@@ -59,54 +59,48 @@ public:
                   PRUint32 aFlags);
   NS_IMETHOD Unlock(void);
   NS_IMETHOD GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight);
-  NS_IMETHOD IsOffscreen(PRBool *aOffScreen);
-  NS_IMETHOD IsPixelAddressable(PRBool *aAddressable);
+
+  inline NS_IMETHODIMP IsOffscreen( PRBool *aOffScreen ) { *aOffScreen = mIsOffscreen; return NS_OK; }
+  inline NS_IMETHODIMP IsPixelAddressable( PRBool *aAddressable ) { *aAddressable = PR_FALSE; return NS_OK; }
   NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat);
 
   //nsIDrawingSurfacePh interface
 
   /* Initialize a On-Screen Drawing Surface */
-  NS_IMETHOD Init();
+  NS_IMETHOD Init( PhGC_t *aGC );
 
   /* Initizlize a Off-Screen Drawing Surface */
-  NS_IMETHOD Init(PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags);
+  NS_IMETHOD Init( PhGC_t *aGC, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags );
 
   /* Make this DrawingSurface active */
-  NS_IMETHOD Select(void);
+  inline NS_IMETHODIMP Select( ) { PhDCSetCurrent( mDrawContext ); PgSetGC( mGC ); return NS_OK; }
 
   /* Flush the Off-Screen draw buffer to the pixmap or PgFlush the On-Screen */
-  NS_IMETHOD Flush(void);
-
-  /* The GC is not ref counted, make sure you know what your doing */
-  PhGC_t     *GetGC(void);
-  PhDrawContext_t     *GetDC(void);
-
-  /* Is this Drawing Surface Active? */
-  PRBool      IsActive();
-  void *GetDrawContext(void);
-   void GetSize(PRUint32 *aWidth, PRUint32 *aHeight) { *aWidth = mWidth; *aHeight = mHeight;}
-public:
-  PRUint32			mWidth;
-  PRUint32			mHeight;
+  inline NS_IMETHODIMP				Flush( void ) { return NS_OK; }
+  inline PhGC_t								*GetGC( void ) { return mGC; }
+  inline PhDrawContext_t			*GetDC( void ) { return mDrawContext; }
+  inline PRBool								IsActive( void ) { return mDrawContext == PhDCGetCurrent() ? PR_TRUE : PR_FALSE; }
+  inline void									GetSize( PRUint32 *aWidth, PRUint32 *aHeight ) { *aWidth = mWidth; *aHeight = mHeight;}
 
 private:
-
-  PRBool			mIsOffscreen;
-  PhGC_t        	*mGC;
-  PhDrawContext_t	*mDrawContext;
+  PRUint32					mWidth;
+  PRUint32					mHeight;
+  PRBool						mIsOffscreen;
+  PhGC_t        		*mGC;
+  PhDrawContext_t		*mDrawContext;
   
-  PRUint32			mFlags;
-  nsPixelFormat 	mPixFormat;
+  PRUint32					mFlags;
 
   /* for lock & unlock */
-  PhDrawContext_t	*mLockDrawContext;
-  PRInt32			mLockX;
-  PRInt32			mLockY;
-  PRUint32			mLockWidth;
-  PRUint32			mLockHeight;
-  PRUint32			mLockFlags;
-  PRBool			mLocked;
-  static int    prefChanged(const char* aPref, void* aClosure);
+  PhDrawContext_t		*mLockDrawContext;
+  PRInt32						mLockX;
+  PRInt32						mLockY;
+  PRUint32					mLockWidth;
+  PRUint32					mLockHeight;
+  PRUint32					mLockFlags;
+  PRBool						mLocked;
+  static nsPixelFormat	mPixFormat;
+  static int    				prefChanged(const char* aPref, void* aClosure);
 };
 
 #endif

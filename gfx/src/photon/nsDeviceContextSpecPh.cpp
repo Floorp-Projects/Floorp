@@ -82,8 +82,10 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
 {
 	nsresult rv = NS_OK;
 	PRUnichar *printer        = nsnull;
+	PRBool silent;
 
 	aPS->GetPrinterName(&printer);
+	aPS->GetPrintSilent( &silent );
 
 	if( printer ) {
 		int res = 111;
@@ -96,7 +98,7 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
 		}
 	else PpLoadDefaultPrinter( mPC );
 
-	if( !aQuiet) 
+	if( !silent ) 
 	{
 		PRBool tofile = PR_FALSE;
 		PRUnichar *printfile = nsnull;
@@ -148,6 +150,12 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
 
 		PpSetPC( mPC, Pp_PC_PAPER_SIZE, &dim, 0 );
   }
+	else { /* silent is set - used when the call is comming from the embedded version */
+		PRInt32 p;
+		aPS->GetEndPageRange( &p );
+		PpPrintReleasePC(mPC);
+		mPC = ( PpPrintContext_t *) p;
+		}
 
  	return rv;
 }

@@ -70,7 +70,7 @@ public:
    NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWindow);
    NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface);
    
-   NS_IMETHOD Reset(void);
+   inline NS_IMETHODIMP Reset(void) { return NS_OK; }
    
    NS_IMETHOD GetDeviceContext(nsIDeviceContext *&aContext);
    
@@ -200,60 +200,29 @@ public:
 #endif /* MOZ_MATHML */
 
    
-//   NS_IMETHOD SetClipRegion(PhTile_t *aTileList, nsClipCombine aCombine, PRBool &aClipState);
-   NS_IMETHOD CommonInit();
    
-   void CreateClipRegion() {
-	   static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
-	   if (mClipRegion)
-		   return;
-	   
-	   PRUint32 w, h;
-	   mSurface->GetSize(&w, &h);
-	   
-	   mClipRegion = do_CreateInstance(kRegionCID);
-	   if (mClipRegion) {
-		   mClipRegion->Init();
-		   mClipRegion->SetTo(0,0,w,h);
-	   }
-   }
 private:
-   void ApplyClipping( PhGC_t *);
-#if 0
-   void holdSetGC();
-   void SetGC();
-   void RestoreGC();
-   void StartDrawing(PhDrawContext_t *dc, PhGC_t *gc);
-   void StopDrawing();
-#endif   
-protected:
-   PhDrawContext_t    *mPtDC;
+	NS_IMETHOD CommonInit();
+	void ApplyClipping( PhGC_t * );
+	void CreateClipRegion( );
+  void UpdateGC( );
+
    PhGC_t             *mGC;
-   PhGC_t             *mholdGC;
    nscolor            mCurrentColor;
    nsLineStyle        mCurrentLineStyle;
    unsigned char      mLineStyle[2];
    nsIFontMetrics     *mFontMetrics;
    nsDrawingSurfacePh *mOffscreenSurface;
    nsDrawingSurfacePh *mSurface;
-   nsDrawingSurface   mMainSurface;
-   nsIWidget          *mDCOwner;
    nsIDeviceContext   *mContext;
    float              mP2T;
-   nsCOMPtr<nsIRegion>   mClipRegion;
-   PtWidget_t         *mWidget;
+   nsCOMPtr<nsIRegion>mClipRegion;
    char               *mPhotonFontName;
-   nsRegionPh         *mGlobalClip;
-   PhDrawContext_t 	*mOldDC;
-   PhGC_t			*mOldGC;
+	 PRBool							mOwner;
    
-   //default objects
    //state management
    nsVoidArray       *mStateCache;
    
-   static PhGC_t     *mPtGC;				/* Default Photon Graphics Context */
-   PRBool            mInitialized;
-   void UpdateGC();
    // ConditionRect is used to fix coordinate overflow problems for
    // rectangles after they are transformed to screen coordinates
    

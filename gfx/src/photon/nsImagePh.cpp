@@ -75,6 +75,10 @@ PhImage_t *MyPiResizeImage(PhImage_t *image,PhRect_t const *bounds,short w,short
 	oldRect.ul.x = oldRect.ul.y = 0;
 	oldRect.lr.x = w - 1;
 	oldRect.lr.y = h - 1;
+
+#ifdef DEBUG_Adrian
+printf( "MyPiResizeImage\n" );
+#endif
 			
 	if(!(newImage = PiInitImage(image,(PhRect_t const*)(&oldRect),&newRect,image->type,flags | Pi_USE_COLORS,image->colors)))
 		return(NULL);
@@ -203,6 +207,8 @@ nsImagePh :: nsImagePh()
 	mIsOptimized = PR_FALSE;
 	memset(&mPhImage, 0, sizeof(PhImage_t));
 	mPhImageZoom = NULL;
+	mDecodedY2_when_scaled = 0;
+	mDirtyFlags = 0;
 
 #ifdef ALLOW_PHIMAGE_CACHEING
 	mPhImageCache=NULL;
@@ -463,8 +469,11 @@ void nsImagePh::MoveAlphaMask(PRInt32 aX, PRInt32 aY)
 
 void nsImagePh :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
-	/* does this mean it's dirty? */
-  	mFlags = aFlags; // this should be 0'd out by Draw()
+	PRInt32 y = aUpdateRect->YMost();
+	PRInt32 x = aUpdateRect->XMost();
+	if( y > mDecodedY2 ) mDecodedY2 = y;
+	if( x > mDecodedX2 ) mDecodedX2 = x;
+	mDirtyFlags = aFlags;
 }
 
 /** ----------------------------------------------------------------
@@ -555,9 +564,10 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 				PRInt32 scaled_h = aDHeight * mPhImage.size.h / aSHeight;
 				use_zoom = 1;
 				
-				if( mPhImageZoom == NULL || mPhImageZoom->size.w != scaled_w || mPhImageZoom->size.h != scaled_h || mDecodedY2_when_scaled != mDecodedY2 ) {
+				if( mPhImageZoom == NULL || mPhImageZoom->size.w != scaled_w || mPhImageZoom->size.h != scaled_h || mDecodedY2_when_scaled != mDecodedY2 || mDirtyFlags != 0 ) {
 
 					/* we already had a scaled image, but the scaling factor was different from what we need now */
+					mDirtyFlags = 0;
 
         	if ( mPhImageZoom ) {
         	  mPhImageZoom->flags = Ph_RELEASE_IMAGE_ALL;

@@ -152,8 +152,8 @@ private:
   PdOffscreenContext_t *mPhImageCache;	  // Cache for the image offscreen
 #endif
 
-  PRUint8             mFlags;             // flags set by ImageUpdated
-  PRUint8             mImageFlags;             // flags set by ImageUpdated
+  PRUint8             mImageFlags;
+	PRUint8							mDirtyFlags;
   PRInt32 mNaturalWidth;
   PRInt32 mNaturalHeight;
 };
