@@ -947,13 +947,18 @@ NS_IMETHODIMP nsImapUrl::SetMockChannel(nsIImapMockChannel * aChannel)
 
 NS_IMETHODIMP nsImapUrl::AddChannelToLoadGroup()
 {
-	nsCOMPtr <nsILoadGroup> aLoadGroup;
+	nsCOMPtr <nsILoadGroup> loadGroup;
 	if (m_mockChannel)
 	{
-		GetLoadGroup(getter_AddRefs(aLoadGroup));
-		if (aLoadGroup)
+		m_mockChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+    // if the mock channel wasn't initialized with a load group then 
+    // use our load group (they may differ)
+    if (!loadGroup)
+      GetLoadGroup(getter_AddRefs(loadGroup));
+		
+    if (loadGroup)
 		{
-			aLoadGroup->AddChannel(m_mockChannel, nsnull /* context isupports */);
+			loadGroup->AddChannel(m_mockChannel, nsnull /* context isupports */);
 		}
 	}
 	return NS_OK;
@@ -961,13 +966,17 @@ NS_IMETHODIMP nsImapUrl::AddChannelToLoadGroup()
 
 NS_IMETHODIMP nsImapUrl::RemoveChannel(nsresult status)
 {
-	nsCOMPtr <nsILoadGroup> aLoadGroup;
+	nsCOMPtr <nsILoadGroup> loadGroup;
 	if (m_mockChannel)
 	{
-		GetLoadGroup(getter_AddRefs(aLoadGroup));
-		if (aLoadGroup)
+		m_mockChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+    // if the mock channel wasn't initialized with a load group then 
+    // use our load group (they may differ)
+    if (!loadGroup)
+      GetLoadGroup(getter_AddRefs(loadGroup));
+		if (loadGroup)
 		{
-			aLoadGroup->RemoveChannel(m_mockChannel, nsnull, status, nsnull);
+			loadGroup->RemoveChannel(m_mockChannel, nsnull, status, nsnull);
 		}
 	}
 	return NS_OK;

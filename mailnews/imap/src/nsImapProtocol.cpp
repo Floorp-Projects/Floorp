@@ -6286,6 +6286,7 @@ nsImapMockChannel::nsImapMockChannel()
   m_channelContext = nsnull;
   m_cancelStatus = NS_OK;
   mOwningRefToUrl = PR_FALSE;
+  mLoadAttributes = 0;
 }
 
 nsImapMockChannel::~nsImapMockChannel()
@@ -6511,14 +6512,14 @@ NS_IMETHODIMP nsImapMockChannel::AsyncWrite(nsIInputStream *fromStream, nsIStrea
 
 NS_IMETHODIMP nsImapMockChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-  *aLoadAttributes = nsIChannel::LOAD_NORMAL;
-  // *aLoadAttributes = mLoadAttributes;
+  //*aLoadAttributes = nsIChannel::LOAD_NORMAL;
+  *aLoadAttributes = mLoadAttributes;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-  // mLoadAttributes = aLoadAttributes;
+  mLoadAttributes = aLoadAttributes;
   return NS_OK;       // don't fail when trying to set this
 }
 
