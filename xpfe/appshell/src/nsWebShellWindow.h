@@ -111,6 +111,7 @@ public:
   // nsWebShellWindow methods...
   nsresult Initialize(nsIXULWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,
                       PRBool aCreatedVisible, PRBool aLoadDefaultPage,
+                      PRUint32 aZlevel,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                       nsWidgetInitData& widgetInitData);
   nsIWidget* GetWidget(void) { return mWindow; }

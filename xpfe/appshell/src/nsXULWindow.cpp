@@ -49,6 +49,7 @@
 // XXX Get rid of this
 #pragma message("WARNING: XXX bad include, remove it.")
 #include "nsIWebShellWindow.h"
+#include "nsWebShellWindow.h" // get rid of this one, too...
 
 // CIDs
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -64,7 +65,8 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull), 
    mContentTreeOwner(nsnull), mPrimaryContentTreeOwner(nsnull),
    mContinueModalLoop(PR_FALSE), mChromeLoaded(PR_FALSE), 
-   mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE) 
+   mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE),
+   mZlevel(nsIXULWindow::normalZ)
    
 {
 	NS_INIT_REFCNT();
@@ -118,6 +120,13 @@ NS_IMETHODIMP nsXULWindow::GetDocShell(nsIDocShell** aDocShell)
 
    *aDocShell = mDocShell;
    NS_IF_ADDREF(*aDocShell);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::GetZlevel(PRUint32 *outLevel)
+{
+   // report our known zlevel, or be on top if currently modal
+   *outLevel = mContinueModalLoop ? nsIXULWindow::highestZ : mZlevel;
    return NS_OK;
 }
 
@@ -426,6 +435,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
       mChromeTreeOwner->XULWindow(nsnull);
       NS_RELEASE(mChromeTreeOwner);
       }
+   mWindow->SetClientData(0); // nsWebShellWindow hackery
    mWindow = nsnull;
 
    return NS_OK;
@@ -1159,6 +1169,82 @@ void nsXULWindow::EnableParent(PRBool aEnable)
     parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
   if (parentWidget)
     parentWidget->Enable(aEnable);
+}
+
+// Constrain the window to its proper z-level
+PRBool nsXULWindow::ConstrainToZLevel(
+                      PRBool      aImmediate,
+                      nsWindowZ  *aPlacement,
+                      nsIWidget  *aReqBelow,
+                      nsIWidget **aActualBelow) {
+
+#if 0
+  /* Do we have a parent window? This means our z-order is already constrained,
+     since we're a dependent window. Our window list isn't hierarchical,
+     so we can't properly calculate placement for such a window.
+     Should we just abort? */
+  nsCOMPtr<nsIBaseWindow> parentWindow = do_QueryReferent(mParentWindow);
+  if (parentWindow)
+    return PR_FALSE;
+#endif
+
+  nsCOMPtr<nsIWindowMediator> mediator(do_GetService(kWindowMediatorCID));
+  if(!mediator)
+    return PR_FALSE;
+
+  PRBool         altered;
+  PRUint32       position,
+                 newPosition;
+  nsIXULWindow  *us = NS_STATIC_CAST(nsIXULWindow *, this);
+
+  altered = PR_FALSE;
+
+  // translate from nsIWindowMediator to nsGUIEvent constants
+  position = nsIWindowMediator::zLevelTop;
+  if (*aPlacement == nsWindowZBottom)
+    position = nsIWindowMediator::zLevelBottom;
+  else if (*aPlacement == nsWindowZRelative)
+    position = nsIWindowMediator::zLevelBelow;
+
+  if (NS_SUCCEEDED(mediator->CalculateZPosition(us, position, aReqBelow,
+                               &newPosition, aActualBelow, &altered))) {
+    if (altered) {
+      if (newPosition == nsIWindowMediator::zLevelTop)
+        *aPlacement = nsWindowZTop;
+      else if (newPosition == nsIWindowMediator::zLevelBottom)
+        *aPlacement = nsWindowZBottom;
+      else
+        *aPlacement = nsWindowZRelative;
+
+      if (aImmediate) {
+        nsCOMPtr<nsIBaseWindow> ourBase = do_QueryInterface(NS_STATIC_CAST(nsIXULWindow *,this));
+        if (ourBase) {
+          nsCOMPtr<nsIWidget> ourWidget;
+          ourBase->GetMainWidget(getter_AddRefs(ourWidget));
+          ourWidget->PlaceBehind(*aActualBelow);
+        }
+      }
+    }
+
+    /* (CalculateZPosition can tell us to be below nothing, because it tries
+       not to change something it doesn't recognize. A request to verify
+       being below an unrecognized window, then, is treated as a request
+       to come to the top (below null) */
+    nsCOMPtr<nsIXULWindow> windowAbove;
+    if (newPosition == nsIWindowMediator::zLevelBelow && *aActualBelow) {
+      void *data;
+      (*aActualBelow)->GetClientData(data);
+      if (data) {
+        nsWebShellWindow *win;
+        win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
+        windowAbove = do_QueryInterface(NS_STATIC_CAST(nsIWebShellWindow *,win));
+      }
+    }
+
+    mediator->SetZPosition(us, newPosition, windowAbove);
+  }
+
+  return altered;
 }
 
 //*****************************************************************************

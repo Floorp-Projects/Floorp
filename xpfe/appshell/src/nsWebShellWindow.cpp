@@ -120,9 +120,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #define USE_NATIVE_MENUS
 #endif
 
-
-#include "nsIWindowMediator.h"
-
 #include "nsIPopupSetFrame.h"
 
 /* Define Class IDs */
@@ -139,10 +136,6 @@ static NS_DEFINE_CID(kContextMenuCID,      NS_CONTEXTMENU_CID);
 
 static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-
-
-
-static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
 static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
@@ -244,6 +237,8 @@ nsWebShellWindow::~nsWebShellWindow()
     NS_RELEASE(mWebShell);
   }
 
+  if (mWindow)
+    mWindow->SetClientData(0);
   mWindow = nsnull; // Force release here.
 
   PR_Lock(mSPTimerLock);
@@ -273,6 +268,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                                       nsIAppShell* aShell, nsIURI* aUrl, 
                                       PRBool aCreatedVisible,
                                       PRBool aLoadDefaultPage,
+                                      PRUint32 aZlevel,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                                       nsWidgetInitData& widgetInitData)
 {
@@ -281,6 +277,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
 
   mShowAfterLoad = aCreatedVisible;
   mLoadDefaultPage = aLoadDefaultPage;
+  mZlevel = aZlevel;
   
   // XXX: need to get the default window size from prefs...
   // Doesn't come from prefs... will come from CSS/XUL/RDF
@@ -474,13 +471,29 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         break;
       }
 
+      case NS_SETZLEVEL: {
+        void             *data;
+        nsZLevelEvent    *zEvent = (nsZLevelEvent *) aEvent;
+
+        zEvent->widget->GetClientData(data);
+        if (data) {
+          nsWebShellWindow *win;
+          win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
+          zEvent->mAdjusted = win->ConstrainToZLevel(zEvent->mImmediate,
+                                &zEvent->mPlacement,
+                                zEvent->mReqBelow, &zEvent->mActualBelow);
+        }
+        break;
+      }
+
+      case NS_MOUSE_ACTIVATE:
       case NS_ACTIVATE: {
 #ifdef DEBUG_saari
         printf("nsWebShellWindow::NS_ACTIVATE\n");
 #endif
         break;
       }
-      
+
       case NS_DEACTIVATE: {
 #ifdef DEBUG_saari
         printf("nsWebShellWindow::NS_DEACTIVATE\n");
@@ -562,7 +575,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 
     }
   }
-  return nsEventStatus_eIgnore;
+  return result;
 }
 
 

@@ -90,6 +90,8 @@ protected:
 
 protected:
    void EnableParent(PRBool aEnable);
+   PRBool ConstrainToZLevel(PRBool aImmediate, nsWindowZ *aPlacement,
+            nsIWidget *aReqBelow, nsIWidget **aActualBelow);
 
    nsChromeTreeOwner*      mChromeTreeOwner;
    nsContentTreeOwner*     mContentTreeOwner;
@@ -104,6 +106,7 @@ protected:
    PRBool                  mChromeLoaded; // True when chrome has loaded
    PRBool                  mShowAfterLoad;
    PRBool                  mIntrinsicallySized; 
+   unsigned long           mZlevel;
 };
 
 // nsContentShellInfo
