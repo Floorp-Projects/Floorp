@@ -24,8 +24,6 @@ MODULE=webBrowser_core
 
 XPIDLSRCS=						\
 		.\nsCWebBrowser.idl						\
-		.\nsIProgress.idl						\
-		.\nsIProgressListener.idl						\
 		.\nsIWebBrowser.idl						\
 		.\nsIWebBrowserChrome.idl					\
 		$(NULL)

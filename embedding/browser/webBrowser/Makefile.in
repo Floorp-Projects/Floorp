@@ -30,8 +30,6 @@ include $(DEPTH)/config/autoconf.mk
 
 XPIDLSRCS	= \
 		nsCWebBrowser.idl			\
-		nsIProgress.idl			\
-		nsIProgressListener.idl			\
 		nsIWebBrowser.idl			\
 		nsIWebBrowserChrome.idl			\
 		$(NULL)
