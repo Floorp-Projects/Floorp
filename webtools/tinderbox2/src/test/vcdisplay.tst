@@ -3,12 +3,13 @@
 #
 
 # generate static html pages for use in testing the popup libraries.
-# Output is written to the file 
-# $TinderConfig::TINDERBOX_HTML_DIR/vcdisplay.htmlo
-# to be examined by a programmer.
+# Output is written to the file
+# $TinderConfig::TINDERBOX_HTML_DIR/vcdisplay.htmlo to be examined by
+# a programmer. Be sure to test the None.pm module as well as the
+# other VC Modules.
 
-# $Revision: 1.3 $ 
-# $Date: 2003/02/11 00:25:04 $ 
+# $Revision: 1.4 $ 
+# $Date: 2003/05/10 19:56:52 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcdisplay.tst,v $ 
 # $Name:  $ 
@@ -113,7 +114,6 @@ sub print_tests {
 	     'file' => 'main.c',
 	     'line' => 325,
 	     'linktxt' =>  "Compiler error! Some error message here.", 
-	     'alt_linktxt' =>  "Compiler error! Some error message here.", 
 	     );
 
     $url = VCDisplay::guess(%args);
@@ -167,6 +167,10 @@ sub main {
     my $outfile ="$TinderConfig::TINDERBOX_HTML_DIR/vcdisplay.html";
     my @libs = glob "./build/lib/VCDisplay/*";
 
+    set_static_vars();
+    get_env();
+
+    my $out = "<pre>\n";
     foreach $lib (@libs) {
 	$lib = basename($lib);
 	$lib =~ s/\..*//;
@@ -174,12 +178,11 @@ sub main {
 	@VCDisplay::ISA = ($libname);
 	eval " use $libname ";
 	
-	my $out = "<pre>";
 	$out .= " ------ $libname -----\n\n";
 	$out .= print_tests();
 	
-	overwrite_file($outfile, $out);
     }
+    overwrite_file($outfile, $out);
 
     return ;
 }
