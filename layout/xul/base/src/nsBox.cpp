@@ -1240,8 +1240,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             value.Trim("%");
 
             nscoord val = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
-            if (val > aSize.width)
-              aSize.width = val;
+            aSize.width = val;
             widthSet = PR_TRUE;
         }
 
@@ -1253,8 +1252,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             value.Trim("%");
 
             nscoord val = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
-            if (val > aSize.height)
-              aSize.height = val;
+            aSize.height = val;
 
             heightSet = PR_TRUE;
         }
@@ -1291,8 +1289,42 @@ nsIBox::AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         heightSet = PR_TRUE;
     }
 
+    nsCOMPtr<nsIContent> content;
+    frame->GetContent(getter_AddRefs(content));
 
-    return NS_OK;
+    if (content) {
+        nsIPresContext* presContext = aState.GetPresContext();
+
+        nsAutoString value;
+        PRInt32 error;
+
+        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::maxwidth, value))
+        {
+            float p2t;
+            presContext->GetScaledPixelsToTwips(&p2t);
+
+            value.Trim("%");
+
+            nscoord val = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+            aSize.width = val;
+            widthSet = PR_TRUE;
+        }
+
+        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::maxheight, value))
+        {
+            float p2t;
+            presContext->GetScaledPixelsToTwips(&p2t);
+
+            value.Trim("%");
+
+            nscoord val = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
+            aSize.height = val;
+
+            heightSet = PR_TRUE;
+        }
+    }
+
+    return (widthSet || heightSet);
 }
 
 PRBool 
