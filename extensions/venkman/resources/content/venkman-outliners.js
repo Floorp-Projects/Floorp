@@ -46,7 +46,8 @@ function initOutliners()
     console._sourceOutliner = document.getElementById("source-outliner");
     console._sourceOutliner.outlinerBoxObject.view = console._sourceOutlinerView;
 
-    console._stackOutlinerView.atomCurrent = atomsvc.getAtom("current-frame-flag");
+    console._stackOutlinerView.atomCurrent = 
+        atomsvc.getAtom("current-frame-flag");
     console._stackOutliner = document.getElementById("call-stack-outliner");
     console._stackOutliner.outlinerBoxObject.view = console._stackOutlinerView;
 
@@ -390,6 +391,7 @@ function skov_setcframe (index)
 
 console._scriptsOutlinerView = new BasicOView();
 
+console._scriptsOutlinerView.shortMode = true;
 console._scriptsOutlinerView.rowCount = 0;
 
 console._scriptsOutlinerView.getCellText =
@@ -401,7 +403,8 @@ function scov_getcelltext (row, colID)
     switch (colID)
     {
         case "script-file-name":
-            return this.scripts[row].fileName;
+            return (this.shortMode) ? this.scripts[row].shortName :
+                this.scripts[row].fileName;
             
         case "script-count":
             return this.scripts[row].scriptCount;
@@ -411,10 +414,25 @@ function scov_getcelltext (row, colID)
     }
 }
 
-console._scriptsOutlinerView.setScripts =
-function scov_setstack (scripts)
+console._scriptsOutlinerView.refreshScripts =
+function scov_refresh (e)
 {
-    function compare (a, b)
+    this.scripts = new Array();
+        
+    for (var p in this.scriptRecords)
+    {        
+        if (p)
+        {
+            var shortname = p;
+            var ary = p.match (/\/([^\/]*)$/);
+            if (ary)
+                shortname = ary[1];
+            this.scripts.push ({fileName: p, shortName: shortname,
+                                scriptCount: this.scriptRecords[p].length});
+        }
+    }
+    
+    function compareFile (a, b)
     {
         if (a.fileName > b.fileName)
             return 1;
@@ -422,21 +440,41 @@ function scov_setstack (scripts)
             return 0;
         return -1;
     }
+
+    function compareShort (a, b)
+    {
+        if (a.shortName > b.shortName)
+            return 1;
+        else if (a.shortName == b.shortName)
+            return 0;
+        return -1;
+    }
+
+    this.scripts.sort((this.shortMode) ? compareShort : compareFile);
     
+    this.rowCount = this.scripts.length;
+    this.outliner.rowCountChanged(0, this.scripts.length);
+    this.outliner.invalidate();
+}
+
+console._scriptsOutlinerView.toggleColumnMode =
+function scov_tcolmode (e)
+{
+    if (!this.shortMode)
+        this.shortMode = true;
+    else
+        delete this.shortMode;
+
+    this.refreshScripts();
+}
+
+console._scriptsOutlinerView.setScripts =
+function scov_setstack (scripts)
+{    
     if (scripts)
     {
-        this.scripts = new Array();
-        
-        for (var p in scripts)
-            if (p)
-                this.scripts.push ({fileName: p,
-                                    scriptCount: scripts[p].length});
-        
-        this.scripts.sort(compare);
-
-        this.rowCount = this.scripts.length;
-        this.outliner.rowCountChanged(0, this.scripts.length);
-        this.outliner.invalidate();
+        this.scriptRecords = scripts;
+        this.refreshScripts();
     }
     else
     {
