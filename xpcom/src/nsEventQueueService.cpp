@@ -230,6 +230,7 @@ nsEventQueueServiceImpl::GetThreadEventQueue(PRThread* aThread, PLEventQueue** a
     *aResult = evQueueEntry->GetEventQueue();
   } else {
     // XXX: Need error code for requesting an event queue when none exists...
+    *aResult = NULL;
     rv = NS_ERROR_FAILURE;
     goto done;
   }
