@@ -31,8 +31,6 @@ CPPSRCS =			\
 	nsJSAttribute.cpp	\
 	$(NULL)
 
-LIBRARY_NAME = jsdom
-
 DEFINES = -D_IMPL_NS_DOM
 
 MODULE = raptor
@@ -42,3 +40,5 @@ REQUIRES = xpcom raptor dom js netlib
 MKSHLIB :=
 
 include $(DEPTH)/config/rules.mk
+
+export:: $(LIBRARY)
