@@ -58,9 +58,24 @@
 #include "nsIBox.h"
 #include "nsIDOMElement.h"
 #include "nsContentPolicyUtils.h"
+#include "nsXPIDLString.h"
+#include "prprf.h"
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
+
+static nscolor
+MakeColorPref(const char *colstr)
+{
+  PRUint32 red, green, blue;
+  nscolor colorref;
+
+  // 4.x stored RGB color values as a string rather than as an int,
+  // thus we need to do this conversion
+  PR_sscanf(colstr, "#%02x%02x%02x", &red, &green, &blue);
+  colorref = NS_RGB(red, green, blue);
+  return colorref;
+}
 
 int
 PrefChangedCallback(const char* aPrefName, void* instance_data)
@@ -288,17 +303,17 @@ nsPresContext::GetUserPreferences()
 
   // * document colors
   PRBool usePrefColors = PR_TRUE;
-  PRInt32  colorPref;
   PRBool boolPref;
+  nsXPIDLCString colorStr;
   if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_system_colors", &boolPref))) {
     usePrefColors = !boolPref;
   }
   if (usePrefColors) {
-    if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.foreground_color", &colorPref))) {
-      mDefaultColor = (nscolor)colorPref;
+    if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.foreground_color", getter_Copies(colorStr)))) {
+      mDefaultColor = MakeColorPref(colorStr);
     }
-    if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.background_color", &colorPref))) {
-      mDefaultBackgroundColor = (nscolor)colorPref;
+    if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.background_color", getter_Copies(colorStr)))) {
+      mDefaultBackgroundColor = MakeColorPref(colorStr);
     }
   }
   else {
@@ -320,11 +335,11 @@ nsPresContext::GetUserPreferences()
   if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.underline_anchors", &boolPref))) {
     mUnderlineLinks = boolPref;
   }
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.anchor_color", &colorPref))) {
-    mLinkColor = (nscolor)colorPref;
+  if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.anchor_color", getter_Copies(colorStr)))) {
+    mLinkColor = MakeColorPref(colorStr);
   }
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.visited_color", &colorPref))) {
-    mVisitedLinkColor = (nscolor)colorPref;
+  if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.visited_color", getter_Copies(colorStr)))) {
+    mVisitedLinkColor = MakeColorPref(colorStr);
   }
 
 
@@ -332,11 +347,11 @@ nsPresContext::GetUserPreferences()
     mUseFocusColors = boolPref;
     mFocusTextColor = mDefaultColor;
     mFocusBackgroundColor = mDefaultBackgroundColor;
-    if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.focus_text_color", &colorPref))) {
-      mFocusTextColor = (nscolor)colorPref;
+    if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.focus_text_color", getter_Copies(colorStr)))) {
+      mFocusTextColor = MakeColorPref(colorStr);
     }
-    if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.focus_background_color", &colorPref))) {
-      mFocusBackgroundColor = (nscolor)colorPref;
+    if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.focus_background_color", getter_Copies(colorStr)))) {
+      mFocusBackgroundColor = MakeColorPref(colorStr);
     }
   }
 
