@@ -1071,6 +1071,10 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
             $::FORM{'order'} = "map_assigned_to.login_name, bugs.bug_status, priority, bugs.bug_id";
             last ORDER;
         };
+        /Changed/ && do {
+            $::FORM{'order'} = "bugs.delta_ts, bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
+            last ORDER;
+        };
         # DEFAULT
         $::FORM{'order'} = "bugs.bug_status, bugs.priority, map_assigned_to.login_name, bugs.bug_id";
     }

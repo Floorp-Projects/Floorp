@@ -1016,7 +1016,7 @@ print qq{
 };
 
 my $deforder = "'Importance'";
-my @orders = ('Bug Number', $deforder, 'Assignee');
+my @orders = ('Bug Number', $deforder, 'Assignee', 'Last Changed');
 
 if ($::COOKIE{'LASTORDER'}) {
     $deforder = "Reuse same sort as last time";
