@@ -143,7 +143,7 @@ text_name=Name:
 ;
 ; Information panes text
 ;
-info_about_intro="The tabs across the top of this window let you control these Personal Security Manager version 1.2 settings: "
+info_about_intro="The tabs across the top of this window let you control these Personal Security Manager version 1.3 settings: "
 info_information=" Click Selected Item to see security information (if available) for the browser window or message you are currently viewing."
 info_applications=" Security settings for Navigator, Messenger, and Java/JavaScript applications."
 info_certificates=" Settings for security certificates stored in your browser, including your personal security password."
