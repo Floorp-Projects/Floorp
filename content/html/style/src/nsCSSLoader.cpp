@@ -1357,7 +1357,9 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
       result = sheet->Clone(clone);
       if (NS_SUCCEEDED(result)) {
         PrepareSheet(clone, aTitle, aMedia);
-        if (aParserToUnblock) { // stick it in now, parser is waiting for it
+        if (aParserToUnblock || (0 == mLoadingSheets.Count())) { 
+          // we either have a parser that needs the sheet now, or we aren't currently
+          // busy.  go ahead and put the sheet right into the doc.
           result = InsertSheetInDoc(clone, aDocIndex, aElement, PR_TRUE, aObserver);
         }
         else {  // add to pending list
