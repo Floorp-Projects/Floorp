@@ -38,14 +38,14 @@
 <!ENTITY calendarPanel.label        "Kalendarz" >
 <!ENTITY calendar.accesskey         "c" >
 <!ENTITY calendar.publish.label     "Publikowanie">
-<!ENTITY calendar.general.label     "General">
+<!ENTITY calendar.general.label     "Ogólne">
 <!ENTITY calendar.alarms.label      "Alarmy">
 <!ENTITY calendar.views.label       "Widoki">
-<!ENTITY calendar.timezone.label    "Moja strefa czasowa">
+<!ENTITY calendar.timezone.label    "Strefa czasowa">
 
-<!ENTITY prefWindow.title            "Calendar Options">
-<!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
-<!ENTITY prefWindow.category         "Category">
+<!ENTITY prefWindow.title            "Opcje kalendarza">
+<!ENTITY prefWindow.size             "szerokość: 52.3em; wysokość: 41em;">
+<!ENTITY prefWindow.category         "Kategoria">
 
 <!ENTITY pref.mainbox.label         "Ustawienia główne" >
 <!ENTITY pref.alarmgoesoff.label "Gdy alarm się wyłącza:">
@@ -55,35 +55,35 @@
 <!ENTITY pref.showalarmbox    "Pokaż alarmy" >
 <!ENTITY pref.defaultemail.label "Domyślny adres do wysyłania alarmów:">
 <!ENTITY pref.defaulttext.label "Domyślny tekst dla alarmów:">
-<!ENTITY pref.missedalarms    "Pokoż niezauważone alarmy" >
+<!ENTITY pref.missedalarms    "Pokaż niezauważone alarmy" >
 <!ENTITY pref.defalarm4events.label "Domyślne ustawienie alarmów dla wydarzeń:">
 <!ENTITY pref.defalarm4todos.label "Domyślne ustawienie alarmów dla zadań:">
-<!ENTITY pref.alarm.on "Wł.">
-<!ENTITY pref.alarm.off "Wył.">
+<!ENTITY pref.alarm.on "włączone">
+<!ENTITY pref.alarm.off "wyłączone">
 <!ENTITY pref.defalarmlen4events.label "Domyślny czas wyłączenia alarmu przed wydarzeniem:">
 <!ENTITY pref.defalarmlen4todos.label "Domyślny czas wyłączenia alarmu przed zadaniem:">
 
 <!ENTITY pref.dateformat.label      "Tekstowy format daty:" >
 <!ENTITY pref.dateformat.long       "Długi" >
 <!ENTITY pref.dateformat.short      "Krótki"  >
-<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
-<!ENTITY pref.defaultlength.label   "Domyślna długość wydarzenia:" >
+<!ENTITY pref.dateformat.storeingmt "Stosuj czas uniwersalny (GMT)" >
+<!ENTITY pref.defaultlength.label   "Domyślny czas trwania wydarzenia:" >
 <!ENTITY pref.defaultsnoozelength.label   "Domyślna długość odstępu powiadamiania:" >
 
 <!ENTITY pref.weekstarts.label     "Pierwszy dzień tygodnia:" >
 <!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
 
 <!ENTITY pref.numberofweeks.label     "Domyślna liczba tygodni:" >
-<!ENTITY pref.numberofweeks.0      "None" >
-<!ENTITY pref.numberofweeks.1      "1 Tydzień" >
-<!ENTITY pref.numberofweeks.2      "2 Tygodnie" >
-<!ENTITY pref.numberofweeks.3      "3 Tygodnie" >
-<!ENTITY pref.numberofweeks.4      "4 Tygodnie" >
-<!ENTITY pref.numberofweeks.5      "5 Tygodni" >
-<!ENTITY pref.numberofweeks.6      "6 Tygodni" >
-<!ENTITY pref.numberofpreviousweeks.label     "Liczba poprzednich tygodni:" >
+<!ENTITY pref.numberofweeks.0      "Brak" >
+<!ENTITY pref.numberofweeks.1      "1 tydzień" >
+<!ENTITY pref.numberofweeks.2      "2 tygodnie" >
+<!ENTITY pref.numberofweeks.3      "3 tygodnie" >
+<!ENTITY pref.numberofweeks.4      "4 tygodnie" >
+<!ENTITY pref.numberofweeks.5      "5 tygodni" >
+<!ENTITY pref.numberofweeks.6      "6 tygodni" >
+<!ENTITY pref.numberofpreviousweeks.label     "Liczba poprzedzających tygodni:" >
 
-<!ENTITY pref.hour.help.description    "Overwritten if events are outside these times" >
+<!ENTITY pref.hour.help.description    "Uwaga: w przypadku wydarzenia dłuższego niż podany zakres, widok dnia zostanie odpowiednio wydłużony." >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
 <!ENTITY pref.hour.02    "02:00" >
@@ -114,32 +114,32 @@
 <!ENTITY pref.calendar.view.weekview.caption "Widok tygodnia">
 <!ENTITY pref.calendar.view.weekanddayview.caption "Widoki dnia i tygodnia">
 <!ENTITY pref.calendar.view.monthview.caption "Widok miesiąca">
-<!ENTITY pref.calendar.view.multiweekview.caption "Widok wielkotygodniaowy">
+<!ENTITY pref.calendar.view.multiweekview.caption "Widok wielotygodniowy">
 
-<!ENTITY pref.calendar.view.restrict.label "Ogranicz widoki do ">
-<!ENTITY pref.calendar.view.starttime.label "Początek:">
+<!ENTITY pref.calendar.view.restrict.label "Ogranicz widok dnia do ">
+<!ENTITY pref.calendar.view.starttime.label "początek:">
 <!ENTITY pref.calendar.view.endtime.label   "koniec:">
 
 <!ENTITY pref.categories.label   "Kategorie" >
 
 <!ENTITY pref.categories.help.description   "Używaj przecinków by oddzielić kategorie, które chcesz dodać.">
 
-<!ENTITY pref.categories.add.title    "Add Category">
-<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
-<!ENTITY pref.categories.edit.title   "Edit Category">
+<!ENTITY pref.categories.add.title    "Dodaj kategorię">
+<!ENTITY pref.categories.add.prompt   "Wprowadź nazwę kategorii">
+<!ENTITY pref.categories.edit.title   "Edytuj kategorię">
 
 
-<!ENTITY pref.reloadonlaunch       "Przeładuj zdalne kalendarze przy starcie">
+<!ENTITY pref.reloadonlaunch       "Odczytaj ponownie zdalne kalendarze przy uruchomieniu">
 
 <!ENTITY pref.publish.caption        "Ustawienia publikowania">
 <!ENTITY pref.publish.path.label     "Domyślna nazwa zdalnego pliku">
 
-<!ENTITY pref.minutes.label "Minuty">
+<!ENTITY pref.minutes.label "minut">
 
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Moja strefa czasowa">
 <!ENTITY pref.calendar.timezone.caption "Strefa czasowa">
-<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
+<!ENTITY pref.calendar.timezone.description "Numer identyfikacyjny strefy czasowej to (kontynent lub ocean)/(największe miasto w regionie strefy czasowej).">
 <!ENTITY pref.defaultzone.label     "Domyślna strefa czasowa:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Afryka/Abidżan" >

@@ -46,7 +46,7 @@
 
   <!-- locale information -->
   <RDF:Description about="urn:mozilla:pl-PL"
-                   chrome:displayName="Polish"
+                   chrome:displayName="Polski"
                    chrome:name="pl-PL">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:locale:pl-PL:packages">

@@ -45,9 +45,9 @@
 
 <!ENTITY event.new.todo                         "Nowe zadanie…">
 <!ENTITY event.new.todo.key                     "T">
-<!ENTITY event.new.todo.accesskey               "t">
+<!ENTITY event.new.todo.accesskey               "d">
 
-<!ENTITY calendar.new.server.label              "Nowy plik kalendarza…">
+<!ENTITY calendar.new.server.label              "Nowy kalendarz…">
 <!ENTITY calendar.new.server.key                "L">
 <!ENTITY calendar.new.server.accesskey          "l">
 
@@ -60,21 +60,21 @@
 <!ENTITY event.edit.event.accesskey             "e">
 
 <!ENTITY event.delete.event                     "Usuń zaznaczone wydarzenie(a)">
-<!ENTITY event.delete.event.accesskey           "d">
+<!ENTITY event.delete.event.accesskey           "y">
 
 <!ENTITY event.delete.tasks                     "Usuń zaznaczone zadanie(a)">
-<!ENTITY event.delete.tasks.accesskey           "t">
+<!ENTITY event.delete.tasks.accesskey           "z">
 
 <!ENTITY event.mail.event                       "Wyślij zaznaczone wydarzenie(a)…">
 <!ENTITY event.mail.event.key                   "M">
-<!ENTITY event.mail.event.accesskey             "m">
+<!ENTITY event.mail.event.accesskey             "W">
 
 <!ENTITY calendar.print.label                   "Drukuj aktywny kalendarz...">
 <!ENTITY calendar.print.key                     "P">
 <!ENTITY calendar.print.accesskey               "r">
 
-<!ENTITY calendar.printpreview.label            "Podgląd druku">
-<!ENTITY calendar.printpreview.accesskey        "v">
+<!ENTITY calendar.printpreview.label            "Podgląd wydruku">
+<!ENTITY calendar.printpreview.accesskey        "g">
 
 <!ENTITY calendar.pagesetup.label               "Ustawienia strony...">
 <!ENTITY calendar.pagesetup.accesskey           "u">
@@ -92,14 +92,14 @@
 <!ENTITY calendar.subscribe.label               "Subskrybuj zdalny kalendarz...">
 <!ENTITY calendar.subscribe.accesskey           "s">
 
-<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.label            "Odśwież zdalne kalendarze">
 <!ENTITY calendar.reloadserver.key              "R">
-<!ENTITY calendar.reloadserver.accesskey        "R">
+<!ENTITY calendar.reloadserver.accesskey        "z">
 
 <!ENTITY calendar.publish.label                 "Publikuj wybrane wydarzenia...">
 <!ENTITY calendar.publish.accesskey             "p">
 
-<!ENTITY calendar.about.label                   "O kalendarzu">
+<!ENTITY calendar.about.label                   "O Kalendarzu">
 <!ENTITY calendar.about.accesskey               "a">
 
 <!ENTITY calendar.cut.label                     "Wytnij">
@@ -108,78 +108,78 @@
 
 <!ENTITY calendar.copy.label                    "Kopiuj">
 <!ENTITY calendar.copy.key                      "C">
-<!ENTITY calendar.copy.accesskey                "c">
+<!ENTITY calendar.copy.accesskey                "K">
 
 <!ENTITY calendar.paste.label                   "Wklej">
 <!ENTITY calendar.paste.key                     "V">
-<!ENTITY calendar.paste.accesskey               "p">
+<!ENTITY calendar.paste.accesskey               "e">
 
-<!ENTITY calendar.selectall.label               "Zazancz wszystko">
+<!ENTITY calendar.selectall.label               "Zazanacz wszystko">
 <!ENTITY calendar.selectall.key                 "A">
 <!ENTITY calendar.selectall.accesskey           "a">
 
 <!ENTITY calendar.preferences.label             "Preferencje...">
 <!ENTITY calendar.preferences.accesskey         "p">
 
-<!ENTITY goMenu.label                           "Idź">
-<!ENTITY goMenu.accesskey                       "g">
+<!ENTITY goMenu.label                           "Przejdź">
+<!ENTITY goMenu.accesskey                       "r">
 
-<!ENTITY goTodayCmd.label                       "Idź do dziś">
-<!ENTITY goTodayCmd.accesskey                   "t">
+<!ENTITY goTodayCmd.label                       "Dzisiaj">
+<!ENTITY goTodayCmd.accesskey                   "D">
 
-<!ENTITY goDateCmd.label                        "Idź do dnia">
-<!ENTITY goDateCmd.accesskey                    "d">
+<!ENTITY goDateCmd.label                        "Dzień...">
+<!ENTITY goDateCmd.accesskey                    "z">
 
-<!ENTITY goPreviousCmd.label                    "Poprzednie">
-<!ENTITY goPreviousCmd.accesskey                "p">
+<!ENTITY goPreviousCmd.label                    "Poprzedni">
+<!ENTITY goPreviousCmd.accesskey                "P">
 
-<!ENTITY goNextCmd.label                        "Następne">
-<!ENTITY goNextCmd.accesskey                    "n">
+<!ENTITY goNextCmd.label                        "Następny">
+<!ENTITY goNextCmd.accesskey                    "N">
 
-<!ENTITY taskMenu.label                         "Tasks">
-<!ENTITY taskMenu.accesskey                     "k">
+<!ENTITY taskMenu.label                         "Zadania">
+<!ENTITY taskMenu.accesskey                     "T">
 
-<!ENTITY toolsMenu.label                        "Tools">
-<!ENTITY toolsMenu.accesskey                    "T">
+<!ENTITY toolsMenu.label                        "Narzędzia">
+<!ENTITY toolsMenu.accesskey                    "n">
 
-<!ENTITY javaScriptConsoleCmd.label             "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.label             "Konsola JavaScript">
 <!ENTITY javaScriptConsoleCmd.accesskey         "S">
 
-<!ENTITY navigatorCmd.label                     "Browser">
+<!ENTITY navigatorCmd.label                     "Przeglądarka">
 <!ENTITY navigatorCmd.accesskey                 "B">
 
-<!ENTITY messengerCmd.label                     "Mail">
+<!ENTITY messengerCmd.label                     "Poczta">
 <!ENTITY messengerCmd.accesskey                 "M">
 
-<!ENTITY addressBookCmd.label                   "Address Book">
+<!ENTITY addressBookCmd.label                   "Książka adresowa">
 <!ENTITY addressBookCmd.accesskey               "A">
 
-<!ENTITY helpMenu.label                         "Help">
-<!ENTITY helpMenu.accesskey                     "H">
+<!ENTITY helpMenu.label                         "Pomoc">
+<!ENTITY helpMenu.accesskey                     "c">
 
-<!ENTITY walletPasswordManager.label            "Password Manager">
-<!ENTITY walletPasswordManager.accesskey        "p">
+<!ENTITY walletPasswordManager.label            "Menedżer haseł">
+<!ENTITY walletPasswordManager.accesskey        "h">
 
 <!-- Toolbar items -->
-<!ENTITY fileMenu.label                         "File">
-<!ENTITY fileMenu.accesskey                     "F">
+<!ENTITY fileMenu.label                         "Plik">
+<!ENTITY fileMenu.accesskey                     "P">
 
-<!ENTITY editMenu.label                         "Edit">
+<!ENTITY editMenu.label                         "Edycja">
 <!ENTITY editMenu.accesskey                     "E">
-<!ENTITY preferencesCmd.label                   "Options...">
+<!ENTITY preferencesCmd.label                   "Opcje...">
 <!ENTITY preferencesCmd.accesskey               "O">
 
-<!ENTITY viewMenu.label                         "View">
-<!ENTITY viewMenu.accesskey                     "V">
+<!ENTITY viewMenu.label                         "Widok">
+<!ENTITY viewMenu.accesskey                     "W">
 
-<!ENTITY releaseCmd.label                       "Release Notes">
+<!ENTITY releaseCmd.label                       "Zmiany">
 <!ENTITY releaseCmd.accesskey                   "R">
-<!ENTITY aboutCmd.label                         "About &brandFullName;">
+<!ENTITY aboutCmd.label                         "O &brandFullName;">
 <!ENTITY aboutCmd.accesskey                     "A">
 
 <!-- Mac OS X "Window" menu items -->
-<!ENTITY windowMenu.label                       "Window">
-<!ENTITY minimizeWindow.label                   "Minimize">
-<!ENTITY zoomWindow.label                       "Zoom">
+<!ENTITY windowMenu.label                       "Okno">
+<!ENTITY minimizeWindow.label                   "Minimalizuj">
+<!ENTITY zoomWindow.label                       "Powiększenie">
 <!ENTITY minimizeWindow.key                     "M">
-<!ENTITY bringAllToFront.label                  "Bring All to Front">
+<!ENTITY bringAllToFront.label                  "Przywróć wszystko">
