@@ -316,7 +316,7 @@ GetChar(JSTokenStream *ts)
 			}
 		    }
 		    for (j = 0; i < len; i++, j++)
-			ubuf[i] = (jschar) (cbuf[j] & 0xff);
+			ubuf[i] = (jschar) (unsigned char) cbuf[j];
 		    ts->userbuf.limit = ubuf + len;
 		    ts->userbuf.ptr = ubuf;
 		} else
