@@ -20,6 +20,10 @@
 
 DEPTH=..\.. 
 
-DIRS = public src public_com png pngcom jpgcom gifcom
+DIRS = public src public_com png pngcom jpgcom gifcom \
+!if defined(MOZ_MNG)
+	mng mngcom	\
+!endif
+	$(NULL)
 
 !include $(DEPTH)\config\rules.mak
