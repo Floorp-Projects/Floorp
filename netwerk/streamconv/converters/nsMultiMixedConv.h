@@ -28,7 +28,6 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
-#include "nsIIOService.h"
 
 #define NS_MULTIMIXEDCONVERTER_CID                         \
 { /* 7584CE90-5B25-11d3-A175-0050041CAF44 */         \
@@ -86,32 +85,9 @@ public:
     nsMultiMixedConv();
     virtual ~nsMultiMixedConv();
 
-    nsresult Init();
-
-    // For factory creation.
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
-        nsresult rv;
-        if (aOuter)
-            return NS_ERROR_NO_AGGREGATION;
-
-        nsMultiMixedConv* _s = new nsMultiMixedConv();
-        if (_s == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(_s);
-        rv = _s->Init();
-        if (NS_FAILED(rv)) {
-            delete _s;
-            return rv;
-        }
-        rv = _s->QueryInterface(aIID, aResult);
-        NS_RELEASE(_s);
-        return rv;
-    }
-
 protected:
     nsresult SendStart(nsIChannel *aChannel);
-    nsresult SendStop();
+    nsresult SendStop(nsresult aStatus, const PRUnichar *aStatusMsg);
     nsresult SendData(char *aBuffer, PRUint32 aLen);
     nsresult ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                           PRUint32 &aLen, PRBool *_retval);
@@ -122,14 +98,11 @@ protected:
     // member data
     PRBool              mNewPart;        // Are we processing the beginning of a part?
 	PRBool				mProcessingHeaders;
-	PRBool				mEndingNewline;  // Did our last header parsing pass end with a newline?
     nsCOMPtr<nsIStreamListener> mFinalListener; // this guy gets the converted data via his OnDataAvailable()
-    nsCOMPtr<nsIIOService>  mIOService;
 
 	nsXPIDLCString		mToken;
     PRUint32            mTokenLen;
 
-    PRUint16            mPartCount;     // the number of parts we've seen so far
     nsCOMPtr<nsIChannel>mPartChannel;   // the channel for the given part we're processing.
                                         // one channel per part.
     nsCOMPtr<nsISupports> mContext;
@@ -138,6 +111,7 @@ protected:
     
     char                *mBuffer;
     PRUint32            mBufLen;
+    PRBool              mFirstOnData;   // used to determine if we're in our first OnData callback.
 };
 
 #endif /* __nsmultimixedconv__h__ */
