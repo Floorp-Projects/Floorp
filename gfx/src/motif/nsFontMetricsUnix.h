@@ -77,7 +77,6 @@ protected:
   nscoord           mMaxAscent;
   nscoord           mMaxDescent;
   nscoord           mMaxAdvance;
-  char *hackyfontnamething;
 };
 
 #endif
