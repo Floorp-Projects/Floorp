@@ -141,6 +141,57 @@ SECStatus
 nsslowcert_OpenCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
                 NSSLOWCERTDBNameFunc namecb, void *cbarg, PRBool openVolatile);
 
+void
+nsslowcert_ClosePermCertDB(NSSLOWCERTCertDBHandle *handle);
+
+/*
+ * is certa newer than certb?  If one is expired, pick the other one.
+ */
+PRBool
+nsslowcert_IsNewer(NSSLOWCERTCertificate *certa, NSSLOWCERTCertificate *certb);
+
+
+SECStatus
+nsslowcert_TraverseDBEntries(NSSLOWCERTCertDBHandle *handle,
+		      certDBEntryType type,
+		      SECStatus (* callback)(SECItem *data, SECItem *key,
+					    certDBEntryType type, void *pdata),
+		      void *udata );
+SECStatus
+nsslowcert_TraversePermCertsForSubject(NSSLOWCERTCertDBHandle *handle,
+				 SECItem *derSubject,
+				 NSSLOWCERTCertCallback cb, void *cbarg);
+int
+nsslowcert_NumPermCertsForSubject(NSSLOWCERTCertDBHandle *handle,
+							 SECItem *derSubject);
+SECStatus
+nsslowcert_TraversePermCertsForNickname(NSSLOWCERTCertDBHandle *handle,
+	 	char *nickname, NSSLOWCERTCertCallback cb, void *cbarg);
+
+int
+nsslowcert_NumPermCertsForNickname(NSSLOWCERTCertDBHandle *handle, 
+							char *nickname);
+SECStatus
+nsslowcert_GetCertTrust(NSSLOWCERTCertificate *cert,
+					 NSSLOWCERTCertTrust *trust);
+
+SECStatus
+nsslowcert_SaveSMimeProfile(NSSLOWCERTCertDBHandle *dbhandle, char *emailAddr, 
+	SECItem *derSubject, SECItem *emailProfile, SECItem *profileTime);
+
+/*
+ * Change the trust attributes of a certificate and make them permanent
+ * in the database.
+ */
+SECStatus
+nsslowcert_ChangeCertTrust(NSSLOWCERTCertDBHandle *handle, 
+	  	NSSLOWCERTCertificate *cert, NSSLOWCERTCertTrust *trust);
+
+PRBool
+nsslowcert_hasTrust(NSSLOWCERTCertificate *cert);
+
+void
+nsslowcert_DestroyGlobalLocks(void);
 
 SEC_END_PROTOS
 

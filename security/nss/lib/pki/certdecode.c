@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.4 $ $Date: 2001/11/29 19:34:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.5 $ $Date: 2001/12/07 01:36:07 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -54,6 +54,7 @@ nssPKIObject_Destroy
 {
     nssList_Destroy(object->instanceList);
     nssArena_Destroy(object->arena);
+    return PR_SUCCESS;
 }
 
 #ifdef NSS_3_4_CODE

@@ -34,7 +34,7 @@
 /*
  * CMS public key crypto
  *
- * $Id: cmspubkey.c,v 1.3 2001/01/07 08:13:07 nelsonb%netscape.com Exp $
+ * $Id: cmspubkey.c,v 1.4 2001/12/07 01:36:13 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -64,7 +64,7 @@ NSS_CMSUtil_EncryptSymKey_RSA(PLArenaPool *poolp, CERTCertificate *cert, PK11Sym
     SECStatus rv;
     SECKEYPublicKey *publickey;
     int data_len;
-    void *mark;
+    void *mark = NULL;
 
     /* sanity check */
     certalgtag = SECOID_GetAlgorithmTag(&(cert->subjectPublicKeyInfo.algorithm));
@@ -76,6 +76,8 @@ NSS_CMSUtil_EncryptSymKey_RSA(PLArenaPool *poolp, CERTCertificate *cert, PK11Sym
 	goto loser;
 	
     mark = PORT_ArenaMark(poolp);
+    if (!mark)
+	goto loser;
 
     /* allocate memory for the encrypted key */
     data_len = SECKEY_PublicKeyStrength(publickey);	/* block size (assumed to be > keylen) */
@@ -96,7 +98,9 @@ NSS_CMSUtil_EncryptSymKey_RSA(PLArenaPool *poolp, CERTCertificate *cert, PK11Sym
     return SECSuccess;
 
 loser:
-    PORT_ArenaRelease(poolp, mark);
+    if (mark) {
+	PORT_ArenaRelease(poolp, mark);
+    }
     return SECFailure;
 }
 
@@ -131,9 +135,9 @@ NSS_CMSUtil_EncryptSymKey_MISSI(PLArenaPool *poolp, CERTCertificate *cert, PK11S
     CERTCertificate *ourCert;
     SECKEYPublicKey *ourPubKey, *publickey = NULL;
     SECKEYPrivateKey *ourPrivKey = NULL;
-    NSSCMSKEATemplateSelector whichKEA;
+    NSSCMSKEATemplateSelector whichKEA = NSSCMSKEAInvalid;
     NSSCMSSMIMEKEAParameters keaParams;
-    PLArenaPool *arena;
+    PLArenaPool *arena = NULL;
     extern const SEC_ASN1Template *nss_cms_get_kea_template(NSSCMSKEATemplateSelector whichTemplate);
 
     /* Clear keaParams, since cleanup code checks the lengths */
@@ -252,8 +256,11 @@ NSS_CMSUtil_EncryptSymKey_MISSI(PLArenaPool *poolp, CERTCertificate *cert, PK11S
     }
 
     PK11_FreeSymKey(tek);
+
     if (err != SECSuccess)
 	goto loser;
+
+    PORT_Assert(whichKEA != NSSCMSKEAInvalid);
 
     /* Encode the KEA parameters into the recipient info. */
     params = SEC_ASN1EncodeItem(poolp, NULL, &keaParams, nss_cms_get_kea_template(whichKEA));
@@ -374,7 +381,7 @@ NSS_CMSUtil_EncryptSymKey_ESDH(PLArenaPool *poolp, CERTCertificate *cert, PK11Sy
     PK11SymKey *tek;
     CERTCertificate *ourCert;
     SECKEYPublicKey *ourPubKey;
-    NSSCMSKEATemplateSelector whichKEA;
+    NSSCMSKEATemplateSelector whichKEA = NSSCMSKEAInvalid;
 
     certalgtag = SECOID_GetAlgorithmTag(&(cert->subjectPublicKeyInfo.algorithm));
     PORT_Assert(certalgtag == SEC_OID_X942_DIFFIE_HELMAN_KEY);
@@ -455,12 +462,16 @@ NSS_CMSUtil_EncryptSymKey_ESDH(PLArenaPool *poolp, CERTCertificate *cert, PK11Sy
 	break;
     default:
 	/* XXXX what do we do here? Neither RC2 nor 3DES... */
+        err = SECFailure;
+        /* set error */
 	break;
     }
 
     PK11_FreeSymKey(kek);	/* we do not need the KEK anymore */
     if (err != SECSuccess)
 	goto loser;
+
+    PORT_Assert(whichKEA != NSSCMSKEAInvalid);
 
     /* see RFC2630 12.3.1.1 "keyEncryptionAlgorithm must be ..." */
     /* params is the DER encoded key wrap algorithm (with parameters!) (XXX) */

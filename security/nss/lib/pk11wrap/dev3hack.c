@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.1 $ $Date: 2001/11/08 00:15:05 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.2 $ $Date: 2001/12/07 01:36:00 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -46,6 +46,19 @@ static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.1 $ $Da
 #ifndef DEVT_H
 #include "devt.h"
 #endif /* DEVT_H */
+
+/* copied from devutil.c in dev */
+static PRUint32
+nssdevPKCS11StringLength(CK_CHAR *pkcs11Str, PRUint32 bufLen)
+{
+    PRInt32 i;
+    for (i = bufLen - 1; i>=0; ) {
+	if (pkcs11Str[i] != ' ') break;
+	--i;
+    }
+    return (PRUint32)(i + 1);
+}
+
 
 #include "dev3hack.h"
 
@@ -123,7 +136,7 @@ nssSlot_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
     rvSlot->slotID = nss3slot->slotID;
     rvSlot->trustDomain = td;
     /* Grab the slot name from the PKCS#11 fixed-length buffer */
-    length = nssPKCS11StringLength(nss3slot->slot_name,
+    length = nssdevPKCS11StringLength((CK_CHAR *)nss3slot->slot_name,
                                    sizeof(nss3slot->slot_name));
     if (length > 0) {
 	rvSlot->name = nssUTF8_Create(td->arena, nssStringType_UTF8String, 
@@ -150,7 +163,7 @@ nssToken_CreateFromPK11SlotInfo(NSSTrustDomain *td, PK11SlotInfo *nss3slot)
                                                        nss3slot->defRWSession);
     rvToken->trustDomain = td;
     /* Grab the token name from the PKCS#11 fixed-length buffer */
-    length = nssPKCS11StringLength(nss3slot->token_name,
+    length = nssdevPKCS11StringLength((CK_CHAR *)nss3slot->token_name,
                                    sizeof(nss3slot->token_name));
     if (length > 0) {
 	rvToken->name = nssUTF8_Create(td->arena, nssStringType_UTF8String, 
@@ -180,11 +193,14 @@ nssToken_Nofify
   NSSToken *tok,
   nssPK11Event event
 )
+
 {
+#ifdef notdef
     switch (event) {
     default:
 	return PR_FAILURE;
     }
+#endif
     return PR_FAILURE;
 }
 

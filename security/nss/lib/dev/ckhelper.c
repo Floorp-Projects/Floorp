@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.11 $ $Date: 2001/11/28 16:23:38 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.12 $ $Date: 2001/12/07 01:35:53 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -86,9 +86,9 @@ nssCKObject_GetAttributes
   NSSSlot *slot
 )
 {
-    nssArenaMark *mark;
+    nssArenaMark *mark = NULL;
     CK_SESSION_HANDLE hSession;
-    CK_ULONG i;
+    CK_ULONG i = 0;
     CK_RV ckrv;
     PRStatus nssrv;
     PRBool alloced = PR_FALSE;

@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.5 2001/12/06 18:21:38 ian.mcgreer%sun.com Exp $
+ * $Id: pcertdb.c,v 1.6 2001/12/07 01:36:18 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -84,7 +84,7 @@ certdb_InitDBLock(NSSLOWCERTCertDBHandle *handle)
  * This lock is currently used for the following operations:
  *	adding or deleting a cert to either the temp or perm databases
  *	converting a temp to perm or perm to temp
- *	changing(maybe just adding????) the trust of a cert
+ *	changing (maybe just adding!?) the trust of a cert
  *      chaning the DB status checking Configuration
  */
 static void
@@ -117,7 +117,7 @@ static PZLock *certRefCountLock = NULL;
  * arg here so that it will be easy to make it per-cert in the future if
  * that turns out to be necessary.
  */
-void
+static void
 nsslowcert_LockCertRefCount(NSSLOWCERTCertificate *cert)
 {
     if ( certRefCountLock == NULL ) {
@@ -132,7 +132,7 @@ nsslowcert_LockCertRefCount(NSSLOWCERTCertificate *cert)
 /*
  * Free the cert reference count lock
  */
-void
+static void
 nsslowcert_UnlockCertRefCount(NSSLOWCERTCertificate *cert)
 {
     PRStatus prstat;
@@ -183,6 +183,16 @@ nsslowcert_UnlockCertTrust(NSSLOWCERTCertificate *cert)
     return;
 }
 
+NSSLOWCERTCertificate *
+nsslowcert_DupCertificate(NSSLOWCERTCertificate *c)
+{
+    if (c) {
+	nsslowcert_LockCertRefCount(c);
+	++c->referenceCount;
+	nsslowcert_UnlockCertRefCount(c);
+    }
+    return c;
+}
 
 static int
 certdb_Get(DB *db, DBT *key, DBT *data, unsigned int flags)
@@ -2869,7 +2879,8 @@ nsslowcert_TraversePermCertsForSubject(NSSLOWCERTCertDBHandle *handle,
 }
 
 int
-nsslowcert_NumPermCertsForSubject(NSSLOWCERTCertDBHandle *handle, SECItem *derSubject)
+nsslowcert_NumPermCertsForSubject(NSSLOWCERTCertDBHandle *handle,
+							 SECItem *derSubject)
 {
     certDBEntrySubject *entry;
     int ret;
@@ -2888,8 +2899,8 @@ nsslowcert_NumPermCertsForSubject(NSSLOWCERTCertDBHandle *handle, SECItem *derSu
 }
 
 SECStatus
-nsslowcert_TraversePermCertsForNickname(NSSLOWCERTCertDBHandle *handle, char *nickname,
-				  NSSLOWCERTCertCallback cb, void *cbarg)
+nsslowcert_TraversePermCertsForNickname(NSSLOWCERTCertDBHandle *handle,
+		 	char *nickname, NSSLOWCERTCertCallback cb, void *cbarg)
 {
     certDBEntryNickname *nnentry = NULL;
     certDBEntrySMime *smentry = NULL;
@@ -2923,9 +2934,9 @@ nsslowcert_TraversePermCertsForNickname(NSSLOWCERTCertDBHandle *handle, char *ni
     return(rv);
 }
 
-
 int
-nsslowcert_NumPermCertsForNickname(NSSLOWCERTCertDBHandle *handle, char *nickname)
+nsslowcert_NumPermCertsForNickname(NSSLOWCERTCertDBHandle *handle, 
+								char *nickname)
 {
     certDBEntryNickname *entry;
     int ret;
@@ -3940,8 +3951,8 @@ nsslowcert_GetCertTrust(NSSLOWCERTCertificate *cert, NSSLOWCERTCertTrust *trust)
  * in the database.
  */
 SECStatus
-nsslowcert_ChangeCertTrust(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTCertificate *cert,
-		    NSSLOWCERTCertTrust *trust)
+nsslowcert_ChangeCertTrust(NSSLOWCERTCertDBHandle *handle, 
+	 	 	NSSLOWCERTCertificate *cert, NSSLOWCERTCertTrust *trust)
 {
     certDBEntryCert *entry;
     int rv;
@@ -4297,7 +4308,7 @@ nsslowcert_FindCrlByKey(NSSLOWCERTCertDBHandle *handle, SECItem *crlKey,
     SECStatus rv;
     SECItem *crl = NULL;
     PRArenaPool *arena = NULL;
-    certDBEntryRevocation *entry;
+    certDBEntryRevocation *entry = NULL;
     certDBEntryType crlType = isKRL ? certDBEntryTypeKeyRevocation  
 					: certDBEntryTypeRevocation;
     
@@ -4401,7 +4412,7 @@ nsslowcert_hasTrust(NSSLOWCERTCertificate *cert)
  */
 SECStatus
 nsslowcert_SaveSMimeProfile(NSSLOWCERTCertDBHandle *dbhandle, char *emailAddr, 
-		SECItem *derSubject, SECItem *emailProfile, SECItem *profileTime)
+	SECItem *derSubject, SECItem *emailProfile, SECItem *profileTime)
 {
     certDBEntrySMime *entry = NULL;
     SECStatus rv = SECFailure;;

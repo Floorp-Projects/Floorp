@@ -1822,7 +1822,6 @@ static int jar_gather_signers
 
 CERTCertDBHandle *JAR_open_database (void)
   {
-  int keepcerts = 0;
   CERTCertDBHandle *certdb;
 
   certdb = CERT_GetDefaultCertDB();

@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.13 2001/11/08 00:14:39 relyea%netscape.com Exp $
+ * $Id: cert.h,v 1.14 2001/12/07 01:35:47 relyea%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -326,6 +326,10 @@ extern SECStatus CERT_KeyFromDERCert(PRArenaPool *arena, SECItem *derCert, SECIt
 
 extern SECStatus CERT_KeyFromIssuerAndSN(PRArenaPool *arena, SECItem *issuer,
 					 SECItem *sn, SECItem *key);
+
+extern SECStatus CERT_SerialNumberFromDERCert(SECItem *derCert, 
+						SECItem *derName);
+
 
 /*
 ** Generate a database search key for a crl, based on the

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.31 2001/11/30 23:32:30 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.32 2001/12/07 01:35:58 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -270,7 +270,10 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
     char *moduleSpec = NULL;
     char *flags = NULL;
     SECStatus rv = SECFailure;
-    char *lconfigdir,*lcertPrefix,*lkeyPrefix,*lsecmodName;
+    char *lconfigdir = NULL;
+    char *lcertPrefix = NULL;
+    char *lkeyPrefix = NULL;
+    char *lsecmodName = NULL;
 
     flags = nss_makeFlags(readOnly,noCertDB,noModDB,forceOpen,
 						pk11_password_required);

@@ -34,7 +34,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.6 2001/11/08 00:15:16 relyea%netscape.com Exp $
+ * $Id: p7decode.c,v 1.7 2001/12/07 01:36:06 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -58,7 +58,7 @@
 #include "secerr.h"
 #include "sechash.h"	/* for HASH_GetHashObject() */
 #include "secder.h"
-/*#include "secpkcs5.h" */
+#include "secpkcs5.h"
 
 struct sec_pkcs7_decoder_worker {
     int depth;

@@ -34,7 +34,7 @@
 /*
  * Support routines for SECItem data structure.
  *
- * $Id: secitem.c,v 1.4 2001/11/02 21:50:09 relyea%netscape.com Exp $
+ * $Id: secitem.c,v 1.5 2001/12/07 01:36:25 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -275,8 +275,6 @@ SECITEM_Hash ( const void *key)
 PRIntn PR_CALLBACK
 SECITEM_HashCompare ( const void *k1, const void *k2)
 {
-    PRIntn rv;
-
     const SECItem *i1 = (const SECItem *)k1;
     const SECItem *i2 = (const SECItem *)k2;
 

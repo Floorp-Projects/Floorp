@@ -34,7 +34,7 @@
 /*
  * CMS encryptedData methods.
  *
- * $Id: cmsencdata.c,v 1.2 2000/06/13 21:56:28 chrisk%netscape.com Exp $
+ * $Id: cmsencdata.c,v 1.3 2001/12/07 01:36:12 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -46,6 +46,7 @@
 #include "pk11func.h"
 #include "prtime.h"
 #include "secerr.h"
+#include "secpkcs5.h"
 
 /*
  * NSS_CMSEncryptedData_Create - create an empty encryptedData object.

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssldef.c,v 1.5 2001/05/10 02:37:59 nelsonb%netscape.com Exp $
+ * $Id: ssldef.c,v 1.6 2001/12/07 01:36:23 relyea%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -88,7 +88,7 @@ int ssl_DefRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
 
     rv = lower->methods->recv(lower, (void *)buf, len, flags, ss->rTimeout);
     if (rv < 0) {
-	PRErrorCode err = PR_GetError();
+	/* PRErrorCode err = PR_GetError(); */
 	MAP_ERROR(PR_SOCKET_SHUTDOWN_ERROR, PR_CONNECT_RESET_ERROR)
     } else if (rv > len) {
 	PORT_Assert(rv <= len);
@@ -152,7 +152,7 @@ int ssl_DefRead(sslSocket *ss, unsigned char *buf, int len)
 
     rv = lower->methods->read(lower, (void *)buf, len);
     if (rv < 0) {
-	PRErrorCode err = PR_GetError();
+	/* PRErrorCode err = PR_GetError(); */
 	MAP_ERROR(PR_SOCKET_SHUTDOWN_ERROR, PR_CONNECT_RESET_ERROR)
     }
     return rv;

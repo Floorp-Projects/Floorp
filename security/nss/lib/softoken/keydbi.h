@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: keydbi.h,v 1.2 2001/11/08 00:15:31 relyea%netscape.com Exp $
+ * $Id: keydbi.h,v 1.3 2001/12/07 01:36:18 relyea%netscape.com Exp $
  */
 
 #ifndef _KEYDBI_H_
@@ -71,7 +71,7 @@ SEC_BEGIN_PROTOS
 **      "f" is the user function to call for each key
 **      "udata" is the user's data, which is passed through to "f"
 */
-extern SECStatus NSSLOWKEY_TraverseKeys(NSSLOWKEYDBHandle *handle, 
+extern SECStatus nsslowkey_TraverseKeys(NSSLOWKEYDBHandle *handle, 
 				NSSLOWKEYTraverseKeysFunc f,
 				void *udata);
 

@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.3 2001/11/30 23:24:30 relyea%netscape.com Exp $
+ * $Id: lowcert.c,v 1.4 2001/12/07 01:36:18 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -116,18 +116,6 @@ const SEC_ASN1Template nsslowcert_DHPublicKeyTemplate[] = {
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPublicKey,u.dh.publicValue), },
     { 0, }
 };
-
-
-NSSLOWCERTCertificate *
-nsslowcert_DupCertificate(NSSLOWCERTCertificate *c)
-{
-    if (c) {
-	nsslowcert_LockCertRefCount(c);
-	++c->referenceCount;
-	nsslowcert_UnlockCertRefCount(c);
-    }
-    return c;
-}
 
 /*
  * Allow use of default cert database, so that apps(such as mozilla) don't

@@ -1270,7 +1270,7 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
     char *tokenName;
     int i;
     CERTCertList *certList = NULL;
-    NSSCertificate **foundCerts;
+    NSSCertificate **foundCerts = NULL;
     NSSCertificate *c;
     NSSTrustDomain *defaultTD = STAN_GetDefaultTrustDomain();
     if ((delimit = PORT_Strchr(nickname,':')) != NULL) {
@@ -3137,7 +3137,6 @@ PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *crlHandle,
     CK_OBJECT_HANDLE crlh = CK_INVALID_HANDLE;
     CK_ATTRIBUTE *attrs = theTemplate;
     CK_RV crv;
-    SECStatus rv;
     SECItem *derCrl = NULL;
 
     PK11_SETATTRS(attrs, CKA_SUBJECT, name->data, name->len); attrs++;
@@ -3283,12 +3282,9 @@ PK11_FindSMimeProfile(PK11SlotInfo **slot, char *emailAddr,
     };
     /* if you change the array, change the variable below as well */
     int tsize = sizeof(theTemplate)/sizeof(theTemplate[0]);
-    CK_BBOOL ck_true = CK_TRUE;
-    CK_BBOOL ck_false = CK_FALSE;
     CK_OBJECT_HANDLE smimeh = CK_INVALID_HANDLE;
     CK_ATTRIBUTE *attrs = theTemplate;
     CK_RV crv;
-    SECStatus rv;
     SECItem *emailProfile = NULL;
 
     PK11_SETATTRS(attrs, CKA_SUBJECT, name->data, name->len); attrs++;
@@ -3385,12 +3381,14 @@ PK11_SaveSMimeProfile(PK11SlotInfo *slot, char *emailAddr, SECItem *derSubj,
 	{ CKA_VALUE, NULL, 0 }
     };
     /* if you change the array, change the variable below as well */
-    int tsize = sizeof(theTemplate)/sizeof(theTemplate[0]);
     int realSize = 0;
     CK_OBJECT_HANDLE smimeh = CK_INVALID_HANDLE;
     CK_ATTRIBUTE *attrs = theTemplate;
     CK_SESSION_HANDLE rwsession;
     CK_RV crv;
+#ifdef DEBUG
+    int tsize = sizeof(theTemplate)/sizeof(theTemplate[0]);
+#endif
 
     PK11_SETATTRS(attrs, CKA_CLASS, &smimeClass, sizeof(smimeClass)); attrs++;
     PK11_SETATTRS(attrs, CKA_TOKEN, &ck_true, sizeof(ck_true)); attrs++;

@@ -57,6 +57,7 @@
 #include "secder.h"
 #include "secport.h"
 #include "pcert.h"
+#include "secrng.h"
 
 #include "keydbi.h" 
 
@@ -506,9 +507,6 @@ pk11_handleCertObject(PK11Session *session,PK11Object *object)
     CK_CERTIFICATE_TYPE type;
     PK11Attribute *attribute;
     CK_RV crv;
-    PK11SessionObject *sessObject = pk11_narrowToSessionObject(object);
-
-    PORT_Assert(sessObject);
 
     /* certificates must have a type */
     if ( !pk11_hasAttribute(object,CKA_CERTIFICATE_TYPE) ) {
@@ -621,6 +619,7 @@ pk11_handleCertObject(PK11Session *session,PK11Object *object)
 
     return CKR_OK;
 }
+
 unsigned int
 pk11_MapTrust(CK_TRUST trust, PRBool clientAuth)
 {
@@ -2201,7 +2200,6 @@ CK_RV NSC_Finalize (CK_VOID_PTR pReserved)
     /* free all the slots */
     if (nscSlotList) {
 	CK_ULONG tmpSlotCount = nscSlotCount;
-	CK_ULONG tmpSlotListSize = nscSlotListSize;
 	CK_SLOT_ID_PTR tmpSlotList = nscSlotList;
 	PLHashTable *tmpSlotHashTable = nscSlotHashTable;
 
@@ -3634,64 +3632,6 @@ pk11_searchSMime(PK11Slot *slot, SECItem *email, PK11SearchResults *handles,
     return;
 }
 
-static void
-pk11_searchSMimeForCert(PK11Slot *slot, SECItem *email, 
-			unsigned long classFlags, 
-                        PK11SearchResults *handles, 
-			CK_ATTRIBUTE *pTemplate, CK_LONG ulCount)
-{
-    NSSLOWCERTCertDBHandle *certHandle = NULL;
-    certDBEntrySMime *entry;
-    int i;
-
-    certHandle = slot->certDB;
-    if (certHandle == NULL) return;
-
-    if (email->data != NULL) {
-	char *tmp_name = (char*)PORT_Alloc(email->len+1);
-
-	if (tmp_name == NULL) {
-	    return;
-	}
-	PORT_Memcpy(tmp_name,email->data,email->len);
-	tmp_name[email->len] = 0;
-
-	entry = nsslowcert_ReadDBSMimeEntry(certHandle,tmp_name);
-	if (entry) {
-	    int count;
-	    pk11CertData certData;
-	    certData.slot = slot;
-	    certData.max_cert_count = 0;
-	    certData.certs = NULL;
-	    certData.cert_count = 0;
-	    certData.template = pTemplate;
-	    certData.templ_count = ulCount;
-	    certData.classFlags = classFlags; 
-	    certData.strict = NSC_STRICT; 
-	    count = nsslowcert_NumPermCertsForSubject(certHandle,&entry->subjectName);
-	    pk11_CertSetupData(&certData,count);
-	    nsslowcert_TraversePermCertsForSubject(certHandle,&entry->subjectName,
-				                pk11_cert_collect, &certData);
-
-	    /*
-	     * build the handles
-	     */	
-	    for (i=0 ; i < certData.cert_count ; i++) {
-		NSSLOWCERTCertificate *cert = certData.certs[i];
-		pk11_addHandle(handles,
-		      pk11_mkHandle(slot,&cert->certKey,PK11_TOKEN_TYPE_CERT));
-		nsslowcert_DestroyCertificate(cert);
-	    }
-
-	    nsslowcert_DestroyDBEntry((certDBEntry *)entry);
-	    if (certData.certs) PORT_Free(certData.certs);
-	}
-	PORT_Free(tmp_name);
-    }
-    return;
-}
-
-
 static CK_RV
 pk11_searchTokenList(PK11Slot *slot, PK11SearchResults *search,
 	 		CK_ATTRIBUTE *pTemplate, CK_LONG ulCount, 
@@ -3913,7 +3853,7 @@ pk11_searchTokenList(PK11Slot *slot, PK11SearchResults *search,
 CK_RV NSC_FindObjectsInit(CK_SESSION_HANDLE hSession,
     			CK_ATTRIBUTE_PTR pTemplate,CK_ULONG ulCount)
 {
-    PK11SearchResults *search,*freeSearch;
+    PK11SearchResults *search = NULL, *freeSearch = NULL;
     PK11Session *session = NULL;
     PK11Slot *slot = pk11_SlotFromSessionHandle(hSession);
     PRBool tokenOnly = PR_FALSE;
@@ -3966,8 +3906,8 @@ CK_RV NSC_FindObjectsInit(CK_SESSION_HANDLE hSession,
     return CKR_OK;
 
 loser:
-    if (freeSearch) {
-	pk11_FreeSearch(freeSearch);
+    if (search) {
+	pk11_FreeSearch(search);
     }
     if (session) {
 	pk11_FreeSession(session);

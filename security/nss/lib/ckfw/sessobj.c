@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: sessobj.c,v $ $Revision: 1.6 $ $Date: 2001/09/20 22:09:46 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: sessobj.c,v $ $Revision: 1.7 $ $Date: 2001/12/07 01:35:51 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -103,6 +103,7 @@ nss_ckmdSessionObject_remove_pointer
   return CKR_OK;
 }
 
+#ifdef NSS_DEBUG
 static CK_RV
 nss_ckmdSessionObject_verifyPointer
 (
@@ -111,6 +112,7 @@ nss_ckmdSessionObject_verifyPointer
 {
   return CKR_OK;
 }
+#endif
 
 #endif /* DEBUG */
 
@@ -819,6 +821,7 @@ nss_ckmdFindSessionObjects_remove_pointer
   return CKR_OK;
 }
 
+#ifdef NSS_DEBUG
 static CK_RV
 nss_ckmdFindSessionObjects_verifyPointer
 (
@@ -827,6 +830,7 @@ nss_ckmdFindSessionObjects_verifyPointer
 {
   return CKR_OK;
 }
+#endif
 
 #endif /* DEBUG */
 

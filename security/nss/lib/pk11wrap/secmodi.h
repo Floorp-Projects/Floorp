@@ -58,7 +58,6 @@ extern SECStatus SECMOD_DeletePermDB(SECMODModule *module);
 extern SECStatus SECMOD_AddPermDB(SECMODModule *module);
 
 extern void SECMOD_Init(void);
-extern void SECMOD_Shutdown(void);
 
 /* list managment */
 extern SECStatus SECMOD_AddModuleToList(SECMODModule *newModule);
@@ -92,7 +91,6 @@ CK_OBJECT_HANDLE pk11_FindObjectByTemplate(PK11SlotInfo *slot,
 					CK_ATTRIBUTE *inTemplate,int tsize);
 SECStatus PK11_UpdateSlotAttribute(PK11SlotInfo *slot,
 				 PK11DefaultArrayEntry *entry, PRBool add);
-SEC_END_PROTOS
 
 #define PK11_GETTAB(x) ((CK_FUNCTION_LIST_PTR)((x)->functionList))
 #define PK11_SETATTRS(x,id,v,l) (x)->type = (id); \
@@ -100,6 +98,11 @@ SEC_END_PROTOS
 SECStatus PK11_CreateNewObject(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
                                CK_ATTRIBUTE *theTemplate, int count,
                                 PRBool token, CK_OBJECT_HANDLE *objectID);
+
+SECStatus pbe_PK11AlgidToParam(SECAlgorithmID *algid,SECItem *mech);
+SECStatus PBE_PK11ParamToAlgid(SECOidTag algTag, SECItem *param, 
+				PRArenaPool *arena, SECAlgorithmID *algId);
+SEC_END_PROTOS
 
 #endif
 

@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.4 2001/11/08 00:14:40 relyea%netscape.com Exp $
+ * $Id: crl.c,v 1.5 2001/12/07 01:35:47 relyea%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -595,7 +595,7 @@ SEC_LookupCrls(CERTCertDBHandle *handle, CERTCrlHeadNode **nodes, int type)
     /* Look up the proper crl types */
     *nodes = head;
 
-    rv = PK11_LookupCrls(nodes, type, NULL);
+    rv = PK11_LookupCrls(head, type, NULL);
     
     if (rv != SECSuccess) {
 	if ( arena ) {

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.18 $ $Date: 2001/11/29 19:34:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.19 $ $Date: 2001/12/07 01:36:08 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -90,8 +90,8 @@ NSSCertificate_Destroy
     if (--c->refCount == 0) {
 	return nssPKIObject_Destroy(&c->object);
     }
-#endif
     return PR_SUCCESS;
+#endif
 }
 
 NSS_IMPLEMENT PRStatus

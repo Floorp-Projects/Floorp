@@ -46,6 +46,7 @@
 #include "jarint.h"
 
 #include "jarevil.h"
+#include "certdb.h"
 
 /* from libevent.h */
 #ifdef MOZILLA_CLIENT_OLD

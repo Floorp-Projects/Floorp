@@ -508,6 +508,7 @@ extern CK_RV pk11_forceAttribute(PK11Object *object, CK_ATTRIBUTE_TYPE type,
 				 void *value, unsigned int len);
 extern CK_RV pk11_defaultAttribute(PK11Object *object, CK_ATTRIBUTE_TYPE type,
 				   void *value, unsigned int len);
+extern unsigned int pk11_MapTrust(CK_TRUST trust, PRBool clientAuth);
 
 extern PK11Object *pk11_NewObject(PK11Slot *slot);
 extern CK_RV pk11_CopyObject(PK11Object *destObject, PK11Object *srcObject);
@@ -538,6 +539,7 @@ extern PK11Session *pk11_NewSession(CK_SLOT_ID slotID, CK_NOTIFY notify,
 extern void pk11_update_state(PK11Slot *slot,PK11Session *session);
 extern void pk11_update_all_states(PK11Slot *slot);
 extern void pk11_FreeContext(PK11SessionContext *context);
+extern void pk11_CleanupFreeLists(void);
 
 extern NSSLOWKEYPublicKey *pk11_GetPubKey(PK11Object *object,
 					  CK_KEY_TYPE key_type);
@@ -576,6 +578,9 @@ CK_RV pk11_DBInit(const char *configdir, const char *certPrefix,
 		PRBool noKeyDB, PRBool forceOpen, 
 		NSSLOWCERTCertDBHandle **certDB, NSSLOWKEYDBHandle **keyDB);
 
+void pk11_DBShutdown(NSSLOWCERTCertDBHandle *certHandle, 
+		     NSSLOWKEYDBHandle *keyHandle);
+
 /*
  * narrow objects
  */
@@ -592,6 +597,8 @@ CK_OBJECT_HANDLE pk11_mkHandle(PK11Slot *slot,
 					SECItem *dbKey, CK_OBJECT_HANDLE class);
 PK11Object * pk11_NewTokenObject(PK11Slot *slot, SECItem *dbKey, 
 						CK_OBJECT_HANDLE handle);
+PK11TokenObject *pk11_convertSessionToToken(PK11Object *so);
+
 SEC_END_PROTOS
 
 #endif /* _PKCS11I_H_ */

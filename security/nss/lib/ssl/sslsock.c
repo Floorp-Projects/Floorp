@@ -35,7 +35,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.22 2001/11/02 04:00:27 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.23 2001/12/07 01:36:23 relyea%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -317,7 +317,9 @@ ssl_FreeSocket(sslSocket *ss)
     int        i;
 
     sslSocket *fs;
+#ifdef DEBUG
     sslSocket  lSock;
+#endif
 
 /* Get every lock you can imagine!
 ** Caller already holds these:
