@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Makefile.PL,v 1.12 1998/08/13 23:33:49 leif Exp $
+# $Id: Makefile.PL,v 1.13 1998/08/14 21:45:39 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -75,7 +75,7 @@ if ($ldapsdk_ver == "30")
 if (!$ldapsdk_ssl)
 {
    print "Include SSL Support (default: yes)?  ";
-   chomp ($sslopt = <>);
+   chomp ($ldapsdk_ssl = <>);
 }
 
 if ($ldapsdk_ssl =~ /^n/i)
