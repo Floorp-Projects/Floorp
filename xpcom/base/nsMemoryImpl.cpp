@@ -392,7 +392,7 @@ NS_Free(void* ptr)
 
 #ifdef NS_MEMORY_FLUSHER_THREAD
 
-NS_IMPL_QUERY_INTERFACE1(MemoryFlusher, nsIRunnable);
+NS_IMPL_QUERY_INTERFACE1(MemoryFlusher, nsIRunnable)
 
 NS_IMETHODIMP
 MemoryFlusher::Run()
