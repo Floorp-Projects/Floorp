@@ -103,8 +103,7 @@ struct RuleProcessorData {
   RuleProcessorData* mParentData;
 
 protected:
-  nsAutoString mLanguage;
-  PRBool mIsLanguageValid;
+  nsAutoString *mLanguage; // NULL means we haven't found out the language yet
 };
 
 struct ElementRuleProcessorData : public RuleProcessorData {

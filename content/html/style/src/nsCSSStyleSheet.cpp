@@ -3383,7 +3383,7 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
   mNameSpaceID = kNameSpaceID_Unknown;
   mPreviousSiblingData = nsnull;
   mParentData = nsnull;
-  mIsLanguageValid = PR_FALSE;
+  mLanguage = nsnull;
 
   // get the compat. mode (unless it is provided)
   if(!aCompat) {
@@ -3476,9 +3476,11 @@ RuleProcessorData::~RuleProcessorData()
 
 const nsString* RuleProcessorData::GetLang(void)
 {
-  if (!mIsLanguageValid) {
-    mIsLanguageValid = PR_TRUE;
-    mLanguage.SetLength(0);
+  if (!mLanguage) {
+    mLanguage = new nsAutoString();
+    if (!mLanguage)
+      return nsnull;
+    mLanguage->SetLength(0);
     nsCOMPtr<nsIContent> content = mContent;
     while (content) {
       PRInt32 attrCount = 0;
@@ -3495,7 +3497,7 @@ const nsString* RuleProcessorData::GetLang(void)
                                        nsHTMLAtoms::lang, value);
         }
         if (attrState == NS_CONTENT_ATTR_HAS_VALUE) {
-          mLanguage = value;
+          *mLanguage = value;
           break;
         }
       }
@@ -3504,7 +3506,7 @@ const nsString* RuleProcessorData::GetLang(void)
       content = dont_AddRef(parent);
     }
   }
-  return &mLanguage;
+  return mLanguage;
 }
 
 static const PRUnichar kNullCh = PRUnichar('\0');
@@ -3771,7 +3773,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           // from the parent we have to be prepared to look at all parent
           // nodes.  The language itself is encoded in the LANG attribute.
           const nsString* lang = data.GetLang();
-          if (!lang->IsEmpty()) {
+          if (lang && !lang->IsEmpty()) { // null check for out-of-memory
             result = localTrue == DashMatchCompare(*lang,
                             nsDependentString(pseudoClass->mString), PR_FALSE);
           }
