@@ -24,10 +24,10 @@
 #include "nsIByteBuffer.h"
 #include "nsIInputStream.h"
 #include "nsMsgLocalFolderHdrs.h"
+#include "nsMsgBaseCID.h"
 #include "libi18n.h"
 #include "nsIMailboxUrl.h"
 #include "nsCRT.h"
-
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsMsgMailboxParser)
 NS_IMPL_RELEASE(nsMsgMailboxParser)
@@ -355,7 +355,13 @@ nsParseMailMessageState::nsParseMailMessageState()
 	m_IgnoreXMozillaStatus = FALSE;
 	m_state = MBOX_PARSE_BODY;
 	Clear();
-	NS_NewRFC822Parser(&m_rfc822AddressParser);
+
+    NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
+    
+    nsComponentManager::CreateInstance(kMsgRFC822ParserCID,
+                                       nsnull,
+                                       nsIMsgRFC822Parser::GetIID(),
+                                       (void **)&m_rfc822AddressParser);
 }
 
 nsParseMailMessageState::~nsParseMailMessageState()
