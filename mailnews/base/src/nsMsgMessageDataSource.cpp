@@ -41,6 +41,7 @@
 #include "nsIMessageView.h"
 #include "nsMsgUtils.h"
 #include "nsMessageViewDataSource.h"
+#include "nsTextFormatter.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
@@ -301,13 +302,28 @@ nsresult nsMsgMessageDataSource::GetSenderName(nsAutoString& sender, nsAutoStrin
 	nsresult rv = NS_OK;
 	if(mHeaderParser)
 	{
+
 		char *name;
-		if(NS_SUCCEEDED(rv = mHeaderParser->ExtractHeaderAddressName (nsnull, nsAutoCString(sender), &name)))
-		{
-			*senderUserName = name;
+		char *senderUTF8 = sender.ToNewUTF8String();
+		if(!senderUTF8)
+			return NS_ERROR_FAILURE;
+
+		if(NS_SUCCEEDED(rv = mHeaderParser->ExtractHeaderAddressName("UTF-8", senderUTF8, &name)))
+        {
+			if(name)
+			{
+				PRUnichar *newSender;
+				nsAutoString fmt("%s");
+				newSender = nsTextFormatter::smprintf(fmt.GetUnicode(),name);
+				if(newSender)
+				{
+					senderUserName->SetString(newSender);
+					nsTextFormatter::smprintf_free(newSender);
+				}
+				nsCRT::free(name);
+			}
+			Recycle(senderUTF8);
 		}
-		if(name)
-			PL_strfree(name);
 	}
 	return rv;
 }
