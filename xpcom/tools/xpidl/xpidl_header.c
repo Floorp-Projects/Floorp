@@ -136,8 +136,6 @@ interface(TreeState *state)
         }
     }
     fputs(" {\n"
-          " private:\n"
-          "  void operator delete(void *); // NOT TO BE IMPLEMENTED\n\n"
           " public: \n"
           "  static const nsIID& IID() {\n"
           "    static nsIID iid = ",
