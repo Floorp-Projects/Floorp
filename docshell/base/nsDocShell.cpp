@@ -2629,99 +2629,93 @@ NS_IMETHODIMP
 nsDocShell::SetFocus()
 {
 #ifdef DEBUG_DOCSHELL_FOCUS
-    printf("nsDocShell::SetFocus %p\n", (nsIDocShell*)this);
+  printf("nsDocShell::SetFocus %p\n", (nsIDocShell*)this);
 #endif
 
-    nsCOMPtr<nsIPresShell> presShell;
-    nsCOMPtr<nsIDocument> document;
-    GetPresShell(getter_AddRefs(presShell));
-    if (!presShell)
-        return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPresShell> presShell;
+  GetPresShell(getter_AddRefs(presShell));
+  if (!presShell)
+    return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIPresContext> presContext;
-    GetPresContext(getter_AddRefs(presContext));
-    if (!presContext)
-        return NS_ERROR_FAILURE;
-
-    /* Check to make sure the root frame for this document
-       is not collapsed. */
-    nsIFrame* rootFrame;
-    presShell->GetRootFrame(&rootFrame);
-    if (!rootFrame)
-        return NS_ERROR_FAILURE;
-
+  /* Check to make sure the root frame for this document
+     is not collapsed. */
+  nsIFrame* rootFrame;
+  presShell->GetRootFrame(&rootFrame);
+  if (rootFrame) {
     nsRect frameRect;
     rootFrame->GetRect(frameRect);
     if (frameRect.IsEmpty()) {
 #ifdef DEBUG_bryner
-        printf("SetFocus: empty frame rect, not accepting focus\n");
+      printf("SetFocus: empty frame rect, not accepting focus\n");
 #endif
-        return NS_ERROR_FAILURE;
+      return NS_ERROR_FAILURE;
     }
+  }
 
-    nsCOMPtr<nsIEventStateManager> esm;
+  nsCOMPtr<nsIDocument> document;
+  presShell->GetDocument(getter_AddRefs(document));
+
+  // Figure out what type of document this is
+  // if parent doc is content then set focus to document itself
+  // and set the "special" flag so it knows we are at the beginning
+  // of the document
+  PRBool doFocusDoc = PR_FALSE;
+  nsIDocShellTreeItem* treeItem = NS_STATIC_CAST(nsIDocShellTreeItem *, this);
+  nsCOMPtr<nsIDocShellTreeItem> parentItem;
+  treeItem->GetParent(getter_AddRefs(parentItem));
+  if (parentItem) {
+    PRInt32 type;
+    parentItem->GetItemType(&type);
+    doFocusDoc = type == nsIDocShellTreeItem::typeContent;
+  }
+
+  // Tell itself (and the DocShellFocusController) who has focus
+  // this way focus gets removed from the currently focused DocShell
+  SetHasFocus(PR_TRUE);
+
+  nsCOMPtr<nsIContent> focusContent;
+
+  nsCOMPtr<nsIEventStateManager> esm;
+
+  nsCOMPtr<nsIPresContext> presContext;
+  GetPresContext(getter_AddRefs(presContext));
+  if (presContext) {
     presContext->GetEventStateManager(getter_AddRefs(esm));
-    if (!esm)
-        return NS_ERROR_FAILURE;
-
-    presShell->GetDocument(getter_AddRefs(document));
-    nsCOMPtr<nsIContent>
-        rootContent(getter_AddRefs(document->GetRootContent()));
-    if (!rootContent)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIContent> focusContent;
-
-    // Figure out what type of document this is
-    // if parent doc is content then set focus to document itself
-    // and set the "special" flag so it knows we are at the beginning
-    // of the document
-    PRBool doFocusDoc = PR_FALSE;
-    nsIDocShellTreeItem* treeItem = NS_STATIC_CAST(nsIDocShellTreeItem *, this);
-    nsCOMPtr<nsIDocShellTreeItem> parentItem;
-    treeItem->GetParent(getter_AddRefs(parentItem));
-    if (parentItem) {
-      PRInt32 type;
-      parentItem->GetItemType(&type);
-      doFocusDoc = type == nsIDocShellTreeItem::typeContent;
-    }
-
-    // Tell itself (and the DocShellFocusController) who has focus
-    // this way focus gets removed from the currently focused DocShell
-    SetHasFocus(PR_TRUE);
-
-    // Either focus the document or the "first" piece of content
-    if (doFocusDoc) {
-      esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-      esm->SetSpecialTopOfDoc(PR_TRUE);
-    } else {
-      nsCOMPtr<nsIContent> content;
-      esm->GetNextTabbableIndexContent(rootContent, PR_TRUE, PR_TRUE, getter_AddRefs(content));
-      if (!content) {
-        esm->GetNextTabbableContent(rootContent, nsnull, PR_TRUE,
-                                    getter_AddRefs(focusContent));
+    nsCOMPtr<nsIContent> rootContent(getter_AddRefs(document->GetRootContent()));
+    if (esm && rootContent) {
+      // Either focus the document or the "first" piece of content
+      if (doFocusDoc) {
+        esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+        esm->SetSpecialTopOfDoc(PR_TRUE);
       } else {
-        focusContent = content;
+        nsCOMPtr<nsIContent> content;
+        esm->GetNextTabbableIndexContent(rootContent, PR_TRUE, PR_TRUE, getter_AddRefs(content));
+        if (!content) {
+          esm->GetNextTabbableContent(rootContent, nsnull, PR_TRUE,
+                                      getter_AddRefs(focusContent));
+        } else {
+          focusContent = content;
+        }
       }
     }
+  }
 
-    if (focusContent) {
-        nsIFrame *focusFrame = nsnull;
-        presShell->GetPrimaryFrameFor(focusContent, &focusFrame);
-        esm->ChangeFocus(focusContent, focusFrame, PR_TRUE);
-        SetCanvasHasFocus(PR_FALSE);
-    } else {
-        nsCOMPtr<nsIScriptGlobalObject> sgo;
-        document->GetScriptGlobalObject(getter_AddRefs(sgo));
-        if (sgo) {
-            nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
-            if (domwin) {
-                domwin->Focus();
-            }
-        }
+  if (focusContent) {
+    nsIFrame *focusFrame = nsnull;
+    presShell->GetPrimaryFrameFor(focusContent, &focusFrame);
+    esm->ChangeFocus(focusContent, focusFrame, PR_TRUE);
+    SetCanvasHasFocus(PR_FALSE);
+  } else {
+    nsCOMPtr<nsIScriptGlobalObject> sgo;
+    document->GetScriptGlobalObject(getter_AddRefs(sgo));
+    if (sgo) {
+      nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
+      if (domwin)
+        domwin->Focus();
     }
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
 //-------------------------------------------------
