@@ -590,7 +590,7 @@ struct nsCharSourceTraits<const char*>
 
     static
     void
-    advance( CharT*& s, difference_type n )
+    advance( char*& s, difference_type n )
       {
         s += n;
       }
