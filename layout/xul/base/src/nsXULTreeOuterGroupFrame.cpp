@@ -39,6 +39,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDragService.h"
 #include "nsIServiceManager.h"
+#include "nsIScrollableView.h"
 
 #define TICK_FACTOR 50
 
@@ -243,6 +244,10 @@ nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aConten
   if (!scrollFrame)
     return rv;
 
+  nsIScrollableView* scrollableView;
+  scrollFrame->GetScrollableView(aPresContext, &scrollableView);
+  scrollableView->SetScrollProperties(NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+
   nsIBox* verticalScrollbar;
   scrollFrame->GetScrollbarBox(PR_TRUE, &verticalScrollbar);
   if (!verticalScrollbar) {
@@ -348,7 +353,7 @@ nsXULTreeOuterGroupFrame::VerticalScroll(PRInt32 aPosition)
   nscoord x, y;
   scrollFrame->GetScrollPosition(mPresContext, x, y);
  
-  scrollFrame->ScrollTo(mPresContext, x, aPosition);
+  scrollFrame->ScrollTo(mPresContext, x, aPosition, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
 }
 
 nscoord
@@ -480,14 +485,14 @@ nsXULTreeOuterGroupFrame::PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex)
 NS_IMETHODIMP
 nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta)
 {
-  if (mContentChain) {
+  //if (mContentChain) {
     // XXX Eventually we need to make the code smart enough to look at a content chain
     // when building ANOTHER content chain.
     // Ensure all reflows happen first and make sure we're dirty.
     nsCOMPtr<nsIPresShell> shell;
     mPresContext->GetShell(getter_AddRefs(shell));
     shell->FlushPendingNotifications();
-  }
+ // }
 
   PRInt32 visibleRows = 0;
   if (mRowHeight)
@@ -922,9 +927,9 @@ nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   PRInt32 rows = 0;
   if (mRowHeight)
     rows = GetAvailableHeight()/mRowHeight;
-  PRInt32 bottomIndex = mCurrentIndex + rows - 1;
-  if (IsFixedRowSize())
-    bottomIndex++;
+  PRInt32 bottomIndex = mCurrentIndex + rows;
+  if (!IsFixedRowSize())
+    bottomIndex-=2;
 
   // if row is visible, ignore
   if (mCurrentIndex <= aRowIndex && aRowIndex <= bottomIndex)

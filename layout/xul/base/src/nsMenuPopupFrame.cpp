@@ -745,7 +745,7 @@ nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
   nsIFrame* immediateParent = nsnull;
   nsCOMPtr<nsIPresShell> shell;
   mPresContext->GetShell(getter_AddRefs(shell));
-  GetInsertionPoint(shell, nsnull, &immediateParent);
+  GetInsertionPoint(shell, this, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -809,7 +809,7 @@ nsMenuPopupFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResu
   nsIFrame* immediateParent = nsnull;
   nsCOMPtr<nsIPresShell> shell;
   mPresContext->GetShell(getter_AddRefs(shell));
-  GetInsertionPoint(shell, nsnull, &immediateParent);
+  GetInsertionPoint(shell, this, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 
@@ -984,7 +984,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
   nsIFrame* immediateParent = nsnull;
   nsCOMPtr<nsIPresShell> shell;
   mPresContext->GetShell(getter_AddRefs(shell));
-  GetInsertionPoint(shell, nsnull, &immediateParent);
+  GetInsertionPoint(shell, this, nsnull, &immediateParent);
   if (!immediateParent)
     immediateParent = this;
 

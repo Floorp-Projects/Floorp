@@ -152,6 +152,8 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
     return NS_ERROR_FAILURE;
   }
 
+  nsMargin margin;
+
   // Get our client rect.
   nsRect clientRect;
   aBox->GetClientRect(clientRect);
@@ -174,30 +176,37 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
     box->IsDirty(dirty);
     box->HasDirtyChildren(dirtyChildren);
     
-    PRBool sizeChanged = PR_FALSE;
-    nsRect childRect;
-    box->GetContentRect(childRect);
-    nsMargin margin(0,0,0,0);
-    box->GetMargin(margin);
-    childRect.Inflate(margin);
-    nsSize size;
-    box->NeedsRecalc();
-    box->GetPrefSize(aState, size);
-    if (clientRect.width != childRect.width || size.height != childRect.height)
-      sizeChanged = PR_TRUE;
+    nsIFrame* childFrame;
+    box->GetFrame(&childFrame);
+    nsFrameState state;
+    childFrame->GetFrameState(&state);
+    PRBool firstReflow = (state & NS_FRAME_FIRST_REFLOW);
+
+    PRBool isRow = PR_TRUE;
+    nsXULTreeGroupFrame* childGroup = GetGroupFrame(box);
+    if (childGroup) {
+      // Set the available height.
+      childGroup->SetAvailableHeight(availableHeight);
+      isRow = PR_FALSE;
+    }
 
     PRBool relayoutAll = (frame->GetOuterFrame()->GetTreeLayoutState() == eTreeLayoutDirtyAll);
 
-    if (relayoutAll || sizeChanged || dirty || dirtyChildren || aState.GetLayoutReason() == nsBoxLayoutState::Initial) {
-      PRBool isRow = PR_TRUE;
-      nsXULTreeGroupFrame* childGroup = GetGroupFrame(box);
-      if (childGroup) {
-        // Set the available height.
-        childGroup->SetAvailableHeight(availableHeight);
-        isRow = PR_FALSE;
-      }
-      childRect.width = clientRect.width;
+    nsRect childRect;
+    PRBool sizeChanged = PR_FALSE;
+    if (isRow) {
+      nsSize size;
+      box->GetPrefSize(aState, size);
+      if (size.width != clientRect.width)
+        sizeChanged = PR_TRUE;
+    }
 
+    if (relayoutAll || childGroup || sizeChanged || dirty || dirtyChildren || aState.GetLayoutReason() == nsBoxLayoutState::Initial) {      
+      nsRect childRect;
+      childRect.x = 0;
+      childRect.y = yOffset;
+      childRect.width = clientRect.width;
+      
       if (isRow)
         childRect.height = frame->GetOuterFrame()->GetRowHeightTwips();
 
@@ -206,19 +215,21 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
       box->SetBounds(aState, childRect);
       box->Layout(aState);
 
+      nsSize size;
       if (!isRow) {
         // We are a row group that might have dynamically
         // constructed new rows.  We need to clear out
         // and recompute our pref size and then adjust our
         // rect accordingly.
-        nsSize size;
         box->NeedsRecalc();
         box->GetPrefSize(aState, size);
         childRect.height = size.height;
         box->SetBounds(aState, childRect);
       }
-      else // Check to see if the row height of the tree has changed.
+      else {// Check to see if the row height of the tree has changed.
+        box->GetPrefSize(aState, size);
         frame->GetOuterFrame()->SetRowHeight(size.height);
+      }
     }
 
     // Place the child by just grabbing its rect and adjusting the x,y.
@@ -229,10 +240,14 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
     availableHeight -= childRect.height;
     box->GetMargin(margin);
     childRect.Deflate(margin);
-    childRect.width < 0 ? 0 : childRect.width;
-    childRect.height < 0 ? 0 : childRect.height;
+    childRect.width = childRect.width < 0 ? 0 : childRect.width;
+    childRect.height = childRect.height < 0 ? 0 : childRect.height;
     
     box->SetBounds(aState, childRect);
+
+    nsXULTreeOuterGroupFrame* outer = GetOuterFrame(aBox);
+    if (outer && !isRow && firstReflow)
+      box->Redraw(aState, nsnull, PR_TRUE);
 
     if ((frame->GetOuterFrame()->GetTreeLayoutState() == eTreeLayoutAbort) || 
         (!frame->ContinueReflow(availableHeight)))

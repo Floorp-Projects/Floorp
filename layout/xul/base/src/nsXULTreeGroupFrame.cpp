@@ -141,6 +141,13 @@ nsXULTreeGroupFrame::Init ( nsIPresContext* aPresContext, nsIContent* aContent,
   
 } // Init
 
+NS_IMETHODIMP
+nsXULTreeGroupFrame::Redraw(nsBoxLayoutState& aState,
+                            const nsRect*   aDamageRect,
+                            PRBool          aImmediate)
+{
+  return nsBoxFrame::Redraw(aState, aDamageRect, aImmediate);
+}
 
 void nsXULTreeGroupFrame::LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult)
 {
@@ -401,38 +408,33 @@ void nsXULTreeGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
   if (mTopFrame && mTopFrame == aChildFrame)
     mTopFrame->GetNextSibling(&mTopFrame);
 
-  // if we're removing the last frame in this rowgroup and if we have
-  // a scrollbar, we have to yank in some rows from above
- /* if (!mTopFrame && mScrollbar && mCurrentIndex > 0) {  
-    // sync up the scrollbar, now that we've scrolled one row
-     mCurrentIndex--;
-     nsAutoString indexStr;
-     PRInt32 pixelIndex = mCurrentIndex * SCROLL_FACTOR;
-     indexStr.AppendInt(pixelIndex);
-    
-     nsCOMPtr<nsIContent> scrollbarContent;
-     mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
-     scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos,
-                                     indexStr, PR_TRUE);
-
-     // Now force the reflow to happen immediately, because we need to
-     // deal with cleaning out the content chain.
-     nsCOMPtr<nsIPresShell> shell;
-     aPresContext->GetShell(getter_AddRefs(shell));
-     shell->FlushPendingNotifications();
-
-     return; // All frames got deleted anyway by the pos change.
-  }
-  */
-
   // Go ahead and delete the frame.
   nsBoxLayoutState state(aPresContext);
   if (aChildFrame) {
     mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, aChildFrame, nsnull);
     Remove(state, aChildFrame);
     mFrames.DestroyFrame(aPresContext, aChildFrame);
+    
+    // Get our old row count.
+    PRInt32 rowCount = mOuterFrame->GetRowCount();
 
+    // See if the last row is visible.  If it is, we need to pull back
+    // by the amount of rows that we lose.
+    PRInt32 index;
+    mOuterFrame->GetIndexOfFirstVisibleRow(&index);
+    PRInt32 vis;
+    mOuterFrame->GetNumberOfVisibleRows(&vis);
+
+    if (index + vis >= rowCount) {
+      // Danger, Will Robinson, danger! We need to scroll backwards.
+      mOuterFrame->ClearRowGroupInfo();
+      PRInt32 newCount = mOuterFrame->GetRowCount();
+      PRInt32 delta = rowCount - newCount;
+      mOuterFrame->ScrollToIndex(index-delta);
+      return;
+    }
   }
+
   MarkDirtyChildren(state);
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));

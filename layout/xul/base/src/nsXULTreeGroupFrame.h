@@ -75,12 +75,14 @@ public:
   nsIFrame* GetNextFrame(nsIFrame* aCurrFrame);
   nsIFrame* GetLastFrame();
   
-  NS_IMETHOD IsDirty(PRBool& aDirtyFlag) { aDirtyFlag = PR_TRUE; return NS_OK; };
-
   NS_IMETHOD TreeAppendFrames(nsIFrame*       aFrameList);
 
   NS_IMETHOD TreeInsertFrames(nsIFrame*       aPrevFrame,
                               nsIFrame*       aFrameList);
+
+  NS_IMETHOD Redraw(nsBoxLayoutState& aState,
+                    const nsRect*   aDamageRect,
+                    PRBool          aImmediate);
 
   // Responses to changes
   void OnContentInserted(nsIPresContext* aPresContext, nsIFrame* aNextSibling, PRInt32 aIndex);
