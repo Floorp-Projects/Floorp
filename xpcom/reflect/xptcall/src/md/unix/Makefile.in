@@ -179,7 +179,7 @@ ifeq ($(OS_ARCH),OpenVMS)
 # Our assembler wants the include file to be of assembler syntax, not C/C++
 # syntax, so we have to massage it slightly.
 
-$(OBJDIR)/xptcstubs_asm_openvms_alpha.o: $(PUBLIC)/xptcstubsdef.inc (srcdir)/xptcstubs_asm_openvms_alpha.s
+$(OBJDIR)/xptcstubs_asm_openvms_alpha.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_openvms_alpha.s
 	@rm -f ./xptcstubsdef_asm.vms
 	@awk ' \
 	/^.*_ENTRY\([0-9]+\)/ { \
