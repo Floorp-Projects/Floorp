@@ -99,7 +99,7 @@ li::-moz-list-bullet {
 
 
 table {
-  text-align: -moz-initial;
+  text-align: start;
   white-space: normal; /* compatible with IE & spec */
   line-height: normal;
 
