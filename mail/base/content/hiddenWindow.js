@@ -45,16 +45,17 @@ function hiddenWindowStartup()
   var disabledItems = ['newNewMsgCmd', 'menu_newFolder', 'newAccountMenuItem', 'menu_close',
                        'menu_sendunsentmsgs', 'menu_subscribe', 'menu_renameFolder', 'menu_selectAll',
                        'menu_showMessengerToolbar', 'menu_showSearchToolbar', 'menu_showTaskbar', 'menu_customizeToolbar',
-                       'sortByDateMenuitem', 'sortByFlagMenuitem', 'sortByOrderReceivedMenuitem', 'sortByPriorityMenuitem',
                        'messagePaneClassic', 'messagePaneWide', 'messagePaneVertical', 'menu_showMessage',
-                       'sortBySenderOrRecipientMenuitem', 'sortBySizeMenuitem', 'sortByStatusMenuitem', 'sortBySubjectMenuitem',
-                       'sortByThreadMenuitem', 'sortByUnreadMenuitem', 'sortByLabelMenuitem', 'sortByJunkStatusMenuitem',
-                       'sortAscending', 'sortDescending', 'viewThreaded', 'viewAll',
-		                   'viewUnread', 'viewLabelMenuItem1', 'viewLabelMenuItem2', 'viewLabelMenuItem3',
+                       'sortByDateMenuitem', 'sortByFlagMenuitem', 'sortByOrderReceivedMenuitem', 'sortByPriorityMenuitem',
+                       'sortBySenderMenuitem', 'sortByRecipientMenuitem', 'sortBySenderOrRecipientMenuitem', 'sortBySizeMenuitem',
+                       'sortByStatusMenuitem', 'sortBySubjectMenuitem', 'sortByThreadMenuitem', 'sortByUnreadMenuitem',
+                       'sortByLabelMenuitem', 'sortByJunkStatusMenuitem', 'sortAscending', 'sortDescending',
+                       'viewThreaded', 'viewAll', 'viewUnread', 'viewLabelMenuItem1',
+                       'viewUnread', 'viewLabelMenuItem1', 'viewLabelMenuItem2', 'viewLabelMenuItem3',
                        'viewLabelMenuItem4', 'viewLabelMenuItem5', 'viewCreateCustomView', 'viewallheaders',
-		                   'viewnormalheaders', 'bodyAllowHTML', 'bodySanitized', 'bodyAsPlaintext',
+                       'viewnormalheaders', 'bodyAllowHTML', 'bodySanitized', 'bodyAsPlaintext',
                        'viewAttachmentsInlineMenuitem', 'goStartPage', 'newMsgCmd',
-		                   'searchMailCmd', 'searchAddressesCmd', 'filtersCmd', 'junkMailCmd'];
+                       'searchMailCmd', 'searchAddressesCmd', 'filtersCmd', 'junkMailCmd'];
   for (var id in disabledItems) 
   {
     var broadcaster = document.getElementById(disabledItems[id]);
