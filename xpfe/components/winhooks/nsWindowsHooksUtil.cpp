@@ -51,6 +51,7 @@ const char * const mozillaKeyName = "Software\\Mozilla\\Desktop";
 
 static const char shortcutSuffix[] = " -url \"%1\"";
 static const char chromeSuffix[] = " -chrome \"%1\"";
+static const char iconSuffix[] = ",0";
 
 // Returns the (fully-qualified) name of this executable.
 static nsCString thisApplication() {
@@ -175,6 +176,24 @@ struct ProtocolRegistryEntry : public SavedRegistryEntry {
     nsresult reset();
 };
 
+// ProtocolIconRegistryEntry
+//
+// For setting icon entries for a given Internet Shortcut protocol.
+// The key name is calculated as
+// HKEY_LOCAL_MACHINE\Software\Classes\protocol\DefaultIcon.
+// The setting is this executable (with appropriate suffix).
+struct ProtocolIconRegistryEntry : public SavedRegistryEntry {
+    nsCString protocol;
+    ProtocolIconRegistryEntry( const char* aprotocol )
+        : SavedRegistryEntry( HKEY_LOCAL_MACHINE, "", "", thisApplication().get() ),
+          protocol( aprotocol ) {
+        keyName = NS_LITERAL_CSTRING("Software\\Classes\\") + protocol + NS_LITERAL_CSTRING("\\DefaultIcon");
+
+        // Append appropriate suffix to setting.
+        setting += iconSuffix;
+    }
+};
+
 // DDERegistryEntry
 //
 // Like a protocol registry entry, but for the shell\open\ddeexec subkey.
@@ -184,7 +203,7 @@ struct ProtocolRegistryEntry : public SavedRegistryEntry {
 //
 // We don't try to save everything, though.  We do save the known useful info
 // under the ddeexec subkey:
-//     ddexec\@
+//     ddeexec\@
 //     ddeexec\NoActivateHandler
 //     ddeexec\Application\@
 //     ddeexec\Topic\@
@@ -306,7 +325,7 @@ else printf( "Setting %s=%s\n", fullName().get(), setting.get() );
             DWORD len = sizeof buffer;
             rc = ::RegQueryValueEx( key, valueNameArg(), NULL, NULL, (LPBYTE)buffer, &len );
             if ( rc != ERROR_SUCCESS || strcmp( setting.get(), buffer ) != 0 ) {
-                rc = ::RegSetValueEx( key, valueNameArg(), NULL, REG_SZ, (LPBYTE)setting.get(), setting.Length() );
+                rc = ::RegSetValueEx( key, valueNameArg(), 0, REG_SZ, (LPBYTE)setting.get(), setting.Length() );
 #ifdef DEBUG_law
 NS_WARN_IF_FALSE( rc == ERROR_SUCCESS, fullName().get() );
 #endif
@@ -458,6 +477,8 @@ nsresult ProtocolRegistryEntry::set() {
 
     // Save and set corresponding DDE entry(ies).
     DDERegistryEntry( protocol.get() ).set();
+    // Set icon.
+    ProtocolIconRegistryEntry( protocol.get() ).set();
 
     return rv;
 }
@@ -553,6 +574,8 @@ nsresult ProtocolRegistryEntry::reset() {
 
     // Do same for corresponding DDE entry.
     DDERegistryEntry( protocol.get() ).reset();
+    // Reset icon.
+    ProtocolIconRegistryEntry( protocol.get() ).reset();
 
     // For http:, on WindowsXP, we need to do some extra cleanup.
     if ( protocol == NS_LITERAL_CSTRING( "http" ) ) {
