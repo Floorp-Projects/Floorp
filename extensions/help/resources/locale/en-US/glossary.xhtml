@@ -31,10 +31,10 @@
   authentication</a>, <a href="#server_authentication">server
   authentication</a>.</dd>
   
-<dt id="bookmark">bookmark</dt><dd>A stored web page address 
-  (<a href="#uniform_resource_locator">URL</a>) that you can go to easily by
-  clicking a bookmark icon in the Personal Toolbar or choosing the bookmark&apos;s
-  name from the Bookmarks menu.</dd>
+<dt id="bookmark">bookmark</dt><dd>A stored <a href="#web_page">web page</a>
+  address (<a href="#url">URL</a>) that you can go to easily by clicking a
+  bookmark icon in the <a href="personal_toolbar">Personal Toolbar</a> or
+  choosing the bookmark&apos;s name from the Bookmarks menu.</dd>
   
 <dt id="ca">CA</dt><dd>See <a href="#certificate_authority">certificate
   authority (CA)</a></dd>
@@ -48,24 +48,23 @@
 <dt id="cache">cache</dt><dd>A collection of web page copies stored
   on your computer&apos;s hard disk or in its random-access memory (RAM). The
   browser accumulates these copies as you browse the Web. When you click a link
-  or type a <a href="#uniform_resource_locator">URL</a> to fetch a particular
-  web page for which the cache already contains a copy, the browser compares
-  the cached copy to the original. If there have been no changes, the browser
-  uses the cached copy rather than refetching the original, saving processing
-  and download time.</dd>
+  or type a <a href="#url">URL</a> to fetch a particular web page for which the
+  cache already contains a copy, the browser compares the cached copy to the
+  original. If there have been no changes, the browser uses the cached copy
+  rather than refetching the original, saving processing and download
+  time.</dd>
   
-<dt id="certificate">certificate</dt><dd>The digital
-  equivalent of an ID card. A certificate specifies the name of an individual,
-  company, or other entity and certifies that a public key, which is included
-  in the certificate, belongs to that entity. When you digitally sign a message
-  or other data, the digital signature for that message is created with the aid
-  of the private key that corresponds to the public key in your certificate. A
-  certificate is issued and digitally signed by a
-<a href="#certificate_authority">certificate
-  authority (CA)</a>. A certificate&apos;s validity can be verified by checking the
-  CA&apos;s <a href="#digital_signature">digital signature</a>. Also called digital
-  ID, digital passport, public-key certificate, X.509 certificate, and security
-  certificate. See also <a href="#public-key_cryptography">public-key
+<dt id="certificate">certificate</dt><dd>The digital equivalent of an ID card.
+  A certificate specifies the name of an individual, company, or other entity
+  and certifies that a public key, which is included in the certificate,
+  belongs to that entity. When you digitally sign a message or other data, the
+  digital signature for that message is created with the aid of the private key
+  that corresponds to the public key in your certificate. A certificate is
+  issued and digitally signed by a <a href="#certificate_authority">certificate
+  authority (CA)</a>. A certificate&apos;s validity can be verified by checking
+  the CA&apos;s <a href="#digital_signature">digital signature</a>. Also called
+  digital ID, digital passport, public-key certificate, X.509 certificate, and
+  security certificate. See also <a href="#public-key_cryptography">public-key
   cryptography</a>.</dd>
   
 <dt id="certificate_authority">certificate authority (CA)</dt><dd>A service
@@ -75,8 +74,7 @@
   intervals. CAs can be independent vendors or a person or organization using
   certificate-issuing server software (such as &brandShortName; Certificate
   Management System). See also <a href="#certificate">certificate</a>,
-  <a href="#certificate_revocation_list">certificate revocation list
-  (CRL)</a>.</dd>
+  <a href="#crl">CRL (certificate revocation list)</a>.</dd>
   
 <dt id="certificate_backup_password">certificate backup password</dt><dd>A
   password that protects a certificate that you are backing up or have
@@ -116,9 +114,9 @@
   renewing a <a href="#certificate">certificate</a> that is about to
   expire.</dd>
   
-<dt id="certificate_revocation_list">certificate revocation list
-  (CRL)</dt><dd>A list of revoked certificates that is generated and signed by
-  a <a href="#certificate_authority">certificate authority (CA)</a>. You can
+<dt id="crl">CRL (certificate revocation list)</dt><dd>A list of revoked
+  certificates that is generated and signed by a
+  <a href="#certificate_authority">certificate authority (CA)</a>. You can
   download the latest CRL to your browser or to a server, then check against it
   to make sure that certificates are still valid before permitting their use
   for authentication.</dd>
@@ -129,45 +127,45 @@
   own CA certificate is both on file with Certificate Manager and marked as
   trusted for issuing that kind of certificate. It also confirms that the
   certificate being verified has not itself been marked as untrusted. Finally,
-  if the <a href="#online_certificate_status_protocol">Online Certificate
-  Status Protocol (OCSP)</a> has been activated, Certificate Manager also
-  performs an online check. It does so by looking up the certificate in a list
-  of valid certificates maintained at a URL that is specified either in the
-  certificate itself or in the browser&apos;s Validation preferences. If any of
-  these checks fail, Certificate Manager marks the certificate as unverified
-  and won&apos;t recognize the identity it certifies.</dd>
+  if the <a href="#ocsp">OCSP (Online Certificate Status Protocol)</a> has been
+  activated, Certificate Manager also performs an online check. It does so by
+  looking up the certificate in a list of valid certificates maintained at a
+  <a href="#url">URL</a> that is specified either in the certificate itself or
+  in the browser&apos;s Validation preferences. If any of these checks fail,
+  Certificate Manager marks the certificate as unverified and won&apos;t
+  recognize the identity it certifies.</dd>
   
-<dt id="cipher">cipher</dt><dd>
-  See <a href="#cryptographic_algorithm">cryptographic algorithm</a>.</dd>
+<dt id="cipher">cipher</dt><dd>See
+  <a href="#cryptographic_algorithm">cryptographic algorithm</a>.</dd>
   
-<dt id="client">client</dt><dd>
-  Software (such as browser software) that sends requests to and receives
-  information from a <a href="#server">server</a>, which is usually running on
-  a different computer. A computer on which client software runs is also
-  described as a client.</dd>
+<dt id="client">client</dt><dd>Software (such as browser software) that sends
+  requests to and receives information from a <a href="#server">server</a>,
+  which is usually running on a different computer. A computer on which client
+  software runs is also described as a client.</dd>
+  
 <dt id="client_authentication">client authentication</dt><dd>The process of
   identifying a <a href="#client">client</a> to a <a href="#server">server</a>,
   for example with a name and password or with a
   <a href="#client_ssl_certificate">client SSL certificate</a> and some
-  digitally signed data. See also <a href="#secure_sockets_layer">Secure
-  Sockets Layer (SSL)</a>, <a href="#server_authentication">server
+  digitally signed data. See also <a href="#ssl">SSL (Secure
+  Sockets Layer)</a>, <a href="#server_authentication">server
   authentication</a>.</dd>
   
 <dt id="client_ssl_certificate">client SSL certificate</dt><dd> A certificate
   that a <a href="#client">client</a> (such as browser software) presents to a
   <a href="#server">server</a> to authenticate the identity of the client
   (or the identity of the person using the client) using the
-  <a href="#secure_sockets_layer">Secure Sockets Layer (SSL)</a> protocol. See
+  <a href="#ssl">SSL (Secure Sockets Layer)</a> protocol. See
   also <a href="#client_authentication">client authentication</a>.</dd>
   
-<dt id="component_bar">Component Bar</dt><dd>The toolbar located
-  at the bottom left of any &brandShortName; window. The Component Bar allows
-  you to switch between &brandShortName; components by clicking icons for
-  Navigator, Mail &amp; Newsgroups, Instant Messenger, and so on.</dd>
+<dt id="component_bar">Component Bar</dt><dd>The toolbar located at the bottom
+  left of any &brandShortName; window. The Component Bar allows you to switch
+  between &brandShortName; components by clicking icons for Navigator,
+  Mail &amp; Newsgroups, Composer, and so on.</dd>
   
-<dt id="cookie">cookie</dt><dd>A small bit of information stored
-  on your computer by some websites. When you visit such a site, the site asks
-  your browser to place one or more cookies on your hard disk. Later, when you
+<dt id="cookie">cookie</dt><dd>A small bit of information stored on your
+  computer by some <a href="#web_site">websites</a>. When you visit such a site, the site asks your
+  browser to place one or more cookies on your hard disk. Later, when you
   return to the site, your browser sends the site the cookies that belong to
   it. Cookies help websites keep track of information about you, such as the
   contents of your shopping cart. You can set your cookie preferences to
@@ -184,33 +182,33 @@
   <a href="#decryption">decryption</a>. Sometimes called a
   <em>cipher.</em></dd>
   
-<dt id="cryptography">cryptography</dt><dd>
-  The art and practice of scrambling (encrypting) and unscrambling (decrypting)
-  information. For example, cryptographic techniques are used to scramble an
-  unscramble information flowing between commercial websites and your browser.
-  See also <a href="#public-key_cryptography">public-key cryptography</a>.</dd>
+<dt id="cryptography">cryptography</dt><dd>The art and practice of scrambling
+  (encrypting) and unscrambling (decrypting) information. For example,
+  cryptographic techniques are used to scramble an unscramble information
+  flowing between commercial websites and your browser. See also
+  <a href="#public-key_cryptography">public-key cryptography</a>.</dd>
   
-<dt id="decryption">decryption</dt><dd>
-  The process of unscrambling data that has been encrypted. See also
-  <a href="#encryption">encryption</a>.</dd>
+<dt id="decryption">decryption</dt><dd> The process of unscrambling data that
+  has been encrypted. See also <a href="#encryption">encryption</a>.</dd>
 
 <dt id="digital_id">digital ID</dt><dd>
    See <a href="#certificate">certificate</a>.</dd>
    
-<dt id="digital_signature">
-  digital signature</dt><dd>A code created from both the data to be
-  signed and the private key of the signer. This code is unique for each new
-  piece of data. Even a single comma added to a message changes the digital
-  signature for that message. Successful validation of your digital signature
-  by appropriate software not only provides evidence that you approved the
-  transaction or message, but also provides evidence that the data has not
-  changed since you digitally signed it. A digital signature has nothing to do
-  with a handwritten signature, although it can sometimes be used for similar
-  legal purposes. See also <a href="#nonrepudiation">nonrepudiation</a>,
+<dt id="digital_signature">digital signature</dt><dd>A code created from both
+  the data to be signed and the private key of the signer. This code is unique
+  for each new piece of data. Even a single comma added to a message changes
+  the digital signature for that message. Successful validation of your digital
+  signature by appropriate software not only provides evidence that you
+  approved the transaction or message, but also provides evidence that the data
+  has not changed since you digitally signed it. A digital signature has
+  nothing to do with a handwritten signature, although it can sometimes be used
+  for similar legal purposes. See also
+  <a href="#nonrepudiation">nonrepudiation</a>,
   <a href="#tamper_detection">tamper detection</a>.</dd>
   
 <dt id="distinguished_name">distinguished name (DN)</dt><dd>A specially
-  formatted name that uniquely identifies the subject of a certificate.</dd>
+  formatted name that uniquely identifies the subject of a
+  <a href="#certificate">certificate</a>.</dd>
   
 <dt id="dual_key_pairs">dual key pairs</dt><dd>Two public-private key
   pairs&mdash;four keys altogether&mdash;corresponding to two separate
@@ -220,46 +218,31 @@
   <a href="#certificate">certificate</a>. See also
   <a href="#public-key_cryptography">public-key cryptography</a>.</dd>
   
-<dt id="eavesdropping">eavesdropping</dt><dd>
-  Surreptitious interception of information sent over a network by an entity
-  for which the information is not intended.</dd>
+<dt id="eavesdropping">eavesdropping</dt><dd>Surreptitious interception of
+  information sent over a network by an entity for which the information is not
+  intended.</dd>
   
-<dt id="encryption">encryption</dt><dd>
-  The process of scrambling information in a way that disguises its meaning.
-  For example, encrypted connections between computers make it very difficult
-  for third-parties to unscramble, or <em>decrypt,</em> information flowing
-  over the connection. Encrypted information can be decrypted only by someone
-  who possesses the appropriate key. See also
-  <a href="#public-key_cryptography">public-key cryptography</a>.</dd>
+<dt id="encryption">encryption</dt><dd>The process of scrambling information in
+  a way that disguises its meaning. For example, encrypted connections between
+  computers make it very difficult for third-parties to unscramble, or
+  <em>decrypt,</em> information flowing over the connection. Encrypted
+  information can be decrypted only by someone who possesses the appropriate
+  key. See also <a href="#public-key_cryptography">public-key
+  cryptography</a>.</dd>
   
-<dt id="encryption_certificate">encryption certificate</dt><dd>
-  A <a href="#certificate">certificate</a> whose public key is used for
+<dt id="encryption_certificate">encryption certificate</dt><dd>A
+  <a href="#certificate">certificate</a> whose public key is used for
   encryption only. Encryption certificates are not used for signing operations.
   See also <a href="#dual_key_pairs">dual key pairs</a>,
   <a href="#signing_certificate">signing certificate</a>.</dd>
   
-<dt id="encryption_key">encryption
-  key</dt><dd> A private key used for encryption only. An encryption key
-  and its equivalent private key, plus a <a href="#signing_key">signing
-  key</a> and its equivalent public key, constitute a
-  <a href="#dual_key_pairs">dual key pairs</a>.</dd>
+<dt id="encryption_key">encryption key</dt><dd> A private key used for
+  encryption only. An encryption key and its equivalent private key, plus a
+  <a href="#signing_key">signing key</a> and its equivalent public key,
+  constitute a <a href="#dual_key_pairs">dual key pairs</a>.</dd>
   
-<dt id="extensible_stylesheet_language_transformation">Extensible Stylesheet
-  Language Transformation (XSLT)</dt><dd> A language used to convert an XML
-  document into another XML document or into some other format.</dd>
-  
-<dt id="extensible_markup_language">Extensible Markup Language
-  (XML)</dt><dd>An open standard for describing data. Unlike HTML, XML allows
-  the developer of a web page to define special tags. For more information, see
-  the online W3C document <a href="http://www.w3.org/xml/">Extensible Markup
-  Language (XML)</a>.</dd>
-  
-<dt id="file_transfer_protocol">File Transfer Protocol (FTP)</dt><dd>A
-  standard that allows users to transfer files from one computer to another
-  over a network. You can use your browser to fetch files using FTP.</dd>
-  
-<dt id="fingerprint">fingerprint</dt><dd>
-  See <a href="#certificate_fingerprint">certificate fingerprint</a>.</dd>
+<dt id="fingerprint">fingerprint</dt><dd>See
+  <a href="#certificate_fingerprint">certificate fingerprint</a>.</dd>
   
 <dt id="fips_pubs_140-1">FIPS PUBS 140-1</dt><dd>Federal Information Processing
   Standards Publications (FIPS PUBS) 140-1 is a US government standard for
@@ -268,24 +251,32 @@
   (such as creating or verifying digital signatures). Many products sold to the
   US government must comply with one or more of the FIPS standards.</dd>
   
-<dt id="foreign_cookie">foreign cookie</dt><dd>A cookie from one
-  site that gets stored on your computer when you visit a different site.
-  Sometimes a website displays content that is hosted on another website.
-  That content can be anything from an image to text or an advertisement. The
-  second website that hosts such elements also has the ability to store a
-  cookie in your browser, even though you don&apos;t visit it directly. Also known
-  as <q>third-party cookie</q>.</dd>
+<dt id="foreign_cookie">foreign cookie</dt><dd>A <a href="#cookie">cookie</a>
+  from one site that gets stored on your computer when you visit a different
+  site. Sometimes a <a href="#web_site">website</a> displays content that is
+  hosted on another website.That content can be anything from an image to text
+  or an advertisement. The second website that hosts such elements also has the
+  ability to store a cookie in your browser, even though you don&apos;t visit
+  it directly. Also known as <q>third-party cookie</q>.</dd>
   
-<dt id="form_manager">Form Manager</dt><dd>The part of the browser
-  that can help you save the personal data you enter into online forms, such as
-  your name, address, phone, and so on. Then, when a website presents you with
-  a form, Form Manager can fill it in automatically.</dd>
+<dt id="form_manager">Form Manager</dt><dd>The part of the browser that can
+  help you save the personal data you enter into online forms, such as your
+  name, address, phone, and so on. Then, when a website presents you with a
+  form, Form Manager can fill it in automatically.</dd>
   
-<dt id="frame">Frame</dt><dd>Frames are Web pages contained inside of
-  an all-encompasssing <q>meta</q> page.</dd>
+<dt id="frame">frame</dt><dd>Frames are <a href="#web_page">web pages</a>
+  contained inside of an all-encompasssing <q>meta</q> page.</dd>
   
-<dt id="helper_application">helper application</dt><dd>Any application
-  that is used to open or view a file downloaded by the browser. A
+<dt id="ftp">FTP (File Transfer Protocol)</dt><dd>A
+  standard that allows users to transfer files from one computer to another
+  over a network. You can use your browser to fetch files using FTP.</dd>
+
+<dt id="gopher">Gopher</dt><dd>A protocol used to search and retrieve
+  information on Internet <a href="#server">servers</a>, common before the
+  emergence of the <a href="#world_wide_web">World Wide Web</a>.</dd>
+  
+<dt id="helper_application">helper application</dt><dd>Any application that is
+  used to open or view a file downloaded by the browser. A
   <a href="#plug-in">plug-in</a> is a special kind of helper application that
   installs itself into the Plugins directory of the main browser installation
   directory and can typically be opened within the browser itself (internally).
@@ -294,50 +285,65 @@
   themselves into the browser directory, but can be opened from the download
   dialog box.</dd>
   
-<dt id="home_page">home page</dt><dd>The page your browser is set
-  to display every time you launch it or when you click the Home button. Also
-  used to refer to the main page for a website, from which you can explore the
-  rest of the site.</dd>
+<dt id="home_page">home page</dt><dd>The page your browser is set to display
+  every time you launch it or when you click the Home button. Also used to
+  refer to the main page for a website, from which you can explore the rest of
+  the site.</dd>
   
-<dt id="hypertext_markup_language">Hypertext Markup Language
-  (HTML)</dt><dd>The document format used for Web pages. The HTML standard
-  defines tags, or codes, used to define the text layout, fonts, style, images,
-  and other elements that make up a web page.</dd>
-  
-<dt id="implicit_consent">implicit consent</dt><dd>Also known as
-  implied or <q>opt-out</q> consent. Used to describe privacy settings
-  that may allow websites to gather information about you (for example by
-  means of <a href="#cookie">cookies</a> and online forms) unless you
-  explicitly choose to withhold your consent by selecting an option on a page
-  that the website provides for that purpose. Your consent may not be
-  requested when the information is actually gathered.</dd>
-  
-<dt id="internet_message_access_protocol">Internet Message Access Protocol
-  (IMAP)</dt><dd>A standard mail server protocol that allows you to store all
-  your messages and any changes to them on the server rather than on your
-  computer&apos;s hard disk. Using IMAP rather than
-  <a href="#post_office_protocol">POP</a> saves disk space and allows you to
-  access your entire mailbox, including sent mail, drafts, and custom folders,
-  from any location. Using an IMAP server over a modem is generally faster than
+<dt id="html">HTML (HyperText Markup Language)</dt><dd>The document format used
+  for web pages. The HTML standard defines tags, or codes, used to define the
+  text layout, fonts, style, images, and other elements that make up a web
+  page.</dd>
+
+<dt id="http">HTTP (HyperText Transfer Protocol)</dt><dd>The protocol used to
+  transfer <a href="#web_page">web pages</a> (HyperText documents) between
+  browsers and <a href="#server">servers</a> over the
+  <a href="#world_wide_web">World Wide Web</a>.</dd>
+
+<dt id="https">HTTPS (HyperText Transfer Protocol
+  Secure)</dt><dd>The secure version of the HTTP protocol that uses
+  <a href="#ssl">SSL</a> to ensure the privacy of customer
+  data (such as credit card information) while en route over the
+  <a href="#internet">Internet</a>.</dd>
+
+<dt id="imap">IMAP (Internet Message Access Protocol)</dt><dd>A standard mail
+  server protocol that allows you to store all your messages and any changes to
+  them on the server rather than on your computer&apos;s hard disk. Using IMAP
+  rather than <a href="#pop">POP</a> saves disk space and allows you to access
+  your entire mailbox, including sent mail, drafts, and custom folders, from
+  any location. Using an IMAP server over a modem is generally faster than
   using a POP mail server, since you initially download message headers only.
-  Not all ISPs support IMAP.</dd>
+  Not all <a href="#isp">ISPs</a> support IMAP.</dd>
   
-<dt id="internet">Internet</dt><dd>A worldwide network of millions
-  of computers that communicate with each other using standard protocols such
-  as <a href="#transmission_control_protocol_internet_protocol">TCP/IP</a>.
-  Originally developed for the US military in 1969, the Internet grew to
-  include educational and research institutions and, in the late 1990s,
-  millions of businesses, organizations, and individuals. Today the Internet is
-  used for email, browsing the <a href="#world_wide_web">World Wide Web</a>,
-  instant messaging, usegroups, and many other purposes.</dd>
+<dt id="implicit_consent">implicit consent</dt><dd>Also known as implied or
+  <q>opt-out</q> consent. Used to describe privacy settings that may allow
+  websites to gather information about you (for example by means of
+  <a href="#cookie">cookies</a> and online forms) unless you explicitly choose
+  to withhold your consent by selecting an option on a page that the website
+  provides for that purpose. Your consent may not be requested when the
+  information is actually gathered.</dd>
+
+<dt id="internet">Internet</dt><dd>A worldwide network of millions of computers
+  that communicate with each other using standard protocols such as
+  <a href="#tcp_ip">TCP/IP</a>. Originally developed for the US military in
+  1969, the Internet grew to include educational and research institutions and,
+  in the late 1990s, millions of businesses, organizations, and individuals.
+  Today the Internet is used for email, browsing the
+  <a href="#world_wide_web">World Wide Web (WWW)</a>, instant messaging,
+  usegroups, and many other purposes.</dd>
   
-<dt id="internet_protocol_address">Internet protocol
-  address (IP address)</dt><dd>The address of a computer on a
-  <a href="#transmission_control_protocol_internet_protocol">TCP/IP</a>
-  network. Every computer on the Internet has an IP address.
+<dt id="ip_address">IP address (Internet protocol address)</dt><dd>The address
+  of a computer on a <a href="#tcp_ip">TCP/IP</a> network. Every computer on
+  the <a href="#internet">Internet</a> has an IP address.
   <a href="#client">Clients</a> have either a permanent IP address or one that
   is dynamically assigned to them each time they connect with the network. IP
   addresses are written as four sets of numbers, like this: 204.171.64.2.</dd>
+  
+<dt id="irc">IRC (Internet Relay Chat)</dt><dd>A protocol used to chat with
+  other people in real-time using an IRC <a href="#client">client</a>.</dd>
+  
+<dt id="isp">ISP (Internet Service Provider)</dt><dd>A company/institution
+  that provides <a href="#internet">Internet</a> connections.</dd>
   
 <dt id="java">Java</dt><dd>A programming language developed by Sun
   Microsystems. A single Java program can run on many different kinds of
@@ -345,37 +351,36 @@
   version of each program for each kind of computer. Your browser can
   automatically download and run Java programs (also called applets).</dd>
   
-<dt id="javascript">JavaScript</dt><dd>A scripting language commonly
-  used to construct web pages. Programmers use JavaScript to make web pages
-  more interactive; for example, to display forms and buttons. JavaScript can
-  be used with Java, but is technically a separate language. Java is not
-  required for JavaScript to work correctly.</dd>
+<dt id="javascript">JavaScript</dt><dd>A scripting language commonly used to
+  construct <a href="#web_page">web pages</a>. Programmers use JavaScript to
+  make web pages more interactive; for example, to display forms and buttons.
+  JavaScript can be used with <a href="#java">Java</a>, but is technically a
+  separate language. Java is not required for JavaScript to work
+  correctly.</dd>
   
-<dt id="key">key</dt><dd>A large
-  number used by a <a href="#cryptographic_algorithm">cryptographic
-  algorithm</a> to encrypt or decrypt data. A person&apos;s public key, for example,
-  allows other people to encrypt messages to that person. The encrypted
-  messages must be decrypted with the corresponding private key. See also
+<dt id="key">key</dt><dd>A large number used by a
+  <a href="#cryptographic_algorithm">cryptographic algorithm</a> to encrypt or
+  decrypt data. A person&apos;s public key, for example, allows other people to
+  encrypt messages to that person. The encrypted messages must be decrypted
+  with the corresponding private key. See also
   <a href="#public-key_cryptography">public-key cryptography</a>.</dd>
   
-<dt id="lightweight_directory_access_protocol">Lightweight Directory Access
-  Protocol (LDAP)</dt><dd>A standard protocol for accessing directory
-  services, such as corporate address books, across multiple platforms. You can
-  set up your browser to access LDAP directories from the Address Book. You can
-  also set up Mail &amp; Newsgroups to use an LDAP directory for email address
-  autocompletion.</dd>
+<dt id="ldap">LDAP (Lightweight Directory Access Protocol)</dt><dd>A standard
+  protocol for accessing directory services, such as corporate address books,
+  across multiple platforms. You can set up your browser to access LDAP
+  directories from the Address Book. You can also set up Mail &amp; Newsgroups
+  to use an LDAP directory for email address autocompletion.</dd>
   
-<dt id="location_bar">Location Bar</dt><dd>The field (and associated
-  buttons) near the top of a Navigator window where you can type a
-  <a href="#uniform_resource_locator">URL</a> or search terms.</dd>
+<dt id="location_bar">Location Bar</dt><dd>The field (and associated buttons)
+  near the top of a Navigator window where you can type a
+  <a href="#url">URL</a> or search terms.</dd>
   
-<dt id="master_key">master key</dt><dd>
-
-  A symmetric key used by Certificate Manager to encrypt information. For
-  example, Password Manager uses Certificate Manager and your master key to
-  encrypt email passwords, website passwords, and other stored sensitive
-  information. See also <a href="#symmetric_encryption">symmetric
-  encryption</a>.</dd>
+<dt id="master_key">master key</dt><dd>A symmetric key used by
+  <a href="#certificate_manager">Certificate Manager</a> to encrypt
+  information. For example, <a href="password_manager">Password Manager</a>
+  uses Certificate Manager and your master key to encrypt email passwords,
+  website passwords, and other stored sensitive information. See also
+  <a href="#symmetric_encryption">symmetric encryption</a>.</dd>
   
 <dt id="master_password">master password</dt><dd>A password used by
   Certificate Manager to protect the master key and/or private keys stored on a
@@ -394,13 +399,12 @@
   credit card payments but never sends any goods. See also
   <a href="#spoofing">spoofing</a>.</dd>
   
-<dt id="navigation_toolbar">Navigation Toolbar</dt><dd>The toolbar
-  near the top of the browser window that includes the Back and
-  Forward buttons.</dd>
+<dt id="navigation_toolbar">Navigation Toolbar</dt><dd>The toolbar near the top
+  of the browser window that includes the Back and Forward buttons.</dd>
   
-<dt id="nonrepudiation">nonrepudiation</dt><dd>
-  The inability, of the sender of a message, to deny having sent the message. A
-  regular hand-written signature provides one form of nonrepudiation. A
+<dt id="nonrepudiation">nonrepudiation</dt><dd>The inability, of the sender of
+  a message, to deny having sent the message. A regular hand-written signature
+  provides one form of nonrepudiation. A
   <a href="#digital_signature">digital signature</a> provides another.</dd>
   
 <dt id="object_signing">object signing</dt><dd>A technology that allows
@@ -408,65 +412,57 @@
   file, and that allows users to identify the signers and control access by
   signed code to local system resources.</dd>
   
-<dt id="object-signing_certificate">
-  object-signing certificate</dt><dd>A certificate whose corresponding
-  private key is used to sign objects such as code files. See also
-<a href="#object_signing">object
-  signing</a>.</dd>
+<dt id="object-signing_certificate"> object-signing certificate</dt><dd>A
+  certificate whose corresponding private key is used to sign objects such as
+  code files. See also <a href="#object_signing">object signing</a>.</dd>
   
-<dt id="online_certificate_status_protocol">
-  Online Certificate Status Protocol (OCSP)</dt><dd>A set of rules
-  that Certificate Manager follows to perform an online check of a
-  certificate&apos;s validity each time the certificate is used. This process
-  involves checking the certificate against a list of valid certificates
-  maintained at a specified website. Your computer must be online for OCSP to
-  work.</dd>
+<dt id="ocsp">OCSP (Online Certificate Status Protocol)</dt><dd>A set of rules
+  that <a href="#certificate_manager">Certificate Manager</a> follows to
+  perform an online check of a certificate&apos;s validity each time the
+  certificate is used. This process involves checking the certificate against a
+  list of valid certificates maintained at a specified website. Your computer
+  must be online for OCSP to work.</dd>
   
-<dt id="p3p">
-  P3P</dt><dd>See <a href="#platform_for_privacy_preferences">Platform for
-  Privacy Preferences (P3P)</a>.</dd>
+<dt id="p3p">P3P (Platform for Privacy Preferences)</dt><dd>A standard
+  published by the World Wide Web Consortium (W3C) designed to help users to
+  gain more control over the use of personal information by websites they
+  visit. For general information on the standard itself, see the online
+  document <a href="http://www.w3.org/P3P/">P3P Public Overview</a>.</dd>
   
-<dt id="password-based_authentication">
-  password-based authentication</dt><dd>Confident identification by
-  means of a name and password. See also
-  <a href="#authentication">authentication</a>.</dd>
+<dt id="password-based_authentication">password-based
+  authentication</dt><dd>Confident identification by means of a name and
+  password. See also <a href="#authentication">authentication</a>.</dd>
   
 <dt id="password_manager">Password Manager</dt><dd>The part of the
   browser that can help you remember some or all of your names and passwords by
   storing them on your computer&apos;s hard disk, and entering them for you
   automatically when you visit such sites.</dd>
   
-<dt id="personal_toolbar">Personal Toolbar</dt><dd>The customizable
-  toolbar that appears just below the location bar by default in Navigator . It
-  contains standard buttons such as Home, Search, Bookmarks, and so on that you
-  can add or remove. You can also add buttons for your favorite bookmarks, or
-  folders containing groups of bookmarks.</dd>
+<dt id="personal_toolbar">Personal Toolbar</dt><dd>The customizable toolbar
+  that appears just below the location bar by default in Navigator. It contains
+  standard buttons such as Home, Search, Bookmarks, and so on that you can add
+  or remove. You can also add buttons for your favorite bookmarks, or folders
+  containing groups of bookmarks.</dd>
   
-<dt id="pkcs_11">PKCS #11</dt><dd>
-  The public-key cryptography standard that governs security devices such
-  as smart cards. See also <a href="#security_device">security device</a>,
-  <a href="#smart_card">smart card</a>.</dd>
+<dt id="pkcs_11">PKCS #11</dt><dd>The public-key cryptography standard that
+  governs security devices such as smart cards. See also
+  <a href="#security_device">security device</a>, <a href="#smart_card">smart
+  card</a>.</dd>
   
-<dt id="pkcs_11_module">PKCS
-  #11 module</dt><dd>A program on your computer that manages cryptographic
-  services such as encryption and decryption using the PKCS #11 standard. Also
-  called <em>cryptographic modules</em>, <em>cryptographic service
-  providers,</em> or <em>security modules</em>, PKCS #11 modules control either
-  hardware or software devices. A PKCS #11 module always controls one or more
-  slots, which may be implemented as some form of physical reader (for example,
-  for reading smart cards) or in software. Each slot for a PKCS #11 module can
-  in turn contain a <a href="#security_device">security device</a> (also called
-  <em>token</em>), which is the hardware or software device that provides
-  cryptographic services and stores certificates and keys. Certificate Manager
-  provides two built-in PKCS #11 modules. You may install additional modules on
-  your computer to control smart card readers or other hardware devices.</dd>
-  
-<dt id="platform_for_privacy_preferences">Platform for Privacy Preferences
-  (P3P)</dt><dd>A standard published by the World Wide Web Consortium (W3C)
-  designed to help users to gain more control over the use of personal
-  information by Websites they visit. For general information on the standard
-  itself, see the online document <a href="http://www.w3.org/P3P/">P3P Public
-  Overview</a>.</dd>
+<dt id="pkcs_11_module">PKCS #11 module</dt><dd>A program on your computer
+  that manages cryptographic services such as encryption and decryption using
+  the PKCS #11 standard. Also called <em>cryptographic modules</em>,
+  <em>cryptographic service providers,</em> or <em>security modules</em>,
+  PKCS #11 modules control either hardware or software devices. A PKCS #11
+  module always controls one or more slots, which may be implemented as some
+  form of physical reader (for example, for reading smart cards) or in
+  software. Each slot for a PKCS #11 module can in turn contain a
+  <a href="#security_device">security device</a> (also called <em>token</em>),
+  which is the hardware or software device that provides cryptographic services
+  and stores certificates and keys. <a href="certificate_manager">Certificate
+  Manager</a> provides two built-in PKCS #11 modules. You may install
+  additional modules on your computer to control smart card readers or other
+  hardware devices.</dd>
   
 <dt id="plug-in">plug-in</dt><dd>A type of
   <a href="#helper_application">helper application</a> that adds new
@@ -475,26 +471,25 @@
   installs itself into the Plugins directory within the main browser
   installation directory and typically can be opened within the browser itself
   (internally). For example, an audio plug-in lets you listen to audio files on
-  a web page or in an e-mail message. Macromedia Flash Player and Java are both
-  examples of plug-in applications.</dd>
+  a <a href="#web_page">web page</a> or in an e-mail message. Macromedia Flash
+  Player and Java are both examples of plug-in applications.</dd>
   
-<dt id="post_office_protocol">Post Office Protocol (POP)</dt><dd>A standard
-  mail server protocol that requires you to download new messages to your local
+<dt id="pop">POP (Post Office Protocol)</dt><dd>A standard mail server protocol
+  that requires you to download new messages to your local
   computer&mdash;although you can choose to leave copies on the server. With
   POP, you can store all your messages, including sent mail, drafts, and custom
   folders, on one computer only. By contrast,
-  <a href="#internet_message_access_protocol">IMAP</a> allows you to
-  permanently store all your messages and any changes to them on the server,
-  where you can access them from any computer. Most ISPs currently support
-  POP.</dd>
+  <a href="#imap">IMAP</a> allows you to permanently store all your messages
+  and any changes to them on the server, where you can access them from any
+  computer. Most <a href="#isp">ISPs</a> currently support POP.</dd>
   
-<dt id="private_key">private key</dt><dd>
-  One of a pair of <a href="#key">keys</a> used in public-key cryptography.
-  The private key is kept secret and is used to decrypt data that has been
-  encrypted with the corresponding public key.</dd>
+<dt id="private_key">private key</dt><dd>One of a pair of
+  <a href="#key">keys</a> used in public-key cryptography. The private key is
+  kept secret and is used to decrypt data that has been encrypted with the
+  corresponding public key.</dd>
   
-<dt id="proxy">proxy</dt><dd>An intermediary or <q>go-between</q>
-  program that acts as both a <a href="#server">server</a> and a
+<dt id="proxy">proxy</dt><dd>An intermediary or <q>go-between</q> program that
+  acts as both a <a href="#server">server</a> and a
   <a href="#client">client</a> for the purpose of making requests on behalf of
   other clients.</dd>
   
@@ -516,44 +511,35 @@
   encrypted with the public key can be decrypted only with the private key.
   </dd>
   
-<dt id="public-key_infrastructure">public-key infrastructure (PKI)</dt><dd>The
-  standards and services that facilitate the use of public-key cryptography and
-  certificates in a networked environment.</dd>
+<dt id="pki">PKI (public-key infrastructure)</dt><dd>The standards and services
+  that facilitate the use of public-key cryptography and certificates in a
+  networked environment.</dd>
   
 <dt id="roaming_profile">roaming profile</dt><dd>A user profile (or parts of
-  it) stored on a remote server and used for sharing the same settings and data
-  across multiple computers.</dd>
+  it) stored on a remote <a href="#server">server</a> and used for sharing the
+  same settings and data across multiple computers.</dd>
 
-<dt id="root_ca">root CA</dt><dd>
-  The <a href="#certificate_authority">certificate authority (CA)</a> with
-  a self-signed certificate at the top of a
+<dt id="root_ca">root CA</dt><dd>The
+  <a href="#certificate_authority">certificate authority (CA)</a> with a
+  self-signed certificate at the top of a
   <a href="#certificate_chain">certificate chain</a>. See also
   <a href="#subordinate_ca">subordinate CA</a>.</dd>
   
-<dt id="search_engine">search engine</dt><dd>A web-based program
-  that allows users to search for and retrieve specific information from the
-  World Wide Web. The search engine may search the full text of web documents
-  or a list of keywords, or use librarians who review web documents and index
-  them manually for retrieval. Typically, the user types a word or phrase, also
-  called a query, into a search box, and the search engine displays links to
-  relevant web pages.</dd>
-  
-<dt id="secure_sockets_layer">Secure Sockets Layer (SSL)</dt><dd>A protocol
-  that allows mutual authentication between a <a href="#client">client</a> and
-  a <a href="#server">server</a> for the purpose of establishing an
-  authenticated and encrypted connection. SSL runs above TCP/IP and below HTTP,
-  LDAP, IMAP, NNTP, and other high-level network protocols. The new Internet
-  Engineering Task Force (IETF) standard called Transport Layer Security (TLS)
-  is based on SSL. See also <a href="#authentication">authentication</a>,
-  <a href="#encryption">encryption</a>.</dd>
+<dt id="search_engine">search engine</dt><dd>A web-based program that allows
+  users to search for and retrieve specific information from the
+  <a href="#world_wide_web">World Wide Web (WWW)</a>. The search engine may
+  search the full text of web documents or a list of keywords, or use
+  librarians who review web documents and index them manually for retrieval.
+  Typically, the user types a word or phrase, also called a query, into a
+  search box, and the search engine displays links to relevant web pages.</dd>
   
 <dt id="security_certificate">security certificate</dt><dd>See
   <a href="#certificate">certificate</a>.</dd>
   
-<dt id="security_device">security
-  device</dt><dd>Hardware or software that provides cryptographic services
-  such as encryption and decryption and can store certificates and keys. A
-  smart card is one example of a security device implemented in hardware.
+<dt id="security_device">security device</dt><dd>Hardware or software that
+  provides cryptographic services such as encryption and decryption and can
+  store certificates and keys. A <a href="#smart_card">smart card</a> is one
+  example of a security device implemented in hardware.
   <a href="#certificate_manager">Certificate Manager</a> contains its own
   built-in security device, called the
   <a href="#software_security_device">software security device</a>, that is
@@ -563,25 +549,25 @@
 <dt id="security_module">security module</dt><dd>See
   <a href="#pkcs_11_module">PKCS #11 module</a>.</dd>
   
-<dt id="security_token">security
-  token</dt><dd>See <a href="#security_device">security device</a>.</dd>
+<dt id="security_token">security token</dt><dd>See
+  <a href="#security_device">security device</a>.</dd>
   
-<dt id="server">server</dt><dd>
-  Software (such as software that serves up web pages) that receives requests
-  from and sends information to a <a href="#client">client</a>,
-  which is usually running on a different computer. A computer on which server
-  software runs is also described as a server.</dd>
+<dt id="server">server</dt><dd>Software (such as software that serves up web
+  pages) that receives requests from and sends information to a
+  <a href="#client">client</a>, which is usually running on a different
+  computer. A computer on which server software runs is also described as a
+  server.</dd>
   
 <dt id="server_authentication">server authentication</dt><dd>The process of
   identifying a <a href="#server">server</a> to a <a href="#client">client</a>
   by using a <a href="#server_ssl_certificate">server SSL certificate</a>. See
   also <a href="#client_authentication">client authentication</a>,
-  <a href="#secure_sockets_layer">Secure Sockets Layer (SSL)</a>.</dd>
+  <a href="#ssl">SSL (Secure Sockets Layer)</a>.</dd>
   
 <dt id="server_ssl_certificate"> server SSL certificate</dt><dd>A
   certificate that a <a href="#server">server</a> presents to a
   <a href="#client">client</a> to authenticate the server&apos;s identity using the
-  <a href="#secure_sockets_layer">Secure Sockets Layer (SSL)</a> protocol.</dd>
+  <a href="#ssl">SSL (Secure Sockets Layer)</a> protocol.</dd>
   
 <dt id="signing_certificate">signing certificate</dt><dd>A certificate whose
   corresponding <a href="#private_key">private key</a> is used to sign
@@ -592,83 +578,95 @@
   used to encrypt email messages. See also <a href="#dual_key_pairs">dual key
   pairs</a>, <a href="#digital_signature">digital signature</a>.</dd>
   
-<dt id="signing_key">signing key</dt><dd>
-  A private key used for signing only. A signing key and its equivalent public
-  key, together with an <a href="#encryption_key">encryption key</a> and
-  its equivalent private key, constitute <a href="#dual_key_pairs">dual key
-  pairs</a>.</dd>
+<dt id="signing_key">signing key</dt><dd>A private key used for signing only.
+  A signing key and its equivalent public key, together with an
+  <a href="#encryption_key">encryption key</a> and its equivalent private key,
+  constitute <a href="#dual_key_pairs">dual key pairs</a>.</dd>
   
-<dt id="slot">slot</dt><dd>A
-  piece of hardware, or its equivalent in software, that is controlled by a
-  <a href="#pkcs_11_module">PKCS #11 module</a> and designed to contain a
-  <a href="#security_device">security device</a>. </dd>
+<dt id="slot">slot</dt><dd>A piece of hardware, or its equivalent in software,
+  that is controlled by a <a href="#pkcs_11_module">PKCS #11 module</a> and
+  designed to contain a <a href="#security_device">security device</a>.</dd>
   
-<dt id="smart_card">smart card</dt><dd>
-  A small device, typically about the size of a credit card, that contains
-  a microprocessor and is capable of storing cryptographic information (such as
-  keys and certificates) and performing cryptographic operations. Smart cards
-  use the <a href="#pkcs_11">PKCS #11</a> standard. A smart card
-  is one kind of <a href="#security_device">security device</a>. </dd>
+<dt id="smart_card">smart card</dt><dd>A small device, typically about the size
+  of a credit card, that contains a microprocessor and is capable of storing
+  cryptographic information (such as keys and certificates) and performing
+  cryptographic operations. Smart cards use the <a href="#pkcs_11">PKCS #11</a>
+  standard. A smart card is one kind of <a href="#security_device">security
+  device</a>.</dd>
   
-<dt id="software_security_device">
-  software security device</dt><dd>The default
-<a href="#security_device">security
-  device</a> used by Certificate Manager to store private keys associated with
-  your certificates. In addition to private keys, the software security device
-  stores the master key used by Password Manager to encrypt email passwords,
+<dt id="smtp">SMTP (Simple Mail Transfer Protocol)</dt><dd>A protocol that
+  sends e-mail messages across the <a href="#internet">Internet</a>.</dd>
+  
+<dt id="software_security_device">software security device</dt><dd>The default
+  <a href="#security_device">security device</a> used by
+  <a href="#certificate_manager">Certificate Manager</a> to store private keys
+  associated with your certificates. In addition to private keys, the software
+  security device stores the master key used by
+  <a href="#password_manager">Password Manager</a> to encrypt email passwords,
   website passwords, and other sensitive information. See also
-<a href="#private_key">private
-  key</a> and <a href="#master_password">master key</a>.</dd>
+  <a href="#private_key">private key</a> and <a href="#master_password">master
+  key</a>.</dd>
   
-<dt id="spoofing">spoofing</dt><dd>
-  Pretending to be someone else. For example, a person can pretend to have
-  the email address <tt>jdoe@mozilla.com</tt>, or a computer can identify
-  itself as a site called <tt>www.mozilla.com</tt> when it is not. Spoofing is
-  one form of <a href="#misrepresentation">misrepresentation</a>.</dd>
+<dt id="spoofing">spoofing</dt><dd>Pretending to be someone else. For example,
+  a person can pretend to have the email address <tt>jdoe@mozilla.com</tt>, or
+  a computer can identify itself as a site called <tt>www.mozilla.com</tt> when
+  it is not. Spoofing is one form of
+  <a href="#misrepresentation">misrepresentation</a>.</dd>
   
-<dt id="ssl">SSL</dt><dd>See <a href="#secure_sockets_layer">Secure
-  Sockets Layer (SSL)</a>. </dd>
+<dt id="ssl">SSL (Secure Sockets Layer)</dt><dd>A protocol that allows mutual
+  authentication between a <a href="#client">client</a> and a
+  <a href="#server">server</a> for the purpose of establishing an authenticated
+  and encrypted connection. SSL runs above <a href="tcp_ip">TCP/IP</a> and
+  below <a href="#http">HTTP</a>, <a href="#ldap">LDAP</a>,
+  <a href="#imap">IMAP</a>, NNTP, and other high-level network protocols.
+  The new Internet Engineering Task Force (IETF) standard called Transport
+  Layer Security (TLS) is based on SSL. See also
+  <a href="#authentication">authentication</a>,
+  <a href="#encryption">encryption</a>.</dd>
   
-<dt id="status_bar">Status Bar</dt><dd>The toolbar that appears
-  at the bottom of any &brandShortName; window. It includes the
+<dt id="status_bar">Status Bar</dt><dd>The toolbar that appears at the bottom
+  of any &brandShortName; window. It includes the
   <a href="#component_bar">Component Bar</a> on the left and status icons on
   the right.</dd>
   
 <dt id="subject">subject</dt><dd> The entity (such as a person, organization,
-  or router) identified by a <a href="#certificate">certificate</a>.
-  In particular, the subject field of a certificate contains the certified
+  or router) identified by a <a href="#certificate">certificate</a>. In
+  particular, the subject field of a certificate contains the certified
   entity&apos;s <a href="#subject_name">subject name</a> and other
   characteristics.</dd>
   
-<dt id="subject_name">subject
-  name</dt><dd>A <a href="#distinguished_name">distinguished name (DN)</a>
-  that uniquely describes the <a href="#subject">subject</a> of a
+<dt id="subject_name">subject name</dt><dd>A
+  <a href="#distinguished_name">distinguished name (DN)</a> that uniquely
+  describes the <a href="#subject">subject</a> of a
   <a href="#certificate">certificate</a>.</dd>
   
-<dt id="subordinate_ca">subordinate
-  CA</dt><dd>A <a href="#certificate_authority">certificate authority (CA)</a>
-  whose certificate is signed by another subordinate CA or by the root CA. See
-  also <a href="#certificate_chain">certificate chain</a>,
-  <a href="#root_ca">root CA</a>.</dd>
+<dt id="subordinate_ca">subordinate CA</dt><dd>A
+  <a href="#certificate_authority">certificate authority (CA)</a> whose
+  certificate is signed by another subordinate CA or by the root CA. See also
+  <a href="#certificate_chain">certificate chain</a>, <a href="#root_ca">root
+  CA</a>.</dd>
   
-<dt id="symmetric_encryption">
-  symmetric encryption</dt><dd>An encryption method that uses a single
-  cryptographic key to both encrypt and decrypt a given message.</dd>
+<dt id="symmetric_encryption">symmetric encryption</dt><dd>An encryption method
+  that uses a single cryptographic key to both encrypt and decrypt a given
+  message.</dd>
   
-<dt id="tamper_detection">tamper
-  detection</dt><dd>A mechanism ensuring that data received in electronic
-  form has not been tampered with; that is, that the data received corresponds
-  entirely with the original version of the same data.</dd>
+<dt id="tamper_detection">tamper detection</dt><dd>A mechanism ensuring that
+  data received in electronic form has not been tampered with; that is, that
+  the data received corresponds entirely with the original version of the same
+  data.</dd>
   
-<dt id="tcp">TCP</dt><dd>See
-  <a href="#transmission_control_protocol_internet_protocol">Transmission
-  Control Protocol/Internet Protocol (TCP/IP)</a>.</dd>
+<dt id="tcp">TCP</dt><dd>See <a href="#tcp_ip">TCP/IP</a>.</dd>
+
+<dt id="tcp_ip">TCP/IP (Transmission Control Protocol/Internet
+  Protocol)</dt><dd>A Unix protocol used to connect computers running a variety
+  of operating systems. TCP/IP is an essential Internet protocol and has become
+  a global standard.</dd>
   
 <dt id="third-party_cookie">third-party cookie</dt><dd>See
   <a href="#foreign_cookie">foreign cookie</a>.</dd>
   
-<dt id="tls">TLS</dt><dd>See <a href="#secure_sockets_layer">Secure Sockets
-  Layer (SSL)</a>.</dd>
+<dt id="tls">TLS</dt><dd>See <a href="#ssl">SSL
+  (Secure Sockets Layer).</a>.</dd>
   
 <dt id="token">token</dt><dd> See <a href="#security_device">security
   device</a>.</dd>
@@ -677,43 +675,51 @@
   you hover your mouse's cursor over certain items. It usually contains
   information regarding the item being hovered over.</dd>
 
-<dt id="transmission_control_protocol_internet_protocol">
-  Transmission Control Protocol/Internet Protocol (TCP/IP)</dt><dd>A Unix
-  protocol used to connect computers running a variety of operating systems.
-  TCP/IP is an essential Internet protocol and has become a global
-  standard.</dd>
-
-<dt id="trust">trust</dt><dd>
-  Confident reliance on a person or other entity. In the context of
-  <a href="#public-key_infrastructure">public-key infrastructure (PKI)</a>,
-  trust usually refers to the relationship between the user of a certificate
-  and the <a href="#certificate_authority">certificate authority (CA)</a> that
-  issued the certificate. If you use Certificate Manager to specify that you
-  trust a CA, Certificate Manager trusts valid certificates issued by that CA
-  unless you specify otherwise in the settings for individual certificates. You
-  use the Authorities tab in Certificate Manager to specify the kinds of
+<dt id="trust">trust</dt><dd>Confident reliance on a person or other entity. In
+  the context of <a href="#pki">PKI (public-key infrastructure)</a>, trust
+  usually refers to the relationship between the user of a certificate and the
+  <a href="#certificate_authority">certificate authority (CA)</a> that issued
+  the certificate. If you use Certificate Manager to specify that you trust a
+  CA, Certificate Manager trusts valid certificates issued by that CA unless
+  you specify otherwise in the settings for individual certificates. You use
+  the Authorities tab in Certificate Manager to specify the kinds of
   certificates you do or don&apos;t trust specific CAs to issue.</dd>
+
+<dt id="url">URL (Uniform Resource Locator)</dt><dd>The standardized address
+  that tells your browser how to locate a file or other resource on the Web.
+  For example: <tt>http://www.mozilla.org.</tt> You can type URLs into the
+  browser&apos;s <a href="#location_bar">Location Bar</a> to access
+  <a href="#web_page">web pages</a>. URLs are also used in the links on web
+  pages that you can click to go to other web pages. Also known as an Internet
+  address or Web address.</dd>
   
-<dt id="uniform_resource_locator">Uniform Resource Locator (URL)</dt><dd>The
-  standardized address that tells your browser how to locate a file or other
-  resource on the Web. For example: <tt>http://www.mozilla.org.</tt> You can
-  type URLs into the browser&apos;s Location Bar to access web pages. URLs are also
-  used in the links on web pages that you can click to go to other web pages.
-  Also known as an Internet address or Web address.</dd>
-  
-<dt id="web_page">web page</dt><dd>A single document on the World
-  Wide Web that is specified by a unique address or URL and that may contain
-  text, hyperlinks, and graphics.</dd>
+<dt id="web_page">web page</dt><dd>A single document on the World Wide Web that
+  is specified by a unique address or <a href="#url">URL</a> and that may
+  contain text, hyperlinks, and graphics.</dd>
   
 <dt id="web_site">website</dt><dd>A group of related web pages linked by
   hyperlinks and managed by a single company, organization, or individual. A
   website may include text, graphics, audio and video files, and links to
   other websites.</dd>
   
-<dt id="world_wide_web">World Wide Web</dt><dd>Also known as the
-  Web. A portion of the Internet that is made up of web pages stored by web
-  <a href="#server">servers</a> and displayed by <a href="#client">clients</a>
-  called web browsers (such as &brandShortName;).</dd>
+<dt id="world_wide_web">World Wide Web (WWW)</dt><dd>Also known as the Web. A
+  portion of the <a href="#internet">Internet</a> that is made up of web pages
+  stored by web <a href="#server">servers</a> and displayed by
+  <a href="#client">clients</a> called web browsers (such as
+  &brandShortName;).</dd>
+  
+<dt id="xml">XML (Extensible Markup Language)</dt><dd>An open standard for
+  describing data. Unlike <a href="#html">HTML</a>, XML allows the developer of
+  a web page to define special tags. For more information, see the online W3C
+  document
+  <a href="http://www.w3.org/xml/">Extensible Markup Language (XML)</a>.</dd>
+  
+<dt id="xslt">XSLT (Extensible Stylesheet Language Transformation)</dt><dd> A
+  language used to convert an XML document into another XML document or into
+  some other format.</dd>
+  
+<dt id="xul">XUL (XML User Interface Language)</dt><dd>A XML markup language
+  for creating user interfaces in applications.</dd>
   
 </dl>
 
