@@ -224,9 +224,17 @@ OperationStreamListener::SignalDetail(PRUint32 statusCode,
     if (resource.IsEmpty()) {
         detailURL = resourceURL;
     } else {
+        // if this URL is relative, resolve it.
+        nsresult rv;
+        nsCAutoString resolvedSpec;
+        rv = resourceURL->Resolve(resource, resolvedSpec);
+
+        // XXX better error handling
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to resolve remote URL!");
+
         if (NS_FAILED(resourceURL->Clone(getter_AddRefs(detailURI))) ||
             !(detailURL = do_QueryInterface(detailURI)) ||
-            NS_FAILED(detailURI->SetSpec(resource))) {
+            NS_FAILED(detailURI->SetSpec(resolvedSpec))) {
             return;
         }
     }
@@ -261,6 +269,9 @@ OperationStreamListener::StatusAndHrefFromResponse(nsIDOMElement *responseElt,
     nsAutoString statusString;
     rv = NS_WD_ElementTextChildValue(responseElt, NS_LITERAL_STRING("status"),
                                      statusString);
+    // XXX if we don't find a status element (or hit any other parse error,
+    // for that matter) we need to signal this back to the caller
+    //
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 res = 0;

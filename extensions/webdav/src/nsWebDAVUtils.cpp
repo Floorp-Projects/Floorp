@@ -123,6 +123,9 @@ NS_WD_GetDocAndResponseListFromBuffer(const nsACString &buffer,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsPromiseFlatCString flat(buffer);
+
+    PR_LOG(gDAVLog, 5, ("XML:\n\n%*s\n\n", flat.Length(), flat.get()));
+
     nsCOMPtr<nsIDOMDocument> doc;
     rv = parser->ParseFromBuffer(NS_REINTERPRET_CAST(const PRUint8 *,
                                                      flat.get()),
