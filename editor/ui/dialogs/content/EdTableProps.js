@@ -210,7 +210,12 @@ function Startup()
     // We may call this with table selected, but no cell,
     //  so disable the Cell Properties tab
     if(!CellElement)
-      CellTab.setAttribute("disabled", "true");
+    {
+      // XXX: Disabling of tabs is currently broken, so for
+      //      now we'll just remove the tab completely.
+      //CellTab.setAttribute("disabled", "true");
+      CellTab.parentNode.removeChild(CellTab);
+    }
   }
 
   doSetOKCancel(onOK, onCancel);
