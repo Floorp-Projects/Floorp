@@ -901,6 +901,7 @@ protected:
     * @param aHint          an optional hint used to make the search for aFrame faster
     */
   nsIFrame* FindFrameWithContent(nsIPresContext*  aPresContext,
+                                 nsIFrameManager* aFrameManager,
                                  nsIFrame*        aParentFrame,
                                  nsIContent*      aParentContent,
                                  nsIContent*      aContent,
