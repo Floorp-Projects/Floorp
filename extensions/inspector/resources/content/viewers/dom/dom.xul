@@ -14,13 +14,13 @@
       orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <script type="application/x-javascript" src="chrome://inspector/content/viewers/dom/dom.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/hooks.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/Flasher.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/PrefUtils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/viewers/dom/dom.js"/>
 
   <!--============================= COMMANDS ============================== -->
 
