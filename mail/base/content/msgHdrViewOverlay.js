@@ -273,7 +273,7 @@ const MsgHdrViewObserver =
 var messageHeaderSink = {
     onStartHeaders: function()
     {
-
+      mSaveHdr = null;
       // clear out any pending collected address timers...
       if (gCollectAddressTimer)
       {
