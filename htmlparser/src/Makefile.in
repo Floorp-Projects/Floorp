@@ -77,12 +77,12 @@ EXPORTS =     \
   $(NULL)
 
 EXTRA_EXPORTS = \
-	$(OBJDIR)/nsHTMLTags.h \
+	nsHTMLTags.h \
 	$(NULL)
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
 EXPORTS += $(EXTRA_EXPORTS)
+
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE = raptor
 
@@ -94,9 +94,10 @@ include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I.
 
-export:: generate
+export:: #generate
 	$(INSTALL) $(EXTRA_EXPORTS) $(PUBLIC)/$(MODULE)
 
+ifdef IGNORE_THIS_SECTION_UNTIL_DECISION_IS_MADE
 generate: $(OBJDIR)/nsHTMLTags.h $(OBJDIR)/nsHTMLEntities.cpp
 
 $(OBJDIR)/nsHTMLTags.o: $(OBJDIR)/nsHTMLTags.h
@@ -111,3 +112,5 @@ $(OBJDIR)/nsHTMLTags.h: $(GENTAGS)
 $(OBJDIR)/nsHTMLEntities.cpp: $(GENENTITIES)
 	rm -f $@
 	$(PERL) $(GENENTITIES) nsHTMLEntities
+endif
+
