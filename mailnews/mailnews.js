@@ -338,3 +338,5 @@ pref("mailnews.start_page.enabled", true);
 
 /* default prefs for Mozilla 5.0 */
 pref("mail.identity.default.compose_html", true);
+
+pref("mail.update_compose_title_as_you_type", true);
