@@ -33,7 +33,6 @@ REQUIRES	= xpcom \
 		  xpinstall \
 		  xpicleanup \
 		  uriloader \
-		  view \
 		  windowwatcher \
 		  embed_base \
 		  appstartup \

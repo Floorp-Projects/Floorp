@@ -26,8 +26,6 @@ REQUIRES	= string \
 		  xpcom \
 		  dom \
 		  widget \
-		  docshell \
-		  layout \
 		  content \
 		  content_xul \
 		  commandhandler \
