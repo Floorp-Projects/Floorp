@@ -231,6 +231,26 @@ nsXPCWrappedJS::Find(REFNSIID aIID)
     return NULL;
 }
 
+NS_IMETHODIMP
+nsXPCWrappedJS::GetInterfaceInfo(nsIInterfaceInfo** info)
+{
+    NS_ASSERTION(GetClass(), "wrapper without class");
+    NS_ASSERTION(GetClass()->GetInterfaceInfo(), "wrapper class without interface");
+
+    if(!(*info = GetClass()->GetInterfaceInfo()))
+        return NS_ERROR_UNEXPECTED;
+    NS_ADDREF(*info);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCWrappedJS::CallMethod(PRUint16 methodIndex,
+                           const nsXPTMethodInfo* info,
+                           nsXPTCMiniVariant* params)
+{
+    return GetClass()->CallMethod(this, methodIndex, info, params);
+}
+
 /***************************************************************************/
 
 NS_IMETHODIMP

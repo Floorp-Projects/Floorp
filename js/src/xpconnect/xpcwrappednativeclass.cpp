@@ -348,10 +348,10 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(JSContext *cx,
         *vp = JSVAL_NULL;
         return JS_TRUE;
     }
-    const nsXPCMiniVariant& mv = *constant->GetValue();
+    const nsXPTCMiniVariant& mv = *constant->GetValue();
 
     // XXX Big Hack!
-    nsXPCVariant v;
+    nsXPTCVariant v;
     v.flags = 0;
     v.type = constant->GetType();
     memcpy(&v.val, &mv.val, sizeof(mv.val));
@@ -367,12 +367,12 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                                            JSBool isAttributeSet,
                                            uintN argc, jsval *argv, jsval *vp)
 {
-#define PARAM_BUFFER_COUNT     32
+#define PARAM_BUFFER_COUNT     16
 
-    nsXPCVariant paramBuffer[PARAM_BUFFER_COUNT];
+    nsXPTCVariant paramBuffer[PARAM_BUFFER_COUNT];
     JSBool retval = JS_FALSE;
 
-    nsXPCVariant* dispatchParams = NULL;
+    nsXPTCVariant* dispatchParams = NULL;
     uint8 i;
     const nsXPTMethodInfo* info;
     uint8 requiredArgs;
@@ -417,7 +417,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     // setup variant array pointer
     if(paramCount > PARAM_BUFFER_COUNT)
     {
-        if(!(dispatchParams = new nsXPCVariant[paramCount]))
+        if(!(dispatchParams = new nsXPTCVariant[paramCount]))
         {
             JS_ReportOutOfMemory(cx);
             goto done;
@@ -433,7 +433,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
 
-        nsXPCVariant* dp = &dispatchParams[i];
+        nsXPTCVariant* dp = &dispatchParams[i];
         dp->type = type;
         dp->flags = 0;
         dp->val.p = NULL;
@@ -444,7 +444,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
         if(param.IsOut())
         {
-            dp->flags = nsXPCVariant::PTR_IS_DATA;
+            dp->flags = nsXPTCVariant::PTR_IS_DATA;
             dp->ptr = &dp->val;
 
             if(!param.IsRetval() &&
@@ -462,7 +462,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             if(type.IsPointer())
             {
                 useAllocator = JS_TRUE;
-                dp->flags |= nsXPCVariant::VAL_IS_OWNED;
+                dp->flags |= nsXPTCVariant::VAL_IS_OWNED;
             }
         }
         else
@@ -471,13 +471,13 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             if(type.IsPointer() && type.TagPart() == nsXPTType::T_IID)
             {
                 useAllocator = JS_TRUE;
-                dp->flags |= nsXPCVariant::VAL_IS_OWNED;
+                dp->flags |= nsXPTCVariant::VAL_IS_OWNED;
             }
         }
 
         if(type.TagPart() == nsXPTType::T_INTERFACE)
         {
-            dp->flags |= nsXPCVariant::VAL_IS_IFACE;
+            dp->flags |= nsXPTCVariant::VAL_IS_IFACE;
 
             if(NS_FAILED(GetInterfaceInfo()->
                                 GetIIDForParam(&param, &conditional_iid)))
@@ -489,7 +489,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         }
         else if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
         {
-            dp->flags |= nsXPCVariant::VAL_IS_IFACE;
+            dp->flags |= nsXPTCVariant::VAL_IS_IFACE;
 
             uint8 arg_num = param.GetInterfaceIsArgNumber();
             const nsXPTParamInfo& param = info->GetParam(arg_num);
@@ -518,8 +518,8 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     }
 
     // do the invoke
-    invokeResult = xpc_InvokeNativeMethod(wrapper->GetNative(), vtblIndex,
-                                          paramCount, dispatchParams);
+    invokeResult = XPTC_InvokeByIndex(wrapper->GetNative(), vtblIndex,
+                                      paramCount, dispatchParams);
 
     if(NS_FAILED(invokeResult))
     {
@@ -533,7 +533,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
 
-        nsXPCVariant* dp = &dispatchParams[i];
+        nsXPTCVariant* dp = &dispatchParams[i];
         if(param.IsOut())
         {
             jsval v;
@@ -598,7 +598,7 @@ done:
     // any alloc'd stuff and release wrappers of params
     for(i = 0; i < dispatchParamsInitedCount; i++)
     {
-        nsXPCVariant* dp = &dispatchParams[i];
+        nsXPTCVariant* dp = &dispatchParams[i];
         void* p = dp->val.p;
         if(!p)
             continue;

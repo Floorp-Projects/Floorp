@@ -297,7 +297,7 @@ NS_IMETHODIMP
 nsXPConnect::WrapJS(JSContext* aJSContext,
                      JSObject* aJSObj,
                      REFNSIID aIID,
-                     nsIXPConnectWrappedJS** aWrapper)
+                     nsISupports** aWrapper)
 {
     NS_PRECONDITION(aJSContext,"bad param");
     NS_PRECONDITION(aJSObj,"bad param");

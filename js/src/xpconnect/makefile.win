@@ -18,7 +18,7 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-DIRS=md
+# DIRS=md
 
 MAKE_OBJ_TYPE	= DLL
 DLLNAME		= xpc$(MOZ_BITS)$(VERSION_NUMBER)
@@ -30,7 +30,7 @@ DLL		=.\$(OBJDIR)\$(DLLNAME).dll
 MODULE=xpconnect
 REQUIRES=xpcom js
 
-MD_LIBRARY	=	.\md\win32\$(OBJDIR)\xpcmd.lib
+# MD_LIBRARY	=	.\md\win32\$(OBJDIR)\xpcmd.lib
 
 DEFINES=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPC_API -DJS_THREADSAFE
 
@@ -62,7 +62,7 @@ EXPORTS =					\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\js -I$(PUBLIC)\raptor \
-      -I$(PUBLIC)\libxpt -I$(PUBLIC)\xptinfo
+      -I$(PUBLIC)\libxpt -I$(PUBLIC)\xptinfo -I$(PUBLIC)\xptcall
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -70,10 +70,11 @@ LCFLAGS = \
         $(NULL)
 
 LLIBS=	$(LIBNSPR)	\
-        $(MD_LIBRARY)	\
+#        $(MD_LIBRARY)	\
 		$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib	\
 		$(DIST)\lib\xpcom$(MOZ_BITS).lib	\
 		$(DIST)\lib\xptinfo$(MOZ_BITS).lib	\
+		$(DIST)\lib\xptcall$(MOZ_BITS).lib	\
 
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib

@@ -268,9 +268,9 @@ nsXPCWrappedJSClass::GetRootJSObject(JSObject* aJSObj)
 NS_IMETHODIMP
 nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                                 const nsXPTMethodInfo* info,
-                                nsXPCMiniVariant* params)
+                                nsXPTCMiniVariant* params)
 {
-#define ARGS_BUFFER_COUNT     32
+#define ARGS_BUFFER_COUNT     16
 
     jsval argsBuffer[ARGS_BUFFER_COUNT];
     jsval* argv = NULL;
@@ -315,10 +315,10 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
         if(param.IsIn())
         {
-            nsXPCMiniVariant* pv;
+            nsXPTCMiniVariant* pv;
 
             if(param.IsOut())
-                pv = (nsXPCMiniVariant*) params[i].val.p;
+                pv = (nsXPTCMiniVariant*) params[i].val.p;
             else
                 pv = &params[i];
 
@@ -457,9 +457,9 @@ pre_call_clean_up:
             jsval val;
             JSBool useAllocator = JS_FALSE;
             const nsXPTType& type = param.GetType();
-            nsXPCMiniVariant* pv;
+            nsXPTCMiniVariant* pv;
 
-            pv = (nsXPCMiniVariant*) params[i].val.p;
+            pv = (nsXPTCMiniVariant*) params[i].val.p;
 
             if(param.IsRetval())
                 val = result;

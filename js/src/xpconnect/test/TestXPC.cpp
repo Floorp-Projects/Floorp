@@ -588,7 +588,7 @@ int main()
             if(JS_GetProperty(jscontext, glob, "bar", &v) && JSVAL_IS_OBJECT(v))
             {
                 JSObject* bar = JSVAL_TO_OBJECT(v);
-                nsIXPConnectWrappedJS* wrapper3;
+                nsISupports* wrapper3;
                 if(NS_SUCCEEDED(xpc->WrapJS(jscontext,
                                        JSVAL_TO_OBJECT(v),
                                        nsITestXPCFoo::GetIID(), &wrapper3)))
