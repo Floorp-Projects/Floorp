@@ -141,9 +141,9 @@ sub getObject {
     # constructor call
     my $self = shift;
     my($name) = @_;
-    foreach my $service (@{$self->objects}) {
-        if ($service->objectProvides($name)) {
-            return $service;
+    foreach my $object (@{$self->objects}) {
+        if ($object->objectProvides($name)) {
+            return $object;
         }
     }
     return undef;
@@ -173,13 +173,13 @@ sub getObjectList {
     # constructor call
     my $self = shift;
     my($name) = @_;
-    my @services = ();
-    foreach my $service (@{$self->objects}) {
-        if ($service->objectProvides($name)) {
-            push(@services, $service);
+    my @objects = ();
+    foreach my $object (@{$self->objects}) {
+        if ($object->objectProvides($name)) {
+            push(@objects, $object);
         }
     }
-    return @services;
+    return @objects;
 }
 
 sub getCollectingServiceList {

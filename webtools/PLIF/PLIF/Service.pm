@@ -37,10 +37,10 @@ use PLIF;
 sub provides { return 0; } # stub
 
 # what services the module provides as an object
-sub objectProvides { 
-    my $class = shift;
-    return $class->provides(@_);
-} 
+sub objectProvides {
+    my $self = shift;
+    return $self->provides(@_);
+}
 
 sub dispatch {
     my $self = shift;

@@ -52,10 +52,10 @@ sub provides {
 }
 
 sub objectProvides {
-    my $class = shift;
+    my $self = shift;
     my($service) = @_;
     return ($service eq 'dispatcher.commands' or 
-            $class->SUPER::objectProvides($service));
+            $self->SUPER::objectProvides($service));
 }
 
 # input.verify

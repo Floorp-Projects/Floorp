@@ -34,9 +34,9 @@ use PLIF::Service;
 1;
 
 sub objectProvides {
-    my $class = shift;
+    my $self = shift;
     my($service) = @_;
-    return ($service eq 'session' or $class->SUPER::provides($service));
+    return ($service eq 'session' or $self->SUPER::provides($service));
 }
 
 sub objectInit {

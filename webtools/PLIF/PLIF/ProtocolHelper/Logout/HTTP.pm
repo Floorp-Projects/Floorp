@@ -45,10 +45,10 @@ sub provides {
 }
 
 sub objectProvides {
-    my $class = shift;
+    my $self = shift;
     my($service) = @_;
     return ($service eq 'user.login.loggedOutUserHandle.http' or
-            $class->SUPER::provides($service));
+            $self->SUPER::provides($service));
 }
 
 sub objectInit {
