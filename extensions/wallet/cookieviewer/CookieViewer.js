@@ -95,14 +95,14 @@ function CreateCookieList()
 // purpose  : an home-brewed object that represents a individual cookie in the stream
 function Cookie(number,name,value,domaintype,domain,path,secure,expire)
 {
-  this.number       = (arguments.length) ? number     : null;
-  this.name         = (arguments.length) ? name       : null;
-  this.value        = (arguments.length) ? value      : null;
-  this.domaintype   = (arguments.length) ? domaintype : null;
-  this.domain       = (arguments.length) ? domain     : null;
-  this.path         = (arguments.length) ? path       : null;
-  this.secure       = (arguments.length) ? secure     : null;
-  this.expire       = (arguments.length) ? expire     : null;
+  this.number       = ( number ) ? number : null;
+  this.name         = ( name ) ? name : null;
+  this.value        = ( value ) ? value : null;
+  this.domaintype   = ( domaintype ) ? domaintype : null;
+  this.domain       = ( domain ) ? domain : null;
+  this.path         = ( path ) ? path : null;
+  this.secure       = ( secure ) ? secure : null;
+  this.expire       = ( expire ) ? expire : null;
 }
 
 
