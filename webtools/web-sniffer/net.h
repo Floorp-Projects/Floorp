@@ -26,10 +26,10 @@
 #define _NET_H_
 
 int netAccept(int fd);
-int netConnect(void *a, unsigned char *hostName, int port);
+int netConnect(App *app, unsigned char *hostName, int port);
 int netGetConnectCount(void);
 int netGetDNSCount(void);
 int netInit(void);
-int netListen(void *a, unsigned char **host, unsigned short *port);
+int netListen(App *app, unsigned char **host, unsigned short *port);
 
 #endif /* _NET_H_ */

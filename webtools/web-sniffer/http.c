@@ -85,7 +85,7 @@ readNonWhiteSpace(Input *input, unsigned short c)
 }
 
 static unsigned char *
-httpReadHeaders(HTTP *http, void *a, Input *input, unsigned char *url)
+httpReadHeaders(HTTP *http, App *app, Input *input, unsigned char *url)
 {
 	unsigned short	c;
 	unsigned char	*charset;
@@ -120,17 +120,17 @@ httpReadHeaders(HTTP *http, void *a, Input *input, unsigned char *url)
 		if (c == 256)
 		{
 			mark(input, 0);
-			reportHTTP(a, input);
+			app->http(app, input);
 			break;
 		}
 		mark(input, -1);
-		reportHTTP(a, input);
+		app->http(app, input);
 		if ((c == '\r') || (c == '\n'))
 		{
 			readLine(input, c);
 			unGetByte(input);
 			mark(input, 0);
-			reportHTTP(a, input);
+			app->http(app, input);
 			break;
 		}
 		while
@@ -151,11 +151,11 @@ httpReadHeaders(HTTP *http, void *a, Input *input, unsigned char *url)
 			return NULL;
 		}
 		mark(input, -1);
-		reportHTTPHeaderName(a, input);
+		app->httpHeaderName(app, input);
 		name = copyLower(input);
 		c = readSpaceTab(input, getByte(input));
 		mark(input, -1);
-		reportHTTP(a, input);
+		app->http(app, input);
 		c = readLine(input, c);
 		if ((c == ' ') || (c == '\t'))
 		{
@@ -169,34 +169,34 @@ httpReadHeaders(HTTP *http, void *a, Input *input, unsigned char *url)
 		value = copy(input);
 		if (!strcasecmp((char *) name, "content-type"))
 		{
-			reportHTTPHeaderValue(a, input, NULL);
+			app->httpHeaderValue(app, input, NULL);
 			type = mimeParseContentType(value);
 			contentType = mimeGetContentType(type);
 			charset = mimeGetContentTypeParameter(type, "charset");
 			if (charset)
 			{
-				reportHTTPCharSet(a, charset);
+				app->httpCharSet(app, charset);
 			}
 			mimeFreeContentType(type);
 		}
 		else if (!strcasecmp((char *) name, "location"))
 		{
-			reportHTTPHeaderValue(a, input, value);
+			app->httpHeaderValue(app, input, value);
 			/* XXX supposed to be absolute URL */
 			rel = urlRelative(url, value);
-			addURL(a, rel->url);
+			addURL(app, rel->url);
 			urlFree(rel);
 			locationFound = 1;
 		}
 		else
 		{
-			reportHTTPHeaderValue(a, input, NULL);
+			app->httpHeaderValue(app, input, NULL);
 		}
 		free(name);
 		free(value);
 		c = readLine(input, c);
 		mark(input, -1);
-		reportHTTP(a, input);
+		app->http(app, input);
 	}
 
 	if (!contentType)
@@ -211,7 +211,7 @@ httpReadHeaders(HTTP *http, void *a, Input *input, unsigned char *url)
 }
 
 void
-httpParseRequest(HTTP *http, void *a, char *url)
+httpParseRequest(HTTP *http, App *app, char *url)
 {
 	unsigned short	c;
 
@@ -221,18 +221,18 @@ httpParseRequest(HTTP *http, void *a, char *url)
 		c = getByte(http->input);
 	} while (c != 256);
 	mark(http->input, -1);
-	reportHTTP(a, http->input);
+	app->http(app, http->input);
 }
 
 void
-httpParseStream(HTTP *http, void *a, unsigned char *url)
+httpParseStream(HTTP *http, App *app, unsigned char *url)
 {
 	const unsigned char	*begin;
 	unsigned short		c;
 	unsigned char		*contentType;
 
 	begin = current(http->input);
-	contentType = httpReadHeaders(http, a, http->input, url);
+	contentType = httpReadHeaders(http, app, http->input, url);
 	http->body = current(http->input);
 	http->bodyLen = inputLength(http->input) - (http->body - begin);
 	if (contentType)
@@ -244,10 +244,10 @@ httpParseStream(HTTP *http, void *a, unsigned char *url)
 			(contentType != locationURLWasAdded)
 		)
 		{
-			reportContentType(a, contentType);
+			app->contentType(app, contentType);
 			if (!strcasecmp((char *) contentType, "text/html"))
 			{
-				htmlRead(a, http->input, url);
+				htmlRead(app, http->input, url);
 			}
 			else
 			{
@@ -257,7 +257,7 @@ httpParseStream(HTTP *http, void *a, unsigned char *url)
 				}
 				while (c != 256);
 				mark(http->input, -1);
-				reportHTTPBody(a, http->input);
+				app->httpBody(app, http->input);
 			}
 			free(contentType);
 		}
@@ -269,20 +269,20 @@ httpParseStream(HTTP *http, void *a, unsigned char *url)
 }
 
 void
-httpRead(HTTP *http, void *a, int sock, unsigned char *url)
+httpRead(HTTP *http, App *app, int sock, unsigned char *url)
 {
 	struct timeval	theTime;
 
-	reportStatus(a, "readStream", __FILE__, __LINE__);
+	app->status(app, "readStream", __FILE__, __LINE__);
 	gettimeofday(&theTime, NULL);
 	http->input = readStream(sock, url);
-	reportTime(REPORT_TIME_READSTREAM, &theTime);
-	reportStatus(a, "readStream done", __FILE__, __LINE__);
-	httpParseStream(http, a, url);
+	app->time(app, appTimeReadStream, &theTime);
+	app->status(app, "readStream done", __FILE__, __LINE__);
+	httpParseStream(http, app, url);
 }
 
 static void
-httpGetObject(HTTP *http, void *a, int sock, URL *url, unsigned char **headers)
+httpGetObject(HTTP *http, App *app, int sock, URL *url, unsigned char **headers)
 {
 	char		*get;
 	unsigned char	**h;
@@ -317,7 +317,7 @@ httpGetObject(HTTP *http, void *a, int sock, URL *url, unsigned char **headers)
 	}
 	send(sock, "\n", 1, 0);
 
-	httpRead(http, a, sock, url->url);
+	httpRead(http, app, sock, url->url);
 }
 
 HTTP *
@@ -346,7 +346,7 @@ httpFree(HTTP *http)
 }
 
 HTTP *
-httpProcess(void *a, URL *url, unsigned char **headers)
+httpProcess(App *app, URL *url, unsigned char **headers)
 {
 	HTTP	*http;
 	int	port;
@@ -367,7 +367,7 @@ httpProcess(void *a, URL *url, unsigned char **headers)
 			url->url ? (char *) url->url : "<NULL>");
 		return NULL;
 	}
-	sock = netConnect(a, url->host, port);
+	sock = netConnect(app, url->host, port);
 	if (sock == -1)
 	{
 		return NULL;
@@ -375,7 +375,7 @@ httpProcess(void *a, URL *url, unsigned char **headers)
 
 	http = httpAlloc();
 
-	httpGetObject(http, a, sock, url, headers);
+	httpGetObject(http, app, sock, url, headers);
 
 	close(sock);
 

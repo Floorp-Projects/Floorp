@@ -45,9 +45,9 @@ typedef struct HTML
 	int		currentAttributeIsURL;
 } HTML;
 
-typedef void (*HTMLHandler)(void *a, HTML *html);
+typedef void (*HTMLHandler)(App *app, HTML *html);
 
-void htmlRead(void *a, Input *input, unsigned char *base);
+void htmlRead(App *app, Input *input, unsigned char *base);
 void htmlRegister(char *tag, char *attributeName, HTMLHandler handler);
 void htmlRegisterTagHandler(HTMLHandler handler);
 void htmlRegisterURLHandler(HTMLHandler handler);

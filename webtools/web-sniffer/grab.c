@@ -24,11 +24,6 @@
 
 #include "all.h"
 
-typedef struct Arg
-{
-	URL	*url;
-} Arg;
-
 static char *limitURLs[] =
 {
 	"http://www.w3.org/TR/REC-CSS2/",
@@ -38,73 +33,8 @@ static char *limitURLs[] =
 static URL *lastURL = NULL;
 static URL *urls = NULL;
 
-void
-reportContentType(void *a, unsigned char *contentType)
-{
-}
-
-void
-reportHTML(void *a, Input *input)
-{
-}
-
-void
-reportHTMLAttributeName(void *a, HTML *html, Input *input)
-{
-}
-
-void
-reportHTMLAttributeValue(void *a, HTML *html, Input *input)
-{
-}
-
-void
-reportHTMLTag(void *a, HTML *html, Input *input)
-{
-}
-
-void
-reportHTMLText(void *a, Input *input)
-{
-}
-
-void
-reportHTTP(void *a, Input *input)
-{
-}
-
-void
-reportHTTPBody(void *a, Input *input)
-{
-}
-
-void
-reportHTTPCharSet(void *a, unsigned char *charset)
-{
-}
-
-void
-reportHTTPHeaderName(void *a, Input *input)
-{
-}
-
-void
-reportHTTPHeaderValue(void *a, Input *input, unsigned char *url)
-{
-}
-
-void
-reportStatus(void *a, char *message, char *file, int line)
-{
-}
-
-void
-reportTime(int task, struct timeval *theTime)
-{
-}
-
 static void
-addURLFunc(void *a, URL *url)
+addURLFunc(App *app, URL *url)
 {
 	lastURL->next = url;
 	lastURL = url;
@@ -186,7 +116,6 @@ grab(unsigned char *url, HTTP *http)
 int
 main(int argc, char *argv[])
 {
-	Arg	arg;
 	HTTP	*http;
 	char	*prog;
 	URL	*url;
@@ -230,8 +159,8 @@ main(int argc, char *argv[])
 	lastURL = url;
 	while (url)
 	{
-		arg.url = url;
-		http = httpProcess(&arg, url, NULL);
+		appDefault.data = url;
+		http = httpProcess(&appDefault, url, NULL);
 		if (http)
 		{
 			switch (http->status)

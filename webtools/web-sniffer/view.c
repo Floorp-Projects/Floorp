@@ -154,63 +154,63 @@ print(View *view, Input *input)
 }
 
 void
-viewHTML(View *view, Input *input)
+viewHTML(App *app, Input *input)
 {
-	fprintf(view->out, "<font color=#009900>");
-	print(view, input);
-	fprintf(view->out, "</font>");
+	fprintf(app->view.out, "<font color=#009900>");
+	print(&app->view, input);
+	fprintf(app->view.out, "</font>");
 }
 
 void
-viewHTMLAttributeName(View *view, Input *input)
+viewHTMLAttributeName(App *app, Input *input)
 {
-	fprintf(view->out, "<font color=#FF6600>");
-	print(view, input);
-	fprintf(view->out, "</font>");
+	fprintf(app->view.out, "<font color=#FF6600>");
+	print(&app->view, input);
+	fprintf(app->view.out, "</font>");
 }
 
 void
-viewHTMLAttributeValue(View *view, Input *input)
+viewHTMLAttributeValue(App *app, Input *input)
 {
-	fprintf(view->out, "<font color=#3333FF>");
-	print(view, input);
-	fprintf(view->out, "</font>");
+	fprintf(app->view.out, "<font color=#3333FF>");
+	print(&app->view, input);
+	fprintf(app->view.out, "</font>");
 }
 
 void
-viewHTMLTag(View *view, Input *input)
+viewHTMLTag(App *app, Input *input)
 {
-	fprintf(view->out, "<font color=#CC33CC>");
-	print(view, input);
-	fprintf(view->out, "</font>");
+	fprintf(app->view.out, "<font color=#CC33CC>");
+	print(&app->view, input);
+	fprintf(app->view.out, "</font>");
 }
 
 void
-viewHTMLText(View *view, Input *input)
+viewHTMLText(App *app, Input *input)
 {
-	print(view, input);
+	print(&app->view, input);
 }
 
 void
-viewHTTP(View *view, Input *input)
+viewHTTP(App *app, Input *input)
 {
-	print(view, input);
+	print(&app->view, input);
 }
 
 void
-viewHTTPHeaderName(View *view, Input *input)
+viewHTTPHeaderName(App *app, Input *input)
 {
-	fprintf(view->out, "<font color=#FF6600>");
-	print(view, input);
-	fprintf(view->out, "</font>");
+	fprintf(app->view.out, "<font color=#FF6600>");
+	print(&app->view, input);
+	fprintf(app->view.out, "</font>");
 }
 
 void
-viewHTTPHeaderValue(View *view, Input *input)
+viewHTTPHeaderValue(App *app, Input *input)
 {
-	fprintf(view->out, "<font color=#3333FF>");
-	print(view, input);
-	fprintf(view->out, "</font>");
+	fprintf(app->view.out, "<font color=#3333FF>");
+	print(&app->view, input);
+	fprintf(app->view.out, "</font>");
 }
 
 void
@@ -220,38 +220,23 @@ viewVerbose(void)
 }
 
 void
-viewReport(View *view, char *str)
+viewReport(App *app, char *str)
 {
 	if (verbose)
 	{
-         	fprintf(view->out, (char *) escapeHTML((unsigned char *) str));
-		fprintf(view->out, "<br>");
-		fflush(view->out);
+         	fprintf(app->view.out, (char *) escapeHTML((unsigned char *) str));
+		fprintf(app->view.out, "<br>");
+		fflush(app->view.out);
 	}
 }
 
 void
-viewReportHTML(View *view, char *str)
+viewReportHTML(App *app, char *str)
 {
 	if (verbose)
 	{
-         	fprintf(view->out, str);
-		fprintf(view->out, "<br>");
-		fflush(view->out);
+         	fprintf(app->view.out, str);
+		fprintf(app->view.out, "<br>");
+		fflush(app->view.out);
 	}
-}
-
-View *
-viewAlloc(void)
-{
-	View	*view;
-
-	view = calloc(sizeof(View), 1);
-	if (!view)
-	{
-		fprintf(stderr, "cannot calloc View\n");
-		exit(0);
-	}
-
-	return view;
 }

@@ -304,7 +304,7 @@ htmlRegisterURLHandler(HTMLHandler handler)
 }
 
 static void
-callHandler(void *a, HTML *html)
+callHandler(App *app, HTML *html)
 {
 	HashEntry	*attrEntry;
 	HashEntry	*tagEntry;
@@ -320,7 +320,7 @@ callHandler(void *a, HTML *html)
 			html->currentAttribute->name);
 		if (attrEntry)
 		{
-			(*((HTMLHandler) attrEntry->value))(a, html);
+			(*((HTMLHandler) attrEntry->value))(app, html);
 		}
 	}
 }
@@ -458,13 +458,13 @@ htmlFreeAttributes(HTMLState *state)
 }
 
 static unsigned short
-readAttribute(void *a, Input *input, HTMLState *state, unsigned short c)
+readAttribute(App *app, Input *input, HTMLState *state, unsigned short c)
 {
 	HTMLAttribute	*attr;
 	unsigned short	quote;
 
 	mark(input, -1);
-	reportHTML(a, input);
+	app->html(app, input);
 	while
 	(
 		(c != 256) &&
@@ -499,7 +499,7 @@ readAttribute(void *a, Input *input, HTMLState *state, unsigned short c)
 	}
 	state->html->currentAttribute = attr;
 	attr->name = copyLower(input);
-	reportHTMLAttributeName(a, state->html, input);
+	app->htmlAttributeName(app, state->html, input);
 	if ((c == 256) || (c == '>'))
 	{
 		return c;
@@ -519,7 +519,7 @@ readAttribute(void *a, Input *input, HTMLState *state, unsigned short c)
 		{
 			quote = c;
 			mark(input, 0);
-			reportHTML(a, input);
+			app->html(app, input);
 			do
 			{
 				c = htmlGetByte(input, state);
@@ -531,13 +531,13 @@ readAttribute(void *a, Input *input, HTMLState *state, unsigned short c)
 			mark(input, -1);
 			attr->value = copy(input);
 			htmlCheckAttribute(state->html);
-			reportHTMLAttributeValue(a, state->html, input);
+			app->htmlAttributeValue(app, state->html, input);
 			c = htmlGetByte(input, state);
 		}
 		else
 		{
 			mark(input, -1);
-			reportHTML(a, input);
+			app->html(app, input);
 			while
 			(
 				(c != 256) &&
@@ -557,9 +557,9 @@ readAttribute(void *a, Input *input, HTMLState *state, unsigned short c)
 			mark(input, -1);
 			attr->value = copy(input);
 			htmlCheckAttribute(state->html);
-			reportHTMLAttributeValue(a, state->html, input);
+			app->htmlAttributeValue(app, state->html, input);
 		}
-		callHandler(a, state->html);
+		callHandler(app, state->html);
 		if (c == '>')
 		{
 			return c;
@@ -589,7 +589,7 @@ caseCompare(char *str, Input *input, HTMLState *state, unsigned short *ret)
 }
 
 static unsigned short
-endTag(void *a, Input *input, HTMLState *state)
+endTag(App *app, Input *input, HTMLState *state)
 {
 	unsigned short	c;
 
@@ -597,19 +597,19 @@ endTag(void *a, Input *input, HTMLState *state)
 	if (c == 256)
 	{
 		mark(input, -1);
-		reportHTML(a, input);
+		app->html(app, input);
 	}
 
 	return c;
 }
 
 static unsigned short
-readTag(void *a, Input *input, HTMLState *state)
+readTag(App *app, Input *input, HTMLState *state)
 {
 	unsigned short	c;
 
 	mark(input, -1);
-	reportHTML(a, input);
+	app->html(app, input);
 
 	c = htmlGetByte(input, state);
 	if (c == '!')
@@ -634,7 +634,7 @@ readTag(void *a, Input *input, HTMLState *state)
 							state);
 							if (c == '>')
 							{
-							    return endTag(a, input, state);
+							    return endTag(app, input, state);
 							}
 							else if (c == '-')
 							{
@@ -644,7 +644,7 @@ readTag(void *a, Input *input, HTMLState *state)
 							  } while (c == '-');
 							  if (c == '>')
 							  {
-							    return endTag(a, input, state);
+							    return endTag(app, input, state);
 							  }
 							}
 						}
@@ -657,7 +657,7 @@ readTag(void *a, Input *input, HTMLState *state)
 						c = htmlGetByte(input, state);
 						if (c == '>')
 						{
-						    return endTag(a, input, state);
+						    return endTag(app, input, state);
 						}
 						else if (c == 256)
 						{
@@ -669,7 +669,7 @@ readTag(void *a, Input *input, HTMLState *state)
 							copyString((unsigned
 								char *) "!--");
 						    state->html->tagIsKnown = 1;
-						    reportHTMLTag(a,
+						    app->htmlTag(app,
 							state->html, input);
 						    return c;
 						}
@@ -717,14 +717,14 @@ readTag(void *a, Input *input, HTMLState *state)
 	{
 		state->html->tagIsKnown = 0;
 	}
-	reportHTMLTag(a, state->html, input);
+	app->htmlTag(app, state->html, input);
 	if (c == 256)
 	{
 		return c;
 	}
 	else if (c == '>')
 	{
-		return endTag(a, input, state);
+		return endTag(app, input, state);
 	}
 	c = eatWhiteSpace(input, state, c);
 	if (c == 256)
@@ -733,38 +733,38 @@ readTag(void *a, Input *input, HTMLState *state)
 	}
 	else if (c == '>')
 	{
-		return endTag(a, input, state);
+		return endTag(app, input, state);
 	}
 	do
 	{
-		c = readAttribute(a, input, state, c);
+		c = readAttribute(app, input, state, c);
 	} while ((c != 256) && (c != '>'));
 	state->html->currentAttribute = NULL;
 	if (tagHandler)
 	{
-		(*tagHandler)(a, state->html);
+		(*tagHandler)(app, state->html);
 	}
 	if (c == '>')
 	{
-		return endTag(a, input, state);
+		return endTag(app, input, state);
 	}
 
 	return c;
 }
 
 static unsigned short
-readText(void *a, Input *input, HTMLState *state)
+readText(App *app, Input *input, HTMLState *state)
 {
 	unsigned short	c;
 
 	mark(input, -1);
-	reportHTML(a, input);
+	app->html(app, input);
 	do
 	{
 		c = htmlGetByte(input, state);
 	} while ((c != 256) && (c != '<'));
 	mark(input, -1);
-	reportHTMLText(a, input);
+	app->htmlText(app, input);
 
 	return c;
 }
@@ -797,7 +797,7 @@ dealWithScript(Input *input, HTMLState *state, unsigned short c)
 }
 
 void
-htmlRead(void *a, Input *input, unsigned char *base)
+htmlRead(App *app, Input *input, unsigned char *base)
 {
 	unsigned short	c;
 	HTML		html;
@@ -834,18 +834,18 @@ htmlRead(void *a, Input *input, unsigned char *base)
 				(c == '!')
 			)
 			{
-				c = readTag(a, input, &state);
+				c = readTag(app, input, &state);
 				c = dealWithScript(input, &state, c);
 			}
 			else
 			{
 				diag(__LINE__, &state, c);
-				c = readText(a, input, &state);
+				c = readText(app, input, &state);
 			}
 		}
 		else
 		{
-			c = readText(a, input, &state);
+			c = readText(app, input, &state);
 		}
 	}
 

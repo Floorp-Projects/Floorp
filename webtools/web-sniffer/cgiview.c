@@ -35,44 +35,26 @@ static char *passThese[] =
 	NULL
 };
 
-void
-reportHTTPCharSet(void *a, unsigned char *charset)
+static void
+cgiviewHTML(App *app, Input *input)
 {
+	viewHTML(app, input);
 }
 
-void
-reportContentType(void *a, unsigned char *contentType)
+static void
+cgiviewHTMLAttributeName(App *app, HTML *html, Input *input)
 {
+	viewHTMLAttributeName(app, input);
 }
 
-void
-reportHTML(void *a, Input *input)
-{
-	View	*view;
-
-	view = a;
-
-	viewHTML(view, input);
-}
-
-void
-reportHTMLAttributeName(void *a, HTML *html, Input *input)
-{
-	View	*view;
-
-	view = a;
-
-	viewHTMLAttributeName(view, input);
-}
-
-void
-reportHTMLAttributeValue(void *a, HTML *html, Input *input)
+static void
+cgiviewHTMLAttributeValue(App *app, HTML *html, Input *input)
 {
 	URL		*url;
-	View		*view;
 	unsigned char	*urlstring;
+	View		*view;
 
-	view = a;
+	view = &app->view;
 
 	if (html->currentAttributeIsURL)
 	{
@@ -82,70 +64,50 @@ reportHTMLAttributeValue(void *a, HTML *html, Input *input)
 		free(urlstring);
 		urlFree(url);
 	}
-	viewHTMLAttributeValue(view, input);
+	viewHTMLAttributeValue(app, input);
 	if (html->currentAttributeIsURL)
 	{
 		fprintf(view->out, "</a>");
 	}
 }
 
-void
-reportHTMLTag(void *a, HTML *html, Input *input)
+static void
+cgiviewHTMLTag(App *app, HTML *html, Input *input)
 {
-	View	*view;
-
-	view = a;
-
-	viewHTMLTag(view, input);
+	viewHTMLTag(app, input);
 }
 
-void
-reportHTMLText(void *a, Input *input)
+static void
+cgiviewHTMLText(App *app, Input *input)
 {
-	View	*view;
-
-	view = a;
-
-	viewHTMLText(view, input);
+	viewHTMLText(app, input);
 }
 
-void
-reportHTTP(void *a, Input *input)
+static void
+cgiviewHTTP(App *app, Input *input)
 {
-	View	*view;
-
-	view = a;
-
-	viewHTTP(view, input);
+	viewHTTP(app, input);
 }
 
-void
-reportHTTPBody(void *a, Input *input)
+static void
+cgiviewHTTPBody(App *app, Input *input)
 {
-	View	*view;
-
-	view = a;
-
-	viewHTTP(view, input);
+	viewHTTP(app, input);
 }
 
-void
-reportHTTPHeaderName(void *a, Input *input)
+static void
+cgiviewHTTPHeaderName(App *app, Input *input)
 {
-	View	*view;
-
-	view = a;
-
-	viewHTTPHeaderName(view, input);
+	viewHTTPHeaderName(app, input);
 }
 
-void
-reportHTTPHeaderValue(void *a, Input *input, unsigned char *url)
+static void
+cgiviewHTTPHeaderValue(App *app, Input *input, unsigned char *url)
 {
-	View		*view;
 	unsigned char	*urlstring;
+	View		*view;
 
-	view = a;
+	view = &app->view;
 
 	if (url)
 	{
@@ -153,25 +115,15 @@ reportHTTPHeaderValue(void *a, Input *input, unsigned char *url)
 		fprintf(view->out, "<a href=\"%s%s\">", me, urlstring);
 		free(urlstring);
 	}
-	viewHTTPHeaderValue(view, input);
+	viewHTTPHeaderValue(app, input);
 	if (url)
 	{
 		fprintf(view->out, "</a>");
 	}
 }
 
-void
-reportStatus(void *a, char *message, char *file, int line)
-{
-}
-
-void
-reportTime(int task, struct timeval *theTime)
-{
-}
-
 unsigned char **
-getHTTPRequestHeaders(View *view, char *host, char *verbose)
+getHTTPRequestHeaders(App *app, char *host, char *verbose)
 {
 	char		**e;
 	extern char	**environ;
@@ -205,7 +157,7 @@ getHTTPRequestHeaders(View *view, char *host, char *verbose)
 
 	e = environ;
 	r = ret;
-	viewReport(view, "will send these HTTP Request headers:");
+	viewReport(app, "will send these HTTP Request headers:");
 	while (*e)
 	{
 		h = passThese;
@@ -259,7 +211,7 @@ getHTTPRequestHeaders(View *view, char *host, char *verbose)
 				}
 				*q = 0;
 				*r++ = str;
-				viewReport(view, str);
+				viewReport(app, str);
 			}
 		}
 		e++;
@@ -270,9 +222,9 @@ getHTTPRequestHeaders(View *view, char *host, char *verbose)
 		strcpy(str, "Host: ");
 		strcat(str, host);
 		*r++ = str;
-		viewReport(view, str);
+		viewReport(app, str);
 	}
-	viewReportHTML(view, "<hr>");
+	viewReportHTML(app, "<hr>");
 	*r = NULL;
 
 	return (unsigned char **) ret;
@@ -282,6 +234,7 @@ int
 main(int argc, char *argv[])
 {
 	char		*ampersand;
+	App		*app;
 	unsigned char	*equals;
 	char		*name;
 	unsigned char	*newURL;
@@ -306,7 +259,17 @@ main(int argc, char *argv[])
 	verbose = "?url=";
 
 	query = getenv("QUERY_STRING");
-	view = viewAlloc();
+	app = appAlloc();
+	app->html = cgiviewHTML;
+	app->htmlAttributeName = cgiviewHTMLAttributeName;
+	app->htmlAttributeValue = cgiviewHTMLAttributeValue;
+	app->htmlTag = cgiviewHTMLTag;
+	app->htmlText = cgiviewHTMLText;
+	app->http = cgiviewHTTP;
+	app->httpBody = cgiviewHTTPBody;
+	app->httpHeaderName = cgiviewHTTPHeaderName;
+	app->httpHeaderValue = cgiviewHTTPHeaderValue;
+	view = &app->view;
 	view->out = stdout;
 	freopen("/dev/null", "w", stderr);
 	fprintf(view->out, "Content-Type: text/html\n");
@@ -359,9 +322,9 @@ main(int argc, char *argv[])
 				"<body><tt><b>\n",
 			url
 		);
-		viewReport(view, "input url:");
-		viewReport(view, (char *) url);
-		viewReportHTML(view, "<hr>");
+		viewReport(app, "input url:");
+		viewReport(app, (char *) url);
+		viewReportHTML(app, "<hr>");
 		u = urlParse(url);
 		if
 		(
@@ -373,7 +336,7 @@ main(int argc, char *argv[])
 			newURL = calloc(strlen((char *) url) + 3, 1);
 			if (!newURL)
 			{
-				viewReport(view, "calloc failed");
+				viewReport(app, "calloc failed");
 				return 1;
 			}
 			strcpy((char *) newURL, "//");
@@ -398,7 +361,7 @@ main(int argc, char *argv[])
 			newURL = calloc(strlen((char *) url) + 2, 1);
 			if (!newURL)
 			{
-				viewReport(view, "calloc failed");
+				viewReport(app, "calloc failed");
 				return 1;
 			}
 			strcpy((char *) newURL, (char *) url);
@@ -410,14 +373,14 @@ main(int argc, char *argv[])
 			(unsigned char *) "http://www.mozilla.org/index.html",
 			newURL);
 		free(newURL);
-		viewReport(view, "fully qualified url:");
-		viewReport(view, (char *) u->url);
-		viewReportHTML(view, "<hr>");
+		viewReport(app, "fully qualified url:");
+		viewReport(app, (char *) u->url);
+		viewReportHTML(app, "<hr>");
 		fflush(view->out);
 		if (!strcmp((char *) u->scheme, "http"))
 		{
-			httpProcess(view, u,
-				getHTTPRequestHeaders(view, (char *) u->host,
+			httpProcess(app, u,
+				getHTTPRequestHeaders(app, (char *) u->host,
 				verbose));
 		}
 		else

@@ -46,6 +46,7 @@ PURIFY =
 
 OBJS =			\
 	addurl.$(OBJ)	\
+	app.$(OBJ)	\
 	file.$(OBJ)	\
 	hash.$(OBJ)	\
 	html.$(OBJ)	\

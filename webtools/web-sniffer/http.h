@@ -40,9 +40,9 @@ HTTP *httpAlloc(void);
 void httpFree(HTTP *http);
 int httpGetHTTP10OrGreaterCount(void);
 int httpGetNonEmptyHTTPResponseCount(void);
-void httpParseRequest(HTTP *http, void *a, char *url);
-void httpParseStream(HTTP *http, void *a, unsigned char *url);
-HTTP *httpProcess(void *a, URL *url, unsigned char **headers);
-void httpRead(HTTP *http, void *a, int fd, unsigned char *url);
+void httpParseRequest(HTTP *http, App *app, char *url);
+void httpParseStream(HTTP *http, App *app, unsigned char *url);
+HTTP *httpProcess(App *app, URL *url, unsigned char **headers);
+void httpRead(HTTP *http, App *app, int fd, unsigned char *url);
 
 #endif /* _HTTP_H_ */

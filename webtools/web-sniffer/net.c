@@ -81,7 +81,7 @@ getHostName(void)
 }
 
 static int
-getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
+getSocketAndIPAddress(App *app, unsigned char *hostName, int port,
 	struct sockaddr_in *addr)
 {
 #if HAVE_GETHOSTBYNAME_R
@@ -99,8 +99,8 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 	if (!proto)
 	{
 		perror("getprotobyname");
-		viewReport(a, "getprotobyname failed");
-		viewReport(a, strerror(errno) ? strerror(errno) : "NULL");
+		viewReport(app, "getprotobyname failed");
+		viewReport(app, strerror(errno) ? strerror(errno) : "NULL");
 		return -1;
 	}
 
@@ -108,15 +108,15 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 	if (sock < 0)
 	{
 		perror("socket");
-		viewReport(a, "socket failed");
-		viewReport(a, strerror(errno) ? strerror(errno) : "NULL");
+		viewReport(app, "socket failed");
+		viewReport(app, strerror(errno) ? strerror(errno) : "NULL");
 		return -1;
 	}
 
-	viewReport(a, "calling gethostbyname_r() on");
-	viewReport(a, (char *) hostName);
+	viewReport(app, "calling gethostbyname_r() on");
+	viewReport(app, (char *) hostName);
 
-	reportStatus(a, "gethostbyname_r", __FILE__, __LINE__);
+	app->status(app, "gethostbyname_r", __FILE__, __LINE__);
 
 	gettimeofday(&theTime, NULL);
 
@@ -142,9 +142,9 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
         else
 #endif
 	{
-		reportTime(REPORT_TIME_GETHOSTBYNAME_FAILURE, &theTime);
-		reportStatus(a, "gethostbyname_r failed", __FILE__, __LINE__);
-		viewReportHTML(a, "failed<br><hr>");
+		app->time(app, appTimeGetHostByNameFailure, &theTime);
+		app->status(app, "gethostbyname_r failed", __FILE__, __LINE__);
+		viewReportHTML(app, "failed<br><hr>");
 		close(sock);
 #if !defined(HAVE_GETHOSTBYNAME_R)
 		threadMutexUnlock();
@@ -152,11 +152,11 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 		return -1;
 	}
 
-	reportTime(REPORT_TIME_GETHOSTBYNAME_SUCCESS, &theTime);
+	app->time(app, appTimeGetHostByNameSuccess, &theTime);
 
-	reportStatus(a, "gethostbyname_r succeeded", __FILE__, __LINE__);
+	app->status(app, "gethostbyname_r succeeded", __FILE__, __LINE__);
 
-	viewReportHTML(a, "succeeded<br><hr>");
+	viewReportHTML(app, "succeeded<br><hr>");
 
 	memset(addr, 0, sizeof(*addr));
 	addr->sin_family = host.h_addrtype /* PF_INET */;
@@ -174,7 +174,7 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 }
 
 int
-netListen(void *a, unsigned char **host, unsigned short *port)
+netListen(App *app, unsigned char **host, unsigned short *port)
 {
 	unsigned char		*hostName;
 	struct sockaddr_in	name;
@@ -187,7 +187,7 @@ netListen(void *a, unsigned char **host, unsigned short *port)
 		return -1;
 	}
 
-	fd = getSocketAndIPAddress(a, hostName, *port, &name);
+	fd = getSocketAndIPAddress(app, hostName, *port, &name);
 	if (fd < 0)
 	{
 		return -1;
@@ -244,27 +244,27 @@ netAccept(int fd)
 }
 
 int
-netConnect(void *a, unsigned char *hostName, int port)
+netConnect(App *app, unsigned char *hostName, int port)
 {
 	struct sockaddr_in	addr;
 	int			sock;
 	struct timeval		theTime;
 
-	sock = getSocketAndIPAddress(a, hostName, port, &addr);
+	sock = getSocketAndIPAddress(app, hostName, port, &addr);
 	if (sock < 0)
 	{
 		return -1;
 	}
 
-	viewReport(a, "calling connect()");
+	viewReport(app, "calling connect()");
 
-	reportStatus(a, "connect", __FILE__, __LINE__);
+	app->status(app, "connect", __FILE__, __LINE__);
 
 	gettimeofday(&theTime, NULL);
 
 	if (connect(sock, (struct sockaddr *) &addr, sizeof(addr)) == -1)
 	{
-		reportTime(REPORT_TIME_CONNECT_FAILURE, &theTime);
+		app->time(app, appTimeConnectFailure, &theTime);
 
 		/* XXX try again if Connection timed out? */
 		/* XXX try again if Connection refused? */
@@ -279,18 +279,18 @@ netConnect(void *a, unsigned char *hostName, int port)
 			perror(NULL);
 		}
 		close(sock);
-		reportStatus(a, "connect failed", __FILE__, __LINE__);
-		viewReport(a, "failed:");
-		viewReport(a, strerror(errno) ? strerror(errno) : "NULL");
-		viewReportHTML(a, "<hr>");
+		app->status(app, "connect failed", __FILE__, __LINE__);
+		viewReport(app, "failed:");
+		viewReport(app, strerror(errno) ? strerror(errno) : "NULL");
+		viewReportHTML(app, "<hr>");
 		return -1;
 	}
 
-	reportTime(REPORT_TIME_CONNECT_SUCCESS, &theTime);
+	app->time(app, appTimeConnectSuccess, &theTime);
 
-	reportStatus(a, "connect succeeded", __FILE__, __LINE__);
+	app->status(app, "connect succeeded", __FILE__, __LINE__);
 
-	viewReportHTML(a, "succeeded<br><hr>");
+	viewReportHTML(app, "succeeded<br><hr>");
 
 	threadMutexLock();
 	connectCount++;

@@ -27,9 +27,9 @@
 
 #include "url.h"
 
-typedef void (*AddURLFunc)(void *a, URL *url);
+typedef void (*AddURLFunc)(App *app, URL *url);
 
-void addURL(void *a, unsigned char *str);
+void addURL(App *app, unsigned char *str);
 void addURLInit(AddURLFunc addURLFunc, char **limitURLs, char **limitDomains);
 
 #endif /* _ADDURL_H_ */

@@ -66,13 +66,15 @@
 typedef int socklen_t;
 #endif
 
+typedef struct App App;
+
 #include "addurl.h"
+#include "app.h"
 #include "file.h"
 #include "hash.h"
 #include "html.h"
 #include "http.h"
 #include "io.h"
-#include "main.h"
 #include "mime.h"
 #include "net.h"
 #include "thread.h"

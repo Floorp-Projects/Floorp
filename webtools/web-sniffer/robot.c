@@ -33,7 +33,7 @@ typedef struct Entry
 	unsigned char	*url;
 } Entry;
 
-typedef struct Arg
+typedef struct Robot
 {
 	int	slot;
 	int	count;
@@ -42,7 +42,7 @@ typedef struct Arg
 	char	viewFile[1024];
 	int	viewFileAdded;
 	char	viewURL[1024];
-} Arg;
+} Robot;
 
 typedef struct StatusEntry
 {
@@ -142,27 +142,27 @@ static FILE *statsOut = NULL;
 static char *firstURL = NULL;
 static unsigned char *startTime = NULL;
 
-void
-reportStatus(void *a, char *message, char *file, int line)
+static void
+robotStatus(App *app, char *message, char *file, int line)
 {
-	Arg		*arg;
+	Robot		*robot;
 	StatusEntry	*entry;
 
-	if (!a)
+	if (!app)
 	{
 		return;
 	}
 
-	arg = a;
-	entry = &statusEntries[arg->slot];
+	robot = app->data;
+	entry = &statusEntries[robot->slot];
 	time(&entry->time);
 	entry->message = message;
 	entry->file = file;
 	entry->line = line;
 }
 
-void
-reportTime(int task, struct timeval *before)
+static void
+robotTime(App *app, int task, struct timeval *before)
 {
 	struct timeval	after;
 	double		span;
@@ -186,7 +186,7 @@ reportTime(int task, struct timeval *before)
 }
 
 static void
-addEntry(HashTable *table, Arg *arg, unsigned char *url, unsigned char *str)
+addEntry(HashTable *table, Robot *robot, unsigned char *url, unsigned char *str)
 {
 	Entry		*entry;
 	HashEntry	*hashEntry;
@@ -205,8 +205,8 @@ addEntry(HashTable *table, Arg *arg, unsigned char *url, unsigned char *str)
 			exit(0);
 		}
 		entry->count = 1;
-		entry->viewURL = copyString((unsigned char *) arg->viewURL);
-		arg->viewFileAdded = 1;
+		entry->viewURL = copyString((unsigned char *) robot->viewURL);
+		robot->viewFileAdded = 1;
 		entry->url = copyString(url);
 		hashAdd(table, copyString(str), entry);
 	}
@@ -225,24 +225,24 @@ freeEntry(unsigned char *str, void *e)
 }
 
 static void
-reportScheme(Arg *arg, unsigned char *url, unsigned char *scheme)
+robotScheme(Robot *robot, unsigned char *url, unsigned char *scheme)
 {
-	addEntry(schemeTable, arg, url, scheme);
+	addEntry(schemeTable, robot, url, scheme);
 }
 
 static void
-addURLFunc(void *a, URL *url)
+addURLFunc(App *app, URL *url)
 {
-	Arg	*arg;
+	Robot	*robot;
 
 	if (!url->scheme)
 	{
 		return;
 	}
 
-	arg = a;
+	robot = app->data;
 
-	reportScheme(arg, url->url, url->scheme);
+	robotScheme(robot, url->url, url->scheme);
 
 	if (strcmp((char *) url->scheme, "http"))
 	{
@@ -262,66 +262,66 @@ addURLFunc(void *a, URL *url)
 	}
 }
 
-void
-reportHTTP(void *a, Input *input)
+static void
+robotHTTP(App *app, Input *input)
 {
-	Arg	*arg;
+	Robot	*robot;
 
-	arg = a;
+	robot = app->data;
 
-	viewHTTP(arg->view, input);
+	viewHTTP(app, input);
 }
 
-void
-reportHTTPBody(void *a, Input *input)
+static void
+robotHTTPBody(App *app, Input *input)
 {
 }
 
-void
-reportHTTPHeaderName(void *a, Input *input)
+static void
+robotHTTPHeaderName(App *app, Input *input)
 {
-	Arg		*arg;
+	Robot		*robot;
 	unsigned char	*name;
 
-	arg = a;
+	robot = app->data;
 
 	name = copyLower(input);
-	addEntry(httpHeaderTable, arg, arg->url->url, name);
+	addEntry(httpHeaderTable, robot, robot->url->url, name);
 	free(name);
 
-	viewHTTPHeaderName(arg->view, input);
+	viewHTTPHeaderName(app, input);
 }
 
-void
-reportHTTPHeaderValue(void *a, Input *input, unsigned char *url)
+static void
+robotHTTPHeaderValue(App *app, Input *input, unsigned char *url)
 {
-	Arg	*arg;
+	Robot	*robot;
 
-	arg = a;
+	robot = app->data;
 
-	viewHTTPHeaderValue(arg->view, input);
+	viewHTTPHeaderValue(app, input);
 }
 
-void
-reportHTML(void *a, Input *input)
+static void
+robotHTML(App *app, Input *input)
 {
-	Arg	*arg;
+	Robot	*robot;
 
-	arg = a;
+	robot = app->data;
 
-	viewHTML(arg->view, input);
+	viewHTML(app, input);
 }
 
-void
-reportHTMLText(void *a, Input *input)
+static void
+robotHTMLText(App *app, Input *input)
 {
-	Arg		*arg;
+	Robot		*robot;
 	unsigned char	*p;
 	unsigned char	*str;
 
-	arg = a;
+	robot = app->data;
 
-	viewHTMLText(arg->view, input);
+	viewHTMLText(app, input);
 
 	str = copy(input);
 	p = str;
@@ -339,11 +339,11 @@ reportHTMLText(void *a, Input *input)
 		{
 			if (p[4] == '7')
 			{
-				fprintf(stderr, "147: %s\n", arg->url->url);
+				fprintf(stderr, "147: %s\n", robot->url->url);
 			}
 			else if (p[4] == '8')
 			{
-				fprintf(stderr, "148: %s\n", arg->url->url);
+				fprintf(stderr, "148: %s\n", robot->url->url);
 			}
 		}
 		p++;
@@ -351,17 +351,17 @@ reportHTMLText(void *a, Input *input)
 	free(str);
 }
 
-void
-reportHTMLTag(void *a, HTML *html, Input *input)
+static void
+robotHTMLTag(App *app, HTML *html, Input *input)
 {
-	Arg		*arg;
+	Robot		*robot;
 	HashEntry	*tagEntry;
 
-	arg = a;
+	robot = app->data;
 	if (html->tagIsKnown)
 	{
 #ifdef ROBOT_LOG_TAGS
-		addEntry(tagTable, arg, arg->url->url, html->tag);
+		addEntry(tagTable, robot, robot->url->url, html->tag);
 #endif
 	}
 	else
@@ -375,54 +375,54 @@ reportHTMLTag(void *a, HTML *html, Input *input)
 		}
 	}
 
-	viewHTMLTag(arg->view, input);
-}
-
-void
-reportHTMLAttributeName(void *a, HTML *html, Input *input)
-{
-	Arg	*arg;
-
-	arg = a;
-	if (html->tagIsKnown)
-	{
-#ifdef ROBOT_LOG_ATTRIBUTES
-		addEntry(attributeTable, arg, arg->url->url,
-			html->currentAttribute->name);
-#endif
-	}
-	viewHTMLAttributeName(arg->view, input);
-}
-
-void
-reportHTMLAttributeValue(void *a, HTML *html, Input *input)
-{
-	Arg	*arg;
-
-	arg = a;
-
-	viewHTMLAttributeValue(arg->view, input);
-}
-
-void
-reportContentType(void *a, unsigned char *contentType)
-{
-	Arg	*arg;
-
-	arg = a;
-
-	addEntry(contentTypeTable, arg, arg->url->url, contentType);
+	viewHTMLTag(app, input);
 }
 
 static void
-metaHandler(void *a, HTML *html)
+robotHTMLAttributeName(App *app, HTML *html, Input *input)
 {
-	Arg		*arg;
+	Robot	*robot;
+
+	robot = app->data;
+	if (html->tagIsKnown)
+	{
+#ifdef ROBOT_LOG_ATTRIBUTES
+		addEntry(attributeTable, robot, robot->url->url,
+			html->currentAttribute->name);
+#endif
+	}
+	viewHTMLAttributeName(app, input);
+}
+
+static void
+robotHTMLAttributeValue(App *app, HTML *html, Input *input)
+{
+	Robot	*robot;
+
+	robot = app->data;
+
+	viewHTMLAttributeValue(app, input);
+}
+
+static void
+robotContentType(App *app, unsigned char *contentType)
+{
+	Robot	*robot;
+
+	robot = app->data;
+
+	addEntry(contentTypeTable, robot, robot->url->url, contentType);
+}
+
+static void
+metaHandler(App *app, HTML *html)
+{
+	Robot		*robot;
 	HTMLAttribute	*attr;
 	unsigned char	*charset;
 	ContentType	*contentType;
 
-	arg = a;
+	robot = app->data;
 
 	attr = html->attributes;
 	while (attr)
@@ -446,26 +446,26 @@ metaHandler(void *a, HTML *html)
 		mimeFreeContentType(contentType);
 		if (charset)
 		{
-			addEntry(metaCharsetTable, arg, arg->url->url,
+			addEntry(metaCharsetTable, robot, robot->url->url,
 				lowerCase(charset));
 			free(charset);
 		}
 	}
 }
 
-void
-tagHandler(void *a, HTML *html)
+static void
+tagHandler(App *app, HTML *html)
 {
 }
 
-void
-reportHTTPCharSet(void *a, unsigned char *charset)
+static void
+robotHTTPCharSet(App *app, unsigned char *charset)
 {
-	Arg	*arg;
+	Robot	*robot;
 
-	arg = a;
+	robot = app->data;
 
-	addEntry(httpCharsetTable, arg, arg->url->url, charset);
+	addEntry(httpCharsetTable, robot, robot->url->url, charset);
 }
 
 static void
@@ -525,7 +525,7 @@ printTimes(FILE *file)
 	fprintf(file, "<td>Max</td>");
 	fprintf(file, "</tr>");
 
-	for (i = 0; i < REPORT_TIME_MAX; i++)
+	for (i = 0; i < appTimeMax; i++)
 	{
 		TimeEntry	*entry;
 
@@ -619,68 +619,93 @@ printStats(void)
 }
 
 static void
-openViewFile(Arg *arg)
+openViewFile(App *app)
 {
-	sprintf(arg->viewURL, "%010d.html", arg->count);
-	sprintf(arg->viewFile, "%s%s", OUTPUT_DIRECTORY, arg->viewURL);
+	Robot	*robot;
+
+	robot = app->data;
+	sprintf(robot->viewURL, "%010d.html", robot->count);
+	sprintf(robot->viewFile, "%s%s", OUTPUT_DIRECTORY, robot->viewURL);
 	/*
-	sprintf(arg->viewFile, "/dev/null");
+	sprintf(robot->viewFile, "/dev/null");
 	*/
-	arg->viewFileAdded = 0;
-	arg->view = viewAlloc();
-	arg->view->out = fopen(arg->viewFile, "w");
-	if (!arg->view->out)
+	robot->viewFileAdded = 0;
+	app->view.out = fopen(robot->viewFile, "w");
+	if (!app->view.out)
 	{
 		fprintf(stderr, "cannot open %s for writing: %s\n",
-			arg->viewFile, strerror(errno));
+			robot->viewFile, strerror(errno));
 		exit(0);
 	}
-	fprintf(arg->view->out, "<html><head><title>View</title></head><body><tt>");
+	fprintf(app->view.out, "<html><head><title>View</title></head><body><tt>");
 }
 
 static void
-closeViewFile(Arg *arg)
+closeViewFile(App *app)
 {
-	fprintf(arg->view->out, "</tt></body></html>");
-	fclose(arg->view->out);
-	if (!arg->viewFileAdded)
+	Robot	*robot;
+
+	robot = app->data;
+	fprintf(app->view.out, "</tt></body></html>");
+	fclose(app->view.out);
+	if (!robot->viewFileAdded)
 	{
-		unlink(arg->viewFile);
+		unlink(robot->viewFile);
 	}
-	arg->viewFileAdded = 0;
-	FREE(arg->view);
+	robot->viewFileAdded = 0;
 }
 
 static void
-processURL(Arg *arg)
+processURL(App *app)
 {
+	Robot		*robot;
 	struct timeval	theTime;
+
+	robot = app->data;
 
 	gettimeofday(&theTime, NULL);
 
-	reportStatus(arg, "processURL", __FILE__, __LINE__);
+	app->status(app, "processURL", __FILE__, __LINE__);
 
-	openViewFile(arg);
-	httpFree(httpProcess(arg, arg->url, NULL));
-	closeViewFile(arg);
+	openViewFile(app);
+	httpFree(httpProcess(app, robot->url, NULL));
+	closeViewFile(app);
 
-	reportStatus(arg, "processURL done", __FILE__, __LINE__);
+	app->status(app, "processURL done", __FILE__, __LINE__);
 
-	reportTime(REPORT_TIME_TOTAL, &theTime);
+	app->time(app, appTimeTotal, &theTime);
 }
 
 static void *
 startHere(void *a)
 {
-	Arg	arg;
+	Robot	robot;
+	App	*app;
 
-	arg.slot = (int) a;
+	robot.slot = (int) a;
+
+	app = appAlloc();
+	app->status = robotStatus;
+	app->time = robotTime;
+	app->http = robotHTTP;
+	app->httpBody = robotHTTPBody;
+	app->httpHeaderName = robotHTTPHeaderName;
+	app->httpHeaderValue = robotHTTPHeaderValue;
+	app->html = robotHTML;
+	app->htmlText = robotHTMLText;
+	app->htmlTag = robotHTMLTag;
+	app->htmlAttributeName = robotHTMLAttributeName;
+	app->htmlAttributeValue = robotHTMLAttributeValue;
+	app->contentType = robotContentType;
+	app->httpCharSet = robotHTTPCharSet;
+	app->data = &robot;
+
 	while (1)
 	{
 		threadMutexLock();
 		while ((!currURL) && (count < LIMIT))
 		{
-			reportStatus(&arg, waiting, __FILE__, __LINE__);
+			app->status(app, waiting, __FILE__, __LINE__);
 			threadCondWait();
 		}
 		if (count >= LIMIT)
@@ -693,11 +718,11 @@ startHere(void *a)
 		{
 			printStats();
 		}
-		arg.count = count;
-		arg.url = currURL;
+		robot.count = count;
+		robot.url = currURL;
 		currURL = currURL->next;
 		threadMutexUnlock();
-		processURL(&arg);
+		processURL(app);
 	}
 
 	return NULL;
@@ -944,12 +969,14 @@ acceptNewClient(int fd)
 static void *
 startStatusFunc(void *a)
 {
+	App	*app;
 	FD	*f;
 	int	fd;
 	fd_set	localFDSet;
 	int	ret;
 
-	fd = netListen(NULL, NULL, &mainPort);
+	app = appAlloc();
+	fd = netListen(app, NULL, &mainPort);
 	if (fd < 0)
 	{
 		fprintf(stderr, "netListen failed\n");

@@ -33,7 +33,7 @@ static HashTable *rejectedURLTable = NULL;
 static HashTable *urlTable = NULL;
 
 static void
-addThisURL(void *a, unsigned char *str)
+addThisURL(App *app, unsigned char *str)
 {
 	int			addIt;
 	/*
@@ -126,7 +126,7 @@ addThisURL(void *a, unsigned char *str)
 			printf("%s\n", fragless);
 			*/
 			hashAdd(urlTable, fragless, NULL);
-			(*addURLFunc)(a, url);
+			(*addURLFunc)(app, url);
 		}
 	}
 	else
@@ -144,7 +144,7 @@ addThisURL(void *a, unsigned char *str)
 }
 
 void
-addURL(void *a, unsigned char *str)
+addURL(App *app, unsigned char *str)
 {
 	int		len;
 	unsigned char	*s;
@@ -152,7 +152,7 @@ addURL(void *a, unsigned char *str)
 	unsigned char	*u;
 	URL		*url;
 
-	addThisURL(a, str);
+	addThisURL(app, str);
 
 	url = urlParse(str);
 	if (!url)
@@ -198,7 +198,7 @@ addURL(void *a, unsigned char *str)
 				slash[1] = 0;
 				u[len] = 0;
 				strcat((char *) u, (char *) s);
-				addThisURL(a, u);
+				addThisURL(app, u);
 				slash[0] = 0;
 			}
 			else
@@ -213,7 +213,7 @@ addURL(void *a, unsigned char *str)
 }
 
 static void
-urlHandler(void *a, HTML *html)
+urlHandler(App *app, HTML *html)
 {
 	URL	*url;
 
@@ -227,7 +227,7 @@ urlHandler(void *a, HTML *html)
 		printf("%s\n", url->url);
 		printf("--------------------------------\n");
 		*/
-		addURL(a, url->url);
+		addURL(app, url->url);
 		urlFree(url);
 	}
 }

@@ -46,6 +46,16 @@ typedef struct Arg
 	View	*view;
 } Arg;
 
+static void proxyHTML(App *app, Input *input);
+static void proxyHTMLAttributeName(App *app, HTML *html, Input *input);
+static void proxyHTMLAttributeValue(App *app, HTML *html, Input *input);
+static void proxyHTMLTag(App *app, HTML *html, Input *input);
+static void proxyHTMLText(App *app, Input *input);
+static void proxyHTTP(App *app, Input *input);
+static void proxyHTTPBody(App *app, Input *input);
+static void proxyHTTPHeaderName(App *app, Input *input);
+static void proxyHTTPHeaderValue(App *app, Input *input, unsigned char *url);
+
 static fd_set fdSet;
 static int id = 0;
 static unsigned short mainPort = 40404;
@@ -172,10 +182,31 @@ removeFD(int fd)
 	}
 }
 
+static App *
+proxyApp(FD *f)
+{
+	App	*app;
+
+	app = appAlloc();
+	app->html = proxyHTML;
+	app->htmlAttributeName = proxyHTMLAttributeName;
+	app->htmlAttributeValue = proxyHTMLAttributeValue;
+	app->htmlTag = proxyHTMLTag;
+	app->htmlText = proxyHTMLText;
+	app->http = proxyHTTP;
+	app->httpBody = proxyHTTPBody;
+	app->httpHeaderName = proxyHTTPHeaderName;
+	app->httpHeaderValue = proxyHTTPHeaderValue;
+	app->view.backslash = 1;
+	app->view.out = f->logFile;
+
+	return app;
+}
+
 static int
 logRequest(FD *f, Input *input)
 {
-	Arg	arg;
+	App	*app;
 	HTTP	*http;
 
 	if
@@ -202,11 +233,9 @@ logRequest(FD *f, Input *input)
 	);
 	http = httpAlloc();
 	http->input = input;
-	arg.view = viewAlloc();
-	arg.view->backslash = 1;
-	arg.view->out = f->logFile;
-	httpParseRequest(http, &arg, "logRequest");
-	free(arg.view);
+	app = proxyApp(f);
+	httpParseRequest(http, app, "logRequest");
+	free(app);
 	httpFree(http);
 	fprintf(f->logFile, "</b></pre>\");\n</script>\n");
 	fflush(f->logFile);
@@ -234,7 +263,7 @@ readClientRequest(int fd)
 static int
 logResponse(FD *f, Input *input)
 {
-	Arg	arg;
+	App	*app;
 	HTTP	*http;
 
 	if ((table[fileno(f->logFile)]->suspend) || (f->suspend))
@@ -252,11 +281,9 @@ logResponse(FD *f, Input *input)
 	);
 	http = httpAlloc();
 	http->input = input;
-	arg.view = viewAlloc();
-	arg.view->backslash = 1;
-	arg.view->out = f->logFile;
-	httpParseStream(http, &arg, (unsigned char *) "readProxyResponse");
-	free(arg.view);
+	app = proxyApp(f);
+	httpParseStream(http, app, (unsigned char *) "readProxyResponse");
+	free(app);
 	httpFree(http);
 	fprintf(f->logFile, "</b></pre>\");\n</script>\n");
 	fflush(f->logFile);
@@ -509,105 +536,58 @@ acceptNewLogger(int fd)
 	return 0;
 }
 
-void
-reportContentType(void *a, unsigned char *contentType)
+static void
+proxyHTML(App *app, Input *input)
 {
+	viewHTML(app, input);
 }
 
-void
-reportHTML(void *a, Input *input)
+static void
+proxyHTMLAttributeName(App *app, HTML *html, Input *input)
 {
-	Arg	*arg;
-
-	arg = a;
-	viewHTML(arg->view, input);
+	viewHTMLAttributeName(app, input);
 }
 
-void
-reportHTMLAttributeName(void *a, HTML *html, Input *input)
+static void
+proxyHTMLAttributeValue(App *app, HTML *html, Input *input)
 {
-	Arg	*arg;
-
-	arg = a;
-	viewHTMLAttributeName(arg->view, input);
+	viewHTMLAttributeValue(app, input);
 }
 
-void
-reportHTMLAttributeValue(void *a, HTML *html, Input *input)
+static void
+proxyHTMLTag(App *app, HTML *html, Input *input)
 {
-	Arg	*arg;
-
-	arg = a;
-	viewHTMLAttributeValue(arg->view, input);
+	viewHTMLTag(app, input);
 }
 
-void
-reportHTMLTag(void *a, HTML *html, Input *input)
+static void
+proxyHTMLText(App *app, Input *input)
 {
-	Arg	*arg;
-
-	arg = a;
-	viewHTMLTag(arg->view, input);
+	viewHTMLText(app, input);
 }
 
-void
-reportHTMLText(void *a, Input *input)
+static void
+proxyHTTP(App *app, Input *input)
 {
-	Arg	*arg;
-
-	arg = a;
-	viewHTMLText(arg->view, input);
+	viewHTTP(app, input);
 }
 
-void
-reportHTTP(void *a, Input *input)
+static void
+proxyHTTPBody(App *app, Input *input)
 {
-	Arg	*arg;
-
-	arg = a;
-	viewHTTP(arg->view, input);
+	viewHTTP(app, input);
 }
 
-void
-reportHTTPBody(void *a, Input *input)
+static void
+proxyHTTPHeaderName(App *app, Input *input)
 {
-	Arg    *arg;
-
-	arg = a;
-	viewHTTP(arg->view, input);
+	viewHTTPHeaderName(app, input);
 }
 
-void
-reportHTTPCharSet(void *a, unsigned char *charset)
+static void
+proxyHTTPHeaderValue(App *app, Input *input, unsigned char *url)
 {
-}
-
-void
-reportHTTPHeaderName(void *a, Input *input)
-{
-	Arg	*arg;
-
-	arg = a;
-	viewHTTPHeaderName(arg->view, input);
-}
-
-void
-reportHTTPHeaderValue(void *a, Input *input, unsigned char *url)
-{
-	Arg	*arg;
-
-	arg = a;
-	viewHTTPHeaderValue(arg->view, input);
-}
-
-void
-reportStatus(void *a, char *message, char *file, int line)
-{
-}
-
-void
-reportTime(int task, struct timeval *theTime)
-{
+	viewHTTPHeaderValue(app, input);
 }
 
 int

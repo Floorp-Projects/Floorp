@@ -33,17 +33,16 @@ typedef struct View
 	FILE	*out;
 } View;
 
-View *viewAlloc(void);
-void viewHTML(View *view, Input *input);
-void viewHTMLAttributeName(View *view, Input *input);
-void viewHTMLAttributeValue(View *view, Input *input);
-void viewHTMLTag(View *view, Input *input);
-void viewHTMLText(View *view, Input *input);
-void viewHTTP(View *view, Input *input);
-void viewHTTPHeaderName(View *view, Input *input);
-void viewHTTPHeaderValue(View *view, Input *input);
-void viewReport(View *view, char *str);
-void viewReportHTML(View *view, char *str);
+void viewHTML(App *app, Input *input);
+void viewHTMLAttributeName(App *app, Input *input);
+void viewHTMLAttributeValue(App *app, Input *input);
+void viewHTMLTag(App *app, Input *input);
+void viewHTMLText(App *app, Input *input);
+void viewHTTP(App *app, Input *input);
+void viewHTTPHeaderName(App *app, Input *input);
+void viewHTTPHeaderValue(App *app, Input *input);
+void viewReport(App *app, char *str);
+void viewReportHTML(App *app, char *str);
 void viewVerbose(void);
 
 #endif /* _VIEW_H_ */
