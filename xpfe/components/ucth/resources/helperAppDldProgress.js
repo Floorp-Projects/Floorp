@@ -378,7 +378,7 @@ function setupPostProgressUI()
   var cancelButton = document.getElementById('cancel');
   if (cancelButton)
   {
-    cancelButton.value = "Close"; // mscott -> replace with a string bundle
+    cancelButton.label = "Close"; // mscott -> replace with a string bundle
     cancelButton.setAttribute("onclick", "window.close()");
   }
 
