@@ -66,7 +66,10 @@ var stateListener = {
 	}
 };
 
+// i18n globals
 var currentMailSendCharset = null;
+var g_send_default_charset = null;
+var g_charsetTitle = null;
 
 function GetArgs()
 {
@@ -355,6 +358,7 @@ function SetDocumentCharacterSet(aCharset)
   if (msgCompose) {
     msgCompose.SetDocumentCharset(aCharset);
     currentMailSendCharset = aCharset;
+    g_charsetTitle = null;
     SetComposeWindowTitle(13);
   }
   else
@@ -380,6 +384,8 @@ function SetDefaultMailSendCharacterSet()
 	  if (msgCompose) {
       // write to the pref file
       prefs.SetCharPref("mailnews.send_default_charset", currentMailSendCharset);
+      // update the global
+      g_send_default_charset = currentMailSendCharset;
       dump("Set send_default_charset to" + currentMailSendCharset + "\n");
     }
 	  else
@@ -434,45 +440,43 @@ function InitCharsetMenuCheckMark()
 
 function GetCharsetUIString()
 {
-  try {
-    prefs = Components.classes['component://netscape/preferences'];
-    prefs = prefs.getService();
-    prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-  }
-  catch (ex) {
-    dump("failed to get prefs service!\n");
-    prefs = null;
-  }
-
-  var send_default_charset = prefs.CopyCharPref("mailnews.send_default_charset");
   var charset = msgCompose.compFields.GetCharacterSet();
+  if (g_send_default_charset == null) {
+    try {
+      prefs = Components.classes['component://netscape/preferences'];
+      prefs = prefs.getService();
+      prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+      g_send_default_charset = prefs.CopyCharPref("mailnews.send_default_charset");
+    }
+    catch (ex) {
+      dump("failed to get prefs service!\n");
+      prefs = null;
+      g_send_default_charset = charset; // set to the current charset
+    }
+  }
 
   charset = charset.toUpperCase();
   if (charset == "US-ASCII")
     charset = "ISO-8859-1";
 
-  if (charset != send_default_charset) {
-    var charsetTitle = "";
-    try {
-      var ccm = Components.classes['component://netscape/charset-converter-manager'];
-      ccm = ccm.getService();
-      ccm = ccm.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
-    }
-    catch (ex) {
-      dump("failed to get charset-converter-manager service!\n");
-      ccm = null;
+  if (charset != g_send_default_charset) {
+
+    if (g_charsetTitle == null) {
+      try {
+        var ccm = Components.classes['component://netscape/charset-converter-manager'];
+        ccm = ccm.getService();
+        ccm = ccm.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
+        // get a localized string
+        var charsetAtom = ccm.GetCharsetAtom(charset);
+        g_charsetTitle = ccm.GetCharsetTitle(charsetAtom);
+      }
+      catch (ex) {
+        dump("failed to get a charset title of " + charset + "!\n");
+        g_charsetTitle = charset; // just show the charset itself
+      }
     }
 
-    // get a localized string
-    try {
-      var charsetAtom = ccm.GetCharsetAtom(charset);
-      charsetTitle = ccm.GetCharsetTitle(charsetAtom);
-    }
-    catch (ex) {
-      dump("failed to get a charset title of " + charset + "!\n");
-      charsetTitle = "";
-    }
-    return " - " + charsetTitle;
+    return " - " + g_charsetTitle;
   }
 
   return "";
