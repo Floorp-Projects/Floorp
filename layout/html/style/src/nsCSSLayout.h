@@ -19,10 +19,11 @@
 #define nsCSSLayout_h___
 
 #include "nsCoord.h"
+class nsIFrame;
 class nsIPresContext;
+struct nsSize;
 struct nsStyleFont;
 struct nsStyleText;
-class nsIFrame;
 
 class nsCSSLayout {
 public:
@@ -57,6 +58,22 @@ public:
                                        nsIFrame* aContainer,
                                        nsIFrame* aFirstChild,
                                        PRInt32 aChildCount);
+
+  /**
+   * Get the CSS size (width & height) values for the given
+   * frame. The value returned indicates which values were set
+   * stylistically.
+   */
+  static PRIntn GetStyleSize(nsIPresContext* aPresContext,
+                             nsIFrame* aFrame,
+                             nsSize& aStyleSize);
+
+// Return value from GetStyleSize
+#define NS_SIZE_HAS_NONE   0x0
+#define NS_SIZE_HAS_WIDTH  0x1
+#define NS_SIZE_HAS_HEIGHT 0x2
+#define NS_SIZE_HAS_BOTH   0x3
+
 };
 
 #endif /* nsCSSLayout_h___ */

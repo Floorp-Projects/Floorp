@@ -24,6 +24,8 @@
 #include "nsIPresContext.h"
 #include "nsRect.h"
 #include "nsIPtr.h"
+#include "nsBlockFrame.h"
+#include "nsHTMLIIDs.h"
 
 static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
@@ -38,14 +40,15 @@ NS_DEF_PTR(nsIContent);
  * fly. Hopefully that's ok because his code generated surprising
  * results in a number of unusual cases.
  */
-nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
-                                             nsIFrame* aContainer,
-                                             nsStyleFont* aContainerFont,
-                                             nscoord aY0,
-                                             nsIFrame* aFirstChild,
-                                             PRIntn aChildCount,
-                                             nscoord* aAscents,
-                                             nscoord aMaxAscent)
+nscoord
+nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
+                                     nsIFrame* aContainer,
+                                     nsStyleFont* aContainerFont,
+                                     nscoord aY0,
+                                     nsIFrame* aFirstChild,
+                                     PRIntn aChildCount,
+                                     nscoord* aAscents,
+                                     nscoord aMaxAscent)
 {
   // Determine minimum and maximum y values for the line and
   // perform alignment of all children except those requesting bottom
@@ -197,13 +200,14 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
 /**
  * Horizontally place the children in the container frame.
  */
-void nsCSSLayout::HorizontallyPlaceChildren(nsIPresContext* aCX,
-                                            nsIFrame* aContainer,
-                                            nsStyleText* aContainerStyle,
-                                            nsIFrame* aFirstChild,
-                                            PRInt32 aChildCount,
-                                            nscoord aLineWidth,
-                                            nscoord aMaxWidth)
+void
+nsCSSLayout::HorizontallyPlaceChildren(nsIPresContext* aCX,
+                                       nsIFrame* aContainer,
+                                       nsStyleText* aContainerStyle,
+                                       nsIFrame* aFirstChild,
+                                       PRInt32 aChildCount,
+                                       nscoord aLineWidth,
+                                       nscoord aMaxWidth)
 {
   PRIntn textAlign = aContainerStyle->mTextAlign;
   nscoord dx = 0;
@@ -235,10 +239,11 @@ void nsCSSLayout::HorizontallyPlaceChildren(nsIPresContext* aCX,
 /**
  * Apply css relative positioning to any child that requires it.
  */
-void nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
-                                           nsIFrame* aContainer,
-                                           nsIFrame* aFirstChild,
-                                           PRInt32 aChildCount)
+void
+nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
+                                      nsIFrame* aContainer,
+                                      nsIFrame* aFirstChild,
+                                      PRInt32 aChildCount)
 {
   nsPoint origin;
   nsIFrame* kid = aFirstChild;
@@ -259,4 +264,76 @@ void nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
     }
     kid->GetNextSibling(kid);
   }
+}
+
+static PRBool
+GetStyleDimension(nsIPresContext* aPresContext,
+                  nsIFrame* aFrame,
+                  nsStylePosition* aStylePos,
+                  nsStyleCoord& aCoord,
+                  nscoord& aResult)
+{
+  nsIFrame* parentFrame;
+  float p2t;
+  PRBool rv = PR_FALSE;
+
+  switch (aCoord.GetUnit()) {
+  case eStyleUnit_Coord:
+    aResult = aCoord.GetCoordValue();
+    rv = PR_TRUE;
+    break;
+
+  case eStyleUnit_Percent:
+    // CSS2 has specified that percentage width/height values are basd
+    // on the containing block's <B>width</B>.
+    aFrame->GetContentParent(parentFrame);
+    while (nsnull != parentFrame) {
+      nsBlockFrame* block;
+      nsresult status =
+        parentFrame->QueryInterface(kBlockFrameCID, (void**) &block);
+      if (NS_OK == status) {
+        nsRect blockRect;
+        block->GetRect(blockRect);
+        aResult = nscoord(blockRect.width * aCoord.GetPercentValue());
+        rv = PR_TRUE;
+        break;
+      }
+    }
+    break;
+
+  case eStyleUnit_Integer:
+    p2t = aPresContext->GetPixelsToTwips();
+    aResult = nscoord(aCoord.GetIntValue() * p2t);
+    break;
+  }
+  if (aResult < 0) {
+    rv = PR_FALSE;
+  }
+
+  return rv;
+}
+
+PRIntn
+nsCSSLayout::GetStyleSize(nsIPresContext* aPresContext,
+                          nsIFrame* aFrame,
+                          nsSize& aStyleSize)
+{
+  // XXX if display == row || rowspan ignore width
+  // XXX if display == col || colspan ignore height
+
+  PRIntn rv = NS_SIZE_HAS_NONE;
+  nsIStyleContext* sc = nsnull;
+  aFrame->GetStyleContext(aPresContext, sc);
+  if (nsnull != sc) {
+    nsStylePosition* pos = (nsStylePosition*) sc->GetData(kStylePositionSID);
+    if (GetStyleDimension(aPresContext, aFrame, pos, pos->mWidth,
+                          aStyleSize.width)) {
+      rv |= NS_SIZE_HAS_WIDTH;
+    }
+    if (GetStyleDimension(aPresContext, aFrame, pos, pos->mHeight,
+                          aStyleSize.height)) {
+      rv |= NS_SIZE_HAS_HEIGHT;
+    }
+  }
+  return rv;
 }
