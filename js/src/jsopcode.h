@@ -70,10 +70,11 @@ typedef enum JSOp {
 #define JOF_LOOKUPSWITCH  5       /* lookup switch */
 #define JOF_QARG          6       /* quickened get/set function argument ops */
 #define JOF_QVAR          7       /* quickened get/set local variable ops */
-#define JOF_DEFLOCALVAR   8       /* define local var with initial value */
+#define JOF_INDEXCONST    8       /* arg or var index + constant pool index */
 #define JOF_JUMPX         9       /* signed 32-bit jump offset immediate */
 #define JOF_TABLESWITCHX  10      /* extended (32-bit offset) table switch */
 #define JOF_LOOKUPSWITCHX 11      /* extended (32-bit offset) lookup switch */
+#define JOF_CONST2        12      /* 2 unsigned 16-bit constant pool indexes */
 #define JOF_TYPEMASK      0x000f  /* mask for above immediate types */
 #define JOF_NAME          0x0010  /* name operation */
 #define JOF_PROP          0x0020  /* obj.prop operation */
@@ -93,6 +94,7 @@ typedef enum JSOp {
 #define JOF_BACKPATCH     0x4000  /* backpatch placeholder during codegen */
 #define JOF_LEFTASSOC     0x8000  /* left-associative operator */
 #define JOF_DECLARING    0x10000  /* var, const, or function declaration op */
+#define JOF_XMLNAME      0x20000  /* XML name: *, a::b, @a, @a::b, etc. */
 
 #define JOF_TYPE_IS_EXTENDED_JUMP(t) \
     ((unsigned)((t) - JOF_JUMPX) <= (unsigned)(JOF_LOOKUPSWITCHX - JOF_JUMPX))

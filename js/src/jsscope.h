@@ -99,7 +99,7 @@
  * that order; and to finish the fork, we'd add a node labeled Z with the path
  * X->Z, if it doesn't exist.  This could lead to lots of extra nodes, and to
  * O(n^2) growth when deleting lots of properties.
- * 
+ *
  * Rather, for O(1) growth all around, we should share the path X->Y->Z among
  * scopes having those three properties added in that order, and among scopes
  * having only X->Z where Y was deleted.  All such scopes have a lastProp that
@@ -345,10 +345,12 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
 extern void
 js_DestroyScope(JSContext *cx, JSScope *scope);
 
-#define ID_TO_VALUE(id) (((id) & JSVAL_INT) ? id : ATOM_KEY((JSAtom *)(id)))
-#define HASH_ID(id)     (((id) & JSVAL_INT)                                   \
-                         ? (jsatomid) JSVAL_TO_INT(id)                        \
-                         : ((JSAtom *)id)->number)
+#define ID_TO_VALUE(id) (JSID_IS_ATOM(id) ? ATOM_KEY(JSID_TO_ATOM(id)) :      \
+                         JSID_IS_OBJECT(id) ? (jsval)JSID_CLRTAG(id) :        \
+                         (jsval)(id))
+#define HASH_ID(id)     (JSID_IS_ATOM(id) ? JSID_TO_ATOM(id)->number :        \
+                         JSID_IS_OBJECT(id) ? (jsatomid) JSID_CLRTAG(id) :    \
+                         (jsatomid) JSID_TO_INT(id))
 
 extern JS_FRIEND_API(JSScopeProperty **)
 js_SearchScope(JSScope *scope, jsid id, JSBool adding);

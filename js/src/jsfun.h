@@ -78,7 +78,7 @@ extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
  */
 #define JSVAL_IS_FUNCTION(cx, v)                                              \
-    (JSVAL_IS_OBJECT(v) && JSVAL_TO_OBJECT(v) &&                              \
+    (!JSVAL_IS_PRIMITIVE(v) &&                                                \
      OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_FunctionClass)
 
 extern JSBool

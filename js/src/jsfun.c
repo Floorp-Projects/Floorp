@@ -96,7 +96,8 @@ js_GetArgsValue(JSContext *cx, JSStackFrame *fp, jsval *vp)
     if (TEST_OVERRIDE_BIT(fp, CALL_ARGUMENTS)) {
         JS_ASSERT(fp->callobj);
         return OBJ_GET_PROPERTY(cx, fp->callobj,
-                                (jsid) cx->runtime->atomState.argumentsAtom,
+                                ATOM_TO_JSID(cx->runtime->atomState
+                                             .argumentsAtom),
                                 vp);
     }
     argsobj = js_GetArgsObject(cx, fp);
@@ -182,7 +183,8 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
     if (TEST_OVERRIDE_BIT(fp, CALL_ARGUMENTS)) {
         JS_ASSERT(fp->callobj);
         if (!OBJ_GET_PROPERTY(cx, fp->callobj,
-                              (jsid) cx->runtime->atomState.argumentsAtom,
+                              ATOM_TO_JSID(cx->runtime->atomState
+                                           .argumentsAtom),
                               &val)) {
             return JS_FALSE;
         }
@@ -199,15 +201,15 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
 
     *objp = NULL;
     *vp = JSVAL_VOID;
-    if (JSVAL_IS_INT(id)) {
-        slot = (uintN) JSVAL_TO_INT(id);
+    if (JSID_IS_INT(id)) {
+        slot = (uintN) JSID_TO_INT(id);
         if (slot < MAXARGS(fp)) {
             if (fp->argsobj && ArgWasDeleted(cx, fp, slot))
                 return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
             *vp = fp->argv[slot];
         }
     } else {
-        if (id == (jsid) cx->runtime->atomState.lengthAtom) {
+        if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom)) {
             if (fp->argsobj && TEST_OVERRIDE_BIT(fp, ARGS_LENGTH))
                 return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
             *vp = INT_TO_JSVAL((jsint) fp->argc);
@@ -271,10 +273,14 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
      * before fp goes away.
      */
     rt = cx->runtime;
-    ok &= js_GetProperty(cx, argsobj, (jsid)rt->atomState.calleeAtom, &rval);
-    ok &= js_SetProperty(cx, argsobj, (jsid)rt->atomState.calleeAtom, &rval);
-    ok &= js_GetProperty(cx, argsobj, (jsid)rt->atomState.lengthAtom, &rval);
-    ok &= js_SetProperty(cx, argsobj, (jsid)rt->atomState.lengthAtom, &rval);
+    ok &= js_GetProperty(cx, argsobj, ATOM_TO_JSID(rt->atomState.calleeAtom),
+                         &rval);
+    ok &= js_SetProperty(cx, argsobj, ATOM_TO_JSID(rt->atomState.calleeAtom),
+                         &rval);
+    ok &= js_GetProperty(cx, argsobj, ATOM_TO_JSID(rt->atomState.lengthAtom),
+                         &rval);
+    ok &= js_SetProperty(cx, argsobj, ATOM_TO_JSID(rt->atomState.lengthAtom),
+                         &rval);
 
     /*
      * Clear the private pointer to fp, which is about to go away (js_Invoke).
@@ -400,7 +406,8 @@ args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         slot = JSVAL_TO_INT(id);
         if (slot < MAXARGS(fp) && !ArgWasDeleted(cx, fp, slot)) {
             /* XXX ECMA specs DontEnum, contrary to other array-like objects */
-            if (!js_DefineProperty(cx, obj, (jsid) id, fp->argv[slot],
+            if (!js_DefineProperty(cx, obj, INT_TO_JSID(JSVAL_TO_INT(id)),
+                                   fp->argv[slot],
                                    args_getProperty, args_setProperty,
                                    JSVERSION_IS_ECMA(cx->version)
                                    ? 0
@@ -432,7 +439,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         }
 
         if (atom && !TEST_OVERRIDE_BIT(fp, tinyid)) {
-            if (!js_DefineNativeProperty(cx, obj, (jsid) atom, value,
+            if (!js_DefineNativeProperty(cx, obj, ATOM_TO_JSID(atom), value,
                                          args_getProperty, args_setProperty, 0,
                                          SPROP_HAS_SHORTID, tinyid, NULL)) {
                 return JS_FALSE;
@@ -465,14 +472,16 @@ args_enumerate(JSContext *cx, JSObject *obj)
      * and creates direct properties of obj, but that it may fail to resolve
      * length or callee if overridden.
      */
-    if (!js_LookupProperty(cx, obj, (jsid) cx->runtime->atomState.lengthAtom,
+    if (!js_LookupProperty(cx, obj,
+                           ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
                            &pobj, &prop)) {
         return JS_FALSE;
     }
     if (prop)
         OBJ_DROP_PROPERTY(cx, pobj, prop);
 
-    if (!js_LookupProperty(cx, obj, (jsid) cx->runtime->atomState.calleeAtom,
+    if (!js_LookupProperty(cx, obj,
+                           ATOM_TO_JSID(cx->runtime->atomState.calleeAtom),
                            &pobj, &prop)) {
         return JS_FALSE;
     }
@@ -481,10 +490,8 @@ args_enumerate(JSContext *cx, JSObject *obj)
 
     nargs = MAXARGS(fp);
     for (slot = 0; slot < nargs; slot++) {
-        if (!js_LookupProperty(cx, obj, (jsid) INT_TO_JSVAL((jsint)slot),
-                               &pobj, &prop)) {
+        if (!js_LookupProperty(cx, obj, INT_TO_JSID((jsint)slot), &pobj, &prop))
             return JS_FALSE;
-        }
         if (prop)
             OBJ_DROP_PROPERTY(cx, pobj, prop);
     }
@@ -573,7 +580,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
      * Get the arguments object to snapshot fp's actual argument values.
      */
     if (fp->argsobj) {
-        argsid = (jsid) cx->runtime->atomState.argumentsAtom;
+        argsid = ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom);
         ok &= js_GetProperty(cx, callobj, argsid, &aval);
         ok &= js_SetProperty(cx, callobj, argsid, &aval);
         ok &= js_PutArgsObject(cx, fp);
@@ -782,7 +789,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     atom = js_AtomizeString(cx, str, 0);
     if (!atom)
         return JS_FALSE;
-    if (!js_LookupProperty(cx, funobj, (jsid)atom, &obj2, &prop))
+    if (!js_LookupProperty(cx, funobj, ATOM_TO_JSID(atom), &obj2, &prop))
         return JS_FALSE;
 
     sprop = (JSScopeProperty *) prop;
@@ -981,8 +988,10 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
              * Clone of a function: make its prototype property value have the
              * same class as the clone-parent's prototype.
              */
-            if (!OBJ_GET_PROPERTY(cx, fun->object, (jsid)prototypeAtom, &pval))
+            if (!OBJ_GET_PROPERTY(cx, fun->object, ATOM_TO_JSID(prototypeAtom),
+                                  &pval)) {
                 return JS_FALSE;
+            }
             if (JSVAL_IS_OBJECT(pval))
                 parentProto = JSVAL_TO_OBJECT(pval);
         }
@@ -1200,11 +1209,12 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                     return JS_FALSE;
 
                 /* Flag duplicate argument if atom is bound in fun->object. */
-                dupflag = SCOPE_GET_PROPERTY(OBJ_SCOPE(fun->object), (jsid)atom)
+                dupflag = SCOPE_GET_PROPERTY(OBJ_SCOPE(fun->object),
+                                             ATOM_TO_JSID(atom))
                           ? SPROP_IS_DUPLICATE
                           : 0;
 
-                if (!js_AddNativeProperty(cx, fun->object, (jsid)atom,
+                if (!js_AddNativeProperty(cx, fun->object, ATOM_TO_JSID(atom),
                                           getter, setter, SPROP_INVALID_SLOT,
                                           attrs | JSPROP_SHARED,
                                           SPROP_HAS_SHORTID | dupflag,
@@ -1257,7 +1267,8 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     JSString *str;
 
     if (!OBJ_GET_PROPERTY(cx, obj,
-                          (jsid)cx->runtime->atomState.classPrototypeAtom,
+                          ATOM_TO_JSID(cx->runtime->atomState
+                                       .classPrototypeAtom),
                           &pval)) {
         return JS_FALSE;
     }
@@ -1562,7 +1573,7 @@ js_IsIdentifier(JSString *str)
         return JS_FALSE;
     s = JSSTRING_CHARS(str);
     c = *s;
-    if (!JS_ISIDENT_START(c))
+    if (!JS_ISIDSTART(c))
         return JS_FALSE;
     for (n--; n != 0; n--) {
         c = *++s;
@@ -1724,8 +1735,10 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                  * we're assured at this point that it's a valid identifier.
                  */
                 atom = CURRENT_TOKEN(ts).t_atom;
-                if (!js_LookupProperty(cx, obj, (jsid)atom, &obj2, &prop))
+                if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &obj2,
+                                       &prop)) {
                     goto bad_formal;
+                }
                 sprop = (JSScopeProperty *) prop;
                 dupflag = 0;
                 if (sprop) {
@@ -1754,7 +1767,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                         goto bad_formal;
                     sprop = NULL;
                 }
-                if (!js_AddNativeProperty(cx, fun->object, (jsid)atom,
+                if (!js_AddNativeProperty(cx, fun->object, ATOM_TO_JSID(atom),
                                           js_GetArgument, js_SetArgument,
                                           SPROP_INVALID_SLOT,
                                           JSPROP_ENUMERATE | JSPROP_PERMANENT |
@@ -1948,8 +1961,10 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
     fun = js_NewFunction(cx, NULL, native, nargs, attrs, obj, atom);
     if (!fun)
         return NULL;
-    if (!OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, OBJECT_TO_JSVAL(fun->object),
-                             NULL, NULL, attrs & ~JSFUN_FLAGS_MASK, NULL)) {
+    if (!OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom),
+                             OBJECT_TO_JSVAL(fun->object),
+                             NULL, NULL,
+                             attrs & ~JSFUN_FLAGS_MASK, NULL)) {
         return NULL;
     }
     return fun;

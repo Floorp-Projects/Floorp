@@ -144,6 +144,8 @@ extern void
 js_FinishRuntimeNumberState(JSContext *cx);
 
 /* Initialize the Number class, returning its prototype object. */
+extern JSClass js_NumberClass;
+
 extern JSObject *
 js_InitNumberClass(JSContext *cx, JSObject *obj);
 

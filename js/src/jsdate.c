@@ -1648,7 +1648,7 @@ date_toLocaleHelper(JSContext *cx, JSObject *obj, uintN argc,
 
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUnicode)
 	return cx->localeCallbacks->localeToUnicode(cx, buf, rval);
-    
+
     str = JS_NewStringCopyZ(cx, buf);
     if (!str)
 	return JS_FALSE;
@@ -1877,7 +1877,7 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *str;
     jsdouble d;
 
-    /* Date called as function */
+    /* Date called as function. */
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
 	int64 us, ms, us2ms;
 	jsdouble msec_time;
@@ -1893,7 +1893,7 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	return date_format(cx, msec_time, FORMATSPEC_FULL, rval);
     }
 
-    /* Date called as constructor */
+    /* Date called as constructor. */
     if (argc == 0) {
 	int64 us, ms, us2ms;
 	jsdouble msec_time;

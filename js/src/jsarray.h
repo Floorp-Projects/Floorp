@@ -47,6 +47,9 @@
 
 JS_BEGIN_EXTERN_C
 
+extern JSBool
+js_IdIsIndex(jsval id, jsuint *indexp);
+
 extern JSClass js_ArrayClass;
 
 extern JSObject *

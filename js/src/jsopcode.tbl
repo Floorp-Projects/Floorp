@@ -309,7 +309,7 @@ OPDEF(JSOP_ARGCNT,      137,"argcnt",     NULL,       1,  0,  1, 12,  JOF_BYTE)
  * The local variable's slot number is the first immediate two-byte operand.
  * The function object's atom index is the second immediate operand.
  */
-OPDEF(JSOP_DEFLOCALFUN, 138,"deflocalfun",NULL,       5,  0,  0,  0,  JOF_DEFLOCALVAR|JOF_DECLARING)
+OPDEF(JSOP_DEFLOCALFUN, 138,"deflocalfun",NULL,       5,  0,  0,  0,  JOF_INDEXCONST|JOF_DECLARING)
 
 /* Extended jumps. */
 OPDEF(JSOP_GOTOX,         139,"gotox",    NULL,       5,  0,  0,  0,  JOF_JUMPX)
@@ -340,5 +340,29 @@ OPDEF(JSOP_DECGVAR,       157,"decgvar",  NULL,       3,  0,  1, 10,  JOF_CONST|
 OPDEF(JSOP_GVARINC,       158,"gvarinc",  NULL,       3,  0,  1, 10,  JOF_CONST|JOF_NAME|JOF_INC|JOF_POST)
 OPDEF(JSOP_GVARDEC,       159,"gvardec",  NULL,       3,  0,  1, 10,  JOF_CONST|JOF_NAME|JOF_DEC|JOF_POST)
 
-/* Regular expression literal requiring special fork-on-exec handling. */
+/* Regular expression literal requiring special "fork on exec" handling. */
 OPDEF(JSOP_REGEXP,        160,"regexp",   NULL,       3,  0,  1, 12,  JOF_CONST)
+
+/* XML (ECMA-357, a.k.a. "E4X") support. */
+OPDEF(JSOP_DEFXMLNS,      161,"defxmlns",   NULL,     1,  1,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_ANYNAME,       162,"anyname",    NULL,     1,  0,  1, 12,  JOF_BYTE|JOF_XMLNAME)
+OPDEF(JSOP_QNAMEPART,     163,"qnamepart",  NULL,     3,  0,  1, 12,  JOF_CONST|JOF_NAME)
+OPDEF(JSOP_QNAME,         164,"qname",      NULL,     1,  2,  1, 12,  JOF_BYTE|JOF_XMLNAME)
+OPDEF(JSOP_TOATTRNAME,    165,"toattrname", NULL,     1,  1,  1, 12,  JOF_BYTE|JOF_XMLNAME)
+OPDEF(JSOP_TOATTRVAL,     166,"toattrval",  NULL,     1,  1,  1, 12,  JOF_BYTE)
+OPDEF(JSOP_ADDATTRNAME,   167,"addattrname",NULL,     1,  2,  1,  8,  JOF_BYTE)
+OPDEF(JSOP_ADDATTRVAL,    168,"addattrval", NULL,     1,  2,  1,  8,  JOF_BYTE)
+OPDEF(JSOP_BINDXMLPROP,   169,"bindxmlprop",NULL,     1,  2,  2,  0,  JOF_BYTE)
+OPDEF(JSOP_BINDXMLNAME,   170,"bindxmlname",NULL,     1,  1,  2,  0,  JOF_BYTE|JOF_XMLNAME|JOF_SET|JOF_ASSIGNING)
+OPDEF(JSOP_SETXMLNAME,    171,"setxmlname", NULL,     1,  3,  1,  1,  JOF_BYTE|JOF_XMLNAME|JOF_SET|JOF_ASSIGNING|JOF_DETECTING)
+OPDEF(JSOP_XMLNAME,       172,"xmlname",    NULL,     1,  1,  1, 12,  JOF_BYTE|JOF_XMLNAME)
+OPDEF(JSOP_DESCENDANTS,   173,"descendants",NULL,     1,  2,  1, 11,  JOF_BYTE)
+OPDEF(JSOP_FILTER,        174,"filter",     NULL,     3,  1,  1, 11,  JOF_JUMP)
+OPDEF(JSOP_TOXML,         175,"toxml",      NULL,     1,  1,  1, 12,  JOF_BYTE)
+OPDEF(JSOP_TOXMLLIST,     176,"toxmllist",  NULL,     1,  1,  1, 12,  JOF_BYTE)
+OPDEF(JSOP_XMLEXPR,       177,"xmlexpr",    NULL,     1,  1,  1, 12,  JOF_BYTE)
+OPDEF(JSOP_XMLOBJECT,     178,"xmlobject",  NULL,     3,  0,  1, 12,  JOF_CONST)
+OPDEF(JSOP_XMLCDATA,      179,"xmlcdata",   NULL,     3,  0,  1, 12,  JOF_CONST)
+OPDEF(JSOP_XMLCOMMENT,    180,"xmlcomment", NULL,     3,  0,  1, 12,  JOF_CONST)
+OPDEF(JSOP_XMLPI,         181,"xmlpi",      NULL,     5,  0,  1, 12,  JOF_CONST2)
+OPDEF(JSOP_CALLMETHOD,    182,"callmethod", NULL,     5, -1,  1, 11,  JOF_INDEXCONST)

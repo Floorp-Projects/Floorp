@@ -225,19 +225,19 @@ typedef enum JSCharType {
 			  >> JS_CTYPE(c)) & 1)
 
 /* A unicode letter, suitable for use in an identifier. */
-#define JS_ISUC_LETTER(c)   ((((1 << JSCT_UPPERCASE_LETTER) |                 \
-			   (1 << JSCT_LOWERCASE_LETTER) |                     \
-			   (1 << JSCT_TITLECASE_LETTER) |                     \
-			   (1 << JSCT_MODIFIER_LETTER) |                      \
-			   (1 << JSCT_OTHER_LETTER) |                         \
-			   (1 << JSCT_LETTER_NUMBER))                         \
-			  >> JS_CTYPE(c)) & 1)
+#define JS_ISLETTER(c)   ((((1 << JSCT_UPPERCASE_LETTER) |                    \
+			    (1 << JSCT_LOWERCASE_LETTER) |                    \
+			    (1 << JSCT_TITLECASE_LETTER) |                    \
+			    (1 << JSCT_MODIFIER_LETTER) |                     \
+			    (1 << JSCT_OTHER_LETTER) |                        \
+			    (1 << JSCT_LETTER_NUMBER))                        \
+			   >> JS_CTYPE(c)) & 1)
 
 /*
  * 'IdentifierPart' from ECMA grammar, is Unicode letter or combining mark or
  * digit or connector punctuation.
  */
-#define JS_ISID_PART(c) ((((1 << JSCT_UPPERCASE_LETTER) |                     \
+#define JS_ISIDPART(c)  ((((1 << JSCT_UPPERCASE_LETTER) |                     \
 			   (1 << JSCT_LOWERCASE_LETTER) |                     \
 			   (1 << JSCT_TITLECASE_LETTER) |                     \
 			   (1 << JSCT_MODIFIER_LETTER) |                      \
@@ -259,12 +259,20 @@ typedef enum JSCharType {
  */
 #define JS_ISWORD(c)    ((c) < 128 && (isalnum(c) || (c) == '_'))
 
-/* XXXbe unify on A/X/Y tbls, avoid ctype.h? */
-#define JS_ISIDENT_START(c) (JS_ISUC_LETTER(c) || (c) == '_' || (c) == '$')
-#define JS_ISIDENT(c)       (JS_ISID_PART(c) || (c) == '_' || (c) == '$')
+#define JS_ISIDSTART(c) (JS_ISLETTER(c) || (c) == '_' || (c) == '$')
+#define JS_ISIDENT(c)   (JS_ISIDPART(c) || (c) == '_' || (c) == '$')
+
+#define JS_ISXMLSPACE(c)        ((c) == ' ' || (c) == '\t' || (c) == '\r' ||  \
+                                 (c) == '\n')
+#define JS_ISXMLNSSTART(c)      ((JS_CCODE(c) & 0x00000100) || (c) == '_')
+#define JS_ISXMLNS(c)           ((JS_CCODE(c) & 0x00000080) || (c) == '.' ||  \
+                                 (c) == '-' || (c) == '_')
+#define JS_ISXMLNAMESTART(c)    (JS_ISXMLNSSTART(c) || (c) == ':')
+#define JS_ISXMLNAME(c)         (JS_ISXMLNS(c) || (c) == ':')
 
 #define JS_ISDIGIT(c)   (JS_CTYPE(c) == JSCT_DECIMAL_DIGIT_NUMBER)
 
+/* XXXbe unify on A/X/Y tbls, avoid ctype.h? */
 /* XXXbe fs, etc. ? */
 #define JS_ISSPACE(c)   ((JS_CCODE(c) & 0x00070000) == 0x00040000)
 #define JS_ISPRINT(c)   ((c) < 128 && isprint(c))
@@ -278,8 +286,6 @@ typedef enum JSCharType {
 #define JS_TOLOWER(c)   ((jschar) ((JS_CCODE(c) & 0x00200000)                 \
                                    ? (c) + ((int32)JS_CCODE(c) >> 22)         \
                                    : (c)))
-
-#define JS_TOCTRL(c)    ((c) ^ 64)      /* XXX unsafe! requires uppercase c */
 
 /* Shorthands for ASCII (7-bit) decimal and hex conversion. */
 #define JS7_ISDEC(c)    ((c) < 128 && isdigit(c))
@@ -306,6 +312,8 @@ extern void
 js_FinishRuntimeStringState(JSContext *cx);
 
 /* Initialize the String class, returning its prototype object. */
+extern JSClass js_StringClass;
+
 extern JSObject *
 js_InitStringClass(JSContext *cx, JSObject *obj);
 
@@ -343,6 +351,12 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str);
 /* Wrap a string value in a String object. */
 extern JSObject *
 js_StringToObject(JSContext *cx, JSString *str);
+
+/*
+ * Convert a value to a printable C string.
+ */
+extern const char *
+js_ValueToPrintableString(JSContext *cx, jsval v);
 
 /*
  * Convert a value to a string, returning null after reporting an error,

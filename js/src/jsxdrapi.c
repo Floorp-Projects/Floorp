@@ -498,7 +498,7 @@ JS_PUBLIC_API(JSBool)
 JS_XDRValue(JSXDRState *xdr, jsval *vp)
 {
     uint32 type;
-    
+
     if (xdr->mode == JSXDR_ENCODE) {
         if (JSVAL_IS_NULL(*vp))
             type = JSVAL_XDRNULL;

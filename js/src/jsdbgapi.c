@@ -408,12 +408,14 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
     if (!(attrs & JSPROP_SETTER))
         return &js_watch_set;   /* & to silence schoolmarmish MSVC */
 
-    if (!JSVAL_IS_INT(id)) {
-        atom = (JSAtom *)id;
-    } else {
-        atom = js_AtomizeInt(cx, JSVAL_TO_INT(id), 0);
+    if (JSID_IS_ATOM(id)) {
+        atom = JSID_TO_ATOM(id);
+    } else if (JSID_IS_INT(id)) {
+        atom = js_AtomizeInt(cx, JSID_TO_INT(id), 0);
         if (!atom)
             return NULL;
+    } else {
+        atom = NULL;
     }
     wrapper = js_NewFunction(cx, NULL, js_watch_set_wrapper, 1, 0,
                              OBJ_GET_PARENT(cx, (JSObject *)setter),
@@ -444,13 +446,13 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
     }
 
     if (JSVAL_IS_INT(id)) {
-        propid = (jsid)id;
+        propid = INT_TO_JSID(JSVAL_TO_INT(id));
         atom = NULL;
     } else {
         atom = js_ValueToStringAtom(cx, id);
         if (!atom)
             return JS_FALSE;
-        propid = (jsid)atom;
+        propid = ATOM_TO_JSID(atom);
     }
 
     if (!js_LookupProperty(cx, obj, propid, &pobj, &prop))

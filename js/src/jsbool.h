@@ -45,6 +45,8 @@
 
 JS_BEGIN_EXTERN_C
 
+extern JSClass js_BooleanClass;
+
 extern JSObject *
 js_InitBooleanClass(JSContext *cx, JSObject *obj);
 

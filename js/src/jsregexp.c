@@ -2998,7 +2998,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
             ok = JS_FALSE;
             goto out;
         }
-        DEFVAL(STRING_TO_JSVAL(matchstr), INT_TO_JSVAL(0));
+        DEFVAL(STRING_TO_JSVAL(matchstr), INT_TO_JSID(0));
     }
 
     res = &cx->regExpStatics;
@@ -3048,7 +3048,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
             if (test)
                 continue;
             if (parsub->index == -1) {
-                ok = js_DefineProperty(cx, obj, INT_TO_JSVAL(num + 1),
+                ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1),
                                        JSVAL_VOID, NULL, NULL,
                                        JSPROP_ENUMERATE, NULL);
             } else {
@@ -3060,7 +3060,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
                     ok = JS_FALSE;
                     goto out;
                 }
-                ok = js_DefineProperty(cx, obj, INT_TO_JSVAL(num + 1),
+                ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1),
                                        STRING_TO_JSVAL(parstr), NULL, NULL,
                                        JSPROP_ENUMERATE, NULL);
             }
@@ -3084,9 +3084,9 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
          * order (so they come after the elements).
          */
         DEFVAL(INT_TO_JSVAL(start + gData.skipped),
-               (jsid)cx->runtime->atomState.indexAtom);
+               ATOM_TO_JSID(cx->runtime->atomState.indexAtom));
         DEFVAL(STRING_TO_JSVAL(str),
-               (jsid)cx->runtime->atomState.inputAtom);
+               ATOM_TO_JSID(cx->runtime->atomState.inputAtom));
     }
 
 #undef DEFVAL

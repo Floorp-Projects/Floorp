@@ -549,7 +549,8 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          * prototype ourselves.
          */
         ok = OBJ_GET_PROPERTY(cx, JSVAL_TO_OBJECT(argv[-2]),
-                              (jsid)cx->runtime->atomState.classPrototypeAtom,
+                              ATOM_TO_JSID(cx->runtime->atomState
+                                           .classPrototypeAtom),
                               &pval);
         if (!ok)
             goto out;
@@ -623,8 +624,11 @@ exn_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jschar *chars, *cp;
     size_t name_length, message_length, length;
 
-    if (!OBJ_GET_PROPERTY(cx, obj, (jsid)cx->runtime->atomState.nameAtom, &v))
+    if (!OBJ_GET_PROPERTY(cx, obj,
+                          ATOM_TO_JSID(cx->runtime->atomState.nameAtom),
+                          &v)) {
         return JS_FALSE;
+    }
     name = JSVAL_IS_STRING(v) ? JSVAL_TO_STRING(v) : cx->runtime->emptyString;
 
     if (!JS_GetProperty(cx, obj, js_message_str, &v))
@@ -675,8 +679,11 @@ exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     size_t lineno_length, name_length, message_length, filename_length, length;
     jschar *chars, *cp;
 
-    if (!OBJ_GET_PROPERTY(cx, obj, (jsid)cx->runtime->atomState.nameAtom, &v))
+    if (!OBJ_GET_PROPERTY(cx, obj,
+                          ATOM_TO_JSID(cx->runtime->atomState.nameAtom),
+                          &v)) {
         return JS_FALSE;
+    }
     name = js_ValueToString(cx, v);
     if (!name)
         return JS_FALSE;

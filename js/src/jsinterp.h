@@ -72,6 +72,7 @@ struct JSStackFrame {
     JSObject        *sharpArray;    /* scope for #n= initializer vars */
     uint32          flags;          /* frame flags -- see below */
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
+    JSObject        *xmlNamespace;  /* null or default xml namespace in E4X */
 };
 
 typedef struct JSInlineFrame {
@@ -93,7 +94,7 @@ typedef struct JSInlineFrame {
 #define JSFRAME_SPECIAL       0x30  /* special evaluation frame flags */
 #define JSFRAME_COMPILING     0x40  /* frame is being used by compiler */
 #define JSFRAME_COMPILE_N_GO  0x80  /* compiler-and-go mode, can optimize name
-                                       references based on scope chain */ 
+                                       references based on scope chain */
 
 #define JSFRAME_OVERRIDE_SHIFT 24   /* override bit-set params; see jsfun.c */
 #define JSFRAME_OVERRIDE_BITS  8
@@ -256,7 +257,8 @@ extern void         js_DumpCallTable(JSContext *cx);
 
 /*
  * NB: js_Invoke requires that cx is currently running JS (i.e., that cx->fp
- * is non-null).
+ * is non-null), and that the callee, |this| parameter, and actual arguments
+ * are already pushed on the stack under cx->fp->sp.
  */
 extern JS_FRIEND_API(JSBool)
 js_Invoke(JSContext *cx, uintN argc, uintN flags);
@@ -267,6 +269,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags);
 #define JSINVOKE_CONSTRUCT      JSFRAME_CONSTRUCTING
 #define JSINVOKE_INTERNAL       JSFRAME_INTERNAL
 #define JSINVOKE_SKIP_CALLER    JSFRAME_SKIP_CALLER
+#define JSINVOKE_CALL_METHOD    0x8
 
 /*
  * "Internal" calls may come from C or C++ code using a JSContext on which no
@@ -274,6 +277,10 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags);
  */
 #define js_InternalCall(cx,obj,fval,argc,argv,rval)                           \
     js_InternalInvoke(cx, obj, fval, 0, argc, argv, rval)
+
+#define js_InternalCallMethod(cx,obj,name,argc,argv,rval)                     \
+    js_InternalInvoke(cx, obj, (jsval) name, JSINVOKE_CALL_METHOD,            \
+                      argc, argv, rval)
 
 #define js_InternalConstruct(cx,obj,fval,argc,argv,rval)                      \
     js_InternalInvoke(cx, obj, fval, JSINVOKE_CONSTRUCT, argc, argv, rval)

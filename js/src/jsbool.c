@@ -54,7 +54,7 @@
 #include "jsobj.h"
 #include "jsstr.h"
 
-static JSClass boolean_class = {
+JSClass js_BooleanClass = {
     "Boolean",
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
@@ -73,13 +73,13 @@ bool_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     char buf[32];
     JSString *str;
 
-    if (!JS_InstanceOf(cx, obj, &boolean_class, argv))
+    if (!JS_InstanceOf(cx, obj, &js_BooleanClass, argv))
 	return JS_FALSE;
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     if (!JSVAL_IS_BOOLEAN(v))
 	return js_obj_toSource(cx, obj, argc, argv, rval);
     JS_snprintf(buf, sizeof buf, "(new %s(%s))",
-		boolean_class.name,
+		js_BooleanClass.name,
 		js_boolean_str[JSVAL_TO_BOOLEAN(v) ? 1 : 0]);
     str = JS_NewStringCopyZ(cx, buf);
     if (!str)
@@ -97,7 +97,7 @@ bool_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSAtom *atom;
     JSString *str;
 
-    if (!JS_InstanceOf(cx, obj, &boolean_class, argv))
+    if (!JS_InstanceOf(cx, obj, &js_BooleanClass, argv))
 	return JS_FALSE;
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     if (!JSVAL_IS_BOOLEAN(v))
@@ -113,7 +113,7 @@ bool_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static JSBool
 bool_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    if (!JS_InstanceOf(cx, obj, &boolean_class, argv))
+    if (!JS_InstanceOf(cx, obj, &js_BooleanClass, argv))
 	return JS_FALSE;
     *rval = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     return JS_TRUE;
@@ -159,7 +159,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto;
 
-    proto = JS_InitClass(cx, obj, NULL, &boolean_class, Boolean, 1,
+    proto = JS_InitClass(cx, obj, NULL, &js_BooleanClass, Boolean, 1,
 			NULL, boolean_methods, NULL, NULL);
     if (!proto)
 	return NULL;
@@ -172,7 +172,7 @@ js_BooleanToObject(JSContext *cx, JSBool b)
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, &boolean_class, NULL, NULL);
+    obj = js_NewObject(cx, &js_BooleanClass, NULL, NULL);
     if (!obj)
 	return NULL;
     OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, BOOLEAN_TO_JSVAL(b));
