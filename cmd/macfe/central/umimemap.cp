@@ -1028,7 +1028,7 @@ void CMimeList::HandleRegisterViewerEvent(const AppleEvent	&inAppleEvent,
 {
 	OSType	appSign;	//	app signature
 	OSType	fileType = 'TEXT';	//	file type to be created
-	volatile char *	mimeType = NULL;	// MIME type
+	char *	mimeType = NULL;	// MIME type
 	OSType	realType;
 	Size	realSize;
 	CMimeMapper * mapper;
@@ -1114,7 +1114,7 @@ void CMimeList::HandleUnregisterViewerEvent(const AppleEvent	&inAppleEvent,
 {
 	OSType	appSign;	//	app signature
 	OSType	fileType = 'TEXT';	//	file type to be created
-	volatile char*	mimeType = NULL;	// MIME type
+	char*	mimeType = NULL;	// MIME type
 
 	CMimeMapper * mapper = NULL;
 	OSErr err;
