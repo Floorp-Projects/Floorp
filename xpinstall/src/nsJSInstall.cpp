@@ -640,7 +640,7 @@ PR_STATIC_CALLBACK(JSBool)
 InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  PRUint32 nativeRet;
+  PRUint64 nativeRet;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -1748,7 +1748,7 @@ PR_STATIC_CALLBACK(JSBool)
 InstallFileOpFileGetDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall*   nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  PRUint32     nativeRet;
+  PRUint64     nativeRet;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;

@@ -353,7 +353,7 @@ extern "C" void RunInstallOnThread(void *data)
                                 args.GetUnicode(), 
                                 &rt, &cx, &glob);
     if (NS_FAILED(rv))
-        goto bail;
+        goto bail; // TODO need to log that this failed!
     
     // Go ahead and run!!
     jsval rval;

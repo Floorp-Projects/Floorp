@@ -536,7 +536,7 @@ nsPrefMigration::CheckForSpace(nsFileSpec newProfilePath, PRFloat64 requiredSpac
 {
 //  nsFileSpec drive(newProfilePath);
 
-  if (newProfilePath.GetDiskSpaceAvailable() < requiredSpace)
+  if (LL_CMP(newProfilePath.GetDiskSpaceAvailable(), <, requiredSpace))
     return NS_ERROR_FAILURE;
   return NS_OK;
 }

@@ -344,7 +344,7 @@ NS_IMETHODIMP nsFileSpecImpl::GetFileSize(PRUint32 *aFileSize)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::GetDiskSpaceAvailable(PRUint32 *aDiskSpaceAvailable)
+NS_IMETHODIMP nsFileSpecImpl::GetDiskSpaceAvailable(PRUint64 *aDiskSpaceAvailable)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(aDiskSpaceAvailable)

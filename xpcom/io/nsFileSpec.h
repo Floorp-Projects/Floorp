@@ -112,7 +112,7 @@
 #include "nsError.h"
 #include "nsString.h"
 #include "nsCRT.h"
-
+#include "prtypes.h"
 //========================================================================================
 //                          Compiler-specific macros, as needed
 //========================================================================================
@@ -418,7 +418,7 @@ class NS_COM nsFileSpec
                                 }
         
         PRUint32                GetFileSize() const;
-        PRUint32                GetDiskSpaceAvailable() const;
+        PRUint64                GetDiskSpaceAvailable() const;
         
         nsFileSpec              operator + (const char* inRelativeUnixPath) const;
         nsFileSpec              operator + (const nsString& inRelativeUnixPath) const

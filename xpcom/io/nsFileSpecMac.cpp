@@ -1105,9 +1105,13 @@ OSErr nsFileSpec::GetFileTypeAndCreator(OSType* type, OSType* creator)
 
 
 //----------------------------------------------------------------------------------------
-PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
+PRUint64 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 {
+    PRUint64 int64;
+
+    LL_I2L(int64 , ULONG_MAX);
+
     HVolumeParam    pb;
     pb.ioCompletion = nsnull;
     pb.ioVolIndex = 0;
@@ -1117,8 +1121,9 @@ PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
     OSErr err = PBHGetVInfoSync( (HParmBlkPtr)&pb );
     
     if ( err == noErr )
-        return pb.ioVFrBlk * pb.ioVAlBlkSiz;
-    return ULONG_MAX;
+        LL_I2L(int64 , (pb.ioVFrBlk * pb.ioVAlBlkSiz));
+        
+    return int64;
 } // nsFileSpec::GetDiskSpace()
 
 //----------------------------------------------------------------------------------------
