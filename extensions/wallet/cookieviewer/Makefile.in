@@ -39,4 +39,5 @@ override NO_STATIC_LIB=
 include $(topsrcdir)/config/rules.mk
 
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/CookieViewer.xul $(srcdir)/CookieViewer.js $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/CookieViewer.xul $(srcdir)/CookieViewer.js $(DIST)/bin/chrome/wallet/content/default
+	$(INSTALL) $(srcdir)/CookieViewer.properties $(DIST)/bin/chrome/wallet/locale/en-US
