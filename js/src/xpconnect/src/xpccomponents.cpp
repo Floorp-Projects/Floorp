@@ -214,7 +214,7 @@ nsXPCInterfaces::FillCache(JSContext *cx, JSObject *obj,
         NS_RELEASE(is_Interface);
         Interfaces->Next();
 
-    } while (!NS_FAILED(Interfaces->IsDone()));
+    } while (NS_COMFALSE == Interfaces->IsDone());
 
 done:
     NS_IF_RELEASE(Interfaces);
@@ -453,7 +453,7 @@ nsXPCClasses::FillCache(JSContext *cx, JSObject *obj,
             NS_RELEASE(is_Class);
             Classes->Next();
 
-        } while(!NS_FAILED(Classes->IsDone()));
+        } while (NS_COMFALSE == Classes->IsDone());
     }
     NS_RELEASE(Classes);
 }
@@ -697,7 +697,7 @@ nsXPCClassesByID::FillCache(JSContext *cx, JSObject *obj,
             NS_RELEASE(is_Class);
             Classes->Next();
 
-        } while(!NS_FAILED(Classes->IsDone()));
+        } while (NS_COMFALSE == Classes->IsDone());
     }
     NS_RELEASE(Classes);
 }
