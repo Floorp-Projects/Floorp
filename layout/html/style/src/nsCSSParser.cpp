@@ -1243,7 +1243,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
     }
     else if ((eCSSToken_Symbol == mToken.mType) && ('[' == mToken.mSymbol)) {  // attribute
       mToken.AppendToString(aSource);
-      if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+      if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
         return PR_FALSE;
       }
       if (eCSSToken_Ident != mToken.mType) {  // malformed selector
@@ -1255,7 +1255,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       if (! mCaseSensitive) {
         attr.ToLowerCase();
       }
-      if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+      if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
         return PR_FALSE;
       }
       if (eCSSToken_Symbol == mToken.mType) {
@@ -1300,13 +1300,13 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
           return PR_FALSE;
         }
         if (NS_ATTR_FUNC_SET != func) { // get value
-          if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+          if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
             return PR_FALSE;
           }
           if ((eCSSToken_Ident == mToken.mType) || (eCSSToken_String == mToken.mType)) {
             mToken.AppendToString(aSource);
             nsAutoString  value(mToken.mIdent);
-            if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
+            if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
               return PR_FALSE;
             }
             if ((eCSSToken_Symbol == mToken.mType) && (']' == mToken.mSymbol)) {
