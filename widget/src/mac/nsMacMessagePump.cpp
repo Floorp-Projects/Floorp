@@ -881,10 +881,22 @@ PRBool	nsMacMessagePump::DispatchOSEventToRaptor(
 													WindowPtr			aWindow)
 {
 	PRBool		handled = PR_FALSE;
-	
-	if (mMessageSink->IsRaptorWindow(aWindow))
-		handled = mMessageSink->DispatchOSEvent(anEvent, aWindow);
-		
+
+	if (mMessageSink->IsRaptorWindow(aWindow)) {
+		/* Suppress dispatch of events to windowshaded windows. This prevents some typical
+		   Mac application behaviour (select something, like, a bunch of bookmarks, collapse
+		   the window and hit delete -- this prevents the bookmarks' being deleted) and also
+		   some surprising behaviour (tooltips are otherwise active in a collapsed window).
+		*/
+#if TARGET_CARBON
+		if (!::IsWindowCollapsed(aWindow))
+			handled = mMessageSink->DispatchOSEvent(anEvent, aWindow);
+#else
+		if (!::EmptyRgn(((WindowRecord *) aWindow)->contRgn))
+			handled = mMessageSink->DispatchOSEvent(anEvent, aWindow);
+#endif
+	}
+
 	return handled;
 }
 
