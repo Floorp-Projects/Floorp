@@ -461,7 +461,7 @@ GtkMozillaContainer::StartStream(const char *base_url,
   
   rv = serv->NewInputStreamChannel(url, content_type, 
                                    1024/*len*/, istream,
-                                   mLoadGroup , &mChannel);
+                                   mLoadGroup , nsnull, &mChannel);
   if (NS_FAILED(rv)) 
     goto error;
   
