@@ -225,7 +225,7 @@ nsXFormsTriggerElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
         parent->InsertBefore(mElement, next, getter_AddRefs(tmp));
     }
   } else {
-    nsXFormsControlStub::WillSetAttribute(aName, aValue);
+    nsXFormsControlStub::AttributeSet(aName, aValue);
   }
 
   return NS_OK;
