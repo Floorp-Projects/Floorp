@@ -40,6 +40,14 @@
 	padding-top: 12px;   
 }
 
+.vspace {
+  padding-top: 7px;
+}
+
+.hspace-both {
+  padding-left: 15px;
+  padding-right: 15px;
+}
 
 
 

@@ -35,6 +35,7 @@ Contributor(s): ______________________________________. -->
   align="vertical"
   class="dialog"
   onload="window.handle = new PrefWindow( 'panelFrame' );"
+  persist="width height"
   width="620" height="470"> 
 
   <html:script language="javascript" src="chrome://global/content/strres.js" />

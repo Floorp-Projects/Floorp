@@ -40,9 +40,10 @@
 
 
   <box align="horizontal">
-		<html:fieldset flex="100%" style="width: 100%">
+    <!-- back and foreground colors -->
+		<html:fieldset flex="10%" style="width: 100%">
 					<html:legend align="left"> &color;</html:legend>
-    		<box style="width: 100%">
+    		<box style="width: 85%" class="hspace-both">
           <html:label>&text;</html:label>
           <spring flex="100%"/>
     			<menu id="foregroundtextmenu" allowevents="true" class="colorpicker">
@@ -55,7 +56,7 @@
     			<html:input type="hidden" id="foregroundText"
                       pref="true" preftype="string" prefstring="browser.foreground_color"/>
     		</box>
-    		<box style="width: 100%">
+    		<box style="width: 85%" class="hspace-both">
           <html:label>&background;</html:label>
           <spring flex="100%"/>
     			<menu id="backgroundmenu" allowevents="true" class="colorpicker">
@@ -69,7 +70,7 @@
     			<html:input type="hidden" id="background"
                       pref="true" preftype="string" prefstring="browser.background_color"/>
     		</box>
-    		<html:div>
+    		<html:div class="vspace hspace-both">
 		  		<html:input type="checkbox" id="browserWFEUseWindowsColors"
                       pref="true" preftype="bool" prefstring="browser.wfe.use_windows_colors"/>
     			<html:label for="browserWFEUseWindowsColors" accesskey="w" tabindex="0">
@@ -77,9 +78,11 @@
     			</html:label>
 		  	</html:div> 
 	    </html:fieldset>
-			<html:fieldset flex="1">
+      
+      <!-- links -->
+			<html:fieldset flex="100%" style="width: 100%">
 				<html:legend align="left">&links;</html:legend>
-    		<box style="width: 100%">
+    		<box style="width: 85%" class="hspace-both">
           <html:label>&unvisit;</html:label>
           <spring flex="100%"/>
     			<menu id="unvisitedlinkmenu" allowevents="true" class="colorpicker">
@@ -93,7 +96,7 @@
     			<html:input type="hidden" id="unvisitedLinks"
                       pref="true" preftype="string" prefstring="browser.anchor_color"/>
     		</box>
-    		<box style="width: 100%">
+    		<box style="width: 85%" class="hspace-both">
           <html:label>&visit;</html:label>
           <spring flex="100%"/>
     			<menu id="visitedlinkmenu" allowevents="true" class="colorpicker">
@@ -107,7 +110,7 @@
     			<html:input type="hidden" id="visitedLinks"
                       pref="true" preftype="string" prefstring="browser.visited_color"/>
     		</box>
-  			<html:div>
+  			<html:div class="vspace hspace-both">
           <html:input type="checkbox" id="browserUnderlineAnchors" pref="true"
                       preftype="bool" prefstring="browser.underline_anchors"/>
 			  	<html:label for="browserUnderlineAnchors" accesskey="u" tabindex="0">				
@@ -118,13 +121,25 @@
     </box>
 
 		<html:fieldset>
-			<html:div>&someProvColors;</html:div>
-			<html:div>
-				<html:input type="checkbox" id="browserUseDocumentColors"
+			<html:legend>&someProvColors;</html:legend>
+ 			<html:div class="hspace-both">
+        <html:input type="radio" id="browserUseDocumentColors0" name="browserUseDocumentColors"
+                    pref="true" preftype="bool" prefindex="true" prefstring="browser.use_document_colors"/>
+				<html:label for="browserUseDocumentColors0" accesskey="a" tabindex="0">
+	  			&alwaysUseDocColors.label;
+  			</html:label>
+      </html:div>
+			<html:div class="hspace-both">
+        <html:input type="radio" id="browserUseDocumentColors1" name="browserUseDocumentColors"
+                    pref="true" preftype="bool" prefindex="false" prefstring="browser.use_document_colors"/>
+				<html:label for="browserUseDocumentColors1" accesskey="a" tabindex="0">
+	  			&ignoreDocColors.label;
+  			</html:label>
+      </html:div>
+<!--				<html:input type="checkbox" id="browserUseDocumentColors"
                     pref="true" preftype="bool" prefstring="browser.use_document_colors"/>
 				<html:label for="browserUseDocumentColors" accesskey="a" tabindex="0">
 	  			&alwaysOverCheck.label;
-  			</html:label>
-			</html:div>		
+  			</html:label>-->
 		</html:fieldset>
 </window>
