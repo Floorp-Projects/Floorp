@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <Quickdraw.h>
 #include <TextServices.h>
+#include <Movies.h>
 
 int strcmpcore(const char*, const char*, int, int);
 
@@ -157,6 +158,9 @@ void InitializeMacToolbox(void)
 		InitCursor();
 		InitContextualMenus();
 		InitTSMAwareApplication();
+		// init QuickTime if we have it
+		if ((long)EnterMovies != kUnresolvedCFragSymbolAddress)
+			EnterMovies();
 #endif
 #if DEBUG
 		InitializeSIOUX(false);
