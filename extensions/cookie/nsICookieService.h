@@ -58,6 +58,16 @@ public:
    */
   NS_IMETHOD SetCookieString(nsIURI *aURL, const nsString& aCookie)=0;
 
+  /*
+   * Set the cookie string and expires associated with the URL
+   *
+   * @param aURL The URL for which to set the cookie string
+   * @param aCookie The char * string to set
+   * @param aExpires The expiry information of the cookie
+   * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+   */
+  NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURL, const char *aCookie, const char *aExpires)=0;
+
   /* 
    * Blows away all permissions currently in the cookie permissions list,
    * and then blows away all cookies currently in the cookie list.
@@ -74,6 +84,6 @@ public:
 
 
 /* ProgID prefixes for Cookie DLL registration. */
-#define NS_COOKIESERVICE_PROGID                           "component:||netscape|cookie"
+#define NS_COOKIESERVICE_PROGID                           "component://netscape/cookie"
 
 #endif /* nsICookieService_h__ */

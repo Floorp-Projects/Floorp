@@ -27,17 +27,12 @@
 #include "nsIServiceManager.h"
 #include "nsICookieService.h"
 #include "nsCookieHTTPNotify.h"
-#include "nsINetModuleMgr.h" 
 #include "nsIEventQueueService.h"
 #include "nsCRT.h"
 #include "nsCookie.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID); 
-static NS_DEFINE_IID(kICookieServiceIID, NS_ICOOKIESERVICE_IID);
-
-static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID); 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,6 +48,7 @@ public:
 
   NS_IMETHOD GetCookieString(nsIURI *aURL, nsString& aCookie);
   NS_IMETHOD SetCookieString(nsIURI *aURL, const nsString& aCookie);
+  NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURL, const char *aCookie, const char *aExpires);
   NS_IMETHOD Cookie_RemoveAllCookies(void);
   NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results);
   NS_IMETHOD Cookie_GetCookieListForViewer(nsString& aCookieList);
@@ -73,7 +69,7 @@ static nsCookieService* gCookieService = nsnull; // The one-and-only CookieServi
 ////////////////////////////////////////////////////////////////////////////////
 // nsCookieService Implementation
 
-NS_IMPL_ISUPPORTS(nsCookieService, kICookieServiceIID);
+NS_IMPL_ISUPPORTS1(nsCookieService, nsICookieService);
 
 NS_EXPORT nsresult NS_NewCookieService(nsICookieService** aCookieService) {
   return nsCookieService::GetCookieService(aCookieService);
@@ -105,9 +101,6 @@ nsresult nsCookieService::GetCookieService(nsICookieService** aCookieService) {
 
 nsresult nsCookieService::Init() {
   nsresult rv;
-  NS_WITH_SERVICE(nsINetModuleMgr, pNetModuleMgr, kNetModuleMgrCID, &rv); 
-  if (NS_FAILED(rv)) return rv;
-
   NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv); 
   if (NS_FAILED(rv)) return rv;
   rv = eventQService->CreateThreadEventQueue();
@@ -116,11 +109,6 @@ nsresult nsCookieService::Init() {
   if (NS_FAILED(rv = NS_NewCookieHTTPNotify(&mCookieHTTPNotify))) {
     return rv;
   }
-  rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID, mCookieHTTPNotify);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID, mCookieHTTPNotify);
-  if (NS_FAILED(rv)) return rv;
 
   COOKIE_RegisterCookiePrefCallbacks();
   COOKIE_ReadCookies();     
@@ -153,6 +141,16 @@ nsCookieService::SetCookieString(nsIURI *aURL, const nsString& aCookie) {
   COOKIE_SetCookieString((char *)spec, cookie);
   nsCRT::free(spec);
   nsCRT::free(cookie);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieService::SetCookieStringFromHttp(nsIURI *aURL, const char *aCookie, const char *aExpires) {
+  char *spec = NULL;
+  nsresult rv = aURL->GetSpec(&spec);
+  if (NS_FAILED(rv)) return rv;
+  COOKIE_SetCookieStringFromHttp(spec, (char *)aCookie, (char *)aExpires);
+  nsCRT::free(spec);
   return NS_OK;
 }
 
@@ -219,9 +217,7 @@ CreateNewCookieService(nsISupports* aOuter, REFNSIID aIID, void **aResult)
 //
 static nsModuleComponentInfo components[] = {
     { "CookieService", NS_COOKIESERVICE_CID,
-      "component://netscape/cookie", CreateNewCookieService, },	// XXX Singleton
-    { "CookieHTTPNotifyService", NS_COOKIEHTTPNOTIFY_CID,
-      "component://netscape/cookie-http-notify", CreateNewCookieService, },
+      NS_COOKIESERVICE_PROGID, CreateNewCookieService, },	// XXX Singleton
 };
 
 ////////////////////////////////////////////////////////////////////////
