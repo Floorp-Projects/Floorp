@@ -241,7 +241,7 @@ protected:
   void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   
-  virtual nsresult AddScriptEventListener(nsIAtom* aAttribute, nsHTMLValue& aValue, REFNSIID aIID);
+  virtual nsresult AddScriptEventListener(nsIAtom* aAttribute, const nsString& aValue, REFNSIID aIID);
   
   void TriggerLink(nsIPresContext& aPresContext,
                  const nsString& aBase,
