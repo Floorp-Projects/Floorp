@@ -856,14 +856,18 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
     }
     else if(name.EqualsIgnoreCase("_content"))
     {
-        if (mTreeOwner)
+        if (mTreeOwner) {
             mTreeOwner->FindItemWithName(name.get(), nsnull, 
                                          getter_AddRefs(treeItem));
-        else
-        {
+        } else {
             NS_ERROR("Someone isn't setting up the tree owner.  "
                      "You might like to try that.  "
                      "Things will.....you know, work.");
+        }
+        // _content should always exist.  If the nsIDocShellTreeOwner did
+        // not find one, then create one...
+        if (!treeItem) {
+            mustMakeNewWindow = PR_TRUE;
         }
     }
     else
