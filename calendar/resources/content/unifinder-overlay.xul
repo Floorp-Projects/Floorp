@@ -64,8 +64,8 @@
         <!--
         <unifinder-button id="unifinder-new-category-button" class="unifinder-new-category-button" tooltip="aTooltip" tooltiptext="&unifinder.toolbar.newfolder.tooltip;" oncommand="unifinderNewCategoryCommand()" />
         -->
-        <unifinder-button id="unifinder-remove-button" class="unifinder-remove-button" tooltip="aTooltip" tooltiptext="&calendar.tools.delete.tooltip;" oncommand="unifinderRemoveCommand()" />
-        <unifinder-button id="unifinder-modify-button" class="unifinder-modify-button" tooltip="aTooltip" tooltiptext="&calendar.tools.modify.tooltip;" oncommand="unifinderModifyCommand()" />
+        <unifinder-button id="unifinder-remove-button" class="unifinder-remove-button" tooltip="aTooltip" tooltiptext="&calendar.tools.delete.tooltip;" label="&calendar.delete.label;" oncommand="unifinderRemoveCommand()" />
+        <unifinder-button id="unifinder-modify-button" class="unifinder-modify-button" tooltip="aTooltip" tooltiptext="&calendar.tools.modify.tooltip;" label="&calendar.modify.label;" oncommand="unifinderModifyCommand()" />
  
         <box flex="1">
             <tabbox   class="unifinder-tab-box" unifinder-tab-box="true" orient="vertical" flex="1" >

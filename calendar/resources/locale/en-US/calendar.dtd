@@ -96,6 +96,9 @@
 <!ENTITY calendar.tools.delete.tooltip         "Delete Event" >
 <!ENTITY calendar.tools.modify.tooltip         "Modify Event" >
 
+<!ENTITY calendar.delete.label         "Delete" >
+<!ENTITY calendar.modify.label         "Edit" >
+
 <!ENTITY calendar.newevent.button.tooltip         "Create New Calendar Event" >
 <!ENTITY calendar.gototoday.button.tooltip        "Go To Today" >
 <!ENTITY calendar.choosedate.button.tooltip       "Pick Date To Go To" >

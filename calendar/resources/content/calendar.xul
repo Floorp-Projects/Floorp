@@ -117,7 +117,7 @@
  
  <popup  id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
 
- <popup id="unifinder-options-menu">
+ <popup id="unifinder-options-menu" position="end_before">
      <!--
      <menuitem label="&calendar.menu.options.newcategory;" oncommand="unifinderNewCategoryCommand()" />
      -->

@@ -35,18 +35,14 @@
    - ***** END LICENSE BLOCK ***** -->
 
 
+<!ENTITY unifinder.menu.label           			    "Menu">
 <!ENTITY unifinder.menu.options.newfolder			    "New Folder...">
 <!ENTITY unifinder.menu.options.moveto			        "Move To...">
 <!ENTITY unifinder.menu.options.copyto			        "Copy To...">
 <!ENTITY unifinder.menu.options.duplicate               "Duplicate...">
-<!ENTITY unifinder.menu.options.publishto			    "Publish To...">
 <!ENTITY unifinder.menu.options.modify			        "Modify">
 <!ENTITY unifinder.menu.options.remove			        "Remove">
 <!ENTITY unifinder.menu.options.delete			        "Delete">
-<!ENTITY unifinder.menu.options.showextraoptions	    "Show Extra Options"> 
-<!ENTITY unifinder.menu.options.hideextraoptions		"Hide Extra Options" >
-<!ENTITY unifinder.menu.options.showmanagementtools		"Show Management Tools">
-<!ENTITY unifinder.menu.options.hidemanagementtools		"Hide Management Tools">
 
 <!-- Toolbar button tooltips -->
 <!ENTITY unifinder.toolbar.newfolder.tooltip        "Create New Item">
@@ -54,7 +50,6 @@
 <!ENTITY unifinder.toolbar.delete.tooltip           "Delete Item">
 <!ENTITY unifinder.toolbar.moveto.tooltip           "Move Item to New Location">
 <!ENTITY unifinder.toolbar.copyto.tooltip           "Copy Item to New Location">
-<!ENTITY unifinder.toolbar.publish.tooltip          "Publish Item to your personal page">
 <!ENTITY unifinder.toolbar.options.tooltip          "Show Extra Options">
 
 

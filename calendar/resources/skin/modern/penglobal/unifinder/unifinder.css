@@ -177,7 +177,7 @@ tabpanels {
 #unifinder-toolbar
 {
    background-image        : url("chrome://penglobal/skin/unifinder/topbar_striped.png");
-   background-repeat       : x-repeat;
+   background-repeat       : repeat;
 }
 
 /* Make space around the little dialog items in some tabs, like the search field and label */
@@ -248,20 +248,6 @@ tabpanels {
     list-style-image        : url("chrome://penglobal/skin/unifinder/move_down.png");
   }
 
-
-/* text for above */
-.unifinder-move-button  > .unifinder-button-text
-  {
-    list-style-image        : url("chrome://penglobal/skin/unifinder/movetext.png");
-  }
-.unifinder-move-button[disabled="true"] > .unifinder-button-text,
-.unifinder-move-button[disabled="true"]:hover > .unifinder-button-text,
-.unifinder-move-button[disabled="true"]:hover:active > .unifinder-button-text
-  {
-   list-style-image         : url("chrome://penglobal/skin/unifinder/movetext_disabled.png");
-  }
-
-
 /*--------------------------------------------------------------------
  *   unifinder copy to button
  *-------------------------------------------------------------------*/
@@ -283,54 +269,6 @@ tabpanels {
 .unifinder-copy-button:hover:active > .unifinder-button-image
   {
     list-style-image        : url("chrome://penglobal/skin/unifinder/copy_down.png");
-  }
-
-/* text for above */
-.unifinder-copy-button  > .unifinder-button-text
-{
-    list-style-image        : url("chrome://penglobal/skin/unifinder/copytext.png");
-}
-
-.unifinder-copy-button[disabled="true"] > .unifinder-button-text,
-.unifinder-copy-button[disabled="true"]:hover > .unifinder-button-text,
-.unifinder-copy-button[disabled="true"]:hover:active > .unifinder-button-text
-{
-    list-style-image         : url("chrome://penglobal/skin/unifinder/copytext_disabled.png");
-}
-
-/*--------------------------------------------------------------------
- *   unifinder publish to button
- *-------------------------------------------------------------------*/
-
-.unifinder-publish-button  > .unifinder-button-image
-  {
-    list-style-image        : url("chrome://penglobal/skin/unifinder/publish_up.png");
-  }
-.unifinder-publish-button[disabled="true"] > .unifinder-button-image,
-.unifinder-publish-button[disabled="true"]:hover > .unifinder-button-image,
-.unifinder-publish-button[disabled="true"]:hover:active > .unifinder-button-image
-  {
-   list-style-image         : url("chrome://penglobal/skin/unifinder/publish_disabled.png");
-  }
-.unifinder-publish-button:hover > .unifinder-button-image
-  {
-    list-style-image        : url("chrome://penglobal/skin/unifinder/publish_hover.png");
-  }
-.unifinder-publish-button:hover:active > .unifinder-button-image
-  {
-    list-style-image        : url("chrome://penglobal/skin/unifinder/publish_down.png");
-  }
-
-/* text for above */
-.unifinder-publish-button > .unifinder-button-text
-  {
-    list-style-image        : url("chrome://penglobal/skin/unifinder/publishtext.png");
-  }
-.unifinder-publish-button[disabled="true"] > .unifinder-button-text,
-.unifinder-publish-button[disabled="true"]:hover > .unifinder-button-text,
-.unifinder-publish-button[disabled="true"]:hover:active > .unifinder-button-text
-  {
-   list-style-image         : url("chrome://penglobal/skin/unifinder/publishtext_disabled.png");
   }
 
 /*--------------------------------------------------------------------
@@ -355,20 +293,6 @@ tabpanels {
   {
     list-style-image        : url("chrome://penglobal/skin/unifinder/modify_down.png");
   }
-
-
-/* text for above */
-.unifinder-modify-button > .unifinder-button-text
-  {
-    list-style-image        : url("chrome://penglobal/skin/unifinder/edittext.png");
-  }
-.unifinder-modify-button[disabled="true"] > .unifinder-button-text,
-.unifinder-modify-button[disabled="true"]:hover > .unifinder-button-text,
-.unifinder-modify-button[disabled="true"]:hover:active > .unifinder-button-text
-  {
-   list-style-image         : url("chrome://penglobal/skin/unifinder/edittext_disabled.png");
-  }
-
 
 /*--------------------------------------------------------------------
  *   unifinder remove button
@@ -396,19 +320,6 @@ tabpanels {
     list-style-image        : url("chrome://penglobal/skin/unifinder/remove_down.png");
   }
   
-
-.unifinder-remove-button > .unifinder-button-text
-  {
-    list-style-image        : url("chrome://penglobal/skin/unifinder/deletetext.png");
-  }
-.unifinder-remove-button[disabled="true"] > .unifinder-button-text,
-.unifinder-remove-button[disabled="true"]:hover > .unifinder-button-text,
-.unifinder-remove-button[disabled="true"]:hover:active > .unifinder-button-text
-  {
-   list-style-image         : url("chrome://penglobal/skin/unifinder/deletetext_disabled.png");
-  }
-
-
 /*--------------------------------------------------------------------
  *   unifinder new category to button
  *-------------------------------------------------------------------*/
@@ -431,20 +342,6 @@ tabpanels {
   {
     list-style-image        : url("chrome://penglobal/skin/unifinder/newcategory_down.png");
   }
-
-
-/* text for above */
-.unifinder-new-category-button > .unifinder-button-text
-  {
-    list-style-image        : url("chrome://penglobal/skin/unifinder/newtext.png");
-  }
-.unifinder-new-category-button[disabled="true"] > .unifinder-button-text,
-.unifinder-new-category-button[disabled="true"]:hover > .unifinder-button-text,
-.unifinder-new-category-button[disabled="true"]:hover:active > .unifinder-button-text
-  {
-   list-style-image         : url("chrome://penglobal/skin/unifinder/newtext_disabled.png");
-  }
-
 
 /*--------------------------------------------------------------------
  *   unifinder clear results to button
@@ -470,7 +367,6 @@ tabpanels {
   }
 
 
-
 /*--------------------------------------------------------------------
  *   unifinder options button
  *-------------------------------------------------------------------*/
@@ -487,14 +383,6 @@ tabpanels {
   {
     list-style-image        : url("chrome://penglobal/skin/unifinder/options_button_down.png");
   }
-
-
-/* text for above */
-.unifinder-options-button-1 > .unifinder-button-text
-  {
-    list-style-image        : url("chrome://penglobal/skin/unifinder/menutext.png");
-  }
-
 
 /*--------------------------------------------------------------------
  *   unifinder options button-2
@@ -515,6 +403,10 @@ tabpanels {
     list-style-image        : url("chrome://penglobal/skin/unifinder/options_button.png");
   }
 
-
-
+.unifinder-button-text
+{
+        font-family             : helvetica;
+        font-size               : 10pt;
+        color                   : #ffffff;
+}
 
