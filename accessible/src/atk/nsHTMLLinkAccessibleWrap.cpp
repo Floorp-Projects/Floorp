@@ -185,6 +185,7 @@ NS_IMETHODIMP nsHTMLImageMapAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 NS_IMETHODIMP nsHTMLImageMapAccessible::GetObject(PRInt32 aIndex,
                                                   nsIAccessible **aAccessible)
 {
+  *aAccessible = nsnull;
   nsCOMPtr<nsIAccessible> areaAccessible;
   nsresult rv = GetChildAt(aIndex, getter_AddRefs(areaAccessible));
   areaAccessible.swap(*aAccessible);
