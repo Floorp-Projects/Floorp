@@ -72,8 +72,7 @@ function calendarPublish(aDataString, newLocation, login, password, contentType)
 {
   try
   {
-     alert( "new location is "+newLocation );
-     var protocolChannel = get_destination_channel(newLocation, login, password);
+    var protocolChannel = get_destination_channel(newLocation, login, password);
     if (!protocolChannel)
     {
       dump("failed to get a destination channel\n");
@@ -93,17 +92,15 @@ function calendarUploadFile(aSourceFilename, newLocation, login, password, conte
    try
    {
       var protocolChannel = get_destination_channel(newLocation, login, password);
-    
       if (!protocolChannel)
       {
          dump("failed to get a destination channel\n");
          return;
       }
-
-       output_file_to_channel(protocolChannel, aSourceFilename, contentType);
-       protocolChannel.asyncOpen(gPublishingListener, protocolChannel);
+      output_file_to_channel(protocolChannel, aSourceFilename, contentType);
+      protocolChannel.asyncOpen(gPublishingListener, protocolChannel);
        
-       return( true );
+      return( true );
    }
    catch (e)
    {
@@ -126,13 +123,14 @@ function output_string_to_channel( aChannel, aDataString, contentType )
 
 function output_file_to_channel( aChannel, aFilePath, contentType )
 {
-   include('chrome://calendar/content/jslib/io/io.js');
-   
    var uploadChannel = aChannel.QueryInterface(Components.interfaces.nsIUploadChannel);
    
    var thisFile = new File( aFilePath );
+   
    thisFile.open( "r" );
+   
    var theFileContents = thisFile.read();
+   
    output_string_to_channel( aChannel, theFileContents, contentType );
 }
 

@@ -125,14 +125,12 @@ if (typeof(JS_FILESYSTEM_LOADED)!='boolean')
 const JS_FILE_LOADED           = true;
 const JS_FILE_FILE             = "file.js";
 
-const JS_FILE_F_CHANNEL_CID    = "@mozilla.org/network/local-file-channel;1";
 const JS_FILE_IOSERVICE_CID    = "@mozilla.org/network/io-service;1";
 const JS_FILE_I_STREAM_CID     = "@mozilla.org/scriptableinputstream;1";
 const JS_FILE_OUTSTREAM_CID    = "@mozilla.org/network/file-output-stream;1";
 
 const JS_FILE_F_TRANSPORT_SERVICE_CID  = "@mozilla.org/network/file-transport-service;1";
 
-const JS_FILE_I_FILE_CHANNEL           = "nsIFileChannel";
 const JS_FILE_I_IOSERVICE              = C.interfaces.nsIIOService;
 const JS_FILE_I_SCRIPTABLE_IN_STREAM   = "nsIScriptableInputStream";
 const JS_FILE_I_FILE_OUT_STREAM        = C.interfaces.nsIFileOutputStream;
@@ -154,14 +152,12 @@ const JS_FILE_DEFAULT_PERMS = 0644;
 const JS_FILE_OK            = true;
 
 try {
-  const JS_FILE_FileChannel  = new C.Constructor
-  (JS_FILE_F_CHANNEL_CID, JS_FILE_I_FILE_CHANNEL);
-  
   const JS_FILE_InputStream  = new C.Constructor
   (JS_FILE_I_STREAM_CID, JS_FILE_I_SCRIPTABLE_IN_STREAM);
 
   const JS_FILE_IOSERVICE    = C.classes[JS_FILE_IOSERVICE_CID].
   getService(JS_FILE_I_IOSERVICE);
+
 } catch (e) {
   jslibError (e, "open("+this.mMode+") (unable to get nsIFileChannel)", 
                 "NS_ERROR_FAILURE", 
@@ -314,27 +310,27 @@ File.prototype.open = function(aMode, aPerms)
         var offSet=0;
         if (aMode == JS_FILE_WRITE_MODE) {
           this.mMode=JS_FILE_WRITE_MODE;
-          // create a filestream                                   
-          var fs = C.classes[JS_FILE_OUTSTREAM_CID].               
-                   createInstance(JS_FILE_I_FILE_OUT_STREAM);      
-                                                                   
-          fs.init(this.mFileInst, JS_FILE_NS_TRUNCATE |            
+          // create a filestream
+          var fs = C.classes[JS_FILE_OUTSTREAM_CID].
+                   createInstance(JS_FILE_I_FILE_OUT_STREAM);
+
+          fs.init(this.mFileInst, JS_FILE_NS_TRUNCATE | 
                                   JS_FILE_NS_WRONLY, 00004, null); 
-          this.mOutStream = fs;                                    
+          this.mOutStream = fs;
         } else {
           this.mMode=JS_FILE_APPEND_MODE;
-          // create a filestream                                  
-          var fs = C.classes[JS_FILE_OUTSTREAM_CID].              
-                   createInstance(JS_FILE_I_FILE_OUT_STREAM);     
-                                                                  
-          fs.init(this.mFileInst, JS_FILE_NS_RDWR |               
-                                  JS_FILE_NS_APPEND, 00004, null);
-          this.mOutStream = fs;                                   
+          // create a filestream
+          var fs = C.classes[JS_FILE_OUTSTREAM_CID].
+                   createInstance(JS_FILE_I_FILE_OUT_STREAM);
+
+          fs.init(this.mFileInst, JS_FILE_NS_RDWR | 
+                                  JS_FILE_NS_APPEND, 00004, null); 
+          this.mOutStream = fs;
         }
       } catch(e) {
         jslibError(e, "open("+this.mMode+") (unable to get file stream)", 
-                    "NS_ERROR_FAILURE", 
-                    JS_FILE_FILE+":open");
+                  "NS_ERROR_FAILURE", 
+                  JS_FILE_FILE+":open");
         return null;
       }
       try {
@@ -373,7 +369,7 @@ File.prototype.open = function(aMode, aPerms)
       } catch (e) {
         jslibError(e, "open(r) (error setting permissions)", 
                       "NS_ERROR_FAILURE", 
-                      JS_FILE_FILE+":open\n"+e);
+                      JS_FILE_FILE+":open");
         return null;
       }
       break;
