@@ -68,9 +68,9 @@ protected:
   nsCOMPtr<nsIDOMDocument> mDocument;
   nsVoidArray* mResults;
   nsCSSProperty* mProperties;
-  nsAutoString* mLastResult;
-  nsAutoString* mBaseURL;
-  nsAutoString* mTextCriteria;
+  nsString mLastResult;
+  nsString mBaseURL;
+  nsString mTextCriteria;
   PRInt32 mResultCount;
   PRUint32 mPropertyCount;
   PRBool mIsActive;
