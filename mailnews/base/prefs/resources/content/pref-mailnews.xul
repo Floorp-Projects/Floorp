@@ -39,9 +39,9 @@ Contributor(s):
   <![CDATA[
     var _elementIDs = ["mailnewsConfirmMoveFoldersToTrash", 
                        "mailnewsStartPageEnabled", "mailnewsStartPageUrl", 
-                       "mailRememberLastMsg", "fileButton", "nextButton",
+                       "fileButton", "nextButton",
                        "printButton", "stopButton"];
-                       //"junkMailButton" - to be added when implemented
+                       //"mailRememberLastMsg","junkMailButton" - to be added when implemented
   ]]>
   </script>
   
@@ -56,12 +56,13 @@ Contributor(s):
 
     <hbox align="start" id="mapi"/>
 
+<!-- not ready yet
     <hbox align="center">
       <checkbox id="mailRememberLastMsg" label="&rememberLastMsg.label;"
                 prefstring="mailnews.remember_selected_message"
                 accesskey="&rememberLastMsg.accesskey;" />
     </hbox>
-    
+-->    
     <separator class="thin"/>
     
   </groupbox>
