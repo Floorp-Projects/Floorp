@@ -123,7 +123,7 @@ public:
                                     nsIRenderingContext* aRendContext,
                                     nsIFontMetrics*      aFontMet, 
                                     nsIFormControlFrame* aFrame,
-                                    PRInt32              aLength,
+                                    nsInputDimensionSpec& aSpec,
                                     nsSize&              aSize);
 
   static void ForceDrawFrame(nsIFrame * aFrame);

@@ -203,7 +203,7 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext&      aPresContext,
                                         nsIRenderingContext* aRendContext,
                                         nsIFontMetrics*      aFontMet, 
                                         nsIFormControlFrame* aFrame,
-                                        PRInt32              aLength,
+                                        nsInputDimensionSpec& aSpec,
                                         nsSize&              aSize)
 {
   float p2t;
@@ -243,7 +243,7 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext&      aPresContext,
     width   = maxCharWidth;
     hgt     = ascent + descent;
     height  = hgt + (hgt / 2);
-    width  += aLength * average;
+    width  += aSpec.mColDefaultSize * average;
   } else if (NS_FORM_TEXTAREA == type) {
     nscoord lines = 1;
     nscoord scrollbarWidth  = 0;
@@ -265,13 +265,29 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext&      aPresContext,
       scrollbarWidth  = 16;
       scrollbarHeight = 16;
     }
+    nsIContent * content;
+    aFrame->GetFormContent(content);
+    nsCOMPtr<nsIHTMLContent> hContent(do_QueryInterface(content));
+
+    // determine the height
+    nsHTMLValue rowAttr;
+    nsresult rowStatus = NS_CONTENT_ATTR_NOT_THERE;
+    if (nsnull != aSpec.mRowSizeAttr) {
+      rowStatus = hContent->GetHTMLAttribute(aSpec.mRowSizeAttr, rowAttr);
+    }
+    if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
+      PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) 
+                              ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
+      lines = (rowAttrInt > 0) ? rowAttrInt : 1;
+    } else {
+      lines = aSpec.mRowDefaultSize;
+    }
+
     average = (char1Width + char2Width) / 2;
-    width   = ((aLength + 1) * average) + scrollbarWidth;
+    width   = ((aSpec.mColDefaultSize + 1) * average) + scrollbarWidth;
     hgt     = ascent + descent;
     height  = (lines + 1) * hgt;
 
-    nsIContent * content;
-    aFrame->GetFormContent(content);
     // then if not word wrapping
     nsHTMLTextWrap wrapProp;
     nsFormControlHelper::GetWrapPropertyEnum(content, wrapProp);
@@ -421,10 +437,23 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
       aDesiredSize.width = NSIntPixelsToTwips(col, p2t);
     } else {
       col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
-      charWidth = GetTextSize(*aPresContext, aFrame, col, aDesiredSize, aRendContext);
+      if (eCompatibility_NavQuirks == qMode) {
+        nsCOMPtr<nsIFontMetrics> fontMet;
+        GetFrameFontFM(*aPresContext, aFrame, getter_AddRefs(fontMet));
+        if (fontMet) {
+          aRendContext->SetFont(fontMet);
+          aSpec.mColDefaultSize = col;
+          charWidth = CalcNavQuirkSizing(*aPresContext, aRendContext, fontMet, 
+                                         aFrame, aSpec, aDesiredSize);
+        } else {
+          charWidth = GetTextSize(*aPresContext, aFrame, col, aDesiredSize, aRendContext);
+        }
+      }
     }
-    if (aSpec.mColSizeAttrInPixels) {
-      aWidthExplicit = PR_TRUE;
+    if (eCompatibility_Standard == qMode) {
+      if (aSpec.mColSizeAttrInPixels) {
+        aWidthExplicit = PR_TRUE;
+      }
     }
     aMinSize.width = aDesiredSize.width;
   } else {
@@ -444,7 +473,7 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
           aRendContext->SetFont(fontMet);
           // this passes in a 
           charWidth = CalcNavQuirkSizing(*aPresContext, aRendContext, fontMet, 
-                                         aFrame, aSpec.mColDefaultSize, aDesiredSize);
+                                         aFrame, aSpec, aDesiredSize);
         } else {
           NS_ASSERTION(fontMet, "Couldn't get Font Metrics"); 
           aDesiredSize.width = 300;  // arbitrary values
@@ -467,23 +496,25 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
   aMinSize.height = aDesiredSize.height;
 
   // determine the height
-  nsHTMLValue rowAttr;
-  nsresult rowStatus = NS_CONTENT_ATTR_NOT_THERE;
-  if (nsnull != aSpec.mRowSizeAttr) {
-    rowStatus = hContent->GetHTMLAttribute(aSpec.mRowSizeAttr, rowAttr);
-  }
-  if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
-    PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) 
-                            ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
-    numRows = (rowAttrInt > 0) ? rowAttrInt : 1;
-    aDesiredSize.height = aDesiredSize.height * numRows;
-  } else {
-    aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
-    if (CSS_NOTSET != aCSSSize.height) {  // css provides height
-      NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
-      if (NS_INTRINSICSIZE != aCSSSize.height) {
-        aDesiredSize.height = PR_MAX(aDesiredSize.height,aCSSSize.height);
-        aHeightExplicit = PR_TRUE;
+  if (eCompatibility_Standard == qMode) {
+    nsHTMLValue rowAttr;
+    nsresult rowStatus = NS_CONTENT_ATTR_NOT_THERE;
+    if (nsnull != aSpec.mRowSizeAttr) {
+      rowStatus = hContent->GetHTMLAttribute(aSpec.mRowSizeAttr, rowAttr);
+    }
+    if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
+      PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) 
+                              ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
+      numRows = (rowAttrInt > 0) ? rowAttrInt : 1;
+      aDesiredSize.height = aDesiredSize.height * numRows;
+    } else {
+      aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
+      if (CSS_NOTSET != aCSSSize.height) {  // css provides height
+        NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
+        if (NS_INTRINSICSIZE != aCSSSize.height) {
+          aDesiredSize.height = PR_MAX(aDesiredSize.height,aCSSSize.height);
+          aHeightExplicit = PR_TRUE;
+        }
       }
     }
   }
