@@ -113,6 +113,8 @@ scrollbarbutton:hover:active {
 /* ::::: square at the corner of two scrollbars ::::: */
 
 scrollcorner { 
+  -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbar-base");
+  cursor: default;
   background-color: #B1BBC5;
 }
 
