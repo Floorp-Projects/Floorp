@@ -28,11 +28,6 @@
 #include <limits.h>
 #include "nsError.h"
 
-// this is inside stdlib.h, but inside wierd #ifdef's...
-#if defined (LINUX)
-extern "C" char *realpath(char *path, char resolved_path[]);
-#endif
-
 #if defined(IRIX) || defined(OSF1) || defined(SOLARIS) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC) || defined(DGUX)
 #include <sys/statvfs.h> /* for statvfs() */
 #define STATFS statvfs
