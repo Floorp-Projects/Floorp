@@ -21,6 +21,7 @@
 #include <Files.h>
 #include <Errors.h>
 #include <Folders.h>
+#include <Gestalt.h>
 #include <Events.h>
 #include <Processes.h>
 #include <TextUtils.h>
@@ -65,8 +66,11 @@ extern PRThread *gPrimaryThread;
 
 UniversalProcPtr	gStackSpacePatchCallThru = NULL;
 pascal long StackSpacePatch(UInt16);
-RoutineDescriptor 	StackSpacePatchRD = BUILD_ROUTINE_DESCRIPTOR(uppStackSpaceProcInfo, &StackSpacePatch);
 
+typedef CALLBACK_API( long , StackSpacePatchPtr )(UInt16 trapNo);
+typedef REGISTER_UPP_TYPE(StackSpacePatchPtr)	StackSpacePatchUPP;
+#define NewStackSpaceProc(userRoutine)	(StackSpacePatchUPP)NewRoutineDescriptor((ProcPtr)(userRoutine), uppStackSpaceProcInfo, GetCurrentArchitecture())
+StackSpacePatchUPP	gStackSpacePatchUPP = NULL;
 
 //##############################################################################
 //##############################################################################
@@ -208,8 +212,9 @@ void _MD_GetRegisters(PRUint32 *to)
 
 void _MD_EarlyInit()
 {
-	Handle		environmentVariables;
-
+	Handle				environmentVariables;
+	long				systemVersion;
+	OSErr				err;
 
 #if !defined(MAC_NSPR_STANDALONE)
 	// MacintoshInitializeMemory();  Moved to mdmacmem.c: AllocateRawMemory(Size blockSize)
@@ -251,11 +256,39 @@ void _MD_EarlyInit()
 	_MD_PutEnv ("NSPR_LOG_MODULES=clock:6,cmon:6,io:6,mon:6,linker:6,cvar:6,sched:6,thread:6");
 #endif
 
-	gStackSpacePatchCallThru = GetOSTrapAddress(0x0065);
-	SetOSTrapAddress((UniversalProcPtr)&StackSpacePatchRD, 0x0065);
+	err = Gestalt(gestaltSystemVersion,&systemVersion);
+	if (systemVersion < 0x00000A00)	// we still need to patch StackSpace()
 	{
-		long foo;
-		foo = StackSpace();
+		CFragConnectionID	connID;
+		Str255				errMessage;
+		Ptr					interfaceLibAddr;
+		CFragSymbolClass	symClass;
+		UniversalProcPtr	(*getOSTrapAddressProc)(UInt16);
+		void				(*setOSTrapAddressProc)(UniversalProcPtr, UInt16);
+
+		// open connection to "InterfaceLib"
+		err = GetSharedLibrary("\pInterfaceLib", kPowerPCCFragArch, kFindCFrag,
+												&connID, &interfaceLibAddr, errMessage);
+		PR_ASSERT(err == noErr);
+
+		// get symbol GetOSTrapAddress and get trap address for StackSpace (A065)
+		err = FindSymbol(connID, "\pGetOSTrapAddress", &(Ptr)getOSTrapAddressProc, &symClass);
+		PR_ASSERT(err == noErr);
+		PR_ASSERT(symClass == kTVectorCFragSymbol);
+		if (err == noErr)
+		{
+			gStackSpacePatchCallThru = getOSTrapAddressProc(0x0065); 
+		}
+		
+		// get symbol SetOSTrapAddress and set trap address for _StackSpace (A065)
+		err = FindSymbol(connID, "\pSetOSTrapAddress", &(Ptr)setOSTrapAddressProc, &symClass);
+		PR_ASSERT(err == noErr);
+		PR_ASSERT(symClass == kTVectorCFragSymbol);
+		if (err == noErr && gStackSpacePatchCallThru)
+		{
+			gStackSpacePatchUPP = NewStackSpaceProc(StackSpacePatch);
+			setOSTrapAddressProc(gStackSpacePatchUPP, 0x0065);
+		}
 	}
 }
 
