@@ -630,7 +630,7 @@ function mircChangeColor (colorInfo, containerTag, data)
         delete data.currFgColor;
     if (ary.length >= 4)
     {
-        bgColor = ary[3];
+        var bgColor = ary[3];
         if (bgColor > 16)
             bgColor &= 16;
         if (bgColor.length == 1)
