@@ -897,6 +897,10 @@ public class Context {
                                 int lineno, Object securityDomain)
         throws IOException
     {
+        if (lineno < 0) {
+            throw new IllegalArgumentException(
+                "Line number can not be negative:"+lineno);
+        }
         return (Script) compile(scope, in, null, sourceName, lineno,
                                 securityDomain, false);
     }
@@ -923,6 +927,10 @@ public class Context {
                                 String sourceName, int lineno,
                                 Object securityDomain)
     {
+        if (lineno < 0) {
+            throw new IllegalArgumentException(
+                "Line number can not be negative:"+lineno);
+        }
         try {
             return (Script) compile(scope, null, source, sourceName, lineno,
                                     securityDomain, false);
