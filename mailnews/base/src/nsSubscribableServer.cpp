@@ -162,7 +162,7 @@ nsSubscribableServer::AddToSubscribeDS(const char *aName)
 	if(NS_FAILED(rv)) return rv;
 	
 	nsXPIDLString unicodeName;
-	rv = ConvertNameToUnichar(aName, getter_Copies(unicodeName));
+	rv = CreateUnicodeStringFromUtf7(aName, getter_Copies(unicodeName));
 	if (NS_FAILED(rv)) return rv;
 
 	rv = SetPropertiesInSubscribeDS((const char *) uri, (const PRUnichar *)unicodeName, resource);
@@ -244,7 +244,7 @@ nsSubscribableServer::FindAndAddParentToSubscribeDS(const char *uri, const char 
 
 		if (!parentExists) {
 			nsXPIDLString unicodeName;
-			rv = ConvertNameToUnichar((const char *)nameCStr, getter_Copies(unicodeName));
+			rv = CreateUnicodeStringFromUtf7((const char *)nameCStr, getter_Copies(unicodeName));
 			if (NS_FAILED(rv)) return rv;
 
 			rv = SetPropertiesInSubscribeDS((const char *)uriCStr, (const PRUnichar *)unicodeName, parentResource);
