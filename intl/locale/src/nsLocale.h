@@ -35,6 +35,8 @@ public:
 	
 	NS_IMETHOD GetCategory(const nsString* category, nsString* result);
 
+  NS_IMETHOD GetCategory(const char *category, char **result);
+
 private:
 	
 	static PLHashNumber Hash_HashFunction(const void* key);

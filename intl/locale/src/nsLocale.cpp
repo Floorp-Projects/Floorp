@@ -91,6 +91,34 @@ nsLocale::GetCategory(const nsString* category,nsString* result)
 }
 
 
+NS_IMETHODIMP
+nsLocale::GetCategory(const char *category, char **result)
+{
+  nsAutoString categoryIn(category);
+  nsString resultOut;
+  nsresult res;
+
+  res = GetCategory(&categoryIn, &resultOut);
+
+  if (NS_SUCCEEDED(res)) {
+    // Convert result to C string.
+    char *tmp = resultOut.ToNewCString();
+    if (NULL == tmp) {
+      res = NS_ERROR_OUT_OF_MEMORY;
+    }
+    else {
+      *result = PL_strdup(tmp);
+      if (NULL == *result) {
+        res = NS_ERROR_OUT_OF_MEMORY;
+      }
+      delete [] tmp;
+    }
+  }
+
+  return res;
+}
+
+
 PLHashNumber
 nsLocale::Hash_HashFunction(const void* key)
 {
