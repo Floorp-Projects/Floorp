@@ -64,7 +64,7 @@ sub DumpKids {
                 SendSQL("select bug_id, bug_status, target_milestone, assigned_to, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
                 ($bugid, $stat, $milestone, $userid, $short_desc) = (FetchSQLData());
             } else {
-                SendSQL("select bug_id, bug_status, userid, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
+                SendSQL("select bug_id, bug_status, assigned_to, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
                 ($bugid, $stat, $userid, $short_desc) = (FetchSQLData());
 
             }
