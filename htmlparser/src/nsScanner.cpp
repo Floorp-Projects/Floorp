@@ -24,6 +24,7 @@
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
+#include "nsFileSpec.h"
 
 
 const char* kBadHTMLText="<H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
@@ -53,7 +54,7 @@ nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharset
   mOwnsStream=PR_FALSE;
   mOffset=0;
   mMarkPos=-1;
-  mFileStream=0;
+  mInputStream=0;
   mUnicodeDecoder = 0;
   mCharset = "";
   mCharsetSource = kCharsetUninitialized;
@@ -77,18 +78,9 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
   mMarkPos=-1;
   mTotalRead=0;
   mOwnsStream=aCreateStream;
-  mFileStream=0;
+  mInputStream=0;
   if(aCreateStream) {
-    char buffer[513];
-    aFilename.ToCString(buffer,sizeof(buffer)-1);
-    #if defined(HAVE_IOS_BINARY) || !defined(XP_UNIX)
-      /* XXX: HAVE_IOS_BINARY needs to be set for mac & win */
-      mFileStream=new fstream(buffer,ios::in|ios::binary);
-    #elif defined(HAVE_IOS_BIN)
-      mFileStream=new fstream(buffer,ios::in|ios::bin);
-    #else
-      mFileStream=new fstream(buffer,ios::in);
-    #endif
+		mInputStream = new nsInputFileStream(nsFileSpec(aFilename));
   } //if
   mUnicodeDecoder = 0;
   mCharset = "";
@@ -106,7 +98,7 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
  *  @param   aFilename --
  *  @return  
  */
-nsScanner::nsScanner(nsString& aFilename,fstream& aStream,const nsString& aCharset, nsCharsetSource aSource, PRBool assumeOwnership) :
+nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& aCharset, nsCharsetSource aSource, PRBool assumeOwnership) :
     mBuffer(""), mFilename(aFilename) 
 {    
   mIncremental=PR_TRUE;
@@ -114,7 +106,7 @@ nsScanner::nsScanner(nsString& aFilename,fstream& aStream,const nsString& aChars
   mMarkPos=-1;
   mTotalRead=0;
   mOwnsStream=assumeOwnership;
-  mFileStream=&aStream;
+  mInputStream=&aStream;
   mUnicodeDecoder = 0;
   mCharset = "";
   mCharsetSource = kCharsetUninitialized;
@@ -185,12 +177,12 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSourc
  *  @return  
  */
 nsScanner::~nsScanner() {
-  if(mFileStream) {
-    mFileStream->close();
+  if(mInputStream) {
+    mInputStream->close();
     if(mOwnsStream)
-      delete mFileStream;
+      delete mInputStream;
   }
-  mFileStream=0;
+  mInputStream=0;
   NS_IF_RELEASE(mUnicodeDecoder);
 }
 
@@ -285,7 +277,7 @@ PRBool nsScanner::Append(const PRUnichar* aBuffer, PRUint32 aLen){
 nsresult nsScanner::FillBuffer(void) {
   nsresult result=NS_OK;
 
-  if(!mFileStream) {
+  if(!mInputStream) {
     //This is DEBUG code!!!!!!  XXX DEBUG XXX
     //If you're here, it means someone tried to load a
     //non-existent document. So as a favor, we emit a
@@ -301,9 +293,8 @@ nsresult nsScanner::FillBuffer(void) {
     char buf[kBufsize+1];
     buf[kBufsize]=0;
 
-    if(mFileStream) {
-      mFileStream->read(buf,kBufsize);
-      numread=mFileStream->gcount();
+    if(mInputStream) {
+    	numread = mInputStream->read(buf, kBufsize);
       if (0 == numread) {
         return kEOF;
       }

@@ -161,7 +161,7 @@ friend class CTokenHandler;
      * @param   aStream is the i/o source
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(fstream& aStream,PRBool aEnableVerify=PR_FALSE);
+    virtual nsresult Parse(nsIInputStream& aStream,PRBool aEnableVerify=PR_FALSE);
 
     /**
      * @update	gess5/11/98

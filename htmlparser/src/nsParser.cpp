@@ -603,7 +603,7 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
  * @param   aStream is the i/o source
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
+nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled){
 
   mDTDVerification=aVerifyEnabled;
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
@@ -638,7 +638,8 @@ nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
   nsParser::gHackMetaCharset = "";
   // XXX end of meta tag charset hack
 
-  CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename,aStream, charset, charsetSource,PR_FALSE),&aStream,0);
+	nsInputStream input(&aStream);
+  CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename, input, charset, charsetSource,PR_FALSE),&aStream,0);
   if(pc) {
     PushContext(*pc);
     pc->mSourceType=kHTMLTextContentType;
