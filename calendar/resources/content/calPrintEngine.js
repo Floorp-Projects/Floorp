@@ -568,7 +568,8 @@ function printMonthView(currentDate) {
       gHtmlString += "<tr>";
       for (var i=0; i<7; i++)
       {
-        gHtmlString += "<td align=left valign=top style='border:1px solid black;vertical-alignment:top;' >";        gHtmlString += "<table valign=top height=100 width=100 style='font-size:10px;'><tr valign=top><td valign=top width=20%>";
+        gHtmlString += "<td align=left valign=top style='border:1px solid black;vertical-align:top;' >";
+        gHtmlString += "<table valign=top height=100 width=100 style='font-size:10px;'><tr valign=top><td valign=top width=20%>";
         if (thisDaysDate.getMonth()==currentDate.getMonth())
           gHtmlString += thisDaysDate.getDate();
         gHtmlString += "</td><td width=80% valign=top></td></tr>";
