@@ -52,7 +52,7 @@ public final class JavaAdapter
     /**
      * Base class for interface with single method to function glue classes
      */
-    public static class IFGlue implements Cloneable
+    public static class IFGlue implements Cloneable, Callable
     {
         final IFGlue ifglue_make(Function function)
         {
@@ -80,23 +80,17 @@ public final class JavaAdapter
         }
 
         protected final Object ifglue_call(Object[] args)
-        {
-            Context cx = Context.getCurrentContext();
-            if (cx != null) {
-                   return ifglue_callImpl(cx, args);
-            } else {
-                cx = Context.enter();
-                try {
-                    return ifglue_callImpl(cx, args);
-                } finally {
-                    Context.exit();
-                }
-            }
-        }
-
-        private Object ifglue_callImpl(Context cx, Object[] args)
+            throws JavaScriptException
         {
             Scriptable scope = function.getParentScope();
+            Scriptable thisObj = scope;
+            return Context.call(this, scope, thisObj, args);
+        }
+
+        public Object call(Context cx, Scriptable scope, Scriptable thisObj,
+                           Object[] args)
+            throws JavaScriptException
+        {
             if (argsToConvert != null) {
                 WrapFactory wf = cx.getWrapFactory();
                 for (int i = 0, N = argsToConvert.length; i != N; ++i) {
@@ -107,12 +101,9 @@ public final class JavaAdapter
                     }
                 }
             }
-            try {
-                return function.call(cx, scope, scope, args);
-            } catch (JavaScriptException ex) {
-                throw ScriptRuntime.throwAsUncheckedException(ex);
-            }
+            return function.call(cx, scope, thisObj, args);
         }
+
 
         private Function function;
         private int[] argsToConvert;

@@ -235,6 +235,65 @@ public class Context
     }
 
     /**
+     * Call {@link
+     * Callable#call(Context cx, Scriptable scope, Scriptable thisObj,
+     *               Object[] args)}
+     * using the Context instance associated with the current thread.
+     * If no Context is associated with the thread, then new Context object
+     * will be temporary associated with the thread during call to
+     * {@link Callable}.
+     *
+     * @see #enter()
+     * @see #exit()
+     */
+    public static Object call(Callable callable, Scriptable scope,
+                              Scriptable thisObj, Object[] args)
+        throws JavaScriptException
+    {
+        Context[] storage = getThreadContextStorage();
+        Context cx;
+        if (storage != null) {
+            cx = storage[0];
+        } else {
+            cx = getCurrentContext_jdk11();
+        }
+
+        if (cx != null) {
+            return callable.call(cx, scope, thisObj, args);
+        }
+
+        cx = new Context();
+        if (!cx.creationEventWasSent) {
+            cx.creationEventWasSent = true;
+            cx.runListeners(CONTEXT_CREATED_EVENT);
+        }
+        cx.runListeners(CONTEXT_ENTER_EVENT);
+
+        if (storage != null) {
+            storage[0] = cx;
+        } else {
+            setThreadContext_jdk11(cx);
+        }
+        ++cx.enterCount;
+        try {
+            return callable.call(cx, scope, thisObj, args);
+        } finally {
+            --cx.enterCount;
+            if (cx.enterCount == 0) {
+                if (storage != null) {
+                    storage[0] = null;
+                } else {
+                    setThreadContext_jdk11(null);
+                }
+            }
+            cx.runListeners(CONTEXT_EXIT_EVENT);
+            if (cx.enterCount == 0) {
+                cx.runListeners(CONTEXT_RELEASED_EVENT);
+            }
+        }
+    }
+
+    /**
      * Add a Context listener.
      */
     public static void addContextListener(ContextListener listener)

@@ -1521,16 +1521,14 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                                     Object[] args)
         throws JavaScriptException
     {
-        Context cx = Context.enter();
-        try {
-            Object fun = getProperty(obj, methodName);
-            if (fun == NOT_FOUND)
-                fun = methodName;
-            return ScriptRuntime.call(cx, fun, obj, args,
-                                      getTopLevelScope(obj));
-        } finally {
-            Context.exit();
+        Object funObj = getProperty(obj, methodName);
+        if (!(funObj instanceof Function)) {
+            throw ScriptRuntime.typeError1(
+                "msg.isnt.function",
+                ScriptRuntime.toString(obj)+'.'+methodName);
         }
+        Function fun = (Function)funObj;
+        return Context.call(fun, getTopLevelScope(obj), obj, args);
     }
 
     private static Scriptable getBase(Scriptable obj, String name) {

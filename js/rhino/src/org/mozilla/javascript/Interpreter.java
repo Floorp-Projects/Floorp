@@ -769,6 +769,10 @@ public class Interpreter
                 if (inum == num) {
                     if (inum == 0) {
                         iCodeTop = addToken(Token.ZERO, iCodeTop);
+                        // Check for negative zero
+                        if (1.0 / num < 0.0) {
+                            iCodeTop = addToken(Token.NEG, iCodeTop);
+                        }
                     } else if (inum == 1) {
                         iCodeTop = addToken(Token.ONE, iCodeTop);
                     } else if ((short)inum == inum) {
@@ -1643,9 +1647,19 @@ public class Interpreter
         throws JavaScriptException
     {
         if (cx.interpreterSecurityDomain != idata.securityDomain) {
-            return execWithNewDomain(cx, scope, thisObj,
-                                     args, argsDbl, argShift, argCount,
-                                     fnOrScript, idata);
+            if (argsDbl != null) {
+                args = getArgsArray(args, argsDbl, argShift, argCount);
+            }
+            SecurityController sc = cx.getSecurityController();
+
+            Object savedDomain = cx.interpreterSecurityDomain;
+            cx.interpreterSecurityDomain = idata.securityDomain;
+            try {
+                return sc.callWithDomain(idata.securityDomain, cx, fnOrScript,
+                                         scope, thisObj, args);
+            } finally {
+                cx.interpreterSecurityDomain = savedDomain;
+            }
         }
 
         final Object DBL_MRK = Interpreter.DBL_MRK;
@@ -3018,40 +3032,6 @@ public class Interpreter
     {
         String name = f.argNames[slot];
         activation.put(name, activation, value);
-    }
-
-    private static Object execWithNewDomain(Context cx,
-                                            final Scriptable scope,
-                                            final Scriptable thisObj,
-                                            final Object[] args,
-                                            final double[] argsDbl,
-                                            final int argShift,
-                                            final int argCount,
-                                            final NativeFunction fnOrScript,
-                                            final InterpreterData idata)
-        throws JavaScriptException
-    {
-        if (cx.interpreterSecurityDomain == idata.securityDomain)
-            Kit.codeBug();
-
-        CodeBlock code = new CodeBlock() {
-            public Object exec(Context cx, Object[] args)
-                throws JavaScriptException
-            {
-                return interpret(cx, scope, thisObj,
-                                 args, argsDbl, argShift, argCount,
-                                 fnOrScript, idata);
-            }
-        };
-
-        Object savedDomain = cx.interpreterSecurityDomain;
-        cx.interpreterSecurityDomain = idata.securityDomain;
-        try {
-            return cx.getSecurityController().
-                    execWithDomain(cx, idata.securityDomain, code, args);
-        } finally {
-            cx.interpreterSecurityDomain = savedDomain;
-        }
     }
 
     private static int getJavaCatchPC(byte[] iCode)

@@ -13,8 +13,8 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is interface specification of code that requires Context
- * objects.
+ * The Original Code is interface specifiing callable object to execute script
+ * related code on demand.
  *
  * The Initial Developer of the Original Code is
  * RUnit Software AS.
@@ -39,18 +39,25 @@
 
 package org.mozilla.javascript;
 
-import java.util.Hashtable;
-import java.io.IOException;
-import java.io.Reader;
-
 /**
- * Representation of code block that needs to access {@link Context} instance
- * when it executes.
+ * Generic notion of callable object that can execute some script-related code
+ * upon request with specified values for script scope and this objects.
  */
-
-public interface CodeBlock
+public interface Callable
 {
-    public Object exec(Context cx, Object[] args)
+    /**
+     * Perform the call.
+     *
+     * @param cx the current Context for this thread
+     * @param scope the scope to use to resolve properties.
+     * @param thisObj the JavaScript <code>this</code> object
+     * @param args the array of arguments
+     * @return the result of the call
+     * @exception JavaScriptException if an uncaught exception
+     *            occurred while executing the function
+     */
+    public Object call(Context cx, Scriptable scope, Scriptable thisObj,
+                       Object[] args)
         throws JavaScriptException;
 }
 

@@ -45,7 +45,7 @@ package org.mozilla.javascript;
  * @author Norris Boyd
  */
 
-public interface Function extends Scriptable {
+public interface Function extends Scriptable, Callable {
     /**
      * Call the function.
      *
