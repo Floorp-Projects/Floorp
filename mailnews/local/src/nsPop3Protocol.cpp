@@ -473,7 +473,7 @@ void nsPop3Protocol::SetPassword(const char* passwd)
 }
 
 
-nsresult nsPop3Protocol::LoadUrl(nsIURL* aURL)
+nsresult nsPop3Protocol::LoadUrl(nsIURL* aURL, nsISupports * /* aConsumer */)
 {
 	const char* urlSpec = NULL;
 	const char* host = NULL;

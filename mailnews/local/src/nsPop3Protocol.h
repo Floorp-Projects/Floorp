@@ -296,7 +296,7 @@ public:
     nsPop3Protocol(nsIURL* aURL);  
     virtual ~nsPop3Protocol();
     
-    virtual nsresult LoadUrl(nsIURL *aURL);
+    virtual nsresult LoadUrl(nsIURL *aURL, nsISupports * aConsumer = nsnull);
 
     const char* GetUsername() { return m_username; };
     void SetUsername(const char* name);
