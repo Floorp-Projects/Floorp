@@ -52,7 +52,7 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.11 $ $Date: 2002/08/14 23:00:45 $
+ * @version $Revision: 1.12 $ $Date: 2002/08/27 21:46:13 $
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -62,18 +62,27 @@ public final class CryptoManager implements TokenSupplier
     public final static class CertUsage {
         private int usage;
         private String name;
+        static private ArrayList list = new ArrayList();
         private CertUsage() {};
         private CertUsage(int usage, String name) {
             this.usage = usage;
             this.name =  name;
+            this.list.add(this);
+
         }
-        int getUsage() {
+        public int getUsage() {
             return usage;
         }
 
+        static public Iterator getCertUsages() {
+            return list.iterator();
+
+        }
         public String toString() {
             return name;
         }
+
+
 
         // certUsage, these must be kept in sync with nss/lib/certdb/certt.h
         public static final CertUsage SSLClient = new CertUsage(0, "SSLClient");
@@ -730,6 +739,7 @@ public final class CryptoManager implements TokenSupplier
      * @return true if the security library is in FIPS-140-1 compliant mode.
      */
     public synchronized native boolean FIPSEnabled();
+
 
     ///////////////////////////////////////////////////////////////////////
     // Password Callback management
@@ -1420,5 +1430,37 @@ public final class CryptoManager implements TokenSupplier
     private native boolean verifyCertTempNative(byte[] certPackage,
         boolean checkSig, int cUsage)
         throws TokenException, CertificateEncodingException;
+
+     ///////////////////////////////////////////////////////////////////////
+    // OCSP management
+    ///////////////////////////////////////////////////////////////////////
+
+    /**
+     * Enables OCSP, note when you Initialize JSS for the first time, for
+     * backwards compatibility, the initialize will enable OCSP if you
+     * previously set values.ocspCheckingEnabled and
+     * values.ocspResponderURL/values.ocspResponderCertNickname
+     * configureOCSP will allow changing of the the OCSPResponder at runtime.
+     *      * @param ocspChecking true or false to enable/disable OCSP
+     *      * @param ocspResponderURL - url of the OCSP responder
+     *      * @param ocspResponderCertNickname - the nickname of the OCSP
+     *        signer certificate or the CA certificate found in the cert DB
+     */
+
+    public void configureOCSP(
+        boolean ocspCheckingEnabled,
+        String ocspResponderURL,
+        String ocspResponderCertNickname )
+    throws GeneralSecurityException
+    {
+        configureOCSPNative(ocspCheckingEnabled,
+                                   ocspResponderURL,
+                                    ocspResponderCertNickname );
+    }
+
+    private native void configureOCSPNative( boolean ocspCheckingEnabled,
+                    String ocspResponderURL,
+                    String ocspResponderCertNickname )
+                    throws GeneralSecurityException;
 
 }
