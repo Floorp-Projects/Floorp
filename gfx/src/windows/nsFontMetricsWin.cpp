@@ -1716,6 +1716,24 @@ HDC   dc1 = NULL;
 #ifdef MOZ_MATHML
     mItalicSlope = float(oMetrics.otmsCharSlopeRun)/float(oMetrics.otmsCharSlopeRise);
     if (oMetrics.otmItalicAngle > 0) mItalicSlope = -mItalicSlope; // back-slanted font
+
+    // Begin -- section of code to get the real x-height with GetGlyphOutline()
+    PRUint8 x = 'x';
+    // set glyph transform matrix to identity
+    MAT2 mat2;
+    FIXED zero, one;
+    zero.fract = 0; one.fract = 0;
+    zero.value = 0; one.value = 1; 
+    mat2.eM12 = mat2.eM21 = zero;
+    mat2.eM11 = mat2.eM22 = one;
+    // get the glyph outline of 'x'
+    GLYPHMETRICS gm;
+    if ((GDI_ERROR != GetGlyphOutline(dc, x, GGO_METRICS, &gm, 0, nsnull, &mat2)) &&
+        (gm.gmBlackBoxY > 0))
+    {
+      mXHeight = NSToCoordRound(gm.gmBlackBoxY * dev2app);
+    }
+    // End -- getting x-height
 #endif
   }
   else {
