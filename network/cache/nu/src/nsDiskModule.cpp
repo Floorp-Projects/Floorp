@@ -73,10 +73,10 @@ const static int MAX_OBJECTS_IN_RECENTLY_USED_LIST = 20; // change later TODO.
 #define CLEANUP_FACTOR 0.75
 
 //Returns the full filename including the cache directory.
-char* FullFilename(const char* i_Filename);
+static char* FullFilename(const char* i_Filename);
 
 //Returns the Least Recently Used object in the database
-nsCacheObject* LRUObject(DB* pDB);
+static nsCacheObject* LRUObject(DB* pDB);
 
 //
 // Constructor: nsDiskModule
@@ -295,15 +295,6 @@ nsStream* nsDiskModule::GetStreamFor(const nsCacheObject* i_pObject)
     MonitorLocker ml(this);
     if (i_pObject)
     {
-        /* 
-        if (Contains((nsCacheObject*)i_pObject))
-        {
-            nsStream* pStream = i_pObject->Stream();
-            if (pStream)
-                return pStream;
-        }
-        */
-        
         nsStream* pStream = i_pObject->Stream();
         if (pStream)
             return pStream;
@@ -316,8 +307,6 @@ nsStream* nsDiskModule::GetStreamFor(const nsCacheObject* i_pObject)
         {
             return new nsFileStream(fullname);
         }
-        
-        return 0;
     }
     return 0;
 }

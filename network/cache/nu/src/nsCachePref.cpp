@@ -44,10 +44,7 @@ static const char* FREQ_PREF        = "browser.cache.check_doc_frequency";
 /* Find a bug in NU_CACHE, get these many chocolates */
 static const PRUint16 CHOCOLATES_PER_BUG_FOUND = 2^BUGS_FOUND_SO_FAR; 
 
-int PR_CALLBACK Cache_PrefChangedFunc(const char *pref, void *data) {
-    nsCachePref::GetInstance()->SetupPrefs(pref);
-	return PR_TRUE;
-} 
+static int PR_CALLBACK Cache_PrefChangedFunc(const char *pref, void *data);
 
 nsCachePref::nsCachePref(void):
     m_BkgSleepTime(BKG_THREAD_SLEEP),
@@ -207,4 +204,8 @@ nsresult nsCachePref::QueryInterface(const nsIID& aIID,
 }
 */
 
+int PR_CALLBACK Cache_PrefChangedFunc(const char *pref, void *data) {
+    nsCachePref::GetInstance()->SetupPrefs(pref);
+	return PR_TRUE;
+} 
 
