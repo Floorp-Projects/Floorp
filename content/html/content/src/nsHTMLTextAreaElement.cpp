@@ -517,22 +517,28 @@ nsHTMLTextAreaElement::GetType(PRInt32* aType)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
-  nsresult result = NS_OK;
-  if (nsnull == aForm) {
+  nsresult result;
+  nsIFormControl *formControl;
+
+  result = QueryInterface(kIFormControlIID, (void**)&formControl);
+  if (NS_FAILED(result))
+    formControl = nsnull;
+
+  if (mForm && formControl)
+    mForm->RemoveElement(formControl, PR_TRUE);
+
+  if (nsnull == aForm)
     mForm = nsnull;
-    return NS_OK;
-  } else {
+  else {
     NS_IF_RELEASE(mForm);
-    nsIFormControl* formControl = nsnull;
-    result = QueryInterface(kIFormControlIID, (void**)&formControl);
-    if ((NS_OK == result) && formControl) {
+    if (formControl) {
       result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
       if ((NS_OK == result) && mForm) {
         mForm->AddElement(formControl);
       }
-      NS_RELEASE(formControl);
     }
   }
+  NS_IF_RELEASE(formControl);
   return result;
 }
 
