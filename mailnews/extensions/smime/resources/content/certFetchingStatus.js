@@ -112,7 +112,7 @@ function stopFetching()
     catch (e) {
     }
   }
-  window.close();
+  return true;
 }
 
 function importCert(ber_value)

@@ -47,7 +47,6 @@
   <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
 </stringbundleset>
 
-<script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCardOverlay.js"/>
 

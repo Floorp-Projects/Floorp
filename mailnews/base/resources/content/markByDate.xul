@@ -39,8 +39,6 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE dialog SYSTEM "chrome://messenger/locale/markByDate.dtd">
 
 <dialog

@@ -38,28 +38,18 @@
 <?xml-sheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/smime/certFetchingStatus.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!DOCTYPE dialog SYSTEM "chrome://messenger-smime/locale/certFetchingStatus.dtd">
 
-<!DOCTYPE window SYSTEM "chrome://messenger-smime/locale/certFetchingStatus.dtd">
-
-<window id="certFetchingStatus" title="&title.label;"
-  class="dialog"
+<dialog id="certFetchingStatus" title="&title.label;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   style="width: 50em;"
+  buttons="cancel"
+  buttonlabelcancel="&stop.label;"
+  ondialogcancel="return stopFetching();"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://messenger-smime/content/certFetchingStatus.js"/>
 
-<vbox>
-
   <description>&info.message;</description>
-  <separator class="thin"/>
 
-  <hbox align="center">
-    <button id="stopButton"
-            label="&stop.label;"
-            oncommand="stopFetching();"/>
-  </hbox>
-
-</vbox>
-</window>
+</dialog>
