@@ -260,14 +260,28 @@ sub packit {
         TinderUtils::run_shell_command "cp $package_location/sea/*.exe $stagedir/";
       }
 
+      # If mozilla/dist/install/*.installer.msi exists, copy it to the staging
+      # directory.
+      my @msi = grep { -f $_ } <${package_location}/*.installer.msi>;
+      if ( scalar(@msi) gt 0 ) {
+	my $msi_files = join(' ', @msi);
+        TinderUtils::run_shell_command "cp $msi_files $stagedir/";
+      }
+
       if ($push_raw_xpis) {
-	# We need to recreate the xpis with compression on, for update.
+        # We need to recreate the xpis with compression on, for update.
         # Since we've already copied over the 7zip-compressed installer, just
         # re-run the installer creation with 7zip disabled to get compressed
         # xpi's, then copy them to stagedir.
+        #
+        # Also set MOZ_PACKAGE_MSI to null to avoid repackaging it
+        # unnecessarily.
+        my $save_msi = $ENV{MOZ_PACKAGE_MSI};
         my $save_7zip = $ENV{MOZ_INSTALLER_USE_7ZIP};
+        $ENV{MOZ_PACKAGE_MSI} = "";
         $ENV{MOZ_INSTALLER_USE_7ZIP} = "";
         TinderUtils::run_shell_command "make -C $packaging_dir installer";
+        $ENV{MOZ_PACKAGE_MSI} = $save_msi;
         $ENV{MOZ_INSTALLER_USE_7ZIP} = $save_7zip;
         TinderUtils::run_shell_command "cp -r $package_location/xpi $stagedir/windows-xpi";
       }
