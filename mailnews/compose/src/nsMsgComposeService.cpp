@@ -30,9 +30,12 @@
 #include "nsIWebShell.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgIdentity.h"
+#include "nsMsgI18N.h"
+#include "nsIMsgDraft.h"
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID);
+static NS_DEFINE_CID(kMsgDraftCID, NS_MSGDRAFT_CID);
 
 nsMsgComposeService::nsMsgComposeService()
 {
@@ -87,6 +90,22 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 {
 	nsAutoString args = "";
 	nsresult rv;
+	
+	/* Actually, the only way to implement forward inline is to simulate a template message. 
+	   Maybe one day when we will have more time we can change that
+	*/
+	if (type == nsIMsgCompType::ForwardInline)
+	{
+	    nsCOMPtr<nsIMsgDraft> pMsgDraft;
+	    rv = nsComponentManager::CreateInstance(kMsgDraftCID,
+	                                 nsnull,
+	                                 nsCOMTypeInfo<nsIMsgDraft>::GetIID(), 
+	                                 getter_AddRefs(pMsgDraft));
+	    if (NS_SUCCEEDED(rv) && pMsgDraft)
+	    	rv = pMsgDraft->OpenDraftMsg(originalMsgURI, nsnull, PR_TRUE);
+
+		return rv;
+	}
 
 	args.Append("type=");
 	args.Append(type);

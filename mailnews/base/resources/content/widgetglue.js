@@ -23,6 +23,9 @@
  * widget/menu item, which gets some context (like the current selection)
  * and then calls a function/command in commandglue
  */
+ 
+var msgComposeType = Components.interfaces.nsIMsgCompType;
+var msgComposFormat = Components.interfaces.nsIMsgCompFormat;
 
 // Controller object for folder pane
 var FolderPaneController =
@@ -290,46 +293,47 @@ function MsgDeleteFolder()
 
 function MsgNewMessage(event)
 {
-  ComposeMessage(0, 0);
+  ComposeMessage(msgComposeType.New, msgComposFormat.Default);
 } 
 
 function MsgReplyMessage(event)
 {
   dump("\nMsgReplyMessage from XUL\n");
-  ComposeMessage(1, 0);
+  ComposeMessage(msgComposeType.Reply, msgComposFormat.Default);
 }
 
 function MsgReplyToAllMessage(event) 
 {
   dump("\nMsgReplyToAllMessage from XUL\n");
-  ComposeMessage(2, 0);
+  ComposeMessage(msgComposeType.ReplyAll, msgComposFormat.Default);
 }
 
 function MsgForwardMessage(event)
 {
   dump("\nMsgForwardMessage from XUL\n");
-  var tree = GetThreadTree();
-  //get the selected elements
-  var messageList = tree.selectedItems;
-  messenger.forwardMessages(messageList, -1);
+  var prefs = Components.classes['component://netscape/preferences'].getService();
+  prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+  var forwardType = 0;
+  try {
+  	var forwardType = prefs.GetIntPref("mail.forward_message_mode");
+  } catch (e) {dump ("faild to retrive pref mail.forward_message_mode");}
+  
+  if (forwardType == 0)
+  	MsgForwardAsAttachment(null);
+  else
+  	MsgForwardAsInline(null);
 }
 
 function MsgForwardAsAttachment(event)
 {
   dump("\nMsgForwardAsAttachment from XUL\n");
-  var tree = GetThreadTree();
-  //get the selected elements
-  var messageList = tree.selectedItems;
-  messenger.forwardMessages(messageList, 0);
+  ComposeMessage(msgComposeType.ForwardAsAttachment, msgComposFormat.Default);
 }
 
 function MsgForwardAsInline(event)
 {
   dump("\nMsgForwardAsInline from XUL\n");
-  var tree = GetThreadTree();
-  //get the selected elements
-  var messageList = tree.selectedItems;
-  messenger.forwardMessages(messageList, 1);
+  ComposeMessage(msgComposeType.ForwardInline, msgComposFormat.Default);
 }
 
 function MsgCopyMessage(destFolder)

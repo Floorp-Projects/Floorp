@@ -65,12 +65,9 @@ function FindIncomingServer(uri)
 	}
 }
 
-function ComposeMessage(type, format)
-//type: 0=new message, 1=reply, 2=reply all,
-//      3=forward inline, 4=forward as attachment
-//
-//format: 0=default (use preference), 1=HTML, 2=plain text
+function ComposeMessage(type, format) //type is a nsIMsgCompType and format is a nsIMsgCompFormat
 {
+		var msgComposeType = Components.interfaces.nsIMsgCompType;
         var identity = null;
 
 	try 
@@ -110,7 +107,7 @@ function ComposeMessage(type, format)
 		return;
 	}
 	
-	if (type == 0) //new message
+	if (type == msgComposeType.New) //new message
 	{
 		//dump("OpenComposeWindow with " + identity + "\n");
 		msgComposeService.OpenComposeWindow(null, null, 0, format, identity);
@@ -134,22 +131,21 @@ function ComposeMessage(type, format)
 			{	
 				dump('i = '+ i);
 				dump('\n');				
-				if (type == 1 || type == 2) //reply or reply all
+				if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline)
 				{
 					msgComposeService.OpenComposeWindow(null, nodeList[i].getAttribute('id'), type, format, identity);
 				}
 				else
 				{
 					if (i) 
-						uri += " "
+						uri += ","
 					uri += nodeList[i].getAttribute('id');
 				}
 			}
-			
-			if (type == 3 || type == 4) //forward
+			if (type == msgComposeType.ForwardAsAttachment)
 			{
 				msgComposeService.OpenComposeWindow(null, uri, type, format, identity);
-			}
+  			}
 		}
 		else
 			dump("### nodeList is invalid\n");

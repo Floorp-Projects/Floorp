@@ -603,8 +603,13 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
   }
 
     /* In case of forwarding multiple messages, originalMsgURI will contains several URI separated by a comma. */
-    /* TODO: Need to extract only first URI, just in case...*/
-    nsCOMPtr<nsIMessage> message = getter_AddRefs(GetIMessageFromURI(originalMsgURI));
+    /* we need to extract only the first URI*/
+    nsString  firstURI(originalMsgURI);
+    PRInt32 offset = firstURI.FindChar(',');
+    if (offset >= 0)
+    	firstURI.Truncate(offset);
+    
+    nsCOMPtr<nsIMessage> message = getter_AddRefs(GetIMessageFromURI(firstURI.GetUnicode()));
     if ((NS_SUCCEEDED(rv)) && message)
     {
       nsString aString = "";
@@ -673,7 +678,6 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
       case nsIMsgCompType::ForwardAsAttachment:
       case nsIMsgCompType::ForwardInline:
         {
-          mQuotingToFollow = PR_TRUE;
         
           if (!aCharset.Equals(""))
             m_compFields->SetCharacterSet(nsAutoCString(aCharset));
@@ -688,14 +692,16 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
             m_compFields->SetSubject(bString.GetUnicode());
         
           // Setup quoting callbacks for later...
-          mQuoteURI = originalMsgURI;
           if (type == nsIMsgCompType::ForwardAsAttachment)
           {
-            mWhatHolder = 0;
+          	mQuotingToFollow = PR_FALSE;	//We don't need to quote the original message.
+          	m_compFields->SetAttachments(originalMsgURI);
           }
           else
           {
+          	mQuotingToFollow = PR_TRUE;
             mWhatHolder = 2;
+			mQuoteURI = originalMsgURI;
           }
         
           break;
@@ -739,14 +745,33 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
         nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
         getter_AddRefs(parser));
       if (parser)
-        if (NS_SUCCEEDED(parser->ExtractHeaderAddressName(nsnull, nsAutoCString(author), &authorName)))
+      {
+		nsString aCharset(msgCompHeaderInternalCharset());
+        char * utf8Author = nsnull;
+		ConvertFromUnicode(aCharset, author, &utf8Author);
+		if (utf8Author)
+		{
+			rv = parser->ExtractHeaderAddressName(nsAutoCString(aCharset), utf8Author, &authorName);
+			if (NS_SUCCEEDED(rv))
+				ConvertToUnicode(aCharset, authorName, author);
+		}
+		
+		if (!utf8Author || NS_FAILED(rv))
+		{
+			rv = parser->ExtractHeaderAddressName(nsnull, nsAutoCString(author), &authorName);
+        	if (NS_SUCCEEDED(rv))
+        		author = authorName;
+		}
+        if (NS_SUCCEEDED(rv))
         {
           mMsgBody = "<br><br>";
-          mMsgBody += authorName;
+          mMsgBody += author;
           mMsgBody += " wrote:<br><BLOCKQUOTE TYPE=CITE><html>";
         }
         if (authorName)
           PL_strfree(authorName);
+        PR_FREEIF(utf8Author);
+      }
     }
   }
   

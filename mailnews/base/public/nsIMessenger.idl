@@ -81,7 +81,5 @@ interface nsIMessenger : nsISupports {
 	void SetDocumentCharset(in wstring characterSet);
     void saveAs(in string url, in boolean asFile);
     void openAttachment(in string url, in string displayName, in string messageUri);
-    void forwardMessages(in nsIDOMNodeList messages,
-						 in PRInt32 type);
 };
 
