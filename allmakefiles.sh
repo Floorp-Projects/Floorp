@@ -822,6 +822,7 @@ extensions/transformiix/source/xslt/util/Makefile
 extensions/transformiix/source/xslt/Makefile
 extensions/transformiix/source/Makefile
 extensions/transformiix/Makefile
+extensions/transformiix/resources/Makefile
 "
 
 MAKEFILES_tridentprofile="

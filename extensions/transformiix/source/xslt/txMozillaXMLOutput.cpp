@@ -734,7 +734,6 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
     nsCOMPtr<nsIURI> baseURL;
     sourceDoc->GetBaseURL(*getter_AddRefs(baseURL));
     doc->SetBaseURL(baseURL);
-    // XXX We might want to call SetDefaultStylesheets here
 
     // Set the mime-type
     if (!mOutputFormat.mMediaType.IsEmpty()) {
