@@ -40,6 +40,8 @@ public:
     CTablePage(CWnd *pParent, MWContext * pMWContext = NULL,
                CEditorResourceSwitcher * pResourceSwitcher = NULL,
                EDT_TableData * pTableData = NULL);
+    ~CTablePage();
+
     void OnOK();
 
 	//{{AFX_DATA(CTablePage)
@@ -58,7 +60,6 @@ public:
 	int		m_iHeightType;
 	BOOL	m_bRowHeader;
 	int		m_iWidthType;
-	BOOL	m_bUseCols;
 	CString	m_csBackgroundImage;
     BOOL    m_bNoSave;
     BOOL    m_bBorderWidthDefined;
@@ -70,6 +71,7 @@ protected:
 
     CColorButton m_ChooseColorButton;
     BOOL         m_bActivated;
+    BOOL         m_bModified;
     BOOL         OnSetActive();
 	int		     m_iWidth;
 	int		     m_iHeight;
@@ -86,6 +88,8 @@ private:
     BOOL               m_bCustomColor;
     int32              m_iParentWidth;
     int32              m_iParentHeight;
+    int                m_iStartColumns;
+    int                m_iStartRows;
 
     // Set before calling UpdateWidthAndHeight()
     //  to not set the associated checkbox
@@ -126,6 +130,8 @@ private:
 	afx_msg void EnableApplyButton();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+
+    void SetModified(BOOL bModified);
 };
 
 class CTableCellPage : public CNetscapePropertyPage
@@ -135,6 +141,8 @@ public:
                    CEditorResourceSwitcher * pResourceSwitcher = NULL,
                    EDT_TableCellData * pCellData = NULL,
                    UINT nIDCaption = 0);
+
+    ~CTableCellPage();
 
     void OnOK();
 
@@ -159,6 +167,7 @@ public:
 protected:              
     CColorButton m_ChooseColorButton;
     BOOL         m_bActivated;
+    BOOL         m_bModified;
 	int	         m_iWidth;
 	int	         m_iHeight;
     BOOL         OnSetActive();
@@ -238,6 +247,8 @@ private:
     // Init controls separated from OnInitDialog()
     //  to allow switching cells while within the dialog
     void InitPageData();
+
+    void SetModified(BOOL bModified);
 };
 
 #endif // _EDTABLE_H

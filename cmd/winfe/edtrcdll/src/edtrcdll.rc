@@ -583,44 +583,41 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Table"
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Number of ",IDC_STATIC,7,3,245,25
-    RTEXT           "Col&umns:",IDC_STATIC,18,13,60,8
-    EDITTEXT        IDC_COLUMNS,81,11,24,13
-    RTEXT           "&Rows:",IDC_STATIC,114,13,48,8
-    EDITTEXT        IDC_ROWS,166,11,24,13
-    GROUPBOX        "Size ",IDC_STATIC,7,30,245,52
+    GROUPBOX        "Number of ",IDC_STATIC,7,3,245,28
+    RTEXT           "Col&umns:",IDC_STATIC,18,15,60,8
+    EDITTEXT        IDC_COLUMNS,81,13,24,13
+    RTEXT           "&Rows:",IDC_STATIC,114,15,48,8
+    EDITTEXT        IDC_ROWS,166,13,24,13
+    GROUPBOX        "Size ",IDC_STATIC,7,33,245,43
     CONTROL         "&Width",IDC_OVERRIDE_WIDTH,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,16,40,69,10
-    EDITTEXT        IDC_WIDTH,16,52,24,13
-    COMBOBOX        IDC_WIDTH_PIX_OR_PERCENT,43,52,74,64,CBS_DROPDOWNLIST | 
+                    WS_TABSTOP,16,44,69,10
+    EDITTEXT        IDC_WIDTH,16,56,24,13
+    COMBOBOX        IDC_WIDTH_PIX_OR_PERCENT,43,56,74,64,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "Minimum &Height",IDC_OVERRIDE_HEIGHT,"Button",
-                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,139,40,75,10
-    EDITTEXT        IDC_HEIGHT,139,52,24,13
-    COMBOBOX        IDC_HEIGHT_PIX_OR_PERCENT,166,52,74,64,CBS_DROPDOWNLIST | 
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,139,44,75,10
+    EDITTEXT        IDC_HEIGHT,139,56,24,13
+    COMBOBOX        IDC_HEIGHT_PIX_OR_PERCENT,166,56,74,64,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Determine column widths from cells in first row only",
-                    IDC_USE_COLS,"Button",BS_AUTOCHECKBOX | WS_GROUP | 
-                    WS_TABSTOP,16,69,226,10
-    GROUPBOX        "Borders and Spacing ",IDC_STATIC,7,84,245,43
+    GROUPBOX        "Borders and Spacing ",IDC_STATIC,7,79,245,46
     CONTROL         "&Border width",IDC_USE_BORDER,"Button",BS_AUTOCHECKBOX | 
-                    WS_GROUP | WS_TABSTOP,16,96,55,10
-    EDITTEXT        IDC_BORDER,15,109,24,13
-    LTEXT           "pixels",IDC_STATIC,42,111,31,8
-    RTEXT           "&Spacing:",IDC_STATIC,93,95,41,8
-    EDITTEXT        IDC_CELL_SPACING,139,93,24,13
-    LTEXT           "pixels between cells",IDC_STATIC,165,95,82,8
-    RTEXT           "&Padding:",IDC_STATIC,93,111,41,8
-    EDITTEXT        IDC_CELL_PADDING,139,109,24,13
+                    WS_GROUP | WS_TABSTOP,16,93,55,10
+    EDITTEXT        IDC_BORDER,15,106,24,13
+    LTEXT           "pixels",IDC_STATIC,42,108,31,8
+    RTEXT           "&Spacing:",IDC_STATIC,93,92,41,8
+    EDITTEXT        IDC_CELL_SPACING,139,90,24,13
+    LTEXT           "pixels between cells",IDC_STATIC,165,92,82,8
+    RTEXT           "&Padding:",IDC_STATIC,93,108,41,8
+    EDITTEXT        IDC_CELL_PADDING,139,106,24,13
     LTEXT           "pixels between border and cell contents",IDC_STATIC,165,
-                    107,82,16
-    GROUPBOX        "Table Alignment ",IDC_STATIC,7,129,79,30,WS_GROUP
-    COMBOBOX        IDC_TABLE_ALIGN,14,140,65,77,CBS_DROPDOWNLIST | 
+                    104,82,16
+    GROUPBOX        "Table Alignment ",IDC_STATIC,7,127,79,30,WS_GROUP
+    COMBOBOX        IDC_TABLE_ALIGN,14,138,65,77,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Caption ",IDC_STATIC,94,129,79,30
-    COMBOBOX        IDC_TABLE_CAPTION,100,140,65,77,CBS_DROPDOWNLIST | 
+    GROUPBOX        "Caption ",IDC_STATIC,94,127,79,30
+    COMBOBOX        IDC_TABLE_CAPTION,100,138,65,77,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "E&xtra HTML...",IDC_EXTRA_HTML,181,140,62,14
+    PUSHBUTTON      "E&xtra HTML...",IDC_EXTRA_HTML,180,138,62,14
     GROUPBOX        "Background ",IDC_STATIC,7,160,245,56
     CONTROL         "&Color",IDC_OVERRIDE_COLOR,"Button",BS_AUTO3STATE | 
                     WS_GROUP | WS_TABSTOP,16,173,48,10
@@ -641,10 +638,10 @@ CAPTION "Cell"
 FONT 8, "MS Sans Serif"
 BEGIN
     GROUPBOX        "Change Selection ",IDC_STATIC,7,3,184,33
-    PUSHBUTTON      "&Previous",IDC_PREVIOUS,14,15,50,14
-    PUSHBUTTON      "&Next",IDC_NEXT,70,15,50,14
     COMBOBOX        IDC_TABLE_SELECTION_TYPE,126,15,58,53,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Previous",IDC_PREVIOUS,14,15,50,14
+    PUSHBUTTON      "&Next",IDC_NEXT,70,15,50,14
     PUSHBUTTON      "In&sert...",IDC_INSERT,200,7,52,13
     PUSHBUTTON      "&Delete...",IDC_DELETE,200,24,52,13
     GROUPBOX        "Size ",IDC_STATIC,7,38,245,43

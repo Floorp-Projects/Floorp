@@ -228,17 +228,19 @@ CTablePage::CTablePage(CWnd *pParent, MWContext * pMWContext,
                        EDT_TableData * pTableData)
            : CNetscapePropertyPage(CTablePage::IDD),
              m_bActivated(0),
+             m_bModified(0),
              m_pMWContext(pMWContext),
              m_pResourceSwitcher(pResourceSwitcher),
-             m_pTableData(pTableData),
+             m_pTableData(0 /*pTableData*/),
              m_bCustomColor(0),
              m_crColor(DEFAULT_COLORREF),
              m_iParentWidth(0),
              m_iParentHeight(0),
-             m_bInternalChangeEditbox(0)
+             m_bInternalChangeEditbox(0),
+             m_iStartColumns(0),
+             m_iStartRows(0)
 {
     ASSERT(pMWContext);
-    ASSERT(pTableData);
     //{{AFX_DATA_INIT(CPage)
 	m_iRows = 0;
     m_iColumns = 0;
@@ -256,8 +258,7 @@ CTablePage::CTablePage(CWnd *pParent, MWContext * pMWContext,
 	m_iWidthType = 0;
 	m_bRowHeader = FALSE;
 	m_iWidth = 1;
-    m_bUseCols = TRUE;
-	m_csBackgroundImage = _T("");
+    m_csBackgroundImage = _T("");
     m_bNoSave = 0;
     m_bBorderWidthDefined = FALSE;
 	//}}AFX_DATA_INIT
@@ -268,15 +269,18 @@ CTablePage::CTablePage(CWnd *pParent, MWContext * pMWContext,
 #endif
 }
 
+CTablePage::~CTablePage()
+{
+    if( m_pTableData )
+        EDT_FreeTableData(m_pTableData);
+}
 
 void CTablePage::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CTablePage)
 	DDX_Text(pDX, IDC_ROWS, m_iRows);
-	DDV_MinMaxInt(pDX, m_iRows, 1, MAX_TABLE_ROWS);
     DDX_Text(pDX, IDC_COLUMNS, m_iColumns);
-	DDV_MinMaxInt(pDX, m_iColumns, 1, MAX_TABLE_COLUMNS);
 	DDX_CBIndex(pDX, IDC_TABLE_ALIGN, m_iAlign);
 	DDX_CBIndex(pDX, IDC_TABLE_CAPTION, m_iCaption);
 	DDX_Text(pDX, IDC_BORDER, m_iBorderWidth);
@@ -290,7 +294,6 @@ void CTablePage::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_OVERRIDE_WIDTH, m_bUseWidth);
 	DDX_CBIndex(pDX, IDC_WIDTH_PIX_OR_PERCENT, m_iWidthType);
 	DDX_CBIndex(pDX, IDC_HEIGHT_PIX_OR_PERCENT, m_iHeightType);
-	DDX_Check(pDX, IDC_USE_COLS, m_bUseCols);
 	DDX_Text(pDX, IDC_BKGRND_IMAGE, m_csBackgroundImage);
 	DDX_Check(pDX, IDC_NO_SAVE_IMAGE, m_bNoSave);
 	DDX_Check(pDX, IDC_USE_BORDER, m_bBorderWidthDefined);
@@ -334,12 +337,44 @@ BOOL CTablePage::OnSetActive()
 		// We must be sure we have switched
 		//  the first time here - before dialog creation
 		m_pResourceSwitcher->switchResources();
+
+        // This is usually supplied, but lets be sure
+        if( !m_pTableData )
+            m_pTableData = EDT_GetTableData(m_pMWContext);
+        if( !m_pTableData )
+            return FALSE;
+        
+        // Save these as the bottom limit when changing table size
+        m_iStartColumns = m_pTableData->iColumns;
+        m_iStartRows = m_pTableData->iRows;
+
 	}
     if(!CPropertyPage::OnSetActive())
         return(FALSE);
 
     if(m_bActivated)
+    {
+        // We are activating the pane after switching to cell tab and back again
+        // Refresh table data to get possibly-changed width and/or height
+        EDT_FreeTableData(m_pTableData);
+        m_pTableData = EDT_GetTableData(m_pMWContext);
+
+        m_iWidth = CASTINT(m_pTableData->iWidth);
+        m_iHeight = CASTINT(m_pTableData->iHeight);
+        m_iWidthType = m_pTableData->bWidthPercent ? ED_PERCENT : ED_PIXELS;
+        m_iHeightType = m_pTableData->bHeightPercent ? ED_PERCENT : ED_PIXELS;
+        m_bUseWidth = m_pTableData->bWidthDefined;
+        m_bUseHeight = m_pTableData->bHeightDefined;
+
+        // We don't use DDX with these so we don't get "not-integer" error messages
+        // Set flag to prevent changing the associated checkbox
+        m_bInternalChangeEditbox = TRUE;
+        UpdateWidthAndHeight(this, m_iWidth, m_iHeight);
+        m_bInternalChangeEditbox = FALSE;
+
+        UpdateData(FALSE);
         return(TRUE);
+    }
 
 	m_bActivated = TRUE;
 
@@ -364,12 +399,14 @@ BOOL CTablePage::OnSetActive()
     m_iBorderWidth = CASTINT(m_pTableData->iBorderWidth);
     m_iCellSpacing = CASTINT(m_pTableData->iCellSpacing);
     m_iCellPadding = CASTINT(m_pTableData->iCellPadding);
+    m_iAlign = GetTableAlign(m_pTableData);
+
     m_iWidth = CASTINT(m_pTableData->iWidth);
     m_iHeight = CASTINT(m_pTableData->iHeight);
     m_iWidthType = m_pTableData->bWidthPercent ? ED_PERCENT : ED_PIXELS;
     m_iHeightType = m_pTableData->bHeightPercent ? ED_PERCENT : ED_PIXELS;
-    m_iAlign = GetTableAlign(m_pTableData);
-    m_bUseCols = m_pTableData->bUseCols;
+    m_bUseWidth = m_pTableData->bWidthDefined;
+    m_bUseHeight = m_pTableData->bHeightDefined;
 
     GetColorHelper(m_pTableData->pColorBackground, m_bUseColor, m_crColor);
 
@@ -440,16 +477,51 @@ BOOL CTablePage::OnSetActive()
 BOOL CTablePage::OnKillActive()
 {
     // never visited this page or no change -- don't bother
-    if(!m_bActivated ||
-       !IS_APPLY_ENABLED(this))
-    {
+    if(!m_bActivated || !m_bModified )
         return TRUE;
-    }
+
     if ( !UpdateData(TRUE) ||
          !ValidateWidthAndHeight(this, &m_iWidth, &m_iHeight, m_iWidthType, m_iHeightType) )
     {
         return FALSE;
     }
+
+    char szMessage[256];
+    CEdit *pEditbox;
+    UINT   nID = 0;
+
+    // Don't let the user enter fewer rows or columns than already exist
+    if( m_iColumns < m_iStartColumns )
+    {
+        // Construct a string showing correct range
+        wsprintf( szMessage, szLoadString(IDS_INTEGER_RANGE_ERROR), m_iStartColumns, MAX_TABLE_COLUMNS);
+        nID = IDC_COLUMNS;
+        // Fix value - put inside allowable range
+        m_iColumns = min(MAX_TABLE_COLUMNS, max(m_iStartColumns, m_iColumns));
+    }
+    if( m_iRows < m_iStartRows )
+    {
+        wsprintf( szMessage, szLoadString(IDS_INTEGER_RANGE_ERROR), m_iStartRows, MAX_TABLE_ROWS);
+        nID = IDC_ROWS;
+        m_iRows = min(MAX_TABLE_COLUMNS, max(m_iStartRows, m_iRows));
+    }
+
+    if( nID )
+    {
+        // Notify user with similar message to the DDV_ validation system
+        MessageBox(szMessage, szLoadString(AFX_IDS_APP_TITLE), MB_ICONEXCLAMATION | MB_OK);
+        
+        // Put focus in the offending control
+        // And select all text, just like DDV functions
+        pEditbox = (CEdit*)GetDlgItem(nID);
+        pEditbox->SetFocus();
+        pEditbox->SetSel(0, -1, TRUE);
+
+        // Write fixed value back to editbox
+        UpdateData(FALSE);
+        return FALSE;
+    }
+
     if ( !m_csBackgroundImage.IsEmpty() )
     {
         if ( m_bImageChanged && !m_bValidImage )
@@ -490,7 +562,6 @@ BOOL CTablePage::OnKillActive()
                 return FALSE;
         }
     }
-
     return TRUE;
 }
 
@@ -499,13 +570,19 @@ void CTablePage::OnHelp()
     NetHelp(HELP_TABLE_PROPS_TABLE);
 }
 
+void CTablePage::SetModified(BOOL bModified)
+{
+    m_bModified = bModified;
+
+    // Set state of Apply button
+    CPropertyPage::SetModified(bModified);
+}
+
 void CTablePage::OnOK() 
 {
     // never visited this page or no change -- don't bother
-    if(!m_bActivated ||
-       !IS_APPLY_ENABLED(this)){
+    if(!m_bActivated || !m_bModified )
         return;
-    }
 
     EDT_BeginBatchChanges(m_pMWContext);
 
@@ -535,7 +612,6 @@ void CTablePage::OnOK()
     m_pTableData->bHeightDefined = m_bUseHeight;
     m_pTableData->bHeightPercent = m_iHeightType == ED_PERCENT;
     m_pTableData->iHeight = m_iHeight;
-    m_pTableData->bUseCols = m_bUseCols;
 
     SetTableAlign(m_pTableData, m_iAlign);
     SetColorHelper(m_bUseColor, m_crColor, &m_pTableData->pColorBackground);
@@ -564,6 +640,8 @@ void CTablePage::OnOK()
     m_bInternalChangeEditbox = TRUE;
     UpdateWidthAndHeight(this, m_iWidth, m_iHeight);
     m_bInternalChangeEditbox = FALSE;
+
+    m_bModified = FALSE;
 }
 
 void CTablePage::OnExtraHTML()
@@ -777,7 +855,6 @@ CTableCellPage::CTableCellPage(CWnd *pParent, MWContext * pMWContext,
       m_bInternalChangeEditbox(0)
 {
     ASSERT(pMWContext);
-    ASSERT(pCellData);
     //{{AFX_DATA_INIT(CPage)
 	m_iAlign = -1;
 	m_iVAlign = -1;
@@ -800,6 +877,12 @@ CTableCellPage::CTableCellPage(CWnd *pParent, MWContext * pMWContext,
     // Set the hInstance so we get template from editor's resource DLL
     m_psp.hInstance = AfxGetResourceHandle();
 #endif
+}
+
+CTableCellPage::~CTableCellPage()
+{
+    if( m_pCellData )
+        EDT_FreeTableCellData(m_pCellData);
 }
 
 void CTableCellPage::DoDataExchange(CDataExchange* pDX)
@@ -860,13 +943,40 @@ BOOL CTableCellPage::OnSetActive()
 		// We must be sure we have switched
 		//  the first time here - before dialog creation
 		m_pResourceSwitcher->switchResources();
+        
+        // This is usually supplied, but lets be sure
+        if( !m_pCellData )
+            m_pCellData = EDT_GetTableCellData(m_pMWContext);
+        if( !m_pCellData )
+            return FALSE;
 	}
+
     if(!CPropertyPage::OnSetActive())
-        return(FALSE);
+        return FALSE;
 
-    if(m_bActivated)
+    if( m_bActivated )
+    {
+        // We are activating the pane after switching to table tab and back again
+        // Refresh cell data to get possibly-changed width and/or height
+        EDT_FreeTableCellData(m_pCellData);
+        m_pCellData = EDT_GetTableCellData(m_pMWContext);
+            
+        m_iWidth = CASTINT(m_pCellData->iWidth);
+        m_iHeight = CASTINT(m_pCellData->iHeight);
+        m_iWidthType = m_pCellData->bWidthPercent ? ED_PERCENT : ED_PIXELS;
+        m_iHeightType = m_pCellData->bHeightPercent ? ED_PERCENT : ED_PIXELS;
+        m_iUseWidth = InitCheckbox(IDC_OVERRIDE_WIDTH, CF_WIDTH, m_pCellData->bWidthDefined);
+        m_iUseHeight = InitCheckbox(IDC_OVERRIDE_HEIGHT, CF_HEIGHT, m_pCellData->bHeightDefined);
+
+        // We don't use DDX with these so we don't get "not-integer" error messages
+        // Set flag to prevent changing the associated checkbox
+        m_bInternalChangeEditbox = TRUE;
+        UpdateWidthAndHeight(this, m_iWidth, m_iHeight);
+        m_bInternalChangeEditbox = FALSE;
+
+        UpdateData(FALSE);
         return(TRUE);
-
+    }
 	m_bActivated = TRUE;
 
     // Get these strings from the editor resource dll before we switch back
@@ -1089,11 +1199,9 @@ int CTableCellPage::InitCheckbox(UINT nIDCheckbox, ED_CellFormat cf, BOOL bSetSt
 BOOL CTableCellPage::OnKillActive()
 {
     // never visited this page or no change -- don't bother
-    if(!m_bActivated ||
-       !IS_APPLY_ENABLED(this))
-    {
+    if(!m_bActivated || !m_bModified )
         return TRUE;
-    }
+
     if ( !UpdateData(TRUE) ||
          !ValidateWidthAndHeight(this, &m_iWidth, &m_iHeight, m_iWidthType, m_iHeightType) )
     {
@@ -1143,20 +1251,19 @@ BOOL CTableCellPage::OnKillActive()
     return TRUE;
 }
 
+void CTableCellPage::SetModified(BOOL bModified)
+{
+    m_bModified = bModified;
+
+    // Change state of Apply button
+    CPropertyPage::SetModified(bModified);
+}
+
 void CTableCellPage::OnOK() 
 {
     // never visited this page or no change -- don't bother
-    if(!m_bActivated ||
-       !IS_APPLY_ENABLED(this))
-    {
+    if(!m_bActivated || !m_bModified )
         return;
-    }
-
-    if ( !UpdateData(TRUE) ||
-         !ValidateWidthAndHeight(this, &m_iWidth, &m_iHeight, m_iWidthType, m_iHeightType) )
-    {
-        return;
-    }
 
     // Use checkbox states and set/clear mask bits and data appropriately
 
@@ -1265,6 +1372,8 @@ void CTableCellPage::OnOK()
     m_bInternalChangeEditbox = TRUE;
     UpdateWidthAndHeight(this, m_iWidth, m_iHeight);
     m_bInternalChangeEditbox = FALSE;
+
+    m_bModified = FALSE;
 }
 
 void CTableCellPage::OnChangeSelectionType()

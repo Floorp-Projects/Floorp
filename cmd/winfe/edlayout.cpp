@@ -368,7 +368,7 @@ FE_DestroyCaret(MWContext * context)
     CNetscapeEditView * pView = (CNetscapeEditView *)WINCX(context)->GetView();
 
     if(!context || pView->GetFocus() != pView ){
-        TRACE0( "FE_DestroyCaret called, but CNetscapeEditView does not have focus\n");
+//        TRACE0( "FE_DestroyCaret called, but CNetscapeEditView does not have focus\n");
         return;
     }
 

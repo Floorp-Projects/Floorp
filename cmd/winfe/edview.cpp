@@ -1132,7 +1132,7 @@ BOOL CNetscapeEditView::PreTranslateMessage(MSG * pMsg)
     {
         // Process Ctrl+equals keydown -- for some bizarre reason,
         //  we don't get an OnKeyDown call for this message
-        if( pMsg->wParam == 17 )
+        if( pMsg->wParam == VK_CONTROL )
         {
             UpdateCursor();
         }
@@ -1150,7 +1150,7 @@ BOOL CNetscapeEditView::PreTranslateMessage(MSG * pMsg)
             return TRUE;
         }
     } else if( pMsg->message == WM_KEYUP &&
-               pMsg->wParam == 17 )
+               pMsg->wParam == VK_CONTROL )
     {
         UpdateCursor();
     }
@@ -1199,6 +1199,9 @@ void CNetscapeEditView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
                 break;
             case VK_ESCAPE:
                 {
+                // NOTE: Don't put VK_ESCAPE in the frame's accelerator table
+                //   else we don't get here!
+
                 // Cancel an Object Sizing operation
                 if( EDT_IsSizing(pMWContext) )
                     GetContext()->CancelSizing();
@@ -1209,6 +1212,8 @@ void CNetscapeEditView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
                     EDT_PasteStyle(pMWContext, FALSE);
                     UpdateCursor();
                 }
+                // Call the CGenericView's interrupt function
+                OnNavigateInterrupt();
 
                 // Continue to do other actions on Esc key
                 break;

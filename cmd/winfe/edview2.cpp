@@ -3299,7 +3299,8 @@ void CNetscapeEditView::OnTableProperties(int iStartPage)
     if( !pTableData )
         return;
 
-    // Get the cell data
+    // Get the cell data. This will be NULL if caret is 
+    //  in a table caption. If it is, then do not add the Cell page
     EDT_TableCellData* pCellData = EDT_GetTableCellData(pMWContext);
 
     CNetscapePropertySheet PropsDlg( szLoadString(IDS_PROPS_TABLE_CAPTION),
@@ -3358,9 +3359,10 @@ void CNetscapeEditView::OnTableProperties(int iStartPage)
         EDT_ClearSpecialCellSelection(pMWContext);
     }
 
-    EDT_FreeTableData(pTableData);
-
-    if( pCellData ) EDT_FreeTableCellData(pCellData);
+    // NOTE: DO NOT CALL EDT_FreeTableData OR EDT_FreeTableCellData here
+    //   because prop pages may be freeing/replacing their data when table
+    //   and/or cell sizes change. Freeing is done in destructors of the 
+    //   property pages
     
     if( pCellPage ) delete pCellPage;
     delete pTablePage;

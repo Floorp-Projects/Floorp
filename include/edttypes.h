@@ -347,14 +347,6 @@ struct _EDT_TableData {
 
 typedef struct _EDT_TableData EDT_TableData;
 
-/* iTableMode param for SetTableMode() */
-#define ED_TABLE_PERCENT           0x0001   /* Convert table and all cells to use % of parent width */
-#define ED_TABLE_PIXELS            0x0002   /* Convert table and all cells to use absolute pixels */
-#define ED_TABLE_USE_CELL_WIDTH    0x0004   /* Set WIDTH param for all cells (facilitates table resizing) */
-#define ED_TABLE_NO_CELL_WIDTH     0x0008   /* Remove WIDTH param for all cells */
-#define ED_TABLE_USE_COLS          0x0010   /* Set COLS param for table (use only 1st row for column widths) */
-#define ED_TABLE_NO_COLS           0x0020   /* Remove COLS param for table (all cell widths used) */
-
 /*--------------------------- TableCaptionData --------------------------------*/
 
 struct _EDT_TableCaptionData {
