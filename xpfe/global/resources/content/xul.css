@@ -806,6 +806,8 @@ page {
 wizard {
   -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizard");
   -moz-box-orient: vertical;
+  width: 40em;
+  height: 30em;
 }
 
 wizardpage {
