@@ -53,6 +53,8 @@ use Tinderbox;
 use Carp;
 use Chatbot::Eliza;
 use babel;
+use IPC::Open2;
+use FileHandle;
 
 $|++;
 
@@ -122,7 +124,7 @@ LoadStockList();
 &create_pid_file;
 
 # read admin list 
-my %admins = ( "sar" => "netscape.com", "terry" => "netscape.com" );
+my %admins = ( "cyeh" => "netscape.com", "terry" => "netscape.com" );
 my $adminf = ".$nick-admins";
 &fetch_admin_conf (\%admins);
 
@@ -136,6 +138,17 @@ $::uuid = "./uuidgen/uuidgen";
 $::uuid = (-f $::uuid) ? $::uuid : "";
 delete $pubcmds{'uuid'} if (! $::uuid);
 
+$::megahal = "./megahal/megahal";
+$::megahal = (-f $::megahal) ? $::megahal : "";
+$::megahal_pid;
+
+if ($::megahal) {
+   $::WTR = FileHandle->new;
+   $::RDR = FileHandle->new;
+   $::megahal_pid = &init_megahal;
+   &debug ("Initializing MEGAHAL conversation AI\n");
+}
+ 
 my $phase;
 my $last_moon = 0;
 my $last_uuid = 0;
@@ -409,11 +422,21 @@ sub on_public {
 
 sub do_unknown {
     my ($nick, $cmd, $rest) = (@_);
-    if (!defined $::eliza) {
-        $::eliza = new Chatbot::Eliza;
+    if (defined $::megahal_pid) {
+       my $sentence = $cmd . " " . $rest . "\n";
+       &debug($sentence);
+       print $::WTR $sentence . "\n";
+       my $result = ($::RDR)->getline;
+       &debug($result . "\n");
+       sendmsg($nick, $result);
     }
-    my $result = $::eliza->transform("$cmd $rest");
-    sendmsg($nick, $result);
+    else {
+        if (!defined $::eliza) {
+            $::eliza = new Chatbot::Eliza;
+        }
+        my $result = $::eliza->transform("$cmd $rest");
+        sendmsg($nick, $result);
+    }
 }
 
 
@@ -780,6 +803,10 @@ sub days
 
 sub killed
     {
+    if ($::megahal_pid) {
+       &debug("Killing megahal.\n");
+       kill (2, $::megahal_pid);
+    }
     confess "i have received a signal of some manner. good night.\n\n";
     }
 
@@ -856,6 +883,14 @@ sub create_pid_file
     }
 	}
 
+sub init_megahal {
+    my $pid;
+    chdir("./megahal");
+    $pid = open2($::RDR, $::WTR, "./megahal");
+    chdir("..");
+    return($pid);
+
+}
 
 sub rdfchannel {
     my ($foo, $url) = (@_);
@@ -1088,7 +1123,7 @@ sub bot_stocks {
 
 sub bot_pub_stocks {
     my ($nick, $cmd, $rest) = (@_);
-    bot_stocks(::$speaker, $cmd, $rest);
+    bot_stocks($::speaker, $cmd, $rest);
     sendmsg($nick, "[ Stocks sent to $::speaker. In the future, use \"/msg mozbot stocks\" ]");
 }
 
