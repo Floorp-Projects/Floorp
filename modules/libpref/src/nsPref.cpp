@@ -210,9 +210,11 @@ nsPref::useDefaultPrefFile(nsPref *aPrefInst)
 #endif /* PREF_USE_SYSDIR */
 
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX)
   aPrefInst->Startup("preferences.js");
-#else /* all others XP_WIN && XP_MAC */
+#elif defined(XP_MAC)
+  aPrefInst->Startup("Netscape Preferences");
+#else /* XP_WIN */
   aPrefInst->Startup("prefs.js");
 #endif
 

@@ -957,9 +957,11 @@ pref_CompareStrings (const void *v1, const void *v2)
 PR_IMPLEMENT(PRBool)
 pref_useDefaultPrefFile(void)
 {
-#ifdef XP_UNIX
+#if defined(XP_UNIX)
   return PREF_Init("preferences.js");
-#else /* all others XP_WIN && XP_MAC */
+#elif defined(XP_MAC)
+  return PREF_Init("Netscape Preferences");
+#else /* XP_WIN */
   return PREF_Init("prefs.js");
 #endif
 }
