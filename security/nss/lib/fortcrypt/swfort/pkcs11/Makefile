@@ -37,11 +37,10 @@ include $(CORE_DEPTH)/coreconf/config.mk
 include config.mk
 
 
-#SWCILIB			= ../$(OBJDIR)/$(LIB_PREFIX)swfci.$(LIB_SUFFIX)
+CRYPTO_LIB = $(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX) 
+
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
-
-CRYPTO_LIB = $(DIST)/lib/freebl.lib 
 
 ifdef MOZILLA_SECURITY_BUILD
 CRYPTO_LIB = $(DIST)/lib/crypto.lib
@@ -51,8 +50,6 @@ CRYPTO_LIB += $(DIST)/lib/bsafe$(BSAFEVER).lib
 CRYPTO_LIB += $(DIST)/lib/freebl.lib 
 endif
 
-#	$(DIST)/lib/dbm.lib 
-#	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib 
 EXTRA_LIBS = \
 	$(DIST)/lib/swfci.lib \
 	$(DIST)/lib/softokn.lib \
@@ -66,43 +63,24 @@ EXTRA_LIBS = \
 
 else
 
-#	$(DIST)/lib/libdbm.a 
-#	$(DIST)/lib/libnspr3.a 
-#
-CRYPTO_LIB = $(DIST)/lib/libfreebl.$(LIB_SUFFIX) 
-
 ifdef MOZILLA_SECURITY_BUILD
-CRYPTO_LIB = $(DIST)/lib/libcrypto.$(LIB_SUFFIX)
+CRYPTO_LIB = $(DIST)/lib/$(LIB_PREFIX)crypto.$(LIB_SUFFIX)
 endif
 ifdef MOZILLA_BSAFE_BUILD
-CRYPTO_LIB += $(DIST)/lib/libbsafe.$(LIB_SUFFIX)
-CRYPTO_LIB += $(DIST)/lib/libfreebl.$(LIB_SUFFIX)
-endif
-
-ifeq ($(OS_ARCH), OS2)
-PLC_STATIC_LIB = $(DIST)/lib/plc4.$(LIB_SUFFIX)
-PLDS_STATIC_LIB = $(DIST)/lib/plds4.$(LIB_SUFFIX)
-else
-PLC_STATIC_LIB = $(DIST)/lib/libplc4.$(LIB_SUFFIX)
-PLDS_STATIC_LIB = $(DIST)/lib/libplds4.$(LIB_SUFFIX)
+CRYPTO_LIB += $(DIST)/lib/$(LIB_PREFIX)bsafe.$(LIB_SUFFIX)
+CRYPTO_LIB += $(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
 endif
 
 EXTRA_LIBS += \
-	$(DIST)/lib/libswfci.$(LIB_SUFFIX) \
-	$(DIST)/lib/libsoftokn.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)swfci.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX) \
 	$(CRYPTO_LIB) \
-	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
-	$(PLC_STATIC_LIB) \
-	$(PLDS_STATIC_LIB) \
+	$(DIST)/lib/$(LIB_PREFIX)secutil.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)plc4.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)plds4.$(LIB_SUFFIX) \
 	$(NULL)
 
 endif
-
-#ifeq ($(OS_TARGET), WIN16)
-#W16LIBS         += $(SWCILIB)
-#else
-#OBJS      += $(SWCILIB)
-#endif
 
 INST_JS                 = inst.js
 LIBCI_JAR               = $(OBJDIR)/lib$(LIBRARY_NAME).jar

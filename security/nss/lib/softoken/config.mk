@@ -46,6 +46,20 @@ ifdef MOZILLA_CLIENT
 DEFINES += -DMOZ_CLIENT
 endif
 
+# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)freebl.$(LIB_SUFFIX)
+CRYPTODIR=../freebl
+ifdef MOZILLA_SECURITY_BUILD
+	CRYPTOLIB=$(DIST)/lib/$(LIB_PREFIX)crypto.$(LIB_SUFFIX)
+	CRYPTODIR=../crypto
+endif
+
+EXTRA_LIBS += \
+	$(CRYPTOLIB) \
+	$(DIST)/lib/$(LIB_PREFIX)secutil.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)dbm.$(LIB_SUFFIX) \
+	$(NULL)
+
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
 
@@ -56,20 +70,6 @@ IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
 RES = $(OBJDIR)/$(LIBRARY_NAME).res
 RESNAME = $(LIBRARY_NAME).rc
 
-# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
-CRYPTOLIB=$(DIST)/lib/freebl.lib
-CRYPTODIR=../freebl
-ifdef MOZILLA_SECURITY_BUILD
-	CRYPTOLIB=$(DIST)/lib/crypto.lib
-	CRYPTODIR=../crypto
-endif
-
-EXTRA_LIBS += \
-	$(CRYPTOLIB) \
-	$(DIST)/lib/secutil.lib \
-	$(DIST)/lib/dbm.lib \
-	$(NULL)
-
 ifdef MOZILLA_BSAFE_BUILD
 	EXTRA_LIBS+=$(DIST)/lib/bsafe$(BSAFEVER).lib
 endif
@@ -79,22 +79,11 @@ EXTRA_SHARED_LIBS += \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
 	$(NULL)
+
 else
 
-# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
-CRYPTOLIB=$(DIST)/lib/libfreebl.$(LIB_SUFFIX)
-CRYPTODIR=../freebl
-ifdef MOZILLA_SECURITY_BUILD
-	CRYPTOLIB=$(DIST)/lib/libcrypto.$(LIB_SUFFIX)
-	CRYPTODIR=../crypto
-endif
-EXTRA_LIBS += \
-	$(CRYPTOLIB) \
-	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
-	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
-	$(NULL)
 ifdef MOZILLA_BSAFE_BUILD
-	EXTRA_LIBS+=$(DIST)/lib/libbsafe.$(LIB_SUFFIX)
+	EXTRA_LIBS+=$(DIST)/lib/$(LIB_PREFIX)bsafe.$(LIB_SUFFIX)
 endif
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)

@@ -52,36 +52,14 @@ IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
 RES = $(OBJDIR)/smime.res
 RESNAME = smime.rc
 
-SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/pkcs12.lib \
-	$(DIST)/lib/pkcs7.lib \
-	$(NULL)
-
-SHARED_LIBRARY_DIRS = \
-	../pkcs12 \
-	../pkcs7 \
-	$(NULL)
-
 EXTRA_SHARED_LIBS += \
 	$(DIST)/lib/nss3.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
 	$(NULL)
+
 else
-
-
-# $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
-# $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
-SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/libpkcs12.${LIB_SUFFIX} \
-	$(DIST)/lib/libpkcs7.${LIB_SUFFIX} \
-	$(NULL)
-
-SHARED_LIBRARY_DIRS = \
-	../pkcs12 \
-	../pkcs7 \
-	$(NULL)
 
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib/ \
@@ -90,4 +68,18 @@ EXTRA_SHARED_LIBS += \
 	-lplds4 \
 	-lnspr4 \
 	$(NULL)
+
 endif
+
+
+SHARED_LIBRARY_LIBS = \
+	$(DIST)/lib/$(LIB_PREFIX)pkcs12.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pkcs7.$(LIB_SUFFIX) \
+	$(NULL)
+
+SHARED_LIBRARY_DIRS = \
+	../pkcs12 \
+	../pkcs7 \
+	$(NULL)
+
+

@@ -36,11 +36,6 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-#TARGETS        = $(LIBRARY)
-#SHARED_LIBRARY =
-#IMPORT_LIBRARY =
-#PROGRAM        =
-
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
 
@@ -51,59 +46,14 @@ IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
 RES = $(OBJDIR)/$(LIBRARY_NAME).res
 RESNAME = $(LIBRARY_NAME).rc
 
-# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
-SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/certhi.lib \
-	$(DIST)/lib/cryptohi.lib \
-	$(DIST)/lib/pk11wrap.lib \
-	$(DIST)/lib/certdb.lib \
-	$(DIST)/lib/secutil.lib \
-	$(DIST)/lib/nsspki.lib \
-	$(DIST)/lib/nssdev.lib \
-	$(DIST)/lib/nssb.lib \
-	$(NULL)
-
-SHARED_LIBRARY_DIRS = \
-	../certhigh \
-	../cryptohi \
-	../pk11wrap \
-	../certdb \
-	../util \
-	../pki \
-	../dev \
-	../base \
-	$(NULL)
-
 EXTRA_SHARED_LIBS += \
 	$(DIST)/lib/softokn3.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
 	$(NULL)
+
 else
-
-# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
-SHARED_LIBRARY_LIBS = \
-	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
-	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
-	$(DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
-	$(DIST)/lib/libcertdb.$(LIB_SUFFIX) \
-	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
-	$(DIST)/lib/libnsspki.$(LIB_SUFFIX) \
-	$(DIST)/lib/libnssdev.$(LIB_SUFFIX) \
-	$(DIST)/lib/libnssb.$(LIB_SUFFIX) \
-	$(NULL)
-
-SHARED_LIBRARY_DIRS = \
-	../certhigh \
-	../pk11wrap \
-	../cryptohi \
-	../certdb \
-	../util \
-	../pki \
-	../dev \
-	../base \
-	$(NULL)
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
@@ -114,5 +64,30 @@ EXTRA_SHARED_LIBS += \
 	-lplds4 \
 	-lnspr4 \
 	$(NULL)
+
 endif
+
+
+# $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
+SHARED_LIBRARY_LIBS = \
+	$(DIST)/lib/$(LIB_PREFIX)certhi.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)cryptohi.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)pk11wrap.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)certdb.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)secutil.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nsspki.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nssdev.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nssb.$(LIB_SUFFIX) \
+	$(NULL)
+
+SHARED_LIBRARY_DIRS = \
+	../certhigh \
+	../cryptohi \
+	../pk11wrap \
+	../certdb \
+	../util \
+	../pki \
+	../dev \
+	../base \
+	$(NULL)
 
