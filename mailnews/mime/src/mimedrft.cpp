@@ -560,7 +560,7 @@ mime_intl_insert_message_header_1(char        **body,
 		mime_SACat(body, ": ");
 
   // MIME decode header and convert to UTF-8
-  nsAutoString ucs2 = mime_decode_string(*hdr_value);
+  nsAutoString ucs2(mime_decode_string(*hdr_value));
   char* utf8 = ucs2.ToNewUTF8String();
   if (NULL != utf8) {
     mime_SACat(body, utf8);
@@ -1034,7 +1034,7 @@ mime_insert_forwarded_message_headers(char            **body,
     // convert body from mail charset to UTF-8
     char *utf8 = NULL;
     nsAutoString ucs2;
-    if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode(mailcharset, *body, ucs2))) {
+    if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode(nsCAutoString(mailcharset), nsCAutoString(*body), ucs2))) {
       utf8 = ucs2.ToNewUTF8String();
       if (NULL != utf8) {
         PR_Free(*body);
@@ -1346,7 +1346,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
 
         // convert from UTF-8 to UCS2
         nsString ucs2;
-        if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode("UTF-8", body, ucs2)))
+        if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode(nsCAutoString("UTF-8"), nsCAutoString(body), ucs2)))
           fields->SetBody(ucs2.GetUnicode());
         else
           fields->SetBody(NS_ConvertASCIItoUCS2(body).GetUnicode());

@@ -2060,7 +2060,7 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
       if (NS_FAILED(rv))
         return rv;
 
-      rv = nsMsgI18NConvertFromUnicode("UTF-8", unicode, convertedStr);
+      rv = nsMsgI18NConvertFromUnicode(nsCAutoString("UTF-8"), nsAutoString(unicode), convertedStr);
       PR_FREEIF(unicode);
       if (NS_FAILED(rv))
         return rv;
@@ -2087,7 +2087,7 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
       if (NS_FAILED(rv))
         return rv;
 
-      rv = nsMsgI18NConvertFromUnicode("UTF-8", unicode, convertedStr);
+      rv = nsMsgI18NConvertFromUnicode(nsCAutoString("UTF-8"), nsAutoString(unicode), convertedStr);
       PR_FREEIF(unicode);
       if (NS_FAILED(rv))
         return rv;

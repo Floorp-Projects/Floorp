@@ -607,7 +607,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
   if ( (newType != nsMimeOutput::nsMimeMessageDraftOrTemplate) && 
     (newType != nsMimeOutput::nsMimeMessageEditorTemplate) )
   {
-    nsCAutoString progID = "component://netscape/messenger/mimeemitter;type=";
+    nsCAutoString progID("component://netscape/messenger/mimeemitter;type=");
     if (mOverrideFormat)
       progID += mOverrideFormat;
     else
