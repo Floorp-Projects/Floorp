@@ -48,7 +48,8 @@
 
 #include "nsDSURIContentListener.h"
 
-// Latest includes
+// Interfaces Needed
+#include "nsISHistory.h"
 #include "nsIWebNavigation.h"
 
 
@@ -124,6 +125,9 @@ protected:
       nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
    NS_IMETHOD SetupNewViewer(nsIContentViewer* aNewViewer);
 
+   NS_IMETHOD StopCurrentLoads();
+   NS_IMETHOD AddCurrentSiteToHistories();
+
    NS_IMETHOD FireStartDocumentLoad(nsIDocumentLoader* aLoader,
                                     nsIURI* aURL,
                                     const char* aCommand);
@@ -151,7 +155,7 @@ protected:
    nsCOMPtr<nsIURI>           mCurrentURI;
    nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
    nsCOMPtr<nsIScriptContext> mScriptContext;
-   nsCOMPtr<nsISupports>      mLoadCookie;
+   nsCOMPtr<nsISHistory>      mSessionHistory;
    PRInt32                    mMarginWidth;
    PRInt32                    mMarginHeight;
    PRInt32                    mItemType;
