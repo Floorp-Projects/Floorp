@@ -23,6 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIHTMLContentSink.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIParser.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoader.h"
@@ -4752,8 +4753,13 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       nsIStreamLoader* loader;
 
       mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+
+      // supply a prompter if you have one. this allows modal dialogs put up
+      // from within this new stream loader to have proper parenting. but it's
+      // not fatal if there isn't a prompter.
+      nsCOMPtr<nsIInterfaceRequestor> promptcall(do_QueryInterface(mWebShell));
       rv = NS_NewStreamLoader(&loader, mScriptURI, this, nsnull, loadGroup,
-                              nsnull, nsIChannel::FORCE_RELOAD);
+                              promptcall, nsIChannel::FORCE_RELOAD);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;
       }
