@@ -47,7 +47,7 @@ Rights Reserved.
 <!ENTITY getNewMsgCmd.accesskey "G">
 <!ENTITY getNewMsgCmd.key "t">
 <!ENTITY getNewMsgForCmd.label "Get New Messages for">
-<!ENTITY getNewMsgForCmd.accesskey "f">
+<!ENTITY getNewMsgForCmd.accesskey "w">
 <!ENTITY getAllNewMsgCmd.label "Get All New Messages">
 <!ENTITY getAllNewMsgCmd.key "t">
 <!ENTITY getNextNMsgCmd.label "Get Next 500 News Messages">
@@ -59,7 +59,7 @@ Rights Reserved.
 <!ENTITY renameFolder.label "Rename Folder...">
 <!ENTITY renameFolder.accesskey "R">
 <!ENTITY compactFolders.label "Compact Folders">
-<!ENTITY compactFolder.accesskey		"t">
+<!ENTITY compactFolder.accesskey		"F">
 <!ENTITY emptyTrashCmd.label "Empty Trash">
 <!ENTITY emptyTrashCmd.accesskey		"y">
 <!ENTITY importCmd.label "Import...">
@@ -495,7 +495,7 @@ Rights Reserved.
 <!ENTITY folderContextRemove.label "Delete">
 <!ENTITY folderContextRemove.accesskey "D">
 <!ENTITY folderContextCompact.label "Compact This Folder">
-<!ENTITY folderContextCompact.accesskey "t">
+<!ENTITY folderContextCompact.accesskey "F">
 <!ENTITY folderContextEmptyTrash.label "Empty Trash">
 <!ENTITY folderContextEmptyTrash.accesskey "y">
 <!ENTITY folderContextSendUnsentMessages.label "Send Unsent Messages...">
