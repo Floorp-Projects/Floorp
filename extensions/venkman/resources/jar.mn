@@ -50,6 +50,8 @@ venkman.jar:
   skin/modern/venkman/images/step-out-act.png   (skin/images/step-out-act.png)
   skin/modern/venkman/images/step-out-dis.png   (skin/images/step-out-dis.png)
   skin/modern/venkman/images/breakpoint-line.gif (skin/images/breakpoint-line.gif)
+  skin/modern/venkman/images/proj-blacklist.png (skin/images/proj-blacklist.png)
+  skin/modern/venkman/images/proj-bl-item.png  (skin/images/proj-bl-item.png)
   skin/modern/venkman/images/proj-breakpoints.png (skin/images/proj-breakpoints.png)
   skin/modern/venkman/images/proj-breakpoint.png  (skin/images/proj-breakpoint.png)
   skin/modern/venkman/images/file-function.png          (skin/images/file-function.png)
