@@ -441,6 +441,7 @@ nsXULDocument::nsXULDocument(void)
       mDisplaySelection(PR_FALSE),
       mIsPopup(PR_FALSE),
       mIsFastLoad(PR_FALSE),
+      mApplyingPersitedAttrs(PR_FALSE),
       mNextFastLoad(nsnull),
       mBoxObjectTable(nsnull),
       mTemplateBuilderTable(nsnull),
@@ -1713,6 +1714,20 @@ ClearBroadcasterMapEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
     entry->mListeners.~nsCheapVoidArray();
 }
 
+static PRBool
+CanBroadcast(PRInt32 aNameSpaceID, nsIAtom* aAttribute)
+{
+    // Don't push changes to the |id|, |ref|, or |persist| attribute.
+    if (aNameSpaceID == kNameSpaceID_None) {
+        if ((aAttribute == nsXULAtoms::id) ||
+            (aAttribute == nsXULAtoms::ref) ||
+            (aAttribute == nsXULAtoms::persist)) {
+            return PR_FALSE;
+        }
+    }
+    return PR_TRUE;
+}
+
 static void
 SynchronizeBroadcastListener(nsIDOMElement* aBroadcaster,
                              nsIDOMElement* aListener,
@@ -1732,8 +1747,8 @@ SynchronizeBroadcastListener(nsIDOMElement* aBroadcaster,
                                        *getter_AddRefs(name),
                                        *getter_AddRefs(prefix));
 
-            // _Don't_ push the |id| attribute's value!
-            if ((nameSpaceID == kNameSpaceID_None) && (name == nsXULAtoms::id))
+            // _Don't_ push the |id|, |ref|, or |persist| attribute's value!
+            if (! CanBroadcast(nameSpaceID, name))
                 continue;
 
             nsAutoString value;
@@ -2002,9 +2017,7 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
     }
 
     // Synchronize broadcast listeners
-    if (mBroadcasterMap &&
-        (aNameSpaceID == kNameSpaceID_None) &&
-        (aAttribute != nsXULAtoms::id)) {
+    if (mBroadcasterMap && CanBroadcast(aNameSpaceID, aAttribute)) {
         nsCOMPtr<nsIDOMElement> domele = do_QueryInterface(aElement);
         BroadcasterMapEntry* entry =
             NS_STATIC_CAST(BroadcasterMapEntry*,
@@ -2826,6 +2839,11 @@ NS_IMETHODIMP
 nsXULDocument::Persist(const nsAReadableString& aID,
                        const nsAReadableString& aAttr)
 {
+    // If we're currently reading persisted attributes out of the
+    // localstore, _don't_ re-enter and try to set them again!
+    if (mApplyingPersitedAttrs)
+        return NS_OK;
+
     nsresult rv;
 
     nsCOMPtr<nsIDOMElement> domelement;
@@ -2911,7 +2929,10 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
         if (NS_FAILED(rv)) return rv;
 
         if (oldvalue) {
-            rv = mLocalStore->Change(element, attr, oldvalue, newvalue);
+            if (oldvalue != newvalue)
+                rv = mLocalStore->Change(element, attr, oldvalue, newvalue);
+            else
+                rv = NS_OK;
         }
         else {
             rv = mLocalStore->Assert(element, attr, newvalue, PR_TRUE);
@@ -5195,37 +5216,27 @@ nsXULDocument::ApplyPersistentAttributes()
     if (! mLocalStore)
         return NS_OK;
 
-    nsresult rv;
-    nsCOMPtr<nsISupportsArray> array;
+    mApplyingPersitedAttrs = PR_TRUE;
+
+    nsSupportsArray elements;
 
     nsXPIDLCString docurl;
-    rv = mDocumentURL->GetSpec(getter_Copies(docurl));
-    if (NS_FAILED(rv)) return rv;
+    mDocumentURL->GetSpec(getter_Copies(docurl));
 
     nsCOMPtr<nsIRDFResource> doc;
-    rv = gRDFService->GetResource(docurl, getter_AddRefs(doc));
-    if (NS_FAILED(rv)) return rv;
+    gRDFService->GetResource(docurl, getter_AddRefs(doc));
 
-    nsCOMPtr<nsISimpleEnumerator> elements;
-    rv = mLocalStore->GetTargets(doc, kNC_persist, PR_TRUE, getter_AddRefs(elements));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsISimpleEnumerator> persisted;
+    mLocalStore->GetTargets(doc, kNC_persist, PR_TRUE, getter_AddRefs(persisted));
 
     while (1) {
-        PRBool hasmore;
-        rv = elements->HasMoreElements(&hasmore);
-        if (NS_FAILED(rv)) return rv;
-
+        PRBool hasmore = PR_FALSE;
+        persisted->HasMoreElements(&hasmore);
         if (! hasmore)
             break;
 
-        if (! array) {
-            rv = NS_NewISupportsArray(getter_AddRefs(array));
-            if (NS_FAILED(rv)) return rv;
-        }
-
         nsCOMPtr<nsISupports> isupports;
-        rv = elements->GetNext(getter_AddRefs(isupports));
-        if (NS_FAILED(rv)) return rv;
+        persisted->GetNext(getter_AddRefs(isupports));
 
         nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(isupports);
         if (! resource) {
@@ -5233,28 +5244,26 @@ nsXULDocument::ApplyPersistentAttributes()
             continue;
         }
 
-        const char* uri;
-        rv = resource->GetValueConst(&uri);
-        if (NS_FAILED(rv)) return rv;
+        const char *uri;
+        resource->GetValueConst(&uri);
+        if (! uri)
+            continue;
 
         nsAutoString id;
-        rv = nsXULContentUtils::MakeElementID(this, NS_ConvertASCIItoUCS2(uri), id);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to compute element ID");
-        if (NS_FAILED(rv)) return rv;
+        nsXULContentUtils::MakeElementID(this, NS_ConvertASCIItoUCS2(uri), id);
 
-        rv = GetElementsForID(id, array);
-        if (NS_FAILED(rv)) return rv;
+        // This will clear the array if there are no elements.
+        GetElementsForID(id, &elements);
 
-        PRUint32 cnt;
-        rv = array->Count(&cnt);
-        if (NS_FAILED(rv)) return rv;
-
+        PRUint32 cnt = 0;
+        elements.Count(&cnt);
         if (! cnt)
             continue;
 
-        rv = ApplyPersistentAttributesToElements(resource, array);
-        if (NS_FAILED(rv)) return rv;
+        ApplyPersistentAttributesToElements(resource, &elements);
     }
+
+    mApplyingPersitedAttrs = PR_FALSE;
 
     return NS_OK;
 }
@@ -5329,7 +5338,7 @@ nsXULDocument::ApplyPersistentAttributesToElements(nsIRDFResource* aResource, ns
             rv = element->SetAttr(/* XXX */ kNameSpaceID_None,
                                   attr,
                                   nsAutoString(wrapper),
-                                  PR_FALSE);
+                                  PR_TRUE);
         }
     }
 
