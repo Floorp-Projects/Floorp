@@ -5080,15 +5080,15 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
   if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
-    // XXX: may want to special case this for HR's if we don't want
-    //      to advertise full support of :before and :after for release 1
     // first, create it's "before" generated content
-    nsIFrame* generatedFrame;
-    if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aParentFrame, aContent,
-                                    aStyleContext, nsCSSAtoms::beforePseudo,
-                                    PR_FALSE, &generatedFrame)) {
-      // Add the generated frame to the child list
-      aFrameItems.AddChild(generatedFrame);
+    if (nsLayoutAtoms::textTagName != aTag) { // see bug 53974.  text nodes never match
+      nsIFrame* generatedFrame;
+      if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aParentFrame, aContent,
+                                      aStyleContext, nsCSSAtoms::beforePseudo,
+                                      PR_FALSE, &generatedFrame)) {
+        // Add the generated frame to the child list
+        aFrameItems.AddChild(generatedFrame);
+      }
     }
 
     // If the frame is a replaced element, then set the frame state bit
@@ -5220,11 +5220,14 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
     }
 
     // finally, create it's "after" generated content
-    if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aParentFrame, aContent,
-                                    aStyleContext, nsCSSAtoms::afterPseudo,
-                                    PR_FALSE, &generatedFrame)) {
-      // Add the generated frame to the child list
-      aFrameItems.AddChild(generatedFrame);
+    if (nsLayoutAtoms::textTagName != aTag) { // see bug 53974.  text nodes never match
+      nsIFrame* generatedFrame;
+      if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aParentFrame, aContent,
+                                      aStyleContext, nsCSSAtoms::afterPseudo,
+                                      PR_FALSE, &generatedFrame)) {
+        // Add the generated frame to the child list
+        aFrameItems.AddChild(generatedFrame);
+      }
     }
 
   }
@@ -10640,7 +10643,7 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell* aPresShell,
         // XXX remove this code and the above checks. We don't want to replicate 
         // the caption (that is what the thead is for). This code is not executed 
         // anyway, because the caption was put in a different child list.
-        nsIContent* caption;
+        nsIContent*           caption;
         nsIStyleContext*      captionStyle;
         const nsStyleDisplay* display;
 
