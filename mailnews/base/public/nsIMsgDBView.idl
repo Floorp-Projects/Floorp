@@ -26,7 +26,7 @@ interface nsIMsgDatabase;
 
 typedef long nsMsgViewSortOrderValue;
 typedef long nsMsgViewSortTypeValue;
-typedef long nsMsgViewTypeValue;
+typedef long nsMsgDBViewTypeValue;
 
 [scriptable, uuid(682a18be-fd18-11d4-a5be-0060b0fc04b7)]
 interface nsMsgViewSortOrder
@@ -53,28 +53,28 @@ interface nsMsgViewSortType
 };
 
 [scriptable, uuid(4063bcf8-fd19-11d4-a5be-0060b0fc04b7)]
-interface nsMsgViewType
+interface nsMsgDBViewType
 {
     /** 
      * this view type matches any other view type, 
 	 * for the purpose of matching cached views.
 	 * Else, it's equivalent to allThreads
      */
-	const nsMsgViewTypeValue anyView = 0; 
+	const nsMsgDBViewTypeValue anyView = 0; 
 
     /** 
      * default view, no killed threads
      */
-	const nsMsgViewTypeValue allThreads = 1;			
+	const nsMsgDBViewTypeValue allThreads = 1;			
 
-	const nsMsgViewTypeValue onlyThreadsWithNew = 2;
-	const nsMsgViewTypeValue onlyNewHeaders = 3;		
-	const nsMsgViewTypeValue watchedThreadsWithNew = 4;
+	const nsMsgDBViewTypeValue onlyThreadsWithNew = 2;
+	const nsMsgDBViewTypeValue onlyNewHeaders = 3;		
+	const nsMsgDBViewTypeValue watchedThreadsWithNew = 4;
 
     /** 
      * view built up on demand
      */
-	const nsMsgViewTypeValue cacheless = 5;	
+	const nsMsgDBViewTypeValue cacheless = 5;	
 };
 
 
