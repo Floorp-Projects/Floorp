@@ -360,6 +360,7 @@ InsertCompList(int instChoice)
 	if (gControls->opt->instChoice < gControls->cfg->numSetupTypes)
 	{
 		compsDone = 0;
+		TEInsert("\r", 1, gControls->stw->instDescTxt);
 		for(i=0; i<kMaxComponents; i++)
 		{
 			if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
@@ -370,11 +371,14 @@ InsertCompList(int instChoice)
 				HLock(currComp.shortDesc);
 				len = strlen(*currComp.shortDesc) + 4;
 				memset(compName, 0, 128);
-				sprintf(compName, "\r ¥ %s", *currComp.shortDesc);
+				if (compsDone == gControls->cfg->st[instChoice].numComps - 1)
+				    sprintf(compName, "%s", *currComp.shortDesc);
+				else
+				    sprintf(compName, "%s, ", *currComp.shortDesc);
 				TEInsert(compName, len, gControls->stw->instDescTxt);
 				HUnlock(currComp.shortDesc);
-				compsDone++;
 			}
+			compsDone++;
 		}
 	}
 }
