@@ -315,7 +315,7 @@ public:
      id = NS_TagToEnum(\"@\");
      NS_ASSERTION(id == eHTMLTag_userdefined, \"found @\");
      id = NS_TagToEnum(\"zzzzz\");
-     NS_ASSERTION(id == eHTMLTag_userdefined, \"found @\");
+     NS_ASSERTION(id == eHTMLTag_userdefined, \"found zzzzz\");
 
      tag = NS_EnumToTag((nsHTMLTag) 0);
      NS_ASSERTION(0 == tag, \"found enum 0\");
