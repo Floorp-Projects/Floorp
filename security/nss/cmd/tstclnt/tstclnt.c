@@ -318,6 +318,46 @@ ownBadCertHandler(void * arg, PRFileDesc * socket)
     return SECSuccess;	/* override, say it's OK. */
 }
 
+SECStatus
+own_GetClientAuthData(void *                       arg,
+                      PRFileDesc *                 socket,
+                      struct CERTDistNamesStr *    caNames,
+                      struct CERTCertificateStr ** pRetCert,
+                      struct SECKEYPrivateKeyStr **pRetKey)
+{
+    if (verbose > 1) {
+        printf("Server requested Client Authentication\n");
+	if (caNames && caNames->nnames > 0) {
+	    PLArenaPool *arena = caNames->arena;
+	    if (!arena)
+		arena = PORT_NewArena(2048);
+	    if (arena) {
+		int i;
+		for (i = 0; i < caNames->nnames; ++i) {
+		    char *nameString;
+		    CERTName dn;
+		    SECStatus rv;
+		    rv = SEC_QuickDERDecodeItem(arena, 
+					    &dn,
+					    SEC_ASN1_GET(CERT_NameTemplate), 
+					    caNames->names + i);
+		    if (rv != SECSuccess)
+			continue;
+		    nameString = CERT_NameToAscii(&dn);
+		    if (!nameString)
+			continue;
+		    printf("CA[%d]: %s\n", i + 1, nameString);
+		    PORT_Free(nameString);
+		}
+		if (!caNames->arena) {
+		    PORT_FreeArena(arena, PR_FALSE);
+		}
+	    }
+	}
+    }
+    return NSS_GetClientAuthData(arg, socket, caNames, pRetCert, pRetKey);
+}
+
 int main(int argc, char **argv)
 {
     PRFileDesc *       s;
@@ -596,7 +636,7 @@ int main(int argc, char **argv)
     if (override) {
 	SSL_BadCertHook(s, ownBadCertHandler, NULL);
     }
-    SSL_GetClientAuthDataHook(s, NSS_GetClientAuthData, (void *)nickname);
+    SSL_GetClientAuthDataHook(s, own_GetClientAuthData, (void *)nickname);
     SSL_HandshakeCallback(s, handshakeCallback, NULL);
     SSL_SetURL(s, host);
 
