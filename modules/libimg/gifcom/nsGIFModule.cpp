@@ -163,7 +163,9 @@ nsGIFModule::GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass,
 }
 
 NS_IMETHODIMP
-nsGIFModule::RegisterSelf(nsIComponentManager *aCompMgr, nsIFileSpec *location)
+nsGIFModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                          nsIFileSpec *location,
+                          const char *registryLocation)
 {
     nsresult rv;
     rv = aCompMgr->RegisterComponentSpec(kGIFDecoderCID, 
@@ -174,7 +176,9 @@ nsGIFModule::RegisterSelf(nsIComponentManager *aCompMgr, nsIFileSpec *location)
 }
 
 NS_IMETHODIMP
-nsGIFModule::UnregisterSelf(nsIComponentManager *aCompMgr, nsIFileSpec *location)
+nsGIFModule::UnregisterSelf(nsIComponentManager *aCompMgr,
+                            nsIFileSpec *location,
+                            const char *registryLocation)
 {
     nsresult rv;
     rv = aCompMgr->UnregisterComponentSpec(kGIFDecoderCID, location);
