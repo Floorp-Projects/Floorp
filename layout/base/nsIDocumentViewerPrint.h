@@ -46,7 +46,7 @@ class nsPrintObject;
 class nsISelection;
 class nsIPresShell;
 class nsIDocument;
-class nsIStyleSet;
+class nsStyleSet;
 class nsIContent;
 class nsIWebShell;
 
@@ -72,7 +72,7 @@ public:
 
   virtual PRBool GetIsCreatingPrintPreview() = 0;
 
-  virtual nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet) = 0;
+  virtual nsresult CreateStyleSet(nsIDocument* aDocument, nsStyleSet** aStyleSet) = 0;
 
   virtual nsresult GetDocumentSelection(nsISelection **aSelection,
                                         nsIPresShell * aPresShell = nsnull) = 0;
@@ -97,7 +97,7 @@ public:
   virtual void     SetIsPrintPreview(PRBool aIsPrintPreview); \
   virtual PRBool   GetIsPrintPreview(); \
   virtual PRBool   GetIsCreatingPrintPreview(); \
-  virtual nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet); \
+  virtual nsresult CreateStyleSet(nsIDocument* aDocument, nsStyleSet** aStyleSet); \
   virtual nsresult GetDocumentSelection(nsISelection **aSelection, nsIPresShell * aPresShell = nsnull); \
   virtual void     IncrementDestroyRefCount(); \
   virtual void     ReturnToGalleyPresentation(); \

@@ -1063,7 +1063,7 @@ nsXBLBinding::InheritsStyle(PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsXBLBinding::WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData)
+nsXBLBinding::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData)
 {
   nsresult rv = NS_OK;
   if (mNextBinding) {
@@ -1072,7 +1072,7 @@ nsXBLBinding::WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData)
       return rv;
   }
 
-  nsCOMPtr<nsISupportsArray> rules = mPrototypeBinding->GetRuleProcessors();
+  nsCOMArray<nsIStyleRuleProcessor> *rules = mPrototypeBinding->GetRuleProcessors();
   if (rules)
     rules->EnumerateForwards(aFunc, aData);
   

@@ -38,7 +38,6 @@
 #define nsIStyleFrameConstruction_h___
 
 #include "nsISupports.h"
-#include "nsIStyleSet.h"
 #include "nsChangeHint.h"
 
 class nsIPresShell;
@@ -52,9 +51,21 @@ class nsStyleChangeList;
 class nsIFrameManager;
 class nsILayoutHistoryState;
 
-// IID for the nsIStyleSet interface {a6cf9066-15b3-11d2-932e-00805f8add32}
+// IID for the nsIStyleFrameConstruction interface {a6cf9066-15b3-11d2-932e-00805f8add32}
 #define NS_ISTYLE_FRAME_CONSTRUCTION_IID \
 {0xa6cf9066, 0x15b3, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+
+/** a simple struct (that may someday be expanded)
+ * that contains data supplied by the caller to help
+ * the style set find a frame for a content node
+ */
+struct nsFindFrameHint
+{
+  nsIFrame *mPrimaryFrameForPrevSibling;  // weak ref to the primary frame for the content for which we need a frame
+  nsFindFrameHint() {
+    mPrimaryFrameForPrevSibling = nsnull;
+  };
+};
 
 /** Interface for objects that handle frame construction based on style.
   * All frame construction goes through an object that implements this interface.
@@ -275,8 +286,7 @@ public:
     *
     * @return  NS_OK
     */
-  NS_IMETHOD CreateContinuingFrame(nsIPresShell*   aPresShell, 
-                                   nsIPresContext* aPresContext,
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
                                    nsIFrame*       aFrame,
                                    nsIFrame*       aParentFrame,
                                    nsIFrame**      aContinuingFrame) = 0;

@@ -39,10 +39,11 @@
 
 // Interfaces
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsIContent.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIStyleSet.h"
+#include "nsStyleSet.h"
 #include "nsIViewManager.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
@@ -80,7 +81,7 @@ public:
 
   PrintObjectType mFrameType;
   nsCOMPtr<nsIPresContext> mPresContext;
-  nsCOMPtr<nsIStyleSet>    mStyleSet;
+  nsStyleSet              *mStyleSet;
   nsCOMPtr<nsIPresShell>   mPresShell;
   nsCOMPtr<nsIViewManager> mViewManager;
   nsCOMPtr<nsIWidget>      mWindow;

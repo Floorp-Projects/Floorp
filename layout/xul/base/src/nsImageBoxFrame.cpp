@@ -82,7 +82,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsTextFragment.h"
 #include "nsIDOMHTMLMapElement.h"
-#include "nsIStyleSet.h"
 #include "nsBoxLayoutState.h"
 #include "nsIDOMDocument.h"
 #include "nsIEventQueueService.h"

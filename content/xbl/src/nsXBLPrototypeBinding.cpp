@@ -927,14 +927,13 @@ nsXBLPrototypeBinding::SetInitialAttributes(nsIContent* aBoundElement, nsIConten
   }
 }
 
-already_AddRefed<nsISupportsArray>
+nsCOMArray<nsIStyleRuleProcessor>*
 nsXBLPrototypeBinding::GetRuleProcessors()
 {
-  nsISupportsArray* result;
-  if (mResources) {
-    result = mResources->mRuleProcessors;
-    NS_IF_ADDREF(result);
-  } else
+  nsCOMArray<nsIStyleRuleProcessor> *result;
+  if (mResources)
+    result = &mResources->mRuleProcessors;
+  else
     result = nsnull;
   return result;
 }

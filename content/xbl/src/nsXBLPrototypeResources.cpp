@@ -113,7 +113,7 @@ nsXBLPrototypeResources::FlushSkinSheets()
   // We have scoped stylesheets.  Reload any chrome stylesheets we
   // encounter.  (If they aren't skin sheets, it doesn't matter, since
   // they'll still be in the chrome cache.
-  mRuleProcessors->Clear();
+  mRuleProcessors.Clear();
 
   nsresult rv;
   nsCOMPtr<nsICSSLoader> loader = do_CreateInstance(kCSSLoaderCID, &rv);
@@ -147,7 +147,7 @@ nsXBLPrototypeResources::FlushSkinSheets()
     nsCOMPtr<nsIStyleRuleProcessor> processor;
     newSheet->GetStyleRuleProcessor(*getter_AddRefs(processor), prevProcessor);
     if (processor != prevProcessor) {
-      mRuleProcessors->AppendElement(processor);
+      mRuleProcessors.AppendObject(processor);
       prevProcessor = processor;
     }
   }

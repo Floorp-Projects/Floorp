@@ -133,3 +133,4 @@ INCLUDES	+= \
 		-I$(srcdir)/../../base/src \
 		$(NULL)
 
+DEFINES += -D_IMPL_NS_LAYOUT

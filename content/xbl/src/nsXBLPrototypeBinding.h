@@ -119,7 +119,7 @@ public:
 
   void SetInitialAttributes(nsIContent* aBoundElement, nsIContent* aAnonymousContent);
 
-  already_AddRefed<nsISupportsArray> GetRuleProcessors();
+  nsCOMArray<nsIStyleRuleProcessor>* GetRuleProcessors();
   already_AddRefed<nsISupportsArray> GetStyleSheets();
 
   PRBool HasInsertionPoints() { return mInsertionPointTable != nsnull; }

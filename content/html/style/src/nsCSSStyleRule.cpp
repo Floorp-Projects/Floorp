@@ -68,8 +68,6 @@
 #include "nsUnicharUtils.h"
 #include "nsCSSPseudoElements.h"
 
-#include "nsIStyleSet.h"
-
 #include "nsContentUtils.h"
 #include "nsContentErrors.h"
 

@@ -55,7 +55,6 @@
 #include "nsHTMLParts.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
-#include "nsIStyleSet.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMElement.h"

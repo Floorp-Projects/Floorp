@@ -2343,7 +2343,6 @@ nsBrowserWindow::DoEditorTest(nsIDocShell *aDocShell, PRInt32 aCommandID)
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIFrameDebug.h"
-#include "nsIStyleSet.h"
 
 
 static void DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* out, PRInt32 aIndent)
@@ -2539,18 +2538,10 @@ nsBrowserWindow::DumpViews(FILE* out)
 void
 nsBrowserWindow::DumpStyleSheets(FILE* out)
 {
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsCOMPtr<nsIStyleSet> styleSet;
-    shell->GetStyleSet(getter_AddRefs(styleSet));
-    if (!styleSet) {
-      fputs("null style set\n", out);
-    } else {
-      styleSet->List(out);
-    }
-    NS_RELEASE(shell);
-  }
-  else {
+  nsCOMPtr<nsIPresShell> shell = dont_AddRef(GetPresShell());
+  if (shell) {
+    shell->ListStyleSheets(out);
+  } else {
     fputs("null pres shell\n", out);
   }
 }
@@ -2558,22 +2549,11 @@ nsBrowserWindow::DumpStyleSheets(FILE* out)
 void
 nsBrowserWindow::DumpStyleContexts(FILE* out)
 {
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsCOMPtr<nsIStyleSet> styleSet;
-    shell->GetStyleSet(getter_AddRefs(styleSet));
-    if (!styleSet) {
-      fputs("null style set\n", out);
-    } else {
-      nsIFrame* root;
-      shell->GetRootFrame(&root);
-      if (nsnull == root) {
-        fputs("null root frame\n", out);
-      } else {
-        styleSet->ListContexts(root, out);
-      }
-    }
-    NS_RELEASE(shell);
+  nsCOMPtr<nsIPresShell> shell = dont_AddRef(GetPresShell());
+  if (shell) {
+    nsIFrame* root;
+    shell->GetRootFrame(&root);
+    shell->ListStyleContexts(root, out);
   } else {
     fputs("null pres shell\n", out);
   }

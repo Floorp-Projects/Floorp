@@ -48,6 +48,7 @@
 
 #include "nsISupports.h"
 #include "nsISupportsArray.h"
+#include "nsIStyleRuleProcessor.h"
 
 class nsIContent;
 class nsIDocument;
@@ -121,7 +122,7 @@ public:
   NS_IMETHOD GetFirstStyleBinding(nsIXBLBinding** aResult) = 0;
 
   NS_IMETHOD InheritsStyle(PRBool* aResult)=0;
-  NS_IMETHOD WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData)=0;
+  NS_IMETHOD WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData)=0;
 
   NS_IMETHOD MarkForDeath()=0;
   NS_IMETHOD MarkedForDeath(PRBool* aResult)=0;

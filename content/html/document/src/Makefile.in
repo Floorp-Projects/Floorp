@@ -85,3 +85,5 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../content/src \
 		$(NULL)
+
+DEFINES += -D_IMPL_NS_LAYOUT

@@ -33,7 +33,8 @@
 #include "nsIFrame.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIStyleSet.h"
+#include "nsStyleSet.h"
+#include "nsIStyleFrameConstruction.h"
 #include "nsStyleContext.h"
 #include "nsStyleChangeList.h"
 #include "nsIEventQueueService.h"
@@ -273,7 +274,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIFrameManager
-  NS_IMETHOD Init(nsIPresShell* aPresShell, nsIStyleSet* aStyleSet);
+  NS_IMETHOD Init(nsIPresShell* aPresShell, nsStyleSet* aStyleSet);
   NS_IMETHOD Destroy();
 
   // Gets and sets the root frame
@@ -392,10 +393,9 @@ private:
   nsIPresContext* GetPresContext() const {
     return mPresShell->GetPresContext();
   }
-  nsIStyleSet* GetStyleSet() const { return mStyleSet; }
 
   nsIPresShell*                   mPresShell;    // weak link, because the pres shell owns us
-  nsIStyleSet*                    mStyleSet;     // weak link. pres shell holds a reference
+  nsStyleSet*                     mStyleSet;     // weak link. pres shell holds a reference
   nsIFrame*                       mRootFrame;
   PLDHashTable                    mPrimaryFrameMap;
   PLDHashTable                    mPlaceholderMap;
@@ -454,7 +454,7 @@ NS_IMPL_ISUPPORTS1(FrameManager, nsIFrameManager)
 
 NS_IMETHODIMP
 FrameManager::Init(nsIPresShell* aPresShell,
-                   nsIStyleSet*  aStyleSet)
+                   nsStyleSet*  aStyleSet)
 {
   NS_ASSERTION(aPresShell, "null aPresShell");
   NS_ASSERTION(aStyleSet, "null aStyleSet");
@@ -596,16 +596,13 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
       //             very fast in the embedded hash table.
       //             This would almost completely remove the lookup penalty for things
       //             like <SCRIPT> and comments in very large documents.
-      nsCOMPtr<nsIStyleSet>    styleSet;
       nsCOMPtr<nsIPresContext> presContext;
 
       // Give the frame construction code the opportunity to return the
       // frame that maps the content object
-      mPresShell->GetStyleSet(getter_AddRefs(styleSet));
-      NS_ASSERTION(styleSet, "bad style set");
       mPresShell->GetPresContext(getter_AddRefs(presContext));
       NS_ASSERTION(presContext, "bad presContext");
-      if (!styleSet || !presContext) {
+      if (!presContext) {
         return NS_ERROR_NULL_POINTER;
       }
 
@@ -641,8 +638,9 @@ FrameManager::GetPrimaryFrameFor(nsIContent* aContent, nsIFrame** aResult)
 
       // walk the frame tree to find the frame that maps aContent.  
       // Use the hint if we have it.
-      styleSet->FindPrimaryFrameFor(presContext, this, aContent, aResult, 
-                                    hint.mPrimaryFrameForPrevSibling ? &hint : nsnull);
+      mPresShell->FrameConstructor()->
+        FindPrimaryFrameFor(presContext, this, aContent, aResult, 
+                            hint.mPrimaryFrameForPrevSibling ? &hint : nsnull);
       
     }
   }
@@ -1140,8 +1138,10 @@ FrameManager::HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
   // are generated
   nsCOMPtr<nsIPresContext> presContext;    
   frameManager->mPresShell->GetPresContext(getter_AddRefs(presContext));
-  frameManager->mStyleSet->CantRenderReplacedElement(presContext,
-                                                     aEvent->mFrame);        
+  frameManager->mPresShell->FrameConstructor()->
+    CantRenderReplacedElement(frameManager->mPresShell, presContext,
+                              aEvent->mFrame);
+
 #ifdef NOISY_EVENTS
   printf("FrameManager::HandlePLEvent() end for FM %p\n", aEvent->owner);
 #endif
@@ -2016,9 +2016,9 @@ FrameManager::HasAttributeDependentStyle(nsIContent *aContent,
     return NS_OK;
   }
 
-  return mStyleSet->HasAttributeDependentStyle(GetPresContext(), aContent,
-                                               aAttribute, aModType,
-                                               aResult);
+  *aResult = mStyleSet->HasAttributeDependentStyle(GetPresContext(), aContent,
+                                                   aAttribute, aModType);
+  return NS_OK;
 }
 
 // Capture state for a given frame.

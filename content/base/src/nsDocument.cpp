@@ -77,7 +77,7 @@
 #include "nsIScrollableView.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsIStyleSet.h"
+#include "nsStyleSet.h"
 #include "nsContentUtils.h"
 #include "nsNodeInfoManager.h"
 #include "nsIXBLService.h"
@@ -1050,7 +1050,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
 
 NS_IMETHODIMP
 nsDocument::CreateShell(nsIPresContext* aContext, nsIViewManager* aViewManager,
-                        nsIStyleSet* aStyleSet,
+                        nsStyleSet* aStyleSet,
                         nsIPresShell** aInstancePtrResult)
 {
   // Don't add anything here.  Add it to |doCreateShell| instead.
@@ -1062,7 +1062,7 @@ nsDocument::CreateShell(nsIPresContext* aContext, nsIViewManager* aViewManager,
 
 nsresult
 nsDocument::doCreateShell(nsIPresContext* aContext,
-                          nsIViewManager* aViewManager, nsIStyleSet* aStyleSet,
+                          nsIViewManager* aViewManager, nsStyleSet* aStyleSet,
                           nsCompatibility aCompatMode,
                           nsIPresShell** aInstancePtrResult)
 {
@@ -1339,13 +1339,8 @@ nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
   PRInt32 count = mPresShells.Count();
   PRInt32 indx;
   for (indx = 0; indx < count; ++indx) {
-    nsCOMPtr<nsIPresShell> shell = (nsIPresShell *)mPresShells.ElementAt(indx);
-    nsCOMPtr<nsIStyleSet> set;
-    if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
-      if (set) {
-        set->AddDocStyleSheet(aSheet, this);
-      }
-    }
+    NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(indx))->StyleSet()->
+      AddDocStyleSheet(aSheet, this);
   }
 }
 
@@ -1379,13 +1374,8 @@ nsDocument::RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet)
   PRInt32 count = mPresShells.Count();
   PRInt32 indx;
   for (indx = 0; indx < count; ++indx) {
-    nsCOMPtr<nsIPresShell> shell = (nsIPresShell *)mPresShells.ElementAt(indx);
-    nsCOMPtr<nsIStyleSet> set;
-    shell->GetStyleSet(getter_AddRefs(set));
-
-    if (set) {
-      set->RemoveDocStyleSheet(aSheet);
-    }
+    NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(indx))->StyleSet()->
+      RemoveStyleSheet(nsStyleSet::eDocSheet, aSheet);
   }
 }
 
@@ -1527,6 +1517,16 @@ nsDocument::SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
     } else {
       RemoveStyleSheetFromStyleSets(aSheet);
     }
+  } else {
+    // We still need to notify the style set of the state change, because
+    // this will invalidate some of the rule processor data.
+
+    PRInt32 count = mPresShells.Count();
+    PRInt32 indx;
+    for (indx = 0; indx < count; ++indx) {
+      NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(indx))->StyleSet()->
+        StyleSheetApplicableStateChanged();
+    }
   }
 
   // We have to always notify, since this will be called for sheets
@@ -1647,6 +1647,14 @@ nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 void
 nsDocument::BeginUpdate(nsUpdateType aUpdateType)
 {
+  if (aUpdateType & UPDATE_STYLE) {
+    PRInt32 shellCount = mPresShells.Count();
+    for (PRInt32 j = 0; j < shellCount; ++j) {
+      NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(j))->StyleSet()->
+        BeginUpdate();
+    }
+  }
+
   PRInt32 i;
   for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
@@ -1657,6 +1665,14 @@ nsDocument::BeginUpdate(nsUpdateType aUpdateType)
 void
 nsDocument::EndUpdate(nsUpdateType aUpdateType)
 {
+  if (aUpdateType & UPDATE_STYLE) {
+    PRInt32 shellCount = mPresShells.Count();
+    for (PRInt32 j = 0; j < shellCount; ++j) {
+      NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(j))->StyleSet()->
+        EndUpdate();
+    }
+  }
+
   PRInt32 i;
   for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];

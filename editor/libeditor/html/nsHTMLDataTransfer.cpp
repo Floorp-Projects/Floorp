@@ -68,7 +68,6 @@
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
-#include "nsIStyleSet.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"
 

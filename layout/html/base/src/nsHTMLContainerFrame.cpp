@@ -59,11 +59,11 @@
 #include "nsIDOMEvent.h"
 #include "nsIScrollableView.h"
 #include "nsWidgetsCID.h"
-#include "nsIStyleSet.h"
 #include "nsCOMPtr.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsReflowPath.h"
+#include "nsIStyleFrameConstruction.h"
 
 static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 
@@ -321,7 +321,7 @@ nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext* aPresContext,
     // into our lines child list.
     nsIFrame* nextFrame = aFrame->GetNextSibling();
 
-    aPresContext->PresShell()->GetStyleSet()->
+    aPresContext->PresShell()->FrameConstructor()->
       CreateContinuingFrame(aPresContext, aFrame, aOuterFrame, &nextInFlow);
 
     if (nsnull == nextInFlow) {

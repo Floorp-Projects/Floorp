@@ -53,6 +53,7 @@
 #include "nsITheme.h"
 #include "pldhash.h"
 #include "nsStyleContext.h"
+#include "nsStyleSet.h"
 
 /*
  * For storage of an |nsRuleNode|'s children in a linked list.
@@ -4330,9 +4331,8 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
   // this works fine even if |this| is a rule node that has been
   // destroyed (leftover from a previous rule tree) but is somehow still
   // used.
-  nsCOMPtr<nsIStyleSet> set;
-  mPresContext->PresShell()->GetStyleSet(getter_AddRefs(set));
-  return set->GetDefaultStyleData()->GetStyleData(aSID);
+  return mPresContext->PresShell()->StyleSet()->
+    DefaultStyleData()->GetStyleData(aSID);
 }
 
 void
@@ -4358,7 +4358,7 @@ PRBool
 nsRuleNode::Sweep()
 {
   // If we're not marked, then we have to delete ourself.
-  if (!(mDependentBits & NS_RULE_NODE_GC_MARK)) {
+  if (!(mDependentBits & NS_RULE_NODE_GC_MARK) && !IsRoot()) {
     Destroy();
     return PR_TRUE;
   }

@@ -40,7 +40,7 @@
 #include "nsIPref.h"
 #include "nsILinkHandler.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIStyleSet.h"
+#include "nsStyleSet.h"
 #include "nsIFrameManager.h"
 #include "nsImageLoader.h"
 #include "nsIContent.h"
@@ -587,9 +587,7 @@ nsPresContext::ClearStyleDataAndReflow()
 {
   if (mShell) {
     // Clear out all our style data.
-    nsCOMPtr<nsIStyleSet> set;
-    mShell->GetStyleSet(getter_AddRefs(set));
-    set->ClearStyleData(this);
+    mShell->StyleSet()->ClearStyleData(this);
 
     // Force a reflow of the root frame
     // XXX We really should only do a reflow if a preference that affects
@@ -767,11 +765,8 @@ nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
     return;
 
   // enable/disable the QuirkSheet
-  nsCOMPtr<nsIStyleSet> set;
-  mShell->GetStyleSet(getter_AddRefs(set));
-  if (set) {
-    set->EnableQuirkStyleSheet(mCompatibilityMode == eCompatibility_NavQuirks);
-  }
+  mShell->StyleSet()->
+    EnableQuirkStyleSheet(mCompatibilityMode == eCompatibility_NavQuirks);
 }
 
 // Helper function for setting Anim Mode on image
@@ -895,27 +890,13 @@ already_AddRefed<nsStyleContext>
 nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
                                       nsStyleContext* aParentContext)
 {
-  nsCOMPtr<nsIStyleSet> set;
-  nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
-  if (NS_SUCCEEDED(rv) && set) {
-    // return the addref'd style context
-    return set->ResolveStyleFor(this, aContent, aParentContext);
-  }
-
-  return nsnull;
+  return mShell->StyleSet()->ResolveStyleFor(this, aContent, aParentContext);
 }
 
 already_AddRefed<nsStyleContext>
 nsPresContext::ResolveStyleContextForNonElement(nsStyleContext* aParentContext)
 {
-  nsCOMPtr<nsIStyleSet> set;
-  nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
-  if (NS_SUCCEEDED(rv) && set) {
-    // return addrefed style context
-    return set->ResolveStyleForNonElement(this, aParentContext);
-  }
-
-  return nsnull;
+  return mShell->StyleSet()->ResolveStyleForNonElement(this, aParentContext);
 }
 
 already_AddRefed<nsStyleContext>
@@ -933,15 +914,9 @@ nsPresContext::ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
                                                 nsStyleContext* aParentContext,
                                                 nsICSSPseudoComparator* aComparator)
 {
-  nsCOMPtr<nsIStyleSet> set;
-  nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
-  if (NS_SUCCEEDED(rv) && set) {
-    // return addrefed style context
-    return set->ResolvePseudoStyleFor(this, aParentContent, aPseudoTag,
-                                      aParentContext, aComparator);
-  }
-
-  return nsnull;
+  return mShell->StyleSet()->ResolvePseudoStyleFor(this, aParentContent,
+                                                   aPseudoTag, aParentContext,
+                                                   aComparator);
 }
 
 already_AddRefed<nsStyleContext>
@@ -949,15 +924,8 @@ nsPresContext::ProbePseudoStyleContextFor(nsIContent* aParentContent,
                                           nsIAtom* aPseudoTag,
                                           nsStyleContext* aParentContext)
 {
-  nsCOMPtr<nsIStyleSet> set;
-  nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
-  if (NS_SUCCEEDED(rv) && set) {
-    // return addrefed style context
-    return set->ProbePseudoStyleFor(this, aParentContent, aPseudoTag,
-                                    aParentContext);
-  }
-
-  return nsnull;
+  return mShell->StyleSet()->ProbePseudoStyleFor(this, aParentContent,
+                                                 aPseudoTag, aParentContext);
 }
 
 NS_IMETHODIMP

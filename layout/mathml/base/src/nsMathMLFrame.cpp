@@ -26,7 +26,7 @@
 
 // used to map attributes into CSS rules
 #include "nsIDocument.h"
-#include "nsIStyleSet.h"
+#include "nsStyleSet.h"
 #include "nsIStyleSheet.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDOMCSSStyleSheet.h"
@@ -505,13 +505,13 @@ GetMathMLAttributeStyleSheet(nsIPresContext* aPresContext,
   *aSheet = nsnull;
 
   // first, look if the attribute stylesheet is already there
-  nsCOMPtr<nsIStyleSet> styleSet;
-  aPresContext->PresShell()->GetStyleSet(getter_AddRefs(styleSet));
-  if (!styleSet)
-    return;
+  nsStyleSet *styleSet = aPresContext->PresShell()->StyleSet();
+  NS_ASSERTION(styleSet, "no style set");
+
   nsAutoString title;
-  for (PRInt32 i = styleSet->GetNumberOfAgentStyleSheets() - 1; i >= 0; --i) {
-    nsCOMPtr<nsIStyleSheet> sheet = getter_AddRefs(styleSet->GetAgentStyleSheetAt(i));
+  for (PRInt32 i = styleSet->SheetCount(nsStyleSet::eAgentSheet) - 1;
+       i >= 0; --i) {
+    nsIStyleSheet *sheet = styleSet->StyleSheetAt(nsStyleSet::eAgentSheet, i);
     nsCOMPtr<nsICSSStyleSheet> cssSheet(do_QueryInterface(sheet));
     if (cssSheet) {
       cssSheet->GetTitle(title);
@@ -539,14 +539,13 @@ GetMathMLAttributeStyleSheet(nsIPresContext* aPresContext,
                                            0, &index);
   }
   cssSheet->SetTitle(NS_ConvertASCIItoUCS2(kTitle));
-  nsCOMPtr<nsIStyleSheet> sheet(do_QueryInterface(cssSheet));
 
   // all done, no further activity from the net involved, so we better do this
-  sheet->SetComplete();
+  cssSheet->SetComplete();
 
   // insert the stylesheet into the styleset without notifying observers
-  styleSet->AppendAgentStyleSheet(sheet);
-  *aSheet = sheet;
+  styleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, cssSheet);
+  *aSheet = cssSheet;
   NS_ADDREF(*aSheet);
 }
 

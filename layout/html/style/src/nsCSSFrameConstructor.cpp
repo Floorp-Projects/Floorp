@@ -61,7 +61,7 @@
 #include "nsIStyleFrameConstruction.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
-#include "nsIStyleSet.h"
+#include "nsStyleSet.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
 #include "nsStyleConsts.h"
@@ -1228,25 +1228,8 @@ GetChildListNameFor(nsIPresContext* aPresContext,
 
 //----------------------------------------------------------------------
 
-nsresult NS_CreateCSSFrameConstructor(nsICSSFrameConstructor **aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nsnull;
-
-  nsCSSFrameConstructor *c = new nsCSSFrameConstructor();
-  if (!c)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(c);
-  nsresult rv = CallQueryInterface(c, aResult);
-  NS_RELEASE(c);
-
-  return rv;
-}
-
 nsCSSFrameConstructor::nsCSSFrameConstructor(void)
-  : nsIStyleFrameConstruction(),
-    mDocument(nsnull),
+  : mDocument(nsnull),
     mInitialContainingBlock(nsnull),
     mFixedContainingBlock(nsnull),
     mDocElementContainingBlock(nsnull),
@@ -3556,9 +3539,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   nsIBindingManager *bindingManager = mDocument->GetBindingManager();
   if (bindingManager) {
     nsCOMPtr<nsIStyleRuleSupplier> ruleSupplier(do_QueryInterface(bindingManager));
-    nsCOMPtr<nsIStyleSet> set;
-    aPresShell->GetStyleSet(getter_AddRefs(set));
-    set->SetStyleRuleSupplier(ruleSupplier);
+    aPresShell->StyleSet()->SetStyleRuleSupplier(ruleSupplier);
   }
   
   // --------- BUILD VIEWPORT -----------
@@ -9973,134 +9954,129 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
 
   NS_ASSERTION(shell, "couldn't get pres shell");
   if (shell) {
-    nsCOMPtr<nsIStyleSet> styleSet;
-    shell->GetStyleSet(getter_AddRefs(styleSet));
+    nsStyleSet *styleSet = shell->StyleSet();
 
-    NS_ASSERTION(styleSet, "couldn't get style set");
-    if (styleSet) { // test if any style rules exist which are dependent on content state
-      // Detect if one is the ancestor of the other, and skip if so.
-      if (aContent1 && aContent2) {
-        if (aContent1 == aContent2)
-          aContent2 = nsnull;
-        else if (IsAncestorOf(aContent1, aContent2))
-          aContent2 = nsnull;
-        else if (IsAncestorOf(aContent2, aContent1)) {
+    // test if any style rules exist which are dependent on content state
+    // Detect if one is the ancestor of the other, and skip if so.
+    if (aContent1 && aContent2) {
+      if (aContent1 == aContent2)
+        aContent2 = nsnull;
+      else if (IsAncestorOf(aContent1, aContent2))
+        aContent2 = nsnull;
+      else if (IsAncestorOf(aContent2, aContent1)) {
+        aContent1 = nsnull;
+      }
+    }
+
+    nsIFrame* primaryFrame1 = nsnull;
+    nsIFrame* primaryFrame2 = nsnull;
+    PRUint8 app1 = 0;
+    PRUint8 app2 = 0;
+
+    if (aContent1) {
+      shell->GetPrimaryFrameFor(aContent1, &primaryFrame1);
+      if (primaryFrame1) {
+        app1 = primaryFrame1->GetStyleDisplay()->mAppearance;
+      }
+
+      // XXXldb Why check app1 here when you could just do the code
+      // below |if (app1)| above and avoid the extra style reresolution?
+      if (!app1) {
+        if (!styleSet->HasStateDependentStyle(aPresContext, aContent1,
+                                              aStateMask))
+        {
+          primaryFrame1 = nsnull;
           aContent1 = nsnull;
         }
       }
+    }
 
-      nsIFrame* primaryFrame1 = nsnull;
-      nsIFrame* primaryFrame2 = nsnull;
-      PRUint8 app1 = 0;
-      PRUint8 app2 = 0;
-
-      if (aContent1) {
-        shell->GetPrimaryFrameFor(aContent1, &primaryFrame1);
-        if (primaryFrame1) {
-          app1 = primaryFrame1->GetStyleDisplay()->mAppearance;
-        }
-
-        // XXXldb Why check app1 here when you could just do the code
-        // below |if (app1)| above and avoid the extra style reresolution?
-        if (!app1) {
-          PRBool depends = PR_FALSE;
-          styleSet->HasStateDependentStyle(aPresContext, aContent1,
-                                           aStateMask, &depends);
-          if (!depends) {
-            primaryFrame1 = nsnull;
-            aContent1 = nsnull;
-          }
-        }
-      }
-
-      if (aContent2) {
-        shell->GetPrimaryFrameFor(aContent2, &primaryFrame2);
-        if (primaryFrame2) {
-          app2 = primaryFrame2->GetStyleDisplay()->mAppearance;
-        }
-
-        // XXXldb Why check app2 here when you could just do the code
-        // below |if (app2)| above and avoid the extra style reresolution?
-        if (!app2) {
-          PRBool depends = PR_FALSE;
-          styleSet->HasStateDependentStyle(aPresContext, aContent2,
-                                           aStateMask, &depends);
-          if (!depends) {
-            primaryFrame2 = nsnull;
-            aContent2 = nsnull;
-          }
-        }
-      }
-
-      nsCOMPtr<nsIFrameManager> frameManager;
-      shell->GetFrameManager(getter_AddRefs(frameManager));
-
-      if (primaryFrame1) {
-        nsStyleChangeList changeList;
-        nsChangeHint frameChange = NS_STYLE_HINT_NONE;
-        frameManager->ComputeStyleChangeFor(primaryFrame1, 
-                                            kNameSpaceID_Unknown, nsnull,
-                                            changeList, NS_STYLE_HINT_NONE,
-                                            frameChange);
-
-        if (app1) {
-          nsCOMPtr<nsITheme> theme;
-          aPresContext->GetTheme(getter_AddRefs(theme));
-          PRBool repaint = PR_FALSE;
-          if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame1, app1))
-            theme->WidgetStateChanged(primaryFrame1, app1, nsnull, &repaint);
-          if (repaint)
-            ApplyRenderingChangeToTree(aPresContext, primaryFrame1, nsnull, nsChangeHint_RepaintFrame);
-        }
-
-        if (frameChange & nsChangeHint_ReconstructDoc) {
-          return ReconstructDocElementHierarchy(aPresContext);
-          // No need to worry about anything else.
-        }
-        else if (frameChange & nsChangeHint_ReconstructFrame) {
-          result = RecreateFramesForContent(aPresContext, aContent1);
-          changeList.Clear();
-        } else {
-          ProcessRestyledFrames(changeList, aPresContext);
-        }
-      }
-
+    if (aContent2) {
+      shell->GetPrimaryFrameFor(aContent2, &primaryFrame2);
       if (primaryFrame2) {
-        nsStyleChangeList changeList;
-        nsChangeHint frameChange = NS_STYLE_HINT_NONE;
-        frameManager->ComputeStyleChangeFor(primaryFrame2, 
-                                            kNameSpaceID_Unknown, nsnull,
-                                            changeList, NS_STYLE_HINT_NONE, frameChange);
-        if (app2) {
-          nsCOMPtr<nsITheme> theme;
-          aPresContext->GetTheme(getter_AddRefs(theme));
-          PRBool repaint = PR_FALSE;
-          if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame2, app2))
-            theme->WidgetStateChanged(primaryFrame2, app2, nsnull, &repaint);
-          if (repaint)
-            ApplyRenderingChangeToTree(aPresContext, primaryFrame2, nsnull, nsChangeHint_RepaintFrame);
-        }
+        app2 = primaryFrame2->GetStyleDisplay()->mAppearance;
+      }
 
-         // max change needed for top level frames
-        if (frameChange & nsChangeHint_ReconstructDoc) {
-          result = ReconstructDocElementHierarchy(aPresContext);
-          changeList.Clear();
-        } else if (frameChange & nsChangeHint_ReconstructFrame) {
-          result = RecreateFramesForContent(aPresContext, aContent2);
-          changeList.Clear();
-        } else {
-          // process any children that need it
-          ProcessRestyledFrames(changeList, aPresContext);
+      // XXXldb Why check app2 here when you could just do the code
+      // below |if (app2)| above and avoid the extra style reresolution?
+      if (!app2) {
+        if (!styleSet->HasStateDependentStyle(aPresContext, aContent2,
+                                              aStateMask))
+        {
+          primaryFrame2 = nsnull;
+          aContent2 = nsnull;
         }
       }
-      
-      // no frames, reconstruct for content
-      if (!primaryFrame1 && aContent1) {
-        result = MaybeRecreateFramesForContent(aPresContext, aContent1);
+    }
+
+    nsCOMPtr<nsIFrameManager> frameManager;
+    shell->GetFrameManager(getter_AddRefs(frameManager));
+
+    if (primaryFrame1) {
+      nsStyleChangeList changeList;
+      nsChangeHint frameChange = NS_STYLE_HINT_NONE;
+      frameManager->ComputeStyleChangeFor(primaryFrame1, 
+                                          kNameSpaceID_Unknown, nsnull,
+                                          changeList, NS_STYLE_HINT_NONE,
+                                          frameChange);
+
+      if (app1) {
+        nsCOMPtr<nsITheme> theme;
+        aPresContext->GetTheme(getter_AddRefs(theme));
+        PRBool repaint = PR_FALSE;
+        if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame1, app1))
+          theme->WidgetStateChanged(primaryFrame1, app1, nsnull, &repaint);
+        if (repaint)
+          ApplyRenderingChangeToTree(aPresContext, primaryFrame1, nsnull, nsChangeHint_RepaintFrame);
       }
-      if (!primaryFrame2 && aContent2) {
-        result = MaybeRecreateFramesForContent(aPresContext, aContent2);
+
+      if (frameChange & nsChangeHint_ReconstructDoc) {
+        return ReconstructDocElementHierarchy(aPresContext);
+        // No need to worry about anything else.
       }
+      else if (frameChange & nsChangeHint_ReconstructFrame) {
+        result = RecreateFramesForContent(aPresContext, aContent1);
+        changeList.Clear();
+      } else {
+        ProcessRestyledFrames(changeList, aPresContext);
+      }
+    }
+
+    if (primaryFrame2) {
+      nsStyleChangeList changeList;
+      nsChangeHint frameChange = NS_STYLE_HINT_NONE;
+      frameManager->ComputeStyleChangeFor(primaryFrame2, 
+                                          kNameSpaceID_Unknown, nsnull,
+                                          changeList, NS_STYLE_HINT_NONE, frameChange);
+      if (app2) {
+        nsCOMPtr<nsITheme> theme;
+        aPresContext->GetTheme(getter_AddRefs(theme));
+        PRBool repaint = PR_FALSE;
+        if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame2, app2))
+          theme->WidgetStateChanged(primaryFrame2, app2, nsnull, &repaint);
+        if (repaint)
+          ApplyRenderingChangeToTree(aPresContext, primaryFrame2, nsnull, nsChangeHint_RepaintFrame);
+      }
+
+      // max change needed for top level frames
+      if (frameChange & nsChangeHint_ReconstructDoc) {
+        result = ReconstructDocElementHierarchy(aPresContext);
+        changeList.Clear();
+      } else if (frameChange & nsChangeHint_ReconstructFrame) {
+        result = RecreateFramesForContent(aPresContext, aContent2);
+        changeList.Clear();
+      } else {
+        // process any children that need it
+        ProcessRestyledFrames(changeList, aPresContext);
+      }
+    }
+
+    // no frames, reconstruct for content
+    if (!primaryFrame1 && aContent1) {
+      result = MaybeRecreateFramesForContent(aPresContext, aContent1);
+    }
+    if (!primaryFrame2 && aContent2) {
+      result = MaybeRecreateFramesForContent(aPresContext, aContent2);
     }
   }
   return result;
@@ -10615,7 +10591,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
 }
 
 nsresult
-nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell* aPresShell, 
+nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell*    aPresShell,
                                                        nsIPresContext*  aPresContext,
                                                        nsIFrame*        aFrame,
                                                        nsIFrame*        aParentFrame,
@@ -10644,7 +10620,7 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell* aPresShell,
         nsIFrame* continuingTableFrame;
 
         // It's the inner table frame, so create a continuing frame
-        CreateContinuingFrame(aPresShell, aPresContext, childFrame, newFrame, &continuingTableFrame);
+        CreateContinuingFrame(aPresContext, childFrame, newFrame, &continuingTableFrame);
         newChildFrames.AddChild(continuingTableFrame);
       } else {
         // XXX remove this code and the above checks. We don't want to replicate 
@@ -10766,12 +10742,12 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
 }
 
 NS_IMETHODIMP
-nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell, 
-                                             nsIPresContext* aPresContext,
+nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
                                              nsIFrame*       aFrame,
                                              nsIFrame*       aParentFrame,
                                              nsIFrame**      aContinuingFrame)
 {
+  nsIPresShell*              shell = aPresContext->PresShell();
   nsStyleContext*            styleContext = aFrame->GetStyleContext();
   nsIFrame*                  newFrame = nsnull;
   nsresult                   rv = NS_OK;
@@ -10781,7 +10757,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
   nsIContent* content = aFrame->GetContent();
 
   if (nsLayoutAtoms::textFrame == frameType) {
-    rv = NS_NewContinuingTextFrame(aPresShell, &newFrame);
+    rv = NS_NewContinuingTextFrame(shell, &newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -10789,7 +10765,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
     }
     
   } else if (nsLayoutAtoms::inlineFrame == frameType) {
-    rv = NS_NewInlineFrame(aPresShell, &newFrame);
+    rv = NS_NewInlineFrame(shell, &newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -10797,7 +10773,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
     }
   
   } else if (nsLayoutAtoms::blockFrame == frameType) {
-    rv = NS_NewBlockFrame(aPresShell, &newFrame);
+    rv = NS_NewBlockFrame(shell, &newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -10805,7 +10781,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
     }
   
   } else if (nsLayoutAtoms::areaFrame == frameType) {
-    rv = NS_NewAreaFrame(aPresShell, &newFrame, 0);
+    rv = NS_NewAreaFrame(shell, &newFrame, 0);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext,
                      aFrame);
@@ -10814,7 +10790,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
     }
   
   } else if (nsLayoutAtoms::positionedInlineFrame == frameType) {
-    rv = NS_NewPositionedInlineFrame(aPresShell, &newFrame);
+    rv = NS_NewPositionedInlineFrame(shell, &newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -10823,18 +10799,18 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
 
   } else if (nsLayoutAtoms::pageFrame == frameType) {
     nsIFrame* pageContentFrame;
-    rv = ConstructPageFrame(aPresShell, aPresContext, aParentFrame, aFrame,
+    rv = ConstructPageFrame(shell, aPresContext, aParentFrame, aFrame,
                             newFrame, pageContentFrame);
   } else if (nsLayoutAtoms::tableOuterFrame == frameType) {
-    rv = CreateContinuingOuterTableFrame(aPresShell, aPresContext, aFrame, aParentFrame,
+    rv = CreateContinuingOuterTableFrame(shell, aPresContext, aFrame, aParentFrame,
                                          content, styleContext, &newFrame);
 
   } else if (nsLayoutAtoms::tableFrame == frameType) {
-    rv = CreateContinuingTableFrame(aPresShell, aPresContext, aFrame, aParentFrame,
+    rv = CreateContinuingTableFrame(shell, aPresContext, aFrame, aParentFrame,
                                     content, styleContext, &newFrame);
 
   } else if (nsLayoutAtoms::tableRowGroupFrame == frameType) {
-    rv = NS_NewTableRowGroupFrame(aPresShell, &newFrame);
+    rv = NS_NewTableRowGroupFrame(shell, &newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -10842,7 +10818,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
     }
 
   } else if (nsLayoutAtoms::tableRowFrame == frameType) {
-    rv = NS_NewTableRowFrame(aPresShell, &newFrame);
+    rv = NS_NewTableRowFrame(shell, &newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -10858,7 +10834,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
         if (IS_TABLE_CELL(cellFrame->GetType())) {
           nsIFrame* continuingCellFrame;
 
-          CreateContinuingFrame(aPresShell, aPresContext, cellFrame, newFrame, &continuingCellFrame);
+          CreateContinuingFrame(aPresContext, cellFrame, newFrame, &continuingCellFrame);
           newChildList.AddChild(continuingCellFrame);
         }
         cellFrame = cellFrame->GetNextSibling();
@@ -10869,7 +10845,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
     }
 
   } else if (IS_TABLE_CELL(frameType)) {
-    rv = NS_NewTableCellFrame(aPresShell, IsBorderCollapse(aParentFrame), &newFrame);
+    rv = NS_NewTableCellFrame(shell, IsBorderCollapse(aParentFrame), &newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -10879,14 +10855,14 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
       nsIFrame* areaFrame;
       nsIFrame* continuingAreaFrame;
       aFrame->FirstChild(aPresContext, nsnull, &areaFrame);
-      CreateContinuingFrame(aPresShell, aPresContext, areaFrame, newFrame, &continuingAreaFrame);
+      CreateContinuingFrame(aPresContext, areaFrame, newFrame, &continuingAreaFrame);
 
       // Set the table cell's initial child list
       newFrame->SetInitialChildList(aPresContext, nsnull, continuingAreaFrame);
     }
   
   } else if (nsLayoutAtoms::lineFrame == frameType) {
-    rv = NS_NewFirstLineFrame(aPresShell, &newFrame);
+    rv = NS_NewFirstLineFrame(shell, &newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -10894,7 +10870,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
     }
   
   } else if (nsLayoutAtoms::letterFrame == frameType) {
-    rv = NS_NewFirstLetterFrame(aPresShell, &newFrame);
+    rv = NS_NewFirstLetterFrame(shell, &newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -10902,7 +10878,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
     }
 
   } else if (nsLayoutAtoms::imageFrame == frameType) {
-    rv = NS_NewImageFrame(aPresShell, &newFrame);
+    rv = NS_NewImageFrame(shell, &newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
     }
@@ -10910,14 +10886,14 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
     // create a continuing out of flow frame
     nsIFrame* oofFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
     nsIFrame* oofContFrame;
-    CreateContinuingFrame(aPresShell, aPresContext, oofFrame, aParentFrame, &oofContFrame);
+    CreateContinuingFrame(aPresContext, oofFrame, aParentFrame, &oofContFrame);
     if (!oofContFrame) 
       return NS_ERROR_NULL_POINTER;
     // create a continuing placeholder frame
     nsCOMPtr<nsIFrameManager> frameManager;
-    aPresShell->GetFrameManager(getter_AddRefs(frameManager));
+    shell->GetFrameManager(getter_AddRefs(frameManager));
     NS_ASSERTION(frameManager, "no frame manager");
-    CreatePlaceholderFrameFor(aPresShell, aPresContext, frameManager, content, 
+    CreatePlaceholderFrameFor(shell, aPresContext, frameManager, content, 
                               oofContFrame, styleContext, aParentFrame, &newFrame);
     if (!newFrame) 
       return NS_ERROR_NULL_POINTER;
@@ -10982,7 +10958,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
   
   // Iterate the fixed frames and replicate each
   for (nsIFrame* fixed = firstFixed; fixed; fixed = fixed->GetNextSibling()) {
-    rv = ConstructFrame(aPresShell, aPresContext, state, fixed->GetContent(), 
+    rv = ConstructFrame(shell, aPresContext, state, fixed->GetContent(), 
                         newFrame, fixedPlaceholders);
     if (NS_FAILED(rv))
       return rv;
@@ -12071,7 +12047,7 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   nsIFrame* nextTextFrame = nsnull;
   if (NeedFirstLetterContinuation(aTextContent)) {
     // Create continuation
-    CreateContinuingFrame(aPresShell, aPresContext, aTextFrame, aParentFrame,
+    CreateContinuingFrame(aPresContext, aTextFrame, aParentFrame,
                           &nextTextFrame);
 
     // Repair the continuations style context

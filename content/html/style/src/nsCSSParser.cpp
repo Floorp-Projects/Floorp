@@ -48,7 +48,6 @@
 #include "nsICSSMediaRule.h"
 #include "nsICSSNameSpaceRule.h"
 #include "nsIUnicharInputStream.h"
-#include "nsIStyleSet.h"
 #include "nsICSSStyleSheet.h"
 #include "nsCSSDeclaration.h"
 #include "nsStyleConsts.h"

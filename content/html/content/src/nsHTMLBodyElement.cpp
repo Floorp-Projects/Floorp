@@ -60,7 +60,6 @@
 #include "nsIDocShell.h"
 #include "nsIFrameManager.h"
 #include "nsCOMPtr.h"
-#include "nsIStyleSet.h"
 #include "nsIView.h"
 #include "nsLayoutAtoms.h"
 #include "nsRuleWalker.h"

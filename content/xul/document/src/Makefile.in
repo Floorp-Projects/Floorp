@@ -80,3 +80,4 @@ LOCAL_INCLUDES	= -I$(srcdir)/../../../base/src \
 		   -I$(srcdir)/../../../xml/document/src \
 		   $(NULL)
 
+DEFINES += -D_IMPL_NS_LAYOUT

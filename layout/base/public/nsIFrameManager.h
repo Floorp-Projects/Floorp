@@ -47,7 +47,7 @@ class nsIAtom;
 class nsIContent;
 class nsIPresContext;
 class nsIPresShell;
-class nsIStyleSet;
+class nsStyleSet;
 class nsStyleContext;
 class nsILayoutHistoryState;
 class nsStyleChangeList;
@@ -73,7 +73,7 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMEMANAGER_IID)
 
   // Initialization
-  NS_IMETHOD Init(nsIPresShell* aPresShell, nsIStyleSet* aStyleSet) = 0;
+  NS_IMETHOD Init(nsIPresShell* aPresShell, nsStyleSet* aStyleSet) = 0;
 
   /**
    * After Destroy is called, all methods should return

@@ -59,10 +59,6 @@
 
 #include "nsRuleWalker.h"
 
-#include "nsIStyleSet.h"
-
-static NS_DEFINE_CID(kCSSFrameConstructorCID, NS_CSSFRAMECONSTRUCTOR_CID);
-
 class HTMLColorRule : public nsIStyleRule {
 public:
   HTMLColorRule(nsIHTMLStyleSheet* aSheet);
@@ -687,49 +683,7 @@ HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
     PL_DHashTableFinish(&mMappedAttrTable);
 }
 
-NS_IMPL_ADDREF(HTMLStyleSheetImpl)
-NS_IMPL_RELEASE(HTMLStyleSheetImpl)
-
-nsresult HTMLStyleSheetImpl::QueryInterface(const nsIID& aIID,
-                                            void** aInstancePtrResult)
-{
-  NS_PRECONDITION(aInstancePtrResult, "null out param");
-
-  if (aIID.Equals(NS_GET_IID(nsIHTMLStyleSheet))) {
-    *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLStyleSheet*, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIStyleSheet))) {
-    *aInstancePtrResult = NS_STATIC_CAST(nsIStyleSheet *, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIStyleRuleProcessor))) {
-    *aInstancePtrResult = NS_STATIC_CAST(nsIStyleRuleProcessor *, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIStyleFrameConstruction))) {
-    // XXX this breaks XPCOM rules since it isn't a proper delegate
-    // This is a temporary method of connecting the constructor for
-    // now
-    nsresult rv;
-    nsCOMPtr<nsICSSFrameConstructor> constructor =
-      do_CreateInstance(kCSSFrameConstructorCID, &rv);
-
-    if (NS_SUCCEEDED(rv)) {
-      rv = constructor->Init(mDocument);
-
-      if (NS_SUCCEEDED(rv)) {
-        rv = constructor->QueryInterface(aIID, aInstancePtrResult);
-      }
-    }
-
-    return rv;
-  } else if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLStyleSheet *, this);
-  } else {
-    *aInstancePtrResult = nsnull;
-
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF_THIS();
-
-  return NS_OK;
-}
+NS_IMPL_ISUPPORTS3(HTMLStyleSheetImpl, nsIHTMLStyleSheet, nsIStyleSheet, nsIStyleRuleProcessor)
 
 NS_IMETHODIMP
 HTMLStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,

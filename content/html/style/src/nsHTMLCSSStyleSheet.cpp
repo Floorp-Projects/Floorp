@@ -52,7 +52,6 @@
 #include "nsIDocument.h"
 #include "nsCOMPtr.h"
 
-#include "nsIStyleSet.h"
 #include "nsRuleWalker.h"
 
 /*
