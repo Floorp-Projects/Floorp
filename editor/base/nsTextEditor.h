@@ -118,6 +118,12 @@ public:
 // Plain text wrapping control
   NS_IMETHOD GetBodyWrapWidth(PRInt32 *aWrapColumn);
   NS_IMETHOD SetBodyWrapWidth(PRInt32 aWrapColumn);
+
+// Logging methods
+
+  NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);
+  NS_IMETHOD StopLogging();
+
 // End of methods implemented in nsEditor
 //=============================================================
 

@@ -23,6 +23,8 @@
 #include "nsITransactionManager.h"
 #include "nsITransactionListener.h"
 
+class nsJSEditorLog;
+
 /** implementation of a transaction listener object.
  *
  */
@@ -30,6 +32,7 @@ class nsJSTxnLog : public nsITransactionListener
 {
 private:
 
+  nsJSEditorLog *mEditorLog;
   PRInt32 mIndentLevel;
   PRInt32 mBatchCount;
 
@@ -37,7 +40,7 @@ public:
 
   /** The default constructor.
    */
-  nsJSTxnLog();
+  nsJSTxnLog(nsJSEditorLog *aEditorLog=0);
 
   /** The default destructor.
    */
@@ -66,6 +69,8 @@ private:
   /* nsJSTxnLog private methods. */
   const char *GetString(nsITransaction *aTransaction);
   nsresult PrintIndent(PRInt32 aIndentLevel);
+  nsresult Write(const char *aBuffer);
+  nsresult WriteInt(const char *aFormat, PRInt32 aInt);
 };
 
 #endif // nsJSTxnLog_h__

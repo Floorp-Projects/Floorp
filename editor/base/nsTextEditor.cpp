@@ -2708,3 +2708,15 @@ nsTextEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
 #endif
 }
 
+NS_IMETHODIMP
+nsTextEditor::StartLogging(nsIFileSpec *aLogFile)
+{
+  return nsEditor::StartLogging(aLogFile);
+}
+
+NS_IMETHODIMP
+nsTextEditor::StopLogging()
+{
+  return nsEditor::StopLogging();
+}
+

@@ -31,6 +31,7 @@ class nsISupportsArray;
 class nsIAtom;
 class nsIOutputStream;
 class nsString;
+class nsIFileSpec;
 
 #define TEXT_EDITOR_FLAG_PLAINTEXT   0x01   // only plain text entry is allowed via events
 #define TEXT_EDITOR_FLAG_SINGLELINE  0x02   // enter key and CR-LF handled specially
@@ -364,6 +365,10 @@ public:
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString)=0;
   NS_IMETHOD EndComposition(void)=0;
 
+
+// Logging Methods
+  NS_IMETHOD StartLogging(nsIFileSpec *aLogFile)=0;
+  NS_IMETHOD StopLogging()=0;
 };
 
 #endif //nsIEditor_h__

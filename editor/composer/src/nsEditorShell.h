@@ -115,7 +115,7 @@ class nsEditorShell :   public nsIEditorShell,
 	  NS_IMETHOD InsertAsCitedQuotation(const PRUnichar *quotedText, const PRUnichar *cite);
 
 	  NS_IMETHOD SelectAll();
-	  NS_IMETHOD DeleteSelection();
+	  NS_IMETHOD DeleteSelection(PRInt32 direction);
 
 	  /* void Find (); */
 	  NS_IMETHOD Find();
@@ -163,6 +163,10 @@ class nsEditorShell :   public nsIEditorShell,
 
 	  /* void RunUnitTests (); */
 	  NS_IMETHOD RunUnitTests();
+
+    /* void BeginLogging (); */
+	  NS_IMETHOD StartLogging(nsIFileSpec *logFile);
+	  NS_IMETHOD StopLogging();
 
 
     /* Spell check interface */

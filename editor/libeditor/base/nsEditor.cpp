@@ -59,6 +59,7 @@
 
 #ifdef ENABLE_JS_EDITOR_LOG
 #include "nsJSEditorLog.h"
+#include "nsJSTxnLog.h"
 #endif // ENABLE_JS_EDITOR_LOG
 
 // transactions the editor knows how to build
@@ -318,6 +319,7 @@ nsEditor::nsEditor()
 ,  mDoc(nsnull)
 #ifdef ENABLE_JS_EDITOR_LOG
 ,  mJSEditorLog(nsnull)
+,  mJSTxnLog(nsnull)
 #endif // ENABLE_JS_EDITOR_LOG
 {
   //initialize member variables here
@@ -350,11 +352,9 @@ nsEditor::~nsEditor()
   }
 
 #ifdef ENABLE_JS_EDITOR_LOG
-  if (mJSEditorLog)
-  {
-    delete mJSEditorLog;
-    mJSEditorLog = 0;
-  }
+
+  StopLogging();
+
 #endif // ENABLE_JS_EDITOR_LOG
 
   // Release service pointers
@@ -560,12 +560,6 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   return NS_OK;
 }
 
-// #define DEBUG_WITH_JS_EDITOR_LOG
-// #define DEBUG_WITH_JS_TXN_LOG
-#ifdef DEBUG_WITH_JS_TXN_LOG
-#include "nsJSTxnLog.h"
-#endif
-
 NS_IMETHODIMP
 nsEditor::EnableUndo(PRBool aEnable)
 {
@@ -582,24 +576,6 @@ nsEditor::EnableUndo(PRBool aEnable)
         printf("ERROR: Failed to get TransactionManager instance.\n");
         return NS_ERROR_NOT_AVAILABLE;
       }
-
-#ifdef DEBUG_WITH_JS_TXN_LOG
-      nsJSTxnLog *log = new nsJSTxnLog();
-      if (log)
-      {
-        NS_ADDREF(log);
-        result = mTxnMgr->AddListener(log);
-        NS_RELEASE(log);
-      }
-#endif
-
-#ifdef ENABLE_JS_EDITOR_LOG
-#ifdef DEBUG_WITH_JS_EDITOR_LOG
-
-      mJSEditorLog = new nsJSEditorLog(this);
-
-#endif
-#endif // ENABLE_JS_EDITOR_LOG
     }
     mTxnMgr->SetMaxTransactionCount(-1);
   }
@@ -958,26 +934,7 @@ nsEditor::BeginTransaction()
     mJSEditorLog->BeginTransaction();
 #endif // ENABLE_JS_EDITOR_LOG
 
-  NS_PRECONDITION(mUpdateCount>=0, "bad state");
-
-  nsCOMPtr<nsIDOMSelection>selection;
-  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(selectionResult) && selection) {
-    selection->StartBatchChanges();
-  }
-
-  if (nsnull!=mViewManager)
-  {
-    if (0==mUpdateCount)
-    {
-#ifdef HACK_FORCE_REDRAW
-      mViewManager->DisableRefresh();
-#else
-      mViewManager->BeginUpdateViewBatch();
-#endif
-    }
-    mUpdateCount++;
-  }
+  BeginUpdateViewBatch();
 
   if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
@@ -997,32 +954,12 @@ nsEditor::EndTransaction()
     mJSEditorLog->EndTransaction();
 #endif // ENABLE_JS_EDITOR_LOG
 
-  NS_PRECONDITION(mUpdateCount>0, "bad state");
-
   if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
     mTxnMgr->EndBatch();
   }
 
-  if (nsnull!=mViewManager)
-  {
-    mUpdateCount--;
-    if (0==mUpdateCount)
-    {
-#ifdef HACK_FORCE_REDRAW
-      mViewManager->EnableRefresh();
-      HACKForceRedraw();
-#else
-      mViewManager->EndUpdateViewBatch();
-#endif
-    }
-  }  
-
-  nsCOMPtr<nsIDOMSelection>selection;
-  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(selectionResult) && selection) {
-    selection->EndBatchChanges();
-  }
+  EndUpdateViewBatch();
 
   return NS_OK;
 }
@@ -1498,7 +1435,6 @@ nsEditor::InsertText(const nsString& aStringToInsert)
   if (mJSEditorLog)
     mJSEditorLog->InsertText(aStringToInsert);
 
-  nsAutoEditBatch aeb(this);
 #endif // ENABLE_JS_EDITOR_LOG
 
   EditAggregateTxn *aggTxn = nsnull;
@@ -1510,8 +1446,10 @@ nsEditor::InsertText(const nsString& aStringToInsert)
   InsertTextTxn *txn;
   result = CreateTxnForInsertText(aStringToInsert, nsnull, &txn); // insert at the current selection
   if ((NS_SUCCEEDED(result)) && txn)  {
+    BeginUpdateViewBatch();
     aggTxn->AppendChild(txn);
-    result = Do(aggTxn);  
+    result = Do(aggTxn);
+    EndUpdateViewBatch();
   }
   else if (NS_ERROR_EDITOR_NO_SELECTION==result)  {
     result = DoInitialInsert(aStringToInsert);
@@ -3140,6 +3078,59 @@ nsEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
 }
 
 NS_IMETHODIMP
+nsEditor::StartLogging(nsIFileSpec *aLogFile)
+{
+#ifdef ENABLE_JS_EDITOR_LOG
+
+  mJSEditorLog = new nsJSEditorLog(this, aLogFile);
+
+  if (!mJSEditorLog)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (mTxnMgr)
+  {
+    mJSTxnLog = new nsJSTxnLog(mJSEditorLog);
+
+    if (mJSTxnLog)
+    {
+      NS_ADDREF(mJSTxnLog);
+      mTxnMgr->AddListener(mJSTxnLog);
+    }
+    else
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+#endif // ENABLE_JS_EDITOR_LOG
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditor::StopLogging()
+{
+#ifdef ENABLE_JS_EDITOR_LOG
+
+  if (mTxnMgr && mJSTxnLog)
+    mTxnMgr->RemoveListener(mJSTxnLog);
+
+  if (mJSTxnLog)
+  {
+    NS_RELEASE(mJSTxnLog);
+    mJSTxnLog = 0;
+  }
+
+  if (mJSEditorLog)
+  {
+    delete mJSEditorLog;
+    mJSEditorLog = 0;
+  }
+
+#endif // ENABLE_JS_EDITOR_LOG
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsEditor::DebugDumpContent() const
 {
   nsCOMPtr<nsIContent>content;
@@ -4021,6 +4012,60 @@ nsresult nsEditor::GetString(const nsString& name, nsString& value)
     result = mStringBundle->GetStringFromName(name, value);
   }
   return result;
+}
+
+nsresult nsEditor::BeginUpdateViewBatch()
+{
+  NS_PRECONDITION(mUpdateCount>=0, "bad state");
+
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(selectionResult) && selection) {
+    selection->StartBatchChanges();
+  }
+
+  if (nsnull!=mViewManager)
+  {
+    if (0==mUpdateCount)
+    {
+#ifdef HACK_FORCE_REDRAW
+      mViewManager->DisableRefresh();
+#else
+      mViewManager->BeginUpdateViewBatch();
+#endif
+    }
+    mUpdateCount++;
+  }
+
+  return NS_OK;
+}
+
+
+nsresult nsEditor::EndUpdateViewBatch()
+{
+  NS_PRECONDITION(mUpdateCount>0, "bad state");
+
+  if (nsnull!=mViewManager)
+  {
+    mUpdateCount--;
+    if (0==mUpdateCount)
+    {
+#ifdef HACK_FORCE_REDRAW
+      mViewManager->EnableRefresh();
+      HACKForceRedraw();
+#else
+      mViewManager->EndUpdateViewBatch();
+#endif
+    }
+  }  
+
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(selectionResult) && selection) {
+    selection->EndBatchChanges();
+  }
+
+  return NS_OK;
 }
 
 /******************************************************************************

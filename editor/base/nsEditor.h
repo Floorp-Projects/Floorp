@@ -32,6 +32,7 @@
 #include "TransactionFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIEditProperty.h"
+#include "nsIFileSpec.h"
 
 class nsIEditActionListener;
 class nsIDOMCharacterData;
@@ -56,6 +57,7 @@ class nsILocale;
 
 #ifdef ENABLE_JS_EDITOR_LOG
 class nsJSEditorLog;
+class nsJSTxnLog;
 #endif // ENABLE_JS_EDITOR_LOG
 
 //This is the monitor for the editor.
@@ -90,6 +92,7 @@ protected:
 
 #ifdef ENABLE_JS_EDITOR_LOG
   nsJSEditorLog *mJSEditorLog;
+  nsJSTxnLog *mJSTxnLog;
 #endif // ENABLE_JS_EDITOR_LOG
 
 public:
@@ -222,6 +225,9 @@ public:
   NS_IMETHOD RemoveEditActionListener(nsIEditActionListener *aListener);
 
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
+
+  NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);
+  NS_IMETHOD StopLogging();
 
 /*END nsIEditor interfaces*/
 
@@ -523,6 +529,9 @@ public:
   nsresult JoinNodeDeep(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMSelection *aSelection); 
 
   nsresult GetString(const nsString& name, nsString& value);
+
+  nsresult BeginUpdateViewBatch(void);
+  nsresult EndUpdateViewBatch(void);
 };
 
 

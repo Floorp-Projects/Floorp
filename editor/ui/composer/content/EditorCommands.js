@@ -422,13 +422,35 @@ function EditorGetScriptFileSpec()
   return fs;
 }
 
-function EditorRunJournal()
+function EditorStartLog()
 {
   var fs;
-  // dump("Executing script ...\n");
+
+  if (window.editorShell)
+  {
+    fs = Components.classes["component://netscape/filespec"].createInstance();
+    fs = fs.QueryInterface(Components.interfaces.nsIFileSpec);
+    fs.UnixStyleFilePath = "journal.js";
+
+    window.editorShell.StartLogging(fs);
+
+    fs = null;
+  }
+}
+
+function EditorStopLog()
+{
+  if (window.editorShell)
+  {
+    window.editorShell.StopLogging();
+  }
+}
+
+function EditorRunLog()
+{
+  var fs;
   fs = EditorGetScriptFileSpec();
   EditorExecuteScript(fs);
-  // dump("Done executing script!\n");
 }
 
 function EditorGetNodeFromOffsets(offsets)

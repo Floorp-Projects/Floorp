@@ -34,29 +34,20 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-nsJSEditorLog::nsJSEditorLog(nsIEditor *aEditor)
+nsJSEditorLog::nsJSEditorLog(nsIEditor *aEditor, nsIFileSpec *aLogFile)
 {
   mRefCnt = 0;
   mEditor = aEditor;
-  mDepth  = 0;
   mLocked = -1;
 
-  nsresult result = NS_NewFileSpec(getter_AddRefs(mFileSpec));
+  mFileSpec = do_QueryInterface(aLogFile);
 
-  if (NS_SUCCEEDED(result))
-  {
-    if (mFileSpec)
-    {
-      result = mFileSpec->SetUnixStyleFilePath("journal.js.NEW");
+  nsresult result;
 
-      if (NS_SUCCEEDED(result))
-      {
-        result = mFileSpec->openStreamForWriting();
-      }
-    }
-    else
-      result = NS_ERROR_NULL_POINTER;
-  }
+  if (mFileSpec)
+    result = mFileSpec->openStreamForWriting();
+  else
+    result = NS_ERROR_NULL_POINTER;
 
   if (NS_FAILED(result))
   {
@@ -707,6 +698,12 @@ nsJSEditorLog::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
 }
 
 NS_IMETHODIMP
+nsJSEditorLog::SaveHLineSettings(nsIDOMElement* aElement)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsJSEditorLog::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 {
   if (!aAnchorElement)
@@ -808,6 +805,18 @@ nsJSEditorLog::EndComposition(void)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsJSEditorLog::StartLogging(nsIFileSpec *aLogFile)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsJSEditorLog::StopLogging()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult
 nsJSEditorLog::Write(const char *aBuffer)
 {
@@ -827,10 +836,14 @@ nsJSEditorLog::Write(const char *aBuffer)
     if (NS_FAILED(result))
       return result;
 
+#ifdef VERY_SLOW
+
     result = mFileSpec->flush();
 
     if (NS_FAILED(result))
       return result;
+
+#endif // VERY_SLOW
   }
   else
   {

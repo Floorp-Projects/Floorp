@@ -35,6 +35,7 @@ class nsStringArray;
 class nsIAtom;
 class nsIOutputStream;
 class nsIDOMWindow;
+class nsIFileSpec;
 
 /**
  * The HTML editor interface. 
@@ -194,6 +195,10 @@ public:
   NS_IMETHOD SetCompositionString(const nsString& aCompositionString)=0;
   NS_IMETHOD EndComposition(void)=0;
 
+
+  // Logging Methods
+  NS_IMETHOD StartLogging(nsIFileSpec *aLogFile)=0;
+  NS_IMETHOD StopLogging()=0;
 };
 
 #endif //nsIEditor_h__

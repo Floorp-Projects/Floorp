@@ -17,6 +17,7 @@
  */
 
 #include <stdio.h>
+#include "nsJSEditorLog.h"
 #include "nsJSTxnLog.h"
 
 #define LOCK_LOG(doc)
@@ -24,11 +25,12 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-nsJSTxnLog::nsJSTxnLog()
+nsJSTxnLog::nsJSTxnLog(nsJSEditorLog *aEditorLog)
 {
   mRefCnt      = 0;
   mIndentLevel = 0;
   mBatchCount  = 0;
+  mEditorLog   = aEditorLog;
 }
 
 nsJSTxnLog::~nsJSTxnLog()
@@ -87,7 +89,9 @@ nsJSTxnLog::WillDo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction)
   LOCK_LOG(this);
 
   PrintIndent(mIndentLevel++);
-  printf("WillDo:   %s\n", GetString(aTransaction));
+  Write("WillDo:   ");
+  Write(GetString(aTransaction));
+  Write("\n");
 
   UNLOCK_LOG(this);
 
@@ -100,7 +104,11 @@ nsJSTxnLog::DidDo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, n
   LOCK_LOG(this);
 
   PrintIndent(--mIndentLevel);
-  printf("DidDo:    %s (%d)\n", GetString(aTransaction), aDoResult);
+  Write("DidDo:    ");
+  Write(GetString(aTransaction));
+  Write("(");
+  WriteInt("%d", aDoResult);
+  Write(")\n");
 
   UNLOCK_LOG(this);
 
@@ -115,9 +123,13 @@ nsJSTxnLog::WillUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction
   PrintIndent(mIndentLevel++);
 
   if (aTransaction)
-    printf("WillUndo: %s\n", GetString(aTransaction));
+  {
+    Write("WillUndo:   ");
+    Write(GetString(aTransaction));
+    Write("\n");
+  }
   else
-    printf("WillUndoBatch\n");
+    Write("WillUndoBatch\n");
 
   UNLOCK_LOG(this);
 
@@ -132,9 +144,19 @@ nsJSTxnLog::DidUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction,
   PrintIndent(--mIndentLevel);
 
   if (aTransaction)
-    printf("DidUndo:  %s (%d)\n", GetString(aTransaction), aUndoResult);
+  {
+    Write("DidUndo:  ");
+    Write(GetString(aTransaction));
+    Write("(");
+    WriteInt("%d", aUndoResult);
+    Write(")\n");
+  }
   else
-    printf("EndUndoBatch (%d)\n", aUndoResult);
+  {
+    Write("EndUndoBatch (");
+    WriteInt("%d", aUndoResult);
+    Write(")\n");
+  }
 
   UNLOCK_LOG(this);
 
@@ -149,9 +171,13 @@ nsJSTxnLog::WillRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction
   PrintIndent(mIndentLevel++);
 
   if (aTransaction)
-    printf("WillRedo: %s\n", GetString(aTransaction));
+  {
+    Write("WillRedo: ");
+    Write(GetString(aTransaction));
+    Write("\n");
+  }
   else
-    printf("WillRedoBatch\n");
+    Write("WillRedoBatch\n");
 
   UNLOCK_LOG(this);
 
@@ -166,9 +192,19 @@ nsJSTxnLog::DidRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction,
   PrintIndent(--mIndentLevel);
 
   if (aTransaction)
-    printf("DidRedo:  %s (%d)\n", GetString(aTransaction), aRedoResult);
+  {
+    Write("DidRedo:  ");
+    Write(GetString(aTransaction));
+    Write(" (");
+    WriteInt("%d", aRedoResult);
+    Write(")\n");
+  }
   else
-    printf("DidRedoBatch (%d)\n", aRedoResult);
+  {
+    Write("DidRedoBatch (");
+    WriteInt("%d", aRedoResult);
+    Write(")\n");
+  }
 
   UNLOCK_LOG(this);
 
@@ -181,7 +217,9 @@ nsJSTxnLog::WillBeginBatch(nsITransactionManager *aTxMgr)
   LOCK_LOG(this);
 
   PrintIndent(mIndentLevel);
-  printf("WillBeginBatch: %d\n", mBatchCount);
+  Write("WillBeginBatch: ");
+  WriteInt("%d", mBatchCount);
+  Write("\n");
 
   UNLOCK_LOG(this);
 
@@ -194,7 +232,11 @@ nsJSTxnLog::DidBeginBatch(nsITransactionManager *aTxMgr, nsresult aResult)
   LOCK_LOG(this);
 
   PrintIndent(mIndentLevel++);
-  printf("DidBeginBatch:  %d (%d)\n", mBatchCount++, aResult);
+  Write("DidBeginBatch:  ");
+  WriteInt("%d", mBatchCount++);
+  Write(" (");
+  WriteInt("%d", aResult);
+  Write(")\n");
 
   UNLOCK_LOG(this);
 
@@ -207,7 +249,9 @@ nsJSTxnLog::WillEndBatch(nsITransactionManager *aTxMgr)
   LOCK_LOG(this);
 
   PrintIndent(--mIndentLevel);
-  printf("WillEndBatch:   %d\n", --mBatchCount);
+  Write("WillEndBatch:   ");
+  WriteInt("%d", --mBatchCount);
+  Write("\n");
 
   UNLOCK_LOG(this);
 
@@ -220,7 +264,11 @@ nsJSTxnLog::DidEndBatch(nsITransactionManager *aTxMgr, nsresult aResult)
   LOCK_LOG(this);
 
   PrintIndent(mIndentLevel);
-  printf("DidEndBatch:    %d (%d)\n", mBatchCount, aResult);
+  Write("DidEndBatch:    ");
+  WriteInt("%d", mBatchCount);
+  Write(" (");
+  WriteInt("%d", aResult);
+  Write(")\n");
 
   UNLOCK_LOG(this);
 
@@ -233,8 +281,11 @@ nsJSTxnLog::WillMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTransac
   LOCK_LOG(this);
 
   PrintIndent(mIndentLevel);
-  printf("WillMerge:   %s <-- %s\n",
-         GetString(aTopTransaction), GetString(aTransaction));
+  Write("WillMerge:   ");
+  Write(GetString(aTopTransaction));
+  Write(" <-- ");
+  Write(GetString(aTransaction));
+  Write("\n");
 
   UNLOCK_LOG(this);
 
@@ -247,9 +298,15 @@ nsJSTxnLog::DidMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTransact
   LOCK_LOG(this);
 
   PrintIndent(mIndentLevel);
-  printf("DidMerge:    %s <-- %s (%s, %d)\n",
-         GetString(aTopTransaction), GetString(aTransaction),
-         aDidMerge ? "TRUE" : "FALSE", aMergeResult);
+  Write("DidMerge:    ");
+  Write(GetString(aTopTransaction));
+  Write(" <-- ");
+  Write(GetString(aTransaction));
+  Write(" (");
+  Write(aDidMerge ? "TRUE" : "FALSE");
+  Write(", ");
+  WriteInt("%d", aMergeResult);
+  Write(")\n");
 
   UNLOCK_LOG(this);
 
@@ -279,10 +336,39 @@ nsJSTxnLog::PrintIndent(PRInt32 aIndentLevel)
 {
   PRInt32 i;
 
-  printf("    // ");
+  Write("    // ");
 
   for (i = 0; i < aIndentLevel; i++)
-    printf("  ");
+    Write("  ");
 
   return NS_OK;
 }
+
+nsresult
+nsJSTxnLog::Write(const char *aBuffer)
+{
+  if (!aBuffer)
+    return NS_ERROR_NULL_POINTER;
+
+  if (mEditorLog)
+    mEditorLog->Write(aBuffer);
+  else
+    printf(aBuffer);
+
+  return NS_OK;
+}
+
+nsresult
+nsJSTxnLog::WriteInt(const char *aFormat, PRInt32 aInt)
+{
+  if (!aFormat)
+    return NS_ERROR_NULL_POINTER;
+
+  if (mEditorLog)
+    mEditorLog->WriteInt(aFormat, aInt);
+  else
+    printf(aFormat, aInt);
+
+  return NS_OK;
+}
+

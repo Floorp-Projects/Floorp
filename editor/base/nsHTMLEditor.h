@@ -113,6 +113,11 @@ public:
   NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride = nsnull);
   NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride = nsnull);
 
+// Logging methods
+
+  NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);
+  NS_IMETHOD StopLogging();
+
 // End of methods implemented in nsEditor
 //=============================================================
 // HTML Editing methods
