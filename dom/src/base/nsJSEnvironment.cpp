@@ -131,7 +131,7 @@ static const char kJSRuntimeServiceContractID[] =
   "@mozilla.org/js/xpc/RuntimeService;1";
 
 static const char kDOMStringBundleURL[] =
-  "chrome://communicator/locale/dom/dom.properties";
+  "chrome://global/locale/dom/dom.properties";
 
 static PRThread *gDOMThread;
 

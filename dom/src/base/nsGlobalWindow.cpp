@@ -188,7 +188,7 @@ static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static const char sJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 
 static const char kDOMBundleURL[] = "chrome://global/locale/commonDialogs.properties";
-static const char kDOMSecurityWarningsBundleURL[] = "chrome://communicator/locale/dom/dom.properties";
+static const char kDOMSecurityWarningsBundleURL[] = "chrome://global/locale/dom/dom.properties";
 
 static const char kCryptoContractID[] = NS_CRYPTO_CONTRACTID;
 static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
