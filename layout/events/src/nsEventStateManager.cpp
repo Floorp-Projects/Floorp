@@ -721,68 +721,90 @@ nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
 NS_IMETHODIMP
 nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 {
-  nsIDocument *document;
+  const PRInt32 maxNotify = 4;
+  nsIContent  *notifyContent[maxNotify] = {nsnull, nsnull, nsnull, nsnull};
 
-  if (aState & NS_EVENT_STATE_ACTIVE && nsnull != mActiveContent) {
-    //transferring ref to lastActive from mActiveContent
-    nsIContent *lastActive = mActiveContent;
-    mActiveContent = nsnull;
-
-    lastActive->GetDocument(document);
-    if (document) {
-      document->ContentStateChanged(lastActive);
-      NS_RELEASE(document);
-    }
-    NS_RELEASE(lastActive);
+  if ((aState & NS_EVENT_STATE_ACTIVE) && (aContent != mActiveContent)) {
+    //transferring ref to notifyContent from mActiveContent
+    notifyContent[2] = mActiveContent;
+    mActiveContent = aContent;
+    NS_IF_ADDREF(mActiveContent);
   }
 
-  if (aState & NS_EVENT_STATE_HOVER && nsnull != mHoverContent) {
-    //transferring ref to lastHover from mHoverContent
-    nsIContent *lastHover = mHoverContent;
-    mHoverContent = nsnull;
-
-    lastHover->GetDocument(document);
-    if (document) {
-      document->ContentStateChanged(lastHover);
-      NS_RELEASE(document);
-    }
-    NS_RELEASE(lastHover);
+  if ((aState & NS_EVENT_STATE_HOVER) && (aContent != mHoverContent)) {
+    //transferring ref to notifyContent from mHoverContent
+    notifyContent[1] = mHoverContent; // notify hover first, since more common case
+    mHoverContent = aContent;
+    NS_IF_ADDREF(mHoverContent);
   }
 
-  if (aState & NS_EVENT_STATE_FOCUS) {
+  if ((aState & NS_EVENT_STATE_FOCUS) && (aContent != mCurrentFocus)) {
     SendFocusBlur(aContent);
 
-    if (nsnull != mCurrentFocus) {
-      //transferring ref to lastFocus from mCurrentFocus
-      nsIContent *lastFocus = mCurrentFocus;
-      mCurrentFocus = nsnull;
+    //transferring ref to notifyContent from mCurrentFocus
+    notifyContent[3] = mCurrentFocus;
+    mCurrentFocus = aContent;
+    NS_IF_ADDREF(mCurrentFocus);
+  }
 
-      lastFocus->GetDocument(document);
-      if (document) {
-        document->ContentStateChanged(lastFocus);
-        NS_RELEASE(document);
+  if (aContent) { // notify about new content too
+    notifyContent[0] = aContent;
+    NS_ADDREF(aContent);  // everything in notify array has a ref
+  }
+
+  // remove duplicates
+  if ((notifyContent[3] == notifyContent[2]) || (notifyContent[3] == notifyContent[1])) {
+    notifyContent[3] = nsnull;
+  }
+  if (notifyContent[2] == notifyContent[1]) {
+    notifyContent[2] = nsnull;
+  }
+
+  // compress the notify array to group notifications tighter
+  nsIContent** from = &(notifyContent[0]);
+  nsIContent** to   = &(notifyContent[0]);
+  nsIContent** end  = &(notifyContent[maxNotify]);
+
+  while (from < end) {
+    if (! *from) {
+      while (++from < end) {
+        if (*from) {
+          *to++ = *from;
+          *from = nsnull;
+          break;
+        }
       }
-      NS_RELEASE(lastFocus);
+    }
+    else {
+      if (from == to) {
+        to++;
+        from++;
+      }
+      else {
+        *to++ = *from;
+        *from++ = nsnull;
+      }
     }
   }
 
-  if (nsnull != aContent) {
-    if (aState & NS_EVENT_STATE_ACTIVE) {
-      mActiveContent = aContent;
-      NS_IF_ADDREF(mActiveContent);
-    }
-    if (aState & NS_EVENT_STATE_HOVER) {
-      mHoverContent = aContent;
-      NS_IF_ADDREF(mHoverContent);
-    }
-    if (aState & NS_EVENT_STATE_FOCUS) {
-      mCurrentFocus = aContent;
-      NS_IF_ADDREF(mCurrentFocus);
-    }
-    aContent->GetDocument(document);
+  if (notifyContent[0]) { // have at least one to notify about
+    nsIDocument *document;  // this presumes content can't get/lose state if not connected to doc
+    notifyContent[0]->GetDocument(document);
     if (document) {
-      document->ContentStateChanged(aContent);
+      document->ContentStatesChanged(notifyContent[0], notifyContent[1]);
+      if (notifyContent[2]) {  // more that two notifications are needed (should be rare)
+        // XXX a further optimization here would be to group the notification pairs
+        // together by parent/child, only needed if more than two content changed
+        // (ie: if [0] and [2] are parent/child, then notify (0,2) (1,3))
+        document->ContentStatesChanged(notifyContent[2], notifyContent[3]);
+      }
       NS_RELEASE(document);
+    }
+
+    from = &(notifyContent[0]);
+    while (from < to) {  // release old refs now that we are through
+      nsIContent* notify = *from++;
+      NS_RELEASE(notify);
     }
   }
 
@@ -795,8 +817,6 @@ nsEventStateManager::SendFocusBlur(nsIContent *aContent)
   if (mCurrentFocus == aContent) {
     return NS_OK;
   }
-
-  nsIDocument *document;
 
   if (mCurrentFocus) {
     ChangeFocus(mCurrentFocus, PR_FALSE);
