@@ -676,6 +676,7 @@
 #define HG92380
 #define HG28336
 #define HG02070
+#define HG62519
 
 
 
