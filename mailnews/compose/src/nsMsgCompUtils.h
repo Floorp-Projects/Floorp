@@ -116,6 +116,12 @@ char        *nsMsgParseURL(const char *url, int part);
 
 char        *GenerateFileNameFromURI(nsIURI *aURL);
 
+//
+// Folder calls...
+//
+char        *GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
+                                       PRBool             aNewsMessage);
+
 NS_END_EXTERN_C
 
 

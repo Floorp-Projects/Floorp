@@ -113,10 +113,10 @@ public:
 // Useful function for the back end...
 nsIMsgFolder      *LocateMessageFolder(nsIMsgIdentity   *userIdentity, 
                                        nsMsgDeliverMode aFolderType,
-                                       const char       *aSavePref);
+                                       const char       *aSaveURI);
 
 PRBool            MessageFolderIsLocal(nsIMsgIdentity   *userIdentity, 
                                        nsMsgDeliverMode aFolderType,
-                                       const char       *aSavePref);
+                                       const char       *aSaveURI);
 
 #endif /* _nsMsgCopy_H_ */

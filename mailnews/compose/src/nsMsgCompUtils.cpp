@@ -2079,3 +2079,42 @@ mime_gen_content_id(PRUint32 aPartNum, const char *aEmailAddress)
 
   return retVal;
 }
+
+char *
+GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
+                          PRBool             aNewsMessage)
+{
+  nsresult      rv = NS_OK;
+  char          *uri = nsnull;
+
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  if (NS_FAILED(rv) || !prefs) 
+    return nsnull;
+
+  if (aMode == nsMsgQueueForLater)       // QueueForLater (Outbox)
+  {
+    rv = prefs->CopyCharPref("mail.default_sendlater_uri", &uri);
+  }
+  else if (aMode == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
+  {
+    rv = prefs->CopyCharPref("mail.default_drafts_uri", &uri);
+  }
+  else if (aMode == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
+  {
+    rv = prefs->CopyCharPref("mail.default_templates_uri", &uri);
+  }
+  else 
+  {
+    //
+    // RICHIE SHERRY - Currently, I am always passing in PR_FALSE for 
+    // the aNewsMessage .... need to do something more intelligent!!!
+    //
+    // This is an FCC operation for a mail message OR a news message 
+    if (aNewsMessage)
+      rv = prefs->CopyCharPref("mail.default_newsfcc_uri", &uri);
+    else
+      rv = prefs->CopyCharPref("mail.default_fcc_uri", &uri);
+  }
+
+  return uri;
+}

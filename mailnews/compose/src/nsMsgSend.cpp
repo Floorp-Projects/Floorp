@@ -1629,12 +1629,9 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   }
   else
   {
-    char *uri = "mailbox://";
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-    if (NS_SUCCEEDED(rv) && prefs) 
-      rv = prefs->CopyCharPref("mail.default_fcc_server", &uri);
-
-    if ( (uri) || (*uri) )
+    // RICHIE - SHERRY - need to deal with news FCC's also!
+    char *uri = GetFolderURIFromUserPrefs(nsMsgDeliverNow, PR_FALSE);
+    if ( (uri) && (*uri) )
     {
       if (PL_strcasecmp(uri, "nocopy://") == 0)
         mCompFields->SetFcc("");
@@ -3039,9 +3036,26 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
     return NS_ERROR_OUT_OF_MEMORY;
 
   if (!mCompFields->GetFcc() || !*mCompFields->GetFcc())
-    return mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
-                                        this, nsnull, mMsgToReplace);
+  {
+    //
+    // Actually, we need to pick up the proper folder from the prefs and not
+    // default to the default "Flagged" folder choices
+    //
+    nsresult    rv;
+
+    // RICHIE SHERRY - Need to deal with news FCC's also
+    char        *uri = GetFolderURIFromUserPrefs(mode, PR_FALSE);
+
+    rv = mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
+                                      this, uri, mMsgToReplace);
+    PR_FREEIF(uri);
+    return rv;    
+  }
   else
+  {
+    // If we get here, then we are doing an FCC operation so the GetFcc is fine
     return mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
                                         this, mCompFields->GetFcc(), mMsgToReplace);
+  }
 }
+

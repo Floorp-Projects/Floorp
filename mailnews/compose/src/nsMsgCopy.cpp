@@ -248,7 +248,7 @@ nsMsgCopy::GetSentFolder(nsIMsgIdentity *userIdentity)
 nsIMsgFolder *
 LocateMessageFolder(nsIMsgIdentity   *userIdentity, 
                     nsMsgDeliverMode aFolderType,
-                    const char       *aSavePref)
+                    const char       *aFolderURI)
 {
   nsresult                  rv = NS_OK;
   nsIMsgFolder              *msgFolder= nsnull;
@@ -281,8 +281,8 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     return nsnull;
 
   // Make a working copy to avoid compiler problems with const...
-  if ( (aSavePref) && (*aSavePref) )
-    savePref = PL_strdup(aSavePref);
+  if ( (aFolderURI) && (*aFolderURI) )
+    savePref = PL_strdup(aFolderURI);
 
   for (i=0; i<cnt; i++)
   {
@@ -300,13 +300,13 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     }
 
     //
-    // If aSavePref is passed in, then the user has chosen a specific
+    // If aFolderURI is passed in, then the user has chosen a specific
     // mail folder to save the message, but if it is null, just find the
     // first one and make that work. The folder is specified as a URI, like
     // the following:
     //
-    //                  mailbox://rhp@netscape.com 
-    //                  newsgroup://news.mozilla.org
+    //                  mailbox://rhp@netscape.com/Sent
+    //                  newsgroup://news.mozilla.org/Outbox
     //
     if ( (savePref) && (*savePref) )
     {
@@ -354,21 +354,41 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
 
     PRUint32 numFolders = 0;
     msgFolder = nsnull;
-    if (aFolderType == nsMsgQueueForLater)       // QueueForLater (Outbox)
+
+    //
+    // First, just try to match the aFolderURI which is a URI with the GetChildWithURI
+    // call. If that fails, then fall back to the defaults, but if it works, then just
+    // return what is found
+    //
+    if ( (aFolderURI) && (*aFolderURI) )
     {
-      rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_QUEUE, &msgFolder, 1, &numFolders);
+      rv = rootFolder->GetChildWithURI(aFolderURI, PR_TRUE, &msgFolder);
+      if (NS_SUCCEEDED(rv) && (msgFolder)) 
+        break;
     }
-    else if (aFolderType == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
+
+    // 
+    // If we haven't found the msgFolder, then just use the defaults
+    // by getting the folder by flags
+    //
+    if (!msgFolder)
     {
-      rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_DRAFTS, &msgFolder, 1, &numFolders);
-    }
-    else if (aFolderType == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
-    {
-      rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES, &msgFolder, 1, &numFolders);
-    }
-    else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
-    {
-      rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, &msgFolder, 1, &numFolders);
+      if (aFolderType == nsMsgQueueForLater)       // QueueForLater (Outbox)
+      {
+        rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_QUEUE, &msgFolder, 1, &numFolders);
+      }
+      else if (aFolderType == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
+      {
+        rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_DRAFTS, &msgFolder, 1, &numFolders);
+      }
+      else if (aFolderType == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
+      {
+        rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TEMPLATES, &msgFolder, 1, &numFolders);
+      }
+      else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
+      {
+        rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_SENTMAIL, &msgFolder, 1, &numFolders);
+      }
     }
     
     if (NS_SUCCEEDED(rv) && (msgFolder)) 
@@ -388,14 +408,14 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
 PRBool
 MessageFolderIsLocal(nsIMsgIdentity   *userIdentity, 
                      nsMsgDeliverMode aFolderType,
-                     const char       *aSavePref)
+                     const char       *aFolderURI)
 {
   nsresult                        rv;
   char                            *aType = nsnull;
   nsCOMPtr<nsIMsgFolder>          dstFolder = nsnull;
   nsIMsgIncomingServer            *dstServer = nsnull;
 
-  dstFolder = LocateMessageFolder(userIdentity, aFolderType, aSavePref);
+  dstFolder = LocateMessageFolder(userIdentity, aFolderType, aFolderURI);
   if (!dstFolder)
     return PR_TRUE;
 

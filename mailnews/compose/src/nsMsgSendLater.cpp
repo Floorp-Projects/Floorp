@@ -594,7 +594,9 @@ nsMsgSendLater::StartNextMailFileSend()
   nsString      subject;
   mMessage->GetSubject(subject);
   tString = subject.ToNewCString();
+#ifdef NS_DEBUG
   printf("Sending message: [%s]\n", tString);
+#endif
   PR_FREEIF(tString);
 
   mTempFileSpec = nsMsgCreateTempFileSpec("nsqmail.tmp"); 
@@ -666,7 +668,13 @@ nsMsgSendLater::StartNextMailFileSend()
 nsIMsgFolder *
 nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity)
 {
-  return LocateMessageFolder(userIdentity, nsMsgQueueForLater, nsnull);
+  nsIMsgFolder    *retFolder = nsnull;
+  char            *uri = nsnull;
+
+  uri = GetFolderURIFromUserPrefs(nsMsgQueueForLater, PR_FALSE);
+  retFolder = LocateMessageFolder(userIdentity, nsMsgQueueForLater, uri);
+  PR_FREEIF(uri);
+  return retFolder;
 }
 
 //
@@ -717,6 +725,9 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
   nsresult ret = mMessageFolder->GetMessages(&mEnumerator);
 	if (NS_FAILED(ret) || (!mEnumerator))
   {
+    // RICHIE - do we do the message loss here?
+    nsMsgDisplayMessageByString("*** NOTICE *** If you failed, more than likely, this is the problem\ndescribed by Bug #10344.");
+
     NS_RELEASE(mIdentity);
     mIdentity = nsnull;
     return NS_ERROR_FAILURE;
@@ -924,16 +935,12 @@ SEARCH_NEWLINE:
 		  receipt = PL_strstr(draftInfo, "receipt=");
 		  if (receipt) 
 			{
-printf("RICHIE - FIX THIS......jjust add a member var and set the comp fields later!!!!!\n\7");
-
 			  char *s = receipt+8;
 			  int requestForReturnReceipt = 0;
-			  sscanf(s, "%d", &requestForReturnReceipt);
-          // RICHIE - return recipients are an issue! We should probably
-          // add these to the CompFields for tracking instead of tying this
-          // stuff to the MessagePane like in the old days.
-			    // if ((requestForReturnReceipt == 2 || requestForReturnReceipt == 3))
-  			  //   m_pane->SetRequestForReturnReceipt(TRUE);
+			  PR_sscanf(s, "%d", &requestForReturnReceipt);
+			  
+        if ((requestForReturnReceipt == 2 || requestForReturnReceipt == 3))
+          mRequestReturnReceipt = PR_TRUE;
 			}
 		  PR_FREEIF(draftInfo);
 		}
