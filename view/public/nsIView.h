@@ -123,11 +123,17 @@ struct nsViewZIndex {
  * Most of the methods here are read-only. To set the corresponding properties
  * of a view, go through nsIViewManager.
  */
-class nsIView : public nsISupports
+
+// hack to make egcs / gcc 2.95.2 happy
+class nsIView_base : public nsISupports
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IVIEW_IID)
+};
 
+class nsIView : public nsIView_base
+{
+public:
   /**
    * Get the view manager which "owns" the view.
    * This method might require some expensive traversal work in the future. If you can get the
