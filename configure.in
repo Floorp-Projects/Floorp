@@ -3581,8 +3581,14 @@ dnl Image decoders
 dnl ========================================================
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm"
 case "$target_os" in
-cygwin*|mingw*|msvc*|mks*|os2*|darwin*)
+cygwin*|mingw*|msvc*|mks*|os2*)
     MOZ_IMG_DECODERS_DEFAULT="$MOZ_IMG_DECODERS_DEFAULT icon"
+    ;;
+darwin*)
+    if test "$MOZ_WIDGET_TOOLKIT" = "mac" -o "$MOZ_WIDGET_TOOLKIT" = "cocoa";
+    then
+        MOZ_IMG_DECODERS_DEFAULT="$MOZ_IMG_DECODERS_DEFAULT icon"
+    fi
     ;;
 esac
 
