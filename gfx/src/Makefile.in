@@ -100,7 +100,6 @@ CPPSRCS = \
 
 ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES += uconv
-CPPSRCS += nsCompressedCharMap.cpp
 endif
 
 ifneq (,$(filter gtk gtk2 xlib os2,$(MOZ_WIDGET_TOOLKIT)))

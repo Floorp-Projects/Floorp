@@ -43,6 +43,7 @@ REQUIRES	= xpcom \
 		  view \
 		  necko \
 		  imglib2 \
+		  unicharutil \
 		  $(NULL)
 EXTRA_DSO_LIBS += gkgfx
 

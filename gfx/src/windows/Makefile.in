@@ -65,7 +65,6 @@ CPPSRCS		= \
 		nsPrintOptionsWin.cpp \
 		nsPrintSettingsWin.cpp \
 		nsGfxFactoryWin.cpp \
-		nsCompressedCharMap.cpp \
 		nsNativeThemeWin.cpp \
 		nsUnicodeRange.cpp \
 		$(NULL)
@@ -86,20 +85,8 @@ _OS_LIBS	+= gdi32
 endif
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 
-GARBAGE		+= nsCompressedCharMap.cpp
-
-ifeq ($(OS_ARCH),WINNT)
-GARBAGE		+= $(srcdir)/nsCompressedCharMap.cpp
-endif
 
 include $(topsrcdir)/config/rules.mk
-
-export:: ../nsCompressedCharMap.cpp
-ifeq ($(OS_ARCH),WINNT)
-	$(INSTALL) $(srcdir)/../nsCompressedCharMap.cpp $(srcdir)
-else
-	$(INSTALL) $(srcdir)/../nsCompressedCharMap.cpp .
-endif
 
 libs:: fontEncoding.properties
 	$(INSTALL) $^ $(DIST)/bin/res/fonts
