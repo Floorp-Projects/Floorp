@@ -1102,7 +1102,7 @@ void nsImapServerResponseParser::msg_fetch()
 				}
 			}
 		}
-		else if (!PL_strcasecmp(fNextToken, "RFC822.SIZE") || !PL_strcasecmp(fNextToken, "XAOL-SIZE"))
+		else if (!PL_strcasecmp(fNextToken, "RFC822.SIZE") || !PL_strcasecmp(fNextToken, "XAOL.SIZE"))
 		{
 			fNextToken = GetNextToken();
 			if (ContinueParse())
