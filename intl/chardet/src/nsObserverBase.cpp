@@ -49,8 +49,19 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(
    if(NS_FAILED(rv =docLoader->GetContentViewerContainer(aDocumentID, &cvc)))
      goto done;
 
+   /* sspitzer:  this was necessary to get printing of mail to work (sort of)
+    */
+   NS_ASSERTION(cvc,"GetContentViewerContainer didn't fail, but cvc is null");
+   if (!cvc) {
+	goto done;
+   }
+
    if(NS_FAILED( rv = cvc->QueryInterface(kIWebShellServicesIID, (void**)&wss)))
      goto done;
+
+   if (!wss) {
+ 	goto done;
+   }
 
 #ifndef DONT_INFORM_WEBSHELL
    // ask the webshellservice to load the URL

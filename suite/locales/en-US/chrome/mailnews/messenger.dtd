@@ -49,7 +49,7 @@ Rights Reserved.
 <!ENTITY getSelectedCmd.label ".Get Selected Messages">  
 <!ENTITY getFlaggedCmd.label ".Get Flagged Messages">  
 <!ENTITY printPreviewCmd.label ".Print Preview">  
-<!ENTITY printCmd.label ".Print">  
+<!ENTITY printCmd.label "Print">  
 <!ENTITY closeCmd.label "Close">  
 
 <!-- Edit Menu -->
