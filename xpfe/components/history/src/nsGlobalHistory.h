@@ -201,6 +201,7 @@ protected:
   // 
   // autocomplete stuff
   //
+  PRBool mAutocompleteOnlyTyped;
   nsStringArray mIgnoreSchemes;
   nsStringArray mIgnoreHostnames;
   
@@ -400,6 +401,7 @@ protected:
     mdb_column mCommentColumn;
     AutocompleteExclude* mExclude;
     const nsAReadableString& mSelectValue;
+    PRBool mMatchOnlyTyped;
 
     virtual ~AutoCompleteEnumerator();
   
@@ -409,6 +411,7 @@ protected:
                            mdb_column aCommentColumn,
                            mdb_column aHiddenColumn,
                            mdb_column aTypedColumn,
+                           PRBool aMatchOnlyTyped,
                            const nsAReadableString& aSelectValue,
                            AutocompleteExclude* aExclude) :
       mHistory(aHistory),
@@ -416,6 +419,7 @@ protected:
       mHiddenColumn(aHiddenColumn),
       mTypedColumn(aTypedColumn),
       mCommentColumn(aCommentColumn),
+      mMatchOnlyTyped(aMatchOnlyTyped),
       mExclude(aExclude),
       mSelectValue(aSelectValue) {}
 

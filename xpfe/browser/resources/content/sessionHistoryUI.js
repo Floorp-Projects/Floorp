@@ -256,10 +256,19 @@ function addToUrlbarHistory()
        }   // while
 
        // Otherwise, we've got a new URL in town. Add it!
+
+       try {
+         var url = entryToAdd.Value;
+         if (url.indexOf(" ") == -1) {
+           var fixedUpURI = gURIFixup.createFixupURI(url, 0);
+           gGlobalHistory.markPageAsTyped(fixedUpURI.spec);
+         }
+       }
+       catch(ex) {
+       }
+
        // Put the value as it was typed by the user in to RDF
        // Insert it to the beginning of the list.
-       var fixedUpURI = gURIFixup.createFixupURI(entryToAdd.Value, 0);
-       gGlobalHistory.markPageAsTyped(fixedUpURI.spec);
        entries.InsertElementAt(entryToAdd, 1, true);
 
        // Remove any expired history items so that we don't let
