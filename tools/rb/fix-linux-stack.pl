@@ -75,8 +75,8 @@ while (<>) {
         print {$out} "$address\n";
         chomp(my $symbol = <$in>);
         chomp(my $fileandline = <$in>);
-        ($symbol eq "??") && { $symbol = $badsymbol };
-        ($fileandline eq "??:0") && { $fileandline = $file };
+        if ($symbol eq "??") { $symbol = $badsymbol; }
+        if ($fileandline eq "??:0") { $fileandline = $file; }
         print "$before$symbol ($fileandline)$after\n";
     } else {
         print $line;
