@@ -44,7 +44,7 @@
 
 <RDF:Description about="urn:mozilla:package:calendar"
         chrome:displayName="Calendar"
-        chrome:author="OEOne Corp."
+        chrome:author="OEone Corp."
         chrome:name="calendar">
 </RDF:Description>
 
