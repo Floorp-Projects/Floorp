@@ -280,6 +280,11 @@
   #define NSCAP_NO_NEW_CASTS
 #endif
 
+#if defined(AIX)
+  #define NSCAP_NO_BOOL
+  #define NSCAP_NO_NEW_CASTS
+#endif
+
 #ifdef NSCAP_NO_EXPLICIT
   #define explicit
 #endif
