@@ -35,12 +35,17 @@
 #include "nsIFileUtilities.h"
 #include "nsICookieStorage.h"
 #include "nsPluginsDir.h"
+#include "nsVoidArray.h"  // array for holding "active" streams
 
 class ns4xPlugin;
 class nsFileSpec;
 class nsIComponentManager;
 class nsIFile;
 class nsIChannel;
+
+// this is the name of the directory which will be created
+// to cache temporary files.
+static const char *kPluginTmpDirName = "plugtmp";
 
 /**
  * A linked-list of plugin information that is used for
@@ -92,6 +97,7 @@ struct nsActivePlugin
   PRTime                 mllStopTime;
   PRBool                 mDefaultPlugin;
   PRBool                 mXPConnected;
+  nsVoidArray*           mStreams;
 
   nsActivePlugin(nsPluginTag* aPluginTag,
                  nsIPluginInstance* aInstance, 
