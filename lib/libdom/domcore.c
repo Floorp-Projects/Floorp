@@ -56,27 +56,29 @@ DOM_SignalException(JSContext *cx, DOM_ExceptionCode exception)
 }
 
 JSBool
-DOM_InsertBeforeStub(JSContext *cx, DOM_Node *node,
-                     DOM_Node *child, DOM_Node *ref)
+DOM_InsertBeforeStub(JSContext *cx, DOM_Node *node, DOM_Node *child,
+                     DOM_Node *ref, JSBool before)
 {
     return JS_TRUE;
 }
 
 JSBool
 DOM_ReplaceChildStub(JSContext *cx, DOM_Node *node, DOM_Node *child,
-                     DOM_Node *old)
+                     DOM_Node *old, JSBool before)
 {
     return JS_TRUE;
 }
 
 JSBool
-DOM_RemoveChildStub(JSContext *cx, DOM_Node *node, DOM_Node *old)
+DOM_RemoveChildStub(JSContext *cx, DOM_Node *node, DOM_Node *old,
+                    JSBool before)
 {
     return JS_TRUE;
 }
 
 JSBool
-DOM_AppendChildStub(JSContext *cx, DOM_Node *node, DOM_Node *child)
+DOM_AppendChildStub(JSContext *cx, DOM_Node *node, DOM_Node *child,
+                    JSBool before)
 {
     return JS_TRUE;
 }

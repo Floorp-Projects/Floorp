@@ -92,8 +92,11 @@ dom_node_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             *vp = JSVAL_NULL; /* XXX '#nameless' or some such? */
             return JS_TRUE;
         }
-        /* str = JS_InternString(cx, node->name);  XXX crashes? */
+#ifdef DEBUG_shaver_0
+        str = JS_InternString(cx, node->name);
+#else
         str = JS_NewStringCopyZ(cx, node->name);
+#endif
         if (!str)
             return JS_FALSE;
         *vp = STRING_TO_JSVAL(str);
@@ -243,7 +246,7 @@ PR_END_MACRO
 
 static JSBool
 node_insertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-		  jsval *vp)
+                  jsval *vp)
 {
     JSObject *newChild, *refChild;
     DOM_Node *newNode, *refNode, *node;
@@ -264,6 +267,8 @@ node_insertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     CHECK_LEGAL_CHILD(node, newNode);
     FAIL_UNLESS_CHILD(node, refNode);
+    if (!node->ops->insertBefore(cx, node, newNode, refNode, JS_TRUE))
+        return JS_FALSE;
     REMOVE_FROM_TREE(newNode);
 
     newNode->parent = node;
@@ -273,7 +278,7 @@ node_insertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     
     refNode->prev_sibling = newNode;
     
-    return node->ops->insertBefore(cx, node, newNode, refNode);
+    return node->ops->insertBefore(cx, node, newNode, refNode, JS_TRUE);
 }
 
 static JSBool
@@ -299,6 +304,8 @@ node_replaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     CHECK_LEGAL_CHILD(node, newNode);
     FAIL_UNLESS_CHILD(node, oldNode);
+    if (!node->ops->replaceChild(cx, node, newNode, oldNode, JS_TRUE))
+        return JS_FALSE;
     REMOVE_FROM_TREE(newNode);
     
     newNode->parent = node;
@@ -307,7 +314,7 @@ node_replaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     oldNode->parent = oldNode->sibling = oldNode->prev_sibling = NULL;
     
-    return node->ops->replaceChild(cx, node, newNode, oldNode);
+    return node->ops->replaceChild(cx, node, newNode, oldNode, JS_FALSE);
 }
 
 static JSBool
@@ -327,9 +334,12 @@ node_removeChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_TRUE;
 
     FAIL_UNLESS_CHILD(node, deadNode);
+    if (!node->ops->removeChild(cx, node, deadNode, JS_TRUE))
+        return JS_FALSE;
+
     REMOVE_FROM_TREE(deadNode);
 
-    return node->ops->removeChild(cx, node, deadNode);
+    return node->ops->removeChild(cx, node, deadNode, JS_FALSE);
 }
 
 static JSBool
@@ -349,6 +359,7 @@ node_appendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_TRUE;
 
     CHECK_LEGAL_CHILD(node, newNode);
+    if (node->ops->appendChild(cx, node, newNode, JS_TRUE))
     REMOVE_FROM_TREE(newNode);
 
     newNode->parent = node;
@@ -363,7 +374,7 @@ node_appendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         node->child = newNode;
     }
 
-    return node->ops->appendChild(cx, node, newNode);
+    return node->ops->appendChild(cx, node, newNode, JS_FALSE);
 }
 
 static JSBool

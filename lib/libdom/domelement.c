@@ -65,7 +65,14 @@ element_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     if (slot == DOM_ELEMENT_TAGNAME) {
         JSString *tagName =
+#ifdef DEBUG_shaver
+            fprintf(stderr, "getting tagName %s\n", 
+                    element->tagName ? element->tagName : "#tag");
             JS_InternString(cx, element->tagName ? element->tagName : "#tag");
+#else
+            JS_NewStringCopyZ(cx,
+                              element->tagName ? element->tagName : "#tag");
+#endif
         if (!tagName)
             return JS_FALSE;
         *vp = STRING_TO_JSVAL(tagName);

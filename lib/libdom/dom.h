@@ -67,16 +67,30 @@ typedef struct DOM_CharacterData 	DOM_CharacterData;
 typedef struct DOM_Text				DOM_Text;
 
 /*
- * All of these handlers are called _after_ the DOM tree is manipulated,
- * and will never be called in error conditions (DOM_NOT_CHILD, etc.).
+ * All of these handlers are called before the DOM tree is manipulated, with
+ * before == JS_TRUE, and then again afterwards, with before == JS_FALSE.
+ *
+ * Before:
+ * Handlers should do nothing but check for legality of the operation in
+ * question, and shouldn't make any changes to the underlying document
+ * structure.  They should signal an error with DOM_SignalException as
+ * appropriate and return false if the operation should not be permitted.
+ * This handler will never be called if the DOM code can detect that the
+ * operation in question is illegal (DOM_NOT_CHILD, for example).
+ *
+ * After:
+ * The handlers should perform whatever back-end manipulation is appropriate
+ * at this point, or signal an exception and return false.
  */
 struct DOM_NodeOps {
     JSBool	(*insertBefore)(JSContext *cx, DOM_Node *node, DOM_Node *child,
-                            DOM_Node *ref);
+                            DOM_Node *ref, JSBool before);
     JSBool	(*replaceChild)(JSContext *cx, DOM_Node *node, DOM_Node *child,
-                            DOM_Node *old);
-    JSBool	(*removeChild) (JSContext *cx, DOM_Node *node, DOM_Node *old);
-    JSBool	(*appendChild) (JSContext *cx, DOM_Node *node, DOM_Node *child);
+                            DOM_Node *old, JSBool before);
+    JSBool	(*removeChild) (JSContext *cx, DOM_Node *node, DOM_Node *old,
+                            JSBool before);
+    JSBool	(*appendChild) (JSContext *cx, DOM_Node *node, DOM_Node *child,
+                            JSBool before);
 
     /* free up Node-private data */
     void		(*destroyNode) (JSContext *cx, DOM_Node *node);
@@ -89,17 +103,19 @@ struct DOM_NodeOps {
 /* stubs */
 JSBool
 DOM_InsertBeforeStub(JSContext *cx, DOM_Node *node, DOM_Node *child,
-                     DOM_Node *ref);
+                     DOM_Node *ref, JSBool before);
 
 JSBool
 DOM_ReplaceChildStub(JSContext *cx, DOM_Node *node, DOM_Node *child,
-                     DOM_Node *old);
+                     DOM_Node *old, JSBool before);
 
 JSBool
-DOM_RemoveChildStub(JSContext *cx, DOM_Node *node, DOM_Node *old);
+DOM_RemoveChildStub(JSContext *cx, DOM_Node *node, DOM_Node *old,
+                    JSBool before);
 
 JSBool
-DOM_AppendChildStub(JSContext *cx, DOM_Node *node, DOM_Node *child);
+DOM_AppendChildStub(JSContext *cx, DOM_Node *node, DOM_Node *child,
+                    JSBool before);
 
 void
 DOM_DestroyNodeStub(JSContext *cx, DOM_Node *node);
