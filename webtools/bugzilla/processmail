@@ -327,7 +327,7 @@ sub ProcessOneBug {
     }
 
     print "<br><center>If you wish to tweak the kinds of mail Bugzilla sends you, you can";
-    print " <a href=\"userprefs.cgi?bank=diffs\">change your preferences</a></center>\n";
+    print " <a href=\"userprefs.cgi?tab=email\">change your preferences</a></center>\n";
 
 }
 
