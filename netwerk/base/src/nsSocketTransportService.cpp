@@ -953,4 +953,3 @@ nsSocketTransportService::SetAutodialEnabled(PRBool enabled)
     mAutodialEnabled = enabled;
     return NS_OK;
 }
-
