@@ -5928,7 +5928,15 @@ nsTextFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
       fprintf(out, " [state=%08x]", mState);
     }
   }
-  fprintf(out, " sc=%p<\n", NS_STATIC_CAST(void*, mStyleContext));
+  fprintf(out, " sc=%p", NS_STATIC_CAST(void*, mStyleContext));
+  nsIAtom* pseudoTag = mStyleContext->GetPseudoType();
+  if (pseudoTag) {
+    nsAutoString atomString;
+    pseudoTag->ToString(atomString);
+    fprintf(out, " pst=%s",
+            NS_LossyConvertUCS2toASCII(atomString).get());
+  }
+  fputs("<\n", out);
 
   // Output the text
   aIndent++;
