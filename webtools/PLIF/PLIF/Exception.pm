@@ -485,7 +485,7 @@ sub handle {
                     $reraise = wrap($@);
                     if (not defined($result) or # $result is not defined if $reraise is now defined
                         not ref($result) or
-                        not $result->isa('PLIF::Exception::Internal::Fallthrough')) {
+                        not UNIVERSAL::isa($result, 'PLIF::Exception::Internal::Fallthrough')) {
                         last handler;
                     }
                     # else, it's the result of an "fallthrough" function call
