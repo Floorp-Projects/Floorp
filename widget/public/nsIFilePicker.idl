@@ -55,7 +55,7 @@ interface nsIFilePicker : nsISupports
   * @param      numberOfFilters  number of filters.  
   *
   */
-  void setFilterList(in long numberOfFilters,
+  void setFilterList(in PRUint32 numberOfFilters,
                      [array, size_is(numberOfFilters)] in wstring titles,
                      [array, size_is(numberOfFilters)] in wstring filters);
 

@@ -157,7 +157,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 //
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsFilePicker::SetFilterList(PRInt32 aNumberOfFilters,
+NS_IMETHODIMP nsFilePicker::SetFilterList(PRUint32 aNumberOfFilters,
                                           const PRUnichar **aTitles,
                                           const PRUnichar **aFilters)
 {
