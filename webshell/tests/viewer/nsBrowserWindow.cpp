@@ -794,7 +794,9 @@ nsBrowserWindow::ForceRefresh()
       nsIView* root;
       vm->GetRootView(root);
       if (nsnull != root) {
-        vm->UpdateView(root, (nsIRegion*)nsnull, NS_VMREFRESH_IMMEDIATE);
+        vm->UpdateView(root, (nsIRegion*)nsnull, NS_VMREFRESH_IMMEDIATE |
+                                                 NS_VMREFRESH_SCREEN_RECT |
+                                                 NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
       }
       NS_RELEASE(vm);
     }
