@@ -29,6 +29,8 @@
 #define _xfe_rdfbase_h_
 
 #include "htrdf.h"
+#include "xp_core.h"
+#include "Command.h"
 
 class XFE_RDFBase
 {
@@ -39,12 +41,17 @@ public:
 
 	virtual ~XFE_RDFBase ();
 
+    // Is the URL a 'special' command url that
+    //    translates to an FE command?
+    static XP_Bool        ht_IsFECommand        (HT_Resource  item);
+    static CommandType    ht_GetFECommand       (HT_Resource  item);
+
     // Pane creation methods.
-    void newPane();
-    void newToolbarPane();
-    void newPaneFromURL(char * url);
-    void newPaneFromResource(HT_Resource node);
-    void newPaneFromResource(RDF_Resource node);
+    void                  newPane               ();
+    void                  newToolbarPane        ();
+    void                  newPaneFromURL        (char * url);
+    void                  newPaneFromResource   (HT_Resource node);
+    void                  newPaneFromResource   (RDF_Resource node);
 
     // Select a view of a pane.
     // Use this to set the view without creating a new pane.
@@ -52,35 +59,40 @@ public:
     // This does not set up the notify callback.  The original creator
     // of the pane is responsible for distributing notify events
     // to dependant views.
-    void setHTView(HT_View v);
+    void                  setHTView             (HT_View v);
+
+    // Return true when the pane was created here.
+    // Return false if the pane is only shared.
+    XP_Bool               isPaneCreator         ();
 
     // Get the root folder of the current view.
-    HT_Resource getRootFolder();
+    HT_Resource           getRootFolder         ();
 
     // Update the current view from the root.
-    virtual void updateRoot();
+    virtual void          updateRoot            ();
 
     // Handle HT events
-    virtual void notify(HT_Resource n, HT_Event whatHappened);
+    virtual void          notify      (HT_Resource n, HT_Event whatHappened);
 
 protected:
     // HT event callback.  Setup when a new pane is created.
-    static void notify_cb(HT_Notification ns, HT_Resource n, 
-                          HT_Event whatHappened,
-                          void *token, uint32 tokenType);
+    static void           notify_cb   (HT_Notification ns, HT_Resource n, 
+                                       HT_Event whatHappened,
+                                       void *token, uint32 tokenType);
 
-    // Called by the pane creation methods to setup a pane
-    void initPane();
+    // Called by the pane creation methods
+    void                  startPaneCreate       ();
+    void                  finishPaneCreate      ();
     
-    void deletePane();
+    void                  deletePane            ();
 
 #ifdef DEBUG
-    void debugEvent(HT_Resource n, HT_Event e);
+    void                  debugEvent            (HT_Resource n, HT_Event e);
 #endif
 
-    HT_Pane            _ht_pane;
-    HT_View            _ht_view;
-    HT_Notification    _ht_ns;
+    HT_Pane               _ht_pane;
+    HT_View               _ht_view;
+    HT_Notification       _ht_ns;
 };
 
 #endif /* _xfe_rdfbase_h_ */

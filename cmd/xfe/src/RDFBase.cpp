@@ -25,7 +25,7 @@
 #include "xp_str.h"
 #include "xpassert.h"
 
-#if DEBUG_slamm
+#if DEBUG_xxx
 #define D(x) x
 #else
 #define D(x)
@@ -48,13 +48,37 @@ XFE_RDFBase::~XFE_RDFBase()
 {
 }
 //////////////////////////////////////////////////////////////////////////
+/*static*/ XP_Bool
+XFE_RDFBase::ht_IsFECommand(HT_Resource item)
+{
+    const char* url = HT_GetNodeURL(item);
+
+    return (XP_STRNCMP(url, "command:", 8) == 0);
+}
+//////////////////////////////////////////////////////////////////////////
+/*static*/ CommandType
+XFE_RDFBase::ht_GetFECommand(HT_Resource item)
+{
+    const char* url = HT_GetNodeURL(item);
+
+    if (url && XP_STRNCMP(url, "command:", 8) == 0)
+    {
+        return Command::convertOldRemote(url + 8);
+    }
+    else 
+    {
+        return NULL;
+    }
+}
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_RDFBase::newPane()
 {
-    initPane();
+    startPaneCreate();
 
     _ht_pane = HT_NewPane(_ht_ns);
-    HT_SetPaneFEData(_ht_pane, this);
+
+    finishPaneCreate();
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -64,11 +88,12 @@ XFE_RDFBase::newPaneFromURL(char *url)
     char ** param_names = NULL;
     char ** param_values = NULL;
 
-    initPane();
+    startPaneCreate();
 
     _ht_pane = HT_PaneFromURL(NULL, url, _ht_ns, 0,
                               param_count, param_names, param_values);
-    HT_SetPaneFEData(_ht_pane, this);
+
+    finishPaneCreate();
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -80,21 +105,22 @@ XFE_RDFBase::newPaneFromResource(HT_Resource node)
 void
 XFE_RDFBase::newPaneFromResource(RDF_Resource node)
 {
-    initPane();
+    startPaneCreate();
 
     _ht_pane = HT_PaneFromResource(node, _ht_ns,
                                    PR_FALSE, PR_TRUE, PR_TRUE);
 
-    HT_SetPaneFEData(_ht_pane, this);
+    finishPaneCreate();
 }
 //////////////////////////////////////////////////////////////////////////
 void
 XFE_RDFBase::newToolbarPane()
 {
-    initPane();
+    startPaneCreate();
 
     _ht_pane = HT_NewToolbarPane(_ht_ns);
-    HT_SetPaneFEData(_ht_pane, this);
+
+    finishPaneCreate();
 }
 //////////////////////////////////////////////////////////////////////////
 HT_Resource
@@ -124,9 +150,25 @@ XFE_RDFBase::updateRoot()
 /*virtual*/ void
 XFE_RDFBase::notify(HT_Resource n, HT_Event whatHappened)
 {
-#ifdef DEBUG
-  debugEvent(n, whatHappened);
-#endif
+  D(debugEvent(n, whatHappened););
+
+  switch (whatHappened) {
+  case HT_EVENT_VIEW_ADDED:
+      ; // Do nothing
+    break;
+  default:
+      // Pass this event to the view
+      if (isPaneCreator()) 
+      {
+          HT_View        ht_view =   HT_GetView(n);
+          XFE_RDFBase *  xfe_view =  (XFE_RDFBase *)HT_GetViewFEData(ht_view);
+
+          if (xfe_view)
+              xfe_view->notify(n, whatHappened);
+      }
+    break;
+  }
+
 }
 //////////////////////////////////////////////////////////////////////////
 //
@@ -144,7 +186,7 @@ XFE_RDFBase::notify_cb(HT_Notification ns, HT_Resource n,
 }
 //////////////////////////////////////////////////////////////////////
 void
-XFE_RDFBase::initPane()
+XFE_RDFBase::startPaneCreate()
 {
     deletePane();
 
@@ -156,11 +198,17 @@ XFE_RDFBase::initPane()
 }
 //////////////////////////////////////////////////////////////////////
 void
+XFE_RDFBase::finishPaneCreate()
+{
+    HT_SetPaneFEData(_ht_pane, this);
+
+    //HT_SetNotificationMask(_ht_pane, NULL);
+}
+//////////////////////////////////////////////////////////////////////
+void
 XFE_RDFBase::deletePane()
 {
-    // Only delete the pane if we have a notification struct.
-    // No nofication struct means the pane was created by another object.
-    if (_ht_ns)
+    if (isPaneCreator())
     {
         delete _ht_ns;
 
@@ -184,7 +232,17 @@ XFE_RDFBase::setHTView(HT_View view)
     _ht_view = view;
     _ht_pane = HT_GetPane(_ht_view);
 
+    HT_SetViewFEData(view, this);
+
     updateRoot();
+}
+//////////////////////////////////////////////////////////////////////////
+XP_Bool
+XFE_RDFBase::isPaneCreator()
+{
+    // Pane was created by this object if the notification struct is set.
+    // No nofication struct means the pane was created by another object.
+    return _ht_ns != NULL;
 }
 //////////////////////////////////////////////////////////////////////////
 #ifdef DEBUG
