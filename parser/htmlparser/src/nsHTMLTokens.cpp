@@ -879,7 +879,12 @@ nsresult CTextToken::ConsumeParsedCharacterData(PRUnichar aChar,
                               *end == '\r' || *end == '\b')) {
           aFound = PR_TRUE;
           mTextValue.Rebind(theContent.str());
-          aScanner.SetPosition(currPos);
+
+          // Note: This SetPosition() is actually going backwards from the
+          // scanner's mCurrentPosition (so we pass aReverse == PR_TRUE). This
+          // is because we call GetChar() above after we get the current
+          // position.
+          aScanner.SetPosition(currPos, PR_FALSE, PR_TRUE);
           break;
         }
       }
