@@ -1174,8 +1174,14 @@ nsXBLPrototypeBinding::ShouldBuildChildFrames(PRBool* aResult)
 void
 nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
 {
+  nsresult rv;
   nsAutoString inherits;
-  aElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::inherits, inherits);
+  rv = aElement->GetAttr(kNameSpaceID_XBL, nsXBLAtoms::inherits, inherits);
+  // XXX fallback to using "inherits" in the null namespace
+  // We shouldn't do this once bug 119317 is fully fixed
+  if (rv == NS_CONTENT_ATTR_NOT_THERE)
+    aElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::inherits, inherits);
+
   if (!inherits.IsEmpty()) {
     if (!mAttributeTable) {
       mAttributeTable = new nsSupportsHashtable(4);
@@ -1239,7 +1245,7 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
       // by the template only, and we don't need it anymore.
       // XXXdwh Don't do this for XUL elements, since it faults them into heavyweight
       // elements. Should nuke from the prototype instead.
-      // aElement->UnsetAttr(kNameSpaceID_None, nsXBLAtoms::inherits, PR_FALSE);
+      // aElement->UnsetAttr(kNameSpaceID_XBL, nsXBLAtoms::inherits, PR_FALSE);
 
       token = nsCRT::strtok( newStr, ", ", &newStr );
     }
