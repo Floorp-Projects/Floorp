@@ -1125,6 +1125,7 @@ SetDocumentInChildrenOf(nsIContent* aContent, nsIDocument* aDocument)
     aContent->ChildAt(i, child);
     if (nsnull != child) {
       child->SetDocument(aDocument, PR_TRUE);
+      NS_RELEASE(child);
     }
   }
 }
