@@ -313,7 +313,7 @@ PRInt32 nsInstallPatch::Complete()
       if (flagEquals) 
       {
         // the patch has not been superceded--do final replacement
-        err = ReplaceFileNowOrSchedule( mPatchedFile, mTargetFile);
+        err = ReplaceFileNowOrSchedule( mPatchedFile, mTargetFile, 0);
         if ( 0 == err || nsInstall::REBOOT_NEEDED == err ) 
         {
             nsString tempVersionString;
