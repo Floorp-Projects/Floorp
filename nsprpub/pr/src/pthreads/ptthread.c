@@ -1030,7 +1030,7 @@ static void init_pthread_gc_support()
     PR_ASSERT(0 == rv);
 #else  /* defined(_PR_DCETHREADS) */
 	{
-	    struct sigaction sigact_usr2 = {0};
+	    struct sigaction sigact_usr2;
 
 	    sigact_usr2.sa_handler = suspend_signal_handler;
 	    sigact_usr2.sa_flags = SA_RESTART;
@@ -1048,7 +1048,7 @@ static void init_pthread_gc_support()
 	}
 #if defined(PT_NO_SIGTIMEDWAIT)
 	{
-	    struct sigaction sigact_null = {0};
+	    struct sigaction sigact_null;
 	    sigact_null.sa_handler = null_signal_handler;
 	    sigact_null.sa_flags = SA_RESTART;
 	    sigemptyset (&sigact_null.sa_mask);
