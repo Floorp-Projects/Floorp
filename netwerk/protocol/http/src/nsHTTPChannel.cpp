@@ -25,6 +25,16 @@
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 
+// jud
+#if 0
+#include "nsINetModRegEntry.h"
+#include "nsProxyObjectManager.h"
+#include "nsIServiceManager.h"
+#include "nsINetModuleMgr.h"
+#include "nsCookieModTest.h"
+#include "nsIEventQueueService.h"
+#endif // 0
+
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, 
                              nsIEventQueue* i_EQ, 
                              nsIHTTPEventSink* i_HTTPEventSink,
@@ -267,6 +277,15 @@ nsHTTPChannel::GetResponseDataListener(nsIStreamListener* *aListener)
   return rv;
 }
 
+// XXX jud
+#if 0
+static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
+static NS_DEFINE_IID(kINetModuleMgrIID, NS_INETMODULEMGR_IID);
+static NS_DEFINE_CID(kCookieModuleCID, NS_COOKIEMODTEST_CID);
+#endif // jud
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPChannel methods:
 
@@ -304,48 +323,69 @@ nsHTTPChannel::Open(void)
     nsINetModuleMgr* pNetModuleMgr = nsnull;
     nsresult ret = nsServiceManager::GetService(kNetModuleMgrCID, kINetModuleMgrIID,
         (nsISupports**) &pNetModuleMgr);
+    if (NS_FAILED(ret)) return ret;
+
+    nsIEventQueue* eventQ;
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+    }
+    if (NS_FAILED(rv)) return rv;
+
+    nsCookieModTest* cookieMod = new nsCookieModTest();
+    nsIHTTPNotify* httpNotify = nsnull;
+    rv = cookieMod->QueryInterface(nsIHTTPNotify::GetIID(), (void**)&httpNotify);
+
+
+    // register the cookie mod for http-requests
+    pNetModuleMgr->RegisterModule("http-request", eventQ, httpNotify, &kCookieModuleCID);
+
 
     if (NS_SUCCEEDED(ret)) {
-        nsIEnumerator* pModules = nsnull;
+        nsISimpleEnumerator* pModules = nsnull;
         ret = pNetModuleMgr->EnumerateModules("http-request", &pModules);
-        if (NS_SUCCEEDED(ret)) ) {
+        if (NS_SUCCEEDED(ret)) {
             nsIProxyObjectManager*  proxyObjectManager = nsnull; 
-            ret = nsComponentManager::CreateInstance(kProxyObjectManagerCID, 
-                                               nsnull, 
-                                               nsIProxyObjectManager::GetIID(), 
-                                               (void**)&proxyObjectManager);
-            nsINetModuleRegEntry *entry = nsnull;
-            pModules->First(&entry);
+            ret = nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+                                                kProxyObjectManagerIID,
+                                                (nsISupports **)&proxyObjectManager);
+            nsISupports *supEntry = nsnull;
+            nsINetModRegEntry *entry = nsnull;
+
+            pModules->GetNext(&supEntry);
             while (NS_SUCCEEDED(ret)) {
+                ret = supEntry->QueryInterface(nsINetModRegEntry::GetIID(), (void**)&entry);
                 // send the SetHeaders event to each registered module,
                 // using the nsISupports Proxy service
-                nsIHttpNotify *pNotify = nsnull;
-                nsCID lCID;
+                nsIHTTPNotify *pNotify = nsnull;
+                nsCID *lCID;
                 nsIEventQueue* lEventQ = nsnull;
 
-                ret = entry->GetmCID(&lCID);
+                ret = entry->GetMCID(&lCID);
                 if (NS_FAILED(ret))
                     return ret;
 
-                ret = entry->GetmEventQ(&lEventQ);
+                ret = entry->GetMEventQ(&lEventQ);
                 if (NS_FAILED(ret))
                     return ret;
                 
                 ret = proxyObjectManager->GetProxyObject(lEventQ, 
-                                                   lCID,
+                                                   *lCID,
                                                    nsnull,
-                                                   nsIHttpNotify::GetIID(),
-                                                   (void**)&nsIHttpNotify);
+                                                   nsIHTTPNotify::GetIID(),
+                                                   PROXY_SYNC,
+                                                   (void**)&pNotify);
 
                 if (NS_SUCCEEDED(ret)) {
                     // send off the notification, and block.
-                    ret = nsIHttpNotify->SetHeaders();
+                    ret = pNotify->ModifyRequest(this);
                     if (NS_SUCCEEDED(ret)) {
                         ;
                     }
                 }
 
-                pModules->Next(&entry);
+                NS_RELEASE(entry);
+                pModules->GetNext(&supEntry);
   
             }
         }
