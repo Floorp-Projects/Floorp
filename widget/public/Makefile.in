@@ -67,7 +67,6 @@ EXPORTS = \
 	nsIMenuButton.h \
 	nsIImageButtonListener.h \
 	nsIContentConnector.h \
-	nsISelectionMgr.h \
 	nsIClipboard.h \
 	nsIDataFlavor.h \
 	nsITransferable.h \

@@ -21,7 +21,6 @@
 #include "plevent.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsSelectionMgr.h"
 #include "nsXPComCIID.h"
 #include <stdlib.h>
 
@@ -58,7 +57,7 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
-  NS_IF_RELEASE(mSelectionMgr);
+
 }
 
 //-------------------------------------------------------------------------
@@ -262,10 +261,6 @@ NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
 NS_METHOD
 nsAppShell::GetSelectionMgr(nsISelectionMgr** aSelectionMgr)
 {
-  *aSelectionMgr = mSelectionMgr;
-  NS_IF_ADDREF(mSelectionMgr);
-  if (!mSelectionMgr)
-    return NS_ERROR_NOT_INITIALIZED;
   return NS_OK;
 }
 
