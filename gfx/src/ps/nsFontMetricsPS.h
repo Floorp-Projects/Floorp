@@ -55,6 +55,10 @@ public:
 
   NS_IMETHOD  GetHeight(nscoord &aHeight);
   NS_IMETHOD  GetLeading(nscoord &aLeading);
+  NS_IMETHOD  GetEmHeight(nscoord &aHeight);
+  NS_IMETHOD  GetEmAscent(nscoord &aAscent);
+  NS_IMETHOD  GetEmDescent(nscoord &aDescent);
+  NS_IMETHOD  GetMaxHeight(nscoord &aHeight);
   NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
@@ -75,6 +79,10 @@ protected:
   nscoord             mAscent;
   nscoord             mDescent;
   nscoord             mLeading;
+  nscoord             mEmHeight;
+  nscoord             mEmAscent;
+  nscoord             mEmDescent;
+  nscoord             mMaxHeight;
   nscoord             mMaxAscent;
   nscoord             mMaxDescent;
   nscoord             mMaxAdvance;
