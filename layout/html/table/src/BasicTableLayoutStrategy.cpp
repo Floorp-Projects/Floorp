@@ -191,7 +191,7 @@ ResetPctValues(nsTableFrame* aTableFrame,
   // initialize the col percent and cell percent values to 0.
   PRInt32 colX;
   for (colX = 0; colX < aNumCols; colX++) { 
-    nsTableColFrame* colFrame = aTableFrame->GetColFrame(colX); if (!colFrame) ABORT0();
+    nsTableColFrame* colFrame = aTableFrame->GetColFrame(colX); 
     if (colFrame) {
       colFrame->SetWidth(PCT, WIDTH_NOT_SET);
       colFrame->SetWidth(PCT_ADJ, WIDTH_NOT_SET);
@@ -263,7 +263,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
   nscoord minTableWidth = 0;
   PRInt32 colX;
   for (colX = 0; colX < numCols; colX++) { 
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT1(PR_FALSE);
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
     if (!colFrame) continue;
     nscoord colMinWidth = colFrame->GetMinWidth();
     mTableFrame->SetColumnWidth(colX, colMinWidth);
@@ -405,7 +405,7 @@ void BasicTableLayoutStrategy::AllocateFully(nscoord&        aTotalAllocated,
 {
   PRInt32 numCols = mTableFrame->GetColCount(); 
   for (PRInt32 colX = 0; colX < numCols; colX++) { 
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT0();
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
     if (!colFrame) continue;
     if (!CanAllocate(aWidthType, aAllocTypes[colX], colFrame)) {
       continue;
@@ -459,7 +459,8 @@ void BasicTableLayoutStrategy::AllocateUnconstrained(PRInt32  aAllocAmount,
       }
       else {
         if (aExclude0Pro) {
-          nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT0();
+          nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
+          if (!colFrame) continue;
           if (colFrame->GetConstraint() == e0ProportionConstraint) {
             aAllocTypes[colX] = FINISHED;
           }
@@ -472,7 +473,8 @@ void BasicTableLayoutStrategy::AllocateUnconstrained(PRInt32  aAllocAmount,
   PRInt32 numColsAllocated = 0; 
   PRInt32 totalAllocated   = 0;
   for (colX = 0; colX < numCols; colX++) { 
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT0(); 
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
+    if (!colFrame) continue; 
     PRBool skipColumn = aExclude0Pro && (e0ProportionConstraint == colFrame->GetConstraint());
     if (FINISHED != aAllocTypes[colX] && !skipColumn ) {
       divisor += mTableFrame->GetColumnWidth(colX);
@@ -482,8 +484,9 @@ void BasicTableLayoutStrategy::AllocateUnconstrained(PRInt32  aAllocAmount,
   for (colX = 0; colX < numCols; colX++) { 
     if (FINISHED != aAllocTypes[colX]) {
       if (aExclude0Pro) {
-        nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT0();
-        if (colFrame && (e0ProportionConstraint == colFrame->GetConstraint())) {
+        nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
+        if (!colFrame) continue;
+        if (e0ProportionConstraint == colFrame->GetConstraint()) {
           continue;
         }
       }
@@ -538,7 +541,7 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(const nsHTMLReflowState& aR
 
   PRInt32 colX;
   for (colX = numCols - 1; colX >= 0; colX--) { 
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT0();
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
     if (!colFrame) continue;
     colFrame->SetWidth(MIN_ADJ, WIDTH_NOT_SET);
     colFrame->SetWidth(FIX_ADJ, WIDTH_NOT_SET);
@@ -703,7 +706,7 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
   PRInt32 spanX;
   // accumulate the various divisors to be used later
   for (spanX = 0; spanX < aColSpan; spanX++) {
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(aColIndex + spanX); if (!colFrame) ABORT1(PR_FALSE);
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(aColIndex + spanX); 
     if (!colFrame) continue;
     nscoord minWidth = PR_MAX(colFrame->GetMinWidth(), 0);
     nscoord pctWidth = PR_MAX(colFrame->GetPctWidth(), 0);
@@ -807,7 +810,7 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
     // get the correct numerator in a similar fashion to getting the divisor
     for (spanX = 0; spanX < aColSpan; spanX++) {
       if (usedWidth >= availWidth) break;
-      nsTableColFrame* colFrame = mTableFrame->GetColFrame(aColIndex + spanX); if (!colFrame) ABORT1(PR_FALSE);
+      nsTableColFrame* colFrame = mTableFrame->GetColFrame(aColIndex + spanX); 
       if (!colFrame) continue;
       nscoord minWidth = colFrame->GetMinWidth();
       nscoord pctWidth = PR_MAX(colFrame->GetPctWidth(), 0);
@@ -979,7 +982,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     nscoord fixWidth = WIDTH_NOT_SET;
     
     // Get column frame and reset it
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT1(PR_FALSE);
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
     if (!colFrame) continue;
     NS_ASSERTION(nsnull != colFrame, "bad col frame");
     colFrame->ResetSizingInfo();
@@ -1084,7 +1087,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
   }
 //set the table col fixed width if present
   for (colX = 0; colX < numCols; colX++) { 
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT1(PR_FALSE);
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
     if (!colFrame) continue;
     nscoord fixColWidth = colFrame->GetWidth(FIX);
     // use the style width of a col only if the col hasn't gotten a fixed width from any cell
@@ -1145,7 +1148,8 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
 
   // Set the table col width for each col to the content min. 
   for (colX = 0; colX < numCols; colX++) { 
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT1(PR_FALSE);
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
+    if (!colFrame) continue;
     nscoord minWidth = colFrame->GetMinWidth();
     mTableFrame->SetColumnWidth(colX, minWidth);
   }
@@ -1164,7 +1168,7 @@ BasicTableLayoutStrategy::ReduceOverSpecifiedPctCols(nscoord aExcess)
 {
   nscoord numCols = mTableFrame->GetColCount();
   for (PRInt32 colX = numCols - 1; (colX >= 0) && (aExcess > 0); colX--) {
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT0();
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
     if (!colFrame) continue;
     nscoord pctWidth = colFrame->GetWidth(PCT);
     nscoord reduction = 0;
@@ -1233,7 +1237,7 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(nsIPresContext&          aPresCon
   }
 
   for (colX = 0; colX < numCols; colX++) { 
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT1(0);
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
     if (!colFrame) continue;
     nscoord maxColBasis = -1;
     // Scan the cells in the col 
@@ -1288,7 +1292,8 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(nsIPresContext&          aPresCon
   nscoord fixDesTotalNoPct = 0;    // total of fix or des widths of cols without pct
 
   for (colX = 0; colX < numCols; colX++) {
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT1(0);
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
+    if (!colFrame) continue;
     nscoord fixWidth = colFrame->GetFixWidth();
     nscoord fixDesWidth = (fixWidth > 0) ? fixWidth : colFrame->GetDesWidth();
     fixDesTotal += fixDesWidth;
@@ -1368,7 +1373,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(nsIPresContext&          aPresCo
   // Determine the percentage contribution for cols and for cells with colspan = 1
   // Iterate backwards, similarly to the reasoning in AssignNonPctColumnWidths
   for (colX = numCols - 1; colX >= 0; colX--) { 
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT1(0);
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
     if (!colFrame) continue;
     nscoord maxColPctWidth = WIDTH_NOT_SET;
     float maxColPct = 0.0f;
@@ -1438,7 +1443,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(nsIPresContext&          aPresCo
       }
       // determine if the cell spans cols which have a pct value
       for (PRInt32 spanX = 0; (spanX < colSpan) && !done; spanX++) {
-        nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX); if (!colFrame) ABORT1(0);
+        nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX); 
         if (!colFrame) continue;
         if (colFrame->GetWidth(PCT) > 0) {
           mTableFrame->SetHasCellSpanningPctCol(PR_TRUE);
@@ -1518,7 +1523,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(nsIPresContext&          aPresCo
         // accumulate the spanTotal as the max of MIN, DES, FIX, PCT
         PRInt32 spanX;
         for (spanX = 0; spanX < colSpan; spanX++) {
-          nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX); if (!colFrame) ABORT1(0);
+          nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX); 
           if (!colFrame) continue;
           nscoord colPctWidth = colFrame->GetWidth(PCT);
           if (colPctWidth > 0) { // skip pct cols
@@ -1553,7 +1558,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(nsIPresContext&          aPresCo
           // record the percent contributions for the spanned cols
           PRInt32 usedColumns = colSpan;
           for (spanX = colSpan-1; spanX >= 0; spanX--) {
-            nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX); if (!colFrame) ABORT1(0);
+            nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX); 
             if (!colFrame) continue;
             if ((colFrame->GetWidth(PCT) > 0) || (canSkipPctAdj && (colFrame->GetWidth(PCT_ADJ) > 0))) {
               // dont use pct cols or if we can skip the pct adj event do not take the PCT_ADJ cols
@@ -1628,7 +1633,7 @@ void BasicTableLayoutStrategy::CalculateTotals(PRInt32* aTotalCounts,
   PRInt32 colX;
 
   for (colX = 0; colX < numEffCols; colX++) { 
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT0();
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
     if (!colFrame) continue;
     nscoord minCol = colFrame->GetMinWidth();
     aTotalCounts[MIN_CON]++;
@@ -1827,7 +1832,7 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
   PRInt32 colX;
   // find out how many constrained cols there are
   for (colX = 0; colX < numCols; colX++) {
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT0();
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
     if (!colFrame) continue;
     if (!CanAllocate(aWidthType, aAllocTypes[colX], colFrame)) {
       continue;
@@ -1844,7 +1849,7 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
   PRInt32 constrColX = 0;
   // set the col info entries for each constrained col
   for (colX = 0; colX < numCols; colX++) {
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); if (!colFrame) ABORT0();
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX); 
     if (!colFrame) continue;
     if (!CanAllocate(aWidthType, aAllocTypes[colX], colFrame)) {
       continue;
