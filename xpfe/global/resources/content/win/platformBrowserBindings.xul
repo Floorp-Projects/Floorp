@@ -8,7 +8,19 @@
 <!-- xul key for Windows -->
 <keyset id="globalKeySet" xulkey="ctrl">
 
-<!-- No windows-specific browser bindings known at this time -->
+<!-- other keybindings for cut/copy/paste -->
+<key id="winAlternativeCutKey" keycode="VK_DELETE" shift="true"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
+    controller.doCommand('cmd_cut');"/>
+<key id="winAlternativeCopyKey" keycode="VK_INSERT" control="true"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
+    controller.doCommand('cmd_copy');"/>
+<key id="winAlternativePasteKey" keycode="VK_INSERT" shift="true"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
+    controller.doCommand('cmd_paste');"/>
 
 </keyset>
 
