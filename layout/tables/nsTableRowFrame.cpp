@@ -537,7 +537,9 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
     if (nsLayoutAtoms::tableCellFrame == frameType.get()) {
       nscoord availWidth = ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth();
       nsSize desSize = ((nsTableCellFrame *)kidFrame)->GetDesiredSize();
-      CalculateCellActualSize(kidFrame, desSize.width, desSize.height, availWidth);
+      if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) && !mPrevInFlow) {
+        CalculateCellActualSize(kidFrame, desSize.width, desSize.height, availWidth);
+      }
       // height may have changed, adjust descent to absorb any excess difference
       nscoord ascent = ((nsTableCellFrame *)kidFrame)->GetDesiredAscent();
       nscoord descent = desSize.height - ascent;
@@ -1059,7 +1061,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
           nsTableFrame::RePositionViews(aPresContext, kidFrame);
         }
         
-        if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
+        if ((NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) && !mPrevInFlow) {
           // Calculate the cell's actual size given its pass2 size. This function
           // takes into account the specified height (in the style), and any special
           // logic needed for backwards compatibility
@@ -1564,6 +1566,28 @@ nsTableRowFrame::GetNextRow() const
     childFrame->GetNextSibling(&childFrame);
   }
   return nsnull;
+}
+
+void 
+nsTableRowFrame::SetUnpaginatedHeight(nsIPresContext* aPresContext,
+                                      nscoord         aValue)
+{
+  // Get the property 
+  nscoord* value = (nscoord*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::rowUnpaginatedHeightProperty, PR_TRUE);
+  if (value) {
+    *value = aValue;
+  }
+}
+
+nscoord
+nsTableRowFrame::GetUnpaginatedHeight(nsIPresContext* aPresContext)
+{
+  // See if the property is set
+  nscoord* value = (nscoord*)nsTableFrame::GetProperty(aPresContext, this, nsLayoutAtoms::rowUnpaginatedHeightProperty);
+  if (value) 
+    return *value;
+  else 
+    return 0;
 }
 
 /* ----- global methods ----- */

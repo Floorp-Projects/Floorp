@@ -1089,6 +1089,18 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
   return NS_OK;
 }
 
+static void
+CacheRowHeightsForPrinting(nsIPresContext*  aPresContext,
+                           nsTableRowFrame* aFirstRow)
+{
+  for (nsTableRowFrame* row = aFirstRow; row; row = row->GetNextRow()) {
+    nsRect rect;
+    row->GetRect(rect);
+    row->SetHasUnpaginatedHeight(PR_TRUE);
+    row->SetUnpaginatedHeight(aPresContext, rect.height);
+  }
+}
+
 /** Layout the entire row group.
   * This method stacks rows vertically according to HTML 4.0 rules.
   * Rows are responsible for layout of their children.
@@ -1115,6 +1127,9 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
   nsRowGroupReflowState state(aReflowState, tableFrame);
   PRBool haveDesiredHeight = PR_FALSE;
 
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
+
   if (eReflowReason_Incremental == aReflowState.reason) {
     rv = IncrementalReflow(aPresContext, aDesiredSize, state, aStatus);
   } 
@@ -1122,6 +1137,10 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     // Check for an overflow list
     MoveOverflowToChildList(aPresContext);
   
+    if (isPaginated && aReflowState.mFlags.mSpecialTableReflow) {
+      // cache row height info for printing, now that row heights are known. 
+      CacheRowHeightsForPrinting(aPresContext, GetFirstRow());
+    }
     // Reflow the existing frames. 
     rv = ReflowChildren(aPresContext, aDesiredSize, state, aStatus,
                         nsnull, PR_FALSE);
@@ -1134,8 +1153,6 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     PRBool isTableUnconstrainedReflow = 
       (NS_UNCONSTRAINEDSIZE == aReflowState.parentReflowState->availableWidth);
 
-    PRBool isPaginated;
-    aPresContext->IsPaginated(&isPaginated);
     // Avoid calling CalculateRowHeights. We can avoid it if the table is going to be
     // doing a pass 2 reflow. In the case where the table is getting an unconstrained
     // reflow, then we need to do this because the table will skip the pass 2 reflow,
@@ -1153,9 +1170,14 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
 
     // See if all the frames fit
     if (aDesiredSize.height > aReflowState.availableHeight) {
-      // Nope, find a place to split the row group
+      // Nope, find a place to split the row group 
+      PRBool specialReflow = (PRBool)aReflowState.mFlags.mSpecialTableReflow;
+      ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialTableReflow = PR_FALSE;
+
       SplitRowGroup(aPresContext, aDesiredSize, aReflowState, tableFrame, aStatus);
-    }
+
+      ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialTableReflow = specialReflow;
+   }
   }
   SetHasStyleHeight((NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) &&
                     (aReflowState.mComputedHeight > 0)); 
