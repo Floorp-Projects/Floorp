@@ -24,7 +24,6 @@
 #include "nsHTTPResponse.h"
 #include "nsIHttpEventSink.h"
 #include "nsCRT.h"
-#include "stdio.h" //sscanf
 
 #include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
@@ -34,18 +33,12 @@
 #include "nsIEventQueueService.h"
 #include "nsIBuffer.h"
 
-static const int kMAX_FIRST_LINE_SIZE= 256;
-static const int kMAX_BUFFER_SIZE = 1024;
+//
+// This specifies the maximum allowable size for a server Status-Line
+// or Response-Header.
+//
+static const int kMAX_HEADER_SIZE = 60000;
 
-static const char* kCRLF = "\r\n";
-static const char kSP = ' ';
-static const char kHT = '\t';
-
-#define Skipln(p,max)   \
-    PR_BEGIN_MACRO      \
-    while ((*p != LF) && (max > p)) \
-        ++p;    \
-    PR_END_MACRO
 
 nsHTTPResponseListener::nsHTTPResponseListener(): 
     m_pConnection(nsnull),
@@ -55,7 +48,8 @@ nsHTTPResponseListener::nsHTTPResponseListener():
     m_ReadLength(0),
     m_PartHeader(nsnull),
     m_PartHeaderLen(0),
-    m_bHeadersDone(PR_FALSE)
+    m_bHeadersDone(PR_FALSE),
+    m_HeaderBuffer(eOneByte)
 {
     NS_INIT_REFCNT();
 }
@@ -85,6 +79,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
                                         PRUint32 i_Length)
 {
     nsresult rv = NS_OK;
+    PRUint32 actualBytesRead;
     NS_ASSERTION(i_pStream, "No stream supplied by the transport!");
 
     if (!m_pResponse)
@@ -100,132 +95,34 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
         nsHTTPChannel* pTestCon = NS_STATIC_CAST(nsHTTPChannel*, m_pConnection);
         pTestCon->SetResponse(m_pResponse);
     }
-    
-    //Rick- can the i_Length ever be zero? 
-    if (0==i_Length)
-        return NS_OK; // Wait for next cycle. 
 
-    if (m_bHeadersDone)
-    {
-        // Pass the notification out to the consumer...
-        NS_ASSERTION(m_pConsumer, "No Stream Listener!");
-        if (m_pConsumer) {
-            rv = m_pConsumer->OnDataAvailable(m_pConnection, i_pStream, 0, i_Length);
-        }
-        return rv;
-    } 
+    if (!m_bHeadersDone) {
+      nsCOMPtr<nsIBuffer> pBuffer;
 
-    else if (!m_bFirstLineParsed) {
-      rv = ParseStatusLine(i_pStream);
+      rv = i_pStream->GetBuffer(getter_AddRefs(pBuffer));
+      if (NS_FAILED(rv)) return rv;
+
+      if (!m_bFirstLineParsed) {
+        rv = ParseStatusLine(pBuffer, i_Length, &actualBytesRead);
+        i_Length -= actualBytesRead;
+      }
+
+      while (NS_SUCCEEDED(rv) && i_Length && !m_bHeadersDone) {
+        rv = ParseHTTPHeader(pBuffer, i_Length, &actualBytesRead);
+        i_Length -= actualBytesRead;
+      }
+
+      if (NS_FAILED(rv)) return rv;
     }
 
-    //Search for the end of the headers mark
-    //Rick- Is this max correct? or should it be the same as transport's max? 
-    char buffer[kMAX_BUFFER_SIZE];
-
-    nsCOMPtr<nsIBuffer> pBuffer;
-    rv = i_pStream->GetBuffer(getter_AddRefs(pBuffer));
-    if (NS_FAILED(rv)) return rv;
-
-    const char* headerTerminationStr = "\r\n\r\n";
-    PRBool bFoundEnd = PR_FALSE;
-    PRUint32 offsetSearchedTo = i_Length;
-
-    rv = pBuffer->Search(headerTerminationStr, PR_FALSE, &bFoundEnd, &offsetSearchedTo);
-    if (NS_FAILED(rv)) return rv;
-
-    if (!bFoundEnd)
-    {
-        headerTerminationStr = "\n\n";
-        rv = pBuffer->Search(headerTerminationStr, PR_FALSE, &bFoundEnd, &offsetSearchedTo);
-        if (NS_FAILED(rv)) return rv;
+    NS_ASSERTION(m_pConsumer, "No Stream Listener!");
+    if (i_Length && m_pConsumer) {
+      rv = m_pConsumer->OnDataAvailable(m_pConnection, i_pStream, 0, i_Length);
     }
 
-    // If the end of the headers was found then adjust the offset to include
-    // the termination characters...
-    if (bFoundEnd)
-    {
-        offsetSearchedTo += PL_strlen(headerTerminationStr);
-    }
-
-    // Now read the buffer upto the offsetSearchedTo
-    PRUint32 lengthRead = 0;
-    rv = pBuffer->Read(buffer, offsetSearchedTo, &lengthRead);
-    if (NS_FAILED(rv)) return rv;
-    buffer[lengthRead] = '\0';
-    char* p = buffer;
-    //parse this buffer-
-    while (buffer+lengthRead > p)
-    {
-        char* lineStart = p;
-        if (*lineStart == '\0' || *lineStart == CR || *lineStart == LF)
-        {
-            m_bHeadersDone = PR_TRUE;
-            // TODO process headers here. 
-            // Based on the process headers we may or may not want to 
-            // fire the headers available
-            FireOnHeadersAvailable();
-            // Fire the partial length onDataAvailable
-            if (i_Length > lengthRead)
-            {
-                NS_ASSERTION(m_pConsumer, "No Stream Listner!");
-                if (m_pConsumer)
-                    rv = m_pConsumer->OnDataAvailable(m_pConnection, i_pStream, 0, i_Length-lengthRead);
-            }
-            break; // break off this buffer while
-        }
-        // Skip to end of line;
-        Skipln(p, buffer+lengthRead);
-/*
-        if (!m_bFirstLineParsed)
-        {
-            char server_version[9]; // HTTP/1.1 
-            PRUint32 stat = 0;
-            char stat_str[kMAX_FIRST_LINE_SIZE];
-            sscanf(lineStart, "%8s %d %s", server_version, &stat, stat_str);
-            m_pResponse->SetServerVersion(server_version);
-            m_pResponse->SetStatus(stat);
-            m_pResponse->SetStatusString(stat_str);
-            m_bFirstLineParsed = PR_TRUE;
-        }
-        else 
-*/
-        {
-            char* header = lineStart;
-            char* value = PL_strchr(lineStart, ':');
-            if(value)
-            {
-                //mark the end of header
-                *value = '\0';
-                value++;
-                //mark the end of value
-                *p = '\0';
-                if (m_PartHeaderLen == 0)
-                    m_pResponse->SetHeaderInternal(header, value);
-                else
-                {
-                    //append the header to the partheader
-                    header = PL_strcat(m_PartHeader, header);
-                    m_pResponse->SetHeaderInternal(header, value);
-                    //Reset partHeader now
-                    delete m_PartHeader;
-                    m_PartHeader = 0;
-                    m_PartHeaderLen = 0;
-                }
-            }
-            else // this is just a part of the header so save it for later use...
-            {
-                NS_ASSERTION(m_PartHeaderLen == 0, "Overwriting partial header!");
-                m_PartHeaderLen = p-header;
-                m_PartHeader = new char(m_PartHeaderLen+1);
-                PL_strncpy(m_PartHeader, lineStart, m_PartHeaderLen);
-                m_PartHeader[m_PartHeaderLen] = '\0';
-            }
-        }
-        p++;
-    }
     return rv;
 }
+
 
 NS_IMETHODIMP
 nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
@@ -408,105 +305,230 @@ nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
     return rv;
 }
 
-char *nsHTTPResponseListener::EatWhiteSpace(char *aBuffer)
+NS_METHOD
+nsWriteToString(void* closure,
+                const char* fromRawSegment,
+                PRUint32 offset,
+                PRUint32 count,
+                PRUint32 *writeCount)
 {
-  while ((*aBuffer == ' ') || (*aBuffer == '\t')) aBuffer++;
-  return aBuffer;
+  nsString *str = (nsString*)closure;
+
+  str->Append(fromRawSegment, count);
+  *writeCount = count;
+  
+  return NS_OK;
 }
 
-nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* aStream)
+
+nsresult nsHTTPResponseListener::ParseStatusLine(nsIBuffer* aBuffer, 
+                                                 PRUint32 aLength,
+                                                 PRUint32 *aBytesRead)
 {
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIBuffer> pBuffer;
-  char statusLineBuffer[255];
-  char *start, *end;
-
   PRBool bFoundString = PR_FALSE;
-  PRUint32 offset, length, bytesRead;
-  PRInt32 CRLFlength, statusCode;
+  PRUint32 offsetOfEnd, totalBytesToRead, actualBytesRead;
 
-  rv = aStream->GetBuffer(getter_AddRefs(pBuffer));
+  *aBytesRead = 0;
+
+  if (kMAX_HEADER_SIZE < m_HeaderBuffer.Length()) {
+    // This server is yanking our chain...
+    return NS_ERROR_FAILURE;
+  }
+
+  // Look for the LF which ends the Status-Line.
+  rv = aBuffer->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
   if (NS_FAILED(rv)) return rv;
 
-  // Look for the CRLF which ends the Status-Line.
-  // If found, then offset will mark the beginning of the CRLF...
-  rv = pBuffer->Search(kCRLF, PR_FALSE, &bFoundString, &offset);
+  if (!bFoundString) {
+    //
+    // This is a partial header...  Read the entire buffer and wait for
+    // more data...
+    //
+    totalBytesToRead = aLength;
+  } else {
+    // Do not forget to include the LF character in the read...
+    totalBytesToRead = offsetOfEnd+1;
+  }
+
+  rv = aBuffer->ReadSegments(nsWriteToString, 
+                             (void*)&m_HeaderBuffer, 
+                             totalBytesToRead, 
+                             &actualBytesRead);
   if (NS_FAILED(rv)) return rv;
+
+  *aBytesRead += actualBytesRead;
+
+  // Wait for more data to arrive before processing the header...
+  if (!bFoundString) return NS_OK;
+
+  //
+  // Replace all LWS with single SP characters.  Also remove the CRLF
+  // characters...
+  //
+  m_HeaderBuffer.CompressSet(" \t", ' ');
+  m_HeaderBuffer.StripChars("\r\n");
 
   //
   // The Status Line has the following: format:
   //    HTTP-Version SP Status-Code SP Reason-Phrase CRLF
   //
-  if (bFoundString) {
-    // Include the CRLF as part of the line to read...
-    CRLFlength = PL_strlen(kCRLF);
-    length = offset + CRLFlength;
 
+  const char *token;
+  nsAutoString str(eOneByte);
+  PRInt32 offset, error;
+
+  //
+  // Parse the HTTP-Version:: "HTTP" "/" 1*DIGIT "." 1*DIGIT
+  //
+
+  offset = m_HeaderBuffer.Find(' ');
+  (void) m_HeaderBuffer.Left(str, offset);
+  if (!str.Length()) {
+    // The status line is bogus...
+    return NS_ERROR_FAILURE;
+  }
+  token = str.GetBuffer();
+  m_pResponse->SetServerVersion(token);
+
+  m_HeaderBuffer.Cut(0, offset+1);
+
+  //
+  // Parse the Status-Code:: 3DIGIT
+  //
+  PRInt32 statusCode;
+
+  offset = m_HeaderBuffer.Find(' ');
+  (void) m_HeaderBuffer.Left(str, offset);
+  if (3 != str.Length()) {
+    // The status line is bogus...
+    return NS_ERROR_FAILURE;
+  }
+
+  statusCode = str.ToInteger(&error);
+  if (NS_FAILED(error)) return NS_ERROR_FAILURE;
+
+  m_pResponse->SetStatus(statusCode);
+  
+  m_HeaderBuffer.Cut(0, offset+1);
+
+  //
+  // Parse the Reason-Phrase:: *<TEXT excluding CR,LF>
+  //
+  if (!m_HeaderBuffer.Length()) {
+    // The status line is bogus...
+    return NS_ERROR_FAILURE;
+  }
+  token = m_HeaderBuffer.GetBuffer();
+  m_pResponse->SetStatusString(token);
+
+  m_HeaderBuffer.Truncate();
+  m_bFirstLineParsed = PR_TRUE;
+  
+  return rv;
+}
+
+
+
+nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBuffer* aBuffer,
+                                                 PRUint32 aLength,
+                                                 PRUint32 *aBytesRead)
+{
+  nsresult rv = NS_OK;
+
+  const char *buf;
+  PRBool bFoundString;
+  PRUint32 offsetOfEnd, totalBytesToRead, actualBytesRead;
+
+  *aBytesRead = 0;
+
+  if (kMAX_HEADER_SIZE < m_HeaderBuffer.Length()) {
+    // This server is yanking our chain...
+    return NS_ERROR_FAILURE;
+  }
+
+  //
+  // Read the header from the input buffer...  A header is terminated by 
+  // a CRLF.  Header values may be extended over multiple lines by preceeding
+  // each extran line with LWS...
+  //
+  do {
     //
-    // Make sure the statusLineBuffer does not overflow.  This would only
-    // happen if the Reason-Phrase returned from the server was large...
+    // If last character in the header string is a LF, then the header 
+    // may be complete...
     //
-    // If the Status-Line is too large, then limit it to the size of the 
-    // buffer.  This will truncate the Reason-Phrase, but who really cares?
-    //
-    NS_ASSERTION(length < sizeof(statusLineBuffer), "Status Line is too long!");
-    if (length >= sizeof(statusLineBuffer)) {
-      length = sizeof(statusLineBuffer);
+    if (m_HeaderBuffer.Last() == '\n' ) {
+      rv = aBuffer->GetReadSegment(0, &buf, &actualBytesRead);
+      // Need to wait for more data to see if the header is complete.
+      if (0 == actualBytesRead) {
+        return NS_OK;
+      }
+
+      // Not LWS - The header is complete...
+      if ((*buf != ' ') && (*buf != '\t')) {
+        break;
+      }
     }
 
-    // Read the Status-Line out of the stream...
-    rv = aStream->Read(statusLineBuffer, length, &bytesRead);
+    // Look for the next LF in the buffer...
+    rv = aBuffer->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
     if (NS_FAILED(rv)) return rv;
 
-    // Null terminate the buffer right before the CRLF...
-    // If the Status-Line was truncated then NULL terminate at the end...
-    if (bytesRead > offset) {
-      statusLineBuffer[bytesRead-CRLFlength] = '\0';
+    if (!bFoundString) {
+      //
+      // The buffer contains a partial header.  Read the entire buffer 
+      // and wait for more data...
+      //
+      totalBytesToRead = aLength;
     } else {
-      statusLineBuffer[bytesRead] = '\0';
+    // Do not forget to include the LF character in the read...
+      totalBytesToRead = offsetOfEnd+1;
     }
 
-    //
-    // Parse the HTTP-Version -> "HTTP" "/" 1*DIGIT "." 1*DIGIT
-    //
-    start = EatWhiteSpace(statusLineBuffer); // Consume any leading whitespace
-    // Find the next space character...
-    for (end=start; (*end && (*end != kSP) && (*end != kHT)); end++) {};
-    if (! *end) {
-      // The status line is bogus...
-      return NS_ERROR_FAILURE;
-    }
-    *end = '\0';  // Replace the first space character with NULL...
-    m_pResponse->SetServerVersion(start);
+    // Append the buffer into the header string...
+    rv = aBuffer->ReadSegments(nsWriteToString, 
+                               (void*)&m_HeaderBuffer, 
+                               totalBytesToRead, 
+                               &actualBytesRead);
+    if (NS_FAILED(rv)) return rv;
 
-    //
-    // Parse the Status-Code -> 3DIGIT
-    //
-    start = EatWhiteSpace(end+1); // Consume any leading whitespace
-    end   = start+3;
+    *aBytesRead += actualBytesRead;
 
-    // Verify that the character after the 3 digits is whitespace...
-    if ((bytesRead < (PRUint32)(end - statusLineBuffer)) || 
-        ((*end != kSP) && (*end != kHT))) {
-      // The status line is bogus...
-      return NS_ERROR_FAILURE;
-    }
-    *end = '\0';  // Replace the first space character with NULL...
-    statusCode = atoi(start);
-    m_pResponse->SetStatus(statusCode);
+    // Partial header - wait for more data to arrive...
+    if (!bFoundString) return NS_OK;
 
-    //
-    // Parse the Reason-Phrase -> *<TEXT excluding CR,LF>
-    //
-    start = EatWhiteSpace(end+1); // Consume any leading whitespace
-    m_pResponse->SetStatusString(start);
+  } while (PR_TRUE);
 
-    m_bFirstLineParsed = PR_TRUE;
+  //
+  // Replace all LWS with single SP characters.  And remove all of the CRLF
+  // characters...
+  //
+  m_HeaderBuffer.CompressSet(" \t", ' ');
+  m_HeaderBuffer.StripChars("\r\n");
+
+  if (!m_HeaderBuffer.Length()) {
+    m_bHeadersDone = PR_TRUE;
+    return NS_OK;
   }
-  else {
-    // XXX: What do we do if only a partial status line is received?
-    rv = NS_ERROR_FAILURE;
-  }
+
+  nsAutoString headerKey(eOneByte);
+  PRInt32 colonOffset;
+
+  // Extract the key field - everything up to the ':'
+  // The header name is case-insensitive...
+  colonOffset = m_HeaderBuffer.Find(':');
+  (void) m_HeaderBuffer.Left(headerKey, colonOffset);
+  headerKey.ToLowerCase();
+
+  // Extract the value field - everything past the ':'
+  // Trim any leading or trailing whitespace...
+  m_HeaderBuffer.Cut(0, colonOffset+1);
+  m_HeaderBuffer.Trim(" ");
+
+  rv = m_pResponse->SetHeaderInternal(headerKey.GetBuffer(), m_HeaderBuffer.GetBuffer());
+
+  m_HeaderBuffer.Truncate();
+
   return rv;
 }
