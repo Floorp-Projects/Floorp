@@ -3923,11 +3923,9 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
     nsIAtom* tag = Tag();
 
     if (kTreeItemAtom == tag) {
-#if 0
         // Force a framechange if the 'open' atom changes on a <treeitem>
         if (kOpenAtom == aAttribute)
             aHint = NS_STYLE_HINT_FRAMECHANGE;
-#endif
     }
     else if (kTreeColAtom == tag) {
         // Ignore 'width' and 'hidden' on a <treecol>
