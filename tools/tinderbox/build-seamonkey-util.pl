@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.274 $ ';
+$::UtilsVersion = '$Revision: 1.275 $ ';
 
 package TinderUtils;
 
@@ -894,9 +894,6 @@ sub BuildIt {
         # Allow skipping of mozilla phase.
         unless ($Settings::SkipMozilla) {
           
-          if (-e $external_build) {
-              PostMozilla::PreBuild();
-          }
           # Make sure we have $Settings::moz_client_mk
           unless (-e "$TreeSpecific::name/$Settings::moz_client_mk") {
             
@@ -913,6 +910,9 @@ sub BuildIt {
           
           # Build it
           unless ($Settings::TestOnly) { # Do not build if testing smoke tests.
+            if (-e $external_build) {
+                PostMozilla::PreBuild();
+            }
             if ($Settings::OS =~ /^WIN/) {
               DeleteBinaryDir($binary_dir);
             } else {
