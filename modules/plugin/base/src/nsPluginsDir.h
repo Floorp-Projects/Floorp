@@ -67,6 +67,7 @@ struct nsPluginInfo {
 	char** fMimeDescriptionArray;
 	char** fExtensionArray;
 	char* fFileName;
+	char* fFullPath;
 };
 
 /**

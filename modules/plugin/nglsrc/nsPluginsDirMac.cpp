@@ -243,6 +243,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 			info.fMimeDescriptionArray = new char*[variantCount];
 			info.fExtensionArray = new char*[variantCount];
 			info.fFileName = p2cstrdup(spec.name);
+			info.fFullPath = PL_strdup(this->GetCString());
 			
 			short mimeIndex = 1, descriptionIndex = 1;
 			for (int i = 0; i < variantCount; i++) {
@@ -274,6 +275,7 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
     delete[] info.fMimeDescriptionArray;
     delete[] info.fExtensionArray;
     delete[] info.fFileName;
+    delete[] info.fFullPath;
   }
   return NS_OK;
 }

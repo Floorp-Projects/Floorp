@@ -688,6 +688,7 @@ nsPluginTag::nsPluginTag()
   mFlags = NS_PLUGIN_FLAG_ENABLED;
   mXPConnected = PR_FALSE;
   mFileName = nsnull;
+  mFullPath = nsnull;
 }
 
 inline char* new_str(const char* str)
@@ -739,6 +740,7 @@ nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
   mFlags = NS_PLUGIN_FLAG_ENABLED;
   mXPConnected = PR_FALSE;
   mFileName = new_str(aPluginTag->mFileName);
+  mFullPath = new_str(aPluginTag->mFullPath);
 }
 
 nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
@@ -774,6 +776,7 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
 	}
 
   mFileName = new_str(aPluginInfo->fFileName);
+  mFullPath = new_str(aPluginInfo->fFullPath);
 
   mLibrary = nsnull;
   mCanUnloadLibrary = PR_TRUE;
@@ -805,6 +808,7 @@ nsPluginTag::nsPluginTag(const char* aName,
   mName            = new_str(aName);
   mDescription     = new_str(aDescription);
   mFileName        = new_str(aFileName);
+  mFullPath        = new_str(aFileName);
 
   if (mVariants) {
     mMimeTypeArray        = new char*[mVariants];
@@ -862,6 +866,13 @@ nsPluginTag::~nsPluginTag()
     delete [] mFileName;
     mFileName = nsnull;
   }
+
+  if(nsnull != mFullPath)
+  {
+    delete [] mFullPath;
+    mFullPath = nsnull;
+  }
+
 }
 
 void nsPluginTag::TryUnloadPlugin(PRBool aForceShutdown)
@@ -3688,8 +3699,13 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 
     if (nsnull == pluginTag->mLibrary)		// if we haven't done this yet
     {
+#ifndef XP_MAC
       nsFileSpec file(pluginTag->mFileName);
-
+#else
+      if (nsnull == pluginTag->mFullPath)
+        return NS_ERROR_FAILURE;
+      nsFileSpec file(pluginTag->mFullPath);
+#endif
       nsPluginFile pluginFile(file);
       PRLibrary* pluginLibrary = NULL;
 
