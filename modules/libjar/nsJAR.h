@@ -55,6 +55,7 @@
 #include "nsISignatureVerifier.h"
 
 class nsIInputStream;
+class nsJARManifestItem;
 
 /*-------------------------------------------------------------------------
  * Class nsJAR declaration. 
@@ -92,14 +93,13 @@ class nsJAR : public nsIZipReader
     //-- Private functions
     nsresult ParseManifest(nsISignatureVerifier* verifier);
     void     ReportError(const char* aFilename, PRInt16 errorCode);
-    nsresult CreateInputStream(const char* aFilename, PRBool verify,
-                               nsIInputStream** result);
     nsresult LoadEntry(const char* aFilename, char** aBuf, 
                        PRUint32* aBufLen = nsnull);
     PRInt32  ReadLine(const char** src); 
     nsresult ParseOneFile(nsISignatureVerifier* verifier,
                           const char* filebuf, PRInt16 aFileType);
-    nsresult VerifyEntry(const char* aEntryName, const char* aEntryData, 
+    nsresult VerifyEntry(nsISignatureVerifier* verifier,
+                         nsJARManifestItem* aEntry, const char* aEntryData, 
                          PRUint32 aLen);
     nsresult RestoreModTime(nsZipItem *aItem, nsIFile *aExtractedFile);
 

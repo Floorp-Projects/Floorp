@@ -70,7 +70,7 @@ nsJARInputStream::Close()
 }
 
 nsresult 
-nsJARInputStream::Init(nsJAR* aJAR, const char* aFilename, PRBool verify)
+nsJARInputStream::Init(nsJAR* aJAR, const char* aFilename)
 {
   if (!aFilename)
     return NS_ERROR_NULL_POINTER;
@@ -82,11 +82,6 @@ nsJARInputStream::Init(nsJAR* aJAR, const char* aFilename, PRBool verify)
   result = Zip()->ReadInit(mEntryName, &mReadInfo);
   if (result != ZIP_OK)
     return NS_ERROR_FAILURE;
-  
-  // Pass the file (already in memory) on to the signature verifier
-  if (verify)
-    return aJAR->VerifyEntry(mEntryName, mReadInfo->mFileBuffer,
-			     mReadInfo->mItem->realsize);
   return NS_OK;
 }
 

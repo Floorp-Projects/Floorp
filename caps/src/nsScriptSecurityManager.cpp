@@ -552,9 +552,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
             case PrefAccess:
                 // Allow access if pref is set
                 NS_ASSERTION(mPrefs,"nsScriptSecurityManager::mPrefs not initialized");
-                mIsAccessingPrefs = PR_TRUE;
-                mPrefs->GetBoolPref("security.checkloaduri", &doCheck);
-                mIsAccessingPrefs = PR_FALSE;
+                mPrefs->GetSecBoolPref("security.checkloaduri", &doCheck);
                 if (!doCheck)
                     return NS_OK;
                 // Otherwise fall through to Deny.
@@ -862,14 +860,7 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
         *result = PR_TRUE;
         return NS_OK;
     }
-    // If this capability check is being called as a result of the security
-    // manager accessing a security preference, allow execution.
-    if (mIsAccessingPrefs && 
-        (PL_strcmp(capability, "SecurityPreferencesAccess") == 0))
-    {
-        *result = PR_TRUE;
-        return NS_OK;
-    }
+
     do {
         nsCOMPtr<nsIPrincipal> principal;
         if (NS_FAILED(GetFramePrincipal(cx, fp, getter_AddRefs(principal)))) {
@@ -1565,13 +1556,11 @@ nsScriptSecurityManager::GetSecurityLevel(nsIPrincipal *principal,
     PRInt32 secLevel;
     char *secLevelString;
 	nsresult rv;
-    mIsAccessingPrefs = PR_TRUE;
-    rv = mPrefs->CopyCharPref(prefName, &secLevelString);
+    rv = mPrefs->CopySecCharPref(prefName, &secLevelString);
     if (NS_FAILED(rv)) {
         prefName += (isWrite ? ".write" : ".read");
-        rv = mPrefs->CopyCharPref(prefName, &secLevelString);
+        rv = mPrefs->CopySecCharPref(prefName, &secLevelString);
     }
-    mIsAccessingPrefs = PR_FALSE;
     if (NS_SUCCEEDED(rv) && secLevelString) {
         if (PL_strcmp(secLevelString, "sameOrigin") == 0)
             secLevel = SCRIPT_SECURITY_SAME_DOMAIN_ACCESS;
@@ -1610,11 +1599,9 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext,
             if (NS_SUCCEEDED(rv))
             {
                 PRBool allow = PR_FALSE;
-                mIsAccessingPrefs = PR_TRUE;
                 //XXX May want to store the value of the pref in a local,
                 //    this will help performance when dealing with plugins.
-                rv = mPrefs->GetBoolPref("security.xpconnect.plugin.unrestricted", &allow);
-                mIsAccessingPrefs = PR_FALSE;
+                rv = mPrefs->GetSecBoolPref("security.xpconnect.plugin.unrestricted", &allow);
                 if (NS_SUCCEEDED(rv) && allow) 
                     return NS_OK;
             }
@@ -1747,19 +1734,19 @@ nsScriptSecurityManager::SavePrincipal(nsIPrincipal* aToSave)
 
     mIsAccessingPrefs = PR_TRUE;
     if (grantedList)
-        mPrefs->SetCharPref(grantedPrefName, grantedList);
+        mPrefs->SetSecCharPref(grantedPrefName, grantedList);
     else
-        mPrefs->ClearUserPref(grantedPrefName);
+        mPrefs->ClearSecUserPref(grantedPrefName);
 
     if (deniedList)
-        mPrefs->SetCharPref(deniedPrefName, deniedList);
+        mPrefs->SetSecCharPref(deniedPrefName, deniedList);
     else
-        mPrefs->ClearUserPref(deniedPrefName);
+        mPrefs->ClearSecUserPref(deniedPrefName);
 
     if (grantedList || deniedList)
-        mPrefs->SetCharPref(idPrefName, id);
+        mPrefs->SetSecCharPref(idPrefName, id);
     else
-        mPrefs->ClearUserPref(idPrefName);
+        mPrefs->ClearSecUserPref(idPrefName);
 
     mIsAccessingPrefs = PR_FALSE;
     return mPrefs->SavePrefFile();
@@ -1840,7 +1827,7 @@ nsScriptSecurityManager::EnumeratePolicyCallback(const char *prefName,
                     return;
             }
             char *s;
-            if (NS_FAILED(mgr->mPrefs->CopyCharPref(prefName, &s)))
+            if (NS_FAILED(mgr->mPrefs->CopySecCharPref(prefName, &s)))
                 return;
             char *q=s;
             char *r=s;
@@ -1959,7 +1946,7 @@ nsScriptSecurityManager::EnumeratePrincipalsCallback(const char *prefName,
         return;
 
     char* id;
-    if (NS_FAILED(info->prefs->CopyCharPref(prefName, &id))) 
+    if (NS_FAILED(info->prefs->CopySecCharPref(prefName, &id))) 
         return;
 
     nsXPIDLCString grantedPrefName;
@@ -1970,9 +1957,9 @@ nsScriptSecurityManager::EnumeratePrincipalsCallback(const char *prefName,
         return;
 
     char* grantedList = nsnull;
-    info->prefs->CopyCharPref(grantedPrefName, &grantedList);
+    info->prefs->CopySecCharPref(grantedPrefName, &grantedList);
     char* deniedList = nsnull;
-    info->prefs->CopyCharPref(deniedPrefName, &deniedList);
+    info->prefs->CopySecCharPref(deniedPrefName, &deniedList);
 
     static const char certificateName[] = "security.principal.certificate";
     static const char codebaseName[] = "security.principal.codebase";
@@ -2017,14 +2004,14 @@ nsScriptSecurityManager::JSEnabledPrefChanged(const char *pref, void *data)
 {
     nsScriptSecurityManager *secMgr = (nsScriptSecurityManager *) data;
 
-    if (NS_FAILED(secMgr->mPrefs->GetBoolPref(jsEnabledPrefName, 
+    if (NS_FAILED(secMgr->mPrefs->GetSecBoolPref(jsEnabledPrefName, 
                                               &secMgr->mIsJavaScriptEnabled)))
     {
         // Default to enabled.
         secMgr->mIsJavaScriptEnabled = PR_TRUE;
     }
 
-    if (NS_FAILED(secMgr->mPrefs->GetBoolPref(jsMailEnabledPrefName, 
+    if (NS_FAILED(secMgr->mPrefs->GetSecBoolPref(jsMailEnabledPrefName, 
                                               &secMgr->mIsMailJavaScriptEnabled))) 
     {
         // Default to enabled.
@@ -2089,7 +2076,7 @@ nsScriptSecurityManager::InitFromPrefs()
     // set callbacks in case the value of the pref changes
     prefs->RegisterCallback(jsEnabledPrefName, JSEnabledPrefChanged, this);
     prefs->RegisterCallback(jsMailEnabledPrefName, JSEnabledPrefChanged, this);
-    prefs->EnumerateChildren("security.policy", 
+    prefs->EnumerateChildren("security.policy",
                              nsScriptSecurityManager::EnumeratePolicyCallback,
                              (void *) this);
 
@@ -2101,6 +2088,7 @@ nsScriptSecurityManager::InitFromPrefs()
     EnumeratePrincipalsInfo info;
     info.ht = mPrincipals;
     info.prefs = mPrefs;
+    
     prefs->EnumerateChildren("security.principal", 
                              nsScriptSecurityManager::EnumeratePrincipalsCallback,
                              (void *) &info);

@@ -52,6 +52,7 @@ interface nsIZipReader : nsISupports
     const short INVALID_UNKNOWN_CA = 3;
     const short INVALID_MANIFEST   = 4;
     const short INVALID_ENTRY      = 5;
+    const short NO_MANIFEST        = 6;
 
     /**
      * Initializes a zip reader after construction.
@@ -101,12 +102,6 @@ interface nsIZipReader : nsISupports
      */
     void getCertificatePrincipal(in string aEntryName, out nsIPrincipal aPrincipal);
 
-    /**
-     * Verifies aData against a digital signature stored in the archive. Returns
-     * a principal if verification succeeds, null otherwise.
-     */
-    nsIPrincipal verifyExternalData(in string aEntryName, in string aData, 
-                                    in unsigned long aLength);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

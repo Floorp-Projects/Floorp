@@ -56,7 +56,7 @@ class nsJARInputStream : public nsIInputStream
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
 
     nsresult 
-    Init(nsJAR* jar, const char* aFilename, PRBool verify);
+    Init(nsJAR* jar, const char* aFilename);
   
   protected:
     nsZipArchive* Zip() { return &mJAR->mZip; }
