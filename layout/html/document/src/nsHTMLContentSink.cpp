@@ -476,6 +476,7 @@ AddAttributes(const nsIParserNode& aNode,
   return NS_OK;
 }
 
+static
 void SetForm(nsIHTMLContent* aContent, nsIDOMHTMLFormElement* aForm)
 {
   nsIFormControl* formControl = nsnull;
