@@ -392,7 +392,6 @@ nsOSHelperAppService::GetTypeAndDescriptionFromMimetypesFile(const nsAString& aF
     return rv;
   }
   
-  CopyASCIItoUTF16(cBuf, buf);
   nsAutoString extensions;
   nsString entry;
   entry.SetCapacity(100);
@@ -401,6 +400,7 @@ nsOSHelperAppService::GetTypeAndDescriptionFromMimetypesFile(const nsAString& aF
                             descriptionStart, descriptionEnd;
 
   do {
+    CopyASCIItoUTF16(cBuf, buf);
     // read through, building up an entry.  If we finish an entry, check for
     // a match and return out of the loop if we match
 
