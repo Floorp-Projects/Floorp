@@ -159,7 +159,7 @@ Rights Reserved.
       </vbox>
       <vbox id="messagesBox" flex="1">
       <hbox id="searchBox"/>
-      <tree id="threadTree" flex="2" persist="height" style="height:0px" context="threadPaneContext"/>
+      <tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext"/>
 
       <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
       <splitter collapse="after" persist="state" 
