@@ -704,6 +704,22 @@ function FolderPaneOnClick(event)
 
 function FolderPaneDoubleClick(treeitem)
 {
+	// don't open a new msg window if we are double clicking on a server.
+	// only do it for folders or newsgroups
+	if (treeitem) {
+	    var uri = treeitem.getAttribute("id");
+	    try {
+		var folder = GetMsgFolderFromUri(uri);
+		if (folder.isServer) {
+			//dump(uri + " is a server, don't open a new window.\n");
+			return;
+		}
+	    }
+	    catch (ex) {
+		//dump(uri + " is not a server, open a new window.\n");
+	    }
+	}
+
 	MsgOpenNewWindowForFolder(treeitem);
 }
 
