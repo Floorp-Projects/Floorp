@@ -58,12 +58,18 @@ BM_DEP_DIRS_string    = intl/unicharutil/public
 BM_CVS_string	      = $(NSPRPUB_DIR) string
 
 #
+# xpidl
+#
+BM_DIRS_xpidl		= $(NSPRPUB_DIR) xpcom/typelib
+BM_CVS_xpidl		= $(NSPRPUB_DIR) xpcom/typelib/xpt
+BM_CVS_NS_xpidl		= xpcom/typelib xpcom/typelib/xpidl
+
 # xpcom
 #
-BM_DIRS_xpcom		= $(NSPRPUB_DIR) modules/libreg string xpcom
+BM_DIRS_xpcom		= $(BM_DIRS_xpidl) modules/libreg string xpcom
 BM_DEP_DIRS_xpcom	= intl/unicharutil/public intl/uconv/public modules/libjar netwerk/base/public
-BM_CVS_NS_xpcom		= xpcom xpcom/typelib xpcom/typelib/xpidl intl/unicharutil/public intl/uconv/public netwerk/base/public
-BM_CVS_xpcom		= $(NSPRPUB_DIR) modules/libreg xpcom/typelib/xpt xpcom/glue xpcom/base xpcom/ds xpcom/io xpcom/components xpcom/threads xpcom/reflect xpcom/proxy xpcom/build xpcom/tools xpcom/sample modules/libjar string
+BM_CVS_NS_xpcom		= $(BM_CVS_NS_xpidl) xpcom intl/uconv/public netwerk/base/public
+BM_CVS_xpcom		= $(BM_CVS_xpidl) modules/libreg xpcom/glue xpcom/base xpcom/ds xpcom/io xpcom/components xpcom/threads xpcom/reflect xpcom/proxy xpcom/build xpcom/tools xpcom/sample string modules/libjar intl/unicharutil/public
 
 #
 # xpconnect
