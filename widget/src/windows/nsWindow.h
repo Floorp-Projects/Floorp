@@ -119,6 +119,7 @@ public:
             WNDPROC         GetPrevWindowProc() { return mPrevWndProc; }
 
     virtual PRBool          DispatchMouseEvent(PRUint32 aEventType);
+    virtual PRBool          AutoErase();
 
 protected:
 

@@ -291,4 +291,15 @@ DWORD nsListBox::WindowExStyle()
   return 0;
 }
 
+//-------------------------------------------------------------------------
+//
+// Clear window before paint
+//
+//-------------------------------------------------------------------------
+
+PRBool nsListBox::AutoErase()
+{
+  return(PR_TRUE);
+}
+
 
