@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.20 $ $Date: 2002/03/07 22:07:49 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.21 $ $Date: 2002/03/07 23:21:32 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -916,9 +916,64 @@ nssToken_ImportTrust
 	/* XXX Fix this! */
 	nssListIterator_Destroy(trust->object.instances);
 	trust->object.instances = nssList_CreateIterator(trust->object.instanceList);
+	tok->hasNoTrust = PR_FALSE;
 	return PR_SUCCESS;
     } 
     return PR_FAILURE;
+}
+
+NSS_IMPLEMENT PRStatus
+nssToken_SetTrustCache
+(
+  NSSToken *token
+)
+{
+    CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE tobj_template[2];
+    CK_ULONG tobj_size;
+    CK_OBJECT_HANDLE obj;
+    nssSession *session = token->defaultSession;
+
+    NSS_CK_TEMPLATE_START(tobj_template, attr, tobj_size);
+    NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS, tobjc);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
+    NSS_CK_TEMPLATE_FINISH(tobj_template, attr, tobj_size);
+
+    obj = find_object_by_template(token, session,
+                                   tobj_template, tobj_size);
+    token->hasNoTrust = PR_FALSE;
+    if (obj == CK_INVALID_HANDLE) {
+	token->hasNoTrust = PR_TRUE;
+    } 
+    return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT PRStatus
+nssToken_SetCrlCache
+(
+  NSSToken *token
+)
+{
+    CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_CRL;
+    CK_ATTRIBUTE_PTR attr;
+    CK_ATTRIBUTE tobj_template[2];
+    CK_ULONG tobj_size;
+    CK_OBJECT_HANDLE obj;
+    nssSession *session = token->defaultSession;
+
+    NSS_CK_TEMPLATE_START(tobj_template, attr, tobj_size);
+    NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CLASS, tobjc);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
+    NSS_CK_TEMPLATE_FINISH(tobj_template, attr, tobj_size);
+
+    obj = find_object_by_template(token, session,
+                                   tobj_template, tobj_size);
+    token->hasNoCrls = PR_TRUE;
+    if (obj == CK_INVALID_HANDLE) {
+	token->hasNoCrls = PR_TRUE;
+    }
+    return PR_SUCCESS;
 }
 
 static CK_OBJECT_HANDLE
@@ -936,6 +991,10 @@ get_cert_trust_handle
     CK_ULONG tobj_size;
     PRUint8 sha1[20]; /* this is cheating... */
     NSSItem sha1_result;
+
+    if (token->hasNoTrust) {
+	return CK_INVALID_HANDLE;
+    }
     sha1_result.data = sha1; sha1_result.size = sizeof sha1;
     sha1_hash(&c->encoding, &sha1_result);
     NSS_CK_TEMPLATE_START(tobj_template, attr, tobj_size);

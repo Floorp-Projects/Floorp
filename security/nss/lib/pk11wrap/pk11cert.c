@@ -3710,6 +3710,9 @@ PK11_FindCrlByName(PK11SlotInfo **slot, CK_OBJECT_HANDLE *crlHandle,
 
 	/* loop through all the fortezza tokens */
 	for (le = list->head; le; le = le->next) {
+	    if (le->slot->nssToken && !nssToken_HasCrls(le->slot->nssToken)) {
+		continue;
+	    }
 	    crlh = pk11_FindObjectByTemplate(le->slot,theTemplate,tsize);
 	    if (crlh != CK_INVALID_HANDLE) {
 		*slot = PK11_ReferenceSlot(le->slot);
@@ -3806,6 +3809,10 @@ PK11_PutCrl(PK11SlotInfo *slot, SECItem *crl, SECItem *name,
     }
 
     PK11_RestoreROSession(slot,rwsession);
+
+    if (slot->nssToken) {
+	nssToken_SetHasCrls(slot->nssToken);
+    }
     return crlh;
 }
 

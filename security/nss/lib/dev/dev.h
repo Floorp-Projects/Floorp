@@ -35,7 +35,7 @@
 #define DEV_H
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.20 $ $Date: 2002/03/07 22:07:48 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.21 $ $Date: 2002/03/07 23:21:32 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVT_H
@@ -279,6 +279,30 @@ nssToken_ImportTrust
   nssSession *sessionOpt,
   NSSTrust *trust,
   PRBool asTokenObject
+);
+
+NSS_EXTERN PRStatus
+nssToken_SetTrustCache
+(
+  NSSToken *tok
+);
+
+NSS_EXTERN PRStatus
+nssToken_SetCrlCache
+(
+  NSSToken *tok
+);
+
+NSS_EXTERN PRBool
+nssToken_HasCrls
+(
+  NSSToken *tok
+);
+
+NSS_EXTERN PRStatus
+nssToken_SetHasCrls
+(
+  NSSToken *tok
 );
 
 NSS_EXTERN NSSPublicKey *
