@@ -474,12 +474,15 @@ sub AnyEntryGroups {
     $query .= " AND product_id = $product_id" if ($product_id);
     $query .= " LIMIT 1";
     SendSQL($query);
-    $::CachedAnyEntryGroups{$product_id} = MoreSQLData();
-    FetchSQLData();
-    PopGlobalSQLState();
-    return $::CachedAnyEntryGroups{$product_id};
+    if (MoreSQLData()) {
+       $::CachedAnyEntryGroups{$product_id} = MoreSQLData();
+       FetchSQLData();
+       PopGlobalSQLState();
+       return $::CachedAnyEntryGroups{$product_id};
+    } else {
+       return undef;
+    }
 }
-
 #
 # This function checks if there are any default groups defined.
 # If so, then groups may have to be changed when bugs move from
