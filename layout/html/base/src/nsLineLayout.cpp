@@ -675,6 +675,7 @@ nsLineLayout::ReflowChild(nsIReflowCommand* aReflowCommand,
         if (!didBreak && CanBreak()) {
           kidFrame = mState.mKidFrame;
           didBreak = PR_TRUE;
+          mPendingBreak = NS_STYLE_CLEAR_NONE;
           goto reflow_it_again_sam;
         }
 
@@ -783,6 +784,7 @@ nsLineLayout::ReflowChild(nsIReflowCommand* aReflowCommand,
     // XXX tell block what topMargin ended up being so that it can
     // undo it if it ends up pushing the line.
 
+    NS_ASSERTION(0 == mPendingBreak, "whoops: uncleared break");
     mSpaceManager->Translate(dx, mY);
     kidFrame->WillReflow(*mPresContext);
     kidFrame->MoveTo(dx, mY);
@@ -845,9 +847,10 @@ nsLineLayout::ReflowChild(nsIReflowCommand* aReflowCommand,
       mBlockReflowState.mY += bottomMargin;
     }
 
+    NS_ASSERTION(0 == mPendingBreak, "whoops: uncleared break");
     kidFrame->WillReflow(*mPresContext);
     kidFrame->MoveTo(dx, mY);
-    rv = mBlock->ReflowInlineChild(kidFrame, mPresContext, kidMetrics,
+    rv = mBlock->ReflowInlineChild(*this, kidFrame, kidMetrics,
                                    kidReflowState, kidReflowStatus);
 
     // See if speculative application of the margin should stick
@@ -880,6 +883,7 @@ nsLineLayout::ReflowChild(nsIReflowCommand* aReflowCommand,
       if (!didBreak && CanBreak()) {
         kidFrame = mState.mKidFrame;
         didBreak = PR_TRUE;
+        mPendingBreak = NS_STYLE_CLEAR_NONE;
         goto reflow_it_again_sam;
       }
       else {
