@@ -97,8 +97,9 @@
      // subtracts time spent from remaining time
      var new_time;
 
+     // prevent negative values if work_time > fRemainingTime
      new_time =
-        fRemainingTime - document.changeform.work_time.value;
+        Math.max(fRemainingTime - document.changeform.work_time.value, 0.0);
      // get upto 2 decimal places
      document.changeform.remaining_time.value =
           Math.round(new_time * 100)/100;
