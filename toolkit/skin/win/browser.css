@@ -35,10 +35,17 @@ tab[busy] > .tab-icon {
 /* ::::: close button ::::: */
 
 .tabs-closebutton {
-  margin: 3px;
-  list-style-image: url("chrome://global/skin/icons/close-button.gif");
+  margin: 0px 4px;
+  padding: 1px 2px 2px 2px;
+  border: none;
+  list-style-image: url("chrome://browser/skin/close.png");
+  -moz-image-region: rect(0px 20px 20px 0px);
 }
 
-.tabs-closebutton > .toolbarbutton-icon {
-  margin: 0;
+.tabs-closebutton:hover {
+  -moz-image-region: rect(0px 50px 20px 30px);
+}
+
+.tabs-closebutton:hover:active {
+  -moz-image-region: rect(0px 110px 20px 90px);
 }
