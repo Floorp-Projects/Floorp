@@ -46,7 +46,7 @@
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #define INITAL_REPEAT_DELAY 250
-#define REPEAT_DELAY        10
+#define REPEAT_DELAY        25
 #else
 #define INITAL_REPEAT_DELAY 250
 #define REPEAT_DELAY        50
