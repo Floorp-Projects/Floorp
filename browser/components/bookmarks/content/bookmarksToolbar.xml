@@ -367,125 +367,124 @@
 
     </implementation>
 
-    <content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-             xmlns:xbl="http://www.mozilla.org/xbl">
-
+    <content>
       <!-- Personal toolbar items -->
-      <hbox id="bookmarks-ptf" anonid="bookmarks-ptf" contextmenu="_child"
-           flex="1" style="margin-left: 3px;" 
-           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
-           ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
-           rdf:type="http://home.netscape.com/NC-rdf#Folder"
-           onclick="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
-           ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
-           ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
-           ondragenter="nsDragAndDrop.dragEnter(event, personalToolbarDNDObserver); event.preventBubble()"
-           ondragexit="nsDragAndDrop.dragExit(event, personalToolbarDNDObserver); event.preventBubble()"
-           ondragover="nsDragAndDrop.dragOver(event, personalToolbarDNDObserver); event.preventBubble()">
+      <xul:hbox id="bookmarks-ptf" anonid="bookmarks-ptf" contextmenu="_child"
+                flex="1" style="margin-left: 3px;" 
+                datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
+                ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
+                rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                onclick="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
+                ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
+                ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
+                ondragenter="nsDragAndDrop.dragEnter(event, personalToolbarDNDObserver); event.preventBubble()"
+                ondragexit="nsDragAndDrop.dragExit(event, personalToolbarDNDObserver); event.preventBubble()"
+                ondragover="nsDragAndDrop.dragOver(event, personalToolbarDNDObserver); event.preventBubble()">
 
         <!-- context menu -->
-        <menupopup onpopupshowing="this.parentNode.parentNode.createBTContextMenu(event);"
-                   onpopuphidden ="this.parentNode.parentNode.destroyBTContextMenu(event);"/>
+        <xul:menupopup onpopupshowing="this.parentNode.parentNode.createBTContextMenu(event);"
+                       onpopuphidden ="this.parentNode.parentNode.destroyBTContextMenu(event);"/>
 
-        <tooltip id="ptTooltip" noautohide="true" 
-                 onpopupshowing="return this.parentNode.parentNode.fillInBTTooltip(document.tooltipNode)">
-          <vbox id="ptTooltipTextBox" flex="1">  
-            <label id="ptTitleText" />
-            <label id="ptUrlText" />
-          </vbox>
-        </tooltip>
+        <xul:tooltip id="ptTooltip" noautohide="true" 
+                     onpopupshowing="return this.parentNode.parentNode.fillInBTTooltip(document.tooltipNode)">
+          <xul:vbox id="ptTooltipTextBox" flex="1">  
+            <xul:label id="ptTitleText" />
+            <xul:label id="ptUrlText" />
+          </xul:vbox>
+        </xul:tooltip>
 
-        <template xmlns:nc="http://home.netscape.com/NC-rdf#">
-          <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-            <toolbarseparator uri="rdf:*"
-                              rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
-          </rule>
+        <xul:template xmlns:nc="http://home.netscape.com/NC-rdf#">
+
+          <xul:rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+            <xul:toolbarseparator uri="rdf:*"
+                                  rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
+          </xul:rule>
 
           <!-- yes, the type attribute is necessary otherwise all leaves are 
                treated as containers for some reason -->
-          <rule parent="hbox" iscontainer="true"
-                nc:FolderGroup="true">
-            <toolbarbutton class="bookmark-item bookmark-group" uri="rdf:*" xulcontentsgenerated="true" 
-                           group="true"
-                           container="false"
-                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                           label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-          </rule>
+          <xul:rule parent="hbox" iscontainer="true" nc:FolderGroup="true">
+            <xul:toolbarbutton class="bookmark-item bookmark-group" uri="rdf:*" xulcontentsgenerated="true" 
+                               group="true" container="false"
+                               rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                               label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </xul:rule>
 
-          <rule parent="hbox" iscontainer="true" isempty="true"
-                rdf:type="http://home.netscape.com/NC-rdf#Folder">
-            <toolbarbutton type="menu" editable="true" class="bookmark-item"
-                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                           uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name">
-              <menupopup>
-                <menuitem label="&emptyItem.label;" disabled="true"/>
-              </menupopup>
-            </toolbarbutton>
-          </rule>
+          <xul:rule parent="hbox" iscontainer="true" isempty="true"
+                    rdf:type="http://home.netscape.com/NC-rdf#Folder">
+            <xul:toolbarbutton type="menu" editable="true" class="bookmark-item"
+                               rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                               uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <xul:menupopup>
+                <xul:menuitem label="&emptyItem.label;" disabled="true"/>
+              </xul:menupopup>
+            </xul:toolbarbutton>
+          </xul:rule>
 
-          <rule parent="hbox" iscontainer="true">
-            <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
-                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                           label="rdf:http://home.netscape.com/NC-rdf#Name">
-              <menupopup/>
-            </toolbarbutton>
-          </rule>
+          <xul:rule parent="hbox" iscontainer="true">
+            <xul:toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
+                               rdf:type="http://home.netscape.com/NC-rdf#Folder"
+                               label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <xul:menupopup/>
+            </xul:toolbarbutton>
+          </xul:rule>
 
-          <rule parent="hbox">
-            <toolbarbutton class="bookmark-item" uri="rdf:*" editable="true" 
-                           status="rdf:http://home.netscape.com/WEB-rdf#status"
-                           rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
-                           statustext="rdf:http://home.netscape.com/NC-rdf#URL"
-                           tooltip="ptTooltip"
-                           label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-          </rule>
+          <xul:rule parent="hbox">
+            <xul:toolbarbutton class="bookmark-item" uri="rdf:*" editable="true" 
+                               status="rdf:http://home.netscape.com/WEB-rdf#status"
+                               rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
+                               statustext="rdf:http://home.netscape.com/NC-rdf#URL"
+                               tooltip="ptTooltip"
+                               label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </xul:rule>
 
-          <rule nc:FolderGroup="true" iscontainer="true">
-            <menupopup>
-              <menuitem class="menuitem-iconic bookmark-group" 
-                        label="rdf:http://home.netscape.com/NC-rdf#Name"
-                        group="true"
-                        uri="rdf:*"
-                        xulcontentsgenerated="true"/>
-            </menupopup>
-          </rule>
+          <xul:rule nc:FolderGroup="true" iscontainer="true">
+            <xul:menupopup>
+              <xul:menuitem class="menuitem-iconic bookmark-group" 
+                            label="rdf:http://home.netscape.com/NC-rdf#Name"
+                            group="true"
+                            uri="rdf:*"
+                            xulcontentsgenerated="true"/>
+            </xul:menupopup>
+          </xul:rule>
 
-          <rule iscontainer="true" isempty="true" rdf:type="http://home.netscape.com/NC-rdf#Folder">
-            <menupopup>
-              <menu class="menu-iconic bookmark-item" uri="rdf:*" 
-                  type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                  label="rdf:http://home.netscape.com/NC-rdf#Name">
-                <menupopup>
-                  <menuitem label="&emptyItem.label;" disabled="true"/>
-                </menupopup>
-              </menu>
-            </menupopup>
-          </rule>
+          <xul:rule iscontainer="true" isempty="true" rdf:type="http://home.netscape.com/NC-rdf#Folder">
+            <xul:menupopup>
+              <xul:menu class="menu-iconic bookmark-item" uri="rdf:*" 
+                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                        label="rdf:http://home.netscape.com/NC-rdf#Name">
+                <xul:menupopup>
+                  <xul:menuitem label="&emptyItem.label;" disabled="true"/>
+                </xul:menupopup>
+              </xul:menu>
+            </xul:menupopup>
+          </xul:rule>
 
-          <rule iscontainer="true">
-            <menupopup>
-              <menu class="menu-iconic bookmark-item" uri="rdf:*"
-                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                    label="rdf:http://home.netscape.com/NC-rdf#Name">
-                <menupopup/>
-              </menu>
-            </menupopup>
-          </rule>
+          <xul:rule iscontainer="true">
+            <xul:menupopup>
+              <xul:menu class="menu-iconic bookmark-item" uri="rdf:*"
+                        type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                        label="rdf:http://home.netscape.com/NC-rdf#Name">
+                <xul:menupopup/>
+              </xul:menu>
+            </xul:menupopup>
+          </xul:rule>
 
-          <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-            <menupopup>
-              <menuseparator uri="rdf:*"
-                             type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
-            </menupopup>
-          </rule>
-          <rule>
-            <menupopup>
-              <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
-                        label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-            </menupopup>
-          </rule>
-        </template>
-      </hbox>
+          <xul:rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+            <xul:menupopup>
+              <xul:menuseparator uri="rdf:*"
+                                 type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
+            </xul:menupopup>
+          </xul:rule>
+
+          <xul:rule>
+            <xul:menupopup>
+              <xul:menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
+                            label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+            </xul:menupopup>
+          </xul:rule>
+
+        </xul:template>
+      </xul:hbox>
     </content>
   </binding>
 
