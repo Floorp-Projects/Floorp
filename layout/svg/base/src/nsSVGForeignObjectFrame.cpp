@@ -119,8 +119,10 @@ public:
                            nsIFrame*       aNewFrame);
 
   // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
 
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
@@ -435,14 +437,16 @@ nsSVGForeignObjectFrame::ReplaceFrame(nsPresContext* aPresContext,
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGForeignObjectFrame::WillModifySVGObservable(nsISVGValue* observable,
+                                                 nsISVGValue::modificationType aModType)
 {
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::DidModifySVGObservable (nsISVGValue* observable)
+nsSVGForeignObjectFrame::DidModifySVGObservable (nsISVGValue* observable,
+                                                 nsISVGValue::modificationType aModType)
 {
   Update();
   

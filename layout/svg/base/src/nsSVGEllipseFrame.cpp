@@ -56,7 +56,8 @@ class nsSVGEllipseFrame : public nsSVGPathGeometryFrame
   virtual nsresult Init();
 
   // nsISVGValueObserver interface:
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable);
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
+                                    nsISVGValue::modificationType aModType);
 
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
@@ -163,7 +164,8 @@ nsresult nsSVGEllipseFrame::Init()
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGEllipseFrame::DidModifySVGObservable(nsISVGValue* observable)
+nsSVGEllipseFrame::DidModifySVGObservable(nsISVGValue* observable,
+                                          nsISVGValue::modificationType aModType)
 {
   nsCOMPtr<nsIDOMSVGLength> l = do_QueryInterface(observable);
   if (l && (mCx==l || mCy==l || mRx==l || mRy==l)) {
@@ -171,7 +173,7 @@ nsSVGEllipseFrame::DidModifySVGObservable(nsISVGValue* observable)
     return NS_OK;
   }
   // else
-  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable);
+  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable, aModType);
 }
 
 //----------------------------------------------------------------------

@@ -76,8 +76,10 @@ public:
   NS_IMETHOD GetValueString(nsAString& aValue);
 
   // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     modificationType aModType);
 
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
@@ -178,19 +180,21 @@ nsSVGStringProxyValue::GetValueString(nsAString& aValue)
 // nsISVGValueObserver methods
 
 NS_IMETHODIMP
-nsSVGStringProxyValue::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGStringProxyValue::WillModifySVGObservable(nsISVGValue* observable,
+                                               modificationType aModType)
 {
-  WillModify();
+  WillModify(aModType);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGStringProxyValue::DidModifySVGObservable (nsISVGValue* observable)
+nsSVGStringProxyValue::DidModifySVGObservable (nsISVGValue* observable,
+                                               modificationType aModType)
 {
   // Our internal proxied object has set its state internally.
   // Make sure its new value takes priority over our cached string:
   mUseCachedValue = PR_FALSE;
   
-  DidModify();
+  DidModify(aModType);
   return NS_OK;
 }

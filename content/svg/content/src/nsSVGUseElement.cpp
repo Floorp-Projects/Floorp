@@ -89,8 +89,10 @@ public:
   virtual void ParentChainChanged();
 
   // nsISVGValueObserver specializations:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
 
   // nsIDOMMutationListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -340,7 +342,8 @@ NS_IMETHODIMP nsSVGUseElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 // nsISVGValueObserver methods
 
 NS_IMETHODIMP
-nsSVGUseElement::WillModifySVGObservable(nsISVGValue* aObservable)
+nsSVGUseElement::WillModifySVGObservable(nsISVGValue* aObservable,
+                                         nsISVGValue::modificationType aModType)
 {
   nsCOMPtr<nsIDOMSVGAnimatedString> s = do_QueryInterface(aObservable);
 
@@ -349,11 +352,12 @@ nsSVGUseElement::WillModifySVGObservable(nsISVGValue* aObservable)
   if (s && mHref == s)
     RemoveListeners();
 
-  return nsSVGUseElementBase::WillModifySVGObservable(aObservable);
+  return nsSVGUseElementBase::WillModifySVGObservable(aObservable, aModType);
 }
 
 NS_IMETHODIMP
-nsSVGUseElement::DidModifySVGObservable(nsISVGValue* aObservable)
+nsSVGUseElement::DidModifySVGObservable(nsISVGValue* aObservable,
+                                        nsISVGValue::modificationType aModType)
 {
   nsCOMPtr<nsIDOMSVGAnimatedString> s = do_QueryInterface(aObservable);
 
@@ -380,7 +384,7 @@ nsSVGUseElement::DidModifySVGObservable(nsISVGValue* aObservable)
     }
   }
 
-  return nsSVGUseElementBase::DidModifySVGObservable(aObservable);
+  return nsSVGUseElementBase::DidModifySVGObservable(aObservable, aModType);
 }
 
 //----------------------------------------------------------------------

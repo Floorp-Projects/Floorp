@@ -70,8 +70,10 @@ public:
   NS_IMETHOD GetValueString(nsAString& aValue);
 
   // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     modificationType aModType);
   
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
@@ -164,16 +166,18 @@ nsSVGAnimatedTransformList::GetAnimVal(nsIDOMSVGTransformList * *aAnimVal)
 // nsISVGValueObserver methods
 
 NS_IMETHODIMP
-nsSVGAnimatedTransformList::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGAnimatedTransformList::WillModifySVGObservable(nsISVGValue* observable,
+                                                    modificationType aModType)
 {
-  WillModify();
+  WillModify(aModType);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGAnimatedTransformList::DidModifySVGObservable (nsISVGValue* observable)
+nsSVGAnimatedTransformList::DidModifySVGObservable (nsISVGValue* observable,
+                                                    modificationType aModType)
 {
-  DidModify();
+  DidModify(aModType);
   return NS_OK;
 }
 

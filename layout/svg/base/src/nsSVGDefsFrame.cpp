@@ -211,14 +211,16 @@ nsSVGDefsFrame::ReplaceFrame(nsPresContext* aPresContext,
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGDefsFrame::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGDefsFrame::WillModifySVGObservable(nsISVGValue* observable,
+                                        nsISVGValue::modificationType aModType)
 {
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsSVGDefsFrame::DidModifySVGObservable (nsISVGValue* observable)
+nsSVGDefsFrame::DidModifySVGObservable (nsISVGValue* observable,
+                                        nsISVGValue::modificationType aModType)
 {
   // make sure our cached transform matrix gets (lazily) updated
   mCanvasTM = nsnull;

@@ -57,7 +57,8 @@ protected:
   
 public:
   // nsISVGValueObserver interface:
-  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable);
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
+                                    nsISVGValue::modificationType aModType);
 
   // nsISVGPathGeometrySource interface:
   NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
@@ -129,7 +130,8 @@ nsresult nsSVGPolygonFrame::Init()
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGPolygonFrame::DidModifySVGObservable(nsISVGValue* observable)
+nsSVGPolygonFrame::DidModifySVGObservable(nsISVGValue* observable,
+                                          nsISVGValue::modificationType aModType)
 {
   nsCOMPtr<nsIDOMSVGPointList> l = do_QueryInterface(observable);
   if (l && mPoints==l) {
@@ -137,7 +139,7 @@ nsSVGPolygonFrame::DidModifySVGObservable(nsISVGValue* observable)
     return NS_OK;
   }
   // else
-  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable);
+  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable, aModType);
 }
 
 //----------------------------------------------------------------------

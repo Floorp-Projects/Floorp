@@ -125,8 +125,10 @@ public:
   already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
 
   // nsISVGValueObserver
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
 
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
@@ -683,13 +685,15 @@ nsSVGInnerSVGFrame::GetCoordContextProvider()
 // nsISVGValueObserver methods:
 
 NS_IMETHODIMP
-nsSVGInnerSVGFrame::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGInnerSVGFrame::WillModifySVGObservable(nsISVGValue* observable,
+                                            nsISVGValue::modificationType aModType)
 {
   return NS_OK;
 }
 	
 NS_IMETHODIMP
-nsSVGInnerSVGFrame::DidModifySVGObservable (nsISVGValue* observable)
+nsSVGInnerSVGFrame::DidModifySVGObservable (nsISVGValue* observable,
+                                            nsISVGValue::modificationType aModType)
 {
   NotifyViewportChange();
   

@@ -84,8 +84,10 @@ public:
   NS_IMETHOD GetValueString(nsAString& aValue);
   
   // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     modificationType aModType);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     modificationType aModType);
 
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
@@ -191,16 +193,18 @@ nsSVGLength::GetValueString(nsAString& aValue)
 // nsISVGValueObserver methods
 
 NS_IMETHODIMP
-nsSVGLength::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGLength::WillModifySVGObservable(nsISVGValue* observable,
+                                     modificationType aModType)
 {
-  WillModify();
+  WillModify(aModType);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGLength::DidModifySVGObservable(nsISVGValue* observable)
+nsSVGLength::DidModifySVGObservable(nsISVGValue* observable,
+                                    modificationType aModType)
 {
-  DidModify();
+  DidModify(aModType);
   return NS_OK;
 }
 
@@ -442,9 +446,9 @@ nsSVGLength::SetContext(nsSVGCoordCtx* context)
 {
   // XXX should we bracket this inbetween WillModify/DidModify pairs?
   MaybeRemoveAsObserver();
-  WillModify();
+  WillModify(mod_context);
   mContext = context;
-  DidModify();
+  DidModify(mod_context);
   MaybeAddAsObserver();
   return NS_OK;
 }

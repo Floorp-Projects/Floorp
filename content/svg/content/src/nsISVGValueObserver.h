@@ -43,6 +43,7 @@
 #include "nsISupports.h"
 
 class nsISVGValue;
+#include "nsISVGValue.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsISVGValueObserver
@@ -53,9 +54,9 @@ class nsISVGValue;
   refs.
 */
 
-// {33e46adb-9aa4-4903-9ede-699fae1107d8}
+// {62fa63b3-d94b-47f3-8dc1-56353a0ee7ff}
 #define NS_ISVGVALUEOBSERVER_IID \
-{ 0x33e46adb, 0x9aa4, 0x4903, { 0x9e, 0xde, 0x69, 0x9f, 0xae, 0x11, 0x7, 0xd8 } }
+{ 0x62fa63b3, 0xd94b, 0x47f3, { 0x8d, 0xc1, 0x56, 0x35, 0x3a, 0xe, 0xe7, 0xff } }
 
 
 class nsISVGValueObserver : public nsISupports
@@ -63,8 +64,10 @@ class nsISVGValueObserver : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGVALUEOBSERVER_IID)
   
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable)=0;
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable)=0;
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
+                                     nsISVGValue::modificationType)=0;
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType)=0;
 };
 
 #endif // __NS_ISVGVALUEOBSERVER_H__

@@ -91,7 +91,8 @@ public:
   virtual PRUint32 GetScriptLineNumber();
 
   // nsISVGValueObserver specializations:
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
+                                     nsISVGValue::modificationType aModType);
 
   // nsIContent specializations:
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
@@ -340,9 +341,11 @@ nsSVGScriptElement::GetScriptLineNumber()
 // nsISVGValueObserver methods
 
 NS_IMETHODIMP
-nsSVGScriptElement::DidModifySVGObservable(nsISVGValue* aObservable)
+nsSVGScriptElement::DidModifySVGObservable(nsISVGValue* aObservable,
+                                           nsISVGValue::modificationType aModType)
 {
-  nsresult rv = nsSVGScriptElementBase::DidModifySVGObservable(aObservable);
+  nsresult rv = nsSVGScriptElementBase::DidModifySVGObservable(aObservable,
+                                                               aModType);
   
   // if aObservable==mHref:
   MaybeProcessScript();
