@@ -223,6 +223,11 @@ var bookmarksDNDObserver = {
     var rTarget = this.getResource(NODE_ID(dropItem));
     var rContainer = this.getResource(NODE_ID(containerItem));    
 
+    const kRDFCUtilsContractID = "@mozilla.org/rdf/container-utils;1";
+    const kRDFCUtilsIID = Components.interfaces.nsIRDFContainerUtils;
+    const kRDFCUtils = Components.classes[kRDFCUtilsContractID].getService(kRDFCUtilsIID);
+    var isContainer = kRDFCUtils.IsContainer(kBMDS, rContainer);
+
     // XXX
     var rType = this.getResource(RDF_NS + "type");
     var rBookmark = this.getResource(NC_NS + "Bookmark");
@@ -236,38 +241,33 @@ var bookmarksDNDObserver = {
       bo.beginBatch();
     }
     */
+
+    var sourceID = [], parentID = [], nameRequired = [], name = [];
     
     for (i = 0; i < numObjects; ++i) {
       var flavourData = aXferData.dataList[i].first;
-      
-      var sourceID, parentID, name;
-      var nameRequired = false;
+      nameRequired[i] = false;
       var data = flavourData.data;
       switch (flavourData.flavour.contentType) {
       case "moz/rdfitem":
         var ix = data.indexOf("\n");
-        sourceID = ix >= 0 ? (parentID = data.substr(ix+1), data.substr(0, ix)) : data;
+        sourceID[i] = ix >= 0 ? (parentID[i] = data.substr(ix+1), data.substr(0, ix)) : data;
         break;
       case "text/x-moz-url":
         ix = data.indexOf("\n");
-        sourceID = ix >= 0 ? (name = data.substr(ix+1), data.substr(0, ix)) : data;
+        sourceID[i] = ix >= 0 ? (name[i] = data.substr(ix+1), data.substr(0, ix)) : data;
         break;
       case "text/unicode":
-        sourceID = data;
-        nameRequired = true;
+        sourceID[i] = data;
+        nameRequired[i] = true;
         break;
       default: 
         continue;
       }
       
-      var rSource = this.getResource(sourceID);
-      var rParent = parentID ? this.getResource(parentID) : null;
+      var rSource = this.getResource(sourceID[i]);
+      var rParent = parentID[i] ? this.getResource(parentID[i]) : null;
 
-      const kRDFCUtilsContractID = "@mozilla.org/rdf/container-utils;1";
-      const kRDFCUtilsIID = Components.interfaces.nsIRDFContainerUtils;
-      const kRDFCUtils = Components.classes[kRDFCUtilsContractID].getService(kRDFCUtilsIID);
-      var isContainer = kRDFCUtils.IsContainer(kBMDS, rContainer);
-            
       // Prevent dropping node on itself, before or after itself, on its parent 
       // container, or a weird situation when an open container is dropped into
       // itself (which results in data loss!).
@@ -276,16 +276,23 @@ var bookmarksDNDObserver = {
       //  see bug 68656 fir details).
       if (rSource == rTarget || (dropAction == "on" && rContainer == rParent) ||
           rContainer == rSource || !isContainer)
-        continue;
+        return;
 
       // Prevent dropping node into one of its own subfolders
+      var dropItem2 = dropItem;
       do {
-        var targetAncestor = NODE_ID(dropItem);
-        dropItem = dropItem.parentNode;
-      } while (targetAncestor != "NC:BookmarksRoot" && targetAncestor != sourceID);
-      if (targetAncestor == sourceID) {
-        continue;
+        var targetAncestor = NODE_ID(dropItem2);
+        dropItem2 = dropItem2.parentNode;
+      } while (targetAncestor != "NC:BookmarksRoot" && targetAncestor != sourceID[i]);
+      if (targetAncestor == sourceID[i]) {
+        return;
       }
+    }
+
+    for (i = 0; i < numObjects; ++i) {
+      var flavourData = aXferData.dataList[i].first;
+      var rSource = this.getResource(sourceID[i]);
+      var rParent = parentID[i] ? this.getResource(parentID[i]) : null;
 
       // XXX if any of the following fails, the nodes are gone for good!
       const kDSIID = Components.interfaces.nsIDragService;
@@ -304,7 +311,7 @@ var bookmarksDNDObserver = {
 
       RDFC.Init(kBMDS, rContainer);
       
-      var bmType = this.getTarget(bookmarksTree.database, sourceID, RDF_NS + "type");
+      var bmType = this.getTarget(bookmarksTree.database, sourceID[i], RDF_NS + "type");
       if (!bmType) 
         kBMDS.Assert(rSource, rType, rBookmark, true);
       if (bmType == NC_NS + "Folder") {
@@ -324,7 +331,7 @@ var bookmarksDNDObserver = {
       dirty = true;
 
       if (rParent) {
-        gBookmarksShell.selectFolderItem(rContainer.Value, sourceID, additiveFlag);
+        gBookmarksShell.selectFolderItem(rContainer.Value, sourceID[i], additiveFlag);
         if (!additiveFlag) additiveFlag = true;
       }
 
@@ -333,10 +340,10 @@ var bookmarksDNDObserver = {
       // preserve not only the URL but the name of the shortcut. The other case
       // where we need to assert a name is when the node does not already exist
       // in the graph, in this case we'll just use the URL as the name.
-      if (name || nameRequired) {
-        var currentName = this.getTarget(bookmarksTree.database, sourceID, NC_NS + "Name");
+      if (name[i] || nameRequired[i]) {
+        var currentName = this.getTarget(bookmarksTree.database, sourceID[i], NC_NS + "Name");
         if (!currentName) {
-          var rDefaultName = this.RDF.GetLiteral(name || sourceID);
+          var rDefaultName = this.RDF.GetLiteral(name[i] || sourceID[i]);
           if (rDefaultName) {
             var rName = this.RDF.GetResource(NC_NS + "Name");
             kBMDS.Assert(rSource, rName, rDefaultName, true);
@@ -344,6 +351,7 @@ var bookmarksDNDObserver = {
         }
       }
     }
+
     /*
     if (numObjects > 1) {
       var bo = bookmarksTree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
