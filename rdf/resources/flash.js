@@ -40,18 +40,11 @@ function Init()
 
         dump('adding "' + service.Value + '" to the tree\n');
         try {
-            // create a new RDF/XML datasource
-            var flashservice =
-                Components.classes['component://netscape/rdf/datasource?name=xml-datasource'].createInstance();
-
+            // create a new RDF/XML datasource. This will,
+            // unfortunately, force it to be read synchronously the
+            // first time around.
+            var flashservice = RDF.GetDataSource(service.Value);
             flashservice = flashservice.QueryInterface(Components.interfaces.nsIRDFXMLDataSource);
-
-            // Initialize it.
-            flashservice.Init(service.Value);
-
-            // Read it in asynchronously.
-            flashservice.Open(false);
-
             // Add it to the tree control's composite datasource.
             tree.database.AddDataSource(flashservice);
 
