@@ -239,6 +239,8 @@ NPError NewControl(const char *pluginType,
         return NPERR_GENERIC_ERROR;
     }
 
+    pData->clsid = clsid;
+
     // Create the control site
     CControlSiteInstance *pSite = NULL;
     CControlSiteInstance::CreateInstance(&pSite);
@@ -299,6 +301,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
     {
         return NPERR_GENERIC_ERROR;
     }
+    pData->pContentType = (pluginType) ? strdup(pluginType) : NULL;
 #ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
     pData->pScriptingPeer = NULL;
 #endif
@@ -323,6 +326,8 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
     // Test if plugin creation has succeeded and cleanup if it hasn't
     if (rv != NPERR_NO_ERROR)
     {
+        if (pData->pContentType)
+            free(pData->pContentType);
         delete pData;
         return rv;
     }
@@ -369,6 +374,8 @@ NPP_Destroy(NPP instance, NPSavedData** save)
         // TODO
     }
 
+    if (pData->pContentType)
+        free(pData->pContentType);
     delete pData;
 
     instance->pdata = 0;

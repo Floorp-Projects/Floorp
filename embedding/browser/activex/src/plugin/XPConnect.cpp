@@ -61,7 +61,7 @@ static PRUint32 gInstances = 0;
 
 nsScriptablePeer::nsScriptablePeer()
 {
-    mRef = 0;
+    NS_INIT_ISUPPORTS();
     if (gInstances == 0)
       XPCOMGlueStartup(nsnull);
     gInstances++;
@@ -629,4 +629,6 @@ xpconnect_getvalue(NPP instance, NPPVariable variable, void *value)
     }
     return NPERR_GENERIC_ERROR;
 }
+
+
 
