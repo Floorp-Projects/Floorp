@@ -25,7 +25,7 @@
 
 class nsIRDFContent;
 class nsIRDFDocument;
-class nsIRDFNode;
+class nsIRDFResource;
 
 // {954F0810-81DC-11d2-B52A-000000000000}
 #define NS_IRDFCONTENT_IID \
@@ -38,14 +38,14 @@ class nsIRDFContent : public nsIXMLContent {
 public:
   NS_IMETHOD Init(nsIRDFDocument* doc,
                   const nsString& tag,
-                  nsIRDFNode* resource,
+                  nsIRDFResource* resource,
                   PRBool childrenMustBeGenerated) = 0;
 
   NS_IMETHOD SetResource(const nsString& aURI) = 0;
   NS_IMETHOD GetResource(nsString& rURI) const = 0;
 
-  NS_IMETHOD SetResource(nsIRDFNode* aResource) = 0;
-  NS_IMETHOD GetResource(nsIRDFNode*& aResource) = 0;
+  NS_IMETHOD SetResource(nsIRDFResource* aResource) = 0;
+  NS_IMETHOD GetResource(nsIRDFResource*& aResource) = 0;
 
   NS_IMETHOD SetProperty(const nsString& aPropertyURI, const nsString& aValue) = 0;
   NS_IMETHOD GetProperty(const nsString& aPropertyURI, nsString& rValue) const = 0;

@@ -25,16 +25,17 @@
 #include "nsIDTD.h"
 #include "nsINameSpaceManager.h"
 #include "nsIParser.h"
+#include "nsIRDFDataSource.h"
 #include "nsIRDFContentSink.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
-#include "nsMemoryDataSource.h"
 #include "nsParserCIID.h"
 
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kIDTDIID,            NS_IDTD_IID);
 static NS_DEFINE_IID(kIParserIID,         NS_IPARSER_IID);
+static NS_DEFINE_IID(kIRDFDataSourceIID,  NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 static NS_DEFINE_CID(kParserCID,          NS_PARSER_IID); // XXX
@@ -43,17 +44,89 @@ static NS_DEFINE_CID(kWellFormedDTDCID,   NS_WELLFORMEDDTD_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
-class StreamDataSourceImpl : public nsMemoryDataSource
+class StreamDataSourceImpl : public nsIRDFDataSource
 {
 protected:
     nsIURL* mURL;
+    nsIRDFDataSource* mInner;
 
 public:
     StreamDataSourceImpl(void);
     virtual ~StreamDataSourceImpl(void);
 
-    // nsIDataSource methods that are overloaded from nsMemoryDataSource
-    NS_IMETHOD Init(const nsString& uri);
+    // nsISupports
+    NS_DECL_ISUPPORTS
+
+    // nsIRDFDataSource
+    NS_IMETHOD Init(const char* uri);
+
+    NS_IMETHOD GetSource(nsIRDFResource* property,
+                         nsIRDFNode* target,
+                         PRBool tv,
+                         nsIRDFResource** source) {
+        return mInner->GetSource(property, target, tv, source);
+    }
+
+    NS_IMETHOD GetSources(nsIRDFResource* property,
+                          nsIRDFNode* target,
+                          PRBool tv,
+                          nsIRDFCursor** sources) {
+        return mInner->GetSources(property, target, tv, sources);
+    }
+
+    NS_IMETHOD GetTarget(nsIRDFResource* source,
+                         nsIRDFResource* property,
+                         PRBool tv,
+                         nsIRDFNode** target) {
+        return mInner->GetTarget(source, property, tv, target);
+    }
+
+    NS_IMETHOD GetTargets(nsIRDFResource* source,
+                          nsIRDFResource* property,
+                          PRBool tv,
+                          nsIRDFCursor** targets) {
+        return mInner->GetTargets(source, property, tv, targets);
+    }
+
+    NS_IMETHOD Assert(nsIRDFResource* source, 
+                      nsIRDFResource* property, 
+                      nsIRDFNode* target,
+                      PRBool tv) {
+        return mInner->Assert(source, property, target, tv);
+    }
+
+    NS_IMETHOD Unassert(nsIRDFResource* source,
+                        nsIRDFResource* property,
+                        nsIRDFNode* target) {
+        return mInner->Unassert(source, property, target);
+    }
+
+    NS_IMETHOD HasAssertion(nsIRDFResource* source,
+                            nsIRDFResource* property,
+                            nsIRDFNode* target,
+                            PRBool tv,
+                            PRBool* hasAssertion) {
+        return mInner->HasAssertion(source, property, target, tv, hasAssertion);
+    }
+
+    NS_IMETHOD AddObserver(nsIRDFObserver* n) {
+        return mInner->AddObserver(n);
+    }
+
+    NS_IMETHOD RemoveObserver(nsIRDFObserver* n) {
+        return mInner->RemoveObserver(n);
+    }
+
+    NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
+                           nsIRDFCursor** labels) {
+        return mInner->ArcLabelsIn(node, labels);
+    }
+
+    NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
+                            nsIRDFCursor** labels) {
+        return mInner->ArcLabelsOut(source, labels);
+    }
+
     NS_IMETHOD Flush(void);
 };
 
@@ -73,8 +146,10 @@ StreamDataSourceImpl::~StreamDataSourceImpl(void)
 }
 
 
+NS_IMPL_ISUPPORTS(StreamDataSourceImpl, kIRDFDataSourceIID);
+
 NS_IMETHODIMP
-StreamDataSourceImpl::Init(const nsString& uri)
+StreamDataSourceImpl::Init(const char* uri)
 {
     nsresult rv;
 

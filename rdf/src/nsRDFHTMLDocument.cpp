@@ -37,14 +37,29 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
+static NS_DEFINE_IID(kIRDFLiteralIID,  NS_IRDFLITERAL_IID);
+
+////////////////////////////////////////////////////////////////////////
+
 class RDFHTMLDocumentImpl : public nsRDFDocument {
 public:
     RDFHTMLDocumentImpl();
     virtual ~RDFHTMLDocumentImpl();
 
 protected:
+    nsresult AddTreeChild(nsIRDFContent* parent,
+                          const nsString& tag,
+                          nsIRDFResource* property,
+                          nsIRDFResource* value);
+
+    nsresult AddLeafChild(nsIRDFContent* parent,
+                          const nsString& tag,
+                          nsIRDFResource* property,
+                          nsIRDFLiteral* value);
+
     virtual nsresult AddChild(nsIRDFContent* parent,
-                              nsIRDFNode* property,
+                              nsIRDFResource* property,
                               nsIRDFNode* value);
 };
 
@@ -59,65 +74,109 @@ RDFHTMLDocumentImpl::~RDFHTMLDocumentImpl(void)
 }
 
 nsresult
-RDFHTMLDocumentImpl::AddChild(nsIRDFContent* parent,
-                              nsIRDFNode* property,
-                              nsIRDFNode* value)
+RDFHTMLDocumentImpl::AddTreeChild(nsIRDFContent* parent,
+                                  const nsString& tag,
+                                  nsIRDFResource* property,
+                                  nsIRDFResource* value)
 {
+    // If it's a tree property, then create a child element whose
+    // value is the value of the property. We'll also attach an "ID="
+    // attribute to the new child; e.g.,
+    //
+    // <parent>
+    //   <property id="value">
+    //      <!-- recursively generated -->
+    //   </property>
+    //   ...
+    // </parent>
+
     nsresult rv;
+    const char* p;
+    nsAutoString s;
     nsIRDFContent* child = nsnull;
 
-    // The tag we'll use for the new child will be the string value of
-    // the property.
-    nsAutoString tag;
-    if (NS_FAILED(rv = property->GetStringValue(tag)))
+    // PR_TRUE indicates that we want the child to dynamically
+    // generate its own kids.
+    if (NS_FAILED(rv = NewChild(tag, value, child, PR_TRUE)))
         goto done;
 
-    if (IsTreeProperty(property) || rdf_IsContainer(mResourceMgr, mDB, value)) {
-        // If it's a tree property, then create a child element whose
-        // value is the value of the property. We'll also attach an "ID="
-        // attribute to the new child; e.g.,
-        //
-        // <parent>
-        //   <property id="value">
-        //      <!-- recursively generated -->
-        //   </property>
-        //   ...
-        // </parent>
+    if (NS_FAILED(rv = value->GetValue(&p)))
+        goto done;
 
-        nsAutoString s;
+    s = p;
 
-        // PR_TRUE indicates that we want the child to dynamically
-        // generate its own kids.
-        if (NS_FAILED(rv = NewChild(tag, value, child, PR_TRUE)))
-            goto done;
-
-        if (NS_FAILED(rv = value->GetStringValue(s)))
-            goto done;
-
-        if (NS_FAILED(rv = child->SetAttribute("ID", s, PR_FALSE)))
-            goto done;
-    }
-    else {
-        // Otherwise, it's not a tree property. So we'll just create a
-        // new element for the property, and a simple text node for
-        // its value; e.g.,
-        //
-        // <parent>
-        //   <property>value</property>
-        //   ...
-        // </parent>
-
-        if (NS_FAILED(rv = NewChild(tag, property, child, PR_FALSE)))
-            goto done;
-
-        if (NS_FAILED(rv = AttachTextNode(child, value)))
-            goto done;
-    }
+    if (NS_FAILED(rv = child->SetAttribute("ID", s, PR_FALSE)))
+        goto done;
 
     rv = parent->AppendChildTo(child, PR_TRUE);
 
 done:
     NS_IF_RELEASE(child);
+    return rv;
+}
+
+
+nsresult
+RDFHTMLDocumentImpl::AddLeafChild(nsIRDFContent* parent,
+                                  const nsString& tag,
+                                  nsIRDFResource* property,
+                                  nsIRDFLiteral* value)
+{
+    // Otherwise, it's not a tree property. So we'll just create a
+    // new element for the property, and a simple text node for
+    // its value; e.g.,
+    //
+    // <parent>
+    //   <property>value</property>
+    //   ...
+    // </parent>
+
+    nsresult rv;
+    nsIRDFContent* child = nsnull;
+
+    if (NS_FAILED(rv = NewChild(tag, property, child, PR_FALSE)))
+        goto done;
+
+    if (NS_FAILED(rv = AttachTextNode(child, value)))
+        goto done;
+
+    rv = parent->AppendChildTo(child, PR_TRUE);
+
+done:
+    NS_IF_RELEASE(child);
+    return rv;
+}
+
+nsresult
+RDFHTMLDocumentImpl::AddChild(nsIRDFContent* parent,
+                              nsIRDFResource* property,
+                              nsIRDFNode* value)
+{
+    nsresult rv;
+
+    // The tag we'll use for the new child will be the string value of
+    // the property.
+    const char* s;
+    if (NS_FAILED(rv = property->GetValue(&s)))
+        return rv;
+
+    nsAutoString tag = s;
+
+    nsIRDFResource* valueResource;
+    if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, (void**) &valueResource))) {
+        if (IsTreeProperty(property) || rdf_IsContainer(mResourceMgr, mDB, valueResource)) {
+            rv = AddTreeChild(parent, tag, property, valueResource);
+            NS_RELEASE(valueResource);
+            return rv;
+        }
+        NS_RELEASE(valueResource);
+    }
+
+    nsIRDFLiteral* valueLiteral;
+    if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, (void**) &valueLiteral))) {
+        rv = AddLeafChild(parent, tag, property, valueLiteral);
+        NS_RELEASE(valueLiteral);
+    }
     return rv;
 }
 

@@ -25,7 +25,7 @@
 class nsIRDFContent;
 class nsIRDFDataBase;
 class nsISupportsArray;
-class nsIRDFNode;
+class nsIRDFResource;
 
 // {954F0811-81DC-11d2-B52A-000000000000}
 #define NS_IRDFDOCUMENT_IID \
@@ -45,7 +45,7 @@ public:
   /**
    * Set the document's "root" resource.
    */
-  NS_IMETHOD SetRootResource(nsIRDFNode* aResource) = 0;
+  NS_IMETHOD SetRootResource(nsIRDFResource* aResource) = 0;
 
   /**
    * Retrieve the document's RDF data base.
@@ -70,14 +70,14 @@ public:
    * should use when constructing the content model from the RDF
    * graph.
    */
-  NS_IMETHOD AddTreeProperty(nsIRDFNode* resource) = 0;
+  NS_IMETHOD AddTreeProperty(nsIRDFResource* resource) = 0;
 
   /**
    * Remove a property from the set of "tree properties" that the
    * document should use when constructing the content model from the
    * RDF graph.
    */
-  NS_IMETHOD RemoveTreeProperty(nsIRDFNode* resource) = 0;
+  NS_IMETHOD RemoveTreeProperty(nsIRDFResource* resource) = 0;
 };
 
 // factory functions

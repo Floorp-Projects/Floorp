@@ -20,7 +20,6 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFResourceManager.h"
 #include "nsIServiceManager.h"
-#include "nsMemoryDataSource.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -30,7 +29,9 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+static NS_DEFINE_IID(kIRDFDataSourceIID,      NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFResourceManagerIID, NS_IRDFRESOURCEMANAGER_IID);
+static NS_DEFINE_CID(kRDFMemoryDataSourceCID, NS_RDFMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFResourceManagerCID,  NS_RDFRESOURCEMANAGER_CID);
 
 static const char kURI_bookmarks[] = "rdf:bookmarks"; // XXX?
@@ -64,7 +65,10 @@ static const char kPersonalToolbar[]  = "Personal Toolbar";
 
 ////////////////////////////////////////////////////////////////////////
 
-
+/**
+ * The bookmark parser knows how to read <tt>bookmarks.html</tt> and convert it
+ * into an RDF graph.
+ */
 class BookmarkParser {
 protected:
     static const char* kBRString;
@@ -87,7 +91,7 @@ protected:
     nsIRDFResourceManager* mResourceMgr;
     nsIRDFDataSource*      mDataSource;
     nsVoidArray            mStack;
-    nsIRDFNode*            mLastItem;
+    nsIRDFResource*        mLastItem;
     nsAutoString           mLine;
     PRInt32                mCounter;
     nsAutoString           mFolderDate;
@@ -98,7 +102,7 @@ protected:
     void DoStateTransition(void);
     void CreateBookmark(void);
 
-    nsresult AssertTime(nsIRDFNode* subject,
+    nsresult AssertTime(nsIRDFResource* subject,
                         const nsString& predicateURI,
                         const nsString& time);
 
@@ -183,7 +187,7 @@ BookmarkParser::AddColumns(void)
     // information about columns, etc.
     nsresult rv;
 
-    nsIRDFNode* columns = nsnull;
+    nsIRDFResource* columns = nsnull;
 
     static const char* gColumnTitles[] = {
         "Name", 
@@ -204,15 +208,16 @@ BookmarkParser::AddColumns(void)
     const char* const* columnTitle = gColumnTitles;
     const char* const* columnURI   = gColumnURIs;
 
-    if (NS_FAILED(rv = rdf_CreateSequence(mResourceMgr, mDataSource, columns)))
+    if (NS_FAILED(rv = rdf_CreateAnonymousResource(mResourceMgr, &columns)))
+        goto done;
+
+    if (NS_FAILED(rv = rdf_MakeSeq(mResourceMgr, mDataSource, columns)))
         goto done;
 
     while (*columnTitle && *columnURI) {
-        nsIRDFNode* column              = nsnull;
-        nsIRDFNode* columnURIResource   = nsnull;
-        nsIRDFNode* columnTitleResource = nsnull;
+        nsIRDFResource* column = nsnull;
 
-        if (NS_SUCCEEDED(rv = rdf_CreateAnonymousNode(mResourceMgr, column))) {
+        if (NS_SUCCEEDED(rv = rdf_CreateAnonymousResource(mResourceMgr, &column))) {
             rdf_Assert(mResourceMgr, mDataSource, column, kURINC_Title,  *columnTitle);
             rdf_Assert(mResourceMgr, mDataSource, column, kURINC_Column, *columnURI);
 
@@ -270,23 +275,24 @@ BookmarkParser::NextToken(void)
     // description
     if ((mState == eBookmarkParserState_InTitle) ||
         (mState == eBookmarkParserState_InH3)) {
-        nsIRDFNode* folder;
+        nsIRDFResource* folder;
 
         if (mStack.Count() > 0) {
             // a regular old folder
+            
             nsAutoString folderURI(kURI_bookmarks);
             folderURI.Append('#');
             folderURI.Append(++mCounter, 10);
 
-            if (NS_FAILED(mResourceMgr->GetNode(folderURI, folder)))
+            if (NS_FAILED(mResourceMgr->GetUnicodeResource(folderURI, &folder)))
                 return;
 
-            nsIRDFNode* parent = (nsIRDFNode*) mStack[mStack.Count() - 1];
+            nsIRDFResource* parent = (nsIRDFResource*) mStack[mStack.Count() - 1];
             rdf_Assert(mResourceMgr, mDataSource, parent, kURINC_Folder, folder);
         }
         else {
             // it's the root
-            if (NS_FAILED(mResourceMgr->GetNode(kURI_bookmarks, folder)))
+            if (NS_FAILED(mResourceMgr->GetResource(kURI_bookmarks, &folder)))
                 return;
         }
 
@@ -297,6 +303,9 @@ BookmarkParser::NextToken(void)
 
         NS_IF_RELEASE(mLastItem);
         mLastItem = folder;
+        // XXX Implied
+        //NS_ADDREF(mLastItem);
+        //NS_RELEASE(folder); 
 
         if (mState != eBookmarkParserState_InTitle)
             rdf_Assert(mResourceMgr, mDataSource, mLastItem, kURINC_Name, mLine);
@@ -346,6 +355,7 @@ BookmarkParser::DoStateTransition(void)
     }
     else if (mLine.Find(kOpenDLString) == 0) {
         mStack.AppendElement(mLastItem);
+        NS_ADDREF(mLastItem);
     }
     else if (mLine.Find(kCloseDLString) == 0) {
         PRInt32 count = mStack.Count();
@@ -407,14 +417,14 @@ BookmarkParser::CreateBookmark(void)
     if (values[eBmkAttribute_URL].Length() == 0)
         return;
 
-    nsIRDFNode* bookmark;
-    if (NS_FAILED(mResourceMgr->GetNode(values[eBmkAttribute_URL], bookmark)))
+    nsIRDFResource* bookmark;
+    if (NS_FAILED(mResourceMgr->GetUnicodeResource(values[eBmkAttribute_URL], &bookmark)))
         return;
 
     if (! mStack.Count())
         return;
 
-    nsIRDFNode* parent = (nsIRDFNode*) mStack[mStack.Count() - 1];
+    nsIRDFResource* parent = (nsIRDFResource*) mStack[mStack.Count() - 1];
     if (! parent)
         return;
 
@@ -431,11 +441,14 @@ BookmarkParser::CreateBookmark(void)
 
     NS_IF_RELEASE(mLastItem);
     mLastItem = bookmark;
+    // XXX Implied
+    //NS_ADDREF(mLastItem);
+    //NS_RELEASE(bookmark);
 }
 
 
 nsresult
-BookmarkParser::AssertTime(nsIRDFNode* object,
+BookmarkParser::AssertTime(nsIRDFResource* object,
                            const nsString& predicateURI,
                            const nsString& time)
 {
@@ -446,9 +459,16 @@ BookmarkParser::AssertTime(nsIRDFNode* object,
 ////////////////////////////////////////////////////////////////////////
 // BookmarkDataSourceImpl
 
-class BookmarkDataSourceImpl : public nsMemoryDataSource {
+/**
+ * The bookmark data source uses a <tt>BookmarkParser</tt> to read the
+ * <tt>bookmarks.html</tt> file from the local disk and present an
+ * in-memory RDF graph based on it.
+ */
+class BookmarkDataSourceImpl : public nsIRDFDataSource {
 protected:
     static const char* kBookmarksFilename;
+
+    nsIRDFDataSource* mInner;
 
     nsresult ReadBookmarks(void);
     nsresult WriteBookmarks(void);
@@ -457,6 +477,81 @@ protected:
 public:
     BookmarkDataSourceImpl(void);
     virtual ~BookmarkDataSourceImpl(void);
+
+    // nsISupports
+    NS_DECL_ISUPPORTS
+
+    // nsIRDFDataSource
+    NS_IMETHOD Init(const char* uri) {
+        return mInner->Init(uri);
+    }
+
+    NS_IMETHOD GetSource(nsIRDFResource* property,
+                         nsIRDFNode* target,
+                         PRBool tv,
+                         nsIRDFResource** source) {
+        return mInner->GetSource(property, target, tv, source);
+    }
+
+    NS_IMETHOD GetSources(nsIRDFResource* property,
+                          nsIRDFNode* target,
+                          PRBool tv,
+                          nsIRDFCursor** sources) {
+        return mInner->GetSources(property, target, tv, sources);
+    }
+
+    NS_IMETHOD GetTarget(nsIRDFResource* source,
+                         nsIRDFResource* property,
+                         PRBool tv,
+                         nsIRDFNode** target) {
+        return mInner->GetTarget(source, property, tv, target);
+    }
+
+    NS_IMETHOD GetTargets(nsIRDFResource* source,
+                          nsIRDFResource* property,
+                          PRBool tv,
+                          nsIRDFCursor** targets) {
+        return mInner->GetTargets(source, property, tv, targets);
+    }
+
+    NS_IMETHOD Assert(nsIRDFResource* source, 
+                      nsIRDFResource* property, 
+                      nsIRDFNode* target,
+                      PRBool tv) {
+        return mInner->Assert(source, property, target, tv);
+    }
+
+    NS_IMETHOD Unassert(nsIRDFResource* source,
+                        nsIRDFResource* property,
+                        nsIRDFNode* target) {
+        return mInner->Unassert(source, property, target);
+    }
+
+    NS_IMETHOD HasAssertion(nsIRDFResource* source,
+                            nsIRDFResource* property,
+                            nsIRDFNode* target,
+                            PRBool tv,
+                            PRBool* hasAssertion) {
+        return mInner->HasAssertion(source, property, target, tv, hasAssertion);
+    }
+
+    NS_IMETHOD AddObserver(nsIRDFObserver* n) {
+        return mInner->AddObserver(n);
+    }
+
+    NS_IMETHOD RemoveObserver(nsIRDFObserver* n) {
+        return mInner->RemoveObserver(n);
+    }
+
+    NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
+                           nsIRDFCursor** labels) {
+        return mInner->ArcLabelsIn(node, labels);
+    }
+
+    NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
+                            nsIRDFCursor** labels) {
+        return mInner->ArcLabelsOut(source, labels);
+    }
 
     NS_IMETHOD Flush(void);
 };
@@ -471,15 +566,26 @@ BookmarkDataSourceImpl::BookmarkDataSourceImpl(void)
     // XXX rvg there should be only one instance of this class. 
     // this is actually true of all datasources.
     NS_INIT_REFCNT();
-    ReadBookmarks(); // XXX do or die, eh?
+    nsresult rv;
+
+    // XXX do or die, my friend...
+    rv = nsRepository::CreateInstance(kRDFMemoryDataSourceCID,
+                                      nsnull,
+                                      kIRDFDataSourceIID,
+                                      (void**) &mInner);
+
+    PR_ASSERT(NS_SUCCEEDED(rv));
+    ReadBookmarks();
     Init(kURI_bookmarks);
 }
 
 BookmarkDataSourceImpl::~BookmarkDataSourceImpl(void)
 {
     Flush();
+    NS_RELEASE(mInner);
 }
 
+NS_IMPL_ISUPPORTS(BookmarkDataSourceImpl, kIRDFDataSourceIID);
 
 
 NS_IMETHODIMP

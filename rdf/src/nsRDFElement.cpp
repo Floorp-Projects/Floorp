@@ -1247,7 +1247,7 @@ nsRDFElement::GetNameSpaceID(PRInt32& aNameSpaceID) const
 NS_IMETHODIMP
 nsRDFElement::Init(nsIRDFDocument* doc,
                    const nsString& aTag,
-                   nsIRDFNode* resource,
+                   nsIRDFResource* resource,
                    PRBool childrenMustBeGenerated)
 {
     NS_PRECONDITION(doc, "null ptr");
@@ -1289,7 +1289,7 @@ nsRDFElement::SetResource(const nsString& aURI)
                                                     (nsISupports**) &mgr)))
         return rv;
     
-    rv = mgr->GetNode(aURI, mResource); // implicit AddRef()
+    rv = mgr->GetUnicodeResource(aURI, &mResource); // implicit AddRef()
     nsServiceManager::ReleaseService(kRDFResourceManagerCID, mgr);
 
     return rv;
@@ -1301,13 +1301,18 @@ nsRDFElement::GetResource(nsString& rURI) const
     if (! mResource)
         return NS_ERROR_NOT_INITIALIZED;
 
-    return mResource->GetStringValue(rURI);
+    const char* s;
+    nsresult rv;
+    if (NS_FAILED(rv = mResource->GetValue(&s)))
+        return rv;
+
+    rURI = s;
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsRDFElement::SetResource(nsIRDFNode* aResource)
+nsRDFElement::SetResource(nsIRDFResource* aResource)
 {
     NS_PRECONDITION(aResource, "null ptr");
     NS_PRECONDITION(!mResource, "already initialized");
@@ -1325,7 +1330,7 @@ nsRDFElement::SetResource(nsIRDFNode* aResource)
 
 
 NS_IMETHODIMP
-nsRDFElement::GetResource(nsIRDFNode*& aResource)
+nsRDFElement::GetResource(nsIRDFResource*& aResource)
 {
     if (! mResource)
         return NS_ERROR_NOT_INITIALIZED;
@@ -1341,8 +1346,9 @@ nsRDFElement::SetProperty(const nsString& aPropertyURI, const nsString& aValue)
     if (!mResource || !mDocument)
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsString resource;
-    mResource->GetStringValue(resource);
+    const char* s;
+    mResource->GetValue(&s);
+    nsAutoString resource = s;
 
 #ifdef DEBUG_waterson
     char buf[256];
@@ -1361,14 +1367,15 @@ nsRDFElement::SetProperty(const nsString& aPropertyURI, const nsString& aValue)
                                                     (nsISupports**) &mgr)))
         return rv;
     
-    nsIRDFNode* property = nsnull;
-    nsIRDFNode* value = nsnull;
-    nsIRDFDataBase* db = nsnull;
+    nsIRDFResource* property = nsnull;
+    nsIRDFLiteral* value     = nsnull;
+    nsIRDFDataBase* db       = nsnull;
 
-    if (NS_FAILED(rv = mgr->GetNode(aPropertyURI, property)))
+    if (NS_FAILED(rv = mgr->GetUnicodeResource(aPropertyURI, &property)))
         goto done;
 
-    if (NS_FAILED(rv = mgr->GetNode(aValue, value)))
+    // XXX assume it's a literal?
+    if (NS_FAILED(rv = mgr->GetLiteral(aValue, &value)))
         goto done;
 
     if (NS_FAILED(rv = mDocument->GetDataBase(db)))

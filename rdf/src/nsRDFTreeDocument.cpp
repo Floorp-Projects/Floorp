@@ -41,6 +41,11 @@ static const char* kColumnsTag  = "COLUMNS";
 
 ////////////////////////////////////////////////////////////////////////
 
+static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
+static NS_DEFINE_IID(kIRDFLiteralIID,  NS_IRDFLITERAL_IID);
+
+////////////////////////////////////////////////////////////////////////
+
 class RDFTreeDocumentImpl : public nsRDFDocument {
 public:
     RDFTreeDocumentImpl();
@@ -51,7 +56,7 @@ public:
 protected:
     virtual nsresult
     AddChild(nsIRDFContent* parent,
-             nsIRDFNode* property,
+             nsIRDFResource* property,
              nsIRDFNode* value);
 
     /**
@@ -70,16 +75,16 @@ protected:
      */
     nsresult
     AddTreeChild(nsIRDFContent* parent,
-                 nsIRDFNode* property,
-                 nsIRDFNode* value);
+                 nsIRDFResource* property,
+                 nsIRDFResource* value);
 
     /**
      * Add a single column to the content model.
      */
     nsresult
     AddColumn(nsIContent* parent,
-              nsIRDFNode* property,
-              nsIRDFNode* title);
+              nsIRDFResource* property,
+              nsIRDFLiteral* title);
 
 
     /**
@@ -87,7 +92,7 @@ protected:
      */
     nsresult
     AddColumnsFromContainer(nsIContent* parent,
-                            nsIRDFNode* columns);
+                            nsIRDFResource* columns);
 
 
     /**
@@ -95,21 +100,21 @@ protected:
      */
     nsresult
     AddColumnsFromMultiAttributes(nsIContent* parent,
-                                  nsIRDFNode* columns);
+                                  nsIRDFResource* columns);
 
     /**
      * Add columns to the content model.
      */
     nsresult
     AddColumns(nsIContent* parent,
-               nsIRDFNode* columns);
+               nsIRDFResource* columns);
 
     /**
      * Add a new property element to the content model
      */
     nsresult
     AddPropertyChild(nsIRDFContent* parent,
-                     nsIRDFNode* property,
+                     nsIRDFResource* property,
                      nsIRDFNode* value);
 };
 
@@ -193,8 +198,8 @@ done:
 
 nsresult
 RDFTreeDocumentImpl::AddTreeChild(nsIRDFContent* parent,
-                                  nsIRDFNode* property,
-                                  nsIRDFNode* value)
+                                  nsIRDFResource* property,
+                                  nsIRDFResource* value)
 {
     // If it's a tree property, then we need to add the new child
     // element to a special "children" element in the parent.  The
@@ -215,6 +220,7 @@ RDFTreeDocumentImpl::AddTreeChild(nsIRDFContent* parent,
     nsresult rv;
     nsIRDFContent* child = nsnull;
     nsIContent* children = nsnull;
+    const char* p;
     nsAutoString s;
 
     // Ensure that the <children> element exists on the parent.
@@ -227,8 +233,10 @@ RDFTreeDocumentImpl::AddTreeChild(nsIRDFContent* parent,
     if (NS_FAILED(rv = NewChild(kFolderTag, value, child, PR_TRUE)))
         goto done;
 
-    if (NS_FAILED(rv = value->GetStringValue(s)))
+    if (NS_FAILED(rv = value->GetValue(&p)))
         goto done;
+
+    s = p;
 
     if (NS_FAILED(rv = child->SetAttribute("ID", s, PR_FALSE)))
         goto done;
@@ -250,14 +258,16 @@ done:
 
 nsresult
 RDFTreeDocumentImpl::AddColumn(nsIContent* parent,
-                               nsIRDFNode* property,
-                               nsIRDFNode* title)
+                               nsIRDFResource* property,
+                               nsIRDFLiteral* title)
 {
     nsresult rv;
 
-    nsAutoString tag;
-    if (NS_FAILED(rv = property->GetStringValue(tag)))
+    const char* s;
+    if (NS_FAILED(rv = property->GetValue(&s)))
         return rv;
+
+    nsAutoString tag = s;
 
     // XXX this should be a generic XML container element, not an nsRDFElement
     nsIRDFContent* column = nsnull;
@@ -317,7 +327,7 @@ done:
 
 nsresult
 RDFTreeDocumentImpl::AddColumnsFromContainer(nsIContent* parent,
-                                             nsIRDFNode* columns)
+                                             nsIRDFResource* columns)
 {
     nsresult rv;
 
@@ -325,38 +335,53 @@ RDFTreeDocumentImpl::AddColumnsFromContainer(nsIContent* parent,
     if (NS_FAILED(rv = EnsureChildElement(parent, kColumnsTag, columnsElement)))
         return rv;
 
-    nsIRDFNode* NC_Column = nsnull;
-    nsIRDFNode* NC_Title  = nsnull;
+    nsIRDFResource* NC_Column = nsnull;
+    nsIRDFResource* NC_Title  = nsnull;
     nsIRDFCursor* cursor  = nsnull;
     PRBool moreElements;
 
-    if (NS_FAILED(rv = mResourceMgr->GetNode(kURINC_Column, NC_Column)))
+    if (NS_FAILED(rv = mResourceMgr->GetResource(kURINC_Column, &NC_Column)))
         goto done;
 
-    if (NS_FAILED(rv = mResourceMgr->GetNode(kURINC_Title, NC_Title)))
+    if (NS_FAILED(rv = mResourceMgr->GetResource(kURINC_Title, &NC_Title)))
         goto done;
 
-    if (NS_FAILED(rv = NS_NewContainerCursor(mDB, columns, cursor)))
+    if (NS_FAILED(rv = NS_NewContainerCursor(mDB, columns, &cursor)))
         goto done;
 
-    while (NS_SUCCEEDED(rv = cursor->HasMoreElements(moreElements)) && moreElements) {
-        nsIRDFNode* column;
-        PRBool tv; /* ignored */
+    while (NS_SUCCEEDED(rv = cursor->HasMoreElements(&moreElements)) && moreElements) {
+        nsIRDFNode* columnNode;
+        if (NS_SUCCEEDED(rv = cursor->GetNext(&columnNode, nsnull))) {
+            nsIRDFResource* column;
+            if (NS_SUCCEEDED(rv = columnNode->QueryInterface(kIRDFResourceIID, (void**) &column))) {
+                // XXX okay, error recovery leaves a bit to be desired here...
+                nsIRDFNode* propertyNode = nsnull;
+                nsIRDFResource* property = nsnull;
+                nsIRDFNode* titleNode    = nsnull;
+                nsIRDFLiteral* title     = nsnull;
 
-        if (NS_SUCCEEDED(rv = cursor->GetNext(column, tv))) {
-            nsIRDFNode* property = nsnull;
-            nsIRDFNode* title    = nsnull;
+                rv = mDB->GetTarget(column, NC_Column, PR_TRUE, &propertyNode);
+                PR_ASSERT(NS_SUCCEEDED(rv));
 
-            rv = mDB->GetTarget(column, NC_Column, PR_TRUE, property);
-            PR_ASSERT(NS_SUCCEEDED(rv));
+                rv = propertyNode->QueryInterface(kIRDFResourceIID, (void**) &property);
+                PR_ASSERT(NS_SUCCEEDED(rv));
 
-            rv = mDB->GetTarget(column, NC_Title, PR_TRUE, title);
-            PR_ASSERT(NS_SUCCEEDED(rv));
+                rv = mDB->GetTarget(column, NC_Title, PR_TRUE, &titleNode);
+                PR_ASSERT(NS_SUCCEEDED(rv));
 
-            AddColumn(columnsElement, property, title);
+                rv = titleNode->QueryInterface(kIRDFLiteralIID, (void**) &title);
+                PR_ASSERT(NS_SUCCEEDED(rv));
 
-            NS_IF_RELEASE(title);
-            NS_IF_RELEASE(property);
+                AddColumn(columnsElement, property, title);
+
+                NS_IF_RELEASE(title);
+                NS_IF_RELEASE(titleNode);
+                NS_IF_RELEASE(property);
+                NS_IF_RELEASE(propertyNode);
+
+                NS_RELEASE(column);
+            }
+            NS_RELEASE(columnNode);
         }
 
         if (NS_FAILED(rv))
@@ -402,7 +427,7 @@ done:
  */
 nsresult
 RDFTreeDocumentImpl::AddColumnsFromMultiAttributes(nsIContent* parent,
-                                                   nsIRDFNode* columns)
+                                                   nsIRDFResource* columns)
 {
     nsresult rv;
 
@@ -412,20 +437,30 @@ RDFTreeDocumentImpl::AddColumnsFromMultiAttributes(nsIContent* parent,
 
     PRBool moreElements;
     nsIRDFCursor* cursor = nsnull;
-    if (NS_FAILED(rv = mDB->ArcLabelsOut(columns, cursor)))
+    if (NS_FAILED(rv = mDB->ArcLabelsOut(columns, &cursor)))
         goto done;
 
-    while (NS_SUCCEEDED(rv = cursor->HasMoreElements(moreElements)) && moreElements) {
-        nsIRDFNode* property;
-        PRBool tv; /* ignored */
+    while (NS_SUCCEEDED(rv = cursor->HasMoreElements(&moreElements)) && moreElements) {
+        nsIRDFNode* propertyNode;
 
-        if (NS_SUCCEEDED(rv = cursor->GetNext(property, tv))) {
-            nsIRDFNode* title;
-            if (NS_SUCCEEDED(rv = mDB->GetTarget(columns, property, PR_TRUE, title))) {
-                rv = AddColumn(columnsElement, property, title);
-                NS_RELEASE(title);
+        if (NS_SUCCEEDED(rv = cursor->GetNext(&propertyNode, nsnull))) {
+            nsIRDFResource* property;
+
+            if (NS_SUCCEEDED(rv = propertyNode->QueryInterface(kIRDFResourceIID,
+                                                               (void**) &property))) {
+                nsIRDFNode* titleNode;
+                if (NS_SUCCEEDED(rv = mDB->GetTarget(columns, property, PR_TRUE, &titleNode))) {
+                    nsIRDFLiteral* title;
+                    if (NS_SUCCEEDED(rv = titleNode->QueryInterface(kIRDFLiteralIID,
+                                                                    (void**) &title))) {
+                        rv = AddColumn(columnsElement, property, title);
+                        NS_RELEASE(title);
+                    }
+                    NS_RELEASE(titleNode);
+                }
+                NS_RELEASE(property);
             }
-            NS_RELEASE(property);
+            NS_RELEASE(propertyNode);
         }
 
         if (NS_FAILED(rv))
@@ -442,7 +477,7 @@ done:
 
 nsresult
 RDFTreeDocumentImpl::AddColumns(nsIContent* parent,
-                                nsIRDFNode* columns)
+                                nsIRDFResource* columns)
 {
     nsresult rv;
     
@@ -458,7 +493,7 @@ RDFTreeDocumentImpl::AddColumns(nsIContent* parent,
 
 nsresult
 RDFTreeDocumentImpl::AddPropertyChild(nsIRDFContent* parent,
-                                      nsIRDFNode* property,
+                                      nsIRDFResource* property,
                                       nsIRDFNode* value)
 {
     // Otherwise, it's not a tree property. So we'll just create a
@@ -474,13 +509,16 @@ RDFTreeDocumentImpl::AddPropertyChild(nsIRDFContent* parent,
     nsresult rv;
     nsIContent* columnsElement = nsnull;
     nsIRDFContent* child       = nsnull;
+    const char* p;
     nsAutoString s;
 
     if (NS_FAILED(rv = EnsureChildElement(parent, kColumnsTag, columnsElement)))
         goto done;
 
-    if (NS_FAILED(rv = property->GetStringValue(s)))
+    if (NS_FAILED(rv = property->GetValue(&p)))
         goto done;
+
+    s = p;
 
     // XXX this should be a generic XML element, *not* an nsRDFElement.
     if (NS_FAILED(rv = NewChild(s, property, child, PR_FALSE)))
@@ -498,36 +536,35 @@ done:
 }
 
 
-static PRBool
-rdf_ContentResourceEquals(nsIRDFResourceManager* mgr,
-                          nsIRDFContent* element,
-                          const nsString& uri)
-{
-    nsresult rv;
-    nsIRDFNode* resource = nsnull;
-    if (NS_FAILED(rv = element->GetResource(resource)))
-        return PR_FALSE;
-
-    PRBool result = rdf_ResourceEquals(mgr, resource, uri);
-    NS_RELEASE(resource);
-    return result;
-}
-
-
 nsresult
 RDFTreeDocumentImpl::AddChild(nsIRDFContent* parent,
-                              nsIRDFNode* property,
+                              nsIRDFResource* property,
                               nsIRDFNode* value)
 {
-    if (parent == mRootContent && rdf_ResourceEquals(mResourceMgr, property, kURINC_Columns)) {
-        return AddColumns(parent, value);
+    nsresult rv;
+    nsIRDFResource* resource;
+    if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
+        PRBool isColumnsProperty;
+
+        if (parent == mRootContent &&
+            NS_SUCCEEDED(property->EqualsString(kURINC_Columns, &isColumnsProperty)) &&
+            isColumnsProperty) {
+            rv = AddColumns(parent, resource);
+
+            NS_RELEASE(resource);
+            return rv;
+        }
+        else if (IsTreeProperty(property) || rdf_IsContainer(mResourceMgr, mDB, resource)) {
+            rv = AddTreeChild(parent, property, resource);
+
+            NS_RELEASE(resource);
+            return rv;
+        }
+
+        NS_RELEASE(resource);
     }
-    else if (IsTreeProperty(property) || rdf_IsContainer(mResourceMgr, mDB, value)) {
-        return AddTreeChild(parent, property, value);
-    }
-    else {
-        return AddPropertyChild(parent, property, value);
-    }
+
+    return AddPropertyChild(parent, property, value);
 }
 
 

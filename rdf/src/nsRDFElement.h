@@ -32,7 +32,6 @@ class nsIContent;
 class nsIRDFDocument;
 class nsIAtom;
 class nsIEventListenerManager;
-class nsIRDFNode;
 class nsISupportsArray;
 
 // XXX should we make this inheirit from the nsXMLElement
@@ -109,14 +108,14 @@ public:
     // nsIRDFContent
     NS_IMETHOD Init(nsIRDFDocument* doc,
                     const nsString& tag,
-                    nsIRDFNode* resource,
+                    nsIRDFResource* resource,
                     PRBool childrenMustBeGenerated);
 
     NS_IMETHOD SetResource(const nsString& aURI);
     NS_IMETHOD GetResource(nsString& rURI) const;
 
-    NS_IMETHOD SetResource(nsIRDFNode* aResource);
-    NS_IMETHOD GetResource(nsIRDFNode*& aResource);
+    NS_IMETHOD SetResource(nsIRDFResource* aResource);
+    NS_IMETHOD GetResource(nsIRDFResource*& aResource);
 
     NS_IMETHOD SetProperty(const nsString& aPropertyURI, const nsString& aValue);
     NS_IMETHOD GetProperty(const nsString& aPropertyURI, nsString& rValue) const;
@@ -152,7 +151,7 @@ protected:
     void*             mScriptObject;
 
     /** The RDF resource that the element corresponds to */
-    nsIRDFNode*       mResource;
+    nsIRDFResource*   mResource;
 
     /** An array of child nodes */
     nsISupportsArray* mChildren;

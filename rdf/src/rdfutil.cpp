@@ -47,13 +47,19 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, nextVal); // ad hoc way to make contain
 
 ////////////////////////////////////////////////////////////////////////
 
-PRBool
-rdf_IsOrdinalProperty(const nsIRDFNode* property)
-{
-    nsAutoString uri;
+static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
+static NS_DEFINE_IID(kIRDFLiteralIID,  NS_IRDFLITERAL_IID);
 
-    if (NS_FAILED(property->GetStringValue(uri)))
+////////////////////////////////////////////////////////////////////////
+
+PRBool
+rdf_IsOrdinalProperty(const nsIRDFResource* property)
+{
+    const char* s;
+    if (NS_FAILED(property->GetValue(&s)))
         return PR_FALSE;
+
+    nsAutoString uri = s;
 
     if (uri.Find(kRDFNameSpaceURI) != 0)
         return PR_FALSE;
@@ -76,33 +82,32 @@ rdf_IsOrdinalProperty(const nsIRDFNode* property)
 PRBool
 rdf_IsContainer(nsIRDFResourceManager* mgr,
                 nsIRDFDataSource* ds,
-                nsIRDFNode* resource)
+                nsIRDFResource* resource)
 {
     PRBool result = PR_FALSE;
 
-    nsIRDFNode* RDF_instanceOf = nsnull;
-    nsIRDFNode* RDF_Bag        = nsnull;
-    nsIRDFNode* RDF_Seq        = nsnull;
+    nsIRDFResource* RDF_instanceOf = nsnull;
+    nsIRDFResource* RDF_Bag        = nsnull;
+    nsIRDFResource* RDF_Seq        = nsnull;
 
     nsresult rv;
-    if (NS_FAILED(rv = mgr->GetNode(kURIRDF_instanceOf, RDF_instanceOf)))
+    if (NS_FAILED(rv = mgr->GetResource(kURIRDF_instanceOf, &RDF_instanceOf)))
         goto done;
     
-    if (NS_FAILED(rv = mgr->GetNode(kURIRDF_Bag, RDF_Bag)))
+    if (NS_FAILED(rv = mgr->GetResource(kURIRDF_Bag, &RDF_Bag)))
         goto done;
 
-    if (NS_FAILED(rv = ds->HasAssertion(resource, RDF_instanceOf, RDF_Bag, PR_TRUE, result)))
+    if (NS_FAILED(rv = ds->HasAssertion(resource, RDF_instanceOf, RDF_Bag, PR_TRUE, &result)))
         goto done;
 
     if (result)
         goto done;
 
-    if (NS_FAILED(rv = mgr->GetNode(kURIRDF_Seq, RDF_Seq)))
+    if (NS_FAILED(rv = mgr->GetResource(kURIRDF_Seq, &RDF_Seq)))
         goto done;
 
-    if (NS_FAILED(rv = ds->HasAssertion(resource, RDF_instanceOf, RDF_Seq, PR_TRUE, result)))
+    if (NS_FAILED(rv = ds->HasAssertion(resource, RDF_instanceOf, RDF_Seq, PR_TRUE, &result)))
         goto done;
-
 
 done:
     NS_IF_RELEASE(RDF_Seq);
@@ -114,19 +119,13 @@ done:
 
 // A complete hack that looks at the string value of a node and
 // guesses if it's a resource
-PRBool
-rdf_IsResource(nsIRDFNode* node)
+static PRBool
+rdf_IsResource(const nsString& s)
 {
-    nsresult rv;
-    nsAutoString v;
-
-    if (NS_FAILED(rv = node->GetStringValue(v)))
-        return PR_FALSE;
-
     PRInt32 index;
 
     // A URI needs a colon. 
-    index = v.Find(':');
+    index = s.Find(':');
     if (index < 0)
         return PR_FALSE;
 
@@ -136,19 +135,18 @@ rdf_IsResource(nsIRDFNode* node)
         return PR_FALSE;
 
     // It can't have spaces or newlines or tabs
-    if (v.Find(' ') > 0 || v.Find('\n') > 0 || v.Find('\t') > 0)
+    if (s.Find(' ') > 0 || s.Find('\n') > 0 || s.Find('\t') > 0)
         return PR_FALSE;
 
     return PR_TRUE;
 }
 
-
-
 // 0. node, node, node
 nsresult
-rdf_Assert(nsIRDFDataSource* ds,
-           nsIRDFNode* subject,
-           nsIRDFNode* predicate,
+rdf_Assert(nsIRDFResourceManager* mgr, // unused
+           nsIRDFDataSource* ds,
+           nsIRDFResource* subject,
+           nsIRDFResource* predicate,
            nsIRDFNode* object)
 {
     NS_ASSERTION(ds,        "null ptr");
@@ -157,17 +155,31 @@ rdf_Assert(nsIRDFDataSource* ds,
     NS_ASSERTION(object,    "null ptr");
 
 #ifdef DEBUG
-    char buf[1024];
-    nsAutoString s;
+    const char* s;
 
-    subject->GetStringValue(s);
-    printf("(%s\n", s.ToCString(buf, sizeof buf));
-    predicate->GetStringValue(s);
-    printf(" %s\n", s.ToCString(buf, sizeof buf));
-    object->GetStringValue(s);
-    printf(" %s)\n", s.ToCString(buf, sizeof buf));
+    subject->GetValue(&s);
+    printf("(%s\n", s);
+    predicate->GetValue(&s);
+    printf(" %s\n", s);
+
+    nsIRDFResource* objectResource;
+    nsIRDFLiteral* objectLiteral;
+
+    if (NS_SUCCEEDED(object->QueryInterface(kIRDFResourceIID, (void**) &objectResource))) {
+        objectResource->GetValue(&s);
+        printf(" %s)\n", s);
+        NS_RELEASE(objectResource);
+    }
+    else if (NS_SUCCEEDED(object->QueryInterface(kIRDFLiteralIID, (void**) &objectLiteral))) {
+        const PRUnichar* p;
+        objectLiteral->GetValue(&p);
+        nsAutoString s2(p);
+        char buf[1024];
+        printf(" %s)\n", s2.ToCString(buf, sizeof buf));
+        NS_RELEASE(objectLiteral);
+    }
 #endif
-    return ds->Assert(subject, predicate, object);
+    return ds->Assert(subject, predicate, object, PR_TRUE);
 }
 
 
@@ -183,8 +195,8 @@ rdf_Assert(nsIRDFResourceManager* mgr,
     NS_ASSERTION(ds, "null ptr");
 
     nsresult rv;
-    nsIRDFNode* subject;
-    if (NS_FAILED(rv = mgr->GetNode(subjectURI, subject)))
+    nsIRDFResource* subject;
+    if (NS_FAILED(rv = mgr->GetUnicodeResource(subjectURI, &subject)))
         return rv;
 
     rv = rdf_Assert(mgr, ds, subject, predicateURI, objectURI);
@@ -197,8 +209,8 @@ rdf_Assert(nsIRDFResourceManager* mgr,
 nsresult
 rdf_Assert(nsIRDFResourceManager* mgr,
            nsIRDFDataSource* ds,
-           nsIRDFNode* subject,
-           nsIRDFNode* predicate,
+           nsIRDFResource* subject,
+           nsIRDFResource* predicate,
            const nsString& objectURI)
 {
     NS_ASSERTION(mgr,     "null ptr");
@@ -207,10 +219,25 @@ rdf_Assert(nsIRDFResourceManager* mgr,
 
     nsresult rv;
     nsIRDFNode* object;
-    if (NS_FAILED(rv = mgr->GetNode(objectURI, object)))
-        return rv;
 
-    rv = rdf_Assert(ds, subject, predicate, object);
+    // XXX Make a guess *here* if the object should be a resource or a
+    // literal. If you don't like it, then call ds->Assert() yerself.
+    if (rdf_IsResource(objectURI)) {
+        nsIRDFResource* resource;
+        if (NS_FAILED(rv = mgr->GetUnicodeResource(objectURI, &resource)))
+            return rv;
+
+        object = resource;
+    }
+    else {
+        nsIRDFLiteral* literal;
+        if (NS_FAILED(rv = mgr->GetLiteral(objectURI, &literal)))
+            return rv;
+
+        object = literal;
+    }
+
+    rv = rdf_Assert(mgr, ds, subject, predicate, object);
     NS_RELEASE(object);
 
     return rv;
@@ -221,7 +248,7 @@ rdf_Assert(nsIRDFResourceManager* mgr,
 nsresult
 rdf_Assert(nsIRDFResourceManager* mgr,
            nsIRDFDataSource* ds,
-           nsIRDFNode* subject,
+           nsIRDFResource* subject,
            const nsString& predicateURI,
            const nsString& objectURI)
 {
@@ -230,12 +257,12 @@ rdf_Assert(nsIRDFResourceManager* mgr,
     NS_ASSERTION(subject, "null ptr");
 
     nsresult rv;
-    nsIRDFNode* object;
-    if (NS_FAILED(rv = mgr->GetNode(objectURI, object)))
+    nsIRDFResource* predicate;
+    if (NS_FAILED(rv = mgr->GetUnicodeResource(predicateURI, &predicate)))
         return rv;
 
-    rv = rdf_Assert(mgr, ds, subject, predicateURI, object);
-    NS_RELEASE(object);
+    rv = rdf_Assert(mgr, ds, subject, predicate, objectURI);
+    NS_RELEASE(predicate);
 
     return rv;
 }
@@ -244,7 +271,7 @@ rdf_Assert(nsIRDFResourceManager* mgr,
 nsresult
 rdf_Assert(nsIRDFResourceManager* mgr,
            nsIRDFDataSource* ds,
-           nsIRDFNode* subject,
+           nsIRDFResource* subject,
            const nsString& predicateURI,
            nsIRDFNode* object)
 {
@@ -254,11 +281,11 @@ rdf_Assert(nsIRDFResourceManager* mgr,
     NS_ASSERTION(object,  "null ptr");
 
     nsresult rv;
-    nsIRDFNode* predicate;
-    if (NS_FAILED(rv = mgr->GetNode(predicateURI, predicate)))
+    nsIRDFResource* predicate;
+    if (NS_FAILED(rv = mgr->GetUnicodeResource(predicateURI, &predicate)))
         return rv;
 
-    rv = rdf_Assert(ds, subject, predicate, object);
+    rv = rdf_Assert(mgr, ds, subject, predicate, object);
     NS_RELEASE(predicate);
 
     return rv;
@@ -276,8 +303,8 @@ rdf_Assert(nsIRDFResourceManager* mgr,
     NS_ASSERTION(ds, "null ptr");
 
     nsresult rv;
-    nsIRDFNode* subject;
-    if (NS_FAILED(rv = mgr->GetNode(subjectURI, subject)))
+    nsIRDFResource* subject;
+    if (NS_FAILED(rv = mgr->GetUnicodeResource(subjectURI, &subject)))
         return rv;
 
     rv = rdf_Assert(mgr, ds, subject, predicateURI, object);
@@ -289,151 +316,152 @@ rdf_Assert(nsIRDFResourceManager* mgr,
 
 
 nsresult
-rdf_CreateAnonymousNode(nsIRDFResourceManager* mgr,
-                        nsIRDFNode*& result)
+rdf_CreateAnonymousResource(nsIRDFResourceManager* mgr,
+                            nsIRDFResource** result)
 {
     static PRUint32 gCounter = 0;
 
     nsAutoString s = "$";
     s.Append(++gCounter, 10);
 
-    return mgr->GetNode(s, result);
+    return mgr->GetUnicodeResource(s, result);
 }
 
 nsresult
-rdf_CreateBag(nsIRDFResourceManager* mgr,
-              nsIRDFDataSource* ds,
-              nsIRDFNode*& result)
+rdf_MakeBag(nsIRDFResourceManager* mgr,
+            nsIRDFDataSource* ds,
+            nsIRDFResource* bag)
 {
     NS_ASSERTION(mgr, "null ptr");
     NS_ASSERTION(ds,  "null ptr");
+    NS_ASSERTION(bag, "null ptr");
 
     nsresult rv;
-    nsIRDFNode* bag = nsnull;
 
-    result = nsnull; // reasonable default
-
-    if (NS_FAILED(rv = rdf_CreateAnonymousNode(mgr, bag)))
-        goto done;
+    // XXX check to see if someone else has already made this into a container.
 
     if (NS_FAILED(rv = rdf_Assert(mgr, ds, bag, kURIRDF_instanceOf, kURIRDF_Bag)))
-        goto done;
+        return rv;
 
     if (NS_FAILED(rv = rdf_Assert(mgr, ds, bag, kURIRDF_nextVal, "1")))
-        goto done;
+        return rv;
 
-    result = bag;
-    NS_ADDREF(result);
-
-done:
-    NS_IF_RELEASE(bag);
-    return rv;
+    return NS_OK;
 }
 
 
 nsresult
-rdf_CreateSequence(nsIRDFResourceManager* mgr,
-                   nsIRDFDataSource* ds,
-                   nsIRDFNode*& result)
+rdf_MakeSeq(nsIRDFResourceManager* mgr,
+            nsIRDFDataSource* ds,
+            nsIRDFResource* seq)
 {
     NS_ASSERTION(mgr, "null ptr");
     NS_ASSERTION(ds,  "null ptr");
+    NS_ASSERTION(seq, "null ptr");
 
     nsresult rv;
-    nsIRDFNode* bag = nsnull;
 
-    result = nsnull; // reasonable default
+    // XXX check to see if someone else has already made this into a container.
 
-    if (NS_FAILED(rv = rdf_CreateAnonymousNode(mgr, bag)))
-        goto done;
+    if (NS_FAILED(rv = rdf_Assert(mgr, ds, seq, kURIRDF_instanceOf, kURIRDF_Seq)))
+        return rv;
 
-    if (NS_FAILED(rv = rdf_Assert(mgr, ds, bag, kURIRDF_instanceOf, kURIRDF_Seq)))
-        goto done;
+    if (NS_FAILED(rv = rdf_Assert(mgr, ds, seq, kURIRDF_nextVal, "1")))
+        return rv;
 
-    if (NS_FAILED(rv = rdf_Assert(mgr, ds, bag, kURIRDF_nextVal, "1")))
-        goto done;
-
-    result = bag;
-    NS_ADDREF(result);
-
-done:
-    NS_IF_RELEASE(bag);
-    return rv;
+    return NS_OK;
 }
 
 
 nsresult
-rdf_CreateAlternation(nsIRDFResourceManager* mgr,
-                      nsIRDFDataSource* ds,
-                      nsIRDFNode*& result)
+rdf_MakeAlt(nsIRDFResourceManager* mgr,
+            nsIRDFDataSource* ds,
+            nsIRDFResource* alt)
 {
     NS_ASSERTION(mgr, "null ptr");
     NS_ASSERTION(ds,  "null ptr");
+    NS_ASSERTION(alt, "null ptr");
 
     nsresult rv;
-    nsIRDFNode* bag = nsnull;
 
-    result = nsnull; // reasonable default
+    // XXX check to see if someone else has already made this into a container.
 
-    if (NS_FAILED(rv = rdf_CreateAnonymousNode(mgr, bag)))
-        goto done;
+    if (NS_FAILED(rv = rdf_Assert(mgr, ds, alt, kURIRDF_instanceOf, kURIRDF_Alt)))
+        return rv;
 
-    if (NS_FAILED(rv = rdf_Assert(mgr, ds, bag, kURIRDF_instanceOf, kURIRDF_Alt)))
-        goto done;
+    if (NS_FAILED(rv = rdf_Assert(mgr, ds, alt, kURIRDF_nextVal, "1")))
+        return rv;
 
-    if (NS_FAILED(rv = rdf_Assert(mgr, ds, bag, kURIRDF_nextVal, "1")))
-        goto done;
-
-    result = bag;
-    NS_ADDREF(result);
-
-done:
-    NS_IF_RELEASE(bag);
-    return rv;
+    return NS_OK;
 }
 
 
 static nsresult
 rdf_ContainerGetNextValue(nsIRDFResourceManager* mgr,
                           nsIRDFDataSource* ds,
-                          nsIRDFNode* container,
-                          PRInt32& result)
+                          nsIRDFResource* container,
+                          nsIRDFResource** result)
 {
     NS_ASSERTION(mgr,       "null ptr");
     NS_ASSERTION(ds,        "null ptr");
     NS_ASSERTION(container, "null ptr");
 
     nsresult rv;
-    nsIRDFNode* nextValProperty = nsnull;
-    nsIRDFNode* nextValResource = nsnull;
-    nsAutoString nextVal;
+    nsIRDFResource* RDF_nextVal   = nsnull;
+    nsIRDFNode* nextValNode       = nsnull;
+    nsIRDFLiteral* nextValLiteral = nsnull;
+    const PRUnichar* s;
+    nsAutoString nextValStr;
+    PRInt32 nextVal;
     PRInt32 err;
 
-    if (NS_FAILED(rv = mgr->GetNode(kURIRDF_nextVal, nextValProperty)))
+    // Get the next value, which hangs off of the bag via the
+    // RDF:nextVal property.
+    if (NS_FAILED(rv = mgr->GetResource(kURIRDF_nextVal, &RDF_nextVal)))
         goto done;
 
-    if (NS_FAILED(rv = ds->GetTarget(container, nextValProperty, PR_TRUE, nextValResource)))
+    if (NS_FAILED(rv = ds->GetTarget(container, RDF_nextVal, PR_TRUE, &nextValNode)))
         goto done;
 
-    if (NS_FAILED(rv = nextValResource->GetStringValue(nextVal)))
+    if (NS_FAILED(rv = nextValNode->QueryInterface(kIRDFLiteralIID, (void**) &nextValLiteral)))
         goto done;
 
-    result = nextVal.ToInteger(&err);
+    if (NS_FAILED(rv = nextValLiteral->GetValue(&s)))
+        goto done;
+
+    nextValStr = s;
+    nextVal = nextValStr.ToInteger(&err);
     if (NS_FAILED(err))
         goto done;
 
-    if (NS_FAILED(rv = ds->Unassert(container, nextValProperty, nextValResource)))
+    // Generate a URI that we can return.
+    nextValStr = kRDFNameSpaceURI;
+    nextValStr.Append("_");
+    nextValStr.Append(nextVal, 10);
+
+    if (NS_FAILED(rv = mgr->GetUnicodeResource(nextValStr, result)))
         goto done;
 
-    nextVal.Truncate();
-    nextVal.Append(result + 1, 10);
+    // Now increment the RDF:nextVal property.
+    if (NS_FAILED(rv = ds->Unassert(container, RDF_nextVal, nextValLiteral)))
+        goto done;
 
-    if (NS_FAILED(rv = rdf_Assert(mgr, ds, container, nextValProperty, nextVal)))
+    NS_RELEASE(nextValLiteral);
+
+    ++nextVal;
+    nextValStr.Truncate();
+    nextValStr.Append(nextVal, 10);
+
+    if (NS_FAILED(rv = mgr->GetLiteral(nextValStr, &nextValLiteral)))
+        goto done;
+
+    if (NS_FAILED(rv = rdf_Assert(mgr, ds, container, RDF_nextVal, nextValLiteral)))
         goto done;
 
 done:
-    NS_IF_RELEASE(nextValResource);
-    NS_IF_RELEASE(nextValProperty);
+    NS_IF_RELEASE(nextValLiteral);
+    NS_IF_RELEASE(nextValNode);
+    NS_IF_RELEASE(RDF_nextVal);
     return rv;
 }
 
@@ -442,7 +470,7 @@ done:
 nsresult
 rdf_ContainerAddElement(nsIRDFResourceManager* mgr,
                         nsIRDFDataSource* ds,
-                        nsIRDFNode* container,
+                        nsIRDFResource* container,
                         nsIRDFNode* element)
 {
     NS_ASSERTION(mgr,       "null ptr");
@@ -452,17 +480,12 @@ rdf_ContainerAddElement(nsIRDFResourceManager* mgr,
 
     nsresult rv;
 
-    PRInt32 nextVal;
-    nsAutoString uri;
+    nsIRDFResource* nextVal;
 
-    if (NS_FAILED(rv = rdf_ContainerGetNextValue(mgr, ds, container, nextVal)))
+    if (NS_FAILED(rv = rdf_ContainerGetNextValue(mgr, ds, container, &nextVal)))
         goto done;
 
-    uri = kRDFNameSpaceURI;
-    uri.Append("_");
-    uri.Append(nextVal, 10);
-
-    if (rv = rdf_Assert(mgr, ds, container, uri, element))
+    if (rv = rdf_Assert(mgr, ds, container, nextVal, element))
         goto done;
 
 done:
@@ -470,52 +493,4 @@ done:
 }
 
 
-
-nsresult
-rdf_ContainerAddElement(nsIRDFResourceManager* mgr,
-                        nsIRDFDataSource* ds,
-                        nsIRDFNode* container,
-                        const nsString& literalOrURI)
-{
-    NS_ASSERTION(mgr,       "null ptr");
-    NS_ASSERTION(ds,        "null ptr");
-    NS_ASSERTION(container, "null ptr");
-
-    nsresult rv;
-    nsIRDFNode* node;
-
-    if (NS_FAILED(rv = mgr->GetNode(literalOrURI, node)))
-        goto done;
-
-    if (NS_FAILED(rv = rdf_ContainerAddElement(mgr, ds, container, node)))
-        goto done;
-
-done:
-    NS_IF_RELEASE(node);
-    return rv;    
-}
-
-
-PRBool
-rdf_ResourceEquals(nsIRDFResourceManager* mgr,
-                   nsIRDFNode* resource,
-                   const nsString& uri)
-{
-    NS_ASSERTION(mgr,      "null ptr");
-    NS_ASSERTION(resource, "null ptr");
-
-    PRBool result = PR_FALSE;
-    nsresult rv;
-
-    nsIRDFNode* that = nsnull;
-
-    if (NS_FAILED(rv = mgr->GetNode(uri, that)))
-        goto done;
-
-    result = (that == resource);
-
-done:
-    NS_IF_RELEASE(that);
-    return result;
-}
 

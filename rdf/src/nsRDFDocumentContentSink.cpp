@@ -398,8 +398,8 @@ nsRDFDocumentContentSink::OpenObject(const nsIParserNode& aNode)
         if (NS_FAILED(rv = GetIdAboutAttribute(aNode, uri)))
             return rv;
 
-        nsIRDFNode* resource;
-        if (NS_FAILED(rv = mRDFResourceManager->GetNode(uri, resource)))
+        nsIRDFResource* resource;
+        if (NS_FAILED(rv = mResourceMgr->GetUnicodeResource(uri, &resource)))
             return rv;
 
         nsIRDFDocument* rdfDoc;

@@ -23,6 +23,7 @@
 #include "prtypes.h"
 
 class nsIRDFCursor;
+class nsIRDFCursor2;
 class nsIRDFDataBase;
 class nsIRDFDataSource;
 class nsIRDFNode;
@@ -34,7 +35,7 @@ class nsString;
  * rdf:_2, etc.
  */
 PRBool
-rdf_IsOrdinalProperty(const nsIRDFNode* property);
+rdf_IsOrdinalProperty(const nsIRDFResource* property);
 
 
 /**
@@ -44,13 +45,7 @@ rdf_IsOrdinalProperty(const nsIRDFNode* property);
 PRBool
 rdf_IsContainer(nsIRDFResourceManager* mgr,
                 nsIRDFDataSource* db,
-                nsIRDFNode* resource);
-
-/**
- * Tries to guess whether the specified node is a resource or a literal.
- */
-PRBool
-rdf_IsResource(nsIRDFNode* node);
+                nsIRDFResource* resource);
 
 
 /**
@@ -59,9 +54,10 @@ rdf_IsResource(nsIRDFNode* node);
 
 // 0. node, node, node
 nsresult
-rdf_Assert(nsIRDFDataSource* ds,
-           nsIRDFNode* subject,
-           nsIRDFNode* predicate,
+rdf_Assert(nsIRDFResourceManager* mgr, // unused
+           nsIRDFDataSource* ds,
+           nsIRDFResource* subject,
+           nsIRDFResource* predicate,
            nsIRDFNode* object);
 
 // 1. string, string, string
@@ -76,15 +72,15 @@ rdf_Assert(nsIRDFResourceManager* mgr,
 nsresult
 rdf_Assert(nsIRDFResourceManager* mgr,
            nsIRDFDataSource* ds,
-           nsIRDFNode* subject,
-           nsIRDFNode* predicate,
+           nsIRDFResource* subject,
+           nsIRDFResource* predicate,
            const nsString& objectURI);
 
 // 3. node, string, string
 nsresult
 rdf_Assert(nsIRDFResourceManager* mgr,
            nsIRDFDataSource* ds,
-           nsIRDFNode* subject,
+           nsIRDFResource* subject,
            const nsString& predicateURI,
            const nsString& objectURI);
 
@@ -92,7 +88,7 @@ rdf_Assert(nsIRDFResourceManager* mgr,
 nsresult
 rdf_Assert(nsIRDFResourceManager* mgr,
            nsIRDFDataSource* ds,
-           nsIRDFNode* subject,
+           nsIRDFResource* subject,
            const nsString& predicateURI,
            nsIRDFNode* object);
 
@@ -109,33 +105,33 @@ rdf_Assert(nsIRDFResourceManager* mgr,
  * resource URI.
  */
 nsresult
-rdf_CreateAnonymousNode(nsIRDFResourceManager* mgr,
-                        nsIRDFNode*& result);
+rdf_CreateAnonymousResource(nsIRDFResourceManager* mgr,
+                            nsIRDFResource** result);
 
 
 /**
  * Create a bag resource.
  */
 nsresult
-rdf_CreateBag(nsIRDFResourceManager* mgr,
-              nsIRDFDataSource* ds,
-              nsIRDFNode*& result);
+rdf_MakeBag(nsIRDFResourceManager* mgr,
+            nsIRDFDataSource* ds,
+            nsIRDFResource* resource);
 
 /**
  * Create a sequence resource.
  */
 nsresult
-rdf_CreateSequence(nsIRDFResourceManager* mgr,
-                   nsIRDFDataSource* ds,
-                   nsIRDFNode*& result);
+rdf_MakeSeq(nsIRDFResourceManager* mgr,
+            nsIRDFDataSource* ds,
+            nsIRDFResource* resource);
 
 /**
  * Create an alternation resource.
  */
 nsresult
-rdf_CreateAlternation(nsIRDFResourceManager* mgr,
-                      nsIRDFDataSource* ds,
-                      nsIRDFNode*& result);
+rdf_MakeAlt(nsIRDFResourceManager* mgr,
+            nsIRDFDataSource* ds,
+            nsIRDFResource* resource);
 
 
 /**
@@ -144,26 +140,8 @@ rdf_CreateAlternation(nsIRDFResourceManager* mgr,
 nsresult
 rdf_ContainerAddElement(nsIRDFResourceManager* mgr,
                         nsIRDFDataSource* ds,
-                        nsIRDFNode* container,
+                        nsIRDFResource* container,
                         nsIRDFNode* element);
-
-/**
- * Add an element to the container.
- */
-nsresult
-rdf_ContainerAddElement(nsIRDFResourceManager* mgr,
-                        nsIRDFDataSource* ds,
-                        nsIRDFNode* container,
-                        const nsString& literalOrURI);
-
-/**
- * Return <tt>PR_TRUE</tt> if the specified resources are equal.
- */
-PRBool
-rdf_ResourceEquals(nsIRDFResourceManager* mgr,
-                   nsIRDFNode* resource,
-                   const nsString& uri);
-
 
 /**
  * Create a cursor on a container that enumerates its contents in
@@ -171,8 +149,16 @@ rdf_ResourceEquals(nsIRDFResourceManager* mgr,
  */
 nsresult
 NS_NewContainerCursor(nsIRDFDataSource* ds,
-                      nsIRDFNode* container,
-                      nsIRDFCursor*& cursor);
+                      nsIRDFResource* container,
+                      nsIRDFCursor** cursor);
+
+
+/**
+ * Create an empty nsIRDFCursor. This will *never* fail, and will *always*
+ * return the same object.
+ */
+nsresult
+NS_NewEmptyRDFCursor(nsIRDFCursor** result);
 
 
 // XXX need to move nsEmptyCursor stuff here.

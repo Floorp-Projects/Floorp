@@ -33,23 +33,123 @@
  */
 
 #include "nscore.h"
-#include "nsMemoryDataSource.h"
 #include "nsIRDFCursor.h"
+#include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
-#include "nsIRDFRegistry.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsRDFCID.h"
-
-extern nsIRDFCursor* gEmptyCursor;
+#include "nsString.h"
+#include "rdfutil.h"
+#include "plhash.h"
 
 static NS_DEFINE_IID(kIRDFCursorIID,     NS_IRDFCURSOR_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID, NS_IRDFDATASOURCE_IID);
+static NS_DEFINE_IID(kIRDFLiteralIID,    NS_IRDFLITERAL_IID);
 static NS_DEFINE_IID(kIRDFNodeIID,       NS_IRDFNODE_IID);
-static NS_DEFINE_IID(kIRDFRegistryIID,   NS_IRDFREGISTRY_IID);
+static NS_DEFINE_IID(kIRDFResourceIID,   NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
 
-static NS_DEFINE_CID(kRDFRegistryCID,        NS_RDFREGISTRY_CID);
+////////////////////////////////////////////////////////////////////////
+
+static PLHashNumber
+rdf_HashPointer(const void* key)
+{
+    return (PLHashNumber) key;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+class NodeImpl;
+
+class MemoryDataSourceImpl : public nsIRDFDataSource {
+protected:
+    PLHashTable* mNodes;
+
+    // hash table routines
+    static void * PR_CALLBACK
+    AllocTable(void *pool, PRSize size);
+
+    static void PR_CALLBACK
+    FreeTable(void *pool, void *item);
+
+    static PLHashEntry * PR_CALLBACK
+    AllocEntry(void *pool, const void *key);
+
+    static void PR_CALLBACK
+    FreeEntry(void *pool, PLHashEntry *he, PRUintn flag);
+
+    static PLHashAllocOps gHashAllocOps;
+
+    static const PRInt32 kNodeTableSize;
+
+    void Dump(void);
+
+public:
+    MemoryDataSourceImpl(void);
+    virtual ~MemoryDataSourceImpl(void);
+
+    // nsISupports
+    NS_DECL_ISUPPORTS
+
+    // nsIRDFDataSource methods
+    NS_IMETHOD Init(const char* uri);
+
+    NS_IMETHOD GetSource(nsIRDFResource* property,
+                         nsIRDFNode* target,
+                         PRBool tv,
+                         nsIRDFResource** source);
+
+    NS_IMETHOD GetSources(nsIRDFResource* property,
+                          nsIRDFNode* target,
+                          PRBool tv,
+                          nsIRDFCursor** sources);
+
+    NS_IMETHOD GetTarget(nsIRDFResource* source,
+                         nsIRDFResource* property,
+                         PRBool tv,
+                         nsIRDFNode** target);
+
+    NS_IMETHOD GetTargets(nsIRDFResource* source,
+                          nsIRDFResource* property,
+                          PRBool tv,
+                          nsIRDFCursor** targets);
+
+    NS_IMETHOD Assert(nsIRDFResource* source, 
+                      nsIRDFResource* property, 
+                      nsIRDFNode* target,
+                      PRBool tv);
+
+    NS_IMETHOD Unassert(nsIRDFResource* source,
+                        nsIRDFResource* property,
+                        nsIRDFNode* target);
+
+    NS_IMETHOD HasAssertion(nsIRDFResource* source,
+                            nsIRDFResource* property,
+                            nsIRDFNode* target,
+                            PRBool tv,
+                            PRBool* hasAssertion);
+
+    NS_IMETHOD AddObserver(nsIRDFObserver* n);
+
+    NS_IMETHOD RemoveObserver(nsIRDFObserver* n);
+
+    NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
+                           nsIRDFCursor** labels);
+
+    NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
+                            nsIRDFCursor** labels);
+
+    NS_IMETHOD Flush();
+};
+
+PLHashAllocOps MemoryDataSourceImpl::gHashAllocOps = {
+    MemoryDataSourceImpl::AllocTable, MemoryDataSourceImpl::FreeTable,
+    MemoryDataSourceImpl::AllocEntry, MemoryDataSourceImpl::FreeEntry
+};
+
+const PRInt32 MemoryDataSourceImpl::kNodeTableSize = 101;
+
 
 ////////////////////////////////////////////////////////////////////////
 // PropertyListElement
@@ -105,22 +205,40 @@ public:
     }
 };
 
+
+
 ////////////////////////////////////////////////////////////////////////
 // NodeImpl
-
-class NodeHashKey;
 
 class NodeImpl {
 protected:
     nsIRDFNode* mNode;
-    nsHashtable mProperties; // maps an nsIRDFNode* property to a property list
 
-    inline PropertyListElement* FindPropertyValue(NodeHashKey* key, nsIRDFNode* value, PRBool tv);
+    /** Maps an nsIRDFNode* property to a property list. Lazily instantiated */
+    PLHashTable* mProperties;
+
+    inline PropertyListElement*
+    FindPropertyValue(nsIRDFResource* property, nsIRDFNode* value, PRBool tv);
+
+    // hash table routines
+    static void * PR_CALLBACK
+    AllocTable(void *pool, PRSize size);
+
+    static void PR_CALLBACK
+    FreeTable(void *pool, void *item);
+
+    static PLHashEntry * PR_CALLBACK
+    AllocEntry(void *pool, const void *key);
+
+    static void PR_CALLBACK
+    FreeEntry(void *pool, PLHashEntry *he, PRUintn flag);
+
+    static PLHashAllocOps gHashAllocOps;
+
+    static const PRInt32 kPropertyTableSize;
 
 public:
-    NodeImpl(nsIRDFNode* node) : mNode(node) {
-        NS_IF_ADDREF(mNode);
-    }
+    NodeImpl(nsIRDFNode* node);
 
     virtual ~NodeImpl(void);
 
@@ -128,75 +246,23 @@ public:
         return mNode;
     }
 
-    PRBool HasPropertyValue(nsIRDFNode* property, nsIRDFNode* value, PRBool tv);
-    void AddProperty(nsIRDFNode* property, nsIRDFNode* value, PRBool tv);
-    void RemoveProperty(nsIRDFNode* property, nsIRDFNode* value);
-    nsIRDFNode* GetProperty(nsIRDFNode* property, PRBool tv);
-    nsIRDFCursor* GetProperties(nsIRDFNode* property, PRBool tv);
+    PRBool HasPropertyValue(nsIRDFResource* property, nsIRDFNode* value, PRBool tv);
+    void AddProperty(nsIRDFResource* property, nsIRDFNode* value, PRBool tv);
+    void RemoveProperty(nsIRDFResource* property, nsIRDFNode* value);
+    nsIRDFNode* GetProperty(nsIRDFResource* property, PRBool tv);
+    nsIRDFCursor* GetProperties(nsIRDFResource* property, PRBool tv);
     nsIRDFCursor* GetArcLabelsOut(void);
+
+    void Dump(const char* resource);
 };
 
-////////////////////////////////////////////////////////////////////////
-// NodeHashKey
-
-class NodeHashKey : public nsHashKey
-{
-private:
-    nsIRDFNode* mNode;
-
-public:
-    NodeHashKey(void) : mNode(nsnull) {
-    }
-
-    NodeHashKey(nsIRDFNode* aNode) : mNode(aNode) {
-        NS_IF_ADDREF(mNode);
-    }
-
-    NodeHashKey(const NodeHashKey& key) : mNode(key.mNode) {
-        NS_IF_ADDREF(mNode);
-    }
-
-    NodeHashKey& operator=(const NodeHashKey& key) {
-        NS_IF_RELEASE(mNode);
-        mNode = key.mNode;
-        NS_IF_ADDREF(mNode);
-        return *this;
-    }
-
-    NodeHashKey& operator=(nsIRDFNode* aNode) {
-        NS_IF_RELEASE(mNode);
-        mNode = aNode;
-        NS_IF_ADDREF(mNode);
-        return *this;
-    }
-
-    virtual ~NodeHashKey(void) {
-        NS_IF_RELEASE(mNode);
-    }
-
-    nsIRDFNode* GetNode(void) {
-        return mNode;
-    }
-
-    // nsHashKey pure virtual interface methods
-    virtual PRUint32 HashValue(void) const {
-        return (PRUint32) mNode;
-    }
-
-    virtual PRBool Equals(const nsHashKey* aKey) const {
-        NodeHashKey* that;
-
-        // XXX like to do a dynamic_cast<> here.
-        that = (NodeHashKey*) aKey;
-
-        return (that->mNode == this->mNode);
-    }
-
-    virtual nsHashKey* Clone(void) const {
-        return new NodeHashKey(mNode);
-    }
+PLHashAllocOps NodeImpl::gHashAllocOps = {
+    NodeImpl::AllocTable, NodeImpl::FreeTable,
+    NodeImpl::AllocEntry, NodeImpl::FreeEntry
 };
 
+// The initial size of the property hashtable
+const PRInt32 NodeImpl::kPropertyTableSize = 7;
 
 ////////////////////////////////////////////////////////////////////////
 // PropertyCursorImpl
@@ -213,8 +279,8 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD HasMoreElements(PRBool& result);
-    NS_IMETHOD GetNext(nsIRDFNode*& next, PRBool& tv);
+    NS_IMETHOD HasMoreElements(PRBool* result);
+    NS_IMETHOD GetNext(nsIRDFNode** next, PRBool* tv);
 };
 
 
@@ -245,21 +311,24 @@ PropertyCursorImpl::~PropertyCursorImpl(void)
 NS_IMPL_ISUPPORTS(PropertyCursorImpl, kIRDFCursorIID);
 
 NS_IMETHODIMP
-PropertyCursorImpl::HasMoreElements(PRBool& result)
+PropertyCursorImpl::HasMoreElements(PRBool* result)
 {
-    result = (mNext != nsnull);
+    *result = (mNext != nsnull);
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-PropertyCursorImpl::GetNext(nsIRDFNode*& next, PRBool& tv)
+PropertyCursorImpl::GetNext(nsIRDFNode** next, PRBool* tv)
 {
-    if (mNext == nsnull)
+    if (! next || ! tv)
+        return NS_ERROR_NULL_POINTER;
+
+    if (! mNext)
         return NS_ERROR_UNEXPECTED;
 
-    next = mNext->GetValue();
-    tv   = mNext->GetTruthValue();
+    *next = mNext->GetValue();
+    if (tv) *tv = mNext->GetTruthValue();
 
     mNext = mNext->GetNext(); // advance past the current node
     while (1) {
@@ -285,24 +354,24 @@ PropertyCursorImpl::GetNext(nsIRDFNode*& next, PRBool& tv)
 class ArcCursorImpl : public nsIRDFCursor {
 private:
     nsISupportsArray* mProperties;
-    static PRBool Enumerator(nsHashKey* key, void* value, void* closure);
+    static PRIntn Enumerator(PLHashEntry* he, PRIntn index, void* closure);
 
 public:
-    ArcCursorImpl(nsHashtable& properties);
+    ArcCursorImpl(PLHashTable* properties);
     virtual ~ArcCursorImpl(void);
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD HasMoreElements(PRBool& result);
-    NS_IMETHOD GetNext(nsIRDFNode*& next, PRBool& tv);
+    NS_IMETHOD HasMoreElements(PRBool* result);
+    NS_IMETHOD GetNext(nsIRDFNode** next, PRBool* tv);
 };
 
 
-ArcCursorImpl::ArcCursorImpl(nsHashtable& properties)
+ArcCursorImpl::ArcCursorImpl(PLHashTable* properties)
 {
     NS_INIT_REFCNT();
     if (NS_SUCCEEDED(NS_NewISupportsArray(&mProperties)))
-        properties.Enumerate(Enumerator, mProperties);
+        PL_HashTableEnumerateEntries(properties, Enumerator, mProperties);
 }
 
 ArcCursorImpl::~ArcCursorImpl(void)
@@ -313,40 +382,48 @@ ArcCursorImpl::~ArcCursorImpl(void)
 NS_IMPL_ISUPPORTS(ArcCursorImpl, kIRDFCursorIID);
 
 PRBool
-ArcCursorImpl::Enumerator(nsHashKey* key, void* value, void* closure)
+ArcCursorImpl::Enumerator(PLHashEntry* he, PRIntn index, void* closure)
 {
     nsISupportsArray* properties = NS_STATIC_CAST(nsISupportsArray*, closure);
-    NodeHashKey* k = (NodeHashKey*) key;
-    properties->AppendElement(k->GetNode());
-    return PR_TRUE;
+    nsIRDFResource* property = NS_CONST_CAST(nsIRDFResource*, NS_STATIC_CAST(const nsIRDFResource*, he->key));
+    properties->AppendElement(property);
+    return HT_ENUMERATE_NEXT;
 }
 
 NS_IMETHODIMP
-ArcCursorImpl::HasMoreElements(PRBool& result)
+ArcCursorImpl::HasMoreElements(PRBool* result)
 {
-    result = (mProperties && mProperties->Count() > 0);
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    *result = (mProperties && mProperties->Count() > 0);
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-ArcCursorImpl::GetNext(nsIRDFNode*& next, PRBool& tv)
+ArcCursorImpl::GetNext(nsIRDFNode** next, PRBool* tv)
 {
+    if (! next)
+        return NS_ERROR_NULL_POINTER;
+
     if (! mProperties || ! mProperties->Count())
         return NS_ERROR_UNEXPECTED;
 
     PRInt32 index = mProperties->Count() - 1;
-    nsISupports* obj = mProperties->ElementAt(index); // this'll AddRef()
+    nsISupports* obj = mProperties->ElementAt(index);
 
     PR_ASSERT(obj);
     if (obj) {
-        obj->QueryInterface(kIRDFNodeIID, (void**) &next);
+        nsIRDFNode* result;
+        obj->QueryInterface(kIRDFNodeIID, (void**) &result); // this'll AddRef()
         obj->Release();
+
+        *next = result;
+        if (tv) *tv = PR_TRUE;
     }
 
     mProperties->RemoveElementAt(index);
-
-    tv = PR_TRUE; // not really applicable...
     return NS_OK;
 }
 
@@ -354,20 +431,35 @@ ArcCursorImpl::GetNext(nsIRDFNode*& next, PRBool& tv)
 ////////////////////////////////////////////////////////////////////////
 // NodeImpl implementation
 
+NodeImpl::NodeImpl(nsIRDFNode* node)
+    : mNode(node),
+      mProperties(nsnull)
+{
+    NS_IF_ADDREF(mNode);
+}
+
+
 NodeImpl::~NodeImpl(void)
 {
     NS_IF_RELEASE(mNode);
 
-    // XXX LEAK! we need to make sure that the properties are
-    // released!
+    if (mProperties) {
+        // XXX LEAK! we need to make sure that the properties are
+        // released!
+        PL_HashTableDestroy(mProperties);
+        mProperties = nsnull;
+    }
 }
 
 
 PropertyListElement*
-NodeImpl::FindPropertyValue(NodeHashKey* key, nsIRDFNode* value, PRBool tv)
+NodeImpl::FindPropertyValue(nsIRDFResource* property, nsIRDFNode* value, PRBool tv)
 {
+    if (! mProperties)
+        return nsnull;
+
     PropertyListElement* head
-        = NS_STATIC_CAST(PropertyListElement*, mProperties.Get(key));
+        = NS_STATIC_CAST(PropertyListElement*, PL_HashTableLookup(mProperties, property));
 
     if (! head)
         return nsnull;
@@ -385,18 +477,19 @@ NodeImpl::FindPropertyValue(NodeHashKey* key, nsIRDFNode* value, PRBool tv)
 
 
 PRBool
-NodeImpl::HasPropertyValue(nsIRDFNode* property, nsIRDFNode* value, PRBool tv)
+NodeImpl::HasPropertyValue(nsIRDFResource* property, nsIRDFNode* value, PRBool tv)
 {
-    NodeHashKey key(property);
-    return (FindPropertyValue(&key, value, tv) != nsnull);
+    return (FindPropertyValue(property, value, tv) != nsnull);
 }
 
 nsIRDFNode*
-NodeImpl::GetProperty(nsIRDFNode* property, PRBool tv)
+NodeImpl::GetProperty(nsIRDFResource* property, PRBool tv)
 {
-    NodeHashKey key(property);
+    if (! mProperties)
+        return nsnull;
+
     PropertyListElement* head
-        = NS_STATIC_CAST(PropertyListElement*, mProperties.Get(&key));
+        = NS_STATIC_CAST(PropertyListElement*, PL_HashTableLookup(mProperties, property));
 
     if (! head)
         return nsnull;
@@ -413,17 +506,31 @@ NodeImpl::GetProperty(nsIRDFNode* property, PRBool tv)
 }
 
 void
-NodeImpl::AddProperty(nsIRDFNode* property, nsIRDFNode* value, PRBool tv)
+NodeImpl::AddProperty(nsIRDFResource* property, nsIRDFNode* value, PRBool tv)
 {
-    NodeHashKey key(property);
-    if (FindPropertyValue(&key, value, tv))
+    // don't allow dups
+    if (FindPropertyValue(property, value, tv))
         return;
 
     // XXX so both positive and negative assertions can live in the
     // graph together. This seems wrong...
 
+    if (! mProperties) {
+        // XXX we'll need a custom allocator to free the linked
+        // list. It leaks right now.
+        mProperties = PL_NewHashTable(kPropertyTableSize,
+                                      rdf_HashPointer,
+                                      PL_CompareValues,
+                                      PL_CompareValues,
+                                      &gHashAllocOps, nsnull);
+
+        PR_ASSERT(mProperties);
+        if (! mProperties)
+            return;
+    }
+
     PropertyListElement* head
-        = NS_STATIC_CAST(PropertyListElement*, mProperties.Get(&key));
+        = NS_STATIC_CAST(PropertyListElement*, PL_HashTableLookup(mProperties, property));
 
     PropertyListElement* e
         = new PropertyListElement(value, tv);
@@ -431,44 +538,60 @@ NodeImpl::AddProperty(nsIRDFNode* property, nsIRDFNode* value, PRBool tv)
     if (head) {
         e->InsertAfter(head);
     } else {
-        mProperties.Put(&key, e);
+        PL_HashTableAdd(mProperties, property, e);
     }
 }
 
 
 void
-NodeImpl::RemoveProperty(nsIRDFNode* property, nsIRDFNode* value)
+NodeImpl::RemoveProperty(nsIRDFResource* property, nsIRDFNode* value)
 {
-    NodeHashKey key(property);
+    if (! mProperties)
+        return;
+
     PropertyListElement* e;
 
     // this is really bizarre that two truth values can live in one
     // data source. I'm suspicious that this isn't quite right...
 
-    e = FindPropertyValue(&key, value, PR_TRUE);
+    e = FindPropertyValue(property, value, PR_TRUE);
     if (e) {
-        if (e->UnlinkAndTestIfEmpty())
-            mProperties.Remove(&key);
-        delete e;
+        if (e->UnlinkAndTestIfEmpty()) {
+            PL_HashTableRemove(mProperties, property);
+        }
+        else {
+            delete e;
+        }
     }
 
-    e = FindPropertyValue(&key, value, PR_FALSE);
+    e = FindPropertyValue(property, value, PR_FALSE);
     if (e) {
-        if (e->UnlinkAndTestIfEmpty())
-            mProperties.Remove(&key);
-        delete e;
+        if (e->UnlinkAndTestIfEmpty()) {
+            PL_HashTableRemove(mProperties, property);
+        }
+        else {
+            delete e;
+        }
     }
 }
 
 
 nsIRDFCursor*
-NodeImpl::GetProperties(nsIRDFNode* property, PRBool tv)
+NodeImpl::GetProperties(nsIRDFResource* property, PRBool tv)
 {
-    NodeHashKey key(property);
-    PropertyListElement* head
-        = NS_STATIC_CAST(PropertyListElement*, mProperties.Get(&key));
+    if (! mProperties)
+        return nsnull;
 
-    return (head) ? (new PropertyCursorImpl(head, tv)) : gEmptyCursor;
+    PropertyListElement* head
+        = NS_STATIC_CAST(PropertyListElement*, PL_HashTableLookup(mProperties, property));
+
+    nsIRDFCursor* result;
+    if (head) {
+        result = new PropertyCursorImpl(head, tv);
+    } else {
+        NS_NewEmptyRDFCursor(&result);
+    }
+    return result;
 }
 
 
@@ -478,254 +601,384 @@ NodeImpl::GetArcLabelsOut(void)
     return new ArcCursorImpl(mProperties);
 }
 
-////////////////////////////////////////////////////////////////////////
-// nsMemoryDataSource implementation
 
-nsMemoryDataSource::nsMemoryDataSource(void)
-    : mRegistry(nsnull)
+void* PR_CALLBACK
+NodeImpl::AllocTable(void* pool, PRSize size)
 {
-    NS_INIT_REFCNT();
+    return new char[size];
 }
 
 
-
-nsMemoryDataSource::~nsMemoryDataSource(void)
+void PR_CALLBACK
+NodeImpl::FreeTable(void* pool, void* item)
 {
-    // XXX LEAK! make sure that you release the nodes
-    if (mRegistry) {
-        mRegistry->Unregister(this);
-        nsServiceManager::ReleaseService(kRDFRegistryCID, mRegistry);
-        mRegistry = nsnull;
+    delete[] item;
+}
+
+
+PLHashEntry* PR_CALLBACK
+NodeImpl::AllocEntry(void* pool, const void* key)
+{
+    nsIRDFResource* property =
+        NS_CONST_CAST(nsIRDFResource*, NS_STATIC_CAST(const nsIRDFResource*, key));
+    NS_ADDREF(property);
+    return new PLHashEntry;
+}
+
+
+void PR_CALLBACK
+NodeImpl::FreeEntry(void* poool, PLHashEntry* he, PRUintn flag)
+{
+    if (flag == HT_FREE_VALUE || flag == HT_FREE_ENTRY) {
+        PropertyListElement* head = NS_STATIC_CAST(PropertyListElement*, he->value);
+        PRBool empty;
+        do {
+            PropertyListElement* next = head->GetNext();
+            empty = head->UnlinkAndTestIfEmpty();
+            delete head;
+            head = next;
+        } while (! empty);
+    }
+    if (flag == HT_FREE_ENTRY) {
+        nsIRDFResource* property =
+            NS_CONST_CAST(nsIRDFResource*, NS_STATIC_CAST(const nsIRDFResource*, he->key));
+
+        NS_RELEASE(property);
+        delete he;
     }
 }
 
-NS_IMPL_ISUPPORTS(nsMemoryDataSource, kIRDFDataSourceIID);
-
-
-NS_IMETHODIMP
-nsMemoryDataSource::Init(const nsString& uri)
+static PRIntn
+rdf_PropertyDumpEnumerator(PLHashEntry* he, PRIntn index, void* closure)
 {
-    nsresult rv;
+    const char* u = (const char*) closure;
+    nsIRDFResource* property =
+        NS_CONST_CAST(nsIRDFResource*, NS_STATIC_CAST(const nsIRDFResource*, he->key));
 
-    if (mRegistry)
-        return NS_ERROR_ALREADY_INITIALIZED;
+    const char* s;
+    property->GetValue(&s);
 
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFRegistryCID,
-                                                    kIRDFRegistryIID,
-                                                    (nsISupports**) &mRegistry)))
-        return rv;
+    PropertyListElement* head =
+        NS_STATIC_CAST(PropertyListElement*, he->value);
 
-    return mRegistry->Register(uri, this);
+    PropertyListElement* next = head;
+    PR_ASSERT(next);
+
+    do {
+        nsIRDFNode* node = next->GetValue();
+        nsIRDFResource* resource;
+        nsIRDFLiteral* literal;
+
+        if (NS_SUCCEEDED(node->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
+            const char* v;
+            resource->GetValue(&v);
+            NS_RELEASE(resource);
+
+            printf("  (%s %s %s)\n", u, s, v);
+        }
+        else if (NS_SUCCEEDED(node->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
+            const PRUnichar* v;
+            literal->GetValue(&v);
+            NS_RELEASE(literal);
+
+            nsAutoString str = v;
+            char buf[1024];
+            printf("  (%s %s %s)\n", u, s, str.ToCString(buf, sizeof buf));
+        }
+        next = next->GetNext();
+    } while (next != head);
+
+    return HT_ENUMERATE_NEXT;
 }
 
-NS_IMETHODIMP
-nsMemoryDataSource::GetSource(nsIRDFNode* property,
-                              nsIRDFNode* target,
-                              PRBool tv,
-                              nsIRDFNode*& source)
+void
+NodeImpl::Dump(const char* resource)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED; // XXX
+    if (! mProperties)
+        return;
+
+    PL_HashTableEnumerateEntries(mProperties, rdf_PropertyDumpEnumerator, (void*) resource);
 }
 
-NS_IMETHODIMP
-nsMemoryDataSource::GetSources(nsIRDFNode* property,
-                               nsIRDFNode* target,
-                               PRBool tv,
-                               nsIRDFCursor*& sources)
+////////////////////////////////////////////////////////////////////////
+// MemoryDataSourceImpl implementation
+
+MemoryDataSourceImpl::MemoryDataSourceImpl(void)
 {
-    PR_ASSERT(0);
-    return NS_ERROR_NOT_IMPLEMENTED; // XXX
+    NS_INIT_REFCNT();
+    mNodes = PL_NewHashTable(kNodeTableSize, rdf_HashPointer,
+                             PL_CompareValues,
+                             PL_CompareValues,
+                             &gHashAllocOps, nsnull);
+
+    PR_ASSERT(mNodes);
 }
 
-NS_IMETHODIMP
-nsMemoryDataSource::GetTarget(nsIRDFNode* source,
-                              nsIRDFNode* property,
-                              PRBool tv,
-                              nsIRDFNode*& target)
+
+
+MemoryDataSourceImpl::~MemoryDataSourceImpl(void)
 {
-    NS_PRECONDITION(source && property, "null ptr");
-    if (!source || !property)
-        return NS_ERROR_NULL_POINTER;
+    PL_HashTableDestroy(mNodes);
+    mNodes = nsnull;
+}
 
-    target = nsnull; // reasonable default
+NS_IMPL_ISUPPORTS(MemoryDataSourceImpl, kIRDFDataSourceIID);
 
-    NodeHashKey key(source);
-    NodeImpl *u;
 
-    if (! (u = NS_STATIC_CAST(NodeImpl*, mNodes.Get(&key))))
-        return NS_ERROR_FAILURE;
-
-    target = u->GetProperty(property, tv);
-    if (! target)
-        return NS_ERROR_FAILURE;
-
-    NS_ADDREF(target); // need to AddRef()
+NS_IMETHODIMP
+MemoryDataSourceImpl::Init(const char* uri)
+{
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMemoryDataSource::GetTargets(nsIRDFNode* source,
-                               nsIRDFNode* property,
-                               PRBool tv,
-                               nsIRDFCursor*& targets)
+MemoryDataSourceImpl::GetSource(nsIRDFResource* property,
+                                nsIRDFNode* target,
+                                PRBool tv,
+                                nsIRDFResource** source)
 {
-    NS_PRECONDITION(source && property, "null ptr");
-    if (!source || !property)
+    PR_ASSERT(0);
+    return NS_ERROR_NOT_IMPLEMENTED; // XXX
+}
+
+NS_IMETHODIMP
+MemoryDataSourceImpl::GetSources(nsIRDFResource* property,
+                                 nsIRDFNode* target,
+                                 PRBool tv,
+                                 nsIRDFCursor** sources)
+{
+    PR_ASSERT(0);
+    return NS_ERROR_NOT_IMPLEMENTED; // XXX
+}
+
+NS_IMETHODIMP
+MemoryDataSourceImpl::GetTarget(nsIRDFResource* source,
+                                nsIRDFResource* property,
+                                PRBool tv,
+                                nsIRDFNode** target)
+{
+    NS_PRECONDITION(source && property && target, "null ptr");
+    if (!source || !property || !target)
         return NS_ERROR_NULL_POINTER;
 
-    targets = gEmptyCursor; // reasonable default
+    *target = nsnull; // reasonable default
 
-    NodeHashKey key(source);
     NodeImpl *u;
-    if (! (u = NS_STATIC_CAST(NodeImpl*, mNodes.Get(&key))))
+    if (! (u = NS_STATIC_CAST(NodeImpl*, PL_HashTableLookup(mNodes, source))))
+        return NS_ERROR_FAILURE;
+
+    *target = u->GetProperty(property, tv);
+    if (! *target)
+        return NS_ERROR_FAILURE;
+
+    NS_ADDREF(*target); // need to AddRef()
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+MemoryDataSourceImpl::GetTargets(nsIRDFResource* source,
+                                 nsIRDFResource* property,
+                                 PRBool tv,
+                                 nsIRDFCursor** targets)
+{
+    NS_PRECONDITION(source && property && targets, "null ptr");
+    if (!source || !property || !targets)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_NewEmptyRDFCursor(targets); // reasonable default
+
+    NodeImpl *u;
+    if (! (u = NS_STATIC_CAST(NodeImpl*, PL_HashTableLookup(mNodes, source))))
         return NS_OK;
 
-    if (! (targets = u->GetProperties(property, tv)))
+    if (! (*targets = u->GetProperties(property, tv)))
         return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(targets);
+    NS_ADDREF(*targets);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMemoryDataSource::Assert(nsIRDFNode* source, 
-                           nsIRDFNode* property, 
-                           nsIRDFNode* target,
-                           PRBool tv)
+MemoryDataSourceImpl::Assert(nsIRDFResource* source, 
+                             nsIRDFResource* property, 
+                             nsIRDFNode* target,
+                             PRBool tv)
 {
     NS_PRECONDITION(source && property && target, "null ptr");
     if (!source || !property || !target)
         return NS_ERROR_NULL_POINTER;
 
-    NodeImpl *u;
+    NodeImpl* u = NS_STATIC_CAST(NodeImpl*, PL_HashTableLookup(mNodes, source));
+    if (! u) {
+        u = new NodeImpl(source);
+        if (! u)
+            return NS_ERROR_OUT_OF_MEMORY;
 
-    if (! (u = Ensure(source)))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (! Ensure(property))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (! Ensure(target))
-        return NS_ERROR_OUT_OF_MEMORY;
+        PL_HashTableAdd(mNodes, source, u);
+    }
 
     u->AddProperty(property, target, tv);
+
+#ifdef DEBUG_waterson
+    PRBool b = PR_FALSE;
+    if (b)
+        Dump();
+#endif
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMemoryDataSource::Unassert(nsIRDFNode* source,
-                             nsIRDFNode* property,
-                             nsIRDFNode* target)
+MemoryDataSourceImpl::Unassert(nsIRDFResource* source,
+                               nsIRDFResource* property,
+                               nsIRDFNode* target)
 {
     NS_PRECONDITION(source && property && target, "null ptr");
     if (!source || !property || !target)
         return NS_ERROR_NULL_POINTER;
 
-    NodeHashKey key(source);
     NodeImpl *u;
-
-    if (! (u = NS_STATIC_CAST(NodeImpl*, mNodes.Get(&key))))
+    if (! (u = NS_STATIC_CAST(NodeImpl*, PL_HashTableLookup(mNodes, source))))
         return NS_OK;
 
     u->RemoveProperty(property, target);
+
+    // XXX If that was the last property, we should remove the node from mNodes to
+    // conserve space
+
+#ifdef DEBUG_waterson
+    PRBool b = PR_FALSE;
+    if (b)
+        Dump();
+#endif
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMemoryDataSource::HasAssertion(nsIRDFNode* source,
-                                 nsIRDFNode* property,
-                                 nsIRDFNode* target,
-                                 PRBool tv,
-                                 PRBool& hasAssertion)
+MemoryDataSourceImpl::HasAssertion(nsIRDFResource* source,
+                                   nsIRDFResource* property,
+                                   nsIRDFNode* target,
+                                   PRBool tv,
+                                   PRBool* hasAssertion)
 {
-    NS_PRECONDITION(source && property && target, "null ptr");
-    if (!source || !property || !target)
+    NS_PRECONDITION(source && property && target && hasAssertion, "null ptr");
+    if (!source || !property || !target || !hasAssertion)
         return NS_ERROR_NULL_POINTER;
 
-    hasAssertion = PR_FALSE; // reasonable default
+    *hasAssertion = PR_FALSE; // reasonable default
 
-    NodeHashKey key(source);
     NodeImpl *u;
-
-    if (! (u = NS_STATIC_CAST(NodeImpl*, mNodes.Get(&key))))
+    if (! (u = NS_STATIC_CAST(NodeImpl*, PL_HashTableLookup(mNodes, source))))
         return NS_OK;
 
-    hasAssertion = (u->GetProperty(property, tv) != nsnull);
+    *hasAssertion = (u->GetProperty(property, tv) != nsnull);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMemoryDataSource::AddObserver(nsIRDFObserver* n)
+MemoryDataSourceImpl::AddObserver(nsIRDFObserver* n)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsMemoryDataSource::RemoveObserver(nsIRDFObserver* n)
+MemoryDataSourceImpl::RemoveObserver(nsIRDFObserver* n)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsMemoryDataSource::ArcLabelsIn(nsIRDFNode* node,
-                                nsIRDFCursor*& labels)
+MemoryDataSourceImpl::ArcLabelsIn(nsIRDFNode* node,
+                                  nsIRDFCursor** labels)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsMemoryDataSource::ArcLabelsOut(nsIRDFNode* source,
-                                 nsIRDFCursor*& labels)
+MemoryDataSourceImpl::ArcLabelsOut(nsIRDFResource* source,
+                                   nsIRDFCursor** labels)
 {
-    NS_PRECONDITION(source, "null ptr");
-    if (! source)
+    NS_PRECONDITION(source && labels, "null ptr");
+    if (!source || !labels)
         return NS_ERROR_NULL_POINTER;
 
-    labels = gEmptyCursor; // reasonable default
+    NS_NewEmptyRDFCursor(labels); // reasonable default
 
-    NodeHashKey key(source);
     NodeImpl *u;
-    if (! (u = NS_STATIC_CAST(NodeImpl*, mNodes.Get(&key))))
+    if (! (u = NS_STATIC_CAST(NodeImpl*, PL_HashTableLookup(mNodes, source))))
         return NS_OK;
 
-    if (! (labels = u->GetArcLabelsOut()))
+    if (! (*labels = u->GetArcLabelsOut()))
         return NS_ERROR_OUT_OF_MEMORY;
 
-    NS_ADDREF(labels);
+    NS_ADDREF(*labels);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMemoryDataSource::Flush()
+MemoryDataSourceImpl::Flush()
 {
     return NS_OK; // nothing to flush!
 }
 
 
-
-NodeImpl*
-nsMemoryDataSource::Ensure(nsIRDFNode* node)
+void* PR_CALLBACK
+MemoryDataSourceImpl::AllocTable(void* pool, PRSize size)
 {
-    // The NodeHashKey does an AddRef(), and is cloned for insertion
-    // into the nsHashTable. This makes resource management really
-    // easy, because when the nsHashtable is destroyed, all of the
-    // keys are automatically deleted, which in turn does an
-    // appropriate Release() on the nsIRDFNode.
-
-    NodeHashKey key(node);
-    NodeImpl* result = NS_STATIC_CAST(NodeImpl*, mNodes.Get(&key));
-    if (! result) {
-        result = new NodeImpl(node);
-        if (result)
-            mNodes.Put(&key, result);
-    }
-    return result;
+    return new char[size];
 }
 
+
+void PR_CALLBACK
+MemoryDataSourceImpl::FreeTable(void* pool, void* item)
+{
+    delete[] item;
+}
+
+
+PLHashEntry* PR_CALLBACK
+MemoryDataSourceImpl::AllocEntry(void* pool, const void* key)
+{
+    return new PLHashEntry;
+}
+
+
+void PR_CALLBACK
+MemoryDataSourceImpl::FreeEntry(void* poool, PLHashEntry* he, PRUintn flag)
+{
+    if (flag == HT_FREE_VALUE || flag == HT_FREE_ENTRY) {
+        NodeImpl* node = NS_STATIC_CAST(NodeImpl*, he->value);
+        delete node;
+    }
+}
+
+static PRIntn
+rdf_NodeDumpEnumerator(PLHashEntry* he, PRIntn index, void* closure)
+{
+    // XXX we're doomed once literals go into the table.
+    nsIRDFResource* node =
+        NS_CONST_CAST(nsIRDFResource*, NS_STATIC_CAST(const nsIRDFResource*, he->key));
+
+    const char* s;
+    node->GetValue(&s);
+
+    printf("[Node: %s]\n", s);
+
+    NodeImpl* impl = NS_STATIC_CAST(NodeImpl*, he->value);
+    impl->Dump(s);
+
+    return HT_ENUMERATE_NEXT;
+}
+
+void
+MemoryDataSourceImpl::Dump(void)
+{
+    PL_HashTableEnumerateEntries(mNodes, rdf_NodeDumpEnumerator, nsnull);
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -733,7 +986,7 @@ nsMemoryDataSource::Ensure(nsIRDFNode* node)
 nsresult
 NS_NewRDFMemoryDataSource(nsIRDFDataSource** result)
 {
-    nsMemoryDataSource* ds = new nsMemoryDataSource();
+    MemoryDataSourceImpl* ds = new MemoryDataSourceImpl();
     if (! ds)
         return NS_ERROR_OUT_OF_MEMORY;
 
