@@ -2493,14 +2493,13 @@ RDFGenericBuilderImpl::CloseWidgetItem(nsIContent* aElement)
     // Find the tag that contains the children so that we can remove all of
     // the children.
     nsCOMPtr<nsIAtom> parentAtom;
-    if (NS_FAILED(rv = GetItemAtomThatContainsTheChildren(getter_AddRefs(parentAtom)))) {
-        return rv;
-    }
+    rv = GetItemAtomThatContainsTheChildren(getter_AddRefs(parentAtom));
+    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIContent> parentNode;
     nsCOMPtr<nsIAtom> tag;
-    if (NS_FAILED(rv = aElement->GetTag(*getter_AddRefs(tag))))
-        return rv; // XXX fatal
+    rv = aElement->GetTag(*getter_AddRefs(tag));
+    if (NS_FAILED(rv)) return rv; // XXX fatal
 
     if (tag == parentAtom) {
         parentNode = dont_QueryInterface(aElement);
@@ -2515,26 +2514,15 @@ RDFGenericBuilderImpl::CloseWidgetItem(nsIContent* aElement)
         return NS_OK;
     }
 
-    if (NS_FAILED(rv)) {
-        NS_ERROR("severe error retrieving parent node for removal");
-        return rv;
-    }
+    NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving parent node for removal");
+    if (NS_FAILED(rv)) return rv;
 
     PRInt32 count;
-    if (NS_FAILED(rv = parentNode->ChildCount(count))) {
-        NS_ERROR("unable to get count of the parent's children");
-        return rv;
-    }
+    rv = parentNode->ChildCount(count);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get count of the parent's children");
+    if (NS_FAILED(rv)) return rv;
 
     while (--count >= 0) {
-        // XXX This is a bit gross. We need to recursively remove any
-        // subtrees before we remove the current subtree.
-        nsIContent* child;
-        if (NS_SUCCEEDED(rv = parentNode->ChildAt(count, child))) {
-            rv = CloseWidgetItem(child);
-            NS_RELEASE(child);
-        }
-
         rv = parentNode->RemoveChildAt(count, PR_TRUE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
     }
@@ -2542,21 +2530,21 @@ RDFGenericBuilderImpl::CloseWidgetItem(nsIContent* aElement)
     // Clear the contents-generated attribute so that the next time we
     // come back, we'll regenerate the kids we just killed.
     rv = aElement->UnsetAttribute(kNameSpaceID_None,
-								  kItemContentsGeneratedAtom,
-								  PR_FALSE);
+                                  kItemContentsGeneratedAtom,
+                                  PR_FALSE);
 	if (NS_FAILED(rv)) return rv;
 
 	// This is a _total_ hack to make sure that any XUL we blow away
 	// gets rebuilt.
-	rv = aElement->UnsetAttribute(kNameSpaceID_None,
-								  kXULContentsGeneratedAtom,
-								  PR_FALSE);
+	rv = parentNode->UnsetAttribute(kNameSpaceID_None,
+                                    kXULContentsGeneratedAtom,
+                                    PR_FALSE);
 	if (NS_FAILED(rv)) return rv;
 
-	rv = aElement->SetAttribute(kNameSpaceID_RDF,
-								kContainerAtom,
-								"true",
-								PR_FALSE);
+	rv = parentNode->SetAttribute(kNameSpaceID_RDF,
+                                  kContainerAtom,
+                                  "true",
+                                  PR_FALSE);
 	if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
