@@ -61,6 +61,7 @@ MOZ_DEBUG=1
 MOZ_OPTIMIZE=
 OBJDIR=.
 OBJDIR_NAME=.
+OBJDIR_SUFFIX=OBJ
 NSINSTALL='$(MOD_DEPTH)/config/$(OBJDIR_NAME)/nsinstall'
 NOSUCHFILE=/no-such-file
 LIBNSPR='-L$(dist_libdir) -lnspr$(MOD_MAJOR_VERSION)'
@@ -462,6 +463,10 @@ if test "$OS_ARCH" = "IRIX64"; then
     OS_ARCH=IRIX
 fi
 
+if test "$OS_ARCH" = "Linux"; then
+    OS_RELEASE=`echo $OS_RELEASE | sed 's/-.*//'`
+fi
+
 if test "$OS_ARCH" = "POSIX_for_OpenVMS_AXP"; then
     OS_ARCH=OpenVMS
 fi
@@ -788,7 +793,7 @@ case "$target" in
     ;;
 
 *-freebsd*)
-    if test -z "$USE_USER_PTHREADS"; then
+    if test -z "$USE_NSPR_THREADS"; then
         USE_PTHREADS=1
     fi
     AC_DEFINE(XP_UNIX)
@@ -943,6 +948,8 @@ case "$target" in
         AC_DEFINE(IRIX6)
         USE_PTHREADS=1
         USE_N32=1
+        COMPILER_TAG=_n32
+        IMPL_STRATEGY=_PTH
         ;;
     irix5*)
         AC_DEFINE(IRIX5)
@@ -1020,8 +1027,9 @@ case "$target" in
     ;;
 
 *-linux*)
-    if test -z "$USE_USER_PTHREADS"; then
+    if test -z "$USE_NSPR_THREADS"; then
         USE_PTHREADS=1
+        IMPL_STRATEGY=_PTH
     fi
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(_POSIX_SOURCE)
@@ -1039,6 +1047,8 @@ case "$target" in
     DSO_LDOPTS='-shared -Wl,-soname -Wl,$(notdir $@)'
     OS_LIBS="$OS_LIBS -lc"
     _OPTIMIZE_FLAGS=-O2
+    COMPILER_TAG=_glibc
+    CPU_ARCH_TAG=_${target_cpu}
     case "${target_cpu}" in
     alpha)
         AC_DEFINE(_ALPHA_)
@@ -1049,6 +1059,7 @@ case "$target" in
     i?86)
         AC_DEFINE(i386)
         PR_MD_ASFILES=os_Linux_x86.s
+        CPU_ARCH_TAG=_x86
         ;;
     ia64)
         PR_MD_ASFILES=os_Linux_ia64.s
@@ -1103,7 +1114,6 @@ case "$target" in
             CFLAGS="$CFLAGS -MD"
             OPTIMIZER=-O2
             DLLFLAGS='-OUT:"$@"'
-            OBJDIR_TAG=_OPT
 
             if test -n "$MOZ_PROFILE"; then
                 OPTIMIZER="$OPTIMIZER -Z7"
@@ -1122,7 +1132,6 @@ case "$target" in
                 DLLFLAGS='-DEBUG -DEBUGTYPE:both -INCLUDE:_GlowCode -OUT:"$@"'
                 DLL_LIBS='$(GLOWDIR)/glowcode.lib'
             fi
-            OBJDIR_TAG=_DBG
             LDFLAGS="-DEBUG -DEBUGTYPE:CV"
             if test -n "$PROFILE"; then
                 LDFLAGS="$LDFLAGS -PROFILE -MAP"
@@ -1162,12 +1171,7 @@ case "$target" in
 
     if test -n "$USE_DEBUG_RTL"; then
         OBJDIR_SUFFIX=OBJD
-    else
-        OBJDIR_SUFFIX=OBJ
     fi
-
-    #OBJDIR_NAME="${OS_CONFIG}${CPU_ARCH_TAG}${OBJDIR_TAG}.${OBJDIR_SUFFIX}"
-    #OBJDIR='${OBJDIR_NAME}'
 
     OS_DLLFLAGS='-nologo -DLL -SUBSYSTEM:WINDOWS -PDB:NONE'
 
@@ -1316,7 +1320,6 @@ mips-sony-newsos*)
     OS_LIBS="$OS_LIBS -lsocket"
     _OPTIMIZE_FLAGS="-O1"
     _DEBUG_FLAGS="-O1 -gstabs"
-    COMPILER_TAG="_qcc"
     CC="qcc -Vgcc_ntox86 -w"
     CXX='$(CC)'
     LD="qcc -Vgcc_ntox86 -nostdlib"
@@ -1552,6 +1555,7 @@ mips-sony-newsos*)
     fi
     if test "$OS_TEST" = "i86pc"; then
         AC_DEFINE(i386)
+        CPU_ARCH_TAG=_$OS_TEST
         # The default debug format, DWARF (-g), is not supported by gcc
         # on i386-ANY-sysv4/solaris, but the stabs format is.  It is
         # assumed that the Solaris assembler /usr/ccs/bin/as is used.
@@ -2095,6 +2099,18 @@ if test -n "$MOZ_DEBUG"; then
     CXXFLAGS="$CXXFLAGS $_DEBUG_FLAGS"
 fi
 
+if test -n "$MOZ_OPTIMIZE"; then
+    OBJDIR_TAG=_OPT
+else
+    OBJDIR_TAG=_DBG
+fi
+
+if test -n "$USE_64"; then
+    COMPILER_TAG=_64
+fi
+
+RELEASE_OBJDIR_NAME="${OS_CONFIG}${CPU_ARCH_TAG}${COMPILER_TAG}${IMPL_STRATEGY}${OBJDIR_TAG}.${OBJDIR_SUFFIX}"
+
 dnl ========================================================
 dnl Substitution of found variables.
 dnl ========================================================
@@ -2177,10 +2193,10 @@ AC_SUBST(ULTRASPARC_FILTER_LIBRARY)
 
 AC_SUBST(OBJDIR)
 AC_SUBST(OBJDIR_NAME)
+AC_SUBST(RELEASE_OBJDIR_NAME)
 AC_SUBST(NSINSTALL)
 AC_SUBST(OPTIMIZER)
 AC_SUBST(RC)
-AC_SUBST(CPU_ARCH_TAG)
 AC_SUBST(DLLFLAGS)
 AC_SUBST(EXEFLAGS)
 AC_SUBST(OS_DLLFLAGS)
