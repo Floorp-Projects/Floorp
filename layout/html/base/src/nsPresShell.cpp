@@ -1366,7 +1366,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
 
       // XXX Deal with the case where there is a scrolled element, e.g., a
       // DIV in the middle...
-      while (closestView != scrolledView) {
+      while ((closestView != nsnull) && (closestView != scrolledView)) {
         nscoord x, y;
 
         // Update the offset
