@@ -36,15 +36,17 @@ chdir("::::");
 # Make and popuplate the dist directory
 DistMozilla();
 
+Delay(10);
+
 # Set the build number in about-all.html.  Commented out for now
 # until ckid/mcvs resource problem is resolved.
 SetBuildNumber();
 
 # SetAgentString();
 
-SetTimeBomb(0, 30);
+Delay(10);
 
-# Delay()
+SetTimeBomb(0, 30);
 
 Delay(10);
 
