@@ -1024,8 +1024,6 @@ nsHttpChannel::SetupByteRangeRequest(PRUint32 partialLen)
 nsresult
 nsHttpChannel::ProcessPartialContent()
 {
-    nsresult rv;
-
     // ok, we've just received a 206
     //
     // we need to stream whatever data is in the cache out first, and then
@@ -1036,8 +1034,18 @@ nsHttpChannel::ProcessPartialContent()
     NS_ENSURE_TRUE(mCachedResponseHead, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_INITIALIZED);
 
+    // Check if the content-encoding we now got is different from the one we
+    // got before
+    if (PL_strcasecmp(mResponseHead->PeekHeader(nsHttp::Content_Encoding),
+                      mCachedResponseHead->PeekHeader(nsHttp::Content_Encoding))
+                      != 0) {
+        Cancel(NS_ERROR_UNEXPECTED); // XXX need better error code
+        return CallOnStartRequest();
+    }
+
+
     // suspend the current transaction
-    rv = mTransactionPump->Suspend();
+    nsresult rv = mTransactionPump->Suspend();
     if (NS_FAILED(rv)) return rv;
 
     // merge any new headers with the cached response headers
