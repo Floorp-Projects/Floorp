@@ -55,6 +55,8 @@ EXTRA_DSO_LDOPTS = \
 	-ljsurl		\
 	-L$(DIST)/bin	\
 	-lraptorbase	\
+	-lraptorgfx	\
+	-lgfxunix	\
 	-lgmbaseunix	\
 	-lnetlib	\
 	-ljs		\
@@ -75,6 +77,8 @@ EXTRA_DSO_LDOPTS = \
 	$(DIST)/lib/libjsurl.a				\
 	$(LD_NONE)					\
 	$(DIST)/bin/libraptorbase.so			\
+	$(DIST)/bin/libraptorgfx.so \
+  $(DIST)/bin/libgfxunix.so \
 	$(DIST)/bin/libgmbaseunix.so			\
 	$(DIST)/bin/libnetlib.so			\
 	$(DIST)/bin/libjs.so				\
