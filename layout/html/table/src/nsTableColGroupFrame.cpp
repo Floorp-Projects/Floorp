@@ -487,7 +487,6 @@ NS_METHOD nsTableColGroupFrame::IncrementalReflow(nsIPresContext*          aPres
                                                   const nsHTMLReflowState& aReflowState,
                                                   nsReflowStatus&          aStatus)
 {
-  nsresult  rv = NS_OK;
 
   // the col group is a target if its path has a reflow command
   nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;

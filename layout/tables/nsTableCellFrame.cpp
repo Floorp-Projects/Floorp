@@ -135,22 +135,6 @@ nsTableCellFrame::Init(nsIPresContext*  aPresContext,
 
   return rv;
 }
-static PRBool
-NoComputedHeightBetween(const nsHTMLReflowState&  aReflowState,
-                        nsIFrame*                 aCellFrame)
-{
-  for (const nsHTMLReflowState* rs = aReflowState.parentReflowState; rs; rs = rs->parentReflowState) {
-    if ((NS_UNCONSTRAINEDSIZE != rs->mComputedHeight) || (0 != rs->mComputedHeight)) {
-      return PR_FALSE;
-    }
-    // stop when we hit the cell frame
-    if (rs->frame == aCellFrame) {
-      return PR_TRUE;
-    }
-  }
-  NS_ASSERTION(PR_FALSE, "program error in NoComputedHeightBetween");
-  return PR_FALSE;
-}
 
 // nsIPercentHeightObserver methods
 
@@ -739,6 +723,7 @@ PRInt32 nsTableCellFrame::GetColSpan()
   return colSpan;
 }
 
+#ifdef DEBUG
 #define PROBABLY_TOO_LARGE 1000000
 static
 void DebugCheckChildSize(nsIFrame*            aChild, 
@@ -758,6 +743,7 @@ void DebugCheckChildSize(nsIFrame*            aChild,
     }
   }
 }
+#endif
 
 // the computed height for the cell, which descendents use for percent height calculations
 // it is the height (minus border, padding) of the cell's first in flow during its final 
@@ -834,7 +820,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   /* XXX: remove tableFrame when border-collapse inherits */
   nsTableFrame* tableFrame = nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame); if (!tableFrame) ABORT1(NS_ERROR_NULL_POINTER);
-  nsTableFrame* tableFrameFirstInFlow = (nsTableFrame*)tableFrame->GetFirstInFlow();
 
   nsMargin borderPadding = aReflowState.mComputedPadding;
   nsMargin border;

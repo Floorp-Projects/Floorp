@@ -674,7 +674,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
         rowInfo[rowIndex].pctHeight = nsTableFrame::RoundToPixel(rowFrame->GetHeight(pctHeightBasis), p2t);
       }
       rowInfo[rowIndex].hasStyleHeight = rowFrame->HasStyleHeight();
-      nonPctHeight = PR_MAX(nonPctHeight, rowFrame->GetFixedHeight());
+      nonPctHeight = nsTableFrame::RoundToPixel(PR_MAX(nonPctHeight, rowFrame->GetFixedHeight()), p2t);
     }
     UpdateHeights(rowInfo[rowIndex], nonPctHeight, heightOfRows, heightOfUnStyledRows);
 
@@ -1088,8 +1088,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
   GET_PIXELS_TO_TWIPS(aPresContext, p2t);
   nscoord availWidth  = nsTableFrame::RoundToPixel(aReflowState.availableWidth, p2t);
   nscoord availHeight = nsTableFrame::RoundToPixel(aReflowState.availableHeight, p2t);
-  nscoord origAvailHeight = availHeight;
-
+  
   PRBool  borderCollapse = ((nsTableFrame*)aTableFrame->GetFirstInFlow())->IsBorderCollapse();
   nscoord cellSpacingY   = aTableFrame->GetCellSpacingY();
 

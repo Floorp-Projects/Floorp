@@ -525,7 +525,7 @@ nscoord
 nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
 {
   nsTableFrame* tableFrame = nsnull;
-  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  nsTableFrame::GetTableFrame(this, tableFrame);
   if (!tableFrame) return 0;
 
   nscoord computedHeight = (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight)
@@ -915,7 +915,6 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
   PRInt32 prevColIndex  = firstPrevColIndex;
   nscoord x = 0; // running total of children x offset
 
-  nsTableFrame* tableFirstInFlow = (nsTableFrame*)aTableFrame.GetFirstInFlow();
   PRBool isAutoLayout = aTableFrame.IsAutoLayout();
   PRBool needToNotifyTable = PR_TRUE;
   nscoord paginatedHeight = 0;
@@ -1276,7 +1275,6 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
     // At this point, we know the column widths. Compute the cell available width
     PRInt32 cellColIndex;
     cellFrame->GetColIndex(cellColIndex);
-    PRInt32 cellColSpan = aTableFrame.GetEffectiveColSpan(*cellFrame);
     nscoord cellSpacingX = aTableFrame.GetCellSpacingX();
 
     nscoord colAvailWidth, cellAvailWidth;
