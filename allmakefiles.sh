@@ -863,6 +863,15 @@ if [ "$MOZ_MNG" ]; then
 "
 fi
 
+
+# modules/staticmod
+
+if [ "$MOZ_STATIC_COMPONENTS" ]; then
+    MAKEFILES_static_components="$MAKEFILES_static_components
+	modules/staticmod
+"
+fi
+
 for extension in $MOZ_EXTENSIONS; do
     case "$extension" in
         cookie ) MAKEFILES_extensions="$MAKEFILES_extensions

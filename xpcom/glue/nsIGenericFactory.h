@@ -109,13 +109,20 @@ NS_NewGenericModule(const char* moduleName,
     NS_IMPL_NSGETMODULE_WITH_DTOR(_name, _components, nsnull)
 
 #define NS_IMPL_NSGETMODULE_WITH_DTOR(_name, _components, _dtor)             \
+                                                                             \
+PRUint32 NSGetModule_components_count =                                      \
+           sizeof(_components) / sizeof(_components[0]);                     \
+                                                                             \
+nsModuleComponentInfo* NSGetModule_components = (_components);               \
+                                                                             \
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,      \
                                           nsIFile* location,                 \
                                           nsIModule** result)                \
 {                                                                            \
     return NS_NewGenericModule((_name),                                      \
-                               sizeof(_components) / sizeof(_components[0]), \
-                               (_components), _dtor, result);                \
+                               NSGetModule_components_count,                 \
+                               NSGetModule_components,                       \
+                               _dtor, result);                               \
 }
 
 ////////////////////////////////////////////////////////////////////////////////
