@@ -722,11 +722,14 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
                     }
                     newsp[1] = OBJECT_TO_JSVAL(thisp);
                     sp = newsp + 4;
-                } else {
-                    if (a->avail < (jsuword)sp) {
-                        JS_ArenaCountAllocation(pool, (jsuword)sp - a->avail);
-                        a->avail = (jsuword)sp;
-                    }
+                } else if ((jsuword)sp > a->avail) {
+                    /*
+                     * Inline, optimized version of JS_ARENA_ALLOCATE to claim
+                     * the small number of words not already allocated as part
+                     * of the caller's operand stack.
+                     */
+                    JS_ArenaCountAllocation(pool, (jsuword)sp - a->avail);
+                    a->avail = (jsuword)sp;
                 }
             }
 
