@@ -634,23 +634,29 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
     rv = nextValNode->QueryInterface(nsIRDFLiteral::GetIID(), getter_AddRefs(nextValLiteral));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLString s;
-    rv = nextValLiteral->GetValue( getter_Copies(s) );
+    const PRUnichar* s;
+    rv = nextValLiteral->GetValueConst(&s);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString nextValStr = (const PRUnichar*) s;
+    PRInt32 nextVal = 0;
+    {
+        for (const PRUnichar* p = s; *p != 0; ++p) {
+            NS_ASSERTION(*p >= '0' && *p <= '9', "not a digit");
+            if (*p < '0' || *p > '9')
+                break;
 
-    PRInt32 err;
-    PRInt32 nextVal = nextValStr.ToInteger(&err);
-    if (NS_FAILED(err))
-        return NS_ERROR_UNEXPECTED;
+            nextVal *= 10;
+            nextVal += *p - '0';
+        }
+    }
 
-    // Generate a URI that we can return.
+    char buf[sizeof(kRDFNameSpaceURI) + 16];
+    nsCAutoString nextValStr(CBufDescriptor(buf, PR_TRUE, sizeof(buf)));
     nextValStr = kRDFNameSpaceURI;
     nextValStr.Append("_");
     nextValStr.Append(nextVal, 10);
 
-    rv = gRDFService->GetUnicodeResource(nextValStr.GetUnicode(), aResult);
+    rv = gRDFService->GetResource((const char*) nextValStr, aResult);
     if (NS_FAILED(rv)) return rv;
 
     // Now increment the RDF:nextVal property.
@@ -661,7 +667,7 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
     nextValStr.Truncate();
     nextValStr.Append(nextVal, 10);
 
-    rv = gRDFService->GetLiteral(nextValStr.GetUnicode(), getter_AddRefs(nextValLiteral));
+    rv = gRDFService->GetLiteral(nsAutoString(nextValStr).GetUnicode(), getter_AddRefs(nextValLiteral));
     if (NS_FAILED(rv)) return rv;
 
     rv = mDataSource->Assert(mContainer, kRDF_nextVal, nextValLiteral, PR_TRUE);
