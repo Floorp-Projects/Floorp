@@ -46,7 +46,7 @@ endif
 
 # If this is an "official mozilla build" make them shortlived.
 ifdef MOZILLA_OFFICIAL
-TARGETS		+= $(DEPTH)/modules/libpref/src/init/all.js
+export:: $(DEPTH)/modules/libpref/src/init/all.js
 endif 
 
 # IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have
