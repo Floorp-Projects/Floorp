@@ -401,7 +401,7 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
     JSFunction *wrapper;
 
     if (!(attrs & JSPROP_SETTER))
-        return js_watch_set;
+        return &js_watch_set;   /* & to silence schoolmarmish MSVC */
 
     if (!JSVAL_IS_INT(id)) {
         atom = (JSAtom *)id;
