@@ -384,7 +384,7 @@ static PR_CALLBACK PRBool
 _ReleaseElement(nsHashKey *aKey, void *aData, void* closure)
 {
     nsISupports* element = NS_STATIC_CAST(nsISupports*, aData);
-    NS_RELEASE(element);
+    NS_IF_RELEASE(element);
     return PR_TRUE;
 }
 
@@ -397,7 +397,7 @@ void*
 nsSupportsHashtable::Put(nsHashKey *aKey, void *aData)
 {
     nsISupports* element = NS_STATIC_CAST(nsISupports*, aData);
-    NS_ADDREF(element);
+    NS_IF_ADDREF(element);
     return nsHashtable::Put(aKey, aData);
 }
 
@@ -408,7 +408,7 @@ nsSupportsHashtable::Get(nsHashKey *aKey)
     if (!data)
         return nsnull;
     nsISupports* element = NS_STATIC_CAST(nsISupports*, data);
-    NS_ADDREF(element);
+    NS_IF_ADDREF(element);
     return data;
 }
 
@@ -419,7 +419,7 @@ nsSupportsHashtable::Remove(nsHashKey *aKey)
     if (!data)
         return nsnull;
     nsISupports* element = NS_STATIC_CAST(nsISupports*, data);
-    NS_RELEASE(element);
+    NS_IF_RELEASE(element);
     return data;
 }
 
@@ -428,7 +428,7 @@ _hashEnumerateCopy(PLHashEntry *he, PRIntn i, void *arg)
 {
     nsHashtable *newHashtable = (nsHashtable *)arg;
     nsISupports* element = NS_STATIC_CAST(nsISupports*, he->value);
-    NS_ADDREF(element);
+    NS_IF_ADDREF(element);
     newHashtable->Put((nsHashKey*)he->key, he->value);
     return HT_ENUMERATE_NEXT;
 }
