@@ -530,11 +530,7 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
 
             // set url 
             nsXPIDLCString pURL ;
-#if 1
-            pFile->GetURL (getter_Copies(pURL)) ;
-#else
-            NS_GetURLFromFile(pFile, getter_Copies(pURL));
-#endif
+            NS_GetURLSpecFromFile(pFile, getter_Copies(pURL));
             attachment->SetUrl(pURL) ;
 
             if (aFiles[i].lpszFileName)
@@ -695,11 +691,7 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
         if (NS_FAILED(rv) || (!bExist) ) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ;
 
         nsXPIDLCString pURL ;
-#if 1
-        pFile->GetURL (getter_Copies(pURL)) ;
-#else
-        NS_GetURLFromFile(pFile, getter_Copies(pURL));
-#endif
+        NS_GetURLSpecFromFile(pFile, getter_Copies(pURL));
         if (pURL)
             Attachments.Assign(pURL) ;
 
@@ -738,11 +730,7 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
             if (NS_FAILED(rv) || (!bExist) ) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ;
 
             nsXPIDLCString pURL ;
-#if 1
-            pFile->GetURL (getter_Copies(pURL)) ;
-#else
-            NS_GetURLFromFile(pFile, getter_Copies(pURL));
-#endif
+            NS_GetURLSpecFromFile(pFile, getter_Copies(pURL));
             if (pURL)
             {
                 if (Attachments.Length() > 0)
