@@ -1378,31 +1378,32 @@ static JSFunctionSpec shell_functions[] = {
 /* NOTE: These must be kept in sync with the above. */
 
 static char *shell_help_messages[] = {
-    "version [number]       Get or set JavaScript version number",
-    "options [option ...]   Get or toggle JavaScript options",
-    "load ['foo.js' ...]    Load files named by string arguments",
-    "print [expr ...]       Evaluate and print expressions",
-    "help [name ...]        Display usage and help messages",
-    "quit                   Quit mocha",
-    "gc                     Run the garbage collector",
-    "trap [fun] [pc] expr   Trap bytecode execution",
-    "untrap [fun] [pc]      Remove a trap",
-    "line2pc [fun] line     Map line number to PC",
-    "pc2line [fun] [pc]     Map PC to line number",
+    "version([number])      Get or set JavaScript version number",
+    "options([option ...])  Get or toggle JavaScript options",
+    "load(['foo.js' ...])   Load files named by string arguments",
+    "print([expr ...])      Evaluate and print expressions",
+    "help([name ...])       Display usage and help messages",
+    "quit()                 Quit the shell",
+    "gc()                   Run the garbage collector",
+    "trap([fun] [pc] expr)  Trap bytecode execution",
+    "untrap([fun] [pc])     Remove a trap",
+    "line2pc([fun] line)    Map line number to PC",
+    "pc2line([fun] [pc])    Map PC to line number",
 #ifdef DEBUG
-    "dis [fun]              Disassemble functions into bytecodes",
-    "dissrc [fun]           Disassemble functions with source lines",
-    "notes [fun]            Show source notes for functions",
-    "tracing [toggle]       Turn tracing on or off",
-    "stats [string ...]     Dump 'arena', 'atom', 'global' stats",
+    "dis([fun])             Disassemble functions into bytecodes",
+    "dissrc([fun])          Disassemble functions with source lines",
+    "notes([fun])           Show source notes for functions",
+    "tracing([toggle])      Turn tracing on or off",
+    "stats([string ...])    Dump 'arena', 'atom', 'global' stats",
 #endif
 #ifdef TEST_EXPORT
-    "doexp obj id           Export identified property from object",
+    "doexp(obj, id)         Export identified property from object",
 #endif
 #ifdef TEST_CVTARGS
-    "cvtargs b c ...        Test JS_ConvertArguments",
+    "cvtargs(b, c, ...)     Test JS_ConvertArguments",
 #endif
-    "build                  Show build date and time",
+    "build()                Show build date and time",
+    "clear([obj])           Clear properties of object",
     0
 };
 
