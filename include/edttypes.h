@@ -125,19 +125,16 @@ typedef int32 ED_CellFormat; /* Prefered type for the editor cell format. */
  * Someday, if we have a lot of spare time we could switch the names. 
  */
 
-/* CLM: Swapped bottom and center tags -- should match latest extensions now?
- *      Note: BASELINE is not written out (this is default display mode)
-*/
 typedef enum {
-    ED_ALIGN_DEFAULT        = -1,
-    ED_ALIGN_CENTER         = 0,    /* abscenter    */
+    ED_ALIGN_DEFAULT        = -1,   /* HTML string */
+    ED_ALIGN_CENTER         = 0,    /* abscenter    NOT SUPPORTED IN COMPOSER FE STARTING IN 5.0 */
     ED_ALIGN_LEFT           = 1,    /* left         */
     ED_ALIGN_RIGHT          = 2,    /* right        */
     ED_ALIGN_TOP            = 3,    /* texttop      */
-    ED_ALIGN_BOTTOM         = 4,    /* absbottom    */
-    ED_ALIGN_BASELINE       = 5,    /* baseline     */
+    ED_ALIGN_BOTTOM         = 4,    /* absbottom    NOT SUPPORTED IN COMPOSER FE STARTING IN 5.0  */
+    ED_ALIGN_BASELINE       = 5,    /* baseline     (default, no param written out)  */
     ED_ALIGN_ABSCENTER      = 6,    /* center       */
-    ED_ALIGN_ABSBOTTOM      = 7,    /* bottom       */
+    ED_ALIGN_ABSBOTTOM      = 7,    /* bottom       Used for Table Cells only */
     ED_ALIGN_ABSTOP         = 8     /* top          */
 } ED_Alignment;
 
