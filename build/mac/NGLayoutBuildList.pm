@@ -1233,7 +1233,7 @@ sub MakeResourceAliases()
 	my($domds_dir) = "$samples_dir" . "rdf:";
 	_InstallResources(":mozilla:rdf:tests:domds:resources:MANIFEST",					"$domds_dir");
 
-	my($ _ch_dir) = "$chrome_dir" . "xpinstall";
+	my($xpinstall_ch_dir) = "$chrome_dir" . "xpinstall";
 	_InstallResources(":mozilla:xpinstall:res:locale:en-US:MANIFEST",					"$xpinstall_ch_dir:locale:en-US:", 0);
 	_InstallResources(":mozilla:xpinstall:res:content:MANIFEST",						"$xpinstall_ch_dir:content:default:", 0);
 	_InstallResources(":mozilla:xpinstall:res:skin:MANIFEST",	 						"$xpinstall_ch_dir:skin:default:", 0);
