@@ -244,9 +244,9 @@ nsInstall::InternalAbort(PRInt32 errcode)
 }
 
 PRInt32    
-nsInstall::AbortInstall()
+nsInstall::AbortInstall(PRInt32 aErrorNumber)
 {
-    InternalAbort(ABORT_INSTALL);
+    InternalAbort(aErrorNumber);
     return NS_OK;
 }
 
