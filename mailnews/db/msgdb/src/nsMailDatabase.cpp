@@ -577,8 +577,15 @@ NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create,
       if (*offlineOp)
         (*offlineOp)->SetMessageKey(msgKey);
       nsCOMPtr <nsIMsgDBHdr> msgHdr;
-      
-      GetMsgHdrForKey(msgKey, getter_AddRefs(msgHdr));
+
+      // GetMsgHdrForKey will return an empty header if no header exists,
+      // so we only want to get the hdr if the db contains a hdr for
+      // that key - otherwise, we'll crunch the new flags.
+      PRBool containsKey;
+      rv = ContainsKey(msgKey , &containsKey);
+
+      if (NS_SUCCEEDED(rv) && containsKey)
+        GetMsgHdrForKey(msgKey, getter_AddRefs(msgHdr));
       if (msgHdr)
       {
         imapMessageFlagsType imapFlags = kNoImapMsgFlag;
