@@ -29,10 +29,10 @@
 #include "nsRelatedLinksHandlerImpl.h"
 #include "nsTimeBomb.h"
 #include "nsUrlbarHistory.h"
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include "nsUrlWidget.h"
 #include "nsWindowsHooks.h"
-#endif // XP_PC
+#endif // Windows
 
 // Factory constructors
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
@@ -46,10 +46,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(InternetSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimeBomb)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
-#endif // 
+#endif // Windows
 
 static nsModuleComponentInfo components[] = {
     { "AutoComplete Search Results", NS_AUTOCOMPLETERESULTS_CID, NS_AUTOCOMPLETERESULTS_PROGID,
@@ -86,12 +86,12 @@ static nsModuleComponentInfo components[] = {
       NS_URLBARHISTORY_PROGID, nsUrlbarHistoryConstructor },
     { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
       NS_URLBARAUTOCOMPLETE_PROGID, nsUrlbarHistoryConstructor },
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
     { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID, NS_IURLWIDGET_PROGID, 
       nsUrlWidgetConstructor }, 
     { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID, NS_IWINDOWSHOOKS_PROGID, 
       nsWindowsHooksConstructor },
-#endif // XP_PC
+#endif // Windows
 };
 
 NS_IMPL_NSGETMODULE("application", components)
