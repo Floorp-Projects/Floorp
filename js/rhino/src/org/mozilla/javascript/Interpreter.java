@@ -271,13 +271,20 @@ public class Interpreter {
         switch (type) {
 
             case TokenStream.FUNCTION : {
-                Node fn = (Node) node.getProp(Node.FUNCTION_PROP);
-                int index = fn.getExistingIntProp(Node.FUNCTION_PROP);
-                iCodeTop = addByte(TokenStream.CLOSURE, iCodeTop);
-                iCodeTop = addIndex(index, iCodeTop);
-                itsStackDepth++;
-                if (itsStackDepth > itsData.itsMaxStack)
-                    itsData.itsMaxStack = itsStackDepth;
+                FunctionNode fn
+                    = (FunctionNode) node.getProp(Node.FUNCTION_PROP);
+                if (fn.itsFunctionType != FunctionNode.FUNCTION_STATEMENT) {
+                    // Only function expressions or function expression
+                    // statements needs closure code creating new function
+                    // object on stack as function statements are initialized
+                    // at script/function start
+                    int index = fn.getExistingIntProp(Node.FUNCTION_PROP);
+                    iCodeTop = addByte(TokenStream.CLOSURE, iCodeTop);
+                    iCodeTop = addIndex(index, iCodeTop);
+                    itsStackDepth++;
+                    if (itsStackDepth > itsData.itsMaxStack)
+                        itsData.itsMaxStack = itsStackDepth;
+                }
                 break;
             }
 
