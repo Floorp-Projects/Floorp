@@ -129,6 +129,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
  * 
  * The easier way would be to completly implement this in assembler. This way one could get rid
  * of the compiler generated function prologue.
+ */
 
 #define STUB_ENTRY(n)								   \
 nsresult nsXPTCStubBase::Stub##n()						   \
