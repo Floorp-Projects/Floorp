@@ -32,6 +32,11 @@ interface nsMimeHeaderDisplayTypes
     const long AllHeaders = 2; 
 }; 
 
+%{C++
+//#define NS_IMIME_MISC_STATUS_KEY       "component://netscape/messenger/mimestatus;"
+#define NS_IMIME_MISC_STATUS_KEY       "Software/Netscape/MimeMiscStatus/"
+%}
+
 [scriptable, uuid(D01D7B59-DCCD-11d2-A411-00805F613C79)]
 interface nsIMimeEmitter : nsISupports{
 

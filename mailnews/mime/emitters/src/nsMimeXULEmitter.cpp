@@ -35,11 +35,12 @@
 #include "nsIComponentManager.h"
 #include "nsEmitterUtils.h"
 #include "nsFileSpec.h"
+#include "nsIRegistry.h"
+#include "nsIMimeMiscStatus.h"
 
 // For the new pref API's
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
-static NS_DEFINE_CID(kMimeMiscStatusCID,		NS_MIME_MISC_STATUS_CID); 
 
 nsresult NS_NewMimeXULEmitter(const nsIID& iid, void **result)
 {
@@ -101,12 +102,9 @@ nsMimeXULEmitter::nsMimeXULEmitter()
     mPrefs->GetIntPref("mailnews.max_header_display_length", &mCutoffValue);
   }
 
-	rv = nsComponentManager::CreateInstance(kMimeMiscStatusCID, 
-                                          NULL, nsIMimeMiscStatus::GetIID(), 
-                                          (void **) getter_AddRefs(mMiscStatus)); 
-  if (NS_FAILED(rv))
-    mMiscStatus = null_nsCOMPtr();
-  
+  mMiscStatusArray = new nsVoidArray();
+  BuildListOfStatusProviders();
+
   rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
                                           NULL, nsIMsgHeaderParser::GetIID(), 
                                           (void **) getter_AddRefs(mHeaderParser));
@@ -145,6 +143,20 @@ nsMimeXULEmitter::~nsMimeXULEmitter(void)
       PR_FREEIF(headerInfo->value);
     }
     delete mHeaderArray;
+  }
+
+  if (mMiscStatusArray)
+  {
+    for (i=0; i<mMiscStatusArray->Count(); i++)
+    {
+      miscStatusType *statusInfo = (miscStatusType *)mHeaderArray->ElementAt(i);
+      if (!statusInfo)
+        continue;
+    
+      NS_IF_RELEASE(statusInfo->obj);
+    }
+
+    delete mMiscStatusArray;
   }
 
   if (mBufferMgr)
@@ -925,7 +937,7 @@ nsMimeXULEmitter::WriteXULTagPrefix(const char *tagName, const char *value)
   // get a field name next to an emitted header value. Note: Default will always
   // be the name of the header itself.
   //
-  UtilityWriteCRLF("<html:table>");  
+  UtilityWriteCRLF("<html:table BORDER=\"0\" CELLSPACING=\"0\" CELLPADDING=\"0\" >");  
   UtilityWriteCRLF("<html:tr VALIGN=\"TOP\">");
   UtilityWriteCRLF("<html:td>");
 
@@ -1025,14 +1037,25 @@ nsMimeXULEmitter::DoGlobalStatusProcessing()
 {
   char    *retval = nsnull;
 
-  if (!mMiscStatus)
-    return NS_OK;
+  if (mMiscStatusArray)
+  {
+    for (PRInt32 i=0; i<mMiscStatusArray->Count(); i++)
+    {
+      retval = nsnull;
+      miscStatusType *statusInfo = (miscStatusType *)mMiscStatusArray->ElementAt(i);
+      if (statusInfo->obj)
+      {
+        if (NS_SUCCEEDED(statusInfo->obj->GetGlobalXULandJS(&retval)))
+        {
+          if ( (retval) && (*retval) )
+            UtilityWriteCRLF(retval);
 
-  if (NS_SUCCEEDED(mMiscStatus->GetGlobalXULandJS(&retval)))
-    if ( (retval) && (*retval) )
-      UtilityWriteCRLF(retval);
+          PR_FREEIF(retval);
+        }
+      }
+    }
+  }
 
-  PR_FREEIF(retval);
   return NS_OK;
 }
 
@@ -1069,7 +1092,7 @@ nsMimeXULEmitter::OutputEmailAddresses(const char *aHeader, const char *aEmailAd
       ProcessSingleEmailEntry(aHeader, curName, curAddress);
       
       if (i != (numAddresses-1))
-        UtilityWrite(", ");
+        UtilityWrite(",&#160;");
       
       if ( ( ((i+1) % 2) == 0) && ((i+1) != (PRUint32) mCutoffValue))
       {
@@ -1099,7 +1122,7 @@ nsMimeXULEmitter::OutputEmailAddresses(const char *aHeader, const char *aEmailAd
     ProcessSingleEmailEntry(aHeader, curName, curAddress);
 
     if (i != (numAddresses-1))
-      UtilityWrite(", ");
+      UtilityWrite(",&#160;");
 
     if ( ( ((i+1) % 2) == 0) && (i != (numAddresses-1)))
     {
@@ -1130,7 +1153,6 @@ nsMimeXULEmitter::OutputEmailAddresses(const char *aHeader, const char *aEmailAd
 nsresult
 nsMimeXULEmitter::ProcessSingleEmailEntry(const char *curHeader, char *curName, char *curAddress)
 {
-nsresult  rv;
 char      *link = nsnull;
 char      *tLink = nsnull;
 char      *workName = nsnull;
@@ -1183,14 +1205,135 @@ char      *workAddr = nsnull;
 
   // Misc here
   char    *xul;
-  if (mMiscStatus)
+  if (mMiscStatusArray)
   {
-    rv = mMiscStatus->GetIndividualXUL(curHeader, workAddr, &xul);
-    if (NS_SUCCEEDED(rv) && xul)
-      UtilityWrite(xul);
+    for (PRInt32 i=0; i<mMiscStatusArray->Count(); i++)
+    {
+      xul = nsnull;
+      miscStatusType *statusInfo = (miscStatusType *)mMiscStatusArray->ElementAt(i);
+      if (statusInfo->obj)
+      {
+        if (NS_SUCCEEDED(statusInfo->obj->GetIndividualXUL(curHeader, workName, workAddr, &xul)))
+        {
+          if ( (xul) && (*xul) )
+            UtilityWriteCRLF(xul);
+
+          PR_FREEIF(xul);
+        }
+      }
+    }
   }
 
   PR_FREEIF(workName);
   PR_FREEIF(workAddr);
   return NS_OK;  
+}
+
+nsresult
+nsMimeXULEmitter::BuildListOfStatusProviders() 
+{
+  nsresult rv;
+
+  // enumerate the registry subkeys
+  nsIRegistry           *registry = nsnull;
+  nsIRegistry::Key      key;
+  nsIEnumerator         *components = nsnull;
+  miscStatusType        *newInfo = nsnull;
+
+  rv = nsServiceManager::GetService(NS_REGISTRY_PROGID,
+                                    nsCOMTypeInfo<nsIRegistry>::GetIID(),
+                                    (nsISupports**)&registry);
+  if (NS_FAILED(rv)) 
+    return rv;
+  
+  rv = registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+  if (NS_FAILED(rv)) 
+    return rv;
+  
+  rv = registry->GetSubtree(nsIRegistry::Common, NS_IMIME_MISC_STATUS_KEY, &key);
+  if (NS_FAILED(rv)) 
+    return rv;
+  
+  rv = registry->EnumerateSubtrees(key, &components);
+  if (NS_FAILED(rv)) 
+    return rv;
+  
+  // go ahead and enumerate through.
+  nsString2 actualProgID("", eOneByte);
+  rv = components->First();
+  while (NS_SUCCEEDED(rv) && !components->IsDone()) 
+  {
+    nsISupports *base = nsnull;
+    
+    rv = components->CurrentItem(&base);
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    nsIRegistryNode *node = nsnull;
+    nsIID nodeIID = NS_IREGISTRYNODE_IID;
+    rv = base->QueryInterface(nodeIID, (void**)&node);
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    char *name = nsnull;
+    rv = node->GetName(&name);
+    if (NS_FAILED(rv)) 
+      return rv;
+    
+    actualProgID = NS_IMIME_MISC_STATUS_KEY;
+    actualProgID.Append(name);
+    
+    // now we've got the PROGID, let's add it to the list...
+    newInfo = (miscStatusType *)PR_NEWZAP(miscStatusType);
+    if (newInfo)
+    {
+      newInfo->obj = GetStatusObjForProgID(actualProgID);
+      if (newInfo->obj)
+      {
+        newInfo->progID = actualProgID;
+        mMiscStatusArray->AppendElement(newInfo);
+      }
+    }
+    
+    // cleanup
+    nsCRT::free(name);
+    NS_RELEASE(node);
+    NS_RELEASE(base);
+    rv = components->Next();
+  }
+  
+  registry->Close();
+  NS_IF_RELEASE( components );
+  nsServiceManager::ReleaseService( NS_REGISTRY_PROGID, registry );
+  
+  return NS_OK;
+}
+
+nsIMimeMiscStatus *
+nsMimeXULEmitter::GetStatusObjForProgID(nsString aProgID)
+{
+  nsresult            rv;
+  nsIComponentManager *comMgr;
+  nsIMimeMiscStatus   *returnObj = nsnull;
+  nsISupports         *obj = nsnull;
+
+  rv = NS_GetGlobalComponentManager(&comMgr);
+  if (NS_FAILED(rv)) 
+    return nsnull;
+  
+  nsCID         cid;
+  rv = comMgr->ProgIDToCLSID(aProgID.GetBuffer(), &cid);
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  rv = comMgr->CreateInstance(cid, nsnull, nsCOMTypeInfo<nsIMimeMiscStatus>::GetIID(), (void**)&obj);  
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  rv = obj->QueryInterface(nsCOMTypeInfo<nsIMimeMiscStatus>::GetIID(), (void**)&returnObj);
+  NS_RELEASE(obj);
+  if (NS_FAILED(rv)) 
+    return nsnull;
+  else
+    return returnObj;
 }

@@ -47,6 +47,11 @@ typedef struct {
   char      *value;
 } headerInfoType;
 
+typedef struct {
+  nsString            progID;
+  nsIMimeMiscStatus   *obj;
+} miscStatusType;
+
 class nsMimeXULEmitter : public nsIMimeEmitter {
 public: 
     nsMimeXULEmitter ();
@@ -109,6 +114,8 @@ public:
     // For storing recipient info in the history database...
     nsresult      DoSpecialSenderProcessing(const char *field, const char *value);
     nsresult      DoGlobalStatusProcessing();
+    nsresult      BuildListOfStatusProviders();
+    nsIMimeMiscStatus   *GetStatusObjForProgID(nsString aProgID);
 
     char          *GetHeaderValue(const char *aHeaderName);
 
@@ -152,7 +159,8 @@ protected:
 
     // For header caching...
     nsVoidArray         *mHeaderArray;
-    nsCOMPtr<nsIMimeMiscStatus>   mMiscStatus;
+    // RICHIE SHERRY nsCOMPtr<nsIMimeMiscStatus>   mMiscStatus;
+    nsVoidArray         *mMiscStatusArray;
     nsCOMPtr<nsIMsgHeaderParser>  mHeaderParser;
 };
 

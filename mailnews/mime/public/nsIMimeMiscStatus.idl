@@ -24,20 +24,13 @@ interface nsIURI;
 interface nsIStreamListener;
 interface nsIChannel;
 
-%{C++
-// {842CC263-5255-11d3-82B8-444553540002}
-#define NS_MIME_MISC_STATUS_CID \
-  { 0x842cc263, 0x5255, 0x11d3,   \
-  { 0x82, 0xb8, 0x44, 0x45, 0x53, 0x54, 0x0, 0x2 } };
-%}
-
 [scriptable, uuid(4644FB25-5255-11d3-82B8-444553540002)] 
 interface nsIMimeMiscStatus : nsISupports{
 
     string  GetGlobalXULandJS();
-    string  GetIndividualXUL(in string aHeader, in string aEmail);
+    string  GetIndividualXUL(in string aName, in string aHeader, in string aEmail);
 
-    long    GetMiscStatus(in string aEmail);
+    long    GetMiscStatus(in string aName, in string aEmail);
     string  GetImageURL(in long aStatus);
 };
 
