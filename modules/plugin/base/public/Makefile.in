@@ -64,7 +64,6 @@ XPIDLSRCS 	= \
 		nsIScriptablePlugin.idl \
 		nsIPluginTagInfo.idl \
 		nsIPluginTagInfo2.idl \
-		nsIPluginViewer.idl  \
 		nsIJRILiveConnectPIPeer.idl \
 		nsIJRILiveConnectPlugin.idl \
 		nsIPluginInputStream.idl \
