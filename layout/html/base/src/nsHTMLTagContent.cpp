@@ -1100,6 +1100,7 @@ static nsHTMLTagContent::EnumTable kDivAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "middle", NS_STYLE_TEXT_ALIGN_CENTER },
   { "justify", NS_STYLE_TEXT_ALIGN_JUSTIFY },
   { 0 }
 };
@@ -1122,6 +1123,7 @@ static nsHTMLTagContent::EnumTable kTableAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "middle", NS_STYLE_TEXT_ALIGN_CENTER },
   { 0 }
 };
 
