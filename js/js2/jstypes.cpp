@@ -39,6 +39,8 @@
 namespace JavaScript {
 namespace JSTypes {
 
+using namespace JSClasses;
+
 //    using JavaScript::StringAtom;
 
 // the canonical undefined value, etc.
@@ -452,7 +454,7 @@ JSValue JSValue::valueToUInt32(const JSValue& value)
 }
 
 
-JSValue JSValue::convert(const JSType *toType)
+JSValue JSValue::convert(JSType *toType)
 {
     if (toType == &Any_Type)    // yuck, something wrong with this
                                 // maybe the base types should be 
@@ -461,9 +463,27 @@ JSValue JSValue::convert(const JSType *toType)
         return *this;
     else if (toType == &Integer_Type)
         return valueToInteger(*this);
-    else
-        //  etc...
-        return kUndefinedValue;
+    else {
+        JSClass *toClass = dynamic_cast<JSClass *>(toType);
+        if (toClass) {
+            if (tag == object_tag) {
+                JSClass *fromClass = dynamic_cast<JSClass *>(object->getType());
+                if (fromClass) {
+                    while (fromClass != toClass) {
+                        fromClass = fromClass->getSuperClass();
+                        if (fromClass == NULL)
+                            throw new JSException("Can't cast to unrelated class");
+                    }
+                    return *this;
+                }
+                else
+                    throw new JSException("Can't cast a generic object to a class");
+            }
+            else
+                throw new JSException("Can't cast a non-object to a class");
+        }
+    }
+    return kUndefinedValue;
 }
 
 

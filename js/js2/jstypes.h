@@ -142,7 +142,7 @@ namespace JSTypes {
 
         JSValue toPrimitive(ECMA_type hint = NoHint) const;
 
-        JSValue convert(const JSType *toType);
+        JSValue convert(JSType *toType);
 
         
         static JSValue valueToString(const JSValue& value);

@@ -101,7 +101,7 @@
             Instruction_2<TypedRegister, TypedRegister>
             (BITNOT, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[BITNOT] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first;
+            f << opcodeNames[BITNOT] << "\t" << mOp1 << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -150,7 +150,7 @@
             Instruction_4<TypedRegister, TypedRegister, const StringAtom*, RegisterList>
             (CALL, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[CALL] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "'" << *mOp3 << "'" << ", " << mOp4;
+            f << opcodeNames[CALL] << "\t" << mOp1 << ", " << mOp2 << ", " << "'" << *mOp3 << "'" << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -166,7 +166,7 @@
             Instruction_3<TypedRegister, TypedRegister, JSType*>
             (CAST, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[CAST] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "'" << *mOp3 << "'";
+            f << opcodeNames[CAST] << "\t" << mOp1 << ", " << mOp2 << ", " << "'" << mOp3->getName() << "'";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -245,7 +245,7 @@
             Instruction_4<JSClass*, uint32, TypedRegister, RegisterList>
             (CONSTRUCTOR_CALL, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[CONSTRUCTOR_CALL] << "\t" << mOp1->getName() << ", " << mOp2 << ", " << "R" << mOp3.first << ", " << mOp4;
+            f << opcodeNames[CONSTRUCTOR_CALL] << "\t" << mOp1->getName() << ", " << mOp2 << ", " << mOp3 << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -276,7 +276,7 @@
             Instruction_3<TypedRegister, TypedRegister, const StringAtom*>
             (DELETE_PROP, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[DELETE_PROP] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "'" << *mOp3 << "'";
+            f << opcodeNames[DELETE_PROP] << "\t" << mOp1 << ", " << mOp2 << ", " << "'" << *mOp3 << "'";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -301,7 +301,7 @@
             Instruction_4<TypedRegister, TypedRegister, TypedRegister, double>
             (ELEM_XCR, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[ELEM_XCR] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "R" << mOp3.first << ", " << mOp4;
+            f << opcodeNames[ELEM_XCR] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3 << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -317,7 +317,7 @@
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (GET_ELEMENT, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[GET_ELEMENT] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "R" << mOp3.first;
+            f << opcodeNames[GET_ELEMENT] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -333,7 +333,7 @@
             Instruction_3<TypedRegister, TypedRegister, const StringAtom*>
             (GET_PROP, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[GET_PROP] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "'" << *mOp3 << "'";
+            f << opcodeNames[GET_PROP] << "\t" << mOp1 << ", " << mOp2 << ", " << "'" << *mOp3 << "'";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -349,7 +349,7 @@
             Instruction_3<TypedRegister, TypedRegister, uint32>
             (GET_SLOT, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[GET_SLOT] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << mOp3;
+            f << opcodeNames[GET_SLOT] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -365,7 +365,7 @@
             Instruction_3<TypedRegister, JSClass*, uint32>
             (GET_STATIC, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[GET_STATIC] << "\t" << "R" << mOp1.first << ", " << mOp2->getName() << ", " << mOp3;
+            f << opcodeNames[GET_STATIC] << "\t" << mOp1 << ", " << mOp2->getName() << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -405,7 +405,7 @@
             Instruction_2<TypedRegister, bool>
             (LOAD_BOOLEAN, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[LOAD_BOOLEAN] << "\t" << "R" << mOp1.first << ", " << "'" << ((mOp2) ? "true" : "false") << "'";
+            f << opcodeNames[LOAD_BOOLEAN] << "\t" << mOp1 << ", " << "'" << ((mOp2) ? "true" : "false") << "'";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -421,7 +421,7 @@
             Instruction_2<TypedRegister, double>
             (LOAD_IMMEDIATE, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[LOAD_IMMEDIATE] << "\t" << "R" << mOp1.first << ", " << mOp2;
+            f << opcodeNames[LOAD_IMMEDIATE] << "\t" << mOp1 << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -437,7 +437,7 @@
             Instruction_2<TypedRegister, const StringAtom*>
             (LOAD_NAME, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[LOAD_NAME] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'";
+            f << opcodeNames[LOAD_NAME] << "\t" << mOp1 << ", " << "'" << *mOp2 << "'";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -453,7 +453,7 @@
             Instruction_2<TypedRegister, JSString*>
             (LOAD_STRING, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[LOAD_STRING] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'";
+            f << opcodeNames[LOAD_STRING] << "\t" << mOp1 << ", " << "'" << *mOp2 << "'";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -469,7 +469,7 @@
             Instruction_4<TypedRegister, TypedRegister, TypedRegister, RegisterList>
             (METHOD_CALL, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[METHOD_CALL] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "R" << mOp3.first << ", " << mOp4;
+            f << opcodeNames[METHOD_CALL] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3 << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -485,7 +485,7 @@
             Instruction_2<TypedRegister, TypedRegister>
             (MOVE, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[MOVE] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first;
+            f << opcodeNames[MOVE] << "\t" << mOp1 << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -510,7 +510,7 @@
             Instruction_3<TypedRegister, const StringAtom*, double>
             (NAME_XCR, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NAME_XCR] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'" << ", " << mOp3;
+            f << opcodeNames[NAME_XCR] << "\t" << mOp1 << ", " << "'" << *mOp2 << "'" << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -526,7 +526,7 @@
             Instruction_2<TypedRegister, TypedRegister>
             (NEGATE, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NEGATE] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first;
+            f << opcodeNames[NEGATE] << "\t" << mOp1 << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -542,7 +542,7 @@
             Instruction_1<TypedRegister>
             (NEW_ARRAY, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NEW_ARRAY] << "\t" << "R" << mOp1.first;
+            f << opcodeNames[NEW_ARRAY] << "\t" << mOp1;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -558,7 +558,7 @@
             Instruction_2<TypedRegister, JSClass*>
             (NEW_CLASS, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NEW_CLASS] << "\t" << "R" << mOp1.first << ", " << mOp2->getName();
+            f << opcodeNames[NEW_CLASS] << "\t" << mOp1 << ", " << mOp2->getName();
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -574,7 +574,7 @@
             Instruction_2<TypedRegister, ICodeModule*>
             (NEW_FUNCTION, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NEW_FUNCTION] << "\t" << "R" << mOp1.first << ", " << "ICodeModule";
+            f << opcodeNames[NEW_FUNCTION] << "\t" << mOp1 << ", " << "ICodeModule";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -590,7 +590,7 @@
             Instruction_1<TypedRegister>
             (NEW_OBJECT, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NEW_OBJECT] << "\t" << "R" << mOp1.first;
+            f << opcodeNames[NEW_OBJECT] << "\t" << mOp1;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -621,7 +621,7 @@
             Instruction_2<TypedRegister, TypedRegister>
             (NOT, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NOT] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first;
+            f << opcodeNames[NOT] << "\t" << mOp1 << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -646,7 +646,7 @@
             Instruction_2<TypedRegister, TypedRegister>
             (POSATE, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[POSATE] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first;
+            f << opcodeNames[POSATE] << "\t" << mOp1 << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -662,7 +662,7 @@
             Instruction_4<TypedRegister, TypedRegister, const StringAtom*, double>
             (PROP_XCR, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[PROP_XCR] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "'" << *mOp3 << "'" << ", " << mOp4;
+            f << opcodeNames[PROP_XCR] << "\t" << mOp1 << ", " << mOp2 << ", " << "'" << *mOp3 << "'" << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -687,7 +687,7 @@
             Instruction_1<TypedRegister>
             (RETURN, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[RETURN] << "\t" << "R" << mOp1.first;
+            f << opcodeNames[RETURN] << "\t" << mOp1;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -733,7 +733,7 @@
             Instruction_2<const StringAtom*, TypedRegister>
             (SAVE_NAME, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[SAVE_NAME] << "\t" << "'" << *mOp1 << "'" << ", " << "R" << mOp2.first;
+            f << opcodeNames[SAVE_NAME] << "\t" << "'" << *mOp1 << "'" << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -749,7 +749,7 @@
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (SET_ELEMENT, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[SET_ELEMENT] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "R" << mOp3.first;
+            f << opcodeNames[SET_ELEMENT] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -765,7 +765,7 @@
             Instruction_3<TypedRegister, const StringAtom*, TypedRegister>
             (SET_PROP, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[SET_PROP] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'" << ", " << "R" << mOp3.first;
+            f << opcodeNames[SET_PROP] << "\t" << mOp1 << ", " << "'" << *mOp2 << "'" << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -781,7 +781,7 @@
             Instruction_3<TypedRegister, uint32, TypedRegister>
             (SET_SLOT, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[SET_SLOT] << "\t" << "R" << mOp1.first << ", " << mOp2 << ", " << "R" << mOp3.first;
+            f << opcodeNames[SET_SLOT] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -797,7 +797,7 @@
             Instruction_3<JSClass*, uint32, TypedRegister>
             (SET_STATIC, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[SET_STATIC] << "\t" << mOp1->getName() << ", " << mOp2 << ", " << "R" << mOp3.first;
+            f << opcodeNames[SET_STATIC] << "\t" << mOp1->getName() << ", " << mOp2 << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -831,7 +831,7 @@
             Instruction_4<TypedRegister, TypedRegister, uint32, double>
             (SLOT_XCR, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[SLOT_XCR] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << mOp3 << ", " << mOp4;
+            f << opcodeNames[SLOT_XCR] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3 << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -847,7 +847,7 @@
             Instruction_4<TypedRegister, JSClass*, uint32, RegisterList>
             (STATIC_CALL, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[STATIC_CALL] << "\t" << "R" << mOp1.first << ", " << mOp2->getName() << ", " << mOp3 << ", " << mOp4;
+            f << opcodeNames[STATIC_CALL] << "\t" << mOp1 << ", " << mOp2->getName() << ", " << mOp3 << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -863,7 +863,7 @@
             Instruction_4<TypedRegister, JSClass*, uint32, double>
             (STATIC_XCR, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[STATIC_XCR] << "\t" << "R" << mOp1.first << ", " << mOp2->getName() << ", " << mOp3 << ", " << mOp4;
+            f << opcodeNames[STATIC_XCR] << "\t" << mOp1 << ", " << mOp2->getName() << ", " << mOp3 << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -906,7 +906,7 @@
             Instruction_1<TypedRegister>
             (SUPER, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[SUPER] << "\t" << "R" << mOp1.first;
+            f << opcodeNames[SUPER] << "\t" << mOp1;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -922,7 +922,7 @@
             Instruction_2<TypedRegister, TypedRegister>
             (TEST, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[TEST] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first;
+            f << opcodeNames[TEST] << "\t" << mOp1 << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -938,7 +938,7 @@
             Instruction_1<TypedRegister>
             (THROW, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[THROW] << "\t" << "R" << mOp1.first;
+            f << opcodeNames[THROW] << "\t" << mOp1;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -993,7 +993,7 @@
             Instruction_3<TypedRegister, TypedRegister, double>
             (VAR_XCR, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[VAR_XCR] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << mOp3;
+            f << opcodeNames[VAR_XCR] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -1009,7 +1009,7 @@
             Instruction_1<TypedRegister>
             (WITHIN, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[WITHIN] << "\t" << "R" << mOp1.first;
+            f << opcodeNames[WITHIN] << "\t" << mOp1;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {

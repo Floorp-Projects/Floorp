@@ -485,7 +485,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 {
                     Cast* c = static_cast<Cast*>(instruction);
                     JSType *toType = op3(c);
-                    (*registers)[dst(c).first] = (*registers)[src1(c).first];
+                    (*registers)[dst(c).first] = (*registers)[src1(c).first].convert(toType);
                 }
                 break;
             case SUPER:
@@ -1095,7 +1095,7 @@ using JSString throughout.
             // increment the program counter.
             ++mPC;
         }
-        catch (JSException x) {
+        catch (JSException *x) {
             if (mLinkage) {
                 if (mActivation->catchStack.empty()) {
                     Linkage *pLinkage = mLinkage;
@@ -1130,7 +1130,8 @@ using JSString throughout.
                     continue;
                 }
             }
-            rv = x.value;
+            rv = x->value;
+            break;
         }
 
     }

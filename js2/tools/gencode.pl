@@ -540,13 +540,17 @@ sub get_print_body {
     for $type (@types) {
 
         if ($type eq "TypedRegister") {
-            push (@oplist, "\"R\" << mOp$op.first");
+
+           push (@oplist, "mOp$op" );
+
+ #           push (@oplist, "\"R\" << ((mOp$op.first == NotARegister) ? -1 : mOp$op.first)");
+
         } elsif ($type eq "Label*") {
             push (@oplist, "\"Offset \" << ((mOp$op) ? mOp$op->mOffset : NotAnOffset)")
         } elsif ($type =~ /String/) {
             push (@oplist, "\"'\" << *mOp$op << \"'\"");
         } elsif ($type =~ /JSType\*/) {
-            push (@oplist, "\"'\" << *mOp$op << \"'\"");
+            push (@oplist, "\"'\" << mOp$op->getName() << \"'\"");
         } elsif ($type =~ /bool/) {
             push (@oplist, "\"'\" << ((mOp$op) ? \"true\" : \"false\") << \"'\"");
         } elsif ($type =~ /ICodeModule/) {
