@@ -129,12 +129,8 @@
   </menupopup>
 
   <menupopup id="menu_FilePopup">
-    <menu label="&sendMenu.label;" accesskey="&sendMenu.accesskey;" position="9">
-      <menupopup>      
-        <menuitem id="menu_sendPage" label="&sendPage.label;" accesskey="&sendPage.accesskey;" command="cmd_sendPage"/>
-        <menuitem id="menu_sendLink" label="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" command="Browser:SendLink"/>
-      </menupopup>
-    </menu>
+    <menuitem id="menu_sendPage" label="&sendPage.label;" accesskey="&sendPage.accesskey;" command="cmd_sendPage" position="9"/>
+    <menuitem id="menu_sendLink" label="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" command="Browser:SendLink" position="10"/>
   </menupopup>
 
   <popup id="contentAreaContextMenu">

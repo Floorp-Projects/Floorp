@@ -3,11 +3,8 @@
 <!ENTITY  newMessageCmd.label             "Message">
 <!ENTITY  newMessageCmd.accesskey         "m">
 
-<!ENTITY sendMenu.label                   "Send">
-<!ENTITY sendMenu.accesskey               "d">
-
-<!ENTITY sendPage.label                   "Page...">
-<!ENTITY sendPage.accesskey               "P">
+<!ENTITY sendPage.label                   "Send Page...">
+<!ENTITY sendPage.accesskey               "S">
 
 <!ENTITY contextSendPage.label            "Send Page...">
 <!ENTITY contextSendPage.accesskey        "d">
@@ -16,6 +13,6 @@
 <!ENTITY contextSendFrame.label           "Send Frame...">
 <!ENTITY contextSendFrame.accesskey       "d">
 
-<!ENTITY sendLinkCmd.label                "Link to Page..."> 
-<!ENTITY sendLinkCmd.accesskey            "L">
+<!ENTITY sendLinkCmd.label                "Send Link..."> 
+<!ENTITY sendLinkCmd.accesskey            "d">
 
