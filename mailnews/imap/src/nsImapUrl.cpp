@@ -956,10 +956,23 @@ nsImapUrl::GetURI(char** aURI)
         *aURI = nsnull;
         PRUint32 key = m_listOfMessageIds ? atoi(m_listOfMessageIds) : 0;
 		nsXPIDLCString theFile;
+#if 0
 		// mscott --> this is probably wrong (the part about getting the file part)
 		// we may need to extract it from a different part of the uri.
 		GetFileName(getter_Copies(theFile));
         return nsBuildImapMessageURI(theFile, key, aURI);
+#else
+        // jefft -- indeed that is wrong 
+        CreateCanonicalSourceFolderPathString(getter_Copies(theFile));
+        nsCString fullFolderPath = m_userName;
+        char *hostName = nsnull;
+        rv = GetHost(&hostName);
+        fullFolderPath += '@';
+        fullFolderPath += hostName;
+        fullFolderPath += '/';
+        fullFolderPath += theFile;
+        return nsBuildImapMessageURI(fullFolderPath, key, aURI);
+#endif 
     }
     return rv;
 }

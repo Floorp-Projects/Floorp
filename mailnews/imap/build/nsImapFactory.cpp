@@ -247,6 +247,10 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 								  "component://netscape/messenger/messageservice;type=imap_message", 
 								path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
+	rv = compMgr->RegisterComponent(kCImapService, nsnull, 
+								  "component://netscape/messenger/messageservice;type=imap", 
+								path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kCImapService, nsnull, nsnull,
 									path, PR_TRUE, PR_TRUE);

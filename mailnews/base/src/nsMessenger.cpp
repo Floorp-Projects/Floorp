@@ -458,7 +458,8 @@ nsMessenger::OpenURL(const char * url)
 
 
 NS_IMETHODIMP
-nsMessenger::OpenAttachment(const char * url)
+nsMessenger::OpenAttachment(const char * url, const char * displayName, 
+                            const char * messageUri)
 {
   nsresult rv = NS_ERROR_FAILURE;
   char *unescapedUrl = nsnull;
@@ -480,7 +481,7 @@ nsMessenger::OpenAttachment(const char * url)
           
           if (!fileSpec) goto done;
 
-          rv = fileSpec->ChooseOutputFile("Save Attachment", "",
+          rv = fileSpec->ChooseOutputFile("Save Attachment", displayName,
                                           nsIFileSpecWithUI::eAllFiles);
           if (NS_FAILED(rv)) goto done;
             
@@ -492,7 +493,7 @@ nsMessenger::OpenAttachment(const char * url)
           {
             NS_ADDREF(aListener);
             nsCOMPtr<nsIURI> aURL;
-#if 1
+
             nsString urlString = unescapedUrl;
             char *urlCString = urlString.ToNewCString();
             rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
@@ -519,24 +520,14 @@ nsMessenger::OpenAttachment(const char * url)
             rv = streamConverterService->AsyncConvertData(
               from.GetUnicode(), to.GetUnicode(), aListener,
               channelSupport, getter_AddRefs(convertedListener));
-#endif
-            rv = GetMessageServiceFromURI(unescapedUrl, &messageService);
+
+            rv = GetMessageServiceFromURI(messageUri, &messageService);
             
             if (NS_SUCCEEDED(rv) && messageService)
             {
-#if 1
-              rv = messageService->DisplayMessage(unescapedUrl,
+              rv = messageService->DisplayMessage(messageUri,
                                                   convertedListener,
                                                   nsnull, nsnull); 
-#else
-              nsCOMPtr<nsISupports> listenerSupport;
-              rv = aListener->QueryInterface(
-                  nsCOMTypeInfo<nsISupports>::GetIID(),
-                  getter_AddRefs(listenerSupport));
-              rv = messageService->DisplayMessage(unescapedUrl,
-                                                  listenerSupport,
-                                                  nsnull, nsnull);
-#endif 
             }
           }
           else

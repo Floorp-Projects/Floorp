@@ -36,6 +36,7 @@
 #include "nsIAbAddressCollecter.h"
 #include "nsAbBaseCID.h"
 #include "nsCOMPtr.h"
+#include "nsIMsgMailNewsUrl.h"
 
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
@@ -530,6 +531,7 @@ nsMimeXULEmitter::DumpAttachmentMenu()
   // RICHIE SHERRY - Hard coded string...evil...need to use string bundle when they work on
   //                 non UI threads.
   char  *i18nString = nsnull;
+  nsresult rv;
 
   if (mAttachArray->Count() == 1)
     i18nString = "Attachment";
@@ -545,14 +547,15 @@ nsMimeXULEmitter::DumpAttachmentMenu()
 
   UtilityWriteCRLF("<box align=\"horizontal\">");
 
-  UtilityWriteCRLF("<popup id=\"attachmentPopup\">");
-  UtilityWriteCRLF("<menu>");
-
-  char *escapedUrl;
+  char *escapedUrl = nsnull;
+  nsCOMPtr<nsIMsgMessageUrl> messageUrl;
+  char *urlString = nsnull;
 
   // Now we can finally write out the attachment information...  
   if (mAttachArray->Count() > 0)
   {
+    UtilityWriteCRLF("<popup id=\"attachmentPopup\">");
+    UtilityWriteCRLF("<menu>");
     PRInt32     i;
     
     for (i=0; i<mAttachArray->Count(); i++)
@@ -574,15 +577,27 @@ nsMimeXULEmitter::DumpAttachmentMenu()
       {
         UtilityWrite(attachInfo->urlSpec);
       }
-      UtilityWrite("mailboxMessage://dummyMessage");
+      UtilityWrite("','");
+      UtilityWrite(attachInfo->displayName);
+      UtilityWrite("','");
+
+      nsCOMPtr<nsIMsgMessageUrl> messageUrl = do_QueryInterface(mURL, &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = messageUrl->GetURI(&urlString);
+      if (NS_SUCCEEDED(rv) && urlString)
+      {
+        UtilityWrite(urlString);
+        nsCRT::free(urlString);
+        urlString = nsnull;
+      }
       UtilityWriteCRLF("' );\"  />");
     }
+    UtilityWriteCRLF("</menu>");
+    UtilityWriteCRLF("</popup>");
   }
 
-  UtilityWriteCRLF("</menu>");
-  UtilityWriteCRLF("</popup>");
+#if 1
 
-#if defined (DEBUG_jefft)
 	// **** jefft - this is a temporary implementation
   if (mAttachArray->Count() > 0)
   {
@@ -590,7 +605,7 @@ nsMimeXULEmitter::DumpAttachmentMenu()
 
 	  UtilityWriteCRLF("<menubar>");
 
-	  UtilityWriteCRLF("<menu value=\"Open Attachment(s)\">");
+	  UtilityWriteCRLF("<menu value=\"Save Attachment(s)\">");
 	  UtilityWriteCRLF("<menupopup>");
 
 	  for (i=0; i<mAttachArray->Count(); i++)
@@ -612,6 +627,19 @@ nsMimeXULEmitter::DumpAttachmentMenu()
           else
           {
             UtilityWrite(attachInfo->urlSpec);
+          }
+          UtilityWrite("','");
+          UtilityWrite(attachInfo->displayName);
+          UtilityWrite("','");
+          
+          nsCOMPtr<nsIMsgMessageUrl> messageUrl = do_QueryInterface(mURL, &rv);
+          if (NS_SUCCEEDED(rv))
+            rv = messageUrl->GetURI(&urlString);
+          if (NS_SUCCEEDED(rv) && urlString)
+          {
+            UtilityWrite(urlString);
+            nsCRT::free(urlString);
+            urlString = nsnull;
           }
 		  UtilityWriteCRLF("' );\"  />");
 	  }

@@ -963,11 +963,7 @@ mime_bridge_create_display_stream(
   // Store the URL string for this decode operation
   char *urlString;
   nsresult rv;
-  nsCOMPtr<nsIMsgMessageUrl> messageUrl = do_QueryInterface(uri, &rv);
-  if (NS_SUCCEEDED(rv))
-	rv = messageUrl->GetURI(&urlString);
-  if (NS_FAILED(rv))
-	rv = uri->GetSpec(&urlString);
+  rv = uri->GetSpec(&urlString);
   if (NS_SUCCEEDED(rv))
   {
     if ((urlString) && (*urlString))
