@@ -49,8 +49,18 @@
 #include <sys/ioctl.h>
 #endif
 #ifdef XP_UNIX
+#ifdef AIX
+/*
+ * On AIX 4.3, the header <arpa/inet.h> refers to struct
+ * ether_addr and struct sockaddr_dl that are not declared.
+ * The following struct declarations eliminate the compiler
+ * warnings.
+ */
+struct ether_addr;
+struct sockaddr_dl;
+#endif /* AIX */
 #include <arpa/inet.h>
-#endif
+#endif /* XP_UNIX */
 #include <netdb.h>
 
 #if defined(FREEBSD) || defined(BSDI) || defined(QNX)
