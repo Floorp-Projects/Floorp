@@ -497,63 +497,6 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
   }
 }
 
-void
-nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
-                                           nsIFrame*       aFrame,
-                                           nsIView*        aView,
-                                           const nsRect*   aCombinedArea,
-                                           PRUint32        aFlags)
-{
-  if (!aView) {
-    return;
-  }
-
-  // Make sure the view is sized and positioned correctly
-  if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW)) {
-    PositionFrameView(aPresContext, aFrame);
-  }
-
-  if (0 == (aFlags & NS_FRAME_NO_SIZE_VIEW)) {
-    nsCOMPtr<nsIViewManager> vm;
-    aView->GetViewManager(*getter_AddRefs(vm));
-    nsRect oldBounds;
-    aView->GetBounds(oldBounds);
-    nsFrameState kidState;
-    aFrame->GetFrameState(&kidState);
-
-    // If the frame has child frames that stick outside the content
-    // area, then size the view large enough to include those child
-    // frames
-    if ((kidState & NS_FRAME_OUTSIDE_CHILDREN) && aCombinedArea) {
-      vm->ResizeView(aView, *aCombinedArea);
-    } else {
-      // If the width is unchanged and the height is not decreased then repaint only the 
-      // newly exposed or contracted area, otherwise repaint the union of the old and new areas
-
-      // XXX:  We currently invalidate the newly exposed areas only when the 
-      // container frame's width is unchanged and the height is either unchanged or increased
-      // This is because some frames do not invalidate themselves properly. see bug 73825.
-      // Once bug 73825 is fixed, we should always pass PR_TRUE instead of 
-      // frameSize.width == width && frameSize.height >= height.
-      nsSize frameSize;
-      aFrame->GetSize(frameSize);
-      nsRect newSize(0, 0, frameSize.width, frameSize.height);
-      vm->ResizeView(aView, newSize, 
-                     (frameSize.width == oldBounds.width && frameSize.height >= oldBounds.height));
-    }
-
-    nsRect newBounds;
-    aView->GetBounds(newBounds);
-
-    // if the bounds have changed and clipping is enabled, we need to update the clip area
-    // and also possibly the transparency (in case the view grew bigger than the clip area
-    // so clipping is now cutting out part of the view)
-    if (oldBounds != newBounds) {
-      SyncFrameViewAfterSizeChange(aPresContext, aFrame, nsnull, aView, aFlags);
-    }
-  }
-}
-
 static void
 SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
                                          nsIFrame*        aFrame,
@@ -705,6 +648,65 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
 }
 
 void
+nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
+                                           nsIFrame*       aFrame,
+                                           nsIView*        aView,
+                                           const nsRect*   aCombinedArea,
+                                           PRUint32        aFlags)
+{
+  if (!aView) {
+    return;
+  }
+
+  // Make sure the view is sized and positioned correctly
+  if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW)) {
+    PositionFrameView(aPresContext, aFrame);
+  }
+
+  if (0 == (aFlags & NS_FRAME_NO_SIZE_VIEW)) {
+    nsCOMPtr<nsIViewManager> vm;
+    aView->GetViewManager(*getter_AddRefs(vm));
+    nsRect oldBounds;
+    aView->GetBounds(oldBounds);
+    nsFrameState kidState;
+    aFrame->GetFrameState(&kidState);
+
+    // If the frame has child frames that stick outside the content
+    // area, then size the view large enough to include those child
+    // frames
+    if ((kidState & NS_FRAME_OUTSIDE_CHILDREN) && aCombinedArea) {
+      vm->ResizeView(aView, *aCombinedArea);
+    } else {
+      // If the width is unchanged and the height is not decreased
+      // then repaint only the newly exposed or contracted area,
+      // otherwise repaint the union of the old and new areas
+
+      // XXX: We currently invalidate the newly exposed areas only
+      // when the container frame's width is unchanged and the height
+      // is either unchanged or increased This is because some frames
+      // do not invalidate themselves properly. see bug 73825.  Once
+      // bug 73825 is fixed, we should always pass PR_TRUE instead of
+      // frameSize.width == width && frameSize.height >= height.
+      nsSize frameSize;
+      aFrame->GetSize(frameSize);
+      nsRect newSize(0, 0, frameSize.width, frameSize.height);
+      vm->ResizeView(aView, newSize, 
+                     (frameSize.width == oldBounds.width && frameSize.height >= oldBounds.height));
+    }
+
+    // Even if the size hasn't changed, we need to sync up the
+    // geometry dependent properties, because (kidState &
+    // NS_FRAME_OUTSIDE_CHILDREN) might have changed, and we can't
+    // detect whether it has or not. Likewise, whether the view size
+    // has changed or not, we may need to change the transparency
+    // state even if there is no clip.
+    nsCOMPtr<nsIStyleContext> savedStyleContext;
+    aFrame->GetStyleContext(getter_AddRefs(savedStyleContext));
+    SyncFrameViewGeometryDependentProperties(aPresContext, aFrame, savedStyleContext, aView, aFlags);
+  }
+}
+
+void
 nsContainerFrame::SyncFrameViewAfterSizeChange(nsIPresContext*  aPresContext,
                                                nsIFrame*        aFrame,
                                                nsIStyleContext* aStyleContext,
@@ -721,17 +723,7 @@ nsContainerFrame::SyncFrameViewAfterSizeChange(nsIPresContext*  aPresContext,
     aStyleContext = savedStyleContext;
   }
 
-  const nsStyleDisplay* display;
-  ::GetStyleData(aStyleContext, &display);
-  nsFrameState kidState;
-  aFrame->GetFrameState(&kidState);
-
-  PRBool isBlockLevel = display->IsBlockLevel() || (kidState & NS_FRAME_OUT_OF_FLOW);
-  PRBool hasClip = display->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT);
-  PRBool hasOverflowClip = isBlockLevel && (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN);
-  if (hasClip || hasOverflowClip) {
-    SyncFrameViewGeometryDependentProperties(aPresContext, aFrame, aStyleContext, aView, aFlags);
-  }
+  SyncFrameViewGeometryDependentProperties(aPresContext, aFrame, aStyleContext, aView, aFlags);
 }
 
 void
