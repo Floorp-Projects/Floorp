@@ -256,7 +256,6 @@ nsresult nsMsgRFC822Parser::UnquotePhraseOrAddr_Intl (PRInt16 csid, const char *
 nsresult NS_NewRFC822Parser(const nsIID &aIID, void ** aInstancePtrResult)
 {
 	/* note this new macro for assertions...they can take a string describing the assertion */
-	nsresult result = NS_OK;
 	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
 	if (nsnull != aInstancePtrResult)
 	{
