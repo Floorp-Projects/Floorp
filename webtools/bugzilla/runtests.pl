@@ -27,13 +27,16 @@ use strict;
 use Test::Harness qw(&runtests $verbose);
 
 $verbose = 0;
+my $onlytest = "";
 
 foreach (@ARGV) {
     if (/^(?:-v|--verbose)$/) {
         $verbose = 1;
-        last;
+    }
+    else {
+        $onlytest = $_;
     }
 }
 
-runtests(glob("t/*.t"));
+runtests(glob("t/$onlytest*.t"));
 
