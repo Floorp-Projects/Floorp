@@ -53,6 +53,7 @@
 #include "nsIFontMetrics.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsWidgetsCID.h"
+#include "nsIWidget.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
@@ -157,8 +158,8 @@ nsBoxToBlockAdaptor::SetParentBox(nsIBox* aParent)
            mFrame->GetView(context, &view);
         }
 
-        nsIWidget* widget;
-        view->GetWidget(widget);
+        nsCOMPtr<nsIWidget> widget;
+        view->GetWidget(*getter_AddRefs(widget));
 
         if (!widget)
            view->CreateWidget(kWidgetCID);   
