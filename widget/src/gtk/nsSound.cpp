@@ -67,6 +67,8 @@ static PRLibrary *elib = nsnull;
 #define ESD_STREAM (0x0000)
 #define ESD_PLAY (0x1000)
 
+#define WAV_MIN_LENGTH 44
+
 typedef int (PR_CALLBACK *EsdOpenSoundType)(const char *host);
 typedef int (PR_CALLBACK *EsdCloseType)(int);
 
@@ -169,6 +171,11 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     return NS_ERROR_FAILURE;
   }
 
+  if (dataLen <= WAV_MIN_LENGTH) {
+      NS_WARNING("WAV files should be longer than 44 bytes.");
+      return NS_ERROR_FAILURE;
+  }
+
   PRUint32 i;
   for (i= 0; i < dataLen; i++) {
 
@@ -234,8 +241,28 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   }
 
   /* write data out */
+  // ESD only handle little-endian data. 
+  // Swap the byte order if we're on a big-endian architecture.
+#ifdef IS_BIG_ENDIAN
+  if (bits_per_sample == 8)
+    write(fd, data, dataLen);
+  else {
+    PRUint8 *buf = new PRUint8[dataLen - WAV_MIN_LENGTH];
+    // According to the wav file format, the first 44 bytes are headers.
+    // We don't really need to send them.
+    if (!buf)
+      return NS_ERROR_OUT_OF_MEMORY;
+    for (PRUint32 j = 0; j < dataLen - WAV_MIN_LENGTH - 1; j += 2) {
+      buf[j] = data[j + WAV_MIN_LENGTH + 1];
+      buf[j + 1] = data[j + WAV_MIN_LENGTH];
+    }
+    write(fd, buf, (dataLen - WAV_MIN_LENGTH));
+    delete [] buf;
+  }
+#else
   write(fd, data, dataLen);
-  
+#endif
+
   close(fd);
 
   return NS_OK;
