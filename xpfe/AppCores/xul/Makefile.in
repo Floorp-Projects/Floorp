@@ -131,7 +131,12 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/resources/TB_NewPrint.gif \
 	$(NULL)
 
+EXPORT_RESOURCE_THROBBER = \
+	$(srcdir)/resources/thobbingN.gif \
+	$(NULL)
+
 install:: 
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
 	$(INSTALL) $(EXPORT_RESOURCE_TOOLBAR) $(DIST)/bin/res/toolbar
+	$(INSTALL) $(EXPORT_RESOURCE_THROBBER) $(DIST)/bin/res/throbber
 
