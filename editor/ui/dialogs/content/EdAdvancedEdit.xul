@@ -56,9 +56,10 @@
     <spring class="spacer"/>
     <tabcontrol align="vertical">
       <tabbox>
-        <tab>&tabHTML.label;</tab>
+        <tab selected="true">&tabHTML.label;</tab>
         <tab>&tabCSS.label;</tab>
         <tab>&tabJSE.label;</tab>
+        <spring flex="1"/>
       </tabbox>
       <tabpanel>
         <!-- CSS Properties -->

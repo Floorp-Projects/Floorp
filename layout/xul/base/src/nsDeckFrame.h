@@ -51,6 +51,9 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
+  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+                      nsDidReflowStatus aStatus);
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,

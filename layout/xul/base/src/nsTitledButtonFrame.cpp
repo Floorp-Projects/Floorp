@@ -1471,7 +1471,7 @@ nsTitledButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsTitledButtonFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+nsTitledButtonFrame::Dirty(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
 {
   // leafs should just return themselves as the incremental child
   incrementalChild = this;

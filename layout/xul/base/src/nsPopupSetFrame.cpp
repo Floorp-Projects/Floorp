@@ -253,7 +253,7 @@ nsPopupSetFrame::DidReflow(nsIPresContext& aPresContext,
 
 // Overridden Box method.
 NS_IMETHODIMP
-nsPopupSetFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+nsPopupSetFrame::Dirty(nsIPresContext& aPresContext,  const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
 {
   incrementalChild = nsnull;
   nsresult rv = NS_OK;
@@ -267,7 +267,7 @@ nsPopupSetFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& increme
   }
 
   // Now call our original box frame method
-  rv = nsBoxFrame::Dirty(aReflowState, incrementalChild);
+  rv = nsBoxFrame::Dirty(aPresContext, aReflowState, incrementalChild);
   if (rv != NS_OK || incrementalChild)
     return rv;
 
@@ -284,7 +284,7 @@ nsPopupSetFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& increme
     nsIFrame* ignore;
     nsIBox* ibox;
     if (NS_SUCCEEDED(popup->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox)
-      ibox->Dirty(aReflowState, ignore);
+      ibox->Dirty(aPresContext, aReflowState, ignore);
   }
 
   return rv;

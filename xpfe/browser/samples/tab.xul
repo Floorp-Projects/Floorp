@@ -6,16 +6,17 @@
 xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
 
-<box align="vertical" style="height: 100%; width: 100%">
+<box align="vertical" flex="1">
 	<tabcontrol align="vertical" flex="100%" >
 	   <tabbox align="horizontal">
-		  <tab>centered</tab>
+		  <tab selected="true">centered</tab>
 		  <tab>percent</tab>
 		  <tab>html</tab>
 		  <tab><html:img src="resource:/res/toolbar/stop.gif"/></tab>
           <tab>native</tab>
           <tab>iframe</tab>
 		  <tab>dialog</tab>
+		  <spring flex="1"/>
 	   </tabbox>
    
 	  <tabpanel flex="100%" style="border: 2px outset gray">

@@ -43,9 +43,10 @@
 
   <tabcontrol flex="100%" align="vertical">
     <tabbox>
-      <tab>&tab.signonsstored.label;</tab>
+      <tab selected="true">&tab.signonsstored.label;</tab>
       <tab>&tab.signonsnotstored.label;</tab>
       <tab>&tab.nopreview.label;</tab>
+	  <spring flex="1"/>
     </tabbox>
     <tabpanel align="horizontal" style="width: 400px;">
       <!-- saved signons -->

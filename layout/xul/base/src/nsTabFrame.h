@@ -45,6 +45,26 @@ protected:
   virtual nsresult GetChildWithTag(nsIAtom* atom, nsIContent* start, nsIContent*& tabpanel);
   virtual nsresult GetTabControl(nsIContent* content, nsIContent*& tabcontrol);
   virtual nsresult GetIndexInParent(nsIContent* content, PRInt32& index);
+ // Selection Methods
+  // XXX Doc me... (in nsIFrame.h puhleeze)
+  // XXX If these are selection specific, then the name should imply selection
+  // rather than generic event processing, e.g., SelectionHandlePress...
+  NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
+                         nsGUIEvent *    aEvent,
+                         nsEventStatus&  aEventStatus) { return NS_OK; }
+
+  NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
+                         nsGUIEvent *    aEvent,
+                         nsEventStatus&  aEventStatus)  { return NS_OK; }
+
+
+  NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
+                        nsGUIEvent *    aEvent,
+                        nsEventStatus&  aEventStatus) { return NS_OK; }
+
+  NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
+                           nsGUIEvent *    aEvent,
+                           nsEventStatus&  aEventStatus)  { return NS_OK; }
 
 private:
    

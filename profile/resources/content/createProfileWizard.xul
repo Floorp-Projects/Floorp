@@ -19,8 +19,9 @@
     </box>
   	<tabcontrol align="vertical"> 
 	  	<tabbox align="horizontal"> 
-  			<tab class="selected" onclick="loadPage('newProfile1_1.xul');">&newprofile.title;</tab> 
-		  	<!-- <tab class="nonselected" onclick="loadPage('mailnews.xul');">&mailnews.title;</tab> -->
+  			<tab selected="true" onclick="loadPage('newProfile1_1.xul');">&newprofile.title;</tab> 
+		  	<!-- <tab onclick="loadPage('mailnews.xul');">&mailnews.title;</tab> -->
+			<spring flex="1"/>
 	    </tabbox> 
 	    <tabpanel flex="100%"/>
 	    <!-- <tabpanel flex="100%"/> -->

@@ -33,9 +33,10 @@ Rights Reserved.
 
 	<tabcontrol align="vertical" style="margin:5px">
 	   <tabbox align="horizontal">
-	      <tab>&Name.tab;</tab>
+	      <tab selected="true">&Name.tab;</tab>
 	      <tab>&Address.tab;</tab>
 	      <tab>&Other.tab;</tab>
+		  <spring flex="1"/>
 	   </tabbox>
 	   
 	   <tabpanel align="vertical" flex="100%" style="border:2px groove white">

@@ -471,7 +471,7 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
       Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
     } else {
       // otherwise dirty our children
-      Dirty(aReflowState,incrementalChild);
+      Dirty(aPresContext, aReflowState,incrementalChild);
     }
   } 
 #if 0
@@ -858,25 +858,29 @@ nsBoxFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, ns
   }
 }
 
-
 void 
-nsBoxFrame::CollapseChild(nsIPresContext* aPresContext, nsIFrame* frame)
+nsBoxFrame::CollapseChild(nsIPresContext& aPresContext, nsIFrame* frame, PRBool hide)
 {
-    nsRect rect(0,0,0,0);
-    frame->GetRect(rect);
-    if (rect.width > 0 || rect.height > 0) {
-      // shrink the frame
-      frame->SizeTo(aPresContext, 0,0);
-
-      // shrink the view
+    // shrink the view
       nsIView* view = nsnull;
-      frame->GetView(aPresContext, &view);
+      frame->GetView(&aPresContext, &view);
 
       // if we find a view stop right here. All views under it
       // will be clipped.
       if (view) {
-        view->SetDimensions(0,0,PR_FALSE);
-        return;
+         nsViewVisibility v;
+         view->GetVisibility(v);
+         nsCOMPtr<nsIWidget> widget;
+         view->GetWidget(*getter_AddRefs(widget));
+         if (hide) {
+             view->SetVisibility(nsViewVisibility_kHide);
+         } else {
+             view->SetVisibility(nsViewVisibility_kShow);
+         }
+         if (widget) {
+
+           return;
+         }
       }
     
       // collapse the child
@@ -885,13 +889,35 @@ nsBoxFrame::CollapseChild(nsIPresContext* aPresContext, nsIFrame* frame)
 
       while (nsnull != child) 
       {
-         CollapseChild(aPresContext, child);
+         CollapseChild(aPresContext, child, hide);
          nsresult rv = child->GetNextSibling(&child);
          NS_ASSERTION(rv == NS_OK,"failed to get next child");
       }
-    }
 }
 
+NS_IMETHODIMP
+nsBoxFrame::DidReflow(nsIPresContext& aPresContext,
+                      nsDidReflowStatus aStatus)
+{
+  nsresult rv = nsHTMLContainerFrame::DidReflow(aPresContext, aStatus);
+  NS_ASSERTION(rv == NS_OK,"DidReflow failed");
+
+  nsIFrame* childFrame = mFrames.FirstChild(); 
+  nscoord count = 0;
+  while (nsnull != childFrame) 
+  {
+    // make collapsed children not show up
+    if (mSprings[count].collapsed) {
+        CollapseChild(aPresContext, childFrame, PR_TRUE);
+    } 
+
+    rv = childFrame->GetNextSibling(&childFrame);
+    NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    count++;
+  }
+
+  return rv;
+}
 
 /**
  * Given the boxes rect. Set the x,y locations of all its children. Taking into account
@@ -912,7 +938,11 @@ nsBoxFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
 
     // make collapsed children not show up
     if (mSprings[count].collapsed) {
-      CollapseChild(&aPresContext, childFrame);
+       nsRect rect(0,0,0,0);
+       childFrame->GetRect(rect);
+       if (rect.width > 0 || rect.height > 0) {
+          childFrame->SizeTo(&aPresContext, 0,0);
+       }
     } else {
       const nsStyleSpacing* spacing;
       rv = childFrame->GetStyleData(eStyleStruct_Spacing,
@@ -1605,8 +1635,15 @@ nsBoxFrame::AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo)
  * will be flowed incrementally.
  */
 NS_IMETHODIMP
-nsBoxFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+nsBoxFrame::Dirty(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
 {
+  nsIFrame* targetFrame = nsnull;
+  aReflowState.reflowCommand->GetTarget(targetFrame);
+  if (this == targetFrame) {
+    // if it has redraw us if we are the target
+    Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+  }
+
   incrementalChild = nsnull;
   nsresult rv = NS_OK;
 
@@ -1625,7 +1662,7 @@ nsBoxFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalC
         // can't use nsCOMPtr on non-refcounted things like frames
         nsIBox* ibox;
         if (NS_SUCCEEDED(childFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox)
-            ibox->Dirty(aReflowState, incrementalChild);
+            ibox->Dirty(aPresContext, aReflowState, incrementalChild);
         else
             incrementalChild = frame;
 

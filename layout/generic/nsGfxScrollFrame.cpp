@@ -1668,7 +1668,7 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIFrame* aFrame, nsBoxInfo& aSize)
 */
 
 NS_IMETHODIMP
-nsGfxScrollFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+nsGfxScrollFrame::Dirty(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
 {
   incrementalChild = nsnull;
   nsresult rv = NS_OK;
@@ -1695,7 +1695,7 @@ nsGfxScrollFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& increm
         if (NS_FAILED(rv))
             return rv;
 
-        ibox->Dirty(aReflowState, incrementalChild);
+        ibox->Dirty(aPresContext, aReflowState, incrementalChild);
         break;
     }
 
