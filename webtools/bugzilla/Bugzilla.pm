@@ -61,7 +61,7 @@ sub login {
     # $::COOKIE{'Bugzilla_login'} from a userid to a loginname
     # (for backwards compat)
     if (defined $_user) {
-        return $_user->{id};
+        return $_user;
     }
 
     $type = LOGIN_NORMAL unless defined $type;
