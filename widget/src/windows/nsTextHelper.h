@@ -33,19 +33,20 @@ public:
     nsTextHelper(nsISupports *aOuter);
     virtual ~nsTextHelper();
 
-    virtual         void            SetMaxTextLength(PRUint32 aChars);
-    virtual         PRUint32        GetText(nsString& aTextBuffer, PRUint32 aBufferSize);
-    virtual         PRUint32        SetText(const nsString &aText);
-    virtual         PRUint32        InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos);
-    virtual         void            RemoveText();
-    virtual         void            SetPassword(PRBool aIsPassword);
-    virtual         PRBool          SetReadOnly(PRBool aReadOnlyFlag);
-    virtual         void            SetSelection(PRUint32 aStartSel, PRUint32 aEndSel);
-    virtual         void            GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
-    virtual         void            SetCaretPosition(PRUint32 aPosition);
-    virtual         PRUint32        GetCaretPosition();
-    virtual         LPCTSTR         WindowClass();
-    virtual         DWORD           WindowStyle();
+    virtual void      SelectAll();
+    virtual void      SetMaxTextLength(PRUint32 aChars);
+    virtual PRUint32  GetText(nsString& aTextBuffer, PRUint32 aBufferSize);
+    virtual PRUint32  SetText(const nsString &aText);
+    virtual PRUint32  InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos);
+    virtual void      RemoveText();
+    virtual void      SetPassword(PRBool aIsPassword);
+    virtual PRBool    SetReadOnly(PRBool aReadOnlyFlag);
+    virtual void      SetSelection(PRUint32 aStartSel, PRUint32 aEndSel);
+    virtual void      GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
+    virtual void      SetCaretPosition(PRUint32 aPosition);
+    virtual PRUint32  GetCaretPosition();
+    virtual LPCTSTR   WindowClass();
+    virtual DWORD     WindowStyle();
 
     virtual         void            PreCreateWidget(void *aInitData);
 

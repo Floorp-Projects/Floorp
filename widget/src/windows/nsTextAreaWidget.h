@@ -49,6 +49,7 @@ public:
     BASE_IWIDGET_IMPL
 
     // nsITextWidget part
+    virtual void            SelectAll();
     virtual void            SetMaxTextLength(PRUint32 aChars);
     virtual PRUint32        SetText(const nsString &aText);
     virtual PRUint32        GetText(nsString& aTextBuffer, PRUint32 aBufferSize);

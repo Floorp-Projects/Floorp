@@ -22,23 +22,33 @@
 #include "nsString.h"
 #include <windows.h>
 
-void nsTextAreaWidget::SetMaxTextLength(PRUint32 aChars) {
+void nsTextAreaWidget::SelectAll() 
+{
+  nsTextHelper::SelectAll();
+}
+
+void nsTextAreaWidget::SetMaxTextLength(PRUint32 aChars) 
+{
   nsTextHelper::SetMaxTextLength(aChars);
 }
 
-PRUint32  nsTextAreaWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
+PRUint32  nsTextAreaWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) 
+{
   return(nsTextHelper::GetText(aTextBuffer, aBufferSize));
 }
 
-PRUint32  nsTextAreaWidget::SetText(const nsString &aText) { 
+PRUint32  nsTextAreaWidget::SetText(const nsString &aText) 
+{ 
   return(nsTextHelper::SetText(aText));
 }
 
-PRUint32  nsTextAreaWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos) { 
+PRUint32  nsTextAreaWidget::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos) 
+{ 
   return(nsTextHelper::InsertText(aText, aStartPos, aEndPos));
 }
 
-void  nsTextAreaWidget::RemoveText() {
+void  nsTextAreaWidget::RemoveText() 
+{
   nsTextHelper::RemoveText();
 }
 

@@ -104,6 +104,12 @@ class nsITextWidget : public nsIWidget
      */
 
     virtual PRBool SetReadOnly(PRBool aReadOnlyFlag) = 0;
+    
+    /**
+     * Select all of the contents
+     */
+
+    virtual void SelectAll() = 0;
 
     /**
      * Set the selection in this text component

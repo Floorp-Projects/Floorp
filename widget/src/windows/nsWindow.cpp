@@ -66,6 +66,56 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 
 //-------------------------------------------------------------------------
 //
+// Initialize an event to dispatch
+//
+//-------------------------------------------------------------------------
+
+void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType)
+{
+    event.widget = this;
+    
+    // get the message position in client coordinates and in twips
+    DWORD pos = ::GetMessagePos();
+    POINT cpos;
+
+    cpos.x = LOWORD(pos);
+    cpos.y = HIWORD(pos);
+
+    ::ScreenToClient(mWnd, &cpos);
+
+    event.point.x = cpos.x;
+    event.point.y = cpos.y;
+
+    event.time = ::GetMessageTime();
+    event.message = aEventType;  
+}
+
+//-------------------------------------------------------------------------
+//
+// Invokes callback and  ProcessEvent method on Event Listener object
+//
+//-------------------------------------------------------------------------
+
+PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
+{
+  PRBool result = PR_FALSE;
+ 
+  if (nsnull != mEventCallback) {
+    result = ConvertStatus((*mEventCallback)(event));
+  }
+
+    // Dispatch to event listener if event was not consumed
+  if ((result != PR_TRUE) && (nsnull != mEventListener)) {
+    return ConvertStatus(mEventListener->ProcessEvent(*event));
+  }
+  else {
+    return(result); 
+  }
+}
+
+
+//-------------------------------------------------------------------------
+//
 // the nsWindow procedure for all nsWindows in this toolkit
 //
 //-------------------------------------------------------------------------
@@ -250,28 +300,10 @@ void nsWindow::Create(nsIWidget *aParent,
     SetCursor(eCursor_standard);
 
     // call the event callback to notify about creation
-    if (mEventCallback) {
-        nsGUIEvent event;
-        event.widget = this;
 
-        DWORD pos = ::GetMessagePos();
-        POINT cpos;
-
-        cpos.x = LOWORD(pos);
-        cpos.y = HIWORD(pos);
-
-        ::ScreenToClient(mWnd, &cpos);
-
-        event.point.x = cpos.x;
-        event.point.y = cpos.y;
-
-        event.time = ::GetMessageTime();
-
-        // 
-        event.message = NS_CREATE;
-        (*mEventCallback)(&event);
-    }
-
+    nsGUIEvent event;
+    InitEvent(event, NS_CREATE);
+    DispatchEvent(&event);
     SubclassWindow(TRUE);
 }
 
@@ -359,6 +391,10 @@ void nsWindow::Create(nsNativeWindow aParent,
     VERIFY(mWnd);
 
     // call the event callback to notify about creation
+    nsGUIEvent event;
+    InitEvent(event, NS_CREATE);
+    DispatchEvent(&event);
+#if 0
     if (mEventCallback) {
         nsGUIEvent event;
         event.widget = this;
@@ -380,6 +416,7 @@ void nsWindow::Create(nsNativeWindow aParent,
         event.message = NS_CREATE;
         (*mEventCallback)(&event);
     }
+#endif
 
     SubclassWindow(TRUE);
 }
@@ -954,34 +991,13 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 //-------------------------------------------------------------------------
 PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode)
 {
-    PRBool result = PR_TRUE;
-	
-    // call the event callback 
-    if (mEventCallback) {
-      nsKeyEvent event;
-      event.widget = this;
-
-      DWORD pos = ::GetMessagePos();
-      POINT cpos;
-
-      cpos.x = LOWORD(pos);
-      cpos.y = HIWORD(pos);
-
-      ::ScreenToClient(mWnd, &cpos);
-
-      event.point.x = cpos.x;
-      event.point.y = cpos.y;
-
-      event.time      = ::GetMessageTime();
-      event.message   = aEventType;
-      event.keyCode   = aKeyCode;
-      event.isShift   = mIsShiftDown;
-      event.isControl = mIsControlDown;
-      event.isAlt     = mIsAltDown;
-      result = ConvertStatus((*mEventCallback)(&event));
-    }
-
-    return result;
+    nsKeyEvent event;
+    InitEvent(event, aEventType);
+    event.keyCode   = aKeyCode;
+    event.isShift   = mIsShiftDown;
+    event.isControl = mIsControlDown;
+    event.isAlt     = mIsAltDown;
+    return(DispatchEvent(&event));
 }
 
 
@@ -1002,31 +1018,36 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         
         case WM_NOTIFY:
             // TAB change
-        {
-          LPNMHDR pnmh = (LPNMHDR) lParam;
+          {
+            LPNMHDR pnmh = (LPNMHDR) lParam;
 
-          if (pnmh->code == TCN_SELCHANGE) {
-            DispatchEventToCallback(NS_TABCHANGE);
-            result = PR_TRUE;
+            if (pnmh->code == TCN_SELCHANGE) {
+              nsGUIEvent event;
+              InitEvent(event, NS_TABCHANGE);
+              DispatchEvent(&event);
+              result = PR_TRUE;
+            }
           }
-        }
-        break;
+          break;
+
+        case WM_MOVE: // Window moved 
+          {
+            nsGUIEvent event;
+            InitEvent(event, NS_MOVE);
+            event.point.x = (int)LOWORD(lParam); // horizontal position in screen coordinates
+            event.point.y = (int)HIWORD(lParam); // vertical position in screen coordinates
+            DispatchEvent(&event);
+          }
+          break;
 
         case WM_DESTROY:
             // clean up.
             OnDestroy();
             result = PR_TRUE;
-            if (nsnull != mEventListener) {
-              printf("Destroy for window called\n");
-              DispatchEvent(NS_DESTROY);
-            }
             break;
 
         case WM_PAINT:
             result = OnPaint();
-            if (nsnull != mEventListener) {
-              DispatchEvent(NS_PAINT);
-            }
             break;
 
         case WM_KEYUP: 
@@ -1135,16 +1156,10 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_SETFOCUS:
             result = DispatchFocus(NS_GOTFOCUS);
-            if (nsnull != mEventListener) {
-              DispatchEvent(NS_GOTFOCUS);
-            }
             break;
 
         case WM_KILLFOCUS:
             result = DispatchFocus(NS_LOSTFOCUS);
-            if (nsnull != mEventListener) {
-              DispatchEvent(NS_LOSTFOCUS);
-            }
             break;
 
         case WM_WINDOWPOSCHANGED: 
@@ -1152,9 +1167,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             WINDOWPOS *wp = (LPWINDOWPOS)lParam;
             nsRect rect(wp->x, wp->y, wp->cx, wp->cy);
             result = OnResize(rect);
-            if (nsnull != mEventListener) {
-              DispatchEvent(NS_SIZE);
-            }
             break;
         }
         case WM_QUERYNEWPALETTE:
@@ -1315,30 +1327,9 @@ void nsWindow::OnDestroy()
         mToolkit = NULL;
     }
 
-    // call the event callback 
-    if (mEventCallback) {
-        nsGUIEvent event;
-        event.widget = this;
-        
-        DWORD pos = ::GetMessagePos();
-        POINT cpos;
-
-        cpos.x = LOWORD(pos);
-        cpos.y = HIWORD(pos);
-
-        ::ScreenToClient(mWnd, &cpos);
-
-        event.point.x = cpos.x;
-        event.point.y = cpos.y;
-
-        event.time = ::GetMessageTime();
-        event.message = NS_DESTROY;
-
-        (*mEventCallback)(&event);
-    }
-    if (nsnull != mEventListener) {
-      DispatchEvent(NS_DESTROY);
-    }
+    nsGUIEvent event;
+    InitEvent(event, NS_DESTROY);
+    DispatchEvent(&event);
 }
 
 
@@ -1359,21 +1350,8 @@ PRBool nsWindow::OnPaint()
         // call the event callback 
         if (mEventCallback) {
             nsPaintEvent event;
-            event.widget = this;
 
-            DWORD pos = ::GetMessagePos();
-            POINT cpos;
-
-            cpos.x = LOWORD(pos);
-            cpos.y = HIWORD(pos);
-
-            ::ScreenToClient(mWnd, &cpos);
-
-            event.point.x = cpos.x;
-            event.point.y = cpos.y;
-
-            event.time = ::GetMessageTime();
-            event.message = NS_PAINT;
+            InitEvent(event, NS_PAINT);
 
             nsRect rect(ps.rcPaint.left, 
                         ps.rcPaint.top, 
@@ -1387,8 +1365,7 @@ PRBool nsWindow::OnPaint()
             if (NS_OK == NSRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext))
             {
               event.renderingContext->Init(mContext, (nsDrawingSurface)hDC);
-              result = ConvertStatus((*mEventCallback)(&event));
-
+              result = DispatchEvent(&event);
               NS_RELEASE(event.renderingContext);
             }
             else
@@ -1412,94 +1389,14 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
     // call the event callback 
     if (mEventCallback) {
         nsSizeEvent event;
-        event.widget = this;
-        event.message = NS_SIZE;
-        
-        // get the message position in client coordinates and in twips
-        DWORD pos = ::GetMessagePos();
-        POINT cpos;
-
-        cpos.x = LOWORD(pos);
-        cpos.y = HIWORD(pos);
-
-        ::ScreenToClient(mWnd, &cpos);
-
-        event.point.x = cpos.x;
-        event.point.y = cpos.y;
-
-        event.time = ::GetMessageTime();
-
+        InitEvent(event, NS_SIZE);
         event.windowSize = &aWindowRect;
-        return ConvertStatus((*mEventCallback)(&event));
+        return(DispatchEvent(&event));
     }
 
     return PR_FALSE;
 }
 
-//-------------------------------------------------------------------------
-//
-// Invokes ProcessEvent method on Event Listener object
-//
-//-------------------------------------------------------------------------
-PRBool nsWindow::DispatchEvent(PRUint32 aEventType)
-{
-    if (nsnull == mEventListener) {
-      return PR_FALSE;
-    }
-
-    nsGUIEvent event;
-    event.widget = this;
-    
-    // get the message position in client coordinates and in twips
-    DWORD pos = ::GetMessagePos();
-    POINT cpos;
-
-    cpos.x = LOWORD(pos);
-    cpos.y = HIWORD(pos);
-
-    ::ScreenToClient(mWnd, &cpos);
-
-    event.point.x = cpos.x;
-    event.point.y = cpos.y;
-
-    event.time = ::GetMessageTime();
-    event.message = aEventType;
-
-    return ConvertStatus(mEventListener->ProcessEvent(event));
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Invokes ProcessEvent method on Event Listener object
-//
-//-------------------------------------------------------------------------
-PRBool nsWindow::DispatchEventToCallback(PRUint32 aEventType)
-{
-   // call the event callback 
-    if (mEventCallback) {
-        nsGUIEvent event;
-        event.widget = this;
-        
-        DWORD pos = ::GetMessagePos();
-        POINT cpos;
-
-        cpos.x = LOWORD(pos);
-        cpos.y = HIWORD(pos);
-
-        ::ScreenToClient(mWnd, &cpos);
-
-        event.point.x = cpos.x;
-        event.point.y = cpos.y;
-
-        event.time = ::GetMessageTime();
-        event.message = aEventType;
-
-        return(ConvertStatus((*mEventCallback)(&event)));
-    }
-    else
-        return(PR_FALSE);
-}
 
 
 //-------------------------------------------------------------------------
@@ -1517,25 +1414,12 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType)
 
  // nsMouseEvent event;
   nsGUIEvent event;
-  event.widget = this;
-  
-  // get the message position in client coordinates and in twips
-  DWORD pos = ::GetMessagePos();
-  POINT cpos;
-
-  cpos.x = LOWORD(pos);
-  cpos.y = HIWORD(pos);
-
-  ::ScreenToClient(mWnd, &cpos);
-
-  event.point.x = cpos.x;
-  event.point.y = cpos.y;
-  event.time = ::GetMessageTime();
-  event.message = aEventType;
+  InitEvent(event, aEventType);
 
   // call the event callback 
   if (nsnull != mEventCallback) {
-    result = ConvertStatus((*mEventCallback)(&event));
+
+    result = DispatchEvent(&event);
 
     //printf("**result=%d%\n",result);
     if (aEventType == NS_MOUSE_MOVE) {
@@ -1613,23 +1497,8 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType)
     // call the event callback 
     if (mEventCallback) {
         nsGUIEvent event;
-        event.widget = this;
-        
-        DWORD pos = ::GetMessagePos();
-        POINT cpos;
-
-        cpos.x = LOWORD(pos);
-        cpos.y = HIWORD(pos);
-
-        ::ScreenToClient(mWnd, &cpos);
-
-        event.point.x = cpos.x;
-        event.point.y = cpos.y;
-
-        event.time = ::GetMessageTime();
-        event.message = aEventType;
-
-        return ConvertStatus((*mEventCallback)(&event));
+        InitEvent(event, aEventType);
+        return(DispatchEvent(&event));
     }
 
     return PR_FALSE;

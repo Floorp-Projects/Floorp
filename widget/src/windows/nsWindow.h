@@ -136,8 +136,6 @@ protected:
     virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode);
 
     virtual PRBool          DispatchFocus(PRUint32 aEventType);
-    virtual PRBool          DispatchEvent(PRUint32 aEventType);
-
     virtual PRBool          OnScroll(UINT scrollCode, int cPos);
     virtual HBRUSH          OnControlColor();
 
@@ -146,9 +144,11 @@ protected:
                                         WPARAM wParam,
                                         LPARAM lParam);
     
-    PRBool DispatchEventToCallback(PRUint32 aEventType);
     static PRBool ConvertStatus(nsEventStatus aStatus);
     DWORD  GetBorderStyle(nsBorderStyle aBorderStyle);
+
+    void InitEvent(nsGUIEvent& event, PRUint32 aEventType);
+    PRBool DispatchEvent(nsGUIEvent* event);
 
 protected:
     HWND        mWnd;

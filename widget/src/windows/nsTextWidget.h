@@ -47,12 +47,6 @@ public:
     // nsIWidget interface
     BASE_IWIDGET_IMPL
 
-    // nsITextWidget part
-    virtual void            SetSelection(PRUint32 aStartSel, PRUint32 aEndSel);
-    virtual void            GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
-    virtual void            SetCaretPosition(PRUint32 aPosition);
-    virtual PRUint32        GetCaretPosition();
-
 protected:
     virtual LPCTSTR     WindowClass();
     virtual DWORD       WindowStyle();
