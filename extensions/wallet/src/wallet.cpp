@@ -3473,6 +3473,115 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
   }
 }
 
+PRIVATE PRBool
+wallet_CaptureInputElement(nsIDOMNode* elementNode, nsIDocument* doc) {
+  nsresult result;
+  PRBool captured = PR_FALSE;
+  nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(elementNode);  
+  if (inputElement) {
+    /* it's an input element */
+    nsAutoString type;
+    result = inputElement->GetType(type);
+    if ((NS_SUCCEEDED(result)) &&
+        (type.IsEmpty() || (type.CompareWithConversion("text", PR_TRUE) == 0))) {
+      nsAutoString field;
+      result = inputElement->GetName(field);
+      if (NS_SUCCEEDED(result)) {
+        nsAutoString value;
+        result = inputElement->GetValue(value);
+        if (NS_SUCCEEDED(result)) {
+          /* get schema name from vcard attribute if it exists */
+          nsAutoString schema;
+          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
+          if (element) {
+            nsAutoString vcardName; vcardName.AssignWithConversion("VCARD_NAME");
+            result = element->GetAttribute(vcardName, schema);
+          }
+
+#ifdef IgnoreFieldNames
+// use displayable text instead of vcard names
+schema.SetLength(0);
+#endif
+
+          if (!schema.Length()) {
+            /* get schema from displayable text if possible */
+            wallet_GetSchemaFromDisplayableText(inputElement, schema, (value.Length()==0));
+          }
+          if (wallet_Capture(doc, field, value, schema)) {
+            captured = PR_TRUE;
+          }
+        }
+      }
+    }
+  }
+  return captured;
+}
+
+PRIVATE PRBool
+wallet_CaptureSelectElement(nsIDOMNode* elementNode, nsIDocument* doc) {
+  nsresult result;
+  PRBool captured = PR_FALSE;
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = do_QueryInterface(elementNode);  
+  if (selectElement) {
+    /* it's a dropdown list */
+    nsAutoString field;
+    result = selectElement->GetName(field);
+    if (NS_SUCCEEDED(result)) {
+      PRUint32 length;
+      selectElement->GetLength(&length);
+      nsIDOMNSHTMLOptionCollection * options;
+      result = selectElement->GetOptions(&options);
+      if ((NS_SUCCEEDED(result)) && (nsnull != options)) {
+        PRInt32 selectedIndex;
+        result = selectElement->GetSelectedIndex(&selectedIndex);
+        if (NS_SUCCEEDED(result)) {
+          nsIDOMNode* optionNode = nsnull;
+          options->Item(selectedIndex, &optionNode);
+          if (nsnull != optionNode) {
+            nsIDOMHTMLOptionElement* optionElement = nsnull;
+            result = optionNode->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&optionElement);
+            if ((NS_SUCCEEDED(result)) && (nsnull != optionElement)) {
+              nsAutoString optionValue;
+              nsAutoString optionText;
+
+              PRBool valueOK = NS_SUCCEEDED(optionElement->GetValue(optionValue))
+                               && optionValue.Length();
+              PRBool textOK = NS_SUCCEEDED(optionElement->GetText(optionText))
+                              && optionText.Length();
+              if (valueOK || textOK) {
+                /* get schema name from vcard attribute if it exists */
+                nsAutoString schema;
+                nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
+                if (element) {
+                  nsAutoString vcardName; vcardName.AssignWithConversion("VCARD_NAME");
+                  result = element->GetAttribute(vcardName, schema);
+                }
+
+#ifdef IgnoreFieldNames
+// use displayable text instead of vcard names
+schema.SetLength(0);
+#endif
+
+                if (!schema.Length()) {
+                  /* get schema from displayable text if possible */
+                  wallet_GetSchemaFromDisplayableText(selectElement, schema, (!valueOK && !textOK));
+                }
+                if (valueOK && wallet_Capture(doc, field, optionValue, schema)) {
+                  captured = PR_TRUE;
+                }
+                if (textOK && wallet_Capture(doc, field, optionText, schema)) {
+                  captured = PR_TRUE;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return captured;
+}
+
 PRIVATE void
 wallet_TraversalForRequestToCapture(nsIDOMWindow* win, PRInt32& captureCount) {
 
@@ -3510,42 +3619,11 @@ wallet_TraversalForRequestToCapture(nsIDOMWindow* win, PRInt32& captureCount) {
                       nsCOMPtr<nsIDOMNode> elementNode;
                       elements->Item(elementY, getter_AddRefs(elementNode));
                       if (elementNode) {
-                        nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(elementNode);  
-                        if (inputElement) {
-                          /* it's an input element */
-                          nsAutoString type;
-                          result = inputElement->GetType(type);
-                          if ((NS_SUCCEEDED(result)) &&
-                              (type.IsEmpty() || (type.CompareWithConversion("text", PR_TRUE) == 0))) {
-                            nsAutoString field;
-                            result = inputElement->GetName(field);
-                            if (NS_SUCCEEDED(result)) {
-                              nsAutoString value;
-                              result = inputElement->GetValue(value);
-                              if (NS_SUCCEEDED(result)) {
-                                /* get schema name from vcard attribute if it exists */
-                                nsAutoString schema;
-                                nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
-                                if (element) {
-                                  nsAutoString vcardName; vcardName.AssignWithConversion("VCARD_NAME");
-                                  result = element->GetAttribute(vcardName, schema);
-                                }
-
-#ifdef IgnoreFieldNames
-// use displayable text instead of vcard names
-schema.SetLength(0);
-#endif
-
-                                if (!schema.Length()) {
-                                  /* get schema from displayable text if possible */
-                                  wallet_GetSchemaFromDisplayableText(inputElement, schema, (value.Length()==0));
-                                  if (wallet_Capture(doc, field, value, schema)) {
-                                    captureCount++;
-                                  }
-                                }
-                              }
-                            }
-                          }
+                        if (wallet_CaptureInputElement(elementNode, doc)) {
+                          captureCount++;
+                        }
+                        if (wallet_CaptureSelectElement(elementNode, doc)) {
+                          captureCount++;
                         }
                       }
                     }
@@ -3844,40 +3922,8 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
               nsIDOMNode* elementNode = nsnull;
               elements->Item(elementY, &elementNode);
               if (nsnull != elementNode) {
-                nsIDOMHTMLInputElement* inputElement;  
-                rv =
-                  elementNode->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement);
-                if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
-
-                  /* it's an input element */
-                  nsAutoString type;
-                  rv = inputElement->GetType(type);
-                  if ((NS_SUCCEEDED(rv)) &&
-                      (type.IsEmpty() || (type.CompareWithConversion("text", PR_TRUE) == 0))) {
-                    nsAutoString field;
-                    rv = inputElement->GetName(field);
-                    if (NS_SUCCEEDED(rv)) {
-                      nsAutoString value;
-                      rv = inputElement->GetValue(value);
-                      if (NS_SUCCEEDED(rv)) {
-
-                        /* get schema name from vcard attribute if it exists */
-                        nsAutoString schema;
-                        nsIDOMElement * element;
-                        rv = elementNode->QueryInterface(kIDOMElementIID, (void**)&element);
-                        if ((NS_SUCCEEDED(rv)) && (nsnull != element)) {
-                          nsAutoString vcardName; vcardName.AssignWithConversion("VCARD_NAME");
-                          rv = element->GetAttribute(vcardName, schema);
-                          NS_RELEASE(element);
-                        }
-
-                        /* get schema from displayable text if possible */
-                        wallet_GetSchemaFromDisplayableText(inputElement, schema, PR_FALSE);
-                        wallet_Capture(doc, field, value, schema);
-                      }
-                    }
-                  }
-                }
+                wallet_CaptureInputElement(elementNode, doc);
+                wallet_CaptureSelectElement(elementNode, doc);
               }
             }
           }
@@ -3894,4 +3940,3 @@ PUBLIC void
 WLLT_FetchFromNetCenter() {
 //  wallet_FetchFromNetCenter();
 }
-
