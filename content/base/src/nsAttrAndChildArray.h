@@ -92,7 +92,13 @@ public:
   const nsAttrValue* AttrAt(PRUint32 aPos) const
   {
     NS_ASSERTION(aPos < AttrCount(), "out-of-bounds access in nsAttrAndChildArray");
-    return &NS_REINTERPRET_CAST(InternalAttr*, mImpl->mBuffer)[aPos].mValue;
+    /**
+     * Due to a compiler bug in VisualAge C++ for AIX, we need to return
+     * the address of the first index into mBuffer here. A similar fix
+     * was also made to the ATTRS macro in nsAttrAndChildArray.cpp. See
+     * Bug 231104.
+     */
+    return &NS_REINTERPRET_CAST(InternalAttr*, &(mImpl->mBuffer[0]))[aPos].mValue;
   }
   nsresult SetAttr(nsIAtom* aLocalName, const nsAString& aValue);
   nsresult SetAttr(nsIAtom* aLocalName, nsHTMLValue* aValue);
