@@ -722,7 +722,7 @@ nsGenericElement::GetParent(nsIContent*& aResult) const
 {
   NS_IF_ADDREF(mParent);
   aResult = mParent;
-  return NS_OK;;
+  return NS_OK;
 }
 
 nsresult
@@ -750,10 +750,10 @@ nsGenericElement::GetTag(nsIAtom*& aResult) const
 
 nsresult
 nsGenericElement::HandleDOMEvent(nsIPresContext& aPresContext,
-                                     nsEvent* aEvent,
-                                     nsIDOMEvent** aDOMEvent,
-                                     PRUint32 aFlags,
-                                     nsEventStatus& aEventStatus)
+                                 nsEvent* aEvent,
+                                 nsIDOMEvent** aDOMEvent,
+                                 PRUint32 aFlags,
+                                 nsEventStatus& aEventStatus)
 {
   nsresult ret = NS_OK;
   
