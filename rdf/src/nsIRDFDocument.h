@@ -22,9 +22,10 @@
 
 #include "nsIXMLDocument.h"
 
-class nsIRDFNode;
+class nsIRDFContent;
 class nsIRDFDataBase;
 class nsISupportsArray;
+class nsIRDFNode;
 
 // {954F0811-81DC-11d2-B52A-000000000000}
 #define NS_IRDFDOCUMENT_IID \
@@ -35,9 +36,22 @@ class nsISupportsArray;
  */
 class nsIRDFDocument : public nsIXMLDocument {
 public:
+  /**
+   * Retrieve the document's RDF data base.
+   */
   NS_IMETHOD GetDataBase(nsIRDFDataBase*& rDataBase) = 0;
 
-  NS_IMETHOD CreateChildren(nsIRDFNode* resource, nsISupportsArray* children) = 0;
+  /**
+   * Given an nsIRDFContent element in the document, create its
+   * "content children," that is, a set of nsIRDFContent elements that
+   * should appear as the node's children in the content model.
+   */
+  NS_IMETHOD CreateChildren(nsIRDFContent* element, nsISupportsArray* children) = 0;
+
+  // XXX these should probably be strings so you can mess with them
+  // via the DOM.
+  NS_IMETHOD AddTreeProperty(nsIRDFNode* resource) = 0;
+  NS_IMETHOD RemoveTreeProperty(nsIRDFNode* resource) = 0;
 };
 
 // factory functions

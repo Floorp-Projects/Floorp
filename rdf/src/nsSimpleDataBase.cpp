@@ -344,6 +344,7 @@ nsSimpleDataBase::nsSimpleDataBase(void)
 {
     NS_INIT_REFCNT();
 
+#if 0
     // Add standard data sources here.
     // XXX this is so wrong.
     nsIRDFDataSource* ds;
@@ -354,6 +355,7 @@ nsSimpleDataBase::nsSimpleDataBase(void)
         AddDataSource(ds);
         NS_RELEASE(ds);
     }
+#endif
 }
 
 

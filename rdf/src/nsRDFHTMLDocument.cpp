@@ -32,21 +32,8 @@
 #include "nsIRDFResourceManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
-#include "nsITextContent.h"
-#include "nsLayoutCID.h"
-#include "nsRDFCID.h"
 #include "nsRDFDocument.h"
 #include "rdfutil.h"
-
-////////////////////////////////////////////////////////////////////////
-
-static NS_DEFINE_IID(kIContentIID,            NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIDocumentIID,           NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIRDFResourceManagerIID, NS_IRDFRESOURCEMANAGER_IID);
-static NS_DEFINE_IID(kITextContentIID,        NS_ITEXT_CONTENT_IID); // XXX grr...
-
-static NS_DEFINE_CID(kRDFResourceManagerCID,  NS_RDFRESOURCEMANAGER_CID);
-static NS_DEFINE_CID(kTextNodeCID,            NS_TEXTNODE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -55,17 +42,10 @@ public:
     RDFHTMLDocumentImpl();
     virtual ~RDFHTMLDocumentImpl();
 
-    // nsIRDFDocument interface
-    NS_IMETHOD CreateChildren(nsIRDFNode* resource, nsISupportsArray* children);
-
 protected:
-    nsresult NewChild(nsIRDFNode* resource,
-                      nsIRDFContent*& result,
-                      PRBool childrenMustBeGenerated);
-
-    nsresult CreateChild(nsIRDFNode* property,
-                         nsIRDFNode* value,
-                         nsIRDFContent*& result);
+    virtual nsresult CreateChild(nsIRDFNode* property,
+                                 nsIRDFNode* value,
+                                 nsIRDFContent*& result);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -78,121 +58,6 @@ RDFHTMLDocumentImpl::~RDFHTMLDocumentImpl(void)
 {
 }
 
-NS_IMETHODIMP
-RDFHTMLDocumentImpl::CreateChildren(nsIRDFNode* resource, nsISupportsArray* children)
-{
-    nsresult rv;
-
-    NS_ASSERTION(mDB, "not initialized");
-    if (! mDB)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    nsIRDFResourceManager* mgr;
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
-                                                    kIRDFResourceManagerIID,
-                                                    (nsISupports**) &mgr)))
-        return rv;
-
-    nsIRDFCursor* properties = nsnull;
-    PRBool moreProperties;
-
-#ifdef ONLY_CREATE_RDF_CONTAINERS_AS_CONTENT
-    if (! rdf_IsContainer(mgr, mDB, resource))
-        goto done;
-#endif
-
-    // Create a cursor that'll enumerate all of the outbound arcs
-    if (NS_FAILED(rv = mDB->ArcLabelsOut(resource, properties)))
-        goto done;
-
-    while (NS_SUCCEEDED(rv = properties->HasMoreElements(moreProperties)) && moreProperties) {
-        nsIRDFNode* property = nsnull;
-        PRBool tv;
-
-        if (NS_FAILED(rv = properties->GetNext(property, tv /* ignored */)))
-            break;
-
-        nsAutoString uri;
-        if (NS_FAILED(rv = property->GetStringValue(uri))) {
-            NS_RELEASE(property);
-            break;
-        }
-
-#ifdef ONLY_CREATE_RDF_CONTAINERS_AS_CONTENT
-        if (! rdf_IsOrdinalProperty(uri)) {
-            NS_RELEASE(property);
-            continue;
-        }
-#endif
-
-        // Create a second cursor that'll enumerate all of the values
-        // for all of the arcs.
-        nsIRDFCursor* values;
-        if (NS_FAILED(rv = mDB->GetTargets(resource, property, PR_TRUE, values))) {
-            NS_RELEASE(property);
-            break;
-        }
-
-        PRBool moreValues;
-        while (NS_SUCCEEDED(rv = values->HasMoreElements(moreValues)) && moreValues) {
-            nsIRDFNode* value = nsnull;
-            if (NS_FAILED(rv = values->GetNext(value, tv /* ignored */)))
-                break;
-
-            // XXX At this point, we need to decide exactly what kind
-            // of kid to create in the content model. For example, for
-            // leaf nodes, we probably want to create some kind of
-            // text element.
-            nsIRDFContent* child;
-            if (NS_FAILED(rv = CreateChild(property, value, child))) {
-                NS_RELEASE(value);
-                break;
-            }
-
-            // And finally, add the child into the content model
-            children->AppendElement(child);
-
-            NS_RELEASE(child);
-            NS_RELEASE(value);
-        }
-
-        NS_RELEASE(values);
-        NS_RELEASE(property);
-
-        if (NS_FAILED(rv))
-            break;
-    }
-
-done:
-    NS_IF_RELEASE(properties);
-    nsServiceManager::ReleaseService(kRDFResourceManagerCID, mgr);
-
-    return rv;
-}
-
-
-
-nsresult
-RDFHTMLDocumentImpl::NewChild(nsIRDFNode* resource,
-                              nsIRDFContent*& result,
-                              PRBool childrenMustBeGenerated)
-{
-    nsresult rv;
-
-    nsIRDFContent* child;
-    if (NS_FAILED(rv = NS_NewRDFElement(&child)))
-        return rv;
-
-    if (NS_FAILED(rv = child->Init(this, resource, childrenMustBeGenerated))) {
-        NS_RELEASE(child);
-        return rv;
-    }
-
-    result = child;
-    return NS_OK;
-}
-
-
 nsresult
 RDFHTMLDocumentImpl::CreateChild(nsIRDFNode* property,
                                  nsIRDFNode* value,
@@ -200,71 +65,62 @@ RDFHTMLDocumentImpl::CreateChild(nsIRDFNode* property,
 {
     nsresult rv;
     nsIRDFContent* child = nsnull;
-    nsIRDFContent* grandchild = nsnull;
-    nsIContent* grandchild2 = nsnull;
-    nsITextContent* text = nsnull;
-    nsIDocument* doc = nsnull;
-    nsAutoString v;
 
-    // Construct a new child node. We will explicitly be generating
-    // all of this node's kids, so set the
-    // "children-must-be-generated" flag to false.
-    if (NS_FAILED(rv = NewChild(property, child, PR_FALSE)))
-        goto error;
+    // The tag we'll use for the new child will be the string value of
+    // the property.
+    nsAutoString tag;
+    if (NS_FAILED(rv = property->GetStringValue(tag)))
+        goto done;
 
-    // If this is NOT a resource, then construct a grandchild which is
-    // just a vanilla text node.
-    if (! rdf_IsResource(value)) {
-        if (NS_FAILED(rv = value->GetStringValue(v)))
-            goto error;
+    if (IsTreeProperty(property) || rdf_IsContainer(mResourceMgr, mDB, value)) {
+        // If it's a tree property, then create a child element whose
+        // value is the value of the property. We'll also attach an "ID="
+        // attribute to the new child; e.g.,
+        //
+        // <parent>
+        //   <property id="value">
+        //      <!-- recursively generated -->
+        //   </property>
+        //   ...
+        // </parent>
 
-        if (NS_FAILED(rv = nsRepository::CreateInstance(kTextNodeCID,
-                                                        nsnull,
-                                                        kIContentIID,
-                                                        (void**) &grandchild2)))
-            goto error;
+        nsAutoString s;
 
-        if (NS_FAILED(rv = QueryInterface(kIDocumentIID, (void**) &doc)))
-            goto error;
+        // PR_TRUE indicates that we want the child to dynamically
+        // generate its own kids.
+        if (NS_FAILED(rv = NewChild(tag, value, child, PR_TRUE)))
+            goto done;
 
-        if (NS_FAILED(rv = grandchild2->SetDocument(doc, PR_FALSE)))
-            goto error;
+        if (NS_FAILED(rv = value->GetStringValue(s)))
+            goto done;
 
-        NS_RELEASE(doc);
+        if (NS_FAILED(rv = child->SetAttribute("ID", s, PR_FALSE)))
+            goto done;
 
-        if (NS_FAILED(rv = grandchild2->QueryInterface(kITextContentIID, (void**) &text)))
-            goto error;
+        result = child;
+        NS_ADDREF(result);
+    }
+    else {
+        // Otherwise, it's not a tree property. So we'll just create a
+        // new element for the property, and a simple text node for
+        // its value; e.g.,
+        //
+        // <parent>
+        //   <property>value</property>
+        //   ...
+        // </parent>
 
-        if (NS_FAILED(rv = text->SetText(v.GetUnicode(), v.Length(), PR_FALSE)))
-            goto error;
+        if (NS_FAILED(rv = NewChild(tag, property, child, PR_FALSE)))
+            goto done;
 
-        NS_RELEASE(text);
+        if (NS_FAILED(rv = AttachTextNode(child, value)))
+            goto done;
 
-        // hook it up to the child
-        if (NS_FAILED(rv = grandchild2->SetParent(child)))
-            goto error;
-
-        if (NS_FAILED(rv = child->AppendChildTo(NS_STATIC_CAST(nsIContent*, grandchild2), PR_TRUE)))
-            goto error;
+        result = child;
+        NS_ADDREF(result);
     }
 
-    // Construct a grandchild which is another RDF resource node. This
-    // node *will* need to recursively generate its children on
-    // demand, so set the children-must-be-generated flag to true.
-    if (NS_FAILED(rv = NewChild(value, grandchild, PR_TRUE)))
-        goto error;
-
-    if (NS_FAILED(rv = child->AppendChildTo(NS_STATIC_CAST(nsIContent*, grandchild), PR_TRUE)))
-        goto error;
-
-    // whew!
-    result = child;
-    return NS_OK;
-
-error:
-    NS_IF_RELEASE(text);
-    NS_IF_RELEASE(doc);
-    NS_IF_RELEASE(grandchild);
+done:
     NS_IF_RELEASE(child);
     return rv;
 }

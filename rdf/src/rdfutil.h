@@ -32,7 +32,7 @@ class nsString;
  * rdf:_2, etc.
  */
 PRBool
-rdf_IsOrdinalProperty(const nsString& uri);
+rdf_IsOrdinalProperty(const nsIRDFNode* property);
 
 
 /**

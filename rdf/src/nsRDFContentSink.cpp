@@ -36,14 +36,7 @@
 
   TO DO ------------------------
 
-  1) Using the nsIRDFContent and nsIRDFContainerContent interfaces to
-     actually build the content model is a red herring. What I
-     *really* want to do is just build an RDF graph, then let the
-     presentation actually generate the "content model" on demand.
-
-  2) Handle resource references in properties
-
-  3) Make sure all shortcut syntax works right.
+  1) Make sure all shortcut syntax works right.
 
 */
 
