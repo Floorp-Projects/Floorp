@@ -92,5 +92,3 @@ TARGET = $(LIBARY)
 
 include $(topsrcdir)/config/rules.mk
 
-test:
-	@echo OS_ARCH = $(OS_ARCH)
