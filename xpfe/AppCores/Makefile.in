@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src xul
+DIRS = public src xul idl
 
 include $(topsrcdir)/config/config.mk
 
