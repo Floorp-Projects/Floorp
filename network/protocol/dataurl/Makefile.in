@@ -34,7 +34,5 @@ EXPORTS= $(srcdir)/dataurl.h
 REQUIRES	= network dbm util pref js java fileurl \
 	security layer img httpurl netcnvts
 
-NO_STATIC_LIB=1
-
 include $(topsrcdir)/config/rules.mk
 
