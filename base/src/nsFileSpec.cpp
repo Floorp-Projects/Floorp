@@ -829,7 +829,7 @@ void nsFileSpec::operator = (const nsPersistentFileDescriptor& inDescriptor)
 	AliasHandle aliasH = nsnull;
 	mError = NS_FILE_RESULT(PtrToHand(decodedData, &(Handle)aliasH, (dataSize * 3) / 4));
 	PR_Free(decodedData);
-	if (NS_SUCCEEDED(mError))
+	if (NS_FAILED(mError))
 		return; // not enough memory?
 
 	Boolean changed;
