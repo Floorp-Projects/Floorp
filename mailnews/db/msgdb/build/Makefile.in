@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= msgdb
 LIBRARY_NAME	= msgdb
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string mailnews locale mork mime msgbase msgbaseutil
+REQUIRES	= xpcom string mailnews locale mork mime msgbase msgbaseutil necko
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl
