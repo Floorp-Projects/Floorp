@@ -59,6 +59,7 @@ interface nsIMdbRow;
 #define kLastNameColumn           "LastName"
 #define kPhoneticFirstNameColumn  "PhoneticFirstName"
 #define kPhoneticLastNameColumn   "PhoneticLastName"
+#define kPhoneticNameColumn       "_PhoneticName"
 #define kDisplayNameColumn        "DisplayName"
 #define kNicknameColumn           "NickName"
 #define kPriEmailColumn           "PrimaryEmail"

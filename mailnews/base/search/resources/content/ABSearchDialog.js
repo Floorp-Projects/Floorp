@@ -50,6 +50,7 @@ var gAddressBookBundle;
 var gSearchStopButton;
 var gPropertiesButton;
 var gComposeButton;
+var gSearchPhoneticName = "false";
 
 var gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
@@ -72,6 +73,14 @@ function searchOnLoad()
   gSearchBundle = document.getElementById("bundle_search");
   gAddressBookBundle = document.getElementById("bundle_addressBook");
   gSearchSession = Components.classes[searchSessionContractID].createInstance(Components.interfaces.nsIMsgSearchSession);
+
+  // initialize a flag for phonetic name search
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefService);
+  var prefBranch = prefService.getBranch(null).QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  gSearchPhoneticName =
+        prefBranch.getComplexValue("mail.addr_book.show_phonetic_fields", 
+                                   Components.interfaces.nsIPrefLocalizedString).data;
 
   if (window.arguments && window.arguments[0])
     SelectDirectory(window.arguments[0].directory);
@@ -194,7 +203,10 @@ function onSearch()
      switch (searchTerm.attrib) {
        case nsMsgSearchAttrib.Name:
          // when doing an "and" search, we'll use the first one
-         attrs = ["DisplayName","FirstName","LastName"];
+         if (gSearchPhoneticName == "false")
+           attrs = ["DisplayName","FirstName","LastName"];
+         else
+           attrs = ["DisplayName","FirstName","LastName","PhoneticFirstName","PhoneticLastName"];
          break;
        case nsMsgSearchAttrib.Email:
          attrs = ["PrimaryEmail"];

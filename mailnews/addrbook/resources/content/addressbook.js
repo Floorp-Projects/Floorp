@@ -192,6 +192,16 @@ function GetCurrentPrefs()
 	var menuitem = top.document.getElementById(menuitemID);
 	if ( menuitem )
 		menuitem.setAttribute('checked', 'true');
+
+  // initialize phonetic 
+  var showPhoneticFields =
+        gPrefs.getComplexValue("mail.addr_book.show_phonetic_fields", 
+                               Components.interfaces.nsIPrefLocalizedString).data;
+  // show phonetic fields if indicated by the pref
+  if (showPhoneticFields == "true")
+    document.getElementById("cmd_SortBy_PhoneticName")
+            .setAttribute("hidden", "false");
+
 }
 
 
@@ -528,7 +538,8 @@ function onEnterInSearchBar()
   ClearCardViewPane();
 
   if (!gQueryURIFormat)
-    gQueryURIFormat = gPrefs.getCharPref("mail.addr_book.quicksearchquery.format");
+    gQueryURIFormat = gPrefs.getComplexValue("mail.addr_book.quicksearchquery.format", 
+                                              Components.interfaces.nsIPrefLocalizedString).data;
 
   var searchURI = GetSelectedDirectory();
   if (!searchURI) return;

@@ -128,7 +128,7 @@ pref("mail.addr_book.mapit_url.format", "chrome://messenger-region/locale/region
 //
 // note, changing this might require a change to SearchNameOrEmail.label
 // in messenger.dtd
-pref("mail.addr_book.quicksearchquery.format","?(or(PrimaryEmail,c,@V)(DisplayName,c,@V)(FirstName,c,@V)(LastName,c,@V))");
+pref("mail.addr_book.quicksearchquery.format", "chrome://messenger/locale/messenger.properties");
 
 // values for "mail.addr_book.lastnamefirst" are:
 //0=displayname, 1=lastname first, 2=firstname first

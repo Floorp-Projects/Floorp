@@ -85,5 +85,11 @@ interface nsIAddrBookSession : nsISupports {
    * we allow the caller to cache the pref value, so we don't have to go to prefs every time.
    */
   wstring generateNameFromCard(in nsIAbCard card, in long generateFormat);
+
+  /** 
+   * generate the phonetic name from the card, using the firstName and lastName
+   *
+   */
+  wstring generatePhoneticNameFromCard(in nsIAbCard aCard, in boolean aLastNameFirst);
 };
 

@@ -240,6 +240,15 @@ Contributor(s):
                                   id="cmd_SortByCompany"
                                   accesskey="&Company.accesskey;"
                                   oncommand="SortResultPane('Company');" name="sortas" type="radio" checked="true"/>
+            <!-- LOCALIZATION NOTE:
+             Fields for phonetic are disabled as default and can be enabled by 
+             editing "mail.addr_book.show_phonetic_fields"    
+             -->
+            <menuitem label="&_PhoneticName.label;"
+                                  id="cmd_SortBy_PhoneticName"
+                                  hidden="true"
+                                  accesskey="&_PhoneticName.accesskey;"
+                                  oncommand="SortResultPane('_PhoneticName');" name="sortas" type="radio" checked="true"/>
             <menuitem label="&NickName.label;"
                                   id="cmd_SortByNickName"
                                   accesskey="&NickName.accesskey;"

@@ -447,15 +447,20 @@ nsresult nsAbView::GetCardValue(nsIAbCard *card, const PRUnichar *colID, PRUnich
 {
   nsresult rv;
 
-  // "G" == "GeneratedName"
+  // "G" == "GeneratedName", "_P" == "_PhoneticName"
   // else, standard column (like PrimaryEmail and _AimScreenName)
-  if (colID[0] == PRUnichar('G')) {
+  if ((colID[0] == PRUnichar('G')) ||
+      (colID[0] == PRUnichar('_') && colID[1] == PRUnichar('P'))) {
     // XXX todo 
     // cache the ab session?
     nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
     
-    rv = abSession->GenerateNameFromCard(card, mGeneratedNameFormat, _retval);
+    if (colID[0] == PRUnichar('G'))
+      rv = abSession->GenerateNameFromCard(card, mGeneratedNameFormat, _retval);
+    else
+      // use LN/FN order for the phonetic name
+      rv = abSession->GeneratePhoneticNameFromCard(card, PR_TRUE, _retval);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   else {

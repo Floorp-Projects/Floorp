@@ -70,6 +70,14 @@
   <treecol id="Company" class="sortDirectionIndicator" 
     persist="hidden ordinal width" flex="1" label="&Company.label;"/>
   <splitter class="tree-splitter"/>
+  <!-- LOCALIZATION NOTE: _PhoneticName may be enabled for Japanese builds. -->
+  <!--
+  <treecol id="_PhoneticName" class="sortDirectionIndicator" 
+    persist="hidden ordinal width" 
+    hiddenbydefault="true"
+    flex="1" label="&_PhoneticName.label;"/>
+  <splitter class="tree-splitter"/>
+   -->
   <treecol id="NickName" class="sortDirectionIndicator" 
     persist="hidden ordinal width" 
     hiddenbydefault="true"
