@@ -1055,6 +1055,8 @@ ReflowCommandHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
 
 // ----------------------------------------------------------------------------
 
+struct CantRenderReplacedElementEvent;
+
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   public nsStubDocumentObserver,
                   public nsISelectionController, public nsIObserver,
