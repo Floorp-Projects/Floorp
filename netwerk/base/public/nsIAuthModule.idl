@@ -41,9 +41,34 @@
 interface nsIAuthModule : nsISupports
 {
     /**
+     * Default behavior.
+     */
+    const unsigned long REQ_DEFAULT = 0;
+
+    /**
+     * Client and server will be authenticated.
+     */
+    const unsigned long REQ_MUTUAL_AUTH = (1 << 0);
+
+    /**
+     * The server is allowed to impersonate the client.  The REQ_MUTUAL_AUTH
+     * flag may also need to be specified in order for this flag to take
+     * effect.
+     */
+    const unsigned long REQ_DELEGATE = (1 << 1);
+
+    /** Other flags may be defined in the future */
+
+    /**
      * Called to initialize an auth module.  The other methods cannot be called
      * unless this method succeeds.
      *
+     * @param aServiceName
+     *        the service name, which may be null if not applicable (e.g., for
+     *        NTLM, this parameter should be null).
+     * @param aServiceFlags
+     *        a bitwise-or of the REQ_ flags defined above (pass REQ_DEFAULT
+     *        for default behavior).
      * @param aDomain
      *        the authentication domain, which may be null if not applicable.
      * @param aUsername
@@ -51,9 +76,11 @@ interface nsIAuthModule : nsISupports
      * @param aPassword
      *        the user's password
      */
-    void init(in wstring aDomain,
-              in wstring aUsername,
-              in wstring aPassword);
+    void init(in string        aServiceName,
+              in unsigned long aServiceFlags,
+              in wstring       aDomain,
+              in wstring       aUsername,
+              in wstring       aPassword);
 
     /**
      * Called to get the next token in a sequence of authentication steps.

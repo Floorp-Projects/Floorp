@@ -713,10 +713,15 @@ nsNTLMAuthModule::InitTest()
 }
 
 NS_IMETHODIMP
-nsNTLMAuthModule::Init(const PRUnichar *domain,
+nsNTLMAuthModule::Init(const char      *serviceName,
+                       PRUint32         serviceFlags,
+                       const PRUnichar *domain,
                        const PRUnichar *username,
                        const PRUnichar *password)
 {
+  NS_ASSERTION(serviceName == nsnull, "unexpected service name");
+  NS_ASSERTION(serviceFlags == nsIAuthModule::REQ_DEFAULT, "unexpected service flags");
+
   mDomain = domain;
   mUsername = username;
   mPassword = password;

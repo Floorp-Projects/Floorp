@@ -106,7 +106,7 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpChannel  *httpChannel,
     // initial challenge
     if (PL_strcasecmp(challenge, "NTLM") == 0) {
         // initialize auth module
-        rv = module->Init(domain, user, pass);
+        rv = module->Init(nsnull, nsIAuthModule::REQ_DEFAULT, domain, user, pass);
         if (NS_FAILED(rv))
             return rv;
 
