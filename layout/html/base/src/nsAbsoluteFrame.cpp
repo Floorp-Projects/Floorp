@@ -60,7 +60,8 @@ AbsoluteFrame::~AbsoluteFrame()
 
 nsIView* AbsoluteFrame::CreateView(nsIView*         aContainingView,
                                    const nsRect&    aRect,
-                                   nsStylePosition* aPosition)
+                                   nsStylePosition* aPosition,
+                                   nsStyleDisplay*  aDisplay)
 {
   nsIView*  view;
 
@@ -81,22 +82,22 @@ nsIView* AbsoluteFrame::CreateView(nsIView*         aContainingView,
     nsIScrollableView*  scrollView = nsnull;
     nsresult            result;
     nsViewClip          clip = {0, 0, 0, 0};
-    PRUint8             clipType = (aPosition->mClipFlags & NS_STYLE_CLIP_TYPE_MASK);
+    PRUint8             clipType = (aDisplay->mClipFlags & NS_STYLE_CLIP_TYPE_MASK);
     nsViewClip*         pClip = nsnull;
 
     // Is there a clip rect specified?
     if (NS_STYLE_CLIP_RECT == clipType) {
-      if ((NS_STYLE_CLIP_LEFT_AUTO & aPosition->mClipFlags) == 0) {
-        clip.mLeft = aPosition->mClip.left;
+      if ((NS_STYLE_CLIP_LEFT_AUTO & aDisplay->mClipFlags) == 0) {
+        clip.mLeft = aDisplay->mClip.left;
       }
-      if ((NS_STYLE_CLIP_RIGHT_AUTO & aPosition->mClipFlags) == 0) {
-        clip.mRight = aPosition->mClip.right;
+      if ((NS_STYLE_CLIP_RIGHT_AUTO & aDisplay->mClipFlags) == 0) {
+        clip.mRight = aDisplay->mClip.right;
       }
-      if ((NS_STYLE_CLIP_TOP_AUTO & aPosition->mClipFlags) == 0) {
-        clip.mTop = aPosition->mClip.top;
+      if ((NS_STYLE_CLIP_TOP_AUTO & aDisplay->mClipFlags) == 0) {
+        clip.mTop = aDisplay->mClip.top;
       }
-      if ((NS_STYLE_CLIP_BOTTOM_AUTO & aPosition->mClipFlags) == 0) {
-        clip.mBottom = aPosition->mClip.bottom;
+      if ((NS_STYLE_CLIP_BOTTOM_AUTO & aDisplay->mClipFlags) == 0) {
+        clip.mBottom = aDisplay->mClip.bottom;
       }
       pClip = &clip;
     }
@@ -285,7 +286,8 @@ NS_METHOD AbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
     ComputeViewBounds(containingRect, position, rect);
 
     // Create a view for the frame
-    nsIView*  view = CreateView(containingView, rect, position);
+    nsStyleDisplay*  display = (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+    nsIView*  view = CreateView(containingView, rect, position, display);
     NS_RELEASE(containingView);
 
     mFrame->SetView(view);  
@@ -294,7 +296,7 @@ NS_METHOD AbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
     // Resize reflow the absolutely positioned element
     nsSize  availSize(rect.width, rect.height);
 
-    if (NS_STYLE_OVERFLOW_VISIBLE == position->mOverflow) {
+    if (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow) {
       // Don't constrain the height since the container should be enlarged to
       // contain overflowing frames
       availSize.height = NS_UNCONSTRAINEDSIZE;
@@ -309,7 +311,7 @@ NS_METHOD AbsoluteFrame::Reflow(nsIPresContext*      aPresContext,
     // the desired size
     if ((eStyleUnit_Auto == position->mWidth.GetUnit()) ||
         ((desiredSize.width > availSize.width) &&
-         (NS_STYLE_OVERFLOW_VISIBLE == position->mOverflow))) {
+         (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow))) {
       rect.width = desiredSize.width;
     }
     if (eStyleUnit_Auto == position->mHeight.GetUnit()) {

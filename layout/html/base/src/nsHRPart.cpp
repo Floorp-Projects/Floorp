@@ -98,6 +98,13 @@ NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect)
 {
+  nsStyleDisplay* disp =
+    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+
+  if (PR_FALSE == disp->mVisible) {
+    return NS_OK;
+  }
+
   float p2t = aPresContext.GetPixelsToTwips();
   nscoord thickness = nscoord(p2t * ((HRulePart*)mContent)->mThickness);
 

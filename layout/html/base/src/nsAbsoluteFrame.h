@@ -20,6 +20,7 @@
 
 #include "nsFrame.h"
 struct nsStylePosition;
+struct nsStyleDisplay;
 
 // Implementation of a frame that's used as a placeholder for an absolutely
 // positioned frame
@@ -58,7 +59,8 @@ protected:
 
   nsIView*  CreateView(nsIView*         aContainingView,
                        const nsRect&    aRect,
-                       nsStylePosition* aPosition);
+                       nsStylePosition* aPosition,
+                       nsStyleDisplay*  aDisplay);
   nsIFrame* GetContainingBlock();
   void      ComputeViewBounds(const nsRect&    aContainingInnerRect,
                               nsStylePosition* aPosition,
