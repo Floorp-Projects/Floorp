@@ -864,6 +864,7 @@
   
             case KeyEvent.DOM_VK_LEFT:
             case KeyEvent.DOM_VK_RIGHT:
+              this.finishAutoComplete(false, false, aEvent);
               this.clearTimer();
               this.closeResultPopup();
               break;
@@ -1273,6 +1274,9 @@
 
       <handler event="blur" phase="capturing"
                action="if ( !(this.ignoreBlurWhileSearching &amp;&amp; this.isSearching) ) {this.userAction = 'none'; this.finishAutoComplete(false, false, event);}"/>
+
+      <handler event="mousedown" phase="capturing"
+               action="if ( !this.mMenuOpen ) this.finishAutoComplete(false, false, event);"/>
     </handlers>
   </binding> 
 
