@@ -33,6 +33,7 @@ nsIAtom* nsHTMLAtoms::alink;
 nsIAtom* nsHTMLAtoms::alt;
 nsIAtom* nsHTMLAtoms::applet;
 nsIAtom* nsHTMLAtoms::archive;
+nsIAtom* nsHTMLAtoms::area;
 nsIAtom* nsHTMLAtoms::axis;
 nsIAtom* nsHTMLAtoms::background;
 nsIAtom* nsHTMLAtoms::below;
@@ -116,6 +117,7 @@ nsIAtom* nsHTMLAtoms::hreflang;
 nsIAtom* nsHTMLAtoms::hspace;
 nsIAtom* nsHTMLAtoms::html;
 nsIAtom* nsHTMLAtoms::httpEquiv;
+nsIAtom* nsHTMLAtoms::ibPseudo;
 nsIAtom* nsHTMLAtoms::id;
 nsIAtom* nsHTMLAtoms::iframe;
 nsIAtom* nsHTMLAtoms::img;
@@ -268,6 +270,7 @@ void nsHTMLAtoms::AddrefAtoms()
     alt = NS_NewAtom("ALT");
     applet = NS_NewAtom("APPLET");
     archive = NS_NewAtom("ARCHIVE");
+    area = NS_NewAtom("AREA");
     axis = NS_NewAtom("AXIS");
     background = NS_NewAtom("BACKGROUND");
     below = NS_NewAtom("BELOW");
@@ -351,6 +354,7 @@ void nsHTMLAtoms::AddrefAtoms()
     hspace = NS_NewAtom("HSPACE");
     html = NS_NewAtom("HTML");
     httpEquiv = NS_NewAtom("HTTP-EQUIV");
+    ibPseudo = NS_NewAtom(":IB-PSEUDO");
     id = NS_NewAtom("ID");
     iframe = NS_NewAtom("IFRAME");
     img = NS_NewAtom("IMG");
@@ -500,6 +504,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(alt);
     NS_RELEASE(applet);
     NS_RELEASE(archive);
+    NS_RELEASE(area);
     NS_RELEASE(axis);
     NS_RELEASE(background);
     NS_RELEASE(below);
@@ -580,6 +585,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(hspace);
     NS_RELEASE(html);
     NS_RELEASE(httpEquiv);
+    NS_RELEASE(ibPseudo);
     NS_RELEASE(id);
     NS_RELEASE(iframe);
     NS_RELEASE(img);

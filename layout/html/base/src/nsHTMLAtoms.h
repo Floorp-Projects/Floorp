@@ -52,6 +52,7 @@ public:
   static nsIAtom* alt;
   static nsIAtom* applet;
   static nsIAtom* archive;
+  static nsIAtom* area;
   static nsIAtom* axis;
 
   static nsIAtom* background;
@@ -143,6 +144,7 @@ public:
   static nsIAtom* html;
   static nsIAtom* httpEquiv;
 
+  static nsIAtom* ibPseudo;
   static nsIAtom* id;
   static nsIAtom* iframe;
   static nsIAtom* img;
