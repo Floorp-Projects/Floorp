@@ -35,7 +35,7 @@ OBJS=					\
 	.\$(OBJDIR)\NewDialog.obj \
 	.\$(OBJDIR)\wizshell.obj \
 	.\$(OBJDIR)\ib.obj		\
-	.\$(OBJDIR)\Helpmenu.obj	\
+	.\$(OBJDIR)\MailNews.obj	\
 	.\$(OBJDIR)\buddylist.obj	\
 	.\$(OBJDIR)\engine.obj	\
 	$(NULL)
@@ -95,8 +95,6 @@ export::
 	$(MAKE_INSTALL) script_Linux.ib $(CCKDIST)\CCKTool
 	$(MAKE_INSTALL) script_Windows.ib $(CCKDIST)\CCKTool
 	$(MAKE_INSTALL) "script_Mac OS.ib" $(CCKDIST)\CCKTool
-	$(MAKE_INSTALL) help1.txt $(CCKDIST)\CCKTool
-	$(MAKE_INSTALL) help2.txt $(CCKDIST)\CCKTool
 
 $(PROGRAM):: $(OBJDIR) $(OBJS) $(RESFILE)
 

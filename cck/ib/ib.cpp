@@ -1308,6 +1308,45 @@ void ModifyBookmarks(CString inputFile, CString outputFile)
 	dstf.close();
 }
 
+void ModifyHelpMenu(CString inputFile, CString outputFile)
+{
+	// Add an item to the Help menu
+
+	char tempbuf[MAX_SIZE];
+	CString searchstr = "oncommand=\"openTopWin(\'urn:clienturl:help:security\');\" />";
+	CString helpMenuName = GetGlobal("HelpMenuCommandName");
+	CString helpMenuUrl = GetGlobal("HelpMenuCommandURL");
+
+	ifstream srcf(inputFile);
+	if (!srcf)
+	{
+		AfxMessageBox("Cannot open input file: " + CString(inputFile),MB_OK);
+		return;
+	}       
+	ofstream dstf(outputFile); 
+	if (!dstf)
+	{
+		AfxMessageBox("Cannot open output file: " + CString(outputFile), MB_OK);
+		srcf.close();
+		return;
+	}
+
+	while (!srcf.eof()) 
+	{
+		srcf.getline(tempbuf,MAX_SIZE);
+		dstf << tempbuf << "\n";
+		if ((CString(tempbuf).Find(searchstr)) != -1)
+		{
+			dstf << "     <menuitem label=\"" << helpMenuName << "\"\n"; 
+			dstf << "        position=\"7\"\n"; 
+			dstf << "        oncommand=\"openTopWin('" << helpMenuUrl << "');\" />\n";
+		}
+	}
+	
+	srcf.close();
+	dstf.close();
+}
+
 int interpret(char *cmd)
 {
 	char *cmdname = strtok(cmd, "(");
@@ -1476,7 +1515,8 @@ int interpret(char *cmd)
 	}
 
 	else if ((strcmp(cmdname, "modifySidebar") == 0) || 
-		(strcmp(cmdname, "modifyBookmarks") == 0))
+		(strcmp(cmdname, "modifyBookmarks") == 0) ||
+		(strcmp(cmdname, "modifyHelpMenu") == 0))
 	{
 		// extract the file to be modified from the jar/xpi
 		// and process the file
@@ -1503,6 +1543,8 @@ int interpret(char *cmd)
 			ModifySidebar(inputFile, outputFile);
 		else if (strcmp(cmdname, "modifyBookmarks") == 0)
 			ModifyBookmarks(inputFile, outputFile);
+		else if (strcmp(cmdname, "modifyHelpMenu") == 0)
+			ModifyHelpMenu(inputFile, outputFile);
 			
 		remove(inputFile);
 		rename(outputFile, inputFile);
@@ -2504,10 +2546,6 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 		httpvalue = httpvalue + HelpUrl;
 		SetGlobal("HelpMenuCommandURL",httpvalue);
 	}
-// Create the HelpMenu.xul in the beginning so that it can be called from the script.ib
-	CString setHlpRDF = tempPath +"\\helpMenu.rdf";
-	SetGlobal("HlpRDF",setHlpRDF);
-	CreateHelpMenu();
 
 	CString setIspRDF = tempPath +"\\mailaccount.rdf";
 	SetGlobal("IspRDF",setIspRDF);
