@@ -880,11 +880,7 @@ nsInstallDlg::ShowCompleteDlg()
     gtk_widget_grab_default(okButton);
     gtk_widget_show_all(completeDlg);
 
-    while (!bComplete)
-    {
-        XI_GTK_UPDATE_UI();
-    }
-
+    gtk_main();
     gtk_main_quit();
 }
 
@@ -896,6 +892,7 @@ nsInstallDlg::CompleteOK(GtkWidget *aWidget, gpointer aData)
     if (dlg)
         gtk_widget_destroy(dlg);
 
+    gtk_main_quit();
     bComplete = TRUE;
 }
 
@@ -1392,7 +1389,8 @@ nsInstallDlg::InitDLProgress( int isFirst )
 void
 nsInstallDlg::InitInstallProgress()
 {
-    gtk_widget_hide(sDLProgress.vbox);
+    if ( sDLProgress.vbox )
+            gtk_widget_hide(sDLProgress.vbox);
     gCtx->idlg->ShowTable();
 }
 
