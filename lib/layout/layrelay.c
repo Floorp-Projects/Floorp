@@ -1306,10 +1306,18 @@ lo_rl_FitMulticolumn( lo_RelayoutState *relay_state, LO_Element *lo_ele )
 			
 			/* Insert the state->linelist constructed above in between the linefeeds before and after
 			   the table. */
-			linefeedBeforeTable->next = state->line_list;
-			state->line_list->lo_any.prev = (LO_Element *) linefeedBeforeTable;
-			lastElementInLastCell->lo_any.next = (LO_Element *) linefeedAfterTable;
-			linefeedAfterTable->prev = lastElementInLastCell;
+			if (state->line_list) {
+				linefeedBeforeTable->next = state->line_list;
+				state->line_list->lo_any.prev = (LO_Element *) linefeedBeforeTable;
+				lastElementInLastCell->lo_any.next = (LO_Element *) linefeedAfterTable;
+				linefeedAfterTable->prev = lastElementInLastCell;
+			}
+			else {
+				/* This means that the MULTICOL tag did not contain anything. So we just
+				   hook up the linefeeds before and after the table element. */
+				linefeedBeforeTable->next = (LO_Element *) linefeedAfterTable;
+				linefeedAfterTable->prev = (LO_Element *) linefeedBeforeTable;
+			}
 
 			/* Set the next layout element to be fitted to the linefeed before the table.  This
 			   will fit all the elements that were on the cells of the table */
