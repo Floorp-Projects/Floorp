@@ -43,7 +43,15 @@
 #include "nsIIOService.h"
 #include "nsCocoaBrowserService.h"
 #include "nsIPrefBranch.h"
+#include "nsEmbedAPI.h"
 #import	"CHAboutBox.h"
+#include <Foundation/NSUserDefaults.h>
+
+#ifdef _BUILD_STATIC_BIN
+#include "nsStaticComponent.h"
+nsresult PR_CALLBACK
+app_GetModuleInfo(NSStaticModuleInfo **info, PRUint32 *count);
+#endif
 
 static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
@@ -52,6 +60,22 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 -(id)init
 {
     if ( (self = [super init]) ) {
+        NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+        if ([defaults boolForKey:@"autoRegister"]) {
+            // This option causes us to simply initialize embedding and exit.
+            NSString *path = [[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent];
+            setenv("MOZILLA_FIVE_HOME", [path fileSystemRepresentation], 1);
+
+#ifdef _BUILD_STATIC_BIN
+            NSGetStaticModuleInfo = app_GetModuleInfo;
+#endif
+
+            if (NS_SUCCEEDED(NS_InitEmbedding(nsnull, nsnull)))
+              NS_TermEmbedding();
+
+            [NSApp terminate:self];
+            return self;
+        }
         mSplashScreen = [[CHSplashScreenWindow alloc] splashImage:nil withFade:YES withStatusRect:NSMakeRect(0,0,0,0)];
         mFindDialog = nil;
         mMenuBookmarks = nil;
