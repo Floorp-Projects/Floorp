@@ -675,7 +675,10 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       child->GetNextSibling(child);
     }
 
-    // XXX Paint this portion of ourselves
+    // Paint this portion of ourselves
+    if (!aLine->mBounds.IsEmpty()) {
+      Invalidate(aLine->mBounds);
+    }
   }
 
   // Consume space and advance running values
