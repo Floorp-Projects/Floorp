@@ -26,6 +26,10 @@ CPPSRCS = \
 	nsWidgetSupport.cpp      \
 	$(NULL)
 
+EXPORTS = \
+	nsWidgetSupport.h \
+	$(NULL)
+
 MODULE=raptor 
 
 OBJS= \
