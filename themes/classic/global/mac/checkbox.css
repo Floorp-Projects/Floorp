@@ -30,6 +30,7 @@
 /* ::::: checkbox ::::: */
 
 checkbox {
+  -moz-appearance: checkbox-container;
   -moz-user-focus: ignore;
   -moz-box-align: center;
   margin: 2px 4px;
@@ -58,6 +59,7 @@ checkbox[disabled="true"] {
 /* ::::: checkmark image ::::: */
 
 .checkbox-check {
+  -moz-appearance: checkbox;
   width: 14px;
   height: 12px;
   background: url("chrome://global/skin/checkbox/cbox.gif") no-repeat;

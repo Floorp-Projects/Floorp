@@ -30,6 +30,7 @@
 /* ::::: toolbox ::::: */
 
 toolbox {
+  -moz-appearance: toolbox;
   background-color: -moz-Dialog;
   border-left: 1px solid ThreeDShadow;
   border-top: 1px solid ThreeDShadow;
@@ -41,6 +42,7 @@ toolbox {
 
 toolbar,
 menubar {
+  -moz-appearance: toolbar;
   min-width: 1px; /* DON'T DELETE!
     Prevents hiding of scrollbars in browser when window is made smaller.*/
 }

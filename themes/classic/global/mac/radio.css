@@ -34,6 +34,7 @@ radiogroup {
 }
 
 radio {
+  -moz-appearance: radio-container;
   -moz-box-align: center;
   margin: 2px 4px;
   padding: 1px 2px 1px 4px;
@@ -61,6 +62,7 @@ radio[disabled="true"] {
 /* ::::: checkmark image ::::: */
 
 .radio-check {
+  -moz-appearance: radio;
   width: 14px;
   height: 12px;
   background: url("chrome://global/skin/radio/radio.gif") no-repeat;

@@ -31,11 +31,13 @@
 /* :::::::::: menulist :::::::::: */
 
 menulist {
+  -moz-appearance: menulist;
   -moz-user-focus: ignore;
   margin: 2px 4px;
 }
 
 .menulist-label-box {
+  -moz-appearance: menulist-text;
   -moz-box-align: center;
   -moz-box-pack: center;
   border: 2px solid;
@@ -55,6 +57,7 @@ menulist {
 /* ..... dropmarker ..... */
 
 .menulist-dropmarker {
+  -moz-appearance: menulist-button;
   -moz-box-align: center;
   -moz-box-pack: center;
   border: 3px solid;

@@ -54,6 +54,7 @@ toolbarbutton {
 
 toolbarbutton:hover,
 toolbarbutton[buttonover="true"] {
+  -moz-appearance: toolbarbutton;
   -moz-border-top-colors: #000000 #FFFFFF;
   -moz-border-right-colors: #000000 #9D9D9D;
   -moz-border-bottom-colors: #000000 #9D9D9D;
@@ -62,6 +63,7 @@ toolbarbutton[buttonover="true"] {
     
 toolbarbutton:hover:active,
 toolbarbutton[open="true"] {
+  -moz-appearance: toolbarbutton;
   -moz-border-top-colors: #000000 #444444;
   -moz-border-right-colors: #000000 #AAAAAA;
   -moz-border-bottom-colors: #000000 #AAAAAA;

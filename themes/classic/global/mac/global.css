@@ -110,7 +110,7 @@ iframe {
 /* ::::: statusbar ::::: */
 
 statusbar {
-
+  -moz-appearance: statusbar;
   border-top: 1px solid #000000 !important;
   border-left: 1px solid ThreeDShadow;
   border-right: none !important

@@ -197,6 +197,7 @@ treecell.propertylist
 
 .tree-cell-twisty 
   {
+    -moz-appearance       : treetwisty;
     list-style-image      : url("chrome://global/skin/tree/twisty-clsd.gif");
     -moz-user-focus       : ignore;
     padding-right         : 2px;

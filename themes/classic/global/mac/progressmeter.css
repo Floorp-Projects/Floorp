@@ -44,6 +44,7 @@
 /* ::::: progressmeter ::::: */
 
 progressmeter {
+  -moz-appearance: progressbar;
   margin: 2px 4px;
   border: 2px solid;
   -moz-border-top-colors: #AAAAAA #000000;

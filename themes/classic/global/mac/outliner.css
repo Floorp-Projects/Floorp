@@ -178,12 +178,14 @@ outlinerbody:-moz-outliner-column(insertafter) {
 /* ::::: twisty :::::  */
 
 outlinerbody:-moz-outliner-twisty {
+  -moz-appearance: treetwisty;
   padding-right: 2px;
   width: 10px; /* The image's width is 10 pixels */
   list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
 }
 
 outlinerbody:-moz-outliner-twisty(open) {
+  -moz-appearance: treetwisty;
   width: 10px; /* The image's width is 10 pixels */
   list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
 }

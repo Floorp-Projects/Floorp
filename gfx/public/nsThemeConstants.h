@@ -143,6 +143,9 @@
 // The dropdown button(s) that open up a dropdown list.
 #define NS_THEME_DROPDOWN_BUTTON                           102
 
+// The text part of a dropdown list, to left of button
+#define NS_THEME_DROPDOWN_TEXT                             103
+
 // A slider
 #define NS_THEME_SLIDER                                    111
 

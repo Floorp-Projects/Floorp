@@ -30,6 +30,7 @@
 /* :::::::::: button :::::::::: */
 
 button {
+  -moz-appearance: button;
   -moz-user-focus: ignore;
   margin: 1px 5px 2px 5px;
   min-width: 6.3em;
