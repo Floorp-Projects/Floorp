@@ -36,7 +36,7 @@ static const nsModuleComponentInfo components[] =
     NS_PNGDECODER_CID,
     "@mozilla.org/image/decoder;2?type=image/png",
     nsPNGDecoderConstructor, },
-  { "PNG decoder",
+  { "PNG Decoder",
     NS_PNGDECODER_CID,
     "@mozilla.org/image/decoder;2?type=image/x-png",
     nsPNGDecoderConstructor, },

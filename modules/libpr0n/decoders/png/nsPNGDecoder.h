@@ -53,8 +53,6 @@ public:
   nsPNGDecoder();
   virtual ~nsPNGDecoder();
 
-  inline nsresult ProcessData(unsigned char *data, PRUint32 count, PRUint32 *readCount);
-
 public:
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<gfxIImageFrame> mFrame;
@@ -66,6 +64,7 @@ public:
   PRUint8 *colorLine, *alphaLine;
   PRUint8 *interlacebuf;
   PRUint32 ibpr;
+  PRPackedBool mError;
 };
 
 #endif // nsPNGDecoder_h__
