@@ -129,7 +129,7 @@
 
       <constructor>
       <![CDATA[
-        this._configureButtons(this.getAttribute("buttons"));
+        this._configureButtons(this.buttons);
 
         // listen for when window is closed via native close buttons
         window.addEventListener("close", this._closeHandler, false);
@@ -228,12 +228,8 @@
               shown[list[i].replace(/ /g, "")] = true;
             
             // hide/show the buttons we want
-            for (dlgtype in shown) {
-              if (shown[dlgtype])
-                buttons[dlgtype].hidden = false;
-              else
-                buttons[dlgtype].hidden = true;
-            }
+            for (dlgtype in buttons) 
+              buttons[dlgtype].hidden = !shown[dlgtype];
           }
         ]]>
         </body>
