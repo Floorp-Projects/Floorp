@@ -1018,7 +1018,7 @@ NS_IMETHODIMP nsMsgFilterList::MatchOrChangeFilterTarget(const char *oldFolderUr
   nsXPIDLCString folderUri;
   for (PRUint32 index = 0; index < numFilters; index++)
   {
-    rv = m_filters->QueryElementAt(index, NS_GET_IID(nsIMsgFilter), (void **)getter_AddRefs(filter));
+    filter = do_QueryElementAt(m_filters, index, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsISupportsArray> filterActionList;
@@ -1028,8 +1028,8 @@ NS_IMETHODIMP nsMsgFilterList::MatchOrChangeFilterTarget(const char *oldFolderUr
 
     for (PRUint32 actionIndex =0; actionIndex < numActions; actionIndex++)
     {
-      nsCOMPtr<nsIMsgRuleAction> filterAction;
-      filterActionList->QueryElementAt(actionIndex, NS_GET_IID(nsIMsgRuleAction), (void **)getter_AddRefs(filterAction));
+      nsCOMPtr<nsIMsgRuleAction> filterAction =
+          do_QueryElementAt(filterActionList, actionIndex);
       nsMsgRuleActionType actionType;
       if (filterAction)
         filterAction->GetType(&actionType);
@@ -1085,13 +1085,11 @@ nsresult nsMsgFilterList::ComputeArbitraryHeaders()
     rv = m_filters->Count(&numFilters);
     NS_ENSURE_SUCCESS(rv,rv);
     nsCOMPtr <nsIMsgFilter> filter;
-    nsCOMPtr <nsISupports> filterSupports;
     nsMsgSearchAttribValue attrib;
     nsXPIDLCString arbitraryHeader;
     for (PRUint32 index = 0; index < numFilters; index++)
     {
-      filterSupports = getter_AddRefs(m_filters->ElementAt(index));
-      filter = do_QueryInterface(filterSupports, &rv);
+      filter = do_QueryElementAt(m_filters, index, &rv);
       if (NS_SUCCEEDED(rv) && filter)
       {
         nsCOMPtr <nsISupportsArray> searchTerms;

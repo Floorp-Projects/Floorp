@@ -431,10 +431,9 @@ nsresult nsMsgDownloadAllNewsgroups::AdvanceToNextServer(PRBool *done)
 
   while (serverIndex < numServers)
   {
-    nsCOMPtr <nsISupports> serverSupports = getter_AddRefs(m_allServers->ElementAt(serverIndex));
+    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryElementAt(m_allServers, serverIndex);
     serverIndex++;
 
-    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverSupports);
     nsCOMPtr <nsINntpIncomingServer> newsServer = do_QueryInterface(server);
     if (!newsServer) // we're only looking for news servers
       continue;

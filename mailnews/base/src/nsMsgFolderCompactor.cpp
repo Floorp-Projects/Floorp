@@ -172,8 +172,8 @@ NS_IMETHODIMP nsFolderCompactState::CompactAll(nsISupportsArray *aArrayOfFolders
     m_offlineFolderArray = do_QueryInterface(aOfflineFolderArray);
 
   m_folderIndex = 0;
-  nsCOMPtr<nsISupports> supports = getter_AddRefs(m_folderArray->ElementAt(m_folderIndex));
-  nsCOMPtr<nsIMsgFolder> firstFolder = do_QueryInterface(supports, &rv);
+  nsCOMPtr<nsIMsgFolder> firstFolder = do_QueryElementAt(m_folderArray,
+                                                         m_folderIndex, &rv);
 
   if (NS_SUCCEEDED(rv) && firstFolder)
     Compact(firstFolder, aMsgWindow);   //start with first folder from here.
@@ -437,8 +437,8 @@ nsFolderCompactState::CompactNextFolder()
    {
      if (m_compactOfflineAlso)
      {
-       nsCOMPtr<nsISupports> supports = getter_AddRefs(m_folderArray->ElementAt(m_folderIndex-1));
-       nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+       nsCOMPtr<nsIMsgFolder> folder = do_QueryElementAt(m_folderArray,
+                                                         m_folderIndex-1, &rv);
        if (NS_SUCCEEDED(rv) && folder)
          folder->CompactAllOfflineStores(m_window, m_offlineFolderArray);
      }
@@ -446,8 +446,8 @@ nsFolderCompactState::CompactNextFolder()
        return rv;
        
    } 
-   nsCOMPtr<nsISupports> supports = getter_AddRefs(m_folderArray->ElementAt(m_folderIndex));
-   nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+   nsCOMPtr<nsIMsgFolder> folder = do_QueryElementAt(m_folderArray,
+                                                     m_folderIndex, &rv);
 
    if (NS_SUCCEEDED(rv) && folder)
      rv = Compact(folder, m_window);                    

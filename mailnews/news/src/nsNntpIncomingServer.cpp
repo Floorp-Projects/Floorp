@@ -438,7 +438,6 @@ nsNntpIncomingServer::CloseCachedConnections()
 {
   nsresult rv;
   PRUint32 cnt;
-  nsCOMPtr<nsISupports> aSupport;
   nsCOMPtr<nsINNTPProtocol> connection;
 
   // iterate through the connection cache and close the connections.
@@ -448,8 +447,7 @@ nsNntpIncomingServer::CloseCachedConnections()
     if (NS_FAILED(rv)) return rv;
     for (PRUint32 i = 0; i < cnt; i++) 
 	  {
-      aSupport = getter_AddRefs(m_connectionCache->ElementAt(0));
-      connection = do_QueryInterface(aSupport);
+      connection = do_QueryElementAt(m_connectionCache, 0);
 		  if (connection)
       {
     	  rv = connection->CloseConnection();
@@ -547,7 +545,6 @@ nsNntpIncomingServer::GetNntpConnection(nsIURI * aUri, nsIMsgWindow *aMsgWindow,
   *aNntpConnection = nsnull;
   // iterate through the connection cache for a connection that can handle this url.
   PRUint32 cnt;
-  nsCOMPtr<nsISupports> aSupport;
 
   rv = m_connectionCache->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
@@ -556,8 +553,7 @@ nsNntpIncomingServer::GetNntpConnection(nsIURI * aUri, nsIMsgWindow *aMsgWindow,
 #endif
   for (PRUint32 i = 0; i < cnt && isBusy; i++) 
   {
-    aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
-    connection = do_QueryInterface(aSupport);
+    connection = do_QueryElementAt(m_connectionCache, i);
     if (connection)
         rv = connection->GetIsBusy(&isBusy);
     if (NS_FAILED(rv)) 

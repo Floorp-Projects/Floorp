@@ -481,9 +481,8 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
 
   while (cnt > 0 && !urlRun && keepGoing)
   {
-    nsCOMPtr<nsISupports> aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
-    nsCOMPtr<nsIImapUrl> aImapUrl(do_QueryInterface(aSupport, &rv));
-    nsCOMPtr<nsIMsgMailNewsUrl> aMailNewsUrl(do_QueryInterface(aSupport, &rv));
+    nsCOMPtr<nsIImapUrl> aImapUrl(do_QueryElementAt(m_urlQueue, 0, &rv));
+    nsCOMPtr<nsIMsgMailNewsUrl> aMailNewsUrl(do_QueryInterface(aImapUrl, &rv));
     
     PRBool removeUrlFromQueue = PR_FALSE;
     if (aImapUrl)
@@ -538,8 +537,7 @@ nsImapIncomingServer::AbortQueuedUrls()
   
   while (cnt > 0)
   {
-    nsCOMPtr<nsISupports> aSupport(getter_AddRefs(m_urlQueue->ElementAt(cnt - 1)));
-    nsCOMPtr<nsIImapUrl> aImapUrl(do_QueryInterface(aSupport, &rv));
+    nsCOMPtr<nsIImapUrl> aImapUrl(do_QueryElementAt(m_urlQueue, cnt - 1, &rv));
     PRBool removeUrlFromQueue = PR_FALSE;
     
     if (aImapUrl)
@@ -691,14 +689,12 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
 
   *aImapConnection = nsnull;
 	// iterate through the connection cache for a connection that can handle this url.
-  nsCOMPtr<nsISupports> aSupport;
   PRBool userCancelled = PR_FALSE;
 
   // loop until we find a connection that can run the url, or doesn't have to wait?
   for (PRUint32 i = 0; i < cnt && !canRunUrlImmediately && !canRunButBusy; i++) 
   {
-    aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
-    connection = do_QueryInterface(aSupport);
+    connection = do_QueryElementAt(m_connectionCache, i);
     if (connection)
     {
       if (ConnectionTimeOut(connection))
@@ -841,7 +837,6 @@ NS_IMETHODIMP nsImapIncomingServer::CloseConnectionForFolder(nsIMsgFolder *aMsgF
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsIImapProtocol> connection;
-    nsCOMPtr<nsISupports> aSupport;
     PRBool isBusy = PR_FALSE, isInbox = PR_FALSE;
     PRUint32 cnt = 0;
     nsXPIDLCString inFolderName;
@@ -859,8 +854,7 @@ NS_IMETHODIMP nsImapIncomingServer::CloseConnectionForFolder(nsIMsgFolder *aMsgF
     
     for (PRUint32 i=0; i < cnt; i++)
     {
-        aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
-        connection = do_QueryInterface(aSupport);
+        connection = do_QueryElementAt(m_connectionCache, i);
         if (connection)
         {
             rv = connection->GetSelectedMailboxName(getter_Copies(connectionFolderName));
@@ -882,7 +876,6 @@ NS_IMETHODIMP nsImapIncomingServer::ResetConnection(const char* folderName)
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsIImapProtocol> connection;
-    nsCOMPtr<nsISupports> aSupport;
     PRBool isBusy = PR_FALSE, isInbox = PR_FALSE;
     PRUint32 cnt = 0;
     nsXPIDLCString curFolderName;
@@ -894,8 +887,7 @@ NS_IMETHODIMP nsImapIncomingServer::ResetConnection(const char* folderName)
     
     for (PRUint32 i=0; i < cnt; i++)
     {
-        aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
-        connection = do_QueryInterface(aSupport);
+        connection = do_QueryElementAt(m_connectionCache, i);
         if (connection)
         {
             rv = connection->GetSelectedMailboxName(getter_Copies(curFolderName));
@@ -976,15 +968,13 @@ nsImapIncomingServer::CloseCachedConnections()
   
   // iterate through the connection cache closing open connections.
   PRUint32 cnt;
-  nsCOMPtr<nsISupports> aSupport;
   
   nsresult rv = m_connectionCache->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   
   for (PRUint32 i = cnt; i>0; i--)
   {
-    aSupport = getter_AddRefs(m_connectionCache->ElementAt(i-1));
-    connection = do_QueryInterface(aSupport);
+    connection = do_QueryElementAt(m_connectionCache, i-1);
     if (connection)
       connection->TellThreadToDie(PR_TRUE);
   }
@@ -2488,14 +2478,12 @@ NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIMsgFolder *aImapFo
   // iterate through the connection cache for a connection that is loading
   // a message in this folder and should be pseudo-interrupted.
   PRUint32 cnt;
-  nsCOMPtr<nsISupports> aSupport;
   
   rv = m_connectionCache->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   for (PRUint32 i = 0; i < cnt; i++) 
   {	
-    aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
-    connection = do_QueryInterface(aSupport);
+    connection = do_QueryElementAt(m_connectionCache, i);
     if (connection)
       rv = connection->PseudoInterruptMsgLoad(aImapFolder, aMsgWindow, interrupted);
   }
@@ -2738,13 +2726,11 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
   m_urlQueue->Count(&cnt);
   if (cnt > 0)
   {
-    nsCOMPtr<nsISupports> aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
-    nsCOMPtr<nsIImapUrl> aImapUrl(do_QueryInterface(aSupport, &rv));
+    nsCOMPtr<nsIImapUrl> aImapUrl(do_QueryElementAt(m_urlQueue, 0, &rv));
     
     if (aImapUrl)
     {
-      nsISupports *aConsumer = (nsISupports*)m_urlConsumers.ElementAt(0);
-      NS_IF_ADDREF(aConsumer);
+      nsCOMPtr<nsISupports> aConsumer = (nsISupports*)m_urlConsumers.ElementAt(0);
       
       nsCOMPtr <nsIImapProtocol>  protocolInstance ;
       rv = CreateImapConnection(aEventQueue, aImapUrl, getter_AddRefs(protocolInstance));
@@ -2762,8 +2748,6 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
         m_urlQueue->RemoveElementAt(0);
         m_urlConsumers.RemoveElementAt(0);
       }
-      
-      NS_IF_RELEASE(aConsumer);
     }    
   }
   else
@@ -3346,15 +3330,13 @@ nsImapIncomingServer::GetNumIdleConnections(PRInt32 *aNumIdleConnections)
   PR_CEnterMonitor(this);
   
   PRUint32 cnt;
-  nsCOMPtr<nsISupports> aSupport;
   
   rv = m_connectionCache->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   // loop counting idle connections
   for (PRUint32 i = 0; i < cnt; i++) 
   {
-    aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
-    connection = do_QueryInterface(aSupport);
+    connection = do_QueryElementAt(m_connectionCache, i);
     if (connection)
     {
       rv = connection->IsBusy(&isBusy, &isInboxConnection);

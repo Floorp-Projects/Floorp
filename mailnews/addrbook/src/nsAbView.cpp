@@ -1074,9 +1074,7 @@ nsresult nsAbView::ReselectCards(nsISupportsArray *cards, nsIAbCard *indexCard)
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISupports> cardSupports;
-    cardSupports = getter_AddRefs(cards->ElementAt(i));
-    nsCOMPtr <nsIAbCard> card = do_QueryInterface(cardSupports);
+    nsCOMPtr <nsIAbCard> card = do_QueryElementAt(cards, i);
     if (card) {
       PRInt32 index = FindIndexForCard(card);
       if (index != CARD_NOT_FOUND) {
@@ -1198,8 +1196,7 @@ NS_IMETHODIMP nsAbView::GetSelectedAddresses(nsISupportsArray **_retval)
       mailListAddresses->Count(&mailListCount);	
 
       for (PRUint32 j = 0; j < mailListCount; j++) {
-        nsCOMPtr<nsISupports> item = getter_AddRefs(mailListAddresses->ElementAt(j));
-        nsCOMPtr<nsIAbCard> mailListCard = do_QueryInterface(item, &rv);
+        nsCOMPtr<nsIAbCard> mailListCard = do_QueryElementAt(mailListAddresses, j, &rv);
         NS_ENSURE_SUCCESS(rv,rv);
 
         rv = mailListCard->GetPrimaryEmail(getter_Copies(primaryEmail));

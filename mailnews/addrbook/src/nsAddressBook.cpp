@@ -1664,9 +1664,7 @@ nsresult nsAddressBook::AppendLDIFForMailList(nsIAbCard *aCard, nsACString &aRes
     if (total) {
       PRUint32 i;
       for (i = 0; i < total; i++) {
-        nsCOMPtr <nsISupports> item = getter_AddRefs(addresses->ElementAt(i));
-        
-        nsCOMPtr <nsIAbCard> listCard = do_QueryInterface(item, &rv);
+        nsCOMPtr <nsIAbCard> listCard = do_QueryElementAt(addresses, i, &rv);
         NS_ENSURE_SUCCESS(rv,rv);
 
         rv = AppendDNForCard("member", listCard, aResult);

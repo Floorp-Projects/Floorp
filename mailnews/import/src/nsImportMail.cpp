@@ -420,7 +420,6 @@ NS_IMETHODIMP nsImportGenericMail::WantsProgress(PRBool *_retval)
 	PRBool			result = PR_FALSE;
 
 	if (m_pMailboxes) {
-		nsISupports *	pSupports;
 		PRUint32		i;
 		PRBool			import;
 		PRUint32		count = 0;
@@ -430,20 +429,17 @@ NS_IMETHODIMP nsImportGenericMail::WantsProgress(PRBool *_retval)
 		rv = m_pMailboxes->Count( &count);
 		
 		for (i = 0; i < count; i++) {
-			pSupports = m_pMailboxes->ElementAt( i);
-			if (pSupports) {
-				nsCOMPtr<nsISupports> interface( dont_AddRef( pSupports));
-				nsCOMPtr<nsIImportMailboxDescriptor> box( do_QueryInterface( pSupports));
-				if (box) {
-					import = PR_FALSE;
-					size = 0;
-					rv = box->GetImport( &import);
-					if (import) {
-						rv = box->GetSize( &size);
-						result = PR_TRUE;
-					}
-					totalSize += size;
+			nsCOMPtr<nsIImportMailboxDescriptor> box =
+				do_QueryElementAt(m_pMailboxes, i);
+			if (box) {
+				import = PR_FALSE;
+				size = 0;
+				rv = box->GetImport( &import);
+				if (import) {
+					rv = box->GetSize( &size);
+					result = PR_TRUE;
 				}
+				totalSize += size;
 			}
 		}
 
@@ -460,19 +456,15 @@ NS_IMETHODIMP nsImportGenericMail::WantsProgress(PRBool *_retval)
 void nsImportGenericMail::GetMailboxName( PRUint32 index, nsISupportsString *pStr)
 {
 	if (m_pMailboxes) {
-		nsISupports *pSupports = m_pMailboxes->ElementAt( index);
-		if (pSupports) {
-			nsCOMPtr<nsISupports> iFace( dont_AddRef( pSupports));
-			nsCOMPtr<nsIImportMailboxDescriptor> box( do_QueryInterface( pSupports));
-			if (box) {
-                nsXPIDLString name;
-                box->GetDisplayName(getter_Copies(name));
-                if (!name.IsEmpty()) {
-                    pStr->SetData(name);
-                }
+		nsCOMPtr<nsIImportMailboxDescriptor> box(do_QueryElementAt(m_pMailboxes, index));
+		if (box) {
+			nsXPIDLString name;
+			box->GetDisplayName(getter_Copies(name));
+			if (!name.IsEmpty()) {
+				pStr->SetData(name);
 			}
 		}
-	}		
+	}
 }
 
 NS_IMETHODIMP nsImportGenericMail::BeginImport(nsISupportsString *successLog, nsISupportsString *errorLog, PRBool isAddrLocHome, PRBool *_retval)
@@ -731,7 +723,6 @@ ImportMailThread( void *stuff)
 	PRUint32	count = 0;
 	rv = pData->boxes->Count( &count);
 	
-	nsISupports *	pSupports;
 	PRUint32		i;
 	PRBool			import;
 	PRUint32		size;	
@@ -779,132 +770,129 @@ ImportMailThread( void *stuff)
   // we combine both good and bad import status into one string (in var 'success').
 
 	for (i = 0; (i < count) && !(pData->abort); i++) {
-		pSupports = pData->boxes->ElementAt( i);
-		if (pSupports) {
-			nsCOMPtr<nsISupports> iFace( dont_AddRef( pSupports));
-			nsCOMPtr<nsIImportMailboxDescriptor> box( do_QueryInterface( pSupports));
-			if (box) {
-				pData->currentMailbox = i;
+		nsCOMPtr<nsIImportMailboxDescriptor> box =
+			do_QueryElementAt(pData->boxes, i);
+		if (box) {
+			pData->currentMailbox = i;
 
-				import = PR_FALSE;
-				size = 0;
-				rv = box->GetImport( &import);
-				if (import)
-					rv = box->GetSize( &size);
-				rv = box->GetDepth( &newDepth);
-				if (newDepth > depth) {
+			import = PR_FALSE;
+			size = 0;
+			rv = box->GetImport( &import);
+			if (import)
+				rv = box->GetSize( &size);
+			rv = box->GetDepth( &newDepth);
+			if (newDepth > depth) {
           // OK, we are going to add a subfolder under the last/previous folder we processed, so
           // find this folder (stored in 'lastName') who is going to be the new parent folder.
-					IMPORT_LOG1( "* Finding folder for child named: %s\n", lastName.get());
-					rv = curProxy->GetChildNamed( lastName.get(), getter_AddRefs( subFolder));
-					if (NS_FAILED( rv)) {
-						nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.get(), &success);
-						pData->fatalError = PR_TRUE;
-						break;
-					}
-
-					rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder), 
-													subFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
-					if (NS_FAILED( rv)) {
-						nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error, bundle);
-						pData->fatalError = PR_TRUE;
-						break;
-					}
-
-          // Make sure this new parent folder obj has the correct subfolder list so far.
-          rv = curProxy->GetSubFolders(getter_AddRefs(enumerator));
-
-					IMPORT_LOG1( "Created proxy for new subFolder: 0x%lx\n", (long) rv);
-				}
-				else if (newDepth < depth) {
-					rv = NS_OK;
-					while ((newDepth < depth) && NS_SUCCEEDED( rv)) {
-						nsCOMPtr<nsIFolder> parFolder;
-						curProxy->GetParent( getter_AddRefs( parFolder));
-						rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
-														parFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
-						depth--;
-					}
-					if (NS_FAILED( rv)) {
-						nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error, bundle);
-						pData->fatalError = PR_TRUE;
-						break;
-					}
-				}
-				depth = newDepth;
-				pName = nsnull;
-				box->GetDisplayName( &pName);
-				if (pName) {
-					lastName = pName;
-					nsCRT::free( pName);
-				}
-				else
-					lastName.Assign(NS_LITERAL_STRING("Unknown!"));
-				
-				exists = PR_FALSE;
-				rv = curProxy->ContainsChildNamed( lastName.get(), &exists);
-				if (exists) {
-					nsXPIDLString subName;
-					curProxy->GenerateUniqueSubfolderName( lastName.get(), nsnull, getter_Copies(subName));
-					if (!subName.IsEmpty()) 
-                        lastName.Assign(subName);
-				}
-				
-				IMPORT_LOG1( "* Creating new import folder: %s\n", lastName.get());
-
-				rv = curProxy->CreateSubfolder( lastName.get(),nsnull);
-				
-				IMPORT_LOG1( "New folder created, rv: 0x%lx\n", (long) rv);
-				if (NS_SUCCEEDED( rv)) {
-					rv = curProxy->GetChildNamed( lastName.get(), getter_AddRefs( subFolder));
-					IMPORT_LOG1( "GetChildNamed for new folder returned rv: 0x%lx\n", (long) rv);
-					if (NS_SUCCEEDED( rv)) {
-						newFolder = do_QueryInterface( subFolder);
-						if (newFolder) {
-							newFolder->GetPath( getter_AddRefs( outBox));
-							IMPORT_LOG0( "Got path for newly created folder\n");
-						}
-						else {
-							IMPORT_LOG0( "Newly created folder not found\n");
-						}
-					}
-				}
-				
+				IMPORT_LOG1( "* Finding folder for child named: %s\n", lastName.get());
+				rv = curProxy->GetChildNamed( lastName.get(), getter_AddRefs( subFolder));
 				if (NS_FAILED( rv)) {
-					nsImportGenericMail::ReportError( IMPORT_ERROR_MB_CREATE, lastName.get(), &success);
+					nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.get(), &success);
+					pData->fatalError = PR_TRUE;
+					break;
 				}
 
-				if (size && import && newFolder && outBox && NS_SUCCEEDED( rv)) {
-					PRBool fatalError = PR_FALSE;
-					pData->currentSize = size;
-					PRUnichar *pSuccess = nsnull;
-					PRUnichar *pError = nsnull;
-					rv = pData->mailImport->ImportMailbox( box, outBox, &pError, &pSuccess, &fatalError);
-					if (pError) {
-						error.Append( pError);
-						nsCRT::free( pError);
-					}
-					if (pSuccess) {
-						success.Append( pSuccess);
-						nsCRT::free( pSuccess);
-					}
+				rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder), 
+												subFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
+				if (NS_FAILED( rv)) {
+					nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error, bundle);
+					pData->fatalError = PR_TRUE;
+					break;
+				}
 
-					pData->currentSize = 0;
-					pData->currentTotal += size;
+				// Make sure this new parent folder obj has the correct subfolder list so far.
+				rv = curProxy->GetSubFolders(getter_AddRefs(enumerator));
+
+				IMPORT_LOG1( "Created proxy for new subFolder: 0x%lx\n", (long) rv);
+			}
+			else if (newDepth < depth) {
+				rv = NS_OK;
+				while ((newDepth < depth) && NS_SUCCEEDED( rv)) {
+					nsCOMPtr<nsIFolder> parFolder;
+					curProxy->GetParent( getter_AddRefs( parFolder));
+					rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIMsgFolder),
+													parFolder, PROXY_SYNC | PROXY_ALWAYS, getter_AddRefs( curProxy));
+					depth--;
+				}
+				if (NS_FAILED( rv)) {
+					nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error, bundle);
+					pData->fatalError = PR_TRUE;
+					break;
+				}
+			}
+			depth = newDepth;
+			pName = nsnull;
+			box->GetDisplayName( &pName);
+			if (pName) {
+				lastName = pName;
+				nsCRT::free( pName);
+			}
+			else
+				lastName.Assign(NS_LITERAL_STRING("Unknown!"));
+				
+			exists = PR_FALSE;
+			rv = curProxy->ContainsChildNamed( lastName.get(), &exists);
+			if (exists) {
+				nsXPIDLString subName;
+				curProxy->GenerateUniqueSubfolderName( lastName.get(), nsnull, getter_Copies(subName));
+				if (!subName.IsEmpty()) 
+					lastName.Assign(subName);
+			}
+				
+			IMPORT_LOG1( "* Creating new import folder: %s\n", lastName.get());
+
+			rv = curProxy->CreateSubfolder( lastName.get(),nsnull);
+				
+			IMPORT_LOG1( "New folder created, rv: 0x%lx\n", (long) rv);
+			if (NS_SUCCEEDED( rv)) {
+				rv = curProxy->GetChildNamed( lastName.get(), getter_AddRefs( subFolder));
+				IMPORT_LOG1( "GetChildNamed for new folder returned rv: 0x%lx\n", (long) rv);
+				if (NS_SUCCEEDED( rv)) {
+					newFolder = do_QueryInterface( subFolder);
+					if (newFolder) {
+						newFolder->GetPath( getter_AddRefs( outBox));
+						IMPORT_LOG0( "Got path for newly created folder\n");
+					}
+					else {
+						IMPORT_LOG0( "Newly created folder not found\n");
+					}
+				}
+			}
+				
+			if (NS_FAILED( rv)) {
+				nsImportGenericMail::ReportError( IMPORT_ERROR_MB_CREATE, lastName.get(), &success);
+			}
+
+			if (size && import && newFolder && outBox && NS_SUCCEEDED( rv)) {
+				PRBool fatalError = PR_FALSE;
+				pData->currentSize = size;
+				PRUnichar *pSuccess = nsnull;
+				PRUnichar *pError = nsnull;
+				rv = pData->mailImport->ImportMailbox( box, outBox, &pError, &pSuccess, &fatalError);
+				if (pError) {
+					error.Append( pError);
+					nsCRT::free( pError);
+				}
+				if (pSuccess) {
+					success.Append( pSuccess);
+					nsCRT::free( pSuccess);
+				}
+
+				pData->currentSize = 0;
+				pData->currentTotal += size;
 					
-					outBox->CloseStream();
+				outBox->CloseStream();
 
           // OK, we've copied the actual folder/file over if the folder size is not 0
           // (ie, the msg summary is no longer valid) so close the msg database so that
           // when the folder is reopened the folder db can be reconstructed (which
           // validates msg summary and forces folder to be reparsed).
-          newFolder->ForceDBClosed();
+				newFolder->ForceDBClosed();
 
-					if (fatalError) {
-						IMPORT_LOG1( "*** ImportMailbox returned fatalError, mailbox #%d\n", (int) i);
-						pData->fatalError = PR_TRUE;
-						break;
-					}
+				if (fatalError) {
+					IMPORT_LOG1( "*** ImportMailbox returned fatalError, mailbox #%d\n", (int) i);
+					pData->fatalError = PR_TRUE;
+					break;
 				}
 			}
 		}

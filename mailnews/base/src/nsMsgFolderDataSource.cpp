@@ -701,8 +701,7 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
   rv = aSources->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   for (PRUint32 i = 0; i < cnt; i++) {
-    nsCOMPtr<nsISupports> source = getter_AddRefs(aSources->ElementAt(i));
-		folder = do_QueryInterface(source, &rv);
+		folder = do_QueryElementAt(aSources, i, &rv);
     if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- folder commands are always enabled
       if (!((aCommand == kNC_Delete) ||
@@ -745,8 +744,7 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
   if (NS_FAILED(rv)) return rv;
 
   for ( ; i < cnt; i++) {
-    supports  = getter_AddRefs(aSources->ElementAt(i));
-    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+    nsCOMPtr<nsIMsgFolder> folder = do_QueryElementAt(aSources, i, &rv);
     if (NS_SUCCEEDED(rv)) 
     {
       if ((aCommand == kNC_Delete))
@@ -799,8 +797,7 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       }
       else if ((aCommand == kNC_Rename))
       {
-        nsCOMPtr<nsISupports> elem = getter_AddRefs(aArguments->ElementAt(0));
-        nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(elem, &rv);
+        nsCOMPtr<nsIRDFLiteral> literal = do_QueryElementAt(aArguments, 0, &rv);
         if(NS_SUCCEEDED(rv))
 		{
           nsXPIDLString name;
@@ -1991,8 +1988,7 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 		return NS_ERROR_FAILURE;
 
 
-	nsCOMPtr<nsISupports> srcFolderSupports = getter_AddRefs(arguments->ElementAt(0));
-	nsCOMPtr<nsIMsgFolder> srcFolder(do_QueryInterface(srcFolderSupports));
+	nsCOMPtr<nsIMsgFolder> srcFolder(do_QueryElementAt(arguments, 0));
 	if(!srcFolder)
 		return NS_ERROR_FAILURE;
 
@@ -2052,12 +2048,10 @@ nsresult nsMsgFolderDataSource::DoFolderCopyToFolder(nsIMsgFolder *dstFolder, ns
 	else    //within the same server therefore no need for copy service 
 	{
 
-	  nsCOMPtr<nsISupports> supports;
 	  nsCOMPtr<nsIMsgFolder> msgFolder;
       for (PRUint32 i=0;i< itemCount; i++)
 	  {
-        supports = getter_AddRefs(arguments->ElementAt(i));
-		msgFolder = do_QueryInterface(supports,&rv);
+		msgFolder = do_QueryElementAt(arguments, i, &rv);
 		if (NS_SUCCEEDED(rv))
 		{
 			rv = dstFolder->CopyFolder(msgFolder, isMoveFolder , msgWindow, nsnull);
@@ -2116,8 +2110,7 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
 nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArray *arguments)
 {
 	nsresult rv = NS_OK;
-	nsCOMPtr<nsISupports> elem = getter_AddRefs(arguments->ElementAt(0));
-	nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(elem, &rv);
+	nsCOMPtr<nsIRDFLiteral> literal = do_QueryElementAt(arguments, 0, &rv);
 	if(NS_SUCCEEDED(rv))
 	{
 		nsXPIDLString name;

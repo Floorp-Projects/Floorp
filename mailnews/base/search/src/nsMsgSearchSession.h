@@ -47,6 +47,7 @@
 #include "nsITimer.h"
 #include "nsMsgSearchArray.h"
 #include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsWeakReference.h"
 
 class nsMsgSearchAdapter;
@@ -83,7 +84,7 @@ protected:
 	nsMsgSearchScopeTermArray m_scopeList;
 	nsCOMPtr <nsISupportsArray> m_termList;
     nsCOMPtr <nsISupportsArray> m_listenerList;
-    nsCOMPtr <nsISupportsArray> m_folderListenerList;
+    nsCOMArray<nsIFolderListener> m_folderListenerList;
 
 	nsMsgResultArray m_resultList;
 

@@ -90,6 +90,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWindowMediator.h"
 #include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIMsgMailSession.h"
@@ -418,7 +419,6 @@ nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorMailSupport *aEditor)
   if (NS_FAILED(aNodeList->Count(&count)))
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsISupports> isupp;
   nsCOMPtr<nsIDOMNode> node;
 
   nsCOMPtr<nsIURI> originalUrl;
@@ -446,17 +446,15 @@ nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorMailSupport *aEditor)
   nsCOMPtr<nsIDOMElement> domElement;
   for (i = 0; i < count; i ++)
   {
-    isupp = getter_AddRefs(aNodeList->ElementAt(i));
-    if (!isupp)
+    node = do_QueryElementAt(aNodeList, i);
+    if (!node)
       continue;
-
-    node = do_QueryInterface(isupp);
     if (IsEmbeddedObjectSafe(originalScheme.get(), originalHost.get(),
                              originalPath.get(), node))
       continue; //Don't need to tag this object, it safe to send it.
     
     //The source of this object should not be sent with the message 
-    domElement = do_QueryInterface(isupp);
+    domElement = do_QueryInterface(node);
     if (domElement)
       domElement->SetAttribute(NS_LITERAL_STRING("moz-do-not-send"), NS_LITERAL_STRING("true"));
   }
@@ -3425,8 +3423,8 @@ nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotifica
   PRUint32 i;
   for (i = 0; i < numListeners;i++)
   {
-    nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mStateListeners->ElementAt(i));
-    nsCOMPtr<nsIMsgComposeStateListener> thisListener = do_QueryInterface(iSupports);
+    nsCOMPtr<nsIMsgComposeStateListener> thisListener =
+      do_QueryElementAt(mStateListeners, i);
     if (thisListener)
     {
       switch (aNotificationType)
@@ -3686,7 +3684,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
     *_retval = nsIAbPreferMailFormat::unknown;
 
   /* First, build an array with original recipients */
-  nsCOMPtr<nsISupportsArray> recipientsList[MAX_OF_RECIPIENT_ARRAY];
+  nsCOMArray<nsMsgRecipient> recipientsList[MAX_OF_RECIPIENT_ARRAY];
 
   nsXPIDLString originalRecipients[MAX_OF_RECIPIENT_ARRAY];
   m_compFields->GetTo(getter_Copies(originalRecipients[0]));
@@ -3707,10 +3705,6 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
       nsXPIDLString addr;
       addressArray->GetCount(&nbrRecipients);
 
-      recipientsList[i] = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
-      if (NS_FAILED(rv))
-        return rv;
-
       for (j = 0; j < nbrRecipients; j ++)
       {
         rv = addressArray->StringAt(j, getter_Copies(addr));
@@ -3725,12 +3719,11 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
         if (!recipient)
            return  NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(recipient);
-
-        rv = recipientsList[i]->AppendElement(recipient);
+        rv = recipientsList[i].AppendObject(recipient) ? NS_OK : NS_ERROR_FAILURE;
         NS_RELEASE(recipient);
         if (NS_FAILED(rv))
           return rv;
-       }
+      }
     }
     else
       return rv;
@@ -3753,7 +3746,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
   {
     nsString dirPath;
     GetABDirectories(kAllDirectoryRoot, addrbookDirArray, PR_TRUE);
-    PRUint32 nbrRecipients;
+    PRInt32 nbrRecipients;
 
     PRUint32 nbrAddressbook;
     addrbookDirArray->Count(&nbrAddressbook);
@@ -3789,12 +3782,12 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
       stillNeedToSearch = PR_FALSE;
       for (i = 0; i < MAX_OF_RECIPIENT_ARRAY; i ++)
       {
-        if (!recipientsList[i])
+        nbrRecipients = recipientsList[i].Count();
+        if (nbrRecipients == 0)
           continue;
-        recipientsList[i]->Count(&nbrRecipients);
-        for (j = 0; j < (PRInt32)nbrRecipients; j ++, recipientsList[i]->Count(&nbrRecipients))
+        for (j = 0; j < nbrRecipients; j++, nbrRecipients = recipientsList[i].Count())
         {
-          nsMsgRecipient* recipient = NS_STATIC_CAST(nsMsgRecipient*, recipientsList[i]->ElementAt(j));
+          nsMsgRecipient* recipient = recipientsList[i][j];
           if (recipient && !recipient->mProcessed)
           {
             /* First check if it's a mailing list */
@@ -3805,8 +3798,8 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
                   PRUint32 nbrAddresses = 0;
                   for (mailListAddresses->Count(&nbrAddresses); nbrAddresses > 0; nbrAddresses --)
                   {
-                    item = getter_AddRefs(mailListAddresses->ElementAt(nbrAddresses - 1));
-                    existingCard = do_QueryInterface(item, &rv);
+                    existingCard = do_QueryElementAt(mailListAddresses,
+                                                     nbrAddresses - 1, &rv);
                     if (NS_FAILED(rv))
                       return rv;
 
@@ -3867,7 +3860,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
                     if (!recipient)
                        return  NS_ERROR_OUT_OF_MEMORY;
                     NS_ADDREF(newRecipient);
-
+                    
                     if (bIsMailList)
                     {
                       //TODO: we must to something to avoid recursivity
@@ -3880,18 +3873,18 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
                       if (NS_SUCCEEDED(rv))
                         recipient->mProcessed = PR_TRUE;
                     }
-                    rv = recipientsList[i]->InsertElementAt(newRecipient, j + 1);
+                    rv = recipientsList[i].InsertObjectAt(newRecipient,
+                                                          j + 1) ? NS_OK : NS_ERROR_FAILURE;
                     NS_RELEASE(newRecipient);
                     if (NS_FAILED(rv))
                       return rv;
                   }
-                  rv = recipientsList[i]->RemoveElementAt(j);
+                  rv = recipientsList[i].RemoveObjectAt(j) ? NS_OK : NS_ERROR_FAILURE;
                  j --;
               }
               else
                 recipient->mProcessed = PR_TRUE;
 
-              NS_RELEASE(recipient);
               continue;
             }
 
@@ -3909,7 +3902,6 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
             }
             else
               stillNeedToSearch = PR_TRUE;
-            NS_RELEASE(recipient);
           }
         }
       }
@@ -3941,15 +3933,14 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
     *_retval = -1;
     for (i = 0; i < MAX_OF_RECIPIENT_ARRAY; i ++)
     {
-      if (!recipientsList[i])
+      PRInt32 nbrRecipients = recipientsList[i].Count();
+      if (nbrRecipients == 0)
         continue;
       recipientsStr.SetLength(0);
-      PRUint32 nbrRecipients;
 
-      recipientsList[i]->Count(&nbrRecipients);
-      for (j = 0; j < (PRInt32)nbrRecipients; j ++)
+      for (j = 0; j < nbrRecipients; j ++)
       {
-        nsMsgRecipient* recipient = NS_STATIC_CAST(nsMsgRecipient*, recipientsList[i]->ElementAt(j));
+        nsMsgRecipient* recipient = recipientsList[i][j];
         if (recipient)
         {          
           /* if we don't have a prefer format for a recipient, check the domain in case we have a format defined for it */
@@ -4000,7 +3991,6 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
             nonHtmlRecipientsStr.Append(recipient->mEmail);
           }
 
-          NS_RELEASE(recipient);
         }
       }
 

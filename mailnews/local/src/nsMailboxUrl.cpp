@@ -97,10 +97,7 @@ static char *nsMailboxGetURI(const char *nativepath)
     PRInt32 i;
     for (i=0; i<count; i++) {
 
-        nsISupports* serverSupports = serverArray->ElementAt(i);
-        nsCOMPtr<nsIMsgIncomingServer> server =
-            do_QueryInterface(serverSupports);
-        NS_RELEASE(serverSupports);
+        nsCOMPtr<nsIMsgIncomingServer> server = do_QueryElementAt(serverArray, i);
 
         if (!server) continue;
 

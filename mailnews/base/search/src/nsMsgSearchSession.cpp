@@ -724,21 +724,13 @@ nsMsgSearchSession::EnableFolderNotifications(PRBool aEnable)
 NS_IMETHODIMP
 nsMsgSearchSession::AddFolderListener(nsIFolderListener *listener)
 {
-    nsresult rv = NS_OK;
-    if (!m_folderListenerList)
-        rv = NS_NewISupportsArray(getter_AddRefs(m_folderListenerList));
-
-    if (NS_SUCCEEDED(rv) && m_folderListenerList)
-        m_folderListenerList->AppendElement(listener);
-
-    return rv;
+    return m_folderListenerList.AppendObject(listener) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsMsgSearchSession::RemoveFolderListener(nsIFolderListener *listener)
 {
-    if (m_folderListenerList)
-        m_folderListenerList->RemoveElement(listener);
+    m_folderListenerList.RemoveObject(listener);
 
     return NS_OK;
 }
@@ -748,18 +740,11 @@ NS_IMETHODIMP
 nsMsgSearchSession::OnItemEvent(nsIFolder *aFolder,
                                 nsIAtom *aEvent)
 {
-	nsresult rv;
-	PRUint32 count;
+	PRInt32 count = m_folderListenerList.Count();
 
-	NS_ASSERTION(m_folderListenerList, "no listeners");
-	if (!m_folderListenerList) return NS_ERROR_FAILURE;
-
-	rv = m_folderListenerList->Count(&count);
-	if (NS_FAILED(rv)) return rv;
-
-	for(PRUint32 i = 0; i < count; i++)
+	for(PRInt32 i = 0; i < count; i++)
 	{
-		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)m_folderListenerList->ElementAt(i));
+		nsIFolderListener* listener = m_folderListenerList[i];
 		if(listener)
 			listener->OnItemEvent(aFolder, aEvent);
 	}

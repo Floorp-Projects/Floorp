@@ -1521,8 +1521,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewListCardAndAddToDB(nsIAbDirectory *aList,
 
     PRUint32 i;
   for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISupports> support = getter_AddRefs(addressList->ElementAt(i));
-    nsCOMPtr<nsIAbCard> currentCard = do_QueryInterface(support, &rv);
+    nsCOMPtr<nsIAbCard> currentCard = do_QueryElementAt(addressList, i, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
     PRBool equals;
@@ -1668,8 +1667,7 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
         total = 0;
         for (i = 0; i < count; i++)
         {
-            nsCOMPtr<nsISupports> pSupport = getter_AddRefs(pAddressLists->ElementAt(i));
-            nsCOMPtr<nsIAbCard> pCard(do_QueryInterface(pSupport, &err));
+            nsCOMPtr<nsIAbCard> pCard(do_QueryElementAt(pAddressLists, i, &err));
             
             if (NS_FAILED(err))
                 continue;
@@ -1684,8 +1682,7 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
         PRUint32 pos;
         for (i = 0; i < count; i++)
         {
-            nsCOMPtr<nsISupports> pSupport = getter_AddRefs(pAddressLists->ElementAt(i));
-            nsCOMPtr<nsIAbCard> pCard(do_QueryInterface(pSupport, &err));
+            nsCOMPtr<nsIAbCard> pCard(do_QueryElementAt(pAddressLists, i, &err));
             
             if (NS_FAILED(err))
                 continue;

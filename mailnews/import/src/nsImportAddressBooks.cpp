@@ -507,26 +507,22 @@ NS_IMETHODIMP nsImportGenericAddressBooks::WantsProgress(PRBool *_retval)
 	if (m_pBooks) {
 		PRUint32		count = 0;
 		nsresult 		rv = m_pBooks->Count( &count);
-		nsISupports *	pSupports;
 		PRUint32		i;
 		PRBool			import;
 		PRUint32		size;
 		
 		for (i = 0; i < count; i++) {
-			pSupports = m_pBooks->ElementAt( i);
-			if (pSupports) {
-				nsCOMPtr<nsISupports> interface( dont_AddRef( pSupports));
-				nsCOMPtr<nsIImportABDescriptor> book( do_QueryInterface( pSupports));
-				if (book) {
-					import = PR_FALSE;
-					size = 0;
-					rv = book->GetImport( &import);
-					if (import) {
-						rv = book->GetSize( &size);
-						result = PR_TRUE;
-					}
-					totalSize += size;
+			nsCOMPtr<nsIImportABDescriptor> book =
+				do_QueryElementAt(m_pBooks, i);
+			if (book) {
+				import = PR_FALSE;
+				size = 0;
+				rv = book->GetImport( &import);
+				if (import) {
+					rv = book->GetSize( &size);
+					result = PR_TRUE;
 				}
+				totalSize += size;
 			}
 		}
 
@@ -860,7 +856,6 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 	PRUint32	count = 0;
 	nsresult 	rv = pData->books->Count( &count);
 	
-	nsISupports *				pSupports;
 	PRUint32					i;
 	PRBool						import;
 	PRUint32					size;
@@ -871,90 +866,87 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 	nsString					error;
 
 	for (i = 0; (i < count) && !(pData->abort); i++) {
-		pSupports = pData->books->ElementAt( i);
-		if (pSupports) {
-			nsCOMPtr<nsISupports> interface( dont_AddRef( pSupports));
-			nsCOMPtr<nsIImportABDescriptor> book( do_QueryInterface( pSupports));
-			if (book) {
-				import = PR_FALSE;
-				size = 0;
-				rv = book->GetImport( &import);
-				if (import)
-					rv = book->GetSize( &size);
-				
-				if (size && import) {
-					PRUnichar *pName;
-					book->GetPreferredName( &pName);
-					if (destDB) {
-            pDestDB = destDB;
-					}
-					else {
-						pDestDB = GetAddressBook( pName, PR_TRUE);
-					}
+		nsCOMPtr<nsIImportABDescriptor> book =
+			do_QueryElementAt(pData->books, i);
+		if (book) {
+			import = PR_FALSE;
+			size = 0;
+			rv = book->GetImport( &import);
+			if (import)
+				rv = book->GetSize( &size);
+			
+			if (size && import) {
+				PRUnichar *pName;
+				book->GetPreferredName( &pName);
+				if (destDB) {
+					pDestDB = destDB;
+				}
+				else {
+					pDestDB = GetAddressBook( pName, PR_TRUE);
+				}
 
-          nsCOMPtr<nsIAddrDatabase> proxyAddrDatabase;
-          rv = NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                     NS_GET_IID(nsIAddrDatabase),
-                     pDestDB,
-                     PROXY_SYNC | PROXY_ALWAYS,
-                     getter_AddRefs(proxyAddrDatabase));
-          if (NS_FAILED(rv))
-            return;
+				nsCOMPtr<nsIAddrDatabase> proxyAddrDatabase;
+				rv = NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                                          NS_GET_IID(nsIAddrDatabase),
+                                          pDestDB,
+                                          PROXY_SYNC | PROXY_ALWAYS,
+                                          getter_AddRefs(proxyAddrDatabase));
+				if (NS_FAILED(rv))
+					return;
 
-					PRBool fatalError = PR_FALSE;
-					pData->currentSize = size;
-					if (proxyAddrDatabase) {
-						PRUnichar *pSuccess = nsnull;
-						PRUnichar *pError = nsnull;
+				PRBool fatalError = PR_FALSE;
+				pData->currentSize = size;
+				if (proxyAddrDatabase) {
+					PRUnichar *pSuccess = nsnull;
+					PRUnichar *pError = nsnull;
 
-						/*
-						if (pData->fieldMap) {
-							PRInt32		sz = 0;
-							PRInt32		mapIndex;
-							PRBool		active;
-							pData->fieldMap->GetMapSize( &sz);
-							IMPORT_LOG1( "**** Field Map Size: %d\n", (int) sz);
-							for (PRInt32 i = 0; i < sz; i++) {
-								pData->fieldMap->GetFieldMap( i, &mapIndex);
-								pData->fieldMap->GetFieldActive( i, &active);
-								IMPORT_LOG3( "Field map #%d: index=%d, active=%d\n", (int) i, (int) mapIndex, (int) active);
-							}
-						}
-						*/
-
-						rv = pData->addressImport->ImportAddressBook(	book, 
-																	proxyAddrDatabase, // destination
-																	pData->fieldMap, // fieldmap
-													pData->bAddrLocInput,
-																	&pError,
-																	&pSuccess,
-																	&fatalError);
-						if (pSuccess) {
-							success.Append( pSuccess);
-							nsCRT::free( pSuccess);
-						}
-						if (pError) {
-							error.Append( pError);
-							nsCRT::free( pError);
+					/*
+					if (pData->fieldMap) {
+						PRInt32		sz = 0;
+						PRInt32		mapIndex;
+						PRBool		active;
+						pData->fieldMap->GetMapSize( &sz);
+						IMPORT_LOG1( "**** Field Map Size: %d\n", (int) sz);
+						for (PRInt32 i = 0; i < sz; i++) {
+							pData->fieldMap->GetFieldMap( i, &mapIndex);
+							pData->fieldMap->GetFieldActive( i, &active);
+							IMPORT_LOG3( "Field map #%d: index=%d, active=%d\n", (int) i, (int) mapIndex, (int) active);
 						}
 					}
-					else {
-						nsImportGenericAddressBooks::ReportError( pName, &error);
+					*/
+
+					rv = pData->addressImport->ImportAddressBook(	book, 
+																proxyAddrDatabase, // destination
+																pData->fieldMap, // fieldmap
+																pData->bAddrLocInput,
+																&pError,
+																&pSuccess,
+																&fatalError);
+					if (pSuccess) {
+						success.Append( pSuccess);
+						nsCRT::free( pSuccess);
 					}
+					if (pError) {
+						error.Append( pError);
+						nsCRT::free( pError);
+					}
+				}
+				else {
+					nsImportGenericAddressBooks::ReportError( pName, &error);
+				}
 
-					nsCRT::free( pName);
+				nsCRT::free( pName);
 
-					pData->currentSize = 0;
-					pData->currentTotal += size;
+				pData->currentSize = 0;
+				pData->currentTotal += size;
 					
-					if (!proxyAddrDatabase) {
-						proxyAddrDatabase->Close( PR_TRUE);
-					}
+				if (!proxyAddrDatabase) {
+					proxyAddrDatabase->Close( PR_TRUE);
+				}
 
-					if (fatalError) {
-						pData->fatalError = PR_TRUE;
-						break;
-					}
+				if (fatalError) {
+					pData->fatalError = PR_TRUE;
+					break;
 				}
 			}
 		}

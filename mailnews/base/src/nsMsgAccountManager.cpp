@@ -181,9 +181,6 @@ nsresult nsMsgAccountManager::Init()
   rv = NS_NewISupportsArray(getter_AddRefs(m_accounts));
   if(NS_FAILED(rv)) return rv;
 
-  rv = NS_NewISupportsArray(getter_AddRefs(m_incomingServerListeners));
-  if(NS_FAILED(rv)) return rv;
-
   rv = NS_NewISupportsArray(getter_AddRefs(mFolderListeners));
 
   nsCOMPtr<nsIObserverService> observerService = 
@@ -661,8 +658,7 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
     NS_ENSURE_SUCCESS(rv,rv);
     for (PRUint32 i=0; i< cnt;i++)
     {
-      nsCOMPtr<nsISupports> supports = getter_AddRefs(allDescendents->ElementAt(i));
-      nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+      nsCOMPtr<nsIMsgFolder> folder = do_QueryElementAt(allDescendents, i, &rv);
       folder->ForceDBClosed();
     }
    
@@ -1753,29 +1749,24 @@ nsMsgAccountManager::findAccountByKey(nsISupports* element, void *aData)
 
 NS_IMETHODIMP nsMsgAccountManager::AddIncomingServerListener(nsIIncomingServerListener *serverListener)
 {
-   m_incomingServerListeners->AppendElement(serverListener);
+   m_incomingServerListeners.AppendObject(serverListener);
    return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgAccountManager::RemoveIncomingServerListener(nsIIncomingServerListener *serverListener)
 {
-    m_incomingServerListeners->RemoveElement(serverListener);
+    m_incomingServerListeners.RemoveObject(serverListener);
     return NS_OK;
 }
 
 
 NS_IMETHODIMP nsMsgAccountManager::NotifyServerLoaded(nsIMsgIncomingServer *server)
 {
-	nsresult rv;
-	PRUint32 count;
-	rv = m_incomingServerListeners->Count(&count);
-	if (NS_FAILED(rv)) return rv;
-
+	PRInt32 count = m_incomingServerListeners.Count();
 	
-	for(PRUint32 i = 0; i < count; i++)
+	for(PRInt32 i = 0; i < count; i++)
 	{
-		nsCOMPtr<nsIIncomingServerListener> listener = 
-			getter_AddRefs((nsIIncomingServerListener*)m_incomingServerListeners->ElementAt(i));
+		nsIIncomingServerListener* listener = m_incomingServerListeners[i];
 		listener->OnServerLoaded(server);
 	}
 
@@ -1784,17 +1775,12 @@ NS_IMETHODIMP nsMsgAccountManager::NotifyServerLoaded(nsIMsgIncomingServer *serv
 
 NS_IMETHODIMP nsMsgAccountManager::NotifyServerUnloaded(nsIMsgIncomingServer *server)
 {
-	nsresult rv;
-	PRUint32 count;
-  server->SetFilterList(nsnull); // clear this to cut shutdown leaks. we are always passing valid non-null server here. 
-	rv = m_incomingServerListeners->Count(&count);
-	if (NS_FAILED(rv)) return rv;
-
+	PRInt32 count = m_incomingServerListeners.Count();
+	server->SetFilterList(nsnull); // clear this to cut shutdown leaks. we are always passing valid non-null server here. 
 	
-	for(PRUint32 i = 0; i < count; i++)
+	for(PRInt32 i = 0; i < count; i++)
 	{
-		nsCOMPtr<nsIIncomingServerListener> listener = 
-			getter_AddRefs((nsIIncomingServerListener*)m_incomingServerListeners->ElementAt(i));
+		nsIIncomingServerListener* listener = m_incomingServerListeners[i];
 		listener->OnServerUnloaded(server);
 	}
 
@@ -1803,16 +1789,11 @@ NS_IMETHODIMP nsMsgAccountManager::NotifyServerUnloaded(nsIMsgIncomingServer *se
 
 NS_IMETHODIMP nsMsgAccountManager::NotifyServerChanged(nsIMsgIncomingServer *server)
 {
-	nsresult rv;
-	PRUint32 count;
-	rv = m_incomingServerListeners->Count(&count);
-	if (NS_FAILED(rv)) return rv;
-
+	PRInt32 count = m_incomingServerListeners.Count();
 	
-	for(PRUint32 i = 0; i < count; i++)
+	for(PRInt32 i = 0; i < count; i++)
 	{
-		nsCOMPtr<nsIIncomingServerListener> listener = 
-			getter_AddRefs((nsIIncomingServerListener*)m_incomingServerListeners->ElementAt(i));
+		nsIIncomingServerListener* listener = m_incomingServerListeners[i];
 		listener->OnServerChanged(server);
 	}
 

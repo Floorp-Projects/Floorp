@@ -1226,9 +1226,8 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
             aSupportsArray->Count(&cnt);
             for (PRInt32 i = cnt-1; i >= 0; i--)
             {
-                aSupport = getter_AddRefs(aSupportsArray->ElementAt(i));
+                aFolder = do_QueryElementAt(aSupportsArray, i);
                 aSupportsArray->RemoveElementAt(i);
-                aFolder = do_QueryInterface(aSupport);
                 if (aFolder)
                     trashFolder->PropagateDelete(aFolder, PR_TRUE, msgWindow);
             }
@@ -1321,15 +1320,13 @@ NS_IMETHODIMP nsImapMailFolder::RecursiveCloseActiveConnections(nsIImapIncomingS
   nsresult rv;
   if (mSubFolders)
   {
-      nsCOMPtr<nsISupports> aSupport;
       nsCOMPtr<nsIMsgImapMailFolder> folder;
       mSubFolders->Count(&cnt);
       if (cnt > 0)
       {
           for (i = 0; i < cnt; i++)
           {
-              aSupport = getter_AddRefs(mSubFolders->ElementAt(i));
-              folder = do_QueryInterface(aSupport);
+              folder = do_QueryElementAt(mSubFolders, i);
               if (folder)
                   folder->RecursiveCloseActiveConnections(incomingImapServer);
               nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(folder, &rv);
@@ -1347,15 +1344,13 @@ NS_IMETHODIMP nsImapMailFolder::PrepareToRename()
     PRUint32 cnt = 0, i;
     if (mSubFolders)
     {
-        nsCOMPtr<nsISupports> aSupport;
         nsCOMPtr<nsIMsgImapMailFolder> folder;
         mSubFolders->Count(&cnt);
         if (cnt > 0)
         {
             for (i = 0; i < cnt; i++)
             {
-                aSupport = getter_AddRefs(mSubFolders->ElementAt(i));
-                folder = do_QueryInterface(aSupport);
+                folder = do_QueryElementAt(mSubFolders, i);
                 if (folder)
                     folder->PrepareToRename();
             }
@@ -1829,7 +1824,6 @@ nsImapMailFolder::BuildIdsAndKeyArray(nsISupportsArray* messages,
     nsresult rv = NS_ERROR_NULL_POINTER;
     PRUint32 count = 0;
     PRUint32 i;
-    nsCOMPtr<nsISupports> msgSupports;
 
     if (!messages) return rv;
 
@@ -1839,9 +1833,8 @@ nsImapMailFolder::BuildIdsAndKeyArray(nsISupportsArray* messages,
     // build up message keys.
     for (i = 0; i < count; i++)
     {
-      msgSupports = getter_AddRefs(messages->ElementAt(i));
       nsMsgKey key;
-      nsCOMPtr <nsIMsgDBHdr> msgDBHdr = do_QueryInterface(msgSupports, &rv);
+      nsCOMPtr <nsIMsgDBHdr> msgDBHdr = do_QueryElementAt(messages, i, &rv);
       if (msgDBHdr)
         rv = msgDBHdr->GetMessageKey(&key);
       if (NS_SUCCEEDED(rv))
@@ -1999,8 +1992,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
       deleteMsgs = PR_FALSE;
       for (PRUint32 i=0; i <cnt; i++)
       {
-        nsCOMPtr <nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(i));
-        nsCOMPtr <nsIMsgDBHdr> msgHdr = do_QueryInterface(msgSupports);
+        nsCOMPtr <nsIMsgDBHdr> msgHdr = do_QueryElementAt(messages, i);
         if (msgHdr)
         {
           msgHdr->GetFlags(&flags);
@@ -2086,7 +2078,6 @@ NS_IMETHODIMP
 nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgWindow)
 {
     nsCOMPtr<nsIMsgFolder> curFolder;
-    nsCOMPtr<nsISupports> folderSupport;
     nsCOMPtr<nsIUrlListener> urlListener;
     nsCOMPtr<nsIMsgFolder> trashFolder;
     PRUint32 i, folderCount = 0;
@@ -2157,8 +2148,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
       {
         for (i = 0; i < folderCount; i++)
         {
-          folderSupport = getter_AddRefs(folders->ElementAt(i));
-          curFolder = do_QueryInterface(folderSupport, &rv);
+          curFolder = do_QueryElementAt(folders, i, &rv);
           if (NS_SUCCEEDED(rv))
           {
             urlListener = do_QueryInterface(curFolder);
@@ -4620,11 +4610,8 @@ void nsImapMailFolder::UpdatePendingCounts(PRBool countUnread, PRBool missingAre
       if (!m_copyState->m_isCrossServerOp)
         for (PRUint32 keyIndex=0; keyIndex < m_copyState->m_totalCount; keyIndex++)
         {
-          nsCOMPtr<nsIMsgDBHdr> message;
-
-          nsCOMPtr<nsISupports> aSupport =
-          getter_AddRefs(m_copyState->m_messages->ElementAt(keyIndex));
-          message = do_QueryInterface(aSupport, &rv);
+          nsCOMPtr<nsIMsgDBHdr> message =
+              do_QueryElementAt(m_copyState->m_messages, keyIndex, &rv);
           // if the key is not there, then assume what the caller tells us to.
           PRBool isRead = missingAreRead;
           PRUint32 flags;
@@ -4639,11 +4626,9 @@ void nsImapMailFolder::UpdatePendingCounts(PRBool countUnread, PRBool missingAre
         }
       else
       {
-        nsCOMPtr<nsIMsgDBHdr> message;
-
-        nsCOMPtr<nsISupports> aSupport =
-          getter_AddRefs(m_copyState->m_messages->ElementAt(m_copyState->m_curIndex));
-        message = do_QueryInterface(aSupport, &rv);
+        nsCOMPtr<nsIMsgDBHdr> message =
+            do_QueryElementAt(m_copyState->m_messages,
+                              m_copyState->m_curIndex, &rv);
           // if the key is not there, then assume what the caller tells us to.
         PRBool isRead = missingAreRead;
         PRUint32 flags;
@@ -5616,10 +5601,8 @@ nsImapMailFolder::CopyNextStreamMessage(PRBool copySucceeded, nsISupports *copyS
 
     if (mailCopyState->m_curIndex < mailCopyState->m_totalCount)
     {
-       nsCOMPtr<nsISupports> aSupport =
-            getter_AddRefs(mailCopyState->m_messages->ElementAt
-                           (mailCopyState->m_curIndex));
-        mailCopyState->m_message = do_QueryInterface(aSupport,
+        mailCopyState->m_message = do_QueryElementAt(mailCopyState->m_messages,
+                                                     mailCopyState->m_curIndex,
                                                      &rv);
         if (NS_SUCCEEDED(rv))
         {
@@ -5755,22 +5738,12 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
          NS_GET_IID(nsImapMoveCopyMsgTxn), 
          getter_AddRefs(m_copyState->m_undoMsgTxn) );
     }
-    nsCOMPtr<nsISupports> msgSupport;
-    msgSupport = getter_AddRefs(messages->ElementAt(0));
-    if (msgSupport)
-    {
-      nsCOMPtr<nsIMsgDBHdr> aMessage;
-      aMessage = do_QueryInterface(msgSupport, &rv);
-      if (NS_SUCCEEDED(rv))
+    nsCOMPtr<nsIMsgDBHdr> aMessage;
+    aMessage = do_QueryElementAt(messages, 0, &rv);
+    if (NS_SUCCEEDED(rv))
         CopyStreamMessage(aMessage, this, msgWindow, isMove);
-      else
-        return rv; //we are clearing copy state in CopyMessages on failure
-    }
-    else
-    {
-       rv = NS_ERROR_FAILURE;
-    }
-    return rv;
+
+    return rv; //we are clearing copy state in CopyMessages on failure
 }
 
 nsresult nsImapMailFolder::GetClearedOriginalOp(nsIMsgOfflineImapOperation *op, nsIMsgOfflineImapOperation **originalOp, nsIMsgDatabase **originalDB)
@@ -5979,11 +5952,8 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
         nsXPIDLCString originalSrcFolderURI;
         if (sourceFolderURI.get())
           originalSrcFolderURI.Adopt(nsCRT::strdup(sourceFolderURI.get()));
-        nsCOMPtr<nsISupports> msgSupports;
         nsCOMPtr<nsIMsgDBHdr> message;
-        
-        msgSupports = getter_AddRefs(messages->ElementAt(sourceKeyIndex));
-        message = do_QueryInterface(msgSupports);
+        message = do_QueryElementAt(messages, sourceKeyIndex);
         nsMsgKey originalKey;
         if (message)
         {

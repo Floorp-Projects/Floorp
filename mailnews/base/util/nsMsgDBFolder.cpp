@@ -128,13 +128,9 @@ NS_IMETHODIMP nsMsgDBFolder::Shutdown(PRBool shutdownChildren)
 		{
 			for (PRUint32 i = 0; i < count; i++)
 			{
-				nsCOMPtr<nsISupports> childFolderSupports = getter_AddRefs(mSubFolders->ElementAt(i));
-				if(childFolderSupports)
-				{
-					nsCOMPtr<nsIFolder> childFolder = do_QueryInterface(childFolderSupports);
-					if(childFolder)
-						childFolder->Shutdown(PR_TRUE);
-				}
+				nsCOMPtr<nsIFolder> childFolder = do_QueryElementAt(mSubFolders, i);
+				if(childFolder)
+					childFolder->Shutdown(PR_TRUE);
 			}
 		}
     // Ask base class shutdown itself.
@@ -151,14 +147,12 @@ NS_IMETHODIMP nsMsgDBFolder::ForceDBClosed ()
     PRUint32 cnt = 0, i;
     if (mSubFolders)
     {
-        nsCOMPtr<nsISupports> aSupport;
         nsCOMPtr<nsIMsgFolder> child;
         mSubFolders->Count(&cnt);
         if (cnt > 0)
             for (i = 0; i < cnt; i++)
             {
-                aSupport = getter_AddRefs(mSubFolders->ElementAt(i));
-                child = do_QueryInterface(aSupport);
+                child = do_QueryElementAt(mSubFolders, i);
                 if (child)
                     child->ForceDBClosed();
             }
@@ -1401,8 +1395,8 @@ nsMsgDBFolder::AutoCompact(nsIMsgWindow *aWindow)
        PRInt32 offlineSupportLevel;
        if ( numServers > 0 )
        {
-         nsCOMPtr <nsISupports> serverSupports = getter_AddRefs(allServers->ElementAt(serverIndex));
-         nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverSupports);
+         nsCOMPtr<nsIMsgIncomingServer> server =
+           do_QueryElementAt(allServers, serverIndex);
          NS_ENSURE_SUCCESS(rv,rv);
          nsCOMPtr<nsISupportsArray> folderArray;
          nsCOMPtr<nsISupportsArray> offlineFolderArray;
@@ -1460,8 +1454,7 @@ nsMsgDBFolder::AutoCompact(nsIMsgWindow *aWindow)
                }
              }
            }
-           serverSupports = getter_AddRefs(allServers->ElementAt(++serverIndex));
-           server = do_QueryInterface(serverSupports, &rv);
+           server = do_QueryElementAt(allServers, ++serverIndex);
          }
          while (serverIndex < numServers);
          totalExpungedBytes = localExpungedBytes + offlineExpungedBytes;
@@ -1479,8 +1472,8 @@ nsMsgDBFolder::AutoCompact(nsIMsgWindow *aWindow)
            {
              if ( localExpungedBytes > 0)
              {
-               nsCOMPtr <nsISupports> aSupports = getter_AddRefs(folderArray->ElementAt(0));
-               nsCOMPtr <nsIMsgFolder> msgFolder = do_QueryInterface(aSupports, &rv);
+               nsCOMPtr <nsIMsgFolder> msgFolder =
+                 do_QueryElementAt(folderArray, 0, &rv);
                if (msgFolder && NS_SUCCEEDED(rv))
                  if (offlineExpungedBytes > 0)
                    msgFolder->CompactAll(nsnull, aWindow, folderArray, PR_TRUE, offlineFolderArray);
@@ -1572,8 +1565,8 @@ nsMsgDBFolder::MatchOrChangeFilterDestination(nsIMsgFolder *newFolder, PRBool ca
       rv = allServers->Count(&numServers);
       for (PRUint32 serverIndex=0; serverIndex < numServers; serverIndex++)
       {
-        nsCOMPtr <nsISupports> serverSupports = getter_AddRefs(allServers->ElementAt(serverIndex));
-        nsCOMPtr <nsIMsgIncomingServer> server = do_QueryInterface(serverSupports, &rv);
+        nsCOMPtr <nsIMsgIncomingServer> server =
+          do_QueryElementAt(allServers, serverIndex, &rv);
         if (server && NS_SUCCEEDED(rv))
         {
           PRBool canHaveFilters;

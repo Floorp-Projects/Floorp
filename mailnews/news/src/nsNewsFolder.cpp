@@ -950,8 +950,7 @@ nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages, nsIMsgWindow *aMsgWi
   nsCOMPtr <nsINntpService> nntpService = do_GetService(NS_NNTPSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(0));
-  nsCOMPtr<nsIMsgDBHdr> msgHdr(do_QueryInterface(msgSupports));
+  nsCOMPtr<nsIMsgDBHdr> msgHdr(do_QueryElementAt(messages, 0));
 
   // for cancel, we need to
   // turn "newsmessage://sspitzer@news.mozilla.org/netscape.test#5428"
@@ -1704,16 +1703,14 @@ NS_IMETHODIMP nsMsgNewsFolder::DownloadMessagesForOffline(nsISupportsArray *mess
   SetSaveArticleOffline(PR_TRUE); // ### TODO need to clear this when we've finished
   PRUint32 count = 0;
   PRUint32 i;
-  nsCOMPtr<nsISupports> msgSupports;
   nsresult rv = messages->Count(&count);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // build up message keys.
   for (i = 0; i < count; i++)
   {
-    msgSupports = getter_AddRefs(messages->ElementAt(i));
     nsMsgKey key;
-    nsCOMPtr <nsIMsgDBHdr> msgDBHdr = do_QueryInterface(msgSupports, &rv);
+    nsCOMPtr <nsIMsgDBHdr> msgDBHdr = do_QueryElementAt(messages, i, &rv);
     if (msgDBHdr)
       rv = msgDBHdr->GetMessageKey(&key);
     if (NS_SUCCEEDED(rv))

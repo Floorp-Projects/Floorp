@@ -43,7 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgWindow.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
 // The mail session is a replacement for the old 4.x MSG_Master object. It contains
@@ -69,7 +69,7 @@ public:
     nsresult GetSelectedLocaleDataDir(nsIFile *defaultsDir);
 
 protected:
-  nsCOMPtr<nsISupportsArray> mListeners; 
+  nsCOMArray<nsIFolderListener> mListeners; 
   nsUInt32Array mListenerNotifyFlags;
 
 	nsCOMPtr<nsISupportsArray> mWindows;

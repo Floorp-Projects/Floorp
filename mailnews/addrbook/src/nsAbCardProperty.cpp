@@ -1459,9 +1459,7 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToXMLPrintData(PRUnichar **aXMLSubstr)
         nsXPIDLString displayName;
         nsXPIDLString primaryEmail;
         for (i = 0; i < total; i++) {
-          nsCOMPtr <nsISupports> item = getter_AddRefs(addresses->ElementAt(i));
-				  
-          nsCOMPtr <nsIAbCard> listCard = do_QueryInterface(item, &rv);
+          nsCOMPtr <nsIAbCard> listCard = do_QueryElementAt(addresses, i, &rv);
           NS_ENSURE_SUCCESS(rv,rv);
 
           xmlStr.Append(NS_LITERAL_STRING("<PrimaryEmail>\n").get());

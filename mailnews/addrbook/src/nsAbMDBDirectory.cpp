@@ -110,11 +110,7 @@ nsresult nsAbMDBDirectory::RemoveCardFromAddressList(nsIAbCard* card)
 
   for (i = listTotal - 1; i >= 0; i--)
   {            
-    nsCOMPtr<nsISupports> pSupport = getter_AddRefs(m_AddressList->ElementAt(i));
-    if (!pSupport)
-      continue;
-
-    nsCOMPtr<nsIAbDirectory> listDir(do_QueryInterface(pSupport, &rv));
+    nsCOMPtr<nsIAbDirectory> listDir(do_QueryElementAt(m_AddressList, i, &rv));
     if (listDir)
     {
       nsCOMPtr <nsISupportsArray> pAddressLists;
@@ -125,8 +121,7 @@ nsresult nsAbMDBDirectory::RemoveCardFromAddressList(nsIAbCard* card)
         rv = pAddressLists->Count(&total);
         for (j = total - 1; j >= 0; j--)
         {
-          nsCOMPtr<nsISupports> pSupport = getter_AddRefs(pAddressLists->ElementAt(j));
-          nsCOMPtr<nsIAbCard> cardInList(do_QueryInterface(pSupport, &rv));
+          nsCOMPtr<nsIAbCard> cardInList(do_QueryElementAt(pAddressLists, j, &rv));
           PRBool equals;
           nsresult rv = cardInList->Equals(card, &equals);  // should we checking email?
           if (NS_SUCCEEDED(rv) && equals) {
@@ -468,11 +463,9 @@ NS_IMETHODIMP nsAbMDBDirectory::DeleteCards(nsISupportsArray *cards)
     NS_ENSURE_SUCCESS(rv, rv);
     for (i = 0; i < cardCount; i++)
     {
-      nsCOMPtr<nsISupports> cardSupports;
       nsCOMPtr<nsIAbCard> card;
       nsCOMPtr<nsIAbMDBCard> dbcard;
-      cardSupports = getter_AddRefs(cards->ElementAt(i));
-      card = do_QueryInterface(cardSupports, &rv);
+      card = do_QueryElementAt(cards, i, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       dbcard = do_QueryInterface(card, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -487,11 +480,7 @@ NS_IMETHODIMP nsAbMDBDirectory::DeleteCards(nsISupportsArray *cards)
           rv = m_AddressList->Count(&cardTotal);
           for (i = cardTotal - 1; i >= 0; i--)
           {            
-            nsCOMPtr<nsISupports> pSupport = getter_AddRefs(m_AddressList->ElementAt(i));
-            if (!pSupport)
-              continue;
-
-            nsCOMPtr<nsIAbMDBCard> dbarrayCard(do_QueryInterface(pSupport, &rv));
+            nsCOMPtr<nsIAbMDBCard> dbarrayCard(do_QueryElementAt(m_AddressList, i, &rv));
             if (dbarrayCard)
             {
               PRUint32 tableID, rowID, cardTableID, cardRowID; 

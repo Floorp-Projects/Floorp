@@ -2686,9 +2686,9 @@ nsresult nsMsgDBView::ReverseSort()
         {
             // swap folders -- 
             // needed when search is done across multiple folders
-            nsCOMPtr <nsISupports> tmpSupports 
-                = getter_AddRefs(folders->ElementAt(i));
-            folders->SetElementAt(i, folders->ElementAt(end));
+            nsCOMPtr<nsISupports> tmpSupports = dont_AddRef(folders->ElementAt(i));
+            nsCOMPtr<nsISupports> endSupports = dont_AddRef(folders->ElementAt(end));
+            folders->SetElementAt(i, endSupports);
             folders->SetElementAt(end, tmpSupports);
         }
         // no need to swap elements in m_levels, 
@@ -3227,11 +3227,8 @@ NS_IMETHODIMP nsMsgDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOr
 
     if (folders)
     {
-        nsCOMPtr <nsISupports> tmpSupports 
-            = getter_AddRefs(folders->ElementAt(numSoFar));
-        nsCOMPtr<nsIMsgFolder> curFolder;
-        if(tmpSupports) {
-            curFolder = do_QueryInterface(tmpSupports);
+        nsCOMPtr<nsIMsgFolder> curFolder = do_QueryElementAt(folders, numSoFar);;
+        if(curFolder) {
             info->folder = curFolder;
         }
     }

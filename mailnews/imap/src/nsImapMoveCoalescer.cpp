@@ -112,8 +112,7 @@ nsresult nsImapMoveCoalescer::PlaybackMoves()
   m_destFolders->Count(&numFolders);
   for (PRUint32 i = 0; i < numFolders; i++)
   {
-    nsCOMPtr <nsISupports> destSupports = getter_AddRefs(m_destFolders->ElementAt(i));
-    nsCOMPtr <nsIMsgFolder> destFolder(do_QueryInterface(destSupports));
+    nsCOMPtr <nsIMsgFolder> destFolder(do_QueryElementAt(m_destFolders, i));
     nsCOMPtr<nsIImapService> imapService = 
       do_GetService(kCImapService, &rv);
     if (NS_SUCCEEDED(rv) && imapService)

@@ -365,8 +365,7 @@ nsAbDirectoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* 
   PRUint32 i, cnt;
   rv = aSources->Count(&cnt);
   for (i = 0; i < cnt; i++) {
-    nsCOMPtr<nsISupports> source = getter_AddRefs(aSources->ElementAt(i));
-		directory = do_QueryInterface(source, &rv);
+		directory = do_QueryElementAt(aSources, i, &rv);
     if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- directory commands are always enabled
       if (!((aCommand == kNC_Delete) || (aCommand == kNC_DeleteCards))) {
@@ -392,8 +391,7 @@ nsAbDirectoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 		rv = DoDeleteFromDirectory(aSources, aArguments);
   else {
     for (i = 0; i < cnt; i++) {
-      nsCOMPtr<nsISupports> supports = getter_AddRefs(aSources->ElementAt(i));
-      nsCOMPtr<nsIAbDirectory> directory = do_QueryInterface(supports, &rv);
+      nsCOMPtr<nsIAbDirectory> directory = do_QueryElementAt(aSources, i, &rv);
       if (NS_SUCCEEDED(rv)) {
         NS_ASSERTION(aCommand == kNC_DeleteCards, "unknown command");
         if ((aCommand == kNC_DeleteCards))  
@@ -561,11 +559,12 @@ nsAbDirectoryDataSource::createDirectoryChildNode(nsIAbDirectory *directory,
 			}
 
 			PRUint32 i;
+			NS_ASSERTION(total <= 1, "This code probably leaks.  Please break out of the loop or something, ok?");
 			for (i = 0; i < total; i++)
 			{
-				nsCOMPtr<nsISupports> mailList = getter_AddRefs(pAddressLists->ElementAt(i));
+				nsCOMPtr<nsIRDFResource> mailList = do_QueryElementAt(pAddressLists, i);
 				if (mailList)
-					mailList->QueryInterface(NS_GET_IID(nsIRDFResource), (void**)target);
+					NS_ADDREF(*target = mailList);
 				else
 					return NS_RDF_NO_VALUE;
 			}
@@ -638,12 +637,10 @@ nsresult nsAbDirectoryDataSource::DoDeleteFromDirectory(nsISupportsArray *parent
 
 	for (item = 0; item < itemCount; item++) 
 	{
-		nsCOMPtr<nsISupports> supports = getter_AddRefs(parentDirs->ElementAt(item));
-		nsCOMPtr<nsIAbDirectory> parent = do_QueryInterface(supports, &rv);
+		nsCOMPtr<nsIAbDirectory> parent = do_QueryElementAt(parentDirs, item, &rv);
 		if (NS_SUCCEEDED(rv)) 
 		{
-			supports = getter_AddRefs(delDirs->ElementAt(item));
-			nsCOMPtr<nsIAbDirectory> deletedDir(do_QueryInterface(supports));
+			nsCOMPtr<nsIAbDirectory> deletedDir(do_QueryElementAt(delDirs, item));
 			if(deletedDir)
 			{
 				rv = parent->DeleteDirectory(deletedDir);

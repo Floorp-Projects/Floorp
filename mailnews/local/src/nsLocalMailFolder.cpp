@@ -519,8 +519,7 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
         nsCOMPtr<nsIEnumerator> enumerator;
         for (PRUint32 i=0; i< cnt;i++)
         {
-          nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
-          nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+          nsCOMPtr<nsIMsgFolder> folder = do_QueryElementAt(mSubFolders, i, &rv);
           if (folder && NS_SUCCEEDED(rv))
           {
             rv = folder->GetSubFolders(getter_AddRefs(enumerator));
@@ -1127,8 +1126,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
   if (NS_SUCCEEDED(rv))
   {
     // we don't allow multiple folder selection so this is ok.
-    nsCOMPtr<nsIMsgFolder> folder;
-    folders->QueryElementAt(0, NS_GET_IID(nsIMsgFolder), (void **) getter_AddRefs(folder));
+    nsCOMPtr<nsIMsgFolder> folder = do_QueryElementAt(folders, 0);
     if (folder)
       trashFolder->CopyFolder(folder, PR_TRUE, msgWindow, nsnull);
   }
@@ -2290,9 +2288,8 @@ nsresult nsMsgLocalMailFolder::WriteStartOfNewMessage()
 
     nsresult rv;
     nsCOMPtr <nsIMsgDBHdr> curSourceMessage; 
-    nsCOMPtr<nsISupports> aSupport =
-        getter_AddRefs(mCopyState->m_messages->ElementAt(mCopyState->m_curCopyIndex));
-    curSourceMessage = do_QueryInterface(aSupport, &rv);
+    curSourceMessage = do_QueryElementAt(mCopyState->m_messages,
+                                         mCopyState->m_curCopyIndex, &rv);
 
   	char statusStrBuf[50];
     if (curSourceMessage)
@@ -2825,17 +2822,12 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
 	messages->Count(&numMessages);
 	for (PRUint32 i = 0; i < numMessages; i++)
 	{
-        nsCOMPtr<nsISupports> msgSupport;
-		msgSupport = getter_AddRefs(messages->ElementAt(i));
-		if (msgSupport)
+		nsCOMPtr<nsIMsgDBHdr> aMessage = do_QueryElementAt(messages, i, &rv);
+		if(NS_SUCCEEDED(rv) && aMessage)
 		{
-		  nsCOMPtr<nsIMsgDBHdr> aMessage = do_QueryInterface(msgSupport, &rv);
-		  if(NS_SUCCEEDED(rv) && aMessage)
-		  {
-			  nsMsgKey key;
-			  aMessage->GetMessageKey(&key);
-			  keyArray.Add(key);
-		  }
+			nsMsgKey key;
+			aMessage->GetMessageKey(&key);
+			keyArray.Add(key);
 		}
 	}
     keyArray.QuickSort();
@@ -2980,10 +2972,7 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *messages, PRBool de
   {
     /* get uidl for this message */
     uidl = nsnull;
-    nsCOMPtr<nsISupports> aSupport =
-      getter_AddRefs(messages->ElementAt(i));
-    
-    nsCOMPtr<nsIMsgDBHdr> msgDBHdr (do_QueryInterface(aSupport, &rv));
+    nsCOMPtr<nsIMsgDBHdr> msgDBHdr (do_QueryElementAt(messages, i, &rv));
     
     PRUint32 flags = 0;
     

@@ -37,6 +37,7 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsIUrlListener.h"
+#include "nsCOMArray.h"
 
 class nsMsgAccountManager
 	: public nsIMsgAccountManager,
@@ -70,7 +71,7 @@ private:
   nsHashtable m_identities;
   nsHashtable m_incomingServers;
   nsCOMPtr<nsIMsgAccount> m_defaultAccount;
-  nsCOMPtr<nsISupportsArray> m_incomingServerListeners;
+  nsCOMArray<nsIIncomingServerListener> m_incomingServerListeners;
   nsCOMPtr<nsIMsgFolder> m_folderDoingEmptyTrash;
   nsCOMPtr<nsIMsgFolder> m_folderDoingCleanupInbox;
   PRBool m_emptyTrashInProgress;

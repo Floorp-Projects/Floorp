@@ -282,10 +282,8 @@ nsMsgCopyService::DoNextCopy()
                 nsCOMPtr<nsIMsgDBHdr> aMessage;
                 if (copySource)
                 {
-                    nsCOMPtr<nsISupports> aSupport;
-                    aSupport =
-                        getter_AddRefs(copySource->m_messageArray->ElementAt(0));
-                    aMessage = do_QueryInterface(aSupport, &rv);
+                    aMessage = do_QueryElementAt(copySource->m_messageArray,
+                                                 0, &rv);
                     copySource->m_processed = PR_TRUE;
                 }
                 copyRequest->m_processed = PR_TRUE;
@@ -341,7 +339,7 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
   nsCopyRequest* copyRequest;
   nsCopySource* copySource = nsnull;
   nsCOMPtr<nsISupportsArray> msgArray;
-  PRUint32 i, cnt;
+  PRUint32 cnt;
   nsCOMPtr<nsIMsgDBHdr> msg;
   nsCOMPtr<nsIMsgFolder> curFolder;
   nsCOMPtr<nsISupports> aSupport;
@@ -366,11 +364,7 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
 
   // duplicate the message array so we could sort the messages by it's
   // folder easily
-  for (i=0; i<cnt; i++)
-  {
-    aSupport = getter_AddRefs(messages->ElementAt(i));
-    msgArray->AppendElement(aSupport);
-  }
+  msgArray->AppendElements(messages);
 
   rv = msgArray->Count(&cnt);
   if (NS_FAILED(rv)) 
@@ -378,8 +372,7 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
 
   while (cnt-- > 0)
   {
-    aSupport = getter_AddRefs(msgArray->ElementAt(cnt));
-    msg = do_QueryInterface(aSupport, &rv);
+    msg = do_QueryElementAt(msgArray, cnt, &rv);
 
     if (NS_FAILED(rv)) 
       goto done;

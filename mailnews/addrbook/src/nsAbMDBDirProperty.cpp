@@ -97,10 +97,8 @@ NS_IMETHODIMP nsAbMDBDirProperty::AddMailListToDirectory(nsIAbDirectory *mailLis
 	for (i = 0; i < count; i++)
 	{
 		nsresult err;
-		nsCOMPtr<nsISupports> pSupport =
-		getter_AddRefs(m_AddressList->ElementAt(i));
-		nsCOMPtr<nsIAbDirectory> pList(do_QueryInterface(pSupport, &err));
-		if (mailList == pList.get())
+		nsCOMPtr<nsIAbDirectory> pList(do_QueryElementAt(m_AddressList, i, &err));
+		if (mailList == pList)
 			return NS_OK;
 	}
 	m_AddressList->AppendElement(mailList);
@@ -117,10 +115,8 @@ NS_IMETHODIMP nsAbMDBDirProperty::AddAddressToList(nsIAbCard *card)
 	for (i = 0; i < count; i++)
 	{
 		nsresult err;
-		nsCOMPtr<nsISupports> pSupport =
-		getter_AddRefs(m_AddressList->ElementAt(i));
-		nsCOMPtr<nsIAbCard> pCard(do_QueryInterface(pSupport, &err));
-		if (card == pCard.get())
+		nsCOMPtr<nsIAbCard> pCard(do_QueryElementAt(m_AddressList, i, &err));
+		if (card == pCard)
 			return NS_OK;
 	}
 	m_AddressList->AppendElement(card);

@@ -439,10 +439,7 @@ nsMsgRDFDataSource::GetTransactionManager(nsISupportsArray *aSources, nsITransac
 
 	if (cnt > 0)
 	{
-		nsCOMPtr<nsISupports> supports;
-
-		supports = getter_AddRefs(aSources->ElementAt(0));
-		transactionManager = do_QueryInterface(supports, &rv);
+		transactionManager = do_QueryElementAt(aSources, 0, &rv);
 		if (NS_SUCCEEDED(rv) && transactionManager)
 		{
 			aSources->RemoveElementAt(0);

@@ -544,10 +544,8 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     for (i=0; i<cnt; i++) {
       // Now that we have the server...we need to get the named message folder
       nsCOMPtr<nsIMsgIncomingServer> inServer; 
-      nsCOMPtr<nsISupports>ptr;
-      ptr = getter_AddRefs(retval->ElementAt(i));
       
-      inServer = do_QueryInterface(ptr, &rv);
+      inServer = do_QueryElementAt(retval, i, &rv);
       if(NS_FAILED(rv) || (!inServer))
         continue;
       

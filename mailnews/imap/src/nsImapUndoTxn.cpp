@@ -383,11 +383,9 @@ nsImapMoveCopyMsgTxn::UndoMailboxDelete()
         PRUint32 i;
         nsCOMPtr<nsIMsgDBHdr> oldHdr;
         nsCOMPtr<nsIMsgDBHdr> newHdr;
-		    nsCOMPtr<nsISupports> aSupport;
         for (i=0; i<count; i++)
         {
-           aSupport = getter_AddRefs(m_srcHdrs->ElementAt(i));
-           oldHdr = do_QueryInterface(aSupport);
+           oldHdr = do_QueryElementAt(m_srcHdrs, i);
            NS_ASSERTION(oldHdr, "fatal ... cannot get old msg header\n");
            rv = srcDB->CopyHdrFromExistingHdr(m_srcKeyArray.GetAt(i),
                                               oldHdr,PR_TRUE,
