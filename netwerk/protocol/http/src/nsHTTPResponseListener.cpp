@@ -29,8 +29,10 @@
 #include "nsHTTPAtoms.h"
 #include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
+#include "nsProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsINetModuleMgr.h"
+#include "nsIEventQueueService.h"
 #include "nsIBuffer.h"
 
 #include "nsIIOService.h"
@@ -80,6 +82,8 @@ nsHTTPResponseListener::~nsHTTPResponseListener()
 
 NS_IMPL_ISUPPORTS(nsHTTPResponseListener,nsCOMTypeInfo<nsIStreamListener>::GetIID());
 
+static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 
 NS_IMETHODIMP
@@ -239,8 +243,7 @@ nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
     nsresult rv;
     NS_ASSERTION(m_bHeadersDone, "Headers have not been received!");
 
-    if (m_bHeadersDone) 
-    {
+    if (m_bHeadersDone) {
 
         // Notify the event sink that response headers are available...
         nsCOMPtr<nsIHTTPEventSink> sink;
@@ -248,40 +251,90 @@ nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
         if (sink) {
             sink->OnHeadersAvailable(m_pConnection);
         }
+
         // Check for any modules that want to receive headers once they've arrived.
         NS_WITH_SERVICE(nsINetModuleMgr, pNetModuleMgr, kNetModuleMgrCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsISimpleEnumerator> pModules;
-        rv = pNetModuleMgr->EnumerateModules(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID, getter_AddRefs(pModules));
+        nsISimpleEnumerator* pModules = nsnull;
+        rv = pNetModuleMgr->EnumerateModules(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID, &pModules);
         if (NS_FAILED(rv)) return rv;
 
+        nsIProxyObjectManager*  proxyObjectManager = nsnull; 
+        rv = nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
+                                            kProxyObjectManagerIID,
+                                            (nsISupports **)&proxyObjectManager);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(pModules);
+            return rv;
+        }
+
+        nsISupports *supEntry = nsnull;
+
         // Go through the external modules and notify each one.
-        nsISupports *supEntry;
         rv = pModules->GetNext(&supEntry);
-        while (NS_SUCCEEDED(rv)) 
-        {
-            nsCOMPtr<nsINetModRegEntry> entry = do_QueryInterface(supEntry, &rv);
-            if (NS_FAILED(rv)) 
+        while (NS_SUCCEEDED(rv)) {
+            nsINetModRegEntry *entry = nsnull;
+            rv = supEntry->QueryInterface(nsCOMTypeInfo<nsINetModRegEntry>::GetIID(), (void**)&entry);
+            NS_RELEASE(supEntry);
+            if (NS_FAILED(rv)) {
+                NS_RELEASE(pModules);
+                NS_RELEASE(proxyObjectManager);
                 return rv;
+            }
 
-            nsCOMPtr<nsINetNotify> syncNotifier;
-            entry->GetSyncProxy(getter_AddRefs(syncNotifier));
-            nsCOMPtr<nsIHTTPNotify> pNotify = do_QueryInterface(syncNotifier, &rv);
+            nsCID *lCID;
+            nsIEventQueue* lEventQ = nsnull;
 
-            if (NS_SUCCEEDED(rv)) 
-            {
+            rv = entry->GetMCID(&lCID);
+            if (NS_FAILED(rv)) {
+                NS_RELEASE(pModules);
+                NS_RELEASE(proxyObjectManager);
+                return rv;
+            }
+
+            rv = entry->GetMEventQ(&lEventQ);
+            if (NS_FAILED(rv)) {
+                NS_RELEASE(pModules);
+                NS_RELEASE(proxyObjectManager);            
+                return rv;
+            }
+
+            nsIHTTPNotify *pNotify = nsnull;
+            // if this call fails one of the following happened.
+            // a) someone registered an object for this topic but didn't
+            //    implement the nsIHTTPNotify interface on that object.
+            // b) someone registered an object for this topic bud didn't
+            //    put the .xpt lib for that object in the components dir
+            rv = proxyObjectManager->GetProxyObject(lEventQ, 
+                                               *lCID,
+                                               nsnull,
+                                               nsCOMTypeInfo<nsIHTTPNotify>::GetIID(),
+                                               /* XXX needs to be async */
+                                               /*PROXY_ASYNC,*/
+                                               PROXY_SYNC,
+                                               (void**)&pNotify);
+            NS_RELEASE(proxyObjectManager);
+        
+            NS_RELEASE(lEventQ);
+
+            if (NS_SUCCEEDED(rv)) {
                 // send off the notification, and block.
+
                 // make the nsIHTTPNotify api call
                 pNotify->AsyncExamineResponse(m_pConnection);
+                NS_RELEASE(pNotify);
                 // we could do something with the return code from the external
                 // module, but what????            
             }
+
+            NS_RELEASE(entry);
             rv = pModules->GetNext(&supEntry); // go around again
         }
-    } 
-    else 
-    {
+        NS_RELEASE(pModules);
+        NS_IF_RELEASE(proxyObjectManager);
+
+    } else {
         rv = NS_ERROR_FAILURE;
     }
 
