@@ -327,9 +327,21 @@ do_QueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
 template <class T>
 inline
 void
-do_QueryInterface( already_AddRefed<T>&, nsresult* = 0 )
+do_QueryInterface( already_AddRefed<T>& )
   {
     // This signature exists soley to _stop_ you from doing the bad thing.
+    //  Saying |do_QueryInterface()| on a pointer that is not otherwise owned by
+    //  someone else is an automatic leak.  See <http://bugzilla.mozilla.org/show_bug.cgi?id=8221>.
+  }
+
+template <class T>
+inline
+void
+do_QueryInterface( already_AddRefed<T>&, nsresult* )
+  {
+    // This signature exists soley to _stop_ you from doing the bad thing.
+    //  Saying |do_QueryInterface()| on a pointer that is not otherwise owned by
+    //  someone else is an automatic leak.  See <http://bugzilla.mozilla.org/show_bug.cgi?id=8221>.
   }
 
 
@@ -407,7 +419,7 @@ class nsCOMPtr
     : private nsCOMPtr_base
 #endif
   {
-    enum { _force_compliant_compilers_to_fail_ = sizeof(T) };
+    enum { _force_even_compliant_compilers_to_fail_ = sizeof(T) };
       /*
         The declaration above exists specifically to make |nsCOMPtr<T>| _not_ compile with only
         a forward declaration of |T|.  This should prevent Windows and Mac engineers from
