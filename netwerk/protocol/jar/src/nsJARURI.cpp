@@ -243,6 +243,9 @@ nsJARURI::Equals(nsIURI *other, PRBool *result)
     nsresult rv;
     *result = PR_FALSE;
 
+    if (other == nsnull)
+        return NS_OK;	// not equal
+
     nsJARURI* otherJAR;
     rv = other->QueryInterface(NS_GET_IID(nsIJARURI), (void**)&otherJAR);
     if (NS_FAILED(rv))

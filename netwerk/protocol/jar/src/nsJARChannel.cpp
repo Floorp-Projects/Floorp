@@ -449,7 +449,7 @@ nsJARChannel::EnsureJARFileAvailable(OnJARFileAvailableFun onJARFileAvailable,
     if (NS_FAILED(rv)) goto error;
 
     rv = jarBaseChannel->GetLocalFile(getter_AddRefs(jarCacheFile));
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && jarCacheFile) {
         // Case 1: Local file
         // we've already got a local jar file -- no need to download it
 
