@@ -104,6 +104,8 @@
 
 #include "nsVariant.h"
 
+#include "nsStringService.h"
+
 #ifdef GC_LEAK_DETECTOR
 #include "nsLeakDetector.h"
 #endif
@@ -185,6 +187,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerManager);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVariant);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRecyclingAllocatorImpl);
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStringService);
 
 #ifdef MOZ_TIMELINE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimelineService);
@@ -364,6 +368,9 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(INTERFACEINFOMANAGER_SERVICE, nsXPTIInterfaceInfoManagerGetSingleton),
 
     COMPONENT(RECYCLINGALLOCATOR, nsRecyclingAllocatorImplConstructor),
+
+#define NS_STRING_SERVICE_CLASSNAME "String Service"
+    COMPONENT(STRING_SERVICE, nsStringServiceConstructor),
 };
 
 #undef COMPONENT
