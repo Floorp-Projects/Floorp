@@ -1137,8 +1137,9 @@
                  constraints)))
              ((eq component-source ':~)
               (push (make-no-line-break-constraint pos) constraints))
-             (t (push (grammar-parametrization-intern grammar-parametrization component-source lhs-arguments) rhs)))
-            (incf pos))
+             (t
+              (push (grammar-parametrization-intern grammar-parametrization component-source lhs-arguments) rhs)
+              (incf pos))))
           (list* lhs-nonterminal (nreverse rhs) production-name (nreverse constraints))))
       production-source)))
 
