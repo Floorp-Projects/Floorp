@@ -145,6 +145,21 @@ extern void * (*nsCapsSetAnnotationCallback)(struct NSJSJavaFrameWrapper *, void
 PR_EXTERN(void)
 setOJISetAnnotationCallback(void * (*fp)(struct NSJSJavaFrameWrapper *, void *));
 
+/* 
+ * Registration flag is set when the communicator
+ * starts with argument '-reg_mode'. The following
+ * functions provide API to enable and disable the flag.
+ * Current state of the flag can be obtained using
+ * nsGetRegistrationModeFlag().
+ */
+void 
+nsCapsEnableRegistrationModeFlag(void);
+
+void 
+nsCapsDisableRegistrationModeFlag(void);
+
+PRBool 
+nsCapsGetRegistrationModeFlag(void);
 
 PR_END_EXTERN_C
 

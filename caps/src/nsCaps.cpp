@@ -32,6 +32,16 @@
 #include "nsCCapsManager.h"
 #include "nsCCapsManagerFactory.h"
 
+/* 
+ * With the introduction of '-reg_mode' flag, 
+ * we now have a variable that holds the information
+ * to tell us whether or not navigator is running with 
+ * that flag. registrationModeflag is introduced for that 
+ * purpose. We have function APIs in place (in nsCaps.h) 
+ * to access and modify this variable. 
+ */
+PRBool registrationModeFlag = PR_FALSE;
+
 PR_BEGIN_EXTERN_C
 
 static PRBool bNSCapsInitialized_g = PR_FALSE;
@@ -334,6 +344,42 @@ PR_IMPLEMENT(void)
 setOJISetAnnotationCallback(void * (*fp)(struct NSJSJavaFrameWrapper *, void *))
 {
     nsCapsSetAnnotationCallback = fp;
+}
+
+/* 
+ * This function enables registration mode flag. 
+ * Enabling this flag will allow only file based
+ * urls ('file:') to run. This flag is enabled
+ * when the AccountSetup application is started.
+ */
+void 
+nsCapsEnableRegistrationModeFlag(void)
+{
+	registrationModeFlag = PR_TRUE;
+}
+
+
+/*
+ * This function disables the registration mode flag.
+ * Disabling this flag allows all valid urls types to
+ * run. This will be disabled when the AccountSetup 
+ * application is finished.
+ */
+void 
+nsCapsDisableRegistrationModeFlag(void)
+{
+	registrationModeFlag = PR_FALSE;
+}
+
+
+/*
+ * This function returns the current value of registration
+ * mode flag.
+ */
+PRBool 
+nsCapsGetRegistrationModeFlag(void)
+{
+	return registrationModeFlag;
 }
 
 PR_END_EXTERN_C
