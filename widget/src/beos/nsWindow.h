@@ -284,7 +284,8 @@ public:	// public on BeOS to allow BViews to access it
 	    ONKEY,
 	    BTNCLICK,
 	    ONACTIVATE,
-	    ONMOVE
+	    ONMOVE,
+	    ONWORKSPACE
 	};
 	nsToolkit *GetToolkit() { return (nsToolkit *)nsBaseWidget::GetToolkit(); }
 };
@@ -323,6 +324,8 @@ public:
 	virtual void            WindowActivated(bool active);
 	virtual void            FrameResized(float width, float height);
 	virtual void            FrameMoved(BPoint origin);
+	virtual void            WorkspacesChanged(uint32 oldworkspace, uint32 newworkspace);
+
 
 	void                    ResizeToWithoutEvent(float width, float height);
 
