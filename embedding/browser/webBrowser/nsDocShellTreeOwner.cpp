@@ -625,6 +625,10 @@ NS_IMETHODIMP nsDocShellTreeOwner::RemoveMouseListener()
     // Unsubscribe from mouse events
     if (mLastDOMDocument)
     {
+        // Removing the mouse listener may cause this instance to
+        // be deleted...  So, keep an extra reference to defer destruction..
+        nsCOMPtr<nsIDocShellTreeOwner> kungFuDeathGrip(this);
+
     	nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
 		mLastDOMDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(eventReceiver));
 		if (eventReceiver)
