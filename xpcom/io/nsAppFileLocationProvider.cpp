@@ -238,6 +238,8 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
 #else
     else if (nsCRT::strcmp(prop, NS_ENV_PLUGINS_DIR) == 0)
     {
+        NS_ERROR("Don't use nsAppFileLocationProvider::GetFile(NS_ENV_PLUGINS_DIR, ...). "
+                 "Use nsAppFileLocationProvider::GetFiles(...).");
         const char *pathVar = PR_GetEnv("MOZ_PLUGIN_PATH");
         if (pathVar)
             rv = NS_NewNativeLocalFile(nsDependentCString(pathVar), PR_TRUE, getter_AddRefs(localFile));
@@ -499,6 +501,64 @@ class nsAppDirectoryEnumerator : public nsISimpleEnumerator
 
 NS_IMPL_ISUPPORTS1(nsAppDirectoryEnumerator, nsISimpleEnumerator)
 
+/* nsPathsDirectoryEnumerator and PATH_SEPARATOR
+ * are not used on MacOS/X. */
+
+#if defined(XP_WIN) || defined(XP_OS2)/* Win32, Win16, and OS/2 */
+#define PATH_SEPARATOR ';'
+#else /*if defined(XP_UNIX) || defined(XP_BEOS)*/
+#define PATH_SEPARATOR ':'
+#endif
+
+class nsPathsDirectoryEnumerator : public nsAppDirectoryEnumerator
+{
+  public:
+    /**
+     * aKeyList is a null-terminated list.
+     * The first element is a path list.
+     * The remainder are properties provided by aProvider.
+     * They do not need to be publicly defined keys.
+     */
+    nsPathsDirectoryEnumerator(nsIDirectoryServiceProvider *aProvider,
+                               const char* aKeyList[]) :
+    nsAppDirectoryEnumerator(aProvider, aKeyList+1),
+    mEndPath(aKeyList[0])
+    {
+    }
+
+    NS_IMETHOD HasMoreElements(PRBool *result) 
+    {
+        if (mEndPath)
+            while (!mNext && *mEndPath)
+            {
+                const char *pathVar = mEndPath;
+                do { ++mEndPath; } while (*mEndPath && *mEndPath != PATH_SEPARATOR);
+
+                nsCOMPtr<nsILocalFile> localFile;
+                NS_NewNativeLocalFile(Substring(pathVar, mEndPath),
+                                      PR_TRUE,
+                                      getter_AddRefs(localFile));
+                if (*mEndPath == PATH_SEPARATOR)
+                    ++mEndPath;
+                // Don't return a "file" (directory) which does not exist.
+                PRBool exists;
+                if (localFile &&
+                    NS_SUCCEEDED(localFile->Exists(&exists)) &&
+                    exists)
+                    mNext = localFile;
+            }
+        if (mNext)
+            *result = PR_TRUE;
+        else
+            nsAppDirectoryEnumerator::HasMoreElements(result);
+
+        return NS_OK;
+    }
+
+  protected:
+    const char *mEndPath;
+};
+
 NS_IMETHODIMP
 nsAppFileLocationProvider::GetFiles(const char *prop, nsISimpleEnumerator **_retval)
 {
@@ -519,11 +579,16 @@ nsAppFileLocationProvider::GetFiles(const char *prop, nsISimpleEnumerator **_ret
             err = ::Gestalt(gestaltSystemVersion, &response); 
             keys = (!err && response >= 0x00001000) ? osXKeys : os9Keys;
         }
-#else
-        static const char* keys[] = { NS_ENV_PLUGINS_DIR, NS_USER_PLUGINS_DIR, NS_APP_PLUGINS_DIR, nsnull };
-#endif
 
         *_retval = new nsAppDirectoryEnumerator(this, keys);
+#else
+        static const char* keys[] = { nsnull, NS_USER_PLUGINS_DIR, NS_APP_PLUGINS_DIR, nsnull };
+        if (!keys[0] && !(keys[0] = PR_GetEnv("MOZ_PLUGIN_PATH"))) {
+            static const char nullstr = 0;
+            keys[0] = &nullstr;
+        }
+        *_retval = new nsPathsDirectoryEnumerator(this, keys);
+#endif
         NS_IF_ADDREF(*_retval);
         rv = *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
     }
