@@ -273,18 +273,16 @@ nsresult nsCharsetConverterManager::CreateMapping()
       res = registry->GetString(key, "destination", &dest);
       if (NS_FAILED(res)) continue;
 
-      nsString * str;
+      nsAutoString str;
 
       if (!strcmp(src, "Unicode")) {
-        str = new nsString(dest);
-        GetCharsetName(str,&mEncArray[mEncSize].mCharset);
-        delete str;
+        str.Assign(dest);
+        GetCharsetName(&str,&mEncArray[mEncSize].mCharset);
         mEncArray[mEncSize].mCID = cid;
         mEncSize++;
       } else if (!strcmp(dest, "Unicode")) {
-        str = new nsString(src);
-        GetCharsetName(str,&mDecArray[mDecSize].mCharset);
-        delete str;
+        str.Assign(src);
+        GetCharsetName(&str,&mDecArray[mDecSize].mCharset);
         mDecArray[mDecSize].mCID = cid;
         mDecSize++;
       }
