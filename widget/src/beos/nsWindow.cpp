@@ -50,6 +50,17 @@
 #include "DropSrc.h"
 #endif
 
+#include "nsIRollupListener.h"
+#include "nsIMenuRollup.h"
+
+////////////////////////////////////////////////////
+// Rollup Listener - static variable defintions
+////////////////////////////////////////////////////
+static nsIRollupListener * gRollupListener           = nsnull;
+static nsIWidget         * gRollupWidget             = nsnull;
+static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
+////////////////////////////////////////////////////
+
 static NS_DEFINE_IID(kIWidgetIID,       NS_IWIDGET_IID);
 
 //-------------------------------------------------------------------------
@@ -842,9 +853,99 @@ NS_METHOD nsWindow::Show(PRBool bState)
 	return NS_OK;
 }
 
+
 NS_METHOD nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
 {
-}
+  if (aDoCapture) { 
+    /* we haven't bothered carrying a weak reference to gRollupWidget because 
+       we believe lifespan is properly scoped. this next assertion helps 
+       assure that remains true. */ 
+    NS_ASSERTION(!gRollupWidget, "rollup widget reassigned before release"); 
+    gRollupConsumeRollupEvent = aConsumeRollupEvent; 
+    NS_IF_RELEASE(gRollupListener); 
+    NS_IF_RELEASE(gRollupWidget); 
+    gRollupListener = aListener; 
+    NS_ADDREF(aListener); 
+    gRollupWidget = this; 
+    NS_ADDREF(this); 
+  } else { 
+    NS_IF_RELEASE(gRollupListener); 
+    NS_IF_RELEASE(gRollupWidget); 
+  } 
+ 
+  return NS_OK; 
+} 
+ 
+PRBool 
+nsWindow::EventIsInsideWindow(nsWindow* aWindow, nsPoint pos) 
+{ 
+  BRect r; 
+  BView *view = (BView *) aWindow->GetNativeData(NS_NATIVE_WIDGET); 
+  if (view && view->LockLooper() ) { 
+    r = view->ConvertToScreen(view->Bounds()); 
+    view->UnlockLooper(); 
+  } 
+  
+  if (pos.x < r.left || pos.x > r.right || 
+      pos.y < r.top || pos.y > r.bottom) { 
+    return PR_FALSE; 
+  } 
+ 
+  return PR_TRUE; 
+} 
+
+// 
+// DealWithPopups 
+// 
+// Handle events that may cause a popup (combobox, XPMenu, etc) to need to rollup. 
+// 
+PRBool 
+nsWindow::DealWithPopups(uint32 methodID, nsPoint pos) 
+{ 
+  if (gRollupListener && gRollupWidget) { 
+ 
+      // Rollup if the event is outside the popup. 
+      PRBool rollup = !nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget, pos); 
+ 
+      // If we're dealing with menus, we probably have submenus and we don't 
+      // want to rollup if the click is in a parent menu of the current submenu. 
+      if (rollup) { 
+        nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) ); 
+        if ( menuRollup ) { 
+          nsCOMPtr<nsISupportsArray> widgetChain; 
+          menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) ); 
+          if ( widgetChain ) { 
+            PRUint32 count = 0; 
+            widgetChain->Count(&count); 
+            for ( PRUint32 i = 0; i < count; ++i ) { 
+              nsCOMPtr<nsISupports> genericWidget; 
+              widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) ); 
+              nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) ); 
+              if ( widget ) { 
+                nsIWidget* temp = widget.get(); 
+                if ( nsWindow::EventIsInsideWindow((nsWindow*)temp, pos) ) { 
+                  rollup = PR_FALSE; 
+                  break; 
+                } 
+              } 
+            } // foreach parent menu widget 
+          } 
+        } // if rollup listener knows about menus 
+      } 
+ 
+      if ( rollup ) { 
+        gRollupListener->Rollup(); 
+ 
+        if (gRollupConsumeRollupEvent) { 
+          return PR_TRUE; 
+        } 
+      } 
+ } // if rollup listeners registered 
+ 
+  return PR_FALSE; 
+
+} // DealWithPopups
+
 
 //-------------------------------------------------------------------------
 //
@@ -1525,11 +1626,38 @@ bool nsWindow::CallMethod(MethodInfo *info)
         	break;
 
 		case nsWindow::ONMOUSE :
-            NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
-			DispatchMouseEvent(((int32 *)info->args)[0],
-				nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]),
-				((int32 *)info->args)[3],
-				((int32 *)info->args)[4]);
+			{
+            	NS_ASSERTION(info->nArgs == 5, "Wrong number of arguments to CallMethod");
+				// close popup when clicked outside of the popup window 
+				// TODO: wheel mouse 
+				uint32 eventID = ((int32 *)info->args)[0]; 
+				bool rollup = false; 
+ 
+				if ((eventID == NS_MOUSE_LEFT_BUTTON_DOWN || 
+					eventID == NS_MOUSE_RIGHT_BUTTON_DOWN || 
+					eventID == NS_MOUSE_MIDDLE_BUTTON_DOWN) && 
+					mView && mView->LockLooper()) { 
+       
+					BPoint p(((int32 *)info->args)[1], ((int32 *)info->args)[2]); 
+					mView->ConvertToScreen(&p); 
+					if (DealWithPopups(nsWindow::ONMOUSE, nsPoint(p.x, p.y))) 
+						rollup = true; 
+					mView->UnlockLooper(); 
+				} 
+				if (rollup) break; 
+                               
+				DispatchMouseEvent(((int32 *)info->args)[0], 
+					nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]), 
+					((int32 *)info->args)[3], 
+					((int32 *)info->args)[4]);
+			
+				if (((int32 *)info->args)[0] == NS_MOUSE_RIGHT_BUTTON_DOWN) {
+					DispatchMouseEvent (NS_CONTEXTMENU,
+						nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]),
+						((int32 *)info->args)[3],
+						((int32 *)info->args)[4]);
+				}
+			}
 			break;
 
 		case nsWindow::ONKEY :
@@ -1560,15 +1688,14 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 		case nsWindow::ONRESIZE :
 			{
-                               NS_ASSERTION(info->nArgs == 2,
-                                                       "Wrong number of arguments to CallMethod");
+				NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod");
 
 				nsRect r;
-                               r.width=(nscoord)info->args[0];
-                               r.height=(nscoord)info->args[1];
+				r.width=(nscoord)info->args[0];
+				r.height=(nscoord)info->args[1];
 
-					OnResize(r);
-				}
+				OnResize(r);
+			}
 			break;
 
 		case nsWindow::ONSCROLL:
@@ -2354,7 +2481,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint aPoint, PRUint3
 	if(nsnull != mEventCallback || nsnull != mMouseListener)
 	{
 		nsMouseEvent event;
-		InitEvent(event, aEventType, &aPoint);
+		InitEvent (event, aEventType, &aPoint);
 		event.isShift   = mod & B_SHIFT_KEY;
 		event.isControl = mod & B_CONTROL_KEY;
 		event.isAlt     = mod & B_COMMAND_KEY;
