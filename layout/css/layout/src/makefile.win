@@ -26,6 +26,7 @@ CPPSRCS=			\
  nsCSSBlockFrame.cpp		\
  nsCSSContainerFrame.cpp	\
  nsCSSInlineFrame.cpp		\
+ nsCSSInlineLayout.cpp		\
  nsCSSLineLayout.cpp		\
  $(NULL)
 
@@ -33,6 +34,7 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsCSSBlockFrame.obj	\
  .\$(OBJDIR)\nsCSSContainerFrame.obj	\
  .\$(OBJDIR)\nsCSSInlineFrame.obj	\
+ .\$(OBJDIR)\nsCSSInlineLayout.obj	\
  .\$(OBJDIR)\nsCSSLineLayout.obj	\
  $(NULL)
 

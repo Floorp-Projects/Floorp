@@ -18,9 +18,11 @@
  */
 #include "nsCSSBlockFrame.h"
 #include "nsCSSLineLayout.h"
+#include "nsCSSInlineLayout.h"
 #include "nsCSSLayout.h"
 #include "nsPlaceholderFrame.h"
 #include "nsStyleConsts.h"
+#include "nsHTMLIIDs.h"
 
 #include "nsIAnchoredItems.h"
 #include "nsIPresContext.h"
@@ -34,11 +36,6 @@
 #include "nsHTMLAtoms.h"// XXX list ordinal hack
 #include "nsHTMLValue.h"// XXX list ordinal hack
 #include "nsIHTMLContent.h"// XXX list ordinal hack
-
-static NS_DEFINE_IID(kIAnchoredItemsIID, NS_IANCHOREDITEMS_IID);
-static NS_DEFINE_IID(kIFloaterContainerIID, NS_IFLOATERCONTAINER_IID);
-static NS_DEFINE_IID(kIInlineReflowIID, NS_IINLINE_REFLOW_IID);
-static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 
 // XXX mLastContentOffset, mFirstContentOffset, mLastContentIsComplete
 // XXX inline span frames
@@ -178,8 +175,6 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext*      aPresContext,
   if (!mBlockIsPseudo) {
     const nsStyleSpacing* blockSpacing = (const nsStyleSpacing*)
       mBlockSC->GetStyleData(eStyleStruct_Spacing);
-    const nsStylePosition* blockPosition = (const nsStylePosition*)
-      mBlockSC->GetStyleData(eStyleStruct_Position);
 
     blockSpacing->CalcBorderPaddingFor(mBlock, mBorderPadding);
     mY = mBorderPadding.top;
@@ -1145,8 +1140,8 @@ InlineFrameData::ReflowLine(nsCSSBlockReflowState& aState,
 
   // Prepare for reflowing this line
   aLineLayout.Prepare(aState.mX);
-  nsCSSInlineLayout inlineLayout(aLineLayout, aState.mBlock, aState.mBlockSC,
-                                 aState);
+  nsCSSInlineLayout inlineLayout(aLineLayout, aState.mBlock, aState.mBlockSC);
+  inlineLayout.Init(&aState);
   inlineLayout.Prepare(aState.mUnconstrainedWidth, aState.mNoWrap,
                        aState.mMaxElementSize);
   inlineLayout.SetReflowSpace(aState.mCurrentBand.availSpace.x,
@@ -1291,7 +1286,7 @@ InlineFrameData::ReflowLine(nsCSSBlockReflowState& aState,
 
   // See if speculative application of the margin should stick
   if (ild == &mLines) {
-    if (0 == inlineLayout.GetLineHeight()) {
+    if (0 == inlineLayout.mMaxAscent + inlineLayout.mMaxDescent) {
       // No, undo margin application when we get a zero height child.
       aState.mY -= bottomMargin;
       if (aState.mY + bottomMargin >= aState.mCurrentBand.availSpace.YMost()) {
@@ -1351,7 +1346,7 @@ InlineFrameData::SplitLine(nsCSSBlockReflowState&  aState,
                            InlineLineData*    ild,
                            nsIFrame*          aFrame)
 {
-  PRInt32 pushCount = ild->mChildCount - aInlineLayout.GetFrameNum();
+  PRInt32 pushCount = ild->mChildCount - aInlineLayout.mFrameNum;
   NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
                ("LineLayout::SplitLine: pushing %d frames",
                 pushCount));
@@ -1692,7 +1687,7 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
   // Replace parent provided reflow state with our own significantly
   // more extensive version.
   nsCSSBlockReflowState state(aPresContext, aSpaceManager, this, aReflowState,
-                         aMetrics.maxElementSize);
+                              aMetrics.maxElementSize);
 
   nsresult rv = NS_OK;
   if (eReflowReason_Initial == state.reason) {
