@@ -65,7 +65,20 @@ interface nsIDOMXULElement : nsIDOMElement
   attribute DOMString minHeight;
   attribute DOMString maxWidth;
   attribute DOMString maxHeight;
+
+  // Persistence 
+  attribute DOMString persist;
+
+  // Position properties for
+  // * popups - these are screen coordinates
+  // * other elements - these are client coordinates relative to parent stack. 
+  attribute DOMString left;
+  attribute DOMString top;
   
+  // XUL Template Builder 
+  attribute DOMString datasources;
+  attribute DOMString ref;
+
   // Tooltip and status info
   attribute DOMString tooltipText;
   attribute DOMString statusText;
