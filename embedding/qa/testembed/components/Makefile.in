@@ -43,6 +43,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= testEmbedComponents
 RESFILE		= Dialogs.res
+MOZILLA_INTERNAL_API = 1
 
 REQUIRES = \
 	xpcom \
