@@ -833,7 +833,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
   }
   const char* uidl = PL_strcasestr(queryPart.get(), "uidl=");
   PR_FREEIF(m_pop3ConData->only_uidl);
-		
+
   if (uidl)
   {
     uidl += 5;
@@ -1074,7 +1074,7 @@ PRInt32 nsPop3Protocol::SendAuth()
   if(!m_pop3ConData->command_succeeded)
     return(Error(POP3_SERVER_ERROR));
 
-  nsCAutoString command("AUTH"CRLF);
+  nsCAutoString command("AUTH" CRLF);
 
   m_pop3ConData->next_state_after_response = POP3_AUTH_RESPONSE;
   return SendData(m_url, command.get());
@@ -1118,35 +1118,25 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
 
     if (!PL_strcmp(line, ".")) 
     {
+        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+
         // now that we've read all the AUTH responses, go for it
         m_pop3ConData->next_state = POP3_SEND_CAPA;
         m_pop3ConData->pause_for_read = PR_FALSE; /* don't pause */
     }
-    else
-    if (!PL_strcasecmp (line, "CRAM-MD5")) 
+    else if (!PL_strcasecmp (line, "CRAM-MD5")) 
     {
         nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
         // this checks if psm is installed...
         if (NS_SUCCEEDED(rv))
-        {
             SetCapFlag(POP3_HAS_AUTH_CRAM_MD5);
-        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     }
-    }
-    else
-    if (!PL_strcasecmp (line, "PLAIN")) 
-    {
+    else if (!PL_strcasecmp (line, "PLAIN")) 
         SetCapFlag(POP3_HAS_AUTH_PLAIN);
-        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
-    }
-    else
-    if (!PL_strcasecmp (line, "LOGIN")) 
-    {
+    else if (!PL_strcasecmp (line, "LOGIN")) 
         SetCapFlag(POP3_HAS_AUTH_LOGIN);
-        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
-    }
 
-	PR_Free(line);
+    PR_Free(line);
     return 0;
 }
 
@@ -1158,6 +1148,11 @@ PRInt32 nsPop3Protocol::SendCapa()
 {
     if(!m_pop3ConData->command_succeeded)
         return(Error(POP3_SERVER_ERROR));
+
+    // for use after mechs disabled fallbacks when login failed
+    // should better live in AuthResponse(), but it would only
+    // be called the first time then
+    BackupAuthFlags();
 
     nsCAutoString command("CAPA" CRLF);
 
@@ -1219,6 +1214,8 @@ PRInt32 nsPop3Protocol::CapaResponse(nsIInputStream* inputStream,
 
 PRInt32 nsPop3Protocol::ProcessAuth()
 {
+    m_password_already_sent = PR_FALSE;
+
     if(m_useSecAuth)
     {
       if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
@@ -1248,37 +1245,107 @@ PRInt32 nsPop3Protocol::ProcessAuth()
     return 0;
 }
 
+void nsPop3Protocol::BackupAuthFlags()
+{
+  m_origAuthFlags = m_pop3ConData->capability_flags &
+                    (POP3_HAS_AUTH_ANY | POP3_HAS_AUTH_ANY_SEC);
+}
+
+void nsPop3Protocol::RestoreAuthFlags()
+{
+  m_pop3ConData->capability_flags |= m_origAuthFlags;
+}
+
 PRInt32 nsPop3Protocol::AuthFallback()
 {
     if (m_pop3ConData->command_succeeded)
-        m_pop3ConData->next_state = POP3_SEND_PASSWORD;
+        if(m_password_already_sent)
+        {
+            m_nsIPop3Sink->SetUserAuthenticated(PR_TRUE);
+
+            m_pop3ConData->next_state = (m_pop3ConData->get_url) 
+              ? POP3_SEND_GURL : POP3_SEND_STAT;
+        }
+        else
+            m_pop3ConData->next_state = POP3_SEND_PASSWORD;
     else
     {
         // response code received,
-        // login failed not because of wrong password
+        // login failed not because of wrong credential
         if(TestFlag(POP3_STOPLOGIN) ||
            TestCapFlag(POP3_HAS_AUTH_RESP_CODE) && !TestFlag(POP3_AUTH_FAILURE))
-            return(Error(POP3_USERNAME_FAILURE));
+            return(Error((m_password_already_sent) 
+                         ? POP3_PASSWORD_FAILURE : POP3_USERNAME_FAILURE));
 
-        // If one authentication failed, we're going to
-        // fall back on a less secure login method.
-        if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
-            // if CRAM-MD5 enabled, disable it
-            ClearCapFlag(POP3_HAS_AUTH_CRAM_MD5);
+        if (m_useSecAuth)
+        {
+            // If one authentication failed, we're going to
+            // fall back on a less secure login method.
+            if (TestCapFlag(POP3_HAS_AUTH_CRAM_MD5))
+                // if CRAM-MD5 enabled, disable it
+                ClearCapFlag(POP3_HAS_AUTH_CRAM_MD5);
+            else if (TestCapFlag(POP3_HAS_AUTH_APOP))
+            {
+                // if APOP enabled, disable it
+                ClearCapFlag(POP3_HAS_AUTH_APOP);
+                // unsure because APOP failed and we can't determine why
+                Error(CANNOT_PROCESS_APOP_AUTH);
+            }
+        }
         else
-        if (TestCapFlag(POP3_HAS_AUTH_APOP))
-            // if APOP enabled, disable it
-            ClearCapFlag(POP3_HAS_AUTH_APOP);
-        else
-        if (TestCapFlag(POP3_HAS_AUTH_PLAIN))
-            // if PLAIN enabled, disable it
-            ClearCapFlag(POP3_HAS_AUTH_PLAIN);
-        else
-        if(TestCapFlag(POP3_HAS_AUTH_LOGIN | POP3_HAS_AUTH_USER))
-            // if LOGIN or USER enabled,
-            // it was the username which was wrong -
-            // no fallback but return error
-            return(Error(POP3_USERNAME_FAILURE));
+        {
+            if (TestCapFlag(POP3_HAS_AUTH_PLAIN))
+                // if PLAIN enabled, disable it
+                ClearCapFlag(POP3_HAS_AUTH_PLAIN);
+            else if(TestCapFlag(POP3_HAS_AUTH_LOGIN))
+                // if LOGIN enabled, disable it
+                ClearCapFlag(POP3_HAS_AUTH_LOGIN);
+            else if(TestCapFlag(POP3_HAS_AUTH_USER))
+            {
+                if(m_password_already_sent)
+                    // if USER enabled, disable it
+                    ClearCapFlag(POP3_HAS_AUTH_USER);
+                else
+                    // if USER enabled,
+                    // it was the username which was wrong -
+                    // no fallback but return error
+                    return(Error(POP3_USERNAME_FAILURE));
+            }
+        }
+
+        // Only forget the password if we've no mechanism left.
+        if (m_useSecAuth && !TestCapFlag(POP3_HAS_AUTH_ANY_SEC) ||
+            !m_useSecAuth && !TestCapFlag(POP3_HAS_AUTH_ANY))
+        {
+            // Let's restore the original auth flags from SendEhloResponse so we can
+            // try them again with new password and username
+            RestoreAuthFlags();
+            m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+
+            Error(POP3_PASSWORD_FAILURE);
+            /* The password failed.
+      
+               Sever the connection and go back to the `read password' state,
+               which, upon success, will re-open the connection.  Set a flag
+               which causes the prompt to be different that time (to indicate
+               that the old password was bogus.)
+        
+               But if we're just checking for new mail (biff) then don't bother
+               prompting the user for a password: just fail silently. 
+            */
+
+            SetFlag(POP3_PASSWORD_FAILED);
+            m_pop3ConData->logonFailureCount++;
+
+            // libmsg event sink
+            if (m_nsIPop3Sink) 
+            {
+                m_nsIPop3Sink->SetUserAuthenticated(PR_FALSE);
+                m_nsIPop3Sink->SetMailAccountURL(NULL);
+            }
+
+            return 0;
+        }
 
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
 
@@ -1346,8 +1413,7 @@ PRInt32 nsPop3Protocol::SendUsername()
     {
         if (TestCapFlag(POP3_HAS_AUTH_PLAIN))
             cmd = "AUTH PLAIN";
-        else
-        if (TestCapFlag(POP3_HAS_AUTH_LOGIN))
+        else if (TestCapFlag(POP3_HAS_AUTH_LOGIN))
         {
             char *base64Str =
                 PL_Base64Encode(m_username.get(), m_username.Length(), nsnull);
@@ -1422,7 +1488,7 @@ PRInt32 nsPop3Protocol::SendPassword()
             }
 
             if (NS_FAILED(rv))
-                ClearFlag(POP3_HAS_AUTH_CRAM_MD5);
+                cmd = "*";
         }
         else
         if (TestCapFlag(POP3_HAS_AUTH_APOP))
@@ -1448,7 +1514,7 @@ PRInt32 nsPop3Protocol::SendPassword()
             }
 
             if (NS_FAILED(rv))
-               ClearFlag(POP3_HAS_AUTH_APOP);
+                cmd = "*";
         }
     }
     else
@@ -1480,70 +1546,24 @@ PRInt32 nsPop3Protocol::SendPassword()
         else
         {
             cmd = "PASS ";
-            cmd += (const char *) password;    
+            cmd += password;    
         }
     }
     cmd += CRLF;
 
     m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
 
-    m_pop3ConData->next_state_after_response =  (m_pop3ConData->get_url) 
-      ? POP3_SEND_GURL : POP3_SEND_STAT;
+    m_pop3ConData->next_state_after_response = POP3_AUTH_FALLBACK;
 
     m_pop3ConData->pause_for_read = PR_TRUE;
+
+    m_password_already_sent = PR_TRUE;
 
     return SendData(m_url, cmd.get(), PR_TRUE);
 }
 
 PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
 {
-  /* check password response */
-  if(!m_pop3ConData->command_succeeded)
-  {
-    // response code received,
-    // login failed not because of wrong password
-    if(TestFlag(POP3_STOPLOGIN) ||
-       TestCapFlag(POP3_HAS_AUTH_RESP_CODE) && !TestFlag(POP3_AUTH_FAILURE))
-      return(Error(POP3_PASSWORD_FAILURE));
-    
-    if(!TestCapFlag(POP3_HAS_AUTH_CRAM_MD5) &&
-      TestCapFlag(POP3_HAS_AUTH_APOP))
-      // unsure because APOP failed and we can't determine why
-      Error(CANNOT_PROCESS_APOP_AUTH);
-    else
-      Error(POP3_PASSWORD_FAILURE);
-      /* The password failed.
-      
-        Sever the connection and go back to the `read password' state,
-        which, upon success, will re-open the connection.  Set a flag
-        which causes the prompt to be different that time (to indicate
-        that the old password was bogus.)
-        
-        But if we're just checking for new mail (biff) then don't bother
-        prompting the user for a password: just fail silently. 
-    */
-    
-    SetFlag(POP3_PASSWORD_FAILED);
-    m_pop3ConData->logonFailureCount++;
-
-    // libmsg event sink
-    if (m_nsIPop3Sink) 
-    {
-      m_nsIPop3Sink->SetUserAuthenticated(PR_FALSE);
-      m_nsIPop3Sink->SetMailAccountURL(NULL);
-    }
-    
-    /* clear the bogus password in case 
-    * we need to sync with auth smtp password 
-    */
-    return 0;
-  }
-  else 
-  {
-    m_nsIPop3Sink->SetUserAuthenticated(PR_TRUE);
-  }
-  
-  
   nsCAutoString cmd;
   if (sendStat) 
   {

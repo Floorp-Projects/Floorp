@@ -108,6 +108,9 @@ enum Pop3CapabilityEnum {
     POP3_HAS_AUTH_RESP_CODE     = 0x00020000
 };
 
+#define POP3_HAS_AUTH_ANY         0x00009002
+#define POP3_HAS_AUTH_ANY_SEC     0x00006000
+
 enum Pop3StatesEnum {
     POP3_READ_PASSWORD,                         // 0
                                                 // 
@@ -164,9 +167,9 @@ enum Pop3StatesEnum {
 };
 
 
-#define KEEP		'k'			/* If we want to keep this item on server. */
-#define DELETE_CHAR	'd'			/* If we want to delete this item. */
-#define TOO_BIG		'b'			/* item left on server because it was too big */
+#define KEEP        'k'         /* If we want to keep this item on server. */
+#define DELETE_CHAR 'd'         /* If we want to delete this item. */
+#define TOO_BIG     'b'         /* item left on server because it was too big */
 
 typedef struct Pop3UidlEntry { /* information about this message */
     char* uidl;
@@ -238,9 +241,9 @@ typedef struct _Pop3ConData {
     /* the current message that we are retrieving 
        with the TOP command */
     PRInt32 current_msg_to_top;	
-   	
+
     /* we will download this many in 
-       POP3_GET_MSG */							   
+       POP3_GET_MSG */
     PRInt32 number_of_messages_not_seen_before;
     /* reached when we have TOPped 
        all of the new messages */
@@ -284,7 +287,7 @@ public:
 
   NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports * aContext, nsresult aStatus);
   NS_IMETHOD Cancel(nsresult status);
-	// for nsMsgLineBuffer
+  // for nsMsgLineBuffer
   virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
 
 private:
@@ -309,24 +312,29 @@ private:
   PRInt32 m_totalBytesReceived; // total # bytes received for the connection
 
   virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
-									PRUint32 sourceOffset, PRUint32 length);
+                                        PRUint32 sourceOffset, PRUint32 length);
   virtual nsresult CloseSocket();
   virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging = PR_FALSE);
 
   nsCOMPtr<nsIURI> m_url;
   nsCOMPtr<nsIPop3Sink> m_nsIPop3Sink;
   nsCOMPtr<nsIPop3IncomingServer> m_pop3Server;
-	
+
   nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
   Pop3ConData* m_pop3ConData;
   void FreeMsgInfo();
   void Abort();
 
   PRBool m_useSecAuth;
+  PRBool m_password_already_sent;
 
   void SetCapFlag(PRUint32 flag);
   void ClearCapFlag(PRUint32 flag);
   PRBool TestCapFlag(PRUint32 flag);
+
+  void BackupAuthFlags();
+  void RestoreAuthFlags();
+  PRInt32 m_origAuthFlags;
 
   //////////////////////////////////////////////////////////////////////////////////////////
       // Begin Pop3 protocol state handlers
