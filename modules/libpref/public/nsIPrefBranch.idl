@@ -71,10 +71,19 @@ interface nsIPrefBranch : nsISupports
   void setComplexValue(in string aPrefName, in nsIIDRef aType, in nsISupports aValue);
 
   /*
-   * methods for preference state manipulation
+   * clearUserPref
+   * 
+   * resets a preference to the default value.
    * pass in a string to be added to the root such as "homepage"
    */
   void    clearUserPref(in string aPrefName);
+
+
+  /*
+   * methods for manipulating the ability to change the state of a preference.
+   * pass in a string to be added to the root such as "homepage"
+   */
+
   void    lockPref(in string aPrefName);
   boolean prefIsLocked(in string aPrefName);
   void    unlockPref(in string aPrefName);
@@ -118,7 +127,8 @@ interface nsIPrefBranch : nsISupports
   /*
    * resetBranch
    * 
-   * clears all user preferences starting at the given preference prefix
+   * clears all user preferences (i.e. resets them to their default values)
+   * starting at the given preference prefix.
    * pass in null or "" to clear this branch
    */
   void resetBranch(in string aStartingAt);
