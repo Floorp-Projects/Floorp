@@ -33,12 +33,14 @@
 #include "nsNntpUrl.h"
 #include "nsNntpService.h"
 #include "nsNntpIncomingServer.h"
+#include "nsNewsMessage.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kNewsFolderResourceCID, NS_NEWSFOLDERRESOURCE_CID);
 static NS_DEFINE_CID(kNntpIncomingServerCID, NS_NNTPINCOMINGSERVER_CID);
+static NS_DEFINE_CID(kNewsMessageResourceCID, NS_NEWSMESSAGERESOURCE_CID);
 
 static PRInt32 g_InstanceCount = 0;
 static PRInt32 g_LockCount = 0;
@@ -152,6 +154,10 @@ nsresult nsMsgNewsFactory::CreateInstance(nsISupports *aOuter,
 	{
 		return NS_NewNntpIncomingServer(aIID, aResult);
 	}
+	else if (mClassID.Equals(kNewsMessageResourceCID)) 
+ 	{
+ 		inst = NS_STATIC_CAST(nsIMessage*, new nsNewsMessage());
+ 	}
 	else
 		return NS_NOINTERFACE;
 
@@ -233,6 +239,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "news",
                                   path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->RegisterComponent(kNewsMessageResourceCID,
+									"News Resource Factory",
+									NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "news_message",
+									path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
 #ifdef NS_DEBUG
 	printf("news registering from %s\n",path);
 #endif
@@ -271,6 +284,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterComponent(kNntpIncomingServerCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterComponent(kNewsMessageResourceCID, path);
 	if (NS_FAILED(rv)) goto done;
 
 done:

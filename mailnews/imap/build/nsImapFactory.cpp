@@ -26,6 +26,7 @@
 #include "pratom.h"
 #include "nsCOMPtr.h"
 #include "nsImapMailFolder.h"
+#include "nsImapMessage.h"
 
 // include files for components this factory creates...
 #include "nsImapUrl.h"
@@ -38,6 +39,8 @@ static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kCImapIncomingServer, NS_IMAPINCOMINGSERVER_CID);
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCImapResource, NS_IMAPRESOURCE_CID);
+static NS_DEFINE_CID(kCImapMessageResource, NS_IMAPMESSAGERESOURCE_CID);
+
 
 ////////////////////////////////////////////////////////////
 //
@@ -138,11 +141,14 @@ nsresult nsImapFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
 	{
 		inst = NS_STATIC_CAST(nsIImapService *, new nsImapService());
 	}
+	else if (mClassID.Equals(kCImapMessageResource)) 
+ 	{
+ 		inst = NS_STATIC_CAST(nsIMessage*, new nsImapMessage());
+ 	}
 	else if (mClassID.Equals(kCImapResource))
 	{
 		inst = NS_STATIC_CAST(nsIMsgImapMailFolder *, new nsImapMailFolder());
 	}
-
 	if (inst == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
 
@@ -226,6 +232,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
 
+
 //  rv = compMgr->RegisterComponent(kImapServiceCID, nsnull, 
 //								  "component://netscape/messenger/messageservice;type=imap_message", 
   //                                path, PR_TRUE, PR_TRUE);
@@ -267,6 +274,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterFactory(kCImapService, path);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterComponent(kCImapMessageResource, path);
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterFactory(kCImapResource, path);
