@@ -20,6 +20,7 @@
   
   Contributor(s): 
     Don Bragg (dbragg@netscape.com) 12/08/1999
+    Blake Ross (BlakeR1234@aol.com) 7/05/2000
  -->
 
 <?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
@@ -32,7 +33,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoad()"
         onclose="return false"
-        title="&progress.label;"
+        title="&progressTitle.label;"
         align = "vertical"
         class = "dialog"
 > 
@@ -75,11 +76,11 @@
             </html>
         </box>
     
-        <spring id="verticalLargeSpacer"/>
+        <spring id="verticalSmallSpacer"/>
 
         <box align="vertical" id="statusMessages">
-            <html:input id="dialog.uiPackageName" readonly="" />
-            <html:input id="dialog.currentAction" readonly="" />
+            <textfield id="dialog.uiPackageName" readonly="" />
+            <textfield id="dialog.currentAction" readonly="" />
         </box>
 
         <box align="horizontal">
