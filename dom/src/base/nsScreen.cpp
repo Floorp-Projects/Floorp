@@ -75,7 +75,8 @@ ScreenImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
     nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-    res = NS_NewScriptScreen(aContext, (nsIDOMScreen*)this, (nsIDOMWindow*)global, &mScriptObject);
+    res = NS_NewScriptScreen(aContext, NS_STATIC_CAST(nsIDOMScreen *, this),
+                             global, &mScriptObject);
     NS_IF_RELEASE(global);
   }
   

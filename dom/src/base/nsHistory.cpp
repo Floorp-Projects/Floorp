@@ -70,7 +70,8 @@ HistoryImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
     nsIScriptGlobalObject *global = aContext->GetGlobalObject();
-    res = NS_NewScriptHistory(aContext, (nsIDOMHistory*)this, (nsIDOMWindow*)global, &mScriptObject);
+    res = NS_NewScriptHistory(aContext, NS_STATIC_CAST(nsIDOMHistory *, this),
+                              global, &mScriptObject);
     NS_IF_RELEASE(global);
   }
   
