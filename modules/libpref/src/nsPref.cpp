@@ -40,6 +40,7 @@ private:
   nsPref();
   ~nsPref();
 
+  static void useDefaultPrefFile(nsPref *aPrefInst);
   static nsPref *mInstance;
 
 public:
@@ -189,10 +190,24 @@ nsPref::~nsPref() {
   mInstance = NULL;
 }
 
+void
+nsPref::useDefaultPrefFile(nsPref *aPrefInst)
+{
+  /* temporary hack to load up pref files */
+
+  if (!aPrefInst)
+    return;
+
+  aPrefInst->Startup("prefs.js");
+
+  return;
+}
+
 nsPref *nsPref::GetInstance()
 {
   if (mInstance == NULL) {
     mInstance = new nsPref();
+    useDefaultPrefFile(mInstance);
   }
   return mInstance;
 }
