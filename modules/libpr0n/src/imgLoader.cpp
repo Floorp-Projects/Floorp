@@ -83,14 +83,14 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
     PRUint32 flags = 0;
     PRBool doomRequest = PR_FALSE;
     aLoadGroup->GetLoadFlags(&flags);
-    if (flags & nsIRequest::LOAD_BYPASS_CACHE)
+    if (flags & nsIRequest::LOAD_BYPASS_CACHE || flags & nsIRequest::VALIDATE_ALWAYS)
       doomRequest = PR_TRUE;
     else {
       nsCOMPtr<nsIRequest> r;
       aLoadGroup->GetDefaultLoadRequest(getter_AddRefs(r));
       if (r) {
         r->GetLoadFlags(&flags);
-        if (flags & nsIRequest::LOAD_BYPASS_CACHE)
+        if (flags & nsIRequest::LOAD_BYPASS_CACHE || flags & nsIRequest::VALIDATE_ALWAYS)
           doomRequest = PR_TRUE;
       }
     }
