@@ -95,18 +95,26 @@
 use diagnostics;
 use strict;
 
-
-
 #
 # This are the --LOCAL-- variables defined in 'localconfig'
 # 
 
-use vars qw(
-    $webservergroup
-    $db_host $db_port $db_name $db_user $db_pass $db_check
-    @severities @priorities @opsys @platforms
-);
-
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for global vars.
+sub sillyness {
+    my $zz;
+    $zz = $::webservergroup;
+    $zz = $::db_host;
+    $zz = $::db_port;
+    $zz = $::db_user;
+    $zz = $::db_name;
+    $zz = $::db_pass;
+    $zz = $::db_check;
+    $zz = @::severities;
+    $zz = @::priorities;
+    $zz = @::opsys;
+    $zz = @::platforms;
+}
 
 # Trim whitespace from front and back.
 
@@ -230,7 +238,7 @@ sub LocalVar ($$)
 #
 
     
-LocalVar('$webservergroup', '
+LocalVar('$::webservergroup', '
 #
 # This is the group your web server runs on.
 # If you have a windows box, ignore this setting.
@@ -243,7 +251,7 @@ $webservergroup = "nobody";
 
 
 
-LocalVar('$db_host', '
+LocalVar('$::db_host', '
 #
 # How to access the SQL database:
 #
@@ -252,7 +260,7 @@ $db_port = 3306;                # which port to use
 $db_name = "bugs";              # name of the MySQL database
 $db_user = "bugs";              # user to attach to the MySQL database
 ');
-LocalVar('$db_pass', '
+LocalVar('$::db_pass', '
 #
 # Some people actually use passwords with their MySQL database ...
 #
@@ -261,7 +269,7 @@ $db_pass = "";
 
 
 
-LocalVar('$db_check', '
+LocalVar('$::db_check', '
 #
 # Should checksetup.pl try to check if your MySQL setup is correct?
 # (with some combinations of MySQL/Msql-mysql/Perl/moonphase this doesn\'t work)
@@ -270,7 +278,7 @@ $db_check = 1;
 ');
 
 
-LocalVar('@severities', '
+LocalVar('@::severities', '
 #
 # Which bug and feature-request severities do you want?
 #
@@ -287,7 +295,7 @@ LocalVar('@severities', '
 
 
 
-LocalVar('@priorities', '
+LocalVar('@::priorities', '
 #
 # Which priorities do you want to assign to bugs and feature-request?
 #
@@ -302,7 +310,7 @@ LocalVar('@priorities', '
 
 
 
-LocalVar('@opsys', '
+LocalVar('@::opsys', '
 #
 # What operatings systems may your products run on?
 #
@@ -342,7 +350,7 @@ LocalVar('@opsys', '
 
 
 
-LocalVar('@platforms', '
+LocalVar('@::platforms', '
 #
 # What hardware platforms may your products run on?
 #
@@ -385,7 +393,7 @@ if ($newstuff ne "") {
 unless (-d 'data') {
     print "Creating data directory ...\n";
     mkdir 'data', 0770;
-    if ($webservergroup eq "") {
+    if ($::webservergroup eq "") {
         chmod 0777, 'data';
     }
     open FILE, '>>data/comments'; close FILE;
@@ -454,10 +462,10 @@ sub isExecutableFile {
   return undef;
 }
 
-if ($webservergroup) {
+if ($::webservergroup) {
     mkdir 'shadow', 0770 unless -d 'shadow';
     # Funny! getgrname returns the GID if fed with NAME ...
-    my $webservergid = getgrnam($webservergroup);
+    my $webservergid = getgrnam($::webservergroup);
     # chmod needs to be called with a valid uid, not 0.  $< returns the
     # caller's uid.  Maybe there should be a $bugzillauid, and call with that
     # userid.
@@ -502,17 +510,21 @@ use DBI;
 my $drh = DBI->install_driver($db_base)
     or die "Can't connect to the $db_base. Is the database installed and up and running?\n";
 
-if ($db_check) {
+if ($::db_check) {
     # Do we have the database itself?
-    my $dsn = "DBI:$db_base:$db_name;$db_host;$db_port";
-    my $dbh = DBI->connect($dsn, $db_user, $db_pass);
+# original DSN line was:
+#    my $dsn = "DBI:$db_base:$::db_name;$::db_host;$::db_port";
+# removed the $db_name because we don't know it exists yet, and this will
+# fail if we request it here and it doesn't. - dave@intrec.com 2000/09/16
+    my $dsn = "DBI:$db_base:;$::db_host;$::db_port";
+    my $dbh = DBI->connect($dsn, $::db_user, $::db_pass);
     my @databases = $dbh->func('_ListDBs');
-    unless (grep /^$db_name$/, @databases) {
-       print "Creating database $db_name ...\n";
-       $drh->func('createdb', $db_name, "$db_host:$db_port", $db_user, $db_pass, 'admin')
+    unless (grep /^$::db_name$/, @databases) {
+       print "Creating database $::db_name ...\n";
+       $drh->func('createdb', $::db_name, "$::db_host:$::db_port", $::db_user, $::db_pass, 'admin')
             or die <<"EOF"
 
-The '$db_name' database is not accessible. This might have several reasons:
+The '$::db_name' database is not accessible. This might have several reasons:
 
 * MySQL is not running.
 * MySQL is running, but the rights are not set correct. Go and read the
@@ -526,10 +538,10 @@ EOF
 }
 
 # now get a handle to the database:
-my $connectstring = "dbi:$db_base:$db_name:host=$db_host:port=$db_port";
-my $dbh = DBI->connect($connectstring, $db_user, $db_pass)
+my $connectstring = "dbi:$db_base:$::db_name:host=$::db_host:port=$::db_port";
+my $dbh = DBI->connect($connectstring, $::db_user, $::db_pass)
     or die "Can't connect to the table '$connectstring'.\n",
-           "Have you read Bugzilla's README?  Have you read the doc of '$db_name'?\n";
+           "Have you read Bugzilla's README?  Have you read the doc of '$::db_name'?\n";
 
 END { $dbh->disconnect if $dbh }
 
@@ -840,10 +852,10 @@ my @tables = $dbh->func('_ListTables');
 
 # add lines here if you add more --LOCAL-- config vars that end up in the enums:
 
-my $severities = '"' . join('", "', @severities) . '"';
-my $priorities = '"' . join('", "', @priorities) . '"';
-my $opsys      = '"' . join('", "', @opsys)      . '"';
-my $platforms  = '"' . join('", "', @platforms)  . '"';
+my $severities = '"' . join('", "', @::severities) . '"';
+my $priorities = '"' . join('", "', @::priorities) . '"';
+my $opsys      = '"' . join('", "', @::opsys)      . '"';
+my $platforms  = '"' . join('", "', @::platforms)  . '"';
 
 # go throught our %table hash and create missing tables
 while (my ($tabname, $fielddef) = each %table) {
@@ -1137,10 +1149,10 @@ sub CheckEnumField ($$@)
 # are ignored.
 #
 
-CheckEnumField('bugs', 'bug_severity', @severities);
-CheckEnumField('bugs', 'priority',     @priorities);
-CheckEnumField('bugs', 'op_sys',       @opsys);
-CheckEnumField('bugs', 'rep_platform', @platforms);
+CheckEnumField('bugs', 'bug_severity', @::severities);
+CheckEnumField('bugs', 'priority',     @::priorities);
+CheckEnumField('bugs', 'op_sys',       @::opsys);
+CheckEnumField('bugs', 'rep_platform', @::platforms);
 
 
 
