@@ -21,6 +21,7 @@
  */
 
 var pref = null;
+var bundle = srGetStrBundle("chrome://navigator/locale/navigator.properties");
 
 // in case we fail to get the start page, load this
 var startPageDefault = "about:blank";
@@ -981,7 +982,7 @@ function BrowserEditBookmarks()
                     var status = document.getElementById("Browser:Status");
                     if ( status ) {
 						var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
-						var msg = "Document: Done (" + elapsed + " secs)";
+						var msg = bundle.GetStringFromName("nv_done") + " (" + elapsed + " secs)";
 						dump( msg + "\n" );
                         status.setAttribute("value",msg);
                         defaultStatus = msg;
