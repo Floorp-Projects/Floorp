@@ -133,10 +133,12 @@ nsClipboard :: SetNativeClipboardData()
   // includes the NULL terminator.
   short mappingLen = 0;
   const char* mapping = theMapper.ExportMapping(&mappingLen);
-  long numBytes = ::PutScrap ( mappingLen, nsMimeMapperMac::MappingFlavor(), mapping );
-  if ( numBytes != noErr )
-    errCode = NS_ERROR_FAILURE;
-  nsCRT::free ( NS_CONST_CAST(char*, mapping) );
+  if ( mapping && mappingLen ) {
+    long numBytes = ::PutScrap ( mappingLen - 1, nsMimeMapperMac::MappingFlavor(), mapping );
+    if ( numBytes != noErr )
+      errCode = NS_ERROR_FAILURE;
+    nsCRT::free ( NS_CONST_CAST(char*, mapping) );
+  }
   
   return errCode;
   
