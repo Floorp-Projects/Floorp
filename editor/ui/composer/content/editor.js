@@ -117,7 +117,8 @@ function TextEditorOnLoad()
 
 function PageIsEmptyAndUntouched()
 {
-  return (editorShell != null) && (editorShell.documentIsEmpty == true) && (docWasModified == false);
+  return (editorShell != null) && editorShell.documentIsEmpty && 
+         !docWasModified && !gHTMLSourceChanged;
 }
 
 function IsEditorContentHTML()
@@ -1681,7 +1682,6 @@ function InitListMenu()
   var mixedObj = new Object();
   var state = editorShell.GetListState(mixedObj);
   var IDSuffix = "noList";
-
   if (state)
   {
     if (state == "dl")
