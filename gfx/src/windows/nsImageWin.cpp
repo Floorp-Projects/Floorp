@@ -1465,11 +1465,17 @@ nsImageWin :: Optimize(nsIDeviceContext* aContext)
     if (mAlphaDepth == 8) {
       CreateImageWithAlphaBits(TheHDC);
     } else {
-      mHBitmap = ::CreateDIBitmap(TheHDC, mBHead, CBM_INIT, mImageBits,
-                                  (LPBITMAPINFO)mBHead,
-                                  256 == mNumPaletteColors ? DIB_PAL_COLORS
-                                                           : DIB_RGB_COLORS);
-      mIsOptimized = (mHBitmap != 0);
+      LPVOID bits;
+      mHBitmap = ::CreateDIBSection(TheHDC, (LPBITMAPINFO)mBHead,
+        256 == mNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS,
+        &bits, NULL, 0);
+
+      if (mHBitmap) {
+        memcpy(bits, mImageBits, mSizeImage);
+        mIsOptimized = PR_TRUE;
+      } else {
+        mIsOptimized = PR_FALSE;
+      }
     }
     if (mIsOptimized)
       CleanUpDIB();
