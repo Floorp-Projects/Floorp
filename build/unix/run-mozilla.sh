@@ -352,31 +352,13 @@ MOZILLA_FIVE_HOME=$MOZ_DIST_BIN
 #
 ##
 ## Set LD_LIBRARY_PATH
-##
-if [ -n "$LD_LIBRARY_PATH" ]
-then
-	LD_LIBRARY_PATH=${MOZ_DIST_BIN}${LD_LIBRARY_PATH+":$LD_LIBRARY_PATH"}
-else
-	LD_LIBRARY_PATH=${MOZ_DIST_BIN}
-fi
-##
+LD_LIBRARY_PATH=${MOZ_DIST_BIN}${LD_LIBRARY_PATH+":$LD_LIBRARY_PATH"}
+#
 ## Set SHLIB_PATH for HPUX
-##
-if [ -n "$SHLIB_PATH" ]
-then
-	SHLIB_PATH=${MOZ_DIST_BIN}${SHLIB_PATH+":$SHLIB_PATH"}
-else
-	SHLIB_PATH=${MOZ_DIST_BIN}
-fi
-##
+SHLIB_PATH=${MOZ_DIST_BIN}${SHLIB_PATH+":$SHLIB_PATH"}
+#
 ## Set LIBPATH for AIX
-##
-if [ -n "$LIBPATH" ]
-then
-	LIBPATH=${MOZ_DIST_BIN}${LIBPATH+":$LIBPATH"}
-else
-	LIBPATH=${MOZ_DIST_BIN}
-fi
+LIBPATH=${MOZ_DIST_BIN}${LIBPATH+":$LIBPATH"}
 #
 echo "MOZILLA_FIVE_HOME=$MOZILLA_FIVE_HOME"
 echo "  LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
@@ -389,7 +371,7 @@ echo "     moz_debugger=$moz_debugger"
 #
 export MOZILLA_FIVE_HOME LD_LIBRARY_PATH
 export SHLIB_PATH LIBPATH
-#
+
 if [ "$moz_debug" = "1" ]
 then
 	moz_debug_program ${1+"$@"}
