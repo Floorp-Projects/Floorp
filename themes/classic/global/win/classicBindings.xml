@@ -132,6 +132,7 @@
           <xul:html class="largeheader-desc-text" inherits="value=description"/>
           <xul:spring flex="1"/>
         </xul:box>
+        <xul:spring flex="1"/>
         <xul:box class="largeheader-icon-container" autostretch="never">
           <xul:image class="largeheader-icon" inherits="src"/>
         </xul:box>

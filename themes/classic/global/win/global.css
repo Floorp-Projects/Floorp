@@ -56,8 +56,8 @@
       background-color    : threedface;
       color               : windowtext;
       padding             : 0px;
-      /* font-family         : sans-serif;
-      font                : dialog; */
+      font-family         : sans-serif;
+      font                : dialog;
       -moz-user-focus     : ignore;
     }
   
