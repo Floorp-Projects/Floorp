@@ -49,6 +49,20 @@
 // Enumerator callback function. Return PR_FALSE to stop
 typedef PRBool (*nsFontFamilyEnumFunc)(const nsString& aFamily, PRBool aGeneric, void *aData);
 
+// IDs for generic fonts
+// NOTE: 0, 1 are reserved for the special IDs of the default variable
+// and fixed fonts in the presentation context, see nsIPresContext.h
+const PRUint8 kGenericFont_NONE         = 0x00;
+// Special
+const PRUint8 kGenericFont_moz_variable = 0x00; // for the default variable width font
+const PRUint8 kGenericFont_moz_fixed    = 0x01; // our special "use the user's fixed font"
+// CSS
+const PRUint8 kGenericFont_serif        = 0x02;
+const PRUint8 kGenericFont_sans_serif   = 0x04;
+const PRUint8 kGenericFont_monospace    = 0x08;
+const PRUint8 kGenericFont_cursive      = 0x10;
+const PRUint8 kGenericFont_fantasy      = 0x20;
+
 // Font structure.
 struct NS_GFX nsFont {
   // The family name of the font
@@ -67,20 +81,29 @@ struct NS_GFX nsFont {
   // line-through). The decorations can be binary or'd together.
   PRUint8 decorations;
 
-  // The size of the font, in nscoord units
+  // The logical size of the font, in nscoord units
   nscoord size;
+
+  // The aspect-value (ie., the ratio actualsize:actualxheight) that any
+  // actual physical font created from this font structure must have when
+  // rendering or measuring a string. A value of 0 means no adjustment
+  // needs to be done.
+  float sizeAdjust;
 
   // Initialize the font struct with an iso-latin1 name
   nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
-         PRUint16 aWeight, PRUint8 aDecoration, nscoord aSize);
+         PRUint16 aWeight, PRUint8 aDecoration, nscoord aSize,
+         float aSizeAdjust=0.0f);
 
   // Initialize the font struct with a (potentially) unicode name
   nsFont(const nsString& aName, PRUint8 aStyle, PRUint8 aVariant,
-         PRUint16 aWeight, PRUint8 aDecoration, nscoord aSize);
+         PRUint16 aWeight, PRUint8 aDecoration, nscoord aSize,
+         float aSizeAdjust=0.0f);
 
   // Make a copy of the given font
   nsFont(const nsFont& aFont);
 
+  nsFont();
   ~nsFont();
 
   PRBool operator==(const nsFont& aOther) const {
@@ -93,10 +116,13 @@ struct NS_GFX nsFont {
 
   // Utility method to interpret name string
   // enumerates all families specified by this font only
-  // returns PR_TRUE if completed, PF_FALSE if stopped
+  // returns PR_TRUE if completed, PR_FALSE if stopped
   // enclosing quotes will be removed, and whitespace compressed (as needed)
   PRBool EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const;
   void GetFirstFamily(nsString& aFamily) const;
+
+  // Utility method to return the ID of a generic font
+  static void GetGenericID(const nsString& aGeneric, PRUint8* aID);
 };
 
 #define NS_FONT_STYLE_NORMAL              0

@@ -57,6 +57,7 @@ struct nsFont;
 struct nsPoint;
 struct nsPathPoint;
 struct nsRect;
+struct nsTextDimensions;
 #ifdef MOZ_MATHML
 struct nsBoundingMetrics;
 #endif
@@ -579,65 +580,76 @@ public:
   NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength,
                       nscoord &aWidth, PRInt32 *aFontID = nsnull) = 0;
 
+  /**
+   * Returns the dimensions of a string, i.e., the overall extent of a string
+   * whose rendering may involve switching between different fonts that have
+   * different metrics.
+   * @param aString string to measure
+   * @param aLength number of characters in string
+   * @param aFontID an optional out parameter used to store a
+   *        font identifier that can be passed into the DrawString()
+   *        methods to speed measurements
+   * @return aDimensions struct that contains the extent of the string (see below)
+   */
+  NS_IMETHOD GetTextDimensions(const char* aString, PRUint32 aLength,
+                               nsTextDimensions& aDimensions) = 0;
+  NS_IMETHOD GetTextDimensions(const PRUnichar* aString, PRUint32 aLength,
+                               nsTextDimensions& aDimensions, PRInt32* aFontID = nsnull) = 0;
+
 #ifdef _WIN32
   /**
    * Given an available width and an array of break points,
-   * returns the width (in app units) of the text that fit and
+   * returns the dimensions (in app units) of the text that fit and
    * the number of characters that fit. The number of characters
    * corresponds to an entry in the break array.
-   * If no font has been Set, the results are undefined.
-   * @param aString 8-bit character string to measure
-   * @param aLength number of characters in string
-   * @param aAvailWidth the available space in which the text must fit
-   * @param aBreaks array of places to break. Specified as offsets from the
+   * If no font has been set, the results are undefined.
+   * @param aString, string to measure
+   * @param aLength, number of characters in string
+   * @param aAvailWidth, the available space in which the text must fit
+   * @param aBreaks, array of places to break. Specified as offsets from the
    *          start of the string
-   * @param aNumBreaks the number of entries in the break array. The last
+   * @param aNumBreaks, the number of entries in the break array. The last
    *          entry in the break array must equal the length of the string
-   * @param aWidth out parameter for width
-   * @param aNumCharsFit the number of characters that fit in the available space
-   * @param aFontID an optional out parameter used to store a
+   * @param aDimensions, out parameter for the dimensions, the ascent and descent
+   *           of the last word are left out to allow possible line-breaking before
+   *           the last word. However, the width of the last word is included.
+   * @param aNumCharsFit, the number of characters that fit in the available space
+   * @param aLastWordDimensions, dimensions of the last word, the width field,
+   *             dimensions.width, should be -1 for an unknown width. But the 
+   *             ascent and descent are expected to be known.
+   * @param aFontID, an optional out parameter used to store a
    *        font identifier that can be passed into the DrawString()
    *        methods to speed rendering
    * @return error status
    */
-  NS_IMETHOD GetWidth(const char *aString,
-                      PRInt32     aLength,
-                      PRInt32     aAvailWidth,
-                      PRInt32*    aBreaks,
-                      PRInt32     aNumBreaks,
-                      nscoord&    aWidth,
-                      PRInt32&    aNumCharsFit,
-                      PRInt32*    aFontID = nsnull) = 0;
+  NS_IMETHOD GetTextDimensions(const char*       aString,
+                               PRInt32           aLength,
+                               PRInt32           aAvailWidth,
+                               PRInt32*          aBreaks,
+                               PRInt32           aNumBreaks,
+                               nsTextDimensions& aDimensions,
+                               PRInt32&          aNumCharsFit,
+                               nsTextDimensions& aLastWordDimensions,
+                               PRInt32*          aFontID = nsnull) = 0;
 
-  /**
-   * Given an available width and an array of break points,
-   * returns the width (in app units) of the text that fit and
-   * the number of characters that fit. The number of characters
-   * corresponds to an entry in the break array.
-   * If no font has been Set, the results are undefined.
-   * @param aString Unicode string to measure
-   * @param aLength number of characters in string
-   * @param aAvailWidth the available space in which the text must fit
-   * @param aBreaks array of places to break. Specified as offsets from the
-   *          start of the string
-   * @param aNumBreaks the number of entries in the break array. The last
-   *          entry in the break array must equal the length of the string
-   * @param aWidth out parameter for width
-   * @param aNumCharsFit the number of characters that fit in the available space
-   * @param aFontID an optional out parameter used to store a
-   *        font identifier that can be passed into the DrawString()
-   *        methods to speed rendering
-   * @return error status
-   */
-  NS_IMETHOD GetWidth(const PRUnichar *aString,
-                      PRInt32          aLength,
-                      PRInt32          aAvailWidth,
-                      PRInt32*         aBreaks,
-                      PRInt32          aNumBreaks,
-                      nscoord&         aWidth,
-                      PRInt32&         aNumCharsFit,
-                      PRInt32*         aFontID = nsnull) = 0;
+  NS_IMETHOD GetTextDimensions(const PRUnichar*  aString,
+                               PRInt32           aLength,
+                               PRInt32           aAvailWidth,
+                               PRInt32*          aBreaks,
+                               PRInt32           aNumBreaks,
+                               nsTextDimensions& aDimensions,
+                               PRInt32&          aNumCharsFit,
+                               nsTextDimensions& aLastWordDimensions,
+                               PRInt32*          aFontID = nsnull) = 0;
 #endif
+  /*
+   * XXX Buggy APIs: the DrawString() APIs are not implemented according
+   * to their signature. Indeed aX and aY are not interpreted as the
+   * coordinates of the baseline.
+   * XXX TODO: replace the buggy DrawString() APIs with the newer DrawString2()
+   * APIs and fix callers. The newer APIs are the ones to use in conjunction
+   * with GetTextDimensions().
+   */
 
   /**
    * Draw a string in the RenderingContext
@@ -648,6 +660,15 @@ public:
    * @param aSpacing inter-character spacing to apply
    */
   NS_IMETHOD DrawString(const char *aString, PRUint32 aLength,
+                        nscoord aX, nscoord aY,
+                        const nscoord* aSpacing = nsnull) = 0;
+
+  /** 
+   * Same as above, with the difference that the implementation is
+   * correctly intepreting aX and aY as the horizontal and vertical
+   * starting point of the baseline
+   */
+  NS_IMETHOD DrawString2(const char *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
                         const nscoord* aSpacing = nsnull) = 0;
 
@@ -663,6 +684,10 @@ public:
    * @param aSpacing inter-character spacing to apply
    */
   NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength,
+                        nscoord aX, nscoord aY,
+                        PRInt32 aFontID = -1,
+                        const nscoord* aSpacing = nsnull) = 0;
+  NS_IMETHOD DrawString2(const PRUnichar *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
                         PRInt32 aFontID = -1,
                         const nscoord* aSpacing = nsnull) = 0;
@@ -860,6 +885,40 @@ public:
 //stop using it.
 #define NS_COPYBITS_TO_BACK_BUFFER          0x0008
 
+/* Struct used to represent the overall extent of a string
+   whose rendering may involve switching between different
+   fonts that have different metrics.
+*/
+struct nsTextDimensions {
+  // max ascent amongst all the fonts needed to represent the string
+  nscoord ascent;
+
+  // max descent amongst all the fonts needed to represent the string
+  nscoord descent;
+
+  // width of the string
+  nscoord width;
+
+
+  nsTextDimensions()
+  {
+    Clear();
+  }
+
+  /* Set all member data to zero */
+  void 
+  Clear() {
+    ascent = descent = width = 0;
+  }
+
+  /* Sum with another dimension */
+  void 
+  Combine(const nsTextDimensions& aOther) {
+    if (ascent < aOther.ascent) ascent = aOther.ascent;
+    if (descent < aOther.descent) descent = aOther.descent;   
+    width += aOther.width;
+  }
+};
 
 #ifdef MOZ_MATHML
 /* Struct used for accurate measurements of a string in order
