@@ -25,7 +25,7 @@ DEPTH=..
 !if defined(DISABLE_EDITOR)
 DIRS= public idl
 !else
-DIRS= txmgr public idl base ui txtsvc
+DIRS= public idl libeditor composer txmgr ui txtsvc
 !endif
 
 include <$(DEPTH)\config\rules.mak>

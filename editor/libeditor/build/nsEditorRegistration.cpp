@@ -46,7 +46,7 @@
 
 #include "nsEditorController.h" //CID
 
-#define DO_COMPOSER_TOO 1
+#undef DO_COMPOSER_TOO   // Remove these clauses when we know they're working
 #ifdef DO_COMPOSER_TOO
 #include "nsComposerController.h" //CID
 #include "nsEditorShell.h"		// for the CID
