@@ -148,7 +148,7 @@ PR_LOG(NNTP, out, buf) ;
 */
 /* PRIVATE XP_List * nntp_connection_list=0; */
 PRIVATE XP_Bool net_news_last_username_probably_valid=FALSE;
-PRIVATE PRInt32 net_NewsChunkSize=-1;  /* default */
+PRInt32 net_NewsChunkSize=-1;  /* default */
 /* PRIVATE PRInt32 net_news_timeout = 170; */
 /* seconds that an idle NNTP conn can live */
 
