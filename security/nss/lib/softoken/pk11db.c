@@ -425,9 +425,9 @@ static SECStatus secmod_EncodeData(DBT *data, char * module) {
     encoded->isCritical = (unsigned char) 
 			(pk11_argHasFlag("flags","critical",nss) ? 1 : 0);
 
-    order = pk11_argReadLong("trustOrder",nss);
+    order = pk11_argReadLong("trustOrder",nss, PK11_DEFAULT_TRUST_ORDER, NULL);
     SECMOD_PUTLONG(encoded->trustOrder,order);
-    order = pk11_argReadLong("cipherOrder",nss);
+    order = pk11_argReadLong("cipherOrder",nss,PK11_DEFAULT_CIPHER_ORDER,NULL);
     SECMOD_PUTLONG(encoded->cipherOrder,order);
 
    
@@ -509,7 +509,8 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     PRBool internal, isFIPS, isModuleDB=PR_FALSE, isModuleDBOnly=PR_FALSE;
     PRBool extended=PR_FALSE;
     PRBool hasRootCerts=PR_FALSE,hasRootTrust=PR_FALSE;
-    unsigned long trustOrder=0, cipherOrder=0;
+    unsigned long trustOrder=PK11_DEFAULT_TRUST_ORDER, 
+				cipherOrder=PK11_DEFAULT_CIPHER_ORDER;
     unsigned long ssl0=0, ssl1=0;
     char **slotStrings = NULL;
     unsigned long slotID,defaultFlags,timeout;
@@ -545,6 +546,11 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 	isModuleDBOnly = (encoded->isModuleDBOnly != 0) ? PR_TRUE: PR_FALSE;
 	extended = PR_TRUE;
     } 
+
+    if (internal && !extended) {
+	trustOrder = 0;
+	cipherOrder = 100;
+    }
 
     /* decode the common name */
     commonName = (char*)PORT_ArenaAlloc(arena,len+1);
@@ -601,7 +607,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 	timeout = SECMOD_GETLONG(slots[i].timeout);
 	hasRootCerts = slots[i].hasRootCerts;
 	if (hasRootCerts && !extended) {
-	    trustOrder = 20;
+	    trustOrder = 100;
 	}
 
 	slotStrings[i] = pk11_mkSlotString(slotID,defaultFlags,
@@ -669,7 +675,7 @@ secmod_addEscape(const char *string, char quote)
 }
 
 #define SECMOD_STEP 10
-#define PK11_DEFAULT_INTERNAL_INIT "library= name=\"NSS Internal PKCS #11 Module\" parameters=\"%s\" NSS=\"Flags=internal,critical slotParams=(1={%s askpw=any timeout=30})\""
+#define PK11_DEFAULT_INTERNAL_INIT "library= name=\"NSS Internal PKCS #11 Module\" parameters=\"%s\" NSS=\"Flags=internal,critical trustOrder=0 cipherOrder=100 slotParams=(1={%s askpw=any timeout=30})\""
 /*
  * Read all the existing modules in
  */
