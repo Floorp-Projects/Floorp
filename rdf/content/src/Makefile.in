@@ -49,6 +49,7 @@ CPPSRCS		= \
 		nsJSXULMenuListElement.cpp \
 		nsRDFDOMNodeList.cpp \
 		nsRuleNetwork.cpp \
+		nsXULAtoms.cpp \
 		nsXULElement.cpp \
 		nsXULAttributes.cpp \
 		nsXULContentSink.cpp \
