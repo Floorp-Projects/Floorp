@@ -72,5 +72,8 @@ public:
 	nsresult GetAllProfiles();
 
 	nsresult UpdateMozProfileRegistry();
+
+	// Fix the version differences by modifying the dir name entries
+	nsresult FixRegEntries();
 };
 
