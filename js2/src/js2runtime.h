@@ -2041,6 +2041,7 @@ XXX ...couldn't get this to work...
 
 
         void *mErrorReporter;
+        void *argumentFormatMap;
 
     private:
         JSObject **mGlobal;

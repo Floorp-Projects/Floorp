@@ -34,6 +34,8 @@
 #ifndef world_h___
 #define world_h___
 
+#include <vector>
+
 #include "strings.h"
 #include "token.h"
 #include "hash.h"
@@ -70,12 +72,17 @@ namespace JavaScript {
         StringAtom &operator[](const char *s) {return operator[](widenCString(s));}
     };
 
+    namespace JS2Runtime {
+        class Context;
+    }
 
     class World {
       public:
         StringAtomTable identifiers;
 
         World();
+
+        std::vector<JS2Runtime::Context *> contextList;
 
         /* Random number generator state, used by jsmath.c. */
         bool                rngInitialized;

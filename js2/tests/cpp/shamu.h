@@ -1,13 +1,7 @@
-struct JSRuntime {
-    double jsNaN;
-    double jsNegativeInfinity;
-    double jsPositiveInfinity;
-    JSString *emptyString;
-};
 
-struct JSContext {
-    JSRuntime *runtime;
-};
+typedef struct JSStackFrame         JSStackFrame;
+typedef struct JSPropertyDescArray  JSPropertyDescArray;
+
 
 
 #ifdef JS_ARGUMENT_FORMATTER_DEFINED

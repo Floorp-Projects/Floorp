@@ -1,4 +1,11 @@
 
+
+#ifdef _WIN32
+ // Turn off warnings about identifiers too long in browser information
+#pragma warning(disable: 4786)
+#endif
+
+
 #include <string.h>
 #include <stdarg.h>
 
@@ -18,44 +25,20 @@
 
 #include "shamu.h"
 
-/*
-jsval convertJS2ValueToJSValue(JSContext *cx, JavaScript::JS2Runtime::js2val v)
-{
-    jsval result = JSVAL_VOID;
-    switch (JavaScript::JS2Runtime::JSValue::tag(v)) {
-    case JS2VAL_DOUBLE: 
-        JS_NewDoubleValue(cx, JavaScript::JS2Runtime::JSValue::f64(v), &result);
-        break;
-    case JS2VAL_OBJECT: 
-        result = OBJECT_TO_JSVAL(JavaScript::JS2Runtime::JSValue::object(v));
-        break;
-    case JS2VAL_STRING:
-        result = STRING_TO_JSVAL(JavaScript::JS2Runtime::JSValue::string(v));
-        break;
-    }
-    return result;
-}
-
-JavaScript::JS2Runtime::js2val convertJSValueToJS2Value(JSContext *cx, jsval v)
-{
-    if (JSVAL_IS_OBJECT(v))
-        return JavaScript::JS2Runtime::JSValue::newObject((JavaScript::JS2Runtime::JSObject *)(JSVAL_TO_OBJECT(v)));
-    else
-    if (JSVAL_IS_DOUBLE(v))
-        return JavaScript::JS2Runtime::JSValue::newNumber(*JSVAL_TO_DOUBLE(v));
-    else
-    if (JSVAL_IS_STRING(v))
-        return JavaScript::JS2Runtime::JSValue::newString((JavaScript::String *)JSVAL_TO_STRING(v));
-
-    return JavaScript::JS2Runtime::kUndefinedValue;
-}
-*/
-
 void nyi()
 {
+    ASSERT("Not Yet Implemented");
     throw "Not Yet Implemented";
 }
 
+#define JS_ASSERT(x) ASSERT(x)
+
+//
+// wrapper function to call SpiderMonkey API functions from the DikDik interpreter.
+//  This function is supplied as the native method dispatch routine whenever a JSFunction
+//  object is constructed and, when invoked, is passed the target function.
+//
+//
 JavaScript::JS2Runtime::js2val callSpiderMonkeyNative(JavaScript::JS2Runtime::JSFunction::NativeCode *js2target, 
                         JavaScript::JS2Runtime::Context *js2cx, 
                         const JavaScript::JS2Runtime::js2val thisValue, 
@@ -63,14 +46,12 @@ JavaScript::JS2Runtime::js2val callSpiderMonkeyNative(JavaScript::JS2Runtime::JS
 {
     JSNative target = (JSNative)js2target;
     jsval result;
-    jsval *args = new jsval[argc];
+    jsval *args = new jsval[argc];          // XXX unnecessary to make copy of these ?
     for (uint32 i = 0; i < argc; i++) {
-        args[i] = argv[i]; // convertJS2ValueToJSValue((JSContext *)js2cx, argv[i]);
+        args[i] = argv[i];
     }
-
     target( (JSContext *)js2cx, (JSObject *)(JavaScript::JS2Runtime::JSValue::object(thisValue)), argc, args, &result);
-
-    return result; //convertJSValueToJS2Value((JSContext *)js2cx, result);
+    return result;
 }
 
 
@@ -89,36 +70,109 @@ extern "C" {
 #define CHECK_REQUEST(cx)       ((void)0)
 #endif
 
+
+/*
+ * Report an exception, which is currently realized as a printf-style format
+ * string and its arguments.
+ */
+typedef enum JSErrNum {
+#define MSG_DEF(name, number, count, exception, format) \
+    name = number,
+#include "js.msg"
+#undef MSG_DEF
+    JSErr_Limit
+} JSErrNum;
+
+JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
+#if JS_HAS_DFLT_MSG_STRINGS
+#define MSG_DEF(name, number, count, exception, format) \
+    { format, count } ,
+#else
+#define MSG_DEF(name, number, count, exception, format) \
+    { NULL, count } ,
+#endif
+#include "js.msg"
+#undef MSG_DEF
+};
+
+
+const JSErrorFormatString *
+js2_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
+{
+    if ((errorNumber > 0) && (errorNumber < JSErr_Limit))
+        return &js_ErrorFormatString[errorNumber];
+    return NULL;
+}
+
+
 JS_PUBLIC_API(jsval)
 JS_GetNaNValue(JSContext *cx)
 {
-    return DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+    JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
+    return JavaScript::JS2Runtime::kNaNValue;
 }
 
 JS_PUBLIC_API(jsval)
 JS_GetNegativeInfinityValue(JSContext *cx)
 {
-    return DOUBLE_TO_JSVAL(cx->runtime->jsNegativeInfinity);
+    JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
+    return JavaScript::JS2Runtime::kNegativeInfinity;
 }
 
 JS_PUBLIC_API(jsval)
 JS_GetPositiveInfinityValue(JSContext *cx)
 {
-    return DOUBLE_TO_JSVAL(cx->runtime->jsPositiveInfinity);
+    JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
+    return JavaScript::JS2Runtime::kPositiveInfinity;
 }
 
 JS_PUBLIC_API(jsval)
 JS_GetEmptyStringValue(JSContext *cx)
 {
-    return STRING_TO_JSVAL(cx->runtime->emptyString);
+    JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
+    return STRING_TO_JSVAL(&js2cx->Empty_StringAtom);
 }
+
+JS_PUBLIC_API(JSUint32) JS_snprintf(char *out, JSUint32 outlen, const char *fmt, ...)
+{
+    nyi();
+    return 0;
+}
+
+JS_FRIEND_API(jsval *)
+js_AllocStack(JSContext *cx, uintN nslots, void **markp)
+{
+    nyi();
+    return NULL;
+}
+
+
+JS_FRIEND_API(void)
+js_FreeStack(JSContext *cx, void *mark)
+{
+    nyi();
+}
+
+
 
 #ifdef JS_ARGUMENT_FORMATTER_DEFINED
 static JSBool
 TryArgumentFormatter(JSContext *cx, const char **formatp, JSBool fromJS,
                      jsval **vpp, va_list *app)
 {
-    nyi();
+    JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
+
+    const char *format;
+    JSArgumentFormatMap *map;
+
+    format = *formatp;
+    for (map = (JSArgumentFormatMap *)(js2cx->argumentFormatMap); map; map = map->next) {
+        if (!strncmp(format, map->format, map->length)) {
+            *formatp = format + map->length;
+            return map->formatter(cx, format, fromJS, vpp, app);
+        }
+    }
+    JS_ReportErrorNumber(cx, js2_GetErrorMessage, NULL, JSMSG_BAD_CHAR, format);
     return JS_FALSE;
 }
 
@@ -126,50 +180,315 @@ JS_PUBLIC_API(JSBool)
 JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
                     ...)
 {
-    nyi();
-    return JS_FALSE;
+    va_list ap;
+    JSBool ok;
+
+    va_start(ap, format);
+    ok = JS_ConvertArgumentsVA(cx, argc, argv, format, ap);
+    va_end(ap);
+    return ok;
+}
+
+JSFunction *
+js_ValueToFunction(JSContext *cx, jsval *vp, JSBool constructing)
+{
+    JSFunction *fun = NULL;
+    // the SpiderMonkey implementation of this invokes DefaultValue
+    // as well as potentially returning the private field of a
+    // JSObject. For now we'll just error if the value is not
+    // specifically a function object.
+    if (JavaScript::JS2Runtime::JSValue::isFunction(*vp))
+        fun = (JSFunction *)JavaScript::JS2Runtime::JSValue::function(*vp);
+    else
+        JS_ReportErrorNumber(cx, js2_GetErrorMessage, NULL, JSMSG_NOT_FUNCTION, "");
+    return fun;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
                       const char *format, va_list ap)
 {
-    nyi();
-    return JS_FALSE;
+    JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
+
+    jsval *sp;
+    JSBool required;
+    char c;
+    JSFunction *fun;
+    jsdouble d;
+    const JavaScript::String *str;
+    JSObject *obj;
+
+    CHECK_REQUEST(cx);
+    sp = argv;
+    required = JS_TRUE;
+    while ((c = *format++) != '\0') {
+        if (isspace(c))
+            continue;
+        if (c == '/') {
+            required = JS_FALSE;
+            continue;
+        }
+        if (sp == argv + argc) {
+            if (required) {
+                fun = js_ValueToFunction(cx, &argv[-2], JS_FALSE);
+                if (fun) {
+                    char numBuf[12];
+                    JS_snprintf(numBuf, sizeof numBuf, "%u", argc);
+                    JS_ReportErrorNumber(cx, js2_GetErrorMessage, NULL,
+                                         JSMSG_MORE_ARGS_NEEDED,
+                                         JS_GetFunctionName(fun), numBuf,
+                                         (argc == 1) ? "" : "s");
+                }
+                return JS_FALSE;
+            }
+            break;
+        }
+        switch (c) {
+          case 'b':
+            *va_arg(ap, JSBool *) = JavaScript::JS2Runtime::JSValue::boolean(JavaScript::JS2Runtime::JSValue::toBoolean(js2cx, *sp));
+            break;
+          case 'c':
+            *va_arg(ap, uint16 *) = JavaScript::JS2Runtime::JSValue::f64(JavaScript::JS2Runtime::JSValue::toUInt16(js2cx, *sp));
+            break;
+          case 'i':
+            *va_arg(ap, int32 *) = JavaScript::JS2Runtime::JSValue::f64(JavaScript::JS2Runtime::JSValue::toInt32(js2cx, *sp));
+            break;
+          case 'u':
+            *va_arg(ap, uint32 *) = JavaScript::JS2Runtime::JSValue::f64(JavaScript::JS2Runtime::JSValue::toUInt32(js2cx, *sp));
+            break;
+          case 'j':
+            *va_arg(ap, int32 *) = JavaScript::JS2Runtime::JSValue::f64(JavaScript::JS2Runtime::JSValue::toInt32(js2cx, *sp));
+            break;
+          case 'd':
+            *va_arg(ap, jsdouble *) = JavaScript::JS2Runtime::JSValue::f64(JavaScript::JS2Runtime::JSValue::toNumber(js2cx, *sp));
+            break;
+          case 'I':
+            d = JavaScript::JS2Runtime::JSValue::f64(JavaScript::JS2Runtime::JSValue::toNumber(js2cx, *sp));
+            *va_arg(ap, jsdouble *) = JavaScript::JS2Runtime::JSValue::float64ToInteger(d);
+            break;
+          case 's':
+          case 'S':
+          case 'W':
+            str = JavaScript::JS2Runtime::JSValue::string(JavaScript::JS2Runtime::JSValue::toString(js2cx, *sp));
+            *sp = STRING_TO_JSVAL(str);
+            if (c == 's')
+                *va_arg(ap, char **) = JS_GetStringBytes((JSString *)str);
+            else if (c == 'W')
+                *va_arg(ap, jschar **) = JS_GetStringChars((JSString *)str);
+            else
+                *va_arg(ap, JSString **) = (JSString *)str;
+            break;
+          case 'o':
+            obj = (JSObject *)JavaScript::JS2Runtime::JSValue::object(JavaScript::JS2Runtime::JSValue::toObject(js2cx, *sp));
+            *sp = OBJECT_TO_JSVAL(obj);
+            *va_arg(ap, JSObject **) = obj;
+            break;
+          case 'f':
+            fun = js_ValueToFunction(cx, sp, JS_FALSE);
+            if (!fun)
+                return JS_FALSE;
+            *sp = OBJECT_TO_JSVAL(fun); // DikDik isn't making a distinction here, OBJECT_TO_JSVAL(fun->object);
+            *va_arg(ap, JSFunction **) = fun;
+            break;
+          case 'v':
+            *va_arg(ap, jsval *) = *sp;
+            break;
+          case '*':
+            break;
+          default:
+            format--;
+            if (!TryArgumentFormatter(cx, &format, JS_TRUE, &sp,
+                                      JS_ADDRESSOF_VA_LIST(ap))) {
+                return JS_FALSE;
+            }
+            /* NB: the formatter already updated sp, so we continue here. */
+            continue;
+        }
+        sp++;
+    }
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(jsval *)
 JS_PushArguments(JSContext *cx, void **markp, const char *format, ...)
 {
-    nyi();
-    return NULL;
+    va_list ap;
+    jsval *argv;
+
+    va_start(ap, format);
+    argv = JS_PushArgumentsVA(cx, markp, format, ap);
+    va_end(ap);
+    return argv;
 }
 
 JS_PUBLIC_API(jsval *)
 JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
 {
-    nyi();
+    uintN argc;
+    jsval *argv, *sp;
+    char c;
+    const char *cp;
+    JSString *str;
+    JSFunction *fun;
+#if 0
+    JSStackHeader *sh;
+#endif
+
+    CHECK_REQUEST(cx);
+    *markp = NULL;
+    argc = 0;
+    for (cp = format; (c = *cp) != '\0'; cp++) {
+        /*
+         * Count non-space non-star characters as individual jsval arguments.
+         * This may over-allocate stack, but we'll fix below.
+         */
+        if (isspace(c) || c == '*')
+            continue;
+        argc++;
+    }
+    sp = js_AllocStack(cx, argc, markp);
+    if (!sp)
+        return NULL;
+    argv = sp;
+    while ((c = *format++) != '\0') {
+        if (isspace(c) || c == '*')
+            continue;
+        switch (c) {
+          case 'b':
+            *sp = BOOLEAN_TO_JSVAL((JSBool) va_arg(ap, int));
+            break;
+          case 'c':
+            *sp = INT_TO_JSVAL((uint16) va_arg(ap, unsigned int));
+            break;
+          case 'i':
+          case 'j':
+            *sp = DOUBLE_TO_JSVAL(JS_NewDouble(cx, (jsdouble) va_arg(ap, int32)));
+            break;
+          case 'u':
+            *sp = DOUBLE_TO_JSVAL(JS_NewDouble(cx, (jsdouble) va_arg(ap, uint32)));
+            break;
+          case 'd':
+          case 'I':
+            *sp = DOUBLE_TO_JSVAL(JS_NewDouble(cx, va_arg(ap, jsdouble)));
+            break;
+          case 's':
+            str = JS_NewStringCopyZ(cx, va_arg(ap, char *));
+            if (!str)
+                goto bad;
+            *sp = STRING_TO_JSVAL(str);
+            break;
+          case 'W':
+            str = JS_NewUCStringCopyZ(cx, va_arg(ap, jschar *));
+            if (!str)
+                goto bad;
+            *sp = STRING_TO_JSVAL(str);
+            break;
+          case 'S':
+            str = va_arg(ap, JSString *);
+            *sp = STRING_TO_JSVAL(str);
+            break;
+          case 'o':
+            *sp = OBJECT_TO_JSVAL(va_arg(ap, JSObject *));
+            break;
+          case 'f':
+            fun = va_arg(ap, JSFunction *);
+//            *sp = fun ? OBJECT_TO_JSVAL(fun->object) : JSVAL_NULL;
+            *sp = fun ? OBJECT_TO_JSVAL(fun) : JSVAL_NULL;
+            break;
+          case 'v':
+            *sp = va_arg(ap, jsval);
+            break;
+          default:
+            format--;
+            if (!TryArgumentFormatter(cx, &format, JS_FALSE, &sp,
+                                      JS_ADDRESSOF_VA_LIST(ap))) {
+                goto bad;
+            }
+            /* NB: the formatter already updated sp, so we continue here. */
+            continue;
+        }
+        sp++;
+    }
+
+    /*
+     * We may have overallocated stack due to a multi-character format code
+     * handled by a JSArgumentFormatter.  Give back that stack space!
+     */
+    JS_ASSERT(sp <= argv + argc);
+#if 0
+    if (sp < argv + argc) {
+        /* Return slots not pushed to the current stack arena. */
+        cx->stackPool.current->avail = (jsuword)sp;
+
+        /* Reduce the count of slots the GC will scan in this stack segment. */
+        sh = cx->stackHeaders;
+        JS_ASSERT(JS_STACK_SEGMENT(sh) + sh->nslots == argv + argc);
+        sh->nslots -= argc - (sp - argv);
+    }
+#endif
+    return argv;
+
+bad:
+    js_FreeStack(cx, *markp);
     return NULL;
 }
 
 JS_PUBLIC_API(void)
 JS_PopArguments(JSContext *cx, void *mark)
 {
-    nyi();
+    CHECK_REQUEST(cx);
+    js_FreeStack(cx, mark);
 }
 
 JS_PUBLIC_API(JSBool)
 JS_AddArgumentFormatter(JSContext *cx, const char *format,
                         JSArgumentFormatter formatter)
 {
-    nyi();
-    return JS_FALSE;
+    JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
+
+    size_t length;
+    JSArgumentFormatMap **mpp, *map;
+
+    length = strlen(format);
+    mpp = (JSArgumentFormatMap **)(&js2cx->argumentFormatMap);
+    while ((map = *mpp) != NULL) {
+        /* Insert before any shorter string to match before prefixes. */
+        if (map->length < length)
+            break;
+        if (map->length == length && !strcmp(map->format, format))
+            goto out;
+        mpp = &map->next;
+    }
+    map = (JSArgumentFormatMap *) JS_malloc(cx, sizeof *map);
+    if (!map)
+        return JS_FALSE;
+    map->format = format;
+    map->length = length;
+    map->next = *mpp;
+    *mpp = map;
+out:
+    map->formatter = formatter;
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(void)
 JS_RemoveArgumentFormatter(JSContext *cx, const char *format)
 {
-    nyi();
+    JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
+
+    size_t length;
+    JSArgumentFormatMap **mpp, *map;
+
+    length = strlen(format);
+    mpp = (JSArgumentFormatMap **)(&js2cx->argumentFormatMap);
+    while ((map = *mpp) != NULL) {
+        if (map->length == length && !strcmp(map->format, format)) {
+            *mpp = map->next;
+            JS_free(cx, map);
+            return;
+        }
+        mpp = &map->next;
+    }
 }
 
 #endif
@@ -364,124 +683,32 @@ JS_SetRuntimePrivate(JSRuntime *rt, void *data)
 JS_PUBLIC_API(void)
 JS_BeginRequest(JSContext *cx)
 {
-    JSRuntime *rt;
-
-    JS_ASSERT(cx->thread);
-    if (!cx->requestDepth) {
-        /* Wait until the GC is finished. */
-        rt = cx->runtime;
-        JS_LOCK_GC(rt);
-
-        /* NB: we use cx->thread here, not js_CurrentThreadId(). */
-        if (rt->gcThread != cx->thread) {
-            while (rt->gcLevel > 0)
-                JS_AWAIT_GC_DONE(rt);
-        }
-
-        /* Indicate that a request is running. */
-        rt->requestCount++;
-        cx->requestDepth = 1;
-        JS_UNLOCK_GC(rt);
-        return;
-    }
-    cx->requestDepth++;
+    // nyi();       XXX get working
 }
 
 JS_PUBLIC_API(void)
 JS_EndRequest(JSContext *cx)
 {
-    JSRuntime *rt;
-    JSScope *scope, **todop;
-    uintN nshares;
-
-    CHECK_REQUEST(cx);
-    JS_ASSERT(cx->requestDepth > 0);
-    if (cx->requestDepth == 1) {
-        /* Lock before clearing to interlock with ClaimScope, in jslock.c. */
-        rt = cx->runtime;
-        JS_LOCK_GC(rt);
-        cx->requestDepth = 0;
-
-        /* See whether cx has any single-threaded scopes to start sharing. */
-        todop = &rt->scopeSharingTodo;
-        nshares = 0;
-        while ((scope = *todop) != NO_SCOPE_SHARING_TODO) {
-            if (scope->ownercx != cx) {
-                todop = &scope->u.link;
-                continue;
-            }
-            *todop = scope->u.link;
-            scope->u.link = NULL;       /* null u.link for sanity ASAP */
-
-            /*
-             * If js_DropObjectMap returns null, we held the last ref to scope.
-             * The waiting thread(s) must have been killed, after which the GC
-             * collected the object that held this scope.  Unlikely, because it
-             * requires that the GC ran (e.g., from a branch callback) during
-             * this request, but possible.
-             */
-            if (js_DropObjectMap(cx, &scope->map, NULL)) {
-                js_InitLock(&scope->lock);
-                scope->u.count = 0;                 /* NULL may not pun as 0 */
-                js_FinishSharingScope(rt, scope);   /* set ownercx = NULL */
-                nshares++;
-            }
-        }
-        if (nshares)
-            JS_NOTIFY_ALL_CONDVAR(rt->scopeSharingDone);
-
-        /* Give the GC a chance to run if this was the last request running. */
-        JS_ASSERT(rt->requestCount > 0);
-        rt->requestCount--;
-        if (rt->requestCount == 0)
-            JS_NOTIFY_REQUEST_DONE(rt);
-
-        JS_UNLOCK_GC(rt);
-        return;
-    }
-
-    cx->requestDepth--;
+    // nyi();       XXX get working
 }
 
 /* Yield to pending GC operations, regardless of request depth */
 JS_PUBLIC_API(void)
 JS_YieldRequest(JSContext *cx)
 {
-    JSRuntime *rt;
-
-    JS_ASSERT(cx->thread);
-    CHECK_REQUEST(cx);
-
-    rt = cx->runtime;
-    JS_LOCK_GC(rt);
-    JS_ASSERT(rt->requestCount > 0);
-    rt->requestCount--;
-    if (rt->requestCount == 0)
-        JS_NOTIFY_REQUEST_DONE(rt);
-    JS_UNLOCK_GC(rt);
-    /* XXXbe give the GC or another request calling it a chance to run here?
-             Assumes FIFO scheduling */
-    JS_LOCK_GC(rt);
-    rt->requestCount++;
-    JS_UNLOCK_GC(rt);
+    // nyi();       XXX get working
 }
 
 JS_PUBLIC_API(jsrefcount)
 JS_SuspendRequest(JSContext *cx)
 {
-    jsrefcount saveDepth = cx->requestDepth;
-
-    while (cx->requestDepth)
-        JS_EndRequest(cx);
-    return saveDepth;
+    return 0;
 }
 
 JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
 {
-    JS_ASSERT(!cx->requestDepth);
-    while (--saveDepth >= 0)
-        JS_BeginRequest(cx);
+    // nyi();       XXX get working
 }
 
 #endif /* JS_THREADSAFE */
@@ -501,7 +728,10 @@ JS_Unlock(JSRuntime *rt)
 JS_PUBLIC_API(JSContext *)
 JS_NewContext(JSRuntime *rt, size_t stackChunkSize)
 {
-    return (JSContext *)(new JavaScript::JS2Runtime::Context(&globalObject, *((JavaScript::World *)rt), a, JavaScript::Pragma::js2));
+    JavaScript::World *world = (JavaScript::World *)rt;
+    JavaScript::JS2Runtime::Context *js2cx = new JavaScript::JS2Runtime::Context(&globalObject, *((JavaScript::World *)rt), a, JavaScript::Pragma::js2);
+    world->contextList.push_back(js2cx);
+    return (JSContext *)(js2cx);
 }
 
 JS_PUBLIC_API(void)
@@ -534,15 +764,29 @@ JS_SetContextPrivate(JSContext *cx, void *data)
 JS_PUBLIC_API(JSRuntime *)
 JS_GetRuntime(JSContext *cx)
 {
-    nyi();
-    return NULL;
+    JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
+    return (JSRuntime *)(&js2cx->mWorld);
 }
 
 JS_PUBLIC_API(JSContext *)
 JS_ContextIterator(JSRuntime *rt, JSContext **iterp)
 {
-    nyi();
-    return NULL;
+    JavaScript::World *world = (JavaScript::World *)rt;
+    if (*iterp == NULL) {
+        std::vector<JavaScript::JS2Runtime::Context *>::reverse_iterator *it = new std::vector<JavaScript::JS2Runtime::Context *>::reverse_iterator(world->contextList.rbegin());
+        *iterp = (JSContext *)it;
+        return (JSContext *)(**it);
+    }
+    else {
+        std::vector<JavaScript::JS2Runtime::Context *>::reverse_iterator *it = (std::vector<JavaScript::JS2Runtime::Context *>::reverse_iterator *)(*iterp);
+        (*it)++;
+        if (*it == world->contextList.rend())
+            return NULL;
+        else {
+            *iterp = (JSContext *)it;
+            return (JSContext *)(**it);
+        }
+    }
 }
 
 JS_PUBLIC_API(JSVersion)
@@ -680,21 +924,19 @@ JS_GetScopeChain(JSContext *cx)
 JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes)
 {
-    nyi();
-    return NULL;
+    return malloc(nbytes);
 }
 
 JS_PUBLIC_API(void *)
 JS_realloc(JSContext *cx, void *p, size_t nbytes)
 {
-    nyi();
-    return NULL;
+    return realloc(p, nbytes);
 }
 
 JS_PUBLIC_API(void)
 JS_free(JSContext *cx, void *p)
 {
-    nyi();
+    free(p);
 }
 
 JS_PUBLIC_API(char *)
@@ -829,7 +1071,7 @@ JS_SetGCCallback(JSContext *cx, JSGCCallback cb)
 JS_PUBLIC_API(JSGCCallback)
 JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb)
 {
-    nyi();
+//    nyi();        not doing GC, so no need to call back :-)
     return cb;
 }
 
@@ -876,11 +1118,23 @@ JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
     nyi();
 }
 
+bool breakit = true;
+
 JS_PUBLIC_API(JSBool)
 JS_ValueToId(JSContext *cx, jsval v, jsid *idp)
 {
-    nyi();
-    return JS_FALSE;
+    if (breakit) nyi();
+
+    JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
+
+    CHECK_REQUEST(cx);
+    if (JSVAL_IS_INT(v)) {
+        *idp = v;
+    } else {
+        const JavaScript::String *str = JavaScript::JS2Runtime::JSValue::string(JavaScript::JS2Runtime::JSValue::toString(js2cx, v));
+        *idp = (jsid)(&js2cx->mWorld.identifiers[*str]);
+    }
+    return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -939,8 +1193,7 @@ JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSContext *cx, JSObject *obj)
 {
     nyi();
-    return (JSClass *)
-        JSVAL_TO_PRIVATE(GC_AWARE_GET_SLOT(cx, obj, JSSLOT_CLASS));
+    return NULL;
 }
 #else
 JS_PUBLIC_API(JSClass *)
@@ -1388,12 +1641,6 @@ JS_GetFunctionName(JSFunction *fun)
 }
 
 
-/*
-        typedef JSValue (NativeCode)(Context *cx, const JSValue &thisValue, JSValue argv[], uint32 argc);
-        typedef JSBool
-        (* JS_DLL_CALLBACK JSNative)(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
-*/
-
 
 JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
@@ -1736,8 +1983,8 @@ JS_NewStringCopyZ(JSContext *cx, const char *s)
 JS_PUBLIC_API(JSString *)
 JS_InternString(JSContext *cx, const char *s)
 {
-    nyi();
-    return NULL;
+    JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
+    return (JSString *)(&js2cx->mWorld.identifiers[s]);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -2021,26 +2268,22 @@ JS_ErrorFromException(JSContext *cx, jsval v)
 JS_PUBLIC_API(intN)
 JS_GetContextThread(JSContext *cx)
 {
-    nyi();
-    return cx->thread;
+//    nyi();            XXX get working
+    return 0;
 }
 
 JS_PUBLIC_API(intN)
 JS_SetContextThread(JSContext *cx)
 {
     nyi();
-    intN old = cx->thread;
-    cx->thread = js_CurrentThreadId();
-    return old;
+    return 0;
 }
 
 JS_PUBLIC_API(intN)
 JS_ClearContextThread(JSContext *cx)
 {
     nyi();
-    intN old = cx->thread;
-    cx->thread = 0;
-    return old;
+    return 0;
 }
 #endif
 
@@ -2259,6 +2502,277 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 
 JS_FRIEND_API(JSScopeProperty **)
 js_SearchScope(JSScope *scope, jsid id, JSBool adding)
+{
+    nyi();
+    return NULL;
+}
+
+
+JS_PUBLIC_API(JSScript *)
+JS_GetFrameScript(JSContext *cx, JSStackFrame *fp)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(void)
+JS_SetFrameAnnotation(JSContext *cx, JSStackFrame *fp, void *annotation)
+{
+    nyi();
+}
+
+JS_PUBLIC_API(void *)
+JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_GetFrameThis(JSContext *cx, JSStackFrame *fp)
+{
+    nyi();
+    return NULL;
+}
+
+
+JS_PUBLIC_API(JSStackFrame *)
+JS_FrameIterator(JSContext *cx, JSStackFrame **iteratorp)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(JSScript *)
+JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
+{
+    nyi();
+    return NULL;
+}
+
+extern JS_PUBLIC_API(JSPrincipals *)
+JS_GetScriptPrincipals(JSContext *cx, JSScript *script)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(uint32)
+JS_XDRMemDataLeft(JSXDRState *xdr)
+{
+    return 0;
+}
+
+JS_PUBLIC_API(void *)
+JS_XDRMemGetData(JSXDRState *xdr, uint32 *lp)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(void)
+JS_XDRMemResetData(JSXDRState *xdr)
+{
+    nyi();
+}
+
+JS_PUBLIC_API(void)
+JS_XDRMemSetData(JSXDRState *xdr, void *data, uint32 len)
+{
+    nyi();
+}
+
+JS_PUBLIC_API(void)
+JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
+{
+    nyi();
+}
+
+JS_PUBLIC_API(JSBool)
+JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
+{
+    nyi();
+    return false;
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(const char *)
+JS_GetScriptFilename(JSContext *cx, JSScript *script)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(jsbytecode *)
+JS_GetFramePC(JSContext *cx, JSStackFrame *fp)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_IsNativeFrame(JSContext *cx, JSStackFrame *fp)
+{
+    nyi();
+    return false;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
+			const char *bytes, uintN length,
+			const char *filename, uintN lineno,
+			jsval *rval)
+{
+    nyi();
+    return false;
+}
+
+JS_PUBLIC_API(JSBool)
+JS_SetDebuggerHandler(JSRuntime *rt, JSTrapHandler handler, void *closure)
+{
+//    nyi();    - not supporting a debugger
+    return false;
+}
+
+JS_PUBLIC_API(JSIntn) JS_CeilingLog2(JSUint32 n)
+{
+    JSIntn log2 = 0;
+
+    if (n & (n-1))
+	log2++;
+    if (n >> 16)
+	log2 += 16, n >>= 16;
+    if (n >> 8)
+	log2 += 8, n >>= 8;
+    if (n >> 4)
+	log2 += 4, n >>= 4;
+    if (n >> 2)
+	log2 += 2, n >>= 2;
+    if (n >> 1)
+	log2++;
+    return log2;
+}
+
+
+/*
+JS_PUBLIC_API(JSDHashEntryHdr *)
+JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(uint32)
+JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
+{
+    nyi();
+    return 0;
+}
+
+JS_PUBLIC_API(JSDHashTable *)
+JS_NewDHashTable(JSDHashTableOps *ops, void *data, uint32 entrySize,
+                 uint32 capacity)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(JSDHashTableOps *)
+JS_DHashGetStubOps(void)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(void)
+JS_DHashTableDestroy(JSDHashTable *table)
+{
+    nyi();
+}
+
+JS_PUBLIC_API(void)
+JS_DHashFinalizeStub(JSDHashTable *table)
+{
+    nyi();
+}
+
+JS_PUBLIC_API(void)
+JS_DHashClearEntryStub(JSDHashTable *table, JSDHashEntryHdr *entry)
+{
+    nyi();
+}
+
+JS_PUBLIC_API(void)
+JS_DHashMoveEntryStub(JSDHashTable *table,
+                      const JSDHashEntryHdr *from,
+                      JSDHashEntryHdr *to)
+{
+    nyi();
+}
+
+JS_PUBLIC_API(const void *)
+JS_DHashGetKeyStub(JSDHashTable *table, JSDHashEntryHdr *entry)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(void)
+JS_DHashFreeTable(JSDHashTable *table, void *ptr)
+{
+    nyi();
+}
+
+JS_PUBLIC_API(void *)
+JS_DHashAllocTable(JSDHashTable *table, uint32 nbytes)
+{
+    nyi();
+    return NULL;
+}
+
+JS_PUBLIC_API(void)
+JS_DHashTableFinish(JSDHashTable *table)
+{
+    nyi();
+}
+
+JS_PUBLIC_API(JSBool)
+JS_DHashTableInit(JSDHashTable *table, JSDHashTableOps *ops, void *data,
+                  uint32 entrySize, uint32 capacity)
+{
+    nyi();
+    return false;
+}
+*/
+
+
+JS_FRIEND_API(JSBool)
+js_Invoke(JSContext *cx, uintN argc, uintN flags)
+{
+    nyi();
+    return false;
+}
+
+JS_PUBLIC_API(void) JS_smprintf_free(char *mem)
+{
+    nyi();
+}
+
+JS_PUBLIC_API(JSFunction *)
+JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp)
 {
     nyi();
     return NULL;
