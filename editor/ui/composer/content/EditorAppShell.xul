@@ -31,7 +31,7 @@
 <!ENTITY cutCmd.label "Cut">
 <!ENTITY copyCmd.label "Copy">
 <!ENTITY pasteCmd.label "Paste">
-<!ENTITY pasteAsQuotationCmd.label "Paste">
+<!ENTITY pasteAsQuotationCmd.label "Paste As Quotation">
 <!ENTITY clearCmd.label ".Clear">
 <!ENTITY selectAllCmd.label "Select All">
 <!ENTITY findCmd.label "Find...">
