@@ -16,13 +16,20 @@ class CBrowseDlg : public CDialog
 // Construction
 public:
 	CControlSiteInstance *m_pControlSite;
+	CLSID m_clsid;
 
 	CBrowseDlg(CWnd* pParent = NULL);	// standard constructor
+
+	HRESULT GetWebBrowser(IWebBrowser **pWebBrowser);
 
 // Dialog Data
 	//{{AFX_DATA(CBrowseDlg)
 	enum { IDD = IDD_CBROWSE_DIALOG };
-	CString	m_sURL;
+	CButton	m_btnRunTest;
+	CComboBox	m_cmbURLs;
+	CTreeCtrl	m_tcTests;
+	CListBox	m_lbMessages;
+	CString	m_szTestDescription;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -34,6 +41,7 @@ public:
 // Implementation
 protected:
 	HICON m_hIcon;
+	CImageList m_cImageList;
 
 	// Generated message map functions
 	//{{AFX_MSG(CBrowseDlg)
@@ -41,6 +49,10 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnGo();
+	afx_msg void OnRuntest();
+	afx_msg void OnBackward();
+	afx_msg void OnForward();
+	afx_msg void OnSelchangedTestlist(NMHDR* pNMHDR, LRESULT* pResult);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

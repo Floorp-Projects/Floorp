@@ -13,6 +13,30 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// Neutral resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_CLOSEDFOLDER        ICON    DISCARDABLE     "res\\closedfolder.ico"
+IDI_OPENFOLDER          ICON    DISCARDABLE     "res\\openfolder.ico"
+IDI_TESTPASSED          ICON    DISCARDABLE     "res\\testpassed.ico"
+IDI_TESTFAILED          ICON    DISCARDABLE     "res\\testfailed.ico"
+#endif    // Neutral resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
 // English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -72,17 +96,30 @@ IDR_MAINFRAME           ICON    DISCARDABLE     "res\\cbrowse.ico"
 // Dialog
 //
 
-IDD_CBROWSE_DIALOG DIALOGEX 0, 0, 358, 226
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_CBROWSE_DIALOG DIALOGEX 0, 0, 477, 318
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "CBrowse"
 FONT 8, "MS Sans Serif"
 BEGIN
     RTEXT           "Goto &URL:",IDC_STATIC,6,8,35,10
-    EDITTEXT        IDC_URL,47,7,247,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Go",IDC_GO,301,7,50,12
-    CONTROL         "",IDC_BROWSER_MARKER,"Static",SS_BLACKFRAME,7,22,344,
-                    196
+    DEFPUSHBUTTON   "&Go",IDC_GO,230,7,25,13
+    CONTROL         "",IDC_BROWSER_MARKER,"Static",SS_BLACKFRAME,7,24,310,
+                    205
+    PUSHBUTTON      "Run",IDC_RUNTEST,325,296,50,14,WS_DISABLED
+    LISTBOX         IDC_LISTMESSAGES,7,247,310,63,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Messages:",IDC_STATIC,7,233,110,11
+    CONTROL         "Tree1",IDC_TESTLIST,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | 
+                    WS_BORDER | WS_TABSTOP,330,16,134,222
+    GROUPBOX        "Tests",IDC_STATIC,324,7,146,237
+    COMBOBOX        IDC_URL,45,7,180,52,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "<",IDC_BACKWARD,261,7,25,13
+    PUSHBUTTON      ">",IDC_FORWARD,292,7,25,13
+    GROUPBOX        "Test Description",IDC_STATIC,324,246,146,45
+    LTEXT           "",IDC_TESTDESCRIPTION,328,258,137,28
 END
 
 
@@ -140,14 +177,85 @@ BEGIN
     IDD_CBROWSE_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 351
+        RIGHTMARGIN, 470
         TOPMARGIN, 7
-        BOTTOMMARGIN, 218
+        BOTTOMMARGIN, 310
     END
 END
 #endif    // APSTUDIO_INVOKED
 
 #endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_TEST                ICON    DISCARDABLE     "res\\test.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PICKBROWSER DIALOG DISCARDABLE  0, 0, 186, 71
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
+    LISTBOX         IDC_LISTBROWSER,7,38,115,26,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "CBrowse is a test app that exercises the IE browser interface.",
+                    IDC_STATIC,7,7,116,18
+    LTEXT           "Pick the browser to test:",IDC_STATIC,7,28,77,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_PICKBROWSER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 64
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CHOOSEBROWSER       "You must choose a browser control from the list to proceed."
+END
+
+#endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
