@@ -198,15 +198,9 @@ class RDFXMLDataSourceImpl : public nsIRDFXMLDataSource,
                              public nsIRDFXMLSource
 {
 protected:
-    struct NameSpaceMap {
-        char* URIPrefix;
-        char* NameSpace;
-        NameSpaceMap* Next;
-    };
-
     nsIRDFDataSource* mInner;
     PRBool            mIsSynchronous; // true if the document should be loaded synchronously
-    PRBool            mIsReadOnly;    // true if the document is read-only
+    PRBool            mIsWritable;    // true if the document can be written back
     PRBool            mIsDirty;       // true if the document should be written back
     nsVoidArray       mObservers;
     char**            mNamedDataSourceURIs;
@@ -215,7 +209,6 @@ protected:
     PRInt32           mNumCSSStyleSheetURLs;
     nsIRDFResource*   mRootResource;
     PRBool            mIsLoading; // true while the document is loading
-    NameSpaceMap*     mNameSpaces;
 
 public:
     RDFXMLDataSourceImpl(void);
@@ -325,12 +318,6 @@ public:
     NS_IMETHOD AddXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver);
     NS_IMETHOD RemoveXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver);
 
-    NS_IMETHOD AddNameSpaceMapping(const char* aNameSpace,
-                                   const char* aURIPrefix);
-
-    NS_IMETHOD GetDefaultNameSpaceFor(const char* aURIPrefix,
-                                      const char** aDefaultNameSpace);
-
     // nsIRDFXMLSource interface
     NS_IMETHOD Serialize(nsIOutputStream* aStream);
 
@@ -355,14 +342,13 @@ NS_NewRDFXMLDataSource(nsIRDFXMLDataSource** result)
 
 RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
     : mIsSynchronous(PR_FALSE),
-      mIsReadOnly(PR_FALSE),
+      mIsWritable(PR_TRUE),
       mIsDirty(PR_FALSE),
       mNamedDataSourceURIs(nsnull),
       mNumNamedDataSourceURIs(0),
       mCSSStyleSheetURLs(nsnull),
       mNumCSSStyleSheetURLs(0),
-      mIsLoading(PR_FALSE),
-      mNameSpaces(nsnull)
+      mIsLoading(PR_FALSE)
 {
     nsresult rv;
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFInMemoryDataSourceCID,
@@ -377,15 +363,6 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
 
 RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
 {
-    while (mNameSpaces) {
-        NameSpaceMap* doomed = mNameSpaces;
-        mNameSpaces = mNameSpaces->Next;
-
-        PL_strfree(doomed->URIPrefix);
-        PL_strfree(doomed->NameSpace);
-        delete doomed;
-    }
-
     nsIRDFService* rdfService;
     if (NS_SUCCEEDED(nsServiceManager::GetService(kRDFServiceCID,
                                                   kIRDFServiceIID,
@@ -499,7 +476,7 @@ static const char kResourceURIPrefix[] = "resource:";
     // XXX this is a hack: any "file:" URI is considered writable. All
     // others are considered read-only.
     if (PL_strncmp(uri, kFileURIPrefix, sizeof(kFileURIPrefix) - 1) != 0)
-        mIsReadOnly = PR_TRUE;
+        mIsWritable = PR_FALSE;
 
     nsIRDFService* rdfService = nsnull;
     nsINameSpaceManager* ns = nsnull;
@@ -599,7 +576,7 @@ RDFXMLDataSourceImpl::Assert(nsIRDFResource* source,
                              nsIRDFNode* target,
                              PRBool tv)
 {
-    if (!mIsLoading && mIsReadOnly)
+    if (!mIsLoading && !mIsWritable)
         return NS_ERROR_FAILURE; // XXX right error code?
 
     nsresult rv;
@@ -617,7 +594,7 @@ RDFXMLDataSourceImpl::Unassert(nsIRDFResource* source,
                                nsIRDFResource* property, 
                                nsIRDFNode* target)
 {
-    if (!mIsLoading && mIsReadOnly)
+    if (!mIsLoading && !mIsWritable)
         return NS_ERROR_FAILURE; // XXX right error code?
 
     nsresult rv;
@@ -633,7 +610,7 @@ RDFXMLDataSourceImpl::Unassert(nsIRDFResource* source,
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Flush(void)
 {
-    if (mIsReadOnly || !mIsDirty)
+    if (!mIsWritable || !mIsDirty)
         return NS_OK;
 
     nsresult rv;
@@ -648,8 +625,6 @@ RDFXMLDataSourceImpl::Flush(void)
     FileOutputStreamImpl* out = new FileOutputStreamImpl(path);
     if (! out)
         return NS_ERROR_OUT_OF_MEMORY;
-
-	NS_ADDREF(out);
 
     if (NS_FAILED(rv = Serialize(out)))
         goto done;
@@ -674,9 +649,9 @@ RDFXMLDataSourceImpl::SetSynchronous(PRBool aIsSynchronous)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::SetReadOnly(PRBool aIsReadOnly)
 {
-    // XXX this is a little bit bogus because you can't _force_ an
-    // unwritable data source to be writable
-    mIsReadOnly = aIsReadOnly;
+    if (mIsWritable && aIsReadOnly)
+        mIsWritable = PR_FALSE;
+
     return NS_OK;
 }
 
@@ -842,33 +817,7 @@ RDFXMLDataSourceImpl::RemoveXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObse
     return NS_OK;
 }
 
-NS_IMETHODIMP
-RDFXMLDataSourceImpl::AddNameSpaceMapping(const char* aNameSpace,
-                                          const char* aURIPrefix)
-{
-    // XXX needs out-of-memory checks
-    NameSpaceMap* entry = new NameSpaceMap;
-    entry->URIPrefix = PL_strdup(aURIPrefix);
-    entry->NameSpace = PL_strdup(aNameSpace);
-    entry->Next = mNameSpaces;
 
-    mNameSpaces = entry;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFXMLDataSourceImpl::GetDefaultNameSpaceFor(const char* aURIPrefix,
-                                             const char** aDefaultNameSpace)
-{
-    for (NameSpaceMap* entry = mNameSpaces; entry != nsnull; entry = entry->Next) {
-        if (PL_strcmp(entry->URIPrefix, aURIPrefix) == 0) {
-            *aDefaultNameSpace = entry->NameSpace;
-            return NS_OK;
-        }
-    }
-    *aDefaultNameSpace = nsnull;
-    return NS_ERROR_FAILURE;
-}
 
 
 ////////////////////////////////////////////////////////////////////////
