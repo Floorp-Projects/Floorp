@@ -362,8 +362,8 @@ net_pop3_free_state(Pop3UidlHost* host)
 // nsPop3Protocol class implementation
 
 nsPop3Protocol::nsPop3Protocol(nsIURI* aURL)
-    : nsMsgLineBuffer(NULL, PR_FALSE),
-      nsMsgProtocol(aURL, aURL)
+    : nsMsgProtocol(aURL, aURL),
+      nsMsgLineBuffer(NULL, PR_FALSE)
 {
 	SetLookingForCRLF(MSG_LINEBREAK_LEN == 2);
 	Initialize(aURL);
