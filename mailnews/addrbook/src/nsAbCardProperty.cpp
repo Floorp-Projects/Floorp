@@ -1076,8 +1076,10 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToXMLPrintData(PRUnichar **aXMLSubstr)
 
   // use ScanTXT to convert < > & to safe values.
   nsXPIDLString safeText;
-  rv = conv->ScanTXT(generatedName.get(), mozITXTToHTMLConv::kEntities , getter_Copies(safeText));
-  NS_ENSURE_SUCCESS(rv,rv);
+  if (!generatedName.IsEmpty()) {
+    rv = conv->ScanTXT(generatedName.get(), mozITXTToHTMLConv::kEntities , getter_Copies(safeText));
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
 
   if (!safeText.IsEmpty())
     xmlStr.Append(safeText.get());
@@ -1309,7 +1311,7 @@ nsresult AppendLabel(nsAbCardProperty *aCard, AppendItem *aItem, mozITXTToHTMLCo
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (attrValue.IsEmpty())
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 
   rv = bundle->GetStringFromName(NS_ConvertASCIItoUCS2(aItem->mLabel).get(), getter_Copies(label));
   NS_ENSURE_SUCCESS(rv, rv);
