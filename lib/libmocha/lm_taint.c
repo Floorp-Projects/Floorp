@@ -1685,8 +1685,12 @@ newJSPrincipalsFromArray(JSContext *cx, jobjectArray principalsArray)
 
     codebase = javaString
         ? JRI_GetStringPlatformChars(env, javaString,
-                                     (const jbyte *)cx->charSetName,
-                                     (jint)cx->charSetNameLength)
+                                     NULL, 0)
+
+    /* XXX - temporarily replace arguments so we can compile
+       (const jbyte *) cx->charSetName,
+       (jint) cx->charSetNameLength);
+    */
         : NULL;
     result = LM_NewJSPrincipals(NULL, NULL, (char *) codebase);
     if (result == NULL) {
