@@ -33,7 +33,7 @@ static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsFileProtocolHandler::nsFileProtocolHandler()
-    : mPool(nsnull)
+    : mPool(nsnull), mSuspended(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -55,6 +55,7 @@ nsFileProtocolHandler::~nsFileProtocolHandler()
     // this will wait for all outstanding requests to be processed, then
     // join with the worker threads, and finally free the pool:
     NS_IF_RELEASE(mPool);
+    NS_IF_RELEASE(mSuspended);
 }
 
 NS_IMPL_ISUPPORTS(nsFileProtocolHandler, nsIProtocolHandler::GetIID());
@@ -98,8 +99,8 @@ nsFileProtocolHandler::GetDefaultPort(PRInt32 *result)
 
 NS_IMETHODIMP
 nsFileProtocolHandler::MakeAbsolute(const char* aSpec,
-                                   nsIURI* aBaseURI,
-                                   char* *result)
+                                    nsIURI* aBaseURI,
+                                    char* *result)
 {
     // XXX optimize this to not needlessly construct the URL
 
@@ -115,7 +116,7 @@ nsFileProtocolHandler::MakeAbsolute(const char* aSpec,
 
 NS_IMETHODIMP
 nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
-                             nsIURI **result)
+                              nsIURI **result)
 {
     nsresult rv;
 
@@ -145,9 +146,9 @@ nsFileProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
 NS_IMETHODIMP
 nsFileProtocolHandler::NewChannel(const char* verb, nsIURI* url,
-                                 nsIEventSinkGetter* eventSinkGetter,
-                                 nsIEventQueue* eventQueue,
-                                 nsIChannel* *result)
+                                  nsIEventSinkGetter* eventSinkGetter,
+                                  nsIEventQueue* eventQueue,
+                                  nsIChannel* *result)
 {
     nsresult rv;
     
