@@ -54,7 +54,7 @@
 //~~~ For image mime types
 #include "net.h"
 
-//#define REFLOW_MODS
+#define REFLOW_MODS
 
 class nsObjectFrame;
 
