@@ -115,7 +115,6 @@ public class Main {
      * Parse arguments.
      */
     public static String[] processOptions(Context cx, String args[]) {
-        cx.setTargetPackage("");    // default to no package
         for (int i=0; i < args.length; i++) {
             String arg = args[i];
             if (!arg.startsWith("-")) {

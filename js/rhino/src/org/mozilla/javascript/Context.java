@@ -1317,6 +1317,7 @@ public class Context {
      * @since 30/10/01 tip + patch (Kemal Bayram)
      */
     public String getClassName() {
+        ClassNameHelper nameHelper = getNameHelper();
         return nameHelper != null ? nameHelper.getClassName() : null;
     }
 
@@ -1326,6 +1327,7 @@ public class Context {
      * @since 30/10/01 tip + patch (Kemal Bayram)
      */
     public void setClassName(String className) {
+        ClassNameHelper nameHelper = getNameHelper();
         if (nameHelper != null) 
               nameHelper.setClassName(className);
     }
@@ -1338,6 +1340,7 @@ public class Context {
      * @since 1.3
      */
     public String getTargetClassFileName() {
+        ClassNameHelper nameHelper = getNameHelper();
         if (nameHelper != null) {
                 ClassRepository repository = nameHelper.getClassRepository();
                 if (repository instanceof FileClassRepository)
@@ -1356,6 +1359,7 @@ public class Context {
      * @since 1.3
      */
     public void setTargetClassFileName(String classFileName) {
+        ClassNameHelper nameHelper = getNameHelper();
         if (nameHelper != null) {
             if (classFileName != null)
                 nameHelper.setClassRepository(
@@ -1371,6 +1375,7 @@ public class Context {
      * @since 1.3
      */
     public String getTargetPackage() {
+        ClassNameHelper nameHelper = getNameHelper();
         return nameHelper != null ? nameHelper.getTargetPackage() : null;
     }
 
@@ -1380,6 +1385,7 @@ public class Context {
      * @since 1.3
      */
     public void setTargetPackage(String targetPackage) {
+        ClassNameHelper nameHelper = getNameHelper();
         if (nameHelper != null)
             nameHelper.setTargetPackage(targetPackage);
     }
@@ -1391,6 +1397,7 @@ public class Context {
      * @since 30/10/01 tip + patch (Kemal Bayram)
      */
     public ClassRepository getClassRepository() {
+        ClassNameHelper nameHelper = getNameHelper();
         return nameHelper != null ? nameHelper.getClassRepository() : null;
     }
 
@@ -1401,6 +1408,7 @@ public class Context {
      * @since 30/10/01 tip + patch (Kemal Bayram)
      */
     public void setClassRepository(ClassRepository classRepository) {
+        ClassNameHelper nameHelper = getNameHelper();
         if (nameHelper != null)
             nameHelper.setClassRepository(classRepository);
     }
@@ -1412,6 +1420,7 @@ public class Context {
      * @since 1.5 Release 2
      */
     public ClassOutput getClassOutput() {
+        ClassNameHelper nameHelper = getNameHelper();
         if (nameHelper != null) {
             ClassRepository repository = nameHelper.getClassRepository();
             if ((repository != null) && 
@@ -1433,6 +1442,7 @@ public class Context {
      * @since 1.5 Release 2
      */
     public void setClassOutput(ClassOutput classOutput) {
+        ClassNameHelper nameHelper = getNameHelper();
         if (nameHelper != null) {
             if (classOutput != null) 
                 nameHelper.setClassRepository(new ClassOutputWrapper(classOutput));
@@ -1498,6 +1508,7 @@ public class Context {
      * @param extendsClass the class it extends
      */
     public void setTargetExtends(Class extendsClass) {
+        ClassNameHelper nameHelper = getNameHelper();
         if (nameHelper != null) {
             nameHelper.setTargetExtends(extendsClass);
         }
@@ -1510,6 +1521,7 @@ public class Context {
      *                          interface the target will extend
      */
     public void setTargetImplements(Class[] implementsClasses) {
+        ClassNameHelper nameHelper = getNameHelper();
         if (nameHelper != null) {
             nameHelper.setTargetImplements(implementsClasses);
         }
@@ -1606,7 +1618,9 @@ public class Context {
         if (isCachingEnabled && !cachingEnabled) {
             // Caching is being turned off. Empty caches.
             JavaMembers.classTable = new Hashtable();
-            nameHelper.reset();
+            ClassNameHelper nameHelper = getNameHelper();
+            if (nameHelper != null)
+                nameHelper.reset();
         }
         isCachingEnabled = cachingEnabled;
         FunctionObject.setCachingEnabled(cachingEnabled);
@@ -1845,21 +1859,34 @@ public class Context {
     }
 
     private static Class codegenClass;
-    private static ClassNameHelper nameHelper;
+    private static ClassNameHelper savedNameHelper;
     static {
         try {
             codegenClass = Class.forName(
                 "org.mozilla.javascript.optimizer.Codegen");
-            Class nameHelperClass = Class.forName(
-                "org.mozilla.javascript.optimizer.OptClassNameHelper");
-            nameHelper = (ClassNameHelper)nameHelperClass.newInstance();
         } catch (ClassNotFoundException x) {
             // ...must be running lite, that's ok
             codegenClass = null;
+        }
+    }
+
+    private static ClassNameHelper getNameHelper() {
+        if (savedNameHelper != null)
+            return savedNameHelper;
+        if (codegenClass == null)
+            return null;
+        try {
+            Class nameHelperClass = Class.forName(
+                "org.mozilla.javascript.optimizer.OptClassNameHelper");
+            savedNameHelper = (ClassNameHelper)nameHelperClass.newInstance();
+            return savedNameHelper;
+        } catch (ClassNotFoundException x) {
+            // ...must be running lite, that's ok
+            return null;
         } catch (IllegalAccessException x) {
-            codegenClass = null;
+            return null;
         } catch (InstantiationException x) {
-            codegenClass = null;
+            return null;
         }
     }
     
@@ -1889,6 +1916,9 @@ public class Context {
         Interpreter compiler = optimizationLevel == -1 
                                ? new Interpreter()
                                : getCompiler();
+        ClassNameHelper nameHelper = optimizationLevel == -1 
+                                     ? null
+                                     : getNameHelper();
         
         errorCount = 0;
         IRFactory irf = compiler.createIRFactory(ts, nameHelper, scope);
@@ -2186,7 +2216,7 @@ public class Context {
             }
             if (initialName.endsWith(".class"))
                 initialName = initialName.substring(0, initialName.length()-6);
-            nameHelper.setClassName(initialName);
+            getNameHelper().setClassName(initialName);
         }
     
         public boolean storeClass(String className, byte[] bytes, boolean tl) 
@@ -2194,7 +2224,7 @@ public class Context {
         {
             // no "elegant" way of getting file name from fully 
             // qualified class name.
-            String targetPackage = nameHelper.getTargetPackage();
+            String targetPackage = getNameHelper().getTargetPackage();
             if ((targetPackage != null) && (targetPackage.length()>0) && 
                 className.startsWith(targetPackage+".")) 
             {
