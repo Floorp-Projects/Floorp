@@ -2863,7 +2863,6 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
             /* End of list? */
     if (line[0]=='.' && line[1]=='\0')
     {
-	    nsresult rv;
 		PRBool listpnames=PR_FALSE;
 		rv = m_newsHost->QueryExtension("LISTPNAMES",&listpnames);
 		if (NS_SUCCEEDED(rv) && listpnames)
@@ -2917,7 +2916,9 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 #endif
 	PR_FREEIF(line);
 
-	if (NS_FAILED(rv)) status = -1;
+	if (NS_FAILED(rv)) {
+		return -1;
+	}
     return(status);
 }
 
