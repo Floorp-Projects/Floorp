@@ -267,6 +267,8 @@ nsMIMEService::InitFromHack() {
     if (NS_FAILED(rv)) return rv;
     rv = AppendExtension(TEXT_HTML, "shtml");
     if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension(TEXT_HTML, "ehtml");
+    if (NS_FAILED(rv)) return rv;
 
     rv = AddMapping(TEXT_RDF, "rdf", "Resource Description Framework", nsnull);
     if (NS_FAILED(rv)) return rv;
