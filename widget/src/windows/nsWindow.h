@@ -237,6 +237,7 @@ class ChildWindow : public nsWindow {
 
 public:
                             ChildWindow(nsISupports *aOuter) : nsWindow(aOuter) {}
+    PRBool          DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint = nsnull);
 
 protected:
     virtual DWORD           WindowStyle();
