@@ -1352,6 +1352,7 @@ dnl Xt is dependent upon SM as of X11R6
 dnl ========================================================
 if test "$no_x" != "yes"
 then
+    AC_DEFINE_UNQUOTED(FUNCPROTO,15)
 	XLIBS="-lX11 $XLIBS"
 	_SAVE_LDFLAGS="$LDFLAGS"
 	LDFLAGS="$XLDFLAGS $LDFLAGS"
