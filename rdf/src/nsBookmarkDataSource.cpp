@@ -434,6 +434,8 @@ const char* nsBookmarkDataSource::kBookmarksFilename = "bookmarks.html";
 
 nsBookmarkDataSource::nsBookmarkDataSource(void)
 {
+    // XXX rvg there should be only one instance of this class. 
+    // this is actually true of all datasources.
     NS_INIT_REFCNT();
     ReadBookmarks(); // XXX do or die, eh?
     Initialize(kURI_bookmarks);
