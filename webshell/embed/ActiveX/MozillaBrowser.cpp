@@ -71,6 +71,13 @@ public:
 
 BOOL CMozillaBrowser::m_bRegistryInitialized = FALSE;
 
+const GUID CGID_IWebBrowser =
+	{ 0xED016940L, 0xBD5B, 0x11cf, {0xBA, 0x4E, 0x00, 0xC0, 0x4F, 0xD7, 0x08, 0x16} };
+
+// TODO
+const GUID CGID_MSHTML =
+	{ 0xED016940L, 0xBD5B, 0x11cf, {0xBA, 0x4E, 0x00, 0xC0, 0x4F, 0xD7, 0x08, 0x16} };
+
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
 
@@ -93,14 +100,18 @@ CMozillaBrowser::CMozillaBrowser()
 	
 	// Create the container that handles some things for us
 	m_pWebShellContainer = NULL;
+	m_pEditor = NULL;
 
 	// Controls starts off unbusy
 	m_bBusy = FALSE;
 
+	// Control starts off in non-edit mode
+	m_bEditorMode = FALSE;
+
 	// Control starts off without being a drop target
 	m_bDropTarget = FALSE;
 
- 	// the IHTMLDOcument, lazy allocation.
+ 	// the IHTMLDocument, lazy allocation.
  	m_pDocument = NULL;
 
 	// Change the current directory to the Mozilla dist so that registration
@@ -479,9 +490,109 @@ HRESULT CMozillaBrowser::CreateWebShell()
 }
 
 
+// Turns the editor mode on or off
+HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
+{
+	m_bEditorMode = FALSE;
+	if (bEnabled && m_pEditor == nsnull)
+	{
+		if (m_pIWebShell == nsnull)
+		{
+			return E_UNEXPECTED;
+		}
+
+		nsresult result = nsComponentManager::CreateInstance(kHTMLEditorCID,
+										nsnull,
+										nsIEditor::GetIID(),
+										(void **) &m_pEditor);
+		if (NS_FAILED(result))
+		{
+			return result;
+		}
+		if (!m_pEditor)
+		{
+			return E_OUTOFMEMORY;
+		}
+
+		nsIDOMDocument *pIDOMDocument = nsnull;
+		if (FAILED(GetDOMDocument(&pIDOMDocument)) || pIDOMDocument == nsnull)
+		{
+			return E_UNEXPECTED;
+		}
+
+		nsIPresShell* pIPresShell = nsnull;
+		if (FAILED(GetPresShell(&pIPresShell)) || pIPresShell == nsnull)
+		{
+			return E_UNEXPECTED;
+		}
+
+		result = m_pEditor->Init(pIDOMDocument, pIPresShell, 0);
+		if (NS_SUCCEEDED(result))
+		{
+			m_bEditorMode = TRUE;
+		}
+
+		NS_RELEASE(pIPresShell);
+		NS_RELEASE(pIDOMDocument);
+	}
+	else
+	{
+		if (m_pEditor)
+		{
+			m_pEditor->Release();
+			m_pEditor = nsnull;
+		}
+	}
+
+	return S_OK;
+}
+
+
+// Returns the presentation shell
+HRESULT CMozillaBrowser::GetPresShell(nsIPresShell **pPresShell)
+{
+	// Test for stupid args
+	if (pPresShell == NULL)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	*pPresShell = nsnull;
+
+	if (m_pIWebShell == nsnull)
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+	
+	nsIContentViewer* pIContentViewer = nsnull;
+	m_pIWebShell->GetContentViewer(&pIContentViewer);
+	if (pIContentViewer != nsnull)
+	{
+		nsIDocumentViewer* pIDocViewer = nsnull;
+		if (pIContentViewer->QueryInterface(kIDocumentViewerIID, (void**) &pIDocViewer) == NS_OK)
+		{
+			nsIPresContext * pIPresContent = nsnull;
+			pIDocViewer->GetPresContext(pIPresContent);
+			if (pIPresContent != nsnull)
+			{
+				pIPresContent->GetShell(pPresShell);
+				NS_RELEASE(pIPresContent);
+			}
+			NS_RELEASE(pIDocViewer);
+		}
+		NS_RELEASE(pIContentViewer);
+	}
+
+	return S_OK;
+}
+
+
 // Return the root DOM document
 HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 {
+	// Test for stupid args
 	if (pDocument == NULL)
 	{
 		NG_ASSERT(0);
@@ -998,9 +1109,20 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
 	// Load the URL	
 	char *tmpCommand = sCommand.ToNewCString();
-	m_pIWebShell->LoadURL(sUrl.GetUnicode(), tmpCommand, pIPostData, bModifyHistory);
+	m_pIWebShell->LoadURL(sUrl.GetUnicode()); 
 	
-	return S_OK;
+/*	, tmpCommand, pIPostData, bModifyHistory);
+	  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
+                     nsIInputStream* aPostDataStream=nsnull,
+                     PRBool aModifyHistory=PR_TRUE,
+#ifdef NECKO
+                     nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
+#else
+                     nsURLReloadType aType=nsURLReload,
+#endif
+                     const PRUint32 aLocalIP=0) = 0;
+*/
+  return S_OK;
 }
 
 
@@ -2268,197 +2390,15 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Resizable(VARIANT_BOOL Value)
 	return S_OK;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
-// IOleCommandTarget implementation
+// Ole Command Handlers
 
-// IOleCommandTarget is a (bloody awful and complicated) generic mechanism
-// for querying for and executing commands on an object. It is used in IE
-// for printing, so that a client prints a page of HTML by calling Exec
-// (or ExecWB) on the control using the command OLECMDID_PRINT.
-
-// To keep things open, all supported commands are in the table below which
-// can be extended when and if necessary.
-
-static const GUID CGID_IWebBrowser =
-{ 0xED016940L, 0xBD5B, 0x11cf, {0xBA, 0x4E, 0x00, 0xC0, 0x4F, 0xD7, 0x08, 0x16} };
-
-#define HTMLID_FIND 1
-#define HTMLID_VIEWSOURCE 2
-#define HTMLID_OPTIONS 3
-
-struct OleCommandInfo
+HRESULT _stdcall CMozillaBrowser::EditModeHandler(IOleCommandTarget *pTarget, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
-	ULONG    nCmdID;
-	const GUID    *pCmdGUID;
-	ULONG    nWindowsCmdID;
-	wchar_t *szVerbText;
-	wchar_t *szStatusText;
-};
-
-struct OleExecData
-{
-	const GUID *pguidCmdGroup;
-	DWORD nCmdID;
-	DWORD nCmdexecopt;
-	VARIANT *pvaIn;
-	VARIANT *pvaOut;
-};
-
-static OleCommandInfo s_aSupportedCommands[] =
-{
-	{ OLECMDID_PRINT, NULL, ID_PRINT, L"Print", L"Print the page" },
-	{ OLECMDID_SAVEAS, NULL, 0, L"SaveAs", L"Save the page" },
-	{ OLECMDID_PAGESETUP, NULL, ID_PAGESETUP, L"Page Setup", L"Page Setup" },
-	{ OLECMDID_PROPERTIES, NULL, 0, L"Properties", L"Show page properties" },
-	{ OLECMDID_CUT, NULL, 0, L"Cut", L"Cut selection" },
-	{ OLECMDID_COPY, NULL, 0, L"Copy", L"Copy selection" },
-	{ OLECMDID_PASTE, NULL, 0, L"Paste", L"Paste as selection" },
-	{ OLECMDID_UNDO, NULL, 0, L"Undo", L"Undo" },
-	{ OLECMDID_REDO, NULL, 0, L"Redo", L"Redo" },
-	{ OLECMDID_SELECTALL, NULL, 0, L"SelectAll", L"Select all" },
-	{ OLECMDID_REFRESH, NULL, 0, L"Refresh", L"Refresh" },
-	{ OLECMDID_STOP, NULL, 0, L"Stop", L"Stop" },
-	{ OLECMDID_ONUNLOAD, NULL, 0, L"OnUnload", L"OnUnload" },
-
-	// Unsupported IE 4.x command group
-	{ HTMLID_FIND, &CGID_IWebBrowser, 0, L"Find", L"Find" },
-	{ HTMLID_VIEWSOURCE, &CGID_IWebBrowser, 0, L"ViewSource", L"View Source" },
-	{ HTMLID_OPTIONS, &CGID_IWebBrowser, 0, L"Options", L"Options" },
-};
-
-
-HRESULT STDMETHODCALLTYPE CMozillaBrowser::QueryStatus(const GUID __RPC_FAR *pguidCmdGroup, ULONG cCmds, OLECMD __RPC_FAR prgCmds[], OLECMDTEXT __RPC_FAR *pCmdText)
-{
-	if (prgCmds == NULL)
-	{
-		return E_INVALIDARG;
-	}
-
-	BOOL bCmdGroupFound = FALSE;
-	BOOL bTextSet = FALSE;
-
-	// Iterate through list of commands and flag them as supported/unsupported
-	for (ULONG nCmd = 0; nCmd < cCmds; nCmd++)
-	{
-		// Unsupported by default
-		prgCmds[nCmd].cmdf = 0;
-
-		// Search the support command list
-		int nSupportedCount = sizeof(s_aSupportedCommands) / sizeof(s_aSupportedCommands[0]);
-		for (int nSupported = 0; nSupported < nSupportedCount; nSupported++)
-		{
-			OleCommandInfo *pCI = &s_aSupportedCommands[nSupported];
-
-			if (pguidCmdGroup && pCI->pCmdGUID && memcmp(pguidCmdGroup, pCI->pCmdGUID, sizeof(GUID)) == 0)
-			{
-				continue;
-			}
-			bCmdGroupFound = TRUE;
-
-			if (pCI->nCmdID != prgCmds[nCmd].cmdID)
-			{
-				continue;
-			}
-
-			// Command is supported so flag it and possibly enable it
-			prgCmds[nCmd].cmdf = OLECMDF_SUPPORTED;
-			if (pCI->nWindowsCmdID != 0)
-			{
-				prgCmds[nCmd].cmdf |= OLECMDF_ENABLED;
-			}
-
-			// Copy the status/verb text for the first supported command only
-			if (!bTextSet && pCmdText)
-			{
-				// See what text the caller wants
-				wchar_t *pszTextToCopy = NULL;
-				if (pCmdText->cmdtextf & OLECMDTEXTF_NAME)
-				{
-					pszTextToCopy = pCI->szVerbText;
-				}
-				else if (pCmdText->cmdtextf & OLECMDTEXTF_STATUS)
-				{
-					pszTextToCopy = pCI->szStatusText;
-				}
-				
-				// Copy the text
-				pCmdText->cwActual = 0;
-				memset(pCmdText->rgwz, 0, pCmdText->cwBuf * sizeof(wchar_t));
-				if (pszTextToCopy)
-				{
-					// Don't exceed the provided buffer size
-					int nTextLen = wcslen(pszTextToCopy);
-					if (nTextLen > pCmdText->cwBuf)
-					{
-						nTextLen = pCmdText->cwBuf;
-					}
-
-					wcsncpy(pCmdText->rgwz, pszTextToCopy, nTextLen);
-					pCmdText->cwActual = nTextLen;
-				}
-				
-				bTextSet = TRUE;
-			}
-			break;
-		}
-	}
-	
-	// Was the command group found?
-	if (!bCmdGroupFound)
-	{
-		OLECMDERR_E_UNKNOWNGROUP;
-	}
-
+	CMozillaBrowser *pBrowser = dynamic_cast<CMozillaBrowser *>(pTarget);
+	BOOL bEditorMode = (nCmdID == IDM_EDITMODE) ? TRUE : FALSE;
+	pBrowser->SetEditorMode(bEditorMode);
 	return S_OK;
-}
-
-
-HRESULT STDMETHODCALLTYPE CMozillaBrowser::Exec(const GUID __RPC_FAR *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT __RPC_FAR *pvaIn, VARIANT __RPC_FAR *pvaOut)
-{
-	BOOL bCmdGroupFound = FALSE;
-
-	// Search the support command list
-	int nSupportedCount = sizeof(s_aSupportedCommands) / sizeof(s_aSupportedCommands[0]);
-	for (int nSupported = 0; nSupported < nSupportedCount; nSupported++)
-	{
-		OleCommandInfo *pCI = &s_aSupportedCommands[nSupported];
-
-		if (pguidCmdGroup && pCI->pCmdGUID && memcmp(pguidCmdGroup, pCI->pCmdGUID, sizeof(GUID)) == 0)
-		{
-			continue;
-		}
-		bCmdGroupFound = TRUE;
-
-		if (pCI->nCmdID != nCmdID)
-		{
-			continue;
-		}
-
-		// Command is supported but not implemented
-		if (pCI->nWindowsCmdID == 0)
-		{
-			continue;
-		}
-
-		// Send ourselves a WM_COMMAND windows message with the associated
-		// identifier and exec data
-		OleExecData cData;
-		cData.pguidCmdGroup = pguidCmdGroup;
-		cData.nCmdID = nCmdID;
-		cData.nCmdexecopt = nCmdexecopt;
-		cData.pvaIn = pvaIn;
-		cData.pvaOut = pvaOut;
-		SendMessage(WM_COMMAND, LOWORD(pCI->nWindowsCmdID), (LPARAM) &cData);
-
-		return S_OK;
-	}
-
-	// Was the command group found?
-	if (!bCmdGroupFound)
-	{
-		OLECMDERR_E_UNKNOWNGROUP;
-	}
-
-	return OLECMDERR_E_NOTSUPPORTED;
 }
 
