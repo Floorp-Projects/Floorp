@@ -59,6 +59,7 @@ public:
 
   void BeginLineReflow(nscoord aX, nscoord aY,
                        nscoord aWidth, nscoord aHeight,
+                       PRBool aImpactedByFloaters,
                        PRBool aIsTopOfPage);
 
   void EndLineReflow();
@@ -83,7 +84,6 @@ public:
   nsresult ReflowFrame(nsIFrame* aFrame,
                        nsIFrame** aNextRCFrame,
                        nsReflowStatus& aReflowStatus);
-
 
   nscoord GetCarriedOutTopMargin() const {
     return mCurrentSpan->mLastFrame->mCarriedOutTopMargin;
@@ -144,6 +144,10 @@ public:
 
   PRBool LineIsEmpty() const {
     return 0 == mTotalPlacedFrames;
+  }
+
+  PRBool LineIsBreakable() const {
+    return (0 != mTotalPlacedFrames) || mImpactedByFloaters;
   }
 
   //----------------------------------------
@@ -229,6 +233,7 @@ protected:
   PRBool mWasInWord;
   PRBool mCanBreakBeforeFrame;
   PRBool mUpdatedBand;
+  PRBool mImpactedByFloaters;
   PRUint8 mPlacedFloaters;
   PRInt32 mTotalPlacedFrames;
   nsVoidArray mWordFrames;
