@@ -200,6 +200,7 @@ XP_File XP_FileOpen( const char* name, XP_FileType type,
   return result; 
 }
 
+#if 0
 extern XP_Bool XP_FileNameContainsBadChars (const char *name)
 {
 #ifdef XP_MAC
@@ -214,7 +215,7 @@ extern XP_Bool XP_FileNameContainsBadChars (const char *name)
 				return TRUE;
 	return FALSE;
 }
-
+#endif
 #endif /* XP_MAC || XP_UNIX */
 
 #ifdef XP_UNIX
@@ -289,7 +290,7 @@ int XP_FileRemove(const char * name, XP_FileType type)
 	return result;
 }
 
-
+#if 0
 int XP_FileRename(const char * from, XP_FileType fromtype,
 				  const char * to, XP_FileType totype)
 {
@@ -306,7 +307,7 @@ int XP_FileRename(const char * from, XP_FileType fromtype,
 		XP_FREE(toName);
 	return res;
 }
-
+#endif
 
 /* Create a new directory */
 
@@ -382,6 +383,7 @@ int XP_MakeDirectory(const char* name, XP_FileType type)
   return result;
 }
 
+#if 0
 int XP_RemoveDirectory (const char *name, XP_FileType type)
 {
   char *tmp = WH_FileName(name, type);
@@ -392,7 +394,6 @@ int XP_RemoveDirectory (const char *name, XP_FileType type)
   return ret;
 }
 
-#if 0
 /*
 ** This function deletes a directory and everything under it.
 ** Deleting directories with "non-file" files, such as links,
@@ -460,7 +461,7 @@ int XP_RemoveDirectoryRecursive(const char *name, XP_FileType type)
 	return ret;
 }
 #endif
-
+#if 0
 int XP_FileTruncate(const char* name, XP_FileType type, int32 length)
 {
   char* filename = WH_FileName(name, type);
@@ -470,7 +471,7 @@ int XP_FileTruncate(const char* name, XP_FileType type, int32 length)
   XP_FREE(filename);
   return result;
 }
-
+#endif
 
 
 /* Writes to a file
@@ -1219,7 +1220,7 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
   return (char *) name;
 }
 
-char * xp_FilePlatformName(const char * name, char* path)
+static char * xp_FilePlatformName(const char * name, char* path)
 {
 	if ((name == NULL) || (XP_STRLEN(name) > 1000))
 		return NULL;
@@ -1227,6 +1228,7 @@ char * xp_FilePlatformName(const char * name, char* path)
 	return path;
 }
 
+#if 0
 char * XP_PlatformFileToURL (const char *name)
 {
 	char *prefix = "file://";
@@ -1239,15 +1241,18 @@ char * XP_PlatformFileToURL (const char *name)
 	return retVal;
 }
 
+
 char *XP_PlatformPartialPathToXPPartialPath(const char *platformPath)
 {
 	/* using the unix XP_PlatformFileToURL, there is no escaping! */
 	return XP_STRDUP(platformPath);
 }
+#endif
 
 
 #define CACHE_SUBDIRS
 
+#if 0
 char*
 XP_TempDirName(void)
 {
@@ -1255,6 +1260,7 @@ XP_TempDirName(void)
 	if (!tmp || !*tmp) tmp = "/tmp";
 	return XP_STRDUP(tmp);
 }
+#endif
 
 static char *
 xp_TempName (XP_FileType type, const char * prefix, char* buf, char* buf2, unsigned int *count)
@@ -1516,6 +1522,7 @@ XP_GetNewsRCFiles(void)
 
 #endif
 
+#if 0
 XP_Dir XP_OpenDir(const char * name, XP_FileType type)
 {
 	XP_Dir dir = NULL;
@@ -1537,7 +1544,7 @@ XP_Dir XP_OpenDir(const char * name, XP_FileType type)
 	}
 	return dir;
 }
-
+#endif
 #endif /* XP_UNIX */
 
 #if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2)
@@ -1627,6 +1634,7 @@ int XP_MakeDirectoryR(const char* name, XP_FileType type)
 	spool.c has been retired. This routine has been adopted by lib/libmisc/dirprefs.c.
 	This is only used for windows platform for now. jefft 7-24-97
 */
+#if 0
 XP_Bool XP_FileIsFullPath(const char * name)
 {
 #ifdef XP_WIN
@@ -1642,7 +1650,7 @@ XP_Bool XP_FileIsFullPath(const char * name)
 	return FALSE;
 #endif
 }
-
+#endif
 /******************************************************************************/
 /* Thread-safe entry points: */
 
