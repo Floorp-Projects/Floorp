@@ -44,6 +44,7 @@
 #include "nsIHTMLAttributes.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsISupportsArray.h"
+#include "nsIFrame.h"
 #include "nsIDocShell.h"
 
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
@@ -162,8 +163,7 @@ nsresult nsBodyInner::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 //----------------------------------------------------------------------
 
 class nsHTMLBodyElement : public nsIDOMHTMLBodyElement,
-                          public nsIScriptObjectOwner,
-                          public nsIDOMEventReceiver,
+                          public nsIJSScriptObject,
                           public nsIHTMLContent
 {
 public:
@@ -196,11 +196,8 @@ public:
   NS_IMETHOD GetVLink(nsString& aVLink);
   NS_IMETHOD SetVLink(const nsString& aVLink);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)
@@ -599,10 +596,64 @@ nsHTMLBodyElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, ALink, alink)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Background, background)
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, BgColor, bgcolor)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Link, link)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Text, text)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, VLink, vlink)
+
+NS_IMETHODIMP 
+nsHTMLBodyElement::GetBgColor(nsString& aBgColor)
+{
+  // If we don't have an attribute, find the actual color used for
+  // (generally from the user agent style sheet) for compatibility
+  if (NS_CONTENT_ATTR_NOT_THERE == mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor)) {
+    nsresult result = NS_OK;
+    if (mInner.mDocument) {
+      // Make sure the presentation is up-to-date
+      result = mInner.mDocument->FlushPendingNotifications();
+      if (NS_FAILED(result)) {
+        return result;
+      }
+    }
+
+    nsCOMPtr<nsIPresContext> context;
+    result = nsGenericHTMLElement::GetPresContext(this, 
+                                                  getter_AddRefs(context));
+    if (NS_FAILED(result)) {
+      return result;
+    }
+    
+    nsCOMPtr<nsIPresShell> shell;
+    result = context->GetShell(getter_AddRefs(shell));
+    if (NS_FAILED(result)) {
+      return result;
+    }
+    
+    nsIFrame* frame;
+    result = shell->GetPrimaryFrameFor(this, &frame);
+    if (NS_FAILED(result)) {
+      return result;
+    }
+
+    if (frame) {
+      const nsStyleColor* styleColor;
+      result = frame->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
+      if (NS_FAILED(result)) {
+        return result;
+      }
+
+      nsHTMLValue value(styleColor->mBackgroundColor);
+      nsGenericHTMLElement::ColorToString(value, aBgColor);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLBodyElement::SetBgColor(const nsString& aBgColor)
+{
+  return mInner.SetAttribute(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor, PR_TRUE); 
+}
 
 NS_IMETHODIMP
 nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,

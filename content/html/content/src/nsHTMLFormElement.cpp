@@ -57,11 +57,9 @@ class nsFormControlList;
 
 class nsHTMLFormElement : public nsIDOMHTMLFormElement,
                           public nsIDOMNSHTMLFormElement,
-                          public nsIScriptObjectOwner,
-                          public nsIDOMEventReceiver,
+                          public nsIJSScriptObject,
                           public nsIHTMLContent,
-                          public nsIForm,
-                          public nsIJSScriptObject
+                          public nsIForm
 {
 public:
   nsHTMLFormElement(nsIAtom* aTag);
@@ -102,11 +100,6 @@ public:
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMElement** aReturn);
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn);
   
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)
@@ -115,18 +108,19 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
   // nsIJSScriptObject
-  PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
+  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
+  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
-  PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
+  virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
-  PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
+  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
-  PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
+  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
-  PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
-  PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
-  void      Finalize(JSContext *aContext, JSObject *aObj);
+  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
   // nsIForm
   NS_IMETHOD AddElement(nsIFormControl* aElement);

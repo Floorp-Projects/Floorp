@@ -34,12 +34,14 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
+#include "nsIDOMNSHTMLAnchorElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kINSHTMLAnchorElementIID, NS_IDOMNSHTMLANCHORELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLAnchorElementIID, NS_IDOMHTMLANCHORELEMENT_IID);
 
 //
@@ -57,7 +59,15 @@ enum HTMLAnchorElement_slots {
   HTMLANCHORELEMENT_SHAPE = -9,
   HTMLANCHORELEMENT_TABINDEX = -10,
   HTMLANCHORELEMENT_TARGET = -11,
-  HTMLANCHORELEMENT_TYPE = -12
+  HTMLANCHORELEMENT_TYPE = -12,
+  NSHTMLANCHORELEMENT_PROTOCOL = -13,
+  NSHTMLANCHORELEMENT_HOST = -14,
+  NSHTMLANCHORELEMENT_HOSTNAME = -15,
+  NSHTMLANCHORELEMENT_PATHNAME = -16,
+  NSHTMLANCHORELEMENT_SEARCH = -17,
+  NSHTMLANCHORELEMENT_PORT = -18,
+  NSHTMLANCHORELEMENT_HASH = -19,
+  NSHTMLANCHORELEMENT_TEXT = -20
 };
 
 /***********************************************************************/
@@ -220,6 +230,158 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           rv = a->GetType(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case NSHTMLANCHORELEMENT_PROTOCOL:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLANCHORELEMENT_PROTOCOL, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAnchorElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAnchorElementIID, (void **)&b)) {
+            rv = b->GetProtocol(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLANCHORELEMENT_HOST:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLANCHORELEMENT_HOST, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAnchorElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAnchorElementIID, (void **)&b)) {
+            rv = b->GetHost(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLANCHORELEMENT_HOSTNAME:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLANCHORELEMENT_HOSTNAME, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAnchorElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAnchorElementIID, (void **)&b)) {
+            rv = b->GetHostname(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLANCHORELEMENT_PATHNAME:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLANCHORELEMENT_PATHNAME, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAnchorElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAnchorElementIID, (void **)&b)) {
+            rv = b->GetPathname(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLANCHORELEMENT_SEARCH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLANCHORELEMENT_SEARCH, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAnchorElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAnchorElementIID, (void **)&b)) {
+            rv = b->GetSearch(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLANCHORELEMENT_PORT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLANCHORELEMENT_PORT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAnchorElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAnchorElementIID, (void **)&b)) {
+            rv = b->GetPort(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLANCHORELEMENT_HASH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLANCHORELEMENT_HASH, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAnchorElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAnchorElementIID, (void **)&b)) {
+            rv = b->GetHash(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLANCHORELEMENT_TEXT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLANCHORELEMENT_TEXT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAnchorElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAnchorElementIID, (void **)&b)) {
+            rv = b->GetText(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
         }
         break;
@@ -558,6 +720,14 @@ static JSPropertySpec HTMLAnchorElementProperties[] =
   {"tabIndex",    HTMLANCHORELEMENT_TABINDEX,    JSPROP_ENUMERATE},
   {"target",    HTMLANCHORELEMENT_TARGET,    JSPROP_ENUMERATE},
   {"type",    HTMLANCHORELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {"protocol",    NSHTMLANCHORELEMENT_PROTOCOL,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"host",    NSHTMLANCHORELEMENT_HOST,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"hostname",    NSHTMLANCHORELEMENT_HOSTNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"pathname",    NSHTMLANCHORELEMENT_PATHNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"search",    NSHTMLANCHORELEMENT_SEARCH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"port",    NSHTMLANCHORELEMENT_PORT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"hash",    NSHTMLANCHORELEMENT_HASH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"text",    NSHTMLANCHORELEMENT_TEXT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

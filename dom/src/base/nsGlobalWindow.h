@@ -70,8 +70,7 @@ class HistoryImpl;
 //*****************************************************************************
 // GlobalWindowImpl: Global Object for Scripting
 //*****************************************************************************   
-class GlobalWindowImpl :   public nsIScriptObjectOwner, 
-                           public nsIScriptGlobalObject,
+class GlobalWindowImpl :   public nsIScriptGlobalObject,
                            public nsIDOMWindow,
                            public nsIJSScriptObject,
                            public nsIScriptObjectPrincipal,
@@ -276,8 +275,7 @@ class nsIURI;
 // LocationImpl: Script "location" object
 //*****************************************************************************   
 
-class LocationImpl : public nsIScriptObjectOwner, 
-                     public nsIDOMLocation, 
+class LocationImpl : public nsIDOMLocation, 
                      public nsIDOMNSLocation,
                      public nsIJSScriptObject
 {

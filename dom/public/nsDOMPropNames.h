@@ -683,6 +683,21 @@
     "nsdocument.height", \
     "nsdocument.stylesheets", \
     "nsdocument.width", \
+    "nshtmlanchorelement.protocol", \
+    "nshtmlanchorelement.host", \
+    "nshtmlanchorelement.hostname", \
+    "nshtmlanchorelement.pathname", \
+    "nshtmlanchorelement.search", \
+    "nshtmlanchorelement.port", \
+    "nshtmlanchorelement.hash", \
+    "nshtmlanchorelement.text", \
+    "nshtmlareaelement.protocol", \
+    "nshtmlareaelement.host", \
+    "nshtmlareaelement.hostname", \
+    "nshtmlareaelement.pathname", \
+    "nshtmlareaelement.search", \
+    "nshtmlareaelement.port", \
+    "nshtmlareaelement.hash", \
     "nshtmlbuttonelement.blur", \
     "nshtmlbuttonelement.focus", \
     "nshtmldocument.alinkcolor", \
@@ -894,7 +909,7 @@
     "xulcheckboxelement.imgalign", \
     "xulcheckboxelement.src", \
     "xulcheckboxelement.value", \
-	"xulcommanddispatcher.active", \
+    "xulcommanddispatcher.active", \
     "xulcommanddispatcher.addcommandupdater", \
     "xulcommanddispatcher.focusedelement", \
     "xulcommanddispatcher.focusedwindow", \

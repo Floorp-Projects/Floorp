@@ -67,8 +67,7 @@ static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
 
 class nsHTMLOptionElement : public nsIDOMHTMLOptionElement,
-                            public nsIScriptObjectOwner,
-                            public nsIDOMEventReceiver,
+                            public nsIJSScriptObject,
                             public nsIHTMLContent,
                             public nsIJSNativeInitializer
                             //public nsIFormControl
@@ -106,11 +105,8 @@ public:
   NS_IMETHOD GetValue(nsString& aValue);
   NS_IMETHOD SetValue(const nsString& aValue);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_NO_SETPARENT_USING_GENERIC(mInner)

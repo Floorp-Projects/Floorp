@@ -96,7 +96,12 @@ nsEventListenerManager::~nsEventListenerManager()
 
 NS_IMPL_ADDREF(nsEventListenerManager)
 NS_IMPL_RELEASE(nsEventListenerManager)
-NS_IMPL_QUERY_INTERFACE1(nsEventListenerManager, nsIEventListenerManager)
+NS_INTERFACE_MAP_BEGIN(nsEventListenerManager)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEventListenerManager)
+   NS_INTERFACE_MAP_ENTRY(nsIEventListenerManager)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
+NS_INTERFACE_MAP_END
 
 nsVoidArray** nsEventListenerManager::GetListenersByIID(const nsIID& aIID)
 {
@@ -1200,7 +1205,9 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
 
     case NS_PAGE_LOAD:
     case NS_PAGE_UNLOAD:
-    
+    case NS_IMAGE_LOAD:
+    case NS_IMAGE_ERROR:
+
       if (nsnull != mLoadListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
@@ -1216,11 +1223,14 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
               if (NS_OK == ls->mListener->QueryInterface(kIDOMLoadListenerIID, (void**)&mLoadListener)) {
                 switch(aEvent->message) {
                   case NS_PAGE_LOAD:
+                  case NS_IMAGE_LOAD:
                     ret = mLoadListener->Load(*aDOMEvent);
                     break;
                   case NS_PAGE_UNLOAD:
                     ret = mLoadListener->Unload(*aDOMEvent);
                     break;
+                  case NS_IMAGE_ERROR:
+                    ret = mLoadListener->Error(*aDOMEvent);
                   default:
                     break;
                 }
@@ -1231,6 +1241,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                 PRUint32 subType = 0;
                 switch(aEvent->message) {
                   case NS_PAGE_LOAD:
+                  case NS_IMAGE_LOAD:
                     subType = NS_EVENT_BITS_LOAD_LOAD;
                     if (ls->mSubType & NS_EVENT_BITS_LOAD_LOAD) {
                       correctSubType = PR_TRUE;
@@ -1242,6 +1253,12 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                       correctSubType = PR_TRUE;
                     }
                     break;
+                  case NS_IMAGE_ERROR:
+                    subType = NS_EVENT_BITS_LOAD_ERROR;
+                    if (ls->mSubType & NS_EVENT_BITS_LOAD_ERROR) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;                    
                   default:
                     break;
                 }
@@ -1733,6 +1750,62 @@ nsresult nsEventListenerManager::RemoveAllListeners(PRBool aScriptOnly)
   return NS_OK;
 }
 
+// nsIDOMEventTarget interface
+NS_IMETHODIMP 
+nsEventListenerManager::AddEventListener(const nsString& aType, 
+                                         nsIDOMEventListener* aListener, 
+                                         PRBool aUseCapture)
+{
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+  return AddEventListenerByType(aListener, aType, flags);
+}
+
+NS_IMETHODIMP 
+nsEventListenerManager::RemoveEventListener(const nsString& aType, 
+                                            nsIDOMEventListener* aListener, 
+                                            PRBool aUseCapture)
+{
+  PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+  
+  return RemoveEventListenerByType(aListener, aType, flags);
+}
+
+// nsIDOMEventReceiver interface
+NS_IMETHODIMP 
+nsEventListenerManager::AddEventListenerByIID(nsIDOMEventListener *aListener, 
+                                              const nsIID& aIID)
+{
+  return AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+}
+
+NS_IMETHODIMP 
+nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
+{
+  return RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+}
+
+NS_IMETHODIMP 
+nsEventListenerManager::GetListenerManager(nsIEventListenerManager** aInstancePtrResult)
+{
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+  *aInstancePtrResult = NS_STATIC_CAST(nsIEventListenerManager*, this);
+  NS_ADDREF(*aInstancePtrResult);
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP 
+nsEventListenerManager::GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult)
+{
+  return NS_NewEventListenerManager(aInstancePtrResult);
+}
+
+NS_IMETHODIMP 
+nsEventListenerManager::HandleEvent(nsIDOMEvent *aEvent)
+{
+  return NS_ERROR_FAILURE;
+}
+
 NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult) 
 {
   nsIEventListenerManager* l = new nsEventListenerManager();
@@ -1747,3 +1820,4 @@ NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstanceP
 
   return NS_ERROR_FAILURE;
 }
+

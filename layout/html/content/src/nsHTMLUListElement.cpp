@@ -38,8 +38,7 @@ extern nsGenericHTMLElement::EnumTable kOldListTypeTable[];
 static NS_DEFINE_IID(kIDOMHTMLUListElementIID, NS_IDOMHTMLULISTELEMENT_IID);
 
 class nsHTMLUListElement : public nsIDOMHTMLUListElement,
-                           public nsIScriptObjectOwner,
-                           public nsIDOMEventReceiver,
+                           public nsIJSScriptObject,
                            public nsIHTMLContent
 {
 public:
@@ -64,11 +63,8 @@ public:
   NS_IMETHOD GetType(nsString& aType);
   NS_IMETHOD SetType(const nsString& aType);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)

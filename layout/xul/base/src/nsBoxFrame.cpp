@@ -512,7 +512,7 @@ nsBoxFrameInner::GetInitialDebug(PRBool& aDebug)
 PRBool
 nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
 {
-  nsString value;
+  nsAutoString value;
 
   nsCOMPtr<nsIContent> content;
   mInner->GetContentOf(this, getter_AddRefs(content));
@@ -560,7 +560,7 @@ PRBool
 nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
 {
 
-  nsString value;
+  nsAutoString value;
 
   nsCOMPtr<nsIContent> content;
   mInner->GetContentOf(this, getter_AddRefs(content));
@@ -624,7 +624,7 @@ PRBool
 nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
 {
  // see if we are a vertical or horizontal box.
-  nsString value;
+  nsAutoString value;
 
   nsCOMPtr<nsIContent> content;
   mInner->GetContentOf(this, getter_AddRefs(content));
@@ -659,7 +659,7 @@ nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
 PRBool
 nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
 {
-  nsString value;
+  nsAutoString value;
 
   nsCOMPtr<nsIContent> content;
   mInner->GetContentOf(this, getter_AddRefs(content));
@@ -907,7 +907,7 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowStat
         
         nsReflowStatus status;
         PRBool redraw;
-        nsString reason("To get pref size");
+        nsAutoString reason("To get pref size");
 
         nsHTMLReflowState state(aReflowState);
         state.availableWidth = NS_INTRINSICSIZE;
@@ -3423,7 +3423,7 @@ nsBoxFrame::GetFrameName(nsString& aResult) const
     nsIFrame* frame = (nsIFrame*)this;
     mInner->GetContentOf(frame, getter_AddRefs(content));
 
-    nsString id;
+    nsAutoString id;
     content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
 
     aResult = "Box[id=";
@@ -3662,19 +3662,19 @@ nsBoxDebug::DisplayDebugInfoFor(nsIPresContext* aPresContext,
                             nsCOMPtr<nsIContent> content;
                             aBoxFrame->mInner->GetContentOf(aBoxFrame, getter_AddRefs(content));
 
-                            nsString id;
+                            nsAutoString id;
                             content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
                             char idValue[100];
                             id.ToCString(idValue,100);
                        
-                            nsString kClass;
+                            nsAutoString kClass;
                             content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, kClass);
                             char kClassValue[100];
                             kClass.ToCString(kClassValue,100);
 
                             nsCOMPtr<nsIAtom> tag;
                             content->GetTag(*getter_AddRefs(tag));
-                            nsString tagString;
+                            nsAutoString tagString;
                             tag->ToString(tagString);
                             char tagValue[100];
                             tagString.ToCString(tagValue,100);
@@ -3858,7 +3858,7 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
     nsCOMPtr<nsIContent> content;
     mInner->GetContentOf(this, getter_AddRefs(content));
 
-    nsString id;
+    nsAutoString id;
     content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
     char idValue[100];
     id.ToCString(idValue,100);

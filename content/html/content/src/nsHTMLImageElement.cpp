@@ -64,10 +64,8 @@ static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 class nsHTMLImageElement : public nsIDOMHTMLImageElement,
                            public nsIDOMImage,
-                           public nsIScriptObjectOwner,
-                           public nsIDOMEventReceiver,
-                           public nsIHTMLContent,
                            public nsIJSScriptObject,
+                           public nsIHTMLContent,
                            public nsIJSNativeInitializer
 {
 public:
@@ -120,11 +118,6 @@ public:
   NS_IMETHOD    SetLowsrc(const nsString& aLowsrc);
   NS_IMETHOD    GetComplete(PRBool* aComplete);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_NO_SETDOCUMENT_USING_GENERIC(mInner)
@@ -133,18 +126,19 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
   // nsIJSScriptObject
-  PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
+  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
+  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
-  PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
+  virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
-  PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
+  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
-  PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
+  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
-  PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
-  PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
-  void      Finalize(JSContext *aContext, JSObject *aObj);
+  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
   // nsIJSNativeInitializer
   NS_IMETHOD Initialize(JSContext* aContext, JSObject *aObj, 
@@ -545,10 +539,9 @@ nsHTMLImageElement::GetCallerSourceURL(JSContext* cx,
 
         if (doc) {
           result = doc->GetBaseURL(*sourceURL);
-        }
-        
-        if (!*sourceURL) {
-          *sourceURL = doc->GetDocumentURL();
+          if (!*sourceURL) {
+            *sourceURL = doc->GetDocumentURL();
+          }
         }
       }
     }

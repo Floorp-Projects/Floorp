@@ -34,8 +34,7 @@
 static NS_DEFINE_IID(kIDOMHTMLBaseElementIID, NS_IDOMHTMLBASEELEMENT_IID);
 
 class nsHTMLBaseElement : public nsIDOMHTMLBaseElement,
-                          public nsIScriptObjectOwner,
-                          public nsIDOMEventReceiver,
+                          public nsIJSScriptObject,
                           public nsIHTMLContent
 {
 public:
@@ -60,11 +59,8 @@ public:
   NS_IMETHOD GetTarget(nsString& aTarget);
   NS_IMETHOD SetTarget(const nsString& aTarget);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)

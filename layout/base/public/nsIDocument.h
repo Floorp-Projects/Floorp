@@ -98,6 +98,8 @@ public:
                                nsISupports* aContainer,
                                nsIStreamListener **aDocListener) = 0;
 
+  NS_IMETHOD StopDocumentLoad() = 0;
+
   /**
    * Return the title of the document. May return null.
    */

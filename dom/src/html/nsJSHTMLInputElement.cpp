@@ -564,6 +564,18 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case HTMLINPUTELEMENT_TYPE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLINPUTELEMENT_TYPE, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+      
+          rv = a->SetType(prop);
+          
+        }
+        break;
+      }
       case HTMLINPUTELEMENT_USEMAP:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLINPUTELEMENT_USEMAP, PR_TRUE);
@@ -824,7 +836,7 @@ static JSPropertySpec HTMLInputElementProperties[] =
   {"size",    HTMLINPUTELEMENT_SIZE,    JSPROP_ENUMERATE},
   {"src",    HTMLINPUTELEMENT_SRC,    JSPROP_ENUMERATE},
   {"tabIndex",    HTMLINPUTELEMENT_TABINDEX,    JSPROP_ENUMERATE},
-  {"type",    HTMLINPUTELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"type",    HTMLINPUTELEMENT_TYPE,    JSPROP_ENUMERATE},
   {"useMap",    HTMLINPUTELEMENT_USEMAP,    JSPROP_ENUMERATE},
   {"value",    HTMLINPUTELEMENT_VALUE,    JSPROP_ENUMERATE},
   {"autocomplete",    HTMLINPUTELEMENT_AUTOCOMPLETE,    JSPROP_ENUMERATE},

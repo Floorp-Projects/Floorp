@@ -34,6 +34,7 @@ static NS_DEFINE_IID(kINameSpaceIID, NS_INAMESPACE_IID);
 static const char kXMLNSNameSpaceURI[] = "<This isn't really a namespace>";
 static const char kXMLNameSpaceURI[] = "http://www.w3.org/XML/1998/namespace";
 static const char kHTMLNameSpaceURI[] = "http://www.w3.org/TR/REC-html40";  // XXX?? "urn:w3-org-ns:HTML"??
+static const char kXHTMLNameSpaceURI[] = "http://www.w3.org/1999/xhtml";
 
 //-----------------------------------------------------------
 // Name Space ID table support
@@ -109,15 +110,19 @@ static void AddRefTable()
     nsString* xmlns = new nsString(kXMLNSNameSpaceURI);
     nsString* xml = new nsString(kXMLNameSpaceURI);
     nsString* html = new nsString(kHTMLNameSpaceURI);
+    nsString* xhtml = new nsString(kXHTMLNameSpaceURI);
     gURIArray->AppendElement(xmlns);  // ordering here needs to match IDs
     gURIArray->AppendElement(xml);
     gURIArray->AppendElement(html); 
+    gURIArray->AppendElement(xhtml); 
     NameSpaceURIKey xmlnsKey(xmlns);
     NameSpaceURIKey xmlKey(xml);
     NameSpaceURIKey htmlKey(html);
+    NameSpaceURIKey xhtmlKey(xhtml);
     gURIToIDTable->Put(&xmlnsKey, (void*)kNameSpaceID_XMLNS);
     gURIToIDTable->Put(&xmlKey, (void*)kNameSpaceID_XML);
     gURIToIDTable->Put(&htmlKey, (void*)kNameSpaceID_HTML);
+    gURIToIDTable->Put(&xhtmlKey, (void*)kNameSpaceID_HTML);
   }
   NS_ASSERTION(nsnull != gURIToIDTable, "no URI table");
   NS_ASSERTION(nsnull != gURIArray, "no URI array");

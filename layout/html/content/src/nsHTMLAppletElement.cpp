@@ -52,8 +52,7 @@
 static NS_DEFINE_IID(kIDOMHTMLAppletElementIID, NS_IDOMHTMLAPPLETELEMENT_IID);
 
 class nsHTMLAppletElement : public nsIDOMHTMLAppletElement,
-                            public nsIScriptObjectOwner,
-                            public nsIDOMEventReceiver,
+                            public nsIJSScriptObject,
                             public nsIHTMLContent
 {
 public:
@@ -96,13 +95,39 @@ public:
   NS_IMETHOD GetWidth(nsString& aWidth);
   NS_IMETHOD SetWidth(const nsString& aWidth);
 
-  // nsIScriptObjectOwner
+  // nsIJSScriptObject
+  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj,
+                        jsval aID, jsval *aVp) {
+    return mInner.AddProperty(aContext, aObj, aID, aVp);
+  }
+  virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj,
+                        jsval aID, jsval *aVp) {
+    return mInner.DeleteProperty(aContext, aObj, aID, aVp);
+  }
+  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj,
+                        jsval aID, jsval *aVp) {
+    return mInner.GetProperty(aContext, aObj, aID, aVp);
+  }
+  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj,
+                        jsval aID, jsval *aVp) {
+    return mInner.SetProperty(aContext, aObj, aID, aVp);
+  }
+  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj) {
+    return mInner.EnumerateProperty(aContext, aObj);
+  }
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID) {
+    return mInner.EnumerateProperty(aContext, aObj);
+  }
+  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID) {
+    return mInner.EnumerateProperty(aContext, aObj);
+  }
+  virtual void      Finalize(JSContext *aContext, JSObject *aObj) {
+    mInner.Finalize(aContext, aObj);
+  }
+
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext,
                              void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)

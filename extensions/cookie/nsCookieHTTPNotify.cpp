@@ -180,7 +180,7 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext)
     rv = SetupCookieService();
     if (NS_FAILED(rv)) return rv;
 
-    nsString cookie;
+    nsAutoString cookie;
     rv = mCookieService->GetCookieStringFromHTTP(pURL, pFirstURL, cookie);
     if (NS_FAILED(rv)) return rv;
 

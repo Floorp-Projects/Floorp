@@ -23,9 +23,9 @@
 #define nsITextContent_h___
 
 #include "nslayout.h"
+#include "nsIContent.h"
 class nsString;
 class nsTextFragment;
-class nsIContent;
 
 // IID for the nsITextContent interface
 #define NS_ITEXT_CONTENT_IID \
@@ -35,7 +35,7 @@ class nsIContent;
  * Interface for textual content. This interface is used to provide
  * an efficient access to text content.
  */
-class nsITextContent : public nsISupports {
+class nsITextContent : public nsIContent {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ITEXT_CONTENT_IID; return iid; }
 

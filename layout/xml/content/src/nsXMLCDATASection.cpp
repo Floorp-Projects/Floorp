@@ -38,8 +38,6 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
 class nsXMLCDATASection : public nsIDOMCDATASection,
                           public nsIScriptObjectOwner,
-                          public nsIDOMEventReceiver,
-                          public nsIContent,
                           public nsITextContent
 {
 public:
@@ -60,9 +58,6 @@ public:
 
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC_DOM_DATA(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)

@@ -34,8 +34,7 @@
 static NS_DEFINE_IID(kIDOMHTMLBaseFontElementIID, NS_IDOMHTMLBASEFONTELEMENT_IID);
 
 class nsHTMLBaseFontElement : public nsIDOMHTMLBaseFontElement,
-                              public nsIScriptObjectOwner,
-                              public nsIDOMEventReceiver,
+                              public nsIJSScriptObject,
                               public nsIHTMLContent
 {
 public:
@@ -62,11 +61,8 @@ public:
   NS_IMETHOD GetSize(nsString& aSize);
   NS_IMETHOD SetSize(const nsString& aSize);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)

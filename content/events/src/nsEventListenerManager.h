@@ -27,6 +27,7 @@
 #include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
+#include "nsIDOMEventReceiver.h"
 
 class nsIDOMEvent;
 class nsIAtom;
@@ -46,7 +47,9 @@ typedef struct {
  * Event listener manager
  */
 
-class nsEventListenerManager : public nsIEventListenerManager {
+class nsEventListenerManager : public nsIEventListenerManager,
+                               public nsIDOMEventReceiver
+{
 
 public:
   nsEventListenerManager();
@@ -101,6 +104,21 @@ public:
   virtual nsresult RemoveAllListeners(PRBool aScriptOnly);
 
   static nsresult GetIdentifiersForType(nsIAtom* aType, nsIID& aIID, PRInt32* aSubType);
+
+  // nsIDOMEventTarget interface
+  NS_IMETHOD AddEventListener(const nsString& aType, 
+                              nsIDOMEventListener* aListener, 
+                              PRBool aUseCapture);
+  NS_IMETHOD RemoveEventListener(const nsString& aType, 
+                                 nsIDOMEventListener* aListener, 
+                                 PRBool aUseCapture);
+
+  // nsIDOMEventReceiver interface
+  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
+  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+  NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
+  NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
 
 protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,

@@ -41,8 +41,7 @@ static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT
 static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 
 class nsHTMLStyleElement : public nsIDOMHTMLStyleElement,
-                    public nsIScriptObjectOwner,
-                    public nsIDOMEventReceiver,
+                    public nsIJSScriptObject,
                     public nsIHTMLContent,
                     public nsIStyleSheetLinkingElement
 {
@@ -70,11 +69,8 @@ public:
   NS_IMETHOD GetType(nsString& aType);
   NS_IMETHOD SetType(const nsString& aType);
 
-  // nsIScriptObjectOwner
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-
-  // nsIDOMEventReceiver
-  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+  // nsIJSScriptObject
+  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC(mInner)

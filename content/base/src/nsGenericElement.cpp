@@ -380,7 +380,6 @@ nsGenericElement::nsGenericElement()
   mTag = nsnull;
   mContent = nsnull;
   mDOMSlots = nsnull;
-  mListenerManager = nsnull;
   mContentID = 0;
 }
 
@@ -389,7 +388,6 @@ nsGenericElement::~nsGenericElement()
   // pop any enclosed ranges out
   // nsRange::OwnerGone(mContent); not used for now
   NS_IF_RELEASE(mTag);
-  NS_IF_RELEASE(mListenerManager);
   if (nsnull != mDOMSlots) {
     if (nsnull != mDOMSlots->mChildNodes) {
       mDOMSlots->mChildNodes->DropReference();
@@ -404,6 +402,7 @@ nsGenericElement::~nsGenericElement()
       mDOMSlots->mAttributeMap->DropReference();
       NS_RELEASE(mDOMSlots->mAttributeMap);
     }
+    NS_IF_RELEASE(mDOMSlots->mListenerManager);
     // XXX Should really be arena managed
     PR_DELETE(mDOMSlots);
   }
@@ -420,9 +419,25 @@ nsGenericElement::GetDOMSlots()
     mDOMSlots->mAttributeMap = nsnull;
     mDOMSlots->mRangeList = nsnull;
     mDOMSlots->mCapturer = nsnull;
+    mDOMSlots->mListenerManager = nsnull;
   }
   
   return mDOMSlots;
+}
+
+void
+nsGenericElement::MaybeClearDOMSlots()
+{
+  if (mDOMSlots &&
+      (nsnull == mDOMSlots->mScriptObject) &&
+      (nsnull == mDOMSlots->mChildNodes) &&
+      (nsnull == mDOMSlots->mStyle) &&
+      (nsnull == mDOMSlots->mAttributeMap) &&
+      (nsnull == mDOMSlots->mRangeList) &&
+      (nsnull == mDOMSlots->mCapturer) &&
+      (nsnull == mDOMSlots->mListenerManager)) {
+    PR_DELETE(mDOMSlots);
+  }
 }
 
 void
@@ -1004,9 +1019,9 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
   
   //Local handling stage
-  if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+  if (mDOMSlots && mDOMSlots->mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
     aEvent->flags |= aFlags;
-    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+    mDOMSlots->mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
     aEvent->flags &= ~aFlags;
   }
 
@@ -1090,11 +1105,7 @@ nsGenericElement::RangeRemove(nsIDOMRange& aRange)
       if (mDOMSlots->mRangeList->Count() == 0) {
         delete mDOMSlots->mRangeList;
         mDOMSlots->mRangeList = nsnull;
-        if ( (mDOMSlots->mScriptObject == nsnull) &&
-             (mDOMSlots->mChildNodes == nsnull) &&
-             (mDOMSlots->mStyle == nsnull) ) {
-          PR_DELETE(mDOMSlots);
-        }
+        MaybeClearDOMSlots();
       }
       return NS_OK;
     }
@@ -1220,9 +1231,10 @@ nsGenericElement::SetScriptObject(void *aScriptObject)
   slots->mScriptObject = aScriptObject;
 
   if (!aScriptObject) {
-    if (mListenerManager) {
-      mListenerManager->RemoveAllListeners(PR_TRUE);
+    if (slots->mListenerManager) {
+      slots->mListenerManager->RemoveAllListeners(PR_TRUE);
     } 
+    MaybeClearDOMSlots();
   }
 
   return NS_OK;
@@ -1230,88 +1242,22 @@ nsGenericElement::SetScriptObject(void *aScriptObject)
 
 //----------------------------------------------------------------------
 
-// nsIDOMEventReceiver implementation
-
 nsresult
 nsGenericElement::GetListenerManager(nsIEventListenerManager** aResult)
 {
-  if (nsnull != mListenerManager) {
-    NS_ADDREF(mListenerManager);
-    *aResult = mListenerManager;
+  nsDOMSlots *slots = GetDOMSlots();
+
+  if (nsnull != slots->mListenerManager) {
+    NS_ADDREF(slots->mListenerManager);
+    *aResult = slots->mListenerManager;
     return NS_OK;
   }
   nsresult rv = NS_NewEventListenerManager(aResult);
   if (NS_OK == rv) {
-    mListenerManager = *aResult;
-    NS_ADDREF(mListenerManager);
+    slots->mListenerManager = *aResult;
+    NS_ADDREF(slots->mListenerManager);
   }
   return rv;
-}
-
-nsresult
-nsGenericElement::GetNewListenerManager(nsIEventListenerManager** aResult)
-{
-  return NS_NewEventListenerManager(aResult);
-} 
-
-nsresult
-nsGenericElement::HandleEvent(nsIDOMEvent *aEvent)
-{
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsGenericElement::AddEventListenerByIID(nsIDOMEventListener* aListener,
-                                   const nsIID& aIID)
-{
-  nsIEventListenerManager *manager;
-
-  if (NS_OK == GetListenerManager(&manager)) {
-    manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-    NS_RELEASE(manager);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsGenericElement::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
-                                      const nsIID& aIID)
-{
-  if (nsnull != mListenerManager) {
-    mListenerManager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsGenericElement::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                   PRBool aUseCapture)
-{
-  nsIEventListenerManager *manager;
-
-  if (NS_OK == GetListenerManager(&manager)) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    manager->AddEventListenerByType(aListener, aType, flags);
-    NS_RELEASE(manager);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsGenericElement::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                      PRBool aUseCapture)
-{
-  if (nsnull != mListenerManager) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------------------

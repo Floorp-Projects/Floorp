@@ -848,7 +848,7 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDocument::StartDocumentLoad(const char* aCommand,
                               nsIChannel* aChannel,
                               nsILoadGroup* aLoadGroup,
@@ -856,6 +856,12 @@ nsDocument::StartDocumentLoad(const char* aCommand,
                               nsIStreamListener **aDocListener)
 {
   return Reset(aChannel, aLoadGroup);
+}
+
+NS_IMETHODIMP 
+nsDocument::StopDocumentLoad()
+{
+  return NS_OK;
 }
 
 const nsString* nsDocument::GetDocumentTitle() const

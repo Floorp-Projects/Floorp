@@ -133,7 +133,7 @@ nsSliderFrame::GetPageIncrement(nsIContent* content)
 PRInt32
 nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsIAtom* atom, PRInt32 defaultValue)
 {
-    nsString value;
+    nsAutoString value;
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, atom, value))
     {
       PRInt32 error;
@@ -178,7 +178,7 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
           sprintf(ch,"%d", current);
  
           // set the new position but don't notify anyone. We already know
-          scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, nsString(ch), PR_FALSE);
+          scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, nsAutoString(ch), PR_FALSE);
       }
   }
   
@@ -292,7 +292,7 @@ PRBool
 nsSliderFrame::IsHorizontal(nsIContent* scrollbar)
 {
   PRBool isHorizontal = PR_TRUE;
-  nsString value;
+  nsAutoString value;
   if (NS_CONTENT_ATTR_HAS_VALUE == scrollbar->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value))
   {
     if (value=="vertical")
@@ -375,7 +375,7 @@ nsSliderFrame::Reflow(nsIPresContext*   aPresContext,
     thumbFrame->GetContent(getter_AddRefs(content));
 
     PRInt32 error;
-    nsString value;
+    nsAutoString value;
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::flex, value))
     {
         value.Trim("%");
@@ -659,7 +659,7 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
   sprintf(ch,"%d", newpos);
 
   // set the new position
-  scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, nsString(ch), PR_TRUE);
+  scrollbar->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, nsAutoString(ch), PR_TRUE);
 
   if (DEBUG_SLIDER)
      printf("Current Pos=%s\n",ch);

@@ -11,3 +11,16 @@
             attribute  long                 tabIndex;
             attribute  DOMString            target;
  };
+
+  interface NSHTMLAreaElement {
+ /* IID: { 0xa6cf911b, 0x15b3, 0x11d2,  \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+   readonly attribute DOMString   protocol;
+   readonly attribute DOMString   host;
+   readonly attribute DOMString   hostname;  
+   readonly attribute DOMString   pathname;
+   readonly attribute DOMString   search;
+   readonly attribute DOMString   port;
+   readonly attribute DOMString   hash;
+  };

@@ -35,12 +35,14 @@
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
 #include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMNSHTMLAreaElement.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIHTMLAreaElementIID, NS_IDOMHTMLAREAELEMENT_IID);
+static NS_DEFINE_IID(kINSHTMLAreaElementIID, NS_IDOMNSHTMLAREAELEMENT_IID);
 
 //
 // HTMLAreaElement property ids
@@ -53,7 +55,14 @@ enum HTMLAreaElement_slots {
   HTMLAREAELEMENT_NOHREF = -5,
   HTMLAREAELEMENT_SHAPE = -6,
   HTMLAREAELEMENT_TABINDEX = -7,
-  HTMLAREAELEMENT_TARGET = -8
+  HTMLAREAELEMENT_TARGET = -8,
+  NSHTMLAREAELEMENT_PROTOCOL = -9,
+  NSHTMLAREAELEMENT_HOST = -10,
+  NSHTMLAREAELEMENT_HOSTNAME = -11,
+  NSHTMLAREAELEMENT_PATHNAME = -12,
+  NSHTMLAREAELEMENT_SEARCH = -13,
+  NSHTMLAREAELEMENT_PORT = -14,
+  NSHTMLAREAELEMENT_HASH = -15
 };
 
 /***********************************************************************/
@@ -168,6 +177,139 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           rv = a->GetTarget(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case NSHTMLAREAELEMENT_PROTOCOL:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLAREAELEMENT_PROTOCOL, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAreaElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAreaElementIID, (void **)&b)) {
+            rv = b->GetProtocol(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLAREAELEMENT_HOST:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLAREAELEMENT_HOST, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAreaElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAreaElementIID, (void **)&b)) {
+            rv = b->GetHost(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLAREAELEMENT_HOSTNAME:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLAREAELEMENT_HOSTNAME, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAreaElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAreaElementIID, (void **)&b)) {
+            rv = b->GetHostname(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLAREAELEMENT_PATHNAME:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLAREAELEMENT_PATHNAME, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAreaElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAreaElementIID, (void **)&b)) {
+            rv = b->GetPathname(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLAREAELEMENT_SEARCH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLAREAELEMENT_SEARCH, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAreaElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAreaElementIID, (void **)&b)) {
+            rv = b->GetSearch(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLAREAELEMENT_PORT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLAREAELEMENT_PORT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAreaElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAreaElementIID, (void **)&b)) {
+            rv = b->GetPort(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLAREAELEMENT_HASH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLAREAELEMENT_HASH, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLAreaElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLAreaElementIID, (void **)&b)) {
+            rv = b->GetHash(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
         }
         break;
@@ -386,6 +528,13 @@ static JSPropertySpec HTMLAreaElementProperties[] =
   {"shape",    HTMLAREAELEMENT_SHAPE,    JSPROP_ENUMERATE},
   {"tabIndex",    HTMLAREAELEMENT_TABINDEX,    JSPROP_ENUMERATE},
   {"target",    HTMLAREAELEMENT_TARGET,    JSPROP_ENUMERATE},
+  {"protocol",    NSHTMLAREAELEMENT_PROTOCOL,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"host",    NSHTMLAREAELEMENT_HOST,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"hostname",    NSHTMLAREAELEMENT_HOSTNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"pathname",    NSHTMLAREAELEMENT_PATHNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"search",    NSHTMLAREAELEMENT_SEARCH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"port",    NSHTMLAREAELEMENT_PORT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"hash",    NSHTMLAREAELEMENT_HASH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

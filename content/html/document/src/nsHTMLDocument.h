@@ -70,6 +70,8 @@ public:
                                nsISupports* aContainer,
                                nsIStreamListener **aDocListener);
 
+  NS_IMETHOD StopDocumentLoad();
+
   NS_IMETHOD EndLoad();
 
   NS_IMETHOD AddImageMap(nsIDOMHTMLMapElement* aMap);

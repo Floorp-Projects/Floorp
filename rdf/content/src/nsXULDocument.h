@@ -89,7 +89,6 @@ class nsXULDocument : public nsIDocument,
                       public nsIDOMNSDocument,
                       public nsIDOMEventCapturer,
                       public nsIJSScriptObject,
-                      public nsIScriptObjectOwner,
                       public nsIHTMLContentContainer,
                       public nsIStreamLoaderObserver,
                       public nsSupportsWeakReference
@@ -112,6 +111,8 @@ public:
                                  nsILoadGroup* aLoadGroup,
                                  nsISupports* aContainer,
                                  nsIStreamListener **aDocListener);
+
+    NS_IMETHOD StopDocumentLoad();
 
     virtual const nsString* GetDocumentTitle() const;
 

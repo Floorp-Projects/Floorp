@@ -96,6 +96,8 @@ EXPORTS		= \
 		nsIDOMNSHTMLButtonElement.h \
 		nsIDOMNSHTMLDocument.h \
 		nsIDOMOption.h \
+		nsIDOMNSHTMLAnchorElement.h \
+		nsIDOMNSHTMLAreaElement.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

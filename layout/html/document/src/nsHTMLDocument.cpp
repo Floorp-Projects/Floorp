@@ -753,6 +753,16 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 }
 
 NS_IMETHODIMP
+nsHTMLDocument::StopDocumentLoad()
+{
+  if (mParser) {
+    mParser->Terminate();
+  }
+ 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLDocument::EndLoad()
 {
   NS_IF_RELEASE(mParser);
