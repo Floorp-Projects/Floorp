@@ -18,6 +18,6 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DIRS = base coreDOM html css events jsurl build
+DIRS = base coreDOM html css events range jsurl build
 
 include <$(DEPTH)\config\rules.mak>
