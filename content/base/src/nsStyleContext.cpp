@@ -2843,7 +2843,7 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
 
 #ifdef SHARE_STYLECONTEXTS
 
-  static PRBool bEnableSharing = PR_TRUE; 
+  static PRBool bEnableSharing = PR_FALSE; 
     // set to FALSE in debugger to turn off sharing of sc data
 
   if (bEnableSharing) {
