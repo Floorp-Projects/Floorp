@@ -28,6 +28,7 @@ extern "C" {
 #include "cvchunk.h"
 };
 #include "netcache.h"
+#include "cookies.h"
 #include "plstr.h"
 
 #include "nsString.h"
@@ -402,6 +403,42 @@ nsNetlibService::SetContainerApplication(nsINetContainerApplication *aContainer)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNetlibService::GetCookieString(nsIURL *aURL, nsString& aCookie)
+{
+    // XXX How safe is it to create a stub context without a URL_Struct?
+    MWContext *stubContext = new_stub_context(nsnull);
+    
+    const char *spec = aURL->GetSpec();
+    char *cookie = NET_GetCookie(stubContext, (char *)spec);
+
+    if (nsnull != cookie) {
+        aCookie.SetString(cookie);
+        PR_FREEIF(cookie);
+    }
+    else {
+        aCookie.SetString("");
+    }
+
+    free_stub_context(stubContext);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetlibService::SetCookieString(nsIURL *aURL, const nsString& aCookie)
+{
+    // XXX How safe is it to create a stub context without a URL_Struct?
+    MWContext *stubContext = new_stub_context(nsnull);
+    
+    const char *spec = aURL->GetSpec();
+    char *cookie = aCookie.ToNewCString();
+
+    NET_SetCookieString(stubContext, (char *)spec, cookie);
+
+    PR_FREEIF(cookie);
+    free_stub_context(stubContext);
+    return NS_OK;
+}
 
 extern "C" {
 

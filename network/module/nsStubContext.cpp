@@ -51,7 +51,7 @@ static nsIStreamListener *getStreamListener(URL_Struct *URL_s)
 {
     nsIStreamListener *res = NULL;
     
-    if (URL_s->fe_data) {
+    if (URL_s && URL_s->fe_data) {
         /* 
          * Retrieve the nsConnectionInfo object from the fe_data field
          * of the URL_Struct...
