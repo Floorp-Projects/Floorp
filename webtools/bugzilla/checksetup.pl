@@ -272,6 +272,7 @@ my $modules = [
 
 my %ppm_modules = (
     'AppConfig'         => 'AppConfig',
+    'Chart::Base'       => 'Chart',
     'CGI'               => 'CGI',
     'Data::Dumper'      => 'Data-Dumper',
     'Date::Format'      => 'TimeDate',
@@ -290,7 +291,7 @@ sub install_command {
         return "ppm install " . $ppm_modules{$module} if exists $ppm_modules{$module};
         return "ppm install " . $module;
     } else {
-        return "perl -MCPAN -e 'install \"$module\"'";
+        return "$^X -MCPAN -e 'install \"$module\"'";
     }    
 }
 
@@ -330,8 +331,7 @@ if ((!$gd || !$chartbase) && !$silent) {
     print "If you you want to see graphical bug charts (plotting historical ";
     print "data over \ntime), you should install libgd and the following Perl ";     print "modules:\n\n";
     print "GD:          " . install_command("GD") ."\n" if !$gd;
-    print "Chart 0.99b: perl -MCPAN " . 
-          "-e'install \"N/NI/NINJAZ/Chart-0.99b.tar.gz\"'\n" if !$chartbase;
+    print "Chart 0.99b: " . install_command("Chart::Base") . "\n" if !$chartbase;
     print "\n";
 }
 if (!$xmlparser && !$silent) {
