@@ -54,6 +54,8 @@ class nsILookAndFeel: public nsISupports {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILOOKANDFEEL_IID)
 
+  // When modifying this list, also modify nsXPLookAndFeel::sColorPrefs
+  // in widget/src/xpwidgts/nsXPLookAndFeel.cpp.
   typedef enum {
     eColor_WindowBackground,
     eColor_WindowForeground,
@@ -105,10 +107,6 @@ public:
     eColor__moz_dialogtext,
     eColor__moz_dragtargetzone,				//used to highlight valid regions to drop something onto
 
-    // A special color value indicating that the current theme should pick the
-    // color.
-    eColor_theme,
-
     //colours needed by Mac Classic skin
     eColor__moz_mac_focusring,				//ring around text fields and lists
     eColor__moz_mac_menuselect,				//colour used when mouse is over a menu item
@@ -128,6 +126,8 @@ public:
     eColor_LAST_COLOR
   } nsColorID;
 
+  // When modifying this list, also modify nsXPLookAndFeel::sIntPrefs
+  // in widget/src/xpwidgts/nsXPLookAndFeel.cpp.
   typedef enum {
     eMetric_WindowTitleHeight,
     eMetric_WindowBorderWidth,
@@ -173,6 +173,8 @@ public:
     eMetric_ScrollThumbStyleProportional
   };
   
+  // When modifying this list, also modify nsXPLookAndFeel::sFloatPrefs
+  // in widget/src/xpwidgts/nsXPLookAndFeel.cpp.
   typedef enum {
     eMetricFloat_TextFieldVerticalInsidePadding,
     eMetricFloat_TextFieldHorizontalInsidePadding,

@@ -206,7 +206,7 @@
 }
 
 #page-proxy-deck {
-  cursor: grab;
+  cursor: -moz-grab;
   margin: 2px 3px;
 }
 

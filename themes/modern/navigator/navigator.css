@@ -387,7 +387,7 @@
 }
 
 #page-proxy-deck {
-  cursor: grab;
+  cursor: -moz-grab;
   margin-right: 4px;
 }
 

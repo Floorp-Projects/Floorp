@@ -323,7 +323,6 @@
 #define NS_STYLE_DISPLAY_TABLE_ROW              15
 #define NS_STYLE_DISPLAY_TABLE_CELL             16
 #define NS_STYLE_DISPLAY_TABLE_CAPTION          17
-#define NS_STYLE_DISPLAY_MENU                   18
 #define NS_STYLE_DISPLAY_BOX                    18
 #define NS_STYLE_DISPLAY_INLINE_BOX             19
 #define NS_STYLE_DISPLAY_GRID                   20
@@ -404,7 +403,6 @@
 #define NS_STYLE_FONT_PULL_DOWN_MENU						14
 #define NS_STYLE_FONT_LIST											15
 #define NS_STYLE_FONT_FIELD											16
-#define NS_STYLE_FONT_THEME                     17
 
 // See nsStylePosition.mPosition
 #define NS_STYLE_POSITION_NORMAL                0

@@ -81,7 +81,7 @@ input {
   border: 2px inset ThreeDFace;
   background-color: -moz-Field;
   color: -moz-FieldText;
-  font: field;
+  font: -moz-field;
   text-align: start;
   vertical-align: text-bottom;
   cursor: text;
@@ -120,7 +120,7 @@ select {
   border-color: ThreeDFace;
   background-color: -moz-Field;
   color: -moz-FieldText;
-  font: list;
+  font: -moz-list;
   white-space: nowrap;
   text-align: start; 
   vertical-align: text-bottom;
@@ -194,7 +194,7 @@ option:checked {
 
 optgroup {
   display: block;
-  font: list;
+  font: -moz-list;
   font-style: italic;
   font-weight: bold;
   -moz-user-select: none;
@@ -365,7 +365,7 @@ input[type="submit"] {
   border: 2px outset ButtonFace;
   background-color: ButtonFace;
   color: ButtonText; 
-  font: button;
+  font: -moz-button;
   white-space: pre;
   cursor: default;
   -moz-box-sizing: border-box;
