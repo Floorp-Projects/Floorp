@@ -55,7 +55,7 @@ class CallableInstance;
 
 
 typedef void (Invokable)();
-typedef Invokable Callor;
+typedef js2val (Callor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 
 extern void initDateObject(JS2Metadata *meta);
@@ -217,12 +217,12 @@ public:
 // A QualifiedName is the combination of an identifier and a namespace
 class QualifiedName {
 public:
-    QualifiedName(Namespace *nameSpace, const StringAtom &id) : nameSpace(nameSpace), id(id) { }
+    QualifiedName(Namespace *nameSpace, const String *id) : nameSpace(nameSpace), id(id) { }
 
-    bool operator ==(const QualifiedName &b) { return (nameSpace == b.nameSpace) && (id == b.id); }
+    bool operator ==(const QualifiedName &b) { return (nameSpace == b.nameSpace) && (*id == *b.id); }
 
     Namespace *nameSpace;    // The namespace qualifier
-    const StringAtom &id;    // The name
+    const String *id;        // The name
 };
 
 // A MULTINAME is the semantic domain of sets of qualified names. Multinames are used internally in property lookup.
@@ -239,7 +239,7 @@ public:
     void addNamespace(NamespaceList *ns);
     void addNamespace(Context &cxt);
 
-    bool matches(QualifiedName &q)                  { return (*name == q.id) && onList(q.nameSpace); }
+    bool matches(QualifiedName &q)                  { return (*name == *q.id) && onList(q.nameSpace); }
     bool onList(Namespace *nameSpace);
 
     NamespaceList nsList;
@@ -1035,7 +1035,7 @@ public:
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase);
 
     HoistedVar *defineHoistedVar(Environment *env, const StringAtom *id, StmtNode *p);
-    Multiname *defineStaticMember(Environment *env, const StringAtom *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos);
+    Multiname *defineStaticMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos);
     OverrideStatusPair *defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos);
     OverrideStatus *resolveOverrides(JS2Class *c, Context *cxt, const StringAtom *id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos);
     OverrideStatus *searchForOverrides(JS2Class *c, const StringAtom *id, NamespaceList *namespaces, Access access, size_t pos);

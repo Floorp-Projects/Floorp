@@ -62,62 +62,62 @@ namespace MetaData {
 
     void RegExpInstance::setLastIndex(JS2Metadata *meta, js2val a)
     {
-        QualifiedName qname(meta->publicNamespace, meta->world.identifiers["lastIndex"]);
+        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["lastIndex"]);
         if (!meta->writeInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, a, RunPhase)) ASSERT(false);
     }
     void RegExpInstance::setGlobal(JS2Metadata *meta, js2val a)
     {
-        QualifiedName qname(meta->publicNamespace, meta->world.identifiers["global"]);
+        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["global"]);
         if (!meta->writeInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, a, RunPhase)) ASSERT(false);
     }
     void RegExpInstance::setMultiline(JS2Metadata *meta, js2val a)
     {
-        QualifiedName qname(meta->publicNamespace, meta->world.identifiers["multiline"]);
+        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["multiline"]);
         if (!meta->writeInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, a, RunPhase)) ASSERT(false);
     }
     void RegExpInstance::setIgnoreCase(JS2Metadata *meta, js2val a)
     {
-        QualifiedName qname(meta->publicNamespace, meta->world.identifiers["ignoreCase"]);
+        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["ignoreCase"]);
         if (!meta->writeInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, a, RunPhase)) ASSERT(false);
     }
     void RegExpInstance::setSource(JS2Metadata *meta, js2val a)
     {
-        QualifiedName qname(meta->publicNamespace, meta->world.identifiers["source"]);
+        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["source"]);
         if (!meta->writeInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, a, RunPhase)) ASSERT(false);
     }
 
     js2val RegExpInstance::getLastIndex(JS2Metadata *meta)
     {
         js2val r;
-        QualifiedName qname(meta->publicNamespace, meta->world.identifiers["lastIndex"]);
+        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["lastIndex"]);
         if (!meta->readInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, RunPhase, &r)) ASSERT(false);
         return r;
     }
     js2val RegExpInstance::getGlobal(JS2Metadata *meta)
     {
         js2val r;
-        QualifiedName qname(meta->publicNamespace, meta->world.identifiers["global"]);
+        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["global"]);
         if (!meta->readInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, RunPhase, &r)) ASSERT(false);
         return r;
     }
     js2val RegExpInstance::getMultiline(JS2Metadata *meta)
     {
         js2val r;
-        QualifiedName qname(meta->publicNamespace, meta->world.identifiers["multiline"]);
+        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["multiline"]);
         if (!meta->readInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, RunPhase, &r)) ASSERT(false);
         return r;
     }
     js2val RegExpInstance::getIgnoreCase(JS2Metadata *meta)
     {
         js2val r;
-        QualifiedName qname(meta->publicNamespace, meta->world.identifiers["ignoreCase"]);
+        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["ignoreCase"]);
         if (!meta->readInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, RunPhase, &r)) ASSERT(false);
         return r;
     }
     js2val RegExpInstance::getSource(JS2Metadata *meta)
     {
         js2val r;
-        QualifiedName qname(meta->publicNamespace, meta->world.identifiers["source"]);
+        QualifiedName qname(meta->publicNamespace, &meta->world.identifiers["source"]);
         if (!meta->readInstanceMember(OBJECT_TO_JS2VAL(this), meta->regexpClass, &qname, RunPhase, &r)) ASSERT(false);
         return r;
     }

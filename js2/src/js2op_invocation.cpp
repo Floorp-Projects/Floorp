@@ -98,6 +98,8 @@
 
     case eCall:
         {
+            // XXX Remove the arguments from the stack, (native calls have done this already)
+            // (important that they're tracked for gc in any mechanism)
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
             a = top(argCount + 2);                  // 'this'
@@ -156,8 +158,18 @@
                     push(a);
                 }
             }
-            // XXX Remove the arguments from the stack, (native calls have done this already)
-            // (important that they're tracked for gc in any mechanism)
+            else
+            if (fObj->kind == ClassKind) {
+                JS2Class *c = checked_cast<JS2Class *>(fObj);
+                if (c->call)
+                    a = c->call(meta, JS2VAL_NULL, base(argCount), argCount);
+                else
+                    a = JS2VAL_UNDEFINED;
+                pop(argCount + 1);
+                push(a);
+            }
+            else
+                meta->reportError(Exception::badValueError, "Un-callable object", errorPos());
         }
         break;
 
@@ -263,4 +275,11 @@
         }
         break;
 
-
+    case eCoerce:
+        {
+            JS2Class *c = BytecodeContainer::getType(pc);
+            pc += sizeof(JS2Class *);
+            a = pop();
+            push(c->implicitCoerce(meta, a));
+        }
+        break;

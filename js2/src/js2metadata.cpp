@@ -2600,7 +2600,7 @@ doUnary:
     // - If the binding exists (not forbidden) in lower frames in the regional environment, it's an error.
     // - Define a forbidden binding in all the lower frames.
     // 
-    Multiname *JS2Metadata::defineStaticMember(Environment *env, const StringAtom *id, NamespaceList *namespaces, 
+    Multiname *JS2Metadata::defineStaticMember(Environment *env, const String *id, NamespaceList *namespaces, 
                                                 Attribute::OverrideModifier overrideMod, bool xplicit, Access access,
                                                 StaticMember *m, size_t pos)
     {
@@ -2671,7 +2671,7 @@ doUnary:
         
         // Now insert the id, via all it's namespaces into the local frame
         for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
-            QualifiedName qName(*nli, *id);
+            QualifiedName qName(*nli, id);
             StaticBinding *sb = new StaticBinding(qName, m);
             const StaticBindingMap::value_type e(*id, sb);
             if (access & ReadAccess)
@@ -2690,7 +2690,7 @@ doUnary:
             Frame *fr = *++fi;
             while (true) {
                 for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
-                    QualifiedName qName(*nli, *id);
+                    QualifiedName qName(*nli, id);
                     StaticBinding *sb = new StaticBinding(qName, forbiddenMember);
                     const StaticBindingMap::value_type e(*id, sb);
                     if (access & ReadAccess)
@@ -2715,15 +2715,15 @@ doUnary:
         JS2Class *s = c;
         while (s) {
             if (access & ReadAccess) {
-                for (InstanceBindingIterator b = s->instanceReadBindings.lower_bound(qname->id),
-                        end = s->instanceReadBindings.upper_bound(qname->id); (b != end); b++) {
+                for (InstanceBindingIterator b = s->instanceReadBindings.lower_bound(*qname->id),
+                        end = s->instanceReadBindings.upper_bound(*qname->id); (b != end); b++) {
                     if (*qname == b->second->qname)
                         return b->second->content;
                 }
             }        
             if (access & WriteAccess) {
-                for (InstanceBindingIterator b = s->instanceWriteBindings.lower_bound(qname->id),
-                        end = s->instanceWriteBindings.upper_bound(qname->id); (b != end); b++) {
+                for (InstanceBindingIterator b = s->instanceWriteBindings.lower_bound(*qname->id),
+                        end = s->instanceWriteBindings.upper_bound(*qname->id); (b != end); b++) {
                     if (*qname == b->second->qname)
                         return b->second->content;
                 }
@@ -2739,7 +2739,7 @@ doUnary:
     {
         OverrideStatus *os = new OverrideStatus(NULL, id);
         for (NamespaceListIterator ns = namespaces->begin(), end = namespaces->end(); (ns != end); ns++) {
-            QualifiedName qname(*ns, *id);
+            QualifiedName qname(*ns, id);
             InstanceMember *m = findInstanceMember(c, &qname, access);
             if (m) {
                 os->multiname.addNamespace(*ns);
@@ -2789,7 +2789,7 @@ doUnary:
         }
         // For all the discovered possible overrides, make sure the member doesn't already exist in the class
         for (NamespaceListIterator nli = os->multiname.nsList.begin(), nlend = os->multiname.nsList.end(); (nli != nlend); nli++) {
-            QualifiedName qname(*nli, *id);
+            QualifiedName qname(*nli, id);
             if (access & ReadAccess) {
                 for (InstanceBindingIterator b = c->instanceReadBindings.lower_bound(*id),
                         end = c->instanceReadBindings.upper_bound(*id); (b != end); b++) {
@@ -2851,14 +2851,14 @@ doUnary:
 
         NamespaceListIterator nli, nlend;
         for (nli = readStatus->multiname.nsList.begin(), nlend = readStatus->multiname.nsList.end(); (nli != nlend); nli++) {
-            QualifiedName qName(*nli, *id);
+            QualifiedName qName(*nli, id);
             InstanceBinding *ib = new InstanceBinding(qName, m);
             const InstanceBindingMap::value_type e(*id, ib);
             c->instanceReadBindings.insert(e);
         }
         
         for (nli = writeStatus->multiname.nsList.begin(), nlend = writeStatus->multiname.nsList.end(); (nli != nlend); nli++) {
-            QualifiedName qName(*nli, *id);
+            QualifiedName qName(*nli, id);
             InstanceBinding *ib = new InstanceBinding(qName, m);
             const InstanceBindingMap::value_type e(*id, ib);
             c->instanceWriteBindings.insert(e);
@@ -2880,7 +2880,7 @@ doUnary:
     HoistedVar *JS2Metadata::defineHoistedVar(Environment *env, const StringAtom *id, StmtNode *p)
     {
         HoistedVar *result = NULL;
-        QualifiedName qName(publicNamespace, *id);
+        QualifiedName qName(publicNamespace, id);
         FrameListIterator regionalFrameMark = env->getRegionalFrame();
         Frame *regionalFrame = *regionalFrameMark;
         ASSERT((regionalFrame->kind == GlobalObjectKind) || (regionalFrame->kind == ParameterKind));

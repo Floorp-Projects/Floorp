@@ -1472,7 +1472,7 @@ void initDateObject(JS2Metadata *meta)
         CallableInstance *fInst = new CallableInstance(meta->functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
 /*
-XXX not prototype object function properties, like ECMA3, but members of the Date class
+XXX not prototype object function properties, like ECMA3
         meta->writeDynamicProperty(meta->dateClass->prototype, new Multiname(meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
 */
 /*

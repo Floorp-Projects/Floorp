@@ -237,7 +237,7 @@ void printFrameBindings(Frame *f)
 {
     stdOut << " Static Bindings:\n";                    
     for (StaticBindingIterator rsb = f->staticReadBindings.begin(), rsend = f->staticReadBindings.end(); (rsb != rsend); rsb++) {
-        stdOut << "\t" << *rsb->second->qname.nameSpace->name << "::" << rsb->second->qname.id;
+        stdOut << "\t" << *rsb->second->qname.nameSpace->name << "::" << *rsb->second->qname.id;
         bool found = false;
         for (StaticBindingIterator wsb = f->staticWriteBindings.begin(), wsend = f->staticWriteBindings.end(); (wsb != wsend); wsb++) {
             if (rsb->second->qname == wsb->second->qname) {
@@ -256,7 +256,7 @@ void printFrameBindings(Frame *f)
             }
         }
         if (!found)
-            stdOut << "\t" << *wsb->second->qname.nameSpace->name << "::" << wsb->second->qname.id << " [write-only]" << "\n";
+            stdOut << "\t" << *wsb->second->qname.nameSpace->name << "::" << *wsb->second->qname.id << " [write-only]" << "\n";
     }
 
 }
@@ -289,7 +289,7 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
 
                     stdOut << " Instance Bindings:\n";                    
                     for (InstanceBindingIterator rib = c->instanceReadBindings.begin(), riend = c->instanceReadBindings.end(); (rib != riend); rib++) {
-                        stdOut << "\t" << *rib->second->qname.nameSpace->name << "::" << rib->second->qname.id;
+                        stdOut << "\t" << *rib->second->qname.nameSpace->name << "::" << *rib->second->qname.id;
                         bool found = false;
                         for (InstanceBindingIterator wib = c->instanceWriteBindings.begin(), wiend = c->instanceWriteBindings.end(); (wib != wiend); wib++) {
                             if (rib->second->qname == wib->second->qname) {
@@ -308,7 +308,7 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                             }
                         }
                         if (!found)
-                            stdOut << "\t" << *wib->second->qname.nameSpace->name << "::" << wib->second->qname.id << " [write-only]" << "\n";
+                            stdOut << "\t" << *wib->second->qname.nameSpace->name << "::" << *wib->second->qname.id << " [write-only]" << "\n";
                     }
                 }
                 else {

@@ -67,6 +67,14 @@ namespace MetaData {
         return thatValue;
     }
     
+    static js2val Boolean_Call(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+    {   
+        if (argc > 0)
+            return BOOLEAN_TO_JS2VAL(meta->toBoolean(argv[0]));
+        else
+            return JS2VAL_FALSE;
+    }
+    
     static js2val Boolean_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
     {
         if (meta->objectType(thisValue) != meta->booleanClass)
@@ -75,9 +83,18 @@ namespace MetaData {
         return (boolInst->mValue) ? meta->engine->allocString(meta->engine->true_StringAtom) : meta->engine->allocString(meta->engine->false_StringAtom);
     }
 
+    static js2val Boolean_valueOf(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
+    {
+        if (meta->objectType(thisValue) != meta->booleanClass)
+            meta->reportError(Exception::typeError, "Boolean.valueOf called on something other than a boolean thing", meta->engine->errorPos());
+        BooleanInstance *boolInst = checked_cast<BooleanInstance *>(JS2VAL_TO_OBJECT(thisValue));
+        return (boolInst->mValue) ? JS2VAL_TRUE : JS2VAL_FALSE;
+    }
+
     void initBooleanObject(JS2Metadata *meta)
     {
         meta->booleanClass->construct = Boolean_Constructor;
+        meta->booleanClass->call = Boolean_Call;
 
         typedef struct {
             char *name;
@@ -87,8 +104,8 @@ namespace MetaData {
 
         PrototypeFunction prototypeFunctions[] =
         {
-                { "toString",            0, Boolean_toString },
-//                { "valueOf",             0, Boolean_valueOf  },
+            { "toString",            0, Boolean_toString },
+            { "valueOf",             0, Boolean_valueOf  },
             { NULL }
         };
 
@@ -96,13 +113,20 @@ namespace MetaData {
         NamespaceList publicNamespaceList;
         publicNamespaceList.push_back(meta->publicNamespace);
 
+        meta->booleanClass->prototype = new PrototypeInstance(meta->objectClass->prototype, meta->booleanClass);
+
+        meta->env->addFrame(meta->booleanClass);
+            Variable *v = new Variable(meta->booleanClass, OBJECT_TO_JS2VAL(meta->booleanClass->prototype), true);
+            meta->defineStaticMember(meta->env, meta->engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        meta->env->removeTopFrame();
+
         PrototypeFunction *pf = &prototypeFunctions[0];
         while (pf->name) {
             CallableInstance *fInst = new CallableInstance(meta->functionClass);
             fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
     /*
-    XXX not prototype object function properties, like ECMA3, but members of the Date class
-            meta->writeDynamicProperty(meta->dateClass->prototype, new Multiname(meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+    XXX not prototype object function properties, like ECMA3
+            meta->writeDynamicProperty(meta->booleanClass->prototype, new Multiname(meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
     */
     /*
     XXX not static members, since those can't be accessed from the instance

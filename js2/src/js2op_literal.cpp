@@ -88,6 +88,12 @@
 	}
 	break;
 
+    case eUndefined: 
+        {
+	    push(JS2VAL_UNDEFINED);
+	}
+	break;
+
     case eThis: // XXX literal?
         {
             a = meta->env->findThis(true);
