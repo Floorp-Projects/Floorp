@@ -1638,8 +1638,8 @@ mime_parse_stream_complete (nsMIMESession *stream)
     nsServiceManager::ReleaseService(kPrefCID, obj->options->prefs);
   
   mdd->identity = nsnull;
-  PR_Free(mdd->url_name)
-  PR_Free(mdd->originalMsgURI)
+  PR_Free(mdd->url_name);
+  PR_Free(mdd->originalMsgURI);
   PR_Free(mdd);
   
   PR_FREEIF(host);
