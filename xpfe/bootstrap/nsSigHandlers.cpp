@@ -42,13 +42,6 @@
  * platforms that do not support it.
  */
 
-#if defined(LINUX)
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE 1
-#endif
-#include <string.h>
-#endif
-
 #include <signal.h>
 #include <stdio.h>
 #include "prthread.h"
@@ -74,6 +67,8 @@
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
+#else
+extern "C" char * strsignal(int);
 #endif
 
 #ifdef MOZ_WIDGET_PHOTON
