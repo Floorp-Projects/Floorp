@@ -340,6 +340,9 @@ NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, StoreSentMailInPFC,
 
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, DownloadBodiesOnGetNewMail,
                         "download_bodies_on_get_new_mail")
+
+NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, UseIdle,
+                        "use_idle");
 //NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, DeleteModel,
 //                       "delete_model")
 
@@ -431,7 +434,7 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
   nsresult rv = NS_OK;
   nsCOMPtr <nsIImapProtocol> aProtocol;
   
-  rv = CreateImapConnection(aClientEventQueue, aImapUrl, getter_AddRefs(aProtocol));
+  rv = GetImapConnection(aClientEventQueue, aImapUrl, getter_AddRefs(aProtocol));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(aImapUrl, &rv);
@@ -460,21 +463,23 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
     PR_CExitMonitor(this);
     // let's try running it now - maybe the connection is free now.
     PRBool urlRun;
-    rv = LoadNextQueuedUrl(&urlRun);
+    rv = LoadNextQueuedUrl(nsnull, &urlRun);
   }
 
   return rv;
 }
 
 // checks to see if there are any queued urls on this incoming server,
-// and if so, tries to run the oldest one.
+// and if so, tries to run the oldest one. Returns true if the url is run
+// on the passed in protocol connection.
 NS_IMETHODIMP
-nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
+nsImapIncomingServer::LoadNextQueuedUrl(nsIImapProtocol *aProtocol, PRBool *aResult)
 {
   PRUint32 cnt = 0;
   nsresult rv = NS_OK;
   PRBool urlRun = PR_FALSE;
   PRBool keepGoing = PR_TRUE;
+  nsCOMPtr <nsIImapProtocol>  protocolInstance ;
   
   nsAutoCMonitor mon(this);
   m_urlQueue->Count(&cnt);
@@ -496,9 +501,8 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
         nsISupports *aConsumer = (nsISupports*)m_urlConsumers.ElementAt(0);
         NS_IF_ADDREF(aConsumer);
         
-        nsCOMPtr <nsIImapProtocol>  protocolInstance ;
         nsImapProtocol::LogImapUrl("creating protocol instance to play queued url", aImapUrl);
-        rv = CreateImapConnection(nsnull, aImapUrl, getter_AddRefs(protocolInstance));
+        rv = GetImapConnection(nsnull, aImapUrl, getter_AddRefs(protocolInstance));
         if (NS_SUCCEEDED(rv) && protocolInstance)
         {
           nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
@@ -527,7 +531,7 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
     m_urlQueue->Count(&cnt);
   }
   if (aResult)
-    *aResult = urlRun;
+    *aResult = urlRun && aProtocol && aProtocol == protocolInstance;
   
   return rv;
 }
@@ -659,7 +663,7 @@ nsImapIncomingServer::ConnectionTimeOut(nsIImapProtocol* aConnection)
 }
 
 nsresult
-nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue, 
+nsImapIncomingServer::GetImapConnection(nsIEventQueue *aEventQueue, 
                                            nsIImapUrl * aImapUrl, 
                                            nsIImapProtocol ** aImapConnection)
 {
@@ -851,7 +855,7 @@ nsImapIncomingServer::CreateProtocolInstance(nsIEventQueue *aEventQueue,
     nsCOMPtr<nsIImapHostSessionList> hostSession = 
       do_GetService(kCImapHostSessionListCID, &rv);
     if (NS_SUCCEEDED(rv))
-      rv = protocolInstance->Initialize(hostSession, aEventQueue);
+      rv = protocolInstance->Initialize(hostSession, this, aEventQueue);
   }
   
   // take the protocol instance and add it to the connectionCache
@@ -970,18 +974,17 @@ nsImapIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 
 NS_IMETHODIMP nsImapIncomingServer::PerformBiff(nsIMsgWindow* aMsgWindow)
 {
-  nsresult rv;
-
-	nsCOMPtr<nsIMsgFolder> rootMsgFolder;
-	rv = GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
-	if(NS_SUCCEEDED(rv))
-	{
+  
+  nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+  nsresult rv = GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
+  if(NS_SUCCEEDED(rv))
+  {
     SetPerformingBiff(PR_TRUE);
-		rv = rootMsgFolder->GetNewMessages(aMsgWindow, nsnull);
+    rv = rootMsgFolder->GetNewMessages(aMsgWindow, nsnull);
   }
   return rv;
 }
-    
+
 
 NS_IMETHODIMP
 nsImapIncomingServer::CloseCachedConnections()
@@ -2628,7 +2631,7 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pEr
       {       
         nsCOMPtr <nsIImapProtocol>  protocolInstance ;
         m_waitingForConnectionInfo = PR_FALSE;
-        rv = CreateImapConnection(aEventQueue, aImapUrl, getter_AddRefs(protocolInstance));
+        rv = GetImapConnection(aEventQueue, aImapUrl, getter_AddRefs(protocolInstance));
         // If users cancel the login then we need to reset url state.
         if (rv == NS_BINDING_ABORTED)
           resetUrlState = PR_TRUE;
@@ -2695,7 +2698,7 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionReply(const PRUnichar *pHo
       nsCOMPtr<nsISupports> aConsumer = (nsISupports*)m_urlConsumers.ElementAt(0);
       
       nsCOMPtr <nsIImapProtocol>  protocolInstance ;
-      rv = CreateImapConnection(aEventQueue, aImapUrl, getter_AddRefs(protocolInstance));
+      rv = GetImapConnection(aEventQueue, aImapUrl, getter_AddRefs(protocolInstance));
       m_waitingForConnectionInfo = PR_FALSE;
       if (NS_SUCCEEDED(rv) && protocolInstance)
       {

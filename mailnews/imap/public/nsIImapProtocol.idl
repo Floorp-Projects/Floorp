@@ -43,6 +43,7 @@ interface nsIURI;
 interface nsIImapUrl;
 interface nsIEventQueue;
 interface nsIImapProtocol;
+interface nsIImapIncomingServer;
 interface nsISupportsArray;
 interface nsIMsgFolder;
 interface nsIImapHostSessionList;
@@ -77,7 +78,8 @@ interface nsIImapProtocol : nsISupports {
 	// or more importantly the event queue of the consumer of the imap
 	// protocol data. The protocol also needs a host session list.
 	/////////////////////////////////////////////////////////////////////////
-	void Initialize(in nsIImapHostSessionList aHostSessionList, in nsIEventQueue aSinkEventQueue) ;
+	void Initialize(in nsIImapHostSessionList aHostSessionList, in nsIImapIncomingServer aServer, 
+                  in nsIEventQueue aSinkEventQueue) ;
 
   void NotifyFEEventCompletion();
 

@@ -81,6 +81,7 @@ interface nsIImapIncomingServer : nsISupports {
   attribute boolean aOLMailboxView;
   attribute boolean storeReadMailInPFC;
   attribute boolean storeSentMailInPFC;
+  attribute boolean useIdle;
   attribute wstring trashFolderName;
 
   boolean getIsPFC(in string folderName);

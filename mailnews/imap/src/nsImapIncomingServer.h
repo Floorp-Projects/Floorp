@@ -114,7 +114,7 @@ protected:
 private:
   nsresult SetDelimiterFromHierarchyDelimiter();
   nsresult SubscribeToFolder(const PRUnichar *aName, PRBool subscribe);
-  nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
+  nsresult GetImapConnection (nsIEventQueue* aEventQueue,
                                    nsIImapUrl* aImapUrl,
                                    nsIImapProtocol** aImapConnection);
   nsresult CreateProtocolInstance(nsIEventQueue *aEventQueue, 

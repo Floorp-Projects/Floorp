@@ -1317,22 +1317,22 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *aMsgWindow,
             }
           }
         }
-          if (aListener)
-          {
-              rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
-                                                  aListener, nsnull);
-          }
-          else
-          {
-              nsCOMPtr<nsIUrlListener> urlListener = 
-                  do_QueryInterface(trashFolder);
-              rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
-                                                  urlListener, nsnull);
-          }
-          // return an error if this failed. We want the empty trash on exit code
-          // to know if this fails so that it doesn't block waiting for empty trash to finish.
-                  if (NS_FAILED(rv))
-            return rv;
+        if (aListener)
+        {
+            rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
+                                                aListener, nsnull);
+        }
+        else
+        {
+            nsCOMPtr<nsIUrlListener> urlListener = 
+                do_QueryInterface(trashFolder);
+            rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
+                                                urlListener, nsnull);
+        }
+        // return an error if this failed. We want the empty trash on exit code
+        // to know if this fails so that it doesn't block waiting for empty trash to finish.
+        if (NS_FAILED(rv))
+          return rv;
         if (hasSubfolders)
         {
             nsCOMPtr<nsIEnumerator> aEnumerator;
@@ -2402,6 +2402,12 @@ nsresult nsImapMailFolder::GetBodysToDownload(nsMsgKeyArray *keysOfMessagesToDow
     }
   }
   return rv;
+}
+
+NS_IMETHODIMP nsImapMailFolder::OnNewIdleMessages()
+{
+  SetPerformingBiff(PR_TRUE);
+  return UpdateFolder(nsnull);
 }
 
 NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(

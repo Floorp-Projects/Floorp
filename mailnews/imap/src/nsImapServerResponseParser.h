@@ -162,7 +162,7 @@ protected:
   virtual void	  internal_date();
   virtual nsresult BeginMessageDownload(const char *content_type);
 
-  virtual void    response_data();
+  virtual void    response_data(PRBool advanceToNextLine);
   virtual void    resp_text();
   virtual void    resp_cond_state();
   virtual void    text_mime2();

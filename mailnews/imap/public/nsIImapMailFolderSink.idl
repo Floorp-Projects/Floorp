@@ -103,6 +103,7 @@ interface nsIImapMailFolderSink : nsISupports {
   attribute unsigned long folderQuotaMaxKB;
   readonly attribute boolean shouldDownloadAllHeaders;
   string GetOnlineDelimiter();
+  void OnNewIdleMessages();
   // Tell mail master about the newly selected mailbox
   void UpdateImapMailboxInfo(in nsIImapProtocol aProtocol,
                                    in nsIMailboxSpec aSpec);

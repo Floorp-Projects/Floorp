@@ -301,6 +301,7 @@ NS_INTERFACE_MAP_BEGIN(nsImapProtocol)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIImapProtocol)
    NS_INTERFACE_MAP_ENTRY(nsIRunnable)
    NS_INTERFACE_MAP_ENTRY(nsIImapProtocol)
+   NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 static PRInt32 gTooFastTime = 2;
@@ -354,6 +355,8 @@ nsImapProtocol::nsImapProtocol() :
   m_flags = 0;
   m_urlInProgress = PR_FALSE;
   m_socketIsOpen = PR_FALSE;
+  m_idle = PR_FALSE;
+  m_useIdle = PR_TRUE; // by default, use it
   m_ignoreExpunges = PR_FALSE;
   m_gotFEEventCompletion = PR_FALSE;
   m_useSecAuth = PR_FALSE;
@@ -460,11 +463,12 @@ nsresult nsImapProtocol::Configure(PRInt32 TooFastTime, PRInt32 IdealTime,
 }
 
 
-nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, nsIEventQueue * aSinkEventQueue)
+nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, nsIImapIncomingServer *aServer, 
+                                    nsIEventQueue * aSinkEventQueue)
 {
   NS_PRECONDITION(aSinkEventQueue && aHostSessionList, 
              "oops...trying to initalize with a null sink event queue!");
-  if (!aSinkEventQueue || !aHostSessionList)
+  if (!aSinkEventQueue || !aHostSessionList || !aServer)
         return NS_ERROR_NULL_POINTER;
 
    nsresult rv = m_downloadLineCache.GrowBuffer(kDownLoadCacheSize);
@@ -474,6 +478,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
    if (!m_flagState)
      return NS_ERROR_OUT_OF_MEMORY;
 
+   aServer->GetUseIdle(&m_useIdle);
    NS_ADDREF(m_flagState);
 
     m_sinkEventQueue = aSinkEventQueue;
@@ -964,6 +969,25 @@ NS_IMETHODIMP nsImapProtocol::Run()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsImapProtocol::OnInputStreamReady(nsIAsyncInputStream *inStr)
+{
+  // should we check if it's a close vs. data available?
+  if (m_idle)
+  {
+    PRUint32 bytesAvailable = 0;
+    (void) inStr->Available(&bytesAvailable);
+    // check if data available - might be a close
+    if (bytesAvailable != 0)
+    {
+      PR_EnterMonitor(m_urlReadyToRunMonitor);
+      m_nextUrlReadyToRun = PR_TRUE;
+      PR_Notify(m_urlReadyToRunMonitor);
+      PR_ExitMonitor(m_urlReadyToRunMonitor);
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsImapProtocol::NotifyFEEventCompletion()
 {
@@ -1099,7 +1123,6 @@ nsImapProtocol::ImapThreadMainLoop()
   PR_LOG(IMAP, PR_LOG_DEBUG, ("ImapThreadMainLoop entering [this=%x]\n", this));
 
   PRIntervalTime sleepTime = kImapSleepTime;
-    // ****** please implement PR_LOG 'ing ******
   while (!DeathSignalReceived())
   {
     nsresult rv = NS_OK;
@@ -1131,11 +1154,49 @@ nsImapProtocol::ImapThreadMainLoop()
       //
       if (ProcessCurrentURL())
         m_nextUrlReadyToRun = PR_TRUE;
+      else
+      {
+        // see if we want to go into idle mode. Might want to check a pref here too.
+        if (m_useIdle && GetServerStateParser().GetCapabilityFlag() & kHasIdleCapability
+          && GetServerStateParser().GetIMAPstate() 
+                == nsImapServerResponseParser::kFolderSelected)
+        {
+          Idle(); // for now, lets just do it. We'll probably want to use a timer
+        }
+      }
     }
+    else if (m_idle)
+    {
+      HandleIdleResponses();
+    }
+#ifdef DEBUG_bienvenu
+    else
+      printf("read to run but no url and not idle\n");
+#endif
   }
   m_imapThreadIsRunning = PR_FALSE;
 
   PR_LOG(IMAP, PR_LOG_DEBUG, ("ImapThreadMainLoop leaving [this=%x]\n", this));
+}
+
+void nsImapProtocol::HandleIdleResponses()
+{
+  PRInt32 oldRecent = GetServerStateParser().NumberOfRecentMessages();
+  nsCAutoString commandBuffer(GetServerCommandTag());
+  commandBuffer.Append(" IDLE"CRLF);
+
+  do
+  {
+    ParseIMAPandCheckForNewMail(commandBuffer.get());
+  }
+  while (m_inputStreamBuffer->NextLineAvailable());
+
+  //  if (oldRecent != GetServerStateParser().NumberOfRecentMessages())
+  //  We might check that something actually changed, but for now we can
+  // just assume it. OnNewIdleMessages must run a url, so that
+  // we'll go back into asyncwait mode.
+  m_imapMailFolderSink->OnNewIdleMessages();
+
 }
 
 void nsImapProtocol::EstablishServerConnection()
@@ -1184,6 +1245,9 @@ void nsImapProtocol::EstablishServerConnection()
 // returns PR_TRUE if another url was run, PR_FALSE otherwise.
 PRBool nsImapProtocol::ProcessCurrentURL()
 {
+  if (m_idle)
+    EndIdle();
+
   Log("ProcessCurrentURL", nsnull, "entering");
   (void) GetImapHostName(); // force m_hostName to get set.
 
@@ -1349,6 +1413,8 @@ PRBool nsImapProtocol::ProcessCurrentURL()
                                                 && GetConnectionStatus() >= 0, copyState);
       copyState = nsnull;
       imapMailFolderSink->ReleaseObject();
+      // we might need this to stick around for IDLE support
+      m_imapMailFolderSink = imapMailFolderSink;
       imapMailFolderSink = nsnull;
   }
 
@@ -1356,7 +1422,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   if (m_imapServerSink)
   {
     if (GetConnectionStatus() >= 0)
-      rv = m_imapServerSink->LoadNextQueuedUrl(&anotherUrlRun);
+      rv = m_imapServerSink->LoadNextQueuedUrl(this, &anotherUrlRun);
     else // if we don't do this, they'll just sit and spin until
           // we run some other url on this server.
     {
@@ -1479,16 +1545,18 @@ nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   nsresult rv = NS_OK;
   if (aURL)
   {
-#ifdef DEBUG_bienvenu1
-    nsXPIDLCString urlSpec;
-    aURL->GetSpec(getter_Copies(urlSpec));
-    printf("loading url %s\n", (const char *) urlSpec);
+#ifdef DEBUG_bienvenu
+    nsCAutoString urlSpec;
+    aURL->GetSpec(urlSpec);
+    printf("loading url %s\n", urlSpec.get());
 #endif
     m_urlInProgress = PR_TRUE;
+    m_imapMailFolderSink = nsnull;
     rv = SetupWithUrl(aURL, aConsumer); 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error setting up imap url");
     if (NS_FAILED(rv)) 
       return rv;
+
     SetupSinkProxy(); // generate proxies for all of the event sinks in the url
     m_lastActiveTime = PR_Now();
     if (m_transport && m_runningUrl)
@@ -1600,7 +1668,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
   if (isBusy)
   {
     nsImapState curUrlImapState;
-//    NS_ASSERTION(m_runningUrl,"isBusy, but no running url.");
+    NS_ASSERTION(m_runningUrl,"isBusy, but no running url.");
     if (m_runningUrl)
     {
       m_runningUrl->GetRequiredImapState(&curUrlImapState);
@@ -3359,7 +3427,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     nsImapAction imapAction; 
     nsresult res = m_runningUrl->GetImapAction(&imapAction);
     if (NS_SUCCEEDED(res) && imapAction == nsIImapUrl::nsImapLiteSelectFolder)
-    return;
+      return;
   }
     
   nsImapMailboxSpec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec();
@@ -6621,6 +6689,43 @@ void nsImapProtocol::Unsubscribe(const char *mailboxName)
       ParseIMAPandCheckForNewMail();
 }
 
+void nsImapProtocol::Idle()
+{
+  IncrementCommandTagNumber();
+    
+  nsCAutoString command (GetServerCommandTag());
+  command += " IDLE"CRLF;
+  nsresult rv = SendData(command.get());  
+  if (NS_SUCCEEDED(rv))
+  {
+      m_idle = PR_TRUE;
+      // we'll just get back a continuation char at first.
+      // + idling...
+      ParseIMAPandCheckForNewMail();
+      // this will cause us to get notified of data or the socket getting closed.
+      // That notification will occur on the socket transport thread - we just
+      // need to poke a monitor so the imap thread will do a blocking read
+      // and parse the data.
+      nsCOMPtr <nsIAsyncInputStream> asyncInputStream = do_QueryInterface(m_inputStream);
+      if (asyncInputStream)
+        asyncInputStream->AsyncWait(this, 0, 0, nsnull);
+  }
+}
+
+void nsImapProtocol::EndIdle()
+{
+  // clear the async wait - otherwise, we seem to have trouble doing a blocking read
+  nsCOMPtr <nsIAsyncInputStream> asyncInputStream = do_QueryInterface(m_inputStream);
+  if (asyncInputStream)
+    asyncInputStream->AsyncWait(nsnull, 0, 0, nsnull);
+  nsresult rv = SendData("DONE"CRLF);
+  if (NS_SUCCEEDED(rv))
+  {
+    m_idle = PR_FALSE;
+    ParseIMAPandCheckForNewMail();
+  }
+}
+
 
 void nsImapProtocol::Search(const char * searchCriteria, 
                             PRBool useUID, 
@@ -7236,7 +7341,8 @@ void nsImapProtocol::GetQuotaDataIfSupported(const char *aBoxName)
                + NS_LITERAL_CSTRING("\"" CRLF);
 
   NS_ASSERTION(m_imapMailFolderSink, "m_imapMailFolderSink is null!");
-  m_imapMailFolderSink->SetFolderQuotaCommandIssued(PR_TRUE);
+  if (m_imapMailFolderSink)
+    m_imapMailFolderSink->SetFolderQuotaCommandIssued(PR_TRUE);
 
   nsresult quotarv = SendData(quotacommand.get());
   if (NS_SUCCEEDED(quotarv))

@@ -133,7 +133,8 @@ typedef enum {
     kAOLImapCapability = 0x00008000,     /* aol imap extensions */
     kHasLanguageCapability = 0x00010000, /* language extensions */
     kHasCRAMCapability     = 0x00020000, /* CRAM auth extension */
-    kQuotaCapability       = 0x00040000  /* RFC 2087 quota extension */
+    kQuotaCapability       = 0x00040000, /* RFC 2087 quota extension */
+    kHasIdleCapability       = 0x00080000  /* RFC 2177 idle extension */
 } eIMAPCapabilityFlag;
 
 // this used to be part of the connection object class - maybe we should move it into 

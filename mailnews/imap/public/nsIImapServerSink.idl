@@ -40,6 +40,7 @@
 
 interface nsIMsgWindow;
 interface nsIMsgMailNewsUrl;
+interface nsIImapProtocol;
 
 [scriptable, uuid(8ec49a08-5cb0-11d3-a52c-0060b0fc04b7)]
 interface nsIImapServerSink : nsISupports {
@@ -57,7 +58,7 @@ interface nsIImapServerSink : nsISupports {
   boolean folderVerifiedOnline(in string aFolderName);
 
   void setCapability(in unsigned long capability);
-  void loadNextQueuedUrl(out boolean urlRun);
+  void loadNextQueuedUrl(in nsIImapProtocol aProtocol, out boolean urlRun);
   // if previous url failed, this gives server chance to abort urls with same mock channel
   void abortQueuedUrls(); 
   void getImapStringByID(in long aMsgId, out wstring aString);
