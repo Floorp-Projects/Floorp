@@ -143,16 +143,29 @@ class nsWidget : public nsBaseWidget
   // GTK signal installers
   //
   //////////////////////////////////////////////////////////////////
-  void InstallMotionNotifySignal(GtkWidget * aWidget,
-                                 PRBool aInstallSignal,
-                                 PRBool aSetEvents);
+  void InstallMotionNotifySignal(GtkWidget * aWidget);
+
+  void InstallEnterNotifySignal(GtkWidget * aWidget);
+
+  void InstallLeaveNotifySignal(GtkWidget * aWidget);
+
+  void InstallButtonPressSignal(GtkWidget * aWidget);
+
+  void InstallButtonReleaseSignal(GtkWidget * aWidget);
+
+  void AddToEventMask(GtkWidget * aWidget,
+                      gint        aEventMask);
 
   //////////////////////////////////////////////////////////////////
   //
   // OnSomething handlers
   //
   //////////////////////////////////////////////////////////////////
-  virtual void OnMotionNotify(GdkEventMotion * aGdkMotionEvent);
+  virtual void OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent);
+  virtual void OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
+  virtual void OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
+  virtual void OnButtonPressSignal(GdkEventButton * aGdkButtonEvent);
+  virtual void OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent);
 
 private:
 
@@ -161,10 +174,42 @@ private:
   // GTK widget signals
   //
   //////////////////////////////////////////////////////////////////
-  static gint MotionNotifySignal(GtkWidget * aWidget,
-                                 GdkEventMotion * aGdkMotionEvent,
-                                 gpointer aData);
 
+  static gint MotionNotifySignal(GtkWidget *       aWidget,
+                                 GdkEventMotion *  aGdkMotionEvent,
+                                 gpointer          aData);
+
+  static gint EnterNotifySignal(GtkWidget *        aWidget, 
+                                GdkEventCrossing * aGdkCrossingEvent, 
+                                gpointer           aData);
+  
+  static gint LeaveNotifySignal(GtkWidget *        aWidget, 
+                                GdkEventCrossing * aGdkCrossingEvent, 
+                                gpointer           aData);
+
+  static gint ButtonPressSignal(GtkWidget *      aWidget, 
+                                GdkEventButton * aGdkButtonEvent, 
+                                gpointer         aData);
+
+  static gint ButtonReleaseSignal(GtkWidget *      aWidget, 
+                                  GdkEventButton * aGdkButtonEvent, 
+                                  gpointer         aData);
+
+  //////////////////////////////////////////////////////////////////
+  //
+  // GTK event support methods
+  //
+  //////////////////////////////////////////////////////////////////
+  void InstallSignal(GtkWidget *   aWidget,
+                     gchar *       aSignalName,
+                     GtkSignalFunc aSignalFunction);
+  
+  PRBool DropEvent(GtkWidget * aWidget, 
+                   GdkWindow * aEventWindow);
+  
+  void InitMouseEvent(GdkEventButton * aGdkButtonEvent,
+                      nsMouseEvent &   anEvent,
+                      PRUint32         aEventType);
 protected:
     GtkWidget *mWidget;
     nsIWidget *mParent;

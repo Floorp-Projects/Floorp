@@ -27,8 +27,6 @@ class nsIMenuItem;
 gint handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p);
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p);
 gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p);
-gint handle_button_press_event(GtkWidget *w, GdkEventButton * event, gpointer p);
-gint handle_button_release_event(GtkWidget *w, GdkEventButton * event, gpointer p);
 gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p);
 gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p);
 

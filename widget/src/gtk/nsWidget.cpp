@@ -765,7 +765,8 @@ NS_METHOD nsWidget::Create(nsNativeWidget aParent,
 //-------------------------------------------------------------------------
 void nsWidget::InitCallbacks(char *aName)
 {
-#if 1
+
+#if 0
 /* basically we are keeping the parent from getting the childs signals by
  * doing this. */
   gtk_signal_connect_after(GTK_OBJECT(mWidget),
@@ -984,28 +985,64 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
 // GTK signal installers
 //
 //////////////////////////////////////////////////////////////////
-void 
-nsWidget::InstallMotionNotifySignal(GtkWidget * aWidget,
-									PRBool aInstallSignal,
-									PRBool aSetEvents)
+void
+nsWidget::AddToEventMask(GtkWidget * aWidget,
+						 gint        aEventMask)
 {
-  NS_ASSERTION( nsnull != aWidget, "widget is null!");
-  NS_ASSERTION( aInstallSignal || aSetEvents, "nothing to do");
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  NS_ASSERTION( 0 != aEventMask, "mask is 0");
 
-  // Connect the signal if needed
-  if (aInstallSignal)
-  {
-	gtk_signal_connect(GTK_OBJECT(aWidget),
-					   "motion_notify_event",
-					   GTK_SIGNAL_FUNC(nsWidget::MotionNotifySignal),
-					   (gpointer) this);
-  }
+  gtk_widget_add_events(aWidget,aEventMask);
+}
+//////////////////////////////////////////////////////////////////
+void 
+nsWidget::InstallMotionNotifySignal(GtkWidget * aWidget)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
 
-  // Set the events so widget will get the events if needed
-  if (aSetEvents)
-  {
-	gtk_widget_add_events(aWidget,GDK_POINTER_MOTION_MASK);
-  }
+  InstallSignal(aWidget,
+				"motion_notify_event",
+				GTK_SIGNAL_FUNC(nsWidget::MotionNotifySignal));
+}
+//////////////////////////////////////////////////////////////////
+void 
+nsWidget::InstallEnterNotifySignal(GtkWidget * aWidget)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+
+  InstallSignal(aWidget,
+				"enter_notify_event",
+				GTK_SIGNAL_FUNC(nsWidget::EnterNotifySignal));
+}
+//////////////////////////////////////////////////////////////////
+void 
+nsWidget::InstallLeaveNotifySignal(GtkWidget * aWidget)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+
+  InstallSignal(aWidget,
+				"leave_notify_event",
+				GTK_SIGNAL_FUNC(nsWidget::LeaveNotifySignal));
+}
+//////////////////////////////////////////////////////////////////
+void 
+nsWidget::InstallButtonPressSignal(GtkWidget * aWidget)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+
+  InstallSignal(aWidget,
+				"button_press_event",
+				GTK_SIGNAL_FUNC(nsWidget::ButtonPressSignal));
+}
+//////////////////////////////////////////////////////////////////
+void 
+nsWidget::InstallButtonReleaseSignal(GtkWidget * aWidget)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+
+  InstallSignal(aWidget,
+				"button_release_event",
+				GTK_SIGNAL_FUNC(nsWidget::ButtonReleaseSignal));
 }
 //////////////////////////////////////////////////////////////////
 
@@ -1015,8 +1052,12 @@ nsWidget::InstallMotionNotifySignal(GtkWidget * aWidget,
 //
 //////////////////////////////////////////////////////////////////
 /* virtual */ void 
-nsWidget::OnMotionNotify(GdkEventMotion * aGdkMotionEvent)
+nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
 {
+//   static int i = 0;
+//   printf("nsWidget::OnMotionNotifySignal(%d,%p,%d,%d)\n",
+// 		 i++,this,(int) aGdkMotionEvent->x,(int) aGdkMotionEvent->y);
+
   nsMouseEvent event;
 
   event.message = NS_MOUSE_MOVE;
@@ -1037,6 +1078,254 @@ nsWidget::OnMotionNotify(GdkEventMotion * aGdkMotionEvent)
   Release();
 }
 //////////////////////////////////////////////////////////////////
+/* virtual */ void
+nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
+{
+  //  printf("nsWidget::OnEnterNotifySignal(%p)\n",this);
+
+  nsMouseEvent event;
+
+  event.message = NS_MOUSE_ENTER;
+  event.widget  = this;
+  event.eventStructType = NS_MOUSE_EVENT;
+
+  if (aGdkCrossingEvent != NULL) 
+  {
+    event.point.x = nscoord(aGdkCrossingEvent->x);
+    event.point.y = nscoord(aGdkCrossingEvent->y);
+    event.time = aGdkCrossingEvent->time;
+  }
+
+  AddRef();
+
+  DispatchMouseEvent(event);
+
+  Release();
+}
+//////////////////////////////////////////////////////////////////////
+/* virtual */ void
+nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
+{
+  //  printf("nsWidget::OnLeaveNotifySignal(%p)\n",this);
+
+  nsMouseEvent event;
+
+  event.message = NS_MOUSE_EXIT;
+  event.widget  = this;
+  event.eventStructType = NS_MOUSE_EVENT;
+
+  if (aGdkCrossingEvent != NULL) 
+  {
+    event.point.x = nscoord(aGdkCrossingEvent->x);
+    event.point.y = nscoord(aGdkCrossingEvent->y);
+    event.time = aGdkCrossingEvent->time;
+  }
+
+  AddRef();
+
+  DispatchMouseEvent(event);
+
+  Release();
+}
+//////////////////////////////////////////////////////////////////////
+/* virtual */ void
+nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
+{
+//   printf("nsWidget::OnButtonPressSignal(%p)\n",this);
+
+  nsMouseEvent event;
+  PRUint32 eventType = 0;
+
+  // Switch on single, double, triple click.
+  switch (aGdkButtonEvent->type) 
+  {
+	// Single click.
+  case GDK_BUTTON_PRESS:   
+	
+    switch (aGdkButtonEvent->button)  // Which button?
+	{
+	case 1:
+	  eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+	  break;
+	  
+	case 2:
+	  eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
+	  break;
+
+	case 3:
+	  eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
+	  break;
+
+	  // Single-click default.
+	default:
+	  eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+	  break;
+	}
+    break;
+
+	// Double click.
+  case GDK_2BUTTON_PRESS:
+
+    switch (aGdkButtonEvent->button)  // Which button?
+	{
+	case 1:
+	  eventType = NS_MOUSE_LEFT_DOUBLECLICK;
+	  break;
+
+	case 2:
+	  eventType = NS_MOUSE_MIDDLE_DOUBLECLICK;
+	  break;
+
+	case 3:
+	  eventType = NS_MOUSE_RIGHT_DOUBLECLICK;
+	  break;
+
+	default:
+	  // Double-click default.
+	  eventType = NS_MOUSE_LEFT_DOUBLECLICK;
+	  break;
+	}
+    break;
+
+	// Triple click.
+  case GDK_3BUTTON_PRESS:
+    // Unhandled triple click.
+    break;
+	
+  default:
+    break;
+  }
+
+  InitMouseEvent(aGdkButtonEvent, event, eventType);
+  
+  AddRef();
+
+  DispatchMouseEvent(event);
+
+  Release();
+}
+//////////////////////////////////////////////////////////////////////
+/* virtual */ void
+nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
+{
+//   printf("nsWidget::OnButtonReleaseSignal(%p)\n",this);
+
+  nsMouseEvent event;
+  PRUint32 eventType = 0;
+
+  switch (aGdkButtonEvent->button)
+	{
+    case 1:
+      eventType = NS_MOUSE_LEFT_BUTTON_UP;
+      break;
+	  
+    case 2:
+      eventType = NS_MOUSE_MIDDLE_BUTTON_UP;
+      break;
+	  
+    case 3:
+      eventType = NS_MOUSE_RIGHT_BUTTON_UP;
+      break;
+
+    default:
+      eventType = NS_MOUSE_LEFT_BUTTON_UP;
+      break;
+	}
+
+  InitMouseEvent(aGdkButtonEvent, event, eventType);
+
+  AddRef();
+
+  DispatchMouseEvent(event);
+
+  Release();
+}
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////
+//
+// GTK event support methods
+//
+//////////////////////////////////////////////////////////////////
+void 
+nsWidget::InstallSignal(GtkWidget *   aWidget,
+						gchar *       aSignalName,
+						GtkSignalFunc aSignalFunction)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  NS_ASSERTION( aSignalName, "signal name is null");
+  NS_ASSERTION( aSignalFunction, "signal function is null");
+
+  gtk_signal_connect(GTK_OBJECT(aWidget),
+					 aSignalName,
+					 GTK_SIGNAL_FUNC(aSignalFunction),
+					 (gpointer) this);
+}
+//////////////////////////////////////////////////////////////////
+void 
+nsWidget::InitMouseEvent(GdkEventButton * aGdkButtonEvent,
+						 nsMouseEvent &anEvent,
+						 PRUint32   aEventType)
+{
+  anEvent.message = aEventType;
+  anEvent.widget  = this;
+
+  anEvent.eventStructType = NS_MOUSE_EVENT;
+
+  if (aGdkButtonEvent != NULL) {
+    anEvent.point.x = nscoord(aGdkButtonEvent->x);
+    anEvent.point.y = nscoord(aGdkButtonEvent->y);
+
+    anEvent.isShift = (aGdkButtonEvent->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isControl = (aGdkButtonEvent->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isAlt = (aGdkButtonEvent->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.time = aGdkButtonEvent->time;
+
+    switch(aGdkButtonEvent->type)
+      {
+      case GDK_BUTTON_PRESS:
+        anEvent.clickCount = 1;
+        break;
+      case GDK_2BUTTON_PRESS:
+        anEvent.clickCount = 2;
+        break;
+      case GDK_3BUTTON_PRESS:  /* Clamp to double-click */
+        anEvent.clickCount = 2;
+        break;
+      default:
+        anEvent.clickCount = 1;
+    }
+
+  }
+}
+//////////////////////////////////////////////////////////////////
+PRBool
+nsWidget::DropEvent(GtkWidget * aWidget, 
+					GdkWindow * aEventWindow) 
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  NS_ASSERTION( nsnull != aEventWindow, "event window is null");
+
+#if 0
+  // For gtklayout widgets, we dont want to handle events
+  // that occur in the sub windows.  Check the window member
+  // of the GdkEvent, if it is not the gtklayout's bin_window,
+  // drop the event.
+  if (GTK_IS_LAYOUT(aWidget))
+  {
+	GtkLayout * layout = GTK_LAYOUT(aWidget);
+
+	if (aEventWindow != layout->bin_window)
+	{
+	  return PR_TRUE;
+	}
+  }
+#endif
+
+  return PR_FALSE;
+}
+//////////////////////////////////////////////////////////////////////
 
 
 //////////////////////////////////////////////////////////////////
@@ -1045,19 +1334,112 @@ nsWidget::OnMotionNotify(GdkEventMotion * aGdkMotionEvent)
 //
 //////////////////////////////////////////////////////////////////
 /* static */ gint
-nsWidget::MotionNotifySignal(GtkWidget * aWidget,
+nsWidget::MotionNotifySignal(GtkWidget *      aWidget,
 							 GdkEventMotion * aGdkMotionEvent,
-							 gpointer aData)
+							 gpointer         aData)
 {
-  NS_ASSERTION( nsnull != aWidget, "widget is null!");
-  NS_ASSERTION( nsnull != aGdkMotionEvent, "event is null!");
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  NS_ASSERTION( nsnull != aGdkMotionEvent, "event is null");
 
   nsWidget * widget = (nsWidget *) aData;
 
-  NS_ASSERTION( nsnull != widget, "instance pointer is null!");
+  NS_ASSERTION( nsnull != widget, "instance pointer is null");
 
-  widget->OnMotionNotify(aGdkMotionEvent);
+  if (widget->DropEvent(aWidget, aGdkMotionEvent->window))
+  {
+	return PR_TRUE;
+  }
+
+  widget->OnMotionNotifySignal(aGdkMotionEvent);
 
   return PR_TRUE;
 }
 //////////////////////////////////////////////////////////////////
+/* static */ gint 
+nsWidget::EnterNotifySignal(GtkWidget *        aWidget, 
+							GdkEventCrossing * aGdkCrossingEvent, 
+							gpointer           aData)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  NS_ASSERTION( nsnull != aGdkCrossingEvent, "event is null");
+
+  nsWidget * widget = (nsWidget *) aData;
+
+  NS_ASSERTION( nsnull != widget, "instance pointer is null");
+
+  if (widget->DropEvent(aWidget, aGdkCrossingEvent->window))
+  {
+	return PR_TRUE;
+  }
+
+  widget->OnEnterNotifySignal(aGdkCrossingEvent);
+
+  return PR_TRUE;
+}
+//////////////////////////////////////////////////////////////////////
+/* static */ gint 
+nsWidget::LeaveNotifySignal(GtkWidget *        aWidget, 
+							GdkEventCrossing * aGdkCrossingEvent, 
+							gpointer           aData)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  NS_ASSERTION( nsnull != aGdkCrossingEvent, "event is null");
+
+  nsWidget * widget = (nsWidget *) aData;
+
+  NS_ASSERTION( nsnull != widget, "instance pointer is null");
+
+  if (widget->DropEvent(aWidget, aGdkCrossingEvent->window))
+  {
+	return PR_TRUE;
+  }
+
+  widget->OnLeaveNotifySignal(aGdkCrossingEvent);
+
+  return PR_TRUE;
+}
+//////////////////////////////////////////////////////////////////////
+/* static */ gint 
+nsWidget::ButtonPressSignal(GtkWidget *      aWidget, 
+							GdkEventButton * aGdkButtonEvent, 
+							gpointer         aData)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  NS_ASSERTION( nsnull != aGdkButtonEvent, "event is null");
+
+  nsWidget * widget = (nsWidget *) aData;
+
+  NS_ASSERTION( nsnull != widget, "instance pointer is null");
+
+  if (widget->DropEvent(aWidget, aGdkButtonEvent->window))
+  {
+	return PR_TRUE;
+  }
+
+  widget->OnButtonPressSignal(aGdkButtonEvent);
+
+  return PR_TRUE;
+}
+//////////////////////////////////////////////////////////////////////
+/* static */ gint 
+nsWidget::ButtonReleaseSignal(GtkWidget *      aWidget, 
+							GdkEventButton * aGdkButtonEvent, 
+							gpointer         aData)
+{
+  NS_ASSERTION( nsnull != aWidget, "widget is null");
+  NS_ASSERTION( nsnull != aGdkButtonEvent, "event is null");
+
+  nsWidget * widget = (nsWidget *) aData;
+
+  NS_ASSERTION( nsnull != widget, "instance pointer is null");
+
+  if (widget->DropEvent(aWidget, aGdkButtonEvent->window))
+  {
+	return PR_TRUE;
+  }
+
+  widget->OnButtonReleaseSignal(aGdkButtonEvent);
+
+  return PR_TRUE;
+}
+//////////////////////////////////////////////////////////////////////
