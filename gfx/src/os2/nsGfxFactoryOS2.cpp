@@ -393,6 +393,52 @@ int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, c
   return ulSize - cplen;
 }
 
+BOOL GetTextExtentPoint32(HPS aPS, const char* aString, int aLength, PSIZEL aSizeL)
+{
+    POINTL ptls[5];
+    PRUint32 tLength = aLength;
+
+    const char* tString = aString;
+    aSizeL->cx = 0;
+
+    while(tLength)
+    {
+      ULONG thislen = min(tLength, 512);
+      GpiQueryTextBox(aPS, thislen, (PCH) tString, 5, ptls);
+      aSizeL->cx += ptls[TXTBOX_CONCAT].x;
+      tLength -= thislen;
+      tString += thislen;
+    }
+    aSizeL->cy = ptls[TXTBOX_TOPLEFT].y - ptls[TXTBOX_BOTTOMLEFT].y;
+    return TRUE;
+}
+
+BOOL ExtTextOut(HPS aPS, int X, int Y, UINT fuOptions, const RECTL* lprc,
+                const char* aString, unsigned int aLength, const int* pDx)
+{
+   POINTL ptl = {X, Y};
+
+   GpiMove( aPS, &ptl);
+
+   PRUint32 lLength = aLength;
+   const char *aStringTemp = aString;
+   // GpiCharString has a max length of 512 chars at a time...
+   while( lLength)
+   {
+      ULONG thislen = min( lLength, 512);
+      GpiCharStringPos( aPS, nsnull,
+                        pDx == nsnull ? 0 : CHS_VECTOR,
+                        thislen, (PCH)aStringTemp,
+                        pDx == nsnull ? nsnull : (PLONG) pDx);
+      lLength -= thislen;
+      aStringTemp += thislen;
+      pDx += thislen;
+   }
+   return TRUE;
+
+}
+
+
 BOOL IsDBCS()
 {
 return bIsDBCS;

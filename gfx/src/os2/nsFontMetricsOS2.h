@@ -79,7 +79,33 @@ struct nsFontHandleOS2
 class nsFontOS2
 {
 public:
+//  nsFontWin(FATTRS* aFattrs, nsFontHandleOS2* aFont, PRUint32* aMap);
+//  virtual ~nsFontWin();
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+//  virtual PRInt32 GetWidth(HPS aPS, const PRUnichar* aString,
+//                           PRUint32 aLength) = 0;
+  // XXX return width from DrawString
+//  virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
+//                          const PRUnichar* aString, PRUint32 aLength) = 0;
+#ifdef MOZ_MATHML
+  virtual nsresult
+  GetBoundingMetrics(HDC                aDC, 
+                     float              aItalicSlope,
+                     const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics) = 0;
+#ifdef NS_DEBUG
+//  virtual void DumpFontInfo() = 0;
+#endif // NS_DEBUG
+#endif
+
   char      mName[FACESIZE];
+  nsFontHandleOS2* mFont;
+//  PRUint32* mMap;
+#ifdef MOZ_MATHML
+  nsCharacterMap* mCMAP;
+#endif
 };
 
 
@@ -125,7 +151,9 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    NS_IMETHOD  GetFont( const nsFont *&aFont);
    NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
    NS_IMETHOD  GetFontHandle( nsFontHandle &aHandle);
+  NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
 
+  virtual nsresult   GetSpaceWidth(nscoord &aSpaceWidth);
   virtual nsFontOS2* FindGlobalFont(HPS aPS, PRUnichar aChar);
   virtual nsFontOS2* FindGenericFont(HPS aPS, PRUnichar aChar);
   virtual nsFontOS2* FindLocalFont(HPS aPS, PRUnichar aChar);
@@ -133,10 +161,6 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   nsFontOS2*         FindFont(HPS aPS, PRUnichar aChar);
   virtual nsFontOS2* LoadGenericFont(HPS aPS, PRUnichar aChar, char** aName);
   virtual nsFontOS2* LoadFont(HPS aPS, nsString* aName);
-
-   // for drawing text
-   PRUint32 GetDevMaxAscender() const { return mDevMaxAscent; }
-   nscoord  GetSpaceWidth( nsIRenderingContext *aRContext);
 
   static PLHashTable* gFontMaps;
   static nsGlobalFont* gGlobalFonts;
@@ -166,8 +190,7 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    nscoord  mMaxAdvance;
    nscoord  mSpaceWidth;
    nscoord  mXHeight;
-
-   PRUint32 mDevMaxAscent;
+  nscoord             mAveCharWidth;
 
    nsFontHandleOS2    *mFontHandle;
    nsDeviceContextOS2 *mDeviceContext;

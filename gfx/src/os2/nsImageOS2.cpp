@@ -221,6 +221,9 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
                            PRInt32 aSX, PRInt32 aSY, PRInt32 aSW, PRInt32 aSH,
                            PRInt32 aDX, PRInt32 aDY, PRInt32 aDW, PRInt32 aDH)
 {
+   if (aDW == 0 || aDH == 0 || aSW == 0 || aSH == 0)  // Nothing to draw
+      return NS_OK;
+
    // Find target rect in OS/2 coords.
    nsRect trect( aDX, aDY, aDW, aDH);
    RECTL  rcl;
@@ -365,9 +368,8 @@ void nsImageOS2::DrawBitmap( HPS hps, LONG lCount, PPOINTL pPoints,
 
       void *pBits = bIsMask ? mAlphaBits : mImageBits;
 
-      if( GPI_ERROR == GpiDrawBits( hps, pBits, pBmp2,
-                                    lCount, pPoints, lRop, BBO_OR))
-         PMERROR( "GpiDrawBits");
+      if (GPI_ERROR == GpiDrawBits (hps, pBits, pBmp2, lCount, pPoints, lRop, BBO_OR))
+         PMERROR( "GpiDrawBits - DrawBitmap");
 
       delete pMaskInfo;
    }

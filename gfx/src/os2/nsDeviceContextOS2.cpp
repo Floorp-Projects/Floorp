@@ -51,12 +51,12 @@ static char* nav4rounding = "font.size.nav4rounding";
 nsDeviceContextOS2 :: nsDeviceContextOS2()
   : DeviceContextImpl()
 {
-  mSurface = nsnull;
+  mSurface = NULL;
   mPaletteInfo.isPaletteDevice = PR_FALSE;
   mPaletteInfo.sizePalette = 0;
   mPaletteInfo.numReserved = 0;
-  mPaletteInfo.palette = nsnull;
-  mDC = nsnull;
+  mPaletteInfo.palette = NULL;
+  mPrintDC = NULL;
   mPixelScale = 1.0f;
   mWidth = -1;
   mHeight = -1;
@@ -97,11 +97,11 @@ nsDeviceContextOS2 :: nsDeviceContextOS2()
 
 nsDeviceContextOS2::~nsDeviceContextOS2()
 {
-  if(mDC)
+  if(mPrintDC)
   {
-     GpiAssociate(mPS, 0);
-     GpiDestroyPS(mPS);
-     PrnCloseDC(mDC);
+     GpiAssociate(mPrintPS, 0);
+     GpiDestroyPS(mPrintPS);
+     PrnCloseDC(mPrintDC);
   }
 
   if (!mPaletteInfo.isPaletteDevice) {
@@ -131,7 +131,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   float origscale, newscale;
   float t2d, a2d;
 
-  mDC = (HDC)aContext;
+  mPrintDC = (HDC)aContext;
 
 #ifdef XP_OS2
   // Create a print PS now.  This is necessary 'cos we need it from
@@ -140,11 +140,11 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   // PS can be associated with a given DC, and we can't get that PS from
   // the DC (really?).  And it would be slow :-)
   SIZEL sizel = { 0 , 0 };
-  mPS = GpiCreatePS( 0/*hab*/, mDC, &sizel,
-                     PU_PELS | GPIT_MICRO | GPIA_ASSOC);
+  mPrintPS = GpiCreatePS( 0/*hab*/, mPrintDC, &sizel,
+                          PU_PELS | GPIT_MICRO | GPIA_ASSOC);
 #endif
 
-  CommonInit( mDC);
+  CommonInit( mPrintDC);
 
   GetTwipsToDevUnits( newscale);
   aOrigContext->GetTwipsToDevUnits( origscale);
@@ -159,7 +159,7 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
 
 #ifdef XP_OS2
   HCINFO hcinfo;
-  PrnQueryHardcopyCaps( mDC, &hcinfo);
+  PrnQueryHardcopyCaps( mPrintDC, &hcinfo);
   mWidth = hcinfo.xPels;
   mHeight = hcinfo.yPels;
   // XXX hsb says there are margin problems, must be from here...
@@ -291,7 +291,7 @@ nsDeviceContextOS2 :: FindScreen ( nsIScreen** outScreen )
 // Create a rendering context against our hdc for a printer
 nsresult nsDeviceContextOS2::CreateRenderingContext( nsIRenderingContext *&aContext)
 {
-   NS_ASSERTION( mDC, "CreateRenderingContext for non-print DC");
+   NS_ASSERTION( mPrintDC, "CreateRenderingContext for non-print DC");
 
    nsIRenderingContext *pContext = new nsRenderingContextOS2;
    if (!pContext)
@@ -303,7 +303,7 @@ nsresult nsDeviceContextOS2::CreateRenderingContext( nsIRenderingContext *&aCont
      return NS_ERROR_OUT_OF_MEMORY;
    NS_ADDREF(surf);
 
-   surf->Init( mPS, mWidth, mHeight);
+   surf->Init( mPrintPS, mWidth, mHeight);
 
    nsresult rc = pContext->Init( this, (void*)((nsDrawingSurfaceOS2 *) surf));
 
@@ -320,7 +320,7 @@ nsresult nsDeviceContextOS2::CreateRenderingContext( nsIRenderingContext *&aCont
 
 NS_IMETHODIMP nsDeviceContextOS2 :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
-  if (nsnull == mDC)
+  if (nsnull == mPrintDC)
     aSupportsWidgets = PR_TRUE;
   else
     aSupportsWidgets = PR_FALSE;
@@ -811,6 +811,10 @@ NS_IMETHODIMP nsDeviceContextOS2 :: GetDeviceContextFor(nsIDeviceContextSpec *aD
 
   HDC dc = PrnOpenDC(pq, "Mozilla");
 
+  if (!dc) {
+     PMERROR("DevOpenDC");
+  } /* endif */
+
   return ((nsDeviceContextOS2 *)aContext)->Init((nsNativeDeviceContext)dc, this);
 }
 
@@ -853,10 +857,10 @@ nsresult nsDeviceContextOS2::CreateFontAliasTable()
 // Printing ------------------------------------------------------------------
 nsresult nsDeviceContextOS2::BeginDocument()
 {
-   NS_ASSERTION(mDC, "BeginDocument for non-print DC");
+   NS_ASSERTION(mPrintDC, "BeginDocument for non-print DC");
    if( mPrintState == nsPrintState_ePreBeginDoc)
    {
-      PrnStartJob( mDC, "Warpzilla NGLayout job");
+      PrnStartJob( mPrintDC, "Warpzilla NGLayout job");
       printf( "BeginDoc\n");
       mPrintState = nsPrintState_eBegunDoc;
    }
@@ -865,7 +869,7 @@ nsresult nsDeviceContextOS2::BeginDocument()
 
 nsresult nsDeviceContextOS2::EndDocument()
 {
-   PrnEndJob( mDC);
+   PrnEndJob( mPrintDC);
    mPrintState = nsPrintState_ePreBeginDoc;
    printf("EndDoc\n");
    return NS_OK;
@@ -877,7 +881,7 @@ nsresult nsDeviceContextOS2::BeginPage()
       mPrintState = nsPrintState_eBegunFirstPage;
    else
    {
-      PrnNewPage( mDC);
+      PrnNewPage( mPrintDC);
       printf("NewPage");
    }
    return NS_OK;
@@ -891,7 +895,7 @@ nsresult nsDeviceContextOS2::EndPage()
 
 BOOL nsDeviceContextOS2::isPrintDC()
 {
-   if ( mDC == nsnull )
+   if ( mPrintDC == nsnull )
       return 0;
 
    else

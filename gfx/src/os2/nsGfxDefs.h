@@ -81,6 +81,9 @@ struct nsGfxModuleData
 };
 
 int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize );
+BOOL GetTextExtentPoint32(HPS aPS, const char* aString, int aLength, PSIZEL aSizeL);
+BOOL ExtTextOut(HPS aPS, int X, int Y, UINT fuOptions, const RECTL* lprc,
+                const char* aString, unsigned int aLength, const int* pDx);
 
 BOOL IsDBCS();
 
