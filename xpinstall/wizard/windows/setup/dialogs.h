@@ -53,6 +53,7 @@ void              PaintGradientShade(HWND hWnd, HDC hdc);
 BOOL              BrowseForDirectory(HWND hDlg, char *szCurrDir);
 LRESULT CALLBACK  BrowseHookProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 void              ShowMessage(LPSTR szMessage, BOOL bShow);
+void              DrawLBText(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag);
 void              DrawCheck(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag);
 void              InvalidateLBCheckbox(HWND hwndListBox);
 void              ProcessWindowsMessages(void);

@@ -665,6 +665,9 @@ HRESULT Initialize(HINSTANCE hInstance)
   DeleteInstallLogFile(FILE_INSTALL_STATUS_LOG);
   LogISTime(W_START);
   DetermineOSVersionEx();
+
+  SystemParametersInfo(SPI_GETSCREENREADER, 0, &(gSystemInfo.bScreenReader), 0);
+
   return(0);
 }
 
@@ -2841,10 +2844,14 @@ HRESULT SiCNodeGetAttributes(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFl
   return(-1);
 }
 
-void SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet, BOOL bIncludeInvisible, DWORD dwACFlag)
+void SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet, BOOL bIncludeInvisible, DWORD dwACFlag, HWND hwndListBox)
 {
-  DWORD dwCount  = 0;
-  siC   *siCTemp = siComponents;
+  DWORD dwCount        = 0;
+  DWORD dwVisibleIndex = 0;
+  siC   *siCTemp       = siComponents;
+
+  LPSTR szTmpString;
+  TCHAR tchBuffer[MAX_BUF];
 
   if(siCTemp != NULL)
   {
@@ -2859,9 +2866,29 @@ void SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet, BOOL bIn
           siCTemp->dwAttributes |= dwAttributes;
         else
           siCTemp->dwAttributes &= ~dwAttributes;
+
+        if((!(siCTemp->dwAttributes & SIC_INVISIBLE))
+           && (dwAttributes == SIC_SELECTED) 
+           && gSystemInfo.bScreenReader 
+           && hwndListBox)
+        {
+          szTmpString = SiCNodeGetDescriptionShort(dwVisibleIndex, FALSE, dwACFlag);
+          lstrcpy(tchBuffer, szTmpString);
+          lstrcat(tchBuffer, " - ");
+          if(bSet)
+            lstrcat(tchBuffer, sgInstallGui.szChecked);
+          else
+            lstrcat(tchBuffer, sgInstallGui.szUnchecked);
+
+          //We've got to actually change the text in the listbox for the screen reader to see it.
+          SendMessage(hwndListBox, LB_INSERTSTRING, 0, (LPARAM)tchBuffer);
+          SendMessage(hwndListBox, LB_DELETESTRING, 1, 0);
+        }
       }
 
       ++dwCount;
+      if(!(siCTemp->dwAttributes & SIC_INVISIBLE))
+        ++dwVisibleIndex;
     }
 
     siCTemp = siCTemp->Next;
@@ -2878,9 +2905,29 @@ void SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet, BOOL bIn
             siCTemp->dwAttributes |= dwAttributes;
           else
             siCTemp->dwAttributes &= ~dwAttributes;
+
+          if((!(siCTemp->dwAttributes & SIC_INVISIBLE))
+             && (dwAttributes == SIC_SELECTED) 
+             && gSystemInfo.bScreenReader 
+             && hwndListBox)
+          {
+            szTmpString = SiCNodeGetDescriptionShort(dwVisibleIndex, FALSE, dwACFlag);
+            lstrcpy(tchBuffer, szTmpString);
+            lstrcat(tchBuffer, " - ");
+            if(bSet)
+              lstrcat(tchBuffer, sgInstallGui.szChecked);
+            else
+              lstrcat(tchBuffer, sgInstallGui.szUnchecked);
+
+            //We've got to actually change the text in the listbox for the screen reader to see it.
+            SendMessage(hwndListBox, LB_INSERTSTRING, dwVisibleIndex, (LPARAM)tchBuffer);
+            SendMessage(hwndListBox, LB_DELETESTRING, dwVisibleIndex+1, 0);
+          }
         }
 
         ++dwCount;
+        if(!(siCTemp->dwAttributes & SIC_INVISIBLE))
+          ++dwVisibleIndex;
       }
 
       siCTemp = siCTemp->Next;
@@ -4701,7 +4748,7 @@ void DeInitDSNode(dsN **dsnComponentDSRequirement)
   DsNodeDelete(dsnComponentDSRequirement);
 }
 
-BOOL ResolveComponentDependency(siCD *siCDInDependency)
+BOOL ResolveComponentDependency(siCD *siCDInDependency, HWND hwndListBox)
 {
   int     dwIndex;
   siCD    *siCDepTemp = siCDInDependency;
@@ -4716,7 +4763,7 @@ BOOL ResolveComponentDependency(siCD *siCDInDependency)
       if(!(dwAttrib & SIC_SELECTED) && !(dwAttrib & SIC_DISABLED))
       {
         bMoreToResolve = TRUE;
-        SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE, AC_ALL);
+        SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE, AC_ALL, hwndListBox);
       }
     }
 
@@ -4729,7 +4776,7 @@ BOOL ResolveComponentDependency(siCD *siCDInDependency)
         if(!(dwAttrib & SIC_SELECTED) && !(dwAttrib & SIC_DISABLED))
         {
           bMoreToResolve = TRUE;
-          SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE, AC_ALL);
+          SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE, AC_ALL, hwndListBox);
         }
       }
 
@@ -4739,7 +4786,7 @@ BOOL ResolveComponentDependency(siCD *siCDInDependency)
   return(bMoreToResolve);
 }
 
-BOOL ResolveDependencies(DWORD dwIndex)
+BOOL ResolveDependencies(DWORD dwIndex, HWND hwndListBox)
 {
   BOOL  bMoreToResolve  = FALSE;
   DWORD dwCount         = 0;
@@ -4752,7 +4799,7 @@ BOOL ResolveDependencies(DWORD dwIndex)
     {
       if(SiCNodeGetAttributes(dwCount, TRUE, AC_ALL) & SIC_SELECTED)
       {
-         bMoreToResolve = ResolveComponentDependency(siCTemp->siCDDependencies);
+         bMoreToResolve = ResolveComponentDependency(siCTemp->siCDDependencies, hwndListBox);
          if(dwIndex == dwCount)
          {
            return(bMoreToResolve);
@@ -4769,7 +4816,7 @@ BOOL ResolveDependencies(DWORD dwIndex)
       {
         if(SiCNodeGetAttributes(dwCount, TRUE, AC_ALL) & SIC_SELECTED)
         {
-           bMoreToResolve = ResolveComponentDependency(siCTemp->siCDDependencies);
+           bMoreToResolve = ResolveComponentDependency(siCTemp->siCDDependencies, hwndListBox);
            if(dwIndex == dwCount)
            {
              return(bMoreToResolve);
@@ -4835,7 +4882,7 @@ ssi* SsiGetNode(LPSTR szDescription)
   return(NULL);
 }
 
-void ResolveDependees(LPSTR szToggledReferenceName)
+void ResolveDependees(LPSTR szToggledReferenceName, HWND hwndListBox)
 {
   BOOL  bAtLeastOneSelected;
   BOOL  bMoreToResolve  = FALSE;
@@ -4859,7 +4906,7 @@ void ResolveDependees(LPSTR szToggledReferenceName)
           dwAttrib = SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL);
           if((dwAttrib & SIC_SELECTED) && !(dwAttrib & SIC_DISABLED))
           {
-            SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, TRUE, AC_ALL);
+            SiCNodeSetAttributes(dwIndex, SIC_SELECTED, FALSE, TRUE, AC_ALL, hwndListBox);
             bMoreToResolve = TRUE;
           }
         }
@@ -4871,7 +4918,7 @@ void ResolveDependees(LPSTR szToggledReferenceName)
           dwAttrib = SiCNodeGetAttributes(dwIndex, TRUE, AC_ALL);
           if(!(dwAttrib & SIC_SELECTED) && !(dwAttrib & SIC_DISABLED))
           {
-            SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE, AC_ALL);
+            SiCNodeSetAttributes(dwIndex, SIC_SELECTED, TRUE, TRUE, AC_ALL, hwndListBox);
             bMoreToResolve = TRUE;
           }
         }
@@ -4882,7 +4929,7 @@ void ResolveDependees(LPSTR szToggledReferenceName)
   } while((siCTemp != NULL) && (siCTemp != siComponents));
 
   if(bMoreToResolve == TRUE)
-    ResolveDependees(szToggledReferenceName);
+    ResolveDependees(szToggledReferenceName, hwndListBox);
 }
 
 void PrintUsage(void)
@@ -6221,6 +6268,8 @@ HRESULT ParseInstallIni()
   GetPrivateProfileString("General", "README", "", sgInstallGui.szReadme_, sizeof(sgInstallGui.szReadme_), szFileIniInstall);
   GetPrivateProfileString("General", "PAUSE_", "", sgInstallGui.szPause_, sizeof(sgInstallGui.szPause_), szFileIniInstall);
   GetPrivateProfileString("General", "RESUME_", "", sgInstallGui.szResume_, sizeof(sgInstallGui.szResume_), szFileIniInstall);
+  GetPrivateProfileString("General", "CHECKED", "",   sgInstallGui.szChecked,   sizeof(sgInstallGui.szChecked),   szFileIniInstall);
+  GetPrivateProfileString("General", "UNCHECKED", "", sgInstallGui.szUnchecked, sizeof(sgInstallGui.szUnchecked), szFileIniInstall);
 
   return(0);
 }
