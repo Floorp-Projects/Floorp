@@ -413,7 +413,7 @@ nsHTMLButtonElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::type) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::EnumValueToString(aValue, kButtonTypeTable, aResult);
+      nsGenericHTMLElement::EnumValueToString(aValue, kButtonTypeTable, aResult, PR_FALSE);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
