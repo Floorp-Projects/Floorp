@@ -68,7 +68,7 @@ print "The raw version id is:  $inDefaultVersion\n";
 $inDefaultGreVersion  = $ARGV[1];
 $inStagePath          = "$topsrcdir/stage";
 $inDistPath           = "$topsrcdir/dist";
-$inXpiURL             = "ftp://not.supplied.com";
+$inXpiURL             = "ftp://not.supplied.invalid";
 $inRedirIniURL        = $inXpiURL;
 
 ParseArgv(@ARGV);

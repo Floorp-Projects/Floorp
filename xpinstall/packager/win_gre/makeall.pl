@@ -67,7 +67,7 @@ print "The raw version id is:  $inDefaultVersion\n";
 
 $inStagePath          = "$topsrcdir/stage";
 $inDistPath           = "$topsrcdir/dist";
-$inXpiURL             = "ftp://not.supplied.com";
+$inXpiURL             = "ftp://not.supplied.invalid";
 $inRedirIniURL        = $inXpiURL;
 
 ParseArgv(@ARGV);
@@ -111,6 +111,9 @@ $ENV{WIZ_fileUninstallZip}     = $seuzFileNameSpecific;
 # The following variables are for displaying version info in the 
 # the installer.
 $ENV{WIZ_userAgent}            = "$versionMain";
+
+# userAgentShort just means it does not have the language string.
+#  ie: '1.3b' as opposed to '1.3b (en)'
 $ENV{WIZ_userAgentShort}       = "$versionMain";
 $ENV{WIZ_xpinstallVersion}     = "$versionMain";
 $ENV{WIZ_distInstallPath}      = "$gDirDistInstall";

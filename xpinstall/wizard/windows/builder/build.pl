@@ -43,7 +43,7 @@ $DEPTH         = "../../../..";
 $topsrcdir     = GetTopSrcDir();
 $inStagePath   = "$topsrcdir/stage";
 $inDistPath    = "$topsrcdir/dist";
-$inXpiURL      = "ftp://not.supplied.com";
+$inXpiURL      = "ftp://not.supplied.invalid";
 $inRedirIniURL = $inXpiURL;
 
 # ensure that Packager.pm is in @INC, since we might not be called from
@@ -57,7 +57,7 @@ $DEPTH            = "$topsrcdir" if !defined($DEPTH);
 $cwdBuilder       = "$topsrcdir/xpinstall/wizard/windows/builder";
 $verPartial       = "5.0.0.";
 $ver              = $verPartial . GetVersion($DEPTH);
-$verGre           = "1.3b.0." . GetVersion($DEPTH);
+$verGre           = "1.3b.0.0";
 $gDistInstallPath = "$inDistPath/install";
 $gPackagerPath    = "$topsrcdir/xpinstall/packager";
 

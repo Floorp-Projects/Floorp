@@ -73,7 +73,7 @@ print "The raw version id is:  $inDefaultProductVersion\n";
 $inDefaultGreVersion      = $ARGV[1];
 $inStagePath              = "$topsrcdir/stage";
 $inDistPath               = "$topsrcdir/dist";
-$inXpiURL                 = "ftp://not.supplied.com";
+$inXpiURL                 = "ftp://not.supplied.invalid";
 $inRedirIniURL            = $inXpiURL;
 $seiFileNameGeneric       = "nsinstall.exe";
 $seiFileNameSpecific      = "mozilla-win32-installer.exe";

@@ -358,6 +358,7 @@ HRESULT ParseForWinRegInfo(LPSTR szString, LPSTR szKeyStr, LPSTR szRootKey, DWOR
     if(!szFirstBackSlash)
       return(WIZ_ERROR_PARSING_UNINST_STRS);
 
+    szFirstBackSlash[0] = '\0';
     lstrcpy(szRootKey, szFirstNonSpace);
     szFirstNonSpace = &(szFirstBackSlash[1]);
     iLen = lstrlen(szFirstNonSpace);
