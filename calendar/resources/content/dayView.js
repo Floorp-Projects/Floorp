@@ -579,6 +579,7 @@ DayView.prototype.selectBoxForEvent = function dayview_selectBoxForEvent( calend
 */
 DayView.prototype.clearSelectedEvent = function dayview_clearSelectedEvent( )
 {
+  debug("clearSelectedEvent");
    var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
 
    for( i = 0; i < ArrayOfBoxes.length; i++ )
@@ -614,3 +615,10 @@ DayView.prototype.hiliteTodaysDate = function dayview_hiliteTodaysDate( )
 {
    return;
 }
+
+
+function debug( Text )
+{
+   dump( "\ndayView.js: "+ Text);
+}
+

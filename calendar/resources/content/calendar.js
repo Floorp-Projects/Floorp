@@ -94,6 +94,8 @@ var showTooltip = true;
 
 //Show only the working days (changed in different menus)
 var gOnlyWorkdayChecked ;
+// ShowToDoInView
+var gDisplayToDoInViewChecked ;
 
 // DAY VIEW VARIABLES
 var kDayViewHourLeftStart = 105;
@@ -110,13 +112,14 @@ var prefService = Components.classes["@mozilla.org/preferences-service;1"]
 var rootPrefNode = prefService.getBranch(null); // preferences root node
 
 /*To log messages in the JSconsole */
+var logMessage;
 if( gDebugCalendar == true ) {
   var aConsoleService = Components.classes["@mozilla.org/consoleservice;1"].
     getService(Components.interfaces.nsIConsoleService);
-  var logMessage = aConsoleService.logStringMessage ;
+  logMessage = aConsoleService.logStringMessage ;
 } else 
 {
-  var logMessage = function(){} ;  
+  logMessage = function(){} ;  
 }
 
 /*To recognize the application running calendar*/
@@ -182,6 +185,7 @@ function calendarInit()
    }
 
    var calendarNode;
+   var containerName;
    var calendarColor;
 
    // loop through the calendars via the rootSequence of the RDF datasource
@@ -1088,7 +1092,7 @@ function getPreviewTextForTask( toDoItem )
 	var nbmaxlines = 5 ;
 	var nblines = lines.length ;
 	if( nblines > nbmaxlines ) {
-	  var nblines = nbmaxlines ;
+	  nblines = nbmaxlines ;
 	  lines[ nblines - 1 ] = "..." ;
 	}
 	
@@ -1430,12 +1434,13 @@ function SetUnicharPref(aPrefObj, aPrefName, aPrefValue)
 /* Change the only-workday checkbox */
 function changeOnlyWorkdayCheckbox( menuindex ) {
   var check = document.getElementById( "only-workday-checkbox-" + menuindex ).getAttribute("checked") ;
+  var changemenu ;
   switch(menuindex){
   case 1:
-    var changemenu = 2 ;
+    changemenu = 2 ;
     break;
   case 2:
-    var changemenu = 1 ;
+    changemenu = 1 ;
     break;
   default:
     return(false);
@@ -1455,12 +1460,13 @@ function changeOnlyWorkdayCheckbox( menuindex ) {
 /* Change the display-todo-inview checkbox */
 function changeDisplayToDoInViewCheckbox( menuindex ) {
   var check = document.getElementById( "display-todo-inview-checkbox-" + menuindex ).getAttribute("checked") ;
+  var changemenu ;
   switch(menuindex){
   case 1:
-    var changemenu = 2 ;
+    changemenu = 2 ;
     break;
   case 2:
-    var changemenu = 1 ;
+    changemenu = 1 ;
     break;
   default:
     return(false);

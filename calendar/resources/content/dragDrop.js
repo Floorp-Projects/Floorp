@@ -92,22 +92,23 @@ var calendarViewDNDObserver = {
       if( aEvent.target.localName == "splitter" || aEvent.target.localName == "menu")
          throw Components.results.NS_OK; // not a draggable item
 
+      var eventIsDragged ;
       switch (aEvent.target.className) {
       case "day-view-event-label-class" :
       case "day-view-event-class" :
-	var eventIsDragged = true ;
+	eventIsDragged = true ;
 	this.startDragDayIndex = 0 ;
 	break;
       case "week-view-event-class" :
-	var eventIsDragged = true ;
+	eventIsDragged = true ;
 	this.startDragDayIndex = aEvent.target.getAttribute( "dayindex" );
 	break;
       case "week-view-event-label-class" :
-	var eventIsDragged = true ;
+        eventIsDragged = true ;
 	this.startDragDayIndex = aEvent.target.parentNode.getAttribute( "dayindex" );
 	break;
       default :
-	var eventIsDragged = false ;
+	eventIsDragged = false ;
       }
 
       if(eventIsDragged == true)

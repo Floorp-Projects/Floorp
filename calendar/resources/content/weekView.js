@@ -815,7 +815,6 @@ WeekView.prototype.hiliteTodaysDate = function( )
 WeekView.prototype.clearSelectedEvent = function( )
 {
    //Event = gCalendarWindow.getSelectedEvent();
-   
    var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
 
    for( i = 0; i < ArrayOfBoxes.length; i++ )
@@ -857,3 +856,9 @@ WeekView.prototype.clearSelectedDate = function( )
       SelectedBoxes[i].removeAttribute( "weekselected" );
    }
 }
+
+function debug( Text )
+{
+   dump( "\nweekView.js: "+ Text);
+}
+

@@ -129,8 +129,6 @@ function MonthView( calendarWindow )
    {
       onSelectionChanged : function( EventSelectionArray )
       {
-         
-         dump( "\nIn Month view, on selection changed");
          if( EventSelectionArray.length > 0 )
          {
             //if there are selected events.
@@ -141,20 +139,16 @@ function MonthView( calendarWindow )
 
             gCalendarWindow.monthView.clearSelectedBoxes();
             
-            //dump( "\nIn Month view, eventSelectionArray.length is "+EventSelectionArray.length );
             var i = 0;
             
             for( i = 0; i < EventSelectionArray.length; i++ )
             {
-               //dump( "\nin Month view, going to try and get the event boxes with name 'month-view-event-box-"+EventSelectionArray[i].id+"'" );
                var EventBoxes = document.getElementsByAttribute( "name", "month-view-event-box-"+EventSelectionArray[i].id );
-               //dump( "\nIn Month view, found "+EventBoxes.length+" matches for the selected event." );
                for ( j = 0; j < EventBoxes.length; j++ ) 
                {
                   EventBoxes[j].setAttribute( "eventselected", "true" );
                }
             }
-            //dump( "\nAll Done in Selection for Month View" );
          }
          else
          {
@@ -880,6 +874,7 @@ MonthView.prototype.doubleClickDay = function monthView_doubleClickDay( event )
 
 MonthView.prototype.clearSelectedEvent = function monthView_clearSelectedEvent( )
 {
+  debug("clearSelectedEvent");
    var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
 
    for( i = 0; i < ArrayOfBoxes.length; i++ )
@@ -967,12 +962,6 @@ MonthView.prototype.setNumberOfEventsToShow = function monthView_setNumberOfEven
 
    //calculate the number of events to show.
   var numberOfEventsToShow = parseInt(  ( MonthViewBoxHeight - MonthViewLabelHeight - 14) / EventBoxHeight )
-//    dump( "\nNactual"+( MonthViewBoxHeight - MonthViewLabelHeight ) / EventBoxHeight );
-//    dump( "\nM MonthViewBoxHeight: "+MonthViewBoxHeight );
-//    dump( "\nM MonthViewLabelHeight: "+MonthViewLabelHeight );
-//    dump( "\nM EventBoxHeight"+EventBoxHeight );
-//    dump( "\nM EventDotBoxHeight"+ EventDotBoxHeight );
-//    dump( "\nNnew : "+ numberOfEventsToShow) ;
   this.numberOfEventsToShow = numberOfEventsToShow ;
 
   // remove created event boxes
@@ -1042,7 +1031,6 @@ var monthViewEventDragAndDropObserver  = {
 	  return;
 	}
       }
-      //dump( "\nEvent being dragged is "+gEventBeingDragged );
       transferData.data=new TransferData();
       transferData.data.addDataForFlavour("text/unicode",0);
   },
@@ -1052,14 +1040,10 @@ var monthViewEventDragAndDropObserver  = {
     return weekflavours;
   },
   onDragOver: function (evt,flavour,session){
-    //dump( "on dragged over "+evt.target.getAttribute( "id" )+"\n" );
     gBoxBeingDroppedOn = document.getElementById( evt.target.getAttribute( "id" ) );
-    //dump( evt.target.getAttribute( "id" ) );
   },
   onDrop: function (evt,dropdata,session){
     //get the date of the current event box.
-    //dump( "\n\nDROP EVNET->\n"+gEventBeingDragged.start );
-
     if( gBoxBeingDroppedOn.date == null )
         return;
     
@@ -1115,3 +1099,10 @@ var monthViewEventDragAndDropObserver  = {
     }
   }
 };
+
+function debug( Text )
+{
+   dump( "\nmonthView.js: "+ Text);
+
+}
+
