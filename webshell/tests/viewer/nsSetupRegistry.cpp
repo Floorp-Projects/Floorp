@@ -128,6 +128,7 @@ static NS_DEFINE_IID(kCHTMLDocument, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCXMLDocument, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCImageDocument, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCHTMLImageElementFactory, NS_HTMLIMAGEELEMENTFACTORY_CID);
+static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 
@@ -192,6 +193,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCXMLDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCImageDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCHTMLImageElementFactory, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kNameSpaceManagerCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 #ifndef XP_MAC		// temporary
   nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
