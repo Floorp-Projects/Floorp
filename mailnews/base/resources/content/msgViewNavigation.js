@@ -124,6 +124,15 @@ function GoNextMessage(type, startFromBeginning )
             var allServers = accountManager.allServers;
             var numServers = allServers.Count();
 
+            var nextMode = pref.GetIntPref("mailnews.nav_crosses_folders");
+            // 0: "next" goes to the next folder, without prompting
+            // 1: "next" goes to the next folder, and prompts (the default)
+            // 2: "next" does nothing when there are no unread messages
+
+            // not crossing folders, don't find next
+            if (nextMode == 2)
+                done=true;
+            
             // todo:  
             // this will search the originalFolderURI server twice
             // prevent that.
@@ -149,11 +158,24 @@ function GoNextMessage(type, startFromBeginning )
             if (nextFolderURI && (originalFolderURI != nextFolderURI)) {
                 var nextFolderResource = RDF.GetResource(nextFolderURI);
                 var nextFolder = nextFolderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
- 
-                var promptText = Bundle.formatStringFromName("advanceNextPrompt", [ nextFolder.name ], 1); 
-                if (commonDialogs.Confirm(window, promptText, promptText)) {
+
+                switch (nextMode) {
+
+                case 0:
+                    // do this unconditionally
+                    gNextMessageAfterLoad = true;
+                    SelectFolder(nextFolderURI);
+                    break;
+                    
+                case 1:
+                    var promptText = Bundle.formatStringFromName("advanceNextPrompt", [ nextFolder.name ], 1); 
+                    if (commonDialogs.Confirm(window, promptText, promptText)) {
                         gNextMessageAfterLoad = true;
                         SelectFolder(nextFolderURI);
+                    }
+                    break;
+                default:
+                    dump("huh?");
                 }
             }
         }
