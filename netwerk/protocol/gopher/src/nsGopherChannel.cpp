@@ -634,3 +634,4 @@ nsGopherChannel::SendRequest(nsITransport* aTransport)
                                  this, nsnull);
     return rv;
 }
+
