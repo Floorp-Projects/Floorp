@@ -83,7 +83,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
       idx = COLOR_ACTIVECAPTION;
       break;
     case eColor_appworkspace:
-      idx = COLOR_DESKTOP;
+      idx = COLOR_APPWORKSPACE;
       break;
     case eColor_background:
       idx = COLOR_BACKGROUND; 
