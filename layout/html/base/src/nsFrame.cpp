@@ -358,7 +358,7 @@ nsFrame::RemoveFrame(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  if (mState & NS_FRAME_EXTERNAL_REFERENCE) {
+  if (mState & NS_FRAME_EXTERNAL_REFERENCE || mSelected) {
     nsCOMPtr<nsIPresShell> shell;
     nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
     if (NS_SUCCEEDED(rv) && shell) {
@@ -1503,11 +1503,13 @@ nsFrame::VerifyTree() const
 /*this method may.. invalidate if the state was changed or if aForceRedraw is PR_TRUE
   it will not update immediately.*/
 NS_IMETHODIMP
-nsFrame::SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw)
+nsFrame::SetSelected(nsSelectionStruct *aSelStruct)
 {
-  if (mSelected != aSelected || aForceRedraw)
+  if (!aSelStruct)
+    return NS_ERROR_NULL_POINTER;
+  if (mSelected != (PRBool)(aSelStruct->mType & nsSelectionStruct::SELON ) || aSelStruct->mForceRedraw)
   {
-    mSelected = aSelected;
+    mSelected = aSelStruct->mType & nsSelectionStruct::SELON ;
     
     nsRect    rect;
     GetRect(rect);
@@ -1518,30 +1520,26 @@ nsFrame::SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset,
 }
 
 NS_IMETHODIMP
-nsFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset,
-                                        PRInt32 aAnchorOffset, PRInt32 aFocusOffset, PRBool aForceRedraw, 
-                                        nsIFocusTracker *aTracker,
-                                        nsIFrame **aActualSelected)
+nsFrame::SetSelectedContentOffsets(nsSelectionStruct *aSS, 
+                                   nsIFocusTracker *aTracker,
+                                   nsIFrame **aActualSelected)
 {
-  if (!aActualSelected)
+  if (!aActualSelected || !aSS)
     return NS_ERROR_NULL_POINTER;
   nsIFrame *child = nsnull;
   nsresult result = FirstChild(nsnull, &child);
   if (NS_FAILED(result)){
     *aActualSelected = this;
-    if (aAnchorOffset > 0)
+    if (aSS->mAnchorOffset > 0)
         aTracker->SetFocus(nsnull,this);
-    if (aFocusOffset > 0)
+    if (aSS->mFocusOffset > 0)
         aTracker->SetFocus(this,nsnull);
-    return SetSelected(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw);
+    return SetSelected(aSS);
   }
   *aActualSelected = nsnull;
-  if (aBeginContentOffset) 
-    SetSelected(PR_FALSE, 0, 0, aForceRedraw); //if all children are not selected, then neither is this
+  //wont actually bother with selection here on "this" frame
   while (child && NS_SUCCEEDED(result)){
-    result |= child->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, 
-                                               aAnchorOffset, aFocusOffset,
-                                               aForceRedraw , aTracker, aActualSelected);
+    result |= child->SetSelectedContentOffsets(aSS, aTracker, aActualSelected);
     if (NS_SUCCEEDED(result) && aActualSelected)
       return result; //done.
     result |= child->GetNextSibling(&child);

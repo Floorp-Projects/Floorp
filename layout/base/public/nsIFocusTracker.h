@@ -50,6 +50,22 @@ public:
    *  @param aFrame will be the frame to scroll into view.
    */
   NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame) = 0;
+
+  /**
+   * Returns the primary frame associated with the content object.
+   *
+   * The primary frame is the frame that is most closely associated with the
+   * content. A frame is more closely associated with the content that another
+   * frame if the one frame contains directly or indirectly the other frame (e.g.,
+   * when a frame is scrolled there is a scroll frame that contains the frame
+   * being scrolled). The primary frame is always the first-in-flow.
+   *
+   * In the case of absolutely positioned elements and floated elements,
+   * the primary frame is the frame that is out of the flow and not the
+   * placeholder frame.
+   */
+  NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
+                                nsIFrame**  aPrimaryFrame) const = 0;
 };
 
 
