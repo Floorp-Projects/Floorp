@@ -2567,7 +2567,7 @@ static nsresult CreateArray(nsIWritableVariant* aResult, PRUint16 aType, const n
       aArray += size;
     }
     if (!NS_FAILED(rc)) {
-      rc = aResult->SetAsArray(nsIDataType::VTYPE_INTERFACE,&NS_GET_IID(nsIVariant),count,a);
+      rc = aResult->SetAsArray(nsIDataType::VTYPE_INTERFACE_IS,&NS_GET_IID(nsIVariant),count,a);
     }
     for (i = 0; i < count; i++) {            //  Release variants for array
       nsIVariant* v = a[i];
@@ -2903,8 +2903,9 @@ NS_IMETHODIMP
     unhandled = PR_TRUE;
   }
   if (unhandled) {  //  Handle all the other cases
-    DECODE_ARRAY(nsIVariant*,INTERFACE,&NS_GET_IID(nsIVariant),a[p] = v;,
-                      for (si = 0; si < size; si++) NS_RELEASE(a[si]););
+    DECODE_ARRAY(nsIVariant*,INTERFACE_IS,&NS_GET_IID(nsIVariant),
+      a[p] = v;NS_ADDREF(a[p]);,
+      for (si = 0; si < size; si++) NS_RELEASE(a[si]););
   }
   if (NS_FAILED(rc))\
     return rc;
