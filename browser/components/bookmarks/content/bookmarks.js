@@ -1497,8 +1497,8 @@ var BookmarksUtils = {
         currentTabInfo = tabsInfo[i];
     }
 
-    openDialog("chrome://browser/content/bookmarks/addBookmark.xul", "",
-               "centerscreen,chrome,dialog=yes,resizable,dependent",
+    openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
+               "centerscreen,chrome,dialog=yes,resizable=no,dependent",
                currentTabInfo.name, currentTabInfo.url, null,
                currentTabInfo.charset, "addGroup" + (aSelect ? ",group" : ""), tabsInfo);
   },
@@ -1527,8 +1527,8 @@ var BookmarksUtils = {
   addBookmark: function (aURL, aTitle, aCharSet, aShowDialog)
   {
     if (aShowDialog)
-      openDialog("chrome://browser/content/bookmarks/addBookmark.xul", "", 
-                 "centerscreen,chrome,dialog=yes,resizable,dependent", aTitle, aURL, null, aCharSet);
+      openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "", 
+                 "centerscreen,chrome,dialog=yes,resizable=no,dependent", aTitle, aURL, null, aCharSet);
     else {
       // User has elected to override the file dialog and always file bookmarks
       // into the default bookmark folder. 
@@ -1818,7 +1818,7 @@ var BookmarkMenuTransactionListener =
       return;
     }
     var node, transactionNumber, transactionList, transactionLabel, action;
-    node = document.getElementById("cmd_undo");
+    node = document.getElementById("cmd_bm_undo");
     transactionNumber = aTxmgr.numberOfUndoItems;
     dump("N UNDO: "+transactionNumber+"\n")
     if (transactionNumber == 0) {
@@ -1832,7 +1832,7 @@ var BookmarkMenuTransactionListener =
     }
     node.setAttribute("label", transactionLabel);
       
-    node = document.getElementById("cmd_redo");
+    node = document.getElementById("cmd_bm_redo");
     transactionNumber = aTxmgr.numberOfRedoItems;
     dump("N REDO: "+transactionNumber+"\n")
     if (transactionNumber == 0) {
