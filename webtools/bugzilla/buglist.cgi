@@ -771,7 +771,7 @@ if ($::usergroupset ne '0' && $buggroupset =~ /^\d*$/) {
         $knum++;
     }
     my @statuskeys = keys %statushash;
-    if (scaler(@statuskeys) == 1) {
+    if (1 == @statuskeys) {
         if (defined $statushash{'RESOLVED'}) {
             print "
 <INPUT TYPE=radio NAME=knob VALUE=verify>
