@@ -162,7 +162,7 @@ public:
   NS_IMETHOD ShowDropDown(PRBool aDoDropDown);
   NS_IMETHOD GetDropDown(nsIFrame** aDropDownFrame);
   NS_IMETHOD SetDropDown(nsIFrame* aDropDownFrame);
-  NS_IMETHOD ListWasSelected(nsIPresContext* aPresContext, PRBool aForceUpdate);
+  NS_IMETHOD ListWasSelected(nsIPresContext* aPresContext, PRBool aForceUpdate, PRBool aSendEvent);
   NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, PRInt32 aNewIndex);
   NS_IMETHOD AbsolutelyPositionDropDown();
   NS_IMETHOD GetAbsoluteRect(nsRect* aRect);
