@@ -17,22 +17,30 @@ mp_err identity_test(void)
   preca = (rand() % MAX_PREC) + 1;
   precb = (rand() % MAX_PREC) + 1;
 
-  mp_init(&a);
-  mp_init(&b);
-  mp_init(&t1);
-  mp_init(&t2);
-  mp_init(&t3);
-  mp_init(&t4);
-  mp_init(&t5);
+  MP_DIGITS(&a) = 0;
+  MP_DIGITS(&b) = 0;
+  MP_DIGITS(&t1) = 0;
+  MP_DIGITS(&t2) = 0;
+  MP_DIGITS(&t3) = 0;
+  MP_DIGITS(&t4) = 0;
+  MP_DIGITS(&t5) = 0;
 
-  mpp_random_size(&a, preca);
-  mpp_random_size(&b, precb);
+  MP_CHECKOK( mp_init(&a)  );
+  MP_CHECKOK( mp_init(&b)  );
+  MP_CHECKOK( mp_init(&t1) );
+  MP_CHECKOK( mp_init(&t2) );
+  MP_CHECKOK( mp_init(&t3) );
+  MP_CHECKOK( mp_init(&t4) );
+  MP_CHECKOK( mp_init(&t5) );
+
+  MP_CHECKOK( mpp_random_size(&a, preca) );
+  MP_CHECKOK( mpp_random_size(&b, precb) );
 
   if (mp_cmp(&a, &b) < 0)
     mp_exch(&a, &b);
 
   MP_CHECKOK( mp_mod(&a, &b, &t1) );       /* t1 = a%b */
-  MP_CHECKOK( mp_div(&a, &b, &t2, &t3) );  /* t2 = a/b */
+  MP_CHECKOK( mp_div(&a, &b, &t2, NULL) ); /* t2 = a/b */
   MP_CHECKOK( mp_mul(&b, &t2, &t3) );      /* t3 = (a/b)*b */
   MP_CHECKOK( mp_add(&t1, &t3, &t4) );     /* t4 = a%b + (a/b)*b */
   MP_CHECKOK( mp_sub(&t4, &a, &t5) );      /* t5 = a%b + (a/b)*b - a */
@@ -42,13 +50,13 @@ mp_err identity_test(void)
   }
 
 CLEANUP:
-  mp_clear(&a);
-  mp_clear(&b);
-  mp_clear(&t1);
-  mp_clear(&t2);
-  mp_clear(&t3);
-  mp_clear(&t4);
   mp_clear(&t5);
+  mp_clear(&t4);
+  mp_clear(&t3);
+  mp_clear(&t2);
+  mp_clear(&t1);
+  mp_clear(&b);
+  mp_clear(&a);
   return res;
 }
 
