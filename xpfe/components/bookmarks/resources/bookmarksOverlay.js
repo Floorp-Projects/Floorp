@@ -219,7 +219,7 @@ BookmarksUIElement.prototype = {
                   "newfolder", "separator", "properties"];
       break;
     case "http://home.netscape.com/NC-rdf#IEFavoriteFolder":
-      commands = ["open", "find", "separator", "bm_copy", "separator", "rename", "separator",
+      commands = ["open", "find", "separator", "bm_copy", "bm_delete", "separator", "rename", "separator",
                   "bm_fileBookmark", "separator", "separator", "properties"];
       break;
     case "http://home.netscape.com/NC-rdf#IEFavorite":
