@@ -4,8 +4,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
-<!-- FIX ME   this should not be here when overlays support css files  -->
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+
 <?xml-stylesheet href="chrome://messengercompose/skin/" type="text/css"?> 
 
 <!--
