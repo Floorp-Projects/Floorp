@@ -122,6 +122,37 @@ PRBool nsWSPInterfaceInfoService::IsArray(nsIWSDLPart* aPart)
           ns.Equals(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_2]));
 }
 
+
+/***************************************************************************/
+// SetException sets a global exception representing the given nsresult. It
+// is guaranteed to also return that nsresult. It is to be used when failing.
+//
+// usage:
+//
+//  if (NS_FAILED(rv)) {
+//    return SetException(rv, "got foo, expected bar", someOptionalObject);
+//  }
+//
+
+static nsresult SetException(nsresult aStatus, const char* aMsg, 
+                             nsISupports* aData)
+{
+  nsCOMPtr<nsIException> exception = new WSPException(aStatus, aMsg, aData);
+  if (exception) {
+    nsCOMPtr<nsIExceptionService> xs =
+        do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
+    if (xs) {
+      nsCOMPtr<nsIExceptionManager> xm;
+      xs->GetCurrentExceptionManager(getter_AddRefs(xm));
+      if (xm) {
+        xm->SetCurrentException(exception);
+      }
+    }
+  }
+  
+  return aStatus;
+}
+
 /***************************************************************************/
 // IIDX is used as a way to hold and share our commone set of interface indexes.
 
@@ -353,6 +384,7 @@ static nsresult GetParamDescOfType(nsIInterfaceInfoSuperManager* iism,
                                    const IIDX& iidx,
                                    XPTParamDescriptor* defaultResult,
                                    const nsAString& qualifier,
+                                   PRUint32 depth,
                                    ParamAccumulator* aParams);
 
 /***************************************************************************/
@@ -410,7 +442,7 @@ static nsresult AppendMethodForParticle(nsIInterfaceInfoSuperManager* iism,
   WSPFactory::XML2C(name, identifierName);
 
   rv = GetParamDescOfType(iism, aSet, schemaType, iidx, defaultResult,
-                          qualifier, &params);
+                          qualifier, 0, &params);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -561,6 +593,7 @@ static nsresult GetParamDescOfType(nsIInterfaceInfoSuperManager* iism,
                                    const IIDX& iidx,
                                    XPTParamDescriptor* defaultResult,
                                    const nsAString& qualifier,
+                                   PRUint32 depth,
                                    ParamAccumulator* aParams)
 {
   XPTTypeDescriptor* additionalType;
@@ -582,39 +615,87 @@ static nsresult GetParamDescOfType(nsIInterfaceInfoSuperManager* iism,
       return rv;
     }
 
-    // XXX need to deal with array case!!!
-    
-    
-    switch(contentModel) {
-      case nsISchemaComplexType::CONTENT_MODEL_EMPTY:
-        
-        // XXX For NOW let's try out part of the Array scheme...
+    PRBool isArray;
+    rv = complexType->GetIsArray(&isArray);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
-        rv = aSet->AllocateAdditionalType(&typeIndex,
-                                          &additionalType);
+    if (isArray) {
+      // If we are already building an array or if this is known to be a
+      // multi-dimensional array, then punt by calling this inner
+      // array an nsIVariant.
+
+      PRUint32 arrayDimension;
+      if (!depth) {
+        rv = complexType->GetArrayDimension(&arrayDimension);
         if (NS_FAILED(rv)) {
           return rv;
         }
+      }
 
-        // XXX Fix the type 'filler-inner'
-        // We may need to use a local ParamAccumulator here and recur in order
-        // To figure out this type. Yuk!
-        additionalType->prefix.flags = TD_INT32;
-
-        // Add the leading 'length' param.
-
-        paramDesc->type.prefix.flags = TD_UINT32;
-        
-        // Alloc another param descriptor to hold the array info.
-        paramDesc = aParams->GetNextParam();
-        if (!paramDesc) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        // Set this *second* param as an array and return.
-        paramDesc->type.prefix.flags = TD_ARRAY | XPT_TDP_POINTER;
-        paramDesc->type.type.additional_type = typeIndex;
+      if (depth || arrayDimension > 1) {
+        NS_ASSERTION(depth==1, "bad depth");
+        paramDesc->type.prefix.flags = TD_INTERFACE_TYPE | XPT_TDP_POINTER;
+        paramDesc->type.type.iface = iidx.Get(IIDX::IDX_nsIVariant);
         return NS_OK;
+      }
+
+      // else, recur to figure out the type for the array elements
+      
+      nsCOMPtr<nsISchemaType> arrayType;
+      rv = complexType->GetArrayType(getter_AddRefs(arrayType));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      
+      ParamAccumulator arrayTypeParams;
+      rv = GetParamDescOfType(iism, aSet, arrayType, iidx, defaultResult,
+                              qualifier, depth+1, &arrayTypeParams);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      rv = aSet->AllocateAdditionalType(&typeIndex, &additionalType);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      // If we needed to build an array to hold the array elements 
+      // (e.g. BUILTIN_TYPE_BASE64BINARY) then punt by making these elements
+      // be variant.
+
+      if(arrayTypeParams.GetCount() != 1) {
+        additionalType->prefix.flags = TD_INTERFACE_TYPE | XPT_TDP_POINTER;
+        additionalType->type.iface = iidx.Get(IIDX::IDX_nsIVariant);
+      }
+      else {
+        // Copy the gathered type into the referenced additional type.
+        *additionalType = arrayTypeParams.GetArray()->type;
+      
+        // We don't support arrays of AString. So, if the element type is
+        // AString then we poke in wstring instead.
+        if (additionalType->prefix.flags == (TD_DOMSTRING | XPT_TDP_POINTER)) {
+          additionalType->prefix.flags = TD_PWSTRING | XPT_TDP_POINTER;
+        } 
+      }
+
+      // Add the leading 'length' param.
+      paramDesc->type.prefix.flags = TD_UINT32;
+      
+      // Alloc another param descriptor to hold the array info.
+      paramDesc = aParams->GetNextParam();
+      if (!paramDesc) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      // Set this *second* param as an array and return.
+      paramDesc->type.prefix.flags = TD_ARRAY | XPT_TDP_POINTER;
+      paramDesc->type.type.additional_type = typeIndex;
+      return NS_OK;
+    }
+
+    switch(contentModel) {
       case nsISchemaComplexType::CONTENT_MODEL_SIMPLE:
         rv = complexType->GetSimpleBaseType(getter_AddRefs(simpleType));
         if (NS_FAILED(rv)) {
@@ -626,6 +707,7 @@ static nsresult GetParamDescOfType(nsIInterfaceInfoSuperManager* iism,
         break;
       default:
         NS_ERROR("unexpected contentModel!");
+      case nsISchemaComplexType::CONTENT_MODEL_EMPTY:
         return NS_ERROR_UNEXPECTED;
     }
 
@@ -645,8 +727,8 @@ static nsresult GetParamDescOfType(nsIInterfaceInfoSuperManager* iism,
       return NS_ERROR_UNEXPECTED;
     }
 
-    // XXX figure out if this is an array (or was that already handled
-    // by the CONTENT_MODEL_EMPTY check above???
+    // XXX I *think* we can safely assume that we've already handled the case
+    // where the type is an array.
 
     rv = FindOrConstructInterface(iism, aSet, complexType, modelGroup, iidx, 
                                   defaultResult, qualifier, &typeIndex);
@@ -703,12 +785,29 @@ do_simple:
         paramDesc->type.prefix.flags = TD_UINT8;
         return NS_OK;
       case nsISchemaBuiltinType::BUILTIN_TYPE_BASE64BINARY:
-        // XXX isArray issues.
-        paramDesc->type.prefix.flags = TD_UINT8;
-        return NS_OK;
       case nsISchemaBuiltinType::BUILTIN_TYPE_HEXBINARY:
-        // XXX isArray issues.
-        paramDesc->type.prefix.flags = TD_UINT8;
+        // XXX We are treating this as an array of TD_UINT8.
+
+        rv = aSet->AllocateAdditionalType(&typeIndex, &additionalType);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+
+        // Copy the element type into the referenced additional type.
+        additionalType->prefix.flags = TD_UINT8;
+
+        // Add the leading 'length' param.
+        paramDesc->type.prefix.flags = TD_UINT32;
+      
+        // Alloc another param descriptor to hold the array info.
+        paramDesc = aParams->GetNextParam();
+        if (!paramDesc) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        // Set this *second* param as an array and return.
+        paramDesc->type.prefix.flags = TD_ARRAY | XPT_TDP_POINTER;
+        paramDesc->type.type.additional_type = typeIndex;
         return NS_OK;
       case nsISchemaBuiltinType::BUILTIN_TYPE_POSITIVEINTEGER:
       case nsISchemaBuiltinType::BUILTIN_TYPE_NONNEGATIVEINTEGER:
@@ -826,7 +925,6 @@ do_simple:
 
 static nsresult GetParamDescOfPart(nsIInterfaceInfoSuperManager* iism,
                                    nsIGenericInterfaceInfoSet* aSet,
-                                   
                                    nsIWSDLPart* aPart,
                                    const IIDX& iidx,
                                    XPTParamDescriptor* defaultResult,
@@ -883,7 +981,7 @@ static nsresult GetParamDescOfPart(nsIInterfaceInfoSuperManager* iism,
   }
 
   return GetParamDescOfType(iism, aSet, type, iidx, defaultResult,
-                            qualifier, aParams);
+                            qualifier, 0, aParams);
 }
 
 /***************************************************************************/
