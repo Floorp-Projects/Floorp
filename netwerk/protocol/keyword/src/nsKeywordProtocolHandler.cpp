@@ -55,21 +55,6 @@ static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 nsKeywordProtocolHandler::nsKeywordProtocolHandler() {
 }
 
-nsresult
-nsKeywordProtocolHandler::Init() {
-    nsresult rv;
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString url;
-    rv = prefs->GetCharPref("keyword.URL", getter_Copies(url));
-    // if we can't find a keyword.URL keywords won't work.
-    if (NS_FAILED(rv) || !url || !*url) return NS_ERROR_FAILURE;
-
-    mKeywordURL.Assign(url);
-    return NS_OK;
-}
-
 nsKeywordProtocolHandler::~nsKeywordProtocolHandler() {
 }
 
@@ -84,10 +69,7 @@ nsKeywordProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aRes
     if (ph == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(ph);
-    nsresult rv = ph->Init();
-    if (NS_SUCCEEDED(rv)) {
-        rv = ph->QueryInterface(aIID, aResult);
-    }
+    nsresult rv = ph->QueryInterface(aIID, aResult);
     NS_RELEASE(ph);
     return rv;
 }
@@ -183,14 +165,20 @@ NS_IMETHODIMP
 nsKeywordProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
     nsresult rv;
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    NS_ASSERTION(!mKeywordURL.IsEmpty(), "someone's trying to use the keyword handler even though it hasn't been init'd");
+    nsXPIDLCString url;
+    rv = prefs->GetCharPref("keyword.URL", getter_Copies(url));
+    // if we can't find a keyword.URL keywords won't work.
+    if (url.IsEmpty())
+        return NS_ERROR_FAILURE;
 
     nsCAutoString path;
     rv = uri->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
-    char *httpSpec = MangleKeywordIntoHTTPURL(path.get(), mKeywordURL.get());
+    char *httpSpec = MangleKeywordIntoHTTPURL(path.get(), url.get());
     if (!httpSpec) return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr<nsIIOService> serv(do_GetIOService(&rv));
