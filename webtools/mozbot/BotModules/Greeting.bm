@@ -54,7 +54,7 @@ sub RegisterConfig {
         ['hitEnabled', 1, 1, 1], # set to 0 to disable hitting
         ['pat', 1, 1, ['/me patpats %target', '%target: yes dear, *pat* *pat*', '/me pats %target condescendingly', '%target: *pat* *pat*']],
         ['patIndex', 1, 1, 0],
-        ['patProtected', 1, 1, {'' => '%source: what did I do now?', '%source: why? what did i do wrong?'}],
+        ['patProtected', 1, 1, {'' => '%source: what did I do now?', 'yourself' => '%source: why? what did i do wrong?'}],
         ['hug', 1, 1, ['/me hugs %target', '%target: *hug*', '/me hugs %target lovingly', '%target: come \'ere! *hugs and kisses*']],
         ['hugIndex', 1, 1, 0],
         ['yousuck', 1, 1, ['%: no, *you* suck!', '/me pouts', '/me cries', '/me . o O ( now what have i done... )']],
