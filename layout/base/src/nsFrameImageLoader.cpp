@@ -45,12 +45,12 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_LAYOUT nsresult
 NS_NewFrameImageLoader(nsIFrameImageLoader** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aResult, "null ptr");
+  if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
   nsFrameImageLoader* it = new nsFrameImageLoader();
-  if (nsnull == it) {
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return it->QueryInterface(kIFrameImageLoaderIID, (void**) aResult);
@@ -75,11 +75,9 @@ nsFrameImageLoader::nsFrameImageLoader()
 
 nsFrameImageLoader::~nsFrameImageLoader()
 {
-  PerFrameData* pfd = mFrames;
-  while (nsnull != pfd) {
-    PerFrameData* next = pfd->mNext;
+  for (PerFrameData *next, *pfd = mFrames; pfd; pfd = next) {
+    next = pfd->mNext;
     delete pfd;
-    pfd = next;
   }
   NS_IF_RELEASE(mImageRequest);
   NS_IF_RELEASE(mPresContext);
@@ -92,7 +90,7 @@ NS_IMPL_RELEASE(nsFrameImageLoader)
 NS_IMETHODIMP
 nsFrameImageLoader::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (!aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kIFrameImageLoaderIID)) {
@@ -129,12 +127,12 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
                          void* aClosure,
                          void* aKey)
 {
-  NS_PRECONDITION(nsnull != aPresContext, "null ptr");
-  if (nsnull == aPresContext) {
+  NS_PRECONDITION(aPresContext, "null ptr");
+  if (!aPresContext) {
     return NS_ERROR_NULL_POINTER;
   }
-  NS_PRECONDITION(nsnull == mPresContext, "double init");
-  if (nsnull != mPresContext) {
+  NS_PRECONDITION(!mPresContext, "double init");
+  if (mPresContext) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
   
@@ -167,7 +165,7 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
 
   if (aTargetFrame || aCallBack) {
     PerFrameData* pfd = new PerFrameData;
-    if (nsnull == pfd) {
+    if (!pfd) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     pfd->mFrame = aTargetFrame;
@@ -198,18 +196,16 @@ nsFrameImageLoader::AddFrame(nsIFrame* aFrame,
                              void* aClosure,
                              void* aKey)
 {
-  PerFrameData* pfd = mFrames;
-  while (pfd) {
+  PerFrameData* pfd;
+  for (pfd = mFrames; pfd; pfd = pfd->mNext)
     if (pfd->mKey == aKey) {
       pfd->mCallBack = aCallBack;
       pfd->mClosure = aClosure;
       return NS_OK;
     }
-    pfd = pfd->mNext;
-  }
 
   pfd = new PerFrameData;
-  if (nsnull == pfd) {
+  if (!pfd) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   pfd->mFrame = aFrame;
@@ -239,9 +235,9 @@ nsFrameImageLoader::AddFrame(nsIFrame* aFrame,
 NS_IMETHODIMP
 nsFrameImageLoader::RemoveFrame(void* aKey)
 {
-  PerFrameData** pfdp = &mFrames;
+  PerFrameData** pfdp;
   PerFrameData* pfd;
-  while (nsnull != (pfd = *pfdp)) {
+  for (pfdp = &mFrames; (pfd = *pfdp); pfdp = &pfd->mNext)
     if (pfd->mKey == aKey) {
       *pfdp = pfd->mNext;
       if (pfd == mCurNotifiedFrame)
@@ -249,8 +245,6 @@ nsFrameImageLoader::RemoveFrame(void* aKey)
       delete pfd;
       return NS_OK;
     }
-    pfdp = &pfd->mNext;
-  }
   return NS_OK;
 }
 
@@ -259,8 +253,8 @@ nsFrameImageLoader::StopImageLoad(PRBool aStopChrome)
 {
   // don't stop chrome
   if (!aStopChrome) {
-      if (mURL.EqualsWithConversion("chrome:", PR_TRUE, 7))
-          return NS_ERROR_FAILURE;
+    if (mURL.EqualsWithConversion("chrome:", PR_TRUE, 7))
+      return NS_ERROR_FAILURE;
   }
 
 #ifdef NOISY_IMAGE_LOADING
@@ -268,7 +262,7 @@ nsFrameImageLoader::StopImageLoad(PRBool aStopChrome)
   fputs(mURL, stdout);
   printf("\n");
 #endif
-  if (nsnull != mImageRequest) {
+  if (mImageRequest) {
     mImageRequest->RemoveObserver(this);
     NS_RELEASE(mImageRequest);
   }
@@ -279,7 +273,7 @@ nsFrameImageLoader::StopImageLoad(PRBool aStopChrome)
 NS_IMETHODIMP
 nsFrameImageLoader::AbortImageLoad()
 {
-  if (nsnull != mImageRequest) {
+  if (mImageRequest) {
     mImageRequest->Interrupt();
   }
   return NS_OK;
@@ -291,8 +285,8 @@ nsFrameImageLoader::IsSameImageRequest(const nsString& aURL,
                                        const nsSize* aDesiredSize,
                                        PRBool* aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aResult, "null ptr");
+  if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -308,7 +302,7 @@ nsFrameImageLoader::IsSameImageRequest(const nsString& aURL,
   // interrupted the load of the image. The good things is that
   // the image is still in the image cache. The bad thing is that
   // we don't share the image loader.
-  if ((nsnull == mFrames) && (mImageLoadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY)) {
+  if (!mFrames && (mImageLoadStatus & NS_IMAGE_LOAD_STATUS_IMAGE_READY)) {
     *aResult = PR_FALSE;
     return NS_OK;
   }
@@ -353,13 +347,13 @@ nsFrameImageLoader::IsSameImageRequest(const nsString& aURL,
 NS_IMETHODIMP
 nsFrameImageLoader::SafeToDestroy(PRBool* aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aResult, "null ptr");
+  if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
   *aResult = PR_FALSE;
-  if ((nsnull == mFrames) && (0 == mNotifyLockCount)) {
+  if (!mFrames && !mNotifyLockCount) {
     *aResult = PR_TRUE;
   }
   return NS_OK;
@@ -382,8 +376,8 @@ nsFrameImageLoader::GetPresContext(nsIPresContext** aPresContext)
 NS_IMETHODIMP
 nsFrameImageLoader::GetImage(nsIImage** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aResult, "null ptr");
+  if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
   *aResult = mImage;
@@ -402,8 +396,8 @@ nsFrameImageLoader::GetSize(nsSize& aResult)
 NS_IMETHODIMP
 nsFrameImageLoader::GetImageLoadStatus(PRUint32* aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aResult, "null ptr");
+  if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
   *aResult = mImageLoadStatus;
@@ -475,7 +469,7 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     break;
 
   case nsImageNotification_kPixmapUpdate:
-    if ((nsnull == mImage) && (nsnull != aImage)) {
+    if (!mImage && aImage) {
       mImage = aImage;
       NS_ADDREF(aImage);
     }
@@ -495,10 +489,10 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     // XXX Temporary fix to deal with the case of animated
     // images that are preloaded. If there are no frames
     // registered, then stop loading this image.
-    if (nsnull == mFrames) {
+    if (!mFrames) {
       AbortImageLoad();
     }
-    if ((nsnull == mImage) && (nsnull != aImage)) {
+    if (!mImage && aImage) {
       mImage = aImage;
       NS_ADDREF(aImage);
       mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_IMAGE_READY;
@@ -520,17 +514,16 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
 
   case nsImageNotification_kIsTransparent:
     // Mark the frame's view as having transparent areas
-    // XXX this is pretty vile; change this so that we set another frame status bit and then pass on a notification *or* lets just start passing on the notifications directly to the frames and eliminate all of this code.
-    pfd = mFrames;
-    while (pfd) {
+    // XXX this is pretty vile; change this so that we set another frame status
+    // bit and then pass on a notification *or* lets just start passing on the
+    // notifications directly to the frames and eliminate all of this code.
+    for (pfd = mFrames; pfd; pfd = pfd->mNext)
       if (pfd->mFrame) {
         pfd->mFrame->GetView(mPresContext, &view);
         if (view) {
           view->SetContentTransparency(PR_TRUE);
         }
       }
-      pfd = pfd->mNext;
-    }
     break;
 
   case nsImageNotification_kAborted:
@@ -565,25 +558,25 @@ nsFrameImageLoader::NotifyFrames(PRBool aIsSizeUpdate)
 {
   mCurNotifiedFrame = mFrames;
   PerFrameData* pfd; // Initialized on the next line
-  while (nsnull != (pfd = mCurNotifiedFrame)) {
-    if ((aIsSizeUpdate && pfd->mNeedSizeUpdate) || !aIsSizeUpdate) {
+  while ((pfd = mCurNotifiedFrame)) {
+    if (!aIsSizeUpdate || pfd->mNeedSizeUpdate) {
       if (pfd->mCallBack) {
 #ifdef NOISY_IMAGE_LOADING
-        printf("  notify pfd = %p frame=%p status=%x\n", pfd, pfd->mFrame, mImageLoadStatus);
+        printf("  notify pfd = %p frame=%p status=%x\n", pfd, pfd->mFrame,
+               mImageLoadStatus);
 #endif
         (*pfd->mCallBack)(mPresContext, this, pfd->mFrame, pfd->mClosure,
                           mImageLoadStatus);
-      }
-      if (pfd != mCurNotifiedFrame) {
-        continue; //pfd has been deleted in the callback, don't chain to next
-      }
+        if (pfd != mCurNotifiedFrame) {
+          continue; //pfd has been deleted in the callback, don't chain to next
+        }
+      } 
       if (aIsSizeUpdate) {
         pfd->mNeedSizeUpdate = PR_FALSE;
       }
     }
     mCurNotifiedFrame = pfd->mNext;
   }
-  
 }
 
 void
@@ -594,8 +587,7 @@ nsFrameImageLoader::DamageRepairFrames(const nsRect* aDamageRect)
   nsRect bounds;
   nsIView* view;
 
-  PerFrameData* pfd = mFrames;
-  while (nsnull != pfd) {
+  for (PerFrameData* pfd = mFrames; pfd; pfd = pfd->mNext) {
     nsIFrame* frame = pfd->mFrame;
 
     if (frame) {
@@ -617,7 +609,7 @@ nsFrameImageLoader::DamageRepairFrames(const nsRect* aDamageRect)
       // itself. Add some API calls to nsIFrame to allow a caller to invalidate
       // parts of the frame...
       frame->GetView(mPresContext, &view);
-      if (nsnull == view) {
+      if (!view) {
         frame->GetOffsetFromView(mPresContext, offset, &view);
         bounds.x += offset.x;
         bounds.y += offset.y;
@@ -626,11 +618,9 @@ nsFrameImageLoader::DamageRepairFrames(const nsRect* aDamageRect)
       nsCOMPtr<nsIViewManager> vm = nsnull;
       nsresult rv = NS_OK;
       rv = view->GetViewManager(*getter_AddRefs(vm));
-      if (NS_SUCCEEDED(rv) && nsnull != vm) {
+      if (NS_SUCCEEDED(rv) && vm) {
         vm->UpdateView(view, bounds, NS_VMREFRESH_NO_SYNC);    
       }
     }
-
-    pfd = pfd->mNext;
   }
 }
