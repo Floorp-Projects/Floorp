@@ -96,6 +96,7 @@ titledbutton[class=secure] {
 }
 
 titledbutton[class=insecure] {
+  display: none;
 }
  
 toolbar#taskbar titledbutton[pseudoclass~="active"] {
