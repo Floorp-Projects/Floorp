@@ -324,7 +324,10 @@ pa_new_document(FO_Present_Types format_out,
     {
 	doc_data->url = XP_STRDUP(url_struct->address);
     }
-
+#ifdef NU_CACHE
+	/* TODO -Gagan*/
+	doc_data->from_net = (url_struct->cache_file != NULL) ? FALSE : TRUE;
+#else
     if ((url_struct->cache_file != NULL)||(url_struct->memory_copy != NULL))
     {
 	doc_data->from_net = FALSE;
@@ -333,6 +336,7 @@ pa_new_document(FO_Present_Types format_out,
     {
 	doc_data->from_net = TRUE;
     }
+#endif /* NU_CACHE */
 
     /*
      * A NET_SUPER_RELOAD should always make everything reload, so no
