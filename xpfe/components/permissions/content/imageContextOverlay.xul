@@ -88,7 +88,7 @@
         if (!permissionmanager) {
           return;
         }
-        permissionmanager.add(window._content.location, false, IMAGEPERMISSION);
+        permissionmanager.add(gContextMenu.imageURL, false, IMAGEPERMISSION);
       },
 
       // Unblock image from loading in the future.
@@ -99,7 +99,7 @@
         if (!permissionmanager) {
           return;
         }
-        permissionmanager.add(window._content.location, true, IMAGEPERMISSION);
+        permissionmanager.add(gContextMenu.imageURL, true, IMAGEPERMISSION);
       },
 
       initImageBlocking : function () {
