@@ -28,8 +28,8 @@ nsTextFragment::~nsTextFragment()
 void
 nsTextFragment::ReleaseText()
 {
-  if (mLength && m1b && mInHeap) {
-    if (mIs2b) {
+  if (mState.mLength && m1b && mState.mInHeap) {
+    if (mState.mIs2b) {
       delete [] m2b;
     }
     else {
@@ -37,9 +37,9 @@ nsTextFragment::ReleaseText()
     }
   }
   m1b = nsnull;
-  mIs2b = 0;
-  mInHeap = 0;
-  mLength = 0;
+  mState.mIs2b = 0;
+  mState.mInHeap = 0;
+  mState.mLength = 0;
 }
 
 nsTextFragment::nsTextFragment(const nsTextFragment& aOther)
@@ -106,9 +106,9 @@ nsTextFragment::SetTo(PRUnichar* aBuffer, PRInt32 aLength, PRBool aRelease)
   ReleaseText();
 
   m2b = aBuffer;
-  mIs2b = 1;
-  mInHeap = aRelease ? 1 : 0;
-  mLength = aLength;
+  mState.mIs2b = 1;
+  mState.mInHeap = aRelease ? 1 : 0;
+  mState.mLength = aLength;
 }
 
 void
@@ -137,9 +137,9 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
 
         // Setup our fields
         m2b = nt;
-        mIs2b = 1;
-        mInHeap = 1;
-        mLength = aLength;
+        mState.mIs2b = 1;
+        mState.mInHeap = 1;
+        mState.mLength = aLength;
       }
     }
     else {
@@ -155,9 +155,9 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
 
         // Setup our fields
         m1b = nt;
-        mIs2b = 0;
-        mInHeap = 1;
-        mLength = aLength;
+        mState.mIs2b = 0;
+        mState.mInHeap = 1;
+        mState.mLength = aLength;
       }
     }
   }
@@ -173,9 +173,9 @@ nsTextFragment::SetTo(const char* aBuffer, PRInt32 aLength)
       nsCRT::memcpy(nt, aBuffer, sizeof(unsigned char) * aLength);
 
       m1b = nt;
-      mIs2b = 0;
-      mInHeap = 1;
-      mLength = aLength;
+      mState.mIs2b = 0;
+      mState.mInHeap = 1;
+      mState.mLength = aLength;
     }
   }
 }
@@ -183,11 +183,11 @@ nsTextFragment::SetTo(const char* aBuffer, PRInt32 aLength)
 void
 nsTextFragment::AppendTo(nsString& aString) const
 {
-  if (mIs2b) {
-    aString.Append(m2b, mLength);
+  if (mState.mIs2b) {
+    aString.Append(m2b, mState.mLength);
   }
   else {
-    aString.Append((char*)m1b, mLength);
+    aString.Append((char*)m1b, mState.mLength);
   }
 }
 
@@ -196,10 +196,10 @@ nsTextFragment::CopyTo(PRUnichar* aDest, PRInt32 aOffset, PRInt32 aCount)
 {
   if (aOffset < 0) aOffset = 0;
   if (aOffset + aCount > GetLength()) {
-    aCount = mLength - aOffset;
+    aCount = mState.mLength - aOffset;
   }
   if (0 != aCount) {
-    if (mIs2b) {
+    if (mState.mIs2b) {
       nsCRT::memcpy(aDest, m2b + aOffset, sizeof(PRUnichar) * aCount);
     }
     else {
@@ -217,10 +217,10 @@ nsTextFragment::CopyTo(char* aDest, PRInt32 aOffset, PRInt32 aCount)
 {
   if (aOffset < 0) aOffset = 0;
   if (aOffset + aCount > GetLength()) {
-    aCount = mLength - aOffset;
+    aCount = mState.mLength - aOffset;
   }
   if (0 != aCount) {
-    if (mIs2b) {
+    if (mState.mIs2b) {
       PRUnichar* cp = m2b + aOffset;
       PRUnichar* end = cp + aCount;
       while (cp < end) {
