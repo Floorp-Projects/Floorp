@@ -21,7 +21,7 @@
 
 #include "nsISound.h"
 
-#include <Beep.h>
+class BSimpleGameSound;
 
 class nsSound : public nsISound {
  public: 
@@ -36,6 +36,8 @@ class nsSound : public nsISound {
   NS_IMETHOD Play(nsIFileSpec *filespec);
 
   NS_IMETHOD Beep(void);
+
+  BSimpleGameSound *mSound;
 
 };
 
