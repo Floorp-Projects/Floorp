@@ -3242,7 +3242,7 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
         nsCOMPtr<nsIComponentLoader> loader;
         int typeIndex;
         rv = AddLoaderType(loaderType.get(), &typeIndex);
-        if (NS_FAILED(rv));
+        if (NS_FAILED(rv))
             return rv;
         GetLoaderForType(typeIndex, getter_AddRefs(loader));
     }
