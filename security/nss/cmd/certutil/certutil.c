@@ -390,7 +390,7 @@ getSignatureOidTag(KeyType keyType, SECOidTag hashAlgTag)
 static SECStatus
 CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
         SECOidTag hashAlgTag, CERTName *subject, char *phone, int ascii, 
-	const char *emailAddrs, PRFileDesc *outFile)
+	const char *emailAddrs, const char *dnsNames, PRFileDesc *outFile)
 {
     CERTSubjectPublicKeyInfo *spki;
     CERTCertificateRequest *cr;
@@ -949,7 +949,7 @@ Usage(char *progName)
     FPS "\t%s -C [-c issuer-name | -x] -i cert-request-file -o cert-file\n"
 	"\t\t [-m serial-number] [-w warp-months] [-v months-valid]\n"
         "\t\t [-f pwfile] [-d certdir] [-P dbprefix] [-1] [-2] [-3] [-4] [-5]\n"
-	"\t\t [-6] [-7 emailAddrs]\n",
+	"\t\t [-6] [-7 emailAddrs] [-8 dns-names]\n",
 	progName);
     FPS "\t%s -D -n cert-name [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t%s -E -n cert-name -t trustargs [-d certdir] [-P dbprefix] [-a] [-i input]\n", 
@@ -975,7 +975,8 @@ Usage(char *progName)
 	"\t\t [-k key-type] [-h token-name] [-g key-size]\n"
         "\t\t [-m serial-number] [-w warp-months] [-v months-valid]\n"
 	"\t\t [-f pwfile] [-d certdir] [-P dbprefix]\n"
-        "\t\t [-p phone] [-1] [-2] [-3] [-4] [-5] [-6] [-7 emailAddrs]\n",
+        "\t\t [-p phone] [-1] [-2] [-3] [-4] [-5] [-6] [-7 emailAddrs]\n"
+        "\t\t [-8 dns-names]\n",
 	progName);
     FPS "\t%s -U [-X] [-d certdir] [-P dbprefix]\n", progName);
     exit(1);
@@ -1048,6 +1049,10 @@ static void LongUsage(char *progName)
 	"   -5 ");
     FPS "%-20s Create extended key usage extension\n",
 	"   -6 ");
+    FPS "%-20s Create an email subject alt name extension\n",
+	"   -7 ");
+    FPS "%-20s Create an dns subject alt name extension\n",
+	"   -8 ");
     FPS "\n");
 
     FPS "%-15s Generate a new key pair\n",
@@ -1256,6 +1261,10 @@ static void LongUsage(char *progName)
 	"   -5 ");
     FPS "%-20s Create extended key usage extension\n",
 	"   -6 ");
+    FPS "%-20s Create an email subject alt name extension\n",
+	"   -7 ");
+    FPS "%-20s Create an dns subject alt name extension\n",
+	"   -8 ");
     FPS "\n");
 
     exit(1);
@@ -1576,12 +1585,11 @@ AddNscpCertType (void *extHandle)
 
 }
 
-
 static SECStatus 
-AddEmailSubjectAlt(void *extHandle, const char *emailAddrs)
+AddSubjectAltNames(void *extHandle, const char *names, CERTGeneralNameType type)
 {
     SECItem item = { 0, NULL, 0 };
-    CERTGeneralName *emailList = NULL;
+    CERTGeneralName *nameList = NULL;
     CERTGeneralName *current;
     PRCList *prev = NULL;
     PRArenaPool *arena;
@@ -1595,10 +1603,10 @@ AddEmailSubjectAlt(void *extHandle, const char *emailAddrs)
     }
 	
     /*
-     * walk down the comma separated list of email addresses. NOTE: there is
+     * walk down the comma separated list of names. NOTE: there is
      * no sanity checks to see if the email address look like email addresses.
      */
-    for (cp=emailAddrs; cp; cp = PORT_Strchr(cp,',')) {
+    for (cp=names; cp; cp = PORT_Strchr(cp,',')) {
 	int len;
 	char *end;
 
@@ -1622,8 +1630,9 @@ AddEmailSubjectAlt(void *extHandle, const char *emailAddrs)
 	    current->l.prev = prev;
 	    prev->next = &(current->l);
 	} else {
-	    emailList = current;
+	    nameList = current;
 	}
+	current->type = type;
 	current->type = certRFC822Name;
 	current->name.other.data = (unsigned char *)tbuf;
 	current->name.other.len = PORT_Strlen(tbuf);
@@ -1633,14 +1642,14 @@ AddEmailSubjectAlt(void *extHandle, const char *emailAddrs)
 	goto loser;
     }
     /* no email address */
-    if (!emailList) {
+    if (!nameList) {
 	/*rv=SECSuccess; We know rv is SECSuccess because of the previous if*/
 	goto done; 
     }
-    emailList->l.prev = prev;
-    current->l.next = &(emailList->l);
+    nameList->l.prev = prev;
+    current->l.next = &(nameList->l);
 
-    CERT_EncodeAltNameExtension(arena, emailList, &item);
+    CERT_EncodeAltNameExtension(arena, nameList, &item);
     rv = CERT_AddExtension (extHandle, SEC_OID_X509_SUBJECT_ALT_NAME, &item, 
 							PR_FALSE, PR_TRUE);
 done:
@@ -1649,6 +1658,19 @@ loser:
     return rv;
 
 }
+
+static SECStatus 
+AddEmailSubjectAlt(void *extHandle, const char *emailAddrs)
+{
+    return AddSubjectAltNames(extHandle, emailAddrs, certRFC822Name);
+}
+
+static SECStatus 
+AddDNSSubjectAlt(void *extHandle, const char *dnsNames)
+{
+    return AddSubjectAltNames(extHandle, dnsNames, certDNSName);
+}
+
 
 typedef SECStatus (* EXTEN_VALUE_ENCODER)
 		(PRArenaPool *extHandle, void *value, SECItem *encodedValue);
@@ -1980,6 +2002,7 @@ CreateCert(
 	int     warpmonths,
 	int     validitylength,
 	const char *emailAddrs,
+	const char *dnsNames,
 	PRBool  ascii,
 	PRBool  selfsign,
 	PRBool	keyUsage, 
@@ -2067,6 +2090,12 @@ CreateCert(
 		break;
 	}
 
+	if (dnsNames != NULL) {
+	    rv = AddDNSSubjectAlt(extHandle,dnsNames);
+	    if (rv)
+		break;
+	}
+
 	CERT_FinishExtensions(extHandle);
 
 	certDER = SignCert(handle, subjectCert, selfsign, hashAlgTag,
@@ -2127,6 +2156,7 @@ enum {
     opt_AddNSCertTypeExt,
     opt_AddExtKeyUsageExt,
     opt_ExtendedEmailAddrs,
+    opt_ExtendedDNSNames,
     opt_ASCIIForIO,
     opt_ValidityTime,
     opt_IssuerName,
@@ -2191,6 +2221,7 @@ static secuCommandFlag certutil_options[] =
 	{ /* opt_AddNSCertTypeExt    */  '5', PR_FALSE, 0, PR_FALSE },
 	{ /* opt_AddExtKeyUsageExt   */  '6', PR_FALSE, 0, PR_FALSE },
 	{ /* opt_ExtendedEmailAddrs  */  '7', PR_TRUE,  0, PR_FALSE },
+	{ /* opt_ExtendedDNSNames    */  '8', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_ASCIIForIO          */  'a', PR_FALSE, 0, PR_FALSE },
 	{ /* opt_ValidityTime        */  'b', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_IssuerName          */  'c', PR_TRUE,  0, PR_FALSE },
@@ -2728,6 +2759,7 @@ main(int argc, char **argv)
 	             certutil.options[opt_PhoneNumber].arg,
 	             certutil.options[opt_ASCIIForIO].activated,
 		     certutil.options[opt_ExtendedEmailAddrs].arg,
+		     certutil.options[opt_ExtendedDNSNames].arg,
 		     outFile ? outFile : PR_STDOUT);
 	if (rv) 
 	    goto shutdown;
@@ -2767,6 +2799,7 @@ main(int argc, char **argv)
 	                inFile, outFile, privkey, &pwdata, hashAlgTag,
 	                serialNumber, warpmonths, validitylength,
 		        certutil.options[opt_ExtendedEmailAddrs].arg,
+		        certutil.options[opt_ExtendedDNSNames].arg,
 	                certutil.options[opt_ASCIIForIO].activated,
 	                certutil.options[opt_SelfSign].activated,
 	                certutil.options[opt_AddKeyUsageExt].activated,
