@@ -368,6 +368,24 @@ nsUnknownContentTypeDialog.prototype = {
         // Set the location text, which is separate from the intro text so it can be cropped
         var location = this.dialogElement( "source" );
         location.value = pathString;
+        
+        // Show the type of file. 
+        var type = this.dialogElement("type");
+        var mimeInfo = this.mLauncher.MIMEInfo;
+        
+        // 1. Try to use the pretty description of the type, if one is available.
+        var typeString = mimeInfo.Description;
+        
+        if (typeString == "") {
+          // 2. If there is none, use the extension to identify the file, e.g. "ZIP file"
+          if (mimeInfo.primaryExtension != "")
+            typeString = mimeInfo.primaryExtension.toUpperCase() + " file";
+          // 3. If we can't even do that, just give up and show the MIME type. 
+          else
+            typeString = mimeInfo.MIMEType;
+        }
+        
+        type.value = typeString;
     },
 
     // Returns true if opening the default application makes sense.
