@@ -37,7 +37,6 @@
 package org.mozilla.javascript.optimizer;
 
 import java.util.Hashtable;
-import java.io.IOException;
 import java.lang.reflect.Method;
 
 import org.mozilla.javascript.Invoker;
@@ -265,21 +264,11 @@ public class InvokerImpl extends Invoker {
         }
         cfw.stopMethod((short)3, null); // three arguments, including the this pointer???
 
+        byte[] bytes = cfw.toByteArray();
+
         // Add class to our classloader.
-        java.io.ByteArrayOutputStream bos =
-            new java.io.ByteArrayOutputStream(550);
-
+        classLoader.defineClass(className, bytes);
         try {
-            cfw.write(bos);
-        }
-        catch (IOException ioe) {
-            throw new RuntimeException("unexpected IOException" + ioe.toString());
-        }
-
-        try {
-            byte[] bytes = bos.toByteArray();
-
-            classLoader.defineClass(className, bytes);
             Class c = classLoader.loadClass(className, true);
             result = (Invoker)c.newInstance();
 

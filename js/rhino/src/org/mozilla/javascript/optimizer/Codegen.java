@@ -41,7 +41,7 @@ package org.mozilla.javascript.optimizer;
 import org.mozilla.javascript.*;
 import org.mozilla.classfile.*;
 import java.util.*;
-import java.io.*;
+import java.io.IOException;
 import java.lang.reflect.*;
 
 /**
@@ -71,7 +71,6 @@ public class Codegen extends Interpreter {
                           Object securityDomain,
                           SecuritySupport securitySupport,
                           ClassNameHelper nameHelper)
-        throws IOException
     {
         Vector classFiles = new Vector();
         Vector names = new Vector();
@@ -503,14 +502,7 @@ public class Codegen extends Interpreter {
 
         emitConstantDudeInitializers();
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream(512);
-        try {
-            classFile.write(out);
-        }
-        catch (IOException ioe) {
-            throw new RuntimeException("unexpected IOException");
-        }
-        byte[] bytes = out.toByteArray();
+        byte[] bytes = classFile.toByteArray();
 
         namesVector.addElement(name);
         classFilesVector.addElement(bytes);

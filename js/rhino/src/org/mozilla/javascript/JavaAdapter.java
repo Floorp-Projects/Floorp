@@ -43,7 +43,7 @@ package org.mozilla.javascript;
 
 import org.mozilla.classfile.*;
 import java.lang.reflect.*;
-import java.io.*;
+import java.io.IOException;
 import java.util.*;
 
 public class JavaAdapter extends ScriptableObject {
@@ -313,14 +313,7 @@ public class JavaAdapter extends ScriptableObject {
                 generateMethod(cfw, adapterName, id, parms, Object.class);
             }
         }
-        ByteArrayOutputStream out = new ByteArrayOutputStream(512);
-        try {
-            cfw.write(out);
-        }
-        catch (IOException ioe) {
-            throw new RuntimeException("unexpected IOException");
-        }
-        byte[] bytes = out.toByteArray();
+        byte[] bytes = cfw.toByteArray();
 
         if (nameHelper != null) {
             try {
