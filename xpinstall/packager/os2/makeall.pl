@@ -236,9 +236,9 @@ if(system("cp $ENV{MOZ_SRC}/mozilla/LICENSE $inDistPath/setup/license.txt"))
 }
 
 # copy readme for the installer
-if(system("cp $ENV{MOZ_SRC}/mozilla/README.TXT $inDistPath/setup/readme.txt"))
+if(system("cp $ENV{MOZ_SRC}/mozilla/README/mozilla/README.os2 $inDistPath/setup/readme.txt"))
 {
-  die "\n Error: copy $ENV{MOZ_SRC}/mozilla/README.TXT $inDistPath/setup/readme.txt\n";
+  die "\n Error: copy $ENV{MOZ_SRC}/mozilla/README/mozilla/README.os2 $inDistPath/setup/readme.txt\n";
 }
 
 # copy the icons
