@@ -47,13 +47,13 @@
 	<!ENTITY findAgainCmd.accesskey "g">
 
 <!-- View menu items -->
-<!ENTITY showComposeToolbarCmd.label "Show Mail Toolbar">
+<!ENTITY showComposeToolbarCmd.label "Mail Toolbar">
 	<!ENTITY showComposeToolbarCmd.accesskey "o">
-<!ENTITY showFormatToolbarCmd.label "Show Formatting Toolbar">
+<!ENTITY showFormatToolbarCmd.label "Formatting Toolbar">
 	<!ENTITY showFormatToolbarCmd.accesskey "F">
-<!ENTITY showStatusbarCmd.label ".Show Statusbar">
+<!ENTITY showStatusbarCmd.label ".Statusbar">
 	<!ENTITY showStatusbarCmd.accesskey "S">
-<!ENTITY showTaskbarCmd.label "Show Taskbar">
+<!ENTITY showTaskbarCmd.label "Taskbar">
 	<!ENTITY showTaskbarCmd.accesskey "T">
 <!ENTITY showParagraphMarksCmd.label ".Show Paragraph Marks">
 <!ENTITY pageSourceCmd.label ".Page Source">
