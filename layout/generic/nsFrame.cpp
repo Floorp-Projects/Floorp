@@ -4230,8 +4230,7 @@ nsFrame::ConsiderChildOverflow(nsPresContext* aPresContext,
   const nsStyleDisplay* disp = GetStyleDisplay();
   // check here also for hidden as table frames (table, tr and td) currently 
   // don't wrap their content into a scrollable frame if overflow is specified
-  if (NS_STYLE_OVERFLOW_CLIP != disp->mOverflow &&
-      NS_STYLE_OVERFLOW_HIDDEN != disp->mOverflow) {
+  if (!disp->IsTableClip()) {
     nsRect* overflowArea = aChildFrame->GetOverflowAreaProperty();
     if (overflowArea) {
       nsRect childOverflow(*overflowArea);
