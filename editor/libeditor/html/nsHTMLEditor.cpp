@@ -90,6 +90,8 @@
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
 #include "nsIDragService.h"
+#include "nsIXIFConverter.h"
+#include "nsIDOMNSUIEvent.h"
 
 // Transactionas
 #include "PlaceholderTxn.h"
@@ -120,6 +122,8 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
+static NS_DEFINE_CID(kCDragServiceCID, NS_DRAGSERVICE_CID);
+static NS_DEFINE_CID(kCXIFFormatConverterCID, NS_XIFFORMATCONVERTER_CID);
 
 #if defined(NS_DEBUG) && defined(DEBUG_buster)
 static PRBool gNoisy = PR_FALSE;
@@ -4686,7 +4690,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
 }
 
 
-NS_IMETHODIMP nsHTMLEditor::InsertFromDrop()
+NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 {
   ForceCompositionEnd();
   
@@ -4707,12 +4711,166 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop()
       if (NS_SUCCEEDED(dragSession->GetNumDropItems(&numItems)))
       {
         PRUint32 i; 
+        PRBool doPlaceCaret = PR_TRUE;
         for (i = 0; i < numItems; ++i)
         {
           if (NS_SUCCEEDED(dragSession->GetData(trans, i)))
+          {
+            if ( doPlaceCaret )
+            {
+              // Set the selection to the point under the mouse cursor:
+              nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aDropEvent));
+
+              if (!nsuiEvent)
+                return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+              nsCOMPtr<nsIDOMNode> parent;
+              if (!NS_SUCCEEDED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
+                return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+              PRInt32 offset = 0;
+              if (!NS_SUCCEEDED(nsuiEvent->GetRangeOffset(&offset)))
+                return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+
+              nsCOMPtr<nsIDOMSelection> selection;
+              if (NS_SUCCEEDED(GetSelection(getter_AddRefs(selection))))
+                (void)selection->Collapse(parent, offset);
+
+              doPlaceCaret = PR_FALSE;
+            }
+            
             rv = InsertFromTransferable(trans);
+          }
         }
       }
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsHTMLEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool &aCanDrag)
+{
+  /* we really should be checking the XY coordinates of the mouseevent and ensure that
+   * that particular point is actually within the selection (not just that there is a selection)
+   */
+  aCanDrag = PR_FALSE;
+  
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+    
+  PRBool isCollapsed;
+  res = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(res)) return res;
+  
+  // if we are collapsed, we have no selection so nothing to drag
+  if ( isCollapsed )
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMEventTarget> eventTarget;
+  res = aDragEvent->GetTarget(getter_AddRefs(eventTarget));
+  if (NS_FAILED(res)) return res;
+  if ( eventTarget )
+  {
+    nsCOMPtr<nsIDOMNode> eventTargetDomNode = do_QueryInterface(eventTarget);
+    if ( eventTargetDomNode )
+    {
+      PRBool amTargettedCorrectly = PR_FALSE;
+      res = selection->ContainsNode(eventTargetDomNode, PR_FALSE, &amTargettedCorrectly);
+      if (NS_FAILED(res)) return res;
+
+    	aCanDrag = amTargettedCorrectly;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIDOMEventTarget> eventTarget;
+  rv = aDragEvent->GetTarget(getter_AddRefs(eventTarget));
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(eventTarget);
+
+  /* get the selection to be dragged */
+  nsCOMPtr<nsIDOMSelection> selection;
+  rv = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+
+  /* create an array of transferables */
+  nsCOMPtr<nsISupportsArray> transferableArray;
+  NS_NewISupportsArray(getter_AddRefs(transferableArray));
+  if (transferableArray == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  /* get the drag service */
+  NS_WITH_SERVICE(nsIDragService, dragService, "component://netscape/widget/dragservice", &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  /* create xif flavor transferable */
+  nsCOMPtr<nsITransferable> trans;
+  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                        NS_GET_IID(nsITransferable), 
+                                        getter_AddRefs(trans));
+  if (NS_FAILED(rv)) return rv;
+  if ( !trans ) return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  rv = GetDocument(getter_AddRefs(domdoc));
+  if (NS_FAILED(rv)) return rv;
+	
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+  if (doc)
+  {
+    nsAutoString buffer;
+    rv = doc->CreateXIF(buffer, selection);
+    if (NS_FAILED(rv)) return rv;
+    if ( !buffer.IsEmpty() )
+    {
+      nsCOMPtr<nsIFormatConverter> xifConverter;
+      rv = nsComponentManager::CreateInstance(kCXIFFormatConverterCID, nsnull, NS_GET_IID(nsIFormatConverter),
+                                              getter_AddRefs(xifConverter));
+      if (NS_FAILED(rv)) return rv;
+      if (!xifConverter) return NS_ERROR_OUT_OF_MEMORY;
+
+      nsCOMPtr<nsISupportsWString> dataWrapper;
+      rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull,
+                                              NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper));
+      if (NS_FAILED(rv)) return rv;
+      if ( !dataWrapper ) return NS_ERROR_OUT_OF_MEMORY;
+
+      rv = trans->AddDataFlavor(kXIFMime);
+      if (NS_FAILED(rv)) return rv;
+      rv = trans->SetConverter(xifConverter);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = dataWrapper->SetData( NS_CONST_CAST(PRUnichar*, buffer.GetUnicode()) );
+      if (NS_FAILED(rv)) return rv;
+
+      // QI the data object an |nsISupports| so that when the transferable holds
+      // onto it, it will addref the correct interface.
+      nsCOMPtr<nsISupports> nsisupportsDataWrapper ( do_QueryInterface(dataWrapper) );
+      rv = trans->SetTransferData(kXIFMime, nsisupportsDataWrapper, buffer.Length() * 2);
+      if (NS_FAILED(rv)) return rv;
+
+      /* add the transferable to the array */
+      rv = transferableArray->AppendElement(trans);
+      if (NS_FAILED(rv)) return rv;
+
+      /* invoke drag */
+      unsigned int flags;
+      // in some cases we'll want to cut rather than copy... hmmmmm...
+      // if ( wantToCut )
+      //   flags = nsIDragService.DRAGDROP_ACTION_COPY + nsIDragService.DRAGDROP_ACTION_MOVE;
+      // else
+        flags = nsIDragService::DRAGDROP_ACTION_COPY + nsIDragService::DRAGDROP_ACTION_MOVE;
+      
+      rv = dragService->InvokeDragSession( domelement, transferableArray, nsnull, flags);
+      if (NS_FAILED(rv)) return rv;
+
+      aDragEvent->PreventBubble();
     }
   }
 

@@ -259,7 +259,9 @@ public:
   NS_IMETHOD Paste(PRInt32 aSelectionType);
   NS_IMETHOD CanPaste(PRInt32 aSelectionType, PRBool &aCanPaste);
 
-  NS_IMETHOD InsertFromDrop();
+  NS_IMETHOD CanDrag(nsIDOMEvent *aDragEvent, PRBool &aCanDrag);
+  NS_IMETHOD DoDrag(nsIDOMEvent *aDragEvent);
+  NS_IMETHOD InsertFromDrop(nsIDOMEvent* aDropEvent);
 
   NS_IMETHOD OutputToString(nsString& aOutputString,
                             const nsString& aFormatType,
