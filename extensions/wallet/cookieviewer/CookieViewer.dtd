@@ -8,6 +8,7 @@
 <!ENTITY     treehead.cookiedomain.label    "Cookie Domain"> 
 <!ENTITY     treehead.infoselected.label    "Information about the selected Cookie">
 <!ENTITY     button.removecookie.label      "Remove Cookie">
+<!ENTITY     button.removeallcookies.label  "Remove All Cookies">
 
 <!ENTITY     props.name.label               "Cookie Name:">
 <!ENTITY     props.value.label              "Data Stored in Cookie:">
@@ -22,7 +23,9 @@
 
 <!ENTITY     addpermission.label            "New Site">
 <!ENTITY     removepermission.label         "Remove Site">
+<!ENTITY     removeallpermissions.label     "Remove All Sites">
 <!ENTITY     removeimage.label              "Remove Site">
+<!ENTITY     removeallimages.label          "Remove All Sites">
 
 <!ENTITY     canSet.label                   "can set cookies">
 <!ENTITY     cannotSet.label                "cannot set cookies">

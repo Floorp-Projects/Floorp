@@ -34,6 +34,10 @@ var goneSS              = ""; // signon
 var goneIS              = ""; // ignored site
 var goneNP              = ""; // nopreview
 var goneNC              = ""; // nocapture
+var deleted_signons_count = 1;
+var deleted_rejects_count = 1;
+var deleted_nopreviews_count = 1;
+var deleted_nocaptures_count = 1;
 
 // function : <SignonViewer.js>::Startup();
 // purpose  : initialises interface, calls init functions for each page
@@ -97,6 +101,9 @@ function LoadSignons()
     var user = currSignon.substring(currSignon.lastIndexOf(":")+1,currSignon.length);
     AddItem("savesignonlist",[site,user],"signon_",i-1);
   }
+  if (deleted_signons_count >= signonList.length) {
+    document.getElementById("removeAllSignons").setAttribute("disabled","true");
+  }
   return true;
 }
 
@@ -104,8 +111,23 @@ function LoadSignons()
 // purpose  : deletes a particular signon
 function DeleteSignon()
 {
+  deleted_signons_count += document.getElementById("signonstree").selectedItems.length;
   goneSS += DeleteItemSelected('signonstree','signon_','savesignonlist');
   DoButtonEnabling("signonstree");
+  if (deleted_signons_count >= signonList.length) {
+    document.getElementById("removeAllSignons").setAttribute("disabled","true");
+  }
+}
+
+// function : <SignonViewer.js>::DeleteAllSignons();
+// purpose  : deletes all the signons
+function DeleteAllSignons() {
+  // delete selected item
+  goneSS += DeleteAllItems(signonList.length, "signon_", "savesignonlist");
+  if( !document.getElementById("removeSignon").disabled ) {
+    document.getElementById("removeSignon").setAttribute("disabled", "true")
+  }
+  document.getElementById("removeAllSignons").setAttribute("disabled","true");
 }
 
 /*** =================== IGNORED SIGNONS CODE =================== ***/
@@ -126,14 +148,32 @@ function LoadReject()
     var user = currSignon.substring(currSignon.lastIndexOf(":")+1,currSignon.length);
     AddItem("ignoredlist",[site],"reject_",i-1);
   }
+  if (deleted_rejects_count >= rejectList.length) {
+    document.getElementById("removeAllSites").setAttribute("disabled","true");
+  }
 }
 
 // function : <SignonViewer.js>::DeleteIgnoredSite();
 // purpose  : deletes ignored site(s)
 function DeleteIgnoredSite()
 {
+  deleted_rejects_count += document.getElementById("ignoretree").selectedItems.length;
   goneIS += DeleteItemSelected('ignoretree','reject_','ignoredlist');
   DoButtonEnabling("ignoretree");
+  if (deleted_rejects_count >= rejectList.length) {
+    document.getElementById("removeAllSites").setAttribute("disabled","true");
+  }
+}
+
+// function : <SignonViewer.js>::DeleteAllSites();
+// purpose  : deletes all the ignored sites
+function DeleteAllSites() {
+  // delete selected item
+  goneIS += DeleteAllItems(rejectList.length, "reject_", "ignoredlist");
+  if( !document.getElementById("removeIgnoredSite").disabled ) {
+    document.getElementById("removeIgnoredSite").setAttribute("disabled", "true")
+  }
+  document.getElementById("removeAllSites").setAttribute("disabled","true");
 }
 
 /*** =================== NO PREVIEW FORMS CODE =================== ***/
@@ -153,14 +193,32 @@ function LoadNopreview()
     var form = currSignon.substring(currSignon.lastIndexOf(":")+1,currSignon.length);
     AddItem("nopreviewlist",[form],"nopreview_",i-1);
   }
+  if (deleted_nopreviews_count >= nopreviewList.length) {
+    document.getElementById("removeAllNopreviews").setAttribute("disabled","true");
+  }
 }
 
 // function : <SignonViewer>::DeleteNoPreviewForm()
 // purpose  : deletes no-preview entry(s)
 function DeleteNoPreviewForm()
 {
+  deleted_nopreviews_count += document.getElementById("nopreviewtree").selectedItems.length;
   goneNP += DeleteItemSelected('nopreviewtree','nopreview_','nopreviewlist');
   DoButtonEnabling("nopreviewtree");
+  if (deleted_nopreviews_count >= nopreviewList.length) {
+    document.getElementById("removeAllNopreviews").setAttribute("disabled","true");
+  }
+}
+
+// function : <SignonViewer.js>::DeleteAllNopreviews();
+// purpose  : deletes all the nopreview sites
+function DeleteAllNopreviews() {
+  // delete selected item
+  goneNP += DeleteAllItems(nopreviewList.length, "nopreview_", "nopreviewlist");
+  if( !document.getElementById("removeNoPreview").disabled ) {
+    document.getElementById("removeNoPreview").setAttribute("disabled", "true")
+  }
+  document.getElementById("removeAllNopreviews").setAttribute("disabled","true");
 }
 
 /*** =================== NO CAPTURE FORMS CODE =================== ***/
@@ -180,14 +238,32 @@ function LoadNocapture()
     var form = currSignon.substring(currSignon.lastIndexOf(":")+1,currSignon.length);
     AddItem("nocapturelist",[form],"nocapture_",i-1);
   }
+  if (deleted_nocaptures_count >= nocaptureList.length) {
+    document.getElementById("removeAllNocaptures").setAttribute("disabled","true");
+  }
 }
 
 // function : <SignonViewer>::DeleteNoCaptureForm()
 // purpose  : deletes no-capture entry(s)
 function DeleteNoCaptureForm()
 {
+  deleted_nocaptures_count += document.getElementById("nocapturetree").selectedItems.length;
   goneNC += DeleteItemSelected('nocapturetree','nocapture_','nocapturelist');
   DoButtonEnabling("nocapturetree");
+  if (deleted_nocaptures_count >= nocaptureList.length) {
+    document.getElementById("removeAllNocaptures").setAttribute("disabled","true");
+  }
+}
+
+// function : <SignonViewer.js>::DeleteAllNocaptures();
+// purpose  : deletes all the nocapture sites
+function DeleteAllNocaptures() {
+  // delete selected item
+  goneNC += DeleteAllItems(nocaptureList.length, "nocapture_", "nocapturelist");
+  if( !document.getElementById("removeNoCapture").disabled ) {
+    document.getElementById("removeNoCapture").setAttribute("disabled", "true")
+  }
+  document.getElementById("removeAllNocaptures").setAttribute("disabled","true");
 }
 
 /*** =================== GENERAL CODE =================== ***/
@@ -262,6 +338,21 @@ function DeleteItemSelected(tree, prefix, kids) {
   for(var i = 0; i < delnarray.length; i++) 
   { 
     document.getElementById(kids).removeChild(delnarray[i]);
+  }
+  return rv;
+}
+
+// function : <SignonViewer.js>::DeleteAllItems();
+// purpose  : deletes all the items
+function DeleteAllItems(length, prefix, kids) {
+  var delnarray = [];
+  var rv = "";
+  for(var i = 0; i < length; i++) 
+  { 
+    if (document.getElementById(prefix+i) != null) {
+      document.getElementById(kids).removeChild(document.getElementById(prefix+i));
+      rv += (i + ",");
+    }
   }
   return rv;
 }

@@ -48,6 +48,9 @@ var images                = [];            // array of images (NEW OBJECT)
 var deleted_cookies       = [];
 var deleted_permissions   = [];
 var deleted_images        = [];
+var deleted_cookies_count = 0;
+var deleted_permissions_count = 0;
+var deleted_images_count = 0;
 // for dealing with the interface:
 var gone_c                = "";
 var gone_p                = "";
@@ -148,6 +151,9 @@ function loadCookies()
       domain = domain.substring(1,domain.length);
     AddItem("cookielist", [domain,cookies[i].name], "tree_", cookies[i].number); 
   }
+  if (cookies.length == 0) {
+    document.getElementById("removeAllCookies").setAttribute("disabled","true");
+  }
 }
 
 // function : <CookieViewer.js>::ViewSelectedCookie();
@@ -206,6 +212,7 @@ function ViewCookieSelected( e )
 // purpose  : deletes all the cookies that are selected
 function DeleteCookieSelected() {
   // delete selected item
+  deleted_cookies_count += document.getElementById("cookietree").selectedItems.length;
   gone_c += DeleteItemSelected("cookietree", "tree_", "cookielist");
   // set fields
   rows = ["ifl_name","ifl_value","ifl_domain","ifl_path","ifl_secure","ifl_expires"];
@@ -219,6 +226,27 @@ function DeleteCookieSelected() {
       document.getElementById("removeCookies").setAttribute("disabled", "true")
     }
   }
+  if (deleted_cookies_count >= cookies.length) {
+    document.getElementById("removeAllCookies").setAttribute("disabled","true");
+  }
+}
+
+// function : <CookieViewer.js>::DeleteAllCookies();
+// purpose  : deletes all the cookies
+function DeleteAllCookies() {
+  // delete selected item
+  gone_c += DeleteAllItems(cookies.length, "tree_", "cookielist");
+  // set fields
+  rows = ["ifl_name","ifl_value","ifl_domain","ifl_path","ifl_secure","ifl_expires"];
+  for(k = 0; k < rows.length; k++) 
+  {
+    var row = document.getElementById(rows[k]);
+    row.setAttribute("value","");
+  }
+  if( !document.getElementById("removeCookies").disabled ) {
+    document.getElementById("removeCookies").setAttribute("disabled", "true")
+  }
+  document.getElementById("removeAllCookies").setAttribute("disabled","true");
 }
 
 // keypress pass-thru
@@ -291,6 +319,9 @@ function loadPermissions()
       contentStr = bundle.GetStringFromName("cannot");    
     AddItem("permissionslist",[domain,contentStr],"permtree_",permissions[i].number)
   }
+  if (permissions.length == 0) {
+    document.getElementById("removeAllPermissions").setAttribute("disabled","true");
+  }
 }
 
 function ViewPermissionSelected()
@@ -302,12 +333,25 @@ function ViewPermissionSelected()
 
 function DeletePermissionSelected()
 {
+  deleted_permissions_count += document.getElementById("permissionstree").selectedItems.length;
   gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');
   if( !document.getElementById("permissionstree").selectedItems.length ) {
     if( !document.getElementById("removePermissions").disabled ) {
       document.getElementById("removePermissions").setAttribute("disabled", "true")
     }
   }
+  if (deleted_permissions_count >= permissions.length) {
+    document.getElementById("removeAllPermissions").setAttribute("disabled","true");
+  }
+}
+
+function DeleteAllPermissions() {
+  // delete selected item
+  gone_p += DeleteAllItems(permissions.length, "permtree_", "permissionlist");
+  if( !document.getElementById("removePermissions").disabled ) {
+    document.getElementById("removePermissions").setAttribute("disabled", "true")
+  }
+  document.getElementById("removeAllPermissions").setAttribute("disabled","true");
 }
 
 /*** =================== IMAGES CODE =================== ***/
@@ -355,6 +399,9 @@ function loadImages()
       contentStr = bundle.GetStringFromName("cannotImages");    
     AddItem("imageslist",[domain,contentStr],"imgtree_",images[i].number)
   }
+  if (images.length == 0) {
+    document.getElementById("removeAllImages").setAttribute("disabled","true");
+  }
 }
 
 function ViewImageSelected()
@@ -366,12 +413,25 @@ function ViewImageSelected()
 
 function DeleteImageSelected()
 {
+  deleted_images_count += document.getElementById("imagestree").selectedItems.length;
   gone_i += DeleteItemSelected('imagestree', 'imgtree_', 'imageslist');
   if( !document.getElementById("imagestree").selectedItems.length ) {
     if( !document.getElementById("removeImages").disabled ) {
       document.getElementById("removeImages").setAttribute("disabled", "true")
     }
   }
+  if (deleted_images_count >= images.length) {
+    document.getElementById("removeAllImages").setAttribute("disabled","true");
+  }
+}
+
+function DeleteAllImages() {
+  // delete selected item
+  gone_i += DeleteAllItems(images.length, "imgtree_", "imageslist");
+  if( !document.getElementById("removeImages").disabled ) {
+    document.getElementById("removeImages").setAttribute("disabled", "true")
+  }
+  document.getElementById("removeAllImages").setAttribute("disabled","true");
 }
 
 /*** =================== GENERAL CODE =================== ***/
@@ -422,5 +482,21 @@ function DeleteItemSelected(tree, prefix, kids) {
   { 
     document.getElementById(kids).removeChild(delnarray[i]);
   }
+  return rv;
+}
+
+// function : <CookieViewer.js>::DeleteAllItems();
+// purpose  : deletes all the items
+function DeleteAllItems(length, prefix, kids) {
+  var delnarray = [];
+  var rv = "";
+  for(var i = 0; i < length; i++) 
+  { 
+    if (document.getElementById(prefix+i) != null) {
+      document.getElementById(kids).removeChild(document.getElementById(prefix+i));
+      rv += (i + ",");
+    }
+  }
+
   return rv;
 }

@@ -100,7 +100,12 @@
         </html:fieldset>
         <spring flex="5%"/>
         <box align="horizontal">
-          <titledbutton id="removeCookies" class="dialog push" disabled="true" value="&button.removecookie.label;" onclick="DeleteCookieSelected();"/>
+          <titledbutton id="removeCookies" class="dialog push" disabled="true"
+                        value="&button.removecookie.label;"
+                        onclick="DeleteCookieSelected();"/>
+          <titledbutton id="removeAllCookies" class="dialog push"
+                        value="&button.removeallcookies.label;"
+                        onclick="DeleteAllCookies();"/>
           <!--  todo: <titledbutton id="restoreCookies" class="dialog push" disabled="true" value="&button.restorecookie.label;" onclick="RestoreCookies();"/> -->
         </box>
       </box>
@@ -124,6 +129,9 @@
           <titledbutton id="removePermissions" class="dialog push" disabled="true" 
                         value="&removepermission.label;" 
                         onclick="DeletePermissionSelected();"/>
+          <titledbutton id="removeAllPermissions" class="dialog push"
+                        value="&removeallpermissions.label;" 
+                        onclick="DeleteAllPermissions();"/>
         </box>
         <spring style="height: 5px;"/>
       </box>
@@ -144,9 +152,12 @@
           </tree>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton id="removeImages" class="dialog push" disabled="true" 
+          <titledbutton id="removeImages" class="dialog push" disabled="true"
                         value="&removeimage.label;" 
                         onclick="DeleteImageSelected();"/>
+          <titledbutton id="removeAllImages" class="dialog push"
+                        value="&removeallimages.label;" 
+                        onclick="DeleteAllImages();"/>
         </box>
         <spring style="height: 5px;"/>
       </box>

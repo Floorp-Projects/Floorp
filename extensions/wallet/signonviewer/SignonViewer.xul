@@ -69,7 +69,11 @@
           </tree>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton id="removeSignon" disabled="true" class="dialog push" value="&remove.label;" onclick="DeleteSignon();"/>
+          <titledbutton id="removeSignon" disabled="true" class="dialog push"
+                        value="&remove.label;" onclick="DeleteSignon();"/>
+          <titledbutton id="removeAllSignons" class="dialog push"
+                        value="&removeall.label;"
+                        onclick="DeleteAllSignons();"/>
         </box>
         <spring style="height: 5px;"/>
       </box>
@@ -90,7 +94,11 @@
           </tree>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton id="removeIgnoredSite" disabled="true" class="dialog push" value="&remove.label;" onclick="DeleteIgnoredSite();"/>
+          <titledbutton id="removeIgnoredSite" disabled="true" class="dialog push"
+                        value="&remove.label;" onclick="DeleteIgnoredSite();"/>
+          <titledbutton id="removeAllSites" class="dialog push"
+                        value="&removeall.label;"
+                        onclick="DeleteAllSites();"/>
         </box>
         <spring style="height: 5px;"/>
       </box>
@@ -111,7 +119,11 @@
           </tree>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton id="removeNoPreview" disabled="true" class="dialog push" value="&remove.label;" onclick="DeleteNoPreviewForm();"/>
+          <titledbutton id="removeNoPreview" disabled="true" class="dialog push"
+                        value="&remove.label;" onclick="DeleteNoPreviewForm();"/>
+          <titledbutton id="removeAllNopreviews" class="dialog push"
+                        value="&removeall.label;"
+                        onclick="DeleteAllNopreviews();"/>
         </box>
         <spring style="height: 5px;"/>
       </box>
@@ -132,7 +144,11 @@
           </tree>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton id="removeNoCapture" disabled="true" class="dialog push" value="&remove.label;" onclick="DeleteNoCaptureForm();"/>
+          <titledbutton id="removeNoCapture" disabled="true" class="dialog push"
+                        value="&remove.label;" onclick="DeleteNoCaptureForm();"/>
+          <titledbutton id="removeAllNocaptures" class="dialog push"
+                        value="&removeall.label;"
+                        onclick="DeleteAllNocaptures();"/>
         </box>
         <spring style="height: 5px;"/>
       </box>
