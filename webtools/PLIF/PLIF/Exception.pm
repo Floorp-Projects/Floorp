@@ -32,7 +32,7 @@ use vars qw(@ISA @EXPORT);
 use overload '""' => 'stringify', 'cmp' => 'comparison';
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(try raise catch with fallthrough except otherwise finally);
+@EXPORT = qw(try catch with fallthrough except otherwise finally);
 
 # To use this package, you first have to define your own exceptions:
 #
@@ -63,6 +63,11 @@ require Exporter;
 #     } finally {
 #         # always called after try block and any handlers
 #     };
+#
+# You can also raise exceptions as warnings by doing:
+#
+#     report MyException;
+#
 
 # constants for stringifying exceptions
 sub seMaxLength() { 80 }
@@ -117,37 +122,31 @@ sub create {
     return bless({@_}, $class);
 }
 
+sub init {
+    my($exception, $method, @data) = @_;
+    if (not ref($exception)) {
+        # in case we were called as a constructor
+        $exception = $exception->create(@data);
+    }
+    # set up the exception and return it
+    my($filename, $line, $stacktrace) = stacktrace;
+    $exception->{'filename'} = $filename;
+    $exception->{'line'} = $line;
+    $exception->{'stacktrace'} = $stacktrace;
+    return $exception;
+}
+
 sub raise {
     my($exception, @data) = @_;
-    my($filename, $line, $stacktrace) = stacktrace;
-    if (ref($exception) and $exception->isa('PLIF::Exception')) {
-        # if the exception is an object, raise it
-        # this is for people doing things like:
-        #   raise IOException->create('message' => $!);
-        # or:
-        #   my $memoryException = MemoryException->create();
-        #   # ...
-        #   $memoryException->raise();
-        $exception->{'filename'} = $filename;
-        $exception->{'line'} = $line;
-        $exception->{'stacktrace'} = $stacktrace;
-        die $exception;
-    } else {
-        # otherwise, assume we were called as a constructor
-        # this is for people doing things like:
-        #   raise IOException;
-        # or:
-        #   raise IOException ('message' => $!);
-        # or:
-        #   IOException->raise('message' => $!);
-        syntax "Syntax error in \"raise\": \"$exception\" is not a PLIF::Exception class", caller unless $exception->isa('PLIF::Exception');
-        die $exception->create(
-            'filename' => $filename,
-            'line' => $line,
-            'stacktrace' => $stacktrace,
-            @data
-        );
-    }
+    syntax "Syntax error in \"raise\": \"$exception\" is not a PLIF::Exception class", caller(1) unless UNIVERSAL::isa($exception, __PACKAGE__);
+    die $exception->init(@data);
+}
+
+# similar to raise, but only warns instead of dying
+sub report {
+    my($exception, @data) = @_;
+    syntax "Syntax error in \"report\": \"$exception\" is not a PLIF::Exception class", caller(1) unless UNIVERSAL::isa($exception, __PACKAGE__);
+    warn $exception->init(@data);
 }
 
 sub try(&;$) {
