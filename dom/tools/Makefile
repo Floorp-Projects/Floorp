@@ -19,30 +19,30 @@ DEPTH=../..
 
 include $(DEPTH)/config/config.mk
 
-CPPSRCS = \
-  .\$(OBJDIR)\main.obj          \
-	.\$(OBJDIR)\IdlParser.obj     \
-	.\$(OBJDIR)\IdlScanner.obj    \
-	.\$(OBJDIR)\Exceptions.obj    \
-	.\$(OBJDIR)\IdlObject.obj     \
-	.\$(OBJDIR)\IdlVariable.obj   \
-	.\$(OBJDIR)\IdlAttribute.obj  \
-	.\$(OBJDIR)\IdlEnum.obj       \
-	.\$(OBJDIR)\IdlFunction.obj   \
-	.\$(OBJDIR)\IdlInterface.obj  \
-	.\$(OBJDIR)\IdlParameter.obj  \
-	.\$(OBJDIR)\IdlSpecification.obj\
-	.\$(OBJDIR)\FileGen.obj       \
-	.\$(OBJDIR)\XPCOMGen.obj      \
-	.\$(OBJDIR)\JSStubGen.obj     \
+PROGRAM = idlc
+
+CPPSRCS =		     \
+	main.cpp	     \
+	IdlParser.cpp	     \
+	IdlScanner.cpp	     \
+	Exceptions.cpp	     \
+	Id.cppect.cpp	     \
+	IdlVariable.cpp	     \
+	IdlAttribute.cpp     \
+	IdlEnum.cpp	     \
+	IdlFunction.cpp	     \
+	IdlInterface.cpp     \
+	IdlParameter.cpp     \
+	IdlSpecification.cpp \
+	FileGen.cpp	     \
+	XPCOMGen.cpp	     \
+	JSStubGen.cpp	     \
 	$(NULL)
 
 OBJS	= $(CPPSRCS:.cpp=.o)
 
 EX_LIBS = \
 	$(NULL)
-
-PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
 NON_DIRS = $(PROGS)
 TARGETS = $(NON_DIRS)
@@ -53,12 +53,8 @@ $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
 	$(CCC) -o $@ $(CFLAGS) -DUSE_NSREG -c $*.cpp
 
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS)
-
 export::
 
-install:: $(PROGS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
+install:: $(PROGRAM)
+	$(INSTALL) $(PROGRAM) $(DIST)/bin
 
