@@ -503,3 +503,6 @@ NOFRAMES {
   display: inherit;
 }
 
+:XML-ROOT {
+  background-color: inherit;
+}

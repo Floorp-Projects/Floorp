@@ -437,13 +437,15 @@ NS_IMETHODIMP
 nsScrollFrame::ListTag(FILE* out) const
 {
   fputs("*ScrollFrame<", out);
-  nsIAtom* atom;
-  mContent->GetTag(atom);
-  if (nsnull != atom) {
-    nsAutoString tmp;
-    atom->ToString(tmp);
-    fputs(tmp, out);
-    NS_RELEASE(atom);
+  if (nsnull != mContent) {
+    nsIAtom* atom;
+    mContent->GetTag(atom);
+    if (nsnull != atom) {
+      nsAutoString tmp;
+      atom->ToString(tmp);
+      fputs(tmp, out);
+      NS_RELEASE(atom);
+    }
   }
   fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;

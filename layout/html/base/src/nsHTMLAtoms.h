@@ -278,6 +278,8 @@ public:
   static nsIAtom* width;
   static nsIAtom* wrap;
 
+  static nsIAtom* xmlRootPseudo;
+
   static nsIAtom* zindex;
 };
 

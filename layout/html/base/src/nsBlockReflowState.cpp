@@ -1677,6 +1677,7 @@ nsBlockFrame::DeleteFrame(nsIPresContext& aPresContext)
   return NS_OK;
 }
 
+// XXX Get rid of this...
 PRBool
 nsBlockFrame::IsPseudoFrame() const
 {
@@ -1689,7 +1690,7 @@ nsBlockFrame::IsPseudoFrame() const
     if (parentContent == mContent) {
       result = PR_TRUE;
     }
-    NS_RELEASE(parentContent);
+    NS_IF_RELEASE(parentContent);
   }
 
   return result;
@@ -1726,12 +1727,14 @@ nsBlockFrame::ListTag(FILE* out) const
     fprintf(out, "*");
   }
   fprintf(out, "Block<");
-  nsIAtom* atom;
-  mContent->GetTag(atom);
-  if (nsnull != atom) {
-    nsAutoString tmp;
-    atom->ToString(tmp);
-    fputs(tmp, out);
+  if (nsnull != mContent) {
+    nsIAtom* atom;
+    mContent->GetTag(atom);
+    if (nsnull != atom) {
+      nsAutoString tmp;
+      atom->ToString(tmp);
+      fputs(tmp, out);
+    }
   }
   fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;
@@ -1741,13 +1744,14 @@ NS_METHOD
 nsBlockFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
   // if a filter is present, only output this frame if the filter says we should
-  nsIAtom* tag;
   nsAutoString tagString;
-  mContent->GetTag(tag);
-  if (tag != nsnull) 
-  {
-    tag->ToString(tagString);
-    NS_RELEASE(tag);
+  if (nsnull != mContent) {
+    nsIAtom* tag;
+    mContent->GetTag(tag);
+    if (tag != nsnull)  {
+      tag->ToString(tagString);
+      NS_RELEASE(tag);
+    }
   }
 
   PRInt32 i;
@@ -2008,7 +2012,7 @@ nsBlockFrame::RenumberLists(nsBlockReflowState& aState)
   // Setup initial list ordinal value
   PRInt32 ordinal = 1;
   nsIHTMLContent* hc;
-  if (NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**) &hc)) {
+  if (mContent && (NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**) &hc))) {
     nsHTMLValue value;
     if (NS_CONTENT_ATTR_HAS_VALUE ==
         hc->GetAttribute(nsHTMLAtoms::start, value)) {

@@ -698,11 +698,16 @@ void nsContainerFrame::AppendChildren(nsIFrame* aChild, PRBool aSetParent)
 NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
   // if a filter is present, only output this frame if the filter says we should
-  nsIAtom* tag;
   nsAutoString tagString;
-  mContent->GetTag(tag);
-  if (tag != nsnull) 
-    tag->ToString(tagString);
+  if (nsnull != mContent) {
+    nsIAtom* tag;
+    mContent->GetTag(tag);
+    if (tag != nsnull) {
+      tag->ToString(tagString);
+      NS_RELEASE(tag);
+    }
+  }
+  
   PRBool outputMe = (PRBool)((nsnull==aFilter) || (PR_TRUE==aFilter->OutputTag(&tagString)));
   if (PR_TRUE==outputMe)
   {
