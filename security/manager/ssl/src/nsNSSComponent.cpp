@@ -34,7 +34,6 @@
 #include "nsIStreamListener.h"
 #include "nsIStringBundle.h"
 #include "nsIDirectoryService.h"
-#include "nsObserverService.h"
 #include "nsCURILoader.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIProxyObjectManager.h"
@@ -869,7 +868,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
 nsresult
 nsNSSComponent::RegisterProfileChangeObserver()
 {
-  nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
+  nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
   NS_ASSERTION(observerService, "could not get observer service");
   if (observerService) {
     observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, PR_TRUE);
