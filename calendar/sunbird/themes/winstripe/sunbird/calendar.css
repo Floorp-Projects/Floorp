@@ -277,145 +277,141 @@ toolbar[iconsize="small"] #calendar-choose-date-button:hover:active {
 }
 
 /*--------------------------------------------------------------------
- *   Change to multiweek view button
+ *   Multiweek view button
  *-------------------------------------------------------------------*/
 #calendar-multiweek-view-button {
 	-moz-image-region: rect(0px 144px 24px 120px);
 }
-#calendar-multiweek-view-button[disabled="true"],
-#calendar-multiweek-view-button[disabled="true"]:hover,
-#calendar-multiweek-view-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(48px 144px 72px 120px);
-}
 #calendar-multiweek-view-button:hover {
 	-moz-image-region: rect(24px 144px 48px 120px);
 }
-#calendar-multiweek-view-button:hover:active {
+#calendar-multiweek-view-button:hover:active,
+#calendar-multiweek-view-button[disabled="true"],
+#calendar-multiweek-view-button[disabled="true"]:hover {
+	-moz-image-region: rect(72px 144px 96px 120px);
+	border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+	padding: 5px 3px 3px 5px;
+	color: ButtonText;
 }
 
 /*--------------------------------------------------------------------
- *   Change to multiweek view button - small
+ *   Multiweek view button - small
  *-------------------------------------------------------------------*/
 toolbar[iconsize="small"] #calendar-multiweek-view-button {
 	-moz-image-region: rect(0px 96px 16px 80px);
 }
-toolbar[iconsize="small"] #calendar-multiweek-view-button[disabled="true"],
-toolbar[iconsize="small"] #calendar-multiweek-view-button[disabled="true"]:hover,
-toolbar[iconsize="small"] #calendar-multiweek-view-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(32px 96px 48px 80px);
-}
 toolbar[iconsize="small"] #calendar-multiweek-view-button:hover {
 	-moz-image-region: rect(16px 96px 32px 80px);
 }
-toolbar[iconsize="small"] #calendar-multiweek-view-button:hover:active {
+toolbar[iconsize="small"] #calendar-multiweek-view-button:hover:active,
+toolbar[iconsize="small"] #calendar-multiweek-view-button[disabled="true"],
+toolbar[iconsize="small"] #calendar-multiweek-view-button[disabled="true"]:hover {
+	-moz-image-region: rect(48px 96px 64px 80px);
 }
 
 /*--------------------------------------------------------------------
- *   Change to month view button
+ *   Month view button
  *-------------------------------------------------------------------*/
 
 #calendar-month-view-button {
 	-moz-image-region: rect(0px 168px 24px 144px);
 }
-#calendar-month-view-button[disabled="true"],
-#calendar-month-view-button[disabled="true"]:hover,
-#calendar-month-view-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(48px 168px 72px 144px);
-}
 #calendar-month-view-button:hover {
 	-moz-image-region: rect(24px 168px 48px 144px);
 }
-#calendar-month-view-button:hover:active {
+#calendar-month-view-button:hover:active,
+#calendar-month-view-button[disabled="true"],
+#calendar-month-view-button[disabled="true"]:hover {
+	-moz-image-region: rect(72px 168px 96px 144px);
+	border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+	padding: 5px 3px 3px 5px;
+	color: ButtonText;
 }
 
 /*--------------------------------------------------------------------
- *   Change to month view button - small
+ *   Month view button - small
  *-------------------------------------------------------------------*/
 
 toolbar[iconsize="small"] #calendar-month-view-button {
 	-moz-image-region: rect(0px 112px 16px 96px);
 }
-toolbar[iconsize="small"] #calendar-month-view-button[disabled="true"],
-toolbar[iconsize="small"] #calendar-month-view-button[disabled="true"]:hover,
-toolbar[iconsize="small"] #calendar-month-view-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(32px 112px 48px 96px);
-}
 toolbar[iconsize="small"] #calendar-month-view-button:hover {
 	-moz-image-region: rect(16px 112px 32px 96px);
 }
-toolbar[iconsize="small"] #calendar-month-view-button:hover:active {
+toolbar[iconsize="small"] #calendar-month-view-button:hover:active,
+toolbar[iconsize="small"] #calendar-month-view-button[disabled="true"],
+toolbar[iconsize="small"] #calendar-month-view-button[disabled="true"]:hover {
+	-moz-image-region: rect(48px 112px 64px 96px);
 }
 
 /*--------------------------------------------------------------------
- *   Change to week view button
+ *   Week view button
  *-------------------------------------------------------------------*/
 
 #calendar-week-view-button {
 	-moz-image-region: rect(0px 120px 24px 96px);
 }
-#calendar-week-view-button[disabled="true"],
-#calendar-week-view-button[disabled="true"]:hover,
-#calendar-week-view-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(48px 120px 72px 96px);
-}
 #calendar-week-view-button:hover {
 	-moz-image-region: rect(24px 120px 48px 96px);
 }
-#calendar-week-view-button:hover:active {
+#calendar-week-view-button:hover:active,
+#calendar-week-view-button[disabled="true"],
+#calendar-week-view-button[disabled="true"]:hover {
+	-moz-image-region: rect(72px 120px 96px 96px);
+	border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+	padding: 5px 3px 3px 5px;
+	color: ButtonText;
 }
 
 /*--------------------------------------------------------------------
- *   Change to week view button - small
+ *   Week view button - small
  *-------------------------------------------------------------------*/
 
 toolbar[iconsize="small"] #calendar-week-view-button {
 	-moz-image-region: rect(0px 80px 16px 64px);
 }
-toolbar[iconsize="small"] #calendar-week-view-button[disabled="true"],
-toolbar[iconsize="small"] #calendar-week-view-button[disabled="true"]:hover,
-toolbar[iconsize="small"] #calendar-week-view-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(32px 80px 48px 64px);
-}
 toolbar[iconsize="small"] #calendar-week-view-button:hover {
 	-moz-image-region: rect(16px 80px 32px 64px);
 }
-toolbar[iconsize="small"] #calendar-week-view-button:hover:active {
+toolbar[iconsize="small"] #calendar-week-view-button:hover:active,
+toolbar[iconsize="small"] #calendar-week-view-button[disabled="true"],
+toolbar[iconsize="small"] #calendar-week-view-button[disabled="true"]:hover {
+	-moz-image-region: rect(48px 80px 64px 64px);
 }
 
 /*--------------------------------------------------------------------
- *   Change to day view button
+ *   Day view button
  *-------------------------------------------------------------------*/
 
 #calendar-day-view-button {
 	-moz-image-region: rect(0px 96px 24px 72px);
 }
-#calendar-day-view-button[disabled="true"],
-#calendar-day-view-button[disabled="true"]:hover,
-#calendar-day-view-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(48px 96px 72px 72px);
-}
 #calendar-day-view-button:hover {
 	-moz-image-region: rect(24px 96px 48px 72px);
 }
-#calendar-day-view-button:hover:active {
+#calendar-day-view-button:hover:active,
+#calendar-day-view-button[disabled="true"],
+#calendar-day-view-button[disabled="true"]:hover {
+	-moz-image-region: rect(72px 96px 96px 72px);
+	border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
+	padding: 5px 3px 3px 5px;
+	color: ButtonText;
 }
 
 /*--------------------------------------------------------------------
- *   Change to day view button - small
+ *   Day view button - small
  *-------------------------------------------------------------------*/
 
 toolbar[iconsize="small"] #calendar-day-view-button {
 	-moz-image-region: rect(0px 64px 16px 48px);
 }
-toolbar[iconsize="small"] #calendar-day-view-button[disabled="true"],
-toolbar[iconsize="small"] #calendar-day-view-button[disabled="true"]:hover,
-toolbar[iconsize="small"] #calendar-day-view-button[disabled="true"]:hover:active {
-	-moz-image-region: rect(32px 64px 48px 48px);
-}
 toolbar[iconsize="small"] #calendar-day-view-button:hover {
 	-moz-image-region: rect(16px 64px 32px 48px);
 }
-toolbar[iconsize="small"] #calendar-day-view-button:hover:active {
+toolbar[iconsize="small"] #calendar-day-view-button:hover:active,
+toolbar[iconsize="small"] #calendar-day-view-button[disabled="true"],
+toolbar[iconsize="small"] #calendar-day-view-button[disabled="true"]:hover {
+	-moz-image-region: rect(48px 64px 64px 48px);
 }
 
 /*--------------------------------------------------------------------
