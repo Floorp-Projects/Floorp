@@ -10,6 +10,10 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+8/16/99 Added "OpenVMS" to the list of OS's. Feed this to mysql:
+
+	alter table bugs change column op_sys op_sys enum("All", "Windows 3.1", "Windows 95", "Windows 98", "Windows NT", "Mac System 7", "Mac System 7.5", "Mac System 7.6.1", "Mac System 8.0", "Mac System 8.5", "Mac System 8.6", "AIX", "BSDI", "HP-UX", "IRIX", "Linux", "FreeBSD", "OSF/1", "Solaris", "SunOS", "Neutrino", "OS/2", "BeOS", "OpenVMS", "other") not null;
+
 6/22/99 Added an entry to the attachments table to record who the submitter
 was.  Nothing uses this yet, but it still should be recorded.
 
