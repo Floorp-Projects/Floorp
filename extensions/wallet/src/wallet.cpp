@@ -1092,7 +1092,7 @@ PUBLIC void
 WLLT_ExpirePassword() {
   nsresult rv = wallet_CryptSetup();
   if (NS_SUCCEEDED(rv)) {
-//    rv = gSecretDecoderRing->Logout();
+    rv = gSecretDecoderRing->Logout();
   }
   PRUnichar * message;
   if (NS_FAILED(rv)) {
@@ -1108,7 +1108,7 @@ PUBLIC
 void WLLT_ChangePassword() {
   nsresult rv = wallet_CryptSetup();
   if (NS_SUCCEEDED(rv)) {
-//    rv = gSecretDecoderRing->ChangePassword();
+    rv = gSecretDecoderRing->ChangePassword();
   }
   if (NS_FAILED(rv)) {
     PRUnichar * message = Wallet_Localize("PasswordNotChanged");

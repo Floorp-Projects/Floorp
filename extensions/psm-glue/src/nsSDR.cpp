@@ -26,6 +26,8 @@
 #include "nsIAllocator.h"
 #include "nsIServiceManager.h"
 
+#include "plbase64.h"
+
 #include "nsISecretDecoderRing.h"
 
 #include "cmtcmn.h"
@@ -195,9 +197,52 @@ loser:
     return rv;
 }
 
+/* void changePassword(); */
+NS_IMETHODIMP nsSecretDecoderRing::
+ChangePassword()
+{
+  return NS_OK;
+}
+
+/* void logout(); */
+NS_IMETHODIMP nsSecretDecoderRing::
+Logout()
+{
+    nsresult rv = NS_OK;
+    CMTStatus status;
+    CMT_CONTROL *control;
+
+    /* Check object initialization */
+    NS_ASSERTION(mPSM != nsnull, "SDR object not initialized");
+    if (mPSM == nsnull) { rv = NS_ERROR_NOT_INITIALIZED; goto loser; }
+
+    /* Get the control connection */
+    rv = mPSM->GetControlConnection(&control);
+    if (rv != NS_OK) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
+    
+    /* Call PSM to decrypt the value */
+    status = CMT_LogoutAllTokens(control);
+    if (status != CMTSuccess) { rv = NS_ERROR_FAILURE; goto loser; } /* Promote? */
+
+loser:
+    return rv;
+}
+
+
+// Support routines
+
 nsresult nsSecretDecoderRing::
 encode(const unsigned char *data, PRInt32 dataLen, char **_retval)
 {
+    nsresult rv = NS_OK;
+
+    *_retval = PL_Base64Encode((const char *)data, dataLen, NULL);
+    if (!*_retval) { rv = NS_ERROR_OUT_OF_MEMORY; goto loser; }
+
+loser:
+    return rv;
+
+#if 0
     nsresult rv = NS_OK;
     char *r = 0;
 
@@ -215,11 +260,31 @@ loser:
     if (r) nsAllocator::Free(r);
 
     return rv;
+#endif
 }
 
 nsresult nsSecretDecoderRing::
 decode(const char *data, unsigned char **result, PRInt32 * _retval)
 {
+    nsresult rv = NS_OK;
+    PRUint32 len = PL_strlen(data);
+    int adjust = 0;
+
+    /* Compute length adjustment */
+    if (data[len-1] == '=') {
+      adjust++;
+      if (data[len-2] == '=') adjust++;
+    }
+
+    *result = (unsigned char *)PL_Base64Decode(data, len, NULL);
+    if (!*result) { rv = NS_ERROR_ILLEGAL_VALUE; goto loser; }
+
+    *_retval = (len*3)/4 - adjust;
+
+loser:
+    return rv;
+
+#if 0
     nsresult rv = NS_OK;
     unsigned char *r = 0;
     PRInt32 rLen;
@@ -239,6 +304,7 @@ loser:
     if (r) nsAllocator::Free(r);
 
     return rv;
+#endif
 }
 
 const char * nsSecretDecoderRing::kPSMComponentProgID = PSM_COMPONENT_PROGID;
