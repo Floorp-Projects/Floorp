@@ -2348,7 +2348,7 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 
 
 
-NS_IMETHODIMP
+nsresult
 InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *mEngine,
 	nsString &htmlResults, PRBool useAllHREFsFlag, PRUint32 &numResults)
 {
