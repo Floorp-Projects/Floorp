@@ -438,6 +438,9 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct)
   NS_ASSERTION(aSID >= 0 && aSID < nsStyleStructID_Length, "out of bounds");
 
   // NOTE:  nsCachedStyleData::GetStyleData works roughly the same way.
+  // See the comments there (in nsRuleNode.h) for more details about
+  // what this is doing and why.
+
   const nsCachedStyleData::StyleStructInfo& info =
       nsCachedStyleData::gInfo[aSID];
   char* resetOrInheritSlot = NS_REINTERPRET_CAST(char*, &mCachedStyleData) +
