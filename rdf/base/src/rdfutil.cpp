@@ -566,6 +566,35 @@ rdf_PossiblyMakeRelative(const nsString& aContextURI, nsString& aURI)
 }
 
 
+PR_EXTERN(nsresult)
+rdf_PossiblyMakeAbsolute(const nsString& aContextURI, nsString& aURI)
+{
+    PRInt32 index = aURI.Find(':');
+    if (index > 0 && index < 10 /* XXX */)
+        return NS_OK;
+
+    PRUnichar last  = aContextURI.Last();
+    PRUnichar first = aURI.First();
+
+    nsAutoString result(aContextURI);
+    if (last == '#' || last == '/') {
+        if (first == '#') {
+            result.Truncate(result.Length() - 2);
+        }
+        result.Append(aURI);
+    }
+    else if (first == '#') {
+        result.Append(aURI);
+    }
+    else {
+        result.Append('#');
+        result.Append(aURI);
+    }
+
+    aURI = result;
+    return NS_OK;
+}
+
 nsresult
 rdf_MakeBag(nsIRDFDataSource* ds,
             nsIRDFResource* bag)

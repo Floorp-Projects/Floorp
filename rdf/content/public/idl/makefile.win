@@ -21,8 +21,10 @@ IGNORE_MANIFEST=1
 MODULE=rdf
 
 IDLSRCS =  \
+        ElementObserver.idl     \
         NodeObserver.idl        \
-        XULNode.idl             \
+        XULDocument.idl         \
+        XULElement.idl          \
         $(NULL)
 
 XPCOM_DESTDIR=$(DEPTH)\rdf\content\public

@@ -24,37 +24,22 @@
   
   TO DO
 
-  1) I need to make sure that the XUL builder only listens to DOM
-     modifications that it should care about. Right now, it'll take
-     any old DOM update and try to whack it into RDF.
-
-  2) I need to implement nsRDFXULBuilder::RemoveAttribute(), and
+  1) Need to implement nsRDFXULBuilder::RemoveAttribute(), and
      figure out how to do nsRDFXULBuilder::Remove() (vanilla) when the
      child isn't a resource element itself.
 
-  3) There's an assertion that's firing when it tries to ask for
-     RDF:ID on an HTML attribute from nsRDFXULBuilder::Remove().
-
-  4) Figure out how to do natural ordering. I was thinking that maybe
-     some kind of partial order relationship between nodes might be
-     simple to implement and easy to work out. For example,
-
-        [foo]--RDF:greaterThan-->[bar]
-
-     I remember talking to RJC about this months ago, and we came to
-     the conclusing that there could get to be nasty cycles; however,
-     it seems like a really simple way to start.
+  2) Implement the remainder of the DOM methods.
 
   */
 
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsIAtom.h"
+#include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeObserver.h"
 #include "nsINameSpaceManager.h"
-#include "nsIRDFContent.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFCursor.h"
 #include "nsIRDFCompositeDataSource.h"
@@ -83,7 +68,6 @@
 static NS_DEFINE_IID(kIContentIID,                NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDocumentIID,               NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kINameSpaceManagerIID,       NS_INAMESPACEMANAGER_IID);
-static NS_DEFINE_IID(kIRDFContentIID,             NS_IRDFCONTENT_IID);
 static NS_DEFINE_IID(kIRDFContentModelBuilderIID, NS_IRDFCONTENTMODELBUILDER_IID);
 static NS_DEFINE_IID(kIRDFCompositeDataSourceIID, NS_IRDFCOMPOSITEDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,             NS_IRDFLITERAL_IID);
@@ -132,6 +116,7 @@ private:
     static PRInt32  kNameSpaceID_RDF;
     static PRInt32  kNameSpaceID_XUL;
 
+    static nsIAtom* kContainerAtom;
     static nsIAtom* kContentsGeneratedAtom;
     static nsIAtom* kDataSourcesAtom;
     static nsIAtom* kIdAtom;
@@ -203,6 +188,12 @@ public:
 
     nsresult
     GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource);
+
+    nsresult
+    CreateResourceElement(PRInt32 aNameSpaceID,
+                          nsIAtom* aTag,
+                          nsIRDFResource* aResource,
+                          nsIContent** aResult);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -214,6 +205,7 @@ nsIRDFService*  RDFXULBuilderImpl::gRDFService = nsnull;
 PRInt32         RDFXULBuilderImpl::kNameSpaceID_RDF = kNameSpaceID_Unknown;
 PRInt32         RDFXULBuilderImpl::kNameSpaceID_XUL = kNameSpaceID_Unknown;
 
+nsIAtom*        RDFXULBuilderImpl::kContainerAtom         = nsnull;
 nsIAtom*        RDFXULBuilderImpl::kContentsGeneratedAtom = nsnull;
 nsIAtom*        RDFXULBuilderImpl::kIdAtom                = nsnull;
 nsIAtom*        RDFXULBuilderImpl::kDataSourcesAtom       = nsnull;
@@ -252,6 +244,7 @@ RDFXULBuilderImpl::RDFXULBuilderImpl(void)
     NS_INIT_REFCNT();
 
     if (gRefCnt++ == 0) {
+        // XXX should hold on to the manager for the duration, as well.
         nsresult rv;
         nsINameSpaceManager* mgr;
         if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
@@ -271,8 +264,9 @@ RDFXULBuilderImpl::RDFXULBuilderImpl(void)
             NS_ERROR("couldn't create namepsace manager");
         }
 
+        kContainerAtom         = NS_NewAtom("container");
         kContentsGeneratedAtom = NS_NewAtom("contentsGenerated");
-        kIdAtom                = NS_NewAtom("id");
+        kIdAtom                = NS_NewAtom("ID");
         kDataSourcesAtom       = NS_NewAtom("datasources");
         kTreeAtom              = NS_NewAtom("tree");
 
@@ -321,6 +315,7 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
         NS_IF_RELEASE(kRDF_child);
         NS_IF_RELEASE(kXUL_element);
 
+        NS_IF_RELEASE(kContainerAtom);
         NS_IF_RELEASE(kContentsGeneratedAtom);
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kDataSourcesAtom);
@@ -1117,11 +1112,11 @@ RDFXULBuilderImpl::CreateXULElement(nsIRDFResource* aResource,
 {
     nsresult rv;
 
-    nsCOMPtr<nsIRDFContent> element;
-    if (NS_FAILED(rv = NS_NewRDFResourceElement(getter_AddRefs(element),
-                                                aResource,
-                                                aNameSpaceID,
-                                                aTag))) {
+    nsCOMPtr<nsIContent> element;
+    if (NS_FAILED(rv = CreateResourceElement(aNameSpaceID,
+                                             aTag,
+                                             aResource,
+                                             getter_AddRefs(element)))) {
         NS_ERROR("unable to create new content element");
         return rv;
     }
@@ -1178,7 +1173,7 @@ RDFXULBuilderImpl::CreateXULElement(nsIRDFResource* aResource,
 
     // Make it a container so that its contents get recursively
     // generated on-demand.
-    if (NS_FAILED(rv = element->SetContainer(PR_TRUE))) {
+    if (NS_FAILED(rv = element->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE))) {
         NS_ERROR("unable to make element a container");
         return rv;
     }
@@ -1422,3 +1417,26 @@ RDFXULBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResou
     return NS_OK;
 }
 
+nsresult
+RDFXULBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
+                                         nsIAtom* aTag,
+                                         nsIRDFResource* aResource,
+                                         nsIContent** aResult)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIContent> result;
+    if (NS_FAILED(rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result))))
+        return rv;
+
+    const char* uri;
+    if (NS_FAILED(rv = aResource->GetValue(&uri)))
+        return rv;
+
+    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_RDF, kIdAtom, uri, PR_FALSE)))
+        return rv;
+
+    *aResult = result;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+}

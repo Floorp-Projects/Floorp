@@ -219,21 +219,6 @@ static const char kApostrophe = '\'';
 }
 
 
-void
-nsRDFParserUtils::FullyQualifyURI(const nsIURL* base, nsString& spec)
-{
-    // This is a fairly heavy-handed way to do this, but...I don't
-    // like typing.
-    nsIURL* url;
-    if (NS_SUCCEEDED(NS_NewURL(&url, spec, base))) {
-        PRUnichar* str;
-        url->ToString(&str);
-        spec = str;
-        delete str;
-        url->Release();
-    }
-}
-
 PRBool
 nsRDFParserUtils::IsJavaScriptLanguage(const nsString& aName)
 {

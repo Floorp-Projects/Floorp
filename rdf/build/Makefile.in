@@ -27,6 +27,7 @@ include $(topsrcdir)/config/config.mk
 LIBRARY_NAME = rdf
 
 CPPSRCS =				\
+	dlldeps.cpp			\
         nsRDFFactory.cpp                \
 	$(NULL)
 
