@@ -262,6 +262,7 @@
 #define NS_STYLE_FONT_DEFAULT                   0x00
 #define NS_STYLE_FONT_SIZE_EXPLICIT             0x01
 #define NS_STYLE_FONT_FACE_EXPLICIT             0x02
+#define NS_STYLE_FONT_USE_FIXED                 0x04
 
 // See nsStyleFont - system fonts
 #define NS_STYLE_FONT_CAPTION                   1
