@@ -206,8 +206,9 @@ nsStyleContext::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 nsIStyleContext* nsStyleContext::GetParent(void) const
 {
-  NS_IF_ADDREF(mParent);
-  return mParent;
+  nsIStyleContext *rv = mParent;
+  NS_IF_ADDREF(rv);
+  return rv;
 }
 
 NS_IMETHODIMP
