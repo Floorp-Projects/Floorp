@@ -380,6 +380,7 @@ void AddPref(CString xpifile, CString entity, CString newvalue, BOOL bUseQuotes,
 
 int ModifyJS(CString xpifile, CString entity, CString newvalue, BOOL bLockPref)
 {
+
 	int rv = TRUE;
 	CString newfile = xpifile + ".new";
 	char *fgetsrv;
@@ -858,6 +859,170 @@ BOOL ProcessPrefsTree(CString strPrefsTreeFile, CString strPrefFile, CString str
 }
 
 
+BOOL ModifyUserJS(CString HashedPrefsFile, CString jsSourceFile)
+{
+
+	// Unhash the prefs file to a plain text file. If there is no hashed file yet,
+	// create a plaintext file with only a comment.
+	CString PlainTextPrefsFile = HashedPrefsFile + ".js";
+	if (FileExists(HashedPrefsFile))
+	{
+		if (!UnHash(HashedPrefsFile, PlainTextPrefsFile))
+			return FALSE;
+	}
+	else
+	{
+		// Create a plain text prefs with only a comment.
+		CreateNewFile(PlainTextPrefsFile, "/* protected prefs */\n");
+	}
+	
+  // find the block and replace it with the contents of the source file
+
+	CString newPrefsFile = PlainTextPrefsFile + ".new";
+
+	// Read in all.js file and make substitutions
+  CStdioFile srcJSC;
+
+  FILE* destJSC = fopen(newPrefsFile, "w");
+
+  if (srcJSC.Open(PlainTextPrefsFile,CFile::modeRead | CFile::typeText) && destJSC)
+  {
+    
+    CString  strLine;
+    bool     bInJSBlock = FALSE;
+    bool     bInsertUserJSNow = FALSE;
+    bool     bDroppedPayload = FALSE;
+
+    int      iBraceLevel = 0;                // these are in case cfg file has braces
+    bool     bPastFirstBrace = FALSE;
+
+
+    while (srcJSC.ReadString(strLine))
+    {
+   
+      strLine += "\n";
+
+      // count braces
+
+/*
+      char buffer[4096];
+
+      strcpy(buffer,strLine);
+      char *token = strtok( buffer, "{");
+      while( token != NULL )
+      {
+        bPastFirstBrace = TRUE;
+        iBraceLevel++;
+        token = strtok(NULL,"{");
+      }
+   
+      strcpy(buffer,strLine);
+      token = strtok( buffer, "}");
+      while( token != NULL )
+      {
+        iBraceLevel--;
+        token = strtok(NULL,"}");
+      }
+
+      if (bPastFirstBrace && iBraceLevel < 1)
+        bInsertUserJSNow = TRUE;
+*/
+      
+      // looking for //ADMJS_BEG (ADM JavaScript Begin)  
+      //          or //ADMJS_END (ADM JavaScript End)        which must be on a line by themselves
+
+
+      int len = strLine.GetLength();
+
+      if (   strLine.GetLength() > 10 
+          && strLine[0] == '/' 
+          && strLine[1] == '/')
+      {
+
+        CString str = strLine.Left(6);
+
+        if (str.CompareNoCase("\n\n//ADMJS_BEG\n") == 0)
+        {
+          bInsertUserJSNow = TRUE;
+          bInJSBlock = TRUE;
+        }
+        else if (str.CompareNoCase("//ADMJS_END\n") == 0)
+          bInJSBlock = FALSE;
+      }
+       
+      
+      // drop our payload
+      //
+      if (bInsertUserJSNow)
+      {
+        CStdioFile srcJS;
+        CString strJSLine;
+
+        fputs(strLine,destJSC);  // write out "//ADMJS_BEG"
+
+        if (srcJS.Open(jsSourceFile,CFile::modeRead | CFile::typeText))
+        {
+          while (srcJS.ReadString(strJSLine))
+          {
+            strJSLine += "\n";
+    				fputs(strJSLine, destJSC);
+          }
+          srcJS.Close();
+        }
+        bInsertUserJSNow = FALSE;
+        bDroppedPayload = TRUE;
+      }
+      else
+      {
+        fputs(strLine,destJSC);  // drop whatever line we have
+      }
+
+    }  // while source lines
+
+    if (!bDroppedPayload)
+    {
+      CStdioFile srcJS;
+      CString strJSLine;
+
+      strJSLine = "\n\n//ADMJS_BEG\n";
+      fputs(strJSLine,destJSC);  
+
+      if (srcJS.Open(jsSourceFile,CFile::modeRead | CFile::typeText))
+      {
+        while (srcJS.ReadString(strJSLine))
+        {
+          strJSLine += "\n";
+  				fputs(strJSLine, destJSC);
+        }
+        srcJS.Close();
+      }
+
+      strJSLine = "//ADMJS_END\n";
+      fputs(strJSLine,destJSC);  
+
+    }
+
+
+    srcJSC.Close();
+    fclose(destJSC);
+
+  }  // if can open source file
+
+  // delete orig and rename new file to correct name
+
+	remove(PlainTextPrefsFile);
+	rename(newPrefsFile, PlainTextPrefsFile);
+  
+	// And rehash it.
+	if (!Hash(PlainTextPrefsFile, HashedPrefsFile))
+		return FALSE;
+
+
+	return TRUE;
+}
+
+
+
 int interpret(char *cmd)
 {
 	char *cmdname = strtok(cmd, "(");
@@ -1105,6 +1270,32 @@ int interpret(char *cmd)
       return TRUE;
 
     ConvertToRemoteAdmin(url, prefFile, remoteAdminFile);
+
+  }
+  else if (strcmp(cmdname, "modifyUserJS") == 0)
+  {
+    // modifyUserJS(XPIname, fileWithinXPI, JSsourcefile)      // within XPI
+    // modifyUserJS(browser.xpi, bin, jsedit.jsc)              //    example
+
+    // modifyUserJS(none, pathAndFilename, JSsourcefile)       // normal file
+    // modifyUserJS(none, \autoadmin\test.jsc, jsedit.jsc)     //    example
+
+		char *xpiname	 = strtok(NULL, ",)");
+		char *filename = strtok(NULL, ",)");
+		char *jssource = strtok(NULL, ",)");
+
+    CString jsSourceFile = configPath + "\\" + jssource;
+
+		// pull the cfg file out of the XPI
+    //
+    ExtractXPIFile(xpiname, filename);
+
+    // replace the appropriate block of javascript
+    //
+    ModifyUserJS(filename, jsSourceFile);   
+
+    // cfg file gets repackaged with call to ReplaceXPIFiles in StartIB after all the interpret calls,
+    // so no need to repacked it ourself.
 
   }
 	else
@@ -1657,6 +1848,8 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	xpiDir = "\\xpi";
 	templinuxDir = "tempLinux";
 	tarfile = "netscape-i686-pc-linux-gnu-sea.tar.gz";
+
+//  AfxMessageBox("set breakpoint",MB_OK);
 
 	if (SearchPath(workspacePath, "NSCPXPI", NULL, 0, NULL, NULL))
 		nscpxpiPath = workspacePath + "\\NSCPXPI";
