@@ -22,17 +22,53 @@
   -->
 
 <!-- These strings are for use specifically in the editor's image map dialog. -->
+
 <!-- Window title -->
 <!ENTITY windowTitle.label "Image Map Editor">
 
-<!-- Toolbar image locations -->
-<!ENTITY pointerIcon.url "chrome://editor/skin/images/pointertool.gif">
-<!ENTITY rectangleIcon.url "chrome://editor/skin/images/rectangletool.gif">
-<!ENTITY circleIcon.url "chrome://editor/skin/images/circletool.gif">
-<!ENTITY polygonIcon.url "chrome://editor/skin/images/polygontool.gif">
-<!ENTITY cutIcon.url "chrome://editor/skin/images/cut.gif">
-<!ENTITY copyIcon.url "chrome://editor/skin/images/copy.gif">
-<!ENTITY pasteIcon.url "chrome://editor/skin/images/paste.gif">
-<!ENTITY zoomInIcon.url "chrome://editor/skin/images/zoomin.gif">
-<!ENTITY zoomOutIcon.url "chrome://editor/skin/images/zoomout.gif">
-<!ENTITY contrastIcon.url "chrome://editor/skin/images/contrast.gif">
+<!-- Menu Items -->
+<!-- File menu -->
+<!ENTITY mapfileMenu.label "File">
+<!ENTITY mapfilemenu.accesskey "f">
+<!ENTITY clearCmd.label "Clear">
+<!ENTITY mapfileclear.accesskey "a">
+<!ENTITY closeCmd.label "Close">
+<!ENTITY mapfileclose.accesskey "c">
+
+<!-- Edit menu -->
+<!ENTITY mapeditMenu.label "Edit">
+<!ENTITY mapeditmenu.accesskey "e">
+<!ENTITY cutCmd.label "Cut">
+<!ENTITY mapeditcut.accesskey "t">
+<!ENTITY copyCmd.label "Copy">
+<!ENTITY mapeditcopy.accesskey "c">
+<!ENTITY pasteCmd.label "Paste">
+<!ENTITY mapeditpaste.accesskey "p">
+<!ENTITY propsCmd.label "Hotspot Properties">
+<!ENTITY mapeditprops.accesskey "h">
+
+<!-- View menu -->
+<!ENTITY mapviewMenu.label "View">
+<!ENTITY mapviewmenu.accesskey "v">
+<!ENTITY showhideTbarCmd.label "Hide Toolbar">
+<!ENTITY mapviewtbar.accesskey "t">
+<!-- Scaling -->
+<!ENTITY mapviewScale.label "Scale">
+<!ENTITY mapviewscale.accesskey "v">
+<!ENTITY apercentCmd.label "100">
+<!ENTITY zoomone.accesskey "1">
+<!ENTITY bpercentCmd.label "200">
+<!ENTITY zoomtwo.accesskey "2">
+<!ENTITY cpercentCmd.label "400">
+<!ENTITY zoomthree.accesskey "3">
+<!-- end scaling-->
+<!ENTITY contrastCmd.label "Contrast">
+<!ENTITY contrast.accesskey "n">
+
+<!-- Help menu -->
+<!ENTITY maphelpMenu.label "Help">
+<!ENTITY maphelpmenu.accesskey "h">
+<!ENTITY aboutCmd.label "About">
+<!ENTITY about.accesskey "b">
+
+<!ENTITY delSpotCmd.label "Delete Spot">

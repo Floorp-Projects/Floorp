@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-
 <!--
    - The contents of this file are subject to the Netscape Public
    - License Version 1.1 (the "License"); you may not use this file
@@ -16,40 +15,116 @@
    - 
    - The Initial Developer of the Original Code is Netscape
    - Communications Corporation. Portions created by Netscape are
-   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Copyright (C) 1999-2000 Netscape Communications Corporation. All
    - Rights Reserved.
    - 
    - Contributor(s): 
+   -    Brian King
    -    Dan Haddix (dan6992@hotmail.com)
   -->
-
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
-<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageMapHotSpot.dtd">
 
-<xul:window class="dialog" title="&windowTitle.label;"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/TR/REC-html40"
+<window class="dialog" title="&windowTitle.label;"
+    xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    align="vertical" flex="100%">
+    align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js" />
-  <script language="JavaScript" src="chrome://editor/content/EdImageMapHotSpot.js" />
+  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js" />
+  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
-  <xul:broadcaster id="args" value=""/>
+  <html:script language="JavaScript" src="chrome://editor/content/EdImageMapHotSpot.js" />
 
-  <xul:box>
-    <label for="urlInput" id="urlLabel">&hotSpotURL.label;</label>
-  </xul:box>
-  <xul:box>
-    <input type="text" id="urlInput"/>
-  </xul:box>
+  <broadcaster id="args" value=""/>
 
-   <!-- from global dialogOverlay -->
-	<box id="okCancelButtons"/> 
-</xul:window>
+  <html:table>
+  <html:tr>
+  <html:td>
+    <html:label for="urlInput" id="urlLabel">&urlFieldset.label;</html:label>
+
+  <html:br/>
+
+    <html:td valign="left">
+    <html:input 
+	type="text" 
+	id="urlInput" 
+	size="30"/>
+    </html:td>
+
+    <html:td valign="right">
+    <titledbutton 
+      class   = "push dialog" 
+      id      = "Browse" 
+      onclick = "chooseFile()"
+      value   = "&browseButton.label;"/>
+    </html:td>
+  </html:td>
+  </html:tr>
+
+  <html:tr>
+  <html:td>
+    <html:label for="titleInput" id="titleLabel">&titleFieldset.label;</html:label>
+
+    <html:br/>
+
+    <html:input type="text" id="titleInput" size="30"/>
+  </html:td>
+  </html:tr>
+
+  <html:tr>
+  <html:td>
+    <html:fieldset>
+      <html:legend
+        class = "dialog"
+        id    = "targetLabel"
+        align = "left"> 
+        &targetFieldset.label; 
+      </html:legend>
+
+      <html:label for="targetInput" id="targetLabel">&target.label;</html:label>
+
+      <html:br/>
+
+      <html:input type="text" id="targetInput" size="20"/>
+
+    </html:fieldset>
+  </html:td>
+
+  <html:td>
+    <html:fieldset>
+      <html:legend
+        class = "dialog"
+        id    = "commonLabel"
+        align = "center"> 
+        &commonFieldset.label; 
+      </html:legend>
+
+      <html:select name="common_targets" id="commonInput" size="4">
+        <html:option selected="true">Same Frame</html:option>
+        <html:option>Whole Page</html:option>
+        <html:option>New Window</html:option>
+        <html:option>Parent Frame</html:option>
+      </html:select>
+
+      </html:fieldset>
+  </html:td>
+  </html:tr>
+
+  </html:table>
+
+  <box align="horizontal">
+
+    <!-- from global dialogOverlay -->
+    <box id="okCancelButtons"/>
+
+  </box>
+
+</window>

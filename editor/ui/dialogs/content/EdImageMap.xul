@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-
 <!--
    - The contents of this file are subject to the Netscape Public
    - License Version 1.1 (the "License"); you may not use this file
@@ -16,22 +15,30 @@
    - 
    - The Initial Developer of the Original Code is Netscape
    - Communications Corporation. Portions created by Netscape are
-   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Copyright (C) 1999-2000 Netscape Communications Corporation. All
    - Rights Reserved.
    - 
    - Contributor(s): 
+   -    Brian King
    -    Dan Haddix (dan6992@hotmail.com)
   -->
 
+<?xml-stylesheet href="chrome://editor/skin/EdImageMap.css" type="text/css"?> 
+
+<!-- <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> -->
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageMap.dtd">
 
 
 <!-- dialog containing a control requiring initial setup -->
-<xul:window title="&windowTitle.label;"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/TR/REC-html40"
+<window class="dialog" title="&windowTitle.label;"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
     onunload="//finishMap();"
     align="vertical"
@@ -39,103 +46,135 @@
    
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </script>
-  <script language="JavaScript" src="chrome://editor/content/EdImageMap.js">
-  </script>
-  <script language="JavaScript" src="chrome://editor/content/EdImageMapShapes.js">
-  </script>
+  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js" />
+  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+
+  <!-- Methods for Image Map only -->
+  <html:script language="JavaScript" src="chrome://editor/content/EdImageMap.js" />
+  <html:script language="JavaScript" src="chrome://editor/content/EdImageMapShapes.js" />
+
+  <broadcaster id="args" value=""/>
+
+  <keyset id="defaultKeySet">
+
+    <key id="mapclearkb"   xulkey="true" key="a" observes="Map:Clear" />
+    <key id="mapclosekb"   xulkey="true" key="l" observes="Map:Close" />
+    <key id="mapcutkb"     xulkey="true" key="x" observes="Map:Cut" />
+    <key id="mapcopykb"    xulkey="true" key="c" observes="Map:Copy" />
+    <key id="mappastekb"   xulkey="true" key="v" observes="Map:Paste" />
+    <key id="mappropskb"   xulkey="true" key="p" observes="Map:Props" />
+    <key id="maptbarkb"    xulkey="true" key="t" observes="Map:ViewToolbar" />
+
+  </keyset>
+
+  <broadcaster id="Map:Clear" value="&clearCmd.label;" oncommand=""/>
+  <broadcaster id="Map:Close" value="&closeCmd.label;" oncommand="exitImageMap()"/>
+  <broadcaster id="Map:Cut" value="&cutCmd.label;" oncommand=""/>
+  <broadcaster id="Map:Copy" value="&copyCmd.label;" oncommand=""/>
+  <broadcaster id="Map:Paste" value="&pasteCmd.label;" oncommand=""/>
+  <broadcaster id="Map:Props" value="&propsCmd.label;" oncommand="hotSpotProps(currentElement[0])"/>
+  <broadcaster id="Map:ViewToolbar" value="&showhideTbarCmd.label;" oncommand="hideToolbar()"/>
+  <broadcaster id="Map:Apercent" value="&apercentCmd.label;" oncommand=""/>
+  <broadcaster id="Map:Bpercent" value="&bpercentCmd.label;" oncommand=""/>
+  <broadcaster id="Map:Cpercent" value="&cpercentCmd.label;" oncommand=""/>
+  <broadcaster id="Map:Contrast" value="&contrastCmd.label;" onaction=""/>
+  <broadcaster id="Map:About" value="&aboutCmd.label;" onaction=""/>
 
 
-  <xul:broadcaster id="args" value=""/>
-
-  <xul:keyset id="defaultKeySet/> 
-
-  <xul:broadcaster id="args" value="chrome://editor/content/EditorInitPage.html"/>
-  <xul:broadcaster id="canPrint"/>
-  
   <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
-  <xul:broadcaster id="dialog.start" ready="false"/>
-  <xul:observes element="dialog.start" attribute="ready" onchange="EditorStartup('html')"/>
+  <broadcaster id="dialog.start" ready="false"/>
+  <observes element="dialog.start" attribute="ready" onchange="EditorStartup('html')"/>
     
-  <xul:broadcaster id="Editor:Document:Dirty" dirty="false"/>
-
-<xul:menubar>
+<menubar>
   <!-- File menu -->
-  <xul:menu value="File" accesskey="f">
-    <xul:menupopup>
-      <xul:menuitem value="Clear All" accesskey="a" onaction=""/>
-      <xul:menuitem value="Exit" accesskey="f" onaction="exitImap()"/>
-    </xul:menupopup>
-  </xul:menu>
+  <menu id="mapfileMenu" value="&mapfileMenu.label;" accesskey="&mapfilemenu.accesskey;">
+    <menupopup>
+      <menuitem accesskey="&mapfileclear.accesskey;" key="mapclearkb" observes="Map:Clear"/>
+      <menuitem accesskey="&mapfileclose.accesskey;" key="mapclosekb" observes="Map:Close"/>
+    </menupopup>
+  </menu>
 
-  <xul:menu value="Edit" accesskey="e">
-    <xul:menupopup>
-      <xul:menuitem value="Cut" onaction=""/>
-      <xul:menuitem value="Copy" onaction=""/>
-      <xul:menuitem value="Paste" onaction=""/>
-      <xul:menuseparator/>
-      <xul:menuitem value="Hotspot Properties" onaction="hotSpotProps(currentElement[0])"/>
-    </xul:menupopup>
-  </xul:menu>
+  <!-- Edit menu -->
+  <menu id="mapeditMenu" value="&mapeditMenu.label;" accesskey="&mapeditmenu.accesskey;">
+    <menupopup>
+      <menuitem accesskey="&mapeditcut.accesskey;" key="mapcutkb" observes="Map:Cut"/>
+      <menuitem accesskey="&mapeditcopy.accesskey;" key="mapcopykb" observes="Map:Copy"/>
+      <menuitem accesskey="&mapeditpaste.accesskey;" key="mappastekb" observes="Map:Paste"/>
+      <menuseparator/>
+      <menuitem accesskey="&mapeditprops.accesskey;" key="mappropskb" observes="Map:Props"/>
+    </menupopup>
+  </menu>
 
-  <xul:menu value="View" accesskey="v">
-    <xul:menupopup>
-      <xul:menuitem id="view_hidetoolbar" value="Hide Toolbar" onaction="hideToolbar()"/>
-      <xul:menu value="Scale" accesskey="v">
-        <xul:menupopup>
-          <xul:menuitem value="100%" onaction=""/>
-          <xul:menuitem value="200%" onaction=""/>
-          <xul:menuitem value="400%" onaction=""/>
-        </xul:menupopup>
-      </xul:menu>
-      <xul:menuseparator/>
-      <xul:menuitem value="High Contrast" onaction=""/>
-    </xul:menupopup>
-  </xul:menu>
+  <!-- View menu -->
+  <menu id="mapviewMenu" value="&mapviewMenu.label;" accesskey="&mapviewmenu.accesskey;">
+    <menupopup>
+      <menuitem id="view_hidetoolbar" accesskey="&mapviewtbar.accesskey;" key="maptbarkb" observes="Map:ViewToolbar"/>
+      <menu id="mapscalingMenu" value="&mapviewScale.label;" accesskey="&mapviewscale.accesskey;">
+        <menupopup>
+          <menuitem accesskey="&zoomone.accesskey;" key="" observes="Map:Apercent"/>
+          <menuitem accesskey="&zoomtwo.accesskey;" key="" observes="Map:Bpercent"/>
+          <menuitem accesskey="&zoomthree.accesskey;" key="" observes="Map:Cpercent"/>
+        </menupopup>
+      </menu>
+      <menuseparator/>
+      <menuitem accesskey="&contrast.accesskey;" observes="Map:Contrast" />
+    </menupopup>
+  </menu>
 
-  <xul:menu value="Help">
-    <xul:menupopup>
-      <xul:menuitem value="About Image Map Editor" onaction=""/>
-    </xul:menupopup>
-  </xul:menu>
+  <menu id="maphelpMenu" value="&maphelpMenu.label;" accesskey="&maphelpmenu.accesskey;">
+    <menupopup>
+      <menuitem accesskey="&about.accesskey;" observes="Map:About"/>
+    </menupopup>
+  </menu>
 
-  <xul:spring flex="100%"/>
-</xul:menubar>
-
-
-<xul:toolbar id="toolbar">
-  <xul:titledbutton class="push" src="&cutIcon.url;"/>
-  <xul:titledbutton class="push" src="&copyIcon.url;"/>
-  <xul:titledbutton class="push" src="&pasteIcon.url;"/>
-  <xul:menuseparator/>
-  <xul:titledbutton class="push" src="&zoomInIcon.url;"/>
-  <xul:titledbutton class="push" src="&zoomOutIcon.url;"/>
-  <xul:titledbutton class="push" toggled="0" src="&contrastIcon.url;" onclick="highContrast()"/>-
-  <xul:spring flex="100%"/>
-</xul:toolbar> 
+  <spring flex="100%"/>
+</menubar>
 
 
-<xul:box align="horizontal" flex="100">
-  <xul:toolbar id="toolbox" align="vertical">
-    <xul:titledbutton class="push" src="&pointerIcon.url;" id="pointer" toggled="0" onclick="changeTool(event, 'select')"/>
-    <xul:titledbutton class="push" src="&rectangleIcon.url;" id="rect" toggled="1" onclick="changeTool(event, 'rect')"/>
-    <xul:titledbutton class="push" src="&circleIcon.url;" id="cir" toggled="0" onclick="changeTool(event, 'cir')"/>
-    <xul:titledbutton class="push" src="&polygonIcon.url;" id="poly" toggled="0" onclick="changeTool(event, 'poly')"/>
-    <xul:spring flex="100%"/>
-  </xul:toolbar>
-  <iframe id="content" src="EdImageMapPage.html" flex="100%"/>
-  <!--<div id="content" style="overflow:auto; background-color:#808080; border: 2 inset #000000;" flex="100%"  onmousedown="downMouse(event)" onmouseup="upMouse(event)" onmousemove="moveMouse(event)" onclick="clickMouse(event)" onkeypress="polyFinish()"></div>-->
-</xul:box>
+<toolbar id="toolbar" class="standard" persist="collapsed">
+  <titledbutton id="cutButton" class="button28" onclick=""/>
+  <titledbutton id="copyButton" class="button28" onclick=""/>
+  <titledbutton id="pasteButton" class="button28" onclick=""/>
+  <titledbutton id="zoomInButton" class="button28" onclick=""/>
+  <titledbutton id="zoomOutButton" class="button28" onclick=""/>
+  <titledbutton id="contrastButton" class="button28" toggled="0" onclick="highContrast()"/>
+  <spring flex="100%"/>
+</toolbar> 
 
-<xul:toolbar>
-  <!-- Cheap hack untill I get key events hooked up -->
-  <xul:titledbutton class="push" value="Delete Spot" onclick="deleteElement(currentElement)"/>  
-  <xul:spring flex="100%"/>
-  <xul:titledbutton class="push" value="OK" onclick="finishMap()"/>  
-  <xul:titledbutton class="push" value="Cancel" onclick="exitImageMap()"/> 
-</xul:toolbar>
-<!-- from global dialogOverlay -->
-<xul:box id="okCancelButtons"/> 
 
-</xul:window>
+<box align="horizontal" flex="100">
+
+  <toolbar id="toolbox" align="vertical">
+    <titledbutton id="pointer" class="other28" onclick="changeTool(event, 'pointer')"/>
+    <titledbutton id="rect" class="other28" onclick="changeTool(event, 'rect')"/>
+    <titledbutton id="cir" class="other28" onclick="changeTool(event, 'cir')"/>
+    <titledbutton id="poly" class="other28" onclick="changeTool(event, 'poly')"/>
+    <spring flex="100%"/>
+  </toolbar>
+
+  <!-- Content Area -->
+  <html:iframe id="content" src="EdImageMapPage.html" flex="100%"/>
+
+</box>
+
+  <!-- from EdDialogOverlay -->
+  <!-- not sure if this is needed, but put it in just in case 
+  <box id="AdvancedEditButton"/> -->
+
+  <box align="horizontal">
+
+    <!-- Cheap hack untill I get key events hooked up -->
+    <titledbutton 
+    class   = "push dialog"
+    id	    = "DelButton"
+    value="&delSpotCmd.label;" 
+    onclick="deleteElement(currentElement)"/>
+    
+    <spring flex="100%"/>
+
+    <!-- from global dialogOverlay -->
+    <box id="okCancelButtons"/>
+
+  </box>
+
+</window>

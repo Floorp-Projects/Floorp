@@ -14,13 +14,12 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Copyright (C) 1999-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributor(s): 
- *   Dan Haddix (dan6992@hotmail.com)
+ *   Dan Haddix
  */
-
 
 var dialog;
 
@@ -29,10 +28,10 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
-  
-   doSetOKCancel(onOK, null);
 
- // Create dialog object to store controls for easy access
+  doSetOKCancel(onOK, null); // Map OK/Cancel to relevant functions
+  
+  // Create dialog object to store controls for easy access
   dialog = new Object;
   dialog.urlInput = document.getElementById("urlInput");
 
