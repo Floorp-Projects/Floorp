@@ -1,0 +1,78 @@
+/* stylesheet for XUL <checkbox> element */
+
+/* default checkbox for dialogs */
+
+/* outer checkbox frame */
+  checkbox 
+    {
+      margin: 3px 5px 3px 5px;
+    }
+
+/* checkmark outer frame */
+  checkbox > .internal-box > .checkmark-box 
+    {
+      border: 1px solid #000000;
+      -moz-border-radius: 3px 2px 2px 3px;
+      background-color: #CCCCCC;
+      margin-top: 2px;
+    }
+
+  checkbox[disabled="true"] > .internal-box > .checkmark-box,
+  checkbox[disabled="true"]:hover > .internal-box > .checkmark-box 
+    {
+      border: 1px solid #999999;
+    }
+    
+/* checkmark inner frame */
+  checkbox > .internal-box > .checkmark-box > image 
+    {
+      border: 1px outset #CCCCCC;
+      width: 8px;
+      height: 8px;
+    }
+  
+  checkbox[checked="true"] > .internal-box > .checkmark-box > image 
+    {
+      list-style-image: url(chrome://global/skin/check-check.gif);
+    }
+    
+  checkbox[checked="true"][disabled="true"] > .internal-box > .checkmark-box > image
+    {
+      list-style-image: url(chrome://global/skin/check-check-disabled.gif);
+    }  
+
+  checkbox:hover:active > .internal-box > .checkmark-box > image 
+    {
+      border: 1px inset #CCCCCC;
+    }
+  
+  checkbox[disabled="true"] > .internal-box > .checkmark-box > image,
+  checkbox[disabled="true"]:active > .internal-box > .checkmark-box > image 
+    {
+      border: 1px outset #CCCCCC;
+      -moz-border-radius: 0px;
+    }
+
+/* checkmark label/icon frame */
+  checkbox[value] > .internal-box > html,
+  checkbox.iconic > .internal-box > .icon 
+    {
+      margin: 0px 0px 0px 4px;
+      padding: 1px;
+    }
+
+  checkbox.iconic > .internal-box > html 
+    {
+      margin-left: 4px;
+    }
+
+  checkbox[disabled="true"][value] > .internal-box > html 
+    {
+      color: #999999;
+    }
+    
+  checkbox:focus > .internal-box > html 
+    {
+      border              : 1px dotted black;
+      padding             : 0px;
+    }

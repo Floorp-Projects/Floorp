@@ -1,0 +1,291 @@
+/** this should only contain XUL dialog and document window widget defaults. Defaults for widgets of
+    a particular application should be in that application's style sheet.
+	For example style definitions for navigator can be found in navigator.css
+
+   THIS FILE IS LOCKED DOWN.  YOU ARE NOT ALLOWED TO MODIFY IT WITHOUT FIRST HAVING YOUR
+   CHANGES REVIEWED BY hyatt@netscape.com.
+**/
+
+/* import the widget style sheets */
+
+@import url(chrome://global/skin/box.css);
+@import url(chrome://global/skin/button.css);
+@import url(chrome://global/skin/checkbox.css);
+@import url(chrome://global/skin/radio.css);
+@import url(chrome://global/skin/tree.css);
+@import url(chrome://global/skin/menu.css);
+@import url(chrome://global/skin/menubutton.css);
+@import url(chrome://global/skin/menulist.css);
+@import url(chrome://global/skin/formatting.css);
+@import url(chrome://global/skin/textfield.css);
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
+@namespace html url("http://www.w3.org/TR/REC-html40"); 
+
+html|* {
+  border: 1px solid green !important;
+}
+
+html|form {
+  border: none !important;
+}
+
+titledbutton {
+  border: 1px solid purple !important;
+}
+
+/**********************************
+ * Window
+ **********************************/
+
+/**
+ * The is the outer most tag in a xul document all xul
+ * content will be inside it.
+ */
+window { 
+  background-color: white;
+  font: 3mm tahoma,arial,helvetica,sans-serif;
+  padding: 0px;
+}
+
+window[wait-cursor] { cursor: wait !important; }
+
+/**
+ * This is a special class of window used for dialogs
+ */
+window.dialog 
+  { 
+    background-color      : #CCCCCC;
+    padding               : 5px;
+  }
+
+/**********************************
+ * XUL widgets
+ **********************************/
+
+/******** Box *********/
+
+:-moz-horizontal-box-debug {
+  border: 2px solid blue;
+  border-top-width: 10px;
+  padding: 2px;
+  margin: 2px;
+  color: white;
+}
+
+:-moz-vertical-box-debug {
+  border: 2px solid red;
+  border-left-width: 10px;
+  padding: 2px;
+  margin: 2px;
+  color: white;
+}
+
+/**
+ * Throbber
+ */
+/* FIX ME - move these gifs to global */
+titledbutton#Throbber {
+	border: none;
+	margin-top: 8px;
+	margin-left: 9px;
+	list-style-image: url("chrome://global/skin/animthrob_single.gif");
+	background-image: none;
+}
+
+titledbutton#Throbber:hover:active {
+	margin-top: 9px;
+	margin-left: 10px;
+}
+
+titledbutton#Throbber[busy="true"] {
+	list-style-image:url("chrome://global/skin/animthrob.gif");
+}
+
+/* icons titledbuttons */
+.message-icon {
+  list-style-image: url("chrome://global/skin/message-icon.gif");
+}
+.alert-icon {
+  list-style-image: url("chrome://global/skin/alert-icon.gif");
+}
+.error-icon {
+  list-style-image: url("chrome://global/skin/error-icon.gif");
+}
+.question-icon {
+  list-style-image: url("chrome://global/skin/question-icon.gif");
+}
+
+/**
+ * status-bar
+ */
+#status-bar 
+  {
+	  background-color      : #CCCCCC;
+	  user-focus            : ignore;
+    overflow              : hidden
+  }
+
+/******** Titled buttons **********/
+titledbutton.toolbar-flat {
+   color: #99CCCC;
+   font: inherit;
+   border: none;
+   padding: 1px;
+   margin: 0px;
+}
+
+titledbutton.toolbar-flat:hover {
+  text-decoration: none;
+  background-color: #336699;
+  color: #CCFFFF;
+}
+
+titledbutton.toolbar-flat:hover:active {
+  text-decoration: none;
+  color: #CCFFFF;
+  padding: 2px 0px 0px 2px;
+}
+
+titledbutton.push[toggled="1"] {
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid white;
+  border-left: 1px solid #666666;
+  border-right: 1px solid white;
+  padding: 3px 1px 1px 3px;
+  margin: 2px;
+}
+
+titledbutton.push[toggled="2"] {
+   background-color: lightgray;
+   border: 1px solid #999999;
+	margin: 2px;
+}
+
+titledbutton.popup {
+	list-style-image:url(chrome://global/skin/taskbar-popup-arrow.gif);
+}
+
+/**********************************
+ * custom XBL widgets
+ **********************************/
+
+/**
+ * texttab folder lookalike e.g. for sidebar panel headers
+ */
+
+box.texttab{
+  behavior: url("chrome://global/content/globalBindings.xml#texttab");
+  padding-top: 2px;
+  min-height: 10px;
+  min-width: 10px;
+}
+
+
+box.texttab[selected="true"] {
+  border-bottom: 1px solid white;
+}
+
+box.texttab > .remain-space{
+  border-bottom:1px solid black;
+}
+
+box.texttab > .tab-leftedge {
+  list-style-image: url("chrome://global/skin/tab-leftedge.gif");
+}
+
+box.texttab > .tab-rightedge {
+  list-style-image: url("chrome://global/skin/tab-rightedge.gif");
+}
+
+box.texttab[selected="true"] > .tab-leftedge {
+  list-style-image: url("chrome://global/skin/seltab-leftedge.gif");
+}
+
+box.texttab[selected="true"]  > .tab-rightedge {
+  list-style-image: url("chrome://global/skin/seltab-rightedge.gif");
+}
+
+box.texttab > .textholder {
+  border-top: 1px solid black;
+  background-color: #CCCCCC;
+}
+
+box.texttab[selected="true"] > .textholder {
+  background-color: white;
+  font-weight: bold;
+}
+
+/**********************************
+ * HTML components in the window tag
+ **********************************/
+html|iframe {
+ min-width: 10px;
+ min-height: 10px;
+ width: 100px;
+ height: 100px;
+ border: none;
+}
+
+
+/** XUL <progressmeter> **/
+
+  progressmeter[mode="undetermined"] > .progressmeter-internal-box
+    {
+      background-image    : url(chrome://global/skin/progressmeter-busy.gif);
+    }
+  
+  progressmeter[mode="undetermined"] > .progressmeter-internal-box > .progressmeter-stack > .progressmeter-progressbar
+    {
+      display             : none;
+    }
+
+  progressmeter 
+    {
+      margin              : 0px 4px 0px 4px;
+      border              : 1px inset #CCCCCC;
+      max-height          : 1.5em;
+    }
+
+  progressmeter > .progressmeter-internal-box 
+    {
+      border              : 1px solid #000000;
+    }
+
+/* progress indicators */
+  .progress-bar 
+    {
+	    background-color    : #6699cc;
+      border-right        : 1px outset #6699cc;
+    }
+  
+  .progress-remainder 
+    {
+	    background-color    : #999999;
+    }
+
+/** XUL <scrollbar> element **/
+  scrollbar 
+    { 
+      user-focus          : ignore; 
+    } 
+
+
+/* XUL <colorpicker> pieces */
+.colorpickertile 
+  {
+    width                 : 20px;
+    height                : 20px;
+    margin                : 1px;
+    border                : 1px inset #CCCCCC;
+  }
+
+.colorpickertile:hover 
+  {
+    border                : 1px solid #FFFFFF;
+  }
+
+.colorpickertile[selected="true"] 
+  {
+    border                : 1px solid #000000;
+  }

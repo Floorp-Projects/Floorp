@@ -1,0 +1,84 @@
+
+/** 
+ * Atomic sub-parts of standard menus
+ **/
+.menu-right 
+  {
+    margin                : 0px 0px 0px 6px;
+    width                 : 8px;
+    text-align            : center;
+    list-style-image      : url("chrome://global/skin/menu-arrow.gif");
+  }
+
+.menu-iconic-left 
+  {
+    color                 : inherit;
+    margin                : 0px 2px 0px 0px;
+    width                 : 13px;
+    text-align            : center;
+    list-style-image      : inherit;
+  }
+
+.menubar-left 
+  {
+    color                 : inherit;
+    margin                : 0px 2px 0px 0px;
+  }
+
+.menu-iconic-text, .menu-iconic-accel, .menu-text, .menu-accel 
+  {
+    color                 : inherit;
+    margin                : 0px 2px 0px 0px;
+  }
+
+.menu-text 
+  {
+    padding-left          : 15px;
+  }
+
+.menu-accel 
+  {
+    margin-left           : 4px;
+    padding-right         : 14px;
+  }
+
+.menu-iconic-accel 
+  {
+    margin-left           : 4px;
+  }
+
+.menubar-text 
+  {
+    color                 : inherit;
+    margin-right          : 2px;
+  }
+
+menuitem[checked="true"] 
+  {
+    list-style-image      : url("chrome://global/skin/menu-check.gif");
+  }
+
+menuitem[checked="true"][disabled="true"] 
+  {
+    list-style-image      : url("chrome://global/skin/menu-check-disabled.gif");
+  }
+
+menuitem[checked="true"][menuactive="true"] 
+  {
+    list-style-image      : url("chrome://global/skin/menu-check-hover.gif");
+  }
+
+.menu-right[disabled="true"] 
+  {
+    list-style-image      : url("chrome://global/skin/menu-arrow-disabled.gif");
+  }
+
+.menu-right[menuactive="true"][disabled="true"] 
+  {
+    list-style-image      : url("chrome://global/skin/menu-arrow-disabled.gif");
+  }
+
+.menu-right[menuactive="true"] 
+  {
+    list-style-image      : url("chrome://global/skin/menu-arrow-hover.gif");
+  }
