@@ -104,5 +104,6 @@
         <string id="defaultApp">             &useSystemDefault.label; </string>
         <string id="badApp">                 &badApp;                 </string>
         <string id="badApp.title">           &badApp.title;           </string>
+        <string id="chooseAppFilePickerTitle">&chooseAppFilePickerTitle;</string>
     </strings>
 </dialog>
