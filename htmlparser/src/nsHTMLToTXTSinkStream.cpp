@@ -600,13 +600,13 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
       {
         temp += " (";
         temp += desc;
-        temp += " <URL:";
+        temp += " <";
         temp += url;
         temp += ">) ";
       }
       else
       {
-        temp += " <URL:";
+        temp += " <";
         temp += url;
         temp += "> ";
       }
@@ -714,7 +714,7 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
   { // these brackets must stay here
     if (!mURL.IsEmpty())
     {
-      nsAutoString temp(" <URL:");
+      nsAutoString temp(" <");
       temp += mURL;
       temp += ">";
       Write(temp);
