@@ -822,6 +822,8 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
          mNeedsAccessUpdate = PR_FALSE;
      }
 
+     // this should not be hardcoded. CSS should decide what the text looks like.
+     /*
 	   // if disabled paint 
 	   if (PR_TRUE == mRenderer->isDisabled())
 	   {
@@ -833,6 +835,7 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
                                     disabledRect.y + mAccessOffset,
                                     mAccessWidth, mAccessUnderlineSize);
 	   }
+       */
 
 	   aRenderingContext.SetColor(colorStyle->mColor);
 	   aRenderingContext.DrawString(mCroppedTitle, mTitleRect.x, mTitleRect.y);
