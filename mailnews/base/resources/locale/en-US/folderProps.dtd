@@ -22,6 +22,7 @@
    -   David Bienvenu <bienvenu@netscape.com>
    -   Mohan Bhamidipati <mohanb@netscape.com>
    -   Lorenzo Colitti   <lorenzo@colitti.com>
+   -   Stefan Borggraefe <Stefan.Borggraefe@gmx.de>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,36 +38,41 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY folderProps.windowtitle.label  "Properties">
+<!ENTITY folderProps.windowtitle.label           "Properties">
 
-<!ENTITY generalInfo.label            "General Information">
-<!ENTITY generalInfo.accesskey        "G">
-<!ENTITY folderCharsetTab.label       "Default Character Encoding:">
-<!ENTITY folderCharsetOverride.label  "Apply default to all messages in the folder (individual message character encoding settings and auto-detection will be ignored)">
+<!ENTITY generalInfo.label                       "General Information">
+<!ENTITY folderCharsetTab.label                  "Default Character Encoding:">
+<!ENTITY folderCharsetTab.accesskey              "E">
+<!ENTITY folderCharsetOverride.label             "Apply default to all messages in the folder (individual message character encoding settings and auto-detection will be ignored)">
+<!ENTITY folderCharsetOverride.accesskey         "A">
 
-<!ENTITY folderOfflineTab.label                             "Offline">
-<!ENTITY folderOfflineTab.accesskey                         "O">
-<!ENTITY folderCheckForNewMessages.label                    "Check this folder for new messages">
+<!ENTITY folderOfflineTab.label                  "Offline">
+<!ENTITY folderCheckForNewMessages.label         "Check this folder for new messages">
+<!ENTITY folderCheckForNewMessages.accesskey     "C">
 
-<!ENTITY offlineFolder.check.label                          "Select this folder for offline use">
-<!ENTITY offlineFolder.button.label                         "Download Now">
+<!ENTITY offlineFolder.check.label               "Select this folder for offline use">
+<!ENTITY offlineFolder.check.accesskey           "S">
+<!ENTITY offlineFolder.button.label              "Download Now">
+<!ENTITY offlineFolder.button.accesskey          "D">
 
-<!ENTITY selectofflineNewsgroup.check.label                 "Select this newsgroup for offline use">
-<!ENTITY UseDefaultofflineNewsgroup.check.label             "Use the default from account settings ">
-<!ENTITY offlineNewsgroup.button.label                      "Download Now">
+<!ENTITY selectofflineNewsgroup.check.label      "Select this newsgroup for offline use">
+<!ENTITY selectofflineNewsgroup.check.accesskey  "o">
+<!ENTITY UseDefaultofflineNewsgroup.check.label  "Use the default from account settings ">
+<!ENTITY offlineNewsgroup.button.label           "Download Now">
+<!ENTITY offlineNewsgroup.button.accesskey       "D">
 
-<!ENTITY folderProps.information.label  "Information:">
-<!ENTITY folderProps.name.label	        "Name:">
+<!ENTITY folderProps.information.label           "Information:">
+<!ENTITY folderProps.name.label                  "Name:">
+<!ENTITY folderProps.name.accesskey              "N">
 
-<!ENTITY folderSharingTab.label                             "Sharing">
-<!ENTITY folderSharingTab.accesskey                         "S">
-<!ENTITY privilegesDesc.label  "Share this and other folders with network users and display and set access privileges">
-<!ENTITY privileges.button.label                      "Privileges...">
-<!ENTITY permissionsDesc.label                            "You have the following permissions:">
-<!ENTITY folderType.label                             "Folder Type:">
+<!ENTITY folderSharingTab.label                  "Sharing">
+<!ENTITY privilegesDesc.label                    "Share this and other folders with network users and display and set access privileges">
+<!ENTITY privileges.button.label                 "Privileges...">
+<!ENTITY privileges.button.accesskey             "P">
+<!ENTITY permissionsDesc.label                   "You have the following permissions:">
+<!ENTITY folderType.label                        "Folder Type:">
 
-<!ENTITY folderQuotaTab.label                               "Quota">
-<!ENTITY folderQuotaTab.accesskey                           "Q">
-<!ENTITY folderQuotaRoot.label                              "Quota Root:">
-<!ENTITY folderQuotaUsage.label                             "Usage:">
-<!ENTITY folderQuotaStatus.label                            "Status:">
+<!ENTITY folderQuotaTab.label                    "Quota">
+<!ENTITY folderQuotaRoot.label                   "Quota Root:">
+<!ENTITY folderQuotaUsage.label                  "Usage:">
+<!ENTITY folderQuotaStatus.label                 "Status:">

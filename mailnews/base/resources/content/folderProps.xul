@@ -25,6 +25,7 @@
    David Bienvenu          <bienvenu@netscape.com>
    Doron Rosenberg         <doronr@naboonline.com>
    Lorenzo Colitti         <lorenzo@colitti.com>
+   Stefan Borggraefe       <Stefan.Borggraefe@gmx.de>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -71,13 +72,15 @@
   <tabpanels id="folderPropTabPanel">
     <vbox>
       <hbox id="nameBox" align="center">
-        <label value="&folderProps.name.label;" for="name"/>
+        <label value="&folderProps.name.label;" for="name"
+               accesskey="&folderProps.name.accesskey;" control="name"/>
         <textbox id="name" readonly="true" oninput="doEnabling();" flex="1"/>
       </hbox>
       
       <vbox>
         <hbox align="center" valign="middle">
-          <label value="&folderCharsetTab.label;" control="folderCharSetList"/>
+          <label value="&folderCharsetTab.label;" control="folderCharsetList"
+                 accesskey="&folderCharsetTab.accesskey;"/>
           <menulist id="folderCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"> 
             <template>
               <menupopup>
@@ -86,10 +89,13 @@
             </template>
           </menulist>
         </hbox> 
-        <checkbox class="indent" id="folderCharsetOverride" label="&folderCharsetOverride.label;" />
+        <checkbox class="indent" id="folderCharsetOverride"
+                  label="&folderCharsetOverride.label;"
+                  accesskey="&folderCharsetOverride.accesskey;"/>
         <checkbox hidable="true" hidefor="movemail,pop3,none,nntp"
                   class="indent" id="folderCheckForNewMessages"
-                  label="&folderCheckForNewMessages.label;" />
+                  label="&folderCheckForNewMessages.label;"
+                  accesskey="&folderCheckForNewMessages.accesskey;"/>
       </vbox>
     </vbox>
  
@@ -97,16 +103,18 @@
       <vbox>
         <checkbox iscontrolcontainer="true" hidable="true"  
                   wsm_persist="true" id="offline.selectForOfflineFolder"  
-                  hidefor="nntp" label="&offlineFolder.check.label;" />
+                  hidefor="nntp" label="&offlineFolder.check.label;"
+                  accesskey="&offlineFolder.check.accesskey;"/>
         <checkbox iscontrolcontainer="true" hidable="true" 
                   wsm_persist="true" id="offline.selectForOfflineNewsgroup" 
-                  hidefor="imap" label="&selectofflineNewsgroup.check.label;" />
+                  hidefor="imap" label="&selectofflineNewsgroup.check.label;"
+                  accesskey="&selectofflineNewsgroup.check.accesskey;"/>
       </vbox>
       <button iscontrolcontainer="true" hidable="true" label="&offlineFolder.button.label;" 
-              oncommand="onOfflineFolderDownload();" 
+              oncommand="onOfflineFolderDownload();" accesskey="&offlineFolder.button.accesskey;" 
               id="offline.offlineFolderDownloadButton" hidefor="nntp" orient="right"/>
       <button iscontrolcontainer="true" hidable="true" label="&offlineNewsgroup.button.label;" 
-              oncommand="onOfflineFolderDownload();" 
+              oncommand="onOfflineFolderDownload();" accesskey="&offlineNewsgroup.button.accesskey;" 
               id="offline.offlineNewsgroupDownloadButton" hidefor="imap" orient="right"/>
     </vbox>
     <vbox hidable="true" hidefor="movemail,pop3,none,nntp" valign="top" align="start">
@@ -120,7 +128,7 @@
       <label value="" id="folderPermissions.text"/>
       <spacer flex="100%"/>
       <button iscontrolcontainer="true" hidable="true" label="&privileges.button.label;" 
-              oncommand="onFolderPrivileges();" 
+              oncommand="onFolderPrivileges();" accesskey="&privileges.button.accesskey;" 
               id="imap.FolderPrivileges" hidefor="movemail,pop3,none,nntp" orient="right"/>
     </vbox>
     <vbox hidable="true" hidefor="pop3,none,nntp" valign="top">
