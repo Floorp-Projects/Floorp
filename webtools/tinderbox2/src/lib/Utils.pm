@@ -3,8 +3,8 @@
 # General purpose utility functions.  Every project needs a kludge
 # bucket for common access.
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:27:17 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/09/10 17:29:17 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -140,6 +140,15 @@ sub get_env {
   $START_TIME = $TIME;
 
   $HOSTNAME = Sys::Hostname::hostname();
+
+  # check both real and effective uid of the process to see if we have
+  # been configured to run with too much privileges.
+
+  ( $< == 0 ) &&
+    die("Security Error. Must not run this program as root\n");
+
+  ( $> == 0 ) &&
+    die("Security Error. Must not run this program as root\n");
 
   my ($logdir) = File::Basename::dirname($ERROR_LOG);
   mkdir_R($logdir);
