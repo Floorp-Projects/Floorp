@@ -167,7 +167,7 @@ void nsGfxModuleData::Init()
    char   buffer[CCHMAXPATH];
    APIRET rc;
 
-   rc = DosLoadModule( buffer, CCHMAXPATH, "GFX_OS2", &hModResources);
+   rc = DosLoadModule( buffer, CCHMAXPATH, "GFXRES", &hModResources);
 
    if( rc)
    {
