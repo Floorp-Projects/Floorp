@@ -258,11 +258,12 @@ static void BuildInterfaceName(const nsAString& qualifier,
                                nsACString& aCIdentifier)
 {
   nsCAutoString temp;
-  aCIdentifier.Truncate();
   WSPFactory::XML2C(qualifier, temp);
-  aCIdentifier.Append(temp);
+  aCIdentifier.Assign(temp);
+
   WSPFactory::XML2C(name, temp);
   aCIdentifier.Append(temp);
+
   WSPFactory::XML2C(uri, temp);
   aCIdentifier.Append(temp);
 }
@@ -291,7 +292,7 @@ static nsresult GetParamDescOfType(nsIInterfaceInfoSuperManager* iism,
 /***************************************************************************/
 // AppendMethodForParticle appends a method to a 'struct' interface 
 // to represent the given nsISchemaParticle. It knows how to flatten
-// particles that are themselvesmodeulgroups (by recurring into 
+// particles that are themselves modelgroups (by recurring into 
 // AppendMethodsForModelGroup). At also knows how to deal with arrays.
 
 static nsresult AppendMethodForParticle(nsIInterfaceInfoSuperManager* iism,
@@ -356,12 +357,12 @@ static nsresult AppendMethodForParticle(nsIInterfaceInfoSuperManager* iism,
   pparamDesc = params.GetArray();
   for (i = 0; i < params.GetCount(); pparamDesc++, i++) {
     // handle AString 'out' passing convensions
-    pparamDesc->flags |= 
-      (pparamDesc->flags | TD_DOMSTRING) ? 
+    pparamDesc->flags |=
+      (XPT_TDP_TAG(pparamDesc->type.prefix) == TD_DOMSTRING) ?
           (XPT_PD_IN | XPT_PD_DIPPER) : XPT_PD_OUT;
 
     // handle array size_of/length_of.
-    if (pparamDesc->type.prefix.flags | TD_ARRAY) {
+    if (XPT_TDP_TAG(pparamDesc->type.prefix) == TD_ARRAY) {
       pparamDesc->type.argnum = 
           pparamDesc->type.argnum2 = i - 1; 
     }
@@ -1227,9 +1228,9 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
     for (k = 0; k < inParams.GetCount(); pparamDesc++, k++) {
       // set direction flag
       pparamDesc->flags |= XPT_PD_IN;
-    
+
       // handle array size_of/length_of.
-      if (pparamDesc->type.prefix.flags | TD_ARRAY) {
+      if (XPT_TDP_TAG(pparamDesc->type.prefix) == TD_ARRAY) {
         pparamDesc->type.argnum = 
             pparamDesc->type.argnum2 = k - 1; 
       }
@@ -1257,13 +1258,13 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
     pparamDesc = outParams.GetArray();
     for (k = 0; k < outParams.GetCount(); pparamDesc++, k++) {
       // handle AString 'out' passing convensions
-      pparamDesc->flags |= 
-        (pparamDesc->flags | TD_DOMSTRING) ? 
+      pparamDesc->flags |=
+        (XPT_TDP_TAG(pparamDesc->type.prefix) == TD_DOMSTRING) ?
             (XPT_PD_IN | XPT_PD_DIPPER) : XPT_PD_OUT;
 
       // handle array size_of/length_of.
-      if (pparamDesc->type.prefix.flags | TD_ARRAY) {
-        pparamDesc->type.argnum = 
+      if (XPT_TDP_TAG(pparamDesc->type.prefix) == TD_ARRAY) {
+        pparamDesc->type.argnum =
             pparamDesc->type.argnum2 = inParams.GetCount() + k - 1; 
       }
       
@@ -1288,7 +1289,7 @@ NS_IMETHODIMP nsWSPInterfaceInfoService::InfoForPort(nsIWSDLPort *aPort, const n
       pparamDesc->flags |= XPT_PD_IN;
     
       // handle array size_of/length_of.
-      if (pparamDesc->type.prefix.flags | TD_ARRAY) {
+      if (XPT_TDP_TAG(pparamDesc->type.prefix) == TD_ARRAY) {
         pparamDesc->type.argnum = 
             pparamDesc->type.argnum2 = k; // not '-1' because of leading arg  
       }
