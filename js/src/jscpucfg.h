@@ -451,7 +451,7 @@
 #define PR_WORDS_PER_DWORD_LOG2  0L
 
 
-#elif defined(SOLARIS)
+#elif defined(sun) && defined(__svr4__)
 
 #ifdef i386
 /* PC-based */
