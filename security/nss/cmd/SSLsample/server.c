@@ -389,7 +389,6 @@ writeDataToSocket(PRFileDesc *sslSocket, DataBuffer *buffer, char *fileName)
 			PORT_Free(fileName);
 			/* Maybe a GET not sent from client.c? */
 			goto writerequest;
-			return SECSuccess;
 		}
 
 		local_file_fd = PR_Open(fileName, PR_RDONLY, 0);

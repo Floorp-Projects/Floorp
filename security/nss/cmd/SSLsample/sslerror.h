@@ -74,7 +74,7 @@ SSL_Strerror(PRErrorCode errNum) {
      * binary search depends on it.
      */
     if (!initDone) {
-	PRErrorCode lastNum = 0x80000000;
+	PRErrorCode lastNum = (PRInt32)0x80000000;
     	for (i = low; i <= high; ++i) {
 	    num = errStrings[i].errNum;
 	    if (num <= lastNum) {

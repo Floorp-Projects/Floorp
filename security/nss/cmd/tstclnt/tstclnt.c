@@ -340,7 +340,7 @@ int main(int argc, char **argv)
 	  case 'v': verbose++;	 			break;
 
 	  case 'w':
-		password = optstate->value;
+		password = PORT_Strdup(optstate->value);
 		useCommandLinePassword = PR_TRUE;
 		break;
 
