@@ -33,8 +33,7 @@ calendar {
 }
 
 .cal-month-box {
-	background-color: #D2B48C;
-	border: 1px outset #D2B48C;
+	background-color: #EEEEEE;
 }
 
 .cal-month-name {
@@ -75,7 +74,6 @@ calendar {
 }
 
 .cal-header {
-	width: 25px;
 	height: 20px;
 	font-family: Arial;
 	color: blue;
@@ -85,7 +83,6 @@ calendar {
 }
 
 .cal-day {
-	width: 25px;
 	height: 20px;
 	font-family: Arial;
 	color: #000000;

@@ -10,78 +10,77 @@
     <!-- ::::::::::::::::: CONTENT ::::::::::::::::::::::::: -->
     <content>
 
-	    <xul:vbox class="cal-mainbox" >
+	    <xul:vbox class="cal-mainbox"  flex="1">
 		  <xul:hbox class="cal-month-box" flex="1">
 			<xul:image class="cal-navbtn" dir="-1"/>
 			<xul:spacer flex="1"/>
-			<xul:text id="month-name" 
-				class="cal-month-name" value="Month"/>
+			<xul:text id="month-name" class="cal-month-name" value="Month"/>
 			<xul:spacer flex="1"/>
 			<xul:image class="cal-navbtn" dir="1"/>
 		  </xul:hbox>
 		  <xul:vbox class="cal-cal-box" flex="1">
-			<xul:hbox class="cal-row-head" flex="1">
-				<xul:text class="cal-header" value="S"/>
-				<xul:text class="cal-header" value="M"/>
-				<xul:text class="cal-header" value="T"/>
-				<xul:text class="cal-header" value="W"/>
-				<xul:text class="cal-header" value="T"/>
-				<xul:text class="cal-header" value="F"/>
-				<xul:text class="cal-header" value="S"/>
+			<xul:hbox class="cal-row-head" equalsize="always">
+				<xul:text class="cal-header" flex="1" value="S"/>
+				<xul:text class="cal-header" flex="1" value="M"/>
+				<xul:text class="cal-header" flex="1" value="T"/>
+				<xul:text class="cal-header" flex="1" value="W"/>
+				<xul:text class="cal-header" flex="1" value="T"/>
+				<xul:text class="cal-header" flex="1" value="F"/>
+				<xul:text class="cal-header" flex="1" value="S"/>
 			</xul:hbox>
-			<xul:hbox class="cal-row-body"  flex="1">
-				<xul:text class="cal-day" />
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
+			<xul:hbox class="cal-row-body" equalsize="always" flex="1">
+				<xul:text class="cal-day" flex="1" />
+				<xul:text class="cal-day" flex="1" />
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
 			</xul:hbox>
-			<xul:hbox class="cal-row-body"  flex="1">
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
+			<xul:hbox class="cal-row-body" equalsize="always" flex="1">
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
 			</xul:hbox>
-			<xul:hbox class="cal-row-body"  flex="1">
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
+			<xul:hbox class="cal-row-body" equalsize="always" flex="1">
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
 			</xul:hbox>
-			<xul:hbox class="cal-row-body"  flex="1">
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
+			<xul:hbox class="cal-row-body" equalsize="always" flex="1">
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
 			</xul:hbox>
-			<xul:hbox class="cal-row-body"  flex="1">
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
+			<xul:hbox class="cal-row-body" equalsize="always" flex="1">
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
 			</xul:hbox>
-			<xul:hbox class="cal-row-body"  flex="1">
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
-				<xul:text class="cal-day"/>
+			<xul:hbox class="cal-row-body" equalsize="always" flex="1">
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
+				<xul:text class="cal-day" flex="1"/>
 			</xul:hbox>
 		</xul:vbox>
 	</xul:vbox>
@@ -95,6 +94,8 @@
 			onset="this.update(val)"/>
 			
 		<property name="onchange"/>
+      
+      <property name="onmonthchange"/>
       
 		<constructor>
 			<![CDATA[
@@ -114,6 +115,9 @@
           else this.mValue = new Date();
           var change = this.getAttribute("onchange");
           if (change) this.onchange = new Function(change);
+          
+          var monthchange = this.getAttribute("onmonthchange");
+          if (monthchange) this.onmonthchange = new Function(monthchange);
           
           this.showMonth(this.mValue);
         }
@@ -189,6 +193,14 @@
         this.mEditorDate.setMonth(ad);
         
         this.showMonth(this.mEditorDate);
+        
+        if (this.mSelected) {
+          this.mSelected.removeAttribute("selected");
+        }
+        
+        this.value = this.mEditorDate;
+
+        if (this.onmonthchange) this.onmonthchange();
 	
 			]]></body>
 		</method>

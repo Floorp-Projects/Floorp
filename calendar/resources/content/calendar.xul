@@ -45,6 +45,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/datepicker/calendar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/communicator.css" type="text/css"?>
 
 <!-- Overlays -->
@@ -265,9 +266,6 @@
           <toolbarbutton class="toolbarbutton-1" id="calendar-edit-event-button"     label="&calendar.edit.button.label;"            tooltiptext="&calendar.edit.button.tooltip;"         observes="modify_command"/>
           <toolbarbutton class="toolbarbutton-1" id="calendar-delete-event-button"   label="&calendar.delete.button.label;"          tooltiptext="&calendar.delete.button.tooltip;"       observes="delete_command"/>
           <toolbarseparator class="toolbarseparator-primary"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-choose-date-button"    label="&calendar.choosedate.button.label;"      tooltiptext="&calendar.choosedate.button.tooltip;"   popup="oe-date-picker-popup"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-go-to-today-button"    label="&calendar.gototoday.button.label;"       tooltiptext="&calendar.gototoday.button.tooltip;"    observes="go_today_command"/>
-          <toolbarseparator class="toolbarseparator-primary"/>
           <toolbarbutton class="toolbarbutton-1" id="calendar-day-view-button"       label="&calendar.dayview.button.label;"         tooltiptext="&calendar.dayview.button.tooltip;"      observes="day_view_command"/>
           <toolbarbutton class="toolbarbutton-1" id="calendar-week-view-button"      label="&calendar.weekview.button.label;"        tooltiptext="&calendar.weekview.button.tooltip;"     observes="week_view_command"/>
           <toolbarbutton class="toolbarbutton-1" id="calendar-month-view-button"     label="&calendar.monthview.button.label;"       tooltiptext="&calendar.monthview.button.tooltip;"    observes="month_view_command"/>
@@ -298,38 +296,55 @@
    <hbox id="calendar-content-box" flex="1">
 
       <vbox id="left-hand-content" flex="1" persist="width">
-         <vbox id="left-hand-above-splitter" flex="1">
-            <listbox id="list-calendars-listbox" class="unifinder-tree-class" flex="1" 
-               contextmenu="calendarlist-context-menu" datasources="rdf:null" ref="urn:calendarcontainer">
-               <listhead>
-                  <listheader flex="1" crop="end" label="&calendar.calendarlistbox.label;"/>
-                  <listheader/>
-               </listhead>
-               <listcols>
-                  <listcol flex="1"/>
-                  <listcol/>
-               </listcols>
-               <template>
-                  <rule>   
-                     <listitem uri="rdf:*" 
-                        calendarPath="rdf:http://home.netscape.com/NC-rdf#path"
-                        onclick="switchCalendar( event );">
-                        <listcell class="calendar-list-item-class"
-                           label="rdf:http://home.netscape.com/NC-rdf#name"
-                           flex="1"
-                           type="checkbox"
-                           checked="rdf:http://home.netscape.com/NC-rdf#active"
-                           />
-                        <!-- If you add something between the above listcell and this listcell,
-                           or between the next listcell and the image tag, you have to modify calendarManager.js -->
-                        <listcell>
-                           <image class="calendar-list-item-class"/>
-                        </listcell>
-                     </listitem>
-                  </rule>
-               </template>
-            </listbox>
-         </vbox>
+      <tabbox id="tablist">
+         <tabs>
+            <tab label="Calendar"/>
+            <tab label="Calendars"/>
+         </tabs>
+         <tabpanels>
+         <tabpanel>
+            <vbox flex="1">
+               <calendar flex="1" id="lefthandcalendar" onchange="gCalendarWindow.goToDay( this.value );" onmonthchange="gCalendarWindow.goToDay( this.value );"/>
+               <button observes="go_today_command" label="Go To Today"/>
+            </vbox>
+         </tabpanel>
+      
+         <tabpanel>
+               <!--<vbox id="left-hand-above-splitter" flex="1">-->
+                  <listbox id="list-calendars-listbox" class="unifinder-tree-class" flex="1" 
+                     contextmenu="calendarlist-context-menu" datasources="rdf:null" ref="urn:calendarcontainer">
+                     <listhead>
+                        <listheader flex="1" crop="end" label="&calendar.calendarlistbox.label;"/>
+                        <listheader/>
+                     </listhead>
+                     <listcols>
+                        <listcol flex="1"/>
+                        <listcol/>
+                     </listcols>
+                     <template>
+                        <rule>   
+                           <listitem uri="rdf:*" 
+                              calendarPath="rdf:http://home.netscape.com/NC-rdf#path"
+                              onclick="switchCalendar( event );">
+                              <listcell class="calendar-list-item-class"
+                                 label="rdf:http://home.netscape.com/NC-rdf#name"
+                                 flex="1"
+                                 type="checkbox"
+                                 checked="rdf:http://home.netscape.com/NC-rdf#active"
+                                 />
+                              <!-- If you add something between the above listcell and this listcell,
+                                 or between the next listcell and the image tag, you have to modify calendarManager.js -->
+                              <listcell>
+                                 <image class="calendar-list-item-class"/>
+                              </listcell>
+                           </listitem>
+                        </rule>
+                     </template>
+                  </listbox>
+               <!--</vbox>-->
+            </tabpanel>
+            </tabpanels>
+         </tabbox>
          <splitter id="calendar-todo-splitter" collapse="after" persist="state"
             class="chromeclass-extrachrome" orient="vertical">
             <grippy/>

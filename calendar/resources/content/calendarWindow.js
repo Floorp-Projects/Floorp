@@ -365,6 +365,7 @@ CalendarWindow.prototype.setSelectedDate = function calWin_setSelectedDate( date
       //redraw the top tree
       setTimeout( "refreshEventTree( getAndSetEventTable() );", 150 );
    }
+   document.getElementById( "lefthandcalendar" ).value = date;
 }
 
 /** PUBLIC
