@@ -76,6 +76,10 @@ class nsInterfaceInfo : public nsIInterfaceInfo
                                             const nsXPTParamInfo* param,
                                             uint16 dimension,
                                             uint8* argnum);
+
+    NS_IMETHOD GetInterfaceIsArgNumberForParam(uint16 methodIndex, 
+                                               const nsXPTParamInfo* param,
+                                               uint8* argnum);
 public:
     virtual ~nsInterfaceInfo();
 
@@ -83,6 +87,10 @@ public:
     void NS_EXPORT print(FILE *fd);
 #endif
 
+private:
+    NS_IMETHOD GetTypeInArray(const nsXPTParamInfo* param, 
+                              uint16 dimension,
+                              const XPTTypeDescriptor** type);
 private:
     friend class nsInterfaceRecord;
 

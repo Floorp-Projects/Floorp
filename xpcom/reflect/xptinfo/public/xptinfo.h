@@ -103,8 +103,14 @@ public:
                           TagPart() == T_INTERFACE_IS);}
 
     PRBool IsArray() const
-        {return (PRBool) (TagPart() == T_ARRAY ||
-                          TagPart() == T_ARRAY_WITH_LENGTH);}
+        {return (PRBool) TagPart() == T_ARRAY;}
+
+    // 'Dependent' means that params of this type are dependent upon other 
+    // params. e.g. an T_INTERFACE_IS is dependent upon some other param at 
+    // runtime to say what the interface type of this param really is.
+    PRBool IsDependent() const
+        {return (PRBool) (TagPart() == T_INTERFACE_IS ||
+                          TagPart() == TD_ARRAY);}
 
     uint8 TagPart() const
         {return (uint8) (flags & XPT_TDP_TAGMASK);}
@@ -132,7 +138,8 @@ public:
         T_INTERFACE         = TD_INTERFACE_TYPE   ,
         T_INTERFACE_IS      = TD_INTERFACE_IS_TYPE,
         T_ARRAY             = TD_ARRAY            ,
-        T_ARRAY_WITH_LENGTH = TD_ARRAY_WITH_LENGTH
+        T_PSTRING_SIZE_IS   = TD_PSTRING_SIZE_IS  ,
+        T_PWSTRING_SIZE_IS  = TD_PWSTRING_SIZE_IS
     };
 // NO DATA - this a flyweight wrapper
 };
@@ -151,13 +158,7 @@ public:
     PRBool IsShared() const {return (PRBool) (XPT_PD_IS_SHARED(flags));}
     const nsXPTType GetType() const {return type.prefix;}
 
-    uint8 GetInterfaceIsArgNumber() const
-    {
-        NS_PRECONDITION(GetType().TagPart() == nsXPTType::T_INTERFACE_IS,"not an interface_is");
-        return type.argnum;
-    }
-    // NOTE: gettting the interface or interface iid is done via methods on
-    // nsIInterfaceInfo
+    // NOTE: other activities on types are done via methods on nsIInterfaceInfo
 
 private:
     nsXPTParamInfo();   // no implementation

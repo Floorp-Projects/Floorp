@@ -284,7 +284,16 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
                     nsIID* iid = nsnull;
                     if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
                     {
-                        uint8 arg_num = paramInfo.GetInterfaceIsArgNumber();
+                        uint8 arg_num;
+                        
+                        rv = interfaceInfo->GetInterfaceIsArgNumberForParam(methodIndex, &paramInfo, &arg_num);
+                        if(NS_FAILED(rv))
+                        {
+                            // This is really bad that we are here.  
+                            rv = NS_ERROR_PROXY_INVALID_IN_PARAMETER;
+                            continue;
+                        }
+
                         const nsXPTParamInfo& param = methodInfo->GetParam(arg_num);
                         const nsXPTType& currentType = param.GetType();
 

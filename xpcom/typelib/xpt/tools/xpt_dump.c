@@ -35,25 +35,29 @@
 
 #define BASE_INDENT 3
 
-static char *type_array[18] = {"int8", "int16", "int32", "int64",
-                               "uint8", "uint16", "uint32", "uint64",
-                               "float", "double", "boolean", "char",
-                               "wchar_t", "void", "reserved", "reserved",
-                               "reserved", "reserved"};
+static char *type_array[23] = 
+            {"int8",        "int16",        "int32",        "int64",
+             "uint8",       "uint16",       "uint32",       "uint64",
+             "float",       "double",       "boolean",      "char",
+             "wchar_t",     "void",         "reserved",     "reserved",
+             "reserved",    "reserved",     "reserved",     "reserved",
+             "reserved",    "reserved",     "reserved"};
 
-static char *ptype_array[20] = {"int8 *", "int16 *", "int32 *", "int64 *",
-                                "uint8 *", "uint16 *", "uint32 *", "uint64 *",
-                                "float *", "double *", "boolean *", "char *",
-                                "wchar_t *", "void *", "nsIID *", "bstr",
-                                "string", "wstring", "Interface *", 
-                                "InterfaceIs *"};
+static char *ptype_array[23] = 
+            {"int8 *",      "int16 *",      "int32 *",      "int64 *",
+             "uint8 *",     "uint16 *",     "uint32 *",     "uint64 *",
+             "float *",     "double *",     "boolean *",    "char *",
+             "wchar_t *",   "void *",       "nsIID *",      "bstr",
+             "string",      "wstring",      "Interface *",  "InterfaceIs *",
+             "array",       "string_s",     "wstring_s"};
 
-static char *rtype_array[20] = {"int8 &", "int16 &", "int32 &", "int64 &",
-                                "uint8 &", "uint16 &", "uint32 &", "uint64 &",
-                                "float &", "double &", "boolean &", "char &",
-                                "wchar_t &", "void &", "nsIID &", "bstr",
-                                "string", "wstring", "Interface &", 
-                                "InterfaceIs &"};
+static char *rtype_array[23] = 
+            {"int8 &",      "int16 &",      "int32 &",      "int64 &",
+             "uint8 &",     "uint16 &",     "uint32 &",     "uint64 &",
+             "float &",     "double &",     "boolean &",    "char &",
+             "wchar_t &",   "void &",       "nsIID &",      "bstr",
+             "string &",    "wstring &",    "Interface &",  "InterfaceIs &",
+             "array &",     "string_s &",   "wstring_s &"};
 
 PRBool param_problems = PR_FALSE;
 
@@ -639,7 +643,7 @@ XPT_GetStringForType(XPTHeader *header, XPTTypeDescriptor *td,
 
     int tag = XPT_TDP_TAG(td->prefix);
     
-    if (tag == TD_ARRAY || tag == TD_ARRAY_WITH_LENGTH) {
+    if (tag == TD_ARRAY) {
         isArray = PR_TRUE;
         td = &id->additional_types[td->type.additional_type];
         tag = XPT_TDP_TAG(td->prefix);
@@ -746,11 +750,6 @@ XPT_DumpTypeDescriptor(XPTTypeDescriptor *td,
     int new_indent;
 
     if (XPT_TDP_TAG(td->prefix) == TD_ARRAY) {
-        fprintf(stdout, "%*sArray (size in arg %d) of...\n", 
-                indent, " ", td->argnum);
-        td = &id->additional_types[td->type.additional_type];
-        indent += BASE_INDENT;
-    } else if (XPT_TDP_TAG(td->prefix) == TD_ARRAY_WITH_LENGTH) {
         fprintf(stdout, "%*sArray (size in arg %d and length in arg %d) of...\n", 
             indent, " ", td->argnum, td->argnum2);
         td = &id->additional_types[td->type.additional_type];
@@ -780,6 +779,12 @@ XPT_DumpTypeDescriptor(XPTTypeDescriptor *td,
     fprintf(stdout, "%*sTag:               %d\n", indent, " ", 
             XPT_TDP_TAG(td->prefix));
     
+    if (XPT_TDP_TAG(td->prefix) == TD_PSTRING_SIZE_IS ||
+        XPT_TDP_TAG(td->prefix) == TD_PWSTRING_SIZE_IS) {
+        fprintf(stdout, "%*s - size in arg %d and length in arg %d\n", 
+            indent, " ", td->argnum, td->argnum2);
+    }
+
     if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
         fprintf(stdout, "%*sInterfaceTypeDescriptor:\n", indent, " "); 
         fprintf(stdout, "%*sIndex of IDE:             %d\n", new_indent, " ", 

@@ -199,8 +199,8 @@ nsInterfaceInfo::GetConstant(uint16 index, const nsXPTConstant** constant)
 }
 
 NS_IMETHODIMP
-nsInterfaceInfo::GetInfoForParam(uint16 methodIndex, 
-                                 const nsXPTParamInfo *param, 
+nsInterfaceInfo::GetInfoForParam(uint16 methodIndex,
+                                 const nsXPTParamInfo *param,
                                  nsIInterfaceInfo** info)
 {
     NS_PRECONDITION(param, "bad pointer");
@@ -225,7 +225,7 @@ nsInterfaceInfo::GetInfoForParam(uint16 methodIndex,
 }
 
 NS_IMETHODIMP
-nsInterfaceInfo::GetIIDForParam(uint16 methodIndex, 
+nsInterfaceInfo::GetIIDForParam(uint16 methodIndex,
                                 const nsXPTParamInfo* param, nsIID** iid)
 {
     NS_PRECONDITION(param, "bad pointer");
@@ -246,12 +246,34 @@ nsInterfaceInfo::GetIIDForParam(uint16 methodIndex,
     nsInterfaceRecord *paramRecord =
         *(this->mInterfaceRecord->typelibRecord->
           interfaceRecords + (param->type.type.interface - 1));
-    
+
     return paramRecord->GetIID(iid);
 }
 
-NS_IMETHODIMP 
-nsInterfaceInfo::GetTypeForParam(uint16 methodIndex, 
+// this is a private helper
+NS_IMETHODIMP
+nsInterfaceInfo::GetTypeInArray(const nsXPTParamInfo* param,
+                                uint16 dimension,
+                                const XPTTypeDescriptor** type)
+{
+    const XPTTypeDescriptor *td = &param->type;
+    const XPTTypeDescriptor *additional_types =
+                this->mInterfaceRecord->interfaceDescriptor->additional_types;
+
+    for (uint16 i = 0; i < dimension; i++) {
+        if (XPT_TDP_TAG(td->prefix) != TD_ARRAY) {
+            NS_ASSERTION(0, "bad dimension");
+            return NS_ERROR_INVALID_ARG;
+        }
+        td = &additional_types[td->type.additional_type];
+    }
+
+    *type = td;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInterfaceInfo::GetTypeForParam(uint16 methodIndex,
                                  const nsXPTParamInfo* param,
                                  uint16 dimension,
                                  nsXPTType* type)
@@ -267,35 +289,31 @@ nsInterfaceInfo::GetTypeForParam(uint16 methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
-    const XPTTypeDescriptor *td = &param->type;
-    const XPTTypeDescriptor *additional_types =
-                this->mInterfaceRecord->interfaceDescriptor->additional_types;
+    const XPTTypeDescriptor *td;
 
-    for(uint16 i = 0; i < dimension; i++) {
-        uint8 tag = XPT_TDP_TAG(td->prefix);
-        if (tag != TD_ARRAY && tag != TD_ARRAY_WITH_LENGTH) {
-            NS_ASSERTION(0, "bad dimension");
-            return NS_ERROR_INVALID_ARG;
-        }
-        td = &additional_types[td->type.additional_type];
+    if (dimension) {
+        nsresult rv = GetTypeInArray(param, dimension, &td);
+        if (NS_FAILED(rv))
+            return rv;
     }
+    else
+        td = &param->type;
 
     *type = nsXPTType(td->prefix);
     return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsInterfaceInfo::GetSizeIsArgNumberForParam(uint16 methodIndex, 
+NS_IMETHODIMP
+nsInterfaceInfo::GetSizeIsArgNumberForParam(uint16 methodIndex,
                                             const nsXPTParamInfo* param,
                                             uint16 dimension,
                                             uint8* argnum)
 {
     NS_PRECONDITION(param, "bad pointer");
     NS_PRECONDITION(argnum, "bad pointer");
-    NS_PRECONDITION(dimension > 0, "arrays have no size_is for dimension 0");
 
     if (methodIndex < mMethodBaseIndex)
-        return mParent->GetSizeIsArgNumberForParam(methodIndex, param, 
+        return mParent->GetSizeIsArgNumberForParam(methodIndex, param,
                                                    dimension, argnum);
 
     if (methodIndex >= mMethodBaseIndex + mMethodCount) {
@@ -303,41 +321,42 @@ nsInterfaceInfo::GetSizeIsArgNumberForParam(uint16 methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
-    const XPTTypeDescriptor *td = &param->type;
-    const XPTTypeDescriptor *additional_types =
-                this->mInterfaceRecord->interfaceDescriptor->additional_types;
+    const XPTTypeDescriptor *td;
 
-    uint16 depth = dimension;
-    while (1)
-    {
-        uint8 tag = XPT_TDP_TAG(td->prefix);
-        if (tag != TD_ARRAY && tag != TD_ARRAY_WITH_LENGTH) {
-            NS_ASSERTION(0, "bad dimension");
-            return NS_ERROR_INVALID_ARG;
-        }
+    if (dimension) {
+        nsresult rv = GetTypeInArray(param, dimension, &td);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+    else
+        td = &param->type;
 
-        if (0 == --depth)
-            break;
-
-        td = &additional_types[td->type.additional_type];
+    // verify that this is a type that has size_is
+    switch (XPT_TDP_TAG(td->prefix)) {
+      case TD_ARRAY:
+      case TD_PSTRING_SIZE_IS:
+      case TD_PWSTRING_SIZE_IS:
+        break;
+      default:
+        NS_ASSERTION(0, "not a size_is");
+        return NS_ERROR_INVALID_ARG;
     }
 
     *argnum = td->argnum;
     return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsInterfaceInfo::GetLengthIsArgNumberForParam(uint16 methodIndex, 
+NS_IMETHODIMP
+nsInterfaceInfo::GetLengthIsArgNumberForParam(uint16 methodIndex,
                                               const nsXPTParamInfo* param,
                                               uint16 dimension,
                                               uint8* argnum)
 {
     NS_PRECONDITION(param, "bad pointer");
     NS_PRECONDITION(argnum, "bad pointer");
-    NS_PRECONDITION(dimension > 0, "arrays have no length_is for dimension 0");
 
     if (methodIndex < mMethodBaseIndex)
-        return mParent->GetLengthIsArgNumberForParam(methodIndex, param, 
+        return mParent->GetLengthIsArgNumberForParam(methodIndex, param,
                                                      dimension, argnum);
 
     if (methodIndex >= mMethodBaseIndex + mMethodCount) {
@@ -345,31 +364,62 @@ nsInterfaceInfo::GetLengthIsArgNumberForParam(uint16 methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
-    const XPTTypeDescriptor *td = &param->type;
-    const XPTTypeDescriptor *additional_types =
-                this->mInterfaceRecord->interfaceDescriptor->additional_types;
+    const XPTTypeDescriptor *td;
 
-    uint16 depth = dimension;
-    while (1)
-    {
-        uint8 tag = XPT_TDP_TAG(td->prefix);
-        if (tag != TD_ARRAY && tag != TD_ARRAY_WITH_LENGTH) {
-            NS_ASSERTION(0, "bad dimension");
-            return NS_ERROR_INVALID_ARG;
+    if (dimension) {
+        nsresult rv = GetTypeInArray(param, dimension, &td);
+        if (NS_FAILED(rv)) {
+            return rv;
         }
+    }
+    else
+        td = &param->type;
 
-        if (0 == --depth) {
-            if (tag != TD_ARRAY_WITH_LENGTH) {
-                NS_ASSERTION(0, "asked for length_is for dimension without one");
-                return NS_ERROR_INVALID_ARG;
-            }
-            break;
-        }
-
-        td = &additional_types[td->type.additional_type];
+    // verify that this is a type that has length_is
+    switch (XPT_TDP_TAG(td->prefix)) {
+      case TD_ARRAY:
+      case TD_PSTRING_SIZE_IS:
+      case TD_PWSTRING_SIZE_IS:
+        break;
+      default:
+        NS_ASSERTION(0, "not a length_is");
+        return NS_ERROR_INVALID_ARG;
     }
 
     *argnum = td->argnum2;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInterfaceInfo::GetInterfaceIsArgNumberForParam(uint16 methodIndex,
+                                                 const nsXPTParamInfo* param,
+                                                 uint8* argnum)
+{
+    NS_PRECONDITION(param, "bad pointer");
+    NS_PRECONDITION(argnum, "bad pointer");
+
+    if (methodIndex < mMethodBaseIndex)
+        return mParent->GetInterfaceIsArgNumberForParam(methodIndex, param,
+                                                        argnum);
+
+    if (methodIndex >= mMethodBaseIndex + mMethodCount) {
+        NS_ASSERTION(0, "bad index");
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    const XPTTypeDescriptor *td = &param->type;
+
+    while (XPT_TDP_TAG(td->prefix) == TD_ARRAY) {
+        td = &this->mInterfaceRecord->interfaceDescriptor->
+                                additional_types[td->type.additional_type];
+    }
+
+    if (XPT_TDP_TAG(td->prefix) != TD_INTERFACE_IS_TYPE) {
+        NS_ASSERTION(0, "not an iid_is");
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    *argnum = td->argnum;
     return NS_OK;
 }
 
