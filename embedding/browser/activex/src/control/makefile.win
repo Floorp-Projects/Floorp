@@ -60,28 +60,6 @@ OBJS =                                 \
 
 # most of these have to be here for nsSetupRegistry.cpp...
 
-#LINCS=  \
-#  -I$(PUBLIC)\raptor \
-#  -I$(PUBLIC)\xpcom \
-#  -I$(PUBLIC)\dom \
-#  -I$(PUBLIC)\js \
-#  -I$(PUBLIC)\netlib \
-#  -I$(PUBLIC)\java \
-#  -I$(PUBLIC)\plugin \
-#  -I$(PUBLIC)\caps \
-#  -I$(PUBLIC)\oji \
-#  -I$(PUBLIC)\editor \
-#  -I$(PUBLIC)\uconv \
-#  -I$(PUBLIC)\intl \
-#  -I$(PUBLIC)\locale \
-#  -I$(PUBLIC)\lwbrk \
-#  -I$(PUBLIC)\unicharutil \
-#  -I$(PUBLIC)\pref \
-#  -I$(PUBLIC)\wallet \
-#  -I$(PUBLIC)\rdf \
-#  -I$(PUBLIC)\profile \
-#  $(NULL) 
-
 LLIBS=                          \
  $(DIST)\lib\xpcom.lib          \
  $(DIST)\lib\baseembed_s.lib    \
