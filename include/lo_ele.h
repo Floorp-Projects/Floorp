@@ -111,20 +111,22 @@
 #define LO_SCRIPT       13
 #define LO_OBJECT       14
 #define LO_PARAGRAPH	15
-#define LO_CENTER		16
+#define LO_CENTER	16
 #define LO_MULTICOLUMN	17
-#define LO_FLOAT		18	
+#define LO_FLOAT	18	
 #define LO_TEXTBLOCK	19
-#define LO_LIST			20
+#define LO_LIST		20
 #define LO_DESCTITLE	21
-#define LO_DESCTEXT		22
+#define LO_DESCTEXT	22
 #define LO_BLOCKQUOTE	23
-#define LO_LAYER		24
-#define LO_HEADING		25
-#define LO_SPAN			26
-#define LO_DIV			27
+#define LO_LAYER	24
+#define LO_HEADING	25
+#define LO_SPAN		26
+#define LO_DIV		27
 #define LO_BUILTIN      28
-#define LO_SPACER		29
+#define LO_SPACER	29
+#define LO_SUPER	30
+#define LO_SUB		31
 
 #define LO_FONT_NORMAL      0x0000
 #define LO_FONT_BOLD        0x0001
@@ -1127,6 +1129,20 @@ typedef struct LO_SpacerStruct_struct {
     PA_Tag *tag;
 } LO_SpacerStruct;
 
+typedef struct LO_SuperStruct_struct {
+    LO_Any lo_any;
+
+    int32 baseline_adj;
+    Bool is_end;
+} LO_SuperStruct;
+
+typedef struct LO_SubStruct_struct {
+    LO_Any lo_any;
+
+    int32 baseline_adj;
+    Bool is_end;
+} LO_SubStruct;
+
 typedef struct LO_NoBreakStruct_struct {
     LO_Any lo_any;
 
@@ -1247,13 +1263,15 @@ union LO_Element_struct {
     LO_ListStruct lo_list;
     LO_DescTitleStruct lo_desctitle;
     LO_DescTextStruct lo_desctext;
-	LO_BlockQuoteStruct lo_blockquote;
-	LO_LayerStruct lo_layer;
-	LO_HeadingStruct lo_heading;
-	LO_SpanStruct lo_span;
-	LO_DivStruct lo_div;
-	LO_SpacerStruct lo_spacer;
-	LO_BuiltinStruct lo_builtin;
+    LO_BlockQuoteStruct lo_blockquote;
+    LO_LayerStruct lo_layer;
+    LO_HeadingStruct lo_heading;
+    LO_SpanStruct lo_span;
+    LO_DivStruct lo_div;
+    LO_SpacerStruct lo_spacer;
+    LO_BuiltinStruct lo_builtin;
+    LO_SuperStruct lo_super;
+    LO_SubStruct lo_sub;
 };
 
 struct LO_ObjectStruct_struct {
