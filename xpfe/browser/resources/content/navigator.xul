@@ -625,7 +625,7 @@ Contributor(s): ______________________________________. -->
 				<menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 			  </menupopup>
 			</rule>
-			<rule rdf:type="http://home.netscape.com/NC-rdf#Bookmarkmenuseparator">
+			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
 			  <menupopup> 
 				<menuseparator uri="..." />
 			  </menupopup>
