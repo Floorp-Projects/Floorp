@@ -85,7 +85,9 @@ sub status
 			{
 				if ($state =~ /success/i) {
 					$state = "Success";
-				} else {
+				} elsif ($state =~ /testfailed/i) {
+					$state = "Test Failed";
+                                } else {
 					$state = "Horked";
 				}
 				$info{$tree}{$build} = $state;
