@@ -366,11 +366,13 @@ pa_new_document(FO_Present_Types format_out,
 unsigned int
 pa_ParseWriteReady (NET_StreamClass *stream)
 {
-	pa_DocData *doc_data = (pa_DocData *) stream->data_object;	
-#ifndef XP_UNIX
+
+    pa_DocData *doc_data = (pa_DocData *) stream->data_object;	
+#if !defined(XP_UNIX) && !defined(XP_WIN32)
 	if (doc_data->overflow_depth)
 		return 0;
 #endif
+
 	return WRITE_READY_SIZE;
 }
 
