@@ -54,6 +54,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsDownloader.obj               \
         .\$(OBJDIR)\nsProtocolProxyService.obj     \
         .\$(OBJDIR)\nsProxyAutoConfigUtils.obj     \
+        .\$(OBJDIR)\nsAsyncStreamListener.obj      \
 	$(NULL)
 
 INCS = $(INCS)                  \
