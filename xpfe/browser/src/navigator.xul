@@ -30,9 +30,6 @@
     if ( window.frames[0].frames[1] ) {
         dump("Setting content window\n");
         appCore.setContentWindow( window.frames[0].frames[1] );
-
-         //Call in to BrowserAppcore to load initial page.
-	     appCore.loadInitialPage();
     } else {
         // Try again.
         dump("Scheduling later attempt to set content window\n");
