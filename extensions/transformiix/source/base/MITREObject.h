@@ -21,19 +21,24 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: MITREObject.h,v 1.2 1999/11/15 07:12:40 nisheeth%netscape.com Exp $
+ * $Id: MITREObject.h,v 1.3 2000/03/02 09:22:28 kvisco%ziplink.net Exp $
  */
 
-#ifndef MITRE_MITREOBJECT_H
-#define MITRE_MITREOBJECT_H
+#include "TxObject.h"
+
+#ifndef TRANSFRMX_MITREOBJECT_H
+#define TRANSFRMX_MITREOBJECT_H
 
 /**
+ * Note this class is here for backward compatiblity, since a number
+ * of other classes rely on it. I primarily use TxObject now, which
+ * contains the #hashCode method.
  * A standard base class for many of the Class definitions in this
- * application
+ * application.
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:12:40 $
+ * @version $Revision: 1.3 $ $Date: 2000/03/02 09:22:28 $
 **/
-class MITREObject {
+class MITREObject : public TxObject{
 public:
     MITREObject() {};
     virtual ~MITREObject() {};
