@@ -708,7 +708,8 @@ public class TokenStream {
             return result;
         }
 
-        {
+    retry:
+        for (;;) {
             // Eat whitespace, possibly sensitive to newlines.
             for (;;) {
                 c = getChar();
@@ -1094,7 +1095,7 @@ public class TokenStream {
                     if (matchChar('-')) {
                         if (matchChar('-')) {
                             skipLine();
-                            return getToken();  // in place of 'goto retry'
+                            continue retry;
                         }
                         ungetChar('-');
                     }
@@ -1159,18 +1160,26 @@ public class TokenStream {
                 // is it a // comment?
                 if (matchChar('/')) {
                     skipLine();
-                    return getToken();
+                    continue retry;
                 }
                 if (matchChar('*')) {
-                    while ((c = getChar()) != -1 &&
-                           !(c == '*' && matchChar('/'))) {
-                        ; // empty loop body
+                    boolean lookForSlash = false;
+                    for (;;) {
+                        c = getChar();
+                        if (c == EOF_CHAR) {
+                            reportSyntaxError("msg.unterminated.comment",
+                                              null);
+                            return ERROR;
+                        } else if (c == '*') {
+                            lookForSlash = true;
+                        } else if (c == '/') {
+                            if (lookForSlash) {
+                                continue retry;
+                            }
+                        } else {
+                            lookForSlash = false;
+                        }
                     }
-                    if (c == EOF_CHAR) {
-                        reportSyntaxError("msg.unterminated.comment", null);
-                        return ERROR;
-                    }
-                    return getToken();  // `goto retry'
                 }
 
                 // is it a regexp?
@@ -1253,7 +1262,7 @@ public class TokenStream {
                         // after line start as comment-utill-eol
                         if (matchChar('>')) {
                             skipLine();
-                            return getToken();
+                            continue retry;
                         }
                     }
                     c = DEC;
