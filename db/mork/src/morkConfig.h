@@ -61,9 +61,8 @@
 #define MORK_OS2 1
 #endif
 
-#ifdef XP_PC
+#ifdef XP_WIN
 #define MORK_WIN 1
-#define XP_WIN 1
 #endif
 
 #ifdef XP_UNIX
@@ -76,7 +75,7 @@
 
 // } %%%%% end platform defs peculiar to Mork %%%%%
 
-#if defined(MORK_WIN) || defined(MORK_UNIX) || defined(MORK_MAC) || defined(MORK_BEOS)
+#if defined(MORK_WIN) || defined(MORK_UNIX) || defined(MORK_MAC) || defined(MORK_BEOS) || defined(MORK_OS2)
 #include <stdio.h> 
 #include <ctype.h> 
 #include <errno.h> 
@@ -96,6 +95,12 @@
 #define MORK_FILESEEK(file, where, how) fseek(file, where, how) 
 #define MORK_FILEREAD(outbuf, insize, file) fread(outbuf, 1, insize, file) 
 #define MORK_FILEFLUSH(file) fflush(file) 
+#if defined(MORK_OS2)
+FILE* mork_fileopen(const char* name, const char* mode);
+#define MORK_FILEOPEN(file, how) mork_fileopen(file, how) 
+#else
+#define MORK_FILEOPEN(file, how) fopen(file, how) 
+#endif
 #define MORK_FILECLOSE(file) fclose(file) 
 #endif /*MORK_WIN*/
 
@@ -152,7 +157,7 @@ extern void mork_assertion_signal(const char* inMessage);
 // { %%%%% begin standard c utility methods %%%%%
 /*define MORK_USE_XP_STDLIB 1*/
 
-#if defined(MORK_WIN) || defined(MORK_UNIX) || defined(MORK_MAC) || defined(MORK_BEOS)
+#if defined(MORK_WIN) || defined(MORK_UNIX) || defined(MORK_MAC) || defined(MORK_BEOS) || defined(MORK_OS2)
 #define MORK_USE_C_STDLIB 1
 #endif /*MORK_WIN*/
 

@@ -537,7 +537,7 @@ morkStdioFile::AcquireBud(nsIMdbEnv * mdbev, nsIMdbHeap* ioHeap, nsIMdbFile **ac
           this->SetFileIoOpen(morkBool_kFalse);
           mStdioFile_File = 0;
           
-          file = fopen(name, "wb+"); // open for write, discarding old content
+          file = MORK_FILEOPEN(name, "wb+"); // open for write, discarding old content
           if ( file )
           {
             mStdioFile_File = file;
@@ -825,7 +825,7 @@ morkStdioFile::OpenStdio(morkEnv* ev, const char* inName, const char* inMode)
           this->SetFileName(ev, inName);
           if ( ev->Good() )
           {
-            FILE* file = fopen(inName, inMode);
+            FILE* file = MORK_FILEOPEN(inName, inMode);
             if ( file )
             {
               mStdioFile_File = file;
