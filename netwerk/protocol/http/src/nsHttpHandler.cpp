@@ -1343,16 +1343,15 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
     LOG(("nsHttpHandler::NewProxiedChannel [proxyInfo=%p]\n",
         proxyInfo));
 
+    PRBool https;
+    nsresult rv = uri->SchemeIs("https", &https);
+    if (NS_FAILED(rv))
+        return rv;
+
     NS_NEWXPCOM(httpChannel, nsHttpChannel);
     if (!httpChannel)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(httpChannel);
-
-    nsresult rv;
-
-    PRBool https;
-    rv = uri->SchemeIs("https", &https);
-    if (NS_FAILED(rv)) return rv;
 
     // select proxy caps if using a non-transparent proxy.  SSL tunneling
     // should not use proxy settings.
