@@ -54,7 +54,7 @@ include $(topsrcdir)/config/rules.mk
 DEFINES += -DSTANDALONE
 
 # Make sure that these custom rules stay in sync with rules.mk
-S_%.$(OBJ_SUFFIX): $(srcdir)/../%.cpp $(MDDEPDIR)
+S_%.$(OBJ_SUFFIX): $(srcdir)/../%.cpp
 ifdef STRICT_CPLUSPLUS_SUFFIX
 	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
