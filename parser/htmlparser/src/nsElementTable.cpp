@@ -33,10 +33,12 @@
  * @return
  */
 PRBool CTagList::Contains(eHTMLTags aTag){
+  PRBool result=PR_FALSE;
   if(mTagList) {
-    return FindTagInSet(aTag,mTagList,mCount);
+    result=FindTagInSet(aTag,mTagList,mCount);
   }
-  return FindTagInSet(aTag,mTags,mCount);
+  else result=FindTagInSet(aTag,mTags,mCount);
+  return result;
 }
 
 /**
@@ -907,7 +909,7 @@ nsHTMLElement gHTMLElements[] = {
 
   { /*tag*/                             eHTMLTag_td,
 	  /*rootnodes*/                       &gTDRootTags,	
-    /*autoclose starttags and endtags*/ &gTDCloseTags,0,
+    /*autoclose starttags and endtags*/ &gTDCloseTags,&gTDCloseTags,
     /*parent,incl,exclgroups*/          kNone, kFlow, kSelf,	
     /*control bits*/                    0,
     /*special parents,kids,skip*/       &gTDRootTags,0,eHTMLTag_unknown},
@@ -928,7 +930,7 @@ nsHTMLElement gHTMLElements[] = {
 
   { /*tag*/                             eHTMLTag_th,
 	  /*rootnodes*/                       &gTDRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,
+    /*autoclose starttags and endtags*/ &gTDCloseTags,&gTDCloseTags,
     /*parent,incl,exclgroups*/          kNone, kFlow, kSelf,	
     /*control bits*/                    0,
     /*special parents,kids,skip*/       &gTDRootTags,0,eHTMLTag_unknown},

@@ -996,8 +996,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
   nsresult    result=NS_OK;
   CEndToken*  et = (CEndToken*)(aToken);
-  eHTMLTags   tokenTagType=(eHTMLTags)et->GetTypeID();
-  
+  eHTMLTags   theChildTag=(eHTMLTags)et->GetTypeID();
 
   // Here's the hacky part: 
   // Because we're trying to be backward compatible with Nav4/5, 
@@ -1009,13 +1008,13 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
   //now check to see if this token should be omitted, or 
   //if it's gated from closing by the presence of another tag.
-  if(PR_TRUE==CanOmitEndTag(mBodyContext->Last(),tokenTagType)) {
-    UpdateStyleStackForCloseTag(tokenTagType,tokenTagType);
+  if(PR_TRUE==CanOmitEndTag(mBodyContext->Last(),theChildTag)) {
+    UpdateStyleStackForCloseTag(theChildTag,theChildTag);
     return result;
   }
 
   nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
-  switch(tokenTagType) {
+  switch(theChildTag) {
 
     case eHTMLTag_style:
     case eHTMLTag_link:
@@ -1027,21 +1026,27 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
     case eHTMLTag_map:
     case eHTMLTag_form:
-      result=CloseContainer(theNode,tokenTagType,PR_FALSE);
+      result=CloseContainer(theNode,theChildTag,PR_FALSE);
       break;
 
     case eHTMLTag_td:
     case eHTMLTag_th:
-      result=CloseContainersTo(tokenTagType,PR_TRUE); 
+      //result=CloseContainersTo(theChildTag,PR_TRUE); 
       // Empty the transient style stack (we just closed any extra
       // ones off so it's safe to do it now) because they don't carry
       // forward across table cell boundaries.
       //mBodyContext->mStyles->mCount=0;
-      break;
+      //break;
 
     default:
-      if(IsContainer(tokenTagType)){
-        result=CloseContainersTo(tokenTagType,PR_TRUE); 
+      if(IsContainer(theChildTag)){
+        CTagList* theCloseTags=gHTMLElements[theChildTag].GetAutoCloseEndTags();
+
+        if(theCloseTags){
+          PRInt32 thePeerIndex=theCloseTags->GetTopmostIndexOf(mBodyContext->mTags);
+          theChildTag=(kNotFound<thePeerIndex) ? mBodyContext->mTags[thePeerIndex] : theChildTag;
+        }
+        result=CloseContainersTo(theChildTag,PR_TRUE); 
       }
       //
       break;
@@ -1576,8 +1581,8 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsTagStack& aTagSta
         while(aChildIndex<--theTopIndex) {
           eHTMLTags theNextTag=aTagStack.mTags[theTopIndex];
           if(PR_FALSE==theCloseTags->Contains(theNextTag)) {
-            if(PR_FALSE==theRootTags->Contains(theNextTag)) {
-              break; //we encountered a tag in root list so fail (because we're gated).
+            if(PR_TRUE==theRootTags->Contains(theNextTag)) {
+              return eHTMLTag_unknown; //we encountered a tag in root list so fail (because we're gated).
             }
             //otherwise presume it's something we can simply ignore and continue search...
           }
