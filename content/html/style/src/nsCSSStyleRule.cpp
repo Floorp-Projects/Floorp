@@ -1639,7 +1639,15 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
 
         // opacity: factor, percent, inherit
         if (eCSSUnit_Percent == ourColor->mOpacity.GetUnit()) {
-          color->mOpacity = ourColor->mOpacity.GetPercentValue();
+          float opacity = parentColor->mOpacity * ourColor->mOpacity.GetPercentValue();
+          if (opacity < 0.0f) {
+            color->mOpacity = 0.0f;
+          } else if (1.0 < opacity) {
+            color->mOpacity = 1.0f;
+          }
+          else {
+            color->mOpacity = opacity;
+          }
         }
         else if (eCSSUnit_Number == ourColor->mOpacity.GetUnit()) {
           color->mOpacity = ourColor->mOpacity.GetFloatValue();
