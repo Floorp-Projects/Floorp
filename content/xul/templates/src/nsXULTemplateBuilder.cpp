@@ -6061,21 +6061,23 @@ nsXULTemplateBuilder::IsDirectlyContainedBy(nsIContent* aChild, nsIContent* aPar
     nsCOMPtr<nsIContent> generated(aChild);
 
     do {
-        // Walk up the generated tree
-        nsCOMPtr<nsIContent> generatedParent;
-        generated->GetParent(*getter_AddRefs(generatedParent));
-        if (! generatedParent)
-            return PR_FALSE;
+        // XXX - gcc 2.95.x -O3 builds are known to break if
+        // we declare nsCOMPtrs inside this loop.  Moving them
+        // out of the loop or using a normal pointer works
+        // around this problem.
+        // http://bugzilla.mozilla.org/show_bug.cgi?id=61501
 
-        generated = generatedParent;
+        // Walk up the generated tree
+        nsIContent *tmp = generated;
+        tmp->GetParent(*getter_AddRefs(generated));
+        if (! generated) 
+            return PR_FALSE;
 
         // Walk up the template tree
-        nsCOMPtr<nsIContent> tmplParent;
-        tmpl->GetParent(*getter_AddRefs(tmplParent));
-        if (! tmplParent)
+        tmp = tmpl;
+        tmp->GetParent(*getter_AddRefs(tmpl));
+        if (! tmpl)
             return PR_FALSE;
-
-        tmpl = tmplParent;
 
         // The content within a template ends when we hit the
         // <template> or <rule> element in the simple syntax, or the
