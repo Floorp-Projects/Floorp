@@ -48,8 +48,7 @@
 #include "nsIScriptExternalNameSet.h"
 #include "nsIEventListenerManager.h"
 #include "nsILayoutDebugger.h"
-#include "nsIHTMLElementFactory.h"
-#include "nsIXMLElementFactory.h"
+#include "nsIElementFactory.h"
 #include "nsIDocumentEncoder.h"
 #include "nsCOMPtr.h"
 #include "nsIFrameSelection.h"
@@ -101,7 +100,9 @@ extern nsresult NS_NewLayoutDocumentLoaderFactory(nsIDocumentLoaderFactory** aRe
 extern nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 extern nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
 #endif
-extern nsresult NS_NewHTMLElementFactory(nsIHTMLElementFactory** aResult);
+extern nsresult NS_NewHTMLElementFactory(nsIElementFactory** aResult);
+extern nsresult NS_NewXMLElementFactory(nsIElementFactory** aResult);
+
 extern nsresult NS_NewHTMLEncoder(nsIDocumentEncoder** aResult);
 extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 
@@ -181,7 +182,7 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     }
   }
 #if 1
-// XXX replace these with nsIHTMLElementFactory calls
+// XXX replace these with nsIElementFactory calls
   else if (mClassID.Equals(kHTMLImageElementCID)) {
     res = NS_NewHTMLImageElement((nsIHTMLContent**)&inst, nsHTMLAtoms::img);
     if (NS_FAILED(res)) {
@@ -313,14 +314,14 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   }
 #endif
   else if (mClassID.Equals(kHTMLElementFactoryCID)) {
-    res = NS_NewHTMLElementFactory((nsIHTMLElementFactory**) &inst);
+    res = NS_NewHTMLElementFactory((nsIElementFactory**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewHTMLElementFactory", res);
       return res;
     }
   }
   else if (mClassID.Equals(kXMLElementFactoryCID)) {
-    res = NS_NewXMLElementFactory((nsIXMLElementFactory**) &inst);
+    res = NS_NewXMLElementFactory((nsIElementFactory**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewXMLElementFactory", res);
       return res;
