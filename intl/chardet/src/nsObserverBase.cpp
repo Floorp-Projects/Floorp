@@ -60,8 +60,8 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(
      if(NS_SUCCEEDED(res)) {
        nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel,&res));
        if(NS_SUCCEEDED(res)) {
-         nsIAtom* atom=nsnull;
-         httpChannel->GetRequestMethod(&atom);
+         nsCOMPtr<nsIAtom> atom=nsnull;
+         httpChannel->GetRequestMethod(getter_AddRefs(atom));
          if(atom) {
            nsAutoString method;
            atom->ToString(method);
