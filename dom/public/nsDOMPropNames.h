@@ -417,7 +417,6 @@
     "htmlinputelement.accesskey", \
     "htmlinputelement.align", \
     "htmlinputelement.alt", \
-    "htmlinputelement.autocomplete", \
     "htmlinputelement.blur", \
     "htmlinputelement.checked", \
     "htmlinputelement.click", \

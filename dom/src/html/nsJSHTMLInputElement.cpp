@@ -70,8 +70,7 @@ enum HTMLInputElement_slots {
   HTMLINPUTELEMENT_TYPE = -16,
   HTMLINPUTELEMENT_USEMAP = -17,
   HTMLINPUTELEMENT_VALUE = -18,
-  HTMLINPUTELEMENT_AUTOCOMPLETE = -19,
-  NSHTMLINPUTELEMENT_CONTROLLERS = -20
+  NSHTMLINPUTELEMENT_CONTROLLERS = -19
 };
 
 /***********************************************************************/
@@ -305,18 +304,6 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(rv)) {
           nsAutoString prop;
           rv = a->GetValue(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-        }
-        break;
-      }
-      case HTMLINPUTELEMENT_AUTOCOMPLETE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLINPUTELEMENT_AUTOCOMPLETE, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetAutocomplete(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
           }
@@ -600,18 +587,6 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case HTMLINPUTELEMENT_AUTOCOMPLETE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLINPUTELEMENT_AUTOCOMPLETE, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
-      
-          rv = a->SetAutocomplete(prop);
-          
-        }
-        break;
-      }
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
@@ -839,7 +814,6 @@ static JSPropertySpec HTMLInputElementProperties[] =
   {"type",    HTMLINPUTELEMENT_TYPE,    JSPROP_ENUMERATE},
   {"useMap",    HTMLINPUTELEMENT_USEMAP,    JSPROP_ENUMERATE},
   {"value",    HTMLINPUTELEMENT_VALUE,    JSPROP_ENUMERATE},
-  {"autocomplete",    HTMLINPUTELEMENT_AUTOCOMPLETE,    JSPROP_ENUMERATE},
   {"controllers",    NSHTMLINPUTELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
