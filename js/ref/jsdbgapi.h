@@ -58,10 +58,6 @@ JS_ClearInterrupt(JSRuntime *rt, JSTrapHandler *handlerp, void **closurep);
 
 /************************************************************************/
 
-typedef JSBool
-(*JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsval id,
-		       jsval old, jsval *newp, void *closure);
-
 extern JS_PUBLIC_API(JSBool)
 JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 		 JSWatchPointHandler handler, void *closure);
