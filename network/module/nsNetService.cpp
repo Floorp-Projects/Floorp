@@ -310,12 +310,6 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
 
     SetupURLStruct(aUrl, URL_s);
 
-    /* 
-     * Mark the URL as background loading.  This prevents many
-     * client upcall notifications...
-     */
-    URL_s->load_background = FALSE;
-
     /*
      * Attach the Data Consumer to the URL_Struct.
      *
@@ -449,12 +443,6 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
         }
 #endif /* XP_WIN && !NETLIB_THREAD */
 
-        /* 
-         * Mark the URL as background loading.  This prevents many
-         * client upcall notifications...
-         */
-        URL_s->load_background = FALSE;
-
         /*
          * Attach the ConnectionInfo object to the URL_Struct.
          *
@@ -505,6 +493,38 @@ loser:
     *aNewStream = NULL;
     return NS_FALSE;
 }
+
+NS_IMETHODIMP
+nsNetlibService::InterruptStream(nsIURL* aURL)
+{
+  nsIProtocolConnection *pProtocol;
+  nsresult rv = NS_OK;
+
+  if (nsnull == aURL) {
+    rv = NS_ERROR_NULL_POINTER;
+    goto done;
+  }
+
+  rv = aURL->QueryInterface(kIProtocolConnectionIID, (void**)&pProtocol);
+   if (NS_SUCCEEDED(rv)) {
+     URL_Struct* URL_s;
+     int status = -1;
+
+     pProtocol->GetURLInfo(&URL_s);
+     if (nsnull != URL_s) {
+       status = NET_InterruptStream(URL_s);
+     }
+     NS_RELEASE(pProtocol);
+
+     if (status != 0) {
+       rv = NS_ERROR_FAILURE;
+     }
+   }
+
+done:
+  return rv;
+}
+
 
 NS_IMETHODIMP
 nsNetlibService::GetCookieString(nsIURL *aURL, nsString& aCookie)

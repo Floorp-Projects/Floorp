@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -29,13 +29,15 @@ struct URL_Struct_;
 /* 121CC0F1-EA26-11d1-BEAE-00805F8A66DC */
 #define NS_IPROTOCOLCONNECTION_IID                      \
 { 0x121cc0f1, 0xea26, 0x11d1,                           \
-    { 0xbe, 0xae, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0xdc } }
+  { 0xbe, 0xae, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0xdc } }
 
 
 
-struct nsIProtocolConnection : public nsISupports
+class nsIProtocolConnection : public nsISupports
 {
-    NS_IMETHOD InitializeURLInfo(URL_Struct_ *URL_s) = 0;
+public:
+  NS_IMETHOD InitializeURLInfo(URL_Struct_ *URL_s) = 0;
+  NS_IMETHOD GetURLInfo(URL_Struct_ **aResult)     = 0;
 };
 
-#endif /* nsIHttpUrl_h___ */
+#endif /* nsIIProtocolConnection_h___ */
