@@ -1539,6 +1539,7 @@ nsXMLContentSink::PushContent(nsIContent *aContent)
   if (nsnull == mContentStack) {
     mContentStack = new nsVoidArray();
   }
+  NS_IF_ADDREF(aContent);
 
   mContentStack->AppendElement((void *)aContent);
   return mContentStack->Count();
@@ -1546,13 +1547,15 @@ nsXMLContentSink::PushContent(nsIContent *aContent)
 
 nsIContent*
 nsXMLContentSink::PopContent()
-{
+{  
   nsIContent* content = nsnull;
   if (nsnull != mContentStack) {
     PRInt32 index = mContentStack->Count() - 1;
     content = (nsIContent *)mContentStack->ElementAt(index);
     mContentStack->RemoveElementAt(index);
   }
+
+  // The caller should NS_RELEASE the returned content object.
   return content;
 }
 
