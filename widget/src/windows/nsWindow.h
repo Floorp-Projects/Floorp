@@ -174,6 +174,8 @@ public:
 
 protected:
 
+    static  BOOL            DealWithPopups ( UINT inMsg, LRESULT* outResult ) ;
+
     static  PRBool          IsScrollbar(HWND aWnd);
     static  PRBool          EventIsInsideWindow(nsWindow* aWindow); 
     virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
