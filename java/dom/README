@@ -27,15 +27,9 @@ Makefiles
 ---------
 
 You may have to set DEPTH to point to the mozilla CVS workspace root
-in Makefile and jni/Makefile. SInce this stuff is not part of the
+in Makefile and jni/Makefile. Since this stuff is not part of the
 regular SeaMonkeyBuild, Makefiles are not generated from Makefile.in,
-so just go ahead and hack the Makefile.
-
-That is also why I have a separate Makefile.linux for Linux. (Does not
-work with Linux... last time I checked, the Blackdown JDK had a
-problem creating the JVM in
-nsJavaDOMImpl.cpp::Initialize:CreateJavaVM).
-
+so just go ahead and hack the Makefile. 
 
 Building
 --------
@@ -51,7 +45,7 @@ Edit Makefile.in to add -DJAVA_DOM to the list of defines. Then do a
 gmake in this directory.
 
 Similarly apply the DocumetnImpl.java patch. Then recompile the
-DocumentImpl class. No changes in makefiles needed.
+DocumentImpl class. No changes in makefiles are needed.
 
 Define JDKHOME so that $JDKHOME/bin points to javac.
 
@@ -68,8 +62,6 @@ however they are not fully implemented yet
 because Mozilla's core DOM does not support DOM2 events fully. 
 Consequences:
   - some methods throws OperationUnsupportedException()
-  - Some of key codes defined at DOM2 specs are never returned
-     (they are not supported by core DOM)
 
 The basic implementation architecture is following:
    - NodeImpl is extended to support EventTarget interface

@@ -524,6 +524,15 @@ void nsJavaDOMImpl::StartJVM(void) {
     strcat(p, cp);
     vm_args.classpath = p;
   }
+
+#ifdef DISABLE_JIT
+   /* workaround to get java dom to work on Linux */
+   char **props = new char*[2];
+   props[0]="java.compiler=";  
+   props[1]=0;
+   vm_args.properties = props;
+#endif
+
 #ifdef DEBUG
   printf("classpath is \"%s\"\n", vm_args.classpath);
 #endif // DEBUG
