@@ -629,14 +629,11 @@ PluginListener::OnStartRequest(nsIURI* aURL, const char *contentType)
 
   rv = channel->GetContentType(&contentType);
   if (NS_FAILED(rv)) {
-    NS_RELEASE(channel);
     return rv;
   }
   rv = mViewer->StartLoad(channel, mNextStream);
 
-  if (NS_FAILED(rv))
-  {
-    NS_RELEASE(channel);
+  if (NS_FAILED(rv)) {
     return rv;
   }
 #else
