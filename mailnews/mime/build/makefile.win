@@ -36,6 +36,7 @@ LLIBS=										\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\xpcom.lib       	\
             $(DIST)\lib\mime_s.lib		\
+			$(DIST)\lib\msgbsutl.lib       	\
 			$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

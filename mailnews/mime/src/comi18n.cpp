@@ -37,6 +37,9 @@
 #include "nsIStringCharsetDetector.h"
 #include "nsIPref.h"
 #include "mimebuf.h"
+#include "nsTextFormater.h"
+#include "nsMsgI18N.h"
+#include "nsMimeTypes.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -756,12 +759,24 @@ convert_and_encode:
           return NULL;
         }
         // utf-8 to mail charset conversion (or iso-8859-1 in case of us-ascii).
-        if (MIME_ConvertCharset(PR_FALSE, "utf-8", !nsCRT::strcasecmp(charset, "us-ascii") ? "iso-8859-1" : charset, 
-                                (const char*) begin, (const PRInt32) len, &buf1, (PRInt32 *) &iBufLen, NULL)) {
+        PRUnichar *u = NULL;
+        nsAutoString fmt("%s");
+        u = nsTextFormater::smprintf(fmt.GetUnicode(), begin);
+        if (NULL == u) {
+            PR_FREEIF(srcbuf);
+            PR_FREEIF(retbuf);
+            return NULL; //error
+        }
+        nsresult rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, 
+                                             !nsCRT::strcasecmp(charset, "us-ascii") ? "iso-8859-1" : charset, 
+                                             u, &buf1);
+        nsAllocator::Free(u);
+        if (NS_FAILED(rv) || NULL == buf1) {
           PR_FREEIF(srcbuf);
           PR_FREEIF(retbuf);
           return NULL; //error
         }
+        iBufLen = nsCRT::strlen(buf1);
 //        buf1 = (char *) cvtfunc(obj, (unsigned char *)begin, len);
 //        iBufLen = nsCRT::strlen( buf1 );
         if (iBufLen <= 0) {
