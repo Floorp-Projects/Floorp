@@ -28,7 +28,7 @@ LIBRARY_NAME = gfxgtk
 
 MODULE=raptor 
 
-REQUIRES=util img xpcom raptor netlib
+REQUIRES=util img xpcom raptor netlib ps
 
 DEFINES += -D_IMPL_NS_GFXONXP 
 CFLAGS	+= $(TK_CFLAGS)
@@ -37,6 +37,8 @@ LLIBS+=$(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorbase.a $(DIST)/lib/libraptorg
 
 CPPSRCS = \
 	nsDeviceContextGTK.cpp \
+	nsDeviceContextSpecFactoryG.cpp \
+	nsDeviceContextSpecG.cpp \
 	nsFontMetricsGTK.cpp \
 	nsGfxFactoryGTK.cpp \
 	nsRenderingContextGTK.cpp \

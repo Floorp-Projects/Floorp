@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ../..
+DEPTH = ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -24,21 +24,28 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = ps $(MOZ_TOOLKIT)
-
-LIBRARY_NAME = raptorgfx
+LIBRARY_NAME = gfxps
 
 MODULE=raptor 
 
-REQUIRES=util img xpcom raptor netlib dom js
+REQUIRES=util img xpcom raptor netlib
 
-DEFINES += -D_IMPL_NS_GFX 
+DEFINES += -D_IMPL_NS_GFXONXP 
+CFLAGS	+= $(TK_CFLAGS)
 
-CPPSRCS=nsColor.cpp nsColorNames.cpp nsColorNamesRGB.cpp nsFont.cpp \
-    nsImageGroup.cpp nsImageManager.cpp nsImageNetContextAsync.cpp \
-    nsImageRenderer.cpp nsImageRequest.cpp nsImageSystemServices.cpp \
-    nsImageURL.cpp nsRect.cpp nsTransform2D.cpp \
-	nsDeviceContext.cpp nsImageNetContextSync.cpp \
-	nsJSRenderingContext.cpp
+LLIBS+=$(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorbase.a $(DIST)/lib/libraptorgfx.a
+
+CPPSRCS = \
+	nsDeviceContextPS.cpp \
+	nsFontMetricsPS.cpp \
+	nsRenderingContextPS.cpp \
+	nsPostScriptObj.cpp \
+
+CSRCS = \
+	font_metrics.c \
 
 include $(topsrcdir)/config/rules.mk
+
+include $(topsrcdir)/config/rules.mk
+
+

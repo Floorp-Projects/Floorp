@@ -20,7 +20,7 @@
 #define nsDeviceContextSpecG_h___
 
 #include "nsIDeviceContextSpec.h"
-#include "nsDeviceContextG.h"
+#include "nsDeviceContextSpecG.h"
 
 class nsDeviceContextSpecGTK : public nsIDeviceContextSpec
 {

@@ -149,7 +149,7 @@ nsIWidget *nsWidget::GetParent(void)
 NS_METHOD nsWidget::Show(PRBool bState)
 {
   if (!mWidget)
-    return NS_ERROR_NULL_POINTER;
+    return NS_OK; // Will be null durring printing
 
   if (bState)
     ::gtk_widget_show(mWidget);
@@ -163,9 +163,14 @@ NS_METHOD nsWidget::Show(PRBool bState)
 
 NS_METHOD nsWidget::IsVisible(PRBool &aState)
 {
-    gint RealVis = GTK_WIDGET_VISIBLE(mWidget);
-    aState = mShown;
-    g_return_val_if_fail(RealVis == mShown, NS_ERROR_FAILURE);
+    if (mWidget) {
+      gint RealVis = GTK_WIDGET_VISIBLE(mWidget);
+      aState = mShown;
+      g_return_val_if_fail(RealVis == mShown, NS_ERROR_FAILURE);
+    }
+    else
+      aState = PR_TRUE;
+
     return NS_OK;
 }
 
@@ -179,7 +184,8 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
   mBounds.x = aX;
   mBounds.y = aY;
-  ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
+  if (mWidget)
+    ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
   return NS_OK;
 }
 
@@ -192,11 +198,13 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 #endif
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
-  ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
+  if (mWidget) {
+    ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
 
-  if (aRepaint)
-    if (GTK_WIDGET_VISIBLE (mWidget))
-      ::gtk_widget_queue_draw (mWidget);
+    if (aRepaint)
+      if (GTK_WIDGET_VISIBLE (mWidget))
+        ::gtk_widget_queue_draw (mWidget);
+  }
 
   return NS_OK;
 }
@@ -274,7 +282,8 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::Enable(PRBool bState)
 {
-    ::gtk_widget_set_sensitive(mWidget, bState);
+    if (mWidget)
+      ::gtk_widget_set_sensitive(mWidget, bState);
     return NS_OK;
 }
 
@@ -285,7 +294,8 @@ NS_METHOD nsWidget::Enable(PRBool bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetFocus(void)
 {
-    ::gtk_widget_grab_focus(mWidget);
+    if (mWidget)
+      ::gtk_widget_grab_focus(mWidget);
     return NS_OK;
 }
 
@@ -389,7 +399,7 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 {
   if (mWidget == nsnull) {
-    return NS_ERROR_FAILURE;
+    return NS_OK; // mWidget will be null during printing. 
   }
 
   if (!GTK_IS_WIDGET (mWidget)) {
@@ -413,7 +423,7 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   GdkRectangle nRect;
   
   if (mWidget == nsnull) {
-    return NS_ERROR_FAILURE;
+    return NS_OK;  // mWidget is null during printing
   }
 
   if (!GTK_IS_WIDGET (mWidget)) {
@@ -441,6 +451,9 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
 NS_METHOD nsWidget::Update(void)
 {
+  if (! mWidget)
+    return NS_OK;
+
   GdkRectangle foo;
   foo.width = mBounds.width;
   foo.height = mBounds.height;

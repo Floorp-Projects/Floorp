@@ -19,7 +19,9 @@
 #ifndef nsDeviceContextPS_h___
 #define nsDeviceContextPS_h___
 
+#ifdef XP_PC
 #define WINTEST
+#endif
 
 #ifdef WINTEST
 #include <windows.h>
@@ -76,10 +78,8 @@ public:
   NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics);
   NS_IMETHOD 	BeginDocument(void);
   NS_IMETHOD 	EndDocument(void);
-
   NS_IMETHOD 	BeginPage(void);
   NS_IMETHOD 	EndPage(void);
-
   virtual void  SetSpec(nsIDeviceContextSpec *aSpec);
 
 protected:
@@ -100,7 +100,6 @@ public:
 public:
   HDC           mDC;               // this is temporary!!!
 #endif
-
 
 //friend nsDeviceContextWin;         // need to be a friend of the class using us.
 };

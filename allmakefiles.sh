@@ -75,6 +75,7 @@ gfx/Makefile
 gfx/public/Makefile
 gfx/src/Makefile
 gfx/src/gtk/Makefile
+gfx/src/ps/Makefile
 gfx/src/motif/Makefile
 gfx/src/rhapsody/Makefile
 gfx/tests/Makefile

@@ -33,10 +33,12 @@ nsFontMetricsPS :: ~nsFontMetricsPS()
     mFont = nsnull;
   }
 
+#ifdef XP_WIN
   if (NULL != mFontHandle){
     ::DeleteObject(mFontHandle);
     mFontHandle = NULL;
   }
+#endif
 
   mDeviceContext = nsnull;
 }
@@ -103,6 +105,7 @@ nsFontMetricsPS :: Destroy()
   return NS_OK;
 }
 
+#ifdef XP_PC
 static void
 MapGenericFamilyToFont(const nsString& aGenericFamily,
                        nsIDeviceContext* aDC,
@@ -130,7 +133,9 @@ MapGenericFamilyToFont(const nsString& aGenericFamily,
     aFontFace.Truncate();
   }
 }
+#endif
 
+#ifdef XP_PC
 struct FontEnumData {
   FontEnumData(nsIDeviceContext* aContext, TCHAR* aFaceName)
   {
@@ -140,7 +145,9 @@ struct FontEnumData {
   nsIDeviceContext* mContext;
   TCHAR* mFaceName;
 };
+#endif
 
+#ifdef XP_PC
 static PRBool
 FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
@@ -162,10 +169,12 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
   }
   return PR_TRUE;
 }
+#endif
 
 void
 nsFontMetricsPS::RealizeFont()
 {
+#ifdef XP_PC
   // Fill in logFont structure; stolen from awt
   LOGFONT logFont;
   logFont.lfWidth          = 0; 
@@ -267,6 +276,7 @@ nsFontMetricsPS::RealizeFont()
 
   if (NULL == mDeviceContext->mDC)
     ::ReleaseDC(win, dc);
+#endif
 }
 
 NS_IMETHODIMP
@@ -351,6 +361,8 @@ nsFontMetricsPS :: GetFont(const nsFont *&aFont)
 NS_IMETHODIMP
 nsFontMetricsPS::GetFontHandle(nsFontHandle &aHandle)
 {
+#ifdef XP_PC
   aHandle = mFontHandle;
+#endif
   return NS_OK;
 }
