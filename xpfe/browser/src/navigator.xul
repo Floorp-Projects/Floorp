@@ -279,12 +279,13 @@ Contributor(s): ______________________________________. -->
 ]> 
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
-	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="Startup()"
         onunload="if (appCore) appCore.close()"
         title="&mainWindow.title;" titlemodifier="&mainWindow.titlemodifier;" 
-        titleseperator ="&mainWindow.titlemodifierseperator;"  windowtype="navigator:browser"> 
+        titleseperator ="&mainWindow.titlemodifierseperator;"  windowtype="navigator:browser"
+		align="vertical"> 
 
   <html:script language="javascript" src="navigator.js">
   </html:script>
@@ -642,7 +643,6 @@ Contributor(s): ______________________________________. -->
 
   </menubar>
   
-  <box id="outer-box" align="vertical">
    <toolbox>
     <toolbar class="main-bar" chromeclass="toolbar">
 		  <titledbutton id="back-button" align="bottom" value="&backButton.label;" onclick="BrowserBack()" tooltip="backtooltip">	
@@ -770,5 +770,4 @@ Contributor(s): ______________________________________. -->
 	      </box>
 	  </toolbar>
 	</toolbox>
-  </box>
 </window>
