@@ -61,13 +61,13 @@ public:
                      nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea) = 0;
 
   /**
-   * Return the source drawing surface that the blending it going to
+   * Return the source drawing surface to be blended
    * @return The platform specific drawing surface
    */
   virtual nsDrawingSurface GetSrcDS()=0;
 
   /**
-   * Return the destination drawing surface that the blending it going to
+   * Return the destination drawing surface to be blended and modified
    * @return The platform specific drawing surface
    */
   virtual nsDrawingSurface GetDstDS()=0;

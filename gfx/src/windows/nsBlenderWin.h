@@ -19,7 +19,7 @@
 #ifndef nsBlenderWin_h___
 #define nsBlenderWin_h___
 
-#include "nsIBlender.h"
+#include "nsBlender.h"
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsIImage.h"
@@ -32,25 +32,79 @@
 //----------------------------------------------------------------------
 
 // Blender interface
-class nsBlenderWin : public nsIBlender
+class nsBlenderWin : public nsBlender
 {
 public:
-
-  NS_DECL_ISUPPORTS
   
-  nsBlenderWin();
-  ~nsBlenderWin();
+ /** --------------------------------------------------------------------------
+  * Construct and set the initial values for this windows specific blender
+  * @update dc - 10/29/98
+  */
+ nsBlenderWin();
 
-  virtual nsresult Init(nsDrawingSurface aSrc,nsDrawingSurface aDst);
-  virtual nsresult Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
+ /** --------------------------------------------------------------------------
+  * Release and cleanup all the windows specific information for this blender
+  * @update dc - 10/29/98
+  */
+ ~nsBlenderWin();
+
+ /** --------------------------------------------------------------------------
+  * Set  all the windows specific data for a blender to some initial values
+  * @update dc - 10/29/98
+  */
+ virtual nsresult Init(nsDrawingSurface aSrc,nsDrawingSurface aDst);
+
+
+/** --------------------------------------------------------------------------
+ * Run the blend using the passed in drawing surfaces
+ * @update dc - 10/29/98
+ * @param aSX -- left location for the blend
+ * @param aSY -- top location for the blend
+ * @param aWidth -- width of the blend
+ * @param aHeight -- height of the blend
+ * @param aDst -- Destination drawing surface for the blend
+ * @param aDX -- left location for the destination of the blend
+ * @param aDY -- top location for the destination of the blend
+ * @param aSrcOpacity -- the percentage for the blend
+ * @param aSaveBlendArea -- If true, will save off the blended area to restore later
+ * @result NS_OK if the blend worked.
+ */
+ virtual nsresult Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,
                           nsDrawingSurface aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,PRBool aSaveBlendArea);
 
   nsDrawingSurface GetSrcDS() {return(mSrcDS);}
   nsDrawingSurface GetDstDS() {return(mDstDS);}
 
+/** --------------------------------------------------------------------------
+ * Replace the bits saved from the last blend if the restore flag was set
+ * @update dc - 10/29/98
+ * @param aDst -- Destination drawing surface to restore to
+ * @result PR_TRUE if the restore worked.
+ */
   PRBool  RestoreImage(nsDrawingSurface aDst);
 
  private:
+
+  /** --------------------------------------------------------------------------
+   * Calculate the metrics for the alpha layer before the blend
+   * @update dc - 10/29/98
+   * @param aSrcInfo -- a pointer to a source bitmap
+   * @param aDestInfo -- a pointer to the destination bitmap
+   * @param aSrcUL -- upperleft for the source blend
+   * @param aMaskInfo -- a pointer to the mask bitmap
+   * @param aMaskUL -- upperleft for the mask bitmap
+   * @param aWidth -- width of the blend
+   * @param aHeight -- heigth of the blend
+   * @param aNumLines -- a pointer to number of lines to do for the blend
+   * @param aNumbytes -- a pointer to the number of bytes per line for the blend
+   * @param aSImage -- a pointer to a the bit pointer for the source
+   * @param aDImage -- a pointer to a the bit pointer for the destination 
+   * @param aMImage -- a pointer to a the bit pointer for the mask 
+   * @param aSLSpan -- number of bytes per span for the source
+   * @param aDLSpan -- number of bytes per span for the destination
+   * @param aMLSpan -- number of bytes per span for the mask
+   * @result PR_TRUE if calculation was succesful
+   */
   PRBool CalcAlphaMetrics(BITMAP *aSrcInfo,BITMAP *aDestInfo,nsPoint *ASrcUL,
                               BITMAP  *aMapInfo,nsPoint *aMaskUL,
                               PRInt32 aWidth,PRInt32 aHeight,
@@ -58,7 +112,6 @@ public:
                               PRInt32 *aNumbytes,PRUint8 **aSImage,PRUint8 **aDImage,
                               PRUint8 **aMImage,PRInt32 *aSLSpan,PRInt32 *aDLSpan,PRInt32 *aMLSpan);
 
-  PRInt32  CalcBytesSpan(PRUint32  aWidth,PRUint32  aBitsPixel);
 
   /**
    * Create a DIB header and bits for a bitmap
@@ -77,92 +130,18 @@ public:
    */
   void DeleteDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits);
 
-  void Do32Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
-
-  /** 
-   * Blend two 24 bit image arrays using an 8 bit alpha mask
-   * @param aNumlines  Number of lines to blend
-   * @param aNumberBytes Number of bytes per line to blend
-   * @param aSImage Pointer to beginning of the source bytes
-   * @param aDImage Pointer to beginning of the destination bytes
-   * @param aMImage Pointer to beginning of the mask bytes
-   * @param aSLSpan number of bytes per line for the source bytes
-   * @param aDLSpan number of bytes per line for the destination bytes
-   * @param aMLSpan number of bytes per line for the Mask bytes
-   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   * @param aSaveBlendArea informs routine if the area affected area will be save first
-   */
-  void Do24BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
-
-  /** 
-   * Blend two 24 bit image arrays using a passed in blend value
-   * @param aNumlines  Number of lines to blend
-   * @param aNumberBytes Number of bytes per line to blend
-   * @param aSImage Pointer to beginning of the source bytes
-   * @param aDImage Pointer to beginning of the destination bytes
-   * @param aMImage Pointer to beginning of the mask bytes
-   * @param aSLSpan number of bytes per line for the source bytes
-   * @param aDLSpan number of bytes per line for the destination bytes
-   * @param aMLSpan number of bytes per line for the Mask bytes
-   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   * @param aSaveBlendArea informs routine if the area affected area will be save first
-   */
-
-  void Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
-
-
-  /** 
-   * Blend two 16 bit image arrays using a passed in blend value
-   * @param aNumlines  Number of lines to blend
-   * @param aNumberBytes Number of bytes per line to blend
-   * @param aSImage Pointer to beginning of the source bytes
-   * @param aDImage Pointer to beginning of the destination bytes
-   * @param aMImage Pointer to beginning of the mask bytes
-   * @param aSLSpan number of bytes per line for the source bytes
-   * @param aDLSpan number of bytes per line for the destination bytes
-   * @param aMLSpan number of bytes per line for the Mask bytes
-   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   * @param aSaveBlendArea informs routine if the area affected area will be save first
-   */
-  void Do16Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
-
-    /** 
-   * Blend two 8 bit image arrays using an 8 bit alpha mask
-   * @param aNumlines  Number of lines to blend
-   * @param aNumberBytes Number of bytes per line to blend
-   * @param aSImage Pointer to beginning of the source bytes
-   * @param aDImage Pointer to beginning of the destination bytes
-   * @param aMImage Pointer to beginning of the mask bytes
-   * @param aSLSpan number of bytes per line for the source bytes
-   * @param aDLSpan number of bytes per line for the destination bytes
-   * @param aMLSpan number of bytes per line for the Mask bytes
-   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   * @param aSaveBlendArea informs routine if the area affected area will be save first
-   */
-  void Do8BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
-
-  /** 
-   * Blend two 8 bit image arrays using a passed in blend value
-   * @param aNumlines  Number of lines to blend
-   * @param aNumberBytes Number of bytes per line to blend
-   * @param aSImage Pointer to beginning of the source bytes
-   * @param aDImage Pointer to beginning of the destination bytes
-   * @param aMImage Pointer to beginning of the mask bytes
-   * @param aSLSpan number of bytes per line for the source bytes
-   * @param aDLSpan number of bytes per line for the destination bytes
-   * @param aMLSpan number of bytes per line for the Mask bytes
-   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   * @param aSaveBlendArea informs routine if the area affected area will be save first
-   */
-  void Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRInt32 aSLSpan,PRInt32 aDLSpan,nsColorMap *aColorMap,nsBlendQuality aBlendQuality,PRBool aSaveBlendArea);
 
 #ifdef NGLAYOUT_DDRAW
+  /** --------------------------------------------------------------------------
+   * Lock a surface down for Direct draw
+   * @update mp - 10/01/98
+   * @param IDirectDrawSurface -- 
+   * @param DDSURFACEDESC -- 
+   * @param BITMAP -- 
+   * @param RECT -- 
+   * @param DWORD -- 
+   * @result PR_TRUE lock was succesful
+   */
   PRBool LockSurface(IDirectDrawSurface *aSurface, DDSURFACEDESC *aDesc, BITMAP *aBitmap, RECT *aRect, DWORD aLockFlags);
 #endif
 
@@ -176,10 +155,8 @@ public:
   PRInt32             mSRowBytes;
   PRInt32             mDRowBytes;
 
-  PRInt32             mSaveLS;
   PRInt32             mSaveNumLines;
   PRInt32             mSaveNumBytes;
-  PRUint8             *mSaveBytes;    // place to save bits
   PRUint8             *mRestorePtr;   // starting area of save dst
   PRUint32            mResLS;         // line span for restore area
 
