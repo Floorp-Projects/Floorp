@@ -84,7 +84,6 @@ Description Long=Program will be installed with the minimal options.
 ; All other components not listed here will be disabled if
 ; this Setup Type is selected.
 C0=Component0
-C1=Component3
 
 [Setup Type1]
 Description Short=C&omplete
@@ -96,7 +95,6 @@ Description Long=Program will be installed with the most common options.
 C0=Component0
 C1=Component1
 C2=Component2
-C3=Component3
 
 [Setup Type2]
 Description Short=C&ustom
@@ -110,7 +108,6 @@ Description Long=You many choose the options you want to install.  Recommended f
 C0=Component0
 C1=Component1
 C2=Component2
-C3=Component3
 
 ;[Setup Type3]
 ;Description Short=C&ustom
@@ -228,24 +225,6 @@ Attributes=SELECTED|LAUNCHAPP
 url0=$URLPath$
 
 [Component2]
-Description Short=Netscape HTML Editor
-Description Long=Software for creating/editing HTML pages.
-Archive=editor.xpi
-$InstallSize$:editor
-$InstallSizeSystem$
-;Dependency0=Netscape Seamonkey
-; Attributes can be the following values:
-;   SELECTED  - the component is selected to be installed by default.
-;   INVISIBLE - the component is not shown in the Select Components dialog.
-Attributes=SELECTED
-Parameter=
-; url keys can be as many as needed.  url0 is attempted first.  if it fails,
-; the next url key is tried in sequential order.
-; The url should not contain the filename.  Setup will assemble the complete url
-; using the url keys and the Archive key.
-url0=$URLPath$
-
-[Component3]
 Description Short=Mail&News
 Description Long=Seamonkey Mail&News
 Archive=mail.xpi

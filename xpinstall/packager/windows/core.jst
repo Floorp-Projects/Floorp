@@ -10,8 +10,11 @@ err = AddDirectory("Program",
                    communicatorFolder, // Where to put this file (Returned from GetFolder) 
                    "",                 // fileName in jar, 
                    false);             // Force Flag 
-
 LogComment("AddDirectory() returned: " + err);
+
+var fileComponentReg = communicatorFolder + "\\component.reg";
+err  = Install.FileDelete(fileComponentReg);
+LogComment("FileDelete() returned: " + err);
 
 err = FinalizeInstall(); 
 LogComment("FinalizeInstall() returned: " + err);
