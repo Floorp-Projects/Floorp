@@ -86,6 +86,10 @@ print_preview   1      NS_PRINT_PREVIEW
 printing        1      NS_PRINTING
 moz_xul         1      MOZ_XUL
 layout_debug    0
+# You need to pull calendar and libical explicitly.
+calendar        0
+# calendar requires libical.
+libical         0
 
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"

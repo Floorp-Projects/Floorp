@@ -665,6 +665,12 @@ sub ProcessJarManifests()
     	CreateJarFromManifest(":mozilla:security:manager:ssl:resources:jar.mn", $chrome_dir, \%jars);
     	CreateJarFromManifest(":mozilla:security:manager:pki:resources:jar.mn", $chrome_dir, \%jars);
     }
+
+    if ($main::options{calendar})
+    {
+      CreateJarFromManifest(":mozilla:calendar:resources:jar.mn", $chrome_dir, \%jars);
+    }
+
     # bad jar.mn files
 #    CreateJarFromManifest(":mozilla:extensions:xmlterm:jar.mn", $chrome_dir, \%jars);
     
@@ -1228,6 +1234,19 @@ sub BuildClientDist()
         InstallFromManifest(":mozilla:js:jsd:MANIFEST", "$distdirectory:jsdebug:");
     }
 
+    #LIBICAL
+    if ($main::options{libical})
+    {
+        InstallFromManifest(":mozilla:other-licenses:libical:src:libical:autogenex:MANIFEST", "$distdirectory:libical:");
+        InstallFromManifest(":mozilla:other-licenses:libical:src:libicalss:MANIFEST", "$distdirectory:libical:");
+    }
+
+    #CALENDAR
+    if ($main::options{calendar})
+    {
+        InstallFromManifest(":mozilla:calendar:libxpical:MANIFEST_IDL", "$distdirectory:idl:");
+    }
+
     print("--- Client Dist export complete ----\n");
 }
 
@@ -1564,6 +1583,11 @@ sub BuildIDLProjects()
         BuildOneProject($layout_debug_path . "lytDbgPlgIDL.xml",  "headers", 0, 0, 0);
         BuildOneProject($layout_debug_path . "lytDbgPlgIDL.xml",  "layoutDebugPlugin.xpt", 0, 0, 0);
         MakeAlias($layout_debug_path . "LayoutDebugPlugin.xpt", $plugin_dist);
+    }
+
+    if ($main::options{calendar})
+    {
+        BuildIDLProject(":mozilla:calendar:macbuild:calendarIDL.xml", "calendar");
     }
 
     EndBuildModule("idl");
@@ -2337,6 +2361,16 @@ sub BuildExtensionsProjects()
         {
             InstallResources(":mozilla:extensions:venkman:js:MANIFEST_COMPONENTS", "$components_dir");
         }
+    }
+    
+    if ($main::options{libical})
+    {
+        BuildProject(":mozilla:other-licenses:libical:macbuild:libical.xml", "libical$D.o");
+        MakeAlias(":mozilla:other-licenses:libical:macbuild:libical$D.o", ":mozilla:dist:libical:");
+    }
+    if ($main::options{calendar})
+    {
+        BuildOneProject(":mozilla:calendar:macbuild:calendar.xml", "xpical$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     }
     
     EndBuildModule("extensions");
