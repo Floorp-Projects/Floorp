@@ -102,13 +102,13 @@ PRThread     *mozilla_thread;
 MODULE_PRIVATE void
 wfe_SetLayoutColor(int type, COLORREF color)
 {
-
+#ifndef MOZ_NGLAYOUT
 	uint8 red   = GetRValue(color);
 	uint8 green	= GetGValue(color);
 	uint8 blue  = GetBValue(color);
 
 	LO_SetDefaultColor(type, red, green, blue);
-
+#endif /* MOZ_NGLAYOUT */
 }
 
 void OpenDraftExit (URL_Struct *url_struct, int/*status*/,MWContext *pContext)

@@ -480,7 +480,11 @@ void CFormElement::ChangeInputElement()
                 tog_data = (lo_FormElementToggleData *) GetElement()->element_data;
 		        if(tog_data->toggled) {
                     // If we are supposed to be on, turn off everyone else
+#ifdef MOZ_NGLAYOUT
+            XP_ASSERT(0);
+#else
     				LO_FormRadioSet(GetContext()->GetDocumentContext(), GetElement());  
+#endif
 		        }
 			}
 		}

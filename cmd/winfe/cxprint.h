@@ -251,8 +251,10 @@ public:
 	virtual void FinishedLayout(MWContext *pContext);
 	//	Display routines
 	virtual void DisplayBullet(MWContext *pContext, int iLocation, LO_BullettStruct *pBullet);
+#ifndef MOZ_NGLAYOUT
 	virtual void DisplayEmbed(MWContext *pContext, int iLocation, LO_EmbedStruct *pEmbed);
 	virtual void DisplayFormElement(MWContext *pContext, int iLocation, LO_FormElementStruct *pFormElement);
+#endif
 	virtual void DisplayHR(MWContext *pContext, int iLocation, LO_HorizRuleStruct *pHorizRule);
 	virtual int DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, int32 lScaleWidth, int32 lScaleHeight, LTRB& Rect);
 	virtual void DisplayLineFeed(MWContext *pContext, int iLocation, LO_LinefeedStruct *pLineFeed, XP_Bool clear);

@@ -31,7 +31,7 @@ extern "C" BOOL WPM_RegisterContentTypeConverter(char *pFormatIn,
 	NET_Converter *pConverterFunc, BOOL bAutomated)	{
 
 	NET_RegContentTypeConverter (pFormatIn,iFormatOut,vpDataObject, pConverterFunc,
-									bAutomated);
+									(PRBool)bAutomated);
 	return(TRUE);
 }
 

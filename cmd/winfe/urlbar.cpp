@@ -446,6 +446,9 @@ void CURLBar::ProcessEnterKey()
             id = 0;
         }
 
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
         if (HK_CallHook(HK_LOCATION, NULL, id, text, &new_text))
         {
             // Nothing, new_text is already set.
@@ -454,6 +457,7 @@ void CURLBar::ProcessEnterKey()
         {
             new_text = NULL;
         }
+#endif /* MOZ_NGLAYOUT */
     }
 
     if (new_text)
@@ -479,8 +483,12 @@ void CURLBar::UpdateFields( const char * msg )
 {       
     CWnd *pText = GetDlgItem( IDC_URLTEXT );
 
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     // strip random backend crap out of the url
     msg = LM_StripWysiwygURLPrefix(msg);
+#endif /* MOZ_NGLAYOUT */
 
     CString cs(msg);
     m_pBox->SetWindowText(cs); 
@@ -684,6 +692,7 @@ BOOL CEditWnd::PreTranslateMessage ( MSG * msg )
 
 					const char *c_url = (const char *)url;
 					url_str = (char *)c_url;
+#ifndef MOZ_NGLAYOUT
 					if (HK_CallHook(HK_LOCATION, NULL, id, url_str, &new_url))
 					{
 						// Nothing, new_url is already set.
@@ -692,6 +701,7 @@ BOOL CEditWnd::PreTranslateMessage ( MSG * msg )
 					{
 						new_url = NULL;
 					}
+#endif /* MOZ_NGLAYOUT */
 				}
 			
 				if (new_url)

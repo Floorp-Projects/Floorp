@@ -58,8 +58,10 @@ public:
 
 //  Embed handling
 public:
+#ifndef MOZ_NGLAYOUT
     virtual void GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pLayoutData, NET_ReloadMethod bReload);
     virtual void FreeEmbedElement(MWContext *pContext, LO_EmbedStruct *pLayoutData);
+#endif /* MOZ_NGLAYOUT */
 
 //	OLE server handling
 public:

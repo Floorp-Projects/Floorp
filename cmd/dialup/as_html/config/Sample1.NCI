@@ -1,0 +1,52 @@
+;  Mode: INI; tab-width: 8; indent-tabs-mode: nil -*-
+; 
+;  The contents of this file are subject to the Netscape Public License
+;  Version 1.0 (the "NPL"); you may not use this file except in
+;  compliance with the NPL.  You may obtain a copy of the NPL at
+;  http://www.mozilla.org/NPL/
+; 
+;  Software distributed under the NPL is distributed on an "AS IS" basis,
+;  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+;  for the specific language governing rights and limitations under the
+;  NPL.
+; 
+;  The Initial Developer of this code under the NPL is Netscape
+;  Communications Corporation.  Portions created by Netscape are
+;  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+;  Reserved.
+;
+[Dial-In Configuration]
+SupportPhone=+1 (800) 000-0000 
+Phone=+1 (800) 000-0000 
+Password=
+Name=
+Description=Company Name
+SiteName=Company Name or Access Location (1)
+
+[Options]
+EnableVJCompression=YES
+
+[IP]
+DNSAddress2=000.000.000.002
+DNSAddress=000.000.000.001
+DomainName=companyname1.com
+IPAddress=
+Enabled=YES
+
+[Services]
+Default_Mail_Protocol=POP
+IMAP_Server=imap.companyname1.net
+POP_Server=pop.companyname1.net
+NNTP_Server=news.companyname1.net 
+SMTP_Server=mail.companyname1.net
+
+[Publishing]
+View_URL=
+Publish_Password=
+Publish_URL=
+
+[Script]
+ScriptFileName=
+
+[Configuration]
+ConfigurationFileName=Sample (1)

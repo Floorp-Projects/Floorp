@@ -330,6 +330,7 @@ UINT GetChildID()
     return s_uChildID++;
 }
 
+#ifndef MOZ_NGLAYOUT
 //  Get the size of an embedded item.
 void CGenericDoc::GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pLayoutData, NET_ReloadMethod Reload) {
     //  First, see if we've already got what Layout is asking for.
@@ -606,7 +607,10 @@ void CGenericDoc::GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pLayoutData,
     }
 
 }
+#endif /* MOZ_NGLAYOUT */
 
+
+#ifndef MOZ_NGLAYOUT
 void CGenericDoc::FreeEmbedElement(MWContext *pContext, LO_EmbedStruct *pLayoutData)
 {
     NPEmbeddedApp* 		pEmbeddedApp = (NPEmbeddedApp*)pLayoutData->objTag.FE_Data;
@@ -751,6 +755,7 @@ void CGenericDoc::FreeEmbedElement(MWContext *pContext, LO_EmbedStruct *pLayoutD
 
     }
 }
+#endif /* MOZ_NGLAYOUT */
 
 
 /////////////////////////////////////////////////////////////////////////////

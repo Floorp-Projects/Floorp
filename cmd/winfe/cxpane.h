@@ -242,7 +242,12 @@ inline void CPaneCX::ResolvePoint(XY& xy, POINT& point)
 }
 inline LO_Element *CPaneCX::GetLayoutElement(XY& Point, CL_Layer *layer) const
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return NULL;
+#else
     return(LO_XYToElement(GetContext(), Point.x, Point.y, layer));
+#endif
 }
 inline BOOL CPaneCX::IsNavCenterHTMLPane() const
 {

@@ -161,8 +161,10 @@ void CAbstractCX::DestroyContext()	{
         //      is set.
 	    Interrupt();
 
+#ifndef MOZ_NGLAYOUT
         //  Layout needs to cleanup.
         LO_DiscardDocument(m_pXPCX);
+#endif
 
 	    //	End the session history of the context.
         SHIST_EndSession(m_pXPCX);
@@ -191,9 +193,13 @@ void CAbstractCX::DestroyContext()	{
         //      unstable state.
 	    XP_RemoveContextFromList(m_pXPCX);
 
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
         //  Have mocha perform cleanup and continue destruction in the
         //    callback
         ET_RemoveWindowContext(m_pXPCX, mocha_done_callback, this);
+#endif /* MOZ_NGLAYOUT */
     }
 }
 
@@ -751,13 +757,21 @@ void CAbstractCX::NiceReload(int usePassInType, NET_ReloadMethod iReloadType )	{
 //	Comments:	Standard stuff.
 
 	MWContext * context = GetContext();
-	if(XP_IsContextBusy(context) == TRUE || LO_LayingOut(context))	{
+	if(XP_IsContextBusy(context) == TRUE 
+#ifndef MOZ_NGLAYOUT
+|| LO_LayingOut(context)
+#endif
+)	{
 		FEU_RequestIdleProcessing(context);
 		context->reSize = TRUE;
 	}
 	else	{
 		context->reSize = FALSE;
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 		NPL_SamePage(context);
+#endif
 		if( usePassInType ) {
 			Reload( iReloadType );
 			return;
@@ -780,9 +794,13 @@ void CAbstractCX::Back()	{
 
 	History_entry *pHist = SHIST_GetPrevious(GetContext());
 	if (GetContext()->grid_children) {
+#ifdef MOZ_NGLAYOUT
+    XP_ASSERT(0);
+#else
 	    if (LO_BackInGrid(GetDocumentContext())) {
 		return;
 	    }
+#endif
 	}
 	if(pHist)	{
 		GetUrl(SHIST_CreateURLStructFromHistoryEntry(GetContext(), pHist), FO_CACHE_AND_PRESENT);
@@ -797,15 +815,20 @@ void CAbstractCX::Forward()	{
 
 	History_entry *pHist = SHIST_GetNext(GetContext());
 	if (GetContext()->grid_children) {
+#ifdef MOZ_NGLAYOUT
+    XP_ASSERT(0);
+#else
 	    if (LO_ForwardInGrid(GetDocumentContext())) {
 		return;
 	    }
+#endif
 	}
 	if(pHist)	{
 		GetUrl(SHIST_CreateURLStructFromHistoryEntry(GetContext(), pHist), FO_CACHE_AND_PRESENT);
 	}
 }
 
+#ifndef MOZ_NGLAYOUT
 XL_TextTranslation CAbstractCX::TranslateText(URL_Struct *pUrl, const char *pFileName, const char *pPrefix, int iWidth)  {
 //	Purpose:    Translate a url into text.
 //	Arguments:  pUrl        The URL to translate.
@@ -840,6 +863,7 @@ XL_TextTranslation CAbstractCX::TranslateText(URL_Struct *pUrl, const char *pFil
     //  Do it.
     return(XL_TranslateText(GetContext(), pUrl, pTextFE));
 }
+#endif /* MOZ_NGLAYOUT */
 
 void CAbstractCX::Interrupt()	{
 //	Purpose:	Interrupt any loads in a context.
@@ -1187,6 +1211,9 @@ void CAbstractCX::AddToBookmarks()
 }
 
 void CAbstractCX::CopySelection()	{
+#ifdef MOZ_NGLAYOUT
+    ASSERT(0);
+#else
 	if(CanCopySelection() == FALSE)	{
 		return;
 	}
@@ -1240,6 +1267,7 @@ void CAbstractCX::CopySelection()	{
 
 	::CloseClipboard();
 	XP_FREE(text);
+#endif
 }
 
 BOOL CAbstractCX::CanCopySelection()	{
@@ -1252,8 +1280,13 @@ BOOL CAbstractCX::CanCopySelection()	{
 			bRetval = FALSE;
 	}
 	else	{
+#ifdef MOZ_NGLAYOUT
+    XP_ASSERT(0);
+    bRetval = FALSE;
+#else
 		//	Is there anything selected to be copied?
 		bRetval = LO_HaveSelection(GetDocumentContext());
+#endif
 	}
 
 	return(bRetval);
@@ -1291,6 +1324,10 @@ CAbstractCX *CAbstractCX::FindContextByID(DWORD dwID)
 //	It's off by default, so be careful out there.
 URL_Struct *CAbstractCX::CreateUrlFromHist(BOOL bClearStateData, SHIST_SavedData *pSavedData, BOOL bWysiwyg)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return NULL;
+#else
 	TRACE("Creating URL from the current history entry.\n");
 
 	//	Make sure that we're not destroyed.
@@ -1336,6 +1373,7 @@ URL_Struct *CAbstractCX::CreateUrlFromHist(BOOL bClearStateData, SHIST_SavedData
 	}
 
 	return(pUrl);
+#endif /* MOZ_NGLAYOUT */
 }
 
 //	Used mainly in cmdui enablers to determine if we could load from 

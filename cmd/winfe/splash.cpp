@@ -303,10 +303,14 @@ void CBigIcon::CenterText(CClientDC &dc, LPCSTR lpszStatus, int top)
 	// We need to compute where to draw the text so it is centered
 	// horizontally
 	int		x = rect.left;
+#ifdef MOZ_NGLAYOUT
+    // Maybe we should put CIntlWin back in the NGLayout build
+    // Right now, splash screen won't center text.
+#else
     CSize   extent = CIntlWin::GetTextExtent(0, dc.m_hDC, lpszStatus, XP_STRLEN(lpszStatus));
-
 	if (extent.cx < rect.Width())
 		x += (rect.Width() - extent.cx) / 2;
+#endif
 
 	// Draw opaquely so we can avoid erasing the old text
 	dc.ExtTextOut(x, rect.top, ETO_OPAQUE, &rect, lpszStatus, strlen(lpszStatus), NULL);

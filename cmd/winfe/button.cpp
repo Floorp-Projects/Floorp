@@ -206,7 +206,11 @@ void CNetscapeButton::Click(UINT nFlags, BOOL bNotify, BOOL &bReturnImmediately)
 	case FORM_TYPE_RADIO:
 		tog_data = (lo_FormElementToggleData *) m_Form->element_data;
 		if(!tog_data->toggled) {
+#ifdef MOZ_NGLAYOUT
+      XP_ASSERT(0);
+#else
 			m_pLastSelectedRadio = LO_FormRadioSet(ABSTRACTCX(m_Context)->GetDocumentContext(), m_Form);  // Turn off everyone else
+#endif
 		}
         if(GetCheck() != tog_data->toggled)   {
             SetCheck(tog_data->toggled);

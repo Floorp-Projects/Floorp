@@ -51,6 +51,13 @@ extern char * EDT_NEW_DOC_NAME;
 
 #define EDT_IS_SIZING   ( EDT_IS_EDITOR(GetContext()) && EDT_IsSizing(GetContext()) )
 
+#ifdef MOZ_NGLAYOUT
+#include "nsString.h"
+#include "nsIURL.h"
+#include "nsIWebWidget.h"
+#include "nsIDocument.h"
+#endif
+
 #if defined(OJI)
 #include "jvmmgr.h"
 #elif defined(JAVA)
@@ -58,7 +65,6 @@ extern char * EDT_NEW_DOC_NAME;
 #endif
 
 #if defined(JAVA) || defined(OJI)
-
 #include "np.h"
 #include "prlog.h"
 
@@ -632,6 +638,9 @@ void CWinCX::DestroyContext()   {
 
 
 void CWinCX::OnDeactivateEmbedCX()  {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     CGenericView *pView = GetView();
     if(pView != NULL && m_pSelected != NULL) {
 		//	Obtain the plugin structure.
@@ -655,6 +664,7 @@ void CWinCX::OnDeactivateEmbedCX()  {
 		//	Clear that nothing is currently selected.
         m_pSelected = NULL;
     }
+#endif /* MOZ_NGLAYOUT */
 }
 
 #ifdef EDITOR
@@ -773,6 +783,7 @@ void CWinCX::ScrollWindow(int x, int y)
 #endif
 //	This function get's called when the window moves around.
 void CWinCX::OnMoveCX()	{
+#ifndef MOZ_NGLAYOUT
     //  WARNING:m_crWindowRect will be invalid until next AftWMSize!
 
 	//	Go through all our immediate children, telling them their screen location
@@ -801,6 +812,7 @@ void CWinCX::OnMoveCX()	{
 #ifdef DDRAW
 	CalcWinPos();
 #endif
+#endif /* MOZ_NGLAYOUT */
 }
 
 static void
@@ -820,7 +832,11 @@ wfe_ResizeFullPagePlugin(MWContext* pContext, int32 lWidth, int32 lHeight)
 			(int)npWindow->width,
 			(int)npWindow->height,
 			SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 		NPL_EmbedSize(pContext->pluginList);
+#endif
 	}
 }
 
@@ -863,6 +879,9 @@ LPDIRECTDRAWSURFACE CWinCX::CreateOffscreenSurface(RECT& rect)
 
 void CWinCX::AftWMSize(PaneMessage *pMessage)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 //  Purpose:    Informs the context that the size of the displayable area has changed.
 //  Arguments:  As OnSize in MFC
 //  Returns:    void
@@ -1062,6 +1081,7 @@ void CWinCX::AftWMSize(PaneMessage *pMessage)
         NiceResizeReload();
 		*/
     }
+#endif /* MOZ_NGLAYOUT */
 }
 
 #ifdef EDITOR
@@ -1087,9 +1107,12 @@ BOOL CWinCX::EraseTextBkgnd(HDC pDC, RECT& cRect, LO_TextStruct* pText)
 					   pText->text_attr->no_background ? NULL : &pText->text_attr->bg);
 }
 
-#ifdef LAYERS
 BOOL CWinCX::HandleLayerEvent(CL_Layer * pLayer, CL_Event * pEvent)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return FALSE;
+#else
     XY point(pEvent->x, pEvent->y); // Event location, in layer coordinates
     BOOL bReturn = TRUE;
     fe_EventStruct *pFEEvent = (fe_EventStruct *)pEvent->fe_event;
@@ -1252,10 +1275,15 @@ BOOL CWinCX::HandleLayerEvent(CL_Layer * pLayer, CL_Event * pEvent)
     }
 
     return bReturn;
+#endif /* MOZ_NGLAYOUT */
 }
 
 BOOL CWinCX::HandleEmbedEvent(LO_EmbedStruct *embed, CL_Event *pEvent)
 {
+#ifdef MOZ_NGLAYOUT
+    XP_ASSERT(0);
+    return FALSE;
+#else
     NPEvent npEvent;
     fe_EventStruct *pFEEvent = (fe_EventStruct *)pEvent->fe_event;
     NPEmbeddedApp *pEmbeddedApp = (NPEmbeddedApp *)embed->objTag.FE_Data;
@@ -1330,11 +1358,15 @@ BOOL CWinCX::HandleEmbedEvent(LO_EmbedStruct *embed, CL_Event *pEvent)
     }
     
     return (BOOL)NPL_HandleEvent(pEmbeddedApp, &npEvent, (void*)npEvent.wParam);
+#endif /* MOZ_NGLAYOUT */
 }
-#endif /* LAYERS */
 
 BOOL CWinCX::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return FALSE;
+#else
     BOOL bReturn = FALSE;
     
 	//	Don't continue if this context is destroyed.
@@ -1397,10 +1429,15 @@ BOOL CWinCX::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 #endif /* LAYERS */
 
     return bReturn;
+#endif /* MOZ_NGLAYOUT */
 }
 
 BOOL CWinCX::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return FALSE;
+#else
     BOOL bReturn = FALSE;
     
 	//	Don't continue if this context is destroyed.
@@ -1466,9 +1503,13 @@ BOOL CWinCX::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 #endif /* LAYERS */
 
     return bReturn;
+#endif /* MOZ_NGLAYOUT */
 }
 
 void CWinCX::OnLButtonDblClkCX(UINT uFlags, CPoint cpPoint)	{
+#ifdef MOZ_NGLAYOUT
+      XP_ASSERT(0);
+#else
 	//	Only do this if clicking is enabled.
 	if(IsClickingEnabled() == FALSE)	{
 		return;
@@ -1488,7 +1529,6 @@ void CWinCX::OnLButtonDblClkCX(UINT uFlags, CPoint cpPoint)	{
 	XY Point;
 	ResolvePoint(Point, cpPoint);
 
-#ifdef LAYERS
 	if (GetContext()->compositor) {
 	    CL_Event event;
 	    fe_EventStruct fe_event;
@@ -1518,16 +1558,19 @@ void CWinCX::OnLButtonDblClkCX(UINT uFlags, CPoint cpPoint)	{
     MouseTimerData mt(GetContext());
     FEU_MouseTimer(&mt);
     return;
+#endif /* MOZ_NGLAYOUT */
 }
 
 void 
 CWinCX::OnLButtonDblClkForLayerCX(UINT uFlags, CPoint& cpPoint,
 				  XY& Point, CL_Layer *layer)
 {
+#ifdef MOZ_NGLAYOUT
+      XP_ASSERT(0);
+#else
 // With LAYERS turned on, the orginal method 
 // OnLButtonDblClkCX is separated into two methods,
 // one of which is a per-layer method.
-#endif /* LAYERS */
 
 	//	Process any embed activation.
 #ifdef LAYERS
@@ -1650,6 +1693,7 @@ CWinCX::OnLButtonDblClkForLayerCX(UINT uFlags, CPoint& cpPoint,
     //      in all cases with the state of the buttons set correctly.
     MouseTimerData mt(GetContext());
     FEU_MouseTimer(&mt);
+#endif /* MOZ_NGLAYOUT */
 }
 
 BOOL CWinCX::PtInSelectedCell(CPoint &DocPoint, LO_CellStruct *cell, 
@@ -1730,6 +1774,10 @@ BOOL CWinCX::PtInSelectedCell(CPoint &DocPoint, LO_CellStruct *cell,
 BOOL CWinCX::PtInSelectedRegion(CPoint cPoint, BOOL bConvertToDocCoordinates,
                                 CL_Layer *layer)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return FALSE;
+#else
     BOOL bPtInRegion = FALSE;
     BOOL bContinue = TRUE;
 
@@ -1743,12 +1791,12 @@ BOOL CWinCX::PtInSelectedRegion(CPoint cPoint, BOOL bConvertToDocCoordinates,
         DocPoint = cPoint;
     }
 
-    int32 start_selection, end_selection;
 	LO_Element * start_element = NULL;
 	LO_Element * end_element = NULL;
     CL_Layer *sel_layer = NULL;
     int32 x_origin, y_origin, old_x_origin, old_y_origin;
 
+    int32 start_selection, end_selection;
 	// Start the search from the current selection location	
 	LO_GetSelectionEndpoints(GetDocumentContext(), 
 	                     &start_element, 
@@ -1861,10 +1909,14 @@ BOOL CWinCX::PtInSelectedRegion(CPoint cPoint, BOOL bConvertToDocCoordinates,
     }
         
     return bPtInRegion;
+#endif /* MOZ_NGLAYOUT */
 }
 
 void CWinCX::OnLButtonDownCX(UINT uFlags, CPoint cpPoint)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	RelayToolTipEvent(cpPoint, WM_LBUTTONDOWN);
 
 	//	Only do this if clicking is enabled.
@@ -1885,7 +1937,6 @@ void CWinCX::OnLButtonDownCX(UINT uFlags, CPoint cpPoint)
 	XY Point;
 	ResolvePoint(Point, cpPoint);
 
-#ifdef LAYERS
 	
 	if (GetContext()->compositor) {
 	    CL_Event event;
@@ -1915,6 +1966,7 @@ void CWinCX::OnLButtonDownCX(UINT uFlags, CPoint cpPoint)
     MouseTimerData mt(GetContext());
     FEU_MouseTimer(&mt);
     return;
+#endif /* MOZ_NGLAYOUT */
 }
 
 void CWinCX::ResetToolTipImg() {
@@ -1944,6 +1996,9 @@ void
 CWinCX::OnLButtonDownForLayerCX(UINT uFlags, CPoint &cpPoint, XY& Point, 
 				CL_Layer *layer)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     MWContext *pMWContext = GetContext();
     XP_ASSERT(pMWContext);
 
@@ -1952,7 +2007,6 @@ CWinCX::OnLButtonDownForLayerCX(UINT uFlags, CPoint &cpPoint, XY& Point,
 // one of which is a per-layer method.
     if (pMWContext->compositor)
       CL_GrabMouseEvents(pMWContext->compositor, layer);
-#endif /* LAYERS */
 
 #ifdef LAYERS
 	LO_Element *pElement = GetLayoutElement(Point, layer);
@@ -1967,6 +2021,9 @@ CWinCX::OnLButtonDownForLayerCX(UINT uFlags, CPoint &cpPoint, XY& Point,
 		(Point.y - pElement->lo_form.y - pElement->lo_form.y_offset < pElement->lo_form.height) &&
 		(Point.y - pElement->lo_form.y - pElement->lo_form.y_offset > 0)) {
        
+#ifdef MOZ_NGLAYOUT
+      XP_ASSERT(0);
+#else
        CFormElement * pFormElement;
        CNetscapeButton * pButton;
        switch (pElement->lo_form.element_data->type) {
@@ -1988,6 +2045,7 @@ CWinCX::OnLButtonDownForLayerCX(UINT uFlags, CPoint &cpPoint, XY& Point,
            default:
                break;
 	}
+#endif
 	return;
    }
 
@@ -2103,7 +2161,11 @@ CWinCX::OnLButtonDownForLayerCX(UINT uFlags, CPoint &cpPoint, XY& Point,
             else
 #endif // EDITOR
             {
+#ifdef MOZ_NGLAYOUT
+            ASSERT(0);
+#else
         		LO_ExtendSelection(GetDocumentContext(), Point.x, Point.y);
+#endif
             }
         } else {
             // Start a normal selection
@@ -2136,12 +2198,15 @@ CWinCX::OnLButtonDownForLayerCX(UINT uFlags, CPoint &cpPoint, XY& Point,
 		LO_HighlightAnchor(GetDocumentContext(), pElement, TRUE);
 	}
 
+#ifdef EDITOR
 MOUSE_TIMER:
+#endif
     //  Have the mouse timer handler do some dirty work.
     //  Please don't return in the above code, I'd like this to get called
     //      in all cases with the state of the buttons set correctly.
     MouseTimerData mt(pMWContext);
     FEU_MouseTimer(&mt);
+#endif /* MOZ_NGLAYOUT */
 }
 
 typedef struct click_closure {
@@ -2156,7 +2221,9 @@ static void
 MapToAnchorAndTarget(MWContext * context, LO_Element * pElement, int x, int y, 
 		     CString& csAnchor, CString& csTarget)
 {
-
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     switch(pElement->type) {
 
     case LO_TEXT:
@@ -2201,7 +2268,7 @@ MapToAnchorAndTarget(MWContext * context, LO_Element * pElement, int x, int y,
     default:
 	break;
     }
-
+#endif /* MOZ_NGLAYOUT */
 }
 
 
@@ -2258,7 +2325,9 @@ win_click_callback(MWContext * pContext, LO_Element * pEle, int32 event,
             FE_DestroyWindow(pContext);
     }
 
+#ifdef EDITOR
 done:
+#endif
     if(pClose->szRefer)
         XP_FREE(pClose->szRefer);
     XP_FREE(pClose);
@@ -2273,6 +2342,9 @@ static void
 image_form_click_callback(MWContext * pContext, LO_Element * pElement, int32 event,
 			  void * pObj, ETEventStatus status)
 {
+#ifdef MOZ_NGLAYOUT
+    XP_ASSERT(0);
+#else
 
     // only continue if OK
     if(status != EVENT_OK) {
@@ -2308,12 +2380,15 @@ image_form_click_callback(MWContext * pContext, LO_Element * pElement, int32 eve
 
     //	Release.
     LO_FreeSubmitData(pSubmit);
-
+#endif /* MOZ_NGLAYOUT */
 }
 
 
 void CWinCX::OnLButtonUpCX(UINT uFlags, CPoint cpPoint, BOOL &bReturnImmediately)	
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	RelayToolTipEvent(cpPoint, WM_LBUTTONUP);
 
 	//	Only do this if clicking is enabled.
@@ -2333,9 +2408,7 @@ void CWinCX::OnLButtonUpCX(UINT uFlags, CPoint cpPoint, BOOL &bReturnImmediately
 
         XY Point;
 	ResolvePoint(Point, cpPoint);
-	
-#ifdef LAYERS
-	
+		
 	if (GetContext()->compositor) {
 	    CL_Event event;
 	    fe_EventStruct fe_event;
@@ -2367,6 +2440,7 @@ void CWinCX::OnLButtonUpCX(UINT uFlags, CPoint cpPoint, BOOL &bReturnImmediately
     MouseTimerData mt(GetContext());
     FEU_MouseTimer(&mt);
     return;
+#endif /* MOZ_NGLAYOUT */
 }
 
 
@@ -2374,6 +2448,9 @@ void
 CWinCX::OnLButtonUpForLayerCX(UINT uFlags, CPoint& cpPoint, XY& Point,
 			      CL_Layer *layer, BOOL &bReturnImmediately)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 
     History_entry *pHist = NULL;
     click_closure * pClosure = NULL;
@@ -2383,7 +2460,6 @@ CWinCX::OnLButtonUpForLayerCX(UINT uFlags, CPoint& cpPoint, XY& Point,
     // one of which is a per-layer method.
     if (GetContext()->compositor)
         CL_GrabMouseEvents(GetContext()->compositor, NULL);
-#endif /* LAYERS */
 
 #ifdef LAYERS
 	LO_Element *pElement = GetLayoutElement(Point, layer);
@@ -2766,12 +2842,16 @@ CWinCX::OnLButtonUpForLayerCX(UINT uFlags, CPoint& cpPoint, XY& Point,
 	        break;
 	}
 
+#ifdef EDITOR
 MOUSE_TIMER:
+#endif
     //  Have the mouse timer handler do some dirty work.
     //  Please don't return in the above code, I'd like this to get called
     //      in all cases with the state of the buttons set correctly.
     MouseTimerData mt(GetContext());
     FEU_MouseTimer(&mt);
+
+#endif /* MOZ_NGLAYOUT */
 }
 
 
@@ -2808,6 +2888,9 @@ wfe_textObjectToBookmarkHandle(LO_TextStruct * text, char * title)
 // Creates OLE drag data source for selected text
 void CWinCX::DragSelection()
 {            
+#ifdef MOZ_NGLAYOUT
+    ASSERT(0);
+#else
     // Begin the drag and drop operation
     // REMEMBER: OnDrop: Check if end pt is withing selection,
     //   if yes, ignore drop
@@ -2834,11 +2917,11 @@ void CWinCX::DragSelection()
     
     char* pText = NULL;
     XP_HUGE_CHAR_PTR pGlobal;
-    XP_HUGE_CHAR_PTR pHTML;
     int32  textLen = 0;
-    int32  htmlLen;
     m_bDragging = FALSE;
 #ifdef EDITOR
+    XP_HUGE_CHAR_PTR pHTML;
+    int32  htmlLen;
     if( EDT_IS_EDITOR(pMWContext) ){
         if( EDT_COP_OK == EDT_CanCopy(pMWContext, TRUE) &&
             EDT_COP_OK == EDT_CopySelection(pMWContext, &pText, &textLen, &pHTML, &htmlLen) ){
@@ -2921,6 +3004,7 @@ void CWinCX::DragSelection()
     pDataSource->Empty();
     delete pDataSource;
     delete pDropSource;
+#endif #endif /* MOZ_NGLAYOUT */
 }
 
 // Triggered on button up on our bitmap on the menu
@@ -3048,6 +3132,9 @@ void wfe_Progress(MWContext *pContext, const char *pMessage);
 
 void CWinCX::OnMouseMoveCX(UINT uFlags, CPoint cpPoint, BOOL &bReturnImmediately)	
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	//	Must have a view to continue.
 	if(GetPane() == NULL)	{
 		return;
@@ -3073,7 +3160,6 @@ void CWinCX::OnMouseMoveCX(UINT uFlags, CPoint cpPoint, BOOL &bReturnImmediately
     XY xyPoint;
     ResolvePoint(xyPoint, cpPoint);
 
-#ifdef LAYERS
 	MWContext  * context  = GetContext();
 	if (context->compositor) {
 	    CL_Event event;
@@ -3101,6 +3187,7 @@ void CWinCX::OnMouseMoveCX(UINT uFlags, CPoint cpPoint, BOOL &bReturnImmediately
     MouseTimerData mt(GetContext());
     FEU_MouseTimer(&mt);
     return;
+#endif /* MOZ_NGLAYOUT */
 }
 
 void
@@ -3110,7 +3197,10 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
 // With LAYERS turned on, the orginal method 
 // OnMouseMoveCX is separated into two methods,
 // one of which is a per-layer method.
-#endif /* LAYERS */
+
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 
     MWContext  * context  = GetContext();
 
@@ -3349,7 +3439,6 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
 					}
 				}
 				else {
-
 					char *pFullLink = (char *) LO_GetSelectionText(GetDocumentContext());
 
 					HGLOBAL hBookmark = wfe_textObjectToBookmarkHandle(text, pFullLink);
@@ -3493,10 +3582,13 @@ MOUSE_TIMER:
     //      in all cases with the state of the buttons set correctly.
     MouseTimerData mt(context);
     FEU_MouseTimer(&mt);
-
+#endif /* MOZ_NGLAYOUT */
 }
 
 void CWinCX::OnRButtonDblClkCX(UINT uFlags, CPoint cpPoint)	{
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	//	Only do this if clicking is enabled.
 	if(IsClickingEnabled() == FALSE)	{
 		return;
@@ -3540,6 +3632,7 @@ void CWinCX::OnRButtonDblClkCX(UINT uFlags, CPoint cpPoint)	{
     //      in all cases with the state of the buttons set correctly.
     MouseTimerData mt(GetContext());
     FEU_MouseTimer(&mt);
+#endif /* MOZ_NGLAYOUT */
 }
 
 void
@@ -3558,6 +3651,9 @@ CWinCX::OnRButtonDblClkForLayerCX(UINT uFlags, CPoint& cpPoint,
 
 void CWinCX::OnRButtonDownCX(UINT uFlags, CPoint cpPoint)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	RelayToolTipEvent(cpPoint, WM_RBUTTONDOWN);
 
     MWContext * pMWContext = GetContext();
@@ -3573,7 +3669,6 @@ void CWinCX::OnRButtonDownCX(UINT uFlags, CPoint cpPoint)
     XY xyPoint;
     ResolvePoint(xyPoint, cpPoint);
 
-#ifdef LAYERS
 	if (pMWContext->compositor) {
 	    CL_Event event;
 	    fe_EventStruct fe_event;
@@ -3601,6 +3696,7 @@ void CWinCX::OnRButtonDownCX(UINT uFlags, CPoint cpPoint)
     MouseTimerData mt(pMWContext);
     FEU_MouseTimer(&mt);
     return;
+#endif /* MOZ_NGLAYOUT */
 }
 
 BOOL
@@ -3610,7 +3706,6 @@ CWinCX::OnRButtonDownForLayerCX(UINT uFlags, CPoint& cpPoint,
 // With LAYERS turned on, the orginal method 
 // OnRButtonDownCX is separated into two methods,
 // one of which is a per-layer method.
-#endif /* LAYERS */
     //	Remember....
     m_LastMouseEvent = m_RBDown;
     m_cpRBDown = cpPoint;
@@ -3621,6 +3716,9 @@ CWinCX::OnRButtonDownForLayerCX(UINT uFlags, CPoint& cpPoint,
 
 void CWinCX::OnRButtonUpCX(UINT uFlags, CPoint cpPoint)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     RelayToolTipEvent(cpPoint, WM_RBUTTONUP);
 
     //	Only do this if clicking is enabled.
@@ -3664,6 +3762,7 @@ void CWinCX::OnRButtonUpCX(UINT uFlags, CPoint cpPoint)
     //      in all cases with the state of the buttons set correctly.
     MouseTimerData mt(GetContext());
     FEU_MouseTimer(&mt);
+#endif /* MOZ_NGLAYOUT */
 }
 
 void
@@ -3709,6 +3808,19 @@ CWnd *CWinCX::GetDialogOwner() const    {
 
 int CWinCX::GetUrl(URL_Struct *pUrl, FO_Present_Types iFormatOut, BOOL bReallyLoading, BOOL bForceNew)   
 {
+#ifdef MOZ_NGLAYOUT
+  // Ask WebWidget to load the URL.
+  nsIWebWidget* ww = GetWebWidget();
+  if (!ww) {
+    return MK_NO_ACTION;
+  }
+  nsAutoString str(pUrl->address);
+  ww->LoadURL(str);
+  return MK_DATA_LOADED; // some success code
+
+  // Do we need to free pUrl
+#else
+
     // If we are POSTing data (publishing), or forcing a new page, don't ask user to save current page first
     //  If user cancels when being prompted to save current document, return without action
 #ifdef EDITOR
@@ -3781,13 +3893,17 @@ int CWinCX::GetUrl(URL_Struct *pUrl, FO_Present_Types iFormatOut, BOOL bReallyLo
 		}
 	}
 
-
     //  Call the base.                          
     return(CPaneCX::GetUrl(pUrl, iFormatOut, bReallyLoading, bForceNew));
+#endif #endif /* MOZ_NGLAYOUT */
 }
 
 CNSToolTip*	CWinCX::CreateToolTip(LO_ImageStruct* pImage, CPoint& cpPoint, CL_Layer *layer)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return NULL;
+#else
 	// Added tool tip to the image.
 	if ((!pImage || !pImage->image_attr) ) return NULL; // image is not ready yet.
 
@@ -3881,6 +3997,7 @@ CNSToolTip*	CWinCX::CreateToolTip(LO_ImageStruct* pImage, CPoint& cpPoint, CL_La
 	else
 		PA_UNLOCK(pImage->alt);
 	return m_ToolTip;
+#endif /* MOZ_NGLAYOUT */
 }
 
 void CWinCX::ClipChildren(CWnd *pWnd, BOOL bSet)
@@ -4137,9 +4254,13 @@ void CWinCX::DestroyEmbedWindow(MWContext *pContext, NPEmbeddedApp *pApp)
     }	
     XP_FREE(pAppWin);	
 
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     // turn scrollbars back on
     if(pApp->pagePluginType == NP_FullPage)
         FE_ShowScrollBars(pContext, TRUE);
+#endif
 }
 
 
@@ -4534,6 +4655,9 @@ void CWinCX::AllConnectionsComplete(MWContext *pContext)
     	}
     }
 
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	if( theGlobalNSFont.WebfontsNeedReload( pContext ) )
 	{
 		// need to remove all font cache before reload.
@@ -4541,6 +4665,7 @@ void CWinCX::AllConnectionsComplete(MWContext *pContext)
 		int usePassInType = 1;
 		NiceReload(usePassInType, NET_RESIZE_RELOAD );
 	}
+#endif /* MOZ_NGLAYOUT */
 }
 
 void CWinCX::UpdateStopState(MWContext *pContext)
@@ -4583,7 +4708,23 @@ void CWinCX::SetDocTitle(MWContext *pContext, char *pTitle)
   	    CString csUrlTitle = pTitle;
         // This should be set at end of GetUrl so we
         //  don't have to depend on history
+#ifdef MOZ_NGLAYOUT
+        // Ask WebWidget for the curent URL.
+        CString csBaseURL;
+        MWContext *pDocContext = GetDocumentContext();
+        nsIWebWidget *ww = (nsIWebWidget*)pDocContext->fe.webWidget;
+        if (ww != nsnull) {
+          nsIDocument *pDoc = ww->GetDocument();
+          if (pDoc != nsnull) {
+            nsIURL *pURL = pDoc->GetDocumentURL();
+            if (pURL != nsnull) {
+              csBaseURL = pURL->GetSpec();
+            }
+          }
+        }
+#else
         CString csBaseURL = LO_GetBaseURL( GetDocumentContext() );
+#endif
 
         BOOL bTitleIsSameAsUrl = (csBaseURL == csUrlTitle);
 
@@ -4675,9 +4816,13 @@ void CWinCX::SetDocDimension(MWContext *pContext, int iLocation, int32 lWidth, i
     // height shrinks, which currently only happens when editing.)
     m_lOrgY = max(0, min(m_lOrgY, lLength - m_lHeight));
 
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     // Anytime we change the scrolling origin, we have to tell the compositor.
     if ( GetContext()->compositor)
         CL_ScrollCompositorWindow(GetContext()->compositor, m_lOrgX, m_lOrgY);
+#endif /* MOZ_NGLAYOUT */
 
     //  Call the base.
     CPaneCX::SetDocDimension(pContext, iLocation, lWidth, lLength);
@@ -4811,6 +4956,7 @@ void CWinCX::Progress(MWContext *pContext, const char *pMessage) {
 	}
 }
 
+#ifndef MOZ_NGLAYOUT
 void CWinCX::DisplayEdge(MWContext *pContext, int iLocation, LO_EdgeStruct *pEdge)	{
 	//	Create an edge window if none currently exists.
 	if(pEdge->FE_Data == NULL)	{
@@ -4831,6 +4977,7 @@ void CWinCX::FreeEdgeElement(MWContext *pContext, LO_EdgeStruct *pEdge)	{
 		pEdge->FE_Data = NULL;
 	}
 }
+#endif /* MOZ_NGLAYOUT */
 
 CWinCX *CWinCX::DetermineTarget(const char *pTargetName)	{
 	//	This function decides what target will load a URL.
@@ -5065,6 +5212,9 @@ void CWinCX::PrintContext() {
 }
 
 void CWinCX::Print()	{
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	if(IsDestroyed() == TRUE || CanPrint() == FALSE)	{
 		return;
 	}
@@ -5108,6 +5258,7 @@ void CWinCX::Print()	{
 	    CPrintCX::PrintAnchorObject(pUrl, pView, &SavedData, pDisplayUrl);
     }
     XP_FREEIF(pDisplayUrl);
+#endif
 }
 
 BOOL CWinCX::CanPrint(BOOL bPreview)	{
@@ -5140,12 +5291,16 @@ BOOL CWinCX::CanPrint(BOOL bPreview)	{
 			if(pTraverseContext != NULL && ABSTRACTCX(pTraverseContext) != NULL)	{
 				pTraverseCX = ABSTRACTCX(pTraverseContext);
 				if(pTraverseCX->IsPrintContext() == TRUE)	{
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 					CPrintCX *pPrintCX = VOID2CX(pTraverseCX, CPrintCX);
 					if(pPrintCX->IsPrintPreview() == FALSE)	{
 						//	Already a print job in progress.
 						bRetval = FALSE;
 						break;
 					}
+#endif
 				}
 			}
 		}
@@ -5251,6 +5406,9 @@ void CWinCX::FindAgain()
 BOOL CWinCX::DoFind(CWnd * pWnd, const char * pFindString, BOOL bMatchCase, 
 						BOOL bSearchDown, BOOL bAlertOnNotFound)
 {
+#ifdef MOZ_NGLAYOUT
+    XP_ASSERT(0);
+#else
 
 	int32 start_position, end_position;
 	LO_Element * start_ele_loc = NULL;
@@ -5353,6 +5511,7 @@ BOOL CWinCX::DoFind(CWnd * pWnd, const char * pFindString, BOOL bMatchCase,
             ::MessageBox(hBox, szLoadString(IDS_FIND_NOT_FOUND), szLoadString(AFX_IDS_APP_TITLE), MB_ICONEXCLAMATION | MB_OK);
 
     }
+#endif /* MOZ_NGLAYOUT */
 	return FALSE;
 
 }
@@ -5362,6 +5521,9 @@ BOOL CWinCX::DoFind(CWnd * pWnd, const char * pFindString, BOOL bMatchCase,
 //
 void FE_SubmitInputElement(MWContext * pContext, LO_Element * pElement)
 {
+#ifdef MOZ_NGLAYOUT
+    XP_ASSERT(0);
+#else
 
 	LO_FormSubmitData * submit;
 	URL_Struct        * URL_s;
@@ -5398,7 +5560,7 @@ void FE_SubmitInputElement(MWContext * pContext, LO_Element * pElement)
 	ABSTRACTCX(pContext)->GetUrl(URL_s, FO_CACHE_AND_PRESENT);
 
 	LO_FreeSubmitData(submit);
-
+#endif /* MOZ_NGLAYOUT */
 }
 
 //	Say wether or not view source is allowed.
@@ -5995,6 +6157,9 @@ static void
 mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
                      void * pObj, ETEventStatus status)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     // keep track of what we have done already so that we
     //   don't thrash
     BOOL bTextSet = FALSE;
@@ -6319,7 +6484,7 @@ FINISH_MOUSE_OVER:
     //      in all cases with the state of the buttons set correctly.
     MouseTimerData mt(context);
     FEU_MouseTimer(&mt);
-
+#endif /* MOZ_NGLAYOUT */
 }
 
 //  Function to handle the details of the cursor being over an element
@@ -6328,6 +6493,9 @@ FINISH_MOUSE_OVER:
 void CWinCX::FireMouseOverEvent(LO_Element *pElement, int32 xVal, int32 yVal,
                                 CL_Layer *layer)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     mouse_over_closure * pClose = NULL;
     LO_Element * pDummy;
     BOOL bEventSent = FALSE;
@@ -6555,13 +6723,16 @@ void CWinCX::FireMouseOverEvent(LO_Element *pElement, int32 xVal, int32 yVal,
     return;
 
 #undef CREATE_CLOSURE
+#endif /* MOZ_NGLAYOUT */
 }
 
 //  Retrieve anchor data out of areas only (usemaps)
 //  Use last known mouse move coordinates to do so.
 LO_AnchorData *CWinCX::GetAreaAnchorData(LO_Element *pElement)  {
     LO_AnchorData *pRetval = NULL;
-
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     //  Make sure this is an image element.
     if(pElement && pElement->lo_any.type == LO_IMAGE)   {
         //  Determine coordinates in pixels with image as origin and
@@ -6595,7 +6766,7 @@ LO_AnchorData *CWinCX::GetAreaAnchorData(LO_Element *pElement)  {
         pRetval = LO_MapXYToAreaAnchor(GetDocumentContext(), pLOImage,
             m_cpMMove.x - Rect.left, m_cpMMove.y - Rect.top);
     }
-
+#endif /* MOZ_NGLAYOUT */
     return(pRetval);
 }
 
@@ -6610,6 +6781,9 @@ free_this_callback(MWContext * context, LO_Element * lo_element, int32 event,
 void CWinCX::FireMouseOutEvent(BOOL bClearElement, BOOL bClearAnchor, int32 xVal,
 			       int32 yVal, CL_Layer *layer)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     // JS needs screen coords for click events.
     CPoint cpScreenPoint(xVal, yVal);
     ClientToScreen(GetPane(), &cpScreenPoint);
@@ -6685,6 +6859,7 @@ void CWinCX::FireMouseOutEvent(BOOL bClearElement, BOOL bClearAnchor, int32 xVal
 
     //  Clean up, these can now be empty.
     m_bLastOverTextSet = FALSE;
+#endif /* MOZ_NGLAYOUT */
 }
 
 CFrameGlue *CWinCX::GetFrame() const
@@ -6766,6 +6941,9 @@ char *CWinCX::getLastFocusAnchorStr()
 // check if(GetPane() && CanBlockDisplay() ) before calling invalidateElement().
 void CWinCX::invalidateElement( LO_Element *pElement )
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	if( pElement == NULL )
 		return;
 
@@ -6816,7 +6994,7 @@ void CWinCX::invalidateElement( LO_Element *pElement )
 
 	// no background erase
 	::InvalidateRect(GetPane(), CRect(CASTINT(Rect.left), CASTINT(Rect.top), CASTINT(Rect.right), CASTINT(Rect.bottom)), FALSE);
-
+#endif /* MOZ_NGLAYOUT */
 }
 
 void CWinCX::SetActiveWindow()
@@ -6841,6 +7019,9 @@ void CWinCX::SetActiveWindow()
 // for clicking on link, we don't need to call Windows' setFocus().
 void CWinCX::setFormElementTabFocus( LO_Element * pFormElement )
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	LO_TabFocusData	newTabFocus;	
 
 	if(pFormElement == getLastTabFocusElement() )  // clicking on the focused element.
@@ -6858,7 +7039,7 @@ void CWinCX::setFormElementTabFocus( LO_Element * pFormElement )
 		setLastTabFocusElement( &newTabFocus, 0 );  // clicked, 0 means don't needSetFocus
 		SetMainFrmTabFocusFlag(CMainFrame::TAB_FOCUS_IN_GRID);  // I have tab focus.
 	}
-
+#endif /* MOZ_NGLAYOUT */
 }
 
 // text element may be fragmented in multiple lines, for Tab_focus, they
@@ -6898,6 +7079,9 @@ int CWinCX::invalidateSegmentedTextElement(LO_TabFocusData *pNextTabFocus, int f
 // the form element is visible and has the fucos already.
 void CWinCX::setLastTabFocusElement( LO_TabFocusData *pNextTabFocus, int needSetFocus ) 
 {
+#ifdef MOZ_NGLAYOUT
+      XP_ASSERT(0);
+#else
 	LO_Element *pElement;
 
 	// both old and new element can be NULL.
@@ -6987,6 +7171,7 @@ void CWinCX::setLastTabFocusElement( LO_TabFocusData *pNextTabFocus, int needSet
 	
     m_isReEntry_setLastTabFocusElement = 0;
 	return;
+#endif /* MOZ_NGLAYOUT */
 }	// CWinCX::setLastTabFocusElement()
 
 // try to set Tab Focus in this CWinCX only.
@@ -6999,7 +7184,11 @@ BOOL CWinCX::setNextTabFocusInWin( int forward )
 	newTabFocus.mapAreaIndex	= m_lastTabFocus.mapAreaIndex;		// 0 means no area
 	newTabFocus.pAnchor			= m_lastTabFocus.pAnchor	;
 
+#ifdef MOZ_NGLAYOUT
+    XP_ASSERT(0);
+#else
 	found = LO_getNextTabableElement( GetContext(), &newTabFocus, forward );
+#endif /* MOZ_NGLAYOUT */
 
 	// even  new element is NULL, need to clear the old focus
 	setLastTabFocusElement( &newTabFocus, 1 );    // key, not click, needSetFocus
@@ -7083,6 +7272,9 @@ BOOL CWinCX::setTabFocusNextChild( MWContext *currentChildContext, int forward )
 	
 BOOL CWinCX::fireTabFocusElement( UINT nChar)		
 {
+#ifdef MOZ_NGLAYOUT
+  ASSERT(0);
+#else
 	int32			mapAreaIndex, xx, yy;
 	lo_MapAreaRec	*theArea;
 
@@ -7118,11 +7310,15 @@ BOOL CWinCX::fireTabFocusElement( UINT nChar)
 			return( TRUE );
 	}
 
-	return( FALSE );
+#endif /* MOZ_NGLAYOUT */
+	return( FALSE ); 
 }
 
 int CWinCX::getImageDrawFlag( MWContext *pContext, LO_ImageStruct *pImage, lo_MapAreaRec **ppArea, uint32 *pFlag )
 {
+#ifdef MOZ_NGLAYOUT
+    XP_ASSERT(0);
+#else
 	LO_Element		*pFocusElement;
 	int32			lastAreaIndex;
 	lo_MapAreaRec	*theArea;
@@ -7161,13 +7357,17 @@ int CWinCX::getImageDrawFlag( MWContext *pContext, LO_ImageStruct *pImage, lo_Ma
 		*ppArea = theArea;			// only the area is focused.
 		return( 1 );
 	}
-	
+
+#endif /* MOZ_NGLAYOUT */
 	return( 0 );
 
 }
 
 int CWinCX::setTextTabFocusDrawFlag( LO_TextStruct *pText, uint32 *pFlag )
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	// Visual feedback for Tab Focus is a dotted box around text or image.
 	// For 2 Form elements, check box and radio button, the box is on
 	// the text following the button.
@@ -7233,6 +7433,7 @@ int CWinCX::setTextTabFocusDrawFlag( LO_TextStruct *pText, uint32 *pFlag )
 		}
 	}
 
+#endif /* MOZ_NGLAYOUT */
 	return(0);
 	
 }	// isTabFocusText()

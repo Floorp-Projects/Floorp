@@ -868,6 +868,10 @@ IsNullPlugin(NPFileTypeAssoc* pAssociation)
 //
 char* wfe_ConstructFilterString(int type)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return NULL;
+#else
     NPFileTypeAssoc* pAssociation = NULL;
     if (type != HTM_ONLY){
         // get the list of associations for all plugin MIME types
@@ -997,6 +1001,7 @@ char* wfe_ConstructFilterString(int type)
 	}
 
     return pFilterString;
+#endif
 }
 
 #ifdef XP_WIN16

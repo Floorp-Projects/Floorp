@@ -65,8 +65,11 @@ FE_DEFINE(GetTextInfo,int, (MWContext * context, LO_TextStruct *text, LO_TextInf
 #ifdef XP_MAC
 FE_DEFINE(MeasureText,int, (MWContext * context, LO_TextStruct *text, short *charLocs))
 #endif 
+#ifndef MOZ_NGLAYOUT
 FE_DEFINE(GetEmbedSize,void, (MWContext * context, LO_EmbedStruct *embed_struct, NET_ReloadMethod force_reload))
+#endif
 FE_DEFINE(GetJavaAppSize,void, (MWContext * context, LO_JavaAppStruct *java_struct, NET_ReloadMethod force_reload))
+#ifndef MOZ_NGLAYOUT
 FE_DEFINE(GetFormElementInfo,void, (MWContext * context, LO_FormElementStruct * form_element))
 FE_DEFINE(GetFormElementValue,void, (MWContext * context, LO_FormElementStruct * form_element, XP_Bool hide))
 FE_DEFINE(ResetFormElement,void, (MWContext * context, LO_FormElementStruct * form_element))
@@ -75,22 +78,29 @@ FE_DEFINE(FreeEmbedElement,void, (MWContext *context, LO_EmbedStruct *))
 #ifdef SHACK
 FE_DEFINE(FreeBuiltinElement,void, (MWContext *context, LO_BuiltinStruct *))
 #endif
+#endif /* MOZ_NGLAYOUT */
 FE_DEFINE(CreateEmbedWindow, void, (MWContext *context, NPEmbeddedApp *app))
 FE_DEFINE(SaveEmbedWindow, void, (MWContext *context, NPEmbeddedApp *app))
 FE_DEFINE(RestoreEmbedWindow, void, (MWContext *context, NPEmbeddedApp *app))
 FE_DEFINE(DestroyEmbedWindow, void, (MWContext *context, NPEmbeddedApp *app))
 FE_DEFINE(FreeJavaAppElement,void, (MWContext *context, struct LJAppletData *appletData))
 FE_DEFINE(HideJavaAppElement,void, (MWContext *context, struct LJAppletData *))
+#ifndef MOZ_NGLAYOUT
 FE_DEFINE(FreeEdgeElement,void, (MWContext *context, LO_EdgeStruct *))
 FE_DEFINE(FormTextIsSubmit,void, (MWContext * context, LO_FormElementStruct * form_element))
+#endif /* MOZ_NGLAYOUT */
 FE_DEFINE(DisplaySubtext,void, (MWContext * context, int iLocation, LO_TextStruct *text, int32 start_pos, int32 end_pos, XP_Bool need_bg))
 FE_DEFINE(DisplayText,void, (MWContext * context, int iLocation, LO_TextStruct *text, XP_Bool need_bg))
+#ifndef MOZ_NGLAYOUT
 FE_DEFINE(DisplayEmbed,void, (MWContext * context, int iLocation ,LO_EmbedStruct *embed_struct))
 #ifdef SHACK
 FE_DEFINE(DisplayBuiltin,void, (MWContext * context, int iLocation ,LO_BuiltinStruct *builtin_struct))
 #endif
+#endif /* MOZ_NGLAYOUT */
 FE_DEFINE(DisplayJavaApp,void, (MWContext * context, int iLocation ,LO_JavaAppStruct *java_struct))
+#ifndef MOZ_NGLAYOUT
 FE_DEFINE(DisplayEdge,void, (MWContext * context, int iLocation ,LO_EdgeStruct *edge_struct))
+#endif
 FE_DEFINE(DisplayTable,void, (MWContext * context, int iLocation ,LO_TableStruct *table_struct))
 FE_DEFINE(DisplayCell,void, (MWContext * context, int iLocation ,LO_CellStruct *cell_struct))
 #ifdef XP_MAC
@@ -101,7 +111,9 @@ FE_DEFINE(DisplaySubDoc,void, (MWContext * context, int iLocation ,LO_SubDocStru
 FE_DEFINE(DisplayLineFeed,void, (MWContext * context, int iLocation , LO_LinefeedStruct *line_feed, XP_Bool need_bg))
 FE_DEFINE(DisplayHR,void, (MWContext * context, int iLocation , LO_HorizRuleStruct *HR_struct))
 FE_DEFINE(DisplayBullet,void, (MWContext *context, int iLocation, LO_BullettStruct *bullet))
+#ifndef MOZ_NGLAYOUT
 FE_DEFINE(DisplayFormElement,void, (MWContext * context, int iLocation, LO_FormElementStruct * form_element))
+#endif
 FE_DEFINE(DisplayBorder,void, (MWContext *context, int iLocation, int x, int y, int width, int height, int bw, LO_Color *color, LO_LineStyle style))
 #ifdef XP_MAC
 FE_DEFINE(UpdateEnableStates,void, (MWContext *context))

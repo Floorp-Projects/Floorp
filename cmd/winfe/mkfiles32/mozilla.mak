@@ -360,7 +360,9 @@ LINK_LIBS= \
 !ifdef MOZ_OJI
     $(DIST)\lib\oji32.lib \
 !endif
+!ifndef MOZ_NGLAYOUT
     $(DIST)\lib\hook.lib \
+!endif
 #!if defined(EDITOR)
 !ifdef JAVA_OR_OJI
     $(DIST)\lib\edtplug.lib \
@@ -393,11 +395,15 @@ LINK_LIBS= \
 !ifdef JAVA_OR_OJI      # XXX remove later
     $(DIST)\lib\jmc.lib \
 !endif
+!ifndef MOZ_NGLAYOUT
     $(DIST)\lib\font.lib \
+!endif
     $(DIST)\lib\rdf32.lib \
     $(DIST)\lib\xml.lib \
     $(OUTDIR)\appicon.res \
+!ifndef MOZ_NGLAYOUT
     $(DIST)\lib\winfont.lib \
+!endif
     $(DIST)\lib\abouturl.lib \
     $(DIST)\lib\dataurl.lib \
     $(DIST)\lib\fileurl.lib \
@@ -438,6 +444,12 @@ LINK_LIBS= \
     $(DIST)\lib\zip$(MOZ_BITS)$(VERSION_NUMBER).lib \
     $(DIST)\lib\jpeg$(MOZ_BITS)$(VERSION_NUMBER).lib \
     $(DIST)\lib\dbm$(MOZ_BITS).lib \
+!endif
+!if defined(MOZ_NGLAYOUT)
+ $(NGLAYOUT_DIST)\lib\raptorbase.lib	\
+ $(NGLAYOUT_DIST)\lib\raptorgfx.lib	\
+ $(NGLAYOUT_DIST)\lib\raptorhtml.lib	\
+ $(NGLAYOUT_DIST)\lib\raptorweb.lib	\
 !endif
 !if "$(WINOS)" == "WIN95"
     $(DIST)\lib\xpcom$(MOZ_BITS).lib
@@ -587,6 +599,7 @@ CDISTINCLUDES2= \
     /I$(XPDIST)\public\zlib \
     /I$(XPDIST)\public\httpurl \
     /I$(XPDIST)\public\netcache \
+    /I$(XPDIST)\public\netlib \
     /I$(XPDIST)\public\network \
     /I$(XPDIST)\public\netcnvts\
     /I$(XPDIST)\public\util
@@ -614,12 +627,14 @@ CDISTINCLUDES3= \
     /I$(DIST)\include \
     /I$(XPDIST)\public\img \
     /I$(XPDIST)\public\jtools \
-!else
 !endif
     /I$(XPDIST)\public \
     /I$(XPDIST)\public\coreincl \
 !ifndef NO_SECURITY
     /I$(XPDIST)\public\jar \
+!endif
+!if defined(MOZ_NGLAYOUT)
+	/I$(XPDIST)\public\raptor \
 !endif
     /I$(XPDIST)\public\util
 
@@ -710,6 +725,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 !ENDIF
 <<
     $(DEPTH)\cmd\winfe\mkfiles32\makedep.exe @$(PROD)$(VERSTR).dep -F <<
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\lib\liblayer\src\cl_comp.c
 	$(DEPTH)\lib\liblayer\src\cl_drwbl.c
 	$(DEPTH)\lib\liblayer\src\cl_layer.c
@@ -766,6 +782,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\layout\ptinpoly.c
 	$(DEPTH)\lib\layout\layrelay.c 
 	$(DEPTH)\lib\layout\laytrav.c 
+!endif
 
 !ifdef MOZ_MAIL_NEWS
 	$(DEPTH)\lib\libaddr\line64.c
@@ -883,6 +900,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmisc\shist.c  
 	$(DEPTH)\lib\libmisc\undo.c   
 
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\lib\libmocha\et_mocha.c
 	$(DEPTH)\lib\libmocha\et_moz.c
 	$(DEPTH)\lib\libmocha\lm_applt.c
@@ -910,6 +928,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 !if "$(MOZ_BITS)" == "32"
 !ifdef MOZ_JAVA
 	$(DEPTH)\lib\libmocha\lm_jsd.c
+!endif
 !endif
 !endif
 
@@ -1049,6 +1068,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libneo\thrnspr.cpp
 !endif
 
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\lib\libparse\pa_amp.c
 	$(DEPTH)\lib\libparse\pa_hash.c   
 	$(DEPTH)\lib\libparse\pa_hook.c   
@@ -1062,6 +1082,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libstyle\jssrules.c
 	$(DEPTH)\lib\libstyle\stystack.c
 	$(DEPTH)\lib\libstyle\stystruc.c
+!endif
 
 	$(DEPTH)\modules\libutil\src\obs.c
 !if "$(MOZ_BITS)"=="16"
@@ -1085,6 +1106,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 !endif
 !endif
 
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\lib\plugin\npassoc.c 
 	$(DEPTH)\lib\plugin\npglue.cpp
 	$(DEPTH)\lib\plugin\npwplat.cpp 
@@ -1094,6 +1116,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\xlate\stubs.c
 	$(DEPTH)\lib\xlate\tblprint.c 
 	$(DEPTH)\lib\xlate\text.c 
+!endif
 
 	$(DEPTH)\lib\xp\allxpstr.c
 	$(DEPTH)\lib\xp\xp_alloc.c
@@ -1202,16 +1225,20 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\animecho.cpp
 	$(DEPTH)\cmd\winfe\askmedlg.cpp 
 	$(DEPTH)\cmd\winfe\authdll.cpp
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\button.cpp 
+!endif
 	$(DEPTH)\cmd\winfe\cfe.cpp
 	$(DEPTH)\cmd\winfe\cmdparse.cpp
 	$(DEPTH)\cmd\winfe\cntritem.cpp   
 	$(DEPTH)\cmd\winfe\confhook.cpp
 	$(DEPTH)\cmd\winfe\csttlbr2.cpp
 	$(DEPTH)\cmd\winfe\custom.cpp 
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\cuvfm.cpp
 	$(DEPTH)\cmd\winfe\cuvfs.cpp
 	$(DEPTH)\cmd\winfe\cvffc.cpp
+!endif
 	$(DEPTH)\cmd\winfe\cxabstra.cpp   
 	$(DEPTH)\cmd\winfe\cxdc.cpp   
 	$(DEPTH)\cmd\winfe\cxdc1.cpp   
@@ -1220,8 +1247,10 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\cxmeta.cpp 
 	$(DEPTH)\cmd\winfe\cxnet1.cpp 
 	$(DEPTH)\cmd\winfe\cxpane.cpp
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\cxprint.cpp
 	$(DEPTH)\cmd\winfe\cxprndlg.cpp   
+!endif
 	$(DEPTH)\cmd\winfe\cxsave.cpp 
 	$(DEPTH)\cmd\winfe\cxstubs.cpp
 	$(DEPTH)\cmd\winfe\cxwin.cpp
@@ -1233,12 +1262,16 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\dialog.cpp 
 	$(DEPTH)\cmd\winfe\display.cpp
 	$(DEPTH)\cmd\winfe\dragbar.cpp   
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\drawable.cpp   
+!endif
 	$(DEPTH)\cmd\winfe\dropmenu.cpp   
 	$(DEPTH)\cmd\winfe\edcombtb.cpp   
 	$(DEPTH)\cmd\winfe\extgen.cpp
 	$(DEPTH)\cmd\winfe\extview.cpp
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\feembed.cpp
+!endif
 	$(DEPTH)\cmd\winfe\fegrid.cpp 
 	$(DEPTH)\cmd\winfe\fegui.cpp  
 	$(DEPTH)\cmd\winfe\feimage.cpp   
@@ -1250,6 +1283,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\feselect.cpp 
 	$(DEPTH)\cmd\winfe\feutil.cpp 
 	$(DEPTH)\cmd\winfe\findrepl.cpp   
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\fmabstra.cpp   
 	$(DEPTH)\cmd\winfe\fmbutton.cpp   
 	$(DEPTH)\cmd\winfe\fmfile.cpp 
@@ -1259,6 +1293,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\fmselone.cpp   
 	$(DEPTH)\cmd\winfe\fmtext.cpp 
 	$(DEPTH)\cmd\winfe\fmtxarea.cpp
+!endif
 	$(DEPTH)\cmd\winfe\frameglu.cpp   
 	$(DEPTH)\cmd\winfe\framinit.cpp   
 	$(DEPTH)\cmd\winfe\genchrom.cpp   
@@ -1268,7 +1303,9 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\genfram2.cpp   
 	$(DEPTH)\cmd\winfe\prefs.cpp   
 	$(DEPTH)\cmd\winfe\genview.cpp
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\gridedge.cpp   
+!endif
 	$(DEPTH)\cmd\winfe\helpers.cpp
 	$(DEPTH)\cmd\winfe\hiddenfr.cpp   
 	$(DEPTH)\cmd\winfe\histbld.cpp   
@@ -1281,7 +1318,9 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\lastacti.cpp
 	$(DEPTH)\cmd\winfe\logindg.cpp   
 	$(DEPTH)\cmd\winfe\mainfrm.cpp
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\medit.cpp  
+!endif
 	$(DEPTH)\cmd\winfe\mozock.cpp 
 	$(DEPTH)\cmd\winfe\mucwiz.cpp  
 	$(DEPTH)\cmd\winfe\mucproc.cpp 
@@ -1292,14 +1331,19 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\navigate.cpp   
 	$(DEPTH)\cmd\winfe\ncapiurl.cpp 
 	$(DEPTH)\cmd\winfe\nethelp.cpp  
+	$(DEPTH)\cmd\winfe\nglglue.cpp  
 	$(DEPTH)\cmd\winfe\mozilla.cpp   
 	$(DEPTH)\cmd\winfe\nsapp.cpp   
 	$(DEPTH)\cmd\winfe\netsdoc.cpp
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\nsfont.cpp
 	$(DEPTH)\cmd\winfe\netsprnt.cpp   
+!endif
 	$(DEPTH)\cmd\winfe\netsvw.cpp 
 	$(DEPTH)\cmd\winfe\nsshell.cpp
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\odctrl.cpp
+!endif
 	$(DEPTH)\cmd\winfe\olectc.cpp 
 	$(DEPTH)\cmd\winfe\olehelp.cpp 
 	$(DEPTH)\cmd\winfe\oleprot1.cpp   
@@ -1329,7 +1373,9 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\spiwrap.c 
 	$(DEPTH)\cmd\winfe\srvritem.cpp   
 	$(DEPTH)\cmd\winfe\statbar.cpp 
+!ifndef MOZ_NGLAYOUT
 	$(DEPTH)\cmd\winfe\stshfont.cpp 
+!endif
 !ifdef MOZ_LOC_INDEP
 	$(DEPTH)\cmd\winfe\stshli.cpp 
 !endif
@@ -1808,6 +1854,51 @@ install:    \
 	   $(OUTDIR)\spellchk\$(SPELLCHK_DLL)    \
 !ENDIF
 !endif
+### Copy NGLayout DLLs and resources
+!ifdef MOZ_NGLAYOUT
+!IF EXIST($(NGLAYOUT_DIST)\bin\raptorbase.dll)
+	    $(OUTDIR)\raptorbase.dll    \
+!ENDIF
+!IF EXIST($(NGLAYOUT_DIST)\bin\raptorhtml.dll)
+	    $(OUTDIR)\raptorhtml.dll    \
+!ENDIF
+!IF EXIST($(NGLAYOUT_DIST)\bin\raptorgfx.dll)
+	    $(OUTDIR)\raptorgfx.dll    \
+!ENDIF
+!IF EXIST($(NGLAYOUT_DIST)\bin\raptorweb.dll)
+	    $(OUTDIR)\raptorweb.dll    \
+!ENDIF
+!IF EXIST($(NGLAYOUT_DIST)\bin\raptorhtmlpars.dll)
+	    $(OUTDIR)\raptorhtmlpars.dll    \
+!ENDIF
+!IF EXIST($(NGLAYOUT_DIST)\bin\raptorhtmlpars.dll)
+	    $(OUTDIR)\raptorwidget.dll    \
+!ENDIF
+!IF EXIST($(NGLAYOUT_DIST)\bin\raptorhtmlpars.dll)
+	    $(OUTDIR)\raptorgfxwin.dll    \
+!ENDIF
+!IF EXIST($(NGLAYOUT_DIST)\bin\raptorhtmlpars.dll)
+	    $(OUTDIR)\raptorview.dll    \
+!ENDIF
+!IF EXIST($(NGLAYOUT_DIST)\bin\jsdom.dll)
+	    $(OUTDIR)\jsdom.dll    \
+!ENDIF
+!IF EXIST($(NGLAYOUT_DIST)\bin\img$(MOZ_BITS)$(VERSION_NUMBER).dll)
+	    $(OUTDIR)\img$(MOZ_BITS)$(VERSION_NUMBER).dll    \
+!ENDIF
+!IF EXIST($(NGLAYOUT_DIST)\bin\netlib.dll)
+	    $(OUTDIR)\netlib.dll    \
+!ENDIF
+!IF EXIST($(NGLAYOUT_DIST)\bin\res)
+	    $(OUTDIR)\res    \
+!ENDIF
+!else
+### Need image lib dll for non-NGLayout build
+!IF EXIST($(DIST)\bin\img$(MOZ_BITS)$(VERSION_NUMBER).dll)
+	    $(OUTDIR)\img$(MOZ_BITS)$(VERSION_NUMBER).dll    \
+!ENDIF
+!endif 
+### End NGLayout DLLs
 !ifdef EDITOR
 !IF EXIST($(SPELLCHK_DATA)\pen4s324.dat)
 	   $(OUTDIR)\spellchk\pen4s324.dat    \
@@ -2129,6 +2220,36 @@ $(OUTDIR)\mnrc$(MOZ_BITS).dll:   $(DIST)\bin\mnrc$(MOZ_BITS).dll
 $(OUTDIR)\xpstrdll.dll:   $(DIST)\bin\xpstrdll.dll
     @IF EXIST $(DIST)\bin\$(@F) copy $(DIST)\bin\$(@F) $@
 
+### Copy NGLayout dlls and resources
+!ifdef MOZ_NGLAYOUT
+$(OUTDIR)\raptorbase.dll:   $(NGLAYOUT_DIST)\bin\raptorbase.dll
+    @IF EXIST $(NGLAYOUT_DIST)\bin\$(@F) copy $(NGLAYOUT_DIST)\bin\$(@F) $@
+$(OUTDIR)\raptorhtml.dll:   $(NGLAYOUT_DIST)\bin\raptorhtml.dll
+    @IF EXIST $(NGLAYOUT_DIST)\bin\$(@F) copy $(NGLAYOUT_DIST)\bin\$(@F) $@
+$(OUTDIR)\raptorgfx.dll:   $(NGLAYOUT_DIST)\bin\raptorgfx.dll
+    @IF EXIST $(NGLAYOUT_DIST)\bin\$(@F) copy $(NGLAYOUT_DIST)\bin\$(@F) $@
+$(OUTDIR)\raptorweb.dll:   $(NGLAYOUT_DIST)\bin\raptorweb.dll
+    @IF EXIST $(NGLAYOUT_DIST)\bin\$(@F) copy $(NGLAYOUT_DIST)\bin\$(@F) $@
+$(OUTDIR)\raptorhtmlpars.dll:   $(NGLAYOUT_DIST)\bin\raptorhtmlpars.dll
+    @IF EXIST $(NGLAYOUT_DIST)\bin\$(@F) copy $(NGLAYOUT_DIST)\bin\$(@F) $@
+$(OUTDIR)\raptorwidget.dll:   $(NGLAYOUT_DIST)\bin\raptorwidget.dll
+    @IF EXIST $(NGLAYOUT_DIST)\bin\$(@F) copy $(NGLAYOUT_DIST)\bin\$(@F) $@
+$(OUTDIR)\raptorgfxwin.dll:   $(NGLAYOUT_DIST)\bin\raptorgfxwin.dll
+    @IF EXIST $(NGLAYOUT_DIST)\bin\$(@F) copy $(NGLAYOUT_DIST)\bin\$(@F) $@
+$(OUTDIR)\raptorview.dll:   $(NGLAYOUT_DIST)\bin\raptorview.dll
+    @IF EXIST $(NGLAYOUT_DIST)\bin\$(@F) copy $(NGLAYOUT_DIST)\bin\$(@F) $@
+$(OUTDIR)\jsdom.dll:   $(NGLAYOUT_DIST)\bin\jsdom.dll
+    @IF EXIST $(NGLAYOUT_DIST)\bin\$(@F) copy $(NGLAYOUT_DIST)\bin\$(@F) $@
+$(OUTDIR)\img$(MOZ_BITS)$(VERSION_NUMBER).dll:   $(NGLAYOUT_DIST)\bin\img$(MOZ_BITS)$(VERSION_NUMBER).dll
+    @IF EXIST $(NGLAYOUT_DIST)\bin\$(@F) copy $(NGLAYOUT_DIST)\bin\$(@F) $@
+$(OUTDIR)\netlib.dll:   $(NGLAYOUT_DIST)\bin\netlib.dll
+    @IF EXIST $(NGLAYOUT_DIST)\bin\$(@F) copy $(NGLAYOUT_DIST)\bin\$(@F) $@
+$(OUTDIR)\res:   $(NGLAYOUT_DIST)\bin\res
+	-mkdir $(OUTDIR)\res
+	-xcopy /s $(NGLAYOUT_DIST)\bin\res $(OUTDIR)\res
+    @IF EXIST $(NGLAYOUT_DIST)\bin\$(@F) copy $(NGLAYOUT_DIST)\bin\$(@F) $@
+!endif
+
 $(OUTDIR)\spellchk\$(SPELLCHK_DLL):   $(DIST)\bin\$(SPELLCHK_DLL) 
     @IF NOT EXIST "$(OUTDIR)\spellchk/$(NULL)" mkdir "$(OUTDIR)\spellchk"
     @IF EXIST $(DIST)\bin\$(SPELLCHK_DLL) copy $(DIST)\bin\$(SPELLCHK_DLL) $(OUTDIR)\spellchk\$(SPELLCHK_DLL)
@@ -2331,11 +2452,15 @@ BUILD_SOURCE: $(OBJ_FILES)
     $(DIST)\lib\crypto.lib +
     $(DIST)\lib\secutil.lib +
     $(DIST)\lib\hash.lib +
+!ifndef MOZ_NGLAYOUT
     $(DIST)\lib\font.lib +
     $(DIST)\lib\winfont.lib +
+!endif
     $(DIST)\lib\prefuuid.lib +
     $(DIST)\lib\htmldg16.lib +
+!ifndef MOZ_NGLAYOUT
     $(DIST)\lib\hook.lib +
+!endif
     $(DIST)\lib\png.lib +
 	$(DIST)\lib\sched16.lib +
     $(DIST)\lib\libreg16.lib +

@@ -273,6 +273,7 @@ void wfe_ProcessTimeouts(DWORD dwNow)
 
     BOOL bCalledSync = FALSE;
 
+#ifndef MOZ_NGLAYOUT
     //  Don't fire timeouts while in the PrintAbortProc, or we will go
     //      reentrant into the GDI code of the print driver if
     //      someone is doing drawing via timeouts.
@@ -284,6 +285,7 @@ void wfe_ProcessTimeouts(DWORD dwNow)
         //  Get Out
         return;
     }
+#endif /* MOZ_NGLAYOUT */
 
     //  Set the hack, such that when FE_ClearTimeout
     //      calls SyncTimeoutPeriod, that GetTickCount()

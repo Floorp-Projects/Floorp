@@ -433,6 +433,9 @@ XP_GetNonGridContext(MWContext *context)
 Bool XP_FindNamedAnchor(MWContext * context, URL_Struct * url, 
 							int32 *xpos, int32 *ypos)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	History_entry *he;
 	
 	if (!context)
@@ -454,6 +457,7 @@ Bool XP_FindNamedAnchor(MWContext * context, URL_Struct * url,
 		/* NET_FreeURLStruct( url ); */
 		return TRUE;
 	}
+#endif /* MOZ_NGLAYOUT */
 	return FALSE;	
 }
 
@@ -462,12 +466,16 @@ Bool XP_FindNamedAnchor(MWContext * context, URL_Struct * url,
  */
 void XP_RefreshAnchors()
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	int i;
 	for (i=1; i<= XP_ListCount(xp_GlobalContextList); i++)
 	{
 		MWContext * compContext = (MWContext *)XP_ListGetObjectNum(xp_GlobalContextList, i);
 		LO_RefreshAnchors(compContext);
 	}
+#endif /* MOZ_NGLAYOUT */
 }
 
 /* XP_InterruptContext
@@ -496,7 +504,11 @@ void XP_InterruptContext(MWContext * context)
 	NET_InterruptWindow(context);
     if (context->img_cx)
         IL_InterruptContext(context->img_cx);
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	ET_InterruptContext(context);
+#endif /* MOZ_NGLAYOUT */
 }
 
 Bool XP_IsContextBusy(MWContext * context)
@@ -529,8 +541,10 @@ Bool XP_IsContextStoppable(MWContext * context)
 	if (NET_AreThereActiveConnectionsForWindow(context))
 		return TRUE;
 	
+#ifndef MOZ_NGLAYOUT
 	if (LM_IsActive(context))
 		return TRUE;
+#endif /* MOZ_NGLAYOUT */
 
 	while ((child = (MWContext*)XP_ListGetObjectNum (context->grid_children,
 													 i++)))

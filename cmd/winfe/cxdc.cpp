@@ -517,9 +517,13 @@ void CDCCX::ClearFontCache()	{
 
 	}
 
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     //  Tell layout to get rid of all of it's cached FE font data
     //      in the LO_TextAttr.
     LO_InvalidateFontData(GetDocumentContext());
+#endif
 
 
     //  Go through our context list of cached fonts and get rid of them all.
@@ -688,6 +692,10 @@ int CDCCX::SelectNetscapeFontWithCache( HDC hdc, LO_TextAttr *pAttr, CyaFont *& 
 //    link-list the font, so it can be deleted when destroy document.
 int CDCCX::SelectNetscapeFont( HDC hdc, LO_TextAttr *pAttr, CyaFont *& pMyFont )
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return 0;
+#else
 	// create font for the text and cache it in pAttr->FE_Data.
 	EncodingInfo *pEncoding = theApp.m_pIntlFont->GetEncodingInfo(GetContext());
 	BOOL bItalic = FALSE;
@@ -929,6 +937,7 @@ int CDCCX::SelectNetscapeFont( HDC hdc, LO_TextAttr *pAttr, CyaFont *& pMyFont )
 	m_cplCachedFontList.AddTail((void *)pMyFont);  // pSelectThis
 
 	return( returnCode );
+#endif /* MOZ_NGLAYOUT */
 }	// HFONT CDCCX::SelectNetscapeFont()
 
 void CDCCX::ReleaseNetscapeFontWithCache(HDC hdc, CyaFont * pNetscapeFont)	
@@ -945,7 +954,11 @@ void CDCCX::ReleaseNetscapeFontWithCache(HDC hdc, CyaFont * pNetscapeFont)
 
 void CDCCX::ReleaseNetscapeFont(HDC hdc, CyaFont * pNetscapeFont)
 {	
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	pNetscapeFont->EndDrawText( hdc );					// restore the old font.
+#endif /* MOZ_NGLAYOUT */
 }
 
 // m_iOffset can be at most 8 or at least -8 based on the values in
@@ -964,7 +977,11 @@ void CDCCX::ChangeFontOffset(int iIncrementor)
 
 	m_iOffset += iIncrementor;
 	if(GetContext()){
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 		GetContext()->fontScalingPercentage = LO_GetScalingFactor(m_iOffset);
+#endif
 	}
 
 	NiceReload();
@@ -1005,6 +1022,10 @@ BOOL CDCCX::ResolveElement(LTRB& Rect, int32 x, int32 y, int32 x_offset, int32 y
 	return bRetval;
 }
 BOOL CDCCX::ResolveElement(LTRB& Rect, LO_TextStruct *pText, int iLocation, int32 lStartPos, int32 lEndPos, int iClear)	{
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return FALSE;
+#else
 	BOOL bRetval = TRUE;
 
 	//	Subtext, in order to be considered at all, must first pass the text resolution.
@@ -1042,6 +1063,7 @@ BOOL CDCCX::ResolveElement(LTRB& Rect, LO_TextStruct *pText, int iLocation, int3
 	}
 
 	return(bRetval);
+#endif /* MOZ_NGLAYOUT */
 }
 
 /* 
@@ -2246,9 +2268,13 @@ void CDCCX::DisplayIcon(int32 x0, int32 y0, int icon_number)
 				if (cxLoadBitmap(MAKEINTRESOURCE(bitmapID), image_bits, &imageInfo)) {
 					if(maskID) {
 						BOOL fillBack = TRUE;
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 #ifdef XP_WIN32
 						CPrintCX* pPrintCx = (CPrintCX*)this;
 						fillBack = pPrintCx->IsPrintingBackground() ? FALSE : TRUE;
+#endif
 #endif
 						cxLoadBitmap(MAKEINTRESOURCE(maskID), mask_bits, &maskInfo);
 						WFE_StretchDIBitsWithMask(hdc,TRUE, m_pImageDC,
@@ -2303,6 +2329,10 @@ int CDCCX::GetUrl(URL_Struct *pUrl, FO_Present_Types iFormatOut, BOOL bReallyLoa
 	//	Save the location of the current document, if not at the very top.
     //  Reset to top, then see if we need to change more....
     SHIST_SetPositionOfCurrentDoc(&(GetContext()->hist), 0);
+
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     if(GetOriginX() || GetOriginY())    {
 #ifdef LAYERS
 	    LO_Any *pAny = (LO_Any *)LO_XYToNearestElement(GetDocumentContext(), GetOriginX(), GetOriginY(), NULL);
@@ -2314,6 +2344,7 @@ int CDCCX::GetUrl(URL_Struct *pUrl, FO_Present_Types iFormatOut, BOOL bReallyLoa
 		    SHIST_SetPositionOfCurrentDoc(&(GetContext()->hist), pAny->ele_id);
 	    }
     }
+#endif /* MOZ_NGLAYOUT */
 
 	//	Handle forced image loading.
 	m_csForceLoadImage = m_csNexttimeForceLoadImage;
@@ -2626,7 +2657,11 @@ void CDCCX::DisplayWindowlessPlugin(MWContext *pContext,
         pAppWin->height = rect.bottom - rect.top;
         pAppWin->type = NPWindowTypeDrawable;
         
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
         NPL_EmbedSize(pEmbeddedApp);
+#endif
     }
     
 #ifdef LAYERS
@@ -2647,7 +2682,11 @@ void CDCCX::DisplayWindowlessPlugin(MWContext *pContext,
     event.wParam = (uint32)hDC;
     event.lParam = (uint32)&rect;
     
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     NPL_HandleEvent(pEmbeddedApp, (void *)&event, pAppWin->window);
+#endif
 
     ReleaseContextDC(hDC);
 }
@@ -2704,6 +2743,7 @@ void CDCCX::DisplayPlugin(MWContext *pContext, LO_EmbedStruct *pEmbed,
        
 }
 
+#ifndef MOZ_NGLAYOUT
 void CDCCX::DisplayEmbed(MWContext *pContext, int iLocation, LO_EmbedStruct *pEmbed)
 {
     NPEmbeddedApp* pEmbeddedApp = (NPEmbeddedApp*)pEmbed->objTag.FE_Data;
@@ -2789,6 +2829,7 @@ void CDCCX::DisplayEmbed(MWContext *pContext, int iLocation, LO_EmbedStruct *pEm
 		ReleaseContextDC(hdc);
 	}
 }
+#endif /* MOZ_NGLAYOUT */
 
 void CDCCX::DisplayHR(MWContext *pContext, int iLocation, LO_HorizRuleStruct *pHorizRule)	
 {
@@ -3714,6 +3755,7 @@ moved into DrawTextPostDecoration()
 	}
 }	// void CDCCX::DisplayText()
 
+#ifndef MOZ_NGLAYOUT
 void CDCCX::FreeEmbedElement(MWContext *pContext, LO_EmbedStruct *pEmbed)	{
 	//	We have our OLE document handle this.
 	GetDocument()->FreeEmbedElement(pContext, pEmbed);
@@ -3724,6 +3766,7 @@ void CDCCX::GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pEmbed, NET_Reload
 	//	We have our OLE document handle this.
 	GetDocument()->GetEmbedSize(pContext, pEmbed, bReload);
 }
+#endif /* MOZ_NGLAYOUT */
 
 #ifdef LAYERS
 void CDCCX::GetTextFrame(MWContext *pContext, LO_TextStruct *pText,
@@ -3751,6 +3794,10 @@ void CDCCX::GetTextFrame(MWContext *pContext, LO_TextStruct *pText,
 #endif  /* LAYERS */
 
 int CDCCX::GetTextInfo(MWContext *pContext, LO_TextStruct *pText, LO_TextInfo *pTextInfo)	{
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return FALSE;
+#else
 	HDC hdc = GetAttribDC();
 
 	//	Determine and select the font.
@@ -3772,6 +3819,7 @@ int CDCCX::GetTextInfo(MWContext *pContext, LO_TextStruct *pText, LO_TextInfo *p
 	ReleaseNetscapeFontWithCache( hdc, pMyFont );
 	ReleaseContextDC(hdc);
 	return(TRUE);
+#endif /* MOZ_NGLAYOUT */
 }
 
 BOOL CDCCX::ResolveTextExtent(int16 wincsid, HDC pDC, LPCTSTR pString, int iLength, LPSIZE pSize, CyaFont *pMyFont)	

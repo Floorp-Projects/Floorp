@@ -520,6 +520,9 @@ extern "C" void FE_DoneMailTo(PrintSetup * print)
 
 extern "C" int FE_LoadExchangeInfo(MWContext * context)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     if(!context)
         return(FALSE);
 
@@ -615,6 +618,7 @@ extern "C" int FE_LoadExchangeInfo(MWContext * context)
 
     // leave pCompose window alive until completion routine
     XL_TranslateText(g_NastyContextSavingHack, URL_s, &print); 
+#endif /* MOZ_NGLAYOUT */
 
 	return(TRUE);
 }

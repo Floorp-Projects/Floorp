@@ -1198,10 +1198,12 @@ Bool login_ProfileSelectedCompleteTheLogin(const char * szProfileName, const cha
 	csTmp += "\\user.js";
 	PREF_ReadUserJSFile((char *)(const char *)csTmp);
 
-	// read in the users optional JS HTML Hook file
-	csTmp = theApp.m_UserDirectory;
-	csTmp += "\\hook.js";
-	HK_ReadHookFile((char *)(const char *)csTmp);
+#ifndef MOZ_NGLAYOUT
+  	// read in the users optional JS HTML Hook file
+  	csTmp = theApp.m_UserDirectory;
+  	csTmp += "\\hook.js";
+  	HK_ReadHookFile((char *)(const char *)csTmp);
+#endif /* MOZ_NGLAYOUT */
 
 	char aPath[_MAX_PATH];
 	::GetModuleFileName(theApp.m_hInstance, aPath, _MAX_PATH);

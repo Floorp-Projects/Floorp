@@ -236,11 +236,15 @@ void CRDFImage::ProcessIcon()
 			iconContext->SetUseDibPalColors(FALSE);
 		}
 
+// Temporary hack to disable loading RDF images for the layout integration
+// build.
+#ifndef MOZ_NGLAYOUT
 		//  Ask for this via client pull.
 		//  We may be in the call stack of the image lib, and doing
 		//  lots of fast small get urls causes it to barf due
 		//  to list management not being reentrant.
 		FEU_ClientPull(iconContext->GetContext(), 0, NET_CreateURLStruct(pUrl, NET_DONT_RELOAD), FO_CACHE_AND_PRESENT, FALSE);
+#endif
 	}
 	else 
 	{ // handle window internal format BMP

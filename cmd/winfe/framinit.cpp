@@ -801,6 +801,9 @@ clean_up:
 
 void CMainFrame::OnDropFiles(HDROP hDropInfo)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     // TODO: Add your message handler code here and/or call default
     //
 
@@ -869,5 +872,5 @@ void CMainFrame::OnDropFiles(HDROP hDropInfo)
     return;
 
     //Mocha will handle cleanup and DragFinish when it calls back in.
-    
+#endif /* MOZ_NGLAYOUT */
 }

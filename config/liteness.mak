@@ -152,3 +152,9 @@ MOZ_COMMUNICATOR_CONFIG_JS=1
 MOZ_COPY_ALL_JARS=1
 MOZ_SPELLCHK=1
 !endif
+
+
+### This probably isn't the best place to put this.
+!if defined(MOZ_NGLAYOUT)
+MOZ_LITENESS_FLAGS=$(MOZ_LITENESS_FLAGS) -DMOZ_NGLAYOUT
+!endif

@@ -74,9 +74,16 @@ NPError FE_PluginGetValue(MWContext *pContext, NPEmbeddedApp *pApp,
 // wrapper for plugin-related FE entry point invented after EmbedUrlExit()
 void FE_EmbedURLExit(URL_Struct *urls, int status, MWContext *cx)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     EmbedUrlExit(urls, status, cx);
+#endif
 }
 
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 void EmbedUrlExit(URL_Struct *pUrl, int iStatus, MWContext *pContext)
 {
     //  The embedded item is finished downloading, and possibly has an error and stuff.
@@ -212,6 +219,7 @@ void EmbedUrlExit(URL_Struct *pUrl, int iStatus, MWContext *pContext)
     //  And well, hey, get rid of the url.
     NET_FreeURLStruct(pUrl);
 }
+#endif /* MOZ_NGLAYOUT */
 
 static void wfe_PluginStream(URL_Struct *pUrlData, MWContext *pContext)
 {

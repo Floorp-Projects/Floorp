@@ -280,6 +280,7 @@ MWContext *CStubsCX::CreateNewDocWindow(MWContext *pContext, URL_Struct *pURL)	{
 void CStubsCX::DisplayBullet(MWContext *pContext, int iLocation, LO_BullettStruct *pBullet)	{
 }
 
+#ifndef MOZ_NGLAYOUT
 void CStubsCX::DisplayEdge(MWContext *pContext, int iLocation, LO_EdgeStruct *pEdge)	{
 }
 
@@ -288,6 +289,7 @@ void CStubsCX::DisplayEmbed(MWContext *pContext, int iLocation, LO_EmbedStruct *
 
 void CStubsCX::DisplayFormElement(MWContext *pContext, int iLocation, LO_FormElementStruct *pFormElement)	{
 }
+#endif
 
 void CStubsCX::DisplayBorder(MWContext *pContext, int iLocation, int x, int y, int width, int height, int bw, LO_Color *color, LO_LineStyle style)	{
 }
@@ -336,11 +338,13 @@ int CStubsCX::FileSortMethod(MWContext *pContext)	{
 void CStubsCX::FinishedLayout(MWContext *pContext)	{
 }
 
+#ifndef MOZ_NGLAYOUT
 void CStubsCX::FormTextIsSubmit(MWContext *pContext, LO_FormElementStruct *pFormElement)	{
 }
 
 void CStubsCX::FreeEdgeElement(MWContext *pContext, LO_EdgeStruct *pEdge)	{
 }
+#endif
 
 void CStubsCX::CreateEmbedWindow(MWContext *pContext, NPEmbeddedApp *pApp) {
 }
@@ -354,6 +358,7 @@ void CStubsCX::RestoreEmbedWindow(MWContext *pContext, NPEmbeddedApp *pApp) {
 void CStubsCX::DestroyEmbedWindow(MWContext *pContext, NPEmbeddedApp *pApp) {
 }
 
+#ifndef MOZ_NGLAYOUT
 void CStubsCX::FreeEmbedElement(MWContext *pContext, LO_EmbedStruct *pEmbed)	{
 }
 
@@ -365,6 +370,7 @@ void CStubsCX::GetFormElementInfo(MWContext *pContext, LO_FormElementStruct *pFo
 
 void CStubsCX::GetFormElementValue(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool bHidden)	{
 }
+#endif
 
 void CStubsCX::GetTextFrame(MWContext *pContext, LO_TextStruct *pText,
 			 int32 start, int32 end, XP_Rect *frame)     {
@@ -454,8 +460,10 @@ XP_Bool CStubsCX::PromptUsernameAndPassword(MWContext *pContext, const char *pMe
 	return(iStatus == IDOK);
 }
 
+#ifndef MOZ_NGLAYOUT
 void CStubsCX::ResetFormElement(MWContext *pContext, LO_FormElementStruct *pFormElement)	{
 }
+#endif
 
 void CStubsCX::SetBackgroundColor(MWContext *pContext, uint8 cRed, uint8 cGreen, uint8 cBlue)	{
 }
@@ -472,8 +480,10 @@ void CStubsCX::SetDocPosition(MWContext *pContext, int iLocation, int32 lX, int3
 void CStubsCX::SetDocTitle(MWContext *pContext, char *pTitle)	{
 }
 
+#ifndef MOZ_NGLAYOUT
 void CStubsCX::SetFormElementToggle(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool bToggle)	{
 }
+#endif
 
 void CStubsCX::SetProgressBarPercent(MWContext *pContext, int32 lPercent)	{
 }

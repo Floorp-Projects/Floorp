@@ -22,15 +22,19 @@
 
 void STARTUP_np(void)
 {
+#ifndef MOZ_NGLAYOUT
     // Be Mac-like.  If the user is holding down the shift key
     //   don't load any of the plugin stuff
     if(::GetKeyState(VK_SHIFT) >= 0)	{
 		NPL_Init();
 	}
+#endif
 }
 
 void SHUTDOWN_np(void)
 {
+#ifndef MOZ_NGLAYOUT
     // unload any remaining plugins
     NPL_Shutdown();
+#endif
 }

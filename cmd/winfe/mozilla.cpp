@@ -91,6 +91,15 @@ BOOL bIsGold = FALSE;
 // Full Circle stuff - see http://www.fullsoft.com for more info
 #include "fullsoft.h"
 
+#ifdef MOZ_NGLAYOUT
+#include "nsISupports.h"
+#include "nsRepository.h"
+#include "nsWidgetsCID.h"
+#include "nsGfxCIID.h"
+#include "nsViewsCID.h"
+#endif
+
+
 #if defined(OJI) || defined(JAVA)
 	// don't include java.h here because the Win16 compiler won't be able to handle this file
 	void WFE_LJ_StartupJava(void);
@@ -207,10 +216,10 @@ static const CLSID BASED_CODE clsid =
 
 CNetscapeApp NEAR theApp;
 
-//#ifdef MOZ_NETSCAPE_FONT_MODULE
+#ifndef MOZ_NGLAYOUT
 // the only one object of CNetscapeFontModule
 CNetscapeFontModule    theGlobalNSFont;
-//#endif // MOZ_NETSCAPE_FONT_MODULE
+#endif /* MOZ_NGLAYOUT */
 
 NET_StreamClass *null_stream(FO_Present_Types format_out, void *newshack, URL_Struct *urls, MWContext *cx)      {
 	//      Stream which does nothing.
@@ -242,6 +251,61 @@ BOOL CNetscapeApp::InitApplication()
     return TRUE;
 }
 
+#ifdef MOZ_NGLAYOUT
+#define WIDGET_DLL "raptorwidget.dll"
+#define GFXWIN_DLL "raptorgfxwin.dll"
+#define VIEW_DLL   "raptorview.dll"
+
+static void InitializeNGLayout() {
+  NS_DEFINE_IID(kCWindowIID, NS_WINDOW_CID);
+  NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
+  NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
+  NS_DEFINE_IID(kCButtonIID, NS_BUTTON_CID);
+  NS_DEFINE_IID(kCComboBoxCID, NS_COMBOBOX_CID);
+  NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
+  NS_DEFINE_IID(kCListBoxCID, NS_LISTBOX_CID);
+  NS_DEFINE_IID(kCRadioButtonCID, NS_RADIOBUTTON_CID);
+  NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
+  NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
+  NS_DEFINE_IID(kCCheckButtonIID, NS_CHECKBUTTON_CID);
+  NS_DEFINE_IID(kCChildIID, NS_CHILD_CID);
+
+  NSRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCHScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCButtonIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCComboBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCFileWidgetCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCListBoxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCRadioButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCTextAreaCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCTextFieldCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCCheckButtonIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCChildIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+
+  NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
+  NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
+  NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
+  NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
+  NS_DEFINE_IID(kCRegionIID, NS_REGION_CID);
+
+  NSRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCRegionIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+
+  NS_DEFINE_IID(kCViewManagerCID, NS_VIEW_MANAGER_CID);
+  NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
+  NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
+
+  NSRepository::RegisterFactory(kCViewManagerCID, VIEW_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCScrollingViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
+}
+#endif /* MOZ_NGLAYOUT */
+
+
 typedef    FARPROC   (*WSASetBlockingHook_t) (FARPROC);
 /////////////////////////////////////////////////////////////////////////////
 // CNetscapeApp initialization
@@ -268,7 +332,7 @@ BOOL CNetscapeApp::InitInstance()
 
 	char *prefStr;  // temporary storage space for preferences
 	int32 prefInt;
-	XP_Bool prefBool;
+	PRBool prefBool;
 
 	// Determine whether this is a PE product ASAP!
 	m_hPEInst    = LoadLibrary("muc.dll");
@@ -741,7 +805,9 @@ BOOL CNetscapeApp::InitInstance()
     // Get the main NSPR event queue
     mozilla_event_queue  = PR_GetMainEventQueue();
 
+#ifndef MOZ_NGLAYOUT
     LM_InitMocha();
+#endif /* MOZ_NGLAYOUT */
 
     // Initialize the XP file extension mapping
     NET_InitFileFormatTypes(NULL, NULL);
@@ -772,11 +838,11 @@ BOOL CNetscapeApp::InitInstance()
 	m_iCSID = (int16)csid;
 	INTL_ChangeDefaultCharSetID((int16)csid);
 
+#ifndef MOZ_NGLAYOUT
 	STARTUP_cvffc();
 
-//#ifdef MOZ_NETSCAPE_FONT_MODULE
 	VERIFY( FONTERR_OK == theGlobalNSFont.InitFontModule() );
-//#endif MOZ_NETSCAPE_FONT_MODULE
+#endif /* MOZ_NGLAYOUT */
 
 	// Initialize RDF
     m_pRDFCX = new CRDFCX(::RDFSlave, MWContextRDFSlave);
@@ -856,10 +922,12 @@ BOOL CNetscapeApp::InitInstance()
     else
 	m_bUseLockedPrefs = FALSE;
 
+#ifdef MOZ_NGLAYOUT
     // Frame creation may cause the loading of the home page so register
     // all of the parser and network functions first
     static PA_InitData parser_data;
     parser_data.output_func = LO_ProcessTag;
+#endif /* MOZ_NGLAYOUT */
 
 	PREF_GetIntPref("network.max_connections",&prefInt);
     int nMaxConnect = CASTINT(prefInt);
@@ -1056,7 +1124,9 @@ BOOL CNetscapeApp::InitInstance()
     NET_RegisterContentTypeConverter(cp_wild, FO_OUT_TO_PROXY_CLIENT, NULL, external_viewer_disk_stream);
     NET_RegisterContentTypeConverter(cp_wild, FO_SAVE_AS, NULL, ContextSaveStream);
     NET_RegisterContentTypeConverter(cp_wild, FO_OLE_NETWORK, NULL, nfe_OleStream);
+#ifndef MOZ_NGLAYOUT
 	NET_RegisterContentTypeConverter(cp_wild, FO_EMBED, NULL, EmbedStream);
+#endif
 	//      added by ftang & jliu, just remap it from memory_stream->net_ColorHTMLStream
     NET_RegisterContentTypeConverter(INTERNAL_PARSER, FO_VIEW_SOURCE, TEXT_HTML, net_ColorHTMLStream);
 
@@ -1068,7 +1138,9 @@ BOOL CNetscapeApp::InitInstance()
     NET_RegisterContentTypeConverter(TEXT_MDL, FO_PRINT, NULL, INTL_ConvCharCode);
     NET_RegisterContentTypeConverter(TEXT_PLAIN, FO_PRINT, NULL, NET_PlainTextConverter);
     NET_RegisterContentTypeConverter(UNKNOWN_CONTENT_TYPE, FO_PRINT, NULL, NET_PlainTextConverter);
+#ifdef MOZ_NGLAYOUT
     NET_RegisterContentTypeConverter(INTERNAL_PARSER, FO_PRINT, (void *)&parser_data, PA_BeginParseMDL);
+#endif /* MOZ_NGLAYOUT */
     NET_RegisterContentTypeConverter(IMAGE_GIF, FO_PRINT, NULL, IL_ViewStream);
     NET_RegisterContentTypeConverter(IMAGE_XBM, FO_PRINT, NULL, IL_ViewStream);
     NET_RegisterContentTypeConverter(IMAGE_JPG, FO_PRINT, NULL, IL_ViewStream);
@@ -1082,6 +1154,10 @@ BOOL CNetscapeApp::InitInstance()
     COleRegistry::RegisterIniProtocolHandlers();
 //END STREAM VODOO
 
+
+#ifdef MOZ_NGLAYOUT
+  InitializeNGLayout();
+#endif
 
 	CString strStatus;
 
@@ -1430,7 +1506,7 @@ BOOL CNetscapeApp::InitInstance()
 	if(m_bAutomated == FALSE && m_bEmbedded == FALSE  && csPrintCommand.IsEmpty())
 	{
 		int iStartupMode=0;
-	    BOOL bStartMode = FALSE;
+	    PRBool bStartMode = FALSE;
 
 		PREF_GetBoolPref("general.startup.browser", &bStartMode);
 		if (bStartMode)
@@ -1979,9 +2055,12 @@ int CNetscapeApp::ExitInstance()
     //  Save certs and keys early, since if they are lost the user is screwed
     SECNAV_Shutdown();
 
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     //  Shut down mocha.
     ET_FinishMocha();
-
+#endif /* MOZ_NGLAYOUT */
 
 
     BOOL javaShutdownSuccessful = fe_ShutdownJava();
@@ -2046,7 +2125,9 @@ int CNetscapeApp::ExitInstance()
     Ctl3dUnregister(m_hInstance);
 #endif
 
+#ifndef MOZ_NGLAYOUT
 	SHUTDOWN_cvffc();
+#endif /* MOZ_NGLAYOUT */
     //  Free off various allocated memory.
     if(XP_AppName)    {
 	XP_FREE(XP_AppName);

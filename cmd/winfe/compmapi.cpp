@@ -102,6 +102,9 @@ extern "C" int FE_LoadExchangeInfo(
    char * pszNewsgroups,
    char * pszSubject)
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     _temp.pszTo = _temp.pszSubject = _temp.pszOrganization = "";
     if(!context)
         return(FALSE);
@@ -195,6 +198,7 @@ extern "C" int FE_LoadExchangeInfo(
 
     // leave pCompose window alive until completion routine
     XL_TranslateText(context, URL_s, &print); 
+#endif /* MOZ_NGLAYOUT */
 
     return(TRUE);
 }

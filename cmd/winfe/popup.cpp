@@ -188,7 +188,10 @@ BOOL CNetscapeView::AddLinkToPopup(CMenu * pMenu, LO_Element * pElement, BOOL bB
 //
 BOOL CNetscapeView::AddEmbedToPopup(CMenu * pMenu, LO_Element * pElement, CL_Layer *layer, BOOL bAddSeparator)
 {
-	
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return FALSE;
+#else	
     UINT uState, uInlineState, uSaveAsState;
     CString csAppend, csEntry;
 
@@ -262,6 +265,7 @@ BOOL CNetscapeView::AddEmbedToPopup(CMenu * pMenu, LO_Element * pElement, CL_Lay
     }
 
 	return bAddSeparator;
+#endif /* MOZ_NGLAYOUT */
 }
 
 BOOL CNetscapeView::AddSaveItemsToPopup(CMenu * pMenu, LO_Element * pElement, CL_Layer *layer, BOOL bAddSeparator)
@@ -309,6 +313,9 @@ BOOL CNetscapeView::AddSaveItemsToPopup(CMenu * pMenu, LO_Element * pElement, CL
 		}
 
 	} else {
+#ifdef MOZ_NGLAYOUT
+    XP_ASSERT(0);
+#else
         LO_ImageStruct *pLOImage;
         CL_Layer *parent_layer;
         char *layer_name;
@@ -331,6 +338,7 @@ BOOL CNetscapeView::AddSaveItemsToPopup(CMenu * pMenu, LO_Element * pElement, CL
             PA_UNLOCK(pLOImage->image_url);
             // Do your stuff here.
         }
+#endif
 	}
 
 	return (bLink || bImage || bAddSeparator);
@@ -363,6 +371,9 @@ void CNetscapeView::AddBrowserItemsToPopup(CMenu * pMenu, LO_Element * pElement,
 		}
 
 	} else {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 		// this is the case for saving backdrop image.
         LO_ImageStruct *pLOImage;
         CL_Layer *parent_layer;
@@ -385,6 +396,7 @@ void CNetscapeView::AddBrowserItemsToPopup(CMenu * pMenu, LO_Element * pElement,
             PA_UNLOCK(pLOImage->image_url);
             // Do your stuff here.
         }		
+#endif /* MOZ_NGLAYOUT */
 	}
 
 	MWContext *pContext = GetContext()->GetContext();
@@ -597,6 +609,7 @@ void CNetscapeView::CreateMessagePopup(CMenu * pMenu, LO_Element * pElement, CL_
 #endif /* MOZ_MAIL_NEWS */
 }
 
+#ifndef MOZ_NGLAYOUT
 void CNetscapeView::OnRButtonDown(UINT uFlags, CPoint cpPoint)	{
 //	Purpose:	Bring up the popup menu.
 //	Arguments:	uFlags	What meta keys are currently pressed, ignored.
@@ -617,9 +630,13 @@ void CNetscapeView::OnRButtonDown(UINT uFlags, CPoint cpPoint)	{
 				  (long)cpPoint.x, (long)cpPoint.y,
 				  NULL);
 }
+#endif /* MOZ_NGLAYOUT */
 
 BOOL CNetscapeView::OnRButtonDownForLayer(UINT uFlags, CPoint& cpPoint, 
 					  long lX, long lY, CL_Layer *layer)	{
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     LO_Element *pElement;
     HDC pDC = GetContextDC();
     MWContext *pContext = GetContext()->GetContext();
@@ -672,6 +689,7 @@ BOOL CNetscapeView::OnRButtonDownForLayer(UINT uFlags, CPoint& cpPoint,
 						       GetParentFrame(), NULL);
     }
 
+#endif /* MOZ_NGLAYOUT */
     return TRUE;
 }
 
@@ -696,6 +714,10 @@ void CNetscapeView::GetLogicalPoint(CPoint cpPoint, long *pLX, long *pLY)
 }
 
 LO_Element *CNetscapeView::GetLayoutElement(CPoint cpPoint, CL_Layer *layer)	{
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return NULL;
+#else
 //	Purpose:	Return the layout element under the device point.
 //	Arguments:	cpPoint The device point.
 //	Returns:	LO_Element *	The layout element under the point, or NULL if over nothing.
@@ -724,6 +746,7 @@ LO_Element *CNetscapeView::GetLayoutElement(CPoint cpPoint, CL_Layer *layer)	{
 	else	{
 		return(NULL);
 	}
+#endif /* MOZ_NGLAYOUT */
 }
 
 CString CNetscapeView::GetAnchorHref(LO_Element *pElement)	{
@@ -736,6 +759,9 @@ CString CNetscapeView::GetAnchorHref(LO_Element *pElement)	{
 //
 
 	CString csRetval;
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	
 	if(pElement != NULL)	{
 		switch(pElement->type)	{
@@ -791,7 +817,7 @@ CString CNetscapeView::GetAnchorHref(LO_Element *pElement)	{
 			}
 		}
 	}
-	
+#endif /* MOZ_NGLAYOUT */	
 	return(csRetval);
 }
 
@@ -942,6 +968,7 @@ void WFE_CondenseURL(CString& csURL, UINT uLength, BOOL bParens)	{
 	
 }
 
+#ifndef MOZ_NGLAYOUT
 void CNetscapeView::OnPopupLoadLink()	{
 //	Purpose:	Load the link
 //	Arguments:	void
@@ -1071,6 +1098,7 @@ void CNetscapeView::OnPopupCopyLinkToClipboard()	{
 
 	CopyLinkToClipboard(m_hWnd, m_csRBLink);
 }
+#endif /* MOZ_NGLAYOUT */
 
 void CNetscapeView::CopyLinkToClipboard(HWND hWnd, CString url)
 {
@@ -1099,6 +1127,7 @@ void CNetscapeView::CopyLinkToClipboard(HWND hWnd, CString url)
 	::CloseClipboard();
 }
 
+#ifndef MOZ_NGLAYOUT
 void CNetscapeView::OnPopupLoadImage()	{
 //	Purpose:	Load an image inline that was delayed.
 //	Arguments:	void
@@ -1337,6 +1366,7 @@ void CNetscapeView::OnPopupCopyEmbedToClipboard()   {
         }
     }
 }
+#endif /* MOZ_NGLAYOUT */
 
 void CNetscapeView::CreateTextAndAnchor(CString &csText, CString &csAnchor)
 {
@@ -1386,6 +1416,7 @@ void CNetscapeView::CreateTextAndAnchor(CString &csText, CString &csAnchor)
     }
 }
 
+#ifndef MOZ_NGLAYOUT
 void CNetscapeView::OnPopupAddLinkToBookmarks()	
 {
 //	Purpose:	Add the link we're under to the bookmarks.
@@ -1428,3 +1459,4 @@ void CNetscapeView::OnPopupMailTo() {
 		GetContext()->MailDocument();
 	}
 }
+#endif /* MOZ_NGLAYOUT */

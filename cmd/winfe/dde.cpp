@@ -4342,7 +4342,11 @@ HDDEDATA CDDEWrapper::PrintURL(HSZ& hszItem)
  if (!port.IsEmpty())
      pt = (char*)(const char*)port; 
  
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
  CPrintCX::AutomatedPrint((char*)(const char*)url, pr, dr, pt);
+#endif
 
  
  return MakeArgs("BL", &retVal);

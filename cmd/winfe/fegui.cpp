@@ -3649,6 +3649,10 @@ void WFE_SetLO_ColorPtr( COLORREF crColor, LO_Color **ppLoColor )
 //  default document colors
 COLORREF WFE_LO2COLORREF( LO_Color * pLoColor, int iColorIndex )
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return 0;
+#else
     COLORREF crColor = 0;
     if ( pLoColor ) {
         crColor = RGB( pLoColor->red, pLoColor->green, pLoColor->blue);
@@ -3659,17 +3663,23 @@ COLORREF WFE_LO2COLORREF( LO_Color * pLoColor, int iColorIndex )
                       lo_master_colors[iColorIndex].blue);
     }
     return crColor;
+#endif /* MOZ_NGLAYOUT */
 }
 
 // Parse a "#FFEEAA" style color string into colors make a COLORREF
 BOOL WFE_ParseColor(char *pRGB, COLORREF * pCRef )
 {
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+  return FALSE;
+#else
     uint8 red, green, blue;
     BOOL bColorsFound = LO_ParseRGB(pRGB, &red, &green, &blue);
     if ( bColorsFound ) {
         *pCRef = RGB( red, green, blue);
     }
     return bColorsFound;
+#endif /* MOZ_NGLAYOUT */
 }
 
 // Helper to clear data

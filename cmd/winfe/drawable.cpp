@@ -168,6 +168,7 @@ COnscreenDrawable::COnscreenDrawable(HDC hDC, CAbstractCX* parentContext)
     m_hDC = hDC;
 }
 
+#ifndef MOZ_NGLAYOUT
 CPrinterDrawable::CPrinterDrawable(HDC hDC, 
                                    int32 lLeftMargin, 
                                    int32 lRightMargin,
@@ -241,6 +242,7 @@ CPrinterDrawable::SetClip(FE_Region hClipRgn)
     else
         CDrawable::SetClip(FE_NULL_REGION);
 }
+#endif /* MOZ_NGLAYOUT */
 
 
 // We should get rid of this function, since it does nothing

@@ -19,7 +19,6 @@
  * Cross platform html dialogs
  *
  *
- * $Id: htmldlgs.c,v 3.2 1998/06/01 22:10:21 raman Exp $
  */
 
 #include "xp.h"
@@ -1061,7 +1060,11 @@ xp_MakeHTMLDialogWindow(void *proto_win, Chrome *chrome)
 	goto done;
     }
 
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     LM_ForceJSEnabled(cx);
+#endif /* MOZ_NGLAYOUT */
 
     /* XXX - get rid of session history */
     SHIST_EndSession(cx);
@@ -1435,7 +1438,11 @@ XP_MakeRawHTMLDialog(void *proto_win, XPDialogInfo *dialogInfo,
     if ( cx == NULL ) {
 	goto loser;
     }
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     LM_ForceJSEnabled(cx);
+#endif /* MOZ_NGLAYOUT */
     
     state->window = (void *)cx;
     state->proto_win = proto_win;
@@ -1648,7 +1655,11 @@ XP_MakeHTMLPanel(void *proto_win, XPPanelInfo *panelInfo,
 	PORT_FreeArena(arena, PR_FALSE);
 	return;
     }
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     LM_ForceJSEnabled(cx);
+#endif /* MOZ_NGLAYOUT */
 
     /* XXX - get rid of session history */
     SHIST_EndSession(cx);

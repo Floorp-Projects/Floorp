@@ -682,7 +682,9 @@ public:
 
 //	Context Overrides
 	virtual void DisplayBullet(MWContext *pContext, int iLocation, LO_BullettStruct *pBullet);
+#ifndef MOZ_NGLAYOUT
 	virtual void DisplayEmbed(MWContext *pContext, int iLocation, LO_EmbedStruct *pEmbed);
+#endif
     virtual void DisplayBorder(MWContext *pContext, int iLocation, int x, int y, int width, int height, int bw, LO_Color *color, LO_LineStyle style);
 	virtual void DisplayHR(MWContext *pContext, int iLocation, LO_HorizRuleStruct *pHorizRule);
 	virtual BITMAPINFO*	 NewPixmap(NI_Pixmap* pImage, BOOL mask = FALSE);
@@ -707,8 +709,10 @@ public:
 #ifdef LAYERS
         virtual void EraseBackground(MWContext *pContext, int iLocation, int32 x, int32 y, uint32 width, uint32 height, LO_Color *pColor);
 #endif
+#ifndef MOZ_NGLAYOUT
 	virtual void FreeEmbedElement(MWContext *pContext, LO_EmbedStruct *pEmbed);
 	virtual void GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pEmbed, NET_ReloadMethod bReload);
+#endif /* MOZ_NGLAYOUT */
 #ifdef LAYERS
 	virtual void GetTextFrame(MWContext *pContext, LO_TextStruct *pText,
 				  int32 start, int32 end, XP_Rect *frame);
@@ -724,12 +728,14 @@ public:
 	static void SetColormap(HDC hdc, NI_ColorMap *pMap, IL_IRGB& transparentColor, HPALETTE hPal);
 	virtual void SetDocDimension(MWContext *pContext, int iLocation, int32 lWidth, int32 lLength);
 	virtual void GetDocPosition(MWContext *pContext, int iLocation, int32 *lX_p, int32 *lY_p);
+#ifndef MOZ_NGLAYOUT
 	virtual void DisplayFormElement(MWContext *pContext, int iLocation, LO_FormElementStruct *pFormElement);
 	virtual void FormTextIsSubmit(MWContext *pContext, LO_FormElementStruct *pFormElement);
 	virtual void GetFormElementInfo(MWContext *pContext, LO_FormElementStruct *pFormElement);
 	virtual void GetFormElementValue(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool bTurnOff);
 	virtual void ResetFormElement(MWContext *pContext, LO_FormElementStruct *pFormElement);
 	virtual void SetFormElementToggle(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool iState);
+#endif
 
 #ifdef TRANSPARENT_APPLET
         virtual void DrawJavaApp(MWContext *pContext, int iLocation, LO_JavaAppStruct *pJava);

@@ -581,14 +581,22 @@ BOOL CSaveCX::CanCreate(URL_Struct* pUrl)
 
 					memcpy(&savedData, &m_pUrl->savedData, sizeof(SHIST_SavedData));
 					memset(&m_pUrl->savedData, 0, sizeof(SHIST_SavedData));
+#ifdef MOZ_NGLAYOUT
+          ASSERT(0);
+#else
 					LO_CloneFormData(&savedData, GetDocumentContext(), m_pUrl);
+#endif
 				}
 			}
 
 		    switch(m_iFileType) {
 				case TXT:
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 					//  We need to ask the text front end to handle.
 					TranslateText(m_pUrl, m_csFileName);
+#endif /* MOZ_NGLAYOUT */
 					break;
 
 				default:

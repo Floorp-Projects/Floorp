@@ -51,6 +51,10 @@ enum FEDragType {
     // Add more as we dream them up!
 };
 
+#ifdef MOZ_NGLAYOUT
+#include "nsIWebWidget.h"
+#endif
+
 /////////////////////////////////////////////////////////////////////////////
 // Mostly default behavior, but override the type of cursor used 
 //   during drag and drop
@@ -248,6 +252,7 @@ protected:
 protected:
     //{{AFX_MSG(CNetscapeView)
    afx_msg void OnSize ( UINT nType, int cx, int cy );
+#ifndef MOZ_NGLAYOUT
     afx_msg void OnSetFocus(CWnd *);
     afx_msg void OnPrepareDC(CDC *pDC, CPrintInfo * pInfo /* = NULL */);
 	afx_msg void OnDeactivateEmbed();
@@ -281,6 +286,7 @@ protected:
 	afx_msg void OnPopupMailTo();
 
     // afx_msg void OnDropFiles( HDROP hDropInfo );
+#endif /* MOZ_NGLAYOUT */
 	//}}AFX_MSG
 #ifdef EDITOR
     afx_msg void OnCanInteract(CCmdUI* pCmdUI);
@@ -289,6 +295,16 @@ protected:
     afx_msg void OnPopupLoadLinkInEditor();
 #endif
     DECLARE_MESSAGE_MAP()
+
+#ifdef MOZ_NGLAYOUT
+private:
+  void checkCreateWebWidget();
+  BOOL m_bNoWebWidgetHack;
+
+public:
+  void NoWebWidgetHack() {m_bNoWebWidgetHack = TRUE;}
+  // Hack to disable it for the RDF window.
+#endif /* MOZ_NGLAYOUT */
 };
 
 #ifdef _DEBUG_HUH_JEM  // debug version in netsvw.cpp

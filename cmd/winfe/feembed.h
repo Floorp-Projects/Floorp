@@ -45,7 +45,9 @@
 //	Function declarations
 //
 extern "C"	{
+#ifndef MOZ_NGLAYOUT
 void EmbedUrlExit(URL_Struct *pUrl, int iStatus, MWContext *pContext);
+#endif
 
 NET_StreamClass *EmbedStream(int iFormatOut, void *pDataObj, URL_Struct *pUrlData, MWContext *pContext);
 int EmbedWrite(NET_StreamClass *stream, const char *pWriteData, int32 lLength);

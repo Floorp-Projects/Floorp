@@ -190,7 +190,7 @@ CEnumHelpers::Next(NET_cdataStruct **ppcdata)
 {
 	CHelperApp	*pHelperApp;
 
-	while ((*ppcdata = (NET_cdataStruct *)XP_ListNextObject(m_pInfoList))) {
+  while ((*ppcdata = (NET_cdataStruct *)XP_ListNextObject(m_pInfoList))) {
 		// Ignore items that don't have a MIME type
 		if (!(*ppcdata)->ci.type)
 			continue;
@@ -826,7 +826,11 @@ CAppearancePrefs::SetEncodingFonts(DWORD dwCharsetNum, LPENCODINGINFO lpInfo)
     	
 		// Reset the assorted font caches...
 		CDCCX::ClearAllFontCaches();
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 		CVirtualFontFontCache::Reset();
+#endif /* MOZ_NGLAYOUT */
 		theApp.m_pIntlFont->WriteToIniFile();
 
 		// Indicate we need to reload all of the windows

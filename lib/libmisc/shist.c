@@ -96,6 +96,9 @@ SHIST_FreeHistoryEntry (MWContext * ctxt, History_entry * entry)
     	if(entry->page_services_url)
     	    XP_FREE(entry->page_services_url);
 
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 		if(entry->savedData.FormList)
 			LO_FreeDocumentFormListData(ctxt, entry->savedData.FormList); 
 
@@ -107,6 +110,7 @@ SHIST_FreeHistoryEntry (MWContext * ctxt, History_entry * entry)
 
 		if(entry->savedData.Window)
 			LM_DropSavedWindow(ctxt, entry->savedData.Window);
+#endif /* MOZ_NGLAYOUT */
 		if(entry->savedData.OnLoad)
 			PA_FREE(entry->savedData.OnLoad);
 		if(entry->savedData.OnUnload)
@@ -736,11 +740,15 @@ SHIST_AddDocument(MWContext * ctxt, History_entry * new_entry)
 	ctxt->hist.cur_doc_ptr = (History_entry *) XP_ListGetObjectNum(ctxt->hist.list_ptr, 
 												 ctxt->hist.cur_doc);
 
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     LO_CleanupGridHistory(ctxt);
     if (ctxt->is_grid_cell)
     {
 	LO_UpdateGridHistory(ctxt);
     }
+#endif /* MOZ_NGLAYOUT */
 
     shist_update_FE(ctxt);
 
@@ -955,6 +963,9 @@ SHIST_GetNext(MWContext * ctxt)
 PUBLIC int
 SHIST_CanGoBack(MWContext * ctxt)
 {
+#ifdef MOZ_NGLAYOUT
+  return FALSE;
+#else
     History *hist;
 
     hist = &ctxt->hist;
@@ -968,8 +979,8 @@ SHIST_CanGoBack(MWContext * ctxt)
 	}
 	return FALSE;
     }
-
     return TRUE;
+#endif /* MOZ_NGLAYOUT */
 }
 
 /* ---
@@ -981,6 +992,9 @@ SHIST_CanGoBack(MWContext * ctxt)
 PUBLIC int
 SHIST_CanGoForward(MWContext * ctxt)
 {
+#ifdef MOZ_NGLAYOUT
+  return FALSE;
+#else
     History *hist;
 
     hist = &ctxt->hist;
@@ -996,6 +1010,7 @@ SHIST_CanGoForward(MWContext * ctxt)
     }
 
     return TRUE;
+#endif /* MOZ_NGLAYOUT */
 }
 
 

@@ -967,12 +967,16 @@ BOOL CDCCX::OnOpenDocumentCX(const char *pPathName)	{
 }
 
 void CDCCX::ViewImages()	{
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	if(IsDestroyed() == FALSE)	{
         // Tell layout that all images are to be force loaded.
         LO_SetForceLoadImage(NULL, TRUE);
 
 		ExplicitlyLoadAllImages();
 	}
+#endif /* MOZ_NGLAYOUT */
 }
 
 BOOL CDCCX::CanViewImages()	{
@@ -1014,6 +1018,9 @@ URL_Struct *CDCCX::CreateUrlFromHist(BOOL bClearStateData, SHIST_SavedData *pSav
 	//		that is needed to perform the next load (such as position)....
 	//	Other's not dealing with history, save their data in the GetUrl call.
     SHIST_SetPositionOfCurrentDoc(&(GetContext()->hist), 0);
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
     if(GetOriginX() || GetOriginY())    {
 #ifdef LAYERS
 	    LO_Any *pAny = (LO_Any *)LO_XYToNearestElement(GetDocumentContext(), GetOriginX(), GetOriginY(), NULL);
@@ -1025,12 +1032,14 @@ URL_Struct *CDCCX::CreateUrlFromHist(BOOL bClearStateData, SHIST_SavedData *pSav
 		    SHIST_SetPositionOfCurrentDoc(&(GetContext()->hist), pAny->ele_id);
 	    }
     }
+#endif /* MOZ_NGLAYOUT */
 
 	//	Call/return the base.
 	URL_Struct *pUrl = CStubsCX::CreateUrlFromHist(bClearStateData, pSavedData, bWysiwyg);
 	return(pUrl);
 }
 
+#ifndef MOZ_NGLAYOUT
 //
 // Make the given form element visible on the screen
 //
@@ -1123,6 +1132,7 @@ void CDCCX::SetFormElementToggle(MWContext *pContext, LO_FormElementStruct *pFor
 		pFormClass->SetFormElementToggle(iState);
 	}
 }
+#endif
 
 //  Do a fill rect type operation.
 void CDCCX::FloodRect(LTRB& Rect, HBRUSH hColor)

@@ -71,6 +71,10 @@ typedef enum ContextType    {
     MaxContextTypes   //  Leave as last entry please
 } ContextType;
 
+#ifdef MOZ_NGLAYOUT
+class nsIWebWidget;
+#endif
+
 //  The abstract windows context
 class CAbstractCX: public IMWContext {
 private:
@@ -88,7 +92,9 @@ public:
 	//	Function to load a URL with this context, with the custom exit routing handler.
 	//	Use this to NET_GetURL instead or XL_TranslateText instead.
 	virtual int GetUrl(URL_Struct *pUrl, FO_Present_Types iFormatOut, BOOL bReallyLoad = TRUE, BOOL bForceNew = FALSE);
+#ifndef MOZ_NGLAYOUT
     virtual XL_TextTranslation TranslateText(URL_Struct *pUrl, const char *pFileName, const char *pPrefix = NULL, int iWidth = 75);
+#endif /* MOZ_NGLAYOUT */
 
     virtual void UpdateStopState(MWContext *pContext) = 0;
 
@@ -201,6 +207,16 @@ public:
     }
 	// Override to allow XP Context->Frame matching
 	virtual CFrameGlue *GetFrame() const { return NULL; }
+
+#ifdef MOZ_NGLAYOUT
+    // Convenience to get/set WebWidget from MWContext.
+    nsIWebWidget *GetWebWidget() const {        
+        return((nsIWebWidget*)m_pXPCX->fe.webWidget);
+    } 
+    void SetWebWidget(nsIWebWidget *pWW) {
+        m_pXPCX->fe.webWidget = pWW;
+    }
+#endif
 
 	//	Named contexts and grid stuff.
 	void SetContextName(const char *pName);

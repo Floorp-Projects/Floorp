@@ -457,8 +457,10 @@ public:
 	virtual void DisplaySubtext(MWContext *pContext, int iLocation, LO_TextStruct *pText, int32 lStartPos, int32 lEndPos, XP_Bool clear);
 	virtual void SetProgressBarPercent(MWContext *pContext, int32 lPercent);
 	virtual void Progress(MWContext *pContext, const char *pMessage);
+#ifndef MOZ_NGLAYOUT
 	virtual void DisplayEdge(MWContext *pContext, int iLocation, LO_EdgeStruct *pEdge);
 	virtual void FreeEdgeElement(MWContext *pContext, LO_EdgeStruct *pEdge);
+#endif
 	virtual void EnableClicking(MWContext *pContext);
 
 //	Misc draw helpers

@@ -65,6 +65,12 @@ extern "C"      {
 #include "li_public.h"
 #endif /* MOZ_LOC_INDEP */
 
+#ifdef MOZ_NGLAYOUT
+#include "nscore.h"
+#include "nsDebug.h"
+#include "prlink.h"
+#endif
+
 #ifdef _DEBUG
 #undef THIS_FILE
 static char BASED_CODE THIS_FILE[] = __FILE__;
@@ -1712,6 +1718,13 @@ BOOL CNetscapeApp::IsIdleMessage(MSG *pMsg)
     return(pMsg->message != WM_PAINT && pMsg->message != 0x0118);
 }
 
+// This is just so we can call NET_PollSockets, will go away when
+// both NGLayout and Mozilla are using the same netlib.
+#ifdef MOZ_NGLAYOUT
+typedef void (*NET_PollSocketsType)();
+static NET_PollSocketsType NGL_NET_PollSockets = nsnull;
+#endif
+
 BOOL CNetscapeApp::OnIdle(LONG lCount)
 {
     // call base class idle first
@@ -1756,6 +1769,23 @@ BOOL CNetscapeApp::OnIdle(LONG lCount)
 	// Poll the socket list and call Netlib
 	if(NET_PollSockets())
 		bResult = TRUE;
+
+// This is just so we can call NET_PollSockets in the DLL, 
+// this will go away when
+// both NGLayout and Mozilla are using the same netlib.
+#ifdef MOZ_NGLAYOUT
+  if (nsnull == NGL_NET_PollSockets) {
+    PRLibrary *netlib = PR_LoadLibrary("netlib");
+    NS_ASSERTION(netlib,"Could not load netlib dll.");
+    NGL_NET_PollSockets = (NET_PollSocketsType)PR_FindSymbol(netlib,"NET_PollSockets");
+    NS_ASSERTION(NGL_NET_PollSockets,"Could not find NET_PollSockets in netlib.dll");
+
+    // This is a hack, we never release netlib.dll.
+  }
+  TRACE("Calling NGL_NET_PollSockets\n");
+  NGL_NET_PollSockets();
+#endif
+
 
 #ifdef MOZ_MAIL_NEWS
 	// currently just to give NeoAccess a chance to do some chores
@@ -1821,8 +1851,12 @@ BOOL CNetscapeApp::OnDDECommand(char *pszCommand)
 	char *pArg3 = FEU_ExtractCommaDilimetedQuotedString(pszCommand, 3);
 	char *pArg4 = FEU_ExtractCommaDilimetedQuotedString(pszCommand, 4);
 
+#ifdef MOZ_NGLAYOUT
+  XP_ASSERT(0);
+#else
 	//  Do it.
 	CPrintCX::AutomatedPrint(pArg1, pArg2, pArg3, pArg4);
+#endif
 
 	//  Get rid of any allocations that FEU did for us.
 	if(pArg1)   {

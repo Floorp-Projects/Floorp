@@ -384,6 +384,7 @@ void CFE_DisplayBullet(MWContext *pContext, int iLocation, LO_BullettStruct *pBu
     ABSTRACTCX(pContext)->DisplayBullet(pContext, iLocation, pBullet);
 }
 
+#ifndef MOZ_NGLAYOUT
 void CFE_DisplayEdge(MWContext *pContext, int iLocation, LO_EdgeStruct *pEdge)	{
 	if(ABSTRACTCX(pContext)->IsDestroyed())	{
 		//	Don't allow this to happen if the context has been destroyed...
@@ -413,6 +414,7 @@ void CFE_DisplayFormElement(MWContext *pContext, int iLocation, LO_FormElementSt
 
     ABSTRACTCX(pContext)->DisplayFormElement(pContext, iLocation, pFormElement);
 }
+#endif
 
 void CFE_DisplayBorder(MWContext *pContext, int iLocation, int x, int y, int width, int height, int bw, LO_Color *color, LO_LineStyle style)	{
 	if(ABSTRACTCX(pContext)->IsDestroyed())	{
@@ -630,6 +632,7 @@ void CFE_FinishedLayout(MWContext *pContext)	{
 	}
 }
 
+#ifndef MOZ_NGLAYOUT
 void CFE_FormTextIsSubmit(MWContext *pContext, LO_FormElementStruct *pFormElement)	{
 	if(ABSTRACTCX(pContext)->IsDestroyed())	{
 		//	Don't allow this to happen if the context has been destroyed...
@@ -649,6 +652,7 @@ void CFE_FreeEdgeElement(MWContext *pContext, LO_EdgeStruct *pEdge)	{
 
     ABSTRACTCX(pContext)->FreeEdgeElement(pContext, pEdge);
 }
+#endif
 
 void
 CFE_CreateEmbedWindow(MWContext *pContext, NPEmbeddedApp *pApp) {
@@ -694,6 +698,7 @@ CFE_DestroyEmbedWindow(MWContext *pContext, NPEmbeddedApp *pApp) {
     ABSTRACTCX(pContext)->DestroyEmbedWindow(pContext, pApp);
 }
 
+#ifndef MOZ_NGLAYOUT
 void CFE_FreeEmbedElement(MWContext *pContext, LO_EmbedStruct *pEmbed)	{
 	if(ABSTRACTCX(pContext)->IsDestroyed())	{
 		//	Don't allow this to happen if the context has been destroyed...
@@ -712,6 +717,7 @@ FE_FreeFormElement(MWContext *pContext, LO_FormElementData *pFormElement)
     if(pFormClass != NULL)
         pFormClass->FreeFormElement(pFormElement);
 }
+#endif
 
 extern "C" void 
 FE_ReleaseTextAttrFeData(MWContext * pContext, LO_TextAttr *attr)
@@ -740,6 +746,7 @@ void CFE_HideJavaAppElement(MWContext *pContext, LJAppletData *pJava)	{
     WINCX(pContext)->HideJavaAppElement(pContext, pJava);
 }
 
+#ifndef MOZ_NGLAYOUT
 void CFE_GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pEmbed, NET_ReloadMethod bReload)	{
 	if(ABSTRACTCX(pContext)->IsDestroyed())	{
 		//	Don't allow this to happen if the context has been destroyed...
@@ -769,6 +776,7 @@ void CFE_GetFormElementValue(MWContext *pContext, LO_FormElementStruct *pFormEle
 
     ABSTRACTCX(pContext)->GetFormElementValue(pContext, pFormElement, bHidden);
 }
+#endif
 
 void CFE_GetJavaAppSize(MWContext *pContext, LO_JavaAppStruct *pJava, NET_ReloadMethod bReload)	{
 	if(ABSTRACTCX(pContext)->IsDestroyed())	{
@@ -1023,6 +1031,7 @@ XP_Bool CFE_PromptUsernameAndPassword(MWContext *pContext, const char *pMessage,
 	return(bReturn);
 }
 
+#ifndef MOZ_NGLAYOUT
 void CFE_ResetFormElement(MWContext *pContext, LO_FormElementStruct *pFormElement)	{
 	if(ABSTRACTCX(pContext)->IsDestroyed())	{
 		//	Don't allow this to happen if the context has been destroyed...
@@ -1032,6 +1041,7 @@ void CFE_ResetFormElement(MWContext *pContext, LO_FormElementStruct *pFormElemen
 
     ABSTRACTCX(pContext)->ResetFormElement(pContext, pFormElement);
 }
+#endif
 
 void CFE_SetBackgroundColor(MWContext *pContext, uint8 cRed, uint8 cGreen, uint8 cBlue)	{
 	if(ABSTRACTCX(pContext)->IsDestroyed())	{
@@ -1087,6 +1097,7 @@ void CFE_SetDocTitle(MWContext *pContext, char *pTitle)	{
 	SHIST_SetTitleOfCurrentDoc( pContext );
 }
 
+#ifndef MOZ_NGLAYOUT
 void CFE_SetFormElementToggle(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool bToggle)	{
 	if(ABSTRACTCX(pContext)->IsDestroyed())	{
 		//	Don't allow this to happen if the context has been destroyed...
@@ -1096,6 +1107,7 @@ void CFE_SetFormElementToggle(MWContext *pContext, LO_FormElementStruct *pFormEl
 
     ABSTRACTCX(pContext)->SetFormElementToggle(pContext, pFormElement, bToggle);
 }
+#endif
 
 void CFE_SetProgressBarPercent(MWContext *pContext, int32 lPercent)	{
 	if(ABSTRACTCX(pContext)->IsDestroyed())	{

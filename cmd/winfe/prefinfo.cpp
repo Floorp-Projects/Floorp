@@ -69,9 +69,13 @@ int PR_CALLBACK prefWatcher(const char *pPrefName, void *pData)
 			break;
 
 		case 7:
+#ifdef MOZ_NGLAYOUT
+      XP_ASSERT(0);
+#else
 			PREF_GetBoolPref("browser.use_document_colors", &prefInfo.m_bUseDocumentColors);
 			LO_SetUserOverride(!prefInfo.m_bUseDocumentColors);
 			bReload = TRUE;
+#endif /* MOZ_NGLAYOUT */
 			break;
 
 		case 8:
@@ -226,11 +230,13 @@ void CPrefInfo::Initialize()
 	wfe_SetLayoutColor(LO_COLOR_BG, m_rgbBackgroundColor);
 	PREF_RegisterCallback("browser.background_color", prefWatcher, (void *)6);
 	
+#ifndef MOZ_NGLAYOUT
 	// See if the user's choices override the document
 	PREF_GetBoolPref("browser.use_document_colors", &m_bUseDocumentColors);
     LO_SetUserOverride(!m_bUseDocumentColors);
 	PREF_RegisterCallback("browser.use_document_colors", prefWatcher, (void *)7);
-	
+#endif	
+
 	// Always Load Images
 	PREF_GetBoolPref("general.always_load_images", &m_bAutoLoadImages);
     PREF_RegisterCallback("general.always_load_images", prefWatcher, (void *)8);
