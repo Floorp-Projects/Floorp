@@ -305,6 +305,37 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         // we want XUL popups to be able to overlap the task bar.
         aMetric = 1;
         break;
+    case eMetric_DragFullWindow:
+        {
+        static PRInt32 sDragFullWindow = -1;
+        if (sDragFullWindow == -1) {
+          HKEY key;
+          char value[100];
+          DWORD length, type;
+          LONG result;
+
+
+          result = ::RegOpenKeyEx(HKEY_CURRENT_USER, 
+                   "Control Panel\\Desktop", 0, KEY_READ, &key);
+
+          if (result == ERROR_SUCCESS) {
+            length = sizeof(value);
+
+            result = ::RegQueryValueEx(key, "DragFullWindows",
+                     NULL, &type, (LPBYTE)&value, &length);
+
+            ::RegCloseKey(key);
+
+            if (result == ERROR_SUCCESS) {
+              PRInt32 errorCode;
+              nsString str; str.AssignWithConversion(value);
+              sDragFullWindow = str.ToInteger(&errorCode);         
+            }
+          }
+        }        
+        aMetric = sDragFullWindow ? 1 : 0;
+        }
+        break;
 
     default:
         aMetric = -1;

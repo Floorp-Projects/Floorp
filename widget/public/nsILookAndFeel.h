@@ -114,8 +114,9 @@ public:
     eMetric_CaretBlinkTime,                               // default, may be overriden by OS
     eMetric_SingleLineCaretWidth,                         // pixel width of caret in a single line field
     eMetric_MultiLineCaretWidth,                          // pixel width of caret in a multi-line field
-    eMetric_SubmenuDelay,
-    eMetric_MenusCanOverlapOSBar                          // can popups overlap menu/task bar?
+    eMetric_SubmenuDelay,                                 // delay before submenus open
+    eMetric_MenusCanOverlapOSBar,                         // can popups overlap menu/task bar?
+    eMetric_DragFullWindow                                // show window contents while dragging?
   } nsMetricID;
 
   typedef enum {
