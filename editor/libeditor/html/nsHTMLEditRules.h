@@ -129,6 +129,7 @@ protected:
                             PRInt32          aMaxLength);
   nsresult WillLoadHTML(nsISelection *aSelection, PRBool *aCancel);
   nsresult WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
+  nsresult StandardBreakImpl(nsIDOMNode *aNode, PRInt32 aOffset, nsISelection *aSelection);
   nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
   nsresult SplitMailCites(nsISelection *aSelection, PRBool aPlaintext, PRBool *aHandled);
   nsresult WillDeleteSelection(nsISelection *aSelection, nsIEditor::EDirection aAction, 

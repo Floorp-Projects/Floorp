@@ -1465,7 +1465,6 @@ nsresult
 nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
-  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
   // initialize out param
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
@@ -1536,74 +1535,86 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
   else if (nsHTMLEditUtils::IsParagraph(blockParent))
   {
     res = ReturnInParagraph(aSelection, blockParent, node, offset, aCancel, aHandled);
-    return NS_OK;
+    if (NS_FAILED(res)) return res;
+    // fall through, we may not have handled it in ReturnInParagraph()
   }
   
-  // its something else (body, div, td, ...): insert a normal br
-  else
+  // if not already handled then do the standard thing
+  if (!(*aHandled))
   {
-    nsCOMPtr<nsIDOMNode> brNode;
-    PRBool bAfterBlock = PR_FALSE;
-    PRBool bBeforeBlock = PR_FALSE;
-    
-    if (bPlaintext)
-    {
-      res = mHTMLEditor->CreateBR(node, offset, address_of(brNode));
-    }
-    else
-    {
-      nsWSRunObject wsObj(mHTMLEditor, node, offset);
-      nsCOMPtr<nsIDOMNode> visNode;
-      PRInt32 visOffset=0;
-      PRInt16 wsType;
-      res = wsObj.PriorVisibleNode(node, offset, address_of(visNode), &visOffset, &wsType);
-      if (NS_FAILED(res)) return res;
-      if (wsType & nsWSRunObject::eBlock)
-        bAfterBlock = PR_TRUE;
-      res = wsObj.NextVisibleNode(node, offset, address_of(visNode), &visOffset, &wsType);
-      if (NS_FAILED(res)) return res;
-      if (wsType & nsWSRunObject::eBlock)
-        bBeforeBlock = PR_TRUE;
-      
-      res = wsObj.InsertBreak(address_of(node), &offset, address_of(brNode), nsIEditor::eNone);
-    }
-    if (NS_FAILED(res)) return res;
-    res = nsEditor::GetNodeLocation(brNode, address_of(node), &offset);
-    if (NS_FAILED(res)) return res;
-    if (bAfterBlock && bBeforeBlock)
-    {
-      // we just placed a br between block boundaries.  
-      // This is the one case where we want the selection to be before 
-      // the br we just placed, as the br will be on a new line,
-      // rather than at end of prior line.
-      selPriv->SetInterlinePosition(PR_TRUE);
-      res = aSelection->Collapse(node, offset);
-      if (NS_FAILED(res)) return res;
-    }
-    else
-    {
-      // SetInterlinePosition(PR_TRUE) means we want the caret to stick to the content on the "right".
-      // We want the caret to stick to whatever is past the break.  This is
-      // because the break is on the same line we were on, but the next content
-      // will be on the following line.
-      
-      // An exception to this is if the break has a next sibling that is a block node.
-      // Then we stick to the left to aviod an uber caret.
-      nsCOMPtr<nsIDOMNode> siblingNode;
-      brNode->GetNextSibling(getter_AddRefs(siblingNode));
-      if (siblingNode && IsBlockNode(siblingNode))
-        selPriv->SetInterlinePosition(PR_FALSE);
-      else 
-        selPriv->SetInterlinePosition(PR_TRUE);
-      res = aSelection->Collapse(node, offset+1);
-      if (NS_FAILED(res)) return res;
-    }
-    *aHandled = PR_TRUE;
+    res = StandardBreakImpl(node, offset, aSelection);
+	  *aHandled = PR_TRUE;
   }
-  
   return res;
 }
 
+nsresult
+nsHTMLEditRules::StandardBreakImpl(nsIDOMNode *aNode, PRInt32 aOffset, nsISelection *aSelection)
+{
+  nsCOMPtr<nsIDOMNode> brNode;
+  PRBool bAfterBlock = PR_FALSE;
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> node(aNode);
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
+  
+  if (mFlags & nsIPlaintextEditor::eEditorPlaintextMask)
+  {
+    res = mHTMLEditor->CreateBR(node, aOffset, address_of(brNode));
+  }
+  else
+  {
+    nsWSRunObject wsObj(mHTMLEditor, node, aOffset);
+    nsCOMPtr<nsIDOMNode> visNode, linkNode;
+    PRInt32 visOffset=0, newOffset;
+    PRInt16 wsType;
+    res = wsObj.PriorVisibleNode(node, aOffset, address_of(visNode), &visOffset, &wsType);
+    if (NS_FAILED(res)) return res;
+    if (wsType==nsWSRunObject::eOtherBlock)
+      bAfterBlock = PR_TRUE;
+    if (mHTMLEditor->IsInLink(node, address_of(linkNode)))
+    {
+      // split the link
+      nsCOMPtr<nsIDOMNode> linkParent;
+      res = linkNode->GetParentNode(getter_AddRefs(linkParent));
+      if (NS_FAILED(res)) return res;
+      res = mHTMLEditor->SplitNodeDeep(linkNode, node, aOffset, &newOffset, PR_TRUE);
+      if (NS_FAILED(res)) return res;
+      // reset {node,aOffset} to the point where link was split
+      node = linkParent;
+      aOffset = newOffset;
+    }
+    res = wsObj.InsertBreak(address_of(node), &aOffset, address_of(brNode), nsIEditor::eNone);
+  }
+  if (NS_FAILED(res)) return res;
+  res = nsEditor::GetNodeLocation(brNode, address_of(node), &aOffset);
+  if (NS_FAILED(res)) return res;
+  if (bAfterBlock)
+  {
+    // we just placed a br after a block.  This is the one case where we want the 
+    // selection to be before the br we just placed, as the br will be on a new line,
+    // rather than at end of prior line.
+    selPriv->SetInterlinePosition(PR_TRUE);
+    res = aSelection->Collapse(node, aOffset);
+  }
+  else
+  {
+    // SetInterlinePosition(PR_TRUE) means we want the caret to stick to the content on the "right".
+    // We want the caret to stick to whatever is past the break.  This is
+    // because the break is on the same line we were on, but the next content
+    // will be on the following line.
+    
+    // An exception to this is if the break has a next sibling that is a block node.
+    // Then we stick to the left to avoid an uber caret.
+    nsCOMPtr<nsIDOMNode> siblingNode;
+    brNode->GetNextSibling(getter_AddRefs(siblingNode));
+    if (siblingNode && IsBlockNode(siblingNode))
+      selPriv->SetInterlinePosition(PR_FALSE);
+    else 
+      selPriv->SetInterlinePosition(PR_TRUE);
+    res = aSelection->Collapse(node, aOffset+1);
+  }
+  return res;
+}
 
 nsresult
 nsHTMLEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
