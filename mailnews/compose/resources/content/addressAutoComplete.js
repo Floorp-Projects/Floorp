@@ -1,3 +1,34 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ * Jean-Francois Ducarroz <ducarroz@netscape.com>
+ * Seth Spitzer <sspitzer@netscape.com>
+ * Alec Flett <alecf@netscape.com>
+ */
+
+// get the current identity from the UI
+var identityElement;
+
+var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+
+    
 var AddressAutoCompleteListener = {
 	onAutoCompleteResult: function(aItem, aOriginalString, aMatch) {
 		dump("aItem = " + aItem + "\n");
@@ -42,5 +73,15 @@ function AutoCompleteAddress(inputElement)
 		ac = ac.QueryInterface(Components.interfaces.nsIAutoCompleteSession);
 	}
 
-	ac.autoComplete(inputElement, inputElement.value, AddressAutoCompleteListener);
+    if (!identityElement)
+        identityElement = document.getElementById("msgIdentity");
+
+    var identity=null;
+    
+    if (identityElement) {
+        idKey = identityElement.value;
+        identity = accountManager.getIdentity(idKey);
+    }
+
+	ac.autoComplete(identity, inputElement, inputElement.value, AddressAutoCompleteListener);
 }

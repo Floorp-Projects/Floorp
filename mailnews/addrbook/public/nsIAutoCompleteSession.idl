@@ -24,9 +24,13 @@
 #include "nsrootidl.idl"
 
 interface nsIAutoCompleteListener;
+interface nsIMsgIdentity;
 
 [scriptable, uuid(CA2A6B07-3625-11d3-988E-001083010E9B)]
 interface nsIAutoCompleteSession : nsISupports {
-	void autoComplete(in nsISupports aParam, in wstring aSearchString, in nsIAutoCompleteListener aResultListener);
+	void autoComplete(in nsIMsgIdentity relativeId,
+                      in nsISupports aParam,
+                      in wstring aSearchString,
+                      in nsIAutoCompleteListener aResultListener);
 };
 

@@ -29,8 +29,8 @@
 #include "nsIAbCard.h"
 #include "nsXPIDLString.h"
 #include "nsMsgBaseCID.h"
-#include "nsIMsgAccountManager.h"
 #include "nsMsgI18N.h"
+#include "nsIMsgIdentity.h"
 
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -58,24 +58,6 @@ nsAbAutoCompleteSession::nsAbAutoCompleteSession()
 	NS_INIT_REFCNT();
     m_numEntries = 0;
     m_tableInitialized = PR_FALSE;
-    
-    // temporary hack to get the current identity
-    nsresult rv;
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv))
-    {    
-	    nsCOMPtr<nsIMsgIdentity> identity;
-	    rv = accountManager->GetCurrentIdentity(getter_AddRefs(identity));
-	    if (NS_SUCCEEDED(rv))
-	    {
-			char * email;
-	    	identity->GetEmail(&email);
-	    	if (email && *email)
-	    		m_domain = PL_strchr(email, '@');
-	    	PR_FREEIF(email);
-	    }
-	}
 }
 
 nsresult nsAbAutoCompleteSession::PopulateTableWithAB(nsIEnumerator * aABCards)
@@ -184,7 +166,11 @@ nsAbAutoCompleteSession::~nsAbAutoCompleteSession()
 	}
 }
 
-NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(nsISupports *aParam, const PRUnichar *aSearchString, nsIAutoCompleteListener *aResultListener)
+NS_IMETHODIMP
+nsAbAutoCompleteSession::AutoComplete(nsIMsgIdentity *aIdentity,
+                                      nsISupports *aParam,
+                                      const PRUnichar *aSearchString,
+                                      nsIAutoCompleteListener *aResultListener)
 {
 	// mscott - right now I'm not even going to bother to make this synchronous...
 	// I'll beef it up with some test data later but we want to see if this idea works for right now...
@@ -193,6 +179,18 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(nsISupports *aParam, const P
     if (!m_tableInitialized) {
       rv = InitializeTable();
       if (NS_FAILED(rv)) return rv;
+    }
+
+    nsXPIDLCString domain;
+    if (aIdentity) {
+      nsXPIDLCString email;
+      rv = aIdentity->GetEmail(getter_Copies(email));
+      if (NS_SUCCEEDED(rv) && email) {
+
+        char *domainStart = PL_strchr(email, '@');
+        if (domainStart)
+          domain = domainStart; // makes a copy
+      }
     }
     
     if (nsCRT::strlen(aSearchString) == 0)
@@ -268,7 +266,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(nsISupports *aParam, const P
 
 					fullAddress = uStr;
 					if (fullAddress.FindChar('@') < 0) /* no domain? */
-						fullAddress += m_domain;		/* then add the default domain */
+						fullAddress += domain;		/* then add the default domain */
 						
 					searchResult += fullAddress;
 
