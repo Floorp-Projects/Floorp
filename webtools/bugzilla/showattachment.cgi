@@ -29,7 +29,7 @@ ConnectToDatabase();
 
 my @row;
 if (defined $::FORM{'attach_id'}) {
-    SendSQL("select mimetype, thedata from attachments where attach_id =".SqlQuote($::FORM{'attach_id'});
+    SendSQL("select mimetype, thedata from attachments where attach_id =".SqlQuote($::FORM{'attach_id'}));
     @row = FetchSQLData();
 }
 if (!@row) {
