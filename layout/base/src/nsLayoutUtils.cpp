@@ -353,9 +353,8 @@ nsLayoutUtils::FindSiblingViewFor(nsIView* aParentView, nsIFrame* aFrame) {
 nsPresContext::ScrollbarStyles
 nsLayoutUtils::ScrollbarStylesOfView(nsIScrollableView *aScrollableView)
 {
-  nsIView *view;
-  CallQueryInterface(aScrollableView, &view);
-  nsIFrame *frame = NS_STATIC_CAST(nsIFrame*, view->GetClientData());
+  nsIFrame *frame =
+    NS_STATIC_CAST(nsIFrame*, aScrollableView->View()->GetClientData());
   if (frame && ((frame = frame->GetParent()))) {
     nsIScrollableFrame *sf;
     CallQueryInterface(frame, &sf);
