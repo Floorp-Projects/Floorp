@@ -258,7 +258,6 @@ endif
 
 all:: export libs install
 
-ifndef USE_AUTOCONF
 #
 # Maybe this should be done in config/Makefile so it only happens once...?
 #
@@ -270,6 +269,7 @@ TARGETS			+= tweak_nspr
 # Since the NSPR folks won't help, we'll fix things the sneaky way.
 #
 tweak_nspr:
+ifndef USE_AUTOCONF
 	@(cd $(DEPTH)/nsprpub/config; \
 		if test -f UNIX.mk.orig; then rm -f UNIX.mk; mv UNIX.mk.orig UNIX.mk; else true; fi; \
 		mv UNIX.mk UNIX.mk.orig; \
