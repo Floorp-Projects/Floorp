@@ -5,8 +5,8 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = tbmb
-LIBRARY_NAME    = tbmb
+MODULE          = timebombgen 
+SIMPLE_PROGRAMS = timebombgen 
 
 CPPSRCS         = \
                 $(srcdir)/timebombgen.cpp \
