@@ -27,8 +27,6 @@
 #include "generic_threads.h"
 #include "pprthred.h"
 
-#include <Processes.h>
-
 extern FILE *GC_stdout, *GC_stderr;
 
 extern void NSInitGarbageCollector();
@@ -47,7 +45,7 @@ static PRStatus PR_CALLBACK scanner(PRThread* t, void** baseAddr, PRUword count,
 
 static void mark_all_stacks(GC_mark_range_proc marker)
 {
-	// PR_ThreadScanStackPointers(PR_GetCurrentThread(), &scanner, marker);
+	/* PR_ThreadScanStackPointers(PR_GetCurrentThread(), &scanner, marker); */
 	PR_ScanStackPointers(&scanner, marker);
 }
 
@@ -75,7 +73,7 @@ void NSInitGarbageCollector()
 {
 	PRLock* mutex;
 	
-	// redirect GC's stderr.
+	/* redirect GC's stderr. */
 	GC_stderr = fopen("RuntimeLeaks", "w");
 
 	mutex = PR_NewLock();
@@ -88,14 +86,14 @@ void NSInitGarbageCollector()
 
 void NSShutdownGarbageCollector()
 {
-	// Run a collection to get unreferenced leaks.
+	/* Run a collection to get unreferenced leaks. */
 	GC_gcollect();
 
 #if 0
 	fclose(GC_stderr);
 	GC_stderr = fopen("ShutdownLeaks", "w");
 
-	// Try to show leaks in current roots:
+	/* Try to show leaks in current roots: */
 	fprintf(GC_stderr, "Shutdown Leaks:\n");
 	GC_clear_roots();
 	GC_gcollect();
