@@ -286,8 +286,8 @@ PRInt32 nsMsgLineBuffer::FlushLastLine()
 // read but unprocessed stream data in a buffer. 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-nsMsgLineStreamBuffer::nsMsgLineStreamBuffer(PRUint32 aBufferSize, PRBool aAllocateNewLines, PRBool aEatCRLFs) 
-											: m_eatCRLFs(aEatCRLFs), m_allocateNewLines(aAllocateNewLines)
+nsMsgLineStreamBuffer::nsMsgLineStreamBuffer(PRUint32 aBufferSize, PRBool aAllocateNewLines, PRBool aEatCRLFs, char aLineToken) 
+	         : m_eatCRLFs(aEatCRLFs), m_allocateNewLines(aAllocateNewLines), m_lineToken(aLineToken)
 {
 	NS_PRECONDITION(aBufferSize > 0, "invalid buffer size!!!");
 	m_dataBuffer = nsnull;
@@ -339,7 +339,7 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
     char * startOfLine = m_dataBuffer+m_startPos;
 
 	if (m_numBytesInBuffer > 0) // any data in our internal buffer?
-		endOfLine = PL_strchr(startOfLine, '\n'); // see if we already have a line ending...
+		endOfLine = PL_strchr(startOfLine, m_lineToken); // see if we already have a line ending...
 
 	// it's possible that we got here before the first time we receive data from the server
 	// so aInputStream will be nsnull...
@@ -385,63 +385,62 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
 		{
 			aInputStream->Read(startOfLine + m_numBytesInBuffer,
                                numBytesToCopy, &numBytesCopied);
-            m_numBytesInBuffer += numBytesCopied;
-            m_dataBuffer[m_startPos+m_numBytesInBuffer] = '\0';
-            PRUint32 i,j=0;
-            for (i=0;i <m_numBytesInBuffer;i++)  //strip nulls
-            {
-               if (startOfLine[i])
-                  startOfLine[j++] = startOfLine[i];
-            } 
-            if (i != j)
-            {
-              startOfLine[j] = '\0';
-              m_numBytesInBuffer = j;
-            }
+      m_numBytesInBuffer += numBytesCopied;
+      m_dataBuffer[m_startPos+m_numBytesInBuffer] = '\0';
+      PRUint32 i,j=0;
+      for (i=0;i <m_numBytesInBuffer;i++)  //strip nulls
+      {
+         if (startOfLine[i])
+            startOfLine[j++] = startOfLine[i];
+      } 
+      if (i != j)
+      {
+        startOfLine[j] = '\0';
+        m_numBytesInBuffer = j;
+      }
 		}
-        else if (!m_numBytesInBuffer)
-        {
-          aPauseForMoreData = PR_TRUE;
-          return nsnull;
-        }
+    else if (!m_numBytesInBuffer)
+    {
+      aPauseForMoreData = PR_TRUE;
+      return nsnull;
+    }
 
 		// okay, now that we've tried to read in more data from the stream, look for another end of line 
 		// character 
-		endOfLine = PL_strchr(startOfLine, '\n');
-
+		endOfLine = PL_strchr(startOfLine, m_lineToken);
 	}
 
 	// okay, now check again for endOfLine.
 	if (endOfLine)
 	{
 		if (!m_eatCRLFs)
-			endOfLine += 1; // count for LF
+			endOfLine += 1; // count for LF or CR
 
-        aNumBytesInLine = endOfLine - startOfLine;
+    aNumBytesInLine = endOfLine - startOfLine;
 
-        if (startOfLine[aNumBytesInLine-1] == '\r')
-          aNumBytesInLine--;
+    if (m_eatCRLFs && aNumBytesInLine > 0 && startOfLine[aNumBytesInLine-1] == '\r') // Remove the CR in a CRLF sequence
+      aNumBytesInLine--;
 
 		// PR_CALLOC zeros out the allocated line
 		char* newLine = (char*) PR_CALLOC(aNumBytesInLine+1);
 		if (!newLine)
-        {
-            aNumBytesInLine = 0;
-            aPauseForMoreData = PR_TRUE;
+    {
+      aNumBytesInLine = 0;
+      aPauseForMoreData = PR_TRUE;
 			return nsnull;
-        }
+    }
 
 		memcpy(newLine, startOfLine, aNumBytesInLine); // copy the string into the new line buffer
 
 		if (m_eatCRLFs)
-			endOfLine += 1; // advance past LF if we haven't already done so...
+			endOfLine += 1; // advance past LF or CR if we haven't already done so...
 
 		// now we need to update the data buffer to go past the line we just read out. 
-        m_numBytesInBuffer -= (endOfLine - startOfLine);
-        if (m_numBytesInBuffer)
-            m_startPos = endOfLine - m_dataBuffer;
-        else
-            m_startPos = 0;
+    m_numBytesInBuffer -= (endOfLine - startOfLine);
+    if (m_numBytesInBuffer)
+        m_startPos = endOfLine - m_dataBuffer;
+    else
+        m_startPos = 0;
 
 		return newLine;
 	}

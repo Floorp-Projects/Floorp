@@ -217,7 +217,11 @@ nsresult nsMailboxProtocol::Initialize(nsIURI * aURL)
 		}
 	}
 
+#if defined(XP_MAC)
+	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE, PR_TRUE, '\r');
+#else
 	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE);
+#endif
 
 	m_nextState = MAILBOX_READ_FOLDER;
 	m_initialState = MAILBOX_READ_FOLDER;
