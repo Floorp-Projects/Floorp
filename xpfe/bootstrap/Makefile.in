@@ -66,8 +66,6 @@ endif
 LIBS		+= \
 		-lraptorgfx \
 		$(TIMER_LIBS) \
-		-ljsdom \
-		-ljsurl \
 		-lmozjs \
 		$(OJI_LIBS) \
 		-limg \

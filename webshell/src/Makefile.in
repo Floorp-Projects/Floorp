@@ -33,7 +33,10 @@ CPPSRCS		= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS =\
-		-L$(DIST)/lib -lneckoutil_s \
+		-L$(DIST)/lib \
+		-lneckoutil_s \
+		-L$(DIST)/bin \
+		-ljsdom \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

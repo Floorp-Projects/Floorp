@@ -17,11 +17,6 @@ MOZILLA_INCLUDES = -I@MOZILLA_DIR@/dist/include
 NULL = 
 NSPR_LIBS       = -lplds3 -lplc3 -lnspr3 -lpthread
 
-MOZ_LIB_JS_PREFIX=moz
-MOZ_LIB_UTIL_PREFIX=moz
-
-ZLIB_LIBS = -lz
-
 TIMER_LIBS = -ltimer_s
 
 BASE_LIBS =          \
@@ -33,8 +28,6 @@ BASE_LIBS =          \
 
 GECKO_LIBS =\
 		-lraptorgfx \
-		-ljsdom \
-		-ljsurl \
 		$(NULL)
 
 IMGLIB_LIBS =        \

@@ -47,8 +47,6 @@ NET_LIBS	= \
 		-lnetwork \
 		-lnetcache \
 		$(NULL)
-else
-NET_LIBS	= -lneckoutil_s
 endif
 
 LIBS		= \
@@ -58,10 +56,7 @@ LIBS		= \
 		-lmozjs \
 		-lwidgetsupport_s \
 		-lraptorgfx \
-		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 		$(TIMER_LIBS) \
-		-ljsurl \
-		-ljsdom \
 		$(NET_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
