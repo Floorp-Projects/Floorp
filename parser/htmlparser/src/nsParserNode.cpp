@@ -183,7 +183,7 @@ const nsString& nsCParserNode::GetSkippedContent() const {
     if(mAttributes[mAttributeCount-1]) {
       CSkippedContentToken* sc=(CSkippedContentToken*)(mAttributes[mAttributeCount-1]);
       if(sc) {
-        return sc->GetStringValueXXX();
+        return sc->GetKey();
       }
     }
   }

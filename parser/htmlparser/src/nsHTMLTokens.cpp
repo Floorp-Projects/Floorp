@@ -107,8 +107,8 @@ static StrToUnicodeStruct gStrToUnicodeTable[] =
  *  @param   
  *  @return  
  */
-CHTMLToken::CHTMLToken(const nsString& aName) : CToken(aName) {
-  mTypeID=eHTMLTag_unknown;
+CHTMLToken::CHTMLToken(const nsString& aName,eHTMLTags aTag) : CToken(aName) {
+  mTypeID=aTag;
 }
 
 /*
@@ -154,7 +154,7 @@ CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) {
  *  @param   
  *  @return  
  */
-CStartToken::CStartToken(nsString& aString) : CHTMLToken(aString) {
+CStartToken::CStartToken(nsString& aString,eHTMLTags aTag) : CHTMLToken(aString,aTag) {
   mAttributed=PR_FALSE;
   mEmpty=PR_FALSE;
 }
@@ -1357,7 +1357,9 @@ nsresult CSkippedContentToken::Consume(PRUnichar,CScanner& aScanner) {
     result=aScanner.ReadUntil(temp,terminals,PR_TRUE);
     done=PRBool(kNotFound!=temp.RFind(mTextValue,PR_TRUE));
   }
-  mTextValue=temp;
+  int len=temp.Length();
+  temp.Truncate(len-mTextValue.Length());
+  mTextKey=temp;
   return result;
 }
 
