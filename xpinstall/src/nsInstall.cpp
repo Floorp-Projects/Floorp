@@ -281,6 +281,18 @@ nsInstall::AddDirectory(const nsString& aRegName,
         return NS_OK;
     }
     
+    nsString qualifiedVersion = aVersion;
+    if (qualifiedVersion == "")
+    {
+        // assume package version for overriden forms that don't take version info
+        *aReturn = mVersionInfo->ToString(qualifiedVersion);
+    }
+
+    if (*aReturn != SUCCESS)
+    {
+        return NS_OK;
+    }
+	
     nsString subdirectory(aSubdir);
 
     if (subdirectory != "")
@@ -328,7 +340,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
 
         ie = new nsInstallFile( this,
                                 fullRegName,
-                                aVersion,
+                                qualifiedVersion,
                                 newJarSource,
                                 aFolder,
                                 newSubDir,
@@ -417,6 +429,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
 {
     nsInstallFile*  ie;
     nsString        qualifiedRegName;
+    nsString        qualifiedVersion;
     nsString        tempTargetName;
     
     PRInt32         errcode = nsInstall::SUCCESS;
@@ -444,6 +457,17 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
         return NS_OK;
     }
 
+    qualifiedVersion = aVersion;
+    if (qualifiedVersion == "")
+    {
+        // assume package version for overriden forms that don't take version info
+        *aReturn = mVersionInfo->ToString(qualifiedVersion);
+    }
+
+    if (*aReturn != SUCCESS)
+    {
+        return NS_OK;
+    }	
 
     if ( aRegName == "" || aRegName == "null") 
     {
@@ -463,7 +487,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
    
     ie = new nsInstallFile( this, 
                             qualifiedRegName, 
-                            aVersion, 
+                            qualifiedVersion, 
                             aJarSource,
                             aFolder,
                             tempTargetName, 
