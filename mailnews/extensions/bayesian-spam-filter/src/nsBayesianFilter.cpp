@@ -897,8 +897,6 @@ nsresult nsBayesianFilter::tokenizeMessage(const char* aMessageURI, nsIMsgWindow
                                                 "filter", nsnull);
 }
 
-inline double abs(double x) { return (x >= 0 ? x : -x); }
-
 PR_STATIC_CALLBACK(int) compareTokens(const void* p1, const void* p2, void* /* data */)
 {
     Token *t1 = (Token*) p1, *t2 = (Token*) p2;
@@ -968,7 +966,7 @@ void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* message
        prob = (spamcount / nbad) / ( hamcount / ngood + spamcount / nbad);
        double n = hamcount + spamcount;
        prob =  (0.225 + n * prob) / (.45 + n);
-       double distance = abs(prob - 0.5);
+       double distance = PR_ABS(prob - 0.5);
        if (distance >= .1) 
        {
          goodclues++;
