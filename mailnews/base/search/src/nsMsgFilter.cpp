@@ -219,6 +219,12 @@ NS_IMETHODIMP nsMsgFilter::GetSearchTerms(nsISupportsArray **aResult)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgFilter::SetSearchTerms(nsISupportsArray *aSearchList)
+{
+    m_termList = aSearchList;
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgFilter::SetScope(nsIMsgSearchScopeTerm *aResult)
 {
 	m_scope = aResult;

@@ -170,7 +170,13 @@ NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, n
       nsXPIDLCString tmpFileName;
       tmpFiltersFile->GetLeafName(getter_Copies(tmpFileName));
       parentDir->AppendRelativeUnixPath(tmpFileName.get());
-      parentDir->Rename("rules.dat");
+      nsXPIDLCString finalLeafName;
+      filterFile->GetLeafName(getter_Copies(finalLeafName));
+      if (!finalLeafName.IsEmpty())
+        parentDir->Rename(finalLeafName);
+      else // fall back to rules.dat
+        parentDir->Rename("rules.dat");
+
       tmpFiltersFile->Delete(PR_FALSE);
     }
 
