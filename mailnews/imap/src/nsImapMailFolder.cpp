@@ -2550,6 +2550,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                     }
                     ClearCopyState(aExitCode);
                 }
+                UpdateFolder();
                 break;
             case nsIImapUrl::nsImapAppendMsgFromFile:
             case nsIImapUrl::nsImapAppendDraftFromFile:
@@ -2563,6 +2564,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                         ClearCopyState(aExitCode);
                     }
                 }
+                UpdateFolder();
                 break;
             default:
                 break;
