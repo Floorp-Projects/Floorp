@@ -227,6 +227,33 @@ MangleResourceIntoFileURL(const char* aResourceFileName)
 
 #endif /* XP_UNIX */
 
+#ifdef XP_BEOS
+    char *moz5 = getenv("MOZILLA_FIVE_HOME");
+    if (moz5)
+      resourceBase = XP_STRDUP(moz5);
+    else
+    {
+      static char buf[MAXPATHLEN];
+      int32 cookie = 0;
+      image_info info;
+      char *p;
+      *buf = 0;
+      if(get_next_image_info(0, &cookie, &info) == B_OK)
+      {
+        strcpy(buf, info.name);
+        if((p = strrchr(buf, '/')) != 0)
+        {
+          *p = 0;
+          resourceBase = XP_STRDUP(buf);
+        }
+        else
+          return nsnull;
+      }
+      else
+        return nsnull;
+    }
+#endif
+
 #ifdef XP_MAC
     resourceBase = XP_STRDUP("usr/local/netscape/bin");
 #endif /* XP_MAC */
