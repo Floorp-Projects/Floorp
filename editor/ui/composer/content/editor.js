@@ -123,7 +123,7 @@ var DocumentStateListener =
 
     // udpate menu items now that we have an editor to play with
     // Note: This must be AFTER window._content.focus();
-    dump("Updating 'create' commands\n");
+    //dump("Updating 'create' commands\n");
     window.updateCommands("create");
   },
   
@@ -438,7 +438,7 @@ function onParagraphFormatChange(paraMenuList, commandID)
   var menuList = document.getElementById("ParagraphSelect");
   if (!menuList) return;
 
-  dump("Updating paragraph format with " + state + "\n");
+  //dump("Updating paragraph format with " + state + "\n");
   
   // force match with "normal"
   if (state == "body")
@@ -490,7 +490,7 @@ function onFontFaceChange(fontFaceMenuList, commandID)
   var commandNode = document.getElementById(commandID);
   var state = commandNode.getAttribute("state");
 
-  dump("Updating font face with " + state + "\n");
+  //dump("Updating font face with " + state + "\n");
   
   if (state == "mixed")
   {
@@ -1501,7 +1501,7 @@ function EditorReflectDocState()
   if (oldModified != documentModified)
     UpdateSaveButton(documentModified);
   
-  dump("Updating save state " + stateString + "\n");
+  //dump("Updating save state " + stateString + "\n");
   
   return true;
 }
