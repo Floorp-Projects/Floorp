@@ -76,7 +76,7 @@ MODULE=raptor
 REQUIRES=xpcom netlib raptor uconv
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib \
-    -I$(PUBLIC)\raptor -I$(PUBLIC)\uconv
+    -I$(PUBLIC)\raptor -I$(PUBLIC)\uconv -I$(PUBLIC)\unicharutil
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorbase
