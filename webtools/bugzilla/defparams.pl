@@ -238,6 +238,11 @@ DefParam("headerhtml",
          "l",
          '');
 
+DefParam("bodyhtml",
+         "Additional parameters to add to the BODY tag at the beginning of documents, eg. background image/colors, link colors, etc",
+         "l",
+         'BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000"');
+
 DefParam("footerhtml",
          "HTML to add to the bottom of every page. By default it displays the blurbhtml, and %commandmenu%, a menu of useful commands.  You probably really want either headerhtml or footerhtml to include %commandmenu%.",
          "l",

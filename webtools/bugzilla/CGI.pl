@@ -921,8 +921,7 @@ sub PutHeader {
 
     print "<HTML><HEAD>\n<TITLE>$title</TITLE>\n";
     print Param("headerhtml") . "\n$jscript\n</HEAD>\n";
-    print "<BODY   BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"\n";
-    print "LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\" $extra>\n";
+    print "<BODY " . Param("bodyhtml") . " $extra>\n";
 
     print PerformSubsts(Param("bannerhtml"), undef);
 
