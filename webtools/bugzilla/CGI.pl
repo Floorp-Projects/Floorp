@@ -186,18 +186,10 @@ sub value_quote {
     $var =~ s/</\&lt;/g;
     $var =~ s/>/\&gt;/g;
     $var =~ s/"/\&quot;/g;
+    $var =~ s/\n/\&#010;/g;
+    $var =~ s/\r/\&#013;/g;
     return $var;
 }
-
-sub value_unquote {
-    my ($var) = (@_);
-    $var =~ s/\&quot/\"/g;
-    $var =~ s/\&lt/</g;
-    $var =~ s/\&gt/>/g;
-    $var =~ s/\&amp/\&/g;
-    return $var;
-}
-
 
 sub navigation_header {
     if (defined $::COOKIE{"BUGLIST"} && $::COOKIE{"BUGLIST"} ne "") {
