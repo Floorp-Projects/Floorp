@@ -13,7 +13,7 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
-# 
+#
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
@@ -23,33 +23,27 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef POLARIS
-SHARED_LIBRARY	= libAutoAdmin.so
-endif
-
-XFEDIR		= $(DEPTH)/cmd/xfe
-
+LIBRARY_NAME	= AutoAdmin
 CSRCS		= prefldap.c icondata.c
+endif
 
 REQUIRES	= ldap js pref
 
+XFEDIR		= $(DEPTH)/cmd/xfe/icons
+
+override NO_SHARED_LIB=
+override NO_STATIC_LIB=1
+
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(topsrcdir)/cmd/xfe/icons -I$(DEPTH)/cmd/xfe/icons
+INCLUDES	+= -I$(topsrcdir)/cmd/xfe/icons -I$(XFEDIR)
 DEFINES		+= -DPOLARIS
 GARBAGE		+= icondata.c
 
-ifeq ($(OS_ARCH),AIX)
-MKSHLIB		= svld -berok $(DSO_LDOPTS)
-endif
-
-ifeq ($(OS_ARCH),OSF1)
-MKSHLIB		= $(LD) $(DSO_LDOPTS)
-endif
-
-polaris: $(SHARED_LIBRARY)
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
+polaris: libs install
 
 icondata.c:
-	@rm -f icondata.c $(NOSUCHFILE)
-	@cd $(XFEDIR)/icons; $(MAKE)
-	@ln -s $(XFEDIR)/icons/icondata.c $@
+	@rm -f $@
+	@cd $(XFEDIR); $(MAKE)
+	@ln -s $(XFEDIR)/icondata.c $@
+

@@ -44,9 +44,7 @@ EXPORTS		= \
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
-EXTRA_DSO_LDOPTS = \
-                -L$(DIST)/lib \
-                -lneckoutil_s
+EXTRA_DSO_LDOPTS = -L$(DIST)/lib -lneckoutil_s
 
 include $(topsrcdir)/config/rules.mk
 

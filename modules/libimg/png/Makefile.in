@@ -13,49 +13,51 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
-#  
+#
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= png
 LIBRARY_NAME	= png
 
-CSRCS		= png.c \
-		  pngerror.c \
-		  pngget.c \
-		  pngmem.c \
-		  pngpread.c \
-		  pngread.c \
-		  pngrio.c \
-		  pngrutil.c \
-		  pngset.c \
-		  pngtrans.c \
-		  pngwio.c \
-		  pngwrite.c \
-		  pngwtran.c \
-		  pngrtran.c \
-		  pngwutil.c \
-		  $(NULL)
+REQUIRES	= util
 
-EXPORTS =	  png.h pngconf.h
+CSRCS		= \
+		png.c \
+		pngerror.c \
+		pngget.c \
+		pngmem.c \
+		pngpread.c \
+		pngread.c \
+		pngrio.c \
+		pngrutil.c \
+		pngset.c \
+		pngtrans.c \
+		pngwio.c \
+		pngwrite.c \
+		pngwtran.c \
+		pngrtran.c \
+		pngwutil.c \
+		$(NULL)
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS		= png.h pngconf.h
 
-REQUIRES	= util 
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+
+LOCAL_INCLUDES	= -I$(srcdir)
 
 ifndef MOZ_NATIVE_ZLIB
 REQUIRES	+= zlib
 EXTRA_DSO_LDOPTS = -L$(DIST)/bin -lzlib
 endif
 
-LOCAL_INCLUDES	= -I$(srcdir)
-
-# need static lib for the components to link with
+override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
+

@@ -13,7 +13,7 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
-# 
+#
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
@@ -21,77 +21,63 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-IS_COMPONENT=1
+
 MODULE		= pref
 LIBRARY_NAME	= pref
+IS_COMPONENT	= 1
 
 REQUIRES	= js pref security ldap img layer xpcom util
 
+CSRCS		= $(OS2CSRCS) prefapi.c
 
-PREF_JS_EXPORTS	= 	$(srcdir)/initpref.js \
-			$(srcdir)/init/all.js 	\
-			$(srcdir)/init/mailnews.js \
-			$(srcdir)/init/editor.js \
-			$(srcdir)/init/config.js \
-			$(NULL)
+CPPSRCS		= nsPref.cpp
 
+PREF_JS_EXPORTS	= \
+		$(srcdir)/initpref.js \
+		$(srcdir)/init/all.js \
+		$(srcdir)/init/mailnews.js \
+		$(srcdir)/init/editor.js \
+		$(srcdir)/init/config.js \
+		$(NULL)
 
 ifneq ($(subst /,_,$(shell uname -s)),OS2)
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-PREF_JS_EXPORTS		+= $(srcdir)/beos/beos.js
+PREF_JS_EXPORTS	+= $(srcdir)/beos/beos.js
 else
-PREF_JS_EXPORTS		+= $(srcdir)/unix/unix.js
+PREF_JS_EXPORTS	+= $(srcdir)/unix/unix.js
 endif
 else
-PREF_JS_EXPORTS		+= $(srcdir)/win/winpref.js $(srcdir)/os2/os2pref.js
-CSRCS		= prefldap.c
+PREF_JS_EXPORTS	+= $(srcdir)/win/winpref.js $(srcdir)/os2/os2pref.js
+OS2CSRCS	= prefldap.c
 LIBRARY		= xppref32.$(LIB_SUFFIX)
-OS2_IMPLIB    	= 1
-DEF_FILE      	= xpOS2.def
-EXTRA_LIBS    	= 	$(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib \
-			$(LIBNSPR) \
-			$(DIST)/lib/libldap.lib $(DIST)/lib/liblber.lib \
-			$(DIST)/lib/libldap.lib $(DIST)/lib/libhash.lib \
-			$(NULL)
+OS2_IMPLIB	= 1
+DEF_FILE	= xpOS2.def
+EXTRA_LIBS	= \
+		$(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib \
+		$(LIBNSPR) \
+		$(DIST)/lib/libldap.lib \
+		$(DIST)/lib/liblber.lib \
+		$(DIST)/lib/libldap.lib \
+		$(DIST)/lib/libhash.lib \
+		$(NULL)
 endif
 
-CSRCS		+= prefapi.c
-
-CPPSRCS		+= nsPref.cpp
-
-EXTRA_DSO_LDOPTS =\
-				-L$(DIST)/bin \
-				$(NSPR_LIBS)	\
-				-lxpcom		\
-				-lmozjs	\
-				-lsecfree	\
-				$(NULL)
+EXTRA_DSO_LDOPTS = \
+		-L$(DIST)/bin \
+		$(NSPR_LIBS) \
+		-lxpcom \
+		-lmozjs \
+		-lsecfree \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-#INCLUDES	+= -I$(srcdir)/unix -Iunix
-
 DEFINES		+= -DB1M
 
-GARBAGE	+=		$(DIST)/bin/components/initpref.js	\
-			$(DIST)/bin/components/all.js	\
-			$(DIST)/bin/components/mailnews.js	\
-			$(DIST)/bin/components/editor.js	\
-			$(DIST)/bin/components/config.js	\
-			$(DIST)/bin/netscape.cfg		\
-			$(NULL)
-
-ifneq ($(subst /,_,$(shell uname -s)),OS2)
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-GARBAGE			+= $(DIST)/bin/components/beos.js
-else
-GARBAGE			+= $(DIST)/bin/components/unix.js
-endif
-else
-GARBAGE			+= $(DIST)/bin/components/winpref.js $(DIST)/bin/components/os2prefs.js
-endif
-
-$(LIBRARY): $(OBJS) 
+GARBAGE		+= $(addprefix $(DIST)/bin/components/, \
+			initpref.js all.js mailnews.js editor.js config.js beos.js unix.js winpref.js os2prefs.js) \
+			$(DIST)/bin/netscape.cfg
 
 install::
 	$(INSTALL) -m 444 $(srcdir)/init/netscape.cfg $(DIST)/bin
+

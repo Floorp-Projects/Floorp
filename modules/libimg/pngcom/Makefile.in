@@ -14,9 +14,6 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 #
-ifndef MOZ_JAVA
-LOCAL_JMC_SUBDIR = .
-endif
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
@@ -26,31 +23,30 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= nspng
-IS_COMPONENT 	= 1
+IS_COMPONENT	= 1
 
-LOCAL_INCLUDES	= -I$(srcdir) 
-EXTRA_LIBS =
+REQUIRES	= util png zlib xpcom img
 
 CPPSRCS		= \
-	ipng.cpp \
-	nsPNGDecoder.cpp \
-	nsPNGCallback.cpp \
-	dllcompat.cpp \
-	$(NULL)
+		ipng.cpp \
+		nsPNGDecoder.cpp \
+		nsPNGCallback.cpp \
+		dllcompat.cpp \
+		$(NULL)
 
+LOCAL_INCLUDES	= -I$(srcdir)
 
-REQUIRES	+= util png zlib xpcom img
+EXTRA_DSO_LDOPTS = $(PNG_LIBS) $(ZLIB_LIBS)
 
-EXTRA_DSO_LDOPTS += $(PNG_LIBS) 
-EXTRA_DSO_LDOPTS += $(ZLIB_LIBS) 
+EXTRA_LIBS	= $(NSPR_LIBS)
 
-EXTRA_LIBS	+= $(NSPR_LIBS)
+ifndef MOZ_JAVA
+LOCAL_JMC_SUBDIR = .
+endif
 
-
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
-include $(topsrcdir)/config/rules.mk   
+include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH), Linux)
-DEFINES += -D_BSD_SOURCE
+DEFINES		+= -D_BSD_SOURCE
 endif
+

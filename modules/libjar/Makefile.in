@@ -17,36 +17,37 @@
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE          = jar
-LIBRARY_NAME    = jar$(VERSION_NUMBER)
-IS_COMPONENT    = 1
+MODULE		= jar
+LIBRARY_NAME	= jar$(VERSION_NUMBER)
+IS_COMPONENT	= 1
 
-XPIDLSRCS=nsIZip.idl \
-          nsIJAR.idl \
-          $(NULL)
+CPPSRCS		= \
+		nsZipArchive.cpp \
+		nsJAR.cpp \
+		nsJARFactory.cpp \
+		nsWildCard.cpp \
+		$(NULL)
 
-CPPSRCS = \
-	nsZipArchive.cpp \
-	nsJAR.cpp \
-	nsJARFactory.cpp \
-	nsWildCard.cpp	\
-	$(NULL)
+EXPORTS		= zipfile.h
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+
+XPIDLSRCS	= \
+		nsIZip.idl \
+		nsIJAR.idl \
+		$(NULL)
 
 
-EXPORTS = zipfile.h 
-
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
-EXTRA_DSO_LDOPTS =\
+EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(ZLIB_LIBS) \
-		-lxpcom	\
-		$(NSPR_LIBS)	\
+		-lxpcom \
+		$(NSPR_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
