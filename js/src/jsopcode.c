@@ -305,7 +305,7 @@ typedef struct Sprinter {
 
 #define OFF2STR(sp,off) ((sp)->base + (off))
 #define STR2OFF(sp,str) ((str) - (sp)->base)
-#define SET_STR(sp,str) ((sp)->offset = STR2OFF(sp, str))
+#define RETRACT(sp,str) ((sp)->offset = STR2OFF(sp, str))
 
 static JSBool
 SprintAlloc(Sprinter *sp, size_t nb)
@@ -729,7 +729,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
 		    rval = QuoteString(&ss->sprinter, str, (jschar)'"');
 		    if (!rval)
 			return JS_FALSE;
-                    SET_STR(&ss->sprinter, rval);
+                    RETRACT(&ss->sprinter, rval);
 		} else {
 		    rval = JS_GetStringBytes(str);
 		}
@@ -986,7 +986,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                     if (!rval)
                         return JS_FALSE;
-                    SET_STR(&ss->sprinter, rval);
+                    RETRACT(&ss->sprinter, rval);
                     js_printf(jp, "\t%s:\n", rval);
 		    jp->indent += 4;
 		    break;
@@ -997,7 +997,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                     if (!rval)
                         return JS_FALSE;
-                    SET_STR(&ss->sprinter, rval);
+                    RETRACT(&ss->sprinter, rval);
 		    js_printf(jp, "\t%s: {\n", rval);
 		    jp->indent += 4;
 		    break;
@@ -1026,7 +1026,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                     if (!rval)
                         return JS_FALSE;
-                    SET_STR(&ss->sprinter, rval);
+                    RETRACT(&ss->sprinter, rval);
                     js_printf(jp, "%s", rval);
                     pc += js_CodeSpec[JSOP_INITCATCHVAR].length;
                     LOCAL_ASSERT(*pc == JSOP_ENTERWITH);
@@ -1272,7 +1272,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                     if (!rval)
                         return JS_FALSE;
-                    SET_STR(&ss->sprinter, rval);
+                    RETRACT(&ss->sprinter, rval);
 		    js_printf(jp, "\tcontinue %s;\n", rval);
 		    break;
 		  case SRC_CONTINUE:
@@ -1284,7 +1284,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                     if (!rval)
                         return JS_FALSE;
-                    SET_STR(&ss->sprinter, rval);
+                    RETRACT(&ss->sprinter, rval);
 		    js_printf(jp, "\tbreak %s;\n", rval);
 		    break;
 		  case SRC_HIDDEN:
@@ -1421,7 +1421,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!lval)
                     return JS_FALSE;
-                SET_STR(&ss->sprinter, lval);
+                RETRACT(&ss->sprinter, lval);
 		goto do_fornameinloop;
 
 	      case JSOP_FORVAR:
@@ -1430,7 +1430,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!lval)
                     return JS_FALSE;
-                SET_STR(&ss->sprinter, lval);
+                RETRACT(&ss->sprinter, lval);
 		goto do_fornameinloop;
 
 	      case JSOP_FORNAME:
@@ -1438,7 +1438,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!lval)
                     return JS_FALSE;
-                SET_STR(&ss->sprinter, lval);
+                RETRACT(&ss->sprinter, lval);
 
               do_fornameinloop:
 		sn = js_GetSrcNote(jp->script, pc);
@@ -1466,7 +1466,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                     lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                     if (!lval)
                         return JS_FALSE;
-                    SET_STR(&ss->sprinter, lval);
+                    RETRACT(&ss->sprinter, lval);
                     js_printf(jp, ".%s", lval);
                 } else if (xval) {
                     js_printf(jp, "[%s]", xval);
@@ -1641,7 +1641,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!lval)
                     return JS_FALSE;
-                SET_STR(&ss->sprinter, lval);
+                RETRACT(&ss->sprinter, lval);
 		todo = Sprint(&ss->sprinter, "%s %s", js_delete_str, lval);
 		break;
 
@@ -1687,7 +1687,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 lval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!lval)
                     return JS_FALSE;
-                SET_STR(&ss->sprinter, lval);
+                RETRACT(&ss->sprinter, lval);
 		todo = Sprint(&ss->sprinter, "%s%s",
 			      js_incop_str[!(cs->format & JOF_INC)], lval);
 		break;
@@ -1872,7 +1872,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!rval)
                     return JS_FALSE;
-                SET_STR(&ss->sprinter, rval);
+                RETRACT(&ss->sprinter, rval);
 		todo = Sprint(&ss->sprinter, "%s%s", VarPrefix(sn), rval);
 		break;
 
@@ -2129,7 +2129,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                 rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                 if (!rval)
                     return JS_FALSE;
-                SET_STR(&ss->sprinter, rval);
+                RETRACT(&ss->sprinter, rval);
                 js_printf(jp, "\texport %s\n", rval);
 		todo = -2;
 		break;
