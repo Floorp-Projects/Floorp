@@ -42,6 +42,8 @@ var messengerMigratorContractID   = "@mozilla.org/messenger/migrator;1";
 var gAnyValidIdentity = false; //If there are no valid identities for any account
 // returns the first account with an invalid server or identity
 
+var gNewAccountToLoad = null;   // used to load new messages if we come from the mail3pane
+
 function getInvalidAccounts(accounts)
 {
     var numAccounts = accounts.Count();
@@ -179,7 +181,7 @@ function verifyAccounts(wizardcallback) {
         //has only a local folder and tries to compose mail.
 
         if (openWizard || prefillAccount || ((!gAnyValidIdentity) && wizardcallback)) {
-            MsgAccountWizard(prefillAccount);
+            MsgAccountWizard();
 		        ret = false;
         }
         // hack, set a time out to do this, so that the window can load first

@@ -61,7 +61,6 @@ var gRightMouseButtonDown = false;
 // after a Delete or Move of a message that has a row index less than currentIndex.
 var gThreadPaneCurrentSelectedIndex = -1;
 var gLoadStartFolder = true;
-var gNewAccountToLoad = null;
 
 // Global var to keep track of if the 'Delete Message' or 'Move To' thread pane
 // context menu item was triggered.  This helps prevent the tree view from
