@@ -151,10 +151,6 @@ ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif
 
-ifdef XP_NEW_SELECTION
-DEFINES		+= -DXP_NEW_SELECTION
-endif
-
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../xul/base/src \
 		-I$(srcdir)/../../../xul/content/src \
