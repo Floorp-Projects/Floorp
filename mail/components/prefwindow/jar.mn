@@ -1,10 +1,8 @@
 messenger.jar:
 +   content/messenger/messengercompose/pref-formatting.xul             (content/pref-formatting.xul)
 +   content/messenger/messengercompose/pref-composing_messages.xul     (content/pref-composing_messages.xul)
-+   content/messenger/messengercompose/pref-composing_messages.xul     (content/pref-composing_messages.xul)
 +   content/messenger/messengercompose/pref-viewing_messages.xul       (content/pref-viewing_messages.xul)
 +   content/messenger/pref-mailnews.xul                                (content/pref-mailnews.xul)
-    content/messenger/pref-languages.xul                               (content/pref-languages.xul)
     content/messenger/pref-privacy.xul                                 (content/pref-privacy.xul)
     content/messenger/preftree.xul                                     (content/preftree.xul)
 
@@ -14,10 +12,10 @@ comm.jar:
 en-US.jar:
 +   locale/en-US/communicator/pref/pref-fonts.dtd                      (locale/pref-fonts.dtd)
 +   locale/en-US/messenger/messengercompose/pref-formatting.dtd        (locale/pref-formatting.dtd)
++   locale/en-US/messenger/messengercompose/pref-composing_messages.dtd (locale/pref-composing_messages.dtd)
 +   locale/en-US/messenger/pref-mailnews.dtd                           (locale/pref-mailnews.dtd)
 +   locale/en-US/messenger/mailPrefsOverlay.dtd                        (locale/mailPrefsOverlay.dtd)
 +   locale/en-US/messenger/pref-viewing_messages.dtd                   (locale/pref-viewing_messages.dtd)
 +   locale/en-US/messenger/AccountManager.dtd                          (locale/AccountManager.dtd)
-    locale/en-US/messenger/pref-languages.dtd                          (locale/pref-languages.dtd)
     locale/en-US/messenger/pref-privacy.dtd                            (locale/pref-privacy.dtd)
 

@@ -131,10 +131,6 @@
               commandupdater="true"
               events="clipboard"
               oncommandupdate="goUpdatePasteMenuItems()"/>
-  <commandset id="findTypeMenuItems"
-              commandupdater="true"
-              events="focus"
-              oncommandupdate="goUpdateFindTypeMenuItems()"/>
 
   <command id="cmd_copyLink"
            oncommand="goDoCommand('cmd_copyLink')"
@@ -167,10 +163,6 @@
   <command id="cmd_selectAll"
            oncommand="goDoCommand('cmd_selectAll')"
            disabled="true"/>
-  <command id="cmd_findTypeText" 
-           oncommand="goDoCommand('cmd_findTypeText')"/>
-  <command id="cmd_findTypeLinks" 
-           oncommand="goDoCommand('cmd_findTypeLinks')"/>
         
   <!-- Not needed yet, window will need this: -->
   <!-- broadcaster id="cmd_preferences"/ -->
@@ -184,42 +176,5 @@
   <menu id="menu_View"
         label="&viewMenu.label;"
         accesskey="&viewMenu.accesskey;"/>
-  <menu id="menu_Toolbars"
-        label="&viewToolbarsMenu.label;"
-        accesskey="&viewToolbarsMenu.accesskey;"/>
-
-  <menuitem id="menu_showTaskbar"
-            label="&showTaskbarCmd.label;"
-            accesskey="&showTaskbarCmd.accesskey;"
-            oncommand="goToggleToolbar('status-bar', 'menu_showTaskbar')"
-            checked="true"/>
-
-  <!-- Help Menu -->
-  <menu id="menu_Help"
-        label="&helpMenu.label;"
-        accesskey="&helpMenu.accesskey;">
-    <menupopup id="helpPopup">
-      <menuitem accesskey="&releaseCmd.accesskey;"
-                label="&releaseCmd.label;"
-                id="releaseUrl"
-                oncommand="openTopWin('&releaseURL;');"/>
-
-      <menuseparator id="menu_HelpAboutSeparator"/>
-
-      <menuitem class="about"
-                accesskey="&aboutCommPluginsCmd.accesskey;"
-                label="&aboutCommPluginsCmd.label;"
-                id="pluginInfo"
-                oncommand="openTopWin('about:plugins')"/>
-      <menuitem accesskey="&aboutCmd.accesskey;"
-                label="&aboutCmd.label;"
-                id="aboutName"
-                oncommand="goAboutDialog();"/>
-    </menupopup>
-  </menu>
-        
- <!-- Toolbar boxes -->
- <hbox id="toolbar_button_box"
-       flex="100%"/>
 
 </overlay>

@@ -11,7 +11,7 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", 
-                       "wrapLength", "mailWarnOnSendAccelKey"];
+                       "wrapLength", "mailWarnOnSendAccelKey", "sendDefaultCharsetList"];
     var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
     observerService.notifyObservers(null, "charsetmenu-selected", "mailedit");
 
@@ -95,4 +95,28 @@
     <label value="&char.label;"/>
   </hbox>
   </groupbox>  
+
+  <!-- Default language for compose -->
+  <groupbox align="start">
+    <caption label="&languagesTitle.label;"/>
+
+    <hbox align="center">
+      <label value="&composingDescription.label;"/>
+    </hbox>
+
+    <separator class="thin"/>
+
+    <hbox align="center">
+      <label control="sendDefaultCharsetList"
+             value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;" page="sendDefaultCharsetList"/>
+      <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
+                preftype="localizedstring" prefstring="mailnews.send_default_charset">
+        <template>
+          <menupopup>
+            <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+          </menupopup>
+        </template>
+      </menulist>       
+    </hbox> 
+  </groupbox>   
 </page>
