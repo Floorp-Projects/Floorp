@@ -168,6 +168,9 @@ nsresult nsRenderingContextMac :: Init(nsIDeviceContext* aContext,nsIWidget *aWi
 
 
   mRenderingSurface = (nsDrawingSurfaceMac)aWindow->GetNativeData(NS_NATIVE_DISPLAY);
+	mCurrentSurface = mRenderingSurface;
+	::InitPort(mCurrentSurface);
+  
 
   mFrontBuffer = mRenderingSurface;
 
@@ -659,6 +662,7 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
+	SetPort(mCurrentSurface);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
 	SetPort(mCurrentSurface);
@@ -701,7 +705,7 @@ PRUint32 		i ;
 PolyHandle	thepoly;
 PRInt32			x,y;
 
-
+	SetPort(mCurrentSurface);
 	thepoly = ::OpenPoly();
 	
 	x = aPoints[0].x;
@@ -728,7 +732,7 @@ PRUint32 		i ;
 PolyHandle	thepoly;
 PRInt32			x,y;
 
-
+	SetPort(mCurrentSurface);
 	thepoly = ::OpenPoly();
 	
 	x = aPoints[0].x;
@@ -766,6 +770,7 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
+	SetPort(mCurrentSurface);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
   SetRect(&therect,x,y,x+w,x+h);
   ::FrameOval(&therect);
@@ -790,6 +795,7 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
+	SetPort(mCurrentSurface);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
   SetRect(&therect,x,y,x+w,x+h);
   ::PaintOval(&therect);
@@ -816,6 +822,7 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
+	SetPort(mCurrentSurface);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
   SetRect(&therect,x,y,x+w,x+h);
   ::FrameArc(&therect,aStartAngle,aEndAngle);
@@ -843,6 +850,7 @@ Rect		therect;
   w = aWidth;
   h = aHeight;
 
+	SetPort(mCurrentSurface);
   mTMatrix->TransformCoord(&x,&y,&w,&h);
   SetRect(&therect,x,y,x+w,x+h);
   ::PaintArc(&therect,aStartAngle,aEndAngle);
@@ -857,6 +865,7 @@ void nsRenderingContextMac :: DrawString(const char *aString, PRUint32 aLength,
 PRInt32 x = aX;
 PRInt32 y = aY;
 
+	SetPort(mCurrentSurface);
   // Substract xFontStruct ascent since drawing specifies baseline
   if (mFontMetrics)
       y += mFontMetrics->GetMaxAscent();
@@ -902,6 +911,8 @@ void nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUint32 aLen
 PRInt32 x = aX;
 PRInt32 y = aY;
 
+	SetPort(mCurrentSurface);
+	
   // Substract xFontStruct ascent since drawing specifies baseline
   if (mFontMetrics)
       y += mFontMetrics->GetMaxAscent();
