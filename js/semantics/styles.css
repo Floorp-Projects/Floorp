@@ -7,6 +7,7 @@ A * {text-decoration: inherit}
 .title1 {font-family: "Times New Roman", Times, serif; font-size: 36pt; font-weight: bold; color: #000000; white-space: nowrap}
 .title2 {font-family: "Times New Roman", Times, serif; font-size: 18pt; font-weight: bold; color: #000000; white-space: nowrap}
 .top-title {color: #009900}
+.es-title {color: #999900}
 .draft-title {color: #FF0000}
 .mod-date {font-size: smaller; font-style: italic; text-align: right}
 .sub {font-size: 50%}
@@ -19,6 +20,11 @@ BODY {background-color: #FFFFFF; color: #000000}
 DL {margin-left: 18pt}
 DD {margin-bottom: 6pt}
 DT {font-style: italic; margin-top: 3pt}
+
+.js2 {background-color: #FFFF66; color: #000033}
+.js2-hidden {}
+.es4 {background-color: #CCCCFF; color: #333300}
+.es4-hidden {}
 
 .grammar-rule {margin-left: 18pt; margin-top: 6pt; margin-bottom: 6pt}
 .grammar-lhs {}
@@ -36,29 +42,29 @@ CODE, PRE {font-family: "Courier New", Courier, mono; color: #0000FF}
 PRE {margin-left: 0.5in}
 A:hover CODE {color: #3333CC}
 A:active CODE {color: #6666FF}
-.control, A.control {font-family: "Times New Roman", Times, serif; font-weight: normal; color: #000099}
+.control, A.control:link, A.control:visited {font-family: "Times New Roman", Times, serif; font-weight: normal; color: #000099}
 A.control:hover, A:hover .control {color: #333366}
 A.control:active, A:active .control {color: #3333FF}
-.terminal, A.terminal {font-family: Georgia, Palatino, "Times New Roman", Times, serif; font-weight: bold; color: #009999}
+.terminal, A.terminal:link, A.terminal:visited {font-family: Georgia, Palatino, "Times New Roman", Times, serif; font-weight: bold; color: #009999}
 A.terminal:hover, A:hover .terminal {color: #336666}
 A.terminal:active, A:active .terminal {color: #00FFFF}
 .terminal-keyword {font-weight: bold}
-.nonterminal, A.nonterminal, .nonterminal A {font-family: Georgia, Palatino, "Times New Roman", Times, serif; font-weight: normal; font-style: italic; color: #009900}
+.nonterminal, A.nonterminal:link, A.nonterminal:visited, .nonterminal A:link, .nonterminal A:visited {font-family: Georgia, Palatino, "Times New Roman", Times, serif; font-weight: normal; font-style: italic; color: #009900}
 A.nonterminal:hover, .nonterminal A:hover, A:hover .nonterminal {color: #336633}
 A.nonterminal:active, .nonterminal A:active, A:active .nonterminal {color: #00FF00}
 .nonterminal-attribute, .nonterminal-argument {font-style: normal}
 .semantic-keyword {font-family: "Times New Roman", Times, serif; font-weight: bold}
-.type-expression, A.type-expression, .type-name, A.type-name {font-family: "Times New Roman", Times, serif; color: #CC0000}
+.type-expression, A.type-expression:link, A.type-expression:visited, .type-name, A.type-name:link, A.type-name:visited {font-family: "Times New Roman", Times, serif; color: #CC0000}
 A.type-expression:hover, A:hover .type-expression, A.type-name:hover, A:hover .type-name {color: #990000}
 A.type-expression:active, A:active .type-expression, A.type-name:active, A:active .type-name {color: #FF6666}
 .type-name {font-variant: small-caps}
-.field-name, A.field-name {font-family: Arial, Helvetica, sans-serif; color: #FF0000}
+.field-name, A.field-name:link, A.field-name:visited {font-family: Arial, Helvetica, sans-serif; color: #FF0000}
 A.field-name:hover, A:hover .field-name {color: #CC3333}
 A.field-name:active, A:active .field-name {color: #FF6666}
-.global-variable, A.global-variable {font-family: "Times New Roman", Times, serif; color: #006600}
-.local-variable, A.local-variable {font-family: "Times New Roman", Times, serif; color: #009900}
+.global-variable, A.global-variable:link, A.global-variable:visited {font-family: "Times New Roman", Times, serif; color: #006600}
+.local-variable, A.local-variable:link, A.local-variable:visited {font-family: "Times New Roman", Times, serif; color: #009900}
 A.global-variable:hover, A:hover .global-variable, A.local-variable:hover, A:hover .local-variable {color: #336633}
 A.global-variable:active, A:active .global-variable, A.local-variable:active, A:active .local-variable {color: #00FF00}
-.action-name, A.action-name {font-family: "Zapf Chancery", "Comic Sans MS", Script, serif; color: #660066}
+.action-name, A.action-name:link, A.action-name:visited {font-family: "Zapf Chancery", "Comic Sans MS", Script, serif; color: #660066}
 A.action-name:hover, A:hover .action-name {color: #663366}
 A.action-name:active, A:active .action-name {color: #FF00FF}
