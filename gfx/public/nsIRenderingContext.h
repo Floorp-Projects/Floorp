@@ -248,7 +248,7 @@ public:
 
   /**
    * Sets the clipping for the RenderingContext to the passed in region
-   * @param aRegion The region to set the clipping area to
+   * @param aRegion The region to set the clipping area to, IN DEVICE COORDINATES
    * @param aCombine how to combine this region with the current clip region.
    *        see the bottom of nsIRenderingContext.h
    * @return PR_TRUE if the clip region is now empty, else PR_FALSE

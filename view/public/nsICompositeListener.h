@@ -51,7 +51,7 @@ public:
    *        hold a reference to the view manager
    * @param aView view to be refreshed.
    * @param aContext rendering context to be used during the refresh.
-   * @param aRegion region of the view to be refreshed.
+   * @param aRegion region of the view to be refreshed, IN DEVICE COORDINATES
    * @param aUpdateFlags see bottom of nsIViewManager.h for description
    * @result The result of the notification, NS_OK if no errors
    */
@@ -67,7 +67,7 @@ public:
    *        hold a reference to the view manager
    * @param aView view that was refreshed.
    * @param aContext rendering context that was used during the refresh.
-   * @param aRegion region of the view that was refreshed.
+   * @param aRegion region of the view that was refreshed, IN DEVICE COORDINATES
    * @param aUpdateFlags see bottom of nsIViewManager.h for description
    * @result The result of the notification, NS_OK if no errors
    */
