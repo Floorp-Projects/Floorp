@@ -214,6 +214,8 @@ protected:
     nsCOMPtr<nsIFile>   mGREComponentsDir;
     PRInt32             mGREComponentsOffset;
 
+    nsCOMPtr<nsIFile>   mRegistryFile;
+
     // Shutdown
     #define NS_SHUTDOWN_NEVERHAPPENED 0
     #define NS_SHUTDOWN_INPROGRESS 1

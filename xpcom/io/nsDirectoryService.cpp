@@ -88,17 +88,11 @@
 #define COMPONENT_REGISTRY_NAME NS_LITERAL_CSTRING("Component Registry")
 #define COMPONENT_DIRECTORY     NS_LITERAL_CSTRING("Components")
 #else
-#define COMPONENT_REGISTRY_NAME NS_LITERAL_CSTRING("component.reg")
+#define COMPONENT_REGISTRY_NAME NS_LITERAL_CSTRING("compreg.dat")
 #define COMPONENT_DIRECTORY     NS_LITERAL_CSTRING("components")
 #endif 
 
-#if defined(XP_MAC)
-#define APP_REGISTRY_NAME "Application Registry"
-#elif defined(XP_WIN) || defined(XP_OS2)
-#define APP_REGISTRY_NAME "registry.dat"
-#else
-#define APP_REGISTRY_NAME "appreg"
-#endif 
+#define XPTI_REGISTRY_NAME      NS_LITERAL_CSTRING("xpti.dat")
 
 // define home directory
 // For Windows platform, We are choosing Appdata folder as HOME
@@ -345,6 +339,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
 
 nsIAtom*  nsDirectoryService::sCurrentProcess = nsnull;
 nsIAtom*  nsDirectoryService::sComponentRegistry = nsnull;
+nsIAtom*  nsDirectoryService::sXPTIRegistry = nsnull;
 nsIAtom*  nsDirectoryService::sComponentDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sGRE_Directory = nsnull;
 nsIAtom*  nsDirectoryService::sGRE_ComponentDirectory = nsnull;
@@ -450,6 +445,7 @@ nsDirectoryService::Init()
     nsDirectoryService::sCurrentProcess             = NS_NewAtom(NS_XPCOM_CURRENT_PROCESS_DIR);
     nsDirectoryService::sComponentRegistry          = NS_NewAtom(NS_XPCOM_COMPONENT_REGISTRY_FILE);
     nsDirectoryService::sComponentDirectory         = NS_NewAtom(NS_XPCOM_COMPONENT_DIR);
+    nsDirectoryService::sXPTIRegistry               = NS_NewAtom(NS_XPCOM_XPTI_REGISTRY_FILE);
     nsDirectoryService::sGRE_Directory              = NS_NewAtom(NS_GRE_DIR);
     nsDirectoryService::sGRE_ComponentDirectory     = NS_NewAtom(NS_GRE_COMPONENT_DIR);
 
@@ -546,6 +542,7 @@ nsDirectoryService::~nsDirectoryService()
      NS_IF_RELEASE(nsDirectoryService::sCurrentProcess);
      NS_IF_RELEASE(nsDirectoryService::sComponentRegistry);
      NS_IF_RELEASE(nsDirectoryService::sComponentDirectory);
+     NS_IF_RELEASE(nsDirectoryService::sXPTIRegistry);
      NS_IF_RELEASE(nsDirectoryService::sGRE_Directory);
      NS_IF_RELEASE(nsDirectoryService::sGRE_ComponentDirectory);
      NS_IF_RELEASE(nsDirectoryService::sOS_DriveDirectory);
@@ -830,8 +827,20 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     else if (inAtom == nsDirectoryService::sComponentRegistry)
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
-        if (localFile)
-    		localFile->AppendNative(COMPONENT_REGISTRY_NAME);           
+        if (!localFile)
+            return NS_ERROR_FAILURE;
+
+        localFile->AppendNative(COMPONENT_DIRECTORY);           
+        localFile->AppendNative(COMPONENT_REGISTRY_NAME);           
+    }
+    else if (inAtom == nsDirectoryService::sXPTIRegistry)
+    {
+        rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
+        if (!localFile)
+            return NS_ERROR_FAILURE;
+
+        localFile->AppendNative(COMPONENT_DIRECTORY);           
+        localFile->AppendNative(XPTI_REGISTRY_NAME);           
     }
     else if (inAtom == nsDirectoryService::sGRE_Directory)
     {
