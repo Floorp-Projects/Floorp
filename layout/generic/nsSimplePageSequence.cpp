@@ -18,10 +18,16 @@
  
 #include "nsSimplePageSequence.h"
 #include "nsPageFrame.h"
-#include "nsIReflowCommand.h"
 #include "nsIPresContext.h"
+#include "nsIReflowCommand.h"
+#include "nsIRenderingContext.h"
 #include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"
+
+nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsIContent* aContent, nsIFrame* aParent)
+  : nsContainerFrame(aContent, aParent)
+{
+}
 
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
@@ -197,6 +203,18 @@ nsSimplePageSequenceFrame::ListTag(FILE* out) const
   }
   fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSimplePageSequenceFrame::Paint(nsIPresContext&      aPresContext,
+                                 nsIRenderingContext& aRenderingContext,
+                                 const nsRect&        aDirtyRect)
+{
+  // Paint a white background
+  // XXX Crop marks or hash marks would be nice. Use style info...
+  aRenderingContext.SetColor(NS_RGB(255,255,255));
+  aRenderingContext.FillRect(aDirtyRect);
+  return nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
 }
 
 //----------------------------------------------------------------------
