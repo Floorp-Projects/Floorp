@@ -1249,7 +1249,22 @@ nsBlockFrame::IncrementalReflow(nsIPresContext*         aPresContext,
     } else {
       NS_NOTYETIMPLEMENTED("unexpected reflow command");
     }
-  } else {
+ } else {
+#if 0
+    // The command is passing through us. Get the next frame in the reflow chain
+    nsIFrame* nextFrame = aReflowCommand.GetNext();
+
+    // Restore our state as if nextFrame is the next frame to reflow
+    RecoverState(aPresContext, state, nextFrame);
+
+    // Get the current bounds. We'll need this to adjust the frames that follow
+    nsRect  oldBounds;
+    nextFrame->GetRect(oldBounds);
+
+    // Pass along the reflow command
+    nsRect  desiredRect;
+    aStatus = aReflowCommand.Next(aSpaceManager, desiredRect, aMaxSize, nextFrame);
+#endif
     NS_NOTYETIMPLEMENTED("unexpected reflow command");
   }
 
