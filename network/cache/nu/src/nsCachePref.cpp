@@ -36,7 +36,7 @@
 
 static const PRUint32 MEM_CACHE_SIZE_DEFAULT = 1024*1024;
 static const PRUint32 DISK_CACHE_SIZE_DEFAULT = 5*MEM_CACHE_SIZE_DEFAULT;
-static const PRUint32 BKG_THREAD_SLEEP = 60;//TODO- Testing 15*60; /*in seconds, 15 minutes */
+static const PRUint32 BKG_THREAD_SLEEP = 15*60; /*in seconds, 15 minutes */
 static const PRUint16 BUGS_FOUND_SO_FAR = 0;
 
 //Preferences
