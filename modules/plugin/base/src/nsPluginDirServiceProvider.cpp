@@ -281,9 +281,11 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
 
     newestPath[0] = 0;
     LONG result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, curKey, 0, KEY_READ, &baseloc);
+    if (ERROR_SUCCESS != result)
+      return NS_ERROR_FAILURE;
 
     // we must enumerate through the keys because what if there is more than one version?
-    while (ERROR_SUCCESS == result) {
+    do {
       path[0] = 0;
       numChars = _MAX_PATH;
       pathlen = sizeof(path);
@@ -299,11 +301,11 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
               PL_strcpy(newestPath, path);
               CopyVersion(&maxVer, &curVer);
             }
-            ::RegCloseKey(keyloc);
           }
+          ::RegCloseKey(keyloc);
         }
       }
-    }
+    } while (ERROR_SUCCESS == result);
 
     ::RegCloseKey(baseloc);
 
@@ -424,8 +426,8 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
               PL_strcpy(newestPath, path);
               CopyVersion(&maxVer, &curVer);
             }
-            ::RegCloseKey(keyloc);
           }
+          ::RegCloseKey(keyloc);
         }
       }
     }
@@ -439,7 +441,7 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
 #endif
 
   if (localFile && NS_SUCCEEDED(rv))
-    return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
+    return CallQueryInterface(localFile, _retval);
 
   return rv;
 }
@@ -458,9 +460,11 @@ nsPluginDirServiceProvider::GetPLIDDirectories(nsISimpleEnumerator **aEnumerator
   char curKey[_MAX_PATH] = "Software\\MozillaPlugins";
 
   LONG result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, curKey, 0, KEY_READ, &baseloc);
+  if (ERROR_SUCCESS != result)
+    return NS_ERROR_FAILURE;
 
   DWORD index = 0;
-  while (ERROR_SUCCESS == result) {
+  do {
     DWORD numChars = _MAX_PATH;
     FILETIME modTime;
     DWORD type;
@@ -508,7 +512,7 @@ nsPluginDirServiceProvider::GetPLIDDirectories(nsISimpleEnumerator **aEnumerator
       }
       ::RegCloseKey(keyloc);
     }
-  }
+  } while (ERROR_SUCCESS == result);
 
   ::RegCloseKey(baseloc);
   
