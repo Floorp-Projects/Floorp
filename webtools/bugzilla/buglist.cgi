@@ -1039,6 +1039,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
         $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
         ProcessFormFields($::buffer);
+        $order = $::FORM{'order'} || $order;
         last CMD;
     };
 
