@@ -150,9 +150,11 @@ Rights Reserved.
           <spacer flex="1"/>
         </vbox>
       </row>
-      <row>
-        <statusbar id="status-bar" class="chromeclass-status"/>
-      </row>
     </rows>
   </grid>
+  <hbox id="okayCancelContainerBox" align="right">
+        <button dlgtype="accept"/> 
+        <button dlgtype="cancel"/>
+  </hbox>
+  <statusbar id="status-bar" class="chromeclass-status"/>
 </dialog>
