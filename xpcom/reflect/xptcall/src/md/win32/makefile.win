@@ -51,6 +51,12 @@ $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
+!IF "$(CPU)" == "ALPHA"
+.SUFFIXES: .s .obj .cpp
+.s{.\$(OBJDIR)\}.obj:
+ asaxp /I..\..\..\public -Fo.\$(OBJDIR)\$(*B).obj $(*B).s
+!endif
+
 libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
