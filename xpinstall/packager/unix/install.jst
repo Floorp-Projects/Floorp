@@ -1,0 +1,29 @@
+var err = startInstall("Mozilla Seamonkey", "Seamonkey", "$Version$"); 
+logComment("startInstall: " + err);
+
+var communicatorFolder = getFolder("Communicator");
+logComment("communicatorFolder: " + communicatorFolder);
+
+err = addDirectory("Program",
+                   "$Version$",
+                   "bin",              // jar source folder 
+                   communicatorFolder, // target folder 
+                   "",                 // target subdir 
+                   true );             // force flag 
+
+logComment("addDirectory() returned: " + err);
+
+// delete the component registry
+var ignoreErr = fileDelete(communicatorFolder + "/component.reg"); 
+logComment("fileDelete() returned: " + ignoreErr);
+
+if (err==SUCCESS || err==REBOOT_NEEDED)
+{
+	err = finalizeInstall(); 
+	logComment("finalizeInstall() returned: " + err);
+}
+else
+{
+	abortInstall();
+	logComment("abortInstall() returned: " + err);
+}
