@@ -282,8 +282,6 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
 
   if ((eCSSUnit_String <= unit) && (unit <= eCSSUnit_Counters)) {
     switch (unit) {
-      case eCSSUnit_URL:      aResult.Append(NS_LITERAL_STRING("url("));
-        break;
       case eCSSUnit_Attr:     aResult.Append(NS_LITERAL_STRING("attr("));
         break;
       case eCSSUnit_Counter:  aResult.Append(NS_LITERAL_STRING("counter("));
@@ -385,7 +383,7 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
       aResult.Append(NS_ConvertASCIItoUCS2(name));
     }
   }
-  else if (eCSSUnit_Color == unit){
+  else if (eCSSUnit_Color == unit) {
     nsAutoString tmpStr;
     nscolor color = aValue.GetColorValue();
 
@@ -405,6 +403,13 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
     aResult.Append(tmpStr);
 
     aResult.Append(PRUnichar(')'));
+  }
+  else if (eCSSUnit_URL == unit) {
+    nsCAutoString spec;
+    aValue.GetURLValue()->GetSpec(spec);
+    aResult.Append(NS_LITERAL_STRING("url(") +
+                   NS_ConvertUTF8toUCS2(spec) +
+                   NS_LITERAL_STRING(")"));
   }
   else if (eCSSUnit_Percent == unit) {
     nsAutoString tmpStr;
@@ -426,7 +431,7 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
     case eCSSUnit_Normal:       aResult.Append(NS_LITERAL_STRING("normal"));   break;
 
     case eCSSUnit_String:       break;
-    case eCSSUnit_URL:
+    case eCSSUnit_URL:          break;
     case eCSSUnit_Attr:
     case eCSSUnit_Counter:
     case eCSSUnit_Counters:     aResult.Append(PRUnichar(')'));    break;

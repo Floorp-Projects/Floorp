@@ -44,6 +44,7 @@
 #include "nsCoord.h"
 #include "nsUnitConversion.h"
 #include "nsReadableUtils.h"
+#include "nsIURI.h"
 
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
@@ -151,26 +152,12 @@ public:
     }
   }
 
-  void SetURI(const nsACString& aString)
+  void SetURI(nsIURI *aURI)
   {
     Reset();
-    mValue.mString = ToNewUnicode(aString);
-    if (mValue.mString) {
-      mType = CSS_URI;
-    } else {
-      mType = CSS_UNKNOWN;
-    }
-  }
-
-  void SetURI(const nsAString& aString)
-  {
-    Reset();
-    mValue.mString = ToNewUnicode(aString);
-    if (mValue.mString) {
-      mType = CSS_URI;
-    } else {
-      mType = CSS_UNKNOWN;
-    }
+    mValue.mURI = aURI;
+    NS_IF_ADDREF(mValue.mURI);
+    mType = CSS_URI;
   }
 
   void SetColor(nsIDOMRGBColor* aColor)
@@ -206,10 +193,12 @@ public:
     switch (mType) {
       case CSS_IDENT:
       case CSS_STRING:
-      case CSS_URI:
         NS_ASSERTION(mValue.mString, "Null string should never happen");
         nsMemory::Free(mValue.mString);
         mValue.mString = nsnull;
+        break;
+      case CSS_URI:
+        NS_IF_RELEASE(mValue.mURI);
         break;
       case CSS_RECT:
         NS_ASSERTION(mValue.mRect, "Null Rect should never happen");
@@ -225,7 +214,7 @@ public:
   }
 
 private:
-  void GetEscapedURI(PRUnichar *aURI, PRUnichar **aReturn);
+  void GetEscapedURI(nsIURI *aURI, PRUnichar **aReturn);
 
   PRUint16 mType;
 
@@ -235,6 +224,7 @@ private:
     nsIDOMRGBColor* mColor;
     nsIDOMRect*     mRect;
     PRUnichar*      mString;
+    nsIURI*         mURI;
   } mValue;
   
   float mT2P;

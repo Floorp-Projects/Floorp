@@ -58,16 +58,20 @@ nsROCSSPrimitiveValue::~nsROCSSPrimitiveValue()
 }
 
 void
-nsROCSSPrimitiveValue::GetEscapedURI(PRUnichar *aURI, PRUnichar **aReturn)
+nsROCSSPrimitiveValue::GetEscapedURI(nsIURI *aURI, PRUnichar **aReturn)
 {
-  PRUint16 length = nsCRT::strlen(aURI);
+  nsCAutoString specUTF8;
+  aURI->GetSpec(specUTF8);
+  NS_ConvertUTF8toUCS2 spec(specUTF8);
+
+  PRUint16 length = spec.Length();
   PRUnichar *escaped = (PRUnichar *)nsMemory::Alloc(length * 2 * sizeof(PRUnichar) + sizeof(PRUnichar('\0')));
 
   if (escaped) {
     PRUnichar *ptr = escaped;
 
     for (PRUint16 i = 0; i < length; ++i) {
-      switch (aURI[i]) {
+      switch (spec[i]) {
         case ' ' : // space
         case '\t': // tab
         case '(' : // opening parenthesis
@@ -83,7 +87,7 @@ nsROCSSPrimitiveValue::GetEscapedURI(PRUnichar *aURI, PRUnichar **aReturn)
         default:
           break;
       }
-      *ptr++ = aURI[i];
+      *ptr++ = spec[i];
     }
     *ptr = 0;
   }
@@ -159,10 +163,16 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
     case CSS_URI :
       {
         nsXPIDLString uri;
-        GetEscapedURI(mValue.mString, getter_Copies(uri));
-        tmpStr.Assign(NS_LITERAL_STRING("url(") +
-                      uri +
-                      NS_LITERAL_STRING(")"));
+        if (mValue.mURI) {
+          GetEscapedURI(mValue.mURI, getter_Copies(uri));
+          tmpStr.Assign(NS_LITERAL_STRING("url(") +
+                        uri +
+                        NS_LITERAL_STRING(")"));
+        } else {
+          // XXXldb Any better ideas?  It's good to have something that
+          // doesn't parse so that things round-trip "correctly".
+          tmpStr.Assign(NS_LITERAL_STRING("url(invalid-url:)"));
+        }
         break;
       }
     case CSS_PERCENTAGE :
@@ -401,9 +411,14 @@ nsROCSSPrimitiveValue::GetStringValue(nsAString& aReturn)
   switch (mType) {
     case CSS_IDENT:
     case CSS_STRING:
-    case CSS_URI:
       aReturn.Assign(mValue.mString);
       break;
+    case CSS_URI: {
+      nsCAutoString spec;
+      if (mValue.mURI)
+        mValue.mURI->GetSpec(spec);
+      CopyUTF8toUTF16(spec, aReturn);
+      } break;
     case CSS_ATTR:
     default:
       aReturn.Truncate();

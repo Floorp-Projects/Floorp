@@ -528,7 +528,7 @@ nsXBLService::~nsXBLService(void)
 // This function loads a particular XBL file and installs all of the bindings
 // onto the element.
 NS_IMETHODIMP
-nsXBLService::LoadBindings(nsIContent* aContent, const nsAString& aURL, PRBool aAugmentFlag,
+nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFlag,
                            nsIXBLBinding** aBinding, PRBool* aResolveStyle) 
 { 
   *aBinding = nsnull;
@@ -559,14 +559,16 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAString& aURL, PRBool a
       }
       else {
         // See if the URIs match.
-        nsCAutoString uri;
-        styleBinding->GetBindingURI(uri);
-        if (uri.Equals(NS_ConvertUCS2toUTF8(aURL)))
+        nsCAutoString spec;
+        styleBinding->GetBindingURI(spec);
+        nsCOMPtr<nsIURI> uri;
+        // XXX This needs an origin charset.
+        NS_NewURI(getter_AddRefs(uri), spec.get());
+        PRBool equal;
+        if (NS_SUCCEEDED(uri->Equals(aURL, &equal)) && equal)
           return NS_OK;
-        else {
-          FlushStyleBindings(aContent);
-          binding = nsnull;
-        }
+        FlushStyleBindings(aContent);
+        binding = nsnull;
       }
     }
   }
@@ -579,29 +581,29 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAString& aURL, PRBool a
   rv = docURI->SchemeIs("chrome", &isChrome);
 
   if (NS_FAILED(rv) || !isChrome) {
-    nsCOMPtr<nsIURI> bindingURI;
-    rv = NS_NewURI(getter_AddRefs(bindingURI), aURL);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsIScriptSecurityManager> secMan(
       do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = secMan->CheckLoadURI(docURI, bindingURI,
+    rv = secMan->CheckLoadURI(docURI, aURL,
                               nsIScriptSecurityManager::ALLOW_CHROME);
     if (NS_FAILED(rv))
       return rv;
   }
   nsCOMPtr<nsIXBLBinding> newBinding;
-  nsCAutoString url; url.AssignWithConversion(aURL);
-  if (NS_FAILED(rv = GetBinding(aContent, url, getter_AddRefs(newBinding)))) {
+  nsCAutoString spec;
+  aURL->GetSpec(spec);
+  if (NS_FAILED(rv = GetBinding(aContent, spec, getter_AddRefs(newBinding)))) {
     return rv;
   }
 
   if (!newBinding) {
-    nsCAutoString str( "Failed to locate XBL binding. XBL is now using id instead of name to reference bindings. Make sure you have switched over.  The invalid binding name is: ");
-    str.AppendWithConversion(aURL);
+#ifdef DEBUG
+    nsCAutoString spec;
+    aURL->GetSpec(spec);
+    nsCAutoString str(NS_LITERAL_CSTRING("Failed to locate XBL binding. XBL is now using id instead of name to reference bindings. Make sure you have switched over.  The invalid binding name is: ") + spec);
     NS_ERROR(str.get());
+#endif
     return NS_OK;
   }
 

@@ -3602,13 +3602,6 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
   return PR_FALSE;
 }
 
-inline static PRBool
-css_RequiresAbsoluteURI(const nsString& uri)
-{
-  // cheap shot at figuring out if this requires an absolute url translation
-  return !StringBeginsWith(uri, NS_LITERAL_STRING("chrome:"));
-}
-
 PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
 {
   if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
@@ -3620,16 +3613,12 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
       // Translate url into an absolute url if the url is relative to
       // the style sheet.
       // XXX editors won't like this - too bad for now
-      nsAutoString absURL;
-      nsresult rv = NS_ERROR_FAILURE;
-      if (mURL && css_RequiresAbsoluteURI(tk->mIdent)) {
-        rv = NS_MakeAbsoluteURI(absURL, tk->mIdent, mURL);
-      }
-      if (NS_FAILED(rv)) {
-        absURL = tk->mIdent;
-      }
+      nsCOMPtr<nsIURI> url;
+      NS_NewURI(getter_AddRefs(url), tk->mIdent, nsnull, mURL);
       if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
-        aValue.SetStringValue(absURL, eCSSUnit_URL);
+        // Set a null value on failure.  Most failure cases should be
+        // NS_ERROR_MALFORMED_URI.
+        aValue.SetURLValue(url);
         return PR_TRUE;
       }
     }

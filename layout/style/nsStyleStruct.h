@@ -52,6 +52,7 @@
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsILanguageAtom.h"
+#include "nsIURI.h"
 
 class nsIFrame;
 
@@ -183,7 +184,7 @@ struct nsStyleBackground : public nsStyleStruct {
     mBackgroundYPosition;         // [reset]
 
   nscolor mBackgroundColor;       // [reset]
-  nsString mBackgroundImage;      // [reset] absolute url string
+  nsCOMPtr<nsIURI> mBackgroundImage; // [reset]
 
   PRBool IsTransparent() const
   {
@@ -586,7 +587,7 @@ struct nsStyleList : public nsStyleStruct {
   
   PRUint8   mListStyleType;             // [inherited] See nsStyleConsts.h
   PRUint8   mListStylePosition;         // [inherited] 
-  nsString  mListStyleImage;            // [inherited] absolute url string
+  nsCOMPtr<nsIURI> mListStyleImage;     // [inherited]
   nsRect        mImageRegion;           // [inherited] the rect to use within an image  
 };
 
@@ -732,7 +733,7 @@ struct nsStyleDisplay : public nsStyleStruct {
 
   nsChangeHint CalcDifference(const nsStyleDisplay& aOther) const;
   
-  nsString  mBinding;           // [reset] absolute url string
+  nsCOMPtr<nsIURI> mBinding;    // [reset]
 #if 0
   // XXX This is how it is defined in the CSS2 spec, but the errata
   // changed it to be consistent with the positioning draft and how
@@ -834,7 +835,48 @@ enum nsStyleContentType {
 
 struct nsStyleContentData {
   nsStyleContentType  mType;
-  nsString            mContent;
+  union {
+    PRUnichar *mString;
+    nsIURI    *mURL;
+  } mContent;
+
+  ~nsStyleContentData() {
+    if (mType == eStyleContentType_URL) {
+      NS_IF_RELEASE(mContent.mURL);
+    } else if (mContent.mString) {
+      nsCRT::free(mContent.mString);
+    }
+  }
+
+  nsStyleContentData& operator=(const nsStyleContentData& aOther) {
+    mType = aOther.mType;
+    if (mType == eStyleContentType_URL) {
+      mContent.mURL = aOther.mContent.mURL;
+      NS_IF_ADDREF(mContent.mURL);
+    } else if (aOther.mContent.mString) {
+      mContent.mString = nsCRT::strdup(aOther.mContent.mString);
+    } else {
+      mContent.mString = nsnull;
+    }
+    return *this;
+  }
+
+  PRBool operator==(const nsStyleContentData& aOther) {
+    if (mType != aOther.mType)
+      return PR_FALSE;
+    if (mType == eStyleContentType_URL) {
+      PRBool eq;
+      return mContent.mURL == aOther.mContent.mURL ||  // handles null==null
+             (mContent.mURL && aOther.mContent.mURL &&
+              NS_SUCCEEDED(mContent.mURL->Equals(aOther.mContent.mURL, &eq)) &&
+              eq);
+    }
+    return mContent.mString == aOther.mContent.mString;
+  }
+
+  PRBool operator!=(const nsStyleContentData& aOther) {
+    return !(*this == aOther);
+  }
 };
 
 struct nsStyleCounterData {
@@ -926,13 +968,15 @@ struct nsStyleContent: public nsStyleStruct {
   nsChangeHint CalcDifference(const nsStyleContent& aOther) const;
 
   PRUint32  ContentCount(void) const  { return mContentCount; } // [reset]
-  nsresult  GetContentAt(PRUint32 aIndex, nsStyleContentType& aType, nsString& aContent) const {
-    if (aIndex < mContentCount) {
-      aType = mContents[aIndex].mType;
-      aContent = mContents[aIndex].mContent;
-      return NS_OK;
-    }
-    return NS_ERROR_ILLEGAL_VALUE;
+
+  const nsStyleContentData& ContentAt(PRUint32 aIndex) const {
+    NS_ASSERTION(aIndex < mContentCount, "out of range");
+    return mContents[aIndex];
+  }
+
+  nsStyleContentData& ContentAt(PRUint32 aIndex) {
+    NS_ASSERTION(aIndex < mContentCount, "out of range");
+    return mContents[aIndex];
   }
 
   nsresult  AllocateContents(PRUint32 aCount) {
@@ -948,20 +992,6 @@ struct nsStyleContent: public nsStyleStruct {
       mContentCount = aCount;
     }
     return NS_OK;
-  }
-
-  nsresult  SetContentAt(PRUint32 aIndex, nsStyleContentType aType, const nsString& aContent) {
-    if (aIndex < mContentCount) {
-      mContents[aIndex].mType = aType;
-      if (aType < eStyleContentType_OpenQuote) {
-        mContents[aIndex].mContent = aContent;
-      }
-      else {
-        mContents[aIndex].mContent.Truncate();
-      }
-      return NS_OK;
-    }
-    return NS_ERROR_ILLEGAL_VALUE;
   }
 
   PRUint32  CounterIncrementCount(void) const { return mIncrementCount; }  // [reset]
@@ -1094,7 +1124,7 @@ struct nsStyleUserInterface: public nsStyleStruct {
   PRUint8   mUserFocus;       // [inherited] (auto-select)
   
   PRUint8 mCursor;                // [inherited] See nsStyleConsts.h NS_STYLE_CURSOR_*
-  nsString mCursorImage;          // [inherited] url string
+  nsCOMPtr<nsIURI> mCursorImage; // [inherited] url string
 };
 
 struct nsStyleXUL : public nsStyleStruct {

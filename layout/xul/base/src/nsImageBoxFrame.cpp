@@ -357,12 +357,17 @@ void
 nsImageBoxFrame::GetImageSource()
 {
   // get the new image src
-  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, mSrc);
-
-  // if the new image is empty
-  if (mSrc.IsEmpty()) {
-    mUseSrcAttr = PR_FALSE;
-
+  nsAutoString src;
+  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
+  mUseSrcAttr = !src.IsEmpty();
+  if (mUseSrcAttr) {
+    nsCOMPtr<nsIURI> baseURI;
+    if (mContent) {
+      mContent->GetBaseURL(getter_AddRefs(baseURI));
+    }
+    // XXX origin charset needed
+    NS_NewURI(getter_AddRefs(mURI), src, nsnull, baseURI);
+  } else {
     // Only get the list-style-image if we aren't being drawn
     // by a native theme.
     const nsStyleDisplay* disp = GetStyleDisplay();
@@ -371,14 +376,8 @@ nsImageBoxFrame::GetImageSource()
       return;
 
     // get the list-style-image
-    const nsStyleList* myList = GetStyleList();
-  
-    if (!myList->mListStyleImage.IsEmpty()) {
-      mSrc = myList->mListStyleImage;
-    }
+    mURI = GetStyleList()->mListStyleImage;
   }
-  else
-    mUseSrcAttr = PR_TRUE;
 }
 
 void
@@ -414,7 +413,7 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   aResize = PR_FALSE;
 
   // get the new image src
-  if (mSrc.IsEmpty()) {
+  if (!mURI) {
     mSizeFrozen = PR_TRUE;
     mHasImage = PR_FALSE;
     aResize = PR_TRUE;
@@ -427,21 +426,7 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
     return;
   }
 
-  nsCOMPtr<nsIURI> baseURI;
-  if (mContent) {
-    mContent->GetBaseURL(getter_AddRefs(baseURI));
-  }
-  nsCOMPtr<nsIURI> srcURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(srcURI), mSrc, nsnull, baseURI);
-
-  if (NS_FAILED(rv)) {
-    if (mImageRequest) {
-      mImageRequest->Cancel(NS_ERROR_FAILURE);
-      mImageRequest = nsnull;
-    }
-    return;
-  }
-
+  nsresult rv;
   if (mImageRequest) {
     nsCOMPtr<nsIURI> requestURI;
     rv = mImageRequest->GetURI(getter_AddRefs(requestURI));
@@ -449,9 +434,8 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
     if (NS_FAILED(rv) || !requestURI) return;
 
     PRBool eq;
-    requestURI->Equals(srcURI, &eq);
     // if the source uri and the current one are the same, return
-    if (eq)
+    if (NS_SUCCEEDED(requestURI->Equals(mURI, &eq)) && eq)
       return;
   }
 
@@ -481,7 +465,7 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   }
 
   // XXX: initialDocumentURI is NULL!
-  il->LoadImage(srcURI, nsnull, documentURI, loadGroup, mListener, doc,
+  il->LoadImage(mURI, nsnull, documentURI, loadGroup, mListener, doc,
                 mLoadFlags, nsnull, nsnull, getter_AddRefs(mImageRequest));
 
   aResize = PR_TRUE;
@@ -587,11 +571,13 @@ nsImageBoxFrame::DidSetStyleContext( nsIPresContext* aPresContext )
     return NS_OK;
 
   // If list-style-image changes, we have a new image.
-  nsAutoString newSrc;
-  if (myList->mListStyleImage.Equals(mSrc))
+  nsIURI *newURI = myList->mListStyleImage;
+  PRBool equal;
+  if (newURI == mURI ||   // handles null==null
+      (newURI && mURI && NS_SUCCEEDED(newURI->Equals(mURI, &equal)) && equal))
     return NS_OK;
 
-  mSrc = myList->mListStyleImage;
+  mURI = newURI;
 
   PRBool aResize;
   UpdateImage(aPresContext, aResize);

@@ -339,7 +339,7 @@ nsComputedDOMStyle::GetBinding(nsIFrame *aFrame,
 
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display, aFrame);
 
-  if (display && !display->mBinding.IsEmpty()) {
+  if (display && display->mBinding) {
     val->SetURI(display->mBinding);
   } else {
     val->SetIdent(NS_LITERAL_STRING("none"));
@@ -1307,7 +1307,7 @@ nsComputedDOMStyle::GetListStyleImage(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_List, (const nsStyleStruct*&)list, aFrame);
 
   if (list) {
-    if (list->mListStyleImage.IsEmpty()) {
+    if (!list->mListStyleImage) {
       val->SetIdent(NS_LITERAL_STRING("none"));
     } else {
       val->SetURI(list->mListStyleImage);
@@ -1741,7 +1741,7 @@ nsComputedDOMStyle::GetCursor(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)ui, aFrame);
 
   if (ui) {
-    if (!ui->mCursorImage.IsEmpty()) {
+    if (ui->mCursorImage) {
       val->SetURI(ui->mCursorImage);
     } else {
       if (ui->mCursor == NS_STYLE_CURSOR_AUTO) {

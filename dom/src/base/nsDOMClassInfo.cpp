@@ -4661,9 +4661,9 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // the DOM computed style API.  We can get rid of this hack if we merge
   // the jsdom library with layout.
 
-  nsAutoString bindingURL;
-  pctx->GetXBLBindingURL(content, bindingURL);
-  if (bindingURL.IsEmpty()) {
+  nsCOMPtr<nsIURI> bindingURL;
+  pctx->GetXBLBindingURL(content, getter_AddRefs(bindingURL));
+  if (!binding) {
     // No binding, nothing left to do here.
     return NS_OK;
   }

@@ -105,7 +105,7 @@ public:
                              nsIAtom* aPseudoTag,
                              nsStyleContext* aParentContext);
 
-  NS_IMETHOD GetXBLBindingURL(nsIContent* aContent, nsAString& aResult);
+  NS_IMETHOD GetXBLBindingURL(nsIContent* aContent, nsIURI** aResult);
   NS_IMETHOD ReParentStyleContext(nsIFrame* aFrame, 
                                   nsStyleContext* aNewParentContext);
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult);
@@ -133,7 +133,7 @@ public:
   NS_IMETHOD SetDefaultLinkColor(nscolor aColor);
   NS_IMETHOD SetDefaultVisitedLinkColor(nscolor aColor);
 
-  NS_IMETHOD LoadImage(const nsString& aURL,
+  NS_IMETHOD LoadImage(nsIURI* aURL,
                        nsIFrame* aTargetFrame,
                        imgIRequest **aRequest);
 
