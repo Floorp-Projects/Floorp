@@ -2329,7 +2329,7 @@ _PR_MD_WRITE(PRFileDesc *fd, void *buf, PRInt32 len)
     int rv, err;
     LONG hiOffset = 0;
     LONG loOffset;
-    LARGE_INTEGER   offset; /* use for a normalized add of len to offset */
+    LARGE_INTEGER offset; /* use for the calculation of the new offset */
 
     if (!fd->secret->md.sync_file_io) {
         PRThread *me = _PR_MD_CURRENT_THREAD();
@@ -2434,10 +2434,16 @@ _PR_MD_WRITE(PRFileDesc *fd, void *buf, PRInt32 len)
                 return -1;
             }
 
-            /* add, normalized, len to the initial file offset for new offset */
+            /*
+             * Moving the file pointer by a relative offset (FILE_CURRENT)
+             * does not work with a file on a network drive exported by a
+             * Win2K system.  We still don't know why.  A workaround is to
+             * move the file pointer by an absolute offset (FILE_BEGIN).
+             * (Bugzilla bug 70765)
+             */
             offset.LowPart = me->md.overlapped.overlapped.Offset;
             offset.HighPart = me->md.overlapped.overlapped.OffsetHigh;
-            offset.QuadPart += len;
+            offset.QuadPart += me->md.blocked_io_bytes;
 
             SetFilePointer((HANDLE)f, offset.LowPart, &offset.HighPart, FILE_BEGIN);
     
