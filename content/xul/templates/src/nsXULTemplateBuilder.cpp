@@ -2083,23 +2083,28 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement, nsIRDFResou
     // See if the element's templates contents have been generated:
     // this prevents a re-entrant call from triggering another
     // generation.
-    PRBool contentsGenerated;
     nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
     if (xulcontent) {
+        PRBool contentsGenerated;
         rv = xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, contentsGenerated);
         if (NS_FAILED(rv)) return rv;
+
+        if (contentsGenerated)
+            return NS_RDF_ELEMENT_WAS_THERE;
+
+        // Now mark the element's contents as being generated so that
+        // any re-entrant calls don't trigger an infinite recursion.
+        rv = xulcontent->SetLazyState(nsIXULContent::eContainerContentsBuilt);
     }
     else {
-        // HTML is always generated
-        contentsGenerated = PR_TRUE;
+        // HTML is always needs to be generated.
+        //
+        // XXX Big ass-umption here -- I am assuming that this will
+        // _only_ ever get called (in the case of an HTML element)
+        // when the XUL builder is descending thru the graph and
+        // stumbles on a template that is rooted at an HTML element.
+        // (/me crosses fingers...)
     }
-
-    if (contentsGenerated)
-        return NS_RDF_ELEMENT_WAS_THERE;
-
-    // Now mark the element's contents as being generated so that
-    // any re-entrant calls don't trigger an infinite recursion.
-    rv = xulcontent->SetLazyState(nsIXULContent::eContainerContentsBuilt);
 
     // XXX Eventually, we may want to factor this into one method that
     // handles RDF containers (RDF:Bag, et al.) and another that
