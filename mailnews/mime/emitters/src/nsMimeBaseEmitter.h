@@ -39,6 +39,7 @@
 #include "nsIStringBundle.h"
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
+#include "nsIMimeConverter.h"
 
 //
 // The base emitter will serve as the place to do all of the caching,
@@ -144,6 +145,9 @@ protected:
 
   // For the format being used...
   PRInt32             mFormat;
+
+  // For I18N Conversion...
+  nsCOMPtr<nsIMimeConverter> mUnicodeConverter;
 };
 
 #endif /* _nsMimeBaseEmitter_h_ */

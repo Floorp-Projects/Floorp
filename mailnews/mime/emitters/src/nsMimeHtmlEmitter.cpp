@@ -65,9 +65,7 @@ nsMimeHtmlDisplayEmitter::~nsMimeHtmlDisplayEmitter(void)
 
 nsresult nsMimeHtmlDisplayEmitter::Init()
 {
-  // we're going to need a converter to convert
-  return nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-                                              NS_GET_IID(nsIMimeConverter), getter_AddRefs(mUnicodeConverter));
+  return NS_OK;
 }
 
 PRBool nsMimeHtmlDisplayEmitter::BroadCastHeadersAndAttachments()
@@ -186,7 +184,10 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
         headerValue = headerInfo->value;
         // this interface for DecodeMimePartIIStr requires us to pass in nsStrings by reference
         // we should remove the nsString requirements from the interface....
-			  rv = mUnicodeConverter->DecodeMimePartIIStr(headerValue, charset, unicodeHeaderValue);
+        if (mUnicodeConverter)
+  			  rv = mUnicodeConverter->DecodeMimePartIIStr(headerValue, charset, unicodeHeaderValue);
+        else
+          unicodeHeaderValue = headerValue; 
         if (NS_SUCCEEDED(rv))
           headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue.GetUnicode());
     }
@@ -227,7 +228,11 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
     nsAutoString attachmentName (name);
     nsAutoString charset ("UTF-8");
   
-	  rv = mUnicodeConverter->DecodeMimePartIIStr(attachmentName, charset, unicodeHeaderValue);
+    if (mUnicodeConverter)
+  	  rv = mUnicodeConverter->DecodeMimePartIIStr(attachmentName, charset, unicodeHeaderValue);
+    else
+      unicodeHeaderValue = attachmentName; 
+
     if (NS_SUCCEEDED(rv))
       headerSink->HandleAttachment(escapedUrl, unicodeHeaderValue.GetUnicode(), uriString);
     nsCRT::free(escapedUrl);

@@ -39,12 +39,15 @@
 #include "nsFileSpec.h"
 #include "nsIRegistry.h"
 #include "nsIMimeStreamConverter.h"
+#include "nsIMimeConverter.h"
+#include "nsMsgMimeCID.h"
 
 static PRLogModuleInfo * gMimeEmitterLogModule = nsnull;
 
 #define   MIME_URL      "chrome://messenger/locale/mimeheader.properties"
 static    NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static    NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static    NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 NS_IMPL_ISUPPORTS2(nsMimeBaseEmitter, nsIMimeEmitter, nsIPipeObserver)
 
@@ -86,6 +89,11 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
 
   // Setup format for output...
   mFormat = nsMimeOutput::nsMimeMessageXULDisplay;
+
+  // This is needed for conversion of I18N Strings...
+  nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                     NS_GET_IID(nsIMimeConverter), 
+                                     getter_AddRefs(mUnicodeConverter));
 
   // Do prefs last since we can live without this if it fails...
   nsresult rv = nsServiceManager::GetService(kPrefCID, nsIPref::GetIID(), (nsISupports**)&(mPrefs));
@@ -555,9 +563,12 @@ nsMimeBaseEmitter::AddHeaderField(const char *field, const char *value)
 // The following code is responsible for formatting headers in a manner that is
 // identical to the normal XUL output.
 ////////////////////////////////////////////////////////////////////////////////
+
 nsresult
 nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
 {
+  char  *newValue = nsnull;
+
   if ( (!field) || (!value) )
     return NS_OK;
 
@@ -568,7 +579,25 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
   if (!EmitThisHeaderForPrefSetting(mHeaderDisplayType, field))
     return NS_OK;
 
-  char  *newValue = nsEscapeHTML(value);
+  if (mUnicodeConverter)
+  {
+    nsAutoString unicodeHeaderValue;
+    nsAutoString charset ("UTF-8");
+
+    // we're going to need a converter to convert
+    nsresult rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, unicodeHeaderValue);
+    char *tValue = unicodeHeaderValue.ToNewCString();
+    if (!tValue)
+      return NS_OK;
+
+    newValue = nsEscapeHTML(tValue);
+    PR_FREEIF(tValue);
+  }
+  else
+  {
+    newValue = nsEscapeHTML(value);
+  }
+
   if (!newValue)
     return NS_OK;
 
