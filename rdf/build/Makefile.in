@@ -50,6 +50,7 @@ INCLUDES += -I$(srcdir)/../base/src       \
 
 SHARED_LIBRARY_LIBS =			 \
 	$(DIST)/lib/librdfbase_s.a	 \
+	$(DIST)/lib/librdfutil_s.a	 \
 	$(DIST)/lib/librdfcontent_s.a	 \
 	$(DIST)/lib/librdfdatasource_s.a \
 	$(NULL)
