@@ -5227,12 +5227,18 @@ PresShell::ReconstructFrames(void)
 
 /*
  * It's better to add stuff to the |DidSetStyleContext| method of the
- * relevant frames than adding it here.  This method should (ideally,
+ * relevant frames than adding it here.  These methods should (ideally,
  * anyway) go away.
  */
-static nsresult 
-FlushMiscWidgetInfo(nsStyleChangeList& aChangeList, nsIPresContext* aPresContext, nsIFrame* aFrame)
+
+// Return value says whether to walk children.
+typedef PRBool (* PR_CALLBACK frameWalkerFn)(nsIFrame *aFrame, void *aClosure);
+   
+PR_STATIC_CALLBACK(PRBool)
+BuildFramechangeList(nsIFrame *aFrame, void *aClosure)
 {
+  nsStyleChangeList *changeList = NS_STATIC_CAST(nsStyleChangeList*, aClosure);
+
   // Ok, get our binding information.
   const nsStyleDisplay* oldDisplay;
   aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)oldDisplay);
@@ -5251,8 +5257,8 @@ FlushMiscWidgetInfo(nsStyleChangeList& aChangeList, nsIPresContext* aPresContext
       binding->MarkedForDeath(&marked);
       if (marked) {
         // Add in a change to process, thus ensuring this binding gets rebuilt.
-        aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_FRAMECHANGE);
-        return NS_OK;
+        changeList->AppendChange(aFrame, content, NS_STYLE_HINT_FRAMECHANGE);
+        return PR_FALSE;
       }
     }
   }
@@ -5262,27 +5268,40 @@ FlushMiscWidgetInfo(nsStyleChangeList& aChangeList, nsIPresContext* aPresContext
     // Trees are problematic.  Always flush them out on a skin switch.
     nsCOMPtr<nsIContent> content;
     aFrame->GetContent(getter_AddRefs(content));
-    aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_FRAMECHANGE);
-    return NS_OK;
+    changeList->AppendChange(aFrame, content, NS_STYLE_HINT_FRAMECHANGE);
+    return PR_FALSE;
   }
+  return PR_TRUE;
+}
 
-  // Perhaps this should move to the appropriate |DidSetStyleContext|?
+PR_STATIC_CALLBACK(PRBool)
+ReResolveMenus(nsIFrame *aFrame, void *aClosure)
+{
+  // We deliberately don't re-resolve style on a menu's popup
+  // sub-content, since doing so slows menus to a crawl.  That means we
+  // have to special-case them on a skin switch, and ensure that the
+  // popup frames just get destroyed completely.
   nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(aFrame));
   if (menuFrame) {
-    menuFrame->UngenerateMenu();   // We deliberately don't re-resolve style on
-    menuFrame->OpenMenu(PR_FALSE); // a menu's popup sub-content, since doing so 
-                                   // slows menus to a crawl.  That means we have to
-                                   // special-case them on a skin switch, and ensure that
-                                   // the popup frames just get destroyed completely.
+    menuFrame->UngenerateMenu();  
+    menuFrame->OpenMenu(PR_FALSE);
   }
-   
-  // Now walk our children.
+  return PR_TRUE;
+}
+
+static void
+WalkFramesThroughPlaceholders(nsIPresContext *aPresContext, nsIFrame *aFrame,
+                              frameWalkerFn aFunc, void *aClosure)
+{
+  PRBool walkChildren = (*aFunc)(aFrame, aClosure);
+  if (!walkChildren)
+    return;
+
   PRInt32 listIndex = 0;
   nsCOMPtr<nsIAtom> childList;
-  nsIFrame* child;
 
   do {
-    child = nsnull;
+    nsIFrame *child = nsnull;
     aFrame->FirstChild(aPresContext, childList, &child);
     while (child) {
       nsFrameState  state;
@@ -5291,22 +5310,22 @@ FlushMiscWidgetInfo(nsStyleChangeList& aChangeList, nsIPresContext* aPresContext
         // only do frames that are in flow
         nsCOMPtr<nsIAtom> frameType;
         child->GetFrameType(getter_AddRefs(frameType));
-        if (nsLayoutAtoms::placeholderFrame == frameType.get()) { // placeholder
-          // get out of flow frame and recurse there
-          nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
+        if (nsLayoutAtoms::placeholderFrame == frameType) { // placeholder
+          // get out of flow frame and recur there
+          nsIFrame* outOfFlowFrame =
+              NS_STATIC_CAST(nsPlaceholderFrame*, child)->GetOutOfFlowFrame();
           NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
-          FlushMiscWidgetInfo(aChangeList, aPresContext, outOfFlowFrame);
+          WalkFramesThroughPlaceholders(aPresContext, outOfFlowFrame,
+                                        aFunc, aClosure);
         }
         else
-          FlushMiscWidgetInfo(aChangeList, aPresContext, child);
+          WalkFramesThroughPlaceholders(aPresContext, child, aFunc, aClosure);
       }
       child->GetNextSibling(&child);
     }
 
     aFrame->GetAdditionalChildListName(listIndex++, getter_AddRefs(childList));
   } while (childList);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5337,7 +5356,8 @@ PresShell::ReconstructStyleData(PRBool aRebuildRuleTree)
     // Handle those widgets that have special style contexts cached
     // that will point to invalid rule nodes following a rule tree
     // reconstruction.
-    FlushMiscWidgetInfo(changeList, mPresContext, rootFrame);
+    WalkFramesThroughPlaceholders(mPresContext, rootFrame,
+                                  &BuildFramechangeList, &changeList);
     cssFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
     changeList.Clear();
 
@@ -5357,8 +5377,14 @@ PresShell::ReconstructStyleData(PRBool aRebuildRuleTree)
 
   if (frameChange == NS_STYLE_HINT_RECONSTRUCT_ALL)
     set->ReconstructDocElementHierarchy(mPresContext);
-  else
+  else {
     cssFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+    if (aRebuildRuleTree) {
+      GetRootFrame(&rootFrame);
+      WalkFramesThroughPlaceholders(mPresContext, rootFrame,
+                                    &ReResolveMenus, nsnull);
+    }
+  }
 
   if (aRebuildRuleTree)
     set->EndRuleTreeReconstruct();
