@@ -14,6 +14,7 @@
 # options
 # -------
 #     -d delimiter - default : 
+#     -s shortens the path
 #
 # usefull enhancements: in the usage part, try to guess what was meant as 
 # a path and echo it to stdout to not break for PATHs with blanks
@@ -21,11 +22,13 @@
 ########################################################################
 
 sub usage {
-    print STDERR "usage $0 [-d <delimiter>] PATH\n";
+    print STDERR "usage $0 [-s] [-d <delimiter>] PATH\n";
     print STDERR "    this script makes components of the PATH unique, if you\n";
     print STDERR "    pass in a searchpath A:B:C:A:B:E it will print A:B:C:E to\n";
-    print STDERR "    the stdout\n";
-    print STDERR "    the parameters you gave were: ";
+    print STDERR "    the stdout\n\n";
+    print STDERR "    -s will mercylessly cut components from the path, \n";
+    print STDERR "    use at your own risk\n\n";
+    print STDERR "    the parameters you gave were: \n";
     for ( $i = 0; $i <= $#ARGV; $i++ ) {
         print STDERR "        $ARGV[$i]\n";
     }
@@ -40,26 +43,48 @@ $searchpath = "";
 @pathcomponents;
 $found=0;
 $newpath="";
+$shorten=0;
 
-
-if ( $ARGV[0] eq '-d' ) {
-    if ( $#ARGV != 2 ) {
-        usage;
+for ( $i=0; $i <= $#ARGV; $i++) {
+    if ( $ARGV[$i] eq '-d' ) {
+        $delimiter = $ARGV[++$i];
+    } elsif  ( $ARGV[$i] eq '-s' ) {
+        $shorten=1;
+    } else {
+        $searchpath = $ARGV[$i];
     }
-    $delimiter = $ARGV[1];
-    $searchpath = $ARGV[2];
-} else {
-    if ( $#ARGV != 0 ) {
-        usage;
-    }
-    $searchpath = $ARGV[0];
 }
+if ( $searchpath eq "" ) {
+    usage;
+}
+#print STDERR "delimiter $delimiter\n";
+#print STDERR "shorten $shorten\n";
+#print STDERR "searchpath $searchpath\n";
 
 @pathcomponents=split($delimiter, $searchpath);
 
-
 for ( $i = 0; $i <= $#pathcomponents; $i++ ) {
     $found=0;
+    if ( $shorten == 1 ) {
+        if ( "\/tools\/ns-arch\/sparc_sun_solaris2\.4\/lib\/sparcworks\/SUNWspro/bin" eq $pathcomponents[$i] ||
+              "\/h\/tortoise\/export\/share\/builds\/tools\/sparc_sun_solaris2\.5\.1\/perl5\.004\/bin" eq $pathcomponents[$i] ||
+              "\/usr\/dist\/local\/exe" eq $pathcomponents[$i] ||
+              "\/opt\/SUNWspro\/bin" eq $pathcomponents[$i] ||
+              "\/opt\/SUNWwabi\/bin" eq $pathcomponents[$i] ||
+              "\/u\/svbld\/bin" eq $pathcomponents[$i] ||
+              "\/usr\/demos" eq $pathcomponents[$i] ||
+              "\/usr\/audio\/bin" eq $pathcomponents[$i] ||
+              "\/usr\/openwin\/demo" eq $pathcomponents[$i] ||
+              "\/tools\/contrib\/bin" eq $pathcomponents[$i] ||
+              "\/usr\/etc\/" eq $pathcomponents[$i] ||
+              "\/usr\/demos\/bin" eq $pathcomponents[$i] ) {
+
+            
+            #print "dumped: $pathcomponents[$i]\n";
+            next;
+        }
+            #print "keep: $pathcomponents[$i]\n";
+    }
     for ( $j = 0; $j < $i; $j++ ) {
         if ( $pathcomponents[$j] eq $pathcomponents[$i] ) {
             #print "$i and $j match - $pathcomponents[$i] - $pathcomponents[$j]\n";
