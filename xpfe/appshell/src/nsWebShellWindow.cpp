@@ -33,6 +33,7 @@
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
+#include "nsIStringBundle.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIPref.h"
 
@@ -152,7 +153,11 @@ static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #include "nsIWebShell.h"
 
+static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
+
 #define SIZE_PERSISTENCE_TIMEOUT 500 // msec
+#define kWebShellLocaleProperties "chrome://global/locale/commonDialogs.properties"
+
 
 const char * kPrimaryContentTypeValue  = "content-primary";
 
@@ -1765,6 +1770,8 @@ public:
 protected:
   nsCOMPtr<nsIDOMWindowInternal>        mDOMWindow;
   nsCOMPtr<nsICommonDialogs>    mCommonDialogs;
+
+  nsresult GetLocaleString(const PRUnichar*, PRUnichar**);
 };
 
 static nsresult
@@ -1800,15 +1807,40 @@ nsDOMWindowPrompter::Init()
   return rv;
 }
 
+nsresult
+nsDOMWindowPrompter::GetLocaleString(const PRUnichar* aString, PRUnichar** aResult)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
+  nsCOMPtr<nsIStringBundle> stringBundle;
+  nsILocale *locale = nsnull;
+ 
+  rv = stringService->CreateBundle(kWebShellLocaleProperties, locale, getter_AddRefs(stringBundle));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+  rv = stringBundle->GetStringFromName(aString, aResult);
+
+  return rv;
+}
+
 NS_IMETHODIMP
 nsDOMWindowPrompter::Alert(const PRUnichar* dialogTitle, 
                            const PRUnichar* text)
 {
   nsresult rv;
-  nsAutoString title(dialogTitle);
-  if (title == nsnull)
-    title.AssignWithConversion("Alert");        // XXX i18n
-  rv = mCommonDialogs->Alert(mDOMWindow, title.GetUnicode(), text);
+ 
+  if (dialogTitle == nsnull) {
+    PRUnichar *title;
+    GetLocaleString(NS_ConvertASCIItoUCS2("Alert"), &title);
+    rv = mCommonDialogs->Alert(mDOMWindow, title, text);
+    nsCRT::free(title);
+    title = nsnull;
+  }
+  else {
+    rv = mCommonDialogs->Alert(mDOMWindow, dialogTitle, text);
+  }
+  
   return rv; 
 }
 
@@ -1817,11 +1849,18 @@ nsDOMWindowPrompter::Confirm(const PRUnichar* dialogTitle,
                              const PRUnichar* text,
                              PRBool *_retval)
 {
-  nsresult rv; 
-  nsAutoString title(dialogTitle);
-  if (title == nsnull)
-    title.AssignWithConversion("Confirm");        // XXX i18n
-  rv = mCommonDialogs->Confirm(mDOMWindow, title.GetUnicode(), text, _retval);
+  nsresult rv;
+  if (dialogTitle == nsnull) {
+    PRUnichar *title;
+    GetLocaleString(NS_ConvertASCIItoUCS2("Confirm"), &title);
+    rv = mCommonDialogs->Confirm(mDOMWindow, title, text, _retval);
+    nsCRT::free(title);
+    title = nsnull;
+  }  
+  else {
+    rv = mCommonDialogs->Confirm(mDOMWindow, dialogTitle, text, _retval);
+  }
+
   return rv; 
 }
 
@@ -1832,13 +1871,20 @@ nsDOMWindowPrompter::ConfirmCheck(const PRUnichar* dialogTitle,
                                   PRBool *checkValue,
                                   PRBool *_retval)
 {
-	nsresult rv;
-  nsAutoString title(dialogTitle);
-  if (title == nsnull)
-    title.AssignWithConversion("Confirm");        // XXX i18n
-  rv = mCommonDialogs->ConfirmCheck(mDOMWindow, title.GetUnicode(), text, 
-                                    checkMsg, checkValue, _retval);
-  return rv; 
+  nsresult rv;
+
+  if (dialogTitle == nsnull) {
+    PRUnichar *title;
+    GetLocaleString(NS_ConvertASCIItoUCS2("ConfirmCheck"), &title);
+    rv = mCommonDialogs->ConfirmCheck(mDOMWindow, title, text, checkMsg, checkValue, _retval);
+    nsCRT::free(title);
+    title = nsnull;
+  }
+  else {
+    rv = mCommonDialogs->ConfirmCheck(mDOMWindow, dialogTitle, text, checkMsg, checkValue, _retval);
+  }
+
+  return rv;  
 }
 
 NS_IMETHODIMP
@@ -1850,13 +1896,21 @@ nsDOMWindowPrompter::Prompt(const PRUnichar* dialogTitle,
                             PRUnichar* *result,
                             PRBool *_retval)
 {
-  // ignore passwordRealm here?
-  nsresult rv; 
-  nsAutoString title(dialogTitle);
-  if (title == nsnull)
-    title.AssignWithConversion("Prompt");        // XXX i18n
-  rv = mCommonDialogs->Prompt(mDOMWindow, title.GetUnicode(), text,
-                              defaultText, result, _retval);
+  nsresult rv;
+
+  if (dialogTitle == nsnull) {
+    PRUnichar *title;
+    GetLocaleString(NS_ConvertASCIItoUCS2("Prompt"), &title);
+    rv = mCommonDialogs->Prompt(mDOMWindow, title, text,
+                                defaultText, result, _retval);
+    nsCRT::free(title);
+    title = nsnull;
+  }
+  else {
+    rv = mCommonDialogs->Prompt(mDOMWindow, dialogTitle, text,
+                                defaultText, result, _retval);
+  }
+
   return rv; 
 }
 
@@ -1869,13 +1923,21 @@ nsDOMWindowPrompter::PromptUsernameAndPassword(const PRUnichar* dialogTitle,
                                                PRUnichar* *pwd,
                                                PRBool *_retval)
 {	
-  // ignore passwordRealm and savePassword here?
-  nsresult rv; 
-  nsAutoString title(dialogTitle);
-  if (title == nsnull)
-    title.AssignWithConversion("Username and Password");        // XXX i18n
-  rv = mCommonDialogs->PromptUsernameAndPassword(mDOMWindow, title.GetUnicode(), text,
-                                                 user, pwd, _retval);
+  nsresult rv;
+  
+  if (dialogTitle == nsnull) {
+    PRUnichar *title;
+    GetLocaleString(NS_ConvertASCIItoUCS2("PromptUsernameAndPassword"), &title);
+    rv = mCommonDialogs->PromptUsernameAndPassword(mDOMWindow, title, text,
+                                                   user, pwd, _retval);
+    nsCRT::free(title);
+    title = nsnull;
+  }
+  else {
+    rv = mCommonDialogs->PromptUsernameAndPassword(mDOMWindow, dialogTitle, text,
+                                                   user, pwd, _retval);
+  }    
+  
   return rv;
 }
 
@@ -1889,11 +1951,21 @@ nsDOMWindowPrompter::PromptPassword(const PRUnichar* dialogTitle,
 {
   // ignore passwordRealm and savePassword here?
   nsresult rv;
-  nsAutoString title(dialogTitle);
-  if (title == nsnull)
-    title.AssignWithConversion("Password");        // XXX i18n
-  rv = mCommonDialogs->PromptPassword(mDOMWindow, title.GetUnicode(), text,
-                                      pwd, _retval);
+
+  if (dialogTitle == nsnull) {
+    PRUnichar *title;
+    GetLocaleString(NS_ConvertASCIItoUCS2("PromptPassword"), &title);
+    rv = mCommonDialogs->PromptPassword(mDOMWindow, title, text, 
+                                        pwd, _retval);
+
+    nsCRT::free(title);
+    title = nsnull;
+  }
+  else {
+    rv = mCommonDialogs->PromptPassword(mDOMWindow, dialogTitle, text,
+                                        pwd, _retval);
+  }
+
   return rv;
 }
 
@@ -1906,11 +1978,20 @@ nsDOMWindowPrompter::Select(const PRUnichar *dialogTitle,
                             PRBool *_retval)
 {
   nsresult rv; 
-  nsAutoString title(dialogTitle);
-  if (title == nsnull)
-    title.AssignWithConversion("Select");        // XXX i18n
-  rv = mCommonDialogs->Select(mDOMWindow, title.GetUnicode(), inMsg,
-                              inCount, inList, outSelection, _retval);
+
+  if (dialogTitle == nsnull) {
+    PRUnichar *title;
+    GetLocaleString(NS_ConvertASCIItoUCS2("Select"), &title);
+    rv = mCommonDialogs->Select(mDOMWindow, title, inMsg, 
+                                inCount, inList, outSelection, _retval);
+    nsCRT::free(title);
+    title = nsnull;
+  }
+  else {
+    rv = mCommonDialogs->Select(mDOMWindow, dialogTitle, inMsg,
+                                inCount, inList, outSelection, _retval);
+  }
+
   return rv;
 }
 
