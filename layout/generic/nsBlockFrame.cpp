@@ -636,6 +636,32 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
 
+  // Should we create a space manager?
+  nsSpaceManager* spaceManager;
+  nsSpaceManager* oldSpaceManager;
+  // XXXldb If we start storing the space manager in the frame rather
+  // than keeping it around only during reflow then we should create it
+  // only when there are actually floats to manage.  Otherwise things
+  // like tables will gain significant bloat.
+  if (NS_BLOCK_SPACE_MGR & mState) {
+    oldSpaceManager = aReflowState.mSpaceManager;
+
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    spaceManager = new nsSpaceManager(shell, this);
+    if (!spaceManager)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    // Set the space manager in the existing reflow state
+    nsHTMLReflowState& reflowState =
+      NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
+    reflowState.mSpaceManager = spaceManager;
+#ifdef NOISY_SPACEMANAGER
+    printf("constructed new space manager %p (replacing %p)\n",
+           reflowState.mSpaceManager, oldSpaceManager);
+#endif
+  }
+
   // See if it's an incremental reflow command
   if (eReflowReason_Incremental == aReflowState.reason) {
     // Give the absolute positioning code a chance to handle it
@@ -685,6 +711,26 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       } else {
         mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
       }
+
+      // If we set the space manager, then restore the old space manager now that we're
+      // going out of scope
+      if (NS_BLOCK_SPACE_MGR & mState) {
+        nsHTMLReflowState&  reflowState = NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
+#ifdef NOISY_SPACEMANAGER
+        printf("restoring old space manager %p after handled incremental reflow\n", oldSpaceManager);
+#endif
+        reflowState.mSpaceManager = oldSpaceManager;
+        delete spaceManager;
+      }
+
+#ifdef NOISY_SPACEMANAGER
+      nsHTMLReflowState&  reflowState = NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
+      if (reflowState.mSpaceManager) {
+        ListTag(stdout);
+        printf(": space-manager %p after reflow\n", reflowState.mSpaceManager);
+        reflowState.mSpaceManager->List(stdout);
+      }
+#endif
       return NS_OK;
     }
   }
@@ -701,32 +747,6 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 #endif
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
-  }
-
-  // Should we create a space manager?
-  nsSpaceManager* spaceManager;
-  nsSpaceManager* oldSpaceManager;
-  // XXXldb If we start storing the space manager in the frame rather
-  // than keeping it around only during reflow then we should create it
-  // only when there are actually floats to manage.  Otherwise things
-  // like tables will gain significant bloat.
-  if (NS_BLOCK_SPACE_MGR & mState) {
-    oldSpaceManager = aReflowState.mSpaceManager;
-
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    spaceManager = new nsSpaceManager(shell, this);
-    if (!spaceManager)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    // Set the space manager in the existing reflow state
-    nsHTMLReflowState& reflowState =
-      NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
-    reflowState.mSpaceManager = spaceManager;
-#ifdef NOISY_SPACEMANAGER
-    printf("constructed new space manager %p (replacing %p)\n",
-           reflowState.mSpaceManager, oldSpaceManager);
-#endif
   }
 
   nsBlockReflowState state(aReflowState, aPresContext, this, aMetrics,
@@ -888,32 +908,6 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
 
-  // If we set the space manager, then restore the old space manager now that we're
-  // going out of scope
-  if (NS_BLOCK_SPACE_MGR & mState) {
-    nsHTMLReflowState&  reflowState = NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
-#ifdef NOISY_SPACEMANAGER
-    printf("restoring old space manager %p\n", oldSpaceManager);
-#endif
-    reflowState.mSpaceManager = oldSpaceManager;
-#ifdef DEBUG
-    // For debugging, we sometimes transfer ownership to the frame manager
-    // (above).
-    if (!transferredSpaceManager)
-#endif
-      delete spaceManager;
-    state.mSpaceManager = nsnull;
-  }
-
-#ifdef NOISY_SPACEMANAGER
-  nsHTMLReflowState&  reflowState = NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
-  if (reflowState.mSpaceManager) {
-    ListTag(stdout);
-    printf(": space-manager %p after reflow\n", reflowState.mSpaceManager);
-    reflowState.mSpaceManager->List(stdout);
-  }
-#endif
-  
   // If this is an incremental reflow and we changed size, then make sure our
   // border is repainted if necessary
   if ((eReflowReason_Incremental == aReflowState.reason ||
@@ -1024,6 +1018,33 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
     }
   }
+
+  // If we set the space manager, then restore the old space manager now that we're
+  // going out of scope
+  if (NS_BLOCK_SPACE_MGR & mState) {
+    nsHTMLReflowState&  reflowState = NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
+#ifdef NOISY_SPACEMANAGER
+    printf("restoring old space manager %p\n", oldSpaceManager);
+#endif
+    reflowState.mSpaceManager = oldSpaceManager;
+#ifdef DEBUG
+    // For debugging, we sometimes transfer ownership to the frame manager
+    // (above).
+    if (!transferredSpaceManager)
+#endif
+      delete spaceManager;
+    state.mSpaceManager = nsnull;
+  }
+
+#ifdef NOISY_SPACEMANAGER
+  nsHTMLReflowState&  reflowState = NS_CONST_CAST(nsHTMLReflowState&, aReflowState);
+  if (reflowState.mSpaceManager) {
+    ListTag(stdout);
+    printf(": space-manager %p after reflow\n", reflowState.mSpaceManager);
+    reflowState.mSpaceManager->List(stdout);
+  }
+#endif
+  
 
 #ifdef DEBUG
   if (gNoisy) {
