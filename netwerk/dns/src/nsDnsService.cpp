@@ -45,6 +45,7 @@
 #include "nsIPrefBranchInternal.h"
 #include "nsIRequestObserver.h"
 #include "nsIServiceManager.h"
+#include "nsXPIDLString.h"
 #include "nsTime.h"
 
 #include "nsError.h"
@@ -57,7 +58,7 @@
 #include "prtime.h"
 #endif
 #include "prsystem.h"
-
+#include "nsNetCID.h"
 
 /******************************************************************************
  *  Platform specific defines and includes
@@ -1125,8 +1126,18 @@ nsDNSService::ExpirationInterval()
 }
 
 
+PRBool
+nsDNSService::IsAsciiString(const char *s)
+{
+    for (const char *c = s; *c; c++) {
+        if (!nsCRT::IsAscii(*c)) return PR_FALSE;
+    }
+    return PR_TRUE;
+}
+
 #define NETWORK_DNS_CACHE_ENTRIES       "network.dnsCacheEntries"
 #define NETWORK_DNS_CACHE_EXPIRATION    "network.dnsCacheExpiration"
+#define NETWORK_ENABLEIDN               "network.enableIDN"
 
 nsresult
 nsDNSService::InstallPrefObserver()
@@ -1144,6 +1155,9 @@ nsDNSService::InstallPrefObserver()
     rv = prefInternal->AddObserver(NETWORK_DNS_CACHE_EXPIRATION, this);
     if (NS_FAILED(rv))  return rv;
     
+    rv = prefInternal->AddObserver(NETWORK_ENABLEIDN, this);
+    if (NS_FAILED(rv))  return rv;
+    
     // get initial values (if any)
     nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(prefs, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -1155,6 +1169,13 @@ nsDNSService::InstallPrefObserver()
     rv = prefBranch->GetIntPref(NETWORK_DNS_CACHE_EXPIRATION, &prefVal);
     if (NS_SUCCEEDED(rv))  mExpirationInterval = prefVal;
     
+    PRBool enableIDN = PR_FALSE;
+    rv = prefBranch->GetBoolPref(NETWORK_ENABLEIDN, &enableIDN);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"GetBoolPref failed!");
+
+    if (enableIDN)
+        mIDNConverter = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
+
     return NS_OK;
 }
 
@@ -1170,6 +1191,9 @@ nsDNSService::RemovePrefObserver()
     nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefs, &rv);
     if (NS_FAILED(rv))  return rv;
     
+    rv = prefInternal->RemoveObserver(NETWORK_ENABLEIDN, this);
+    if (NS_FAILED(rv))  return rv;
+
     rv  = prefInternal->RemoveObserver(NETWORK_DNS_CACHE_ENTRIES, this);
     rv2 = prefInternal->RemoveObserver(NETWORK_DNS_CACHE_EXPIRATION, this);
     
@@ -1199,6 +1223,26 @@ nsDNSService::Observe(nsISupports *      subject,
         rv = prefs->GetIntPref(NETWORK_DNS_CACHE_EXPIRATION, &mExpirationInterval);
         if (mExpirationInterval < 0)
             mExpirationInterval = 0;
+    }
+    else if (NS_LITERAL_STRING(NETWORK_ENABLEIDN).Equals(data)) {
+        PRBool enableIDN = PR_FALSE;
+        rv = prefs->GetBoolPref(NETWORK_ENABLEIDN, &enableIDN);
+
+        /* We need to acquire the DNS lock when clearing mIDNConverter because:
+         * 1) this method runs only on the main UI thread
+         * 2) users of mIDNConvert (nsDNSService::Lookup) runs on other
+         *    threads inside the DNS service lock
+         * BUT we do not perform lock when setting mIDNConverter because
+         * pointer stores are atomic.
+         */
+        if (enableIDN && !mIDNConverter) {
+            mIDNConverter = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
+            NS_ASSERTION(NS_SUCCEEDED(rv),"idnSDK not installed");
+        }
+        else if (!enableIDN && mIDNConverter) {
+            nsAutoLock dnsLock(mDNSServiceLock);
+            mIDNConverter = nsnull;
+        }
     }
     
     return rv;
@@ -1349,7 +1393,18 @@ nsDNSService::Lookup(const char*     hostName,
         if (mThread == nsnull)
             return NS_ERROR_OFFLINE;
 
-        nsDNSLookup * lookup = FindOrCreateLookup(hostName);
+        nsDNSLookup *lookup = nsnull;
+        // IDN handling
+        if (mIDNConverter && !IsAsciiString(hostName)) {
+            nsXPIDLCString hostNameACE;
+            rv = mIDNConverter->UTF8ToIDNHostName(hostName, getter_Copies(hostNameACE));
+            if (!hostNameACE.get()) return NS_ERROR_OUT_OF_MEMORY;
+            lookup = FindOrCreateLookup(hostNameACE);
+        }
+
+        // if it hasn't been created (no IDN converter / not an IDN hostName)
+        if (!lookup)
+            lookup = FindOrCreateLookup(hostName);
         if (!lookup) return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(lookup);  // keep it around for life of this method.
 

@@ -156,7 +156,6 @@ interface nsIChannel : nsIRequest
      */
     const unsigned long CACHE_AS_FILE = 1 << 19;
 
-
 %{C++
 // There is no content available (when asyncOpen is called)
 #define NS_ERROR_NO_CONTENT NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 17)
