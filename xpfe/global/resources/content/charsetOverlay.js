@@ -1,7 +1,8 @@
 function MultiplexHandler(event)
 {
-  node = event.target;
-  name = node.getAttribute('name');
+  var node = event.target;
+  var name = node.getAttribute('name');
+  var charset;
 
   if (name == 'detectorGroup') {
     SelectDetector(event);
@@ -24,13 +25,13 @@ function SelectDetector(event)
 {
 	dump("Charset Detector menu item pressed: " + event.target.getAttribute('id') + "\n");
 
-    uri =  event.target.getAttribute("id");
-    prefvalue = uri.substring('charsetDetector.'.length, uri.length);
+    var uri =  event.target.getAttribute("id");
+    var prefvalue = uri.substring('chardet.'.length, uri.length);
     if("off" == prefvalue) { // "off" is special value to turn off the detectors
         prefvalue = "";
     }
 
-    pref = Components.classes['component://netscape/preferences'];
+    var pref = Components.classes['component://netscape/preferences'];
     if (pref) {
         pref = pref.getService();
         pref = pref.QueryInterface(Components.interfaces.nsIPref);
@@ -44,10 +45,10 @@ function SelectDetector(event)
 
 function UpdateCurrentCharset()
 {
-    charset = document.commandDispatcher.focusedWindow.document.characterSet;
-    charset = charset.toLowerCase();
+    var charset = document.commandDispatcher.focusedWindow.document.characterSet;
+	dump("Update current charset: " + charset + "\n");
 
-    menuitem = document.getElementById('charset.' + charset);
+    var menuitem = document.getElementById('charset.' + charset);
 
     if (menuitem) {
         menuitem.setAttribute('checked', 'true');
@@ -56,7 +57,7 @@ function UpdateCurrentCharset()
 
 function UpdateCharsetDetector()
 {
-    pref = Components.classes['component://netscape/preferences'];
+    var pref = Components.classes['component://netscape/preferences'];
     if (pref) {
         pref = pref.getService();
         pref = pref.QueryInterface(Components.interfaces.nsIPref);
@@ -67,8 +68,8 @@ function UpdateCharsetDetector()
         if (prefvalue == "") prefvalue = "off";
     }
 
-    prefvalue = 'charsetDetector.' + prefvalue;
-    menuitem = document.getElementById(prefvalue);
+    var prefvalue = 'chardet.' + prefvalue;
+    var menuitem = document.getElementById(prefvalue);
 
     if (menuitem) {
         menuitem.setAttribute('checked', 'true');
@@ -83,15 +84,14 @@ function UpdateMenus(event)
 
 function charsetLoadListener (event)
 {
-    menu = Components.classes['component://netscape/rdf/datasource?name=charset-menu'];
+    var menu = Components.classes['component://netscape/rdf/datasource?name=charset-menu'];
 
     if (menu) {
         menu = menu.getService();
         menu = menu.QueryInterface(Components.interfaces.nsICurrentCharsetListener);
     }
 
-    charset = window.content.document.characterSet;
-    charset = charset.toLowerCase();
+    var charset = window.content.document.characterSet;
 
     if (menu) {
         menu.SetCurrentCharset(charset);
