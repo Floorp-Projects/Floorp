@@ -1584,7 +1584,7 @@ nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
 #ifdef IBMBIDI
 //ahmed
 NS_IMETHODIMP
-nsPresContext::IsArabicEncoding(PRBool& aResult)
+nsPresContext::IsArabicEncoding(PRBool& aResult) const
 {
   aResult=PR_FALSE;
   if ( (mCharset.EqualsIgnoreCase("ibm864") )||(mCharset.EqualsIgnoreCase("ibm864i") )||(mCharset.EqualsIgnoreCase("windows-1256") )||(mCharset.EqualsIgnoreCase("iso-8859-6") ))
@@ -1593,7 +1593,7 @@ nsPresContext::IsArabicEncoding(PRBool& aResult)
 }
 
 NS_IMETHODIMP
-nsPresContext::IsVisRTL(PRBool& aResult)
+nsPresContext::IsVisRTL(PRBool& aResult) const
 {
   aResult=PR_FALSE;
   if ( (mIsVisual)&&(GET_BIDI_OPTION_DIRECTION(mBidi) == IBMBIDI_TEXTDIRECTION_RTL) )
@@ -1681,7 +1681,7 @@ NS_IMETHODIMP   nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
   }
   return NS_OK;
 }
-NS_IMETHODIMP   nsPresContext::GetBidi(PRUint32* aDest)
+NS_IMETHODIMP   nsPresContext::GetBidi(PRUint32* aDest) const
 {
   if (aDest)
     *aDest = mBidi;
@@ -1704,7 +1704,7 @@ nsPresContext::GetIsBidiSystem(PRBool& aResult) const
 }
 
 NS_IMETHODIMP
-nsPresContext::GetBidiCharset(nsAString &aCharSet)
+nsPresContext::GetBidiCharset(nsAString &aCharSet) const
 {
   aCharSet = mCharset;
   return NS_OK;

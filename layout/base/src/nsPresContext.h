@@ -185,15 +185,15 @@ public:
   NS_IMETHOD SetVisualMode(PRBool aIsVisual);
   NS_IMETHOD GetBidiUtils(nsBidiPresUtils** aBidiUtils);
   NS_IMETHOD SetBidi(PRUint32 aSource, PRBool aForceReflow = PR_FALSE);
-  NS_IMETHOD GetBidi(PRUint32* aDest);
+  NS_IMETHOD GetBidi(PRUint32* aDest) const;
  //ahmed
-  NS_IMETHOD IsVisRTL(PRBool &aResult);
-  NS_IMETHOD IsArabicEncoding(PRBool &aResult);
+  NS_IMETHOD IsVisRTL(PRBool &aResult) const;
+  NS_IMETHOD IsArabicEncoding(PRBool &aResult) const;
 
 //Mohamed  17-1-01
   NS_IMETHOD SetIsBidiSystem(PRBool aIsBidi);
   NS_IMETHOD GetIsBidiSystem(PRBool &aResult) const;
-  NS_IMETHOD GetBidiCharset(nsAString &aCharSet);
+  NS_IMETHOD GetBidiCharset(nsAString &aCharSet) const;
 //Mohamed End
 #endif // IBMBIDI
 

@@ -49,6 +49,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  uconv \
 		  layout_xul \
+		  intl \
 		  $(NULL)
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 !if defined(XP_NEW_SELECTION)

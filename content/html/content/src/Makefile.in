@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  exthandler \
 		  uconv \
+		  intl \
 		  $(NULL)
 
 CPPSRCS		= \

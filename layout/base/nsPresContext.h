@@ -477,20 +477,20 @@ public:
   /**
    * Get the Bidi options for the presentation context
    */  
-  NS_IMETHOD GetBidi(PRUint32* aBidiOptions) = 0;
+  NS_IMETHOD GetBidi(PRUint32* aBidiOptions) const = 0;
 //ahmed
 
   /**
    * Check for Bidi text mode and direction
    * @return aResult == TRUE if the text mode is visual and the direction is right-to-left
    */
-  NS_IMETHOD IsVisRTL(PRBool &aResult) = 0;
+  NS_IMETHOD IsVisRTL(PRBool &aResult) const = 0;
 
   /**
    * Check for Arabic encoding
    * @return aResult == TRUE if the document encoding is an Arabic codepage
    */
-  NS_IMETHOD IsArabicEncoding(PRBool &aResult) = 0;
+  NS_IMETHOD IsArabicEncoding(PRBool &aResult) const = 0;
 
   /**
    * Set the Bidi capabilities of the system
@@ -507,7 +507,7 @@ public:
   /**
    * Get the document charset
    */
-  NS_IMETHOD GetBidiCharset(nsAString &aCharSet) = 0;
+  NS_IMETHOD GetBidiCharset(nsAString &aCharSet) const = 0;
 
 
 #endif // IBMBIDI

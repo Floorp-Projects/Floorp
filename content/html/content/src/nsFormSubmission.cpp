@@ -59,6 +59,9 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,
 #include "nsUnicharUtils.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsIMIMEInputStream.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
+#include "nsIStringBundle.h"
 
 //BIDI
 #ifdef IBMBIDI
@@ -178,7 +181,7 @@ public:
    *        builds.
    * @param aCharset the returned charset [OUT]
    */
-  static void GetSubmitCharset(nsIForm* aForm,
+  static void GetSubmitCharset(nsIHTMLContent* aForm,
                                PRUint8 aCtrlsModAtSubmit,
                                nsAString& aCharset);
   /**
@@ -188,7 +191,7 @@ public:
    * @param aCharset the charset of the form
    * @param aEncoder the returned encoder [OUT]
    */
-  static nsresult GetEncoder(nsIForm* aForm,
+  static nsresult GetEncoder(nsIHTMLContent* aForm,
                              nsIPresContext* aPresContext,
                              const nsAString& aCharset,
                              nsISaveAsCharset** aEncoder);
@@ -200,13 +203,48 @@ public:
    *        exist on the form, so *make sure you provide a default value*.)
    *        [OUT]
    */
-  static void GetEnumAttr(nsIForm* aForm, nsIAtom* aAtom, PRInt32* aValue);
+  static void GetEnumAttr(nsIHTMLContent* aForm,
+                          nsIAtom* aAtom, PRInt32* aValue);
 };
 
+//
+// Static helper methods that don't really have nothing to do with nsFormSub
+//
 
 /**
- * Handles URL encoded submissions, both of the POST and GET variety.
+ * Send a warning to the JS console
+ * @param aContent the content the warning is about
+ * @param aWarningName the internationalized name of the warning within
+ *        layout/html/forms/src/HtmlProperties.js
  */
+static nsresult
+SendJSWarning(nsIHTMLContent* aContent,
+              const nsAFlatString& aWarningName);
+/**
+ * Send a warning to the JS console
+ * @param aContent the content the warning is about
+ * @param aWarningName the internationalized name of the warning within
+ *        layout/html/forms/src/HtmlProperties.js
+ * @param aWarningArg1 an argument to replace a %S in the warning
+ */
+static nsresult
+SendJSWarning(nsIHTMLContent* aContent,
+              const nsAFlatString& aWarningName,
+              const nsAFlatString& aWarningArg1);
+/**
+ * Send a warning to the JS console
+ * @param aContent the content the warning is about
+ * @param aWarningName the internationalized name of the warning within
+ *        layout/html/forms/src/HtmlProperties.js
+ * @param aWarningArgs an array of strings to replace %S's in the warning
+ * @param aWarningArgsLen the number of strings in the array
+ */
+static nsresult
+SendJSWarning(nsIHTMLContent* aContent,
+              const nsAFlatString& aWarningName,
+              const PRUnichar** aWarningArgs, PRUint32 aWarningArgsLen);
+
+
 class nsFSURLEncoded : public nsFormSubmission
 {
 public:
@@ -241,7 +279,7 @@ public:
                              nsIInputStream* aStream,
                              const nsACString& aContentType,
                              PRBool aMoreFilesToCome);
-  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles)
+  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles) const
       { *aAcceptsFiles = PR_FALSE; return NS_OK; }
 
   NS_IMETHOD Init();
@@ -271,6 +309,9 @@ private:
 
   /** The query string so far (the part after the ?) */
   nsCString mQueryString;
+
+  /** Whether or not we have warned about a file control not being submitted */
+  PRBool mWarnedFileControl;
 };
 
 NS_IMPL_RELEASE_INHERITED(nsFSURLEncoded, nsFormSubmission)
@@ -282,6 +323,20 @@ nsFSURLEncoded::AddNameValuePair(nsIDOMHTMLElement* aSource,
                                  const nsAString& aName,
                                  const nsAString& aValue)
 {
+  //
+  // Check if there is an input type=file so that we can warn
+  //
+  if (!mWarnedFileControl) {
+    nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aSource);
+    PRInt32 type;
+    formControl->GetType(&type);
+    if (type == NS_FORM_INPUT_FILE) {
+      nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(aSource);
+      SendJSWarning(content, NS_LITERAL_STRING("ForgotFileEnctypeWarning"));
+      mWarnedFileControl = PR_TRUE;
+    }
+  }
+
   //
   // Let external code process (and possibly change) value
   //
@@ -338,6 +393,7 @@ NS_IMETHODIMP
 nsFSURLEncoded::Init()
 {
   mQueryString.Truncate();
+  mWarnedFileControl = PR_FALSE;
   return NS_OK;
 }
 
@@ -544,7 +600,7 @@ public:
                              nsIInputStream* aStream,
                              const nsACString& aContentType,
                              PRBool aMoreFilesToCome);
-  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles)
+  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles) const
       { *aAcceptsFiles = PR_TRUE; return NS_OK; }
 
   NS_IMETHOD Init();
@@ -871,7 +927,7 @@ protected:
   // nsFormSubmission
   NS_IMETHOD GetEncodedSubmission(nsIURI* aURI,
                                   nsIInputStream** aPostDataStream);
-  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles)
+  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles) const
       { *aAcceptsFiles = PR_FALSE; return NS_OK; }
 
 private:
@@ -1002,9 +1058,90 @@ NS_INTERFACE_MAP_END
 // JBK moved from nsFormFrame - bug 34297
 // submission
 
-// static
+static nsresult
+SendJSWarning(nsIHTMLContent* aContent,
+               const nsAFlatString& aWarningName)
+{
+  return SendJSWarning(aContent, aWarningName, nsnull, 0);
+}
+
+static nsresult
+SendJSWarning(nsIHTMLContent* aContent,
+               const nsAFlatString& aWarningName,
+               const nsAFlatString& aWarningArg1)
+{
+  const PRUnichar* formatStrings[1] = { aWarningArg1.get() };
+  return SendJSWarning(aContent, aWarningName, formatStrings, 1);
+}
+
+static nsresult
+SendJSWarning(nsIHTMLContent* aContent,
+              const nsAFlatString& aWarningName,
+              const PRUnichar** aWarningArgs, PRUint32 aWarningArgsLen)
+{
+  nsresult rv = NS_OK;
+
+  //
+  // Get the document URL to use as the filename
+  //
+  nsCAutoString documentURLSpec;
+  {
+    nsCOMPtr<nsIDocument> document;
+    aContent->GetDocument(*getter_AddRefs(document));
+    if (document) {
+      nsCOMPtr<nsIURI> documentURL;
+      document->GetDocumentURL(getter_AddRefs(documentURL));
+      NS_ENSURE_TRUE(documentURL, NS_ERROR_UNEXPECTED);
+      documentURL->GetPath(documentURLSpec);
+    }
+  }
+
+  //
+  // Get the error string
+  //
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle(
+      "chrome://communicator/locale/layout/HtmlForm.properties",
+      getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLString warningStr;
+  if (aWarningArgsLen > 0) {
+    bundle->FormatStringFromName(aWarningName.get(),
+                                 aWarningArgs, aWarningArgsLen,
+                                 getter_Copies(warningStr));
+  } else {
+    bundle->GetStringFromName(aWarningName.get(), getter_Copies(warningStr));
+  }
+
+  //
+  // Create the error
+  //
+  nsCOMPtr<nsIScriptError>
+      scriptError(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+  NS_ENSURE_TRUE(scriptError, NS_ERROR_UNEXPECTED);
+
+  rv = scriptError->Init(warningStr.get(),
+                         NS_ConvertUTF8toUCS2(documentURLSpec).get(),
+                         nsnull, (uintN)0,
+                         0, nsIScriptError::warningFlag,
+                         "HTML");
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  //
+  // Send the error to the console
+  //
+  nsCOMPtr<nsIConsoleService>
+      consoleService(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+  NS_ENSURE_TRUE(consoleService, NS_ERROR_UNEXPECTED);
+
+  return consoleService->LogMessage(scriptError);
+}
+
 nsresult
-GetSubmissionFromForm(nsIForm* aForm,
+GetSubmissionFromForm(nsIHTMLContent* aForm,
                       nsIPresContext* aPresContext,
                       nsIFormSubmission** aFormSubmission)
 {
@@ -1060,6 +1197,12 @@ GetSubmissionFromForm(nsIForm* aForm,
     *aFormSubmission = new nsFSTextPlain(charset, encoder,
                                          formProcessor, bidiOptions);
   } else {
+    if (enctype == NS_FORM_ENCTYPE_MULTIPART ||
+        enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
+      nsAutoString enctypeStr;
+      aForm->GetAttr(kNameSpaceID_None, nsHTMLAtoms::enctype, enctypeStr);
+      SendJSWarning(aForm, NS_LITERAL_STRING("ForgotPostWarning"), PromiseFlatString(enctypeStr));
+    }
     *aFormSubmission = new nsFSURLEncoded(charset, encoder,
                                           formProcessor, bidiOptions, method);
   }
@@ -1108,7 +1251,7 @@ nsFormSubmission::SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
 // JBK moved from nsFormFrame - bug 34297
 // static
 void
-nsFormSubmission::GetSubmitCharset(nsIForm* form,
+nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
                                    PRUint8 aCtrlsModAtSubmit,
                                    nsAString& oCharset)
 {
@@ -1116,9 +1259,8 @@ nsFormSubmission::GetSubmitCharset(nsIForm* form,
 
   nsresult rv = NS_OK;
   nsAutoString acceptCharsetValue;
-  nsCOMPtr<nsIHTMLContent> formContent = do_QueryInterface(form);
   nsHTMLValue value;
-  rv = formContent->GetHTMLAttribute(nsHTMLAtoms::acceptcharset, value);
+  rv = aForm->GetHTMLAttribute(nsHTMLAtoms::acceptcharset, value);
   if (rv == NS_CONTENT_ATTR_HAS_VALUE && value.GetUnit() == eHTMLUnit_String) {
     value.GetStringValue(acceptCharsetValue);
   }
@@ -1148,14 +1290,10 @@ nsFormSubmission::GetSubmitCharset(nsIForm* form,
   }
   // if there are no accept-charset or all the charset are not supported
   // Get the charset from document
-  nsCOMPtr<nsGenericElement> formElement = do_QueryInterface(form);
-  if (formElement) {
-    nsIDocument* doc = nsnull;
-    formElement->GetDocument(doc);
-    if (doc) {
-      rv = doc->GetDocumentCharacterSet(oCharset);
-      NS_RELEASE(doc);
-    }
+  nsCOMPtr<nsIDocument> doc;
+  aForm->GetDocument(*getter_AddRefs(doc));
+  if (doc) {
+    rv = doc->GetDocumentCharacterSet(oCharset);
   }
 
 #ifdef IBMBIDI
@@ -1187,7 +1325,7 @@ nsFormSubmission::GetSubmitCharset(nsIForm* form,
 // JBK moved from nsFormFrame - bug 34297
 // static
 nsresult
-nsFormSubmission::GetEncoder(nsIForm* form,
+nsFormSubmission::GetEncoder(nsIHTMLContent* aForm,
                              nsIPresContext* aPresContext,
                              const nsAString& aCharset,
                              nsISaveAsCharset** aEncoder)
@@ -1290,15 +1428,13 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
 
 // static
 void
-nsFormSubmission::GetEnumAttr(nsIForm* form, nsIAtom* atom, PRInt32* aValue)
+nsFormSubmission::GetEnumAttr(nsIHTMLContent* aContent,
+                              nsIAtom* atom, PRInt32* aValue)
 {
-  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(form);
-  if (content) {
-    nsHTMLValue value;
-    if (content->GetHTMLAttribute(atom, value) == NS_CONTENT_ATTR_HAS_VALUE) {
-      if (eHTMLUnit_Enumerated == value.GetUnit()) {
-        *aValue = value.GetIntValue();
-      }
+  nsHTMLValue value;
+  if (aContent->GetHTMLAttribute(atom, value) == NS_CONTENT_ATTR_HAS_VALUE) {
+    if (eHTMLUnit_Enumerated == value.GetUnit()) {
+      *aValue = value.GetIntValue();
     }
   }
 }

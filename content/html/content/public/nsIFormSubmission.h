@@ -43,7 +43,7 @@ class nsAString;
 class nsACString;
 class nsIURI;
 class nsIInputStream;
-class nsIForm;
+class nsIHTMLContent;
 class nsIPresContext;
 class nsIContent;
 class nsIFormControl;
@@ -70,7 +70,7 @@ public:
    *
    * @param aAcceptsFiles the boolean output
    */
-  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles) = 0;
+  NS_IMETHOD AcceptsFiles(PRBool* aAcceptsFiles) const = 0;
 
   /**
    * Call to perform the submission
@@ -129,7 +129,8 @@ public:
  * @param aPresContext the presentation context
  * @param aFormSubmission the form submission object (out param)
  */
-nsresult GetSubmissionFromForm(nsIForm* aForm, nsIPresContext* aPresContext,
+nsresult GetSubmissionFromForm(nsIHTMLContent* aForm,
+                               nsIPresContext* aPresContext,
                                nsIFormSubmission** aFormSubmission);
 
 
