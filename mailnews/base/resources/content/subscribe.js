@@ -148,7 +148,7 @@ function SubscribeOnLoad()
 		dump("xxx todo:  make sure this is a subscribable server\n");
 		//dump("folder="+folder+"\n");
 		//dump("folder.server="+folder.server+"\n");
-		gServerURI = folder.server.serverPasswordRealm;
+		gServerURI = folder.server.serverURI;
 		//dump("gServerURI="+gServerURI+"\n");
 	}
 	else {
