@@ -889,14 +889,14 @@ nsCString& nsCString::Assign(char aChar) {
  * @param 
  * @return
  */
-#ifdef AIX
+#if defined(AIX) || defined(XP_OS2_VACPP)
 nsCString& nsCString::operator=(const nsSubsumeCStr& aSubsumeString) {
-  nsSubsumeCStr temp(aSubsumeString);  // a temp is needed for the AIX compiler
+  nsSubsumeCStr temp(aSubsumeString);  // a temp is needed for the AIX and VAC++ compiler
   CSubsume(*this,temp);
 #else
 nsCString& nsCString::operator=(nsSubsumeCStr& aSubsumeString) {
   CSubsume(*this,aSubsumeString);
-#endif // AIX
+#endif // AIX || XP_OS2_VACPP
   return *this;
 }
 #endif
@@ -1946,14 +1946,14 @@ nsCAutoString::nsCAutoString(PRUnichar aChar) : nsCString(){
  * @update  gess 1/4/99
  * @param   reference to a subsumeString
  */
-#ifdef AIX
+#if defined(AIX) || defined(XP_OS2_VACPP)
 nsCAutoString::nsCAutoString(const nsSubsumeCStr& aSubsumeStr) :nsCString() {
-  nsSubsumeCStr temp(aSubsumeStr);  // a temp is needed for the AIX compiler
+  nsSubsumeCStr temp(aSubsumeStr);  // a temp is needed for the AIX and VAC++ compilers
   CSubsume(*this,temp);
 #else
 nsCAutoString::nsCAutoString( nsSubsumeCStr& aSubsumeStr) :nsCString() {
   CSubsume(*this,aSubsumeStr);
-#endif // AIX
+#endif // AIX || XP_OS2_VACPP
 }
 
 /**

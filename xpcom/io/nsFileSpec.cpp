@@ -41,7 +41,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifdef	XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include <mbstring.h>
 #endif
 
@@ -357,7 +357,7 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
         return nsnull;
 
     char* chars = mData->mString;
-#ifdef	XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
     const char* lastSeparator = (const char*) _mbsrchr((const unsigned char *) chars, inSeparator);
 #else
     const char* lastSeparator = strrchr(chars, inSeparator);
@@ -374,7 +374,7 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
 
     // So now, separator was the last character. Poke in a null instead.
     *(char*)lastSeparator = '\0'; // Should use const_cast, but Unix has old compiler.
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
     leafPointer = (const char*) _mbsrchr((const unsigned char *) chars, inSeparator);
 #else
     leafPointer = strrchr(chars, inSeparator);
