@@ -65,6 +65,9 @@ private:
 nsNativeComponentLoader::nsNativeComponentLoader() :
     mRegistry(nsnull), mCompMgr(nsnull), mDllStore(nsnull)
 {
+#ifdef DEBUG_shaver
+    fprintf(stderr, "NEW NATIVECOMPONENTLOADER\n");
+#endif
     NS_INIT_REFCNT();
 }
 

@@ -106,8 +106,8 @@ nsFactoryEntry::nsFactoryEntry(const nsCID &aClass,
     : cid(aClass), factory(nsnull), loader(aLoader)
 {
     loader = aLoader;
-    type = nsCRT::strdup(aType);
-    location = nsCRT::strdup(aLocation);
+    type = aType;
+    location = aLocation;
 }
 
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory)
@@ -674,6 +674,9 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
     if (NS_FAILED(rv))
         return rv;
 
+#ifdef DEBUG_shaver
+    fprintf(stderr, "NEW FACTORYENTRY(%s,%s)\n", library, componentType);
+#endif
     nsFactoryEntry *res = new nsFactoryEntry(aCID, library, componentType,
                                              loader);
     if (res == NULL)
@@ -783,6 +786,9 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
                                            &componentType)))
             continue;
 
+#ifdef DEBUG_shaver
+    fprintf(stderr, "NEW FACTORYENTRY(%s,%s)\n", library, componentType);
+#endif
         nsFactoryEntry* entry = 
             /* hand off componentType and library to factory */
             new nsFactoryEntry(aClass, library, componentType,
@@ -1389,6 +1395,9 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
         return NS_ERROR_FACTORY_EXISTS;
     }
 
+#ifdef DEBUG_shaver
+    fprintf(stderr, "NEW FACTORYENTRY(Factory,%s)\n", aProgID);
+#endif
     nsFactoryEntry *newEntry = new nsFactoryEntry(aClass, aFactory);
     if (newEntry == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1556,6 +1565,9 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
         goto out;
     }
 
+#ifdef DEBUG_shaver
+    fprintf(stderr, "NEW FACTORYENTRY(%s,%s)\n", aRegistryName, aType);
+#endif
     /* hand off aRegistryName to entry */
     newEntry = new nsFactoryEntry(aClass, aRegistryName,
                                   nsCRT::strdup(aType),
