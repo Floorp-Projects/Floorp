@@ -107,7 +107,7 @@
         <RDF:li resource="urn:sidebar:nc-panel:net.240" />
         <RDF:li resource="urn:sidebar:nc-panel:net.229" />
         <RDF:li resource="urn:sidebar:nc-panel:net.400" />
-        <RDF:li resource="urn:sidebar:nc-panel:net.342" />
+        <RDF:li resource="urn:sidebar:nc-panel:net.345" />
 
         <RDF:li>
           <RDF:Seq about="urn:sidebar:panel-group:technology">
