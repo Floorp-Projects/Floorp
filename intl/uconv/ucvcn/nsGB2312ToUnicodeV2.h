@@ -45,14 +45,14 @@ public:
    */
   static nsresult CreateInstance(nsISupports **aResult);
 
+protected:
+
 #ifdef INTEL_CHANGE
-  NS_IMETHODIMP nsGB2312ToUnicodeV2::ConvertNoBuff(const char* aSrc,
+  NS_IMETHOD ConvertNoBuff(const char* aSrc,
 											   PRInt32 * aSrcLength,
 											   PRUnichar *aDest,
 											   PRInt32 * aDestLength);
 #endif
-
-protected:
 
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]
