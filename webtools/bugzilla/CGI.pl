@@ -713,43 +713,54 @@ sub confirm_login {
     # to a later section.  -Joe Robins, 8/3/00
     my $enteredlogin = "";
     my $realcryptpwd = "";
-    if (defined $::FORM{"Bugzilla_login"} &&
-	defined $::FORM{"Bugzilla_password"}) {
 
-       $enteredlogin = $::FORM{"Bugzilla_login"};
-       my $enteredpwd = $::FORM{"Bugzilla_password"};
-       CheckEmailSyntax($enteredlogin);
+    # If the form contains Bugzilla login and password fields, use Bugzilla's 
+    # built-in authentication to authenticate the user (otherwise use LDAP below).
+    if (defined $::FORM{"Bugzilla_login"} && defined $::FORM{"Bugzilla_password"}) {
+        # Make sure the user's login name is a valid email address.
+        $enteredlogin = $::FORM{"Bugzilla_login"};
+        CheckEmailSyntax($enteredlogin);
 
-       $realcryptpwd  = PasswordForLogin($::FORM{"Bugzilla_login"});
+        # Retrieve the user's ID and crypted password from the database.
+        my $userid;
+        SendSQL("SELECT userid, cryptpassword FROM profiles 
+                 WHERE login_name = " . SqlQuote($enteredlogin));
+        ($userid, $realcryptpwd) = FetchSQLData();
 
-       if (defined $::FORM{"PleaseMailAPassword"}) {
-         my $realpwd;
-         if ($realcryptpwd eq "") {
-           $realpwd = InsertNewUser($enteredlogin, "");
-         } else {
-           SendSQL("select password from profiles where login_name = " .
-                   SqlQuote($enteredlogin));
-           $realpwd = FetchOneColumn();
-         }
-         print "Content-type: text/html\n\n";
-         PutHeader("Password has been emailed");
-         MailPassword($enteredlogin, $realpwd);
-         PutFooter();
-         exit;
-       }
+        # If this is a new user, generate a password, insert a record
+        # into the database, and email their password to them.
+        if ( defined $::FORM{"PleaseMailAPassword"} && !$userid ) {
+            my $password = InsertNewUser($enteredlogin, "");
+            print "Content-Type: text/html\n\n";
+            PutHeader("Account Created");
+            MailPassword($enteredlogin, $password);
+            PutFooter();
+            exit;
+        }
 
-       SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " .
-               SqlQuote(substr($realcryptpwd, 0, 2)) . ")");
-       my $enteredcryptpwd = FetchOneColumn();
+        # Otherwise, authenticate the user.
+        else {
+            # Get the salt from the user's crypted password.
+            my $salt = $realcryptpwd;
 
-       if ($realcryptpwd eq "" || $enteredcryptpwd ne $realcryptpwd) {
-         print "Content-type: text/html\n\n";
-         PutHeader("Login failed");
-         print "The username or password you entered is not valid.\n";
-         print "Please click <b>Back</b> and try again.\n";
-         PutFooter();
-         exit;
-       }
+            # Using the salt, crypt the password the user entered.
+            my $enteredCryptedPassword = crypt( $::FORM{"Bugzilla_password"} , $salt );
+
+            # Make sure the passwords match or throw an error.
+            ($enteredCryptedPassword eq $realcryptpwd)
+              || DisplayError("The username or password you entered is not valid.")
+              && exit;
+
+            # If the user has successfully logged in, delete any password tokens
+            # lying around in the system for them.
+            use Token;
+            my $token = Token::HasPasswordToken($userid);
+            while ( $token ) {
+                Token::Cancel($token, "user logged in");
+                $token = Token::HasPasswordToken($userid);
+            }
+        }
+
      } elsif (Param("useLDAP") &&
               defined $::FORM{"LDAP_login"} &&
               defined $::FORM{"LDAP_password"}) {
@@ -952,23 +963,32 @@ Content-type: text/html
 </tr>
 </table>
 ";
-        foreach my $i (keys %::FORM) {
-            if ($i =~ /^Bugzilla_/) {
-                next;
-            }
-            print "<input type=hidden name=$i value=\"@{[value_quote($::FORM{$i})]}\">\n";
+        # Add all the form fields into the form as hidden fields
+        # (except for Bugzilla_login and Bugzilla_password which we
+        # already added as text fields above).
+        foreach my $i ( grep( $_ !~ /^Bugzilla_/ , keys %::FORM ) ) {
+            print qq|<input type="hidden" name="$i" value="@{[value_quote($::FORM{$i})]}">\n|;
         }
-        print "
-<input type=submit value=Login name=GoAheadAndLogIn><hr>
-";
-        # If we're using LDAP, we can't request that a password be mailed...
-        unless(Param("useLDAP")) {
-          print "
-If you don't have a password, or have forgotten it, then please fill in the
-e-mail address above and click
- here:<input type=submit value=\"E-mail me a password\"
-name=PleaseMailAPassword>
-</form>\n";
+
+        print qq|
+          <input type="submit" name="GoAheadAndLogIn" value="Login">
+          </form>
+        |;
+
+        # Allow the user to request a token to change their password (unless
+        # we are using LDAP, in which case the user must use LDAP to change it).
+        unless( Param("useLDAP") ) {
+            print qq|
+              <hr>
+              <form method="get" action="token.cgi">
+                <input type="hidden" name="a" value="reqpw">
+                If you don't have a password or have forgotten it,
+                enter your login name below and submit a request 
+                to change your password.<br>
+                <input size="35" name="loginname">
+                <input type="submit" value="Submit Request">
+              </form>
+            |;
         }
 
         # This seems like as good as time as any to get rid of old

@@ -616,19 +616,21 @@ sub GetVersionTable {
 
 sub InsertNewUser {
     my ($username, $realname) = (@_);
-    my $password = "";
-    for (my $i=0 ; $i<8 ; $i++) {
-        $password .= substr("abcdefghijklmnopqrstuvwxyz", int(rand(26)), 1);
-    }
 
+    # Generate a new random password for the user.
+    my $password = GenerateRandomPassword();
+    my $cryptpassword = Crypt($password);
+
+    # Determine what groups the user should be in by default
+    # and add them to those groups.
     PushGlobalSQLState();
     SendSQL("select bit, userregexp from groups where userregexp != ''");
     my $groupset = "0";
     while (MoreSQLData()) {
         my @row = FetchSQLData();
-	# Modified -Joe Robins, 2/17/00
-	# Making this case insensitive, since usernames are email addresses,
-	# and could be any case.
+        # Modified -Joe Robins, 2/17/00
+        # Making this case insensitive, since usernames are email addresses,
+        # and could be any case.
         if ($username =~ m/$row[1]/i) {
             $groupset .= "+ $row[0]"; # Silly hack to let MySQL do the math,
                                       # not Perl, since we're dealing with 64
@@ -636,13 +638,102 @@ sub InsertNewUser {
                                       # does that.
         }
     }
-            
+
+    # Insert the new user record into the database.            
     $username = SqlQuote($username);
     $realname = SqlQuote($realname);
-    SendSQL("insert into profiles (login_name, realname, password, cryptpassword, groupset) values ($username, $realname, '$password', encrypt('$password'), $groupset)");
+    $cryptpassword = SqlQuote($cryptpassword);
+    SendSQL("INSERT INTO profiles (login_name, realname, cryptpassword, groupset) 
+             VALUES ($username, $realname, $cryptpassword, $groupset)");
     PopGlobalSQLState();
+
+    # Return the password to the calling code so it can be included 
+    # in an email sent to the user.
     return $password;
 }
+
+sub GenerateRandomPassword {
+    my ($size) = @_;
+
+    # Generated passwords are eight characters long by default.
+    $size ||= 8;
+
+    # The list of characters that can appear in a password.
+    # If you change this you must also update &ValidatePassword below.
+    my @pwchars = (0..9, 'A'..'Z', 'a'..'z', '-', '_');
+    #my @pwchars = (0..9, 'A'..'Z', 'a'..'z', '-', '_', '!', '@', '#', '$', '%', '^', '&', '*');
+
+    # The number of characters in the list.
+    my $pwcharslen = scalar(@pwchars);
+
+    # Generate the password.
+    my $password = "";
+    for ( my $i=0 ; $i<$size ; $i++ ) {
+        $password .= $pwchars[rand($pwcharslen)];
+    }
+
+    # Return the password.
+    return $password;
+}
+
+
+sub ValidatePassword {
+    # Determines whether or not a password is valid (i.e. meets Bugzilla's
+    # requirements for length and content).  If the password is valid, the
+    # function returns boolean false.  Otherwise it returns an error message
+    # (synonymous with boolean true) that can be displayed to the user.
+    
+    # If a second password is passed in, this function also verifies that
+    # the two passwords match.
+
+    my ($password, $matchpassword) = @_;
+    
+    if ( $password !~ /^[a-zA-Z0-9-_]*$/ ) {
+        return "The password contains an illegal character.  Legal characters are letters, numbers, hyphens (-), and underlines (_).";
+    } elsif ( length($password) < 3 ) {
+        return "The password is less than three characters long.  It must be at least three characters.";
+    } elsif ( length($password) > 16 ) {
+        return "The password is more than 16 characters long.  It must be no more than 16 characters.";
+    } elsif ( $matchpassword && $password ne $matchpassword ) { 
+        return "The two passwords do not match.";
+    }
+
+    return 0;
+}
+
+
+sub Crypt {
+    # Crypts a password, generating a random salt to do it.
+    # Random salts are generated because the alternative is usually
+    # to use the first two characters of the password itself, and since
+    # the salt appears in plaintext at the beginning of the crypted
+    # password string this has the effect of revealing the first two
+    # characters of the password to anyone who views the crypted version.
+
+    my ($password) = @_;
+
+    # The list of characters that can appear in a salt.  Salts and hashes
+    # are both encoded as a sequence of characters from a set containing
+    # 64 characters, each one of which represents 6 bits of the salt/hash.
+    # The encoding is similar to BASE64, the difference being that the
+    # BASE64 plus sign (+) is replaced with a forward slash (/).
+    my @saltchars = (0..9, 'A'..'Z', 'a'..'z', '.', '/');
+
+    # Generate the salt.  We use an 8 character (48 bit) salt for maximum
+    # security on systems whose crypt uses MD5.  Systems with older
+    # versions of crypt will just use the first two characters of the salt.
+    my $salt = '';
+    for ( my $i=0 ; $i < 8 ; ++$i ) {
+        $salt .= $saltchars[rand(64)];
+    }
+
+    # Crypt the password.
+    my $cryptedpassword = crypt($password, $salt);
+
+    # Return the crypted password.
+    return $cryptedpassword;
+}
+
 
 sub DBID_to_real_or_loginname {
     my ($id) = (@_);

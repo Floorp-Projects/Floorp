@@ -57,13 +57,18 @@ my $realname = $::FORM{'realname'};
 if (defined $login) {
     CheckEmailSyntax($login);
     if (DBname_to_id($login) != 0) {
-	PutHeader("Account exists");
-	print "A bugzilla account for the name <tt>$login</tt> already\n";
-	print "exists.  If you have forgotten the password for it, then\n";
-	print "<a href=query.cgi?GoAheadAndLogIn>click here</a> and use\n";
-	print "the <b>E-mail me a password</b> button.\n";
+        PutHeader("Account Exists");
+        print qq|
+          <form method="get" action="token.cgi">
+            <input type="hidden" name="a" value="reqpw">
+            <input type="hidden" name="loginname" value="$login">
+            A Bugzilla account for <tt>$login</tt> already exists.  If you
+            are the account holder and have forgotten your password, 
+            <input type="submit" value="submit a request to change it">.
+          </form>
+        |;
         PutFooter();
-	exit;
+        exit;
     }
     PutHeader("Account created");
     my $password = InsertNewUser($login, $realname);

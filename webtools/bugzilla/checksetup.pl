@@ -914,7 +914,7 @@ $table{groups} =
 $table{logincookies} =
    'cookie mediumint not null auto_increment primary key,
     userid mediumint not null,
-    cryptpassword varchar(64),
+    cryptpassword varchar(34),
     hostname varchar(128),
     lastused timestamp,
 
@@ -936,8 +936,7 @@ $table{products} =
 $table{profiles} =
    'userid mediumint not null auto_increment primary key,
     login_name varchar(255) not null,
-    password varchar(16),
-    cryptpassword varchar(64),
+    cryptpassword varchar(34),
     realname varchar(255),
     groupset bigint not null,
     disabledtext mediumtext,
@@ -1037,6 +1036,19 @@ $table{shadowlog} =
 $table{duplicates} =
     'dupe_of mediumint(9) not null,
      dupe mediumint(9) not null primary key';
+
+# 2001-06-21, myk@mozilla.org, bug 77473:
+# Stores the tokens users receive when they want to change their password 
+# or email address.  Tokens provide an extra measure of security for these changes.
+$table{tokens} =
+    'userid mediumint not null , 
+     issuedate datetime not null , 
+     token varchar(16) not null primary key ,  
+     tokentype varchar(8) not null , 
+     eventdata tinytext null , 
+
+     index(userid)';
+
 
 
 ###########################################################################
@@ -1417,12 +1429,15 @@ _End_Of_SQL_
     system("stty","-echo");  # disable input echoing
 
     while( $pass1 ne $pass2 ) {
-      while( $pass1 eq "" ) {
+      while( $pass1 eq "" || $pass1 !~ /^[a-zA-Z0-9-_]{3,16}$/ ) {
         print "Enter a password for the administrator account: ";
         $pass1 = <STDIN>;
         chomp $pass1;
         if(! $pass1 ) {
           print "\n\nIt's just plain stupid to not have a password.  Try again!\n";
+        } elsif ( $pass1 !~ /^[a-zA-Z0-9-_]{3,16}$/ ) {
+          print "The password must be 3-16 characters in length 
+                 and contain only letters, numbers, hyphens (-), and underlines (_).";
         }
       }
       print "\nPlease retype the password to verify: ";
@@ -1435,6 +1450,9 @@ _End_Of_SQL_
       }
     }
 
+    # Crypt the administrator's password
+    my $cryptedpassword = Crypt($pass1);
+
     system("stty","echo"); # re-enable input echoing
     $SIG{HUP}  = 'DEFAULT'; # and remove our interrupt hooks
     $SIG{INT}  = 'DEFAULT';
@@ -1442,12 +1460,12 @@ _End_Of_SQL_
     $SIG{TERM} = 'DEFAULT';
 
     $realname = $dbh->quote($realname);
-    $pass1 = $dbh->quote($pass1);
+    $cryptedpassword = $dbh->quote($cryptedpassword);
 
     $dbh->do(<<_End_Of_SQL_);
       INSERT INTO profiles
-      (login_name, realname, password, cryptpassword, groupset)
-      VALUES ($login, $realname, $pass1, encrypt($pass1), 0x7fffffffffffffff)
+      (login_name, realname, cryptpassword, groupset)
+      VALUES ($login, $realname, $cryptedpassword, 0x7fffffffffffffff)
 _End_Of_SQL_
   } else {
     $dbh->do(<<_End_Of_SQL_);
@@ -1458,6 +1476,41 @@ _End_Of_SQL_
   }
   print "\n$login is now set up as the administrator account.\n";
 }
+
+
+sub Crypt {
+    # Crypts a password, generating a random salt to do it.
+    # Random salts are generated because the alternative is usually
+    # to use the first two characters of the password itself, and since
+    # the salt appears in plaintext at the beginning of the crypted
+    # password string this has the effect of revealing the first two
+    # characters of the password to anyone who views the crypted version.
+
+    my ($password) = @_;
+
+    # The list of characters that can appear in a salt.  Salts and hashes
+    # are both encoded as a sequence of characters from a set containing
+    # 64 characters, each one of which represents 6 bits of the salt/hash.
+    # The encoding is similar to BASE64, the difference being that the
+    # BASE64 plus sign (+) is replaced with a forward slash (/).
+    my @saltchars = (0..9, 'A'..'Z', 'a'..'z', '.', '/');
+
+    # Generate the salt.  We use an 8 character (48 bit) salt for maximum
+    # security on systems whose crypt uses MD5.  Systems with older
+    # versions of crypt will just use the first two characters of the salt.
+    my $salt = '';
+    for ( my $i=0 ; $i < 8 ; ++$i ) {
+        $salt .= $saltchars[rand(64)];
+    }
+
+    # Crypt the password.
+    my $cryptedpassword = crypt($password, $salt);
+
+    # Return the crypted password.
+    return $cryptedpassword;
+}
+
+
 
 
 ###########################################################################
@@ -1808,10 +1861,10 @@ if (GetFieldDef('bugs', 'long_desc')) {
                         # him or something.  Invent a new profile entry,
                         # disabled, just to represent him.
                         $dbh->do("INSERT INTO profiles " .
-                                 "(login_name, password, cryptpassword," .
+                                 "(login_name, cryptpassword," .
                                  " disabledtext) VALUES (" .
                                  $dbh->quote($name) .
-                                 ", 'okthen', encrypt('okthen'), " .
+                                 ", " . $dbh->quote(Crypt('okthen')) . ", " . 
                                  "'Account created only to maintain database integrity')");
                         $s2 = $dbh->prepare("SELECT LAST_INSERT_ID()");
                         $s2->execute();
@@ -2203,6 +2256,42 @@ if (-d 'shadow') {
 }
 DropField("profiles", "emailnotification");
 DropField("profiles", "newemailtech");
+
+# 2001-06-12; myk@mozilla.org; bugs 74032, 77473:
+# Recrypt passwords using Perl &crypt instead of the mysql equivalent
+# and delete plaintext passwords from the database.
+if ( GetFieldDef('profiles', 'password') ) {
+    
+    print <<ENDTEXT;
+Your current installation of Bugzilla stores passwords in plaintext 
+in the database and uses mysql's encrypt function instead of Perl's 
+crypt function to crypt passwords.  Passwords are now going to be 
+re-crypted with the Perl function, and plaintext passwords will be 
+deleted from the database.  This could take a while if your  
+installation has many users. 
+ENDTEXT
+
+    # Re-crypt everyone's password.
+	  my $sth = $dbh->prepare("SELECT userid, password FROM profiles");
+	  $sth->execute();
+
+    my $i = 1;
+
+    print "Fixing password #1... ";
+	  while (my ($userid, $password) = $sth->fetchrow_array()) {
+        my $cryptpassword = $dbh->quote(Crypt($password));
+        $dbh->do("UPDATE profiles SET cryptpassword = $cryptpassword WHERE userid = $userid");
+        ++$i;
+        # Let the user know where we are at every 500 records.
+        print "$i... " if !($i%500);
+	  }
+    print "$i... Done.\n";
+
+    # Drop the plaintext password field and resize the cryptpassword field.
+    DropField('profiles', 'password');
+    ChangeFieldType('profiles', 'cryptpassword', 'varchar(34)');
+
+}
 
 #
 # 2001-06-06 justdave@syndicomm.com:

@@ -148,9 +148,12 @@ sub SaveAccount {
         my $old = SqlQuote($::FORM{'Bugzilla_password'});
         my $pwd1 = SqlQuote($::FORM{'pwd1'});
         my $pwd2 = SqlQuote($::FORM{'pwd2'});
-        SendSQL("SELECT cryptpassword = ENCRYPT($old, LEFT(cryptpassword, 2)) " .
-                "FROM profiles WHERE userid = $userid");
-        if (!FetchOneColumn()) {
+        SendSQL("SELECT cryptpassword FROM profiles WHERE userid = $userid");
+        my $oldcryptedpwd = FetchOneColumn();
+        if ( !$oldcryptedpwd ) {
+            Error("I was unable to retrieve your old password from the database.");
+        }
+        if ( crypt($::FORM{'Bugzilla_password'}, $oldcryptedpwd) ne $oldcryptedpwd ) {
             Error("You did not enter your old password correctly.");
         }
         if ($pwd1 ne $pwd2) {
@@ -159,9 +162,13 @@ sub SaveAccount {
         if ($::FORM{'pwd1'} eq '') {
             Error("You must enter a new password.");
         }
-        SendSQL("UPDATE profiles SET password = $pwd1, " .
-                "cryptpassword = ENCRYPT($pwd1) " .
-                "WHERE userid = $userid");
+        my $passworderror = ValidatePassword($::FORM{'pwd1'});
+        Error($passworderror) if $passworderror;
+
+        my $cryptedpassword = SqlQuote(Crypt($::FORM{'pwd1'}));
+        SendSQL("UPDATE  profiles 
+                 SET     cryptpassword = $cryptedpassword 
+                 WHERE   userid = $userid");
     }
     SendSQL("UPDATE profiles SET " .
             "realname = " . SqlQuote($::FORM{'realname'}) .

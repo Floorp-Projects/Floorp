@@ -97,10 +97,9 @@ sub EmitElement ($$)
 # Displays the form to edit a user parameters
 #
 
-sub EmitFormElements ($$$$$$)
+sub EmitFormElements ($$$$$)
 {
-    my ($user, $password, $realname, $groupset, $blessgroupset,
-        $disabledtext) = @_;
+    my ($user, $realname, $groupset, $blessgroupset, $disabledtext) = @_;
 
     print "  <TH ALIGN=\"right\">Login name:</TH>\n";
     EmitElement("user", $user);
@@ -115,7 +114,11 @@ sub EmitFormElements ($$$$$$)
         if(Param('useLDAP')) {
           print "  <TD><FONT COLOR=RED>This site is using LDAP for authentication!</FONT></TD>\n";
         } else {
-          print "  <TD><INPUT TYPE=\"PASSWORD\" SIZE=16 MAXLENGTH=16 NAME=\"password\" VALUE=\"$password\"></TD>\n";
+          print qq|
+            <TD><INPUT TYPE="PASSWORD" SIZE="16" MAXLENGTH="16" NAME="password" VALUE=""><br>
+                (enter new password to change)
+            </TD>
+          |;
         }
         print "</TR><TR>\n";
 
@@ -386,7 +389,7 @@ if ($action eq 'add') {
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', '', 0, 0, '');
+    EmitFormElements('', '', 0, 0, '');
 
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
@@ -423,7 +426,10 @@ if ($action eq 'new') {
 
     # Cleanups and valididy checks
     my $realname = trim($::FORM{realname} || '');
-    my $password = trim($::FORM{password} || '');
+    # We don't trim the password since that could falsely lead the user
+    # to believe a password with a space was accepted even though a space 
+    # is an illegal character in a Bugzilla password.
+    my $password = $::FORM{'password'};
     my $disabledtext = trim($::FORM{disabledtext} || '');
     my $emailregexp = Param("emailregexp");
 
@@ -445,10 +451,9 @@ if ($action eq 'new') {
         PutTrailer($localtrailer);
 	exit;
     }
-    if ($password !~ /^[a-zA-Z0-9-_]*$/ || length($password) < 3 || length($password) > 16) {
-        print "The new user must have a password. The password must be between ",
-	      "3 and 16 characters long and must contain only numbers, letters, ",
-	      "hyphens and underlines. Press <b>Back</b> and try again.\n";
+    my $passworderror = ValidatePassword($password);
+    if ( $passworderror ) {
+        print $passworderror;
         PutTrailer($localtrailer);
         exit;
     }
@@ -473,12 +478,11 @@ if ($action eq 'new') {
 
     # Add the new user
     SendSQL("INSERT INTO profiles ( " .
-            "login_name, password, cryptpassword, realname, groupset, " .
+            "login_name, cryptpassword, realname, groupset, " .
             "disabledtext" .
             " ) VALUES ( " .
             SqlQuote($user) . "," .
-            SqlQuote($password) . "," .
-            "encrypt(" . SqlQuote($password) . ")," .
+            SqlQuote(Crypt($password)) . "," .
             SqlQuote($realname) . "," .
             $bits . "," .
             SqlQuote($disabledtext) . ")" );
@@ -682,24 +686,20 @@ if ($action eq 'edit') {
     CheckUser($user);
 
     # get data of user
-    SendSQL("SELECT password, realname, groupset, blessgroupset, disabledtext
+    SendSQL("SELECT realname, groupset, blessgroupset, disabledtext
 	     FROM profiles
 	     WHERE login_name=" . SqlQuote($user));
-    my ($password, $realname, $groupset, $blessgroupset,
+    my ($realname, $groupset, $blessgroupset,
         $disabledtext) = FetchSQLData();
 
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements($user, $password, $realname, $groupset, $blessgroupset,
-                     $disabledtext);
+    EmitFormElements($user, $realname, $groupset, $blessgroupset, $disabledtext);
     
     print "</TR></TABLE>\n";
 
     print "<INPUT TYPE=HIDDEN NAME=\"userold\" VALUE=\"$user\">\n";
-    if ($editall && !Param('useLDAP')) {
-        print "<INPUT TYPE=HIDDEN NAME=\"passwordold\" VALUE=\"$password\">\n";
-    }
     print "<INPUT TYPE=HIDDEN NAME=\"realnameold\" VALUE=\"$realname\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"groupsetold\" VALUE=\"$groupset\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"blessgroupsetold\" VALUE=\"$blessgroupset\">\n";
@@ -726,8 +726,7 @@ if ($action eq 'update') {
     my $userold               = trim($::FORM{userold}              || '');
     my $realname              = trim($::FORM{realname}             || '');
     my $realnameold           = trim($::FORM{realnameold}          || '');
-    my $password              = trim($::FORM{password}             || '');
-    my $passwordold           = trim($::FORM{passwordold}          || '');
+    my $password              = $::FORM{password}                  || '';
     my $disabledtext          = trim($::FORM{disabledtext}         || '');
     my $disabledtextold       = trim($::FORM{disabledtextold}      || '');
     my $groupsetold           = trim($::FORM{groupsetold}          || '0');
@@ -791,14 +790,19 @@ if ($action eq 'update') {
 	print "Updated ability to tweak permissions of other users.\n";
     }
 
-    if(!Param('useLDAP')) {
-      if ($editall && $password ne $passwordold) {
-        my $q = SqlQuote($password);
-        SendSQL("UPDATE profiles
-		 SET password= $q, cryptpassword = ENCRYPT($q)
-		 WHERE login_name=" . SqlQuote($userold));
-	print "Updated password.<BR>\n";
-      }
+    # Update the database with the user's new password if they changed it.
+    if ( !Param('useLDAP') && $editall && $password ) {
+        my $passworderror = ValidatePassword($password);
+        if ( !$passworderror ) {
+            my $cryptpassword = SqlQuote(Crypt($password));
+            my $loginname = SqlQuote($userold);
+            SendSQL("UPDATE  profiles
+                     SET     cryptpassword = $cryptpassword
+                     WHERE   login_name = $loginname");
+            print "Updated password.<BR>\n";
+        } else {
+            print "Did not update password: $passworderror<br>\n";
+        }
     }
     if ($editall && $realname ne $realnameold) {
         SendSQL("UPDATE profiles
