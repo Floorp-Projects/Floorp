@@ -19,6 +19,8 @@
 #include <iostream.h>
 #include <assert.h>
 #include "COM_auto_ptr.h"
+#include "nsISupports.h"
+
 
 
 #ifndef NSCAP_NO_NEW_CASTS
@@ -28,15 +30,22 @@
 #endif
 
 
-class IFoo // : public ISupports
+#define NS_IFOO_IID \
+{ 0x6f7652e0,  0xee43, 0x11d1, \
+ { 0x9c, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }
+
+class IFoo : public nsISupports
   {
-    public:
+		public:
+			static const nsIID& IID() { static nsIID iid = NS_IFOO_IID; return iid; }
+
+		public:
       IFoo();
       virtual ~IFoo();
 
-      virtual unsigned long AddRef();
-      virtual unsigned long Release();
-      // virtual NS_RESULT QueryInterface
+      NS_IMETHOD_(nsrefcnt) AddRef();
+      NS_IMETHOD_(nsrefcnt) Release();
+      NS_IMETHOD QueryInterface( const nsIID&, void** );
 
       static void print_totals();
 
@@ -53,8 +62,8 @@ class IBar;
 typedef unsigned long NS_RESULT;
 
   // some functions I'll need (and define below)
-         NS_RESULT  CreateIFoo( void** );
-         NS_RESULT  CreateIBar( void** result );
+          nsresult  CreateIFoo( void** );
+          nsresult  CreateIBar( void** result );
               void  AnIFooPtrPtrContext( IFoo** );
               void  AVoidPtrPtrContext( void** );
               void  set_a_IFoo( COM_auto_ptr<IFoo>* result );
@@ -107,7 +116,7 @@ IFoo::~IFoo()
     cout << "IFoo@" << STATIC_CAST(void*, this) << "::~IFoo()" << " [#" << total_destructions_ << "]" << endl;
   }
 
-unsigned long
+nsrefcnt
 IFoo::AddRef()
   {
     ++refcount_;
@@ -115,7 +124,7 @@ IFoo::AddRef()
     return refcount_;
   }
 
-unsigned long
+nsrefcnt
 IFoo::Release()
   {
     int wrap_message = (refcount_ == 1);
@@ -137,7 +146,31 @@ IFoo::Release()
     return refcount_;
   }
 
-NS_RESULT
+nsresult
+IFoo::QueryInterface( const nsIID& aIID, void** aResult )
+	{
+    cout << "IFoo@" << STATIC_CAST(void*, this) << "::QueryInterface()" << endl;
+		nsISupports* rawPtr = 0;
+		nsresult status = NS_OK;
+
+		if ( aIID.Equals(IID()) )
+			rawPtr = this;
+		else
+			{
+				nsID iid_of_ISupports = NS_ISUPPORTS_IID;
+				if ( aIID.Equals(iid_of_ISupports) )
+					rawPtr = STATIC_CAST(nsISupports*, this);
+				else
+					status = NS_ERROR_NO_INTERFACE;
+			}
+
+		NS_IF_ADDREF(rawPtr);
+		*aResult = rawPtr;
+
+		return status;
+	}
+
+nsresult
 CreateIFoo( void** result )
     // a typical factory function (that calls AddRef)
   {
@@ -175,11 +208,20 @@ return_a_IFoo()
 
 
 
+#define NS_IBAR_IID \
+{ 0x6f7652e1,  0xee43, 0x11d1, \
+ { 0x9c, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }
+
 class IBar : public IFoo
   {
+  	public:
+  		static const nsIID& IID() { static nsIID iid = NS_IBAR_IID; return iid; }
+
     public:
       IBar();
       virtual ~IBar();
+
+      NS_IMETHOD QueryInterface( const nsIID&, void** );
   };
 
 IBar::IBar()
@@ -192,9 +234,35 @@ IBar::~IBar()
     cout << "IBar@" << STATIC_CAST(void*, this) << "::~IBar()" << endl;
   }
 
+nsresult
+IBar::QueryInterface( const nsID& aIID, void** aResult )
+	{
+    cout << "IBar@" << STATIC_CAST(void*, this) << "::QueryInterface()" << endl;
+		nsISupports* rawPtr = 0;
+		nsresult status = NS_OK;
+
+		if ( aIID.Equals(IID()) )
+			rawPtr = this;
+		else if ( aIID.Equals(IFoo::IID()) )
+			rawPtr = STATIC_CAST(IFoo*, this);
+		else
+			{
+				nsID iid_of_ISupports = NS_ISUPPORTS_IID;
+				if ( aIID.Equals(iid_of_ISupports) )
+					rawPtr = STATIC_CAST(nsISupports*, this);
+				else
+					status = NS_ERROR_NO_INTERFACE;
+			}
+
+		NS_IF_ADDREF(rawPtr);
+		*aResult = rawPtr;
+
+		return status;
+	}
 
 
-NS_RESULT
+
+nsresult
 CreateIBar( void** result )
     // a typical factory function (that calls AddRef)
   {
@@ -339,30 +407,68 @@ main()
 
 
     {
-      cout << endl << "### Test 17: basic parameter behavior?" << endl;
+    	cout << endl << "### setup for Test 17" << endl;
       COM_auto_ptr<IFoo> foop;
+      cout << "### Test 17: basic parameter behavior?" << endl;
       CreateIFoo( nsGetterAddRefs<IFoo>(foop) );
     }
+    cout << "### End Test 17" << endl;
 
 
     {
-      cout << endl << "### Test 18: basic parameter behavior, using the short form?" << endl;
+    	cout << endl << "### setup for Test 18" << endl;
       COM_auto_ptr<IFoo> foop;
+      cout << "### Test 18: basic parameter behavior, using the short form?" << endl;
       CreateIFoo( getter_AddRefs(foop) );
     }
+    cout << "### End Test 18" << endl;
 
 
     {
-      cout << endl << "### Test 19: reference parameter behavior?" << endl;
+    	cout << endl << "### setup for Test 19, 20" << endl;
       COM_auto_ptr<IFoo> foop;
+      cout << "### Test 19: reference parameter behavior?" << endl;
       set_a_IFoo(&foop);
 
-      cout << endl << "### Test 20: return value behavior?" << endl;
+      cout << "### Test 20: return value behavior?" << endl;
       foop = return_a_IFoo();
     }
+    cout << "### End Test 19, 20" << endl;
+
+		{
+    	cout << endl << "### setup for Test 21" << endl;
+			COM_auto_ptr<IFoo> fooP;
+
+			cout << "### Test 21: is |QueryInterface| called on assigning in a raw pointer?" << endl;
+			fooP = new IFoo;
+		}
+    cout << "### End Test 21" << endl;
+
+		{
+    	cout << endl << "### setup for Test 22" << endl;
+			COM_auto_ptr<IFoo> fooP;
+			fooP = new IFoo;
+
+			COM_auto_ptr<IFoo> foo2P;
+
+			cout << "### Test 22: is |QueryInterface| _not_ called when assigning in a smart-pointer of the same type?" << endl;
+			foo2P = fooP;
+		}
+    cout << "### End Test 22" << endl;
+
+		{
+    	cout << endl << "### setup for Test 23" << endl;
+			COM_auto_ptr<IBar> barP( new IBar );
+
+			cout << "### Test 23: is |QueryInterface| called when assigning in a smart-pointer of a different type?" << endl;
+
+			if ( COM_auto_ptr<IFoo> fooP( barP ) )
+				cout << "an IBar* is an IFoo*" << endl;
+		}
+    cout << "### End Test 23" << endl;
 
 
-    cout << endl << "### Test 21: will a static |COM_auto_ptr| |Release| before program termination?" << endl;
+    cout << endl << "### Test 24: will a static |COM_auto_ptr| |Release| before program termination?" << endl;
     gFoop = new IFoo;
     
     cout << "<<main()" << endl;
