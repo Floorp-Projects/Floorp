@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.2 1998/07/23 11:05:54 leif Exp $
+# $Id: Conn.pm,v 1.3 1998/07/29 02:41:11 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -27,16 +27,11 @@
 #
 #############################################################################
 
-package Mozilla::LDAP::Connection;
+package Mozilla::LDAP::Conn;
 
-require Exporter;
-require Mozilla::LDAP::API;
+require Mozilla::LDAP::Utils(:all);
+require Mozilla::LDAP::API(:all);
 require Mozilla::LDAP::Entry;
-require Mozilla::LDAP::Utils;
-
-@ISA = qw(Exporter);
-@EXPORT_OK = qw(new isURL getError getErrorString printError search
-		searchURL entry delete add update setRebindProc);
 
 
 #############################################################################
@@ -48,6 +43,9 @@ sub new
   my $self = {};
   my ($host, $port, $binddn, $bindpasswd, $certdb, $authmeth) = @_;
 
+  #
+  # Add support for passing the hash array of parameters...
+  #
   if (!defined($port) || ($port eq ""))
     {
       $port = (($certdb ne "") ? LDAPS_PORT : LDAP_PORT);
@@ -76,15 +74,16 @@ sub DESTROY
 
   return unless defined($self->{ld});
 
-  Ldapc::ldap_unbind_s($self->{ld});
-  Ldapc::ldap_msgfree($self->{ldres}) if defined($self->{ldres});
+  ldap_unbind_s($self->{ld});
+  ldap_msgfree($self->{ldres}) if defined($self->{ldres});
 
   undef $self->{ld};
 }
 
 
 #############################################################################
-# Initialize a normal connection.
+# Initialize a normal connection. This seems silly, why not just merge
+# this back into the creator method (new)...
 #
 sub init
 {
@@ -94,14 +93,14 @@ sub init
 
   if ($self->{certdb} ne "")
     {
-      $ret = Ldapc::ldapssl_client_init($self->{certdb}, "");
+      $ret = ldapssl_client_init($self->{certdb}, "");
       return 0 if ($ret < 0);
 
-      $ld = Ldapc::ldapssl_init($self->{host}, $self->{port}, 1);
+      $ld = ldapssl_init($self->{host}, $self->{port}, 1);
     }
   else
     {
-      $ld = Ldapc::ldap_init($self->{host}, $self->{port});
+      $ld = ldap_init($self->{host}, $self->{port});
     }
   if (!$ld)
     {
@@ -111,12 +110,12 @@ sub init
     }
 
   $self->{ld} = $ld;
-  $ret = Ldapc::ldap_bind_s($ld, $self->{binddn}, $self->{bindpasswd},
-			     $self->{authmethod});
+  $ret = ldap_bind_s($ld, $self->{binddn}, $self->{bindpasswd},
+		     $self->{authmethod});
 
   if ($ret)
     {
-      Ldapc::ldap_perror($ld, "Authentication failed");
+      ldap_perror($ld, "Authentication failed");
 
       return 0;
     }
@@ -132,7 +131,7 @@ sub isURL
 {
   my ($self, $url) = @_;
 
-  return Ldapc::ldap_is_ldap_url($url);
+  return ldap_is_ldap_url($url);
 }
 
 
@@ -143,7 +142,7 @@ sub getError
 {
   my ($self) = @_;
 
-  return Ldapc::ldap_get_lderrno($self->{ld});
+  return ldap_get_lderrno($self->{ld});
 }
 
 
@@ -155,7 +154,7 @@ sub getErrorString
   my ($self) = @_;
   my ($ret);
 
-  $ret = Ldapc::ldap_err2string(Ldapc::ldap_get_lderrno $self->{ld});
+  $ret = ldap_err2string(ldap_get_lderrno $self->{ld});
 
   return $ret;
 }
@@ -169,7 +168,7 @@ sub printError
   my ($self, $str) = @_;
 
   $str = "Last error: " if ($str eq "");
-  Ldapc::ldap_perror($self->{ld}, $str);
+  ldap_perror($self->{ld}, $str);
 }
 
 
@@ -184,25 +183,27 @@ sub search
   my $entry;
   my $res = \$resv;
 
-  $filter = "(objectclass=*)" if ($filter eq "ALL");
-  Ldapc::ldap_msgfree($self->{ldres}) if defined($self->{ldres});
-  if (Ldapc::ldap_is_ldap_url($filter))
+  $scope = str2Scope($scope);
+  $filter = "(objectclass=*)" if ($filter =~ /^ALL$/i);
+
+  ldap_msgfree($self->{ldres}) if defined($self->{ldres});
+  if (ldap_is_ldap_url($filter))
     {
-      if (! Ldapc::ldap_url_search_s($self->{ld}, $filter, $attrsonly, $res))
+      if (! ldap_url_search_s($self->{ld}, $filter, $attrsonly, $res))
 	{
 	  $self->{ldres} = $res;
 	  $self->{ldfe} = 1;
-	  $entry = $self->entry();
+	  $entry = $self->nextEntry();
 	}
     }
   else
     {
-      if (! Ldapc::ldap_search_s($self->{ld}, $basedn, $scope, $filter,
-				 \@attrs, $attrsonly, $res))
+      if (! ldap_search_s($self->{ld}, $basedn, $scope, $filter, \@attrs,
+			  $attrsonly, $res))
 	{
 	  $self->{ldres} = $res;
 	  $self->{ldfe} = 1;
-	  $entry = $self->entry();
+	  $entry = $self->nextEntry();
 	}
     }
 
@@ -220,12 +221,12 @@ sub searchURL
   my $entry;
   my $res = \$resv;
 
-  Ldapc::ldap_msgfree($self->{ldres}) if defined($self->{ldres});
-  if (! Ldapc::ldap_url_search_s($self->{ld}, $url, $attrsonly, $res))
+  ldap_msgfree($self->{ldres}) if defined($self->{ldres});
+  if (! ldap_url_search_s($self->{ld}, $url, $attrsonly, $res))
     {
       $self->{ldres} = $res;
       $self->{ldfe} = 1;
-      $entry = $self->entry();
+      $entry = $self->nextEntry();
     }
 
   return $entry;
@@ -233,9 +234,10 @@ sub searchURL
 
 
 #############################################################################
-# Entry.
+# Get an entry from the search, either the first entry, or the next entry,
+# depending on the call order.
 #
-sub entry
+sub nextEntry
 {
   my $self = shift;
   my %entry;
@@ -250,41 +252,44 @@ sub entry
   if ($self->{ldfe} == 1)
     {
       $self->{ldfe} = 0;
-      $ldentry = Ldapc::ldap_first_entry($self->{ld}, $self->{ldres}); 
+      $ldentry = ldap_first_entry($self->{ld}, $self->{ldres}); 
       $self->{ldentry} = $ldentry;
     }
   else
     {
-      return "" if (!$self->{ldentry});
-      $ldentry = Ldapc::ldap_next_entry($self->{ld}, $self->{ldentry}); 
+      return unless $self->{ldentry};
+      $ldentry = ldap_next_entry($self->{ld}, $self->{ldentry}); 
       $self->{ldentry} = $ldentry;
     }
-  return "" if (!$ldentry);
+  return unless $ldentry;
 
-  $dn = Ldapc::ldap_get_dn($self->{ld}, $self->{ldentry});
+  $dn = ldap_get_dn($self->{ld}, $self->{ldentry});
   $obj->{dn} = $dn;
   $self->{dn} = $dn;
-  $attr = Ldapc::ldap_first_attribute($self->{ld}, $self->{ldentry}, $ber);
+  $attr = ldap_first_attribute($self->{ld}, $self->{ldentry}, $ber);
   return (bless \%entry, Mozilla::LDAP::Entry) unless $attr;
 
-  $vals = Ldapc::ldap_get_values_len($self->{ld}, $self->{ldentry}, $attr);
+  $vals = ldap_get_values_len($self->{ld}, $self->{ldentry}, $attr);
   $obj->{$attr} = $vals;
   push(@ocorder, $attr);
 
-  while ($attr = Ldapc::ldap_next_attribute($self->{ld},
-					    $self->{ldentry}, $ber))
+  while ($attr = ldap_next_attribute($self->{ld},
+				     $self->{ldentry}, $ber))
     {
-      $vals = Ldapc::ldap_get_values_len($self->{ld}, $self->{ldentry}, $attr);
+      $vals = ldap_get_values_len($self->{ld}, $self->{ldentry}, $attr);
       $obj->{$attr} = $vals;
       push(@ocorder, $attr);
     }
   $obj->{_oc_order_} = \@ocorder;
   $obj->{_self_obj_} = $obj;
 
-  Ldapc::ldap_ber_free($ber, 0) if $ber;
+  ldap_ber_free($ber, 0) if $ber;
 
   return bless \%entry, Mozilla::LDAP::Entry;
 }
+
+# This is deprecated...
+*entry = \*nextEntry;
 
 
 #############################################################################
@@ -295,7 +300,7 @@ sub close
   my $self = shift;
   my $ret = 1;
 
-  $ret = Ldapc::ldap_unbind_s($self->{ld}) if defined($self->{ld});
+  $ret = ldap_unbind_s($self->{ld}) if defined($self->{ld});
   undef $self->{ld};
 
   return (!$ret);
@@ -312,13 +317,13 @@ sub delete
 
   if ($dn ne "")
     {
-      $dn = $self->normalizeDN($dn);
+      $dn = normalizeDN($dn);
     }
   else
     {
-      $dn = $self->normalizeDN($self->{dn});
+      $dn = normalizeDN($self->{dn});
     }
-  $ret = Ldapc::ldap_delete_s($self->{ld}, $dn) if ($dn ne "");
+  $ret = ldap_delete_s($self->{ld}, $dn) if ($dn ne "");
 
   return (!$ret)
 }
@@ -340,7 +345,7 @@ sub add
       @args = ();
       foreach $key (keys %$entry)
 	{
-	  next if (($key eq "dn") || ($key =~ /^_.+_/));
+	  next if (($key eq "dn") || ($key =~ /^_.+_$/));
 	  @vals = @{$entry->{$key}};
 	  foreach $val (@vals)
 	    {
@@ -348,7 +353,7 @@ sub add
 	    }
 	}
     }
-  $ret = Ldapc::ldap_add_s($self->{ld}, $entry->{dn}, \@args) if ($#args > $[);
+  $ret = ldap_add_s($self->{ld}, $entry->{dn}, \@args) if ($#args > $[);
 
   return (!$ret);
 }
@@ -370,7 +375,7 @@ sub update
     {
       next if (($key eq "dn") || ($key =~ /^_.+_/));
 
-      if ($entry->{"_${key}_modified"})
+      if ($entry->{"_${key}_modified_"})
 	{
 	  @vals = @{$entry->{$key}};
 	  if ($#vals == $[)
@@ -380,7 +385,7 @@ sub update
 	  else
 	    {
 	      grep(($new{$_} = 1), @vals);
-	      foreach (@{$entry->{"_${key}_save"}})
+	      foreach (@{$entry->{"_${key}_save_"}})
 		{
 		  if (! $new{$_})
 		    {
@@ -394,17 +399,17 @@ sub update
 		}
 	    }
 
-	  delete $entry->{_self_obj_}->{"_${key}_modified"};
-	  undef @{$entry->{"_${key}_save"}};
+	  delete $entry->{_self_obj_}->{"_${key}_modified_"};
+	  undef @{$entry->{"_${key}_save_"}};
 	}
-      elsif ($entry->{"_${key}_deleted"})
+      elsif ($entry->{"_${key}_deleted_"})
 	{
 	  push(@args, "delete", $key, "");
-	  undef @{$entry->{"_${key}_save"}};
-	  delete $entry->{_self_obj_}->{"_${key}_deleted"};
+	  undef @{$entry->{"_${key}_save_"}};
+	  delete $entry->{_self_obj_}->{"_${key}_deleted_"};
 	}
     }
-  $ret = Ldapc::ldap_modify($self->{ld}, $entry->{dn}, \@args)
+  $ret = ldap_modify($self->{ld}, $entry->{dn}, \@args)
     if ($#args > $[);
 
   return (!$ret);
@@ -419,10 +424,9 @@ sub setRebindProc
   my ($self, $proc) = @_;
 
   # Should we try to reinitialize the connection?
-  die "No LDAP connection"
-    unless defined($self->{ld});
+  die "No LDAP connection" unless defined($self->{ld});
 
-  Ldapc::ldap_set_rebind_proc($self->{"ld"}, $proc);
+  ldap_set_rebind_proc($self->{"ld"}, $proc);
 }
 
 
@@ -439,12 +443,12 @@ __END__
 
 =head1 NAME
 
-  Ldapp.pm - Object Oriented API for the LDAP SDK.
+  Mozilla::LDAP::Conn - Object Oriented API for the LDAP SDK.
 
 =head1 SYNOPSIS
 
-  use Ldapp;
-  use LdapUtils;
+  use Mozilla::LDAP::Conn;
+  use Mozilla::LDAP::Utils;
 
 =head1 ABSTRACT
 
@@ -453,10 +457,10 @@ module. Even though it's certainly possible, and sometimes even necessary,
 to call the native LDAP C SDK functions, we strongly recommend you use
 these object classes.
 
-It's not required to use our LdapUtils.pm package, but it's
-convenient and good for portability if you use as much as you can from
-that package as well. This implies using the LdapConf package as well,
-even though you usually don't need to use it directly.
+It's not required to use our ::Utils.pm package, but it's convenient and
+good for portability if you use as much as you can from that package as
+well. This implies using the LdapConf package as well, even though you
+usually don't need to use it directly.
 
 =head1 DESCRIPTION
 
@@ -465,22 +469,24 @@ experience with LDAP, I suggest you read some of the literature out
 there. The LDAP Deployment Book, or the LDAP C SDK documentation are good
 starting points.
 
-There are two main object classes in this package, the primary class is to
-establish and use an LDAP connection. This class tracks the LDAP
-connection, it's current status, and the current search (if any). Every
-time you call the B<search> method of an Ldapp object, you'll reset it's
-state.
+This object class tracks the LDAP connection, it's current status, and the
+current search (if any). Every time you call the B<search> method of an
+Ldapp object, you'll reset it's state. It depends heavily on the ::Entry
+class, which are used to retrieve, modify and update a single entry.
 
-The second class is for retrieving, modifying and updating a single entry
-from the LDAP server. The B<search> and B<entry> methods from the
-Ldapp class returns Ldapp::Entry objects. You also have to instantiate
-(and modify) a new Entry object when you want to add new entries to an
-LDAP server.
+The B<search> and B<entry> methods from the Ldapp class returns ::Entry
+objects. You also have to instantiate (and modify) a new Entry object when
+you want to add new entries to an LDAP server. Alternatively, the add()
+method will also take a hash array as argument, to make it easy to create
+new LDAP entries.
 
 To assure that changes to an entry are updated properly, we strongly
 recommend you use the native methods of this object class. Even though you
 can modify certain elements directly, it could cause changes not to be
-committed to the LDAP server.
+committed to the LDAP server. If there's something missing from the API,
+please let us know, or even fix it yourself.
+
+=head1 Some LDAP basics
 
 An entry consist of a DN, and a hash array of pointers to attribute
 values. Each attribute value (except the DN) is an array, but you have to
@@ -511,13 +517,13 @@ are all RDNs. One particular property for a RDN is that they must be
 unique within it's sub-tree. Hence, there can only be one user with
 C<uid=leif> within the ou=people tree.
 
-=head1 CREATING A NEW LDAPP OBJECT
+=head1 CREATING A NEW ::Conn OBJECT
 
 Before you can do anything with LDAP, you'll need to instantiate at least
-one Ldapp object, and connect it to an LDAP server. As you probably
+one ::Connection object, and connect it to an LDAP server. As you probably
 guessed already, this is done with the B<new> method:
 
-    $ldap = new Ldapp("ldap", "389", $bind, $pswd, $cert);
+    $ldap = new Mozilla::LDAP::Conn("ldap", "389", $bind, $pswd, $cert);
     die "Couldn't connect to LDAP server ldap" unless  $ldap;
 
 The arguments are: Host name, port number, and optionally a bind-DN, it's
