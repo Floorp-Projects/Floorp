@@ -38,23 +38,27 @@
 ; initial-lookaheads.
 (defun make-state (grammar kernel kernel-item-alist mode number initial-lookaheads)
   (let ((laitems nil)
-        (laitems-hash (make-hash-table :test #'eq)))
+        (laitems-hash (make-hash-table :test #'eq))
+        (laitems-maybe-forbidden nil)) ;Association list of:  laitem -> terminalset of potentially forbidden terminals; missing means *empty-terminalset*
     (labels
       ;Create a laitem for this item and add the association item->laitem to the laitems-hash
       ;hash table if it's not there already.  Regardless of whether a new laitem was created,
       ;update the laitem's lookaheads to also include the given lookaheads.
       ;forbidden is a terminalset of terminals that must not occur immediately after the dot in this
       ;laitem.  The forbidden set is inherited from constraints in parent laitems in the same state.
+      ;maybe-forbidden is an upper bounds on the forbidden lookaheads in this laitem.
       ;If prev is non-null, update (laitem-propagates prev) to include the laitem and the given
       ;passthrough terminalset if it's not already included there.
       ;If a new laitem was created and its first symbol after the dot exists and is a
       ;nonterminal A, recursively close items A->.rhs corresponding to all rhs's in the
       ;grammar's rule for A.
-      ((close-item (item forbidden lookaheads prev passthroughs)
+      ((close-item (item forbidden maybe-forbidden lookaheads prev passthroughs)
          (let ((production (item-production item))
                (dot (item-dot item))
                (laitem (gethash item laitems-hash)))
-           (terminalset-union-f forbidden (terminalset-complement (general-production-constraint production dot)))
+           (let ((extra-forbidden (terminalset-complement (general-production-constraint production dot))))
+             (terminalset-union-f forbidden extra-forbidden)
+             (terminalset-union-f maybe-forbidden extra-forbidden))
            (unless (terminalset-empty? forbidden)
              (multiple-value-bind (dot-lookaheads dot-passthroughs)
                                   (string-initial-terminals grammar (item-unseen item) (production-constraints production) (item-dot item) t)
@@ -69,25 +73,32 @@
                  ;Convert forbidden into a canonical format by removing terminals that cannot begin this item's expansion anyway.
                  (terminalset-intersection-f forbidden dot-initial))))
            (if laitem
-             (progn
-               (unless (terminalset-= forbidden (laitem-forbidden laitem))
+             (let ((laitem-maybe-forbidden-entry (assoc laitem laitems-maybe-forbidden))
+                   (new-forbidden (terminalset-union forbidden (laitem-forbidden laitem))))
+               (when laitem-maybe-forbidden-entry
+                 (terminalset-intersection-f (cdr laitem-maybe-forbidden-entry) maybe-forbidden))
+               (unless (terminalset-<= new-forbidden (or (cdr laitem-maybe-forbidden-entry) *empty-terminalset*))
                  (error "Two laitems in the same state differing only in forbidden initial terminal constraints: ~S" laitem))
+               (setf (laitem-forbidden laitem) new-forbidden)
                (terminalset-union-f (laitem-lookaheads laitem) lookaheads))
              (let ((item-next-symbol (item-next-symbol item)))
                (setq laitem (allocate-laitem grammar item forbidden lookaheads))
                (push laitem laitems)
                (setf (gethash item laitems-hash) laitem)
+               (unless (terminalset-empty? maybe-forbidden)
+                 (push (cons laitem maybe-forbidden) laitems-maybe-forbidden))
                (when (nonterminal? item-next-symbol)
                  (multiple-value-bind (next-lookaheads next-passthroughs)
                                       (string-initial-terminals grammar (rest (item-unseen item)) (production-constraints production) (1+ dot) nil)
                    (let ((next-prev (and (not (terminalset-empty? next-passthroughs)) laitem)))
                      (dolist (production (rule-productions (grammar-rule grammar item-next-symbol)))
-                       (close-item (make-item grammar production 0) forbidden next-lookaheads next-prev next-passthroughs)))))))
+                       (close-item (make-item grammar production 0) forbidden maybe-forbidden next-lookaheads next-prev next-passthroughs)))))))
            (when prev
              (laitem-add-propagation prev laitem passthroughs)))))
       
       (dolist (acons kernel-item-alist)
         (close-item (car acons) 
+                    *empty-terminalset*
                     *empty-terminalset*
                     (if (eq mode :canonical-lr-1) (cdr acons) initial-lookaheads)
                     (and (eq mode :lalr-1) (cdr acons))
