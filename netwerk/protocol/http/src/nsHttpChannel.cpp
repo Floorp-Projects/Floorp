@@ -2043,11 +2043,12 @@ nsHttpChannel::GetCredentials(const char *challenges,
             }
             else if (!identFromURI || nsCRT::strcmp(ident->User(), entry->Identity().User()) == 0) {
                 LOG(("  taking identity from auth cache\n"));
-                // the password from the auth cache is more likely to be correct than
-                // the one in the URL.  at least, we know that it works with the given
-                // username.  it is possible for a server to distinguish logons based
-                // on the supplied password alone, but that would be quite unusual...
-                // and i don't think we need to worry about such unorthodox cases.
+                // the password from the auth cache is more likely to be
+                // correct than the one in the URL.  at least, we know that it
+                // works with the given username.  it is possible for a server
+                // to distinguish logons based on the supplied password alone,
+                // but that would be quite unusual... and i don't think we need
+                // to worry about such unorthodox cases.
                 ident->Set(entry->Identity());
                 identFromURI = PR_FALSE;
                 if (entry->Creds()[0] != '\0') {
@@ -2064,9 +2065,10 @@ nsHttpChannel::GetCredentials(const char *challenges,
         }
 
         if (!entry && ident->IsEmpty()) {
-            // at this point we are forced to interact with the user to get their
-            // username and password for this domain.
-            rv = PromptForIdentity(host, port, proxyAuth, realm.get(), scheme.get(), authFlags, *ident);
+            // at this point we are forced to interact with the user to get
+            // their username and password for this domain.
+            rv = PromptForIdentity(host, port, proxyAuth, realm.get(), 
+                                   scheme.get(), authFlags, *ident);
             if (NS_FAILED(rv)) return rv;
             identFromURI = PR_FALSE;
         }
@@ -2084,25 +2086,31 @@ nsHttpChannel::GetCredentials(const char *challenges,
                                    &mAuthContinuationState,
                                    getter_Copies(result));
     sessionStateGrip.swap(sessionState);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_SUCCEEDED(rv)) {
+        LOG(("generated creds: %s\n", result.get()));
 
-    LOG(("generated creds: %s\n", result.get()));
+        // let's try these credentials
+        creds = result;
 
-    // let's try these credentials
-    creds = result;
+        // always store the credentials we're trying now so that they will
+        // be used on subsequent links.  This will potentially remove good
+        // credentials from the cache.  This is ok as we don't want to use
+        // cached credentials if the user specified something on the URI
+        // or in another manner.  This is so that we don't transparently
+        // authenticate as someone they're not expecting to authenticate as.
 
-    // don't bother remember the identity if it came from the URI.
-    if (!identFromURI) {
         // find out if this authenticator allows reuse of credentials
-        PRBool saveCreds     = (authFlags & nsIHttpAuthenticator::REUSABLE_CREDENTIALS);
-        PRBool saveChallenge = (authFlags & nsIHttpAuthenticator::REUSABLE_CHALLENGE);
+        PRBool saveCreds
+                = (authFlags & nsIHttpAuthenticator::REUSABLE_CREDENTIALS);
+        PRBool saveChallenge
+                = (authFlags & nsIHttpAuthenticator::REUSABLE_CHALLENGE);
 
         // create a cache entry.  we do this even though we don't yet know that
-        // these credentials are valid b/c we need to avoid prompting the user more
-        // than once in case the credentials are valid.
+        // these credentials are valid b/c we need to avoid prompting the user
+        // more than once in case the credentials are valid.
         //
-        // if the credentials are not reusable, then we don't bother sticking them
-        // in the auth cache.
+        // if the credentials are not reusable, then we don't bother sticking
+        // them in the auth cache.
         rv = authCache->SetAuthEntry(host, port, path.get(), realm.get(),
                                      saveCreds ? creds.get() : nsnull,
                                      saveChallenge ? challenge.get() : nsnull,
@@ -2324,47 +2332,69 @@ nsHttpChannel::SetAuthorizationHeader(nsHttpAuthCache *authCache,
     rv = authCache->GetAuthEntryForPath(host, port, path, &entry);
     if (NS_SUCCEEDED(rv)) {
         // if we are trying to add a header for origin server auth and if the
-        // URL contains an explicit username, then be sure to try the given
-        // username first.
-        if (header == nsHttp::Authorization) {
-            nsHttpAuthIdentity temp;
-            GetIdentityFromURI(0, temp);
-            if (!temp.IsEmpty() &&
-                    nsCRT::strcmp(temp.User(), entry->Identity().User()) != 0)
-                return; // different username; let the server challenge us.
+        // URL contains an explicit username, then try the given username first.
+        // we only want to do this, however, if we know the URL requires auth
+        // based on the presence of an auth cache entry for this URL (which is
+        // true since we are here).  but, if the username from the URL matches
+        // the username from the cache, then we should prefer the password
+        // stored in the cache since that is most likely to be valid.
+        if (header == nsHttp::Authorization && entry->Domain()[0] == '\0') {
+            GetIdentityFromURI(0, ident);
+            // if the usernames match, then clear the ident so we will pick
+            // up the one from the auth cache instead.
+            if (nsCRT::strcmp(ident.User(), entry->User()) == 0)
+                ident.Clear();
         }
+        PRBool identFromURI;
+        if (ident.IsEmpty()) {
+            ident.Set(entry->Identity());
+            identFromURI = PR_FALSE;
+        }
+        else
+            identFromURI = PR_TRUE;
 
         nsXPIDLCString temp;
         const char *creds     = entry->Creds();
         const char *challenge = entry->Challenge();
         // we can only send a preemptive Authorization header if we have either
         // stored credentials or a stored challenge from which to derive
-        // credentials.
-        if (!creds[0] && challenge[0]) {
+        // credentials.  if the identity is from the URI, then we cannot use
+        // the stored credentials.
+        if ((!creds[0] || identFromURI) && challenge[0]) {
             nsCAutoString unused1, unused2;
             rv = SelectChallenge(challenge, unused1, unused2, getter_AddRefs(auth));
             if (NS_SUCCEEDED(rv)) {
                 nsISupports *sessionState = entry->mMetaData;
                 rv = auth->GenerateCredentials(this, challenge,
                                                header == nsHttp::Proxy_Authorization,
-                                               entry->Domain(),
-                                               entry->User(),
-                                               entry->Pass(),
+                                               ident.Domain(),
+                                               ident.User(),
+                                               ident.Password(),
                                                &sessionState,
                                                &mAuthContinuationState,
                                                getter_Copies(temp));
+
                 entry->mMetaData.swap(sessionState);
-                if (NS_SUCCEEDED(rv))
+                if (NS_SUCCEEDED(rv)) {
                     creds = temp.get();
+
+                    //
+                    // set the cached authorization credentials to
+                    // those we used (in case we used the URI
+                    // specified credentials)
+                    rv = authCache->SetAuthEntry(host, port, path,
+                                                 entry->Realm(),
+                                                 creds, challenge,
+                                                 ident, sessionState);
+                }
             }
         }
         if (creds[0]) {
             LOG(("   adding \"%s\" request header\n", header.get()));
             mRequestHead.SetHeader(header, nsDependentCString(creds));
-            // remember the identity that we've tried, so we can know not to try
-            // it again if the server challenges us.
-            ident.Set(entry->Identity());
         }
+        else
+            ident.Clear(); // don't remember the identity
     }
 }
 
