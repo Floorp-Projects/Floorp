@@ -122,6 +122,7 @@ BEGIN_MESSAGE_MAP(CBrowserView, CWnd)
     ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, OnUpdatePaste)
     ON_UPDATE_COMMAND_UI(ID_FILE_PRINT, OnUpdateFilePrint)
     ON_UPDATE_COMMAND_UI(ID_FILE_PRINTSETUP, OnUpdatePrintSetup)
+    ON_UPDATE_COMMAND_UI(ID_VIEW_IMAGE, OnUpdateViewImage)
     //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -780,6 +781,11 @@ void CBrowserView::OnViewImageInNewWindow()
 {
     if(mCtxMenuImgSrc.Length())
         OpenURLInNewWindow(mCtxMenuImgSrc.get());
+}
+
+void CBrowserView::OnUpdateViewImage(CCmdUI *pCmdUI)
+{
+    pCmdUI->Enable(mCtxMenuImgSrc.Length() > 0);
 }
 
 void CBrowserView::OnSaveLinkAs()

@@ -189,6 +189,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&View Page Source",           ID_VIEW_SOURCE
         MENUITEM "View Page &Info",             ID_VIEW_INFO
+        MENUITEM "View Background &Image",      ID_VIEW_IMAGE
         MENUITEM SEPARATOR
         MENUITEM "Save &Page As...",            ID_FILE_SAVE_AS
         MENUITEM SEPARATOR

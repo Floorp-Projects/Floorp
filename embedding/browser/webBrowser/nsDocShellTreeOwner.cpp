@@ -1566,18 +1566,18 @@ ChromeContextMenuListener :: ContextMenu ( nsIDOMEvent* aMouseEvent )
       }
       else if (tag.Equals(NS_LITERAL_STRING("html"), nsCaseInsensitiveStringComparator()))
       {
-        // first check if this is a background image that the user was trying to click on
-        // and if the listener is ready for that (only nsIContextMenuListener2 and up)
-        if (menuInfoImpl && menuInfoImpl->HasBackgroundImage(node)) {
-          flags2 |= nsIContextMenuListener2::CONTEXT_BACKGROUND_IMAGE;
-          targetDOMnode = node;
-        }
-
         if (!flags && !flags2) { 
         // only care about this if no other context was found.
             flags |= nsIContextMenuListener::CONTEXT_DOCUMENT;
             flags2 |= nsIContextMenuListener2::CONTEXT_DOCUMENT;
             targetDOMnode = node;
+        }
+        if (!(flags & nsIContextMenuListener::CONTEXT_IMAGE)) {
+          // first check if this is a background image that the user was trying to click on
+          // and if the listener is ready for that (only nsIContextMenuListener2 and up)
+          if (menuInfoImpl && menuInfoImpl->HasBackgroundImage(node)) {
+            flags2 |= nsIContextMenuListener2::CONTEXT_BACKGROUND_IMAGE;
+          }
         }
         break; // exit do-while
       }

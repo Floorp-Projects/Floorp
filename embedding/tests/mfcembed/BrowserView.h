@@ -196,6 +196,7 @@ protected:
     afx_msg void OnUpdateCut(CCmdUI* pCmdUI);
     afx_msg void OnUpdateCopy(CCmdUI* pCmdUI);
     afx_msg void OnUpdatePaste(CCmdUI* pCmdUI);
+    afx_msg void OnUpdateViewImage(CCmdUI* pCmdUI);
     //}}AFX_MSG
     DECLARE_MESSAGE_MAP()
 };
