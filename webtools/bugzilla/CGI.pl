@@ -242,11 +242,9 @@ sub CheckFormFieldDefined (\%$) {
         $fieldname,              # the fieldname to check
        ) = @_;
 
-    if ( !defined $formRef->{$fieldname} ) {
-        print "$fieldname was not defined; ";
-        print Param("browserbugmessage");
-        PutFooter();
-        exit 0;
+    if (!defined $formRef->{$fieldname}) {
+          ThrowCodeError("$fieldname was not defined; " . 
+                                                    Param("browserbugmessage"));
       }
 }
 
@@ -489,22 +487,12 @@ sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
     if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:"\[\] \t\r\n]/) {
-        print "Content-type: text/html\n\n";
-
-        # For security, escape HTML special characters.
-        $addr = html_quote($addr);
-
-        PutHeader("Check e-mail syntax");
-        print "The e-mail address you entered\n";
-        print "(<b>$addr</b>) didn't match our minimal\n";
-        print "syntax checking for a legal email address.\n";
-        print Param('emailregexpdesc') . "\n";
-        print "It must also not contain any of these special characters: " .
-              "<tt>\\ ( ) &amp; &lt; &gt; , ; : \" [ ]</tt> " .
-              "or any whitespace.\n";
-        print "<p>Please click <b>Back</b> and try again.\n";
-        PutFooter();
-        exit;
+        ThrowUserError("The e-mail address you entered(<b>" .
+        html_quote($addr) . "</b>) didn't pass our syntax checking 
+        for a legal email address. " . Param('emailregexpdesc') .
+        ' It must also not contain any of these special characters:
+        <tt>\ ( ) &amp; &lt; &gt; , ; : " [ ]</tt>, or any whitespace.', 
+        "Check e-mail address syntax");
     }
 }
 
@@ -559,24 +547,17 @@ sub confirm_login {
         if ( defined $::FORM{"PleaseMailAPassword"} && !$userid ) {
             # Ensure the new login is valid
             if(!ValidateNewUser($enteredlogin)) {
-                DisplayError("Account Exists");
-                exit;
+                ThrowUserError("That account already exists.");
             }
 
             my $password = InsertNewUser($enteredlogin, "");
-            # There's a template for this - account_created.tmpl - but
-            # it's easier to wait to use it until templatisation has progressed
-            # further; we want to avoid sprinkling multiple copies of the
-            # template setup code everywhere - Gerv.
-            print "Content-Type: text/html\n\n";
-            PutHeader("Account Created");
             MailPassword($enteredlogin, $password);
-            print "The password for the e-mail address\n";
-            print "$enteredlogin has been e-mailed to that address.\n";
-            print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
-            print "and enter your password in the form there.\n";
-            PutFooter();
-            exit;
+            
+            $vars->{'login'} = $enteredlogin;
+            
+            print "Content-Type: text/html\n\n";
+            $template->process("account/created.html.tmpl", $vars)
+              || ThrowTemplateError($template->error());                 
         }
 
         # Otherwise, authenticate the user.
@@ -755,14 +736,10 @@ Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:
 Content-type: text/html
 
 ";
-            PutHeader("Your account has been disabled");
-            print $::disabledreason;
-            print "<HR>\n";
-            print "If you believe your account should be restored, please\n";
-            print "send email to " . Param("maintainer") . " explaining\n";
-            print "why.\n";
-            PutFooter();
-            exit();
+            ThrowUserError($::disabledreason . "<hr>" .
+            "If you believe your account should be restored, please " .
+            "send email to " . Param("maintainer") . " explaining why.",
+            "Your account has been disabled");
         }
         print "Content-type: text/html\n\n";
         PutHeader("Login");
@@ -871,72 +848,17 @@ Content-type: text/html
     return $::userid;
 }
 
-
 sub PutHeader {
-    my ($title, $h1, $h2, $extra, $jscript) = (@_);
-
-    if (!defined $h1) {
-        $h1 = $title;
-    }
-    if (!defined $h2) {
-        $h2 = "";
-    }
-    if (!defined $extra) {
-       $extra = "";
-    }
-    $jscript ||= "";
-
-    print qq|
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<HTML>
-<HEAD>
-<TITLE>$title</TITLE>
-| . Param("headerhtml") . qq|
-$jscript
-</HEAD>
-<BODY | . Param("bodyhtml") . qq| $extra>
-| . PerformSubsts(Param("bannerhtml"), undef) . qq|
-<TABLE BORDER="0" CELLSPACING="0">
-<TR>
-<TD VALIGN="TOP" ALIGN="LEFT">
-    <TABLE BORDER="0" CELLPADDING="0" CELLSPACING="2">
-    <TR><TD VALIGN="TOP" ALIGN="LEFT">
-        <FONT SIZE="+1">
-        <B>$h1</B>
-        </FONT>
-    </TD></TR>
-    </TABLE>
-</TD>
-<TD VALIGN="MIDDLE">&nbsp;</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">
-$h2
-</TD></TR></TABLE>
-    |;
-
-    if (Param("shutdownhtml")) {
-        # If we are dealing with the params page, we want
-        # to ignore shutdownhtml
-        if ($0 !~ m:[\\/](do)?editparams.cgi$:) {
-            print "<p>\n";
-            print Param("shutdownhtml");
-            exit;
-        }
-    }
+    ($vars->{'title'}, $vars->{'h1'}, $vars->{'h2'}, 
+     $vars->{'extra'}, $vars->{'jscript'}) = (@_);
+     
+    $::template->process("global/header.html.tmpl", $::vars)
+      || ThrowTemplateError($::template->error());
 }
 
-# Putfooter echoes footerhtml and by default prints closing tags
-#
-# param
-#   dontclose (boolean): avoid sending </body></html>
-#
-# Example:
-# Putfooter(); # normal close
-# Putfooter(1); # don't send closing tags
 sub PutFooter {
-    my ( $dontclose ) = @_;
-    print PerformSubsts(Param("footerhtml"));
-    print "\n</body></html>\n" if ( ! $dontclose );
-    SyncAnyPendingShadowChanges();
+    $::template->process("global/footer.html.tmpl", $::vars)
+      || ThrowTemplateError($::template->error());
 }
 
 ###############################################################################
@@ -1035,11 +957,19 @@ sub CheckIfVotedConfirmed {
                     "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
                     "($id,$who,now(),$fieldid,'0','1')");
         }
+        
         AppendComment($id, DBID_to_name($who),
                       "*** This bug has been confirmed by popular vote. ***");
-        print "<TABLE BORDER=1><TD><H2>Bug $id has been confirmed by votes.</H2>\n";
-        system("./processmail", $id);
-        print "<TD><A HREF=\"show_bug.cgi?id=$id\">Go To BUG# $id</A></TABLE>\n";
+                      
+        $vars->{'type'} = "votes";
+        $vars->{'id'} = $id;
+        $vars->{'mail'} = "";
+        open(PMAIL, "-|") or exec('./processmail', $id);
+        $vars->{'mail'} .= $_ while <PMAIL>;
+        close(PMAIL);
+        
+        $template->process("bug/process/results.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
     }
 
 }
