@@ -20,98 +20,102 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= js
+LIBRARY_NAME	= mozjs
+
+DIRS		= $(OJIDIR) fdlibm xpconnect
+
+CSRCS		= \
+		jsapi.c \
+		jsarena.c \
+		jsarray.c \
+		jsatom.c \
+		jsbool.c \
+		jscntxt.c \
+		jsdate.c \
+		jsdbgapi.c \
+		jsdtoa.c \
+		jsemit.c \
+		jsexn.c \
+		jsfun.c \
+		jsgc.c \
+		jshash.c \
+		jsinterp.c \
+		jslock.c \
+		jslog2.c \
+		jslong.c \
+		jsmath.c \
+		jsnum.c \
+		jsobj.c \
+		jsopcode.c \
+		jsparse.c \
+		jsprf.c \
+		jsregexp.c \
+		jsscan.c \
+		jsscope.c \
+		jsscript.c \
+		jsstr.c \
+		jsutil.c \
+		jsxdrapi.c \
+		prmjtime.c \
+		$(NULL)
+
+EXPORTS		= \
+		js.msg \
+		jsapi.h \
+		jsarray.h \
+		jsarena.h \
+		jsatom.h \
+		jsbit.h \
+		jsbool.h \
+		jsclist.h \
+		jscntxt.h \
+		jscompat.h \
+		jsconfig.h \
+		jsdate.h \
+		jsdbgapi.h \
+		jsemit.h \
+		jsfun.h \
+		jsgc.h \
+		jshash.h \
+		jsinterp.h \
+		jslock.h \
+		jslong.h \
+		jsmath.h \
+		jsnum.h \
+		jsobj.h \
+		jsopcode.tbl \
+		jsopcode.h \
+		jsosdep.h \
+		jsotypes.h \
+		jsparse.h \
+		jsprf.h \
+		jsprvtd.h \
+		jspubtd.h \
+		jsregexp.h \
+		jsscan.h \
+		jsscope.h \
+		jsscript.h \
+		jsstr.h \
+		jstypes.h \
+		jsutil.h \
+		jsxdrapi.h \
+		jsstddef.h \
+		$(NULL)
+
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+
 FDLIBM_LIBRARY	= fdlibm/libfdm.a
 JSMATH_PRELINK	= jsmathtemp.o
 JS_SAFE_ARENA	= 1
 
-include $(DEPTH)/config/autoconf.mk
-
-LIBRARY_NAME	= mozjs
-MODULE		= js
-
-CSRCS		= jsapi.c \
-		  jsarena.c \
-		  jsarray.c \
-		  jsatom.c \
-		  jsbool.c \
-		  jscntxt.c \
-		  jsdate.c \
-		  jsdbgapi.c \
-		  jsdtoa.c \
-		  jsemit.c \
-		  jsexn.c \
-		  jsfun.c \
-		  jsgc.c \
-		  jshash.c \
-		  jsinterp.c \
-		  jslock.c \
-		  jslog2.c \
-		  jslong.c \
-		  jsmath.c \
-		  jsnum.c \
-		  jsobj.c \
-		  jsopcode.c \
-		  jsparse.c \
-		  jsprf.c \
-		  jsregexp.c \
-		  jsscan.c \
-		  jsscope.c \
-		  jsscript.c \
-		  jsstr.c \
-		  jsutil.c \
-		  jsxdrapi.c \
-		  prmjtime.c \
-		  $(NULL)
-
-EXPORTS		= js.msg \
-		  jsapi.h \
-		  jsarray.h \
-		  jsarena.h \
-		  jsatom.h \
-		  jsbit.h \
-		  jsbool.h \
-		  jsclist.h \
-		  jscntxt.h \
-		  jscompat.h \
-		  jsconfig.h \
-		  jsdate.h \
-		  jsdbgapi.h \
-		  jsemit.h \
-		  jsfun.h \
-		  jsgc.h \
-		  jshash.h \
-		  jsinterp.h \
-		  jslock.h \
-		  jslong.h \
-		  jsmath.h \
-		  jsnum.h \
-		  jsobj.h \
-		  jsopcode.tbl \
-		  jsopcode.h \
-		  jsosdep.h \
-		  jsotypes.h \
-		  jsparse.h \
-		  jsprf.h \
-		  jsprvtd.h \
-		  jspubtd.h \
-		  jsregexp.h \
-		  jsscan.h \
-		  jsscope.h \
-		  jsscript.h \
-		  jsstr.h \
-		  jstypes.h \
-		  jsutil.h \
-		  jsxdrapi.h \
-		  jsstddef.h \
-		  $(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
 ifdef MOZ_OJI
-DIRS		= liveconnect
+OJIDIR		= liveconnect
 endif
 
-DIRS		+= fdlibm xpconnect
+DASH_R		= -r
 
 include $(topsrcdir)/config/config.mk
 
@@ -136,6 +140,20 @@ ifndef BUILD_OPT
 MOCHAFILE	= 1
 endif
 
+ifndef NSBUILDROOT
+JSJAVA_STUBHEADERS = \
+		-I$(topsrcdir)/sun-java/include/_gen \
+		-I$(topsrcdir)/sun-java/netscape/javascript/_jri \
+		-I$(topsrcdir)/sun-java/netscape/security/_jri
+else
+JSJAVA_STUBHEADERS = -I$(JRI_GEN_DIR) -I$(JDK_GEN_DIR)
+endif
+
+JSJAVA_CFLAGS	= \
+		-I$(topsrcdir)/sun-java/md-include \
+		-I$(topsrcdir)/sun-java/include \
+		$(JSJAVA_STUBHEADERS)
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DEXPORT_JS_API
@@ -147,15 +165,14 @@ GARBAGE		+= $(JSMATH_PRELINK) jscpucfg.o jsautocfg.h jsautocfg.tmp jscpucfg
 TARGETS		+= jscpucfg
 
 ifneq ($(findstring -L,$(NSPR_LIBS)),)
-NSPR_STATIC_PATH	= $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
+NSPR_STATIC_PATH = $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
 else
-NSPR_STATIC_PATH	= $(DIST)/lib
+NSPR_STATIC_PATH = $(DIST)/lib
 endif
 
-ifeq ($(OS_ARCH),BeOS)
 LDFLAGS		= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS))
-else
-LDFLAGS		= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS)) -lm
+ifneq ($(OS_ARCH),BeOS)
+LDFLAGS		+= -lm
 endif
 
 ifdef JS_SAFE_ARENA
@@ -174,6 +191,29 @@ ifdef JS_VERSION
 DEFINES		+= -DJS_VERSION=$(JS_VERSION)
 endif
 
+ifeq ($(OS_ARCH),FreeBSD)
+LDFLAGS		+= -pthread
+endif
+ifeq ($(OS_ARCH),IRIX)
+ifneq ($(basename $(OS_RELEASE)),5)
+LDFLAGS		+= -n32
+DASH_R		+= -n32
+endif
+endif
+ifeq ($(OS_ARCH),Linux)
+LDFLAGS		+= -ldl
+endif
+ifeq ($(OS_ARCH),OSF1)
+LDFLAGS		+= -lc_r
+endif
+ifeq ($(OS_ARCH),QNX)
+ifeq ($(OS_TARGET),NTO)
+DASH_R		= -r
+else
+DASH_R		=
+endif
+endif
+ifeq ($(OS_ARCH),SunOS)
 ifeq ($(CPU_ARCH),sparc)
 
 ifndef JS_NO_ULTRA
@@ -190,49 +230,11 @@ else
 ASFLAGS		+= -Wa,-xarch=v8,-P,-L,-D_ASM,-D__STDC__=0
 endif
 
-endif # sparc
-
-ifndef NSBUILDROOT
-JSJAVA_STUBHEADERS = -I$(topsrcdir)/sun-java/include/_gen \
-		     -I$(topsrcdir)/sun-java/netscape/javascript/_jri \
-		     -I$(topsrcdir)/sun-java/netscape/security/_jri
-else
-JSJAVA_STUBHEADERS = -I$(JRI_GEN_DIR) -I$(JDK_GEN_DIR)
 endif
-
-JSJAVA_CFLAGS	= -I$(topsrcdir)/sun-java/md-include \
-		  -I$(topsrcdir)/sun-java/include \
-		  $(JSJAVA_STUBHEADERS)
-
-DASH_R		= -r
-
-ifeq ($(OS_ARCH),IRIX)
-ifneq ($(basename $(OS_RELEASE)),5)
-LDFLAGS		+= -n32
-DASH_R		+= -n32
-endif
-endif
-ifeq ($(OS_ARCH),Linux)
-LDFLAGS		+= -ldl
-endif
-ifeq ($(OS_ARCH),FreeBSD)
-LDFLAGS		+= -pthread
-endif
-ifeq ($(OS_ARCH),OSF1)
-LDFLAGS		+= -lc_r
-endif
-ifeq ($(OS_ARCH),QNX)
-ifeq ($(OS_TARGET),NTO)
-DASH_R		= -r
-else
-DASH_R		=
-endif
-endif
-ifeq ($(OS_ARCH),SunOS)
 ifeq ($(OS_RELEASE),4.1)
-LDFLAGS         += -ldl -lnsl
+LDFLAGS		+= -ldl -lnsl
 else
-LDFLAGS         += -lposix4 -ldl -lnsl -lsocket
+LDFLAGS		+= -lposix4 -ldl -lnsl -lsocket
 endif
 endif
 
@@ -255,14 +257,12 @@ jsdtoa.o: jsdtoa.c
 	$(CC) -o $@ -c $(filter-out -O, $(CFLAGS)) $<
 endif
 
-# ripped from $(topsrcdir)/config/rules.mk
 $(FDLIBM_LIBRARY):
-	set -e;					\
-	set $(EXIT_ON_ERROR);			\
-	echo "cd $(@D); $(MAKE) $(@F)";		\
-	oldDir=`pwd`;				\
-	cd $(@D); $(MAKE) $(@F); cd $$oldDir;	\
-	set +e;
+	@set -e; set $(EXIT_ON_ERROR); \
+	oldDir=`pwd`; \
+	echo "cd $(@D); $(MAKE) $(@F)"; \
+	cd $(@D); $(MAKE) $(@F); cd $$oldDir; \
+	set +e
 
 jsopcode.h jsopcode.c: jsopcode.tbl
 
