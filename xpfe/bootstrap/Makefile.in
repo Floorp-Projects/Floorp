@@ -214,6 +214,13 @@ CPPSRCS += nsNativeAppSupportWin.cpp nsNativeAppSupportBase.cpp
 OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS += nsNativeAppSupportCocoa.mm
+LDFLAGS += \
+        -framework Cocoa \
+        $(NULL)   
+endif
+
 XP_DIST_DEP_LIBS := $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
 
 ifeq ($(OS_ARCH),OS2)

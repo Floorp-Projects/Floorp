@@ -520,6 +520,7 @@ widget/src/gtksuperwin/Makefile
 widget/src/gtkxtbin/Makefile
 widget/src/photon/Makefile
 widget/src/mac/Makefile
+widget/src/cocoa/Makefile
 widget/src/xlib/Makefile
 widget/src/os2/Makefile
 widget/src/os2/res/Makefile

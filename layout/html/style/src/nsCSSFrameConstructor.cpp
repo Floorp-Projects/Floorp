@@ -3841,10 +3841,9 @@ nsCSSFrameConstructor::HasGfxScrollbars()
     }
   }
 
-  //return mHasGfxScrollbars;
-  // we no longer support native scrollbars. Except in form elements. So 
-  // we always return true
-  return PR_TRUE;
+  // while we don't support native scrollbars for Seamonkey, some embedding
+  // clients demand them (but may still want XUL). Give them that option.
+  return mHasGfxScrollbars;
 }
 
 PRBool

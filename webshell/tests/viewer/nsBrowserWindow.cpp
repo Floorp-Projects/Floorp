@@ -31,7 +31,7 @@
 #include "nsIPref.h" 
 #include "prmem.h"
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #include "nsBrowserWindow.h"
 #define NS_IMPL_IDS
 #else
