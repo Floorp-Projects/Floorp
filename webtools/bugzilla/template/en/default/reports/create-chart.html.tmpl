@@ -34,7 +34,7 @@
   donames = 1 
 %]
 
-<script>
+<script language="JavaScript" type="text/javascript">
 [%# This function takes necessary action on selection of a subcategory %]
 function subcatSelected() {
   var cat = document.chartform.category.value;
@@ -59,14 +59,88 @@ function subcatSelected() {
   
 [% gttext = "Grand Total" %]
 
-<h3>Current Data Sets:</h3>
+<form method="get" action="chart.cgi" name="chartform">  
+  <p>
+    <span style="color: red">
+      Note: this new charting system is in beta. This means that retention of
+      data or defined data sets is on a best-efforts basis only, and cannot be
+      guaranteed. Please file any bugs you find or enhancement ideas you think
+      of.
+    </span>
+  </p>
+  
+  <table cellpadding="2" cellspacing="2" border="0">
+    [% IF NOT category OR category.size == 0 %]
+      <tr>
+        <td>
+          <i>No data sets exist, or none are visible to you.</i>
+        </td>
+      </tr>
+    [% ELSE %]
+      <tr>
+        <th>Category:</th>
+        <noscript><th></th></noscript>
+        <th>Sub-category:</th>
+        <noscript><th></th></noscript>
+        <th>Name:</th>
+        <th><br>
+        </th>
+      </tr>
+      <tr>
+      
+        [% PROCESS series_select sel = { name => 'category', 
+                                         size => 5,
+                                         onchange = "catSelected();
+                                                     subcatSelected();" } %]
+                                   
+        <noscript>
+          <td>
+            <input type="submit" name="action-assemble" value="Update --&gt;">
+          </td>
+        </noscript>
+        
+        [% PROCESS series_select sel = { name => 'subcategory', 
+                                         size => 5,
+                                         onchange = "subcatSelected()" } %]
+                                   
+        <noscript>
+          <td>
+            <input type="submit" name="action-assemble" value="Update --%gt;">
+          </td>
+        </noscript>
+        
+        <td align="left">
+          <label for="name" accesskey="N">
+            <select name="name" id="name" style="width: 15em"
+                    size="5" multiple="multiple"
+              [% FOREACH x = name.keys.sort %]
+                <option value="[% name.$x FILTER html %]">
+                  [% x FILTER html %]</option>
+              [% END %]
+            </select>
+          </label>
+        </td>
 
-<form method="get" action="chart.cgi" name="chartform">
+        <td align="center" valign="middle"> 
+          <input type="submit" name="action-add" value="Add To List"><br>
+        </td>
+      </tr>
+    [% END %]
+  </table>
+
+  <script language="JavaScript" type="text/javascript">
+    document.chartform.category[0].selected = true;
+    catSelected();
+    subcatSelected();
+  </script>
+
+  <h3>List Of Data Sets To Plot</h3>
+
   [% IF chart.lines.size > 0 %]
-    <table border="0" cellspacing="2" cellpadding="2">
+    <table cellspacing="2" cellpadding="2">
       <tr>
         <th>Select</th>
-        <th>As</th>
+        <th>Label</th>
         <th></th>
         <th>Data Set</th>
         <th>Subs</th>
@@ -121,15 +195,13 @@ function subcatSelected() {
                      value="[% series.series_id %]">
             </td>
 
-            <td>
-              [% IF series.creator != 0 %]
-                [% IF series.isSubscribed(user.id) %]
-                  <input type="submit" value="Unsubscribe" style="width: 12ex;"
-                         name="action-unsubscribe[% series.series_id %]">
-                [% ELSE %]
-                  <input type="submit" value="Subscribe" style="width: 12ex;"
-                         name="action-subscribe[% series.series_id %]">
-                [% END %]
+            <td align="center">
+              [% IF series.creator != 0 AND series.isSubscribed(user.id) %]
+                <input type="submit" value="Unsubscribe" style="width: 12ex;"
+                       name="action-unsubscribe[% series.series_id %]">
+              [% ELSE %]
+                <input type="submit" value="Subscribe" style="width: 12ex;"
+                       name="action-subscribe[% series.series_id %]">
               [% END %]
             </td>
 
@@ -181,7 +253,7 @@ function subcatSelected() {
         </td>
 
         <td></td>
-        <td valign="bottom"> 
+        <td valign="bottom" colspan="2"> 
           <b>Date Range:</b> 
           <input type="text" size="12" name="datefrom" 
             value="[% time2str("%Y-%m-%d", chart.datefrom) IF chart.datefrom%]">
@@ -190,92 +262,33 @@ function subcatSelected() {
             value="[% time2str("%Y-%m-%d", chart.dateto) IF chart.dateto %]">
         </td>
 
-        <td valign="bottom">
-        </td>
-
         <td style="text-align: right" valign="bottom">
-          <input type="submit" name="action-wrap" value="Chart"
-                 style="width: 5em;">
+          <input type="submit" name="action-wrap" value="Chart This List">
         </td>
       </tr>
     </table>
   [% ELSE %]
   <p><i>None</i></p>
-  [% END %]
-  
-<h3>Select Data Sets:</h3>
-
-  <table cellpadding="2" cellspacing="2" border="0">
-    [% IF NOT category OR category.size == 0 %]
-      <tr>
-        <td>
-          <i>You do not have permissions to see any data sets, or none
-             exist.</i>
-        </td>
-      </tr>
-    [% ELSE %]
-      <tr>
-        <th>Category:</th>
-        <noscript><th></th></noscript>
-        <th>Sub-category:</th>
-        <noscript><th></th></noscript>
-        <th>Name:</th>
-        <th><br>
-        </th>
-      </tr>
-      <tr>
-      
-        [% PROCESS series_select sel = { name => 'category', 
-                                         size => 5,
-                                         onchange = "catSelected();
-                                                     subcatSelected();" } %]
-                                   
-        <noscript>
-          <td>
-            <input type="submit" name="action-assemble" value="Update -->">
-          </td>
-        </noscript>
-        
-        [% PROCESS series_select sel = { name => 'subcategory', 
-                                         size => 5,
-                                         onchange = "subcatSelected()" } %]
-                                   
-        <noscript>
-          <td>
-            <input type="submit" name="action-assemble" value="Update -->">
-          </td>
-        </noscript>
-        
-        <td align="left">
-          <label for="name" accesskey="N">
-            <select name="name" id="name" style="width: 15em"
-                    size="5" multiple="multiple"
-              [% FOREACH x = name.keys.sort %]
-                <option value="[% name.$x FILTER html %]"
-                  [%# " selected" IF lsearch(default.name, x) != -1 %]>
-                  [% x FILTER html %]</option>
-              [% END %]
-            </select>
-          </label>
-        </td>
-
-        <td style="text-align: center; vertical-align: middle;"> 
-          <input type="submit" name="action-add" value="Add" 
-                 style="width: 3em;"><br>
-        </td>
-      </tr>
-    [% END %]
-  </table>
-
-  <script>
-    document.chartform.category[0].selected = true;
-    catSelected();
-    subcatSelected();
-  </script>
+  [% END %]  
 </form>
 
+<h4>How Subscriptions Work</h4>
+
+<p>
+Administrators may mark data sets as public, which then show up in everyone's
+list. All others are not public, and you must explicitly subscribe to them in
+order for them to appear in your list.
+</p>
+
+<p>
+When you 
 [% IF UserInGroup('editbugs') %]
-  <h3><a href="query.cgi?format=create-series">New Data Set</a></h3>
-[% END %]
+  <a href="query.cgi?format=create-series">create a new data set</a>,
+[% ELSE %]
+  create a new data set,
+[% END %]                 
+you are automatically subscribed to it. When the last person unsubscribes 
+from a data set, data stops being collected.
+</p>
 
 [% PROCESS global/footer.html.tmpl %]

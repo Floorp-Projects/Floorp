@@ -33,6 +33,7 @@
   [% button_name = "Change" %]
 
   [% PROCESS reports/series.html.tmpl %]
+  <input type="hidden" name="action-alter" value="1">
   
   [% IF default.series_id %]
     <input type="hidden" name="series_id" value="[% default.series_id %]">
@@ -40,8 +41,13 @@
 </form>
 
 <p>
-  <b>Creator</b>: <a href="mailto:[% creator.email FILTER html %]">
-  [% creator.email FILTER html %]</a>
+  <b>Creator</b>: 
+  [% IF creator.email %]
+    <a href="mailto:[% creator.email FILTER html %]">
+    [% creator.email FILTER html %]</a>
+  [% ELSE %]
+    (automatically created by [% terms.Bugzilla %])
+  [% END %]
 </p>
 
 <p>

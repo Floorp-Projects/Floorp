@@ -32,34 +32,19 @@
   onload = "selectProduct(document.forms['chartform']);"
 %]
 
-[% button_name = "I'm Feeling Buggy" %]
-
 <form method="get" action="chart.cgi" name="chartform">
   
 [% PROCESS search/form.html.tmpl %]
 
-<table>
-  <tr>
-    <td>
-      <input type="radio" id="action-search"
-             name="action" value="search" checked="checked">
-      <label for="action-search">Run this search</label></td>
-  </tr>
-
-  <tr>
-    <td>
-      <input type="radio" id="action-create" name="action" value="create">
-      <label for="action-create">
-        Start recording [% terms.bug %] count data for this search, as follows:
-      </label>
-      <br>
+<p>
+  <input type="submit" name="action-search" value="Run Search">
+  to see which bugs would be included in this series.
+</p>
+    
+<h3>Data Set Parameters</h3>
       
-      [% INCLUDE reports/series.html.tmpl %]
+[% INCLUDE reports/series.html.tmpl %]
       
-    </td>
-  </tr>
-</table>
-
 <hr>
 
 [% PROCESS "search/boolean-charts.html.tmpl" %]
