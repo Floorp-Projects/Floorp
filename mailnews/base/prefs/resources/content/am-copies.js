@@ -22,7 +22,6 @@ var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Compon
 var gFccRadioElemChoice, gDraftsRadioElemChoice, gTmplRadioElemChoice;
 var gFccRadioElemChoiceLocked, gDraftsRadioElemChoiceLocked, gTmplRadioElemChoiceLocked;
 var gDefaultPickerMode = "1";
-var gMessengerBundle;
 
 var gFccFolderWithDelim, gDraftsFolderWithDelim, gTemplatesFolderWithDelim;
 
@@ -61,7 +60,6 @@ function onInit() {
                      tmplFolderPickerId);
     initBccSelf();
     setupFccItems();
-    gMessengerBundle = document.getElementById("bundle_messenger");
     SetSpecialFolderNamesWithDelims();
 }
 
@@ -216,13 +214,11 @@ function noteSelectionChange(radioItemId)
 function SetSpecialFolderNamesWithDelims()
 {
     var folderDelim = "/";
-    var sentFolderName =  gMessengerBundle.getString('sentFolderName');
-    var draftsFolderName =  gMessengerBundle.getString('draftsFolderName');
-    var templatesFolderName =  gMessengerBundle.getString('templatesFolderName');
-	
-    gFccFolderWithDelim = folderDelim + sentFolderName;
-    gDraftsFolderWithDelim = folderDelim + draftsFolderName;
-    gTemplatesFolderWithDelim = folderDelim + templatesFolderName;
+    /* we use internal names known to everyone like "Sent", "Templates" and "Drafts" */
+
+    gFccFolderWithDelim = folderDelim + "Sent";
+    gDraftsFolderWithDelim = folderDelim + "Drafts";
+    gTemplatesFolderWithDelim = folderDelim + "Templates";
 }
 
 // Save all changes on this page
