@@ -48,10 +48,12 @@
       ;grammar's rule for A.
       ((close-item (item forbidden lookaheads prev passthroughs)
          (let ((production (item-production item))
+               (dot (item-dot item))
                (laitem (gethash item laitems-hash)))
+           (terminalset-union-f forbidden (terminalset-complement (general-production-constraint production dot)))
            (unless (terminalset-empty? forbidden)
              (multiple-value-bind (dot-lookaheads dot-passthroughs)
-                                  (string-initial-terminals grammar (item-unseen item) (production-constraints production) (item-dot item))
+                                  (string-initial-terminals grammar (item-unseen item) (production-constraints production) (item-dot item) t)
                (let ((dot-initial (terminalset-union dot-lookaheads dot-passthroughs)))
                  ;Check whether any terminal can start this item.  If not, skip this item altogether.
                  (when (terminalset-empty? (terminalset-difference dot-initial forbidden))
@@ -72,14 +74,11 @@
                (push laitem laitems)
                (setf (gethash item laitems-hash) laitem)
                (when (nonterminal? item-next-symbol)
-                 (let* ((dot (item-dot item))
-                        (next-forbidden (terminalset-union forbidden
-                                                           (terminalset-complement (general-production-lookahead-constraint production dot)))))
-                   (multiple-value-bind (next-lookaheads next-passthroughs)
-                                        (string-initial-terminals grammar (rest (item-unseen item)) (production-constraints production) (1+ dot))
-                     (let ((next-prev (and (not (terminalset-empty? next-passthroughs)) laitem)))
-                       (dolist (production (rule-productions (grammar-rule grammar item-next-symbol)))
-                         (close-item (make-item grammar production 0) next-forbidden next-lookaheads next-prev next-passthroughs))))))))
+                 (multiple-value-bind (next-lookaheads next-passthroughs)
+                                      (string-initial-terminals grammar (rest (item-unseen item)) (production-constraints production) (1+ dot) nil)
+                   (let ((next-prev (and (not (terminalset-empty? next-passthroughs)) laitem)))
+                     (dolist (production (rule-productions (grammar-rule grammar item-next-symbol)))
+                       (close-item (make-item grammar production 0) forbidden next-lookaheads next-prev next-passthroughs)))))))
            (when prev
              (laitem-add-propagation prev laitem passthroughs)))))
       
@@ -111,6 +110,32 @@
     (dolist (shift-symbol (sorted-hash-table-keys shift-symbols-hash))
       (let ((kernel-item-alist (gethash shift-symbol shift-symbols-hash)))
         (funcall f shift-symbol (sort (mapcar #'car kernel-item-alist) #'< :key #'item-number) kernel-item-alist)))))
+
+
+; f is a function that takes a terminal variant as an argument.
+; For each variant of the given terminal (which, along with kernel-item-alist, was obtained from
+; state-each-shift-item-alist's callback), determine whether that variant can actually occur at the
+; current position or whether it is forbidden by constraints.  If it can occur, call f with that variant.
+; Signal an error if some laitems in kernel-item-alist indicate that a variant can occur while others
+; indicate that the same variant cannot occur.  Also signal an internal error if no variant can occur, as
+; make-state should have filtered such shift items out.
+(defun each-shift-symbol-variant (f grammar terminal kernel-item-alist)
+  (let ((n-applicable-variants 0))
+    (dolist (variant (terminal-variants grammar terminal))
+      (let ((allowed nil)
+            (forbidden nil))
+        (dolist (acons kernel-item-alist)
+          (if (terminal-in-terminalset grammar variant (laitem-forbidden (cdr acons)))
+            (setq forbidden t)
+            (setq allowed t)))
+        (when (eq allowed forbidden)
+          (error "Symbol ~S ~A" variant
+                 (if allowed "both allowed and forbidden" "neither allowed nor forbidden")))
+        (unless forbidden
+          (incf n-applicable-variants)
+          (funcall f variant))))
+    (when (zerop n-applicable-variants)
+      (error "Internal parser error"))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -231,8 +256,11 @@
                    (if (nonterminal? shift-symbol)
                      (push (cons shift-symbol destination-state)
                            (state-gotos source-state))
-                     (push (cons shift-symbol (make-shift-transition destination-state))
-                           (state-transitions source-state)))))
+                     (each-shift-symbol-variant
+                      #'(lambda (shift-symbol-variant)
+                          (push (cons shift-symbol-variant (make-shift-transition destination-state))
+                                (state-transitions source-state)))
+                      grammar shift-symbol kernel-item-alist))))
              source-state))
           (dolist (dirty-state (sort (hash-table-keys dirty-states) #'< :key #'state-number))
             (when (remhash dirty-state dirty-states)
@@ -244,10 +272,13 @@
                      (let* ((destination-binding (assoc shift-symbol (state-gotos dirty-state) :test *grammar-symbol-=*))
                             (destination-state (assert-non-null (cdr destination-binding))))
                        (setf (cdr destination-binding) (update-destination-state destination-state kernel-item-alist)))
-                     (let* ((destination-transition (cdr (assoc shift-symbol (state-transitions dirty-state) :test *grammar-symbol-=*)))
-                            (destination-state (assert-non-null (transition-state destination-transition))))
-                       (setf (transition-state destination-transition)
-                             (update-destination-state destination-state kernel-item-alist)))))
+                     (each-shift-symbol-variant
+                      #'(lambda (shift-symbol-variant)
+                          (let* ((destination-transition (cdr (assoc shift-symbol-variant (state-transitions dirty-state) :test *grammar-symbol-=*)))
+                                 (destination-state (assert-non-null (transition-state destination-transition))))
+                            (setf (transition-state destination-transition)
+                                  (update-destination-state destination-state kernel-item-alist))))
+                      grammar shift-symbol kernel-item-alist)))
                dirty-state))))))
     (setf (grammar-states grammar) (nreverse states))
     initial-state))
@@ -288,8 +319,11 @@
                (if (nonterminal? shift-symbol)
                  (push (cons shift-symbol destination-state)
                        (state-gotos source-state))
-                 (push (cons shift-symbol (make-shift-transition destination-state))
-                       (state-transitions source-state)))))
+                 (each-shift-symbol-variant
+                  #'(lambda (shift-symbol-variant)
+                      (push (cons shift-symbol-variant (make-shift-transition destination-state))
+                            (state-transitions source-state)))
+                  grammar shift-symbol kernel-item-alist))))
          source-state)))
     (setf (grammar-states grammar) (nreverse states))
     initial-state))
@@ -340,7 +374,7 @@
           (let ((lookaheads (terminalset-difference
                              (terminalset-intersection
                               (laitem-lookaheads laitem)
-                              (general-production-lookahead-constraint (item-production item) (item-dot item)))
+                              (general-production-constraint (item-production item) (item-dot item)))
                              (laitem-forbidden laitem))))
             (if (grammar-symbol-= (item-lhs item) *start-nonterminal*)
               (when (terminal-in-terminalset grammar *end-marker* lookaheads)
@@ -445,8 +479,8 @@
 
 
 ; Make the grammar and compile its parser.  kind should be either :lalr-1 or :lr-1.
-(defun make-and-compile-grammar (kind parametrization start-symbol grammar-source &optional excluded-nonterminals-source)
-  (compile-parser (make-grammar parametrization start-symbol grammar-source excluded-nonterminals-source)
+(defun make-and-compile-grammar (kind parametrization start-symbol grammar-source &rest grammar-options)
+  (compile-parser (apply #'make-grammar parametrization start-symbol grammar-source grammar-options)
                   kind))
 
 
