@@ -29,7 +29,6 @@ const nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
 
 var gFilterBundle;
 var gPromptService;
-var gFilterListDialogAlreadyOpen = false;
 var gFilterListMsgWindow = null;
 
 function onLoad()
@@ -74,17 +73,9 @@ function onLoad()
         onNewFilter(window.arguments[0].prefillValue);
 }
 
-function openPrefillOnExistingFilterList(emailAddress)
-{
-  gFilterListDialogAlreadyOpen = true;
-  onNewFilter(emailAddress);
-}
 function onCancel()
 {
-  if(gFilterListDialogAlreadyOpen)
-    gFilterListDialogAlreadyOpen = false;
-  else
-    window.close();
+  window.close();
 }
   
 function onOk()

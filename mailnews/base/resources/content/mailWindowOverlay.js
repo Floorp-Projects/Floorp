@@ -1067,45 +1067,11 @@ function MsgSearchAddresses()
 function MsgFilters(emailAddress)
 {
     var preselectedFolder = GetFirstSelectedMsgFolder();
-    var windowManagerInterface = GetWindowMediator();
-    var filterList = windowManagerInterface.getMostRecentWindow("mailnews:filterlist");
     var args = { folder: preselectedFolder };
     if (emailAddress)
       args.prefillValue = emailAddress;
-
-    if (filterList)
-    {
-      var filterEditor = windowManagerInterface.getMostRecentWindow("mailnews:filtereditor");
-
-      // If the filtereditor is open, then we focus that because it is modal and
-      // thus blocking the filterlist from focusing.
-      if (filterEditor)
-      {
-        if(emailAddress)
-        {
-          if(!gPromptService) {
-            gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-            gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
-          }
-
-          gPromptService.alert(window,
-                gBrandBundle.getString("brandShortName"),
-                gMessengerBundle.getString('cannotHaveTwoFilterRulesText')
-          );
-        }
-        filterEditor.focus();
-      }
-      else
-      {
-        if(emailAddress)
-          filterList.openPrefillOnExistingFilterList(emailAddress);
-        else
-          filterList.focus();
-      }
-    }
-    else
-      window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 
-                          "chrome,resizable,centerscreen,dialog=yes", args);
+    window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 
+                        "chrome,modal,resizable,centerscreen,dialog=yes", args);
 }
 
 function MsgViewAllHeaders()
