@@ -60,8 +60,16 @@ do
       shift 2
       ;;
     -*)
-      echo "Unknown option: $1" 1>&2
-      exit 1
+	case $1 in
+		-ProfileManager | -ProfileWizard | -installer | -edit | -mail | -pref | -compose | -editor | -addressbook | -chrome )
+		moreargs=$1
+		shift
+		;;
+	*)
+		echo "Unknown option: $1" 1>&2
+		exit 1
+		;;
+	esac
       ;;
     *)
       break
@@ -69,4 +77,4 @@ do
  esac
 done
 
-$dist_bin/run-mozilla.sh $script_args ./apprunner ${1+"$@"}
+$dist_bin/run-mozilla.sh $script_args ./apprunner $moreargs ${1+"$@"}
