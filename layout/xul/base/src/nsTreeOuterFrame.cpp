@@ -94,24 +94,11 @@ nsTreeOuterFrame::HandleEvent(nsIPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
   *aEventStatus = nsEventStatus_eConsumeDoDefault;
-  if (aEvent->message == NS_KEY_DOWN) {
-    // Retrieve the tree frame.
-    nsIFrame* curr = mFrames.FirstChild();
-    while (curr) {
-      nsCOMPtr<nsIContent> content;
-      curr->GetContent(getter_AddRefs(content));
-      if (content) {
-        nsCOMPtr<nsIAtom> tag;
-        content->GetTag(*getter_AddRefs(tag));
-        if (tag && tag.get() == nsXULAtoms::tree) {
-          // This is our actual tree frame.
-          return curr->HandleEvent(aPresContext, aEvent, aEventStatus);
-        }
-      }
-
-      curr->GetNextSibling(&curr);
-    }
-  }
+  if (aEvent->message == NS_KEY_PRESS) {
+    nsITreeFrame* tree = FindTreeFrame(aPresContext);
+    nsTreeFrame* treeFrame = (nsTreeFrame*)tree;
+    return treeFrame->HandleEvent(aPresContext, aEvent, aEventStatus);
+  } 
   return NS_OK;
 }
 
