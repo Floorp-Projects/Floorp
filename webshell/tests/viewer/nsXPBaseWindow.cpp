@@ -258,8 +258,7 @@ void nsXPBaseWindow::ForceRefresh()
   nsIPresShell* shell;
   GetPresShell(shell);
   if (nsnull != shell) {
-    nsCOMPtr<nsIViewManager> vm;
-    shell->GetViewManager(getter_AddRefs(vm));
+    nsIViewManager *vm = shell->GetViewManager();
     if (vm) {
       nsIView* root;
       vm->GetRootView(root);

@@ -2128,18 +2128,19 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
     nsresult rv = NS_OK;
     //if that failed get it from the pres shell
     if (!frameSelection)
-      rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+      frameSelection = shell->FrameSelection();
 
     nsCOMPtr<nsIContent> content;
-    if (NS_SUCCEEDED(rv) && frameSelection){
-      PRInt32 offset;
-      PRInt32 length;
+    PRInt32 offset;
+    PRInt32 length;
 
-      rv = GetContentAndOffsetsForSelection(aPresContext,getter_AddRefs(content),&offset,&length);
-      if (NS_SUCCEEDED(rv) && content){
-        rv = frameSelection->LookUpSelection(content, mContentOffset, 
-                              mContentLength , &details, PR_FALSE);
-      }
+    rv = GetContentAndOffsetsForSelection(aPresContext,
+                                          getter_AddRefs(content),
+                                          &offset, &length);
+    if (NS_SUCCEEDED(rv) && content) {
+      rv = frameSelection->LookUpSelection(content, mContentOffset,
+                                           mContentLength, &details,
+                                           PR_FALSE);
     }
       
     //where are the selection points "really"
@@ -2314,19 +2315,19 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
       //if that failed get it from the pres shell
       nsresult rv = NS_OK;
       if (!frameSelection)
-        rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+        frameSelection = shell->FrameSelection();
       nsCOMPtr<nsIContent> content;
-      if (NS_SUCCEEDED(rv) && frameSelection){
-        PRInt32 offset;
-        PRInt32 length;
+      PRInt32 offset;
+      PRInt32 length;
 
-        rv = GetContentAndOffsetsForSelection(aPresContext,getter_AddRefs(content),&offset,&length);
-        if (NS_SUCCEEDED(rv) && content){
-          rv = frameSelection->LookUpSelection(content, mContentOffset, 
-                                mContentLength , &details, PR_FALSE);
-        }
+      rv = GetContentAndOffsetsForSelection(aPresContext,
+                                            getter_AddRefs(content),
+                                            &offset, &length);
+      if (NS_SUCCEEDED(rv) && content) {
+        rv = frameSelection->LookUpSelection(content, mContentOffset, 
+                                             mContentLength, &details,
+                                             PR_FALSE);
       }
-
         
       //where are the selection points "really"
       SelectionDetails *sdptr = details;
@@ -2992,19 +2993,18 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
       nsresult rv = NS_OK;
       frameSelection = do_QueryInterface(selCon); //this MAY implement
       if (!frameSelection)//if that failed get it from the presshell
-        rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+        frameSelection = shell->FrameSelection();
       nsCOMPtr<nsIContent> content;
-      if (NS_SUCCEEDED(rv) && frameSelection)
-      {
-        PRInt32 offset;
-        PRInt32 length;
+      PRInt32 offset;
+      PRInt32 length;
 
-        rv = GetContentAndOffsetsForSelection(aPresContext,getter_AddRefs(content),&offset,&length);
-        if (NS_SUCCEEDED(rv))
-        {
-          rv = frameSelection->LookUpSelection(content, mContentOffset, 
-                                mContentLength , &details, PR_FALSE);
-        }
+      rv = GetContentAndOffsetsForSelection(aPresContext,
+                                            getter_AddRefs(content),
+                                            &offset, &length);
+      if (NS_SUCCEEDED(rv)) {
+        rv = frameSelection->LookUpSelection(content, mContentOffset, 
+                                             mContentLength, &details,
+                                             PR_FALSE);
       }
 
       //where are the selection points "really"
@@ -3218,17 +3218,18 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
       frameSelection = do_QueryInterface(selCon); //this MAY implement
       nsresult rv = NS_OK;
       if (!frameSelection)//if that failed get it from the presshell
-        rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+        frameSelection = shell->FrameSelection();
       nsCOMPtr<nsIContent> content;
-      if (NS_SUCCEEDED(rv) && frameSelection){
-        PRInt32 offset;
-        PRInt32 length;
+      PRInt32 offset;
+      PRInt32 length;
 
-        rv = GetContentAndOffsetsForSelection(aPresContext, getter_AddRefs(content),&offset,&length);
-        if (NS_SUCCEEDED(rv)){
-          rv = frameSelection->LookUpSelection(content, mContentOffset, 
-                                mContentLength , &details, PR_FALSE);
-        }
+      rv = GetContentAndOffsetsForSelection(aPresContext,
+                                            getter_AddRefs(content),
+                                            &offset, &length);
+      if (NS_SUCCEEDED(rv)) {
+        rv = frameSelection->LookUpSelection(content, mContentOffset, 
+                                             mContentLength, &details,
+                                             PR_FALSE);
       }
         
       //where are the selection points "really"
@@ -3650,19 +3651,19 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
         frameSelection = do_QueryInterface(selCon); //this MAY implement
       }
       if (!frameSelection)
-        rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
-      if (NS_SUCCEEDED(rv) && frameSelection){
-        nsCOMPtr<nsIContent> content;
-        PRInt32 offset;
-        PRInt32 length;
+        frameSelection = shell->FrameSelection();
 
-        rv = GetContentAndOffsetsForSelection(aPresContext, getter_AddRefs(content),&offset,&length);
-        if (NS_SUCCEEDED(rv) && content){
-          rv = frameSelection->LookUpSelection(content, offset,
-                                length , &details, PR_TRUE);
-// PR_TRUE last param used here! we need to see if we are still selected. so no shortcut
+      nsCOMPtr<nsIContent> content;
+      PRInt32 offset;
+      PRInt32 length;
 
-        }
+      rv = GetContentAndOffsetsForSelection(aPresContext,
+                                            getter_AddRefs(content),
+                                            &offset, &length);
+      if (NS_SUCCEEDED(rv) && content) {
+        rv = frameSelection->LookUpSelection(content, offset,
+                                             length, &details, PR_TRUE);
+        // PR_TRUE last param used here! we need to see if we are still selected. so no shortcut
       }
     }
     if (!details)

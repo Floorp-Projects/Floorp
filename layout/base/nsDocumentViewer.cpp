@@ -2368,8 +2368,7 @@ NS_IMETHODIMP
 DocumentViewerImpl::SetAuthorStyleDisabled(PRBool aStyleDisabled)
 {
   if (mPresShell) {
-    nsresult rv = mPresShell->SetAuthorStyleDisabled(aStyleDisabled);
-    if (NS_FAILED(rv)) return rv;
+    mPresShell->SetAuthorStyleDisabled(aStyleDisabled);
   }
   return CallChildren(SetChildAuthorStyleDisabled, &aStyleDisabled);
 }
@@ -2377,9 +2376,10 @@ DocumentViewerImpl::SetAuthorStyleDisabled(PRBool aStyleDisabled)
 NS_IMETHODIMP
 DocumentViewerImpl::GetAuthorStyleDisabled(PRBool* aStyleDisabled)
 {
-  *aStyleDisabled = PR_FALSE;
   if (mPresShell) {
-    return mPresShell->GetAuthorStyleDisabled(aStyleDisabled);
+    *aStyleDisabled = mPresShell->GetAuthorStyleDisabled();
+  } else {
+    *aStyleDisabled = PR_FALSE;
   }
   return NS_OK;
 }

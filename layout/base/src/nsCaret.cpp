@@ -303,16 +303,6 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   if (!contentNode)
     return NS_ERROR_FAILURE;
 
-  //get frame selection and find out what frame to use...
-  nsCOMPtr<nsIFrameSelection> frameSelection;
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-  if (presShell)
-    err = presShell->GetFrameSelection(getter_AddRefs(frameSelection));
-  else
-    return NS_ERROR_FAILURE;
-  if (NS_FAILED(err) || !frameSelection)
-    return err?err : NS_ERROR_FAILURE;  
-
   // find the frame that contains the content node that has focus
   nsIFrame*       theFrame = nsnull;
   PRInt32         theFrameOffset = 0;
@@ -323,7 +313,12 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
     hint = nsIFrameSelection::HINTRIGHT;
   else
     hint = nsIFrameSelection::HINTLEFT;
-  err = frameSelection->GetFrameForNodeOffset(contentNode, focusOffset, hint, &theFrame, &theFrameOffset);
+
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  err = presShell->FrameSelection()->GetFrameForNodeOffset(contentNode,
+                                                           focusOffset, hint,
+                                                           &theFrame,
+                                                           &theFrameOffset);
   if (NS_FAILED(err) || !theFrame)
     return err;
   
@@ -532,12 +527,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
   if (!presShell)
     return PR_FALSE;
     
-  nsCOMPtr<nsIFrameSelection> frameSelection;
-  presShell->GetFrameSelection(getter_AddRefs(frameSelection));
-  if (!frameSelection)
-    return PR_FALSE;
-
-
+  nsIFrameSelection *frameSelection = presShell->FrameSelection();
   nsIFrame* theFrame = nsnull;
   PRInt32   theFrameOffset = 0;
 

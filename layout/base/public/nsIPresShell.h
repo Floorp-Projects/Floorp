@@ -90,8 +90,8 @@ class nsIStyleSheet;
 class nsCSSFrameConstructor;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x16c9c6ee, 0xd9c0, 0x463d, \
-  {0xbc, 0x5e, 0x4d, 0xdf, 0x60, 0xdd, 0x73, 0xfc} }
+{ 0x3b864134, 0x4e25, 0x4cd0, \
+  {0xa6, 0x9e, 0x34, 0x14, 0x13, 0x18, 0x39, 0x58} }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -167,7 +167,6 @@ public:
 
   nsPresContext* GetPresContext() { return mPresContext; }
 
-  NS_IMETHOD GetViewManager(nsIViewManager** aResult) = 0;
   nsIViewManager* GetViewManager() { return mViewManager; }
 
 #ifdef _IMPL_NS_LAYOUT
@@ -185,6 +184,7 @@ public:
 
 #endif
 
+  // These two methods are used only by viewer
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle) = 0;
 
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle) = 0;
@@ -193,15 +193,23 @@ public:
   /* Enable/disable author style level. Disabling author style disables the entire
    * author level of the cascade, including the HTML preshint level.
    */
-  NS_IMETHOD SetAuthorStyleDisabled(PRBool aStyleDisabled) = 0;
-  NS_IMETHOD GetAuthorStyleDisabled(PRBool* aStyleDisabled) = 0;
+  // XXX these could easily be inlined, but there is a circular #include
+  // problem with nsStyleSet.
+  NS_HIDDEN_(void) SetAuthorStyleDisabled(PRBool aDisabled);
+  NS_HIDDEN_(PRBool) GetAuthorStyleDisabled();
 
   /*
    * Called when stylesheets are added/removed/enabled/disabled to rebuild
    * all style data for a given pres shell without necessarily reconstructing
    * all of the frames.
    */
-  NS_IMETHOD ReconstructStyleData() = 0;
+  virtual NS_HIDDEN_(void) ReconstructStyleDataExternal();
+  NS_HIDDEN_(void) ReconstructStyleDataInternal();
+#ifdef _IMPL_NS_LAYOUT
+  void ReconstructStyleData() { ReconstructStyleDataInternal(); }
+#else
+  void ReconstructStyleData() { ReconstructStyleDataExternal(); }
+#endif
 
   /** Setup all style rules required to implement preferences
    * - used for background/text/link colors and link underlining
@@ -213,16 +221,6 @@ public:
    */
   NS_IMETHOD SetPreferenceStyleRules(PRBool aForceReflow) = 0;
 
-  /** Allow client to enable and disable the use of the preference style rules,
-   *  by type. 
-   *  NOTE: type argument is currently ignored, but is in the API for 
-   *        future refinement
-   *
-   *  - initially created for bugs 31816, 20760, 22963
-   */
-  NS_IMETHOD EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType=0xFF) = 0;
-  NS_IMETHOD ArePrefStyleRulesEnabled(PRBool& aEnabled) = 0;
-
   /**
    * Gather titles of all selectable (alternate and preferred) style sheets
    * fills void array with nsString* caller must free strings
@@ -230,10 +228,11 @@ public:
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList) = 0;
 
   /**
-   * GetFrameSelection will return the Frame based selection API you 
-   *  cannot go back and forth anymore with QI with nsIDOM sel and nsIFrame sel.
+   * FrameSelection will return the Frame based selection API.
+   * You cannot go back and forth anymore with QI between nsIDOM sel and
+   * nsIFrame sel.
    */
-  NS_IMETHOD GetFrameSelection(nsIFrameSelection** aSelection) = 0;  
+  nsIFrameSelection* FrameSelection() { return mSelection; }
 
   // Make shell be a document observer
   NS_IMETHOD BeginObservingDocument() = 0;
@@ -672,11 +671,14 @@ protected:
   // these are the same Document and PresContext owned by the DocViewer.
   // we must share ownership.
   nsIDocument*              mDocument;      // [STRONG]
-  nsPresContext*           mPresContext;   // [STRONG]
+  nsPresContext*            mPresContext;   // [STRONG]
   nsStyleSet*               mStyleSet;      // [OWNS]
   nsCSSFrameConstructor*    mFrameConstructor; // [OWNS]
   nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
+  nsIFrameSelection*        mSelection;
   nsFrameManagerBase        mFrameManager;  // [OWNS]
+
+  PRPackedBool              mStylesHaveChanged;
 };
 
 /**

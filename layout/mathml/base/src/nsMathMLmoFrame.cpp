@@ -134,11 +134,10 @@ nsMathMLmoFrame::IsFrameInSelection(nsPresContext* aPresContext,
     if (NS_SUCCEEDED(rv) && selCon)
       frameSelection = do_QueryInterface(selCon);
     if (!frameSelection)
-      rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
-    if (NS_SUCCEEDED(rv) && frameSelection) {
-      frameSelection->LookUpSelection(aFrame->GetContent(),
-				      0, 1, &details, PR_TRUE);
-    }
+      frameSelection = shell->FrameSelection();
+
+    frameSelection->LookUpSelection(aFrame->GetContent(),
+				    0, 1, &details, PR_TRUE);
   }
   if (!details)
     return PR_FALSE;

@@ -1154,8 +1154,7 @@ NS_IMETHODIMP nsBrowserWindow::ForceRefresh()
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-    nsCOMPtr<nsIViewManager> vm;
-    shell->GetViewManager(getter_AddRefs(vm));
+    nsIViewManager *vm = shell->GetViewManager();
     if (vm) {
       nsIView* root;
       vm->GetRootView(root);
@@ -2479,8 +2478,7 @@ DumpViewsRecurse(nsIDocShell* aDocShell, FILE* out)
     fprintf(out, "docshell=%p \n", aDocShell);
     nsIPresShell* shell = GetPresShellFor(aDocShell);
     if (nsnull != shell) {
-      nsCOMPtr<nsIViewManager> vm;
-      shell->GetViewManager(getter_AddRefs(vm));
+      nsIViewManager *vm = shell->GetViewManager();
       if (vm) {
         nsIView* root;
         vm->GetRootView(root);

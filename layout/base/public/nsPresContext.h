@@ -185,7 +185,7 @@ public:
    * Access the image animation mode for this context
    */
   PRUint16     ImageAnimationMode() const { return mImageAnimationMode; }
-  virtual void SetImageAnimationModeExternal(PRUint16 aMode);
+  virtual NS_HIDDEN_(void) SetImageAnimationModeExternal(PRUint16 aMode);
   NS_HIDDEN_(void) SetImageAnimationModeInternal(PRUint16 aMode);
 #ifdef _IMPL_NS_LAYOUT
   void SetImageAnimationMode(PRUint16 aMode)
@@ -227,7 +227,7 @@ public:
   /**
    * Get the font metrics for a given font.
    */
-  virtual already_AddRefed<nsIFontMetrics>
+  virtual NS_HIDDEN_(already_AddRefed<nsIFontMetrics>)
    GetMetricsForExternal(const nsFont& aFont);
   NS_HIDDEN_(already_AddRefed<nsIFontMetrics>)
     GetMetricsForInternal(const nsFont& aFont);
@@ -243,7 +243,7 @@ public:
    * Get the default font correponding to the given ID.  This object is
    * read-only, you must copy the font to modify it.
    */
-  virtual const nsFont* GetDefaultFontExternal(PRUint8 aFontID) const;
+  virtual NS_HIDDEN_(const nsFont*) GetDefaultFontExternal(PRUint8 aFontID) const;
   NS_HIDDEN_(const nsFont*) GetDefaultFontInternal(PRUint8 aFontID) const;
 #ifdef _IMPL_NS_LAYOUT
   const nsFont* GetDefaultFont(PRUint8 aFontID) const
@@ -328,7 +328,7 @@ public:
 
   NS_HIDDEN_(void) SetContainer(nsISupports* aContainer);
 
-  virtual already_AddRefed<nsISupports> GetContainerExternal();
+  virtual NS_HIDDEN_(already_AddRefed<nsISupports>) GetContainerExternal();
   NS_HIDDEN_(already_AddRefed<nsISupports>) GetContainerInternal();
 #ifdef _IMPL_NS_LAYOUT
   already_AddRefed<nsISupports> GetContainer()
@@ -462,7 +462,7 @@ public:
    *
    *  @lina 07/12/2000
    */
-  virtual PRBool BidiEnabledExternal() const;
+  virtual NS_HIDDEN_(PRBool) BidiEnabledExternal() const;
   NS_HIDDEN_(PRBool) BidiEnabledInternal() const;
 #ifdef _IMPL_NS_LAYOUT
   PRBool BidiEnabled() const { return BidiEnabledInternal(); }

@@ -2019,16 +2019,6 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
     // then we use the document fonts anyway
     useDocumentFonts =
       mPresContext->GetCachedBoolPref(kPresContext_UseDocumentFonts);
-    if (!useDocumentFonts) {
-      // check if the prefs have been disabled for this shell
-      // - if prefs are disabled then we use the document fonts anyway (yet another override)
-      PRBool prefsEnabled = PR_TRUE;
-      nsIPresShell *shell = mPresContext->GetPresShell();
-      if (shell)
-        shell->ArePrefStyleRulesEnabled(prefsEnabled);
-      if (!prefsEnabled)
-        useDocumentFonts = PR_TRUE;
-    }
   }
 
   // See if we are in the chrome

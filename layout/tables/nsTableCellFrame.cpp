@@ -305,39 +305,38 @@ nsTableCellFrame::DecorateForSelection(nsPresContext* aPresContext,
     PRBool isSelected =
       (GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
     if (isSelected) {
-      nsCOMPtr<nsIFrameSelection> frameSelection;
-      nsresult result = aPresContext->PresShell()->
-        GetFrameSelection(getter_AddRefs(frameSelection));
-      if (NS_SUCCEEDED(result)) {
-        PRBool tableCellSelectionMode;
-        result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
-        if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
-          nscolor       bordercolor;
-          if (displaySelection == nsISelectionController::SELECTION_DISABLED) {
-            bordercolor = NS_RGB(176,176,176);// disabled color
-          }
-          else {
-            aPresContext->LookAndFeel()->
-              GetColor(nsILookAndFeel::eColor_TextSelectBackground,
-                       bordercolor);
-          }
-          PRInt16 t2p = (PRInt16) aPresContext->PixelsToTwips();
-          if ((mRect.width >(3*t2p)) && (mRect.height > (3*t2p)))
-          {
-            //compare bordercolor to ((nsStyleColor *)myColor)->mBackgroundColor)
-            bordercolor = EnsureDifferentColors(bordercolor, aStyleColor->mBackgroundColor);
-            //outerrounded
-            aRenderingContext.SetColor(bordercolor);
-            aRenderingContext.DrawLine(t2p, 0, mRect.width, 0);
-            aRenderingContext.DrawLine(0, t2p, 0, mRect.height);
-            aRenderingContext.DrawLine(t2p, mRect.height, mRect.width, mRect.height);
-            aRenderingContext.DrawLine(mRect.width, t2p, mRect.width, mRect.height);
-            //middle
-            aRenderingContext.DrawRect(t2p, t2p, mRect.width-t2p, mRect.height-t2p);
-            //shading
-            aRenderingContext.DrawLine(2*t2p, mRect.height-2*t2p, mRect.width-t2p, mRect.height- (2*t2p));
-            aRenderingContext.DrawLine(mRect.width - (2*t2p), 2*t2p, mRect.width - (2*t2p), mRect.height-t2p);
-          }
+      nsIFrameSelection *frameSelection =
+        aPresContext->PresShell()->FrameSelection();
+
+      PRBool tableCellSelectionMode;
+      nsresult result =
+        frameSelection->GetTableCellSelection(&tableCellSelectionMode);
+      if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
+        nscolor       bordercolor;
+        if (displaySelection == nsISelectionController::SELECTION_DISABLED) {
+          bordercolor = NS_RGB(176,176,176);// disabled color
+        }
+        else {
+          aPresContext->LookAndFeel()->
+            GetColor(nsILookAndFeel::eColor_TextSelectBackground,
+                     bordercolor);
+        }
+        PRInt16 t2p = (PRInt16) aPresContext->PixelsToTwips();
+        if ((mRect.width >(3*t2p)) && (mRect.height > (3*t2p)))
+        {
+          //compare bordercolor to ((nsStyleColor *)myColor)->mBackgroundColor)
+          bordercolor = EnsureDifferentColors(bordercolor, aStyleColor->mBackgroundColor);
+          //outerrounded
+          aRenderingContext.SetColor(bordercolor);
+          aRenderingContext.DrawLine(t2p, 0, mRect.width, 0);
+          aRenderingContext.DrawLine(0, t2p, 0, mRect.height);
+          aRenderingContext.DrawLine(t2p, mRect.height, mRect.width, mRect.height);
+          aRenderingContext.DrawLine(mRect.width, t2p, mRect.width, mRect.height);
+          //middle
+          aRenderingContext.DrawRect(t2p, t2p, mRect.width-t2p, mRect.height-t2p);
+          //shading
+          aRenderingContext.DrawLine(2*t2p, mRect.height-2*t2p, mRect.width-t2p, mRect.height- (2*t2p));
+          aRenderingContext.DrawLine(mRect.width - (2*t2p), 2*t2p, mRect.width - (2*t2p), mRect.height-t2p);
         }
       }
     }
@@ -491,16 +490,11 @@ nsTableCellFrame::SetSelected(nsPresContext* aPresContext,
   //   only this frame is considered
   nsFrame::SetSelected(aPresContext, aRange, aSelected, aSpread);
 
-  nsCOMPtr<nsIFrameSelection> frameSelection;
-  nsresult result = aPresContext->PresShell()->
-    GetFrameSelection(getter_AddRefs(frameSelection));
-  if (NS_SUCCEEDED(result) && frameSelection) {
-    PRBool tableCellSelectionMode;
-    result = frameSelection->GetTableCellSelection(&tableCellSelectionMode);
-    if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
-      // Selection can affect content, border and outline
-      Invalidate(GetOverflowRect(), PR_FALSE);
-    }
+  PRBool tableCellSelectionMode;
+  nsresult result = aPresContext->PresShell()->FrameSelection()->GetTableCellSelection(&tableCellSelectionMode);
+  if (NS_SUCCEEDED(result) && tableCellSelectionMode) {
+    // Selection can affect content, border and outline
+    Invalidate(GetOverflowRect(), PR_FALSE);
   }
   return NS_OK;
 }
