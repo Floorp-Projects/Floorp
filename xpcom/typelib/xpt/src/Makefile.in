@@ -29,7 +29,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 LIBRARY_NAME	= xpt
 LIB_IS_C_ONLY	= 1
+ifdef CROSS_COMPILE
 HOST_LIBRARY_NAME	= hostxpt
+endif
 
 REQUIRES	= $(MODULE)
 
