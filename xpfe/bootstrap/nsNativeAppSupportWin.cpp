@@ -60,7 +60,6 @@
 #define TURBO_QUIT 1
 
 static HWND hwndForDOMWindow( nsISupports * );
-static nsAutoString closeText;
 
 static
 nsresult
@@ -1670,7 +1669,7 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
 // Utility function that sets up system tray icon.
 void
 nsNativeAppSupportWin::SetupSysTrayIcon() {
-    // Mesages go to the hidden window.
+    // Messages go to the hidden window.
     mIconData.hWnd  = (HWND)MessageWindow();
 
     // Icon is our default application icon.
