@@ -17,10 +17,9 @@ CFLAGS         +=-D_IMPL_NS_CALENDAR
 
 LD_LIBS += \
 	raptorbase \
-	$(NATIVE_RAPTOR_WIDGET) \
 	xpcom$(MOZ_BITS) \
-    $(NATIVE_LIBNLS_LIBS) \
-    util10	\
+	$(NATIVE_LIBNLS_LIBS) \
+	util10	\
 	$(XP_REG_LIB)
 
 AR_LIBS +=  \
