@@ -52,6 +52,13 @@ sub newPassword {
     return ($crypt, $password);
 }
 
+sub encryptPassword {
+    my $self = shift;
+    my($password) = @_;
+    my $crypt = $self->crypt($password);
+    return $crypt;
+}
+
 sub checkPassword {
     my $self = shift;
     my($key, $userData) = @_;

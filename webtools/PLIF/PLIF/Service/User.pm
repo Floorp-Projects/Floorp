@@ -119,13 +119,22 @@ sub objectInit {
     $self->newFieldPassword($newFieldPassword);
     $self->fields({});
     $self->fieldsByID({});
-    # don't forget to update the 'hash' function if you add more fields
+    # don't forget to update the 'hash' function if you add more properties/field whatever you want to call them
     my $fieldFactory = $app->getService('user.fieldFactory');
     foreach my $fieldID (keys(%$fields)) {
         $self->insertField($fieldFactory->createFieldByID($app, $self, $fieldID, $fields->{$fieldID}));
     }
-    $self->groups({%$groups}); # hash of groupID => groupName
-    $self->originalGroups({%$groups}); # a backup used to make a comparison when saving the groups
+    # $groups is an array of arrays containing groupID, groupName, user level in group
+    my $groupsByID = {};
+    my $groupsByName = {};
+    foreach my $group (@$groups) {
+        $groupsByID->{$group->[0]} = [$group->[1], $group->[2]]; # id => name, level
+        $groupsByID->{$group->[1]} = [$group->[0], $group->[2]]; # name => id, level
+    }
+    $self->groupsByID($groupsByID); # authoritative version
+    $self->originalGroupsByID($groupsByID); # a backup used to make a comparison when saving the groups
+    $self->groupsByName($groupsByName); # helpful version for output purposes only
+    # rights
     my %rights = map {$_ => 1} @$rights;
     $self->rights(\%rights); # map a list of strings into a hash for easy access
     $self->{'_DIRTY'}->{'properties'} = not(defined($userID));
@@ -146,7 +155,8 @@ sub hasField {
     return undef;
 }
 
-# if you want to add a field, you do:
+# returns a field *even if it does not exist yet*
+# -- so if you want to add a field by name, you do:
 #     $user->getField('category', 'name')->data($myData);
 sub getField {
     my $self = shift;
@@ -154,6 +164,19 @@ sub getField {
     my $field = $self->hasField($category, $name);
     if (not defined($field)) {
         $field = $self->insertField($self->app->getService('user.fieldFactory')->createFieldByName($self->app, $self, $category, $name));
+    }
+    return $field;
+}
+
+# returns a field *even if it does not exist yet*
+# -- so if you want to add a field by ID, you do:
+#     $user->getField($fieldID)->data($myData);
+sub getFieldByID {
+    my $self = shift;
+    my($ID) = @_;
+    my $field = $self->fieldsByID($ID);
+    if (not defined($field)) {
+        $field = $self->insertField($self->app->getService('user.fieldFactory')->createFieldByID($self->app, $self, $ID));
     }
     return $field;
 }
@@ -183,6 +206,8 @@ sub prepareAddressChange {
     }
 }
 
+# Call this if you don't yet have a field handle.
+# If you have got a new field already, it is safe to just call prepareAddressChange().
 sub prepareAddressAddition {
     my $self = shift;
     my($fieldName, $newAddress, $password) = @_;
@@ -243,13 +268,14 @@ sub hash {
     $result->{'userID'} = $self->userID,
     $result->{'mode'} = $self->mode,
     $result->{'adminMessage'} = $self->adminMessage,
-    $result->{'groups'} = $self->groups;
+    $result->{'groupsByID'} = $self->groupsByID;
+    $result->{'groupsByName'} = $self->groupsByName;
     $result->{'rights'} = [keys(%{$self->rights})];
     $result->{'right'} = $self->rights;
     $result->{'fields'} = {};
     foreach my $field (values(%{$self->fieldsByID})) {
         # XXX should we also pass the field metadata on? (e.g. typeData)
-        $result->{'fields'}->{$field->fieldID} = $field->data; # (not an array btw)
+        $result->{'fields'}->{$field->fieldID} = $field->data; # (not an array btw: could have holes)
         $result->{'fields'}->{$field->category.':'.$field->name} = $field->data;
     }
     return $result;
@@ -263,18 +289,38 @@ sub checkPassword {
 
 sub joinGroup {
     my $self = shift;
-    my($groupID) = @_;
-    $self->{'groups'}->{$groupID} = $self->app->getService('dataSource.user')->getGroupName($self->app, $groupID);
-    $self->invalidateRights();
-    $self->{'_DIRTY'}->{'groups'} = 1;
+    my($groupID, $level) = @_;
+    if ($level > 0) {
+        my $groupName = $self->app->getService('dataSource.user')->getGroupName($self->app, $groupID);
+        $self->{'groupsByID'}->{$groupID} = [$groupName, $level];
+        $self->{'groupsByName'}->{$groupName} = [$groupID, $level];
+        $self->invalidateRights();
+        $self->{'_DIRTY'}->{'groups'} = 1;
+    } else {
+        $self->leaveGroup($groupID, $level);
+    }
 }
 
 sub leaveGroup {
     my $self = shift;
     my($groupID) = @_;
-    delete($self->{'groups'}->{$groupID});
-    $self->invalidateRights();
-    $self->{'_DIRTY'}->{'groups'} = 1;
+    if (defined($self->{'groupsByID'}->{$groupID})) {
+        my $groupName = $self->app->getService('dataSource.user')->getGroupName($self->app, $groupID);
+        delete($self->{'groupsByID'}->{$groupID});
+        delete($self->{'groupsByID'}->{$groupName});
+        $self->invalidateRights();
+        $self->{'_DIRTY'}->{'groups'} = 1;
+    }
+}
+
+sub levelInGroup {
+    my $self = shift;
+    my($groupID) = @_;
+    if (defined($self->{'groupsByID'}->{$groupID})) {
+        return $self->{'groupsByID'}->{$groupID}->[1];
+    } else {
+        return 0;
+    }
 }
 
 
@@ -290,7 +336,7 @@ sub insertField {
 
 sub invalidateRights {
     my $self = shift;
-    my $rights = $self->app->getService('dataSource.user')->getRights($self->app, keys(%{$self->{'groups'}}));
+    my $rights = $self->app->getService('dataSource.user')->getRights($self->app, keys(%{$self->{'groupsByID'}}));
     $self->rights(map {$_ => 1} @$rights); # map a list of strings into a hash for easy access
     # don't set a dirty flag, because rights are merely a convenient
     # cached expansion of the rights data. Changing this externally
@@ -307,7 +353,7 @@ sub propertySet {
                           ($self->propertyExists($name)) and
                           (not defined($self->propertyGet($name))));
     my $result = $self->SUPER::propertySet(@_);
-    if (($name eq 'userID') and (defined($value)) and ($hadUndefinedID)) {
+    if (($hadUndefinedID) and (defined($value))) {
         # we've just aquired an ID, so propagate the change to all fields
         foreach my $field (values(%{$self->fieldsByID})) {
             $field->userID($value);
@@ -322,15 +368,16 @@ sub propertySet {
 sub propertyGet {
     my $self = shift;
     my($name) = @_;
-    if ($name eq 'groups') {
-        return {%{$self->{'groups'}}};
+    if ($name eq 'groupByID') {
+        return {%{$self->{'groupByID'}}};
         # Create new hash so that they can't edit ours. This ensures
         # that they can't inadvertently bypass the DIRTY flagging by
         # propertySet(), above. This does mean that internally we have
-        # to access $self->{'groups'} instead of $self->groups.
+        # to access $self->{'groupsByID'} instead of $self->groupsByID.
     } else {
-        # we don't bother looking at $self->rights, but any changes
-        # made to it won't be saved anyway.
+        # we don't bother looking at $self->rights or
+        # $self->groupsByName, but any changes made to those won't be
+        # saved anyway.
         return $self->SUPER::propertyGet(@_);
     }
 }
@@ -355,15 +402,16 @@ sub writeProperties {
 
 sub writeGroups {
     my $self = shift;
-    # compare the group lists before and after and see which got added and which got removed
+    # compare the group lists before and after and see which got added or changed and which got removed
     my $dataSource = $self->app->getService('dataSource.user');
-    foreach my $group (keys(%{$self->{'groups'}})) {
-        if (not defined($self->{'originalGroups'}->{$group})) {
-            $dataSource->addUserGroup($self->app, $self->userID, $group);
+    foreach my $group (keys(%{$self->{'groupsByID'}})) {
+        if ((not defined($self->{'originalGroupsByID'}->{$group})) or
+            ($self->{'groupsByID'}->{$group}->[1] != $self->{'originalGroupsByID'}->{$group}->[1])) {
+            $dataSource->addUserGroup($self->app, $self->userID, $group, $self->{'groupsByID'}->{$group}->[1]);
         }
     }
-    foreach my $group (keys(%{$self->{'originalGroups'}})) {
-        if (not defined($self->{'groups'}->{$group})) {
+    foreach my $group (keys(%{$self->{'originalGroupsByID'}})) {
+        if (not defined($self->{'groupsByID'}->{$group})) {
             $dataSource->removeUserGroup($self->app, $self->userID, $group);
         }
     }

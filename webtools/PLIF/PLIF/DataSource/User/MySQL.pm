@@ -77,7 +77,7 @@ sub getUserByID {
                                                         WHERE userData.userID = ?', $id)->rows;
         my %fieldData = map { $$_[0] => $$_[1] } @$fieldData;
         # groups
-        my $groupData = $self->database($app)->execute('SELECT groups.groupID, groups.name
+        my $groupData = $self->database($app)->execute('SELECT groups.groupID, groups.name, userGroupsMapping.level
                                                         FROM groups, userGroupsMapping
                                                         WHERE userGroupsMapping.userID = ?
                                                         AND userGroupsMapping.groupID = groups.groupID', $id)->rows;
@@ -95,7 +95,7 @@ sub getUserByID {
         return ();
     }
     # return userID, mode, password, adminMessage, newFieldID,
-    # newFieldValue, newFieldKey, { fieldID => data }*, { groupID => name }*,
+    # newFieldValue, newFieldKey, [ fieldID, data ]*, [ groupID, name, level ]*,
     # [rightNames]*; or () if unsuccessful
 }
 
@@ -131,18 +131,20 @@ sub removeUserField {
 
 sub setUserGroups {
     my $self = shift;
-    my($app, $userID, @groupIDs) = @_;
+    my($app, $userID, $groupIDs) = @_; # $groupIDs is a hash of groupID => level
     $self->database($app)->execute('DELETE FROM userGroupsMapping WHERE userID = ?', $userID);
-    my $handle = $self->database($app)->prepare('INSERT INTO userGroupsMapping SET userID=?, groupID=?');
-    foreach my $groupID (@groupIDs) {
-        $handle->reexecute($userID, $groupID);
+    my $handle = $self->database($app)->prepare('INSERT INTO userGroupsMapping SET userID=?, groupID=?, level=?');
+    foreach my $groupID (keys(%$groupIDs)) {
+        $self->assert($groupIDs->{$groupID} > 0, 1, 'Invalid group membership level passed to setUserGroups');
+        $handle->reexecute($userID, $groupID, $groupIDs->{$groupID});
     }
 }
 
 sub addUserGroup {
     my $self = shift;
-    my($app, $userID, $groupID) = @_;
-    $self->database($app)->execute('REPLACE INTO userGroupsMapping SET userID=?, groupID=?', $userID, $groupID);
+    my($app, $userID, $groupID, $level) = @_;
+    $self->assert($level > 0, 1, 'Invalid group membership level passed to addUserGroup');
+    $self->database($app)->execute('REPLACE INTO userGroupsMapping SET userID=?, groupID=?, level=?', $userID, $groupID, $level);
 }
 
 sub removeUserGroup {
@@ -183,6 +185,13 @@ sub getFieldNamesByCategory {
     # return [name, name, name, name ...]
 }
 
+sub getFieldsByCategory {
+    my $self = shift;
+    my($app, $category) = @_;
+    return $self->database($app)->execute('SELECT type, fieldID, category, name, data, mode FROM userDataTypes WHERE category = ?', $category)->rows;
+    # return [type, fieldID, category, name, typeData]*
+}
+
 sub setField {
     my $self = shift;
     my($app, $fieldID, $category, $name, $type, $data, $mode) = @_;
@@ -214,7 +223,7 @@ sub getGroups {
         # rights
         my $rights = $self->database($app)->execute('SELECT rights.name
                                                      FROM rights, groupRightsMapping
-                                                     AND userGroupsMapping.groupID = ?
+                                                     WHERE groupRightsMapping.groupID = ?
                                                      AND groupRightsMapping.rightID = rights.rightID', $group->[0])->rows;
         foreach my $right (@$rights) {
             $right = $right->[0];
@@ -395,6 +404,7 @@ sub setupInstall {
             CREATE TABLE userGroupsMapping (
                                   userID integer unsigned NOT NULL,
                                   groupID integer unsigned NOT NULL,
+                                  level integer unsigned NOT NULL DEFAULT 1,
                                   PRIMARY KEY (userID, groupID)
                                   )
         ');
@@ -403,9 +413,14 @@ sub setupInstall {
         # +-------------------+
         # | userID         K1 |
         # | groupID        K1 |
+        # | level             | 1: member, 2: admin, 3: owner [1]
         # +-------------------+
+        # [1]: level 0 is reserved for 'not a member' which in the database is represented by absence
     } else {
         # check its schema is up to date
+        if (not $helper->columnExists($app, $self->database($app), 'userGroupsMapping', 'level')) {
+            $self->database($app)->execute('ALTER TABLE userGroupsMapping ADD COLUMN level integer unsigned NOT NULL DEFAULT 1');
+        }
     }
     if (not $helper->tableExists($app, $self->database($app), 'groups')) {
         $self->debug('going to create \'groups\' table');

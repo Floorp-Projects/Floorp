@@ -90,7 +90,7 @@ sub getUserByID {
     my($app, $id) = @_;
     $self->notImplemented();
     # return userID, disabled, password, adminMessage, newFieldID, newFieldValue, 
-    # newFieldKey, { fieldID => data }*, { groupID => name }*, [rightNames]*
+    # newFieldKey, [ fieldID, data ]*, [ groupID, name, level ]*, [rightNames]*
     # or () if unsuccessful
 }
 
@@ -117,13 +117,18 @@ sub removeUserField {
 
 sub setUserGroups {
     my $self = shift;
-    my($app, $userID, @groupIDs) = @_;
+    my($app, $userID, $groupIDs) = @_;
+    $groupIDs is a hashref in the form { groupID => level }*
+    foreach my $groupID (keys(%$groupIDs)) {
+        $self->assert($groupIDs->{$groupID} > 0, 1, 'Invalid group membership level passed to setUserGroups');
+    }
     $self->notImplemented();
 }
 
 sub addUserGroup {
     my $self = shift;
-    my($app, $userID, $groupID) = @_;
+    my($app, $userID, $groupID, $level) = @_;
+    $self->assert($level > 0, 1, 'Invalid group membership level passed to addUserGroup');
     $self->notImplemented();
 }
 
@@ -139,6 +144,24 @@ sub getFields {
     my($app) = @_;
     $self->notImplemented();
     # return [type, fieldID, category, name, typeData]*
+}
+
+# returns the userDataTypes table in a nice way
+# data sources for data bases where this can be efficiently extracted
+# from the database can reimplement this method, but for the others
+# here is a default implementation that simply recasts getFields().
+sub getFieldsHierarchically {
+    my $self = shift;
+    my($app) = @_;
+    my $fields = {};
+    foreach my $field (@{$self->getFields($app)}) {
+        if (not defined($fields->{$field->[2]})) {
+            $fields->{$field->[2]} = { $field->[3] => [$field->[0], $field->[1], $field->[4], ] };
+        } else {
+            $fields->{$field->[2]}->{$field->[3]} = [$field->[0], $field->[1], $field->[4]];
+        }
+    }
+    return $fields; # { category => { name => [type, fieldID, typeData] } }
 }
 
 sub getFieldByID {
@@ -160,6 +183,13 @@ sub getFieldNamesByCategory {
     my($app, $category) = @_;
     $self->notImplemented();
     # return [name, name, name, name ...]
+}
+
+sub getFieldsByCategory {
+    my $self = shift;
+    my($app, $category) = @_;
+    $self->notImplemented();
+    # return [type, fieldID, category, name, typeData]*
 }
 
 sub setField {
