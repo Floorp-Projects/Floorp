@@ -159,7 +159,6 @@ function WM_ProgressUpdate( currentPageNumber )
   if ( statusbar ) {
       var string;
       try {
-          dump("mapLength = " + this.GetMapLength() + "\n");
           string = this.bundle.formatStringFromName("oflabel",
                                                     [currentPageNumber+1,
                                                     this.GetMapLength()], 2);
