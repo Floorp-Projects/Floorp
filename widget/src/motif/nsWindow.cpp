@@ -216,6 +216,7 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent,
   					   nsnull);
 
     frameParent = mainWindow;
+
   }
   else
    frameParent = (Widget)aNativeParent;
@@ -225,14 +226,16 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent,
 				    frameParent,
 				    XmNwidth, aRect.width,
 				    XmNheight, aRect.height,
+				    XmNmarginHeight, 0,
+				    XmNmarginWidth, 0,
 				    nsnull);
 
   mWidget = frame ;
 
+
   if (mainWindow) {
     XmMainWindowSetAreas (mainWindow, nsnull, nsnull, nsnull, nsnull, frame);
   }
-
     
   if (aWidgetParent) {
     aWidgetParent->AddChild(this);
