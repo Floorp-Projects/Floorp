@@ -22,7 +22,7 @@
 #include "nsIImapUrl.h"
 #include "nsIUrlListenerManager.h"
 #include "nsINetlibURL.h" /* this should be temporary until nunet project lands */
-#include "nsIMsgIdentity.h"
+#include "nsIMsgIncomingServer.h"
 
 class nsImapUrl : public nsIImapUrl, public nsINetlibURL
 {
@@ -44,8 +44,8 @@ public:
 	/////////////////////////////////////////////////////////////////////////////// 
 	// we support the nsIImapUrl interface
 	///////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD SetIdentity(nsIMsgIdentity * aMsgIdentity);
-	NS_IMETHOD GetIdentity(nsIMsgIdentity ** aMsgIdentity);
+	NS_IMETHOD SetServer(nsIMsgIncomingServer * aServer);
+	NS_IMETHOD GetServer(nsIMsgIncomingServer ** aServer);
 
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog);
 	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog);
@@ -135,7 +135,7 @@ protected:
     nsIImapExtension* m_imapExtension;
     nsIImapMiscellaneous* m_imapMiscellaneous;
 
-	nsIMsgIdentity  *m_identity;
+	nsIMsgIncomingServer  *m_server;
 };
 
 #endif /* nsImapUrl_h___ */
