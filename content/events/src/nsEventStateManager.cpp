@@ -47,7 +47,6 @@
 #include "nsIWidget.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIPrefBranchInternal.h"
 #include "nsDOMEvent.h"
 #include "nsHTMLAtoms.h"
 #include "nsIEditorDocShell.h"
@@ -214,9 +213,7 @@ nsEventStateManager::Init()
                               &nsEventStateManager::gGeneralAccesskeyModifier);
     }
 
-    nsCOMPtr<nsIPrefBranchInternal> prefBranchInt(do_QueryInterface(mPrefBranch));
-    if (prefBranchInt)
-      prefBranchInt->AddObserver("accessibility.browsewithcaret", this, PR_TRUE);
+    mPrefBranch->AddObserver("accessibility.browsewithcaret", this, PR_TRUE);
   }
 
   if (nsEventStateManager::sTextfieldSelectModel == eTextfieldSelect_unset) {
@@ -272,9 +269,7 @@ nsEventStateManager::~nsEventStateManager()
 nsresult
 nsEventStateManager::Shutdown()
 {
-  nsCOMPtr<nsIPrefBranchInternal> prefBranchInt(do_QueryInterface(mPrefBranch));
-  if (prefBranchInt)
-    prefBranchInt->RemoveObserver("accessibility.browsewithcaret", this);
+  mPrefBranch->RemoveObserver("accessibility.browsewithcaret", this);
   
   mPrefBranch = nsnull;
 

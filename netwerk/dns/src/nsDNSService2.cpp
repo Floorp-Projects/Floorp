@@ -283,7 +283,7 @@ nsDNSService::Init()
     PRBool   enableIDN        = PR_TRUE;
 
     // read prefs
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    nsCOMPtr<nsIPrefBranchInternal> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
         PRInt32 val;
         if (NS_SUCCEEDED(prefs->GetIntPref(kPrefDnsCacheEntries, &val)))
@@ -307,12 +307,9 @@ nsDNSService::Init()
             return NS_ERROR_OUT_OF_MEMORY;
         
         // register as prefs observer
-        nsCOMPtr<nsIPrefBranchInternal> prefsInt = do_QueryInterface(prefs);
-        if (prefsInt) {
-            prefsInt->AddObserver(kPrefDnsCacheEntries, this, PR_FALSE);
-            prefsInt->AddObserver(kPrefDnsCacheExpiration, this, PR_FALSE);
-            prefsInt->AddObserver(kPrefEnableIDN, this, PR_FALSE);
-        }
+        prefs->AddObserver(kPrefDnsCacheEntries, this, PR_FALSE);
+        prefs->AddObserver(kPrefDnsCacheExpiration, this, PR_FALSE);
+        prefs->AddObserver(kPrefEnableIDN, this, PR_FALSE);
     }
 
     return nsHostResolver::Create(maxCacheEntries,

@@ -181,7 +181,6 @@ private:
     void     BuildUserAgent();
     void     InitUserAgentComponents();
     void     PrefsChanged(nsIPrefBranch *prefs, const char *pref);
-    void     GetPrefBranch(nsIPrefBranch **);
 
     nsresult SetAccept(const char *);
     nsresult SetAcceptLanguages(const char *);

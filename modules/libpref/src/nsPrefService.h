@@ -56,7 +56,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPREFSERVICE
   NS_FORWARD_NSIPREFBRANCH(mRootBranch->)
-  NS_DECL_NSIPREFBRANCHINTERNAL
+  NS_FORWARD_NSIPREFBRANCHINTERNAL(mRootBranch->)
   NS_DECL_NSIOBSERVER
 
   nsPrefService();
@@ -74,7 +74,7 @@ protected:
   nsresult WritePrefFile(nsIFile* aFile);
 
 private:
-  nsCOMPtr<nsIPrefBranch> mRootBranch;
+  nsCOMPtr<nsIPrefBranchInternal> mRootBranch;
   nsIFile*                mCurrentFile;
   PRPackedBool            mErrorOpeningUserPrefs;
 

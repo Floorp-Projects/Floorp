@@ -227,20 +227,14 @@ nsPrefetchService::Init()
     nsresult rv;
 
     // read prefs and hook up pref observer
-    nsCOMPtr<nsIPrefService> prefServ(do_GetService(kPrefServiceCID, &rv));
+    nsCOMPtr<nsIPrefBranchInternal> prefs(do_GetService(kPrefServiceCID, &rv));
     if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIPrefBranch> prefs;
-        rv = prefServ->GetBranch(nsnull, getter_AddRefs(prefs));
-        if (NS_SUCCEEDED(rv)) {
-            PRBool enabled;
-            rv = prefs->GetBoolPref(PREFETCH_PREF, &enabled);
-            if (NS_SUCCEEDED(rv) && enabled)
-                mDisabled = PR_FALSE;
+      PRBool enabled;
+      rv = prefs->GetBoolPref(PREFETCH_PREF, &enabled);
+      if (NS_SUCCEEDED(rv) && enabled)
+        mDisabled = PR_FALSE;
 
-            nsCOMPtr<nsIPrefBranchInternal> prefsInt(do_QueryInterface(prefs));
-            if (prefsInt)
-                prefsInt->AddObserver(PREFETCH_PREF, this, PR_TRUE);
-        }
+      prefs->AddObserver(PREFETCH_PREF, this, PR_TRUE);
     }
 
     // Observe xpcom-shutdown event

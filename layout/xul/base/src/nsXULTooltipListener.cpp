@@ -294,14 +294,13 @@ nsXULTooltipListener::Init(nsIContent* aSourceNode, nsIRootBox* aRootBox)
 
   // Only the first time, register the callback and get the initial value of the pref
   if (!prefChangeRegistered) {
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));  
+    nsCOMPtr<nsIPrefBranchInternal> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));  
     if (prefBranch) {
       // get the initial value of the pref
       nsresult rv = prefBranch->GetBoolPref("browser.chrome.toolbar_tips", &sShowTooltips);
       if (NS_SUCCEEDED(rv)) {
         // register the callback so we get notified of updates
-        nsCOMPtr<nsIPrefBranchInternal> prefInternal(do_QueryInterface(prefBranch));
-        rv = prefInternal->AddObserver("browser.chrome.toolbar_tips", this, PR_FALSE);
+        rv = prefBranch->AddObserver("browser.chrome.toolbar_tips", this, PR_FALSE);
         if (NS_SUCCEEDED(rv))
           prefChangeRegistered = PR_TRUE;
       }

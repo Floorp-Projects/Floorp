@@ -148,12 +148,10 @@ nsresult
 nsProtocolProxyService::Init()
 {
     // failure to access prefs is non-fatal
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefBranch) {
         // monitor proxy prefs
-        nsCOMPtr<nsIPrefBranchInternal> prefInt = do_QueryInterface(prefBranch);
-        if (prefInt)
-            prefInt->AddObserver("network.proxy", this, PR_FALSE);
+        prefBranch->AddObserver("network.proxy", this, PR_FALSE);
 
         // read all prefs
         PrefsChanged(prefBranch, nsnull);

@@ -219,14 +219,11 @@ nsIOService::Init()
         mRestrictedPortList.AppendElement(NS_REINTERPRET_CAST(void *, gBadPortList[i]));
 
     // Further modifications to the port list come from prefs
-    nsCOMPtr<nsIPrefBranch> prefBranch;
+    nsCOMPtr<nsIPrefBranchInternal> prefBranch;
     GetPrefBranch(getter_AddRefs(prefBranch));
     if (prefBranch) {
-        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
-        if (pbi) {
-            pbi->AddObserver(PORT_PREF_PREFIX, this, PR_TRUE);
-            pbi->AddObserver(AUTODIAL_PREF, this, PR_TRUE);
-        }
+        prefBranch->AddObserver(PORT_PREF_PREFIX, this, PR_TRUE);
+        prefBranch->AddObserver(AUTODIAL_PREF, this, PR_TRUE);
         PrefsChanged(prefBranch);
     }
     
@@ -319,7 +316,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
 
     PRBool externalProtocol = PR_FALSE;
     PRBool listedProtocol   = PR_TRUE;
-    nsCOMPtr<nsIPrefBranch> prefBranch;
+    nsCOMPtr<nsIPrefBranchInternal> prefBranch;
     GetPrefBranch(getter_AddRefs(prefBranch));
     if (prefBranch) {
         nsCAutoString externalProtocolPref("network.protocol-handler.external.");
@@ -634,13 +631,10 @@ nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool r
 }
 
 void
-nsIOService::GetPrefBranch(nsIPrefBranch **result)
+nsIOService::GetPrefBranch(nsIPrefBranchInternal **result)
 {
     *result = nsnull;
-    nsCOMPtr<nsIPrefService> prefService =
-        do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefService)
-        prefService->GetBranch(nsnull, result);
+    CallGetService(NS_PREFSERVICE_CONTRACTID, result);
 }
 
 // nsIObserver interface

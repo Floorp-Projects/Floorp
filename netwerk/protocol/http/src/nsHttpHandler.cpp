@@ -191,18 +191,15 @@ nsHttpHandler::Init()
     InitUserAgentComponents();
 
     // monitor some preference changes
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    GetPrefBranch(getter_AddRefs(prefBranch));
+    nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefBranch) {
-        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
-        if (pbi) {
-            pbi->AddObserver(HTTP_PREF_PREFIX, this, PR_TRUE);
-            pbi->AddObserver(UA_PREF_PREFIX, this, PR_TRUE);
-            pbi->AddObserver(INTL_ACCEPT_LANGUAGES, this, PR_TRUE); 
-            pbi->AddObserver(INTL_ACCEPT_CHARSET, this, PR_TRUE);
-            pbi->AddObserver(NETWORK_ENABLEIDN, this, PR_TRUE);
-            pbi->AddObserver(BROWSER_PREF("disk_cache_ssl"), this, PR_TRUE);
-        }
+        prefBranch->AddObserver(HTTP_PREF_PREFIX, this, PR_TRUE);
+        prefBranch->AddObserver(UA_PREF_PREFIX, this, PR_TRUE);
+        prefBranch->AddObserver(INTL_ACCEPT_LANGUAGES, this, PR_TRUE); 
+        prefBranch->AddObserver(INTL_ACCEPT_CHARSET, this, PR_TRUE);
+        prefBranch->AddObserver(NETWORK_ENABLEIDN, this, PR_TRUE);
+        prefBranch->AddObserver(BROWSER_PREF("disk_cache_ssl"), this, PR_TRUE);
+
         PrefsChanged(prefBranch, nsnull);
     }
 
@@ -1025,16 +1022,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
 #undef PREF_CHANGED
-}
-
-void
-nsHttpHandler::GetPrefBranch(nsIPrefBranch **result)
-{
-    *result = nsnull;
-    nsCOMPtr<nsIPrefService> prefService =
-        do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefService)
-        prefService->GetBranch(nsnull, result);
 }
 
 /**
