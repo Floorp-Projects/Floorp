@@ -743,4 +743,23 @@ void _PR_InitLayerCache()
     PR_ASSERT(NULL != identity_cache.ml);
 }  /* _PR_InitLayerCache */
 
+void _PR_CleanupLayerCache(void)
+{
+    if (identity_cache.ml)
+    {
+        PR_DestroyLock(identity_cache.ml);
+        identity_cache.ml = NULL;
+    }
+
+    if (identity_cache.name)
+    {
+        PRDescIdentity ident;
+
+        for (ident = 0; ident <= identity_cache.ident; ident++)
+            PR_DELETE(identity_cache.name[ident]);
+
+        PR_DELETE(identity_cache.name);
+    }
+}  /* _PR_CleanupLayerCache */
+
 /* prlayer.c */
