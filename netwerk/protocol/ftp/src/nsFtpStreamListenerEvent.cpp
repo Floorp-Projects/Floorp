@@ -44,8 +44,7 @@ void PR_CALLBACK nsFtpStreamListenerEvent::HandlePLEvent(PLEvent* aEvent)
     // to compensate for the vtable...
     nsFtpStreamListenerEvent *ev = (nsFtpStreamListenerEvent*)aEvent;
 
-    nsresult rv = ev->HandleEvent();
-    //ev->mListener->SetStatus(rv);
+    ev->HandleEvent();
 }
 
 void PR_CALLBACK nsFtpStreamListenerEvent::DestroyPLEvent(PLEvent* aEvent)

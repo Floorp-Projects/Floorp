@@ -54,19 +54,21 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 // initiated by the server (PORT command) or by the client (PASV command).
 // Client initiation is the most command case and is attempted first.
 
-nsFTPChannel::nsFTPChannel()
-    : mUrl(nsnull), mConnected(PR_FALSE), mListener(nsnull),
-      mLoadAttributes(LOAD_NORMAL), mLoadGroup(nsnull), mContext(nsnull), mEventQueue(nsnull)
-{
-
-    nsresult rv;
-    
+nsFTPChannel::nsFTPChannel() {
     NS_INIT_REFCNT();
 
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
-    }
+    mUrl = nsnull;
+    mEventQueue = nsnull;
+    mEventSink = nsnull;
+    mConnected = PR_FALSE;
+    mListener = nsnull;
+    mContext = nsnull;
+    mLoadAttributes = LOAD_NORMAL;
+    mBufferInputStream = nsnull;
+    mBufferOutputStream = nsnull;
+    mSourceOffset = 0;
+    mAmount = 0;
+    mLoadGroup = nsnull;
 }
 
 nsFTPChannel::~nsFTPChannel() {
@@ -127,6 +129,11 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
             mEventSink = eventSink;
             NS_ADDREF(mEventSink);
         }
+    }
+
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
     }
 
     return NS_OK;

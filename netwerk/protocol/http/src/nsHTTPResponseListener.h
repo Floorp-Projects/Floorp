@@ -94,21 +94,20 @@ protected:
 
     nsresult FinishedResponseHeaders();
 
-    nsresult ProcessHeader(nsIAtom* aHeader, nsString& aValue);
+    nsresult ProcessHeader(nsIAtom* aHeader, nsCString& aValue);
     nsresult ProcessStatusCode();
     nsresult ProcessRedirection(PRInt32 aStatusCode);
 	nsresult ProcessAuthentication(PRInt32 aStatusCode);
 
 protected:
 
+    nsCString           mHeaderBuffer;
     nsHTTPChannel*      	mConnection;
     nsIStreamListener*  	mConsumer;
     PRBool              	mFirstLineParsed;
-    nsString            	mHeaderBuffer;
     PRBool              	mHeadersDone;
     PRUint32            	mReadLength; // Already read
     nsHTTPResponse*     	mResponse;
-
     nsCOMPtr<nsISupports> 	mResponseContext;
 };
 
