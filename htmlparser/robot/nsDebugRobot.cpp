@@ -116,7 +116,7 @@ extern "C" NS_EXPORT int DebugRobot(
   g_bHitTop = PR_FALSE;
   g_duplicateList = new nsVoidArray();
   RobotSinkObserver* myObserver = new RobotSinkObserver();
-  SetVerificationDirectory(verify_dir);
+  //SetVerificationDirectory(verify_dir);
   NS_ADDREF(myObserver);
   g_workList = workList;
 
