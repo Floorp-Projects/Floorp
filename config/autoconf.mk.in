@@ -108,10 +108,19 @@ endif
 NSPR_CFLAGS	= @NSPR_CFLAGS@
 NSPR_LIBS	= @NSPR_LIBS@
 
+# MKSHLIB_FORCE_ALL is used to force the linker to include all object
+# files present in an archive. MKSHLIB_UNFORCE_ALL reverts the linker
+# to normal behavior. Makefile's that create shared libraries out of
+# archives use these flags to force in all of the .o files in the
+# archives into the shared library.
 ifndef NO_SHARED_LIB
+WRAP_MALLOC_LIB         = @WRAP_MALLOC_LIB@
+WRAP_MALLOC_CFLAGS      = @WRAP_MALLOC_CFLAGS@
 BUILD_UNIX_PLUGINS      = 1
 DSO_CFLAGS              = @DSO_CFLAGS@
 MKSHLIB			= @MKSHLIB@
+MKSHLIB_FORCE_ALL	= @MKSHLIB_FORCE_ALL@
+MKSHLIB_UNFORCE_ALL	= @MKSHLIB_UNFORCE_ALL@
 DSO_LDOPTS		= @DSO_LDOPTS@
 DLL_SUFFIX		= @DLL_SUFFIX@
 endif
