@@ -20,15 +20,9 @@ HTML {
 
 BODY {
   background: rgb(255,255,255);	// XXX this needs to go away
-//  color: black;
   cursor: arrow;
   display: block;
-//  font-family: serif;
-//  font-style: normal;
-//  font-variant: normal;
-//  font-weight: normal;
-//  font-size: 11pt;
-  line-height: 1.1;
+  line-height: 1.1;	// XXX should this come from pres context?
   padding: 8px;
 }
 
@@ -118,11 +112,6 @@ TD, TH {
   text-align: left;
   border-style: inset;
   border-color: #C0C0C0;
-//  font-family: serif;
-//  font-style: normal;
-//  font-variant: normal;
-//  font-weight: normal;
-//  font-size: 11pt;
   line-height: 1.1;
   display: table-cell;
   cursor: arrow;
@@ -348,12 +337,8 @@ INPUT {
 }
 SELECT {
   vertical-align: bottom;
-//  font-family: "Times New Roman";
-//  font-size: 10pt;
 }
 OPTION {
-//  font-family: "Times New Roman";
-//  font-size: 10pt;
 }
 TEXTAREA {
   vertical-align: bottom;
