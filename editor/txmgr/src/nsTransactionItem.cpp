@@ -177,6 +177,16 @@ nsTransactionItem::RedoChildren()
   nsresult result;
   PRInt32 sz = 0;
 
+  if (!mRedoStack)
+    return NS_OK;
+
+  /* Redo all of the transaction items children! */
+  result = mRedoStack->GetSize(&sz);
+
+  if (!NS_SUCCEEDED(result))
+    return result;
+
+
   while (sz-- > 0) {
     result = mRedoStack->Peek(&item);
 
