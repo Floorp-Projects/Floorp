@@ -237,11 +237,10 @@ void
 nsDeviceContextWin :: FindScreen ( nsIScreen** outScreen )
 {
   // optimize for the case where we only have one monitor.
-  static nsCOMPtr<nsIScreen> sPrimaryScreen;
-  if ( !sPrimaryScreen && mScreenManager )
-    mScreenManager->GetPrimaryScreen ( getter_AddRefs(sPrimaryScreen) );  
+  if ( !mPrimaryScreen && mScreenManager )
+    mScreenManager->GetPrimaryScreen ( getter_AddRefs(mPrimaryScreen) );  
   if ( sNumberOfScreens == 1 ) {
-    NS_IF_ADDREF(*outScreen = sPrimaryScreen.get());
+    NS_IF_ADDREF(*outScreen = mPrimaryScreen.get());
     return;
   }
   
