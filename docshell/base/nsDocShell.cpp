@@ -50,6 +50,7 @@
 #include "nsIAuthPrompt.h"
 #include "nsTextFormatter.h"
 #include "nsIHttpEventSink.h"
+#include "nsIUploadChannel.h"
 #include "nsISecurityEventSink.h"
 #include "nsScriptSecurityManager.h"
 #include "nsDocumentCharsetInfoCID.h"
@@ -5643,7 +5644,9 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         }
 
         if (httpChannel) {
-            httpChannel->GetUploadStream(getter_AddRefs(inputStream));
+            nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
+            if (uploadChannel) {
+                httpChannel->GetUploadStream(getter_AddRefs(inputStream));
         }
     }
     /* Create SH Entry (mLSHE) only if there is a  SessionHistory object (mSessionHistory) in

@@ -66,11 +66,6 @@ interface nsIHttpChannel : nsIChannel
     void     setRequestHeader(in ACString header, in ACString value);
     void     visitRequestHeaders(in nsIHttpHeaderVisitor visitor);
 
-    /**
-     * Get the stream (to be) uploaded by this HTTP channel.
-     */
-    readonly attribute nsIInputStream uploadStream;
-
     /**************************************************************************
      * Response info...
      */

@@ -783,4 +783,13 @@ nsFileChannel::SetUploadFile(nsIFile *aFile,
     return SetUploadStream(inStream, aContentType, aContentLength);
 }
 
+NS_IMETHODIMP
+nsFileChannel::GetUploadStream(nsIInputStream **stream)
+{
+    NS_ENSURE_ARG_POINTER(stream);
+    *stream = mUploadStream;
+    NS_IF_ADDREF(*stream);
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
