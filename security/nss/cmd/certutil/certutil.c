@@ -570,10 +570,11 @@ ListCerts(CERTCertDBHandle *handle, char *name, PRBool raw, PRBool ascii)
     PRInt32 numBytes;
 
     if (name == NULL) {
-	/*
-	SECU_PrintCertificateNames_(PR_STDOUT, PR_TRUE, PR_FALSE);
-	*/
+#if 1
+	rv = SECU_PrintCertificateNames_(handle, stdout, PR_FALSE, PR_TRUE);
+#else
 	rv = SECU_PrintCertificateNames(handle, stdout);
+#endif
 	if (rv) {
 	    SECU_PrintError(progName, "problem printing certificate nicknames");
 	    return SECFailure;
@@ -927,11 +928,12 @@ Usage(char *progName)
 	progName);
     FPS "\t%s -U [-d certdir]\n", progName);
     exit(-1);
+#undef FPS
 }
 
 static void LongUsage(char *progName)
 {
-
+#define FPS printf( 
     FPS "%-15s Add a certificate to the database        (create if needed)\n",
 	"-A");
     FPS "%-15s Add an Email certificate to the database (create if needed)\n",
