@@ -2198,16 +2198,10 @@ wallet_ClearStopwatch();
 PUBLIC void
 WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName) {
   char * message = Wallet_Localize("WantToCaptureForm?");
-  nsFileSpec file = Wallet_ProfileDirectory(WALLET_EDITOR_NAME);
-  if (file) {
-    nsFileURL u = nsFileURL(file);
-    *result =
-      (PL_strcmp(URLName, (char *)u.GetURLString())) && wallet_GetFormsCapturingPref() &&
-      (count>=3) && FE_Confirm(message);
-  } 
-  else {
-    *result = PR_FALSE;
-  }
+  nsFileURL u = nsFileURL(Wallet_ProfileDirectory(WALLET_EDITOR_NAME));
+  *result =
+    (PL_strcmp(URLName, (char *)u.GetURLString())) && wallet_GetFormsCapturingPref() &&
+    (count>=3) && FE_Confirm(message);
   PR_FREEIF(message);
 }
 
