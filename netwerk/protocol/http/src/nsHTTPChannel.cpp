@@ -2628,7 +2628,8 @@ nsHTTPChannel::ProcessRedirection(PRInt32 aStatusCode)
 
   mResponse->GetHeader(nsHTTPAtoms::Location, getter_Copies(location));
 
-  if (((301 == aStatusCode) || (302 == aStatusCode) || (aStatusCode == 305)) && (location))
+  if ((location) && ((301 == aStatusCode) || (302 == aStatusCode) ||
+                     (303 == aStatusCode) || (305 == aStatusCode)))
   {
       nsCOMPtr<nsIChannel> channel;
 
