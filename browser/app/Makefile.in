@@ -156,19 +156,19 @@ endif
 endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-phoenix:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+MozillaFirebird:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
 		-e "s|%MREDIR%|$(mredir)|" \
 		-e "s|mozilla-bin|$(PROGRAM)|g" > $@
 	chmod +x $@
 
-libs:: phoenix
+libs:: MozillaFirebird
 	$(INSTALL) $< $(DIST)/bin
 
-install:: phoenix
+install:: MozillaFirebird
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
-GARBAGE += phoenix
+GARBAGE += MozillaFirebird
 GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, all.js)
 
 endif
