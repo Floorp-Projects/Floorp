@@ -39,17 +39,17 @@ public:
 	nsCacheManager();
 	~nsCacheManager();
 
-	int			    AddModule(nsCacheModule* i_cacheModule);
-    int             Contains(const char* i_url) const;
-	int			    Entries() const;
+	PRInt32		    AddModule(nsCacheModule* i_cacheModule);
+    PRBool          Contains(const char* i_url) const;
+	PRInt32		    Entries() const;
 	/* Singleton */
 	static nsCacheManager* 
 				    GetInstance();
     nsCacheObject*  GetObject(const char* i_url) const;
-	nsCacheModule*  GetModule(int i_index) const;
+	nsCacheModule*  GetModule(PRInt32 i_index) const;
 	const char*     Trace() const;
-    /* Performance measure- TODO change to microsec PR_ */
-    int             WorstCaseTime() const;
+    /* Performance measure- microseconds */
+    PRUint32         WorstCaseTime() const;
 protected:
 	nsCacheModule*
 				LastModule() const;

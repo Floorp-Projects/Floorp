@@ -32,8 +32,8 @@ class nsDiskModule : public nsCacheModule
 public:
 	nsDiskModule();
 	~nsDiskModule();
-	int			AddObject(nsCacheObject* i_pObject);
-	nsCacheObject* GetObject(long i_index) const;
+	PRBool          AddObject(nsCacheObject* i_pObject);
+	nsCacheObject*  GetObject(PRUint32 i_index) const;
 
 private:
 	nsDiskModule(const nsDiskModule& dm);

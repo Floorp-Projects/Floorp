@@ -17,7 +17,7 @@
 
 
 
-DEPTH	= ../../..
+DEPTH	= ../../../..
 
 MODULE	= cache
 

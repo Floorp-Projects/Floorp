@@ -33,13 +33,13 @@ class nsMemModule : public nsCacheModule
 
 public:
 	nsMemModule();
-	nsMemModule(const long size);
+	nsMemModule(const PRUint32 size);
 	~nsMemModule();
 
-	int	            AddObject(nsCacheObject* i_pObject);
-	int	            Contains(nsCacheObject* i_pObject) const;
-    int             Contains(const char* i_url) const;
-	nsCacheObject*	GetObject(long i_index) const;
+	PRBool          AddObject(nsCacheObject* i_pObject);
+	PRBool          Contains(nsCacheObject* i_pObject) const;
+    PRBool          Contains(const char* i_url) const;
+	nsCacheObject*	GetObject(PRUint32 i_index) const;
 	nsCacheObject*	GetObject(const char* i_url) const;
 
 	// Start of nsMemModule specific stuff...

@@ -21,6 +21,8 @@
  * 
  */
 
+#include <prtypes.h>
+#include <prinrval.h>
 #include "nsCacheManager.h"
 #include "nsCacheTrace.h"
 #include "nsCacheModule.h"
@@ -60,7 +62,7 @@ const char* nsCacheManager::Trace() const
 	return total;
 }
 
-int	nsCacheManager::AddModule(nsCacheModule* pModule)
+PRInt32	nsCacheManager::AddModule(nsCacheModule* pModule)
 {
 	if (pModule) 
 	{
@@ -75,7 +77,7 @@ int	nsCacheManager::AddModule(nsCacheModule* pModule)
 		return -1;
 }
 
-int nsCacheManager::Contains(const char* i_url) const
+PRBool nsCacheManager::Contains(const char* i_url) const
 {
     if (m_pFirstModule)
     {
@@ -84,12 +86,12 @@ int nsCacheManager::Contains(const char* i_url) const
         {
             if (pModule->Contains(i_url))
             {
-                return 1;
+                return PR_TRUE;
             }
             pModule = pModule->Next();
         }
     }
-    return 0;
+    return PR_FALSE;
 }
 
 nsCacheObject* nsCacheManager::GetObject(const char* i_url) const
@@ -109,11 +111,11 @@ nsCacheObject* nsCacheManager::GetObject(const char* i_url) const
     return 0;
 }
 
-int nsCacheManager::Entries() const
+PRInt32 nsCacheManager::Entries() const
 {
 	if (m_pFirstModule) 
 	{
-		int count=1;
+		PRInt32 count=1;
 		nsCacheModule* pModule = m_pFirstModule;
 		while (pModule = pModule->Next()) 
 		{
@@ -124,12 +126,12 @@ int nsCacheManager::Entries() const
 	return 0;
 }
 
-nsCacheModule* nsCacheManager::GetModule(int i_index) const
+nsCacheModule* nsCacheManager::GetModule(PRInt32 i_index) const
 {
 	if ((i_index < 0) || (i_index >= Entries()))
 		return 0;
 	nsCacheModule* pModule = m_pFirstModule;
-	for (int i=0; i<=i_index; pModule = pModule->Next())
+	for (PRInt32 i=0; i<=i_index; pModule = pModule->Next())
 		i++;
 #ifdef DEBUG
 	assert(pModule);
@@ -150,11 +152,9 @@ nsCacheModule* nsCacheManager::LastModule() const
 	return 0;
 }
 
-int nsCacheManager::WorstCaseTime() const 
+PRUint32 nsCacheManager::WorstCaseTime() const 
 {
-    long delta = time(0);
+    PRIntervalTime start = PR_IntervalNow();
     while (this->Contains("a vague string that should not be in any of the modules"));
-    delta -= time(0);
-    return delta*(-1);
-
+    return PR_IntervalToMicroseconds(PR_IntervalNow() - start);
 }

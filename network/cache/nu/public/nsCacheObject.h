@@ -23,6 +23,9 @@
 #include "nsISupports.h"
 #endif
 
+#include <prtypes.h>
+#include <prinrval.h>
+
 class nsCacheObject //: public nsISupports
 {
 
@@ -47,43 +50,48 @@ public:
 
 */
 
-	void		Address(const char* i_url);
+	void        Address(const char* i_url);
 	const char* Address(void) const;
 
-	void		Etag(const char* i_etag);
+	void        Etag(const char* i_etag);
 	const char* Etag(void) const;
 
-	long		Expires(void) const;
-	void		Expires(long i_Expires);
+	PRIntervalTime
+                Expires(void) const;
+	void        Expires(PRIntervalTime i_Expires);
 
-	int			Hits(void) const;
-	int			IsExpired(void) const;
-	int			IsPartial(void) const;
-	long		LastAccessed(void) const;
+	PRUint16    Hits(void) const;
+	PRBool      IsExpired(void) const;
+	PRBool      IsPartial(void) const;
+	PRIntervalTime
+                LastAccessed(void) const;
 
-	long		LastModified(void) const;
-	void		LastModified(long i_lastModified);
+	PRIntervalTime
+                LastModified(void) const;
+	void        LastModified(PRIntervalTime i_lastModified);
 
-	long		Size(void) const;
-	void		Size(long s);
+	PRUint32    Size(void) const;
+	void        Size(PRUint32 s);
 
-	const char*		Trace() const;
+	const char*     
+                Trace() const;
 	
 //	virtual	void getReadStream();
 //	virtual void getWriteStream();
 
 protected:
 	
-	void	Init();
+	void	    Init();
 
-	char*	m_Etag;
-	long	m_Expires;
-	int		m_Flags;
-	int		m_Hits;
-	long	m_LastAccessed;
-	long	m_LastModified;
-	long	m_Size;
-	char*	m_Url;
+	char*	    m_Etag;
+	PRIntervalTime
+                m_Expires;
+	int		    m_Flags;
+	PRUint16    m_Hits;
+	PRIntervalTime
+                m_LastAccessed, m_LastModified;
+	PRUint32	m_Size;
+	char*	    m_Url;
 
 private:
     nsCacheObject& operator=(const nsCacheObject& x);	
@@ -99,55 +107,53 @@ inline const char* nsCacheObject::Etag(void) const
 	return m_Etag;
 }
 
-inline long nsCacheObject::Expires(void) const
+inline PRIntervalTime nsCacheObject::Expires(void) const
 {
 	return m_Expires;
 };
 
-inline void nsCacheObject::Expires(long i_Expires)
+inline void nsCacheObject::Expires(PRIntervalTime i_Expires)
 {
 	m_Expires = i_Expires;
 }
 
-inline int nsCacheObject::Hits(void) const
+inline PRUint16 nsCacheObject::Hits(void) const
 {
 	return m_Hits;
 }
 
-#ifndef _DEBUG
-inline int nsCacheObject::IsExpired(void) const
+inline PRBool nsCacheObject::IsExpired(void) const
 {
-	time_t now = time();
-	return (m_Expires <= now) ? 1 : 0;
-}
-#endif
-
-inline int nsCacheObject::IsPartial(void) const
-{
-	return (m_Flags & nsCacheObject::PARTIAL) ? 1 : 0;
+	PRIntervalTime now = PR_IntervalNow();
+	return (m_Expires <= now);
 }
 
-inline long nsCacheObject::LastAccessed(void) const
+inline PRBool nsCacheObject::IsPartial(void) const
+{
+	return (m_Flags & nsCacheObject::PARTIAL);
+}
+
+inline PRIntervalTime nsCacheObject::LastAccessed(void) const
 {
 	return m_LastAccessed;
 }
 
-inline long nsCacheObject::LastModified(void) const
+inline PRIntervalTime nsCacheObject::LastModified(void) const
 {
 	return m_LastModified;
 }
 
-inline void nsCacheObject::LastModified(long i_LastModified)
+inline void nsCacheObject::LastModified(PRIntervalTime i_LastModified)
 {
 	m_LastModified = i_LastModified;
 }
 
-inline long nsCacheObject::Size(void) const
+inline PRUint32 nsCacheObject::Size(void) const
 {
 	return m_Size;
 }
 
-inline void nsCacheObject::Size(long i_Size)
+inline void nsCacheObject::Size(PRUint32 i_Size)
 {
 	m_Size = i_Size;
 }
