@@ -322,9 +322,12 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
     mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
 
   } else {
+    nsReflowReason  reflowReason = aReflowState.reason;
+
     // Do we have any children?
     if (nsnull == mFirstChild) {
       // No, create the first child frame
+      reflowReason = eReflowReason_Initial;
       CreateFirstChild(aPresContext);
     }
   
@@ -339,7 +342,7 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
         // Tile the pages vertically
         for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; ) {
           // Reflow the page
-          nsReflowState   kidReflowState(kidFrame, aReflowState, pageSize);
+          nsReflowState   kidReflowState(kidFrame, aReflowState, pageSize, reflowReason);
           nsReflowStatus  status;
 
           // Place and size the page. If the page is narrower than our max width then
@@ -376,6 +379,7 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
             nsresult rv = kidFrame->CreateContinuingFrame(aPresContext, this,
                                                           kidSC, continuingPage);
             NS_RELEASE(kidSC);
+            reflowReason = eReflowReason_Initial;
   
             // Add it to our child list
 #ifdef NS_DEBUG
@@ -399,7 +403,7 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
         // Allow the frame to be as wide as our max width, and as high
         // as it wants to be.
         nsSize        maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
-        nsReflowState kidReflowState(mFirstChild, aReflowState, maxSize);
+        nsReflowState kidReflowState(mFirstChild, aReflowState, maxSize, reflowReason);
   
         // Get the child's desired size. Our child's desired height is our
         // desired size
