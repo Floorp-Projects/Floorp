@@ -50,20 +50,20 @@
 			<spring style="width:5px"/>
 			<html:input name="disk" type="text" size="3" id="pref:string:browser.cache.memory_cache_size" />
 			<html:div>&kbyes;</html:div>
-			<titledbutton name="clearm" value="&clearMemcacheButton.label;" />
+			<titledbutton class="dialog push" name="clearm" value="&clearMemcacheButton.label;" />
 		</box> 
 		<box align="horizontal" style="width: 100%;"> 
 			<html:div>&diskCache;</html:div>
 			<spring style="width:5px"/>
 			<html:input name="disk" type="text" size="3" id="pref:string:browser.cache.disk_cache_size" />
 			<html:div>&kbyes;</html:div>
-			<titledbutton name="clearm" value="&clearDiskcacheButton.label;" />
+			<titledbutton class="dialog push" name="clearm" value="&clearDiskcacheButton.label;" />
 		</box>
 		<box align="horizontal" style="width: 100%;"> 
 			<html:div>&diskCacheFolder;</html:div>
 			<html:input name="disk" type="text" size="20" id="pref:string:browser.cache.directory" />
 			<html:div>
-				<titledbutton value="Choose File..." align="left" onclick="PrefCacheSelectFolder()"/>
+				<titledbutton class="dialog push" value="Choose File..." align="left" onclick="PrefCacheSelectFolder()"/>
 			</html:div>
 		</box>
 

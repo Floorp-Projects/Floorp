@@ -75,8 +75,8 @@
 			<html:input name="homepage" type="text"	id="pref:string:browser.startup.homepage" size="30" /> 
 			<html:div>
 				<spring flex="100%"/>
-				<titledbutton name="starts" type="button" value="&useCurrent;" onclick="SetHomePageToCurrentPage();" />
-				<titledbutton name="browse" type="button" value="&browseFile;" onclick="PrefNavSelectFile()"/>
+				<titledbutton class="dialog push" name="starts" type="button" value="&useCurrent;" onclick="SetHomePageToCurrentPage();" />
+				<titledbutton class="dialog push" name="browse" type="button" value="&browseFile;" onclick="PrefNavSelectFile()"/>
 			</html:div>		
 		</html:fieldset>  
 	</box> 
@@ -89,7 +89,7 @@
 			<html:div>&historyPages;</html:div>	
 			&pagesHis;<html:input type="text" value="&histDay;" size="3" />
 			&daysRadio; 
-			<titledbutton name="Clearit" value="&clearHis;" />		
+			<titledbutton class="dialog push" name="Clearit" value="&clearHis;" />		
 		</html:fieldset>  
 	</box> 
 
@@ -99,7 +99,7 @@
 						<html:div>&header4.label;</html:div> 
 					</html:legend>
 					&clearBar; 
-					<titledbutton name="starts" type="button" value="&clearLoc;" />		
+					<titledbutton class="dialog push" name="starts" type="button" value="&clearLoc;" />		
 		</html:fieldset>  
 	</box> 
 </html:div>

@@ -88,7 +88,7 @@
 					</html:legend>
          <!--   <html:div>&offlineMsgs;</html:div>  -->
 			<box flex="100%"><html:div>
-				<titledbutton value="&select;" align="left"/>
+				<titledbutton class="dialog push" value="&select;" align="left"/>
 			</html:div></box>
 		</html:fieldset>
 	</box>
