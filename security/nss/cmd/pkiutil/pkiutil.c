@@ -365,7 +365,9 @@ main(int argc, char **argv)
 #endif
 
 done:
-    NSS_Shutdown();
+    if (NSS_Shutdown() != SECSuccess) {
+	exit(1);
+    }
 
     return rv;
 }
