@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: oid.c,v $ $Revision: 1.2 $ $Date: 2001/01/03 19:50:17 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: oid.c,v $ $Revision: 1.3 $ $Date: 2001/01/31 18:01:53 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -282,7 +282,7 @@ static PZLock *oid_hash_lock;
  * inclined student.
  */
 
-static PR_CALLBACK PLHashNumber
+static PLHashNumber PR_CALLBACK
 oid_hash
 (
   const void *key
@@ -310,7 +310,7 @@ oid_hash
  * but heck it's only used internally by the hash table anyway.
  */
 
-static PR_CALLBACK PRIntn
+static PRIntn PR_CALLBACK
 oid_hash_compare
 (
   const void *k1,
@@ -407,7 +407,7 @@ static NSSArena *oid_arena;
  * It also creates the aforementioned NSSArena.
  */
 
-static PR_CALLBACK PRStatus
+static PRStatus PR_CALLBACK
 oid_once_func
 (
   void

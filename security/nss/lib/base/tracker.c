@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tracker.c,v $ $Revision: 1.2 $ $Date: 2001/01/03 19:48:49 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tracker.c,v $ $Revision: 1.3 $ $Date: 2001/01/31 18:01:45 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -155,7 +155,7 @@ call_once
  * There are no possible errors.
  */
 
-static PR_CALLBACK PLHashNumber
+static PLHashNumber PR_CALLBACK
 identity_hash
 (
   const void *key
@@ -245,7 +245,7 @@ nssPointerTracker_initialize
  * entries.
  */
 
-static PR_CALLBACK PRIntn
+static PRIntn PR_CALLBACK
 count_entries
 (
   PLHashEntry *he,
