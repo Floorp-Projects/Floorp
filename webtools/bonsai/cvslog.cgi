@@ -123,7 +123,6 @@ unless ($found_rcs_file) {
     &print_top;
     my $escaped_filename = html_quote($filename);
     print "Rcs file, $escaped_filename, does not exist.<BR><BR>\n";
-    print "</BODY></HTML>\n";
     PutsTrailer();
     exit;
 }
