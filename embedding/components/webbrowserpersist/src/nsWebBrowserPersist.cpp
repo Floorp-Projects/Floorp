@@ -114,10 +114,6 @@ struct OutputData
 const PRUint32 kDefaultPersistFlags = 
     nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION;
 
-// Default flags for encoding
-const PRUint32 kDefaultEncodingFlags =
-    nsIDocumentEncoder::OutputRaw;
-
 nsWebBrowserPersist::nsWebBrowserPersist() :
     mFileCounter(1),
     mFrameCounter(1),
