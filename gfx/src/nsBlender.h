@@ -24,10 +24,7 @@
 #define nsBlender_h___
 
 #include "nsIBlender.h"
-#include "nsPoint.h"
-#include "nsRect.h"
-#include "nsIImage.h"
-#include "libimg.h"
+#include "il_types.h"
 
 typedef enum
 {
@@ -69,11 +66,10 @@ protected:
   virtual ~nsBlender();
 
   //called by nsIBlender Blend() functions
-  nsresult Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride, PRInt32 aSrcBytes,
-                 PRUint8 *aDestBits, PRInt32 aDestStride, PRInt32 aDestBytes,
-                 PRUint8 *aSecondSrcBits, PRInt32 aSecondSrcStride, PRInt32 aSecondSrcBytes,
-                 PRInt32 aLines, PRInt32 aAlpha, nsPixelFormat &aPixFormat,
-                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor);
+  nsresult Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride,
+                 PRUint8 *aDestBits, PRInt32 aDestStride,
+                 PRUint8 *aSecondSrcBits,
+                 PRInt32 aSrcBytes, PRInt32 aLines, float aOpacity);
 
   /** --------------------------------------------------------------------------
    * Blend two 32 bit image arrays
@@ -86,11 +82,10 @@ protected:
    * @param aDLSpan number of bytes per line for the destination bytes
    * @param aMLSpan number of bytes per line for the Mask bytes
    * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
-   * @param aPixelFormat nsPixelFormat struct filled out to describe data format
    */
-  void Do32Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                 PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aTheQual,
-                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixelFormat);
+  void Do32Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
+                 PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
+                 PRInt32 aSLSpan, PRInt32 aDLSpan, nsBlendQuality aTheQual);
 
  /** --------------------------------------------------------------------------
   * Blend two 24 bit image arrays using a passed in blend value
@@ -104,10 +99,9 @@ protected:
   * @param aMLSpan number of bytes per line for the Mask bytes
   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
   */
-  void Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                 PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,
-                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixelFormat);
-
+  void Do24Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
+                 PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
+                 PRInt32 aSLSpan, PRInt32 aDLSpan, nsBlendQuality aBlendQuality);
 
  /** --------------------------------------------------------------------------
   * Blend two 16 bit image arrays using a passed in blend value
@@ -121,9 +115,9 @@ protected:
   * @param aMLSpan number of bytes per line for the Mask bytes
   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
   */
-  void Do16Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                 PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,
-                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixelFormat);
+  void Do16Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
+                 PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
+                 PRInt32 aSLSpan, PRInt32 aDLSpan, nsBlendQuality aBlendQuality);
 
 
  /** --------------------------------------------------------------------------
@@ -138,34 +132,11 @@ protected:
   * @param aMLSpan number of bytes per line for the Mask bytes
   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
   */
-  void Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
-                PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,IL_ColorSpace *aColorMap,nsBlendQuality aBlendQuality,
-                nscolor aSrcBackColor, nscolor aSecondSrcBackColor);
+  void Do8Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
+                PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
+                PRInt32 aSLSpan, PRInt32 aDLSpan, IL_ColorSpace *aColorMap, nsBlendQuality aBlendQuality);
 
   nsIDeviceContext  *mContext;
-
-  PRUint8             *mSrcBytes;
-  PRUint8             *mSecondSrcBytes;
-  PRUint8             *mDestBytes;
-
-  PRInt32             mSrcRowBytes;
-  PRInt32             mSecondSrcRowBytes;
-  PRInt32             mDestRowBytes;
-
-  PRInt32             mSrcSpan;
-  PRInt32             mSecondSrcSpan;
-  PRInt32             mDestSpan;
-  
-  PRUint16						mRedMask;
-  PRUint16						mBlueMask;
-  PRUint16						mGreenMask;
-  PRUint16						mRedSetMask;
-  PRUint16						mGreenSetMask;
-  PRUint16						mBlueSetMask;  
-  PRUint8							mRedShift;
-  PRUint8							mGreenShift;
-  PRUint8							mBlueShift;
-  
 };
 
 #endif
