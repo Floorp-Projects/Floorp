@@ -29,7 +29,8 @@ public:
    */
   static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
                            nsIContent* aContent,
-                           nsIFrame*   aParent);
+                           nsIFrame*   aParent,
+                           nsIFrame*   aAnchoredItem = nsnull);
 
   // Returns the associated anchored item
   nsIFrame*   GetAnchoredItem() const {return mAnchoredItem;}
@@ -81,7 +82,7 @@ protected:
 
   // Constructor. Takes as arguments the content object and the Frame for
   // the content parent
-  nsPlaceholderFrame(nsIContent* aContent, nsIFrame* aParent);
+  nsPlaceholderFrame(nsIContent* aContent, nsIFrame* aParent, nsIFrame* aAnchoredItem);
   virtual ~nsPlaceholderFrame();
 };
 
