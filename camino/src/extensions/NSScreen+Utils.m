@@ -41,7 +41,8 @@
 
 @implementation NSScreen (CHScreenAdditions)
 
-+ (NSScreen*)screenForPoint:(NSPoint)point {
++ (NSScreen*)screenForPoint:(NSPoint)point
+{
 	NSArray* screens = [NSScreen screens];
 	NSEnumerator* screenEnum = [screens objectEnumerator];
 	NSScreen* screen;

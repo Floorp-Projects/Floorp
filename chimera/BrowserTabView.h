@@ -19,7 +19,7 @@
 #import <Cocoa/Cocoa.h>
 
 
-@interface CHExtendedTabView : NSTabView
+@interface BrowserTabView : NSTabView
 {
   BOOL autoHides;
   int  maxNumberOfTabs;			// 0 means 'no max'

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Simon Fraser <sfraser@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -35,25 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import <Cocoa/Cocoa.h>
 
-#import "NSScreen+Utils.h"
+#import "CHIconTabViewItem.h"
 
+// a subclass of CHIconTabViewItem that handles dragging of site icons
 
-@implementation NSScreen (CHScreenAdditions)
-
-+ (NSScreen*)screenForPoint:(NSPoint)point
+@interface BrowserTabViewItem : CHIconTabViewItem
 {
-	NSArray* screens = [NSScreen screens];
-	NSEnumerator* screenEnum = [screens objectEnumerator];
-	NSScreen* screen;
-	
-	while ( (screen = [screenEnum nextObject]) ) {
-		NSRect frame = [screen frame];
-		if (NSPointInRect(point, frame))
-			break;
-	}
-	
-	return screen;
+
 }
 
 @end

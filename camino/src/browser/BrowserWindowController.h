@@ -77,12 +77,12 @@ class nsIDOMNode;
 
 @class BookmarksDataSource;
 @class CHHistoryDataSource;
-@class CHExtendedTabView;
+@class BrowserTabView;
 @class CHPageProxyIcon;
 
 @interface BrowserWindowController : NSWindowController<CHFind>
 {
-  IBOutlet CHExtendedTabView* mTabBrowser;
+  IBOutlet BrowserTabView* mTabBrowser;
   IBOutlet NSDrawer*          mSidebarDrawer;
   IBOutlet NSTabView*         mSidebarTabView;
   IBOutlet NSTabView*         mSidebarSourceTabView;

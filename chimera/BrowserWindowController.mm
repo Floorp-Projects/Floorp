@@ -44,7 +44,7 @@
 #import "CHPreferenceManager.h"
 #import "BookmarksDataSource.h"
 #import "CHHistoryDataSource.h"
-#import "CHExtendedTabView.h"
+#import "BrowserTabView.h"
 #import "CHUserDefaults.h"
 #import "CHPageProxyIcon.h"
 
