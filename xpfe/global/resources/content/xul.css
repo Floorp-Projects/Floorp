@@ -722,7 +722,7 @@ thumb
   -moz-binding: url(chrome://global/content/bindings/scrollbar.xml#thumb);
 }
 
-scrollbar, scrollbarbutton, slider, thumb {
+scrollbar, scrollbarbutton, scrollcorner, slider, thumb {
   -moz-user-select: none;
 }
 
