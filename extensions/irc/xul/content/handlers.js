@@ -1413,7 +1413,7 @@ function cli_iserver (e)
         return false;
 
     var ary = 
-        e.inputData.match(/^([^\s\:]+)[\s\:]?(?:(\d+)(?:\s+(\S+)|$)|(\S+)|$)/);
+        e.inputData.match(/^([^\s\:]+)[\s\:]?(?:(\d+)(?:\s+(\S+)|\s*$)|(\S+)|$)/);
     var pass;
     if (3 in ary && ary[3])
         pass = ary[3];
