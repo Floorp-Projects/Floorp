@@ -124,7 +124,7 @@ NS_IMETHODIMP nsMsgAttachment::SetContentType(const char * aContentType)
      keep only the content type alone. Therefore we need to cleanup it.
   */
   PRInt32 offset = mContentType.FindChar(';');
-  if (offset)
+  if (offset >= 0)
     mContentType.Truncate(offset);
 
   return NS_OK;
