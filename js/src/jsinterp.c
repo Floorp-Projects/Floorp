@@ -2437,7 +2437,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
                 /* If obj is not XML, we must get rval given its fid. */
                 if (!OBJECT_IS_XML(cx, obj)) {
-                    ok = OBJ_GET_PROPERTY(cx, obj, fid, &rval);
+                    ok = OBJ_GET_PROPERTY(cx, origobj, fid, &rval);
                     if (!ok)
                         goto out;
                 }
