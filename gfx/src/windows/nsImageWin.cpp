@@ -428,21 +428,42 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 {
 
 HDC     TheHDC;
-PRInt32 canRaster,srcHeight,srcy;
+PRInt32 canRaster,srcy;
 HBITMAP oldBits;
 DWORD   rop;
+PRInt32 origSHeight = aSHeight, origDHeight = aDHeight;
+PRInt32 origSWidth = aSWidth, origDWidth = aDWidth;
 
-  if (mBHead == nsnull) 
+  if (mBHead == nsnull || aSWidth < 0 || aDWidth < 0 || aSHeight < 0 || aDHeight < 0) 
     return NS_ERROR_FAILURE;
 
+  if (0 == aSWidth || 0 == aDWidth || 0 == aSHeight || 0 == aDHeight)
+    return NS_OK;
+
   // limit the size of the blit to the amount of the image read in
-  srcHeight = mBHead->biHeight;
-  srcy = 0;
-  if((mDecodedY2 < srcHeight)) {
-    aDHeight = PRInt32 (float(mDecodedY2/float(srcHeight))*aDHeight);
-    srcHeight = mDecodedY2;
-    srcy = (mBHead->biHeight-mDecodedY2);
+  if (aSX + aSWidth > mDecodedX2) {
+    aDWidth -= ((aSX + aSWidth - mDecodedX2)*origDWidth)/origSWidth;
+    aSWidth = mDecodedX2 - mDecodedX1;
   }
+  if (aSX < mDecodedX1) {
+    aDX += ((mDecodedX1 - aSX)*origDWidth)/origSWidth;
+    aSX = mDecodedX1;
+  }
+
+  if (aSY + aSHeight > mDecodedY2) {
+    aDHeight -= ((aSY + aSHeight - mDecodedY2)*origDHeight)/origSHeight;
+    aSHeight = mDecodedY2 - mDecodedY1;
+  }
+  if (aSY < mDecodedY1) {
+    aDY += ((mDecodedY1 - aSY)*origDHeight)/origSHeight;
+    aSY = mDecodedY1;
+  }
+
+  if (aDWidth <= 0 || aDHeight <= 0)
+    return NS_OK;
+
+  // Translate to bottom-up coordinates for the source bitmap
+  srcy = mBHead->biHeight - (aSY + aSHeight);
 
   // if DC is not for a printer, and the image can be optimized, 
   ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
@@ -462,23 +483,20 @@ DWORD   rop;
         if( 1==mAlphaDepth){
 	        MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
 
-	        ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, aSY,aSWidth, aSHeight, mAlphaBits,
+	        ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, srcy,aSWidth, aSHeight, mAlphaBits,
 			                                    (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
 	         rop = SRCPAINT;
         }
-        else if( 8==mAlphaDepth){              
-            ALPHA8BITMAPINFO bmi(mAlphaWidth, mAlphaHeight);
-
-          	::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, aSY, aSWidth, aSHeight, mAlphaBits,
-	     	    	                            (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
-       	     rop = SRCPAINT;
-
-        }
       }
 
-      ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, srcy, aSWidth, srcHeight, mImageBits,
-		                                  (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
+      if (8==mAlphaDepth) {              
+         DrawComposited(TheHDC, aDX, aDY, aDWidth, aDHeight,
+           aSX, srcy, aSWidth, aSHeight);
+      } else {
+        ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, srcy, aSWidth, aSHeight, mImageBits,
+		      (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
 		      DIB_RGB_COLORS, rop);
+      }
 
     }else{
       nsIDeviceContext    *dx;
@@ -497,7 +515,7 @@ DWORD   rop;
           if( 1==mAlphaDepth){
 	          MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
 
-	          ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, aSY, aSWidth, aSHeight, mAlphaBits,
+	          ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, srcy, aSWidth, aSHeight, mAlphaBits,
 			                                    (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
 	           rop = SRCPAINT;
              //rop = SRCCOPY;
@@ -517,9 +535,9 @@ DWORD   rop;
                 blendFunction.BlendFlags = 0;
                 blendFunction.SourceConstantAlpha = 255;
                 blendFunction.AlphaFormat = 1 /*AC_SRC_ALPHA*/;
-                gAlphaBlend(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, srcy, aSWidth, srcHeight, blendFunction);
+                gAlphaBlend(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, srcy, aSWidth, aSHeight, blendFunction);
               } else {
-                ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, srcy,aSWidth, srcHeight, rop);
+                ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, aSY,aSWidth, aSHeight, rop);
               }
             }else{
               PrintDDB(aSurface,aDX,aDY,aDWidth,aDHeight,rop);
@@ -534,9 +552,9 @@ DWORD   rop;
             blendFunction.BlendFlags = 0;
             blendFunction.SourceConstantAlpha = 255;
             blendFunction.AlphaFormat = 1 /*AC_SRC_ALPHA*/;
-            gAlphaBlend(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, srcy, aSWidth, srcHeight, blendFunction);
+            gAlphaBlend(TheHDC, aDX, aDY, aDWidth, aDHeight, srcDC, aSX, srcy, aSWidth, aSHeight, blendFunction);
           } else {
-            ::StretchBlt(TheHDC,aDX,aDY,aDWidth,aDHeight,srcDC,aSX,srcy,aSWidth,srcHeight,rop);
+            ::StretchBlt(TheHDC,aDX,aDY,aDWidth,aDHeight,srcDC,aSX,aSY,aSWidth,aSHeight,rop);
           }
         }
 
@@ -606,129 +624,7 @@ void nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int a
 NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 				 PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-HDC     TheHDC;
-PRInt32 canRaster,srcHeight,srcy;
-HBITMAP oldBits;
-DWORD   rop;
-
-  if (mBHead == nsnull) 
-    return NS_ERROR_FAILURE;
-
-  // limit the size of the blit to the amount of the image read in
-  srcHeight = mBHead->biHeight;
-  srcy = 0;
-  if((mDecodedY2 < srcHeight)) {
-    aHeight = PRInt32 (float(mDecodedY2/float(srcHeight))*aHeight);
-    srcHeight = mDecodedY2;
-    srcy = (mBHead->biHeight-mDecodedY2);
-  }
-
-  // if DC is not for a printer, and the image can be optimized, 
-  ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
-
-  // find out if the surface is a printer.
-  ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
-  if(canRaster != DT_RASPRINTER){
-    if ((PR_TRUE==mCanOptimize) && (nsnull == mHBitmap))
-      CreateDDB(aSurface);
-  }
-
-  if (nsnull != TheHDC){
-    if (!IsOptimized() || nsnull==mHBitmap){
-      rop = SRCCOPY;
-
-      if (nsnull != mAlphaBits){
-        if( 1==mAlphaDepth){
-	        MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
-
-	        ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,0, 0, 
-                    mAlphaWidth, mAlphaHeight, mAlphaBits,
-			            (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
-	         rop = SRCPAINT;
-        }
-      }
-
-      if (8 == mAlphaDepth) {
-        DrawComposited(TheHDC, aX, aY, aWidth, aHeight,
-                0, srcy, mBHead->biWidth, srcHeight);
-      } else {
-        ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,
-                       0, srcy, mBHead->biWidth, srcHeight, mImageBits,
-                       (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
-                       DIB_RGB_COLORS, rop);
-      }
-
-    }else{
-      nsIDeviceContext    *dx;
-      aContext.GetDeviceContext(dx);
-      nsDrawingSurface     ds;
-      dx->GetDrawingSurface(aContext, ds);
-      nsDrawingSurfaceWin *srcDS = (nsDrawingSurfaceWin *)ds;
-      HDC                 srcDC;
-
-      if (nsnull != srcDS){
-	      srcDS->GetDC(&srcDC);
-
-        rop = SRCCOPY;
-
-        if (nsnull != mAlphaBits){
-          if( 1==mAlphaDepth){
-	          MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
-
-	          ::StretchDIBits(TheHDC,aX,aY,aWidth,aHeight,0,0,mAlphaWidth, mAlphaHeight, mAlphaBits,
-			              (LPBITMAPINFO)&bmi,DIB_RGB_COLORS,SRCAND);
-            rop = SRCPAINT;
-          }
-        }
-        // if this is for a printer.. we have to convert it back to a DIB
-        if(canRaster == DT_RASPRINTER){
-          if(!(GetDeviceCaps(TheHDC,RASTERCAPS) &(RC_BITBLT | RC_STRETCHBLT))) {
-              // we have an error with the printer not supporting a raster device
-          } else {
-            // if we did not convert to a DDB already
-            if (nsnull == mHBitmap) {
-              oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
-              if (8 == mAlphaDepth) {
-                BLENDFUNCTION blendFunction;
-                blendFunction.BlendOp = AC_SRC_OVER;
-                blendFunction.BlendFlags = 0;
-                blendFunction.SourceConstantAlpha = 255;
-                blendFunction.AlphaFormat = 1 /*AC_SRC_ALPHA*/;
-                gAlphaBlend(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, srcy,
-                   mBHead->biWidth, srcHeight, blendFunction);
-              } else {
-                ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, srcy,
-		           mBHead->biWidth, srcHeight, rop);
-              }
-            }else{
-              PrintDDB(aSurface,aX,aY,aWidth,aHeight,rop);
-            }
-          }
-        } else {
-          // we are going to the device that created this DDB
-          oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
-          if (8 == mAlphaDepth) {
-            BLENDFUNCTION blendFunction;
-            blendFunction.BlendOp = AC_SRC_OVER;
-            blendFunction.BlendFlags = 0;
-            blendFunction.SourceConstantAlpha = 255;
-            blendFunction.AlphaFormat = 1 /*AC_SRC_ALPHA*/;
-            gAlphaBlend(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, srcy, mBHead->biWidth, srcHeight, blendFunction);
-          } else {
-            ::StretchBlt(TheHDC,aX,aY,aWidth,aHeight,srcDC,0,srcy,mBHead->biWidth,srcHeight,rop);
-          }
-        }
-
-        ::SelectObject(srcDC, oldBits);
-        srcDS->ReleaseDC();
-      }
-    NS_RELEASE(dx);
-    }
-
-    ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
-  }
-
-  return NS_OK;
+  return Draw(aContext, aSurface, 0, 0, mNaturalWidth, mNaturalHeight, aX, aY, aWidth, aHeight);
 }
 
 /** ---------------------------------------------------

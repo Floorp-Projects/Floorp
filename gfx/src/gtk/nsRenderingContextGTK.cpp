@@ -1617,6 +1617,8 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
   sr = aSRect;
   mTranMatrix->TransformCoord(&sr.x, &sr.y,
                             &sr.width, &sr.height);
+  sr.x -= mTranMatrix->GetXTranslationCoord();
+  sr.y -= mTranMatrix->GetYTranslationCoord();
 
   dr = aDRect;
   mTranMatrix->TransformCoord(&dr.x, &dr.y,

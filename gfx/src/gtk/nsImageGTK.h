@@ -147,7 +147,8 @@ private:
                              XImage *ximage, unsigned char *readData);
   inline void DrawComposited(nsIRenderingContext &aContext,
                              nsDrawingSurface aSurface,
-                             PRInt32 aX, PRInt32 aY,
+                             PRInt32 aSX, PRInt32 aSY,
+                             PRInt32 aDX, PRInt32 aDY,
                              PRInt32 aWidth, PRInt32 aHeight);
 
   inline void TilePixmap(GdkPixmap *src, GdkPixmap *dest, PRInt32 aSXOffset, PRInt32 aSYOffset, 

@@ -1001,21 +1001,8 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
             inner.SizeTo(mComputedSize);
           } else if (lowImgCon) {
           }
-#else
-        if (mImageLoader.GetLoadImageFailed()) {
-          float p2t;
-          aPresContext->GetScaledPixelsToTwips(&p2t);
-          if (image) {
-            inner.width  = NSIntPixelsToTwips(image->GetWidth(), p2t);
-            inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
-          } else if (lowImage) {
-            inner.width  = NSIntPixelsToTwips(lowImage->GetWidth(), p2t);
-            inner.height = NSIntPixelsToTwips(lowImage->GetHeight(), p2t);
-          }
-#endif
         }
 
-#ifdef USE_IMG2
         if (imgCon) {
           nsPoint p(inner.x, inner.y);
           if (mIntrinsicSize == mComputedSize) {
@@ -1038,13 +1025,39 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
           }
         }
 #else
-        if (image && imgSrcLinesLoaded > 0) {
-          aRenderingContext.DrawImage(image, inner);
-        } else if (lowImage && lowSrcLinesLoaded > 0) {
-          aRenderingContext.DrawImage(lowImage, inner);
+        /*
+         * aDirtyRect is the dirty rect, which we want to use to minimize
+         * painting, but it's in terms of the frame and not the image, so
+         * we need to use the intersection of the dirty rect and the inner
+         * image rect. 
+         */
+        if (inner.IntersectRect(inner, aDirtyRect)) {
+          if (mImageLoader.GetLoadImageFailed()) {
+            float p2t;
+            aPresContext->GetScaledPixelsToTwips(&p2t);
+            if (image != nsnull) {
+              inner.width  = NSIntPixelsToTwips(image->GetWidth(), p2t);
+              inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
+            } else if (lowImage != nsnull) {
+              inner.width  = NSIntPixelsToTwips(lowImage->GetWidth(), p2t);
+              inner.height = NSIntPixelsToTwips(lowImage->GetHeight(), p2t);
+            }
+          }
+          /*
+           * We need to adjust the image source rect to match
+           * the image's coordinates: we slide to the right and down.
+           */
+          nsRect innerSource(inner);
+          innerSource.x -= mBorderPadding.left;
+          innerSource.y -= mBorderPadding.top;
+
+          if (image != nsnull && imgSrcLinesLoaded > 0) {
+            aRenderingContext.DrawImage(image, innerSource, inner);
+          } else if (lowImage != nsnull && lowSrcLinesLoaded > 0) {
+            aRenderingContext.DrawImage(lowImage, innerSource, inner);
+          }
         }
 #endif
-
       }
 
       nsImageMap* map = GetImageMap(aPresContext);
