@@ -399,10 +399,11 @@ PRInt32     numerror,height,width;
 POINT       cpos;
 PRUint32    min,seconds,milli,i;
 SYSTEMTIME  thetime;
+PRUint32    size;
 
   if(aBlender && aImage)
     {
-    gBlendMessage->GetText(str,3);
+    gBlendMessage->GetText(str,3,size);
     blendamount = (float)(str.ToInteger(&numerror))/100.0f;
     if(blendamount < 0.0)
       blendamount = 0.0f;
@@ -459,10 +460,12 @@ PRInt32   numerror,i,height,width;
 POINT     cpos;
 DWORD     pos;
 MSG       msg;
+PRUint32  size;
+
 
   if(aBlender && aImage)
     {
-    gBlendMessage->GetText(str,3);
+    gBlendMessage->GetText(str,3,size);
     blendamount = (float)(str.ToInteger(&numerror))/100.0f;
     if(blendamount < 0.0)
       blendamount = 0.0f;
@@ -953,6 +956,7 @@ char      szFile[256];
 float     blendamount;
 nsString  str;
 PRInt32   numerror;
+PRUint32  size;
 
   switch (msg) 
     {
@@ -995,7 +999,7 @@ PRInt32   numerror;
           break;
         case COMPTST:         // composite basic test
           IsImageLoaded();
-          gBlendMessage->GetText(str,3);
+          gBlendMessage->GetText(str,3,size);
           blendamount = (float)(str.ToInteger(&numerror))/100.0f;
           if(blendamount < 0.0)
             blendamount = 0.0f;
@@ -1114,13 +1118,24 @@ static HWND CreateTopLevel(const char* clazz, const char* title,int aWidth, int 
   nsRepository::RegisterFactory(kCTextFieldCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
   rect.SetRect(25, 370, 40, 25);  
   nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&gBlendMessage);
-  gBlendMessage->Create(gWindow, rect, nsnull, nsnull);
-  gBlendMessage->SetText("50");
+  
+  nsIWidget* widget = nsnull;
+  if (NS_OK == gBlendMessage->QueryInterface(kIWidgetIID,(void**)&widget))
+  {
+    widget->Create(gWindow, rect, nsnull, nsnull);
+    NS_RELEASE(widget);
+  }
+  PRUint32 size;
+  gBlendMessage->SetText("50",size);
 
   rect.SetRect(70,370,40,25);
   nsRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&gQualMessage);
-  gQualMessage->Create(gWindow, rect, nsnull, nsnull);
-  gQualMessage->SetText("3");
+  if (NS_OK == gQualMessage->QueryInterface(kIWidgetIID,(void**)&widget))
+  {
+    widget->Create(gWindow, rect, nsnull, nsnull);
+    NS_RELEASE(widget);
+  }
+  gQualMessage->SetText("3",size);
 
   ::ShowWindow(window, SW_SHOW);
   ::UpdateWindow(window);
