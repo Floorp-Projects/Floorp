@@ -63,7 +63,6 @@
 class nsPref : public nsIPref,
                public nsIPrefService,
                public nsIObserver,
-               public nsIPrefBranch,
                public nsIPrefBranchInternal,
                public nsISecurityPref,
                public nsSupportsWeakReference

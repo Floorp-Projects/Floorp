@@ -52,8 +52,7 @@
 #include "nsVoidArray.h"
 #include "nsWeakReference.h"
 
-class nsPrefBranch : public nsIPrefBranch,
-                     public nsIPrefBranchInternal,
+class nsPrefBranch : public nsIPrefBranchInternal,
                      public nsISecurityPref,
                      public nsIObserver,
                      public nsSupportsWeakReference

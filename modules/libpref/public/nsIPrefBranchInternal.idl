@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIPrefBranch.idl"
 
 interface nsIObserver;
 
@@ -51,8 +51,8 @@ interface nsIObserver;
  * @see nsIPrefBranch
  */
 
-[scriptable, uuid(24ef9578-1dd2-11b2-b439-fcc3d2b4fa20)]
-interface nsIPrefBranchInternal : nsISupports
+[scriptable, uuid(74567534-eb94-4b1c-8f45-389643bfc555)]
+interface nsIPrefBranchInternal : nsIPrefBranch
 {
   /**
    * Called by a preferences consumer to add itself as a preference change
