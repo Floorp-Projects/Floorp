@@ -51,6 +51,7 @@
 #define ID_PTR_CELL         2011
 #define ID_PTR_GRAB         2012
 #define ID_PTR_GRABBING     2013
+#define ID_PTR_ARROWWAIT    2014
 
 #define ID_STR_FONT        10000
 #define ID_STR_HMMDIR      10001

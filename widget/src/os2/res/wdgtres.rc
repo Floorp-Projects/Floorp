@@ -60,6 +60,7 @@ POINTER ID_PTR_ALIAS       aliasb.ptr
 POINTER ID_PTR_CELL        cell.ptr
 POINTER ID_PTR_GRAB        grab.ptr
 POINTER ID_PTR_GRABBING    grabbing.ptr
+POINTER ID_PTR_ARROWWAIT   arrow_wait.ptr
 
 /* stringtable */
 STRINGTABLE
