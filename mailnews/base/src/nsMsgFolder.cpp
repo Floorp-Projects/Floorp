@@ -1404,7 +1404,7 @@ nsGetMailFolderSeparator(nsString& result)
   static char* gMailFolderSep = nsnull;         // never freed
 
   if (gMailFolderSep == nsnull) {
-    gMailFolderSep = PR_smprintf(".sbd%c", PR_GetDirectorySeparator());
+    gMailFolderSep = PR_smprintf(".sbd");
     if (gMailFolderSep == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
   }
