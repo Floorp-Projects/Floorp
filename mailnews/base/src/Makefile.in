@@ -30,6 +30,7 @@ EXPORTS = \
 	nsMsgPtrArray.h \
 	nsMsgGroupRecord.h \
 	nsMsgRFC822Parser.h \
+	nsNewsSet.h \
 	$(NULL)
 
 CPPSRCS = \
@@ -37,6 +38,8 @@ CPPSRCS = \
 	nsMsgGroupRecord.cpp \
 	nsMsgRFC822Parser.cpp \
 	nsMsgFolder.cpp \
+	nsMsgRDFFolder.cpp \
+	nsNewsSet.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk

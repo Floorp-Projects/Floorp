@@ -32,6 +32,8 @@ CPPSRCS=    nsMsgRFC822Parser.cpp  \
 			nsMsgFolder.cpp \
 			nsMsgPtrArray.cpp	\
 			nsMsgGroupRecord.cpp	\
+			nsMsgRDFFolder.cpp \
+			nsNewsSet.cpp \
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgRFC822Parser.obj  \
@@ -40,14 +42,17 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgRFC822Parser.obj  \
 			.\$(OBJDIR)\nsMsgFolder.obj \
 			.\$(OBJDIR)\nsMsgPtrArray.obj		\
 			.\$(OBJDIR)\nsMsgGroupRecord.obj	\
+			.\$(OBJDIR)\nsMsgRDFFolder.obj \
+			.\$(OBJDIR)\nsNewsSet.obj \
 			$(NULL)
 
 
 EXPORTS=	nsMsgRFC822Parser.h \
 			nsUInt32Array.h	\
 			nsMsgKeyArray.h	\
-			 nsMsgGroupRecord.h  \
-			 nsMsgPtrArray.h	 \
+			nsNewsSet.h	\
+			nsMsgGroupRecord.h  \
+			nsMsgPtrArray.h	 \
 			$(NULL)
 
 
