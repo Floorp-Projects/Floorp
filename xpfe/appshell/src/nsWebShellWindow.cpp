@@ -175,6 +175,9 @@ static NS_DEFINE_IID(kIUrlDispatcherIID,     NS_IURLDISPATCHER_IID);
 #define DEBUG_MENUSDEL 1
 #endif
 
+static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
+#include "nsINetSupportDialogService.h"
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 #include "nsIWebShell.h"
 
 const char * kThrobberOnStr  = "resource:/res/throbber/anims07.gif";
@@ -299,7 +302,11 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
      NS_ADDREF_THIS();
      return NS_OK;
   }	
-  
+  if (aIID.Equals(kINetSupportIID )) {
+    *aInstancePtr = (void*)(nsINetSupport*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)(nsISupports*)(nsIWebShellContainer*)this;
     NS_ADDREF_THIS();
@@ -2840,3 +2847,68 @@ nsWebShellWindow::IsIntrinsicallySized(PRBool& aResult)
   aResult = mIntrinsicallySized;
   return NS_OK;
 }
+
+
+// nsINetSupport
+void nsWebShellWindow::Alert(const nsString &aText)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
+  
+  if ( dialog )
+   	dialog->Alert( aText );  
+}
+
+PRBool nsWebShellWindow::Confirm(const nsString &aText)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
+  PRInt32 result = 0;
+ 
+  if ( dialog )
+   	dialog->Confirm( aText,&result );  
+  return result ? PR_TRUE : PR_FALSE;
+}
+
+PRBool nsWebShellWindow::Prompt(const nsString &aText,
+                           const nsString &aDefault,
+                           nsString &aResult)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
+	PRInt32 result = 0;
+  if ( dialog )
+  {
+   	dialog->Prompt( aText, aDefault, aResult,&result ); 
+	}
+	 return result ? PR_TRUE : PR_FALSE;
+}
+
+PRBool nsWebShellWindow::PromptUserAndPassword(
+				const nsString &aText, nsString &aUser, nsString &aPassword)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
+	PRInt32 result = 0;
+  if ( dialog )
+  {
+   		dialog->PromptUserAndPassword( aText, aUser, aPassword, &result );  
+
+	}
+	 return result ? PR_TRUE : PR_FALSE;
+}
+
+PRBool nsWebShellWindow::PromptPassword(const nsString &aText,
+                                   nsString &aPassword)
+ {
+ 	nsresult rv;
+ 	NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
+	PRInt32 result = 0;
+  if ( dialog )
+  {
+  	
+   	dialog->PromptPassword( aText, aPassword, &result ); 
+   
+	}
+	 return result ? PR_TRUE : PR_FALSE;
+ }
