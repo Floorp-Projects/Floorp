@@ -258,19 +258,7 @@ CERT_FindCertByIssuerAndSN(CERTCertDBHandle *handle, CERTIssuerAndSN *issuerAndS
 {
     PK11SlotInfo *slot;
     CERTCertificate *cert;
-    NSSDER issuer, serial;
-    NSSCryptoContext *cc;
-    NSSCertificate *c;
 
-    NSSITEM_FROM_SECITEM(&issuer, &issuerAndSN->derIssuer);
-    NSSITEM_FROM_SECITEM(&serial, &issuerAndSN->serialNumber);
-    cc = STAN_GetDefaultCryptoContext();
-    c = NSSCryptoContext_FindCertificateByIssuerAndSerialNumber(cc, 
-                                                                &issuer, 
-                                                                &serial);
-    if (c) {
-	return STAN_GetCERTCertificate(c);
-    }
     cert = PK11_FindCertByIssuerAndSN(&slot,issuerAndSN,NULL);
     if (cert && slot) {
         PK11_FreeSlot(slot);

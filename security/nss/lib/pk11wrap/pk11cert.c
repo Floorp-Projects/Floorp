@@ -2156,11 +2156,31 @@ PK11_FindCertByIssuerAndSN(PK11SlotInfo **slotPtr, CERTIssuerAndSN *issuerSN,
     CERTCertificate *rvCert = NULL;
     NSSCertificate *cert;
     NSSDER issuer, serial;
-    issuer.data = (void *)issuerSN->derIssuer.data;
-    issuer.size = (PRUint32)issuerSN->derIssuer.len;
-    serial.data = (void *)issuerSN->serialNumber.data;
-    serial.size = (PRUint32)issuerSN->serialNumber.len;
-    /* XXX login to slots */
+    NSSCryptoContext *cc;
+    SECItem *derSerial;
+
+    /* PKCS#11 needs to use DER-encoded serial numbers.  Create a
+     * CERTIssuerAndSN that actually has the encoded value and pass that
+     * to PKCS#11 (and the crypto context).
+     */
+    derSerial = SEC_ASN1EncodeItem(NULL, NULL,
+                                   &issuerSN->serialNumber,
+                                   SEC_IntegerTemplate);
+    if (!derSerial) {
+	return NULL;
+    }
+
+    NSSITEM_FROM_SECITEM(&issuer, &issuerSN->derIssuer);
+    NSSITEM_FROM_SECITEM(&serial, derSerial);
+
+    cc = STAN_GetDefaultCryptoContext();
+    cert = NSSCryptoContext_FindCertificateByIssuerAndSerialNumber(cc, 
+                                                                &issuer, 
+                                                                &serial);
+    if (cert) {
+	SECITEM_FreeItem(derSerial, PR_TRUE);
+	return STAN_GetCERTCertificate(cert);
+    }
     cert = NSSTrustDomain_FindCertificateByIssuerAndSerialNumber(
                                                   STAN_GetDefaultTrustDomain(),
                                                   &issuer,
@@ -2169,6 +2189,7 @@ PK11_FindCertByIssuerAndSN(PK11SlotInfo **slotPtr, CERTIssuerAndSN *issuerSN,
 	rvCert = STAN_GetCERTCertificate(cert);
 	if (slotPtr) *slotPtr = PK11_ReferenceSlot(rvCert->slot);
     }
+    SECITEM_FreeItem(derSerial, PR_TRUE);
     return rvCert;
 #endif
 }
