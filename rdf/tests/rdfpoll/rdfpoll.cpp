@@ -142,23 +142,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRDFObserver interface
-    NS_IMETHOD OnAssert(nsIRDFResource* aSource,
-                        nsIRDFResource* aProperty,
-                        nsIRDFNode* aTarget);
-
-    NS_IMETHOD OnUnassert(nsIRDFResource* aSource,
-                          nsIRDFResource* aProperty,
-                          nsIRDFNode* aTarget);
-
-    NS_IMETHOD OnChange(nsIRDFResource* aSource,
-                        nsIRDFResource* aProperty,
-                        nsIRDFNode* aOldTarget,
-                        nsIRDFNode* aNewTarget);
-
-    NS_IMETHOD OnMove(nsIRDFResource* aOldSource,
-                      nsIRDFResource* aNewSource,
-                      nsIRDFResource* aProperty,
-                      nsIRDFNode* aTarget);
+    NS_DECL_NSIRDFOBSERVER
 };
 
 Observer::Observer()
@@ -216,7 +200,8 @@ rdf_WriteOp(const char* aOp,
 }
 
 NS_IMETHODIMP
-Observer::OnAssert(nsIRDFResource* aSource,
+Observer::OnAssert(nsIRDFDataSource* aDataSource,
+                   nsIRDFResource* aSource,
                    nsIRDFResource* aProperty,
                    nsIRDFNode* aTarget)
 {
@@ -225,7 +210,8 @@ Observer::OnAssert(nsIRDFResource* aSource,
 
 
 NS_IMETHODIMP
-Observer::OnUnassert(nsIRDFResource* aSource,
+Observer::OnUnassert(nsIRDFDataSource* aDataSource,
+                     nsIRDFResource* aSource,
                      nsIRDFResource* aProperty,
                      nsIRDFNode* aTarget)
 {
@@ -234,7 +220,8 @@ Observer::OnUnassert(nsIRDFResource* aSource,
 
 
 NS_IMETHODIMP
-Observer::OnChange(nsIRDFResource* aSource,
+Observer::OnChange(nsIRDFDataSource* aDataSource,
+                   nsIRDFResource* aSource,
                    nsIRDFResource* aProperty,
                    nsIRDFNode* aOldTarget,
                    nsIRDFNode* aNewTarget)
@@ -250,7 +237,8 @@ Observer::OnChange(nsIRDFResource* aSource,
 }
 
 NS_IMETHODIMP
-Observer::OnMove(nsIRDFResource* aOldSource,
+Observer::OnMove(nsIRDFDataSource* aDataSource,
+                 nsIRDFResource* aOldSource,
                  nsIRDFResource* aNewSource,
                  nsIRDFResource* aProperty,
                  nsIRDFNode* aTarget)
@@ -265,6 +253,17 @@ Observer::OnMove(nsIRDFResource* aOldSource,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+Observer::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+Observer::EndUpdateBatch(nsIRDFDataSource* aDataSource)
+{
+    return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////
 

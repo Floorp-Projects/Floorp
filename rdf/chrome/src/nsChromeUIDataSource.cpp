@@ -155,19 +155,7 @@ nsChromeUIDataSource::Assert(nsIRDFResource* aSource,
                              nsIRDFNode* aTarget,
                              PRBool aTruthValue)
 {
-  nsresult rv = mComposite->Assert(aSource, aProperty, aTarget, aTruthValue);
-  if (mObservers) {
-    PRUint32 count;
-    rv = mObservers->Count(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
-      nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-      obs->OnAssert(aSource, aProperty, aTarget);
-      NS_RELEASE(obs);
-    }
-  }
-  return rv;
+  return mComposite->Assert(aSource, aProperty, aTarget, aTruthValue);
 }
 
 NS_IMETHODIMP
@@ -175,19 +163,7 @@ nsChromeUIDataSource::Unassert(nsIRDFResource* aSource,
                                   nsIRDFResource* aProperty,
                                   nsIRDFNode* aTarget)
 {
-  nsresult rv = mComposite->Unassert(aSource, aProperty, aTarget);
-  if (mObservers) {
-    PRUint32 count;
-    rv = mObservers->Count(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
-      nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-      obs->OnUnassert(aSource, aProperty, aTarget);
-      NS_RELEASE(obs);
-    }
-  }
-  return rv;
+  return mComposite->Unassert(aSource, aProperty, aTarget);
 }
 
 NS_IMETHODIMP
@@ -196,20 +172,7 @@ nsChromeUIDataSource::Change(nsIRDFResource* aSource,
                                 nsIRDFNode* aOldTarget,
                                 nsIRDFNode* aNewTarget)
 {
-  nsresult rv = mComposite->Change(aSource, aProperty, aOldTarget, aNewTarget);
-  if (mObservers) {
-    PRUint32 count;
-    rv = mObservers->Count(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
-      nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-      obs->OnChange(aSource, aProperty, aOldTarget, aNewTarget);
-      NS_RELEASE(obs);
-    }
-  }
-
-  return rv;
+  return mComposite->Change(aSource, aProperty, aOldTarget, aNewTarget);
 }
 
 NS_IMETHODIMP
@@ -218,19 +181,7 @@ nsChromeUIDataSource::Move(nsIRDFResource* aOldSource,
                               nsIRDFResource* aProperty,
                               nsIRDFNode* aTarget)
 {
-  nsresult rv = mComposite->Move(aOldSource, aNewSource, aProperty, aTarget);
-  if (mObservers) {
-    PRUint32 count;
-    rv = mObservers->Count(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
-      nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-      obs->OnMove(aOldSource, aNewSource, aProperty, aTarget);
-      NS_RELEASE(obs);
-    }
-  }
-  return rv;
+  return mComposite->Move(aOldSource, aNewSource, aProperty, aTarget);
 }
 
 
@@ -342,9 +293,10 @@ nsChromeUIDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 //////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsChromeUIDataSource::OnAssert(nsIRDFResource* aSource,
-                                  nsIRDFResource* aProperty,
-                                  nsIRDFNode* aTarget)
+nsChromeUIDataSource::OnAssert(nsIRDFDataSource* aDataSource,
+                               nsIRDFResource* aSource,
+                               nsIRDFResource* aProperty,
+                               nsIRDFNode* aTarget)
 {
   if (mObservers) {
     PRUint32 count;
@@ -354,7 +306,7 @@ nsChromeUIDataSource::OnAssert(nsIRDFResource* aSource,
 
     for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
       nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-      obs->OnAssert(aSource, aProperty, aTarget);
+      obs->OnAssert(this, aSource, aProperty, aTarget);
       NS_RELEASE(obs);
       // XXX ignore return value?
     }
@@ -363,9 +315,10 @@ nsChromeUIDataSource::OnAssert(nsIRDFResource* aSource,
 }
 
 NS_IMETHODIMP
-nsChromeUIDataSource::OnUnassert(nsIRDFResource* aSource,
-                                    nsIRDFResource* aProperty,
-                                    nsIRDFNode* aTarget)
+nsChromeUIDataSource::OnUnassert(nsIRDFDataSource* aDataSource,
+                                 nsIRDFResource* aSource,
+                                 nsIRDFResource* aProperty,
+                                 nsIRDFNode* aTarget)
 {
   if (mObservers) {
     PRUint32 count;
@@ -375,7 +328,7 @@ nsChromeUIDataSource::OnUnassert(nsIRDFResource* aSource,
 
     for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
       nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-      obs->OnUnassert(aSource, aProperty, aTarget);
+      obs->OnUnassert(aDataSource, aSource, aProperty, aTarget);
       NS_RELEASE(obs);
       // XXX ignore return value?
     }
@@ -385,10 +338,11 @@ nsChromeUIDataSource::OnUnassert(nsIRDFResource* aSource,
 
 
 NS_IMETHODIMP
-nsChromeUIDataSource::OnChange(nsIRDFResource* aSource,
-                                  nsIRDFResource* aProperty,
-                                  nsIRDFNode* aOldTarget,
-                                  nsIRDFNode* aNewTarget)
+nsChromeUIDataSource::OnChange(nsIRDFDataSource* aDataSource,
+                               nsIRDFResource* aSource,
+                               nsIRDFResource* aProperty,
+                               nsIRDFNode* aOldTarget,
+                               nsIRDFNode* aNewTarget)
 {
   if (mObservers) {
     PRUint32 count;
@@ -397,7 +351,7 @@ nsChromeUIDataSource::OnChange(nsIRDFResource* aSource,
 
     for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
       nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-      obs->OnChange(aSource, aProperty, aOldTarget, aNewTarget);
+      obs->OnChange(aDataSource, aSource, aProperty, aOldTarget, aNewTarget);
       NS_RELEASE(obs);
       // XXX ignore return value?
     }
@@ -407,10 +361,11 @@ nsChromeUIDataSource::OnChange(nsIRDFResource* aSource,
 
 
 NS_IMETHODIMP
-nsChromeUIDataSource::OnMove(nsIRDFResource* aOldSource,
-                                nsIRDFResource* aNewSource,
-                                nsIRDFResource* aProperty,
-                                nsIRDFNode* aTarget)
+nsChromeUIDataSource::OnMove(nsIRDFDataSource* aDataSource,
+                             nsIRDFResource* aOldSource,
+                             nsIRDFResource* aNewSource,
+                             nsIRDFResource* aProperty,
+                             nsIRDFNode* aTarget)
 {
   if (mObservers) {
     PRUint32 count;
@@ -419,11 +374,23 @@ nsChromeUIDataSource::OnMove(nsIRDFResource* aOldSource,
 
     for (PRInt32 i = PRInt32(count) - 1; i >= 0; --i) {
       nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
-      obs->OnMove(aOldSource, aNewSource, aProperty, aTarget);
+      obs->OnMove(aDataSource, aOldSource, aNewSource, aProperty, aTarget);
       NS_RELEASE(obs);
       // XXX ignore return value?
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChromeUIDataSource::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChromeUIDataSource::EndUpdateBatch(nsIRDFDataSource* aDataSource)
+{
   return NS_OK;
 }
 

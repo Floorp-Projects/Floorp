@@ -2365,23 +2365,7 @@ public:
     NS_IMETHOD RebuildContainer(nsIContent* aContainer);
 
     // nsIRDFObserver interface
-    NS_IMETHOD OnAssert(nsIRDFResource* aSource,
-                        nsIRDFResource* aProperty,
-                        nsIRDFNode* aTarget);
-
-    NS_IMETHOD OnUnassert(nsIRDFResource* aSource,
-                          nsIRDFResource* aProperty,
-                          nsIRDFNode* aTarget);
-
-    NS_IMETHOD OnChange(nsIRDFResource* aSource,
-                        nsIRDFResource* aProperty,
-                        nsIRDFNode* aOldTarget,
-                        nsIRDFNode* aNewTarget);
-
-    NS_IMETHOD OnMove(nsIRDFResource* aOldSource,
-                      nsIRDFResource* aNewSource,
-                      nsIRDFResource* aProperty,
-                      nsIRDFNode* aTarget);
+    NS_DECL_NSIRDFOBSERVER
 
     // Implementation methods
     nsresult
@@ -4508,7 +4492,8 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const ClusterKeySet& aNewKeys)
 
 
 NS_IMETHODIMP
-nsXULTemplateBuilder::OnAssert(nsIRDFResource* aSource,
+nsXULTemplateBuilder::OnAssert(nsIRDFDataSource* aDataSource,
+                               nsIRDFResource* aSource,
                                nsIRDFResource* aProperty,
                                nsIRDFNode* aTarget)
 {
@@ -4595,7 +4580,8 @@ nsXULTemplateBuilder::Retract(nsIRDFResource* aSource,
 }
 
 NS_IMETHODIMP
-nsXULTemplateBuilder::OnUnassert(nsIRDFResource* aSource,
+nsXULTemplateBuilder::OnUnassert(nsIRDFDataSource* aDataSource,
+                                 nsIRDFResource* aSource,
                                  nsIRDFResource* aProperty,
                                  nsIRDFNode* aTarget)
 {
@@ -4628,7 +4614,8 @@ nsXULTemplateBuilder::OnUnassert(nsIRDFResource* aSource,
 
 
 NS_IMETHODIMP
-nsXULTemplateBuilder::OnChange(nsIRDFResource* aSource,
+nsXULTemplateBuilder::OnChange(nsIRDFDataSource* aDataSource,
+                               nsIRDFResource* aSource,
                                nsIRDFResource* aProperty,
                                nsIRDFNode* aOldTarget,
                                nsIRDFNode* aNewTarget)
@@ -4685,7 +4672,8 @@ nsXULTemplateBuilder::OnChange(nsIRDFResource* aSource,
 
 
 NS_IMETHODIMP
-nsXULTemplateBuilder::OnMove(nsIRDFResource* aOldSource,
+nsXULTemplateBuilder::OnMove(nsIRDFDataSource* aDataSource,
+                             nsIRDFResource* aOldSource,
                              nsIRDFResource* aNewSource,
                              nsIRDFResource* aProperty,
                              nsIRDFNode* aTarget)
@@ -4702,6 +4690,20 @@ nsXULTemplateBuilder::OnMove(nsIRDFResource* aOldSource,
 	}
 
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsXULTemplateBuilder::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
+{
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULTemplateBuilder::EndUpdateBatch(nsIRDFDataSource* aDataSource)
+{
+    return NS_OK;
 }
 
 

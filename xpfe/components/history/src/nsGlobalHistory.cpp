@@ -1773,7 +1773,7 @@ nsGlobalHistory::NotifyAssert(nsIRDFResource* aSource,
       if (! observer)
         continue;
 
-      rv = observer->OnAssert(aSource, aProperty, aValue);
+      rv = observer->OnAssert(this, aSource, aProperty, aValue);
       NS_RELEASE(observer);
     }
   }
@@ -1802,7 +1802,7 @@ nsGlobalHistory::NotifyChange(nsIRDFResource* aSource,
       if (! observer)
         continue;
 
-      rv = observer->OnChange(aSource, aProperty, aOldValue, aNewValue);
+      rv = observer->OnChange(this, aSource, aProperty, aOldValue, aNewValue);
       NS_RELEASE(observer);
     }
   }

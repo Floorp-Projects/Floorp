@@ -40,21 +40,27 @@ function debug(msg) {
 }
 
 var panel_observer = {
-  OnAssert : function(src,prop,target) { 
+  onAssert : function(ds,src,prop,target) { 
     debug ("*** sidebar observer: assert");
     // "refresh" is asserted by select menu and by customize.js.
     if (prop == RDF.GetResource(NC + "refresh")) {
       sidebar_refresh();
     }
   },
-  OnUnassert : function(src,prop,target) {
+  onUnassert : function(ds,src,prop,target) {
     debug ("*** sidebar observer: unassert");
   },
-  OnChange : function(src,prop,old_target,new_target) {
+  onChange : function(ds,src,prop,old_target,new_target) {
     debug ("*** sidebar observer: change");
   },
-  OnMove : function(old_src,new_src,prop,target) {
+  onMove : function(ds,old_src,new_src,prop,target) {
     debug ("*** sidebar observer: move");
+  },
+  beginUpdateBatch : function(ds) {
+    debug ("*** sidebar observer: beginUpdateBatch");
+  },
+  endUpdateBatch : function(ds) {
+    debug ("*** sidebar observer: endUpdateBatch");
   }
 };
 
