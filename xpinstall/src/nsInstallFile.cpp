@@ -73,6 +73,14 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     if ( (forceInstall == PR_FALSE ) && (inVInfo !=  "") && ( VR_ValidateComponent( qualifiedRegNameString ) == 0 ) ) 
     {
         nsInstallVersion *newVersion = new nsInstallVersion();
+        
+        if (newVersion == nsnull)
+        {
+            delete [] qualifiedRegNameString;
+            *error = nsInstall::OUT_OF_MEMORY;
+            return;
+        }
+
         newVersion->Init(inVInfo);
         
         VERSION versionStruct;
@@ -80,6 +88,14 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         VR_GetVersion( qualifiedRegNameString, &versionStruct );
         
         nsInstallVersion* oldVersion = new nsInstallVersion();
+        
+        if (newVersion == nsnull)
+        {
+            delete [] qualifiedRegNameString;
+            delete oldVersion;
+            *error = nsInstall::OUT_OF_MEMORY;
+            return;
+        }
 
         oldVersion->Init(versionStruct.major,
                          versionStruct.minor,
@@ -98,7 +114,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
             areTheyEqual == nsIDOMInstallVersion::BLD_DIFF_MINUS   )
         {
             // the file to be installed is OLDER than what is on disk.  Return error
-            delete qualifiedRegNameString;
+            delete [] qualifiedRegNameString;
             *error = areTheyEqual;
             return;
         }
@@ -107,7 +123,13 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     delete [] qualifiedRegNameString;
 
     mFinalFile = new nsFileSpec(folderSpec);
-
+    
+    if (mFinalFile == nsnull)
+    {
+        *error = nsInstall::OUT_OF_MEMORY;
+        return;
+    }
+    
     if ( mFinalFile->Exists() )
     {
         // is there a file with the same name as the proposed folder?
@@ -146,7 +168,15 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     mVersionRegistryName    = new nsString(inComponentName);
     mJarLocation            = new nsString(inJarLocation);
     mVersionInfo	        = new nsString(inVInfo);
-        
+     
+    if (mVersionRegistryName == nsnull ||
+        mJarLocation         == nsnull ||
+        mVersionInfo         == nsnull )
+    {
+        *error = nsInstall::OUT_OF_MEMORY;
+        return;
+    }
+
     nsString regPackageName;
     mInstall->GetRegPackageName(regPackageName);
     
@@ -240,6 +270,9 @@ char* nsInstallFile::toString()
 {
     char* buffer = new char[1024];
     
+    if (buffer == nsnull)
+        return nsnull;
+
     if (mFinalFile == nsnull)
     {
         sprintf( buffer, nsInstallResources::GetInstallFileString(), nsnull);

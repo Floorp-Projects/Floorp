@@ -303,8 +303,8 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                 mFileSpec = nsnull;
 			   return;
 		}
-		
-        if (aRelativePath.Length() > 0)
+
+        if (aRelativePath.Length() > 0 && mFileSpec)
         {
             nsString tempPath(aRelativePath);
 

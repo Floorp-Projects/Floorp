@@ -88,11 +88,18 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     mRegistryName   =   new nsString(inVRName);
     mJarLocation    =   new nsString(inJarLocation);
     mTargetFile     =   new nsFileSpec(folderSpec);
-    
     mVersionInfo    =   new nsInstallVersion();
     
+    if (mRegistryName == nsnull ||
+        mJarLocation  == nsnull ||
+        mTargetFile   == nsnull ||
+        mVersionInfo  == nsnull )
+    {
+        *error = nsInstall::OUT_OF_MEMORY;
+        return;
+    }
+
     mVersionInfo->Init(inVInfo);
-    
 }
 
 
@@ -118,10 +125,20 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     mRegistryName   =   new nsString(inVRName);
     mJarLocation    =   new nsString(inJarLocation);
     mVersionInfo    =   new nsInstallVersion();
+    mTargetFile     =   new nsFileSpec(folderSpec);
+
+    if (mRegistryName == nsnull ||
+        mJarLocation  == nsnull ||
+        mTargetFile   == nsnull ||
+        mVersionInfo  == nsnull )
+    {
+        *error = nsInstall::OUT_OF_MEMORY;
+        return;
+    }
     
     mVersionInfo->Init(inVInfo);
     
-    mTargetFile = new nsFileSpec(folderSpec);
+    
     if(inPartialPath != "null")
         *mTargetFile += inPartialPath;
 }
@@ -247,8 +264,8 @@ PRInt32 nsInstallPatch::Complete()
                               tempVersion, 
                               PR_FALSE );
             
-            delete [] tempRegName;
-            delete [] tempVersion;
+            if (tempRegName) delete [] tempRegName;
+            if (tempVersion) delete [] tempVersion;
 
         }
         else
@@ -281,6 +298,9 @@ void nsInstallPatch::Abort()
 char* nsInstallPatch::toString()
 {
 	char* buffer = new char[1024];
+    
+    if (buffer == nsnull)
+        return buffer;
 
     if (mTargetFile != nsnull) 
         sprintf( buffer, nsInstallResources::GetPatchFileString(), mTargetFile->GetCString()); 

@@ -42,7 +42,7 @@ class nsWinProfile
      *
      * @return  false for failure, true for success
      */
-    PRInt32 writeString( nsString section, nsString key, nsString value, PRInt32* aReturn );
+    PRInt32 WriteString( nsString section, nsString key, nsString value, PRInt32* aReturn );
     
     /**
      * Reads a value from a windows "ini" file.  We don't support using
@@ -50,23 +50,23 @@ class nsWinProfile
      *
      * @return  String value from INI, "" if not found, null if error
      */
-    PRInt32 getString( nsString section, nsString key, nsString* aReturn );
+    PRInt32 GetString( nsString section, nsString key, nsString* aReturn );
     
-    nsString* getFilename();
-    nsInstall* installObject();
+    nsString* GetFilename();
+    nsInstall* InstallObject();
     
-    PRInt32 finalWriteString( nsString section, nsString key, nsString value );
+    PRInt32 FinalWriteString( nsString section, nsString key, nsString value );
 
     
   private:
     
     /* Private Fields */
-    nsString*  filename;
-    nsInstall* su;
+    nsString*  mFilename;
+    nsInstall* mInstallObject;
     
     /* Private Methods */
-    PRInt32 nativeWriteString( nsString section, nsString key, nsString value );
-    PRInt32 nativeGetString( nsString section, nsString key, nsString* aReturn );
+    PRInt32 NativeWriteString( nsString section, nsString key, nsString value );
+    PRInt32 NativeGetString( nsString section, nsString key, nsString* aReturn );
 };
 
 #endif /* nsWinProfile_h__ */

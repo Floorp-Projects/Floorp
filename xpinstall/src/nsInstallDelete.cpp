@@ -55,6 +55,13 @@ nsInstallDelete::nsInstallDelete( nsInstall* inInstall,
     
 
     mFinalFile = new nsFileSpec(folderSpec);
+
+    if (mFinalFile == nsnull)
+    {
+        *error = nsInstall::OUT_OF_MEMORY;
+        return;
+    }
+
     *mFinalFile += inPartialPath;
 
     *error = ProcessInstallDelete();
@@ -103,8 +110,11 @@ PRInt32 nsInstallDelete::Complete()
     if (mDeleteStatus == DELETE_COMPONENT) 
     {
         char* temp = mRegistryName.ToNewCString();
-        err = VR_Remove(temp);
-        delete [] temp;
+        if (temp)
+        {
+            err = VR_Remove(temp);
+            delete [] temp;
+        }
     }
 
     if ((mDeleteStatus == DELETE_FILE) || (err == REGERR_OK)) 
@@ -128,11 +138,15 @@ char* nsInstallDelete::toString()
 {
     char* buffer = new char[1024];
     
+    if (buffer == nsnull)
+        return nsnull;
+
     if (mDeleteStatus == DELETE_COMPONENT)
     {
         char* temp = mRegistryName.ToNewCString();
         sprintf( buffer, nsInstallResources::GetDeleteComponentString(), temp);
-        delete [] temp;
+        if (temp)
+            delete [] temp;
     }
     else
     {
@@ -167,6 +181,9 @@ PRInt32 nsInstallDelete::ProcessInstallDelete()
     {
         /* Check if the component is in the registry */
         tempCString = mRegistryName.ToNewCString();
+        
+        if (tempCString == nsnull)
+                return nsInstall::OUT_OF_MEMORY;
 
         err = VR_InRegistry( tempCString );
                 
@@ -180,6 +197,9 @@ PRInt32 nsInstallDelete::ProcessInstallDelete()
 
             tempRegistryString = (char*)PR_Calloc(MAXREGPATHLEN, sizeof(char));
             
+            if (tempRegistryString == nsnull)
+                return nsInstall::OUT_OF_MEMORY;
+
             err = VR_GetPath( tempCString , MAXREGPATHLEN, tempRegistryString);
             
             if (err == REGERR_OK)
@@ -188,6 +208,10 @@ PRInt32 nsInstallDelete::ProcessInstallDelete()
                     delete mFinalFile;
 
                 mFinalFile = new nsFileSpec(tempRegistryString);
+                
+                if (mFinalFile == nsnull)
+                    return nsInstall::OUT_OF_MEMORY;
+                
             }
 
             PR_FREEIF(tempRegistryString);

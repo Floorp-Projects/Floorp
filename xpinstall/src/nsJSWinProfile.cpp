@@ -80,7 +80,7 @@ WinProfileGetString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
 
-    nativeThis->getString(b0, b1, &nativeRet);
+    nativeThis->GetString(b0, b1, &nativeRet);
 
     ConvertStrToJSVal(nativeRet, cx, rval);
   }
@@ -123,7 +123,7 @@ WinProfileWriteString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     ConvertJSValToStr(b1, cx, argv[1]);
     ConvertJSValToStr(b2, cx, argv[2]);
 
-    if(NS_OK != nativeThis->writeString(b0, b1, b2, &nativeRet))
+    if(NS_OK != nativeThis->WriteString(b0, b1, b2, &nativeRet))
     {
       return JS_FALSE;
     }

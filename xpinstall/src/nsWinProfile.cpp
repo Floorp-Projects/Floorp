@@ -25,61 +25,63 @@
 
 nsWinProfile::nsWinProfile( nsInstall* suObj, const nsString& folder, const nsString& file )
 {
-  filename = new nsString(folder);
-  if(filename->Last() != '\\')
+  mFilename = new nsString(folder);
+    
+  if (mFilename)
   {
-    filename->Append("\\");
+    if(mFilename->Last() != '\\')
+    {
+        mFilename->Append("\\");
+    }
+    mFilename->Append(file);
+
+	mInstallObject = suObj;
   }
-  filename->Append(file);
-
-	su = suObj;
-
-//	principal = suObj->GetPrincipal();
-//	privMgr = nsPrivilegeManager::getPrivilegeManager();
-//	impersonation = nsTarget::findTarget(IMPERSONATOR);
-//	target = (nsUserTarget*)nsTarget::findTarget(INSTALL_PRIV);
 }
 
 nsWinProfile::~nsWinProfile()
 {
-  delete filename;
+  if (mFilename)
+      delete mFilename;
 }
 
 PRInt32
-nsWinProfile::getString(nsString section, nsString key, nsString* aReturn)
+nsWinProfile::GetString(nsString section, nsString key, nsString* aReturn)
 {
-  return nativeGetString(section, key, aReturn);
+  return NativeGetString(section, key, aReturn);
 }
 
 PRInt32
-nsWinProfile::writeString(nsString section, nsString key, nsString value, PRInt32* aReturn)
+nsWinProfile::WriteString(nsString section, nsString key, nsString value, PRInt32* aReturn)
 {
+  *aReturn = NS_OK;
+  
   nsWinProfileItem* wi = new nsWinProfileItem(this, section, key, value);
 
-  *aReturn = NS_OK;
+  if(wi == nsnull)
+      return nsInstall::OUT_OF_MEMORY;
 
-  if(wi == NULL)
-    return PR_FALSE;
-
-  su->ScheduleForInstall(wi);
+  if (mInstallObject)
+    mInstallObject->ScheduleForInstall(wi);
+  
   return NS_OK;
 }
 
-nsString* nsWinProfile::getFilename()
+nsString* nsWinProfile::GetFilename()
 {
-	return filename;
+	return mFilename;
 }
 
-nsInstall* nsWinProfile::installObject()
+nsInstall* nsWinProfile::InstallObject()
 {
-	return su;
+	return mInstallObject;
 }
 
 PRInt32
-nsWinProfile::finalWriteString( nsString section, nsString key, nsString value )
+nsWinProfile::FinalWriteString( nsString section, nsString key, nsString value )
 {
 	/* do we need another security check here? */
-	return nativeWriteString(section, key, value);
+	return NativeWriteString(section, key, value);
 }
 
 /* Private Methods */
@@ -87,35 +89,35 @@ nsWinProfile::finalWriteString( nsString section, nsString key, nsString value )
 #define STRBUFLEN 255
   
 PRInt32
-nsWinProfile::nativeGetString(nsString section, nsString key, nsString* aReturn )
+nsWinProfile::NativeGetString(nsString section, nsString key, nsString* aReturn )
 {
-	int       numChars;
+  int       numChars;
   char      valbuf[STRBUFLEN];
   char*     sectionCString;
   char*     keyCString;
   char*     filenameCString;
 
   /* make sure conversions worked */
-  if(section.First() != '\0' && key.First() != '\0' && filename->First() != '\0')
+  if(section.First() != '\0' && key.First() != '\0' && mFilename->First() != '\0')
   {
     sectionCString  = section.ToNewCString();
     keyCString      = key.ToNewCString();
-    filenameCString = filename->ToNewCString();
+    filenameCString = mFilename->ToNewCString();
 
     numChars        = GetPrivateProfileString(sectionCString, keyCString, "", valbuf, STRBUFLEN, filenameCString);
 
     *aReturn        = valbuf;
 
-    delete [] sectionCString;
-    delete [] keyCString;
-    delete [] filenameCString;
+    if (sectionCString)  delete [] sectionCString;
+    if (keyCString)      delete [] keyCString;
+    if (filenameCString) delete [] filenameCString;
   }
 
   return numChars;
 }
 
 PRInt32
-nsWinProfile::nativeWriteString( nsString section, nsString key, nsString value )
+nsWinProfile::NativeWriteString( nsString section, nsString key, nsString value )
 {
   char* sectionCString;
   char* keyCString;
@@ -124,19 +126,19 @@ nsWinProfile::nativeWriteString( nsString section, nsString key, nsString value 
   int   success = 0;
 
 	/* make sure conversions worked */
-  if(section.First() != '\0' && key.First() != '\0' && filename->First() != '\0')
+  if(section.First() != '\0' && key.First() != '\0' && mFilename->First() != '\0')
   {
     sectionCString  = section.ToNewCString();
     keyCString      = key.ToNewCString();
     valueCString    = value.ToNewCString();
-    filenameCString = filename->ToNewCString();
+    filenameCString = mFilename->ToNewCString();
 
     success = WritePrivateProfileString( sectionCString, keyCString, valueCString, filenameCString );
 
-    delete [] sectionCString;
-    delete [] keyCString;
-    delete [] valueCString;
-    delete [] filenameCString;
+    if (sectionCString)  delete [] sectionCString;
+    if (keyCString)      delete [] keyCString;
+    if (valueCString)    delete [] valueCString;
+    if (filenameCString) delete [] filenameCString;
   }
 
   return success;
