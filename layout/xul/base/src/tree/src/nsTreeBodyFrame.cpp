@@ -23,6 +23,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *  Ben Goodger <ben@netscape.com>
  *  Joe Hewitt <hewitt@netscape.com>
+ *  Jan Varga <varga@utcru.sk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -76,6 +77,7 @@
 #include "nsNetUtil.h"
 #include "nsBoxLayoutState.h"
 #include "nsIDragService.h"
+#include "nsOutlinerContentView.h"
 
 #ifdef USE_IMG2
 #include "imgIRequest.h"
@@ -405,17 +407,33 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
       }
     }
 
-    // See if there is a XUL outliner builder associated with the
-    // element. If so, try to make *it* be the view.
+
+    // A content model view is always created and hooked up,
+    // unless there is a XULOutlinerBuilder view.
+
     nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(mContent);
     if (xulele) {
+      nsCOMPtr<nsIOutlinerView> view;
+
+      // First, see if there is a XUL outliner builder
+      // associated with the element.
       nsCOMPtr<nsIXULTemplateBuilder> builder;
       xulele->GetBuilder(getter_AddRefs(builder));
-      if (builder) {
-        nsCOMPtr<nsIOutlinerView> view = do_QueryInterface(builder);
-        if (view)
-          SetView(view);
+      if (builder)
+        view = do_QueryInterface(builder);
+      else {
+        // No builder, create a outliner content model view.
+        nsCOMPtr<nsIOutlinerContentView> contentView;
+        NS_NewOutlinerContentView(getter_AddRefs(contentView));
+        if (contentView) {
+          contentView->SetRoot(xulele);
+          view = do_QueryInterface(contentView);
+        }
       }
+
+      // Hook up the view.
+      if (view)
+        SetView(view);
     }
   }
 
@@ -785,39 +803,6 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aR
   PRInt32 x, y;
   AdjustEventCoordsToBoxCoordSpace ( aX, aY, &x, &y );
   
-#if 0
-  // Convert our x and y coords to twips.
-  float pixelsToTwips = 0.0;
-  mPresContext->GetPixelsToTwips(&pixelsToTwips);
-  aX = NSToIntRound(aX * pixelsToTwips);
-  aY = NSToIntRound(aY * pixelsToTwips);
-  
-  // Get our box object.
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(*getter_AddRefs(doc));
-  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mContent));
-  
-  nsCOMPtr<nsIBoxObject> boxObject;
-  nsDoc->GetBoxObjectFor(elt, getter_AddRefs(boxObject));
-  
-  PRInt32 x;
-  PRInt32 y;
-  boxObject->GetX(&x);
-  boxObject->GetY(&y);
-
-  x = NSToIntRound(x * pixelsToTwips);
-  y = NSToIntRound(y * pixelsToTwips);
-
-  // Adjust into our coordinate space.
-  x = aX-x;
-  y = aY-y;
-
-  // Adjust y by the inner box y, so that we're in the inner box's
-  // coordinate space.
-  y += mInnerBox.y;
-#endif
-
   // Now just mod by our total inner box height and add to our top row index.
   *aRow = (y/mRowHeight)+mTopRowIndex;
 
@@ -1690,7 +1675,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
     aRenderingContext.PushState();
 
     PRUint8 side = NS_SIDE_TOP;
-    PRInt32 y = rowRect.y + rowRect.height / 2;
+    nscoord currY = rowRect.y + rowRect.height / 2;
     for (PRInt32 i = 0; i < 2; i++) {
       nscolor color;
       PRBool transparent; PRBool foreground;
@@ -1700,10 +1685,10 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
       style = borderStyle->GetBorderStyle(side);
       aRenderingContext.SetLineStyle(ConvertBorderStyleToLineStyle(style));
 
-      aRenderingContext.DrawLine(rowRect.x, y, rowRect.x + rowRect.width, y);
+      aRenderingContext.DrawLine(rowRect.x, currY, rowRect.x + rowRect.width, currY);
 
       side = NS_SIDE_BOTTOM;
-      y = y + 16;
+      currY += 16;
     }
 
     PRBool clipState;

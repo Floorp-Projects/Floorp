@@ -7790,6 +7790,14 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     PRInt32 namespaceID;
     bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
 
+    // Just ignore outliner tags, anyway we don't create any frames for them.
+    if (tag == nsXULAtoms::outlineritem ||
+        tag == nsXULAtoms::outlinerseparator ||
+        tag == nsXULAtoms::outlinerchildren ||
+        tag == nsXULAtoms::outlinerrow ||
+        tag == nsXULAtoms::outlinercell)
+      return NS_OK;
+
     PRBool treeChildren = tag.get() == nsXULAtoms::treechildren;
     PRBool treeItem = tag.get() == nsXULAtoms::treeitem;
 
@@ -8369,6 +8377,14 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     nsCOMPtr<nsIAtom> tag;
     PRInt32 namespaceID;
     bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
+
+    // Just ignore outliner tags, anyway we don't create any frames for them.
+    if (tag == nsXULAtoms::outlineritem ||
+        tag == nsXULAtoms::outlinerseparator ||
+        tag == nsXULAtoms::outlinerchildren ||
+        tag == nsXULAtoms::outlinerrow ||
+        tag == nsXULAtoms::outlinercell)
+      return NS_OK;
 
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
     PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
@@ -9227,6 +9243,14 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     nsCOMPtr<nsIAtom> tag;
     PRInt32 namespaceID;
     bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
+
+    // Just ignore outliner tags, anyway we don't create any frames for them.
+    if (tag == nsXULAtoms::outlineritem ||
+        tag == nsXULAtoms::outlinerseparator ||
+        tag == nsXULAtoms::outlinerchildren ||
+        tag == nsXULAtoms::outlinerrow ||
+        tag == nsXULAtoms::outlinercell)
+      return NS_OK;
 
     PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
     PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;

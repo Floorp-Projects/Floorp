@@ -49,12 +49,16 @@ CPPSRCS	= \
  nsOutlinerBoxObject.cpp \
  nsOutlinerColFrame.cpp \
  nsOutlinerSelection.cpp \
+ nsOutlinerUtils.cpp \
+ nsOutlinerContentView.cpp \
  $(NULL)
 
 EXPORTS = \
  nsOutlinerBodyFrame.h \
  nsOutlinerColFrame.h \
  nsOutlinerSelection.h \
+ nsOutlinerUtils.h \
+ nsOutlinerContentView.h \
  $(NULL)
 
 DEFINES += -D_IMPL_NS_HTML
