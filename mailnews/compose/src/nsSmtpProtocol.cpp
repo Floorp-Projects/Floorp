@@ -16,10 +16,10 @@
  * Reserved.
  */
 #include "msgCore.h"
+#include "MsgCompGlue.h" // need this to get MK_ defines...
 
 #include "nsSmtpProtocol.h"
 #include "nscore.h"
-#include "xp.h"  // mscott -- remove this dependency...
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -31,10 +31,6 @@
 
 #include "nsMsgBaseCID.h"
 
-#include "rosetta.h"
-
-//#include "allxpstr.h" // already included into msgcompglue.cpp, cannot include it twice
-						// else we get a lot of link warnings
 #include "prtime.h"
 #include "prlog.h"
 #include "prerror.h"
@@ -46,17 +42,8 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kRFC822ParserCID, NS_MSGRFC822PARSER_CID);
 
 extern "C" {
-	extern int MK_OUT_OF_MEMORY;
-	extern int MK_SMTP_SERVER_ERROR;
-	extern int MK_TCP_READ_ERROR;
-	extern int MK_COULD_NOT_LOGIN_TO_SMTP_SERVER;
-	extern int MK_COULD_NOT_GET_USERS_MAIL_ADDRESS;
-	extern int MK_POP3_PASSWORD_UNDEFINED;
-	extern int MK_ERROR_SENDING_FROM_COMMAND;
-	extern int MK_ERROR_SENDING_RCPT_COMMAND;
-	extern int MK_ERROR_SENDING_DATA_COMMAND;
-	extern int MK_ERROR_SENDING_MESSAGE;
-	extern int MK_MIME_NO_RECIPIENTS;
+	char * NET_SACopy (char **destination, const char *source);
+	char * NET_SACat (char **destination, const char *source);
 }
 
 /* the output_buffer_size must be larger than the largest possible line
@@ -532,16 +519,16 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 			m_continuationResponse = m_responseCode;
 
 		if(PL_strlen(line) > 3)
-         	StrAllocCopy(m_responseText, line+4);
+         	NET_SACopy(&m_responseText, line+4);
     }
     else
     {    /* have to continue */
 		if (m_continuationResponse == m_responseCode && cont_char == ' ')
 			m_continuationResponse = -1;    /* ended */
 
-        StrAllocCat(m_responseText, "\n");
+        NET_SACat(&m_responseText, "\n");
         if(PL_strlen(line) > 3)
-            StrAllocCat(m_responseText, line+4);
+            NET_SACat(&m_responseText, line+4);
      }
 
 	if(m_continuationResponse == -1)  /* all done with this response? */
@@ -1068,7 +1055,7 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 		{
 		  char buffer[512];
 		  PR_snprintf(buffer, sizeof(buffer), "Sender: %.256s" CRLF, real_name);
-		  StrAllocCat(command, buffer);
+		  NET_SACat(command, buffer);
 		  if(!command)
 		    {
 		      CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
@@ -1287,7 +1274,7 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
 #endif
 	/* else */
 	m_nextState = SMTP_DONE;
-	return(MK_NO_DATA);
+	return(0);
 }
 
 
