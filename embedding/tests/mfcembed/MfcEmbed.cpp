@@ -411,9 +411,6 @@ nsresult CMfcEmbedApp::InitializePrefs()
    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
    if (NS_SUCCEEDED(rv)) {	  
 
-        rv = InitializeCachePrefs();
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Could not initialize cache prefs");
-        
 		// We are using the default prefs from mozilla. If you were
 		// disributing your own, this would be done simply by editing
 		// the default pref files.
@@ -453,42 +450,6 @@ nsresult CMfcEmbedApp::InitializePrefs()
     return rv;
 }
 
-nsresult CMfcEmbedApp::InitializeCachePrefs()
-{
-	const char * const CACHE_DIR_PREF   = "browser.cache.directory";
-	
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
-	if (NS_FAILED(rv)) return rv;
-	
-	// See if we have a pref to a dir which exists
-    nsCOMPtr<nsILocalFile> prefDir;
-    rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs(prefDir));
-    if (NS_SUCCEEDED(rv)) {
-        PRBool isDir;
-        rv = prefDir->IsDirectory(&isDir);
-        if (NS_SUCCEEDED(rv) && isDir)
-            return NS_OK;
-    }
-
-    // Set up the new pref
-    nsCOMPtr<nsIFile> profileDir;   
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
-    NS_ASSERTION(profileDir, "NS_APP_USER_PROFILE_50_DIR is not defined");
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsILocalFile> cacheDir(do_QueryInterface(profileDir));
-    NS_ASSERTION(cacheDir, "Cannot get nsILocalFile from cache dir");
-
-    PRBool exists;
-    cacheDir->Append("Cache");
-    rv = cacheDir->Exists(&exists);
-    if (NS_SUCCEEDED(rv) && !exists)
-    rv = cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
-    if (NS_FAILED(rv)) return rv;
-
-    return prefs->SetFileXPref(CACHE_DIR_PREF, cacheDir);
-}
 
 /* InitializeWindowCreator creates and hands off an object with a callback
    to a window creation function. This will be used by Gecko C++ code
@@ -557,10 +518,6 @@ NS_IMETHODIMP CMfcEmbedApp::Observe(nsISupports *aSubject, const PRUnichar *aTop
 				pBrowserFrame->DestroyWindow();
 		    }
 	    }
-
-        NS_WITH_SERVICE(nsINetDataCacheManager, cacheMgr, NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv))
-          cacheMgr->Clear(nsINetDataCacheManager::MEM_CACHE);
     }
     else if (nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-after-change").get()) == 0)
     {

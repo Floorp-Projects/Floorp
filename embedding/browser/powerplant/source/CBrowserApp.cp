@@ -69,7 +69,6 @@
 #include "macstdlibextras.h"
 #include "SIOUX.h"
 #include "nsIURL.h"
-#include "nsINetDataCacheManager.h"
 
 #include <TextServices.h>
 
@@ -471,9 +470,6 @@ nsresult CBrowserApp::InitializePrefs()
    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
    if (NS_SUCCEEDED(rv)) {	  
 
-        rv = InitCachePrefs();
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Could not initialize cache prefs");
-        
 		// We are using the default prefs from mozilla. If you were
 		// disributing your own, this would be done simply by editing
 		// the default pref files.
@@ -494,43 +490,6 @@ nsresult CBrowserApp::InitializePrefs()
 		NS_ASSERTION(PR_FALSE, "Could not get preferences service");
 		
     return rv;
-}
-
-nsresult CBrowserApp::InitCachePrefs()
-{
-	const char * const CACHE_DIR_PREF   = "browser.cache.directory";
-	
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
-	if (NS_FAILED(rv)) return rv;
-	
-	// See if we have a pref to a dir which exists
-    nsCOMPtr<nsILocalFile> prefDir;
-    rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs(prefDir));
-    if (NS_SUCCEEDED(rv)) {
-        PRBool isDir;
-        rv = prefDir->IsDirectory(&isDir);
-        if (NS_SUCCEEDED(rv) && isDir)
-            return NS_OK;
-    }
-
-    // Set up the new pref
-    nsCOMPtr<nsIFile> profileDir;   
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
-    NS_ASSERTION(profileDir, "NS_APP_USER_PROFILE_50_DIR is not defined");
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsILocalFile> cacheDir(do_QueryInterface(profileDir));
-    NS_ASSERTION(cacheDir, "Cannot get nsILocalFile from cache dir");
-
-    PRBool exists;
-    cacheDir->Append("Cache");
-    rv = cacheDir->Exists(&exists);
-    if (NS_SUCCEEDED(rv) && !exists)
-    rv = cacheDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
-    if (NS_FAILED(rv)) return rv;
-
-    return prefs->SetFileXPref(CACHE_DIR_PREF, cacheDir);
 }
 
 Boolean CBrowserApp::SelectFileObject(PP_PowerPlant::CommandT	inCommand,
@@ -606,19 +565,6 @@ NS_IMETHODIMP CBrowserApp::Observe(nsISupports *aSubject, const PRUnichar *aTopi
         	    mSubCommanders.RemoveItemsAt(1, iterator.GetCurrentIndex());
         	    delete browserWindow;
         	}
-        }
-        
-        // Clear the cache(s) The cache mgr does not do this itself since an
-        // application may be using a global cache for all profiles so it would
-        // not know whether to respond to a profile change.
-
-        NS_WITH_SERVICE(nsINetDataCacheManager, cacheMgr, NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);
-        if (NS_SUCCEEDED(rv))
-        {
-            if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
-                cacheMgr->RemoveAll();
-            else
-                cacheMgr->Clear(nsINetDataCacheManager::MEM_CACHE);
         }
     }
     else if (!nsCRT::strcmp(aTopic, NS_LITERAL_STRING("profile-after-change").get()))

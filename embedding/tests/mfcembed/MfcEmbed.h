@@ -106,7 +106,6 @@ private:
 	BOOL			InitializeProfiles();
 	BOOL			CreateHiddenWindow();
     nsresult        InitializePrefs();
-    nsresult        InitializeCachePrefs();
     nsresult        InitializeWindowCreator();
     
 private:
