@@ -100,11 +100,11 @@ void _PR_IntsOn(_PRCPU *cpu)
 }
 
 /*
-** Assign an idle lock to the first runnable waiting thread. Skip over
+** Unblock threads waiting for the lock. Skip over
 ** threads that are trying to be suspended
 ** Note: Caller must hold _PR_LOCK_LOCK()
 */
-PRThread * _PR_AssignLock(PRLock *lock)
+PRThread * _PR_UnblockWaiters(PRLock *lock)
 {
     PRThread *t = NULL;
     PRThread *me;
@@ -131,31 +131,24 @@ PRThread * _PR_AssignLock(PRLock *lock)
             continue;
         }
 
-        /* Found a thread to give the lock to */
+        /* Found a runnable thread */
 	    PR_ASSERT(t->state == _PR_LOCK_WAIT);
 	    PR_ASSERT(t->wait.lock == lock);
         pri = t->priority;
         t->wait.lock = 0;
         PR_REMOVE_LINK(&t->waitQLinks);         /* take it off lock's waitQ */
 
-		/* Lock inherits the thread's priority */
-        lock->priority = pri;
-        lock->boostPriority = PR_PRIORITY_LOW;
-        lock->owner = t;
-
-        /* Add the granted lock to this owning thread's lock list */
-        PR_APPEND_LINK(&lock->links, &t->lockList);
-
 		/*
-		** If the new owner of the lock is a native thread, nothing else to do
-		** except to wake it up by calling the machine dependent wakeup routine.
+		** If this is a native thread, nothing else to do except to wake it
+		** up by calling the machine dependent wakeup routine.
 		**
-		** If the new owner is a local thread, we need to assign it a cpu and
-		** put the thread on that cpu's run queue.  There are two cases to take care 
-		** of.  If the currently running thread is also a local thread, we just
-		** assign our own cpu to that thread and put it on the cpu's run queue.
-		** If the the currently running thread is a native thread, we assign the
-		** primordial cpu to it (on NT, MD_WAKEUP handles the cpu assignment).  
+		** If this is a local thread, we need to assign it a cpu and
+		** put the thread on that cpu's run queue.  There are two cases to
+		** take care of.  If the currently running thread is also a local
+		** thread, we just assign our own cpu to that thread and put it on
+		** the cpu's run queue.  If the the currently running thread is a
+		** native thread, we assign the primordial cpu to it (on NT,
+		** MD_WAKEUP handles the cpu assignment).  
 		*/
 		
         if ( !_PR_IS_NATIVE_THREAD(t) ) {
@@ -243,6 +236,7 @@ PR_IMPLEMENT(void) PR_Lock(PRLock *lock)
 
     PR_ASSERT(_PR_IS_NATIVE_THREAD(me) || _PR_MD_GET_INTSOFF() != 0);
 
+retry:
     _PR_LOCK_LOCK(lock);
     if (lock->owner == 0) {
         /* Just got the lock */
@@ -314,12 +308,8 @@ PR_IMPLEMENT(void) PR_Lock(PRLock *lock)
     _PR_LOCK_UNLOCK(lock);
 
     _PR_MD_WAIT(me, PR_INTERVAL_NO_TIMEOUT);
+	goto retry;
 
-	/* When we are here after the context switch, we better own the lock */
-    PR_ASSERT(lock->owner == me);
-
-    if (!_PR_IS_NATIVE_THREAD(me))
-    	_PR_FAST_INTSON(is);
 #endif  /* _PR_GLOBAL_THREADS_ONLY */
 }
 
@@ -382,19 +372,12 @@ PR_IMPLEMENT(PRStatus) PR_Unlock(PRLock *lock)
         }
     }
 
-    /* Assign the lock to the first waiting thread */
+    /* Unblock the lock waiters */
     q = lock->waitQ.next;
-    if (q == &lock->waitQ) {
-        /* Nobody wants the lock right now */
-        lock->boostPriority = PR_PRIORITY_LOW;
-        lock->owner = 0;
-    } else {
-      if (_PR_AssignLock(lock) == NULL) {
-	/* no eligible thread to assign to */
-        lock->boostPriority = PR_PRIORITY_LOW;
-        lock->owner = 0;
-      }
-    }
+    if (q != &lock->waitQ)
+      _PR_UnblockWaiters(lock);
+	lock->boostPriority = PR_PRIORITY_LOW;
+	lock->owner = 0;
     _PR_LOCK_UNLOCK(lock);
     if (!_PR_IS_NATIVE_THREAD(me))
     	_PR_INTSON(is);
