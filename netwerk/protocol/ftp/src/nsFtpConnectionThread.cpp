@@ -1439,9 +1439,13 @@ nsFtpConnectionThread::R_retr() {
 
         char *contentType;
         rv = MIMEService->GetTypeFromURI(mUrl, &contentType);
-        if (NS_FAILED(rv)) return FTP_ERROR;
 
-        dataCtxt->SetContentType(contentType);
+        // if we fail, we want to push the data on up anyway. let the app figure
+        // out what to do.
+        if (NS_SUCCEEDED(rv)) {
+            dataCtxt->SetContentType(contentType);
+        }
+
         nsISupports *ctxtSup = nsnull;
         rv = dataCtxt->QueryInterface(NS_GET_IID(nsISupports), (void**)&ctxtSup);
 
