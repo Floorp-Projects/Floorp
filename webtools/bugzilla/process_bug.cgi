@@ -568,7 +568,8 @@ SWITCH: for ($::FORM{'knob'}) {
     /^accept$/ && CheckonComment( "accept" ) && do {
         DoConfirm();
         ChangeStatus('ASSIGNED');
-        if (Param("musthavemilestoneonaccept")) {
+        if (Param("musthavemilestoneonaccept") &&
+                scalar(@{$::target_milestone{$::FORM{'product'}}}) > 1) {
             if (Param("usetargetmilestone")) {
                 $requiremilestone = 1;
             }
