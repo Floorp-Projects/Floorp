@@ -228,7 +228,9 @@ nsAppShellService::CreateTopLevelWindow(nsIWidget *aParent,
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   } else {
-    rv = window->Initialize(aParent, mAppShell, aUrl, aControllerIID,
+    // temporarily disabling parentage because non-Windows platforms
+    // seem to be interpreting it in unexpected ways.
+    rv = window->Initialize((nsIWidget *) nsnull, mAppShell, aUrl, aControllerIID,
                             anObserver, aCallbacks,
                             aInitialWidth, aInitialHeight);
     if (NS_SUCCEEDED(rv)) {
@@ -275,7 +277,9 @@ nsAppShellService::CreateDialogWindow(nsIWidget * aParent,
   if (nsnull == window) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   } else {
-    rv = window->Initialize(aParent, mAppShell, aUrl, aControllerIID,
+    // temporarily disabling parentage because non-Windows platforms
+    // seem to be interpreting it in unexpected ways.
+    rv = window->Initialize((nsIWidget *) nsnull, mAppShell, aUrl, aControllerIID,
                             anObserver, aCallbacks,
                             aInitialWidth, aInitialHeight);
     if (NS_SUCCEEDED(rv)) {
@@ -306,8 +310,10 @@ nsAppShellService::RegisterTopLevelWindow(nsIWidget* aWindow)
     nsWebShellWindow* window = (nsWebShellWindow *) data;
     nsIWebShellContainer* wsc;
     rv = window->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv)) {
       mWindowList->AppendElement(wsc);
+      NS_RELEASE(wsc);
+    }
   }
   return rv;
 }
@@ -326,8 +332,10 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWidget* aWindow)
     nsWebShellWindow* window = (nsWebShellWindow *) data;
     nsIWebShellContainer* wsc;
     rv = window->QueryInterface(kIWebShellContainerIID, (void **) &wsc);
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv)) {
       mWindowList->RemoveElement(wsc);
+      NS_RELEASE(wsc);
+    }
   }
   return rv;
 }
