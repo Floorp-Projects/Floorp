@@ -26,6 +26,7 @@ LIBRARY_NAME=basedocshell_s
 
 XPIDLSRCS=						\
 		.\nsCDocShell.idl			\
+		.\nsCDefaultURIFixup.idl			\
 		.\nsIDocShell.idl			\
         .\nsIDocShellHistory.idl \
 		.\nsIDocShellLoadInfo.idl			\
@@ -38,6 +39,7 @@ XPIDLSRCS=						\
 		.\nsIScrollable.idl		\
 		.\nsITextScroll.idl		\
 		.\nsIWebNavigation.idl		\
+    .\nsIURIFixup.idl \
 		$(NULL)
 
 CPP_OBJS=											\
@@ -45,6 +47,7 @@ CPP_OBJS=											\
         .\$(OBJDIR)\nsWebShell.obj          \
 		.\$(OBJDIR)\nsDocShellLoadInfo.obj	\
 		.\$(OBJDIR)\nsDSURIContentListener.obj	\
+    .\$(OBJDIR)\nsDefaultURIFixup.obj \
 #		.\$(OBJDIR)\nsDSWebProgressListener.obj	\
 		$(NULL)
 

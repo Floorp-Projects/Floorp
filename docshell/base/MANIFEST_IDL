@@ -21,6 +21,7 @@
 #
 
 nsCDocShell.idl
+nsCDefaultURIFixup.idl
 nsIDocShell.idl
 nsIDocShellLoadInfo.idl
 nsIDocShellTreeItem.idl
@@ -29,4 +30,5 @@ nsIDocShellTreeOwner.idl
 nsIMarkupDocumentViewer.idl
 nsIScrollable.idl
 nsITextScroll.idl
-nsIContentViewerEdit.idl	
+nsIContentViewerEdit.idl
+nsIURIFixup.idl

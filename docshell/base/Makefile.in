@@ -30,6 +30,7 @@ include $(DEPTH)/config/autoconf.mk
 
 XPIDLSRCS	= \
 		nsCDocShell.idl			\
+		nsCDefaultURIFixup.idl		\
 		nsIDocShell.idl			\
 		nsIDocShellLoadInfo.idl	\
 		nsIDocShellTreeItem.idl	\
@@ -41,6 +42,7 @@ XPIDLSRCS	= \
 		nsITextScroll.idl		\
 		nsIWebNavigation.idl		\
 		nsIContentViewerEdit.idl	\
+		nsIURIFixup.idl			\
 		$(NULL)
 
 CPPSRCS		= \
@@ -48,6 +50,7 @@ CPPSRCS		= \
 		nsWebShell.cpp		\
 		nsDocShellLoadInfo.cpp		\
 		nsDSURIContentListener.cpp		\
+		nsDefaultURIFixup.cpp		\
 #		nsDSWebProgressListener.cpp		\
 		$(NULL)
 

@@ -23,8 +23,10 @@
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsWebShell.h"
+#include "nsDefaultURIFixup.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebShell);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultURIFixup);
 
 // Currently no-one is instanciating docshell's directly because
 // nsWebShell is still our main "shell" class. nsWebShell is a subclass
@@ -37,7 +39,11 @@ static nsModuleComponentInfo gDocShellModuleInfo[] = {
     { "WebShell", 
       NS_WEB_SHELL_CID,
       "@mozilla.org/webshell;1",
-      nsWebShellConstructor }
+      nsWebShellConstructor },
+    { "Default keyword fixup", 
+      NS_DEFAULTURIFIXUP_CID,
+      NS_URIFIXUP_CONTRACTID,
+      nsDefaultURIFixupConstructor }
 };
 
 // "docshell provider" to illustrate that this thing really *should*
