@@ -173,9 +173,12 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   nsCOMPtr<nsILookAndFeel> lookAndFeel;
   nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, NS_GET_IID(nsILookAndFeel), 
                                       getter_AddRefs(lookAndFeel));
-  if ( lookAndFeel )
-    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, mMenuCanOverlapOSBar);
-
+  if ( lookAndFeel ) {
+    PRBool tempBool;
+    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, tempBool);
+    mMenuCanOverlapOSBar = tempBool;
+  }
+  
   // XXX Hack
   mPresContext = aPresContext;
 

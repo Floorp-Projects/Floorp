@@ -211,12 +211,12 @@ protected:
   nsIMenuFrame* mTimerMenu; // A menu awaiting closure.
   nsCOMPtr<nsITimer> mCloseTimer; // Close timer.
 
-  PRBool mIsContextMenu;  // is this a context menu?
+  PRPackedBool mIsContextMenu;  // is this a context menu?
   
-  PRBool mMenuCanOverlapOSBar;    // can we appear over the taskbar/menubar?
+  PRPackedBool mMenuCanOverlapOSBar;    // can we appear over the taskbar/menubar?
 
-  PRBool mShouldAutoPosition; // Should SyncViewWithFrame be allowed to auto position popup?
-  PRBool mShouldRollup; // Should this menupopup be allowed to dismiss automatically?
+  PRPackedBool mShouldAutoPosition; // Should SyncViewWithFrame be allowed to auto position popup?
+  PRPackedBool mShouldRollup; // Should this menupopup be allowed to dismiss automatically?
 
 }; // class nsMenuPopupFrame
 

@@ -144,16 +144,17 @@ private:
   nsCOMPtr<imgIDecoderObserver> mListener;
 
   nsString mSrc; // The raw image source.
-  PRBool mUseSrcAttr; // Whether or not the image src comes from an attribute.
+
+  PRPackedBool mUseSrcAttr; // Whether or not the image src comes from an attribute.
+  PRPackedBool mSizeFrozen;
+  PRPackedBool mHasImage;
   
   nsRect mSubRect; // If set, indicates that only the portion of the image specified by the rect should be used.
 
   nsSize mIntrinsicSize;
   PRInt32 mLoadFlags;
 
-  PRBool mSizeFrozen;
   nsSize mImageSize;
-  PRBool mHasImage;
   
 }; // class nsImageBoxFrame
 

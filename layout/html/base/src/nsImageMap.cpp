@@ -94,9 +94,9 @@ public:
   nsCOMPtr<nsIContent> mArea;
   nscoord* mCoords;
   PRInt32 mNumCoords;
-  PRBool mSuppressFeedback;
-  PRBool mHasURL;
-  PRBool mHasFocus;
+  PRPackedBool mSuppressFeedback;
+  PRPackedBool mHasURL;
+  PRPackedBool mHasFocus;
   nsIFrame* mImageFrame;
 };
 
