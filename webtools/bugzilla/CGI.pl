@@ -52,6 +52,8 @@ use CGI::Carp qw(fatalsToBrowser);
 
 require 'globals.pl';
 
+use vars qw($template $vars);
+
 # If Bugzilla is shut down, do not go any further, just display a message
 # to the user about the downtime.  (do)editparams.cgi is exempted from
 # this message, of course, since it needs to be available in order for
@@ -1199,27 +1201,80 @@ sub PutFooter {
 }
 
 
+###############################################################################
+# Error handling
+#
+# If you are doing incremental output, set $vars->{'header_done'} once you've
+# done the header.
+###############################################################################
+
+# DisplayError is deprecated. Use CodeError, UserError or TemplateError 
+# instead.
 sub DisplayError {
-  my ($message, $title) = (@_);
-  $title ||= "Error";
-  $message ||= "An unknown error occurred.";
-  
-  print "Content-type: text/html\n\n";
-  PutHeader($title);
+  ($vars->{'error'}, $vars->{'title'}) = (@_);
+  $vars->{'title'} ||= "Error";
 
-  print PerformSubsts( Param("errorhtml") , {errormsg => $message} );
-
-  PutFooter();
+  print "Content-type: text/html\n\n" if !$vars->{'header_done'};
+  $template->process("global/user-error.html.tmpl", $vars)
+    || TemplateError($template->error());   
 
   return 1;
 }
 
+# For "this shouldn't happen"-type places in the code.
+# $vars->{'variables'} is a reference to a hash of useful debugging info.
+sub CodeError {
+  ($vars->{'error'}, $vars->{'variables'}) = (@_);
+  $vars->{'title'} = "Code Error";
+
+  # We may optionally log something to file here.
+  
+  print "Content-type: text/html\n\n" if !$vars->{'header_done'};
+  $template->process("global/code-error.html.tmpl", $vars)
+    || TemplateError($template->error());
+    
+  exit;
+}
+
+# For errors made by the user.
+sub UserError {
+  ($vars->{'error'}, $vars->{'title'}, my $unlock_tables) = (@_);
+  $vars->{'title'} ||= "Error";
+
+  SendSQL("UNLOCK TABLES") if $unlock_tables;
+  
+  print "Content-type: text/html\n\n" if !$vars->{'header_done'};
+  $template->process("global/user-error.html.tmpl", $vars)
+    || TemplateError($template->error());
+    
+  exit;
+}
+
+# If the template system isn't working, we can't use a template :-)
+# The Content-Type will already have been printed.
+sub TemplateError {
+    my ($error) = html_quote((@_));
+    
+    print "<tt><p>
+      Bugzilla has suffered an internal error. Please save this page, and its 
+      URL, and send it to ";
+    print Param("maintainer");
+    print ", with details of what you were doing at the time this message
+      appeared.</p>
+      <p>Template->process() failed: $error.</p></tt>";
+    
+    exit;  
+}
+
+# PuntTryAgain is deprecated. Use UserError with the unlock_tables parameter. 
 sub PuntTryAgain ($) {
-    my ($str) = (@_);
-    print PerformSubsts(Param("errorhtml"),
-                        {errormsg => $str});
+    ($vars->{'error'}) = (@_);
+    
     SendSQL("UNLOCK TABLES");
-    PutFooter();
+
+    $vars->{'header_done'} = "true";
+    $template->process("global/user-error.html.tmpl", $vars)
+      || TemplateError($template->error());
     exit;
 }
 
