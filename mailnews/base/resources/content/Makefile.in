@@ -63,6 +63,8 @@ EXPORT_RESOURCE_SAMPLES = \
 		mailContextMenus.js \
 		msgPrintEngine.js \
 		msgPrintEngine.xul \
+		popTest.js \
+		popTest.xul \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
