@@ -88,40 +88,14 @@ DOM_DestroyStyleDatabase(JSContext *cx, DOM_StyleDatabase *db)
 #define IMAGE_DEF_VERTICAL_SPACE	0
 
 DOM_StyleDatabase *
-DOM_StyleDatabaseFromContext(JSContext *cx)
+DOMMOZ_NewStyleDatabase(JSContext *cx, lo_DocState *state)
 {
-    MochaDecoder *decoder;
-    lo_TopState *top;
+    DOM_StyleDatabase *db;
     LO_Color visitCol, linkCol;
-    lo_DocState *state;
     DOM_StyleSelector *sel, *imgsel;
     DOM_AttributeEntry *entry;
-    DOM_StyleDatabase *db = NULL;
+    lo_TopState *top = state->top_state;
 
-    if (!cx)
-        return NULL;
-
-    decoder = JS_GetPrivate(cx, JS_GetGlobalObject(cx));
-    if (!decoder)
-        return NULL;
-    
-    LO_LockLayout();
-    top = lo_FetchTopState(decoder->window_context->doc_id);
-    if (!top)
-        goto error;
-
-    if (top->style_db) {
-        LO_UnlockLayout();
-        return (DOM_StyleDatabase *)top->style_db;
-    }
-
-    state = top->doc_state;
-    if (!state)
-        goto error;
-
-    db = DOM_NewStyleDatabase(cx);
-    if (!db)
-        goto error;
     /*
      * Install default rules.
      * In an ideal world (perhaps 5.0?), we would parse .netscape/ua.css
@@ -131,6 +105,9 @@ DOM_StyleDatabaseFromContext(JSContext *cx)
      * make the weighting stuff work correctly at the same time, too,
      * but I don't think it's vital.
      */
+    db = DOM_NewStyleDatabase(cx);
+    if (!db)
+        return NULL;
 
     linkCol.red = STATE_UNVISITED_ANCHOR_RED(state);
     linkCol.green = STATE_UNVISITED_ANCHOR_GREEN(state);
@@ -138,6 +115,7 @@ DOM_StyleDatabaseFromContext(JSContext *cx)
     visitCol.red = STATE_VISITED_ANCHOR_RED(state);
     visitCol.green = STATE_VISITED_ANCHOR_GREEN(state);
     visitCol.blue = STATE_VISITED_ANCHOR_BLUE(state);
+
     top->style_db = db;
 
     sel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
@@ -199,15 +177,49 @@ DOM_StyleDatabaseFromContext(JSContext *cx)
 #ifdef DEBUG_shaver
     fprintf(stderr, "successfully added all default rules\n");
 #endif
-
-    LO_UnlockLayout();
     return db;
 
  error:
-    LO_UnlockLayout();
     if (db)
         DOM_DestroyStyleDatabase(cx, db);
     return NULL;
+}
+
+DOM_StyleDatabase *
+DOM_StyleDatabaseFromContext(JSContext *cx)
+{
+    MochaDecoder *decoder;
+    lo_TopState *top;
+    lo_DocState *state;
+    DOM_StyleDatabase *db = NULL;
+
+    if (!cx)
+        return NULL;
+
+    decoder = JS_GetPrivate(cx, JS_GetGlobalObject(cx));
+    if (!decoder)
+        return NULL;
+    
+    LO_LockLayout();
+    top = lo_FetchTopState(decoder->window_context->doc_id);
+    if (!top)
+        goto out;
+
+    if (top->style_db) {
+        LO_UnlockLayout();
+        return (DOM_StyleDatabase *)top->style_db;
+    }
+
+    state = top->doc_state;
+    if (!state)
+        goto out;
+
+    db = DOMMOZ_NewStyleDatabase(cx, state);
+    top->style_db = db;
+
+out:
+    LO_UnlockLayout();
+    return db;
 }
 #endif /* MOZILLA_CLIENT */
 
