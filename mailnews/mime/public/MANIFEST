@@ -20,4 +20,4 @@ nsIMimeObjectClassAccess.h
 nsIMimeConverter.h
 nsMailHeaders.h
 nsIMimeContentTypeHandler.h
-
+nsIMimeStreamConverter.idl
