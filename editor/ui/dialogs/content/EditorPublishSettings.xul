@@ -42,7 +42,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EditorPublishSettings.js"/>
-  <script type="application/x-javascript" src="chrome://editor/content/PublishPrefs.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/publishprefs.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
