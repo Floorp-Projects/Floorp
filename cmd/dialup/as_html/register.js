@@ -54,7 +54,8 @@ function loadData()
 
 		var language = plugin.GetISPLanguage( globals.selectedISP );
 		var acctSetupFile = globals.getAcctSetupFilename( self );
-		var regFile = globals.getFolder( self ) + "isp/" + language + "/" + globals.selectedISP + "/client_data/config/config.ias.r";
+		var acctSetupFolder = globals.getFolder( self ) + "isp/" + language + "/" + globals.selectedISP + "/client_data/config/";
+		var regFile = acctSetupFolder + "config.ias.r";
 		
 		// determine name of scripting file
 		var scriptEnabledFlag = "FALSE";
