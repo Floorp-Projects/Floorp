@@ -148,18 +148,11 @@ if (Param("useqacontact")) {
     }
 }
 
-if (exists $::FORM{'bug_status'}) {
-    # Ignore the given status, so that we can set it to UNCONFIRMED
-    # or NEW, depending on votestoconfirm if either the given state was
-    # unconfirmed (so that a user can't override the below check), or if
-    # the user doesn't have permission to change the default status anyway
-    if ($::FORM{'bug_status'} eq $::unconfirmedstate
-        || (!UserInGroup("canedit") && !UserInGroup("canconfirm"))) {
-        delete $::FORM{'bug_status'};
-    }
-}
-
-if (!exists $::FORM{'bug_status'}) {
+if (UserInGroup("canedit") || UserInGroup("canconfirm")) {
+    # Default to NEW if the user hasn't selected another status
+    $::FORM{'bug_status'} ||= "NEW";
+} else {
+    # Default to UNCONFIRMED if we are using it, NEW otherwise
     $::FORM{'bug_status'} = $::unconfirmedstate;
     SendSQL("SELECT votestoconfirm FROM products WHERE id = $product_id");
     if (!FetchOneColumn()) {
