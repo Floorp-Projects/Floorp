@@ -122,6 +122,12 @@ BOOL CWizardMachineApp::InitInstance()
 
 	strcpy(currDirPath, Path);
 
+	CString Root = Path;
+
+	WIDGET* wroot = SetGlobal("Root",Root);
+	if (wroot)
+	wroot->cached = TRUE;
+
 	CString outputFile = Path + "output.dat";
 	out = fopen(outputFile, "w");
 	if (!out)
@@ -1375,6 +1381,8 @@ BOOL CWizardMachineApp::FillGlobalWidgetArray(CString file)
 				name =  CString(strtok(buffer,"="));
 				value = CString(strtok(NULL,"="));
 				value.TrimRight();
+				if (value.Find("%") >= 0)
+					value=replaceVars((char *) (LPCSTR) value,NULL);
 				
 				WIDGET* w = SetGlobal(name, value);
 				if (w)
