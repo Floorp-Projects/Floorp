@@ -73,6 +73,7 @@ EXPORTS		= \
 		nsSpecialSystemDirectory.h \
 	        nsScriptableInputStream.h \
 		nsStorageStream.h \
+		nsStringIO.h \
 		$(NULL)			
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

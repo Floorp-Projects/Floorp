@@ -12,3 +12,4 @@ nsLocalFile.h
 nsLocalFileMac.h
 nsILocalFileMac.h
 nsDirectoryService.h
+nsStringIO.h
