@@ -582,10 +582,9 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
   // For row groups that are split across pages, the first row frame won't
   // necessarily be index 0
   PRInt32 startRowIndex = -1;
-  
+  const nsStyleDisplay *childDisplay;
   while (nsnull != rowFrame)
   {
-    const nsStyleDisplay *childDisplay;
     rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
     {
@@ -639,7 +638,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
     rowIndex = 0;
     while (nsnull != rowFrame)
     {
-      const nsStyleDisplay *childDisplay;
       rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
       if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
       {
@@ -650,9 +648,9 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
         rowFrame->FirstChild(nsnull, &cellFrame);
         while (nsnull != cellFrame)
         {
-          const nsStyleDisplay *childDisplay;
-          cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-          if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay)
+          const nsStyleDisplay *cellChildDisplay;
+          cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellChildDisplay));
+          if (NS_STYLE_DISPLAY_TABLE_CELL == cellChildDisplay->mDisplay)
           {
             if (gsDebug) printf("TRGF CalcRowH:   for cell %p...\n", cellFrame);
             PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(rowIndex + startRowIndex,
@@ -763,7 +761,6 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
   rowFrame = GetFirstFrame();
   while (nsnull != rowFrame)
   {
-    const nsStyleDisplay *childDisplay;
     rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
     {

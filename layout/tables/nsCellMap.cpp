@@ -28,17 +28,17 @@ static const PRBool gsDebug = PR_FALSE;
 #endif
 
 nsCellMap::nsCellMap(int aRowCount, int aColCount)
-  : mRowCount(0),
-    mColCount(0),
+  : mRows(nsnull),
+    mMinColSpans(nsnull),
+    mColFrames(nsnull),
+    mRowCount(0),
     mTotalRowCount(0),
+    mColCount(0),
+    mIsCollapsedRows(nsnull),
     mNumCollapsedRows(0),
+    mIsCollapsedCols(nsnull),
     mNumCollapsedCols(0)
 {
-  mRows = nsnull;
-  mColFrames = nsnull;
-  mMinColSpans = nsnull;
-  mIsCollapsedRows = nsnull;
-  mIsCollapsedCols = nsnull;
   Reset(aRowCount, aColCount);
 }
 
@@ -98,7 +98,6 @@ void nsCellMap::Reset(int aRowCount, int aColCount)
 
   // void arrays force the caller to handle null padding elements themselves
   // so if the number of columns has increased, we need to add extra cols to each row
-  PRInt32 newCols = mColCount-aColCount;
   for (PRInt32 rowIndex=0; rowIndex<mRowCount; rowIndex++)
   {
     nsVoidArray *row = (nsVoidArray *)(mRows->ElementAt(rowIndex));
@@ -140,7 +139,7 @@ void nsCellMap::DumpCellMap() const
       for (int colIndex=0; colIndex<mColCount; colIndex++)
       {
         CellData* data = (CellData *)(row->ElementAt(colIndex));
-        printf("Cell [%d,%d] = %p  for index = %d\n", rowIndex, colIndex, data);
+        printf("Cell [%d,%d] = %p\n", rowIndex, colIndex, data);
       }
     }
   }

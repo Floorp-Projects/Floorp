@@ -52,6 +52,7 @@ NS_IMETHODIMP CreateElementTxn::Init(nsIEditor      *aEditor,
       nsCOMPtr<nsIDOMNodeList> testChildNodes;
       nsresult testResult = mParent->GetChildNodes(getter_AddRefs(testChildNodes));
       NS_ASSERTION(testChildNodes, "bad parent type, can't have children.");
+      NS_ASSERTION(NS_SUCCEEDED(testResult), "bad result.");
     }
 #endif
     return NS_OK;
@@ -101,7 +102,7 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
         if (gNoisy) { printf("  newNode = %p\n", mNewNode.get()); }
         // insert the new node
         nsCOMPtr<nsIDOMNode> resultNode;
-        if (CreateElementTxn::eAppend==mOffsetInParent)
+        if (CreateElementTxn::eAppend==(PRInt32)mOffsetInParent)
         {
           result = mParent->AppendChild(mNewNode, getter_AddRefs(resultNode));
         }

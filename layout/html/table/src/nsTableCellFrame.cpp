@@ -325,49 +325,52 @@ void  nsTableCellFrame::VerticallyAlignChild()
   /* XXX: remove tableFrame when border-collapse inherits */
   nsTableFrame* tableFrame=nsnull;
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  nsMargin borderPadding;
-  GetCellBorder (borderPadding, tableFrame);
-  nsMargin padding;
-  spacing->GetPadding(padding);
-  borderPadding += padding;
-  
-  nscoord topInset = borderPadding.top;
-  nscoord bottomInset = borderPadding.bottom;
-  PRUint8 verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_MIDDLE;
-  if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
-    verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
-  }
-  nscoord height = mRect.height;
-  nsRect kidRect;  
-  nsIFrame* firstKid = mFrames.FirstChild();
-  firstKid->GetRect(kidRect);
-  nscoord childHeight = kidRect.height;
-  
-
-  // Vertically align the child
-  nscoord kidYTop = 0;
-  switch (verticalAlignFlags) 
+  if (NS_SUCCEEDED(rv) && tableFrame)
   {
-    case NS_STYLE_VERTICAL_ALIGN_BASELINE:
-    // Align the child's baseline at the max baseline
-    //kidYTop = aMaxAscent - kidAscent;
-    break;
+    nsMargin borderPadding;
+    GetCellBorder (borderPadding, tableFrame);
+    nsMargin padding;
+    spacing->GetPadding(padding);
+    borderPadding += padding;
+  
+    nscoord topInset = borderPadding.top;
+    nscoord bottomInset = borderPadding.bottom;
+    PRUint8 verticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_MIDDLE;
+    if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
+      verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
+    }
+    nscoord height = mRect.height;
+    nsRect kidRect;  
+    nsIFrame* firstKid = mFrames.FirstChild();
+    firstKid->GetRect(kidRect);
+    nscoord childHeight = kidRect.height;
+  
 
-    case NS_STYLE_VERTICAL_ALIGN_TOP:
-    // Align the top of the child frame with the top of the box, 
-    // minus the top padding
-      kidYTop = topInset;
-    break;
+    // Vertically align the child
+    nscoord kidYTop = 0;
+    switch (verticalAlignFlags) 
+    {
+      case NS_STYLE_VERTICAL_ALIGN_BASELINE:
+      // Align the child's baseline at the max baseline
+      //kidYTop = aMaxAscent - kidAscent;
+      break;
 
-    case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-      kidYTop = height - childHeight - bottomInset;
-    break;
+      case NS_STYLE_VERTICAL_ALIGN_TOP:
+      // Align the top of the child frame with the top of the box, 
+      // minus the top padding
+        kidYTop = topInset;
+      break;
 
-    default:
-    case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-      kidYTop = height/2 - childHeight/2;
+      case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+        kidYTop = height - childHeight - bottomInset;
+      break;
+
+      default:
+      case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
+        kidYTop = height/2 - childHeight/2;
+    }
+    firstKid->MoveTo(kidRect.x, kidYTop);
   }
-  firstKid->MoveTo(kidRect.x, kidYTop);
 }
 
 PRInt32 nsTableCellFrame::GetRowSpan()
@@ -480,6 +483,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   /* XXX: remove tableFrame when border-collapse inherits */
   nsTableFrame* tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if (NS_FAILED(rv)) { return rv; }
   nsMargin borderPadding;
   spacing->GetPadding(borderPadding);
   nsMargin border;
@@ -520,7 +524,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
         aReflowState.reflowCommand->GetType(type);
         if (nsIReflowCommand::StyleChanged==type)
         {
-          nsresult rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
+          rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
           aStatus = NS_FRAME_COMPLETE;
           return rv;
         }
@@ -667,12 +671,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   // So here all we have to do is tell the table to rebalance.
   if (eReflowReason_Incremental == aReflowState.reason) 
   {
-    nsTableFrame* tableFrame=nsnull;
-    rv = nsTableFrame::GetTableFrame(this, tableFrame);
-    if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-    {
-      tableFrame->InvalidateColumnWidths();
-    }
+    tableFrame->InvalidateColumnWidths();
   }
    
 
@@ -1080,7 +1079,7 @@ PRUint8 nsTableCellFrame::GetOpposingEdge(PRUint8 aEdge)
 nscoord nsTableCellFrame::FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge)
 {
   nscoord result = 0;
-  PRInt32 index = 0;
+  PRInt32 theIndex = 0;
   PRInt32 count = 0;
 
 
@@ -1091,9 +1090,9 @@ nscoord nsTableCellFrame::FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge)
     nsIFrame* frame;
     
     nscoord value = 0;
-    while (index < count)
+    while (theIndex < count)
     {
-      frame = (nsIFrame*)(aList->ElementAt(index++));
+      frame = (nsIFrame*)(aList->ElementAt(theIndex++));
       value = GetMargin(frame, aEdge);
       if (value > result)
         result = value;

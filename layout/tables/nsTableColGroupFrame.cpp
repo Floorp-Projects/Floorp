@@ -341,7 +341,6 @@ NS_METHOD nsTableColGroupFrame::IR_ColInserted(nsIPresContext&          aPresCon
                                                PRBool                   aReplace)
 {
   nsresult rv=NS_OK;
-  PRBool adjustStartingColIndex=PR_FALSE;
   rv = AddFrame(aReflowState, (nsIFrame *)aInsertedFrame);
   if (NS_FAILED(rv))
     return rv;
@@ -377,7 +376,6 @@ NS_METHOD nsTableColGroupFrame::IR_ColAppended(nsIPresContext&          aPresCon
                                                nsTableColFrame *        aAppendedFrame)
 {
   nsresult rv=NS_OK;
-  PRBool adjustStartingColIndex=PR_FALSE;
   rv = AddFrame(aReflowState, (nsIFrame*)aAppendedFrame);
   if (NS_FAILED(rv))
     return rv;

@@ -76,7 +76,7 @@ NS_IMETHODIMP
 GenericElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   *aReturn=nsnull;
-  PRUint32 index = 0;
+  PRUint32 theIndex = 0;
   nsresult rv = NS_OK;
   if (nsnull!=mParent)
   {
@@ -89,7 +89,7 @@ GenericElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
       child->GetTag(childTag);
       if (mTag==childTag)
       {
-        if (aIndex==index)
+        if (aIndex==theIndex)
         {
           child->QueryInterface(kIDOMNodeIID, (void**)aReturn);   // out-param addref
           NS_ASSERTION(nsnull!=aReturn, "content element must be an nsIDOMNode");
@@ -97,7 +97,7 @@ GenericElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
           NS_RELEASE(child);
           break;
         }
-        index++;
+        theIndex++;
       }
       NS_RELEASE(childTag);
       NS_RELEASE(child);

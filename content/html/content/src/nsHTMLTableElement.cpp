@@ -198,8 +198,8 @@ TableRowsCollection::GetLength(PRUint32* aLength)
     {
       rowGroup = nsnull;
       nsIDOMNode *node;
-      PRUint32 index=0;
-      tbodies->Item(index, &node);
+      PRUint32 theIndex=0;
+      tbodies->Item(theIndex, &node);
       while (nsnull!=node)
       {
         nsIContent *content=nsnull;
@@ -208,10 +208,10 @@ TableRowsCollection::GetLength(PRUint32* aLength)
         PRUint32 rows;
         body.GetLength(&rows);
         *aLength += rows;
-        index++;
+        theIndex++;
         NS_RELEASE(content);
         NS_RELEASE(node);
-        tbodies->Item(index, &node);
+        tbodies->Item(theIndex, &node);
       }
       NS_RELEASE(tbodies);
     }
@@ -253,8 +253,8 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
     if (nsnull != tbodies) {
       rowGroup = nsnull;
       nsIDOMNode *node;
-      PRUint32 index=0;
-      tbodies->Item(index, &node);
+      PRUint32 theIndex=0;
+      tbodies->Item(theIndex, &node);
       while (nsnull != node) {
         nsIContent *content = nsnull;
         node->QueryInterface(kIContentIID, (void **)&content);
@@ -269,8 +269,8 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 		  return NS_OK;
         }
         count += rows;
-        index++;
-        tbodies->Item(index, &node);
+        theIndex++;
+        tbodies->Item(theIndex, &node);
       }
       NS_RELEASE(tbodies);
     }
@@ -700,7 +700,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     refRow->GetParentNode(&parent);
     // create the row
     nsIHTMLContent *newRow=nsnull;
-    nsresult rv = NS_NewHTMLTableRowElement(&newRow, nsHTMLAtoms::tr);
+    rv = NS_NewHTMLTableRowElement(&newRow, nsHTMLAtoms::tr);
     if (NS_SUCCEEDED(rv) && (nsnull!=newRow))
     {
       nsIDOMNode *newRowNode=nsnull;

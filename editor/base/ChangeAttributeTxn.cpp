@@ -53,7 +53,6 @@ NS_IMETHODIMP ChangeAttributeTxn::Init(nsIEditor      *aEditor,
 NS_IMETHODIMP ChangeAttributeTxn::Do(void)
 {
   // need to get the current value of the attribute and save it, and set mAttributeWasSet
-  mAttributeWasSet;
   nsresult result = mEditor->GetAttributeValue(mElement, mAttribute, mUndoValue, mAttributeWasSet);
   // XXX: hack until attribute-was-set code is implemented
       if (PR_FALSE==mUndoValue.Equals(""))
