@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.34 2003/01/18 14:02:59 kaie%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.35 2003/02/04 01:37:22 kaie%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -99,15 +99,16 @@ nsPKCS12Blob::~nsPKCS12Blob()
 // nsPKCS12Blob::SetToken
 //
 // Set the token to use for import/export
-void 
+nsresult
 nsPKCS12Blob::SetToken(nsIPK11Token *token)
 {
  nsNSSShutDownPreventionLock locker;
+ nsresult rv = NS_OK;
  if (token) {
    mToken = token;
  } else {
    PK11SlotInfo *slot;
-   nsresult rv = GetSlotWithMechanism(CKM_RSA_PKCS, mUIContext,&slot);
+   rv = GetSlotWithMechanism(CKM_RSA_PKCS, mUIContext,&slot);
    if (NS_FAILED(rv)) {
       mToken = 0;  
    } else {
@@ -116,6 +117,7 @@ nsPKCS12Blob::SetToken(nsIPK11Token *token)
    }
  }
  mTokenSet = PR_TRUE;
+ return rv;
 }
 
 // nsPKCS12Blob::ImportFromFile
@@ -126,16 +128,23 @@ nsresult
 nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
 {
   nsNSSShutDownPreventionLock locker;
-  nsresult rv;
+  nsresult rv = NS_OK;
 
-  if (!mToken && !mTokenSet) {
-    SetToken(NULL); // Ask the user to pick a slot
-  } else if (!mToken && mTokenSet) {
-    // Someone tried setting the token before, but that failed.
-    // Probably because the user canceled.
-    handleError(PIP_PKCS12_USER_CANCELED);
-    return NS_OK;
+  if (!mToken) {
+    if (!mTokenSet) {
+      rv = SetToken(NULL); // Ask the user to pick a slot
+      if (NS_FAILED(rv)) {
+        handleError(PIP_PKCS12_USER_CANCELED);
+        return rv;
+      }
+    }
   }
+
+  if (!mToken) {
+    handleError(PIP_PKCS12_RESTORE_FAILED);
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   // init slot
   rv = mToken->Login(PR_TRUE);
   if (NS_FAILED(rv)) return rv;
