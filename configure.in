@@ -1394,6 +1394,25 @@ then
 
 	LDFLAGS="$_SAVE_LDFLAGS"
 
+    dnl ====================================================
+    dnl = Check if X headers exist
+    dnl ====================================================
+    _SAVE_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $XCFLAGS"
+    AC_TRY_COMPILE([
+        #include <stdio.h>
+        #include <X11/Xlib.h>
+    ],
+    [
+        Display *dpy = 0;
+        if ((dpy = XOpenDisplay(NULL)) == NULL) {
+            fprintf(stderr, ": can't open %s\en", XDisplayName(NULL));
+            exit(1);
+        }
+    ], [], 
+    [ AC_MSG_ERROR([Could not compile basic X program.]) ])
+    CFLAGS="$_SAVE_CFLAGS"
+
 fi # $no_x
 
 AC_SUBST(XCFLAGS)
