@@ -175,7 +175,7 @@ nsBlockReflowContext::AlignBlockHorizontally(nscoord                 aWidth,
     // computations are no longer valid.
     if (aWidth != mComputedWidth) {
       if (eStyleUnit_Auto == leftUnit) {
-        aAlign.mXOffset = 0;
+        aAlign.mXOffset = mSpace.x;
         aAlign.mLeftMargin = 0;
       }
       if (eStyleUnit_Auto == rightUnit) {
