@@ -92,6 +92,9 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
 {
+  const nsReflowState* rsp = &aReflowState;
+  nsReflowState resizeReflowState(aReflowState);
+
   NS_FRAME_TRACE_REFLOW_IN("nsBodyFrame::Reflow");
 
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
@@ -138,7 +141,30 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
       // XXX FIX ME. For an absolutely positioned item we need to properly
       // compute the available space and then resize the frame if necessary...
       nsReflowState reflowState(nextFrame, aReflowState, aReflowState.maxSize);
-      return nextFrame->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+      nsresult rv = nextFrame->Reflow(aPresContext, aDesiredSize,
+                                      reflowState, aStatus);
+      if (NS_OK != rv) {
+        return rv;
+      }
+
+      // XXX Temporary code: if the frame we just reflowed is a
+      // floating frame then fall through into the main reflow pathway
+      // after clearing out our incremental reflow status. This forces
+      // our child to adjust to the new size of the floater.
+      const nsStyleDisplay* display;
+      nextFrame->GetStyleData(eStyleStruct_Display,
+                              (const nsStyleStruct*&) display);
+      if (NS_STYLE_FLOAT_NONE == display->mFloats) {
+        return rv;
+      }
+
+      // Switch over to a reflow-state that is called resize instead
+      // of an incremental reflow state like we were passed in.
+      resizeReflowState.reason = eReflowReason_Resize;
+      resizeReflowState.reflowCommand = nsnull;
+      rsp = &resizeReflowState;
+
+      // XXX End temporary code
     }
   }
 
@@ -155,10 +181,10 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
   
     // Compute the child frame's max size
     nsSize  kidMaxSize = GetColumnAvailSpace(&aPresContext, borderPadding,
-                                             aReflowState.maxSize);
+                                             rsp->maxSize);
     mSpaceManager->Translate(borderPadding.left, borderPadding.top);
   
-    if (eReflowReason_Resize == aReflowState.reason) {
+    if (eReflowReason_Resize == rsp->reason) {
       // Clear any regions that are marked as unavailable
       // XXX Temporary hack until everything is incremental...
       mSpaceManager->ClearRegions();
@@ -170,7 +196,7 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
 
     // Get the column's desired rect
     nsIRunaround* reflowRunaround;
-    nsReflowState reflowState(mFirstChild, aReflowState, kidMaxSize);
+    nsReflowState reflowState(mFirstChild, *rsp, kidMaxSize);
     nsRect        desiredRect;
 
     mFirstChild->WillReflow(aPresContext);
@@ -210,15 +236,15 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
 #endif
   
     // Reflow any absolutely positioned frames that need reflowing
-    ReflowAbsoluteItems(&aPresContext, aReflowState);
+    ReflowAbsoluteItems(&aPresContext, *rsp);
 
     // Return our desired size
-    ComputeDesiredSize(desiredRect, aReflowState.maxSize, borderPadding, aDesiredSize);
+    ComputeDesiredSize(desiredRect, rsp->maxSize, borderPadding, aDesiredSize);
 
     // Decide how much to repaint based on the reflow type.
     // Note: we don't have to handle the initial reflow case, because that's
     // handled by the root content frame
-    switch (aReflowState.reason) {
+    switch (rsp->reason) {
     case eReflowReason_Resize:
       // For a resize just repaint the entire frame
       damageArea.width = aDesiredSize.width;
