@@ -52,6 +52,7 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/msgViewNavigation.js"/>
 <html:script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
 <html:script src="chrome://messenger/content/mailContextMenus.js"/>
+<html:script src="chrome://messenger/content/messengerdnd.js"/>
 
 <commands id="commands">
 	<commandset id="CommandUpdate_Mail"

@@ -29,7 +29,6 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script src="chrome://messenger/content/messengerdnd.js"/>
 
 	<tree style="width:100px; height: 600px;" flex="100%"
 	      rdf:datasources="rdf:null"
@@ -38,8 +37,8 @@
 		  onselect="top.FolderPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
 		  onblur="goOnEvent(this,'blur')"
 		ondragover="return DragOverTree(event);"
-		ondraggesture="return BeginDragTree(event);"
-		ondragdrop="return DropOnTree(event);"> 
+		ondraggesture="return BeginDragFolderTree(event);"
+		ondragdrop="return DropOnFolderTree(event);"> 
 
 	  <template>
 	  	<rule>
@@ -55,6 +54,7 @@
 			  CanRename="rdf:http://home.netscape.com/NC-rdf#CanRename"
 			  CanCreateSubfolders="rdf:http://home.netscape.com/NC-rdf#CanCreateSubfolders"
 			  CanSubscribe="rdf:http://home.netscape.com/NC-rdf#CanSubscribe"
+			  CanFileMessages="rdf:http://home.netscape.com/NC-rdf#CanFileMessages"
 			  persist="threaded open">
 		  	  <treerow >
 					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"/>

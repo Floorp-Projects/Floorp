@@ -32,7 +32,6 @@ Rights Reserved.
 >
 
 <html:script src="chrome://global/content/treePopups.js"/>
-<html:script src="chrome://messenger/content/messengerdnd.js"/>
 
 
 
@@ -48,8 +47,8 @@ Rights Reserved.
   	<rule>
           <treechildren onclick="ThreadPaneOnClick(event);"
 			ondragover="return DragOverTree(event);"
-			ondraggesture="return BeginDragTree(event);"
-			ondragdrop="return DropOnTree(event);"> 
+			ondraggesture="return BeginDragThreadTree(event);"
+			ondragdrop="return DropOnThreadTree(event);"> 
 
 		<treeitem uri="..."
 			 Status="rdf:http://home.netscape.com/NC-rdf#Status"
