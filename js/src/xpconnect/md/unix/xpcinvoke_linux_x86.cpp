@@ -22,9 +22,7 @@
 
 // Remember that these 'words' are 32bit DWORDS
 
-#if !defined(LINUX)
-#error "This code is for Linux x86 only"
-#endif
+#if defined(LINUX)
 
 static uint32
 invoke_count_words(uint32 paramCount, nsXPCVariant* s)
@@ -162,3 +160,4 @@ XPC_TestInvoke(void* that, PRUint32 index,
 }
 #endif
 
+#endif

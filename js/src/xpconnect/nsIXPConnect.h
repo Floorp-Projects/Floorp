@@ -157,7 +157,7 @@ XPC_PUBLIC_API(void)
 XPC_Dump(nsISupports* p, int depth);
 #define XPC_DUMP(x,d) XPC_Dump(x,d)
 #else
-#define XPC_DUMP(x,d) ((void*)0)
+#define XPC_DUMP(x,d) ((void)0)
 #endif
 
 JS_END_EXTERN_C

@@ -427,7 +427,7 @@ extern "C" JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
 int main()
 {
     JSRuntime *rt;
-    JSContext *cx;
+    JSContext *jscontext;
     JSObject *glob;
 
     gErrFile = stderr;
@@ -438,11 +438,11 @@ int main()
     rt = JS_NewRuntime(8L * 1024L * 1024L);
     if (!rt)
         return 1;
-    cx = JS_NewContext(rt, 8192);
-    if (!cx)
+    jscontext = JS_NewContext(rt, 8192);
+    if (!jscontext)
         return 1;
 
-    JS_SetErrorReporter(cx, my_ErrorReporter);
+    JS_SetErrorReporter(jscontext, my_ErrorReporter);
 
     nsIXPConnect* xpc = XPC_GetXPConnect();
     if(!xpc)
@@ -453,16 +453,16 @@ int main()
 
 /*
     // old code where global object was plain object
-    glob = JS_NewObject(cx, &global_class, NULL, NULL);
+    glob = JS_NewObject(jscontext, &global_class, NULL, NULL);
     if (!glob)
         return 1;
 
-    if (!JS_InitStandardClasses(cx, glob))
+    if (!JS_InitStandardClasses(jscontext, glob))
         return 1;
-    if (!JS_DefineFunctions(cx, glob, glob_functions))
+    if (!JS_DefineFunctions(jscontext, glob, glob_functions))
         return 1;
 
-    xpc->InitJSContext(cx, glob);
+    xpc->InitJSContext(jscontext, glob);
 */
 
     nsTestXPCFoo* foo = new nsTestXPCFoo();
@@ -481,19 +481,19 @@ int main()
     nsIXPConnectWrappedNative* fool_wrapper = NULL;
 
 /*
-    if(NS_SUCCEEDED(xpc->WrapNative(cx, foo, nsITestXPCFoo::IID(), &wrapper)))
+    if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo, nsITestXPCFoo::IID(), &wrapper)))
 */
     // new code where global object is a wrapped xpcom object
     if(NS_SUCCEEDED(xpc->InitJSContextWithNewWrappedGlobal(
-                                    cx, foo, nsITestXPCFoo::IID(), &wrapper)))
+                                    jscontext, foo, nsITestXPCFoo::IID(), &wrapper)))
     {
         wrapper->GetJSObject(&glob);
-        JS_DefineFunctions(cx, glob, glob_functions);
+        JS_DefineFunctions(jscontext, glob, glob_functions);
 
         nsTestXPCFoo* fool = new nsTestXPCFoo();
-        xpc->WrapNative(cx, fool, nsITestXPCFoo2::IID(), &fool_wrapper);
+        xpc->WrapNative(jscontext, fool, nsITestXPCFoo2::IID(), &fool_wrapper);
 
-        if(NS_SUCCEEDED(xpc->WrapNative(cx, foo, nsITestXPCFoo2::IID(), &wrapper2)))
+        if(NS_SUCCEEDED(xpc->WrapNative(jscontext, foo, nsITestXPCFoo2::IID(), &wrapper2)))
         {
             JSObject* js_obj;
             nsISupports* com_obj;
@@ -504,17 +504,17 @@ int main()
 
             jsval v;
             v = OBJECT_TO_JSVAL(js_obj);
-            JS_SetProperty(cx, glob, "foo", &v);
+            JS_SetProperty(jscontext, glob, "foo", &v);
 
             // add the reflected native echo object (sans error checking :)
             nsIXPConnectWrappedNative* echo_wrapper;
             JSObject* echo_jsobj;
             jsval echo_jsval;
             MyEcho* myEcho = new MyEcho();
-            xpc->WrapNative(cx, myEcho, nsIEcho::IID(), &echo_wrapper);
+            xpc->WrapNative(jscontext, myEcho, nsIEcho::IID(), &echo_wrapper);
             echo_wrapper->GetJSObject(&echo_jsobj);
             echo_jsval = OBJECT_TO_JSVAL(echo_jsobj);
-            JS_SetProperty(cx, glob, "echo", &echo_jsval);
+            JS_SetProperty(jscontext, glob, "echo", &echo_jsval);
 
             char* txt[] = {
               "load('testxpc.js');",
@@ -522,13 +522,13 @@ int main()
             };
 
             for(char** p = txt; *p; p++)
-                JS_EvaluateScript(cx, glob, *p, strlen(*p), "builtin", 1, &rval);
+                JS_EvaluateScript(jscontext, glob, *p, strlen(*p), "builtin", 1, &rval);
 
-            if(JS_GetProperty(cx, glob, "bar", &v) && JSVAL_IS_OBJECT(v))
+            if(JS_GetProperty(jscontext, glob, "bar", &v) && JSVAL_IS_OBJECT(v))
             {
                 JSObject* bar = JSVAL_TO_OBJECT(v);
                 nsIXPConnectWrappedJS* wrapper3;
-                if(NS_SUCCEEDED(xpc->WrapJS(cx,
+                if(NS_SUCCEEDED(xpc->WrapJS(jscontext,
                                        JSVAL_TO_OBJECT(v),
                                        nsITestXPCFoo::IID(), &wrapper3)))
                 {
@@ -575,14 +575,14 @@ int main()
 
     if(glob)
     {
-        JS_DeleteProperty(cx, glob, "foo");
-        JS_DeleteProperty(cx, glob, "echo");
-        JS_DeleteProperty(cx, glob, "bar");
-        JS_DeleteProperty(cx, glob, "foo2");
-        JS_DeleteProperty(cx, glob, "baz");
-        JS_DeleteProperty(cx, glob, "baz2");
-        JS_DeleteProperty(cx, glob, "reciever");
-        JS_SetGlobalObject(cx, JS_NewObject(cx, &global_class, NULL, NULL));
+        JS_DeleteProperty(jscontext, glob, "foo");
+        JS_DeleteProperty(jscontext, glob, "echo");
+        JS_DeleteProperty(jscontext, glob, "bar");
+        JS_DeleteProperty(jscontext, glob, "foo2");
+        JS_DeleteProperty(jscontext, glob, "baz");
+        JS_DeleteProperty(jscontext, glob, "baz2");
+        JS_DeleteProperty(jscontext, glob, "reciever");
+        JS_SetGlobalObject(jscontext, JS_NewObject(jscontext, &global_class, NULL, NULL));
     }
     NS_RELEASE(wrapper);
 
@@ -590,19 +590,19 @@ int main()
 
 //    js_DumpGCHeap = stdout;
 
-    JS_GC(cx);
+//    JS_GC(jscontext);
 //    printf("-----------------------\n");
-//    JS_GC(cx);
+//    JS_GC(jscontext);
 
     // dump to log test...
-    XPC_LOG_ALWAYS((""));
-    XPC_LOG_ALWAYS(("after running JS_GC..."));
-    XPC_LOG_ALWAYS((""));
+//    XPC_LOG_ALWAYS((""));
+//    XPC_LOG_ALWAYS(("after running JS_GC..."));
+//    XPC_LOG_ALWAYS((""));
     XPC_DUMP(xpc, 3);
 
     NS_RELEASE(xpc);
 
-    JS_DestroyContext(cx);
+    JS_DestroyContext(jscontext);
     JS_DestroyRuntime(rt);
     JS_ShutDown();
     return 0;
@@ -611,6 +611,7 @@ int main()
 /***************************************************************************/
 
 #include "jsatom.h"
+#ifdef DEBUG
 int
 DumpAtom(JSHashEntry *he, int i, void *arg)
 {
@@ -649,3 +650,4 @@ void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
 void Dobj(nsISupports* p, int depth) {if(p)XPC_DUMP(p,depth);}
 void Dxpc(int depth) {Dobj(XPC_GetXPConnect(), depth);}
 JS_END_EXTERN_C
+#endif
