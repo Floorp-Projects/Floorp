@@ -1511,11 +1511,18 @@ nsStandardURL::SchemeIs(const char *scheme, PRBool *result)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsStandardURL::Clone(nsIURI **result)
+/* virtual */ nsStandardURL*
+nsStandardURL::StartClone()
 {
     nsStandardURL *clone;
     NS_NEWXPCOM(clone, nsStandardURL);
+    return clone;
+}
+
+NS_IMETHODIMP
+nsStandardURL::Clone(nsIURI **result)
+{
+    nsStandardURL *clone = StartClone();
     if (!clone)
         return NS_ERROR_OUT_OF_MEMORY;
 

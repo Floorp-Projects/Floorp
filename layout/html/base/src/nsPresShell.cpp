@@ -182,6 +182,7 @@
 #endif
 #include "nsIXBLBinding.h"
 #include "nsPlaceholderFrame.h"
+#include "nsIDOMMutationEvent.h"
 
 // Dummy layout request
 #include "nsDummyLayoutRequest.h"
@@ -1378,9 +1379,7 @@ protected:
   nsresult GetSelectionForCopy(nsISelection** outSelection);
 
   nsICSSStyleSheet*         mPrefStyleSheet; // mStyleSet owns it but we maintain a ref, may be null
-#ifdef DEBUG
   PRUint32                  mUpdateCount;
-#endif
   // normal reflow commands
   nsVoidArray               mReflowCommands;
   PLDHashTable              mReflowCommandTable;
@@ -3422,26 +3421,21 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
 void
 PresShell::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
-#ifdef DEBUG
-  mUpdateCount++;
-#endif
   mFrameConstructor->BeginUpdate();
 
-  if (aUpdateType & UPDATE_STYLE)
+  if (aUpdateType & UPDATE_STYLE) {
+    ++mUpdateCount;
     mStyleSet->BeginUpdate();
+  }
 }
 
 void
 PresShell::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
 {
-#ifdef DEBUG
-  NS_PRECONDITION(0 != mUpdateCount, "too many EndUpdate's");
-  --mUpdateCount;
-#endif
-
   if (aUpdateType & UPDATE_STYLE) {
     mStyleSet->EndUpdate();
-    if (mStylesHaveChanged)
+    NS_ASSERTION(0 != mUpdateCount, "too many EndUpdate's");
+    if (--mUpdateCount == 0 && mStylesHaveChanged)
       ReconstructStyleData();
   }
 
@@ -6033,6 +6027,7 @@ PresShell::GetAgentStyleSheets(nsCOMArray<nsIStyleSheet>& aSheets)
 nsresult
 PresShell::SetAgentStyleSheets(const nsCOMArray<nsIStyleSheet>& aSheets)
 {
+  mStylesHaveChanged = PR_TRUE;
   return mStyleSet->ReplaceSheets(nsStyleSet::eAgentSheet, aSheets);
 }
 
@@ -6479,13 +6474,23 @@ ReResolveMenusAndTrees(nsIFrame *aFrame, void *aClosure)
 }
 
 PR_STATIC_CALLBACK(PRBool)
-ReframeImageBoxes(nsIFrame *aFrame, void *aClosure)
+UpdateImageBoxSrcs(nsIFrame *aFrame, void *aClosure)
 {
-  nsStyleChangeList *list = NS_STATIC_CAST(nsStyleChangeList*, aClosure);
-  if (aFrame->GetType() == nsLayoutAtoms::imageBoxFrame) {
-    list->AppendChange(aFrame, aFrame->GetContent(),
-                       NS_STYLE_HINT_FRAMECHANGE);
-    return PR_FALSE; // don't walk descendants
+  nsPresContext *presContext = NS_STATIC_CAST(nsPresContext*, aClosure);
+
+  nsIContent *content = aFrame->GetContent();
+  if (aFrame->GetType() == nsLayoutAtoms::imageBoxFrame &&
+      content->HasAttr(kNameSpaceID_None, nsHTMLAtoms::src)) {
+    // If it's a chrome URL containing "/skin/", we want the frame to
+    // reload its image.
+    nsAutoString attr;
+    content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, attr);
+    if (StringBeginsWith(attr, NS_LITERAL_STRING("chrome:")) &&
+        attr.Find("/skin/") != -1) {
+      aFrame->AttributeChanged(presContext, content,
+                               kNameSpaceID_None, nsHTMLAtoms::src,
+                               nsIDOMMutationEvent::MODIFICATION);
+    }
   }
   return PR_TRUE; // walk descendants
 }
@@ -6542,12 +6547,10 @@ PresShell::Observe(nsISupports* aSubject,
       WalkFramesThroughPlaceholders(mPresContext, rootFrame,
                                     &ReResolveMenusAndTrees, nsnull);
 
-      // Because "chrome:" URL equality is messy, reframe image box
-      // frames (hack!).
-      nsStyleChangeList changeList;
+      // Allow <xul:image src="" /> to be an additional (to stylesheet
+      // links) entry point into themes, for convenience.
       WalkFramesThroughPlaceholders(mPresContext, rootFrame,
-                                    ReframeImageBoxes, &changeList);
-      mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+                                    UpdateImageBoxSrcs, mPresContext);
 
       mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
     }
