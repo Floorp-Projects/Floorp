@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Contributors: Jeff Galyan <talisman@anamorphic.com>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.composition;
@@ -29,7 +30,7 @@ public class AddressBar extends NSTabbedPane {
     AttachmentsList mAttachmentsList;
     OptionsPanel mOptionsPanel;
 
-    public AddressBar() {
+    public AddressBar(CompositionPanel cp) {
       // address panel
         ImageIcon addressIcon = new ImageIcon(getClass().getResource("images/small_address.gif"));
         mAddressList = new AddressList ();
@@ -40,7 +41,7 @@ public class AddressBar extends NSTabbedPane {
 
           // options panel
         ImageIcon optionsIcon = new ImageIcon(getClass().getResource("images/small_otpions.gif"));
-        mOptionsPanel = new OptionsPanel();
+        mOptionsPanel = new OptionsPanel(cp);
 
         // tabbed panel holds address, attachments and otpions.
         addTab("", addressIcon,        mAddressList);

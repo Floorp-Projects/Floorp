@@ -25,6 +25,7 @@ package grendel.composition;
 
 import java.io.Serializable;
 import java.awt.*;
+import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
@@ -40,9 +41,13 @@ public class OptionsPanel extends JPanel implements Serializable  {
     private GridBagLayout gridbag;
 
     private LabeledCombo ident;
+    
+    protected CompositionPanel mCompositionPanel;
 
-    public OptionsPanel () {
+    public OptionsPanel (CompositionPanel cp) {
         super ();
+        
+        mCompositionPanel = cp;
         
         c = new GridBagConstraints();
         gridbag = new GridBagLayout();
@@ -157,6 +162,8 @@ public class OptionsPanel extends JPanel implements Serializable  {
 
             add ("West", mLabel);
             add ("Center", mComboBox);
+            
+            mComboBox.addItemListener(new IdentityChangeListener());
         }
 
         public void addPossibleValue(String aValue) {
@@ -170,5 +177,22 @@ public class OptionsPanel extends JPanel implements Serializable  {
         public int getSelectedIndex() {
             return mComboBox.getSelectedIndex();
         }
+        
+        class IdentityChangeListener implements ItemListener {
+        
+            private boolean first = true;
+            
+            public void itemStateChanged(ItemEvent e) {
+              if (e.getStateChange() == e.SELECTED) {
+              	if (first) {
+              	  first = false;
+              	} else {
+            	  mCompositionPanel.AddSignature();
+            	}
+              }
+            }
+            
+        }
     }
+    
 }

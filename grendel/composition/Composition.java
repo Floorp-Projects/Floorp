@@ -126,6 +126,8 @@ public class Composition extends GeneralFrame {
         fPanel.add(mCompositionPanel);
 
         restoreBounds();	
+        
+        mCompositionPanel.AddSignature();
     }
 
     public void dispose() {

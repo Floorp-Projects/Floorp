@@ -124,7 +124,7 @@ public class CompositionPanel extends GeneralPanel {
 
     //toolbar buttons
     fToolBar = createToolbar();
-    mAddressBar = new AddressBar();
+    mAddressBar = new AddressBar(this);
     mAddressList = mAddressBar.getAddressList();
     mAttachmentsList = mAddressBar.getAttachmentsList();
 
@@ -199,6 +199,15 @@ public class CompositionPanel extends GeneralPanel {
     qot.actionPerformed(new ActionEvent(this,0,""));
   }
 
+  /**
+   * Add a signature
+   */
+   
+  public void AddSignature() {
+    AddSignatureAction asa = new AddSignatureAction();
+    asa.actionPerformed(new ActionEvent(this,0,""));
+  }
+
   protected void notifySendingMail() {
     Object[] listeners = mListeners.getListenerList();
     ChangeEvent changeEvent = null;
@@ -256,7 +265,7 @@ public class CompositionPanel extends GeneralPanel {
   public static final String sendNowTag               ="sendNow";
   public static final String sendLaterTag             ="sendLater";
   public static final String quoteOriginalTextTag     ="quoteOriginalText";
-  public static final String addSignatureTag          ="addSignature";
+  public static final String addSignatureTag          ="addSignatureAction";
   public static final String selectAddressesTag       ="selectAddresses";
   public static final String goOfflineTag             ="goOffline";
   public static final String closeWindowTag           ="closeWindow";
@@ -645,8 +654,8 @@ public class CompositionPanel extends GeneralPanel {
   /**
    * Add a signature
    */
-  class AddSignature extends UIAction {
-    AddSignature() {
+  class AddSignatureAction extends UIAction {
+    AddSignatureAction() {
       super(addSignatureTag);
       this.setEnabled(true);
     }
@@ -658,6 +667,19 @@ public class CompositionPanel extends GeneralPanel {
 
       Document doc = mEditor.getDocument();
       int oldPosition = mEditor.getCaretPosition();
+      
+      for (int i=0; i<doc.getLength()-3;i++) {
+        try {
+          if (doc.getText(i,1).equals("\n")) {
+            if (doc.getText(i+1,3).equals("-- ")) {
+              doc.remove(i, doc.getLength()-i);
+            }
+          }
+        } catch (BadLocationException ble) {
+          ble.printStackTrace();
+        }
+      }
+      
       int position = doc.getEndPosition().getOffset() - 1;
       
       try {
@@ -671,7 +693,9 @@ public class CompositionPanel extends GeneralPanel {
       	  s = sigReader.readLine();
         }
       } catch (FileNotFoundException fnfe) {
-        fnfe.printStackTrace();
+        //this can mean two things: either there's no signature specified
+        //or the file is missing. I the last case we should do
+        //something sensible.
       } catch (IOException ioe) {
         ioe.printStackTrace();
       } catch (BadLocationException ble) {
@@ -852,8 +876,8 @@ public class CompositionPanel extends GeneralPanel {
                      "security",   "Show security Information");
     addToolbarButton(toolBar, null,
                      "stop",       "Stop the current Transfer (ESC)" );
-    addToolbarButton(toolBar, new AddSignature(),
-                     "signature",  "Add the signature of the current personality" );
+    //addToolbarButton(toolBar, new AddSignatureAction(),
+    //                 "signature",  "Add the signature of the current personality" );
 
     return toolBar;
   }
