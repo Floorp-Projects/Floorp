@@ -27,14 +27,14 @@
  *       PRECEDING_SIBLING_AXIS to be compatible with the
  *       W3C XPath 1.0 Recommendation
  *
- * $Id: Names.cpp,v 1.2 2000/04/12 05:52:09 kvisco%ziplink.net Exp $
+ * $Id: Names.cpp,v 1.3 2000/04/12 11:00:29 kvisco%ziplink.net Exp $
  */
 
 /**
  * XSL names used throughout the XSLProcessor.
  * Probably should be wrapped in a Namespace
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/12 05:52:09 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/12 11:00:29 $
 **/
 #include "Names.h"
 
@@ -100,6 +100,7 @@ const String MODE_ATTR               = "mode";
 const String NAME_ATTR               = "name";
 const String NAMESPACE_ATTR          = "namespace";
 const String OMIT_XMLDECL_ATTR       = "omit-xml-declaration";
+const String ORDER_ATTR              = "order";
 const String PRIORITY_ATTR           = "priority";
 const String SELECT_ATTR             = "select";
 const String STANDALONE              = "standalone";

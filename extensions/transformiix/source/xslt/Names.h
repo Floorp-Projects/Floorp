@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Names.h,v 1.1 2000/04/06 07:46:31 kvisco%ziplink.net Exp $
+ * $Id: Names.h,v 1.2 2000/04/12 11:00:36 kvisco%ziplink.net Exp $
  */
 
 #include "String.h"
@@ -61,6 +61,7 @@ extern const String PARAM;
 extern const String PI;
 extern const String PRESERVE_SPACE;
 extern const String STRIP_SPACE;
+extern const String SORT;
 extern const String TEMPLATE;
 extern const String TEXT;
 extern const String VALUE_OF;
@@ -90,6 +91,7 @@ extern const String MODE_ATTR;
 extern const String NAME_ATTR;
 extern const String NAMESPACE_ATTR;
 extern const String OMIT_XMLDECL_ATTR;
+extern const String ORDER_ATTR;
 extern const String PRIORITY_ATTR;
 extern const String SELECT_ATTR;
 extern const String STANDALONE;

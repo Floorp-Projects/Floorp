@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.4 2000/04/12 10:16:45 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XSLTProcessor.h,v 1.5 2000/04/12 11:00:56 kvisco%ziplink.net Exp $
  */
 
 
@@ -59,7 +59,7 @@
 #include "List.h"
 #include "VariableBinding.h"
 #include "Numbering.h"
-
+#include "NodeSorter.h"
 
 #ifdef MOZILLA
 /* bacd8ad0-552f-11d3-a9f7-000064657374 */
@@ -75,7 +75,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/04/12 10:16:45 $
+ * @version $Revision: 1.5 $ $Date: 2000/04/12 11:00:56 $
 **/
 class XSLTProcessor
 #ifdef MOZILLA
@@ -362,7 +362,7 @@ private:
 class XSLType : public MITREObject {
 
 public:
-    enum _XSLType {
+    enum types {
         APPLY_IMPORTS =  1,
         APPLY_TEMPLATES,
         ATTRIBUTE,
@@ -383,6 +383,7 @@ public:
         PARAM,
         PI,
         PRESERVE_SPACE,
+        SORT,
         STRIP_SPACE,
         TEMPLATE,
         TEXT,
