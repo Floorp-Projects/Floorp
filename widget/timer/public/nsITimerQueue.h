@@ -39,8 +39,8 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITIMERQUEUE_IID)
 
   NS_IMETHOD_(void) AddReadyQueue(nsITimer* timer)=0;
-  NS_IMETHOD_(bool) IsTimerInQueue(nsITimer* timer)=0;
-  NS_IMETHOD_(bool) HasReadyTimers(PRUint32 minTimerPriority)=0;
+  NS_IMETHOD_(PRBool) IsTimerInQueue(nsITimer* timer)=0;
+  NS_IMETHOD_(PRBool) HasReadyTimers(PRUint32 minTimerPriority)=0;
   NS_IMETHOD_(void) FireNextReadyTimer(PRUint32 minTimerPriority)=0;
 };
 
