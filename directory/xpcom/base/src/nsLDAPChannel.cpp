@@ -820,12 +820,10 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 // If the writeCount == -1, then all the available data in the input
 // stream is written.
 //
-// void asyncWrite(in nsIInputStream fromStream,
-//                 in nsIStreamObserver observer,
+// void asyncWrite(in nsIStreamProvider provider,
 //                 in nsISupports ctxt);
 NS_IMETHODIMP
-nsLDAPChannel::AsyncWrite(nsIInputStream* fromStream,
-                          nsIStreamObserver* observer,
+nsLDAPChannel::AsyncWrite(nsIStreamProvider* provider,
                           nsISupports* ctxt)
 {
     NS_NOTYETIMPLEMENTED("nsLDAPChannel::AsyncWrite");
