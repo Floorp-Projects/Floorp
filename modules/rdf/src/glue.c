@@ -45,6 +45,9 @@ extern	MWContext	*FE_GetRDFContext(void);
 extern	char		*gDefaultNavcntr;
 extern	RDF		gNCDB;
 
+/* pointer to the mocha thread */
+extern	PRThread	*mozilla_thread;
+
 
 /* globals */
 char			*profileDirURL = NULL;
@@ -249,11 +252,34 @@ rdfRetrievalType (RDFFile f)
 
 */
 
+typedef	struct	{
+	ETEvent			ce;
+	URL_Struct		*urls;
+	int			method;
+	MWContext		*cx;
+	Net_GetUrlExitFunc	*exitFunc;
+} MozillaEvent_rdf_GetURL;
+
+PR_STATIC_CALLBACK(void *)
+rdf_HandleEvent_GetURL(MozillaEvent_rdf_GetURL *event)
+{
+	NET_GetURL(event->urls, event->method, event->cx, event->exitFunc);
+	return(NULL);
+}
+
+PR_STATIC_CALLBACK(void)
+rdf_DisposeEvent_GetURL(MozillaEvent_rdf_GetURL *event)
+{
+	XP_FREE(event);
+}
+
 int
 rdf_GetURL (MWContext *cx,  int method, Net_GetUrlExitFunc *exit_routine, RDFFile rdfFile)
 {
-	URL_Struct      *urls = NULL;
-        char* url  ;
+	MozillaEvent_rdf_GetURL		*event;
+	URL_Struct      		*urls = NULL;
+        char				*url;
+
 #ifdef DEBUG_gagan
         return 0;
 #endif
@@ -282,7 +308,27 @@ rdf_GetURL (MWContext *cx,  int method, Net_GetUrlExitFunc *exit_routine, RDFFil
 	if (urls == NULL) return 0;
 	urls->fe_data = rdfFile;
 	if (method) urls->method = method;
-	NET_GetURL(urls, FO_CACHE_AND_RDF, cx, rdf_GetUrlExitFunc);
+
+	if (PR_CurrentThread() == mozilla_thread)
+	{
+		NET_GetURL(urls, FO_CACHE_AND_RDF, cx, rdf_GetUrlExitFunc);
+	}
+	else
+	{
+		/* send event to Mozilla thread */
+		
+		if (mozilla_event_queue == NULL)	return(0);
+		event = PR_NEW(MozillaEvent_rdf_GetURL);
+		if (event == NULL)	return(0);
+		PR_InitEvent(&(event->ce.event), cx,
+			(PRHandleEventProc)rdf_HandleEvent_GetURL,
+			(PRDestroyEventProc)rdf_DisposeEvent_GetURL);
+		event->urls = urls;
+		event->method = FO_CACHE_AND_RDF;
+		event->cx = cx;
+		event->exitFunc = rdf_GetUrlExitFunc;
+		PR_PostEvent(mozilla_event_queue, &(event->ce.event));
+	}
 	return 1;
 }
 #endif /* MOZILLA_CLIENT */

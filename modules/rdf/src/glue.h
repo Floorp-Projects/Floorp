@@ -27,6 +27,8 @@
 #include "fe_proto.h"
 
 #include "prinit.h"
+#include "prthread.h"
+#include "libevent.h"
 
 #ifdef XP_UNIX
 #include <sys/fcntl.h>
