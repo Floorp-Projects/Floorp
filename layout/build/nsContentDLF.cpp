@@ -271,12 +271,13 @@ nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
     rv = NS_NewDocumentViewer(getter_AddRefs(docv));
     if (NS_FAILED(rv))
       break;
-    docv->SetUAStyleSheet(gUAStyleSheet);
+
+    docv->SetUAStyleSheet(NS_STATIC_CAST(nsIStyleSheet*, gUAStyleSheet));
 
     // Bind the document to the Content Viewer
-    rv = docv->LoadStart(aDocument);
-    *aDocViewerResult = docv;
-    NS_IF_ADDREF(*aDocViewerResult);
+    nsIContentViewer* cv = NS_STATIC_CAST(nsIContentViewer*, docv.get());
+    rv = cv->LoadStart(aDocument);
+    NS_ADDREF(*aDocViewerResult = cv);
   } while (PR_FALSE);
 
   return rv;
