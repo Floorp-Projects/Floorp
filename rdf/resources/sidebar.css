@@ -7,7 +7,8 @@ tree {
  background-color: #eeeeee; 
  border: none; 
  border-spacing: 0px; 
-// border-collapse: collapse; 
+// border-collapse: collapse;
+ width: 100%;
 } 
 
 treeitem { 
@@ -51,3 +52,21 @@ treecol[sortActive="true"] {
   background-color: green;
 }
   
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/bookmark-folder-closed.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/bookmark-folder-open.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/personal-folder-closed.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/personal-folder-open.gif");
+}
+treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/bookmark-folder-closed.gif");
+}
