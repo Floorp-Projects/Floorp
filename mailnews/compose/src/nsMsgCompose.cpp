@@ -26,7 +26,9 @@
 #include "nsIMsgHeaderParser.h" 
 #include "nsIMimeURLUtils.h" 
 #include "nsQuickSort.h"
+#include "nsIPref.h"
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kCMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 
@@ -499,6 +501,9 @@ void nsMsgCompose::NotifyPrefsChange(NotifyCode) {
 
 int nsMsgCompose::CreateVcardAttachment ()
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
 	nsMsgCompPrefs pCompPrefs;
 	char* name;
 	int status = 0;
@@ -540,7 +545,8 @@ int nsMsgCompose::CreateVcardAttachment ()
 			char *vCardFileName = NULL;
 			char *mailIdentityUserEmail = NULL;
 			char *atSign = NULL;
-			PREF_CopyCharPref("mail.identity.useremail", &mailIdentityUserEmail);
+      if (NS_SUCCEEDED(rv) && prefs)
+  			prefs->CopyCharPref("mail.identity.useremail", &mailIdentityUserEmail);
 			if (mailIdentityUserEmail)
 			{
 				atSign = PL_strchr(mailIdentityUserEmail, '@');
@@ -613,14 +619,23 @@ int nsMsgCompose::CreateVcardAttachment ()
 char*
 nsMsgCompose::FigureBcc(PRBool newsBcc)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
 	nsMsgCompPrefs pCompPrefs;
 	char* result = NULL;
 	PRBool useBcc = PR_FALSE;
 
 	if (newsBcc)
-		PREF_GetBoolPref("news.use_default_cc", &useBcc);
+    if (NS_SUCCEEDED(rv) && prefs)
+    {
+  		prefs->GetBoolPref("news.use_default_cc", &useBcc);
+    }
 	else
-		PREF_GetBoolPref("mail.use_default_cc", &useBcc);
+    if (NS_SUCCEEDED(rv) && prefs)
+    {
+  		prefs->GetBoolPref("mail.use_default_cc", &useBcc);
+    }
 		
 	if (useBcc || GetPrefs()->GetDefaultBccSelf(newsBcc) != 0)
 	{
@@ -941,6 +956,8 @@ HJ73123
 void
 nsMsgCompose::InitializeHeaders(MWContext* old_context, const nsIMsgCompFields* fields)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
 	nsMsgCompPrefs pCompPrefs;
 
 	PR_ASSERT(m_fields == NULL);
@@ -1102,8 +1119,13 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context, const nsIMsgCompFields* 
 	if (!*m_fields->GetFcc()) 
 	{
 		PRBool useDefaultFcc = PR_TRUE;
-		/*int prefError =*/ PREF_GetBoolPref(*newsgroups ? "news.use_fcc" : "mail.use_fcc",
-											&useDefaultFcc);
+		/*int prefError =*/   
+    if (NS_SUCCEEDED(rv) && prefs)
+    {
+      prefs->GetBoolPref(*newsgroups ? "news.use_fcc" : "mail.use_fcc",
+            &useDefaultFcc);
+    }
+
 		if (useDefaultFcc)
 		{
 			m_fields->SetFcc((char *)GetPrefs()->
@@ -1317,6 +1339,9 @@ nsMsgCompose::GetUrlDone_S(PrintSetup* pptr)
 void
 nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
 	PRFileDesc  *file=(PRFileDesc *)nsnull;
 	PR_FREEIF(m_quoteUrl);
 	m_textContext = NULL;  /* since this is called as a result of
@@ -1331,8 +1356,11 @@ nsMsgCompose::GetUrlDone(PrintSetup* /*pptr*/)
 	char* curquote = NULL;
 	PRInt32 replyOnTop = 0, replyWithExtraLines = 0;
 
-	PREF_GetIntPref("mailnews.reply_on_top", &replyOnTop);
-	PREF_GetIntPref("mailnews.reply_with_extra_lines", &replyWithExtraLines);
+	if (NS_SUCCEEDED(rv) && prefs)
+  {
+    prefs->GetIntPref("mailnews.reply_on_top", &replyOnTop);
+  	prefs->GetIntPref("mailnews.reply_with_extra_lines", &replyWithExtraLines);
+  }
 
 	PRInt32 extra = (m_markup ? 0 : 
 	               (replyWithExtraLines ? MSG_LINEBREAK_LEN * replyWithExtraLines
@@ -1497,12 +1525,18 @@ MyQuoteFunc(void* closure, const char* data)
 
 QuotePlainIntoHTML::QuotePlainIntoHTML(MWContext* context)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
 	m_context = context;
 	if (EDT_PasteQuoteBegin(m_context, PR_TRUE) != EDT_COP_OK) {
 		m_context = NULL;
 	}
-	PREF_GetIntPref("mailnews.reply_on_top", &m_replyOnTop);
-	PREF_GetIntPref("mailnews.reply_with_extra_lines", &m_replyWithExtraLines);
+	if (NS_SUCCEEDED(rv) && prefs)
+  {
+    prefs->GetIntPref("mailnews.reply_on_top", &m_replyOnTop);
+	  prefs->GetIntPref("mailnews.reply_with_extra_lines", &m_replyWithExtraLines);
+  }
 
 	m_buffer = NULL;
 	m_size = 0;
@@ -1627,6 +1661,9 @@ nsresult nsMsgCompose::QuoteMessage(int (*func)(void* closure,
 													 const char* data),
 										 void* closure)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
 	nsresult status = 0;
 	char* ptr;
 	 m_haveQuoted = PR_TRUE;
@@ -1761,7 +1798,10 @@ nsresult nsMsgCompose::QuoteMessage(int (*func)(void* closure,
 			// We are quoting html message into plain text message
 			// Use wrapline width from preference
 			PRInt32 width = 72;
-			PREF_GetIntPref("mailnews.wraplength", &width);
+			
+      if (NS_SUCCEEDED(rv) && prefs)
+        prefs->GetIntPref("mailnews.wraplength", &width);
+
 			if (width == 0) width = 72;
 			else if (width < 10) width = 10;
 			else if (width > 30000) width = 30000;
@@ -2710,6 +2750,9 @@ void
 nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 									const char* error_message)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
 	PR_ASSERT(context == m_context);
 
 	// *** We don't want to set m_status to status. The default value
@@ -2805,7 +2848,8 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 											   == FOLDER_IMAPMAIL)) 
 							{
 								PRBool storeFlag = PR_TRUE;
-								PREF_GetBoolPref("mail.imap.store_answered_forwarded_flag", &storeFlag);
+                if (NS_SUCCEEDED(rv) && prefs)
+                  prefs->GetBoolPref("mail.imap.store_answered_forwarded_flag", &storeFlag);
 								if (storeFlag)
 									imapFolder->StoreImapFlags(this, m_actionInfo->m_flags, PR_TRUE, readIds);
 							}
@@ -3118,7 +3162,12 @@ JFD */
 int
 nsMsgCompose::SendMessageNow()
 {
-	PREF_SetBoolPref("network.online", PR_TRUE);	// make sure we're online.
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
+	if (NS_SUCCEEDED(rv) && prefs)
+    prefs->SetBoolPref("network.online", PR_TRUE);	// make sure we're online.
+
 		// remember if we're queued so we know which folder
 	m_deliver_mode = nsMsgDeliverNow;		
 							
@@ -3682,6 +3731,9 @@ int
 nsMsgCompose::ResultsRecipients(PRBool cancelled, PRInt32* nohtml,
 									   PRInt32* htmlok)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
 	int status = 0;
 	if (cancelled) return 0;
 	PR_ASSERT(m_htmlrecip);
@@ -3742,8 +3794,8 @@ nsMsgCompose::ResultsRecipients(PRBool cancelled, PRInt32* nohtml,
 /*JFD
 	if (m_host) m_host->SaveHostInfo();
 */
-
-	PREF_CopyCharPref("mail.htmldomains", &domainlist);
+  if (NS_SUCCEEDED(rv) && prefs)
+  	prefs->CopyCharPref("mail.htmldomains", &domainlist);
 	changed = PR_FALSE;
 
 	length = domainlist ? PL_strlen(domainlist) : 0;
@@ -3800,8 +3852,11 @@ nsMsgCompose::ResultsRecipients(PRBool cancelled, PRInt32* nohtml,
 			PL_strcat(ptr, domainstrings[i]);
 			if (i < num-1) PL_strcat(ptr, ",");
 		}
-		PREF_SetCharPref("mail.htmldomains", ptr);
-		PREF_SavePrefFile();
+		if (NS_SUCCEEDED(rv) && prefs)
+    {
+      prefs->SetCharPref("mail.htmldomains", ptr);
+      prefs->SavePrefFile();
+    }
 		delete [] ptr;
 		ptr = NULL;
 	}				
@@ -3967,6 +4022,9 @@ int
 nsMsgCompose::MungeThroughRecipients(PRBool* someNonHTML,
 											PRBool* groupNonHTML)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
 	PRBool foo;
 	if (!someNonHTML) someNonHTML = &foo;
 	if (!groupNonHTML) groupNonHTML = &foo;
@@ -4039,7 +4097,8 @@ nsMsgCompose::MungeThroughRecipients(PRBool* someNonHTML,
 				continue;
 			}
 			if (!domainlist) {
-				PREF_CopyCharPref("mail.htmldomains", &domainlist);
+				if (NS_SUCCEEDED(rv) && prefs)
+          prefs->CopyCharPref("mail.htmldomains", &domainlist);
 			}
 			char* domain = at + 1;
 			for (;;) {
@@ -4157,6 +4216,9 @@ nsMsgCompose::MungeThroughRecipients(PRBool* someNonHTML,
 MSG_HTMLComposeAction
 nsMsgCompose::DetermineHTMLAction()
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
 	PRBool someNonHTML, groupNonHTML;
 	int status;
 
@@ -4178,8 +4240,10 @@ nsMsgCompose::DetermineHTMLAction()
 		// we do not honor that preference for newsgroups, only for e-mail
 		// addresses.
 		if (!groupNonHTML) {
-			PRInt32 value;
-			if (PREF_GetIntPref("mail.default_html_action", &value) >= 0) {
+			PRInt32 value = 0;
+      if (NS_SUCCEEDED(rv) && prefs)
+        prefs->GetIntPref("mail.default_html_action", &value);
+			if (value >= 0) {
 				switch (value) {
 				case 1:				// Force plaintext.
 					return MSG_HTMLConvertToPlaintext;

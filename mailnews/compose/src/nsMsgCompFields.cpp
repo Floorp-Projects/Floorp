@@ -20,6 +20,9 @@
 #include "nsCRT.h"
 #include "nsMsgCompFields.h"
 #include "nsMsgCompFieldsFact.h"
+#include "nsIPref.h"
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 /* this function will be used by the factory to generate an Message Compose Fields Object....*/
 nsresult NS_NewMsgCompFields(const nsIID &aIID, void ** aInstancePtrResult)
@@ -43,6 +46,9 @@ NS_IMPL_ISUPPORTS(nsMsgCompFields, nsIMsgCompFields::GetIID());
 
 nsMsgCompFields::nsMsgCompFields()
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
 	PRInt16 i;
 	PRBool bReturnReceiptOn = PR_FALSE;
 
@@ -59,8 +65,11 @@ nsMsgCompFields::nsMsgCompFields()
 	m_multipart_alt = PR_FALSE;
 	m_receiptType = 0;
 
-	PREF_GetBoolPref("mail.request.return_receipt_on", &bReturnReceiptOn);
-	PREF_GetIntPref("mail.request.return_receipt", &m_receiptType);
+  if (NS_SUCCEEDED(rv) && prefs) 
+  {
+    prefs->GetBoolPref("mail.request.return_receipt_on", &bReturnReceiptOn);
+	  prefs->GetIntPref("mail.request.return_receipt", &m_receiptType);
+  }
 	SetReturnReceipt (bReturnReceiptOn, NULL);
 
 	NS_INIT_REFCNT();

@@ -34,6 +34,7 @@
 #include "nsMsgSend.h"
 #include "nsIMimeConverter.h"
 #include "nsEscape.h"
+#include "nsIPref.h"
 
 /* use these macros to define a class IID for our component. Our object currently supports two interfaces 
    (nsISupports and nsIMsgCompose) so we want to define constants for these two interfaces */
@@ -44,6 +45,8 @@ static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID); 
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #if 0 //JFD
 #include "msg.h"
@@ -298,11 +301,6 @@ static char* NET_GetURLFromLocalFile(char *filename)
 }
 
 #endif /* XP_MAC */
-
-#include "nsIPref.h"
-
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #ifdef XP_UNIX
 #define TEMP_PATH "/usr/tmp/"
@@ -595,7 +593,10 @@ PRBool MSG_DeliverMimeAttachment::UseUUEncode_p(void)
 
 static void msg_escape_file_name (URL_Struct *m_url) 
 {
-    NS_ASSERTION (m_url->address && !PL_strncasecmp(m_url->address, "file:", 5), "Invalid URL type");
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);   
+  
+  NS_ASSERTION (m_url->address && !PL_strncasecmp(m_url->address, "file:", 5), "Invalid URL type");
 	if (!m_url->address || PL_strncasecmp(m_url->address, "file:", 5))
 		return;
 
@@ -633,7 +634,15 @@ static char *msg_GetMissionControlledOutgoingMIMEType(const char *filename,
 
 			if (prefString)
 			{
-				PREF_CopyCharPref(prefString, &mcOutgoingMimeType);
+        nsresult rv;
+        NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+        if (NS_SUCCEEDED(rv) && prefs) 
+        {
+          // RICHIE
+          if (NS_SUCCEEDED(rv) && prefs)
+  				  prefs->CopyCharPref(prefString, &mcOutgoingMimeType);
+        }
+
 				PR_Free(prefString);
 			}
 			return mcOutgoingMimeType;
@@ -998,7 +1007,10 @@ JFD */
 	  m_print_setup.eol = CRLF;
 JFD */
 	  PRInt32 width = 72;
-	  PREF_GetIntPref("mailnews.wraplength", &width);
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    if (NS_SUCCEEDED(rv) && prefs) 
+  	  prefs->GetIntPref("mailnews.wraplength", &width);
 	  if (width == 0) width = 72;
 	  else if (width < 10) width = 10;
 	  else if (width > 30000) width = 30000;
@@ -1650,7 +1662,9 @@ MSG_RegisterConverters (void)
 
   /* Decoders from mimejul.c for text/calendar */
   PRBool handle_calendar_mime = PR_TRUE;
-  PREF_GetBoolPref("calendar.handle_text_calendar_mime_type", &handle_calendar_mime);
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  if (NS_SUCCEEDED(rv) && prefs) 
+    prefs->GetBoolPref("calendar.handle_text_calendar_mime_type", &handle_calendar_mime);
   if (handle_calendar_mime)
   {
       NET_RegisterContentTypeConverter (TEXT_CALENDAR, FO_PRESENT,
@@ -1968,6 +1982,9 @@ static int mime_encoder_output_fn (const char *buf, PRInt32 size, void *closure)
 int
 MSG_DeliverMimeAttachment::PickEncoding (const char *charset)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
   // use the boolean so we only have to test for uuencode vs base64 once
   PRBool needsB64 = PR_FALSE;
   PRBool forceB64 = PR_FALSE;
@@ -1977,7 +1994,8 @@ MSG_DeliverMimeAttachment::PickEncoding (const char *charset)
 
   /* Allow users to override our percentage-wise guess on whether
 	 the file is text or binary */
-  PREF_GetBoolPref ("mail.file_attach_binary", &forceB64);
+  if (NS_SUCCEEDED(rv) && prefs) 
+    prefs->GetBoolPref ("mail.file_attach_binary", &forceB64);
 
   if (forceB64 || mime_type_requires_b64_p (m_type))
 	{
@@ -3012,6 +3030,9 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 									const char *charset,
 									nsMsgDeliverMode deliver_mode)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
 	int size = 0;
 	char *buffer = 0, *buffer_tail = 0;
 	PRBool isDraft = deliver_mode == nsMsgSaveAsDraft ||
@@ -3080,8 +3101,10 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 		{
 			PRInt32 receipt_header_type = 0;
 
-			PREF_GetIntPref("mail.receipt.request_header_type",
-						  &receipt_header_type);
+			NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+      if (NS_SUCCEEDED(rv) && prefs) 
+    	  prefs->GetIntPref("mail.receipt.request_header_type", &receipt_header_type);
+
 			// 0 = MDN Disposition-Notification-To: ; 1 = Return-Receipt-To: ; 2 =
 			// both MDN DNT & RRT headers
 			if (receipt_header_type == 1) {
@@ -3203,7 +3226,10 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 	{
 		PRBool bUseXSender = PR_FALSE;
 
-		PREF_GetBoolPref("mail.use_x_sender", &bUseXSender);
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    if (NS_SUCCEEDED(rv) && prefs) 
+  	  prefs->GetBoolPref("mail.use_x_sender", &bUseXSender);
+
 		if (bUseXSender) {
 			char *convbuf;
 			char tmpBuffer[256];
@@ -3215,7 +3241,9 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 
 			PUSH_STRING("\"");
 
-			PREF_GetCharPref("mail.identity.username", tmpBuffer, &bufSize);
+      NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+      if (NS_SUCCEEDED(rv) && prefs) 
+  	    prefs->GetCharPref("mail.identity.username", tmpBuffer, &bufSize);
 			convbuf = INTL_EncodeMimePartIIStr((char *)tmpBuffer, charset,
 										mime_headers_use_quoted_printable_p);
 			if (convbuf) {     /* MIME-PartII conversion */
@@ -3227,7 +3255,8 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 
 			PUSH_STRING("\" <");
 
-			PREF_GetCharPref("mail.smtp_name", tmpBuffer, &bufSize);
+      if (NS_SUCCEEDED(rv) && prefs) 
+  	    prefs->GetCharPref("mail.smtp_name", tmpBuffer, &bufSize);
 			convbuf = INTL_EncodeMimePartIIStr((char *)tmpBuffer, charset,
 											mime_headers_use_quoted_printable_p);
 			if (convbuf) {     /* MIME-PartII conversion */
@@ -3239,7 +3268,8 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 
 			PUSH_STRING ("@");
 
-			PREF_GetCharPref("network.hosts.smtp_server", tmpBuffer, &bufSize);
+      if (NS_SUCCEEDED(rv) && prefs) 
+  	    prefs->GetCharPref("network.hosts.smtp_server", tmpBuffer, &bufSize);
 			convbuf = INTL_EncodeMimePartIIStr((char *)tmpBuffer, charset,
 											mime_headers_use_quoted_printable_p);
 			if (convbuf) {     /* MIME-PartII conversion */
@@ -3307,9 +3337,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 	}
 
 
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
-
+  NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
 	if (NS_SUCCEEDED(rv) && pNetService)
 	{
 		nsString aNSStr;
@@ -3809,6 +3837,9 @@ static char * mime_generate_attachment_headers (const char *type, const char *en
 								  MSG_DeliverMimeAttachment * /*ma*/,
 								  const char *charset)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+
 	PRInt32 buffer_size = 2048 + (base_url ? 2*PL_strlen(base_url) : 0);
 	char *buffer = (char *) PR_Malloc (buffer_size);
 	char *buffer_tail = buffer;
@@ -3859,7 +3890,8 @@ static char * mime_generate_attachment_headers (const char *type, const char *en
 	}
 
 	PRInt32 parmFolding = 0;
-	PREF_GetIntPref("mail.strictly_mime.parm_folding", &parmFolding);
+  if (NS_SUCCEEDED(rv) && prefs) 
+    prefs->GetIntPref("mail.strictly_mime.parm_folding", &parmFolding);
 
 #ifdef EMIT_NAME_IN_CONTENT_TYPE
 	if (real_name && *real_name) {
@@ -3901,7 +3933,9 @@ static char * mime_generate_attachment_headers (const char *type, const char *en
 		char *period = PL_strrchr(real_name, '.');
 		PRInt32 pref_content_disposition = 0;
 
-		PREF_GetIntPref("mail.content_disposition_type", &pref_content_disposition);
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    if (NS_SUCCEEDED(rv) && prefs) 
+  	  prefs->GetIntPref("mail.content_disposition_type", &pref_content_disposition);
 		PUSH_STRING ("Content-Disposition: ");
 
 		if (pref_content_disposition == 1)
@@ -3973,7 +4007,8 @@ static char * mime_generate_attachment_headers (const char *type, const char *en
 		/* rhp - Put in a pref for using Content-Location instead of Content-Base.
 			     This will get tweaked to default to true in 5.0
 		*/
-		PREF_GetBoolPref("mail.use_content_location_on_send", &useContentLocation);
+    if (NS_SUCCEEDED(rv) && prefs) 
+      prefs->GetBoolPref("mail.use_content_location_on_send", &useContentLocation);
 
 		if (useContentLocation)
 			PUSH_STRING ("Content-Location: \"");
@@ -4114,6 +4149,8 @@ msg_make_filename_qtext(const char *srcText, PRBool stripCRLFs)
 static void
 msg_pick_real_name (MSG_DeliverMimeAttachment *attachment, const char *charset)
 {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
   const char *s, *s2;
   char *s3;
   char *url;
@@ -4185,7 +4222,8 @@ msg_pick_real_name (MSG_DeliverMimeAttachment *attachment, const char *charset)
   nsUnescape (attachment->m_real_name);
 
   PRInt32 parmFolding = 0;
-  PREF_GetIntPref("mail.strictly_mime.parm_folding", &parmFolding);
+  if (NS_SUCCEEDED(rv) && prefs) 
+    prefs->GetIntPref("mail.strictly_mime.parm_folding", &parmFolding);
 
   if (parmFolding == 0 || parmFolding == 1)
   {
@@ -5826,17 +5864,21 @@ char *
 nsMsgSendMimeDeliveryState::GetOnlineFolderName(PRUint32 flag, const char
 											   **pDefaultName)
 {
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
 	char *onlineFolderName = NULL;
 
 	switch (flag)
 	{
 	case MSG_FOLDER_FLAG_DRAFTS:
 		if (pDefaultName) *pDefaultName = DRAFTS_FOLDER_NAME;
-		PREF_CopyCharPref ("mail.default_drafts", &onlineFolderName);
+    if (NS_SUCCEEDED(rv) && prefs) 
+      prefs->CopyCharPref ("mail.default_drafts", &onlineFolderName);
 		break;
 	case MSG_FOLDER_FLAG_TEMPLATES:
 		if (pDefaultName) *pDefaultName = TEMPLATES_FOLDER_NAME;
-		PREF_CopyCharPref("mail.default_templates", &onlineFolderName);
+    if (NS_SUCCEEDED(rv) && prefs) 
+      prefs->CopyCharPref("mail.default_templates", &onlineFolderName);
 		break;
 	case MSG_FOLDER_FLAG_SENTMAIL:
 		if (pDefaultName) *pDefaultName = SENT_FOLDER_NAME;
