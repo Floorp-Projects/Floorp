@@ -468,7 +468,8 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
 
 nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 {
-  return GetDatabaseWOReparse(getter_AddRefs(mDatabase));
+  nsCOMPtr <nsIMsgDatabase> msgDB;
+  return GetDatabaseWOReparse(getter_AddRefs(msgDB));
 }
 
 //we treat failure as null db returned
@@ -679,10 +680,11 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
 NS_IMETHODIMP
 nsMsgLocalMailFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
-  nsresult rv = GetDatabaseWOReparse(getter_AddRefs(mDatabase));
+  nsCOMPtr <nsIMsgDatabase> msgDB;
+  nsresult rv = GetDatabaseWOReparse(getter_AddRefs(msgDB));
 
   if(NS_SUCCEEDED(rv))
-    return mDatabase->EnumerateMessages(result);
+    return msgDB->EnumerateMessages(result);
   return rv;
 }
 
@@ -1492,7 +1494,8 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
   }
   else
   {   
-      rv = GetDatabaseWOReparse(getter_AddRefs(mDatabase));
+      nsCOMPtr <nsIMsgDatabase> msgDB;
+      rv = GetDatabaseWOReparse(getter_AddRefs(msgDB));
       if(NS_SUCCEEDED(rv))
       {
           nsCOMPtr<nsISupports> msgSupport;

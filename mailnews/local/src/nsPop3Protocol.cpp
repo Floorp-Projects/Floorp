@@ -3434,7 +3434,7 @@ nsPop3Protocol::CommitState(PRBool remove_last_entry)
       m_pop3ConData->newuidl && m_pop3ConData->newuidl->nentries > 0) 
     {  
       PRBool val = PL_HashTableRemove (m_pop3ConData->newuidl, info->uidl);
-      PR_ASSERT(val);
+      NS_ASSERTION(val, "uidl not in hash table");
     }
   }
   
