@@ -22,7 +22,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = widget scribble
+ifdef ENABLE_TESTS
+DIRS = scribble widget
+endif
 
 include $(topsrcdir)/config/config.mk
 
