@@ -434,7 +434,11 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
   if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type ||
       NS_FORM_INPUT_FILE == type) {
     nsIFormControlFrame* formControlFrame = nsnull;
-    GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+
+    // No need to flush here, if there's no frame created for this
+    // input yet, there won't be a value in it (that we don't already
+    // have) even if we force it to be created
+    GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
     if (formControlFrame) {
       formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
@@ -509,7 +513,11 @@ nsHTMLInputElement::SetValueSecure(const nsAReadableString& aValue,
     }
 
     nsIFormControlFrame* formControlFrame = nsnull;
-    GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+
+    // No need to flush here, if there's no frame at this point we
+    // don't need to force creation of one just to tell it about this
+    // new value.
+    GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
     if (formControlFrame) {
       nsCOMPtr<nsIPresContext> presContext;
@@ -546,7 +554,9 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
   nsAutoString value; value.AssignWithConversion("0");
   nsIFormControlFrame* formControlFrame = nsnull;
 
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+  // No need to flush here, if there's no frame created for this input
+  // yet, we know our own checked state.
+  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
   if (formControlFrame) {
     formControlFrame->GetProperty(nsHTMLAtoms::checked, value);
@@ -601,7 +611,11 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
   GetPresContext(this, getter_AddRefs(presContext));
 
   nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+
+  // No need to flush here since if there's no frame for this input at
+  // this point we don't care about creating one, once it's created
+  // the frame will do the right thing.
+  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
   if (formControlFrame) {
     // the value is being toggled
@@ -1556,18 +1570,13 @@ nsHTMLInputElement::GetControllers(nsIControllers** aResult)
 NS_IMETHODIMP
 nsHTMLInputElement::GetTextLength(PRInt32* aTextLength)
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+  nsAutoString val;
 
-  if (formControlFrame) {
-    nsCOMPtr<textControlPlace>
-      textControlFrame(do_QueryInterface(formControlFrame));
+  nsresult rv = GetValue(val);
 
-    if (textControlFrame)
-      textControlFrame->GetTextLength(aTextLength);
-  }
+  *aTextLength = val.Length();
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
