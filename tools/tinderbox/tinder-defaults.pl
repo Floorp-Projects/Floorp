@@ -68,8 +68,8 @@ $BinaryName = 'mozilla-bin';
 
 #
 # For embedding app, use:
-$EmbedBinaryName = 'gtkEmbed';
-$EmbedDistDir    = 'dist/Embed'
+$EmbedBinaryName = 'TestGtkEmbed';
+$EmbedDistDir    = 'dist/bin'
 
 
 $ShellOverride = ''; # Only used if the default shell is too stupid
