@@ -31,6 +31,37 @@
 #define CRLF "\015\012"     /* A CR LF equivalent string */
 
 
+// This macro can be used in a class declaration for classes that want
+// to ensure that their instance memory is zeroed.
+#define NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW \
+  void* operator new(size_t sz) {             \
+    void* rv = ::operator new(sz);            \
+    if (rv) {                                 \
+      nsCRT::zero(rv, sz);                    \
+    }                                         \
+    return rv;                                \
+  }                                           \
+  void operator delete(void* ptr) {           \
+    ::operator delete(ptr);                   \
+  }
+
+// This macro works with the next macro to declare a non-inlined
+// version of the above.
+#define NS_DECL_ZEROING_OPERATOR_NEW \
+  void* operator new(size_t sz);     \
+  void operator delete(void* ptr);
+
+#define NS_IMPL_ZEROING_OPERATOR_NEW(_class) \
+  void* _class::operator new(size_t sz) {    \
+    void* rv = ::operator new(sz);           \
+    if (rv) {                                \
+      nsCRT::zero(rv, sz);                   \
+    }                                        \
+    return rv;                               \
+  }                                          \
+  void _class::operator delete(void* ptr) {  \
+    ::operator delete(ptr);                  \
+  }
 
 /// This is a wrapper class around all the C runtime functions. 
 
