@@ -22,6 +22,7 @@
 DEPTH=..
 
 
-DIRS = src robot robot\test
+DIRS = src robot robot\test tests
+
 
 include <$(DEPTH)\config\rules.mak>
