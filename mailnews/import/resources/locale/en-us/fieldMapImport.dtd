@@ -36,7 +36,7 @@
  ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY fieldMapImport.title "Import Address Book">
-<!ENTITY fieldMapImport.width "440">
+<!ENTITY fieldMapImport.size "width: 40em; height: 30em;">
 <!ENTITY fieldMapImport.recordNumber "Imported data for Record: ">
 <!ENTITY fieldMapImport.next "Next">
 <!ENTITY fieldMapImport.next.accesskey "N">
@@ -44,9 +44,9 @@
 <!ENTITY fieldMapImport.previous.accesskey "P">
 <!ENTITY fieldMapImport.text "Use Move Up and Move Down to match the address book fields on the left to the correct data for import on the right. Uncheck items you do not want to import.">
 <!ENTITY fieldMapImport.up "Move Up">
-<!ENTITY fieldMapImport.up.accesskey "M">
+<!ENTITY fieldMapImport.up.accesskey "U">
 <!ENTITY fieldMapImport.down "Move Down">
-<!ENTITY fieldMapImport.down.accesskey "o">
+<!ENTITY fieldMapImport.down.accesskey "D">
 <!ENTITY fieldMapImport.fieldListTitle "Address Book fields">
 <!ENTITY fieldMapImport.dataTitle "Record data to import">
 

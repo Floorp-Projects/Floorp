@@ -36,33 +36,27 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/fieldMapImport.dtd">
 
-
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/fieldMapImport.dtd">
-
-
-<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        buttons="accept,cancel"
         title="&fieldMapImport.title;"
-        class="dialog"
-        width="&fieldMapImport.width;"
-        onload="OnLoadFieldMapImport()">
+        style="&fieldMapImport.size;"
+        ondialogaccept="FieldImportOKButton();"
+        onload="OnLoadFieldMapImport();">
 
   <script type="application/x-javascript" src="chrome://messenger/content/fieldMapImport.js"/>
 
-  <keyset id="dialogKeys"/>
-
-  <hbox>
+  <hbox align="center">
     <label value="&fieldMapImport.recordNumber;"/>
     <label id="recordNumber"/>
     <spacer flex="1"/>
-    <button id="previous" oncommand="OnPreviousRecord()"
+    <button id="previous" oncommand="Browse(-1);"
             label="&fieldMapImport.previous;"
             accesskey="&fieldMapImport.previous.accesskey;"/>
-    <button id="next" oncommand="OnNextRecord()" 
+    <button id="next" oncommand="Browse(1);" 
             label="&fieldMapImport.next;"
             accesskey="&fieldMapImport.next.accesskey;"/>      
   </hbox>
@@ -72,21 +66,12 @@
   <separator class="thin"/>
 
   <!-- field list -->
-  <hbox>
-    <vbox>
-      <spacer flex="50%"/>
-      <button id="upButton" label="&fieldMapImport.up;"
-              accesskey="&fieldMapImport.up.accesskey;"
-              oncommand="moveUpListItem();"/>
-      <button id="downButton" label="&fieldMapImport.down;"
-              accesskey="&fieldMapImport.down.accesskey;"
-              oncommand="moveDownListItem();"/>
-      <spacer flex="50%"/>
-    </vbox>
-    <listbox id="fieldList" flex="1" onclick="itemSelected();">
+  <hbox flex="1">
+    <listbox id="fieldList" flex="1" onselect="disableMoveButtons();"
+             onclick="itemClicked(event);">
       <listcols>
-        <listcol flex="35%"/>
-        <listcol flex="65%"/>
+        <listcol flex="7"/>
+        <listcol flex="13"/>
       </listcols>
 
       <listhead>
@@ -94,11 +79,17 @@
         <listheader id="sampleDataHeader" label="&fieldMapImport.dataTitle;"/>
       </listhead>
     </listbox>
-  </hbox>
-  
-  <separator/>
-  
-  <!-- OK & Cancel buttons -->
-  <hbox id="okCancelButtonsRight"/>
 
-</window>
+    <vbox>
+      <spacer flex="1"/>
+      <button id="upButton" class="up" label="&fieldMapImport.up;"
+              accesskey="&fieldMapImport.up.accesskey;"
+              oncommand="moveItem(true);"/>
+      <button id="downButton" class="down" label="&fieldMapImport.down;"
+              accesskey="&fieldMapImport.down.accesskey;"
+              oncommand="moveItem(false);"/>
+      <spacer flex="1"/>
+    </vbox>
+  </hbox>
+
+</dialog>
