@@ -118,8 +118,34 @@ which will be used to compare against the type's of the objects being logged.
 For example:
 <blockquote>env XPCOM_MEM_LOG_CLASSES=nsWebShell XPCOM_MEM_REFCNT_LOG=1
 ./apprunner</blockquote>
+
 will show you just the AddRef/Release calls to instances of nsWebShell
-while running apprunner.</blockquote>
+while running apprunner.Note that setting XPCOM_MEM_LOG_CLASSES will
+also list the <i>serial number</i> of each object that leaked in the
+"bloat log" (that is, the file specified by the XPCOM_MEM_BLOAT_LOG
+variable). An object's serial number is simply a unique number,
+starting at one, that is assigned to the object when it is allocated.
+</blockquote>
+</blockquote>
+
+You may use an object's serial number with the following variable to
+further restrict the reference count tracing:
+
+<blockquote>XPCOM_MEM_LOG_OBJECTS</blockquote>
+
+<blockquote>
+<blockquote>Set this variable to a comma-separated list of object
+<i>serial number</i>. When this is set, along with
+XPCOM_MEM_LOG_CLASSES and XPCOM_MEM_REFCNT_LOG, a stack track will be
+generated for <em>only</em> the specific objects that you list. For
+example,
+
+<blockquote>env XPCOM_MEM_LOG_CLASSES=nsWebShell XPCOM_MEM_LOG_OBJECTS=2 XPCOM_MEM_REFCNT_LOG=1
+./apprunner</blockquote>
+
+will dump stack traces to the console for the 2nd
+<code>nsWebShell</code> object that gets allocated, and nothing else.
+</blockquote>
 </blockquote>
 
 <hr WIDTH="100%">
