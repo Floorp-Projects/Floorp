@@ -83,6 +83,8 @@ nsWindow::nsWindow()
   mIsDestroyingWindow = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
   mFont = nsnull;
+  
+  m_nsIMenuBar = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -96,6 +98,7 @@ nsWindow::~nsWindow()
   if (nsnull != mShell) {
     Destroy();
   }
+  NS_IF_RELEASE(m_nsIMenuBar);
 }
 
 PRBool nsWindow::IsChild() const
@@ -143,6 +146,8 @@ NS_METHOD nsWindow::RemoveTooltips()
 
 NS_METHOD nsWindow::Destroy()
 {
+  NS_IF_RELEASE(m_nsIMenuBar);
+
   // Call base class first... we need to ensure that upper management
   // knows about the close so that if this is the main application
   // window, for example, the application will exit as it should.
@@ -165,7 +170,7 @@ gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
 {
   win->SetIsDestroying( PR_TRUE );
   win->Destroy();
-  return PR_TRUE;
+  return TRUE;
 }
 
 NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
@@ -545,6 +550,10 @@ PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 {
+  NS_IF_RELEASE(m_nsIMenuBar);
+  m_nsIMenuBar = aMenuBar;
+  NS_IF_ADDREF(m_nsIMenuBar);
+  
   GtkWidget *menubar;
   void *voidData;
   aMenuBar->GetNativeData(voidData);

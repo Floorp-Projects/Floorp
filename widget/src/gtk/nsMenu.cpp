@@ -99,7 +99,10 @@ nsMenu::nsMenu() : nsIMenu()
 //-------------------------------------------------------------------------
 nsMenu::~nsMenu()
 {
+  g_print("nsMenu::~nsMenu called\n");
   NS_IF_RELEASE(mListener);
+  // Free our menu items
+  //RemoveAll();
 }
 
 //-------------------------------------------------------------------------
@@ -115,6 +118,7 @@ NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
     if(menubar)
     {
       mMenuBarParent = menubar;
+      NS_RELEASE(menubar);
     }
     else
     {
@@ -123,6 +127,7 @@ NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
       if(menu)
       {
         mMenuParent = menu;
+	NS_RELEASE(menu);
       }
     }
   }
