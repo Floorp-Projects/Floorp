@@ -1694,30 +1694,32 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
 NS_IMETHODIMP
 nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
 {
-    NS_ENSURE_ARG(inFile);
-    NS_ENSURE_ARG_POINTER(_retval);
-   
-    nsXPIDLCString inPath;
-    nsresult rv;
-    
     *_retval = PR_FALSE;
-
-    if (NS_FAILED(rv = inFile->GetPath(getter_Copies(inPath))))
-        return rv;
+       
+    char* myFilePath;
+    if ( NS_FAILED(GetTarget(&myFilePath)))
+        GetPath(&myFilePath);
     
-    size_t len = strlen(mPath);   
- 
-    if ( strncmp( mPath, inPath, len) == 0)
+    PRInt32 myFilePathLen = strlen(myFilePath);
+    
+    char* inFilePath;
+    if ( NS_FAILED(inFile->GetTarget(&inFilePath)))
+        inFile->GetPath(&inFilePath);
+
+    if ( strncmp( myFilePath, inFilePath, myFilePathLen) == 0)
     {
         // now make sure that the |inFile|'s path has a trailing
         // separator.
 
-        if (inPath[len] == '\\')
+        if (inFilePath[myFilePathLen] == '\\')
         {
             *_retval = PR_TRUE;
         }
 
     }
+        
+    nsAllocator::Free(inFilePath);
+    nsAllocator::Free(myFilePath);
 
     return NS_OK;
 }
