@@ -1099,7 +1099,7 @@ static int HandleRemoteArguments(int argc, char* argv[], PRBool *aArgUsed)
       // was there a window not running?
       if (!success) {
         PR_fprintf(PR_STDERR, "No running window found.\n");
-        return 1;
+        return 2;
       }
       client->Shutdown();
       // success
