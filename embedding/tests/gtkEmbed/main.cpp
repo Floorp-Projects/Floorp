@@ -14,6 +14,10 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 
+#ifdef NS_TRACE_MALLOC
+#include "nsTraceMalloc.h"
+#endif
+
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 static gint  io_identifier = 0;
@@ -56,6 +60,11 @@ dump_mem_clicked_cb(GtkButton *button, nsIWebBrowserChrome *browser)
 {
   g_print("dumping memory usage:\n");
   system("ps -eo \"%c %z\" | grep gtkEmbed");
+
+#ifdef NS_TRACE_MALLOC
+  // dump detailed information, too
+  NS_TraceMallocDumpAllocations("allocations.log");
+#endif
 }
 
 
@@ -189,6 +198,10 @@ nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome)
 
 int main( int  argc,  char *argv[] )
 {
+#ifdef NS_TRACE_MALLOC
+  argc = NS_TraceMallocStartupArgs(argc, argv);
+#endif
+
   char *loadURLStr;
   if (argc > 1)
     loadURLStr = argv[1];
@@ -228,6 +241,11 @@ int main( int  argc,  char *argv[] )
 
   printf("Cleaning up embedding\n");
   NS_TermEmbedding();        
+
+#ifdef NS_TRACE_MALLOC
+  NS_TraceMallocShutdown();
+#endif
+
   return(0);
 }
 
