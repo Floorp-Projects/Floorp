@@ -548,7 +548,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // Finally, release the component manager last because it unloads the
     // libraries:
     NS_RELEASE2(nsComponentManagerImpl::gComponentManager, cnt);
-    NS_ASSERTION(cnt == 0, "Component Manager being held past XPCOM shutdown.");
+    NS_WARN_IF_FALSE(cnt == 0, "Component Manager being held past XPCOM shutdown.");
 
 #ifdef DEBUG
     extern void _FreeAutoLockStatics();
