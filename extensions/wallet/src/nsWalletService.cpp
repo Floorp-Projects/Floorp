@@ -220,7 +220,7 @@ nsWalletlibService::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, PRInt32 aStatus,
+nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus,
 									nsIDocumentLoaderObserver * aObserver)
 #else
 nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PRInt32 aStatus,
@@ -423,7 +423,7 @@ nsWalletlibService::OnStatusURLLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP
 #ifdef NECKO
 nsWalletlibService::OnEndURLLoad(nsIDocumentLoader* loader, 
-                               nsIChannel* channel, PRInt32 aStatus)
+                               nsIChannel* channel, nsresult aStatus)
 #else
 nsWalletlibService::OnEndURLLoad(nsIDocumentLoader* loader, 
                                nsIURI* aURL, PRInt32 aStatus)

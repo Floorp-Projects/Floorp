@@ -87,7 +87,7 @@ nsMsgStatusFeedback::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aUR
 
 
 NS_IMETHODIMP
-nsMsgStatusFeedback::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, PRInt32 aStatus,
+nsMsgStatusFeedback::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus,
 									nsIDocumentLoaderObserver * aObserver)
 {
   NS_PRECONDITION(aLoader != nsnull, "null ptr");
@@ -142,7 +142,7 @@ NS_IMETHODIMP nsMsgStatusFeedback::OnStatusURLLoad(nsIDocumentLoader* loader, ns
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgStatusFeedback::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus)
+NS_IMETHODIMP nsMsgStatusFeedback::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus)
 {
 	return NS_OK;
 }

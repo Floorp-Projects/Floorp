@@ -105,7 +105,7 @@ public:
 #ifndef NECKO
     NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,nsIDocumentLoaderObserver * aObserver){return NS_OK;}
 #else
-    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus,nsIDocumentLoaderObserver * aObserver){return NS_OK;}
+    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus,nsIDocumentLoaderObserver * aObserver){return NS_OK;}
 #endif // NECKO
 
 #ifndef NECKO
@@ -129,7 +129,7 @@ public:
 #ifndef NECKO
     NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus);
 #else
-    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus);
+    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
 #endif // NECKO
 
 #ifndef NECKO
@@ -751,7 +751,7 @@ DocumentViewerImpl::OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
  */
 NS_IMETHODIMP 
 #ifdef NECKO
-DocumentViewerImpl::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus)
+DocumentViewerImpl::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus)
 #else
 DocumentViewerImpl::OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus)
 #endif // NECKO
