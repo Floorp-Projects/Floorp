@@ -140,9 +140,13 @@ nsLocalMoveCopyMsgTxn::Undo()
                                                    getter_AddRefs(newHdr));
                 if (NS_SUCCEEDED(rv))
                     srcDB->UndoDelete(newHdr);
+                srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
             }
             if (oldHdr)
+            {
                 rv = dstDB->DeleteHeader(oldHdr, nsnull, PR_TRUE, PR_TRUE);
+                dstDB->Commit(nsMsgDBCommitType::kLargeCommit);
+            }
         }
     }
     return rv;
@@ -175,9 +179,13 @@ nsLocalMoveCopyMsgTxn::Redo()
                                                    getter_AddRefs(newHdr));
                 if (NS_SUCCEEDED(rv))
                     dstDB->UndoDelete(newHdr);
+                dstDB->Commit(nsMsgDBCommitType::kLargeCommit);
             }
             if (m_isMove && oldHdr)
+            {
                 rv = srcDB->DeleteHeader(oldHdr, nsnull, PR_TRUE, PR_TRUE);
+                srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
+            }
         }
     }
     return rv;

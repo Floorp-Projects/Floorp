@@ -1166,13 +1166,17 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
       if(NS_SUCCEEDED(rv))
       {
           PRUint32 messageCount;
+          nsCOMPtr<nsIMessage> message;
+          nsCOMPtr<nsISupports> msgSupport;
           rv = messages->Count(&messageCount);
           if (NS_FAILED(rv)) return rv;
           for(PRUint32 i = 0; i < messageCount; i++)
           {
-			  nsCOMPtr<nsIMessage> message = getter_AddRefs((nsIMessage*)messages->ElementAt(i));
-              if(message)
+              msgSupport = getter_AddRefs(messages->ElementAt(i));
+              if (msgSupport)
               {
+                message = do_QueryInterface(msgSupport, &rv);
+                if(message)
                   DeleteMessage(message, txnMgr, PR_TRUE);
               }
           }
@@ -1624,8 +1628,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 			rv = GetDatabase();
 
 		if(NS_SUCCEEDED(rv))
+    {
 			rv = mDatabase->CopyHdrFromExistingHdr(mCopyState->m_curDstKey, msgDBHdr,
                                              getter_AddRefs(newHdr));
+      mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+    }
     if (NS_SUCCEEDED(rv) && mCopyState->m_undoMsgTxn)
     {
       nsCOMPtr<nsLocalMoveCopyMsgTxn>
