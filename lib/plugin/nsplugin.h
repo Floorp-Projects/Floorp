@@ -317,6 +317,7 @@ struct NPPort {
 #define getFocusEvent           (osEvt + 16)
 #define loseFocusEvent          (osEvt + 17)
 #define adjustCursorEvent       (osEvt + 18)
+#define menuCommandEvent		(osEvt + 19)
 
 #endif /* XP_MAC */
 
@@ -765,6 +766,10 @@ public:
     NS_IMETHOD_(void)
     UnregisterWindow(void* window) = 0;
 
+	// Menu ID allocation calls for Mac:
+
+    NS_IMETHOD_(PRInt16)
+	AllocateMenuID(PRBool isSubmenu) = 0;
 };
 
 #define NP_IPLUGININSTANCEPEER_IID                   \
