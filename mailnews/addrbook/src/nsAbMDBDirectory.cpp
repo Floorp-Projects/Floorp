@@ -78,8 +78,6 @@ nsAbMDBDirectory::nsAbMDBDirectory(void):
 
 nsAbMDBDirectory::~nsAbMDBDirectory(void)
 {
-  nsresult rv = NS_OK;
-
   if (mDatabase) {
     mDatabase->RemoveListener(this);
   }
