@@ -24,6 +24,10 @@ html {
   display: block;
 }
 
+text,spring {
+  display: inline;
+}
+
 /**
  * Hide the content, but don't destroy the frames. 
  * DO NOT USE "_collapsed" IN YOUR XUL! 
@@ -138,6 +142,7 @@ scrollbox {
 
 arrowscrollbox {
   -moz-binding: url(chrome://global/content/xulBindings.xml#arrowscrollbox);
+  display: -moz-xul-stack;
 }
 
 /******** Box *******/
