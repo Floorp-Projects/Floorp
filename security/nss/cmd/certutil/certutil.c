@@ -1669,7 +1669,7 @@ SECKEYPrivateKey *selfsignprivkey, char *issuerNickName, void *pwarg)
       caPrivateKey = selfsignprivkey;
     } else {
       /*CERTCertificate *issuer = CERT_FindCertByNickname(handle, issuerNickName);*/
-      CERTCertificate *issuer = PK11_FindCertFromNickname(issuerNickName, NULL);
+      CERTCertificate *issuer = PK11_FindCertFromNickname(issuerNickName, pwarg);
       if( (CERTCertificate *)NULL == issuer ) {
         SECU_PrintError(progName, "unable to find issuer with nickname %s", 
 	                issuerNickName);
@@ -1919,6 +1919,7 @@ CreateCert(
 	int     serialNumber, 
 	int     warpmonths,
 	int     validitylength,
+	void	*pwarg,
 	PRBool  selfsign,
 	PRBool	keyUsage, 
 	PRBool  extKeyUsage,
@@ -2585,10 +2586,15 @@ main(int argc, char **argv)
     /*  Create a certificate (-C or -S).  */
     if (certutil.commands[cmd_CreateAndAddCert].activated ||
          certutil.commands[cmd_CreateNewCert].activated) {
+	if ( certutil.options[opt_PasswordFile].arg) {
+	    pwdata.source = PW_FROMFILE;
+	    pwdata.data = certutil.options[opt_PasswordFile].arg;
+	}
 	rv = CreateCert(certHandle, 
 	                certutil.options[opt_IssuerName].arg,
 	                inFile, outFile, privkey, &pwdata,
 	                serialNumber, warpmonths, validitylength,
+			&pwdata,
 	                certutil.options[opt_SelfSign].activated,
 	                certutil.options[opt_AddKeyUsageExt].activated,
 	                certutil.options[opt_AddExtKeyUsageExt].activated,
