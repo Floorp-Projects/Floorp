@@ -91,7 +91,6 @@ protected:
 	nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
 	nsCOMPtr<nsIURI>                    mOriginalURI;
     nsLoadFlags                         mLoadAttributes;
-    nsCOMPtr<nsISupports>               mOwner;
 
     PRUint32                            mStartPosition;
     PRInt32                             mReadCount;
