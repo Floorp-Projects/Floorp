@@ -328,9 +328,9 @@ nsProgressMeterFrame::setSize(nsAutoString sizeString, int& size, PRBool& isPerc
 			v = 100;
 	}
 
-	printf("size=%d\n", v);
+	// printf("size=%d\n", v);
 
-    size = v;
+  size = v;
 }
 
 
@@ -339,18 +339,18 @@ void
 nsProgressMeterFrame::setAlignment(nsAutoString progress)
 {
     if (progress.EqualsIgnoreCase("vertical"))
-		mHorizontal = PR_FALSE;
+		  mHorizontal = PR_FALSE;
     else
-		mHorizontal = PR_TRUE;
+		  mHorizontal = PR_TRUE;
 }
 
 void
 nsProgressMeterFrame::setMode(nsAutoString mode)
 {
     if (mode.EqualsIgnoreCase("undetermined"))
-		mUndetermined = PR_TRUE;
+		  mUndetermined = PR_TRUE;
     else
-		mUndetermined = PR_FALSE;
+		  mUndetermined = PR_FALSE;
 }
 
 
@@ -376,40 +376,42 @@ nsProgressMeterFrame :: Paint ( nsIPresContext* aPresContext,
   // if we are visible then tell our superclass to paint
   nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        aWhichLayer);
+  
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND)
+  {
+    // get our border
+    const nsStyleSpacing* spacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    nsMargin border(0,0,0,0);
+    spacing->CalcBorderFor(this, border);
 
-  // get our border
-	const nsStyleSpacing* spacing =
-		(const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-	nsMargin border(0,0,0,0);
-	spacing->CalcBorderFor(this, border);
-
-	const nsStyleColor* colorStyle =
-		(const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    const nsStyleColor* colorStyle =
+      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
 
     nscolor color = colorStyle->mColor;
-		
-	// figure our twips convertion ratio
-    //	float p2t;
-    //	aPresContext->GetScaledPixelsToTwips(p2t);
-    //	nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+      
+    // figure our twips convertion ratio
+      //  float p2t;
+      //  aPresContext->GetScaledPixelsToTwips(p2t);
+      //  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
-	// figure out our rectangle
+    // figure out our rectangle
     nsRect rect(0,0,mRect.width, mRect.height);
 
-	// if its vertical then transform the coords to the X coordinate system
-	// and do our calculations there.
-	if (!mHorizontal)
-  		rect = TransformYtoX(rect);
+    // if its vertical then transform the coords to the X coordinate system
+    // and do our calculations there.
+    if (!mHorizontal)
+        rect = TransformYtoX(rect);
 
     //CalcSize(aPresContext,rect.width,rect.height);
-	rect.x = border.left;
-	rect.y = border.top;
-	rect.width -= border.left*2;
-	rect.height -= border.top*2;
+    rect.x = border.left;
+    rect.y = border.top;
+    rect.width -= border.left*2;
+    rect.height -= border.top*2;
 
-	// paint the current progress in blue
-	PaintBar(aPresContext, aRenderingContext, rect, mProgress, color);
-	
+    // paint the current progress in blue
+    PaintBar(aPresContext, aRenderingContext, rect, mProgress, color);
+	}
  
   return NS_OK;  
 } // Paint
@@ -427,14 +429,14 @@ nsProgressMeterFrame :: PaintBar ( nsIPresContext* aPresContext,
 
 	nsRect bar(rect);
 
-    if (!mUndetermined) 
+  if (!mUndetermined) 
 	{
-	  int p = (int)(bar.width*progress);
+	  nscoord p = (nscoord)(bar.width*progress);
 	  bar.width = p;
 	}
 
 	// fill the bar first then we will do the shading over it.
-    aRenderingContext.SetColor(color);
+  aRenderingContext.SetColor(color);
 
 	if (mHorizontal)
 		aRenderingContext.FillRect(bar);
@@ -444,11 +446,10 @@ nsProgressMeterFrame :: PaintBar ( nsIPresContext* aPresContext,
 	}
 
 	// draw the stripped barber shop if undetermined.
-    if (mUndetermined) 
-      PaintBarStripped(aPresContext,aRenderingContext,bar, color);
-    else 
-	  PaintBarSolid(aPresContext,aRenderingContext,bar, color, 0);
-	
+  if (mUndetermined) 
+    PaintBarStripped(aPresContext,aRenderingContext,bar, color);
+  else 
+	  PaintBarSolid(aPresContext,aRenderingContext,bar, color, 0);	
 
 }
 
@@ -478,22 +479,21 @@ PRUint8
 nsProgressMeterFrame::GetBrightness(nscolor c)
 {
      
-	    // get the biggest rgb component;
+	// get the biggest rgb component;
+  PRUint8 r = NS_GET_R(c);
+  PRUint8 g = NS_GET_G(c);
+  PRUint8 b = NS_GET_B(c);
 
-        PRUint8 r = NS_GET_R(c);
-        PRUint8 g = NS_GET_G(c);
-        PRUint8 b = NS_GET_B(c);
+	PRUint8 biggest = r;
 
-		PRUint8 biggest = r;
+	if (r > g && r > b)
+		biggest = r;
+	else if (g > r && g > b)
+		biggest = g;
+	else if (b > r && b > g)
+		biggest = b;
 
-		if (r > g && r > b)
-			biggest = r;
-		else if (g > r && g > b)
-			biggest = g;
-		else if (b > r && b > g)
-			biggest = b;
-
-       return biggest;
+  return biggest;
 }
 
 void 
@@ -501,75 +501,75 @@ nsProgressMeterFrame::PaintBarSolid(nsIPresContext* aPresContext, nsIRenderingCo
                                     const nsRect& rect, nscolor color, float skew)
 {
 
-	    // figure out a pixel size
-		float p2t;
-		aPresContext->GetScaledPixelsToTwips(&p2t);
-		nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  // figure out a pixel size
+	float p2t;
+	aPresContext->GetScaledPixelsToTwips(&p2t);
+	nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
-		// how many pixel lines will fit?
-    int segments = 0;
-    if(onePixel) {
-      segments = (rect.height/2) / onePixel;
-    } else {
-      // Zero-height rect?  Bail, don't paint.
-      return;
-    }
+	// how many pixel lines will fit?
+  int segments = 0;
+  if(onePixel) {
+    segments = (rect.height/2) / onePixel;
+  } else {
+    // Zero-height rect?  Bail, don't paint.
+    return;
+  }
 
-		// get the skew in pixels;
-		int skewedPixels = int(skew * onePixel);
+	// get the skew in pixels;
+	int skewedPixels = int(skew * onePixel);
 
-		// we will draw from the top to center and from the bottom to center at the same time
-		// so we need 2 rects one for the top and one for the bottom
+	// we will draw from the top to center and from the bottom to center at the same time
+	// so we need 2 rects one for the top and one for the bottom
 
-		// top.
+	// top.
 
-		nsRect tr(rect);
-		tr.height= onePixel;
+	nsRect tr(rect);
+	tr.height= onePixel;
 
-		// bottom
-		nsRect br(rect);
-		br.height = onePixel;
-		br.y = rect.y + 2*segments*onePixel;
-	    br.x = rect.x + 2*segments*skewedPixels;
+	// bottom
+	nsRect br(rect);
+	br.height = onePixel;
+	br.y = rect.y + 2*segments*onePixel;
+    br.x = rect.x + 2*segments*skewedPixels;
 
-		// get the brightness of the color
-		PRUint8 brightness = GetBrightness(color);
+	// get the brightness of the color
+	PRUint8 brightness = GetBrightness(color);
 
-		// we need to figure out how bright we can get.
-    PRUint8 units = 0;
-    if(segments) {
-      units = (255 - brightness)/segments;
-    } else {
-      // Divide-by-zero case, zero-height rect?
-      units = 0;
-    }
+	// we need to figure out how bright we can get.
+  PRUint8 units = 0;
+  if(segments) {
+    units = (255 - brightness)/segments;
+  } else {
+    // Divide-by-zero case, zero-height rect?
+    units = 0;
+  }
 
-		// get a color we can set
-		nscolor c(color);
+	// get a color we can set
+	nscolor c(color);
+  
+  for (int i=0; i <= segments; i++)
+  {
+    // set the color and fill the top and bottom lines
+    aRenderingContext.SetColor(c);
     
-    for (int i=0; i <= segments; i++)
-      {
-        // set the color and fill the top and bottom lines
-		    aRenderingContext.SetColor(c);
-        
-        if (mHorizontal) {
-          aRenderingContext.FillRect(tr);
-          aRenderingContext.FillRect(br);
-        } else {
-          aRenderingContext.FillRect(TransformXtoY(tr));
-          aRenderingContext.FillRect(TransformXtoY(br));
-        }
-        // brighten the color
-        c = BrightenBy(c, units);
-        
-        // move one line down
-        tr.x += skewedPixels;
-        tr.y += onePixel;
-        
-        // move one line up
-        br.y -= onePixel;
-        br.x -= skewedPixels;
-      }
+    if (mHorizontal) {
+      aRenderingContext.FillRect(tr);
+      aRenderingContext.FillRect(br);
+    } else {
+      aRenderingContext.FillRect(TransformXtoY(tr));
+      aRenderingContext.FillRect(TransformXtoY(br));
+    }
+    // brighten the color
+    c = BrightenBy(c, units);
+    
+    // move one line down
+    tr.x += skewedPixels;
+    tr.y += onePixel;
+    
+    // move one line up
+    br.y -= onePixel;
+    br.x -= skewedPixels;
+  }
 }
 
 
@@ -673,9 +673,9 @@ nsProgressMeterFrame :: Reflow ( nsIPresContext*          aPresContext,
   }
 
   if (mUndetermined)
-     gStripeAnimator->AddFrame(aPresContext, this);
+    gStripeAnimator->AddFrame(aPresContext, this);
   else 
-	 gStripeAnimator->RemoveFrame(this);
+	  gStripeAnimator->RemoveFrame(this);
 
   return nsLeafFrame::Reflow ( aPresContext, aDesiredSize, aReflowState, aStatus );
 
