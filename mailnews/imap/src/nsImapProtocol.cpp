@@ -437,15 +437,16 @@ nsImapProtocol::SetupSinkProxy()
 // running, then you should put it in Initialize(). 
 nsresult nsImapProtocol::SetupWithUrl(nsIURL * aURL, nsISupports* aConsumer)
 {
+    nsresult rv = NS_ERROR_FAILURE;
 	NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
 	if (aURL)
 	{
-        nsresult rv = aURL->QueryInterface(nsIImapUrl::GetIID(), 
+        rv = aURL->QueryInterface(nsIImapUrl::GetIID(), 
                                            (void **)&m_runningUrl);
         if (NS_FAILED(rv)) return rv;
 
         if (!m_server)
-            m_runningUrl->GetServer(getter_AddRefs(m_server));
+            rv = m_runningUrl->GetServer(getter_AddRefs(m_server));
 
 		if ( m_runningUrl && !m_transport /* and we don't have a transport yet */)
 		{
@@ -468,6 +469,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURL * aURL, nsISupports* aConsumer)
 			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register Imap instance as a consumer on the socket");
 		} // if m_runningUrl
 	} // if aUR
+    return rv;
 }
 
 
