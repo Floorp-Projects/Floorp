@@ -355,8 +355,10 @@ public class leaksoup {
 		int leftBracket = line.indexOf('[');
 		if (leftBracket == -1)
 			return line;
-		int comma = line.indexOf(',', leftBracket + 1);
 		int rightBracket = line.indexOf(']', leftBracket + 1);
+		if (rightBracket == -1)
+			return line;
+		int comma = line.indexOf(',', leftBracket + 1);
 		String macPath = line.substring(leftBracket + 1, comma);
 		String path = macPath.replace(':', '/');
 		
