@@ -20,15 +20,9 @@
  * Contributor(s): 
  */
 
-//#define USE_SHM
 
 #include <gdk/gdkx.h>
 #include <gdk/gdkprivate.h>
-#ifdef USE_SHM
-#include <sys/ipc.h>
-#include <sys/shm.h>
-#include <X11/extensions/XShm.h>
-#endif /* USE_SHM */
 #include "nsDrawingSurfaceGTK.h"
 
 NS_IMPL_ISUPPORTS2(nsDrawingSurfaceGTK, nsIDrawingSurface, nsIDrawingSurfaceGTK)
@@ -37,12 +31,6 @@ NS_IMPL_ISUPPORTS2(nsDrawingSurfaceGTK, nsIDrawingSurface, nsIDrawingSurfaceGTK)
 
 #ifdef CHEAP_PERFORMANCE_MEASUREMENT
 static PRTime mLockTime, mUnlockTime;
-#endif
-
-
-// XXX need to rewrite x11 shared image code in here, so turn it off
-#ifdef USE_SHM
-#undef USE_SHM
 #endif
 
 nsDrawingSurfaceGTK :: nsDrawingSurfaceGTK()
@@ -149,89 +137,12 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
   mLockFlags = aFlags;
 
   // Obtain an ximage from the pixmap.
-#ifdef USE_SHM
-  if (gdk_get_use_xshm())
-  {
-    if (!mImage) { // only grab a new image if we don't already have one
-      //    printf("using xshm\n");
-      //      printf("%p getting the shared image\n", this);
-      mImage = gdk_image_new(GDK_IMAGE_SHARED,
-                             gdk_rgb_get_visual(),
-                             mWidth,
-                             mHeight);
-    }
-
-    XShmGetImage(GDK_DISPLAY(),
-                 GDK_WINDOW_XWINDOW(mPixmap),
-                 GDK_IMAGE_XIMAGE(mImage),
-                 mLockX, mLockY,
-                 0xFFFFFFFF);
-  }
-  else
-  {
-#endif /* USE_SHM */
-    mImage = ::gdk_image_get(mPixmap, mLockX, mLockY, mLockWidth, mLockHeight);
-#ifdef USE_SHM
-  }
-#endif /* USE_SHM */
+  mImage = ::gdk_image_get(mPixmap, mLockX, mLockY, mLockWidth, mLockHeight);
 
   *aBits = GDK_IMAGE_XIMAGE(mImage)->data;
 
   *aWidthBytes = GDK_IMAGE_XIMAGE(mImage)->bytes_per_line;
   *aStride = GDK_IMAGE_XIMAGE(mImage)->bytes_per_line;
-
-
-#if 0
-  int bytes_per_line = GDK_IMAGE_XIMAGE(mImage)->bytes_per_line;
-
-  //
-  // All this code is a an attempt to set the stride width properly.
-  // Needs to be cleaned up alot.  For now, it will only work in the
-  // case where aWidthBytes and aStride are the same.  One is assigned to 
-  // the other.
-  // 
-
-  *aWidthBytes = mImage->bpl;
-  *aStride = mImage->bpl;
-
-  int width_in_pixels = *aWidthBytes << 8;
-
-
-  int bitmap_pad = GDK_IMAGE_XIMAGE(mImage)->bitmap_pad;
-  int depth = GDK_IMAGE_XIMAGE(mImage)->depth;
-
-#define RASWIDTH8(width, bpp) (width)
-#define RASWIDTH16(width, bpp) ((((width) * (bpp) + 15) >> 4) << 1)
-#define RASWIDTH32(width, bpp) ((((width) * (bpp) + 31) >> 5) << 2)
-
-  switch(bitmap_pad)
-    {
-    case 8:
-      *aStride = RASWIDTH8(aWidth,bitmap_pad);
-      break;
-
-    case 16:
-      *aStride = bytes_per_line;
-      *aStride = RASWIDTH16(aWidth,bitmap_pad);
-      break;
-
-    case 32:
-      *aStride = bytes_per_line;
-      *aStride = RASWIDTH32(aWidth,bitmap_pad);
-      break;
-
-    default:
-
-      NS_ASSERTION(nsnull,"something got screwed");
-
-    }
-
-  *aStride = (*aWidthBytes) + ((bitmap_pad >> 3) - 1);
-
-  GDK_IMAGE_XIMAGE(mImage)->bitmap_pad;
-
-  *aWidthBytes = mImage->bpl;
-#endif
 
 #ifdef CHEAP_PERFORMANCE_MEASUREMENT
   //  MOZ_TIMER_STOP(mLockTime);
@@ -276,18 +187,9 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
                    mLockWidth, mLockHeight);
   }
 
-  // don't destroy the image if we are shared... it will be destroyed by release if they really want it to go away, otherwise save it.
-#ifdef USE_SHM
-  if (!gdk_get_use_xshm()) {
-#endif
-
-    if (mImage)
-      ::gdk_image_destroy(mImage);
-    mImage = nsnull;
-
-#ifdef USE_SHM
-  }
-#endif
+  if (mImage)
+    ::gdk_image_destroy(mImage);
+  mImage = nsnull;
 
   mLocked = PR_FALSE;
 
@@ -338,6 +240,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
   mWidth  = ((GdkWindowPrivate*)aDrawable)->width;
   mHeight = ((GdkWindowPrivate*)aDrawable)->height;
 
+  // XXX was i smoking crack when i wrote this comment?
   // this is definatly going to be on the screen, as it will be the window of a
   // widget or something.
   mIsOffscreen = PR_FALSE;
@@ -374,6 +277,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
   return NS_OK;
 }
 
+/* inline */
 PRUint8 
 nsDrawingSurfaceGTK::ConvertMaskToCount(unsigned long val)
 {
