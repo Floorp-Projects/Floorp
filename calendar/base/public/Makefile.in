@@ -53,4 +53,6 @@ XPIDLSRCS	= calIDateTime.idl   \
 		  calIICSService.idl \
 		  $(NULL)
 
+EXPORTS		= calBaseCID.h
+
 include $(topsrcdir)/config/rules.mk

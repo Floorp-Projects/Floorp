@@ -58,8 +58,6 @@ REQUIRES = \
 	ical \
 	calbase
 
-EXPORTS = calBaseCID.h
-
 CPPSRCS = calBaseModule.cpp \
 	$(NULL)
 
