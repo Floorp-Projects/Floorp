@@ -11303,7 +11303,7 @@ void CEditBuffer::PositionCaret(int32 x, int32 y) {
 // This is static so all windows may share current drag table data
 EDT_DragTableData* CEditBuffer::m_pDragTableData = NULL;
 
-XP_Bool CEditBuffer::StartDragTable(int32 /*x*/, int32 /*y*/)
+XP_Bool CEditBuffer::StartDragTable(int32 x, int32 y)
 {
     if( !m_pDragTableData )
     {
@@ -11311,6 +11311,11 @@ XP_Bool CEditBuffer::StartDragTable(int32 /*x*/, int32 /*y*/)
     }
     if( m_pDragTableData )
     {
+        m_pDragTableData->X = x;
+        m_pDragTableData->Y = y;
+        m_pDragTableData->iWidth = 0;
+        m_pDragTableData->iHeight = 0;
+
         m_pDragTableData->iSourceType = GetTableSelectionType(); //m_TableHitType;
         // Initialize data for possible dragging
         // This is used by PositionDropCaret()
@@ -11461,9 +11466,11 @@ XP_Bool CEditBuffer::PositionDropCaret(int32 x, int32 y)
         // We can't drop inside the table being dragged
 
         // Get where user is currently dragging over
-        int32 iWidth = 0;
-        int32 iHeight = 0;
+        //int32 iWidth = 0;
+        //int32 iHeight = 0;
         LO_Element *pLoCell;
+        m_pDragTableData->X = x;
+        m_pDragTableData->Y = y;
         ED_DropType iDropType = GetTableDropRegion(&m_pDragTableData->X, &m_pDragTableData->Y, 
                                                    &m_pDragTableData->iWidth, &m_pDragTableData->iHeight, 
                                                    &pLoCell);
@@ -15713,8 +15720,7 @@ ED_DropType CEditBuffer::GetTableDropRegion(int32 *pX, int32 *pY, int32 *pWidth,
   
     lo_GetLineEnds(m_pContext, state, line, &pLoElement, &pEndLoElement);
 
-	while (pLoElement != pEndLoElement)
-	{
+	do {
 		if (pLoElement->type == LO_TABLE)
 		{
             // Save table if Y value is ANYWHERE inside the table
@@ -15778,8 +15784,12 @@ ED_DropType CEditBuffer::GetTableDropRegion(int32 *pX, int32 *pY, int32 *pWidth,
                 break;
 		    }
         }
+        // We're done after processing last element on the line
+        if( pLoElement == pEndLoElement )
+            break;
 		pLoElement = pLoElement->lo_any.next;
 	}
+    while ( pLoElement != 0 );
 
     if( pTableElement && pCellElement )
     {
