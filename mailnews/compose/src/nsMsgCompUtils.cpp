@@ -907,7 +907,9 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
 		char *period = PL_strrchr(real_name, '.');
 		PRInt32 pref_content_disposition = 0;
 
-    prefs->GetIntPref("mail.content_disposition_type", &pref_content_disposition);
+        rv = prefs->GetIntPref("mail.content_disposition_type", &pref_content_disposition);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get mail.content_disposition_type");
+
 		PUSH_STRING ("Content-Disposition: ");
 
 		if (pref_content_disposition == 1)
