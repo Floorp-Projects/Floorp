@@ -9,12 +9,12 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  * 
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- * 
+ * The Original Code is Rhino code, released
+ * May 6, 1999.
+ *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributor(s):

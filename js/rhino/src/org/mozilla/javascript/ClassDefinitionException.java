@@ -12,7 +12,7 @@
  * rights and limitations under the License.
  *
  * The Original Code is Rhino code, released
- * May 6, 1998.
+ * May 6, 1999.
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
