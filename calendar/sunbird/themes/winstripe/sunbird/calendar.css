@@ -238,6 +238,22 @@
   list-style-image: url('chrome://calendar/content/sunbird_small.png');
 }
 
+/*--------------------------------------------------------------------
+ *   Calendar area navigation buttons
+ *-------------------------------------------------------------------*/
+
+.prevnextbuttons {
+	list-style-image: url("chrome://calendar/skin/prevnextarrow.png");
+	margin: 5px 15px;
+	cursor: pointer;
+}
+
+.updownbuttons {
+	list-style-image: url("chrome://calendar/skin/pageupdown.png");
+	margin: 5px 5px;
+	cursor: pointer;
+}
+
 /*
 *****************************
  MultiWeek
@@ -300,52 +316,50 @@
 }
 
 /*Previous/Next Buttons*/
-.updownbuttons{
-    list-style-image: url("chrome://calendar/skin/pageupdown.png");
-}
-#multiweek-next-button{
+
+#multiweek-next-button {
     -moz-box-align:end;
-    -moz-image-region: rect(120px 30px 150px 0);
+    -moz-image-region: rect(82px 20px 100px 0);
     cursor:pointer;
 }
-#multiweek-next-button:hover{
-    -moz-image-region: rect(120px 60px 150px 30px);
+#multiweek-next-button:hover {
+    -moz-image-region: rect(82px 40px 100px 20px);
 }
-#multiweek-next-button:hover:active{
-    -moz-image-region: rect(120px 90px 150px 60px);
+#multiweek-next-button:hover:active {
+    margin: 6px 4px 4px 6px;
 }
-#multiweek-previous-button{
+#multiweek-previous-button {
     -moz-box-align:start;
-    -moz-image-region: rect(90px 30px 120px 0);
+    -moz-image-region: rect(64px 20px 82px 0);
     cursor:pointer;
 }
-#multiweek-previous-button:hover{
-    -moz-image-region: rect(90px 60px 120px 30px);
+#multiweek-previous-button:hover {
+    -moz-image-region: rect(64px 40px 82px 20px);
 }
-#multiweek-previous-button:hover:active{
-    -moz-image-region: rect(90px 90px 120px 60px);
+#multiweek-previous-button:hover:active {
+    margin: 6px 4px 4px 6px;
 }
-#multiweek-nextpage-button{
+#multiweek-nextpage-button {
     -moz-box-align:end;
-    -moz-image-region: rect(45px 30px 90px 0);
+    -moz-image-region: rect(32px 20px 64px 0);
     cursor:pointer;
 }
-#multiweek-nextpage-button:hover{
-    -moz-image-region: rect(45px 60px 90px 30px);
+#multiweek-nextpage-button:hover {
+    -moz-image-region: rect(32px 40px 64px 20px);
 }
-#multiweek-nextpage-button:hover:active{
-    -moz-image-region: rect(45px 90px 90px 60px);
+#multiweek-nextpage-button:hover:active {
+    margin: 6px 4px 4px 6px;
 }
-#multiweek-previouspage-button{
+#multiweek-previouspage-button {
     -moz-box-align:start;
-    -moz-image-region: rect(0 30px 45px 0);
+    -moz-image-region: rect(0 20px 32px 0);
     cursor:pointer;
 }
-#multiweek-previouspage-button:hover{
-    -moz-image-region: rect(0 60px 45px 30px);
+#multiweek-previouspage-button:hover {
+    -moz-image-region: rect(0 40px 32px 20px);
 }
-#multiweek-previouspage-button:hover:active{
-    -moz-image-region: rect(0 90px 45px 60px);
+#multiweek-previouspage-button:hover:active {
+    margin: 6px 4px 4px 6px;
 }
 
 /*--------------------------------------------------------------------
@@ -456,30 +470,27 @@
 
 
 /*Previous/Next Buttons*/
-.prevnextbuttons{
-    list-style-image: url("chrome://calendar/skin/prevnextarrow.png");
-}
-#month-next-button{
+#month-next-button {
     -moz-box-align:end;
-    -moz-image-region: rect(33px 20px 66px 0);
+    -moz-image-region: rect(18px 18px 36px 0px);
     cursor:pointer;
 }
-#month-next-button:hover{
-    -moz-image-region: rect(33px 40px 66px 20px);
+#month-next-button:hover {
+    -moz-image-region: rect(18px 36px 36px 18px);
 }
-#month-next-button:hover:active{
-    -moz-image-region: rect(33px 60px 66px 40px);
+#month-next-button:hover:active {
+    margin: 6px 14px 4px 16px;
 }
-#month-previous-button{
+#month-previous-button {
     -moz-box-align:start;
-    -moz-image-region: rect(0 20px 33px 0);
+    -moz-image-region: rect(0px 18px 18px 0px);
     cursor:pointer;
 }
-#month-previous-button:hover{
-    -moz-image-region: rect(0 40px 33px 20px);
+#month-previous-button:hover {
+    -moz-image-region: rect(0px 36px 18px 18px);
 }
-#month-previous-button:hover:active{
-    -moz-image-region: rect(0 60px 33px 40px);
+#month-previous-button:hover:active {
+    margin: 6px 14px 4px 16px;
 }
 
 
@@ -705,38 +716,32 @@
  * Next and Previous buttons.
  *-------------------------------------------------------------------*/
 
-#day-next-button
-{
+#day-next-button {
     -moz-box-align:end;
-    -moz-image-region: rect(33px 20px 66px 0);
+    -moz-image-region: rect(18px 18px 36px 0px);
     cursor:pointer;
 }
 
-#day-next-button:hover
-{
-    -moz-image-region: rect(33px 40px 66px 20px);
+#day-next-button:hover {
+    -moz-image-region: rect(18px 36px 36px 18px);
 }
 
-#day-next-button:hover:active
-{
-    -moz-image-region: rect(33px 60px 66px 40px);
+#day-next-button:hover:active {
+    margin: 6px 14px 4px 16px;
 }
 
-#day-previous-button
-{
+#day-previous-button {
     -moz-box-align:start;
-    -moz-image-region: rect(0 20px 33px 0);
+    -moz-image-region: rect(0px 18px 18px 0px);
     cursor:pointer;
 }
 
-#day-previous-button:hover
-{
-    -moz-image-region: rect(0 40px 33px 20px);
+#day-previous-button:hover {
+    -moz-image-region: rect(0px 36px 18px 18px);
 }
 
-#day-previous-button:hover:active
-{
-    -moz-image-region: rect(0 60px 33px 40px);
+#day-previous-button:hover:active {
+    margin: 6px 14px 4px 16px;
 }
 
 /*--------------------------------------------------------------------
@@ -994,38 +999,32 @@
 	 min-height:	54px;
 }
 
-#week-next-button
-{
+#week-next-button {
     -moz-box-align:end;
-    -moz-image-region: rect(33px 20px 66px 0);
+    -moz-image-region: rect(18px 18px 36px 0px);
     cursor:pointer;
 }
 
-#week-next-button:hover
-{
-    -moz-image-region: rect(33px 40px 66px 20px);
+#week-next-button:hover {
+    -moz-image-region: rect(18px 36px 36px 18px);
 }
 
-#week-next-button:hover:active
-{
-    -moz-image-region: rect(33px 60px 66px 40px);
+#week-next-button:hover:active {
+    margin: 6px 14px 4px 16px;
 }
 
-#week-previous-button
-{
+#week-previous-button {
     -moz-box-align:start;
-    -moz-image-region: rect(0 20px 33px 0);
+    -moz-image-region: rect(0px 18px 18px 0px);
     cursor:pointer;
 }
 
-#week-previous-button:hover
-{
-    -moz-image-region: rect(0 40px 33px 20px);
+#week-previous-button:hover {
+    -moz-image-region: rect(0px 36px 18px 18px);
 }
 
-#week-previous-button:hover:active
-{
-    -moz-image-region: rect(0 60px 33px 40px);
+#week-previous-button:hover:active {
+    margin: 6px 14px 4px 16px;
 }
 
 #week-next-button-box

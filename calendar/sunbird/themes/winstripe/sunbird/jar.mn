@@ -1,6 +1,8 @@
 calendar.jar:
         skin/classic/calendar/calendar.css
         skin/classic/calendar/toolbar-large.png
+        skin/classic/calendar/pageupdown.png
+        skin/classic/calendar/prevnextarrow.png
         skin/classic/calendar/pref/Options.png                      (pref/Options.png)
         skin/classic/calendar/pref/pref.css                         (pref/pref.css)
         skin/classic/calendar/datetimepickers/calendar_disabled.png (datetimepickers/calendar_disabled.png)
