@@ -29,6 +29,9 @@
 // extern "C" {
 #include "npapi.h"
 // }
+#include "nsIPluginManager.h"
+#include "nsIServiceManager.h"
+#include "nsIAllocator.h"
 #include "nsplugin.h"
 #include "nsDebug.h"
 
@@ -42,8 +45,11 @@
 //
 // This is the dummy plugin manager that interacts with the 5.0 plugin.
 //
-class CPluginManager : public nsIPluginManager {
+class CPluginManager : public nsIPluginManager, public nsIServiceManager, public nsIAllocator {
 public:
+	// Need an operator new for this.
+	void* operator new(size_t size) { return ::NPN_MemAlloc(size); }
+	void operator delete(void* ptr) { ::NPN_MemFree(ptr); }
 
     CPluginManager(void);
     virtual ~CPluginManager(void);
@@ -109,6 +115,60 @@ public:
 
 #endif // !NEW_PLUGIN_STREAM_API
 
+    NS_IMETHOD
+    GetService(const nsCID& aClass, const nsIID& aIID,
+               nsISupports* *result,
+               nsIShutdownListener* shutdownListener = NULL);
+
+    NS_IMETHOD
+    ReleaseService(const nsCID& aClass, nsISupports* service,
+                   nsIShutdownListener* shutdownListener = NULL);
+
+    /**
+     * Requests a service to be shut down, possibly unloading its DLL.
+     *
+     * @returns NS_OK - if shutdown was successful and service was unloaded,
+     * @returns NS_ERROR_SERVICE_NOT_FOUND - if shutdown failed because
+     *          the service was not currently loaded
+     * @returns NS_ERROR_SERVICE_IN_USE - if shutdown failed because some
+     *          user of the service wouldn't voluntarily release it by using
+     *          a shutdown listener.
+     */
+    NS_IMETHOD
+    ShutdownService(const nsCID& aClass) { return NS_OK; }
+
+    /**
+     * Allocates a block of memory of a particular size. 
+     *
+     * @param size - the size of the block to allocate
+     * @result the block of memory
+     */
+    NS_IMETHOD_(void*)
+    Alloc(PRUint32 size);
+
+    /**
+     * Reallocates a block of memory to a new size.
+     *
+     * @param ptr - the block of memory to reallocate
+     * @param size - the new size
+     * @result the rellocated block of memory
+     */
+    NS_IMETHOD_(void*)
+    Realloc(void* ptr, PRUint32 size);
+
+    /**
+     * Frees a block of memory. 
+     *
+     * @param ptr - the block of memory to free
+     */
+    NS_IMETHOD
+    Free(void* ptr);
+
+    /**
+     * Attempts to shrink the heap.
+     */
+    NS_IMETHOD
+    HeapMinimize(void);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -523,13 +583,8 @@ nsIPlugin* thePlugin = NULL;
 //
 // Interface IDs for nsISupports
 //
-NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
-NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
-NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
-NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID);
-NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
-NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
+NS_DEFINE_IID(kPluginCID, NS_PLUGIN_CID);
+NS_DEFINE_IID(kCAllocatorCID, NS_ALLOCATOR_CID);
 
 #ifdef NEW_PLUGIN_STREAM_API
 NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
@@ -585,7 +640,7 @@ char* NPP_GetMIMEDescription(void)
     //fprintf(stderr, "MIME description\n");
     if (thePlugin == NULL) {
         freeFac = 1;
-        NSGetFactory(kIPluginIID, NULL, (nsIFactory** )&thePlugin);
+        NSGetFactory(thePluginManager, kPluginCID, NULL, NULL, (nsIFactory** )&thePlugin);
     }
     //fprintf(stderr, "Allocated Plugin 0x%08x\n", thePlugin);
     const char * ret;
@@ -626,7 +681,7 @@ NPP_GetValue(NPP instance, NPPVariable variable, void *value) {
     //fprintf(stderr, "MIME description\n");
     if (thePlugin == NULL) {
         freeFac = 1;
-        if (NSGetFactory(kIPluginIID, NULL, (nsIFactory**)&thePlugin ) != NS_OK)
+        if (NSGetFactory(thePluginManager, kPluginCID, NULL, NULL, (nsIFactory** )&thePlugin) != NS_OK)
             return NPERR_GENERIC_ERROR;
     }
     //fprintf(stderr, "Allocated Plugin 0x%08x\n", thePlugin);
@@ -670,10 +725,13 @@ NPP_Initialize(void)
     // On UNIX the plugin might have been created when calling NPP_GetMIMEType.
     if (thePlugin == NULL) {
         // create nsIPlugin factory
-        error = (NPError)NSGetFactory(kIPluginIID, NULL, (nsIFactory**)&thePlugin );
+        error = (NPError)NSGetFactory(thePluginManager, kPluginCID, NULL, NULL, (nsIFactory** )&thePlugin);
+#if 0
+		// beard: this will leak reference counts.       
 	    if (error == NS_OK) {
 	    	thePlugin->AddRef();
 	    }
+#endif
 	}
 	
     return (NPError) error;	
@@ -763,10 +821,10 @@ NPP_New(NPMIMEType pluginType,
 
     // Create a new plugin instance and start it.
     nsIPluginInstance* pluginInstance = NULL;
-    thePlugin->CreateInstance(NULL, kIPluginInstanceIID, (void**)&pluginInstance);
+    thePlugin->CreateInstance(thePluginManager, nsIPluginInstance::IID(), (void**)&pluginInstance);
     if (pluginInstance == NULL) {
         return NPERR_OUT_OF_MEMORY_ERROR;
-    } 
+    }
     
     // Create a new plugin instance peer,
     // XXX - Since np_instance is not implemented in the 4.0x browser, I
@@ -1155,44 +1213,6 @@ CPluginManager::~CPluginManager(void)
 {
 }
 
-#if 0
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// MemAlloc:
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginManager::MemAlloc(PRUint32 size)
-{
-    return NPN_MemAlloc(size);
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// MemFree:
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginManager::MemFree(void* ptr)
-{
-    assert( ptr != NULL );
-
-    NPN_MemFree(ptr);
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-// MemFlush:
-//+++++++++++++++++++++++++++++++++++++++++++++++++
-
-NS_METHOD
-CPluginManager::MemFlush(PRUint32 size)
-{
-#ifdef XP_MAC
-    return NPN_MemFlush(size);	
-#else
-    return 0;
-#endif
-}
-#endif
-
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 // ReloadPlugins:
 //+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1220,7 +1240,7 @@ CPluginManager::GetURL(nsISupports* pluginInst,
     }
 
     nsIPluginInstance* inst = NULL;
-    nsresult rslt = pluginInst->QueryInterface(kIPluginInstanceIID, (void**)&inst);
+    nsresult rslt = pluginInst->QueryInterface(nsIPluginInstance::IID(), (void**)&inst);
     if (rslt != NS_OK) return rslt;
 	CPluginInstancePeer* instancePeer = NULL;
     rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
@@ -1270,7 +1290,7 @@ CPluginManager::PostURL(nsISupports* pluginInst,
     }
 
     nsIPluginInstance* inst = NULL;
-    nsresult rslt = pluginInst->QueryInterface(kIPluginInstanceIID, (void**)&inst);
+    nsresult rslt = pluginInst->QueryInterface(nsIPluginInstance::IID(), (void**)&inst);
     if (rslt != NS_OK) return rslt;
 	CPluginInstancePeer* instancePeer = NULL;
     rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
@@ -1320,7 +1340,7 @@ CPluginManager::GetURL(nsISupports* pinst, const char* url, const char* target,
                        const char* referrer, PRBool forceJSEnabled)
 {
     nsIPluginInstance* inst = NULL;
-    nsresult rslt = pinst->QueryInterface(kIPluginInstanceIID, (void**)&inst);
+    nsresult rslt = pinst->QueryInterface(nsIPluginInstance::IID(), (void**)&inst);
     if (rslt != NS_OK) return rslt;
 	CPluginInstancePeer* instancePeer = NULL;
     rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
@@ -1353,7 +1373,7 @@ CPluginManager::PostURL(nsISupports* pinst, const char* url, const char* target,
                         PRUint32 postHeadersLength, const char* postHeaders)
 {
     nsIPluginInstance* inst = NULL;
-    nsresult rslt = pinst->QueryInterface(kIPluginInstanceIID, (void**)&inst);
+    nsresult rslt = pinst->QueryInterface(nsIPluginInstance::IID(), (void**)&inst);
     if (rslt != NS_OK) return rslt;
 	CPluginInstancePeer* instancePeer = NULL;
     rslt = inst->GetPeer((nsIPluginInstancePeer**)&instancePeer);
@@ -1377,6 +1397,66 @@ CPluginManager::PostURL(nsISupports* pinst, const char* url, const char* target,
 }
 
 #endif // !NEW_PLUGIN_STREAM_API
+
+
+NS_METHOD
+CPluginManager::GetService(const nsCID& aClass, const nsIID& aIID,
+               nsISupports* *result,
+               nsIShutdownListener* shutdownListener)
+{
+	// the only service we support currently is nsIAllocator.
+	if (aClass.Equals(kCAllocatorCID)) {
+		return QueryInterface(aIID, (void**) result);
+	}
+	return NS_ERROR_SERVICE_NOT_FOUND;
+}
+
+NS_METHOD
+CPluginManager::ReleaseService(const nsCID& aClass, nsISupports* service,
+                   nsIShutdownListener* shutdownListener)
+{
+	NS_RELEASE(service);
+	return NS_OK;
+}
+
+NS_METHOD_(void*)
+CPluginManager::Alloc(PRUint32 size)
+{
+	return ::NPN_MemAlloc(size);
+}
+
+NS_METHOD_(void*)
+CPluginManager::Realloc(void* ptr, PRUint32 size)
+{
+	if (ptr != NULL) {
+		void* new_ptr = Alloc(size);
+		if (new_ptr != NULL) {
+			::memcpy(new_ptr, ptr, size);
+			Free(ptr);
+		}
+		ptr = new_ptr;
+	}
+	return ptr;
+}
+
+NS_METHOD
+CPluginManager::Free(void* ptr)
+{
+	if (ptr != NULL) {
+		::NPN_MemFree(ptr);
+		return NS_OK;
+	}
+	return NS_ERROR_NULL_POINTER;
+}
+
+NS_METHOD
+CPluginManager::HeapMinimize()
+{
+#ifdef XP_MAC
+	::NPN_MemFlush(1024);
+#endif
+	return NS_OK;
+}
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 // UserAgent:
@@ -1443,19 +1523,23 @@ CPluginManager::QueryInterface(const nsIID& iid, void** ptr)
         return NS_ERROR_NULL_POINTER;                                        
     }                                                                      
   
-    if (iid.Equals(kIPluginManagerIID)) {
-        *ptr = (void*) (nsIPluginManager*)this;                                        
+    if (iid.Equals(nsIServiceManager::IID())) {                                                          
+        *ptr = (void*) (nsIServiceManager*)this;                                        
         AddRef();                                                            
         return NS_OK;                                                        
-    }                                                                      
-    if (iid.Equals(kISupportsIID)) {                                      
+    }
+    if (iid.Equals(nsIAllocator::IID())) {                                                          
+        *ptr = (void*) (nsIAllocator*)this;                                        
+        AddRef();                                                            
+        return NS_OK;                                                        
+    }
+    if (iid.Equals(nsIPluginManager::IID()) || iid.Equals(nsISupports::IID())) {
         *ptr = (void*) ((nsIPluginManager*)this);                        
         AddRef();                                                            
         return NS_OK;                                                        
     }                                                                      
     return NS_NOINTERFACE;                                                 
 }
-
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1696,12 +1780,12 @@ CPluginInstancePeer::QueryInterface(const nsIID& iid, void** ptr)
         return NS_ERROR_NULL_POINTER;                                        
     }                                                                      
   
-    if (iid.Equals(kIPluginInstancePeerIID)) {
+    if (iid.Equals(nsIPluginInstancePeer::IID())) {
         *ptr = (void*) this;                                        
         AddRef();                                                            
         return NS_OK;                                                        
     }                                                                      
-    if (iid.Equals(kIPluginTagInfoIID) || iid.Equals(kISupportsIID)) {                                      
+    if (iid.Equals(nsIPluginTagInfo::IID()) || iid.Equals(nsISupports::IID())) {                                      
         *ptr = (void*) ((nsIPluginTagInfo*)this);                        
         AddRef();                                                            
         return NS_OK;                                                        
@@ -1816,7 +1900,7 @@ CPluginManagerStream::Close(void)
 NS_IMPL_ADDREF(CPluginManagerStream);
 NS_IMPL_RELEASE(CPluginManagerStream);
 
-NS_IMPL_QUERY_INTERFACE(CPluginManagerStream, kIOutputStreamIID);
+NS_IMPL_QUERY_INTERFACE(CPluginManagerStream, nsIOutputStream::IID());
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -2004,7 +2088,7 @@ nsresult CPluginStreamPeer::QueryInterface(const nsIID& iid, void** ptr)
         AddRef(); 
         return NS_OK; 
 	} else if (iid.Equals(kIPluginStreamPeerIID) ||
-			   iid.Equals(kISupportsIID)) {
+			   iid.Equals(nsISupports::IID())) {
         *ptr = (void*) ((nsIPluginStreamPeer*)this); 
         AddRef(); 
         return NS_OK; 
