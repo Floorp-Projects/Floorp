@@ -238,6 +238,11 @@ PR_MD_CSRCS=
 PR_MD_ARCH_DIR=unix
 AR_FLAGS='cr $@'
 
+OS_TARGET=`uname -s`
+OS_ARCH=`uname -s | sed -e 's|/|_|g'`
+OS_RELEASE=`uname -r`
+OS_TEST=`uname -m`
+
 dnl ========================================================
 dnl Override of system specific host options
 dnl ========================================================
@@ -774,8 +779,6 @@ dnl ========================================================
 dnl Check options
 dnl ========================================================
 
-OS_LIBS=
-
 AC_CHECK_LIB(pthread, pthread_attr_init, 
              _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
     AC_CHECK_LIB(c_r, pthread_attr_init,
@@ -971,9 +974,6 @@ AC_CHECK_FUNC(dlopen,,[
 ])
 
 EXTRA_LIBS=
-if test "$enable_shared" = no; then
-  EXTRA_LIBS="$OS_LIBS"
-fi
 
 if test -n "$MOZ_OPTIMIZE"; then
     CFLAGS="$CFLAGS $_OPTIMIZE_FLAGS"
@@ -995,6 +995,7 @@ AC_SUBST(CFLAGS)
 AC_SUBST(CXXFLAGS)
 AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CFLAGS)
+AC_SUBST(LDFLAGS)
 AC_SUBST(GNU_CC)
 
 AC_SUBST(USE_CPLUS)
@@ -1022,6 +1023,11 @@ AC_SUBST(DLL_SUFFIX)
 AC_SUBST(MKSHLIB)
 AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
+
+AC_SUBST(OS_TARGET)
+AC_SUBST(OS_ARCH)
+AC_SUBST(OS_RELEASE)
+AC_SUBST(OS_TEST)
 
 AC_SUBST(DEFINES)
 AC_SUBST(DEFS)
