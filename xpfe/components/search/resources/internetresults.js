@@ -1,31 +1,4 @@
 
-var gEditorShell = null;
-
-function doLoad()
-{
-	var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
-	if (editorShell)	editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
-	if (editorShell)
-	{
-		window.editorShell = editorShell;
-
-		editorShell.Init();
-
-//		editorShell.SetWebShellWindow(window);
-//		dump("SetWebShellWindow\n");
-//		editorShell.SetToolbarWindow(window)
-//		dump("SetToolbarWindow\n");
-
-		editorShell.SetEditorType("html");
-		editorShell.SetContentWindow(window.content);
-
-		// The editor gets instantiated by the editor shell when the URL has finished loading.
-		editorShell.LoadUrl("about:blank");
-		
-		gEditorShell = editorShell;
-	}
-}
-
 function doClick(node)
 {
 	var theID = node.getAttribute("id");
@@ -53,24 +26,18 @@ function doClick(node)
 				if (target)	target = target.Value;
 				if (target)
 				{
-					if (gEditorShell == null)
+					var text = "<BASE TARGET='_NEW'>";
+					if (banner)
 					{
-						doLoad();
+						// add a </A> and a <BR> just in case
+						text += banner + "</A><BR>";
 					}
-					if (gEditorShell)
-					{
-						var text = "";
-						if (banner)
-						{
-							// add a </A> and a <BR> just in case
-							text += banner + "</A><BR>";
-						}
-						text += target;
-
-						gEditorShell.SelectAll();
-						gEditorShell.DeleteSelection(2);
-						gEditorShell.InsertSource(text);
-					}
+					text += target;
+					
+					var doc = window.frames[0].document;
+					doc.open("text/html", "replace");
+					doc.writeln(text);
+					doc.close();
 				}
 			}
 		}
