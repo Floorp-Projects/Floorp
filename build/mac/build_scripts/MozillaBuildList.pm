@@ -134,6 +134,8 @@ sub InstallDefaultsFiles()
     InstallResources(":mozilla:modules:libpref:src:MANIFEST_PREFS",                    "$default_pref_dir", 0);
     InstallResources(":mozilla:modules:libpref:src:init:MANIFEST",                     "$default_pref_dir", 0);
     InstallResources(":mozilla:modules:libpref:src:mac:MANIFEST",                      "$default_pref_dir", 0);
+    InstallResources(":mozilla:netwerk:base:public:MANIFEST_PREFS",                      "$default_pref_dir", 0);
+
     if ($main::options{inspector})
     {
       InstallResources(":mozilla:extensions:inspector:resources:content:prefs:MANIFEST", "$default_pref_dir", 0);
@@ -976,6 +978,7 @@ sub BuildIDLProjects()
 	
 	if ($main::options{psm2}) {
     	BuildIDLProject(":mozilla:security:manager:ssl:macbuild:pipnssIDL.mcp",         "pipnss");
+    	BuildIDLProject(":mozilla:security:manager:pki:macbuild:pippkiIDL.mcp",         "pippki");    	
 	}
     
     BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",             "libpref");
