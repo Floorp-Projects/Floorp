@@ -85,8 +85,11 @@ getStackDepth()
 
 // getCallingJavaMethod
 //
-// Move the cursor of this frame to the closest Java frame and
-// return the method corresponding to that frame
+// Identify caller stack frames that correspond to non-native Java methods.
+// Use the climbDepth argument to determine how many such stack frames
+// should be skipped over and return the method corresponding to the final
+// such frame, e.g. a climbDepth of 1 means that we should return the
+// immediate enclosing non-native Java calling method.
 Method &Frame::getCallingJavaMethod(int climbDepth)
 {
 	Method *m;
