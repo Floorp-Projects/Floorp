@@ -852,7 +852,7 @@ void nsWebShellWindow::DoContextMenu(
         
         // The parent owns the context menu, so we can release it	
         NS_RELEASE(listener);	
-		NS_RELEASE(pnsContextMenu);
+		    NS_RELEASE(pnsContextMenu);
     }
   } // end if (aMenuNode)
 }
@@ -938,7 +938,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
 
   // Find out if we're a menu.
   nsCOMPtr<nsIDOMNodeList> menuNodes;
-  if (NS_FAILED(rv = aElement->GetElementsByTagName("menu", getter_AddRefs(menuNodes)))) {
+  if (NS_FAILED(rv = aPopupContent->GetElementsByTagName("menu", getter_AddRefs(menuNodes)))) {
     NS_ERROR("Error occurred looking for nodes.");
     return rv;
   }
