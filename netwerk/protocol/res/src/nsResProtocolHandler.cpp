@@ -379,4 +379,12 @@ nsResProtocolHandler::GetSubstitutions(const char *root, nsISupportsArray* *resu
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsResProtocolHandler::HasSubstitutions(const char *root, PRBool *result)
+{
+    nsStringKey key(root);
+    *result = mSubstitutions.Exists(&key);
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
