@@ -1,0 +1,6 @@
+nsICookie.idl
+nsICookieManager.idl
+nsICookieService.idl
+nsIImgManager.idl
+nsIPermission.idl
+nsIPermissionManager.idl
