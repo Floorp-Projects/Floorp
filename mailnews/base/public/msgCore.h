@@ -125,6 +125,9 @@ nsPath2URI(const char* rootURI, nsFileSpec& path, char* *uri);
 extern nsresult
 nsURI2Name(const char* rootURI, char* uriStr, nsString& name);
 
+extern nsresult
+nsParseLocalMessageURI(const char* uri, nsString& folderURI, PRUint32 *key);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

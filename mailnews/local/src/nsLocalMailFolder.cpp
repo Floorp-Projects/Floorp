@@ -44,33 +44,6 @@ static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult nsParseLocalMessageURI(const char* uri, nsString& folderURI, nsMsgKey *key)
-{
-	if(!key)
-		return NS_ERROR_NULL_POINTER;
-
-	nsAutoString uriStr = uri;
-	PRInt32 keySeparator = uriStr.Find('#');
-	if(keySeparator != -1)
-	{
-		nsAutoString folderPath;
-		uriStr.Left(folderPath, keySeparator);
-		PRInt32 msfExtPos = folderPath.Find(".msf");
-		if(msfExtPos != -1)
-			folderPath.Left(folderURI, msfExtPos);
-		else
-			folderURI = folderPath;
-
-		nsAutoString keyStr;
-		uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
-		PRInt32 errorCode;
-		*key = keyStr.ToInteger(&errorCode);
-
-		return errorCode;
-	}
-	return NS_ERROR_FAILURE;
-
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

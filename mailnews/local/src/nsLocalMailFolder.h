@@ -132,7 +132,4 @@ protected:
 	nsMailDatabase* mMailDatabase;
 };
 
-extern nsresult
-nsParseLocalMessageURI(const char* uri, nsString& folderURI, nsMsgKey *key);
-
 #endif // nsMsgLocalMailFolder_h__
