@@ -743,7 +743,15 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
   
   nsCOMPtr<nsIURI> channelURI;
   if (channel) {
-    channel->GetURI(getter_AddRefs(channelURI));
+    // If the channel's original URI is "chrome:", we want that, since
+    // the observer code in nsXULPrototypeCache depends on chrome stylesheets
+    // having a chrome URI.  (Whether or not chrome stylesheets come through
+    // this codepath seems nondeterministic.)
+    // Otherwise we want the potentially-HTTP-redirected URI.
+    channel->GetOriginalURI(getter_AddRefs(channelURI));
+    PRBool isChrome;
+    if (NS_FAILED(channelURI->SchemeIs("chrome", &isChrome)) || !isChrome)
+      channel->GetURI(getter_AddRefs(channelURI));
   }
   
 #ifdef MOZ_TIMELINE
