@@ -101,7 +101,6 @@
 <!ENTITY editcheckspelling.keybinding "k">
 
 <!-- View menu items -->
-<!ENTITY viewMenu.label "View">
 <!ENTITY viewToolbarsMenu.label "Toolbars"> 
 <!ENTITY viewToolbarsMenu.accesskey "t"> 
 <!ENTITY compositionToolbarCmd.label "Composition Toolbar">
@@ -273,11 +272,6 @@
 <!ENTITY clear.accesskey "l">
 <!ENTITY selectAllCmd.label "Select All">
 <!ENTITY selectall.accesskey "a">
-
-
-<!-- Format Menu -->
-<!ENTITY formatMenu.label "Format">
-<!ENTITY formatmenu.accesskey "o">
 
 <!-- Font Face SubMenu -->
 <!ENTITY FontFaceSelect.tooltip "Choose a font">
