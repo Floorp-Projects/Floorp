@@ -1172,9 +1172,11 @@ nsLocalFile::IsSpecial(PRBool *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
     VALIDATE_STAT_CACHE();
-    *_retval = !S_ISLNK(mCachedStat.st_mode) &&
-               !S_ISREG(mCachedStat.st_mode) &&
-               !S_ISDIR(mCachedStat.st_mode);
+    *_retval = S_ISCHR(mCachedStat.st_mode)  ||
+               S_ISBLK(mCachedStat.st_mode)  ||
+               S_ISFIFO(mCachedStat.st_mode) ||
+               S_ISSOCK(mCachedStat.st_mode);
+
     return NS_OK;
 }
 
