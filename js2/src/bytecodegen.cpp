@@ -1150,6 +1150,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
         }
         break;
     case StmtNode::block:
+    case StmtNode::group:
         {
             BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
             StmtNode *s = b->statements;

@@ -438,7 +438,8 @@ namespace JavaScript {
         enum Kind {         // Actual class         Operands
             empty,          // StmtNode             ;
             expression,     // ExprStmtNode         <expr> ;
-            block,          // BlockStmtNode        <attributes> { <statements> }
+            block,          // BlockStmtNode        { <statements> }
+            group,          // BlockStmtNode        <attributes> { <statements> }
             label,          // LabelStmtNode        <name> : <stmt>
             If,             // UnaryStmtNode        if ( <expr> ) <stmt>
             IfElse,         // BinaryStmtNode       if ( <expr> ) <stmt> else <stmt2>
@@ -502,7 +503,7 @@ namespace JavaScript {
     };
 
     struct AttributeStmtNode: StmtNode {
-        ExprNode *attributes;           // Block or definition's attributes; nil if none
+        ExprNode *attributes;           // Directive's attributes; nil if none
 
         JS2Runtime::Attribute *attributeValue;      // used by backend
 
@@ -512,13 +513,12 @@ namespace JavaScript {
     };
 
     struct BlockStmtNode: AttributeStmtNode {
-        StmtNode *statements;           // Linked list of block's statements
+        StmtNode *statements;           // Linked list of block's or group's statements
 
         BlockStmtNode(size_t pos, Kind kind, ExprNode *attributes, StmtNode *statements):
                 AttributeStmtNode(pos, kind, attributes), statements(statements) {}
 
         void print(PrettyPrinter &f, bool noSemi) const;
-        void printBlock(PrettyPrinter &f, bool loose) const;
     };
 
     struct LabelStmtNode: StmtNode {
@@ -838,7 +838,7 @@ namespace JavaScript {
         void parseFunctionName(FunctionName &fn);
         void parseFunctionSignature(FunctionDefinition &fd);
         ExportBinding *parseExportBinding();
-        StmtNode *parseBlockContents(bool inSwitch);
+        StmtNode *parseBlockContents(bool substatement, bool inSwitch);
         BlockStmtNode *parseBody(bool *semicolonWanted);
         void parseIncludeExclude(UseStmtNode &s);
         ImportStmtNode *parseImport(size_t pos, ExprNode *attributes);
@@ -847,7 +847,7 @@ namespace JavaScript {
         bool parseBooleanPragma(const ExprList *arguments, bool &value, bool ignoreErrors);
         bool parseNumericPragma(const ExprList *arguments, float64 &value, bool ignoreErrors);
         StmtNode *parseUse(size_t pos, ExprNode *attributes, bool &semicolonWanted);
-        StmtNode *parseAnnotatableDirective(size_t pos, ExprNode *attributes, const Token &t, bool noIn, bool untyped, bool &semicolonWanted);
+        StmtNode *parseAnnotatableDirective(size_t pos, ExprNode *attributes, const Token &t, bool noIn, bool substatement, bool &semicolonWanted);
         ForStmtNode *parseFor(size_t pos, bool &semicolonWanted);
         TryStmtNode *parseTry(size_t pos);
         PackageStmtNode *parsePackage(size_t pos);
@@ -855,7 +855,7 @@ namespace JavaScript {
         StmtNode *parseSubstatement(bool &semicolonWanted);
 
       public:
-        StmtNode *parseFullDirective(bool inSwitch);
+        StmtNode *parseFullDirective(bool substatement, bool inSwitch);
         StmtNode *parseProgram();
     };
 }

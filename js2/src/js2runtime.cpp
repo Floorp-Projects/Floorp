@@ -1020,6 +1020,7 @@ void ScopeChain::collectNames(StmtNode *p)
         }
         break;
     case StmtNode::block:
+    case StmtNode::group:
         {
             // should push a new Activation scope here?
             BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
@@ -1605,6 +1606,7 @@ void Context::buildRuntimeForStmt(StmtNode *p)
 {
     switch (p->getKind()) {
     case StmtNode::block:
+    case StmtNode::group:
         {
             BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
             StmtNode *s = b->statements;

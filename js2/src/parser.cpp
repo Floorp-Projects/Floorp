@@ -1255,13 +1255,14 @@ JS::ExportBinding *JS::Parser::parseExportBinding()
 }
 
 
-// Parse a list of Directives ending with a '}'.  Return these directives as a linked list
+// Parse a list of Directives (if substatement is false) or a Substatements (if substatement is true)
+// ending with a '}'.  Return these directives or substatements as a linked list
 // threaded through the StmtNodes' next fields.  The opening '{' has already been read.
-// If inSwitch is true, only allow case <expr>: and default: statements or Substatements.
+// If inSwitch is true, allow case <expr>: and default: statements.
 //
-// The list of Directives forms a scope for the purpose of pragma processing.  The pragma
-// settings are restored to their current values after the '}'.
-JS::StmtNode *JS::Parser::parseBlockContents(bool inSwitch)
+// The list of Directives or Substatements forms a scope for the purpose of pragma processing.
+// The pragma settings are restored to their current values after the '}'.
+JS::StmtNode *JS::Parser::parseBlockContents(bool substatement, bool inSwitch)
 {
     NodeQueue<StmtNode> q;
     SaveRestore<Pragma::Flags> savedFlags(flags);
@@ -1272,7 +1273,7 @@ JS::StmtNode *JS::Parser::parseBlockContents(bool inSwitch)
             syntaxError("First statement in a switch block must be 'case expr:' or 'default:'", 0);
     }
     while (!lexer.peek(true).hasKind(Token::closeBrace))
-        q += parseFullDirective(inSwitch);
+        q += parseFullDirective(substatement, inSwitch);
     lexer.skip();
     return q.first;
 }
@@ -1291,7 +1292,7 @@ JS::BlockStmtNode *JS::Parser::parseBody(bool *semicolonWanted)
     const Token *tBrace = lexer.eat(true, Token::openBrace);
     if (tBrace) {
         size_t pos = tBrace->getPos();
-        return new(arena) BlockStmtNode(pos, StmtNode::block, 0, parseBlockContents(false));
+        return new(arena) BlockStmtNode(pos, StmtNode::block, 0, parseBlockContents(false, false));
     } else {
         if (!semicolonWanted)
             syntaxError("'{' expected", 0);
@@ -1526,7 +1527,8 @@ JS::StmtNode *JS::Parser::parseUse(size_t pos, ExprNode *attributes, bool &semic
 // an AnnotatableDirective or an AnnotatedBlock.  The attributes have already been parsed.
 // If there were no attributes, the attributes parameter is nil.
 // If noIn is false, allow the in operator.
-// If untyped is true, do not allow types on variables declared in const or var directives.
+// If substatement is true, do not allow types on variables declared in const or var directives and only
+// allow substatements inside groups.
 //
 // If the directive ends with an optional Semicolon production, then that semicolon is not parsed.
 // Instead, parseAnnotatableDirective returns true in semicolonWanted when either a semicolon, a line break
@@ -1537,7 +1539,7 @@ JS::StmtNode *JS::Parser::parseUse(size_t pos, ExprNode *attributes, bool &semic
 // The first token of the directive has already been read and is provided in t.
 // After parseAnnotatableDirective finishes, the next token might have been peeked with preferRegExp set to true.
 JS::StmtNode *JS::Parser::parseAnnotatableDirective(size_t pos, ExprNode *attributes, const Token &t, bool noIn,
-                                                    bool untyped, bool &semicolonWanted)
+                                                    bool substatement, bool &semicolonWanted)
 {
     StmtNode *s;
     ASSERT(!semicolonWanted);
@@ -1547,7 +1549,8 @@ JS::StmtNode *JS::Parser::parseAnnotatableDirective(size_t pos, ExprNode *attrib
         syntaxError("Line break not allowed here");
     switch (t.getKind()) {
       case Token::openBrace:
-        s = new(arena) BlockStmtNode(pos, StmtNode::block, attributes, parseBlockContents(false));
+        sKind = attributes ? StmtNode::group : StmtNode::block;
+        s = new(arena) BlockStmtNode(pos, sKind, attributes, parseBlockContents(attributes && substatement, false));
         break;
 
       case Token::Export:
@@ -1569,7 +1572,7 @@ JS::StmtNode *JS::Parser::parseAnnotatableDirective(size_t pos, ExprNode *attrib
         {
             NodeQueue<VariableBinding> bindings;
 
-            do bindings += parseVariableBinding(lexer.peek(true).getPos(), noIn, untyped, false, false, sKind == StmtNode::Const);
+            do bindings += parseVariableBinding(lexer.peek(true).getPos(), noIn, substatement, false, false, sKind == StmtNode::Const);
             while (lexer.eat(true, Token::comma));
             s = new(arena) VariableStmtNode(pos, sKind, attributes, bindings.first);
         }
@@ -1791,7 +1794,7 @@ JS::StmtNode *JS::Parser::parseDirective(bool substatement, bool inSwitch, bool 
       case Token::Switch:
         e = parseParenthesizedListExpression();
         require(true, Token::openBrace);
-        s = new(arena) SwitchStmtNode(pos, e, parseBlockContents(true));
+        s = new(arena) SwitchStmtNode(pos, e, parseBlockContents(true, true));
         break;
 
       case Token::Case:
@@ -1998,7 +2001,7 @@ JS::StmtNode *JS::Parser::parseSubstatement(bool &semicolonWanted)
 }
 
 
-// Parse and return a Directive (if inSwitch is false) or a Substatement (if inSwitch is true).
+// Parse and return a Directive (if substatement is false) or a Substatement (if substatement is true).
 // If inSwitch is true, allow case <expr>: and default: statements.
 //
 // If the parsed Directive ends with an optional Semicolon production, a semicolon is required unless
@@ -2006,10 +2009,10 @@ JS::StmtNode *JS::Parser::parseSubstatement(bool &semicolonWanted)
 //
 // If the first token was peeked, it should be have been done with preferRegExp set to true.
 // After parseFullDirective finishes, the next token might have been peeked with preferRegExp set to true.
-JS::StmtNode *JS::Parser::parseFullDirective(bool inSwitch)
+JS::StmtNode *JS::Parser::parseFullDirective(bool substatement, bool inSwitch)
 {
     bool semicolonWanted;
-    StmtNode *s = parseDirective(inSwitch, inSwitch, semicolonWanted);
+    StmtNode *s = parseDirective(substatement, inSwitch, semicolonWanted);
     if (semicolonWanted)
         parseClosingSemicolon();
     return s;
@@ -2024,7 +2027,7 @@ JS::StmtNode *JS::Parser::parseProgram()
     NodeQueue<StmtNode> q;
 
     while (!lexer.peek(true).hasKind(Token::end))
-        q += parseFullDirective(false);
+        q += parseFullDirective(false, false);
     return q.first;
 }
 
@@ -2134,7 +2137,7 @@ void JS::FunctionDefinition::print(PrettyPrinter &f, const AttributeStmtNode *at
     if (body) {
         bool loose = attributes != 0;
         f.linearBreak(1, loose);
-        body->printBlock(f, loose);
+        StmtNode::printBlockStatements(f, body->statements, loose);
     } else
         StmtNode::printSemi(f, noSemi);
 }
@@ -2451,10 +2454,9 @@ void JS::StmtNode::printStatements(PrettyPrinter &f, const StmtNode *statements)
 
 
 // Print statements as a block enclosed in curly braces onto f.
-// If loose is false, do not insist on each statement being on a separate
-// line; instead, make breaks between statements be linear breaks in the
-// enclosing PrettyPrinter::Block scope. The caller must have placed this
-// call inside a PrettyPrinter::Block scope.
+// If loose is false, do not insist on each statement being on a separate line; instead,
+// make breaks between statements be linear breaks in the enclosing PrettyPrinter::Block scope.
+// The caller must have placed this call inside a PrettyPrinter::Block scope.
 void JS::StmtNode::printBlockStatements(PrettyPrinter &f, const StmtNode *statements, bool loose)
 {
     f << '{';
@@ -2503,9 +2505,9 @@ void JS::StmtNode::printSemi(PrettyPrinter &f, bool noSemi)
 // the containining statement.
 void JS::StmtNode::printSubstatement(PrettyPrinter &f, bool noSemi, const char *continuation) const
 {
-    if (hasKind(block) && !checked_cast<const BlockStmtNode *>(this)->attributes) {
+    if (hasKind(block)) {
         f << ' ';
-        checked_cast<const BlockStmtNode *>(this)->printBlock(f, true);
+        printBlockStatements(f, checked_cast<const BlockStmtNode *>(this)->statements, true);
         if (continuation)
             f << ' ' << continuation;
     } else {
@@ -2529,18 +2531,6 @@ void JS::AttributeStmtNode::printAttributes(PrettyPrinter &f) const
     if (a) {
         f << a << ' ';
     }
-}
-
-
-// Print this block, including attributes, onto f.
-// If loose is false, do not insist on each statement being on a separate line;
-// instead, make breaks between statements be linear breaks in the enclosing
-// PrettyPrinter::Block scope.
-// The caller must have placed this call inside a PrettyPrinter::Block scope.
-void JS::BlockStmtNode::printBlock(PrettyPrinter &f, bool loose) const
-{
-    printAttributes(f);
-    printBlockStatements(f, statements, loose);
 }
 
 
@@ -2596,7 +2586,8 @@ void JS::DebuggerStmtNode::print(PrettyPrinter &f, bool) const
 void JS::BlockStmtNode::print(PrettyPrinter &f, bool) const
 {
     PrettyPrinter::Block b(f, 0);
-    printBlock(f, true);
+    printAttributes(f);
+    printBlockStatements(f, statements, true);
 }
 
 void JS::LabelStmtNode::print(PrettyPrinter &f, bool noSemi) const
@@ -2845,7 +2836,7 @@ void JS::ClassStmtNode::print(PrettyPrinter &f, bool noSemi) const
     }
     if (body) {
         f.requiredBreak();
-        body->printBlock(f, true);
+        printBlockStatements(f, body->statements, true);
     } else
         printSemi(f, noSemi);
 }
