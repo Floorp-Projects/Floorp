@@ -371,6 +371,8 @@
 #define IDS_SELECTED_CELLS_CAPTION      42321
 #define IDS_SELECTED_ROW_CAPTION        42322
 #define IDS_SELECTED_COLUMN_CAPTION     42323
+#define IDS_BUILT_IN                    42324
+#define IDS_PLUGIN                      42325
 #define IDC_ABOVE                       42338
 #define IDC_BEFORE                      42338
 #define IDC_TABLE_ALIGN                 42339

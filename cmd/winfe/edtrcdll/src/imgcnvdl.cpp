@@ -141,6 +141,7 @@ BOOL CImageConversionDialog::InitDialog()
     if(!t_wnd)
         return FALSE;
     CString t_string;
+    CString t_append;
     for (DWORD i=0;i<m_Doptionarraycount;i++)
     {
         t_string=m_Doptionarray[i].m_pencodername;
@@ -148,9 +149,11 @@ BOOL CImageConversionDialog::InitDialog()
         t_string+=m_Doptionarray[i].m_pfileextention;
         t_string+=')';
         if (m_Doptionarray[i].m_builtin)
-            t_string+=" (Built-in)";
+            t_append.LoadString(g_instance, IDS_BUILT_IN);
         else 
-            t_string+=" (Plug-in)";
+            t_append.LoadString(g_instance, IDS_PLUGIN);
+        
+        t_string+=t_append;
         ListBox_AddString(t_wnd,t_string);
     }
     ListBox_SetCurSel(t_wnd,m_Doutputimagetype);

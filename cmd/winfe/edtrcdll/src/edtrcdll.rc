@@ -1138,6 +1138,8 @@ BEGIN
     IDS_SELECTED_CELLS_CAPTION "Selected Cells"
     IDS_SELECTED_ROW_CAPTION "Selected Cells in Row"
     IDS_SELECTED_COLUMN_CAPTION "Selected Cells in Column"
+    IDS_BUILT_IN                "  (Built-in)"
+    IDS_PLUGIN                  "  (Plugin)"
 END
 
 #endif    // English (U.S.) resources
