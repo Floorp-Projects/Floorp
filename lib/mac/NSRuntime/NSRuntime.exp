@@ -17,8 +17,8 @@ __unexpected
 __dt__Q23std13bad_exceptionFv		# std::bad_exception::~bad_exception()
 __unregister_fragment
 __register_fragment
-#__global_destructor_chain
-#__destroy_global_chain
+__global_destructor_chain
+__destroy_global_chain
 __register_global_object
 __destroy_new_array2
 __destroy_new_array
