@@ -22,11 +22,10 @@ OS_ARCH=`cd ../common; gmake os_arch`
 
 if [ ${OS_ARCH} = "WINNT" ]; then
 	PATH=${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$PATH
-	PATH=`perl $QASCRIPT_DIR/path_uniq -d ';' "$PATH"`
 else
 	PATH=${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$PATH
-	PATH=`$QASCRIPT_DIR/path_uniq -d ';' "$PATH"`
 fi
+PATH=`perl $QASCRIPT_DIR/path_uniq -d ';' "$PATH"`
 export PATH
 
 LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib

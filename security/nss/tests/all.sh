@@ -5,7 +5,7 @@
 ALL_SH_BASEPATH=$PATH	#to avoid that PATH is being appended every time 
 export ALL_SH_BASEPATH	#init is sourced
 CURDIR=`pwd`
-TESTS="sdr ssl cipher smime"
+TESTS="sdr ssl cipher smime perf"
 cd common
 . ./init.sh
 export MOZILLA_ROOT
