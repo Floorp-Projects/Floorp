@@ -27,6 +27,10 @@ const int bm_lockedPad = 2;
 const int bm_unlockedPad = 3;
 const int bm_unlockedPadGray = 4;
 
+// submenus
+const int menu_pref = 0;
+const int menu_group = 1;
+const int menu_userAddedPref = 2;
 /////////////////////////////////////////////////////////////////////////////
 // CPrefEditView
 
@@ -42,6 +46,7 @@ BEGIN_MESSAGE_MAP(CPrefEditView, CTreeView)
   ON_COMMAND(ID_FINDPREF, OnFindPref)
   ON_COMMAND(ID_FINDNEXTPREF, OnFindNextPref)
   ON_COMMAND(ID_ADDPREF, OnAddPref)
+  ON_COMMAND(ID_DELPREF, OnDelPref)
 	ON_WM_KEYDOWN()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
@@ -610,8 +615,10 @@ void CPrefEditView::OnFindNextPref()
 // User added prefs go into the root group.
 HTREEITEM CPrefEditView::AddPref(CString& rstrPrefName, CString& rstrPrefDesc, CString& rstrPrefType)
 {
-  // Modify it.
+  // Create it.
   CPrefElement* newPref = new CPrefElement(rstrPrefName, rstrPrefDesc, rstrPrefType);
+
+  newPref->SetUserAdded(TRUE);
     
   // Add it to the tree.
   CTreeCtrl &treeCtrl = GetTreeCtrl();
@@ -662,6 +669,28 @@ void CPrefEditView::OnAddPref()
 
   }
 
+}
+
+// Delete the user-added pref.
+void CPrefEditView::OnDelPref()
+{
+  CTreeCtrl &treeCtrl = GetTreeCtrl();
+	HTREEITEM hTreeCtrlItem = treeCtrl.GetSelectedItem();
+
+  // Can't edit a pref group--only a pref (leaf).
+  if (treeCtrl.ItemHasChildren(hTreeCtrlItem))
+    return;
+
+  // If user added-pref, delete the CPrefElement that was created with new.
+  CPrefElement* pe = (CPrefElement*)treeCtrl.GetItemData(hTreeCtrlItem);
+  ASSERT(pe); // There must be a CPrefElement object for each pref in the tree.
+  if ((pe == NULL) || !pe->IsUserAdded())
+    return;
+
+  delete pe;
+
+  // Remove item from the tree.
+  treeCtrl.DeleteItem(hTreeCtrlItem);
 }
 
 // Open the edit dialog box for the selected pref item. A pref should be selected,
@@ -759,9 +788,21 @@ void CPrefEditView::OnRclick(NMHDR* pNMHDR, LRESULT* pResult)
 
       int submenu;
       if (!treeCtrl.ItemHasChildren(hTreeCtrlItem)) // no children == leaf node == pref 
-        submenu = 0;
+      {
+        CPrefElement* pe = (CPrefElement*)treeCtrl.GetItemData(hTreeCtrlItem);
+        ASSERT(pe); // there must be a CPrefElement object for each leaf node.
+        if (!pe)
+          return;
+
+        if (pe->IsUserAdded())
+          submenu = menu_userAddedPref;
+        else
+          submenu = menu_pref;
+      }
       else
-        submenu = 1;
+      {
+        submenu = menu_group;
+      }
 
       ShowPopupMenu(pt, submenu);
 		}
@@ -780,6 +821,11 @@ void CPrefEditView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   else if ((nChar == 0x46) && GetAsyncKeyState(VK_CONTROL)) // Ctrl+F
   {
     OnFindPref();
+  }
+
+  else if (nChar == VK_DELETE)
+  {
+    OnDelPref();
   }
 
   else

@@ -49,6 +49,7 @@ void CPrefElement::ReInit()
   m_bLocked = FALSE;
   m_bLockable = TRUE;
   m_bManage = FALSE;
+  m_bUserAdded = FALSE;
   m_iChoices = 0;
 }
 
@@ -143,6 +144,8 @@ void CPrefElement::startElement(const char* name, const char** atts)
         m_bLockable = (stricmp(attrVal, "true") == 0);
       else if (stricmp(attrName, "description") == 0)
         m_strDescription = attrVal;
+      else if (stricmp(attrName, "useradded") == 0)
+        m_bUserAdded = (stricmp(attrVal, "true") == 0);
     }
 
   }
@@ -316,9 +319,9 @@ CString CPrefElement::XML(int iIndentSize, int iIndentLevel)
   int iIndentSpaces = iIndentSize * iIndentLevel;
 
   CString strRet;
-  strRet.Format("%*s<PREF uiname=\"%s\" prefname=\"%s\" type=\"%s\" lockable=\"%s\" description=\"%s\">\n", 
+  strRet.Format("%*s<PREF uiname=\"%s\" prefname=\"%s\" type=\"%s\" lockable=\"%s\" description=\"%s\" useradded=\"%s\">\n", 
     iIndentSpaces, " ", GetUIName(), GetPrefName(), GetPrefType(),
-    IsLockable()?"true":"false", GetPrefDescription());
+    IsLockable()?"true":"false", GetPrefDescription(), IsUserAdded()?"true":"false");
 
   CString strTmp;
   if (IsChoose())

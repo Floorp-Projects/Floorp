@@ -68,6 +68,7 @@ protected:
   afx_msg void OnFindPref();
   afx_msg void OnFindNextPref();
   afx_msg void OnAddPref();
+  afx_msg void OnDelPref();
 	afx_msg void OnRclick(NMHDR* pNMHDR, LRESULT* pResult);
   afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 
