@@ -38,7 +38,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- * $Id: mpi-test.c,v 1.9 2000/11/08 01:52:52 nelsonb%netscape.com Exp $
+ * $Id: mpi-test.c,v 1.10 2000/12/15 03:00:00 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -52,6 +52,17 @@
 #include "mpprime.h"
 
 #include "test-info.c"
+
+/* ZS means Zero Suppressed (no leading zeros) */
+#if MP_USE_LONG_DIGIT 
+#define ZS_DIGIT_FMT         "%lX"
+#elif MP_USE_LONG_LONG_DIGIT
+#define ZS_DIGIT_FMT         "%llX"
+#elif MP_USE_UINT_DIGIT 
+#define ZS_DIGIT_FMT         "%X"
+#else
+#error "unknown type of digit"
+#endif
 
 /*
   Test vectors
@@ -906,7 +917,7 @@ int test_div_d(void)
     ++err;
   }
 
-  sprintf(g_intbuf, "%X", r);
+  sprintf(g_intbuf, ZS_DIGIT_FMT, r);
 
   if(strcmp(g_intbuf, r_mp3d6) != 0) {
     reason("error: computed r = %s, expected %s\n", g_intbuf, r_mp3d6);
@@ -922,7 +933,7 @@ int test_div_d(void)
     ++err;
   }
 
-  sprintf(g_intbuf, "%X", r);
+  sprintf(g_intbuf, ZS_DIGIT_FMT, r);
 
   if(strcmp(g_intbuf, r_mp9c16) != 0) {
     reason("error: computed r = %s, expected %s\n", g_intbuf, r_mp9c16);
@@ -1146,7 +1157,7 @@ int test_mod_d(void)
 
   mp_init(&a); mp_read_radix(&a, mp5, 16);
   IFOK( mp_mod_d(&a, md5, &r) );
-  sprintf(g_intbuf, "%X", r);
+  sprintf(g_intbuf, ZS_DIGIT_FMT, r);
   mp_clear(&a);
 
   if(strcmp(g_intbuf, r_mp5d5) != 0) {
