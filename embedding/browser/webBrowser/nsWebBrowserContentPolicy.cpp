@@ -50,8 +50,10 @@ nsWebBrowserContentPolicy::ShouldLoad(PRInt32 contentType,
         return NS_OK;
 
     nsCOMPtr<nsIDocShell> shell;
-    if (NS_FAILED(scriptGlobal->GetDocShell(getter_AddRefs(shell))))
-        return NS_OK;
+    scriptGlobal->GetDocShell(getter_AddRefs(shell));
+    /* We're going to dereference shell, so make sure it isn't null */
+    if (!shell)
+      return NS_OK;
     
     switch (contentType) {
       case nsIContentPolicy::OBJECT:
