@@ -23,7 +23,7 @@
  * Keith Visco 
  *    -- finished implementation
  *
- * $Id: XMLParser.h,v 1.6 2000/08/27 05:58:58 kvisco%ziplink.net Exp $
+ * $Id: XMLParser.h,v 1.7 2001/01/22 21:54:20 axel%pike.org Exp $
  */
 
 #include <iostream.h>
@@ -46,7 +46,7 @@ typedef struct  {
  * parsing is provided by EXPAT.
  * @author <a href="tomk@mitre.org">Tom Kneeland</a>
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2000/08/27 05:58:58 $
+ * @version $Revision: 1.7 $ $Date: 2001/01/22 21:54:20 $
 **/
 class XMLParser
 {
@@ -55,6 +55,7 @@ class XMLParser
    * Sax related methods for XML parsers
    * --------------------------------------------------*/
   friend void charData(void* userData, const XML_Char* s, int len);
+  friend void commentHandler(void* userData, const XML_Char* s);
   friend void startElement(void *userData, const XML_Char* name,
                            const XML_Char** atts);
   friend void endElement(void *userData, const XML_Char* name);
@@ -88,4 +89,5 @@ void charData(void* userData, const XML_Char* s, int len);
 void startElement(void *userData, const XML_Char* name, const XML_Char** atts);
 void endElement(void *userData, const XML_Char* name);
 void piHandler(void *userData, const XML_Char *target, const XML_Char *data);
+void piHandler(void *userData, const XML_Char *s);
 #endif
