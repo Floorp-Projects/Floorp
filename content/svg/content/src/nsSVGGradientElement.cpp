@@ -314,7 +314,7 @@ nsSVGLinearGradientElement::Init()
   {
     nsCOMPtr<nsISVGLength> length;
     rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
+                         0.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX1), length);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -326,7 +326,7 @@ nsSVGLinearGradientElement::Init()
   {
     nsCOMPtr<nsISVGLength> length;
     rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
+                         0.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY1), length);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -338,7 +338,7 @@ nsSVGLinearGradientElement::Init()
   {
     nsCOMPtr<nsISVGLength> length;
     rv = NS_NewSVGLength(getter_AddRefs(length),
-                         1.0f);
+                         100.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX2), length);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -350,7 +350,7 @@ nsSVGLinearGradientElement::Init()
   {
     nsCOMPtr<nsISVGLength> length;
     rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
+                         0.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY2), length);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -487,7 +487,7 @@ nsSVGRadialGradientElement::Init()
   {
     nsCOMPtr<nsISVGLength> length;
     rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
+                         50.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mCx), length);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -499,7 +499,7 @@ nsSVGRadialGradientElement::Init()
   {
     nsCOMPtr<nsISVGLength> length;
     rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
+                         50.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mCy), length);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -511,7 +511,7 @@ nsSVGRadialGradientElement::Init()
   {
     nsCOMPtr<nsISVGLength> length;
     rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
+                         50.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mR), length);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -523,7 +523,7 @@ nsSVGRadialGradientElement::Init()
   {
     nsCOMPtr<nsISVGLength> length;
     rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
+                         50.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mFx), length);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -535,7 +535,7 @@ nsSVGRadialGradientElement::Init()
   {
     nsCOMPtr<nsISVGLength> length;
     rv = NS_NewSVGLength(getter_AddRefs(length),
-                         0.0f);
+                         50.0,nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mFy), length);
     NS_ENSURE_SUCCESS(rv,rv);

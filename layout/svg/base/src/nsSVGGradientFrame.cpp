@@ -372,7 +372,7 @@ nsSVGGradientFrame::checkURITarget(const nsAString& attrStr) {
   aGrad->HasAttribute(attrStr, &attr);
   if (attr) {
     // Yes, just return
-    return false;
+    return PR_FALSE;
   }
   return checkURITarget();
 }
@@ -381,12 +381,12 @@ PRBool
 nsSVGGradientFrame::checkURITarget(void) {
   // Have we already figured out the next Gradient?
   if (mNextGrad != nsnull) {
-    return true;
+    return PR_TRUE;
   }
 
   // Do we have URI?
   if (mNextGradStr.Length() == 0) {
-    return false; // No, return the default
+    return PR_FALSE; // No, return the default
   }
 
   // Get the Gradient
@@ -395,9 +395,9 @@ nsSVGGradientFrame::checkURITarget(void) {
   // Note that we are using *our* frame tree for this call, otherwise we're going to have
   // to get the PresShell in each call
   if (GetSVGGradient(&mNextGrad, aGradStr, mContent, GetPresContext()->PresShell()) == NS_OK) {
-    return true;
+    return PR_TRUE;
   }
-  return false;
+  return PR_FALSE;
 }
 
 // -------------------------------------------------------------------------
@@ -679,12 +679,14 @@ nsSVGRadialGradientFrame::GetFx(float *aFx)
       aRNgrad->GetFx(aFx);
       return NS_OK;
     }
-    // There are no gradients in the list with our type -- fall through
-    // and return our default value
+    // There are no gradients in the list with our type --  the spec
+    // states that if there is no explicit fx value, we return the cx value
+    // see http://www.w3.org/TR/SVG11/pservers.html#RadialGradients
+    return GetCx(aFx);
   }
   // No, return the values
   nsCOMPtr<nsIDOMSVGAnimatedLength> aLen;
-  aRgrad->GetCx(getter_AddRefs(aLen));
+  aRgrad->GetFx(getter_AddRefs(aLen));
   nsCOMPtr<nsIDOMSVGLength> sLen;
   aLen->GetBaseVal(getter_AddRefs(sLen));
   sLen->GetValue(aFx);
@@ -708,8 +710,10 @@ nsSVGRadialGradientFrame::GetFy(float *aFy)
       aRNgrad->GetFy(aFy);
       return NS_OK;
     }
-    // There are no gradients in the list with our type -- fall through
-    // and return our default value
+    // There are no gradients in the list with our type -- the spec
+    // states that if there is no explicit fy value, we return the cy value
+    // see http://www.w3.org/TR/SVG11/pservers.html#RadialGradients
+    return GetCy(aFy);
   }
   // No, return the values
   nsCOMPtr<nsIDOMSVGAnimatedLength> aLen;
