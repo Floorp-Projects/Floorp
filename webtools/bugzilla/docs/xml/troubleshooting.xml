@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: troubleshooting.xml,v 1.2 2004/12/07 12:29:04 jake%bugzilla.org Exp $ -->
+<!-- $Id: troubleshooting.xml,v 1.3 2004/12/21 20:57:39 jake%bugzilla.org Exp $ -->
 
 <appendix id="troubleshooting">
 <title>Troubleshooting</title>
@@ -292,6 +292,21 @@ at /usr/lib/perl5/site_perl/5.6.0/File/Temp.pm line 233.</programlisting>
      </para>
 
    </section>
+
+  <section id="trbl-index">
+  <title><filename>index.cgi</filename> doesn't show up unless specified in the URL</title>
+    <para>
+      You probably need to set up your web server in such a way that it
+      will serve the index.cgi page as an index page.
+    </para>
+    <para>
+      If you are using Apache, you can do this by adding 
+      <filename>index.cgi</filename> to the end of the 
+      <computeroutput>DirectoryIndex</computeroutput> line
+      as mentioned in <xref linkend="http-apache"/>.
+    </para>
+
+  </section>
 
 </appendix> 
 
