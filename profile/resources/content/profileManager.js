@@ -108,7 +108,7 @@ function RenameProfile()
         var migrate = selected.firstChild.firstChild.getAttribute("rowMigrate");
         try {
           profile.renameProfile(oldName, newName);
-          selected.firstChild.firstChild.setAttribute( "value", newName );
+          selected.firstChild.firstChild.setAttribute( "label", newName );
           selected.setAttribute( "rowName", newName );
           selected.setAttribute( "profile_name", newName );
         }
