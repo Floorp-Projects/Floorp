@@ -33,7 +33,8 @@ public:
 
 nsresult
 NS_NewRDFSimpleContentSink(nsIRDFContentSink** aResult,
-                           nsIURL* aURL)
+                           nsIURL* aURL,
+                           nsINameSpaceManager* aNameSpaceManager)
 {
     NS_PRECONDITION(aResult, "null ptr");
     if (! aResult)
@@ -44,7 +45,7 @@ NS_NewRDFSimpleContentSink(nsIRDFContentSink** aResult,
     if (! it)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = it->Init(aURL);
+    nsresult rv = it->Init(aURL, aNameSpaceManager);
     if (NS_FAILED(rv)) {
         delete it;
         return rv;

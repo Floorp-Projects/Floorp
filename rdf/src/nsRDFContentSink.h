@@ -27,6 +27,7 @@ class nsVoidArray;
 class nsIRDFNode;
 class nsIRDFDataSource;
 class nsIRDFResourceManager;
+class nsINameSpaceManager;
 
 typedef enum {
     eRDFContentSinkState_InProlog,
@@ -45,7 +46,7 @@ public:
     nsRDFContentSink();
     virtual ~nsRDFContentSink();
 
-    virtual nsresult Init(nsIURL* aURL);
+    virtual nsresult Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager);
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -85,17 +86,19 @@ protected:
     PRBool mConstrainSize;
 
     // namespace management
-    void FindNameSpaceAttributes(const nsIParserNode& aNode);
+    void      PushNameSpacesFrom(const nsIParserNode& aNode);
+    nsIAtom*  CutNameSpacePrefix(nsString& aString);
+    PRInt32   GetNameSpaceID(nsIAtom* aPrefix);
+    void      GetNameSpaceURI(PRInt32 aID, nsString& aURI);
+    void      PopNameSpaces();
 
-    void OpenNameSpace(const nsString& aPrefix, const nsString& aURI);
-    void GetNameSpaceURI(const nsString& aPrefix, nsString& rURI);
-    void CloseNameSpacesAtNestLevel(PRInt32 mNestLevel);
-  
-    nsVoidArray* mNameSpaces;
+    nsINameSpaceManager*  mNameSpaceManager;
+    nsVoidArray* mNameSpaceStack;
+    PRInt32      mRDFNameSpaceID;
 
     void SplitQualifiedName(const nsString& aQualifiedName,
-                            nsString& rNameSpaceURI,
-                            nsString& rPropertyURI);
+                            PRInt32& rNameSpaceID,
+                            nsString& rProperty);
 
     // RDF-specific parsing
     nsresult GetIdAboutAttribute(const nsIParserNode& aNode, nsString& rResource);
@@ -120,9 +123,7 @@ protected:
     PRInt32     PushContext(nsIRDFNode *aContext, RDFContentSinkState aState);
     nsresult    PopContext(nsIRDFNode*& rContext, RDFContentSinkState& rState);
     nsIRDFNode* GetContextElement(PRInt32 ancestor = 0);
-    PRInt32     GetCurrentNestLevel();
 
-    PRInt32 mNestLevel;
     nsVoidArray* mContextStack;
 
     nsIURL*      mDocumentURL;

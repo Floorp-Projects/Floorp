@@ -27,6 +27,7 @@
 class nsIArena;
 class nsIParser;
 class nsISupportsArray;
+class nsINameSpaceManager;
 
 /**
  * An NGLayout document context for displaying an RDF graph.
@@ -97,6 +98,8 @@ public:
     virtual nsIScriptContextOwner *GetScriptContextOwner();
 
     virtual void SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner);
+
+    NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager);
 
     virtual void AddObserver(nsIDocumentObserver* aObserver);
 
@@ -177,12 +180,6 @@ public:
 
 
     // nsIXMLDocument interface
-    NS_IMETHOD RegisterNameSpace(nsIAtom* aPrefix, const nsString& aURI, 
-                                 PRInt32& aNameSpaceId);
-
-    NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceId, nsString& aURI);
-    NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceId, nsIAtom*& aPrefix);
-
     NS_IMETHOD PrologElementAt(PRInt32 aOffset, nsIContent** aContent);
     NS_IMETHOD PrologCount(PRInt32* aCount);
     NS_IMETHOD AppendToProlog(nsIContent* aContent);
@@ -232,7 +229,7 @@ protected:
     nsICollection*         mSelection;
     PRBool                 mDisplaySelection;
     nsVoidArray            mPresShells;
-    nsVoidArray            mNameSpaces;
+    nsINameSpaceManager*   mNameSpaceManager;
     nsIStyleSheet*         mAttrStyleSheet;
     nsIParser*             mParser;
     nsIRDFDataBase*        mDB;
