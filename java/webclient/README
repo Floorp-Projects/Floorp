@@ -58,7 +58,7 @@ Solaris support is coming soon):
 ========================================================================
 Requirements:
 
-* built M8 mozilla tree for some variant of Linux
+* built mozilla tree for some variant of Linux
 
 * JDK1.2 with native threads support from http://www.blackdown.org 
 (JDK1.1 doesn't seem to work)

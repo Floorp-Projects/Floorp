@@ -45,6 +45,34 @@ extern "C" {
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_createTopLevelWindow
 (JNIEnv * env, jobject obj) {
     static GtkWidget *window = NULL;
+
+    // PENDING(mark): This is a hack needed in order to get those error
+    // messages about:
+    /***************************************************
+     *nsComponentManager: Load(/disk4/mozilla/mozilla/dist/bin/components/librdf.so) 
+     *FAILED with error: libsunwjdga.so: cannot open shared object file: 
+     *No such file or directory
+     ****************************************************/
+    // But the weird thing is, libhistory.so isn't linked with libsunwjdga.so.
+    // In fact, libsunwjdga.so doesn't even exist anywhere! I know it's
+    // a JDK library, but I think it is only supposed to get used on
+    // Solaris, not Linux. And why the hell is nsComponentManager trying
+    // to open this JDK library anyways? I need to try and get my stuff
+    // building on Solaris. Also, I will have to scan the Linux 
+    // JDK1.2 sources and figure out what's going on. In the meantime....
+    //
+    // -Mark
+    void * dll;
+
+    dll = dlopen("components/libhistory.so", RTLD_NOW | RTLD_GLOBAL);
+    if (!dll) {
+        printf("Got Error: %s\n", dlerror());
+    }
+    dll = dlopen("components/librdf.so", RTLD_NOW | RTLD_GLOBAL);
+    if (!dll) {
+        printf("Got Error: %s\n", dlerror());
+    }
+
     NS_SetupRegistry();
     
     /* Initialise GTK */
@@ -138,14 +166,10 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanvas_setGTKWindowSize
     (JNIEnv * env, jobject obj, jint gtkWinPtr, jint width, jint height) {
-#ifdef DEBUG_RAPTOR_CANVAS
-    printf("set gtk window size....width=%i, height=%i\n", width, height);
-#endif
     if (gtkWinPtr != 0) {
         GtkWidget * gtkWidgetPtr = (GtkWidget *) gtkWinPtr;
 
         if (gtkWidgetPtr) {
-            printf("size is being set...\n");
             gtk_widget_set_usize(gtkWidgetPtr, width, height);
         }
     }

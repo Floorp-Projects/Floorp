@@ -127,7 +127,11 @@ wsLoadURLEvent::wsLoadURLEvent(nsIWebShell* webShell, PRUnichar * urlString) :
 	mWebShell(webShell),
 	mURL(nsnull)
 {
+#ifdef NECKO
+	mURL = new nsString(urlString);
+#else
 	mURL = new nsString1(urlString);
+#endif
 }
 
 

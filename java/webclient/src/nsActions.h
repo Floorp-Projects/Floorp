@@ -74,7 +74,11 @@ public:
 
 protected:
 	nsIWebShell	*	mWebShell;
+#ifdef NECKO
+	nsString	*	mURL;
+#else
 	nsString1	*	mURL;
+#endif
 };
 
 

@@ -34,7 +34,11 @@
 #include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsRepository.h"
+#ifdef NECKO
+#include "nsNeckoUtil.h"
+#else
 #include "nsINetService.h"
+#endif
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 
@@ -188,12 +192,12 @@ static void event_processor_callback(gpointer data,
                                      gint source,
                                      GdkInputCondition condition) {
 #if DEBUG_RAPTOR_CANVAS
-    printf("event_processor_callback()\n");
+    printf("EventHandler: event_processor_callback()\n");
 #endif
     nsIEventQueue *eventQueue = (nsIEventQueue*)data;
     eventQueue->ProcessPendingEvents();
 #if DEBUG_RAPTOR_CANVAS
-    printf("Done processing pending events...\n");
+    printf("EventHandler: Done processing pending events\n");
 #endif
 }
 #endif
@@ -223,9 +227,13 @@ EmbeddedEventHandler (void * arg) {
     
     // Create the event queue.
     rv = aEventQService->CreateThreadEventQueue();
-    
+
+#ifndef NECKO    
     NS_InitINetService();
-    
+#endif
+    // HACK(mark): EmbeddedThread isn't set until after this method returns!!
+    initContext->embeddedThread = PR_GetCurrentThread();
+
     // Create the action queue
     if (initContext->embeddedThread) {
 
@@ -236,9 +244,28 @@ EmbeddedEventHandler (void * arg) {
 #if DEBUG_RAPTOR_CANVAS
 			printf("EmbeddedEventHandler(%lx): Create the action queue\n", initContext);
 #endif
+#ifdef XP_UNIX
+            // We need to do something different for Unix
+            nsIEventQueue * EQueue = nsnull;
+            
+            rv = aEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
+            gdk_input_add(EQueue->GetEventQueueSelectFD(),
+                          GDK_INPUT_READ,
+                          event_processor_callback,
+                          EQueue);
+
+            PLEventQueue * plEventQueue = nsnull;
+
+            EQueue->GetPLEventQueue(&plEventQueue);
+            initContext->actionQueue = plEventQueue;
+#else
 			initContext->actionQueue = ::PL_CreateMonitoredEventQueue("Action Queue", initContext->embeddedThread);
+#endif
 		}
 	}
+
+    // PENDING(mark): This is a test
+    //PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
 
 #if DEBUG_RAPTOR_CANVAS
 	printf("EmbeddedEventHandler(%lx): Create the WebShell...\n", initContext);
@@ -276,21 +303,8 @@ EmbeddedEventHandler (void * arg) {
     printf("EmbeddedEventHandler(%lx): enter event loop\n", initContext);
 #endif
     
-#ifdef XP_UNIX
-    // PENDING(mark): I'm not sure why the following code is needed....
-    // All I know is that when I add the code here, the document 
-    // loader will try to load any clicked urls before crashing.
-    // Whereas, if I left it out, nothing happens when the user clicks on
-    // a URL
-    nsIEventQueue * EQueue = nsnull;
-
-    rv = aEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
-    
-    gdk_input_add(EQueue->GetEventQueueSelectFD(),
-                  GDK_INPUT_READ,
-                  event_processor_callback,
-                  EQueue);
-#endif
+    // PENDING(mark): This is a test
+    //PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
 
     do {
         if (!processEventLoop(initContext)) {
@@ -1822,8 +1836,11 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL (
 
 		if (voidResult != nsnull) {
 
+#ifdef NECKO
+			nsString * string = new nsString((PRUnichar *) voidResult);
+#else
 			nsString1 * string = new nsString1((PRUnichar *) voidResult);
-
+#endif
 			if (string == nsnull) {
 				::ThrowExceptionToJava(env, "raptorWebShellGetURL Exception: unable to create Java string");
 				return nsnull;
