@@ -175,6 +175,7 @@
 <!ENTITY manBookmarksCmd.commandkey "b">
 
 <!ENTITY helpMenuCmd.label "Help">
+<!ENTITY helpMenuCmd.accesskey "h">
 <!ENTITY helpContentsCmd.label "Help Contents">
 <!ENTITY howTutorialCmd.label "How to Tutorial">
 <!ENTITY helpChannelCmd.label "Help Channel">
