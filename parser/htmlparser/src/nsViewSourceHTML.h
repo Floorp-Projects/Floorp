@@ -82,7 +82,7 @@ protected:
     nsParser*           mParser;
     nsIHTMLContentSink* mSink;
     PRInt32             mLineNumber;
-    nsITokenizer*       mTokenizer;
+    nsITokenizer*       mTokenizer; // weak
 
     PRInt32             mStartTag;
     PRInt32             mEndTag;

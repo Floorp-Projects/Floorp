@@ -121,7 +121,6 @@ nsScanner::nsScanner(const nsAString& anHTMLString, const nsString& aCharset, PR
   mUnicodeDecoder = 0;
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
-  mNewlinesSkipped=0;
 }
 
 /**
@@ -150,7 +149,6 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
   mUnicodeDecoder = 0;
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
-  mNewlinesSkipped=0;
 }
 
 /**
@@ -176,7 +174,6 @@ nsScanner::nsScanner(const nsAString& aFilename,nsInputStream& aStream,const nsS
   mUnicodeDecoder = 0;
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
-  mNewlinesSkipped=0;
 }
 
 
@@ -562,55 +559,54 @@ nsresult nsScanner::Peek(nsAString& aStr, PRInt32 aNumChars)
  *  @param   
  *  @return  error status
  */
-nsresult nsScanner::SkipWhitespace(void) {
+nsresult nsScanner::SkipWhitespace(PRInt32& aNewlinesSkipped) {
 
   if (!mSlidingBuffer) {
     return kEOF;
   }
 
-  nsReadingIterator<PRUnichar> current;
-  PRBool            found;
-  PRBool            skipped = PR_FALSE;
-
-  mNewlinesSkipped = 0;
-  current = mCurrentPosition;
-
-  PRUnichar         theChar=0;
-  nsresult          result=Peek(theChar);
+  PRUnichar theChar = 0;
+  nsresult  result = Peek(theChar);
   
   if (result == kEOF) {
     return Eof();
   }
   
-  while (current != mEndPosition) {
+  nsReadingIterator<PRUnichar> current = mCurrentPosition;
+  PRBool    done = PR_FALSE;
+  PRBool    skipped = PR_FALSE;
+  
+  while (!done && current != mEndPosition) {
     switch(theChar) {
-      case '\n': mNewlinesSkipped++;
+      case '\n':
+      case '\r': aNewlinesSkipped++;
       case ' ' :
-      case '\r':
       case '\b':
       case '\t':
-        found=PR_TRUE;
+        {
+          skipped = PR_TRUE;
+          PRUnichar thePrevChar = theChar;
+          theChar = (++current != mEndPosition) ? *current : '\0';
+          if ((thePrevChar == '\r' && theChar == '\n') ||
+              (thePrevChar == '\n' && theChar == '\r')) {
+            theChar = (++current != mEndPosition) ? *current : '\0'; // CRLF == LFCR => LF
+          }
+        }
         break;
       default:
-        found=PR_FALSE;
+        done = PR_TRUE;
         break;
     }
-    if(!found) {
-      break;
-    }
-    ++current;
-    theChar = *current;
-    skipped = PR_TRUE;
   }
 
   if (skipped) {
     SetPosition(current);
     if (current == mEndPosition) {
-      return Eof();
+      result = Eof();
     }
   }
 
-  return NS_OK;
+  return result;
 }
 
 /**
@@ -1026,95 +1022,102 @@ nsresult nsScanner::ReadNumber(nsReadingIterator<PRUnichar>& aStart,
  *  @param   addTerminal tells us whether to append terminal to aString
  *  @return  error code
  */
-nsresult nsScanner::ReadWhitespace(nsString& aString) {
+nsresult nsScanner::ReadWhitespace(nsString& aString,
+                                   PRInt32& aNewlinesSkipped) {
 
   if (!mSlidingBuffer) {
     return kEOF;
   }
 
-  PRUnichar         theChar=0;
-  nsresult          result=Peek(theChar);
+  PRUnichar theChar = 0;
+  nsresult  result = Peek(theChar);
+  
+  if (result == kEOF) {
+    return Eof();
+  }
+  
   nsReadingIterator<PRUnichar> origin, current, end;
-  PRBool            found=PR_FALSE;  
+  PRBool done = PR_FALSE;  
 
   origin = mCurrentPosition;
   current = origin;
   end = mEndPosition;
 
-  while(current != end) {
- 
-    theChar=*current;
-    if(theChar) {
-      switch(theChar) {
-        case ' ':
-        case '\b':
-        case '\t':
-        case kLF:
-        case kCR:
-          found=PR_TRUE;
-          break;
-        default:
-          found=PR_FALSE;
-          break;
-      }
-      if(!found) {
+  while(!done && current != end) {
+    switch(theChar) {
+      case '\n':
+      case '\r': aNewlinesSkipped++;
+      case ' ' :
+      case '\b':
+      case '\t':
+        {
+          PRUnichar thePrevChar = theChar;
+          theChar = (++current != end) ? *current : '\0';
+          if ((thePrevChar == '\r' && theChar == '\n') ||
+              (thePrevChar == '\n' && theChar == '\r')) {
+            theChar = (++current != end) ? *current : '\0'; // CRLF == LFCR => LF
+          }
+        }
+        break;
+      default:
+        done = PR_TRUE;
         AppendUnicodeTo(origin, current, aString);
         break;
-      }
     }
-    ++current;
   }
 
   SetPosition(current);
   if (current == end) {
     AppendUnicodeTo(origin, current, aString);
-    return Eof();
+    result = Eof();
   }
-
-  //DoErrTest(aString);
 
   return result;
 }
 
 nsresult nsScanner::ReadWhitespace(nsReadingIterator<PRUnichar>& aStart, 
-                                   nsReadingIterator<PRUnichar>& aEnd) {
+                                   nsReadingIterator<PRUnichar>& aEnd,
+                                   PRInt32& aNewlinesSkipped) {
 
   if (!mSlidingBuffer) {
     return kEOF;
   }
 
-  PRUnichar         theChar=0;
-  nsresult          result=Peek(theChar);
+  PRUnichar theChar = 0;
+  nsresult  result = Peek(theChar);
+  
+  if (result == kEOF) {
+    return Eof();
+  }
+  
   nsReadingIterator<PRUnichar> origin, current, end;
-  PRBool            found=PR_FALSE;  
+  PRBool done = PR_FALSE;  
 
   origin = mCurrentPosition;
   current = origin;
   end = mEndPosition;
 
-  while(current != end) {
- 
-    theChar=*current;
-    if(theChar) {
-      switch(theChar) {
-        case ' ':
-        case '\b':
-        case '\t':
-        case kLF:
-        case kCR:
-          found=PR_TRUE;
-          break;
-        default:
-          found=PR_FALSE;
-          break;
-      }
-      if(!found) {
+  while(!done && current != end) {
+    switch(theChar) {
+      case '\n':
+      case '\r': aNewlinesSkipped++;
+      case ' ' :
+      case '\b':
+      case '\t':
+        {
+          PRUnichar thePrevChar = theChar;
+          theChar = (++current != end) ? *current : '\0';
+          if ((thePrevChar == '\r' && theChar == '\n') ||
+              (thePrevChar == '\n' && theChar == '\r')) {
+            theChar = (++current != end) ? *current : '\0'; // CRLF == LFCR => LF
+          }
+        }
+        break;
+      default:
+        done = PR_TRUE;
         aStart = origin;
         aEnd = current;
         break;
-      }
-
-      ++current;
     }
   }
 
@@ -1122,10 +1125,8 @@ nsresult nsScanner::ReadWhitespace(nsReadingIterator<PRUnichar>& aStart,
   if (current == end) {
     aStart = origin;
     aEnd = current;
-    return Eof();
+    result = Eof();
   }
-
-  //DoErrTest(aString);
 
   return result;
 }

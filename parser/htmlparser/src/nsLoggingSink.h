@@ -40,6 +40,7 @@
 #define NS_LOGGING_SINK_H__
 
 #include "nsILoggingSink.h"
+#include "nsIParser.h"
 
 class nsLoggingSink : public nsILoggingSink {
 public:
@@ -114,6 +115,7 @@ protected:
 	int				          mLevel;
   nsIHTMLContentSink  *mSink;
   PRBool              mAutoDeleteOutput;
+  nsIParser*          mParser;
 };
 
 #endif

@@ -41,6 +41,7 @@
 #include "nsReadableUtils.h"
 #include "prprf.h"
 
+
 static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kILoggingSinkIID, NS_ILOGGING_SINK_IID);
@@ -197,6 +198,12 @@ nsLoggingSink::SetParser(nsIParser* aParser)  {
     theResult=mSink->SetParser(aParser);
   }
   
+  NS_IF_RELEASE(mParser);
+  
+  mParser = aParser;
+  
+  NS_IF_ADDREF(mParser);
+
   return theResult;
 }
 
@@ -610,8 +617,16 @@ nsLoggingSink::WriteAttributes(const nsIParserNode& aNode) {
   }
 
   if (0 != strchr(gSkippedContentTags, aNode.GetNodeType())) {
+    nsCOMPtr<nsIDTD> dtd;
+    mParser->GetDTD(getter_AddRefs(dtd));
+    NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
+    
+    nsString theString;
+    PRInt32 lineNo = 0;
+
+    dtd->CollectSkippedContent(aNode.GetNodeType(), theString, lineNo);
     char* content;
-    GetNewCString(aNode.GetSkippedContent(), &content);
+    GetNewCString(theString, &content);
     if(content) {
       PR_fprintf(mOutput, " <content value=\"");
       PR_fprintf(mOutput, "%s\"/>\n", content) ;
@@ -630,7 +645,14 @@ nsLoggingSink::WillWriteAttributes(const nsIParserNode& aNode)
     return PR_TRUE;
   }
   if (0 != strchr(gSkippedContentTags, aNode.GetNodeType())) {
-    const nsString& content = aNode.GetSkippedContent();
+    nsCOMPtr<nsIDTD> dtd;
+    mParser->GetDTD(getter_AddRefs(dtd));
+    NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
+    
+    nsString content;
+    PRInt32 lineNo = 0;
+
+    dtd->CollectSkippedContent(aNode.GetNodeType(), content, lineNo);
     if (content.Length() > 0) {
       return PR_TRUE;
     }
