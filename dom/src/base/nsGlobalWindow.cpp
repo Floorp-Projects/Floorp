@@ -268,7 +268,8 @@ NS_IMPL_RELEASE(GlobalWindowImpl)
 // GlobalWindowImpl::nsIScriptGlobalObject
 //*****************************************************************************
 
-NS_IMETHODIMP GlobalWindowImpl::SetContext(nsIScriptContext* aContext)
+NS_IMETHODIMP
+GlobalWindowImpl::SetContext(nsIScriptContext* aContext)
 {
   // if setting the context to null, then we won't get to clean up the
   // named reference, so do it now
@@ -298,15 +299,17 @@ NS_IMETHODIMP GlobalWindowImpl::SetContext(nsIScriptContext* aContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetContext(nsIScriptContext ** aContext)
+NS_IMETHODIMP
+GlobalWindowImpl::GetContext(nsIScriptContext ** aContext)
 {
   *aContext = mContext;
   NS_IF_ADDREF(*aContext);
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
-                                               PRBool removeEventListeners)
+NS_IMETHODIMP
+GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
+                                 PRBool removeEventListeners)
 {
   if (!aDocument) {
     if (mDocument) {
@@ -345,19 +348,19 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
 
     if (mDocument) {
       // Get our private root. If it is equal to us, then we
-      // need to attach our global key bindings that handle 
+      // need to attach our global key bindings that handle
       // browser scrolling and other browser commands.
       nsCOMPtr<nsIDOMWindowInternal> internal;
       GetPrivateRoot(getter_AddRefs(internal));
       nsCOMPtr<nsIDOMWindowInternal> us(do_QueryInterface(NS_STATIC_CAST(nsIDOMWindow*,this)));
       if (internal == us) {
         nsresult rv;
-        nsCOMPtr<nsIXBLService> xblService = 
+        nsCOMPtr<nsIXBLService> xblService =
                  do_GetService("@mozilla.org/xbl;1", &rv);
         if (xblService) {
           nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mChromeEventHandler));
           xblService->AttachGlobalKeyHandler(rec);
-          
+
           // for now, the only way to get drag/drop is to use the XUL
           // wrapper. There are just too many things that need to be
           // added to hookup DnD with XBL (pinkerton)
@@ -447,7 +450,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
+NS_IMETHODIMP
+GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
 {
   if (aDocShell == mDocShell)
     return NS_OK;
@@ -519,14 +523,16 @@ NS_IMETHODIMP GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetDocShell(nsIDocShell ** aDocShell)
+NS_IMETHODIMP
+GlobalWindowImpl::GetDocShell(nsIDocShell ** aDocShell)
 {
   *aDocShell = mDocShell;
   NS_IF_ADDREF(*aDocShell);
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetOpenerWindow(nsIDOMWindowInternal* aOpener)
+NS_IMETHODIMP
+GlobalWindowImpl::SetOpenerWindow(nsIDOMWindowInternal* aOpener)
 {
   mOpener = aOpener;
   return NS_OK;
@@ -549,11 +555,12 @@ GlobalWindowImpl::GetGlobalObjectOwner(nsIScriptGlobalObjectOwner ** aOwner)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
-                                               nsEvent* aEvent,
-                                               nsIDOMEvent** aDOMEvent,
-                                               PRUint32 aFlags,
-                                               nsEventStatus* aEventStatus)
+NS_IMETHODIMP
+GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
+                                 nsEvent* aEvent,
+                                 nsIDOMEvent** aDOMEvent,
+                                 PRUint32 aFlags,
+                                 nsEventStatus* aEventStatus)
 {
   nsresult ret = NS_OK;
   PRBool externalDOMEvent = PR_FALSE;
@@ -566,21 +573,21 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
   nsCOMPtr<nsIChromeEventHandler> kungFuDeathGrip1(mChromeEventHandler);
   nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(mContext);
 
-  /* If this is a mouse event, use the struct to provide entropy for 
+  /* If this is a mouse event, use the struct to provide entropy for
    * the system.
    */
-  if (gEntropyCollector && 
-      (NS_EVENT_FLAG_BUBBLE != aFlags) && 
+  if (gEntropyCollector &&
+      (NS_EVENT_FLAG_BUBBLE != aFlags) &&
       (aEvent->message == NS_MOUSE_MOVE)) {
     //I'd like to not come in here if there is a mChromeEventHandler
-    //present, but there is always one when the message is 
+    //present, but there is always one when the message is
     //NS_MOUSE_MOVE.
     //
     //Chances are this counter will overflow during the life of the
-    //process, but that's OK for our case.  Means we get a little 
+    //process, but that's OK for our case.  Means we get a little
     //more entropy.
     if (count++ % 100 == 0) {
-      //Since the high bits seem to be zero's most of the time, 
+      //Since the high bits seem to be zero's most of the time,
       //let's only take the lowest half of the point structure.
       PRInt16 myCoord[4];
 
@@ -596,7 +603,7 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
   if (NS_EVENT_FLAG_INIT & aFlags) {
     if (aDOMEvent) {
       if (*aDOMEvent) {
-        externalDOMEvent = PR_TRUE;   
+        externalDOMEvent = PR_TRUE;
       }
     }
     else {
@@ -721,7 +728,8 @@ GlobalWindowImpl::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 // GlobalWindowImpl::nsIScriptObjectPrincipal
 //*****************************************************************************
 
-NS_IMETHODIMP GlobalWindowImpl::GetPrincipal(nsIPrincipal** result)
+NS_IMETHODIMP
+GlobalWindowImpl::GetPrincipal(nsIPrincipal** result)
 {
   NS_ENSURE_ARG_POINTER(result);
 
@@ -764,7 +772,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetPrincipal(nsIPrincipal** result)
 // GlobalWindowImpl::nsIDOMWindow
 //*****************************************************************************
 
-NS_IMETHODIMP GlobalWindowImpl::GetDocument(nsIDOMDocument** aDocument)
+NS_IMETHODIMP
+GlobalWindowImpl::GetDocument(nsIDOMDocument** aDocument)
 {
   /* lazily instantiate an about:blank document if necessary, and if we have
      what it takes to do so. Note that domdoc here is the same thing as
@@ -791,21 +800,24 @@ NS_IMETHODIMP GlobalWindowImpl::GetExtantDocument(nsIDOMDocument** aDocument)
 // GlobalWindowImpl::nsIDOMWindowInternal
 //*****************************************************************************
 
-NS_IMETHODIMP GlobalWindowImpl::GetWindow(nsIDOMWindowInternal** aWindow)
+NS_IMETHODIMP
+GlobalWindowImpl::GetWindow(nsIDOMWindowInternal** aWindow)
 {
   *aWindow = NS_STATIC_CAST(nsIDOMWindowInternal *, this);
   NS_ADDREF(*aWindow);
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetSelf(nsIDOMWindowInternal** aWindow)
+NS_IMETHODIMP
+GlobalWindowImpl::GetSelf(nsIDOMWindowInternal** aWindow)
 {
   *aWindow = NS_STATIC_CAST(nsIDOMWindowInternal *, this);
   NS_ADDREF(*aWindow);
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
+NS_IMETHODIMP
+GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
 {
   if (!mNavigator) {
     mNavigator = new NavigatorImpl(mDocShell);
@@ -819,7 +831,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetScreen(nsIDOMScreen** aScreen)
+NS_IMETHODIMP
+GlobalWindowImpl::GetScreen(nsIDOMScreen** aScreen)
 {
   if (!mScreen && mDocShell) {
     mScreen = new ScreenImpl(mDocShell);
@@ -832,7 +845,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetScreen(nsIDOMScreen** aScreen)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetHistory(nsIDOMHistory** aHistory)
+NS_IMETHODIMP
+GlobalWindowImpl::GetHistory(nsIDOMHistory** aHistory)
 {
   if (!mHistory && mDocShell) {
     mHistory = new HistoryImpl(mDocShell);
@@ -844,7 +858,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetHistory(nsIDOMHistory** aHistory)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetParent(nsIDOMWindow** aParent)
+NS_IMETHODIMP
+GlobalWindowImpl::GetParent(nsIDOMWindow** aParent)
 {
   NS_ENSURE_ARG_POINTER(aParent);
   *aParent = nsnull;
@@ -869,7 +884,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetParent(nsIDOMWindow** aParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetTop(nsIDOMWindow** aTop)
+NS_IMETHODIMP
+GlobalWindowImpl::GetTop(nsIDOMWindow** aTop)
 {
   nsresult ret = NS_OK;
 
@@ -888,7 +904,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetTop(nsIDOMWindow** aTop)
   return ret;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetContent(nsIDOMWindow** aContent)
+NS_IMETHODIMP
+GlobalWindowImpl::GetContent(nsIDOMWindow** aContent)
 {
   *aContent = nsnull;
 
@@ -907,7 +924,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetContent(nsIDOMWindow** aContent)
 }
 
 // XXX for sidebar HACK, see bug 20721
-NS_IMETHODIMP GlobalWindowImpl::GetSidebar(nsISidebar** aSidebar)
+NS_IMETHODIMP
+GlobalWindowImpl::GetSidebar(nsISidebar** aSidebar)
 {
   nsresult rv = NS_OK;
 
@@ -928,7 +946,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetSidebar(nsISidebar** aSidebar)
 
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetPrompter(nsIPrompt** aPrompt)
+NS_IMETHODIMP
+GlobalWindowImpl::GetPrompter(nsIPrompt** aPrompt)
 {
   if (!mDocShell)
     return NS_ERROR_FAILURE;
@@ -940,7 +959,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetPrompter(nsIPrompt** aPrompt)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetMenubar(nsIDOMBarProp** aMenubar)
+NS_IMETHODIMP
+GlobalWindowImpl::GetMenubar(nsIDOMBarProp** aMenubar)
 {
   if (!mMenubar) {
     mMenubar = new MenubarPropImpl();
@@ -959,7 +979,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetMenubar(nsIDOMBarProp** aMenubar)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetToolbar(nsIDOMBarProp** aToolbar)
+NS_IMETHODIMP
+GlobalWindowImpl::GetToolbar(nsIDOMBarProp** aToolbar)
 {
   if (!mToolbar) {
     mToolbar = new ToolbarPropImpl();
@@ -978,7 +999,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetToolbar(nsIDOMBarProp** aToolbar)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetLocationbar(nsIDOMBarProp** aLocationbar)
+NS_IMETHODIMP
+GlobalWindowImpl::GetLocationbar(nsIDOMBarProp** aLocationbar)
 {
   if (!mLocationbar) {
     mLocationbar = new LocationbarPropImpl();
@@ -997,7 +1019,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetLocationbar(nsIDOMBarProp** aLocationbar)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetPersonalbar(nsIDOMBarProp** aPersonalbar)
+NS_IMETHODIMP
+GlobalWindowImpl::GetPersonalbar(nsIDOMBarProp** aPersonalbar)
 {
   if (!mPersonalbar) {
     mPersonalbar = new PersonalbarPropImpl();
@@ -1016,7 +1039,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetPersonalbar(nsIDOMBarProp** aPersonalbar)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetStatusbar(nsIDOMBarProp** aStatusbar)
+NS_IMETHODIMP
+GlobalWindowImpl::GetStatusbar(nsIDOMBarProp** aStatusbar)
 {
   if (!mStatusbar) {
     mStatusbar = new StatusbarPropImpl();
@@ -1035,7 +1059,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetStatusbar(nsIDOMBarProp** aStatusbar)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetScrollbars(nsIDOMBarProp** aScrollbars)
+NS_IMETHODIMP
+GlobalWindowImpl::GetScrollbars(nsIDOMBarProp** aScrollbars)
 {
   if (!mScrollbars) {
     mScrollbars = new ScrollbarsPropImpl();
@@ -1054,18 +1079,21 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollbars(nsIDOMBarProp** aScrollbars)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetDirectories(nsIDOMBarProp** aDirectories)
+NS_IMETHODIMP
+GlobalWindowImpl::GetDirectories(nsIDOMBarProp** aDirectories)
 {
   return GetPersonalbar(aDirectories);
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetClosed(PRBool* aClosed)
+NS_IMETHODIMP
+GlobalWindowImpl::GetClosed(PRBool* aClosed)
 {
   *aClosed = !mDocShell;
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetFrames(nsIDOMWindowCollection** aFrames)
+NS_IMETHODIMP
+GlobalWindowImpl::GetFrames(nsIDOMWindowCollection** aFrames)
 {
   if (!mFrames && mDocShell) {
     mFrames = new nsDOMWindowList(mDocShell);
@@ -1079,7 +1107,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetFrames(nsIDOMWindowCollection** aFrames)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetCrypto(nsIDOMCrypto** aCrypto)
+NS_IMETHODIMP
+GlobalWindowImpl::GetCrypto(nsIDOMCrypto** aCrypto)
 {
   nsresult rv;
 
@@ -1091,7 +1120,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetCrypto(nsIDOMCrypto** aCrypto)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetPkcs11(nsIDOMPkcs11** aPkcs11)
+NS_IMETHODIMP
+GlobalWindowImpl::GetPkcs11(nsIDOMPkcs11** aPkcs11)
 {
   nsresult rv;
 
@@ -1103,7 +1133,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetPkcs11(nsIDOMPkcs11** aPkcs11)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetControllers(nsIControllers** aResult)
+NS_IMETHODIMP
+GlobalWindowImpl::GetControllers(nsIControllers** aResult)
 {
   if (!mControllers) {
     mControllers = do_CreateInstance(kXULControllersCID);
@@ -1122,27 +1153,31 @@ NS_IMETHODIMP GlobalWindowImpl::GetControllers(nsIControllers** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetOpener(nsIDOMWindowInternal** aOpener)
+NS_IMETHODIMP
+GlobalWindowImpl::GetOpener(nsIDOMWindowInternal** aOpener)
 {
   *aOpener = mOpener;
   NS_IF_ADDREF(*aOpener);
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetOpener(nsIDOMWindowInternal* aOpener)
+NS_IMETHODIMP
+GlobalWindowImpl::SetOpener(nsIDOMWindowInternal* aOpener)
 {
   mOpener = aOpener;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetStatus(nsAWritableString& aStatus)
+NS_IMETHODIMP
+GlobalWindowImpl::GetStatus(nsAWritableString& aStatus)
 {
   aStatus = mStatus;
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetStatus(const nsAReadableString& aStatus)
+NS_IMETHODIMP
+GlobalWindowImpl::SetStatus(const nsAReadableString& aStatus)
 {
   mStatus = aStatus;
 
@@ -1177,7 +1212,8 @@ GlobalWindowImpl::SetDefaultStatus(const nsAReadableString& aDefaultStatus)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetName(nsAWritableString& aName)
+NS_IMETHODIMP
+GlobalWindowImpl::GetName(nsAWritableString& aName)
 {
   nsXPIDLString name;
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
@@ -1188,7 +1224,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetName(nsAWritableString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetName(const nsAReadableString& aName)
+NS_IMETHODIMP
+GlobalWindowImpl::SetName(const nsAReadableString& aName)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
@@ -1197,33 +1234,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetName(const nsAReadableString& aName)
   return result;
 }
 
-NS_IMETHODIMP    
-GlobalWindowImpl::GetTitle(nsAWritableString& aTitle)
-{
-  aTitle = mTitle;
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-GlobalWindowImpl::SetTitle(const nsAReadableString& aTitle)
-{
-  mTitle = aTitle;
-  if(mDocShell) {
-    // See if we're a chrome shell.
-    PRInt32 type;
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
-    docShellAsItem->GetItemType(&type);
-    if(type == nsIDocShellTreeItem::typeChrome) {
-      nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
-      if(docShellAsWin) {
-        docShellAsWin->SetTitle(PromiseFlatString(mTitle).get());
-      }
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
+NS_IMETHODIMP
+GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 {
   FlushPendingNotifications(PR_TRUE);
 
@@ -1235,7 +1247,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
+NS_IMETHODIMP
+GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
 {
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
@@ -1243,7 +1256,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
   nsCOMPtr<nsIDocShellTreeItem> docShellParent;
   docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
 
-  // It's only valid to access this from a top window.  Doesn't work from 
+  // It's only valid to access this from a top window.  Doesn't work from
   // sub-frames.
   if (docShellParent)
     return NS_OK; // Silent failure
@@ -1263,7 +1276,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
+NS_IMETHODIMP
+GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
 {
   FlushPendingNotifications(PR_TRUE);
 
@@ -1275,7 +1289,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
+NS_IMETHODIMP
+GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
 {
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
@@ -1283,7 +1298,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
   nsCOMPtr<nsIDocShellTreeItem> docShellParent;
   docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
 
-  // It's only valid to access this from a top window.  Doesn't work from 
+  // It's only valid to access this from a top window.  Doesn't work from
   // sub-frames.
   if (docShellParent)
     return NS_OK; // Silent failure
@@ -1304,7 +1319,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetOuterWidth(PRInt32* aOuterWidth)
+NS_IMETHODIMP
+GlobalWindowImpl::GetOuterWidth(PRInt32* aOuterWidth)
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -1318,7 +1334,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetOuterWidth(PRInt32* aOuterWidth)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetOuterWidth(PRInt32 aOuterWidth)
+NS_IMETHODIMP
+GlobalWindowImpl::SetOuterWidth(PRInt32 aOuterWidth)
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -1336,7 +1353,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetOuterWidth(PRInt32 aOuterWidth)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetOuterHeight(PRInt32* aOuterHeight)
+NS_IMETHODIMP
+GlobalWindowImpl::GetOuterHeight(PRInt32* aOuterHeight)
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -1350,7 +1368,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetOuterHeight(PRInt32* aOuterHeight)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetOuterHeight(PRInt32 aOuterHeight)
+NS_IMETHODIMP
+GlobalWindowImpl::SetOuterHeight(PRInt32 aOuterHeight)
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -1368,7 +1387,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetOuterHeight(PRInt32 aOuterHeight)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetScreenX(PRInt32* aScreenX)
+NS_IMETHODIMP
+GlobalWindowImpl::GetScreenX(PRInt32* aScreenX)
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -1382,7 +1402,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetScreenX(PRInt32* aScreenX)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetScreenX(PRInt32 aScreenX)
+NS_IMETHODIMP
+GlobalWindowImpl::SetScreenX(PRInt32 aScreenX)
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -1401,7 +1422,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetScreenX(PRInt32 aScreenX)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetScreenY(PRInt32* aScreenY)
+NS_IMETHODIMP
+GlobalWindowImpl::GetScreenY(PRInt32* aScreenY)
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -1415,7 +1437,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetScreenY(PRInt32* aScreenY)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetScreenY(PRInt32 aScreenY)
+NS_IMETHODIMP
+GlobalWindowImpl::SetScreenY(PRInt32 aScreenY)
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -1538,17 +1561,20 @@ GlobalWindowImpl::CheckSecurityLeftAndTop(PRInt32* aLeft, PRInt32* aTop)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetPageXOffset(PRInt32* aPageXOffset)
+NS_IMETHODIMP
+GlobalWindowImpl::GetPageXOffset(PRInt32* aPageXOffset)
 {
   return GetScrollX(aPageXOffset);
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetPageYOffset(PRInt32* aPageYOffset)
+NS_IMETHODIMP
+GlobalWindowImpl::GetPageYOffset(PRInt32* aPageYOffset)
 {
   return GetScrollY(aPageYOffset);
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetScrollX(PRInt32* aScrollX)
+NS_IMETHODIMP
+GlobalWindowImpl::GetScrollX(PRInt32* aScrollX)
 {
   NS_ENSURE_ARG_POINTER(aScrollX);
   nsresult result = NS_OK;
@@ -1567,7 +1593,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollX(PRInt32* aScrollX)
   return result;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetScrollY(PRInt32* aScrollY)
+NS_IMETHODIMP
+GlobalWindowImpl::GetScrollY(PRInt32* aScrollY)
 {
   NS_ENSURE_ARG_POINTER(aScrollY);
   nsresult result = NS_OK;
@@ -1586,7 +1613,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollY(PRInt32* aScrollY)
   return result;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetLength(PRUint32* aLength)
+NS_IMETHODIMP
+GlobalWindowImpl::GetLength(PRUint32* aLength)
 {
   nsCOMPtr<nsIDOMWindowCollection> frames;
   if (NS_SUCCEEDED(GetFrames(getter_AddRefs(frames))) && frames) {
@@ -1595,7 +1623,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetLength(PRUint32* aLength)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Dump(const nsAReadableString& aStr)
+NS_IMETHODIMP
+GlobalWindowImpl::Dump(const nsAReadableString& aStr)
 {
 #if !(defined(NS_DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
   {
@@ -1662,7 +1691,8 @@ GlobalWindowImpl::EnsureReflowFlushAndPaint()
   presShell->UnsuppressPainting();
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetTextZoom(float *aZoom)
+NS_IMETHODIMP
+GlobalWindowImpl::GetTextZoom(float *aZoom)
 {
   if (mDocShell) {
     nsCOMPtr<nsIContentViewer> contentViewer;
@@ -1676,7 +1706,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetTextZoom(float *aZoom)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SetTextZoom(float aZoom)
+NS_IMETHODIMP
+GlobalWindowImpl::SetTextZoom(float aZoom)
 {
   if (mDocShell) {
     nsCOMPtr<nsIContentViewer> contentViewer;
@@ -1842,7 +1873,8 @@ GlobalWindowImpl::Prompt(nsAWritableString& aReturn)
   return Prompt(message, initial, title, savePassword, aReturn);
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Focus()
+NS_IMETHODIMP
+GlobalWindowImpl::Focus()
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -1880,7 +1912,8 @@ NS_IMETHODIMP GlobalWindowImpl::Focus()
   return result;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Blur()
+NS_IMETHODIMP
+GlobalWindowImpl::Blur()
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -1896,7 +1929,8 @@ NS_IMETHODIMP GlobalWindowImpl::Blur()
   return rv;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Back()
+NS_IMETHODIMP
+GlobalWindowImpl::Back()
 {
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
@@ -1904,7 +1938,8 @@ NS_IMETHODIMP GlobalWindowImpl::Back()
   return webNav->GoBack();
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Forward()
+NS_IMETHODIMP
+GlobalWindowImpl::Forward()
 {
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
@@ -1912,7 +1947,8 @@ NS_IMETHODIMP GlobalWindowImpl::Forward()
   return webNav->GoForward();
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Home()
+NS_IMETHODIMP
+GlobalWindowImpl::Home()
 {
   if (!mDocShell)
     return NS_OK;
@@ -1938,7 +1974,7 @@ NS_IMETHODIMP GlobalWindowImpl::Home()
   nsresult rv;
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
-  rv = webNav->LoadURI(homeURL.get(), 
+  rv = webNav->LoadURI(homeURL.get(),
                        nsIWebNavigation::LOAD_FLAGS_NONE,
                        nsnull,
                        nsnull,
@@ -1947,22 +1983,26 @@ NS_IMETHODIMP GlobalWindowImpl::Home()
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Stop()
+NS_IMETHODIMP
+GlobalWindowImpl::Stop()
 {
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
   return webNav->Stop(nsIWebNavigation::STOP_ALL);
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Print()
+NS_IMETHODIMP
+GlobalWindowImpl::Print()
 {
   nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint;
-  if (NS_SUCCEEDED(GetInterface(NS_GET_IID(nsIWebBrowserPrint), getter_AddRefs(webBrowserPrint)))) {
-    webBrowserPrint->Print(nsnull, nsnull);        
+  if (NS_SUCCEEDED(GetInterface(NS_GET_IID(nsIWebBrowserPrint),
+                                getter_AddRefs(webBrowserPrint)))) {
+    webBrowserPrint->Print(nsnull, nsnull);
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::MoveTo(PRInt32 aXPos, PRInt32 aYPos)
+NS_IMETHODIMP
+GlobalWindowImpl::MoveTo(PRInt32 aXPos, PRInt32 aYPos)
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -1977,7 +2017,8 @@ NS_IMETHODIMP GlobalWindowImpl::MoveTo(PRInt32 aXPos, PRInt32 aYPos)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::MoveBy(PRInt32 aXDif, PRInt32 aYDif)
+NS_IMETHODIMP
+GlobalWindowImpl::MoveBy(PRInt32 aXDif, PRInt32 aYDif)
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -1996,7 +2037,8 @@ NS_IMETHODIMP GlobalWindowImpl::MoveBy(PRInt32 aXDif, PRInt32 aYDif)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::ResizeTo(PRInt32 aWidth, PRInt32 aHeight)
+NS_IMETHODIMP
+GlobalWindowImpl::ResizeTo(PRInt32 aWidth, PRInt32 aHeight)
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -2011,7 +2053,8 @@ NS_IMETHODIMP GlobalWindowImpl::ResizeTo(PRInt32 aWidth, PRInt32 aHeight)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
+NS_IMETHODIMP
+GlobalWindowImpl::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
 {
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -2031,7 +2074,8 @@ NS_IMETHODIMP GlobalWindowImpl::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::SizeToContent()
+NS_IMETHODIMP
+GlobalWindowImpl::SizeToContent()
 {
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
@@ -2039,7 +2083,7 @@ NS_IMETHODIMP GlobalWindowImpl::SizeToContent()
   nsCOMPtr<nsIDocShellTreeItem> docShellParent;
   docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
 
-  // It's only valid to access this from a top window.  Doesn't work from 
+  // It's only valid to access this from a top window.  Doesn't work from
   // sub-frames.
   if (docShellParent)
     return NS_ERROR_FAILURE;
@@ -2053,26 +2097,14 @@ NS_IMETHODIMP GlobalWindowImpl::SizeToContent()
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetAttention()
-{
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
-  GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-  NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIWidget> widget;
-  treeOwnerAsWin->GetMainWidget(getter_AddRefs(widget));
-  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(widget->GetAttention(), NS_ERROR_FAILURE);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP GlobalWindowImpl::Scroll(PRInt32 aXScroll, PRInt32 aYScroll)
+NS_IMETHODIMP
+GlobalWindowImpl::Scroll(PRInt32 aXScroll, PRInt32 aYScroll)
 {
   return ScrollTo(aXScroll, aYScroll);
 }
 
-NS_IMETHODIMP GlobalWindowImpl::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
+NS_IMETHODIMP
+GlobalWindowImpl::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
 {
   nsresult result;
   nsIScrollableView *view = nsnull;      // no addref/release for views
@@ -2104,8 +2136,9 @@ NS_IMETHODIMP GlobalWindowImpl::ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll)
   return result;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::ScrollBy(PRInt32 aXScrollDif,
-                                         PRInt32 aYScrollDif)
+NS_IMETHODIMP
+GlobalWindowImpl::ScrollBy(PRInt32 aXScrollDif,
+                           PRInt32 aYScrollDif)
 {
   nsresult result;
   nsIScrollableView *view = nsnull;      // no addref/release for views
@@ -2125,7 +2158,8 @@ NS_IMETHODIMP GlobalWindowImpl::ScrollBy(PRInt32 aXScrollDif,
   return result;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::ScrollByLines(PRInt32 numLines)
+NS_IMETHODIMP
+GlobalWindowImpl::ScrollByLines(PRInt32 numLines)
 {
   nsresult result;
   nsIScrollableView *view = nsnull;   // no addref/release for views
@@ -2140,7 +2174,8 @@ NS_IMETHODIMP GlobalWindowImpl::ScrollByLines(PRInt32 numLines)
   return result;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::ScrollByPages(PRInt32 numPages)
+NS_IMETHODIMP
+GlobalWindowImpl::ScrollByPages(PRInt32 numPages)
 {
   nsresult result;
   nsIScrollableView *view = nsnull;   // no addref/release for views
@@ -2155,12 +2190,14 @@ NS_IMETHODIMP GlobalWindowImpl::ScrollByPages(PRInt32 numPages)
   return result;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::ClearTimeout(PRInt32 aTimerID)
+NS_IMETHODIMP
+GlobalWindowImpl::ClearTimeout(PRInt32 aTimerID)
 {
   return ClearTimeoutOrInterval(aTimerID);
 }
 
-NS_IMETHODIMP GlobalWindowImpl::ClearInterval(PRInt32 aTimerID)
+NS_IMETHODIMP
+GlobalWindowImpl::ClearInterval(PRInt32 aTimerID)
 {
   return ClearTimeoutOrInterval(aTimerID);
 }
@@ -2185,7 +2222,8 @@ GlobalWindowImpl::SetResizable(PRBool aResizable)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::CaptureEvents(PRInt32 aEventFlags)
+NS_IMETHODIMP
+GlobalWindowImpl::CaptureEvents(PRInt32 aEventFlags)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
 
@@ -2197,7 +2235,8 @@ NS_IMETHODIMP GlobalWindowImpl::CaptureEvents(PRInt32 aEventFlags)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::ReleaseEvents(PRInt32 aEventFlags)
+NS_IMETHODIMP
+GlobalWindowImpl::ReleaseEvents(PRInt32 aEventFlags)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
 
@@ -2209,112 +2248,23 @@ NS_IMETHODIMP GlobalWindowImpl::ReleaseEvents(PRInt32 aEventFlags)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::RouteEvent(nsIDOMEvent* aEvt)
+NS_IMETHODIMP
+GlobalWindowImpl::RouteEvent(nsIDOMEvent* aEvt)
 {
   //XXX Not the best solution -joki
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::EnableExternalCapture()
+NS_IMETHODIMP
+GlobalWindowImpl::EnableExternalCapture()
 {
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::DisableExternalCapture()
+NS_IMETHODIMP
+GlobalWindowImpl::DisableExternalCapture()
 {
   return NS_ERROR_FAILURE;
-}
-
-//Note: This call will lock the cursor, it will not change as it moves.
-//To unlock, the cursor must be set back to CURSOR_AUTO.
-NS_IMETHODIMP GlobalWindowImpl::SetCursor(const nsAReadableString& aCursor)
-{
-  nsresult ret = NS_OK;
-  PRInt32 cursor;
-
-  if (aCursor.Equals(NS_LITERAL_STRING("auto")))
-    cursor = NS_STYLE_CURSOR_AUTO;
-  else if (aCursor.Equals(NS_LITERAL_STRING("default")))
-    cursor = NS_STYLE_CURSOR_DEFAULT;
-  else if (aCursor.Equals(NS_LITERAL_STRING("pointer")))
-    cursor = NS_STYLE_CURSOR_POINTER;
-  else if (aCursor.Equals(NS_LITERAL_STRING("crosshair")))
-    cursor = NS_STYLE_CURSOR_CROSSHAIR;
-  else if (aCursor.Equals(NS_LITERAL_STRING("move")))
-    cursor = NS_STYLE_CURSOR_MOVE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("text")))
-    cursor = NS_STYLE_CURSOR_TEXT;
-  else if (aCursor.Equals(NS_LITERAL_STRING("wait")))
-    cursor = NS_STYLE_CURSOR_WAIT;
-  else if (aCursor.Equals(NS_LITERAL_STRING("help")))
-    cursor = NS_STYLE_CURSOR_HELP;
-  else if (aCursor.Equals(NS_LITERAL_STRING("n-resize")))
-    cursor = NS_STYLE_CURSOR_N_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("s-resize")))
-    cursor = NS_STYLE_CURSOR_S_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("w-resize")))
-    cursor = NS_STYLE_CURSOR_W_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("e-resize")))
-    cursor = NS_STYLE_CURSOR_E_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("ne-resize")))
-    cursor = NS_STYLE_CURSOR_NE_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("nw-resize")))
-    cursor = NS_STYLE_CURSOR_NW_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("se-resize")))
-    cursor = NS_STYLE_CURSOR_SE_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("sw-resize")))
-    cursor = NS_STYLE_CURSOR_SW_RESIZE;
-  else if (aCursor.Equals(NS_LITERAL_STRING("copy")))
-    cursor = NS_STYLE_CURSOR_COPY;      // CSS3
-  else if (aCursor.Equals(NS_LITERAL_STRING("alias")))
-    cursor = NS_STYLE_CURSOR_ALIAS;
-  else if (aCursor.Equals(NS_LITERAL_STRING("context-menu")))
-    cursor = NS_STYLE_CURSOR_CONTEXT_MENU;
-  else if (aCursor.Equals(NS_LITERAL_STRING("cell")))
-    cursor = NS_STYLE_CURSOR_CELL;
-  else if (aCursor.Equals(NS_LITERAL_STRING("grab")))
-    cursor = NS_STYLE_CURSOR_GRAB;
-  else if (aCursor.Equals(NS_LITERAL_STRING("grabbing")))
-    cursor = NS_STYLE_CURSOR_GRABBING;
-  else if (aCursor.Equals(NS_LITERAL_STRING("spinning")))
-    cursor = NS_STYLE_CURSOR_SPINNING;
-  else if (aCursor.Equals(NS_LITERAL_STRING("count-up")))
-    cursor = NS_STYLE_CURSOR_COUNT_UP;
-  else if (aCursor.Equals(NS_LITERAL_STRING("count-down")))
-    cursor = NS_STYLE_CURSOR_COUNT_DOWN;
-  else if (aCursor.Equals(NS_LITERAL_STRING("count-up-down")))
-    cursor = NS_STYLE_CURSOR_COUNT_UP_DOWN;
-  else
-    return NS_OK;
-
-  nsCOMPtr<nsIPresContext> presContext;
-  mDocShell->GetPresContext(getter_AddRefs(presContext));
-  if (presContext) {
-    nsCOMPtr<nsIEventStateManager> esm;
-    if (NS_SUCCEEDED(presContext->GetEventStateManager(getter_AddRefs(esm)))) {
-      // Need root widget.
-      nsCOMPtr<nsIPresShell> presShell;
-      mDocShell->GetPresShell(getter_AddRefs(presShell));
-      NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-      nsCOMPtr<nsIViewManager> vm;
-      presShell->GetViewManager(getter_AddRefs(vm));
-      NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
-
-      nsIView *rootView;
-      vm->GetRootView(rootView);
-      NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
-
-      nsCOMPtr<nsIWidget> widget;
-      rootView->GetWidget(*getter_AddRefs(widget));
-      NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
-
-      // Call esm and set cursor.
-      ret = esm->SetCursor(cursor, widget, PR_TRUE);
-    }
-  }
-
-  return ret;
 }
 
 /*
@@ -2344,7 +2294,7 @@ GlobalWindowImpl::CheckForAbusePoint ()
       }
     }
   }
-  
+
   return PR_FALSE;
 }
 
@@ -2421,7 +2371,7 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
                       _retval);
 }
 
-// like Open, but attaches to the new window any extra parameters past 
+// like Open, but attaches to the new window any extra parameters past
 // [features] as a JS property named "arguments"
 NS_IMETHODIMP
 GlobalWindowImpl::OpenDialog(const nsAReadableString& aUrl,
@@ -2517,7 +2467,7 @@ GlobalWindowImpl::Close()
   }
 
   if (cx) {
-    nsCOMPtr<nsIScriptContext> currentCX = 
+    nsCOMPtr<nsIScriptContext> currentCX =
       NS_STATIC_CAST(nsIScriptContext *, ::JS_GetContextPrivate(cx));
 
     if (currentCX && currentCX == mContext) {
@@ -2620,7 +2570,7 @@ GlobalWindowImpl::Escape(const nsAReadableString& aStr,
   PRInt32 destLen2, destLen = maxByteLen;
   if (!dest)
     return NS_ERROR_OUT_OF_MEMORY;
-  
+
   // Convert from unicode to the character set
   result = encoder->Convert(src, &srcLen, dest, &destLen);
   if (NS_FAILED(result)) {
@@ -2644,8 +2594,9 @@ GlobalWindowImpl::Escape(const nsAReadableString& aStr,
   return result;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsAReadableString& aStr,
-                                         nsAWritableString& aReturn)
+NS_IMETHODIMP
+GlobalWindowImpl::Unescape(const nsAReadableString& aStr,
+                           nsAWritableString& aReturn)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIUnicodeDecoder> decoder;
@@ -2717,7 +2668,8 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsAReadableString& aStr,
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetSelection(nsISelection** aSelection)
+NS_IMETHODIMP
+GlobalWindowImpl::GetSelection(nsISelection** aSelection)
 {
   NS_ENSURE_ARG_POINTER(aSelection);
   *aSelection = nsnull;
@@ -3003,7 +2955,7 @@ GlobalWindowImpl::Btoa(const nsAString& aBinaryData,
 //*****************************************************************************
 
 NS_IMETHODIMP
-GlobalWindowImpl::AddEventListener(const nsAReadableString& aType, 
+GlobalWindowImpl::AddEventListener(const nsAReadableString& aType,
                                    nsIDOMEventListener* aListener,
                                    PRBool aUseCapture)
 {
@@ -3032,7 +2984,8 @@ GlobalWindowImpl::RemoveEventListener(const nsAReadableString& aType,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
+NS_IMETHODIMP
+GlobalWindowImpl::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
 {
   if (mDocument) {
     nsCOMPtr<nsIDocument> idoc(do_QueryInterface(mDocument));
@@ -3110,7 +3063,8 @@ GlobalWindowImpl::GetNewListenerManager(nsIEventListenerManager **aResult)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::HandleEvent(nsIDOMEvent *aEvent)
+NS_IMETHODIMP
+GlobalWindowImpl::HandleEvent(nsIDOMEvent *aEvent)
 {
   PRBool noDefault;
   return DispatchEvent(aEvent, &noDefault);
@@ -3120,7 +3074,8 @@ NS_IMETHODIMP GlobalWindowImpl::HandleEvent(nsIDOMEvent *aEvent)
 // GlobalWindowImpl::nsPIDOMWindow
 //*****************************************************************************
 
-NS_IMETHODIMP GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow ** aParent)
+NS_IMETHODIMP
+GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow ** aParent)
 {
   nsCOMPtr<nsIDOMWindow> parent;
   *aParent = nsnull;            // Set to null so we can bail out later
@@ -3151,7 +3106,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow ** aParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetPrivateRoot(nsIDOMWindowInternal ** aParent)
+NS_IMETHODIMP
+GlobalWindowImpl::GetPrivateRoot(nsIDOMWindowInternal ** aParent)
 {
   *aParent = nsnull;            // Set to null so we can bail out later
 
@@ -3195,7 +3151,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetPrivateRoot(nsIDOMWindowInternal ** aParent)
 }
 
 
-NS_IMETHODIMP GlobalWindowImpl::GetLocation(nsIDOMLocation ** aLocation)
+NS_IMETHODIMP
+GlobalWindowImpl::GetLocation(nsIDOMLocation ** aLocation)
 {
   if (!mLocation && mDocShell) {
     mLocation = new LocationImpl(mDocShell);
@@ -3208,8 +3165,9 @@ NS_IMETHODIMP GlobalWindowImpl::GetLocation(nsIDOMLocation ** aLocation)
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetObjectProperty(const PRUnichar *aProperty,
-                                                  nsISupports ** aObject)
+NS_IMETHODIMP
+GlobalWindowImpl::GetObjectProperty(const PRUnichar *aProperty,
+                                    nsISupports ** aObject)
 {
   NS_ENSURE_TRUE(mJSObject, NS_ERROR_NOT_AVAILABLE);
 
@@ -3241,7 +3199,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetObjectProperty(const PRUnichar *aProperty,
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Activate()
+NS_IMETHODIMP
+GlobalWindowImpl::Activate()
 {
 /*
    nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
@@ -3260,13 +3219,13 @@ NS_IMETHODIMP GlobalWindowImpl::Activate()
    nsIView* rootView;
    vm->GetRootView(rootView);
    NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
-   
+
    nsCOMPtr<nsIWidget> widget;
    rootView->GetWidget(*getter_AddRefs(widget));
    NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
    return widget->SetFocus();
-   
+
  */
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -3308,7 +3267,8 @@ NS_IMETHODIMP GlobalWindowImpl::Activate()
   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::Deactivate()
+NS_IMETHODIMP
+GlobalWindowImpl::Deactivate()
 {
   nsCOMPtr<nsIPresShell> presShell;
   mDocShell->GetPresShell(getter_AddRefs(presShell));
@@ -3444,8 +3404,10 @@ GlobalWindowImpl::GetDocument(nsIDOMDocumentView ** aDocumentView)
 
 ///*****************************************************************************
 // GlobalWindowImpl::nsIInterfaceRequestor
-//*****************************************************************************   
-NS_IMETHODIMP GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
+//*****************************************************************************
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
 {
   NS_ENSURE_ARG_POINTER(aSink);
   *aSink = nsnull;
@@ -3599,7 +3561,8 @@ GlobalWindowImpl::OpenInternal(const nsAReadableString& aUrl,
   return rv;
 }
 
-void GlobalWindowImpl::CloseWindow(nsISupports *aWindow)
+void
+GlobalWindowImpl::CloseWindow(nsISupports *aWindow)
 {
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aWindow));
 
@@ -3778,7 +3741,8 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   return NS_OK;
 }
 
-void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
+void
+GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 {
   PRBool scripts_enabled = PR_TRUE;
 
@@ -3890,8 +3854,8 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     next = timeout->next;
 
     /*
-     * Check to see if it should fire at this depth. If it shouldn't, we'll 
-     * ignore it 
+     * Check to see if it should fire at this depth. If it shouldn't, we'll
+     * ignore it
      */
     if (timeout->firingDepth == firingDepth) {
       nsTimeoutImpl *last_running_timeout = mRunningTimeout;
@@ -4071,8 +4035,9 @@ void GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
   return;
 }
 
-void GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout,
-                                   nsIScriptContext *aContext)
+void
+GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout,
+                              nsIScriptContext *aContext)
 {
   JSRuntime *rt = nsnull;
 
@@ -4134,7 +4099,8 @@ void GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout,
   delete aTimeout;
 }
 
-void GlobalWindowImpl::HoldTimeout(nsTimeoutImpl *aTimeout)
+void
+GlobalWindowImpl::HoldTimeout(nsTimeoutImpl *aTimeout)
 {
   aTimeout->ref_count++;
 }
@@ -4176,7 +4142,8 @@ GlobalWindowImpl::ClearTimeoutOrInterval(PRInt32 aTimerID)
   return NS_OK;
 }
 
-void GlobalWindowImpl::ClearAllTimeouts()
+void
+GlobalWindowImpl::ClearAllTimeouts()
 {
   nsTimeoutImpl *timeout, *next;
 
@@ -4209,8 +4176,9 @@ void GlobalWindowImpl::ClearAllTimeouts()
   mTimeoutsWereCleared = PR_TRUE;
 }
 
-void GlobalWindowImpl::InsertTimeoutIntoList(nsTimeoutImpl **aList,
-                                             nsTimeoutImpl *aTimeout)
+void
+GlobalWindowImpl::InsertTimeoutIntoList(nsTimeoutImpl **aList,
+                                        nsTimeoutImpl *aTimeout)
 {
   nsTimeoutImpl *to;
 
@@ -4381,7 +4349,8 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
   return NS_OK;
 }
 
-void GlobalWindowImpl::FlushPendingNotifications(PRBool aFlushReflows)
+void
+GlobalWindowImpl::FlushPendingNotifications(PRBool aFlushReflows)
 {
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
   if (doc) {
@@ -4389,18 +4358,246 @@ void GlobalWindowImpl::FlushPendingNotifications(PRBool aFlushReflows)
   }
 }
 
+// QueryInterface implementation for nsGlobalChromeWindow
+NS_INTERFACE_MAP_BEGIN(nsGlobalChromeWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMChromeWindow)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ChromeWindow)
+NS_INTERFACE_MAP_END_INHERITING(GlobalWindowImpl)
+
+NS_IMPL_ADDREF_INHERITED(nsGlobalChromeWindow, GlobalWindowImpl)
+NS_IMPL_RELEASE_INHERITED(nsGlobalChromeWindow, GlobalWindowImpl)
+
+// nsGlobalChromeWindow implementation
+
+NS_IMETHODIMP
+nsGlobalChromeWindow::GetTitle(nsAWritableString& aTitle)
+{
+  aTitle = mTitle;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalChromeWindow::SetTitle(const nsAReadableString& aTitle)
+{
+  mTitle = aTitle;
+  if(mDocShell) {
+    nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
+    if(docShellAsWin) {
+      docShellAsWin->SetTitle(PromiseFlatString(mTitle).get());
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalChromeWindow::GetWindowState(PRUint16* aWindowState)
+{
+  *aWindowState = nsIDOMChromeWindow::STATE_NORMAL;
+
+  nsCOMPtr<nsIWidget> widget;
+  nsresult rv = GetMainWidget(getter_AddRefs(widget));
+
+  PRInt32 aMode = 0;
+
+  if (widget) {
+    rv = widget->GetSizeMode(&aMode);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  switch (aMode) {
+    case nsSizeMode_Minimized:
+      *aWindowState = nsIDOMChromeWindow::STATE_MINIMIZED;
+      break;
+    case nsSizeMode_Maximized:
+      *aWindowState = nsIDOMChromeWindow::STATE_MAXIMIZED;
+      break;
+    case nsSizeMode_Normal:
+      *aWindowState = nsIDOMChromeWindow::STATE_NORMAL;
+    default:
+      NS_WARNING("Illegal window state for this chrome window");
+      break;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsGlobalChromeWindow::Maximize()
+{
+  nsCOMPtr<nsIWidget> widget;
+  nsresult rv = GetMainWidget(getter_AddRefs(widget));
+
+  if (widget) {
+    rv = widget->SetSizeMode(nsSizeMode_Maximized);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsGlobalChromeWindow::Minimize()
+{
+  nsCOMPtr<nsIWidget> widget;
+  nsresult rv = GetMainWidget(getter_AddRefs(widget));
+
+  if (widget) {
+    rv = widget->SetSizeMode(nsSizeMode_Minimized);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsGlobalChromeWindow::Restore()
+{
+  nsCOMPtr<nsIWidget> widget;
+  nsresult rv = GetMainWidget(getter_AddRefs(widget));
+
+  if (widget) {
+    rv = widget->SetSizeMode(nsSizeMode_Normal);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsGlobalChromeWindow::GetAttention()
+{
+  nsCOMPtr<nsIWidget> widget;
+  nsresult rv = GetMainWidget(getter_AddRefs(widget));
+
+  if (widget) {
+    rv = widget->GetAttention();
+  }
+
+  return rv;
+}
+
+//Note: This call will lock the cursor, it will not change as it moves.
+//To unlock, the cursor must be set back to CURSOR_AUTO.
+NS_IMETHODIMP
+nsGlobalChromeWindow::SetCursor(const nsAReadableString& aCursor)
+{
+  nsresult rv = NS_OK;
+  PRInt32 cursor;
+
+  if (aCursor.Equals(NS_LITERAL_STRING("auto")))
+    cursor = NS_STYLE_CURSOR_AUTO;
+  else if (aCursor.Equals(NS_LITERAL_STRING("default")))
+    cursor = NS_STYLE_CURSOR_DEFAULT;
+  else if (aCursor.Equals(NS_LITERAL_STRING("pointer")))
+    cursor = NS_STYLE_CURSOR_POINTER;
+  else if (aCursor.Equals(NS_LITERAL_STRING("crosshair")))
+    cursor = NS_STYLE_CURSOR_CROSSHAIR;
+  else if (aCursor.Equals(NS_LITERAL_STRING("move")))
+    cursor = NS_STYLE_CURSOR_MOVE;
+  else if (aCursor.Equals(NS_LITERAL_STRING("text")))
+    cursor = NS_STYLE_CURSOR_TEXT;
+  else if (aCursor.Equals(NS_LITERAL_STRING("wait")))
+    cursor = NS_STYLE_CURSOR_WAIT;
+  else if (aCursor.Equals(NS_LITERAL_STRING("help")))
+    cursor = NS_STYLE_CURSOR_HELP;
+  else if (aCursor.Equals(NS_LITERAL_STRING("n-resize")))
+    cursor = NS_STYLE_CURSOR_N_RESIZE;
+  else if (aCursor.Equals(NS_LITERAL_STRING("s-resize")))
+    cursor = NS_STYLE_CURSOR_S_RESIZE;
+  else if (aCursor.Equals(NS_LITERAL_STRING("w-resize")))
+    cursor = NS_STYLE_CURSOR_W_RESIZE;
+  else if (aCursor.Equals(NS_LITERAL_STRING("e-resize")))
+    cursor = NS_STYLE_CURSOR_E_RESIZE;
+  else if (aCursor.Equals(NS_LITERAL_STRING("ne-resize")))
+    cursor = NS_STYLE_CURSOR_NE_RESIZE;
+  else if (aCursor.Equals(NS_LITERAL_STRING("nw-resize")))
+    cursor = NS_STYLE_CURSOR_NW_RESIZE;
+  else if (aCursor.Equals(NS_LITERAL_STRING("se-resize")))
+    cursor = NS_STYLE_CURSOR_SE_RESIZE;
+  else if (aCursor.Equals(NS_LITERAL_STRING("sw-resize")))
+    cursor = NS_STYLE_CURSOR_SW_RESIZE;
+  else if (aCursor.Equals(NS_LITERAL_STRING("copy")))
+    cursor = NS_STYLE_CURSOR_COPY;      // CSS3
+  else if (aCursor.Equals(NS_LITERAL_STRING("alias")))
+    cursor = NS_STYLE_CURSOR_ALIAS;
+  else if (aCursor.Equals(NS_LITERAL_STRING("context-menu")))
+    cursor = NS_STYLE_CURSOR_CONTEXT_MENU;
+  else if (aCursor.Equals(NS_LITERAL_STRING("cell")))
+    cursor = NS_STYLE_CURSOR_CELL;
+  else if (aCursor.Equals(NS_LITERAL_STRING("grab")))
+    cursor = NS_STYLE_CURSOR_GRAB;
+  else if (aCursor.Equals(NS_LITERAL_STRING("grabbing")))
+    cursor = NS_STYLE_CURSOR_GRABBING;
+  else if (aCursor.Equals(NS_LITERAL_STRING("spinning")))
+    cursor = NS_STYLE_CURSOR_SPINNING;
+  else if (aCursor.Equals(NS_LITERAL_STRING("count-up")))
+    cursor = NS_STYLE_CURSOR_COUNT_UP;
+  else if (aCursor.Equals(NS_LITERAL_STRING("count-down")))
+    cursor = NS_STYLE_CURSOR_COUNT_DOWN;
+  else if (aCursor.Equals(NS_LITERAL_STRING("count-up-down")))
+    cursor = NS_STYLE_CURSOR_COUNT_UP_DOWN;
+  else
+    return NS_OK;
+
+  nsCOMPtr<nsIPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
+  if (presContext) {
+    nsCOMPtr<nsIEventStateManager> esm;
+    if (NS_SUCCEEDED(presContext->GetEventStateManager(getter_AddRefs(esm)))) {
+      // Need root widget.
+      nsCOMPtr<nsIPresShell> presShell;
+      mDocShell->GetPresShell(getter_AddRefs(presShell));
+      NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIViewManager> vm;
+      presShell->GetViewManager(getter_AddRefs(vm));
+      NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
+
+      nsIView *rootView;
+      vm->GetRootView(rootView);
+      NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIWidget> widget;
+      rootView->GetWidget(*getter_AddRefs(widget));
+      NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+
+      // Call esm and set cursor.
+      rv = esm->SetCursor(cursor, widget, PR_TRUE);
+    }
+  }
+
+  return rv;
+}
+
+nsresult
+nsGlobalChromeWindow::GetMainWidget(nsIWidget** aMainWidget)
+{
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
+  nsresult rv = GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
+
+  if (treeOwnerAsWin) {
+    rv = treeOwnerAsWin->GetMainWidget(aMainWidget);
+  }
+
+  return rv;
+}
+
+
 //*****************************************************************************
 // GlobalWindowImpl: Creator Function (This should go away)
 //*****************************************************************************
 
-nsresult NS_NewScriptGlobalObject(nsIScriptGlobalObject **aResult)
+nsresult
+NS_NewScriptGlobalObject(PRBool aIsChrome, nsIScriptGlobalObject **aResult)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
-
   *aResult = nsnull;
 
-  GlobalWindowImpl *global =
-    new GlobalWindowImpl();
+  GlobalWindowImpl *global;
+
+  if (aIsChrome) {
+    global = new nsGlobalChromeWindow();
+  } else {
+    global = new GlobalWindowImpl();
+  }
+
   NS_ENSURE_TRUE(global, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(NS_STATIC_CAST(nsIScriptGlobalObject *, global),
@@ -4411,9 +4608,9 @@ nsresult NS_NewScriptGlobalObject(nsIScriptGlobalObject **aResult)
 //***    NavigatorImpl: Object Management
 //*****************************************************************************
 
-NavigatorImpl::NavigatorImpl(nsIDocShell *aDocShell) : 
-  mMimeTypes(nsnull),                                                       
-  mPlugins(nsnull),                                                       
+NavigatorImpl::NavigatorImpl(nsIDocShell *aDocShell) :
+  mMimeTypes(nsnull),
+  mPlugins(nsnull),
   mDocShell(aDocShell)
 {
   NS_INIT_REFCNT();
@@ -4498,7 +4695,7 @@ NavigatorImpl::GetAppVersion(nsAWritableString& aAppVersion)
     aAppVersion = NS_ConvertASCIItoUCS2(str);
     Recycle(str);
 
-    aAppVersion.Append(NS_LITERAL_STRING(" (")); 
+    aAppVersion.Append(NS_LITERAL_STRING(" ("));
     res = service->GetPlatform(&str);
     if (NS_FAILED(res))
       return res;
@@ -4506,7 +4703,7 @@ NavigatorImpl::GetAppVersion(nsAWritableString& aAppVersion)
     aAppVersion += NS_ConvertASCIItoUCS2(str);
     Recycle(str);
 
-    aAppVersion.Append(NS_LITERAL_STRING("; "));                      
+    aAppVersion.Append(NS_LITERAL_STRING("; "));
     res = service->GetLanguage(&str);
     if (NS_FAILED(res))
       return res;
@@ -4788,7 +4985,7 @@ NavigatorImpl::Preference()
   NS_ENSURE_SUCCESS(rv, rv);
 
   //--Check to see if the caller is allowed to access prefs
-  nsCOMPtr<nsIScriptSecurityManager> secMan = 
+  nsCOMPtr<nsIScriptSecurityManager> secMan =
       do_GetService("@mozilla.org/scriptsecuritymanager;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   PRUint32 action;

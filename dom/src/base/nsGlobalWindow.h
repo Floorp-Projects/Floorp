@@ -64,6 +64,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMJSWindow.h"
+#include "nsIDOMChromeWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsITimer.h"
@@ -282,7 +283,6 @@ protected:
   PRPackedBool                  mIsDocumentLoaded; // true between onload and onunload events
   nsString                      mStatus;
   nsString                      mDefaultStatus;
-  nsString                      mTitle;
 
   nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
   nsIDocShell*                  mDocShell;  // Weak Reference
@@ -294,6 +294,26 @@ protected:
 
   friend class nsDOMScriptableHelper;
   static nsIXPConnect *sXPConnect;
+};
+
+/*
+ * nsGlobalChromeWindow inherits from GlobalWindowImpl. It is the global
+ * object created for a Chrome Window only.
+ */
+class nsGlobalChromeWindow : public GlobalWindowImpl,
+                             public nsIDOMChromeWindow
+{
+public:
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIDOMChromeWindow interface
+  NS_DECL_NSIDOMCHROMEWINDOW
+
+protected:
+  nsresult GetMainWidget(nsIWidget** aMainWidget);
+
+  nsString mTitle;
 };
 
 /*

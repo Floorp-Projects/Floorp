@@ -84,8 +84,10 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   readonly attribute nsIDOMCrypto                crypto;
   readonly attribute nsIDOMPkcs11                pkcs11;
 
+  // XXX Shouldn't this be in nsIDOMChromeWindow?
   /* [replaceable] controllers */
   readonly attribute nsIControllers              controllers;
+
            attribute nsIDOMWindowInternal        opener;
 
   /* [replaceable] */
@@ -95,8 +97,6 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   // XXX: The setter that takes a string argument needs to be special
   // cased!
   readonly attribute nsIDOMLocation              location;
-           attribute DOMString                   title;
-
   
   /* [replaceable] */
            attribute long                        innerWidth;
@@ -115,7 +115,7 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   void                      alert(in DOMString text);
   boolean                   confirm(in DOMString text);
 
-  // XXX prompt() should return a null string if cancel is pressed
+  // prompt() should return a null string if cancel is pressed
   DOMString                 prompt(in DOMString aMessage,
                                    in DOMString aInitial,
                                    in DOMString aTitle,
@@ -135,7 +135,6 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   void                      moveBy(in long xDif, in long yDif);
   void                      resizeTo(in long width, in long height);
   void                      resizeBy(in long widthDif, in long heightDif);
-  void                      GetAttention();
   void                      scroll(in long xScroll, in long yScroll);
 
   void                      clearTimeout(in long timerID);
@@ -144,8 +143,6 @@ interface nsIDOMWindowInternal : nsIDOMWindow
   //                                        in unsigned long timeout */);
   //[noscript] long           setInterval(/* in function,
   //                                        in unsigned long timeout */);
-
-  void                      setCursor(in DOMString cursor);
 
   [noscript] nsIDOMWindow   open(in DOMString url, in DOMString name,
                                  in DOMString options);
@@ -160,6 +157,7 @@ interface nsIDOMWindowInternal : nsIDOMWindow
                                        in nsISupports aExtraArgument);
   void                      close();
 
+  // XXX Should this be in nsIDOMChromeWindow?
   void                      updateCommands(in DOMString action);
 
   DOMString                 escape(in DOMString str);

@@ -42,9 +42,18 @@
 [scriptable, uuid(876d6f96-2420-4f78-bc17-00b1a2ec12ba)]
 interface nsIDOMChromeWindow : nsISupports
 {
+  const unsigned short STATE_MAXIMIZED = 1;
+  const unsigned short STATE_MINIMIZED = 2;
+  const unsigned short STATE_NORMAL = 3;
+
            attribute DOMString                   title;
+  readonly attribute unsigned short              windowState;
 
   void                      getAttention();
 
   void                      setCursor(in DOMString cursor);
+
+  void                      maximize();
+  void                      minimize();
+  void                      restore();
 };

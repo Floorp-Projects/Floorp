@@ -56,7 +56,8 @@ extern nsresult NS_NewJSEventListener(nsIDOMEventListener **aInstancePtrResult,
                                       nsIScriptContext *aContext,
                                       nsISupports *aObject);
 
-extern nsresult NS_NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal);
+extern nsresult NS_NewScriptGlobalObject(PRBool aIsChrome,
+                                         nsIScriptGlobalObject **aGlobal);
 
 extern nsresult NS_NewDOMException(nsresult aResult,
                                    nsIException* aDefaultException,
@@ -88,7 +89,8 @@ public:
                                 nsISupports* aObject,
                                 nsIDOMEventListener ** aInstancePtrResult);
 
-  NS_IMETHOD NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal);
+  NS_IMETHOD NewScriptGlobalObject(PRBool aIsChrome,
+                                   nsIScriptGlobalObject **aGlobal);
 
   NS_IMETHOD_(nsISupports *)GetClassInfoInstance(nsDOMClassInfoID aID);
 };
@@ -145,9 +147,10 @@ nsDOMSOFactory::NewJSEventListener(nsIScriptContext *aContext,
 }
 
 NS_IMETHODIMP
-nsDOMSOFactory::NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal)
+nsDOMSOFactory::NewScriptGlobalObject(PRBool aIsChrome,
+                                      nsIScriptGlobalObject **aGlobal)
 {
-  return NS_NewScriptGlobalObject(aGlobal);
+  return NS_NewScriptGlobalObject(aIsChrome, aGlobal);
 }
 
 NS_IMETHODIMP_(nsISupports *)
