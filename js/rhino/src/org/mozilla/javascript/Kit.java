@@ -38,9 +38,10 @@
 
 package org.mozilla.javascript;
 
-import java.util.Hashtable;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.Method;
+import java.util.Hashtable;
 
 /**
  * Collection of utilities
@@ -48,8 +49,25 @@ import java.io.Reader;
 
 public class Kit
 {
+    /**
+     * Reflection of Throwable.initCause(Throwable) from JDK 1.4
+     * or nul if it is not available.
+     */
+    private static Method Throwable_initCause = null;
 
-    static Class classOrNull(String className)
+    static {
+        // Are we running on a JDK 1.4 or later system?
+        try {
+            Class ThrowableClass = Kit.classOrNull("java.lang.Throwable");
+            Class[] signature = { ThrowableClass };
+            Throwable_initCause
+                = ThrowableClass.getMethod("initCause", signature);
+        } catch (Exception ex) {
+            // Assume any exceptions means the method does not exist.
+        }
+    }
+
+    public static Class classOrNull(String className)
     {
         try {
             return Class.forName(className);
@@ -63,7 +81,7 @@ public class Kit
         return null;
     }
 
-    static Class classOrNull(ClassLoader loader, String className)
+    public static Class classOrNull(ClassLoader loader, String className)
     {
         try {
             return loader.loadClass(className);
@@ -87,6 +105,18 @@ public class Kit
         } catch (IllegalAccessException x) {
         }
         return null;
+    }
+
+    public static void initCauseOrIgnore(Throwable ex, Throwable cause)
+    {
+        if (Throwable_initCause != null) {
+            Object[] args = { cause };
+            try {
+                Throwable_initCause.invoke(ex, args);
+            } catch (Exception e) {
+                // Ignore any exceptions
+            }
+        }
     }
 
     /**
@@ -375,26 +405,5 @@ public class Kit
     {
         throw new IllegalArgumentException("Type "+x.getClass().getName()+" of "+x+" is not valid JS type");
     }
-
-    /**
-     * Convinient way to throw IllegalArgumentException to indicate bad
-     * argument.
-     */
-    public static void argBug()
-        throws IllegalArgumentException
-    {
-        throw new IllegalArgumentException();
-    }
-
-    /**
-     * Convinient way to throw IllegalStateException to indicate bad
-     * state.
-     */
-    public static void stateBug()
-        throws IllegalArgumentException
-    {
-        throw new IllegalArgumentException();
-    }
-
 }
 

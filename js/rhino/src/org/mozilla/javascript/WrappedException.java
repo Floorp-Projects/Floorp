@@ -47,27 +47,6 @@ import java.lang.reflect.Method;
  */
 public class WrappedException extends EvaluatorException
 {
-
-    /**
-     * <p>Pointer to initCause() method of Throwable.
-     * If this method does not exist,
-     * (i.e. we're running on something earlier than Java 1.4), the pointer will
-     * be null.</p>
-     */
-    private static Method initCauseMethod = null;
-
-    static {
-        // Are we running on a JDK 1.4 or later system?
-        try {
-            Class ThrowableClass = Kit.classOrNull(
-                                       "java.lang.Throwable");
-            initCauseMethod = ThrowableClass.getMethod("initCause",
-                                          new Class[]{ThrowableClass});
-        } catch (Exception ex) {
-            // Assume any exceptions means the method does not exist.
-        }
-    }
-
     /**
      * @see Context#throwAsScriptRuntimeEx(Throwable e)
      */
@@ -75,13 +54,7 @@ public class WrappedException extends EvaluatorException
     {
         super("Wrapped "+exception.toString());
         this.exception = exception;
-        if (initCauseMethod != null) {
-            try {
-                initCauseMethod.invoke(this, new Object[] {exception});
-            } catch (Exception e) {
-                // Ignore any exceptions
-            }
-        }
+        Kit.initCauseOrIgnore(this, exception);
     }
 
     /**
