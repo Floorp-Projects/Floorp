@@ -83,8 +83,7 @@ namespace MacFileHelpers
 										FSSpec& ioSpec,
 										Boolean inCreateDirs);
 	char*							PathNameFromFSSpec(
-										const FSSpec& inSpec,
-										Boolean wantLeafName );
+										const FSSpec& inSpec );
 	OSErr							CreateFolderInFolder(
 										short				refNum,		// Parent directory/volume
 										long				dirID,
@@ -516,100 +515,31 @@ OSErr MacFileHelpers::FSSpecFromUnixPath(
 } // MacFileHelpers::FSSpecFromLocalUnixPath
 
 //-----------------------------------
-char* MacFileHelpers::PathNameFromFSSpec( const FSSpec& inSpec, Boolean wantLeafName )
+char* MacFileHelpers::PathNameFromFSSpec( const FSSpec& inSpec )
 // Returns a full pathname to the given file
 // Returned value is allocated with new [], and must be freed with delete []
-// This is taken from FSpGetFullPath in MoreFiles, except that we need to tolerate
-// fnfErr.
+// For consistency and to work under OS X this creates an nsILocalFileMac and has it do the work.
 //-----------------------------------
 {
 	char* result = nil;
-	OSErr err = noErr;
-	
-	short fullPathLength = 0;
-	Handle fullPath = nsnull;
-	
-	FSSpec tempSpec = inSpec;
-	if ( tempSpec.parID == fsRtParID )
-	{
-		/* The object is a volume */
-		
-		/* Add a colon to make it a full pathname */
-		tempSpec.name[++tempSpec.name[0]] = ':';
-		
-		/* We're done */
-		err = PtrToHand(&tempSpec.name[1], &fullPath, tempSpec.name[0]);
-	}
-	else
-	{
-		/* The object isn't a volume */
-		
-		CInfoPBRec	  pb = { 0 };
-		Str63 dummyFileName;
-		MacFileHelpers::PLstrcpy(dummyFileName, "\pG'day!");
+	nsresult rv;
 
-		/* Is the object a file or a directory? */
-		pb.dirInfo.ioNamePtr = (! tempSpec.name[0]) ? (StringPtr)dummyFileName : tempSpec.name;
-		pb.dirInfo.ioVRefNum = tempSpec.vRefNum;
-		pb.dirInfo.ioDrDirID = tempSpec.parID;
-		pb.dirInfo.ioFDirIndex = 0;
-		err = PBGetCatInfoSync(&pb);
-		if ( err == noErr || err == fnfErr)
-		{
-			// if the object is a directory, append a colon so full pathname ends with colon
-			// Beware of the "illegal spec" case that Netscape uses (empty name string). In
-			// this case, we don't want the colon.
-			if ( err == noErr && tempSpec.name[0] && (pb.hFileInfo.ioFlAttrib & ioDirMask) != 0 )
-			{
-				++tempSpec.name[0];
-				tempSpec.name[tempSpec.name[0]] = ':';
-			}
-			
-			/* Put the object name in first */
-			err = PtrToHand(&tempSpec.name[1], &fullPath, tempSpec.name[0]);
-			if ( err == noErr )
-			{
-				/* Get the ancestor directory names */
-				pb.dirInfo.ioNamePtr = tempSpec.name;
-				pb.dirInfo.ioVRefNum = tempSpec.vRefNum;
-				pb.dirInfo.ioDrParID = tempSpec.parID;
-				do	  /* loop until we have an error or find the root directory */
-				{
-					pb.dirInfo.ioFDirIndex = -1;
-					pb.dirInfo.ioDrDirID = pb.dirInfo.ioDrParID;
-					err = PBGetCatInfoSync(&pb);
-					if ( err == noErr )
-					{
-						/* Append colon to directory name */
-						++tempSpec.name[0];
-						tempSpec.name[tempSpec.name[0]] = ':';
-						
-						/* Add directory name to beginning of fullPath */
-						(void) Munger(fullPath, 0, nsnull, 0, &tempSpec.name[1], tempSpec.name[0]);
-						err = MemError();
-					}
-				} while ( err == noErr && pb.dirInfo.ioDrDirID != fsRtDirID );
-			}
-		}
-	}
-	if ( err != noErr && err != fnfErr)
-		goto Clean;
+    FSSpec nonConstSpec = inSpec;
+    nsXPIDLCString path;	
+    nsCOMPtr<nsILocalFileMac> macFile;
+    
+    rv = NS_NewLocalFileWithFSSpec(&nonConstSpec, PR_TRUE, getter_AddRefs(macFile));
+    if (NS_FAILED(rv)) return nsnull;
+    nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(macFile, &rv));
+    if (NS_FAILED(rv)) return nsnull;
+    rv = localFile->GetPath(getter_Copies(path));
+    if (NS_FAILED(rv)) return nsnull;
+    PRInt32 strLen = path.Length();
+    result = new char [strLen + 1];
+    if (!result) return nsnull;
+	memcpy(result, path.get(), strLen);
+	result[ strLen ] = 0;
 
-	fullPathLength = GetHandleSize(fullPath);
-	err = noErr;	
-	int allocSize = 1 + fullPathLength;
-	// We only want the leaf name if it's the root directory or wantLeafName is true.
-	if (inSpec.parID != fsRtParID && !wantLeafName)
-		allocSize -= inSpec.name[0];
-	result = new char[allocSize];
-	if (!result)
-		goto Clean;
-	memcpy(result, *fullPath, allocSize - 1);
-	result[ allocSize - 1 ] = 0;
-Clean:
-	if (fullPath)
-		DisposeHandle(fullPath);
-	NS_ASSERTION(result, "Out of memory"); // OOPS! very bad.
 	return result;
 } // MacFileHelpers::PathNameFromFSSpec
 
@@ -1238,7 +1168,7 @@ const char* nsFileSpec::GetCString() const
 {
 	if (mPath.IsEmpty())
 	{
-		char* path = MacFileHelpers::PathNameFromFSSpec(mSpec, true);
+		char* path = MacFileHelpers::PathNameFromFSSpec(mSpec);
 		if (path != NULL) {
 			const_cast<nsFileSpec*>(this)->mPath = path;	// operator =() copies the string!!!
 			delete[] path;
@@ -1318,7 +1248,7 @@ nsFilePath::nsFilePath(const nsFileURL& inOther)
 void nsFilePath::operator = (const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 {
-	char * path = MacFileHelpers::PathNameFromFSSpec(inSpec, true);
+	char * path = MacFileHelpers::PathNameFromFSSpec(inSpec);
 	path = MacFileHelpers::EncodeMacPath(path, true, false);
 	mPath = path;
 	nsCRT::free(path);
@@ -1329,7 +1259,7 @@ void nsFilePath::operator = (const nsFileSpec& inSpec)
 void nsFilePath::operator = (const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 {
-	char * path = MacFileHelpers::PathNameFromFSSpec(inOther.mFileSpec, true);
+	char * path = MacFileHelpers::PathNameFromFSSpec(inOther.mFileSpec);
 	path = MacFileHelpers::EncodeMacPath(path, true, false);
 	mPath = path;
 	nsCRT::free(path);
@@ -1406,7 +1336,7 @@ void nsFileURL::operator = (const nsFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
 	mFileSpec  = inOther;
-	char* path = MacFileHelpers::PathNameFromFSSpec( mFileSpec, true );
+	char* path = MacFileHelpers::PathNameFromFSSpec( mFileSpec );
 	char* encodedPath = MacFileHelpers::EncodeMacPath(path, true, true);
 	nsSimpleCharString encodedURL(kFileURLPrefix);
 	encodedURL += encodedPath;

@@ -59,6 +59,8 @@
 #include <AppleEvents.h>
 #include <AEDataModel.h>
 #include <AERegistry.h>
+#include <Gestalt.h>
+#include <UnicodeConverter.h>
 
 #include <Math64.h>
 #include <Aliases.h>
@@ -693,6 +695,171 @@ static OSErr ResolvePathAndSpec(const char * filePath, FSSpec *inSpec, PRBool cr
 }
 
 #pragma mark -
+#pragma mark [nsFSStringConversionMac]
+
+class nsFSStringConversionMac {
+public:
+     static nsresult UCSToFS(const nsAString& aIn, nsACString& aOut);  
+     static nsresult FSToUCS(const nsACString& ain, nsAString& aOut);  
+
+     static void CleanUp();
+
+private:
+     static TextEncoding GetSystemEncoding();
+     static nsresult PrepareEncoder();
+     static nsresult PrepareDecoder();
+     
+     static UnicodeToTextInfo sEncoderInfo;
+     static TextToUnicodeInfo sDecoderInfo;
+};
+
+UnicodeToTextInfo nsFSStringConversionMac::sEncoderInfo = nsnull;
+TextToUnicodeInfo nsFSStringConversionMac::sDecoderInfo = nsnull;
+
+nsresult nsFSStringConversionMac::UCSToFS(const nsAString& aIn, nsACString& aOut)
+{
+    nsresult rv = PrepareEncoder();
+    if (NS_FAILED(rv)) return rv;
+    
+    OSStatus err = noErr;
+    char stackBuffer[512];
+
+    aOut.Truncate(0);
+    nsReadingIterator<PRUnichar> done_reading;
+    aIn.EndReading(done_reading);
+
+    // for each chunk of |aIn|...
+    PRUint32 fragmentLength = 0;
+    nsReadingIterator<PRUnichar> iter;
+    for (aIn.BeginReading(iter); iter != done_reading && err == noErr; iter.advance(PRInt32(fragmentLength)))
+    {
+        fragmentLength = PRUint32(iter.size_forward());        
+        UInt32 bytesLeft = fragmentLength * sizeof(UniChar);
+        nsReadingIterator<PRUnichar> sub_iter(iter);
+        
+        do {
+            UInt32 bytesRead = 0, bytesWritten = 0;
+            err = ::ConvertFromUnicodeToText(sEncoderInfo,
+                                             bytesLeft,
+                                             (const UniChar*)sub_iter.get(),
+                                             kUnicodeUseFallbacksMask | kUnicodeLooseMappingsMask,
+                                             0, nsnull, nsnull, nsnull,
+                                             sizeof(stackBuffer),
+                                             &bytesRead,
+                                             &bytesWritten,
+                                             stackBuffer);
+            if (err == kTECUsedFallbacksStatus)
+                err = noErr;
+            else if (err == kTECOutputBufferFullStatus) {
+                bytesLeft -= bytesRead;
+                sub_iter.advance(bytesRead / sizeof(UniChar));
+            }
+            aOut.Append(stackBuffer, bytesWritten);
+        }
+        while (err == kTECOutputBufferFullStatus);
+    }
+    return (err == noErr) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+nsresult nsFSStringConversionMac::FSToUCS(const nsACString& aIn, nsAString& aOut)
+{
+    nsresult rv = PrepareDecoder();
+    if (NS_FAILED(rv)) return rv;
+    
+    OSStatus err = noErr;
+    UniChar stackBuffer[512];
+
+    aOut.Truncate(0);
+    nsReadingIterator<char> done_reading;
+    aIn.EndReading(done_reading);
+
+    // for each chunk of |aIn|...
+    PRUint32 fragmentLength = 0;
+    nsReadingIterator<char> iter;
+    for (aIn.BeginReading(iter); iter != done_reading && err == noErr; iter.advance(PRInt32(fragmentLength)))
+    {
+        fragmentLength = PRUint32(iter.size_forward());        
+        UInt32 bytesLeft = fragmentLength;
+        nsReadingIterator<char> sub_iter(iter);
+        
+        do {
+            UInt32 bytesRead = 0, bytesWritten = 0;
+            err = ::ConvertFromTextToUnicode(sDecoderInfo,
+                                             bytesLeft,
+                                             sub_iter.get(),
+                                             kUnicodeUseFallbacksMask | kUnicodeLooseMappingsMask,
+                                             0, nsnull, nsnull, nsnull,
+                                             sizeof(stackBuffer),
+                                             &bytesRead,
+                                             &bytesWritten,
+                                             stackBuffer);
+            if (err == kTECUsedFallbacksStatus)
+                err = noErr;
+            else if (err == kTECOutputBufferFullStatus) {
+                bytesLeft -= bytesRead;
+                sub_iter.advance(bytesRead);
+            }
+            aOut.Append((PRUnichar *)stackBuffer, bytesWritten / sizeof(PRUnichar));
+        }
+        while (err == kTECOutputBufferFullStatus);
+    }
+    return (err == noErr) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+void nsFSStringConversionMac::CleanUp()
+{
+    if (sDecoderInfo) {
+        ::DisposeTextToUnicodeInfo(&sDecoderInfo);
+        sDecoderInfo = nsnull;
+    }
+    if (sEncoderInfo) {
+        ::DisposeUnicodeToTextInfo(&sEncoderInfo);
+        sEncoderInfo = nsnull;
+    }  
+}
+
+TextEncoding nsFSStringConversionMac::GetSystemEncoding()
+{
+	OSStatus err;
+	TextEncoding theEncoding;
+	
+	err = ::UpgradeScriptInfoToTextEncoding(smSystemScript, kTextLanguageDontCare,
+		kTextRegionDontCare, NULL, &theEncoding);
+	
+	if (err != noErr)
+		theEncoding = kTextEncodingMacRoman;
+	
+	return theEncoding;
+}
+
+nsresult nsFSStringConversionMac::PrepareEncoder()
+{
+    nsresult rv = NS_OK;
+    if (!sEncoderInfo) {
+        OSStatus err;
+        err = ::CreateUnicodeToTextInfoByEncoding(GetSystemEncoding(), &sEncoderInfo);
+        if (err)
+            rv = NS_ERROR_FAILURE;
+    }
+    return rv;
+}
+
+nsresult nsFSStringConversionMac::PrepareDecoder()
+{
+    nsresult rv = NS_OK;
+    if (!sDecoderInfo) {
+        OSStatus err;
+        err = ::CreateTextToUnicodeInfoByEncoding(GetSystemEncoding(), &sDecoderInfo);
+        if (err)
+            rv = NS_ERROR_FAILURE;
+    }
+    return rv;
+}
+
+
+
+
+#pragma mark -
 #pragma mark [nsDirEnumerator]
 class nsDirEnumerator : public nsISimpleEnumerator
 {
@@ -804,7 +971,8 @@ NS_IMPL_ISUPPORTS1(nsDirEnumerator, nsISimpleEnumerator)
 
 #pragma mark -
 
-OSType nsLocalFile::mgCurrentProcessSignature = 0;
+OSType nsLocalFile::sCurrentProcessSignature = 0;
+PRBool nsLocalFile::sHasHFSPlusAPIs = PR_FALSE;
 
 #pragma mark [CTOR/DTOR]
 nsLocalFile::nsLocalFile()
@@ -820,9 +988,9 @@ nsLocalFile::nsLocalFile()
 	MakeDirty();	
 	ClearFSSpec(mSpec);
 	
-	DetermineCurrentProcessCreator();
-	if (mgCurrentProcessSignature != 0)
-	    mCreator = mgCurrentProcessSignature;
+	InitClassStatics();
+	if (sCurrentProcessSignature != 0)
+	    mCreator = sCurrentProcessSignature;
 }
 
 nsLocalFile::~nsLocalFile()
@@ -1407,24 +1575,82 @@ nsLocalFile::GetPath(char **_retval)
 			break;
 		
 		case eInitWithFSSpec:
-		{	// Now would be a good time to call the code that makes an FSSpec into a path
-			short	fullPathLen;
-			Handle	fullPathHandle;
-			ResolveAndStat(PR_TRUE);
-			(void)::FSpGetFullPath(&mResolvedSpec, &fullPathLen, &fullPathHandle);
-			if (!fullPathHandle)
-				return NS_ERROR_OUT_OF_MEMORY;
-			
-			char* fullPath = (char *)nsMemory::Alloc(fullPathLen + 1);
-			if (!fullPath)
-				return NS_ERROR_OUT_OF_MEMORY;
-			
-			::HLock(fullPathHandle);
-			nsCRT::memcpy(fullPath, *fullPathHandle, fullPathLen);			
-			fullPath[fullPathLen] = '\0';
-			
-			*_retval = fullPath;
-			::DisposeHandle(fullPathHandle);
+		{
+		    ResolveAndStat(PR_TRUE);
+		    
+#if TARGET_CARBON
+            if (sHasHFSPlusAPIs) // should always be true under Carbon, but in case...
+            {
+    		    OSErr err;
+    		    nsresult rv;
+    		    nsAutoString ucPathString;
+    		    nsCAutoString fsCharSetPathStr;
+    		    
+    		    FSRef nodeRef;
+    		    FSCatalogInfo catalogInfo;
+    		    catalogInfo.parentDirID = 0;
+    		    err = ::FSpMakeFSRef(&mResolvedSpec, &nodeRef);
+    		    
+    		    if (err == fnfErr) {
+    		        FSSpec parentDirSpec;		        
+    		        err = GetParentFolderSpec(mResolvedSpec, parentDirSpec);
+    		        if (err == noErr) {
+    		            nsDependentCString leafName((char *)&mResolvedSpec.name[1], PRUint32(mResolvedSpec.name[0]));
+    		            nsFSStringConversionMac::FSToUCS(leafName, ucPathString);
+    		            err = ::FSpMakeFSRef(&parentDirSpec, &nodeRef);
+    		        }
+    		    }
+
+    		    while (err == noErr && catalogInfo.parentDirID != fsRtParID) {
+    		        HFSUniStr255 nodeName;
+    		        FSRef parentRef;
+    		        err = ::FSGetCatalogInfo(&nodeRef,
+    		                                 kFSCatInfoNodeFlags + kFSCatInfoParentDirID,
+    		                                 &catalogInfo,
+    		                                 &nodeName,
+    		                                 nsnull,
+    		                                 &parentRef);
+    		        if (err == noErr)
+    		        {
+    		            if (catalogInfo.nodeFlags & kFSNodeIsDirectoryMask)
+    		                nodeName.unicode[nodeName.length++] = PRUnichar(':');
+    		            nsDependentString nodeNameStr((PRUnichar *)nodeName.unicode, (PRUint32)nodeName.length);
+    		            ucPathString.Insert(nodeNameStr, 0);
+    		            nodeRef = parentRef;
+    		        }
+    		    }
+    		    rv = MacErrorMapper(err);
+    		    if (NS_FAILED(rv))
+    		        return rv;
+    		    rv = nsFSStringConversionMac::UCSToFS(ucPathString, fsCharSetPathStr);
+    		    if (NS_FAILED(rv))
+    		        return rv;
+    		    // When nsIFile params are all nsAString&, we won't have to do this
+    		    *_retval = fsCharSetPathStr.ToNewCString();
+    		    if (!*_retval)
+    		        return NS_ERROR_OUT_OF_MEMORY;
+		    }
+		    else
+#endif
+            {
+    			// Now would be a good time to call the code that makes an FSSpec into a path
+    			short	fullPathLen;
+    			Handle	fullPathHandle;
+    			(void)::FSpGetFullPath(&mResolvedSpec, &fullPathLen, &fullPathHandle);
+    			if (!fullPathHandle)
+    				return NS_ERROR_OUT_OF_MEMORY;
+    			
+    			char* fullPath = (char *)nsMemory::Alloc(fullPathLen + 1);
+    			if (!fullPath)
+    				return NS_ERROR_OUT_OF_MEMORY;
+    			
+    			::HLock(fullPathHandle);
+    			nsCRT::memcpy(fullPath, *fullPathHandle, fullPathLen);			
+    			fullPath[fullPathLen] = '\0';
+    			
+    			*_retval = fullPath;
+    			::DisposeHandle(fullPathHandle);
+			}
 			break;
 		}
 			
@@ -2911,7 +3137,7 @@ NS_IMETHODIMP nsLocalFile::SetFileTypeAndCreator(OSType type, OSType creator)
 		return NS_ERROR_FILE_NOT_FOUND;
 		
 	if (creator == CURRENT_PROCESS_CREATOR)
-	    creator = (mgCurrentProcessSignature != 0) ? mgCurrentProcessSignature : kDefaultCreator;
+	    creator = (sCurrentProcessSignature != 0) ? sCurrentProcessSignature : kDefaultCreator;
 	
 	// See if the user specified a type or creator before changing from what was read
 	if (type)
@@ -3128,13 +3354,13 @@ nsresult nsLocalFile::ExtensionIsOnExceptionList(const char *extension, PRBool *
 }
 
 
-nsresult nsLocalFile::DetermineCurrentProcessCreator()
+void nsLocalFile::InitClassStatics()
 {
-    nsresult rv = NS_OK;
+    OSErr err;
     
-    if (mgCurrentProcessSignature == 0)
+
+    if (sCurrentProcessSignature == 0)
     {
-        OSErr err;
         ProcessSerialNumber psn;
      	ProcessInfoRec 	info;
     	
@@ -3146,13 +3372,20 @@ nsresult nsLocalFile::DetermineCurrentProcessCreator()
 		info.processAppSpec = nil;
 		err = ::GetProcessInformation(&psn, &info);
 	    if (err == noErr)
-	        mgCurrentProcessSignature = info.processSignature;
+	        sCurrentProcessSignature = info.processSignature;
 	    // Try again next time if error
-	    else
-	        rv = MacErrorMapper(err);
     }
-    return NS_OK;
+    
+    static PRBool didHFSPlusCheck = PR_FALSE;
+    if (!didHFSPlusCheck)
+    {
+        long response;
+        err = ::Gestalt(gestaltFSAttr, &response);
+        sHasHFSPlusAPIs = (err == noErr && (response & (1 << gestaltHasHFSPlusAPIs)) != 0);
+        didHFSPlusCheck = PR_TRUE;
+    }
 }
+
 
 #pragma mark -
 
