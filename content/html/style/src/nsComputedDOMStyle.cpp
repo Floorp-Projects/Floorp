@@ -1364,6 +1364,62 @@ nsComputedDOMStyle::GetListStyleType(nsIFrame *aFrame,
 }
 
 nsresult
+nsComputedDOMStyle::GetImageRegion(nsIFrame *aFrame,
+                                   nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleList* list = nsnull;
+
+  GetStyleData(eStyleStruct_List, (const nsStyleStruct*&)list, aFrame);
+
+  nsresult rv = NS_OK;
+  nsROCSSPrimitiveValue *topVal = nsnull;
+  nsROCSSPrimitiveValue *rightVal = nsnull;
+  nsROCSSPrimitiveValue *bottomVal = nsnull;
+  nsROCSSPrimitiveValue *leftVal = nsnull;
+  if (list) {
+    if (list->mImageRegion.width <= 0 || list->mImageRegion.height <= 0) {
+      val->SetIdent(NS_LITERAL_STRING("auto"));
+    } else {
+      // create the cssvalues for the sides, stick them in the rect object
+      topVal = GetROCSSPrimitiveValue();
+      rightVal = GetROCSSPrimitiveValue();
+      bottomVal = GetROCSSPrimitiveValue();
+      leftVal = GetROCSSPrimitiveValue();
+      if (topVal && rightVal && bottomVal && leftVal) {
+        nsDOMCSSRect * domRect = new nsDOMCSSRect(topVal, rightVal,
+                                                  bottomVal, leftVal);
+        if (domRect) {
+          topVal->SetTwips(list->mImageRegion.y);
+          rightVal->SetTwips(list->mImageRegion.width + list->mImageRegion.x);
+          bottomVal->SetTwips(list->mImageRegion.height + list->mImageRegion.y);
+          leftVal->SetTwips(list->mImageRegion.x);
+          val->SetRect(domRect);
+        } else {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+      } else {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+
+  if (NS_FAILED(rv)) {
+    delete topVal;
+    delete rightVal;
+    delete bottomVal;
+    delete leftVal;
+    delete val;
+
+    return rv;
+  }
+  
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetLineHeight(nsIFrame *aFrame,
                                   nsIDOMCSSValue** aValue)
 {
@@ -3513,6 +3569,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(box_pack,                      BoxPack),
     COMPUTED_STYLE_MAP_ENTRY(box_sizing,                    BoxSizing),
     COMPUTED_STYLE_MAP_ENTRY(float_edge,                    FloatEdge),
+    COMPUTED_STYLE_MAP_ENTRY(image_region,                  ImageRegion),
     COMPUTED_STYLE_MAP_ENTRY(opacity,                       Opacity),
     //// COMPUTED_STYLE_MAP_ENTRY(_moz_outline,             MozOutline),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_color,            OutlineColor),
@@ -3524,7 +3581,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(user_select,                   UserSelect)
   };
 
-  *aLength = sizeof(map) / sizeof(map[0]);
+  *aLength = NS_ARRAY_LENGTH(map);
 
   return map;
 }
