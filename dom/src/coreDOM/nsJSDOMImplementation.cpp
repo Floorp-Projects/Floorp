@@ -270,7 +270,7 @@ DOMImplementationCreateDocument(JSContext *cx, JSObject *obj, uintN argc, jsval 
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b2),
                                            kIDocumentTypeIID,
-                                           "DocumentType",
+                                           NS_ConvertToString("DocumentType"),
                                            cx,
                                            argv[2])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);

@@ -178,7 +178,7 @@ HistoryImpl::Go(JSContext* cx, jsval* argv, PRUint32 argc)
       PRInt32 i, count;
 
       if (nsnull != jsstr) {
-        nsAutoString substr(JS_GetStringBytes(jsstr));
+        nsAutoString substr; substr.AssignWithConversion(JS_GetStringBytes(jsstr));
 
         result = webShell->GetHistoryLength(count);
         for (i = 0; (i < count) && NS_SUCCEEDED(result); i++) {

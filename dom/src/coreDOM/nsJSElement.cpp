@@ -361,7 +361,7 @@ ElementSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIAttrIID,
-                                           "Attr",
+                                           NS_ConvertToString("Attr"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
@@ -409,7 +409,7 @@ ElementRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIAttrIID,
-                                           "Attr",
+                                           NS_ConvertToString("Attr"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);

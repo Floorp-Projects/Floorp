@@ -117,10 +117,10 @@ GetNSHTMLOptionCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval 
 
     JSString *jsstring = JS_ValueToString(cx, id);
     if (nsnull != jsstring) {
-      name.SetString(JS_GetStringChars(jsstring));
+      name.Assign(JS_GetStringChars(jsstring));
     }
     else {
-      name.SetString("");
+      name.SetLength(0);
     }
 
     result = a->NamedItem(name, &prop);

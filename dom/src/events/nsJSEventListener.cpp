@@ -99,7 +99,7 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  eventString.Insert("on", 0, 2);
+  eventString.InsertWithConversion("on", 0, 2);
   eventChars = eventString.ToNewCString();
   
   result = mOwner->GetScriptObject(mContext, (void**)&obj);

@@ -252,7 +252,7 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         if (NS_SUCCEEDED(rv)) {
           nsIDOMHTMLCollection* prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kIHTMLCollectionIID, "HTMLCollection",
+                                                  kIHTMLCollectionIID, NS_ConvertToString("HTMLCollection"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
           }

@@ -182,8 +182,8 @@ LocationImpl::GetHash(nsString& aHash)
         NS_RELEASE(url);
       }
       if (result == NS_OK && (nsnull != ref) && ('\0' != *ref)) {
-        aHash.Assign("#");
-        aHash.Append(ref);
+        aHash.AssignWithConversion("#");
+        aHash.AppendWithConversion(ref);
         nsCRT::free(ref);
       }
       else {
@@ -236,13 +236,13 @@ LocationImpl::GetHost(nsString& aHost)
       char* host;
       result = url->GetHost(&host);
       if (result == NS_OK) {
-        aHost.Assign(host);
+        aHost.AssignWithConversion(host);
         nsCRT::free(host);
         PRInt32 port;
         (void)url->GetPort(&port);
         if (-1 != port) {
-          aHost.Append(":");
-          aHost.Append(port, 10);
+          aHost.AppendWithConversion(":");
+          aHost.AppendWithConversion(port, 10);
         }
       }
       NS_RELEASE(url);
@@ -288,7 +288,7 @@ LocationImpl::GetHostname(nsString& aHostname)
       char* host;
       result = url->GetHost(&host);
       if (result == NS_OK) {
-        aHostname.Assign(host);
+        aHostname.AssignWithConversion(host);
         nsCRT::free(host);
       }
       NS_RELEASE(url);
@@ -332,7 +332,7 @@ LocationImpl::GetHref(nsString& aHref)
         nsXPIDLCString uriString;
         result = uri->GetSpec(getter_Copies(uriString));
         if (NS_SUCCEEDED(result))
-            aHref = uriString;
+            aHref.AssignWithConversion(uriString);
     }
   }
 
@@ -401,7 +401,7 @@ LocationImpl::GetPathname(nsString& aPathname)
       char* file;
       result = url->GetPath(&file);
       if (result == NS_OK) {
-        aPathname.Assign(file);
+        aPathname.AssignWithConversion(file);
         nsCRT::free(file);
       }
       NS_IF_RELEASE(url);
@@ -448,7 +448,7 @@ LocationImpl::GetPort(nsString& aPort)
       PRInt32 port;
       (void)url->GetPort(&port);
       if (-1 != port) {
-        aPort.Append(port, 10);
+        aPort.AppendWithConversion(port, 10);
       }
       NS_RELEASE(url);
     }
@@ -503,8 +503,8 @@ LocationImpl::GetProtocol(nsString& aProtocol)
       char* protocol;
       result = url->GetScheme(&protocol);
       if (result == NS_OK) {
-        aProtocol.Assign(protocol);
-        aProtocol.Append(":");
+        aProtocol.AssignWithConversion(protocol);
+        aProtocol.AppendWithConversion(":");
         nsCRT::free(protocol);
       }
       NS_RELEASE(url);
@@ -555,8 +555,8 @@ LocationImpl::GetSearch(nsString& aSearch)
         NS_RELEASE(url);
       }
       if (result == NS_OK && (nsnull != search) && ('\0' != *search)) {
-        aSearch.Assign("?");
-        aSearch.Append(search);
+        aSearch.AssignWithConversion("?");
+        aSearch.AppendWithConversion(search);
         nsCRT::free(search);
       }
       else {

@@ -427,7 +427,7 @@ HTMLOptionElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     return JS_FALSE;
   }
 
-  result = manager->LookupName("HTMLOptionElement", PR_TRUE, classID);
+  result = manager->LookupName(NS_ConvertToString("HTMLOptionElement"), PR_TRUE, classID);
   if (NS_OK != result) {
     return JS_FALSE;
   }
