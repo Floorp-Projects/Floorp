@@ -659,7 +659,7 @@ DeleteCert(CERTCertDBHandle *handle, char *name)
 
 static SECStatus
 ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
-	     char *certUsage, PRBool checkSig, PRBool logit)
+	     char *certUsage, PRBool checkSig, PRBool logit, secuPWData *pwdata)
 {
     SECStatus rv;
     CERTCertificate *cert;
@@ -717,7 +717,7 @@ ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
 	}
  
 	rv = CERT_VerifyCert(handle, cert, checkSig, usage,
-			     timeBoundary, NULL, log);
+			     timeBoundary, pwdata, log);
 	if ( log ) {
 	    if ( log->head == NULL ) {
 		fprintf(stdout, "%s: certificate is valid\n", progName);
@@ -2570,7 +2570,8 @@ main(int argc, char **argv)
 	                  certutil.options[opt_ValidityTime].arg,
 			  certutil.options[opt_Usage].arg,
 			  certutil.options[opt_VerifySig].activated,
-			  certutil.options[opt_DetailedInfo].activated);
+			  certutil.options[opt_DetailedInfo].activated,
+	                  &pwdata);
 	return !rv - 1;
     }
 
