@@ -987,6 +987,9 @@ nsXULDocument::CreateShell(nsIPresContext* aContext,
 
     mPresShells.AppendElement(shell);
     *aInstancePtrResult = shell; // addref implicit in CreateInstance()
+    
+    // tell the context the mode we want (always standard)
+    aContext->SetCompatibilityMode(eCompatibility_Standard);
 
     return NS_OK;
 }
