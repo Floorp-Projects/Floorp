@@ -563,7 +563,7 @@ nsInstall::DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn)
         return NS_OK;
     }
     
-    nsInstallDelete* id = new nsInstallDelete(this, "", qualifiedRegName, &result);
+    nsInstallDelete* id = new nsInstallDelete(this, qualifiedRegName, &result);
     
     if (id == nsnull)
     {
