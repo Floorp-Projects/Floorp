@@ -2898,23 +2898,34 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
       }
       else
       {
-          nsCOMPtr<nsIStreamIOChannel> ioChannel(do_QueryInterface(channel));
-          if(ioChannel) // Might be a javascript: URL load, need to set owner
-          {
-              static const char jsSchemeName[] = "javascript";
-              char* scheme;
-              aURI->GetScheme(&scheme);
-              if (PL_strcasecmp(scheme, jsSchemeName) == 0)
-                  channel->SetOwner(aOwner);
-              if (scheme)
-                  nsCRT::free(scheme);
-          }
-          else
-          { // Also set owner for data: URLs
-              nsCOMPtr<nsIDataChannel> dataChannel(do_QueryInterface(channel));
-              if (dataChannel)
-                  channel->SetOwner(aOwner);
-          }
+        // If an owner was not provided, we want to inherit the principal from the current document iff we 
+        // are dealing with a JS or a data url.
+        nsCOMPtr<nsISupports> owner = aOwner;
+        nsCOMPtr<nsIStreamIOChannel> ioChannel(do_QueryInterface(channel));
+        if(ioChannel) // Might be a javascript: URL load, need to set owner
+        {
+           static const char jsSchemeName[] = "javascript";
+           char* scheme;
+           aURI->GetScheme(&scheme);
+           if (PL_strcasecmp(scheme, jsSchemeName) == 0)
+           {
+             if (!owner)  // only try to call GetCurrentDocumentOwner if we are a JS url or a data url (hence the code duplication)
+               GetCurrentDocumentOwner(getter_AddRefs(owner));
+              channel->SetOwner(owner);
+           }
+           if (scheme)
+               nsCRT::free(scheme);
+        }
+        else
+        { // Also set owner for data: URLs
+           nsCOMPtr<nsIDataChannel> dataChannel(do_QueryInterface(channel));
+           if (dataChannel)
+           {
+             if (!owner)
+               GetCurrentDocumentOwner(getter_AddRefs(owner));
+             channel->SetOwner(owner);
+           }
+        }
       }
 
    NS_ENSURE_SUCCESS(DoChannelLoad(channel, aLoadCmd, aWindowTarget, uriLoader), NS_ERROR_FAILURE);
