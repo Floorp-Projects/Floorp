@@ -256,7 +256,8 @@ nsDOMStyleDeclaration::SetProperty(const nsString& aPropertyName,
     nsICSSParser* css;
     result = NS_NewCSSParser(&css);
     if (NS_OK == result) {
-      result = css->ParseAndAppendDeclaration(declString, nsnull, *decl);
+      PRInt32 hint;
+      result = css->ParseAndAppendDeclaration(declString, nsnull, decl, &hint);
       if (NS_OK == result) {
         if (aPriority.Equals("!important")) {
           char prop[50];
@@ -266,7 +267,7 @@ nsDOMStyleDeclaration::SetProperty(const nsString& aPropertyName,
         nsIDocument *doc;
         result = mContent->GetDocument(doc);
         if (NS_OK == result) {
-          doc->AttributeChanged(mContent, nsHTMLAtoms::style);
+          doc->AttributeChanged(mContent, nsHTMLAtoms::style, hint);
           NS_RELEASE(doc);
         }
       }

@@ -1221,7 +1221,7 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
     }
 
     if (aNotify && (nsnull != mDocument)) {
-      mDocument->AttributeChanged(mContent, aAttribute);
+      mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
     }
   }
   return result;
@@ -1241,7 +1241,7 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
       NS_RELEASE(sheet);
     }
     if (aNotify) {
-      mDocument->AttributeChanged(mContent, aAttribute);
+      mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
@@ -1287,7 +1287,7 @@ nsGenericHTMLElement::UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify)
       NS_RELEASE(sheet);
     }
     if (aNotify) {
-      mDocument->AttributeChanged(mContent, aAttribute);
+      mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
