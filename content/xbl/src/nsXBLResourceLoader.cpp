@@ -238,14 +238,16 @@ nsXBLResourceLoader::NotifyBoundElements()
     xblService->BindingReady(content, bindingURI, &ready);
 
     if (ready) {
-      nsCOMPtr<nsIDocument> doc = content->GetDocument();
+      // We need the document to flush out frame construction and
+      // such, so we want to use the current document.
+      nsIDocument* doc = content->GetCurrentDoc();
     
       if (doc) {
         // Flush first to make sure we can get the frame for content
         doc->FlushPendingNotifications(Flush_Frames);
 
         // Notify
-        nsCOMPtr<nsIContent> parent = content->GetParent();
+        nsIContent* parent = content->GetParent();
         PRInt32 index = 0;
         if (parent)
           index = parent->IndexOf(content);

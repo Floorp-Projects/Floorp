@@ -279,7 +279,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
         nsCOMPtr<nsIContent> elt(do_QueryInterface(aReceiver));
         nsCOMPtr<nsIDocument> doc;
         if (elt)
-          doc = elt->GetDocument();
+          doc = elt->GetOwnerDoc();
 
         if (!doc)
           doc = do_QueryInterface(aReceiver);
@@ -409,7 +409,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
       nsCOMPtr<nsIContent> content(do_QueryInterface(aReceiver));
       if (!content)
         return NS_OK;
-      boundDocument = content->GetDocument();
+      boundDocument = content->GetOwnerDoc();
       if (!boundDocument)
         return NS_OK;
     }

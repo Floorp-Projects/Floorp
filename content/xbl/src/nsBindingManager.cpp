@@ -1128,7 +1128,7 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
       // We have never made a wrapper for this implementation.
       // Create an XPC wrapper for the script object and hand it back.
 
-      nsIDocument* doc = aContent->GetDocument();
+      nsIDocument* doc = aContent->GetOwnerDoc();
       if (!doc)
         return NS_NOINTERFACE;
 

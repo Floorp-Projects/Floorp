@@ -276,8 +276,11 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
         nsAutoString command;
         elt->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
         if (!command.IsEmpty()) {
-          // Locate the command element in question.
-          nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(elt->GetDocument()));
+          // Locate the command element in question.  Note that we
+          // know "elt" is in a doc if we're dealing with it here.
+          NS_ASSERTION(elt->IsInDoc(), "elt must be in document");
+          nsCOMPtr<nsIDOMDocument> domDoc(
+             do_QueryInterface(elt->GetCurrentDoc()));
           if (domDoc)
             domDoc->GetElementById(command, getter_AddRefs(commandElt));
 

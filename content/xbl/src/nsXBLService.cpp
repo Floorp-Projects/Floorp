@@ -133,7 +133,9 @@ public:
 
   void DocumentLoaded(nsIDocument* aBindingDoc)
   {
-    nsCOMPtr<nsIDocument> doc = mBoundElement->GetDocument();
+    // We only need the document here to cause frame construction, so
+    // we need the current doc, not the owner doc.
+    nsIDocument* doc = mBoundElement->GetCurrentDoc();
     if (!doc)
       return;
 
@@ -144,9 +146,9 @@ public:
     if (!ready)
       return;
 
-    // XXX Deal with layered bindings.
+    // XXX Deal with layered bindings.  For example, mBoundElement may be anonymous content.
     // Now do a ContentInserted notification to cause the frames to get installed finally,
-    nsCOMPtr<nsIContent> parent = mBoundElement->GetParent();
+    nsIContent* parent = mBoundElement->GetParent();
     PRInt32 index = 0;
     if (parent)
       index = parent->IndexOf(mBoundElement);
@@ -382,7 +384,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     // ready.
     if (count > 0) {
       nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(0);
-      nsIDocument* document = req->mBoundElement->GetDocument();
+      nsIDocument* document = req->mBoundElement->GetCurrentDoc();
       if (document)
         document->FlushPendingNotifications(Flush_ContentAndNotify);
     }
@@ -432,7 +434,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     // XXXbz this is still needed for <xul:iframe>.  We need to fix that.
     if (count > 0) {
       nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(0);
-      nsIDocument* document = req->mBoundElement->GetDocument();
+      nsIDocument* document = req->mBoundElement->GetCurrentDoc();
       if (document)
         document->FlushPendingNotifications(Flush_Layout);
     }
@@ -527,7 +529,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
 
   nsresult rv;
 
-  nsCOMPtr<nsIDocument> document = aContent->GetDocument();
+  nsCOMPtr<nsIDocument> document = aContent->GetOwnerDoc();
 
   // XXX document may be null if we're in the midst of paint suppression
   if (!document)
@@ -642,7 +644,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
 nsresult
 nsXBLService::FlushStyleBindings(nsIContent* aContent)
 {
-  nsCOMPtr<nsIDocument> document = aContent->GetDocument();
+  nsCOMPtr<nsIDocument> document = aContent->GetOwnerDoc();
 
   // XXX doc will be null if we're in the midst of paint suppression.
   if (! document)
@@ -674,7 +676,7 @@ NS_IMETHODIMP
 nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID,
                          nsIAtom** aResult)
 {
-  nsIDocument* document = aContent->GetDocument();
+  nsIDocument* document = aContent->GetOwnerDoc();
   if (document) {
     nsIBindingManager *bindingManager = document->GetBindingManager();
   
@@ -706,7 +708,7 @@ nsXBLService::GetXBLDocumentInfo(nsIURI* aURI, nsIContent* aBoundElement, nsIXBL
 
   if (!*aResult) {
     // The second line of defense is the binding manager's document table.
-    nsIDocument* boundDocument = aBoundElement->GetDocument();
+    nsIDocument* boundDocument = aBoundElement->GetOwnerDoc();
     if (boundDocument)
       boundDocument->GetBindingManager()->GetXBLDocumentInfo(aURI, aResult);
   }
@@ -729,7 +731,8 @@ nsXBLService::AttachGlobalKeyHandler(nsIDOMEventReceiver* aReceiver)
   nsCOMPtr<nsIDOMEventReceiver> rec = aReceiver;
   nsCOMPtr<nsIContent> contentNode(do_QueryInterface(aReceiver));
   if (contentNode) {
-    nsCOMPtr<nsIDocument> doc = contentNode->GetDocument();
+    // Only attach if we're really in a document
+    nsCOMPtr<nsIDocument> doc = contentNode->GetCurrentDoc();
     if (doc)
       rec = do_QueryInterface(doc); // We're a XUL keyset. Attach to our document.
   }
@@ -872,7 +875,7 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
   if (ref.IsEmpty())
     return NS_ERROR_FAILURE;
   
-  nsCOMPtr<nsIDocument> boundDocument = aBoundElement->GetDocument();
+  nsCOMPtr<nsIDocument> boundDocument = aBoundElement->GetOwnerDoc();
 
   nsCOMPtr<nsIXBLDocumentInfo> docInfo;
   LoadBindingDocumentInfo(aBoundElement, boundDocument, aURI, PR_FALSE,

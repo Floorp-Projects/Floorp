@@ -237,7 +237,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
 
   // Get the script context the same way
   // nsXBLProtoImpl::InstallImplementation does.
-  nsIDocument* document = aBoundElement->GetDocument();
+  nsIDocument* document = aBoundElement->GetOwnerDoc();
   if (!document) {
     return NS_OK;
   }
