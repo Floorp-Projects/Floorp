@@ -58,6 +58,8 @@
 #include "nsIBrowserInstance.h"
 #include "nsIEventQueueService.h"
 #include "nsAppFileLocationProvider.h"
+#include "nsMPFileLocProvider.h" 
+#include "nsDirectoryServiceDefs.h" 
 
 // Interfaces Needed
 #include "nsIXULWindow.h"
@@ -71,6 +73,9 @@
 #define DEBUG_CMD_LINE
 #endif
 
+// Standalone App defines
+#define STANDALONE_APP_PREF        "profile.standalone_app.enable"
+#define STANDALONE_APP_DIR_PREF    "profile.standalone_app.directory"
 
 static NS_DEFINE_CID(kSoftUpdateCID,     NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -108,6 +113,8 @@ static nsresult CheckForNewChrome(void);
 // to make it as unlikely as possible that somebody calls printf() before we get initialized.
 static struct MacInitializer { MacInitializer() { InitializeMacToolbox(); } } gInitializer;
 
+// Initialize profile services for both standalone and regular profiles
+static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs);
 
 class stTSMCloser
 {
@@ -745,6 +752,59 @@ static nsresult CreateAndRegisterDirectoryService()
   return rv;
 }
 
+// Do the righe thing to provide locations depending on whether an
+// application is standalone or not 
+static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
+{
+    nsresult rv;
+
+    PRBool standaloneApp = PR_FALSE; 
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    if (NS_FAILED(rv)) return rv; 
+    rv = prefs->GetBoolPref(STANDALONE_APP_PREF, &standaloneApp); 
+    if (NS_SUCCEEDED(rv) && standaloneApp) 
+    { 
+        nsMPFileLocProvider *fileLocProvider = new nsMPFileLocProvider; 
+        NS_ENSURE_TRUE(fileLocProvider, NS_ERROR_OUT_OF_MEMORY); 
+        // Specify the dir that standalone app will use for its "profile" dir 
+        nsCOMPtr<nsIFile> parentDir; 
+        rv = NS_GetSpecialDirectory(NS_OS_CURRENT_PROCESS_DIR, getter_AddRefs(parentDir)); 
+        if (NS_FAILED(rv)) return rv; 
+
+        // Get standalone app dir name from prefs and initialize mpfilelocprovider
+        nsXPIDLCString appDir;
+        rv = prefs->CopyCharPref(STANDALONE_APP_DIR_PREF, getter_Copies(appDir));
+        if (NS_FAILED(rv) || (nsCRT::strlen(appDir) == 0)) 
+            return NS_ERROR_FAILURE; 
+        rv = fileLocProvider->Initialize(parentDir, appDir); 
+        if (NS_FAILED(rv)) return rv; 
+
+        rv = prefs->ResetPrefs(); 
+        if (NS_FAILED(rv)) return rv; 
+        rv = prefs->ReadUserPrefs(); 
+        if (NS_FAILED(rv)) return rv; 
+    } 
+    else 
+    { 
+        nsCOMPtr<nsIProfile> profileMgr = do_GetService(kProfileCID, &rv);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = profileMgr->StartupWithArgs(cmdLineArgs);
+        if (NS_FAILED(rv)) return rv;
+
+        // if we get here, and we don't have a current profile, return a failure so we will exit
+        // this can happen, if the user hits Cancel or Exit in the profile manager dialogs
+        nsXPIDLString currentProfileStr;
+        rv = profileMgr->GetCurrentProfile(getter_Copies(currentProfileStr));
+        if (NS_FAILED(rv) || !((const PRUnichar *)currentProfileStr) ||
+                            (nsCRT::strlen((const PRUnichar *)currentProfileStr) == 0)) {
+  	    return NS_ERROR_FAILURE;
+        }
+    }
+    return rv;
+}
+
 #ifdef DEBUG_warren
 #ifdef XP_PC
 #define _CRTDBG_MAP_ALLOC
@@ -900,23 +960,9 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize appshell");
   if (NS_FAILED(rv)) return rv;
 
-
-  /* -- PROFILE stuff -- */
-  nsCOMPtr<nsIProfile> profileMgr = do_GetService(kProfileCID, &rv);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get profile manager");
+  // Initialize Profile Service here.
+  rv = InitializeProfileService(cmdLineArgs);
   if (NS_FAILED(rv)) return rv;
-
-  rv = profileMgr->StartupWithArgs(cmdLineArgs);
-  if (NS_FAILED(rv)) return rv;
-
-  // if we get here, and we don't have a current profile, return a failure so we will exit
-  // this can happen, if the user hits Cancel or Exit in the profile manager dialogs
-  nsXPIDLString currentProfileStr;
-  rv = profileMgr->GetCurrentProfile(getter_Copies(currentProfileStr));
-  if (NS_FAILED(rv) || !((const PRUnichar *)currentProfileStr) ||
-                        (nsCRT::strlen((const PRUnichar *)currentProfileStr) == 0)) {
-  	return NS_ERROR_FAILURE;
-  }
 
   // rjc: now must explicitly call appshell's CreateHiddenWindow() function AFTER profile manager.
   //      if the profile manager ever switches to using nsIDOMWindowInternal stuff, this might have to change
