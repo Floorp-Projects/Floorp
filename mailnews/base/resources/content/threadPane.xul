@@ -40,42 +40,20 @@ Rights Reserved.
           <treechildren>
 		<treeitem uri="..."
   		  Status="rdf:http://home.netscape.com/NC-rdf#Status"
-  		  Flagged="rdf:http://home.netscape.com/NC-rdf#Flagged">
+  		  Flagged="rdf:http://home.netscape.com/NC-rdf#Flagged"
+		  currentView="currentView">
 	  		<treerow >
-				<treecell>
-					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Thread" align="right" style="list-style-image: none;" />
-				</treecell>
-				<treecell>
-					<treeindentation />
-					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Subject" align="right" />
-				</treecell>
-				<treecell>
-					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Sender" align="right" style="list-style-image: none;" />
-				</treecell>
-				<treecell treeallowevents="true">
-					<titledbutton align="right" class="unreadcol" onclick="return top.ToggleMessageRead(event.target.parentNode.parentNode.parentNode)" />
-				</treecell>
-				<treecell>
-					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Date" align="right" style="list-style-image: none;" />
-				</treecell>
-				<treecell>
-					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Priority" align="right" style="list-style-image: none;" />
-				</treecell>
-				<treecell treeallowevents="true">
-					<titledbutton align="right" class="flagcol" onclick="return top.ToggleMessageFlagged(event.target.parentNode.parentNode.parentNode)" />
-				</treecell>
-				<treecell>
-					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Status" align="right" style="list-style-image: none;" />
-				</treecell>
-				<treecell>
-					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Size" align="right" style="list-style-image: none;" />
-				</treecell>
-				<treecell>
-					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages" align="right" style="list-style-image: none;" />
-				</treecell>
-				<treecell>
-					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#TotalMessages" align="right" style="list-style-image: none;" />
-				</treecell>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#Thread"/>
+				<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Subject"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#Sender"/>
+				<treecell treeallowevents="true" class="unreadcol" onclick="return top.ToggleMessageRead(event.target.parentNode.parentNode.parentNode)"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#Date"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#Priority"/>
+				<treecell treeallowevents="true" class="flagcol" onclick="return top.ToggleMessageFlagged(event.target.parentNode.parentNode.parentNode)" />
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#Status"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#Size"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
 	  		</treerow>
 		</treeitem>
           </treechildren>
@@ -95,23 +73,17 @@ Rights Reserved.
   <treecol style="width:8%" id="TotalColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
   <treehead>
     <treerow>
-		<treecell> 
-				<html:img src="&threadcol.img;"/>
-		</treecell>
-		<treecell onclick="return top.SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');">&subjectColumn.label;</treecell>
+		<treecell onclick="return top.ChangeThreadView();" class='threadColumnHeader' id="ThreadColumnHeader"/> 
+		<treecell value="&subjectColumn.label;" onclick="return top.SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');"/>
 		<treecell onclick="return top.SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender');">&senderColumn.label;</treecell>
-		<treecell> 
-				<html:img src="&readcol.img;"/>
-		</treecell>
-		<treecell onclick="return top.SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');">&dateColumn.label;</treecell>
-		<treecell onclick="return top.SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority');">&priorityColumn.label;</treecell>
-		<treecell> 
-				<html:img src="&flagcol.img;"/>
-		</treecell>
-		<treecell onclick="return top.SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status');">&statusColumn.label;</treecell>
-		<treecell onclick="return top.SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size');">&sizeColumn.label;</treecell>
-		<treecell onclick="return top.SortThreadPane('UnreadColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages');">&unreadColumn.label;</treecell>
-		<treecell onclick="return top.SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages');">&totalColumn.label;</treecell>
+		<treecell class="readColumnHeader"/> 
+		<treecell value="&dateColumn.label;" onclick="return top.SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');"/>
+		<treecell value="&priorityColumn.label;" onclick="return top.SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority');"/>
+		<treecell class="flagColumnHeader"/> 
+		<treecell value="&statusColumn.label;" onclick="return top.SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status');"/>
+		<treecell value="&sizeColumn.label;" onclick="return top.SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size');"/>
+		<treecell value="&unreadColumn.label;" onclick="return top.SortThreadPane('UnreadColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages');"/>
+		<treecell value="&totalColumn.label;" onclick="return top.SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages');"/>
     </treerow>
   </treehead>
 </tree>

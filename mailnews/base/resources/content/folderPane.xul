@@ -43,32 +43,24 @@
 		  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
 		  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
           ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-	  		<treerow >
-				<treecell>
-					<treeindentation />
-					<titledbutton class="twisty" treeallowevents="true" onclick="return top.ToggleTwisty(event.target.parentNode.parentNode.parentNode)" />
-					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" class="folderIcon"/>
-				</treecell>
-				<treecell>
-					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages" align="right" style="list-style-image: none;" />
-				</treecell>
-				<treecell>
-					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#TotalMessages" align="right" style="list-style-image: none;" />
-				</treecell>
+	  	  <treerow >
+				<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
 	  		</treerow>
 		</treeitem>
        </treechildren>
 	</rule>
   </template>
 
-  <treecol style="width:65%" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol style="width:15%" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-  <treecol style="width:15%" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+  <treecol style="width:60%" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol style="width:20%" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+  <treecol style="width:20%" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
   <treehead>
     <treerow>
-      <treecell>&nameColumn.label;</treecell>
-      <treecell>&unreadColumn.label;</treecell>
-      <treecell>&totalColumn.label;</treecell>
+      <treecell value="&nameColumn.label;"/>
+      <treecell value="&unreadColumn.label;"/>
+      <treecell value="&totalColumn.label;"/>
     </treerow>
   </treehead>
 

@@ -556,6 +556,47 @@ function OnLoadThreadPane(threadTree)
 	messageDataSource = messageDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
 	threadTree.database.AddDataSource(messageDataSource);
 
+	ShowThreads(false);
+}
 
+function ChangeThreadView()
+{
+	var threadPane = GetThreadPane();
+	var threadColumn = threadPane.document.getElementById('ThreadColumnHeader');
+	if(threadColumn)
+	{
+		var currentView = threadColumn.getAttribute('currentView');
+		if(currentView== 'threaded')
+		{
+			ShowThreads(false);
+		}
+		else if(currentView == 'unthreaded')
+		{
+			ShowThreads(true);
+		}
+		RefreshThreadTreeView();
+	}
+}
+
+function ShowThreads(showThreads)
+{
+	var view = messageViewDataSource.QueryInterface(Components.interfaces.nsIMessageView);
+	if(view)
+	{
+		view.SetShowThreads(showThreads);
+		var threadPane = GetThreadPane();
+		var threadColumn = threadPane.document.getElementById('ThreadColumnHeader');
+		if(threadColumn)
+		{
+			if(showThreads)
+			{
+				threadColumn.setAttribute('currentView', 'threaded');
+			}
+			else
+			{
+				threadColumn.setAttribute('currentView', 'unthreaded');
+			}
+		}
+	}
 }
 

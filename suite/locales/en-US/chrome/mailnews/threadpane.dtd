@@ -27,6 +27,3 @@ Rights Reserved.
 <!ENTITY sizeColumn.label "Size">
 <!ENTITY unreadColumn.label "Unread">
 <!ENTITY totalColumn.label "Total">
-<!ENTITY readcol.img "chrome://messenger/skin/readcol.gif">
-<!ENTITY flagcol.img "chrome://messenger/skin/flagcol.gif">
-<!ENTITY threadcol.img "chrome://messenger/skin/unthreadcol.gif">
