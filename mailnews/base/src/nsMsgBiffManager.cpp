@@ -17,6 +17,7 @@
  */
 
 #include "nsMsgBiffManager.h"
+#include "nsCRT.h"
 
 NS_BEGIN_EXTERN_C
 
@@ -220,7 +221,11 @@ nsresult nsMsgBiffManager::PerformBiff()
 		nsBiffEntry *current = (nsBiffEntry*)mBiffArray->ElementAt(i);
 		if(current->nextBiffTime < currentTime)
 		{
-			current->server->PerformBiff();
+			char *password = nsnull;
+			current->server->GetPassword(&password);
+			//Make sure we're logged on before doing a biff
+			if(password && (nsCRT::strcmp(password, "") != 0))
+				current->server->PerformBiff();
 			mBiffArray->RemoveElementAt(i);
 			i--; //Because we removed it we need to look at the one that just moved up.
 			SetNextBiffTime(current, currentTime);
