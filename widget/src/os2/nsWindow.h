@@ -242,8 +242,6 @@ protected:
    PSWP      mSWPs;           // SWPs for deferred window positioning
    ULONG     mlHave, mlUsed;  // description of mSWPs array
    HPOINTER  mFrameIcon;      // current frame icon
-   HPS       mPS;             // cache PS for window
-   ULONG     mPSRefs;         // number of refs to cache ps
    BOOL      mNativeDrag;     // is the drag from outside Mozilla
    VDKEY     mDeadKey;        // dead key from previous keyevent
    BOOL      mHaveDeadKey;    // is mDeadKey valid [0 may be a valid dead key, for all I know]

@@ -165,8 +165,6 @@ nsWindow::nsWindow() : nsBaseWidget()
     mlHave              = 0;
     mlUsed              = 0;
     mFrameIcon          = 0;
-    mPS                 = 0;
-    mPSRefs             = 0;
     mNativeDrag         = FALSE;
     mDeadKey            = 0;
     mHaveDeadKey        = FALSE;
@@ -1904,42 +1902,26 @@ NS_IMETHODIMP nsWindow::Update()
 //-------------------------------------------------------------------------
 void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
-  void *rc = NULL;
-
     switch(aDataType) {
         case NS_NATIVE_WIDGET:
         case NS_NATIVE_WINDOW:
         case NS_NATIVE_PLUGIN_PORT:
-            rc = (void*) mWnd;
-            break;
+            return (void*)mWnd;
         case NS_NATIVE_GRAPHIC:
-            if( !mPS)
-            {
-              if( mNativeDrag) { 
-                mPS = DrgGetPS(mWnd);
-              } else {
-                mPS = WinGetPS(mWnd);
-              }
-              nsPaletteOS2::SelectGlobalPalette(mPS, mWnd);
+            HPS hps;
+            if (mNativeDrag) { 
+              hps = DrgGetPS(mWnd);
+            } else {
+              hps = WinGetPS(mWnd);
             }
-            mPSRefs++;
-            rc = (void*) mPS;
-            break;
+            nsPaletteOS2::SelectGlobalPalette(hps, mWnd);
+            return (void*)hps;
         case NS_NATIVE_COLORMAP:
-        case NS_NATIVE_DISPLAY:
-        case NS_NATIVE_REGION:
-        case NS_NATIVE_OFFSETX:
-        case NS_NATIVE_OFFSETY: // could do this, I suppose; but why?
-                                // OTOH, this might make plugins work!
-            break;
         default: 
-#ifdef DEBUG
-            printf( "*** Someone's added a new NS_NATIVE value...\n");
-#endif
             break;
     }
 
-    return rc;
+    return NULL;
 }
 
 //~~~
@@ -1948,32 +1930,18 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
   switch(aDataType)
   {
     case NS_NATIVE_GRAPHIC:
-      mPSRefs--;
-      if( !mPSRefs)
-      {
-        BOOL rc;
-        if( mNativeDrag) rc = DrgReleasePS( mPS);
-        else rc = WinReleasePS((HPS)data);
-#ifdef DEBUG
-        if( !rc)
-          printf( "Error from {Win/Drg}ReleasePS()\n");
-#endif
-        mPS = 0;
+      if (mNativeDrag) {
+        DrgReleasePS((HPS)data);
+      } else {
+        WinReleasePS((HPS)data);
       }
       break;
-    case NS_NATIVE_DISPLAY:
-    case NS_NATIVE_REGION:
-    case NS_NATIVE_OFFSETX:
-    case NS_NATIVE_OFFSETY:
     case NS_NATIVE_WIDGET:
     case NS_NATIVE_WINDOW:
     case NS_NATIVE_PLUGIN_PORT:
     case NS_NATIVE_COLORMAP:
       break;
     default: 
-#ifdef DEBUG
-      printf( "*** Someone's added a new NS_NATIVE value...\n");
-#endif
       break;
   }
 }
@@ -2729,11 +2697,6 @@ void nsWindow::OnDestroy()
    if( mSWPs) free( mSWPs);
    mSWPs = 0;
    mlHave = mlUsed = 0;
-
-   // release any ps (erm, probably an error if this is necessary)
-   if( mPS)
-      WinReleasePS( mPS);
-   mPS = 0;
 
    // release references to context, toolkit, appshell, children
    nsBaseWidget::OnDestroy();
