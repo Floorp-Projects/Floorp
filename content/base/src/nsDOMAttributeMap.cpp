@@ -28,9 +28,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
 
-static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
-static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
-static NS_DEFINE_IID(kIDOMAttributePrivateIID, NS_IDOMATTRIBUTEPRIVATE_IID);
 
 //----------------------------------------------------------------------
 
@@ -39,88 +36,25 @@ nsDOMAttributeMap::nsDOMAttributeMap(nsIContent* aContent)
 {
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
-  mAttributes = nsnull;
   // We don't add a reference to our content. If it goes away,
   // we'll be told to drop our reference
 }
 
-PR_STATIC_CALLBACK (PRIntn)
-RemoveAttributes(PLHashEntry* he, PRIntn i, void* arg)
-{
-  nsIDOMAttr* attr = (nsIDOMAttr*)he->value;
-  char* str = (char*)he->key;
-  
-  if (nsnull != attr) {
-    nsIDOMAttributePrivate* attrPrivate;
-    attr->QueryInterface(kIDOMAttributePrivateIID, (void**)&attrPrivate);
-    attrPrivate->DropReference();
-    NS_RELEASE(attrPrivate);
-    NS_RELEASE(attr);
-  }
-  Recycle(str);
-
-  return HT_ENUMERATE_REMOVE;
-}
-
-PR_STATIC_CALLBACK (PRIntn)
-DropReferencesInAttributes(PLHashEntry* he, PRIntn i, void* arg)
-{
-  nsDOMAttribute* attr = (nsDOMAttribute*)he->value;
-
-  if (nsnull != attr) {
-    nsIDOMAttributePrivate* attrPrivate;
-    attr->QueryInterface(kIDOMAttributePrivateIID, (void**)&attrPrivate);
-    attrPrivate->DropReference();
-    NS_RELEASE(attrPrivate);
-  }
-
-  return HT_ENUMERATE_NEXT;
-}
-
 nsDOMAttributeMap::~nsDOMAttributeMap()
 {
-  if (nsnull != mAttributes) {
-    PL_HashTableEnumerateEntries(mAttributes, RemoveAttributes, nsnull);
-    PL_HashTableDestroy(mAttributes);
-  }
 }
 
-void 
+void
 nsDOMAttributeMap::DropReference()
 {
   mContent = nsnull;
-  if (nsnull != mAttributes) {
-    PL_HashTableEnumerateEntries(mAttributes, DropReferencesInAttributes, nsnull);
-  }
 }
 
-nsresult
-nsDOMAttributeMap::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIDOMNamedNodeMapIID)) {
-    nsIDOMNamedNodeMap* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDOMNamedNodeMap* tmp1 = this;
-    nsISupports* tmp2 = tmp1;
-    *aInstancePtr = (void*)tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(nsDOMAttributeMap)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNamedNodeMap)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMNamedNodeMap)
+   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
+NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsDOMAttributeMap)
 NS_IMPL_RELEASE(nsDOMAttributeMap)
@@ -132,14 +66,14 @@ nsDOMAttributeMap::GetScriptObject(nsIScriptContext *aContext,
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
     nsIDOMScriptObjectFactory *factory;
-    
+
     res = nsGenericElement::GetScriptObjectFactory(&factory);
     if (NS_OK != res) {
       return res;
     }
 
-    res = factory->NewScriptNamedNodeMap(aContext, 
-                                         (nsISupports *)(nsIDOMNamedNodeMap *)this, 
+    res = factory->NewScriptNamedNodeMap(aContext,
+                                         (nsISupports *)(nsIDOMNamedNodeMap *)this,
                                          (nsISupports *)mContent,
                                          (void**)&mScriptObject);
     NS_RELEASE(factory);
@@ -155,284 +89,165 @@ nsDOMAttributeMap::SetScriptObject(void *aScriptObject)
   return NS_OK;
 }
 
-PLHashTable*
-nsDOMAttributeMap::GetAttributeTable()
-{
-  if ((nsnull == mAttributes) && (nsnull != mContent)) {
-    PRInt32 count;
-    mContent->GetAttributeCount(count);
-    mAttributes = PL_NewHashTable(count, PL_HashString, PL_CompareStrings,
-                                  PL_CompareValues, nsnull, nsnull);
-  }
-
-  return mAttributes;
-}
-
-nsresult
-nsDOMAttributeMap::GetNamedItemCommon(const nsString& aAttrName,
-                                      PRInt32 aNameSpaceID,
-                                      nsIAtom* aNameAtom,
-                                      nsIDOMNode** aAttribute)
-{
-  nsIDOMAttr* attribute;
-  char buf[128];
-  nsresult result = NS_OK;
-  
-  PLHashTable* attrHash = GetAttributeTable();
-  aAttrName.ToCString(buf, sizeof(buf));
-  if (nsnull != attrHash) {
-    attribute = (nsIDOMAttr*)PL_HashTableLookup(attrHash, buf);
-    if (nsnull == attribute) {
-      nsresult attrResult;
-      nsAutoString value;
-      attrResult = mContent->GetAttribute(aNameSpaceID, aNameAtom, value);
-      if (NS_CONTENT_ATTR_NOT_THERE != attrResult) {
-        nsDOMAttribute* domAttribute;
-        domAttribute = new nsDOMAttribute(mContent, aAttrName, value);
-        if (nsnull == domAttribute) {
-          result = NS_ERROR_OUT_OF_MEMORY;
-        }
-        else {
-          result = domAttribute->QueryInterface(kIDOMAttrIID, 
-                                                (void **)&attribute);
-          char* hashKey = aAttrName.ToNewCString();
-          PL_HashTableAdd(attrHash, hashKey, attribute);
-        }
-      }
-    }
-  }
-
-  if (nsnull != attribute) {
-    result = attribute->QueryInterface(kIDOMNodeIID, (void**)aAttribute);
-  }
-  else {
-    *aAttribute = nsnull;
-  }
-
-  return result;
-}
-
 void
 nsDOMAttributeMap::GetNormalizedName(PRInt32 aNameSpaceID,
                                      nsIAtom* aNameAtom,
                                      nsString& aAttrName)
 {
-  nsIAtom* prefix;
+  nsCOMPtr<nsIAtom> prefix;
   aAttrName.Truncate();
-  mContent->GetNameSpacePrefixFromId(aNameSpaceID, prefix);
+  mContent->GetNameSpacePrefixFromId(aNameSpaceID, *getter_AddRefs(prefix));
 
-  if (nsnull != prefix) {
+  if (prefix) {
     prefix->ToString(aAttrName);
     aAttrName.AppendWithConversion(":");
-    NS_RELEASE(prefix);
   }
 
-  if (nsnull != aNameAtom) {
+  if (aNameAtom) {
     nsAutoString tmp;
-    
+
     aNameAtom->ToString(tmp);
     aAttrName.Append(tmp);
-  } 
+  }
 }
 
 nsresult
 nsDOMAttributeMap::GetNamedItem(const nsString &aAttrName,
                                 nsIDOMNode** aAttribute)
 {
-  nsresult result = NS_OK;
-  if (nsnull != mContent) {
-    nsIAtom* nameAtom;
+  NS_ENSURE_ARG_POINTER(aAttribute);
+  *aAttribute = nsnull;
+
+  nsresult rv = NS_OK;
+  if (mContent) {
+    nsCOMPtr<nsIAtom> nameAtom;
     PRInt32 nameSpaceID;
     nsAutoString normalizedName;
 
-    mContent->ParseAttributeString(aAttrName, nameAtom, nameSpaceID);
+    mContent->ParseAttributeString(aAttrName, *getter_AddRefs(nameAtom),
+                                   nameSpaceID);
     if (kNameSpaceID_Unknown == nameSpaceID) {
-      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+      return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
+
     GetNormalizedName(nameSpaceID, nameAtom, normalizedName);
-    result = GetNamedItemCommon(normalizedName, 
-                                nameSpaceID, 
-                                nameAtom,
-                                aAttribute);
-    NS_IF_RELEASE(nameAtom);
-  }
-  else {
-    *aAttribute = nsnull;
+
+    nsresult attrResult;
+    nsAutoString value;
+    attrResult = mContent->GetAttribute(nameSpaceID, nameAtom, value);
+
+    if (NS_CONTENT_ATTR_NOT_THERE != attrResult && NS_SUCCEEDED(attrResult)) {
+      nsDOMAttribute* domAttribute;
+      domAttribute = new nsDOMAttribute(mContent, normalizedName, value);
+      if (!domAttribute) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      rv = domAttribute->QueryInterface(NS_GET_IID(nsIDOMAttr),
+                                        (void **)aAttribute);
+    }
   }
 
-  return result;
+  return rv;
 }
 
 nsresult
 nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
 {
-  nsresult result = NS_OK;
-  nsIDOMAttr* attribute;
+  NS_ENSURE_ARG_POINTER(aReturn);
 
-  if (nsnull == aNode) {
+  if (!aNode) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (nsnull != mContent) {
-    result = aNode->QueryInterface(kIDOMAttrIID, (void**)&attribute);
-    if (NS_OK == result) {
-      PLHashTable* attrHash;
+  nsresult rv = NS_OK;
+  *aReturn = nsnull;
 
-      attrHash = GetAttributeTable();
-      if (nsnull != attrHash) {
-        nsIDOMNode* oldAttribute;
-        nsIDOMAttributePrivate* attrPrivate;
-        nsAutoString name, value;
-        char buf[128];
-        char* key;
-        nsIAtom* nameAtom;
-        PRInt32 nameSpaceID;
+  if (mContent) {
+    nsCOMPtr<nsIDOMAttr> attribute(do_QueryInterface(aNode));
 
-        // Get normalized attribute name
-        attribute->GetName(name);
-        mContent->ParseAttributeString(name, nameAtom, nameSpaceID);
-        if (kNameSpaceID_Unknown == nameSpaceID) {
-          nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-        }
-        GetNormalizedName(nameSpaceID, nameAtom, name);
-        name.ToCString(buf, sizeof(buf));
-        result = GetNamedItemCommon(name, nameSpaceID, nameAtom, &oldAttribute);
+    if (!attribute) {
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
 
-        if (nsnull != oldAttribute) {
-          nsIDOMAttributePrivate* oldAttributePrivate;
-          PLHashEntry** he;
+    nsAutoString name, value;
+    nsCOMPtr<nsIAtom> nameAtom;
+    PRInt32 nameSpaceID;
 
-          // Remove the attribute from the hash table, cleaning
-          // the hash table entry as we go about it.
-          he = PL_HashTableRawLookup(attrHash, PL_HashString(buf), buf);
-          key = (char*)(*he)->key;
-          PL_HashTableRemove(attrHash, buf);
-          if (nsnull != key) {
-            Recycle(key);
-          }
-          
-          result = oldAttribute->QueryInterface(kIDOMAttributePrivateIID,
-                                                (void **)&oldAttributePrivate);
-          if (NS_OK == result) {
-            oldAttributePrivate->DropReference();
-            NS_RELEASE(oldAttributePrivate);
-          }
+    // Get normalized attribute name
+    attribute->GetName(name);
+    mContent->ParseAttributeString(name, *getter_AddRefs(nameAtom),
+                                   nameSpaceID);
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
+    }
+    GetNormalizedName(nameSpaceID, nameAtom, name);
 
-          *aReturn = oldAttribute;
+    nsresult attrResult = mContent->GetAttribute(nameSpaceID, nameAtom, value);
 
-          // Drop the reference held in the hash table
-          NS_RELEASE(oldAttribute);
-        }
-        else {
-          *aReturn = nsnull;
-        }
-
-        attribute->GetValue(value);
-
-        // Associate the new attribute with the content
-        key = name.ToNewCString();
-        result = attribute->QueryInterface(kIDOMAttributePrivateIID,
-                                           (void **)&attrPrivate);
-        if (NS_SUCCEEDED(result)) {
-          nsIContent* owner;
-
-          attrPrivate->GetContent(&owner);
-          if (owner) {
-            // The old attribute is already associated with another
-            // piece of content.
-            result = NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR;
-            NS_RELEASE(owner);
-          }
-          else {
-            attrPrivate->SetContent(mContent);
-            attrPrivate->SetName(name);
-
-            // Add the new attribute node to the hash table (maintaining
-            // a reference to it)
-            PL_HashTableAdd(attrHash, key, attribute);
-
-            // Set the attribute on the content
-            result = mContent->SetAttribute(nameSpaceID, nameAtom, value, PR_TRUE);
-            NS_IF_RELEASE(nameAtom);
-          }
-          NS_RELEASE(attrPrivate);
-        }
+    if (NS_CONTENT_ATTR_NOT_THERE != attrResult && NS_SUCCEEDED(attrResult)) {
+      nsDOMAttribute* domAttribute;
+      // We pass a null content here since the attr node we return isn't
+      // tied to this content anymore.
+      domAttribute = new nsDOMAttribute(nsnull, name, value);
+      if (!domAttribute) {
+        return NS_ERROR_OUT_OF_MEMORY;
       }
+
+      rv = domAttribute->QueryInterface(NS_GET_IID(nsIDOMAttr),
+                                        (void **)aReturn);
     }
-    else {
-      result = NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-    }
+
+    attribute->GetValue(value);
+
+    rv = mContent->SetAttribute(nameSpaceID, nameAtom, value, PR_TRUE);
   }
-  else {
-    *aReturn = nsnull;
-  }
-  
-  return result;
+
+  return rv;
 }
 
 NS_IMETHODIMP
 nsDOMAttributeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
 {
-  nsresult result = NS_OK;
-  if (nsnull != mContent) {
-    PLHashTable* attrHash;
-    
-    attrHash = GetAttributeTable();
-    if (nsnull != attrHash) {
-      nsIDOMNode* attribute;
-      nsIDOMAttributePrivate* attrPrivate;
-      char buf[128];
-      char* key;
-      nsIAtom* nameAtom;
-      PRInt32 nameSpaceID;
-      nsAutoString name;
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
 
-      mContent->ParseAttributeString(aName, nameAtom, nameSpaceID);
-      if (kNameSpaceID_Unknown == nameSpaceID) {
-        nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
-      }
-      GetNormalizedName(nameSpaceID, nameAtom, name);
-      name.ToCString(buf, sizeof(buf));
-      result = GetNamedItemCommon(name, nameSpaceID, nameAtom, &attribute);
-      
-      if (nsnull != attribute) {
-        PLHashEntry** he;
+  nsresult rv = NS_OK;
 
-        // Remove the attribute from the hash table, cleaning
-        // the hash table entry as we go about it.
-        he = PL_HashTableRawLookup(attrHash, PL_HashString(buf), buf);
-        key = (char*)(*he)->key;
+  if (mContent) {
+    nsCOMPtr<nsIDOMNode> attribute;
+    nsCOMPtr<nsIAtom> nameAtom;
+    PRInt32 nameSpaceID;
+    nsAutoString name(aName);
 
-        PL_HashTableRemove(attrHash, buf);
-        if (nsnull != key) {
-          Recycle(key);
-        }
-          
-        result = attribute->QueryInterface(kIDOMAttributePrivateIID,
-                                           (void **)&attrPrivate);
-        if (NS_OK == result) {
-          attrPrivate->DropReference();
-          NS_RELEASE(attrPrivate);
-        }
-        
-        *aReturn = attribute;
-
-        // Drop the reference held in the hash table
-        NS_RELEASE(attribute);
-
-        // Unset the attribute in the content
-        result = mContent->UnsetAttribute(nameSpaceID, nameAtom, PR_TRUE);
-      }
-      else {
-        result = NS_ERROR_DOM_NOT_FOUND_ERR;
-        *aReturn = nsnull;
-      }
-
-      NS_IF_RELEASE(nameAtom);
+    mContent->ParseAttributeString(aName, *getter_AddRefs(nameAtom),
+                                   nameSpaceID);
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
+    GetNormalizedName(nameSpaceID, nameAtom, name);
+
+    nsresult attrResult;
+    nsAutoString value;
+    attrResult = mContent->GetAttribute(nameSpaceID, nameAtom, value);
+
+    if (NS_CONTENT_ATTR_NOT_THERE != attrResult && NS_SUCCEEDED(attrResult)) {
+      nsDOMAttribute* domAttribute;
+      domAttribute = new nsDOMAttribute(nsnull, name, value);
+      if (!domAttribute) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      rv = domAttribute->QueryInterface(NS_GET_IID(nsIDOMAttr),
+                                        (void **)aReturn);
+    } else {
+      return NS_ERROR_DOM_NOT_FOUND_ERR;
+    }
+
+    rv = mContent->UnsetAttribute(nameSpaceID, nameAtom, PR_TRUE);
   }
 
-  return result;
+  return rv;
 }
 
 
@@ -440,43 +255,56 @@ nsresult
 nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   PRInt32 nameSpaceID;
-  nsIAtom* nameAtom = nsnull;
-  nsresult result = NS_OK;
-  if ((nsnull != mContent) &&
-      NS_SUCCEEDED(mContent->GetAttributeNameAt(aIndex, 
-                                                nameSpaceID, 
-                                                nameAtom))) {
-    nsAutoString attrName;
+  nsCOMPtr<nsIAtom> nameAtom;
 
-    GetNormalizedName(nameSpaceID, nameAtom, attrName);   
-    result = GetNamedItemCommon(attrName, nameSpaceID, nameAtom, aReturn);
-    NS_IF_RELEASE(nameAtom);
+  nsresult rv = NS_OK;
+  if (mContent &&
+      NS_SUCCEEDED(mContent->GetAttributeNameAt(aIndex,
+                                                nameSpaceID,
+                                                *getter_AddRefs(nameAtom)))) {
+    nsAutoString value, name;
+    mContent->GetAttribute(nameSpaceID, nameAtom, value);
+
+    GetNormalizedName(nameSpaceID, nameAtom, name);
+
+    nsDOMAttribute* domAttribute;
+
+    domAttribute = new nsDOMAttribute(mContent, name, value);
+    if (!domAttribute) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    rv = domAttribute->QueryInterface(NS_GET_IID(nsIDOMAttr),
+                                      (void **)aReturn);
   }
   else {
     *aReturn = nsnull;
+
+    rv = NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
-  
-  return result;
+
+  return rv;
 }
 
 nsresult
 nsDOMAttributeMap::GetLength(PRUint32 *aLength)
 {
+  NS_ENSURE_ARG_POINTER(aLength);
+
   PRInt32 n;
   nsresult rv = NS_OK;
 
   if (nsnull != mContent) {
     rv = mContent->GetAttributeCount(n);
     *aLength = PRUint32(n);
-  }
-  else {
+  } else {
     *aLength = 0;
   }
   return rv;
 }
 
 nsresult
-nsDOMAttributeMap::GetNamedItemNS(const nsString& aNamespaceURI, 
+nsDOMAttributeMap::GetNamedItemNS(const nsString& aNamespaceURI,
                                   const nsString& aLocalName,
                                   nsIDOMNode** aReturn)
 {
@@ -490,7 +318,7 @@ nsDOMAttributeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
 }
 
 nsresult
-nsDOMAttributeMap::RemoveNamedItemNS(const nsString& aNamespaceURI, 
+nsDOMAttributeMap::RemoveNamedItemNS(const nsString& aNamespaceURI,
                                      const nsString&aLocalName,
                                      nsIDOMNode** aReturn)
 {
@@ -499,19 +327,6 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsString& aNamespaceURI,
 
 
 #ifdef DEBUG
-PR_STATIC_CALLBACK (PRIntn)
-SizeAttributes(PLHashEntry* he, PRIntn i, void* arg)
-{
-  char* str = (char*)he->key;
-  PRUint32 size = sizeof(PLHashEntry);
-  if (str) {
-    size += PL_strlen(str) + 1;
-  }
-  PRUint32* sump = (PRUint32*) arg;
-  *sump = *sump + size;
-  return HT_ENUMERATE_NEXT;
-}
-
 nsresult
 nsDOMAttributeMap::SizeOfNamedNodeMap(nsIDOMNamedNodeMap* aMap,
                                       nsISizeOfHandler* aSizer,
@@ -520,13 +335,6 @@ nsDOMAttributeMap::SizeOfNamedNodeMap(nsIDOMNamedNodeMap* aMap,
   if (!aResult) return NS_ERROR_NULL_POINTER;
   nsDOMAttributeMap* map = (nsDOMAttributeMap*) aMap;
   PRUint32 sum = sizeof(nsDOMAttributeMap);
-  if (map->mAttributes) {
-    sum += sizeof(*map->mAttributes);
-    PRUint32 esize = 0;
-    PL_HashTableEnumerateEntries(map->mAttributes, SizeAttributes,
-                                 (void*) &esize);
-    sum += esize;
-  }
   *aResult = sum;
   return NS_OK;
 }

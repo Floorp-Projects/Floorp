@@ -180,9 +180,10 @@ nsDOMAttribute::GetValue(nsString& aValue)
     if (kNameSpaceID_Unknown == nameSpaceID) {
       nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
     }
-    attrResult = mContent->GetAttribute(nameSpaceID, nameAtom, mValue);
-    if (NS_CONTENT_ATTR_NOT_THERE == attrResult) {
-      mValue.Truncate();
+    nsAutoString tmpValue;
+    attrResult = mContent->GetAttribute(nameSpaceID, nameAtom, tmpValue);
+    if (NS_CONTENT_ATTR_NOT_THERE != attrResult) {
+      mValue = tmpValue;
     }
     NS_IF_RELEASE(nameAtom);
   }

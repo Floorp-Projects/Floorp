@@ -71,13 +71,9 @@ protected:
   void GetNormalizedName(PRInt32 aNameSpaceID,
                          nsIAtom* aNameAtom,
                          nsString& aAttrName);
-  PLHashTable* GetAttributeTable();
 
 private:
   nsIContent* mContent;
-  // XXX We really don't need to use a hashtable here. 
-  // We generally deal with a small number of attributes
-  PLHashTable* mAttributes;
   void* mScriptObject;
 };
 
