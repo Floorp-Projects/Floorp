@@ -85,16 +85,12 @@
 #catExtButton       {-moz-image-region: rect(0px, 192px, 32px, 160px)}
 #catAdvancedButton  {-moz-image-region: rect(0px, 224px, 32px, 192px)}
 
-.indent {
-  margin-left: 23px;
-  margin-right: 23px;
+expander {
+  margin: 2px;
+  border: 1px solid transparent;
 }
-
-.small-indent {
-  margin-left: 15px; 
-}
-
-.uniWidthButton {
-  min-width: 8em;
+#privacyCategories > expander[open="true"] {
+  background-color: #FFFFCC;
+  border: 1px solid black;
 }
 
