@@ -8,3 +8,11 @@ This directory includes:
         gnats2bz.pl -- a perl script to help import bugs from a GNATS 
                         database into a Bugzilla database.  Contributed by
                         Tom Schutter <tom@platte.com>
+
+       bug_email.pl --  a perl script that can receive email containing
+                        bug reports (email-interface). Contributed by
+                        Klaas Freitag <freitag@SuSE.de>
+	
+      README.Mailif --  Readme describing the mail interface.
+  bugmail_help.html --  User help page for the mail interface.
+
