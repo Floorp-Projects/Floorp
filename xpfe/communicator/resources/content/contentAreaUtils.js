@@ -772,7 +772,7 @@ function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aD
     var url = aDocumentURI.QueryInterface(Components.interfaces.nsIURL);
     if (url.fileName != "") {
       // 2) Use the actual file name, if present
-      return unescape(url.fileName);
+      return validateFileName(unescape(url.fileName));
     }
   } catch (e) {
     try {
