@@ -18,21 +18,21 @@
 #include "intlpriv.h"
 #include "unicpriv.h"
 
-typedef uint16 (* MapFormatFunc)(uint16 in,uTable *uTable,uMapCell *cell);
+typedef uint16 (* MapFormatFunc)(uint16 in,uTable *uT,uMapCell *cell);
 typedef XP_Bool (* HitFormateFunc)(uint16 in,uMapCell *cell);
-typedef void (* IterateFormatFunc)(uTable *uTable, uMapCell *cell,uMapIterateFunc callback, uint16 context);
+typedef void (* IterateFormatFunc)(uTable *uT, uMapCell *cell,uMapIterateFunc callback, uint16 context);
 
 PRIVATE XP_Bool uHitFormate0(uint16 in,uMapCell *cell);
 PRIVATE XP_Bool uHitFormate1(uint16 in,uMapCell *cell);
 PRIVATE XP_Bool uHitFormate2(uint16 in,uMapCell *cell);
-PRIVATE uint16 uMapFormate0(uint16 in,uTable *uTable,uMapCell *cell);
-PRIVATE uint16 uMapFormate1(uint16 in,uTable *uTable,uMapCell *cell);
-PRIVATE uint16 uMapFormate2(uint16 in,uTable *uTable,uMapCell *cell);
-PRIVATE void uIterateFormate0(uTable *uTable, uMapCell *cell,uMapIterateFunc callback, uint16 context);
-PRIVATE void uIterateFormate1(uTable *uTable, uMapCell *cell,uMapIterateFunc callback, uint16 context);
-PRIVATE void uIterateFormate2(uTable *uTable, uMapCell *cell,uMapIterateFunc callback, uint16 context);
-PRIVATE uMapCell *uGetMapCell(uTable *uTable, int16 item);
-PRIVATE char uGetFormat(uTable *uTable, int16 item);
+PRIVATE uint16 uMapFormate0(uint16 in,uTable *uT,uMapCell *cell);
+PRIVATE uint16 uMapFormate1(uint16 in,uTable *uT,uMapCell *cell);
+PRIVATE uint16 uMapFormate2(uint16 in,uTable *uT,uMapCell *cell);
+PRIVATE void uIterateFormate0(uTable *uT, uMapCell *cell,uMapIterateFunc callback, uint16 context);
+PRIVATE void uIterateFormate1(uTable *uT, uMapCell *cell,uMapIterateFunc callback, uint16 context);
+PRIVATE void uIterateFormate2(uTable *uT, uMapCell *cell,uMapIterateFunc callback, uint16 context);
+PRIVATE uMapCell *uGetMapCell(uTable *uT, int16 item);
+PRIVATE char uGetFormat(uTable *uT, int16 item);
 
 
 /*=================================================================================
@@ -76,9 +76,9 @@ PRIVATE XP_Bool uHit(unsigned char format, uint16 in,uMapCell *cell)
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE void uCellIterate(unsigned char format, uTable *uTable, uMapCell *cell,uMapIterateFunc callback, uint16 context)
+PRIVATE void uCellIterate(unsigned char format, uTable *uT, uMapCell *cell,uMapIterateFunc callback, uint16 context)
 {
-	(* m_iterate[format])((uTable),(cell),(callback),(context));
+	(* m_iterate[format])((uT),(cell),(callback),(context));
 }
 /*	
 	Switch to Macro later for performance
@@ -88,9 +88,9 @@ PRIVATE void uCellIterate(unsigned char format, uTable *uTable, uMapCell *cell,u
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE uint16 uMap(unsigned char format, uint16 in,uTable *uTable,uMapCell *cell)
+PRIVATE uint16 uMap(unsigned char format, uint16 in,uTable *uT,uMapCell *cell)
 {
-	return 	(* m_map[format])((in),(uTable),(cell));
+	return 	(* m_map[format])((in),(uT),(cell));
 }
 /* 	
 	Switch to Macro later for performance
@@ -104,9 +104,9 @@ PRIVATE uint16 uMap(unsigned char format, uint16 in,uTable *uTable,uMapCell *cel
 /*	
 	Switch to Macro later for performance
 */
-PRIVATE uMapCell *uGetMapCell(uTable *uTable, int16 item)
+PRIVATE uMapCell *uGetMapCell(uTable *uT, int16 item)
 {
-	return ((uMapCell *)(((uint16 *)uTable) + uTable->offsetToMapCellArray) + item) ;
+	return ((uMapCell *)(((uint16 *)uT) + uT->offsetToMapCellArray) + item) ;
 }
 /*=================================================================================
 
@@ -114,27 +114,27 @@ PRIVATE uMapCell *uGetMapCell(uTable *uTable, int16 item)
 /*	
 	Switch to Macro later for performance
 */
-PRIVATE char uGetFormat(uTable *uTable, int16 item)
+PRIVATE char uGetFormat(uTable *uT, int16 item)
 {
-	return (((((uint16 *)uTable) + uTable->offsetToFormatArray)[ item >> 2 ]
+	return (((((uint16 *)uT) + uT->offsetToFormatArray)[ item >> 2 ]
 		>> (( item % 4 ) << 2)) & 0x0f);
 }
 /*=================================================================================
 
 =================================================================================*/
-MODULE_PRIVATE XP_Bool uMapCode(uTable *uTable, uint16 in, uint16* out)
+MODULE_PRIVATE XP_Bool uMapCode(uTable *uT, uint16 in, uint16* out)
 {
 	XP_Bool done = FALSE;
-	uint16 itemOfList = uTable->itemOfList;
+	uint16 itemOfList = uT->itemOfList;
 	uint16 i;
 	for(i=0;i<itemOfList;i++)
 	{
 		uMapCell* uCell;
-		char format = uGetFormat(uTable,i);
-		uCell = uGetMapCell(uTable,i);
+		char format = uGetFormat(uT,i);
+		uCell = uGetMapCell(uT,i);
 		if(uHit(format, in, uCell))
 		{
-			*out = uMap(format, in, uTable,uCell);
+			*out = uMap(format, in, uT,uCell);
 			done = TRUE;
 			break;
 		}
@@ -144,16 +144,16 @@ MODULE_PRIVATE XP_Bool uMapCode(uTable *uTable, uint16 in, uint16* out)
 /*=================================================================================
 
 =================================================================================*/
-MODULE_PRIVATE void		uMapIterate(uTable *uTable, uMapIterateFunc callback, uint16 context)
+MODULE_PRIVATE void		uMapIterate(uTable *uT, uMapIterateFunc callback, uint16 context)
 {
-	uint16 itemOfList = uTable->itemOfList;
+	uint16 itemOfList = uT->itemOfList;
 	uint16 i;
 	for(i=0;i<itemOfList;i++)
 	{
 		uMapCell* uCell;
-		char format = uGetFormat(uTable,i);
-		uCell = uGetMapCell(uTable,i);
-		uCellIterate(format, uTable ,uCell,callback, context);
+		char format = uGetFormat(uT,i);
+		uCell = uGetMapCell(uT,i);
+		uCellIterate(format, uT ,uCell,callback, context);
 	}
 }
 
@@ -185,22 +185,22 @@ PRIVATE XP_Bool uHitFormate2(uint16 in,uMapCell *cell)
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE uint16 uMapFormate0(uint16 in,uTable *uTable,uMapCell *cell)
+PRIVATE uint16 uMapFormate0(uint16 in,uTable *uT,uMapCell *cell)
 {
 	return ((in - cell->fmt.format0.srcBegin) + cell->fmt.format0.destBegin);
 }
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE uint16 uMapFormate1(uint16 in,uTable *uTable,uMapCell *cell)
+PRIVATE uint16 uMapFormate1(uint16 in,uTable *uT,uMapCell *cell)
 {
-	return (*(((uint16 *)uTable) + uTable->offsetToMappingTable
+	return (*(((uint16 *)uT) + uT->offsetToMappingTable
 		+ cell->fmt.format1.mappingOffset + in - cell->fmt.format1.srcBegin));
 }
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE uint16 uMapFormate2(uint16 in,uTable *uTable,uMapCell *cell)
+PRIVATE uint16 uMapFormate2(uint16 in,uTable *uT,uMapCell *cell)
 {
 	return (cell->fmt.format2.destBegin);
 }
@@ -208,7 +208,7 @@ PRIVATE uint16 uMapFormate2(uint16 in,uTable *uTable,uMapCell *cell)
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE void uIterateFormate0(uTable *uTable, uMapCell *cell,uMapIterateFunc callback, uint16 context)
+PRIVATE void uIterateFormate0(uTable *uT, uMapCell *cell,uMapIterateFunc callback, uint16 context)
 {
 	uint16 ucs2;
 	uint16 med;
@@ -219,18 +219,18 @@ PRIVATE void uIterateFormate0(uTable *uTable, uMapCell *cell,uMapIterateFunc cal
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE void uIterateFormate1(uTable *uTable, uMapCell *cell,uMapIterateFunc callback, uint16 context)
+PRIVATE void uIterateFormate1(uTable *uT, uMapCell *cell,uMapIterateFunc callback, uint16 context)
 {
 	uint16 ucs2;
 	uint16 *medpt;
-	medpt = (((uint16 *)uTable) + uTable->offsetToMappingTable	+ cell->fmt.format1.mappingOffset);
+	medpt = (((uint16 *)uT) + uT->offsetToMappingTable	+ cell->fmt.format1.mappingOffset);
 	for(ucs2 = cell->fmt.format1.srcBegin;	ucs2 <= cell->fmt.format1.srcEnd ; ucs2++, medpt++)
 		(*callback)(ucs2, *medpt, context);
 }
 /*=================================================================================
 
 =================================================================================*/
-PRIVATE void uIterateFormate2(uTable *uTable, uMapCell *cell,uMapIterateFunc callback, uint16 context)
+PRIVATE void uIterateFormate2(uTable *uT, uMapCell *cell,uMapIterateFunc callback, uint16 context)
 {
 	(*callback)(cell->fmt.format2.srcBegin, cell->fmt.format2.destBegin, context);
 }
