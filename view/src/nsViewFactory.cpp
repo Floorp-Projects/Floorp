@@ -17,7 +17,7 @@
  */
 
 #include "nscore.h"
-#include "nsIFactory.h"
+#include "nsIGenericFactory.h"
 #include "nsISupports.h"
 
 #include "nsViewsCID.h"
@@ -62,40 +62,39 @@ NS_IMPL_ISUPPORTS1(nsViewFactory, nsIFactory)
 nsresult nsViewFactory::CreateInstance(nsISupports *aOuter,  
                                        const nsIID &aIID,  
                                        void **aResult)
-{  
-  if (aResult == NULL) {  
-    return NS_ERROR_NULL_POINTER;  
-  }  
+{
+	nsresult rv = NS_OK;
 
-  *aResult = NULL;  
-  
-  nsISupports *inst = nsnull;
+	if (aResult == NULL) {  
+		return NS_ERROR_NULL_POINTER;  
+	}  
 
-  if (mClassID.Equals(kCViewManager)) {
-    inst = (nsISupports*) new nsViewManager();
-  } else if (mClassID.Equals(kCView)) {
-    inst = (nsISupports*) new nsView();
-  } else if (mClassID.Equals(kCScrollingView)) {
-    inst = (nsISupports*) (nsView*) new nsScrollingView();
-  }
+	*aResult = NULL;  
 
-  if (inst == NULL) {  
-    return NS_ERROR_OUT_OF_MEMORY;  
-  }
-
-  // add a reference count, 
-  NS_ADDREF(inst);
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-  return res;  
+	// views aren't reference counted, so have to be treated specially.
+	// their lifetimes are managed by the view manager they are associated with.
+	nsIView* view = nsnull;
+	if (mClassID.Equals(kCView)) {
+		view = new nsView();
+	} else if (mClassID.Equals(kCScrollingView)) {
+		view = new nsScrollingView();
+	}
+	if (nsnull == view)
+		return NS_ERROR_OUT_OF_MEMORY;  
+	rv = view->QueryInterface(aIID, aResult);
+	if (NS_FAILED(rv))
+		view->Destroy();
+	
+	return rv;  
 }  
 
 nsresult nsViewFactory::LockFactory(PRBool aLock)  
 {  
   // Not implemented in simplest case.  
   return NS_OK;
-}  
+}
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager)
 
 // return the proper factory to the caller
 extern "C" NS_VIEW nsresult
@@ -105,15 +104,31 @@ NSGetFactory(nsISupports* serviceMgr,
              const char *aProgID,
              nsIFactory **aFactory)
 {
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
-  }
+	nsresult rv;
 
-  *aFactory = new nsViewFactory(aClass);
+	do {
+		if (nsnull == aFactory) {
+			rv = NS_ERROR_NULL_POINTER;
+			break;
+		}
 
-  if (nsnull == aFactory) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+		*aFactory = nsnull;
 
-  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+		if (aClass.Equals(kCViewManager)) {
+			nsIGenericFactory* factory = nsnull;
+			rv = NS_NewGenericFactory(&factory, &nsViewManagerConstructor);
+			if (NS_SUCCEEDED(rv))
+				*aFactory = factory;
+		} else if (aClass.Equals(kCView) || aClass.Equals(kCScrollingView)) {
+			nsViewFactory* factory = new nsViewFactory(aClass);
+			if (nsnull == factory) {
+				rv = NS_ERROR_OUT_OF_MEMORY;
+				break;
+			}
+			NS_ADDREF(factory);
+			*aFactory = factory;
+		}
+	} while (0);
+	
+	return rv;
 }
