@@ -30,6 +30,7 @@ CPPSRCS =                              \
         nsFileTransport.cpp            \
         nsFileTransportService.cpp     \
         nsSocketTransport.cpp          \
+        nsSocketTransportStreams.cpp   \
         nsSocketTransportService.cpp   \
         nsNetService.cpp               \
         nsStandardUrl.cpp              \
