@@ -124,6 +124,10 @@
 - (void)addTabViewItem:(NSTabViewItem *)tabViewItem
 {
   [super addTabViewItem:tabViewItem];
+  // the new tab view item needs to have its tab visibility synchronized to the tab bar so that
+  // its content view will be hooked up correctly
+  if ([tabViewItem isMemberOfClass:[BrowserTabViewItem class]])
+    [(BrowserTabViewItem*)tabViewItem updateTabVisibility:[mTabBar isVisible]];
   [self showOrHideTabsAsAppropriate];
 }
 
