@@ -1,4 +1,4 @@
-    var err = initInstall("Mozilla Calendar", "Mozilla/Calendar", "0.1");
+    var err = initInstall("Mozilla Calendar", "/Mozilla/Calendar", "0.1");
     logComment("initInstall: " + err);
 
     var fProgram = getFolder("Program");
@@ -21,21 +21,17 @@
                        "",                              //version
                        "viewer/chrome",                 // jar source folder
                        ChromeDirectory,                 // target folder 
-                       "calendar",                      // target subdir
+                       "",                              // target subdir
                        true );                          // force flag
 
     logComment("addDirectory() returned: " + err);
 
-    calendarDir = getFolder("Chrome","calendar");
+    calendarDir = getFolder("Chrome","calendar.jar");
 
-    var calendarContent = getFolder(calendarDir, "content");
-    var calendarSkin    = getFolder(calendarDir, "skin");
-    var calendarLocale  = getFolder(calendarDir, "locale");
-
-    err = registerChrome(CONTENT | DELAYED_CHROME, calendarContent );
-    err = registerChrome(SKIN | DELAYED_CHROME, calendarSkin, "modern/");
-    err = registerChrome(SKIN | DELAYED_CHROME, calendarSkin, "classic/");
-    err = registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "en-US/");
+    err = registerChrome(PACKAGE | DELAYED_CHROME, calendarDir, "content/calendar/" );
+    err = registerChrome(SKIN | DELAYED_CHROME, calendarDir, "skin/modern/calendar/");
+    err = registerChrome(SKIN | DELAYED_CHROME, calendarDir, "skin/classic/calendar/");
+    err = registerChrome(LOCALE | DELAYED_CHROME, calendarDir, "locale/en-US/calendar/");
 
     logComment("registerChrome() returned: " + err);
 
