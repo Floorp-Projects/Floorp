@@ -1,0 +1,185 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Oracle Corporation code.
+ *
+ * The Initial Developer of the Original Code is
+ *  Oracle Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+interface nsIWriteablePropertyBag;
+
+interface calICalendar;
+interface calIDisplayItem;
+
+//
+// calIItemBase
+//
+// Base for Events, Todos, Journals, etc.
+//
+
+[scriptable, uuid(096b8cc5-113c-40fb-bc52-d64e3992980c)]
+interface calIItemBase
+{
+  // clone interface; returns this item, but with
+  // NULL id
+  // XXX nsICloneable?
+  calIItemBase clone();
+
+  // methods
+  const long CAL_METHOD_NONE = 0;
+  const long CAL_METHOD_PUBLISH = 1;
+  const long CAL_METHOD_REQUEST = 2;
+
+  // statuses, extended by each event/todo/journal subclass
+  const long CAL_ITEM_STATUS_NONE = 0;
+  const long CAL_ITEM_STATUS_CANCELLED = 1;
+
+  // the time when this item was created
+  attribute calIDateTime creationDate;
+
+  // last time any attribute was modified on this item, in UTC
+  readonly attribute PRTime lastModifiedTime;
+
+  // the calICalendar to which this event belongs
+  attribute calICalendar parent;
+
+  // the ID of this event
+  attribute AUTF8String id;
+
+  // event title
+  attribute AUTF8String title;
+
+  // event priority
+  attribute short priority;
+  attribute boolean isPrivate;
+
+  // event/status of the event (see consts above)
+  attribute long method;
+  attribute long status;
+
+  // ical interop; writing this means parsing
+  // the ical string into this event
+  attribute AUTF8String icalString;
+
+  //
+  // alarms
+  //
+  attribute boolean hasAlarm;
+  attribute calIDateTime alarmTime;
+  // rest of alarm properties (?)
+  void snoozeAlarm (in calIDateTime aSnoozeFor);
+
+  //
+  // recurrence
+  //
+  const long CAL_ITEM_RECUR_TYPE_NONE = 0;
+  const long CAL_ITEM_RECUR_TYPE_MINUTELY = 1;
+  const long CAL_ITEM_RECUR_TYPE_HOURLY = 2;
+  const long CAL_ITEM_RECUR_TYPE_DAILY = 3;
+  const long CAL_ITEM_RECUR_TYPE_MONTHLY = 4;
+  const long CAL_ITEM_RECUR_TYPE_YEARLY = 5;
+
+  attribute long recurType;
+  attribute calIDateTime recurEnd; // if null, then forever
+  // array of calIDateTime
+  readonly attribute nsISupportsArray recurrenceExceptions;
+  // rest of recurrence in properties (?)
+
+  // return the next display item for this event,
+  // where the start time is >= aStartTime
+  calIDisplayItem getNextOccurrence (in calIDateTime aStartTime);
+
+  // return the previous display item for this event,
+  // where the start time is < aStartTime
+  calIDisplayItem getPreviousOccurrence (in calIDateTime aStartTime);
+
+  // return array of calIDisplayItems, representing all
+  // occurances of this event between start and end.
+  nsISupportsArray getAllOccurrences (in calIDateTime aStartTime,
+				      in calIDateTime aEndTime);
+
+  // attachments
+  // array of nsIMsgAttachment
+  readonly attribute nsISupportsArray attachments;
+
+  // contacts
+  // array of nsIAbCard
+  readonly attribute nsISupportsArray contacts;
+
+  //
+  // other properties come in through a property bag
+  //
+
+  // 'description' - description (string)
+  // 'location' - location (string)
+  // 'categories' - categories (string)
+  // 'syncId' - sync id (string)
+  // 'inviteEmailAddress' - string
+  // alarmLength/alarmUnits/alarmEmailAddress/lastAlarmAck
+  // recurInterval/recurCount/recurWeekdays/recurWeeknumber
+
+  // Ideally, /all/ of the properties on the event should
+  // be available via the property bag.  (And maybe the
+  // nsIItemBase impl should be QI'able to
+  // nsIWritablePropertyBag also)
+
+  readonly attribute nsIWritablePropertyBag properties;
+};
+
+//
+// calIItemOccurrence
+//
+// An item representing a specific instance of a possibly recurring item.
+// XXX unclear how recurrence (& this) works for todo events with due dates.
+//
+
+[scriptable, uuid(b19f3d7e-e848-4139-af3e-505a8023568d)]
+interface calIItemOccurrence
+{
+  //
+  // The parent item for which this is the occurrence item for
+  //
+  readonly attribute calIItemBase item;
+
+  //
+  // The start and end times to display for this event instance
+  //
+  readonly attribute calIDateTime occurrenceStartDate;
+  readonly attribute calIDateTime occurrenceEndDate;
+
+  // same as item.getNextOccurrence(occurrenceEndDate)
+  readonly attribute calIItemOccurence next;
+  // same as item.getPreviousOccurence(occurrenceStartDate)
+  readonly attribute calIItemOccurence previous;
+};
+
