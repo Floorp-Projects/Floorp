@@ -46,18 +46,24 @@ nsMIMEInfoImpl::GetExtCount() {
 
 NS_IMETHODIMP
 nsMIMEInfoImpl::GetFileExtensions(PRUint32 *elementCount, char ***extensions) {
-    *elementCount = mExtensions.Count();
-    if (*elementCount < 1) return NS_OK;;
+    PRUint32 count = mExtensions.Count();
+    if (count < 1) return NS_OK;
 
-    char **_retExts = (char**)nsMemory::Alloc((*elementCount)*2*sizeof(char*));
+    char **_retExts = (char**)nsMemory::Alloc((count)*sizeof(char*));
     if (!_retExts) return NS_ERROR_OUT_OF_MEMORY;
 
-    for (PRUint8 i=0; i < *elementCount; i++) {
+    for (PRUint8 i=0; i < count; i++) {
         nsCString* ext = mExtensions.CStringAt(i);
         _retExts[i] = ext->ToNewCString();
-        if (!_retExts[i]) return NS_ERROR_OUT_OF_MEMORY;
+        if (!_retExts[i]) {
+            // clean up all the strings we've allocated
+            while (i-- != 0) nsMemory::Free(_retExts[i]);
+            nsMemory::Free(_retExts);
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
     }
 
+    *elementCount = count;
     *extensions   = _retExts;
 
     return NS_OK;
