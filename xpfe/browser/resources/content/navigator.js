@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *    Blake Ross <BlakeR1234@aol.com>
  */
 
 var pref = null;
@@ -1028,6 +1029,16 @@ function BrowserEditBookmarks()
     }
   }
 
+function BrowserChangeTextSize(newSize)
+  {
+
+     var oldSize = document.getElementById("menu_TextSize_Popup").getAttribute("oldsize");
+      var diff = newSize - oldSize; 
+      If (diff != 0) BrowserChangeTextZoom(diff);
+      document.getElementById("menu_TextSize_Popup").setAttribute("oldsize", newSize);           
+      
+  }
+                
   function BrowserSetDefaultCharacterSet(aCharset)
   {
     if (appCore != null) {
@@ -1664,4 +1675,3 @@ function FillInHTMLTooltip ( tipElement )
   
   return retVal;
 }
-
