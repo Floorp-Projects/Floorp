@@ -145,21 +145,24 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
   // First, Show/Hide the appropriate UI
   if (isGroup) {
     [self showUIElementPair: mNameLabel        control: mNameField];
+    [mNameField setNextKeyView:mKeywordField];
+    [self hideUIElementPair: mLocationLabel    control: mLocationField];
     [self showUIElementPair: mKeywordLabel     control: mKeywordField];
     [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
-    [self hideUIElementPair: mLocationLabel    control: mLocationField];
   }
   else if (isFolder) {
     [self showUIElementPair: mNameLabel        control: mNameField];
-    [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
-    [self hideUIElementPair: mKeywordLabel     control: mKeywordField];
+    [mNameField setNextKeyView:mDescriptionField];
     [self hideUIElementPair: mLocationLabel    control: mLocationField];
+    [self hideUIElementPair: mKeywordLabel     control: mKeywordField];
+    [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
   }
   else {
     [self showUIElementPair: mNameLabel        control: mNameField];
-    [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
-    [self showUIElementPair: mKeywordLabel     control: mKeywordField];
+    [mNameField setNextKeyView:mLocationField];
     [self showUIElementPair: mLocationLabel    control: mLocationField];
+    [self showUIElementPair: mKeywordLabel     control: mKeywordField];
+    [self showUIElementPair: mDescriptionLabel control: mDescriptionField];
   }
   
   // Then, fill with appropriate values from Bookmarks
