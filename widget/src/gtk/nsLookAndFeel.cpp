@@ -171,7 +171,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   case eColor_buttonshadow:
   case eColor_threeddarkshadow:
   case eColor_threedshadow: // i think these should be the same
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->dark[GTK_STATE_NORMAL]);
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->black);
     break;
 
   case eColor_threedlightshadow:
