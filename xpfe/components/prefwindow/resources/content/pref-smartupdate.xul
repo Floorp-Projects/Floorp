@@ -67,7 +67,7 @@
       </tree>
       <spring flex="5%"/>
       <box align="vertical">
-        <titledbutton class="dialog push" id="pref:0:bool:smartupdate" value="&uninstallButton.label;" accesskey="&uninstallButton.accesskey;"/>
+        <button class="dialog push" id="pref:0:bool:smartupdate" value="&uninstallButton.label;" accesskey="&uninstallButton.accesskey;"/>
         <spring flex="100%"/>
       </box>
     </box>

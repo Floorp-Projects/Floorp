@@ -21,12 +21,12 @@
 
 <toolbox style="min-width: 10px">  
    <toolbar>
-      <titledbutton id="back-button"    align="top" value="Back"/>	
-      <titledbutton id="forward-button" align="top" value="Forward"/>
-	  <titledbutton id="reload-button"  align="top" value="Reload"/>
-	  <titledbutton id="stop-button"    align="top" value="Stop"/>
-	  <titledbutton id="home-button"    align="top" value="Home"/>
-	  <titledbutton id="print-button"   align="top" value="Print"/> 
+      <button id="back-button"    align="top" value="Back"/>	
+      <button id="forward-button" align="top" value="Forward"/>
+	  <button id="reload-button"  align="top" value="Reload"/>
+	  <button id="stop-button"    align="top" value="Stop"/>
+	  <button id="home-button"    align="top" value="Home"/>
+	  <button id="print-button"   align="top" value="Print"/> 
 
           <box align="vertical" flex="100%">
             <spring flex="100%"/>
@@ -34,13 +34,13 @@
 	    <spring flex="100%"/>
           </box>
 
-          <titledbutton src="resource:/res/throbber/anims00.gif" align="right"/>
+          <button src="resource:/res/throbber/anims00.gif" align="right"/>
     
     </toolbar>
 
     <toolbar>
-      <titledbutton align="left" id="translate-button" value="Mozilla" />
-      <titledbutton align="left" id="translate-button" value="ABC News"/>
+      <button align="left" id="translate-button" value="Mozilla" />
+      <button align="left" id="translate-button" value="ABC News"/>
 	  <spring flex="100%"/>
     </toolbar>
     
