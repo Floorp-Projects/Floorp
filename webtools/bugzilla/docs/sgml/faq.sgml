@@ -357,8 +357,8 @@
 	</question>
 	<answer>
 	  <para>
-	    Yes.  Look at <ulink url="http://bugzilla.mozilla.org/reports.cgi">
-	    http://bugzilla.mozilla.org/reports.cgi</ulink> for samples of what
+	    Yes.  Look at <ulink url="http://bugzilla.mozilla.org/report.cgi">
+	    http://bugzilla.mozilla.org/report.cgi</ulink> for samples of what
             Bugzilla can do in reporting and graphing.
 	  </para>
 	  <para>
