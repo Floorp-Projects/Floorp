@@ -521,11 +521,7 @@ HRESULT ProcessXpcomFile()
   lstrcpy(szDestination, siCFXpcomFile.szDestination);
   AppendBackSlash(szDestination, sizeof(szDestination));
 
-#ifdef MOZ_THUNDERBIRD
-  lstrcat(szDestination, "thunderbird");
-#else
   lstrcat(szDestination, "bin");
-#endif
 
   FileCopy(szSource, szDestination, TRUE, FALSE);
   return(FO_SUCCESS);
