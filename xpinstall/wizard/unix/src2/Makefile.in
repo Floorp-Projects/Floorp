@@ -65,6 +65,10 @@ ifeq ($(OS_ARCH), Linux)
 DEFINES	+= -D_BSD_SOURCE
 endif
 
+EXTRA_DEPS = \
+	../../libxpnet/src/libxpnet_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/libjar50_s.$(LIB_SUFFIX)
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += `$(GTK_CONFIG) --cflags`
