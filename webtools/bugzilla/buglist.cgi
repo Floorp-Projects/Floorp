@@ -199,7 +199,13 @@ sub GetQuip {
 
     my $quip;
 
-    SendSQL("SELECT quip FROM quips WHERE approved = 1 ORDER BY RAND() LIMIT 1");
+    # COUNT is quick because it is cached for MySQL. We may want to revisit
+    # this when we support other databases.
+
+    SendSQL("SELECT COUNT(quip) FROM quips WHERE approved = 1");
+    my $count = FetchOneColumn();
+    my $random = int(rand($count));
+    SendSQL("SELECT quip FROM quips WHERE approved = 1 LIMIT $random,1");
 
     if (MoreSQLData()) {
         ($quip) = FetchSQLData();
