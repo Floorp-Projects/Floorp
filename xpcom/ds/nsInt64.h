@@ -23,7 +23,6 @@
 #ifndef nsInt64_h__
 #define nsInt64_h__
 
-#include <algorithm> // to get all comparisons given operator== and operator<
 #include "prlong.h"
 #include "nscore.h"
 
@@ -178,7 +177,11 @@ public:
 
     // Comparison operators
     friend inline PRBool operator ==(const nsInt64& aObject1, const nsInt64& aObject2);
+    friend inline PRBool operator !=(const nsInt64& aObject1, const nsInt64& aObject2);
+    friend inline PRBool operator >(const nsInt64& aObject1, const nsInt64& aObject2);
+    friend inline PRBool operator >=(const nsInt64& aObject1, const nsInt64& aObject2);
     friend inline PRBool operator <(const nsInt64& aObject1, const nsInt64& aObject2);
+    friend inline PRBool operator <=(const nsInt64& aObject1, const nsInt64& aObject2);
 
     // Bitwise operators
 
@@ -266,11 +269,43 @@ operator ==(const nsInt64& aObject1, const nsInt64& aObject2) {
 }
 
 /**
+ * Determine if two 64-bit integers are not equal
+ */
+inline PRBool
+operator !=(const nsInt64& aObject1, const nsInt64& aObject2) {
+    return LL_NE(aObject1.mValue, aObject2.mValue);
+}
+
+/**
+ * Determine if one 64-bit integer is strictly greater than another, using signed values
+ */
+inline PRBool
+operator >(const nsInt64& aObject1, const nsInt64& aObject2) {
+    return LL_CMP(aObject1.mValue, >, aObject2.mValue);
+}
+
+/**
+ * Determine if one 64-bit integer is greater than or equal to another, using signed values
+ */
+inline PRBool
+operator >=(const nsInt64& aObject1, const nsInt64& aObject2) {
+    return ! LL_CMP(aObject1.mValue, <, aObject2.mValue);
+}
+
+/**
  * Determine if one 64-bit integer is strictly less than another, using signed values
  */
 inline PRBool 
 operator <(const nsInt64& aObject1, const nsInt64& aObject2) {
     return LL_CMP(aObject1.mValue, <, aObject2.mValue);
+}
+
+/**
+ * Determine if one 64-bit integers is less than or equal to another, using signed values
+ */
+inline PRBool
+operator <=(const nsInt64& aObject1, const nsInt64& aObject2) {
+    return ! LL_CMP(aObject1.mValue, >, aObject2.mValue);
 }
 
 /**
