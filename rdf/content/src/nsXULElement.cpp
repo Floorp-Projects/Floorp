@@ -2551,7 +2551,13 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
       // and cells going away.
       // First, retrieve the tree.
       nsCOMPtr<nsIDOMXULTreeElement> treeElement;
-      rv = GetParentTree(getter_AddRefs(treeElement));
+
+      // Check first whether this element IS the tree
+      treeElement = do_QueryInterface((nsIDOMXULElement*)this);
+
+      // If it's not, look at our parent
+      if (!treeElement)
+        rv = GetParentTree(getter_AddRefs(treeElement));
       if (treeElement) {
         nsCOMPtr<nsIDOMNodeList> itemList;
         treeElement->GetSelectedItems(getter_AddRefs(itemList));
