@@ -82,7 +82,7 @@ nsPluginInstanceBase * NS_NewPluginInstance(nsPluginCreateData * aCreateDataStru
 void NS_DestroyPluginInstance(nsPluginInstanceBase * aPlugin)
 {
   if(aPlugin)
-    delete aPlugin;
+    delete (nsPluginInstance *)aPlugin;
 }
 
 ////////////////////////////////////////
