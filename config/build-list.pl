@@ -25,7 +25,7 @@
 # A generic script to add entries to a file 
 # if the entry does not already exist
 # 
-# Usage: $0 [-l] <filename> <entry>
+# Usage: $0 [-l] <filename> <entry> [<entry> <entry>]
 #
 #   -l do not attempt flock the file.
 
@@ -38,7 +38,6 @@ sub usage() {
     exit(1);
 }
 
-$lockfile = 
 $nofilelocks = 0;
 
 getopts("l");
@@ -46,7 +45,11 @@ getopts("l");
 $nofilelocks = 1 if defined($::opt_l);
 
 $file = shift;
-$entry = shift;
+
+undef @entrylist;
+while ($entry = shift) {
+    push @entrylist, $entry;
+}
 
 $lockfile = $file . ".lck";
 
@@ -57,19 +60,36 @@ if ( ! -e "$file") {
 }
 
 # This needs to be atomic
-open(OUT, ">>$file") || die ("$file: $!\n");
 mozLock($lockfile) unless $nofilelocks;
-open(RES, "grep -c '^$entry\$' $file |") or $err = $!;
-if ($err) {
-	flock(OUT,LOCK_UN) unless $nofilelocks;
-	die ("grep: $err\n");
+
+# Read entire file into mem
+undef @inbuf;
+if ( -e "$file" ) {
+    open(IN, "$file") || die ("$file: $!\n");
+    while ($tmp = <IN>) {
+	chomp($tmp);
+	push @inbuf, $tmp;
+    }
+    close(IN);
 }
-chomp($val = <RES>);
-close(RES);
-if (!$val) {
-    print OUT "$entry\n";
+
+undef @outbuf;
+# Add each entry to file if it's not already there
+foreach $entry (@entrylist) {
+    push @outbuf, $entry if (!grep(/^$entry$/, @inbuf));
 }
+
+$count = $#outbuf + 1;
+
+# Append new entry to file
+if ($count) {
+    open(OUT, ">>$file") || die ("$file: $!\n");
+    foreach $entry (@outbuf) {
+	print OUT "$entry\n";
+    }
+    close(OUT);
+}
+
 mozUnlock($lockfile) unless $nofilelocks;
-close(OUT);
 
 exit(0);
