@@ -47,9 +47,9 @@ package org.mozilla.javascript;
 
 public class NodeTransformer
 {
-    public NodeTransformer(Interpreter compiler)
+    public NodeTransformer(CompilerEnvirons compilerEnv)
     {
-        this.compiler = compiler;
+        this.compilerEnv = compilerEnv;
     }
 
     public final void transform(ScriptOrFnNode tree)
@@ -104,9 +104,9 @@ public class NodeTransformer
                     if (n.getType() == Token.LABEL) {
                         String otherId = ((Node.Jump)n).getLabel();
                         if (id.equals(otherId)) {
-                            Object[] messageArgs = { id };
-                            reportError("msg.dup.label", messageArgs,
-                                        node, tree);
+                            reportError(
+                                Context.getMessage1("msg.dup.label", id),
+                                node, tree);
                             break typeswitch;
                         }
                     }
@@ -316,22 +316,19 @@ public class NodeTransformer
                     target = loop.getContinue();
                 }
                 if (loop == null || target == null) {
-                    String messageId;
+                    String msg;
                     Object[] messageArgs = null;
                     if (label == null) {
                         // didn't find an appropriate target
-                        if (type == Token.CONTINUE) {
-                            messageId = "msg.continue.outside";
-                        } else {
-                            messageId = "msg.bad.break";
-                        }
+                        msg = Context.getMessage0(
+                            (type == Token.CONTINUE)
+                                ? "msg.continue.outside" : "msg.bad.break");
                     } else if (loop != null) {
-                        messageId = "msg.continue.nonloop";
+                        msg = Context.getMessage0("msg.continue.nonloop");
                     } else {
-                        messageArgs = new Object[] { label };
-                        messageId = "msg.undef.label";
+                        msg = Context.getMessage1("msg.undef.label", label);
                     }
-                    reportError(messageId, messageArgs, node, tree);
+                    reportError(msg, node, tree);
                     break;
                 }
                 jump.setType(Token.GOTO);
@@ -529,13 +526,12 @@ public class NodeTransformer
         return replacement;
     }
 
-    private void reportError(String messageId, Object[] messageArgs,
-                             Node stmt, ScriptOrFnNode tree)
+    private void reportError(String message, Node stmt, ScriptOrFnNode tree)
     {
         int lineno = stmt.getLineno();
         String sourceName = tree.getSourceName();
-        compiler.compilerEnv.reportSyntaxError(
-            true, messageId, messageArgs, sourceName, lineno, null, 0);
+        compilerEnv.reportSyntaxError(
+            true, message, sourceName, lineno, null, 0);
     }
 
     private ObjArray loops;
@@ -543,6 +539,6 @@ public class NodeTransformer
     private boolean inFunction;
     private boolean hasFinally;
 
-    private Interpreter compiler;
+    private CompilerEnvirons compilerEnv;
 }
 

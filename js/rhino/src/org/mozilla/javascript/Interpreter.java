@@ -110,12 +110,16 @@ public class Interpreter
     // Last icode
         END_ICODE                       = BASE_ICODE + 30;
 
-    public Object compile(Context cx, Scriptable scope, ScriptOrFnNode tree,
+    public Object compile(Context cx, Scriptable scope,
+                          CompilerEnvirons compilerEnv,
+                          ScriptOrFnNode tree,
+                          String encodedSource,
+                          boolean returnFunction,
                           SecurityController securityController,
-                          Object securityDomain, String encodedSource,
-                          boolean returnFunction)
+                          Object securityDomain)
     {
-        (new NodeTransformer(this)).transform(tree);
+        this.compilerEnv = compilerEnv;
+        (new NodeTransformer(compilerEnv)).transform(tree);
 
         if (Token.printTrees) {
             System.out.println(tree.toStringTree(tree));
@@ -3287,7 +3291,7 @@ public class Interpreter
         return pc;
     }
 
-    protected CompilerEnvirons compilerEnv;
+    private CompilerEnvirons compilerEnv;
 
     private boolean itsInFunctionFlag;
 

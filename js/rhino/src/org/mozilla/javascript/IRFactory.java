@@ -45,9 +45,9 @@ package org.mozilla.javascript;
  */
 class IRFactory
 {
-    IRFactory(TokenStream ts)
+    IRFactory(Parser parser)
     {
-        this.ts = ts;
+        this.parser = parser;
     }
 
     ScriptOrFnNode createScript()
@@ -385,13 +385,13 @@ class IRFactory
              */
             Node lastChild = lhsNode.getLastChild();
             if (lhsNode.getFirstChild() != lastChild) {
-                ts.reportCurrentLineError("msg.mult.index", null);
+                parser.reportError("msg.mult.index");
             }
             lvalue = Node.newString(Token.NAME, lastChild.getString());
             break;
 
           default:
-            ts.reportCurrentLineError("msg.bad.for.in.lhs", null);
+            parser.reportError("msg.bad.for.in.lhs");
             return objNode;
         }
 
@@ -648,7 +648,7 @@ class IRFactory
          * (Which will make Array optimizations involving allocating a
          * Java array to back the javascript array work better.)
          */
-        if (ts.compilerEnv.languageVersion == Context.VERSION_1_2) {
+        if (parser.compilerEnv.languageVersion == Context.VERSION_1_2) {
             /* When last array element is empty, we need to set the
              * length explicitly, because we can't depend on SETELEM
              * to do it for us - because empty [,,] array elements
@@ -869,7 +869,7 @@ class IRFactory
         }
         // TODO: This should be a ReferenceError--but that's a runtime
         //  exception. Should we compile an exception into the code?
-        ts.reportCurrentLineError("msg.bad.lhs.assign", null);
+        parser.reportError("msg.bad.lhs.assign");
         return child;
     }
 
@@ -1081,7 +1081,7 @@ class IRFactory
           default:
             // TODO: This should be a ReferenceError--but that's a runtime
             //  exception. Should we compile an exception into the code?
-            ts.reportCurrentLineError("msg.bad.lhs.assign", null);
+            parser.reportError("msg.bad.lhs.assign");
             return left;
         }
     }
@@ -1128,7 +1128,7 @@ class IRFactory
           default:
             // TODO: This should be a ReferenceError--but that's a runtime
             //  exception. Should we compile an exception into the code?
-            ts.reportCurrentLineError("msg.bad.lhs.assign", null);
+            parser.reportError("msg.bad.lhs.assign");
             return left;
         }
     }
@@ -1187,7 +1187,7 @@ class IRFactory
     }
 
     // Only needed to call reportCurrentLineError.
-    private TokenStream ts;
+    private Parser parser;
 
     private static final int LOOP_DO_WHILE = 0;
     private static final int LOOP_WHILE    = 1;

@@ -52,19 +52,16 @@ import java.lang.reflect.Constructor;
  * @author Roger Lawrence
  */
 
-public class Codegen extends Interpreter {
-
-    public Codegen()
+class Codegen
+{
+    byte[] compileToClassFile(CompilerEnvirons compilerEnv,
+                              String mainClassName,
+                              ScriptOrFnNode scriptOrFn,
+                              String encodedSource,
+                              boolean returnFunction)
     {
-    }
+        this.compilerEnv = compilerEnv;
 
-    public Object compile(Context cx, Scriptable scope,
-                          ScriptOrFnNode scriptOrFn,
-                          SecurityController securityController,
-                          Object securityDomain, String encodedSource,
-                          boolean returnFunction)
-    {
-        nameHelper = (OptClassNameHelper)ClassNameHelper.get(cx);
         transform(scriptOrFn);
 
         if (Token.printTrees) {
@@ -77,112 +74,11 @@ public class Codegen extends Interpreter {
 
         initScriptOrFnNodesData(scriptOrFn);
 
-        Class[] interfaces = nameHelper.getTargetImplements();
-        Class superClass = nameHelper.getTargetExtends();
-        boolean isPrimary = (interfaces == null && superClass == null);
-        mainClassName = nameHelper.getScriptClassName(isPrimary);
+        this.mainClassName = mainClassName;
         mainClassSignature
             = ClassFileWriter.classNameToSignature(mainClassName);
 
-        generateCode(encodedSource);
-
-        boolean onlySave = false;
-        ClassRepository repository = nameHelper.getClassRepository();
-        if (repository != null) {
-            try {
-                if (!repository.storeClass(mainClassName, mainClassBytes,
-                                           true))
-                {
-                    onlySave = true;
-                }
-            } catch (IOException iox) {
-                throw Context.throwAsScriptRuntimeEx(iox);
-            }
-
-            if (!isPrimary) {
-                String adapterClassName = nameHelper.getScriptClassName(true);
-                int functionCount = scriptOrFn.getFunctionCount();
-                ObjToIntMap functionNames = new ObjToIntMap(functionCount);
-                for (int i = 0; i != functionCount; ++i) {
-                    FunctionNode ofn = scriptOrFn.getFunctionNode(i);
-                    String name = ofn.getFunctionName();
-                    if (name != null && name.length() != 0) {
-                        functionNames.put(name, ofn.getParamCount());
-                    }
-                }
-                if (superClass == null) {
-                    superClass = ScriptRuntime.ObjectClass;
-                }
-                byte[] classFile = JavaAdapter.createAdapterCode(
-                                       functionNames, adapterClassName,
-                                       superClass, interfaces,
-                                       mainClassName);
-                try {
-                    if (!repository.storeClass(adapterClassName, classFile,
-                                               true))
-                    {
-                        onlySave = true;
-                    }
-                } catch (IOException iox) {
-                    throw Context.throwAsScriptRuntimeEx(iox);
-                }
-            }
-        }
-
-        if (onlySave) { return null; }
-
-        Exception e = null;
-        Class result = null;
-        ClassLoader parentLoader = cx.getApplicationClassLoader();
-        GeneratedClassLoader loader;
-        if (securityController == null) {
-            loader = cx.createClassLoader(parentLoader);
-        } else {
-            loader = securityController.createClassLoader(parentLoader,
-                                                          securityDomain);
-        }
-
-        try {
-            result = loader.defineClass(mainClassName, mainClassBytes);
-            loader.linkClass(result);
-        } catch (SecurityException x) {
-            e = x;
-        } catch (IllegalArgumentException x) {
-            e = x;
-        }
-        if (e != null)
-            throw new RuntimeException("Malformed optimizer package " + e);
-
-        if (scriptOrFn.getType() == Token.FUNCTION) {
-            NativeFunction f;
-            try {
-                Constructor ctor = result.getConstructors()[0];
-                Object[] initArgs = { scope, cx, new Integer(0) };
-                f = (NativeFunction)ctor.newInstance(initArgs);
-            } catch (Exception ex) {
-                throw new RuntimeException
-                    ("Unable to instantiate compiled class:"+ex.toString());
-            }
-            int ftype = ((FunctionNode)scriptOrFn).getFunctionType();
-            OptRuntime.initFunction(f, ftype, scope, cx);
-            return f;
-        } else {
-            Script script;
-            try {
-                script = (Script) result.newInstance();
-            } catch (Exception ex) {
-                throw new RuntimeException
-                    ("Unable to instantiate compiled class:"+ex.toString());
-            }
-            return script;
-        }
-    }
-
-    public void notifyDebuggerCompilationDone(Context cx,
-                                              Object scriptOrFunction,
-                                              String debugSource)
-    {
-        // Not supported
+        return generateCode(encodedSource);
     }
 
     private void transform(ScriptOrFnNode tree)
@@ -221,7 +117,8 @@ public class Codegen extends Interpreter {
             directCallTargets = new ObjArray();
         }
 
-        OptTransformer ot = new OptTransformer(this, possibleDirectCalls,
+        OptTransformer ot = new OptTransformer(compilerEnv,
+                                               possibleDirectCalls,
                                                directCallTargets);
         ot.transform(tree);
 
@@ -264,7 +161,7 @@ public class Codegen extends Interpreter {
         }
     }
 
-    private void generateCode(String encodedSource)
+    private byte[] generateCode(String encodedSource)
     {
         boolean hasScript = (scriptOrFnNodes[0].getType() == Token.SCRIPT);
         boolean hasFunctions = (scriptOrFnNodes.length > 1 || !hasScript);
@@ -334,7 +231,7 @@ public class Codegen extends Interpreter {
         emitRegExpInit(cfw);
         emitConstantDudeInitializers(cfw);
 
-        mainClassBytes = cfw.toByteArray();
+        return cfw.toByteArray();
     }
 
     private void emitDirectConstructor(ClassFileWriter cfw,
@@ -1056,15 +953,14 @@ public class Codegen extends Interpreter {
         = "(Lorg/mozilla/javascript/Scriptable;"
           +"Lorg/mozilla/javascript/Context;I)V";
 
-    private OptClassNameHelper nameHelper;
+    private CompilerEnvirons compilerEnv;
+
     private ObjArray directCallTargets;
     ScriptOrFnNode[] scriptOrFnNodes;
     private ObjToIntMap scriptOrFnIndexes;
 
     String mainClassName;
     String mainClassSignature;
-
-    private byte[] mainClassBytes;
 
     boolean itsUseDynamicScope;
     int languageVersion;

@@ -292,18 +292,16 @@ public class TokenStream
         return id & 0xff;
     }
 
-    public final void reportCurrentLineError(String messageProperty,
-                                             Object[] args)
+    public final void reportCurrentLineError(String message)
     {
-        compilerEnv.reportSyntaxError(true, messageProperty, args,
+        compilerEnv.reportSyntaxError(true, message,
                                       getSourceName(), getLineno(),
                                       getLine(), getOffset());
     }
 
-    public final void reportCurrentLineWarning(String messageProperty,
-                                               Object[] args)
+    public final void reportCurrentLineWarning(String message)
     {
-        compilerEnv.reportSyntaxError(false, messageProperty, args,
+        compilerEnv.reportSyntaxError(false, message,
                                       getSourceName(), getLineno(),
                                       getLine(), getOffset());
     }
@@ -435,8 +433,8 @@ public class TokenStream
                             if (escapeVal < 0) { break; }
                         }
                         if (escapeVal < 0) {
-                            reportCurrentLineError(
-                                "msg.invalid.escape", null);
+                            reportCurrentLineError(Context.getMessage0(
+                                "msg.invalid.escape"));
                             return Token.ERROR;
                         }
                         addToString(escapeVal);
@@ -449,8 +447,8 @@ public class TokenStream
                                 isUnicodeEscapeStart = true;
                                 containsEscape = true;
                             } else {
-                                reportCurrentLineError(
-                                    "msg.illegal.character", null);
+                                reportCurrentLineError(Context.getMessage0(
+                                    "msg.illegal.character"));
                                 return Token.ERROR;
                             }
                         } else {
@@ -482,9 +480,8 @@ public class TokenStream
                             // If implementation permits to use future reserved
                             // keywords in violation with the EcmaScript,
                             // treat it as name but issue warning
-                            Object[] errArgs = { str };
-                            reportCurrentLineWarning(
-                                "msg.reserved.keyword", errArgs);
+                            reportCurrentLineWarning(Context.getMessage1(
+                                "msg.reserved.keyword", str));
                         }
                     }
                 }
@@ -524,9 +521,8 @@ public class TokenStream
                          * permissive, so we warn about it.
                          */
                         if (base == 8 && c >= '8') {
-                            Object[] errArgs = { c == '8' ? "8" : "9" };
-                            reportCurrentLineWarning(
-                                "msg.bad.octal.literal", errArgs);
+                            reportCurrentLineWarning(Context.getMessage1(
+                                "msg.bad.octal.literal", c == '8' ? "8" : "9"));
                             base = 10;
                         }
                         addToString(c);
@@ -552,8 +548,8 @@ public class TokenStream
                             c = getChar();
                         }
                         if (!isDigit(c)) {
-                            reportCurrentLineError(
-                                "msg.missing.exponent", null);
+                            reportCurrentLineError(Context.getMessage0(
+                                "msg.missing.exponent"));
                             return Token.ERROR;
                         }
                         do {
@@ -572,9 +568,8 @@ public class TokenStream
                         dval = (Double.valueOf(numString)).doubleValue();
                     }
                     catch (NumberFormatException ex) {
-                        Object[] errArgs = { ex.getMessage() };
-                        reportCurrentLineError(
-                            "msg.caught.nfe", errArgs);
+                        reportCurrentLineError(Context.getMessage1(
+                            "msg.caught.nfe", ex.getMessage()));
                         return Token.ERROR;
                     }
                 } else {
@@ -599,8 +594,8 @@ public class TokenStream
             strLoop: while (c != quoteChar) {
                     if (c == '\n' || c == EOF_CHAR) {
                         ungetChar(c);
-                        reportCurrentLineError(
-                            "msg.unterminated.string.lit", null);
+                        reportCurrentLineError(Context.getMessage0(
+                            "msg.unterminated.string.lit"));
                         return Token.ERROR;
                     }
 
@@ -825,8 +820,8 @@ public class TokenStream
                     for (;;) {
                         c = getChar();
                         if (c == EOF_CHAR) {
-                            reportCurrentLineError(
-                                "msg.unterminated.comment", null);
+                            reportCurrentLineError(Context.getMessage0(
+                                "msg.unterminated.comment"));
                             return Token.ERROR;
                         } else if (c == '*') {
                             lookForSlash = true;
@@ -846,8 +841,8 @@ public class TokenStream
                     while ((c = getChar()) != '/') {
                         if (c == '\n' || c == EOF_CHAR) {
                             ungetChar(c);
-                            reportCurrentLineError(
-                                "msg.unterminated.re.lit", null);
+                            reportCurrentLineError(Context.getMessage0(
+                                "msg.unterminated.re.lit"));
                             return Token.ERROR;
                         }
                         if (c == '\\') {
@@ -871,8 +866,8 @@ public class TokenStream
                     }
 
                     if (isAlpha(peekChar())) {
-                        reportCurrentLineError(
-                            "msg.invalid.re.flag", null);
+                        reportCurrentLineError(Context.getMessage0(
+                            "msg.invalid.re.flag"));
                         return Token.ERROR;
                     }
 
@@ -932,8 +927,8 @@ public class TokenStream
                 return c;
 
             default:
-                reportCurrentLineError(
-                    "msg.illegal.character", null);
+                reportCurrentLineError(Context.getMessage0(
+                    "msg.illegal.character"));
                 return Token.ERROR;
             }
         }

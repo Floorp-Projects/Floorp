@@ -996,7 +996,7 @@ public class Context
     {
         boolean errorseen = false;
         CompilerEnvirons compilerEnv = new CompilerEnvirons();
-        compilerEnv.initFromContext(this, new DefaultErrorReporter());
+        compilerEnv.initFromContext(this, null);
         // no source name or source text manager, because we're just
         // going to throw away the result.
         TokenStream ts = new TokenStream(compilerEnv,
@@ -2089,7 +2089,6 @@ public class Context
         int syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
         if (syntaxErrorCount == 0) {
             Interpreter compiler = createCompiler();
-            compiler.compilerEnv = compilerEnv;
             if (securityController != null) {
                 securityDomain = securityController.
                                      getDynamicSecurityDomain(securityDomain);
@@ -2098,14 +2097,16 @@ public class Context
             }
 
             String encodedSource = null;
-            if (isGeneratingSource()) {
+            if (compilerEnv.isGeneratingSource()) {
                 encodedSource = decompiler.getEncodedSource();
             }
             decompiler = null; // It helps GC
 
-            Object result = compiler.compile(this, scope, tree,
-                                             securityController, securityDomain,
-                                             encodedSource, returnFunction);
+            Object result = compiler.compile(this, scope, compilerEnv,
+                                             tree, encodedSource,
+                                             returnFunction,
+                                             securityController,
+                                             securityDomain);
             syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
             if (syntaxErrorCount == 0) {
                 if (debugger != null) {
@@ -2122,7 +2123,7 @@ public class Context
     }
 
     private static Class codegenClass = Kit.classOrNull(
-                             "org.mozilla.javascript.optimizer.Codegen");
+                             "org.mozilla.javascript.optimizer.ClassCompiler");
 
     private Interpreter createCompiler() {
         Interpreter result = null;

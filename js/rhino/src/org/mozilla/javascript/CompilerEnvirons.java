@@ -53,6 +53,8 @@ public class CompilerEnvirons
             = cx.hasFeature(Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME);
 
         this.optimizationLevel = cx.getOptimizationLevel();
+
+        this.generatingSource = cx.isGeneratingSource();
     }
 
     public final int getSyntaxErrorCount()
@@ -62,30 +64,33 @@ public class CompilerEnvirons
 
     public void setSyntaxErrorReporter(ErrorReporter syntaxErrorReporter)
     {
-        if (syntaxErrorReporter == null) Kit.argBug();
         this.syntaxErrorReporter = syntaxErrorReporter;
     }
 
     public final void reportSyntaxError(boolean isError,
-                                        String messageProperty, Object[] args,
+                                        String message,
                                         String sourceName, int lineno,
-                                        String line, int lineOffset)
+                                        String lineText, int lineOffset)
     {
-        String message = Context.getMessage(messageProperty, args);
         if (isError) {
             ++syntaxErrorCount;
             if (fromEval) {
                 // We're probably in an eval. Need to throw an exception.
                 throw ScriptRuntime.constructError(
                     "SyntaxError", message, sourceName,
-                    lineno, line, lineOffset);
+                    lineno, lineText, lineOffset);
+            } else if (syntaxErrorReporter != null) {
+                syntaxErrorReporter.error(message, sourceName, lineno,
+                                          lineText, lineOffset);
             } else {
-                syntaxErrorReporter.error(message, sourceName,
-                                          lineno, line, lineOffset);
+                throw new EvaluatorException(message, sourceName, lineno,
+                                            lineText, lineOffset);
             }
         } else {
-            syntaxErrorReporter.warning(message, sourceName,
-                                        lineno, line, lineOffset);
+            if (syntaxErrorReporter != null) {
+                syntaxErrorReporter.warning(message, sourceName,
+                                            lineno, lineText, lineOffset);
+            }
         }
     }
 
@@ -141,6 +146,27 @@ public class CompilerEnvirons
         this.optimizationLevel = level;
     }
 
+    public boolean isGeneratingSource()
+    {
+        return generatingSource;
+    }
+
+    /**
+     * Specify whether or not source information should be generated.
+     * <p>
+     * Without source information, evaluating the "toString" method
+     * on JavaScript functions produces only "[native code]" for
+     * the body of the function.
+     * Note that code generated without source is not fully ECMA
+     * conformant.
+     * @since 1.3
+     */
+    public void setGeneratingSource(boolean generatingSource)
+    {
+        this.generatingSource = generatingSource;
+    }
+
+
     private ErrorReporter syntaxErrorReporter;
     private int syntaxErrorCount;
 
@@ -152,5 +178,6 @@ public class CompilerEnvirons
     boolean reservedKeywordAsIdentifier;
     boolean allowMemberExprAsFunctionName;
     private int optimizationLevel;
+    private boolean generatingSource;
 }
 
