@@ -33,6 +33,7 @@
 
 #include "nspr.h"
 #include "ldap.h"
+// XXXdmose errno.h should go away, probably after ldap C SDK 4.1 lands
 #include "errno.h"
 
 /* one of these exists per thread */
