@@ -32,11 +32,15 @@ REQUIRES	= xpcom
 CPPSRCS		= \
 		GtkMozEmbedChrome.cpp \
 		GtkMozEmbedStream.cpp \
-		nsSetupRegistry.cpp \
 		gtkmozembed.cpp
 
+SHARED_LIBRARY_LIBS= \
+		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
+		$(NULL)
+
 EXPORTS		= \
-		gtkmozembed.h
+		gtkmozembed.h \
+		gtkmozembed_internal.h
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \

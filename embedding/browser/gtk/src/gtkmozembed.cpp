@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "gtkmozembed.h"
+#include "gtkmozembed_internal.h"
 #include "nsIWebBrowser.h"
 #include "nsCWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
@@ -32,6 +33,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
+#include "nsEmbedAPI.h"
 #include "nsVoidArray.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -64,6 +66,10 @@ enum {
 };
 
 static guint moz_embed_signals[LAST_SIGNAL] = { 0 };
+
+static char *component_path = NULL;
+static gint  num_widgets = 0;
+static gint  io_identifier = 0;
 
 /* class and instance initialization */
 
@@ -132,12 +138,13 @@ gtk_moz_embed_handle_destroy(void *aData);
 static PRBool
 gtk_moz_embed_handle_open_uri(const char *aURI, void *aData);
 
+static gboolean
+gtk_moz_embed_startup_xpcom(void);
+
+static void
+gtk_moz_embed_shutdown_xpcom(void);
+
 static GtkBinClass *parent_class;
-
-static PRBool NS_SetupRegistryCalled = PR_FALSE;
-static PRBool ThreadQueueSetup       = PR_FALSE;
-
-extern "C" void NS_SetupRegistry();
 
 // we use this for adding callbacks to the C++ code that doesn't know
 // anything about the GtkMozEmbed class
@@ -187,38 +194,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 
   object_class->destroy = gtk_moz_embed_destroy;
 
-  // check to see if NS_SetupRegistry has been called
-  if (!NS_SetupRegistryCalled)
-  {
-    NS_SetupRegistry();
-    NS_SetupRegistryCalled = PR_TRUE;
-  }
-  // check to see if we have to set up our thread event queue
-  if (!ThreadQueueSetup)
-  {
-    nsIEventQueueService* eventQService;
-    nsresult rv;
-    rv = nsServiceManager::GetService(kEventQueueServiceCID,
-				      NS_GET_IID(nsIEventQueueService),
-				      (nsISupports **)&eventQService);
-    if (NS_OK == rv)
-    {
-      // create the event queue
-      rv = eventQService->CreateThreadEventQueue();
-      g_return_if_fail(NS_SUCCEEDED(rv));
 
-      nsIEventQueue *eventQueue;
-      rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQueue);
-      g_return_if_fail(NS_SUCCEEDED(rv));
-
-      gdk_input_add(eventQueue->GetEventQueueSelectFD(),
-		    GDK_INPUT_READ,
-		    gtk_moz_embed_handle_event_queue,
-		    eventQueue);
-      NS_RELEASE(eventQService);
-    }
-    ThreadQueueSetup = PR_TRUE;
-  }
   
   // set up our signals
 
@@ -262,7 +238,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   GTK_RUN_FIRST,
 		   object_class->type,
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, net_state),
-		   gtk_marshal_NONE__INT,
+		   gtk_marshal_NONE__INT_INT,
 		   GTK_TYPE_NONE, 2, GTK_TYPE_INT, GTK_TYPE_UINT);
   moz_embed_signals[NET_START] =
     gtk_signal_new("net_start",
@@ -314,6 +290,16 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 static void
 gtk_moz_embed_init(GtkMozEmbed *embed)
 {
+  // before we do anything else we need to fire up XPCOM
+  if (num_widgets == 0)
+  {
+    gboolean retval;
+    retval = gtk_moz_embed_startup_xpcom();
+    g_return_if_fail(retval == TRUE);
+      
+  }
+  // increment the number of widgets
+  num_widgets++;
   GtkMozEmbedPrivate *embed_private;
   // create our private struct
   embed_private = new GtkMozEmbedPrivate();
@@ -368,6 +354,18 @@ GtkWidget *
 gtk_moz_embed_new(void)
 {
   return GTK_WIDGET(gtk_type_new(gtk_moz_embed_get_type()));
+}
+
+void
+gtk_moz_embed_set_comp_path    (char *aPath)
+{
+  // free the old one if we have to
+  if (component_path)
+    g_free(component_path);
+  if (aPath) 
+  {
+    component_path = g_strdup(aPath);
+  }
 }
 
 void
@@ -625,6 +623,21 @@ gtk_moz_embed_get_location     (GtkMozEmbed *embed)
 }
 
 void
+gtk_moz_embed_get_nsIWebBrowser  (GtkMozEmbed *embed, nsIWebBrowser **retval)
+{
+  GtkMozEmbedPrivate *embed_private;
+  
+  g_return_if_fail (embed != NULL);
+  g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
+  g_return_if_fail (retval != NULL);
+  
+  embed_private = (GtkMozEmbedPrivate *)embed->data;
+
+  *retval = embed_private->webBrowser.get();
+  NS_IF_ADDREF(*retval);
+}
+
+void
 gtk_moz_embed_realize(GtkWidget *widget)
 {
   GtkMozEmbed        *embed;
@@ -786,6 +799,14 @@ gtk_moz_embed_destroy(GtkObject *object)
     delete embed_private;
     embed->data = NULL;
   }
+
+  num_widgets--;
+
+  // see if we need to shutdown XPCOM
+  if (num_widgets == 0)
+  {
+    gtk_moz_embed_shutdown_xpcom();
+  }
 }
 
 static void
@@ -855,12 +876,12 @@ gtk_moz_embed_handle_net(GtkMozEmbed *embed, gint32 flags, guint32 status)
   g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
 
   // if we've got the start flag, emit the signal
-  if ((flags & GTK_MOZ_EMBED_FLAG_IS_WINDOW) && (flags & GTK_MOZ_EMBED_FLAG_START))
+  if ((flags & GTK_MOZ_EMBED_FLAG_IS_NETWORK) && (flags & GTK_MOZ_EMBED_FLAG_START))
     gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_START]);
   // for people who know what they are doing
   gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_STATE], flags, status);
   // and for stop, too
-  if ((flags & GTK_MOZ_EMBED_FLAG_IS_WINDOW) && (flags & GTK_MOZ_EMBED_FLAG_STOP))
+  if ((flags & GTK_MOZ_EMBED_FLAG_IS_NETWORK) && (flags & GTK_MOZ_EMBED_FLAG_STOP))
     gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[NET_STOP]);
 
 }
@@ -899,7 +920,7 @@ gtk_moz_embed_handle_visibility(PRBool aVisibility, void *aData)
   gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[VISIBILITY], aVisibility);
 }
 
-static void
+void
 gtk_moz_embed_handle_destroy(void *aData)
 {
   GtkMozEmbed *embed = (GtkMozEmbed *)aData;
@@ -907,7 +928,7 @@ gtk_moz_embed_handle_destroy(void *aData)
   gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[DESTROY_BROWSER]);
 }
 
-static PRBool
+PRBool
 gtk_moz_embed_handle_open_uri(const char *aURI, void *aData)
 {
   GtkMozEmbed *embed = (GtkMozEmbed *)aData;
@@ -916,3 +937,46 @@ gtk_moz_embed_handle_open_uri(const char *aURI, void *aData)
   gtk_signal_emit(GTK_OBJECT(embed), moz_embed_signals[OPEN_URI], aURI, &return_val);
   return return_val;
 }
+
+gboolean
+gtk_moz_embed_startup_xpcom(void)
+{
+  nsresult rv;
+  // init our embedding
+  rv = NS_InitEmbedding(component_path);
+  if (NS_FAILED(rv))
+    return FALSE;
+  // set up the thread event queue
+  nsIEventQueueService* eventQService;
+  rv = nsServiceManager::GetService(kEventQueueServiceCID,
+				    NS_GET_IID(nsIEventQueueService),
+				    (nsISupports **)&eventQService);
+  if (NS_OK == rv)
+  {
+    // get our hands on the thread event queue
+    nsIEventQueue *eventQueue;
+    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQueue);
+    if (NS_FAILED(rv))
+      return FALSE;
+    
+    io_identifier = gdk_input_add(eventQueue->GetEventQueueSelectFD(),
+				  GDK_INPUT_READ,
+				  gtk_moz_embed_handle_event_queue,
+				  eventQueue);
+    NS_RELEASE(eventQService);
+    NS_RELEASE(eventQueue);
+  }
+  return TRUE;
+}
+
+void
+gtk_moz_embed_shutdown_xpcom(void)
+{
+  nsresult rv;
+  // remove the IO handler for the thread event queue
+  gdk_input_remove(io_identifier);
+  io_identifier = 0;
+  // shut down XPCOM
+  NS_TermEmbedding();
+}
+
