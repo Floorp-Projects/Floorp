@@ -310,7 +310,6 @@ nsMemCache::RemoveAll(void)
             failed = PR_TRUE;
             continue;
         }
-        mOccupancy -= bytesUsed;
     }
 
     if (failed)
