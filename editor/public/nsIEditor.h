@@ -38,6 +38,10 @@ Editor interface to outside world
 0xe2f4c7f1, 0x864a, 0x11d2, \
 { 0x8f, 0x38, 0x0, 0x60, 0x8, 0x31, 0x1, 0x94 } }
 
+#define NS_ITEXTEDITORFACTORY_IID \
+{ /* {4a1f5ce0-c1f9-11d2-8f4c-006008159b0c}*/ \
+0x4a1f5ce0, 0xc1f9, 0x11d2, \
+{ 0x8f, 0x4c, 0x0, 0x60, 0x8, 0x15, 0x9b, 0xc } }
 
 class nsIDOMDocument;
 class nsIPresShell;
@@ -52,8 +56,6 @@ class nsString;
  */
 class nsIEditor  : public nsISupports{
 public:
-
-  typedef enum {NONE = 0,BOLD = 1,NUMPROPERTIES} Properties;
 
   typedef enum {eLTR=0, eRTL=1} Direction;
 
@@ -76,29 +78,6 @@ public:
    * @param aDoc [OUT] the dom interface being observed, refcounted
    */
   virtual nsresult GetDocument(nsIDOMDocument **aDoc)=0;
-
-  /**
-   * SetProperties() sets the aggregate properties on the current selection
-   *
-   * @param aProperty An enum that lists the various properties that can be applied, bold, ect.
-   * @see Properties
-   * NOTE:  this is an experimental interface.  Since it's really just a shortcut for 
-   * the caller setting a set of attributes on a set of nodes, this method may be removed.
-   * If it's more than just a convenience method (ie, it has logic about what objects in a selection get
-   * which attributes) that's a whole other story.
-   */
-  virtual nsresult SetProperties(Properties aProperties)=0;
-
-  /**
-   * GetProperties() gets the aggregate properties of the current selection.
-   * All object in the current selection are scanned and their attributes are
-   * represented in a list of Property object.
-   *
-   * @param aProperty An enum that will recieve the various properties that can be applied from the current selection.
-   * @see nsIEditor::Properties
-   * NOTE: this method is experimental, expect it to change.
-   */
-  virtual nsresult GetProperties(Properties **aProperties)=0;
 
   /**
    * SetAttribute() sets the attribute of aElement.
@@ -137,23 +116,47 @@ public:
                                    const nsString& aAttribute)=0;
 
   /** 
-   * CreateElement instantiates a new element of type aTag and inserts it into aParent at aPosition.
+   * CreateNode instantiates a new element of type aTag and inserts it into aParent at aPosition.
    * @param aTag      The type of object to create
    * @param aParent   The node to insert the new object into
    * @param aPosition The place in aParent to insert the new node
    */
-  virtual nsresult CreateElement(const nsString& aTag,
-                                 nsIDOMNode *    aParent,
-                                 PRInt32         aPosition)=0;
+  virtual nsresult CreateNode(const nsString& aTag,
+                              nsIDOMNode *    aParent,
+                              PRInt32         aPosition)=0;
 
   /** 
-   * DeleteElement removes aChild from aParent.
+   * InsertNode inserts aNode into aParent at aPosition.
+   * No checking is done to verify the legality of the insertion.  That is the 
+   * responsibility of the caller.
+   * @param aNode     The DOM Node to insert.
+   * @param aParent   The node to insert the new object into
+   * @param aPosition The place in aParent to insert the new node
+   */
+  virtual nsresult InsertNode(nsIDOMNode * aNode,
+                              nsIDOMNode * aParent,
+                              PRInt32      aPosition)=0;
+
+
+  /**
+   * InsertText() Inserts a string at the current location, given by the selection.
+   * If the selection is not collapsed, the selection is deleted and the insertion
+   * takes place at the resulting collapsed selection.
+   *
+   * NOTE: what happens if the string contains a CR?
+   *
+   * @param aString   the string to be inserted
+   */
+  virtual nsresult InsertText(const nsString& aStringToInsert)=0;
+
+  /** 
+   * DeleteNode removes aChild from aParent.
    * If aChild is not a child of aParent, nothing is done and an error is returned.
    * @param aChild    The node to delete
    * @param aParent   The parent of aChild
    */
-  virtual nsresult DeleteElement(nsIDOMNode * aParent,
-                                 nsIDOMNode * aChild)=0;
+  virtual nsresult DeleteNode(nsIDOMNode * aParent,
+                              nsIDOMNode * aChild)=0;
 
   /** 
    * DeleteSelection removes all nodes in the current selection.
@@ -188,25 +191,12 @@ public:
                             nsIDOMNode  *aParent,
                             PRBool       aNodeToKeepIsFirst)=0;
   
-
   /**
-   * InsertText() Inserts a string at the current location, given by the selection.
-   * If the selection is not collapsed, the selection is deleted and the insertion
-   * takes place at the resulting collapsed selection.
-   *
-   * NOTE: what happens if the string contains a CR?
-   *
-   * @param aString   the string to be inserted
-   */
-  virtual nsresult InsertText(const nsString& aStringToInsert)=0;
-
-  /**
-   * Commit(PRBool aCtrlKey) is a catch all method.  It may be depricated later.
-   * <BR>It is to respond to RETURN keys and CTRL return keys.  Its action depends
-   * on the selection at the time.  It may insert a <BR> or a <P> or activate the properties of the element
+   * The handler for RETURN keys and CTRL-RETURN keys.<br>
+   * It may enter a character, split a node in the tree, etc.
    * @param aCtrlKey  was the CtrlKey down?
    */
-  virtual nsresult Commit(PRBool aCtrlKey)=0;
+  virtual nsresult InsertBreak(PRBool aCtrlKey)=0;
 
   /** turn the undo system on or off
     * @param aEnable  if PR_TRUE, the undo system is turned on if it is available
@@ -255,20 +245,21 @@ public:
     */
   virtual nsresult CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)=0;
 
-  /** BeginUpdate is a signal from the caller to the editor that the caller will execute multiple updates
-    * to the content tree that should be treated in the most efficient way possible.
-    * All transactions executed between a call to BeginUpdate and EndUpdate will be undoable as
-    * an atomic action.
-    * EndUpdate must be called after BeginUpdate.
-    * Calls to BeginUpdate can be nested, as long as EndUpdate is called once per BeginUpdate.
+  /** BeginTransaction is a signal from the caller to the editor that the caller will execute multiple updates
+    * to the content tree that should be treated as a single logical operation,
+    * in the most efficient way possible.<br>
+    * All transactions executed between a call to BeginTransaction and EndTransaction will be undoable as
+    * an atomic action.<br>
+    * EndTransaction must be called after BeginTransaction.<br>
+    * Calls to BeginTransaction can be nested, as long as EndTransaction is called once per BeginUpdate.
     */
-  virtual nsresult BeginUpdate()=0;
+  virtual nsresult BeginTransaction()=0;
 
-  /** EndUpdate is a signal to the editor that the caller is finished updating the content model.
-    * BeginUpdate must be called before EndUpdate is called.
-    * Calls to BeginUpdate can be nested, as long as EndUpdate is called once per BeginUpdate.
+  /** EndTransaction is a signal to the editor that the caller is finished updating the content model.<br>
+    * BeginUpdate must be called before EndTransaction is called.<br>
+    * Calls to BeginTransaction can be nested, as long as EndTransaction is called once per BeginTransaction.
     */
-  virtual nsresult EndUpdate()=0;
+  virtual nsresult EndTransaction()=0;
 
 
 };
