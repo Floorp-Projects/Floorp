@@ -70,6 +70,7 @@
         appCore.setDisableCallback("DoDisableButtons();");
         appCore.setEnableCallback("DoEnableButtons();");
         dump("Adding BrowserAppCore to AppCoreManager...\n");
+        dump("...probably for a second time, because the constructor of nsBaseAppCore does this!\n");
         XPAppCoresManager.Add(appCore);  
       }
     } else {
@@ -309,6 +310,21 @@
     }
   }
 
+  function DoPreferences()
+  {
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("resource:/res/samples/PrefsWindow.html",
+                             window);
+    }
+  }
+
 
   </html:script>
 
@@ -367,7 +383,7 @@
       <separator /> 
       <menuitem name="Select All" onclick="BrowserReload();"/> 
       <separator /> 
-      <menuitem name="Preferences..." onclick="BrowserReload();"/> 
+      <menuitem name="Preferences..." onclick="DoPreferences();"/> 
     </menu> 
 
     <menu name="View">
