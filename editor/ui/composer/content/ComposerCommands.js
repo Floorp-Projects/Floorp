@@ -1082,15 +1082,19 @@ function nsLinkCheckTimeOut()
   for (var i=0; i < gNumLinksToCheck; ++i)
   {
     var linkChecker = gLinksBeingChecked[i].QueryInterface(Components.interfaces.nsIURIChecker);
+    // nsIURIChecker returns:
+    // NS_BINDING_SUCCEEDED     link is valid
+    // NS_BINDING_FAILED        link is invalid (gave an error)
+    // NS_BINDING_ABORTED       timed out, or cancelled
     var status = linkChecker.status;
-    if (status == 1)         // LINK_INVALID
+    if (status ==0x804b0001)        // NS_BINDING_FAILED
       dump(">> " + linkChecker.name + " is broken\n");
-    else if (status == 2)    // LINK_TIMED_OUT
+    else if (status == 0x804b0002)   // NS_BINDING_ABORTED
       dump(">> " + linkChecker.name + " timed out\n");
-    else if (status == 3)    // LINK_NOT_CHECKED
-      dump(">> " + linkChecker.name + " not checked\n");
-    else
+    else if (status == 0)             // NS_BINDING_SUCCEEDED
       dump("   " + linkChecker.name + " OK!\n");
+    else
+      dump(">> " + linkChecker.name + " not checked\n");
   }
 
   delete gLinksBeingChecked;  // This deletes/cancels everything
@@ -1134,7 +1138,7 @@ var nsCheckLinksCommand =
             = Components.classes["@mozilla.org/network/urichecker;1"]
                 .createInstance()
                   .QueryInterface(Components.interfaces.nsIURIChecker);
-          gLinksBeingChecked[gNumLinksToCheck].asyncCheckURI(uri, this);
+          gLinksBeingChecked[gNumLinksToCheck].asyncCheckURI(uri, this, null);
         }
       } catch(e) {
         // NS_ERROR_NOT_AVAILABLE means the refobj was out of uris,
@@ -1149,14 +1153,17 @@ var nsCheckLinksCommand =
     gStartedAllChecks = true;
   },
 
-  // urichecker requires that we have an OnStartRequest even tho it's a nop
+  // Implement nsIRequestObserver:
+  // urichecker requires that we have an OnStartRequest even tho it's a nop.
   onStartRequest: function(request, ctxt) { },
 
+  // onStopRequest is where we really handle the status.
   onStopRequest: function(request, ctxt, status)
   {
     var linkChecker = request.QueryInterface(Components.interfaces.nsIURIChecker);
     if (linkChecker)
     {
+      linkChecker.status = status;
       ++gNumLinksCalledBack;
       if (gStartedAllChecks && gNumLinksCalledBack >= gNumLinksToCheck)
       {
