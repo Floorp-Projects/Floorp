@@ -1953,10 +1953,19 @@ NS_IMETHODIMP nsMsgDatabase::SetLabel(nsMsgKey key, nsMsgLabelValue label)
   rv = GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
   if (NS_FAILED(rv) || !msgHdr) 
     return NS_MSG_MESSAGE_NOT_FOUND; 
+  nsMsgLabelValue oldLabel;
+  msgHdr->GetLabel(&oldLabel);
 
   msgHdr->SetLabel(label);
-  // set the flag in the x-mozilla-status2 line.
-  return SetKeyFlag(key, PR_TRUE, label << 25, nsnull);
+  // clear old label
+  if (oldLabel != label)
+  {
+    if (oldLabel != 0)
+      rv = SetKeyFlag(key, PR_FALSE, oldLabel << 25, nsnull);
+    // set the flag in the x-mozilla-status2 line.
+    rv = SetKeyFlag(key, PR_TRUE, label << 25, nsnull);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -2068,7 +2077,7 @@ nsresult  nsMsgDatabase::SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
     return NS_OK;
 
   NotifyKeyChangeAll(key, oldFlags, flags, instigator);
-	return rv;
+  return rv;
 }
 
 nsresult nsMsgDatabase::SetMsgHdrFlag(nsIMsgDBHdr *msgHdr, PRBool set, PRUint32 flag, nsIDBChangeListener *instigator)

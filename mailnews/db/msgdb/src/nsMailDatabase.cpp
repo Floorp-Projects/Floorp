@@ -372,9 +372,9 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
     {
       PRUint32 msgOffset;
       (void)mailHdr->GetMessageOffset(&msgOffset);
-      PRUint32 position = offset + msgOffset;
+      PRUint32 statusPos = offset + msgOffset;
       PR_ASSERT(offset < 10000);
-      fileStream->seek(position);
+      fileStream->seek(statusPos);
       buf[0] = '\0';
       if (fileStream->readline(buf, sizeof(buf))) 
       {
@@ -403,15 +403,16 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
           {
             flags &= ~MSG_FLAG_RUNTIME_ONLY;
           }
-          fileStream->seek(position);
-          // We are filing out old Cheddar flags here
+          fileStream->seek(statusPos);
+          // We are filing out x-mozilla-status flags here
           PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT,
             flags & 0x0000FFFF);
-          fileStream->write(buf, PL_strlen(buf));
+          PRInt32 lineLen = PL_strlen(buf);
+          PRInt32 status2Pos = statusPos + lineLen + MSG_LINEBREAK_LEN;
+          fileStream->write(buf, lineLen);
           
           // time to upate x-mozilla-status2
-          position = fileStream->tell();
-          fileStream->seek(position + MSG_LINEBREAK_LEN);
+          fileStream->seek(status2Pos);
           if (fileStream->readline(buf, sizeof(buf))) 
           {
             if (strncmp(buf, X_MOZILLA_STATUS2, X_MOZILLA_STATUS2_LEN) == 0 &&
@@ -421,7 +422,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
               PRUint32 dbFlags;
               (void)mailHdr->GetFlags(&dbFlags);
               dbFlags &= 0xFFFF0000;
-              fileStream->seek(position + MSG_LINEBREAK_LEN);
+              fileStream->seek(status2Pos);
               PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS2_FORMAT, dbFlags);
               fileStream->write(buf, PL_strlen(buf));
             }
@@ -431,7 +432,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
 #ifdef DEBUG
           printf("Didn't find %s where expected at position %ld\n"
             "instead, found %s.\n",
-            X_MOZILLA_STATUS, (long) position, buf);
+            X_MOZILLA_STATUS, (long) statusPos, buf);
 #endif
           SetReparse(PR_TRUE);
         }			
@@ -440,7 +441,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
       {
 #ifdef DEBUG
         printf("Couldn't read old status line at all at position %ld\n",
-          (long) position);
+          (long) statusPos);
 #endif
         SetReparse(PR_TRUE);
       }
