@@ -202,7 +202,7 @@ public:
   virtual GtkWindow *GetTopLevelWindow(void);
 
 
-  PRBool   OnKey(nsKeyEvent &aEvent)         { return OnInput(aEvent); };
+  PRBool   OnKey(nsKeyEvent &aEvent);
   PRBool   OnText(nsTextEvent &aEvent)       { return OnInput(aEvent); };
   PRBool   OnComposition(nsCompositionEvent &aEvent) { return OnInput(aEvent); };
   PRBool   OnInput(nsInputEvent &aEvent);
