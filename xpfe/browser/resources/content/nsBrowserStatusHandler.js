@@ -73,8 +73,6 @@ nsBrowserStatusHandler.prototype =
   jsDefaultStatus : "",
   overLink : "",
 
-  hideAboutBlank : true,
-
   QueryInterface : function(aIID)
   {
     if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
@@ -301,11 +299,8 @@ nsBrowserStatusHandler.prototype =
       }
     }
 
-    if (this.hideAboutBlank) {
-      this.hideAboutBlank = false;
-      if (location == "about:blank")
-        location = "";
-    }
+    if (!getWebNavigation().canGoBack && location == "about:blank")
+      location = "";
 
     // Disable menu entries for images, enable otherwise
     if (content.document && this.mimeTypeIsTextBased(content.document.contentType))
