@@ -156,7 +156,7 @@ PRBool nsDll::Load(void)
     if (!manager)
         return PR_TRUE;
 
-#if defined(LINUX)        
+#if defined(XP_UNIX) && !defined(MACOSX) 
     nsXPIDLCString extraData;
     manager->GetOptionalData(m_dllSpec, m_registryLocation, getter_Copies(extraData));
     
@@ -230,7 +230,7 @@ PRBool nsDll::Load(void)
     NS_ASSERTION(lf, "nsIFile here must implement a nsILocalFile"); 
     lf->Load(&m_instance);
 
-#if defined(LINUX) 
+#if defined(XP_UNIX) && !defined(MACOSX) 
     // Unload any of library dependencies we loaded earlier. The assumption  
     // here is that the component will have a "internal" reference count to
     // the dependency library we just loaded.  
