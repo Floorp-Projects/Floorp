@@ -101,6 +101,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 		switch( aStatus ) 
 		{
 			case NS_ERROR_UNKNOWN_HOST:				
+			case NS_ERROR_UNKNOWN_PROXY_HOST:				
 				cbw.reason = -12; 
 				break;
 			case NS_ERROR_NET_TIMEOUT: 				
@@ -113,6 +114,7 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 				cbw.reason = -404; 
 				break;
 			case NS_ERROR_CONNECTION_REFUSED:	
+			case NS_ERROR_PROXY_CONNECTION_REFUSED:	
 				cbw.reason = -13; 
 				break;
 

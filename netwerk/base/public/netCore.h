@@ -38,74 +38,7 @@
 #ifndef __netCore_h__
 #define __netCore_h__
 
-#include "nsError.h"
-
- /* networking error codes */
-
-// NET RANGE:   1 -20
-// FTP RANGE:   21-30
-// HTTP RANGE:  31-40
-// DNS RANGE:   41-50 
-// SOCKET RANGE 51-60
-// CACHE RANGE: 61-70
-// NET RANGE 2: 71-80
-
-// XXX Why can't we put all Netwerk error codes in one file to help avoid collisions?
-
-// Generic status codes for OnStopRequest:
-#define NS_BINDING_SUCCEEDED NS_OK
-#define NS_BINDING_FAILED    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 1)
-#define NS_BINDING_ABORTED   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 2)
-
-// The binding has been moved to another request in the same load group:
-#define NS_BINDING_REDIRECTED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 3)
-
-// The binding has been moved to another request in a different load group:
-#define NS_BINDING_RETARGETED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 4)
-
-#define NS_ERROR_MALFORMED_URI \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 10)
-
-#define NS_ERROR_ALREADY_CONNECTED \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 11)
-
-#define NS_ERROR_NOT_CONNECTED \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 12)
-
-/* see nsISocketTransportService.idl for other errors */
-
-#define NS_ERROR_IN_PROGRESS \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 15)
-
-#define NS_ERROR_OFFLINE \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 16)
-
-// Unknown Protocol Error
-#define NS_ERROR_UNKNOWN_PROTOCOL \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 18)
-
-// There is no content available (when nsIChannel::asyncOpen is called)
-#define NS_ERROR_NO_CONTENT \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 17)
-
-#define NS_ERROR_PORT_ACCESS_NOT_ALLOWED \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 19)
-
-/* 20 - 24 defined in ftpCore.h */
-
-#define NS_ERROR_NOT_RESUMABLE \
-      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 25)
-
-#define NS_ERROR_REDIRECT_LOOP \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 31)
-
-#define NS_ERROR_NET_INTERRUPT \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 71)
-
-/**
- * nsresult passed through onStopRequest if the document could not be fetched from the cache.
- */
-#define NS_ERROR_DOCUMENT_NOT_CACHED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 70)
+#include "nsNetError.h"
 
 // Where most necko status messages come from:
 #define NECKO_MSGS_URL  "chrome://necko/locale/necko.properties"

@@ -100,6 +100,7 @@
 #include "nsMsgSendReport.h"
 #include "nsMsgSimulateError.h"
 #include "nsNetCID.h"
+#include "nsNetError.h"
 #include "nsMsgUtils.h"
 #include "nsIRDFService.h"
 #include "nsIMsgMdnGenerator.h"
@@ -3166,6 +3167,7 @@ SendDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, nsMsgDeliveryType deliver
         switch (aExitCode)
         {
           case NS_ERROR_UNKNOWN_HOST:
+          case NS_ERROR_UNKNOWN_PROXY_HOST:
             aExitCode = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
             break;
           default:

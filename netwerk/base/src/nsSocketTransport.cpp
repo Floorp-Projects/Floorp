@@ -542,7 +542,9 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             mStatus = doConnection(aSelectFlags);
 
             // on connection failure, reuse next address if one exists
-            if (mStatus == NS_ERROR_CONNECTION_REFUSED) {
+            if (mStatus == NS_ERROR_CONNECTION_REFUSED ||
+                mStatus == NS_ERROR_PROXY_CONNECTION_REFUSED) {
+
                 LOG(("connection failed [this=%x error=%x]\n", this, mStatus));
 
                 // Try again? 
@@ -1054,6 +1056,9 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
             sslControl->ProxyStartSSL();
         }
     }
+    // map to proxy specific error if appropriate.
+    if (rv == NS_ERROR_CONNECTION_REFUSED && UsingProxy())
+        rv = NS_ERROR_PROXY_CONNECTION_REFUSED;
     return rv;
 }
 
@@ -1688,19 +1693,21 @@ nsSocketTransport::OnStopLookup(nsISupports *aContext,
 
     // If the lookup failed...
     if (NS_FAILED(aStatus)) {
-        
         // Retry? 
         // Don't want to set the tryNextAddress param because DNS lookup has
         // just failed so hostname has not been resolved yet.
         if (aStatus != NS_BASE_STREAM_WOULD_BLOCK && OnConnectionFailed(PR_FALSE))
             mStatus = NS_OK;
-        else
+        else {
+            // map to proxy unknown error message if lookup was for a proxy.
+            if (aStatus == NS_ERROR_UNKNOWN_HOST && UsingProxy())
+                aStatus = NS_ERROR_UNKNOWN_PROXY_HOST;
             mStatus = aStatus;
+        }
     }
     else if (mNetAddress == nsnull) {
         mStatus = NS_ERROR_ABORT;
     }
-
 
     // Start processing the transport again - if necessary...
     if (GetFlag(eSocketDNS_Wait)) {

@@ -240,8 +240,9 @@ protected:
         mReadWriteState &= ~aFlag;
     } 
 
-    PRInt32     GetSocketPort(void)  { return (mProxyPort != -1 && !mProxyTransparent) ? mProxyPort : mPort; }
-    const char *GetSocketHost(void)  { return (mProxyHost && !mProxyTransparent) ? mProxyHost : mHostName; }
+    PRBool      UsingProxy()     { return (mProxyHost && !mProxyTransparent); }
+    const char *GetSocketHost()  { return UsingProxy() ? mProxyHost : mHostName; }
+    PRInt32     GetSocketPort()  { return UsingProxy() ? mProxyPort : mPort; }
     
 protected:
     class nsNetAddrList {

@@ -1475,9 +1475,11 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIRequest *request, nsISupports *ct
     switch (aStatus) 
     {
         case NS_ERROR_UNKNOWN_HOST:
+        case NS_ERROR_UNKNOWN_PROXY_HOST:
             AlertUserEventUsingId(IMAP_UNKNOWN_HOST_ERROR);
             break;
         case NS_ERROR_CONNECTION_REFUSED:
+        case NS_ERROR_PROXY_CONNECTION_REFUSED:
             AlertUserEventUsingId(IMAP_CONNECTION_REFUSED_ERROR);
             break;
         case NS_ERROR_NET_TIMEOUT:

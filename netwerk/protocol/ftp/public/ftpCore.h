@@ -38,31 +38,16 @@
 #ifndef __ftpCore_h___
 #define __ftpCore_h___
 
-#include "nsError.h"
- 
-//////////////////////////////
-//// FTP CODES      RANGE: 20-30
-//////////////////////////////
-#define NS_ERROR_FTP_LOGIN \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 21)
-
-#define NS_ERROR_FTP_CWD \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 22)
-
-#define NS_ERROR_FTP_PASV \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 23)
-
-#define NS_ERROR_FTP_PWD \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 24)
+#include "nsNetError.h"
 
 /**
- * Status nsresult codes: used with nsINotification objects 
+ * Status nsresult codes
  */
 #define NS_NET_STATUS_BEGIN_FTP_TRANSACTION \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 27)
+    NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_NETWORK, 27)
 
 #define NS_NET_STATUS_END_FTP_TRANSACTION \
-    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 28)
+    NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_NETWORK, 28)
 
 #endif // __ftpCore_h___
 

@@ -2567,6 +2567,14 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
             // Port blocked for security reasons
             error.Assign(NS_LITERAL_STRING("deniedPortAccess"));
             break;
+        case NS_ERROR_UNKNOWN_PROXY_HOST:
+            // Proxy hostname could not be resolved.
+            error.Assign(NS_LITERAL_STRING("proxyResolveFailure"));
+            break;
+        case NS_ERROR_PROXY_CONNECTION_REFUSED:
+            // Proxy connection was refused.
+            error.Assign(NS_LITERAL_STRING("proxyConnectFailure"));
+            break;
         }
     }
 

@@ -931,7 +931,9 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 
     // Errors to be shown only on top-level frames
     if ((aStatus == NS_ERROR_UNKNOWN_HOST || 
-         aStatus == NS_ERROR_CONNECTION_REFUSED) &&
+         aStatus == NS_ERROR_CONNECTION_REFUSED ||
+         aStatus == NS_ERROR_UNKNOWN_PROXY_HOST || 
+         aStatus == NS_ERROR_PROXY_CONNECTION_REFUSED) &&
             (isTopFrame || mUseErrorPages)) {
       DisplayLoadError(aStatus, url, nsnull);
     }
