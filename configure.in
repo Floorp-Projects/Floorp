@@ -205,9 +205,10 @@ dnl MKSHLIB='$(LD) $(DSO_LDOPTS)'
 *-*-solaris*) 
     AC_DEFINE(BROKEN_QSORT)
     if test -z "$GNU_CC"; then
+       LDFLAGS='-xildoff'
        MKSHLIB='$(CXX) $(DSO_LDOPTS)'
        MKSHLIB_FORCE_ALL='-z allextract'
-       MKSHLIB_UNFORCE_ALL='-z defaultextract'
+       MKSHLIB_UNFORCE_ALL=''
 	   DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
        AS='/usr/ccs/bin/as'
        AS_DASH_C_FLAG=''
