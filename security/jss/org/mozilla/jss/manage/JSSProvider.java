@@ -81,5 +81,13 @@ public class JSSProvider extends java.security.Provider {
         /////////////////////////////////////////////////////////////
         put("SecureRandom.pkcs11prng",
             "org.mozilla.jss.provider.PKCS11SecureRandom");
+
+        /////////////////////////////////////////////////////////////
+        // KeyPairGenerator
+        /////////////////////////////////////////////////////////////
+        put("KeyPairGenerator.RSA",
+            "org.mozilla.jss.provider.java.security.RSAKeyPairGeneratorSpi");
+        put("KeyPairGenerator.DSA",
+            "org.mozilla.jss.provider.java.security.DSAKeyPairGeneratorSpi");
     }
 }
