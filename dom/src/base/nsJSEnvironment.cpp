@@ -184,15 +184,15 @@ NS_ScriptErrorReporter(JSContext *cx,
   error.AppendWithConversion("\n");
   if (status != nsEventStatus_eIgnore && !JSREPORT_IS_WARNING(report->flags))
     error.AppendWithConversion("Error was suppressed by event handler\n");
-  
+
+#ifdef DEBUG  
   char *errorStr = error.ToNewCString();
   if (errorStr) {
     fprintf(stderr, "%s\n", errorStr);
-#ifdef DEBUG
     fflush(stderr);
-#endif
     nsMemory::Free(errorStr);
   }
+#endif
 
 #ifdef PR_LOGGING
   if (report) {
