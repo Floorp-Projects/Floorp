@@ -84,9 +84,6 @@ EmbedPrivate::EmbedPrivate(void)
 EmbedPrivate::~EmbedPrivate()
 {
   sWindowList->RemoveElement(this);
-  DetachListeners();
-  if (mEventReceiver)
-    mEventReceiver = nsnull;
   PopStartup();
 }
 
@@ -179,7 +176,43 @@ EmbedPrivate::Realize(void)
 void
 EmbedPrivate::Unrealize(void)
 {
-  // XXX umm, yeah.  undo all of realize.
+  // Get the nsIWebBrowser object for our embedded window.
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+
+  // destroy our child window
+  mWindow->ReleaseChildren();
+
+  // Release our progress listener
+  nsCOMPtr<nsISupportsWeakReference> supportsWeak;
+  supportsWeak = do_QueryInterface(mProgressGuard);
+  nsCOMPtr<nsIWeakReference> weakRef;
+  supportsWeak->GetWeakReference(getter_AddRefs(weakRef));
+  webBrowser->RemoveWebBrowserListener(weakRef,
+				       nsIWebProgressListener::GetIID());
+  weakRef = 0;
+  supportsWeak = 0;
+  // Now that we have removed the listener, release our progress
+  // object
+  mProgressGuard = 0;
+  mProgress = 0;
+
+  // release navigation
+  mNavigation = nsnull;
+
+  // release session history
+  mSessionHistory = nsnull;
+
+  // Release our content listener
+  webBrowser->SetParentURIContentListener(nsnull);
+  mContentListenerGuard = 0;
+  mContentListener = 0;
+
+  // detach our event listeners and release the event receiver
+  DetachListeners();
+  if (mEventReceiver)
+    mEventReceiver = nsnull;
+  
   mOwningWidget = 0;
 }
 
@@ -276,11 +309,9 @@ EmbedPrivate::PopStartup(void)
 {
   sWidgetCount--;
   if (sWidgetCount == 0) {
-    if (sPrefs) {
-      sPrefs->ShutDown();
-      NS_RELEASE(sPrefs);
-      sPrefs = 0;
-    }
+    
+    // shut down the profiles
+    ShutdownProfile();
 
     if (sAppShell) {
       // Shutdown the appshell service.
@@ -509,4 +540,15 @@ EmbedPrivate::StartupProfile(void)
     sPrefs->ReadUserPrefs();
   }
   return NS_OK;
+}
+
+/* static */
+void
+EmbedPrivate::ShutdownProfile(void)
+{
+  if (sPrefs) {
+    sPrefs->ShutDown();
+    NS_RELEASE(sPrefs);
+    sPrefs = 0;
+  }
 }

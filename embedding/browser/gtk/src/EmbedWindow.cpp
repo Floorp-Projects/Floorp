@@ -85,6 +85,9 @@ EmbedWindow::CreateWindow(void)
 void
 EmbedWindow::ReleaseChildren(void)
 {
+  mBaseWindow->Destroy();
+  mBaseWindow = 0;
+  mWebBrowser = 0;
 }
 
 // nsISupports
