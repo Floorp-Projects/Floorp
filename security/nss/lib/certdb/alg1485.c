@@ -449,7 +449,6 @@ typedef struct stringBufStr {
 } stringBuf;
 
 #define DEFAULT_BUFFER_SIZE 200
-#define MAX(x,y) ((x) > (y) ? (x) : (y))
 
 static SECStatus
 AppendStr(stringBuf *bufp, char *str)
@@ -465,7 +464,7 @@ AppendStr(stringBuf *bufp, char *str)
     bufSize = bufLen + len;
     if (!buf) {
 	bufSize++;
-	size = MAX(DEFAULT_BUFFER_SIZE,bufSize*2);
+	size = PR_MAX(DEFAULT_BUFFER_SIZE,bufSize*2);
 	buf = (char *) PORT_Alloc(size);
 	bufp->size = size;
     } else if (bufp->size < bufSize) {
