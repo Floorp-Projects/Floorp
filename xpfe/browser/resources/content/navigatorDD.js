@@ -298,7 +298,7 @@ var contentAreaDNDObserver = {
       return flavourList;
     },
 
-  onDrop: function (aData)
+  onDrop: function (aEvent, aData)
     {
       var aData = aData.length ? aData[0] : aData;
       var url = retrieveURLFromData(aData);
@@ -341,7 +341,7 @@ var proxyIconDNDObserver = {
 };
 
 var homeButtonObserver = {
-  onDrop: function (aData)
+  onDrop: function (aEvent, aData)
     {
       var aData = aData.length ? aData[0] : aData;
       var url = retrieveURLFromData(aData);
@@ -407,7 +407,7 @@ function retrieveURLFromData (aData)
     switch (aData.flavour)
       {
         case "text/unicode":
-          return aData.data.data; 
+          return aData.data.data; // XXX this is busted. 
           break;
         case "application/x-moz-file":
           var dataObj = aData.data.data.QueryInterface(Components.interfaces.nsIFile);

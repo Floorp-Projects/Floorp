@@ -48,8 +48,6 @@
  *                                          // or not to accept drop.
  **/ 
 
-/** error codes **/
- 
 var nsDragAndDrop = {
 
   get mDragService()
@@ -153,7 +151,7 @@ var nsDragAndDrop = {
           aEvent.preventBubble();
           // hand over to the client to respond to dropped data
           if (aDragDropObserver.onDrop) 
-            aDragDropObserver.onDrop(dragData);
+            aDragDropObserver.onDrop(aEvent, dragData);
         }
     },
 
