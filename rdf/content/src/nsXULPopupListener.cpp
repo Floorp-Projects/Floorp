@@ -33,6 +33,7 @@
 #include "nsIDOMMouseMotionListener.h"
 #include "nsRDFCID.h"
 
+#include "nsIDOMXULPopupElement.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMXULDocument.h"
@@ -486,11 +487,11 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
         
         mPopupContent = popupContent.get();
 
-        nsCOMPtr<nsIDOMWindow> uselessPopup; // XXX Should go away.
-        domWindow->CreatePopup(mElement, popupContent, 
+        nsCOMPtr<nsIDOMXULPopupElement> xulPopup = do_QueryInterface(popupContent);
+        if (xulPopup)
+          xulPopup->OpenPopup(mElement,
                                xPos, yPos, 
-                               type, anchorAlignment, popupAlignment,
-                               getter_AddRefs(uselessPopup));
+                               type, anchorAlignment, popupAlignment);
       }
     }
   }

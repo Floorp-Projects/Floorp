@@ -95,13 +95,6 @@ public:
                         const PRUnichar* aURL,
                         nsresult aStatus);
 
-
-  NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
-                         PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& anAnchorAlignment,
-                         const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup);
-
   NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
 
   NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
