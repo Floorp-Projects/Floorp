@@ -559,6 +559,10 @@ alltags:
 $(PROGRAM): $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LD) -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(PROGOBJS) $(LIBS) $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) /ST:0x1000000
+ifdef OS2_PROGRAM_RESOURCE
+	rc -n -x2 -r $(OS2_PROGRAM_RESOURCE)
+	rc -n -x2 $(patsubst %.rc,%.res,$(OS2_PROGRAM_RESOURCE)) $@
+endif # os2_prog_rsrc
 else
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(WRAP_MALLOC_LIB)
