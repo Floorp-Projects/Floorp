@@ -70,4 +70,6 @@ EXTRA_DSO_LDOPTS += \
                 $(MOZ_COMPONENT_LIBS) \
                 $(NULL)
 
-INCLUDES	+= $(TK_CFLAGS) -I$(topsrcdir)/gfx/src/mac -I$(srcdir)/../xpwidgets
+INCLUDES	+= $(TK_CFLAGS) -I$(topsrcdir)/gfx/src/mac -I$(srcdir)/../xpwidgets \
+		-I$(topsrcdir)/widget/timer/src/mac \
+		$(NULL)
