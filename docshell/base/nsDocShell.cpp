@@ -187,6 +187,7 @@ nsDocShell::nsDocShell():
     mFocusDocFirst(PR_FALSE),
     mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
     mBusyFlags(BUSY_FLAGS_NONE),
+    mFiredUnloadEvent(PR_FALSE),
     mEODForCurrentDocument(PR_FALSE),
     mURIResultedInDocument(PR_FALSE),
     mUseExternalProtocolHandler(PR_FALSE),
@@ -739,6 +740,33 @@ nsDocShell::PrepareForNewContentModel()
   mEODForCurrentDocument = PR_FALSE;
   return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsDocShell::FireUnloadNotification()
+{
+    nsresult rv;
+
+    if (mContentViewer && !mFiredUnloadEvent) {
+        mFiredUnloadEvent = PR_TRUE;
+
+        rv = mContentViewer->Unload();
+
+        PRInt32 i, n = mChildren.Count();
+        for (i = 0; i < n; i++) {
+            nsIDocShellTreeItem* item = (nsIDocShellTreeItem*) mChildren.ElementAt(i);
+            if(item) {
+                nsCOMPtr<nsIDocShell> shell(do_QueryInterface(item));
+                if (shell) {
+                    rv = shell->FireUnloadNotification();
+                }
+            }
+        }
+    }
+
+    return NS_OK;
+}
+
 
 //
 // Bug 13871: Prevent frameset spoofing
@@ -2399,6 +2427,9 @@ nsDocShell::Create()
 NS_IMETHODIMP
 nsDocShell::Destroy()
 {
+    //Fire unload event before we blow anything away.
+    (void) FireUnloadNotification();
+
     mIsBeingDestroyed = PR_TRUE;
 
     // Stop any URLs that are currently being loaded...
@@ -3779,6 +3810,18 @@ nsDocShell::CreateContentViewer(const char *aContentType,
     if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;
 
+    // Notify the current document that it is about to be unloaded!!
+    //
+    // It is important to fire the unload() notification *before* any state
+    // is changed within the DocShell - otherwise, javascript will get the
+    // wrong information :-(
+    //
+    (void) FireUnloadNotification();
+
+    // Set mFiredUnloadEvent = PR_FALSE so that the unload handler for the
+    // *new* document will fire.
+    mFiredUnloadEvent = PR_FALSE;
+
     // we've created a new document so go ahead and call OnLoadingSite
     mURIResultedInDocument = PR_TRUE;
 
@@ -4132,6 +4175,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 
     return NS_OK;
 }
+
 
 //*****************************************************************************
 // nsDocShell: Site Loading
