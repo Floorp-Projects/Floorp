@@ -37,6 +37,7 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIContent.h"
 #include "nsIDOMElementObserver.h"
+#include "nsIDOMEventCapturer.h"
 #include "nsIDOMNodeObserver.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMSelection.h"
@@ -62,6 +63,7 @@
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
+#include "nsIEventListenerManager.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
@@ -93,6 +95,9 @@
 #include "rdfutil.h"
 #include "rdf.h"
 
+#include "nsIDOMEventCapturer.h"
+#include "nsIDOMEventReceiver.h"
+
 #include "nsILineBreakerFactory.h"
 #include "nsIWordBreakerFactory.h"
 #include "nsLWBrkCIID.h"
@@ -122,13 +127,18 @@ static NS_DEFINE_IID(kIRDFResourceIID,            NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID,      NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDOMSelectionIID,           NS_IDOMSELECTION_IID);
+static NS_DEFINE_IID(kIDOMEventCapturerIID,       NS_IDOMEVENTCAPTURER_IID);
+static NS_DEFINE_IID(kIDOMEventReceiverIID,       NS_IDOMEVENTRECEIVER_IID);
+static NS_DEFINE_IID(kIDOMEventTargetIID,         NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kIStreamListenerIID,         NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,         NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellIID,               NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID,            NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIXULContentSinkIID,         NS_IXULCONTENTSINK_IID);
+static NS_DEFINE_IID(kIEventListenerManagerIID,   NS_IEVENTLISTENERMANAGER_IID);
 
+static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kCSSParserCID,              NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_CID(kHTMLStyleSheetCID,         NS_HTMLSTYLESHEET_CID);
@@ -364,6 +374,7 @@ class XULDocumentImpl : public nsIDocument,
                         public nsIRDFDocument,
                         public nsIStreamLoadableDocument,
                         public nsIDOMXULDocument,
+                        public nsIDOMEventCapturer, 
                         public nsIJSScriptObject,
                         public nsIScriptObjectOwner,
                         public nsIHTMLContentContainer,
@@ -555,6 +566,22 @@ public:
     NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder);
     NS_IMETHOD GetDocumentDataSource(nsIRDFDataSource** aDatasource);
 
+    // nsIDOMEventCapturer interface
+    NS_IMETHOD    CaptureEvent(const nsString& aType);
+    NS_IMETHOD    ReleaseEvent(const nsString& aType);
+
+    // nsIDOMEventReceiver interface (yuck. inherited from nsIDOMEventCapturer)
+    NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
+    NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
+    NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+    NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
+
+    // nsIDOMEventTarget interface
+    NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                              PRBool aPostProcess, PRBool aUseCapture);
+    NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                 PRBool aPostProcess, PRBool aUseCapture);
+
     // nsIDOMDocument interface
     NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDoctype);
     NS_IMETHOD    GetImplementation(nsIDOMDOMImplementation** aImplementation);
@@ -697,6 +724,7 @@ protected:
     nsIDOMSelection*           mSelection;        // [OWNER] 
     PRBool                     mDisplaySelection;
     nsVoidArray                mPresShells;
+    nsIEventListenerManager*   mListenerManager;
     nsINameSpaceManager*       mNameSpaceManager;  // [OWNER] 
     nsIHTMLStyleSheet*         mAttrStyleSheet;    // [OWNER] 
     nsCOMPtr<nsIHTMLCSSStyleSheet> mInlineStyleSheet;
@@ -745,7 +773,8 @@ XULDocumentImpl::XULDocumentImpl(void)
       mWordBreaker(nsnull),
       mContentViewerContainer(nsnull),
       mCommand(""),
-      mFragmentRoot(nsnull)
+      mFragmentRoot(nsnull),
+      mListenerManager(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -788,6 +817,8 @@ XULDocumentImpl::~XULDocumentImpl()
 {
     NS_IF_RELEASE(mDocumentDataSource);
     NS_IF_RELEASE(mLocalDataSource);
+
+    NS_IF_RELEASE(mListenerManager);
 
     // mParentDocument is never refcounted
     // Delete references to sub-documents
@@ -919,6 +950,15 @@ XULDocumentImpl::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(nsIDOMElementObserver::GetIID())) {
         *result = NS_STATIC_CAST(nsIDOMElementObserver*, this);
+    }
+    else if (iid.Equals(kIDOMEventReceiverIID)) {
+        *result = NS_STATIC_CAST(nsIDOMEventReceiver*, this);
+    }
+    else if (iid.Equals(kIDOMEventTargetIID)) {
+        *result = NS_STATIC_CAST(nsIDOMEventTarget*, this);
+    }
+    else if (iid.Equals(kIDOMEventCapturerIID)) {
+        *result = NS_STATIC_CAST(nsIDOMEventCapturer*, this);
     }
     else if (iid.Equals(nsIStreamLoadableDocument::GetIID())) {
     		*result = NS_STATIC_CAST(nsIStreamLoadableDocument*, this);
@@ -2821,7 +2861,7 @@ XULDocumentImpl::GetChildNodes(nsIDOMNodeList** aChildNodes)
         rv = nsRDFDOMNodeList::Create(&children);
 
         if (NS_SUCCEEDED(rv)) {
-            nsIDOMNode* domNode;
+            nsIDOMNode* domNode = nsnull;
             rv = mRootContent->QueryInterface(nsIDOMNode::GetIID(), (void**)&domNode);
             NS_ASSERTION(NS_SUCCEEDED(rv), "root content is not a DOM node");
 
@@ -3704,4 +3744,111 @@ XULDocumentImpl::MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIRDFResourc
 
     rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), aResult);
     return rv;
+}
+
+// nsIDOMEventCapturer and nsIDOMEventReceiver Interface Implementations
+
+NS_IMETHODIMP
+XULDocumentImpl::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
+{
+    nsIEventListenerManager *manager;
+
+    if (NS_OK == GetListenerManager(&manager)) {
+        manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+        NS_RELEASE(manager);
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+XULDocumentImpl::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
+{
+    if (nsnull != mListenerManager) {
+        mListenerManager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+XULDocumentImpl::AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                 PRBool aPostProcess, PRBool aUseCapture)
+{
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
+                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+
+    manager->AddEventListenerByType(aListener, aType, flags);
+    NS_RELEASE(manager);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+XULDocumentImpl::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                    PRBool aPostProcess, PRBool aUseCapture)
+{
+  if (nsnull != mListenerManager) {
+    PRInt32 flags = (aPostProcess ? NS_EVENT_FLAG_POST_PROCESS : NS_EVENT_FLAG_NONE) |
+                    (aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE);
+
+    mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+XULDocumentImpl::GetListenerManager(nsIEventListenerManager** aResult)
+{
+    if (nsnull != mListenerManager) {
+        NS_ADDREF(mListenerManager);
+        *aResult = mListenerManager;
+        return NS_OK;
+    }
+    nsresult rv = nsComponentManager::CreateInstance(kEventListenerManagerCID,
+                                               nsnull,
+                                               kIEventListenerManagerIID,
+                                               (void**) aResult);
+    if (NS_OK == rv) {
+        mListenerManager = *aResult;
+        NS_ADDREF(mListenerManager);
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+XULDocumentImpl::GetNewListenerManager(nsIEventListenerManager **aResult)
+{
+    return nsComponentManager::CreateInstance(kEventListenerManagerCID,
+                                        nsnull,
+                                        kIEventListenerManagerIID,
+                                        (void**) aResult);
+}
+
+nsresult
+XULDocumentImpl::CaptureEvent(const nsString& aType)
+{
+  nsIEventListenerManager *mManager;
+
+  if (NS_OK == GetListenerManager(&mManager)) {
+    //mManager->CaptureEvent(aListener);
+    NS_RELEASE(mManager);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+XULDocumentImpl::ReleaseEvent(const nsString& aType)
+{
+  if (nsnull != mListenerManager) {
+    //mListenerManager->ReleaseEvent(aListener);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }

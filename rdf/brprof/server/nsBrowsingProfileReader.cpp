@@ -483,12 +483,14 @@ int main(int argc, char **argv)
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create thread event queue");
     if (NS_FAILED(rv)) return rv;
 
-    PLEventQueue* mainQueue;
+    nsIEventQueue* mainQueue;
     rv = theEventQueueService->GetThreadEventQueue(PR_GetCurrentThread(),
                                                    &mainQueue);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get event queue for current thread");
     if (NS_FAILED(rv)) return rv;
+
+		NS_IF_RELEASE(mainQueue);
 
     // Create a WAI instance, register, and run.
     nsBrowsingProfileReader service(kInstanceName, argc, argv);

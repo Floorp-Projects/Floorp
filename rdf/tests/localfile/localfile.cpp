@@ -160,7 +160,7 @@ main(int argc, char** argv)
     SetupRegistry();
 
     nsIEventQueueService* theEventQueueService = nsnull;
-    PLEventQueue* mainQueue      = nsnull;
+    nsIEventQueue* mainQueue      = nsnull;
     nsIRDFService* theRDFService = nsnull;
     nsIRDFXMLDataSource* ds      = nsnull;
     nsIRDFResource* theHomePage  = nsnull;
@@ -179,6 +179,8 @@ main(int argc, char** argv)
     if (NS_FAILED(rv = theEventQueueService->GetThreadEventQueue(PR_GetCurrentThread(),
                                                                  &mainQueue)))
         goto done;
+
+		NS_IF_RELEASE(mainQueue);
 
     // Create a stream data source and initialize it on argv[1], which
     // is hopefully a "file:" URL. (Actually, we can do _any_ kind of
