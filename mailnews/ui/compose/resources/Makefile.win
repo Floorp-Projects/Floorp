@@ -23,6 +23,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
 	$(MAKE_INSTALL) Compose.xul $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) ComposeBody.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ComposeFrame.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) mail_options.gif $(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) mail_options_mo.gif $(DIST)\bin\res\toolbar
@@ -51,6 +52,7 @@ install:: $(DLL)
 
 clobber::
 	rm -f $(DIST)\bin\res\samples\Compose.xul
+	rm -f $(DIST)\bin\res\samples\ComposeBody.html
 	rm -f $(DIST)\bin\res\samples\ComposeFrame.html
 	rm -f $(DIST)\bin\res\toolbar\mail_options.gif
 	rm -f $(DIST)\bin\res\toolbar\mail_options_mo.gif
