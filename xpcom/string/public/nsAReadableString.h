@@ -480,8 +480,8 @@ basic_nsAReadableString<CharT>::BeginReading( nsReadingIterator<CharT>& aResult 
   {
     aResult.mOwningString = this;
     GetReadableFragment(aResult.mFragment, kFirstFragment);
-    aResult.normalize_forward();
     aResult.mPosition = aResult.mFragment.mStart;
+    aResult.normalize_forward();
     return aResult;
   }
 

@@ -288,8 +288,8 @@ class basic_nsAWritableString
         {
           aResult.mOwningString = this;
           GetWritableFragment(aResult.mFragment, kFirstFragment);
-          aResult.normalize_forward();
           aResult.mPosition = aResult.mFragment.mStart;
+          aResult.normalize_forward();
           return aResult;
         }
 
