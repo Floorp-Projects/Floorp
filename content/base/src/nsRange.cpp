@@ -826,26 +826,6 @@ PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
   return theIndex;
 }
 
-nsresult nsRange::GetDOMNodeFromContent(nsIContent* inContentNode, nsCOMPtr<nsIDOMNode>* outDomNode)
-{
-  if (!outDomNode) 
-    return NS_ERROR_NULL_POINTER;
-  nsresult res = inContentNode->QueryInterface(NS_GET_IID(nsIDOMNode), getter_AddRefs(*outDomNode));
-  if (NS_FAILED(res)) 
-    return res;
-  return NS_OK;
-}
-
-nsresult nsRange::GetContentFromDOMNode(nsIDOMNode* inDomNode, nsCOMPtr<nsIContent>* outContentNode)
-{
-  if (!outContentNode) 
-    return NS_ERROR_NULL_POINTER;
-  nsresult res = inDomNode->QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(*outContentNode));
-  if (NS_FAILED(res)) 
-    return res;
-  return NS_OK;
-}
-
 nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* aSourceNode)
 {
   // utility routine to pop all the range endpoints inside the content subtree defined by 
@@ -871,9 +851,7 @@ nsresult nsRange::PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* 
           theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(0)));
           if (theRange)
           {
-            nsCOMPtr<nsIDOMNode> domNode;
-            res = GetDOMNodeFromContent(cN, address_of(domNode));
-            NS_POSTCONDITION(NS_SUCCEEDED(res), "error updating range list");
+            nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(cN));
             NS_POSTCONDITION(domNode, "error updating range list");
             // sanity check - do range and content agree over ownership?
             res = theRange->ContentOwnsUs(domNode);
@@ -2363,12 +2341,10 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
   nsVoidArray *theRangeList;
   parent->GetRangeList(theRangeList);
   if (!theRangeList) return NS_OK;
-  
-  nsCOMPtr<nsIDOMNode> domNode;
+
   nsresult res;
-  
-  res = GetDOMNodeFromContent(parent, address_of(domNode));
-  if (NS_FAILED(res))  return res;
+
+  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(parent));
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
 
@@ -2410,11 +2386,9 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
 
   // any ranges in the content subtree rooted by aRemovedNode need to
   // have the enclosed endpoints promoted up to the parentNode/offset
-  nsCOMPtr<nsIDOMNode> domNode;
-  nsresult res = GetDOMNodeFromContent(parent, address_of(domNode));
-  if (NS_FAILED(res))  return res;
+  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(parent));
   if (!domNode) return NS_ERROR_UNEXPECTED;
-  res = PopRanges(domNode, aOffset, removed);
+  nsresult res = PopRanges(domNode, aOffset, removed);
 
   // quick return if no range list
   nsVoidArray *theRangeList;
@@ -2463,16 +2437,11 @@ nsresult nsRange::OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset, n
   
   nsCOMPtr<nsIContent> parent( do_QueryInterface(aParentNode) );
   nsCOMPtr<nsIContent> replaced( do_QueryInterface(aReplacedNode) );
-  nsCOMPtr<nsIDOMNode> parentDomNode; 
-  nsresult res;
-  
-  res = GetDOMNodeFromContent(parent, address_of(parentDomNode));
-  if (NS_FAILED(res))  return res;
+  nsCOMPtr<nsIDOMNode> parentDomNode( do_QueryInterface(parent) ); 
+
   if (!parentDomNode) return NS_ERROR_UNEXPECTED;
-  
-  res = PopRanges(parentDomNode, aOffset, replaced);
-  
-  return res;
+
+  return PopRanges(parentDomNode, aOffset, replaced);
 }
   
 
@@ -2486,11 +2455,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
   aTextNode->GetRangeList(theRangeList);
   // the caller already checked to see if there was a range list
   
-  nsCOMPtr<nsIDOMNode> domNode;
-  nsresult res;
-  
-  res = GetDOMNodeFromContent(textNode, address_of(domNode));
-  if (NS_FAILED(res))  return res;
+  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(textNode));
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
   PRInt32   count = theRangeList->Count();
@@ -2500,7 +2465,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
     NS_ASSERTION(theRange, "oops, no range");
 
     // sanity check - do range and content agree over ownership?
-    res = theRange->ContentOwnsUs(domNode);
+    nsresult res = theRange->ContentOwnsUs(domNode);
     NS_PRECONDITION(NS_SUCCEEDED(res), "range and content disagree over range ownership");
     if (NS_SUCCEEDED(res))
     { 
