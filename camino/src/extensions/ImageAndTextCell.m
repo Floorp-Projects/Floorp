@@ -91,6 +91,12 @@
 - (void)selectWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject start:(int)selStart length:(int)selLength {
     NSRect textFrame, imageFrame;
     NSDivideRect (aRect, &imageFrame, &textFrame, 3 + [image size].width, NSMinXEdge);
+
+    // adjust so things line up better. not perfect but |textObj| won't tell me
+    // enough about the font used to get the lineheight.
+    textFrame.size.height -= 2;
+    textFrame.origin.y++;
+    
     [super selectWithFrame: textFrame inView: controlView editor:textObj delegate:anObject start:selStart length:selLength];
 }
 
