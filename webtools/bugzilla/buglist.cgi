@@ -546,14 +546,13 @@ while (@row = FetchSQLData()) {
                 next;
             }
             my $value = shift @row;
-            my $nowrap = "";
 
             if ($::needquote{$c}) {
                 $value = html_quote($value);
             } else {
                 $value = "<nobr>$value</nobr>";
             }
-            pnl "<td $nowrap>$value";
+            pnl "<td>$value";
         }
         if ($dotweak) {
             my $value = shift @row;

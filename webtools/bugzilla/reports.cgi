@@ -261,6 +261,9 @@ FIN
 	# start painting report #
 	#########################
 
+        $bugs_status{'NEW'}      ||= '0';
+        $bugs_status{'ASSIGNED'} ||= '0';
+        $bugs_status{'REOPENED'} ||= '0';
 	print <<FIN;
 <h1>$quip</h1>
 <table border=1 cellpadding=5>

@@ -29,11 +29,9 @@ require 'globals.pl';
 
 sub GeneratePersonInput {
     my ($field, $required, $def_value, $extraJavaScript) = (@_);
-    if (!defined $extraJavaScript) {
-        $extraJavaScript = "";
-    }
+    $extraJavaScript ||= "";
     if ($extraJavaScript ne "") {
-        $extraJavaScript = "onChange=\" $extraJavaScript \"";
+        $extraJavaScript = "onChange=\"$extraJavaScript\"";
     }
     return "<INPUT NAME=\"$field\" SIZE=32 $extraJavaScript VALUE=\"$def_value\">";
 }

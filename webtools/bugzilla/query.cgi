@@ -57,7 +57,7 @@ if (!defined $::buffer || $::buffer eq "") {
     $::buffer = $::COOKIE{"DEFAULTQUERY"};
 }
 
-my %default;
+use vars qw(%default);
 my %type;
 
 foreach my $name ("bug_status", "resolution", "assigned_to", "rep_platform",
