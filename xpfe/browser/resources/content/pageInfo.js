@@ -489,6 +489,7 @@ function grabAll(elem)
   }
 
   // one switch to rule them all
+  // XXX: these tests should use regexes to be a little more lenient wrt whitespace, see bug 177047
   switch (elem.nodeName.toLowerCase())
   {
     // form tab
@@ -510,8 +511,13 @@ function grabAll(elem)
     case "link":
       if (elem.rel)
       {
-        // should this test use regexes to be a little more lenient wrt whitespace?
-        if (elem.rel.toLowerCase() == "stylesheet" || elem.rel.toLowerCase() == "alternate stylesheet")
+        var rel = elem.rel.toLowerCase();
+        if (rel == "icon")
+        {
+          imageView.addRow([elem.href, gStrings.mediaLink, "", elem]);
+          break;
+        }
+        if (rel == "stylesheet" || rel == "alternate stylesheet")
           linktext = gStrings.linkStylesheet;
         else
           linktext = gStrings.linkRel;
@@ -542,10 +548,6 @@ function grabAll(elem)
       break;
     case "embed":
       imageView.addRow([elem.src, gStrings.mediaEmbed, "", elem]);
-      break;
-    case "link":
-      if (elem.rel == "icon")
-        imageView.addRow([elem.href, gStrings.mediaLink, "", elem]);
       break;
     default:
       if (elem.hasAttributeNS(XLinkNS, "href"))
