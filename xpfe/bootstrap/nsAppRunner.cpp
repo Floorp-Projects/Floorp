@@ -119,6 +119,27 @@ PrintUsage(void)
    fprintf(stderr, "\t<url>:  a fully defined url string like http:// etc..\n");
 }
 
+//----------------------------------------------------------------------------------------
+static PRBool CheckAndRunPrefs(nsICmdLineService* cmdLineArgs)
+//----------------------------------------------------------------------------------------
+{
+  char* cmdResult;
+  nsresult rv = cmdLineArgs->GetCmdLineValue("-pref", &cmdResult);
+  if (NS_SUCCEEDED(rv) && cmdResult && (strcmp("1",cmdResult) == 0))
+  {
+    nsIPrefWindow* prefWindow;
+    rv = nsComponentManager::CreateInstance(
+	  NS_PREFWINDOW_PROGID,
+      nsnull,
+      nsIPrefWindow::GetIID(),
+      (void **)&prefWindow);
+	if (NS_SUCCEEDED(rv))
+	  prefWindow->showWindow(nsString("Apprunner::main()").GetUnicode(), nsnull, nsnull);
+	NS_IF_RELEASE(prefWindow);
+	return PR_TRUE;
+  }
+  return PR_FALSE;
+} // CheckandRunPrefs
 
 int main(int argc, char* argv[])
 {
@@ -551,24 +572,6 @@ int main(int argc, char* argv[])
   /* End of mailhack */
   /* ********************************************************************* */
 
-  // Support the "-pref" command-line option, which just puts up the pref window, so that
-  // apprunner becomes a "control panel". The "OK" and "Cancel" buttons will quit
-  // the application.
-  rv = cmdLineArgs->GetCmdLineValue("-pref", &cmdResult);
-  if (NS_SUCCEEDED(rv) && cmdResult && (strcmp("1",cmdResult) == 0))
-  {
-    nsIPrefWindow* prefWindow;
-    rv = nsComponentManager::CreateInstance(
-	  NS_PREFWINDOW_PROGID,
-      nsnull,
-      nsIPrefWindow::GetIID(),
-      (void **)&prefWindow);
-	if (NS_SUCCEEDED(rv))
-	  prefWindow->showWindow(nsString("Apprunner::main()").GetUnicode(), nsnull, nsnull);
-	NS_IF_RELEASE(prefWindow);
-	goto done;
-  }
-
   // Kick off appcores
   rv = nsServiceManager::GetService(kAppCoresManagerCID,
                                     kIDOMAppCoresManagerIID,
@@ -646,6 +649,12 @@ int main(int argc, char* argv[])
   // Now we have the right profile, read the user-specific prefs.
   prefs->ReadUserPrefs();
  
+  // Support the "-pref" command-line option, which just puts up the pref window, so that
+  // apprunner becomes a "control panel". The "OK" and "Cancel" buttons will quit
+  // the application.
+  if (CheckAndRunPrefs(cmdLineArgs))
+    goto done;
+
   if ( !useArgs ) {
       rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
                        nsnull, nsnull, widthVal, heightVal);
