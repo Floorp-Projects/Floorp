@@ -152,9 +152,8 @@ CMMF_CertResponseGetCertificate(CMMFCertResponse *inCertResp,
         return NULL;
     }
     
-    return cmmf_CertOrEncCertGetCertificate
-                                (&inCertResp->certifiedKeyPair->certOrEncCert,
-				 inCertdb);
+    return cmmf_CertOrEncCertGetCertificate(
+		&inCertResp->certifiedKeyPair->certOrEncCert, inCertdb);
 				   
 }
 

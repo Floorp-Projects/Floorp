@@ -770,6 +770,7 @@ crmf_create_encrypted_value_wrapped_privkey(SECKEYPrivateKey   *inPrivKey,
     if (pubMechType == CKM_INVALID_MECHANISM) {
         /* XXX I should probably do something here for non-RSA 
 	 *     keys that are in certs. (ie DSA)
+	 * XXX or at least SET AN ERROR CODE.
 	 */
         goto loser;
     }
@@ -832,20 +833,14 @@ crmf_create_encrypted_value_wrapped_privkey(SECKEYPrivateKey   *inPrivKey,
     if (rv != SECSuccess) {
         goto loser;
     }
-    PORT_Free(encodedParam.data);
+    SECITEM_FreeItem(&encodedParam, PR_FALSE);
     PORT_Free(wrappedPrivKeyBits);
     PORT_Free(wrappedSymKeyBits);
-    if (iv->data != NULL) {
-        PORT_Free(iv->data);
-    }
-    PORT_Free(iv);
+    SECITEM_FreeItem(iv, PR_TRUE);
     return destValue;
  loser:
     if (iv != NULL) {
-        if (iv->data) {
-	    PORT_Free(iv->data);
-	}
-        PORT_Free(iv);
+	SECITEM_FreeItem(iv, PR_TRUE);
     }
     if (myEncrValue != NULL) {
         crmf_destroy_encrypted_value(myEncrValue, PR_TRUE);
@@ -857,7 +852,7 @@ crmf_create_encrypted_value_wrapped_privkey(SECKEYPrivateKey   *inPrivKey,
         PORT_Free(wrappedPrivKeyBits);
     }
     if (encodedParam.data != NULL) {
-        PORT_Free(encodedParam.data);
+	SECITEM_FreeItem(&encodedParam, PR_FALSE);
     }
     return NULL;
 }
