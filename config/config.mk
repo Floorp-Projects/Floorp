@@ -273,9 +273,6 @@ XPIDL_LINK	= $(DIST)/bin/xpt_link$(BIN_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH),OS2)
-SHELL		= gbash.exe
-NSINSTALL	= nsinstall
-INSTALL		= $(NSINSTALL)
 PATH_SEPARATOR	:= \;
 else
 PATH_SEPARATOR	:= :
@@ -446,7 +443,7 @@ endif
 
 GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
 
-ifneq (,$(filter-out OS2 WINNT, $(OS_ARCH)))
+ifneq (,$(filter-out WINNT, $(OS_ARCH)))
 ifdef CROSS_COMPILE
 NSINSTALL	= $(CONFIG_TOOLS)/host_nsinstall
 else
