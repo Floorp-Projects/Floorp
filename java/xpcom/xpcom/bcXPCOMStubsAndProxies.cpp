@@ -31,7 +31,7 @@ static  nsModuleComponentInfo components[] =
 {
     {
         "Black Connect XPCOM stubs and proxies",
-	BC_XPCOMSTUBSANDPROXIES_CID,
+	    BC_XPCOMSTUBSANDPROXIES_CID,
         BC_XPCOMSTUBSANDPROXIES_PROGID,
         bcXPCOMStubsAndProxiesConstructor
     }

@@ -74,15 +74,20 @@ void bcJavaStub::Dispatch(bcICall *call) {
     nsXPTMethodInfo* info;
     interfaceInfo->GetMethodInfo(mid,(const nsXPTMethodInfo **)&info);
     PRUint32 paramCount = info->GetParamCount();
-    args = env->NewObjectArray(paramCount, objectClass,NULL);    
+    printf("\n**[c++]hasRetval: %d\n", HasRetval(paramCount, info));
+    if (HasRetval(paramCount, info))
+        // do not pass retval param
+        paramCount--;
+    args = env->NewObjectArray(paramCount, objectClass,NULL);
     bcJavaMarshalToolkit * mt = new bcJavaMarshalToolkit(mid, interfaceInfo, args, env,1, call->GetORB());
-    bcIUnMarshaler * um = call->GetUnMarshaler();   
+    bcIUnMarshaler * um = call->GetUnMarshaler();
     mt->UnMarshal(um);
     jobject jiid = bcIIDJava::GetObject(&iid);
-    bcJavaGlobal::GetJNIEnv()->CallStaticObjectMethod(utilitiesClass, callMethodByIndexMID, object, jiid, (jint)mid, args);
+    jobject retval = bcJavaGlobal::GetJNIEnv()->CallStaticObjectMethod(utilitiesClass, callMethodByIndexMID, object, jiid, (jint)mid, args);
     //nb return value; excepion handling
-    bcIMarshaler * m = call->GetMarshaler();  
-    mt->Marshal(m);
+    bcIMarshaler * m = call->GetMarshaler(); 
+//      mt->Marshal(m);
+    mt->Marshal(m, retval);
     //nb memory deallocation
     delete m; delete um; delete mt;
     return;
@@ -109,8 +114,12 @@ void bcJavaStub::Init() {
     }
 }
 
-
-
-
-
-
+PRBool bcJavaStub::HasRetval(PRUint32 paramCount, nsXPTMethodInfo *info)
+{
+    for (unsigned int i = 0; i < paramCount; i++) {
+        nsXPTParamInfo param = info->GetParam(i);
+        if (param.IsRetval())
+            return PR_TRUE;
+    }
+    return PR_FALSE;
+}

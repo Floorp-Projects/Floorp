@@ -121,7 +121,16 @@ nsresult bcXPCOMMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
             params[i].ptr = params[i].val.p = value->val.p;
             params[i].flags |= nsXPTCVariant::PTR_IS_DATA;
         }
+#if 0
+        if (callSide == onClient 
+            &&  param.GetType().IsPointer() 
+            &&  ! param.GetType().IsReference() 
+            ) {
+            allocator->Free(params[i].val.p);
+        }
+#endif
         
+
         if ( (callSide == onServer && !param.IsIn() 
               || (callSide == onClient && !param.IsOut()))){ 
             continue;
@@ -326,7 +335,6 @@ bcXPCOMMarshalToolkit::UnMarshalElement(void *data, bcIUnMarshaler *um, nsXPTPar
     nsresult r = NS_OK;
     switch(type) {
         case nsXPTType::T_IID    :
-            allocator->Free(*(char**)data);
             *(char**)data = (char*)new nsIID(); //nb memory leak. how are we going to release it
             data = *(char**)data;
         case nsXPTType::T_I8  :

@@ -119,6 +119,10 @@ private:
     nsCOMPtr<nsIAllocator> allocator;
 };
 
+nsresult bcJavaMarshalToolkit::Marshal(bcIMarshaler *m, jobject retval) {
+    retV = retval;
+    return Marshal(m);
+}
 
 nsresult bcJavaMarshalToolkit::Marshal(bcIMarshaler *m) {
 
@@ -129,12 +133,21 @@ nsresult bcJavaMarshalToolkit::Marshal(bcIMarshaler *m) {
         if ((callSide == onClient  && !param.IsIn())
             || (callSide == onServer && !param.IsOut())) {
             continue;
+        } else if (param.IsRetval()  && callSide == onServer) {
+            r = MarshalElement(m, retV, PR_FALSE, &param, XPTType2bcXPType(param.GetType().TagPart()), i);
+        } else {
+            jobject object = env->GetObjectArrayElement(args,i);
+            r = MarshalElement(m, object, param.IsOut(), &param, XPTType2bcXPType(param.GetType().TagPart()), i);
         }
-        jobject object = env->GetObjectArrayElement(args,i);
-        r = MarshalElement(m, object, param.IsOut(), &param, XPTType2bcXPType(param.GetType().TagPart()), i);
     }
     return r;
 
+}
+
+nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um, jobject *retval) {
+    nsresult r = UnMarshal(um);
+    *retval = retV;
+    return r;
 }
 
 nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
@@ -146,6 +159,11 @@ nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
         nsXPTParamInfo param = info->GetParam(i);
         PRBool isOut = param.IsOut();
         nsXPTType type = param.GetType();
+        if (param.IsRetval() && callSide == onServer) {
+            printf("** bcJavaMarshalToolkit::UnMarshal skipping retval\n");            
+            printf("**unmarshall: call side: %d\n", callSide);
+            continue;
+        }
         if ( (callSide == onServer && !param.IsIn()
               || (callSide == onClient && !param.IsOut()))){
             if (callSide == onServer
@@ -155,11 +173,16 @@ nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
             }
             continue;
         }
-        if (isOut) {
-            value = env->GetObjectArrayElement(args,i);
+        if (param.IsRetval()) {
+            UnMarshalElement(&value, i, um, PR_FALSE, &param, XPTType2bcXPType(type.TagPart()),allocator);
+            retV = value;
+        } else {
+            if (isOut) {
+                value = env->GetObjectArrayElement(args,i);
+            }
+            UnMarshalElement(&value, i, um, isOut, &param, XPTType2bcXPType(type.TagPart()),allocator);
+            env->SetObjectArrayElement(args,i,value);
         }
-        UnMarshalElement(&value, i, um, isOut, &param, XPTType2bcXPType(type.TagPart()),allocator);
-        env->SetObjectArrayElement(args,i,value);
     }
     delete allocator;
     return NS_OK;

@@ -136,11 +136,15 @@ public class InterfaceRegistry {
     public static int getIndexByMethod(Method method, IID iid) {
         int result = -1;
         MethodArray m = (MethodArray)iMethods.get(iid);
+        String methodName = method.getName();
         if (m != null && m.methods !=null) {
+            
             for (int i = 0; i < m.methods.length; i++) {
-                if (method.equals(m.methods[i])) {
-                    result = i;
-                    break;
+                if (m.methods[i] != null) {
+                    if (methodName.equals(m.methods[i].getName())) {
+                        result = i;
+                        break;
+                    }
                 }
             }
         }

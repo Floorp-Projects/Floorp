@@ -66,9 +66,12 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_xpcom_Utilities_callMethodByIndex
     mt->Marshal(m);
     orb->SendReceive(call);
     bcIUnMarshaler * um = call->GetUnMarshaler();
-    mt->UnMarshal(um);
+//      mt->UnMarshal(um);
+    jobject retval;
+    mt->UnMarshal(um, &retval);
     delete m; delete um; delete mt;
-    return NULL;
+//      return NULL;
+    return retval;
 }
 
 /*

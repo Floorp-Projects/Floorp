@@ -38,9 +38,12 @@ public:
                          JNIEnv *env, int isOnServer, bcIORB *orb) ;
     virtual ~bcJavaMarshalToolkit();
     nsresult Marshal(bcIMarshaler *);
+    nsresult Marshal(bcIMarshaler *, jobject);
     nsresult UnMarshal(bcIUnMarshaler *);
+    nsresult UnMarshal(bcIUnMarshaler *, jobject*);
 private:
 
+    jobject retV;
 
     enum ArrayModifier { none, arrayElement, array}; 
     enum { unDefined, onServer, onClient } callSide; 

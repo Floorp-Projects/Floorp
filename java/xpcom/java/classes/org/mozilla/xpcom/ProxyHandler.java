@@ -33,10 +33,12 @@ class ProxyHandler implements InvocationHandler {
 			 Method method,
 			 Object[] args) throws Throwable {
         System.out.println("--[java]ProxyHandler.invoke "+method);
-        if ("toString".equals(method.getName()) &&
-            (method.getParameterTypes()).length == 0) { //it is String toString() method
-            return "ProxyObject@{oid = "+oid+" iid = "+iid+"}";
-        }
+        /*
+         *if ("toString".equals(method.getName()) &&
+         *   (method.getParameterTypes()).length == 0) { //it is String toString() method
+         *   return "ProxyObject@{oid = "+oid+" iid = "+iid+"}";
+         *}
+         */
         return Utilities.callMethod(oid, method, iid, orb, args);
     }
     private long oid;

@@ -27,6 +27,7 @@ public class Utilities {
     
     static Object callMethodByIndex(Object obj, IID iid, int mid, Object[] args) {
         System.out.println("--[java]org.mozilla.xpcom.Utilities.callMethodByIndex "+args.length+" "+mid);
+        Object retObject = null;
         for (int i = 0; i < args.length; i++) {
             System.out.println("--[java]callMethodByIndex args["+i+"] = "+args[i]);
         }
@@ -34,13 +35,14 @@ public class Utilities {
         System.out.println("--[java] org.mozilla.xpcom.Utilities.callMethodByIndex method "+method);
         try {
             if (method != null) {
-                method.invoke(obj,args); 
+                retObject = method.invoke(obj,args); 
+                System.out.println("--[java] Utilities.callMethodByIndex: retObject = " + retObject);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("--callMethodByIndex method finished"+method);
-        return null; //nb for testing
+        System.out.println("--[java] Utilities.callMethodByIndex method finished"+method);
+        return retObject;
     }
 
     static Object callMethod(long oid, Method method, IID iid, long orb , Object[] args) {

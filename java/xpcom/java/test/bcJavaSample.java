@@ -26,15 +26,17 @@ public class bcJavaSample implements bcIJavaSample {
     public bcJavaSample() {
         System.out.println("--[java]bcJavaSample constructor");
     }
-    public void queryInterface(IID iid, Object[] result) {
+    public Object queryInterface(IID iid) {
         System.out.println("--[java]bcJavaSample::queryInterface iid="+iid);
+        Object result;
         if ( iid.equals(nsISupportsIID)
              || iid.equals(bcIJavaSampleIID)) {
-            result[0] = this;
+            result = this;
         } else {
             result = null;
         }
-        System.out.println("--[java]bcJavaSample::queryInterface result=null"+(result==null));
+        System.out.println("--[java]bcJavaSample::queryInterface result=null "+(result==null));
+        return result;
     }
     public void test0() {
         System.out.println("--[java]bcJavaSample.test0 ");
@@ -77,26 +79,25 @@ public class bcJavaSample implements bcIJavaSample {
     public void test5(nsIComponentManager cm) {
         System.out.println("--[java]bcJavaSample.test5");
         try {
-            nsIEnumerator [] retval = new nsIEnumerator[1];
-            cm.enumerateContractIDs(retval);
-            nsIEnumerator enumerator = retval[0];
+            nsIEnumerator retval;
+            nsIEnumerator enumerator = cm.enumerateContractIDs();
             System.out.println("--[java] before calling enumerator.firts() "+
                                "enumerator==null "+(enumerator==null));
 
             enumerator.first();
             int counter = 0;
-            nsISupports obj[] = new nsISupports[1];
-            String str[] = new String[1];
-            nsISupportsString strObj[] = new nsISupportsString[1];
+            nsISupports obj;
+            String str;
+            nsISupportsString strObj;
             while (true) {
-                enumerator.currentItem(obj);
-                if (obj[0] == null ||
-                    counter > 10) {
+                obj = enumerator.currentItem();
+                if (obj == null 
+                    || counter > 300) {
                     break;
                 }
-                obj[0].queryInterface(nsISupportsStringIID,strObj);
-                strObj[0].toString(str);
-                System.out.println("--[java] bcJavaSample.Test5 string "+str[0]);
+                strObj = (nsISupportsString) obj.queryInterface(nsISupportsStringIID);
+                str = strObj.getData();
+                System.out.println("--[java] bcJavaSample.Test5 string "+str);
                 enumerator.next(); counter++;
             }
         } catch (Exception e) {

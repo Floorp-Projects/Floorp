@@ -24,6 +24,7 @@
 #define __bcJavaStub_h
 #include "bcIStub.h"
 #include "jni.h"
+#include "xptinfo.h"
 
 class bcJavaStub : public bcIStub {
  public:
@@ -36,6 +37,7 @@ private:
     static jclass utilitiesClass;
     static jmethodID callMethodByIndexMID;
     void Init();
+    PRBool HasRetval(PRUint32 paramCount, nsXPTMethodInfo *info);
 };
 
 #endif

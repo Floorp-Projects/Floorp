@@ -38,7 +38,7 @@ IS_COMPONENT    = 1
 
 EXPORTS = \
        bcJavaStubsAndProxies.h
-       
+
 CPPSRCS =  \
            bcJavaMarshalToolkit.cpp \
 	   bcJavaStub.cpp \
@@ -48,8 +48,7 @@ CPPSRCS =  \
 	   org_mozilla_xpcom_Utilities.cpp \
 	   $(NULL)
 
-CXXFLAGS        += -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT -DOJI_DISABLE -I$(CONNECT_SRC)/public
-
+CXXFLAGS  := -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT -DOJI_DISABLE -I$(CONNECT_SRC)/public $(CXXFLAGS) 
 
 DSO_LDOPTS += \
       -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/ \
@@ -63,19 +62,19 @@ DSO_LDOPTS += \
 #      -L$(JDKHOME)/jre/bin/classic \
 #      -ljvm  \
 #      $(NULL)
-      
+
 ifneq ($(OS_ARCH), Linux)
 DSO_LDOPTS      += \
                   -lthread -lXm -lX11 -lXt -lm
 endif
-		
+
 EXTRA_DSO_LDOPTS += \
       -L$(DIST)/bin/components/ \
       -lbcorb \
       $(NULL)
-      
-include $(topsrcdir)/config/rules.mk
 
+include $(topsrcdir)/config/rules.mk
+CCC += $(CXXFLAGS) # I want to have $(JDKHOME)/include before $(DIST) include
 
 
 

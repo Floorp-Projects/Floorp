@@ -21,7 +21,7 @@ public interface nsIFactory extends nsISupports
 
 
     /* void createInstance (in nsISupports aOuter, in nsIIDRef iid, [iid_is (iid), retval] out nsQIResult result); */
-    public void createInstance(nsISupports aOuter, IID iid, Object[] result);
+    public Object createInstance(nsISupports aOuter, IID iid);
 
     /* void lockFactory (in PRBool lock); */
     public void lockFactory(boolean lock);

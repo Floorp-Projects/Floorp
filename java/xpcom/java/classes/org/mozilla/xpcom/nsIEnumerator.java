@@ -19,15 +19,25 @@ public interface nsIEnumerator extends nsISupports
     public static final String IID =
         "ad385286-cbc4-11d2-8cca-0060b0fc14a3";
 
+    /** First will reset the list. will return NS_FAILED if no items
+   */
 
     /* void first (); */
     public void first();
+    /** Next will advance the list. will return failed if already at end
+   */
 
     /* void next (); */
     public void next();
+    /** CurrentItem will return the CurrentItem item it will fail if the 
+   *  list is empty
+   */
 
     /* nsISupports currentItem (); */
-    public void currentItem(nsISupports[] _retval);
+    public nsISupports currentItem();
+    /** return if the collection is at the end.  that is the beginning following 
+   *  a call to Prev and it is the end of the list following a call to next
+   */
 
     /* void isDone (); */
     public void isDone();
