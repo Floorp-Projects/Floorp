@@ -49,10 +49,8 @@
 
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-  
-static   NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
-
-static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 static NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
 static NS_DEFINE_CID(kLocaleCID, NS_LOCALE_CID);
@@ -60,7 +58,7 @@ static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
-static NS_DEFINE_CID(kMsgRFC822ParserCID,			NS_MSGRFC822PARSER_CID); 
+static NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID); 
 
 
 #ifdef WE_HAVE_MDBINTERFACES
@@ -95,52 +93,6 @@ static char* CreateURI(nsFileSpec path, nsMsgKey key)
 	return uri.ToNewCString();
 }
 #endif
-
-nsresult
-nsMsgDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result,
-							PRBool getKeyFromHeader)
-{
-    nsresult rv;
-
-	nsIRDFService *rdf;
-	rv = nsServiceManager::GetService(kRDFServiceCID, 
-										nsIRDFService::GetIID(), 
-                                     (nsISupports**)&rdf);
-
-    if (NS_FAILED(rv)) return rv;
-
-	char* msgURI;
-
-	//Need to remove ".msf".
-	nsFileSpec folderPath = path;
-	char* leafName = folderPath.GetLeafName();
-	nsString folderName(leafName);
-	PL_strfree(leafName);
-	if(folderName.Find(".msf") != -1)
-	{
-		nsString realFolderName;
-		folderName.Left(realFolderName, folderName.Length() - 4);
-		folderPath.SetLeafName((const nsString)realFolderName);
-	}
-
-	rv = nsBuildLocalMessageURI(folderPath, key, &msgURI);
-    if (NS_FAILED(rv)) return rv;
-
-
-    nsIRDFResource* res;
-    rv = rdf->GetResource(msgURI, &res);
-    PR_smprintf_free(msgURI);
-    if (NS_FAILED(rv)) return rv;
-    
-    nsMsgHdr* msgHdr = (nsMsgHdr*)res;
-    msgHdr->Init(this, hdrRow);
-    msgHdr->SetMessageKey(key);
-    *result = msgHdr;
-  
-    nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
-
-    return rv;
-}
 
 NS_IMETHODIMP nsMsgDatabase::AddListener(nsIDBChangeListener *listener)
 {
@@ -785,7 +737,7 @@ nsresult nsMsgDatabase::InitNewDB()
 			dbFolderInfo->SetVersion(GetCurVersion());
 			nsIMdbStore *store = GetStore();
 			// create the unique table for the dbFolderInfo.
-			mdb_err err = store->NewTable(GetEnv(), m_hdrRowScopeToken, 
+			mdb_err err = (nsresult) store->NewTable(GetEnv(), m_hdrRowScopeToken, 
 				m_hdrTableKindToken, PR_FALSE, nsnull, &m_mdbAllMsgHeadersTable);
 //			m_mdbAllMsgHeadersTable->BecomeContent(GetEnv(), &gAllMsgHdrsTableOID);
 			m_dbFolderInfo = dbFolderInfo;
@@ -903,7 +855,7 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMessage **pmsgHdr)
 				err = hdrRow->GetOid(GetEnv(), &rowOid);
 				if (NS_SUCCEEDED(err) && rowOid.mOid_Id == key)                                    
                 {                                                               
-                     err = CreateMsgHdr(hdrRow, m_dbName, key, pmsgHdr);         
+                     err = CreateMsgHdr(hdrRow, m_dbName, key, pmsgHdr, PR_FALSE);         
                      break;                                                      
                  }                                                               
              }                                                                   
@@ -915,7 +867,7 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMessage **pmsgHdr)
 
 		if (err == NS_OK && hdrRow)
 		{
-			err = CreateMsgHdr(hdrRow, m_dbName, key, pmsgHdr);
+			err = CreateMsgHdr(hdrRow, m_dbName, key, pmsgHdr, PR_FALSE);
 		}
 #endif
 	}
@@ -1315,7 +1267,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 {
 	nsresult		rv;
 	nsMsgHdr		*pHeader;
-	ListContext		*listContext = NULL;
+	//ListContext		*listContext = NULL;
 	PRInt32			numChanged = 0;
 
     nsIEnumerator* hdrs;
@@ -1351,7 +1303,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (time_t startDate, time_t endDate, n
 {
 	nsresult rv;
 	nsMsgHdr	*pHeader;
-	ListContext		*listContext = NULL;
+	//ListContext		*listContext = NULL;
 	PRInt32			numChanged = 0;
 
     nsIEnumerator* hdrs;
@@ -1875,6 +1827,8 @@ NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMessage **pnewHdr)
 	nsIMdbRow		*hdrRow;
 	struct mdbOid allMsgHdrsTableOID;
 
+    printf("nsMsgDatabase::CreateNewHdr()\n");
+
 	if (!pnewHdr || !m_mdbAllMsgHeadersTable)
 		return NS_ERROR_NULL_POINTER;
 
@@ -1884,7 +1838,7 @@ NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMessage **pnewHdr)
 	err  = GetStore()->NewRowWithOid(GetEnv(),
                                      &allMsgHdrsTableOID, &hdrRow);
 	if (NS_FAILED(err)) return err;
-    err = CreateMsgHdr(hdrRow, m_dbName, key, pnewHdr);
+    err = CreateMsgHdr(hdrRow, m_dbName, key, pnewHdr, PR_FALSE);
 	return err;
 }
 
@@ -1977,7 +1931,7 @@ NS_IMETHODIMP nsMsgDatabase::CreateNewHdrAndAddToDB(PRBool *newThread, nsMsgHdrS
 	}
 	if (NS_FAILED(err)) return err;
 
-    err = CreateMsgHdr(hdrRow, m_dbName, hdrStruct->m_messageKey, pnewHdr);
+    err = CreateMsgHdr(hdrRow, m_dbName, hdrStruct->m_messageKey, pnewHdr, PR_FALSE);
 	if (NS_SUCCEEDED(err))
 		err = AddNewHdrToDB(*pnewHdr, notify);
 	return err;
@@ -2010,9 +1964,9 @@ NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMessage *ex
 
 	if (existingHdr)
 	{
+#ifdef MDB_DOES_CELL_CURSORS_OR_COPY_ROW
 	    nsMsgHdr* sourceMsgHdr = NS_STATIC_CAST(nsMsgHdr*, existingHdr);      // closed system, cast ok
 		nsMsgHdr *destMsgHdr = nsnull;
-#ifdef MDB_DOES_CELL_CURSORS_OR_COPY_ROW
 		CreateNewHdr(key, &destMsgHdr);
 		nsIMdbRow	sourceRow = sourceMsgHdr->GetMDBRow() ;
 		{
@@ -2588,7 +2542,7 @@ nsresult nsMsgDatabase::DumpContents()
 			msgHdr->GetSubject(subject);
 			char *authorStr = author.ToNewCString();
 			char *subjectStr = subject.ToNewCString();
-			printf("hdr key = %ld, author = %s subject = %s\n", key, (authorStr) ? authorStr : "", (subjectStr) ? subjectStr : "");
+			printf("hdr key = %u, author = %s subject = %s\n", key, (authorStr) ? authorStr : "", (subjectStr) ? subjectStr : "");
 			delete [] authorStr;
 			delete [] subjectStr;
 			NS_RELEASE(msgHdr);
@@ -2599,7 +2553,7 @@ nsresult nsMsgDatabase::DumpContents()
     for ( i = 0; i < threads.GetSize(); i++) 
 	{
         key = threads[i];
-		printf("thread key = %ld\n", key);
+		printf("thread key = %u\n", key);
 //		DumpThread(key);
     }
 
@@ -2640,7 +2594,8 @@ nsresult	nsMsgDatabase::DumpThread(nsMsgKey threadId)
 					(void)pMessage->GetMessageKey(&key);
 					pMessage->GetSubject(subject);
 
-					printf("message in thread %ld %s\n", key, (const char *) &nsAutoString(subject));
+                    
+					printf("message in thread %u %s\n", key, (const char *) &nsAutoString(subject));
 				}
 		//		NS_RELEASE(pMessage);
 				pMessage = nsnull;
