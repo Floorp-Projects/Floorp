@@ -20,39 +20,35 @@
  *   Radha Kulkarni <radha@netscape.com>
  */
 
-#ifndef nsSHTransaction_h
-#define nsSHTransaction_h
+#ifndef nsSHistory_h
+#define nsSHistory_h
 
-#include "nsISHTransaction.h"
-#include "nsISHEntry.h"
+#include "nsCOMPtr.h"
+#include "nsISHistory.h"
 
-class nsSHTransaction: public nsISHTransaction
+class nsISHEntry;
+class nsISHTransaction;
+
+class nsSHistory: public nsISHistory
 {
 public:
 	NS_DECL_ISUPPORTS
-	NS_DECL_NSISHTRANSACTION
+	NS_DECL_NSISHISTORY
 
-	nsSHTransaction();
+	nsSHistory();
 
 protected:
-	virtual ~nsSHTransaction();
-
+	virtual ~nsSHistory();
 
 private:
     friend NS_IMETHODIMP
-		NS_NewSHTransaction(nsISupports * aOuter, REFNSIID aIID, void** aResult);
-	nsresult SetChild(nsISHTransaction * aChild);
-	nsresult SetParent(nsISHTransaction * aParent);
-	nsresult SetSHEntry(nsISHEntry * aSHEntry);
-	//nsresult SetLRVList(nsISHTransaction * aLRVList);
-    
-	/* Weak reference to parent */
-	nsISHTransaction * mParent;
-	nsISHTransaction * mChild;
-	nsISHTransaction * mLRVList;
-	nsISHEntry *  mSHEntry;
-
+		NS_NewSHistory(nsISupports * aOuter, REFNSIID aIID, void** aResult);
+    NS_IMETHOD GetRootEntry(nsISHTransaction ** aResult);
+    //nsISHTransaction *  mListRoot;
+	nsCOMPtr<nsISHTransaction> mListRoot;
+	PRInt32 mIndex;
+	PRInt32 mLength;
 };
 
 
-#endif   /* nsSHTransaction_h */
+#endif   /* nsSHistory */

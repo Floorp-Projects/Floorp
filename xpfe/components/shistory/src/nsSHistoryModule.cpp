@@ -26,9 +26,11 @@
 #include "nsIServiceManager.h"
 #include "nsISHEntry.h"
 #include "nsISHTransaction.h"
+#include "nsISHistory.h"
 
 extern NS_IMETHODIMP NS_NewSHTransaction(nsISupports * aOuter, REFNSIID aIID, void** aResult);
 extern NS_IMETHODIMP NS_NewSHEntry(nsISupports * aOuter, REFNSIID aIID, void** aResult);
+extern NS_IMETHODIMP NS_NewSHistory(nsISupports * aOuter, REFNSIID aIID, void** aResult);
  
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -42,8 +44,12 @@ static nsModuleComponentInfo gSHistoryModuleInfo[] = {
   { "nsSHTransaction",
     NS_SHTRANSACTION_CID,
     NS_SHTRANSACTION_PROGID, 
-    NS_NewSHTransaction }
+    NS_NewSHTransaction },
+    { "nsSHistory",
+    NS_SHISTORY_CID,
+    NS_SHISTORY_PROGID, 
+    NS_NewSHistory }
 };
 
 
-NS_IMPL_NSGETMODULE("history", gSHistoryModuleInfo)
+NS_IMPL_NSGETMODULE("shistory", gSHistoryModuleInfo)

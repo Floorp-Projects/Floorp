@@ -25,12 +25,14 @@ CPPSRCS=                                \
  nsSHEntry.obj                          \
  nsSHTrasaction.obj                     \
  nsSHistoryModule.obj                   \
+ nsSHistory.obj                         \
  $(NULL)
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsSHEntry.obj              \
  .\$(OBJDIR)\nsSHTransaction.obj        \
  .\$(OBJDIR)\nsSHistoryModule.obj       \
+ .\$(OBJDIR)\nsSHistory.obj             \
  $(NULL)
 
 MAKE_OBJ_TYPE=DLL
