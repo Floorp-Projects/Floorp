@@ -286,7 +286,7 @@ NS_METHOD
 LocalSearchDataSource::parseResourceIntoFindTokens(nsIRDFResource *u, findTokenPtr tokens)
 {
 	const char		*uri = nsnull;
-	char			*id, *token, *value;
+	char			*id, *token, *value, *newstr;
 	int			loop;
 	nsresult		rv;
 
@@ -300,7 +300,7 @@ LocalSearchDataSource::parseResourceIntoFindTokens(nsIRDFResource *u, findTokenP
 		return(NS_ERROR_OUT_OF_MEMORY);
 
 	/* parse ID, build up token list */
-	if ((token = strtok(id, "&")) != NULL)
+	if ((token = nsCRT::strtok(id, "&", &newstr)) != NULL)
 	{
 		while (token != NULL)
 		{
@@ -335,7 +335,7 @@ LocalSearchDataSource::parseResourceIntoFindTokens(nsIRDFResource *u, findTokenP
 					break;
 				}
 			}
-			token = strtok(NULL, "&");
+			token = nsCRT::strtok(newstr, "&", &newstr);
 		}
 	}
 	PL_strfree(id);
