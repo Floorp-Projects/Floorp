@@ -65,7 +65,6 @@ private:
 	static PRBool	ReadBytes( nsIFileSpec *stream, void *pBuffer, PRUint32 offset, PRUint32 bytes);
 	static PRUint32 ReadMsgIndex( nsIFileSpec *file, PRUint32 offset, PRUint32Array *pArray);
 	static void		ConvertIndex( nsIFileSpec *pFile, char *pBuffer, PRUint32 *pIndex, PRUint32 size);
-	static nsresult WriteMessageBuffer( nsIFileSpec *stream, char *pBuffer, PRUint32 size, char *last2);
 	static PRBool	IsFromLine( char *pLine, PRUint32 len);
 
 

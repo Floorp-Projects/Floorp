@@ -38,6 +38,7 @@
 #include "nsOE5File.h"
 #include "nsCRT.h"
 #include "OEDebugLog.h"
+#include "nsMsgUtils.h"
 
 
 #define	kIndexGrowBy		100
@@ -276,164 +277,155 @@ nsresult nsOE5File::ImportMailbox( PRUint32 *pBytesDone, PRBool *pAbort, nsStrin
 			text length in block
 			pointer to next block. (0 if end)
 
+    Each message is made up of a linked list of block data.
 		So what we do for each message is:
-			Read the first block
-			Write out the From message separator if the message doesn't already
-				start with one.
-			Write out all subsequent blocks of text keeping track of the last
-				2 bytes written of the message.
-			if the last 2 bytes aren't and end of line then write one out before
-				proceeding to the next message.
+      1. Read the first block data.
+      2. Write out the From message separator if the message doesn't already
+				 start with one.
+      3. If the block of data doesn't end with CRLF then a line is broken into two blocks,
+         so save the incomplete line for later process when we read the next block. Then
+         write out the block excluding the partial line at the end of the block (if exists).
+      4. If there's next block of data then read next data block. Otherwise we're done.
+         If we found a partial line in step #3 then find the rest of the line from the
+         current block and write out this line separately.
+      5. Reset some of the control variables and repeat step #3.
 	*/
 	
 	PRUint32	didBytes = 0;
-	char		last2[2] = {0, 0};
-	PRUint32	next;
+  PRUint32	next, size;
+  char *pStart, *pEnd, *partialLineStart;
+  nsCAutoString partialLine, tempLine;
 	rv = NS_OK;
-	for (PRUint32 i = 0; (i < indexSize) && !(*pAbort); i++) {
-		if (pIndex[i]) {
-			if (ReadBytes( inFile, block, pIndex[i], 16) && 
-						(block[0] == pIndex[i]) &&
-						(block[2] < kMailboxBufferSize) &&
-						(ReadBytes( inFile, pBuffer, kDontSeek, block[2]))) {
-				// write out the from separator.
-				if (!IsFromLine( pBuffer, block[2])) {
-					rv = pDestination->Write( m_pFromLineSep, sepLen, &written);
-					// FIXME: Do I need to check the return value of written???
-					if (NS_FAILED( rv))
-						break;
-					last2[0] = 13;
-					last2[1] = 10;
-				}
-				else {
-					last2[0] = 0;
-					last2[1] = 0;
-				}
-				rv = WriteMessageBuffer( pDestination, pBuffer, block[2], last2);
-				didBytes += block[2];
+
+  for (PRUint32 i = 0; (i < indexSize) && !(*pAbort); i++)
+  {
+    if (! pIndex[i])
+      continue;
+
+    if (ReadBytes( inFile, block, pIndex[i], 16) && (block[0] == pIndex[i]) &&
+        (block[2] < kMailboxBufferSize) && (ReadBytes( inFile, pBuffer, kDontSeek, block[2])))
+    {
+			// write out the from separator.
+      if (!IsFromLine( pBuffer, block[2]))
+      {
+				rv = pDestination->Write( m_pFromLineSep, sepLen, &written);
+				// FIXME: Do I need to check the return value of written???
 				if (NS_FAILED( rv))
 					break;
-				next = block[3];
-				while (next && !(*pAbort)) {
-					if (ReadBytes( inFile, block, next, 16) &&
-						(block[0] == next) &&
-						(block[2] < kMailboxBufferSize) &&
-						(ReadBytes( inFile, pBuffer, kDontSeek, block[2]))) {
-						if (block[2])
-							rv = WriteMessageBuffer( pDestination, pBuffer, block[2], last2);
-						didBytes += block[2];
-						if (NS_FAILED( rv))
-							break;
-						next = block[3];
-					}
-					else {
-						IMPORT_LOG2( "Error reading message from %S at 0x%lx\n", name.get(), pIndex[i]);
-						pDestination->Write( "\x0D\x0A", 2, &written);
-						next = 0;
-						last2[0] = 13;
-						last2[1] = 10;
-					}
-				}
-				if (NS_FAILED( rv) || (*pAbort))
-					break;
-				if ((last2[0] != 13) || (last2[1] != 10)) {
-					pDestination->Write( "\x0D\x0A", 2, &written);
-					last2[0] = 13;
-					last2[1] = 10;
-				}
-
-				msgCount++;
-				if (pCount)
-					*pCount = msgCount;
-				if (pBytesDone)
-					*pBytesDone = didBytes;
 			}
-			else {
-				// Error reading message, should this be logged???
-				IMPORT_LOG2( "Error reading message from %S at 0x%lx\n", name.get(), pIndex[i]);
-			}			
-		}
-	}
-	
 
-	delete [] pBuffer;
-	inFile->CloseStream();
-	pDestination->CloseStream();
-	
+      // block[2] contains the chars in the buffer (ie, buf content size).
+      // block[3] contains offset to the next block of data (0 means no more data).
+      size = block[2];
+      pStart = pBuffer;
+      pEnd = pStart + size;
 
-	return( rv);
-}
+      do 
+      {
+        partialLine.Truncate();
+        partialLineStart = pEnd;
 
+        // If the buffer doesn't end with CRLF then a line is broken into two blocks,
+        // so save the incomplete line for later process when we read the next block.
+        if ( (size > 1) && !(*(pEnd - 2) == nsCRT::CR && *(pEnd - 1) == nsCRT::LF) )
+        {
+          partialLineStart -= 2;
+           while ((partialLineStart >= pStart) && (*partialLineStart != nsCRT::CR) && (*(partialLineStart+1) != nsCRT::LF))
+            partialLineStart--;
+          if (partialLineStart != (pEnd - 2))
+            partialLineStart += 2; // skip over CRLF if we find them.
+          partialLine.Assign(partialLineStart, pEnd - partialLineStart);
+        }
 
-#define ISFROMLINE( pChar, i)	(*(pChar + i) == 'F') && (*(pChar + i + 1) == 'r') && \
-								(*(pChar + i + 2) == 'o') && (*(pChar + i + 3) == 'm') && \
-								(*(pChar + i + 4) == ' ')
+        // Now process the block of data which ends with CRLF.
+        rv = EscapeFromSpaceLine(pDestination, pStart, partialLineStart);
+        if (NS_FAILED(rv))
+          break;
 
+        didBytes += block[2];
 
-nsresult nsOE5File::WriteMessageBuffer( nsIFileSpec *stream, char *pBuffer, PRUint32 size, char *last2)
-{
-	if (!size)
-		return( NS_OK);
+        next = block[3];
+        if (! next)
+        {
+          // OK, we're done so flush out the partial line if it's not empty.
+          if (partialLine.Length())
+            rv = EscapeFromSpaceLine(pDestination, (char *)partialLine.get(), (partialLine.get()+partialLine.Length()));
+        }
+        else
+        if (ReadBytes(inFile, block, next, 16) && (block[0] == next) &&
+            (block[2] < kMailboxBufferSize) && (ReadBytes(inFile, pBuffer, kDontSeek, block[2])))
+        {
+          // See if we have a partial line from previous block. If so then build a complete 
+          // line (ie, take the remaining chars from this block) and process this line. Need
+          // to adjust where data start and size in this case.
+          size = block[2];
+          pStart = pBuffer;
+          pEnd = pStart + size;
+          if (partialLine.Length())
+          {
+            while ((pStart < pEnd) && (*pStart != nsCRT::CR) && (*(pStart+1) != nsCRT::LF))
+              pStart++;
+            tempLine.Assign(pBuffer, pStart - pBuffer + 2);
+            partialLine.Append(tempLine);
+            rv = EscapeFromSpaceLine(pDestination, (char *)partialLine.get(), (partialLine.get()+partialLine.Length()));
+            if (NS_FAILED(rv))
+              break;
+            
+            // Adjust where data start and size (since some of the data has been processed).
+            size -= (pStart - pBuffer + 2);
+            pStart += 2;
+          }
+	      }
+	      else
+        {
+		      IMPORT_LOG2( "Error reading message from %S at 0x%lx\n", name.get(), pIndex[i]);
+		      rv = pDestination->Write( "\x0D\x0A", 2, &written);
+		      next = 0;
+	      }
+      } while (next);
 
-	PRInt32		written;
-	nsresult	rv = NS_OK;
+      // Always end a msg with CRLF. This will make sure that OE msgs without body is
+      // correctly recognized as msgs. Otherwise, we'll end up with the following in
+      // the msg folder where the 2nd msg starts right after the headers of the 1st msg:
+      //
+      // From - Jan 1965 00:00:00     <<<--- 1st msg starts here
+      // Subject: Test msg
+      // . . . (more headers)
+      // To: <someone@netscape.com>
+      // From - Jan 1965 00:00:00     <<<--- 2nd msg starts here
+      // Subject: How are you
+      // . . .(more headers)
+      //
+      // In this case, the 1st msg is not recognized as a msg (it's skipped)
+      // when you open the folder.
+      rv = pDestination->Write( "\x0D\x0A", 2, &written);
 
-	//check the very beginning of the buffer to make sure it's not a from
-	// line
-	if ((size > 4) && ((last2[0] = 0x0D) && (last2[1] == 0x0A)) || (last2[1] == 0x0D)) {
-		if ((last2[1] == 0x0D) && (size > 5) && (*pBuffer == 0x0A) && ISFROMLINE( pBuffer, 1)) {
-			rv = stream->Write( pBuffer, 1, &written);
-			pBuffer++;
-			size--;
-			if (NS_SUCCEEDED( rv))
-				rv = stream->Write( ">", 1, &written);
-		}
-		else if ((last2[0] == 0x0D) && ISFROMLINE( pBuffer, 0)) {
-			rv = stream->Write( ">", 1, &written);				
-		}
-		if (NS_FAILED( rv))
-			return( rv);
-	}
-	
-	// examine the rest of the buffer for from problems!
-	PRUint32		cnt = 0;
-	char *			pChar = pBuffer;
-	if (size > 6) {
-		while (cnt < (size - 6)) {
-			if ((*pChar == 0x0D) && (*(pChar + 1) == 0x0A) && ISFROMLINE( pChar, 2)) {			
-				rv = stream->Write( pBuffer, cnt + 2, &written);
-				pBuffer += (cnt + 2);
-				size -= (cnt + 2);
-				pChar += 2;
-				cnt = 0;
-				if (NS_SUCCEEDED( rv)) {
-					rv = stream->Write( ">", 1, &written);
-				}
-				if (NS_FAILED( rv))
-					return( rv);
-			}
-			else {
-				cnt++;
-				pChar++;
-			}
-		}
-	}
-	
-	rv = stream->Write( pBuffer, (PRInt32) size, &written);
+      if (NS_FAILED(rv))
+        break;
 
-	if (NS_SUCCEEDED( rv)) {
-		if (size > 1) {
-			last2[0] = *(pBuffer + size - 2);
-			last2[1] = *(pBuffer + size - 1);
+			msgCount++;
+			if (pCount)
+				*pCount = msgCount;
+			if (pBytesDone)
+				*pBytesDone = didBytes;
 		}
 		else {
-			last2[0] = last2[1];
-			last2[1] = *pBuffer;
-		}
+			// Error reading message, should this be logged???
+			IMPORT_LOG2( "Error reading message from %S at 0x%lx\n", name.get(), pIndex[i]);
+      *pAbort = PR_TRUE;
+		}			
 	}
+	
+  delete [] pBuffer;
+  inFile->CloseStream();
+  pDestination->CloseStream();
 
-	return( rv);
+  if (NS_FAILED(rv))
+    *pAbort = PR_TRUE;
+
+  return( rv);
 }
+
 
 /*
 	A message index record consists of:
