@@ -75,18 +75,6 @@ nsHTMLFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
       }
     }
 
-#if 0
-    // See if the frame is supposed to scroll
-    if (!aForce) {
-      nsStyleDisplay* display = (nsStyleDisplay*)
-        aStyleContext->GetData(eStyleStruct_Display);
-      if (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) {
-        aForce = PR_TRUE;
-        scrollView = PR_TRUE;
-      }
-    }
-#endif
-
     if (aForce) {
       // Create a view
       nsIFrame* parent;
