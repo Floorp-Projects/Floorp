@@ -55,6 +55,7 @@ protected:
   NS_IMETHOD  FireThatLoadOperation(nsString *uri);
   NS_IMETHOD  StartNextPrintOperation();
   void        InitializeDisplayCharset();
+  void        SetupObserver();
 
   nsIDOMWindow                *mWindow;
   nsCOMPtr<nsIWebShell>       mWebShell;

@@ -27,7 +27,7 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
                      
-<window id="printEngine"
+<window id="printEngineWin"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
@@ -48,5 +48,5 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
 
   <!-- The main display frame -->
-  <html:iframe id="printengine" style="height: 0px" flex="1" name="printengine" type="content" src="about:blank"/>
+  <html:iframe id="printengine" style="height: 0px" flex="1" name="printengine" type="content" src="about:blank" />
 </window>

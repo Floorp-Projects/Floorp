@@ -66,9 +66,9 @@ function InitPrintEngineWindow()
         dump(uriArray[i]);
         printEngine.AddPrintURI(uriArray[i]);      
         dump("\n");
-	    }
+	    }	    
 	  }
-  }  
+  }
 }
 
 function ClearPrintEnginePane()

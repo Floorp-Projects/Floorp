@@ -55,7 +55,7 @@ nsMsgPrintEngine::nsMsgPrintEngine() :
 
 nsMsgPrintEngine::~nsMsgPrintEngine()
 {
-  mWebShell = nsnull;
+  NS_IF_RELEASE(mWindow);
 }
 
 // Implement AddRef and Release
@@ -67,40 +67,6 @@ nsresult nsMsgPrintEngine::Init()
 {
 	return NS_OK;
 }
-
-/** Initializes simple container for native window widget
- * @param aNativeWidget native window widget (e.g., GtkWidget)
- * @param width window width (pixels)
- * @param height window height (pixels)
- * @param aPref preferences object
- */
-/** RICHIE
-NS_IMETHODIMP nsMsgPrintEngine::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgPrintEngine::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP nsMsgPrintEngine::ProgressLoadURL(nsIWebShell* aShell,
-          const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP nsMsgPrintEngine::EndLoadURL(nsIWebShell* aShell,
-                                             const PRUnichar* aURL,
-                                             nsresult aStatus)
-{
-
-  return NS_OK;
-}
-***/
 
 NS_IMETHODIMP
 nsMsgPrintEngine::OnStartDocumentLoad(nsIDocumentLoader *aLoader, nsIURI *aURL, const char *aCommand)
@@ -114,7 +80,6 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIChannel *aChan
   // Now, fire off the print operation!
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIContentViewer> viewer;
-
 
   NS_ASSERTION(mWebShell,"can't print, there is no webshell");
   if ( (!mWebShell) || (!aChannel) ) 
@@ -213,32 +178,7 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindow *aWin)
     nsresult rv = rootWebShell->FindChildWithName(webShellName.GetUnicode(), *getter_AddRefs(mWebShell));
     if (NS_SUCCEEDED(rv) && mWebShell) 
     {
-      nsCOMPtr <nsIDocumentLoader> docLoader = nsnull;
-      mWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
-      if (docLoader)
-      {
-        nsCOMPtr<nsIDocumentLoaderObserver> observer = do_QueryInterface(this);
-        if (observer)
-          docLoader->AddObserver(observer);
-
-
-        nsIWebShell *mRootWebShell;
-        mWebShell->GetRootWebShell(mRootWebShell);
-        nsIWebShell *root = mRootWebShell;
-        NS_RELEASE(root); // don't hold reference
-        if (mRootWebShell)
-        {
-          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mRootWebShell));
-          if (docShell)
-            docShell->SetDocLoaderObserver(observer);
-        }
-
-      }
-
-
-//RICHIE      nsCOMPtr<nsIDocumentLoaderObserver> observer = do_QueryInterface(this);
-//      if (observer)
-//        mWebShell->SetDocLoaderObserver(observer);
+      SetupObserver();
     }
   }
 
@@ -262,7 +202,6 @@ nsMsgPrintEngine::SetPrintURICount(PRInt32 aCount)
 NS_IMETHODIMP
 nsMsgPrintEngine::StartPrintOperation()
 {
-  return NS_OK;
   return StartNextPrintOperation();
 }
 
@@ -275,10 +214,12 @@ nsMsgPrintEngine::StartNextPrintOperation()
   if (mCurrentlyPrintingURI == -1)
     InitializeDisplayCharset();
 
+  // SetupObserver();
+
   // First, check if we are at the end of this stuff!
   if ( (mCurrentlyPrintingURI+1) >= mURIArray.Count() )
   {
-    Release();
+    // Release();
     return NS_OK;
   }
 
@@ -319,19 +260,6 @@ nsMsgPrintEngine::FireThatLoadOperation(nsString *uri)
       mWebShell->LoadURL(uri->GetUnicode(), nsnull, nsIChannel::LOAD_DOCUMENT_URI);
   }
 
-  // Force add an observer!
-  nsCOMPtr <nsIDocumentLoader> docLoader = nsnull;
-	mWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
-  if (docLoader)
-  {
-    nsCOMPtr<nsIDocumentLoaderObserver> observer = do_QueryInterface(this);
-    if (observer)
-    {
-      docLoader->RemoveObserver(observer);
-      docLoader->AddObserver(observer);
-    }
-  }
-
   PR_FREEIF(tString);
   return rv;
 }
@@ -354,4 +282,17 @@ nsMsgPrintEngine::InitializeDisplayCharset()
       }
     }
   }
+}
+
+void
+nsMsgPrintEngine::SetupObserver()
+{
+  if (!mWebShell)
+    return;
+
+  nsCOMPtr<nsIDocumentLoaderObserver> observer = do_QueryInterface(this);
+  if (observer)
+  {
+    mWebShell->SetDocLoaderObserver(observer);
+  } 
 }
