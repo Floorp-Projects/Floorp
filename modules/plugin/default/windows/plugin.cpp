@@ -595,29 +595,40 @@ void CPlugin::onPaint(HWND hWnd)
     pt[1].x = 1;            pt[1].y = 1;
     pt[2].x = rc.right-1; pt[2].y = 1;
 
-    SelectObject(hDC, (HGDIOBJ)CreatePen(PS_SOLID, 1, GetSysColor(COLOR_3DLIGHT)));
+    HPEN hPen3DLight  = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_3DLIGHT));
+    HPEN hPen3DShadow = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_3DSHADOW));
+    HPEN hPen3DDKShadow = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_3DDKSHADOW));
+
+    HPEN hPenOld = SelectPen(hDC, hPen3DLight);
     Polyline(hDC, pt, 3);
 
     // left vert and top horiz shadow
     pt[0].x = 2;            pt[0].y = rc.bottom-3;
     pt[1].x = 2;            pt[1].y = 2;
     pt[2].x = rc.right-2; pt[2].y = 2;
-    SelectObject(hDC, (HGDIOBJ)CreatePen(PS_SOLID, 1, GetSysColor(COLOR_3DSHADOW)));
+    SelectPen(hDC, hPen3DShadow);
     Polyline(hDC, pt, 3);
 
     // right vert and bottom horiz highlight
     pt[0].x = rc.right-3; pt[0].y = 2;
     pt[1].x = rc.right-3; pt[1].y = rc.bottom-3;
     pt[2].x = 2;            pt[2].y = rc.bottom-3;
-    SelectObject(hDC, (HGDIOBJ) CreatePen(PS_SOLID, 1, GetSysColor(COLOR_3DLIGHT)));
+    SelectPen(hDC, hPen3DLight);
     Polyline(hDC, pt, 3);
 
     // right vert and bottom horiz shadow
     pt[0].x = rc.right-1; pt[0].y = 1;
     pt[1].x = rc.right-1; pt[1].y = rc.bottom-1;
     pt[2].x = 0;            pt[2].y = rc.bottom-1;
-    SelectObject(hDC, (HGDIOBJ)CreatePen(PS_SOLID, 1, GetSysColor(COLOR_3DDKSHADOW)));
+    SelectPen(hDC, hPen3DDKShadow);
     Polyline(hDC, pt, 3);
+
+    // restore the old pen
+    SelectPen(hDC, hPenOld);
+
+    DeletePen(hPen3DDKShadow);
+    DeletePen(hPen3DShadow);
+    DeletePen(hPen3DLight);
   }
 
   DrawCommandMessage(hDC, m_szCommandMessage, &rc);
