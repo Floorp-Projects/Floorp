@@ -32,7 +32,7 @@ interface nsIMsgSearchValue : nsISupports {
 
     // accessing these will throw an exception if the above
     // attribute does not match the type!
-    attribute string str;
+    attribute wstring str;
     attribute nsMsgPriorityValue priority;
     attribute PRTime date;
     attribute unsigned long status; // see MSG_FLAG in msgcom.h

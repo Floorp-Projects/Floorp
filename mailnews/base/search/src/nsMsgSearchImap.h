@@ -38,7 +38,9 @@ public:
 	NS_IMETHOD GetEncoding (char **result);
 	NS_IMETHOD AddResultElement (nsIMsgDBHdr *);
 
-	static nsresult Encode (nsCString *ppEncoding, nsISupportsArray *searchTerms, const PRUnichar *srcCharset, const PRUnichar *destCharset);
+	static nsresult Encode (nsCString& ppEncoding,
+                            nsISupportsArray *searchTerms,
+                            const PRUnichar *destCharset);
 	
 
 protected:

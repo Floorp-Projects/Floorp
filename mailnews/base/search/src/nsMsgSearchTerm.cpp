@@ -21,6 +21,8 @@
  */
 
 #include "msgCore.h"
+#include "nsXPIDLString.h"
+
 #include "nsMsgSearchCore.h"
 #include "nsIMsgSearchSession.h"
 #include "nsMsgUtils.h"
@@ -34,6 +36,7 @@
 #include "nsMsgLocalSearch.h"
 #include "nsMsgSearchNews.h"
 #include "nsMsgSearchValue.h"
+
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil
 //---------------------------------------------------------------------------
@@ -282,7 +285,7 @@ nsMsgSearchTerm::nsMsgSearchTerm (
 nsMsgSearchTerm::~nsMsgSearchTerm ()
 {
 	if (IS_STRING_ATTRIBUTE (m_attribute) && m_value.string)
-		PR_Free(m_value.string);
+		Recycle(m_value.string);
 }
 
 NS_IMPL_ISUPPORTS1(nsMsgSearchTerm, nsIMsgSearchTerm)
@@ -784,7 +787,7 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 	if(nsMsgSearchOp::IsEmpty != m_operator)	// Save some performance for opIsEmpty
 	{
 #ifdef DO_I18N
-		n_str = INTL_GetNormalizeStr(csid , (unsigned char*)m_value.u.string);	// Always new buffer unless not enough memory
+		n_str = INTL_GetNormalizeStr(csid , (unsigned char*)m_value.string);	// Always new buffer unless not enough memory
 		if (!body)
 			n_header = INTL_GetNormalizeStrFromRFC1522(csid , stringToMatch);	// Always new buffer unless not enough memory
 		else
@@ -1460,7 +1463,9 @@ nsresult nsMsgResultElement::AssignValues (nsIMsgSearchValue *src, nsMsgSearchVa
 		if (dst->attribute < nsMsgSearchAttrib::kNumMsgSearchAttributes)
 		{
 			NS_ASSERTION(IS_STRING_ATTRIBUTE(dst->attribute), "assigning non-string result");
-			err = src->GetStr(&dst->string);
+            nsXPIDLString unicodeString;
+			err = src->GetStr(getter_Copies(unicodeString));
+            dst->string = NS_ConvertUCS2toUTF8(unicodeString).ToNewCString();
 		}
 		else
 			err = NS_ERROR_INVALID_ARG;
@@ -1574,7 +1579,7 @@ nsresult nsMsgResultElement::GetPrettyName (nsMsgSearchValue **value)
 					if (tmp)
 					{
 						XP_FREE ((*value)->u.string);
-						(*value)->u.string = tmp;
+						(*value)->u.utf8SstringZ = tmp;
 					}
 				}
 			}

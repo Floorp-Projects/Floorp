@@ -40,7 +40,7 @@ public:
 
 	virtual nsresult Encode (nsCString *outEncoding);
 	virtual char *EncodeTerm (nsIMsgSearchTerm *);
-	char *EncodeValue (const char *);
+	PRUnichar *EncodeToWildmat (const PRUnichar *);
 	
     PRBool DuplicateHit(PRUint32 artNum) ;
     void CollateHits ();

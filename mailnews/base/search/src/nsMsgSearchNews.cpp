@@ -75,30 +75,30 @@ nsresult nsMsgSearchNews::Search (PRBool *aDone)
 }
 
 
-char *nsMsgSearchNews::EncodeValue (const char *value)
+PRUnichar *nsMsgSearchNews::EncodeToWildmat (const PRUnichar *value)
 {
 	// Here we take advantage of XPAT's use of the wildmat format, which allows
 	// a case-insensitive match by specifying each case possibility for each character
 	// So, "FooBar" is encoded as "[Ff][Oo][Bb][Aa][Rr]"
 
-    char *caseInsensitiveValue = (char*) PR_Malloc ((4 * nsCRT::strlen(value)) + 1);
+    PRUnichar *caseInsensitiveValue = (PRUnichar*) PR_Malloc ((4 * nsCRT::strlen(value)) + 1);
 	if (caseInsensitiveValue)
 	{
-		char *walkValue = caseInsensitiveValue;
+		PRUnichar *walkValue = caseInsensitiveValue;
 		while (*value)
 		{
 			if (nsCRT::IsAsciiAlpha(*value))
 			{
-				*walkValue++ = '[';
-				*walkValue++ = (char)nsCRT::ToUpper((PRUnichar)*value);
-				*walkValue++ = (char)nsCRT::ToLower((PRUnichar)*value);
-				*walkValue++ = ']';
+				*walkValue++ = (PRUnichar)'[';
+				*walkValue++ = nsCRT::ToUpper((PRUnichar)*value);
+				*walkValue++ = nsCRT::ToLower((PRUnichar)*value);
+				*walkValue++ = (PRUnichar)']';
 			}
 			else
 				*walkValue++ = *value;
 			value++;
 		}
-		*walkValue = '\0';
+		*walkValue = 0;
 	}
 	return caseInsensitiveValue;
 }
@@ -172,13 +172,12 @@ char *nsMsgSearchNews::EncodeTerm (nsIMsgSearchTerm *term)
     return nsnull;
 
 
-  char *intlNonRFC1522Value = nsnull;
-  rv = searchValue->GetStr(&intlNonRFC1522Value);
+  nsXPIDLString intlNonRFC1522Value;
+  rv = searchValue->GetStr(getter_Copies(intlNonRFC1522Value));
 	if (!NS_SUCCEEDED(rv) || !intlNonRFC1522Value)
 		return nsnull;
 		
-	char *caseInsensitiveValue = EncodeValue ((char*)intlNonRFC1522Value);
-	nsCRT::free(intlNonRFC1522Value);
+	PRUnichar *caseInsensitiveValue = EncodeToWildmat (intlNonRFC1522Value);
 	if (!caseInsensitiveValue)
 		return nsnull;
 
@@ -187,42 +186,44 @@ char *nsMsgSearchNews::EncodeTerm (nsIMsgSearchTerm *term)
 	// Need to add the INTL_FormatNNTPXPATInRFC1522Format call after we can do that
 	// so we should search a string in either RFC1522 format and non-RFC1522 format
 		
-	char *escapedValue = EscapeSearchUrl (caseInsensitiveValue);
+	PRUnichar *escapedValue = EscapeSearchUrl (caseInsensitiveValue);
 	nsCRT::free(caseInsensitiveValue);
 	if (!escapedValue)
 		return nsnull;
 
+#if 0
 	// We also need to apply NET_Escape to it since we have to pass 8-bits data
 	// And sometimes % in the 7-bit doulbe byte JIS
 	// 
-	char * urlEncoded = nsEscape((char*)escapedValue, url_Path);
+	PRUnichar * urlEncoded = nsEscape(escapedValue, url_Path);
 	nsCRT::free(escapedValue);
 
 	if (! urlEncoded)
 		return nsnull;
 
-	char *pattern = pattern = new char [nsCRT::strlen(urlEncoded) + overhead];
+	char *pattern = new char [nsCRT::strlen(urlEncoded) + overhead];
 	if (!pattern)
 		return nsnull;
 	else 
 		pattern[0] = '\0';
+#else
+    nsCAutoString pattern;
+#endif
 
+    
 	if (leadingStar)
-		PL_strcat (pattern, "*");
-	PL_strcat (pattern, urlEncoded);
+      pattern.Append("*");
+    pattern.Append(NS_ConvertUCS2toUTF8(escapedValue));
 	if (trailingStar)
-		PL_strcat (pattern, "*");
+      pattern.Append("*");
 
 	// Combine the XPAT command syntax with the attribute and the pattern to
 	// form the term encoding
 	char *xpatTemplate = "XPAT %s 1- %s";
-	int termLength = nsCRT::strlen(xpatTemplate) + nsCRT::strlen(attribEncoding) + nsCRT::strlen(pattern) + 1;
+	int termLength = nsCRT::strlen(xpatTemplate) + nsCRT::strlen(attribEncoding) + pattern.Length() + 1;
 	char *termEncoding = new char [termLength];
 	if (termEncoding)
-		PR_snprintf (termEncoding, termLength, xpatTemplate, attribEncoding, pattern);
-
-	nsCRT::free(urlEncoded);
-	delete [] pattern;
+		PR_snprintf (termEncoding, termLength, xpatTemplate, attribEncoding, pattern.GetBuffer());
 
 	return termEncoding;
 }

@@ -50,12 +50,8 @@ nsMsgFilterDataSource::nsMsgFilterDataSource()
 {
     NS_INIT_ISUPPORTS();
 
-    if (mGlobalRefCount == 0)
+    if (mGlobalRefCount++ == 0)
         initGlobalObjects(getRDFService());
-
-    
-    mGlobalRefCount++;
-    /* member initializers and constructor code */
 }
 
 nsMsgFilterDataSource::~nsMsgFilterDataSource()

@@ -23,11 +23,7 @@
 #include "MailNewsTypes2.idl"
 #include "nsIMsgFolder.idl"
 
-interface nsIMsgHeaderParser;
-
-%{C++
-#include "nsIMsgHeaderParser.h"
-%}
+#include "nsIMsgHeaderParser.idl"
 
 interface nsIMsgDatabase;
 interface nsIMsgDBHdr;
@@ -218,15 +214,4 @@ class nsMsgDIRServer;
 %}
 
 [ptr] native nsSearchMenuItem(nsSearchMenuItem);
-
-%{C++
-/* Use this to help build menus in the search dialog. See APIs below */
-#define kMsgSearchMenuLength 64
-typedef struct nsMsgSearchMenuItem 
-{
-    int16 attrib;
-    char name[kMsgSearchMenuLength];
-    PRBool isEnabled;
-} nsMsgSearchMenuItem;
-%}
 

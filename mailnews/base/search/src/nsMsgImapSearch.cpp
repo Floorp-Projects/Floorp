@@ -52,7 +52,7 @@ nsresult nsMsgSearchOnlineMail::ValidateTerms ()
       GetSearchCharsets(srcCharset, dstCharset);
 
       // do IMAP specific validation
-      err = Encode (&m_encoding, m_searchTerms, srcCharset.GetUnicode(), dstCharset.GetUnicode());
+      err = Encode (m_encoding, m_searchTerms, dstCharset.GetUnicode());
       NS_ASSERTION(NS_SUCCEEDED(err), "failed to encode imap search");
   }
   
@@ -239,9 +239,11 @@ nsresult nsMsgSearchOnlineMail::Search (PRBool *aDone)
 }
 
 
-nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsISupportsArray *searchTerms, const PRUnichar *srcCharset, const PRUnichar *destCharset)
+nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
+                                        nsISupportsArray *searchTerms,
+                                        const PRUnichar *destCharset)
 {
-    char *imapTerms = nsnull;
+    nsXPIDLCString imapTerms;
 
 	//check if searchTerms are ascii only
 	PRBool asciiOnly = PR_TRUE;
@@ -263,7 +265,7 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsISupportsArray *
       pTerm->GetAttrib(&attribute);
 			if (IsStringAttribute(attribute))
 			{
-				char *pchar;
+              PRUnichar *pchar;
         nsCOMPtr <nsIMsgSearchValue> searchValue;
 
         nsresult rv = pTerm->GetValue(getter_AddRefs(searchValue));
@@ -276,7 +278,7 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsISupportsArray *
       		continue;
 				for (; *pchar ; pchar++)
 				{
-					if (*pchar & 0x80)
+					if (*pchar & 0xFF80)
 					{
 						asciiOnly = PR_FALSE;
 						break;
@@ -293,13 +295,13 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsISupportsArray *
 	// Get the optional CHARSET parameter, in case we need it.
   char *csname = GetImapCharsetParam(asciiOnly ? usAsciiCharSet.GetUnicode() : destCharset);
 
-  nsresult err = nsMsgSearchAdapter::EncodeImap (&imapTerms, searchTerms, srcCharset, asciiOnly ?  usAsciiCharSet.GetUnicode(): destCharset, PR_FALSE);
+  nsresult err = nsMsgSearchAdapter::EncodeImap (getter_Copies(imapTerms), searchTerms, asciiOnly ?  usAsciiCharSet.GetUnicode(): destCharset, PR_FALSE);
   if (NS_SUCCEEDED(err))
   {
-    pEncoding->Append("SEARCH");
+    pEncoding.Append("SEARCH");
     if (csname)
-      pEncoding->Append(csname);
-    pEncoding->Append(imapTerms);
+      pEncoding.Append(csname);
+    pEncoding.Append(imapTerms);
   }
   PR_FREEIF(csname);
   return err;

@@ -21,6 +21,7 @@
  */
 
 #include "msgCore.h"
+#include "nsTextFormatter.h"
 #include "nsMsgSearchCore.h"
 #include "nsMsgSearchAdapter.h"
 #include "nsMsgSearchScopeTerm.h"
@@ -129,7 +130,9 @@ NS_IMETHODIMP nsMsgSearchAdapter::AddHit(nsMsgKey key)
 
 
 char *
-nsMsgSearchAdapter::TryToConvertCharset(const char *sourceStr, const PRUnichar *srcCharset, const PRUnichar * destCharset, PRBool useMime2)
+nsMsgSearchAdapter::TryToConvertCharset(const PRUnichar *sourceStr,
+                                        const PRUnichar * destCharset,
+                                        PRBool useMime2)
 {
 	char *result = nsnull;
 
@@ -198,23 +201,24 @@ nsMsgSearchAdapter::GetImapCharsetParam(const PRUnichar *destCharset)
 	return result;
 }
 
-char *nsMsgSearchAdapter::EscapeSearchUrl (const char *nntpCommand)
+PRUnichar *nsMsgSearchAdapter::EscapeSearchUrl (const PRUnichar *nntpCommand)
 {
-	char *result = nsnull;
+	PRUnichar *result = nsnull;
 	// max escaped length is two extra characters for every character in the cmd.
-  char *scratchBuf = (char*) PR_Malloc(3*nsCRT::strlen(nntpCommand) + 1);
+  PRUnichar *scratchBuf = (PRUnichar*) PR_Malloc(3*nsCRT::strlen(nntpCommand) + 1);
 	if (scratchBuf)
 	{
-		char *scratchPtr = scratchBuf;
+		PRUnichar *scratchPtr = scratchBuf;
 		while (PR_TRUE)
 		{
-			char ch = *nntpCommand++;
+			PRUnichar ch = *nntpCommand++;
 			if (!ch)
 				break;
 			if (ch == '#' || ch == '?' || ch == '@' || ch == '\\')
 			{
 				*scratchPtr++ = '\\';
-				sprintf (scratchPtr, "%X", ch);
+                nsTextFormatter::snprintf(scratchPtr, 2,
+                                          NS_ConvertASCIItoUCS2("%2.2X").GetUnicode(), ch);
                                    /* Reviewed 4.51 safe use of sprintf */
 				scratchPtr += 2;
 			}
@@ -222,51 +226,55 @@ char *nsMsgSearchAdapter::EscapeSearchUrl (const char *nntpCommand)
 				*scratchPtr++ = ch;
 		}
 		*scratchPtr = '\0';
-		result = PL_strdup (scratchBuf); // realloc down to smaller size
-    nsCRT::free (scratchBuf);
+		result = nsCRT::strdup (scratchBuf); // realloc down to smaller size
+        nsCRT::free (scratchBuf);
 	}
 	return result;
 }
 
-char *nsMsgSearchAdapter::EscapeImapSearchProtocol(const char *imapCommand)
+PRUnichar *
+nsMsgSearchAdapter::EscapeImapSearchProtocol(const PRUnichar *imapCommand)
 {
-	char *result = nsnull;
+	PRUnichar *result = nsnull;
 	// max escaped length is one extra character for every character in the cmd.
-  char *scratchBuf = (char*) PR_Malloc (2*nsCRT::strlen(imapCommand) + 1);
+    PRUnichar *scratchBuf =
+        (PRUnichar*) PR_Malloc (2*nsCRT::strlen(imapCommand) + 1);
 	if (scratchBuf)
 	{
-		char *scratchPtr = scratchBuf;
+		PRUnichar *scratchPtr = scratchBuf;
 		while (1)
 		{
-			char ch = *imapCommand++;
+			PRUnichar ch = *imapCommand++;
 			if (!ch)
 				break;
-			if (ch == '\\')
+			if (ch == (PRUnichar)'\\')
 			{
-				*scratchPtr++ = '\\';
-				*scratchPtr++ = '\\';
+				*scratchPtr++ = (PRUnichar)'\\';
+				*scratchPtr++ = (PRUnichar)'\\';
 			}
 			else
 				*scratchPtr++ = ch;
 		}
-		*scratchPtr = '\0';
-    result = nsCRT::strdup (scratchBuf); // realloc down to smaller size
-    nsCRT::free (scratchBuf);
+		*scratchPtr = 0;
+        result = nsCRT::strdup (scratchBuf); // realloc down to smaller size
+        nsCRT::free (scratchBuf);
 	}
 	return result;
 }
 
-char *nsMsgSearchAdapter::EscapeQuoteImapSearchProtocol(const char *imapCommand)
+PRUnichar *
+nsMsgSearchAdapter::EscapeQuoteImapSearchProtocol(const PRUnichar *imapCommand)
 {
-	char *result = nsnull;
+	PRUnichar *result = nsnull;
 	// max escaped length is one extra character for every character in the cmd.
-  char *scratchBuf = (char*) PR_Malloc (2*nsCRT::strlen(imapCommand) + 1);
+    PRUnichar *scratchBuf =
+        (PRUnichar*) PR_Malloc (2*nsCRT::strlen(imapCommand) + 1);
 	if (scratchBuf)
 	{
-		char *scratchPtr = scratchBuf;
+		PRUnichar *scratchPtr = scratchBuf;
 		while (1)
 		{
-			char ch = *imapCommand++;
+			PRUnichar ch = *imapCommand++;
 			if (!ch)
 				break;
 			if (ch == '"')
@@ -556,9 +564,9 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 
 		if (IsStringAttribute(attrib))
 		{
-			char *unconvertedValue; // = reallyDredd ? MSG_EscapeSearchUrl (term->m_value.u.string) : msg_EscapeImapSearchProtocol(term->m_value.u.string);
-      nsXPIDLCString searchTermValue;
-      searchValue->GetStr(getter_Copies(searchTermValue));
+			PRUnichar *convertedValue; // = reallyDredd ? MSG_EscapeSearchUrl (term->m_value.u.string) : msg_EscapeImapSearchProtocol(term->m_value.u.string);
+            nsXPIDLString searchTermValue;
+            searchValue->GetStr(getter_Copies(searchTermValue));
 			// Ugly switch for Korean mail/news charsets.
 			// We want to do this here because here is where
 			// we know what charset we want to use.
@@ -569,24 +577,27 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 				dest_csid = INTL_DefaultMailCharSetID(dest_csid);
 #endif
 
-			unconvertedValue = TryToConvertCharset((const char *) searchTermValue,
-										srcCharset,
-										destCharset,
-										reallyDredd);
-			if (!unconvertedValue)
-				unconvertedValue = nsCRT::strdup((const char *) searchTermValue); // couldn't convert, send as is
-
-			value = reallyDredd ? EscapeSearchUrl (unconvertedValue) : EscapeImapSearchProtocol(unconvertedValue);
-			PR_Free(unconvertedValue);
-
-			valueWasAllocated = PR_TRUE;
-			useQuotes = !reallyDredd || (PL_strchr(value, ' ') != nsnull);
+            // do all sorts of crazy escaping
+			convertedValue = reallyDredd ? EscapeSearchUrl (searchTermValue) :
+                EscapeImapSearchProtocol(searchTermValue);
+            
+			useQuotes = !reallyDredd ||
+                (nsAutoString(convertedValue).FindChar((PRUnichar)' ') != -1);
 			if (useQuotes)
 			{
-				unconvertedValue = value;
-				value = EscapeQuoteImapSearchProtocol(unconvertedValue);
-				PR_Free(unconvertedValue);
+                PRUnichar *oldConvertedValue = convertedValue;
+				convertedValue = EscapeQuoteImapSearchProtocol(convertedValue);
+                nsCRT::free(oldConvertedValue);
 			}
+
+            // now convert to char*
+            value = TryToConvertCharset(convertedValue, destCharset, reallyDredd);
+            // if couldn't convert, send as is
+			if (!value)
+				value = NS_ConvertUCS2toUTF8(convertedValue).ToNewCString();
+
+			nsCRT::free(convertedValue);
+			valueWasAllocated = PR_TRUE;
 
 		}
 	}

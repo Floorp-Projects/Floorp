@@ -30,6 +30,8 @@ nsMsgSearchValueImpl::nsMsgSearchValueImpl(nsMsgSearchValue *aInitialValue)
     mValue = *aInitialValue;
     if (IS_STRING_ATTRIBUTE(aInitialValue->attribute))
         mValue.string = nsCRT::strdup(aInitialValue->string);
+    else
+        mValue.string = 0;
 }
 
 nsMsgSearchValueImpl::~nsMsgSearchValueImpl()
@@ -42,21 +44,21 @@ nsMsgSearchValueImpl::~nsMsgSearchValueImpl()
 NS_IMPL_ISUPPORTS1(nsMsgSearchValueImpl, nsIMsgSearchValue)
 
 NS_IMETHODIMP
-nsMsgSearchValueImpl::GetStr(char** aResult)
+nsMsgSearchValueImpl::GetStr(PRUnichar** aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_TRUE(IS_STRING_ATTRIBUTE(mValue.attribute), NS_ERROR_ILLEGAL_VALUE);
-    *aResult = nsCRT::strdup(mValue.string);
+    *aResult = NS_ConvertUTF8toUCS2(mValue.string).ToNewUnicode();
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMsgSearchValueImpl::SetStr(const char* aValue)
+nsMsgSearchValueImpl::SetStr(const PRUnichar* aValue)
 {
     NS_ENSURE_TRUE(IS_STRING_ATTRIBUTE(mValue.attribute), NS_ERROR_ILLEGAL_VALUE);
     if (mValue.string)
         nsCRT::free(mValue.string);
-    mValue.string = nsCRT::strdup(aValue);
+    mValue.string = NS_ConvertUCS2toUTF8(aValue).ToNewCString();
     return NS_OK;
 }
 
@@ -198,10 +200,11 @@ NS_IMETHODIMP
 nsMsgSearchValueImpl::ToString(PRUnichar **aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
-    
+
+    nsAutoString resultStr;
+    resultStr.AssignWithConversion("[nsIMsgSearchValue: ");
     if (IS_STRING_ATTRIBUTE(mValue.attribute)) {
-        nsCAutoString str(mValue.string);
-        *aResult = str.ToNewUnicode();
+        resultStr.Append(NS_ConvertUTF8toUCS2(mValue.string));
         return NS_OK;
     }
 
@@ -215,11 +218,15 @@ nsMsgSearchValueImpl::ToString(PRUnichar **aResult)
     case nsMsgSearchAttrib::Size:
     case nsMsgSearchAttrib::AgeInDays:
     case nsMsgSearchAttrib::FolderInfo:
-        *aResult = nsnull;
+        resultStr.AppendWithConversion("type=");
+        resultStr.AppendInt(mValue.attribute);
         break;
     default:
         NS_ASSERTION(0, "Unknown search value type");
     }        
-            
+
+    resultStr.AppendWithConversion("]");
+
+    *aResult = resultStr.ToNewUnicode();
     return NS_OK;
 }
