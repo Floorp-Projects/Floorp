@@ -161,13 +161,12 @@ function changeFilter(filterTypes)
   window.setCursor("auto");
 }
 
-function showFileSavingErrorDialog(file){
+function showFilePermissionsErrorDialog(titleStrName, messageStrName, file)
+{
   var errorTitle =
-    gFilePickerBundle.getFormattedString("errorSavingFileTitle",
-                                         [file.unicodePath]);
+    gFilePickerBundle.getFormattedString(titleStrName, [file.unicodePath]);
   var errorMessage =
-    gFilePickerBundle.getFormattedString("saveWithoutPermissionMessage_file",
-                                         [file.unicodePath]);
+    gFilePickerBundle.getFormattedString(messageStrName, [file.unicodePath]);
   var promptService =
     Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 
@@ -178,15 +177,9 @@ function openOnOK()
 {
   var dir = outlinerView.getSelectedFile();
   if (!dir.isReadable()) {
-    var errorTitle =
-      gFilePickerBundle.getFormattedString("errorOpenFileDoesntExistTitle",
-                                           [dir.unicodePath]);
-    var errorMessage =
-      gFilePickerBundle.getFormattedString("errorDirNotReadableMessage",
-                                           [dir.unicodePath]);
-    var promptService =
-      Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-    promptService.alert(window, errorTitle, errorMessage);
+    showFilePermissionsErrorDialog("errorOpenFileDoesntExistTitle",
+                                   "errorDirNotReadableMessage",
+                                   dir);
     return false;
   }
 
@@ -238,13 +231,9 @@ function selectOnOK()
   }
 
   if (!file.exists() && (filePickerMode != nsIFilePicker.modeSave)) {
-    errorTitle = gFilePickerBundle.getFormattedString("errorOpenFileDoesntExistTitle",
-                                                      [file.unicodePath]);
-    errorMessage = gFilePickerBundle.getFormattedString("errorOpenFileDoesntExistMessage",
-                                                        [file.unicodePath]);
-    promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                              .getService(Components.interfaces.nsIPromptService);
-    promptService.alert(window, errorTitle, errorMessage);
+    showFilePermissionsErrorDialog("errorOpenFileDoesntExistTitle",
+                                   "errorOpenFileDoesntExistMessage",
+                                   file);
     return false;
   }
 
@@ -256,8 +245,15 @@ function selectOnOK()
   switch(filePickerMode) {
   case nsIFilePicker.modeOpen:
     if (isFile) {
-      retvals.directory = file.parent.unicodePath;
-      ret = nsIFilePicker.returnOK;
+      if (file.isReadable()) {
+        retvals.directory = file.parent.unicodePath;
+        ret = nsIFilePicker.returnOK;
+      } else {
+        showFilePermissionsErrorDialog("errorOpeningFileTitle",
+                                       "openWithoutPermissionMessage_file",
+                                       file);
+        ret = nsIFilePicker.returnCancel;
+      }
     } else if (isDir) {
       if (!sfile.equals(file)) {
         gotoDirectory(file);
@@ -270,7 +266,9 @@ function selectOnOK()
   case nsIFilePicker.modeSave:
     if (isFile) { // can only be true if file.exists()
       if (!file.isWritable()) {
-        showFileSavingErrorDialog(file);
+        showFilePermissionsErrorDialog("errorSavingFileTitle",
+                                       "saveWithoutPermissionMessage_file",
+                                       file);
         ret = nsIFilePicker.returnCancel;
       } else {
         // we need to pop up a dialog asking if you want to save
@@ -495,7 +493,7 @@ function onFileSelected(file) {
     }
   }
 
-  okButton.disabled = (textInput.value != "");
+  okButton.disabled = (textInput.value == "");
 }
 
 function onTextFieldFocus() {
