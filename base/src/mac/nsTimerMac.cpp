@@ -38,74 +38,74 @@ class TimerImpl : public nsITimer
 // TimerImpl implements nsITimer API
 //========================================================================================
 {
-	private:
-		nsTimerCallbackFunc mCallbackFunc;
-		nsITimerCallback * mCallbackObject;
-  	void * mClosure;
-  	PRUint32 mDelay;
-  	PRUint32 mFireTime;	// Timer should fire when TickCount >= this number
-	
-	public:
+  private:
+    nsTimerCallbackFunc mCallbackFunc;
+    nsITimerCallback * mCallbackObject;
+    void * mClosure;
+    PRUint32 mDelay;
+    PRUint32 mFireTime;  // Timer should fire when TickCount >= this number
+  
+  public:
 
-	// constructors
+  // constructors
 
-	  TimerImpl();
+    TimerImpl();
 
-	  virtual ~TimerImpl();
+    virtual ~TimerImpl();
       
-	 	NS_DECL_ISUPPORTS
+     NS_DECL_ISUPPORTS
 
-		PRUint32 GetFireTime() const { return mFireTime; }
+    PRUint32 GetFireTime() const { return mFireTime; }
 
-		void Fire();
+    void Fire();
 
-	// nsITimer overrides
+  // nsITimer overrides
 
-	  virtual nsresult Init(nsTimerCallbackFunc aFunc,
-	                        void *aClosure,
-	                        PRUint32 aDelay);
+    virtual nsresult Init(nsTimerCallbackFunc aFunc,
+                          void *aClosure,
+                          PRUint32 aDelay);
 
-		virtual nsresult Init(nsITimerCallback *aCallback,
-	                        PRUint32 aDelay);
+    virtual nsresult Init(nsITimerCallback *aCallback,
+                          PRUint32 aDelay);
 
-	  virtual void Cancel();
+    virtual void Cancel();
 
-	  virtual PRUint32 GetDelay();
+    virtual PRUint32 GetDelay();
 
-	  virtual void SetDelay(PRUint32 aDelay);
+    virtual void SetDelay(PRUint32 aDelay);
 
     virtual void* GetClosure();
-	
-	private:
-	// Calculates mFireTime too
-		void SetDelaySelf( PRUint32 aDelay );
+  
+  private:
+  // Calculates mFireTime too
+    void SetDelaySelf( PRUint32 aDelay );
 };
 
 #pragma mark class TimerPeriodical
 
 //========================================================================================
-class TimerPeriodical	: public Repeater
+class TimerPeriodical  : public Repeater
 // TimerPeriodical is a singleton Repeater subclass that fires
 // off TimerImpl. The firing is done on idle.
 //========================================================================================
-{	
-		static TimerPeriodical * gPeriodical;
-		
+{  
+    static TimerPeriodical * gPeriodical;
+    
         list<TimerImpl*> mTimers;
-	
-	public:
-		// Returns the singleton instance
-		static TimerPeriodical * GetPeriodical();
+  
+  public:
+    // Returns the singleton instance
+    static TimerPeriodical * GetPeriodical();
 
-		TimerPeriodical();
+    TimerPeriodical();
 
-		virtual ~TimerPeriodical();
-		
-		virtual	void RepeatAction( const EventRecord &inMacEvent);
-		
-		nsresult AddTimer( TimerImpl * aTimer);
-		
-		nsresult RemoveTimer( TimerImpl * aTimer);
+    virtual ~TimerPeriodical();
+    
+    virtual  void RepeatAction( const EventRecord &inMacEvent);
+    
+    nsresult AddTimer( TimerImpl * aTimer);
+    
+    nsresult RemoveTimer( TimerImpl * aTimer);
 
 };
 
@@ -120,43 +120,44 @@ NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID)
 //----------------------------------------------------------------------------------------
 TimerImpl::TimerImpl()
 //----------------------------------------------------------------------------------------
-:	mCallbackFunc(nsnull)
-,	mCallbackObject(nsnull)
-,	mClosure(nsnull)
-,	mDelay(0)
-,	mFireTime(0)
+:  mCallbackFunc(nsnull)
+,  mCallbackObject(nsnull)
+,  mClosure(nsnull)
+,  mDelay(0)
+,  mFireTime(0)
 {
-	NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 }
 
 //----------------------------------------------------------------------------------------
 TimerImpl::~TimerImpl()
 //----------------------------------------------------------------------------------------
 {
-	NS_IF_RELEASE(mCallbackObject);
+  Cancel();
+  NS_IF_RELEASE(mCallbackObject);
 }
 
 //----------------------------------------------------------------------------------------
 nsresult TimerImpl::Init(nsTimerCallbackFunc aFunc,
-	                        void *aClosure,
-	                        PRUint32 aDelay)
+                          void *aClosure,
+                          PRUint32 aDelay)
 //----------------------------------------------------------------------------------------
 {
-	mCallbackFunc = aFunc;
-	mClosure = aClosure;
-	SetDelaySelf(aDelay);
-	return TimerPeriodical::GetPeriodical()->AddTimer(this);
+  mCallbackFunc = aFunc;
+  mClosure = aClosure;
+  SetDelaySelf(aDelay);
+  return TimerPeriodical::GetPeriodical()->AddTimer(this);
 }
 
 //----------------------------------------------------------------------------------------
 nsresult TimerImpl::Init(nsITimerCallback *aCallback,
-	                        PRUint32 aDelay)
+                          PRUint32 aDelay)
 //----------------------------------------------------------------------------------------
 {
-	NS_ADDREF(aCallback);
-	mCallbackObject = aCallback;
-	SetDelaySelf(aDelay);
-	return TimerPeriodical::GetPeriodical()->AddTimer(this);
+  NS_ADDREF(aCallback);
+  mCallbackObject = aCallback;
+  SetDelaySelf(aDelay);
+  return TimerPeriodical::GetPeriodical()->AddTimer(this);
 }
 
 //----------------------------------------------------------------------------------------
@@ -164,21 +165,21 @@ void TimerImpl::Cancel()
 //----------------------------------------------------------------------------------------
 {
 
-	TimerPeriodical::GetPeriodical()->RemoveTimer(this);
+  TimerPeriodical::GetPeriodical()->RemoveTimer(this);
 }
 
 //----------------------------------------------------------------------------------------
 PRUint32 TimerImpl::GetDelay()
 //----------------------------------------------------------------------------------------
 {
-	return mDelay;
+  return mDelay;
 }
 
 //----------------------------------------------------------------------------------------
 void TimerImpl::SetDelay(PRUint32 aDelay)
 //----------------------------------------------------------------------------------------
 {
-	SetDelaySelf(aDelay);
+  SetDelaySelf(aDelay);
 }
 
 //----------------------------------------------------------------------------------------
@@ -192,19 +193,19 @@ void* TimerImpl::GetClosure()
 void TimerImpl::Fire()
 //----------------------------------------------------------------------------------------
 {
-	if (mCallbackFunc != NULL)
-	{
-		(*mCallbackFunc)(this, mClosure);
-	}
-	else if (mCallbackObject != NULL)
-	{
-		nsITimerCallback* object = mCallbackObject;
-		mCallbackObject = nsnull;
-			// because the Notify call will release it.
-    		// We will release again it in the destructor if
-    		// it is not null when we go away!
-		object->Notify(this); // Fire the timer
-	}
+  if (mCallbackFunc != NULL)
+  {
+    (*mCallbackFunc)(this, mClosure);
+  }
+  else if (mCallbackObject != NULL)
+  {
+    nsITimerCallback* object = mCallbackObject;
+    mCallbackObject = nsnull;
+      // because the Notify call will release it.
+      // We will release again it in the destructor if
+      // it is not null when we go away!
+    object->Notify(this); // Fire the timer
+  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -212,19 +213,18 @@ void TimerImpl::SetDelaySelf( PRUint32 aDelay )
 //----------------------------------------------------------------------------------------
 {
 
-	mDelay = aDelay;
-	mFireTime = TickCount() + (mDelay * 3) / 50;	// We need mFireTime in ticks (1/60th)
-													//  but aDelay is in 1000th (60/1000 = 3/50)
-    //NS_ADDREF(this); // Needed because the Stop() function will call NS_RELEASE on us when we fire.
+  mDelay = aDelay;
+  mFireTime = TickCount() + (mDelay * 3) / 50;  // We need mFireTime in ticks (1/60th)
+                          //  but aDelay is in 1000th (60/1000 = 3/50)
 }
 
 TimerPeriodical * TimerPeriodical::gPeriodical = nsnull;
 
 TimerPeriodical * TimerPeriodical::GetPeriodical()
 {
-	if (gPeriodical == NULL)
-		gPeriodical = new TimerPeriodical();
-	return gPeriodical;
+  if (gPeriodical == NULL)
+    gPeriodical = new TimerPeriodical();
+  return gPeriodical;
 }
 
 TimerPeriodical::TimerPeriodical()
@@ -233,56 +233,51 @@ TimerPeriodical::TimerPeriodical()
 
 TimerPeriodical::~TimerPeriodical()
 {
-	PR_ASSERT(mTimers.size() == 0);
+  PR_ASSERT(mTimers.size() == 0);
 }
 
 nsresult TimerPeriodical::AddTimer( TimerImpl * aTimer)
 {
-	NS_ADDREF(aTimer);
-	mTimers.push_back(aTimer);
-	StartRepeating();
-	return NS_OK;
+  // make sure it's not already there
+  mTimers.remove(aTimer);
+  mTimers.push_back(aTimer);
+  StartRepeating();
+  return NS_OK;
 }
 
 nsresult TimerPeriodical::RemoveTimer( TimerImpl * aTimer)
 {
-	mTimers.remove(aTimer);
-	NS_RELEASE(aTimer);
-	if ( mTimers.size() == 0 )
-		StopRepeating();
-	return NS_OK;
+  mTimers.remove(aTimer);
+  if ( mTimers.size() == 0 )
+    StopRepeating();
+  return NS_OK;
 }
 
 // Called through every event loop
 // Loops through the list of available timers, and 
 // fires off the appropriate ones
-void	TimerPeriodical::RepeatAction( const EventRecord &inMacEvent)
+void  TimerPeriodical::RepeatAction( const EventRecord &inMacEvent)
 {
-	list<TimerImpl*>::iterator iter = mTimers.begin();
-	
-	while (iter != mTimers.end())
-	{
-		TimerImpl* timer = *iter; 
-		if (timer->GetFireTime() <= inMacEvent.when)
-		{
-    		// Another hairy fact:
-    		// when firing the timer causes a URL to load, it calls Stop, which
-    		// deletes all timers, including this one. Oi vey!
-			mTimers.erase(iter++);
-			timer->Fire();
-			NS_RELEASE(timer);
-		}
-		else
-	    {
-	      iter++;
-	    }
-	}
-	if ( mTimers.size() == 0 )
-	 	StopRepeating();
-
+  list<TimerImpl*>::iterator iter = mTimers.begin();
+  
+  while (iter != mTimers.end())
+  {
+    TimerImpl* timer = *iter; 
+    if (timer->GetFireTime() <= inMacEvent.when)
+    {
+      mTimers.erase(iter++);
+      timer->Fire();
+    }
+    else
+      {
+        iter++;
+      }
+  }
+  if ( mTimers.size() == 0 )
+     StopRepeating();
 }
 
-								
+                
 NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
