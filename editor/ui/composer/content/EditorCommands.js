@@ -433,15 +433,29 @@ function EditorShowClipboard()
 
 function EditorViewSource()
 {
-  // *** THIS IS NOT CORRECT - It simply loads the content from original URL,
-  //     which will now show current editor document changes.
+  // Temporary hack: save to a file and call up the source view window
+  // using the local file url.
+  if (!editorShell.CheckAndSaveDocument(editorShell.GetString("BeforeViewSource")))
+    return;
 
-  // Use a browser window to view source
-  window.openDialog( "chrome://navigator/content/",
-                     "_blank",
-                     "chrome,menubar,status,dialog=no,resizable",
-                     window.content.location,
-                     "view-source" );
+  fileurl = "";
+  try {
+    fileurl = window.content.location;
+  } catch (e) {
+    return;
+  }
+
+  // CheckAndSave doesn't tell us if the user said "Don't Save",
+  // so make sure we have a url:
+  if (fileurl != "" && fileurl != "about:blank")
+  {
+    // Use a browser window to view source
+    window.openDialog( "chrome://navigator/content/",
+                       "_blank",
+                       "chrome,menubar,status,dialog=no,resizable",
+                       fileurl,
+                       "view-source" );
+  }
 }
 
 
@@ -966,7 +980,25 @@ function EditorSetDisplayStyle(mode)
 
 function EditorPreview()
 {
-  contentWindow.focus();
+  if (!editorShell.CheckAndSaveDocument(editorShell.GetString("BeforePreview")))
+    return;
+
+  fileurl = "";
+  try {
+    fileurl = window.content.location;
+  } catch (e) {
+    return;
+  }
+
+  // CheckAndSave doesn't tell us if the user said "Don't Save",
+  // so make sure we have a url:
+  if (fileurl != "" && fileurl != "about:blank")
+  {
+    window.openDialog("chrome://navigator/content/navigator.xul",
+                      "EditorPreview",
+                      "chrome,all,dialog=no",
+                      fileurl );
+  }
 }
 
 function EditorPrintSetup()
