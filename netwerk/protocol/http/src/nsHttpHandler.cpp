@@ -119,6 +119,7 @@ nsHttpHandler::nsHttpHandler()
     , mConnectionLock(nsnull)
     , mUserAgentIsDirty(PR_TRUE)
     , mUseCache(PR_TRUE)
+    , mSendSecureXSiteReferrer(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
 
@@ -1335,6 +1336,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             else
                 mProxyCapabilities &= ~NS_HTTP_ALLOW_PIPELINING;
         }
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("sendSecureXSiteReferrer"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("sendSecureXSiteReferrer"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mSendSecureXSiteReferrer = cVar;
     }
 
     /*

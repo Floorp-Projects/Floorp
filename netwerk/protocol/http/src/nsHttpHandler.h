@@ -86,6 +86,7 @@ public:
     const char   *UserAgent();
     nsHttpVersion DefaultVersion()     { return mHttpVersion; }
     PRUint8       ReferrerLevel()      { return mReferrerLevel; }
+    PRBool        SendSecureXSiteReferrer() { return mSendSecureXSiteReferrer; }
     PRUint8       RedirectionLimit()   { return mRedirectionLimit; }
     PRUint16      IdleTimeout()        { return mIdleTimeout; }
     PRUint16      MaxRequestAttempts() { return mMaxRequestAttempts; }
@@ -269,6 +270,9 @@ private:
     PRPackedBool   mUserAgentIsDirty; // true if mUserAgent should be rebuilt
 
     PRPackedBool   mUseCache;
+    // mSendSecureXSiteReferrer: default is false, 
+    // if true allow referrer headers between secure non-matching hosts
+    PRPackedBool   mSendSecureXSiteReferrer;
 };
 
 #endif // nsHttpHandler_h__
