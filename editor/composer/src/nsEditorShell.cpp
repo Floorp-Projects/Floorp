@@ -130,7 +130,6 @@
 static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kHTMLEditorCID,            NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
-static NS_DEFINE_CID(kCSpellCheckerCID,         NS_SPELLCHECKER_CID);
 static NS_DEFINE_IID(kCFileWidgetCID,           NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
@@ -1050,8 +1049,6 @@ nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
 NS_IMETHODIMP 
 nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
 {
-  nsresult  res = NS_OK;
-
   // Reqesting SourceMode and we are already doing that
   if (aDisplayMode == eDisplayModeSource && mDisplayMode == eDisplayModeSource)
       return NS_OK;
@@ -4028,10 +4025,10 @@ nsEditorShell::GetEmbeddedObjects(nsISupportsArray **aObjectArray)
 }
 
 NS_IMETHODIMP    
-nsEditorShell::StartSpellChecking(PRUnichar **aFirstMisspelledWord)
+nsEditorShell::InitSpellChecker()
 {
   nsresult  result = NS_NOINTERFACE;
-  nsAutoString firstMisspelledWord;
+
    // We can spell check with any editor type
   if (mEditor)
   {
@@ -4059,7 +4056,7 @@ nsEditorShell::StartSpellChecking(PRUnichar **aFirstMisspelledWord)
     if (NS_FAILED(result))
       return result;
 
-    result = nsComponentManager::CreateInstance(kCSpellCheckerCID,
+    result = nsComponentManager::CreateInstance(NS_SPELLCHECKER_PROGID,
                                                 nsnull,
                                                 NS_GET_IID(nsISpellChecker),
                                                 (void **)getter_AddRefs(mSpellChecker));
@@ -4076,10 +4073,8 @@ nsEditorShell::StartSpellChecking(PRUnichar **aFirstMisspelledWord)
       return result;
 
     DeleteSuggestedWordList();
-    // Return the first misspelled word and initialize the suggested list
-    result = mSpellChecker->NextMisspelledWord(&firstMisspelledWord, &mSuggestedWordList);
   }
-  *aFirstMisspelledWord = firstMisspelledWord.ToNewUnicode();
+
   return result;
 }
 
@@ -4322,7 +4317,7 @@ nsEditorShell::SetCurrentDictionary(const PRUnichar *aDictionary)
 }
 
 NS_IMETHODIMP    
-nsEditorShell::CloseSpellChecking()
+nsEditorShell::UninitSpellChecker()
 {
   nsresult  result = NS_NOINTERFACE;
    // We can spell check with any editor type
