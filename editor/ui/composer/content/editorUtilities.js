@@ -432,8 +432,8 @@ function MakeRelativeUrl(url)
 
 
   // Get just the file path part of the urls
-  var docPath = IOService.extractUrlPart(docUrl, IOService.url_Path, {start:0}, {end:0}); 
-  var urlPath = IOService.extractUrlPart(inputUrl, IOService.url_Path, {start:0}, {end:0});
+  var docPath = IOService.extractUrlPart(docUrl, IOService.url_Path); 
+  var urlPath = IOService.extractUrlPart(inputUrl, IOService.url_Path);
 
   // We only return "urlPath", so we can convert
   //  the entire docPath for case-insensitive comparisons
@@ -634,7 +634,7 @@ function GetHost(url)
 
   var host = "";
   try {
-    host = IOService.extractUrlPart(url, IOService.url_Host, {start:0}, {end:0}); 
+    host = IOService.extractUrlPart(url, IOService.url_Host); 
    } catch (e) {}
 
   return host;
@@ -651,7 +651,7 @@ function GetUsername(url)
 
   var username = "";
   try {
-    username = IOService.extractUrlPart(url, IOService.url_Username, {start:0}, {end:0});
+    username = IOService.extractUrlPart(url, IOService.url_Username);
   } catch (e) {}
 
   return username;
@@ -669,10 +669,10 @@ function GetFilename(url)
   var filename;
 
   try {
-    filename = IOService.extractUrlPart(url, IOService.url_FileBaseName, {start:0}, {end:0});
+    filename = IOService.extractUrlPart(url, IOService.url_FileBaseName);
     if (filename)
     {
-      var ext = IOService.extractUrlPart(url, IOService.url_FileExtension, {start:0}, {end:0});
+      var ext = IOService.extractUrlPart(url, IOService.url_FileExtension);
       if (ext)
         filename += "."+ext;
     }
@@ -690,10 +690,6 @@ function StripUsernamePassword(url, usernameObj, passwordObj)
   if (!url || IsUrlAboutBlank(url))
     return url;
 
-  var IOService = GetIOService();
-  if (!IOService)
-    return url;
-
   if (usernameObj)
     usernameObj.value = "";
   if (passwordObj)
@@ -704,18 +700,60 @@ function StripUsernamePassword(url, usernameObj, passwordObj)
   if (atIndex > 0)
   {
     try {
-      var startU = {value :0};
-      var username = IOService.extractUrlPart(url, IOService.url_Username, startU, {end:0});
-      var password = IOService.extractUrlPart(url, IOService.url_Password, {start:0}, {end:0});
+      var IOService = GetIOService();
+      if (!IOService)
+        return url;
+
+      var username = IOService.extractUrlPart(url, IOService.url_Username);
+      var password = IOService.extractUrlPart(url, IOService.url_Password);
 
       if (usernameObj && username)
         usernameObj.value = username;
       if (passwordObj && password)
         passwordObj.value = password;
-
       if (username)
-        return url.slice(0, startU.value) + url.slice(atIndex+1);
+      {
+        var usernameStart = url.indexOf(username);
+        if (usernameStart != -1)
+          return url.slice(0, usernameStart) + url.slice(atIndex+1);
+      }
+    } catch (e) {}
+  }
+  return url;
+}
 
+function StripPassword(url, passwordObj)
+{
+  url = TrimString(url);
+  if (!url || IsUrlAboutBlank(url))
+    return url;
+
+  if (passwordObj)
+    passwordObj.value = "";
+
+  // "@" must exist else we will never detect password
+  var atIndex = url.indexOf("@");
+  if (atIndex > 0)
+  {
+    try {
+      var IOService = GetIOService();
+      if (!IOService)
+        return url;
+
+      var password = IOService.extractUrlPart(url, IOService.url_Password);
+
+      if (passwordObj && password)
+        passwordObj.value = password;
+      if (password)
+      {
+        // Find last ":" before "@"
+        var colon = url.lastIndexOf(":", atIndex);
+        if (colon != -1)
+        {
+          // Include the "@"
+          return url.slice(0, colon) + url.slice(atIndex);
+        }
+      }
     } catch (e) {}
   }
   return url;
@@ -737,6 +775,21 @@ function StripUsernamePasswordFromURI(uri)
       }
     } catch (e) {}    
   }
+  return url;
+}
+
+function InsertUsernameIntoUrl(url, username)
+{
+  if (!url || !username)
+    return url;
+
+  try {
+    var ioService = GetIOService();
+    var URI = ioService.newURI(url, window.editorShell.GetDocumentCharacterSet(), null);
+    URI.username = username;
+    return URI.spec;
+  } catch (e) {}
+
   return url;
 }
 
