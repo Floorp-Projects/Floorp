@@ -31,14 +31,14 @@
 #include "nsITimer.h"
 #include "nsIThrobber.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCXPFCButtonCID, NS_XPFC_BUTTON_CID);
-static NS_DEFINE_IID(kCIXPFCButtonIID, NS_IXPFC_BUTTON_IID);
-static NS_DEFINE_IID(kCButtonCID,           NS_BUTTON_CID);
-static NS_DEFINE_IID(kInsButtonIID, NS_IBUTTON_IID);
-
-static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
-static NS_DEFINE_IID(kIThrobberIID, NS_ITHROBBER_IID);
+static NS_DEFINE_IID(kCIXPFCButtonIID,NS_IXPFC_BUTTON_IID);
+static NS_DEFINE_IID(kCButtonCID,     NS_BUTTON_CID);
+static NS_DEFINE_IID(kInsButtonIID,   NS_IBUTTON_IID);
+static NS_DEFINE_IID(kIWidgetIID,     NS_IWIDGET_IID);
+static NS_DEFINE_IID(kThrobberCID,    NS_THROBBER_CID);
+static NS_DEFINE_IID(kIThrobberIID,   NS_ITHROBBER_IID);
 
 #define DEFAULT_WIDTH  50
 #define DEFAULT_HEIGHT 50
@@ -138,21 +138,35 @@ nsresult nsXPFCButton :: CreateWidget()
 
     if (NS_OK == res)
     {
-      nsSize size ;
+
+      nsIWidget * bw = nsnull;
+
+      res = button->QueryInterface(kIWidgetIID,(void**)&bw);
+
+      if (NS_OK == res)
+      {
+
+        nsSize size ;
       
-      GetClassPreferredSize(size);
+        GetClassPreferredSize(size);
 
-      nsRect rect(0,0,size.width,size.height);
+        nsRect rect(0,0,size.width,size.height);
 
-      button->Create(parent, 
-                     rect, 
-                     gXPFCToolkit->GetShellEventCallback(), 
-                     nsnull);
+        bw->Create(parent, 
+                   rect, 
+                   gXPFCToolkit->GetShellEventCallback(), 
+                   nsnull);
 
-      button->SetLabel(GetLabel());
-      button->SetBackgroundColor(GetBackgroundColor());
-      button->SetForegroundColor(GetForegroundColor());
-      button->Show(PR_TRUE);
+        bw->SetBackgroundColor(GetBackgroundColor());
+        bw->SetForegroundColor(GetForegroundColor());
+        bw->Show(PR_TRUE);
+
+        button->SetLabel(GetLabel());
+
+        NS_RELEASE(bw);
+
+      }
+
       NS_RELEASE(button);
     }
   

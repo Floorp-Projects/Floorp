@@ -23,11 +23,12 @@
 #include "nsWidgetsCID.h"
 #include "nsXPFCToolkit.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kCXPFCTextWidgetCID, NS_XPFC_TEXTWIDGET_CID);
-static NS_DEFINE_IID(kCIXPFCTextWidgetIID, NS_IXPFC_TEXTWIDGET_IID);
+static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kCXPFCTextWidgetCID,   NS_XPFC_TEXTWIDGET_CID);
+static NS_DEFINE_IID(kCIXPFCTextWidgetIID,  NS_IXPFC_TEXTWIDGET_IID);
 static NS_DEFINE_IID(kCTextWidgetCID,       NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kInsTextWidgetIID, NS_ITEXTWIDGET_IID);
+static NS_DEFINE_IID(kInsTextWidgetIID,     NS_ITEXTWIDGET_IID);
+static NS_DEFINE_IID(kIWidgetIID,           NS_IWIDGET_IID);
 
 #define DEFAULT_WIDTH  50
 #define DEFAULT_HEIGHT 50
@@ -103,24 +104,36 @@ nsresult nsXPFCTextWidget :: CreateWidget()
 
   if (NS_OK == res)
   {
-    nsSize size ;
+    nsIWidget * tw = nsnull;
+
+    res = text_widget->QueryInterface(kIWidgetIID,(void**)&tw);
+
+    if (NS_OK == res)
+    {
+      nsSize size ;
     
-    GetClassPreferredSize(size);
+      GetClassPreferredSize(size);
 
-    nsRect rect(0,0,size.width,size.height);
+      nsRect rect(0,0,size.width,size.height);
 
-    text_widget->Create(parent, 
-                   rect, 
-                   gXPFCToolkit->GetShellEventCallback(), 
-                   nsnull);
+      tw->Create(parent, 
+                 rect, 
+                 gXPFCToolkit->GetShellEventCallback(), 
+                 nsnull);
 
-    text_widget->SetText(GetLabel());
-    text_widget->SetBackgroundColor(GetBackgroundColor());
-    text_widget->SetForegroundColor(GetForegroundColor());
-    text_widget->Show(PR_TRUE);
+      tw->SetBackgroundColor(GetBackgroundColor());
+      tw->SetForegroundColor(GetForegroundColor());
+      tw->Show(PR_TRUE);
 
-    if (gXPFCToolkit->GetCanvasManager()->GetFocusedCanvas() == this)
-      SetFocus();
+      PRUint32 num;
+
+      text_widget->SetText(GetLabel(),num);
+
+      if (gXPFCToolkit->GetCanvasManager()->GetFocusedCanvas() == this)
+        SetFocus();
+
+      NS_RELEASE(tw);
+    }
 
     NS_RELEASE(text_widget);
   }

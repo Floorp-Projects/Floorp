@@ -23,11 +23,12 @@
 #include "nsWidgetsCID.h"
 #include "nsXPFCToolkit.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kCXPFCTabWidgetCID, NS_XPFC_TABWIDGET_CID);
+static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kCXPFCTabWidgetCID,  NS_XPFC_TABWIDGET_CID);
 static NS_DEFINE_IID(kCIXPFCTabWidgetIID, NS_IXPFC_TABWIDGET_IID);
-static NS_DEFINE_IID(kCTabWidgetCID,        NS_TABWIDGET_CID);
-static NS_DEFINE_IID(kInsTabWidgetIID, NS_ITABWIDGET_IID);
+static NS_DEFINE_IID(kCTabWidgetCID,      NS_TABWIDGET_CID);
+static NS_DEFINE_IID(kInsTabWidgetIID,    NS_ITABWIDGET_IID);
+static NS_DEFINE_IID(kIWidgetIID,         NS_IWIDGET_IID);
 
 #define DEFAULT_WIDTH  50
 #define DEFAULT_HEIGHT 50
@@ -101,19 +102,31 @@ nsresult nsXPFCTabWidget :: CreateWidget()
 
   if (NS_OK == res)
   {
-    nsSize size ;
+    nsIWidget * tw = nsnull;
+
+    res = tab_widget->QueryInterface(kIWidgetIID,(void**)&tw);
+
+    if (NS_OK == res)
+    {
+
+      nsSize size ;
     
-    GetClassPreferredSize(size);
+      GetClassPreferredSize(size);
 
-    nsRect rect(0,0,size.width,size.height);
+      nsRect rect(0,0,size.width,size.height);
 
-    tab_widget->Create(parent, 
-                   rect, 
-                   gXPFCToolkit->GetShellEventCallback(), 
-                   nsnull);
+      tw->Create(parent, 
+                 rect, 
+                 gXPFCToolkit->GetShellEventCallback(), 
+                 nsnull);
 
-    tab_widget->Show(PR_TRUE);
-    SetParameter(nsString("tab1"),nsString("Tab1"));
+      tw->Show(PR_TRUE);
+      SetParameter(nsString("tab1"),nsString("Tab1"));
+
+      NS_RELEASE(tw);
+
+    }
+
     NS_RELEASE(tab_widget);
   }
   
