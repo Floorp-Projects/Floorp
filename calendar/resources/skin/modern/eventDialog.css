@@ -139,7 +139,7 @@
   	max-width					: 50em;
 }
 
-#start-date-text
+.date-text-class
 {
    -moz-user-focus			: ignore !important;
    
@@ -163,25 +163,25 @@
 
 
 /*--------------------------------------------------------------------
- *   Start date button
+ *   Start and End date button
  *-------------------------------------------------------------------*/
 
-#start-date-button 
+.event-date-button-class
   {
     margin-left             : 3px;
     list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_up.gif");
   }
-#start-date-button[disabled="true"],
-#start-date-button[disabled="true"]:hover,
-#start-date-button[disabled="true"]:hover:active
+.event-date-button-class[disabled="true"],
+.event-date-button-class[disabled="true"]:hover,
+.event-date-button-class[disabled="true"]:hover:active
   {
    list-style-image         : url("chrome://calendar/skin/ca-event-dialog/calendar_disabled.gif");
   }
-#start-date-button:hover
+.event-date-button-class:hover
   {
     list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_hover.gif");
   }
-#start-date-button:hover:active
+.event-date-button-class:hover:active
   {
     list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_down.gif");
   }
