@@ -61,6 +61,7 @@ toolkit.jar:
          content/global/widgets/autoscroll_all.png          (content/widgets/autoscroll_all.png)
          content/global/widgets/autoscroll_h.png            (content/widgets/autoscroll_h.png)
          content/global/widgets/autoscroll_v.png            (content/widgets/autoscroll_v.png)
++        content/global/globalOverlay.xul                   (obsolete/content/globalOverlay.xul)
 *+       content/global/dialogOverlay.xul                   (obsolete/content/dialogOverlay.xul) 
 *+       content/global/dialogOverlay.js                    (obsolete/content/dialogOverlay.js) 
 +        content/global/nsClipboard.js                      (obsolete/content/nsClipboard.js) 
