@@ -61,13 +61,40 @@ public:
   nsNSSASN1Tree();
   virtual ~nsNSSASN1Tree();
 protected:
-  PRUint32 CountNumberOfVisibleRows(nsIASN1Object *asn1Object);
-  nsresult GetASN1ObjectAtIndex(PRUint32 index, nsIASN1Object *sourceObject,
-                                nsIASN1Object **retval);
-  PRInt32 GetParentOfObjectAtIndex(PRUint32 index, nsIASN1Object *sourceObject);
-  PRInt32 GetLevelsTilIndex(PRUint32 index, nsIASN1Object *sourceObject);
+
+  class myNode
+  {
+  public:
+    nsCOMPtr<nsIASN1Object> obj;
+    nsCOMPtr<nsIASN1Sequence> seq;
+    myNode *child;
+    myNode *next;
+    myNode *parent;
+    
+    myNode() {
+      child = next = parent = nsnull;
+    }
+  };
+
+  myNode *mTopNode;
+
   nsCOMPtr<nsIASN1Object> mASN1Object;
   nsCOMPtr<nsITreeSelection> mSelection;
   nsCOMPtr<nsITreeBoxObject> mTree;
+
+  void InitNodes();
+  void InitChildsRecursively(myNode *n);
+
+  void ClearNodes();
+  void ClearNodesRecursively(myNode *n);
+
+  PRInt32 CountVisibleNodes(myNode *n);
+  myNode *FindNodeFromIndex(myNode *n, PRInt32 wantedIndex,
+                            PRInt32 &index_counter, PRInt32 &level_counter,
+                            PRInt32 *optionalOutParentIndex, PRInt32 *optionalOutLevel);
+  myNode *FindNodeFromIndex(PRInt32 wantedIndex, 
+                            PRInt32 *optionalOutParentIndex = nsnull, 
+                            PRInt32 *optionalOutLevel = nsnull);
+
 };
 #endif //_NSSASNTREE_H_
