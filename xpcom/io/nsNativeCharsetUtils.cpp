@@ -835,8 +835,6 @@ NS_ShutdownNativeCharsetUtils()
 NS_COM nsresult
 NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output)
 {
-    nsresult rv;
-
     PRUint32 inputLen = input.Length();
 
     output.Truncate();
@@ -883,8 +881,6 @@ NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output)
 NS_COM nsresult
 NS_CopyUnicodeToNative(const nsAString  &input, nsACString &output)
 {
-    nsresult rv;
-
     PRUint32 inputLen = input.Length();
 
     output.Truncate();
