@@ -73,312 +73,308 @@ var FeedCache =
   }
 };
 
-function Feed(resource) 
+function Feed(aResource) 
 {
-  this.resource = resource.QueryInterface(Components.interfaces.nsIRDFResource);
-  this.description = null;
-  this.author = null;
- 
-  this.request = null;
-  this.folder = null;
-  this.server = null;
-  this.downloadCallback = null;
-  this.items = new Array();
-
-  return this;
+  this.resource = aResource.QueryInterface(Components.interfaces.nsIRDFResource);
 }
 
-// The name of the message folder corresponding to the feed.
-// XXX This should be called something more descriptive like "folderName".
-// XXX Or maybe, when we support nested folders and downloading into any folder,
-// there could just be a reference to the folder itself called "folder".
-Feed.prototype.name getter = function() 
+Feed.prototype = 
 {
-  var name = this.title || this.description || this.url;
-  if (!name)
-    throw("couldn't compute feed name, as feed has no title, description, or URL.");
+  description: null,
+  author: null,
+  request: null,
+  folder: null,
+  server: null,
+  downloadCallback: null,
+  resource: null,
+  items: new Array(),
 
-  // Make sure the feed name doesn't have any line breaks, since we're going
-  // to use it as the name of the folder in the filesystem.  This may not
-  // be necessary, since Mozilla's mail code seems to handle other forbidden
-  // characters in filenames and can probably handle these as well.
-  name = name.replace(/[\n\r\t]+/g, " ");
-
-  // Make sure the feed doesn't end in a period to work around bug 117840.
-  name = name.replace(/\.+$/, "");
-
-  return name;
-}
-
-Feed.prototype.download = function(parseItems, aCallback) 
-{
-  this.downloadCallback = aCallback; // may be null 
-
-  // Whether or not to parse items when downloading and parsing the feed.
-  // Defaults to true, but setting to false is useful for obtaining
-  // just the title of the feed when the user subscribes to it.
-  this.parseItems = parseItems == null ? true : parseItems ? true : false;
-
-  // Before we do anything...make sure the url is an http url. This is just a sanity check
-  // so we don't try opening mailto urls, imap urls, etc. that the user may have tried to subscribe to 
-  // as an rss feed..
-  var uri = Components.classes["@mozilla.org/network/standard-url;1"].
-                      createInstance(Components.interfaces.nsIURI);
-  uri.spec = this.url;
-  if (!(uri.schemeIs("http") || uri.schemeIs("https")))
-    return this.onParseError(this); // simulate an invalid feed error
-
-  // Before we try to download the feed, make sure we aren't already processing the feed
-  // by looking up the url in our feed cache
-  if (FeedCache.getFeed(this.url))
+  get name()
   {
-    if (this.downloadCallback)
-      this.downloadCallback.downloaded(this, kNewsBlogFeedIsBusy);
-    return ; // don't do anything, the feed is already in use
-  }
+    var name = this.title || this.description || this.url;
+    if (!name)
+      throw("couldn't compute feed name, as feed has no title, description, or URL.");
 
-  this.request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                 .createInstance(Components.interfaces.nsIXMLHttpRequest);
-  this.request.onprogress = Feed.onProgress; // must be set before calling .open
-  this.request.open("GET", this.url, true);
+    // Make sure the feed name doesn't have any line breaks, since we're going
+    // to use it as the name of the folder in the filesystem.  This may not
+    // be necessary, since Mozilla's mail code seems to handle other forbidden
+    // characters in filenames and can probably handle these as well.
+    name = name.replace(/[\n\r\t]+/g, " ");
 
-  this.request.overrideMimeType("text/xml");
-  this.request.onload = Feed.onDownloaded;
-  this.request.onerror = Feed.onDownloadError;
-  FeedCache.putFeed(this);
-  this.request.send(null);
-}
+    // Make sure the feed doesn't end in a period to work around bug 117840.
+    name = name.replace(/\.+$/, "");
 
-Feed.onDownloaded = function(event) 
-{
-  var request = event.target;
-  var url = request.channel.originalURI.spec;
-  debug(url + " downloaded");
-  var feed = FeedCache.getFeed(url);
-  if (!feed)
-    throw("error after downloading " + url + ": couldn't retrieve feed from request");
+    return name;
+  },
+
+  download: function(aParseItems, aCallback) 
+  { 
+    this.downloadCallback = aCallback; // may be null 
+
+    // Whether or not to parse items when downloading and parsing the feed.
+    // Defaults to true, but setting to false is useful for obtaining
+    // just the title of the feed when the user subscribes to it.
+    this.parseItems = aParseItems == null ? true : aParseItems ? true : false;
+
+    // Before we do anything...make sure the url is an http url. This is just a sanity check
+    // so we don't try opening mailto urls, imap urls, etc. that the user may have tried to subscribe to 
+    // as an rss feed..
+    var uri = Components.classes["@mozilla.org/network/standard-url;1"].
+                        createInstance(Components.interfaces.nsIURI);
+    uri.spec = this.url;
+    if (!(uri.schemeIs("http") || uri.schemeIs("https")))
+      return this.onParseError(this); // simulate an invalid feed error
+
+    // Before we try to download the feed, make sure we aren't already processing the feed
+    // by looking up the url in our feed cache
+    if (FeedCache.getFeed(this.url))
+    {
+      if (this.downloadCallback)
+        this.downloadCallback.downloaded(this, kNewsBlogFeedIsBusy);
+      return ; // don't do anything, the feed is already in use
+    }
+
+    this.request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                   .createInstance(Components.interfaces.nsIXMLHttpRequest);
+    this.request.onprogress = Feed.onProgress; // must be set before calling .open
+    this.request.open("GET", this.url, true);
+
+    this.request.overrideMimeType("text/xml");
+    this.request.onload = this.onDownloaded;
+    this.request.onerror = this.onDownloadError;
+    FeedCache.putFeed(this);
+    this.request.send(null);
+  }, 
+
+  onDownloaded: function(aEvent) 
+  {
+    var request = aEvent.target;
+    var url = request.channel.originalURI.spec;
+    debug(url + " downloaded");
+    var feed = FeedCache.getFeed(url);
+    if (!feed)
+      throw("error after downloading " + url + ": couldn't retrieve feed from request");
+    feed.parse(); // parse will asynchronously call the download callback when it is done
+  }, 
   
-  feed.parse();
-
-  // parse will asynchronously call the download callback when it is done
-}
-
-Feed.onProgress = function(event) 
-{
-  var request = event.target;
-  var url = request.channel.originalURI.spec;
-  var feed = FeedCache.getFeed(url);
-
-  if (feed.downloadCallback)
-    feed.downloadCallback.onProgress(feed, event.position, event.totalSize);
-}
-
-Feed.onDownloadError = function(event) 
-{
-  var request = event.target;
-  var url = request.channel.originalURI.spec;
-  var feed = FeedCache.getFeed(url);
-  if (feed.downloadCallback)
-    feed.downloadCallback.downloaded(feed, kNewsBlogRequestFailure);
-
-  FeedCache.removeFeed(url);
-}
-
-Feed.prototype.onParseError = function(feed) 
-{
-  if (feed && feed.downloadCallback)
+  onProgress: function(aEvent) 
   {
+    var request = aEvent.target;
+    var url = request.channel.originalURI.spec;
+    var feed = FeedCache.getFeed(url);
+
     if (feed.downloadCallback)
-      feed.downloadCallback.downloaded(feed, kNewsBlogInvalidFeed);
+      feed.downloadCallback.onProgress(feed, aEvent.position, aEvent.totalSize);
+  },
+
+  onDownloadError: function(aEvent) 
+  {
+    var request = aEvent.target;
+    var url = request.channel.originalURI.spec;
+    var feed = FeedCache.getFeed(url);
+    if (feed.downloadCallback)
+      feed.downloadCallback.downloaded(feed, kNewsBlogRequestFailure);
+    
     FeedCache.removeFeed(url);
-  }
-}
+  },
 
-Feed.prototype.url getter = function() 
-{
-  var ds = getSubscriptionsDS(this.server);
-  var url = ds.GetTarget(this.resource, DC_IDENTIFIER, true);
-  if (url)
-    url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-  else
-    url = this.resource.Value;
-  return url;
-}
-
-Feed.prototype.title getter = function() 
-{
-  var ds = getSubscriptionsDS(this.server);
-  var title = ds.GetTarget(this.resource, DC_TITLE, true);
-  if (title)
-    title = title.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-  return title;
-}
-
-Feed.prototype.title setter = function(new_title) 
-{
-  var ds = getSubscriptionsDS(this.server);
-  new_title = rdf.GetLiteral(new_title || "");
-  var old_title = ds.GetTarget(this.resource, DC_TITLE, true);
-  if (old_title)
-      ds.Change(this.resource, DC_TITLE, old_title, new_title);
-  else
-      ds.Assert(this.resource, DC_TITLE, new_title, true);
-}
-
-Feed.prototype.quickMode getter = function() 
-{
-  var ds = getSubscriptionsDS(this.server);
-  var quickMode = ds.GetTarget(this.resource, FZ_QUICKMODE, true);
-  if (quickMode) 
+  onParseError: function(aFeed) 
   {
-    quickMode = quickMode.QueryInterface(Components.interfaces.nsIRDFLiteral);
-    quickMode = quickMode.Value;
-    quickMode = eval(quickMode);
-  }    
-  return quickMode;
-}
+    if (aFeed && aFeed.downloadCallback)
+    {
+      if (aFeed.downloadCallback)
+        aFeed.downloadCallback.downloaded(aFeed, kNewsBlogInvalidFeed);
+      FeedCache.removeFeed(url);
+    }
+  },
 
-Feed.prototype.quickMode setter = function(new_quickMode) 
-{
-  var ds = getSubscriptionsDS(this.server);
-  new_quickMode = rdf.GetLiteral(new_quickMode || "");
-  var old_quickMode = ds.GetTarget(this.resource, FZ_QUICKMODE, true);
-  if (old_quickMode)
-    ds.Change(this.resource, FZ_QUICKMODE, old_quickMode, new_quickMode);
-  else
-    ds.Assert(this.resource, FZ_QUICKMODE, new_quickMode, true);
-}
-
-Feed.prototype.parse = function() 
-{
-  // Figures out what description language (RSS, Atom) and version this feed
-  // is using and calls a language/version-specific feed parser.
-
-  debug("parsing feed " + this.url);
-
-  if (!this.request.responseText) 
-    return this.onParseError(this);
-
-  // create a feed parser which will parse the feed for us
-  var parser = new FeedParser();
-  this.itemsToStore = parser.parseFeed(this, this.request.responseText, this.request.responseXML, this.request.channel.URI);
-  
-  // storeNextItem will iterate through the parsed items, storing each one.
-  this.itemsToStoreIndex = 0;
-  this.storeNextItem();
-}
-
-Feed.prototype.invalidateItems = function () 
-{
-  var ds = getItemsDS(this.server);
-  debug("invalidating items for " + this.url);
-  var items = ds.GetSources(FZ_FEED, this.resource, true);
-  var item;
-  
-  while (items.hasMoreElements()) 
+  get url()
   {
-    item = items.getNext();
-    item = item.QueryInterface(Components.interfaces.nsIRDFResource);
-    debug("invalidating " + item.Value);
-    var valid = ds.GetTarget(item, FZ_VALID, true);
-    if (valid)
-      ds.Unassert(item, FZ_VALID, valid, true);
-  }
-}
-
-Feed.prototype.removeInvalidItems = function() 
-{
-  var ds = getItemsDS(this.server);
-  debug("removing invalid items for " + this.url);
-  var items = ds.GetSources(FZ_FEED, this.resource, true);
-  var item;
-  while (items.hasMoreElements()) 
-  {
-    item = items.getNext();
-    item = item.QueryInterface(Components.interfaces.nsIRDFResource);
-    if (ds.HasAssertion(item, FZ_VALID, RDF_LITERAL_TRUE, true))
-      continue;
-    debug("removing " + item.Value);
-    ds.Unassert(item, FZ_FEED, this.resource, true);
-    if (ds.hasArcOut(item, FZ_FEED))
-      debug(item.Value + " is from more than one feed; only the reference to this feed removed");
+    var ds = getSubscriptionsDS(this.server);
+    var url = ds.GetTarget(this.resource, DC_IDENTIFIER, true);
+    if (url)
+      url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     else
-      removeAssertions(ds, item);
-  }
-}
+      url = this.resource.Value;
+    return url;
+  },
 
-// gets the next item from gItemsToStore and forces that item to be stored
-// to the folder. If more items are left to be stored, fires a timer for the next one.
-// otherwise it triggers a download done notification to the UI
-Feed.prototype.storeNextItem = function()
-{
-  if (!this.itemsToStore.length)
+  get title()
   {
-    // create a folder for the feed if one does not exist already...
-    var folder;
+    var ds = getSubscriptionsDS(this.server);
+    var title = ds.GetTarget(this.resource, DC_TITLE, true);
+    if (title)
+      title = title.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    return title;
+  },
 
-    try {
-        folder = this.server.rootMsgFolder.getChildNamed(this.name);
-     } catch(e) {}
+  set title (aNewTitle) 
+  {
+    var ds = getSubscriptionsDS(this.server);
+    aNewTitle = rdf.GetLiteral(aNewTitle || "");
+    var old_title = ds.GetTarget(this.resource, DC_TITLE, true);
+    if (old_title)
+        ds.Change(this.resource, DC_TITLE, old_title, aNewTitle);
+    else
+        ds.Assert(this.resource, DC_TITLE, aNewTitle, true);
+  },
 
-    if (!folder) 
-      this.server.rootMsgFolder.createSubfolder(this.name, null /* supposed to be a msg window */);
+  get quickMode ()
+  {
+    var ds = getSubscriptionsDS(this.server);
+    var quickMode = ds.GetTarget(this.resource, FZ_QUICKMODE, true);
+    if (quickMode) 
+    {
+      quickMode = quickMode.QueryInterface(Components.interfaces.nsIRDFLiteral);
+      quickMode = quickMode.Value;
+      quickMode = eval(quickMode);
+    }    
+    return quickMode;
+  },
 
-    return this.cleanupParsingState(this);
-  }
+  set quickMode (aNewQuickMode) 
+  {
+    var ds = getSubscriptionsDS(this.server);
+    aNewQuickMode = rdf.GetLiteral(aNewQuickMode || "");
+    var old_quickMode = ds.GetTarget(this.resource, FZ_QUICKMODE, true);
+    if (old_quickMode)
+      ds.Change(this.resource, FZ_QUICKMODE, old_quickMode, aNewQuickMode);
+    else
+      ds.Assert(this.resource, FZ_QUICKMODE, aNewQuickMode, true);
+  },
 
-  var item = this.itemsToStore[this.itemsToStoreIndex]; 
+  parse: function() 
+  {
+    // Figures out what description language (RSS, Atom) and version this feed
+    // is using and calls a language/version-specific feed parser.
 
-  item.store();
-  item.markValid();
+    debug("parsing feed " + this.url);
 
-  // if the listener is tracking progress for storing each item, report it here...
-  if (item.feed.downloadCallback && item.feed.downloadCallback.onFeedItemStored)
-    item.feed.downloadCallback.onFeedItemStored(item.feed, this.itemsToStoreIndex, this.itemsToStore.length);
+    if (!this.request.responseText) 
+      return this.onParseError(this);
+
+    // create a feed parser which will parse the feed for us
+    var parser = new FeedParser();
+    this.itemsToStore = parser.parseFeed(this, this.request.responseText, this.request.responseXML, this.request.channel.URI);
+  
+    // storeNextItem will iterate through the parsed items, storing each one.
+    this.itemsToStoreIndex = 0;
+    this.storeNextItem();
+  },
+
+  invalidateItems: function () 
+  {
+    var ds = getItemsDS(this.server);
+    debug("invalidating items for " + this.url);
+    var items = ds.GetSources(FZ_FEED, this.resource, true);
+    var item;
+  
+    while (items.hasMoreElements()) 
+    {
+      item = items.getNext();
+      item = item.QueryInterface(Components.interfaces.nsIRDFResource);
+      debug("invalidating " + item.Value);
+      var valid = ds.GetTarget(item, FZ_VALID, true);
+      if (valid)
+        ds.Unassert(item, FZ_VALID, valid, true);
+    }
+  }, 
+
+  removeInvalidItems: function() 
+  {
+    var ds = getItemsDS(this.server);
+    debug("removing invalid items for " + this.url);
+    var items = ds.GetSources(FZ_FEED, this.resource, true);
+    var item;
+    while (items.hasMoreElements()) 
+    {
+      item = items.getNext();
+      item = item.QueryInterface(Components.interfaces.nsIRDFResource);
+      if (ds.HasAssertion(item, FZ_VALID, RDF_LITERAL_TRUE, true))
+        continue;
+      debug("removing " + item.Value);
+      ds.Unassert(item, FZ_FEED, this.resource, true);
+      if (ds.hasArcOut(item, FZ_FEED))
+        debug(item.Value + " is from more than one feed; only the reference to this feed removed");
+      else
+        removeAssertions(ds, item);
+    }
+  },
+
+  // gets the next item from gItemsToStore and forces that item to be stored
+  // to the folder. If more items are left to be stored, fires a timer for the next one.
+  // otherwise it triggers a download done notification to the UI
+  storeNextItem: function()
+  {
+    if (!this.itemsToStore.length)
+    {
+      // create a folder for the feed if one does not exist already...
+      var folder;
+
+      try {
+          folder = this.server.rootMsgFolder.getChildNamed(this.name);
+       } catch(e) {}
+
+      if (!folder) 
+        this.server.rootMsgFolder.createSubfolder(this.name, null /* supposed to be a msg window */);
+
+      return this.cleanupParsingState(this);
+    }
+
+    var item = this.itemsToStore[this.itemsToStoreIndex]; 
+
+    item.store();
+    item.markValid();
+
+    // if the listener is tracking progress for storing each item, report it here...
+    if (item.feed.downloadCallback && item.feed.downloadCallback.onFeedItemStored)
+      item.feed.downloadCallback.onFeedItemStored(item.feed, this.itemsToStoreIndex, this.itemsToStore.length);
  
-  this.itemsToStoreIndex++
+    this.itemsToStoreIndex++
 
-  // eventually we'll report individual progress here....
+    // eventually we'll report individual progress here....
 
-  if (this.itemsToStoreIndex < this.itemsToStore.length)
+    if (this.itemsToStoreIndex < this.itemsToStore.length)
+    {
+      if (!this.storeItemsTimer)
+        this.storeItemsTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
+      this.storeItemsTimer.initWithCallback(this, 50, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+    }
+    else
+      this.cleanupParsingState(item.feed);   
+  },
+
+  cleanupParsingState: function(aFeed) 
   {
-    if (!this.storeItemsTimer)
-      this.storeItemsTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
-    this.storeItemsTimer.initWithCallback(this, 50, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
-  }
-  else
-    this.cleanupParsingState(item.feed);   
-}
-
-Feed.prototype.cleanupParsingState = function(feed) {
     // now that we are done parsing the feed, remove the feed from our feed cache
-  FeedCache.removeFeed(feed.url);
+    FeedCache.removeFeed(feed.url);
+    aFeed.removeInvalidItems();
 
-  feed.removeInvalidItems();
+    // let's be sure to flush any feed item changes back to disk
+    var ds = getItemsDS(feed.server);
+    ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
 
-  // let's be sure to flush any feed item changes back to disk
-  var ds = getItemsDS(feed.server);
-  ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
+    if (aFeed.downloadCallback)
+      aFeed.downloadCallback.downloaded(feed, kNewsBlogSuccess);
 
-  if (feed.downloadCallback)
-    feed.downloadCallback.downloaded(feed, kNewsBlogSuccess);
+    this.request = null; // force the xml http request to go away. This helps reduce some nasty assertions on shut down. 
+    this.itemsToStore = "";
+    this.itemsToStoreIndex = 0;
+    this.storeItemsTimer = null;
+  }, 
 
-  this.request = null; // force the xml http request to go away. This helps reduce some nasty assertions on shut down. 
-  this.itemsToStore = "";
-  this.itemsToStoreIndex = 0;
-  this.storeItemsTimer = null;
-}   
+  notify: function(aTimer) 
+  {
+    this.storeNextItem();
+  }, 
 
-Feed.prototype.notify = function(aTimer) 
-{
-  this.storeNextItem();
-}
+  QueryInterface: function(aIID) 
+  {
+    if (aIID.equals(Components.interfaces.nsITimerCallback) || aIID.equals(Components.interfaces.nsISupports))
+      return this;
 
-Feed.prototype.QueryInterface = function(aIID) 
-{
-  if (aIID.equals(Components.interfaces.nsITimerCallback) || aIID.equals(Components.interfaces.nsISupports))
-    return this;
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;    
+  }
+};
 
-  Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-  return null;    
-}
