@@ -50,6 +50,7 @@ REQUIRES	= xpcom \
 		  browser \
 		  docshell \
 		  uconv \
+		  locale \
 		  xremoteservice \
 		  $(NULL)
 # for jprof
