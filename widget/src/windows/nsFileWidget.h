@@ -52,6 +52,7 @@ class nsFileWidget : public nsIFileWidget, public nsObject
     // nsIFileWidget part
     virtual PRBool          Show();
     virtual void            GetFile(nsString& aFile);
+    virtual void            SetDefaultString(nsString& aFile);
     virtual void            SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[]);
   
   protected:
@@ -63,6 +64,8 @@ class nsFileWidget : public nsIFileWidget, public nsObject
      PRUint32               mNumberOfFilters;  
      const nsString*        mTitles;
      const nsString*        mFilters;
+     nsString               mDefault;
+
 
      void GetFilterListArray(nsString& aFilterList);
 };

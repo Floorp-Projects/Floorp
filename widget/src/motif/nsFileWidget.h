@@ -61,11 +61,14 @@ class nsFileWidget : public nsWindow
     // nsIFileWidget part
     virtual void            Show(PRBool bState);
     virtual void            GetFile(nsString& aFile);
+    virtual void            SetDefaultString(nsString& aString);
     virtual void            SetFilterList(PRUint32 aNumberOfFilters,
                                           const nsString aTitles[],
                                           const nsString aFilters[]);
     virtual void            OnOk();
     virtual void            OnCancel();
+
+
   
   protected:
      PRBool                 mIOwnEventLoop;
@@ -76,6 +79,7 @@ class nsFileWidget : public nsWindow
      PRUint32               mNumberOfFilters;  
      const nsString*        mTitles;
      const nsString*        mFilters;
+     nsString               mDefault;
 
      void GetFilterListArray(nsString& aFilterList);
 
@@ -106,6 +110,7 @@ class nsFileWidget : public nsWindow
                                       void *aInitData = nsnull);
 
       virtual void            GetFile(nsString& aFile);
+      virtual void            SetDefaultString(nsString& aString);
       virtual void            SetFilterList(PRUint32 aNumberOfFilters,
                                             const nsString aTitles[],
                                             const nsString aFilters[]);
