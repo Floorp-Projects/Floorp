@@ -18,6 +18,7 @@
 
 #include "nsTextEditRules.h"
 #include "nsTextEditor.h"
+#include "nsEditor.h"
 #include "PlaceholderTxn.h"
 #include "InsertTextTxn.h"
 #include "nsCOMPtr.h"
@@ -31,69 +32,8 @@
 #include "nsIContent.h"
 #include "nsIEditProperty.h"
 
-const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
-const static char* kMOZEditorBogusNodeValue="TRUE";
-
 static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
 
-/********************************************************
- *  Helper Functions 
- ********************************************************/
-
-PRBool nsTextEditRules::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
-{
-  nsCOMPtr<nsIDOMElement>element;
-  element = do_QueryInterface(aNode);
-  if (element)
-  {
-    nsAutoString tag;
-    element->GetTagName(tag);
-    if (tag.Equals(aTag->GetUnicode()))
-    {
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
-PRBool nsTextEditRules::IsEditable(nsIDOMNode *aNode)
-{
-  if (!aNode) return PR_FALSE;
-  nsCOMPtr<nsIDOMElement>element;
-  element = do_QueryInterface(aNode);
-  if (element)
-  {
-    nsAutoString att(kMOZEditorBogusNodeAttr);
-    nsAutoString val;
-    (void)element->GetAttribute(att, val);
-    if (val.Equals(kMOZEditorBogusNodeValue)) {
-      return PR_FALSE;
-    }
-    else {
-      return PR_TRUE;
-    }
-  }
-  else
-  { 
-    nsCOMPtr<nsIDOMCharacterData>text;
-    text = do_QueryInterface(aNode);
-    if (text)
-    {
-      nsAutoString data;
-      text->GetData(data);
-      if (0==data.Length()) {
-        return PR_FALSE;
-      }
-      if ('\n'==data.CharAt(0)) {
-        return PR_FALSE;
-      }
-      else {
-        return PR_TRUE;
-      }
-    }
-  }
-  return PR_TRUE;
-}
 
 
 /********************************************************
@@ -437,7 +377,7 @@ nsTextEditRules::InsertStyleNode(nsIDOMNode      *aNode,
   nsCOMPtr<nsIDOMNode>parent;
   aNode->GetParentNode(getter_AddRefs(parent));
   PRInt32 offsetInParent;
-  nsIEditorSupport::GetChildOffset(aNode, parent, offsetInParent);
+  nsEditor::GetChildOffset(aNode, parent, offsetInParent);
   nsAutoString tag;
   aTag->ToString(tag);
   result = mEditor->CreateNode(tag, parent, offsetInParent, aNewNode);
@@ -563,7 +503,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
         result = bodyNode->GetFirstChild(getter_AddRefs(bodyChild));        
         while ((NS_SUCCEEDED(result)) && bodyChild)
         { 
-          if (PR_TRUE==IsEditable(bodyChild))
+          if (PR_TRUE==nsEditor::IsEditable(bodyChild))
           {
             needsBogusContent = PR_FALSE;
             break;
@@ -599,8 +539,8 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
             newPElement = do_QueryInterface(mBogusNode);
             if (newPElement)
             {
-              nsAutoString att(kMOZEditorBogusNodeAttr);
-              nsAutoString val(kMOZEditorBogusNodeValue);
+              nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
+              nsAutoString val(nsEditor::kMOZEditorBogusNodeValue);
               newPElement->SetAttribute(att, val);
             }
           }
@@ -706,10 +646,10 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
         element = do_QueryInterface(node);
         if (element)
         {
-          nsAutoString att(kMOZEditorBogusNodeAttr);
+          nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
           nsAutoString val;
           (void)element->GetAttribute(att, val);
-          if (val.Equals(kMOZEditorBogusNodeValue)) {
+          if (val.Equals(nsEditor::kMOZEditorBogusNodeValue)) {
             mBogusNode = do_QueryInterface(element);
           }
         }
@@ -752,10 +692,10 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
         element = do_QueryInterface(node);
         if (element)
         {
-          nsAutoString att(kMOZEditorBogusNodeAttr);
+          nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
           nsAutoString val;
           (void)element->GetAttribute(att, val);
-          if (val.Equals(kMOZEditorBogusNodeValue)) {
+          if (val.Equals(nsEditor::kMOZEditorBogusNodeValue)) {
             mBogusNode = do_QueryInterface(element);
           }
         }

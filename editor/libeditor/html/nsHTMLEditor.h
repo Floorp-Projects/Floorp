@@ -107,7 +107,7 @@ public:
   NS_IMETHOD GetParagraphStyle(nsStringArray *aTagList);
   NS_IMETHOD AddBlockParent(nsString& aParentTag);
   NS_IMETHOD ReplaceBlockParent(nsString& aParentTag);
-  NS_IMETHOD RemoveBlockParent();
+  NS_IMETHOD RemoveParagraphStyle();
   NS_IMETHOD RemoveParent(const nsString &aParentTag);
 
   NS_IMETHOD InsertLink(nsString& aURL);
@@ -163,7 +163,21 @@ protected:
                                     nsString    &aParentTag,
                                     BlockTransformationType aTranformation);
 
+  NS_IMETHOD RemoveParagraphStyleFromRange(nsIDOMRange *aRange);
+  
+  NS_IMETHOD RemoveParagraphStyleFromBlockContent(nsIDOMRange *aRange);
+
+  NS_IMETHOD RemoveParentFromRange(const nsString &aParentTag, nsIDOMRange *aRange);
+  
+  NS_IMETHOD RemoveParentFromBlockContent(const nsString &aParentTag, nsIDOMRange *aRange);
+
   NS_IMETHOD CanContainBlock(nsString &aBlockChild, nsString &aBlockParent, PRBool &aCanContain);
+
+  
+  NS_IMETHOD IsRootTag(nsString &aTag, PRBool &aIsTag);
+
+  NS_IMETHOD IsSubordinateBlock(nsString &aTag, PRBool &aIsTag);
+
 
 // EVENT LISTENERS AND COMMAND ROUTING NEEDS WORK
 // For now, the listners are tied to the nsTextEditor class

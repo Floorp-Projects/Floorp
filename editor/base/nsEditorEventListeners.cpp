@@ -25,6 +25,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIEditProperty.h"
 #include "nsISupportsArray.h"
+#include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIStringStream.h"
 
@@ -599,7 +600,39 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
             nsCOMPtr<nsIHTMLEditor>htmlEditor;
             htmlEditor = do_QueryInterface(mEditor);
             if (htmlEditor) {
-              htmlEditor->RemoveBlockParent();
+              htmlEditor->RemoveParagraphStyle();
+            }
+          }
+        }
+        break;
+
+      // hard-coded change structure test -- GetParagraphStyle
+      case nsIDOMEvent::VK_0:
+        if (PR_TRUE==ctrlKey)
+        {
+          aProcessed=PR_TRUE;
+          if (mEditor)
+          {
+            nsCOMPtr<nsIHTMLEditor>htmlEditor;
+            htmlEditor = do_QueryInterface(mEditor);
+            if (htmlEditor) 
+            {
+              printf("testing GetParagraphStyle\n");
+              nsStringArray styles;
+              nsresult result = htmlEditor->GetParagraphStyle(&styles);
+              if (NS_SUCCEEDED(result))
+              {
+                PRInt32 count = styles.Count();
+                PRInt32 i;
+                for (i=0; i<count; i++)
+                {
+                  nsString *tag = styles.StringAt(i);
+                  char *tagCString = tag->ToNewCString();
+                  printf("%s ", tagCString);
+                  delete [] tagCString;
+                }
+                printf("\n");
+              }
             }
           }
         }

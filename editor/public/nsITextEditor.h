@@ -27,7 +27,6 @@
 #include "nsIEditor.h"
 #include "nscore.h"
 
-class nsIEditorCallback;
 class nsISupportsArray;
 class nsIAtom;
 class nsIOutputStream;

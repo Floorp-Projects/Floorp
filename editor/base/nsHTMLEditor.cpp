@@ -40,7 +40,6 @@
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsITableCellLayout.h"   //For GetColIndexForCell
 
 
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
@@ -59,7 +58,7 @@ static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kIContentIteratorIID, NS_ICONTENTITERTOR_IID);
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
+static PRBool gNoisy = PR_TRUE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -205,7 +204,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
           if (-1==offsetInParent) 
           {
             nextNode->GetParentNode(getter_AddRefs(parent));
-            result = nsIEditorSupport::GetChildOffset(nextNode, parent, offsetInParent);
+            result = GetChildOffset(nextNode, parent, offsetInParent);
             if (NS_SUCCEEDED(result)) {
               selection->Collapse(parent, offsetInParent+1);  // +1 to insert just after the break
             }
@@ -395,17 +394,17 @@ nsHTMLEditor::GetParagraphStyle(nsStringArray *aTagList)
       if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
       {
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-        // scan the range for all the independent block content subranges
+        // scan the range for all the independent block content blockSections
         // and get the block parent of each
-        nsISupportsArray *subRanges;
-        result = NS_NewISupportsArray(&subRanges);
-        if ((NS_SUCCEEDED(result)) && subRanges)
+        nsISupportsArray *blockSections;
+        result = NS_NewISupportsArray(&blockSections);
+        if ((NS_SUCCEEDED(result)) && blockSections)
         {
-          result = GetBlockRanges(range, subRanges);
+          result = GetBlockSectionsForRange(range, blockSections);
           if (NS_SUCCEEDED(result))
           {
             nsIDOMRange *subRange;
-            subRange = (nsIDOMRange *)(subRanges->ElementAt(0));
+            subRange = (nsIDOMRange *)(blockSections->ElementAt(0));
             while (subRange && (NS_SUCCEEDED(result)))
             {
               nsCOMPtr<nsIDOMNode>startParent;
@@ -418,17 +417,19 @@ nsHTMLEditor::GetParagraphStyle(nsStringArray *aTagList)
                 {
                   nsAutoString blockParentTag;
                   blockParent->GetTagName(blockParentTag);
-                  if (-1==aTagList->IndexOf(blockParentTag)) {
+                  PRBool isRoot;
+                  IsRootTag(blockParentTag, isRoot);
+                  if ((PR_FALSE==isRoot) && (-1==aTagList->IndexOf(blockParentTag))) {
                     aTagList->AppendString(blockParentTag);
                   }
                 }
               }
               NS_RELEASE(subRange);
-              subRanges->RemoveElementAt(0);
-              subRange = (nsIDOMRange *)(subRanges->ElementAt(0));
+              blockSections->RemoveElementAt(0);
+              subRange = (nsIDOMRange *)(blockSections->ElementAt(0));
             }
           }
-          NS_RELEASE(subRanges);
+          NS_RELEASE(blockSections);
         }
       }
     }
@@ -465,7 +466,7 @@ nsHTMLEditor::AddBlockParent(nsString& aParentTag)
       if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
       {
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-        // scan the range for all the independent block content subranges
+        // scan the range for all the independent block content blockSections
         // and apply the transformation to them
         result = ReParentContentOfRange(range, aParentTag, eInsertParent);
       }
@@ -510,40 +511,17 @@ nsHTMLEditor::ReplaceBlockParent(nsString& aParentTag)
       if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
       {
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-        // scan the range for all the independent block content subranges
+        // scan the range for all the independent block content blockSections
         // and apply the transformation to them
         result = ReParentContentOfRange(range, aParentTag, eReplaceParent);
       }
     }
     nsEditor::EndTransaction();
-    if (NS_SUCCEEDED(result))
-    { // set the selection
-      // XXX: can't do anything until I can create ranges
-    }
   }
   if (gNoisy) {printf("Finished nsHTMLEditor::AddBlockParent with this content:\n"); DebugDumpContent(); } // DEBUG
 
   return result;
 }
-
-void IsRootTag(nsString &aTag, PRBool &aIsTag)
-{
-  static nsAutoString bodyTag = "body";
-  static nsAutoString tdTag = "td";
-  static nsAutoString thTag = "th";
-  static nsAutoString captionTag = "caption";
-  if (PR_TRUE==aTag.EqualsIgnoreCase(bodyTag) ||
-      PR_TRUE==aTag.EqualsIgnoreCase(tdTag) ||
-      PR_TRUE==aTag.EqualsIgnoreCase(thTag) ||
-      PR_TRUE==aTag.EqualsIgnoreCase(captionTag) )
-  {
-    aIsTag = PR_TRUE;
-  }
-  else {
-    aIsTag = PR_FALSE;
-  }
-}
-
 
 NS_IMETHODIMP 
 nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode, 
@@ -551,6 +529,12 @@ nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode,
                                     BlockTransformationType aTransformation)
 {
   if (!aNode) { return NS_ERROR_NULL_POINTER; }
+  if (gNoisy) 
+  { 
+    char *tag = aParentTag.ToNewCString();
+    printf("---------- ReParentContentOfNode(%p,%s,%d) -----------\n", aNode, tag, aTransformation); 
+    delete [] tag;
+  }
   // find the current block parent, or just use aNode if it is a block node
   nsCOMPtr<nsIDOMElement>blockParentElement;
   nsCOMPtr<nsIDOMNode>nodeToReParent; // this is the node we'll operate on, by default it's aNode
@@ -606,7 +590,7 @@ nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode,
       { // this is the case of an insertion point between 2 non-text objects
         // XXX: how to you know it's an insertion point???
         PRInt32 offsetInParent=0;
-        result = nsIEditorSupport::GetChildOffset(nodeToReParent, blockParentNode, offsetInParent);
+        result = GetChildOffset(nodeToReParent, blockParentNode, offsetInParent);
         NS_ASSERTION((NS_SUCCEEDED(result)), "bad result from GetChildOffset");
         // otherwise, just create the block parent at the selection
         result = nsTextEditor::CreateNode(aParentTag, blockParentNode, offsetInParent, 
@@ -654,10 +638,14 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
                                    nsString    &aParentTag,
                                    nsIDOMNode  *aBlockParentNode,
                                    nsString    &aBlockParentTag,
-                                   BlockTransformationType aTranformation,
+                                   BlockTransformationType aTransformation,
                                    nsIDOMNode **aNewParentNode)
 {
   if (!aNode || !aBlockParentNode || !aNewParentNode) { return NS_ERROR_NULL_POINTER; }
+  nsCOMPtr<nsIDOMNode> blockParentNode = do_QueryInterface(aBlockParentNode);
+  PRBool removeBlockParent = PR_FALSE;
+  PRBool removeBreakBefore = PR_FALSE;
+  PRBool removeBreakAfter = PR_FALSE;
   nsCOMPtr<nsIDOMNode>ancestor;
   nsresult result = aNode->GetParentNode(getter_AddRefs(ancestor));
   nsCOMPtr<nsIDOMNode>previousAncestor = do_QueryInterface(aNode);
@@ -675,46 +663,87 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
   }
   // now, previousAncestor is the node we are operating on
   nsCOMPtr<nsIDOMNode>leftNode, rightNode;
-  result = GetBlockDelimitedContent(previousAncestor, 
-                                    getter_AddRefs(leftNode), 
-                                    getter_AddRefs(rightNode));
+  result = GetBlockSection(previousAncestor, 
+                           getter_AddRefs(leftNode), 
+                           getter_AddRefs(rightNode));
   if ((NS_SUCCEEDED(result)) && leftNode && rightNode)
   {
-    PRInt32 offsetInParent=0;
-    if (eInsertParent==aTranformation)
+    // determine some state for managing <BR>s around the new block
+    PRBool isSubordinateBlock = PR_FALSE;  // if true, the content is already in a subordinate block
+    PRBool isRootBlock = PR_FALSE;  // if true, the content is in a root block
+    nsCOMPtr<nsIDOMElement>blockParentElement = do_QueryInterface(blockParentNode);
+    if (blockParentElement)
     {
-      result = nsIEditorSupport::GetChildOffset(leftNode, aBlockParentNode, offsetInParent);
+      nsAutoString blockParentTag;
+      blockParentElement->GetTagName(blockParentTag);
+      IsSubordinateBlock(blockParentTag, isSubordinateBlock);
+      IsRootTag(blockParentTag, isRootBlock);
+    }
+
+    if (PR_TRUE==isRootBlock)
+    { // we're creating a block element where a block element did not previously exist 
+      removeBreakBefore = PR_TRUE;
+      removeBreakAfter = PR_TRUE;
+    }
+
+    // apply the transformation
+    PRInt32 offsetInParent=0;
+    if (eInsertParent==aTransformation || PR_TRUE==isRootBlock)
+    {
+      result = GetChildOffset(leftNode, blockParentNode, offsetInParent);
       NS_ASSERTION((NS_SUCCEEDED(result)), "bad result from GetChildOffset");
-      result = nsTextEditor::CreateNode(aParentTag, aBlockParentNode, offsetInParent, aNewParentNode);
-      if (gNoisy) { printf("created a node in aBlockParentNode at offset %d\n", offsetInParent); }
+      result = nsTextEditor::CreateNode(aParentTag, blockParentNode, offsetInParent, aNewParentNode);
+      if (gNoisy) { printf("created a node in blockParentNode at offset %d\n", offsetInParent); }
     }
     else
     {
       nsCOMPtr<nsIDOMNode> grandParent;
-      result = aBlockParentNode->GetParentNode(getter_AddRefs(grandParent));
+      result = blockParentNode->GetParentNode(getter_AddRefs(grandParent));
       if ((NS_SUCCEEDED(result)) && grandParent)
       {
         nsCOMPtr<nsIDOMNode>firstChildNode, lastChildNode;
-        aBlockParentNode->GetFirstChild(getter_AddRefs(firstChildNode));
-        aBlockParentNode->GetLastChild(getter_AddRefs(lastChildNode));
+        blockParentNode->GetFirstChild(getter_AddRefs(firstChildNode));
+        blockParentNode->GetLastChild(getter_AddRefs(lastChildNode));
         if (firstChildNode==leftNode && lastChildNode==rightNode)
         {
-          result = nsIEditorSupport::GetChildOffset(aBlockParentNode, grandParent, offsetInParent);
+          result = GetChildOffset(blockParentNode, grandParent, offsetInParent);
           NS_ASSERTION((NS_SUCCEEDED(result)), "bad result from GetChildOffset");
           result = nsTextEditor::CreateNode(aParentTag, grandParent, offsetInParent, aNewParentNode);
           if (gNoisy) { printf("created a node in grandParent at offset %d\n", offsetInParent); }
         }
         else
         {
-          result = nsIEditorSupport::GetChildOffset(leftNode, aBlockParentNode, offsetInParent);
+          // We're in the case where the content of blockParentNode is separated by <BR>'s, 
+          // creating multiple block content ranges.
+          // Split blockParentNode around the blockContent
+          if (gNoisy) { printf("splitting a node because of <BR>s\n"); }
+          nsCOMPtr<nsIDOMNode> newLeftNode;
+          if (firstChildNode!=leftNode)
+          {
+            result = GetChildOffset(leftNode, blockParentNode, offsetInParent);
+            if (gNoisy) { printf("splitting left at %d\n", offsetInParent); }
+            result = SplitNode(blockParentNode, offsetInParent, getter_AddRefs(newLeftNode));
+            // after this split, blockParentNode still contains leftNode and rightNode
+          }
+          if (lastChildNode!=rightNode)
+          {
+            result = GetChildOffset(rightNode, blockParentNode, offsetInParent);
+            offsetInParent++;
+            if (gNoisy) { printf("splitting right at %d\n", offsetInParent); }
+            result = SplitNode(blockParentNode, offsetInParent, getter_AddRefs(newLeftNode));
+            blockParentNode = do_QueryInterface(newLeftNode);
+          }
+          result = GetChildOffset(leftNode, blockParentNode, offsetInParent);
           NS_ASSERTION((NS_SUCCEEDED(result)), "bad result from GetChildOffset");
-          result = nsTextEditor::CreateNode(aParentTag, aBlockParentNode, offsetInParent, aNewParentNode);
-          if (gNoisy) { printf("created a node in aBlockParentNode at offset %d\n", offsetInParent); }
+          result = nsTextEditor::CreateNode(aParentTag, blockParentNode, offsetInParent, aNewParentNode);
+          if (gNoisy) { printf("created a node in blockParentNode at offset %d\n", offsetInParent); }
+          // what we need to do here is remove the existing block parent when we're all done.
+          removeBlockParent = PR_TRUE;
         }
       }
     }
     if ((NS_SUCCEEDED(result)) && *aNewParentNode)
-    { // move all the children/contents of aBlockParentNode to aNewParentNode
+    { // move all the children/contents of blockParentNode to aNewParentNode
       nsCOMPtr<nsIDOMNode>childNode = do_QueryInterface(rightNode);
       nsCOMPtr<nsIDOMNode>previousSiblingNode;
       while (NS_SUCCEEDED(result) && childNode)
@@ -737,6 +766,73 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
         childNode = do_QueryInterface(previousSiblingNode);
       } // end while loop 
     }
+    // clean up the surrounding content to maintain vertical whitespace
+    if (NS_SUCCEEDED(result))
+    {
+      // if the prior node is a <BR> and we did something to change vertical whitespacing, delete the <BR>
+      nsCOMPtr<nsIDOMNode> brNode;
+      result = GetPriorNode(leftNode, getter_AddRefs(brNode));
+      if (NS_SUCCEEDED(result) && brNode)
+      {
+        nsCOMPtr<nsIContent> brContent = do_QueryInterface(brNode);
+        if (brContent)
+        {
+          nsCOMPtr<nsIAtom> brContentTag;
+          brContent->GetTag(*getter_AddRefs(brContentTag));
+          if (nsIEditProperty::br==brContentTag) {
+            result = DeleteNode(brNode);
+          }
+        }
+      }
+
+      // if the next node is a <BR> and we did something to change vertical whitespacing, delete the <BR>
+      if (NS_SUCCEEDED(result))
+      {
+        result = GetNextNode(rightNode, getter_AddRefs(brNode));
+        if (NS_SUCCEEDED(result) && brNode)
+        {
+          nsCOMPtr<nsIContent> brContent = do_QueryInterface(brNode);
+          if (brContent)
+          {
+            nsCOMPtr<nsIAtom> brContentTag;
+            brContent->GetTag(*getter_AddRefs(brContentTag));
+            if (nsIEditProperty::br==brContentTag) {
+              result = DeleteNode(brNode);
+            }
+          }
+        }
+      }
+    }
+    if ((NS_SUCCEEDED(result)) && (PR_TRUE==removeBlockParent))
+    { // we determined we need to remove the previous block parent.  Do it!
+      // go through list backwards so deletes don't interfere with the iteration
+      nsCOMPtr<nsIDOMNodeList> childNodes;
+      result = blockParentNode->GetChildNodes(getter_AddRefs(childNodes));
+      if ((NS_SUCCEEDED(result)) && (childNodes))
+      {
+        nsCOMPtr<nsIDOMNode>grandParent;
+        blockParentNode->GetParentNode(getter_AddRefs(grandParent));
+        PRInt32 offsetInParent;
+        result = GetChildOffset(blockParentNode, grandParent, offsetInParent);
+        PRUint32 childCount;
+        childNodes->GetLength(&childCount);
+        PRInt32 i=childCount-1;
+        for ( ; ((NS_SUCCEEDED(result)) && (0<=i)); i--)
+        {
+          nsCOMPtr<nsIDOMNode> childNode;
+          result = childNodes->Item(i, getter_AddRefs(childNode));
+          if ((NS_SUCCEEDED(result)) && (childNode))
+          {
+            result = nsTextEditor::DeleteNode(childNode);
+            if (NS_SUCCEEDED(result)) {
+              result = nsTextEditor::InsertNode(childNode, grandParent, offsetInParent);
+            }
+          }
+        }
+        if (gNoisy) { printf("removing the old block parent %p\n", blockParentNode.get()); }
+        result = nsTextEditor::DeleteNode(blockParentNode);
+      }
+    }
   }
   return result;
 }
@@ -748,29 +844,30 @@ nsHTMLEditor::ReParentContentOfRange(nsIDOMRange *aRange,
 {
   if (!aRange) { return NS_ERROR_NULL_POINTER; }
   nsresult result;
-  nsISupportsArray *subRanges;
-  result = NS_NewISupportsArray(&subRanges);
-  if ((NS_SUCCEEDED(result)) && subRanges)
+  nsISupportsArray *blockSections;
+  result = NS_NewISupportsArray(&blockSections);
+  if ((NS_SUCCEEDED(result)) && blockSections)
   {
-    result = GetBlockRanges(aRange, subRanges);
+    result = GetBlockSectionsForRange(aRange, blockSections);
     if (NS_SUCCEEDED(result)) 
     {
       nsIDOMRange *subRange;
-      subRange = (nsIDOMRange *)(subRanges->ElementAt(0));
+      subRange = (nsIDOMRange *)(blockSections->ElementAt(0));
       while (subRange && (NS_SUCCEEDED(result)))
       {
         nsCOMPtr<nsIDOMNode>startParent;
         result = subRange->GetStartParent(getter_AddRefs(startParent));
         if (NS_SUCCEEDED(result) && startParent) 
         {
+          if (gNoisy) { printf("ReParentContentOfRange calling ReParentContentOfNode\n"); }
           result = ReParentContentOfNode(startParent, aParentTag, aTranformation);
         }
         NS_RELEASE(subRange);
-        subRanges->RemoveElementAt(0);
-        subRange = (nsIDOMRange *)(subRanges->ElementAt(0));
+        blockSections->RemoveElementAt(0);
+        subRange = (nsIDOMRange *)(blockSections->ElementAt(0));
       }
     }
-    NS_RELEASE(subRanges);
+    NS_RELEASE(blockSections);
   }
   return result;
 }
@@ -793,10 +890,10 @@ nsHTMLEditor::CanContainBlock(nsString &aBlockChild, nsString &aBlockParent, PRB
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::RemoveBlockParent()
+nsHTMLEditor::RemoveParagraphStyle()
 {
   if (gNoisy) { 
-    printf("---------- nsHTMLEditor::RemoveBlockParent ----------\n"); 
+    printf("---------- nsHTMLEditor::RemoveParagraphStyle ----------\n"); 
   }
   
   nsresult result=NS_ERROR_NOT_INITIALIZED;
@@ -815,65 +912,7 @@ nsHTMLEditor::RemoveBlockParent()
       if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
       {
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-        nsCOMPtr<nsIDOMNode>commonParent;
-        result = range->GetCommonParent(getter_AddRefs(commonParent));
-        if ((NS_SUCCEEDED(result)) && commonParent)
-        {
-          PRInt32 startOffset, endOffset;
-          range->GetStartOffset(&startOffset);
-          range->GetEndOffset(&endOffset);
-          nsCOMPtr<nsIDOMNode> startParent;  nsCOMPtr<nsIDOMNode> endParent;
-          range->GetStartParent(getter_AddRefs(startParent));
-          range->GetEndParent(getter_AddRefs(endParent));
-          if (startParent.get()==endParent.get()) 
-          { // the range is entirely contained within a single node
-            nsCOMPtr<nsIDOMElement>blockParentElement;
-            result = nsTextEditor::GetBlockParent(startParent, getter_AddRefs(blockParentElement));
-            while ((NS_SUCCEEDED(result)) && blockParentElement)
-            {
-              nsAutoString childTag;  // leave as empty string
-              nsAutoString blockParentTag;
-              blockParentElement->GetTagName(blockParentTag);
-              PRBool canContain;
-              CanContainBlock(childTag, blockParentTag, canContain);
-              if (PR_TRUE==canContain) {
-                break;
-              }
-              else 
-              {
-                // go through list backwards so deletes don't interfere with the iteration
-                nsCOMPtr<nsIDOMNodeList> childNodes;
-                result = blockParentElement->GetChildNodes(getter_AddRefs(childNodes));
-                if ((NS_SUCCEEDED(result)) && (childNodes))
-                {
-                  nsCOMPtr<nsIDOMNode>grandParent;
-                  blockParentElement->GetParentNode(getter_AddRefs(grandParent));
-                  PRInt32 offsetInParent;
-                  result = nsIEditorSupport::GetChildOffset(blockParentElement, grandParent, offsetInParent);
-                  PRUint32 childCount;
-                  childNodes->GetLength(&childCount);
-                  PRInt32 i=childCount-1;
-                  for ( ; ((NS_SUCCEEDED(result)) && (0<=i)); i--)
-                  {
-                    nsCOMPtr<nsIDOMNode> childNode;
-                    result = childNodes->Item(i, getter_AddRefs(childNode));
-                    if ((NS_SUCCEEDED(result)) && (childNode))
-                    {
-                      result = nsTextEditor::DeleteNode(childNode);
-                      if (NS_SUCCEEDED(result)) {
-                        result = nsTextEditor::InsertNode(childNode, grandParent, offsetInParent);
-                      }
-                    }
-                  }
-                  if (NS_SUCCEEDED(result)) {
-                    result = nsTextEditor::DeleteNode(blockParentElement);
-                  }
-                }
-              }
-              result = nsTextEditor::GetBlockParent(startParent, getter_AddRefs(blockParentElement));
-            }
-          }
-        }
+        result = RemoveParagraphStyleFromRange(range);
       }
     }
     nsEditor::EndTransaction();
@@ -882,10 +921,92 @@ nsHTMLEditor::RemoveBlockParent()
 }
 
 NS_IMETHODIMP 
+nsHTMLEditor::RemoveParagraphStyleFromRange(nsIDOMRange *aRange)
+{
+  if (!aRange) { return NS_ERROR_NULL_POINTER; }
+  nsresult result;
+  nsISupportsArray *blockSections;
+  result = NS_NewISupportsArray(&blockSections);
+  if ((NS_SUCCEEDED(result)) && blockSections)
+  {
+    result = GetBlockSectionsForRange(aRange, blockSections);
+    if (NS_SUCCEEDED(result)) 
+    {
+      nsIDOMRange *subRange;
+      subRange = (nsIDOMRange *)(blockSections->ElementAt(0));
+      while (subRange && (NS_SUCCEEDED(result)))
+      {
+        result = RemoveParagraphStyleFromBlockContent(subRange);
+        NS_RELEASE(subRange);
+        blockSections->RemoveElementAt(0);
+        subRange = (nsIDOMRange *)(blockSections->ElementAt(0));
+      }
+    }
+    NS_RELEASE(blockSections);
+  }
+  return result;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::RemoveParagraphStyleFromBlockContent(nsIDOMRange *aRange)
+{
+  if (!aRange) { return NS_ERROR_NULL_POINTER; }
+  nsresult result;
+  nsCOMPtr<nsIDOMNode>startParent;
+  aRange->GetStartParent(getter_AddRefs(startParent));
+  nsCOMPtr<nsIDOMElement>blockParentElement;
+  result = nsTextEditor::GetBlockParent(startParent, getter_AddRefs(blockParentElement));
+  while ((NS_SUCCEEDED(result)) && blockParentElement)
+  {
+    nsAutoString blockParentTag;
+    blockParentElement->GetTagName(blockParentTag);
+    PRBool isSubordinateBlock;
+    IsSubordinateBlock(blockParentTag, isSubordinateBlock);
+    if (PR_FALSE==isSubordinateBlock) {
+      break;
+    }
+    else 
+    {
+      // go through list backwards so deletes don't interfere with the iteration
+      nsCOMPtr<nsIDOMNodeList> childNodes;
+      result = blockParentElement->GetChildNodes(getter_AddRefs(childNodes));
+      if ((NS_SUCCEEDED(result)) && (childNodes))
+      {
+        nsCOMPtr<nsIDOMNode>grandParent;
+        blockParentElement->GetParentNode(getter_AddRefs(grandParent));
+        PRInt32 offsetInParent;
+        result = GetChildOffset(blockParentElement, grandParent, offsetInParent);
+        PRUint32 childCount;
+        childNodes->GetLength(&childCount);
+        PRInt32 i=childCount-1;
+        for ( ; ((NS_SUCCEEDED(result)) && (0<=i)); i--)
+        {
+          nsCOMPtr<nsIDOMNode> childNode;
+          result = childNodes->Item(i, getter_AddRefs(childNode));
+          if ((NS_SUCCEEDED(result)) && (childNode))
+          {
+            result = nsTextEditor::DeleteNode(childNode);
+            if (NS_SUCCEEDED(result)) {
+              result = nsTextEditor::InsertNode(childNode, grandParent, offsetInParent);
+            }
+          }
+        }
+        if (NS_SUCCEEDED(result)) {
+          result = nsTextEditor::DeleteNode(blockParentElement);
+        }
+      }
+    }
+    result = nsTextEditor::GetBlockParent(startParent, getter_AddRefs(blockParentElement));
+  }
+  return result;
+}
+
+
+NS_IMETHODIMP 
 nsHTMLEditor::RemoveParent(const nsString &aParentTag)
 {
   if (gNoisy) { 
-    printf("---------- nsHTMLEditor::RemoveParent %s----------\n", aParentTag); 
+    printf("---------- nsHTMLEditor::RemoveParagraphStyle ----------\n"); 
   }
   
   nsresult result=NS_ERROR_NOT_INITIALIZED;
@@ -904,68 +1025,7 @@ nsHTMLEditor::RemoveParent(const nsString &aParentTag)
       if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
       {
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-        nsCOMPtr<nsIDOMNode>commonParent;
-        result = range->GetCommonParent(getter_AddRefs(commonParent));
-        if ((NS_SUCCEEDED(result)) && commonParent)
-        {
-          PRInt32 startOffset, endOffset;
-          range->GetStartOffset(&startOffset);
-          range->GetEndOffset(&endOffset);
-          nsCOMPtr<nsIDOMNode> startParent;  nsCOMPtr<nsIDOMNode> endParent;
-          range->GetStartParent(getter_AddRefs(startParent));
-          range->GetEndParent(getter_AddRefs(endParent));
-          if (startParent.get()==endParent.get()) 
-          { // the range is entirely contained within a single node
-            nsCOMPtr<nsIDOMNode>parentNode;
-            nsCOMPtr<nsIDOMElement>parentElement;
-            result = startParent->GetParentNode(getter_AddRefs(parentNode));
-            while ((NS_SUCCEEDED(result)) && parentNode)
-            {
-              parentElement = do_QueryInterface(parentNode);
-              nsAutoString childTag;  // leave as empty string
-              nsAutoString parentTag;
-              parentElement->GetTagName(parentTag);
-              PRBool canContain;
-              CanContainBlock(childTag, parentTag, canContain);
-              if (aParentTag.EqualsIgnoreCase(parentTag))
-              {
-                // go through list backwards so deletes don't interfere with the iteration
-                nsCOMPtr<nsIDOMNodeList> childNodes;
-                result = parentElement->GetChildNodes(getter_AddRefs(childNodes));
-                if ((NS_SUCCEEDED(result)) && (childNodes))
-                {
-                  nsCOMPtr<nsIDOMNode>grandParent;
-                  parentElement->GetParentNode(getter_AddRefs(grandParent));
-                  PRInt32 offsetInParent;
-                  result = nsIEditorSupport::GetChildOffset(parentElement, grandParent, offsetInParent);
-                  PRUint32 childCount;
-                  childNodes->GetLength(&childCount);
-                  PRInt32 i=childCount-1;
-                  for ( ; ((NS_SUCCEEDED(result)) && (0<=i)); i--)
-                  {
-                    nsCOMPtr<nsIDOMNode> childNode;
-                    result = childNodes->Item(i, getter_AddRefs(childNode));
-                    if ((NS_SUCCEEDED(result)) && (childNode))
-                    {
-                      result = nsTextEditor::DeleteNode(childNode);
-                      if (NS_SUCCEEDED(result)) {
-                        result = nsTextEditor::InsertNode(childNode, grandParent, offsetInParent);
-                      }
-                    }
-                  }
-                  if (NS_SUCCEEDED(result)) {
-                    result = nsTextEditor::DeleteNode(parentElement);
-                  }
-                }
-                break;
-              }
-              else if (PR_TRUE==canContain) {  // hit a subdoc, terminate?
-                break;
-              }
-              result = parentElement->GetParentNode(getter_AddRefs(parentNode));
-            }
-          }
-        }
+        result = RemoveParentFromRange(aParentTag, range);
       }
     }
     nsEditor::EndTransaction();
@@ -973,6 +1033,92 @@ nsHTMLEditor::RemoveParent(const nsString &aParentTag)
   return result;
 }
 
+NS_IMETHODIMP 
+nsHTMLEditor::RemoveParentFromRange(const nsString &aParentTag, nsIDOMRange *aRange)
+{
+  if (!aRange) { return NS_ERROR_NULL_POINTER; }
+  nsresult result;
+  nsISupportsArray *blockSections;
+  result = NS_NewISupportsArray(&blockSections);
+  if ((NS_SUCCEEDED(result)) && blockSections)
+  {
+    result = GetBlockSectionsForRange(aRange, blockSections);
+    if (NS_SUCCEEDED(result)) 
+    {
+      nsIDOMRange *subRange;
+      subRange = (nsIDOMRange *)(blockSections->ElementAt(0));
+      while (subRange && (NS_SUCCEEDED(result)))
+      {
+        result = RemoveParentFromBlockContent(aParentTag, subRange);
+        NS_RELEASE(subRange);
+        blockSections->RemoveElementAt(0);
+        subRange = (nsIDOMRange *)(blockSections->ElementAt(0));
+      }
+    }
+    NS_RELEASE(blockSections);
+  }
+  return result;
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::RemoveParentFromBlockContent(const nsString &aParentTag, nsIDOMRange *aRange)
+{
+  if (!aRange) { return NS_ERROR_NULL_POINTER; }
+  nsresult result;
+  nsCOMPtr<nsIDOMNode>startParent;
+  result = aRange->GetStartParent(getter_AddRefs(startParent));
+  if ((NS_SUCCEEDED(result)) && startParent)
+  { 
+    nsCOMPtr<nsIDOMNode>parentNode;
+    nsCOMPtr<nsIDOMElement>parentElement;
+    result = startParent->GetParentNode(getter_AddRefs(parentNode));
+    while ((NS_SUCCEEDED(result)) && parentNode)
+    {
+      parentElement = do_QueryInterface(parentNode);
+      nsAutoString parentTag;
+      parentElement->GetTagName(parentTag);
+      PRBool isRoot;
+      IsRootTag(parentTag, isRoot);
+      if (aParentTag.EqualsIgnoreCase(parentTag))
+      {
+        // go through list backwards so deletes don't interfere with the iteration
+        nsCOMPtr<nsIDOMNodeList> childNodes;
+        result = parentElement->GetChildNodes(getter_AddRefs(childNodes));
+        if ((NS_SUCCEEDED(result)) && (childNodes))
+        {
+          nsCOMPtr<nsIDOMNode>grandParent;
+          parentElement->GetParentNode(getter_AddRefs(grandParent));
+          PRInt32 offsetInParent;
+          result = GetChildOffset(parentElement, grandParent, offsetInParent);
+          PRUint32 childCount;
+          childNodes->GetLength(&childCount);
+          PRInt32 i=childCount-1;
+          for ( ; ((NS_SUCCEEDED(result)) && (0<=i)); i--)
+          {
+            nsCOMPtr<nsIDOMNode> childNode;
+            result = childNodes->Item(i, getter_AddRefs(childNode));
+            if ((NS_SUCCEEDED(result)) && (childNode))
+            {
+              result = nsTextEditor::DeleteNode(childNode);
+              if (NS_SUCCEEDED(result)) {
+                result = nsTextEditor::InsertNode(childNode, grandParent, offsetInParent);
+              }
+            }
+          }
+          if (NS_SUCCEEDED(result)) {
+            result = nsTextEditor::DeleteNode(parentElement);
+          }
+        }
+        break;
+      }
+      else if (PR_TRUE==isRoot) {  // hit a local root node, terminate loop
+        break;
+      }
+      result = parentElement->GetParentNode(getter_AddRefs(parentNode));
+    }
+  }
+  return result;
+}
 
 NS_IMETHODIMP
 nsHTMLEditor::InsertLink(nsString& aURL)
@@ -1329,6 +1475,62 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
   (void)nsEditor::EndTransaction();
   
   return result;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::IsRootTag(nsString &aTag, PRBool &aIsTag)
+{
+  static nsAutoString bodyTag = "body";
+  static nsAutoString tdTag = "td";
+  static nsAutoString thTag = "th";
+  static nsAutoString captionTag = "caption";
+  if (PR_TRUE==aTag.EqualsIgnoreCase(bodyTag) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(tdTag) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(thTag) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(captionTag) )
+  {
+    aIsTag = PR_TRUE;
+  }
+  else {
+    aIsTag = PR_FALSE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::IsSubordinateBlock(nsString &aTag, PRBool &aIsTag)
+{
+  static nsAutoString p = "p";
+  static nsAutoString h1 = "h1";
+  static nsAutoString h2 = "h2";
+  static nsAutoString h3 = "h3";
+  static nsAutoString h4 = "h4";
+  static nsAutoString h5 = "h5";
+  static nsAutoString h6 = "h6";
+  static nsAutoString address = "address";
+  static nsAutoString pre = "pre";
+  static nsAutoString li = "li";
+  static nsAutoString dt = "dt";
+  static nsAutoString dd = "dd";
+  if (PR_TRUE==aTag.EqualsIgnoreCase(p)  ||
+      PR_TRUE==aTag.EqualsIgnoreCase(h1) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(h2) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(h3) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(h4) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(h5) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(h6) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(address) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(pre) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(li) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(dt) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(dd) )
+  {
+    aIsTag = PR_TRUE;
+  }
+  else {
+    aIsTag = PR_FALSE;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLEditor::BeginComposition(void)

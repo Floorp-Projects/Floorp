@@ -21,7 +21,6 @@
 
 #include "prmon.h"
 #include "nsIEditor.h"
-#include "nsIEditorSupport.h"
 #include "nsIContextLoader.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
@@ -46,6 +45,7 @@ class SplitElementTxn;
 class JoinElementTxn;
 class EditAggregateTxn;
 class nsVoidArray;
+class nsISupportsArray;
 
 //This is the monitor for the editor.
 PRMonitor *getEditorMonitor();
@@ -56,7 +56,7 @@ PRMonitor *getEditorMonitor();
  *  manager, event interfaces. the idea for the event interfaces is to have them 
  *  delegate the actual commands to the editor independent of the XPFE implementation.
  */
-class nsEditor : public nsIEditor, public nsIEditorSupport
+class nsEditor : public nsIEditor
 {
 private:
   nsIPresShell   *mPresShell;
@@ -75,6 +75,10 @@ protected:
   nsIDOMDocument * mDoc;
 
 public:
+
+  const static char* nsEditor::kMOZEditorBogusNodeAttr;
+  const static char* nsEditor::kMOZEditorBogusNodeValue;
+
   /** The default constructor. This should suffice. the setting of the interfaces is done
    *  after the construction of the editor class.
    */
@@ -186,32 +190,6 @@ public:
 /*END nsIEditor interfaces*/
 
 
-/*BEGIN public methods unique to nsEditor.  These will get moved to an interface
-  if they survive.
-*/
-
-  /** GetFirstTextNode ADDREFFS and will get the next available text node from the passed
-   *  in node parameter it can also return NS_ERROR_FAILURE if no text nodes are available
-   *  now it simply returns the first node in the dom
-   *  @param nsIDOMNode *aNode is the node to start looking from
-   *  @param nsIDOMNode **aRetNode is the return location of the text dom node
-   *
-   * NOTE: this method will probably be removed.
-   */
-  NS_IMETHOD GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode);
-
-  /** GetFirstNodeOfType ADDREFFS and will get the next available node from the passed
-   *  in aStartNode parameter of type aTag.
-   *  It can also return NS_ERROR_FAILURE if no such nodes are available
-   *  @param nsIDOMNode *aStartNode is the node to start looking from
-   *  @param nsIAtom *aTag is the type of node we are searching for
-   *  @param nsIDOMNode **aResult is the node we found, or nsnull if there is none
-   */
-  NS_IMETHOD GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDOMNode **aResult);
-
-/*END public methods of nsEditor*/
-
-
 /*BEGIN private methods used by the implementations of the above functions*/
 protected:
   /** create a transaction for setting aAttribute to aValue on aElement
@@ -278,27 +256,9 @@ protected:
                                    PRUint32    aOffset,
                                    SplitElementTxn **aTxn);
 
-  NS_IMETHOD SplitNodeImpl(nsIDOMNode * aExistingRightNode,
-                           PRInt32      aOffset,
-                           nsIDOMNode * aNewLeftNode,
-                           nsIDOMNode * aParent);
-
   NS_IMETHOD CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
                                   nsIDOMNode  *aRightNode,
                                   JoinElementTxn **aTxn);
-
-  NS_IMETHOD JoinNodesImpl(nsIDOMNode * aNodeToKeep,
-                           nsIDOMNode * aNodeToJoin,
-                           nsIDOMNode * aParent,
-                           PRBool       aNodeToKeepIsFirst);
-
-  NS_IMETHOD GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
-
-  NS_IMETHOD GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
-
-  NS_IMETHOD GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
-
-  NS_IMETHOD GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
 
   /** Create an aggregate transaction for deleting current selection
    *  Used by all methods that need to delete current selection,
@@ -321,10 +281,151 @@ protected:
 // of an error in Gecko which is not rendering the
 // document after a change via the DOM - gpk 2/13/99
   void HACKForceRedraw(void);
+
   PRBool mIMEFirstTransaction;
 
-
   NS_IMETHOD DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, PRInt32& offsetOfNewNode);
+
+public:
+  /** 
+   * SplitNode() creates a new node identical to an existing node, and split the contents between the two nodes
+   * @param aExistingRightNode   the node to split.  It will become the new node's next sibling.
+   * @param aOffset              the offset of aExistingRightNode's content|children to do the split at
+   * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
+   * @param aParent              the parent of aExistingRightNode
+   */
+  static nsresult SplitNodeImpl(nsIDOMNode *aExistingRightNode,
+                                PRInt32      aOffset,
+                                nsIDOMNode *aNewLeftNode,
+                                nsIDOMNode *aParent);
+
+  /** 
+   * JoinNodes() takes 2 nodes and merge their content|children.
+   * @param aNodeToKeep   The node that will remain after the join.
+   * @param aNodeToJoin   The node that will be joined with aNodeToKeep.
+   *                      There is no requirement that the two nodes be of the same type.
+   * @param aParent       The parent of aExistingRightNode
+   * @param aNodeToKeepIsFirst  if PR_TRUE, the contents|children of aNodeToKeep come before the
+   *                            contents|children of aNodeToJoin, otherwise their positions are switched.
+   */
+  static nsresult JoinNodesImpl(nsIDOMNode *aNodeToKeep,
+                                nsIDOMNode *aNodeToJoin,
+                                nsIDOMNode *aParent,
+                                PRBool      aNodeToKeepIsFirst);
+
+  /**
+   *  Set aOffset to the offset of aChild in aParent.  
+   *  Returns an error if aChild is not an immediate child of aParent.
+   */
+  static nsresult GetChildOffset(nsIDOMNode *aChild, 
+                                 nsIDOMNode *aParent, 
+                                 PRInt32    &aOffset);
+
+  /** set aIsInline to PR_TRUE if aNode is inline as defined by HTML DTD */
+  static nsresult IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline);
+
+  /** returns the closest block parent of aNode, not including aNode itself.
+    * can return null, for example if aNode is in a document fragment.
+    * @param aNode        The node whose parent we seek.
+    * @param aBlockParent [OUT] The block parent, if any.
+    * @return a success value unless an unexpected error occurs.
+    */
+  static nsresult GetBlockParent(nsIDOMNode     *aNode, 
+                                 nsIDOMElement **aBlockParent);
+
+  /** Determines the bounding nodes for the block section containing aNode.
+    * The calculation is based on some nodes intrinsically being block elements
+    * acording to HTML.  Style sheets are not considered in this calculation.
+    * <BR> tags separate block content sections.  So the HTML markup:
+    * <PRE>
+    *      <P>text1<BR>text2<B>text3</B></P>
+    * </PRE>
+    * contains two block content sections.  The first has the text node "text1"
+    * for both endpoints.  The second has "text2" as the left endpoint and
+    * "text3" as the right endpoint.
+    * Notice that offsets aren't required, only leaf nodes.  Offsets are implicit.
+    *
+    * @param aNode      the block content returned includes aNode
+    * @param aLeftNode  [OUT] the left endpoint of the block content containing aNode
+    * @param aRightNode [OUT] the right endpoint of the block content containing aNode
+    *
+    */
+  static nsresult GetBlockSection(nsIDOMNode  *aNode,
+                                  nsIDOMNode **aLeftNode, 
+                                  nsIDOMNode **aRightNode);
+
+  /** Compute the set of block sections in a given range.
+    * A block section is the set of (leftNode, rightNode) pairs given
+    * by GetBlockSection.  The set is computed by computing the 
+    * block section for every leaf node in the range and throwing 
+    * out duplicates.
+    *
+    * @param aRange     The range to compute block sections for.
+    * @param aSections  Allocated storage for the resulting set, stored as nsIDOMRanges.
+    */
+  static nsresult GetBlockSectionsForRange(nsIDOMRange      *aRange, 
+                                           nsISupportsArray *aSections);
+
+  /** returns PR_TRUE in out-param aResult if all nodes between (aStartNode, aStartOffset)
+    * and (aEndNode, aEndOffset) are inline as defined by HTML DTD. 
+    */
+  static nsresult IntermediateNodesAreInline(nsIDOMRange  *aRange,
+                                             nsIDOMNode   *aStartNode, 
+                                             PRInt32       aStartOffset, 
+                                             nsIDOMNode   *aEndNode,
+                                             PRInt32       aEndOffset,
+                                             PRBool       &aResult);
+
+  /** returns the number of things inside aNode in the out-param aCount.  
+    * @param  aNode is the node to get the length of.  
+    *         If aNode is text, returns number of characters. 
+    *         If not, returns number of children nodes.
+    * @param  aCount [OUT] the result of the above calculation.
+    */
+  static nsresult GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount);
+
+  /**
+   */
+  static nsresult GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+
+  /**
+   */
+  static nsresult GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+
+  /**
+   */
+  static nsresult GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+
+  /**
+   */
+  static nsresult GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
+
+  /** GetFirstTextNode ADDREFFS and will get the next available text node from the passed
+   *  in node parameter it can also return NS_ERROR_FAILURE if no text nodes are available
+   *  now it simply returns the first node in the dom
+   *  @param nsIDOMNode *aNode is the node to start looking from
+   *  @param nsIDOMNode **aRetNode is the return location of the text dom node
+   *
+   * NOTE: this method will probably be removed.
+   */
+  static nsresult GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode);
+
+  /** GetFirstNodeOfType ADDREFFS and will get the next available node from the passed
+   *  in aStartNode parameter of type aTag.
+   *  It can also return NS_ERROR_FAILURE if no such nodes are available
+   *  @param   aStartNode is the node to start looking from
+   *  @param   aTag is the type of node we are searching for
+   *  @param   aResult is the node we found, or nsnull if there is none
+   */
+  static nsresult GetFirstNodeOfType(nsIDOMNode     *aStartNode, 
+                                     const nsString &aTag, 
+                                     nsIDOMNode    **aResult);
+
+  /** returns PR_TRUE if aNode is of the type implied by aTag */
+  static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
+
+  /** returns PR_TRUE if aNode is an editable node */
+  static PRBool IsEditable(nsIDOMNode *aNode);
 
 
 };

@@ -73,6 +73,7 @@ SUP places text in superscript style
 
   // block tags 
   static nsIAtom *blockquote;
+  static nsIAtom *br;
   static nsIAtom *h1;
   static nsIAtom *h2;
 

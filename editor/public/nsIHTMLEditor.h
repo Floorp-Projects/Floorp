@@ -123,11 +123,13 @@ public:
     */
   NS_IMETHOD ReplaceBlockParent(nsString& aParentTag)=0;
 
+  /** remove the paragraph style from the selection */
+  NS_IMETHOD RemoveParagraphStyle()=0;
+
   /** remove block parent of type aTagToRemove from the selection.
     * if aTagToRemove is null, the nearest enclosing block that 
-    * is <B>not</B> a sub-document is removed.
+    * is <B>not</B> a root is removed.
     */
-  NS_IMETHOD RemoveBlockParent()=0;
   NS_IMETHOD RemoveParent(const nsString &aParentTag)=0;
 
   NS_IMETHOD InsertLink(nsString& aURL)=0;

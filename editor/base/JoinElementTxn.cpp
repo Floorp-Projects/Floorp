@@ -17,19 +17,16 @@
  */
 
 #include "JoinElementTxn.h"
+#include "nsEditor.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMSelection.h"
-#include "nsIEditorSupport.h"
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
-
-static NS_DEFINE_IID(kIEditorSupportIID,    NS_IEDITORSUPPORT_IID);
-
 
 JoinElementTxn::JoinElementTxn()
   : EditTxn()
@@ -84,19 +81,15 @@ NS_IMETHODIMP JoinElementTxn::Do(void)
               leftNodeAsText->GetLength(&mOffset);
             }
           }
-          nsCOMPtr<nsIEditorSupport> editor;
-          result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
-          if (NS_SUCCEEDED(result) && editor) {
-            result = editor->JoinNodesImpl(mRightNode, mLeftNode, mParent, PR_FALSE);
-            if (NS_SUCCEEDED(result))
+          result = nsEditor::JoinNodesImpl(mRightNode, mLeftNode, mParent, PR_FALSE);
+          if (NS_SUCCEEDED(result))
+          {
+            if (gNoisy) { printf("  left node = %p removed\n", mLeftNode.get()); }
+            nsCOMPtr<nsIDOMSelection>selection;
+            mEditor->GetSelection(getter_AddRefs(selection));
+            if (selection)
             {
-              if (gNoisy) { printf("  left node = %p removed\n", mLeftNode.get()); }
-              nsCOMPtr<nsIDOMSelection>selection;
-              mEditor->GetSelection(getter_AddRefs(selection));
-              if (selection)
-              {
-                selection->Collapse(mRightNode, mOffset);
-              }
+              selection->Collapse(mRightNode, mOffset);
             }
           }
         }
