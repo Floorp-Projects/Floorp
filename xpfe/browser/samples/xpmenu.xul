@@ -119,6 +119,8 @@ playsound
     </xpmenubar>
   </toolbox>
 
+<html:div style="height: 400px; width: 400 px; background: url(resource:/res/samples/rock_gra.gif);"/>
+
 <!--  <html:iframe style="height: 300px" src="http://www.mozillazine.org/"/>
 -->
 
