@@ -27,8 +27,11 @@
 
 //#undef NOISY_FONTS
 //#undef REALLY_NOISY_FONTS
+
+#ifdef DEBUG_pavlov
 #define NOISY_FONTS
 #define REALLY_NOISY_FONTS
+#endif
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
