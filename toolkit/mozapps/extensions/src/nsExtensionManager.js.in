@@ -926,7 +926,7 @@ nsExtensionInstaller.prototype = {
     zipReader.open();
 
     try {
-      zipReader.test(fileName);
+      zipReader.getEntry(fileName);
       
       // Extract the contents.rdf file at the location specified in the provider arc
       // and discover the list of provider names to register for that location.
@@ -1162,7 +1162,7 @@ nsThemeInstaller.prototype = {
     zipReader.open();
     
     try {
-      zipReader.test(FILE_INSTALL_MANIFEST);
+      zipReader.getEntry(FILE_INSTALL_MANIFEST);
     }
     catch (e) {
       // If the zip reader returned an error code here it means that the install.rdf
@@ -1171,8 +1171,8 @@ nsThemeInstaller.prototype = {
       // anymore as there is no practical use for them, so we should throw an error
       // here and bail. 
       try {
-        zipReader.test(FILE_CHROME_MANIFEST);
-
+        zipReader.getEntry(FILE_CHROME_MANIFEST);
+        
         // Load the contents.rdf file from the .jar file if present and show a detailed
         // error.         
         var tempChromeManifest = getFile(extDirKey,
@@ -1184,7 +1184,7 @@ nsThemeInstaller.prototype = {
         showOldThemeError(rdfs.GetDataSourceBlocking(getURLSpecFromFile(tempChromeManifest)));
         tempChromeManifest.remove(false);
       }
-      catch(e) {
+      catch (e) {
         showMissingFileError(aJARFile, FILE_CHROME_MANIFEST);
       }
     }
@@ -2284,6 +2284,8 @@ nsExtensionManager.prototype = {
   installTheme: function (aJARFile, aFlags)
   {
     this._ensureDS();
+    
+    dump("*** installTheme\n");
     
     var isProfile = aFlags & nsIExtensionManager.FLAG_INSTALL_PROFILE;
     var installer = new nsThemeInstaller(this._ds, this);
@@ -3433,7 +3435,7 @@ nsExtensionsDataSource.prototype = {
         zipReader.open();
         var url = aFallbackURL;
         try {
-          zipReader.test(aFileName);
+          zipReader.getEntry(aFileName);
           url = "jar:" + getURLSpecFromFile(jarFile) + "!/" + aFileName; 
         }
         catch (e) { }
