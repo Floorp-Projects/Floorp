@@ -209,11 +209,13 @@ function FolderProperties(name, uri)
 function MsgToggleMessagePane()
 {
   var splitter = document.getElementById("threadpane-splitter");
-    var state = splitter.getAttribute("state");
-    if (state == "collapsed")
-        splitter.setAttribute("state", null);
-    else
-        splitter.setAttribute("state", "collapsed")
+  var state = splitter.getAttribute("state");
+  if (state == "collapsed")
+    splitter.setAttribute("state", null);
+  else
+    splitter.setAttribute("state", "collapsed")
+
+   ChangeMessagePaneVisibility(IsMessagePaneCollapsed());
 }
 
 function MsgSetFolderCharset() 
