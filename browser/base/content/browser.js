@@ -519,10 +519,84 @@ function BrowserHome()
   loadURI(homePage);
 }
 
-function updateGoMenu(event)
+function constructGoMenuItem(goMenu, beforeItem, url, title)
 {
-  // XXX Write me - dwh
+  const kXULNS = 
+    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+  var menuitem = document.createElementNS(kXULNS, "menuitem");
+  menuitem.setAttribute("url", url);
+  menuitem.setAttribute("label", title);
+  goMenu.insertBefore(menuitem, beforeItem);
+  return menuitem;
+}
+
+function onGoMenuHidden()
+{
+  setTimeout("destroyGoMenuItems(document.getElementById('goPopup'));", 0);
+}
+
+function destroyGoMenuItems(goMenu) {
+  var history = document.getElementById("hiddenHistoryTree");
+  history.removeAttribute("ref");
+  
+  var startSeparator = document.getElementById("startHistorySeparator");
+  var endSeparator = document.getElementById("endHistorySeparator");
+  endSeparator.hidden = true;
+
+  // Destroy the items.
+  var destroy = false;
+  for (var i = 0; i < goMenu.childNodes.length; i++) {
+    var item = goMenu.childNodes[i];
+    if (item == endSeparator)
+      break;
+
+    if (destroy) {
+      i--;
+      goMenu.removeChild(item);
+    }
+
+    if (item == startSeparator)
+      destroy = true;
+  }
+}
+
+function updateGoMenu(goMenu)
+{
+  var history = document.getElementById("hiddenHistoryTree");
+  if (history.hidden)
+    history.hidden = false;
+
+  if (!history.ref)
+    history.ref = "NC:HistoryRoot";
+  
+  var count = history.treeBoxObject.view.rowCount;
+  if (count > 10)
+    count = 10;
+
+  if (count == 0)
+    return;
+
+  const NC_NS     = "http://home.netscape.com/NC-rdf#";
+
+  if (!gRDF)
+     gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                      .getService(Components.interfaces.nsIRDFService);
+
+  var builder = history.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+  
+  var beforeItem = document.getElementById("endHistorySeparator");
+  beforeItem.hidden = false;
+
+  var nameResource = gRDF.GetResource(NC_NS + "Name");
+
+  for (var i = count-1; i >= 0; i--) {
+    var res = builder.getResourceAtIndex(i);
+    var url = res.Value;
+    var titleRes = history.database.GetTarget(res, nameResource, true);
+    var titleLiteral = titleRes.QueryInterface(Components.interfaces.nsIRDFLiteral);
+    beforeItem = constructGoMenuItem(goMenu, beforeItem, url, titleLiteral.Value);
+  }
 }
 
 function addGroupmarkAs()

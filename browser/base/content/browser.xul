@@ -429,6 +429,30 @@ Contributor(s):
               oncommand="gContextMenu.showMetadata();"/>
   </popup>
 
+  <!-- Total hack. Used by the Go menu to build up items. -->
+  <tree id="hiddenHistoryTree" hidden="true" collapsed="true"
+                  datasources="rdf:history" flags="dont-build-content"
+                  hidecolumnpicker="true">
+    <template>
+      <rule>
+        <treechildren>
+          <treeitem uri="rdf:*" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+            <treerow>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Date" hidden="true"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+    </template>
+    <treecols id="hiddenHistoryTreeCols">
+      <treecol flex="1" id="Name"
+               hideheader="true" primary="true"/>
+      <treecol id="Date" hidden="true" hideheader="true"
+               sort="rdf:http://home.netscape.com/NC-rdf#Date" sortActive="true" sortDirection="descending"/>
+    </treecols>
+  </tree>
+
   <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons" iconsize="small">
     <!-- Menu -->
       <menubar id="main-menubar" class="chromeclass-menubar">
@@ -634,14 +658,14 @@ Contributor(s):
           </menupopup>
         </menu>
     
-        <menu label="&goMenu.label;" accesskey="&goMenu.accesskey;">
-          <menupopup onpopupshowing="updateGoMenu(event);">
+        <menu label="&goMenu.label;" accesskey="&goMenu.accesskey;" oncommand="var url = event.target.getAttribute('url'); if (url) openTopWin(url);">
+          <menupopup id="goPopup" onpopupshowing="updateGoMenu(this);" onpopuphiding="onGoMenuHidden();">
             <menuitem label="&backCmd.label;"    accesskey="&backCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
             <menuitem label="&forwardCmd.label;" accesskey="&forwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
             <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
-            <menuseparator/>
+            <menuseparator id="startHistorySeparator"/>
+            <menuseparator hidden="true" id="endHistorySeparator"/>
             <menuitem accesskey="&historyCmd.accesskey;" command="viewHistorySidebar" key="key_gotoHistory"/>
-            <menuseparator hidden="true"/>
           </menupopup>
         </menu>
 
