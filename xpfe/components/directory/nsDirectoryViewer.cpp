@@ -17,6 +17,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author(s):
+ *   Chris Waterson           <waterson@netscape.com>
+ *   Robert John Churchill    <rjc@netscape.com>
+ *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
@@ -61,6 +65,8 @@
 #include "nsIInterfaceRequestor.h"
 #include "iostream.h"
 #include "nsITextToSubURI.h"
+#include "nsITimer.h"
+#include "nsISupportsArray.h"
 
 //----------------------------------------------------------------------
 //
@@ -89,6 +95,7 @@ class nsHTTPIndex : public nsIHTTPIndex, public nsIRDFDataSource
 private:
 	static nsIRDFResource		*kNC_Child;
 	static nsIRDFResource		*kNC_loading;
+    static nsIRDFLiteral        *kTrueLiteral;
 
 protected:
 	// We grab a reference to the content viewer container (which
@@ -98,12 +105,15 @@ protected:
 	// an OnStartRequest() notification
 
 	nsCOMPtr<nsIRDFDataSource>	mInner;
+    nsCOMPtr<nsISupportsArray>	mConnectionList;
+    nsCOMPtr<nsITimer>		    mTimer;
 	nsISupports			*mContainer;	// [WEAK]
 	nsCString			mBaseURL;
 
-			nsHTTPIndex(nsISupports* aContainer);
+			    nsHTTPIndex(nsISupports* aContainer);
 	nsresult 	Init(nsIURI* aBaseURL);
 	PRBool		isWellknownContainerURI(nsIRDFResource *r);
+static	void	FireTimer(nsITimer* aTimer, void* aClosure);
 
 public:
 			    nsHTTPIndex();
@@ -198,6 +208,7 @@ PRInt32			gRefCnt = 0;
 
 nsIRDFResource	*nsHTTPIndex::kNC_Child;
 nsIRDFResource	*nsHTTPIndex::kNC_loading;
+nsIRDFLiteral   *nsHTTPIndex::kTrueLiteral;
 
 nsrefcnt nsHTTPIndexParser::gRefCntParser = 0;
 nsIRDFService* nsHTTPIndexParser::gRDF;
@@ -321,6 +332,7 @@ nsHTTPIndexParser::Create(nsHTTPIndex* aHTTPIndex,
   *aResult = result;
   return NS_OK;
 }
+
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsHTTPIndexParser, nsIStreamListener, nsIStreamObserver);
 
@@ -919,7 +931,7 @@ nsHTTPIndexParser::ParseInt(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** 
 //
 
 nsHTTPIndex::nsHTTPIndex()
-	: mInner(nsnull), mContainer(nsnull)
+	: mInner(nsnull), mContainer(nsnull), mTimer(nsnull), mConnectionList(nsnull)
 {
 	NS_INIT_REFCNT();
 }
@@ -927,7 +939,7 @@ nsHTTPIndex::nsHTTPIndex()
 
 
 nsHTTPIndex::nsHTTPIndex(nsISupports* aContainer)
-	: mInner(nsnull), mContainer(aContainer)
+	: mInner(nsnull), mContainer(aContainer), mTimer(nsnull), mConnectionList(nsnull)
 {
 	NS_INIT_REFCNT();
 }
@@ -940,6 +952,18 @@ nsHTTPIndex::~nsHTTPIndex()
 	{
 		NS_IF_RELEASE(kNC_Child);
 		NS_IF_RELEASE(kNC_loading);
+
+		NS_IF_RELEASE(kTrueLiteral);
+
+    	if (mTimer)
+    	{
+    		// be sure to cancel the timer, as it holds a
+    		// weak reference back to nsHTTPIndex
+    		mTimer->Cancel();
+    		mTimer = nsnull;
+    	}
+
+        mConnectionList = nsnull;
 
 		if (gRDF)
 		{
@@ -975,9 +999,15 @@ nsHTTPIndex::Init()
 		gRDF->GetResource(NC_NAMESPACE_URI "child",   &kNC_Child);
 		gRDF->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
 
-		// register this as a named data source with the RDF service
+        rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
+        if (NS_FAILED(rv)) return(rv);
+
+        if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(mConnectionList))))
+        	return(rv);
+
+		// (do this last) register this as a named data source with the RDF service
 		rv = gRDF->RegisterDataSource(this, PR_FALSE);
-		if (NS_FAILED(rv)) return rv;
+		if (NS_FAILED(rv)) return(rv);
 	}
 	return(NS_OK);
 }
@@ -1032,7 +1062,7 @@ nsHTTPIndex::Create(nsIURI* aBaseURL, nsISupports* aContainer, nsIHTTPIndex** aR
 
 
 
-NS_IMPL_ISUPPORTS2(nsHTTPIndex, nsIHTTPIndex, nsIRDFDataSource);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsHTTPIndex, nsIHTTPIndex, nsIRDFDataSource);
 
 
 
@@ -1183,47 +1213,6 @@ nsHTTPIndex::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBo
 {
 	nsresult	rv = NS_ERROR_UNEXPECTED;
 
-	if (isWellknownContainerURI(aSource) && (aProperty == kNC_Child))
-	{
-		PRBool		doNetworkRequest = PR_TRUE;
-		if (NS_SUCCEEDED(rv) && (_retval))
-		{
-			// check and see if we already have data for the search in question;
-			// if we do, BeginSearchRequest() won't bother doing the search again,
-			// otherwise it will kickstart it
-			PRBool		hasResults = PR_FALSE;
-			if (NS_SUCCEEDED((*_retval)->HasMoreElements(&hasResults)) && (hasResults == PR_TRUE))
-			{
-				doNetworkRequest = PR_FALSE;
-			}
-		}
-		if (doNetworkRequest == PR_TRUE)
-		{
-			const char	*uri = nsnull;
-			aSource->GetValueConst(&uri);
-
-			nsCOMPtr<nsIURI>	url;
-			if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), uri)))
-			{
-				nsCOMPtr<nsIChannel>	channel;
-				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull, nsnull)))
-				{
-					nsCOMPtr<nsIStreamListener>	listener;
-					if (NS_SUCCEEDED(rv = CreateListener(getter_AddRefs(listener))))
-					{
-						if (NS_SUCCEEDED(rv = channel->AsyncRead(listener, aSource)))
-						{
-							nsCOMPtr<nsIRDFLiteral>	trueLiteral;
-							gRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(),
-								getter_AddRefs(trueLiteral));
-							rv = mInner->Assert(aSource, kNC_loading, trueLiteral, PR_TRUE);
-						}
-					}
-				}
-			}
-		}
-	}
-
 	if (mInner)
 	{
 		rv = mInner->GetTargets(aSource, aProperty, aTruthValue, _retval);
@@ -1232,7 +1221,117 @@ nsHTTPIndex::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBo
 	{
 		rv = NS_NewEmptyEnumerator(_retval);
 	}
+
+	if (isWellknownContainerURI(aSource) && (aProperty == kNC_Child))
+	{
+		PRBool		doNetworkRequest = PR_TRUE;
+		if (NS_SUCCEEDED(rv) && (_retval))
+		{
+			// check and see if we already have data for the search in question;
+			// if we do, don't bother doing the search again
+			PRBool		hasResults = PR_FALSE;
+			if (NS_SUCCEEDED((*_retval)->HasMoreElements(&hasResults)) &&
+			    (hasResults == PR_TRUE))
+			{
+				doNetworkRequest = PR_FALSE;
+			}
+		}
+
+        // Note: if we need to do a network request, do it out-of-band
+        // (because the XUL template builder isn't re-entrant)
+        // by using a global connection list and an immediately-firing timer
+
+		if ((doNetworkRequest == PR_TRUE) && (mConnectionList))
+		{
+		    PRInt32 connectionIndex = mConnectionList->IndexOf(aSource);
+		    if (connectionIndex < 0)
+		    {
+    		    // add aSource into list of connections to make
+	    	    mConnectionList->AppendElement(aSource);
+
+                // if we don't have a timer about to fire, create one
+                // which should fire as soon as possible (out-of-band)
+            	if (!mTimer)
+            	{
+            		mTimer = do_CreateInstance("component://netscape/timer", &rv);
+            		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a timer");
+            		if (NS_SUCCEEDED(rv))
+            		{
+                		mTimer->Init(nsHTTPIndex::FireTimer, this, 1,
+                		    NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
+                		// Note: don't addref "this" as we'll cancel the
+                		// timer in the httpIndex destructor
+                	}
+            	}
+	    	}
+		}
+	}
+
 	return(rv);
+}
+
+void
+nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
+{
+	nsHTTPIndex *httpIndex = NS_STATIC_CAST(nsHTTPIndex *, aClosure);
+	if (!httpIndex)	return;
+
+    // Note: process ALL outstanding connection requests;
+    // don't return out of this loop as mTimer needs to be cancelled afterwards
+    if (httpIndex->mConnectionList)
+    {
+        PRUint32    numItems = 0;
+        PRInt32     loop;
+        httpIndex->mConnectionList->Count(&numItems);
+        if (numItems > 0)
+        {
+            for (loop=((PRInt32)numItems)-1; loop>=0; loop--)
+            {
+                nsCOMPtr<nsISupports>   isupports;
+                httpIndex->mConnectionList->GetElementAt((PRUint32)loop, getter_AddRefs(isupports));
+                httpIndex->mConnectionList->RemoveElementAt((PRUint32)loop);
+
+                nsCOMPtr<nsIRDFResource>    aSource;
+                if (isupports)  aSource = do_QueryInterface(isupports);
+    			const char	*uri = nsnull;
+                if (aSource)    aSource->GetValueConst(&uri);
+                nsresult            rv = NS_OK;
+    			nsCOMPtr<nsIURI>	url;
+                if (uri)
+                {
+        			rv = NS_NewURI(getter_AddRefs(url), uri);
+        		}
+				nsCOMPtr<nsIChannel>	channel;
+        		if (NS_SUCCEEDED(rv) && (url))
+        		{
+    				rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull, nsnull);
+        		}
+				nsCOMPtr<nsIStreamListener>	listener;
+        		if (NS_SUCCEEDED(rv) && (channel))
+        		{
+					rv = httpIndex->CreateListener(getter_AddRefs(listener));
+        		}
+        		if (NS_SUCCEEDED(rv) && (listener))
+        		{
+					if (NS_SUCCEEDED(rv = channel->AsyncRead(listener, aSource)))
+					{
+					    // mark aSource as "loading"
+						rv = httpIndex->mInner->Assert(aSource, kNC_loading, kTrueLiteral, PR_TRUE);
+					}
+        		}
+            }
+        }
+    }
+
+    // after firing off any/all of the connections
+    // be sure to cancel the timer
+	if (httpIndex->mTimer)
+	{
+		// be sure to cancel the timer, as it holds a
+		// weak reference back to nsHTTPIndex
+		httpIndex->mTimer->Cancel();
+		httpIndex->mTimer = nsnull;
+	}
 }
 
 NS_IMETHODIMP
