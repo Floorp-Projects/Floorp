@@ -103,8 +103,8 @@ protected:
   char *m_key;
   
   char *getPrefName(const char *identityKey, const char *pref);
-  char *getCharPref(nsIPref *pref, const char *identityKey, const char *pref);
-  PRBool getBoolPref(nsIPref *pref, const char *identityKey, const char *pref);
+  char *getCharPref(nsIPref *prefs, const char *identityKey, const char *pref);
+  PRBool getBoolPref(nsIPref *prefs, const char *identityKey, const char *pref);
   
 };
 
