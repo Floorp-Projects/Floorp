@@ -25,18 +25,18 @@ SPAN.command     { color: blue }
 DIV.errmsg       { color: red }
 
 /* Explicit hyperlinks (underlined) */
-DIV.textlink     { font-family: monaco; color: blue; cursor: hand;
+DIV.textlink     { font-family: monaco; color: blue; cursor: pointer;
                     text-decoration: underline }
-SPAN.textlink    { font-family: monaco; color: blue; cursor: hand;
+SPAN.textlink    { font-family: monaco; color: blue; cursor: pointer;
                     text-decoration: underline }
 
 /* Imlicit hyperlinks (highlighted) */
-SPAN.highlight   { font-family: monaco; color: blue; cursor: hand }
-SPAN.directory   { font-family: monaco; color: blue; cursor: hand }
-SPAN.executable  { font-family: monaco; color: blue; cursor: hand }
-SPAN.plainfile   { font-family: monaco; color: blue; cursor: hand }
-SPAN.imagefile   { font-family: monaco; color: blue; cursor: hand }
-SPAN.urlfile     { font-family: monaco; color: blue; cursor: hand }
+SPAN.highlight   { font-family: monaco; color: blue; cursor: pointer }
+SPAN.directory   { font-family: monaco; color: blue; cursor: pointer }
+SPAN.executable  { font-family: monaco; color: blue; cursor: pointer }
+SPAN.plainfile   { font-family: monaco; color: blue; cursor: pointer }
+SPAN.imagefile   { font-family: monaco; color: blue; cursor: pointer }
+SPAN.urlfile     { font-family: monaco; color: blue; cursor: pointer }
 
 /* Screen display */
 PRE.row              { margin: 0; padding-top: 0; padding-bottom: 0 }
@@ -60,8 +60,8 @@ TABLE.tiptable   { background-color: #DDDDDD }
 DIV.tipelement   { font-family: sans-serif }
 
 /* Help links */
-SPAN.helphighlight { font-family: sans-serif; color: green; cursor: hand }
-SPAN.helplink      { font-family: sans-serif; color: blue; cursor: hand;
+SPAN.helphighlight { font-family: sans-serif; color: green; cursor: pointer }
+SPAN.helplink      { font-family: sans-serif; color: blue; cursor: pointer;
                      text-decoration: underline }
 
 /* Level style */
