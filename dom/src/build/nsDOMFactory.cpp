@@ -48,6 +48,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIExceptionService.h"
 
+#include "nsScriptNameSpaceManager.h"
 
 extern nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal,
                                        nsIScriptContext **aContext);
@@ -93,6 +94,15 @@ public:
                                    nsIScriptGlobalObject **aGlobal);
 
   NS_IMETHOD_(nsISupports *)GetClassInfoInstance(nsDOMClassInfoID aID);
+  NS_IMETHOD_(nsISupports *)GetExternalClassInfoInstance(const nsAString& aName);
+
+  NS_IMETHOD RegisterDOMClassInfo(const char *aName,
+                                  nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
+                                  const nsIID *aProtoChainInterface,
+                                  const nsIID **aInterfaces,
+                                  PRUint32 aScriptableFlags,
+                                  PRBool aHasClassInterface,
+                                  const nsCID *aConstructorCID);
 };
 
 nsDOMSOFactory::nsDOMSOFactory()
@@ -159,6 +169,37 @@ nsDOMSOFactory::GetClassInfoInstance(nsDOMClassInfoID aID)
   return nsDOMClassInfo::GetClassInfoInstance(aID);
 }
 
+NS_IMETHODIMP_(nsISupports *)
+nsDOMSOFactory::GetExternalClassInfoInstance(const nsAString& aName)
+{
+  extern nsScriptNameSpaceManager *gNameSpaceManager;
+
+  NS_ENSURE_TRUE(gNameSpaceManager, nsnull);
+
+  const nsGlobalNameStruct *globalStruct;
+  gNameSpaceManager->LookupName(aName, &globalStruct);
+  if (globalStruct) {
+    if (globalStruct->mType == nsGlobalNameStruct::eTypeExternalClassInfoCreator) {
+      nsresult rv;
+      nsCOMPtr<nsIDOMCIExtension> creator(do_CreateInstance(globalStruct->mCID, &rv));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+
+      rv = creator->RegisterDOMCI(NS_ConvertUCS2toUTF8(aName).get(), this);
+      NS_ENSURE_SUCCESS(rv, nsnull);
+
+      rv = gNameSpaceManager->LookupName(aName, &globalStruct);
+      NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && globalStruct, nsnull);
+
+      NS_ASSERTION(globalStruct->mType == nsGlobalNameStruct::eTypeExternalClassInfo,
+                   "The classinfo data for this class didn't get registered.");
+    }
+    if (globalStruct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
+      return nsDOMClassInfo::GetClassInfoInstance(globalStruct->mData);
+    }
+  }
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsDOMSOFactory::Observe(nsISupports *aSubject, 
                         const char *aTopic,
@@ -200,6 +241,28 @@ nsDOMSOFactory::GetException(nsresult result, nsIException *aDefaultException,
                              nsIException **_retval)
 {
   return NS_NewDOMException(result, aDefaultException, _retval);
+}
+
+NS_IMETHODIMP
+nsDOMSOFactory::RegisterDOMClassInfo(const char *aName,
+                                     nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
+                                     const nsIID *aProtoChainInterface,
+                                     const nsIID **aInterfaces,
+                                     PRUint32 aScriptableFlags,
+                                     PRBool aHasClassInterface,
+                                     const nsCID *aConstructorCID)
+{
+  extern nsScriptNameSpaceManager *gNameSpaceManager;
+
+  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+
+  return gNameSpaceManager->RegisterDOMCIData(aName,
+                                              aConstructorFptr,
+                                              aProtoChainInterface,
+                                              aInterfaces,
+                                              aScriptableFlags,
+                                              aHasClassInterface,
+                                              aConstructorCID);
 }
 
 //////////////////////////////////////////////////////////////////////

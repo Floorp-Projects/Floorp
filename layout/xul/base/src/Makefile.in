@@ -49,7 +49,9 @@ REQUIRES	= xpcom \
 		  gfx2 \
 		  imglib2 \
 		  unicharutil \
-      webbrwsr \
+		  webbrwsr \
+		  xpconnect \
+		  js \
 		  $(NULL)
 
 CPPSRCS		= \

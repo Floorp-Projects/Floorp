@@ -49,12 +49,51 @@ class nsIDOMNSHTMLOptionCollection;
 class nsIPluginInstance;
 class nsIForm;
 
+struct nsDOMClassInfoData;
+
+typedef nsIClassInfo* (*nsDOMClassInfoConstructorFnc)
+  (nsDOMClassInfoData* aData);
+
+
+struct nsDOMClassInfoData
+{
+  const char *mName;
+  union {
+    nsDOMClassInfoConstructorFnc mConstructorFptr;
+    nsDOMClassInfoExternalConstructorFnc mExternalConstructorFptr;
+  };
+  nsIClassInfo *mCachedClassInfo; // low bit is set to 1 if external,
+                                  // so be sure to mask if necessary!
+  const nsIID *mProtoChainInterface;
+  const nsIID **mInterfaces;
+  PRUint32 mScriptableFlags : 31; // flags must not use more than 31 bits!
+  PRBool mHasClassInterface : 1;
+#ifdef NS_DEBUG
+  PRUint32 mDebugID;
+#endif
+};
+
+struct nsExternalDOMClassInfoData : public nsDOMClassInfoData
+{
+  const nsCID *mConstructorCID;
+};
+
+
+typedef unsigned long PtrBits;
+
+// To be used with the nsDOMClassInfoData::mCachedClassInfo pointer.
+// The low bit is set when we created a generic helper for an external
+// (which holds on to the nsDOMClassInfoData).
+#define GET_CLEAN_CI_PTR(_ptr) (nsIClassInfo*)(PtrBits(_ptr) & ~0x1)
+#define MARK_EXTERNAL(_ptr) (nsIClassInfo*)(PtrBits(_ptr) | 0x1)
+#define IS_EXTERNAL(_ptr) (PtrBits(_ptr) & 0x1)
+
 
 class nsDOMClassInfo : public nsIXPCScriptable,
                        public nsIClassInfo
 {
 public:
-  nsDOMClassInfo(nsDOMClassInfoID aID);
+  nsDOMClassInfo(nsDOMClassInfoData* aData);
   virtual ~nsDOMClassInfo();
 
   NS_DECL_NSIXPCSCRIPTABLE
@@ -73,12 +112,13 @@ public:
   // them the right to do that?
 
   static nsIClassInfo* GetClassInfoInstance(nsDOMClassInfoID aID);
+  static nsIClassInfo* GetClassInfoInstance(nsDOMClassInfoData* aData);
 
   static void ShutDown();
 
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsDOMClassInfo(aID);
+    return new nsDOMClassInfo(aData);
   }
 
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
@@ -87,11 +127,12 @@ public:
   static nsresult ThrowJSException(JSContext *cx, nsresult aResult);
 
 protected:
-  const nsDOMClassInfoID mID;
+  const nsDOMClassInfoData* mData;
 
   static nsresult Init();
   static nsresult RegisterClassName(PRInt32 aDOMClassInfoID);
   static nsresult RegisterClassProtos(PRInt32 aDOMClassInfoID);
+  static nsresult RegisterExternalClasses();
 
   // Checks if id is a number and returns the number, if aIsNumber is
   // non-null it's set to true if the id is a number and false if it's
@@ -202,7 +243,7 @@ typedef nsDOMClassInfo nsDOMGenericSH;
 class nsEventRecieverSH : public nsDOMGenericSH
 {
 protected:
-  nsEventRecieverSH(nsDOMClassInfoID aID) : nsDOMGenericSH(aID)
+  nsEventRecieverSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
   {
   }
 
@@ -242,7 +283,7 @@ public:
 class nsWindowSH : public nsEventRecieverSH
 {
 protected:
-  nsWindowSH(nsDOMClassInfoID aID) : nsEventRecieverSH(aID)
+  nsWindowSH(nsDOMClassInfoData* aData) : nsEventRecieverSH(aData)
   {
   }
 
@@ -277,9 +318,9 @@ public:
   NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                       JSObject *obj);
 
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsWindowSH(aID);
+    return new nsWindowSH(aData);
   }
 
   static PRBool sDoSecurityCheckInAddProperty;
@@ -292,7 +333,7 @@ public:
 class nsNodeSH : public nsEventRecieverSH
 {
 protected:
-  nsNodeSH(nsDOMClassInfoID aID) : nsEventRecieverSH(aID)
+  nsNodeSH(nsDOMClassInfoData* aData) : nsEventRecieverSH(aData)
   {
   }
 
@@ -306,9 +347,9 @@ public:
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsNodeSH(aID);
+    return new nsNodeSH(aData);
   }
 };
 
@@ -318,7 +359,7 @@ public:
 class nsElementSH : public nsNodeSH
 {
 protected:
-  nsElementSH(nsDOMClassInfoID aID) : nsNodeSH(aID)
+  nsElementSH(nsDOMClassInfoData* aData) : nsNodeSH(aData)
   {
   }
 
@@ -330,9 +371,9 @@ public:
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                     JSObject *obj);
 
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsElementSH(aID);
+    return new nsElementSH(aData);
   }
 };
 
@@ -342,7 +383,7 @@ public:
 class nsArraySH : public nsDOMClassInfo
 {
 protected:
-  nsArraySH(nsDOMClassInfoID aID) : nsDOMClassInfo(aID)
+  nsArraySH(nsDOMClassInfoData* aData) : nsDOMClassInfo(aData)
   {
   }
 
@@ -357,9 +398,9 @@ public:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsArraySH(aID);
+    return new nsArraySH(aData);
   }
 };
 
@@ -369,7 +410,7 @@ public:
 class nsNamedArraySH : public nsArraySH
 {
 protected:
-  nsNamedArraySH(nsDOMClassInfoID aID) : nsArraySH(aID)
+  nsNamedArraySH(nsDOMClassInfoData* aData) : nsArraySH(aData)
   {
   }
 
@@ -391,7 +432,7 @@ public:
 class nsNamedNodeMapSH : public nsNamedArraySH
 {
 protected:
-  nsNamedNodeMapSH(nsDOMClassInfoID aID) : nsNamedArraySH(aID)
+  nsNamedNodeMapSH(nsDOMClassInfoData* aData) : nsNamedArraySH(aData)
   {
   }
 
@@ -409,9 +450,9 @@ protected:
                                 nsISupports **aResult);
 
 public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsNamedNodeMapSH(aID);
+    return new nsNamedNodeMapSH(aData);
   }
 };
 
@@ -421,7 +462,7 @@ public:
 class nsHTMLCollectionSH : public nsNamedArraySH
 {
 protected:
-  nsHTMLCollectionSH(nsDOMClassInfoID aID) : nsNamedArraySH(aID)
+  nsHTMLCollectionSH(nsDOMClassInfoData* aData) : nsNamedArraySH(aData)
   {
   }
 
@@ -439,9 +480,9 @@ protected:
                                 nsISupports **aResult);
 
 public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsHTMLCollectionSH(aID);
+    return new nsHTMLCollectionSH(aData);
   }
 };
 
@@ -451,7 +492,7 @@ public:
 class nsFormControlListSH : public nsHTMLCollectionSH
 {
 protected:
-  nsFormControlListSH(nsDOMClassInfoID aID) : nsHTMLCollectionSH(aID)
+  nsFormControlListSH(nsDOMClassInfoData* aData) : nsHTMLCollectionSH(aData)
   {
   }
 
@@ -465,9 +506,9 @@ protected:
                                 nsISupports **aResult);
 
 public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsFormControlListSH(aID);
+    return new nsFormControlListSH(aData);
   }
 };
 
@@ -477,7 +518,7 @@ public:
 class nsDocumentSH : public nsNodeSH
 {
 public:
-  nsDocumentSH(nsDOMClassInfoID aID) : nsNodeSH(aID)
+  nsDocumentSH(nsDOMClassInfoData* aData) : nsNodeSH(aData)
   {
   }
 
@@ -492,9 +533,9 @@ public:
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsDocumentSH(aID);
+    return new nsDocumentSH(aData);
   }
 };
 
@@ -504,7 +545,7 @@ public:
 class nsHTMLDocumentSH : public nsDocumentSH
 {
 protected:
-  nsHTMLDocumentSH(nsDOMClassInfoID aID) : nsDocumentSH(aID)
+  nsHTMLDocumentSH(nsDOMClassInfoData* aData) : nsDocumentSH(aData)
   {
   }
 
@@ -526,9 +567,9 @@ public:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsHTMLDocumentSH(aID);
+    return new nsHTMLDocumentSH(aData);
   }
 };
 
@@ -538,7 +579,7 @@ public:
 class nsHTMLElementSH : public nsElementSH
 {
 protected:
-  nsHTMLElementSH(nsDOMClassInfoID aID) : nsElementSH(aID)
+  nsHTMLElementSH(nsDOMClassInfoData* aData) : nsElementSH(aData)
   {
   }
 
@@ -555,9 +596,9 @@ public:
                         JSObject *obj, jsval id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
 
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsHTMLElementSH(aID);
+    return new nsHTMLElementSH(aData);
   }
 };
 
@@ -567,7 +608,7 @@ public:
 class nsHTMLFormElementSH : public nsHTMLElementSH
 {
 protected:
-  nsHTMLFormElementSH(nsDOMClassInfoID aID) : nsHTMLElementSH(aID)
+  nsHTMLFormElementSH(nsDOMClassInfoData* aData) : nsHTMLElementSH(aData)
   {
   }
 
@@ -586,9 +627,9 @@ public:
                          JSObject *obj, jsval id, jsval *vp,
                          PRBool *_retval);
 
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsHTMLFormElementSH(aID);
+    return new nsHTMLFormElementSH(aData);
   }
 };
 
@@ -598,7 +639,7 @@ public:
 class nsHTMLSelectElementSH : public nsHTMLElementSH
 {
 protected:
-  nsHTMLSelectElementSH(nsDOMClassInfoID aID) : nsHTMLElementSH(aID)
+  nsHTMLSelectElementSH(nsDOMClassInfoData* aData) : nsHTMLElementSH(aData)
   {
   }
 
@@ -616,9 +657,9 @@ public:
   static nsresult SetOption(JSContext *cx, jsval *vp, PRUint32 aIndex,
                             nsIDOMNSHTMLOptionCollection *aOptCollection);
 
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsHTMLSelectElementSH(aID);
+    return new nsHTMLSelectElementSH(aData);
   }
 };
 
@@ -629,7 +670,7 @@ public:
 class nsHTMLExternalObjSH : public nsHTMLElementSH
 {
 protected:
-  nsHTMLExternalObjSH(nsDOMClassInfoID aID) : nsHTMLElementSH(aID)
+  nsHTMLExternalObjSH(nsDOMClassInfoData* aData) : nsHTMLElementSH(aData)
   {
   }
 
@@ -656,7 +697,7 @@ public:
 class nsHTMLAppletElementSH : public nsHTMLExternalObjSH
 {
 protected:
-  nsHTMLAppletElementSH(nsDOMClassInfoID aID) : nsHTMLExternalObjSH(aID)
+  nsHTMLAppletElementSH(nsDOMClassInfoData* aData) : nsHTMLExternalObjSH(aData)
   {
   }
 
@@ -670,9 +711,9 @@ protected:
                                      JSObject **plugin_proto);
 
 public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsHTMLAppletElementSH(aID);
+    return new nsHTMLAppletElementSH(aData);
   }
 };
 
@@ -682,7 +723,7 @@ public:
 class nsHTMLPluginObjElementSH : public nsHTMLAppletElementSH
 {
 protected:
-  nsHTMLPluginObjElementSH(nsDOMClassInfoID aID) : nsHTMLAppletElementSH(aID)
+  nsHTMLPluginObjElementSH(nsDOMClassInfoData* aData) : nsHTMLAppletElementSH(aData)
   {
   }
 
@@ -700,9 +741,9 @@ public:
                         JSObject *obj, jsval id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
 
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsHTMLPluginObjElementSH(aID);
+    return new nsHTMLPluginObjElementSH(aData);
   }
 };
 
@@ -712,7 +753,7 @@ public:
 class nsHTMLOptionCollectionSH : public nsHTMLCollectionSH
 {
 protected:
-  nsHTMLOptionCollectionSH(nsDOMClassInfoID aID) : nsHTMLCollectionSH(aID)
+  nsHTMLOptionCollectionSH(nsDOMClassInfoData* aData) : nsHTMLCollectionSH(aData)
   {
   }
 
@@ -724,9 +765,9 @@ public:
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsHTMLOptionCollectionSH(aID);
+    return new nsHTMLOptionCollectionSH(aData);
   }
 };
 
@@ -736,7 +777,7 @@ public:
 class nsPluginSH : public nsNamedArraySH
 {
 protected:
-  nsPluginSH(nsDOMClassInfoID aID) : nsNamedArraySH(aID)
+  nsPluginSH(nsDOMClassInfoData* aData) : nsNamedArraySH(aData)
   {
   }
 
@@ -754,9 +795,9 @@ protected:
                                 nsISupports **aResult);
 
 public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsPluginSH(aID);
+    return new nsPluginSH(aData);
   }
 };
 
@@ -766,7 +807,7 @@ public:
 class nsPluginArraySH : public nsNamedArraySH
 {
 protected:
-  nsPluginArraySH(nsDOMClassInfoID aID) : nsNamedArraySH(aID)
+  nsPluginArraySH(nsDOMClassInfoData* aData) : nsNamedArraySH(aData)
   {
   }
 
@@ -784,9 +825,9 @@ protected:
                                 nsISupports **aResult);
 
 public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsPluginArraySH(aID);
+    return new nsPluginArraySH(aData);
   }
 };
 
@@ -796,7 +837,7 @@ public:
 class nsMimeTypeArraySH : public nsNamedArraySH
 {
 protected:
-  nsMimeTypeArraySH(nsDOMClassInfoID aID) : nsNamedArraySH(aID)
+  nsMimeTypeArraySH(nsDOMClassInfoData* aData) : nsNamedArraySH(aData)
   {
   }
 
@@ -814,9 +855,9 @@ protected:
                                 nsISupports **aResult);
 
 public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsMimeTypeArraySH(aID);
+    return new nsMimeTypeArraySH(aData);
   }
 };
 
@@ -826,7 +867,7 @@ public:
 class nsStringArraySH : public nsDOMClassInfo
 {
 protected:
-  nsStringArraySH(nsDOMClassInfoID aID) : nsDOMClassInfo(aID)
+  nsStringArraySH(nsDOMClassInfoData* aData) : nsDOMClassInfo(aData)
   {
   }
 
@@ -848,7 +889,7 @@ public:
 class nsHistorySH : public nsStringArraySH
 {
 protected:
-  nsHistorySH(nsDOMClassInfoID aID) : nsStringArraySH(aID)
+  nsHistorySH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
   {
   }
 
@@ -863,9 +904,9 @@ public:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
 
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsHistorySH(aID);
+    return new nsHistorySH(aData);
   }
 };
 
@@ -875,7 +916,7 @@ public:
 class nsMediaListSH : public nsStringArraySH
 {
 protected:
-  nsMediaListSH(nsDOMClassInfoID aID) : nsStringArraySH(aID)
+  nsMediaListSH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
   {
   }
 
@@ -887,9 +928,9 @@ protected:
                                nsAWritableString& aResult);
 
 public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsMediaListSH(aID);
+    return new nsMediaListSH(aData);
   }
 };
 
@@ -899,7 +940,7 @@ public:
 class nsStyleSheetListSH : public nsArraySH
 {
 protected:
-  nsStyleSheetListSH(nsDOMClassInfoID aID) : nsArraySH(aID)
+  nsStyleSheetListSH(nsDOMClassInfoData* aData) : nsArraySH(aData)
   {
   }
 
@@ -913,9 +954,9 @@ protected:
                              nsISupports **aResult);
 
 public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsStyleSheetListSH(aID);
+    return new nsStyleSheetListSH(aData);
   }
 };
 
@@ -925,7 +966,7 @@ public:
 class nsCSSStyleDeclSH : public nsStringArraySH
 {
 protected:
-  nsCSSStyleDeclSH(nsDOMClassInfoID aID) : nsStringArraySH(aID)
+  nsCSSStyleDeclSH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
   {
   }
 
@@ -937,9 +978,9 @@ protected:
                                nsAWritableString& aResult);
 
 public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsCSSStyleDeclSH(aID);
+    return new nsCSSStyleDeclSH(aData);
   }
 };
 
@@ -949,7 +990,7 @@ public:
 class nsCSSRuleListSH : public nsArraySH
 {
 protected:
-  nsCSSRuleListSH(nsDOMClassInfoID aID) : nsArraySH(aID)
+  nsCSSRuleListSH(nsDOMClassInfoData* aData) : nsArraySH(aData)
   {
   }
 
@@ -963,9 +1004,9 @@ protected:
                              nsISupports **aResult);
 
 public:
-  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
-    return new nsCSSRuleListSH(aID);
+    return new nsCSSRuleListSH(aData);
   }
 };
 

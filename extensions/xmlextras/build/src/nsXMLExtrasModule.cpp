@@ -49,6 +49,7 @@
 #include "nsXPIDLString.h"
 #include "nsDOMCID.h"
 #include "prprf.h"
+#include "nsIDOMClassInfo.h"
 
 #include "nsSOAPHeaderBlock.h"
 #include "nsSOAPParameter.h"
@@ -68,10 +69,6 @@
 #include "wspprivate.h"
 #endif // MOZ_WSP
 
-#include "nsString.h"
-#include "prprf.h"
-#include "nsIScriptNameSpaceManager.h"
-
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -81,6 +78,37 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
+
+NS_DECL_DOM_CLASSINFO(DOMSerializer)
+NS_DECL_DOM_CLASSINFO(XMLHttpRequest)
+NS_DECL_DOM_CLASSINFO(DOMParser)
+
+/* 6fb64081-1da6-11d6-a7f2-9babb25552bc */
+#define XMLEXTRAS_DOMCI_EXTENSION_CID   \
+{ 0x6fb64081, 0x1da6, 0x11d6, {0xa7, 0xf2, 0x9b, 0xab, 0xb2, 0x55, 0x52, 0xbc} }
+
+#define XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID \
+"@mozilla.org/xmlextras-domci-extender;1"
+
+NS_DOMCI_EXTENSION(XMLExtras)
+    static NS_DEFINE_CID(kXMLSerializerCID, NS_XMLSERIALIZER_CID);
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(DOMSerializer)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMSerializer)
+    NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(DOMSerializer, PR_TRUE, &kXMLSerializerCID)
+
+    static NS_DEFINE_CID(kXMLHttpRequestCID, NS_XMLHTTPREQUEST_CID);
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XMLHttpRequest)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIXMLHttpRequest)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIJSXMLHttpRequest)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMEventTarget)
+    NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(XMLHttpRequest, PR_TRUE, &kXMLHttpRequestCID)
+
+    static NS_DEFINE_CID(kDOMParserCID, NS_DOMPARSER_CID);
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(DOMParser)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMParser)
+    NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(DOMParser, PR_TRUE, &kDOMParserCID)
+NS_DOMCI_EXTENSION_END
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPCall)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPResponse)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPEncoding)
@@ -227,21 +255,33 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
     return rv;
 
   nsXPIDLCString previous;
-  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
                                 "XMLSerializer",
-                                NS_XMLSERIALIZER_CONTRACTID,
+                                XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
                                 "XMLHttpRequest",
-                                NS_XMLHTTPREQUEST_CONTRACTID,
+                                XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
                                 "DOMParser",
-                                NS_DOMPARSER_CONTRACTID,
+                                XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE,
+                                "nsIXMLHttpRequest",
+                                NS_GET_IID(nsIXMLHttpRequest).ToString(),
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE,
+                                "nsIJSXMLHttpRequest",
+                                NS_GET_IID(nsIJSXMLHttpRequest).ToString(),
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -317,6 +357,9 @@ static const nsModuleComponentInfo components[] = {
     nsXMLHttpRequestConstructor },
   { "DOM Parser", NS_DOMPARSER_CID, NS_DOMPARSER_CONTRACTID,
     nsDOMParserConstructor },
+  { "XML Extras DOMCI Extender",
+    XMLEXTRAS_DOMCI_EXTENSION_CID, XMLEXTRAS_DOMCI_EXTENSION_CONTRACTID,
+    NS_DOMCI_EXTENSION_CONSTRUCTOR(XMLExtras) },
   { "SOAP Call", NS_SOAPCALL_CID, NS_SOAPCALL_CONTRACTID,
     nsSOAPCallConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPCall), 
@@ -558,6 +601,10 @@ static const nsModuleComponentInfo components[] = {
 void PR_CALLBACK
 XMLExtrasModuleDestructor(nsIModule* self)
 {
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(DOMSerializer));
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(XMLHttpRequest));
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(DOMParser));
+
   nsSchemaAtoms::DestroySchemaAtoms();
 #ifdef MOZ_WSP
   nsWSDLAtoms::DestroyWSDLAtoms();

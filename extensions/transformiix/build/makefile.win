@@ -28,6 +28,8 @@ REQUIRES	= xpcom \
 		  content_xsl \
 		  necko \
 		  content \
+		  xpconnect \
+		  js \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 

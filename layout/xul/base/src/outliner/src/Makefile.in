@@ -41,7 +41,9 @@ REQUIRES	= xpcom \
 		  necko \
 		  gfx2 \
 		  imglib2 \
-      webbrwsr \
+		  webbrwsr \
+		  xpconnect \
+		  js \
 		  $(NULL)
 
 CPPSRCS	= \

@@ -186,11 +186,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_CRMFObject_id,
   eDOMClassInfo_Pkcs11_id,
 
-  // XML extras classes
-  eDOMClassInfo_XMLHttpRequest_id,
-  eDOMClassInfo_DOMSerializer_id,
-  eDOMClassInfo_DOMParser_id,
-
 #ifdef MOZ_SVG
   // The SVG document
   eDOMClassInfo_SVGDocument_id,
@@ -241,11 +236,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGAnimatedRect_id,
 #endif
   
-  // Transformiix classes
-  eDOMClassInfo_XSLTProcessor_id,
-  eDOMClassInfo_XPathProcessor_id,
-  eDOMClassInfo_NodeSet_id,
-
   // DOM Traversal classes
   eDOMClassInfo_TreeWalker_id,
 
@@ -260,6 +250,28 @@ enum nsDOMClassInfoID {
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };
+
+#include "nsIXPCScriptable.h"
+
+#define DEFAULT_SCRIPTABLE_FLAGS                                           \
+  (nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY |                          \
+   nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY |                          \
+   nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY |                          \
+   nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE |                      \
+   nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE |                        \
+   nsIXPCScriptable::DONT_ASK_INSTANCE_FOR_SCRIPTABLE |                    \
+   nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES |                        \
+   nsIXPCScriptable::WANT_CHECKACCESS |                                    \
+   nsIXPCScriptable::WANT_POSTCREATE)
+
+#define DOM_DEFAULT_SCRIPTABLE_FLAGS                                       \
+  (DEFAULT_SCRIPTABLE_FLAGS |                                              \
+   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |                           \
+   nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
+
+
+typedef nsIClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
+  (const char* aName);
 
 
 /**
@@ -281,21 +293,136 @@ enum nsDOMClassInfoID {
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"
 
-#define NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(_class)                          \
-  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \
-    static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);      \
-                                                                              \
-    nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID));      \
-    if (sof) {                                                                \
-      foundInterface =                                                        \
-        sof->GetClassInfoInstance(eDOMClassInfo_##_class##_id);               \
-                                                                              \
-      if (foundInterface) {                                                   \
-        *aInstancePtr = foundInterface;                                       \
-                                                                              \
-        return NS_OK;                                                         \
-      }                                                                       \
-    }                                                                         \
+#define NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(_class)                       \
+  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                             \
+    static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);   \
+                                                                           \
+    nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID));   \
+    if (sof) {                                                             \
+      foundInterface =                                                     \
+        sof->GetClassInfoInstance(eDOMClassInfo_##_class##_id);            \
+                                                                           \
+      if (foundInterface) {                                                \
+        *aInstancePtr = foundInterface;                                    \
+                                                                           \
+        return NS_OK;                                                      \
+      }                                                                    \
+    }                                                                      \
   } else
+
+// Looks up the nsIClassInfo for a class name registered with the 
+// nsScriptNamespaceManager. Remember to release NS_CLASSINFO_NAME(_class)
+// (eg. when your module unloads).
+#define NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(_class)              \
+  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                             \
+    extern nsISupports *NS_CLASSINFO_NAME(_class);                         \
+    if (NS_CLASSINFO_NAME(_class)) {                                       \
+      foundInterface = NS_CLASSINFO_NAME(_class);                          \
+    } else {                                                               \
+      static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID); \
+                                                                           \
+      nsCOMPtr<nsIDOMScriptObjectFactory> sof(do_GetService(kDOMSOF_CID)); \
+      if (sof) {                                                           \
+        foundInterface =                                                   \
+          sof->GetExternalClassInfoInstance(NS_LITERAL_STRING(#_class));   \
+                                                                           \
+        if (foundInterface)                                                \
+          NS_CLASSINFO_NAME(_class) = foundInterface;                      \
+      }                                                                    \
+    }                                                                      \
+  } else
+
+
+#define NS_DECL_DOM_CLASSINFO(_class) \
+  nsISupports *NS_CLASSINFO_NAME(_class) = nsnull;
+
+// {891a7b01-1b61-11d6-a7f2-f690b638899c}
+#define NS_IDOMCI_EXTENSION_IID  \
+{ 0x891a7b01, 0x1b61, 0x11d6, \
+{ 0xa7, 0xf2, 0xf6, 0x90, 0xb6, 0x38, 0x89, 0x9c } }
+
+class nsIDOMScriptObjectFactory;
+
+class nsIDOMCIExtension : public nsISupports {
+public:  
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCI_EXTENSION_IID)
+
+  NS_IMETHOD RegisterDOMCI(const char* aName,
+                           nsIDOMScriptObjectFactory* aDOMSOFactory) = 0;
+};
+
+
+#define NS_DOMCI_EXTENSION_NAME(_module) ns##_module##DOMCIExtension
+#define NS_DOMCI_EXTENSION_CONSTRUCTOR(_module) \
+  ns##_module##DOMCIExtensionConstructor
+#define NS_DOMCI_EXTENSION_CONSTRUCTOR_IMP(_extension) \
+  NS_GENERIC_FACTORY_CONSTRUCTOR(_extension)
+
+#define NS_DOMCI_EXTENSION(_module)                                       \
+class NS_DOMCI_EXTENSION_NAME(_module) : public nsIDOMCIExtension         \
+{                                                                         \
+public:                                                                   \
+  NS_DOMCI_EXTENSION_NAME(_module)();                                     \
+  virtual ~NS_DOMCI_EXTENSION_NAME(_module)();                            \
+                                                                          \
+  NS_DECL_ISUPPORTS                                                       \
+                                                                          \
+  NS_IMETHOD RegisterDOMCI(const char* aName,                             \
+                           nsIDOMScriptObjectFactory* aDOMSOFactory);     \
+};                                                                        \
+                                                                          \
+NS_DOMCI_EXTENSION_CONSTRUCTOR_IMP(NS_DOMCI_EXTENSION_NAME(_module))      \
+                                                                          \
+NS_DOMCI_EXTENSION_NAME(_module)::NS_DOMCI_EXTENSION_NAME(_module)()      \
+{                                                                         \
+  NS_INIT_ISUPPORTS();                                                    \
+};                                                                        \
+                                                                          \
+NS_DOMCI_EXTENSION_NAME(_module)::~NS_DOMCI_EXTENSION_NAME(_module)()     \
+{                                                                         \
+};                                                                        \
+                                                                          \
+NS_IMPL_ISUPPORTS1(NS_DOMCI_EXTENSION_NAME(_module), nsIDOMCIExtension)   \
+                                                                          \
+NS_IMETHODIMP                                                             \
+NS_DOMCI_EXTENSION_NAME(_module)::RegisterDOMCI(const char* aName,        \
+                                                nsIDOMScriptObjectFactory* aDOMSOFactory) \
+{
+
+#define NS_DOMCI_EXTENSION_ENTRY_BEGIN(_class)                            \
+  if (nsCRT::strcmp(aName, #_class) == 0) {                               \
+    static const nsIID* interfaces[] = {
+
+#define NS_DOMCI_EXTENSION_ENTRY_INTERFACE(_interface)                    \
+      &NS_GET_IID(_interface),
+
+// Don't forget to register the primary interface (_proto) in the 
+// JAVASCRIPT_DOM_INTERFACE category, or prototypes for this class
+// won't work (except if the interface name starts with nsIDOM).
+#define NS_DOMCI_EXTENSION_ENTRY_END_HELPER(_class, _proto, _hasclassif,  \
+                                            _constructorcid)              \
+      nsnull                                                              \
+    };                                                                    \
+    aDOMSOFactory->RegisterDOMClassInfo(#_class, nsnull, _proto,          \
+                                        interfaces,                       \
+                                        DOM_DEFAULT_SCRIPTABLE_FLAGS,     \
+                                        _hasclassif, _constructorcid);    \
+    return NS_OK;                                                         \
+  }
+
+#define NS_DOMCI_EXTENSION_ENTRY_END(_class, _proto, _hasclassif,         \
+                                     _constructorcid)                     \
+  NS_DOMCI_EXTENSION_ENTRY_END_HELPER(_class, &NS_GET_IID(_proto),        \
+                                      _hasclassif, _constructorcid)
+
+#define NS_DOMCI_EXTENSION_ENTRY_END_NO_PRIMARY_IF(_class, _hasclassif,   \
+                                                   _constructorcid)       \
+  NS_DOMCI_EXTENSION_ENTRY_END_HELPER(_class, nsnull, _hasclassif,        \
+                                      _constructorcid)
+
+#define NS_DOMCI_EXTENSION_END                                            \
+  return NS_ERROR_FAILURE;                                                \
+};
+
 
 #endif /* nsIDOMClassInfo_h___ */
