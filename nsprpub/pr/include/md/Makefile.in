@@ -48,14 +48,7 @@ include $(topsrcdir)/config/rules.mk
 export:: $(MDCPUCFG_H)
 	$(INSTALL) -m 444 $(srcdir)/$(MDCPUCFG_H) $(dist_includedir)
 	$(INSTALL) -m 444 $(CONFIGS) $(HEADERS) $(dist_includedir)/md
-ifneq ($(OS_ARCH),OpenVMS)
 	mv -f $(dist_includedir)/$(MDCPUCFG_H) $(dist_includedir)/prcpucfg.h
-else
-# mv'ing a link causes the file itself to move, not the link.
-	rm -f $(dist_includedir)/$(MDCPUCFG_H)
-	rm -f $(dist_includedir)/prcpucfg.h
-	ln -fs $(srcdir)/$(MDCPUCFG_H) $(dist_includedir)/prcpucfg.h
-endif
 
 real_install::
 	$(NSINSTALL) -D $(DESTDIR)$(includedir)/md
