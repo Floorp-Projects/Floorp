@@ -314,7 +314,7 @@ function onAccept()
   else if (gPreviousDefaultSite != gDefaultSiteName)
   {
     // only the default site was changed
-    SavePublishSiteDataToPrefs(null, gDefaultSiteName);
+    SetDefaultSiteName(gDefaultSiteName);
   }
 
   SaveWindowLocation();
