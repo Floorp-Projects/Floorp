@@ -272,7 +272,7 @@ final class LineBuffer {
         stringStart = -1;
         stringSoFar = null;
 		
-		if (true) { //hadCFSinceStringStart) {
+		if (hadCFSinceStringStart) {
 			char c[] = result.toCharArray();
 			StringBuffer x = null;
 			for (int i = 0; i < c.length; i++) {
