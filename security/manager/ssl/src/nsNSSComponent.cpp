@@ -580,7 +580,7 @@ nsNSSComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
   return NS_OK;
 }
 
-int
+int PR_CALLBACK
 nsNSSComponent::PrefChangedCallback(const char* aPrefName, void* data)
 {
   nsNSSComponent* nss = NS_STATIC_CAST(nsNSSComponent*, data);

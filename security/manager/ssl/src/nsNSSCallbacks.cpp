@@ -185,7 +185,7 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   return nsnull;
 }
 
-void HandshakeCallback(PRFileDesc* fd, void* client_data) {
+void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
   PRInt32 sslStatus;
   char* signer = nsnull;
   char* cipherName = nsnull;

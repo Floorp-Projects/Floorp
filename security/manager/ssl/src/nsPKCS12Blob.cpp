@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.8 2001/05/01 23:23:22 mcgreer%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.9 2001/05/22 21:19:31 ddrinan%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -420,7 +420,7 @@ nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsILocalFile *file)
 
 // digest_open
 // open a temporary file for reading/writing digests
-SECStatus
+SECStatus PR_CALLBACK
 nsPKCS12Blob::digest_open(void *arg, PRBool reading)
 {
   nsPKCS12Blob *cx = (nsPKCS12Blob *)arg;
@@ -457,7 +457,7 @@ nsPKCS12Blob::digest_open(void *arg, PRBool reading)
 
 // digest_close
 // close the temp file opened above
-SECStatus
+SECStatus PR_CALLBACK
 nsPKCS12Blob::digest_close(void *arg, PRBool remove_it)
 {
   nsPKCS12Blob *cx = (nsPKCS12Blob *)arg;
@@ -473,7 +473,7 @@ nsPKCS12Blob::digest_close(void *arg, PRBool remove_it)
 
 // digest_read
 // read bytes from the temp digest file
-int
+int PR_CALLBACK
 nsPKCS12Blob::digest_read(void *arg, unsigned char *buf, unsigned long len)
 {
   nsPKCS12Blob *cx = (nsPKCS12Blob *)arg;
@@ -482,7 +482,7 @@ nsPKCS12Blob::digest_read(void *arg, unsigned char *buf, unsigned long len)
 
 // digest_write
 // write bytes to the temp digest file
-int
+int PR_CALLBACK
 nsPKCS12Blob::digest_write(void *arg, unsigned char *buf, unsigned long len)
 {
   nsPKCS12Blob *cx = (nsPKCS12Blob *)arg;
@@ -492,7 +492,7 @@ nsPKCS12Blob::digest_write(void *arg, unsigned char *buf, unsigned long len)
 // nickname_collision
 // what to do when the nickname collides with one already in the db.
 // TODO: not handled, throw a dialog allowing the nick to be changed?
-SECItem *
+SECItem * PR_CALLBACK
 nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
 {
   // not handled yet (wasn't in psm 1.x either)
@@ -503,7 +503,7 @@ nsPKCS12Blob::nickname_collision(SECItem *oldNick, PRBool *cancel, void *wincx)
 
 // write_export_file
 // write bytes to the exported PKCS#12 file
-void
+void PR_CALLBACK
 nsPKCS12Blob::write_export_file(void *arg, const char *buf, unsigned long len)
 {
   nsPKCS12Blob *cx = (nsPKCS12Blob *)arg;

@@ -109,7 +109,7 @@ private:
   char * GetPK11String(const PRUnichar *name, PRUint32 len);
   nsresult RegisterPSMContentListener();
   nsresult RegisterProfileChangeObserver();
-  static int PrefChangedCallback(const char* aPrefName, void* data);
+  static int PR_CALLBACK PrefChangedCallback(const char* aPrefName, void* data);
   void PrefChanged(const char* aPrefName);
 
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
