@@ -576,6 +576,11 @@ PARAM {
   height: 0;
 }
 
+:-moz-viewport {
+  display: block;
+  background-color: inherit;
+}
+
 :ROOT {
   display: block;
   background-color: inherit;
