@@ -360,23 +360,35 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetChecked(PRBool* aValue)
 {
-  nsString val;                                                 
-  nsresult rv = mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, val);       
-  *aValue = (NS_CONTENT_ATTR_NOT_THERE != rv);                        
-  return NS_OK;  
+  nsIFormControlFrame* formControlFrame = nsnull;
+  if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+    nsString value("0");
+    formControlFrame->GetProperty(nsHTMLAtoms::checked, value);
+    if (value == "1")
+      *aValue = PR_TRUE;
+    else
+      *aValue = PR_FALSE;
+
+    NS_RELEASE(formControlFrame);
+  }
+  return NS_OK;      
 }
 
 
 NS_IMETHODIMP 
 nsHTMLInputElement::SetChecked(PRBool aValue)
 {
-  nsAutoString empty;                                               
-  if (aValue) {                                                     
-    return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, empty, PR_TRUE); 
-  } else {                                                            
-    mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, PR_TRUE);             
-    return NS_OK;                                                   
-  }         
+  nsIFormControlFrame* formControlFrame = nsnull;
+  if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+    if (PR_TRUE == aValue) {
+     formControlFrame->SetProperty(nsHTMLAtoms::checked, "1");
+    }
+    else {
+      formControlFrame->SetProperty(nsHTMLAtoms::checked, "0");
+    }
+    NS_RELEASE(formControlFrame);
+  }
+  return NS_OK;     
 }
 
 NS_IMETHODIMP
