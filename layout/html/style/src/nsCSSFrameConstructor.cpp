@@ -7278,10 +7278,10 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresContext*  aPresCon
         // list...
         nsIFrame*               captionFrame;
         nsFrameItems            childItems;
+        NS_NewTableCaptionFrame(&captionFrame);
         nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
                                       GetAbsoluteContainingBlock(aPresContext, newFrame),
                                       captionFrame);
-        NS_NewTableCaptionFrame(&captionFrame);
         captionFrame->Init(*aPresContext, caption, newFrame, captionStyle, nsnull);
         ProcessChildren(aPresContext, state, caption, captionFrame,
                         PR_TRUE, childItems, PR_TRUE);
