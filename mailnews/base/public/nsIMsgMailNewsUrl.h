@@ -86,6 +86,7 @@ public:
 
 class nsIMsgUriUrl : public nsISupports
 {
+public:
 	static const nsIID& GetIID() { static nsIID iid = NS_IMSGURIURL_IID; return iid; }
 	NS_IMETHOD GetURI(char ** aURI) = 0; 
 };
