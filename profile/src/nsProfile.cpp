@@ -238,9 +238,6 @@ nsProfile::~nsProfile()
     printf("~nsProfile \n");
 #endif
 
-    gProfileDataAccess->mProfileDataChanged = PR_TRUE;
-    gProfileDataAccess->UpdateRegistry(nsnull);
-    
    if (--gInstanceCount == 0) {
         
       delete gProfileDataAccess;
@@ -1341,6 +1338,10 @@ NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
         return rv;
     }
 
+    // Update registry entries
+    gProfileDataAccess->mProfileDataChanged = PR_TRUE;
+    gProfileDataAccess->UpdateRegistry(nsnull);
+    
     // Need to load new profile prefs.
     rv = LoadNewProfilePrefs();
     return rv;
