@@ -17,9 +17,8 @@
 #
 
 nsIScriptContext.h
-nsIScriptObject.h
+nsIJSScriptObject.h
 nsIScriptObjectOwner.h
 nsIScriptContextOwner.h
 nsIJSScriptObject.h
 nsIScriptGlobalObject.h
-nsIDOMWindow.h
