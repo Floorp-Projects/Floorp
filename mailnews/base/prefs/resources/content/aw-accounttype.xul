@@ -33,12 +33,13 @@ Rights Reserved.
 <window id="accounttype" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.wizardPageLoaded('accounttype');">
-<box alignment="vertical" style="width: 100%; height: 100%">
+
+<box align="vertical" style="width: 100%; height: 100%">
 <html:div>
   <html:div>&accountTypeTitle.label;</html:div>
   <html:div>&accountTypeDesc.label;</html:div>
 </html:div>
-<box alignment="vertical">
+<box align="vertical">
   <html:div>
     <html:input type="radio" name="acctyperadio" id="mailaccount" value="mail"/>
     &accountTypeMail.label;

@@ -24,30 +24,24 @@ Rights Reserved.
 
 <!DOCTYPE window
 [
-<!ENTITY mailTypeTitle.label "Netscape WebMail or Other Mail:">
-<!ENTITY mailTypeDesc.label "Select a free Netscape WebMail account or other mail account, such as your ISP or company mail.">
-<!ENTITY mailTypeWebMail.label "Netscape WebMail">
-<!ENTITY mailTypeOtherMail.label "Other Mail">
+<!ENTITY fullnameTitle.label "Your Name:">
+<!ENTITY fullnameDesc.label "Enter your name as you would like it to appear in the From field of outgoing messages:">
+<!ENTITY fullnameExample.label "For example: Elmer Fudd">
 
 ]>
 
-<window id="mailtype" xmlns:html="http://www.w3.org/TR/REC-html40"
+<window id="fullnamepage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="parent.wizardPageLoaded('mailtype');">
+    onload="parent.wizardPageLoaded('fullname');">
 <box align="vertical" style="width: 100%; height: 100%">
-<html:div>
-  <html:div>&mailTypeTitle.label;</html:div>
-  <html:div>&mailTypeDesc.label;</html:div>
-</html:div>
-<box align="vertical">
   <html:div>
-    <html:input type="radio" name="acctyperadio" id="mailaccount"/>
-    &mailTypeWebMail.label;
+    <html:div>&fullnameTitle.label;</html:div>
+    <html:div>&fullnameDesc.label;</html:div>
   </html:div>
-  <html:div>
-    <html:input type="radio" name="acctyperadio" id="mailaccount"/>
-    &mailTypeOtherMail.label;
-  </html:div>
-</box>
+  <box align="horizontal">
+    <html:input type="text" name="fullname" id="fullname"/>
+    <spring flex="100%"/>
+  </box>
+  <html:div>&fullnameExample.label;</html:div>
 </box>
 </window>

@@ -24,40 +24,34 @@ Rights Reserved.
 
 <!DOCTYPE window
 [
-<!ENTITY serverTitle.label "Incoming Server Name:">
-<!ENTITY serverDesc.label "Enter the name of your incoming email server:">
-<!ENTITY serverExample.label "For example: pop.fudd.com">
+<!ENTITY loginTitle.label "Your Email Account Name and Password:">
+<!ENTITY loginDesc.label "Enter your server login name and password given to you by your email provider:">
+<!ENTITY loginExample.label "For example: elmer">
 
-<!ENTITY serverTypeTitle.label "Incoming Server Type:">
-<!ENTITY serverTypeDesc.label "Enter the type of incoming server you are using:">
-
+<!ENTITY passwordTitle.label "Password:">
 ]>
 
-<window id="serverpage" xmlns:html="http://www.w3.org/TR/REC-html40"
+<window id="loginpage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="parent.wizardPageLoaded('server');">
-
-<box align="vertical" style="width: 100%; height: 100%; margin: 10px">
+    onload="parent.wizardPageLoaded('login');">
+<box align="vertical" style="width: 100%; height: 100%">
   <html:div>
-    <html:div>&serverTitle.label;</html:div>
-    <html:div>&serverDesc.label;</html:div>
+    <html:div>&loginTitle.label;</html:div>
+    <html:div>&loginDesc.label;</html:div>
   </html:div>
   <box align="horizontal">
-  <html:input id="hostname" name="hostname" type="text"/>
-  <spring flex="100%"/>
+    <html:input type="text" name="login" id="login"/>
+    <spring flex="100%"/>
   </box>
+  <html:div>&loginExample.label;</html:div>
+
 
   <html:div>
-    <html:div>&serverTypeTitle.label;</html:div>
-    <html:div>&serverTypeDesc.label;</html:div>
+    <html:div>&passwordTitle.label;</html:div>
   </html:div>
   <box align="horizontal">
-  <html:select name="servertype" id="servertype">
-    <html:option id="pop3radio" value="pop3">POP3</html:option>
-    <html:option id="imapradio" value="imap">IMAP</html:option>
-    <html:option id="nntpradio" value="nntp">NNTP</html:option>
-  </html:select>
-  <spring flex="100%"/>
+    <html:input type="text" name="password" id="password"/>
+    <spring flex="100%"/>
   </box>
 </box>
 </window>
