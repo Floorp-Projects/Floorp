@@ -40,8 +40,6 @@ LIBXUL_LIBRARY = 1
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
 		  string \
-		  js \
-		  xpconnect \
 		  intl \
 		  necko \
 		  $(NULL)
