@@ -325,6 +325,19 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIDOMNode> targetNode;
   if (target) targetNode = do_QueryInterface(target);
 
+  // This is a gross hack to deal with a recursive popup situation happening in AIM code. 
+  // See http://bugzilla.mozilla.org/show_bug.cgi?id=96920.
+  // If a menu item child was clicked on that leads to a popup needing
+  // to show, we know (guaranteed) that we're dealing with a menu or
+  // submenu of an already-showing popup.  We don't need to do anything at all.
+  if (popupType == eXULPopupType_popup) {
+    nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
+    nsCOMPtr<nsIAtom> tag;
+    targetContent->GetTag(*getter_AddRefs(tag));
+    if (tag && (tag.get() == nsXULAtoms::menu || tag.get() == nsXULAtoms::menuitem))
+      return NS_OK;
+  }
+
   // Get the document with the popup.
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIContent> content = do_QueryInterface(mElement);
