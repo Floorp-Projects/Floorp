@@ -240,3 +240,5 @@ MSG_DEF(JSMSG_REDECLARED_PARAM,       164, 1, JSEXN_TYPEERR, "redeclaration of f
 MSG_DEF(JSMSG_NEWREGEXP_FLAGGED,      165, 0, JSEXN_TYPEERR, "can't supply flags when constructing one RegExp from another")
 MSG_DEF(JSMSG_RESERVED_SLOT_RANGE,    166, 0, JSEXN_RANGEERR, "reserved slot index out of range")
 MSG_DEF(JSMSG_CANT_DECODE_PRINCIPALS, 167, 0, JSEXN_INTERNALERR, "can't decode JSPrincipals")
+MSG_DEF(JSMSG_CANT_SEAL_OBJECT,       168, 1, JSEXN_ERR, "can't seal {0} objects")
+MSG_DEF(JSMSG_CANT_UNSEAL_OBJECT,     169, 1, JSEXN_ERR, "can't unseal {0} objects")

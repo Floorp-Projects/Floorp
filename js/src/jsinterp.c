@@ -1965,10 +1965,12 @@ js_Interpret(JSContext *cx, jsval *result)
         if (!OBJ_IS_NATIVE(obj)) {                                            \
             ok = call;                                                        \
         } else {                                                              \
+            JSScope *scope_;                                                  \
             JS_LOCK_OBJ(cx, obj);                                             \
             PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, sprop);          \
-            if (sprop && !(sprop->attrs & JSPROP_READONLY)) {                 \
-                JSScope *scope_ = OBJ_SCOPE(obj);                             \
+            if (sprop &&                                                      \
+                !(sprop->attrs & JSPROP_READONLY) &&                          \
+                (scope_ = OBJ_SCOPE(obj), !SCOPE_IS_SEALED(scope_))) {        \
                 JS_UNLOCK_SCOPE(cx, scope_);                                  \
                 ok = SPROP_SET(cx, sprop, obj, obj, &rval);                   \
                 JS_LOCK_SCOPE(cx, scope_);                                    \

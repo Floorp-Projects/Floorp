@@ -1415,6 +1415,32 @@ Clone(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static JSBool
+Seal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSObject *target;
+    JSBool deep = JS_FALSE;
+
+    if (!JS_ConvertArguments(cx, argc, argv, "o/b", &target, &deep))
+        return JS_FALSE;
+    if (!target)
+        return JS_TRUE;
+    return JS_SealObject(cx, target, deep);
+}
+
+static JSBool
+Unseal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSObject *target;
+    JSBool deep = JS_FALSE;
+
+    if (!JS_ConvertArguments(cx, argc, argv, "o/b", &target, &deep))
+        return JS_FALSE;
+    if (!target)
+        return JS_TRUE;
+    return JS_UnsealObject(cx, target, deep);
+}
+
 static JSFunctionSpec shell_functions[] = {
     {"version",         Version,        0},
     {"options",         Options,        0},
@@ -1444,6 +1470,8 @@ static JSFunctionSpec shell_functions[] = {
     {"clear",           Clear,          0},
     {"intern",          Intern,         1},
     {"clone",           Clone,          1},
+    {"seal",            Seal,           1, 0, 1},
+    {"unseal",          Unseal,         1, 0, 1},
     {0}
 };
 
@@ -1478,6 +1506,8 @@ static char *shell_help_messages[] = {
     "clear([obj])           Clear properties of object",
     "intern(str)            Internalize str in the atom table",
     "clone(fun[, scope])    Clone function object",
+    "seal(obj[, deep])      Seal object, or object graph if deep",
+    "unseal(obj[, deep])    Unseal object, or object graph if deep",
     0
 };
 

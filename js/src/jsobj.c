@@ -2605,8 +2605,15 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     getter = clasp->getProperty;
     setter = clasp->setProperty;
     if (sprop) {
+        /*
+         * Set scope for use below.  It was locked by js_LookupProperty, and
+         * we know pobj owns it (i.e., scope->object == pobj).  Therefore we
+         * optimize JS_UNLOCK_OBJ(cx, pobj) into JS_UNLOCK_SCOPE(cx, scope).
+         */
+        scope = OBJ_SCOPE(pobj);
+
         attrs = sprop->attrs;
-        if (attrs & JSPROP_READONLY) {
+        if ((attrs & JSPROP_READONLY) || SCOPE_IS_SEALED(scope)) {
             /* XXXbe ECMA violation: readonly proto-property stops set cold. */
             OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
             if (!JSVERSION_IS_ECMA(cx->version)) {
@@ -2623,13 +2630,6 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             }
             return JS_TRUE;
         }
-
-        /*
-         * Set scope for use below.  It was locked by js_LookupProperty, and
-         * we know pobj owns it (i.e., scope->object == pobj).  Therefore we
-         * optimize JS_UNLOCK_OBJ(cx, pobj) into JS_UNLOCK_SCOPE(cx, scope).
-         */
-        scope = OBJ_SCOPE(pobj);
 
         if (pobj != obj) {
             /* Don't clone a setter or shared prototype property. */

@@ -50,6 +50,7 @@
 #include "jsdbgapi.h"
 #include "jslock.h"
 #include "jsnum.h"
+#include "jsopcode.h"
 #include "jsscope.h"
 #include "jsstr.h"
 
@@ -840,6 +841,21 @@ CheckAncestorLine(JSScope *scope, JSBool sparse)
 #define CHECK_ANCESTOR_LINE(scope, sparse) /* nothing */
 #endif
 
+static void
+ReportReadOnlyScope(JSContext *cx, JSScope *scope)
+{
+    JSString *str;
+
+    str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
+                                     OBJECT_TO_JSVAL(scope->object),
+                                     NULL);
+
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_READ_ONLY,
+                         str
+                         ? JS_GetStringBytes(str)
+                         : LOCKED_OBJ_GET_CLASS(scope->object)->name);
+}
+
 JSScopeProperty *
 js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                     JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
@@ -850,6 +866,17 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
     int change;
 
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
+
+    /*
+     * You can't add properties to a sealed scope.  But note well that you can
+     * change property attributes in a sealed scope, even though that replaces
+     * a JSScopeProperty * in the scope's hash table -- but no id is added, so
+     * the scope remains sealed.
+     */
+    if (SCOPE_IS_SEALED(scope)) {
+        ReportReadOnlyScope(cx, scope);
+        return NULL;
+    }
 
     /*
      * Normalize stub getter and setter values for faster is-stub testing in
@@ -1273,6 +1300,10 @@ js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id)
 
     JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
+    if (SCOPE_IS_SEALED(scope)) {
+        ReportReadOnlyScope(cx, scope);
+        return JS_FALSE;
+    }
     METER(removes);
 
     spp = js_SearchScope(scope, id, JS_FALSE);
