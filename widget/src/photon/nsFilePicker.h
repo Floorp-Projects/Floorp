@@ -67,7 +67,7 @@ protected:
 
 
   void GetFilterListArray(nsString& aFilterList);
-  static void GetFileSystemCharset(nsString & fileSystemCharset);
+  static void GetFileSystemCharset(nsCString & fileSystemCharset);
   char * ConvertToFileSystemCharset(const PRUnichar *inString);
   PRUnichar * ConvertFromFileSystemCharset(const char *inString);
 
