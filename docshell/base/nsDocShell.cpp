@@ -178,7 +178,6 @@ nsDocShell::nsDocShell():
     mItemType(typeContent),
     mCurrentScrollbarPref(-1, -1),
     mDefaultScrollbarPref(-1, -1),
-    mInitialPageLoad(PR_TRUE),
     mAllowPlugins(PR_TRUE),
     mAllowJavascript(PR_TRUE),
     mAllowMetaRedirects(PR_TRUE),
@@ -684,6 +683,17 @@ nsDocShell::StopLoad()
     return NS_OK;
 }
 
+
+/*
+ * Reset state to a new content model within the current document and the document
+ * viewer.  Called by the document before initiating an out of band document.write().
+ */
+NS_IMETHODIMP
+nsDocShell::PrepareForNewContentModel()
+{
+  mEODForCurrentDocument = PR_FALSE;
+  return NS_OK;
+}
 
 //
 // Bug 13871: Prevent frameset spoofing
@@ -2359,6 +2369,7 @@ nsDocShell::Destroy()
 
     if (mScriptGlobal) {
         mScriptGlobal->SetDocShell(nsnull);
+        mScriptGlobal->SetGlobalObjectOwner(nsnull);
         mScriptGlobal = nsnull;
     }
     if (mScriptContext) {
@@ -3737,7 +3748,8 @@ nsDocShell::CreateContentViewer(const char *aContentType,
     NS_ENSURE_SUCCESS(Embed(viewer, "", (nsISupports *) nsnull),
                       NS_ERROR_FAILURE);
 
-    mEODForCurrentDocument = PR_FALSE;  // clear the current flag
+    mEODForCurrentDocument = PR_FALSE;
+
     return NS_OK;
 }
 
@@ -4851,7 +4863,6 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     // will set it up for us. 
     SetupRefreshURI(aChannel);
 
-    mInitialPageLoad = PR_FALSE;
     return NS_OK;
 }
 

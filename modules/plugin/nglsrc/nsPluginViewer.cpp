@@ -158,9 +158,9 @@ public:
   NS_IMETHOD Init(nsIWidget* aParentWidget,
                   nsIDeviceContext* aDeviceContext,
                   const nsRect& aBounds);
-  NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
   NS_IMETHOD SetContainer(nsISupports* aContainer);
   NS_IMETHOD GetContainer(nsISupports** aContainerResult);
+  NS_IMETHOD LoadStart(nsISupports* aDoc);
   NS_IMETHOD LoadComplete(nsresult aStatus);
   NS_IMETHOD Destroy(void);
   NS_IMETHOD Stop(void);
@@ -288,21 +288,6 @@ PluginViewerImpl::~PluginViewerImpl()
   NS_IF_RELEASE(mChannel);
 }
 
-/*
- * This method is called by the Document Loader once a document has
- * been created for a particular data stream...  The content viewer
- * must cache this document for later use when Init(...) is called.
- */
-NS_IMETHODIMP
-PluginViewerImpl::BindToDocument(nsISupports *aDoc, const char *aCommand)
-{
-#ifdef NS_DEBUG
-  printf("PluginViewerImpl::BindToDocument\n");
-#endif
-  return aDoc->QueryInterface(kIDocumentIID, (void**)&mDocument);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 PluginViewerImpl::SetContainer(nsISupports* aContainer)
 {
@@ -426,6 +411,21 @@ PluginViewerImpl::Stop(void)
   // XXX write this
   return NS_OK;
 }
+
+/*
+ * This method is called by the Document Loader once a document has
+ * been created for a particular data stream...  The content viewer
+ * must cache this document for later use when Init(...) is called.
+ */
+NS_IMETHODIMP
+PluginViewerImpl::LoadStart(nsISupports *aDoc)
+{
+#ifdef NS_DEBUG
+  printf("PluginViewerImpl::LoadStart\n");
+#endif
+  return aDoc->QueryInterface(kIDocumentIID, (void**)&mDocument);
+}
+
 
 NS_IMETHODIMP
 PluginViewerImpl::LoadComplete(nsresult aStatus)
