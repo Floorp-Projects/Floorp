@@ -189,7 +189,7 @@ public:
 	  offlineMail,
 	  localNews,
 	  news,
-	  newsEx,
+	  newsEx
 	};
 
 protected:
