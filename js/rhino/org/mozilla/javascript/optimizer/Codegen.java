@@ -125,8 +125,7 @@ public class Codegen extends Interpreter {
                         }
                         if (clazz == null) {
                             Context.checkSecurityDomainRequired();
-                            if (classLoader == null)
-                                classLoader = new JavaScriptClassLoader();
+                            JavaScriptClassLoader classLoader = new JavaScriptClassLoader();
                             clazz = classLoader.defineClass(name, classFile);
                             ClassLoader loader = clazz.getClassLoader();
                             clazz = loader.loadClass(name);
@@ -3761,8 +3760,7 @@ public class Codegen extends Interpreter {
     private short scriptRuntimeIndex;
     private int version;
     private OptClassNameHelper itsNameHelper;
-    private static JavaScriptClassLoader classLoader;
-    
+
     private String itsSourceFile;
     private int itsLineNumber;
 
