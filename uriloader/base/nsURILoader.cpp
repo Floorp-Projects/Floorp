@@ -368,11 +368,13 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
         aChannel->GetURI(getter_AddRefs(uri));
         nsCOMPtr<nsIStreamListener> contentStreamListener;
         nsCOMPtr<nsIExternalHelperAppService> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_PROGID));
-        rv = helperAppService->DoContent(contentType, uri, m_originalContext, &abortProcess, getter_AddRefs(contentStreamListener));
-        if (NS_SUCCEEDED(rv) && contentStreamListener)
-          return RetargetOutput(aChannel, contentType, contentType, contentStreamListener);
-        else
-          rv = NS_ERROR_FAILURE; // this will cause us to bring up the unknown content handler dialog.
+        if (helperAppService)
+        {
+            rv = helperAppService->DoContent(contentType, uri, m_originalContext, &abortProcess, getter_AddRefs(contentStreamListener));
+            if (NS_SUCCEEDED(rv) && contentStreamListener)
+              return RetargetOutput(aChannel, contentType, contentType, contentStreamListener);
+        }
+        rv = NS_ERROR_FAILURE; // this will cause us to bring up the unknown content handler dialog.
       }
 
       if (NS_FAILED(rv))
