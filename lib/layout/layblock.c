@@ -799,7 +799,7 @@ lo_BeginLayerTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
     if (!param->bgcolor) {
       if (!DOM_StyleGetProperty(cx, db, node, BG_COLOR_STYLE, &entry))
         /* what now? */
-        return NULL;
+        return;
       if (entry)
         param->bgcolor = XP_STRDUP(entry->value);
     }
@@ -940,16 +940,103 @@ lo_ParseStyleCoords(MWContext *context,
 }
 
 #ifdef DOM
+static JSBool
+PositionParser(const char *position, uint32 *data, void *closure)
+{
+  if (!strcasecomp(position, ABSOLUTE_STYLE))
+    *data = 0;
+  else if (!strcasecomp(position, RELATIVE_STYLE))
+    *data = 1;
+  else
+    *data = 2;
+  return JS_TRUE;
+}
+
 void
 lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
                                 DOM_StyleDatabase *db, DOM_Node *node,
                                 PA_Tag *tag)
 {
+  DOM_Element *element;
   LO_BlockInitializeStruct *param;
   DOM_AttributeEntry *entry;
+  JSBool inflow;
+
 #ifdef DEBUG_shaver
   fprintf(stderr, "setting layer data on <%s>\n", PA_TagString(tag->type));
 #endif
+  
+  return;
+#if 0
+ if (lo_IsEmptyTag(tag->type))
+    /* other code says we can't handle empty tags, so I bail...for now! */
+    return;
+
+  if (!DOM_StyleGetProperty(cx, db, node, POSITION_STYLE, &entry))
+    return;
+  if (entry) {
+    if (!DOM_GetCleanAttributeData(cx, entry, PositionParser,
+                                   (uint32 *)&inflow, NULL))
+      return;
+  } else {
+    if (!DOM_StyleGetProperty(cx, db, node, LAYER_SRC, &entry))
+      return;
+    if (entry)
+      inflow = JS_TRUE;
+  }
+
+  param = XP_NEW_ZAP(LO_BlockInitializeStruct);
+  if (!param)
+    return;
+
+  param->name = XP_STRDUP(node->name);
+  if (node->type == NODE_TYPE_ELEMENT)
+    param->id = element->styleID ? XP_STRDUP(element->styleID) : NULL;
+
+  if (!DOM_StyleGetProperty(cx, db, node, LEFT_STYLE, &entry))
+    goto error;
+  if (entry) {
+    if (!DOM_GetCleanAttributeData(cx, entry, lo_SSNumToFEUnitsX, &param->left,
+                                   (void *)context))
+      goto error;
+    param->has_left = TRUE;
+  }
+
+  if (!DOM_StyleGetProperty(cx, db, node, TOP_STYLE, &entry))
+    goto error;
+  if (entry) {
+    if (!DOM_GetCleanAttributeData(cx, entry, lo_SSNumToFEUnitsY, &param->top,
+                                   (void *)context))
+      goto error;
+    param->has_top = TRUE;
+  }
+
+  if (!DOM_StyleGetProperty(cx, db, node, HEIGHT_STYLE, &entry))
+    goto error;
+  if (entry) {
+    if (!DOM_GetCleanAttributeData(cx, entry, lo_SSNumToFEUnitsY,
+                                   &param->height, (void *)context))
+      goto error;
+    param->has_height = TRUE;
+  }
+
+  if (!DOM_StyleGetProperty(cx, db, node, CLIP_STYLE, &entry))
+    goto error;
+  if (entry) {
+    /* XXX GetCleanAttributeData */
+    param->clip = lo_ParseStyleCoords(context, state, entry->value);
+    param->clip_expansion_policy = LO_AUTO_EXPAND_NONE;
+  }
+
+  param->above = NULL;
+  param->below = NULL;
+  if (!DOM_StyleGetProperty(cx, db, node, ZINDEX_STYLE, &entry))
+    goto error;
+                                   
+  return;
+ error:
+  XP_FREE(param);
+#endif 0
 }
 #else
 
