@@ -635,7 +635,18 @@ NS_IMETHODIMP nsImapIncomingServer::ResetConnection(const char* folderName)
 NS_IMETHODIMP 
 nsImapIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 {
-	nsresult rv;
+    nsXPIDLCString password;
+    nsresult rv;
+
+    
+    rv = GetPassword(getter_Copies(password));
+    if (NS_FAILED(rv)) return rv;
+    if (!(const char*) password || 
+        nsCRT::strlen((const char*) password) == 0)
+        return NS_OK;
+
+    rv = ResetFoldersToUnverified(nsnull);
+    
     nsCOMPtr<nsIFolder> rootFolder;
     rv = GetRootFolder(getter_AddRefs(rootFolder));
 	if (NS_FAILED(rv)) return rv;
@@ -2208,7 +2219,6 @@ nsImapIncomingServer::GetDoingLsub(PRBool *doingLsub)
 NS_IMETHODIMP
 nsImapIncomingServer::ReDiscoverAllFolders()
 {
-    nsresult rv = ResetFoldersToUnverified(nsnull);
-    rv = PerformExpand(nsnull);
+    nsresult rv = PerformExpand(nsnull);
     return rv;
 }
