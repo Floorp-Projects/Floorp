@@ -1,0 +1,30 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><html><head><meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><meta name="author" content="Rob Weltman">
+  <title>The Mozilla implementation of org.ietf.ldap</title>
+</head><body>
+<h2>The Mozilla implementation of org.ietf.ldap</h2>
+<br>
+<i><small>Rob Weltman</small><small><br></small><small>November 8, 2001</small></i><br>
+
+&nbsp;<br>
+This is a new branch of the Directory SDK for Java that complies with the
+proposed IETF standard API. While very similar to the netscape.ldap branch,
+it is different enough that just changing your import statements from "import
+netscape.ldap.*;" to "import org.ietf.ldap.*;" won't let you compile. There
+will be a migration guide and sample apps soon.<br>
+<br>
+The code requires JDK 1.2 or higher, or JDK 1.8 if you have the Collections classes in your CLASSPATH.<br>
+<br>
+Build the SDK with <a href="http://jakarta.apache.org/ant/">ant</a>
+.
+<ul>
+  <li>ant &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Compiles and creates a JAR file</li>
+  <li>ant javadoc &nbsp; &nbsp;Generates javadocs</li>
+</ul>
+At this point, consider the branch to be of Alpha quality. It implements
+just about everything in the IETF API except for startTLS and stopTLS.<br>
+<br>
+SASL clients will require the new Java SASL API being defined in <a href="http://www.jcp.org/jsr/detail/28.jsp">JSR 28</a>
+ in the JCP. There are <a href="http://www.worldspot.com/jsr28/">docs</a>
+ for the proposed new API that you can browse. Soon there will be a Reference Implementation for download.<br>
+<br>
+</body></html>
