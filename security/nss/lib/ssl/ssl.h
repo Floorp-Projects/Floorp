@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl.h,v 1.14 2002/06/22 01:40:31 nelsonb%netscape.com Exp $
+ * $Id: ssl.h,v 1.15 2002/09/18 22:32:19 wtc%netscape.com Exp $
  */
 
 #ifndef __ssl_h_
@@ -84,17 +84,23 @@ SSL_IMPORT PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 ** 		require a certificate during secure connect
 */
 /* options */
-#define SSL_SECURITY			1
-#define SSL_SOCKS			2
-#define SSL_REQUEST_CERTIFICATE		3
+#define SSL_SECURITY			1 /* (on by default) */
+#define SSL_SOCKS			2 /* (off by default) */
+#define SSL_REQUEST_CERTIFICATE		3 /* (off by default) */
 #define SSL_HANDSHAKE_AS_CLIENT		5 /* force accept to hs as client */
+                               		  /* (off by default) */
 #define SSL_HANDSHAKE_AS_SERVER		6 /* force connect to hs as server */
+                               		  /* (off by default) */
 #define SSL_ENABLE_SSL2			7 /* enable ssl v2 (on by default) */
 #define SSL_ENABLE_SSL3		        8 /* enable ssl v3 (on by default) */
 #define SSL_NO_CACHE		        9 /* don't use the session cache */
-#define SSL_REQUIRE_CERTIFICATE        10
+                    		          /* (off by default) */
+#define SSL_REQUIRE_CERTIFICATE        10 /* (SSL_REQUIRE_FIRST_HANDSHAKE */
+                                          /* by default) */
 #define SSL_ENABLE_FDX                 11 /* permit simultaneous read/write */
+                                          /* (off by default) */
 #define SSL_V2_COMPATIBLE_HELLO        12 /* send v3 client hello in v2 fmt */
+                                          /* (on by default) */
 #define SSL_ENABLE_TLS		       13 /* enable TLS (on by default) */
 #define SSL_ROLLBACK_DETECTION         14 /* for compatibility, default: on */
 
