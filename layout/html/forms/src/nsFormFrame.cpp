@@ -96,6 +96,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
+#include "nsLinebreakConverter.h"
 #include "nsIMIMEService.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -711,7 +712,7 @@ nsFormFrame::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeE
 
 // XXX i18n helper routines
 nsString*
-nsFormFrame::URLEncode(nsString& aString, nsIUnicodeEncoder* encoder) 
+nsFormFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder) 
 {
   char* inBuf = nsnull;
   if(encoder)
@@ -720,10 +721,15 @@ nsFormFrame::URLEncode(nsString& aString, nsIUnicodeEncoder* encoder)
   if(nsnull == inBuf)
     inBuf  = aString.ToNewCString();
 
-  char* outBuf = nsEscape(inBuf, url_XPAlphas);
+  // convert to CRLF breaks
+  char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(inBuf,
+                           nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakNet);
+  delete [] inBuf;
+  
+  char* outBuf = nsEscape(convertedBuf, url_XPAlphas);
   nsString* result = new nsString(outBuf);
   nsCRT::free(outBuf);
-  nsCRT::free(inBuf);
+  nsAllocator::Free(convertedBuf);
   return result;
 }
 
@@ -984,6 +990,12 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
             continue;
           }
 
+          // convert value to CRLF line breaks
+          char* newValue = nsLinebreakConverter::ConvertLineBreaks(value,
+                           nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakNet);
+          delete [] value;
+          value = newValue;
+          
           // Add boundary line
           contentLen += sepLen + boundaryLen + crlfLen;
 
@@ -1020,13 +1032,13 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
               contentLen += fileInfo.size;
             }
             // Add CRLF after file
-	    contentLen += crlfLen;
+            contentLen += crlfLen;
           } else {
-	    // Non-file inputs add value line
+            // Non-file inputs add value line
             contentLen += PL_strlen(value) + crlfLen;
           }
           delete [] name;
-          delete [] value;
+          nsAllocator::Free(value);
         }
         delete [] names;
         delete [] values;
@@ -1081,6 +1093,13 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
               continue;
             }
 
+            // convert value to CRLF line breaks
+          // convert value to CRLF line breaks
+            char* newValue = nsLinebreakConverter::ConvertLineBreaks(value,
+                             nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakNet);
+            delete [] value;
+            value = newValue;
+
 	    // Print boundary line
             sprintf(buffer, SEP "%s" CRLF, boundary);
             rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
@@ -1118,7 +1137,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
               rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               // end content-type header
-	    }
+	          }
 
             // Blank line before value
             rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
@@ -1127,31 +1146,31 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
             // File inputs print file contents next
             if (NS_FORM_INPUT_FILE == type) {
               nsIFileSpec* contentFile = nsnull;
-	      rv = NS_NewFileSpec(&contentFile);
+              rv = NS_NewFileSpec(&contentFile);
               NS_ASSERTION(contentFile, "Post content file couldn't be created!");
-	      if (NS_FAILED(rv) || !contentFile) break; // NS_ERROR_OUT_OF_MEMORY
-	      rv = contentFile->SetNativePath(value);
+              if (NS_FAILED(rv) || !contentFile) break; // NS_ERROR_OUT_OF_MEMORY
+              rv = contentFile->SetNativePath(value);
               NS_ASSERTION(contentFile, "Post content file path couldn't be set!");
-	      if (NS_FAILED(rv)) {
-	        NS_RELEASE(contentFile);
-		break;
+              if (NS_FAILED(rv)) {
+                NS_RELEASE(contentFile);
+                break;
               }
               // Print file contents
               PRInt32 size = 1;
               while (1) {
-	        char* readbuffer = nsnull;
+                char* readbuffer = nsnull;
                 rv = contentFile->Read(&readbuffer, BUFSIZE, &size);
                 if (NS_FAILED(rv) || 0 >= size) break;
                 rv = postDataFile->Write(readbuffer, wantbytes = size, &gotbytes);
                 if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               }
-	      NS_RELEASE(contentFile);
-	      // Print CRLF after file
+              NS_RELEASE(contentFile);
+              // Print CRLF after file
               rv = postDataFile->Write(CRLF, wantbytes = PL_strlen(CRLF), &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
 
-	    // Non-file inputs print value line
+            // Non-file inputs print value line
             else {
               rv = postDataFile->Write(value, wantbytes = PL_strlen(value), &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
@@ -1159,7 +1178,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
             delete [] name;
-            delete [] value;
+            nsAllocator::Free(value);
           }
           delete [] names;
           delete [] values;
