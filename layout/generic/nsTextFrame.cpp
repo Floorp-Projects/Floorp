@@ -1075,7 +1075,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
   PRInt32 i;
   for (i = 0;i <= mContentLength; i ++){
     if (ip[i] == aOffset){ //reverse mapping
-      aOffset = i;
+      aOffset = i + mContentOffset;
       break;
     }
   }
@@ -1795,17 +1795,17 @@ nsTextFrame::GetPosition(nsIPresContext& aCX,
       }
 
       aContentOffset = index + mContentOffset;
-      aContentOffsetEnd = aContentOffset;
-/*      //reusing wordBufMem
+      //reusing wordBufMem
       PRInt32 i;
       for (i = 0;i <= mContentLength; i ++){
         if (ip[i] == aContentOffset){ //reverse mapping
-            aContentOffset = i;
+            aContentOffset = i + mContentOffset;
             break;
         }
       }
+      aContentOffsetEnd = aContentOffset;
       NS_ASSERTION(i<= mContentLength, "offset we got from binary search is messed up");
-      */
+      
       *aNewContent = mContent;
       if (*aNewContent) {
         (*aNewContent)->AddRef();
