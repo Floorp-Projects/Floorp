@@ -560,7 +560,7 @@ nsHTMLTableRowElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
@@ -606,6 +606,24 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
+nsHTMLTableRowElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                                PRInt32& aHint) const
+{
+  if ((aAttribute == nsHTMLAtoms::align) ||
+      (aAttribute == nsHTMLAtoms::valign) ||
+      (aAttribute == nsHTMLAtoms::height)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (! nsGenericHTMLElement::GetBackgroundAttributesImpact(aAttribute, aHint)) {
+      aHint = NS_STYLE_HINT_CONTENT;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLTableRowElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
                                                     nsMapAttributesFunc& aMapFunc) const
 {
@@ -626,18 +644,3 @@ nsHTMLTableRowElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLTableRowElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  if (PR_TRUE == nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, 
-    aAttribute, aHint)) {
-    // Do nothing
-  }
-  else {
-    // XXX put in real handling for known attributes, return CONTENT for anything else
-    *aHint = NS_STYLE_HINT_CONTENT;
-  }
-  return NS_OK;
-}

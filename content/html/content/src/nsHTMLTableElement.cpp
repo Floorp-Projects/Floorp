@@ -951,7 +951,7 @@ nsHTMLTableElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void 
-MapTableFrameInto(nsIHTMLAttributes* aAttributes,
+MapTableFrameInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext, 
                   nsStyleSpacing* aSpacing)
@@ -1023,7 +1023,7 @@ MapTableFrameInto(nsIHTMLAttributes* aAttributes,
 }
 
 static void 
-MapTableBorderInto(nsIHTMLAttributes* aAttributes,
+MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
                    nsIStyleContext* aContext,
                    nsIPresContext* aPresContext)
 {
@@ -1079,7 +1079,7 @@ MapTableBorderInto(nsIHTMLAttributes* aAttributes,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
@@ -1213,24 +1213,35 @@ x += 1;
       //background: color
       nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
       nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-
-      // direction
-      aAttributes->GetAttribute(nsHTMLAtoms::dir, value);
-      if (eHTMLUnit_String == value.GetUnit()) {
-        nsString dir;
-        value.GetStringValue(dir);
-        nsStyleDisplay* display = (nsStyleDisplay*)
-          aContext->GetMutableStyleData(eStyleStruct_Display);
-        if (dir.EqualsIgnoreCase("RTL")) {
-          display->mDirection = NS_STYLE_DIRECTION_RTL;
-        } 
-        else {
-          display->mDirection = NS_STYLE_DIRECTION_LTR;
-        }
-      }
     }
   }
 }
+
+NS_IMETHODIMP
+nsHTMLTableElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                             PRInt32& aHint) const
+{
+  if ((aAttribute == nsHTMLAtoms::align) || 
+      (aAttribute == nsHTMLAtoms::layout) ||
+      (aAttribute == nsHTMLAtoms::cellpadding) ||
+      (aAttribute == nsHTMLAtoms::cellspacing) ||
+      (aAttribute == nsHTMLAtoms::cols) ||
+      (aAttribute == nsHTMLAtoms::rules) ||
+      (aAttribute == nsHTMLAtoms::border) ||
+      (aAttribute == nsHTMLAtoms::frame) ||
+      (aAttribute == nsHTMLAtoms::width) ||
+      (aAttribute == nsHTMLAtoms::height)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (! nsGenericHTMLElement::GetBackgroundAttributesImpact(aAttribute, aHint)) {
+      aHint = NS_STYLE_HINT_CONTENT;
+    }
+  }
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLTableElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
@@ -1253,19 +1264,3 @@ nsHTMLTableElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLTableElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  if (PR_TRUE == nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, 
-    aAttribute, aHint)) {
-    // Do nothing
-  }
-  else if (nsHTMLAtoms::summary != aAttribute)
-  {
-    // XXX put in real handling for known attributes, return CONTENT for anything else
-    *aHint = NS_STYLE_HINT_CONTENT;
-  }
-  return NS_OK;
-}

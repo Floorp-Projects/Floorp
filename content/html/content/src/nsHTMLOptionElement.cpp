@@ -370,12 +370,24 @@ nsHTMLOptionElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLOptionElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                              PRInt32& aHint) const
+{
+  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLOptionElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
@@ -423,15 +435,6 @@ nsHTMLOptionElement::GetText(nsString& aText)
       NS_RELEASE(node);
     }
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLOptionElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }
 

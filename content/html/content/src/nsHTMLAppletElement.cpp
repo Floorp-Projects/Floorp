@@ -212,14 +212,30 @@ nsHTMLAppletElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aContext, aPresContext);
-  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
-  nsGenericHTMLElement::MapImageBorderAttributesInto(aAttributes, aContext, aPresContext, nsnull);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aContext, aPresContext, nsnull);
+}
+
+NS_IMETHODIMP
+nsHTMLAppletElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                              PRInt32& aHint) const
+{
+  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (! nsGenericHTMLElement::GetImageMappedAttributesImpact(aAttribute, aHint)) {
+      if (! nsGenericHTMLElement::GetImageAlignAttributeImpact(aAttribute, aHint)) {
+        if (! nsGenericHTMLElement::GetImageBorderAttributeImpact(aAttribute, aHint)) {
+          aHint = NS_STYLE_HINT_CONTENT;
+        }
+      }
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -242,15 +258,6 @@ nsHTMLAppletElement::HandleDOMEvent(nsIPresContext& aPresContext,
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
-}
-
-NS_IMETHODIMP
-nsHTMLAppletElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  return NS_OK;
 }
 
 #if defined(OJI)

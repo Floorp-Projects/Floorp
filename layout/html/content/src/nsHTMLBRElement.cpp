@@ -161,20 +161,34 @@ nsHTMLBRElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  if (nsnull != aAttributes) {
-    nsStyleDisplay* display = (nsStyleDisplay*)
-      aContext->GetMutableStyleData(eStyleStruct_Display);
-    nsHTMLValue value;
-    aAttributes->GetAttribute(nsHTMLAtoms::clear, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      display->mBreakType = value.GetIntValue();
-    }
+  nsStyleDisplay* display = (nsStyleDisplay*)
+    aContext->GetMutableStyleData(eStyleStruct_Display);
+
+  nsHTMLValue value;
+  aAttributes->GetAttribute(nsHTMLAtoms::clear, value);
+  if (value.GetUnit() == eHTMLUnit_Enumerated) {
+    display->mBreakType = value.GetIntValue();
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsHTMLBRElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                          PRInt32& aHint) const
+{
+  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (nsHTMLAtoms::clear == aAttribute) {
+      aHint = NS_STYLE_HINT_REFLOW;
+    }
+    else {
+      aHint = NS_STYLE_HINT_CONTENT;
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -198,11 +212,3 @@ nsHTMLBRElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLBRElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  return NS_OK;
-}

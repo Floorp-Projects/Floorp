@@ -260,7 +260,7 @@ nsHTMLImageElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
@@ -309,9 +309,32 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     }
   }
   nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
-  nsGenericHTMLElement::MapImageBorderAttributesInto(aAttributes, aContext, aPresContext, nsnull);
+  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aContext, aPresContext, nsnull);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLImageElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                             PRInt32& aHint) const
+{
+  if ((aAttribute == nsHTMLAtoms::usemap) ||
+      (aAttribute == nsHTMLAtoms::ismap)) {
+    aHint = NS_STYLE_HINT_FRAMECHANGE;
+  }
+  else if (aAttribute == nsHTMLAtoms::align) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (! nsGenericHTMLElement::GetImageMappedAttributesImpact(aAttribute, aHint)) {
+      if (! nsGenericHTMLElement::GetImageBorderAttributeImpact(aAttribute, aHint)) {
+        aHint = NS_STYLE_HINT_CONTENT;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLImageElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
@@ -382,24 +405,6 @@ nsHTMLImageElement::Finalize(JSContext *aContext)
   mInner.Finalize(aContext);
 }
 
-
-NS_IMETHODIMP
-nsHTMLImageElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  if (aAttribute == nsHTMLAtoms::src) {
-    *aHint = NS_STYLE_HINT_CONTENT;
-  }
-  else if ((aAttribute == nsHTMLAtoms::usemap) ||
-           (aAttribute == nsHTMLAtoms::ismap)) {
-    *aHint = NS_STYLE_HINT_FRAMECHANGE;
-  }
-  else {
-    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  }
-  return NS_OK;
-}
 
 NS_IMETHODIMP    
 nsHTMLImageElement::Initialize(JSContext* aContext, 

@@ -205,11 +205,22 @@ nsHTMLScriptElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+}
+
+NS_IMETHODIMP
+nsHTMLScriptElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                              PRInt32& aHint) const
+{
+  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -233,11 +244,3 @@ nsHTMLScriptElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                aFlags, aEventStatus);
 }
 
-NS_IMETHODIMP
-nsHTMLScriptElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
-{
-  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  return NS_OK;
-}

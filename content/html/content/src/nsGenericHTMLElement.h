@@ -37,6 +37,7 @@ class nsIDOMNodeList;
 class nsIEventListenerManager;
 class nsIFrame;
 class nsIHTMLAttributes;
+class nsIHTMLMappedAttributes;
 class nsIHTMLContent;
 class nsIStyleContext;
 class nsIStyleRule;
@@ -209,26 +210,6 @@ public:
   static PRBool FrameborderValueToString(PRBool aStandardMode,
                                          const nsHTMLValue& aValue,
                                          nsString& aResult);
-  static void MapCommonAttributesInto(nsIHTMLAttributes* aAttributes, 
-                                      nsIStyleContext* aStyleContext,
-                                      nsIPresContext* aPresContext);
-
-  static void MapImageAttributesInto(nsIHTMLAttributes* aAttributes, 
-                                     nsIStyleContext* aContext,
-                                     nsIPresContext* aPresContext);
-
-  static void MapImageAlignAttributeInto(nsIHTMLAttributes* aAttributes, 
-                                         nsIStyleContext* aContext,
-                                         nsIPresContext* aPresContext);
-
-  static void MapImageBorderAttributesInto(nsIHTMLAttributes* aAttributes, 
-                                           nsIStyleContext* aContext,
-                                           nsIPresContext* aPresContext,
-                                           nscolor aBorderColors[4]);
-
-  static void MapBackgroundAttributesInto(nsIHTMLAttributes* aAttributes, 
-                                          nsIStyleContext* aContext,
-                                          nsIPresContext* aPresContext);
 
   static PRBool ParseScrollingValue(PRBool aStandardMode,
                                     const nsString& aString,
@@ -238,15 +219,48 @@ public:
                                        const nsHTMLValue& aValue,
                                        nsString& aResult);
 
-  static PRBool GetStyleHintForCommonAttributes(const nsIContent* aNode,
-                                                const nsIAtom* aAttribute,
-                                                PRInt32* aHint);
+  /** Attribute Mapping Helpers
+   *
+   * All attributes that are mapped into style contexts must have a 
+   * matched set of mapping function and impact getter
+   */
+
+  static void MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
+                                      nsIStyleContext* aStyleContext,
+                                      nsIPresContext* aPresContext);
+  static PRBool GetCommonMappedAttributesImpact(const nsIAtom* aAttribute,
+                                                PRInt32& aHint);
+
+  static void MapImageAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
+                                     nsIStyleContext* aContext,
+                                     nsIPresContext* aPresContext);
+  static PRBool GetImageMappedAttributesImpact(const nsIAtom* aAttribute,
+                                               PRInt32& aHint);
+
+  static void MapImageAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes, 
+                                         nsIStyleContext* aContext,
+                                         nsIPresContext* aPresContext);
+  static PRBool GetImageAlignAttributeImpact(const nsIAtom* aAttribute,
+                                             PRInt32& aHint);
+
+  static void MapImageBorderAttributeInto(const nsIHTMLMappedAttributes* aAttributes, 
+                                          nsIStyleContext* aContext,
+                                          nsIPresContext* aPresContext,
+                                          nscolor aBorderColors[4]);
+  static PRBool GetImageBorderAttributeImpact(const nsIAtom* aAttribute,
+                                              PRInt32& aHint);
+
+  static void MapBackgroundAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
+                                          nsIStyleContext* aContext,
+                                          nsIPresContext* aPresContext);
+  static PRBool GetBackgroundAttributesImpact(const nsIAtom* aAttribute,
+                                              PRInt32& aHint);
 
   //XXX This creates a dependency between content and frames 
   static nsresult GetPrimaryFrame(nsIHTMLContent* aContent,
                                   nsIFormControlFrame *&aFormControlFrame);
 
-  static nsresult GetBaseURL(nsIHTMLAttributes* aAttributes,
+  static nsresult GetBaseURL(const nsHTMLValue& aBaseHref,
                              nsIDocument* aDocument,
                              nsIURI** aResult);
 
@@ -460,8 +474,8 @@ public:
                                nsString& aResult) const;               \
   NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,  \
                                           nsMapAttributesFunc& aMapFunc) const;  \
-  NS_IMETHOD GetStyleHintForAttributeChange(const nsIAtom* aAttribute, \
-                                            PRInt32 *aHint) const;                                             
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,       \
+                                      PRInt32& aHint) const;
   
 #define NS_IMPL_IHTMLCONTENT_USING_GENERIC2(_g)                        \
   NS_IMETHOD Compact() {                                               \
@@ -506,8 +520,8 @@ public:
                                nsString& aResult) const;               \
   NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, \
                                           nsMapAttributesFunc& aMapFunc) const;  \
-  NS_IMETHOD GetStyleHintForAttributeChange(const nsIAtom* aAttribute, \
-                                            PRInt32 *aHint) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,       \
+                                      PRInt32& aHint) const;
 
 /**
  * This macro implements the portion of query interface that is

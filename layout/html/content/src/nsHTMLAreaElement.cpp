@@ -175,12 +175,24 @@ nsHTMLAreaElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
+
+NS_IMETHODIMP
+nsHTMLAreaElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                            PRInt32& aHint) const
+
+{
+  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    aHint = NS_STYLE_HINT_CONTENT;
+  }
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLAreaElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
@@ -201,31 +213,6 @@ nsHTMLAreaElement::HandleDOMEvent(nsIPresContext& aPresContext,
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
-}
-
-NS_IMETHODIMP
-nsHTMLAreaElement::GetStyleHintForAttributeChange(const nsIAtom* aAttribute,
-                                                  PRInt32 *aHint) const
-
-{
-  if ((aAttribute == nsHTMLAtoms::alt) ||
-      (aAttribute == nsHTMLAtoms::coords) ||
-      (aAttribute == nsHTMLAtoms::href) ||
-      (aAttribute == nsHTMLAtoms::nohref) ||
-      (aAttribute == nsHTMLAtoms::shape) ||
-      (aAttribute == nsHTMLAtoms::tabindex) ||
-      (aAttribute == nsHTMLAtoms::target)) {
-    *aHint = NS_STYLE_HINT_CONTENT;
-  }
-  else if (aAttribute == nsHTMLAtoms::accesskey) {
-    // XXX Notification needs to happen for this attribute
-    *aHint = NS_STYLE_HINT_CONTENT;
-  }
-  else {
-    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

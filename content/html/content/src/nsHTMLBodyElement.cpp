@@ -264,11 +264,11 @@ BodyRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresConte
   aPresContext->GetFontScaler(&scaler);
   float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
   // apply font scaling to the body
-  font->mFont.size *= scaleFactor;
+  font->mFont.size = NSToCoordFloor(float(font->mFont.size) * scaleFactor);
   if (font->mFont.size < 1) {
     font->mFont.size = 1;
   }
-  font->mFixedFont.size *= scaleFactor;
+  font->mFixedFont.size = NSToCoordFloor(float(font->mFixedFont.size) * scaleFactor);
   if (font->mFixedFont.size < 1) {
     font->mFixedFont.size = 1;
   }
@@ -619,18 +619,8 @@ nsHTMLBodyElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-static PRBool ColorNameToRGB(const nsHTMLValue& aValue, nscolor* aColor)
-{
-  nsAutoString buffer;
-  aValue.GetStringValue(buffer);
-  char cbuf[40];
-  buffer.ToCString(cbuf, sizeof(cbuf));
-
-  return NS_ColorNameToRGB(cbuf, aColor);
-}
-
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
+MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
@@ -639,18 +629,11 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
 
     aAttributes->GetAttribute(nsHTMLAtoms::text, value);
-    if (eHTMLUnit_Color == value.GetUnit()) {
+    if ((eHTMLUnit_Color == value.GetUnit()) || 
+        (eHTMLUnit_ColorName == value.GetUnit())){
       nsStyleColor* color = (nsStyleColor*)
         aContext->GetMutableStyleData(eStyleStruct_Color);
       color->mColor = value.GetColorValue();
-    }
-    else if (eHTMLUnit_String == value.GetUnit()) {
-      nscolor backgroundColor;
-      if (ColorNameToRGB(value, &backgroundColor)) {
-        nsStyleColor* color = (nsStyleColor*)
-          aContext->GetMutableStyleData(eStyleStruct_Color);
-        color->mColor = backgroundColor;
-      }
     }
 
     nsCOMPtr<nsIPresShell> presShell;
@@ -665,36 +648,21 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
           nsIHTMLStyleSheet* styleSheet;
           if (NS_OK == htmlContainer->GetAttributeStyleSheet(&styleSheet)) {
             aAttributes->GetAttribute(nsHTMLAtoms::link, value);
-            if (eHTMLUnit_Color == value.GetUnit()) {
+            if ((eHTMLUnit_Color == value.GetUnit()) || 
+                (eHTMLUnit_ColorName == value.GetUnit())) {
               styleSheet->SetLinkColor(value.GetColorValue());
-            }
-            else if (eHTMLUnit_String == value.GetUnit()) {
-              nscolor linkColor;
-              if (ColorNameToRGB(value, &linkColor)) {
-                styleSheet->SetLinkColor(linkColor);
-              }
             }
 
             aAttributes->GetAttribute(nsHTMLAtoms::alink, value);
-            if (eHTMLUnit_Color == value.GetUnit()) {
+            if ((eHTMLUnit_Color == value.GetUnit()) || 
+                (eHTMLUnit_ColorName == value.GetUnit())) {
               styleSheet->SetActiveLinkColor(value.GetColorValue());
-            }
-            else if (eHTMLUnit_String == value.GetUnit()) {
-              nscolor linkColor;
-              if (ColorNameToRGB(value, &linkColor)) {
-                styleSheet->SetActiveLinkColor(linkColor);
-              }
             }
 
             aAttributes->GetAttribute(nsHTMLAtoms::vlink, value);
-            if (eHTMLUnit_Color == value.GetUnit()) {
+            if ((eHTMLUnit_Color == value.GetUnit()) ||
+                (eHTMLUnit_ColorName == value.GetUnit())) {
               styleSheet->SetVisitedLinkColor(value.GetColorValue());
-            }
-            else if (eHTMLUnit_String == value.GetUnit()) {
-              nscolor linkColor;
-              if (ColorNameToRGB(value, &linkColor)) {
-                styleSheet->SetVisitedLinkColor(linkColor);
-              }
             }
             NS_RELEASE(styleSheet);
           }
@@ -804,21 +772,23 @@ nsHTMLBodyElement::GetInlineStyleRules(nsISupportsArray* aRules)
 }
 
 NS_IMETHODIMP
-nsHTMLBodyElement::GetStyleHintForAttributeChange(
-    const nsIAtom* aAttribute,
-    PRInt32 *aHint) const
+nsHTMLBodyElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                            PRInt32& aHint) const
 {
   if ((aAttribute == nsHTMLAtoms::link) ||
       (aAttribute == nsHTMLAtoms::vlink) ||
       (aAttribute == nsHTMLAtoms::alink) ||
-      (aAttribute == nsHTMLAtoms::bgcolor) ||
-      (aAttribute == nsHTMLAtoms::background) ||
-      (aAttribute == nsHTMLAtoms::text))
-  {
-    *aHint = NS_STYLE_HINT_VISUAL;
+      (aAttribute == nsHTMLAtoms::text)) {
+    aHint = NS_STYLE_HINT_VISUAL;
   }
-  else {
-    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  else if ((aAttribute == nsHTMLAtoms::marginwidth) ||
+           (aAttribute == nsHTMLAtoms::marginheight)) {
+    aHint = NS_STYLE_HINT_REFLOW;
+  }
+  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (! nsGenericHTMLElement::GetBackgroundAttributesImpact(aAttribute, aHint)) {
+      aHint = NS_STYLE_HINT_CONTENT;
+    }
   }
 
   return NS_OK;
