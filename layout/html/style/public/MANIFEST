@@ -2,6 +2,7 @@
 # This is a list of local files which get copied to the mozilla:dist:layout directory
 #
 
+nsCSSAtoms.h
 nsICSSParser.h
 nsICSSStyleSheet.h
 nsStyleUtil.h

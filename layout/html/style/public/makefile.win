@@ -17,7 +17,7 @@
 
 DEPTH=..\..\..\.. 
 
-EXPORTS=nsICSSParser.h nsICSSStyleSheet.h nsStyleUtil.h
+EXPORTS=nsCSSAtoms.h nsICSSParser.h nsICSSStyleSheet.h nsStyleUtil.h
 MODULE=raptor 
 
 include <$(DEPTH)\layout\config\rules.mak>
