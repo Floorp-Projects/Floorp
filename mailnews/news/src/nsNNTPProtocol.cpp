@@ -544,7 +544,7 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
         if (NS_FAILED(rv)) return rv;
     }
 
-	NS_PRECONDITION(m_url, "invalid URL passed into NNTP Protocol");
+	NS_PRECONDITION(m_url , "invalid URL passed into NNTP Protocol");
 
 	// Right now, we haven't written an nsNNTPURL yet. When we do, we'll pull the event sink
 	// data out of it and set our event sink member variables from it. For now, just set them
@@ -868,10 +868,19 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		m_typeWanted = LIST_WANTED;
 	  }
 	  else {
-		nsXPIDLCString newsgroupURI;
-		rv = aURL->GetSpec(getter_Copies(newsgroupURI));
+
+		nsXPIDLCString	username;
+		rv = aURL->GetUsername(getter_Copies(username));
 		if (NS_FAILED(rv)) return(rv);
-    
+		
+		nsXPIDLCString	hostname;
+		rv = aURL->GetHost(getter_Copies(hostname));
+		if (NS_FAILED(rv)) return(rv);
+		
+		nsXPIDLCString newsgroupURI;
+		rv = CreateNewsFolderURI((const char *)username,(const char *)hostname,(const char *)m_currentGroup,getter_Copies(newsgroupURI));
+		if (NS_FAILED(rv)) return rv;
+		
 		PRBool containsGroup = PR_TRUE;
 		NS_ASSERTION(m_nntpServer,"no nntp server");
 		if (m_nntpServer) {
@@ -2304,7 +2313,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 
 		rv = m_runningURL->GetMessageHeader(getter_AddRefs(msgHdr));
 
-		if (NS_SUCCEEDED(rv)) {
+		if (NS_SUCCEEDED(rv) && msgHdr) {
 			msgHdr->MarkRead(PR_TRUE);
 		}
 
@@ -2409,27 +2418,44 @@ nsNNTPProtocol::SetNewsFolder()
 	// xxx todo:  I need to fix this so this is passed in when I create the nsNNTPProtocol
 
     if (!m_newsFolder) {
-        nsCAutoString folderURI("news://");
-
-		if ((const char *)m_userName) {
-			folderURI += (const char *)m_userName;
-			folderURI += "@";
-		}
-        folderURI += (const char *)m_hostName;
-
+		nsXPIDLCString folderURI;
         nsXPIDLCString newsgroupName;
         rv = m_runningURL->GetNewsgroupName(getter_Copies(newsgroupName));
 		if (NS_FAILED(rv)) return rv;
 
-        if ((const char *)newsgroupName) {
-        	folderURI += "/";
-            folderURI += (const char *)newsgroupName;
-		}
+		rv = CreateNewsFolderURI((const char *)m_userName,(const char *)m_hostName, (const char *)newsgroupName, getter_Copies(folderURI));
+		if (NS_FAILED(rv)) return rv;
 
         rv = InitializeNewsFolderFromUri((const char *)folderURI);
 		if (NS_FAILED(rv)) return rv;
     }
 	return NS_OK;
+}
+
+nsresult
+nsNNTPProtocol::CreateNewsFolderURI(const char *username, const char *hostname, const char *newsgroupname, char **uri)
+{		
+		nsCAutoString folderURI("news://");
+
+		if ((const char *)username) {
+			folderURI += (const char *)username;
+			folderURI += "@";
+		}
+        folderURI += (const char *)hostname;
+
+		if ((const char *)newsgroupname) {
+			folderURI += "/";
+            folderURI += (const char *)newsgroupname;
+		}
+		
+		if (!uri) return NS_ERROR_NULL_POINTER; 
+	
+		*uri = PL_strdup((const char *)folderURI);
+		if (!*uri) return NS_ERROR_OUT_OF_MEMORY;
+#ifdef DEBUG_sspitzer
+		printf("news uri=%s\n",*uri);
+#endif /* DEBUG_sspitzer */
+		return NS_OK;
 }
 
 PRInt32 nsNNTPProtocol::BeginAuthorization()

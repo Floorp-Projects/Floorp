@@ -315,12 +315,15 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
        eventSink = do_GetInterface(requestor);
     
     nsCOMPtr<nsIURI> loadingURI;
-    channel->GetURI(getter_AddRefs(loadingURI));
-    
+    res = channel->GetURI(getter_AddRefs(loadingURI));
+    NS_ASSERTION(NS_SUCCEEDED(res),"GetURI failed");
+
 #if defined(DEBUG)
-    nsXPIDLCString temp;
-    loadingURI->GetSpec(getter_Copies(temp));
-    PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: OnStateChange: %x :%s\n", this, aProgressStateFlags,(const char*)temp));
+	if (loadingURI) {
+      nsXPIDLCString temp;
+      loadingURI->GetSpec(getter_Copies(temp));
+      PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: OnStateChange: %x :%s\n", this, aProgressStateFlags,(const char*)temp));
+	}
 #endif
 
     // A Document is starting to load...
