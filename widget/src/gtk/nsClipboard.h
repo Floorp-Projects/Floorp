@@ -61,7 +61,8 @@ protected:
 
 
 private:
-  void AddTarget(GdkAtom aAtom, GdkAtom aSelectionAtom);
+  inline void SetWhichClipboard(PRInt32 aWhichClipboard);
+  inline void AddTarget(GdkAtom aAtom, GdkAtom aSelectionAtom);
   void RegisterFormat(const char *aMimeStr, GdkAtom aSelectionAtom);
   PRBool DoRealConvert(GdkAtom type);
   PRBool DoConvert(const char *aMimeStr);
