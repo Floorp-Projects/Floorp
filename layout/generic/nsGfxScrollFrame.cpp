@@ -393,7 +393,7 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     // Make sure we are not a text area.
     nsCOMPtr<nsIContent> content;
     mParent->GetContent(getter_AddRefs(content));
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(mContent));
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(content));
     if (!textAreaElement) {
       SetScrollbarVisibility(aPresContext, PR_FALSE, PR_FALSE);
       return NS_OK;
