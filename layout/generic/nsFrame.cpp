@@ -1002,26 +1002,26 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
       rect.x = offsetPoint.x;
       rect.y = offsetPoint.y;
 
-      nscoord y1 = rect.y;
-      nscoord y2 = rect.y + rect.height;
+      nscoord ya = rect.y;
+      nscoord yb = rect.y + rect.height;
 
-      PRInt32 yDistance = PR_MIN(abs(y1 - aPoint.y),abs(y2 - aPoint.y));
+      PRInt32 yDistance = PR_MIN(abs(ya - aPoint.y),abs(yb - aPoint.y));
 
       if (yDistance <= closestYDistance && rect.width > 0 && rect.height > 0)
       {
         if (yDistance < closestYDistance)
           closestXDistance = HUGE_DISTANCE;
 
-        nscoord x1 = rect.x;
-        nscoord x2 = rect.x + rect.width;
+        nscoord xa = rect.x;
+        nscoord xb = rect.x + rect.width;
 
-        if (x1 <= aPoint.x && x2 >= aPoint.x && y1 <= aPoint.y && y2 >= aPoint.y)
+        if (xa <= aPoint.x && xb >= aPoint.x && ya <= aPoint.y && yb >= aPoint.y)
         {
           closestFrame = kid;
           break;
         }
 
-        PRInt32 xDistance = PR_MIN(abs(x1 - aPoint.x),abs(x2 - aPoint.x));
+        PRInt32 xDistance = PR_MIN(abs(xa - aPoint.x),abs(xb - aPoint.x));
 
         if (xDistance < closestXDistance)
         {
@@ -2048,7 +2048,9 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
         //we need to jump to new block frame.
       return NS_ERROR_FAILURE;
     }
-    result = it->GetLine(searchingLine, &firstFrame, &lineFrameCount,nonUsedRect);
+    PRUint32 lineFlags;
+    result = it->GetLine(searchingLine, &firstFrame, &lineFrameCount,
+                         nonUsedRect, &lineFlags);
     if (!lineFrameCount)
       continue;
     if (NS_SUCCEEDED(result)){
@@ -2295,7 +2297,9 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       PRInt32 lineFrameCount;
       nsIFrame *firstFrame;
       nsRect  usedRect; 
-      result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,usedRect);
+      PRUint32 lineFlags;
+      result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,usedRect,
+                           &lineFlags);
       if (eSelectBeginLine == aPos->mAmount)
       {
         if (firstFrame)
@@ -2370,8 +2374,10 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       nsIFrame *lastFrame;
       nsRect  nonUsedRect;
       PRInt32 lineFrameCount;
+      PRUint32 lineFlags;
 
-      result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect);
+      result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,nonUsedRect,
+                           &lineFlags);
       if (NS_FAILED(result))
         return result;
 
