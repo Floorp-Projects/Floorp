@@ -44,6 +44,7 @@ public:
   NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext)=0;
   NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument)=0;
   NS_IMETHOD_(void)       SetWebShell(nsIWebShell *aWebShell)=0;
+  NS_IMETHOD_(void)       GetWebShell(nsIWebShell **aWebShell)=0;
   NS_IMETHOD_(void)       SetOpenerWindow(nsIDOMWindow *aOpener)=0;
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
