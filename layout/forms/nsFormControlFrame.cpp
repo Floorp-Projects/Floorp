@@ -597,6 +597,9 @@ NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
         if (NS_VK_RETURN == keyEvent->keyCode) {
           EnterPressed(aPresContext);
+        } 
+        else if (NS_VK_SPACE == keyEvent->keyCode) {
+          MouseClicked(&aPresContext);
         }
       }
       break;
