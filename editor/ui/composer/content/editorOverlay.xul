@@ -574,8 +574,8 @@
     </menu>
     <menuseparator />
     <menuitem id="tableFixupMenuitem"      value="&tableFixup.label;"      accesskey="&tablefixup.accesskey;"   oncommand="EditorNormalizeTable()"/>
-    <menuitem id="tableJoinCellsMenuitem"  value="&tableJoinCells.label;"  accesskey="&tablejoin.accesskey;"    oncommand="EditorJoinTableCells()"/>
-    <menuitem id="tablePropertiesMenuitem" value="&tableProperties.label;" accesskey="&properties.accesskey;"   oncommand="EditorInsertOrEditTable(false)"/>
+    <menuitem id="tableJoinCellsMenuitem"  value="&tableJoinCells.label;"  accesskey="&tablejoin.accesskey;"    oncommand="EditorJoinTableCells()" disabled="true"/>
+    <menuitem id="tablePropertiesMenuitem" value="&tableProperties.label;" accesskey="&properties.accesskey;"   oncommand="EditorInsertOrEditTable(false)" disabled="true"/>
   </menupopup>
   </menu>
 
