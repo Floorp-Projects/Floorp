@@ -45,6 +45,7 @@
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIWalletService.h"
+#include "nsIWebShell.h"
 #ifdef NECKO
 #include "nsICookieService.h"
 #endif // NECKO
@@ -829,6 +830,16 @@ int main(int argc, char* argv[])
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
 
     int result = main1(argc, argv);
+
+#ifdef NS_DEBUG
+		if ( unsigned long count = NS_TotalWebShellsInExistence() )
+			{
+				printf("!!!Warning: there are still %l instances of nsWebShell outstanding.  OK?\n", count);
+
+				char cc;
+				scanf("%c", &cc);
+			}
+#endif
 
     // calling this explicitly will cut down on a large number of leaks we're
     // seeing:
