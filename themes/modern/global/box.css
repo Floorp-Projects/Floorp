@@ -17,10 +17,6 @@ title
     padding               : inherit;
   }
 
-title text {
-  margin : 0px 3px 0px 3px;
-}
-    
 /** box formatting **/
   box[autostretch="never"]
     {
