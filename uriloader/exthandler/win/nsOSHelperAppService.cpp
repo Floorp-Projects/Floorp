@@ -237,8 +237,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
 // value; the low order bit of the third byte of which indicates that the user does not need
 // to be prompted.
 //
-// This function sets only the Description and AlwaysAskBeforeHandling attributes of the
-// input nsIMIMEInfo.
+// This function sets only the Description attribute of the input nsIMIMEInfo.
 static nsresult GetMIMEInfoFromRegistry( LPBYTE fileType, nsIMIMEInfo *pInfo )
 {
     nsresult rv = NS_OK;
@@ -259,22 +258,6 @@ static nsresult GetMIMEInfoFromRegistry( LPBYTE fileType, nsIMIMEInfo *pInfo )
             pInfo->SetDescription( desc.GetUnicode() );
             delete [] pDesc;
         }
-
-        // Now get EditFlags.
-        DWORD len = 0;
-        LPBYTE pEditFlags = GetValueBytes( fileTypeKey, "EditFlags", &len );
-        if ( pEditFlags )
-        {
-            // Test "confirm open after download" setting.  Note that this bit is
-            // *on* if that checkbox is unchecked.
-            if ( ( len >= 3 ) && ( pEditFlags[2] & 0x01 ) )
-            {
-                // This means we don't ask.
-                pInfo->SetAlwaysAskBeforeHandling( PR_FALSE );
-            }
-            delete [] pEditFlags;
-        }
-
     }
     else
     {
