@@ -44,7 +44,7 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 // if defined widget changes like moves and resizes are defered until and done
 // all in one pass.
-#define CACHE_WIDGET_CHANGES
+//#define CACHE_WIDGET_CHANGES
 
 // display list flags
 #define VIEW_RENDERED		0x00000001
