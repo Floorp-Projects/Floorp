@@ -163,6 +163,7 @@ typedef struct _regfile
     struct _regfile *prev;
 #ifndef STANDALONE_REGISTRY
     PRLock          *lock;
+    PRUint64        uniqkey;
 #endif
 } REGFILE;
 

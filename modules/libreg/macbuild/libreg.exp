@@ -21,6 +21,7 @@ NR_RegOpen
 NR_RegFlush
 NR_RegSetUsername
 NR_RegGetUsername
+NR_RegGetUniqueName
 VR_SetRegDirectory
 VR_CreateRegistry
 VR_PackRegistry
