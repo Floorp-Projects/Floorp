@@ -4,7 +4,7 @@
 <!DOCTYPE window>
 
 <!-- dialog containing a control requiring initial setup -->
-<xul:window width="380" height="405" title="Image Properties"
+<xul:window width="420" height="375" title="Image Properties"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()">
@@ -20,13 +20,27 @@
   <table>
     <tr>
       <td colspan="2">
-        <fieldset><legend align="left">Image Information </legend>
-          <p class="smallmargin">Enter a remote URL or local file: </p>
-          <input type="text" size="20" length="20" id="image.srcInput" onchange="OnChangeSrc()"/>
-          <button class="ChooseFile" id="ChooseFile" onclick="chooseFile()">Choose File...</button>
-          <br/>
-          <p class="smallmargin">Alternative Text</p>
-          <input type="text" size="30" id="image.altTextInput" />
+        <fieldset id="imageInfo.fieldset" ><legend align="left"> Image Information </legend>
+          <table>
+            <tr>
+              <td align="right" valign="middle">
+                <label class="enabled"> Image URL </label>
+              </td>
+              <td valign="middle">
+                <input type="text" size="30" length="30" id="image.srcInput" onkeypress="OnChangeSrc()" onchange="OnChangeSrc()"/>
+                <button class="ChooseFile" id="ChooseFile" onclick="chooseFile()"> Choose File... </button>
+              </td>
+            </tr>
+            
+            <tr>
+              <td align="right" valign="middle">
+                <label class="enabled"> Alternative Text </label>
+              </td>
+              <td>
+                <input type="text" size="30" id="image.altTextInput" onkeypress="doOverallEnabling()"/>
+              </td>
+            </tr>
+          </table>
         </fieldset>
       </td>
       <td/>
@@ -38,25 +52,130 @@
       <td/>
     </tr>
     <tr id="AdvancedRow">
-      <td height="60">
-        <fieldset><legend align="left">Dimensions </legend>
-          <select id="WidthUnits" size="1"  onchange="SelectWidthUnits()">
-            <option>pixels</option>
-            <option>percent</option>
-          </select>
+      <td>
+        <fieldset id="imagedimensionsFieldset" ><legend align="left">Dimensions </legend>
+          <table cellspacing="0" cellpadding="0">
+            <tr>
+              <td>
+                <input type="radio" name="image.dimensionType" id="originalsizeRadio" onclick="doDimensionEnabling()" checked="true" />
+              </td>
+              <td colspan="3">
+                <label class="disabled" for="originalsizeRadio" id="originalsizeLabel" > Original Size </label>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <input type="radio" name="image.dimensionType" id="customsizeRadio" />
+              </td>
+              <td colspan="3">
+                <label class="disabled" for="customsizeRadio" id="customsizeLabel" onclick="doDimensionEnabling()" > Custom Size </label>
+              </td>
+            </tr>
+          
+							<!-- IMAGE WIDTH -->
+						<tr valign="middle">
+						  <td/>
+						  <td>
+	              <label class="disabled" for="imagewidthInput" id="imagewidthLabel"> Width </label>
+	            </td>
+	            <td>
+			          <input type="text" size="4" length="4" id="imagewidthInput" />
+			        </td>
+			        <td>
+			          <select id="widthunitSelect" size="1"  onchange="SelectWidthUnits()">
+			            <option>pixels</option>
+			            <option>percent</option>
+			          </select>
+	            </td>
+	          </tr>
+                    
+							<!-- IMAGE HEIGHT -->
+						<tr valign="middle">
+						  <td/>
+						  <td>
+	              <label class="disabled" for="imageheightInput" id="imageheightLabel"> Height </label>
+	            </td>
+	            <td>
+	              <input type="text" size="4" length="4" id="imageheightInput" />
+			        </td>
+			        <td>
+	              <select id="heightunitSelect" size="1"  onchange="SelectWidthUnits()">
+			            <option>pixels</option>
+			            <option>percent</option>
+			          </select>
+	            </td>
+	          </tr>
+
+							<!-- CONSTRAIN DIMENSIONS -->
+						<tr valign="middle">
+						  <td/>
+						  <td colspan="3">
+			          <input type="checkbox" id="constrainCheckbox"></input>
+			          <label class="disabled" id="constrainLabel" for="constrainCheckbox"> Constrain </label>
+	            </td>
+	          </tr>
+	        </table>
+
         </fieldset>
-      </td>
-      <td height="60">
-        <fieldset><legend align="left">Spacing </legend>
-          Put spacing controls here<br/>
-          <button>Button</button>  
-          <input type="radio">Radio button</input>
-          <input type="Checkbox">Checkbox</input>
+     </td>
+      <td>
+							<!-- IMAGE ALIGNMENT -->
+        <label class="disabled" for="image.alignType" id="imagealignmentLabel"> Align Text to Image </label>
+        <select size="1" id="image.alignType">
+          <optgroup label="alignment">
+            <option label="top alignment"> at the top </option>
+            <option label="center alignment"> in the center </option>
+            <option label="bottom alignment"> at the bottom </option>
+            <option label="text wrap around left-aligned image"> wrap around right side </option>
+            <option label="text wrap around right-aligned image"> wrap around left side </option>
+          </optgroup>
+        </select>
+
+        <br/>
+        <p/>
+        <fieldset id="spacing.fieldset"><legend align="left">Spacing </legend>
+          <table cellspacing="0" cellpadding="0">
+            <tr valign="middle">
+              <td align="right">
+                <label class="disabled" for="imageleftrightInput" id="leftrightLabel"> Left and Right </label>
+              </td>
+              <td>
+                <input type="text" size="4" length="4" maxlength="4" id="imageleftrightInput" />
+              </td>
+              <td valign="middle">
+                <label class="disabled" for="imageleftrightInput" id="leftrighttypeLabel"> pixels </label>
+              </td>
+            </tr>
+
+            <tr valign="middle">
+              <td align="right">
+                <label class="disabled" for="imagetopbottomInput" id="topbottomLabel"> Top and Bottom </label>
+              </td>
+              <td>
+                <input type="text" size="4" length="4" maxlength="4" id="imagetopbottomInput" />
+              </td>
+              <td valign="middle">
+                <label class="disabled" for="imagetopbottomInput" id="topbottomtypeLabel"> pixels </label>
+              </td>
+            </tr>
+
+            <tr valign="middle">
+              <td align="right">
+                <label class="disabled" for="imageborderInput" id="borderLabel"> Solid Border </label>
+              </td>
+              <td>
+                <input type="text" size="4" length="4" maxlength="4" id="imageborderInput" />
+              </td>
+              <td valign="middle">
+                <label class="disabled" for="imageborderInput" id="bordertypeLabel"> pixels </label>
+              </td>
+            </tr>
+          </table>
         </fieldset>
       </td>
     </tr>
     <tr>
-    <td colspan="2" align = "right">
+    <td colspan="2" align="right">
       <button class="spaced" id="OK" onclick="onOK()" width="50">OK</button>  
       <button class="spaced" id="Cancel" onclick="onCancel()" width="50">Cancel</button>
     </td>
@@ -86,116 +205,6 @@
 
         <table cellspacing="0" cellpadding="0" width="100%">
           <tr>
-            <td width="55%" valign="top">
-              <fieldset><legend align="left"> Dimensions </legend>
-                  <xul:radio name="image.dimensionType" value="Original Size" checked />
-                  Original Size
-                  <br/>
-                  <xul:radio name="image.dimensionType" value="Custom Size" />
-                  Custom Size
-
-                <table>
-                  <tr>
-                    <td width="8"></td>
-                    <td width="40" valign="middle" align="right">
-                      <p>Height</p>
-                    </td>
-                    <td>
-                      <input type="text" size="4" length="4" maxlength="4" name="image.height" />
-                      <select size="1" name="image.heightType">
-                        <optgroup label="pixels">
-                          <option label="pixels" value="pixels">pixels</option>
-                          <option label="% of window" value="% of window">% of window</option>
-                        </optgroup>
-                      </select>
-                    </td>
-                  </tr>
-                  <tr>
-                  <td/>
-                  <td valign="middle" align="right">
-                    <p>Width</p>
-                  </td>
-                  <td>
-                    <input type="text" size="4" length="4" maxlength="4" name="image.width" />
-                    <select size="1" name="image.widthType">
-                      <optgroup label="pixels">
-                        <option label="pixels" value="pixels">pixels</option>
-                        <option label="% of window" value="% of window">% of window</option>
-                      </optgroup>
-                    </select>
-                  </td>
-                  </tr>
-
-                  <tr>
-                    <td>
-                      <p>
-                        <xul:checkbox value="Constrain" disabled />
-                        Constrain
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </fieldset>
-
-            </td>
-
-            <td width="45%">
-              <select size="1" name="image.alignType">
-                <optgroup label="alignment">
-                  <option label="top alignment" value="top alignment">top alignment</option>
-                  <option label="center alignment" value="center alignment">center alignment</option>
-                  <option label="bottom alignment" value="bottom alignment">bottom alignment</option>
-                  <option label="text wrap around left-aligned image" value="around left alignment">around left alignment</option>
-                  <option label="text wrap around right-aligned image" value="around right alignment">around right alignment</option>
-                </optgroup>
-              </select>
-
-              <p/>
-
-              <fieldset><legend align="left"> Space Around Image </legend>
-                <table cellspacing="0" cellpadding="2" width="100%">
-                  <tr valign="middle">
-                    <td align="right">
-                      <p>Left and Right</p>
-                    </td>
-                    <td>
-                      <input type="text" size="4" length="4" maxlength="4" name="image.leftRightSpacing" />
-                    </td>
-                    <td>
-                      <p>pixels</p>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td>
-                      <p>Top and Bottom</p>
-                    </td>
-                    <td>
-                      <input type="text" size="4" length="4" maxlength="4" name="image.topBottomSpacing" />
-                    </td>
-                    <td>
-                      <p>pixels</p>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td align="right">
-                      <p>Solid Border</p>
-                    </td>
-                    <td>
-                      <input type="text" size="4" length="4" maxlength="4" name="image.borderWidth" />
-                    </td>
-                    <td>
-                      <p>pixels</p>
-                    </td>
-                  </tr>
-                </table>
-              </fieldset>
-
-            </td>
-          </tr>
-
-          <tr>
             <td>
               <input type="button" value=" Remove Image Map " disabled />
             </td>
@@ -205,10 +214,6 @@
           </tr>
         </table>
 
-        <input type="button" id="helpbutton" value=" Help " disabled />
-        <input type="submit" id="cancelbutton" value=" Cancel " />
-        <input type="button" id="applybutton" value=" Apply " disabled />
-        <input type="submit" id="okbutton" value=" OK " />
       </td>
     </tr>
   </table>
