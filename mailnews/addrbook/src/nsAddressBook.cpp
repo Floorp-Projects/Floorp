@@ -146,8 +146,8 @@ static ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[] = {
   {kJobTitleColumn, "title", PR_TRUE},
   {kDepartmentColumn, "ou", PR_TRUE},
   {kCompanyColumn, "o", PR_TRUE},
-  {kWebPage1Column, "homeurl", PR_TRUE},
-  {kWebPage2Column, "workurl", PR_TRUE},
+  {kWebPage1Column, "workurl", PR_TRUE},
+  {kWebPage2Column, "homeurl", PR_TRUE},
   {kBirthYearColumn, nsnull, PR_TRUE},
   {kBirthMonthColumn, nsnull, PR_TRUE}, 
   {kBirthDayColumn, nsnull, PR_TRUE}, 
@@ -963,7 +963,7 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
         mDatabase->AddHomePhone(newRow, column.get());
 
       else if ( kNotFound != colType.Find("homeurl") )
-        mDatabase->AddWebPage1(newRow, column.get());
+        mDatabase->AddWebPage2(newRow, column.get());
       break; // 'h'
 
     case 'i':
@@ -1171,7 +1171,7 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 
     case 'w':
       if ( kNotFound != colType.Find("workurl") )
-        mDatabase->AddWebPage2(newRow, column.get());
+        mDatabase->AddWebPage1(newRow, column.get());
 
       break; // 'w'
 

@@ -73,7 +73,13 @@ interface nsIAbCard : nsISupports {
 	attribute wstring jobTitle;
 	attribute wstring department;
 	attribute wstring company;
+	/**
+	 * webPage1 is work web page
+	 */
 	attribute wstring webPage1;
+	/**
+	 * webPage2 is home web page
+	 */
 	attribute wstring webPage2;
 	attribute wstring birthYear;
 	attribute wstring birthMonth;

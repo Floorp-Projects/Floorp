@@ -80,7 +80,9 @@
 #define kJobTitleColumn           "JobTitle"
 #define kDepartmentColumn         "Department"
 #define kCompanyColumn            "Company"
+// webPage1 is work web page
 #define kWebPage1Column           "WebPage1"
+// webPage2 is home web page
 #define kWebPage2Column           "WebPage2"
 #define kBirthYearColumn          "BirthYear"
 #define kBirthMonthColumn         "BirthMonth"

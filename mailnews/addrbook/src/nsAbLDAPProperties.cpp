@@ -150,9 +150,9 @@ static MozillaLdapPropertyRelation mozillaLdapPropertyTable[] =
     {MozillaProperty_String, "WorkCountry",        "countryname"},
 
     // ?
-    {MozillaProperty_String, "WebPage1",        "homeurl"},
+    {MozillaProperty_String, "WebPage1",        "workurl"},
     // ?
-    {MozillaProperty_String, "WebPage2",        "workurl"},
+    {MozillaProperty_String, "WebPage2",        "homeurl"},
 
     // ?
     {MozillaProperty_String, "BirthYear",        "birthyear"},

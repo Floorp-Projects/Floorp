@@ -1102,7 +1102,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
         else if (colType.Equals("homepostaladdress") )
     m_database->AddHomeAddress(newRow, column.get());
       else if (colType.Equals("homeurl") )
-        m_database->AddWebPage1(newRow, column.get());
+        m_database->AddWebPage2(newRow, column.get());
       break; // 'h'
 
     case 'i':
@@ -1204,7 +1204,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
     case 'w':
       if ( colType.Equals("workurl") )
-        m_database->AddWebPage2(newRow, column.get());
+        m_database->AddWebPage1(newRow, column.get());
 
       break; // 'w'
 
