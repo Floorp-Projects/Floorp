@@ -1685,9 +1685,11 @@ public class Context {
      * {@link WrapFactory} and {@link #setWrapHandler(WrapFactory)}
      */
     public void setWrapHandler(WrapHandler wrapHandler) {
-        WrapFactory proxy = (wrapHandler == null) ? null
-                             : new WrapHandlerProxy(wrapHandler);
-           setWrapFactory(proxy);
+        if (wrapHandler == null) {
+            setWrapFactory(new WrapFactory());
+        } else {
+            setWrapFactory(new WrapHandlerProxy(wrapHandler));
+        }
     }
 
     /**
@@ -1695,8 +1697,11 @@ public class Context {
      * {@link WrapFactory} and {@link #getWrapHandler(WrapFactory)}
      */
     public WrapHandler getWrapHandler() {
-        WrapHandlerProxy proxy = (WrapHandlerProxy)getWrapFactory();
-        return (proxy == null) ? null : proxy._handler;
+        WrapFactory f = getWrapFactory();
+        if (f instanceof WrapHandlerProxy) {
+            return ((WrapHandlerProxy)f)._handler;
+        }
+        return null;
     }
 
     /**
