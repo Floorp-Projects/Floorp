@@ -96,9 +96,12 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
 //-------------------------------------------------------------------------
 nsMenuItem::~nsMenuItem()
 {
-  NS_IF_RELEASE(mMenu);
-  NS_IF_RELEASE(mTarget);
-  NS_IF_RELEASE(mListener);
+  //NS_IF_RELEASE(mMenu);
+
+  //NS_IF_RELEASE(mTarget);
+
+  //NS_IF_RELEASE(mListener);
+
 }
 
 //-------------------------------------------------------------------------
@@ -111,7 +114,8 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
   nsISupports  * parent  = aParent;
 
   // Bump the ref count on the parent, since it gets released unconditionally..
-  NS_ADDREF(parent);
+  //NS_ADDREF(parent);
+
   while (1) {
     if (NS_OK == parent->QueryInterface(kIMenuIID,(void**)&menu)) {
       NS_RELEASE(parent);
@@ -150,11 +154,16 @@ NS_METHOD nsMenuItem::Create(nsIMenu * aParent, const nsString &aLabel, PRUint32
   mCommand = aCommand;
   mLabel   = aLabel;
   mMenu    = aParent;
-  NS_ADDREF(mMenu);
+  //NS_ADDREF(mMenu);
+
+
+
+  //NS_ASSERTION(false,"get debugger");
 
   nsISupports * sups;
   if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {
-    mTarget = GetMenuBarParent(sups);
+    //mTarget = GetMenuBarParent(sups);
+
     NS_RELEASE(sups);
   } else {
     mTarget = nsnull;
@@ -220,7 +229,8 @@ NS_METHOD nsMenuItem::GetCommand(PRUint32 & aCommand)
 NS_METHOD nsMenuItem::GetTarget(nsIWidget *& aTarget)
 {
   aTarget = mTarget;
-  NS_ADDREF(mTarget);
+  //NS_ADDREF(mTarget);
+
   return NS_OK;
 }
 
@@ -233,6 +243,7 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
 {
+  NS_IF_RELEASE(mListener);
   mListener = aMenuListener;
   NS_ADDREF(mListener);
   return NS_OK;
@@ -379,6 +390,7 @@ NS_IMETHODIMP nsMenuItem::SetDOMElement(nsIDOMElement * aDOMElement)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
+  printf("nsMenuItem::MenuSelect called \n");
   if (mListener) {
     mListener->MenuItemSelected(aMenuEvent);
   }
