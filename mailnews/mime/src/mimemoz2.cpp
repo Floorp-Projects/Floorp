@@ -80,7 +80,10 @@
 #include "nsNetCID.h"
 #include "nsIMsgWindow.h"
 #include "nsMsgUtils.h"
-
+#include "nsIChannel.h"
+#include "nsICacheEntryDescriptor.h"
+#include "nsICacheSession.h"
+#include "nsITransport.h"
 #include "mimeebod.h"
 #include "mimeeobj.h"
 
@@ -1015,32 +1018,95 @@ static int    mime_image_write_buffer(char *buf, PRInt32 size, void *image_closu
 /* Interface between libmime and inline display of images: the abomination
    that is known as "internal-external-reconnect".
  */
-struct mime_image_stream_data {
+class mime_image_stream_data {
+public:
+  mime_image_stream_data();
+
   struct mime_stream_data *msd;
   char                    *url;
   nsMIMESession           *istream;
+  nsCOMPtr<nsIOutputStream> memCacheOutputStream;
+  PRBool m_shouldCacheImage;
 };
+
+mime_image_stream_data::mime_image_stream_data()
+{
+  url = nsnull;
+  istream = nsnull;
+  msd = nsnull;
+  m_shouldCacheImage = PR_FALSE;
+}
 
 static void *
 mime_image_begin(const char *image_url, const char *content_type,
                  void *stream_closure)
 {
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
-  struct mime_image_stream_data *mid;
+  class mime_image_stream_data *mid;
+ 
+  mid = new mime_image_stream_data;
+  if (!mid) return nsnull;
 
-  mid = PR_NEW(struct mime_image_stream_data);
-  if (!mid) return 0;
 
-  memset(mid, 0, sizeof(*mid));
   mid->msd = msd;
 
   mid->url = (char *) nsCRT::strdup(image_url);
   if (!mid->url)
   {
     PR_Free(mid);
-    return 0;
+    return nsnull;
   }
 
+  if (msd->channel)
+  {
+    nsCOMPtr <nsIURI> uri;
+    nsresult rv = msd->channel->GetURI(getter_AddRefs(uri));
+    if (NS_SUCCEEDED(rv) && uri)
+    {
+      nsCOMPtr <nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(uri);
+      if (mailUrl)
+      {
+        nsCOMPtr<nsICacheSession> memCacheSession;
+        mailUrl->GetImageCacheSession(getter_AddRefs(memCacheSession));
+        if (memCacheSession)
+        {
+          nsXPIDLCString spec;
+
+          uri->GetSpec(getter_Copies(spec));
+          nsCOMPtr<nsICacheEntryDescriptor> entry;
+
+          // we may need to convert the image_url into just a part url - in any case,
+          // it has to be the same as what imglib will be asking imap for later
+          // on so that we'll find this in the memory cache.
+          rv = memCacheSession->OpenCacheEntry(image_url, nsICache::ACCESS_READ_WRITE, nsICache::BLOCKING, getter_AddRefs(entry));
+          nsCacheAccessMode access;
+          if (entry)
+          {
+            entry->GetAccessGranted(&access);
+#ifdef DEBUG_bienvenu
+            printf("Mime opening cache entry for %s access = %ld\n", image_url, access);
+#endif
+            // if we only got write access, then we should fill in this cache entry
+            if (access & nsICache::ACCESS_WRITE && !(access & nsICache::ACCESS_READ))
+            {
+              mailUrl->CacheCacheEntry(entry);
+              entry->MarkValid();
+              nsCOMPtr<nsITransport> transport;
+              rv = entry->GetTransport(getter_AddRefs(transport));
+              if (NS_FAILED(rv)) return nsnull;
+
+              // remember the content type as meta data so we can pull it out in the imap code
+              // to feed the cache entry directly to imglib w/o going through mime.
+              entry->SetMetaDataElement("contentType", content_type);
+              nsCOMPtr<nsIOutputStream> out;
+              rv = transport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(mid->memCacheOutputStream));
+              if (NS_FAILED(rv)) return nsnull;
+            }
+          }
+        }
+      }
+    }
+  }
   mid->istream = (nsMIMESession *) msd->pluginObj2;
   return mid;
 }
@@ -1048,22 +1114,25 @@ mime_image_begin(const char *image_url, const char *content_type,
 static void
 mime_image_end(void *image_closure, int status)
 {
-  struct mime_image_stream_data *mid =
-    (struct mime_image_stream_data *) image_closure;
+  mime_image_stream_data *mid =
+    (mime_image_stream_data *) image_closure;
   
   PR_ASSERT(mid);
   if (!mid) 
     return;
+  if (mid->memCacheOutputStream)
+    mid->memCacheOutputStream->Close();
+
   PR_FREEIF(mid->url);
-  PR_FREEIF(mid);
+  delete mid;
 }
 
 
 static char *
 mime_image_make_image_html(void *image_closure)
 {
-  struct mime_image_stream_data *mid =
-    (struct mime_image_stream_data *) image_closure;
+  mime_image_stream_data *mid =
+    (mime_image_stream_data *) image_closure;
 
   const char *prefix = "<P><CENTER><IMG SRC=\"";
   const char *suffix = "\"></CENTER><P>";
@@ -1097,8 +1166,8 @@ mime_image_make_image_html(void *image_closure)
 static int
 mime_image_write_buffer(char *buf, PRInt32 size, void *image_closure)
 {
-  struct mime_image_stream_data *mid =
-                (struct mime_image_stream_data *) image_closure;
+  mime_image_stream_data *mid =
+                (mime_image_stream_data *) image_closure;
   struct mime_stream_data *msd = mid->msd;
 
   if ( ( (!msd->output_emitter) ) &&
@@ -1110,6 +1179,11 @@ mime_image_write_buffer(char *buf, PRInt32 size, void *image_closure)
   // and the returned URL will deal with writing the data to the viewer.
   // Just return the size value to the caller.
   //
+  if (mid->memCacheOutputStream)
+  {
+    PRUint32 bytesWritten;
+    mid->memCacheOutputStream->Write(buf, size, &bytesWritten);
+  }
   return size;
 }
 

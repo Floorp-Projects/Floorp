@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
 		  caps \
 		  mimetype \
 		  uriloader \
+		  nkcache \
 		  xpconnect \
 		  pipnss \
 !if defined(BUILD_SMIME)

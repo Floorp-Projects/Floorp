@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  uriloader \
 		  xpconnect \
+		  nkcache \
 		  pipnss \
 		  $(NULL)
 
