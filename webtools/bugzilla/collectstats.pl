@@ -84,18 +84,27 @@ my $tend = time;
 
 CollectSeriesData();
 
-# Generate a static RDF file containing the default view of the duplicates data.
-open(CGI, "GATEWAY_INTERFACE=cmdline REQUEST_METHOD=GET QUERY_STRING=ctype=rdf ./duplicates.cgi |")
-  || die "can't fork duplicates.cgi: $!";
-open(RDF, ">$datadir/duplicates.tmp")
-  || die "can't write to $datadir/duplicates.tmp: $!";
-my $headers_done = 0;
-while (<CGI>) {
-  print RDF if $headers_done;
-  $headers_done = 1 if $_ eq "\n";
+{
+    local $ENV{'GATEWAY_INTERFACE'} = 'cmdline';
+    local $ENV{'REQUEST_METHOD'} = 'GET';
+    local $ENV{'QUERY_STRING'} = 'ctype=rdf';
+
+    my $perl = $^X;
+    trick_taint($perl);
+
+    # Generate a static RDF file containing the default view of the duplicates data.
+    open(CGI, "$perl -T duplicates.cgi |")
+        || die "can't fork duplicates.cgi: $!";
+    open(RDF, ">$datadir/duplicates.tmp")
+        || die "can't write to $datadir/duplicates.tmp: $!";
+    my $headers_done = 0;
+    while (<CGI>) {
+        print RDF if $headers_done;
+        $headers_done = 1 if $_ eq "\n";
+    }
+    close CGI;
+    close RDF;
 }
-close CGI;
-close RDF;
 if (-s "$datadir/duplicates.tmp") {
     rename("$datadir/duplicates.rdf", "$datadir/duplicates-old.rdf");
     rename("$datadir/duplicates.tmp", "$datadir/duplicates.rdf");
@@ -183,6 +192,7 @@ sub calculate_dupes {
     # so we can read it back in to do changed counters
     # First, delete it if it exists, so we don't add to the contents of an old file
     if (my @files = <$datadir/duplicates/dupes$today*>) {
+        map { trick_taint($_) } @files;
         unlink @files;
     }
    
