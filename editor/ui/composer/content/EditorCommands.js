@@ -303,12 +303,62 @@ function EditorDeleteToEndOfLine()
   editorShell.DeleteToEndOfLine();
 }
 
+function FindAndSelectEditorWindowWithURL(urlToMatch)
+{
+  // returns true if found; false if an error or not found
+  
+  var windowManager = Components.classes["component://netscape/rdf/datasource?name=window-mediator"].getService();
+  if ( !windowManager )
+    return false;
+  
+  var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
+  if ( !windowManagerInterface )
+    return false;
+
+  var enumerator = windowManagerInterface.GetEnumerator( "composer:html" );
+  if ( !enumerator )
+    return false;
+
+  while ( enumerator.HasMoreElements() )
+  {
+    var window = windowManagerInterface.ConvertISupportsToDOMWindow( enumerator.GetNext() );
+    if ( window )
+    {
+      var didFindWindow = editorShell.checkOpenWindowForURLMatch(urlToMatch, window)
+	    if (didFindWindow)
+	    {
+	      window.focus();
+	      return true;
+	    }
+	  }
+  }
+
+  // not found
+  return false;
+}
+
 // --------------------------- File menu ---------------------------
 
 function EditorOpen()
 {
   dump("In EditorOpen..\n");
-  editorShell.Open();
+  var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
+  filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);     
+  
+  /* doesn't handle *.shtml files */
+	filePicker.chooseInputFile(editorShell.GetString("OpenHTMLFile"), filePicker.eHTMLFiles+filePicker.eTextFiles+filePicker.eAllFiles, 0, 0);
+  /* need to handle cancel (uncaught exception at present) */
+    
+  /* check for already open window and activate it... */
+  var found = FindAndSelectEditorWindowWithURL(filePicker.URLString);
+  if (!found)
+  {
+  /* open new window */
+    window.openDialog( "chrome://editor/content",
+                 "_blank",
+                 "chrome,dialog=no,all",
+                 filePicker.URLString );
+  }
 }
 
 function EditorNewPlaintext()
@@ -319,17 +369,28 @@ function EditorNewPlaintext()
                      "chrome://editor/content/EditorInitPagePlain.html");
 }
 
+// returns wasSavedSuccessfully
+function EditorCheckAndSaveDocument(reasonToSaveString)
+{
+
+}
+
+// returns wasSavedSuccessfully
+function EditorSaveDocument(doSaveAs, doSaveCopy)
+{
+  editorShell.saveDocument(doSaveAs, doSaveCopy);
+}
+
 function EditorSave()
 {
   dump("In EditorSave...\n");
-  editorShell.Save();
+  EditorSaveDocument(false, false)
   contentWindow.focus();
 }
 
 function EditorSaveAs()
 {
-  dump("In EditorSave...\n");
-  editorShell.SaveAs();
+  EditorSaveDocument(true, false);
   contentWindow.focus();
 }
 
