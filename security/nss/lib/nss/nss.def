@@ -700,6 +700,7 @@ CERT_VerifyOCSPResponseSignature;
 PK11_GetPBEIV;
 PK11_ImportCRL;
 PK11_SaveContextAlloc;
+SEC_QuickDERDecodeItem;
 ;+    local:
 ;+       *;
 ;+};

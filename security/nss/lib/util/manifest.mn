@@ -33,6 +33,7 @@
 CORE_DEPTH = ../../..
 
 EXPORTS = \
+	quickder.h \
 	base64.h \
 	ciferfam.h \
 	nssb64.h \
@@ -60,6 +61,7 @@ EXPORTS = \
 	$(NULL)
 
 CSRCS = \
+	quickder.c \
 	secdig.c \
 	derdec.c \
 	derenc.c \
