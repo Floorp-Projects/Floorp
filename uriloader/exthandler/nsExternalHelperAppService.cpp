@@ -19,6 +19,7 @@
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
  *   Bill Law <law@netscape.com>
+ *   Christian Biesinger <cbiesinger@web.de>
  */
 
 #include "nsExternalHelperAppService.h"
@@ -56,7 +57,6 @@
 #include "nsIDocumentLoader.h"
 #include "nsIHelperAppLauncherDialog.h"
 #include "nsNetUtil.h"
-#include "nsCExternalHandlerService.h" // contains contractids for the helper app service
 #include "nsIIOService.h"
 #include "nsNetCID.h"
 
@@ -206,6 +206,12 @@ struct nsExtraMimeTypeEntry {
   PRUint32 mMacCreator;
 };
 
+#if defined(XP_MACOSX) || defined(XP_MAC)
+#define MAC_TYPE(x) x
+#else
+#define MAC_TYPE(x) 0
+#endif
+
 // This table lists all of the 'extra" content types that we can deduce from particular
 // file extensions.  These entries also ensure that we provide a good descriptive name
 // when we encounter files with these content types and/or extensions.  These can be
@@ -221,9 +227,9 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
 #endif
   { APPLICATION_GZIP2, "gz", "gzip", 0, 0 },
   { "application/x-arj", "arj", "ARJ file", 0,0 },
-  { APPLICATION_XPINSTALL, "xpi", "XPInstall Install", 'xpi*','MOSS' },
-  { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File",0, 0 },
-  { APPLICATION_JAVASCRIPT, "js", "Javascript Source File", 'TEXT', 'ttxt' },
+  { APPLICATION_XPINSTALL, "xpi", "XPInstall Install", MAC_TYPE('xpi*'), MAC_TYPE('MOSS') },
+  { APPLICATION_POSTSCRIPT, "ps,eps,ai", "Postscript File", 0, 0 },
+  { APPLICATION_JAVASCRIPT, "js", "Javascript Source File", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
   { IMAGE_ART, "art", "ART Image", 0, 0 },
   { IMAGE_BMP, "bmp", "BMP Image", 0, 0 },
   { IMAGE_GIF, "gif", "GIF Image", 0,0 },
@@ -232,16 +238,18 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { IMAGE_PNG, "png", "PNG Image", 0, 0 },
   { IMAGE_TIFF, "tiff,tif", "TIFF Image", 0, 0 },
   { IMAGE_XBM, "xbm", "XBM Image", 0, 0 },
-  { "image/svg+xml", "svg", "Scalable Vector Graphics", 'svg ', 'ttxt' },
-  { MESSAGE_RFC822, "eml", "RFC-822 data", 'TEXT', 'MOSS' },
-  { TEXT_PLAIN, "txt,text", "Text File", 'TEXT', 'ttxt' },
-  { TEXT_HTML, "html,htm,shtml,ehtml", "HyperText Markup Language", 'TEXT', 'MOSS' },
-  { "application/xhtml+xml", "xhtml,xht", "Extensible HyperText Markup Language", 'TEXT', 'ttxt' },
-  { TEXT_RDF, "rdf", "Resource Description Framework", 'TEXT','ttxt' },
-  { TEXT_XUL, "xul", "XML-Based User Interface Language", 'TEXT', 'ttxt' },
-  { TEXT_XML, "xml,xsl,xbl", "Extensible Markup Language", 'TEXT', 'ttxt' },
-  { TEXT_CSS, "css", "Style Sheet", 'TEXT', 'ttxt' },
+  { "image/svg+xml", "svg", "Scalable Vector Graphics", MAC_TYPE('svg '), MAC_TYPE('ttxt') },
+  { MESSAGE_RFC822, "eml", "RFC-822 data", MAC_TYPE('TEXT'), MAC_TYPE('MOSS') },
+  { TEXT_PLAIN, "txt,text", "Text File", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
+  { TEXT_HTML, "html,htm,shtml,ehtml", "HyperText Markup Language", MAC_TYPE('TEXT'), MAC_TYPE('MOSS') },
+  { "application/xhtml+xml", "xhtml,xht", "Extensible HyperText Markup Language", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
+  { TEXT_RDF, "rdf", "Resource Description Framework", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
+  { TEXT_XUL, "xul", "XML-Based User Interface Language", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
+  { TEXT_XML, "xml,xsl,xbl", "Extensible Markup Language", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
+  { TEXT_CSS, "css", "Style Sheet", MAC_TYPE('TEXT'), MAC_TYPE('ttxt') },
 };
+
+#undef MAC_TYPE
 
 static const char* const nonDecodableTypes [] = {
   "application/tar",
@@ -360,13 +368,10 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
                                                     nsISupports *aWindowContext,
                                                     nsIStreamListener ** aStreamListener)
 {
-  nsCOMPtr<nsIMIMEInfo> mimeInfo;
   nsCAutoString fileExtension;
 
-  // Get some stuff we will need later
+  // Get the file extension that we will need later
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-
-  nsCOMPtr<nsIURL> url;
   if (channel) {
     PRBool methodIsPost = PR_FALSE;
     nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(channel);
@@ -402,7 +407,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     // it will belong to a CGI script anyway
     // Also, if we already have an extension, don't bother
     if (uri && !methodIsPost && fileExtension.IsEmpty()) {
-      url = do_QueryInterface(uri);
+      nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
 
       if (url) {
         nsCAutoString query;
@@ -419,6 +424,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
        aMimeContentType, fileExtension.get()));
 
   // (1) Try to find a mime object by looking at the mime type/extension
+  nsCOMPtr<nsIMIMEInfo> mimeInfo;
   GetFromTypeAndExtension(aMimeContentType, fileExtension.get(), getter_AddRefs(mimeInfo));
   LOG(("Type/Ext lookup found 0x%p\n", mimeInfo.get()));
 
