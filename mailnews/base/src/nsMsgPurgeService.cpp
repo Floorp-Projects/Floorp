@@ -154,7 +154,10 @@ nsresult nsMsgPurgeService::AddServer(nsIMsgIncomingServer *server)
   if (junkFolderURI.IsEmpty())  
     return NS_OK;
 
-  //we cannot do GetExistingFolder because folder tree has not been built yet.
+  // we cannot do GetExistingFolder because folder tree has not been built yet.
+  // it's ok if the folder doesn't exist
+  // when we call PurgeJunkFolder(), we call GetExistingFolder()
+  // and if it doesn't exist then, we don't do any purging
   nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -373,6 +376,7 @@ nsresult nsMsgPurgeService::PurgeJunkFolder(nsPurgeEntry *entry)
 
     nsCOMPtr<nsIMsgFolder> junkFolder;
     GetExistingFolder(junkFolderURI.get(), getter_AddRefs(junkFolder));
+    // if the folder doesn't exist, no need to purge it
     if (junkFolder)
     {
       //multiple servers can point to same junk folder, so check last purge time before issuing a purge
