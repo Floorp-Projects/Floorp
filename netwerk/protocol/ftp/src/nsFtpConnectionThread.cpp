@@ -140,7 +140,8 @@ nsresult
 nsFtpConnectionThread::Process() {
     nsresult rv;
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() started for %x (spec =%s)\n", mURL.get(), mURLSpec));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() started for %x (spec =%s)\n",
+        mURL.get(), (const char *) mURLSpec));
  
     while (mKeepRunning) {
 
@@ -719,7 +720,8 @@ nsFtpConnectionThread::Process() {
         } // END: switch 
     } // END: while loop
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() ended for %x (spec =%s)\n\n\n", mURL.get(), mURLSpec));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() ended for %x (spec =%s)\n\n\n",
+        mURL.get(), (const char *) mURLSpec));
 
     return NS_OK;
 }
