@@ -2712,7 +2712,7 @@ nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
     }
 
     // If we have generated content, the primary frame will be a
-    // wrapper frame.. out real frame will be in its child list.
+    // wrapper frame..  out real frame will be in its child list.
     for (frame->FirstChild(frame->GetPresContext(), nsnull, &frame);
          frame;
          frame = frame->GetNextSibling()) {
