@@ -92,22 +92,13 @@ dnl This is used by webconfig to group options
 define(MOZ_ARG_HEADER, [# $1])
 
 dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
-AC_DEFUN(MOZ_READ_MYCONFIG,
+AC_DEFUN(MOZ_READ_MOZCONFIG,
 [AC_REQUIRE([AC_INIT_BINSH])dnl
-# Read in 'myconfig.sh' script to set the initial options.
-# See the load-myconfig.sh script for more details.
-_topsrcdir=`dirname [$]0`
-for _config in $MOZ_MYCONFIG \
-               myconfig.sh \
-               $_topsrcdir/myconfig.sh \
-               $HOME/.mozmyconfig.sh
-do
-     if test -f $_config; then
-	MOZ_MYCONFIG=$_config;
-	. $_topsrcdir/build/autoconf/load-myconfig.sh
-	break
-     fi
-done])
+# Read in 'mozconfig.sh' script to set the initial options.
+# See the load-mozconfig.sh script for more details.
+TOPSRCDIR=`dirname [$]0`
+PATH="$TOPSRCDIR/build/autoconf:$PATH"
+. load-mozconfig.sh])
 
 dnl This gets inserted at the top of the configure script
-MOZ_READ_MYCONFIG
+MOZ_READ_MOZCONFIG

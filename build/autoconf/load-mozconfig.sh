@@ -16,15 +16,15 @@
 # Reserved.
 #
 
-# load-myconfig.sh - Loads options from myconfig.sh onto configure's
-#    command-line. The myconfig.sh is searched for in the following
-#    order: $MOZ_MYCONFIG, $objdir/myconfig.sh, $topsrcdir/myconfig.sh.
+# load-mozconfig.sh - Loads options from mozconfig.sh onto configure's
+#    command-line. See find-mozconfig.sh for how the config file is
+#    found
 #
-#    The options from myconfig.sh are inserted into the command-line
+#    The options from mozconfig.sh are inserted into the command-line
 #    before the real command-line options. This way the real options
-#    will override any myconfig.sh options.
+#    will override any mozconfig.sh options.
 #
-# myconfig.sh is a shell script. To add an option to configure's
+# mozconfig.sh is a shell script. To add an option to configure's
 #    command-line use the pre-defined function, ac_add_options,
 #
 #       ac_add_options  <configure-option> [<configure-option> ... ]
@@ -33,7 +33,7 @@
 #
 #       ac_add_options --with-pthreads --enable-debug
 #
-# ac_add_options can be called multiple times in myconfig.sh.
+# ac_add_options can be called multiple times in mozconfig.sh.
 #    Each call adds more options to configure's command-line.
 #
 # Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
@@ -43,12 +43,13 @@ ac_add_options() {
   for _opt
   do
     # Escape shell characters, space, tab, dollar, quote, backslash.
-    _opt=`echo $_opt | sed -e 's/\([\ \	\$\"\\]\)/\\\\\1/g;'`
+    _opt=`echo $_opt | sed -e 's/\([\ \	\$\"\\]\)/\\\\\1/g;s/@\([^@]*\)@/\$\1/g;'`
+    _opt=`echo $_opt | sed -e 's/@\([^@]*\)@/\$(\1)/g'`
 
     # Avoid adding duplicates
     case "$ac_options" in
       *"$_opt"* ) ;;
-      * ) myconfig_ac_options="$myconfig_ac_options $_opt" ;;
+      * ) mozconfig_ac_options="$mozconfig_ac_options $_opt" ;;
     esac
   done
 }
@@ -60,8 +61,8 @@ mk_add_options() {
 }
 
 ac_echo_options() {
-  echo "Adding options from $MOZ_MYCONFIG:"
-  eval "set -- $myconfig_ac_options"
+  echo "Adding options from $MOZCONFIG:"
+  eval "set -- $mozconfig_ac_options"
   for _opt
   do
     echo "  $_opt"
@@ -72,7 +73,7 @@ ac_echo_options() {
 # Define load the options
 #
 ac_options=
-myconfig_ac_options=
+mozconfig_ac_options=
 
 # Save the real command-line options
 for _opt
@@ -83,9 +84,14 @@ do
   ac_options="$ac_options \"$_opt\""
 done
 
-. $MOZ_MYCONFIG
+# Call find-mozconfig.sh 
+#   In params:   $MOZCONFIG $HOME (old:$MOZ_MYCONFIG)
+MOZCONFIG=`$TOPSRCDIR/build/autoconf/find-mozconfig.sh`
 
-ac_echo_options 1>&2
+if [ "$MOZCONFIG" ]; then
+  . $MOZCONFIG
+  ac_echo_options 1>&2
+fi
 
-eval "set -- $myconfig_ac_options $ac_options"
+eval "set -- $mozconfig_ac_options $ac_options"
 
