@@ -176,7 +176,8 @@ UpdateRNG(void)
 }
 
 
-static unsigned char P[] = { 0x00, 0x8d, 0xf2, 0xa4, 0x94, 0x49, 0x22, 0x76,
+static const unsigned char P[] = 
+                           { 0x00, 0x8d, 0xf2, 0xa4, 0x94, 0x49, 0x22, 0x76,
 			     0xaa, 0x3d, 0x25, 0x75, 0x9b, 0xb0, 0x68, 0x69,
 			     0xcb, 0xea, 0xc0, 0xd8, 0x3a, 0xfb, 0x8d, 0x0c,
 			     0xf7, 0xcb, 0xb8, 0x32, 0x4f, 0x0d, 0x78, 0x82,
@@ -185,10 +186,12 @@ static unsigned char P[] = { 0x00, 0x8d, 0xf2, 0xa4, 0x94, 0x49, 0x22, 0x76,
 			     0xac, 0x49, 0x69, 0x3d, 0xfb, 0xf8, 0x37, 0x24,
 			     0xc2, 0xec, 0x07, 0x36, 0xee, 0x31, 0xc8, 0x02,
 			     0x91 };
-static unsigned char Q[] = { 0x00, 0xc7, 0x73, 0x21, 0x8c, 0x73, 0x7e, 0xc8,
+static const unsigned char Q[] = 
+                           { 0x00, 0xc7, 0x73, 0x21, 0x8c, 0x73, 0x7e, 0xc8,
 			     0xee, 0x99, 0x3b, 0x4f, 0x2d, 0xed, 0x30, 0xf4,
 			     0x8e, 0xda, 0xce, 0x91, 0x5f };
-static unsigned char G[] = { 0x00, 0x62, 0x6d, 0x02, 0x78, 0x39, 0xea, 0x0a,
+static const unsigned char G[] = 
+                           { 0x00, 0x62, 0x6d, 0x02, 0x78, 0x39, 0xea, 0x0a,
 			     0x13, 0x41, 0x31, 0x63, 0xa5, 0x5b, 0x4c, 0xb5,
 			     0x00, 0x29, 0x9d, 0x55, 0x22, 0x95, 0x6c, 0xef,
 			     0xcb, 0x3b, 0xff, 0x10, 0xf3, 0x99, 0xce, 0x2c,
@@ -198,15 +201,15 @@ static unsigned char G[] = { 0x00, 0x62, 0x6d, 0x02, 0x78, 0x39, 0xea, 0x0a,
 			     0x8c, 0xc5, 0x72, 0xaf, 0x53, 0xe6, 0xd7, 0x88,
 			     0x02 };
 
-static SECKEYPQGParams default_pqg_params = {
+static const SECKEYPQGParams default_pqg_params = {
     NULL,
-    { 0, P, sizeof(P) },
-    { 0, Q, sizeof(Q) },
-    { 0, G, sizeof(G) }
+    { 0, (unsigned char *)P, sizeof(P) },
+    { 0, (unsigned char *)Q, sizeof(Q) },
+    { 0, (unsigned char *)G, sizeof(G) }
 };
 
 static SECKEYPQGParams *
-decode_pqg_params(char *str)
+decode_pqg_params(const char *str)
 {
     char *buf;
     unsigned int len;
@@ -248,85 +251,107 @@ CERTUTIL_DestroyParamsPQG(SECKEYPQGParams *params)
 }
 
 static int
-pqg_prime_bits(char *str)
+pqg_prime_bits(const SECKEYPQGParams *params)
 {
-    SECKEYPQGParams *params = NULL;
-    int primeBits = 0, i;
+    int primeBits = 0;
  
-    params = decode_pqg_params(str);
-    if (params == NULL)
-        goto done; /* lose */
- 
-    for (i = 0; params->prime.data[i] == 0; i++)
-        /* empty */;
+    if (params != NULL) {
+	int i;
+	for (i = 0; params->prime.data[i] == 0; i++) {
+	    /* empty */;
+	}
 	primeBits = (params->prime.len - i) * 8;
+    }
  
-done:
-    if (params != NULL)
-        CERTUTIL_DestroyParamsPQG(params);
     return primeBits;
 }
 
 static char *
-SECU_GetpqgString(char *filename)
+getPQGString(const char *filename)
 {
-    char phrase[400];
-    FILE *fh;
-    char *rv;
+    unsigned char *buf      = NULL;
+    PRFileDesc    *src;
+    PRInt32        numBytes;
+    PRStatus       prStatus;
+    PRFileInfo     info;
 
-    fh = fopen(filename,"r");
-    rv = fgets (phrase, sizeof(phrase), fh);
-
-    fclose(fh);
-    if (phrase[strlen(phrase)-1] == '\n')
-	phrase[strlen(phrase)-1] = '\0';
-    if (rv) {
-	return (char*) PORT_Strdup(phrase);
+    src   = PR_Open(filename, PR_RDONLY, 0);
+    if (!src) {
+    	fprintf(stderr, "Failed to open PQG file %s\n", filename);
+	return NULL;
     }
-    fprintf(stderr,"pqg file contain no data\n");
-    return NULL;
+
+    prStatus = PR_GetOpenFileInfo(src, &info);
+
+    if (prStatus == PR_SUCCESS) {
+	buf = (unsigned char*)PORT_Alloc(info.size + 1);
+    }
+    if (!buf) {
+	PR_Close(src);
+    	fprintf(stderr, "Failed to read PQG file %s\n", filename);
+	return NULL;
+    }
+
+    numBytes = PR_Read(src, buf, info.size);
+    PR_Close(src);
+    if (numBytes != info.size) {
+	PORT_Free(buf);
+    	fprintf(stderr, "Failed to read PQG file %s\n", filename);
+	PORT_SetError(SEC_ERROR_IO);
+	return NULL;
+    }
+
+    if (buf[numBytes-1] == '\n') 
+    	numBytes--;
+    if (buf[numBytes-1] == '\r') 
+    	numBytes--;
+    buf[numBytes] = 0;
+    
+    return (char *)buf;
 }
 
-SECKEYPQGParams*
-getpqgfromfile(int keyBits, char *pqgFile)
+static SECKEYPQGParams*
+getpqgfromfile(int keyBits, const char *pqgFile)
 {
     char *end, *str, *pqgString;
-    int primeBits;
+    SECKEYPQGParams* params = NULL;
 
-    pqgString = SECU_GetpqgString(pqgFile);
-    if (pqgString)
-	str = PORT_Strdup(pqgString);
-    else
+    str = pqgString = getPQGString(pqgFile);
+    if (!str) 
 	return NULL;
 
     do {
 	end = PORT_Strchr(str, ',');
 	if (end)
 	    *end = '\0';
-	primeBits = pqg_prime_bits(str);
-	if (keyBits == primeBits)
-	    goto found_match;
-	str = end + 1;
+	params = decode_pqg_params(str);
+	if (params) {
+	    int primeBits = pqg_prime_bits(params);
+	    if (keyBits == primeBits)
+		break;
+	    CERTUTIL_DestroyParamsPQG(params);
+	    params = NULL;
+	}
+	if (end)
+	    str = end + 1;
     } while (end);
 
     PORT_Free(pqgString);
-    PORT_Free(str);
-    return NULL;
-
-found_match:
-    PORT_Free(pqgString);
-    PORT_Free(str);
-    return decode_pqg_params(str);
+    return params;
 }
 
-void CERTUTIL_FileForRNG(char *noise)
+static SECStatus 
+CERTUTIL_FileForRNG(const char *noise)
 {
     char buf[2048];
     PRFileDesc *fd;
     PRInt32 count;
 
-    fd = PR_OpenFile(noise,PR_RDONLY,0666);
-    if (!fd) return;
+    fd = PR_Open(noise,PR_RDONLY,0);
+    if (!fd) {
+	fprintf(stderr, "failed to open noise file.");
+	return SECFailure;
+    }
 
     do {
 	count = PR_Read(fd,buf,sizeof(buf));
@@ -336,7 +361,7 @@ void CERTUTIL_FileForRNG(char *noise)
     } while (count > 0);
 
     PR_Close(fd);
-   
+    return SECSuccess;
 }
 
 #ifdef NSS_ENABLE_ECC
@@ -431,7 +456,7 @@ static CurveNameTagPair nameTagPair[] =
 };
 
 static SECKEYECParams * 
-getECParams(char *curve)
+getECParams(const char *curve)
 {
     SECKEYECParams *ecparams;
     SECOidData *oidData = NULL;
@@ -471,23 +496,33 @@ getECParams(char *curve)
 
 SECKEYPrivateKey *
 CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
-			    int publicExponent, char *noise, 
-			    SECKEYPublicKey **pubkeyp, char *pqgFile,
+			    int publicExponent, const char *noise, 
+			    SECKEYPublicKey **pubkeyp, const char *pqgFile,
                             secuPWData *pwdata)
 {
-    CK_MECHANISM_TYPE mechanism;
-    SECOidTag algtag;
-    PK11RSAGenParams rsaparams;
-    SECKEYPQGParams *dsaparams = NULL;
-    void *params;
-    PRArenaPool *dsaparena;
+    CK_MECHANISM_TYPE  mechanism;
+    SECOidTag          algtag;
+    PK11RSAGenParams   rsaparams;
+    SECKEYPQGParams  * dsaparams = NULL;
+    void             * params;
+    SECKEYPrivateKey * privKey = NULL;
+
+    if (slot == NULL)
+	return NULL;
+
+    if (PK11_Authenticate(slot, PR_TRUE, pwdata) != SECSuccess)
+	return NULL;
 
     /*
      * Do some random-number initialization.
      */
 
     if (noise) {
-    	CERTUTIL_FileForRNG(noise);
+    	SECStatus rv = CERTUTIL_FileForRNG(noise);
+	if (rv != SECSuccess) {
+	    PORT_SetError(PR_END_OF_FILE_ERROR); /* XXX */
+	    return NULL;
+    	}
     } else {
 	int rv = UpdateRNG();
 	if (rv) {
@@ -497,54 +532,52 @@ CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
     }
 
     switch (keytype) {
-      case rsaKey:
+    case rsaKey:
 	rsaparams.keySizeInBits = size;
 	rsaparams.pe = publicExponent;
 	mechanism = CKM_RSA_PKCS_KEY_PAIR_GEN;
 	algtag = SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;
 	params = &rsaparams;
 	break;
-      case dsaKey:
+    case dsaKey:
 	mechanism = CKM_DSA_KEY_PAIR_GEN;
 	algtag = SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST;
 	if (pqgFile) {
 	    dsaparams = getpqgfromfile(size, pqgFile);
+	    if (dsaparams == NULL)
+	    	return NULL;
+	    params = dsaparams;
 	} else {
-	    dsaparena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-	    if (dsaparena == NULL) return NULL;
-	    dsaparams = PORT_ArenaZAlloc(dsaparena, sizeof(SECKEYPQGParams));
-	    if (dsaparams == NULL) return NULL;
-	    dsaparams->arena = dsaparena;
-	    SECITEM_AllocItem(dsaparena, &dsaparams->prime, sizeof P);
-	    SECITEM_AllocItem(dsaparena, &dsaparams->subPrime, sizeof Q);
-	    SECITEM_AllocItem(dsaparena, &dsaparams->base, sizeof G);
-	    PORT_Memcpy(dsaparams->prime.data, P, dsaparams->prime.len);
-	    PORT_Memcpy(dsaparams->subPrime.data, Q, dsaparams->subPrime.len);
-	    PORT_Memcpy(dsaparams->base.data, G, dsaparams->base.len);
+	    /* cast away const, and don't set dsaparams */
+	    params = (void *)&default_pqg_params;
 	}
-	params = dsaparams;
 	break;
 #ifdef NSS_ENABLE_ECC
-      case ecKey:
+    case ecKey:
 	mechanism = CKM_EC_KEY_PAIR_GEN;
 	/* For EC keys, PQGFile determines EC parameters */
 	if ((params = (void *) getECParams(pqgFile)) == NULL)
 	    return NULL;
 	break;
 #endif /* NSS_ENABLE_ECC */
-      default:
+    default:
 	return NULL;
     }
-
-    if (slot == NULL)
-	return NULL;
-    if (PK11_Authenticate(slot, PR_TRUE, pwdata) != SECSuccess)
-	return NULL;
 
     fprintf(stderr, "\n\n");
     fprintf(stderr, "Generating key.  This may take a few moments...\n\n");
 
-    return PK11_GenerateKeyPair(slot, mechanism, params, pubkeyp,
+    privKey = PK11_GenerateKeyPair(slot, mechanism, params, pubkeyp,
 				PR_TRUE /*isPerm*/, PR_TRUE /*isSensitive*/, 
 				pwdata /*wincx*/);
+    /* free up the params */
+    switch (keytype) {
+    case rsaKey: /* nothing to free */                        break;
+    case dsaKey: if (dsaparams) CERTUTIL_DestroyParamsPQG(dsaparams); 
+	                                                      break;
+#ifdef NSS_ENABLE_ECC
+    case ecKey: SECITEM_FreeItem((SECItem *)params, PR_TRUE); break;
+#endif
+    }
+    return privKey;
 }
