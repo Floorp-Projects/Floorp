@@ -410,7 +410,7 @@ nsDocument::nsDocument()
   mDocumentTitle = nsnull;
   mDocumentURL = nsnull;
   mDocumentURLGroup = nsnull;
-  mCharacterSet = eCharSetID_IsoLatin1;
+  mCharacterSet = nsnull;
   mParentDocument = nsnull;
   mRootContent = nsnull;
   mScriptObject = nsnull;
@@ -635,12 +635,12 @@ nsDocument::GetBaseURL(nsIURL*& aURL) const
   return NS_OK;
 }
 
-nsCharSetID nsDocument::GetDocumentCharacterSet() const
+nsString* nsDocument::GetDocumentCharacterSet() const
 {
   return mCharacterSet;
 }
 
-void nsDocument::SetDocumentCharacterSet(nsCharSetID aCharSetID)
+void nsDocument::SetDocumentCharacterSet(nsString* aCharSetID)
 {
   mCharacterSet = aCharSetID;
 }

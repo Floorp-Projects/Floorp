@@ -161,13 +161,14 @@ nsresult IsoLatin1Converter::Convert(PRUnichar* aDst,
 NS_BASE nsresult
 NS_NewB2UConverter(nsIB2UConverter** aInstancePtrResult,
                    nsISupports* aOuter,
-                   nsCharSetID aCharSet)
+                   nsString* aCharSet)
 {
   if (nsnull != aOuter) {
     return NS_ERROR_NO_AGGREGATION;
   }
-  if (eCharSetID_IsoLatin1 != aCharSet) {
-    return NS_BASE_STREAM_NO_CONVERTER;
+  // We cannot use enum to pass charset id
+  if ((nsnull != aCharSet) && (! aCharSet->EqualsIgnoreCase( "iso-8859-1" ))){
+      return NS_BASE_STREAM_NO_CONVERTER;
   }
   IsoLatin1Converter* it = new IsoLatin1Converter();
   if (nsnull == it) {
@@ -315,7 +316,7 @@ NS_NewConverterStream(nsIUnicharInputStream** aInstancePtrResult,
                       nsISupports* aOuter,
                       nsIInputStream* aStreamToWrap,
                       PRInt32 aBufferSize,
-                      nsCharSetID aCharSet)
+                      nsString* aCharSet)
 {
   if (nsnull != aOuter) {
     return NS_ERROR_NO_AGGREGATION;

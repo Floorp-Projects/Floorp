@@ -29,13 +29,6 @@ class nsString;
 { 0x35e40290, 0x93b5, 0x11d1, \
   {0x89, 0x5b, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
 
-/// Enumeration of character set ids.
-enum nsCharSetID {
-  eCharSetID_IsoLatin1 = 0,
-  eCharSetID_UTF8,
-  eCharSetID_ShiftJis
-  // XXX more i'm sure...
-};
 
 /** Abstract unicode character input stream
  *  @see nsIInputStream
@@ -84,7 +77,7 @@ extern NS_BASE nsresult
                         nsISupports* aOuter,
                         nsIInputStream* aStreamToWrap,
                         PRInt32 aBufferSize = 0,
-                        nsCharSetID aCharSet = eCharSetID_IsoLatin1);
+                        nsString* aCharSet = nsnull);
 
 /** Create a new nsB2UConverter for the given character set. When given
  * nsnull, the converter for iso-latin1 to unicode is provided. If no
@@ -93,6 +86,6 @@ extern NS_BASE nsresult
 extern NS_BASE nsresult
   NS_NewB2UConverter(nsIB2UConverter** aInstancePtrResult,
                      nsISupports* aOuter,
-                     nsCharSetID aCharSet = eCharSetID_IsoLatin1);
+                     nsString* aCharSet = nsnull);
 
 #endif /* nsUnicharInputStream_h___ */

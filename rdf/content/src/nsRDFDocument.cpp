@@ -145,9 +145,9 @@ public:
 
     NS_IMETHOD GetBaseURL(nsIURL*& aURL) const;
 
-    virtual nsCharSetID GetDocumentCharacterSet() const;
+    virtual nsString* GetDocumentCharacterSet() const;
 
-    virtual void SetDocumentCharacterSet(nsCharSetID aCharSetID);
+    virtual void SetDocumentCharacterSet(nsString* aCharSetID);
 
     NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsString& aData) const;
     NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsString& aData);
@@ -336,7 +336,7 @@ protected:
     nsIContent*            mRootContent;
     nsIDocument*           mParentDocument;
     nsIScriptContextOwner* mScriptContextOwner;
-    nsCharSetID            mCharSetID;
+    nsString*              mCharSetID;
     nsVoidArray            mStyleSheets;
     nsICollection*         mSelection;
     PRBool                 mDisplaySelection;
@@ -752,14 +752,14 @@ RDFDocumentImpl::GetBaseURL(nsIURL*& aURL) const
     return NS_OK;
 }
 
-nsCharSetID 
+nsString* 
 RDFDocumentImpl::GetDocumentCharacterSet() const
 {
     return mCharSetID;
 }
 
 void 
-RDFDocumentImpl::SetDocumentCharacterSet(nsCharSetID aCharSetID)
+RDFDocumentImpl::SetDocumentCharacterSet(nsString* aCharSetID)
 {
     mCharSetID = aCharSetID;
 }
