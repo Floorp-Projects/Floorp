@@ -732,22 +732,23 @@ BEGIN
     PUSHBUTTON      "Help",ID_HELP,150,96,50,14
 END
 
-IDD_DEFAULT_BROWSER DIALOG DISCARDABLE  0, 0, 256, 165
+IDD_DEFAULT_BROWSER DIALOG DISCARDABLE  0, 0, 256, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Mozilla Communicator [Default Browser Check]"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Communicator does not control some file types that it is capable of handling.  In the list below, select the file types that you wish to associate with Mozilla.",
+    LTEXT           "Mozilla is not registered to handle some file types or Internet Shortcuts you asked it to.  Do you want to register it to handle those now?",
                     IDC_STATIC,36,8,206,30
-    CONTROL         "Do not perform this check in the future for those file types not selected in the list above.",
+    CONTROL         "Do not perform this check in the future.",
                     IDC_IGNORE,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | 
-                    WS_TABSTOP,7,116,242,20
-    DEFPUSHBUTTON   "&Ok",IDOK,70,140,50,14,WS_GROUP
-    PUSHBUTTON      "&Cancel",ID_NO,135,140,50,14
+                    WS_TABSTOP,14,35,242,16
+    DEFPUSHBUTTON   "&Yes",IDOK,70,60,50,14,WS_GROUP
+    PUSHBUTTON      "&No",ID_NO,135,60,50,14
+    PUSHBUTTON      "&Details...",ID_NO,200,60,50,14,WS_DISABLED
     CONTROL         "",IDC_WARNING_ICON,"Static",SS_BLACKFRAME | NOT 
                     WS_VISIBLE,8,8,18,20
     LISTBOX         IDC_LIST1,7,38,241,71,LBS_SORT | LBS_MULTIPLESEL | 
-                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP | NOT WS_VISIBLE
 END
 
 IDD_SEARCH DIALOG DISCARDABLE  0, 0, 294, 166
