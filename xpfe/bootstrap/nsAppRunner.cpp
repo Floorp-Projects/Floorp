@@ -58,8 +58,6 @@ static NS_DEFINE_CID(kSoftUpdateCID,     NS_SoftwareUpdate_CID);
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_IID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
-static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
-static NS_DEFINE_CID(kCookieServiceCID,    NS_COOKIESERVICE_CID);
 
 #define PREF_GENERAL_STARTUP_BROWSER "general.startup.browser"
 #define PREF_GENERAL_STARTUP_MAIL "general.startup.mail"
@@ -567,7 +565,7 @@ static nsresult main1(int argc, char* argv[])
   // I'm doing this using the serviceManager for convenience's sake.
   // Presumably an application will init it's own cookie service a 
   // different way (this way works too though).
-  NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
+  nsCOMPtr<nsICookieService> cookieService = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
   // quiet the compiler
   (void)cookieService;
   
