@@ -435,7 +435,7 @@ bool JSValue::isPositiveZero() const
 int JSValue::operator==(const JSValue& value) const
 {
     if (this->tag == value.tag) {
-        #define CASE(T) case T##_tag: return (this->T == value.T)
+#       define CASE(T) case T##_tag: return (this->T == value.T)
         switch (tag) {
         CASE(i8); CASE(u8);
         CASE(i16); CASE(u16);
