@@ -491,7 +491,7 @@ AC_CACHE_CHECK(for C++ reinterpret_cast,
                ac_cv_cpp_reinterpret_cast,
                [AC_TRY_COMPILE(struct X { int i; };
                                struct Y { int i; };,
-                               X x; Y*y = reinterpret_cast<Y*>(&x);,
+                               X x; X*const z = &x;Y*y = reinterpret_cast<Y*>(z);,
                                ac_cv_cpp_reinterpret_cast=yes,
                                ac_cv_cpp_reinterpret_cast=no)])
 if test $ac_cv_cpp_reinterpret_cast = yes ; then
