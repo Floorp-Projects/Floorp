@@ -2869,7 +2869,6 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
 
   // Determine if this line is "essentially" the first line
   for (line_iterator line = begin_lines(); line != aLine; ++line) {
-    PRBool empty;
     if (!line->IsEmpty()) {
       // A line which preceeds aLine is non-empty, so therefore the
       // top margin applies.
