@@ -784,6 +784,137 @@ nsLocalFile::AppendNativeInternal(const nsAFlatCString &node, PRBool multipleCom
 NS_IMETHODIMP
 nsLocalFile::Normalize()
 {
+    // XXX See bug 187957 comment 18 for possible problems with this implementation.
+    
+    if (mWorkingPath.IsEmpty())
+        return NS_OK;
+
+    // work in unicode for ease
+    nsAutoString path;
+    NS_CopyNativeToUnicode(mWorkingPath, path);
+
+    // find the index of the root backslash for the path. Everything before 
+    // this is considered fully normalized and cannot be ascended beyond 
+    // using ".."  For a local drive this is the first slash (e.g. "c:\").
+    // For a UNC path it is the slash following the share name 
+    // (e.g. "\\server\share\").
+    PRInt32 rootIdx = 2;        // default to local drive
+    if (path.First() == '\\')   // if a share then calculate the rootIdx
+    {
+        rootIdx = path.FindChar('\\', 2);   // skip \\ in front of the server 
+        if (rootIdx == kNotFound)
+            return NS_OK;                   // already normalized
+        rootIdx = path.FindChar('\\', rootIdx+1);
+        if (rootIdx == kNotFound)
+            return NS_OK;                   // already normalized
+    }
+    else if (path.CharAt(rootIdx) != '\\')
+    {
+        // The path has been specified relative to the current working directory 
+        // for that drive. To normalize it, the current working directory for 
+        // that drive needs to be inserted before the supplied relative path
+        // which will provide an absolute path (and the rootIdx will still be 2).
+        char cwd[MAX_PATH];
+        char * pcwd = cwd;
+        int drive = toupper(path.First()) - 'A' + 1;
+        if (!_getdcwd(drive, pcwd, MAX_PATH))
+            pcwd = _getdcwd(drive, 0, 0);
+        if (!pcwd)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        nsAutoString currentDir;
+        NS_CopyNativeToUnicode(nsDependentCString(pcwd), currentDir);
+        if (pcwd != cwd)
+            free(pcwd);
+
+        if (currentDir.Last() == '\\')
+            path.Replace(0, 2, currentDir);
+        else
+            path.Replace(0, 2, currentDir + NS_LITERAL_STRING("\\"));
+    }
+    NS_POSTCONDITION(0 < rootIdx && rootIdx < (PRInt32)path.Length(), "rootIdx is invalid");
+    NS_POSTCONDITION(path.CharAt(rootIdx) == '\\', "rootIdx is invalid");
+
+    // if there is nothing following the root path then it is already normalized
+    if (rootIdx + 1 == (PRInt32)path.Length())
+        return NS_OK;
+
+    // assign the root
+    nsAutoString normal;
+    const PRUnichar * pathBuffer = path.get();  // simplify access to the buffer
+    normal.SetCapacity(path.Length()); // it won't ever grow longer
+    normal.Assign(pathBuffer, rootIdx);
+
+    // Normalize the path components. The actions taken are:
+    //
+    //  "\\"    condense to single backslash
+    //  "."     remove from path
+    //  ".."    up a directory
+    //  "..."   remove from path (any number of dots > 2)
+    //
+    // The last form is something that Windows 95 and 98 supported and 
+    // is a shortcut for changing up multiple directories. Windows XP
+    // and ilk ignore it in a path, as is done here.
+    PRInt32 len, begin, end = rootIdx;
+    while (end < (PRInt32)path.Length())
+    {
+        // find the current segment (text between the backslashes) to 
+        // be examined, this will set the following variables:
+        //  begin == index of first char in segment
+        //  end   == index 1 char after last char in segment
+        //  len   == length of segment 
+        begin = end + 1;
+        end = path.FindChar('\\', begin);
+        if (end == kNotFound)
+            end = path.Length();
+        len = end - begin;
+        
+        // ignore double backslashes
+        if (len == 0)
+            continue;
+        
+        // len != 0, and interesting paths always begin with a dot
+        if (pathBuffer[begin] == '.')
+        {
+            // ignore single dots
+            if (len == 1)
+                continue;   
+
+            // handle multiple dots
+            if (len >= 2 && pathBuffer[begin+1] == '.')
+            {
+                // back up a path component on double dot
+                if (len == 2)
+                {
+                    PRInt32 prev = normal.RFindChar('\\');
+                    if (prev >= rootIdx)
+                        normal.Truncate(prev);
+                    continue;
+                }
+
+                // length is > 2 and the first two characters are dots. 
+                // if the rest of the string is dots, then ignore it.
+                int idx = len - 1;
+                for (; idx >= 2; --idx) 
+                {
+                    if (pathBuffer[begin+idx] != '.')
+                        break;
+                }
+
+                // this is true if the loop above didn't break
+                // and all characters in this segment are dots.
+                if (idx < 2) 
+                    continue;
+            }
+        }
+
+        // add the current component to the path, including the preceding backslash
+        normal.Append(pathBuffer + begin - 1, len + 1);
+    }
+    
+    NS_CopyUnicodeToNative(normal, mWorkingPath);
+    MakeDirty();
+
     return NS_OK;
 }
 
