@@ -184,6 +184,20 @@ class NS_COM nsDependentSingleFragmentCSubstring
 
 inline
 const nsDependentCSubstring
+Substring( const nsACString& aString, PRUint32 aStartPos )
+  {
+    return nsDependentCSubstring(aString, aStartPos, aString.Length() - aStartPos);
+  }
+
+inline
+const nsDependentSubstring
+Substring( const nsAString& aString, PRUint32 aStartPos )
+  {
+    return nsDependentSubstring(aString, aStartPos, aString.Length() - aStartPos);
+  }
+
+inline
+const nsDependentCSubstring
 Substring( const nsACString& aString, PRUint32 aStartPos, PRUint32 aSubstringLength )
   {
     return nsDependentCSubstring(aString, aStartPos, aSubstringLength);
@@ -210,6 +224,19 @@ Substring( const nsAString::const_iterator& aStart, const nsAString::const_itera
     return nsDependentSubstring(aStart, aEnd);
   }
 
+inline
+const nsDependentSingleFragmentCSubstring
+Substring( const nsASingleFragmentCString& aString, PRUint32 aStartPos )
+  {
+    return nsDependentSingleFragmentCSubstring(aString, aStartPos, aString.Length() - aStartPos);
+  }
+
+inline
+const nsDependentSingleFragmentSubstring
+Substring( const nsASingleFragmentString& aString, PRUint32 aStartPos )
+  {
+    return nsDependentSingleFragmentSubstring(aString, aStartPos, aString.Length() - aStartPos);
+  }
 
 inline
 const nsDependentSingleFragmentCSubstring
@@ -239,5 +266,60 @@ Substring( const nsASingleFragmentString::const_char_iterator& aStart, const nsA
     return nsDependentSingleFragmentSubstring(aStart, aEnd);
   }
 
+inline
+const nsDependentCSubstring
+StringHead( const nsACString& aString, PRUint32 aCount )
+  {
+    return nsDependentCSubstring(aString, 0, aCount);
+  }
+
+inline
+const nsDependentSubstring
+StringHead( const nsAString& aString, PRUint32 aCount )
+  {
+    return nsDependentSubstring(aString, 0, aCount);
+  }
+
+inline
+const nsDependentSingleFragmentCSubstring
+StringHead( const nsASingleFragmentCString& aString, PRUint32 aCount )
+  {
+    return nsDependentSingleFragmentCSubstring(aString, 0, aCount);
+  }
+
+inline
+const nsDependentSingleFragmentSubstring
+StringHead( const nsASingleFragmentString& aString, PRUint32 aCount )
+  {
+    return nsDependentSingleFragmentSubstring(aString, 0, aCount);
+  }
+
+inline
+const nsDependentCSubstring
+StringTail( const nsACString& aString, PRUint32 aCount )
+  {
+    return nsDependentCSubstring(aString, aString.Length() - aCount, aCount);
+  }
+
+inline
+const nsDependentSubstring
+StringTail( const nsAString& aString, PRUint32 aCount )
+  {
+    return nsDependentSubstring(aString, aString.Length() - aCount, aCount);
+  }
+
+inline
+const nsDependentSingleFragmentCSubstring
+StringTail( const nsASingleFragmentCString& aString, PRUint32 aCount )
+  {
+    return nsDependentSingleFragmentCSubstring(aString, aString.Length() - aCount, aCount);
+  }
+
+inline
+const nsDependentSingleFragmentSubstring
+StringTail( const nsASingleFragmentString& aString, PRUint32 aCount )
+  {
+    return nsDependentSingleFragmentSubstring(aString, aString.Length() - aCount, aCount);
+  }
 
 #endif /* !defined(nsDependentSubstring_h___) */
