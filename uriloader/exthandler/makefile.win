@@ -36,6 +36,10 @@ XPIDLSRCS=						                \
     .\nsIExternalProtocolService.idl  \
 		$(NULL)
 
+EXPORTS=	            					  \
+	        nsHelperAppRDF.h				\
+          $(NULL)
+
 LIBRARY_NAME=exthandlers_s
 
 CPP_OBJS =                                          \
