@@ -1269,7 +1269,8 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
       kidReflowState.mComputedHeight -= (kidReflowState.mComputedBorderPadding.top + kidReflowState.mComputedBorderPadding.bottom);
 
 
-  rv = ReflowChild(child, aPresContext, kidReflowDesiredSize, kidReflowState, 0, 0, 0, aStatus);
+  rv = ReflowChild(child, aPresContext, kidReflowDesiredSize, kidReflowState, aReflowState.mComputedBorderPadding.left,
+                    aReflowState.mComputedBorderPadding.top, 0, aStatus);
  // Place and size the child.
   FinishReflowChild(child, aPresContext, kidReflowDesiredSize, aReflowState.mComputedBorderPadding.left,
                     aReflowState.mComputedBorderPadding.top, 0);
