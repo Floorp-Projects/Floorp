@@ -244,9 +244,10 @@ nsHttpHandler::Init()
     
     nsCOMPtr<nsIObserverService> observerSvc =
         do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    if (observerSvc)
+    if (observerSvc) {
         observerSvc->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
-
+        observerSvc->AddObserver(this, NS_LITERAL_STRING("session-logout").get());
+    }
     return NS_OK;
 }
 
@@ -1780,7 +1781,8 @@ nsHttpHandler::Observe(nsISupports *subject,
                        const PRUnichar *topic,
                        const PRUnichar *data)
 {
-    if (!nsCRT::strcmp(topic, NS_LITERAL_STRING("profile-before-change").get())) {
+    if (!nsCRT::strcmp(topic, NS_LITERAL_STRING("profile-before-change").get()) ||
+        !nsCRT::strcmp(topic, NS_LITERAL_STRING("session-logout").get())) {
         // clear cache of all authentication credentials.
         if (mAuthCache)
             mAuthCache->ClearAll();
