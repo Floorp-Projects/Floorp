@@ -2527,7 +2527,7 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
          return NS_ERROR_FAILURE;
       }
 
-   //XXX Wrong, but needed for now
+   //XXX Wrong, but needed for now. See bug 31818.
    channel->SetOriginalURI(aReferrerURI ? aReferrerURI : aURI);
    
    // Mark the channel as being a document URI...
