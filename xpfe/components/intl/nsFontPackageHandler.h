@@ -42,6 +42,13 @@
 
 #include "nsIFontPackageHandler.h"
 
+/* a3328b5b-388c-4c9a-a5b7-2213621e1744 */
+#define NS_FONTPACKAGEHANDLER_CID \
+{ 0xa3328b5b, \
+  0x388c, \
+  0x4c9a, \
+  {0xa5, 0xb7, 0x22, 0x13, 0x62, 0x1e, 0x17, 0x44} }
+
 class nsFontPackageHandler : public nsIFontPackageHandler
 {
 public:
