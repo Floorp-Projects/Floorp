@@ -17,23 +17,32 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Peter Hartshorn <peter@igelaus.com.au>
  */
 
 #ifndef nsClipboard_h__
 #define nsClipboard_h__
 
-#include "nsBaseClipboard.h"
+#include "nsIClipboard.h"
+#include "nsITransferable.h"
+#include "nsIClipboardOwner.h"
+#include <nsCOMPtr.h>
+#include "nsWidget.h"
+
+#include "X11/X.h"
+#include "X11/Xlib.h"
 
 class nsITransferable;
 class nsIClipboardOwner;
 class nsIWidget;
 
 /**
- * Native Gtk Clipboard wrapper
+ * Native Xlib Clipboard wrapper
  */
 
-class nsClipboard : public nsBaseClipboard
+class nsClipboard : public nsIClipboard
 {
 
 public:
@@ -41,52 +50,28 @@ public:
   virtual ~nsClipboard();
 
   //nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
 
-  // nsIClipboard  
-  NS_IMETHOD ForceDataToClipboard();
+  // nsIClipboard
+  NS_DECL_NSICLIPBOARD
 
 protected:
-  NS_IMETHOD        SetNativeClipboardData();
-  NS_IMETHOD        GetNativeClipboardData(nsITransferable * aTransferable);
+  void Init(void);
 
+  static nsEventStatus PR_CALLBACK Callback(nsGUIEvent *event);
+  PRBool  mIgnoreEmptyNotification;
 
-  void              CreateInvisibleWindow(void);
+private:
+  static nsCOMPtr<nsITransferable>   mTransferable;
 
-  PRBool            mIgnoreEmptyNotification;
-
-  static Window     *sWindow;
 
   // Used for communicating pasted data
   // from the asynchronous X routines back to a blocking paste:
-  GtkSelectionData  mSelectionData;
-  PRBool            mBlocking;
+  PRBool mBlocking;
 
-  void SelectionReceiver(GtkWidget *aWidget,
-                         GtkSelectionData *aSelectionData);
-
-  static void SelectionGetCB(GtkWidget *widget, 
-                             GtkSelectionData *selection_data,
-                             guint      /*info*/,
-                             guint      /*time*/,
-                             gpointer data);
-
-  static void SelectionClearCB(GtkWidget *widget, 
-                               GdkEventSelection *event,
-                               gpointer data );
-
-  static void SelectionRequestCB(GtkWidget *aWidget,
-                             GtkSelectionData *aSelectionData,
-                             gpointer aData);
-  
-  static void SelectionReceivedCB(GtkWidget *aWidget,
-                                  GtkSelectionData *aSelectionData,
-                                  gpointer aData);
-
-  static void SelectionNotifyCB(GtkWidget *aWidget,
-                                GtkSelectionData *aSelectionData,
-                                gpointer aData);
-  
+  static Window sWindow;
+  nsWidget *sWidget;
+  static Display *sDisplay;
 
 };
 

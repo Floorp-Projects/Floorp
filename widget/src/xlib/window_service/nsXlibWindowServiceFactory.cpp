@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Peter Hartshorn <peter@igelaus.com.au>
  */
 
 #include "nsIXlibWindowService.h"
@@ -60,7 +61,7 @@ nsXlibWindowServiceFactory::~nsXlibWindowServiceFactory()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsXlibWindowServiceFactory, NS_GET_IID(nsIFactory))
+NS_IMPL_THREADSAFE_ISUPPORTS(nsXlibWindowServiceFactory, NS_GET_IID(nsIFactory))
 
 NS_IMETHODIMP
 nsXlibWindowServiceFactory::CreateInstance(nsISupports *aOuter,

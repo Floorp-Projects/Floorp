@@ -25,6 +25,7 @@
 
 #include "nsIAppShell.h"
 #include "nsIEventQueueService.h"
+#include "prtime.h"
 
 class nsAppShell : public nsIAppShell
 {
@@ -38,8 +39,8 @@ class nsAppShell : public nsIAppShell
   
   NS_IMETHOD            Create(int* argc, char ** argv);
   virtual nsresult      Run(); 
-  NS_IMETHOD            Spinup() { return NS_OK; }
-  NS_IMETHOD            Spindown() { return NS_OK; }
+  NS_IMETHOD            Spinup();
+  NS_IMETHOD            Spindown();
   NS_IMETHOD            ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen)
                           { return NS_OK; }
   NS_IMETHOD            GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
@@ -65,13 +66,29 @@ class nsAppShell : public nsIAppShell
   static void HandleEnterEvent(XEvent *event, nsWidget *aWidget);
   static void HandleLeaveEvent(XEvent *event, nsWidget *aWidget);
   static void HandleClientMessageEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleSelectionRequestEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleDragMotionEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleDragEnterEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleDragLeaveEvent(XEvent *event, nsWidget *aWidget);
+  static void HandleDragDropEvent(XEvent *event, nsWidget *aWidget);
+  static void ForwardEvent(XEvent *event, nsWidget *aWidget);
   static PRBool DieAppShellDie;
+  static PRBool mClicked;
+  static PRTime mClickTime;
+  static PRInt16 mClicks;
+  static PRUint16 mClickedButton;
+  static Display * mDisplay;
+  static PRBool mDragging;
+  static PRBool mAltDown;
+  static PRBool mShiftDown;
+  static PRBool mCtrlDown;
+  static PRBool mMetaDown;
 
 protected:
   nsIEventQueueService * mEventQueueService;
+  nsIEventQueue *mEventQueue;
 
 
-  Display * mDisplay;
   Screen *  mScreen;
 };
 

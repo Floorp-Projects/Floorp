@@ -18,205 +18,192 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Hartshorn <peter@igelaus.com.au>
+ *   Ken Faulkner <faulkner@igelaus.com.au>
  */
 
-#include "nsIFactory.h"
-#include "nsISupports.h"
+#include "nsIGenericFactory.h"
+#include "nsIModule.h"
+#include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
 
-// includes for our specific widgets
 #include "nsWindow.h"
 #include "nsButton.h"
 #include "nsCheckButton.h"
-#include "nsComboBox.h"
-#include "nsRadioButton.h"
 #include "nsFileWidget.h"
-#include "nsListBox.h"
-#include "nsScrollBar.h"
-#include "nsTextAreaWidget.h"
 #include "nsTextWidget.h"
 #include "nsAppShell.h"
 #include "nsToolkit.h"
 #include "nsLookAndFeel.h"
 #include "nsLabel.h"
+#include "nsTransferable.h"
+#include "nsClipboard.h"
+#include "nsXIFFormatConverter.h"
+//#include "nsFontRetrieverService.h"
+#include "nsDragService.h"
+#include "nsFileSpecWithUIImpl.h"
+#include "nsScrollBar.h"
+#include "nsSound.h"
 
-static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
-static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
-static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
-static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
-static NS_DEFINE_IID(kCCombobox,      NS_COMBOBOX_CID);
-static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
-static NS_DEFINE_IID(kCListbox,       NS_LISTBOX_CID);
-static NS_DEFINE_IID(kCRadioButton,   NS_RADIOBUTTON_CID);
-static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
-static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
-static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
-static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
-static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
-static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsButton)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCheckButton)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileWidget)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextWidget)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLabel)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXIFFormatConverter)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontRetrieverService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 
-static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
-static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
-
-class nsWidgetFactory : public nsIFactory
-{   
-public:   
-  // nsISupports methods   
-  NS_DECL_ISUPPORTS
-  
-  // nsIFactory methods   
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-			    const nsIID &aIID,   
-			    void **aResult);   
-  
-  NS_IMETHOD LockFactory(PRBool aLock);   
-  
-  nsWidgetFactory(const nsCID &aClass);   
-  virtual ~nsWidgetFactory();   
-  
-private:   
-  nsCID mClassID;
-}; 
-
-NS_IMPL_ADDREF(nsWidgetFactory)
-NS_IMPL_RELEASE(nsWidgetFactory)
-
-nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)
+static nsresult nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-  NS_INIT_REFCNT();
-  mClassID = aClass;
-}
-
-nsWidgetFactory::~nsWidgetFactory()
-{
-}
-
-nsresult nsWidgetFactory::QueryInterface(const nsIID &aIID,
-                                         void **aResult)
-{
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;   
-  }
-
-  // Always NULL result, in case of failure
-  *aResult = NULL;
-
-  if (aIID.Equals(kISupportsIID)) {
-    *aResult = (void *)(nsISupports*)this;
-  } else if (aIID.Equals(kIFactoryIID)) {
-    *aResult = (void *)(nsIFactory*)this;
-  }
-
-  if (*aResult == NULL) {
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF_THIS(); // Increase reference count for caller
-  return NS_OK;
-}  
-
-
-nsresult nsWidgetFactory::CreateInstance(nsISupports* aOuter,
-                                          const nsIID &aIID,  
-                                          void **aResult)  
-{
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = NULL;
-  if (nsnull != aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
+  nsresult rv;
   nsISupports *inst = nsnull;
-  if (mClassID.Equals(kCWindow)) {
-    inst = (nsISupports*)new nsWindow();
-  }
-  else if (mClassID.Equals(kCChild)) {
-    inst = (nsISupports*)new ChildWindow();
-  }
-  else if (mClassID.Equals(kCButton)) {
-    inst = (nsISupports*)(nsWindow*)new nsButton();
-  }
-  else if (mClassID.Equals(kCCheckButton)) {
-    inst = (nsISupports*)(nsWindow*)new nsCheckButton();
-  }
-  else if (mClassID.Equals(kCCombobox)) {
-    inst = (nsISupports*)(nsWindow*)new nsComboBox();
-  }
-  else if (mClassID.Equals(kCRadioButton)) {
-    inst = (nsISupports*)(nsWindow*)new nsRadioButton();
-  }
-  else if (mClassID.Equals(kCFileOpen)) {
-    inst = (nsISupports*)new nsFileWidget();
-  }
-  else if (mClassID.Equals(kCListbox)) {
-    inst = (nsISupports*)(nsWindow*)new nsListBox();
-  }
-  else if (mClassID.Equals(kCHorzScrollbar)) {
-    inst = (nsISupports*)(nsWindow*)new nsScrollbar(PR_FALSE);
-  }
-  else if (mClassID.Equals(kCVertScrollbar)) {
-    inst = (nsISupports*)(nsWindow*)new nsScrollbar(PR_TRUE);
-  }
-  else if (mClassID.Equals(kCTextArea)) {
-    inst = (nsISupports*)(nsWindow*)new nsTextAreaWidget();
-  }
-  else if (mClassID.Equals(kCTextField)) {
-    inst = (nsISupports*)(nsWindow*)new nsTextWidget();
-  }
-  else if (mClassID.Equals(kCAppShell)) {
-    inst = (nsISupports*)new nsAppShell();
-  }
-  else if (mClassID.Equals(kCToolkit)) {
-    inst = (nsISupports*)new nsToolkit();
-  }
-  else if (mClassID.Equals(kCLookAndFeel)) {
-    inst = (nsISupports*)new nsLookAndFeel();
-  }
-  else if (mClassID.Equals(kCLabel)) {
-    inst = (nsISupports*)(nsWindow*)new nsLabel();
-  }
-  if (inst == NULL) {  
-    return NS_ERROR_OUT_OF_MEMORY;  
-  }  
-  
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  
-  if (res != NS_OK) {  
-    // We didn't get the right interface, so clean up  
-    delete inst;  
-  }
-  
-  return res;  
-}
 
-nsresult nsWidgetFactory::LockFactory(PRBool aLock)
-{
-  // Not implemented in simplest case.
-  return NS_OK;
-} 
-
-// return the proper factory to the caller
-extern "C" NS_WIDGET nsresult
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
-{
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
+  if ( NULL == aResult )
+  {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = NULL;
+  if (NULL != aOuter)
+  {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
   }
   
-  *aFactory = new nsWidgetFactory(aClass);
-  
-  if (nsnull == aFactory) {
+  inst = (nsISupports *)(nsBaseWidget *)(nsWidget *)new nsScrollbar(PR_FALSE);
+  if (inst == NULL)
+  {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  
-  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+
+  return rv;
 }
+
+static nsresult nsVertScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  nsresult rv;
+  nsISupports *inst = nsnull;
+
+  if ( NULL == aResult )
+  {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = NULL;
+  if (NULL != aOuter)
+  {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+  
+  inst = (nsISupports *)(nsBaseWidget *)(nsWidget *)new nsScrollbar(PR_TRUE);
+  if (inst == NULL)
+  {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+
+  return rv;
+}
+
+static nsModuleComponentInfo components[] =
+{
+  { "Xlib nsWindow",
+    NS_WINDOW_CID,
+    "mozilla.widgets.window.xlib.1",
+    nsWindowConstructor },
+  { "Xlib Child nsWindow",
+    NS_CHILD_CID,
+    "mozilla.widgets.child_window.xlib.1",
+    ChildWindowConstructor },
+  { "Xlib Button",
+    NS_BUTTON_CID,
+    "mozilla.widgets.button.xlib.1",
+    nsButtonConstructor },
+  { "Xlib Check Button",
+    NS_CHECKBUTTON_CID,
+    "mozilla.widgets.checkbutton.xlib.1",
+    nsCheckButtonConstructor },
+  { "Xlib File Widget",
+    NS_FILEWIDGET_CID,
+    "mozilla.widgets.filewidget.xlib.1",
+    nsFileWidgetConstructor },
+  { "Xlib Horiz Scrollbar",
+    NS_HORZSCROLLBAR_CID,
+    "mozilla.widgets.horizscroll.xlib.1",
+    nsHorizScrollbarConstructor },
+  { "Xlib Vert Scrollbar",
+    NS_VERTSCROLLBAR_CID,
+    "mozilla.widgets.vertscroll.xlib.1",
+    nsVertScrollbarConstructor },
+  { "Xlib Text Widget",
+    NS_TEXTFIELD_CID,
+    "mozilla.widgets.textwidget.xlib.1",
+    nsTextWidgetConstructor },
+  { "Xlib AppShell",
+    NS_APPSHELL_CID,
+    "mozilla.widget.appshell.xlib.1",
+    nsAppShellConstructor },
+  { "Xlib Toolkit",
+    NS_TOOLKIT_CID,
+    "mozilla.widget.toolkit.xlib.1",
+    nsToolkitConstructor },
+  { "Xlib Look And Feel",
+    NS_LOOKANDFEEL_CID,
+    "mozilla.widget.lookandfeel.xlib.1",
+    nsLookAndFeelConstructor },
+  { "Xlib Label",
+    NS_LABEL_CID,
+    "mozilla.widget.label.xlib.1",
+    nsLabelConstructor },
+  { "Xlib Sound",
+    NS_SOUND_CID,
+      "mozilla.widget.sound.xlib.1",
+    //"component://netscape/sound",
+    nsSoundConstructor },
+  { "Transferrable",
+    NS_TRANSFERABLE_CID,
+    //    "mozilla.widget.transferrable.xlib.1",
+    "component://netscape/widget/transferable",
+    nsTransferableConstructor },
+  { "Xlib Clipboard",
+    NS_CLIPBOARD_CID,
+    //    "mozilla.widget.clipboard.xlib.1",
+    "component://netscape/widget/clipboard",
+    nsClipboardConstructor },
+  { "XIF Format Converter",
+    NS_XIFFORMATCONVERTER_CID,
+    "mozilla.widget.xifformatconverter.xlib.1",
+    nsXIFFormatConverterConstructor },
+  //{ "Xlib Font Retriever Service",
+    //NS_FONTRETRIEVERSERVICE_CID,
+    //"mozilla.widget.fontretrieverservice.xlib.1",
+    //nsFontRetrieverServiceConstructor },
+  { "Xlib Drag Service",
+    NS_DRAGSERVICE_CID,
+    //    "mozilla.widget.dragservice.xlib.1",
+    "component://netscape/widget/dragservice",
+    nsDragServiceConstructor },
+  { "File Spec with UI",
+    NS_FILESPECWITHUI_CID,
+    //    "mozilla.widget.filespecwithui.xlib.1",
+    "component://netscape/filespecwithui",
+    nsFileSpecWithUIImplConstructor }
+};
+
+NS_IMPL_NSGETMODULE("nsWidgetXLIBModule", components)

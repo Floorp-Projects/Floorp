@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Ken Faulkner <faulkner@igelaus.com.au>
+ *   Quy Tonthat <quy@igelaus.com.au>
  */
 
 #ifndef nsWidget_h__
@@ -30,7 +32,7 @@
 #include "nsBaseWidget.h"
 #include "nsHashtable.h"
 #include "prlog.h"
-
+#include "nsIRegion.h"
 #include "nsIXlibWindowService.h"
 
 #ifdef DEBUG_blizzard
@@ -90,6 +92,8 @@ public:
   virtual nsIFontMetrics* GetFont(void);
   NS_IMETHOD              SetFont(const nsFont &aFont);
   NS_IMETHOD              SetCursor(nsCursor aCursor);
+  void                    LockCursor(PRBool aLock);
+
   NS_IMETHOD Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD              Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
   NS_IMETHOD              Update();
@@ -121,12 +125,16 @@ public:
   virtual PRBool          OnPaint(nsPaintEvent &event);
   virtual PRBool          OnResize(nsSizeEvent &event);
   virtual PRBool          OnDeleteWindow(void);
+
+  // KenF Added FIXME:
+  virtual void						OnDestroy(void);
   virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
   virtual PRBool          DispatchKeyEvent(nsKeyEvent &aKeyEvent);
   virtual PRBool          DispatchDestroyEvent(void);
 
   static nsWidget        * GetWidgetForWindow(Window aWindow);
   void                     SetVisibility(int aState); // using the X constants here
+  void                     SetIonic(PRBool isIonic);
   static Window            GetFocusWindow(void);
 
   PRBool DispatchWindowEvent(nsGUIEvent & aEvent);
@@ -141,8 +149,13 @@ public:
   static Atom   WMSaveYourself;
   static PRBool WMProtocolsInitialized;
 
+  // Checks if parent is alive. nsWidget has a stub, nsWindow has real
+  // thing. KenF
+  void *CheckParent(long ThisWindow);
+
 protected:
 
+  nsCOMPtr<nsIRegion> mUpdateArea;
   // private event functions
   PRBool ConvertStatus(nsEventStatus aStatus);
 
@@ -196,10 +209,13 @@ protected:
   nsString       mName;           // name of the type of widget
   PRBool         mIsToplevel;
   nsRect         mRequestedSize;
+  PRBool         mMapped;
 
   static         Window                 mFocusWindow;
 
-private:
+  // Changed to protected so nsWindow has access to it. KenF
+protected:
+  PRBool       mListenForResizes;     // If we're native we want to listen.
   static       nsHashtable *          gsWindowList;
 
   static       nsXlibWindowCallback   gsWindowCreateCallback;

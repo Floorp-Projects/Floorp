@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Hartshorn <peter@igelaus.com.au>
+ *   Ken Faulkner <faulkner@igelaus.com.au>
  */
 
 #ifndef nsWindow_h__
@@ -27,20 +29,82 @@
 
 #include "nsString.h"
 
+class nsListItem {
+public:
+  nsListItem() {}
+  nsListItem(void *aData, nsListItem *aPrev);
+  ~nsListItem() {}
+
+  void *getData() { return data; }
+  nsListItem *getNext() { return next; }
+  void setNext(nsListItem *aNext) { next = aNext; }
+  nsListItem *getPrev() { return prev; };
+  void setPrev(nsListItem *aPrev) { prev = aPrev; }
+
+private:
+  void *data;
+  nsListItem *next;
+  nsListItem *prev;
+};
+
+class nsList {
+public:
+  nsList();
+  ~nsList();
+  nsListItem *getHead() { return head; }
+  void add(void *aData);
+  void remove(void *aData);
+  void reset();
+
+private:
+  nsListItem *head;
+  nsListItem *tail;
+};
+
+
 class nsWindow : public nsWidget
 {
  public:
   nsWindow();
   ~nsWindow();
+  static void      UpdateIdle (void *data);
   NS_IMETHOD Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
+  NS_IMETHOD           InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous);
   NS_IMETHOD Update();
   NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+  NS_IMETHOD ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
+  NS_IMETHOD ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy);
+
   NS_IMETHOD SetTitle(const nsString& aTitle);
+
+  NS_IMETHOD Resize(PRInt32 aWidth,
+                    PRInt32 aHeight,
+                    PRBool   aRepaint);
+  NS_IMETHOD Resize(PRInt32 aX,
+                    PRInt32 aY,
+                    PRInt32 aWidth,
+                    PRInt32 aHeight,
+                    PRBool   aRepaint);
+
+
+  NS_IMETHOD SetFocus(void);
+  virtual  PRBool OnExpose(nsPaintEvent &event);
+  
 protected:
   virtual void DestroyNative(void);
+  virtual void DestroyNativeChildren(void);
 
   virtual long GetEventMask();
+
+
+
+  void                 QueueDraw();
+  void                 UnqueueDraw();
+  PRBool mIsUpdating;
+  PRBool mBlockFocusEvents;
+
+
 
 #if 0
   virtual void CreateNative(Window aParent, nsRect aRect);
