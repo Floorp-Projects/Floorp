@@ -42,6 +42,8 @@
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsGenericHTMLElement.h"
+#include "nsLayoutAtoms.h"
+
 class nsHTMLFrame;
 
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
@@ -111,6 +113,8 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
@@ -126,6 +130,7 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
+
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,
                               nsIAtom* aAttribute,
@@ -153,6 +158,8 @@ public:
   nsHTMLFrameInnerFrame();
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
   /**
     * @see nsIFrame::Paint
@@ -309,6 +316,15 @@ nsHTMLFrameOuterFrame::Paint(nsIPresContext& aPresContext,
 NS_IMETHODIMP nsHTMLFrameOuterFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("FrameOuter", aResult);
+}
+
+NS_IMETHODIMP
+nsHTMLFrameOuterFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::htmlFrameOuterFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -600,6 +616,15 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsI
 NS_IMETHODIMP nsHTMLFrameInnerFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("FrameInner", aResult);
+}
+
+NS_IMETHODIMP
+nsHTMLFrameInnerFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::htmlFrameInnerFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
 }
 
 NS_METHOD
