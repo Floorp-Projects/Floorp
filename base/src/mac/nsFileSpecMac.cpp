@@ -45,7 +45,8 @@ namespace MacFileHelpers
 	OSErr							FSSpecFromFullUnixPath(
 										const char * unixPath,
 										FSSpec& outSpec,
-										Boolean resolveAlias);
+										Boolean resolveAlias,
+										Boolean allowPartial = false);
 	char*							MacPathFromUnixPath(const char* unixPath);
 	char*							EncodeMacPath(
 										char* inPath, // NOT const - gets clobbered
@@ -318,7 +319,8 @@ OSErr MacFileHelpers::ResolveAliasFile(FSSpec& inOutSpec, Boolean& wasAliased)
 OSErr MacFileHelpers::FSSpecFromFullUnixPath(
 	const char * unixPath,
 	FSSpec& outSpec,
-	Boolean resolveAlias)
+	Boolean resolveAlias,
+	Boolean allowPartial)
 // File spec from URL. Reverses GetURLFromFileSpec 
 // Its input is only the <path> part of the URL
 // JRM 97/01/08 changed this so that if it's a partial path (doesn't start with '/'),
@@ -332,7 +334,10 @@ OSErr MacFileHelpers::FSSpecFromFullUnixPath(
 		return memFullErr;
 
 	OSErr err = noErr;
-	NS_ASSERTION(*unixPath == '/' /*full path*/, "Not a Unix path!");
+	if (!allowPartial)
+	{
+		NS_ASSERTION(*unixPath == '/' /*full path*/, "Not a full Unix path!");
+	}
 	err = FSSpecFromPathname(macPath, outSpec);
 	if (err == fnfErr)
 		err = noErr;
@@ -466,7 +471,8 @@ nsNativeFileSpec::nsNativeFileSpec(const nsNativeFileSpec& inSpec)
 nsNativeFileSpec::nsNativeFileSpec(const char* inString)
 //----------------------------------------------------------------------------------------
 {
-	mError = MacFileHelpers::FSSpecFromFullUnixPath(inString, mSpec, true);
+	mError = MacFileHelpers::FSSpecFromFullUnixPath(inString, mSpec, true, true);
+		// allow a partial path
 	if (mError == fnfErr)
 		mError = noErr;
 } // nsNativeFileSpec::nsNativeFileSpec
