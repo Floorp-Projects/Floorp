@@ -112,7 +112,7 @@ NS_IMPL_ISUPPORTS4(nsSVGAnimatedRect,
                    nsISVGValue,
                    nsIDOMSVGAnimatedRect,
                    nsISupportsWeakReference,
-                   nsISVGValueObserver);
+                   nsISVGValueObserver)
 
 //----------------------------------------------------------------------
 // nsISVGValue methods:
