@@ -339,6 +339,9 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
     mSelectionListenerP = new ResizerSelectionListener(this);
     if (!mSelectionListenerP) {return NS_ERROR_NULL_POINTER;}
 
+    // ignore any errors from this in case the file is missing
+    AddOverrideStyleSheet(NS_LITERAL_STRING("resource:/res/EditorOverride.css"));
+
     nsCOMPtr<nsISelection>selection;
     result = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(result)) { return result; }
