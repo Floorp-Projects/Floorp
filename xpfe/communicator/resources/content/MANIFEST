@@ -2,3 +2,7 @@ communicatorOverlay.xul
 utilityOverlay.xul
 utilityOverlay.js
 utilityOverlay.css
+taskbarOverlay.xul
+tasksOverlay.js
+tasksOverlay.xul
+dialogBindings.xml

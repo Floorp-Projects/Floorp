@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<bindings id="dialogBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:html="http://www.w3.org/TR/REC-html40"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="smallheader">
+    <content>
+      <xul:box class="toolbar-primary" autostretch="never" flex="1">
+        <xul:text class="box-smallheader-left" inherits="title:value"/>
+        <xul:spring flex="1"/>
+        <xul:text class="box-smallheader-right" inherits="description:value"/>
+      </xul:box>
+    </content>
+    <interface>
+      <property name="title" onset="this.setAttribute('title',val); return val;"
+                             onget="return this.getAttribute('title');"/>
+      <property name="description" onset="this.setAttribute('description',val); return val;"
+                             onget="return this.getAttribute('description');"/>
+    </interface>
+  </binding>
+
+  <binding id="largeheader">
+    <content>
+      <xul:box class="box-header-header toolbar-primary" flex="1" autostretch="never">
+        <xul:image inherits="src" class="box-header-circle"/>
+        <xul:box autostretch="never" class="box-header-text-box">
+          <xul:text class="box-header-text" inherits="value"/>
+        </xul:box>
+        <xul:spring flex="1"/>
+      </xul:box>
+    </content>
+  </binding>
+  
+  <binding id="status">
+    <content>
+      <xul:box class="box-status-bg toolbar-standard" flex="1">
+        <xul:text class="box-status-text" inherits="value"/>
+        <xul:spring flex="1"/>
+        <xul:text class="box-status-progress" inherits="progress:value"/>
+      </xul:box>  
+    </content>
+  </binding>
+  
+</bindings>
