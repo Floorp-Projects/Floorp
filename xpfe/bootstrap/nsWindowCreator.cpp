@@ -64,6 +64,7 @@
    Mozilla version, which calls through to nsAppShellService.
 */
 
+#include "nsXPCOM.h"
 #include "nsCOMPtr.h"
 #include "nsAppShellCIDs.h"
 #include "nsWidgetsCID.h"
