@@ -89,6 +89,8 @@ typedef enum _FTP_STATE {
     FTP_S_SYST, FTP_R_SYST,
     FTP_S_ACCT, FTP_R_ACCT,
     FTP_S_TYPE, FTP_R_TYPE,
+    FTP_S_CWD,  FTP_R_CWD,
+    FTP_S_PWD,  FTP_R_PWD,
     FTP_S_SIZE, FTP_R_SIZE,
     FTP_S_MDTM, FTP_R_MDTM,
     FTP_S_REST, FTP_R_REST,
@@ -143,6 +145,8 @@ private:
     nsresult        S_syst(); FTP_STATE       R_syst();
 
     nsresult        S_type(); FTP_STATE       R_type();
+    nsresult        S_cwd();  FTP_STATE       R_cwd();
+    nsresult        S_pwd();  FTP_STATE       R_pwd();
 
     nsresult        S_size(); FTP_STATE       R_size();
     nsresult        S_mdtm(); FTP_STATE       R_mdtm();
@@ -206,6 +210,7 @@ private:
     nsCOMPtr<nsIURI>       mURI;        // the uri we're connecting to
     PRInt32                mPort;       // the port to connect to
     nsCString              mPath;       // the url's path
+    nsCString              mPwd;        // login Path
 
         // ****** other vars
     nsCOMPtr<nsIInputStream>  mWriteStream; // This stream is written to the server.

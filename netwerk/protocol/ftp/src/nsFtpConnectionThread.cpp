@@ -590,9 +590,10 @@ nsFtpState::EstablishControlConnection()
             
             // read cached variables into us. 
             mServerType = mControlConnection->mServerType;           
+            mPwd        = mControlConnection->mPwd;
             mPassword   = mControlConnection->mPassword;
             mTryingCachedControl = PR_TRUE;
-            
+
             // we're already connected to this server, skip login.
             mState = FTP_S_PASV;
             mResponseCode = 530;  //assume the control connection was dropped.
@@ -794,6 +795,41 @@ nsFtpState::Process()
             
             break;
        
+// CWD            
+          case FTP_S_CWD:
+            rv = S_cwd();
+            
+            if (NS_FAILED(rv))
+                mInternalError = NS_ERROR_FTP_CWD;
+            
+            MoveToNextState(FTP_R_CWD);
+            break;
+            
+           case FTP_R_CWD:
+               mState = R_cwd();
+              
+            if (FTP_ERROR == mState)
+                mInternalError = NS_ERROR_FTP_CWD;
+            break;
+
+// PWD        
+          case FTP_S_PWD:
+            rv = S_pwd();
+
+            if (NS_FAILED(rv))
+                mInternalError = NS_ERROR_FTP_PWD;
+            
+            MoveToNextState(FTP_R_PWD);
+            break;
+            
+          case FTP_R_PWD:
+            mState = R_pwd();
+
+            if (FTP_ERROR == mState) 
+                mInternalError = NS_ERROR_FTP_PWD;
+
+            break;
+
 // LIST
           case FTP_S_LIST:
             rv = S_list();
@@ -1131,6 +1167,58 @@ nsFtpState::R_pass() {
 
 
 nsresult
+nsFtpState::S_pwd() {
+    nsCString pwdStr("PWD" CRLF);
+    return SendFTPCommand(pwdStr);
+}
+
+ FTP_STATE
+nsFtpState::R_pwd() {
+    if (mResponseCode/100 != 2) 
+        return FTP_ERROR;
+    if (mServerType != FTP_VMS_TYPE) {
+        nsCAutoString respStr(mResponseMsg);
+        PRInt32 pos = respStr.FindChar('"');
+        if (pos > -1) {
+            respStr.Cut(0,pos+1);
+            pos = respStr.FindChar('"');
+            if (pos > -1) {
+                respStr.Truncate(pos);
+                if (respStr.Last() != '/')
+                    respStr.Append("/");
+                mPwd = respStr;
+            }
+        }
+    }
+    return FTP_S_TYPE;
+}
+
+
+nsresult
+nsFtpState::S_cwd() {
+    nsCAutoString cwdStr(mPath);
+    if (cwdStr.IsEmpty() || cwdStr.First() != '/')
+        cwdStr.Insert(mPwd,0);
+
+    cwdStr.Insert("CWD ",0);
+    cwdStr.Append(CRLF);
+
+    return SendFTPCommand(cwdStr);
+}
+
+FTP_STATE
+nsFtpState::R_cwd() {
+    if (mResponseCode/100 == 2) {
+        if (mAction == PUT)
+            return FTP_S_STOR;
+        
+        return FTP_S_LIST;
+    }
+    
+    return FTP_ERROR;
+}
+
+nsresult
 nsFtpState::S_acct() {
     nsCString acctString("ACCT noaccount" CRLF);
     return SendFTPCommand(acctString);
@@ -1179,7 +1267,7 @@ nsFtpState::R_syst() {
             mServerType = FTP_UNIX_TYPE;
         }
 
-        return FTP_S_TYPE;
+        return FTP_S_PWD;
     }
 
     if (mResponseCode/100 == 5) {   
@@ -1187,7 +1275,7 @@ nsFtpState::R_syst() {
         // No clue.  We will just hope it is UNIX type server.
         mServerType = FTP_UNIX_TYPE;
 
-        return FTP_S_TYPE;
+        return FTP_S_PWD;
     }
     return FTP_ERROR;
 }
@@ -1373,12 +1461,7 @@ nsFtpState::S_list() {
 
     mDRequestForwarder->SetEntityID(nsnull);
 
-    nsCAutoString listString("LIST");
-    if (!mPath.IsEmpty()) {
-        listString.Append(" ");
-        listString.Append(mPath);
-    }    
-    listString.Append(CRLF);
+    nsCAutoString listString("LIST" CRLF);
 
     return SendFTPCommand(listString);
 }
@@ -1457,7 +1540,7 @@ nsFtpState::R_retr() {
         return FTP_S_PASV;
     }
 
-    return FTP_S_LIST;
+    return FTP_S_CWD;
 }
 
 
@@ -1791,14 +1874,9 @@ nsFtpState::R_pasv() {
         }
     }
 
-    if (mRETRFailed) {
-        return FTP_S_LIST;
+    if (mRETRFailed || mPath.IsEmpty() || mPath.Last() == '/') {
+        return FTP_S_CWD;
     }
-
-    // These next two line will break any FTP server the returns tar.gz when issuing 
-    // a RETR for a directory.
-    //    if (mPath.IsEmpty())
-    //    return FTP_S_LIST;
 
     return FTP_S_SIZE;
 }
@@ -2228,6 +2306,7 @@ nsFtpState::KillControlConnection() {
         // Store connection persistant data
         mControlConnection->mServerType = mServerType; 
         mControlConnection->mPassword = mPassword;
+        mControlConnection->mPwd = mPwd;
         nsresult rv = gFtpHandler->InsertConnection(mURI, mControlConnection);
         // Can't cache it?  Kill it then.  
         mControlConnection->Disconnect(rv);
