@@ -23,7 +23,7 @@ char buffer[50000];
 XPI	xpiList[100];
 int xpiLen = -1;
 
-COMPONENT SelectedComponents[100];
+COMPONENT Components[100];
 int		numComponents;
 
 int findXPI(CString xpiname, CString filename)
@@ -260,12 +260,12 @@ void init_components()
 {
 	int i;
 	WIDGET *w = findWidget("SelectedComponents");
-	BuildComponentList(SelectedComponents, &numComponents);
+	BuildComponentList(Components, &numComponents);
 
 	// Turn off components that aren't selected
 	for (i=0; i<numComponents; i++)
-		if (strstr(SelectedComponents[i].name, w->value) == NULL)
-			SelectedComponents[i].selected = FALSE;
+		if (strstr(Components[i].name, w->value) == NULL)
+			Components[i].selected = FALSE;
 
 }
 
@@ -338,7 +338,16 @@ int StartIB(CString parms, WIDGET *curWidget)
 	// Copy remaining default installer files into config
 	// preserving any existing files that we created already
 	// in previous steps
+	/* -- Need to be more selective than this
 	CopyDir(nscpxpiPath, cdPath, NULL, FALSE);
+	*/
+	for (int i=0; i<numComponents; i++)
+	{
+		if (Components[i].selected)
+			CopyFile(nscpxpiPath + Components[i].archive, 
+					 cdPath + Components[i].archive, FALSE);
+	}
+	// Didn't work...
 
 	ReplaceINIFile();
 

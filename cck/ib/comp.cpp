@@ -15,7 +15,7 @@ extern CString iniPath;
 extern CString scriptPath;
 extern CString nscpxpiPath;
 
-extern COMPONENT SelectedComponents[100];
+extern COMPONENT Components[100];
 extern int		numComponents;
 
 extern "C" __declspec(dllexport)
@@ -40,6 +40,7 @@ int BuildComponentList(COMPONENT *comps, int *compNum)
 		GetPrivateProfileString(component, "Attributes", "", 
 			attr, MAX_SIZE, iniPath);
 
+		comps[*compNum].archive  = CString(archive);
 		comps[*compNum].compname = component;
 		comps[*compNum].name 	 = CString(name);
 		comps[*compNum].desc 	 = CString(desc);
@@ -70,30 +71,30 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 		nscpxpiPath = rootPath + "NSCPXPI";
 	iniPath		= nscpxpiPath + "\\config.ini";
 
-	BuildComponentList(SelectedComponents, &numComponents);
+	BuildComponentList(Components, &numComponents);
 
 	int i;
 	CString WidgetValue("");
 	for (i=0; i<numComponents; i++)
 	{
-		curWidget->options.name[i] = new char[strlen(SelectedComponents[i].compname)+1];
-		strcpy(curWidget->options.name[i], SelectedComponents[i].compname);
+		curWidget->options.name[i] = new char[strlen(Components[i].compname)+1];
+		strcpy(curWidget->options.name[i], Components[i].compname);
 
-		curWidget->options.value[i] = new char[strlen(SelectedComponents[i].name)+1];
-		strcpy(curWidget->options.value[i], SelectedComponents[i].name);
+		curWidget->options.value[i] = new char[strlen(Components[i].name)+1];
+		strcpy(curWidget->options.value[i], Components[i].name);
 
-		curWidget->optDesc.name[i]  = new char[strlen(SelectedComponents[i].compname)+1];
-		strcpy(curWidget->optDesc.name[i], SelectedComponents[i].compname);
+		curWidget->optDesc.name[i]  = new char[strlen(Components[i].compname)+1];
+		strcpy(curWidget->optDesc.name[i], Components[i].compname);
 
-		curWidget->optDesc.value[i] = new char[strlen(SelectedComponents[i].desc)+1];
-		strcpy(curWidget->optDesc.value[i], SelectedComponents[i].desc);
+		curWidget->optDesc.value[i] = new char[strlen(Components[i].desc)+1];
+		strcpy(curWidget->optDesc.value[i], Components[i].desc);
 
 		// INVISIBLE just means not selected, let user decide whether to
 		// include them again.  SELECTED components get checkmarks.
-		if (SelectedComponents[i].selected)
+		if (Components[i].selected)
 		{
 			WidgetValue += ",";
-			WidgetValue += SelectedComponents[i].name;
+			WidgetValue += Components[i].name;
 		}
 	}
 
