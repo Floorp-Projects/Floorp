@@ -60,6 +60,7 @@ LLIBS	= \
 
 OBJS =	\
 	.\$(OBJDIR)\nsBrowserInstance.obj \
+	.\$(OBJDIR)\nsBrowserStatusFilter.obj \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -105,6 +105,8 @@
 #include "nsFileStream.h"
 #include "nsIProxyObjectManager.h" 
 
+#include "nsBrowserStatusFilter.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 
 // if DEBUG, NS_BUILD_REFCNT_LOGGING, or MOZ_PERF_METRICS is defined,
 // enable the PageCycler
@@ -961,7 +963,12 @@ static const nsModuleComponentInfo components[] = {
     NS_BROWSERCONTENTHANDLER_CID,
     "@mozilla.org/commandlinehandler/general-startup;1?type=chrome",
     nsBrowserContentHandlerConstructor,
-  } 
+  },
+  { NS_BROWSERSTATUSFILTER_CLASSNAME,
+    NS_BROWSERSTATUSFILTER_CID,
+    NS_BROWSERSTATUSFILTER_CONTRACTID,
+    nsBrowserStatusFilterConstructor
+  }
   
 };
 
