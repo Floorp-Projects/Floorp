@@ -299,25 +299,24 @@ typedef struct dlgSelectComponents
   LPSTR szMessage0;
 } diSC;
 
-typedef struct wiCBstruct
+typedef struct oiCBstruct
 {
   BOOL  bEnabled;
   BOOL  bCheckBoxState;
   LPSTR szDescription;
-  LPSTR szArchive;
-} wiCBs;
+} oiCBs;
 
-typedef struct dlgWindowsIntegration
+typedef struct dlgOS2Integration
 {
   BOOL  bShowDialog;
   LPSTR szTitle;
   LPSTR szMessage0;
   LPSTR szMessage1;
-  wiCBs wiCB0;
-  wiCBs wiCB1;
-  wiCBs wiCB2;
-  wiCBs wiCB3;
-} diWI;
+  oiCBs oiCBMakeDefaultBrowser;
+  oiCBs oiCBAssociateHTML;
+  oiCBs oiCBUpdateCONFIGSYS;
+  LPSTR szHomeDirectory;
+} diOI;
 
 typedef struct dlgProgramFolder
 {

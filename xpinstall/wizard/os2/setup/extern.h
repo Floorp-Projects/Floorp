@@ -74,7 +74,7 @@ extern diL              diLicense;
 extern diST             diSetupType;
 extern diSC             diSelectComponents;
 extern diSC             diSelectAdditionalComponents;
-extern diWI             diWindowsIntegration;
+extern diOI             diOS2Integration;
 extern diPF             diProgramFolder;
 extern diDO             diAdditionalOptions;
 extern diAS             diAdvancedSettings;

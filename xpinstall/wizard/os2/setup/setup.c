@@ -77,7 +77,7 @@ diQL            diQuickLaunch;
 diST            diSetupType;
 diSC            diSelectComponents;
 diSC            diSelectAdditionalComponents;
-diWI            diWindowsIntegration;
+diOI            diOS2Integration;
 diPF            diProgramFolder;
 diDO            diAdditionalOptions;
 diAS            diAdvancedSettings;

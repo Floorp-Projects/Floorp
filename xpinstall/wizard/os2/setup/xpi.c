@@ -330,26 +330,12 @@ void cbXPIStart(const char *URL, const char *UIName)
 
 void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
 {
-  char szFilename[MAX_BUF];
-  char szStrProcessingFileBuf[MAX_BUF];
-  char szStrCopyingFileBuf[MAX_BUF];
+  char szBuf[MAX_BUF];
 
   if(sgProduct.ulMode != SILENT)
   {
-    ParsePath((char *)msg, szFilename, sizeof(szFilename), FALSE, PP_FILENAME_ONLY);
-
-    if(max == 0)
-    {
-      /* Processing file */
-      sprintf(szStrProcessingFileBuf, szStrProcessingFile, szFilename);
-      WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrProcessingFileBuf);
-    }
-    else
-    {
-      /* Copying file */
-      sprintf(szStrCopyingFileBuf, szStrCopyingFile, szFilename);
-      WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrCopyingFileBuf);
-    }
+    TruncateString(WinWindowFromID(dlgInfo.hWndDlg, IDC_STATUS3), msg, szBuf, sizeof(szBuf));
+    WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szBuf);
   }
 
   ProcessWindowsMessages();

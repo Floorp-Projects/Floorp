@@ -372,7 +372,7 @@ HRESULT Initialize(HMODULE hInstance, PSZ szAppName)
 
   // determine the system's TEMP path
   tempEnvVar = getenv("TMP");
-  if (tempEnvVar) {
+  if ((tempEnvVar) && (!(isFAT(tempEnvVar)))) {
     strcpy(szTempDir, tempEnvVar);
   }
   else
@@ -381,7 +381,7 @@ HRESULT Initialize(HMODULE hInstance, PSZ szAppName)
     if (tempEnvVar)
       strcpy(szTempDir, tempEnvVar);
   }
-  if (!tempEnvVar)
+  if ((!tempEnvVar) || (isFAT(tempEnvVar)))
   {
     ULONG ulBootDrive = 0;
     APIRET rc;
@@ -389,6 +389,31 @@ HRESULT Initialize(HMODULE hInstance, PSZ szAppName)
     DosQuerySysInfo(QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
                     &ulBootDrive, sizeof(ulBootDrive));
     buffer[0] = 'A' - 1 + ulBootDrive;
+    if (isFAT(buffer)) {
+       /* Try current disk if boot drive is FAT */
+       ULONG ulDriveNum;
+       ULONG ulDriveMap;
+       strcpy(buffer, " :\\");
+       DosQueryCurrentDisk(&ulDriveNum, &ulDriveMap);
+       buffer[0] = 'A' - 1 + ulDriveNum;
+       if (isFAT(buffer)) {
+         int i;
+         for (i = 2; i < 26; i++) {
+           if ((ulDriveMap<<(31-i)) >> 31) {
+             buffer[0] = 'A' + i;
+             if (!(isFAT(buffer))) {
+                break;
+             }
+           }
+         }
+         if (i == 26) {
+            char szBuf[MAX_BUF];
+            if(NS_LoadString(hSetupRscInst, IDS_ERROR_NO_LONG_FILENAMES, szBuf, MAX_BUF) == WIZ_OK)
+              WinMessageBox(HWND_DESKTOP, HWND_DESKTOP, szBuf, NULL, 0, MB_ICONEXCLAMATION);
+            return(1);
+         }
+       }
+    }
     strcpy(szTempDir, buffer);
     strcat(szTempDir, "TEMP");
   }
@@ -1750,6 +1775,48 @@ HRESULT LaunchApps()
   return(0);
 }
 
+HRESULT ProcessOS2Integration()
+{
+  if (diOS2Integration.oiCBMakeDefaultBrowser.bCheckBoxState == TRUE) {
+    HOBJECT hObjURL = NULLHANDLE;
+    CHAR    szSetupString[1000];
+    CHAR    szTemp[CCHMAXPATH];
+    strcpy(szSetupString, "OBJECTID=<MOZTEMPCONVERSIONURL>");
+    sprintf(szTemp, "%s\\%s", sgProduct.szPath, sgProduct.szProgramName);
+    strcat(szSetupString, ";DEFAULTBROWSER=");
+    strcat(szSetupString, szTemp) ;
+    PrfWriteProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultBrowserExe",
+                          szTemp ) ;
+
+    strcat(szSetupString, ";DEFAULTWORKINGDIR=");
+    strcat(szSetupString, sgProduct.szPath);
+    PrfWriteProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultWorkingDir",
+                          sgProduct.szPath);
+
+#ifdef OLDCODE
+    strcat(szSetupString, ";PARAMETERS=");
+    strcat(szSetupString, pszDefaultParms);
+    PrfWriteProfileString(HINI_USER,
+                          "WPURLDEFAULTSETTINGS",
+                          "DefaultParameters",
+                          pszDefaultParms);
+#endif
+    if (hObjURL = WinCreateObject("WPUrl",
+                                  "Temporary URL",
+                                  szSetupString,
+                                  "<WP_NOWHERE>",
+                                  CO_REPLACEIFEXISTS))
+    {
+      WinDestroyObject(hObjURL);
+    }
+  }
+  return(0);
+}
+
 char *GetOSTypeString(char *szOSType, ULONG ulOSTypeBufSize)
 {
   memset(szOSType, 0, ulOSTypeBufSize);
@@ -2003,7 +2070,7 @@ void DeInitDlgSelectComponents(diSC *diDialog)
   FreeMemory(&(diDialog->szMessage0));
 }
 
-HRESULT InitDlgWindowsIntegration(diWI *diDialog)
+HRESULT InitDlgOS2Integration(diOI *diDialog)
 {
   diDialog->bShowDialog = FALSE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -2012,52 +2079,37 @@ HRESULT InitDlgWindowsIntegration(diWI *diDialog)
     exit(1);
   if((diDialog->szMessage1 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
+  if((diDialog->szHomeDirectory = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    exit(1);
 
-  diDialog->wiCB0.bEnabled = FALSE;
-  diDialog->wiCB1.bEnabled = FALSE;
-  diDialog->wiCB2.bEnabled = FALSE;
-  diDialog->wiCB3.bEnabled = FALSE;
+  diDialog->oiCBMakeDefaultBrowser.bEnabled = FALSE;
+  diDialog->oiCBAssociateHTML.bEnabled = FALSE;
+  diDialog->oiCBUpdateCONFIGSYS.bEnabled = FALSE;
 
-  diDialog->wiCB0.bCheckBoxState = FALSE;
-  diDialog->wiCB1.bCheckBoxState = FALSE;
-  diDialog->wiCB2.bCheckBoxState = FALSE;
-  diDialog->wiCB3.bCheckBoxState = FALSE;
+  diDialog->oiCBMakeDefaultBrowser.bCheckBoxState = FALSE;
+  diDialog->oiCBAssociateHTML.bCheckBoxState = FALSE;
+  diDialog->oiCBUpdateCONFIGSYS.bCheckBoxState = FALSE;
 
-  if((diDialog->wiCB0.szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((diDialog->oiCBMakeDefaultBrowser.szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((diDialog->wiCB1.szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((diDialog->oiCBAssociateHTML.szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((diDialog->wiCB2.szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((diDialog->wiCB3.szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-
-  if((diDialog->wiCB0.szArchive = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((diDialog->wiCB1.szArchive = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((diDialog->wiCB2.szArchive = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((diDialog->wiCB3.szArchive = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((diDialog->oiCBUpdateCONFIGSYS.szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   return(0);
 }
 
-void DeInitDlgWindowsIntegration(diWI *diDialog)
+void DeInitDlgOS2Integration(diOI *diDialog)
 {
   FreeMemory(&(diDialog->szTitle));
   FreeMemory(&(diDialog->szMessage0));
   FreeMemory(&(diDialog->szMessage1));
+  FreeMemory(&(diDialog->szHomeDirectory));
 
-  FreeMemory(&(diDialog->wiCB0.szDescription));
-  FreeMemory(&(diDialog->wiCB1.szDescription));
-  FreeMemory(&(diDialog->wiCB2.szDescription));
-  FreeMemory(&(diDialog->wiCB3.szDescription));
-  FreeMemory(&(diDialog->wiCB0.szArchive));
-  FreeMemory(&(diDialog->wiCB1.szArchive));
-  FreeMemory(&(diDialog->wiCB2.szArchive));
-  FreeMemory(&(diDialog->wiCB3.szArchive));
+  FreeMemory(&(diDialog->oiCBMakeDefaultBrowser.szDescription));
+  FreeMemory(&(diDialog->oiCBAssociateHTML.szDescription));
+  FreeMemory(&(diDialog->oiCBUpdateCONFIGSYS.szDescription));
 }
 
 HRESULT InitDlgProgramFolder(diPF *diDialog)
@@ -4969,7 +5021,7 @@ HRESULT ParseConfigIni(int argc, char *argv[])
     return(1);
   if(InitDlgSelectComponents(&diSelectAdditionalComponents, SM_SINGLE))
     return(1);
-  if(InitDlgWindowsIntegration(&diWindowsIntegration))
+  if(InitDlgOS2Integration(&diOS2Integration))
     return(1);
   if(InitDlgProgramFolder(&diProgramFolder))
     return(1);
@@ -5152,20 +5204,13 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   if(strcmpi(szShowDialog, "TRUE") == 0)
     diSelectAdditionalComponents.bShowDialog = TRUE;
 
-  /* Windows Integration dialog */
-  GetPrivateProfileString("Dialog Windows Integration", "Show Dialog",  "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
-  GetPrivateProfileString("Dialog Windows Integration", "Title",        "", diWindowsIntegration.szTitle,    MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Windows Integration", "Message0",     "", diWindowsIntegration.szMessage0, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Windows Integration", "Message1",     "", diWindowsIntegration.szMessage1, MAX_BUF, szFileIniConfig);
+  /* OS/2 Integration dialog */
+  GetPrivateProfileString("Dialog OS/2 Integration", "Show Dialog",  "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
+  GetPrivateProfileString("Dialog OS/2 Integration", "Title",        "", diOS2Integration.szTitle,    MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog OS/2 Integration", "Message0",     "", diOS2Integration.szMessage0, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog OS/2 Integration", "Message1",     "", diOS2Integration.szMessage1, MAX_BUF, szFileIniConfig);
   if(strcmpi(szShowDialog, "TRUE") == 0)
-    diWindowsIntegration.bShowDialog = TRUE;
-
-  /* Program Folder dialog */
-  GetPrivateProfileString("Dialog Program Folder",      "Show Dialog",  "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
-  GetPrivateProfileString("Dialog Program Folder",      "Title",        "", diProgramFolder.szTitle,         MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Program Folder",      "Message0",     "", diProgramFolder.szMessage0,      MAX_BUF, szFileIniConfig);
-  if(strcmpi(szShowDialog, "TRUE") == 0)
-    diProgramFolder.bShowDialog = TRUE;
+    diOS2Integration.bShowDialog = TRUE;
 
   /* Additional Options dialog */
   GetPrivateProfileString("Dialog Additional Options",       "Show Dialog",    "", szShowDialog,                     sizeof(szShowDialog), szFileIniConfig);
@@ -5221,7 +5266,7 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   else
     diAdditionalOptions.bShowProtocols = TRUE;
 
-   /* Program Folder dialog */
+   /* Quick Launch dialog */
   GetPrivateProfileString("Dialog Quick Launch",      "Show Dialog",  "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
   GetPrivateProfileString("Dialog Quick Launch",      "Title",        "", diQuickLaunch.szTitle,         MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Quick Launch",      "Message0",     "", diQuickLaunch.szMessage0,      MAX_BUF, szFileIniConfig);
@@ -5262,45 +5307,32 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   else if(strcmpi(szShowDialog, "AUTO") == 0)
     diReboot.dwShowDialog = AUTO;
 
-  GetPrivateProfileString("Windows Integration-Item0", "CheckBoxState", "", szBuf,                                    sizeof(szBuf), szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item0", "Description",   "", diWindowsIntegration.wiCB0.szDescription, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item0", "Archive",       "", diWindowsIntegration.wiCB0.szArchive,     MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("OS/2 Integration-Item0", "CheckBoxState", "", szBuf,                                    sizeof(szBuf), szFileIniConfig);
+  GetPrivateProfileString("OS/2 Integration-Item0", "Description",   "", diOS2Integration.oiCBMakeDefaultBrowser.szDescription, MAX_BUF, szFileIniConfig);
   /* Check to see if the checkbox need to be shown at all or not */
-  if(*diWindowsIntegration.wiCB0.szDescription != '\0')
-    diWindowsIntegration.wiCB0.bEnabled = TRUE;
+  if(*diOS2Integration.oiCBMakeDefaultBrowser.szDescription != '\0')
+    diOS2Integration.oiCBMakeDefaultBrowser.bEnabled = TRUE;
   /* check to see if the checkbox needs to be checked by default or not */
   if(strcmpi(szBuf, "TRUE") == 0)
-    diWindowsIntegration.wiCB0.bCheckBoxState = TRUE;
+    diOS2Integration.oiCBMakeDefaultBrowser.bCheckBoxState = TRUE;
 
-  GetPrivateProfileString("Windows Integration-Item1", "CheckBoxState", "", szBuf,                           sizeof(szBuf), szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item1", "Description",   "", diWindowsIntegration.wiCB1.szDescription, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item1", "Archive",       "", diWindowsIntegration.wiCB1.szArchive, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("OS/2 Integration-Item1", "CheckBoxState", "", szBuf,                           sizeof(szBuf), szFileIniConfig);
+  GetPrivateProfileString("OS/2 Integration-Item1", "Description",   "", diOS2Integration.oiCBAssociateHTML.szDescription, MAX_BUF, szFileIniConfig);
   /* Check to see if the checkbox need to be shown at all or not */
-  if(*diWindowsIntegration.wiCB1.szDescription != '\0')
-    diWindowsIntegration.wiCB1.bEnabled = TRUE;
+  if(*diOS2Integration.oiCBAssociateHTML.szDescription != '\0')
+    diOS2Integration.oiCBAssociateHTML.bEnabled = TRUE;
   /* check to see if the checkbox needs to be checked by default or not */
   if(strcmpi(szBuf, "TRUE") == 0)
-    diWindowsIntegration.wiCB1.bCheckBoxState = TRUE;
+    diOS2Integration.oiCBAssociateHTML.bCheckBoxState = TRUE;
 
-  GetPrivateProfileString("Windows Integration-Item2", "CheckBoxState", "", szBuf,                           sizeof(szBuf), szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item2", "Description",   "", diWindowsIntegration.wiCB2.szDescription, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item2", "Archive",       "", diWindowsIntegration.wiCB2.szArchive, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("OS/2 Integration-Item2", "CheckBoxState", "", szBuf,                           sizeof(szBuf), szFileIniConfig);
+  GetPrivateProfileString("OS/2 Integration-Item2", "Description",   "", diOS2Integration.oiCBUpdateCONFIGSYS.szDescription, MAX_BUF, szFileIniConfig);
   /* Check to see if the checkbox need to be shown at all or not */
-  if(*diWindowsIntegration.wiCB2.szDescription != '\0')
-    diWindowsIntegration.wiCB2.bEnabled = TRUE;
+  if(*diOS2Integration.oiCBUpdateCONFIGSYS.szDescription != '\0')
+    diOS2Integration.oiCBUpdateCONFIGSYS.bEnabled = TRUE;
   /* check to see if the checkbox needs to be checked by default or not */
   if(strcmpi(szBuf, "TRUE") == 0)
-    diWindowsIntegration.wiCB2.bCheckBoxState = TRUE;
-
-  GetPrivateProfileString("Windows Integration-Item3", "CheckBoxState", "", szBuf,                           sizeof(szBuf), szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item3", "Description",   "", diWindowsIntegration.wiCB3.szDescription, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item3", "Archive",       "", diWindowsIntegration.wiCB3.szArchive, MAX_BUF, szFileIniConfig);
-  /* Check to see if the checkbox need to be shown at all or not */
-  if(*diWindowsIntegration.wiCB3.szDescription != '\0')
-    diWindowsIntegration.wiCB3.bEnabled = TRUE;
-  /* check to see if the checkbox needs to be checked by default or not */
-  if(strcmpi(szBuf, "TRUE") == 0)
-    diWindowsIntegration.wiCB3.bCheckBoxState = TRUE;
+    diOS2Integration.oiCBUpdateCONFIGSYS.bCheckBoxState = TRUE;
 
   /* Read in the Site Selector Status */
   GetPrivateProfileString("Site Selector", "Status", "", szBuf, sizeof(szBuf), szFileIniConfig);
@@ -5316,7 +5348,7 @@ HRESULT ParseConfigIni(int argc, char *argv[])
       diSetupType.bShowDialog                   = FALSE;
       diSelectComponents.bShowDialog            = FALSE;
       diSelectAdditionalComponents.bShowDialog  = FALSE;
-      diWindowsIntegration.bShowDialog          = FALSE;
+      diOS2Integration.bShowDialog          = FALSE;
       diProgramFolder.bShowDialog               = FALSE;
       diQuickLaunch.bShowDialog                 = FALSE;
       diAdditionalOptions.bShowDialog             = FALSE;
@@ -6117,6 +6149,35 @@ HRESULT FileExists(PSZ szFile)
   return (FALSE);
 }
 
+BOOL isFAT(char* szPath)
+{
+    APIRET rc;
+    ULONG ulSize;
+    PFSQBUFFER2 pfsqbuf2;
+    CHAR szDrive[3];
+
+    ulSize = sizeof(FSQBUFFER2) + 3 * CCHMAXPATH;
+    pfsqbuf2 = (PFSQBUFFER2)malloc(ulSize);
+    strncpy(szDrive, szPath, 2);
+    szDrive[2] = '\0';
+
+    DosError(FERR_DISABLEHARDERR);
+    rc = DosQueryFSAttach(szDrive, 0, FSAIL_QUERYNAME,
+                          pfsqbuf2, &ulSize);
+    DosError(FERR_ENABLEHARDERR);
+
+    if (rc == NO_ERROR) {
+      if (strcmp(pfsqbuf2->szFSDName + pfsqbuf2->cbName, "FAT") == 0) {
+        return TRUE;
+      }
+    }
+  if (rc == NO_ERROR) {
+    return FALSE;
+  } else {
+    return TRUE;
+  }
+}
+
 BOOL NeedReboot()
 {
    if(diReboot.dwShowDialog == AUTO)
@@ -6440,7 +6501,7 @@ void DeInitialize()
   DeInitDlgAdditionalOptions(&diAdditionalOptions);
   DeInitDlgAdvancedSettings(&diAdvancedSettings);
   DeInitDlgProgramFolder(&diProgramFolder);
-  DeInitDlgWindowsIntegration(&diWindowsIntegration);
+  DeInitDlgOS2Integration(&diOS2Integration);
   DeInitDlgSelectComponents(&diSelectAdditionalComponents);
   DeInitDlgSelectComponents(&diSelectComponents);
   DeInitDlgSetupType(&diSetupType);
