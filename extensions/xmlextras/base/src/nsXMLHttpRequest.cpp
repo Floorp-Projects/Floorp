@@ -362,9 +362,9 @@ nsXMLHttpRequest::DispatchEvent(nsIDOMEvent *evt, PRBool *_retval)
   return NS_OK;
 }
 
-/* attribute nsIOnReadystatechangeHandler onreadystatechange; */
+/* attribute nsIOnReadyStateChangeHandler onreadystatechange; */
 NS_IMETHODIMP
-nsXMLHttpRequest::GetOnreadystatechange(nsIOnReadystatechangeHandler * *aOnreadystatechange)
+nsXMLHttpRequest::GetOnreadystatechange(nsIOnReadyStateChangeHandler * *aOnreadystatechange)
 {
   NS_ENSURE_ARG_POINTER(aOnreadystatechange);
 
@@ -375,7 +375,7 @@ nsXMLHttpRequest::GetOnreadystatechange(nsIOnReadystatechangeHandler * *aOnready
 }
 
 NS_IMETHODIMP
-nsXMLHttpRequest::SetOnreadystatechange(nsIOnReadystatechangeHandler * aOnreadystatechange)
+nsXMLHttpRequest::SetOnreadystatechange(nsIOnReadyStateChangeHandler * aOnreadystatechange)
 {
   mOnReadystatechangeListener = aOnreadystatechange;
 

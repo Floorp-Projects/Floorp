@@ -140,7 +140,7 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mOnLoadListener;
   nsCOMPtr<nsIDOMEventListener> mOnErrorListener;
 
-  nsCOMPtr<nsIOnReadystatechangeHandler> mOnReadystatechangeListener;
+  nsCOMPtr<nsIOnReadyStateChangeHandler> mOnReadystatechangeListener;
 
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
   nsCOMPtr<nsIEventQueueService> mEventQService;

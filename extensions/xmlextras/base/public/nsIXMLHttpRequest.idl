@@ -279,7 +279,7 @@ interface nsIXMLHttpRequest : nsISupports
 
 
 [scriptable, function, uuid(6459B7CE-6B57-4934-A0AF-0133BA6F9085)]
-interface nsIOnReadystatechangeHandler : nsISupports {
+interface nsIOnReadyStateChangeHandler : nsISupports {
   /**
    * Helper to implement the onreadystatechange callback member.
    * You should not need to use this.
@@ -324,7 +324,7 @@ interface nsIJSXMLHttpRequest : nsISupports {
    * After the initial response, all event listeners will be cleared.
    * Call open() before setting new event listeners.
    */
-  attribute nsIOnReadystatechangeHandler onreadystatechange;
+  attribute nsIOnReadyStateChangeHandler onreadystatechange;
 };
 
 %{ C++
