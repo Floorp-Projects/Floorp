@@ -531,8 +531,7 @@ printCertCB(CERTCertificate *cert, void *arg)
 }
 
 static SECStatus
-dumpChain(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
-          PRBool raw, PRBool ascii, PRFileDesc *outfile, void *pwarg)
+DumpChain(CERTCertDBHandle *handle, char *name)
 {
     SECStatus rv;
     CERTCertificate *the_cert;
@@ -641,29 +640,6 @@ ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
     }
     return rv;
 }
-
-static SECStatus
-DumpChain(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
-          PRBool raw, PRBool ascii, PRFileDesc *outfile, secuPWData *pwdata)
-{
-    SECStatus rv;
-
-    if (slot == NULL) {
-	PK11SlotList *list;
-	PK11SlotListElement *le;
-
-	list= PK11_GetAllTokens(CKM_INVALID_MECHANISM,
-						PR_FALSE,PR_FALSE,pwdata);
-	if (list) for (le = list->head; le; le = le->next) {
-	    printf("\n\nListing certificates for %s:\n\n", PK11_GetSlotName(le->slot));
-	    rv = dumpChain(handle,name,le->slot,raw,ascii,outfile,pwdata);
-	}
-    } else {
-	rv = dumpChain(handle,name,slot,raw,ascii,outfile,pwdata);
-    }
-    return rv;
-}
-
 
 static SECStatus 
 DeleteCert(CERTCertDBHandle *handle, char *name)
@@ -2531,10 +2507,7 @@ main(int argc, char **argv)
 	goto shutdown;
     }
     if (certutil.commands[cmd_DumpChain].activated) {
-	rv = DumpChain(certHandle, name, slot,
-	               certutil.options[opt_BinaryDER].activated,
-	               certutil.options[opt_ASCIIForIO].activated, 
-                       (outFile) ? outFile : PR_STDOUT, &pwdata);
+	rv = DumpChain(certHandle, name);
 	goto shutdown;
     }
     /*  XXX needs work  */
