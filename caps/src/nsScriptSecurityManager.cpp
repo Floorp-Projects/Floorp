@@ -151,6 +151,17 @@ nsScriptSecurityManager::CheckConnect(JSContext* aJSContext,
                                       const char* aClassName,
                                       const char* aPropertyName)
 {
+    // Get a context if necessary
+    if (!aJSContext)
+    {
+        aJSContext = GetCurrentContextQuick();
+        if (!aJSContext)
+            return NS_OK; // No JS context, so allow the load
+    }
+
+    nsresult rv = CheckLoadURIFromScript(aJSContext, aTargetURI);
+    if (NS_FAILED(rv)) return rv;
+
     return CheckPropertyAccessImpl(nsIXPCSecurityManager::ACCESS_GET_PROPERTY, nsnull,
                                    aJSContext, nsnull, nsnull, aTargetURI,
                                    nsnull, nsnull, aClassName, aPropertyName, nsnull);
@@ -180,12 +191,14 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
           printf("### CheckPropertyAccess(%s.%s, %i) ", aClassName, aProperty, aAction);
     else
     {
-        nsXPIDLCString classDescription;
+        nsXPIDLCString classNameStr;
+        const char* className;
         if (aClassInfo)
-            aClassInfo->GetClassDescription(getter_Copies(classDescription));
-        if(!classDescription)
-            classDescription = "UnknownClass";
-        nsCAutoString propertyStr(classDescription);
+            aClassInfo->GetClassDescription(getter_Copies(classNameStr));
+        className = classNameStr.get();
+        if(!className)
+            className = "UnknownClass";
+        nsCAutoString propertyStr(className);
         propertyStr += '.';
         propertyStr.AppendWithConversion((PRUnichar*)JSValIDToString(aJSContext, aName));
 
@@ -590,14 +603,6 @@ nsScriptSecurityManager::GetPrefName(nsIPrincipal* principal,
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
 {
-    // Get a context if necessary
-    if (!cx)
-    {
-        cx = GetCurrentContextQuick();
-        if (!cx)
-            return NS_OK; // No JS context, so allow the load
-    }
-
     // Get principal of currently executing script.
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal))))
@@ -1303,11 +1308,14 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
     JSStackFrame *fp = nsnull;
     JSContext *cx = GetCurrentContextQuick();
     fp = cx ? JS_FrameIterator(cx, &fp) : nsnull;
-    if (!fp) {
+    if (!fp)
+    {
         // No script code on stack. Allow execution.
         *result = PR_TRUE;
         return NS_OK;
     }
+    *result = PR_FALSE;
+    nsCOMPtr<nsIPrincipal> previousPrincipal;
     do
     {
         nsCOMPtr<nsIPrincipal> principal;
@@ -1315,30 +1323,32 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
             return NS_ERROR_FAILURE;
         if (!principal)
             continue;
+        // If caller has a different principal, stop looking up the stack.
+        if(previousPrincipal)
+        {
+            PRBool isEqual = PR_FALSE;
+            if(NS_FAILED(previousPrincipal->Equals(principal, &isEqual)) || !isEqual)
+                break;
+        }
+        else
+            previousPrincipal = principal;
 
         // First check if the principal is even able to enable the 
         // given capability. If not, don't look any further.
         PRInt16 canEnable;
         rv = principal->CanEnableCapability(capability, &canEnable);
-        if (NS_FAILED(rv))
-            return rv;
+        if (NS_FAILED(rv)) return rv;
         if (canEnable != nsIPrincipal::ENABLE_GRANTED &&
             canEnable != nsIPrincipal::ENABLE_WITH_USER_PERMISSION) 
-        {
-            *result = PR_FALSE;
             return NS_OK;
-        }
 
         // Now see if the capability is enabled.
         void *annotation = JS_GetFrameAnnotation(cx, fp);
-        rv = principal->IsCapabilityEnabled(capability, annotation, 
-                                            result);
-        if (NS_FAILED(rv))
-            return rv;
+        rv = principal->IsCapabilityEnabled(capability, annotation, result);
+        if (NS_FAILED(rv)) return rv;
         if (*result)
             return NS_OK;
     } while ((fp = JS_FrameIterator(cx, &fp)) != nsnull);
-    *result = PR_FALSE;
     return NS_OK;
 }
 
@@ -1511,7 +1521,7 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
     JSContext *cx = GetCurrentContextQuick();
     JSStackFrame *fp;
 
-    //Error checks for capability string length (200)
+    //-- Error checks for capability string length (200)
     if(PL_strlen(capability)>200)
     {
 		static const char msg[] = "Capability name too long";
