@@ -82,6 +82,14 @@ sub getArguments {
     $self->notImplemented();
 }
 
+# returns all the arguments present that begin with a specific string
+# followed by a dot (the keys in the hash returned do not start with
+# the prefix)
+sub getArgumentsBranch {
+    my $self = shift;
+    $self->notImplemented();
+}
+
 sub hash {
     my $self = shift;
     return {
