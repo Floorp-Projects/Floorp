@@ -104,7 +104,7 @@ nsIMAPBodyShell::nsIMAPBodyShell(nsImapProtocol *protocolConnection, const char 
 	if (!buf)
 		return;
 	m_UID = "";
-	m_UID.AppendInt(UID, 10);
+	m_UID.AppendInt(UID);
 #ifdef DEBUG_chrisf
 	NS_ASSERTION(folderName);
 #endif
@@ -1676,7 +1676,7 @@ nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(PRUint32 UID, const char 
 {
 	nsCString uidString;
 	
-	uidString.AppendInt(UID, 10);
+	uidString.AppendInt(UID);
 	nsIMAPBodyShell *rv = FindShellForUID(uidString, mailboxName);
 	return rv;
 }

@@ -379,7 +379,7 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctx
         PRUnichar *errorMsg = FormatStringWithHostNameByID(errorID, msgUrl);
         if (errorMsg == nsnull) {
           nsAutoString resultString(NS_LITERAL_STRING("[StringID "));
-          resultString.AppendInt(errorID, 10);
+          resultString.AppendInt(errorID);
           resultString.Append(NS_LITERAL_STRING("?]"));
           errorMsg = ToNewUnicode(resultString);
         }

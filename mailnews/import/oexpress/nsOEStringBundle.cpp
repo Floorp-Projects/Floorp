@@ -113,7 +113,7 @@ PRUnichar *nsOEStringBundle::GetStringByID(PRInt32 stringID, nsIStringBundle *pB
 
 	nsString resultString;
 	resultString.Append(NS_LITERAL_STRING("[StringID "));
-	resultString.AppendInt(stringID, 10);
+	resultString.AppendInt(stringID);
 	resultString.Append(NS_LITERAL_STRING("?]"));
 
 	return( ToNewUnicode(resultString));

@@ -3692,7 +3692,7 @@ nsresult nsNNTPProtocol::GetNewsStringByID(PRInt32 stringID, PRUnichar **aString
 
 		if (NS_FAILED(rv)) {
 			resultString.Assign(NS_LITERAL_STRING("[StringID"));
-			resultString.AppendInt(stringID, 10);
+			resultString.AppendInt(stringID);
 			resultString.Append(NS_LITERAL_STRING("?]"));
 			*aString = ToNewUnicode(resultString);
 		}

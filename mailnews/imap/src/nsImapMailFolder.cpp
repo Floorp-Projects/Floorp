@@ -1885,9 +1885,9 @@ nsImapMailFolder::AllocateUidStringFromKeys(nsMsgKey *keys, PRInt32 numKeys, nsC
     }
     else if (curSequenceEnd > startSequence)
     {
-      msgIds.AppendInt(startSequence, 10);
+      msgIds.AppendInt(startSequence);
       msgIds += ':';
-      msgIds.AppendInt(curSequenceEnd, 10);
+      msgIds.AppendInt(curSequenceEnd);
       if (!lastKey)
         msgIds += ',';
       startSequence = nextKey;
@@ -1897,7 +1897,7 @@ nsImapMailFolder::AllocateUidStringFromKeys(nsMsgKey *keys, PRInt32 numKeys, nsC
     {
       startSequence = nextKey;
       curSequenceEnd = startSequence;
-      msgIds.AppendInt(keys[keyIndex], 10);
+      msgIds.AppendInt(keys[keyIndex]);
       if (!lastKey)
         msgIds += ',';
     }

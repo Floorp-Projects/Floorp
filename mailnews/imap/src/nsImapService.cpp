@@ -908,7 +908,7 @@ nsresult nsImapService::DecomposeImapURI(const char * aMessageURI, nsIMsgFolder 
 
     if (msgKey) {
       nsCAutoString messageIdString;
-      messageIdString.AppendInt(msgKey, 10 /* base 10 */);
+      messageIdString.AppendInt(msgKey);
       *aMsgKey = ToNewCString(messageIdString);
     }
 
@@ -1368,7 +1368,7 @@ nsImapService::Biff(nsIEventQueue * aClientEventQueue,
             GetFolderName(aImapMailFolder, getter_Copies(folderName));
             urlSpec.Append((const char *) folderName);
 			urlSpec.Append(">");
-			urlSpec.AppendInt(uidHighWater, 10);
+			urlSpec.AppendInt(uidHighWater);
 			rv = uri->SetSpec(urlSpec);
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
@@ -1624,7 +1624,7 @@ nsresult nsImapService::DiddleFlags(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
 			urlSpec.Append('>');
-			urlSpec.AppendInt(flags, 10);
+			urlSpec.AppendInt(flags);
 			rv = uri->SetSpec(urlSpec);
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,

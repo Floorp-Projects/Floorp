@@ -392,9 +392,9 @@ void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &retu
     }
     else if (curSequenceEnd > startSequence)
     {
-      returnString.AppendInt(startSequence, 10);
+      returnString.AppendInt(startSequence);
       returnString += ':';
-      returnString.AppendInt(curSequenceEnd, 10);
+      returnString.AppendInt(curSequenceEnd);
       if (!lastKey)
         returnString += ',';
 //      sprintf(currentidString, "%ld:%ld,", startSequence, curSequenceEnd);
@@ -405,7 +405,7 @@ void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &retu
     {
       startSequence = nextKey;
       curSequenceEnd = startSequence;
-      returnString.AppendInt(msgUids[keyIndex], 10);
+      returnString.AppendInt(msgUids[keyIndex]);
       if (!lastKey)
         returnString += ',';
 //      sprintf(currentidString, "%ld,", msgUids[keyIndex]);
