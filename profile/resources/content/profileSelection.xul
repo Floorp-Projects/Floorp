@@ -61,10 +61,13 @@
       <box orient="vertical" id="manager">
         <html class="label" style="width: 200px;">&pmTextA.label;</html>
         <spring flex="1"/>
-        <box orient="vertical" autostretch="never" id="managebuttons">
-          <button id="newbutton" value="&newButton.label;" onclick="CreateProfileWizard();"/>
-          <button id="renbutton" value="&renameButton.label;" onclick="RenameProfile();"/>
-          <button id="delbutton" value="&deleteButton.label;" onclick="ConfirmDelete();"/>
+        <box>
+          <box orient="vertical" flex="1" id="managebuttons">
+            <button id="newbutton" value="&newButton.label;" oncommand="CreateProfileWizard();"/>
+            <button id="renbutton" value="&renameButton.label;" oncommand="RenameProfile();"/>
+            <button id="delbutton" value="&deleteButton.label;" oncommand="ConfirmDelete();"/>
+          </box>
+          <spring flex="2"/>
         </box>
       </box>
     </deck>  
