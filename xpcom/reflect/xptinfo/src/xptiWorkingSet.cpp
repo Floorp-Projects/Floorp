@@ -71,7 +71,7 @@ IIDMatch(PLDHashTable *table,
     return iid1 == iid2 || iid1->Equals(*iid2);
 }       
           
-static struct PLDHashTableOps IIDTableOps =
+const static struct PLDHashTableOps IIDTableOps =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
@@ -101,7 +101,7 @@ NameMatch(PLDHashTable *table,
     return str1 == str2 || 0 == PL_strcmp(str1, str2);
 }       
 
-static struct PLDHashTableOps NameTableOps =
+static const struct PLDHashTableOps NameTableOps =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
