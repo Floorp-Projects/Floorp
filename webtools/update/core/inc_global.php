@@ -63,6 +63,10 @@ foreach ($_GET as $key => $val) {
 $_GET["$key"] = htmlentities(str_replace("\\","",strip_tags($_GET["$key"])));
 }
 
+foreach ($_POST as $key => $val) {
+$_POST["$key"] = htmlentities(str_replace("\\","",strip_tags($_POST["$key"])));
+}
+
 // Bug 250596 Fixes for incoming $_GET variables.
 if ($_GET["application"]) {
 $_GET["application"] = escape_string(strtolower($_GET["application"]));
