@@ -44,9 +44,29 @@ public:
 
   // nsIMsgAppCore
   NS_IMETHOD GetNewMail();
+
+private:
+  nsString m_Id;
   
 };
 
+//
+// nsMsgAppCore
+//
+nsMsgAppCore::nsMsgAppCore()
+{
+  NS_INIT_REFCNT();
+
+}
+
+nsMsgAppCore::~nsMsgAppCore()
+{
+
+}
+
+//
+// nsISupports
+//
 NS_IMPL_ADDREF(nsMsgAppCore);
 NS_IMPL_RELEASE(nsMsgAppCore);
 
@@ -84,37 +104,62 @@ nsMsgAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-
-
-nsMsgAppCore::nsMsgAppCore()
-{
-  NS_INIT_REFCNT();
-
-}
-
-nsMsgAppCore::~nsMsgAppCore()
-{
-
-}
-
+//
+// nsIScriptObjectOwner
+//
 nsresult
 nsMsgAppCore::GetScriptObject(nsIScriptContext *aContext, void **aScriptObject)
 {
 
-
+  return NS_OK;
 }
 
 nsresult
 nsMsgAppCore::SetScriptObject(void* aScriptObject)
 {
-
+  
+  return NS_OK;
 } 
 
+//
+// nsIDOMBaseAppCore
+//
+nsresult
+nsMsgAppCore::Init(const nsString& aId)
+{
+  m_Id = aId;
+  return NS_OK;
+}
 
+
+nsresult
+nsMsgAppCore::GetId(nsString& aId)
+{
+  aId = m_Id;
+  return NS_OK;
+}
+
+//
+// nsIMsgAppCore
+//
 nsresult
 nsMsgAppCore::GetNewMail()
 {
 
-
+  return NS_OK;
 }
                               
+extern "C"
+nsresult
+NS_NewMsgAppCore(nsIDOMMsgAppCore **aResult)
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+
+  nsMsgAppCore *appcore = new nsMsgAppCore();
+  if (appcore) {
+    return appcore->QueryInterface(kIMsgAppCoreIID,
+                                   (void **)aResult);
+
+  }
+  return NS_ERROR_NOT_INITIALIZED;
+}
