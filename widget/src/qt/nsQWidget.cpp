@@ -1109,16 +1109,19 @@ nsQWidget::~nsQWidget()
 void qt_enter_modal(QWidget*);          // defined in qapplication_x11.cpp
 void qt_leave_modal(QWidget*);          // --- "" ---
 
+#if QT_VERSION < 300
+#define NS_QT_SHOW_MODAL Qt::WType_Modal
+#else
+#define NS_QT_SHOW_MODAL Qt::WShowModal
+#endif
 void nsQWidget::SetModal(PRBool aState)
 {
   if (aState) {
-    setWFlags(Qt::WShowModal);
-//    setWState(Qt::WState_Modal);
+    setWFlags(NS_QT_SHOW_MODAL);
     qt_enter_modal(this);
   }
   else {
-    clearWFlags(Qt::WShowModal);
-//    clearWState(Qt::WState_Modal);
+    clearWFlags(NS_QT_SHOW_MODAL);
     qt_leave_modal(this);
   }
 }

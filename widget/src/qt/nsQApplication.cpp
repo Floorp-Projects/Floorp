@@ -41,7 +41,11 @@
 #include "nsQApplication.h"
 #include "nsQWidget.h"
 
+#if QT_VERSION >= 300
 #include <qstylefactory.h>
+#else
+#include <qwindowsstyle.h>
+#endif
 #include <qcursor.h>
 
 #ifdef DBG_JCG
@@ -135,7 +139,13 @@ nsQApplication::nsQApplication(int argc,char** argv)
   NS_ASSERTION(!mInstance, "Attempt to create duplicate QApplication Object.");
   mInstance = this;
   setGlobalMouseTracking(true);
+#if QT_VERSION >= 300
   setStyle(QStyleFactory::create("windows"));
+#else
+  //XXX this line seems to have linking problems w/ debian
+  //    this code should eventually be changed anyway for nsITheme reasons
+  setStyle(new QWindowsStyle());
+#endif
   setOverrideCursor(QCursor(ArrowCursor),PR_TRUE);
   connect(this,SIGNAL(lastWindowClosed()),this,SLOT(quit()));
   printf("Exit: QApplication::QApplication\n");
