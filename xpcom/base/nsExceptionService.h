@@ -62,7 +62,7 @@ public:
   static PRLock* lock;
 
   static PRUintn tlsIndex;
-  static void ThreadDestruct( void *data );
+  static void PR_CALLBACK ThreadDestruct( void *data );
 #ifdef NS_DEBUG
   static PRInt32 totalInstances;
 #endif
