@@ -57,60 +57,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["browserStartupHomepage", "tabBackground", "downloadDir", "defaultDir"];
-
-    function selectFolder()
-    { 
-      const nsIFilePicker = Components.interfaces.nsIFilePicker;
-      const nsILocalFile = Components.interfaces.nsILocalFile;
-      var fp = Components.classes["@mozilla.org/filepicker;1"]
-                         .createInstance(nsIFilePicker);
-      var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-
-      var prefbundle = document.getElementById("bundle_prefutilities");
-      var description = prefbundle.getString("downloadDirTitle");
-      fp.init(window, description, nsIFilePicker.modeGetFolder);
-      try 
-      {
-        var initialDir = pref.getComplexValue("browser.download.dir", nsILocalFile);
-        if (initialDir)
-          fp.displayDirectory = initialDir;
-      }
-      catch (ex)
-      {
-        // ignore exception: file picker will open at default location
-      }
-      fp.appendFilters(nsIFilePicker.filterAll);
-      var ret = fp.show();
-    
-      var folderField = document.getElementById("defaultDir");
-      if (ret == nsIFilePicker.returnOK) {
-        var localFile = fp.file.QueryInterface(nsILocalFile);
-        var viewable = fp.file.path;
-        folderField.value = viewable;
-        pref.setComplexValue("browser.download.dir", nsILocalFile, localFile)
-      }
-      else if (ret == nsIFilePicker.returnCancel) {
-        if (folderField.value == "") {
-          var downloadDir = document.getElementById("downloadDir");
-          downloadDir.selectedItem = document.getElementById("alwaysAskRadio");
-        }
-      }
-    }
-    function doEnabling(aRadioButton)
-    {
-      if (aRadioButton.localName != "radio")
-        return;
-        
-      var textbox = document.getElementById("defaultDir");
-      var button = document.getElementById("browse");
-      var disable = aRadioButton.id == "alwaysAskRadio";
-      textbox.disabled = disable;
-      button.disabled = disable;
-      if (!disable && textbox.value == "") 
-        selectFolder();
-    }
+    var _elementIDs = ["browserStartupHomepage", "tabBackground"];
     
 #ifdef XP_WIN
      // "Install" the SetFields function.  This will be
@@ -230,19 +177,6 @@
               label="&background.label;" 
               prefstring="browser.tabs.loadInBackground"/>
   </groupbox>
-  <groupbox orient="horizontal">
-    <caption label="&defaultDir.label;"/>
-    <radiogroup id="downloadDir" oncommand="doEnabling(event.target);" flex="1"
-                preftype="bool" prefstring="browser.download.useDownloadDir">
-      <radio id="alwaysAskRadio" label="&rememberLast.label;" value="false"/>
-      <hbox flex="1">
-        <radio id="useDownloadDirRadio" label="&useDownloadDir.label;" value="true"/>
-        <textbox id="defaultDir" flex="1" prefstring="browser.download.dir"
-                 onchange="checkDownloadDirectory();"/>
-        <button id="browse" label="&browse.label;" oncommand="selectFolder();"/>
-      </hbox>
-    </radiogroup>
-  </groupbox>
 #ifdef XP_WIN
   <groupbox orient="horizontal">
     <caption label="&defaultBrowserGroup.label;"/>
@@ -254,5 +188,15 @@
       </hbox>
    </groupbox>
 #endif
+
+  <groupbox>
+    <caption label="&connectionsInfo.caption;"/>
+    <hbox align="center">
+      <description flex="1">&proxiesInfo.label;</description>
+      <button id="catProxiesButton" label="&showConnections.label;" 
+              accesskey="&showConnections.accesskey;" 
+              oncommand="showConnections();"/>
+    </hbox>
+  </groupbox>
 </page>
 

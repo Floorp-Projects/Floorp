@@ -1,7 +1,6 @@
 <!-- extracted from content/pref-fonts.xul -->
 
-<!-- LOCALIZATION NOTE : FILE 'Fonts' prefs dialog -->
-<!ENTITY  lHeader                                 "Fonts &amp; Colors">
+<!ENTITY  prefFontsDialog.title                   "Fonts &amp; Colors">
 
 <!ENTITY  language.label                          "Fonts for:">
 <!ENTITY  language.accesskey                      "t">
