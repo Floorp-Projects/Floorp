@@ -2385,7 +2385,14 @@ GetMapFor10646Font(XFontStruct* aFont)
     PRInt32 offset = (((row - minByte1) * charsPerRow) - minByte2);
     for (PRInt32 cell = minByte2; cell <= maxByte2; cell++) {
       XCharStruct* bounds = &aFont->per_char[offset + cell];
-      if (bounds->ascent || bounds->descent) {
+      // From Section 8.5 Font Metrics in the Xlib programming manual:
+      // A nonexistent character is represented with all members of its XCharStruct set to zero. 
+      if (bounds->ascent ||
+          bounds->descent ||
+          bounds->lbearing ||
+          bounds->rbearing ||
+          bounds->width ||
+          bounds->attributes) {
         ccmapObj.SetChar((row << 8) | cell);
       }
     }
