@@ -31,6 +31,10 @@
 #include "nsMemory.h"
 #include "nsIStreamListener.h"
 #include "nsIMIMEService.h"
+#include "nsILoadGroup.h"
+#include "nsCURILoader.h"
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
 
 // used to manage our in memory data source of helper applications
 #include "nsRDFCID.h"
@@ -68,6 +72,8 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { TEXT_PLAIN, "txt,text", "Text File", 'TEXT', 'ttxt' },
 #if defined(VMS)
   { APPLICATION_OCTET_STREAM, "exe,bin,sav,bck,pcsi,dcx_axpexe,dcx_vaxexe,sfx_axpexe,sfx_vaxexe", "Binary Executable", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
+#elif defined(XP_MAC) // don't define .bin on the mac...use internet config to look that up...
+  { APPLICATION_OCTET_STREAM, "exe", "Binary Executable", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
 #else
   { APPLICATION_OCTET_STREAM, "exe,bin", "Binary Executable", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
 #endif
@@ -462,6 +468,8 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
    NS_INTERFACE_MAP_ENTRY(nsIHelperAppLauncher)   
+   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalAppHandler::nsExternalAppHandler()
@@ -477,6 +485,64 @@ nsExternalAppHandler::~nsExternalAppHandler()
 {
   if (mDataBuffer)
     nsMemory::Free(mDataBuffer);
+}
+
+NS_IMETHODIMP nsExternalAppHandler::GetInterface(const nsIID & aIID, void * *aInstancePtr)
+{
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+  return QueryInterface(aIID, aInstancePtr);
+}
+
+
+NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListener * aWebProgressListener)
+{
+  if (mLoadCookie) 
+  {
+    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+
+    if (webProgress) 
+    {
+      mWebProgressListener = aWebProgressListener;
+      webProgress->AddProgressListener(mWebProgressListener);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::GetDownloadInfo(nsIURI ** aSourceUrl, nsIFile ** aTarget)
+{
+  if (mFinalFileDestination)
+  {
+    *aTarget = mFinalFileDestination;
+  }
+  else
+    *aTarget = mTempFile;
+
+  NS_IF_ADDREF(*aTarget);
+
+  *aSourceUrl = mSourceUrl;
+  NS_IF_ADDREF(*aSourceUrl);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::CloseProgressWindow()
+{
+  // make our docloader release the progress listener from the progress window...
+  if (mLoadCookie && mWebProgressListener) 
+  {
+    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+
+    if (webProgress) 
+    {
+      webProgress->RemoveProgressListener(mWebProgressListener);
+    }
+  }
+
+  // release extra state...
+  mWebProgressListener = nsnull;
+  mLoadCookie = nsnull;
+  return NS_OK;
 }
 
 void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel * aChannel)
@@ -512,12 +578,37 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel * aCha
               dispFileName.Truncate(pos);
 
             // ONLY if we got here, will we remember the suggested file name...
-            mHTTPSuggestedFileName.AssignWithConversion(dispFileName);
+            mSuggestedFileName.AssignWithConversion(dispFileName);
           }
         } // if we found a file name in the header disposition field
       } // we had a disp header 
     } // we created the atom correctly
   } // if we had an http channel
+}
+
+nsresult nsExternalAppHandler::RetargetLoadNotifications(nsIChannel * aChannel)
+{
+  // we are going to run the downloading of the helper app in our own little docloader / load group context. 
+  // so go ahead and force the creation of a load group and doc loader for us to use...
+  nsresult rv = NS_OK;
+  
+  nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));
+  NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsILoadGroup> newLoadGroup;
+  nsCOMPtr<nsILoadGroup> oldLoadGroup;
+  uriLoader->GetLoadGroupForContext(NS_STATIC_CAST(nsIURIContentListener*, this), getter_AddRefs(newLoadGroup));
+  aChannel->GetLoadGroup(getter_AddRefs(oldLoadGroup));
+
+  if(oldLoadGroup)
+     oldLoadGroup->RemoveChannel(aChannel, nsnull, NS_OK, nsnull);
+      
+   aChannel->SetLoadGroup(newLoadGroup);
+   nsCOMPtr<nsIInterfaceRequestor> req (do_QueryInterface(mLoadCookie));
+   aChannel->SetNotificationCallbacks(req);
+   rv = newLoadGroup->AddChannel(aChannel, nsnull);
+
+   return rv;
 }
 
 nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
@@ -547,8 +638,8 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 #endif
 
   nsCOMPtr<nsIURI> uri;
-  aChannel->GetURI(getter_AddRefs(uri));
-  nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
+  aChannel->GetURI(getter_AddRefs(mSourceUrl));
+  nsCOMPtr<nsIURL> url = do_QueryInterface(mSourceUrl);
 
   nsCAutoString tempLeafName;   
 
@@ -561,6 +652,12 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
     if (leafName)
     {
       tempLeafName = leafName;
+
+      // store the file name in the url so we can present it as a "suggested" file name when 
+      // we prompt the user...
+      if (!tempLeafName.IsEmpty())
+        mSuggestedFileName.AssignWithConversion(tempLeafName);
+
       // strip off whatever extension this file may have and force our own extension.
       PRInt32 pos = tempLeafName.RFindCharInSet(".");
       if (pos > 0) 
@@ -598,6 +695,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
     return aChannel->Cancel(NS_BINDING_ABORTED);
 
   nsresult rv = SetUpTempFile(aChannel);
+  // retarget all load notifcations to our docloader instead of the original window's docloader...
+  RetargetLoadNotifications(aChannel);
+  // ignore failure...
   ExtractSuggestedFileNameFromChannel(aChannel); 
 
   // now that the temp file is set up, find out if we need to invoke a dialog asking the user what
@@ -698,6 +798,7 @@ nsresult nsExternalAppHandler::Init(nsIMIMEInfo * aMIMEInfo, const char * aTempF
   if (aTempFileExtension && *aTempFileExtension != '.')
     mTempFileExtension = ".";
   mTempFileExtension.Append(aTempFileExtension);
+
   return NS_OK;
 }
 
@@ -708,6 +809,18 @@ NS_IMETHODIMP nsExternalAppHandler::GetMIMEInfo(nsIMIMEInfo ** aMIMEInfo)
   return NS_OK;
 }
 
+nsresult nsExternalAppHandler::ShowProgressDialog()
+{
+  // we are back from the helper app dialog (where the user chooses to save or open), but we aren't
+  // done processing the load. in this case, throw up a progress dialog so the user can see what's going on...
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIHelperAppLauncherDialog> dlgService( do_GetService(NS_IHELPERAPPLAUNCHERDLG_CONTRACTID, &rv));
+  if ( dlgService ) 
+    dlgService->ShowProgressDialog(this, mWindowContext);
+
+  return rv;
+}
+
 nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, const PRUnichar * aDefaultFile)
 {
   // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog service
@@ -715,7 +828,7 @@ nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, con
   nsresult rv = NS_OK;
   if ( dlgService ) 
     rv = dlgService->PromptForSaveToFile(mWindowContext, aDefaultFile, NS_ConvertASCIItoUCS2(mTempFileExtension).get(), aNewFile);
-
+  
   return rv;
 }
 
@@ -730,10 +843,10 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
   {
     nsXPIDLString leafName;
     mTempFile->GetUnicodeLeafName(getter_Copies(leafName));
-    if (mHTTPSuggestedFileName.IsEmpty())
+    if (mSuggestedFileName.IsEmpty())
       rv = PromptForSaveToFile(getter_AddRefs(fileToUse), leafName);
     else
-      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), mHTTPSuggestedFileName.GetUnicode());
+      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), mSuggestedFileName.GetUnicode());
 
     if (NS_FAILED(rv)) 
       return Cancel();
@@ -743,6 +856,7 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
    fileToUse = do_QueryInterface(aNewFileLocation);
 
   mReceivedDispostionInfo = PR_TRUE;
+  
   // if the on stop request was actually issued then it's now time to actually perform the file move....
   if (mStopRequestIssued && fileToUse)
   {
@@ -755,6 +869,10 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
      {
        rv = mTempFile->MoveTo(directoryLocation, fileName);
      }
+  }
+  else
+  {
+    ShowProgressDialog();
   }
 
   return rv;
@@ -779,6 +897,10 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
       rv = helperAppService->LaunchAppWithTempFile(mMimeInfo, mTempFile);
     }
   }
+  else
+  {
+    ShowProgressDialog();
+  }
 
   return NS_OK;
 }
@@ -799,6 +921,69 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel()
     mTempFile->Delete(PR_TRUE);
     mTempFile = nsnull;
   }
+
+  return NS_OK;
+}
+
+
+// nsIURIContentListener implementation
+NS_IMETHODIMP nsExternalAppHandler::OnStartURIOpen(nsIURI* aURI, const char* aWindowTarget, PRBool* aAbortOpen)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
+{
+  *aProtocolHandler = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::IsPreferred(const char * aContentType, nsURILoadCommand aCommand, const char * aWindowTarget,
+                                char ** aDesiredContentType, PRBool * aCanHandleContent)
+
+{
+  NS_NOTREACHED("IsPreferred");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::CanHandleContent(const char * aContentType, nsURILoadCommand aCommand,
+                                const char * aWindowTarget, char ** aDesiredContentType,
+                                PRBool * aCanHandleContent)
+
+{
+  NS_NOTREACHED("CanHandleContent");
+  return NS_ERROR_NOT_IMPLEMENTED;
+} 
+
+NS_IMETHODIMP nsExternalAppHandler::DoContent(const char * aContentType, nsURILoadCommand aCommand, const char * aWindowTarget, 
+                                              nsIChannel * aOpenedChannel,
+                                              nsIStreamListener ** aContentHandler,PRBool * aAbortProcess)
+{
+  NS_NOTREACHED("DoContent");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::GetParentContentListener(nsIURIContentListener** aParent)
+{
+  *aParent = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::SetParentContentListener(nsIURIContentListener* aParent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::GetLoadCookie(nsISupports ** aLoadCookie)
+{
+  *aLoadCookie = mLoadCookie;
+  NS_IF_ADDREF(*aLoadCookie);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalAppHandler::SetLoadCookie(nsISupports * aLoadCookie)
+{
+  mLoadCookie = aLoadCookie;
   return NS_OK;
 }
 

@@ -65,7 +65,32 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
   if (NS_SUCCEEDED(rv)) return NS_OK;
   
   // there is no registry on linux (like there is on win32)
+  // so we can only make up a dummy mime type for this content....
+  nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
+  nsCAutoString fileExtension;
+
   *aStreamListener = nsnull;
+  if (aURI)
+  {
+    nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+    nsXPIDLCString extenion;
+    url->GetFileExtension(getter_Copies(extenion));
+    
+    fileExtension = ".";  
+    fileExtension.Append(extenion);
+  }
+
+  if (mimeInfo)
+  {  
+    if (!fileExtension.IsEmpty())
+      mimeInfo->SetFileExtensions(fileExtension);
+    mimeInfo->SetMIMEType(aMimeContentType);
+
+    // this code is incomplete and just here to get things started..
+    nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension, aWindowContext);
+    handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
+  }
+
   return NS_OK;
 }
 

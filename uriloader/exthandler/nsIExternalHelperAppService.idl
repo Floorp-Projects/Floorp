@@ -30,6 +30,7 @@ interface nsIURI;
 interface nsIStreamListener;
 interface nsIFile;
 interface nsIMIMEInfo;
+interface nsIWebProgressListener;
 
 
 [scriptable, uuid(663CC0AA-42EA-11d4-98D0-001083010E9B)]
@@ -86,4 +87,15 @@ interface nsIHelperAppLauncher : nsISupports
 
   // called if the user decides to cancel the handling of this content type
   void Cancel();
+
+  // the following methods are used by the progress dialog to get or set information 
+  // on the current helper app launcher download
+  void setWebProgressListener(in nsIWebProgressListener aWebProgressListener);
+  // when the stand along progress window actually closes, it calls this method
+  // so we can release any local state...
+  void closeProgressWindow();
+
+  // aSourceUrl--> the url we are downloading....and the file we are saving too
+  nsIFile getDownloadInfo(out nsIURI aSourceUrl);
+  
 };
