@@ -22,42 +22,29 @@
  */
 
 #include "nsISupports.idl"
+#include "nsISchema.idl"
 
 %{ C++
 #include "nsAWritableString.h"
 %} 
 
-interface nsIWSDLService;
+interface nsIWSDLBinding;
 interface nsIWSDLPort;
 interface nsIWSDLOperation;
 interface nsIWSDLMessage;
 interface nsIWSDLPart;
 interface nsIDOMElement;
-interface nsISchemaComponent;
-interface nsISchema;
-
-[scriptable, uuid(0458dac0-65de-11d5-9b42-00104bdf5339)]
-interface nsIWSDLService : nsISupports {
-  readonly attribute AString name;
-  readonly attribute nsIDOMElement documentation;
-  readonly attribute PRUint32 portCount;
-  nsIWSDLPort getPort(in PRUint32 index);
-};
 
 [scriptable, uuid(0458dac1-65de-11d5-9b42-00104bdf5339)]
-interface nsIWSDLPort : nsISupports {
-  const unsigned short STYLE_RPC = 1;
-  const unsigned short STYLE_DOCUMENT = 2;
-  
+interface nsIWSDLPort : nsISupports { 
   readonly attribute AString name;
   readonly attribute nsIDOMElement documentation;
 
-  readonly attribute AString bindingName;
-  readonly attribute unsigned short style;
-  readonly attribute AString transport;
+  readonly attribute nsIWSDLBinding binding;
 
   readonly attribute PRUint32 operationCount;
   nsIWSDLOperation getOperation(in PRUint32 index);
+  nsIWSDLOperation getOperationByName(in AString name);
 };
 
 [scriptable, uuid(0458dac2-65de-11d5-9b42-00104bdf5339)]
@@ -65,38 +52,32 @@ interface nsIWSDLOperation : nsISupports {
   readonly attribute AString name;
   readonly attribute nsIDOMElement documentation;
 
-  readonly attribute unsigned short style;
-  readonly attribute AString soapAction;
+  readonly attribute nsIWSDLBinding binding;
 
   readonly attribute nsIWSDLMessage input;
   readonly attribute nsIWSDLMessage output;
-  readonly attribute nsIWSDLMessage fault;  
+  readonly attribute PRUint32 faultCount;
+  nsIWSDLMessage getFault(in PRUint32 index);
+
+  readonly attribute PRUint32 parameterCount;
+  AString getParameter(in PRUint32 index);
 };
 
 [scriptable, uuid(0458dac3-65de-11d5-9b42-00104bdf5339)]
 interface nsIWSDLMessage : nsISupports {
-  const unsigned short   LOCATION_SOAP_BODY = 1;
-  const unsigned short   LOCATION_SOAP_HEADER = 2;
-  const unsigned short   LOCATION_SOAP_FAULT = 3;
-
-  const unsigned short   USE_LITERAL = 1;
-  const unsigned short   USE_ENCODED = 2;
-
   readonly attribute AString name;
   readonly attribute nsIDOMElement documentation;
   
-  readonly attribute unsigned short location;
-  readonly attribute unsigned short use;
-  readonly attribute AString encodingStyle;
-  readonly attribute AString namespace;
-
   readonly attribute PRUint32 partCount;
   nsIWSDLPart getPart(in PRUint32 index);
+  nsIWSDLPart getPartByName(in AString name);
 };
 
 [scriptable, uuid(0458dac4-65de-11d5-9b42-00104bdf5339)]
 interface nsIWSDLPart : nsISupports {
   readonly attribute AString name;
+
+  readonly attribute nsIWSDLBinding binding;
   
   readonly attribute AString type;
   readonly attribute AString elementName;
@@ -107,9 +88,11 @@ interface nsIWSDLPart : nsISupports {
    * elementName attribute is used, it is a nsISchemaElement.
    */
   readonly attribute nsISchemaComponent schemaComponent;
-
-  /**
-   * The containing schema for the schemaComponent
-   */
-  readonly attribute nsISchema schema;
 };
+
+[scriptable, uuid(0458dac0-65de-11d5-9b42-00104bdf5339)]
+interface nsIWSDLBinding : nsISupports {
+  readonly attribute AString protocol;
+  readonly attribute nsIDOMElement documentation;
+};
+

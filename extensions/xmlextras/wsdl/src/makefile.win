@@ -28,17 +28,19 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
 	nsWSDLLoader.cpp			\
+	nsWSDLDefinitions.cpp			\
 	$(NULL)
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsWSDLLoader.obj		\
+	.\$(OBJDIR)\nsWSDLDefinitions.obj	\
 	$(NULL)
 
 EXPORTS =					\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-	-I$(PUBLIC)\dom -I$(PUBLIC)\uconv
+	-I$(PUBLIC)\dom -I$(PUBLIC)\uconv -I..\..\schema\src
 
 LCFLAGS = \
         $(LCFLAGS) \

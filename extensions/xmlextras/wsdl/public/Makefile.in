@@ -27,10 +27,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xmlextras
+XPIDL_MODULE	= wsdl
 
 XPIDLSRCS	= \
-		.\nsIWSDL.idl  		\
-		.\nsIWSDLLoader.idl  	\
+		nsIWSDL.idl  		\
+		nsIWSDLSOAPBinding.idl \
+		nsIWSDLLoader.idl  	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

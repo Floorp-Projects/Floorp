@@ -1,0 +1,61 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications.  Portions created by Netscape Communications are
+ * Copyright (C) 2001 by Netscape Communications.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Vidur Apparao <vidur@netscape.com> (original author)
+ */
+
+#include "nsISupports.idl"
+#include "nsIWSDL.idl"
+
+%{ C++
+#include "nsAWritableString.h"
+%} 
+
+[scriptable, uuid(0458dac7-65de-11d5-9b42-00104bdf5339)]
+interface nsISOAPPortBinding : nsIWSDLBinding {
+  const unsigned short STYLE_RPC = 1;
+  const unsigned short STYLE_DOCUMENT = 2;
+
+  readonly attribute AString name;
+  readonly attribute AString address;
+  readonly attribute unsigned short style;
+  readonly attribute AString transport;
+};
+
+[scriptable, uuid(0458dac8-65de-11d5-9b42-00104bdf5339)]
+interface nsISOAPOperationBinding : nsIWSDLBinding {
+  readonly attribute unsigned short style;
+  readonly attribute AString soapAction;
+};
+
+[scriptable, uuid(0458dac9-65de-11d5-9b42-00104bdf5339)]
+interface nsISOAPPartBinding : nsIWSDLBinding {
+  const unsigned short   LOCATION_BODY = 1;
+  const unsigned short   LOCATION_HEADER = 2;
+  const unsigned short   LOCATION_FAULT = 3;
+
+  const unsigned short   USE_LITERAL = 1;
+  const unsigned short   USE_ENCODED = 2;
+
+  readonly attribute unsigned short location;
+  readonly attribute unsigned short use;
+  readonly attribute AString encodingStyle;
+  readonly attribute AString namespace;
+};

@@ -25,138 +25,220 @@
 #define __nsWSDLPrivate_h__
 
 #include "nsIWSDL.h"
-#include "nsIWSDLLoader.h"
+#include "nsIWSDLSOAPBinding.h"
 
 // DOM Includes
 #include "nsIDOMElement.h"
 
+// Schema includes
+#include "nsISchema.h"
+
 // XPCOM Includes
 #include "nsCOMPtr.h"
+#include "nsVoidArray.h"
 #include "nsSupportsArray.h"
 #include "nsString.h"
 
-class nsWSDLLoader : public nsIWSDLLoader {
+#define NS_WSDL_SCHEMA_NAMESPACE "http://www.w3.org/2001/XMLSchema"
+#define NS_WSDL_NAMESPACE "http://schemas.xmlsoap.org/wsdl/"
+#define NS_WSDL_SOAP_NAMESPACE "http://schemas.xmlsoap.org/wsdl/soap/"
+
+class nsSOAPPortBinding : public nsISOAPPortBinding {
 public:
-  nsWSDLLoader();
-  virtual ~nsWSDLLoader();
-
+  nsSOAPPortBinding(const nsAReadableString& aName);
+  virtual ~nsSOAPPortBinding();
+  
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIWSDLLOADER
-};
+  NS_DECL_NSIWSDLBINDING
+  NS_DECL_NSISOAPPORTBINDING
 
-class nsWSDLService : public nsIWSDLService {
-public:
-  nsWSDLService();
-  virtual ~nsWSDLService();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIWSDLSERVICE
-
-  NS_IMETHOD SetName(const nsAReadableString& aName);
   NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
-  NS_IMETHOD AddPort(nsIWSDLPort* aPort);
+  NS_IMETHOD SetAddress(const nsAReadableString& aAddress);
+  NS_IMETHOD SetStyle(PRUint16 aStyle);
+  NS_IMETHOD SetTransport(const nsAReadableString& aTransport);
 
 protected:
   nsString mName;
+  nsString mAddress;  
+  PRUint16 mStyle;
+  nsString mTransport;  
   nsCOMPtr<nsIDOMElement> mDocumentationElement;
-  nsSupportsArray mPorts;
 };
 
 class nsWSDLPort : public nsIWSDLPort {
 public:
-  nsWSDLPort();
+  nsWSDLPort(const nsAReadableString &aName);
   virtual ~nsWSDLPort();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLPORT
 
-  NS_IMETHOD SetName(const nsAReadableString& aName);
   NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
-  NS_IMETHOD SetBindingInfo(const nsAReadableString& aBindingName,
-                            PRUint16 aStyle,
-                            const nsAReadableString& aTransport);
   NS_IMETHOD AddOperation(nsIWSDLOperation* aOperation);
+  NS_IMETHOD SetBinding(nsIWSDLBinding* aBinding);
 
 protected:
   nsString mName;
   nsCOMPtr<nsIDOMElement> mDocumentationElement;
-  nsString mBindingName;
-  PRUint16 mStyle;
-  nsString mTransport;
   nsSupportsArray mOperations;
+  nsCOMPtr<nsIWSDLBinding> mBinding;
+};
+
+class nsSOAPOperationBinding : public nsISOAPOperationBinding {
+public:
+  nsSOAPOperationBinding();
+  virtual ~nsSOAPOperationBinding();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWSDLBINDING
+  NS_DECL_NSISOAPOPERATIONBINDING
+
+  NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
+  NS_IMETHOD SetStyle(PRUint16 aStyle);
+  NS_IMETHOD SetSoapAction(const nsAReadableString& aAction);
+
+protected:
+  PRUint16 mStyle;
+  nsString mSoapAction;  
+  nsCOMPtr<nsIDOMElement> mDocumentationElement;
 };
 
 class nsWSDLOperation : public nsIWSDLOperation {
 public:
-  nsWSDLOperation();
+  nsWSDLOperation(const nsAReadableString &aName);
   virtual ~nsWSDLOperation();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLOPERATION
 
-  NS_IMETHOD SetName(const nsAReadableString& aName);
   NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
-  NS_IMETHOD SetBindingInfo(PRUint16 aStyle,
-                            const nsAReadableString& aSoapAction);
-  NS_IMETHOD SetInputMessage(nsIWSDLMessage* aInputMessage);
-  NS_IMETHOD SetOutputMessage(nsIWSDLMessage* aOutputMessage);
-  NS_IMETHOD SetFaultMessage(nsIWSDLMessage* aFaultMessage);
+  NS_IMETHOD SetInput(nsIWSDLMessage* aInputMessage);
+  NS_IMETHOD SetOutput(nsIWSDLMessage* aOutputMessage);
+  NS_IMETHOD AddFault(nsIWSDLMessage* aFaultMessage);
+  NS_IMETHOD AddParameter(const nsAReadableString& aParameter);
+  NS_IMETHOD SetBinding(nsIWSDLBinding* aBinding);
 
 protected:
   nsString mName;
   nsCOMPtr<nsIDOMElement> mDocumentationElement;
-  PRUint16 mStyle;
-  nsString mSoapAction;
   nsCOMPtr<nsIWSDLMessage> mInputMessage;
   nsCOMPtr<nsIWSDLMessage> mOutputMessage;
-  nsCOMPtr<nsIWSDLMessage> mFaultMessage;
+  nsSupportsArray mFaultMessages;
+  nsStringArray mParameters;
+  nsCOMPtr<nsIWSDLBinding> mBinding;
 };
 
 class nsWSDLMessage : public nsIWSDLMessage {
 public:
-  nsWSDLMessage();
+  nsWSDLMessage(const nsAReadableString& aName);
   virtual ~nsWSDLMessage();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLMESSAGE
 
-  NS_IMETHOD SetName(const nsAReadableString& aName);
   NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
-  NS_IMETHOD SetBindingInfo(PRUint16 aLocation, PRUint16 aUse,
-                            const nsAReadableString& aEncodingStyle,
-                            const nsAReadableString& aNamespace);
   NS_IMETHOD AddPart(nsIWSDLPart* aPart);
 
 protected:
   nsString mName;
   nsCOMPtr<nsIDOMElement> mDocumentationElement;
+  nsSupportsArray mParts;
+};
+
+class nsSOAPPartBinding : public nsISOAPPartBinding {
+public:
+  nsSOAPPartBinding(PRUint16 aLocation, PRUint16 aUse,
+                    const nsAReadableString& aEncodingStyle,
+                    const nsAReadableString& aNamespace);
+  virtual ~nsSOAPPartBinding();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWSDLBINDING
+  NS_DECL_NSISOAPPARTBINDING
+
+protected:
   PRUint16 mLocation;
   PRUint16 mUse;
   nsString mEncodingStyle;
-  nsString mNamespace;
-  nsSupportsArray mParts;
+  nsString mNamespace;  
 };
 
 class nsWSDLPart : public nsIWSDLPart {
 public:
-  nsWSDLPart();
+  nsWSDLPart(const nsAReadableString& aName);
   virtual ~nsWSDLPart();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWSDLPART
 
-  NS_IMETHOD SetName(const nsAReadableString& aName);
   NS_IMETHOD SetTypeInfo(const nsAReadableString& aType,
                          const nsAReadableString& aElementName,
-                         nsIDOMElement* aSchema,
-                         nsIDOMElement* aSchemaRoot);
+                         nsISchemaComponent* aSchemaComponent);
+  NS_IMETHOD SetBinding(nsIWSDLBinding* aBinding);
 
 protected:
   nsString mName;
   nsString mType;
   nsString mElementName;
-  nsCOMPtr<nsIDOMElement> mSchema;
-  nsCOMPtr<nsIDOMElement> mSchemaRoot;
+  nsCOMPtr<nsISchemaComponent> mSchemaComponent;
+  nsCOMPtr<nsIWSDLBinding> mBinding;
 };
+
+
+#define NS_WSDLPORT_CID                           \
+{ /* c1dfb250-0c19-4339-8211-24eabc0103e5 */      \
+ 0xc1dfb250, 0x0c19, 0x4339,                      \
+ {0x82, 0x11, 0x24, 0xea, 0xbc, 0x01, 0x03, 0xe5}}
+
+#define NS_WSDLPORT_CONTRACTID   \
+"@mozilla/xmlextras/wsdl/wsdlport;1"
+
+#define NS_WSDLOPERATION_CID                      \
+{ /* cf54bdf5-20de-45ef-b6c8-aa535007549a */      \
+ 0xcf54bdf5, 0x20de, 0x45ef,                      \
+ {0xb6, 0xc8, 0xaa, 0x53, 0x50, 0x07, 0x54, 0x9a}}
+
+#define NS_WSDLOPERATION_CONTRACTID   \
+"@mozilla/xmlextras/wsdl/wsdloperation;1"
+
+#define NS_WSDLMESSAGE_CID                        \
+{ /* 36b26cab-3eed-4c7c-81ad-94c8b1eb9ebe */      \
+ 0x36b26cab, 0x3eed, 0x4c7c,                      \
+ {0x81, 0xad, 0x94, 0xc8, 0xb1, 0xeb, 0x9e, 0xbe}}
+
+#define NS_WSDLMESSAGE_CONTRACTID   \
+"@mozilla/xmlextras/wsdl/wsdlmessage;1"
+
+#define NS_WSDLPART_CID                           \
+{ /* 1841ebe8-5bdc-4e79-bcf4-329785318491 */      \
+ 0x1841ebe8, 0x5bdc, 0x4e79,                      \
+ {0xbc, 0xf4, 0x32, 0x97, 0x85, 0x31, 0x84, 0x91}}
+
+#define NS_WSDLPART_CONTRACTID   \
+"@mozilla/xmlextras/wsdl/wsdlpart;1"
+
+#define NS_SOAPPORTBINDING_CID                    \
+{ /* a9155950-e49d-4123-93b7-e263a3af2b32 */      \
+ 0xa9155950, 0xe49d, 0x4123,                      \
+ {0x93, 0xb7, 0xe2, 0x63, 0xa3, 0xaf, 0x2b, 0x32}}
+
+#define NS_SOAPPORTBINDING_CONTRACTID   \
+"@mozilla/xmlextras/wsdl/soapportbinding;1"
+
+#define NS_SOAPOPERATIONBINDING_CID               \
+{ /* f5230937-4af6-43fb-9766-1890896632b2 */      \
+ 0xf5230937, 0x4af6, 0x43fb,                      \
+ {0x97, 0x66, 0x18, 0x90, 0x89, 0x66, 0x32, 0xb2}}
+
+#define NS_SOAPOPERATIONBINDING_CONTRACTID   \
+"@mozilla/xmlextras/wsdl/soapoperationbinding;1"
+
+#define NS_SOAPPARTBINDING_CID                    \
+{ /* b7698d5c-06cc-45fe-b6bc-88e32a9f970e */      \
+ 0xb7698d5c, 0x06cc, 0x45fe,                      \
+ {0xb6, 0xbc, 0x88, 0xe3, 0x2a, 0x9f, 0x97, 0x0e}}
+
+#define NS_SOAPPARTBINDING_CONTRACTID   \
+"@mozilla/xmlextras/wsdl/soappartbinding;1"
 
 #endif // __nsWSDLPrivate_h__

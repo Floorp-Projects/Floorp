@@ -27,21 +27,37 @@
 #include "nsAWritableString.h"
 %} 
 
-interface nsIWSDLService;
-interface nsIURI;
-interface nsIWSDLLoaderListener;
+interface nsIWSDLPort;
+interface nsIWSDLLoadListener;
 
 [scriptable, uuid(0458dac5-65de-11d5-9b42-00104bdf5339)]
 interface nsIWSDLLoader : nsISupports {
-  nsIWSDLService load(in nsIURI wsdlURI);
-  void loadAsync(in nsIURI wsdlURI, in nsIWSDLLoaderListener listener);
-  nsISupports createServiceProxy(in nsIWSDLService service, 
-                                 in AString nameSpace);
+  nsIWSDLPort load(in AString wsdlURI, in AString portName);
+  void loadAsync(in AString wsdlURI, in AString portName, 
+                 in nsIWSDLLoadListener listener);
+  nsISupports createPortProxy(in nsIWSDLPort service, 
+                              in AString nameSpace);
 };
 
-[scriptable, uuid(0458dac6-65de-11d5-9b42-00104bdf5339)]
-interface nsIWSDLLoaderListener : nsISupports {
+[scriptable, function, uuid(0458dac6-65de-11d5-9b42-00104bdf5339)]
+interface nsIWSDLLoadListener : nsISupports {
+  void onLoad(in nsIWSDLPort service);
   void onError(in PRInt32 status,
                in AString statusMessage);
-  void onComplete(in nsIWSDLService service);
 };
+
+%{ C++
+#define NS_WSDLLOADER_CID                             \
+{ /* 0a5af577-a61e-4492-ba0e-dd3c7b657e18 */          \
+ 0x0a5af577, 0xa61e, 0x4492,                          \
+ {0xba, 0x0e, 0xdd, 0x3c, 0x7b, 0x65, 0x7e, 0x18}}
+
+#define NS_WSDLLOADER_CONTRACTID "@mozilla.org/xmlextras/wsdl/wsdlloader;1"
+
+#define NS_ERROR_WSDL_NOT_WSDL_ELEMENT NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 1)
+#define NS_ERROR_WSDL_SCHEMA_PROCESSING_ERROR NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 2)
+#define NS_ERROR_WSDL_BINDING_NOT_FOUND NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 3)
+#define NS_ERROR_WSDL_UNKNOWN_SCHEMA_COMPONENT NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 4)
+#define NS_ERROR_WSDL_UNKNOWN_WSDL_COMPONENT NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 5)
+#define NS_ERROR_WSDL_LOADING_ERROR NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 6)
+%}

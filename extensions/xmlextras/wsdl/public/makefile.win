@@ -22,9 +22,11 @@
 DEPTH=..\..\..\..
 
 XPIDLSRCS = .\nsIWSDL.idl  \
+	    .\nsIWSDLSOAPBinding.idl \
 	    .\nsIWSDLLoader.idl \
 	    $(NULL)
 
 MODULE=xmlextras
+XPIDL_MODULE=wsdl
 
 include <$(DEPTH)\config\rules.mak>
