@@ -42,7 +42,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULCheckboxElement.h"
-#include "nsIDOMXULDescriptionElement.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULLabelElement.h"
 #include "nsIDOMXULMenuListElement.h"
@@ -437,7 +436,7 @@ NS_IMETHODIMP nsXULGroupboxAccessible::GetAccName(nsAString& _retval)
   */
 
 nsXULProgressMeterAccessible::nsXULProgressMeterAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessible(aNode, aShell)
+nsFormControlAccessible(aNode, aShell)
 { 
 }
 
@@ -461,7 +460,8 @@ NS_IMETHODIMP nsXULProgressMeterAccessible::GetAccValue(nsAString& _retval)
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No element for DOM node!");
   element->GetAttribute(NS_LITERAL_STRING("value"), _retval);
-  _retval.Append(NS_LITERAL_STRING("%"));
+  if (!_retval.IsEmpty() && _retval.Last() != '%')
+    _retval.Append(NS_LITERAL_STRING("%"));
   return NS_OK;
 }
 
