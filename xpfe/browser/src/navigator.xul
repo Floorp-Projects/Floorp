@@ -255,7 +255,10 @@
 		if (rdfCore)
 		{
 			rdfCore.Init("RDFCore");
-			XPAppCoresManager.Add(rdfCore);
+// We do not need this add() call. It fails and doesn't execute the loadURL
+// call that is following. The job of add has already been done by the Init()
+// call.  
+		//	XPAppCoresManager.Add(rdfCore);
 			rdfCoreFound = true;
 		}
 	}
