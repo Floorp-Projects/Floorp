@@ -22,10 +22,14 @@
 #define __PlugletEngine_h__
 #include "nsplugin.h"
 #include "jni.h"
-#include "nsJVMManager.h"
 #include "nsIPluginManager.h"
 #include "PlugletsDir.h"
+#include "nsComPtr.h"
+
+#ifndef OJI_DISABLED
+#include "nsJVMManager.h"
 #include "PlugletSecurityContext.h"
+#endif /* OJI_DISABLE */
 
 class PlugletEngine : public nsIPlugin {
  public:
@@ -39,7 +43,7 @@ class PlugletEngine : public nsIPlugin {
     NS_IMETHOD GetMIMEDescription(const char* *result);
     NS_IMETHOD GetValue(nsPluginVariable variable, void *value);
     NS_DECL_ISUPPORTS
-    PlugletEngine(nsISupports* aService);
+    PlugletEngine();
     virtual ~PlugletEngine(void);
     static JNIEnv * GetJNIEnv(void);
     static jobject GetPlugletManager(void);
@@ -52,12 +56,20 @@ class PlugletEngine : public nsIPlugin {
     static PRInt32 lockCount;
     static PlugletsDir *dir;
     static PlugletEngine * engine;
-    static nsJVMManager * jvmManager;
-    static  nsIPluginManager *pluginManager;
+    static nsCOMPtr<nsIPluginManager>  pluginManager;
     static jobject plugletManager;
-    static PlugletSecurityContext * securityContext;
+#ifndef OJI_DISABLE
+    static nsJVMManager * jvmManager;
+    static PlugletSecurityContext *securityContext;
+#else /* OJI_DISABLE */
+    static JavaVM *jvm;
+    static void StartJVM(void);
+#endif /* OJI_DISABLE */
 };    
 
 #endif /* __PlugletEngine_h__ */
+
+
+
 
 

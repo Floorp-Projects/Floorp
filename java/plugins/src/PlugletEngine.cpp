@@ -1,4 +1,4 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -23,31 +23,55 @@
 #include "nsIServiceManager.h"
 #include "prenv.h"
 #include "PlugletManager.h"
-#include "ProxyJNI.h"
+#include "nsIGenericFactory.h"
+#include "nsIModule.h"
 
-static NS_DEFINE_IID(kIPluginIID,NS_IPLUGIN_IID);
-static NS_DEFINE_CID(kPluginCID,NS_PLUGIN_CID);
-static NS_DEFINE_IID(kIServiceManagerIID, NS_ISERVICEMANAGER_IID);
-static NS_DEFINE_IID(kIJVMManagerIID,NS_IJVMMANAGER_IID);
+#ifndef OJI_DISABLE
+#include "ProxyJNI.h"
 static NS_DEFINE_CID(kJVMManagerCID,NS_JVMMANAGER_CID);
+PlugletSecurityContext *PlugletEngine::securityContext = NULL;
+nsJVMManager * PlugletEngine::jvmManager = NULL;
+#endif /* OJI_DISABLE */
+
+
+static NS_DEFINE_CID(kIPluginIID,NS_IPLUGIN_IID);
+static NS_DEFINE_CID(kPluginCID,NS_PLUGIN_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 
+#define PLUGLETENGINE_PROGID \
+"component://netscape/blackwood/pluglet-engine"
+
+#define  PLUGLETENGINE_CID  \
+{ /* C1E694F3-9BE1-11d3-837C-0004AC56C49E */ \
+  0xc1e694f3, 0x9be1, 0x11d3, { 0x83, 0x7c, 0x0, 0x4, 0xac, 0x56, 0xc4, 0x9e } \
+} 
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(PlugletEngine)
+
+static  nsModuleComponentInfo components[] = 
+{
+    {
+        "Pluglet Engine",
+        PLUGLETENGINE_CID,
+        PLUGLETENGINE_PROGID,
+        PlugletEngineConstructor
+    }
+};
+
+NS_IMPL_NSGETMODULE("PlugletEngineModule",components);
 
 
-#define PLUGIN_MIME_DESCRIPTION "*:*:Pluglet Engine"
-
-nsJVMManager * PlugletEngine::jvmManager = NULL;
 int PlugletEngine::objectCount = 0;
 PlugletsDir * PlugletEngine::dir = NULL;
 PRInt32 PlugletEngine::lockCount = 0;
 PlugletEngine * PlugletEngine::engine = NULL;
-nsIPluginManager *PlugletEngine::pluginManager = NULL;
+nsCOMPtr<nsIPluginManager> PlugletEngine::pluginManager;
 jobject PlugletEngine::plugletManager = NULL;
-PlugletSecurityContext *PlugletEngine::securityContext = NULL;
+
+#define PLUGIN_MIME_DESCRIPTION "*:*:Pluglet Engine"
 
 NS_IMPL_ISUPPORTS(PlugletEngine,kIPluginIID);
 NS_METHOD PlugletEngine::Initialize(void) {
@@ -117,27 +141,9 @@ char *ToString(jobject obj,JNIEnv *env) {
 	return res;
 }
 
-PlugletEngine::PlugletEngine(nsISupports* aService) {
+PlugletEngine::PlugletEngine() {
     NS_INIT_REFCNT();
     dir = new PlugletsDir();
-    nsresult res = NS_OK;
-
-    nsIServiceManager *sm;
-    res = aService->QueryInterface(nsIServiceManager::GetIID(),(void**)&sm);
-    if (NS_FAILED(res)) {
-	return;
-    }
-    res = sm->GetService(kPluginManagerCID,kIPluginManagerIID,(nsISupports**)&pluginManager);
-    if (NS_FAILED(res)) {
-      return;
-    }
-#ifndef OJI_DISABLED
-    res = sm->GetService(kJVMManagerCID,kIJVMManagerIID,(nsISupports**)&jvmManager);
-    if (NS_FAILED(res)) {
-	jvmManager = NULL;
-    }
-#endif
-    NS_RELEASE(sm);
     engine = this;
     objectCount++;
 }
@@ -152,13 +158,13 @@ PlugletEngine::~PlugletEngine(void) {
 
 #ifdef XP_PC
 #define PATH_SEPARATOR ';'
-#else
+#else /* XP_PC */
 #define PATH_SEPARATOR ':'
-#endif 
+#endif /* XP_PC */
 
-JavaVM *jvm = NULL;	
+JavaVM *PlugletEngine::jvm = NULL;	
 
-static void StartJVM() {
+void PlugletEngine::StartJVM(void) {
     JNIEnv *env = NULL;	
     jint res;
     JDK1_1InitArgs vm_args;
@@ -176,35 +182,49 @@ static void StartJVM() {
         printf("--JNI_CreateJavaVM failed \n");
     }
 }
-#endif // OJI_DISABLE
+#endif /* OJI_DISABLE */
 
 JNIEnv * PlugletEngine::GetJNIEnv(void) {
    JNIEnv * res;
 #ifndef OJI_DISABLE
+   nsresult result;
    if (!jvmManager) {
-       //nb it is bad :(
+       NS_WITH_SERVICE(nsIJVMManager, _jvmManager, kJVMManagerCID, &result);
+       if (NS_SUCCEEDED(result)) {
+           jvmManager = (nsJVMManager*)((nsIJVMManager*)_jvmManager);
+       }
+   }
+   if (!jvmManager) {
        return NULL;
    }
    jvmManager->CreateProxyJNI(NULL,&res);
    if (!securityContext) {
        securityContext = new PlugletSecurityContext();
    }
-   ::SetSecurityContext(res,securityContext);
-
-   //nb error handling
-#else
+   SetSecurityContext(res,securityContext);
+#else  /* OJI_DISABLE */
     if (!jvm) {
            printf(":) starting jvm\n");
 	   StartJVM();
    }
    jvm->AttachCurrentThread(&res,NULL);
-#endif //OJI_DISABLED
+#endif /* OJI_DISABLED */
    return res;
 }
 
 jobject PlugletEngine::GetPlugletManager(void) {
+    if (!pluginManager) {
+        nsresult  res;
+        NS_WITH_SERVICE(nsIPluginManager,_pluginManager,kPluginManagerCID,&res);
+        if (NS_SUCCEEDED(res)) { 
+            pluginManager = _pluginManager;
+        }
+    }
+    if (!pluginManager) {
+        return NULL;
+    }
     if (!plugletManager) {
-	plugletManager = PlugletManager::GetJObject(pluginManager);
+        plugletManager = PlugletManager::GetJObject(pluginManager.get());
     }
     return plugletManager;
 }
@@ -224,80 +244,4 @@ PRBool PlugletEngine::IsUnloadable(void) {
   return (lockCount == 0 
 	  && objectCount == 0);
 }
-
-// ******************************************
-extern "C" NS_EXPORT nsresult
-NSGetFactory(nsISupports* serviceMgr,
-	     const nsCID &aClass,
-	     const char *aClassName,
-	     const char *aProgID,
-	     nsIFactory **aFactory)
-{
-    if (aClass.Equals(kPluginCID)) {
-	if (PlugletEngine::GetEngine()) {
-	    *aFactory = PlugletEngine::GetEngine();
-	    return NS_OK;
-	}
-	PlugletEngine * engine = new PlugletEngine(serviceMgr);
-	if (!engine) 
-	    return NS_ERROR_OUT_OF_MEMORY;
-	engine->AddRef();
-	*aFactory = engine;
-	return NS_OK;
-    }
-    return NS_ERROR_FAILURE; 
-}
-
-extern "C" NS_EXPORT PRBool
-NSCanUnload(nsISupports* serviceMgr)
-{
-    return (PlugletEngine::IsUnloadable());
-}
-
-
-extern  "C" char*  
-NP_GetMIMEDescription(void)
-{
-    return PLUGIN_MIME_DESCRIPTION;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -17,38 +17,26 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-
-# -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-#
-# The contents of this file are subject to the Netscape Public License
-# Version 1.0 (the "NPL"); you may not use this file except in
-# compliance with the NPL.  You may obtain a copy of the NPL at
-# http://www.mozilla.org/NPL/
-#
-# Software distributed under the NPL is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
-# for the specific language governing rights and limitations under the
-# NPL.
-#
-# The Initial Developer of this code under the NPL is Netscape
-# Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1999 Netscape Communications Corporation.  All Rights
-# Reserved.
-
-
 IGNORE_MANIFEST=1
 #//------------------------------------------------------------------------
 #//
 #// Makefile to build 
 #//
 #//------------------------------------------------------------------------
-MODULE = nppluglet
 
-LIBRARY_NAME = nppluglet	
+MAKE_OBJ_TYPE	= DLL
+DLLNAME = pluglet
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE = pluglet
+COMPONENT = 1 
 
 DEPTH= ..\..\..\
 
-REQUIRES = java plug xpcom raptor
+REQUIRES = \
+!ifndef OJI_DISABLE
+	oji  \
+!endif
+	java plug xpcom raptor 
 
 OBJS =  \
 	.\$(OBJDIR)\Pluglet.obj \
@@ -76,14 +64,6 @@ MAKE_OBJ_TYPE = DLL
 #// (these must be defined before the common makefiles are included)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=nppluglet
-PDBFILE=nppluglet.pdb
-MAPFILE=nppluglet.map
-DEFFILE=PlugletEngine.def
-RESFILE=PlugletEngine.res
-
-DLL = .\$(OBJDIR)\$(DLLNAME).dll
-
 #//------------------------------------------------------------------------
 #//
 #// Define any local options for the make tools 
@@ -110,7 +90,7 @@ LCFLAGS=$(LCFLAGS) -DOJI_DISABLE
 include <$(DEPTH)/config/rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\plugins
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 
 
 

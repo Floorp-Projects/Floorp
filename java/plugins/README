@@ -29,17 +29,11 @@ How To Build:
 
 * Follow the directions in ..\README
 
-* if you do not have working OJI set OJI_DISABLED to 1
+* if you do not have working OJI set OJI_DISABLE to 1
   (You can do it in your command prompt, or you can set it in 
    mozilla/java/plugins/src).
 
 * type "nmake /f makefile.win"
-
-* apply the patch to mozilla/modules/plugin/nglsrc/nsPluginHostImpl.cpp
-  by executing : patch nsPluginHostImpl.cpp  < nsPluginHostImpl.patch
-  and execute "nmake /f makefile.win" inside mozilla/modules/plugin/nglsrc
-  directory
-
 
 How to Run:
 
