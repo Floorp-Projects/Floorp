@@ -14,7 +14,7 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 1998-1999 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
@@ -38,6 +38,8 @@ install::
 	$(MAKE_INSTALL) EdNamedAnchorProperties.dtd      $(DIST)\bin\chrome\editor\locale\en-US
 	$(MAKE_INSTALL) EdDialogOverlay.dtd              $(DIST)\bin\chrome\editor\locale\en-US
 	$(MAKE_INSTALL) EdAdvancedEdit.dtd               $(DIST)\bin\chrome\editor\locale\en-US
+	$(MAKE_INSTALL) EditorImageMap.dtd               $(DIST)\bin\chrome\editor\locale\en-US
+	$(MAKE_INSTALL) EditorImageMapHotSpot.dtd        $(DIST)\bin\chrome\editor\locale\en-US
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\locale\en-US\EditorHLineProperties.dtd 
@@ -54,5 +56,7 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\locale\en-US\EdNamedAnchorProperties.dtd 
   rm -f $(DIST)\bin\chrome\editor\locale\en-US\EdDialogOverlay.dtd 
   rm -f $(DIST)\bin\chrome\editor\locale\en-US\EdAdvancedEdit.dtd
+  rm -f $(DIST)\bin\chrome\editor\locale\en-US\EditorImageMap.dtd
+  rm -f $(DIST)\bin\chrome\editor\locale\en-US\EditorImageMapHotSpot.dtd
 
 

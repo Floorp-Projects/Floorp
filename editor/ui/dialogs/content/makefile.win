@@ -57,6 +57,12 @@ install::
 	$(MAKE_INSTALL) EdAECSSAttributes.js   $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EdAEHTMLAttributes.js  $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EdAEJSEAttributes.js   $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) EdImageMap.js          $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) EdImageMap.xul         $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) EdImageMapHotSpot.js   $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) EdImageMapHotSpot.xul  $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) EdImageMapShapes.js    $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) EdImageMapPage.html    $(DIST)\bin\chrome\editor\content\default
 
 
 clobber::
@@ -93,3 +99,9 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\content\default\EdAECSSAttributes.js
   rm -f $(DIST)\bin\chrome\editor\content\default\EdAEHTMLAttributes.js
   rm -f $(DIST)\bin\chrome\editor\content\default\EdAEJSEAttributes.js
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdImageMap.js
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdImageMap.xul
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdImageMapHotSpot.js
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdImageMapHotSpot.xul
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdImageMapShapes.js
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdImageMapPage.html
