@@ -1997,8 +1997,8 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
   nativeInstallObject = new nsInstall(theJARFile);
 
   nativeInstallObject->SetJarFileLocation(jarfile);
-  nativeInstallObject->SetInstallArguments(args);
-  nativeInstallObject->SetInstallURL(url);
+  nativeInstallObject->SetInstallArguments(nsAutoString(args));
+  nativeInstallObject->SetInstallURL(nsAutoString(url));
   nativeInstallObject->SetInstallFlags(flags);
   nativeInstallObject->SetChromeRegistry(reg);
 
