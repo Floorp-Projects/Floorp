@@ -11,7 +11,10 @@ PALOMAR_DIR = $(JSDEBUGGING_DIR)\ifcui\palomar
 IFC_DIST_FILE = $(DIST_CLASSES)\ifc11.jar
 
 !IF "$(NO_RHINO)" == ""
-RHINO_CLASSES = $(BUILD_DIR)\..\..\..\..\ns\js\rhino
+RHINO_CLASSROOT = $(BUILD_DIR)\..\..\jsjava
+RHINO_CLASSES = $(RHINO_CLASSROOT)\js.jar;$(RHINO_CLASSROOT)\jsdebug.jar
+
+#RHINO_CLASSES = $(BUILD_DIR)\..\..\..\..\ns\js\rhino
 !ENDIF
 
 #these are used for CD

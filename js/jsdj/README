@@ -11,6 +11,7 @@ The notable subdirs are:
 build         - stuff to build the code
 classes       - trees of source files
 dist          - generated output dir
+doc           - some documents
 ifcui         - auxilary pieces of the JavaScript Debugger
 jslogger      - auxilary pieces of a smaple JavaScript logging app
 stub_classes  - stubbed out mozilla classes to allow standalone debugging
@@ -22,9 +23,3 @@ The source to the debugger lives in:
 All building is done in:
     jsdj/build
 
-***************************************************************************
-*** 09/15/98
-*** NOTE: some of this relates to code in js/jsd that is not yet checked in.
-*** New stuff in js/jsd will go in when new js/src lands (later this week).
-*** I decided to check this in anyway...
-***************************************************************************

@@ -13,7 +13,7 @@ to the public. The flag 'NO_RHINO=1' is necessary for many of the makefile
 targets when used outside of Netscape.
 
 There is code here to also build a Corba/iiop connection for remote debugging to
-a Netscape Internal version of Enterprise Server 3.51. This is not fully
+a Netscape internal version of Enterprise Server 3.51. This is not fully
 functional on the server side. You should normally use the NO_CORBA=1 build
 flag. If you want to play with this stuff then you need an install of ES3.51 and
 you need to set the ES3_ROOT environment variable to point to that install.
@@ -29,5 +29,43 @@ up to date :).
 
 There are a few .bat files for convenience to build the targets I often build.
 
+'mk_ifcui_std_with_rhino.bat' will build the whole thing (except Corba parts) 
+and ASSUMEs that you want Rhino support and that you have already built Rhino
+in the 'correct' relative directory.
 
+The directory structure used at Netscape for Rhino is:
 
+    someroot/ns/js/rhino
+    someroot/mozilla/js/src
+    someroot/mozilla/js/jsd
+    someroot/mozilla/js/jsdj
+
+where 'someroot' can be anything. The salient point is that from the jsdj/build
+directory the relative path to the rhino classes is: 
+
+.\..\..\..\..\ns\js\rhino
+
+This can be adjusted by hacking the 'RHINO_CLASSES' var near the top of 
+jsdj.mak.
+
+------------------------
+FOR THE JS 1.4 RELEASE:
+
+Rhino (JavaScript for Java) is packaged as 'jsjava.jar'. It unzips so that the 
+root directory is named 'jsjava'. 
+
+To simplify building js/jsdj for this release jsdj.mak has been modified to 
+include:
+
+    RHINO_CLASSROOT = $(BUILD_DIR)\..\..\jsjava
+    RHINO_CLASSES = $(RHINO_CLASSROOT)\js.jar;$(RHINO_CLASSROOT)\jsdebug.jar
+
+This supports unzipping jsjava.jar into mozilla/js for a directory tree like:
+
+    someroot/mozilla/js/jsjava
+    someroot/mozilla/js/src
+    someroot/mozilla/js/jsd
+    someroot/mozilla/js/jsdj
+
+mk_ifcui_std_with_rhino.bat can then be run from mozilla/js/jsdj/build to build
+all of js/jsdj including Rhino support.
