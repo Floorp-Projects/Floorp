@@ -1408,7 +1408,7 @@ NS_IMETHODIMP nsTextEditor::InsertAsQuotation(const nsString& aQuotedText)
 // Get the wrap width for the first PRE tag in the document.
 // If no PRE tag, throw an error.
 //
-NS_IMETHODIMP nsTextEditor::GetBodyWrapWidth(PRUint32 *aWrapColumn)
+NS_IMETHODIMP nsTextEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
 {
   nsresult res;
 
@@ -1463,7 +1463,7 @@ NS_IMETHODIMP nsTextEditor::GetBodyWrapWidth(PRUint32 *aWrapColumn)
 // (Eventually want to search for more than one in case there are
 // interspersed quoted text blocks.)
 // 
-NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRUint32 aWrapColumn)
+NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
 {
   nsresult res;
 
@@ -1551,7 +1551,18 @@ NS_IMETHODIMP nsTextEditor::OutputTextToString(nsString& aOutputString, PRBool a
 	  
     // Try to turn on pretty printing, but don't panic if it doesn't work:
     (void)encoder->PrettyPrint(PR_TRUE);
-    (void)encoder->SetWrapColumn(mWrapColumn);
+    // Set the wrap column.  If our wrap column is 0,
+    // i.e. wrap to body width, then don't set it, let the
+    // document encoder use its own default.
+    if (mWrapColumn != 0)
+    {
+      PRUint32 wc;
+      if (mWrapColumn < 0)
+        wc = 0;
+      else
+        wc = (PRUint32)mWrapColumn;
+      (void)encoder->SetWrapColumn(wc);
+    }
 
     rv = encoder->EncodeToString(aOutputString);
   }

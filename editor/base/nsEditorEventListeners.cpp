@@ -413,7 +413,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         {
           printf("Getting number of columns\n");
           aProcessed=PR_TRUE;
-          PRUint32 wrap;
+          PRInt32 wrap;
           if (NS_SUCCEEDED(mEditor->GetBodyWrapWidth(&wrap)))
             printf("Currently wrapping to %d\n", wrap);
           else
@@ -426,7 +426,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         if (PR_TRUE==altKey)
         {
           aProcessed=PR_TRUE;
-          PRUint32 wrap;
+          PRInt32 wrap;
           if (!NS_SUCCEEDED(mEditor->GetBodyWrapWidth(&wrap)))
           {
             printf("GetBodyWrapWidth returned an error\n");
@@ -447,7 +447,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         if (PR_TRUE==altKey)
         {
           aProcessed=PR_TRUE;
-          PRUint32 wrap;
+          PRInt32 wrap;
           if (!NS_SUCCEEDED(mEditor->GetBodyWrapWidth(&wrap)))
           {
             printf("GetBodyWrapWidth returned an error\n");
