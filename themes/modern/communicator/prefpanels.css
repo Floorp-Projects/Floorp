@@ -40,7 +40,7 @@
    ====================================================================== */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace url("http://www.w3.org/1999/xhtml");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 /* ::::: Themes ::::: */
 
@@ -77,6 +77,12 @@
 #sizeMono {
   width: 4em;
 }
+
+.prefpanel-font-list {
+  -moz-box-flex: 1;
+}
+
+/* ::::: Mouse Wheel ::::: */
 
 #mouseWheelMode {
   width: 9em;
