@@ -1591,7 +1591,9 @@ $::template ||= Template->new(
         {
             my ($var) = @_;
             $var =~ s/"/""/g;
-            $var = "\"$var\"";
+            if ($var !~ /^-?(\d+\.)?\d*$/) {
+                $var = "\"$var\"";
+            }
             return $var;
         } ,
       } ,
