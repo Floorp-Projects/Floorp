@@ -25,10 +25,6 @@
 #include "nsIImage.h"
 #include "nsRenderingContextWin.h"
 
-#ifdef NGLAYOUT_DDRAW
-#include "ddraw.h"
-#endif
-
 //----------------------------------------------------------------------
 
 // Blender interface
@@ -58,6 +54,12 @@ protected:
    * @update dc - 10/29/98
    */
   ~nsBlenderWin();
+
+  nsresult Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride, PRInt32 aSrcBytes,
+                 PRUint8 *aDestBits, PRInt32 aDestStride, PRInt32 aDestBytes,
+                 PRUint8 *aSecondSrcBits, PRInt32 aSecondSrcStride, PRInt32 aSecondSrcBytes,
+                 PRInt32 aLines, PRInt32 aAlpha, nsPixelFormat &aPixFormat,
+                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor);
 
  private:
 #if 0
