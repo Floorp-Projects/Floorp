@@ -109,10 +109,11 @@ NS_IMETHODIMP nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
   if ( !sNumberOfScreens )
     mScreenManager->GetNumberOfScreens(&sNumberOfScreens);
 
-	// get resolution
+	// get resolution. Ensure that mPixelsToTwips is integral or we 
+	// run into serious rounding problems.
   double pix_inch = GetScreenResolution();		//Fix2X((**thepix).hRes);
-	mTwipsToPixels = pix_inch/(float)NSIntPointsToTwips(72);
-	mPixelsToTwips = 1.0f/mTwipsToPixels;
+  mPixelsToTwips = nscoord(NSIntPointsToTwips(72)/(float)pix_inch);
+  mTwipsToPixels = 1.0f/mPixelsToTwips;
 	
   return DeviceContextImpl::Init(aNativeWidget);
 }
