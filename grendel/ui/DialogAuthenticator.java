@@ -198,7 +198,7 @@ public class DialogAuthenticator extends Authenticator {
                                                 JOptionPane.PLAIN_MESSAGE,
                                                 JOptionPane.OK_CANCEL_OPTION);
       actionPanel.addPropertyChangeListener(new OptionListener());
-      add(actionPanel);
+      getContentPane().add(actionPanel);
 
       Dimension size = getPreferredSize();
       Dimension screen = getToolkit().getScreenSize();
