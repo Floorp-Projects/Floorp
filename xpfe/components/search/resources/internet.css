@@ -31,6 +31,10 @@ treeitem > treerow > treecell > titledbutton[value="AOL Netfind"] {
 	list-style-image: url("resource:/res/rdf/datasets/AOL_NetFind.gif");
 }
 
+treeitem > treerow > treecell > titledbutton[value="Google"] {
+	list-style-image: url("resource:/res/rdf/datasets/Google.gif");
+}
+
 treeitem > treerow > treecell > titledbutton[value="GoTo.com"] {
 	list-style-image: url("resource:/res/rdf/datasets/GoTo.com.gif");
 }
