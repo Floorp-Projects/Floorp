@@ -372,7 +372,13 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
     {
       nsAutoString date;
       rv = message->GetProperty("date", date);
-	  createNode(date, target);
+			PRInt32 error;
+			time_t time = date.ToInteger(&error, 16);
+			struct tm* tmTime = localtime(&time);
+			char dateBuf[100];
+			strftime(dateBuf, 100, "%m/%d/%y %I:%M %p", tmTime);
+			date = dateBuf;
+		  createNode(date, target);
     }
     return rv;
   }
