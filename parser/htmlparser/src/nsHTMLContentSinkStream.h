@@ -49,6 +49,7 @@
 #include "nsCOMPtr.h"
 #include "nsHTMLTokens.h"  // for eHTMLTags
 #include "nsISaveAsCharset.h" // Some compilers can't do nsCOMPtr on a forward type
+#include "nsIURI.h"
 
 #define NS_IHTMLCONTENTSINKSTREAM_IID  \
   {0xa39c6bff, 0x15f0, 0x11d2, \
@@ -184,6 +185,9 @@ protected:
     PRBool    mDirtyStack[1024];    // warning: hard-coded nesting level
     PRInt32   mColPos;
     PRBool    mInBody;
+
+    PRUint32  mFlags;
+    nsCOMPtr<nsIURI> mURI;
 
     PRBool    mDoFormat;
     PRBool    mDoHeader;

@@ -89,7 +89,10 @@ public:
     // to text for mail sending. This differs just slightly
     // but in an important way from normal formatted, and that is that
     // lines are space stuffed. This can't (correctly) be done later.
-    OutputFormatFlowed  = 64
+    OutputFormatFlowed  = 64,
+
+    // Convert links, image src, and script src to absolute URLs when possible
+    OutputAbsoluteLinks = 128
   };
   
   static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_ENCODER_IID; return iid; }
