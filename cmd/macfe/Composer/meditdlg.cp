@@ -260,8 +260,13 @@ void CEditDialog::ListenToMessage( MessageT inMessage, void* ioParam )
 					if (cancel)
 					{
 						StringHandle CloseHandle = GetString(CLOSE_STR_RESID);
-						CStr255 Close = **( (CStr255**)CloseHandle );	// Lock it? I don't think so.
-						cancel->SetDescriptor(Close);
+						if ( CloseHandle )
+						{
+							SInt8 hstate = HGetState( (Handle)CloseHandle );
+							HLock( (Handle)CloseHandle );
+							cancel->SetDescriptor( *CloseHandle );
+							HSetState( (Handle)CloseHandle, hstate );
+						}
 					}
 				}
 			}
@@ -337,7 +342,8 @@ void CEditDialog::ChooseImageFile(CLargeEditField* editField)
 	if ( fileLink == NULL )
 		return;
 	
-	editField->SetDescriptor( CStr255(/*NET_UnEscape*/(fileLink)) );
+	editField->SetDescriptor( CtoPstr(/*NET_UnEscape*/(fileLink)) );
+
 	XP_FREE(fileLink);
 }
 
@@ -821,7 +827,7 @@ void CPublish::InitializeDialogControls()
 
 			if (NET_ParseUploadURL(entry, &location, &user, &pass)) {
 				
-				UMenuUtils::InsertMenuItem(menu, CStr255(location), i + 2);
+				UMenuUtils::InsertMenuItem(menu, CtoPstr(location), i + 2);
 				
 				XP_FREE(location);
 				XP_FREE(user);
@@ -830,8 +836,12 @@ void CPublish::InitializeDialogControls()
 		}
 	}
 
-	CStr255 location = EDT_GetDefaultPublishURL( fContext, NULL, NULL, NULL );
-	fPublishLocation->SetDescriptor( location );
+	char *location = EDT_GetDefaultPublishURL( fContext, NULL, NULL, NULL );
+	if ( location )
+	{
+		fPublishLocation->SetDescriptor( CtoPstr(location) );
+		XP_FREE( location );
+	}
 	this->SetLatentSub( fPublishLocation );
 	
 	char *localDir = DocName();
@@ -843,7 +853,7 @@ void CPublish::InitializeDialogControls()
 			XP_STRCPY(localDir, pSlash);
 		}
 		
-		fLocalLocation->SetDescriptor(CStr255(localDir));
+		fLocalLocation->SetDescriptor( CtoPstr(localDir) );
 		
 		XP_FREE( localDir );
 	}
@@ -859,13 +869,13 @@ void CPublish::InitializeDialogControls()
 		EDT_PageData *pageData = EDT_GetPageData( fContext );
 		if ( pageData )
 		{
-			titleField->SetDescriptor( CStr255(pageData->pTitle) );
+			titleField->SetDescriptor( CtoPstr(pageData->pTitle) );
 			EDT_FreePageData( pageData );
 		}
 	}
 	
-	location = CPrefs::GetString(CPrefs::PublishLocation);
-	if (location.Length())
+	CStr255 locationCStr = CPrefs::GetString(CPrefs::PublishLocation);
+	if (locationCStr.Length())
 		fDefaultLocation->Enable();
 	else
 		fDefaultLocation->Disable();
@@ -1129,9 +1139,9 @@ void CPublish::ListenToMessage( MessageT inMessage, void* ioParam )
 						pass = newpass;
 					}
 					
-					fPublishLocation->SetDescriptor(CStr255(location));
-					fUserID->SetDescriptor(CStr255(user));
-					fPassword->SetDescriptor(CStr255(pass));
+					fPublishLocation->SetDescriptor( CtoPstr(location) );
+					fUserID->SetDescriptor( CtoPstr(user) );
+					fPassword->SetDescriptor( CtoPstr(pass) );
 					
 					if (pass && *pass)
 						fSavePassword->SetValue(1);
@@ -1161,9 +1171,9 @@ void CPublish::ListenToMessage( MessageT inMessage, void* ioParam )
 						pass = newpass;
 					}
 					
-					fPublishLocation->SetDescriptor(CStr255(location));
-					fUserID->SetDescriptor(CStr255(user));
-					fPassword->SetDescriptor(CStr255(pass));
+					fPublishLocation->SetDescriptor( CtoPstr(location) );
+					fUserID->SetDescriptor( CtoPstr(user) );
+					fPassword->SetDescriptor( CtoPstr(pass) );
 					
 					XP_FREE(location);
 					XP_FREE(user);
@@ -1765,19 +1775,23 @@ void CTableInsertDialog::FinishCreateSelf()
 
 void CTableInsertDialog::InitializeDialogControls()
 {
-	short 			ResID;
+	short 			resID;
 	CStr255			title;
 	StringHandle	titleH;
 
 	if (EDT_IsInsertPointInTable(fContext))
-		ResID = EDITOR_PERCENT_PARENT_CELL;
+		resID = EDITOR_PERCENT_PARENT_CELL;
 	else
-		ResID = EDITOR_PERCENT_WINDOW;
+		resID = EDITOR_PERCENT_WINDOW;
 
-	titleH = GetString( ResID );
+	titleH = GetString( resID );
 	if (titleH)
 	{
-		title = ** (CStr255**)titleH;
+		SInt8 hstate = HGetState( (Handle)titleH );
+		HLock( (Handle)titleH );
+		title = *titleH;
+		HSetState( (Handle)titleH, hstate );
+
 		MenuHandle menuh = ((LGAPopup *)fWidthPopup)->GetMacMenuH();
 		if (menuh)
 		{
@@ -2177,19 +2191,23 @@ void CEDTableContain::PrefsFromControls()
 // Initialize from preferences
 void CEDTableContain::ControlsFromPref()
 {
-	short 			ResID;
+	short 			resID;
 	CStr255			title;
 	StringHandle	titleH;
 
 	if (EDT_IsInsertPointInNestedTable(fContext))
-		ResID = EDITOR_PERCENT_PARENT_CELL;
+		resID = EDITOR_PERCENT_PARENT_CELL;
 	else
-		ResID = EDITOR_PERCENT_WINDOW;
+		resID = EDITOR_PERCENT_WINDOW;
 
-	titleH = GetString( ResID );
+	titleH = GetString( resID );
 	if (titleH)
 	{
-		title = ** (CStr255**)titleH;
+		SInt8 hstate = HGetState( (Handle)titleH );
+		HLock( (Handle)titleH );
+		title = *titleH;
+		HSetState( (Handle)titleH, hstate );
+
 		MenuHandle menuh = ((LGAPopup *)fWidthPopup)->GetMacMenuH();
 		if (menuh)
 		{
@@ -2600,18 +2618,22 @@ void CEDTableCellContain::ControlsFromPref()
 #endif
 
 // set popup menus depending if nested in another table or just in window
-	short 			ResID;
+	short 			resID;
 	CStr255			title;
 	StringHandle	titleH;
 	if (EDT_IsInsertPointInNestedTable(fContext))
-		ResID = EDITOR_PERCENT_PARENT_CELL;
+		resID = EDITOR_PERCENT_PARENT_CELL;
 	else
-		ResID = EDITOR_PERCENT_WINDOW;
+		resID = EDITOR_PERCENT_WINDOW;
 
-	titleH = GetString( ResID );
+	titleH = GetString( resID );
 	if (titleH)
 	{
-		title = ** (CStr255**)titleH;
+		SInt8 hstate = HGetState( (Handle)titleH );
+		HLock( (Handle)titleH );
+		title = *titleH;
+		HSetState( (Handle)titleH, hstate );
+
 		MenuHandle menuh = ((LGAPopup *)fWidthPopup)->GetMacMenuH();
 		if (menuh)
 		{
@@ -3597,7 +3619,7 @@ void CEDLinkContain::ControlsFromPref()
 	{
 		char *selection = (char*)LO_GetSelectionText( fContext );
 		if ( selection ) 
-			fLinkedTextEdit->SetDescriptor( CStr255(selection) );
+			fLinkedTextEdit->SetDescriptor( CtoPstr(selection) );
 		
 		if ( fInsert && selection == NULL )
 		{
@@ -3611,13 +3633,15 @@ void CEDLinkContain::ControlsFromPref()
 			SwitchTarget( fLinkPageTextEdit );
 			fLinkPageTextEdit->SelectAll();
 		}
+		
+		XP_FREEIF( selection );
 	}
 
 	EDT_HREFData *linkdata = EDT_GetHREFData( fContext );
 	if ( linkdata )
 	{
 		if ( linkdata->pURL )
-			fLinkPageTextEdit->SetDescriptor( CStr255(linkdata->pURL) );
+			fLinkPageTextEdit->SetDescriptor( CtoPstr(linkdata->pURL) );
 		pExtra = linkdata->pExtra;	// let's not realloc
 		linkdata->pExtra = NULL;	// don't dispose of this!
 		
