@@ -2062,8 +2062,8 @@ pk11_freeHashItem(PLHashEntry* entry, PRIntn index, void *arg)
 /*
  * initialize one of the slot structures. figure out which by the ID
  */
-CK_RV
-PK11_DestroySlot(PK11Slot *slot)
+static CK_RV
+pk11_DestroySlotData(PK11Slot *slot)
 {
     int i;
 
@@ -2217,7 +2217,7 @@ CK_RV NSC_Finalize (CK_VOID_PTR pReserved)
 			PL_HashTableLookup(tmpSlotHashTable, (void *)slotID);
 	    PORT_Assert(slot);
 	    if (!slot) continue;
-	    PK11_DestroySlot(slot);
+	    pk11_DestroySlotData(slot);
 	    PL_HashTableRemove(tmpSlotHashTable, (void *)slotID);
 	}
 	PORT_Free(tmpSlotList);
