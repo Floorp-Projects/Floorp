@@ -419,7 +419,9 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
        for browser windows by name, as it does.)
      */
     if (aParent) {
-      if (name.EqualsIgnoreCase("_top")) {
+      if (name.EqualsIgnoreCase("_self")) {
+        GetWindowTreeItem(aParent, getter_AddRefs(newDocShellItem));
+      } else if (name.EqualsIgnoreCase("_top")) {
         nsCOMPtr<nsIDocShellTreeItem> shelltree;
         GetWindowTreeItem(aParent, getter_AddRefs(shelltree));
         if (shelltree)
