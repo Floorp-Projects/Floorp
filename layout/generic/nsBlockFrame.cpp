@@ -583,8 +583,9 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": begin reflow type %d availSize=%d,%d computedSize=%d,%d\n",
-           aReflowState.reason, aReflowState.availableWidth, aReflowState.availableHeight,
+    printf(": begin %s reflow availSize=%d,%d computedSize=%d,%d\n",
+           nsHTMLReflowState::ReasonToString(aReflowState.reason),
+           aReflowState.availableWidth, aReflowState.availableHeight,
            aReflowState.mComputedWidth, aReflowState.mComputedHeight);
   }
   if (gNoisy) {
@@ -2103,7 +2104,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     aState.AdvanceToNextLine();
   }
 
-  // Pull data from a next-in-flow if we can
+  // Pull data from a next-in-flow if there's still room for more
+  // content here.
   while (keepGoing && (nsnull != aState.mNextInFlow)) {
     // Grab first line from our next-in-flow
     line = aState.mNextInFlow->mLines;
@@ -2153,8 +2155,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // line to be created; see SplitLine's callers for examples of
     // when this happens).
     while (nsnull != line) {
-      rv = ReflowLine(aState, line, &keepGoing, incrementalReflow ?
-                      PR_TRUE : PR_FALSE);
+      rv = ReflowLine(aState, line, &keepGoing, incrementalReflow /* force invalidate */);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -2537,7 +2538,6 @@ PlaceFrameView(nsIPresContext* aPresContext,
   aFrame->GetView(aPresContext, &view);
   if (view) {
     nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aFrame, view, nsnull);
-
   } else {
     nsContainerFrame::PositionChildViews(aPresContext, aFrame);
   }
@@ -5507,7 +5507,22 @@ nsBlockFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
-{  
+{
+#ifdef DEBUG
+  if (gNoisyReflow) {
+    IndentBy(stdout, gNoiseIndent);
+    ListTag(stdout);
+    printf(": ReflowDirtyChild (");
+    if (aChild)
+      nsFrame::ListTag(stdout, aChild);
+    else
+      printf("null");
+    printf(")\n");
+
+    gNoiseIndent++;
+  }
+#endif
+
   if (aChild) {
     // See if the child is absolutely positioned
     nsFrameState  childState;
@@ -5531,6 +5546,15 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
           aPresShell->AppendReflowCommand(reflowCmd);
           NS_RELEASE(reflowCmd);
         }
+
+#ifdef DEBUG
+        if (gNoisyReflow) {
+          IndentBy(stdout, gNoiseIndent);
+          printf("scheduled reflow command for absolutely positioned frame\n");
+          --gNoiseIndent;
+        }
+#endif
+
         return rv;
       }
     }
@@ -5562,6 +5586,13 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 
     nsFrame::CreateAndPostReflowCommand(aPresShell, this, 
       nsIReflowCommand::ReflowDirty, nsnull, nsnull, nsnull);
+
+#ifdef DEBUG
+    if (gNoisyReflow) {
+      IndentBy(stdout, gNoiseIndent);
+      printf("scheduled reflow command targeted at self\n");
+    }
+#endif
   }
   else {
     if (!(mState & NS_FRAME_IS_DIRTY)) {      
@@ -5572,10 +5603,23 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
       nsIReflowCommand::ReflowType type = nsIReflowCommand::ReflowDirty;
       aPresShell->CancelReflowCommand(this, &type);
 
+#ifdef DEBUG
+      if (gNoisyReflow) {
+        IndentBy(stdout, gNoiseIndent);
+        printf("cancelled reflow targeted at self\n");
+      }
+#endif
+
       // Pass up the reflow request to the parent frame.
       mParent->ReflowDirtyChild(aPresShell, this);
     }
   }
+
+#ifdef DEBUG
+  if (gNoisyReflow) {
+    --gNoiseIndent;
+  }
+#endif
   
   return NS_OK;
 }

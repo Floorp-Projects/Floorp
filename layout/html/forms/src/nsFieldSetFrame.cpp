@@ -517,15 +517,8 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
 
       // only if the origin changed
       if ((curOrigin.x != mLegendRect.x) || (curOrigin.y != mLegendRect.y)) {
-
           mLegendFrame->MoveTo(aPresContext,  actualLegendRect.x , actualLegendRect.y);
-
-          nsIView*  view;
-          mLegendFrame->GetView(aPresContext, &view);
-          if (view) 
-              nsContainerFrame::PositionFrameView(aPresContext, mLegendFrame, view);
-          else
-              nsContainerFrame::PositionChildViews(aPresContext, mLegendFrame);
+          nsContainerFrame::PositionFrameView(aPresContext, mLegendFrame);
       }
     }
 

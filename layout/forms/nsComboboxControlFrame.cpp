@@ -1080,11 +1080,7 @@ nsComboboxControlFrame::ReflowCombobox(nsIPresContext *         aPresContext,
   aDisplayFrame->WillReflow(aPresContext);
   //aDisplayFrame->MoveTo(aPresContext, dspBorderPadding.left + aBorderPadding.left, dspBorderPadding.top + aBorderPadding.top);
   aDisplayFrame->MoveTo(aPresContext, aBorderPadding.left, aBorderPadding.top);
-  nsIView*  view;
-  aDisplayFrame->GetView(aPresContext, &view);
-  if (view) {
-    nsAreaFrame::PositionFrameView(aPresContext, aDisplayFrame, view);
-  }
+  nsAreaFrame::PositionFrameView(aPresContext, aDisplayFrame);
   nsReflowStatus status;
   nsresult rv = aDisplayFrame->Reflow(aPresContext, txtKidSize, txtKidReflowState, status);
   if (NS_FAILED(rv)) return;

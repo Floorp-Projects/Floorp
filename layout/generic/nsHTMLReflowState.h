@@ -231,6 +231,8 @@ struct nsHTMLReflowState {
 #ifdef DEBUG
   // hook for attaching debug info (e.g. tables may attach a timer during reflow)
   void* mDebugHook;
+
+  static const char* ReasonToString(nsReflowReason aReason);
 #endif
 
   // Note: The copy constructor is written by the compiler

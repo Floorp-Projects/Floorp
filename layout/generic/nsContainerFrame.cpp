@@ -356,23 +356,24 @@ TranslatePointTo(nsPoint& aPoint, nsIView* aChildView, nsIView* aParentView)
 
 void
 nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
-                                    nsIFrame*       aKidFrame,
-                                    nsIView*        aView)
+                                    nsIFrame*       aKidFrame)
 {
-  if (aView) {
+  nsIView* view;
+  aKidFrame->GetView(aPresContext, &view);
+  if (view) {
     // Position view relative to its parent, not relative to aKidFrame's
     // frame which may not have a view
+    nsIView*        parentView;
+    view->GetParent(parentView);
+
     nsIView*        containingView;
     nsPoint         origin;
-    nsIView*        parentView;
-    nsIViewManager *vm;
-
-    aView->GetParent(parentView);
     aKidFrame->GetOffsetFromView(aPresContext, origin, &containingView);
-    aView->GetViewManager(vm);
 
-    if (containingView != parentView) 
-    {
+    nsCOMPtr<nsIViewManager> vm;
+    view->GetViewManager(*getter_AddRefs(vm));
+
+    if (containingView != parentView) {
       // it is possible for parent view not to have a frame attached to it
       // kind of an anonymous view. This happens with native scrollbars and
       // the clip view. To fix this we need to go up and parentView chain
@@ -405,9 +406,10 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
       }
     }
 
-    vm->MoveViewTo(aView, origin.x, origin.y);
-
-    NS_RELEASE(vm);
+    vm->MoveViewTo(view, origin.x, origin.y);
+  }
+  else {
+    PositionChildViews(aPresContext, aKidFrame);
   }
 }
 
@@ -714,11 +716,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
   }
 
   if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW)) {
-    nsIView*  view;
-    aKidFrame->GetView(aPresContext, &view);
-    if (view) {
-      PositionFrameView(aPresContext, aKidFrame, view);
-    }
+    PositionFrameView(aPresContext, aKidFrame);
   }
 
   // Reflow the child frame
@@ -781,20 +779,8 @@ nsContainerFrame::PositionChildViews(nsIPresContext* aPresContext,
     nsIFrame* childFrame;
     aFrame->FirstChild(aPresContext, childListName, &childFrame);
     while (childFrame) {
-      nsIView*  view;
-
-      // See if the child frame has a view
-      childFrame->GetView(aPresContext, &view);
-
-      if (view) {
-        // Position the view. Because any child views are relative to their
-        // parent, there's no need to recurse
-        PositionFrameView(aPresContext, childFrame, view);
-
-      } else {
-        // Recursively examine its child frames
-        PositionChildViews(aPresContext, childFrame);
-      }
+      // Position the frame's view, if it has one.
+      PositionFrameView(aPresContext, childFrame);
 
       // Get the next sibling child frame
       childFrame->GetNextSibling(&childFrame);
@@ -821,11 +807,7 @@ nsContainerFrame::PositionChildViews(nsIPresContext* aPresContext,
  * NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
  *    don't want to automatically sync the frame and view
  * NS_FRAME_NO_SIZE_VIEW - don't size the frame's view
- * NS_FRAME_NO_MOVE_CHILD_VIEWS - don't move child views. This is for the case
- *    where the frame's new position differs from its current position and the
- *    frame itself doesn't have a view, so moving the frame would cause any child
- *    views to be out of sync
-*/
+ */
 nsresult
 nsContainerFrame::FinishReflowChild(nsIFrame*            aKidFrame,
                                     nsIPresContext*      aPresContext,
@@ -849,12 +831,12 @@ nsContainerFrame::FinishReflowChild(nsIFrame*            aKidFrame,
                              &aDesiredSize.mOverflowArea,
                              aFlags);
 
-  } else if (0 == (aFlags & NS_FRAME_NO_MOVE_CHILD_VIEWS)) {
+  }
+  else if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW) &&
+           ((curOrigin.x != aX) || (curOrigin.y != aY))) {
     // If the frame has moved, then we need to make sure any child views are
     // correctly positioned
-    if ((curOrigin.x != aX) || (curOrigin.y != aY)) {
-      PositionChildViews(aPresContext, aKidFrame);
-    }
+    PositionChildViews(aPresContext, aKidFrame);
   }
   
   return aKidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);

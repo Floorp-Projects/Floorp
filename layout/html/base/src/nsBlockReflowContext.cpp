@@ -521,14 +521,7 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
   // Note: Use "x" and "y" and not "mX" and "mY" because they more accurately
   // represents where we think the block will be placed
   aFrame->MoveTo(mPresContext, x, y);
-  nsIView*  view;
-  aFrame->GetView(mPresContext, &view);
-  if (view) {
-    nsContainerFrame::PositionFrameView(mPresContext, aFrame, view);
-  }
-  else {
-    nsContainerFrame::PositionChildViews(mPresContext, aFrame);
-  }
+  nsContainerFrame::PositionFrameView(mPresContext, aFrame);
 
 #ifdef DEBUG
   mMetrics.width = nscoord(0xdeadbeef);

@@ -549,22 +549,9 @@ nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect)
       frame->SetRect(presContext, aRect);
 
     
-    if (!(flags & NS_FRAME_NO_MOVE_VIEW) || !(flags & NS_FRAME_NO_MOVE_CHILD_VIEWS)) 
+    if (!(flags & NS_FRAME_NO_MOVE_VIEW))
     { 
-      nsIView*  view;
-      frame->GetView(presContext, &view);
-      if (view) {
-        if (!(flags & NS_FRAME_NO_MOVE_VIEW)) {
-          nsContainerFrame::PositionFrameView(presContext, frame, view);
-        }
-      } else {
-        if (!(flags & NS_FRAME_NO_MOVE_CHILD_VIEWS)) {
-          // only if the origin changed
-          if ((rect.x != aRect.x) || (rect.y != aRect.y))  {
-             nsContainerFrame::PositionChildViews(presContext, frame);
-          }
-        }
-      }
+      nsContainerFrame::PositionFrameView(presContext, frame);
     }
   
 

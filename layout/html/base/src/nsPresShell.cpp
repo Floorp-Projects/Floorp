@@ -2660,16 +2660,14 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_Initial, rcx, maxSize);
-    nsIView*          view;
-
     rootFrame->WillReflow(mPresContext);
-    rootFrame->GetView(mPresContext, &view);
-    if (view) {
-      nsContainerFrame::PositionFrameView(mPresContext, rootFrame, view);
-    }
+    nsContainerFrame::PositionFrameView(mPresContext, rootFrame);
     rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
+
+    nsIView* view;
+    rootFrame->GetView(mPresContext, &view);
     if (view) {
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
                                                  nsnull);
@@ -2798,15 +2796,13 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_Resize, rcx, maxSize);
-    nsIView*          view;
 
     rootFrame->WillReflow(mPresContext);
-    rootFrame->GetView(mPresContext, &view);
-    if (view) {
-      nsContainerFrame::PositionFrameView(mPresContext, rootFrame, view);
-    }
+    nsContainerFrame::PositionFrameView(mPresContext, rootFrame);
     rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
+    nsIView* view;
+    rootFrame->GetView(mPresContext, &view);
     if (view) {
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
                                                  nsnull);
@@ -3335,16 +3331,14 @@ PresShell::StyleChangeReflow()
 
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_StyleChange, rcx, maxSize);
-    nsIView*          view;
 
     rootFrame->WillReflow(mPresContext);
-    rootFrame->GetView(mPresContext, &view);
-    if (view) {
-      nsContainerFrame::PositionFrameView(mPresContext, rootFrame, view);
-    }
+    nsContainerFrame::PositionFrameView(mPresContext, rootFrame);
     rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
+    nsIView* view;
+    rootFrame->GetView(mPresContext, &view);
     if (view) {
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
                                                  nsnull);
