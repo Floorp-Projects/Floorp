@@ -48,7 +48,6 @@ function updateWinReg()
 var srDest;
 var err;
 var szUninstall;
-var fUninstall;
 var fCommunicator;
 var fWindowsSystem;
 var fileTemp;
@@ -67,8 +66,6 @@ logComment("fCommunicator: " + fCommunicator);
 
 // build the uninstall folder path
 szUninstall = fCommunicator + "Uninstall";
-fUninstall  = getFolder("file:///", szUninstall);
-File.dirCreate(fUninstall);
 
 // Log component.reg file so it can be deleted by the uninstaller.
 // These two files are created after installation is done, thus
@@ -103,7 +100,7 @@ if(verifyDiskSpace(fCommunicator, srDest) == true)
               "msvcrt.dll",         // dir name in jar to extract 
               fWindowsSystem,       // Where to put this file (Returned from getFolder) 
               "",                   // subdir name to create relative to fCommunicator
-              true);                // Force Flag 
+              WIN_SHARED_FILE);
       logComment("addFile() of msvcrt.dll returned: " + err);
     }
     else
@@ -126,7 +123,7 @@ if(verifyDiskSpace(fCommunicator, srDest) == true)
               "msvcirt.dll",        // dir name in jar to extract 
               fWindowsSystem,       // Where to put this file (Returned from getFolder) 
               "",                   // subdir name to create relative to fCommunicator
-              true);                // Force Flag 
+              WIN_SHARED_FILE);
       logComment("addFile() of msvcirt.dll returned: " + err);
     }
     else
