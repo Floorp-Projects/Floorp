@@ -33,6 +33,9 @@
 #include <MacTypes.h>
 #include <PLStringFuncs.h>
 #include <Icons.h>
+#if TARGET_CARBON || (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
+#include <ControlDefinitions.h>
+#endif
 
 #include "FullPath.h"
 #include "MoreFilesExtras.h"

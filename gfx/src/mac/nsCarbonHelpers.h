@@ -24,7 +24,11 @@
 #ifndef CarbonHelpers_h__
 #define CarbonHelpers_h__
 
+#if (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
+#include <ControlDefinitions.h>
+#else
 #include <Controls.h>
+#endif
 #include <Menus.h>
 #include <Windows.h>
 
@@ -73,10 +77,14 @@ inline void GetPortHiliteColor ( GrafPtr port, RGBColor* color )
 	}
 }
 
+#undef DisposeAEEventHandlerUPP
+
 inline void DisposeAEEventHandlerUPP ( RoutineDescriptor* proc )
 {
 	::DisposeRoutineDescriptor(proc);
 }
+
+#undef DisposeNavEventUPP
 
 inline void DisposeNavEventUPP ( RoutineDescriptor* proc )
 {

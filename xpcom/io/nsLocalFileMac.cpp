@@ -48,6 +48,7 @@
 #include <AppleEvents.h>
 #include <AEDataModel.h>
 
+#include <Math64.h>
 #include <Aliases.h>
 #include <Folders.h>
 #include "macDirectoryCopy.h"
@@ -1628,8 +1629,9 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 	
 	if (err == noErr)
 	{
-		space64Bits.lo = pb.ioVFreeBytes.lo;
-		space64Bits.hi = pb.ioVFreeBytes.hi;
+		const UnsignedWide& freeBytes = UInt64ToUnsignedWide(pb.ioVFreeBytes);
+		space64Bits.lo = freeBytes.lo;
+		space64Bits.hi = freeBytes.hi;
 	}
 		
 	*aDiskSpaceAvailable = space64Bits;

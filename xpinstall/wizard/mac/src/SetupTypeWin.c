@@ -22,6 +22,7 @@
 
 #include "MacInstallWizard.h"
 
+#include <Math64.h>
 
 /*-----------------------------------------------------------*
  *   Setup Type Window
@@ -475,8 +476,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	pb.ioVRefNum = vRefNum;
 	
 	ERR_CHECK( PBXGetVolInfoSync(&pb) );
-	freeSpace.hi = pb.ioVFreeBytes.hi;
-	freeSpace.lo = pb.ioVFreeBytes.lo;
+	freeSpace = UInt64ToUnsignedWide(pb.ioVFreeBytes);
 	dFree = (freeSpace.hi * 4294967296) + freeSpace.lo; // 2^32 = 4294967296
 	lFree = (long) (dFree/1024);
 

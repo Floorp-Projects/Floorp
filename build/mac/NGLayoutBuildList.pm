@@ -22,7 +22,7 @@ use MacCVS;
 use MANIFESTO;
 
 @ISA		= qw(Exporter);
-@EXPORT		= qw(Checkout BuildDist BuildProjects BuildCommonProjects BuildLayoutProjects BuildOneProject);
+@EXPORT		= qw(ConfigureBuildSystem Checkout BuildDist BuildProjects BuildCommonProjects BuildLayoutProjects BuildOneProject);
 
 # NGLayoutBuildList builds the nglayout project
 # it is configured by setting the following variables in the caller:
@@ -174,6 +174,60 @@ sub _copy($$)
 		print( "Copying $_[0] to $_[1]\n" );
 		&copy;
 	}
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// Configure Build System
+#//--------------------------------------------------------------------------------------------------
+
+my($UNIVERSAL_INTERFACES_VERSION) = 0x0320;
+
+sub _processRunning($)
+{
+  my($processName, $psn, $psi) = @_;
+  while ( ($psn, $psi) = each(%Process) ) {
+      if ($psi->processName eq $processName) { return 1; }
+  }
+  return 0;
+}
+
+sub _genBuildSystemInfo()
+{
+  # always rebuild the configuration program.
+  BuildProjectClean(":mozilla:build:mac:tools:BuildSystemInfo:BuildSystemInfo.mcp", "BuildSystemInfo");
+
+  # delete the configuration file.
+  unlink(":mozilla:build:mac:BuildSystemInfo.pm");
+  
+  # run the program.
+  system(":mozilla:build:mac:BuildSystemInfo");
+
+  # wait for the file to be created.
+  while (!(-e ":mozilla:build:mac:BuildSystemInfo.pm")) { WaitNextEvent(); }
+  
+  # wait for BuildSystemInfo to finish, so that we see correct results.
+  while (_processRunning("BuildSystemInfo")) { WaitNextEvent(); }
+
+  # now, evaluate the contents of the file.
+	open(F, ":mozilla:build:mac:BuildSystemInfo.pm");
+	while (<F>) { eval; }
+	close(F);
+}
+
+# defines some build-system configuration variables.
+sub ConfigureBuildSystem()
+{
+	#// In the future, we may want to do configurations based on the actual build system itself.
+	#// _genBuildSystemInfo();
+
+	#// For now, if we discover a newer header file than existed in Universal Interfaces 3.2,
+	#// we'll assume that 3.3 or later is in use.
+	my($universal_interfaces) = getCodeWarriorPath("MacOS Support:Universal:Interfaces:CIncludes:");
+	if (-e ($universal_interfaces . "ControlDefinitions.h")) {
+		$UNIVERSAL_INTERFACES_VERSION = 0x0330;
+	}
+
+	printf("UNIVERSAL_INTERFACES_VERSION = 0x%04X\n", $UNIVERSAL_INTERFACES_VERSION);
 }
 
 #//--------------------------------------------------------------------------------------------------
@@ -1350,8 +1404,7 @@ sub BuildRuntimeProjects()
 	}
 	else
 	{
-	    #//if (0 /* $main::UNIVERSAL_HEADERS_VERSION >= 0x0330 */) {
-	    if (0) {
+	    if ($UNIVERSAL_INTERFACES_VERSION >= 0x0330) {
     		_BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",			"MacOS Interfaces (3.3)");
 	    } else {
     		_BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",			"MacOS Interfaces");

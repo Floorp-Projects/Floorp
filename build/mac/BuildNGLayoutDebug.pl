@@ -189,6 +189,8 @@ else
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
 
+ConfigureBuildSystem();
+
 Checkout();
 
 chdir($MOZ_SRC);

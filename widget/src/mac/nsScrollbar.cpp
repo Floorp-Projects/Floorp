@@ -22,7 +22,7 @@
 
 #include "nsScrollbar.h"
 #include "nsIDeviceContext.h"
-#if TARGET_CARBON
+#if TARGET_CARBON || (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
 #include <ControlDefinitions.h>
 #endif
 

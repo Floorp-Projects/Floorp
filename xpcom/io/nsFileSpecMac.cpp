@@ -38,6 +38,7 @@
 #include <Aliases.h>
 #include <Folders.h>
 #include <Errors.h>
+#include <Math64.h>
 #include <TextUtils.h>
 #include <Processes.h>
 #include <limits.h>		// ULONG_MAX
@@ -1208,8 +1209,9 @@ PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
 	
 	if (err == noErr)
 	{
-		space64Bits.lo = pb.ioVFreeBytes.lo;
-		space64Bits.hi = pb.ioVFreeBytes.hi;
+		const UnsignedWide& freeBytes = UInt64ToUnsignedWide(pb.ioVFreeBytes);
+		space64Bits.lo = freeBytes.lo;
+		space64Bits.hi = freeBytes.hi;
 	}
 		
 	return space64Bits;

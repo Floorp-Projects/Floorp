@@ -156,6 +156,8 @@ else
 Moz::StopForErrors();
 #Moz::DontStopForErrors();
 
+ConfigureBuildSystem();
+
 Checkout();
 
 SetBuildNumber();
