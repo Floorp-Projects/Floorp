@@ -4,7 +4,7 @@
 <!-- LOCALIZATION NOTE (title.label): DONT_TRANSLATE -->
 <!ENTITY  title.label                     "Search">
 
-<!--L OCALIZATION NOTE (lHeader): Translate "Search" according to Netscape glossary -->
+<!--LOCALIZATION NOTE (lHeader): Translate "Search" according to Netscape glossary -->
 <!ENTITY  lHeader                         "Search">
 <!ENTITY  legendHeader                    "Default search engine">
 <!ENTITY  defaultSearchEngine.label       "Search using:">

@@ -6,10 +6,10 @@
 <!ENTITY  maintainCheckbox.label "Maintain links">
 <!ENTITY  keepCheck.label "Keep images with page">
 
-<!--LOCALIZATION NOTE (adjustDesc.label): Attempt to maitain approximate line length, linefeeds and white space -->
+<!--LOCALIZATION NOTE (adjustDesc.label): Attempt to maintain approximate line length, linefeeds and white space -->
 <!ENTITY  adjustDesc.label "Adjust links to work from the page's location. (Links to local pages will work when
 			      local versions exist.)           ">
-<!--LOCALIZATION NOTE (saveDesc.label): Attempt to maitain approximate line length, linefeeds and white space -->
+<!--LOCALIZATION NOTE (saveDesc.label): Attempt to maintain approximate line length, linefeeds and white space -->
 <!ENTITY  saveDesc.label "Save copies of images to the page's location.  Images will always
 				appear in local versions of the page and when the page is published.">
 <!ENTITY  tip.label "Tip: Check both options if you will be using remote publishing.">

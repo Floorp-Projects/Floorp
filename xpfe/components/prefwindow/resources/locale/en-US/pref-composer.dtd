@@ -11,7 +11,7 @@
 
 <!ENTITY  maintainTableStructure.label          "Maintain table structure during delete tasks">
 <!ENTITY  maintainStructure.accesskey           "m">
-
+<!-- LOCALIZATION NOTE (pressingTheDeleteKey.label): Don't translate "Delete" -->
 <!ENTITY  pressingTheDeleteKey.label            "Pressing the [Delete] key should">
 <!ENTITY  deleteCell.label                      "delete cell (content and structure)">
 <!ENTITY  deleteCell.accesskey                  "s">

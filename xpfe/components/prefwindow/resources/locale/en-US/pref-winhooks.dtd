@@ -28,6 +28,7 @@
 <!ENTITY https.accesskey  "S">
 <!ENTITY ftp.label        "File Transfer Protocol (ftp:)">
 <!ENTITY ftp.accesskey    "F">
+<!--LOCALIZATION NOTE (chrome.label): Don't translate 'chrome' -->
 <!ENTITY chrome.label     "Chrome Protocol (chrome:)">
 <!ENTITY chrome.accesskey "C">
 
