@@ -34,7 +34,9 @@ include $(GDEPTH)/gconfig/config.mk
 
 DEFINES		+= -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".o\" -DNeedVarargsPrototypes
 
+ifeq ($(OS_ARCH),WINNT)
 LDFLAGS = /SUBSYSTEM:CONSOLE
+endif
 
 include $(GDEPTH)/gconfig/rules.mk
 

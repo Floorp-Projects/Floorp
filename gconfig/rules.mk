@@ -821,7 +821,9 @@ endif
 #
 .PHONY: all all_platforms alltags boot clean clobber clobber_all export install libs realclean release $(OBJDIR) $(DIRS)
 
+ifeq ($(OS_ARCH),WINNT)
 -include $(OBJDIR)/make.dp
+endif
 
 
 
