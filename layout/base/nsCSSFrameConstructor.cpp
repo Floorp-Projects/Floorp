@@ -5051,11 +5051,14 @@ nsCSSFrameConstructor::IsScrollable(nsIPresContext*       aPresContext,
 {
   // For the time being it's scrollable if the overflow property is auto or
   // scroll, regardless of whether the width or height is fixed in size
-  if ((NS_STYLE_OVERFLOW_SCROLL == aDisplay->mOverflow) ||
-      (NS_STYLE_OVERFLOW_AUTO == aDisplay->mOverflow)) {
-    return PR_TRUE;
+  switch (aDisplay->mOverflow) {
+  	case NS_STYLE_OVERFLOW_SCROLL:
+  	case NS_STYLE_OVERFLOW_AUTO:
+  	case NS_STYLE_OVERFLOW_SCROLLBARS_NONE:
+  	case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
+  	case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
+	    return PR_TRUE;
   }
-
   return PR_FALSE;
 }
 
