@@ -508,47 +508,33 @@ function CleanUpSearchView()
   }
 }
 
-function SubscribeTreeOrSearchOutlinerHasFocus()
+function onSearchOutlinerKeyPress(event)
 {
-  var currentNode = top.document.commandDispatcher.focusedElement;
-  while (currentNode) {
-    if (currentNode === gSubscribeTree ||
-        currentNode === gSearchOutliner)
-      return true;
-    currentNode = currentNode.parentNode;
-  }
-
-  return false;
-}
-
-function SubscribeSpaceHit()
-{
-  // if the subscribe tree / search outliner
-  // doesn't have focus, return.
-  // the space should be processed as it might be
-  // for the quick search text field, or for a button.
-  if (!SubscribeTreeOrSearchOutlinerHasFocus())
+  // for now, only do something on space key
+  if (event.keyCode != 0)
     return;
 
-  var i;
+  var outlinerSelection = gSearchView.selection; 
+  for (var i=0;i<outlinerSelection.getRangeCount();i++) {
+    var start = new Object;
+    var end = new Object;
+    outlinerSelection.getRangeAt(i,start,end);
+    for (var k=start.value;k<=end.value;k++)
+      ReverseStateFromRow(k);
 
-  if (InSearchMode()) {
-    var outlinerSelection = gSearchView.selection; 
-    for (i=0;i<outlinerSelection.getRangeCount();i++) {
-      var start = new Object;
-      var end = new Object;
-      outlinerSelection.getRangeAt(i,start,end);
-      for (var k=start.value;k<=end.value;k++)
-        ReverseStateFromRow(k);
+    // force a repaint
+    InvalidateSearchOutliner();
+  }
+}
 
-      // force a repaint
-      InvalidateSearchOutliner();
-    }
-  }
-  else {
-    var groupList = gSubscribeTree.selectedItems;
-    for (i=0;i<groupList.length;i++)
-      ReverseStateFromNode(groupList[i]);
-  }
+function onSubscribeTreeKeyPress(event)
+{
+  // for now, only do something on space key
+  if (event.keyCode != 0)
+    return;
+
+  var groupList = gSubscribeTree.selectedItems;
+  for (var i=0;i<groupList.length;i++)
+    ReverseStateFromNode(groupList[i]);
 }
 

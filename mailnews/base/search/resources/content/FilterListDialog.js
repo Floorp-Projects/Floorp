@@ -30,6 +30,7 @@ const nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
 var gFilterBundle;
 var gPromptService;
 var gFilterListMsgWindow = null;
+var gFilterTree;
 
 function onLoad()
 {
@@ -44,6 +45,7 @@ function onLoad()
     gFilterListMsgWindow.SetDOMWindow(window); 
 
     gFilterBundle = document.getElementById("bundle_filter");
+    gFilterTree = document.getElementById("filterTree");
 
     editButton = document.getElementById("editButton");
     deleteButton = document.getElementById("deleteButton");
@@ -68,7 +70,7 @@ function onLoad()
     if (firstItem) {
         selectServer(firstItem);
     }
-
+    
     if (("arguments" in window) && window.arguments[0] && ("prefillValue" in window.arguments[0])) 
         onNewFilter(window.arguments[0].prefillValue);
 }
@@ -101,14 +103,13 @@ function setServer(uri)
    var msgFolder =  resource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
    //Calling getFilterList will detect any errors in rules.dat, backup the file, and alert the user
-   //we need to do this because tree.setAttribute will cause rdf to call getFilterList and there is 
+   //we need to do this because gFilterTree.setAttribute will cause rdf to call getFilterList and there is 
    //no way to pass msgWindow in that case. 
 
    if (msgFolder)
      msgFolder.getFilterList(gFilterListMsgWindow);
 
-    var tree = document.getElementById("filterTree");
-    tree.setAttribute("ref", uri);
+    gFilterTree.setAttribute("ref", uri);
     updateButtons();
 }
 
@@ -118,15 +119,19 @@ function onToggleEnabled(event)
     while (item && item.localName != "treeitem") {
         item = item.parentNode;
     }
+    toggleFilter(item.id);
+}
 
-    var filterResource = rdf.GetUnicodeResource(item.id);
+function toggleFilter(aFilterURI)
+{
+    var filterResource = rdf.GetUnicodeResource(aFilterURI);
     var filter = filterResource.GetDelegate("filter",
                                             Components.interfaces.nsIMsgFilter);
     filter.enabled = !filter.enabled;
     refreshFilterList();
 }
 
-// sets up the menulist and the tree
+// sets up the menulist and the gFilterTree
 function selectServer(uri)
 {
     // update the server menu
@@ -138,7 +143,7 @@ function selectServer(uri)
 
 function currentFilter()
 {
-    var selection = document.getElementById("filterTree").selectedItems;
+    var selection = gFilterTree.selectedItems;
     if (!selection || selection.length <=0)
         return null;
 
@@ -228,26 +233,27 @@ function moveCurrentFilter(motion)
     refreshFilterList();
 }
 
-function refreshFilterList() {
-    var tree = document.getElementById("filterTree");
-    if (!tree) return;
+function refreshFilterList() 
+{
+    if (!gFilterTree) 
+      return;
 
     var selection;
 
-    var selectedItems = tree.selectedItems;
+    var selectedItems = gFilterTree.selectedItems;
     if (selectedItems && selectedItems.length >0)
-        selection = tree.selectedItems[0].id;
+        selection = gFilterTree.selectedItems[0].id;
 
-    tree.clearSelection();
-    tree.setAttribute("ref", tree.getAttribute("ref"));
+    gFilterTree.clearSelection();
+    gFilterTree.setAttribute("ref", gFilterTree.getAttribute("ref"));
 
     if (selection) {
         var newItem = document.getElementById(selection);
 
         // sometimes the selected element is gone.
         if (newItem) {
-            tree.selectItem(newItem);
-            tree.ensureElementIsVisible(newItem);
+            gFilterTree.selectItem(newItem);
+            gFilterTree.ensureElementIsVisible(newItem);
         }
     }
 }
@@ -347,10 +353,23 @@ function getServerThatCanHaveFilters()
 function onFilterDoubleClick(event)
 {
     // we only care about button 0 (left click) events
-    if (event.button != 0) return;
+    if (event.button != 0) 
+      return;
 
     var t = event.originalTarget;
 
     if (t.parentNode.parentNode.localName == "treeitem")
         onEditFilter();
+}
+
+function onFilterTreeKeyPress(event)
+{
+  // for now, only do something on space key
+  if (event.keyCode != 0)
+    return;
+
+  var selectedFilters = gFilterTree.selectedItems;
+
+  for (var i=0;i<selectedFilters.length;i++)
+    toggleFilter(selectedFilters[i].getAttribute("id"));
 }

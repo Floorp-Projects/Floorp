@@ -46,10 +46,6 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://messenger/content/subscribe.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 
-<keyset id="subscribeKeys">
-  <key id="space" key=" " oncommand="SubscribeSpaceHit()"/>
-</keyset>
-
   <grid flex="1" style="width: 40em; height: 25em;">
     <columns>
       <column flex="1"/>
@@ -101,6 +97,7 @@ Rights Reserved.
               id="subscribetree"
               datasources="rdf:null"
               seltype="multiple"
+              onkeypress="onSubscribeTreeKeyPress(event);"
               onclick="SubscribeOnClick(event);"> 
           <template>
             <rule>    
@@ -134,7 +131,9 @@ Rights Reserved.
         </tree>
      </hbox>
      <hbox id="searchview">
-       <outliner id="searchOutliner" flex="1" onclick="SearchOnClick(event);"> 
+       <outliner id="searchOutliner" flex="1" 
+              onkeypress="onSearchOutlinerKeyPress(event);"
+              onclick="SearchOnClick(event);"> 
          <outlinercols>
            <outlinercol id="nameCol" label="..." flex="5" width="0" persist="hidden width" ignoreincolumnpicker="true" />
            <splitter class="tree-splitter" />

@@ -81,6 +81,7 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
         <vbox>
           <tree id="filterTree" flex="1"
                 onselect="onFilterSelect(event);"
+                onkeypress="onFilterTreeKeyPress(event);"
                 ondblclick="onFilterDoubleClick(event);"
                 datasources="rdf:msgfilters rdf:msgaccountmanager"
                 containment="http://home.netscape.com/NC-rdf#child">
