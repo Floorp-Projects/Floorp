@@ -51,7 +51,6 @@ static NS_DEFINE_IID(kBrowserWindowCID,          NS_BROWSER_WINDOW_CID);
 
 nsRDFCore::nsRDFCore()
 {
-  printf("Created nsRDFCore\n");
   mScriptObject   = nsnull;
   mScriptContext  = nsnull;
 /*
@@ -85,15 +84,11 @@ nsRDFCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   // Always NULL result, in case of failure
   *aInstancePtr = NULL;
 
-printf("About to compare RDFCOREIIDs\n");
-
   if ( aIID.Equals(kIRDFCoreIID) ) {
     *aInstancePtr = (void*) ((nsIDOMRDFCore*)this);
     AddRef();
     return NS_OK;
   }
-
-printf("RDFCOREIIDs did not matched.\n");
 
   return nsBaseAppCore::QueryInterface(aIID, aInstancePtr);
 }
@@ -132,7 +127,7 @@ nsRDFCore::Init(const nsString& aId)
 NS_IMETHODIMP    
 nsRDFCore::DoSort(nsIDOMNode* node, const nsString& sortResource)
 {
-  printf("nsRDFCore::DoSort entered!!!\n");
+  printf(" ***** nsRDFCore::DoSort entered!!! *****\n");
 
 /*
   if (nsnull == mScriptContext) {
