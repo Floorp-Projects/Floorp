@@ -33,7 +33,9 @@ EXPORTS =	 						\
 			nsIMsgCompFields.h		\
 			nsMsgCompFieldsFact.h	\
 			nsIMsgSend.h			\
+			nsIMsgSendLater.h			\
 			nsMsgSendFact.h			\
+			nsMsgSendLaterFact.h			\
 			nsISmtpUrl.h			\
 			nsISmtpService.h		\
 			MsgCompGlue.h			\
