@@ -18,11 +18,11 @@ Netscape Personal Security Manager</h2></center>
 
 <center>
 <h2>
-Release 1.2</h2></center>
+Release 1.3</h2></center>
 
 <center>
 <h2>
-8/3/2000</h2></center>
+8/29/2000</h2></center>
 
 <center>
 <hr WIDTH="100%"></center>
@@ -32,19 +32,19 @@ the software.
 <p>These notes include information for IS professionals who are thoroughly
 familiar with security and public-key infrastructure (PKI) issues.
 <p>Use of this product is subject to the terms detailed in the license
-agreement accompanying it (see <a href="license.txt">license.txt</a>).
+agreement accompanying Netscape 6 PR3.
 <p>
 <hr WIDTH="100%">
 <h2>
 Contents</h2>
 <a href="#Documentation">Documentation</a>
-<br><a href="#Changes Since PSM 1.1">Changes Since Personal Security Manager
-1.1</a>
+<br><a href="#Changes Since PSM 1.2">Changes Since Personal Security Manager
+1.2</a>
 <br><a href="#Software/Hardware Requirements">Software/Hardware Requirements</a>
 <br><a href="#unpacking">Installing Personal Security Manager</a>
 <br><a href="#Using the Test Bed">Using Personal Security Manager</a>
-<br><a href="#Known Bugs/Issues for 12 Release">Known Bugs/Issues for Personal
-Security Manager 1.2</a>
+<br><a href="#Known Bugs/Issues for 13 Release">Known Bugs/Issues for Personal
+Security Manager 1.3</a>
 <br><a href="#Feedback">Feedback</a>
 <p>
 <hr WIDTH="100%">
@@ -61,125 +61,62 @@ Security Manager window.</li>
 <a href="cmcjavascriptapi.html">JavaScript API for Client Certificate Management</a>
 -- This reference describes a new Javascript API for performing user certificate
 management operations with Personal Security Manager, including one-click
-issuance, forced certificate backup by end users, issuance of dual encryption
-and signing email certificates, and automatic archival of encryption private
-keys.</li>
+issuance, forced certificate backup by end users, and automatic archival
+of encryption private keys.</li>
 </ul>
 For the latest release notes, deployment guide, and other information,
 see <a href="http://docs.iPlanet.com/docs/manuals/psm.html">http://docs.iPlanet.com/docs/manuals/psm.html</a><a href="http://developer.iPlanet.com/docs/manuals/psm.html">.</a>
 <p>
 <hr WIDTH="100%">
 <h2>
-<a NAME="Changes Since PSM 1.1"></a>Changes Since Personal Security Manager
-1.1</h2>
-The status of the following important features or bugs has changed since
-the 1.1 release:
-<ul>
-<li>
-This release makes it possible to view more details about each certificate,
-including other certificates in the certificate chain. To use this feature,
-click the Certificates tab in the Personal Security Manager window, select
-the certificate you want to view, then click View. To see the next certificate
-in the certificate chain, click the name labeled "Issued Under" in the
-View Security Certificate window. To view the complete contents of the
-certificate, click View More Info in the upper-right corner of the View
-Security Certificate window.</li>
-
-<li>
-This release includes support for the Netscape 6 Password Manager. For
-information about this feature, see <a href="http://home.netscape.com/eng/mozilla/ns6/relnotes/pv6-2.html">http://home.netscape.com/eng/mozilla/ns6/relnotes/pv6-2.html</a>.</li>
-
-<li>
-This release works with Netscape 6 or Communicator 4.7x (but not both at
-the same time) on Windows 95/98/NT without requiring any changes to the
-directory <tt>C:\Program Files\Common Files\Netscape Shared\Security\</tt>.
-Earlier releases required an existing Security directory (created for the
-Communicator 4.7x version of Personal Security Manager) to be renamed before
-installing Netscape 6 (or PSM for Mozilla), and vice versa.</li>
-</ul>
-
+<a NAME="Changes Since PSM 1.2"></a>Changes Since Personal Security Manager
+1.2</h2>
+Most changes since the Personal Security Manager 1.3 involves minor bug
+fixes and optimizaitons.
+<p>Netscape 6 and Mozilla do not supported signed or encrypted email. For
+this reason, features related to email certifiates are not available in
+this release.
+<p>
 <hr WIDTH="100%">
 <h4>
 <a NAME="Software/Hardware Requirements"></a><font size=+2>Software/Hardware
 Requirements</font></h4>
-<b>Operating systems supported:</b> Windows NT, Windows 95, Windows 98;
-Solaris 2.6, 2.7; and Linux 2.1 and 2.2.
-<p><b>Other software requirements:</b>
-<blockquote>
-<li>
-You must use Communicator 4.7 or later versions. Get the latest version
-of Communicator from <a href="http://home.netscape.com">http://home.netscape.com</a>
-before proceeding.</li>
-
-<li>
-If you are running Communicator 4.7, Personal Security Manager requires
-that Communicator have JavaScript turned on. If you are running later versions
-of Communicator, Personal Security Manager works regardless of whether
-JavaScript is turned on.</li>
-</blockquote>
-
+<b>Operating systems supported:</b> Windows NT, Windows 95, Windows 98
+Windows 2000; Solaris 2.6, 2.7, 2.8; and Red Hat Linux 6.1.
+<p><b>Other software requirements: </b>This release has been tested with
+Mozilla and Netscape 6. It is not intended for use with Communicator.
+<br>
 <hr WIDTH="100%">
 <h2>
 <a NAME="unpacking"></a>Installing Personal Security Manager</h2>
-
+Personal Security Manager 1.3 comes installed with Netscape 6 PR3. To install
+Netscape 1.3 with Mozilla, see <a href="http://docs.iplanet.com/docs/manuals/psm/psm-mozilla/index.html">http://docs.iplanet.com/docs/manuals/psm/psm-mozilla/index.html</a>.
+<p>The instructions that follow describe how the Personal Security Manager
+files are installed on each platform.
 <h3>
-Installing on Windows 95/98/NT</h3>
-To install Personal Security Manager on Windows 95/98/NT, save the file
-in a convenient location with the specified filename, then drag the file's
-icon into a Navigator window (that is, a browser window displayed by Communicator
-4.7 or later). Dropping the file's icon over the browser window initiates
-SmartUpdate, which automatically installs Personal Security Manager. After
-installation is complete, exit Communicator and relaunch it. If your copy
-of Communicator is installed in the default location, SmartUpdate installs
-the Personal Security Manager files in the directory
-<tt>C:\Program Files\Common
-Files\Netscape Shared\Security\</tt> and adds the file <tt>cmnav.dll</tt>
-in the directory <tt>C:\Program Files\Netscape\Communicator\Program</tt>.
+Installing on Windows 95/98/2000/NT</h3>
+Personal Security Manager is installed in a directory called <tt>psm</tt>
+in the same directory where the Netscape or Mozilla executable resides.
 <p><b>Windows NT users:</b> On Windows NT, you must have administrator
-privileges to install Personal Security Manager using SmartUpdate.
-<p><b>Mozilla and Netscape 6 users:</b> Personal Security Manager 1.2 works
-on Windows with Mozilla, Netscape 6, and Communicator--but not when any
-of these browsers are running at the same time. For example, you must exit
-Netscape 6 before launching Communicator with Personal Security Manager
-1.2 enabled.
+privileges to install Personal Security Manager.
+<p><b>All Windows users:</b> Personal Security Manager 1.3 works with Mozilla
+and Netscape 6, and Personal Security Manager 1.2 works with Mozilla, Netscape
+6, and Communicator 4.7x--but not when any of these browsers are running
+at the same time. For example, you must exit Netscape 6 PR3 before launching
+Communicator with Personal Security Manager 1.2 enabled.
 <h3>
 Installing on Unix</h3>
-Before you install Personal Security Manager on Unix, you must be logged
-in as the same Unix user you will be logged in as when you run Communicator.
-For the Unix installation to succeed, you must have write privileges for
-both the directory where the Netscape executable resides and the directory
-where the installation script creates the directory containing the Personal
-Security Manager files.
-<p>To install Personal Security Manager on Unix, download the tar file
-for the version of the product that you want to install and follow these
-steps:
-<ol>
-<li>
-Exit Communicator, if it is running.</li>
-
-<li>
-Decompress the downloaded file to some convenient location.</li>
-
-<li>
-Run the <tt>psm-install</tt> program.</li>
-</ol>
-The <tt>psm-install</tt> program allows you to specify the directory in
-which Personal Security Manager will be installed. In this release, you
-must install Personal Security Manager locally. To do so, you can either
-install it in the default location (<tt>/opt/netscape/security</tt>) or
-in some other local location. However, if you install Personal Security
-Manager anywhere other than the default location, Communicator must also
-be installed locally.
+Personal Security Manager must be installed locally, either in the default
+location (<tt>/opt/netscape/security</tt>) or in some other local location.
+However, if you install Personal Security Manager anywhere other than the
+default location, Netscape 6 must also be installed locally.
 <p>To run Personal Security Manager on Unix, you must be logged in as the
 same Unix user you were logged in as when you installed it.
 <h3>
 Disabling Personal Security Manager</h3>
-To <b>disable</b> Personal Security Manager temporarily, simply rename
-the file <tt>cmnav.dll</tt> (in the Netscape program directory on Windows
-95/98/NT, or the directory in which your Netscape executable resides on
-Unix) to some other name, such as <tt>cmnav.txt</tt>. On Unix, you can
-also rename the file <tt>cmnav.so</tt> to some other name to disable Personal
-Security Manager.
+To <b>disable</b> Personal Security Manager temporarily, remove the directory
+<tt>psm</tt> from the directory where the Netscape or Mozilla executable
+resides.
 <p>
 <hr WIDTH="100%">
 <h2>
@@ -189,7 +126,7 @@ Security Manager that are available with this release:
 <ul>
 <li>
 <a href="#Start Up Personal Security Manager with">Start Up Personal Security
-Manager with Communicator</a></li>
+Manager with Netscape 6</a></li>
 
 <li>
 <a href="#Use SSL with Server Authentication">Test Basic SSL</a></li>
@@ -202,10 +139,6 @@ Manager with Communicator</a></li>
 
 <li>
 <a href="#Using Your Personal Certificate for Client">Test Client Authentication</a></li>
-
-<li>
-<a href="#Request and Use Separate Signing and Encryption">Request and
-Use Separate Signing and Encryption Certificates ("Dual Key-Pair Certificates")</a></li>
 
 <li>
 <a href="#Validate Certificates Using OSCP">Validate Certificates Using
@@ -222,13 +155,23 @@ Manager, see <a href="cmcjavascriptapi.html">JavaScript API for Client
 Certificate Management</a> and the Personal Security Manager Deployment
 Guide. For the latest versions of these documents, see <a href="http://docs.iPlanet.com/docs/manuals/psm.html">http://docs.iPlanet.com/docs/manuals/psm.html</a>.
 <h3>
-<a NAME="Start Up Personal Security Manager with"></a>Start Up Personal
-Security Manager with Communicator</h3>
-Follow these steps to start Personal Security Manager with Communicator.
+<a NAME="Start Up Personal Security Manager with"></a>Use Personal Security
+Manager with Netscape 6</h3>
+Personal Security Manager starts automatically the first time Netscape
+6 needs to perform some action involving security, such as handling an
+SSL session.
+<p>Follow these steps to view your security settings and confirm that&nbsp;
+Personal Security Manager is running:
 <ol>
 <li>
-Launch Communicator. Personal Security Manager will silently load in the
-background.</li>
+Launch Netscape 6.</li>
+
+<li>
+Choose Security &amp; Privacy from the Tasks menu, then choose Security
+Manager to view your Personal Security Manager settings.</li>
+
+<li>
+Close the Personal Security Manager window.</li>
 
 <li>
 Go to the page <a href="psmtest.html">psmtest.html</a> (in the same directory
@@ -239,6 +182,7 @@ Security Manager and its version number.</li>
 Note that the version number has two parts. The first is the version of
 the PSM client library, and the second is the version of the PSM server
 library.
+<br>&nbsp;
 <h3>
 <a NAME="Use SSL with Server Authentication"></a>Test Basic SSL</h3>
 Go to any online store, banking service, brokerage account, or other web
@@ -294,38 +238,6 @@ D using Personal Security Manager.</li>
 </ul>
 
 <h3>
-<a NAME="Request and Use Separate Signing and Encryption"></a>Request and
-Use Separate Signing and Encryption Certificates ("Dual Key-Pair Certificates")</h3>
-Separate signing and encryption certificates, sometimes called "dual key-pair
-certificates," are specialized certificates used only with S/MIME. The
-term "dual key pair" refers to the fact that two public-private key pairs--four
-keys altogether--correspond to two separate certificates. The private key
-of one pair is used for email signing operations, and the public and private
-keys of the other pair are used for email encryption and decryption operations.
-Each pair corresponds to a separate certificate.
-<p>In the past, Communicator has supported the signing and encryption functions
-for S/MIME with a single, combined signing and encryption certificate.
-<p>This version of Personal Security Manager allows you to request dual
-key-pair certificates from a single, specially configured enrollment page
-provided by Netscape Certificate Management System. The resulting certificates
-are combined under a single nickname in the Certificates/Mine panel displayed
-by Personal Security Manager. (To see this panel after Personal Security
-Manager is installed, click the Security button in the Communicator toolbar,
-then click the Certificates tab.) When you select a nickname that represents
-a pair of related signing and encryption certificates, then click View
-or other buttons that act on the selection, a dialog box allows you to
-select which certificate you want to act on.
-<p>For instructions on configuring Certificate Management System to issue
-dual key-pair certificates and to archive the private encryption key, see
-<a href="http://home.netscape.com/eng/server/cms/41/adm_gide/kycrt_ee.htm#1067601">Chapter
-25, Recovering Encrypted Data</a>, in <i>Netscape Certificate Management
-System Administrator's Guide.</i>
-<p>Once you have obtained your dual key-pair certificates, you can use
-them with Personal Security Manager to sign and encrypt email. You can
-also back them up and import them using buttons in the Certificates/Mine
-panel, and set the certificate you want to use for signing in the Applications/Messenger
-panel.
-<h3>
 <a NAME="Validate Certificates Using OSCP"></a>Validate Certificates Using
 OSCP</h3>
 Personal Security Manager supports the use of the On-Line Certificate Status
@@ -372,103 +284,39 @@ not to send the certificate chain (including the CA root certificate and
 the OCSP responder's certificate) correctly.</li>
 </ul>
 
-<h3>
-<a NAME="Fetch Certificates Automatically from a Directory"></a>Fetch Certificates
-Automatically from a Directory</h3>
-Personal Security Manager can search a specified directory for the certificate
-associated with an email address. This search is performed automatically
-when you send a message (but note that it doesn't work over SSL in this
-release; see <a href="#Known Bugs/Issues for 12 Release">Known Bugs/Issues
-for 1.2 Release</a>).
-<p>To activate this feature, you must specify a directory server to search.
-To do so, choose Preferences from the File menu in Communicator, then click
-Addressing under Mail &amp; Newsgroups. In the right panel, click Directory
-Server under Pinpoint Addressing, select the directory you want to use
-from the drop-down menu, and click OK. Personal Security Manager uses this
-directory for automatic certificate lookups when you send an encrypted
-email message.
-<p>If the directory you want doesn't show up in the drop-down menu under
-Pinpoint Addressing, you can add it to your list of directories using the
-Communicator Address Book. To do so, choose Address Book from the Communicator
-menu, then choose New Directory from the File menu. You must then add information
-about the directory you want to add. Once the directory has been added
-to the Address book, you can specify it in your preferences as described
-above.
-<p>
 <hr WIDTH="100%">
 <h2>
-<a NAME="Known Bugs/Issues for 12 Release"></a>Known Bugs/Issues for Personal
-Security Manager 1.2</h2>
+<a NAME="Known Bugs/Issues for 13 Release"></a>Known Bugs/Issues for Personal
+Security Manager 1.3</h2>
 
 <ul>
 <li>
 FORTEZZA is not guaranteed to work with this release. [# 94220]</li>
 
 <li>
-LDAP over SSL does not work for address book lookups, pinpoint addressing,
-or automatic certificate fetching. That is, if you choose Address Book
-from the Communicator menu, select a directory in the left frame, and click
-the Properties button, the checkbox labeled Secure must not be selected.
-If Secure is selected, address book lookups for that directory will not
-work. Similarly, if the same Secure checkbox is selected for a directory
-that is also specified for pinpoint addressing, pinpoint addressing and
-automatic certificate lookups won't work. To view pinpoint addressing settings,
-choose Preferences from the Edit menu in Communicator and select Addressing
-under Mail &amp; Newsgroups. [# 364811]</li>
-
-<li>
-Secure proxy does not work with this release when it is running with Communicator
-4.72 or earlier versions. [# 362464] (Secure proxy does work with this
-release when it is running with Communicator 4.73 and later versions.)
-HTTP proxy works with Communicator 4.72 or earlier versions, but you must
-configure Communicator preferences as follows:</li>
-
-<ul>
-<li>
-Choose Preferences from the Edit menu, then click the plus sign beside
-Advanced, then click Proxies.</li>
-
-<li>
-In the Proxies panel, click "Manual proxy configuration." You must configure
-the proxy manually.</li>
-
-<li>
-Click View to see the proxy configurations.</li>
-
-<li>
-In the Manual Proxy Configuration dialog box, enter the hostname for the
-HTTP proxy you want to use in the field labeled HTTP, and the port number
-in the corresponding port field. Then, enter <tt>127.0.0.1</tt> in the
-field at the bottom labeled "Exceptions/Do not use proxy servers for domains
-beginning with:" (plus other names of other hosts, if necessary, that you
-don't want to use a proxy server to reach). This number identifies the
-local host, which cannot use a proxy server (or else Personal Security
-Manager won't work). Do not enter anything in the field labeled "Security."</li>
-</ul>
-
-<li>
 In some unusual circumstances you may encounter problems such as valid
-certificates not being verified or Communicator freezing up. If you encounter
+certificates not being verified or Netscape 6 freezing up. If you encounter
 a problem that doesn't appear to have a logical explanation, try the following
 as a last resort:</li>
 
 <ol>
 <li>
-Exit Communicator, then relaunch it. If necessary, use Control-Alt-Delete
-on Windows 95/98/NT to bring up the Task Manager and click End Process
-for both <tt>psm.exe</tt> and <tt>netscape.exe</tt>.</li>
+Exit Netscape 6, then relaunch it. If necessary, use Control-Alt-Delete
+on Windows 95/98/2000/NT to bring up the Task Manager and click End Process
+for both <tt>psm.exe</tt> and <tt>netscp6.exe</tt>.</li>
 
 <li>
 <b>Warning:</b> <b>Before taking this step, back up your own certificates
 stored internally by Personal Security Manager.</b> If exiting and relaunching
-Communicator doesn't take care of the problem, in some rare cases it may
-work to exit Communicator, then delete or rename your <tt>cert7.db</tt>
-and <tt>key3.db</tt> files (located in your user profile directory on Windows
-95/98/NT, or in the directory in which the Netscape executable resides
-on Unix) and relaunch the Communicator. You should also look for all other
-files in the same directory that begin with <tt>cert</tt> or <tt>key</tt>
+Netscape 6 doesn't take care of the problem, in some rare cases it may
+work to exit Netscape 6, then delete or rename your <tt>cert7.db</tt> and
+<tt>key3.db</tt> files (located in your user profile directory on Windows
+95/98/2000/NT, or in the directory in which the Netscape or Mozilla executable
+resides on Unix) and relaunch the Netscape 6. You should also look for
+all other files in the same directory that begin with <tt>cert</tt> or
+<tt>key</tt>
 and end in <tt>.db</tt> and delete those files as well before relaunching
-Communicator.</li>
+Netscape 6.</li>
 </ol>
 </ul>
 
