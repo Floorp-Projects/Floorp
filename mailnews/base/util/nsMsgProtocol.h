@@ -66,6 +66,11 @@ public:
 	// End of nsIStreamListenerSupport
 	////////////////////////////////////////////////////////////////////////////////////////
 
+	// LoadUrl -- A protocol typically overrides this function, sets up any local state for the url and
+	// then calls the base class which opens the socket if it needs opened. If the socket is 
+	// already opened then we just call ProcessProtocolState to start the churning process.
+	virtual nsresult LoadUrl(nsIURL * aURL);
+
 	// Flag manipulators
 	PRBool TestFlag  (PRUint32 flag) {return flag & m_flags;}
 	void   SetFlag   (PRUint32 flag) { m_flags |= flag; }
@@ -83,11 +88,6 @@ protected:
 	virtual nsresult CloseSocket(); 
 
 	virtual nsresult SetupTransportState(); // private method used by OpenNetworkSocket and OpenFileSocket
-
-	// LoadUrl -- A protocol typically overrides this function, sets up any local state for the url and
-	// then calls the base class which opens the socket if it needs opened. If the socket is 
-	// already opened then we just call ProcessProtocolState to start the churning process.
-	virtual nsresult LoadUrl(nsIURL * aURL);
 
 	// ProcessProtocolState - This is the function that gets churned by calls to OnDataAvailable. 
 	// As data arrives on the socket, OnDataAvailable calls ProcessProtocolState.
