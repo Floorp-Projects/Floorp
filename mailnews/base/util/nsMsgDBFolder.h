@@ -106,6 +106,7 @@ protected:
 
   static nsIAtom* mFolderLoadedAtom;
   static nsIAtom* mDeleteOrMoveMsgCompletedAtom;
+  static nsIAtom* mDeleteOrMoveMsgFailedAtom;
 
 private:
   static nsrefcnt mInstanceCount;
