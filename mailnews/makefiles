@@ -20,6 +20,11 @@ mailnews/base/public/Makefile
 mailnews/base/src/Makefile
 mailnews/base/util/Makefile
 mailnews/base/build/Makefile
+mailnews/base/search/Makefile
+mailnews/base/search/public/Makefile
+mailnews/base/search/src/Makefile
+mailnews/base/search/resources/Makefile
+mailnews/base/search/resources/content/Makefile
 mailnews/base/tests/Makefile
 mailnews/base/tests/accountmanager/Makefile
 mailnews/base/tests/identity/Makefile
