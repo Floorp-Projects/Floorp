@@ -69,7 +69,8 @@ protected:
     nsresult RegistryNameForLib(const char *aLibName, char **aRegistryName);
     nsresult RegisterComponentCommon(const nsCID &aClass,
                                      const char *aClassName,
-                                     const char *aProgID, char *aRegistryName,
+                                     const char *aProgID,
+                                     const char *aRegistryName,
                                      PRBool aReplace, PRBool aPersist,
                                      const char *aType);
     nsresult AddComponentToRegistry(const nsCID &aCID, const char *aClassName,
