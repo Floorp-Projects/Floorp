@@ -645,10 +645,15 @@ var nsValidateCommand =
     }
 
     URL2Validate = window.editorShell.editorDocument.location;
-    // XXX This should use SchemeIs instead of comparing against file:
-    if (URL2Validate.toString().indexOf("file://") >= 0)
+    // See if it's a file:
+    var ifile = Components.classes["@mozilla.org/file/local;1"].createInstance().QueryInterface(Components.interfaces.nsIFile);
+    try {
+      ifile.URL = URL2Validate;
+      // nsIFile throws an exception if it's not a file url
+    } catch (e) { ifile = null; }
+    if (ifile)
     {
-      URL2Validate = window.editorShell.editorDocument.location.pathname;
+      URL2Validate = ifile.path;
       var vwin = window.open("http://validator.w3.org/file-upload.html",
                              "EditorValidate");
       // Window loads asynchronously, so pass control to the load listener:
