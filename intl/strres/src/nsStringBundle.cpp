@@ -47,6 +47,7 @@
 #include "nsIModule.h"
 #include "nsIRegistry.h"
 #include "nsISupportsArray.h"
+#include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "nsAutoLock.h"
 #include "nsTextFormatter.h"
@@ -68,9 +69,8 @@ static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 // XXX investigate need for proper locking in this module
 //static PRInt32 gLockCount = 0;
 
-NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 class nsStringBundle : public nsIStringBundle,
+                       public nsSupportsWeakReference,
                        public nsIStreamLoaderObserver
 {
 public:
@@ -85,8 +85,8 @@ public:
   NS_DECL_NSISTRINGBUNDLE
   NS_DECL_NSISTREAMLOADEROBSERVER
 
-  nsCOMPtr<nsIPersistentProperties> mProps;
-
+  void FlushStrings();
+  
 protected:
   //
   // functional decomposition of the funitions repeatively called 
@@ -95,6 +95,7 @@ protected:
   nsresult GetStringFromName(const nsAReadableString& aName, nsString& aResult);
 
 private:
+  nsCOMPtr<nsIPersistentProperties> mProps;
   nsCString              mPropertiesURL;
   PRBool                 mAttemptedLoad;
   PRBool                 mLoaded;
@@ -112,12 +113,6 @@ nsStringBundle::InitSyncStream(const char* aURLSpec)
 { 
   
   nsresult rv = NS_OK;
-
-  // plan A: don't fallback; use aURLSpec: xxx.pro -> xxx.pro
-
-#ifdef DEBUG_tao_
-    printf("\n** nsStringBundle::InitSyncStream: %s\n", aURLSpec?s:"null");
-#endif
 
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), aURLSpec);
@@ -172,8 +167,9 @@ nsStringBundle::LoadProperties()
   mAttemptedLoad = PR_TRUE;
 
   //
-  // use eventloop instead
+  // use eventloop to load the string bundle
   //
+  
   // create an event queue for this thread.
   nsresult rv;
   nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
@@ -192,17 +188,17 @@ nsStringBundle::LoadProperties()
   rv = NS_NewStreamLoader(getter_AddRefs(loader), 
                           uri, 
                           this /*the load observer*/);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "\n-->nsStringBundle::Init: NS_NewStreamLoader failed...\n");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "nsStringBundle::Init: NS_NewStreamLoader failed...");
 
   // process events until we're finished.
   PLEvent *event;
   while (!mLoaded) {
     rv = currentThreadQ->WaitForEvent(&event);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "\n-->nsStringBundle::Init: currentThreadQ->WaitForEvent failed...\n");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsStringBundle::Init: currentThreadQ->WaitForEvent failed.");
     if (NS_FAILED(rv)) return rv;
 
     rv = currentThreadQ->HandleEvent(event);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "\n-->nsStringBundle::Init: currentThreadQ->HandleEvent failed...\n");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsStringBundle::Init: currentThreadQ->HandleEvent failed...");
     if (NS_FAILED(rv)) return rv;
   }
   
@@ -233,7 +229,7 @@ nsStringBundle::OnStreamComplete(nsIStreamLoader* aLoader,
         channel->GetURI(getter_AddRefs(uri));
         if (uri) {
             uri->GetSpec(getter_Copies(uriSpec));
-            printf("\n -->nsStringBundle::OnStreamComplete: Failed to load %s\n", 
+            printf("-->nsStringBundle::OnStreamComplete: Failed to load %s\n", 
                    uriSpec ? (const char *) uriSpec : "");
         }
       }
@@ -337,12 +333,21 @@ nsStringBundle::FormatStringFromName(const PRUnichar *aName,
   rv = GetStringFromName(nsDependentString(aName), formatStr);
   if (NS_FAILED(rv)) return rv;
 
-  return FormatString(formatStr.get(), aParams, aLength, aResult);
+  return FormatString(formatStr.GetUnicode(), aParams, aLength, aResult);
 }
-                                     
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsStringBundle, 
-                              nsIStringBundle, nsIStreamLoaderObserver)
+void
+nsStringBundle::FlushStrings()
+{
+  mProps = nsnull;
+  mLoaded = mAttemptedLoad = PR_FALSE;
+}
+
+
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsStringBundle, 
+                              nsIStringBundle,
+                              nsISupportsWeakReference,
+                              nsIStreamLoaderObserver)
 
 /* void GetStringFromID (in long aID, out wstring aResult); */
 NS_IMETHODIMP
@@ -729,14 +734,18 @@ private:
                             PRUnichar* *result);
 
   void flushBundleCache();
+  void flushNotificationList();
   
   bundleCacheEntry_t *insertIntoCache(nsIStringBundle *aBundle,
                                       nsCStringKey *aHashKey);
 
+  void insertIntoNotificationList(nsStringBundle* aBundle);
+  
   static void recycleEntry(bundleCacheEntry_t*);
   
   nsHashtable mBundleMap;
   PRCList mBundleCache;
+  nsVoidArray mBundleList;
   PLArenaPool mCacheEntryPool;
 
   nsCOMPtr<nsIErrorService>     mErrorService;
@@ -747,9 +756,6 @@ private:
 nsStringBundleService::nsStringBundleService() :
   mBundleMap(MAX_CACHED_BUNDLES, PR_TRUE)
 {
-#ifdef DEBUG_tao_
-  printf("\n++ nsStringBundleService::nsStringBundleService ++\n");
-#endif
   NS_INIT_REFCNT();
 
   PR_INIT_CLIST(&mBundleCache);
@@ -814,10 +820,47 @@ nsStringBundleService::flushBundleCache()
   PL_FreeArenaPool(&mCacheEntryPool);
 }
 
+void
+nsStringBundleService::flushNotificationList()
+{
+  nsWeakPtr weakBundle;
+  nsCOMPtr<nsIStringBundle> bundle;
+  
+  PRUint32 count;
+  count = mBundleList.Count();
+
+  // count backwards through the list, since we might be removing
+  // elements
+  printf("flushNotificationList()\n");
+  PRInt32 i;
+  for (i=count; i>0; --i) {
+    weakBundle = (nsIWeakReference*)mBundleList.ElementAt(i-1);
+    printf("\tFlushing element %d: %p (%p)", i-1,
+           mBundleList.ElementAt(i-1), weakBundle.get());
+	if (!weakBundle) {
+		mBundleList.RemoveElementAt(i-1);
+		continue;
+	}
+
+    bundle = do_QueryReferent(weakBundle);
+
+    // remove weak references whose target has gone away
+    if (!bundle)
+      mBundleList.RemoveElementAt(i-1);
+    else {
+      // we own this list, so we know exactly what is stored there
+      nsStringBundle* bundleImpl = (nsStringBundle*)bundle.get();
+      bundleImpl->FlushStrings();
+    }
+  }
+
+}
+
 NS_IMETHODIMP
 nsStringBundleService::FlushBundles()
 {
   flushBundleCache();
+  flushNotificationList();
   return NS_OK;
 }
 
@@ -856,6 +899,8 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
       return NS_ERROR_FAILURE;
     }
 
+    insertIntoNotificationList(bundle);
+    
     cacheEntry = insertIntoCache(bundle, &completeKey);
     NS_RELEASE(bundle);         // cache should now be holding a ref
                                 // in the cacheEntry
@@ -916,6 +961,18 @@ nsStringBundleService::insertIntoCache(nsIStringBundle* aBundle,
 }
 
 void
+nsStringBundleService::insertIntoNotificationList(nsStringBundle *aBundle)
+{
+  nsIStringBundle* bundle = NS_STATIC_CAST(nsIStringBundle*, aBundle);
+  nsWeakPtr weakBundle = do_GetWeakReference(bundle);
+
+  printf("inserting %p into notification list\n", weakBundle.get());
+  if (weakBundle)
+    mBundleList.AppendElement((void*)weakBundle.get());
+}
+
+
+void
 nsStringBundleService::recycleEntry(bundleCacheEntry_t *aEntry)
 {
   delete aEntry->mHashKey;
@@ -926,24 +983,9 @@ NS_IMETHODIMP
 nsStringBundleService::CreateBundle(const char* aURLSpec, 
                                     nsIStringBundle** aResult)
 {
-#ifdef DEBUG_tao_
-  printf("\n++ nsStringBundleService::CreateBundle ++\n");
-  {
-    nsAutoString aURLStr(aURLSpec);
-    char *s = aURLStr.ToNewCString();
-    printf("\n** nsStringBundleService::CreateBundle: %s\n", s?s:"null");
-    delete s;
-  }
-#endif
-
   return getStringBundle(aURLSpec, mAsync?PR_TRUE:PR_FALSE, aResult);
 }
-  
-NS_IMETHODIMP
-nsStringBundleService::CreateAsyncBundle(const char* aURLSpec, nsIStringBundle** aResult)
-{
-  return getStringBundle(aURLSpec, PR_TRUE, aResult);
-}
+
 
 NS_IMETHODIMP
 nsStringBundleService::CreateExtensibleBundle(const char* aRegistryKey, 
