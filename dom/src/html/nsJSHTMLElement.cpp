@@ -60,7 +60,8 @@ enum HTMLElement_slots {
   HTMLELEMENT_OFFSETLEFT = -8,
   HTMLELEMENT_OFFSETWIDTH = -9,
   HTMLELEMENT_OFFSETHEIGHT = -10,
-  HTMLELEMENT_OFFSETPARENT = -11
+  HTMLELEMENT_OFFSETPARENT = -11,
+  HTMLELEMENT_INNERHTML = -12
 };
 
 /***********************************************************************/
@@ -217,6 +218,18 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case HTMLELEMENT_INNERHTML:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLELEMENT_INNERHTML, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetInnerHTML(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
     }
@@ -310,6 +323,18 @@ SetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case HTMLELEMENT_INNERHTML:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLELEMENT_INNERHTML, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+      
+          rv = a->SetInnerHTML(prop);
+          
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
@@ -390,6 +415,7 @@ static JSPropertySpec HTMLElementProperties[] =
   {"offsetWidth",    HTMLELEMENT_OFFSETWIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"offsetHeight",    HTMLELEMENT_OFFSETHEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"offsetParent",    HTMLELEMENT_OFFSETPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"innerHTML",    HTMLELEMENT_INNERHTML,    JSPROP_ENUMERATE},
   {0}
 };
 

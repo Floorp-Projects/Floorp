@@ -66,6 +66,9 @@ public:
   NS_IMETHOD    GetOffsetHeight(PRInt32* aOffsetHeight)=0;
 
   NS_IMETHOD    GetOffsetParent(nsIDOMElement** aOffsetParent)=0;
+
+  NS_IMETHOD    GetInnerHTML(nsString& aInnerHTML)=0;
+  NS_IMETHOD    SetInnerHTML(const nsString& aInnerHTML)=0;
 };
 
 
@@ -86,6 +89,8 @@ public:
   NS_IMETHOD    GetOffsetWidth(PRInt32* aOffsetWidth);  \
   NS_IMETHOD    GetOffsetHeight(PRInt32* aOffsetHeight);  \
   NS_IMETHOD    GetOffsetParent(nsIDOMElement** aOffsetParent);  \
+  NS_IMETHOD    GetInnerHTML(nsString& aInnerHTML);  \
+  NS_IMETHOD    SetInnerHTML(const nsString& aInnerHTML);  \
 
 
 
@@ -106,6 +111,8 @@ public:
   NS_IMETHOD    GetOffsetWidth(PRInt32* aOffsetWidth) { return _to GetOffsetWidth(aOffsetWidth); } \
   NS_IMETHOD    GetOffsetHeight(PRInt32* aOffsetHeight) { return _to GetOffsetHeight(aOffsetHeight); } \
   NS_IMETHOD    GetOffsetParent(nsIDOMElement** aOffsetParent) { return _to GetOffsetParent(aOffsetParent); } \
+  NS_IMETHOD    GetInnerHTML(nsString& aInnerHTML) { return _to GetInnerHTML(aInnerHTML); } \
+  NS_IMETHOD    SetInnerHTML(const nsString& aInnerHTML) { return _to SetInnerHTML(aInnerHTML); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLElementClass(nsIScriptContext *aContext, void **aPrototype);

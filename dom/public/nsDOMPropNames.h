@@ -357,6 +357,7 @@
     "htmlelement.classname", \
     "htmlelement.dir", \
     "htmlelement.id", \
+    "htmlelement.innerhtml", \
     "htmlelement.lang", \
     "htmlelement.offsetheight", \
     "htmlelement.offsetleft", \

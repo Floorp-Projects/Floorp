@@ -98,6 +98,8 @@ public:
   nsresult    GetOffsetWidth(PRInt32* aOffsetWidth);
   nsresult    GetOffsetHeight(PRInt32* aOffsetHeight);
   nsresult    GetOffsetParent(nsIDOMElement** aOffsetParent);
+  nsresult    GetInnerHTML(nsString& aInnerHTML);
+  nsresult    SetInnerHTML(const nsString& aInnerHTML);
   nsresult    GetOffsetRect(nsRect& aRect, 
                             nsIAtom* aOffsetParentTag,
                             nsIContent** aOffsetParent);
@@ -539,6 +541,12 @@ public:
   }                                                     \
   NS_IMETHOD GetOffsetParent(nsIDOMElement** aOffsetParent) { \
     return _g.GetOffsetParent(aOffsetParent);           \
+  }                                                     \
+  NS_IMETHOD GetInnerHTML(nsString& aInnerHTML) {       \
+    return _g.GetInnerHTML(aInnerHTML);                 \
+  }                                                     \
+  NS_IMETHOD SetInnerHTML(const nsString& aInnerHTML) { \
+    return _g.SetInnerHTML(aInnerHTML);                 \
   }
 
 
