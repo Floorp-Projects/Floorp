@@ -46,7 +46,11 @@
 #if defined(WIN32)
 #include <strstrea.h>
 #else
-#include <strstream.h>
+#if defined(XP_MAC)
+#include "ostrstream.h"
+#else
+include <strstream.h>
+#endif
 #endif
 
 #if defined(WIN32)
