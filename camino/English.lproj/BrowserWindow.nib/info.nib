@@ -39,7 +39,11 @@
 	<string>4</string>
 	<key>IBLockedObjects</key>
 	<array/>
+	<key>IBOpenObjects</key>
+	<array>
+		<integer>10</integer>
+	</array>
 	<key>IBSystem Version</key>
-	<string>5S66</string>
+	<string>5S60</string>
 </dict>
 </plist>
