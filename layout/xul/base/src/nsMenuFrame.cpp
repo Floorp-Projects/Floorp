@@ -1231,6 +1231,12 @@ nsMenuFrame::Execute()
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_ACTION;
+  event.isShift = false;
+  event.isControl = false;
+  event.isAlt = false;
+  event.isMeta = false;
+  event.clickCount = 0;
+  event.widget = nsnull;
   mContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 
   // XXX HACK. Just gracefully exit if the node has been removed, e.g., window.close()
@@ -1255,6 +1261,12 @@ nsMenuFrame::OnCreate()
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_CREATE;
+  event.isShift = false;
+  event.isControl = false;
+  event.isAlt = false;
+  event.isMeta = false;
+  event.clickCount = 0;
+  event.widget = nsnull;
   
   nsCOMPtr<nsIContent> child;
   GetMenuChildrenElement(getter_AddRefs(child));
@@ -1276,6 +1288,12 @@ nsMenuFrame::OnDestroy()
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_DESTROY;
+  event.isShift = false;
+  event.isControl = false;
+  event.isAlt = false;
+  event.isMeta = false;
+  event.clickCount = 0;
+  event.widget = nsnull;
   
   nsCOMPtr<nsIContent> child;
   GetMenuChildrenElement(getter_AddRefs(child));
