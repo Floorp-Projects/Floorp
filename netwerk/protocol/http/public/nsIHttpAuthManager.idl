@@ -1,0 +1,79 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla.
+ *
+ * The Initial Developer of the Original Code is Sun Microsystem.
+ * Portions created by Sun Microsystem are Copyright (C) 2003
+ * by Sun Microsystem. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Darin Fisher <darin@netscape.com>
+ *   Louie Zhao <louie.zhao@sun.com>
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(81328d02-74df-4724-8a53-8fac43841c5c)]
+interface nsIHttpAuthManager : nsISupports
+{
+    /**
+     * Lookup auth identity.
+     *
+     * @param hostPort
+     *        the "host:port" of the server issuing a challenge.
+     * @param realm
+     *        optional string identifying auth realm.
+     * @param path
+     *        optional string identifying auth path. empty for proxy auth.
+     * @param userDomain
+     *        return value containing user domain.
+     * @param userName
+     *        return value containing user name.
+     * @param userPassword
+     *        return value containing user password.
+     */
+    void getAuthIdentity(in ACString aHost,
+                         in PRInt32  aPort,
+                         in ACString aRealm,
+                         in ACString aPath,
+                         out AString aUserDomain,
+                         out AString aUserName,
+                         out AString aUserPassword);
+    /**
+     * Store auth identity.
+     *
+     * @param hostPort
+     *        the "host:port" of the server issuing a challenge.
+     * @param realm
+     *        optional string identifying auth realm.
+     * @param path
+     *        optional string identifying auth path. empty for proxy auth.
+     * @param userDomain
+     *        optional string containing user domain.
+     * @param userName
+     *        optional string containing user name.
+     * @param userPassword
+     *        optional string containing user password.
+     */
+    void setAuthIdentity(in ACString aHost,
+                         in PRInt32  aPort,
+                         in ACString aRealm,
+                         in ACString aPath,
+                         in AString  aUserDomain,
+                         in AString  aUserName,
+                         in AString  aUserPassword);
+    /**
+     * Clear all auth cache.
+     */
+    void clearAll();
+};
