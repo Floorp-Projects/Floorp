@@ -1386,9 +1386,11 @@ NS_IMETHODIMP
 nsEditorShell::FinishHTMLSource(void)
 {
   if (mHTMLSourceMode)
+  {
     // Call the JS command to convert and switch to previous edit mode
-    return DoControllerCommand(NS_LITERAL_STRING("cmd_FinishHTMLSource"));
-
+    nsAutoString command(NS_LITERAL_STRING("cmd_FinishHTMLSource"));
+    return DoControllerCommand(command);
+  }
   return NS_OK;
 }
 
@@ -1648,8 +1650,9 @@ nsEditorShell::CheckAndSaveDocument(const PRUnichar *reasonToSave, PRBool *_retv
         }
         else if (mHTMLSourceMode) // result == eNo
         {
-           // User doesn't want to save document, so we just cancel source mode
-          rv = DoControllerCommand(NS_LITERAL_STRING("cmd_CancelHTMLSource"));
+          // User doesn't want to save document, so we just cancel source mode
+          nsAutoString command(NS_LITERAL_STRING("cmd_CancelHTMLSource"));
+          rv = DoControllerCommand(command);
         }
       }
     }
@@ -5211,9 +5214,9 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
     // In "All Tags" mode, use AdvancedProperties,
     //  in others use appriate object property dialog
     if (mDisplayMode != eDisplayModeAllTags) 
-      commandName = NS_ConvertASCIItoUCS2("cmd_objectProperties");
+      commandName = NS_LITERAL_STRING("cmd_objectProperties");
     else
-      commandName = NS_ConvertASCIItoUCS2("cmd_advancedProperties");
+      commandName = NS_LITERAL_STRING("cmd_advancedProperties");
     
     rv = DoControllerCommand(commandName);
 
