@@ -86,3 +86,5 @@ editattachstatuses.cgi #49
 globals.pl #50
 CGI.pl #51
 ));
+
+1;
