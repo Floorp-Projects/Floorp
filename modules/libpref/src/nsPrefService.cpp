@@ -50,6 +50,7 @@
 #include "nsPrefBranch.h"
 #include "nsXPIDLString.h"
 #include "nsCRT.h"
+#include "nsCOMArray.h"
 
 #include "nsQuickSort.h"
 #include "prmem.h"
@@ -70,7 +71,7 @@
 #endif
 
 // Definitions
-#define INITIAL_MAX_DEFAULT_PREF_FILES 10
+#define INITIAL_PREF_FILES 10
 #define PREF_READ_BUFFER_SIZE 4096
 
 // Prototypes
@@ -630,32 +631,108 @@ static nsresult openPrefFile(nsIFile* aFile)
  * some stuff that gets called from Pref_Init()
  */
 
-/// Note: inplaceSortCallback is a small C callback stub for NS_QuickSort
-static int PR_CALLBACK
-inplaceSortCallback(const void *data1, const void *data2, void *privateData)
+static int
+pref_CompareFileNames(nsIFile* aFile1, nsIFile* aFile2, void* /*unused*/)
 {
-  nsCAutoString name1;
-  nsCAutoString name2;
-  nsIFile *file1= *(nsIFile **)data1;
-  nsIFile *file2= *(nsIFile **)data2;
-  nsresult rv;
-  int sortResult = 0;
+  nsCAutoString filename1, filename2;
+  aFile1->GetNativeLeafName(filename1);
+  aFile2->GetNativeLeafName(filename2);
 
-  rv = file1->GetNativeLeafName(name1);
-  NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get the leaf name");
-  if (NS_SUCCEEDED(rv)) {
-    rv = file2->GetNativeLeafName(name2);
-    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get the leaf name");
+  return Compare(filename1, filename2);
+}
+
+/**
+ * Load default pref files from a directory. The files in the
+ * directory are sorted alphabetically; a set of "special file
+ * names" may be specified which are loaded after all the others.
+ */
+static nsresult
+pref_LoadPrefsInDir(nsIFile* aDir, char const *const *aSpecialFiles, PRUint32 aSpecialFilesCount)
+{
+  nsresult rv, rv2;
+  PRBool hasMoreElements;
+
+  nsCOMPtr<nsISimpleEnumerator> dirIterator;
+
+  // this may fail in some normal cases, such as embedders who do not use a GRE
+  rv = aDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = dirIterator->HasMoreElements(&hasMoreElements);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMArray<nsIFile> prefFiles(INITIAL_PREF_FILES);
+  nsCOMArray<nsIFile> specialFiles(aSpecialFilesCount);
+  nsCOMPtr<nsIFile> prefFile;
+
+  while (hasMoreElements && NS_SUCCEEDED(rv)) {
+    nsCAutoString leafName;
+
+    rv = dirIterator->GetNext(getter_AddRefs(prefFile));
+    if (NS_FAILED(rv)) {
+      break;
+    }
+
+    prefFile->GetNativeLeafName(leafName);
+    NS_ASSERTION(!leafName.IsEmpty(), "Failure in default prefs: directory enumerator returned empty file?");
+
+    // Skip non-js files
+    if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".js"))) {
+      PRBool shouldParse = PR_TRUE;
+      // separate out special files
+      for (PRUint32 i = 0; i < aSpecialFilesCount; ++i) {
+        if (leafName.Equals(nsDependentCString(aSpecialFiles[i]))) {
+          shouldParse = PR_FALSE;
+          // special files should be process in order; we put them into
+          // the array by index; this can make the array sparse
+          specialFiles.ReplaceObjectAt(prefFile, i);
+        }
+      }
+
+      if (shouldParse) {
+        prefFiles.AppendObject(prefFile);
+      }
+    }
+
+    rv = dirIterator->HasMoreElements(&hasMoreElements);
+  }
+
+  if (prefFiles.Count() + specialFiles.Count() == 0) {
+    NS_WARNING("No default pref files found.");
     if (NS_SUCCEEDED(rv)) {
-      if (!name1.IsEmpty() && !name2.IsEmpty()) {
-        // we want it so foo.js will come before foo-<bar>.js
-        // "foo." is before "foo-", so we have to reverse the order to accomplish
-        sortResult = Compare(name2, name1); // XXX i18n
+      rv = NS_SUCCESS_FILE_DIRECTORY_EMPTY;
+    }
+    return rv;
+  }
+
+  prefFiles.Sort(pref_CompareFileNames, nsnull);
+  
+  PRUint32 arrayCount = prefFiles.Count();
+  PRUint32 i;
+  for (i = 0; i < arrayCount; ++i) {
+    rv2 = openPrefFile(prefFiles[i]);
+    if (NS_FAILED(rv2)) {
+      NS_ERROR("Default pref file not parsed successfully.");
+      rv = rv2;
+    }
+  }
+
+  arrayCount = specialFiles.Count();
+  for (i = 0; i < arrayCount; ++i) {
+    // this may be a sparse array; test before parsing
+    nsIFile* file = specialFiles[i];
+    if (file) {
+      rv2 = openPrefFile(file);
+      if (NS_FAILED(rv2)) {
+        NS_ERROR("Special default pref file not parsed successfully.");
+        rv = rv2;
       }
     }
   }
-  return sortResult;
+
+  return rv;
 }
+
 
 //----------------------------------------------------------------------------------------
 // Initialize default preference JavaScript buffers from
@@ -666,8 +743,25 @@ static nsresult pref_InitInitialObjects()
   nsCOMPtr<nsIFile> aFile;
   nsCOMPtr<nsIFile> defaultPrefDir;
   nsresult          rv;
-  PRBool            hasMoreElements;
-        
+
+  // first we parse the GRE default prefs. This also works if we're not using a GRE, 
+
+  rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(defaultPrefDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = defaultPrefDir->AppendNative(NS_LITERAL_CSTRING("greprefs"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = pref_LoadPrefsInDir(defaultPrefDir, nsnull, 0);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Error parsing GRE default preferences. Is this an old-style embedding app?");
+  }
+
+  // now parse the "application" default preferences
+  rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(defaultPrefDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  /* these pref file names should not be used: we process them after all other application pref files for backwards compatibility */
   static const char* specialFiles[] = {
 #if defined(XP_MAC) || defined(XP_MACOSX)
       "macprefs.js"
@@ -690,82 +784,13 @@ static nsresult pref_InitInitialObjects()
 #endif
   };
 
-  rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(defaultPrefDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsIFile **defaultPrefFiles = (nsIFile **)nsMemory::Alloc(INITIAL_MAX_DEFAULT_PREF_FILES * sizeof(nsIFile *));
-  int maxDefaultPrefFiles = INITIAL_MAX_DEFAULT_PREF_FILES;
-  int numFiles = 0;
-
-  // Parse all the random files that happen to be in the components directory.
-  nsCOMPtr<nsISimpleEnumerator> dirIterator;
-  defaultPrefDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
-  if (!dirIterator) {
-    NS_ERROR("ERROR: Could not make a directory iterator.");
-    return NS_ERROR_FAILURE;
+  rv = pref_LoadPrefsInDir(defaultPrefDir, specialFiles, NS_ARRAY_LENGTH(specialFiles));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Error parsing application default preferences.");
   }
 
-  dirIterator->HasMoreElements(&hasMoreElements);
-  if (!hasMoreElements) {
-    NS_ERROR("ERROR: Prefs directory is empty.");
-    return NS_ERROR_FAILURE;
-  }
-
-  while (hasMoreElements) {
-    PRBool shouldParse = PR_TRUE;
-    nsCAutoString leafName;
-
-    dirIterator->GetNext(getter_AddRefs(aFile));
-    dirIterator->HasMoreElements(&hasMoreElements);
-
-    rv = aFile->GetNativeLeafName(leafName);
-    if (NS_SUCCEEDED(rv)) {
-      // Skip non-js files
-      if (!StringEndsWith(leafName, NS_LITERAL_CSTRING(".js")))
-        shouldParse = PR_FALSE;
-      // Skip files in the special list.
-      if (shouldParse) {
-        for (int j = 0; j < (int) (sizeof(specialFiles) / sizeof(char *)); j++)
-          if (!strcmp(leafName.get(), specialFiles[j]))
-            shouldParse = PR_FALSE;
-      }
-      if (shouldParse) {
-        rv = aFile->Clone(&(defaultPrefFiles[numFiles]));
-        if NS_SUCCEEDED(rv) {
-          ++numFiles;
-          if (numFiles == maxDefaultPrefFiles) {
-            // double the size of the array
-            maxDefaultPrefFiles *= 2;
-            defaultPrefFiles = (nsIFile **)nsMemory::Realloc(defaultPrefFiles, maxDefaultPrefFiles * sizeof(nsIFile *));
-          }
-        }
-      }
-    }
-  }
-
-  NS_QuickSort((void *)defaultPrefFiles, numFiles, sizeof(nsIFile *), inplaceSortCallback, nsnull);
-
-  int k;
-  for (k = 0; k < numFiles; k++) {
-    rv = openPrefFile(defaultPrefFiles[k]);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Config file not parsed successfully");
-    NS_RELEASE(defaultPrefFiles[k]);
-  }
-  nsMemory::Free(defaultPrefFiles);
-
-  // Finally, parse any other special files (platform-specific ones).
-  for (k = 0; k < (int) (sizeof(specialFiles) / sizeof(char *)); k++) {
-    // we must get the directory every time so we can append the child
-    // because SetLeafName will not work here.
-    rv = defaultPrefDir->Clone(getter_AddRefs(aFile));
-    if (NS_SUCCEEDED(rv)) {
-      rv = aFile->AppendNative(nsDependentCString(specialFiles[k]));
-      if (NS_SUCCEEDED(rv)) {
-        rv = openPrefFile(aFile);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "<platform>.js was not parsed successfully");
-      }
-    }
-  }
+  // xxxbsmedberg: TODO load default prefs from a category
+  // but the architecture is not quite there yet
 
   return NS_OK;
 }

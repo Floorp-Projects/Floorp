@@ -219,7 +219,7 @@ class nsCOMArray : public nsCOMArray_base
     }
     
     typedef int (* PR_CALLBACK nsCOMArrayComparatorFunc)
-        (const T* aElement1, const T* aElement2, void* aData);
+        (T* aElement1, T* aElement2, void* aData);
         
     void Sort(nsCOMArrayComparatorFunc aFunc, void* aData) {
         nsCOMArray_base::Sort(nsVoidArrayComparatorFunc(aFunc), aData);
