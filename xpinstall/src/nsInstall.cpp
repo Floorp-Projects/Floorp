@@ -809,7 +809,8 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
                 // characters in the string.  ToCString() requires the
                 // total number of characters in the string to copy,
                 // therefore add 1 to it.
-                dirStr.ToCString(dir, i + 1);
+                dirStr.Truncate(i + 1);
+                dirStr.ToCString(dir, MAXREGPATHLEN);
             }
         }
         else
