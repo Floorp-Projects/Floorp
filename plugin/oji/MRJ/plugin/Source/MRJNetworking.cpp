@@ -77,7 +77,7 @@ static char* JMTextToEncoding(JMTextRef textRef, JMTextEncoding encoding)
 
 class MRJInputStream : public nsIPluginStreamListener {
     MRJMonitor mMonitor;
-    typedef vector<char> buffer_t;
+    typedef std::vector<char> buffer_t;
     buffer_t mBuffer;
     size_t mOffset;
     bool mComplete;

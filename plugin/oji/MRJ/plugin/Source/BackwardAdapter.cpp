@@ -75,7 +75,7 @@
 
 #pragma mark CPluginManager
 
-class CPluginManager : public nsIPluginManager2, public nsIServiceManagerObsolete, public nsIMemory {
+class CPluginManager : public nsIPluginManager2, public nsIServiceManager, public nsIMemory {
 public:
 	// Need an operator new for this.
 	void* operator new(size_t size) { return ::NPN_MemAlloc(size); }
@@ -363,71 +363,28 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // from nsIServiceManager:
 
+    NS_IMETHOD
+    GetService(const nsCID& aClass, const nsIID& aIID, void* *result);
+
+    NS_IMETHOD
+    GetServiceByContractID(const char *aContractID, const nsIID & aIID, void * *result)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+    NS_IMETHOD
+    IsServiceInstantiated(const nsCID & aClass, const nsIID & aIID, PRBool *_retval)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+    NS_IMETHOD
+    IsServiceInstantiatedByContractID(const char *aContractID, const nsIID & aIID, PRBool *_retval)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
    /**
-     * RegisterService may be called explicitly to register a service
-     * with the service manager. If a service is not registered explicitly,
-     * the component manager will be used to create an instance according
-     * to the class ID specified.
-     */
-    NS_IMETHOD
-    RegisterService(const nsCID& aClass, nsISupports* aService)
-    {
-    	return NS_ERROR_NOT_IMPLEMENTED;
-	}
-
-    /**
-     * Requests a service to be shut down, possibly unloading its DLL.
-     *
-     * @returns NS_OK - if shutdown was successful and service was unloaded,
-     * @returns NS_ERROR_SERVICE_NOT_FOUND - if shutdown failed because
-     *          the service was not currently loaded
-     * @returns NS_ERROR_SERVICE_IN_USE - if shutdown failed because some
-     *          user of the service wouldn't voluntarily release it by using
-     *          a shutdown listener.
-     */
-    NS_IMETHOD
-    UnregisterService(const nsCID& aClass)
-    {
-    	return NS_ERROR_NOT_IMPLEMENTED;
-	}
-
-    NS_IMETHOD
-    GetService(const nsCID& aClass, const nsIID& aIID,
-               nsISupports* *result,
-               nsIShutdownListener* shutdownListener = NULL);
-
-    NS_IMETHOD
-    ReleaseService(const nsCID& aClass, nsISupports* service,
-                   nsIShutdownListener* shutdownListener = NULL);
-
-    NS_IMETHOD
-    RegisterService(const char* aContractID, nsISupports* aService)
-    {
-    	return NS_ERROR_NOT_IMPLEMENTED;
-	}
-
-    NS_IMETHOD
-    UnregisterService(const char* aContractID)
-    {
-    	return NS_ERROR_NOT_IMPLEMENTED;
-	}
-
-    NS_IMETHOD
-    GetService(const char* aContractID, const nsIID& aIID,
-               nsISupports* *result,
-               nsIShutdownListener* shutdownListener = NULL)
-    {
-    	return NS_ERROR_NOT_IMPLEMENTED;
-	}
-
-    NS_IMETHOD
-    ReleaseService(const char* aContractID, nsISupports* service,
-                   nsIShutdownListener* shutdownListener = NULL)
-    {
-    	return NS_ERROR_NOT_IMPLEMENTED;
-	}
-
-    /**
      * Allocates a block of memory of a particular size. 
      *
      * @param size - the size of the block to allocate
@@ -2010,9 +1967,7 @@ CPluginManager::AllocateMenuID(nsIEventHandler* handler, PRBool isSubmenu, PRInt
 //////////////////////////////
 
 NS_METHOD
-CPluginManager::GetService(const nsCID& aClass, const nsIID& aIID,
-               nsISupports* *result,
-               nsIShutdownListener* shutdownListener)
+CPluginManager::GetService(const nsCID& aClass, const nsIID& aIID, void* *result)
 {
 	// the only service we support currently is nsIMemory.
 	if (aClass.Equals(kPluginManagerCID) || aClass.Equals(kMemoryCID)) {
@@ -2026,14 +1981,6 @@ CPluginManager::GetService(const nsCID& aClass, const nsIID& aIID,
 		return mLiveconnect->QueryInterface(aIID, (void**)result);
 	}
 	return NS_ERROR_SERVICE_NOT_FOUND;
-}
-
-NS_METHOD
-CPluginManager::ReleaseService(const nsCID& aClass, nsISupports* service,
-                   nsIShutdownListener* shutdownListener)
-{
-	NS_RELEASE(service);
-	return NS_OK;
 }
 
 //////////////////////////////
