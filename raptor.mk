@@ -81,47 +81,47 @@ THIS_MAKEFILE = raptor.mk
 real_all: pass1_all pass2_all
 
 pass1_all:
-	cd $(MOZ_SRC)/ns; \
+	cd $(MOZ_SRC)/mozilla; \
 	$(MAKE) -f $(THIS_MAKEFILE) export
-	cd $(MOZ_SRC)/ns/base; \
+	cd $(MOZ_SRC)/mozilla/base; \
 	$(MAKE) export
-	cd $(MOZ_SRC)/ns; \
+	cd $(MOZ_SRC)/mozilla; \
 	$(MAKE) -f $(THIS_MAKEFILE) libs; \
 	$(MAKE) -f $(THIS_MAKEFILE) install
 
 pass2_all: 
-	cd $(MOZ_SRC)/ns; \
+	cd $(MOZ_SRC)/mozilla; \
 	$(MAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 export; \
 	$(MAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 libs; \
 	$(MAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 install
 
 real_export:
-	cd $(MOZ_SRC)/ns; \
+	cd $(MOZ_SRC)/mozilla; \
 	$(MAKE) -f $(THIS_MAKEFILE) export; \
 	$(MAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 export
 
 real_libs:
-	cd $(MOZ_SRC)/ns; \
+	cd $(MOZ_SRC)/mozilla; \
 	$(MAKE) -f $(THIS_MAKEFILE) libs; \
 	$(MAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 libs
 
 real_install:
-	cd $(MOZ_SRC)/ns; \
+	cd $(MOZ_SRC)/mozilla; \
 	$(MAKE) -f $(THIS_MAKEFILE) install; \
 	$(MAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 install
 
 real_clobber:
-	cd $(MOZ_SRC)/ns; \
+	cd $(MOZ_SRC)/mozilla; \
 	$(MAKE) -f $(THIS_MAKEFILE) clobber_all; \
 	$(MAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 clobber_all; \
 	$(MAKE) -f $(THIS_MAKEFILE) final_clobber
 
 final_clobber:
-	cd $(MOZ_SRC)/ns; \
+	cd $(MOZ_SRC)/mozilla; \
 	$(RM) -r dist
 
 real_depend:
-	cd $(MOZ_SRC)/ns; \
+	cd $(MOZ_SRC)/mozilla; \
 	$(MAKE) -f $(THIS_MAKEFILE) depend; \
 	$(MAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 depend
 
@@ -135,43 +135,43 @@ pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_raptor
 
 pull_lizard:
 	cd $(MOZ_SRC)/.; \
-	$(CVSCO_LIZARD) ns/config; \
-	$(CVSCO_LIZARD) ns/build/build_number; \
-	$(CVSCO_LIZARD) ns/cmd/xfe/icons/icondata.h; \
-	$(CVSCO_LIZARD) ns/lib/liblayer; \
-	$(CVSCO_LIZARD) ns/modules/zlib; \
-	$(CVSCO_LIZARD) ns/modules/libutil; \
-	$(CVSCO_LIZARD) ns/nsprpub; \
-	$(CVSCO_LIZARD) ns/sun-java; \
-	$(CVSCO_LIZARD) ns/nav-java; \
-	$(CVSCO_LIZARD) ns/js; \
-	$(CVSCO_LIZARD) ns/modules/security/freenav; \
+	$(CVSCO_LIZARD) mozilla/config; \
+	$(CVSCO_LIZARD) mozilla/build/build_number; \
+	$(CVSCO_LIZARD) mozilla/cmd/xfe/icons/icondata.h; \
+	$(CVSCO_LIZARD) mozilla/lib/liblayer; \
+	$(CVSCO_LIZARD) mozilla/modules/zlib; \
+	$(CVSCO_LIZARD) mozilla/modules/libutil; \
+	$(CVSCO_LIZARD) mozilla/nsprpub; \
+	$(CVSCO_LIZARD) mozilla/sun-java; \
+	$(CVSCO_LIZARD) mozilla/nav-java; \
+	$(CVSCO_LIZARD) mozilla/js; \
+	$(CVSCO_LIZARD) mozilla/modules/security/freenav; \
 
 pull_xpcom:
 	cd $(MOZ_SRC)/.; \
-	$(CVSCO_XPCOM) ns/modules/libreg; \
-	$(CVSCO_XPCOM) ns/xpcom; \
-	$(CVSCO_XPCOM) ns/modules/libpref
+	$(CVSCO_XPCOM) mozilla/modules/libreg; \
+	$(CVSCO_XPCOM) mozilla/xpcom; \
+	$(CVSCO_XPCOM) mozilla/modules/libpref
 
 pull_imglib:
 	cd $(MOZ_SRC)/.; \
-	$(CVSCO_IMGLIB) ns/jpeg; \
-	$(CVSCO_IMGLIB) ns/modules/libutil; \
-	$(CVSCO_IMGLIB) ns/modules/libimg 
+	$(CVSCO_IMGLIB) mozilla/jpeg; \
+	$(CVSCO_IMGLIB) mozilla/modules/libutil; \
+	$(CVSCO_IMGLIB) mozilla/modules/libimg 
 
 pull_netlib:
 	cd $(MOZ_SRC)/.; \
-	$(CVSCO_NETLIB) ns/lib/xp; \
-	$(CVSCO_NETLIB) ns/lib/libnet; \
-	$(CVSCO_NETLIB) ns/include
+	$(CVSCO_NETLIB) mozilla/lib/xp; \
+	$(CVSCO_NETLIB) mozilla/lib/libnet; \
+	$(CVSCO_NETLIB) mozilla/include
 
 pull_raptor:
 	cd $(MOZ_SRC)/.; \
-	$(CVSCO_RAPTOR) ns/base; \
-	$(CVSCO_RAPTOR) ns/dom; \
-	$(CVSCO_RAPTOR) ns/gfx; \
-	$(CVSCO_RAPTOR) ns/htmlparser; \
-	$(CVSCO_RAPTOR) ns/layout; \
-	$(CVSCO_RAPTOR) ns/view; \
-	$(CVSCO_RAPTOR) ns/webshell; \
-	$(CVSCO_RAPTOR) ns/widget
+	$(CVSCO_RAPTOR) mozilla/base; \
+	$(CVSCO_RAPTOR) mozilla/dom; \
+	$(CVSCO_RAPTOR) mozilla/gfx; \
+	$(CVSCO_RAPTOR) mozilla/htmlparser; \
+	$(CVSCO_RAPTOR) mozilla/layout; \
+	$(CVSCO_RAPTOR) mozilla/view; \
+	$(CVSCO_RAPTOR) mozilla/webshell; \
+	$(CVSCO_RAPTOR) mozilla/widget
