@@ -38,11 +38,17 @@
 
 #include "resources.h"
 
+// XXX For font setting below
+#include "nsFont.h"
+#include "nsUnitConversion.h"
+#include "nsIDeviceContext.h"
+
 // XXX greasy constants
 #define THROBBER_WIDTH 32
 #define THROBBER_HEIGHT 32
 #define BUTTON_WIDTH 90
 #define BUTTON_HEIGHT THROBBER_HEIGHT
+#define STATUS_HEIGHT 24
 
 #ifdef INSET_WEBSHELL
 #define WEBSHELL_LEFT_INSET 5
@@ -461,10 +467,23 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   return NS_OK;
 }
 
+// XXX This sort of thing should be in a resource
+#define TOOL_BAR_FONT      "Helvetica"
+#define TOOL_BAR_FONT_SIZE 7
+#define STATUS_BAR_FONT      "Helvetica"
+#define STATUS_BAR_FONT_SIZE 5
+
 nsresult
 nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
 {
   nsresult rv;
+
+  nsIDeviceContext* dc = mWindow->GetDeviceContext();
+  float t2d = dc->GetTwipsToDevUnits();
+  nsFont font(TOOL_BAR_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+              NS_FONT_WEIGHT_NORMAL, 0,
+              nscoord(t2d * NS_POINTS_TO_TWIPS_INT(TOOL_BAR_FONT_SIZE)));
+  NS_RELEASE(dc);
 
   // Create and place back button
   rv = NSRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID,
@@ -475,17 +494,19 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   nsRect r(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT);
   mBack->Create(mWindow, r, HandleBackEvent, NULL);
   mBack->SetLabel("Back");
+  mBack->SetFont(font);
   mBack->Show(PR_TRUE);
 
   // Create and place forward button
   r.SetRect(BUTTON_WIDTH, 0, BUTTON_WIDTH, BUTTON_HEIGHT);  
   rv = NSRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID,
-                               (void**)&mForward);
+                                    (void**)&mForward);
   if (NS_OK != rv) {
     return rv;
   }
   mForward->Create(mWindow, r, HandleForwardEvent, NULL);
   mForward->SetLabel("Forward");
+  mForward->SetFont(font);
   mForward->Show(PR_TRUE);
 
   // Create and place location bar
@@ -502,6 +523,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   mLocation->SetForegroundColor(NS_RGB(255, 0, 0));
   mLocation->SetBackgroundColor(NS_RGB(255, 255, 255));
   mLocation->Show(PR_TRUE);
+  mLocation->SetFont(font);
 
   // Create and place throbber
   r.SetRect(aWidth - THROBBER_WIDTH, 0,
@@ -522,6 +544,13 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
 {
   nsresult rv;
 
+  nsIDeviceContext* dc = mWindow->GetDeviceContext();
+  float t2d = dc->GetTwipsToDevUnits();
+  nsFont font(STATUS_BAR_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
+              NS_FONT_WEIGHT_NORMAL, 0,
+              nscoord(t2d * NS_POINTS_TO_TWIPS_INT(STATUS_BAR_FONT_SIZE)));
+  NS_RELEASE(dc);
+
   nsRect r(0, 0, aWidth, THROBBER_HEIGHT);
   rv = NSRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID,
                                     (void**)&mStatus);
@@ -531,7 +560,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   mStatus->Create(mWindow, r, HandleLocationEvent, NULL);
   mStatus->SetText("");
   mStatus->SetForegroundColor(NS_RGB(255, 0, 0));
-  //mStatus->SetBackgroundColor(NS_RGB(255, 255, 255));
+  mStatus->SetFont(font);
   mStatus->Show(PR_TRUE);
 
   return NS_OK;
@@ -564,10 +593,10 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
             aWidth,
             aHeight - BUTTON_HEIGHT);
   if (mStatus) {
-    mStatus->Resize(0, aHeight - THROBBER_HEIGHT,
-                    aWidth, THROBBER_HEIGHT,
+    mStatus->Resize(0, aHeight - STATUS_HEIGHT,
+                    aWidth, STATUS_HEIGHT,
                     PR_TRUE);
-    rr.height -= THROBBER_HEIGHT;
+    rr.height -= STATUS_HEIGHT;
   }
 
   // inset the web widget
