@@ -662,7 +662,7 @@ pk11_mkCipherFlags(unsigned long ssl0, unsigned long ssl1)
 		tmp = PR_smprintf("%s,%s",cipher,string);
 		PR_smprintf_free(cipher);
 		PR_smprintf_free(string);
-		tmp = cipher;
+		cipher = tmp;
 	    } else {
 		cipher = string;
 	    }
@@ -672,9 +672,9 @@ pk11_mkCipherFlags(unsigned long ssl0, unsigned long ssl1)
 	if (ssl1 & (1<<i)) {
 	    if (cipher) {
 		char *tmp;
-		tmp = PR_smprintf("%s,0l0x%08",cipher,1<<i);
+		tmp = PR_smprintf("%s,0l0x%08x",cipher,1<<i);
 		PR_smprintf_free(cipher);
-		tmp = cipher;
+		cipher = tmp;
 	    } else {
 		cipher = PR_smprintf("0l0x%08x",1<<i);
 	    }
@@ -762,9 +762,9 @@ pk11_mkSlotString(unsigned long slotID, unsigned long defaultFlags,
     if (flags) PR_smprintf_free(flags);
     if (rootFlags) PORT_Free(rootFlags);
     if (defaultFlags & PK11_OWN_PW_DEFAULTS) {
-    	slotString = PR_smprintf("0x%08x=[%s askpw=%s timeout=%d %s]",slotID,flagPair,askpw,timeout,rootFlagsPair);
+    	slotString = PR_smprintf("0x%08lx=[%s askpw=%s timeout=%d %s]",(PRUint32)slotID,flagPair,askpw,timeout,rootFlagsPair);
     } else {
-    	slotString = PR_smprintf("0x%08x=[%s %s]",slotID,flagPair,rootFlagsPair);
+    	slotString = PR_smprintf("0x%08lx=[%s %s]",(PRUint32)slotID,flagPair,rootFlagsPair);
     }
     pk11_freePair(flagPair);
     pk11_freePair(rootFlagsPair);
