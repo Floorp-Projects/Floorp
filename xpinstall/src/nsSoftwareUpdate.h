@@ -87,8 +87,4 @@ class nsSoftwareUpdateNameSet : public nsIScriptExternalNameSet
             NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext);
             NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext);
 };
-
-#define XPINSTALL_ENABLE_PREF      "xpinstall.enabled"
-#define XPINSTALL_DETAILS_PREF     "xpinstall.show_details"
-
 #endif

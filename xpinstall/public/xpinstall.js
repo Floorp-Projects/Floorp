@@ -1,2 +1,3 @@
 pref("xpinstall.enabled",       true);
-pref("xpinstall.show_details",  false);
+pref("xpinstall.manual_confirm",  true);
+pref("xpinstall.notifications_enabled",  true);
