@@ -40,6 +40,7 @@
  
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
+@namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
 *|*:fieldset-content {
   display: block;
@@ -60,10 +61,10 @@ legend {
 
 fieldset {
   display: block;
-  border: 2px solid black;
-  padding: 4px 4px 4px 4px;
   margin-left: 2px;
   margin-right: 2px;
+  padding: 4px 4px 4px 4px;
+  border: 2px solid;
 }
 
 label {
@@ -76,31 +77,45 @@ label {
 
 /* default inputs, text inputs, and selects */
 input {
-  background-color: -moz-Field;
+  padding: 1px 0 1px 0;
   border: 2px inset ThreeDFace;
+  background-color: -moz-Field;
   color: -moz-FieldText;
-  cursor: text;
   font: field;
   text-align: start;
   vertical-align: text-bottom;
+  cursor: text;
   -moz-box-sizing: border-box;
   -moz-user-focus: normal;
   -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#inputFields");
-  padding: 1px 0 1px 0;
+}
+
+:not(xul|textbox) > input:not([type]),
+:not(xul|textbox) > input[type="text"],
+:not(xul|textbox) > input[type="password"] {
+  border-width: 2px !important;
+  border-style: inset !important;
+  -moz-border-radius: 0 !important;
 }
 
 textarea {
-  background-color: -moz-Field;
-  border: 2px inset ThreeDFace;
-  color: -moz-FieldText;
-  cursor: text;
-  font: medium -moz-fixed;
   margin: 1px 0 1px 0;
+  border: 2px inset ThreeDFace;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  font: medium -moz-fixed;
   text-align: start;
   vertical-align: text-bottom;
+  cursor: text;
   -moz-box-sizing: border-box;
   -moz-user-focus: normal;
   -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#textAreas");
+}
+
+:not(xul|textbox) > textarea {
+  border-width: 2px !important;
+  border-style: inset !important;
+  -moz-border-radius: 0 !important;
 }
 
 textarea > scrollbar {
@@ -115,18 +130,22 @@ textarea > scrollbar {
 }
 
 select {
-  font: list;
-  background-color: -moz-Field;
-  border: 2px inset ThreeDFace !important;
   margin: 0;
-  vertical-align: text-bottom;
+  border-color: ThreeDFace;
+  background-color: -moz-Field;
   color: -moz-FieldText;
+  font: list;
   white-space: nowrap;
   text-align: start; 
+  vertical-align: text-bottom;
   cursor: default;
+  -moz-box-sizing: border-box;
   -moz-user-select: none;
   -moz-user-focus: normal;
-  -moz-box-sizing: border-box;
+
+  border-width: 2px !important;
+  border-style: inset !important;
+  -moz-border-radius: 0 !important;
 }
 
 select[size] {
@@ -137,14 +156,15 @@ select[size="1"] {
 }
 
 select > input[type="button"] {
-  position: static ! important;
+  width: 12px;
+  height: 12px;
   white-space: nowrap;
+  -moz-user-focus: none;
+
+  position: static !important;
   background-image: url("arrow.gif") !important;
   background-repeat: no-repeat !important;
   background-position: center !important;
-  width: 12px;
-  height: 12px;
-  -moz-user-focus: none;
 }
 
 select > input[type="button"]:active {
@@ -162,17 +182,17 @@ select:-moz-dummy-option {
 
 *|*:-moz-display-comboboxcontrol-frame {
   overflow: hidden;
-  white-space: nowrap;
+  padding: 1px 0 1px 4px;
   background-color: inherit;
   color: inherit;
+  white-space: nowrap;
   text-align: inherit;
-  padding: 1px 0 1px 4px;
   -moz-user-select: none;
 }
 
 option {
-  min-height: 1em;
   display: block;
+  min-height: 1em;
   -moz-user-select: none;
   -moz-user-focus: none;
 }
@@ -182,8 +202,8 @@ select > option {
 }
 
 option:checked {
-  color: HighlightText ! important;
   background-color: Highlight ! important;
+  color: HighlightText ! important;
 }
 
 optgroup {
@@ -207,10 +227,11 @@ optgroup:before {
 }
 
 *|*:-moz-dropdown-list {
-  background-color: inherit;
-  border: 1px outset black !important; 
   z-index: 2147483647;
+  background-color: inherit;
   -moz-user-select: none;
+
+  border: 1px outset black !important; 
 } 
 
 input[disabled],
@@ -231,14 +252,14 @@ input[type="hidden"] {
 
 /* image buttons */
 input[type="image"] {
+  padding: 0;
   border: none;
-  vertical-align: baseline;
   background-color: transparent;
-  cursor: pointer;
   font-family: sans-serif;
   font-size: small;
+  vertical-align: baseline;
+  cursor: pointer;
   -moz-binding: none;
-  padding: 0;
 }
 
 input[type="image"][disabled] {
@@ -252,10 +273,17 @@ input[type="image"]:focus {
 /* file selector */
 input[type="file"] {
   white-space: nowrap;
-  border: none;
   cursor: default;
   -moz-binding: none;
-  padding: 0;
+
+  padding: 0 !important;
+  border-style: none !important;
+}
+
+input[type="file"] > input[type="text"] {
+  border-color: inherit;
+  background-color: inherit;
+  color: inherit;
 }
 
 /* button part of file selector */
@@ -271,31 +299,32 @@ input[type="file"] > input[type="button"]:-moz-focus-inner
 
 /* radio buttons */
 input[type="radio"] {
-  border: 2px inset ThreeDFace;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
   width: 12px;
   height: 12px;
-  cursor: default;
-  vertical-align: baseline;
-  -moz-border-radius: 100%;
-  -moz-binding: none;
   margin: 3px 3px 0px 5px;
   padding: 0;
+  vertical-align: baseline;
+  cursor: default;
+  -moz-binding: none;
+
+  border-width: 2px !important;
+  border-style: inset !important;
+  -moz-border-radius: 100% !important;
 }
 
 /* check boxes */
 input[type="checkbox"] {
-  border: 2px inset ThreeDFace;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
   width: 13px;
   height: 13px;
-  cursor: default;
-  vertical-align: text-bottom;
-  -moz-binding: none;
   margin: 3px 3px 3px 4px;
   padding: 0;
+  vertical-align: text-bottom;
+  cursor: default;
+  -moz-binding: none;
+
+  border-width: 2px !important;
+  border-style: inset !important;
+  -moz-border-radius: 0 !important;
 }
 
 /* common features of radio buttons and check boxes */
@@ -308,27 +337,31 @@ input[type="checkbox"][disabled]:active,
 input[type="checkbox"][disabled]:hover,
 input[type="checkbox"][disabled]:hover:active {
   padding: 1px;
-  border: 1px inset ThreeDShadow;
+  border-color: ThreeDShadow;
   background-color: GrayText;
+
+  border-width: 1px !important;
+  border-style: inset !important;
 }
 
 input[type="checkbox"]:focus,
 input[type="radio"]:focus {
-  border-style: groove;
+  border-style: groove !important;
 }
 
 input[type="checkbox"]:hover:active,
 input[type="radio"]:hover:active {
-  border-style: inset;
   background-color: ThreeDFace;
+
+  border-style: inset !important;
 }
 
 *|*:-moz-radio {
-  background-color: -moz-FieldText;
   width: 4px;
   height: 4px;
   left: 6px;
   top: 6px;
+  background-color: -moz-FieldText;
   -moz-border-radius: 3px;
 }
 
@@ -337,13 +370,13 @@ button,
 input[type="reset"],
 input[type="button"],
 input[type="submit"] { 
+  padding: 2px 0 2px 0;
   border: 2px outset ButtonFace;
   background-color: ButtonFace;
   color: ButtonText; 
-  padding: 2px 0 2px 0;
   font: button;
-  cursor: default;
   white-space: pre;
+  cursor: default;
   -moz-box-sizing: border-box;
   -moz-user-select: none;
   -moz-user-focus: normal;
@@ -359,8 +392,8 @@ button:active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
-  border-style: inset;
   padding: 3px 0 1px 0;
+  border-style: inset;
 }
 
 button:-moz-focus-inner,
@@ -390,8 +423,8 @@ select[disabled] > input[type="button"],
 select[disabled] > input[type="button"]:active,
 input[type="submit"][disabled]:active,
 input[type="submit"][disabled] {
-  border: 1px outset ButtonShadow;
   padding: 3px 1px 3px 1px;
+  border: 1px outset ButtonShadow;
   color: GrayText;
 }
 
