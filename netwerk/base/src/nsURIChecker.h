@@ -72,7 +72,7 @@ protected:
     nsCOMPtr<nsIRequestObserver> mObserver;
     nsCOMPtr<nsISupports> mCtxt;
 
-    void SetStatusAndCallBack(nsresult aStatus);
+    void SetStatusAndCallBack(nsIRequest* aRequest, nsresult aStatus);
 };
 
 #endif // nsURIChecker_h__

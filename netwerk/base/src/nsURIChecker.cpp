@@ -61,7 +61,7 @@ nsURIChecker::~nsURIChecker()
 }
 
 void
-nsURIChecker::SetStatusAndCallBack(nsresult aStatus)
+nsURIChecker::SetStatusAndCallBack(nsIRequest* aRequest, nsresult aStatus)
 {
     mStatus = aStatus;
     mIsPending = PR_FALSE;
@@ -69,6 +69,10 @@ nsURIChecker::SetStatusAndCallBack(nsresult aStatus)
     mObserver->OnStartRequest(NS_STATIC_CAST(nsIRequest*, this), mCtxt);
     mObserver->OnStopRequest(NS_STATIC_CAST(nsIRequest*, this),
                              mCtxt, mStatus);
+    
+    // We don't want to read the actual data, so cancel now:
+    if (aRequest)
+        aRequest->Cancel(NS_BINDING_ABORTED);
 }
 
 /////////////////////////////////////////////////////
@@ -77,6 +81,7 @@ nsURIChecker::SetStatusAndCallBack(nsresult aStatus)
 NS_IMETHODIMP
 nsURIChecker::AsyncCheckURI(const char* aURI, nsIRequestObserver *aObserver,
                             nsISupports* aCtxt,
+                            nsLoadFlags aLoadFlags,
                             nsIRequest** aRequestRet)
 {
     nsresult rv;
@@ -86,8 +91,10 @@ nsURIChecker::AsyncCheckURI(const char* aURI, nsIRequestObserver *aObserver,
     mStatus = NS_BINDING_REDIRECTED;
     mObserver = aObserver;
     mCtxt = aCtxt;
-    if (aRequestRet)
+    if (aRequestRet) {
         *aRequestRet = this;
+        NS_ADDREF(*aRequestRet);
+    }
 
     // Get the IO Service:
     nsCOMPtr<nsIIOService> ios (do_GetIOService(&rv));
@@ -103,6 +110,9 @@ nsURIChecker::AsyncCheckURI(const char* aURI, nsIRequestObserver *aObserver,
     rv = ios->NewChannelFromURI(URI, getter_AddRefs(mChannel));
     if (NS_FAILED(rv)) return rv;
 
+    // Set the load flags
+    mChannel->SetLoadFlags(aLoadFlags);
+
     // See if it's an http channel, which needs special treatment:
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
     if (httpChannel)
@@ -110,6 +120,12 @@ nsURIChecker::AsyncCheckURI(const char* aURI, nsIRequestObserver *aObserver,
 
     // and start the request:
     return mChannel->AsyncOpen(this, nsnull);
+}
+
+NS_IMETHODIMP
+nsURIChecker::GetBaseRequest(nsIRequest** aRequest)
+{
+    return CallQueryInterface(mChannel, aRequest);
 }
 
 /////////////////////////////////////////////////////
@@ -181,29 +197,26 @@ nsURIChecker::OnStartRequest(nsIRequest *aRequest, nsISupports *aCtxt)
     nsresult rv = aRequest->GetStatus(&status);
     // DNS errors and other obvious problems will return failure status
     if (NS_FAILED(rv) || NS_FAILED(status)) {
-        SetStatusAndCallBack(NS_BINDING_FAILED);
+        SetStatusAndCallBack(nsnull, NS_BINDING_FAILED);
         return NS_OK;
     }
-
-    // We don't want to read the actual data, so cancel now:
-    aRequest->Cancel(NS_BINDING_ABORTED);
 
     // If status is zero, it might still be an error if it's http:
     // http has data even when there's an error like a 404.
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
     if (!httpChannel) {
-        SetStatusAndCallBack(NS_BINDING_SUCCEEDED);
+        SetStatusAndCallBack(aRequest, NS_BINDING_SUCCEEDED);
         return NS_OK;
     }
     PRUint32 responseStatus;
     rv = httpChannel->GetResponseStatus(&responseStatus);
     if (NS_FAILED(rv)) {
-        SetStatusAndCallBack(NS_BINDING_FAILED);
+        SetStatusAndCallBack(aRequest, NS_BINDING_FAILED);
         return NS_OK;
     }
     // If it's between 200-299, it's valid:
     if (responseStatus / 100 == 2) {
-        SetStatusAndCallBack(NS_BINDING_SUCCEEDED);
+        SetStatusAndCallBack(aRequest, NS_BINDING_SUCCEEDED);
         return NS_OK;
     }
     // If we got a 404 (not found), we need some extra checking:
@@ -212,6 +225,9 @@ nsURIChecker::OnStartRequest(nsIRequest *aRequest, nsISupports *aCtxt)
     // and will have to be retried without the head.
     if (responseStatus == 404)
     {
+        // We don't want to read the actual data, so cancel now:
+        aRequest->Cancel(NS_BINDING_ABORTED);
+
         char* server = 0;
         rv = httpChannel->GetResponseHeader("Server", &server);
         if (NS_SUCCEEDED(rv)) {
@@ -231,13 +247,13 @@ nsURIChecker::OnStartRequest(nsIRequest *aRequest, nsISupports *aCtxt)
         }
 
         // Else it was a normal 404, so return as expected
-        SetStatusAndCallBack(NS_BINDING_FAILED);
+        SetStatusAndCallBack(aRequest, NS_BINDING_FAILED);
         return NS_OK;
     }
 
     // If we get here, then it's an http channel, not a 100, 200 or 404.
     // Treat it as an error.
-    SetStatusAndCallBack(NS_BINDING_FAILED);
+    SetStatusAndCallBack(aRequest, NS_BINDING_FAILED);
     return NS_OK;
 }
 

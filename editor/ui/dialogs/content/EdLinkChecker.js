@@ -92,7 +92,8 @@ function Startup()
 
           // XXX Calling this is related to crash deleting gLinksBeingChecked when dialog is closed
           //     (if this isn't called, no crash)
-          gLinksBeingChecked[gNumLinksToCheck].asyncCheckURI(uri, gRequestObserver, null);
+          gLinksBeingChecked[gNumLinksToCheck].asyncCheckURI(uri, gRequestObserver, null,
+							     Components.interfaces.nsIRequest.LOAD_NORMAL);
           gNumLinksToCheck++;
         };
       } catch (e) {
