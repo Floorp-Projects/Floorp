@@ -75,12 +75,14 @@
             <spacer class="spacer"/>
             <row align="center">
               <label value="&pageTitle.label;"/>
-              <textbox id="PageTitleInput" class="minWidth15"/>
+              <textbox id="PageTitleInput" 
+                tooltiptext="&pageTitle.tooltip;" class="minWidth15"/>
               <label value="&pageTitleExample.label;"/>
             </row>
             <row align="center">
               <label value="&filename.label;"/>
-              <textbox id="FilenameInput" class="minWidth15"/>
+              <textbox id="FilenameInput"
+                tooltiptext="&filename.tooltip;" class="minWidth15"/>
               <label value="&filenameExample.label;"/>
             </row>
           </rows>
@@ -98,17 +100,20 @@
         <spacer class="spacer"/>
         <groupbox>
           <caption>
-            <checkbox id="OtherDirCheckbox" label="&publishImgCheckbox.label;" oncommand="doEnabling();"/>
+            <checkbox id="OtherDirCheckbox" label="&publishImgCheckbox.label;" 
+              tooltiptext="&publishImgCheckbox.tooltip;" oncommand="doEnabling();"/>
           </caption>
           <vbox>
           <radiogroup id="OtherDirRadiogroup">
             <hbox>
               <spacer class="checkbox-spacer"/>
-              <radio id="SameLocationRadio" label="&sameLocationRadio.label;" oncommand="doEnabling();"/>
+              <radio id="SameLocationRadio" label="&sameLocationRadio.label;"
+                tooltiptext="&sameLocationRadio.tooltip;" oncommand="doEnabling();"/>
             </hbox>
             <hbox>
               <spacer class="checkbox-spacer"/>
-              <radio id="UseSubdirRadio" label="&useSubdirRadio.label;" oncommand="doEnabling();"/>
+              <radio id="UseSubdirRadio" label="&useSubdirRadio.label;"
+                tooltiptext="&useSubdir.tooltip;" oncommand="doEnabling();"/>
             </hbox>
           </radiogroup>
           </vbox>
@@ -117,7 +122,7 @@
             <spacer class="radio-spacer"/>
             <!-- Contents filled in at runtime -->
             <menulist id="OtherDirList" class="minWidth20" editable="true" flex="1"
-                      oninput="onInputSettings();"/>
+              tooltiptext="&useSubdir.tooltip;" oninput="onInputSettings();"/>
 <!-- 
             <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.OtherDirList);" disabled="true"/>
 -->

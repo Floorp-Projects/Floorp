@@ -35,14 +35,17 @@
     <caption label="&serverInfo.label;"/>
     <hbox align="center">
       <label value="&siteName.label;"/>
-      <textbox id="SiteNameInput" class="MinWidth20em" oninput="onInputSettings();" flex="1"/>
+      <textbox id="SiteNameInput" class="MinWidth20em" 
+        tooltiptext="&siteName.tooltip;" oninput="onInputSettings();" flex="1"/>
     </hbox>
     <spacer class="spacer"/>
     <label value="&siteUrl.label;"/>
-    <textbox id="PublishUrlInput" class="MinWidth20em" oninput="onInputSettings();"/>
+    <textbox id="PublishUrlInput" class="MinWidth20em"
+      tooltiptext="&siteUrl.tooltip;" oninput="onInputSettings();"/>
     <spacer class="spacer"/>
     <label value="&browseUrl.label;"/>
-    <textbox id="BrowseUrlInput" class="MinWidth20em" oninput="onInputSettings();"/>
+    <textbox id="BrowseUrlInput" class="MinWidth20em" 
+      tooltiptext="&browseUrl.tooltip;" oninput="onInputSettings();"/>
     <spacer class="spacer"/>
   </groupbox>
   <groupbox id="LoginSettingsBox">
@@ -52,13 +55,16 @@
       <rows>
         <row align="center">
           <label value="&username.label;"/>
-          <textbox id="UsernameInput" class="MinWidth10em" flex="1" oninput="onInputSettings();"/>
+          <textbox id="UsernameInput" class="MinWidth10em" 
+            tooltiptext="&username.tooltip;" oninput="onInputSettings();" flex="1"/>
         </row>
         <row align="center">
           <label value="&password.label;"/>
           <hbox>
-            <textbox id="PasswordInput" type="password" class="MinWidth5em" oninput="onInputSettings();"/>
-            <checkbox id="SavePassword" label="&savePassword.label;" oncommand="onInputSettings();"/>
+            <textbox id="PasswordInput" type="password" class="MinWidth5em" 
+              oninput="onInputSettings();"/>
+            <checkbox id="SavePassword" label="&savePassword.label;" 
+              tooltiptext="&savePassword.tooltip;" oncommand="onInputSettings();"/>
           </hbox>
         </row>
       </rows>
