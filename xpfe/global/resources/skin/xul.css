@@ -444,8 +444,8 @@ titledbutton[class~=popup] {
 
 titledbutton:hover {
   border: 1px outset white;
-  color:#333366;
-  text-decoration:underline;
+	color:#333366;
+	text-decoration:underline;
   padding: 2px;
 }
  
@@ -641,6 +641,7 @@ tree {
  background-color: white;
  border: none;
  border-spacing: 0px;
+ width: 100%;
  table-layout: fixed;
  font: inherit;
 }
@@ -1128,30 +1129,12 @@ treecell {
 }
 
 treeitem > treerow > treecell > .tree-icon > .twisty {
- text-decoration: none;
- color: inherit;
  border: none;
  padding: 0px;
  margin: 0px;
  width: 16px;
  list-style-image: url("chrome://global/skin/closedtwisty.gif");
  visibility: visible;
-}
-
-.twisty:hover {
- text-decoration: none;
- color: inherit;
- border: none;
- padding: 0px;
- margin: 0px;
-}
-
-.twisty:active {
- text-decoration: none;
- color: inherit;
- border: none;
- padding: 0px;
- margin: 0px;
 }
 
 treeitem[empty="true"] > treerow > treecell > .tree-icon > titledbutton.twisty {
