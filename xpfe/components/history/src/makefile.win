@@ -26,14 +26,6 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsGlobalHistory.obj        \
  $(NULL)
 
-LINCS=-I$(PUBLIC)\raptor                \
-      -I$(PUBLIC)\rdf                   \
-      -I$(PUBLIC)\xpcom                 \
-      -I$(PUBLIC)\base                  \
-      -I$(PUBLIC)\xpfe\components       \
-      -I$(PUBLIC)\profile               \
-      $(NULL)
-
 MAKE_OBJ_TYPE=DLL
 DLLNAME = history
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
