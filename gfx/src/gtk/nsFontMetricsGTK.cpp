@@ -58,9 +58,11 @@ nsFontMetricsGTK::nsFontMetricsGTK()
   mFontHandle = nsnull;
 
   mHeight = 0;
-  mAscent = 0;
-  mDescent = 0;
   mLeading = 0;
+  mEmHeight = 0;
+  mEmAscent = 0;
+  mEmDescent = 0;
+  mMaxHeight = 0;
   mMaxAscent = 0;
   mMaxDescent = 0;
   mMaxAdvance = 0;
@@ -100,6 +102,7 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
     mSubstituteFont = nsnull;
   }
 
+  mWesternFont = nsnull;
   mFontHandle = nsnull;
 
   if (!--gFontMetricsGTKCount) {
@@ -210,11 +213,11 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
   mFont->EnumerateFamilies(FontEnumCallback, this);
 
-  nsFontGTK* f = FindFont('a');
-  if (!f) {
+  mWesternFont = FindFont('a');
+  if (!mWesternFont) {
     return NS_OK; // XXX
   }
-  mFontHandle = f->mFont;
+  mFontHandle = mWesternFont->mFont;
 
   RealizeFont();
 
@@ -292,8 +295,19 @@ void nsFontMetricsGTK::RealizeFont()
   float f;
   mDeviceContext->GetDevUnitsToAppUnits(f);
 
-  mAscent = nscoord(fontInfo->ascent * f);
-  mDescent = nscoord(fontInfo->descent * f);
+  int lineSpacing = fontInfo->ascent + fontInfo->descent;
+  if (lineSpacing > mWesternFont->mSize) {
+    mLeading = nscoord((lineSpacing - mWesternFont->mSize) * f);
+  }
+  else {
+    mLeading = 0;
+  }
+  mEmHeight = nscoord(mWesternFont->mSize * f);
+  mEmAscent = nscoord(fontInfo->ascent * mWesternFont->mSize * f / lineSpacing);
+  mEmDescent = mEmHeight - mEmAscent;
+
+  mMaxHeight = nscoord((fontInfo->max_bounds.ascent +
+                        fontInfo->max_bounds.descent) * f);
   mMaxAscent = nscoord(fontInfo->max_bounds.ascent * f) ;
   mMaxDescent = nscoord(fontInfo->max_bounds.descent * f);
 
@@ -377,8 +391,6 @@ void nsFontMetricsGTK::RealizeFont()
   /* need better way to calculate this */
   mStrikeoutOffset = NSToCoordRound(mXHeight / 2.0);
   mStrikeoutSize = mUnderlineSize;
-
-  mLeading = 0;
 }
 
 NS_IMETHODIMP  nsFontMetricsGTK::GetXHeight(nscoord& aResult)
@@ -422,6 +434,30 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetHeight(nscoord &aHeight)
 NS_IMETHODIMP  nsFontMetricsGTK::GetLeading(nscoord &aLeading)
 {
   aLeading = mLeading;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsGTK::GetEmHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsGTK::GetEmAscent(nscoord &aAscent)
+{
+  aAscent = mEmAscent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsGTK::GetEmDescent(nscoord &aDescent)
+{
+  aDescent = mEmDescent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsGTK::GetMaxHeight(nscoord &aHeight)
+{
+  aHeight = mMaxHeight;
   return NS_OK;
 }
 
