@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl.h,v 1.16 2003/03/26 00:31:12 wtc%netscape.com Exp $
+ * $Id: ssl.h,v 1.17 2003/10/19 01:31:41 nelsonb%netscape.com Exp $
  */
 
 #ifndef __ssl_h_
@@ -103,6 +103,10 @@ SSL_IMPORT PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
                                           /* (on by default) */
 #define SSL_ENABLE_TLS		       13 /* enable TLS (on by default) */
 #define SSL_ROLLBACK_DETECTION         14 /* for compatibility, default: on */
+#define SSL_NO_STEP_DOWN               15 /* Disable export cipher suites   */
+                                          /* if step-down keys are needed.  */
+					  /* default: off, generate         */
+					  /* step-down keys if needed.      */
 
 #ifdef SSL_DEPRECATED_FUNCTION 
 /* Old deprecated function names */
