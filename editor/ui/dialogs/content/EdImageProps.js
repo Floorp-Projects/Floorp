@@ -168,11 +168,11 @@ function Startup()
   // Set SeeMore bool to the OPPOSITE of the current state,
   //   which is automatically saved by using the 'persist="more"'
   //   attribute on the MoreFewerButton button
-  //   onMoreFewerImage will toggle the state and redraw the dialog
+  //   onMoreFewer will toggle the state and redraw the dialog
   SeeMore = (dialog.MoreFewerButton.getAttribute("more") != "1");
 
   // Initialize widgets with image attributes in the case where the entire dialog isn't visible
-  onMoreFewerImage();  // this call will initialize all widgets if entire dialog is visible
+  onMoreFewer();  // this call will initialize all widgets if entire dialog is visible
 
   SetTextboxFocus(dialog.srcInput);
 
@@ -392,7 +392,8 @@ function ChangeImageSrc()
   doOverallEnabling();
 }
 
-function onMoreFewerImage()
+// This overrides the default onMoreFewer in EdDialogCommon.js
+function onMoreFewer()
 {
   if (SeeMore)
   {
@@ -428,28 +429,22 @@ function doDimensionEnabling()
   if ( !dialog.customSizeRadio.checked && !dialog.actualSizeRadio.checked)
     dump("BUG!  neither radio button is checked!!!! \n");
 
-  SetElementEnabledById( "widthInput", enable );
-  SetElementEnabledById( "widthLabel", enable);
-  SetElementEnabledById( "widthUnitsMenulist", enable );
-
+  // BUG 74145: After input field is disabled,
+  //   setting it enabled causes blinking caret to appear
+  //   even though focus isn't set to it.
   SetElementEnabledById( "heightInput", enable );
   SetElementEnabledById( "heightLabel", enable );
   SetElementEnabledById( "heightUnitsMenulist", enable );
+
+  SetElementEnabledById( "widthInput", enable );
+  SetElementEnabledById( "widthLabel", enable);
+  SetElementEnabledById( "widthUnitsMenulist", enable );
 
   var constrainEnable = enable
          && ( dialog.widthUnitsMenulist.selectedIndex == 0 )
          && ( dialog.heightUnitsMenulist.selectedIndex == 0 );
 
   SetElementEnabledById( "constrainCheckbox", constrainEnable );
-
-  // Counteracting another weird caret
-  //  (appears in Height input, but not really focused!)
-
-// not sure why we want to give the width field focus;
-// it certainly doesn't make sense to do this in a generic
-// enable/disable function which could be called at any time
-  //if (enable)
-  //  dialog.widthInput.focus();
 }
 
 function doOverallEnabling()
@@ -478,9 +473,6 @@ function ToggleConstrain()
     constrainWidth = Number(dialog.widthInput.value.trimString());
     constrainHeight = Number(dialog.heightInput.value.trimString());
   }
-// the following line is *really* annoying!
-//  document.getElementById('widthInput').focus()
-
 }
 
 function constrainProportions( srcID, destID )
@@ -580,46 +572,29 @@ function ValidateData()
 
   var width = "";
   var height = "";
-  var isPercentWidth, isPercentHeight;
-  var maxLimitWidth, maxLimitHeight;
 
-  if (dialog.actualSizeRadio.checked)
+  if (!dialog.actualSizeRadio.checked)
   {
-    width = actualWidth ? actualWidth : "";
-    height = actualHeight ? actualHeight : "";
-  }
-  else
-  {
-    isPercentWidth = (dialog.widthUnitsMenulist.selectedIndex == 1);
-    isPercentHeight = (dialog.heightUnitsMenulist.selectedIndex == 1);
-
-    maxLimitWidth = isPercentWidth ? 100 : maxPixels;  // Defined in EdDialogCommon.js
-    width = ValidateNumberString(dialog.widthInput.value, 1, maxLimitWidth);
-    if (width == "")
-    {
-      if ( !SeeMore )
-        onMoreFewerImage();
-      SetTextboxFocus(dialog.widthInput);
+    // Get user values for width and height
+    width = ValidateNumber(dialog.widthInput, dialog.widthUnitsMenulist, 1, maxPixels, 
+                           globalElement, "width", false, true);
+    if (gValidationError)
       return false;
-    }
-    if (isPercentWidth)
-      width = width + "%";
 
-    maxLimitHeight = isPercentHeight ? 100 : maxPixels;  // Defined in EdDialogCommon.js
-    height = ValidateNumberString(dialog.heightInput.value, 1, maxLimitHeight);
-    if (height == "")
-    {
-      if ( !SeeMore )
-        onMoreFewerImage();
-      SetTextboxFocus(dialog.heightInput);
+    height = ValidateNumber(dialog.heightInput, dialog.heightUnitsMenulist, 1, maxPixels, 
+                            globalElement, "height", false, ture);
+    if (gValidationError)
       return false;
-    }
-    if (isPercentHeight)
-      height = height + "%";
   }
+
   // We always set the width and height attributes, even if same as actual.
   //  This speeds up layout of pages since sizes are known before image is downloaded
   // (But don't set if we couldn't obtain actual dimensions)
+  if (!width)
+    width = actualWidth;
+  if (!height)
+    height = actualHeight;
+
   if (width)
     globalElement.setAttribute("width", width);
   else
@@ -631,37 +606,22 @@ function ValidateData()
     globalElement.removeAttribute("height");
 
   // spacing attributes
-  var amount;
-  if ( dialog.imagelrInput.value )
-  {
-    amount = ValidateNumberString(dialog.imagelrInput.value, 0, maxPixels);
-    if (amount == "")
-      return false;
-    globalElement.setAttribute( "hspace", amount );
-  }
-  else
-    globalElement.removeAttribute( "hspace" );
 
-  if ( dialog.imagetbInput.value )
-  {
-    var vspace = ValidateNumberString(dialog.imagetbInput.value, 0, maxPixels);
-    if (vspace == "")
-      return false;
-    globalElement.setAttribute( "vspace", vspace );
-  }
-  else
-    globalElement.removeAttribute( "vspace" );
+  ValidateNumber(dialog.imagelrInput, null, 0, maxPixels, 
+                 globalElement, "hspace", false, true, true);
+  if (gValidationError)
+    return false;
+
+  ValidateNumber(dialog.imagetbInput, null, 0, maxPixels, 
+                 globalElement, "vspace", false, true);
+  if (gValidationError)
+    return false;
 
   // note this is deprecated and should be converted to stylesheets
-  if ( dialog.border.value )
-  {
-    var border = ValidateNumberString(dialog.border.value, 0, maxPixels);
-    if (border == "")
-      return false;
-    globalElement.setAttribute( "border", border );
-  }
-  else
-    globalElement.removeAttribute( "border" );
+  ValidateNumber(dialog.border, null, 0, maxPixels, 
+                 globalElement, "border", false, true);
+  if (gValidationError)
+    return false;
 
   // Default or setting "bottom" means don't set the attribute
   // Note that the attributes "left" and "right" are opposite

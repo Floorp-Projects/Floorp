@@ -43,6 +43,7 @@ var gOutputFormatFlowed  = 64;
 var gOutputAbsoluteLinks = 128;
 var gOutputEncodeEntities = 256;
 var gStringBundle;
+var gValidationError = false;
 
 // Use for 'defaultIndex' param in InitPixelOrPercentMenulist
 var gPixel = 0;
@@ -88,10 +89,109 @@ function StringExists(string)
   return false;
 }
 
-
-function ValidateNumberString(value, minValue, maxValue)
+/* Validate contents of an input field 
+ *
+ *  inputWidget    The 'textbox' XUL element for text input of the attribute's value
+ *  listWidget     The 'menulist' XUL element for choosing "pixel" or "percent"
+ *                  May be null when no pixel/percent is used.
+ *  minVal         minimum allowed for input widget's value
+ *  maxVal         maximum allowed for input widget's value
+ *                 (when "listWidget" is used, maxVal is used for "pixel" maximum,
+ *                  100% is assumed if "percent" is the user's choice)
+ *  element        The DOM element that we set the attribute on. May be null.
+ *  attName        Name of the attribute to set.  May be null or ignored if "element" is null
+ *  mustHaveValue  If true, error dialog is displayed if "value" is empty string
+ *
+ *  This calls "ValidateNumberRange()", which puts up an error dialog to inform the user. 
+ *    If error, we also: 
+ *      Shift focus and select contents of the inputWidget,
+ *      Switch to appropriate panel of tabbed dialog if user implements "SwitchToValidate()",
+ *      and/or will expand the dialog to full size if "More / Fewer" feature is implemented
+ *
+ *  Returns the "value" as a string, or "" if error or input contents are empty
+ *  The global "gValidationError" variable is set true if error was found
+ */
+function ValidateNumber(inputWidget, listWidget, minVal, maxVal, element, attName, mustHaveValue, mustShowMoreSection)
 {
-  // Get the number version (strip out non-numbers)
+  if (!inputWidget)
+  {
+    gValidationError = true;
+    return "";
+  }
+
+  // Global error return value
+  gValidationError = false;
+  var maxLimit = maxVal;
+  var isPercent = false;
+
+  var numString = inputWidget.value.trimString();
+  if (numString)
+  {
+    if (listWidget)
+      isPercent = (listWidget.selectedIndex == 1);
+    if (isPercent)
+      maxLimit = 100;
+
+    // This method puts up the error message
+    numString = ValidateNumberRange(numString, minVal, maxLimit, mustHaveValue);
+    if(!numString)
+    {
+      // Switch to appropriate panel for error reporting
+      SwitchToValidatePanel();
+
+      // or expand dialog for users of "More / Fewer" button
+      if ("dialog" in window && dialog && 
+           "MoreSection" in dialog && dialog.MoreSection)
+      {
+        if ( !SeeMore )
+          onMoreFewer();
+      }
+
+      // Error - shift to offending input widget
+      SetTextboxFocus(inputWidget);
+      gValidationError = true;
+    }
+    else
+    {
+      if (isPercent)
+        numString += "%";
+      if (element)
+        element.setAttribute(attName, numString);
+    }
+  } else if (element) {
+    element.removeAttribute(attName);
+  }
+  return numString;
+}
+
+/* Validate contents of an input field 
+ *
+ *  value          number to validate
+ *  minVal         minimum allowed for input widget's value
+ *  maxVal         maximum allowed for input widget's value
+ *                 (when "listWidget" is used, maxVal is used for "pixel" maximum,
+ *                  100% is assumed if "percent" is the user's choice)
+ *  mustHaveValue  If true, error dialog is displayed if "value" is empty string
+ *
+ *  If inputWidget's value is outside of range, or is empty when "mustHaveValue" = true,
+ *      an error dialog is popuped up to inform the user. The focus is shifted
+ *      to the inputWidget.
+ *
+ *  Returns the "value" as a string, or "" if error or input contents are empty
+ *  The global "gValidationError" variable is set true if error was found
+ */
+function ValidateNumberRange(value, minValue, maxValue, mustHaveValue)
+{
+  // Initialize global error flag
+  gValidationError = false;
+  value = TrimString(String(value));
+
+  // We don't show error for empty string unless caller wants to
+  if (!value && !mustHaveValue)
+    return "";
+
+  var numberStr = "";
+
   if (value.length > 0)
   {
     // Extract just numeric characters
@@ -101,16 +201,26 @@ function ValidateNumberString(value, minValue, maxValue)
       // Return string version of the number
       return String(number);
     }
-    var message = editorShell.GetString("ValidateNumber");
-    // Replace variable placeholders in message with number values
-    message = ((message.replace(/%n%/,number)).replace(/%min%/,minValue)).replace(/%max%/,maxValue);
-    ShowInputErrorMessage(message);
+    numberStr = String(number);
   }
-  else
+
+  var message = "";
+
+  if (numberStr.length > 0)
   {
-    dump("ValidateNumberString ERROR -- No string supplied: value = "+value+"\n");
+    // We have a number from user outside of allowed range
+    message = editorShell.GetString( "ValidateRangeMsg");
+    message = message.replace(/%n%/, numberStr);
+    message += "\n ";
   }
+  message += editorShell.GetString( "ValidateNumberMsg");
+
+  // Replace variable placeholders in message with number values
+  message = message.replace(/%min%/, minValue).replace(/%max%/, maxValue);
+  ShowInputErrorMessage(message);
+
   // Return an empty string to indicate error
+  gValidationError = true;
   return "";
 }
 
@@ -754,6 +864,12 @@ function onMoreFewer()
     dialog.MoreFewerButton.setAttribute("label",GetString("FewerProperties"));
     SeeMore = true;
   }
+}
+
+function SwitchToValidatePanel()
+{
+  // no default implementation
+  // Only EdTableProps.js currently implements this
 }
 
 function GetPrefs()

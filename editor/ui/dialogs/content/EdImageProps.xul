@@ -95,7 +95,7 @@
       class   = "dialog" 
       id      = "MoreFewerButton" 
       align   = "left" 
-      oncommand = "onMoreFewerImage()" 
+      oncommand = "onMoreFewer()" 
       tooltip = "aTooltip" tooltiptext = "&MoreFewerButton.tooltip;"
       persist = "more"/>
     <spring class="spacer"/>

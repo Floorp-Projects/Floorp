@@ -129,12 +129,20 @@ function onSaveDefault()
       var percentIndex = width.search(/%/);
       var percent;
       var widthInt;
-      if (percentIndex > 0) {
+      if (width)
+      {
+        if (percentIndex > 0) {
+          percent = true;
+          widthInt = Number(width.substr(0, percentIndex));
+        } else {
+          percent = false;
+          widthInt = Number(width);
+        }
+      }
+      else
+      {
         percent = true;
-        widthInt = Number(width.substr(0, percentIndex));
-      } else {
-        percent = false;
-        widthInt = Number(width);
+        widthInt = Number(100);
       }
       prefs.SetIntPref("editor.hrule.width", widthInt);
       prefs.SetBoolPref("editor.hrule.width_percent", percent);
@@ -155,32 +163,15 @@ function onSaveDefault()
 function ValidateData()
 {
   // Height is always pixels
-  height = ValidateNumberString(dialog.heightInput.value, 1, maxPixels);
-  if (height)
-  {
-    globalElement.setAttribute("size", height);
-  }
-  else
-    globalElement.removeAttribute("size");
+  height = ValidateNumber(dialog.heightInput, null, 1, maxPixels,
+                          globalElement, "size", false);
+  if (gValidationError)
+    return false;
 
-  var isPercent = (dialog.pixelOrPercentMenulist.selectedIndex == 1);
-  var maxLimit;
-  if (isPercent) {
-    maxLimit = 100;
-  } else {
-    // Upper limit when using pixels
-    maxLimit = maxPixels;
-  }
-
-  width = ValidateNumberString(dialog.widthInput.value, 1, maxLimit);
-  if (width)
-  {
-    if (isPercent)
-      width = width + "%";
-    globalElement.setAttribute("width", width);
-  }
-  else 
-    globalElement.removeAttribute("width");
+  width = ValidateNumber(dialog.widthInput, dialog.pixelOrPercentMenulist, 1, maxPixels, 
+                         globalElement, "width", false);
+  if (gValidationError)
+    return false;
 
   align = "left";
   if (dialog.centerAlign.checked) {
