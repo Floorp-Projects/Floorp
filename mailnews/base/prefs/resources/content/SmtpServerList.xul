@@ -41,15 +41,13 @@
 <script language="javascript" src="chrome://global/content/strres.js"/>
 <script language="javascript" src="SmtpServerList.js"/>
 
-<keyset>
-  <key id="keyset"/>
-</keyset>
+<keyset id="keyset"/>
 
 <box align="horizontal">
   <html flex="1">&smtpListDesc.label;</html>
 </box>
 <box align="horizontal" style="min-height: 10em; min-width: 30em">
-  <tree id="smtpTree" onselect="onSelectionChange(event);" class="inset" flex="1">
+  <tree id="smtpTree" onselect="onSelectionChange(event);" class="inset" flex="1" style="height: 30px">
     <treecolgroup>
       <treecol flex="1"/>
     </treecolgroup>
@@ -57,13 +55,13 @@
   </tree>
   <box align="vertical">
     <button id="addButton"
-       onclick="onAdd(event);" value="&smtpListAdd.label;"/>
+       oncommand="onAdd(event);" value="&smtpListAdd.label;"/>
     <button id="editButton" disabled="true"
-       onclick="onEdit(event);" value="&smtpListEdit.label;"/>
+       oncommand="onEdit(event);" value="&smtpListEdit.label;"/>
     <button id="deleteButton" disabled="true"
-       onclick="onDelete(event);" value="&smtpListDelete.label;"/>
+       oncommand="onDelete(event);" value="&smtpListDelete.label;"/>
     <button id="setDefaultButton" disabled="true"
-       onclick="onSetDefault(event);" value="&smtpListSetDefault.label;"/>
+       oncommand="onSetDefault(event);" value="&smtpListSetDefault.label;"/>
   </box>
 </box>
 <separator class="groove"/>

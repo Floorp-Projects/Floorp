@@ -37,12 +37,10 @@ function initSmtpSettings(server) {
     gSmtpHostname = document.getElementById("smtp.hostname");
     gSmtpUseUsername = document.getElementById("smtp.useUsername");
     gSmtpAuthMethod = document.getElementById("smtp.authMethod");
-    gSmtpSavePassword = document.getElementById("smtp.savePassword")
     
     if (server) {
         gSmtpHostname.value = server.hostname;
         gSmtpUsername.value = server.username;
-        gSmtpSavePassword.checked = server.savePassword;
         gSmtpAuthMethod.setAttribute("value", server.authMethod);
         // radio groups not implemented
         //document.getElementById("smtp.trySSL").value = server.trySSL;
@@ -74,7 +72,6 @@ function saveSmtpSettings(server)
         dump("Saved authmethod = " + server.authMethod +
              " but checked = " + gSmtpUseUsername.checked + "\n");
         server.username = gSmtpUsername.value;
-        //server.savePassword = gSmtpSavePassword.checked;
     }
 }
 
@@ -82,7 +79,6 @@ function onUseUsername(checkbox, dofocus)
 {
     if (checkbox.checked) {
         gSmtpUsername.removeAttribute("disabled");
-        gSmtpSavePassword.removeAttribute("disabled");
         if (dofocus)
             gSmtpUsername.focus();
         if (gSavedUsername && gSavedUsername != "")
@@ -91,7 +87,6 @@ function onUseUsername(checkbox, dofocus)
         gSavedUsername = gSmtpUsername.value;
         gSmtpUsername.value = "";
         gSmtpUsername.setAttribute("disabled", "true");
-        gSmtpSavePassword.setAttribute("disabled", "true");
     }        
 }
 

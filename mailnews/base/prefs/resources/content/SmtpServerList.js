@@ -125,17 +125,12 @@ function refreshServerList()
     for (var i=0; i< selectedItems.length; i++)
         oldSelectedIds[i] = selectedItems[0].id;
 
-    // recreate <treechildren>
-    // note - I tried creating the <treechildren> node pre-populated,
-    // but the tree wouldn't notice the update
-    dump("Removing " + serverList.firstChild.localName + "\n");
-    if (serverList.firstChild &&
-        serverList.firstChild.localName.toLowerCase() == "treechildren")
-        serverList.removeChild(serverList.firstChild);
+    var treeChildren = document.getElementById("smtpTreeChildren");
 
-    var treeChildren = document.createElement("treechildren");
-    serverList.appendChild(treeChildren);
-    
+    // remove all children
+    while (treeChildren.hasChildNodes())
+        treeChildren.removeChild(treeChildren.lastChild);
+
     var defaultServer = smtpService.defaultServer;
     fillSmtpServers(treeChildren,smtpService.smtpServers, defaultServer);
 

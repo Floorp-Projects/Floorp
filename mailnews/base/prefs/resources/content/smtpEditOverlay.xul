@@ -48,7 +48,6 @@
           <text value="&userName.label;"/>
           <textfield wsm_persist="true" id="smtp.username"/>
         </box>
-        <checkbox wsm_persist="true" id="smtp.savePassword" value="&savePassword.label;"/>
       </box>
      </box>
      <checkbox wsm_persist="true" id="smtp.isSecure" value="&isSecure.label;" oncommand="updateControls();"/>
