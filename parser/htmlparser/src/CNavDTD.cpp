@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//#define ENABLE_CRC
 //#define ALLOW_TR_AS_CHILD_OF_TABLE  //by setting this to true, TR is allowable directly in TABLE.
 
 #define ENABLE_RESIDUALSTYLE  
@@ -83,12 +82,7 @@ static const  char kNullToken[] = "Error: Null token given";
 static const  char kInvalidTagStackPos[] = "Error: invalid tag stack position";
 #endif
 
-#ifdef  ENABLE_CRC
-static char gShowCRC;
-#endif
-
 #include "nsElementTable.h"
-
 
 #ifdef MOZ_PERF_METRICS
 #  define START_TIMER()                    \
@@ -179,10 +173,6 @@ CNavDTD::CNavDTD() : nsIDTD(),
     mLineNumber(1),
     mOpenMapCount(0),
     mFlags(NS_DTD_FLAG_NONE)
-#ifdef ENABLE_CRC
-    ,mComputedCRC32(0),
-    mExpectedCRC32(0)
-#endif
 {
   mBodyContext=new nsDTDContext();
 }
@@ -393,11 +383,6 @@ nsresult CNavDTD::WillBuildModel(const CParserContext& aParserContext,
         mFlags |= NS_IPARSER_FLAG_SCRIPT_ENABLED;
       }
     }
-    
-#ifdef ENABLE_CRC
-    mComputedCRC32=0;
-    mExpectedCRC32=0;
-#endif
   }
 
   return result;
@@ -591,43 +576,8 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,
       } 
     }
 
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::DidBuildModel(), this=%p\n", this));
-
-#ifdef  ENABLE_CRC
-
-      //let's only grab this state once! 
-    if (!gShowCRC) { 
-      gShowCRC=1; //this only indicates we'll not initialize again. 
-      char* theEnvString = PR_GetEnv("RICKG_CRC"); 
-      if (theEnvString){ 
-        if (('1'== theEnvString[0]) || ('Y'== theEnvString[0]) || ('y'== theEnvString[0])){ 
-          gShowCRC=2;  //this indicates that the CRC flag was found in the environment. 
-        } 
-      } 
-    } 
-
-    if (2 == gShowCRC) { 
-      if (mComputedCRC32 != mExpectedCRC32) { 
-        if (mExpectedCRC32 != 0) { 
-          printf("CRC Computed: %u  Expected CRC: %u\n,",mComputedCRC32,mExpectedCRC32); 
-          result = aSink->DidBuildModel(); 
-        } 
-        else { 
-          printf("Computed CRC: %u.\n",mComputedCRC32); 
-          result = aSink->DidBuildModel(); 
-          NS_ENSURE_SUCCESS(result, result);
-        } 
-      } 
-    }
-#endif
-
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidBuildModel(), this=%p\n", this));
-    START_TIMER();
-
-      //Now make sure the misplaced content list is empty,
-      //by forcefully recycling any tokens we might find there.
-
+    //Now make sure the misplaced content list is empty,
+    //by forcefully recycling any tokens we might find there.
     CToken* theToken = 0;
     while ((theToken = (CToken*)mMisplacedContent.Pop())) {
       IF_FREE(theToken, mTokenAllocator);
@@ -1428,35 +1378,6 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
   START_TIMER()
 
   if(NS_SUCCEEDED(result)) {
-
-#ifdef ENABLE_CRC
-
-    STOP_TIMER()
-
-      if(eHTMLTag_meta==aTag) {  
-      PRInt32 theCount=aNode.GetAttributeCount(); 
-      if(1<theCount){ 
-  
-        const nsAString& theKey = aNode.GetKeyAt(0);
-        if(theKey.Equals("NAME",IGNORE_CASE)) { 
-          const nsString& theValue1=aNode.GetValueAt(0); 
-          if(theValue1.Equals("\"CRC\"",IGNORE_CASE)) { 
-            const nsAString& theKey2 = aNode.GetKeyAt(1); 
-            if(theKey2.Equals("CONTENT",IGNORE_CASE)) { 
-              const nsString& theValue2=aNode.GetValueAt(1); 
-              PRInt32 err=0; 
-              mExpectedCRC32=theValue2.ToInteger(&err); 
-            } //if 
-          } //if 
-        } //else 
-
-      } //if 
-    }//if 
-
-    START_TIMER()
-
-#endif
-
     if(NS_OK==result) {
       result=gHTMLElements[aTag].HasSpecialProperty(kDiscardTag) ? 1 : NS_OK;
     }
@@ -3275,12 +3196,6 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
     OpenTransientStyles(aTag); 
   }
 
-#ifdef ENABLE_CRC
-  #define K_OPENOP 100
-  CRCStruct theStruct(aTag,K_OPENOP);
-  mComputedCRC32=AccumulateCRC(mComputedCRC32,(char*)&theStruct,sizeof(theStruct));
-#endif
-
   switch (aTag) {
     case eHTMLTag_html:
       result=OpenHTML(aNode); break;
@@ -3384,11 +3299,6 @@ nsresult
 CNavDTD::CloseContainer(const eHTMLTags aTag, eHTMLTags aTarget,PRBool aClosedByStartTag)
 {
   nsresult   result = NS_OK;
-#ifdef ENABLE_CRC
-  #define K_CLOSEOP 200
-  CRCStruct theStruct(nodeType,K_CLOSEOP);
-  mComputedCRC32=AccumulateCRC(mComputedCRC32,(char*)&theStruct,sizeof(theStruct));
-#endif
 
   switch (aTag) {
 

@@ -1485,48 +1485,6 @@ void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* 
 }
 #endif
 
-
-/*************************************************************************
- *  The table lookup technique was adapted from the algorithm described  *
- *  by Avram Perez, Byte-wise CRC Calculations, IEEE Micro 3, 40 (1983). *
- *************************************************************************/
-
-#define POLYNOMIAL 0x04c11db7L
-
-static PRBool crc_table_initialized;
-static PRUint32 crc_table[256];
-
-static void gen_crc_table() {
- /* generate the table of CRC remainders for all possible bytes */
-  int i, j;  
-  PRUint32 crc_accum;
-  for ( i = 0;  i < 256;  i++ ) { 
-    crc_accum = ( (unsigned long) i << 24 );
-    for ( j = 0;  j < 8;  j++ ) { 
-      if ( crc_accum & 0x80000000L )
-        crc_accum = ( crc_accum << 1 ) ^ POLYNOMIAL;
-      else crc_accum = ( crc_accum << 1 ); 
-    }
-    crc_table[i] = crc_accum; 
-  }
-  return; 
-}
-
-PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size)  {
-  if (!crc_table_initialized) {
-    gen_crc_table();
-    crc_table_initialized = PR_TRUE;
-  }
-
- /* update the CRC on the data block one byte at a time */
-  int i, j;
-  for ( j = 0;  j < data_blk_size;  j++ ) { 
-    i = ( (int) ( crc_accum >> 24) ^ *data_blk_ptr++ ) & 0xff;
-    crc_accum = ( crc_accum << 8 ) ^ crc_table[i]; 
-  }
-  return crc_accum; 
-}
-
 /**************************************************************
   This defines the topic object used by the observer service.
   The observerService uses a list of these, 1 per topic when
