@@ -125,8 +125,6 @@
 #endif // IBMBIDI
 
 #define DEFAULT_COLUMN_WIDTH 20
-// (10 pixels)
-#define GUESS_INPUT_SIZE 150
 
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
@@ -1552,7 +1550,7 @@ nsTextControlFrame::GetRows()
 }
 
 
-void
+nsresult
 nsTextControlFrame::ReflowStandard(nsIPresContext*          aPresContext,
                                    nsSize&                  aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
@@ -1560,8 +1558,9 @@ nsTextControlFrame::ReflowStandard(nsIPresContext*          aPresContext,
 {
   // get the css size and let the frame use or override it
   nsSize minSize;
-  CalculateSizeStandard(aPresContext, aReflowState.rendContext, aDesiredSize,
-                        minSize);
+  nsresult rv = CalculateSizeStandard(aPresContext, aReflowState.rendContext,
+                                      aDesiredSize, minSize);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Add in the size of the scrollbars for textarea
   if (IsTextArea()) {
@@ -1597,11 +1596,13 @@ nsTextControlFrame::ReflowStandard(nsIPresContext*          aPresContext,
   aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+
+  return NS_OK;
 }
 
 
 
-void
+nsresult
 nsTextControlFrame::CalculateSizeStandard(nsIPresContext*       aPresContext,
                                           nsIRenderingContext*  aRendContext,
                                           nsSize&               aDesiredSize,
@@ -1610,62 +1611,35 @@ nsTextControlFrame::CalculateSizeStandard(nsIPresContext*       aPresContext,
   aDesiredSize.width  = CSS_NOTSET;
   aDesiredSize.height = CSS_NOTSET;
 
+  // Get leading and the Average/MaxAdvance char width 
   nscoord fontHeight  = 0;
-  // get leading
+  nscoord charWidth   = 0;
+  nscoord charMaxAdvance  = 0;
+
   nsCOMPtr<nsIFontMetrics> fontMet;
   nsresult rv = nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
-  if (NS_SUCCEEDED(rv) && fontMet) {
-    aRendContext->SetFont(fontMet);
-    fontMet->GetHeight(fontHeight);
-  } else {
-    NS_WARNING("No font metrics found for textarea / input!  Something is fishy.");
-    fontHeight = GUESS_INPUT_SIZE;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  aRendContext->SetFont(fontMet);
+  fontMet->GetHeight(fontHeight);
+  fontMet->GetAveCharWidth(charWidth);
+  fontMet->GetMaxAdvance(charMaxAdvance);
 
-  // Internal padding is necessary for better matching IE's width
-  nscoord internalPadding = 0;
-
-  // Get the Average char width to calc the min width and 
-  // pref width. Pref Width is calced by multiplying the size times avecharwidth
-  // 
-  // XXX Currently, WIN32 is the only platform to implement the GetAveCharWidth in 
-  // nsIFontMetrics. The other need to have it implemeneted (Bug 50998)
-  // and then this if def removed. We are too close to RTM to implement it in all 
-  // the platforms and ports.
-
+  // calc the min width and pref width. Pref Width is calced by multiplying the size times avecharwidth 
   float p2t;
   aPresContext->GetPixelsToTwips(&p2t);
 
-  nscoord charWidth   = 0;
-
-#if defined(_WIN32) || defined(XP_OS2)
-  fontMet->GetAveCharWidth(charWidth);
-
-  // Get frame font
-  const nsFont * font = nsnull;
-  if (NS_SUCCEEDED(this->GetFont(aPresContext, font))) {
-    // To better match IE, take the size (in twips) and remove 4 pixels
-    // add this on as additional padding
-    internalPadding = PR_MAX(font->size - NSToCoordRound(4 * p2t), 0);
-    // round to a multiple of p2t
-    nscoord rest = internalPadding%NSToCoordRound(p2t);
-    if( rest < NSToCoordRound(p2t) - rest) {
-      internalPadding = internalPadding - rest;
-    } else {
-      internalPadding = internalPadding + NSToCoordRound(p2t) - rest;
-    }
+  // To better match IE, take the maximum character width(in twips) and remove 4 pixels
+  // add this on as additional padding(internalPadding)
+  nscoord internalPadding = 0;
+  internalPadding = PR_MAX(charMaxAdvance - NSToCoordRound(4 * p2t), 0);
+  // round to a multiple of p2t
+  nscoord t = NSToCoordRound(p2t); 
+  nscoord rest = internalPadding % t; 
+  if (rest < t - rest) {
+    internalPadding -= rest;
+  } else {
+    internalPadding += t - rest;
   }
-
-#else
-  // XP implementation of AveCharWidth
-  nsAutoString aveStr; 
-  aveStr.Assign(NS_LITERAL_STRING(" ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwxyz!@#$%^&*()_+=-0987654321~`';\":[]}{?><,./\\|"));
-  aRendContext->GetWidth(aveStr, charWidth);
-  charWidth /= aveStr.Length();
-  // Round to the nearest twip
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t);  // get the rounding right
-  charWidth = nscoord((float(charWidth) / float(onePixel)) + 0.5)*onePixel;
-#endif
 
   // Set the width equal to the width in characters
   aDesiredSize.width = GetCols() * charWidth;
@@ -1681,9 +1655,9 @@ nsTextControlFrame::CalculateSizeStandard(nsIPresContext*       aPresContext,
   // shall pass.
   aMinSize.width  = aDesiredSize.width;
   aMinSize.height = aDesiredSize.height;
+
+  return NS_OK;
 }
-
-
 
 //------------------------------------------------------------------
 NS_IMETHODIMP
@@ -2217,7 +2191,8 @@ nsTextControlFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
     mNotifyOnInput = PR_TRUE; //its ok to notify now. all has been prepared.
 
   nsReflowStatus status;
-  ReflowStandard(presContext, aSize, *reflowState, status);
+  nsresult rv = ReflowStandard(presContext, aSize, *reflowState, status);
+  NS_ENSURE_SUCCESS(rv, rv);
   AddInset(aSize);
 
   mPrefSize = aSize;
