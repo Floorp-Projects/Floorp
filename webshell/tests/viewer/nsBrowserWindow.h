@@ -181,6 +181,11 @@ public:
   void ToggleFrameBorders();
   void ToggleVisualEventDebugging();
   void ToggleBoolPrefAndRefresh(const char * aPrefName);
+
+  void SetBoolPref(const char * aPrefName, PRBool aValue);
+  void SetStringPref(const char * aPrefName, const nsString& aValue);
+  void GetStringPref(const char * aPrefName, nsString& aValue);
+
   void ShowContentSize(FILE* out = stdout);
   void ShowFrameSize(FILE* out = stdout);
   void ShowStyleSize();
