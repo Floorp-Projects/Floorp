@@ -59,8 +59,6 @@
 #include "nsLayoutCID.h"
 
 // Drag & Drop, Clipboard Support
-static NS_DEFINE_CID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
-static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kContentIteratorCID,      NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
@@ -460,8 +458,7 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   if (!aMouseEvent)
     return NS_OK;   // NS_OK means "we didn't process the event".  Go figure.
 
-  nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
-  mouseEvent = do_QueryInterface(aMouseEvent);
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
   if (!mouseEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;
@@ -480,84 +477,9 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 
   PRUint16 button = 0;
   mouseEvent->GetButton(&button);
-   // left button click might be a drag-start
-   if (1==button)
-   {
-#ifndef EXPERIMENTAL_DRAG_CODE
-      return NS_OK;
-#else
-      nsString XIFBuffer;
-      // get the DOM select here
-      nsCOMPtr<nsIDOMSelection> sel;
-      editor->GetSelection(getter_AddRefs(sel));
-    
-      // convert the DOMselection to XIF
-      if (sel)
-      {
-         // if we are within the selection, start the drag
-
-         nsCOMPtr<nsIDOMNode> target;
-         nsresult rv = aMouseEvent->GetTarget(getter_AddRefs(target));
-         if (NS_FAILED(rv) || !target) { return NS_OK; }
-         PRBool isInSel;
-         rv = IsNodeInSelection(target, sel, isInSel);
-         if (NS_FAILED(rv) || PR_FALSE==isInSel) { return NS_OK; }
-         doc->CreateXIF(XIFBuffer, sel);
-
-         // Get the Clipboard
-         NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
-         if (NS_FAILED(rv)) return rv;
-        
-          // Create a data flavor to tell the transferable 
-          // that it is about to receive XIF
-          nsAutoString flavor(kXIFMime);
-
-          // Create a transferable for putting data on the Clipboard
-          nsCOMPtr<nsITransferable> trans;
-          rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                                  nsITransferable::GetIID(), 
-                                                  (void**) getter_AddRefs(trans));
-          if (NS_OK == rv) {
-             // The data on the clipboard will be in "XIF" format
-             // so give the clipboard transferable a "XIFConverter" for 
-             // converting from XIF to other formats
-             nsCOMPtr<nsIFormatConverter> xifConverter;
-             rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
-                                                     nsIFormatConverter::GetIID(), 
-                                                     (void**) getter_AddRefs(xifConverter));
-             if (NS_OK == rv) {
-                // Add the XIF DataFlavor to the transferable
-                // this tells the transferable that it can handle receiving the XIF format
-                trans->AddDataFlavor(&flavor);
-
-                // Add the converter for going from XIF to other formats
-                trans->SetConverter(xifConverter);
-
-                // Now add the XIF data to the transferable
-                // the transferable wants the number bytes for the data and since it is double byte
-                // we multiply by 2
-                trans->SetTransferData(&flavor, XIFBuffer.ToNewUnicode(), XIFBuffer.Length()*2);
-
-                // Now invoke the drag session
-                NS_WITH_SERVICE(nsIDragService, dragService, kCDragServiceCID, &rv);
-                if (NS_FAILED(rv)) return rv;
-                nsCOMPtr<nsISupportsArray> items;
-                NS_NewISupportsArray(getter_AddRefs(items));
-                if ( items ) {
-                  items->AppendElement(trans);
-                  dragService->InvokeDragSession(items, nsnull, 
-                              nsIDragService::DRAGDROP_ACTION_COPY | 
-                              nsIDragService::DRAGDROP_ACTION_MOVE);
-                } 
-             }
-          }
-       }
-       return NS_ERROR_BASE;   // return that we've handled the event
-#endif
-  }
   // middle-mouse click (paste);
-  else if (button == 2)
-   {
+  if (button == 2)
+  {
 
     // Set the selection to the point under the mouse cursor:
       nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aMouseEvent));
@@ -577,7 +499,7 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 
       // If the ctrl key is pressed, we'll do paste as quotation.
       // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
-      nsCOMPtr<nsIDOMMouseEvent> mouseEvent (do_QueryInterface(aMouseEvent));
+      mouseEvent = do_QueryInterface(aMouseEvent);
       PRBool ctrlKey = PR_FALSE;
       mouseEvent->GetCtrlKey(&ctrlKey);
 
@@ -811,7 +733,7 @@ nsresult
 nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 {
   nsresult rv;
-  NS_WITH_SERVICE ( nsIDragService, dragService, kCDragServiceCID, &rv );
+  NS_WITH_SERVICE ( nsIDragService, dragService, "component://netscape/widget/dragservice", &rv );
   if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
     if ( dragSession ) {
@@ -830,7 +752,7 @@ nsresult
 nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
 {
   nsresult rv;
-  NS_WITH_SERVICE ( nsIDragService, dragService, kCDragServiceCID, &rv );
+  NS_WITH_SERVICE ( nsIDragService, dragService, "component://netscape/widget/dragservice", &rv );
   if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
     if ( dragSession ) {
@@ -858,7 +780,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 {
   // Create drag service for getting state of drag
   nsresult rv;
-  NS_WITH_SERVICE(nsIDragService, dragService, kCDragServiceCID, &rv);
+  NS_WITH_SERVICE(nsIDragService, dragService, "component://netscape/widget/dragservice", &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
@@ -867,7 +789,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 
     // Create transferable for getting the drag data
     nsCOMPtr<nsITransferable> trans;
-    rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+    rv = nsComponentManager::CreateInstance("component://netscape/widget/transferable", nsnull, 
                                             nsITransferable::GetIID(), 
                                             (void**) getter_AddRefs(trans));
     if ( NS_SUCCEEDED(rv) && trans ) {
