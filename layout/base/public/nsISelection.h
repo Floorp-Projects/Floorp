@@ -43,10 +43,11 @@ public:
   /** HandleKeyEvent will accept an event and frame and 
    *  will return NS_OK if it handles the event or NS_COMFALSE if not.
    *  <P>DOES NOT ADDREF<P>
+   *  @param tracker to ask where the current focus is and to set the new anchor ect.
    *  @param aGuiEvent is the event that should be dealt with by aFocusFrame
    *  @param aFrame is the frame that MAY handle the event
    */
-  NS_IMETHOD HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame) = 0;
+  NS_IMETHOD HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, nsIFrame *aFrame) = 0;
 
   /** TakeFocus will take the focus to the new frame at the new offset and 
    *  will either extend the selection from the old anchor, or replace the old anchor.

@@ -1841,6 +1841,14 @@ nsFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffs
 }
 
 
+NS_IMETHODIMP
+nsFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  nsIFrame **aResultFrame, 
+                    PRInt32 *aFrameOffset, PRInt32 *aContentOffset)
+{
+  //default, no matter what grab next/ previous sibling. 
+  return NS_ERROR_FAILURE;
+}
+
 //-----------------------------------------------------------------------------------
 
 /********************************************************
