@@ -1985,3 +1985,17 @@ nsImapIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 	if (!mInner) return NS_ERROR_FAILURE;
 	return mInner->GetSubscribeListener(aListener);
 }
+
+NS_IMETHODIMP
+nsImapIncomingServer::Subscribe(const char *aName)
+{
+	printf("subscribe to folder: %s\n",aName);
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::Unsubscribe(const char *aName)
+{
+	printf("unsubscribe to folder: %s\n",aName);
+	return NS_OK;
+}

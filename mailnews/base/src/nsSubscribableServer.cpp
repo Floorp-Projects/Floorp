@@ -335,3 +335,17 @@ nsSubscribableServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
 	NS_ASSERTION(PR_FALSE,"override this.");
 	return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP
+nsSubscribableServer::Subscribe(const char *aName)
+{
+	NS_ASSERTION(PR_FALSE,"override this.");
+	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::Unsubscribe(const char *aName)
+{
+	NS_ASSERTION(PR_FALSE,"override this.");
+	return NS_ERROR_FAILURE;
+}

@@ -793,3 +793,17 @@ nsNntpIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 	if (!mInner) return NS_ERROR_FAILURE;
 	return mInner->GetSubscribeListener(aListener);
 }
+
+NS_IMETHODIMP
+nsNntpIncomingServer::Subscribe(const char *aName)
+{
+	printf("subscribe to news group: %s\n",aName);
+	return SubscribeToNewsgroup(aName);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::Unsubscribe(const char *aName)
+{
+	printf("unsubscribe to news group: %s\n",aName);
+	return NS_OK;
+}

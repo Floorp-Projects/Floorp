@@ -45,5 +45,7 @@ interface nsISubscribableServer : nsISupports {
 	void addToSubscribeDS(in string aName);
 	void setAsSubscribedInSubscribeDS(in string aName);
 	void updateSubscribedInSubscribeDS();
+	void subscribe(in string name);
+	void unsubscribe(in string name);
 };
 
