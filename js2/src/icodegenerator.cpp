@@ -124,7 +124,7 @@ void ICodeGenerator::branchConditional(int32 label, Register condition)
 
 int32 ICodeGenerator::getLabel()
 {
-    int32 result = labels.size();
+    int32 result = static_cast<int32>(labels.size());
     labels.push_back(new Label(NULL, -1));
     return result;
 }
@@ -138,10 +138,10 @@ void ICodeGenerator::setLabel(int32 label)
         throw std::out_of_range("label out of range");
     l = labels[label];
 #else
-    l = labels.at(label);
+    l = labels.at(static_cast<uint32>(label));
 #endif
     l->itsBase = iCode;
-    l->itsOffset = iCode->size();
+    l->itsOffset = static_cast<int32>(iCode->size());
 }
 
 void ICodeGenerator::setLabel(InstructionStream *stream, int32 label)
@@ -153,10 +153,10 @@ void ICodeGenerator::setLabel(InstructionStream *stream, int32 label)
         throw std::out_of_range("label out of range");
     l = labels[label];
 #else
-    l = labels.at(label);
+    l = labels.at(static_cast<uint32>(label));
 #endif
     l->itsBase = stream;
-    l->itsOffset = stream->size();
+    l->itsOffset = static_cast<int32>(stream->size());
 }
 
 /***********************************************************************************************/
@@ -180,7 +180,7 @@ void ICodeGenerator::mergeStream(InstructionStream *sideStream)
 
 /***********************************************************************************************/
 
-void ICodeGenerator::beginWhileStatement(const SourcePosition &pos)
+void ICodeGenerator::beginWhileStatement(uint32)
 {
     resetTopRegister();
   
@@ -232,7 +232,7 @@ void ICodeGenerator::endWhileStatement()
 
 /***********************************************************************************************/
 
-void ICodeGenerator::beginForStatement(const SourcePosition &pos)
+void ICodeGenerator::beginForStatement(uint32)
 {
     int32 forCondition = getLabel();
 
@@ -295,7 +295,7 @@ void ICodeGenerator::endForStatement()
 
 /***********************************************************************************************/
 
-void ICodeGenerator::beginDoStatement(const SourcePosition &pos)
+void ICodeGenerator::beginDoStatement(uint32)
 {
     resetTopRegister();
   
@@ -341,7 +341,7 @@ void ICodeGenerator::endDoExpression(Register condition)
 
 /***********************************************************************************************/
 
-void ICodeGenerator::beginSwitchStatement(const SourcePosition &pos, Register expression)
+void ICodeGenerator::beginSwitchStatement(uint32, Register expression)
 {
     // stash the control expression value
     resetTopRegister();
@@ -430,7 +430,7 @@ void ICodeGenerator::endSwitchStatement()
 
 /***********************************************************************************************/
 
-void ICodeGenerator::beginIfStatement(const SourcePosition &pos, Register condition)
+void ICodeGenerator::beginIfStatement(uint32, Register condition)
 {
     int32 elseLabel = getLabel();
     
