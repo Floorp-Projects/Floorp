@@ -132,6 +132,7 @@ protected:
 protected:
    PRBool                     mCreated;
    nsString                   mName;
+   nsString                   mTitle;
    nsVoidArray                mChildren;
    nsDSURIContentListener*    mContentListener;
    nsDocShellInitInfo*        mInitInfo;
@@ -148,12 +149,12 @@ protected:
    PRInt32                    mMarginHeight;
    PRInt32                    mItemType;
 
-   /* Note this can not be nsCOMPtr as that that would cause an addref on the 
-   parent thus a cycle.  A weak reference would work, but not required as the
-   interface states a requirement to zero out the parent when the parent is
-   releasing the interface.*/
+   /* WEAK REFERENCES BELOW HERE.
+   Note these are intentionally not addrefd.  Doing so will create a cycle.
+   For that reasons don't use nsCOMPtr.*/
    nsIDocShellTreeItem*       mParent;  // Weak Reference
    nsIDocShellTreeOwner*      mTreeOwner; // Weak Reference
+   nsIChromeEventHandler*     mChromeEventHandler; //Weak Reference
 };
 
 #endif /* nsDocShell_h__ */
