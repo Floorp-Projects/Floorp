@@ -32,3 +32,4 @@
 <!ENTITY engine.column.label         "Search Engine">
 <!ENTITY viewbyprovider.label        "View by search engine:">
 <!ENTITY allresults.title.label      "All results combined">
+<!ENTITY internetresults.title       "Search Results">
