@@ -9,6 +9,19 @@
     <resources>
       <stylesheet src="chrome://global/skin/toolbar.css"/>
     </resources>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            if (this.localName == "toolbarseparator")
+              return accService.createXULToolbarSeparatorAccessible(this);
+            else
+              return accService.createXULToolbarAccessible(this);
+          ]]>
+        </getter>
+      </property>
+    </implementation>
   </binding>
   
   <binding id="toolbox" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base">  

@@ -3783,8 +3783,7 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       NS_ConvertUCS2toUTF8 utf8Value(term->text);
       
       if (term->method.Equals("is")) {
-
-        if (utf8Value != rowVal)
+        if (!utf8Value.Equals(rowVal, nsCaseInsensitiveCStringComparator()))
           return PR_FALSE;
       }
 
@@ -3794,12 +3793,12 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       }
 
       else if (term->method.Equals("contains")) {
-        if (!FindInReadable(utf8Value, start, end))
+        if (!FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()))
           return PR_FALSE;
       }
 
       else if (term->method.Equals("doesntcontain")) {
-        if (FindInReadable(utf8Value, start, end))
+        if (FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()))
           return PR_FALSE;
       }
 
@@ -3807,7 +3806,7 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
         // need to make sure that the found string is 
         // at the beginning of the string
         nsACString::const_iterator real_start = start;
-        if (!(FindInReadable(utf8Value, start, end) &&
+        if (!(FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()) &&
               real_start == start))
           return PR_FALSE;
       }
@@ -3816,7 +3815,7 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
         // need to make sure that the found string ends
         // at the end of the string
         nsACString::const_iterator real_end = end;
-        if (!(RFindInReadable(utf8Value, start, end) &&
+        if (!(RFindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()) &&
               real_end == end))
           return PR_FALSE;
       }

@@ -69,6 +69,40 @@
       <property name="autoCheck"
                 onget="return this.getAttribute('autoCheck') == 'true';"
                 onset="this.setAttribute('autoCheck', val); return val;"/>
+
+      <method name ="filterButtons">
+        <parameter name="node"/>
+        <body>
+        <![CDATA[
+          if (node.localName == "button" && node.accessKey &&
+            !node.disabled && !node.collapsed && !node.hidden)
+            return NodeFilter.FILTER_ACCEPT;
+          return NodeFilter.FILTER_SKIP;
+        ]]>
+        </body>
+      </method>
+
+      <method name="fireAccessKeyButton">
+        <parameter name="aSubtree"/>
+        <parameter name="aAccessKeyLower"/>
+        <body>
+        <![CDATA[
+          var iterator = aSubtree.ownerDocument.createTreeWalker(aSubtree, 
+                                                                 NodeFilter.SHOW_ELEMENT, 
+                                                                 this.filterButtons, false);
+          while (iterator.nextNode()) {
+            var test = iterator.currentNode;
+            if (test.accessKey.toLowerCase() == aAccessKeyLower && 
+                !test.disabled && !test.collapsed && !test.hidden) {
+              test.focus();
+              test.click();
+              return true;
+            }
+          }
+          return false;
+        ]]>
+        </body>
+      </method>
     </implementation>
 
     <handlers>
@@ -84,11 +118,51 @@
       ]]>
       </handler>
 
+      <handler event="keypress">
+      <![CDATA[
+        if (event.keyCode == KeyEvent.DOM_VK_UP ||
+            event.keyCode == KeyEvent.DOM_VK_LEFT)
+          return window.document.commandDispatcher.rewindFocus();
+
+        if (event.keyCode == KeyEvent.DOM_VK_DOWN ||
+            event.keyCode == KeyEvent.DOM_VK_RIGHT)
+          return window.document.commandDispatcher.advanceFocus();
+
+        if (event.keyCode || event.charCode <= ' ')
+          return;  // No arrow key or potential accesskey pressed
+
+        // Possible accesskey pressed
+        var charPressedLower = String.fromCharCode(event.charCode).toLowerCase();
+
+        // If the accesskey of the current button is pressed, just activate it
+        if (this.accessKey.toLowerCase() == charPressedLower) {
+          this.click();
+          return;
+        }
+
+        // Search for accesskey in the list of buttons for this doc and each subdoc
+        // Get the buttons for the main document and all sub-frames
+        for (var frameCount = -1; frameCount < window.top.frames.length; frameCount++) {
+          var doc = (frameCount == -1)? window.top.document: 
+            window.top.frames[frameCount].document
+          if (this.fireAccessKeyButton(doc.documentElement, charPressedLower))
+            return;
+        }
+
+        // Test anonymous buttons
+        var dlg = window.top.document;
+        var buttonBox = dlg.getAnonymousElementByAttribute(dlg.documentElement,
+                                                         "anonid", "buttons");
+        if (buttonBox)
+          this.fireAccessKeyButton(buttonBox, charPressedLower);
+      ]]>
+      </handler>
+
     </handlers>
   </binding>
 
   <binding id="button" display="xul:button"
-           extends="chrome://global/content/widgets/button.xml#button-base">
+           extends="chrome://global/content/bindings/button.xml#button-base">
     <resources>
       <stylesheet src="chrome://global/skin/button.css"/>
     </resources>
@@ -106,7 +180,7 @@
   </binding>
 
   <binding id="menu" display="xul:menu"
-           extends="chrome://global/content/widgets/button.xml#button">
+           extends="chrome://global/content/bindings/button.xml#button">
     <content>
       <children includes="observes|template|menupopup|tooltip"/>
       <xul:hbox class="box-inherit button-box" xbl:inherits="align,dir,pack,orient"
@@ -121,7 +195,7 @@
   </binding>           
 
   <binding id="menu-button-base"
-           extends="chrome://global/content/widgets/button.xml#button-base">
+           extends="chrome://global/content/bindings/button.xml#button-base">
     <implementation>
       <constructor>
         this.init();
@@ -223,7 +297,7 @@
   </binding>
 
   <binding id="menu-button" display="xul:menu"
-           extends="chrome://global/content/widgets/button.xml#menu-button-base">
+           extends="chrome://global/content/bindings/button.xml#menu-button-base">
     <resources>
       <stylesheet src="chrome://global/skin/button.css"/>
     </resources>
@@ -241,7 +315,7 @@
   </binding>
   
   <binding id="button-image" display="xul:button"
-           extends="chrome://global/content/widgets/button.xml#button">
+           extends="chrome://global/content/bindings/button.xml#button">
     <content>
       <xul:image class="button-image-icon" xbl:inherits="src=image"/>
     </content>
