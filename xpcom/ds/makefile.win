@@ -32,7 +32,6 @@ EXPORTS =                          \
         nsHashtable.h              \
         nsHashtableEnumerator.h    \
         nsIArena.h                 \
-        nsIAtom.h                  \
         nsIBuffer.h                \
         nsIByteBuffer.h            \
         nsIObserverList.h          \
@@ -58,14 +57,14 @@ EXPORTS =                          \
 
 XPIDL_MODULE = xpcom_ds
 
-XPIDLSRCS =                 \
-        .\nsIAtom.idl       \
-        .\nsICollection.idl \
-        .\nsIEnumerator.idl \
-		.\nsIObserver.idl   \
-		.\nsIObserverService.idl   \
-	.\nsISupportsArray.idl	\
-	.\nsISupportsPrimitives.idl	\
+XPIDLSRCS =                         \
+        .\nsIAtom.idl               \
+        .\nsICollection.idl         \
+        .\nsIEnumerator.idl         \
+	.\nsIObserver.idl           \
+	.\nsIObserverService.idl    \
+	.\nsISupportsArray.idl	    \
+	.\nsISupportsPrimitives.idl \
         $(NULL)
 
 ################################################################################
