@@ -110,7 +110,7 @@ NS_IMETHODIMP CPromptService::AlertCheck(nsIDOMWindow *parent, const PRUnichar *
 {
     NS_ENSURE_ARG_POINTER(checkValue);
 
-    StDialogHandler	theHandler(dlog_ConfirmCheck, CBrowserChrome::GetLWindowForDOMWindow(parent));
+    StDialogHandler	theHandler(dlog_AlertCheck, CBrowserChrome::GetLWindowForDOMWindow(parent));
     LWindow			 *theDialog = theHandler.GetDialog();
     nsCAutoString    cStr;
     Str255           pStr;
