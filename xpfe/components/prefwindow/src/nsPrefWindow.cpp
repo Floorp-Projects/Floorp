@@ -217,13 +217,15 @@ NS_IMETHODIMP nsPrefWindow::ShowWindow(
 #if defined(MODELESS_PREF_DIALOG)||defined(DEBUG_mcafee)||defined(DEBUG_akkana)||defined(DEBUG_pavlov)
     // testing modeless pref window.  -mcafee
     nsIWebShellWindow *foo = nsnull;
+    // pass 0 for the height and width because we want to leave the size up to the xul (see prefs.xul for the window size)
     rv = appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, PR_TRUE,
                                NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
-                               cb, 504, 436, &foo);
+                               cb, 0, 0, &foo);
 #else
+    // pass 0 for the height and width because we want to leave the size up to the xul (see prefs.xul for the window size)
     rv = appShell->RunModalDialog(nsnull, parent, urlObj,
                                NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
-                               cb, 504, 436);
+                               cb, 0, 0);
 #endif
     return rv;
 } // nsPrefWindow::ShowWindow()

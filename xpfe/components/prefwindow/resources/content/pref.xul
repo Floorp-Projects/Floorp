@@ -32,6 +32,8 @@
   class="dialog"
   onload="StartUp('Top'); OnLoadPref();"
   title="&window.title;"
+  height="436"
+  width="600"
   align="vertical">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
