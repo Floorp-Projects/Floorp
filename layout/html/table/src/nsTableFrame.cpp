@@ -3850,7 +3850,19 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
         rowGroupFrame->GetNextSibling(&rowGroupFrame);
       }
       rowGroupFrame=mFrames.FirstChild();
+      // the first row group's y position starts inside our padding
       nscoord rowGroupYPos = 0;
+      if (rowGroupFrame) {
+        const nsStyleSpacing* spacing =
+          (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+	      nsMargin margin(0,0,0,0);
+        if (spacing->GetBorder(margin)) { // XXX see bug 10636 and handle percentages
+          rowGroupYPos = margin.top;
+        }
+        if (spacing->GetPadding(margin)) { // XXX see bug 10636 and handle percentages
+          rowGroupYPos += margin.top;
+        }
+      }
       while (nsnull!=rowGroupFrame)
       {
         const nsStyleDisplay *rowGroupDisplay;
@@ -4185,11 +4197,10 @@ void nsTableFrame::CacheColFramesInCellMap()
 }
 
 PRBool nsTableFrame::ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
-                                               const nsTableCellFrame& aCellFrame,
-                                               PRBool                  aConsiderMinWidth) const
+                                               const nsTableCellFrame& aCellFrame) const
 {
   if (mTableLayoutStrategy) {
-    return mTableLayoutStrategy->ColumnsCanBeInvalidatedBy(aPrevStyleWidth, aCellFrame, aConsiderMinWidth);
+    return mTableLayoutStrategy->ColumnsCanBeInvalidatedBy(aPrevStyleWidth, aCellFrame);
   }
   return PR_FALSE;
 }

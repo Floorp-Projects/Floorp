@@ -184,8 +184,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
 }
 
 PRBool FixedTableLayoutStrategy::ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
-                                                           const nsTableCellFrame& aCellFrame,
-                                                           PRBool                  aConsiderMinWidth) const
+                                                           const nsTableCellFrame& aCellFrame) const
 {
   return ColumnsCanBeInvalidatedBy(aCellFrame);
 }
@@ -199,9 +198,9 @@ PRBool FixedTableLayoutStrategy::ColumnsCanBeInvalidatedBy(const nsTableCellFram
   if (0 == rowIndex) {
     // It is not worth the effort to determine if the col or cell determined the col
     // width. Since rebalancing the columns is fairly trival in this strategy, just force it.
-    return PR_FALSE;
+    return PR_TRUE;
   }
-  return PR_TRUE;
+  return PR_FALSE;
 }
 
 PRBool FixedTableLayoutStrategy::ColumnsAreValidFor(const nsTableCellFrame& aCellFrame,
@@ -209,7 +208,7 @@ PRBool FixedTableLayoutStrategy::ColumnsAreValidFor(const nsTableCellFrame& aCel
                                                     nscoord                 aPrevCellDes) const
 {
   // take the easy way out, see comments above.
-  return ColumnsCanBeInvalidatedBy(aCellFrame);
+  return !ColumnsCanBeInvalidatedBy(aCellFrame);
 }
 
 

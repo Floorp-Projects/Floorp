@@ -154,8 +154,7 @@ protected:
 
   // see nsTableFrame::ColumnsCanBeInvalidatedBy
   PRBool ColumnsCanBeInvalidatedBy(nsStyleCoord*           aPrevStyleWidth,
-                                   const nsTableCellFrame& aCellFrame,
-                                   PRBool                  aConsiderMinWidth = PR_FALSE) const;
+                                   const nsTableCellFrame& aCellFrame) const;
 
   // see nsTableFrame::ColumnsCanBeInvalidatedBy
   PRBool ColumnsCanBeInvalidatedBy(const nsTableCellFrame& aCellFrame,
