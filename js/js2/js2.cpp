@@ -160,25 +160,27 @@ static void readEvalPrint(FILE *in, World &world)
                     stdOut << ' ';
                     t.print(stdOut, true);
                 }
+	            stdOut << '\n';
             } else {
-                ExprNode *parseTree = p.parseExpression(false);
-				p.require(false, Token::end);
+                StmtNode *parsedStatements = p.parseProgram();
+				ASSERT(p.lexer.peek(true).hasKind(Token::end));
                 {
                 	PrettyPrinter f(stdOut, 20);
                 	{
                 		PrettyPrinter::Block b(f, 2);
-	                	f << "Expression =";
+	                	f << "Program =";
 	                	f.linearBreak(1);
-	                	f << parseTree;
+	                	StmtNode::printStatements(f, parsedStatements);
                 	}
                 	f.end();
                 }
-#if 1
+        	    stdOut << '\n';
+#if 0
+				// Generate code for parsedStatements, which is a linked list of zero or more statements
                 genCode(world, cx, parseTree);
 #endif
             }
             clear(buffer);
-            stdOut << '\n';
         } catch (Exception &e) {
             /* If we got a syntax error on the end of input,
              * then wait for a continuation
