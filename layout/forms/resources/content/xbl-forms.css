@@ -226,7 +226,7 @@ textarea > scrollbar {
 }
 
 *|*::-moz-singleline-textcontrol-frame {
-  overflow: hidden;
+  overflow: -moz-hidden-unscrollable;
   white-space: nowrap;
   background-color: inherit;
   text-align: inherit;

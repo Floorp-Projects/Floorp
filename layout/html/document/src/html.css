@@ -392,7 +392,7 @@ object, embed, applet {
 
 frameset {
   display: block ! important;
-  overflow: hidden;
+  overflow: -moz-hidden-unscrollable;
 }
 
 frame {

@@ -120,7 +120,7 @@ textarea > scrollbar {
 }
 
 *|*::-moz-singleline-textcontrol-frame {
-  overflow: hidden;
+  overflow: -moz-hidden-unscrollable;
   white-space: nowrap;
   background-color: inherit;
   text-align: inherit;
@@ -185,7 +185,7 @@ select::-moz-dummy-option {
 }
 
 *|*::-moz-display-comboboxcontrol-frame {
-  overflow: hidden;
+  overflow: -moz-hidden-unscrollable;
   /* This top/bottom padding plus the combobox top/bottom border need to
      add up to the top/bottom borderpadding of text inputs and buttons */ 
   padding: 1px 0 1px 4px;

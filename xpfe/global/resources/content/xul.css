@@ -98,7 +98,7 @@ radio {
 
 window, 
 page {
-  overflow: hidden;
+  overflow: -moz-hidden-unscrollable;
   -moz-box-orient: vertical;
 }
 
