@@ -99,6 +99,7 @@ bin/components/autocomplete.xpt
 bin/components/appshell.xpt
 bin/components/caps.xpt
 bin/components/chrome.xpt
+bin/components/nsComposerCmdLineHandler.js
 bin/components/cookie.xpt
 bin/components/libjsd.so
 bin/components/jsdservice.xpt
