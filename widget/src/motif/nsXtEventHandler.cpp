@@ -459,7 +459,9 @@ void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
   }
 
   if (cbs->reason == XmCR_ACTIVATE) {
-    printf ("Password: %s\n", data->mPassword.ToNewCString());
+    char* password = data->mPassword.ToNewCString();
+    printf ("Password: %s\n", password);
+    delete[] password;
     return;
   }
 
