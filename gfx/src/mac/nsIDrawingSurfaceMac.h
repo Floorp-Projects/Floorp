@@ -40,6 +40,14 @@ public:
    * @param  aPort GrafPtr to initialize drawing surface with
    * @return error status
    **/
+  NS_IMETHOD Init(nsDrawingSurface aDS) = 0;
+
+  /**
+   * Initialize a drawing surface using a Macintosh GrafPtr.
+   * aPort is not owned by this drawing surface, just used by it.
+   * @param  aPort GrafPtr to initialize drawing surface with
+   * @return error status
+   **/
   NS_IMETHOD Init(GrafPtr aPort) = 0;
 
   /**
@@ -66,15 +74,6 @@ public:
    * @return error status
    **/
   NS_IMETHOD GetGrafPtr(GrafPtr *aPort) = 0;
-
-  /**
-   * Get the offsets for the graphics port
-   * @param  aXOff out parameter for GraphicsState
-   * @param  aYOff out parameter for GraphicsState
-   * @return error status
-   **/
-  NS_IMETHOD GetOffset(PRInt32 *aXOff,PRInt32 *aYOff) = 0;
-
 
 };
 

@@ -34,11 +34,10 @@ nsDrawingSurfaceMac :: nsDrawingSurfaceMac()
   NS_INIT_REFCNT();
 
   mPort = NULL;
+	mGS = new GraphicState();
   mWidth = mHeight = 0;
   mLockOffset = mLockHeight = 0;
   mLockFlags = 0;
-  mOffx = 0;
-  mOffy = 0;
 	mIsOffscreen = PR_FALSE;
 
 }
@@ -58,12 +57,8 @@ GWorldPtr offscreenGWorld;
 		::DisposeGWorld(offscreenGWorld);
 	}
 
-	if (mMainRegion){
-		::DisposeRgn(mMainRegion);
-	}
-
-	if (mClipRegion){
-		::DisposeRgn(mClipRegion);
+	if (mGS){
+		delete mGS;
 	}
 		
 }
@@ -173,26 +168,29 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: GetPixelFormat(nsPixelFormat *aFormat)
  * @update 3/02/99 dwc
  * @return error status
  */
+NS_IMETHODIMP nsDrawingSurfaceMac :: Init(nsDrawingSurface	aDS)
+{
+GrafPtr	gport;
+
+	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aDS);
+	surface->GetGrafPtr(&gport);
+	mPort = gport;
+	mGS->Init(surface);
+	
+  return NS_OK;
+}
+
+/** --------------------------------------------------- 
+ * See Documentation in nsIDrawingSurfaceMac.h
+ * @update 3/02/99 dwc
+ * @return error status
+ */
 NS_IMETHODIMP nsDrawingSurfaceMac :: Init(GrafPtr aPort)
 {
-RgnHandle	rgn;
 
 	// set our grafPtr to the passed in port
   mPort = aPort;
-
-	// calculate our regions based on the ports rectangle
-	rgn = ::NewRgn();
-	if(rgn)
-  ::RectRgn(rgn, &aPort->portRect);
-  mMainRegion			= rgn;
-	mClipRegion = ::NewRgn();
-	if (mClipRegion)
-		::CopyRgn(rgn,mClipRegion);
-
-	// set up our offsets
-  mOffx = 0;
-  mOffy = 0;
-
+	mGS->Init(aPort);
   return NS_OK;
 }
 
@@ -203,23 +201,9 @@ RgnHandle	rgn;
  */
 NS_IMETHODIMP nsDrawingSurfaceMac :: Init(nsIWidget *aTheWidget)
 {
-RgnHandle	widgetRgn;
-
 	// get our native graphics port from the widget
  	mPort = static_cast<GrafPtr>(aTheWidget->GetNativeData(NS_NATIVE_DISPLAY));
-
-	widgetRgn = (RgnHandle)aTheWidget->GetNativeData(NS_NATIVE_REGION);
-	mMainRegion = ::NewRgn();
-	if (mMainRegion)
-		::CopyRgn(widgetRgn, mMainRegion);
-	mClipRegion = ::NewRgn();
-	if (mClipRegion)
-		::CopyRgn(widgetRgn, mClipRegion);
-
-	// set up our offsets
-  mOffx = (PRInt32)aTheWidget->GetNativeData(NS_NATIVE_OFFSETX);;
-  mOffy = (PRInt32)aTheWidget->GetNativeData(NS_NATIVE_OFFSETY);;
-
+	mGS->Init(aTheWidget);
   return NS_OK;
 }
 
@@ -245,7 +229,6 @@ GrafPtr 	savePort;
 	}
 
 	// create offscreen
-  
   QDErr osErr = ::NewGWorld(&offscreenGWorld, depth, &macRect, nil, nil, 0);
   if (osErr != noErr)
   	return NS_ERROR_FAILURE;
