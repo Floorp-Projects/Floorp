@@ -278,7 +278,6 @@ nsresult nsFind::InitIterator()
     if (NS_FAILED(rv))
       SetRangeAroundDocument();
   }
-  else printf("Range was already initialized\n");
 
   mIterator->Init(mRange);
   if (mFindBackward) {
