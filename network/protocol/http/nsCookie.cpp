@@ -201,7 +201,7 @@ PRIVATE nsresult cookie_ProfileDirectory(nsFileSpec& dirSpec) {
   return rv;
 }
 
-#ifdef XP_MAC
+#ifndef XP_MAC
 /*
  * Write a line to a file
  * return NS_OK if no error occurs
@@ -1757,7 +1757,7 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 	net_IntSetCookieString(context, cur_url, set_cookie_header, gmtCookieExpires);
 }
 
-#ifdef XP_MAC
+#ifndef XP_MAC
 /* saves the HTTP cookies permissions to disk */
 PRIVATE void
 net_SaveCookiePermissions()
