@@ -383,9 +383,17 @@ nsresult nsRenderingContextOS2::SelectOffScreenDrawingSurface( nsDrawingSurface 
 
    // Set image foreground and background colors. These are used in transparent images for blitting 1-bit masks.
    // To invert colors on ROP_SRCAND we map 1 to black and 0 to white
+   // map 1 in mask to 0x000000 (black) in destination
+   // map 0 in mask to 0xFFFFFF (white) in destination
+
    IMAGEBUNDLE ib;
-   ib.lColor     = GFX (::GpiQueryColorIndex (mSurface->mPS, 0, MK_RGB (0, 0, 0)), GPI_ALTERROR);        // map 1 in mask to 0x000000 (black) in destination
-   ib.lBackColor = GFX (::GpiQueryColorIndex (mSurface->mPS, 0, MK_RGB (255, 255, 255)), GPI_ALTERROR);  // map 0 in mask to 0xFFFFFF (white) in destination
+   if (palInfo.isPaletteDevice && palInfo.palette) {
+      ib.lColor     = GFX (::GpiQueryColorIndex (mSurface->mPS, 0, MK_RGB (0x00, 0x00, 0x00)), GPI_ALTERROR); // CLR_BLACK
+      ib.lBackColor = GFX (::GpiQueryColorIndex (mSurface->mPS, 0, MK_RGB (0xFF, 0xFF, 0xFF)), GPI_ALTERROR); // CLR_WHITE
+   } else {
+      ib.lColor     = MK_RGB (0x00, 0x00, 0x00); // CLR_BLACK
+      ib.lBackColor = MK_RGB (0xFF, 0xFF, 0xFF); // CLR_WHITE
+   }
    ib.usMixMode  = FM_OVERPAINT;
    ib.usBackMixMode = BM_OVERPAINT;
    GFX (::GpiSetAttrs (mSurface->mPS, PRIM_IMAGE, IBB_COLOR | IBB_BACK_COLOR | IBB_MIX_MODE | IBB_BACK_MIX_MODE, 0, (PBUNDLE)&ib), FALSE);
