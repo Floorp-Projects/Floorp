@@ -2346,6 +2346,9 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
     aCard->SetLastName(aTagValue->GetUnicode());
 
   if (!aTagName->CompareWithConversion(kServerDisplayNameColumn))
+    aCard->SetDisplayName(aTagValue->GetUnicode());
+
+  if (!aTagName->CompareWithConversion(kServerNicknameColumn))
     aCard->SetNickName(aTagValue->GetUnicode());
 
   if (!aTagName->CompareWithConversion(kServerPriEmailColumn))

@@ -70,8 +70,8 @@ char *kLastModifiedDateColumn = "LastModifiedDate";
 // Server record fields!
 char *kServerFirstNameColumn = "fname";
 char *kServerLastNameColumn = "lname";
-char *kServerDisplayNameColumn = "screen_name";
-char *kServerNicknameColumn = "OMIT:NickName";
+char *kServerDisplayNameColumn = "Display_name";
+char *kServerNicknameColumn = "nick_name";
 char *kServerPriEmailColumn = "email1";
 char *kServer2ndEmailColumn = "email2";
 char *kServerPlainTextColumn = "OMIT:SendPlainText";

@@ -499,6 +499,15 @@ nsAbSyncPostEngine::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */
           KickTheSyncOperation();
         }
       }
+
+      // RICHIE - Special here to show the server we are hitting!
+      // RICHIE - REMOVE THIS BEFORE SHIPPING!!!!
+      PRUnichar *msgValue = nsnull;
+      msgValue = nsTextFormatter::smprintf(nsString(NS_ConvertASCIItoUCS2("Server: %s - port %d")).GetUnicode(),
+                                           mMojoSyncSpec, mMojoSyncPort);
+      NotifyListenersOnStatus(mTransactionID, msgValue);
+      PR_FREEIF(msgValue);
+      // RICHIE 
     }
     else
     {

@@ -115,6 +115,7 @@ NS_IMETHODIMP nsAbSyncDriver::OnStartOperation(PRInt32 aTransactionID, PRUint32 
     msgValue = nsTextFormatter::smprintf(outValue, aMsgSize);
 
     mStatus->ShowStatusString(msgValue);
+
     PR_FREEIF(outValue);
     PR_FREEIF(msgValue);
   }
@@ -144,7 +145,7 @@ NS_IMETHODIMP nsAbSyncDriver::OnProgress(PRInt32 aTransactionID, PRUint32 aProgr
 /* void OnStatus (in PRInt32 aTransactionID, in wstring aMsg); */
 NS_IMETHODIMP nsAbSyncDriver::OnStatus(PRInt32 aTransactionID, const PRUnichar *aMsg)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return mStatus->ShowStatusString(aMsg);
 }
 
 /* void OnStopOperation (in PRInt32 aTransactionID, in nsresult aStatus, in wstring aMsg); */
