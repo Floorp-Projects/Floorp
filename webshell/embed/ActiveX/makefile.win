@@ -28,7 +28,6 @@ MAKE_OBJ_TYPE = DLL
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 RESFILE = $(DLLNAME).res
 DEFFILE = $(DLLNAME).def
-OS_CFLAGS = /D "WIN32" /GX
 
 OBJS =                                     \
 	.\$(OBJDIR)\StdAfx.obj             \
@@ -64,12 +63,13 @@ LLIBS = $(MYLIBS)               \
  shell32.lib                    \
  -SUBSYSTEM:windows
 
+LCFLAGS = /D "WIN32" /GX 
 LFLAGS = /DLL
 
 include <$(DEPTH)\config\rules.mak>
 
 !ifdef MOZ_NO_DEBUG_RTL
-OS_CFLAGS = $(OS_CFLAGS) -DMOZ_NO_DEBUG_RTL
+LCFLAGS = $(LCFLAGS) -DMOZ_NO_DEBUG_RTL
 !endif
 
 install:: $(DLL)
