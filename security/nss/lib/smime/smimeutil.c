@@ -34,7 +34,7 @@
 /*
  * Stuff specific to S/MIME policy and interoperability.
  *
- * $Id: smimeutil.c,v 1.5 2001/01/07 08:13:07 nelsonb%netscape.com Exp $
+ * $Id: smimeutil.c,v 1.6 2001/04/11 22:49:07 nelsonb%netscape.com Exp $
  */
 
 #include "secmime.h"
@@ -715,3 +715,28 @@ loser:
 
     return cert;
 }
+
+extern const char __nss_smime_rcsid[];
+extern const char __nss_smime_sccsid[];
+
+PRBool
+NSSSMIME_VersionCheck(const char *importedVersion)
+{
+    /*
+     * This is the secret handshake algorithm.
+     *
+     * This release has a simple version compatibility
+     * check algorithm.  This release is not backward
+     * compatible with previous major releases.  It is
+     * not compatible with future major, minor, or
+     * patch releases.
+     */
+    int vmajor = 0, vminor = 0, vpatch = 0;
+    const char *ptr = importedVersion;
+    volatile char c; /* force a reference that won't get optimized away */
+
+    c = __nss_smime_rcsid[0] + __nss_smime_sccsid[0]; 
+
+    return NSS_VersionCheck(importedVersion);
+}
+
