@@ -22,7 +22,7 @@
 <!-- extracted from ./sidebar.rdf -->
 
 <!ENTITY sidebar.whats-related.label  "What's Related">
-<!ENTITY sidebar.search.label         "Search Results">
+<!ENTITY sidebar.search.label         "Search">
 <!ENTITY sidebar.alerts.label         "Alerts">
 <!-- LOCALIZATION NOTE sidebar.tinderbox.label: DONT_TRANSLATE -->
 <!ENTITY sidebar.tinderbox.label      "Tinderbox">
