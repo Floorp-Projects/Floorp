@@ -23,7 +23,6 @@
  */
 
 #include "nsIServiceManager.h"
-#include "nsILocalFile.h"
 #include "nsIEventQueueService.h"
 
 #include "nsIStringBundle.h"
@@ -68,7 +67,24 @@ extern "C" void NS_SetupRegistry();
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
+
 nsresult NS_InitEmbedding(const char *aPath)
+{
+	// Create an object to represent the path
+	nsILocalFile *localFile = nsnull;
+	if (aPath && strlen(aPath) > 0)
+	{
+		NS_NewLocalFile(aPath, &localFile);
+	}
+
+    nsresult rv = NS_InitEmbedding(localFile);
+    NS_IF_RELEASE(localFile);
+
+    return rv;
+}
+
+
+nsresult NS_InitEmbedding(nsILocalFile *aPath)
 {
     // Reentrant calls to this method do nothing except increment a counter
     if (++sInitCounter > 1)
@@ -82,18 +98,10 @@ nsresult NS_InitEmbedding(const char *aPath)
 	if (!sXPCOMInitializedFlag)
 #endif
 	{
-		// Create an object to represent the path
-		nsILocalFile *pBinDirPath = nsnull;
-		if (aPath && strlen(aPath) > 0)
-		{
-			NS_NewLocalFile(aPath, &pBinDirPath);
-		}
-
 		// Initialise XPCOM
-		if (pBinDirPath)
+		if (aPath)
 		{
-			NS_InitXPCOM(&sServiceManager, pBinDirPath);
-			NS_RELEASE(pBinDirPath);
+			NS_InitXPCOM(&sServiceManager, aPath);
 		}
 		else
 		{
@@ -154,6 +162,7 @@ nsresult NS_InitEmbedding(const char *aPath)
 
     return NS_OK;
 }
+
 
 nsresult NS_TermEmbedding()
 {
