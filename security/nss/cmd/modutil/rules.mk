@@ -31,6 +31,14 @@
 # GPL.
 #
 
+#
+# Some versions of yacc generate files that include platform-specific
+# system headers.  For example, the yacc in Solaris 2.6 inserts
+#     #include <values.h>
+# which does not exist on NT.  For portability, always use Berkeley
+# yacc (such as the yacc in Linux) to generate files.
+#
+
 generate: installparse.c installparse.l
 
 installparse.c:
