@@ -151,7 +151,17 @@
 		What do I have to beware of?
 	*/
 
+#if defined(__GNUG__) && (__GNUC_MINOR__ <= 90)
+	#define NO_MEMBER_USING_DECLARATIONS
+#endif
 
+#if defined(_MSC_VER) && (_MSC_VER<1100)
+	#define NO_EXPLICIT
+#endif
+
+#ifdef NO_EXPLICIT
+	#define explicit
+#endif
 
 
 template <class T>
@@ -165,9 +175,31 @@ class derived_safe : public T
 		*/
 	{
 		private:
+#ifndef NO_MEMBER_USING_DECLARATIONS
 			using T::AddRef;
 			using T::Release;
+#else
+			unsigned long AddRef() { }
+			unsigned long Release() { }
+#endif
 	};
+
+#if defined(NO_MEMBER_USING_DECLARATIONS) && defined(NEED_UNUSED_VIRTUAL_IMPLEMENTATIONS)
+template <class T>
+unsigned long
+derived_safe<T>::AddRef()
+	{
+		return 0;
+	}
+
+template <class T>
+unsigned long
+derived_safe<T>::Release()
+	{
+		return 0;
+	}
+
+#endif
 
 
 
