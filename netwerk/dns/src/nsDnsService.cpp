@@ -79,7 +79,7 @@ public:
 	NS_DECL_ISUPPORTS
 
 	nsDNSLookup(nsISupports * clientContext, const char * hostName, nsIDNSListener* listener);
-    ~nsDNSLookup(void);
+    	virtual ~nsDNSLookup(void);
 
     nsresult            AddDNSRequest(nsDNSRequest* request);
     nsresult            FinishHostEntry(void);
@@ -117,6 +117,7 @@ class nsDNSRequest : public nsIRequest
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
+    virtual ~nsDNSRequest(void) {};
 
 protected:
     nsCOMPtr<nsIDNSListener>    mListener;
@@ -362,8 +363,6 @@ nsDNSService::nsDNSService()
 nsresult
 nsDNSService::Init()
 {
-  nsresult rv = NS_OK;
-
 //    initialize DNS cache (persistent?)
 #if defined(XP_MAC)
 //    create Open Transport Service Provider for DNS Lookups
@@ -395,6 +394,7 @@ nsDNSService::Init()
 
 	// if either of the two previous calls failed then dealloc service ref and return NS_FAILED
 	
+    nsresult rv = NS_OK;
     rv = NS_NewThread(&mThread, this, 0, PR_JOINABLE_THREAD);
 	
 
