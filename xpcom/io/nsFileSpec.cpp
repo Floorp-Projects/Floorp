@@ -422,6 +422,16 @@ void nsFilePath::operator = (const nsFileURL& inOther)
 #endif
 }
 
+//----------------------------------------------------------------------------------------
+void nsFilePath::operator = (const nsFilePath& inOther)
+//----------------------------------------------------------------------------------------
+{
+    nsFileSpecHelpers::StringAssign(mPath, inOther.mPath);
+#ifdef XP_MAC
+    mNativeFileSpec = inOther.GetNativeSpec();
+#endif
+}
+
 //========================================================================================
 //                                nsNativeFileSpec implementation
 //========================================================================================
