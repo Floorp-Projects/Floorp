@@ -159,6 +159,9 @@ endif
 
 OS_CONFIG	:= $(OS_ARCH)$(OS_RELEASE)
 
+FINAL_LINK_LIBS = $(DEPTH)/config/final-link-libs
+FINAL_LINK_COMPS = $(DEPTH)/config/final-link-comps
+
 # determine debug-related options
 DEBUG_FLAGS :=
 
