@@ -866,18 +866,6 @@ NS_METHOD nsWindow::SetMenuBar( nsIMenuBar * aMenuBar )
   return res;
 }
 
-NS_METHOD nsWindow::ShowMenuBar( PRBool aShow)
-{
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ShowMenuBar  aShow=<%d> - Not Implemented \n", aShow));
-  return NS_ERROR_FAILURE;
-}
-
-NS_METHOD nsWindow::IsMenuBarVisible( PRBool *aVisible )
-{
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::IsMenuBarVisible - Not Implemented \n"));
-  return NS_ERROR_FAILURE;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -898,6 +886,19 @@ nsRect rect;
 //	printf ("doing resize %d %d %d %d\n",rect.x,rect.y,rect.width,rect.height);
 	someWindow->OnResize( rect );
 	return( Pt_CONTINUE );
+}
+
+NS_METHOD nsWindow::ShowMenuBar( PRBool aShow)
+{
+	PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::ShowMenuBar  aShow=<%d> - Not Impmented \n", aShow));
+    return NS_ERROR_FAILURE;
+}
+	
+NS_METHOD nsWindow::IsMenuBarVisible( PRBool *aVisible )
+{
+	PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::IsMenuBarVisible - Not Implemented\n"));
+    *aVisible = PR_TRUE;
+	return NS_ERROR_FAILURE;
 }
 
 
@@ -1076,6 +1077,8 @@ PRBool nsWindow::HandleEvent( PtCallbackInfo_t* aCbInfo )
   return result;
 }
 
+//int lastx=-1;
+//int lasty=-1;
 
 void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 {
@@ -1113,13 +1116,30 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
       return;
 
     // clip damage to widgets bounds...
+/*
     if( rect.ul.x < 0 ) rect.ul.x = 0;
     if( rect.ul.y < 0 ) rect.ul.y = 0;
     if( rect.lr.x >= area.size.w ) rect.lr.x = area.size.w - 1;
     if( rect.lr.y >= area.size.h ) rect.lr.y = area.size.h - 1;
-
+*/
+    // Make damage relative to widgets parent
     nsDmg.x = rect.ul.x + area.pos.x;
     nsDmg.y = rect.ul.y + area.pos.y;
+    nsDmg.x = rect.ul.x;
+    nsDmg.y = rect.ul.y;
+
+    // Get the position of the child window instead of pWidgets pos since it's always 0,0.
+
+//    PtWidget_t * parent = PtWidgetParent( pWidget );
+//    if( parent )
+//    {
+//      PtWidgetArea( parent, &area );
+//      nsDmg.x = area.pos.x + rect.ul.x;
+//      nsDmg.y = area.pos.y + rect.ul.y;
+//    }
+//    else
+//      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  No parent!\n" ));
+
     nsDmg.width = rect.lr.x - rect.ul.x + 1;
     nsDmg.height = rect.lr.y - rect.ul.y + 1;
 
@@ -1163,6 +1183,20 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
       }
 
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
+/*
+	nsDmg.y = 0;
+ 	nsDmg.x = 0;
+	nsDmg.width = 640;
+	nsDmg.height = 480;
+*/
+/*
+	nsDmg.x = 20;
+	nsDmg.y = 70;
+	nsDmg.width = 100;
+	nsDmg.height = 100;
+*/
+//987
+//      printf ( "Dispatching paint event %p %p %d %d (area=%ld,%ld,%ld,%ld).\n",pWidget,pWin->mWidget,offset.x,offset.y,nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height );
       pWin->DispatchWindowEvent(&pev);
       NS_RELEASE(pev.renderingContext);
     }
