@@ -274,7 +274,9 @@ protected:
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect);
 
-  nsresult AddNewFrames(nsIFrame*);
+  nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext* aPresContext,
+                                             nsIFrame*       aFloatedFrame);
+  nsresult AddNewFrames(nsIPresContext* aPresContext, nsIFrame*);
 
 #ifdef NS_DEBUG
   PRBool IsChild(nsIFrame* aFrame);
@@ -1007,7 +1009,7 @@ NS_IMETHODIMP
 nsCSSBlockFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   mHasBeenInitialized = PR_TRUE;
-  return AddNewFrames(aChildList);
+  return AddNewFrames(&aPresContext, aChildList);
 }
 
 NS_IMETHODIMP
@@ -1504,7 +1506,7 @@ nsCSSBlockFrame::ProcessInitialReflow(nsIPresContext* aPresContext)
         bulletFrame->SetStyleContext(aPresContext, kidSC);
         NS_RELEASE(kidSC);
 
-        // Now go insert the bullet frame
+        // Insert the bullet frame
         InsertNewFrame(this, bulletFrame, nsnull);
       }
 
@@ -1655,8 +1657,29 @@ nsCSSBlockFrame::ComputeFinalSize(nsCSSBlockReflowState& aState,
   NS_ASSERTION(aDesiredRect.width < 1000000, "whoops");
 }
 
+nsPlaceholderFrame*
+nsCSSBlockFrame::CreatePlaceholderFrame(nsIPresContext* aPresContext,
+                                        nsIFrame*       aFloatedFrame)
+{
+  nsIContent* content;
+  aFloatedFrame->GetContent(content);
+
+  // XXX We should wrap the floated element in a BODY frame...
+  nsPlaceholderFrame* placeholder;
+  nsPlaceholderFrame::NewFrame((nsIFrame**)&placeholder, content, this, aFloatedFrame);
+  NS_IF_RELEASE(content);
+
+  // Let the placeholder share the same style context as the floated element
+  nsIStyleContext*  kidSC;
+  aFloatedFrame->GetStyleContext(aPresContext, kidSC);
+  placeholder->SetStyleContext(aPresContext, kidSC);
+  NS_RELEASE(kidSC);
+  
+  return placeholder;
+}
+
 nsresult
-nsCSSBlockFrame::AddNewFrames(nsIFrame* aNewFrame)
+nsCSSBlockFrame::AddNewFrames(nsIPresContext* aPresContext, nsIFrame* aNewFrame)
 {
   // Get our last line and then get its last child
   nsIFrame* lastFrame;
@@ -1682,7 +1705,8 @@ nsCSSBlockFrame::AddNewFrames(nsIFrame* aNewFrame)
   }
 
   // Now create some lines for the new frames
-  nsresult rv;
+  nsIFrame* prevFrame = lastFrame;
+  nsresult  rv;
   for (nsIFrame* frame = aNewFrame; nsnull != frame; frame->GetNextSibling(frame)) {
     // See if the child is a block or non-block
     const nsStyleDisplay* kidDisplay;
@@ -1699,6 +1723,25 @@ nsCSSBlockFrame::AddNewFrames(nsIFrame* aNewFrame)
     }
     PRBool isBlock =
       nsCSSLineLayout::TreatFrameAsBlock(kidDisplay, kidPosition);
+
+    // See if the element wants to be floated
+    if (NS_STYLE_FLOAT_NONE != kidDisplay->mFloats) {
+      // Create a placeholder frame that will serve as the anchor point.
+      nsPlaceholderFrame* placeholder = CreatePlaceholderFrame(aPresContext, frame);
+      // Remove the floated element from the flow, and replace it with the
+      // placeholder frame
+      if (nsnull != prevFrame) {
+        prevFrame->SetNextSibling(placeholder);
+      }
+      nsIFrame* nextSibling;
+      frame->GetNextSibling(nextSibling);
+      placeholder->SetNextSibling(nextSibling);
+      frame->SetNextSibling(nsnull);
+
+      // The placeholder frame is always inline
+      frame = placeholder;
+      isBlock = PR_FALSE;
+    }
 
     // If the child is an inline then add it to the lastLine (if it's
     // an inline line, otherwise make a new line). If the child is a
@@ -1747,6 +1790,9 @@ nsCSSBlockFrame::AddNewFrames(nsIFrame* aNewFrame)
       lastLine->mChildCount++;
       pendingInlines++;
     }
+
+    // Remember the previous frame
+    prevFrame = frame;
   }
 
   if (0 != pendingInlines) {
@@ -1813,7 +1859,7 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
 
   // Add the new frames to the child list, and create new lines. Each
   // impacted line will be marked dirty
-  AddNewFrames(firstAppendedFrame);
+  AddNewFrames(aState.mPresContext, firstAppendedFrame);
 #endif
 
   // Generate text-run information

@@ -30,13 +30,14 @@
 nsresult
 nsPlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
                              nsIContent* aContent,
-                             nsIFrame*   aParent)
+                             nsIFrame*   aParent,
+                             nsIFrame*   aAnchoredItem)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsPlaceholderFrame(aContent, aParent);
+  nsIFrame* it = new nsPlaceholderFrame(aContent, aParent, aAnchoredItem);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -44,9 +45,12 @@ nsPlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
   return NS_OK;
 }
 
-nsPlaceholderFrame::nsPlaceholderFrame(nsIContent* aContent, nsIFrame* aParent)
+nsPlaceholderFrame::nsPlaceholderFrame(nsIContent* aContent,
+                                       nsIFrame*   aParent,
+                                       nsIFrame*   aAnchoredItem)
   : nsFrame(aContent, aParent)
 {
+  mAnchoredItem = aAnchoredItem;
 }
 
 nsPlaceholderFrame::~nsPlaceholderFrame()
@@ -141,6 +145,10 @@ nsPlaceholderFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
       }
     }
 
+    // Notify our containing block that there's a new floater
+    container->AddFloater(&presContext, aReflowState, mAnchoredItem, this);
+
+  } else if (eReflowReason_Initial == aReflowState.reason) {
     // Notify our containing block that there's a new floater
     container->AddFloater(&presContext, aReflowState, mAnchoredItem, this);
   }
