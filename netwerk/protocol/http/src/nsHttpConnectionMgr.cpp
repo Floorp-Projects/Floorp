@@ -640,6 +640,15 @@ nsHttpConnectionMgr::OnMsgNewTransaction(nsHttpTransaction *trans)
 {
     LOG(("nsHttpConnectionMgr::OnMsgNewTransaction [trans=%x]\n", trans));
 
+    // since "adds" and "cancels" are processed asynchronously and because
+    // various events might trigger an "add" directly on the socket thread,
+    // we must take care to avoid dispatching a transaction that has already
+    // been canceled (see bug 190001).
+    if (NS_FAILED(trans->Status())) {
+        LOG(("  transaction was canceled... dropping event!\n"));
+        return NS_OK;
+    }
+
     PRUint8 caps = trans->Caps();
     nsHttpConnectionInfo *ci = trans->ConnectionInfo();
     NS_ASSERTION(ci, "no connection info");
