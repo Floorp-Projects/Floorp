@@ -75,8 +75,7 @@
 			&doNotDecp.label;
 			</html:div>
 		<html:div>
-         <html:textarea name="textstyle" ROWS="2" COLS="30" id="pref:string:browser.related.disabledForDomains">
-	     </html:textarea>
+			<html:input name="textstyle" id="pref:string:browser.related.disabledForDomains" />
 		</html:div>
 		</html:fieldset>
 	</box>
