@@ -301,6 +301,12 @@ nsMsgStatusFeedback.prototype =
       this.meteorsSpinning = true;
       this.startTimeoutID = null;
 
+      if (!this.progressMeterVisible)
+      {
+        this.progressMeterContainer.removeAttribute('collapsed'); 
+        this.progressMeterVisible = true;
+      }
+
       // Turn progress meter on.
       this.statusBar.setAttribute("mode","undetermined");
 
@@ -348,6 +354,7 @@ nsMsgStatusFeedback.prototype =
       this.statusBar.setAttribute("mode","normal");
       this.statusBar.value = 0;  // be sure to clear the progress bar
       this.statusBar.label = "";
+
       if (this.progressMeterVisible)
       {
         this.progressMeterContainer.collapsed = true;
@@ -388,8 +395,6 @@ nsMsgStatusFeedback.prototype =
         this.statusBar.setAttribute("mode", "normal");
         this.statusBar.value = percentage;
         this.statusBar.label = Math.round(percentage) + "%";
-        if (this.progressMeterVisible)
-          this.progressMeterContainer.collapsed = false;
       }
     },
   closeWindow : function(percent)
