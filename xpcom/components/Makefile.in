@@ -58,8 +58,10 @@ EXPORTS		= \
 		nsIServiceManagerUtils.h \
 		nsIServiceManagerObsolete.h \
 		nsXPComFactory.h \
+		nsNativeComponentLoader.h \
 		nsStaticComponent.h \
 		nsObsoleteModuleLoading.h \
+		xcDll.h \
 		$(NULL)
 
 XPIDLSRCS	= \
