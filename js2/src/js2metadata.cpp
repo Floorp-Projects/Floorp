@@ -4456,7 +4456,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 ASSERT(plural->positional[i]->cloneContent->memberKind == Member::VariableMember);
                 (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = argBase[i];
             }
-            meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, meta->engine->numberToString(i), true, argBase[i]);
+            meta->objectClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->objectClass, meta->engine->numberToString(i), true, argBase[i]);
         }
         while (i++ < length) {
             if (i < plural->positionalCount) {
@@ -4464,10 +4464,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 ASSERT(plural->positional[i]->cloneContent->memberKind == Member::VariableMember);
                 (checked_cast<Variable *>(plural->positional[i]->cloneContent))->value = JS2VAL_UNDEFINED;
             }
-            meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, meta->engine->numberToString(i), true, JS2VAL_UNDEFINED);
+            meta->objectClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->objectClass, meta->engine->numberToString(i), true, JS2VAL_UNDEFINED);
         }
         setLength(meta, argsObj, argCount);
-        meta->arrayClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->arrayClass, meta->engine->allocStringPtr("callee"), true, OBJECT_TO_JS2VAL(fnObj));
+        meta->objectClass->writePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->objectClass, meta->engine->allocStringPtr("callee"), true, OBJECT_TO_JS2VAL(fnObj));
     }
 
 

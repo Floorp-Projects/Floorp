@@ -235,6 +235,7 @@ namespace JavaScript
     };
 
     inline bool isASCIIDecimalDigit(char16 c) {return c >= '0' && c <= '9';}
+    inline bool isASCIIOctalDigit(char16 c) {return c >= '0' && c <= '7';}
     bool isASCIIHexDigit(char16 c, uint &digit);
 
     const char16 *skipWhiteSpace(const char16 *str, const char16 *strEnd);

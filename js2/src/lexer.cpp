@@ -363,10 +363,10 @@ bool JS::Lexer::lexNumeral()
             } else
                 reader.setPos(pos);
             goto done;
-        } else if (isASCIIDecimalDigit(ch)) {
+        } else if (isASCIIOctalDigit(ch)) {
             // Backward compatible hack, support octal for SpiderMonkey's sake
             octal = true;
-            while (isASCIIDecimalDigit(ch)) {
+            while (isASCIIOctalDigit(ch)) {
                 reader.recordChar(ch);
                 ch = getChar();
             }

@@ -284,7 +284,7 @@
             push((*localFrame->slots)[slotIndex]);
         }
         break;
-/*
+
     case eFrameSlotRef:
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
@@ -294,7 +294,7 @@
             push((*localFrame->slots)[slotIndex]);
         }
         break;
-*/
+
     case ePackageSlotWrite:
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
