@@ -488,6 +488,14 @@ CWebBrowserContainer::ShowModal()
 }
 
 NS_IMETHODIMP
+CWebBrowserContainer::IsModal(PRBool *_retval)
+{
+	// we're not
+	*_retval = PR_FALSE;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
 CWebBrowserContainer::ExitModalLoop(nsresult aStatus)
 {
 	// Ignore request to exit modal loop
@@ -735,6 +743,14 @@ NS_IMETHODIMP
 CWebBrowserContainer::ShowAsModal(void)
 {
 	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+CWebBrowserContainer::IsWindowModal(PRBool *_retval)
+{
+	// we're not
+	*_retval = PR_FALSE;
+	return NS_OK;
 }
 
 NS_IMETHODIMP

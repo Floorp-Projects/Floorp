@@ -174,6 +174,12 @@ NS_IMETHODIMP WebBrowserChrome::ShowAsModal(void)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP WebBrowserChrome::IsWindowModal(PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP WebBrowserChrome::ExitModalEventLoop(nsresult aStatus)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
