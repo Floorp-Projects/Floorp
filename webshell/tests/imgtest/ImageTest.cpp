@@ -36,6 +36,7 @@
 #include "nsRect.h"
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
+#include "nsIDeviceContext.h"
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
@@ -196,15 +197,15 @@ MyLoadImage(char *aFileName)
     MyReleaseImages();
 
     if (gImageGroup == NULL) {
-        nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
+        nsIDeviceContext *deviceCtx = gWindow->GetDeviceContext();
         if (NS_NewImageGroup(&gImageGroup) != NS_OK ||
-            gImageGroup->Init(drawCtx) != NS_OK) {
+            gImageGroup->Init(deviceCtx) != NS_OK) {
                 ::MessageBox(NULL, "Couldn't create image group",
                              class1Name, MB_OK);
-                NS_RELEASE(drawCtx);
+                NS_RELEASE(deviceCtx);
                 return;
             }
-        NS_RELEASE(drawCtx);
+        NS_RELEASE(deviceCtx);
     }
 
     strcpy(fileURL, FILE_URL_PREFIX);

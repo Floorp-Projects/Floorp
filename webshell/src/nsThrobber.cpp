@@ -31,6 +31,7 @@
 #include "nsWidgetsCID.h"
 #include "nsCRT.h"
 #include "prprf.h"
+#include "nsIDeviceContext.h"
 
 static NS_DEFINE_IID(kChildCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
@@ -438,9 +439,9 @@ nsThrobber::LoadThrobberImages()
     return rv;
   }
 
-  nsIRenderingContext *drawCtx = mWidget->GetRenderingContext();
-  mImageGroup->Init(drawCtx);
-  NS_RELEASE(drawCtx);
+  nsIDeviceContext *deviceCtx = mWidget->GetDeviceContext();
+  mImageGroup->Init(deviceCtx);
+  NS_RELEASE(deviceCtx);
 
   rv = NS_NewTimer(&mTimer);
   if (NS_OK != rv) {
