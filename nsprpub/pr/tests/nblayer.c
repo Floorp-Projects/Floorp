@@ -367,6 +367,48 @@ static PRInt16 PR_CALLBACK MyPoll(
     return new_flags;
 }  /* MyPoll */
 
+static PRFileDesc * PR_CALLBACK MyAccept(
+    PRFileDesc *fd, PRNetAddr *addr, PRIntervalTime timeout)
+{
+    PRStatus rv;
+    PRFileDesc *newfd, *layer = fd;
+    PRFileDesc *newstack;
+    PRFilePrivate *newsecret;
+
+    PR_ASSERT(fd != NULL);
+    PR_ASSERT(fd->lower != NULL);
+
+    newstack = PR_NEW(PRFileDesc);
+    if (NULL == newstack)
+    {
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return NULL;
+    }
+    newsecret = PR_NEW(PRFilePrivate);
+    if (NULL == newsecret)
+    {
+        PR_DELETE(newstack);
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return NULL;
+    }
+    *newstack = *fd;  /* make a copy of the accepting layer */
+    *newsecret = *fd->secret;
+    newstack->secret = newsecret;
+
+    newfd = (fd->lower->methods->accept)(fd->lower, addr, timeout);
+    if (NULL == newfd)
+    {
+        PR_DELETE(newsecret);
+        PR_DELETE(newstack);
+        return NULL;
+    }
+
+    /* this PR_PushIOLayer call cannot fail */
+    rv = PR_PushIOLayer(newfd, PR_TOP_IO_LAYER, newstack);
+    PR_ASSERT(PR_SUCCESS == rv);
+    return newfd;  /* that's it */
+}
+
 static PRInt32 PR_CALLBACK MyRecv(
     PRFileDesc *fd, void *buf, PRInt32 amount,
     PRIntn flags, PRIntervalTime timeout)
@@ -542,6 +584,7 @@ PRIntn main(PRIntn argc, char **argv)
     ** send is really a send - receive - send sequence.
     */
     myMethods = *stubMethods;  /* first get the entire batch */
+    myMethods.accept = MyAccept;  /* then override the ones we care about */
     myMethods.recv = MyRecv;  /* then override the ones we care about */
     myMethods.send = MySend;  /* then override the ones we care about */
     myMethods.close = MyClose;  /* then override the ones we care about */
