@@ -20,7 +20,7 @@
 
 # You need to put this in your CVSROOT directory, and check it in.  (Change the
 # first line above to point to a real live perl5.)  Add "dolog.pl" to
-# Cvsroot/checkoutlist, and check it in. Then, add a line to your
+# CVSROOT/checkoutlist, and check it in. Then, add a line to your
 # CVSROOT/loginfo file that says something like:
 #
 #      ALL      $CVSROOT/CVSROOT/dolog.pl -r /cvsroot bonsai-checkin-daemon@my.bonsai.machine
