@@ -49,6 +49,7 @@ class BookmarksService;
 
 @class BookmarkInfoController;
 
+// data source for the bookmarks sidebar. We make one per browser window.
 @interface BookmarksDataSource : NSObject
 {
   BookmarksService* mBookmarks;
@@ -106,14 +107,16 @@ class BookmarksService;
 @interface BookmarkItem : NSObject
 {
   nsIContent* mContentNode;
+  NSImage*    mSiteIcon;
 }
 
 - (nsIContent*)contentNode;
 - (void)setContentNode: (nsIContent*)aContentNode;
+- (void)setSiteIcon:(NSImage*)image;
 - (NSString*)url;
+- (NSImage*)siteIcon;
 - (NSNumber*)contentID;
 - (id)copyWithZone:(NSZone *)aZone;
 - (BOOL)isFolder;
 
 @end
-

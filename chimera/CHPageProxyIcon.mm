@@ -24,12 +24,24 @@
 #import "NSString+Utils.h"
 
 #import "CHPageProxyIcon.h"
+
 #import "BookmarksService.h"
 #import "MainController.h"
 
 #include "nsCRT.h"
+#include "nsNetUtil.h"
+#include "nsString.h"
 
 @implementation CHPageProxyIcon
+
+- (void)awakeFromNib
+{
+}
+
+- (void)dealloc
+{
+  [super dealloc];
+}
 
 - (void) resetCursorRects
 {
@@ -76,5 +88,6 @@
                     at: NSMakePoint(0,0) offset: NSMakeSize(0,0)
                     event: event pasteboard: pboard source: self slideBack: YES];
 }
+
 
 @end

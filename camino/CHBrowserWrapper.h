@@ -51,6 +51,9 @@
   NSTabViewItem* mTab;
   NSWindow* mWindow;
 
+  NSImage*  mSiteIconImage;    // current proxy icon image, which may be a site icon (favicon).
+  NSString* mSiteIconURI;      // uri from  which we loaded the site icon	
+  
     // the secure state of this browser. We need to hold it so that we can set
     // the global lock icon whenever we become the primary. Value is one of
     // security enums in nsIWebProgressListener.
@@ -60,9 +63,9 @@
   NSString* mTitle;
 
   CHBrowserView* mBrowserView;
-  NSString* defaultStatus;
-  NSString* loadingStatus;
-  ToolTip* toolTip;
+  NSString* mDefaultStatusString;
+  NSString* mLoadingStatusString;
+  ToolTip* mToolTip;
 
   BOOL mIsPrimary;
   BOOL mIsBusy;

@@ -53,6 +53,9 @@ class nsIDOMHTMLDocument;
 @class BookmarksDataSource;
 @class BookmarkItem;
 
+// despite appearances, BookmarksService is not a singleton. We make one for the bookmarks menu,
+// one each per BookmarksDataSource, and one per bookmarks toolbar. It relies on a bunch of global
+// variables, which is evil.
 class BookmarksService
 {
 public:
@@ -63,6 +66,7 @@ public:
   void AddObserver();
   void RemoveObserver();
 
+public:
   static void BookmarkAdded(nsIContent* aContainer, nsIContent* aChild, bool shouldFlush = true);
   static void BookmarkChanged(nsIContent* aItem, bool shouldFlush = true);
   static void BookmarkRemoved(nsIContent* aContainer, nsIContent* aChild, bool shouldFlush = true);
@@ -71,7 +75,6 @@ public:
   static void MoveBookmarkToFolder(nsIDOMElement* aBookmark, nsIDOMElement* aFolder, nsIDOMElement* aBeforeElt);
   static void DeleteBookmark(nsIDOMElement* aBookmark);
   
-public:
   static void GetRootContent(nsIContent** aResult);
   static BookmarkItem* GetRootItem();
   static BookmarkItem* GetWrapperFor(nsIContent* aItem);
@@ -87,6 +90,8 @@ public:
 
   static void ConstructAddBookmarkFolderList(NSPopUpButton* aPopup, BookmarkItem* aItem);
   
+  static NSImage* CreateIconForBookmark(nsIDOMElement* aElement);
+
   static void EnsureToolbarRoot();
 
   static void ImportBookmarks(nsIDOMHTMLDocument* aHTMLDoc);
@@ -95,8 +100,6 @@ public:
   static void OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder);
   
   static NSString* ResolveKeyword(NSString* aKeyword);
-
-  static NSImage* CreateIconForBookmark(nsIDOMElement* aElement);
 
   static BOOL DoAncestorsIncludeNode(BookmarkItem* bookmark, BookmarkItem* searchItem);
   static bool IsBookmarkDropValid(BookmarkItem* proposedParent, int index, NSArray* draggedIDs);
@@ -139,3 +142,23 @@ private:
   CHBookmarksToolbar* mToolbar;
   BookmarksDataSource* mDataSource;
 };
+
+
+
+// singleton bookmarks manager object
+
+@interface BookmarksManager : NSObject
+{
+
+
+
+}
+
++ (BookmarksManager*)sharedBookmarksManager;
+
+- (void)loadProxyImageFor:(id)requestor withURI:(NSString*)inURIString;
+
+
+@end
+
+

@@ -25,14 +25,19 @@
 #import <Appkit/Appkit.h>
 
 class nsIDOMElement;
+class BookmarksService;
+
 @class BookmarkItem;
 
-@interface CHBookmarksButton : NSButton {
-
-  nsIDOMElement* mElement;
-  BookmarkItem* mBookmarkItem;
-  BOOL mIsFolder;
+@interface CHBookmarksButton : NSButton
+{
+  nsIDOMElement*    mElement;
+  BookmarkItem*     mBookmarkItem;
+  BookmarksService* mBookmarksService;
+  BOOL              mIsFolder;
 }
+
+-(id)initWithFrame:(NSRect)frame element:(nsIDOMElement*)element bookmarksService:(BookmarksService*)bookmarksService;
 
 -(void)setElement: (nsIDOMElement*)aElt;
 -(nsIDOMElement*)element;

@@ -37,12 +37,13 @@
 
 #import "NSString+Utils.h"
 
+#import "CHPreferenceManager.h"
 #import "CHBrowserView.h"
 #import "BookmarksService.h"
 #import "BookmarksDataSource.h"
 #import "BookmarkInfoController.h"
 #import "CHIconTabViewItem.h"
-#import "StringUtils.h"
+#import "SiteIconProvider.h"
 
 #include "nsCRT.h"
 #include "nsString.h"
@@ -106,6 +107,7 @@ NSMutableDictionary* BookmarksService::gDictionary = nil;
 MainController* BookmarksService::gMainController = nil;
 NSMenu* BookmarksService::gBookmarksMenu = nil;
 nsIDOMElement* BookmarksService::gToolbarRoot = nsnull;
+
 nsIAtom* BookmarksService::gBookmarkAtom = nsnull;
 nsIAtom* BookmarksService::gDescriptionAtom = nsnull;
 nsIAtom* BookmarksService::gFolderAtom = nsnull;
@@ -114,8 +116,11 @@ nsIAtom* BookmarksService::gHrefAtom = nsnull;
 nsIAtom* BookmarksService::gKeywordAtom = nsnull;
 nsIAtom* BookmarksService::gNameAtom = nsnull;
 nsIAtom* BookmarksService::gOpenAtom = nsnull;
+
 nsVoidArray* BookmarksService::gInstances = nsnull;
+
 BOOL BookmarksService::gBookmarksFileReadOK = NO;
+
 int BookmarksService::CHInsertNone = 0;
 int BookmarksService::CHInsertInto = 1;
 int BookmarksService::CHInsertBefore = 2;
@@ -136,6 +141,54 @@ BookmarksService::BookmarksService(CHBookmarksToolbar* aToolbar)
 BookmarksService::~BookmarksService()
 {
 }
+
+void
+BookmarksService::AddObserver()
+{
+    gRefCnt++;
+    if (gRefCnt == 1) {
+        gBookmarkAtom = NS_NewAtom("bookmark");
+        gFolderAtom = NS_NewAtom("folder");
+        gNameAtom = NS_NewAtom("name");
+        gHrefAtom = NS_NewAtom("href");
+        gOpenAtom = NS_NewAtom("open");
+        gKeywordAtom = NS_NewAtom("id");
+        gDescriptionAtom = NS_NewAtom("description");
+        gGroupAtom = NS_NewAtom("group");
+        gInstances = new nsVoidArray();
+    
+        ReadBookmarks();
+     }
+    
+    gInstances->AppendElement(this);
+}
+
+void
+BookmarksService::RemoveObserver()
+{
+    if (gRefCnt == 0)
+        return;
+ 
+    gInstances->RemoveElement(this);
+     
+    gRefCnt--;
+    if (gRefCnt == 0) {
+        // Flush Bookmarks before shutting down as some changes are not flushed when
+        // they are performed (folder open/closed) as writing a whole bookmark file for
+        // that type of operation seems excessive. 
+        FlushBookmarks();
+          
+        NS_IF_RELEASE(gBookmarks);
+        NS_RELEASE(gBookmarkAtom);
+        NS_RELEASE(gFolderAtom);
+        NS_RELEASE(gNameAtom);
+        NS_RELEASE(gHrefAtom);
+        NS_RELEASE(gOpenAtom);
+        [gDictionary release];
+    }
+}
+
+#pragma mark -
 
 void
 BookmarksService::GetRootContent(nsIContent** aResult)
@@ -211,7 +264,7 @@ BookmarksService::LocateMenu(nsIContent* aContent)
 }
 
 void
-BookmarksService::BookmarkAdded(nsIContent* aContainer, nsIContent* aChild, bool shouldFlush = true)
+BookmarksService::BookmarkAdded(nsIContent* aContainer, nsIContent* aChild, bool shouldFlush)
 {
   if (!gInstances || !gDictionary)
     return;
@@ -258,7 +311,7 @@ BookmarksService::BookmarkAdded(nsIContent* aContainer, nsIContent* aChild, bool
 }
 
 void
-BookmarksService::BookmarkChanged(nsIContent* aItem, bool shouldFlush = true)
+BookmarksService::BookmarkChanged(nsIContent* aItem, bool shouldFlush)
 {
   if (!gInstances || !gDictionary)
     return;
@@ -289,6 +342,10 @@ BookmarksService::BookmarkChanged(nsIContent* aItem, bool shouldFlush = true)
       aItem->GetAttr(kNameSpaceID_None, gNameAtom, name);
       NSString* bookmarkTitle = [[NSString stringWith_nsAString: name] stringByTruncatingTo:80 at:kTruncateAtMiddle];
       [childItem setTitle: bookmarkTitle];
+      
+      // and reset the image
+      BookmarkItem* item = GetWrapperFor(aItem);
+      [childItem setImage: [item siteIcon]];
     }
     
   }
@@ -298,7 +355,7 @@ BookmarksService::BookmarkChanged(nsIContent* aItem, bool shouldFlush = true)
 }
 
 void
-BookmarksService::BookmarkRemoved(nsIContent* aContainer, nsIContent* aChild, bool shouldFlush = true)
+BookmarksService::BookmarkRemoved(nsIContent* aContainer, nsIContent* aChild, bool shouldFlush)
 {
   if (!gInstances)
     return;
@@ -343,51 +400,6 @@ BookmarksService::BookmarkRemoved(nsIContent* aContainer, nsIContent* aChild, bo
       FlushBookmarks(); 
 }
 
-void
-BookmarksService::AddObserver()
-{
-    gRefCnt++;
-    if (gRefCnt == 1) {
-        gBookmarkAtom = NS_NewAtom("bookmark");
-        gFolderAtom = NS_NewAtom("folder");
-        gNameAtom = NS_NewAtom("name");
-        gHrefAtom = NS_NewAtom("href");
-        gOpenAtom = NS_NewAtom("open");
-        gKeywordAtom = NS_NewAtom("id");
-        gDescriptionAtom = NS_NewAtom("description");
-        gGroupAtom = NS_NewAtom("group");
-        gInstances = new nsVoidArray();
-    
-    ReadBookmarks();
-     }
-    
-    gInstances->AppendElement(this);
-}
-
-void
-BookmarksService::RemoveObserver()
-{
-    if (gRefCnt == 0)
-        return;
- 
-    gInstances->RemoveElement(this);
-     
-    gRefCnt--;
-    if (gRefCnt == 0) {
-        // Flush Bookmarks before shutting down as some changes are not flushed when
-        // they are performed (folder open/closed) as writing a whole bookmark file for
-        // that type of operation seems excessive. 
-        FlushBookmarks();
-          
-        NS_IF_RELEASE(gBookmarks);
-        NS_RELEASE(gBookmarkAtom);
-        NS_RELEASE(gFolderAtom);
-        NS_RELEASE(gNameAtom);
-        NS_RELEASE(gHrefAtom);
-        NS_RELEASE(gOpenAtom);
-        [gDictionary release];
-    }
-}
 
 void
 BookmarksService::AddBookmarkToFolder(nsString& aURL, nsString& aTitle, nsIDOMElement* aFolder, nsIDOMElement* aBeforeElt)
@@ -601,6 +613,40 @@ BookmarksService::FlushBookmarks()
     domSerializer->SerializeToStream(domDoc, outputStream, nsnull);
 }
 
+NSImage*
+BookmarksService::CreateIconForBookmark(nsIDOMElement* aElement)
+{
+  nsCOMPtr<nsIAtom> tagName;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  content->GetTag(*getter_AddRefs(tagName));
+
+  nsAutoString group;
+  content->GetAttr(kNameSpaceID_None, gGroupAtom, group);
+  if (!group.IsEmpty())
+    return [NSImage imageNamed:@"groupbookmark"];
+
+  if (tagName == BookmarksService::gFolderAtom)
+    return [NSImage imageNamed:@"folder"];
+  
+  // fire off a proxy icon load
+  if ([[CHPreferenceManager sharedInstance] getBooleanPref:"browser.chrome.site_icons" withSuccess:NULL])
+  {
+    nsAutoString href;
+    content->GetAttr(kNameSpaceID_None, gHrefAtom, href);
+    if (href.Length() > 0)
+    {
+      BookmarkItem* contentItem = BookmarksService::GetWrapperFor(content);
+      if ([contentItem siteIcon])
+        return [contentItem siteIcon];
+      
+      if (contentItem && ![contentItem siteIcon])
+        [[BookmarksManager sharedBookmarksManager] loadProxyImageFor:contentItem withURI:[NSString stringWith_nsAString:href]];
+    }
+  }
+  
+  return [NSImage imageNamed:@"smallbookmark"];
+}
+
 void BookmarksService::EnsureToolbarRoot()
 {
   if (gToolbarRoot)
@@ -763,18 +809,21 @@ BookmarksService::AddMenuBookmark(NSMenu* aMenu, nsIContent* aParent, nsIContent
   nsAutoString group;
   aChild->GetAttr(kNameSpaceID_None, gGroupAtom, group);
 
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aChild));
+  NSImage* menuItemImage = BookmarksService::CreateIconForBookmark(elt);
+  
   if (group.IsEmpty() && tagName == gFolderAtom) {
     NSMenu* menu = [[[NSMenu alloc] initWithTitle: title] autorelease];
     [aMenu setSubmenu: menu forItem: menuItem];
     [menu setAutoenablesItems: NO];
-    [menuItem setImage: [NSImage imageNamed:@"folder"]];
+    [menuItem setImage: menuItemImage];
     ConstructBookmarksMenu(menu, aChild);
   }
   else {
     if (group.IsEmpty())
-      [menuItem setImage: [NSImage imageNamed:@"smallbookmark"]];
+      [menuItem setImage: menuItemImage];
     else
-      [menuItem setImage: [NSImage imageNamed:@"groupbookmark"]];
+      [menuItem setImage: menuItemImage];
     
     [menuItem setTarget: gMainController];
     [menuItem setAction: @selector(openMenuBookmark:)];
@@ -997,10 +1046,12 @@ BookmarksService::ImportBookmarks(nsIDOMHTMLDocument* aHTMLDoc)
   nsCOMPtr<nsIContent> parentContent(do_QueryInterface(bookmarksRoot));
   nsCOMPtr<nsIContent> childContent(do_QueryInterface(importedRootElement));
   
+#if 0
   // XXX testing
   if (gDictionary)
     [gDictionary removeAllObjects];
-  
+#endif
+
   // this will save the file
   BookmarkAdded(parentContent, childContent, true /* flush */);
 }
@@ -1072,24 +1123,7 @@ BookmarksService::ResolveKeyword(NSString* aKeyword)
     content->GetAttr(kNameSpaceID_None, gHrefAtom, url);
     return [NSString stringWith_nsAString: url];
   }
-  return [NSString stringWithCString:""];
-}
-
-NSImage*
-BookmarksService::CreateIconForBookmark(nsIDOMElement* aElement)
-{
-  nsCOMPtr<nsIAtom> tagName;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  content->GetTag(*getter_AddRefs(tagName));
-  if (tagName == BookmarksService::gFolderAtom)
-    return [NSImage imageNamed:@"folder"];
-    
-  nsAutoString group;
-  content->GetAttr(kNameSpaceID_None, gGroupAtom, group);
-  if (!group.IsEmpty())
-    return [NSImage imageNamed:@"smallgroup"];
-  
-  return [NSImage imageNamed:@"groupbookmark"];
+  return [NSString string];
 }
 
 // Is searchItem equal to bookmark or bookmark's parent, grandparent, etc?
@@ -1291,4 +1325,79 @@ BookmarksService::PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeI
   BookmarksService::AddBookmarkToFolder(url, title, parentElt, beforeElt);
   return YES;  
 }
+
+#pragma mark -
+
+@interface BookmarksManager(Private)
+
+- (void)registerNotificationListener;
+- (void)imageLoadedNotification:(NSNotification*)notification;
+
+@end
+
+
+@implementation BookmarksManager
+
++ (BookmarksManager*)sharedBookmarksManager;
+{
+  static BookmarksManager* sBookmarksManager = nil;
+  
+  if (!sBookmarksManager)
+    sBookmarksManager = [[BookmarksManager alloc] init];
+  
+  return sBookmarksManager;
+}
+
+- (id)init
+{
+  if ((self = [super init]))
+  {
+    [self registerNotificationListener];
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  [[NSNotificationCenter defaultCenter] removeObserver:self];  
+  [super dealloc];
+}
+
+- (void)loadProxyImageFor:(id)requestor withURI:(NSString*)inURIString
+{
+  [[SiteIconProvider sharedFavoriteIconProvider] loadFavoriteIcon:self
+      forURI:inURIString withUserData:requestor allowNetwork:NO];
+}
+
+
+- (void)registerNotificationListener
+{
+  [[NSNotificationCenter defaultCenter] addObserver:	self
+                                        selector:     @selector(imageLoadedNotification:)
+                                        name:         SiteIconLoadNotificationName
+                                        object:				self];
+
+}
+
+// callback for [[SiteIconProvider sharedFavoriteIconProvider] loadFavoriteIcon]
+- (void)imageLoadedNotification:(NSNotification*)notification
+{
+  //NSLog(@"BookmarksManager imageLoadedNotification");
+  NSDictionary* userInfo = [notification userInfo];
+  if (userInfo)
+  {
+    id       requestor = [userInfo objectForKey:SiteIconLoadUserDataKey];		// requestor is a BookmarkItem
+  	NSImage* iconImage = [userInfo objectForKey:SiteIconLoadImageKey];
+      
+    if (iconImage && [requestor isMemberOfClass:[BookmarkItem class]])
+    {
+      [requestor setSiteIcon:iconImage];
+      BookmarksService::BookmarkChanged([requestor contentNode], FALSE);
+    }
+    
+  }
+}
+
+
+@end
 

@@ -132,7 +132,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   [mBookmarksMenu setAutoenablesItems: NO];
   mMenuBookmarks = new BookmarksService((BookmarksDataSource*)nil);
   mMenuBookmarks->AddObserver();
-  mMenuBookmarks->ConstructBookmarksMenu(mBookmarksMenu, nsnull);
+  BookmarksService::ConstructBookmarksMenu(mBookmarksMenu, nsnull);
   BookmarksService::gMainController = self;
     
   // Initialize offline mode.
@@ -150,6 +150,29 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   if (mOffline)
     [mOfflineMenuItem setTitle: @"Go Online"];	// XXX localize me
 */
+}
+
+-(void)applicationWillTerminate: (NSNotification*)aNotification
+{
+#if DEBUG
+    NSLog(@"Termination notification");
+#endif
+
+    // Autosave one of the windows.
+    [[[mApplication mainWindow] windowController] autosaveWindowFrame];
+    
+    mMenuBookmarks->RemoveObserver();
+    delete mMenuBookmarks;
+    mMenuBookmarks = nsnull;
+    
+    // Release before calling TermEmbedding since we need to access XPCOM
+    // to save preferences
+    [mPreferencesController release];
+    [mPreferenceManager release];
+
+    nsCocoaBrowserService::TermEmbedding();
+    
+    [self autorelease];
 }
 
 -(IBAction)newWindow:(id)aSender
@@ -455,29 +478,6 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
 }
 
-
--(void)applicationWillTerminate: (NSNotification*)aNotification
-{
-#if DEBUG
-    NSLog(@"Termination notification");
-#endif
-
-    // Autosave one of the windows.
-    [[[mApplication mainWindow] windowController] autosaveWindowFrame];
-    
-    mMenuBookmarks->RemoveObserver();
-    delete mMenuBookmarks;
-    mMenuBookmarks = nsnull;
-    
-    // Release before calling TermEmbedding since we need to access XPCOM
-    // to save preferences
-    [mPreferenceManager release];
-    
-    nsCocoaBrowserService::TermEmbedding();
-    
-    [self autorelease];
-}
-
 // Bookmarks menu actions.
 -(IBAction) importBookmarks:(id)aSender
 {
@@ -558,10 +558,10 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (MVPreferencesController *)preferencesController
 {
-    if (!preferencesController) {
-        preferencesController = [[MVPreferencesController sharedInstance] retain];
+    if (!mPreferencesController) {
+        mPreferencesController = [[MVPreferencesController sharedInstance] retain];
     }
-    return preferencesController;
+    return mPreferencesController;
 }
 
 - (void)displayPreferencesWindow:sender

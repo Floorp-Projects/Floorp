@@ -46,6 +46,7 @@
 #import "CHHistoryDataSource.h"
 #import "CHExtendedTabView.h"
 #import "CHUserDefaults.h"
+#import "CHPageProxyIcon.h"
 
 #include "nsIWebNavigation.h"
 #include "nsIDOMElement.h"
@@ -945,6 +946,13 @@ static NSArray* sToolbarDefaults = nil;
     // to, because it forces a redraw of every view in the window and with a lot
     // of tabs, it's dog slow.
     // [[self window] display];
+}
+
+- (void)updateSiteIcons:(NSImage *)siteIconImage
+{
+  if (siteIconImage == nil)
+    siteIconImage = [NSImage imageNamed:@"globe_ico"];
+	[mProxyIcon setImage:siteIconImage];
 }
 
 -(void)newTab:(BOOL)allowHomepage

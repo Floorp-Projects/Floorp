@@ -39,9 +39,9 @@
 
 @implementation CHBookmarksButton
 
-- (id)initWithFrame:(NSRect)frame {
+- (id)initWithFrame:(NSRect)frame
+{
     if ( (self = [super initWithFrame:frame]) ) {
-        mElement = nsnull;
         [self setBezelStyle: NSRegularSquareBezelStyle];
         [self setButtonType: NSMomentaryChangeButton];
         [self setBordered: NO];
@@ -49,6 +49,15 @@
         [self setRefusesFirstResponder: YES];
         [self setFont: [NSFont labelFontOfSize: 11.0]];
     }
+  return self;
+}
+
+-(id)initWithFrame:(NSRect)frame element:(nsIDOMElement*)element bookmarksService:(BookmarksService*)bookmarksService
+{
+  if ( (self = [self initWithFrame:frame]) ) {
+      mBookmarksService = bookmarksService;
+      [self setElement:element];
+  }
   return self;
 }
 
@@ -203,22 +212,24 @@
   nsAutoString tag;
   mElement->GetLocalName(tag);
 
+  NSImage* bookmarkImage = mBookmarksService->CreateIconForBookmark(aElt);
+
   nsAutoString group;
   mElement->GetAttribute(NS_LITERAL_STRING("group"), group);
-
+  
   if (!group.IsEmpty()) {
     mIsFolder = NO;
-    [self setImage: [NSImage imageNamed: @"groupbookmark"]];
+    [self setImage: bookmarkImage];
     [self setAction: @selector(openBookmark:)];
     [self setTarget: self];
   }
   else if (tag.Equals(NS_LITERAL_STRING("folder"))) {
-    [self setImage: [NSImage imageNamed: @"folder"]];
+    [self setImage: bookmarkImage];
     mIsFolder = YES;
   }
   else {
     mIsFolder = NO;
-    [self setImage: [NSImage imageNamed: @"smallbookmark"]];
+    [self setImage: bookmarkImage];
     [self setAction: @selector(openBookmark:)];
     [self setTarget: self];
     nsAutoString href;

@@ -31,9 +31,14 @@
 #include "nsIDOMElement.h"
 #include "nsIContent.h"
 
+@interface CHBookmarksToolbar(Private)
+- (CHBookmarksButton*)makeNewButtonWithElement:(nsIDOMElement*)element;
+@end
+
 @implementation CHBookmarksToolbar
 
-- (id)initWithFrame:(NSRect)frame {
+- (id)initWithFrame:(NSRect)frame
+{
   if ( (self = [super initWithFrame:frame]) ) {
     mBookmarks = nsnull;
     mButtons = [[NSMutableArray alloc] init];
@@ -95,8 +100,7 @@
   while (child) {
     nsCOMPtr<nsIDOMElement> childElt(do_QueryInterface(child));
     if (childElt) {
-      CHBookmarksButton* button = [[[CHBookmarksButton alloc] initWithFrame: NSMakeRect(2, 1, 100, 17)] autorelease];
-      [button setElement: childElt];
+      CHBookmarksButton* button = [self makeNewButtonWithElement:childElt];
       [self addSubview: button];
       [mButtons addObject: button];
     }
@@ -111,8 +115,7 @@
 
 -(void)addButton: (nsIDOMElement*)aElt atIndex: (int)aIndex
 {
-  CHBookmarksButton* button = [[[CHBookmarksButton alloc] initWithFrame: NSMakeRect(2, 1, 100, 17)] autorelease];
-  [button setElement: aElt];
+  CHBookmarksButton* button = [self makeNewButtonWithElement:aElt];
   [self addSubview: button];
   [mButtons insertObject: button atIndex: aIndex];
   if ([self isShown])
@@ -451,6 +454,11 @@
   } else {// if (aPosition == BookmarksService::CHInsertBefore) {
     return NSMakeRect([aButton frame].origin.x - 2, [aButton frame].origin.y, 2, [aButton frame].size.height);
   }
+}
+
+- (CHBookmarksButton*)makeNewButtonWithElement:(nsIDOMElement*)element
+{
+	return [[[CHBookmarksButton alloc] initWithFrame: NSMakeRect(2, 1, 100, 17) element:element bookmarksService:mBookmarks] autorelease];
 }
 
 @end

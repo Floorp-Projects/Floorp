@@ -41,6 +41,7 @@
 
 #import "BookmarksDataSource.h"
 #import "BookmarkInfoController.h"
+#import "SiteIconProvider.h"
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
@@ -55,17 +56,16 @@
 #include "nsVoidArray.h"
 
 #import "BookmarksService.h"
-#import "StringUtils.h"
 
 @implementation BookmarksDataSource
 
 -(id) init
 {
-    if ( (self = [super init]) ) {
-        mBookmarks = nsnull;
-        mCachedHref = nil;
-    }
-    return self;
+  if ( (self = [super init]) ) {
+    mBookmarks = nsnull;
+    mCachedHref = nil;
+  }
+  return self;
 }
 
 -(void) awakeFromNib
@@ -86,16 +86,16 @@
 
 -(void) ensureBookmarks
 {
-    if (mBookmarks)
-        return;
-    
-    mBookmarks = new BookmarksService(self);
-    mBookmarks->AddObserver();
-    
-    [mOutlineView setTarget: self];
-    [mOutlineView setDoubleAction: @selector(openBookmark:)];
-    [mOutlineView setDeleteAction: @selector(deleteBookmarks:)];
-    [mOutlineView reloadData];
+  if (mBookmarks)
+    return;
+  
+  mBookmarks = new BookmarksService(self);
+  mBookmarks->AddObserver();
+  
+  [mOutlineView setTarget: self];
+  [mOutlineView setDoubleAction: @selector(openBookmark:)];
+  [mOutlineView setDeleteAction: @selector(deleteBookmarks:)];
+  [mOutlineView reloadData];
 }
 
 -(IBAction)addBookmark:(id)aSender
@@ -530,20 +530,10 @@
 
         //Get the cell of the text attachment.
         attachmentAttrStringCell = (NSCell *)[(NSTextAttachment *)[attachmentAttrString attribute:NSAttachmentAttributeName atIndex:0 effectiveRange:nil] attachmentCell];
-        //Figure out which image to add, and set the cell's image.
-        // Use the bookmark groups image for groups.
-        if ([self outlineView:outlineView isItemExpandable:item]) {
-          nsIContent* content = [item contentNode];
-          nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(content));
-          nsAutoString group;
-          content->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
-          if (!group.IsEmpty())
-            [attachmentAttrStringCell setImage:[NSImage imageNamed:@"groupbookmark"]];
-          else
-            [attachmentAttrStringCell setImage:[NSImage imageNamed:@"folder"]];
-        }
-        else
-          [attachmentAttrStringCell setImage:[NSImage imageNamed:@"smallbookmark"]];
+
+        nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(content));
+        NSImage* bookmarkImage = mBookmarks->CreateIconForBookmark(elt);
+        [attachmentAttrStringCell setImage:bookmarkImage];
         
         //Insert the image
         [cellValue replaceCharactersInRange:NSMakeRange(0, 0) withAttributedString:attachmentAttrString];
@@ -855,7 +845,16 @@
 
 @end
 
+#pragma mark -
+
 @implementation BookmarkItem
+
+-(void)dealloc
+{
+  [mSiteIcon release];
+  [super dealloc];
+}
+
 -(nsIContent*)contentNode
 {
   return mContentNode;
@@ -887,6 +886,18 @@
   return [NSString stringWith_nsAString: href];
 }
 
+- (void)setSiteIcon:(NSImage*)image
+{
+  //NSLog(@"Setting site icon for %@", [self url]);
+  [mSiteIcon autorelease];
+  mSiteIcon = [image retain];
+}
+
+- (NSImage*)siteIcon
+{
+  return mSiteIcon;
+}
+
 -(void)setContentNode: (nsIContent*)aContentNode
 {
   mContentNode = aContentNode;
@@ -896,6 +907,7 @@
 {
   BookmarkItem* copy = [[[self class] allocWithZone: aZone] init];
   [copy setContentNode: mContentNode];
+  [copy setSiteIcon: mSiteIcon];
   return copy;
 }
 

@@ -78,6 +78,7 @@ class nsIDOMNode;
 @class BookmarksDataSource;
 @class CHHistoryDataSource;
 @class CHExtendedTabView;
+@class CHPageProxyIcon;
 
 @interface BrowserWindowController : NSWindowController<CHFind>
 {
@@ -93,6 +94,7 @@ class nsIDOMNode;
   IBOutlet NSWindow*          mLocationSheetWindow;
   IBOutlet NSTextField*       mLocationSheetURLField;
   IBOutlet NSView*            mStatusBar;     // contains the status text, progress bar, and lock
+  IBOutlet CHPageProxyIcon*   mProxyIcon;
 
   IBOutlet id                   mSidebarBrowserView;  // currently unused
   IBOutlet BookmarksDataSource* mSidebarBookmarksDataSource;
@@ -162,6 +164,7 @@ class nsIDOMNode;
 
 - (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate;
 - (void)updateLocationFields:(NSString *)locationString;
+- (void)updateSiteIcons:(NSImage *)siteIconImage;
 - (void)updateToolbarItems;
 - (void)focusURLBar;
 

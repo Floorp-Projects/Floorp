@@ -25,7 +25,7 @@
 
 @interface CHPageProxyIcon : NSImageView
 {
-
 }
+
 
 @end

@@ -37,9 +37,12 @@
 
 #import "NSString+Utils.h"
 
+#import "CHPreferenceManager.h"
 #import "CHBrowserWrapper.h"
 #import "BrowserWindowController.h"
 #import "BookmarksService.h"
+#import "SiteIconProvider.h"
+#import "CHIconTabViewItem.h"
 #import "ToolTip.h"
 
 #include "nsCOMPtr.h"
@@ -64,8 +67,18 @@
 
 static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
+const NSString* kOfflineNotificationName = @"offlineModeChanged";
+
 @interface CHBrowserWrapper(Private)
-  -(void) setPendingActive:(BOOL)active;
+
+- (void)setPendingActive:(BOOL)active;
+- (void)registerNotificationListener;
+
+- (void)setSiteIconImage:(NSImage*)inSiteIcon;
+- (void)setSiteIconURI:(NSString*)inSiteIconURI;
+
+- (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI;
+
 @end
 
 @implementation CHBrowserWrapper
@@ -85,10 +98,12 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 #endif
 
   [[NSNotificationCenter defaultCenter] removeObserver: self];
-    
-  [defaultStatus release];
-  [loadingStatus release];
-  [toolTip release];
+  
+  [mSiteIconImage release];
+  [mSiteIconURI release];
+  [mDefaultStatusString release];
+  [mLoadingStatusString release];
+  [mToolTip release];
 
   [super dealloc];
 }
@@ -105,7 +120,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   progress = nil;
   progressSuper = nil;
   mIsPrimary = NO;
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [[NSNotificationCenter defaultCenter] removeObserver:self name:kOfflineNotificationName object:nil];
 
   [mBrowserView setActive: NO];
 }
@@ -133,7 +148,13 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     mIsBusy = NO;
     mListenersAttached = NO;
     mSecureState = nsIWebProgressListener::STATE_IS_INSECURE;
-    toolTip = [[ToolTip alloc] init];
+
+    mToolTip = [[ToolTip alloc] init];
+
+    //[self setSiteIconImage:[NSImage imageNamed:@"globe_ico"]];
+    //[self setSiteIconURI: [NSString string]];
+    
+    [self registerNotificationListener];
   }
   return self;
 }
@@ -155,9 +176,9 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   if (!mIsBusy)
     [progress removeFromSuperview];
   
-  defaultStatus = NULL;
-  loadingStatus = DOCUMENT_DONE_STRING;
-  [status setStringValue:loadingStatus];
+  mDefaultStatusString = NULL;
+  mLoadingStatusString = DOCUMENT_DONE_STRING;
+  [status setStringValue:mLoadingStatusString];
   
   mIsPrimary = YES;
 
@@ -181,11 +202,12 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   if (mWindowController) // Only register if we're the content area.
     [[NSNotificationCenter defaultCenter] addObserver:self
         selector:@selector(offlineModeChanged:)
-        name:@"offlineModeChanged"
+        name:kOfflineNotificationName
         object:nil];
         
   // Update the URL bar.
   [mWindowController updateLocationFields:[self getCurrentURLSpec]];
+  [mWindowController updateSiteIcons:mSiteIconImage];
   
   if (mWindowController && !mListenersAttached) {
     mListenersAttached = YES;
@@ -209,7 +231,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   return [mBrowserView getCurrentURLSpec];
 }
 
-- (void)awakeFromNib 
+- (void)awakeFromNib
 {
 }
 
@@ -239,17 +261,17 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (void)onLoadingStarted 
 {
-  if (defaultStatus) {
-    [defaultStatus release];
-    defaultStatus = NULL;
+  if (mDefaultStatusString) {
+    [mDefaultStatusString release];
+    mDefaultStatusString = NULL;
   }
 
   [progressSuper addSubview:progress];
   [progress setIndeterminate:YES];
   [progress startAnimation:self];
 
-  loadingStatus = NSLocalizedString(@"TabLoading", @"");
-  [status setStringValue:loadingStatus];
+  mLoadingStatusString = NSLocalizedString(@"TabLoading", @"");
+  [status setStringValue:mLoadingStatusString];
 
   mIsBusy = YES;
   [mTab setLabel: NSLocalizedString(@"TabLoading", @"")];
@@ -271,12 +293,12 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   [progress stopAnimation:self];
   [progress removeFromSuperview];
 
-  loadingStatus = DOCUMENT_DONE_STRING;
-  if (defaultStatus) {
-    [status setStringValue:defaultStatus];
+  mLoadingStatusString = DOCUMENT_DONE_STRING;
+  if (mDefaultStatusString) {
+    [status setStringValue:mDefaultStatusString];
   }
   else {
-    [status setStringValue:loadingStatus];
+    [status setStringValue:mLoadingStatusString];
   }
 
   mIsBusy = NO;
@@ -316,8 +338,32 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (void)onLocationChange:(NSString*)urlSpec
 {
+  BOOL useSiteIcons = [[CHPreferenceManager sharedInstance] getBooleanPref:"browser.chrome.site_icons" withSuccess:NULL];
+  BOOL siteIconLoadInitiated = NO;
+  
+  SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];
+  NSString* faviconURI = [SiteIconProvider faviconLocationStringFromURI:urlSpec];
+
+  if (useSiteIcons && [faviconURI length] > 0)
+  {
+    // if the favicon uri has changed, fire off favicon load. When it completes, our
+    // imageLoadedNotification selector gets called.
+    if (![faviconURI isEqualToString:mSiteIconURI])
+      siteIconLoadInitiated = [faviconProvider loadFavoriteIcon:self forURI:urlSpec withUserData:nil allowNetwork:YES];
+  }
+  else
+  {
+    if ([urlSpec isEqualToString:@"about:blank"])
+      faviconURI = urlSpec;
+    else
+    	faviconURI = @"";
+  }
+
+  if (!siteIconLoadInitiated)
+    [self updateSiteIconImage:nil withURI:faviconURI];
+  
   if (mIsPrimary)
-    [mWindowController updateLocationFields:urlSpec];
+    [mWindowController updateLocationFields:urlSpec];  
 }
 
 - (void)onStatusChange:(NSString*)aStatusString
@@ -342,20 +388,20 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 - (void)setStatus:(NSString *)statusString ofType:(NSStatusType)type 
 {
   if (type == NSStatusTypeScriptDefault) {
-    if (defaultStatus) {
-      [defaultStatus release];
+    if (mDefaultStatusString) {
+      [mDefaultStatusString release];
     }
-    defaultStatus = statusString;
-    if (defaultStatus) {
-      [defaultStatus retain];
+    mDefaultStatusString = statusString;
+    if (mDefaultStatusString) {
+      [mDefaultStatusString retain];
     }
   }
   else if (!statusString) {
-    if (defaultStatus) {
-      [status setStringValue:defaultStatus];
+    if (mDefaultStatusString) {
+      [status setStringValue:mDefaultStatusString];
     }
     else {
-      [status setStringValue:loadingStatus];
+      [status setStringValue:mLoadingStatusString];
     }      
   }
   else {
@@ -418,12 +464,12 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text
 {
   NSPoint point = [[self window] convertBaseToScreen:[self convertPoint: where toView:nil]];
-  [toolTip showToolTipAtPoint: point withString: text];
+  [mToolTip showToolTipAtPoint: point withString: text];
 }
 
 - (void)onHideTooltip
 {
-  [toolTip closeToolTip];
+  [mToolTip closeToolTip];
 }
 
 // Called when a context menu should be shown.
@@ -546,5 +592,78 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   mActivateOnLoad = active;
 }
+
+- (void)setSiteIconImage:(NSImage*)inSiteIcon
+{
+  [mSiteIconImage autorelease];
+  mSiteIconImage = [inSiteIcon retain];
+}
+
+- (void)setSiteIconURI:(NSString*)inSiteIconURI
+{
+  [mSiteIconURI autorelease];
+  mSiteIconURI = [inSiteIconURI retain];
+}
+
+// A nil inSiteIcon image indicates that we should use the default icon
+// If inSiteIconURI is "about:blank", we don't show any icon
+- (void)updateSiteIconImage:(NSImage*)inSiteIcon withURI:(NSString *)inSiteIconURI
+{
+  BOOL resetTabIcon = NO;
+  
+  if (![mSiteIconURI isEqualToString:inSiteIconURI])
+  {
+    if (!inSiteIcon)
+    {
+      if (![inSiteIconURI isEqualToString:@"about:blank"])
+        inSiteIcon = [NSImage imageNamed:@"globe_ico"];
+    }
+
+    [self setSiteIconImage: inSiteIcon];
+    [self setSiteIconURI:   inSiteIconURI];
+  
+    // update the proxy icon
+    if (mIsPrimary)
+      [mWindowController updateSiteIcons:mSiteIconImage];
+      
+    resetTabIcon = YES;
+  }
+
+  // update the tab icon
+  if ([mTab isMemberOfClass:[CHIconTabViewItem class]])
+  {
+    CHIconTabViewItem* tabItem = (CHIconTabViewItem*)mTab;
+    if (resetTabIcon || ![tabItem tabIcon])
+      [tabItem setTabIcon:mSiteIconImage];
+  }
+  
+}
+
+- (void)registerNotificationListener
+{
+  [[NSNotificationCenter defaultCenter] addObserver:	self
+                                        selector:     @selector(imageLoadedNotification:)
+                                        name:         SiteIconLoadNotificationName
+                                        object:				self];
+
+}
+
+// called when [[SiteIconProvider sharedFavoriteIconProvider] loadFavoriteIcon] completes
+- (void)imageLoadedNotification:(NSNotification*)notification
+{
+  NSDictionary* userInfo = [notification userInfo];
+  if (userInfo)
+  {
+  	NSImage*  iconImage     = [userInfo objectForKey:SiteIconLoadImageKey];
+    NSString* siteIconURI   = [userInfo objectForKey:SiteIconLoadURIKey];
+    
+    // NSLog(@"CHBrowserWrapper imageLoadedNotification got image %@ and uri %@", iconImage, proxyImageURI);
+    if (iconImage == nil)
+      siteIconURI = @"";	// go back to default image
+    
+    [self updateSiteIconImage:iconImage withURI:siteIconURI];
+  }
+}
+
 
 @end

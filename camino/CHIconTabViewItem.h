@@ -40,7 +40,8 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface CHIconTabViewItem : NSTabViewItem {
+@interface CHIconTabViewItem : NSTabViewItem
+{
   NSImage *mTabIcon;
   NSDictionary* mLabelAttributes;
 }

@@ -75,7 +75,7 @@ class BookmarksService;
     
     FindDlgController*      mFindDialog;
 
-    MVPreferencesController* preferencesController;
+    MVPreferencesController* mPreferencesController;
 
     NSString*               mStartURL;
 }

@@ -35,12 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Foundation/Foundation.h>
+#import <AppKit/AppKit.h>
 #import <Carbon/Carbon.h>
 
-@interface CHPreferenceManager : NSObject {
+class nsIPref;
+
+@interface CHPreferenceManager : NSObject
+{
     NSUserDefaults*	mDefaults;
     ICInstance 			mInternetConfig;
+    nsIPref*        mPrefs;
 }
 
 + (CHPreferenceManager *)sharedInstance;
@@ -53,5 +57,10 @@
 
 - (NSString *) getICStringPref:(ConstStr255Param) prefKey;
 - (NSString *) homePage:(BOOL) checkStartupPagePref;
+
+- (NSString*)getStringPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
+- (NSColor*)getColorPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
+- (BOOL)getBooleanPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
+- (int)getIntPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
 
 @end
