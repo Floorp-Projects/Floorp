@@ -280,9 +280,6 @@ nsXBLPrototypeBinding::Initialize()
 {
   nsIContent* content = GetImmediateChild(nsXBLAtoms::content);
   if (content) {
-    // Make sure to construct the attribute table first, since constructing the
-    // insertion point table removes some of the subtrees, which makes them
-    // unreachable by walking our DOM.
     ConstructAttributeTable(content);
     ConstructInsertionTable(content);
   }
@@ -979,113 +976,105 @@ DeleteAttributeTable(nsHashKey* aKey, void* aData, void* aClosure)
 void
 nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
 {
-  // Don't add entries for <children> elements, since those will get
-  // removed from the DOM when we construct the insertion point table.
-  nsINodeInfo* nodeInfo = aElement->GetNodeInfo();
-  if (nodeInfo && !nodeInfo->Equals(nsXBLAtoms::children,
-                                    kNameSpaceID_XBL)) {
-    nsAutoString inherits;
-    aElement->GetAttr(kNameSpaceID_XBL, nsXBLAtoms::inherits, inherits);
+  nsAutoString inherits;
+  aElement->GetAttr(kNameSpaceID_XBL, nsXBLAtoms::inherits, inherits);
 
-    if (!inherits.IsEmpty()) {
-      if (!mAttributeTable) {
-        mAttributeTable = new nsObjectHashtable(nsnull, nsnull,
-                                                DeleteAttributeTable,
-                                                nsnull, 4);
-        if (!mAttributeTable)
+  if (!inherits.IsEmpty()) {
+    if (!mAttributeTable) {
+      mAttributeTable = new nsObjectHashtable(nsnull, nsnull,
+                                              DeleteAttributeTable, nsnull, 4);
+      if (!mAttributeTable)
+        return;
+    }
+
+    // The user specified at least one attribute.
+    char* str = ToNewCString(inherits);
+    char* newStr;
+    // XXX We should use a strtok function that tokenizes PRUnichars
+    // so that we don't have to convert from Unicode to ASCII and then back
+
+    char* token = nsCRT::strtok( str, ", ", &newStr );
+    while( token != NULL ) {
+      // Build an atom out of this attribute.
+      nsCOMPtr<nsIAtom> atom;
+      PRInt32 atomNsID = kNameSpaceID_None;
+      nsCOMPtr<nsIAtom> attribute;
+      PRInt32 attributeNsID = kNameSpaceID_None;
+
+      // Figure out if this token contains a :. 
+      nsAutoString attrTok; attrTok.AssignWithConversion(token);
+      PRInt32 index = attrTok.Find("=", PR_TRUE);
+      nsresult rv;
+      if (index != -1) {
+        // This attribute maps to something different.
+        nsAutoString left, right;
+        attrTok.Left(left, index);
+        attrTok.Right(right, attrTok.Length()-index-1);
+
+        rv = nsContentUtils::SplitQName(aElement, left, &attributeNsID,
+                                        getter_AddRefs(attribute));
+        if (NS_FAILED(rv))
+          return;
+
+        rv = nsContentUtils::SplitQName(aElement, right, &atomNsID,
+                                        getter_AddRefs(atom));
+        if (NS_FAILED(rv))
           return;
       }
-
-      // The user specified at least one attribute.
-      char* str = ToNewCString(inherits);
-      char* newStr;
-      // XXX We should use a strtok function that tokenizes PRUnichars
-      // so that we don't have to convert from Unicode to ASCII and then back
-
-      char* token = nsCRT::strtok( str, ", ", &newStr );
-      while( token != NULL ) {
-        // Build an atom out of this attribute.
-        nsCOMPtr<nsIAtom> atom;
-        PRInt32 atomNsID = kNameSpaceID_None;
-        nsCOMPtr<nsIAtom> attribute;
-        PRInt32 attributeNsID = kNameSpaceID_None;
-
-        // Figure out if this token contains a :.
-        nsAutoString attrTok; attrTok.AssignWithConversion(token);
-        PRInt32 index = attrTok.Find("=", PR_TRUE);
-        nsresult rv;
-        if (index != -1) {
-          // This attribute maps to something different.
-          nsAutoString left, right;
-          attrTok.Left(left, index);
-          attrTok.Right(right, attrTok.Length()-index-1);
-
-          rv = nsContentUtils::SplitQName(aElement, left, &attributeNsID,
-                                          getter_AddRefs(attribute));
-          if (NS_FAILED(rv))
-            return;
-
-          rv = nsContentUtils::SplitQName(aElement, right, &atomNsID,
-                                          getter_AddRefs(atom));
-          if (NS_FAILED(rv))
-            return;
-        }
-        else {
-          nsAutoString tok;
-          tok.AssignWithConversion(token);
-          rv = nsContentUtils::SplitQName(aElement, tok, &atomNsID, 
-                                          getter_AddRefs(atom));
-          if (NS_FAILED(rv))
-            return;
-          attribute = atom;
-          attributeNsID = atomNsID;
-        }
-
-        nsPRUint32Key nskey(atomNsID);
-        nsObjectHashtable* attributesNS =
-          NS_STATIC_CAST(nsObjectHashtable*, mAttributeTable->Get(&nskey));
-        if (!attributesNS) {
-          attributesNS = new nsObjectHashtable(nsnull, nsnull,
-                                               DeleteAttributeEntry,
-                                               nsnull, 4);
-          if (!attributesNS)
-            return;
-
-          mAttributeTable->Put(&nskey, attributesNS);
-        }
-      
-        // Create an XBL attribute entry.
-        nsXBLAttributeEntry* xblAttr =
-          nsXBLAttributeEntry::Create(atom, attribute, attributeNsID, aElement);
-
-        // Now we should see if some element within our anonymous
-        // content is already observing this attribute.
-        nsISupportsKey key(atom);
-        nsXBLAttributeEntry* entry = NS_STATIC_CAST(nsXBLAttributeEntry*,
-                                                    attributesNS->Get(&key));
-
-        if (!entry) {
-          // Put it in the table.
-          attributesNS->Put(&key, xblAttr);
-        } else {
-          while (entry->GetNext())
-            entry = entry->GetNext();
-
-          entry->SetNext(xblAttr);
-        }
-
-        // Now remove the inherits attribute from the element so that it doesn't
-        // show up on clones of the element.  It is used
-        // by the template only, and we don't need it anymore.
-        // XXXdwh Don't do this for XUL elements, since it faults them into heavyweight
-        // elements. Should nuke from the prototype instead.
-        // aElement->UnsetAttr(kNameSpaceID_XBL, nsXBLAtoms::inherits, PR_FALSE);
-
-        token = nsCRT::strtok( newStr, ", ", &newStr );
+      else {
+        nsAutoString tok;
+        tok.AssignWithConversion(token);
+        rv = nsContentUtils::SplitQName(aElement, tok, &atomNsID, 
+                                        getter_AddRefs(atom));
+        if (NS_FAILED(rv))
+          return;
+        attribute = atom;
+        attributeNsID = atomNsID;
       }
 
-      nsMemory::Free(str);
+      nsPRUint32Key nskey(atomNsID);
+      nsObjectHashtable* attributesNS =
+        NS_STATIC_CAST(nsObjectHashtable*, mAttributeTable->Get(&nskey));
+      if (!attributesNS) {
+        attributesNS = new nsObjectHashtable(nsnull, nsnull,
+                                             DeleteAttributeEntry, nsnull, 4);
+        if (!attributesNS)
+          return;
+
+         mAttributeTable->Put(&nskey, attributesNS);
+      }
+      
+      // Create an XBL attribute entry.
+      nsXBLAttributeEntry* xblAttr =
+        nsXBLAttributeEntry::Create(atom, attribute, attributeNsID, aElement);
+
+      // Now we should see if some element within our anonymous
+      // content is already observing this attribute.
+      nsISupportsKey key(atom);
+      nsXBLAttributeEntry* entry = NS_STATIC_CAST(nsXBLAttributeEntry*,
+                                                  attributesNS->Get(&key));
+
+      if (!entry) {
+        // Put it in the table.
+        attributesNS->Put(&key, xblAttr);
+      } else {
+        while (entry->GetNext())
+          entry = entry->GetNext();
+
+        entry->SetNext(xblAttr);
+      }
+
+      // Now remove the inherits attribute from the element so that it doesn't
+      // show up on clones of the element.  It is used
+      // by the template only, and we don't need it anymore.
+      // XXXdwh Don't do this for XUL elements, since it faults them into heavyweight
+      // elements. Should nuke from the prototype instead.
+      // aElement->UnsetAttr(kNameSpaceID_XBL, nsXBLAtoms::inherits, PR_FALSE);
+
+      token = nsCRT::strtok( newStr, ", ", &newStr );
     }
+
+    nsMemory::Free(str);
   }
 
   // Recur into our children.
