@@ -468,9 +468,9 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
     // stretch the char to the appropriate height if it is not big enough.
     nsBoundingMetrics charSize;
     charSize.Clear(); // this will tell stretch that we don't know the default size
-    aMathMLChar->Stretch(aPresContext, aRenderingContext,
-                         NS_STRETCH_DIRECTION_VERTICAL,
-                         aContainerSize, charSize);
+    nsresult res = aMathMLChar->Stretch(aPresContext, aRenderingContext,
+                                        NS_STRETCH_DIRECTION_VERTICAL,
+                                        aContainerSize, charSize);
 
     if (eMathMLChar_DONT_STRETCH != aMathMLChar->GetEnum())
     {
@@ -482,6 +482,13 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
     else {
       charSize.ascent = fontAscent;
       charSize.descent = fontDescent;
+      if (NS_FAILED(res) && charSize.width == 0) {
+        // gracefully handle cases where stretching the char failed (i.e., GetBoundingMetrics failed)
+        // we need to get the width
+        aRenderingContext.GetWidth(aData, charSize.width);
+        // XXX the bounding metrics of the MathMLChar is not updated, but PlaceChar()
+        // will do the right thing by leaving the necessary room to paint the char.
+      }
     }
 
     if (aDesiredSize.ascent < charSize.ascent) 
@@ -511,7 +518,7 @@ nsMathMLmfencedFrame::PlaceChar(nsMathMLChar*      aMathMLChar,
   aMathMLChar->GetBoundingMetrics(bm);
 
   // the char's x-origin was used to store lspace ...
-  // the char's y-origin was used to stored the ascent ... 
+  // the char's y-origin was used to store the ascent ... 
   nsRect rect;
   aMathMLChar->GetRect(rect);
  
