@@ -274,16 +274,26 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
 	delete[] uriStr;
 	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
-	if(name.Compare("Inbox", PR_TRUE) == 0)
-		folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
-	else if(name.Compare("Trash", PR_TRUE) == 0)
-		folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
-    else if(name.Compare("Sent", PR_TRUE) == 0)
-        folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-    else if(name.Compare("Drafts", PR_TRUE) == 0)
-        folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-    else if (name.Compare("Templates", PR_TRUE) == 0)
-        folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
+	PRBool isServer;
+    rv = GetIsServer(&isServer);
+
+	//Only set these is these are top level children.
+	if(NS_SUCCEEDED(rv) && isServer)
+	{
+
+		if(name.Compare("Inbox", PR_TRUE) == 0)
+			folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
+		else if(name.Compare("Trash", PR_TRUE) == 0)
+			folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
+		else if(name.Compare("Sent", PR_TRUE) == 0)
+			folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
+		else if(name.Compare("Drafts", PR_TRUE) == 0)
+			folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
+		else if (name.Compare("Templates", PR_TRUE) == 0)
+			folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
+	}
+	//at this point we must be ok and we don't want to return failure in case GetIsServer failed.
+	rv = NS_OK;
 
 	nsCOMPtr <nsISupports> supports = do_QueryInterface(folder);
 	NS_ASSERTION(supports, "couldn't get isupports from imap folder");
