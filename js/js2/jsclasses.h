@@ -143,8 +143,7 @@ namespace JSClasses {
             if (slti == mSlots.end())
                 defineSlot(name, type, JSSlot::kNoFlag, getter, 0);
             else {
-                if (slti->second.mActual)
-                    ASSERT(slti->second.isVirtual());
+                ASSERT(!slti->second.mActual || slti->second.isVirtual());
                 ASSERT(slti->second.mGetter == 0);
                 slti->second.mGetter = getter;
                 slti->second.mActual = false;
@@ -159,8 +158,7 @@ namespace JSClasses {
                 defineSlot(name, type, JSSlot::kNoFlag, 0, setter);
             else {
                 JSSlot &s = slti->second;
-                if (s.mActual)
-                    ASSERT(s.isVirtual());
+                ASSERT(!s.mActual || s.isVirtual());
                 ASSERT(s.mSetter == 0);
                 s.mSetter = setter;
                 s.mActual = false;
@@ -353,11 +351,9 @@ namespace JSClasses {
             return gc_base::operator new(n);
         }
         
-#if !defined(XP_MAC)
         void operator delete(void* /*ptr*/) {}
         void operator delete(void* /*ptr*/, JSClass* /*thisClass*/) {}
         void operator delete(void* /*ptr*/, uint32 /*slotCount*/) {}
-#endif
         
         JSInstance(uint32 slotCount)
         {
