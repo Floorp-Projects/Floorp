@@ -78,6 +78,7 @@ DEFINES		+= \
 endif
 
 EXTRA_DEPS      = tmreader.$(OBJ_SUFFIX)
+GARBAGE		+= tmreader.$(OBJ_SUFFIX)
 
 include $(topsrcdir)/config/rules.mk
 
