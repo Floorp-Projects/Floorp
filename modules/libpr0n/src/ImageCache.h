@@ -28,8 +28,6 @@
 #include "imgRequest.h"
 #include "prtypes.h"
 
-#define MOZ_NEW_CACHE 1
-
 #ifdef MOZ_NEW_CACHE
 #include "nsICacheEntryDescriptor.h"
 #else
