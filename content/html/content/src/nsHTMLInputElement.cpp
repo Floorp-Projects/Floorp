@@ -1538,8 +1538,15 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
               nsCOMPtr<nsIPresShell> presShell;
               aPresContext->GetShell(getter_AddRefs(presShell));
-              nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
-              presShell->HandleEventWithTarget(&event, nsnull, form, NS_EVENT_FLAG_INIT, &status);
+              // If |nsIPresShell::Destroy| has been called due to
+              // handling the event (base class HandleDOMEvent, above),
+              // the pres context will return a null pres shell.  See
+              // bug 125624.
+              if (presShell) {
+                nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
+                presShell->HandleEventWithTarget(&event, nsnull, form, 
+                                                 NS_EVENT_FLAG_INIT, &status);
+              }
             }
             break;
 
