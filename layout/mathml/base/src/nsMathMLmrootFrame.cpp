@@ -130,7 +130,7 @@ nsMathMLmrootFrame::Paint(nsIPresContext*      aPresContext,
     mSqrChar.Paint(aPresContext, aRenderingContext,
                    aDirtyRect, aWhichLayer, this);
 
-    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && !mBarRect.IsEmpty()) {
       // paint the overline bar
       const nsStyleColor *color = NS_STATIC_CAST(const nsStyleColor*,
         mStyleContext->GetStyleData(eStyleStruct_Color));
@@ -231,6 +231,9 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
   nscoord ruleThickness, leading, em;
   GetRuleThickness(renderingContext, fm, ruleThickness);
 
+  nsBoundingMetrics bmOne;
+  renderingContext.GetBoundingMetrics(NS_LITERAL_STRING("1").get(), 1, bmOne);
+
   // get the leading to be left at the top of the resulting frame
   // this seems more reliable than using fm->GetLeading() on suspicious fonts               
   GetEmHeight(fm, em);
@@ -244,7 +247,11 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
   else
     phi = ruleThickness;
   psi = ruleThickness + phi/4;
-  
+
+  // built-in: adjust clearance psi to emulate \mathstrut using '1' (TexBook, p.131)
+  if (bmOne.ascent > bmBase.ascent)
+    psi += bmOne.ascent - bmBase.ascent;
+
   // Stretch the radical symbol to the appropriate height if it is not big enough.
   nsBoundingMetrics contSize = bmBase;
   contSize.descent = bmBase.ascent + bmBase.descent + psi;
