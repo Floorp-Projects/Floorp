@@ -1228,7 +1228,7 @@ nsContainerFrame::PushChildren(nsIPresContext* aPresContext,
 }
 
 /**
- * Moves any frames on the overflwo lists (the prev-in-flow's overflow list and
+ * Moves any frames on the overflow lists (the prev-in-flow's overflow list and
  * the receiver's overflow list) to the child list.
  *
  * Updates this frame's child count and content mapping.
