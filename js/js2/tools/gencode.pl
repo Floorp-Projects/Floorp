@@ -430,7 +430,7 @@ sub collect {
 
             $printops_decl .= ($dec_list =~ /RegisterList/) ?
                                "const JSValues& registers" :
-                               "const JSValues& /*registers*/";
+                               "const JSValues& registers";
             $printops_decl .= ") {\n";
 
             $class_decs .= ($init_tab . $tab . 
@@ -582,7 +582,8 @@ sub get_printops_body {
     for $type (@types) {
 
         if ($type eq "TypedRegister") {
-            push (@oplist, "mOp$op.first");
+            push (@oplist, "getRegisterValue(registers, mOp$op.first)");
+#            push (@oplist, "mOp$op.first");
 #            push (@oplist, "\"R\" << mOp$op.first << '=' << registers[mOp$op.first]");
         } elsif ($type eq "RegisterList") {
             push (@oplist, "ArgList(mOp$op, registers)");
