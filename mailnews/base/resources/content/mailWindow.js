@@ -244,7 +244,6 @@ function nsMsgStatusFeedback()
 nsMsgStatusFeedback.prototype =
 {
   // global variables for status / feedback information....
-  startTime  : 0,
   statusTextFld : null,
   statusBar     : null,
   throbber      : null,
@@ -304,9 +303,6 @@ nsMsgStatusFeedback.prototype =
 
       //turn on stop button and menu
     this.stopCmd.removeAttribute("disabled");
-
-      // Remember when loading commenced.
-      this.startTime = (new Date()).getTime();
     },
   startMeteors : function()
     {
@@ -332,10 +328,7 @@ nsMsgStatusFeedback.prototype =
         gTimelineService.resetTimer("FolderLoading");
       }
       this.ensureStatusFields();
-      // Record page loading time.
-      var elapsed = ( (new Date()).getTime() - this.startTime ) / 1000;
-      var msg = gMessengerBundle.getFormattedString("documentDoneTime",
-                                                    [ elapsed ]);
+      var msg = gMessengerBundle.getString("documentDone");
       this.showStatusString(msg);
       defaultStatus = msg;
 

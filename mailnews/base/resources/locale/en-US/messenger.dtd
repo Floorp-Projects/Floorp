@@ -407,7 +407,7 @@ Rights Reserved.
 <!ENTITY throbber.tooltip "Go to the &vendorShortName; home page">
 
 <!-- Statusbar -->
-<!ENTITY  statusText.label "Document: Done">
+<!ENTITY  statusText.label "Done">
 <!ENTITY  unreadCountText.label "Unread: ">
 <!ENTITY  totalCountText.label " Total: ">
 
