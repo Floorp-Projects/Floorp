@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
+
+<!DOCTYPE window
+[
+<!ENTITY window.title "Addressing">
+<!ENTITY pane.title "Addressing">
+<!ENTITY pinpoint.label "Pinpoint Addressing">
+<!ENTITY lookFor.label "Look for addresses in the following">
+<!ENTITY padCheck.label "Address Books">
+<!ENTITY dirCheck.label "Directory Server">
+<!ENTITY nsbook.label "Netscape Phonebook">
+<!ENTITY mulFound.label "When there are multiple addresses found:">
+<!ENTITY showList.label "Show me a list of choices">
+<!ENTITY acceptList.label "Accept what I have typed">
+<!ENTITY oneMatch.label "If there is one match in your personal address books:">
+<!ENTITY useAddress.label "Use the address and do not search in the directory">
+<!ENTITY displayFullname.label "When displaying full names:">
+<!ENTITY useDisplayName.label "Show names using display name (from address book card)">
+<!ENTITY useLastFirst.label "Show names using last name, first name">
+]>
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		onload="StartUp('Mailnews-Main')" >
+
+<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
+
+<html:div flex="100%">
+	<html:div id="top">
+		<html:span id="lefttext">&pane.title;</html:span>
+	</html:div>
+
+&pinpoint.label;
+<html:form>
+	<html:table>
+	<html:tr><html:td>&lookFor.label;</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input type="checkbox"/>&padCheck.label;
+		</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input type="checkbox"/>&dirCheck.label;
+		</html:td></html:tr>
+		<html:tr><html:td>
+			<html:select>
+			<html:option>&nsbook.label;</html:option>
+			</html:select>
+		</html:td></html:tr>
+	<html:tr><html:td>&mulFound.label;</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input name="multilist" type="radio"/>&showList.label;
+		</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input name="multilist" type="radio"/>&acceptList.label;
+		</html:td></html:tr>
+		<html:tr><html:td>&oneMatch.label;</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input type="checkbox"/>&useAddress.label;
+		</html:td></html:tr>
+	</html:table>
+</html:form>
+
+&displayFullname.label;
+<html:form>
+	<html:table>
+		<html:tr><html:td>
+			<html:input name="displayname" type="radio" id="pref:0:int:mail.addr_book.lastnamefirst" checked="true"/>&useDisplayName.label;
+		</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input name="displayname" type="radio" id="pref:1:int:mail.addr_book.lastnamefirst"/>&useLastFirst.label;
+		</html:td></html:tr>
+	</html:table>
+</html:form>
+
+</html:div>
+</window>
