@@ -30,6 +30,8 @@ var ERR_LENGTH = '\nERROR !!! match arrays have different lengths:';
 var ERR_MATCH = '\nERROR !!! regexp failed to give expected match array:';
 var ERR_NO_MATCH = '\nERROR !!! regexp FAILED to match anything !!!';
 var ERR_UNEXP_MATCH = '\nERROR !!! regexp MATCHED when we expected it to fail !!!';
+var CHAR_LBRACKET = '[';
+var CHAR_RBRACKET = ']';
 var CHAR_QT = "'";
 var CHAR_NL = '\n';
 
@@ -126,18 +128,51 @@ function testRegExp(statuses, patterns, strings, actualmatches, expectedmatches)
 function getState(status, pattern, string)
 {
   /*
-   * Escape \n's to make them LITERAL \n's in the presentation string.
+   * Escape \n's, etc. to make them LITERAL in the presentation string.
    * We don't have to worry about this in |pattern|; such escaping is
    * done automatically by pattern.toString(), invoked implicitly below.
+   *
+   * One would like to simply do: string = string.replace(/\s/g, '\$1').
+   * However, the backreference $1 is not a literal string value, 
+   * so this method doesn't work.
+   *
+   * Also tried string = string.replace(/\s/g, escape('$1'));
+   * but such a presentation is in hexadecimal form...
    */
   string = string.replace(/\n/g, '\\n');
+  string = string.replace(/\r/g, '\\r');
+  string = string.replace(/\t/g, '\\t');
+  string = string.replace(/\v/g, '\\v');
+  string = string.replace(/\f/g, '\\f');
+
   return (status + MSG_PAT + pattern + MSG_STR + quote(string));
 }
 
 
+/*
+ * If available, arr.toSource() gives more detail than arr.toString()
+ *
+ * var arr = Array(1,2,'3');
+ *
+ * arr.toSource()
+ * [1, 2, "3"]
+ *
+ * arr.toString()
+ * 1,2,3
+ *
+ * But toSource() doesn't exist in Rhino - so branch on this -
+ *
+ */
 function formatArray(arr)
 {
-  return arr.toSource();
+  try
+  {
+    return arr.toSource();
+  }
+  catch(e)
+  {
+    return CHAR_LBRACKET + arr.toString() + CHAR_RBRACKET;
+  }
 }
 
 
