@@ -37,7 +37,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile,v 1.17 2001/10/09 23:51:36 nelsonb%netscape.com Exp $
+## $Id: Makefile,v 1.18 2002/09/27 01:23:28 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -112,10 +112,12 @@ ifeq ($(TARGET),v8plusSOLARIS)
 #Solaris 32
 SOLARIS_FPU_FLAGS = -fast -xO5 -xrestrict=%all -xdepend -xchip=ultra -xarch=v8plusa -KPIC -mt
 SOLARIS_ASM_FLAGS = -xchip=ultra -xarch=v8plusa -KPIC -mt 
-AS_OBJS = montmulfv8.o mpi_sparc.o mpv_sparcv8.o
+AS_OBJS += montmulfv8.o 
+AS_OBJS += mpi_sparc.o mpv_sparcv8.o
 #AS_OBJS = montmulf.o
 MPICMN += -DMP_ASSEMBLY_MULTIPLY 
-MPICMN += -DMP_USING_MONT_MULF -DMP_USE_UINT_DIGIT
+MPICMN += -DMP_USING_MONT_MULF 
+MPICMN += -DMP_USE_UINT_DIGIT
 MPICMN += -DMP_NO_MP_WORD
 CFLAGS=-O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
  -DSOLARIS2_6 -D_SVID_GETTOD -xarch=v8plus -DXP_UNIX $(MPICMN)
@@ -135,12 +137,35 @@ CFLAGS=-O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
  -DSOLARIS2_6 -D_SVID_GETTOD -xarch=v8 -DXP_UNIX $(MPICMN)
 endif
 
+ifeq ($(TARGET),ia64HPUX)
+#HPUX 32 on ia64  -- 64 bit digits SCREAM.
+# This one is for DD32 which is the 32-bit ABI with 64-bit registers.
+CFLAGS= +O3 -DHPUX10 -D_POSIX_C_SOURCE=199506L -Aa +Z -DHPUX -Dhppa \
+ -D_HPUX_SOURCE -Aa +e -z +p +DD32 -DHPUX11 -DXP_UNIX -Wl,+k $(MPICMN)
+#CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Aa +Z -DHPUX -Dhppa \
+ -D_HPUX_SOURCE -Aa +e -z +p +DD32 -DHPUX11 -DXP_UNIX -Wl,+k $(MPICMN)
+#CFLAGS= -g -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
+ -D_HPUX_SOURCE -Aa +e -z +p +DD32 -DHPUX11 -DXP_UNIX -Wl,+k $(MPICMN)
+endif
+
+ifeq ($(TARGET),ia64HPUX64)
+#HPUX 32 on ia64
+# This one is for DD64 which is the 64-bit ABI 
+CFLAGS= +O3 -DHPUX10 -D_POSIX_C_SOURCE=199506L -Aa +Z -DHPUX -Dhppa \
+ -D_HPUX_SOURCE -Aa +e -z +p +DD64 -DHPUX11 -DXP_UNIX -Wl,+k $(MPICMN)
+#CFLAGS= -g -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
+ -D_HPUX_SOURCE -Aa +e -z +p +DD64 -DHPUX11 -DXP_UNIX -Wl,+k $(MPICMN)
+endif
+
 ifeq ($(TARGET),PA2.0WHPUX)
 #HPUX64 (HP PA 2.0 Wide) using MAXPY and 64-bit digits
 MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
 AS_OBJS = mpi_hp.o hpma512.o hppa20.o 
 CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
  -D_HPUX_SOURCE -Aa +e -z +DA2.0W +DS2.0 +O3 +DChpux -DHPUX11  -DXP_UNIX \
+ $(MPICMN)
+#CFLAGS= -g -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
+ -D_HPUX_SOURCE -Aa +e -z +DA2.0W +DS2.0 +DChpux -DHPUX11  -DXP_UNIX \
  $(MPICMN)
 AS = $(CC) $(CFLAGS) -c
 endif
@@ -150,8 +175,8 @@ ifeq ($(TARGET),PA2.0NHPUX)
 # This one is for DA2.0 (N) which is the 32-bit ABI with 64-bit registers.
 MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
 AS_OBJS = mpi_hp.o hpma512.o hppa20.o 
-CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
- -D_HPUX_SOURCE -Aa +e -z +DA2.0 +DS2.0 +O3 +DChpux -DHPUX11  -DXP_UNIX \
+CFLAGS= +O3 -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
+ -D_HPUX_SOURCE -Aa +e -z +DA2.0 +DS2.0 +DChpux -DHPUX11  -DXP_UNIX \
  -Wl,+k $(MPICMN)
 #CFLAGS= -g -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
  -D_HPUX_SOURCE -Aa +e -z +DA2.0 +DS2.0 +DChpux -DHPUX11  -DXP_UNIX \
