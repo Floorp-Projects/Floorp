@@ -418,13 +418,13 @@ MultiweekView.prototype.getToDoBox = function multiweekView_getToDoBox( calendar
   var eventBox = document.createElement( "box" );
   eventBox.setAttribute( "id", "multiweek-view-todo-box-"+calendarToDo.id );
   eventBox.setAttribute( "name", "multiweek-view-todo-box-"+calendarToDo.id );
-  eventBox.setAttribute( "event"+calendarToDo.id, true );
+//  eventBox.setAttribute( "event"+calendarToDo.id, true );
   eventBox.setAttribute( "class", "multiweek-day-event-box-class" );
 
-  if( calendarToDo.categories && calendarToDo.categories != "" )
-  {
-    eventBox.setAttribute( calendarToDo.categories, "true" );
-  }
+//   if( calendarToDo.categories && calendarToDo.categories != "" )
+//   {
+//     eventBox.setAttribute( calendarToDo.categories, "true" );
+//   }
             
   eventBox.setAttribute( "todobox", "multiweekview" );
   eventBox.setAttribute( "onclick", "multiweekToDoBoxClickEvent( this, event )" );
