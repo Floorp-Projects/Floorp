@@ -135,8 +135,7 @@ static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
-
-
+static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
@@ -203,7 +202,6 @@ nsHTMLDocument::nsHTMLDocument()
   mLastBlockSearchOffset = 0;
   mAdjustToEnd           = PR_FALSE;
   mShouldMatchCase       = PR_FALSE;
-  mIsPreTag              = PR_FALSE;
 
   mHoldBlockContent      = nsnull;
 
@@ -2693,14 +2691,6 @@ static PRBool IsInline(eHTMLTags aTag)
 }
 
 //----------------------------
-static PRBool IsBlockLevel(eHTMLTags aTag, PRBool &isPreTag)
-{
-  isPreTag = (aTag == eHTMLTag_pre);
-
-  return !IsInline(aTag);
-}
-
-//----------------------------
 class SubText {
 public:
   nsIDOMNode * mContentNode;
@@ -2919,39 +2909,42 @@ PRBool nsHTMLDocument::SearchBlock(BlockText  & aBlockText,
   return found;
 }
 
-static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
-
-////////////////////////////////////////////////////
-// Check to see if a Content node is a block tag
-////////////////////////////////////////////////////
-PRBool nsHTMLDocument::NodeIsBlock(nsIDOMNode * aNode) 
+///////////////////////////////////////////////////////
+// Check to see if a Content node is a block tag.
+// We need to treat pre nodes as inline for selection
+// purposes even though they're really block nodes.
+///////////////////////////////////////////////////////
+PRBool nsHTMLDocument::NodeIsBlock(nsIDOMNode * aNode, PRBool aPreIsBlock) const
 {
-  PRBool isBlock = PR_FALSE;
-
   nsIDOMElement* domElement;
   nsresult rv = aNode->QueryInterface(kIDOMElementIID,(void **)&domElement);
-  if (NS_OK != rv) {
-    return isBlock;
-  }
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
   nsAutoString tagName;
   domElement->GetTagName(tagName);
   NS_RELEASE(domElement);
 
-  // XXX Should be done at a higher level than this routine
-  // since getting the service is not the cheapest operation.
-  // Waiting for mjudge to tell me where since it looks like
-  // this code is still in development.
+  if (!mParserService)
+  {
+    nsIParserService* parserService;
+    if (NS_FAILED(nsServiceManager::GetService(kParserServiceCID,
+                                               NS_GET_IID(nsIParserService),
+                                               (nsISupports**)&parserService))
+        || !parserService)
+      return PR_FALSE;
 
-  NS_WITH_SERVICE(nsIParserService, service, kParserServiceCID, &rv);
-
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 id;
-    
-    service->HTMLStringTagToId(tagName, &id);
-    isBlock = IsBlockLevel(nsHTMLTag(id), mIsPreTag);
+    // Wish mParserService could be mutable:
+    NS_CONST_CAST(nsHTMLDocument* , this)->mParserService = parserService;
   }
 
-  return isBlock;
+  PRInt32 id;
+  mParserService->HTMLStringTagToId(tagName, &id);
+
+  if (id == eHTMLTag_pre)
+    return aPreIsBlock;
+
+  return !IsInline(nsHTMLTag(id));
 }
 
 /////////////////////////////////////////////
@@ -3676,7 +3669,16 @@ nsHTMLDocument::IsInSelection(nsIDOMSelection* aSelection,
   if (retval)
     return retval;
 
-  return nsDocument::IsInSelection(aSelection, aContent);
+  // If it's a block node, return true if the node itself
+  // is in the selection.  If it's inline, return true if
+  // the node or any of its children is in the selection.
+  nsCOMPtr<nsIDOMNode> node (do_QueryInterface((nsIContent*)aContent));
+  if (NodeIsBlock(node, PR_FALSE))
+    aSelection->ContainsNode(node, PR_FALSE, &retval);
+  else
+    aSelection->ContainsNode(node, PR_TRUE, &retval);
+
+  return retval;
 }
 
 

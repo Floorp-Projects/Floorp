@@ -39,6 +39,7 @@ class nsIHTMLCSSStyleSheet;
 class nsIParser;
 class BlockText;
 class nsICSSLoader;
+class nsIParserService;
 
 class nsHTMLDocument : public nsMarkupDocument,
                        public nsIHTMLDocument,
@@ -145,7 +146,7 @@ protected:
                      nsString     & aStr,
                      nsIDOMNode * aCurrentBlock);
 
-  PRBool NodeIsBlock(nsIDOMNode * aNode);
+  PRBool NodeIsBlock(nsIDOMNode * aNode, PRBool aPreIsBlock = PR_TRUE) const;
   nsIDOMNode * FindBlockParent(nsIDOMNode * aNode, 
                                PRBool aSkipThisContent = PR_FALSE);
 
@@ -177,7 +178,6 @@ protected:
   nsIDOMNode * mBodyContent;
 
   PRBool       mShouldMatchCase;
-  PRBool       mIsPreTag;
 
 protected:
   static PRIntn RemoveStrings(PLHashEntry *he, PRIntn i, void *arg);
@@ -234,6 +234,9 @@ protected:
   PLHashTable *mNamedItems;
 
   nsIParser *mParser;
+
+  // The parser service -- used for NodeIsBlock:
+  nsCOMPtr<nsIParserService> mParserService;
 
   PRUint32 mIsWriting : 1;
   PRUint32 mWriteLevel : 31;
