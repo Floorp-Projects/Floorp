@@ -38,7 +38,7 @@
 //static const char* kCallFindChar =  "For better performance, call FindChar() for targets whose length==1.";
 //static const char* kCallRFindChar = "For better performance, call RFindChar() for targets whose length==1.";
 
-static const PRUnichar gCommonEmptyBuffer[1];
+static const PRUnichar gCommonEmptyBuffer[1] = {0};
 
 /**
  * This method initializes all the members of the nsStr structure 
