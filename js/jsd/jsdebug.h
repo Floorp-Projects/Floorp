@@ -235,6 +235,18 @@ extern JSD_PUBLIC_API(JSDScript*)
 JSD_IterateScripts(JSDContext* jsdc, JSDScript **iterp);
 
 /*
+* Get the JSScript for a JSDScript
+*/
+extern JSD_PUBLIC_API(JSScript*)
+JSD_GetJSScript(JSDContext* jsdc, JSDScript *script);
+
+/*
+* Get the JSFunction for a JSDScript
+*/
+extern JSD_PUBLIC_API(JSFunction*)
+JSD_GetJSFunction(JSDContext* jsdc, JSDScript *script);
+     
+/*
 * Set the private data for this script, returns previous value
 */
 extern JSD_PUBLIC_API(void *)

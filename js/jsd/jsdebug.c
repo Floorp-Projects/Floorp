@@ -142,6 +142,18 @@ JSD_IterateScripts(JSDContext* jsdc, JSDScript **iterp)
     return jsd_IterateScripts(jsdc, iterp);
 }
 
+JSD_PUBLIC_API(JSScript*)
+JSD_GetJSScript(JSDContext* jsdc, JSDScript *script)
+{
+    return jsd_GetJSScript(jsdc, script);
+}
+
+JSD_PUBLIC_API(JSFunction*)
+JSD_GetJSFunction(JSDContext* jsdc, JSDScript *script)
+{
+    return jsd_GetJSFunction (jsdc, script);
+}
+
 JSD_PUBLIC_API(void *)
 JSD_SetScriptPrivate(JSDScript *jsdscript, void *data)
 {

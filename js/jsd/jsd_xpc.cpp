@@ -34,7 +34,9 @@
  */
 
 #include "jsd_xpc.h"
+#include "jsdbgapi.h"
 #include "jscntxt.h"
+#include "jsfun.h"
 
 #include "nsIXPConnect.h"
 #include "nsIGenericFactory.h"
@@ -55,6 +57,11 @@
 #include "nsIAppShell.h"
 #include "nsIJSContextStack.h"
 
+/* XXX
+ * defining CAUTIOUS_SCRIPTHOOK makes jsds disable GC while calling out to the
+ * script hook.  This is a hack to avoid some js engine problems that I havn't
+ * properly tracked down.  I'm lame.
+ */
 #define CAUTIOUS_SCRIPTHOOK
 
 #ifdef DEBUG_verbose
@@ -424,16 +431,17 @@ jsds_NotifyPendingDeadScripts (JSContext *cx)
 {
     nsCOMPtr<jsdIScriptHook> hook = 0;   
     gJsds->GetScriptHook (getter_AddRefs(hook));
-    if (hook)
-    {
-        DeadScript *ds;
+
+    DeadScript *ds;
 #ifdef CAUTIOUS_SCRIPTHOOK
-        JSRuntime *rt = JS_GetRuntime(cx);
+    JSRuntime *rt = JS_GetRuntime(cx);
 #endif
-        gJsds->Pause(nsnull);
-        do {
-            ds = gDeadScripts;
-            
+    gJsds->Pause(nsnull);
+    do {
+        ds = gDeadScripts;
+        
+        if (hook)
+        {
             /* tell the user this script has been destroyed */
 #ifdef CAUTIOUS_SCRIPTHOOK
             JS_DISABLE_GC(rt);
@@ -442,19 +450,19 @@ jsds_NotifyPendingDeadScripts (JSContext *cx)
 #ifdef CAUTIOUS_SCRIPTHOOK
             JS_ENABLE_GC(rt);
 #endif
-            /* get next deleted script */
-            gDeadScripts = NS_REINTERPRET_CAST(DeadScript *,
-                                               PR_NEXT_LINK(&ds->links));
-            /* take ourselves out of the circular list */
-            PR_REMOVE_LINK(&ds->links);
-            /* addref came from the FromPtr call in jsds_ScriptHookProc */
-            NS_RELEASE(ds->script);
-            /* free the struct! */
-            PR_Free(ds);
-        } while (&gDeadScripts->links != &ds->links);
-        /* keep going until we catch up with our tail */
-        gJsds->UnPause(nsnull);
-    }
+        }
+        /* get next deleted script */
+        gDeadScripts = NS_REINTERPRET_CAST(DeadScript *,
+                                           PR_NEXT_LINK(&ds->links));
+        /* take ourselves out of the circular list */
+        PR_REMOVE_LINK(&ds->links);
+        /* addref came from the FromPtr call in jsds_ScriptHookProc */
+        NS_RELEASE(ds->script);
+        /* free the struct! */
+        PR_Free(ds);
+    } while (&gDeadScripts->links != &ds->links);
+    /* keep going until we catch up with our tail */
+    gJsds->UnPause(nsnull);
     gDeadScripts = 0;
 }
 
@@ -586,12 +594,15 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
     JSRuntime *rt = JS_GetRuntime(cx);
 #endif
 
+    nsCOMPtr<jsdIScriptHook> hook;
+    gJsds->GetScriptHook (getter_AddRefs(hook));
+    
     if (creating) {
-        jsdIScriptHook *hook = 0;
-        
-        gJsds->GetScriptHook (&hook);
-        if (!hook)
+        /* a script is being created */
+        if (!hook) {
+            /* nobody cares, just exit */
             return;
+        }
             
         nsCOMPtr<jsdIScript> script = 
             getter_AddRefs(jsdScript::FromPtr(jsdc, jsdscript));
@@ -605,41 +616,42 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
         JS_ENABLE_GC(rt);
 #endif
     } else {
+        /* a script is being destroyed.  even if there is no registered hook
+         * we'll still need to invalidate the jsdIScript record, in order
+         * to remove the reference held in the JSDScript private data. */
+        nsCOMPtr<jsdIScript> jsdis = 
+            NS_STATIC_CAST(jsdIScript *, JSD_GetScriptPrivate(jsdscript));
+        if (!jsdis)
+            return;
         
-        jsdIScript *jsdis = jsdScript::FromPtr(jsdc, jsdscript);
-        /* the initial addref is owned by the DeadScript record */
         jsdis->Invalidate();
-
+        if (!hook)
+            return;
+        
         if (gGCStatus == JSGC_END) {
             /* if GC *isn't* running, we can tell the user about the script
              * delete now. */
-            nsCOMPtr<jsdIScriptHook> hook = 0;   
-            gJsds->GetScriptHook (getter_AddRefs(hook));
-            if (hook) {
 #ifdef CAUTIOUS_SCRIPTHOOK
-                JS_DISABLE_GC(rt);
+            JS_DISABLE_GC(rt);
 #endif
                 
-                gJsds->Pause(nsnull);
-                hook->OnScriptDestroyed (jsdis);
-                gJsds->UnPause(nsnull);
+            gJsds->Pause(nsnull);
+            hook->OnScriptDestroyed (jsdis);
+            gJsds->UnPause(nsnull);
 #ifdef CAUTIOUS_SCRIPTHOOK
-                JS_ENABLE_GC(rt);
+            JS_ENABLE_GC(rt);
 #endif
-            }
         } else {
             /* if a GC *is* running, we've got to wait until it's done before
              * we can execute any JS, so we queue the notification in a PRCList
              * until GC tells us it's done. See jsds_GCCallbackProc(). */
             DeadScript *ds = PR_NEW(DeadScript);
-            if (!ds) {
-                NS_RELEASE(jsdis);
+            if (!ds)
                 return; /* NS_ERROR_OUT_OF_MEMORY */
-            }
         
             ds->jsdc = jsdc;
             ds->script = jsdis;
-        
+            NS_ADDREF(ds->script);
             if (gDeadScripts)
                 /* if the queue exists, add to it */
                 PR_APPEND_LINK(&ds->links, &gDeadScripts->links);
@@ -649,9 +661,7 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
                 gDeadScripts = ds;
             }
         }
-    }
-    
-            
+    }            
 }
 
 /*******************************************************************************
@@ -721,16 +731,6 @@ jsdObject::GetValue(jsdIValue **_rval)
     JSDValue *jsdv = JSD_GetValueForObject (mCx, mObject);
     
     *_rval = jsdValue::FromPtr (mCx, jsdv);
-    return NS_OK;
-}
-
-/* PC */
-NS_IMPL_THREADSAFE_ISUPPORTS1(jsdPC, jsdIPC); 
-
-NS_IMETHODIMP
-jsdPC::GetPc(jsuword *_rval)
-{
-    *_rval = mPC;
     return NS_OK;
 }
 
@@ -837,12 +837,15 @@ jsdProperty::GetVarArgSlot(PRUint32 *_rval)
 NS_IMPL_THREADSAFE_ISUPPORTS2(jsdScript, jsdIScript, jsdIEphemeral); 
 
 jsdScript::jsdScript (JSDContext *aCx, JSDScript *aScript) : mValid(PR_FALSE),
+                                                             mTag(0),
                                                              mCx(aCx),
                                                              mScript(aScript),
                                                              mFileName(0), 
                                                              mFunctionName(0),
                                                              mBaseLineNumber(0),
-                                                             mLineExtent(0)
+                                                             mLineExtent(0),
+                                                             mPPLineMap(0),
+                                                             mFirstPC(0)
 {
     DEBUG_CREATE ("jsdScript", gScriptCount);
     NS_INIT_ISUPPORTS();
@@ -856,6 +859,7 @@ jsdScript::jsdScript (JSDContext *aCx, JSDScript *aScript) : mValid(PR_FALSE),
             new nsCString(JSD_GetScriptFunctionName(mCx, mScript));
         mBaseLineNumber = JSD_GetScriptBaseLineNumber(mCx, mScript);
         mLineExtent = JSD_GetScriptLineExtent(mCx, mScript);
+        mFirstPC = JSD_GetClosestPC(mCx, mScript, 0);
         JSD_UnlockScriptSubsystem(mCx);
         
         mValid = PR_TRUE;
@@ -869,12 +873,123 @@ jsdScript::~jsdScript ()
         delete mFileName;
     if (mFunctionName)
         delete mFunctionName;
-    
+
+    if (mPPLineMap)
+        PR_Free(mPPLineMap);
+
     /* Invalidate() needs to be called to release an owning reference to
      * ourselves, so if we got here without being invalidated, something
      * has gone wrong with our ref count. */
     NS_ASSERTION (!mValid, "Script destroyed without being invalidated.");
+}
+
+/*
+ * This method populates a line <-> pc map for a pretty printed version of this
+ * script.  It does this by decompiling, and then recompiling the script.  The
+ * resulting script is scanned for the line map, and then left as GC fodder.
+ */
+PCMapEntry *
+jsdScript::CreatePPLineMap()
+{    
+    JSContext  *cx  = JSD_GetDefaultJSContext (mCx);
+    JSObject   *obj = JS_NewObject(cx, NULL, NULL, NULL);
+    JSFunction *fun = JSD_GetJSFunction (mCx, mScript);
+    JSScript   *script;
+    PRUint32    baseLine;
+    PRBool      scriptOwner = PR_FALSE;
     
+    if (fun) {
+        if (fun->nargs > 8)
+            return 0;
+        JSString *jsstr = JS_DecompileFunctionBody (cx, fun, 4);
+        if (!jsstr)
+            return 0;
+    
+        const char *argnames[] = {"arg1", "arg2", "arg3", "arg4", 
+                                  "arg5", "arg6", "arg7", "arg8",
+                                  "arg9", "arg10", "arg11", "arg12" };
+        fun = JS_CompileUCFunction (cx, obj, "ppfun", fun->nargs, argnames,
+                                    JS_GetStringChars(jsstr),
+                                    JS_GetStringLength(jsstr),
+                                    "jsd:ppfun", 3);
+        if (!fun || !(script = JS_GetFunctionScript(cx, fun)))
+            return 0;
+        baseLine = 3;
+    } else {
+        JSString *jsstr = JS_DecompileScript (cx, JSD_GetJSScript(mCx, mScript),
+                                              "ppscript", 4);
+        if (!jsstr)
+            return 0;
+
+        script = JS_CompileUCScript (cx, obj,
+                                     JS_GetStringChars(jsstr),
+                                     JS_GetStringLength(jsstr),
+                                     "jsd:ppscript", 1);
+        if (!script)
+            return 0;
+        scriptOwner = PR_TRUE;
+        baseLine = 1;
+    }
+        
+    PRUint32 scriptExtent = JS_GetScriptLineExtent (cx, script);
+    PRUint32 firstPC = (PRUint32) JS_LineNumberToPC (cx, script, 0);
+    /* allocate worst case size of map (number of lines in script + 1
+     * for our 0 record), we'll shrink it with a realloc later. */
+    mPPLineMap = 
+        NS_STATIC_CAST(PCMapEntry *,
+                       PR_Malloc((scriptExtent + 1) * sizeof (PCMapEntry)));
+    if (mPPLineMap) {             
+        mPCMapSize = 0;
+        for (PRUint32 line = baseLine; line < scriptExtent + baseLine; ++line) {
+            PRUint32 pc = (PRUint32) JS_LineNumberToPC (cx, script,
+                                                        line);
+            if (line == JS_PCToLineNumber (cx, script, (jsbytecode *)pc)) {
+                pc -= firstPC;
+                mPPLineMap[mPCMapSize].line = line;
+                mPPLineMap[mPCMapSize].pc = pc;
+                ++mPCMapSize;
+            }
+        }
+        if (scriptExtent != mPCMapSize) {
+            mPPLineMap =
+                NS_STATIC_CAST(PCMapEntry *,
+                               PR_Realloc(mPPLineMap,
+                                          mPCMapSize * sizeof(PCMapEntry)));
+        }
+    }
+
+    if (scriptOwner)
+        JS_DestroyScript (cx, script);
+
+    return mPPLineMap;
+}
+
+PRUint32
+jsdScript::PPPcToLine (PRUint32 aPC)
+{
+    if (!mPPLineMap && !CreatePPLineMap())
+        return 0;
+    PRUint32 i;
+    for (i = 1; i < mPCMapSize; ++i) {
+        if (mPPLineMap[i].pc > aPC)
+            return mPPLineMap[i - 1].line;            
+    }
+
+    return mPPLineMap[mPCMapSize - 1].line;
+}
+
+PRUint32
+jsdScript::PPLineToPc (PRUint32 aLine)
+{
+    if (!mPPLineMap && !CreatePPLineMap())
+        return 0;
+    PRUint32 i;
+    for (i = 1; i < mPCMapSize; ++i) {
+        if (mPPLineMap[i].line > aLine)
+            return mPPLineMap[i - 1].pc;
+    }
+
+    return mPPLineMap[mPCMapSize - 1].pc;
 }
 
 NS_IMETHODIMP
@@ -894,6 +1009,16 @@ jsdScript::GetJSDScript(JSDScript **_rval)
 }
 
 NS_IMETHODIMP
+jsdScript::GetTag(PRUint32 *_rval)
+{
+    if (!mTag)
+        mTag = ++jsdScript::LastTag;
+    
+    *_rval = mTag;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 jsdScript::Invalidate()
 {
     ASSERT_VALID_SCRIPT;
@@ -904,8 +1029,26 @@ jsdScript::Invalidate()
                                         JSD_GetScriptPrivate(mScript));
     NS_ASSERTION (script == this, "That's not my script!");
     NS_RELEASE(script);
-
+    JSD_SetScriptPrivate(mScript, NULL);
     return NS_OK;
+}
+
+void
+jsdScript::InvalidateAll ()
+{
+    JSDContext *cx;
+    gJsds->GetJSDContext (&cx);
+    JSDScript *script;
+    JSDScript *iter = NULL;
+    
+    JSD_LockScriptSubsystem(cx);
+    while((script = JSD_IterateScripts(cx, &iter)) != NULL) {
+        jsdIScript *jsdis = NS_STATIC_CAST(jsdIScript *,
+                                           JSD_GetScriptPrivate(script));
+        if (jsdis)
+            jsdis->Invalidate();
+    }
+    JSD_UnlockScriptSubsystem(cx);
 }
 
 NS_IMETHODIMP
@@ -930,6 +1073,30 @@ jsdScript::GetFunctionName(char **_rval)
 }
 
 NS_IMETHODIMP
+jsdScript::GetFunctionSource(nsAString & aFunctionSource)
+{
+    ASSERT_VALID_SCRIPT;
+    JSContext *cx = JSD_GetDefaultJSContext (mCx);
+    if (NS_WARN_IF_FALSE(cx, "No default context !?"))
+        return NS_ERROR_FAILURE;
+    JSFunction *fun = JSD_GetJSFunction (mCx, mScript);
+    JSString *jsstr;
+    if (fun)
+    {
+        jsstr = JS_DecompileFunction (cx, fun, 4);
+    }
+    else
+    {
+        JSScript *script = JSD_GetJSScript (mCx, mScript);
+        jsstr = JS_DecompileScript (cx, script, "ppscript", 4);
+    }
+    if (!jsstr)
+        return NS_ERROR_FAILURE;
+    aFunctionSource = JS_GetStringChars(jsstr);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 jsdScript::GetBaseLineNumber(PRUint32 *_rval)
 {
     *_rval = mBaseLineNumber;
@@ -944,55 +1111,75 @@ jsdScript::GetLineExtent(PRUint32 *_rval)
 }
 
 NS_IMETHODIMP
-jsdScript::PcToLine(jsdIPC *aPC, PRUint32 *_rval)
+jsdScript::PcToLine(PRUint32 aPC, PRUint32 aPcmap, PRUint32 *_rval)
 {
     ASSERT_VALID_SCRIPT;
-    jsuword pc;
-    aPC->GetPc(&pc);
-    *_rval = JSD_GetClosestLine (mCx, mScript, pc);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-jsdScript::LineToPc(PRUint32 aLine, jsdIPC **_rval)
-{
-    ASSERT_VALID_SCRIPT;
-    jsuword pc = JSD_GetClosestPC (mCx, mScript, aLine);
-    *_rval = jsdPC::FromPtr (pc);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-jsdScript::IsLineExecutable(PRUint32 aLine, PRBool *_rval)
-{
-    ASSERT_VALID_SCRIPT;
-    jsuword pc = JSD_GetClosestPC (mCx, mScript, aLine);
-    *_rval = (aLine == JSD_GetClosestLine (mCx, mScript, pc));
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-jsdScript::SetBreakpoint(jsdIPC *aPC)
-{
-    ASSERT_VALID_SCRIPT;
-    jsuword pc;
-    aPC->GetPc (&pc);
+    if (aPcmap == PCMAP_SOURCETEXT) {
+        *_rval = JSD_GetClosestLine (mCx, mScript, mFirstPC + aPC);
+    } else if (aPcmap == PCMAP_PRETTYPRINT) {
+        *_rval = PPPcToLine(aPC);
+    } else {
+        return NS_ERROR_INVALID_ARG;
+    }
     
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::LineToPc(PRUint32 aLine, PRUint32 aPcmap, PRUint32 *_rval)
+{
+    ASSERT_VALID_SCRIPT;
+    if (aPcmap == PCMAP_SOURCETEXT) {
+        jsuword pc = JSD_GetClosestPC (mCx, mScript, aLine);
+        *_rval = pc - mFirstPC;
+    } else if (aPcmap == PCMAP_PRETTYPRINT) {
+        *_rval = PPLineToPc(aLine);
+    } else {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::IsLineExecutable(PRUint32 aLine, PRUint32 aPcmap, PRBool *_rval)
+{
+    ASSERT_VALID_SCRIPT;
+    if (aPcmap == PCMAP_SOURCETEXT) {    
+        jsuword pc = JSD_GetClosestPC (mCx, mScript, aLine);
+        *_rval = (aLine == JSD_GetClosestLine (mCx, mScript, pc));
+    } else if (aPcmap == PCMAP_PRETTYPRINT) {
+        if (!mPPLineMap && !CreatePPLineMap())
+            return NS_ERROR_FAILURE;
+        *_rval = PR_FALSE;
+        for (PRUint32 i = 0; i < mPCMapSize; ++i) {
+            if (mPPLineMap[i].line >= aLine) {
+                *_rval = (mPPLineMap[i].line == aLine);
+                break;
+            }
+        }
+    } else {
+        return NS_ERROR_INVALID_ARG;
+    }
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::SetBreakpoint(PRUint32 aPC)
+{
+    ASSERT_VALID_SCRIPT;
+    jsuword pc = mFirstPC + aPC;
     JSD_SetExecutionHook (mCx, mScript, pc, jsds_ExecutionHookProc,
                           NS_REINTERPRET_CAST(void *, PRIVATE_TO_JSVAL(NULL)));
     return NS_OK;
 }
 
 NS_IMETHODIMP
-jsdScript::ClearBreakpoint(jsdIPC *aPC)
+jsdScript::ClearBreakpoint(PRUint32 aPC)
 {
     ASSERT_VALID_SCRIPT;    
-    if (!aPC)
-        return NS_ERROR_INVALID_ARG;
-    
-    jsuword pc;
-    aPC->GetPc (&pc);
-    
+    jsuword pc = mFirstPC + aPC;
     JSD_ClearExecutionHook (mCx, mScript, pc);
     return NS_OK;
 }
@@ -1070,12 +1257,17 @@ jsdStackFrame::GetScript(jsdIScript **_rval)
 }
 
 NS_IMETHODIMP
-jsdStackFrame::GetPc(jsdIPC **_rval)
+jsdStackFrame::GetPc(PRUint32 *_rval)
 {
     ASSERT_VALID_FRAME;
-    jsuword pc;
-    pc = JSD_GetPCForStackFrame (mCx, mThreadState, mStackFrameInfo);
-    *_rval = jsdPC::FromPtr (pc);
+    JSDScript *script = JSD_GetScriptForStackFrame (mCx, mThreadState,
+                                                    mStackFrameInfo);
+    jsuword pcbase = JSD_GetClosestPC(mCx, script, 0);
+    if (!script)
+        return NS_ERROR_FAILURE;
+    
+    jsuword pc = JSD_GetPCForStackFrame (mCx, mThreadState, mStackFrameInfo);
+    *_rval = pc - pcbase;
     return NS_OK;
 }
 
@@ -1425,6 +1617,13 @@ jsdValue::Refresh()
 NS_IMPL_THREADSAFE_ISUPPORTS1(jsdService, jsdIDebuggerService); 
 
 NS_IMETHODIMP
+jsdService::GetJSDContext(JSDContext **_rval)
+{
+    *_rval = mCx;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 jsdService::GetInitAtStartup (PRBool *_rval)
 {
     nsresult rv;
@@ -1587,8 +1786,8 @@ jsdService::OnForRuntime (JSRuntime *rt)
      */
     if (mThrowHook)
         JSD_SetThrowHook (mCx, jsds_ExecutionHookProc, NULL);
-    if (mScriptHook)
-        JSD_SetScriptHook (mCx, jsds_ScriptHookProc, NULL);
+    /* can't ignore script callbacks, as we need to |Release| the wrapper 
+     * stored in private data when a script is deleted. */
     if (mInterruptHook)
         JSD_SetInterruptHook (mCx, jsds_ExecutionHookProc, NULL);
     if (mDebuggerHook)
@@ -1635,12 +1834,12 @@ jsdService::Off (void)
         JS_SetGCCallbackRT (mRuntime, gLastGCProc);
     */
 
+    jsdScript::InvalidateAll();
     jsdValue::InvalidateAll();
     jsdProperty::InvalidateAll();
     ClearAllBreakpoints();
 
     JSD_ClearThrowHook (mCx);
-    JSD_SetScriptHook (mCx, NULL, NULL);
     JSD_ClearInterruptHook (mCx);
     JSD_ClearDebuggerHook (mCx);
     JSD_ClearDebugBreakHook (mCx);
@@ -1720,7 +1919,9 @@ jsdService::EnumerateScripts (jsdIScriptEnumerator *enumerator)
     
     JSD_LockScriptSubsystem(mCx);
     while((script = JSD_IterateScripts(mCx, &iter)) != NULL) {
-        rv = enumerator->EnumerateScript (jsdScript::FromPtr(mCx, script));
+        nsCOMPtr<jsdIScript> jsdis =
+            getter_AddRefs(jsdScript::FromPtr(mCx, script));
+        rv = enumerator->EnumerateScript (jsdis);
         if (NS_FAILED(rv))
             break;
     }
@@ -2098,9 +2299,9 @@ jsdService::SetScriptHook (jsdIScriptHook *aHook)
     
     if (aHook)
         JSD_SetScriptHook (mCx, jsds_ScriptHookProc, NULL);
-    else
-        JSD_SetScriptHook (mCx, NULL, NULL);
-    
+    /* we can't unset it if !aHook, because we still need to see script
+     * deletes in order to Release the jsdIScripts held in JSDScript
+     * private data. */
     return NS_OK;
 }
 

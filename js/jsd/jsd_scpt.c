@@ -248,6 +248,18 @@ jsd_FindJSDScript( JSDContext*  jsdc,
     return NULL;
 }               
 
+JSScript *
+jsd_GetJSScript (JSDContext *jsdc, JSDScript *script)
+{
+    return script->script;
+}
+
+JSFunction *
+jsd_GetJSFunction (JSDContext *jsdc, JSDScript *script)
+{
+    return script->function;
+}
+
 JSDScript*
 jsd_IterateScripts(JSDContext* jsdc, JSDScript **iterp)
 {
@@ -336,7 +348,7 @@ jsd_GetClosestPC(JSDContext* jsdc, JSDScript* jsdscript, uintN line)
 #endif
 
     return (jsuword) JS_LineNumberToPC(jsdc->dumbContext, 
-                                        jsdscript->script, line );
+                                       jsdscript->script, line );
 }
 
 uintN

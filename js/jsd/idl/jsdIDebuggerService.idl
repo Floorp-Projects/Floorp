@@ -75,6 +75,9 @@ interface jsdIProperty;
 [scriptable, uuid(01be7f9a-1dd2-11b2-9d55-aaf919b27c73)]
 interface jsdIDebuggerService : nsISupports
 {
+    /** Internal use only. */
+    [noscript] readonly attribute JSDContext        JSDContext;
+
     /**
      * Called when a jsdIScript is created or destroyed.
      */
@@ -120,7 +123,7 @@ interface jsdIDebuggerService : nsISupports
      * autostart pref may have turned the service on.
      */
     readonly attribute boolean isOn;
-    
+
     /**
      * Turn on the debugger.  This function should only be called from JavaScript
      * code.  The debugger will be enabled on the runtime the call is made on,
@@ -183,8 +186,7 @@ interface jsdIDebuggerService : nsISupports
      */
     void appendFilter (in jsdIFilter filter);
     /**
-     * Unignore execution hooks which are triggered by a jsdIScript matching
-     * particular filter.
+     * Remove a filter.
      *
      * If |filter| is not present this method throws NS_ERROR_INVALID_ARG.
      *
@@ -194,16 +196,15 @@ interface jsdIDebuggerService : nsISupports
      */
     void removeFilter (in jsdIFilter filter);
     /**
-     * Swaps the positions of the filters passed in.
+     * Swap position of two filters.
      * 
      * If |filter_a| is not present, this method throws NS_ERROR_INVALID_ARG.
      * If |filter_b| is not present, filter_a is replaced by filter_b.
-     * If |filter_a| == |filter_b|, then the glob and urlPattern properties of
-     * the filter are reread.
+     * If |filter_a| == |filter_b|, then filter is refreshed.
      */
     void swapFilters (in jsdIFilter filter_a, in jsdIFilter filter_b);
     /**
-     * Enumerate all active filters.  This routine refreshes each filter before
+     * Enumerate registered filters.  This routine refreshes each filter before
      * passing them on to the enumeration function.  Calling this with a null
      * |enumerator| is equivilant to jsdIService::refreshFilters.
      *
@@ -213,13 +214,13 @@ interface jsdIDebuggerService : nsISupports
     void enumerateFilters (in jsdIFilterEnumerator enumerator);
     /**
      * Force the debugger to resync its internal filter cache with the
-     * actual values in the jsdIFilter objects.  To refresh a single filter,
-     * see jsdIService::swapFilters.  This method is equivilant to
+     * actual values in the jsdIFilter objects.  To refresh a single filter
+     * use jsdIService::swapFilters.  This method is equivilant to
      * jsdIService::enumerateFilters with a null enumerator.
      */
     void refreshFilters ();
     /**
-     * Causes the debugger service to clear its list of filters.
+     * Clear the list of filters.
      */
     void clearFilters();
 
@@ -469,21 +470,6 @@ interface jsdIEphemeral : nsISupports
 /* handle objects */
 
 /**
- * XXX can't reflect the jsuword pc because it'll change sizes on 64 bit systems,
- * but we could represent all pcs as offsets, and store them in ulongs.  This
- * would allow us to get rid of jsdIPC, and simplify things in some places.  The
- * only tradeoff would be that scripts with more than 2^32 instructions would
- * have pc's we can't represent.  If you're script is that large, you need more
- * help than the debugger can provide.
- */
-[scriptable, uuid(e7c8ea2c-1dd1-11b2-9242-f2768e04e92e)]
-interface jsdIPC : nsISupports
-{
-    /** Internal use only. */
-    [noscript] readonly attribute jsuword pc;
-};
-
-/**
  * Stack frame objects.  These are only valid inside the jsdIExecutionHook which
  * gave it to you.  After you return from that handler the bottom frame, and any
  * frame you found attached through it, are invalidated via the jsdIEphemeral
@@ -511,7 +497,7 @@ interface jsdIStackFrame : jsdIEphemeral
     /**
      * Current program counter in this stack frame.
      */
-    readonly attribute jsdIPC         pc;
+    readonly attribute unsigned long  pc;
     /**
      * Current line number (using the script's pc to line map.)
      */
@@ -557,6 +543,12 @@ interface jsdIScript : jsdIEphemeral
     [noscript] readonly attribute JSDScript  JSDScript;
 
     /**
+     * Tag value guaranteed unique among jsdIScript objects.  Useful as a
+     * hash key in script.
+     */
+    readonly attribute unsigned long tag;
+    
+    /**
      * Filename given for this script when it was compiled.
      * This data is copied from the underlying structure when the jsdIScript
      * instance is created and is therefore available even after the script is
@@ -572,6 +564,10 @@ interface jsdIScript : jsdIEphemeral
      */
     readonly attribute string        functionName;
     /**
+     * Source code for this script, without function declaration.
+     */
+    readonly attribute AString functionSource;
+    /**
      * Line number in source file containing the first line of this script.
      * This data is copied from the underlying structure when the jsdIScript
      * instance is created and is therefore available even after the script is
@@ -586,27 +582,33 @@ interface jsdIScript : jsdIEphemeral
      */
     readonly attribute unsigned long lineExtent;
 
+    const unsigned long PCMAP_SOURCETEXT  = 1; /* map to actual source text    */
+    const unsigned long PCMAP_PRETTYPRINT = 2; /* map to pretty printed source */
+
     /**
      * Get the closest line number to a given PC.
+     * The |pcmap| argument specifies which pc to source line map to use.
      */
-    unsigned long pcToLine (in jsdIPC pc);
+    unsigned long pcToLine (in unsigned long pc, in unsigned long pcmap);
     /**
      * Get the first PC associated with a line.
+     * The |pcmap| argument specifies which pc to source line map to use.
      */
-    jsdIPC lineToPc (in unsigned long line);
+    unsigned long lineToPc (in unsigned long line, in unsigned long pcmap);
     /**
      * Determine is a particular line is executable, like checking that
      * lineToPc == pcToLine, except in one call.
+     * The |pcmap| argument specifies which pc to source line map to use.
      */
-    boolean isLineExecutable (in unsigned long line);
+    boolean isLineExecutable (in unsigned long line, in unsigned long pcmap);
     /**
      * Set a breakpoint at a PC in this script.
      */
-    void setBreakpoint (in jsdIPC pc);
+    void setBreakpoint (in unsigned long pc);
     /**
      * Clear a breakpoint at a PC in this script.
      */
-    void clearBreakpoint (in jsdIPC pc);
+    void clearBreakpoint (in unsigned long pc);
     /**
      * Clear all breakpoints set in this script.
      */
@@ -646,7 +648,7 @@ interface jsdIValue : jsdIEphemeral
     const unsigned long TYPE_BOOLEAN  = 0;
     /** Value is a primitive number that is too large to fit in an integer. */
     const unsigned long TYPE_DOUBLE   = 1;
-    /** Value is a number that fits into an integer. */
+    /** Value is a primitive number that fits into an integer. */
     const unsigned long TYPE_INT      = 2;
     /** Value is a function. */
     const unsigned long TYPE_FUNCTION = 3;
