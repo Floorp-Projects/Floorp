@@ -904,7 +904,7 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
             if NS_FAILED(rv)
             { 
                 // We got an error getting the DL folder from IC so try finding the user's Desktop folder
-                rv = GetOSXFolderType(kUserDomain, kSystemDesktopFolderType, getter_AddRefs(localFile));
+                rv = GetOSXFolderType(kUserDomain, kDesktopFolderType, getter_AddRefs(localFile));
             }
         }
         
