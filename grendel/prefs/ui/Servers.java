@@ -195,7 +195,7 @@ public class Servers extends JFrame {
     Vector ids = new Vector();
     IdentityArray idprefs = IdentityArray.GetMaster();
     for (int i=0; i<idprefs.size(); i++) {
-      ids.add(idprefs.get(i).getDescription());
+      ids.addElement(idprefs.get(i).getDescription());
     }
     cbIdent = new JComboBox(ids);
     cbIdent.setBounds(270,240,212,cbIdent.getPreferredSize().height);

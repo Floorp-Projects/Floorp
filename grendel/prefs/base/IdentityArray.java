@@ -82,7 +82,7 @@ public class IdentityArray {
   }
   
   public void add (IdentityStructure aIdentity) {
-    ids.add(aIdentity);
+    ids.addElement(aIdentity);
   }
   
   public void remove (int Index) {
