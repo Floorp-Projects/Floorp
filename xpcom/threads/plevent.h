@@ -473,6 +473,9 @@ struct PLEvent {
 #ifdef PL_POST_TIMINGS
     PRIntervalTime      postTime;
 #endif
+#ifdef XP_UNIX
+    unsigned long       id;
+#endif /* XP_UNIX */
     /* other fields follow... */
 };
 
@@ -506,6 +509,78 @@ PR_EXTERN(HWND)
     );
 
 #endif /* XP_PC */
+
+#ifdef XP_UNIX
+/* -----------------------------------------------------------------------
+** FUNCTION: PL_ProcessEventsBeforeID()
+**
+** DESCRIPTION:
+**
+** PL_ProcessEventsBeforeID() will process events in a native event
+** queue that have an id that is older than the ID passed in.
+**
+** INPUTS:
+**  PLEventQueue *aSelf
+**  unsigned long aID
+**
+** RETURNS:
+**  PRInt32 number of requests processed, -1 on error.
+**
+** RESTRICTIONS: Unix only (well, X based unix only)
+*/
+PR_EXTERN(PRInt32)
+PL_ProcessEventsBeforeID(PLEventQueue *aSelf, unsigned long aID);
+
+/* This prototype is a function that can be called when an event is
+   posted to stick an ID on it.  */
+
+typedef unsigned long
+(PR_CALLBACK *PLGetEventIDFunc)(void *aClosure);
+
+
+/* -----------------------------------------------------------------------
+** FUNCTION: PL_RegisterEventIDFunc()
+**
+** DESCRIPTION:
+**
+** This function registers a function for getting the ID on unix for
+** this event queue.
+**
+** INPUTS:
+**  PLEventQueue *aSelf
+**  PLGetEventIDFunc func
+**  void *aClosure
+**
+** RETURNS:
+**  void
+**
+** RESTRICTIONS: Unix only (well, X based unix only) */
+PR_EXTERN(void)
+PL_RegisterEventIDFunc(PLEventQueue *aSelf, PLGetEventIDFunc aFunc,
+                       void *aClosure);
+
+/* -----------------------------------------------------------------------
+** FUNCTION: PL_RegisterEventIDFunc()
+**
+** DESCRIPTION:
+**
+** This function unregisters a function for getting the ID on unix for
+** this event queue.
+**
+** INPUTS:
+**  PLEventQueue *aSelf
+**
+** RETURNS:
+**  void
+**
+** RESTRICTIONS: Unix only (well, X based unix only) */
+PR_EXTERN(void)
+PL_UnregisterEventIDFunc(PLEventQueue *aSelf);
+
+#endif /* XP_UNIX */
+
+
+/* ----------------------------------------------------------------------- */
 
 #if defined(NO_NSPR_10_SUPPORT)
 #else
