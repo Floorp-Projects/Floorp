@@ -97,6 +97,13 @@ iframe {
 
 /******** Box *******/
 
+hbox {
+  behavior: url(chrome://global/content/xulBindings.xml#hbox);
+}
+
+vbox {
+  behavior: url(chrome://global/content/xulBindings.xml#vbox);
+}
 
 /******* ToolBox & ToolBar *******/
 

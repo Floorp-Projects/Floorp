@@ -5,6 +5,12 @@
    xmlns:html="http://www.w3.org/TR/REC-html40"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
+  <binding id="hbox" extends="xul:box"/>
+
+  <binding id="vbox" extends="xul:box">
+    <content orient="vertical"/>
+  </binding>
+
   <binding id="thumb" extends="xul:box">
     <content>
       <xul:spring flex="1"/>
