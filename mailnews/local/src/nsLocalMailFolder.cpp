@@ -2738,7 +2738,7 @@ nsMsgLocalMailFolder::setSubfolderFlag(PRUnichar* aFolderName,
  	nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(folder);
 	if (!msgFolder) return NS_ERROR_FAILURE;
     
-	rv = msgFolder->SetFlag(MSG_FOLDER_FLAG_TRASH);
+	rv = msgFolder->SetFlag(flags);
 	if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
