@@ -35,7 +35,7 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.3 $ $Date: 2001/10/15 18:19:03 $ $Name:  $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.4 $ $Date: 2001/10/17 14:40:22 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -117,13 +117,6 @@ NSS_EXTERN NSSToken *
 nssTrustDomain_GetSymmetricKeyToken
 (
   NSSTrustDomain *td
-);
-
-NSS_EXTERN NSSCertificate *
-nssTrustDomain_FindCertificateByIdentifier
-(
-  NSSTrustDomain *td,
-  NSSItem *identifier
 );
 
 /* Certificate cache routines */

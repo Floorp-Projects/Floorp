@@ -35,7 +35,7 @@
 #define PKINSS3HACK_H
 
 #ifdef DEBUG
-static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pkinss3hack.h,v $ $Revision: 1.1 $ $Date: 2001/10/11 16:34:46 $ $Name:  $";
+static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pkinss3hack.h,v $ $Revision: 1.2 $ $Date: 2001/10/17 14:40:22 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKIT_H
@@ -63,6 +63,37 @@ STAN_AddNewSlotToDefaultTD
 
 NSS_EXTERN CERTCertificate *
 STAN_GetCERTCertificate(NSSCertificate *c);
+
+NSS_EXTERN NSSCertificate *
+STAN_GetNSSCertificate(CERTCertificate *c);
+
+/* This function is being put here because it is a hack for 
+ * PK11_FindCertFromNickname.
+ */
+NSS_EXTERN NSSCertificate *
+nssTrustDomain_FindBestCertificateByNicknameForToken
+(
+  NSSTrustDomain *td,
+  NSSToken *token,
+  NSSUTF8 *name,
+  NSSTime *timeOpt, /* NULL for "now" */
+  NSSUsage *usage,
+  NSSPolicies *policiesOpt /* NULL for none */
+);
+
+/* This function is being put here because it is a hack for 
+ * PK11_FindCertsFromNickname.
+ */
+NSS_EXTERN NSSCertificate **
+nssTrustDomain_FindCertificatesByNicknameForToken
+(
+  NSSTrustDomain *td,
+  NSSToken *token,
+  NSSUTF8 *name,
+  NSSCertificate *rvOpt[],
+  PRUint32 maximumOpt, /* 0 for no max */
+  NSSArena *arenaOpt
+);
 
 PR_END_EXTERN_C
 
