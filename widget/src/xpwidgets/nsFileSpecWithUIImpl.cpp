@@ -102,6 +102,10 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseOutputFile(
     SetFileWidgetFilterList(fileWidget, outMask, nsnull, nsnull);
 
     nsFileSpec spec;
+    // If there is a filespec specified, then start there.
+    if (GetFileSpec(&spec) != NS_ERROR_NOT_INITIALIZED)
+      fileWidget->SetDisplayDirectory(spec);
+    
     nsString winTitle(windowTitle);
 
     nsFileDlgResults result = fileWidget->PutFile(nsnull, winTitle, spec);
