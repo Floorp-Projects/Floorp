@@ -919,25 +919,25 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
 static nsFontCharSetInfo CP1251 =
 { "windows-1251", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88591 =
-{ "iso-8859-1", SingleByteConvert, 0 };
+{ "ISO-8859-1", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88592 =
-{ "iso-8859-2", SingleByteConvert, 0 };
+{ "ISO-8859-2", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88593 =
-{ "iso-8859-3", SingleByteConvert, 0 };
+{ "ISO-8859-3", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88594 =
-{ "iso-8859-4", SingleByteConvert, 0 };
+{ "ISO-8859-4", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88595 =
-{ "iso-8859-5", SingleByteConvert, 0 };
+{ "ISO-8859-5", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88596 =
-{ "iso-8859-6", SingleByteConvert, 0 };
+{ "ISO-8859-6", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88597 =
-{ "iso-8859-7", SingleByteConvert, 0 };
+{ "ISO-8859-7", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88598 =
-{ "iso-8859-8", SingleByteConvert, 0 };
+{ "ISO-8859-8", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88599 =
-{ "iso-8859-9", SingleByteConvert, 0 };
+{ "ISO-8859-9", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO885915 =
-{ "iso-8859-15", SingleByteConvert, 0 };
+{ "ISO-8859-15", SingleByteConvert, 0 };
 static nsFontCharSetInfo JISX0201 =
 { "jis_0201", SingleByteConvert, 1 };
 static nsFontCharSetInfo KOI8R =
