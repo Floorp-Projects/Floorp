@@ -26,7 +26,6 @@ LIBRARY_NAME	= nsprefm
 IS_COMPONENT	= 1
 
 CPPSRCS		= \
-		nsPMProgressDlg.cpp \
 		nsPrefMigration.cpp \
 		nsPrefMigrationFactory.cpp \
 		$(NULL)
