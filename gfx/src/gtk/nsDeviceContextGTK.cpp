@@ -766,10 +766,62 @@ ListFontProps(XFontStruct *aFont, Display *aDisplay)
 }
 #endif
 
+#define LOCATE_MINUS(pos, str)  { \
+   pos = str.FindChar('-'); \
+   if (pos < 0) \
+     return ; \
+  }
+#define NEXT_MINUS(pos, str) { \
+   pos = str.FindChar('-', pos+1); \
+   if (pos < 0) \
+     return ; \
+  }  
+ 
+static void
+AppendFontFFREName(nsString& aString, const char* aXLFDName)
+{
+  // convert fontname from XFLD to FFRE and append, ie. from
+  // -adobe-courier-medium-o-normal--14-140-75-75-m-90-iso8859-15
+  // to
+  // adobe-courier-iso8859-15
+  nsCAutoString nameStr(aXLFDName);
+  PRInt32 pos1, pos2;
+  // remove first '-' and everything before it. 
+  LOCATE_MINUS(pos1, nameStr);
+  nameStr.Cut(0, pos1+1);
+
+  // skip foundry and family name
+  LOCATE_MINUS(pos1, nameStr);
+  NEXT_MINUS(pos1, nameStr);
+  pos2 = pos1;
+
+  // find '-' just before charset registry
+  for (PRInt32 i=0; i < 10; i++) {
+    NEXT_MINUS(pos2, nameStr);
+  }
+
+  // remove everything in between
+  nameStr.Cut(pos1, pos2-pos1);
+
+  aString.AppendWithConversion(nameStr.get());
+}
+
 static void
 AppendFontName(XFontStruct* aFontStruct, nsString& aString, Display *aDisplay)
 {
   unsigned long pr = 0;
+  // we first append the FFRE name to reconstruct font more faithfully
+  unsigned long font_atom = gdk_atom_intern("FONT", FALSE);
+  ::XGetFontProperty(aFontStruct, font_atom, &pr);
+  if(pr) {
+    char* xlfdName = ::XGetAtomName(aDisplay, pr);
+    AppendFontFFREName(aString, xlfdName);
+    ::XFree(xlfdName);
+  }
+ 
+  aString.Append(NS_LITERAL_STRING(','));
+
+  // next, we need to append family name to cover more encodings.
   ::XGetFontProperty(aFontStruct, XA_FAMILY_NAME, &pr);
   if (!pr)
     ::XGetFontProperty(aFontStruct, XA_FULL_NAME, &pr);
@@ -877,12 +929,13 @@ nsSystemFontsGTK::GetSystemFontInfo(GtkStyle *aStyle, nsFont* aFont, float aPixe
     nsString& fontName = aFont->name;
     fontName.Truncate();
     for (;;) {
-      AppendFontName(*fontStructs, fontName, fontDisplay);
-      ++fontStructs;
+      // we need to append FFRE name instead of family name in this case
+      AppendFontFFREName(fontName, *fontNames);
+      ++fontNames;
       --numFonts;
       if (numFonts == 0)
         break;
-      fontName.Append(NS_LITERAL_STRING(","));
+      fontName.Append(PRUnichar(','));
     }
   }
   return NS_OK;
