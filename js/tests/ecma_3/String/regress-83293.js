@@ -92,7 +92,7 @@ function test()
   status = 'Section E of test';
   var strJim = 'aa$aa';
   strA = '$';
-  actual = strJim.replace(strA, strB);             // WRONG: 'aaZaa'
+  actual = strJim.replace(strA, strB);             // bug -> 'aaZaa'
   expect = strJim.replace(new RegExp(strA), strB); // expect 'aa$aaZ'
   reportCompare(expect, actual, status);
 
