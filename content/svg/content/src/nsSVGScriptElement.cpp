@@ -302,8 +302,10 @@ nsSVGScriptElement::GetScriptURI()
   nsIURI *uri = nsnull;
   nsAutoString src;
   mHref->GetAnimVal(src);
-  if (!src.IsEmpty())
-    NS_NewURI(&uri, src);
+  if (!src.IsEmpty()) {
+    nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+    NS_NewURI(&uri, src, nsnull, baseURI);
+  }
   return uri;
 }
 
