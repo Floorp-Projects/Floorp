@@ -45,13 +45,14 @@
     
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <!-- global dialog functions -->
-  <script type="application/x-javascript" src="chrome://editor/content/EdAdvancedEdit.js"/>
   <!-- element page functions -->
   <script type="application/x-javascript" src="chrome://editor/content/EdAEHTMLAttributes.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdAECSSAttributes.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdAEJSEAttributes.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/EdAEAttributes.js"/>
 
+  <!-- global dialog functions -->
+  <script type="application/x-javascript" src="chrome://editor/content/EdAdvancedEdit.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
 
@@ -78,19 +79,18 @@
         <tree id="HTMLATree" 
           class="AttributesTree inset" 
           flex="1"
-          tooltip="aTooltip" tooltiptext="Click on item to edit value"
-          onselect="SelectTreeItem(this)">
-          <treecols>
+          onselect="onSelectHTMLTreeItem();"
+          onclick="onSelectHTMLTreeItem();"
+          ondblclick="editHTMLAttributeValue(event.target);">
+          <treecolgroup>
             <treecol flex="35" width="0"/>
             <splitter class="tree-splitter"/>
             <treecol flex="65" width="0"/>
-          </treecols>
+          </treecolgroup>
           <treehead>
             <treerow>
-              <treecell class="treecell-header treecell-inset-header" label="&tree.attributeHeader.label;"
-                tooltip="aTooltip" tooltiptext="Click on item to edit value"/>
-              <treecell class="treecell-header treecell-inset-header" label="&tree.valueHeader.label;"
-                tooltip="aTooltip" tooltiptext="Click on item to edit value"/>
+              <treecell class="treecell-header treecell-inset-header" label="&tree.attributeHeader.label;"/>
+              <treecell class="treecell-header treecell-inset-header" label="&tree.valueHeader.label;"/>
             </treerow>
           </treehead>
           <treechildren id="HTMLAList" flex="1"/>
@@ -98,28 +98,40 @@
         <box valign="middle" autostretch="never" flex="1">
           <text class="label" value="&editAttribute.label;"/>
           <spring flex="1"/>
-          <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveAttribute('HTMLATree')"/>
+          <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveHTMLAttribute();"/>
         </box>
-        <box orient="vertical">
-          <spring class="spacer"/>
-          <titledbox orient="vertical">
-            <label value="&AddHTMLAttributeLabel.label;"/>
-            <box autostretch="never">
+        <grid>
+          <columns>
+            <column flex="1"/><column flex="1"/>
+          </columns>
+          <rows>
+            <row valign="bottom" equalsize="always">
               <text class="label" for="AddHTMLAttributeNameInput" value="&AttName.label;"/>
-              <textbox flex="1" id="AddHTMLAttributeNameInput" oninput="doHTMLEnabling()" onkeyup="if (event.keyCode == 13) onAddHTMLAttribute();"/>
               <text class="label" for="AddHTMLAttributeValueInput" value="&AttValue.label;"/>
-          	  <textbox flex="1" id="AddHTMLAttributeValueInput" oninput="doHTMLEnabling()" onkeyup="if (event.keyCode == 13) onAddHTMLAttribute();"/>
-              <button class="dialog" id="AddHTMLAttribute" oncommand="onAddHTMLAttribute()" label="&AddAttributeButton.label;" disabled="true"/>
-            </box>
-          </titledbox>
-        </box>
+            </row>
+            <row valign="middle" equalsize="always">
+              <!-- Lists are built at runtime -->
+              <menulist id="AddHTMLAttributeNameInput" editable="true" flex="1"
+                        oninput="onInputHTMLAttributeName();"
+                        onchange="onChangeHTMLAttribute();"/>
+              <deck id="AddHTMLAttributeValueDeck" flex="1" index="0">
+                <textbox id="AddHTMLAttributeValueTextbox" flex="1"
+                         oninput="onInputHTMLAttributeValue();"/>
+                <menulist id="AddHTMLAttributeValueMenulist" editable="true" flex="1"
+                          oninput="onInputHTMLAttributeValue();"/>
+              </deck>
+            </row>
+          </rows>
+        </grid>
       </box>
       <!-- ============================================================== -->
       <!--                         CSS Attributes                         -->
       <!-- ============================================================== -->
       <box flex="1" orient="vertical">
         <tree id="CSSATree" class="AttributesTree inset" flex="1"
-          onselect="SelectTreeItem(this)">
+          onselect="onSelectCSSTreeItem();"
+          onclick="onSelectCSSTreeItem();"
+          ondblclick="editCSSAttributeValue(event.target);">
           <treecolgroup>
             <treecol flex="35" width="0"/>
             <splitter class="tree-splitter"/>
@@ -136,28 +148,35 @@
         <box valign="middle" autostretch="never" flex="1">
           <text class="label" value="&editAttribute.label;"/>
           <spring flex="1"/>
-          <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveAttribute('CSSATree')"/>
+          <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveCSSAttribute();"/>
         </box>
-        <box orient="vertical">
-          <spring class="spacer"/>
-          <titledbox orient="vertical">
-            <label value="&AddCSSAttributeLabel.label;"/>
-            <box autostretch="never">
-              <text class="label" for="AddCSSAttributeNameInput" value="&AttName.label;"/>
-              <textbox flex="1" id="AddCSSAttributeNameInput"  oninput="doCSSEnabling()" onkeyup="if (event.keyCode == 13) onAddCSSAttribute();"/>
+        <grid>
+          <columns>
+            <column flex="1"/><column flex="1"/>
+          </columns>
+          <rows>
+            <row valign="bottom" equalsize="always">
+              <text class="label" for="AddCSSAttributeNameInput"  value="&AttName.label;"/>
               <text class="label" for="AddCSSAttributeValueInput" value="&AttValue.label;"/>
-          	  <textbox flex="1" id="AddCSSAttributeValueInput" oninput="doCSSEnabling()" onkeyup="if (event.keyCode == 13) onAddCSSAttribute();"/>
-              <button class="dialog" id="AddCSSAttribute" oncommand="onAddCSSAttribute()" label="&AddAttributeButton.label;" disabled="true"/>
-            </box>
-          </titledbox>
-        </box>
+            </row>
+            <row valign="middle" equalsize="always">
+              <textbox id="AddCSSAttributeNameInput" flex="1"
+                oninput="onInputCSSAttributeName();"
+                onchange="onChangeCSSAttribute();"/>
+          	  <textbox id="AddCSSAttributeValueInput" flex="1"
+                oninput="onInputCSSAttributeValue();"/>
+            </row>
+          </rows>
+        </grid>
       </box>
       <!-- ============================================================== -->
       <!--                    JavaScript Event Handlers                   -->
       <!-- ============================================================== -->
       <box flex="1" orient="vertical">
         <tree id="JSEATree" class="AttributesTree inset" flex="1"
-          onselect="SelectTreeItem(this)">
+          onselect="onSelectJSETreeItem();"
+          onclick="onSelectJSETreeItem();"
+          ondblclick="editJSEAttributeValue(event.target);">
           <treecolgroup>
             <treecol flex="35" width="0"/>
             <splitter class="tree-splitter"/>
@@ -174,23 +193,27 @@
         <box valign="middle" autostretch="never" flex="1">
           <text class="label" value="&editAttribute.label;"/>
           <spring flex="1"/>
-          <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveAttribute('JSEATree')"/>
+          <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveJSEAttribute()"/>
         </box>
-        <box orient="vertical">
-          <spring class="spacer"/>
-          <titledbox orient="vertical">
-            <label value="&AddJSEAttributeLabel.label;"/>
-            <box autostretch="never">
-              <text class="label" for="AddJSEAttributeNameInput" value="&AttName.label;"/>
-              <textbox flex="1" id="AddJSEAttributeNameInput" oninput="doJSEEnabling()" onkeyup="if (event.keyCode == 13) onAddJSAttribute();"/>
+        <grid>
+          <columns>
+            <column flex="1"/><column flex="1"/>
+          </columns>
+          <rows>
+            <row valign="bottom" equalsize="always">
+              <text class="label" for="AddJSEAttributeNameList" value="&AttName.label;"/>
               <text class="label" for="AddJSEAttributeValueInput" value="&AttValue.label;"/>
-          	  <textbox flex="1" id="AddJSEAttributeValueInput" oninput="doJSEEnabling()" onkeyup="if (event.keyCode == 13) onAddJSAttribute();"/>
-              <button class="dialog" id="AddJSEAttribute" oncommand="onAddJSEAttribute()" label="&AddAttributeButton.label;" disabled="true"/>
-            </box>
-          </titledbox>
-        </box>
+            </row>
+            <row valign="middle" equalsize="always">
+              <!-- List is built at runtime -->
+              <menulist id="AddJSEAttributeNameList" flex="1"
+                oncommand="onSelectJSEAttribute();"/>
+          	  <textbox id="AddJSEAttributeValueInput" flex="1"
+                oninput="onInputJSEAttributeValue();"/>
+            </row>
+          </rows>
+        </grid>
       </box>
-      <!-- ============================================================== -->
     </tabpanels>
   </tabbox>
   <spring class="spacer"/>

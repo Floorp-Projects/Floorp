@@ -21,27 +21,25 @@
  *   Ben "Count XULula" Goodger
  */
 
-/**************         FOR NOW         **************/
-const TEXT_WIDGETS_DONT_SUCK  = false;
-const PERFORMANCE_BOOSTS      = false;
-
 /**************       NAMESPACES       ***************/
 const XUL_NS    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 /**************         GLOBALS         **************/
-
-var tagname     = null; // element.nodeName;
-var element     = null; // handle for the actual element
+var gElement    = null; // handle to actual element edited
 
 var HTMLAttrs   = [];   // html attributes
 var CSSAttrs    = [];   // css attributes
 var JSEAttrs    = [];   // js events
 
 var HTMLRAttrs  = [];   // removed html attributes
-//var CSSRAttrs   = [];   // removed css attributes
 var JSERAttrs   = [];   // removed js events
 
-var gSelecting = false; // To prevent recursive selection
+/* Set false to allow changing selection in tree
+   without doing "onselect" handler actions
+*/
+var gDoOnSelectTree = true;
+var gUpdateTreeValue = true;
+
 var dialog;
 
 /************** INITIALISATION && SETUP **************/
@@ -65,32 +63,51 @@ function Startup()
   doSetOKCancel(onOK, onCancel);
 
   // Element to edit is passed in
-  element = window.arguments[1];
-  if (!element || element == undefined) {
+  if (!window.arguments[1])
+  {
     dump("Advanced Edit: Element to edit not supplied\n");
     window.close();
+    return;
   }
+  // The actual element edited (not a copy!)
+  gElement = window.arguments[1];
 
   // place the tag name in the header
   var tagLabel = document.getElementById("tagLabel");
-  tagLabel.setAttribute("value", ("<" + element.localName + ">"));
+  tagLabel.setAttribute("value", ("<" + gElement.localName + ">"));
 
   // Create dialog object to store controls for easy access
   dialog                            = {};
   dialog.AddHTMLAttributeNameInput  = document.getElementById("AddHTMLAttributeNameInput");
-  dialog.AddHTMLAttributeValueInput = document.getElementById("AddHTMLAttributeValueInput");
-  dialog.AddHTMLAttribute           = document.getElementById("AddHTMLAttribute");
-  dialog.AddCSSAttributeNameInput   = document.getElementById("AddCSSAttributeNameInput");
-  dialog.AddCSSAttributeValueInput  = document.getElementById("AddCSSAttributeValueInput");
-  dialog.AddCSSAttribute            = document.getElementById("AddCSSAttribute");
-  dialog.AddJSEAttributeNameInput   = document.getElementById("AddJSEAttributeNameInput");
-  dialog.AddJSEAttributeValueInput  = document.getElementById("AddJSEAttributeValueInput");
-  dialog.AddJSEAttribute            = document.getElementById("AddJSEAttribute");
+
+  // We use a <deck> to switch between editable menulist and textbox
+  dialog.AddHTMLAttributeValueDeck     = document.getElementById("AddHTMLAttributeValueDeck");
+  dialog.AddHTMLAttributeValueMenulist = document.getElementById("AddHTMLAttributeValueMenulist");
+  dialog.AddHTMLAttributeValueTextbox  = document.getElementById("AddHTMLAttributeValueTextbox");
+  dialog.AddHTMLAttributeValueInput    = dialog.AddHTMLAttributeValueTextbox;
+
+  dialog.AddHTMLAttributeTree          = document.getElementById("HTMLATree");
+  dialog.AddCSSAttributeNameInput      = document.getElementById("AddCSSAttributeNameInput");
+  dialog.AddCSSAttributeValueInput     = document.getElementById("AddCSSAttributeValueInput");
+  dialog.AddCSSAttributeTree           = document.getElementById("CSSATree");
+  dialog.AddJSEAttributeNameList       = document.getElementById("AddJSEAttributeNameList");
+  dialog.AddJSEAttributeValueInput     = document.getElementById("AddJSEAttributeValueInput");
+  dialog.AddJSEAttributeTree           = document.getElementById("JSEATree");
+  dialog.okButton                      = document.getElementById("ok");
 
   // build the attribute trees
   BuildHTMLAttributeTable();
   BuildCSSAttributeTable();
   BuildJSEAttributeTable();
+  
+  // Build attribute name arrays for menulists
+  BuildJSEAttributeNameList();
+
+  // No menulists for CSS panel (yet), so just clear input fields
+  ClearCSSInputWidgets();
+
+  // Do this last -- sets focus to HTML Name menulist
+  BuildHTMLAttributeNameList();
 
   // size the dialog properly
   window.sizeToContent();
@@ -106,120 +123,159 @@ function Startup()
  **/
 function onOK()
 {
-  UpdateObject(); // call UpdateObject fn to update element in document
-  window.opener.AdvancedEditOK = true;
-  window.opener.globalElement = element;
+  // Update our gElement attributes
+  UpdateHTMLAttributes();
+  UpdateCSSAttributes();
+  UpdateJSEAttributes();
 
+  window.opener.AdvancedEditOK = true;
   SaveWindowLocation();
 
   return true; // do close the window
 }
 
 /**
- * function   : void UpdateObject ( void );
- * parameters : none
- * returns    : none
- * desc.      : Updates the copy of the page object with the data set in this dialog.
- **/
-function UpdateObject()
-{
-    UpdateHTMLAttributes();
-    UpdateCSSAttributes();
-    UpdateJSEAttributes();
-}
-
-/**
  * function   : bool CheckAttributeNameSimilarity ( string attName, array attArray );
  * parameters : attribute to look for, array of current attributes
- * returns    : false if attribute already exists, true if it does not
+ * returns    : true if attribute already exists, false if it does not
  * desc.      : checks to see if any other attributes by the same name as the arg supplied
  *              already exist.
  **/
 function CheckAttributeNameSimilarity(attName, attArray)
 {
-  for(var i = 0; i < attArray.length; i++)
+  for (var i = 0; i < attArray.length; i++)
   {
-    if(attName.toLowerCase() == attArray[i].toLowerCase())
-      return false;
+    if (attName.toLowerCase() == attArray[i].toLowerCase())
+      return true;
   }
-  return true;
+  return false;
 }
 
 /**
- * function   : bool CheckAttributeNotRemoved ( string attName, array attArray );
- * parameters : attribute to look for, array of deleted attributes
- * returns    : false if attribute already exists, true if it does not
- * desc.      : check to see if the attribute is in the array marked for removal
- *              before updating the final object
+ * function   : bool UpdateExistingAttribute ( string attName, string attValue, string treeChildrenId );
+ * parameters : attribute to look for, new value, ID of <treeChildren> node in XUL tree
+ * returns    : true if attribute already exists in tree, false if it does not
+ * desc.      : checks to see if any other attributes by the same name as the arg supplied
+ *              already exist while setting the associated value if different from current value
  **/
-function CheckAttributeNotRemoved( attName, attArray )
+function UpdateExistingAttribute( attName, attValue, treeChildrenId )
 {
-  for( var i = 0; i < attArray.length; i++ )
+  var treeChildren = document.getElementById(treeChildrenId);
+  if (!treeChildren)
+    return;
+
+  var name;
+  var i;
+  attName = TrimString(attName).toLowerCase();
+  attValue = TrimString(attValue);
+
+  for (i = 0; i < treeChildren.childNodes.length; i++)
   {
-    if(attName.toLowerCase() == attArray[i].toLowerCase())
-      return false;
-  }
-  return true;
-}
+    var item = treeChildren.childNodes[i];
+    name = GetTreeItemAttributeStr(item);
+    if (name.toLowerCase() == attName)
+    {
+      // Set the text in the "value' column treecell
+      SetTreeItemValueStr(item, attValue);
 
-/**
- * function   : void doRemoveAttribute( DOMElement which);
- * parameters : DOMElement that was context-clicked.
- * returns    : nothing
- * desc.      : removes an attribute or attributes from the tree
- **/
-function RemoveAttribute( treeId )
-{
-  var tree = document.getElementById(treeId);
-  if (!tree) return;
+      // Select item just changed, 
+      //  but don't trigger the tree's onSelect handler
+      gDoOnSelectTree = false;
+      try {
+        treeChildren.parentNode.selectItem(item);
+      } catch (e) {}
+      gDoOnSelectTree = true;
 
-  var kids = tree.lastChild;  // treechildren element of tree
-  var newIndex = tree.selectedIndex;
-
-  // We only allow 1 selected item
-  if (tree.selectedItems.length)
-  {
-    var item = tree.selectedItems[0];
-    // Name is the value of the treecell
-    var attr = TrimString(item.firstChild.firstChild.getAttribute("value"));
-
-    // remove the item from the attribute arrary
-    switch ( tree.id ) {
-      case "HTMLATree":
-        HTMLRAttrs[HTMLRAttrs.length] = attr;
-        if (newIndex >= (HTMLAttrs.length-1))
-          newIndex--;
-        RemoveNameFromAttArray(attr, HTMLAttrs);
-        break;
-      case "CSSATree":
-        // We write a completely new "style" string, so we don't need "remove" array
-        //CSSRAttrs[CSSRAttrs.length] = attr;
-        if (newIndex >= (CSSAttrs.length-1))
-          newIndex--;
-        RemoveNameFromAttArray(attr, CSSAttrs);
-        break;
-      case "JSEATree":
-        JSERAttrs[JSERAttrs.length] = attr;
-        if (newIndex >= (JSEAttrs.length-1))
-          newIndex--;
-        RemoveNameFromAttArray(attr, JSEAttrs);
-        break;
-      default: break;
+      return true;
     }
-
-    // Remove the item from the tree
-    kids.removeChild (item);
-
-    // Reselect an item
-    tree.selectedIndex = newIndex;
-    SelectTreeItem(tree);
   }
+  return false;
 }
+
+/**
+ * function   : string GetAndSelectExistingAttributeValue ( string attName, string treeChildrenId );
+ * parameters : attribute to look for, ID of <treeChildren> node in XUL tree
+ * returns    : value in from the tree or empty string if name not found
+ **/
+function GetAndSelectExistingAttributeValue( attName, treeChildrenId )
+{
+  if (!attName)
+    return "";
+
+  var treeChildren = document.getElementById(treeChildrenId);
+  var name;
+  var i;
+
+  for (i = 0; i < treeChildren.childNodes.length; i++)
+  {
+    var item = treeChildren.childNodes[i];
+    name = GetTreeItemAttributeStr(item);
+    if (name.toLowerCase() == attName.toLowerCase())
+    {
+      // Select item in the tree
+      //  but don't trigger the tree's onSelect handler
+      gDoOnSelectTree = false;
+      try {
+        treeChildren.parentNode.selectItem(item);
+      } catch (e) {}
+      gDoOnSelectTree = true;
+
+      // Get the text in the "value' column treecell
+      return GetTreeItemValueStr(item);
+    }
+  }
+
+  // Attribute doesn't exist in tree, so remove selection
+  gDoOnSelectTree = false;
+  try {
+    treeChildren.parentNode.clearItemSelection();
+  } catch (e) {}
+  gDoOnSelectTree = true;
+
+  return "";
+}
+
+/* Tree structure: 
+  <treeItem>
+    <treeRow>
+      <treeCell> // Name Cell
+      <treeCell  // Value Cell
+*/
+function GetTreeItemAttributeStr(treeItem)
+{
+  if (treeItem)
+    return TrimString(treeItem.firstChild.firstChild.getAttribute("label"));
+
+  return "";
+}
+
+function GetTreeItemValueStr(treeItem)
+{
+  if (treeItem)
+    return TrimString(treeItem.firstChild.lastChild.getAttribute("label"));
+
+  return "";
+}
+
+function SetTreeItemValueStr(treeItem, value)
+{
+  if (treeItem && GetTreeItemValueStr(treeItem) != value)
+    treeItem.firstChild.lastChild.setAttribute("label", value);
+}
+
+function IsNotTreeHeader(treeCell)
+{
+  if (treeCell)
+    return (treeCell.parentNode.parentNode.nodeName != "treehead");
+
+  return false;
+}
+
 function RemoveNameFromAttArray(attName, attArray)
 {
   for (var i=0; i < attArray.length; i++)
   {
-    if(attName.toLowerCase() == attArray[i].toLowerCase())
+    if (attName.toLowerCase() == attArray[i].toLowerCase())
     {
       // Remove 1 array item
       attArray.splice(i,1);
@@ -228,117 +284,34 @@ function RemoveNameFromAttArray(attName, attArray)
   }
 }
 
-// NOT USED
-/*
-function doSelect(e)
-{
-  if ( TEXT_WIDGETS_DONT_SUCK && PERFORMANCE_BOOSTS ) {
-    var cell  = e.target.parentNode.lastChild;
-    var input = cell.firstChild;
-
-    var selitems = document.getElementsByAttribute("class","FocusSelected");
-    for ( var i = 0; i < selitems.length; i++ )
-    {
-      if ( selitems[i].nodeName == "input" ) {
-        selitems[i].removeAttribute("class","FocusSelected");
-        selitems[i].setAttribute("class","AttributesCell");
-      } else if ( selitems[i].nodeName == "treecell" )
-        selitems[i].removeAttribute("class","FocusSelected");
-    }
-
-    cell.setAttribute("class","FocusSelected");
-    input.setAttribute("class","FocusSelected");
-    SetTextboxFocus(input);
-  }
-}
-*/
-
 // adds a generalised treeitem.
-function AddTreeItem ( name, value, treekidsId, attArray, valueCaseFunc )
+function AddTreeItem ( name, value, treeChildrenId, attArray )
 {
   attArray[attArray.length] = name;
-  var treekids    = document.getElementById ( treekidsId );
+  var treeChildren    = document.getElementById ( treeChildrenId );
   var treeitem    = document.createElementNS ( XUL_NS, "treeitem" );
   var treerow     = document.createElementNS ( XUL_NS, "treerow" );
-  var attrcell    = document.createElementNS ( XUL_NS, "treecell" );
-  attrcell.setAttribute( "class", "propertylist" );
-  attrcell.setAttribute( "label", name );
-  // Modify treerow selection to better show focus in textbox
-  treeitem.setAttribute( "class", "ae-selection");
 
-  treerow.appendChild ( attrcell );
+  var attrCell    = document.createElementNS ( XUL_NS, "treecell" );
+  attrCell.setAttribute( "class", "propertylist" );
+  attrCell.setAttribute( "label", name );
 
-  if ( !valueCaseFunc ) {
-    // no handling function provided, create default cell.
-    var valCell = CreateCellWithField ( name, value );
-    if (!valCell) return null;
-    treerow.appendChild ( valCell );
-  } else
-    valueCaseFunc();  // run user specified function for adding content
+  var valueCell    = document.createElementNS ( XUL_NS, "treecell" );
+  valueCell.setAttribute( "class", "propertylist" );
+  valueCell.setAttribute( "label", value );
 
+  treerow.appendChild ( attrCell );
+  treerow.appendChild ( valueCell );
   treeitem.appendChild ( treerow );
-  treekids.appendChild ( treeitem );
+  treeChildren.appendChild ( treeitem );
+
+  // Select item just added,
+  //  but suppress calling the onSelect handler
+  gDoOnSelectTree = false;
+  try {
+    treeChildren.parentNode.selectItem(treeitem);
+  } catch (e) {}
+  gDoOnSelectTree = true;
+
   return treeitem;
 }
-
-// creates a generic treecell with field inside.
-// optional parameters for initial values.
-function CreateCellWithField( name, value )
-{
-  var valCell     = document.createElementNS ( XUL_NS, "treecell" );
-  if (!valCell) return null;
-  valCell.setAttribute ( "class", "value propertylist" );
-  valCell.setAttribute ( "allowevents", "true" );
-  var valField    = document.createElementNS ( XUL_NS, "textbox" );
-  if ( name  ) valField.setAttribute ( "id", name );
-  if (!valField) return null;
-  if ( value ) valField.setAttribute ( "value", value );
-  valField.setAttribute ( "flex", "1" );
-  valField.setAttribute ( "class", "plain" );
-  valField.setAttribute ( "onfocus", "SelectItemWithTextbox(\""+name+"\")");
-  valField.setAttribute ( "allowevents", "true");
-  valCell.appendChild ( valField );
-  return valCell;
-}
-
-function SelectItemWithTextbox(id)
-{
-  var textbox = document.getElementById(id);
-  if (textbox)
-  {
-    var treeItem = textbox.parentNode.parentNode.parentNode;
-    if (treeItem)
-    {
-      // Prevent SelectTreeItem() from setting selection to entire textbox
-      gSelecting = true;
-      treeItem.parentNode.parentNode.selectItem(treeItem);
-      gSelecting = false;
-    }
-  }
-}
-
-// When a "name" treecell is selected, shift focus to the textbox
-function SelectTreeItem(tree)
-{
-  // Prevent infinite loop -- SetTextboxFocusById triggers recursive call
-  if (gSelecting) return;
-  gSelecting = true;
-  if (tree && tree.selectedItems && tree.selectedItems.length)
-  {
-    // 2nd cell (value column) contains the textbox
-    var textboxCell = tree.selectedItems[0].firstChild.firstChild.nextSibling;
-    if (textboxCell)
-    {
-      // Select its contents and set focus
-      SetTextboxFocusById(textboxCell.firstChild.id);
-    }
-  }
-  gSelecting = false;
-}
-
-// todo: implement attribute parsing, e.g. colorpicker appending, etc.
-function AttributeParser( name, value )
-{
-
-}
-

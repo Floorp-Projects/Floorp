@@ -60,6 +60,7 @@ CHROME_CONTENT = \
 	.\EdAECSSAttributes.js \
 	.\EdAEHTMLAttributes.js \
 	.\EdAEJSEAttributes.js \
+	.\EdAEAttributes.js \
 	.\EdImageMap.js \
 	.\EdImageMap.xul \
 	.\EdImageMapHotSpot.js \

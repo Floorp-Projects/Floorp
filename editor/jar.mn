@@ -178,6 +178,7 @@ comm.jar:
 	content/editor/EdAECSSAttributes.js                      (ui/dialogs/content/EdAECSSAttributes.js) 
 	content/editor/EdAEHTMLAttributes.js                     (ui/dialogs/content/EdAEHTMLAttributes.js) 
 	content/editor/EdAEJSEAttributes.js                      (ui/dialogs/content/EdAEJSEAttributes.js) 
+	content/editor/EdAEAttributes.js                         (ui/dialogs/content/EdAEAttributes.js) 
 	content/editor/EdImageMap.js                             (ui/dialogs/content/EdImageMap.js) 
 	content/editor/EdImageMap.xul                            (ui/dialogs/content/EdImageMap.xul) 
 	content/editor/EdImageMapHotSpot.js                      (ui/dialogs/content/EdImageMapHotSpot.js) 
