@@ -22,7 +22,7 @@
  */
 
 /**
- * MODULE NOTES:
+ * MODULE NOTES: 
  * @update  gess 7/15/98
  *
  * NavDTD is an implementation of the nsIDTD interface.

@@ -748,7 +748,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
  
   nsCParserNode* theNode=CreateNode();
   theNode->Init(aToken,mLineNumber,mTokenRecycler);
-  
+   
   eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
   PRInt16       attrCount=aToken->GetAttributeCount();
   eHTMLTags     theParent=mBodyContext->Last();
@@ -763,7 +763,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
       PRBool theTagWasHandled=PR_FALSE; 
 
       switch(theChildTag) {    
-    
+     
         case eHTMLTag_html: 
           if(!HasOpenContainer(theChildTag)) { 
             mSink->OpenHTML(*theNode);
