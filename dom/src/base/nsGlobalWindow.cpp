@@ -2459,7 +2459,13 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
 {
   SetDOMStringToNull(aReturn);
 
-  nsCOMPtr<nsIAuthPrompt> prompter(do_GetInterface(mDocShell));
+  nsresult rv;
+  nsCOMPtr<nsIWindowWatcher> wwatch =
+    do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAuthPrompt> prompter;
+  wwatch->GetNewAuthPrompter(this, getter_AddRefs(prompter));
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
   // Reset popup state while opening a modal dialog, and firing events
@@ -2484,11 +2490,9 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
     title.Assign(aTitle);
   }
 
-  nsresult rv = prompter->Prompt(title.get(),
-                                 PromiseFlatString(aMessage).get(), nsnull,
-                                 aSavePassword,
-                                 PromiseFlatString(aInitial).get(),
-                                 getter_Copies(uniResult), &b);
+  rv = prompter->Prompt(title.get(), PromiseFlatString(aMessage).get(), nsnull,
+                        aSavePassword, PromiseFlatString(aInitial).get(),
+                        getter_Copies(uniResult), &b);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (uniResult && b) {
