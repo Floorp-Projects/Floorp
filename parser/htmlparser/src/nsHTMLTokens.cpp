@@ -2097,74 +2097,6 @@ void CEntityToken::AppendSourceTo(nsAString& anOutputString){
   //anOutputString+=";";
 }
 
-/*
- *  default constructor
- *  
- *  @update  gess 3/25/98
- *  @param   aName -- string to init token name with
- *  @return  
- */
-CScriptToken::CScriptToken() : CHTMLToken(eHTMLTag_script) {
-}
-
-/*
- *  default constructor
- *  
- *  @update  gess 3/25/98
- *  @param   aName -- string to init token name with
- *  @return  
- */
-CScriptToken::CScriptToken(const nsAString& aString) : CHTMLToken(eHTMLTag_script) {
-  mTextValue.Assign(aString);
-}
-                        
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-PRInt32 CScriptToken::GetTokenType(void) {
-  return eToken_script;
-}
-
-const nsAString& CScriptToken::GetStringValue(void)
-{
-  return mTextValue;
-}
-
-/*
- *  default constructor
- *  
- *  @update  gess 3/25/98
- *  @param   aName -- string to init token name with
- *  @return  
- */
-CStyleToken::CStyleToken() : CHTMLToken(eHTMLTag_style) {
-}
-
-CStyleToken::CStyleToken(const nsAString& aString) : CHTMLToken(eHTMLTag_style) {
-  mTextValue.Assign(aString);
-}
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-PRInt32 CStyleToken::GetTokenType(void) {
-  return eToken_style;
-}
-
-const nsAString& CStyleToken::GetStringValue(void)
-{
-  return mTextValue;
-}
-
-
 /**
  * 
  * @update	gess4/25/98
@@ -2232,35 +2164,6 @@ PRInt32 CInstructionToken::GetTokenType(void){
 }
 
 const nsAString& CInstructionToken::GetStringValue(void)
-{
-  return mTextValue;
-}
-
-
-CErrorToken::CErrorToken(nsParserError *aError) : CHTMLToken(eHTMLTag_unknown)
-{
-  mError = aError;
-}
-
-CErrorToken::~CErrorToken() 
-{
-  delete mError;
-}
-
-PRInt32 CErrorToken::GetTokenType(void){
-  return eToken_error;
-}
-
-void CErrorToken::SetError(nsParserError *aError) {
-  mError = aError;
-}
-
-const nsParserError * CErrorToken::GetError(void) 
-{ 
-  return mError; 
-}
-
-const nsAString& CErrorToken::GetStringValue(void)
 {
   return mTextValue;
 }
