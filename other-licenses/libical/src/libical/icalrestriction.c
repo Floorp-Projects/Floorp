@@ -17,6 +17,10 @@
 #include <assert.h>
 #include <stdio.h> /* For snprintf */   
 
+#ifdef WIN32
+#define snprintf	_snprintf
+#define strcasecmp	stricmp
+#endif
 #define TMP_BUF_SIZE 1024
 
 
