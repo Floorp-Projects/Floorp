@@ -7029,6 +7029,10 @@ LO_isTabableElement(MWContext *context, LO_TabFocusData *pCurrentFocus  )
 #endif
 	case LO_SCRIPT :	/*    13  */
 		break;
+#ifdef SHACK
+	case LO_BUILTIN :   /*    28  */
+		break;
+#endif /* SHACK */
 	default :			/* something wrong!!  */
 			bIsTabable = FALSE;
 		break;
