@@ -511,14 +511,21 @@ NS_IMPL_RELEASE(SimplePlugin);
  * resources allocated by NPP_Initialize. 
  +++++++++++++++++++++++++++++++++++++++++++++++++*/
 
+SimplePlugin* gPlugin = NULL;
+
 extern "C" NS_EXPORT nsresult
 NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
 {
     if (aClass.Equals(kIPluginIID)) {
+        if (gPlugin) {
+            *aFactory = gPlugin;
+            return NS_OK;
+        }
         SimplePlugin* fact = new SimplePlugin();
         if (fact == NULL) 
             return NS_ERROR_OUT_OF_MEMORY;
         fact->AddRef();
+        gPlugin = fact;
         *aFactory = fact;
         return NS_OK;
     }
@@ -708,6 +715,25 @@ SimplePluginInstance::Start(void)
         sprintf(factString, "my favorite function returned %d\n", v);
         DisplayJavaMessage(factString, -1);
     }
+
+#ifdef NEW_PLUGIN_STREAM_API
+    // Try getting some streams:
+    gPlugin->GetPluginManager()->GetURL(this, "http://warp", NULL,
+                                        new SimplePluginStreamListener(this));
+
+    gPlugin->GetPluginManager()->GetURL(this, "http://home.netscape.com", NULL,
+                                        new SimplePluginStreamListener(this),
+                                        nsPluginStreamType_AsFile);
+
+    gPlugin->GetPluginManager()->GetURL(this, "http://warp/java", NULL,
+                                        new SimplePluginStreamListener(this),
+                                        nsPluginStreamType_AsFileOnly);
+
+    gPlugin->GetPluginManager()->GetURL(this, "http://warp/java/oji", NULL,
+                                        new SimplePluginStreamListener(this),
+                                        nsPluginStreamType_Seek);
+#endif
+
     return NS_OK;
 }
 
@@ -1080,6 +1106,11 @@ native_Simple_printToStdout(JRIEnv* env, struct Simple* self,
 void
 SimplePluginInstance::DisplayJavaMessage(char* msg, int len)
 {
+#ifdef XP_PC
+    OutputDebugString(msg);
+    OutputDebugString("\n");
+#endif
+
     Simple* javaPeer;   // instance of the java class (there's no package qualifier)
     java_lang_String* str;
 

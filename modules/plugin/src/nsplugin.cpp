@@ -159,8 +159,7 @@ nsPluginManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstanceP
     if (mgr == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
     mgr->AddRef();
-    *aInstancePtr = mgr->GetInner();
-    *aInstancePtr = (outer != NULL)? (void *)mgr->GetInner(): (void *)mgr;
+    *aInstancePtr = outer ? (void *)mgr->GetInner() : (void *)mgr;
     return NS_OK;
 }
 
@@ -613,6 +612,15 @@ nsPluginManager::GetURL(nsISupports* pluginInst,
                         const char* referrer,
                         PRBool forceJSEnabled)
 {
+    void* notifyData = NULL;
+    if (listener) {
+        nsPluginInputStream* inStr = new nsPluginInputStream(listener, streamType);
+        if (inStr == NULL) 
+            return NS_ERROR_OUT_OF_MEMORY;
+        inStr->AddRef();
+        notifyData = inStr;
+    }
+
     NPError rslt = NPERR_INVALID_PARAM;
     nsIPluginInstance* inst = NULL;
     if (pluginInst->QueryInterface(kIPluginInstanceIID, (void**)&inst) == NS_OK) {
@@ -620,12 +628,6 @@ nsPluginManager::GetURL(nsISupports* pluginInst,
         nsPluginInstancePeer* peer;
         nsresult err = inst->GetPeer((nsIPluginInstancePeer**)&peer);
         if (err == NS_OK) {
-            void* notifyData = NULL;
-            if (listener) {
-                nsPluginInputStream* inStr = new nsPluginInputStream(listener, streamType);
-                notifyData = inStr;
-            }
-
             if (PR_CurrentThread() == mozilla_thread) {
                 NPP npp = peer->GetNPP();
                 rslt = np_geturlinternal(npp,
@@ -720,6 +722,15 @@ nsPluginManager::PostURL(nsISupports* pluginInst,
                          PRUint32 postHeadersLen, 
                          const char* postHeaders)
 {
+    void* notifyData = NULL;
+    if (listener) {
+        nsPluginInputStream* inStr = new nsPluginInputStream(listener, streamType);
+        if (inStr == NULL) 
+            return NS_ERROR_OUT_OF_MEMORY;
+        inStr->AddRef();
+        notifyData = inStr;
+    }
+
     NPError rslt = NPERR_INVALID_PARAM;
     nsIPluginInstance* inst = NULL;
     if (pluginInst->QueryInterface(kIPluginInstanceIID, (void**)&inst) == NS_OK) {
@@ -727,12 +738,6 @@ nsPluginManager::PostURL(nsISupports* pluginInst,
         nsPluginInstancePeer* peer;
         nsresult err = inst->GetPeer((nsIPluginInstancePeer**)&peer);
         if (err == NS_OK) {
-            void* notifyData = NULL;
-            if (listener) {
-                nsPluginInputStream* inStr = new nsPluginInputStream(listener, streamType);
-                notifyData = inStr;
-            }
-
             if (PR_CurrentThread() == mozilla_thread) {
                 NPP npp = peer->GetNPP();
                 PR_ASSERT(postHeaders == NULL); // XXX need to deal with postHeaders
@@ -1628,7 +1633,8 @@ nsPluginInputStream::nsPluginInputStream(nsIPluginStreamListener* listener,
                                          nsPluginStreamType streamType)
     : mListener(listener), mStreamType(streamType),
       mUrls(NULL), mStream(NULL),
-      mBuffer(NULL), mBufferLength(0), mAmountRead(0)
+      mBuffer(NULL)
+//      mBuffer(NULL), mBufferLength(0), mAmountRead(0)
 {
     NS_INIT_REFCNT();
     listener->AddRef();
@@ -1636,8 +1642,8 @@ nsPluginInputStream::nsPluginInputStream(nsIPluginStreamListener* listener,
 
 nsPluginInputStream::~nsPluginInputStream(void)
 {
+    Cleanup();
     mListener->Release();
-    PL_strfree(mBuffer);
 }
 
 NS_IMPL_ADDREF(nsPluginInputStream);
@@ -1659,9 +1665,26 @@ nsPluginInputStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_NOINTERFACE; 
 }
 
+void 
+nsPluginInputStream::Cleanup(void)
+{
+    if (mBuffer) {
+        // free the buffered data
+        BufferElement* element = mBuffer;
+        while (element != NULL) {
+            BufferElement* next = element->next;
+            PL_strfree(element->segment);
+            delete element;
+            element = next;
+        }
+        mBuffer = NULL;
+    }
+}
+
 NS_METHOD
 nsPluginInputStream::Close(void)
 {
+    Cleanup();
     NPError err = npn_destroystream(mStream->instance->npp, mStream->pstream, 
                                     nsPluginReason_UserBreak);
     return fromNPError[err];
@@ -1678,17 +1701,40 @@ nsPluginInputStream::GetLength(PRInt32 *aLength)
 #endif
 }
 
+nsresult
+nsPluginInputStream::ReceiveData(const char* buffer, PRUint32 offset, PRUint32 len)
+{
+    BufferElement* element = new BufferElement;
+    if (element == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    element->segment = PL_strdup(buffer);
+    element->offset = offset;
+    element->length = len;
+    element->next = mBuffer;
+    mBuffer = element;
+    return NS_OK;
+}
+
 NS_METHOD
 nsPluginInputStream::Read(char* aBuf, PRInt32 aOffset, PRInt32 aCount, 
                           PRInt32 *aReadCount)
 {
-    if (aOffset > (PRInt32)mBufferLength)
-        return NS_ERROR_FAILURE;        // XXX right error?
-    PRUint32 cnt = PR_MIN(aCount, (PRInt32)mBufferLength - aOffset);
-    memcpy(aBuf, &mBuffer[aOffset], cnt);
-    *aReadCount = cnt;
-    mAmountRead -= cnt;
-    return NS_OK;
+    BufferElement* element;
+    for (element = mBuffer; element != NULL; element = element->next) {
+        if ((PRInt32)element->offset <= aOffset
+            && aOffset < (PRInt32)(element->offset + element->length)) {
+            // found our segment
+            PRUint32 segmentIndex = aOffset - element->offset;
+            PRUint32 segmentAmount = element->length - segmentIndex;
+            if (aCount > (PRInt32)segmentAmount) {
+                return NS_BASE_STREAM_EOF;      // XXX right error?
+            }
+            memcpy(aBuf, &element->segment[segmentIndex], aCount);
+//            mReadCursor = segmentIndex + aCount;
+            return NS_OK;
+        }
+    }
+    return NS_ERROR_FAILURE;
 }
 
 NS_METHOD
