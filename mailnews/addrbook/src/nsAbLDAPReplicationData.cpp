@@ -236,7 +236,7 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::Abort()
             if(NS_SUCCEEDED(rv)) {
                 // now put back the backed up replicated file if aborted
                 if(mBackupReplicationFile && mDirServerInfo->replInfo) 
-                    rv = mBackupReplicationFile->MoveTo(nsnull, mDirServerInfo->replInfo->fileName);
+                    rv = mBackupReplicationFile->MoveToNative(nsnull, nsDependentCString(mDirServerInfo->replInfo->fileName));
             }
         }
     }
@@ -472,7 +472,7 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchResult(nsILDAPMessage *aMes
                 // now put back the backed up replicated file
                 if(mBackupReplicationFile && mDirServerInfo->replInfo) 
                 {
-                    rv = mBackupReplicationFile->MoveTo(nsnull, mDirServerInfo->replInfo->fileName);
+                    rv = mBackupReplicationFile->MoveToNative(nsnull, nsDependentCString(mDirServerInfo->replInfo->fileName));
                     NS_ASSERTION(NS_SUCCEEDED(rv), "Replication Backup File Move back on Failure failed");
                 }
             }
@@ -526,7 +526,14 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
         // clone the existing one for a much better performance - for Download All.
         // And also important in case if replication fails we donot lose user's existing 
         // replicated data for both Download all and Changelog.
-        rv = mReplicationFile->Clone(getter_AddRefs(mBackupReplicationFile));
+        nsCOMPtr<nsIFile> clone;
+        rv = mReplicationFile->Clone(getter_AddRefs(clone));
+        if(NS_FAILED(rv))  {
+            delete dbPath;
+            Done(PR_FALSE);
+            return rv;
+        }
+        mBackupReplicationFile = do_QueryInterface(clone, &rv);
         if(NS_FAILED(rv))  {
             delete dbPath;
             Done(PR_FALSE);
@@ -538,8 +545,8 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
             Done(PR_FALSE);
             return rv;
         }
-        nsXPIDLCString backupFileLeafName;
-        rv = mBackupReplicationFile->GetLeafName(getter_Copies(backupFileLeafName));
+        nsCAutoString backupFileLeafName;
+        rv = mBackupReplicationFile->GetLeafName(backupFileLeafName);
         if(NS_FAILED(rv))  {
             delete dbPath;
             Done(PR_FALSE);
@@ -555,25 +562,25 @@ nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
 
         if(aCreate) {
             // set backup file to existing replication file for move
-            mBackupReplicationFile->SetLeafName(mDirServerInfo->replInfo->fileName);
-            rv = mBackupReplicationFile->MoveTo(nsnull, backupFileLeafName.get());
+            mBackupReplicationFile->SetNativeLeafName(nsDependentCString(mDirServerInfo->replInfo->fileName));
+            rv = mBackupReplicationFile->MoveTo(nsnull, backupFileLeafName);
             // set the backup file leaf name now
             if (NS_SUCCEEDED(rv))
-                mBackupReplicationFile->SetLeafName(backupFileLeafName.get());
+                mBackupReplicationFile->SetLeafName(backupFileLeafName);
         }
         else {
             // set backup file to existing replication file for copy
-            mBackupReplicationFile->SetLeafName(mDirServerInfo->replInfo->fileName);
+            mBackupReplicationFile->SetLeafName(nsDependentCString(mDirServerInfo->replInfo->fileName));
             // specify the parent here specifically, 
             // passing nsnull to copy to the same dir actually renames existing file
             // instead of making another copy of the existing file.
             nsCOMPtr<nsIFile> parent;
             rv = mBackupReplicationFile->GetParent(getter_AddRefs(parent));
             if (NS_SUCCEEDED(rv))
-                rv = mBackupReplicationFile->CopyTo(parent, backupFileLeafName.get());
+                rv = mBackupReplicationFile->CopyTo(parent, backupFileLeafName);
             // set the backup file leaf name now
             if (NS_SUCCEEDED(rv))
-                mBackupReplicationFile->SetLeafName(backupFileLeafName.get());
+                mBackupReplicationFile->SetLeafName(backupFileLeafName);
         }
         if(NS_FAILED(rv))  {
             delete dbPath;

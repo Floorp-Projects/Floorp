@@ -42,6 +42,8 @@
 
 #include "nsIRegistry.h"
 #include "NSReg.h"
+#include "nsIFile.h"
+#include "nsCOMPtr.h"
 
 struct nsRegistry : public nsIRegistry, nsIRegistryGetter {
     // This class implements the nsISupports interface functions.
@@ -64,7 +66,7 @@ protected:
 #ifdef EXTRA_THREADSAFE
     PRLock *mregLock;    // libreg isn't threadsafe. Use locks to synchronize.
 #endif
-    char *mCurRegFile;    // these are to prevent open from opening the registry again
+    nsCOMPtr<nsIFile> mCurRegFile; // these are to prevent open from opening the registry again
     nsWellKnownRegistry mCurRegID;
 
     NS_IMETHOD Close();

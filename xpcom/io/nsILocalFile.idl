@@ -60,8 +60,8 @@ interface nsILocalFile : nsIFile
      *          error (NS_ERROR_FILE_UNRECOGNIZED_PATH).  This
      *          path must in native.
      */
-    void initWithPath([const] in string filePath);
-    void initWithUnicodePath([const] in wstring filePath);
+    void initWithPath(in AUTF8String filePath);
+    [noscript] void initWithNativePath(in ACString filePath);
     
     /**
      * initWithFile
@@ -109,15 +109,16 @@ interface nsILocalFile : nsIFile
      *        this cannot contain .. or cannot start with a directory separator
      * XXXbe  Why not?  Bogus!
      */
-    void appendRelativePath([const] in string relativeFilePath);
-    void appendRelativeUnicodePath([const] in wstring relativeFilePath);
-    
+    void appendRelativePath(in AUTF8String relativeFilePath);
+    [noscript] void appendRelativeNativePath(in ACString relativeFilePath);
     
     /**
      *   Accessor to a null terminated string which will specify
      *   the file in a persistent manner for disk storage.
+     *
+     *   XXX charset undefined
      */
-    attribute string persistentDescriptor;
+    attribute ACString persistentDescriptor;
 
     /** 
      * reveal --> Ask the operating system to open the folder which contains
@@ -164,9 +165,8 @@ interface nsILocalFile : nsIFile
 #define NS_LOCAL_FILE_CLASSNAME "Local File Specification"
 
 extern "C" NS_EXPORT nsresult
-NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result);
-
+NS_NewLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
 extern "C" NS_EXPORT nsresult
-NS_NewUnicodeLocalFile(const PRUnichar* path, PRBool followLinks, nsILocalFile* *result);
+NS_NewNativeLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
 
 %}

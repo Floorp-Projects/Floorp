@@ -49,6 +49,7 @@
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsILocalFile.h"
 
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
@@ -1280,20 +1281,18 @@ PUBLIC nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
   
   nsresult res;
   nsCOMPtr<nsIFile> aFile;
-  nsXPIDLCString pathBuf;
+  nsCAutoString pathBuf;
   nsCOMPtr<nsIFileSpec> tempSpec;
   
   res = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(aFile));
   if (NS_FAILED(res)) return res;
-  res = aFile->GetPath(getter_Copies(pathBuf));
+
+  res = NS_NewFileSpecFromIFile(aFile, getter_AddRefs(tempSpec));
   if (NS_FAILED(res)) return res;
   
   // TODO: Change the function to return an nsIFile
   // and not do this conversion
-  res = NS_NewFileSpec(getter_AddRefs(tempSpec));
-  if (NS_FAILED(res)) return res;
-  res = tempSpec->SetNativePath(pathBuf);
-  if (NS_FAILED(res)) return res;
+
   res = tempSpec->GetFileSpec(&dirSpec);
   
   return res;
@@ -1303,22 +1302,20 @@ PUBLIC nsresult Wallet_DefaultsDirectory(nsFileSpec& dirSpec) {
 
   nsresult res;
   nsCOMPtr<nsIFile> aFile;
-  nsXPIDLCString pathBuf;
+  nsCAutoString pathBuf;
   nsCOMPtr<nsIFileSpec> tempSpec;
   
   res = NS_GetSpecialDirectory(NS_APP_DEFAULTS_50_DIR, getter_AddRefs(aFile));
   if (NS_FAILED(res)) return res;
-  res = aFile->Append("wallet");
+  res = aFile->Append(NS_LITERAL_CSTRING("wallet"));
   if (NS_FAILED(res)) return res;
-  res = aFile->GetPath(getter_Copies(pathBuf));
+
+  res = NS_NewFileSpecFromIFile(aFile, getter_AddRefs(tempSpec));
   if (NS_FAILED(res)) return res;
   
   // TODO: Change the function to return an nsIFile
   // and not do this conversion
-  res = NS_NewFileSpec(getter_AddRefs(tempSpec));
-  if (NS_FAILED(res)) return res;
-  res = tempSpec->SetNativePath(pathBuf);
-  if (NS_FAILED(res)) return res;
+
   res = tempSpec->GetFileSpec(&dirSpec);
   
   return res;

@@ -693,12 +693,12 @@ void CBrowserView::OnFileSaveAs()
         if(persist)
         {
             nsCOMPtr<nsILocalFile> file;
-            NS_NewLocalFile(T2A(pStrFullPath), TRUE, getter_AddRefs(file));
+            NS_NewNativeLocalFile(nsDependentCString(T2A(pStrFullPath)), TRUE, getter_AddRefs(file));
 
             nsCOMPtr<nsILocalFile> dataPath;
             if (pStrDataPath)
             {
-                NS_NewLocalFile(pStrDataPath, TRUE, getter_AddRefs(dataPath));
+                NS_NewNativeLocalFile(nsDependentCString(pStrDataPath), TRUE, getter_AddRefs(dataPath));
             }
 
             if(bSaveAll)
@@ -839,7 +839,7 @@ void CBrowserView::OnSaveLinkAs()
 		if(persist)
         {
             nsCOMPtr<nsILocalFile> file;
-            NS_NewLocalFile(strFullPath.GetBuffer(0), TRUE, getter_AddRefs(file));
+            NS_NewNativeLocalFile(nsDependentCString(strFullPath.GetBuffer(0)), TRUE, getter_AddRefs(file));
             persist->SaveURI(linkURI, nsnull, file);
         }
     }
@@ -885,7 +885,7 @@ void CBrowserView::OnSaveImageAs()
         if(persist)
         {
             nsCOMPtr<nsILocalFile> file;
-            NS_NewLocalFile(strFullPath.GetBuffer(0), TRUE, getter_AddRefs(file));
+            NS_NewNativeLocalFile(nsDependentCString(strFullPath.GetBuffer(0)), TRUE, getter_AddRefs(file));
             persist->SaveURI(linkURI, nsnull, file);
         }
     }

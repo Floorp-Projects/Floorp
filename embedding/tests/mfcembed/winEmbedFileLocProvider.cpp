@@ -36,16 +36,16 @@
  
 // WARNING: These hard coded names need to go away. They need to
 // come from localizable resources
-#define APP_REGISTRY_NAME "registry.dat"
+#define APP_REGISTRY_NAME NS_LITERAL_CSTRING("registry.dat")
 
-#define PROFILE_ROOT_DIR_NAME       "Profiles"
-#define DEFAULTS_DIR_NAME           "defaults"
-#define DEFAULTS_PREF_DIR_NAME      "pref"
-#define DEFAULTS_PROFILE_DIR_NAME   "profile"
-#define RES_DIR_NAME                "res"
-#define CHROME_DIR_NAME             "chrome"
-#define PLUGINS_DIR_NAME            "plugins"
-#define SEARCH_DIR_NAME             "searchplugins" 
+#define PROFILE_ROOT_DIR_NAME       NS_LITERAL_CSTRING("Profiles")
+#define DEFAULTS_DIR_NAME           NS_LITERAL_CSTRING("defaults")
+#define DEFAULTS_PREF_DIR_NAME      NS_LITERAL_CSTRING("pref")
+#define DEFAULTS_PROFILE_DIR_NAME   NS_LITERAL_CSTRING("profile")
+#define RES_DIR_NAME                NS_LITERAL_CSTRING("res")
+#define CHROME_DIR_NAME             NS_LITERAL_CSTRING("chrome")
+#define PLUGINS_DIR_NAME            NS_LITERAL_CSTRING("plugins")
+#define SEARCH_DIR_NAME             NS_LITERAL_CSTRING("searchplugins")
 
 
 //*****************************************************************************
@@ -221,7 +221,7 @@ NS_METHOD winEmbedFileLocProvider::GetProductDirectory(nsILocalFile **aLocalFile
     }
     if (NS_FAILED(rv)) return rv;
 
-    rv = localDir->AppendRelativePath(mProductDirName);
+    rv = localDir->AppendRelativeNativePath(nsDependentCString(mProductDirName));
     if (NS_FAILED(rv)) return rv;
     rv = localDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)

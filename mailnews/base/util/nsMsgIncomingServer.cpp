@@ -452,15 +452,11 @@ nsMsgIncomingServer::GetFileValue(const char* prefname,
   
   nsCOMPtr<nsILocalFile> prefLocal;
   nsCOMPtr<nsIFileSpec> outSpec;
-  nsXPIDLCString pathBuf;
   
   nsresult rv = m_prefs->GetFileXPref(fullPrefName.get(), getter_AddRefs(prefLocal));
   if (NS_FAILED(rv)) return rv;
-  rv = NS_NewFileSpec(getter_AddRefs(outSpec));
-  if (NS_FAILED(rv)) return rv;
-  rv = prefLocal->GetPath(getter_Copies(pathBuf));
-  if (NS_FAILED(rv)) return rv;
-  rv = outSpec->SetNativePath((const char *)pathBuf);
+
+  rv = NS_NewFileSpecFromIFile(prefLocal, getter_AddRefs(outSpec));
   if (NS_FAILED(rv)) return rv;
   
   *spec = outSpec;

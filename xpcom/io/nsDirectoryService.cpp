@@ -39,7 +39,6 @@
 #include "nsCOMPtr.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsILocalFile.h"
 #include "nsLocalFile.h"
 #include "nsDebug.h"
 
@@ -79,11 +78,11 @@
 #include "nsAppFileLocationProvider.h"
 
 #if defined(XP_MAC)
-#define COMPONENT_REGISTRY_NAME "Component Registry"
-#define COMPONENT_DIRECTORY     "Components"
+#define COMPONENT_REGISTRY_NAME NS_LITERAL_CSTRING("Component Registry")
+#define COMPONENT_DIRECTORY     NS_LITERAL_CSTRING("Components")
 #else
-#define COMPONENT_REGISTRY_NAME "component.reg"  
-#define COMPONENT_DIRECTORY     "components"    
+#define COMPONENT_REGISTRY_NAME NS_LITERAL_CSTRING("component.reg")
+#define COMPONENT_DIRECTORY     NS_LITERAL_CSTRING("components")
 #endif 
 
 #if defined(XP_MAC)
@@ -159,7 +158,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
         if (lastSlash)
             *(lastSlash + 1) = '\0';
         
-        localFile->InitWithPath(buf);
+        localFile->InitWithNativePath(nsDependentCString(buf));
         *aFile = localFile;
         return NS_OK;
     }
@@ -261,7 +260,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
 
     if (moz5)
     {
-        localFile->InitWithPath(moz5);
+        localFile->InitWithNativePath(nsDependentCString(moz5));
         localFile->Normalize();
         *aFile = localFile;
         return NS_OK;
@@ -279,7 +278,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
         // Fall back to current directory.
         if (getcwd(buf, sizeof(buf)))
         {
-            localFile->InitWithPath(buf);
+            localFile->InitWithNativePath(nsDependentCString(buf));
             *aFile = localFile;
             return NS_OK;
         }
@@ -292,7 +291,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
     DosGetInfoBlocks( &ptib, &ppib);
     DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer);
     *strrchr( buffer, '\\') = '\0'; // XXX DBCS misery
-    localFile->InitWithPath(buffer);
+    localFile->InitWithNativePath(nsDependentCString(buffer));
     *aFile = localFile;
     return NS_OK;
 
@@ -301,7 +300,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
     char *moz5 = getenv("MOZILLA_FIVE_HOME");
     if (moz5)
     {
-        localFile->InitWithPath(moz5);
+        localFile->InitWithNativePath(nsDependentCString(moz5));
         localFile->Normalize();
         *aFile = localFile;
         return NS_OK;
@@ -319,7 +318,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
         if((p = strrchr(buf, '/')) != 0)
         {
           *p = 0;
-          localFile->InitWithPath(buf);
+          localFile->InitWithNativePath(nsDependentCString(buf));
           *aFile = localFile;
           return NS_OK;
         }
@@ -693,7 +692,7 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
         NS_RELEASE(fileData.data);  // addref occurs in FindProviderFile()
         return rv;
     }
-    
+
     FindProviderFile(NS_STATIC_CAST(nsIDirectoryServiceProvider*, this), &fileData);
     if (fileData.data)
     {
@@ -715,7 +714,7 @@ nsDirectoryService::Set(const char* prop, nsISupports* value)
     nsCStringKey key(prop);
     if (mHashtable->Exists(&key) || value == nsnull)
         return NS_ERROR_FAILURE;
-    
+
     nsCOMPtr<nsIFile> ourFile;
     value->QueryInterface(NS_GET_IID(nsIFile), getter_AddRefs(ourFile));
     if (ourFile)
@@ -723,8 +722,10 @@ nsDirectoryService::Set(const char* prop, nsISupports* value)
       nsCOMPtr<nsIFile> cloneFile;
       ourFile->Clone (getter_AddRefs (cloneFile));
       mHashtable->Put(&key, cloneFile);
+
       return NS_OK;
     }
+
     return NS_ERROR_FAILURE;   
 }
 

@@ -75,7 +75,7 @@ private:
 	nsresult ConfirmAutoMigration(PRBool canInteract, PRBool *confirmed);
 	nsresult CopyDefaultFile(nsIFile *profDefaultsDir,
 	                         nsIFile *newProfDir,
-								const char *fileName);
+                             const nsACString &fileName);
 	nsresult EnsureProfileFileExists(nsIFile *aFile);
 	nsresult LoadNewProfilePrefs();
     nsresult SetProfileDir(const PRUnichar *profileName, nsIFile *profileDir);

@@ -41,6 +41,7 @@
 #include "nsMsgImapCID.h"
 #include "nsImapMailFolder.h"
 #include "nsIEnumerator.h"
+#include "nsILocalFile.h"
 #include "nsIFolderListener.h"
 #include "nsCOMPtr.h"
 #include "nsIRDFService.h"
@@ -164,8 +165,8 @@ nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
                         if (NS_SUCCEEDED(rv))
                         {
                           nsCOMPtr<nsILocalFile> newChild(do_QueryInterface(destClone));
-                          nsXPIDLCString leafName;
-                          dirEntry->GetLeafName(getter_Copies(leafName));
+                          nsCAutoString leafName;
+                          dirEntry->GetLeafName(leafName);
                           newChild->AppendRelativePath(leafName);
                           rv = newChild->Exists(&exists);
                           if (NS_SUCCEEDED(rv) && !exists)
@@ -174,7 +175,7 @@ nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
                         }
                       }
                       else
-                        rv = dirEntry->CopyTo(destDir, nsnull);
+                        rv = dirEntry->CopyTo(destDir, nsCString());
                     }
                     
     }
@@ -1431,11 +1432,9 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName, nsIMsgFolder *p
 	   nsCOMPtr<nsILocalFile> destDir = (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
 	   NS_ENSURE_SUCCESS(rv,rv);
 	  
-	   nsCString oldPathStr (dirSpec.GetNativePathCString());
-       srcDir->InitWithPath(oldPathStr.get());
+       srcDir->InitWithNativePath(nsDependentCString(dirSpec.GetNativePathCString()));
 	   
-       nsCString newPathStr (parentPath.GetNativePathCString());
-       destDir->InitWithPath(newPathStr.get());
+       destDir->InitWithNativePath(nsDependentCString(parentPath.GetNativePathCString()));
        
 	   rv = RecursiveCopy(srcDir, destDir);
        

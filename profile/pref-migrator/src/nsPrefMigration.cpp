@@ -45,7 +45,10 @@
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsILocalFile.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDependentString.h"
 #include "nsFileStream.h"
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
@@ -608,34 +611,28 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
                      getter_AddRefs(PrefsFile4xAsIFile));
   if (NS_FAILED(rv)) return rv;
 
-  nsSpecialSystemDirectory systemTempDir(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-  nsFileSpec tempPrefsFile = systemTempDir;
-  
-  systemTempDir += "migrate"; 
-  
-  //Convert the systemTempDir to an nsILocalFile
-  nsCOMPtr<nsILocalFile> systemTempIFileDir;
-  rv = NS_NewLocalFile(systemTempDir, PR_TRUE, getter_AddRefs(systemTempIFileDir));
+  nsCOMPtr<nsIFile> systemTempDir;
+  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(systemTempDir));
   if (NS_FAILED(rv)) return rv;
 
+  systemTempDir->Append(NS_LITERAL_CSTRING("migrate"));
+  
   //Create a unique directory in the system temp dir based on the name of the 4.x prefs file
-  rv = systemTempIFileDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0700); 
+  rv = systemTempDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0700); 
   if (NS_FAILED(rv)) return rv;
 
-  rv = PrefsFile4xAsIFile->CopyTo(systemTempIFileDir, PREF_FILE_NAME_IN_4x);
+  rv = PrefsFile4xAsIFile->CopyTo(systemTempDir, NS_LITERAL_CSTRING(PREF_FILE_NAME_IN_4x));
   if (NS_FAILED(rv)) return rv;
   
-  //Get the new unique directory name and append it to the system temp dir
-  nsXPIDLCString uniquePrefsDir;
-  systemTempIFileDir->GetLeafName(getter_Copies(uniquePrefsDir));
-  tempPrefsFile += uniquePrefsDir;
-  tempPrefsFile += PREF_FILE_NAME_IN_4x;
+  nsCOMPtr<nsIFile> cloneFile;
+  rv = systemTempDir->Clone(getter_AddRefs(cloneFile));
+  if (NS_FAILED(rv)) return rv;
 
-  //Create the m_prefsFile fileSpec for use in ReadUserPrefsFrom
-//  rv = NS_NewFileSpecWithSpec(tempPrefsFile, getter_AddRefs(m_prefsFile));
-//  if (NS_FAILED(rv)) return rv;
+  m_prefsFile = do_QueryInterface(cloneFile, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  NS_NewLocalFile((const char *)tempPrefsFile, PR_TRUE, getter_AddRefs(m_prefsFile));
+  rv = m_prefsFile->Append(NS_LITERAL_CSTRING(PREF_FILE_NAME_IN_4x));
+  if (NS_FAILED(rv)) return rv;
 
   //Clear the prefs in case a previous set was read in.
   m_prefs->ResetPrefs();
@@ -1114,9 +1111,9 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   nsXPIDLCString path;
 
   newProfilePath->GetNativePath(getter_Copies(path));
-  NS_NewLocalFile(path, PR_TRUE, getter_AddRefs(newPrefsFile));
+  NS_NewNativeLocalFile(path, PR_TRUE, getter_AddRefs(newPrefsFile));
 
-  rv = newPrefsFile->Append(PREF_FILE_NAME_IN_5x);
+  rv = newPrefsFile->Append(NS_LITERAL_CSTRING(PREF_FILE_NAME_IN_5x));
   if (NS_FAILED(rv)) return rv;
 
   rv=m_prefs->SavePrefFile(newPrefsFile);
@@ -1129,9 +1126,9 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   if (flagExists)
     m_prefsFile->Remove(PR_FALSE);
   
-  systemTempIFileDir->Exists(&flagExists); //Delete the unique dir in the system temp dir.
+  systemTempDir->Exists(&flagExists); //Delete the unique dir in the system temp dir.
   if (flagExists)
-    systemTempIFileDir->Remove(PR_FALSE);
+    systemTempDir->Remove(PR_FALSE);
 
   return rv;
 }
@@ -1244,7 +1241,7 @@ nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newP
   if (NS_FAILED(rv)) return rv;
   
   // convert nsILocalFile to nsIFileSpec
-  rv = oldPrefPathFile->GetPath(getter_Copies(oldPrefPathStr));
+  rv = oldPrefPathFile->GetNativePath(oldPrefPathStr);
   if (NS_FAILED(rv)) return rv;
 
   rv = NS_NewFileSpec(getter_AddRefs(oldPrefPath));
@@ -2008,7 +2005,7 @@ nsPrefMigration::DetermineOldPath(nsIFileSpec *profilePath, const char *oldPathN
 	rv = bundle->GetStringFromName(entityName.get(), getter_Copies(localizedDirName));
 	if (NS_FAILED(rv)) return rv;
 
-	rv = oldLocalFile->AppendRelativeUnicodePath((const PRUnichar *)localizedDirName);
+	rv = oldLocalFile->AppendRelativePath(NS_ConvertUCS2toUTF8(localizedDirName));
 	if (NS_FAILED(rv)) return rv;
 
 	PRBool exists = PR_FALSE;
@@ -2025,10 +2022,10 @@ nsPrefMigration::DetermineOldPath(nsIFileSpec *profilePath, const char *oldPathN
 	}
 
 	/* at this point, the folder with the localized name exists, so use it */
-	nsXPIDLCString persistentDescriptor;
-	rv = oldLocalFile->GetPersistentDescriptor(getter_Copies(persistentDescriptor));
+	nsCAutoString persistentDescriptor;
+	rv = oldLocalFile->GetPersistentDescriptor(persistentDescriptor);
 	if (NS_FAILED(rv)) return rv;
-	rv = oldPath->SetPersistentDescriptorString((const char *)persistentDescriptor);
+	rv = oldPath->SetPersistentDescriptorString(persistentDescriptor.get());
 	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;

@@ -77,6 +77,7 @@
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
+#include "nsILocalFile.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 
@@ -2399,12 +2400,9 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	if (!channelURI)
 		return(NS_ERROR_NULL_POINTER);
 
-	nsCAutoString spec;
-	if (NS_FAILED(rv = channelURI->GetSpec(spec)))
+	nsCAutoString baseName;
+	if (NS_FAILED(rv = channelURI->GetSpec(baseName)))
 		return(rv);
-
-	// get base name
-    NS_ConvertUTF8toUCS2 baseName(spec);
 
 	PRInt32			slashOffset = baseName.RFindChar(PRUnichar('/'));
 	if (slashOffset < 0)		return(NS_ERROR_UNEXPECTED);
@@ -2435,55 +2433,57 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	if (NS_FAILED(context->GetBufferLength(&bufferLength)))	return(rv);
 	if (bufferLength < 1)	return(NS_OK);
 	
-	rv = outFile->AppendUnicode(baseName.get());
+	rv = outFile->Append(baseName);
 	if (NS_FAILED(rv)) return rv;
 	
 	// save data to file
 	// Note: write out one character at a time, as we might be dealing
 	//       with binary data (such as 0x00) [especially for images]
+    //
+    // XXX - It appears that this is done in order to discard the upper
+    // byte of each PRUnichar.  I hope that's OK!!
+    //
 	outFile->Remove(PR_FALSE);
 
-     // Make an nsFileSpec from file so we can use nsOutputFileStream
-     nsXPIDLCString pathBuf;
-     rv = outFile->GetPath(getter_Copies(pathBuf));
-     if (NS_FAILED(rv)) return rv;
-     nsFileSpec  outFileSpec((const char *)pathBuf);
+    nsCOMPtr<nsIOutputStream> outputStream, fileOutputStream;
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOutputStream), outFile);
+    if (NS_FAILED(rv)) return rv;
+    rv = NS_NewBufferedOutputStream(getter_AddRefs(outputStream), fileOutputStream, 4096);
+    if (NS_FAILED(rv)) return rv;
 
-	nsOutputFileStream	outputStream(outFileSpec);
-	if (!outputStream.failed())
-	{
-		for (PRInt32 loop=0; loop < bufferLength; loop++)
-		{
-			outputStream.put((char)(dataBuf[loop]));
-		}
-		outputStream.flush();		
-		outputStream.close();
+    PRUint32 bytesWritten;
+    for (PRInt32 loop=0; loop < bufferLength; loop++)
+    {
+        const char b = (const char) dataBuf[loop];
+        outputStream->Write(&b, 1, &bytesWritten);
+    }
+    outputStream->Flush();		
+    outputStream->Close();
 
-		if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT ||
-			contextType == nsIInternetSearchContext::ENGINE_UPDATE_CONTEXT)
-		{
+    if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT ||
+        contextType == nsIInternetSearchContext::ENGINE_UPDATE_CONTEXT)
+    {
 #ifdef	XP_MAC
-			// set appropriate Mac file type/creator for search engine files
-			nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(outFile));
-			if (macFile) {
-			  macFile->SetFileType('issp');
-			  macFile->SetFileCreator('fndf');
-			}
+        // set appropriate Mac file type/creator for search engine files
+        nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(outFile));
+        if (macFile) {
+          macFile->SetFileType('issp');
+          macFile->SetFileCreator('fndf');
+        }
 #endif
 
-			// check suggested category hint
-			const PRUnichar	*hintUni = nsnull;
-			rv = context->GetHintConst(&hintUni);
+        // check suggested category hint
+        const PRUnichar	*hintUni = nsnull;
+        rv = context->GetHintConst(&hintUni);
 
-			// update graph with various required info
-			SaveEngineInfoIntoGraph(outFile, nsnull, hintUni, dataBuf, PR_FALSE, PR_FALSE);
-		}
-		else if (contextType == nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT)
-		{
-			// update graph with icon info
-			SaveEngineInfoIntoGraph(nsnull, outFile, nsnull, nsnull, PR_FALSE, PR_FALSE);
-		}
-	}
+        // update graph with various required info
+        SaveEngineInfoIntoGraph(outFile, nsnull, hintUni, dataBuf, PR_FALSE, PR_FALSE);
+    }
+    else if (contextType == nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT)
+    {
+        // update graph with icon info
+        SaveEngineInfoIntoGraph(nsnull, outFile, nsnull, nsnull, PR_FALSE, PR_FALSE);
+    }
 
 	// after we're all done with the data buffer, get rid of it
 	context->Truncate();
@@ -3740,7 +3740,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 				    nsCAutoString			poststrC;
 				    poststrC.AssignWithConversion(postStr);
 				    if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postDataStream),
-									       PR_FALSE, poststrC.get(), 0)))
+									       PR_FALSE, poststrC, 0)))
 				    {
 					nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
 					NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
@@ -3831,11 +3831,11 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 	if (NS_FAILED(rv)) return(rv);
 	if (!exists) return(NS_ERROR_UNEXPECTED);
 
-	nsAutoString   basename;
-	nsXPIDLCString leafCName;
-	rv = native->GetLeafName(getter_Copies(leafCName));
+	nsCAutoString leafName;
+	rv = native->GetLeafName(leafName);
 	if (NS_FAILED(rv)) return rv;
-	basename.AssignWithConversion((const char *)leafCName);
+
+    NS_ConvertUTF8toUCS2 basename(leafName);
 
 	// ensure that the basename points to the search engine file
 	PRInt32		extensionOffset;
@@ -3845,14 +3845,13 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 		basename.Append(NS_LITERAL_STRING(".src"));
 	}
 
-  nsXPIDLCString filePath;
-  rv = native->GetPath(getter_Copies(filePath));
+  nsCAutoString filePath;
+  rv = native->GetNativePath(filePath);
   if (NS_FAILED(rv)) return rv;
-  nsFileSpec nativeSpec((const char *)filePath);
   
 	nsAutoString	searchURL;
 	searchURL.AssignWithConversion(kEngineProtocol);
-	char		*uriCescaped = nsEscape((const char *)filePath, url_Path);
+	char		*uriCescaped = nsEscape(filePath.get(), url_Path);
 	if (!uriCescaped)	return(NS_ERROR_NULL_POINTER);
 	searchURL.AppendWithConversion(uriCescaped);
 	nsCRT::free(uriCescaped);
@@ -4055,13 +4054,12 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
         if (NS_FAILED(rv) || (fileSize == 0))
             continue;
     
-        nsXPIDLCString pathBuf;
-        rv = dirEntry->GetPath(getter_Copies(pathBuf));
+        nsCAutoString pathBuf;
+        rv = dirEntry->GetPath(pathBuf);
         if (NS_FAILED(rv))
         continue;
 
-		nsAutoString	uri;
-		uri.AssignWithConversion((const char *)pathBuf);
+		NS_ConvertUTF8toUCS2 uri(pathBuf);
 		PRInt32		len = uri.Length();
 		if (len < 5)
 		{
@@ -4142,7 +4140,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
 		
 		if (foundIconFlag)
 		{
-		  NS_NewLocalFile((const char *)iconSpec, PR_TRUE, getter_AddRefs(iconFile));
+		  NS_NewNativeLocalFile(nsDependentCString((const char *)iconSpec), PR_TRUE, getter_AddRefs(iconFile));
 		}
 
 		SaveEngineInfoIntoGraph(dirEntry, iconFile, nsnull, nsnull, isSystemSearchFile, checkMacFileType);

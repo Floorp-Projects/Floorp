@@ -57,8 +57,8 @@ interface nsIFile : nsISupports
      *      A string which is intented to be a child node of the
      *      nsIFile.
      */
-    void append([const] in string node);
-    void appendUnicode([const] in wstring node);
+    void append(in AUTF8String node);
+    [noscript] void appendNative(in ACString node);
 
     /**
      * Normalize the pathName (e.g. removing .. and . components on Unix).
@@ -91,8 +91,8 @@ interface nsIFile : nsISupports
     /**
      *   Accessor to the leaf name of the file itself.
      */
-    attribute string leafName;
-    attribute wstring unicodeLeafName;
+    attribute AUTF8String leafName;
+    [noscript] attribute ACString nativeLeafName;
 
     /**
      *  copyTo
@@ -120,8 +120,8 @@ interface nsIFile : nsISupports
      *       which case the current leaf name will be used.
      *
      */
-    void copyTo(in nsIFile newParentDir, [const] in string newName);
-    void copyToUnicode(in nsIFile newParentDir, [const] in wstring newName);
+    void copyTo(in nsIFile newParentDir, in AUTF8String newName);
+    [noscrpit] void CopyToNative(in nsIFile newParentDir, in ACString newName);
 
     /**
      *  copyToFollowingLinks
@@ -131,8 +131,8 @@ interface nsIFile : nsISupports
      *  such as Unix and Linux always follow symbolic links
      *  when copying.
      */
-    void copyToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
-    void copyToFollowingLinksUnicode(in nsIFile newParentDir, [const] in wstring newName);
+    void copyToFollowingLinks(in nsIFile newParentDir, in AUTF8String newName);
+    [noscript] void copyToFollowingLinksNative(in nsIFile newParentDir, in ACString newName);
 
     /**
      *  moveTo
@@ -159,8 +159,8 @@ interface nsIFile : nsISupports
      *       which case the current leaf name will be used.
      *
      */
-    void moveTo(in nsIFile newParentDir, [const] in string newName);
-    void moveToUnicode(in nsIFile newParentDir, [const] in wstring newName);
+    void moveTo(in nsIFile newParentDir, in AUTF8String newName);
+    [noscript] void moveToNative(in nsIFile newParentDir, in ACString newName);
 
     /**
      *  This will try to delete this file.  The 'recursive' flag
@@ -215,11 +215,10 @@ interface nsIFile : nsISupports
      *  path:
      *      Find out what the nsIFile points at.
      */
-
-    readonly attribute string target;
-    readonly attribute wstring unicodeTarget;
-    readonly attribute string path;
-    readonly attribute wstring unicodePath;
+    readonly attribute AUTF8String target;
+    [noscript] readonly attribute ACString nativeTarget;
+    readonly attribute AUTF8String path;
+    [noscript] readonly attribute ACString nativePath;
 
     boolean exists();
     boolean isWritable();
@@ -260,7 +259,6 @@ interface nsIFile : nsISupports
      *       permissions.
      */
     void createUnique(in unsigned long type, in unsigned long permissions);
-    
 
     /**
       * clone()

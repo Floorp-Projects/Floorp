@@ -44,6 +44,7 @@
 #include "nsMsgMessageFlags.h"
 #include "nsIDBFolderInfo.h"
 #include "nsIInputStream.h"
+#include "nsILocalFile.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgDBCID.h"
@@ -1554,13 +1555,14 @@ nsOutputFileStream * nsParseNewMailState::GetLogFile ()
     nsCOMPtr<nsIFile> logDir;
     NS_GetSpecialDirectory(NS_APP_MAIL_50_DIR, getter_AddRefs(logDir));
 
-    nsXPIDLCString pathBuf;
-    logDir->Append("filter.log");
-    nsresult rv = logDir->GetPath(getter_Copies(pathBuf));
-    if (NS_FAILED(rv)) return nsnull;
-    nsCOMPtr<nsIFileSpec> outSpec;
+    logDir->Append(NS_LITERAL_CSTRING("filter.log"));
 
-		nsFileSpec logFile(pathBuf);
+    nsCAutoString pathBuf;
+    nsresult rv = logDir->GetNativePath(pathBuf);
+    if (NS_FAILED(rv)) return nsnull;
+
+		nsFileSpec logFile(pathBuf.get());
+
 		m_logFile = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE, 00600);
 	}
 	return m_logFile;

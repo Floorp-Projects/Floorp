@@ -1175,19 +1175,15 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(historyFile));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = historyFile->Append("absync.dat");
+  rv = historyFile->Append(NS_LITERAL_CSTRING("absync.dat"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // TODO: Convert the rest of the code to use
   // nsIFile and avoid this conversion hack.
   do
   {
-    nsXPIDLCString pathBuf;
-    rv = historyFile->GetPath(getter_Copies(pathBuf));
+    rv = NS_NewFileSpecFromIFile(historyFile, getter_AddRefs(mHistoryFile));
     if (NS_FAILED(rv)) break;
-    rv = NS_NewFileSpec(getter_AddRefs(mHistoryFile));
-    if (NS_FAILED(rv)) break;
-    rv = mHistoryFile->SetNativePath(pathBuf);
   }
   while (0);
 
@@ -1227,7 +1223,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(lockFile));
   if (NS_SUCCEEDED(rv)) 
   {
-    rv = lockFile->Append((const char *)"absync.lck");
+    rv = lockFile->Append(NS_LITERAL_CSTRING("absync.lck"));
     if (NS_SUCCEEDED(rv)) 
     {
     
@@ -1235,12 +1231,8 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
       // nsIFile and avoid this conversion hack.
       do
       {
-        nsXPIDLCString pathBuf;
-        rv = lockFile->GetPath(getter_Copies(pathBuf));
+        rv = NS_NewFileSpecFromIFile(lockFile, getter_AddRefs(mLockFile));
         if (NS_FAILED(rv)) break;
-        rv = NS_NewFileSpec(getter_AddRefs(mLockFile));
-        if (NS_FAILED(rv)) break;
-        rv = mLockFile->SetNativePath(pathBuf);
       }
       while (0);
       

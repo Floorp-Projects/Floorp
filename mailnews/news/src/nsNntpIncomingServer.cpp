@@ -271,13 +271,9 @@ nsNntpIncomingServer::GetNewsrcRootPath(nsIFileSpec **aNewsrcRootPath)
     
     // Make the resulting nsIFileSpec
     // TODO: Convert arg to nsILocalFile and avoid this
-    nsXPIDLCString pathBuf;
-    rv = localFile->GetPath(getter_Copies(pathBuf));
-    if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIFileSpec> outSpec;
-    rv = NS_NewFileSpec(getter_AddRefs(outSpec));
+    rv = NS_NewFileSpecFromIFile(localFile, getter_AddRefs(outSpec));
     if (NS_FAILED(rv)) return rv;
-    outSpec->SetNativePath(pathBuf);
     
     if (!havePref || !exists)
         rv = SetNewsrcRootPath(outSpec);

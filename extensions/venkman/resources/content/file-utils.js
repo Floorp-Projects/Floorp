@@ -105,7 +105,7 @@ function futils_nosepicker(initialPath, typeList, attribs)
         {
             localFile =
                 classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-            localFile.initWithUnicodePath(initialPath);
+            localFile.initWithPath(initialPath);
         }
         else
         {
@@ -224,7 +224,7 @@ function LocalFile(file, mode, perms, tmp)
     if (typeof file == "string")
     {
         this.localFile = classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-        this.localFile.initWithUnicodePath(file);
+        this.localFile.initWithPath(file);
     }
     else if (file instanceof nsILocalFile)
     {

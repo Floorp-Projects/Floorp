@@ -90,7 +90,7 @@ function chooseProfileFolder( aRootFolder )
       fp.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
       fp.show();
       // later change to 
-      aRootFolder = fp.file.unicodePath;
+      aRootFolder = fp.file.path;
     }
     catch(e) {
       aRootFolder = null;
@@ -100,7 +100,7 @@ function chooseProfileFolder( aRootFolder )
     var folderText = document.getElementById("ProfileDir");
     dump("*** setting rootFolderAttribute to " + aRootFolder + "\n");
     folderText.setAttribute( "rootFolder", aRootFolder );
-    if ( aRootFolder != top.profile.defaultProfileParentDir.unicodePath )
+    if ( aRootFolder != top.profile.defaultProfileParentDir.path )
       document.getElementById( "useDefault" ).removeAttribute("disabled");
     updateProfileName();
   }
@@ -128,14 +128,14 @@ function updateProfileName()
     var sfile = Components.classes[nsILocalFile_CONTRACTID].createInstance(nsILocalFile); 
     if ( sfile ) {
       // later change to 
-      sfile.initWithUnicodePath(rootFolder);
+      sfile.initWithPath(rootFolder);
     }
     // later change to 
-    sfile.appendUnicode(profileName.value);
+    sfile.append(profileName.value);
     
     clearFolderDisplay();
     // later change to 
-    var value = document.createTextNode( sfile.unicodePath );
+    var value = document.createTextNode( sfile.path );
     folderDisplayElement.appendChild( value );
   }
   catch(e) {
@@ -153,7 +153,7 @@ function setDisplayToDefaultFolder()
     if ( fileSpec )
       fileSpec = fileSpec.QueryInterface( Components.interfaces.nsIFile );
     if ( fileSpec )
-      profileDisplay.setAttribute("rootFolder", fileSpec.unicodePath );
+      profileDisplay.setAttribute("rootFolder", fileSpec.path );
 
 
   }

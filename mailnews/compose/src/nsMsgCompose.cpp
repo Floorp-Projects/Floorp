@@ -110,6 +110,7 @@
 #include "nsNetUtil.h"
 #include "nsMsgSimulateError.h"
 #include "nsIAddrDatabase.h"
+#include "nsILocalFile.h"
 
 // Defines....
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -3063,7 +3064,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   // are doing plain text compose, we should insert some sort of message
   // saying "Image Signature Omitted" or something.
   //
-  nsXPIDLCString sigNativePath;
+  nsCAutoString sigNativePath;
   PRBool        useSigFile = PR_FALSE;
   PRBool        htmlSig = PR_FALSE;
   PRBool        imageSig = PR_FALSE;
@@ -3075,12 +3076,15 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     rv = identity->GetAttachSignature(&useSigFile);
     if (NS_SUCCEEDED(rv) && useSigFile) 
     {
+      useSigFile = PR_FALSE;  // by default, assume no signature file!
+
       nsCOMPtr<nsILocalFile> sigFile;
       rv = identity->GetSignature(getter_AddRefs(sigFile));
-      if (NS_SUCCEEDED(rv) && sigFile)
-         rv = sigFile->GetPath(getter_Copies(sigNativePath));
-      else
-        useSigFile = PR_FALSE;  //No signature file! therefore turn it off.
+      if (NS_SUCCEEDED(rv) && sigFile) {
+        rv = sigFile->GetNativePath(sigNativePath);
+        if (NS_SUCCEEDED(rv) && !sigNativePath.IsEmpty())
+          useSigFile = PR_TRUE; // ok, there's a signature file
+      }
     }
   }
   
@@ -3090,7 +3094,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   if ((!useSigFile) || NS_FAILED(rv))
     return NS_OK;
 
-  nsFileSpec    testSpec(sigNativePath);
+  nsFileSpec    testSpec(sigNativePath.get());
   
   // If this file doesn't really exist, just bail!
   if (!testSpec.Exists())

@@ -26,7 +26,7 @@ var dialog;
 
 function loadDialog() {
     dialog.location.setAttribute( "value", data.source.URI.spec );
-    dialog.fileName.setAttribute( "value", data.target.unicodePath );
+    dialog.fileName.setAttribute( "value", data.target.path );
     dialog.error = false;
 }
 

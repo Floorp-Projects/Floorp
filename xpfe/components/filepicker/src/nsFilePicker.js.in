@@ -66,7 +66,7 @@ function nsFilePicker()
   this.mFilterIndex = 0;
   if (lastDirectory) {
     this.mDisplayDirectory = Components.classes[LOCAL_FILE_CONTRACTID].createInstance(nsILocalFile);
-    this.mDisplayDirectory.initWithUnicodePath(lastDirectory);
+    this.mDisplayDirectory.initWithPath(lastDirectory);
   } else {
     this.mDisplayDirectory = null;
   }

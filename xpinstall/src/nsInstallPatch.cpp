@@ -43,6 +43,7 @@
 #include "nsInstallPatch.h"
 #include "nsInstallResources.h"
 #include "nsIDOMInstallVersion.h"
+#include "nsILocalFile.h"
 
 #include "gdiff.h"
 
@@ -107,7 +108,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     nsString folderSpec; folderSpec.AssignWithConversion(tempTargetFile);
 	
     nsCOMPtr<nsILocalFile> tmp;
-    NS_NewLocalFile((char*)tempTargetFile, PR_TRUE, getter_AddRefs(tmp));
+    NS_NewNativeLocalFile(nsDependentCString(tempTargetFile), PR_TRUE, getter_AddRefs(tmp));
 
     mPatchFile      =   nsnull;
     mTargetFile     =   nsnull;
@@ -175,7 +176,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     mVersionInfo->Init(inVInfo);
     
     if(! inPartialPath.IsEmpty())
-        mTargetFile->Append(NS_LossyConvertUCS2toASCII(inPartialPath).get());
+        mTargetFile->Append(NS_ConvertUCS2toUTF8(inPartialPath));
 }
 
 nsInstallPatch::~nsInstallPatch()
@@ -319,8 +320,8 @@ PRInt32 nsInstallPatch::Complete()
             nsString tempVersionString;
             mVersionInfo->ToString(tempVersionString);
             
-            nsXPIDLCString tempPath;
-            mTargetFile->GetPath(getter_Copies(tempPath));
+            nsCAutoString tempPath;
+            mTargetFile->GetNativePath(tempPath);
 
             // DO NOT propagate version registry errors, it will abort 
             // FinalizeInstall() leaving things hosed. These piddly errors
@@ -374,9 +375,9 @@ char* nsInstallPatch::toString()
 
         if (rsrcVal)
         {
-            char* temp;
-            mTargetFile->GetPath(&temp);
-            sprintf( buffer, rsrcVal, temp); 
+            nsCAutoString temp;
+            mTargetFile->GetNativePath(temp);
+            sprintf( buffer, rsrcVal, temp.get()); 
             nsCRT::free(rsrcVal);
         }
     }
@@ -414,8 +415,8 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
   nsCOMPtr<nsILocalFile> uniqueSrcFile;
   nsCOMPtr<nsILocalFile> patchFileLocal = do_QueryInterface(patchFile, &rv);
   
-  char*        realfile;
-  sourceFile->GetPath(&realfile);
+  nsCAutoString realfile;
+  sourceFile->GetPath(realfile);
 
   sourceFile->Clone(getter_AddRefs(outFileSpec));
 
@@ -449,20 +450,20 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
     if (( dd->bWin32BoundImage || dd->bMacAppleSingle) && (status == GDIFF_OK ))
     {
         // make an unique tmp file  (FILENAME-src.EXT)
-        char* leafName;
-        rv = sourceFile->GetLeafName(&leafName);
+        nsCAutoString leafName;
+        rv = sourceFile->GetLeafName(leafName);
 
-        nsString tmpName(NS_LITERAL_STRING("-src"));
-        nsString tmpFileName; tmpFileName.AssignWithConversion(leafName);
+        NS_NAMED_LITERAL_STRING(tmpName, "-src");
+        NS_ConvertUTF8toUCS2 tmpFileName(leafName);
 
         PRInt32 i;
         if ((i = tmpFileName.RFindChar('.')) > 0)
         {
-            nsString ext;
-            nsString fName;
+            nsAutoString ext;
+            nsAutoString fName;
             tmpFileName.Right(ext, (tmpFileName.Length() - i) );        
             tmpFileName.Left(fName, (tmpFileName.Length() - (tmpFileName.Length() - i)));
-            tmpFileName = fName + tmpName + ext;
+            tmpFileName.Assign(fName + tmpName + ext);
 
         } else {
                tmpFileName += tmpName;
@@ -470,29 +471,31 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
         
     
         rv = sourceFile->Clone(getter_AddRefs(tempSrcFile));  //Clone the sourceFile
-        tempSrcFile->SetLeafName(NS_LossyConvertUCS2toASCII(tmpFileName).get()); //Append the new leafname
+        tempSrcFile->SetLeafName(NS_ConvertUCS2toUTF8(tmpFileName)); //Append the new leafname
         uniqueSrcFile = do_QueryInterface(tempSrcFile, &rv);  //Create an nsILocalFile version to pass to MakeUnique
         MakeUnique(uniqueSrcFile); 
 
-       char*        realfile;
-       sourceFile->GetPath(&realfile);
+       nsCAutoString realfile;
+       sourceFile->GetPath(realfile);
 
 #ifdef WIN32
+        nsCAutoString nativeFile;
+        sourceFile->GetNativePath(nativeFile);
+
         // unbind Win32 images
 
-        char* unboundFile;
-        uniqueSrcFile->GetPath(&unboundFile);
+        nsCAutoString unboundFile;
+        uniqueSrcFile->GetNativePath(unboundFile);
 
-        if (su_unbind(realfile, unboundFile))  //
+        if (su_unbind((char*)nativeFile.get(), (char*)unboundFile.get()))  //
         {
-            PL_strfree(realfile);
-            realfile = PL_strdup(unboundFile);
+            uniqueSrcFile->GetPath(realfile);
         }
         else
         {
             status = GDIFF_ERR_MEM;
         }
-        PL_strfree(unboundFile);
+        unboundFile.Truncate();
 #endif
 #ifdef XP_MAC
    // Encode src file, and put into temp file
@@ -506,8 +509,7 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
         if (status == noErr)
         {
             // set
-            PL_strfree(realfile);
-            tempSrcFile->GetPath(&realfile);
+            tempSrcFile->GetPath(realfile);
         }
 #endif
     }
@@ -516,16 +518,15 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
     goto cleanup;
 
     // make a unique file at the same location of our source file  (FILENAME-ptch.EXT)
-    nsString patchFileName(NS_LITERAL_STRING("-ptch"));
-    char* leafName;
-    sourceFile->GetLeafName(&leafName);
-    nsString newFileName; newFileName.AssignWithConversion(leafName);;
+    NS_NAMED_LITERAL_CSTRING(patchFileName, "-ptch");
+    nsCAutoString newFileName;
+    sourceFile->GetLeafName(newFileName);
 
     PRInt32 index;
     if ((index = newFileName.RFindChar('.')) > 0)
     {
-        nsString extention;
-        nsString fileName;
+        nsCAutoString extention;
+        nsCAutoString fileName;
         newFileName.Right(extention, (newFileName.Length() - index) );        
         newFileName.Left(fileName, (newFileName.Length() - (newFileName.Length() - index)));
         newFileName = fileName + patchFileName + extention;
@@ -537,7 +538,7 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
     }
 
 
-    outFileSpec->SetLeafName(NS_LossyConvertUCS2toASCII(newFileName).get());  //Set new leafname
+    outFileSpec->SetLeafName(newFileName);  //Set new leafname
     nsCOMPtr<nsILocalFile> outFileLocal = do_QueryInterface(outFileSpec, &rv); //Create an nsILocalFile version 
                                                                                //to send to MakeUnique()
     MakeUnique(outFileLocal);
@@ -626,8 +627,8 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
         
         outFileSpec->Remove(PR_FALSE);
         
-        char* leaf;
-        anotherName->GetLeafName(&leaf);
+        nsCAutoString leaf;
+        anotherName->GetLeafName(leaf);
         anotherName->CopyTo(parent, leaf);
         
         anotherName->Clone(newFile);
@@ -665,11 +666,6 @@ cleanup:
         PR_DELETE( tmpurl );
     }
 
-    if (realfile != NULL)
-    {
-        PL_strfree(realfile);
-    }
-    
     if (tempSrcFile)
     {
         tempSrcFile->Exists(&flagExists);
@@ -715,13 +711,13 @@ nsInstallPatch::HashFilePath(nsIFile* aPath)
 {
     PRUint32 rv = 0;
 
-    char* cPath;
-    aPath->GetPath(&cPath);
+    nsCAutoString cPath;
+    aPath->GetNativePath(cPath);
     
-    if(cPath != nsnull) 
+    if (!cPath.IsEmpty())
     {
         char  ch;
-        char* pathIndex = cPath;
+        const char* pathIndex = cPath.get();
 
         while ((ch = *pathIndex++) != 0) 
         {
@@ -729,8 +725,6 @@ nsInstallPatch::HashFilePath(nsIFile* aPath)
             rv = ((rv << 5) + (rv << 2) + rv) + ch;
         }
     }
-
-    PL_strfree(cPath);
 
     return (void*)rv;
 }

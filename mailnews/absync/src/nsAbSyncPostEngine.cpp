@@ -698,7 +698,7 @@ nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, const char *postData)
   if (!httpChannel)
     return NS_ERROR_FAILURE;
 
-  if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postStream), PR_FALSE, postData, 0))){
+  if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postStream), PR_FALSE, nsDependentCString(postData), 0))){
     nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
     NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
     uploadChannel->SetUploadStream(postStream, nsnull, -1);

@@ -129,9 +129,9 @@ static int PR_CALLBACK compare(const void* aElement1,
     coll->CompareString(kCollationStrengthDefault, str1, str2, &res);
     return res;*/
 #else
-    nsXPIDLCString name1, name2;
-    a->GetLeafName(getter_Copies(name1));
-    b->GetLeafName(getter_Copies(name2));
+    nsCAutoString name1, name2;
+    a->GetNativeLeafName(name1);
+    b->GetNativeLeafName(name2);
     
     return Compare(name1, name2);
 #endif
@@ -150,11 +150,11 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
-        nsXPIDLCString path;
-        aDir->GetPath(getter_Copies(path));
+        nsCAutoString path;
+        aDir->GetNativePath(path);
         PR_LOG(gLog, PR_LOG_DEBUG,
                ("nsDirectoryIndexStream[%p]: initialized on %s",
-                this, (const char*) path));
+                this, path.get()));
     }
 #endif
 
@@ -327,11 +327,11 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
 
 #ifdef PR_LOGGING
             if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
-                nsXPIDLCString path;
-                current->GetPath(getter_Copies(path));
+                nsCAutoString path;
+                current->GetNativePath(path);
                 PR_LOG(gLog, PR_LOG_DEBUG,
                        ("nsDirectoryIndexStream[%p]: iterated %s",
-                        this, (const char*) path));
+                        this, path.get()));
             }
 #endif
 
@@ -381,8 +381,8 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
                 mBuf.Append(' ');
             }
 #else
-            nsXPIDLCString leafname;
-            rv = current->GetLeafName(getter_Copies(leafname));
+            nsCAutoString leafname;
+            rv = current->GetNativeLeafName(leafname);
             if (NS_FAILED(rv)) return rv;
             if (!leafname.IsEmpty()) {
                 char* escaped = nsEscape(leafname.get(), url_Path);

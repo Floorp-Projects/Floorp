@@ -43,6 +43,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIAbLDAPReplicationQuery.h"
 #include "nsIAddrDatabase.h"
+#include "nsILocalFile.h"
 #include "nsDirPrefs.h"
 
 class nsAbLDAPProcessReplicationData : public nsIAbLDAPProcessReplicationData
@@ -63,7 +64,7 @@ protected :
 
   nsCOMPtr<nsIAddrDatabase> mReplicationDB;
   nsCOMPtr <nsILocalFile> mReplicationFile;
-  nsCOMPtr <nsIFile> mBackupReplicationFile;
+  nsCOMPtr <nsILocalFile> mBackupReplicationFile;
 
   // state of processing, protocol used and count of results
   PRInt32         mState;

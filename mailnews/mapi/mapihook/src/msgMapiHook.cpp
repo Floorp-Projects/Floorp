@@ -518,9 +518,9 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
         {
             // check if attachment exists
             if (aIsUnicode)
-                pFile->InitWithUnicodePath (aFiles[i].lpszPathName) ; 
+                pFile->InitWithPath (NS_ConvertUCS2toUTF8(aFiles[i].lpszPathName)) ; 
             else
-                pFile->InitWithPath ((char *) aFiles[i].lpszPathName) ; 
+                pFile->InitWithNativePath (nsDependentCString((const char*)aFiles[i].lpszPathName)) ; 
             PRBool bExist ;
             rv = pFile->Exists(&bExist) ;
             if (NS_FAILED(rv) || (!bExist) ) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ;
@@ -540,33 +540,35 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
                 rv = NS_FileSpecToIFile(&tmpDir, getter_AddRefs(pTempPath)) ;
                 if(NS_FAILED(rv) || !pTempPath) return rv ;
                 // temp dir path
-                nsXPIDLString tempPath ;
-                rv = pTempPath->GetUnicodePath (getter_Copies(tempPath)) ;
+                nsCAutoString tempPath ;
+                rv = pTempPath->GetPath (tempPath) ;
                 if(NS_FAILED(rv) || tempPath.IsEmpty()) return rv ;
 
                 // filename of the file attachment
-                nsXPIDLString leafName ;
-                pFile->GetUnicodeLeafName (getter_Copies(leafName)) ;
+                nsCAutoString leafName ;
+                pFile->GetLeafName (leafName) ;
                 if(NS_FAILED(rv) || leafName.IsEmpty()) return rv ;
                 // full path of the file attachment
-                nsXPIDLString path ;
-                pFile->GetUnicodePath (getter_Copies(path)) ;
+                nsCAutoString path ;
+                pFile->GetPath (path) ;
                 if(NS_FAILED(rv) || path.IsEmpty()) return rv ;
                 
                 // dir path of the file attachment
-                nsAutoString dirPath (path.get()) ;
+                nsCAutoString dirPath (path.get()) ;
                 PRInt32 offset = dirPath.Find (leafName.get()) ;
                 if (offset != kNotFound && offset > 1)
                     dirPath.SetLength(offset-1) ;
                 // see if the attachment dir path (only) is same as temp path
-                if (!Compare(tempPath, dirPath, nsCaseInsensitiveStringComparator()))
+                // XXX need nsCaseInsensitiveUTF8StringComparator()
+                if (!Compare(NS_ConvertUTF8toUCS2(tempPath),
+                             NS_ConvertUTF8toUCS2(dirPath),
+                             nsCaseInsensitiveStringComparator()))
                 {
                     // if not already existing, create another temp dir for mapi within Win temp dir
-                    nsAutoString strTempDir ;
-                    strTempDir += tempPath.get() ; 
+                    nsCAutoString strTempDir ;
                     // this is windows only so we can do "\\"
-                    strTempDir.AppendWithConversion("\\moz_mapi") ; 
-                    pTempDir->InitWithUnicodePath (strTempDir.get()) ;
+                    strTempDir = tempPath + NS_LITERAL_CSTRING("\\moz_mapi");
+                    pTempDir->InitWithPath (strTempDir) ;
                     pTempDir->Exists (&bExist) ;
                     if (!bExist)
                     {
@@ -582,21 +584,25 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
                     // rename or copy the existing temp file with the real file name
                     if (aIsUnicode)
                     {
+                        NS_ConvertUCS2toUTF8 fileNameUTF8(aFiles[i].lpszFileName);
                         // check if the user is sending a temporary unsaved file, in this case
                         // the leaf name of the PathName and the FileName (real filename) would be same
                         // if so copy the file (this will create a copy file) and then send else move would do nothing
                         // and the calling app would delete the file and then send will fail.
-                        if (!Compare(nsDependentString(aFiles[i].lpszFileName), nsDependentString(leafName), nsCaseInsensitiveStringComparator()))
+                        // XXX need nsCaseInsensitiveUTF8StringComparator()
+                        if (!Compare(nsDependentString(aFiles[i].lpszFileName),
+                                     NS_ConvertUTF8toUCS2(leafName),
+                                     nsCaseInsensitiveStringComparator()))
                         {
-                            rv = pFile->CopyToUnicode(pTempDir, aFiles[i].lpszFileName) ;
-                            pFile->InitWithUnicodePath(strTempDir.get()) ;
-                            pFile->AppendUnicode (aFiles[i].lpszFileName) ;
+                            rv = pFile->CopyTo(pTempDir, fileNameUTF8);
+                            pFile->InitWithPath(strTempDir) ;
+                            pFile->Append(fileNameUTF8);
                         }
                         else
                         {
                             // else if user is sending an already existing file open in the application
                             // just move the file to one with real file name, better performance
-                            rv = pFile->MoveToUnicode(nsnull, aFiles[i].lpszFileName) ;
+                            rv = pFile->MoveTo(nsnull, fileNameUTF8);
                             // now create an empty file with the temp filename so that
                             // the calling apps donot crash if they dont find their temp file
                             if (NS_SUCCEEDED(rv))
@@ -613,18 +619,22 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
                         // convert to Unicode using Platform charset
                         rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), (char *) aFiles[i].lpszFileName, fileName);
                         if (NS_FAILED(rv)) return rv ;
+                        nsDependentCString fileNameNative((char *) aFiles[i].lpszFileName);
                         // now compare the unicode filename string
-                        if (!Compare(fileName, leafName, nsCaseInsensitiveStringComparator()))
+                        // XXX need nsCaseInsensitiveUTF8StringComparator()
+                        if (!Compare(fileName,
+                                     NS_ConvertUTF8toUCS2(leafName),
+                                     nsCaseInsensitiveStringComparator()))
                         {
-                            rv = pFile->CopyTo(pTempDir, (char *) aFiles[i].lpszFileName) ;
-                            pFile->InitWithUnicodePath(strTempDir.get()) ;
-                            pFile->Append ((char *) aFiles[i].lpszFileName) ;
+                            rv = pFile->CopyToNative(pTempDir, fileNameNative);
+                            pFile->InitWithPath(strTempDir) ;
+                            pFile->AppendNative (fileNameNative);
                         }
                         else
                         {
                             // else if user is sending an already existing file open in the application
                             // just move the file to one with real file name, better performance
-                            rv = pFile->MoveTo(nsnull, (char *) aFiles[i].lpszFileName) ;
+                            rv = pFile->MoveToNative(nsnull, fileNameNative);
                             // now create an empty file with the temp filename so that
                             // the calling apps donot crash if they dont find their temp file
                             if (NS_SUCCEEDED(rv))
@@ -780,7 +790,7 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
     {
         nsCOMPtr <nsILocalFile> pFile = do_CreateInstance (NS_LOCAL_FILE_CONTRACTID, &rv) ;
         if (NS_FAILED(rv) || (!pFile) ) return rv ;        
-        pFile->InitWithUnicodePath (strFilePaths.get()) ;
+        pFile->InitWithPath (NS_ConvertUCS2toUTF8(strFilePaths)) ;
 
         PRBool bExist ;
         rv = pFile->Exists(&bExist) ;
@@ -816,7 +826,7 @@ nsresult nsMapiHook::PopulateCompFieldsForSendDocs(nsIMsgCompFields * aCompField
                     newFilePaths += offset + strDelimChars.Length() ;
             }
 
-            pFile->InitWithUnicodePath (RemainingPaths.get()) ;
+            pFile->InitWithPath (NS_ConvertUCS2toUTF8(RemainingPaths)) ;
 
     #ifdef RAJIV_DEBUG
             printf ("File : %S \n", RemainingPaths.get()) ; 

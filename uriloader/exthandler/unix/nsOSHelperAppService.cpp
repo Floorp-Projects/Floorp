@@ -140,8 +140,9 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
   if (aMIMEInfo)
   {
     nsCOMPtr<nsIFile> application;
-    nsXPIDLCString path;
-    aTempFile->GetPath(getter_Copies(path));
+
+    nsCAutoString path;
+    aTempFile->GetNativePath(path);
     
     aMIMEInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
     if (application)
@@ -327,7 +328,7 @@ CreateInputStream(const nsAString& aFilename,
   nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
-  rv = file->InitWithUnicodePath(PromiseFlatString(aFilename).get());
+  rv = file->InitWithPath(NS_ConvertUCS2toUTF8(aFilename));
   if (NS_FAILED(rv))
     return rv;
 
@@ -895,7 +896,7 @@ GetHandlerAndDescriptionFromMailcapFile(const nsAString& aFilename,
   nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
-  rv = file->InitWithUnicodePath(PromiseFlatString(aFilename).get());
+  rv = file->InitWithPath(NS_ConvertUCS2toUTF8(aFilename));
   if (NS_FAILED(rv))
     return rv;
 
@@ -1093,14 +1094,14 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   // first check if this is a full path
   PRBool exists = PR_FALSE;
   if (*platformAppPath == '/') {
-    localFile->InitWithUnicodePath(platformAppPath);
+    localFile->InitWithPath(NS_ConvertUCS2toUTF8(platformAppPath));
     localFile->Exists(&exists);
   } else {
+
     // ugly hack.  Walk the PATH variable...
     char* unixpath = PR_GetEnv("PATH");
-    nsAutoString path;
-    path.Assign(NS_ConvertUTF8toUCS2(unixpath));
-    nsAString::const_iterator start_iter, end_iter, colon_iter;
+    nsCAutoString path(unixpath);
+    nsACString::const_iterator start_iter, end_iter, colon_iter;
 
     path.BeginReading(start_iter);
     colon_iter = start_iter;
@@ -1110,8 +1111,8 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
       while (colon_iter != end_iter && *colon_iter != ':') {
         ++colon_iter;
       }
-      localFile->InitWithUnicodePath(PromiseFlatString(Substring(start_iter, colon_iter)).get());
-      rv = localFile->AppendRelativeUnicodePath(platformAppPath);
+      localFile->InitWithNativePath(PromiseFlatCString(Substring(start_iter, colon_iter)));
+      rv = localFile->AppendRelativePath(NS_ConvertUCS2toUTF8(platformAppPath));
       if (NS_SUCCEEDED(rv)) {
         localFile->Exists(&exists);
         if (!exists) {

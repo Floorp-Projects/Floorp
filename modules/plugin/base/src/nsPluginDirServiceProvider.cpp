@@ -40,6 +40,7 @@
  
 #include "nsCRT.h"
 #include "nsILocalFile.h"
+#include "nsDependentString.h"
 
 #if defined (XP_WIN)
 #include <windows.h>
@@ -109,7 +110,7 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
 
                 result = ::RegQueryValueEx(keyloc, "Plugins Directory", NULL, &type, (LPBYTE)&path, &pathlen); 
                 if (result == ERROR_SUCCESS)
-                    rv = NS_NewLocalFile(path, PR_TRUE, getter_AddRefs(localFile));
+                    rv = NS_NewNativeLocalFile(nsDependentCString(path), PR_TRUE, getter_AddRefs(localFile));
                 ::RegCloseKey(keyloc); 
             } 
         }
@@ -176,7 +177,7 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
         if (newestPath[0] != 0)
         {
             PL_strcat(newestPath,"\\bin");
-            rv = NS_NewLocalFile(newestPath, PR_TRUE, getter_AddRefs(localFile));
+            rv = NS_NewNativeLocalFile(nsDependentCString(newestPath), PR_TRUE, getter_AddRefs(localFile));
         }
 #endif
     }

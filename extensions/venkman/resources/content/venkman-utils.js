@@ -345,7 +345,7 @@ function getURLSpecFromFile (file)
     {
         var fileObj =
             Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-        fileObj.initWithUnicodePath(file);
+        fileObj.initWithPath(file);
         file = fileObj;
     }
     

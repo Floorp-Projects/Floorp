@@ -302,7 +302,7 @@ nsHelperAppDialog.prototype = {
                var parentObject = fileObject.parent;
                if (parentObject)
                {
-                 pathString = parentObject.unicodePath;
+                 pathString = parentObject.path;
                }
              }
           }
@@ -329,10 +329,10 @@ nsHelperAppDialog.prototype = {
           this.updateApplicationName(applicationDescription); 
           this.givenDefaultApp = true;
         }
-        else if (this.chosenApp && this.chosenApp.unicodePath)
+        else if (this.chosenApp && this.chosenApp.path)
         {
           // If a user-chosen application, show its path.
-          this.updateApplicationName(this.chosenApp.unicodePath);
+          this.updateApplicationName(this.chosenApp.path);
           this.choseApp = true;
         }
         else
@@ -401,7 +401,7 @@ nsHelperAppDialog.prototype = {
         {
           // only enable the OK button if we have a default app to use or if 
           // the user chose an app....
-          if ((this.choseApp && this.chosenApp.unicodePath) || this.givenDefaultApp)
+          if ((this.choseApp && this.chosenApp.path) || this.givenDefaultApp)
             ok = true;
         }
         
@@ -475,7 +475,7 @@ nsHelperAppDialog.prototype = {
             this.chosenApp    = fp.file;
             // Update dialog.
 
-            this.updateApplicationName(this.chosenApp.unicodePath);
+            this.updateApplicationName(this.chosenApp.path);
         }
     },
 

@@ -921,14 +921,12 @@ nsComponentManagerImpl::PlatformInit(void)
     if (!mComponentsDir)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    char* componentDescriptor;
-    mComponentsDir->GetPath(&componentDescriptor);
-    if (!componentDescriptor)
-        return NS_ERROR_NULL_POINTER;
+    nsCAutoString componentDescriptor;
+    rv = mComponentsDir->GetNativePath(componentDescriptor);
+    if (NS_FAILED(rv))
+        return rv;
 
-    mComponentsOffset = strlen(componentDescriptor);
-
-    nsMemory::Free(componentDescriptor);
+    mComponentsOffset = componentDescriptor.Length();
 
     if (mNativeComponentLoader) {
         /* now that we have the registry, Init the native loader */
@@ -2300,38 +2298,35 @@ nsComponentManagerImpl::RegistryLocationForSpec(nsIFile *aSpec,
     PRBool containedIn;
     mComponentsDir->Contains(aSpec, PR_TRUE, &containedIn);
 
-    char *persistentDescriptor;
+    nsCAutoString persistentDescriptor;
 
     if (containedIn){
-        
-        rv = aSpec->GetPath(&persistentDescriptor);
+        rv = aSpec->GetNativePath(persistentDescriptor);
         if (NS_FAILED(rv))
             return rv;
         
-        char* relativeLocation = persistentDescriptor + mComponentsOffset + 1;
+        const char* relativeLocation = persistentDescriptor.get() + mComponentsOffset + 1;
         
         rv = MakeRegistryName(relativeLocation, XPCOM_RELCOMPONENT_PREFIX, 
                               aRegistryName);
     } else {
         /* absolute names include volume info on Mac, so persistent descriptor */
-        rv = aSpec->GetPath(&persistentDescriptor);
+        rv = aSpec->GetNativePath(persistentDescriptor);
         if (NS_FAILED(rv))
             return rv;
-        rv = MakeRegistryName(persistentDescriptor, XPCOM_ABSCOMPONENT_PREFIX,
+        rv = MakeRegistryName(persistentDescriptor.get(), XPCOM_ABSCOMPONENT_PREFIX,
                               aRegistryName);
     }
 
-    if (persistentDescriptor)
-        nsMemory::Free(persistentDescriptor);
-        
     return rv;
-
 }
 
 nsresult
 nsComponentManagerImpl::SpecForRegistryLocation(const char *aLocation,
                                                 nsIFile **aSpec)
 {
+    // i18n: assuming aLocation is encoded for the current locale
+ 
     nsresult rv;
     if (!aLocation || !aSpec)
         return NS_ERROR_NULL_POINTER;
@@ -2342,7 +2337,7 @@ nsComponentManagerImpl::SpecForRegistryLocation(const char *aLocation,
         nsLocalFile* file = new nsLocalFile;
         if (!file) return NS_ERROR_FAILURE;
         
-        rv = file->InitWithPath(((char *)aLocation + 4));
+        rv = file->InitWithNativePath(nsDependentCString((char *)aLocation + 4));
         file->QueryInterface(NS_GET_IID(nsILocalFile), (void**)aSpec);
         return rv;
     }
@@ -2357,7 +2352,7 @@ nsComponentManagerImpl::SpecForRegistryLocation(const char *aLocation,
         
         if (NS_FAILED(rv)) return rv;
         
-        rv = file->AppendRelativePath(aLocation + 4);
+        rv = file->AppendRelativeNativePath(nsDependentCString(aLocation + 4));
         *aSpec = file;
         return rv;
     }

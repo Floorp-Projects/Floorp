@@ -51,8 +51,8 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
   if (aMIMEInfo)
   {
     nsCOMPtr<nsIFile> application;
-    nsXPIDLCString path;
-    aTempFile->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    aTempFile->GetNativePath(path);
 
     nsMIMEInfoHandleAction action = nsIMIMEInfo::useSystemDefault;
     aMIMEInfo->GetPreferredAction(&action);
@@ -62,7 +62,7 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
     {
       // if we were given an application to use then use it....otherwise
       // make the registry call to launch the app
-      const char * strPath = (const char *) path;
+      const char * strPath = path.get();
       nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
       nsresult rv;
       if (NS_FAILED(rv = process->Init(application)))
@@ -218,7 +218,7 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
   {
     // extract the url spec from the url
     nsCAutoString urlSpec;
-    aURL->GetSpec(urlSpec);
+    aURL->GetAsciiSpec(urlSpec);
 
     LONG r = (LONG) ::ShellExecute( NULL, "open", urlSpec.get(), NULL, NULL, SW_SHOWNORMAL);
     if (r < 32) 
@@ -236,7 +236,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   if (localFile)
   {
     if (localFile)
-      localFile->InitWithUnicodePath(platformAppPath);
+      localFile->InitWithPath(NS_ConvertUCS2toUTF8(platformAppPath));
     *aFile = localFile;
     NS_IF_ADDREF(*aFile);
   }

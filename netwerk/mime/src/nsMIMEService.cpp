@@ -184,21 +184,20 @@ NS_IMETHODIMP nsMIMEService::GetTypeFromFile( nsIFile* aFile, char **aContentTyp
 		nsCOMPtr<nsIMIMEInfo> info;
 		
 		// Get the Extension
-		char* fileName;
+    nsCAutoString fileName;
 		const char* ext = nsnull;
-    rv = aFile->GetLeafName(&fileName);
+    rv = aFile->GetNativeLeafName(fileName);
     if (NS_FAILED(rv)) return rv;
-    if (fileName != nsnull) {
-      PRInt32 len = strlen(fileName); 
+    if (!fileName.IsEmpty()) {
+      PRInt32 len = fileName.Length(); 
       for (PRInt32 i = len; i >= 0; i--) {
           if (fileName[i] == '.') {
-              ext = &fileName[i + 1];
+              ext = &fileName.get()[i + 1];
               break;
           }
       }
      }
      	nsCString fileExt( ext );       
-			nsCRT::free(fileName);
 		// Handle the mac case
 #ifdef XP_MAC
 		nsCOMPtr<nsILocalFileMac> macFile;

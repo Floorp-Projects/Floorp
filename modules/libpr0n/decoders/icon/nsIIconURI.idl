@@ -41,6 +41,6 @@ interface nsIMozIconURI : nsIURI
   attribute nsIURI IconFile; // maybe null if there isn't a real file we are trying to fetch
 
   attribute unsigned long imageSize; // measured by # of pixels in a row. defaults to 16.
-  attribute string contentType;      // may be an empty string
-  readonly attribute string fileExtension;    
+  attribute ACString contentType;      // may be an empty string
+  readonly attribute ACString fileExtension;    
 };

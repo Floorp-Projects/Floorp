@@ -59,7 +59,7 @@ nsHelperAppLauncherDialog.prototype= {
         else if (this.chosenApp)
         {
           // If a user-chosen application, show its path.
-          document.getElementById( "appName" ).value = this.chosenApp.unicodePath;
+          document.getElementById( "appName" ).value = this.chosenApp.path;
         }
 
         var saveToDisk = document.getElementById("saveToDisk");
@@ -151,7 +151,7 @@ nsHelperAppLauncherDialog.prototype= {
             this.userChoseApp = true;
             this.chosenApp    = fp.file;
             // Update dialog.
-            document.getElementById( "appName" ).value = this.chosenApp.unicodePath;
+            document.getElementById( "appName" ).value = this.chosenApp.path;
         }
     },
 

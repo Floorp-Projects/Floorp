@@ -89,7 +89,7 @@ nsComm4xProfile::GetMailDir(const PRUnichar *profileName, char **_retval)
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr <nsILocalFile> profileLocation;
         profileLocation = do_QueryInterface(file);
-        rv = profileLocation->Append(PREF_FILE_NAME_IN_4x);
+        rv = profileLocation->Append(NS_LITERAL_CSTRING(PREF_FILE_NAME_IN_4x));
         if (NS_FAILED(rv)) return rv;
         PRBool exists = PR_FALSE;
         rv = profileLocation->Exists(&exists);
@@ -100,9 +100,12 @@ nsComm4xProfile::GetMailDir(const PRUnichar *profileName, char **_retval)
             if (NS_FAILED(rv)) return rv;
             if (prefValue) {
 #ifdef XP_MAC
-                rv = profileLocation->SetPersistentDescriptor(prefValue.get());
+                rv = profileLocation->SetPersistentDescriptor(prefValue);
                 if (NS_FAILED(rv)) return rv;
-                rv = profileLocation->GetPath(_retval);
+                nsCAutoString nativePath;
+                rv = profileLocation->GetNativePath(nativePath);
+                if (NS_FAILED(rv)) return rv;
+                *_retval = ToNewCString(nativePath);
 #else
                 *_retval = ToNewCString(prefValue);
 #endif
@@ -112,9 +115,12 @@ nsComm4xProfile::GetMailDir(const PRUnichar *profileName, char **_retval)
                 nsCOMPtr <nsIFile> mailLocation;
                 rv =  resolvedLocation->Clone(getter_AddRefs(mailLocation));
                 if (NS_FAILED(rv)) return rv;
-                rv = mailLocation->Append("Mail");
+                rv = mailLocation->Append(NS_LITERAL_CSTRING("Mail"));
                 if (NS_FAILED(rv)) return rv;
-                rv = mailLocation->GetPath(_retval);
+                nsCAutoString nativePath;
+                rv = mailLocation->GetNativePath(nativePath);
+                if (NS_FAILED(rv)) return rv;
+                *_retval = ToNewCString(nativePath);
             }
 #endif
         }

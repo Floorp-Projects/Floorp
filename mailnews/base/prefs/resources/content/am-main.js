@@ -78,7 +78,7 @@ function selectFile()
     var ret = fp.show();
     if (ret == nsIFilePicker.returnOK) {
         var folderField = document.getElementById("identity.signature");
-        folderField.value = fp.file.unicodePath;
+        folderField.value = fp.file.path;
     }
 }
 

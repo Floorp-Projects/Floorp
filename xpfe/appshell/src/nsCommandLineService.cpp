@@ -39,6 +39,7 @@
 #include "nsICmdLineService.h"
 #include "nsCommandLineService.h"
 #include "nsIComponentManager.h"
+#include "nsILocalFile.h"
 #include "nsString.h"
 #include "plstr.h"
 #include "nsNetUtil.h"
@@ -71,7 +72,7 @@ static void* ProcessURLArg(char* str)
       nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
       if (file)
       {
-        rv = file->InitWithPath(str);
+        rv = file->InitWithNativePath(nsDependentCString(str));
         if (NS_SUCCEEDED(rv))
         {
           nsCAutoString fileurl;

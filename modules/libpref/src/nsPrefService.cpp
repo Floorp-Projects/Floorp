@@ -43,6 +43,7 @@
 #include "nsICategoryManager.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
+#include "nsILocalFile.h"
 #include "nsIObserverService.h"
 #include "nsPrefBranch.h"
 #include "nsXPIDLString.h"
@@ -313,7 +314,7 @@ nsresult nsPrefService::UseDefaultPrefFile()
     // knows about NS_APP_PREFS_50_FILE. Put the file in NS_XPCOM_CURRENT_PROCESS_DIR.
     rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(aFile));
     if (NS_FAILED(rv)) return rv;
-    rv = aFile->Append("default_prefs.js");
+    rv = aFile->Append(NS_LITERAL_CSTRING("default_prefs.js"));
     if (NS_FAILED(rv)) return rv;
   } 
 
@@ -333,11 +334,9 @@ nsresult nsPrefService::UseUserPrefFile()
   nsresult rv = NS_OK;
   nsCOMPtr<nsIFile> aFile;
 
-  static const char* userFiles[] = {"user.js"};
-
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(aFile));
   if (NS_SUCCEEDED(rv) && aFile) {
-    rv = aFile->Append(userFiles[0]);
+    rv = aFile->Append(NS_LITERAL_CSTRING("user.js"));
     if (NS_SUCCEEDED(rv)) {
       rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE);
     }
@@ -409,8 +408,8 @@ static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal,
 
 #if MOZ_TIMELINE
   {
-    nsXPIDLCString str;
-    aFile->GetPath(getter_Copies(str));
+    nsCAutoString str;
+    aFile->GetNativePath(str);
     NS_TIMELINE_MARK_FUNCTION1("load pref file", str.get());
   }
 #endif
@@ -459,28 +458,24 @@ static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal,
 static int PR_CALLBACK
 inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 {
-  char *name1 = nsnull;
-  char *name2 = nsnull;
+  nsCAutoString name1;
+  nsCAutoString name2;
   nsIFile *file1= *(nsIFile **)data1;
   nsIFile *file2= *(nsIFile **)data2;
   nsresult rv;
   int sortResult = 0;
 
-  rv = file1->GetLeafName(&name1);
+  rv = file1->GetNativeLeafName(name1);
   NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get the leaf name");
   if (NS_SUCCEEDED(rv)) {
-    rv = file2->GetLeafName(&name2);
+    rv = file2->GetNativeLeafName(name2);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get the leaf name");
     if (NS_SUCCEEDED(rv)) {
-      if (name1 && name2) {
+      if (!name1.IsEmpty() && !name2.IsEmpty()) {
         // we want it so foo.js will come before foo-<bar>.js
         // "foo." is before "foo-", so we have to reverse the order to accomplish
-        sortResult = PL_strcmp(name2,name1);
+        sortResult = Compare(name2, name1); // XXX i18n
       }
-      if (name1)
-        nsCRT::free((char*)name1);
-      if (name2)
-        nsCRT::free((char*)name2);
     }
   }
   return sortResult;
@@ -544,20 +539,20 @@ JSBool pref_InitInitialObjects()
 
   while (hasMoreElements) {
     PRBool shouldParse = PR_TRUE;
-    char* leafName;
+    nsCAutoString leafName;
 
     dirIterator->GetNext(getter_AddRefs(aFile));
     dirIterator->HasMoreElements(&hasMoreElements);
 
-    rv = aFile->GetLeafName(&leafName);
+    rv = aFile->GetNativeLeafName(leafName);
     if (NS_SUCCEEDED(rv)) {
       // Skip non-js files
-      if (PL_strstr(leafName, ".js") + PL_strlen(".js") != leafName + PL_strlen(leafName))
+      if ((leafName.Length() < 3) || !Substring(leafName, leafName.Length() - 3, 3).Equals(NS_LITERAL_CSTRING(".js")))
         shouldParse = PR_FALSE;
       // Skip files in the special list.
       if (shouldParse) {
         for (int j = 0; j < (int) (sizeof(specialFiles) / sizeof(char *)); j++)
-          if (!PL_strcmp(leafName, specialFiles[j]))
+          if (!strcmp(leafName.get(), specialFiles[j]))
             shouldParse = PR_FALSE;
       }
       if (shouldParse) {
@@ -571,8 +566,6 @@ JSBool pref_InitInitialObjects()
           }
         }
       }
-      if (leafName)
-        nsCRT::free((char*)leafName);
     }
   };
 
@@ -592,7 +585,7 @@ JSBool pref_InitInitialObjects()
     // because SetLeafName will not work here.
     rv = defaultPrefDir->Clone(getter_AddRefs(aFile));
     if (NS_SUCCEEDED(rv)) {
-      rv = aFile->Append((char*)specialFiles[k]);
+      rv = aFile->Append(nsDependentCString(specialFiles[k]));
       if (NS_SUCCEEDED(rv)) {
         rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "<platform>.js was not parsed successfully");

@@ -117,7 +117,7 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
 	// check if bin/defaults/messenger/<folderNameOnDisk> 
 	// (or bin/defaults/messenger/<locale>/<folderNameOnDisk> if we had a locale provide) exists.
 	// it doesn't have to exist.  if it doesn't, return
-	rv = defaultMessagesFile->Append(folderNameOnDisk);
+	rv = defaultMessagesFile->AppendNative(nsDependentCString(folderNameOnDisk));
 	if (NS_FAILED(rv)) return rv;
     rv = defaultMessagesFile->Exists(&exists);
 	if (NS_FAILED(rv)) return rv;
@@ -137,7 +137,7 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
     nsCOMPtr<nsIFile> testDir;
     rv = localParentDir->Clone(getter_AddRefs(testDir));
     if (NS_FAILED(rv)) return rv;
-    rv = testDir->Append(folderNameOnDisk);
+    rv = testDir->AppendNative(nsDependentCString(folderNameOnDisk));
     if (NS_FAILED(rv)) return rv;
     rv = testDir->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
@@ -156,7 +156,7 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
 #ifdef DEBUG_sspitzer
 		printf("copy default %s\n",folderNameOnDisk);
 #endif
-		rv = defaultMessagesFile->CopyTo(localParentDir, nsnull);
+		rv = defaultMessagesFile->CopyTo(localParentDir, nsCString());
 		if (NS_FAILED(rv)) return rv;
 	}
 	return NS_OK;

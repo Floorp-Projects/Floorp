@@ -416,12 +416,12 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   internalDownload->SetSource(aSource);
 
   // the persistent descriptor of the target is the unique identifier we use
-  char* path;
-  rv = aTarget->GetPath(&path);
+  nsCAutoString path;
+  rv = aTarget->GetNativePath(path);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRDFResource> downloadRes;
-  gRDFService->GetResource(path, getter_AddRefs(downloadRes));
+  gRDFService->GetResource(path.get(), getter_AddRefs(downloadRes));
 
   // if the resource is in the container already (the user has already
   // downloaded this file), remove it
@@ -453,11 +453,11 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   }
 
   // Set and assert the "pretty" (display) name of the download
-  nsXPIDLString prettyName;
+  nsCAutoString prettyName;
   nsAutoString displayName; displayName.Assign(aDisplayName);
   if (displayName.IsEmpty()) {
-    aTarget->GetUnicodeLeafName(getter_Copies(prettyName));
-    displayName.Assign(prettyName);
+    aTarget->GetLeafName(prettyName);
+    displayName.Assign(NS_ConvertUTF8toUCS2(prettyName));
   }
   (*aDownload)->SetDisplayName(displayName.get());
  
@@ -479,7 +479,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
 
   // Assert file information
   nsCOMPtr<nsIRDFResource> fileResource;
-  gRDFService->GetResource(path, getter_AddRefs(fileResource));
+  gRDFService->GetResource(path.get(), getter_AddRefs(fileResource));
   rv = mDataSource->Assert(downloadRes, gNC_File, fileResource, PR_TRUE);
   if (NS_FAILED(rv)) {
     downloads->IndexOf(downloadRes, &itemIndex);
@@ -787,8 +787,8 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
     nsCOMPtr<nsILocalFile> target;
     dialog->GetTarget(getter_AddRefs(target));
     
-    char* path;
-    nsresult rv = target->GetPath(&path);
+    nsCAutoString path;
+    nsresult rv = target->GetNativePath(path);
     if (NS_FAILED(rv)) return rv;
     
     nsCStringKey key(path);
@@ -797,7 +797,7 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
       nsDownload* download = NS_STATIC_CAST(nsDownload*, mCurrDownloads->Get(&key));
       download->SetDialog(nsnull);
       
-      return CancelDownload(path);  
+      return CancelDownload(path.get());  
     }
   }
   return NS_OK;
@@ -821,11 +821,11 @@ nsDownload::nsDownload():mStartTime(0),
 
 nsDownload::~nsDownload()
 {  
-  char* path;
-  nsresult rv = mTarget->GetPath(&path);
+  nsCAutoString path;
+  nsresult rv = mTarget->GetNativePath(path);
   if (NS_FAILED(rv)) return;
 
-  mDownloadManager->AssertProgressInfoFor(path);
+  mDownloadManager->AssertProgressInfoFor(path.get());
 }
 
 nsresult
@@ -947,12 +947,12 @@ nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
   mLastUpdate = now;
 
   if (mDownloadState == NOTSTARTED) {
-    char* path;
-    nsresult rv = mTarget->GetPath(&path);
+    nsCAutoString path;
+    nsresult rv = mTarget->GetNativePath(path);
     if (NS_FAILED(rv)) return rv;
 
     mDownloadState = DOWNLOADING;
-    mDownloadManager->DownloadStarted(path);
+    mDownloadManager->DownloadStarted(path.get());
   }
 
   if (aMaxTotalProgress > 0)
@@ -1012,11 +1012,11 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
 {   
   if (NS_FAILED(aStatus)) {
     mDownloadState = FAILED;
-    char* path;
-    nsresult rv = mTarget->GetPath(&path);
+    nsCAutoString path;
+    nsresult rv = mTarget->GetNativePath(path);
     if (NS_FAILED(rv)) return rv;
 
-    mDownloadManager->DownloadEnded(path, aMessage);
+    mDownloadManager->DownloadEnded(path.get(), aMessage);
   }
 
   if (mListener)
@@ -1062,11 +1062,11 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       mCurrBytes = mMaxBytes;
       mPercentComplete = 100;
 
-      char* path;
-      nsresult rv = mTarget->GetPath(&path);
+      nsCAutoString path;
+      nsresult rv = mTarget->GetNativePath(path);
       if (NS_FAILED(rv)) return rv;
 
-      mDownloadManager->DownloadEnded(path, nsnull);
+      mDownloadManager->DownloadEnded(path.get(), nsnull);
     }
 
     // break the cycle we created in AddDownload
@@ -1122,11 +1122,11 @@ nsDownload::SetDisplayName(const PRUnichar* aDisplayName)
 
   nsCOMPtr<nsIRDFLiteral> nameLiteral;
   nsCOMPtr<nsIRDFResource> res;
-  char* path;
-  nsresult rv = mTarget->GetPath(&path);
+  nsCAutoString path;
+  nsresult rv = mTarget->GetNativePath(path);
   if (NS_FAILED(rv)) return rv;
 
-  gRDFService->GetResource(path, getter_AddRefs(res));
+  gRDFService->GetResource(path.get(), getter_AddRefs(res));
   
   gRDFService->GetLiteral(aDisplayName, getter_AddRefs(nameLiteral));
   ds->Assert(res, gNC_Name, nameLiteral, PR_TRUE);

@@ -112,7 +112,13 @@ public:
     // nsILocalFile interface
     NS_DECL_NSILOCALFILE
 
+public:
+    static void GlobalInit();
+    static void GlobalShutdown();
+
 private:
+
+    static PRBool mFSCharsetIsUTF8;
 
     // this is the flag which indicates if I can used cached information about the file
     PRPackedBool mDirty;
@@ -136,15 +142,18 @@ private:
     nsresult ResolveAndStat(PRBool resolveTerminal);
     nsresult ResolvePath(const char* workingPath, PRBool resolveTerminal, char** resolvedPath);
     
-    nsresult CopyMove(nsIFile *newParentDir, const char *newName, PRBool followSymlinks, PRBool move);
-    nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const char * newName, PRBool followSymlinks, PRBool move);
+    nsresult CopyMove(nsIFile *newParentDir, const nsACString &newName, PRBool followSymlinks, PRBool move);
+    nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const nsACString &newName, PRBool followSymlinks, PRBool move);
 
     nsresult SetModDate(PRInt64 aLastModifiedTime, PRBool resolveTerminal);
 
+    static PRBool FSCharsetIsUTF8() { return mFSCharsetIsUTF8; }
+
+    // XXX impl
+    PRBool PathIsASCII() { return PR_FALSE; }
+    PRBool LeafIsASCII() { return PR_FALSE; }
+
+    NS_DECL_NSLOCALFILE_UNICODE_METHODS
 };
-
-
-extern nsresult NS_CreateUnicodeConverters();
-extern void     NS_DestroyUnicodeConverters();
 
 #endif

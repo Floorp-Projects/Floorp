@@ -62,6 +62,7 @@
 #include "nsFileStream.h"
 #include "nsMsgUtils.h"
 #include "nsIFileSpec.h" 
+#include "nsILocalFile.h"
 #include "nsIURL.h"
 #include "nsNetCID.h"
 #include "nsISmtpService.h"
@@ -954,12 +955,7 @@ nsresult nsMsgAccountManager::GetFolderCache(nsIMsgFolderCache* *aFolderCache)
     
     // TODO: Make nsIMsgFolderCache::Init take an nsIFile and
     // avoid this conversion.
-    nsXPIDLCString pathBuf;   
-    rv = cacheFile->GetPath(getter_Copies(pathBuf));
-    if (NS_FAILED(rv)) return rv;
-    rv = NS_NewFileSpec(getter_AddRefs(cacheFileSpec));
-    if (NS_FAILED(rv)) return rv;
-    rv = cacheFileSpec->SetNativePath(pathBuf);
+    rv = NS_NewFileSpecFromIFile(cacheFile, getter_AddRefs(cacheFileSpec));
     if (NS_FAILED(rv)) return rv;
                
     m_msgFolderCache->Init(cacheFileSpec);

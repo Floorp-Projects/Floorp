@@ -147,7 +147,7 @@ nsFastLoadService::NewFastLoadFile(const char* aBaseName, nsIFile* *aResult)
     nsCAutoString name(aBaseName);
     MASSAGE_BASENAME(name);
     name += PLATFORM_FASL_SUFFIX;
-    rv = file->Append(name.get());
+    rv = file->Append(name);
     if (NS_FAILED(rv))
         return rv;
 
@@ -356,8 +356,8 @@ nsFastLoadService::ComputeChecksum(nsIFile* aFile,
                                    nsIFastLoadReadControl* aControl,
                                    PRUint32 *aChecksum)
 {
-    nsXPIDLCString path;
-    nsresult rv = aFile->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    nsresult rv = aFile->GetPath(path);
     if (NS_FAILED(rv))
         return rv;
 
@@ -389,8 +389,8 @@ nsFastLoadService::CacheChecksum(nsIFile* aFile, nsIObjectOutputStream *aStream)
     if (NS_FAILED(rv))
         return rv;
 
-    nsXPIDLCString path;
-    rv = aFile->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    rv = aFile->GetPath(path);
     if (NS_FAILED(rv))
         return rv;
 

@@ -73,7 +73,7 @@
 #define XP_SHEnumerateUnreadMailAccounts "SHEnumerateUnreadMailAccountsW"
 #define ShellNotifyWideVersion "Shell_NotifyIconW"
 #define UNREADMAILNODEKEY "Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail\\"
-#define SHELL32_DLL "shell32.dll"
+#define SHELL32_DLL NS_LITERAL_CSTRING("shell32.dll")
 #define DOUBLE_QUOTE "\""
 #define PROFILE_COMMANDLINE_ARG " -p "
 #define MAIL_COMMANDLINE_ARG " -mail"
@@ -399,13 +399,11 @@ nsMessengerWinIntegration::Init()
   NS_ENSURE_SUCCESS(rv,rv);
 
   // get path to shell dll.
-  nsXPIDLCString shellFile;
-  rv = systemDir->GetPath(getter_Copies(shellFile));
+  nsCAutoString shellFile;
+  rv = systemDir->GetNativePath(shellFile);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  mShellDllPath.Assign(shellFile);
-  mShellDllPath.Append("\\");
-  mShellDllPath.Append(SHELL32_DLL);
+  mShellDllPath.Assign(shellFile + NS_LITERAL_CSTRING("\\") + SHELL32_DLL);
 
   // load shell dll. If no such dll found, return 
   HMODULE hModule = ::LoadLibrary(mShellDllPath.get());

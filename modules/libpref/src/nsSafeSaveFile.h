@@ -38,7 +38,6 @@
 
 #include "nsIFile.h"
 #include "nsString.h"
-#include "nsXPIDLString.h"
 
 class nsSafeSaveFile {
     public:
@@ -55,7 +54,7 @@ class nsSafeSaveFile {
 
     private:
         nsCOMPtr<nsIFile> mTempFile;
-        nsXPIDLCString    mTargetFileName;
+        nsCString         mTargetFileName; // UTF-8
         PRInt32           mTargetNameLen;
         PRInt32           mBackupCount;
 };

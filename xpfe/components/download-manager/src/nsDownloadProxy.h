@@ -65,11 +65,11 @@ public:
     rv = dm->AddDownload(aSource, aTarget, aDisplayName, aOpeningWith, aStartTime, aPersist, getter_AddRefs(mInner));
     if (NS_FAILED(rv)) return rv;
     
-    char* path;
-    rv = aTarget->GetPath(&path);
+    nsCAutoString path;
+    rv = aTarget->GetNativePath(path);
     if (NS_FAILED(rv)) return rv;
 
-    return dm->OpenProgressDialogFor(path, nsnull);
+    return dm->OpenProgressDialogFor(path.get(), nsnull);
   }
 
  

@@ -325,7 +325,7 @@ nsNameValuePairDB::~nsNameValuePairDB()
 }
 
 PRBool
-nsNameValuePairDB::OpenForRead(const nsACString & aCatalogName)
+nsNameValuePairDB::OpenForRead(const nsACString & aCatalogName) // native charset
 {
   nsresult result;
 
@@ -334,7 +334,7 @@ nsNameValuePairDB::OpenForRead(const nsACString & aCatalogName)
   if (NS_FAILED(result))
     goto error_return;
 
-  local_file->InitWithPath(PromiseFlatCString(aCatalogName).get());
+  local_file->InitWithNativePath(aCatalogName);
   local_file->OpenANSIFileDesc("r", &mFile);
   if (mFile && CheckHeader())
     return PR_TRUE;
@@ -346,17 +346,14 @@ error_return:
 }
 
 PRBool
-nsNameValuePairDB::OpenTmpForWrite(const nsACString& aCatalogName)
+nsNameValuePairDB::OpenTmpForWrite(const nsACString& aCatalogName) // native charset
 {
-  nsCAutoString name(aCatalogName);
-  name.Append(".tmp");
-
   nsresult result;
   nsCOMPtr<nsILocalFile> local_file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID,
                                                         &result);
   if (NS_FAILED(result))
     return PR_FALSE;
-  local_file->InitWithPath(name.get());
+  local_file->InitWithNativePath(aCatalogName + NS_LITERAL_CSTRING(".tmp"));
   local_file->OpenANSIFileDesc("w+", &mFile);
   if (mFile == nsnull)
     return PR_FALSE;
@@ -455,8 +452,8 @@ nsNameValuePairDB::RenameTmp(const char* aCatalogName)
   nsCOMPtr<nsILocalFile> current_file;
   nsCOMPtr<nsILocalFile> tmp_file;
   nsCAutoString parent_dir;
-  nsXPIDLCString parent_path;
-  nsXPIDLCString cur_path;
+  nsCAutoString parent_path;
+  nsCAutoString cur_path;
 
   //
   // Split the parent dir and file name
@@ -475,8 +472,8 @@ nsNameValuePairDB::RenameTmp(const char* aCatalogName)
   dir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     goto Rename_Error;
-  dir->InitWithPath(parent_dir.get());
-  dir->GetPath(getter_Copies(parent_path));
+  dir->InitWithNativePath(parent_dir);
+  dir->GetNativePath(parent_path);
 
   if (!mAtEndOfGroup || mError)
     goto Rename_Error;
@@ -488,7 +485,7 @@ nsNameValuePairDB::RenameTmp(const char* aCatalogName)
   tmp_file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     goto Rename_Error;
-  tmp_file->InitWithPath(tmp_name.get());
+  tmp_file->InitWithNativePath(tmp_name);
   tmp_file->Exists(&exists);
   if (!exists)
     goto Rename_Error;
@@ -500,7 +497,7 @@ nsNameValuePairDB::RenameTmp(const char* aCatalogName)
   old_file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     goto Rename_Error;
-  old_file->InitWithPath(old_name.get());
+  old_file->InitWithNativePath(old_name);
 
   //
   // Check we have a current copy
@@ -508,15 +505,15 @@ nsNameValuePairDB::RenameTmp(const char* aCatalogName)
   current_file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     goto Rename_Error;
-  current_file->InitWithPath(current_name.get());
+  current_file->InitWithNativePath(current_name);
   current_file->Exists(&exists);
   if (exists) {
     //
     // Rename the current copy to old
     //
-    current_file->GetPath(getter_Copies(cur_path));
+    current_file->GetNativePath(cur_path);
     old_name.Right(old_name_tail, old_name.Length() - last_slash - 1);
-    rv = current_file->MoveTo(dir, old_name_tail.get());
+    rv = current_file->MoveToNative(dir, old_name_tail);
     if (NS_FAILED(rv))
       goto Rename_Error;
   }
@@ -525,7 +522,7 @@ nsNameValuePairDB::RenameTmp(const char* aCatalogName)
   // Rename the tmp to current
   //
   current_name.Right(current_name_tail, current_name.Length() - last_slash - 1);
-  rv = tmp_file->MoveTo(dir, current_name_tail.get());
+  rv = tmp_file->MoveToNative(dir, current_name_tail);
   if (NS_FAILED(rv))
     goto Rename_Error;
 

@@ -38,19 +38,17 @@
 #include "nsAppDirectoryServiceDefs.h"
 
 static nsresult 
-GetPersistentStringFromSpec(nsIFile* inSpec, char **string)
+GetPersistentStringFromSpec(nsIFile* inSpec, nsACString &string)
 {
     nsresult rv;
-
-    if (!string) return NS_ERROR_NULL_POINTER;
 
     nsCOMPtr<nsILocalFile> LocalFile = do_QueryInterface(inSpec, &rv);
 
     if (NS_SUCCEEDED(rv)) {
-        rv = LocalFile->GetPath(string);
+        rv = LocalFile->GetNativePath(string);
     } 
     else {
-        *string = nsnull;
+        string.Truncate();
     }
     return rv;
 }
@@ -70,11 +68,11 @@ PRInt32 ReplaceWindowsSystemFile(nsIFile* currentSpec, nsIFile* finalSpec)
     // Get OS version info 
     DWORD dwVersion = GetVersion();
 
-    char *final;
-    char *current;
+    nsCAutoString final;
+    nsCAutoString current;
 
-    finalSpec->GetPath(&final);
-    currentSpec->GetPath(&current);
+    finalSpec->GetNativePath(final);
+    currentSpec->GetNativePath(current);
  
     // Get build numbers for Windows NT or Win32s 
 
@@ -89,44 +87,39 @@ PRInt32 ReplaceWindowsSystemFile(nsIFile* currentSpec, nsIFile* finalSpec)
         char    Src[_MAX_PATH];   // 8.3 name
         char    Dest[_MAX_PATH];  // 8.3 name
         
-        strlen = GetShortPathName( (LPCTSTR)current, (LPTSTR)Src, (DWORD)sizeof(Src) );
+        strlen = GetShortPathName( (LPCTSTR)current.get(), (LPTSTR)Src, (DWORD)sizeof(Src) );
         if ( strlen > 0 ) 
         {
-            free(current);
-            current = strdup(Src);
+            current = Src;
         }
 
-        strlen = GetShortPathName( (LPCTSTR) final, (LPTSTR) Dest, (DWORD) sizeof(Dest));
+        strlen = GetShortPathName( (LPCTSTR) final.get(), (LPTSTR) Dest, (DWORD) sizeof(Dest));
         if ( strlen > 0 ) 
         {
-            free(final);
-            final = strdup(Dest);
+            final = Dest;
         }
         
         // NOTE: use OEM filenames! Even though it looks like a Windows
         //       .INI file, WININIT.INI is processed under DOS 
         
-        AnsiToOem( final, final );
-        AnsiToOem( current, current );
+        AnsiToOem( (char*)final.get(), (char*)final.get() );
+        AnsiToOem( (char*)current.get(), (char*)current.get() );
 
-        if ( WritePrivateProfileString( "Rename", final, current, "WININIT.INI" ) )
+        if ( WritePrivateProfileString( "Rename", final.get(), current.get(), "WININIT.INI" ) )
             err = 0;
     }
     else
     {
        // Windows NT
-        if ( MoveFileEx(final, current, MOVEFILE_DELAY_UNTIL_REBOOT) )
+        if ( MoveFileEx(final.get(), current.get(), MOVEFILE_DELAY_UNTIL_REBOOT) )
           err = 0;
     }
-
-    free(final);
-    free(current);
     
     return err;
 }
 #endif
 
-char* GetRegFilePath()
+nsresult GetRegFilePath(nsACString &regFilePath)
 {
     nsresult rv;
     nsCOMPtr<nsILocalFile> iFileUtilityPath;
@@ -162,10 +155,7 @@ char* GetRegFilePath()
 
     //Yes, we know using GetPath is buggy on the Mac.
     //When libreg is fixed to accept nsIFiles we'll change this to match.
-    char* regFilePath;
-    iFileUtilityPath->GetPath(&regFilePath);
-  
-    return regFilePath;
+    return iFileUtilityPath->GetNativePath(regFilePath);
 }
 
 
@@ -191,10 +181,9 @@ PRInt32 ScheduleFileForDeletion(nsIFile *filename)
     REGERR  err;
     PRInt32 result = nsInstall::UNEXPECTED_ERROR;
 
-    char* regFilePath = GetRegFilePath();
-    err = NR_RegOpen(regFilePath, &reg);
-    if (regFilePath)
-      nsCRT::free(regFilePath);
+    nsCAutoString path;
+    GetRegFilePath(path);
+    err = NR_RegOpen((char*)path.get(), &reg);
 
     if ( err == REGERR_OK )
     {
@@ -206,12 +195,11 @@ PRInt32 ScheduleFileForDeletion(nsIFile *filename)
             err = NR_RegGetUniqueName( reg, valname, sizeof(valname) );
             if ( err == REGERR_OK )
             {
-                nsXPIDLCString nameowner;
-                nsresult rv = GetPersistentStringFromSpec(
-                                filename,getter_Copies(nameowner));
-                if ( NS_SUCCEEDED(rv) && nameowner )
+                nsCAutoString nameowner;
+                nsresult rv = GetPersistentStringFromSpec(filename, nameowner);
+                if ( NS_SUCCEEDED(rv) && !nameowner.IsEmpty() )
                 {
-                    const char *fnamestr = nameowner;
+                    const char *fnamestr = nameowner.get();
                     err = NR_RegSetEntry( reg, newkey, valname, 
                                           REGTYPE_ENTRY_BYTES, 
                                           (void*)fnamestr, 
@@ -257,7 +245,7 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
     nsCOMPtr<nsIFile>      renamedDoomedFile;
     nsCOMPtr<nsILocalFile> tmpLocalFile;
     nsCOMPtr<nsIFile> parent;
-    nsXPIDLCString leafname;
+    nsCAutoString leafname;
     
     doomedFile->Clone(getter_AddRefs(renamedDoomedFile));
     renamedDoomedFile->Exists(&flagExists);
@@ -266,36 +254,35 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
         tmpLocalFile = do_QueryInterface(renamedDoomedFile, &rv); // Convert to an nsILocalFile
 
         //get the leafname so we can convert its extension to .old
-        nsXPIDLCString uniqueLeafName;
-        tmpLocalFile->GetLeafName(getter_Copies(leafname));
-        nsCString newLeafName (leafname); 
+        nsCAutoString uniqueLeafName;
+        tmpLocalFile->GetNativeLeafName(leafname);
 
-        PRInt32 extpos = newLeafName.RFindChar('.');
+        PRInt32 extpos = leafname.RFindChar('.');
         if (extpos != -1)
         {
             // We found the extension; 
-            newLeafName.Truncate(extpos + 1); //strip off the old extension
+            leafname.Truncate(extpos + 1); //strip off the old extension
         }
-        newLeafName.Append("old");
+        leafname.Append("old");
         
         //Now reset the leafname
-        tmpLocalFile->SetLeafName(newLeafName.get());
+        tmpLocalFile->SetNativeLeafName(leafname);
         
         MakeUnique(tmpLocalFile);                                 //  for the call to MakeUnique
         
         tmpLocalFile->GetParent(getter_AddRefs(parent)); //get the parent for later use in MoveTo
-        tmpLocalFile->GetLeafName(getter_Copies(uniqueLeafName));//this is the new "unique" leafname
+        tmpLocalFile->GetNativeLeafName(uniqueLeafName);//this is the new "unique" leafname
 
         rv = doomedFile->Clone(getter_AddRefs(renamedDoomedFile));// Reset renamedDoomed file so doomedfile isn't 
                                                                   //   changed during the MoveTo call
         if (NS_FAILED(rv)) result = nsInstall::UNEXPECTED_ERROR;
-        rv = renamedDoomedFile->MoveTo(parent, uniqueLeafName);        
+        rv = renamedDoomedFile->MoveToNative(parent, uniqueLeafName);        
 
         if (NS_SUCCEEDED(rv))
         {
-            renamedDoomedFile = parent;                //MoveTo on Mac doesn't reset the tmpFile object to 
-            renamedDoomedFile->Append(uniqueLeafName); //the new name or location. That's why there's this 
-                                                       //explict assignment and Append call.
+            renamedDoomedFile = parent;                      //MoveTo on Mac doesn't reset the tmpFile object to 
+            renamedDoomedFile->AppendNative(uniqueLeafName); //the new name or location. That's why there's this 
+                                                             //explict assignment and Append call.
         }
 
         if (result == nsInstall::UNEXPECTED_ERROR)
@@ -321,13 +308,13 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
         if(!flagIsEqual)
         {
             NS_WARNING("File unpacked into a non-dest dir" );
-            replacementFile->GetLeafName(getter_Copies(leafname));
-            rv = replacementFile->MoveTo(parentofFinalFile, leafname);
+            replacementFile->GetNativeLeafName(leafname);
+            rv = replacementFile->MoveToNative(parentofFinalFile, leafname);
         }
         	
-        rv = doomedFile->GetLeafName(getter_Copies(leafname));
+        rv = doomedFile->GetNativeLeafName(leafname);
         if ( NS_SUCCEEDED(rv))
-            rv = replacementFile->MoveTo(parentofReplacementFile, leafname );
+            rv = replacementFile->MoveToNative(parentofReplacementFile, leafname );
 
         if ( NS_SUCCEEDED(rv) ) 
         {
@@ -339,7 +326,7 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
         {
             // couldn't rename file, try to put old file back
             renamedDoomedFile->GetParent(getter_AddRefs(parent));
-            renamedDoomedFile->MoveTo(parent, leafname);
+            renamedDoomedFile->MoveToNative(parent, leafname);
         }
     }
 
@@ -368,8 +355,9 @@ PRInt32 ReplaceFileNowOrSchedule(nsIFile* replacementFile, nsIFile* doomedFile, 
         HREG    reg;
         REGERR  err;
 
-        char* regFilePath = GetRegFilePath();
-        if ( REGERR_OK == NR_RegOpen(regFilePath, &reg) ) 
+        nsCAutoString regFilePath;
+        GetRegFilePath(regFilePath);
+        if ( REGERR_OK == NR_RegOpen((char*)regFilePath.get(), &reg) ) 
         {
             err = NR_RegAddKey( reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY, &listkey );
             if ( err == REGERR_OK ) 
@@ -383,17 +371,14 @@ PRInt32 ReplaceFileNowOrSchedule(nsIFile* replacementFile, nsIFile* doomedFile, 
                     err = NR_RegAddKey( reg, listkey, valname, &filekey );
                     if ( REGERR_OK == err )
                     {
-                        nsXPIDLCString srcowner;
-                        nsXPIDLCString destowner;
-                        nsresult rv = GetPersistentStringFromSpec(
-                                replacementFile, getter_Copies(srcowner));
-                        nsresult rv2 = GetPersistentStringFromSpec(
-                                doomedFile, getter_Copies(destowner));
+                        nsCAutoString srcowner;
+                        nsCAutoString destowner;
+                        nsresult rv = GetPersistentStringFromSpec(replacementFile, srcowner);
+                        nsresult rv2 = GetPersistentStringFromSpec(doomedFile, destowner);
                         if ( NS_SUCCEEDED(rv) && NS_SUCCEEDED(rv2) )
                         {
-
-                            const char *fsrc  = srcowner;
-                            const char *fdest = destowner;
+                            const char *fsrc  = srcowner.get();
+                            const char *fdest = destowner.get();
                             err = NR_RegSetEntry( reg, filekey, 
                                                   REG_REPLACE_SRCFILE,
                                                   REGTYPE_ENTRY_BYTES, 
@@ -419,8 +404,6 @@ PRInt32 ReplaceFileNowOrSchedule(nsIFile* replacementFile, nsIFile* doomedFile, 
             }
             NR_RegClose(reg);
         }
-        if (regFilePath)
-            nsCRT::free(regFilePath);
     }
 
     return result;
@@ -477,7 +460,7 @@ void DeleteScheduledFiles( HREG reg )
                     // no need to check return value of 
                     // SetPersistentDescriptorString, it's always NS_OK
                     //spec->SetPersistentDescriptorString(valbuf); //nsIFileXXX: Do we still need this instead of InitWithPath?
-                    NS_NewLocalFile((char*)valbuf, PR_TRUE, getter_AddRefs(spec));
+                    NS_NewNativeLocalFile(nsDependentCString(valbuf), PR_TRUE, getter_AddRefs(spec));
                     spec->Clone(getter_AddRefs(doomedFile));
                     if (NS_SUCCEEDED(rv)) 
                     {
@@ -538,10 +521,10 @@ void ReplaceScheduledFiles( HREG reg )
 
             if ( err1 == REGERR_OK && err2 == REGERR_OK )
             {
-                rv1 = NS_NewLocalFile((char*)srcFile, PR_TRUE, getter_AddRefs(src));
+                rv1 = NS_NewNativeLocalFile(nsDependentCString(srcFile), PR_TRUE, getter_AddRefs(src));
                 rv1 = src->Clone(getter_AddRefs(srcSpec));
 
-                rv2 = NS_NewLocalFile((char*)doomedFile, PR_TRUE, getter_AddRefs(dest));
+                rv2 = NS_NewNativeLocalFile(nsDependentCString(doomedFile), PR_TRUE, getter_AddRefs(dest));
                 rv2 = dest->Clone(getter_AddRefs(doomedSpec));
 
                 if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2))

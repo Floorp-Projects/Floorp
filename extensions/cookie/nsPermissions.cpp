@@ -684,7 +684,7 @@ PERMISSION_DeletePersistentUserData(void)
   nsCOMPtr<nsIFile> cookiesPermFile;
   res = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookiesPermFile));
   if (NS_SUCCEEDED(res)) {
-    res = cookiesPermFile->Append(kCookiesPermFileName);
+    res = cookiesPermFile->AppendNative(nsDependentCString(kCookiesPermFileName));
     if (NS_SUCCEEDED(res))
         (void) cookiesPermFile->Remove(PR_FALSE);
   }

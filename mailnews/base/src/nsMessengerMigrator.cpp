@@ -55,6 +55,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIFileSpec.h" 
+#include "nsILocalFile.h"
 #include "nsIURL.h"
 #include "nsNetCID.h"
 #include "nsIStringBundle.h"
@@ -559,14 +560,8 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   // Convert the nsILocalFile into an nsIFileSpec
   // TODO: convert users os nsIFileSpec to nsILocalFile
   // and avoid this step.
-  nsXPIDLCString mailDirPath;
-  rv = mailDir->GetPath(getter_Copies(mailDirPath));
+  rv = NS_NewFileSpecFromIFile(mailDir, getter_AddRefs(mailDirSpec));
   if (NS_FAILED(rv)) return rv;
-  rv = NS_NewFileSpec(getter_AddRefs(mailDirSpec));
-  if (NS_FAILED(rv)) return rv;
-  rv = mailDirSpec->SetNativePath(mailDirPath);
-  if (NS_FAILED(rv)) return rv;
-
 
   // set the default local path for "none"
   rv = server->SetDefaultLocalPath(mailDirSpec);
@@ -1180,17 +1175,12 @@ nsMessengerMigrator::MigrateLocalMailAccount()
     rv = mailDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
   if (NS_FAILED(rv)) return rv;  
     
-  nsXPIDLCString mailDirPath;
   nsCOMPtr<nsIFileSpec> mailDirSpec;
   
   // Convert the nsILocalFile into an nsIFileSpec
   // TODO: convert users of nsIFileSpec to nsILocalFile
   // and avoid this step.
-  rv = mailDir->GetPath(getter_Copies(mailDirPath));
-  if (NS_FAILED(rv)) return rv;
-  rv = NS_NewFileSpec(getter_AddRefs(mailDirSpec));
-  if (NS_FAILED(rv)) return rv;
-  rv = mailDirSpec->SetNativePath(mailDirPath);
+  rv = NS_NewFileSpecFromIFile(mailDir, getter_AddRefs(mailDirSpec));
   if (NS_FAILED(rv)) return rv;
 
   // set the default local path for "none"
@@ -1294,15 +1284,11 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   if (NS_FAILED(rv)) {
     // we wan't <profile>/Mail
     nsCOMPtr<nsIFile> aFile;
-    nsXPIDLCString pathBuf;
     
     rv = NS_GetSpecialDirectory(NS_APP_MAIL_50_DIR, getter_AddRefs(aFile));
     if (NS_FAILED(rv)) return rv;
-    rv = aFile->GetPath(getter_Copies(pathBuf));
-    if (NS_FAILED(rv)) return rv;
-    rv = NS_NewFileSpec(getter_AddRefs(mailDir));
-    if (NS_FAILED(rv)) return rv;
-    rv = mailDir->SetNativePath((const char *)pathBuf);
+
+    NS_NewFileSpecFromIFile(aFile, getter_AddRefs(mailDir));
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -1447,17 +1433,12 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
     rv = mailDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
   if (NS_FAILED(rv)) return rv;
   
-  nsXPIDLCString mailDirPath;
   nsCOMPtr<nsIFileSpec> mailDirSpec;
   
   // Convert the nsILocalFile into an nsIFileSpec
   // TODO: convert users os nsIFileSpec to nsILocalFile
   // and avoid this step.
-  rv = mailDir->GetPath(getter_Copies(mailDirPath));
-  if (NS_FAILED(rv)) return rv;
-  rv = NS_NewFileSpec(getter_AddRefs(mailDirSpec));
-  if (NS_FAILED(rv)) return rv;
-  rv = mailDirSpec->SetNativePath(mailDirPath);
+  rv = NS_NewFileSpecFromIFile(mailDir, getter_AddRefs(mailDirSpec));
   if (NS_FAILED(rv)) return rv;
 
   // set the default local path for "pop3"
@@ -1747,17 +1728,12 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
     rv = imapMailDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
   if (NS_FAILED(rv)) return rv;
   
-  nsXPIDLCString pathBuf;
   nsCOMPtr<nsIFileSpec> imapMailDirSpec;
 
   // Convert the nsILocalFile into an nsIFileSpec
   // TODO: convert users os nsIFileSpec to nsILocalFile
   // and avoid this step.
-  rv = imapMailDir->GetPath(getter_Copies(pathBuf));
-  if (NS_FAILED(rv)) return rv;
-  rv = NS_NewFileSpec(getter_AddRefs(imapMailDirSpec));
-  if (NS_FAILED(rv)) return rv;
-  rv = imapMailDirSpec->SetNativePath(pathBuf);
+  rv = NS_NewFileSpecFromIFile(imapMailDir, getter_AddRefs(imapMailDirSpec));
   if (NS_FAILED(rv)) return rv;
 
   // we only need to do this once
@@ -1946,15 +1922,8 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   if (NS_FAILED(rv) || !ab4xFile) return;
 
   // TODO: Change users of nsIFileSpec to nsIFile and avoid this.
-  {
-     nsXPIDLCString pathBuf;  
-     rv = ab4xFile->GetPath(getter_Copies(pathBuf));
-     if (NS_FAILED(rv)) return;
-     rv = NS_NewFileSpec(getter_AddRefs(ab4xFileSpec));
-     if (NS_FAILED(rv)) return;
-     rv = ab4xFileSpec->SetNativePath(pathBuf);
-     if (NS_FAILED(rv)) return;
-  }
+  rv = NS_NewFileSpecFromIFile(ab4xFile, getter_AddRefs(ab4xFileSpec));
+  if (NS_FAILED(rv)) return;
   
   rv = ab4xFileSpec->AppendRelativeUnixPath((const char *)abFileName);
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed:  failed to append filename");
@@ -1966,22 +1935,15 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   // do the migration in a subdirectory of temp, to prevent 
   // collision (between multiple users), deleting TMPDIR
   // and privacy issues (where the temp ldif files are readable)
-  rv = tmpLDIFFile->Append("addr-migrate");
+  rv = tmpLDIFFile->Append(NS_LITERAL_CSTRING("addr-migrate"));
   if (NS_FAILED(rv) || !tmpLDIFFile) return;
 
   rv = tmpLDIFFile->CreateUnique(nsIFile::DIRECTORY_TYPE, 0700);
   if (NS_FAILED(rv) || !tmpLDIFFile) return;
 
   // TODO: Change users of nsIFileSpec to nsIFile and avoid this.
-  {
-     nsXPIDLCString pathBuf;  
-     rv = tmpLDIFFile->GetPath(getter_Copies(pathBuf));
-     if (NS_FAILED(rv)) return;
-     rv = NS_NewFileSpec(getter_AddRefs(tmpLDIFFileSpec));
-     if (NS_FAILED(rv)) return;
-     rv = tmpLDIFFileSpec->SetNativePath(pathBuf);
-     if (NS_FAILED(rv)) return;
-  }
+  rv = NS_NewFileSpecFromIFile(tmpLDIFFile, getter_AddRefs(tmpLDIFFileSpec));
+  if (NS_FAILED(rv)) return;
 
   // get the csid from the prefs
   nsCAutoString csidPrefName;
@@ -2124,10 +2086,10 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
     
     // TODO: convert users os nsIFileSpec to nsILocalFile
     // and avoid this step.
-    nsXPIDLCString pathBuf;
-    rv = newsDir->GetPath(getter_Copies(pathBuf));
+    nsCAutoString pathBuf;
+    rv = newsDir->GetNativePath(pathBuf);
     if (NS_FAILED(rv)) return rv;
-    newsHostsDir = pathBuf;    
+    newsHostsDir = pathBuf.get();    
     
 #ifdef USE_NEWSRC_MAP_FILE	
     // if we are using the fat file, it lives in the newsHostsDir.
@@ -2264,10 +2226,10 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
     newsDir = prefLocal;
     
     {
-        nsXPIDLCString pathBuf;
-        newsDir->GetPath(getter_Copies(pathBuf));
+        nsCAutoString pathBuf;
+        newsDir->GetNativePath(pathBuf);
         if (NS_FAILED(rv)) return rv;
-        newsrcDir = (const char *)pathBuf;
+        newsrcDir = pathBuf.get();
     }
 
     for (nsDirectoryIterator i(newsrcDir, PR_FALSE); i.Exists(); i++) {

@@ -566,9 +566,9 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
         nsCOMPtr<nsISupports> genericDataWrapper;
 	      if ( strcmp(flavorStr, kFileMime) == 0 ) {
 	        // we have a file path in |data|. Create an nsLocalFile object.
-	        char* filepath = NS_REINTERPRET_CAST(char*, data);
+	        nsDependentCString filepath(NS_REINTERPRET_CAST(char*, data));
 	        nsCOMPtr<nsILocalFile> file;
-	        if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) )
+	        if ( NS_SUCCEEDED(NS_NewNativeLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) )
 	          genericDataWrapper = do_QueryInterface(file);
 	      }
 	      else {
@@ -669,7 +669,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
     else {
       // we have a normal file, use some Necko objects to get our file path
 	    nsCOMPtr<nsILocalFile> file;
-        if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) ) {
+        if ( NS_SUCCEEDED(NS_NewNativeLocalFile(nsDependentCString(filepath), PR_FALSE, getter_AddRefs(file))) ) {
         nsCAutoString urlSpec;
         NS_GetURLSpecFromFile(file, urlSpec);
 

@@ -2157,8 +2157,8 @@ nsStandardURL::GetFile(nsIFile **result)
 
 #if defined(PR_LOGGING)
     if (LOG_ENABLED()) {
-        nsXPIDLCString path;
-        localFile->GetPath(getter_Copies(path));
+        nsCAutoString path;
+        localFile->GetNativePath(path);
         LOG(("nsStandardURL::GetFile [this=%p spec=%s resulting_path=%s]\n",
             this, mSpec.get(), path.get()));
     }

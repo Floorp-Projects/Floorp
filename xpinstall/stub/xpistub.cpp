@@ -121,7 +121,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     getcwd(componentPath, MAX_PATH);
 
     nsCOMPtr<nsILocalFile> file;
-    NS_NewLocalFile(componentPath, PR_TRUE, getter_AddRefs(file));
+    NS_NewNativeLocalFile(nsDependentCString(componentPath), PR_TRUE, getter_AddRefs(file));
     
     rv = NS_InitXPCOM2(&gServiceMgr, file, nsnull); 
 
@@ -138,7 +138,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     sprintf(compDirPath, "%s/components", cwd);
 
     nsCOMPtr<nsILocalFile> compDir;
-    NS_NewLocalFile(compDirPath, PR_TRUE, getter_AddRefs(compDir));
+    NS_NewNativeLocalFile(nsDependentCString(compDirPath), PR_TRUE, getter_AddRefs(compDir));
 
 #else
 
@@ -189,7 +189,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
 	NS_NewLocalFileWithFSSpec((FSSpec *)&aProgramDir, PR_TRUE, getter_AddRefs(iMacDirSpec));
 	iDirSpec = do_QueryInterface(iMacDirSpec);
 #else
-	NS_NewLocalFile(aProgramDir, PR_TRUE, getter_AddRefs(iDirSpec));
+	NS_NewNativeLocalFile(nsDependentCString(aProgramDir), PR_TRUE, getter_AddRefs(iDirSpec));
 #endif    
     
     if (hook && iDirSpec)
@@ -263,7 +263,7 @@ PR_PUBLIC_API(PRInt32) XPI_Install(
 	NS_NewLocalFileWithFSSpec((FSSpec *)&aFile, PR_TRUE, getter_AddRefs(iMacFile));
 	iFile = do_QueryInterface(iMacFile);
 #else
-	NS_NewLocalFile(aFile, PR_TRUE, getter_AddRefs(iFile));
+	NS_NewNativeLocalFile(nsDependentCString(aFile), PR_TRUE, getter_AddRefs(iFile));
 #endif  
 
     if (iFile && gXPI)

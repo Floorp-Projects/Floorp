@@ -677,6 +677,7 @@ nsFT2FontCatalog::doGetDirsPrefEnumCallback(const char* aName, void* aClosure)
   dce = (nsDirCatalogEntry *)calloc(1, sizeof(nsDirCatalogEntry));
   if (!dce)
     return;
+  // native charset?!
   mPref->CopyCharPref(aName, (char **)&dce->mDirName);
   if (!dce->mDirName)
     return;
@@ -713,21 +714,20 @@ nsFT2FontCatalog::GetFontCatalog(FT_Library lib, nsFontCatalog *aFontCatalog,
 {
   int i;
   nsresult rv;
-  nsXPIDLCString font_summaries_dir_path;
-  nsXPIDLCString font_download_dir_path;
+  nsCAutoString font_summaries_dir_path;
+  nsCAutoString font_download_dir_path;
   PRBool exists;
-  nsCOMPtr<nsIFile> font_download_dir;
+  nsCOMPtr<nsIFile> font_summaries_dir, font_download_dir;
 
   if (lib) {
     //
     // Get the dir for downloaded fonts
     //
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR,
-                                getter_AddRefs(font_download_dir));
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(font_download_dir));
     if (NS_FAILED(rv))
       goto cleanup_and_return;
 
-    rv = font_download_dir->Append(FONT_DOWNLOAD_SUBDIR);
+    rv = font_download_dir->AppendNative(FONT_DOWNLOAD_SUBDIR);
     if (NS_FAILED(rv))
       goto cleanup_and_return;
     exists = PR_FALSE;
@@ -740,23 +740,21 @@ nsFT2FontCatalog::GetFontCatalog(FT_Library lib, nsFontCatalog *aFontCatalog,
       if (NS_FAILED(rv))
         goto cleanup_and_return;
     }
-    rv = font_download_dir->GetPath(getter_Copies(font_download_dir_path));
+    rv = font_download_dir->GetNativePath(font_download_dir_path);
     if (NS_FAILED(rv))
       goto cleanup_and_return;
 
     //
     // Get the user dir for font catalogs
     //
-    nsCOMPtr<nsIFile> font_summaries_dir;
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR,
-                                getter_AddRefs(font_summaries_dir));
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(font_summaries_dir));
     if (NS_FAILED(rv))
       goto cleanup_and_return;
 
-    rv = font_summaries_dir->Append(FONT_DOWNLOAD_SUBDIR);
+    rv = font_summaries_dir->AppendNative(FONT_DOWNLOAD_SUBDIR);
     if (NS_FAILED(rv))
       goto cleanup_and_return;
-    rv = font_summaries_dir->Append(FONT_SUMMARIES_SUBDIR);
+    rv = font_summaries_dir->AppendNative(FONT_SUMMARIES_SUBDIR);
     if (NS_FAILED(rv))
       goto cleanup_and_return;
     exists = PR_FALSE;
@@ -769,24 +767,22 @@ nsFT2FontCatalog::GetFontCatalog(FT_Library lib, nsFontCatalog *aFontCatalog,
       if (NS_FAILED(rv))
         goto cleanup_and_return;
     }
-    rv = font_summaries_dir->GetPath(getter_Copies(font_summaries_dir_path));
+    rv = font_summaries_dir->GetNativePath(font_summaries_dir_path);
     if (NS_FAILED(rv))
       goto cleanup_and_return;
 
     //
     // Get the font summaries for the public font dirs
     //
-    nsCAutoString fs_dir(font_summaries_dir_path);
     for (i=0; i<aOldDirCatalog->numDirs; i++) {
-      nsCAutoString dir_name(aOldDirCatalog->dirs[i]->mDirName);
-      HandleFontDir(lib, aFontCatalog, fs_dir, dir_name);
+      HandleFontDir(lib, aFontCatalog, font_summaries_dir_path,
+                    nsDependentCString(aOldDirCatalog->dirs[i]->mDirName));
     }
 
     //
     // Get the font summaries for the downloaded/private font dir
     //
-    nsCAutoString fdown_dir(font_download_dir_path);
-    HandleFontDir(lib, aFontCatalog, fs_dir, fdown_dir);
+    HandleFontDir(lib, aFontCatalog, font_summaries_dir_path, font_download_dir_path);
   }
 
   return 0;
@@ -887,8 +883,8 @@ cleanup_and_return:
 }
 
 PRBool
-nsFT2FontCatalog::GetFontSummaryName(const nsACString &aFontDirName,
-                                     const nsACString &aFontSummariesDir,
+nsFT2FontCatalog::GetFontSummaryName(const nsACString &aFontDirName,      // native charset
+                                     const nsACString &aFontSummariesDir, // native charset
                                      nsACString &aFontSummaryFileName,
                                      nsACString 
                                                &aFallbackFontSummaryFileName)
@@ -906,16 +902,16 @@ nsFT2FontCatalog::GetFontSummaryName(const nsACString &aFontDirName,
   // or the "private" one in our $HOME/.mozilla/fontsummaries dir
   //
   font_dir = new nsLocalFile();
-  font_dir->InitWithPath(PromiseFlatCString(aFontDirName).get());
+  font_dir->InitWithNativePath(aFontDirName);
   rv = font_dir->IsWritable(&public_dir_writable);
   if (NS_SUCCEEDED(rv) && public_dir_writable) {
     FONT_CATALOG_PRINTF(("can write \"%s\"", PromiseFlatCString(aFontDirName).get()));
     nsCOMPtr<nsILocalFile> summary_file = new nsLocalFile();
-    summary_file->InitWithPath(PromiseFlatCString(aFontDirName).get());
-    summary_file->Append(PUBLIC_FONT_SUMMARY_NAME);
-    char *font_summary_path;
-    summary_file->GetPath(&font_summary_path);
-    FONT_CATALOG_PRINTF(("font_summary_path = \"%s\"", font_summary_path));
+    summary_file->InitWithNativePath(aFontDirName);
+    summary_file->AppendNative(PUBLIC_FONT_SUMMARY_NAME);
+    nsCAutoString font_summary_path;
+    summary_file->GetNativePath(font_summary_path);
+    FONT_CATALOG_PRINTF(("font_summary_path = \"%s\"", font_summary_path.get()));
     rv = summary_file->Exists(&exists);
     if (NS_SUCCEEDED(rv)) {
       if (!exists) {
@@ -923,11 +919,11 @@ nsFT2FontCatalog::GetFontSummaryName(const nsACString &aFontDirName,
         aFontSummaryFileName = font_summary_path;
       }
       else {
-        FONT_CATALOG_PRINTF(("font summary \"%s\" exists", font_summary_path));
+        FONT_CATALOG_PRINTF(("font summary \"%s\" exists", font_summary_path.get()));
         rv = summary_file->IsWritable(&public_summary_writable);
         if (NS_SUCCEEDED(rv) && public_summary_writable) {
           FONT_CATALOG_PRINTF(("font summary \"%s\" is writable", 
-                               font_summary_path));
+                               font_summary_path.get()));
           public_summary_writable = PR_TRUE;
           aFontSummaryFileName = font_summary_path;
         }
@@ -1054,12 +1050,12 @@ nsFT2FontCatalog::GetRange2CharSetName(unsigned long aBit)
 PRBool
 nsFT2FontCatalog::HandleFontDir(FT_Library aFreeTypeLibrary, 
                                 nsFontCatalog *aFontCatalog,
-                                const nsACString &aFontSummariesDir, 
-                                const nsACString &aFontDirName)
+                                const nsACString &aFontSummariesDir, // native charset
+                                const nsACString &aFontDirName)      // native charset
 {
   int i, status = -1;
   PRBool rslt, current;
-  char *fileName;
+  nsCAutoString fileName;
   nsHashtable* fontFileNamesHash = nsnull;
   nsHashtable* fallbackFceHash = nsnull;
   nsresult rv;
@@ -1068,7 +1064,7 @@ nsFT2FontCatalog::HandleFontDir(FT_Library aFreeTypeLibrary,
   PRBool moreFilesInDir = PR_FALSE;
   nsCOMPtr<nsIFile> dir;
   nsCOMPtr<nsILocalFile> dirLocal;
-  nsCOMPtr<nsIFile> dirEntry;
+  nsCOMPtr<nsILocalFile> dirEntry;
   nsCOMPtr<nsISimpleEnumerator> dirIterator;
   PRBool summary_needs_update = PR_FALSE;
   nsFontCatalogEntry *fce;
@@ -1115,7 +1111,7 @@ nsFT2FontCatalog::HandleFontDir(FT_Library aFreeTypeLibrary,
   //
   dir = new nsLocalFile();
   dirLocal = do_QueryInterface(dir);
-  dirLocal->InitWithPath(PromiseFlatCString(aFontDirName).get());
+  dirLocal->InitWithNativePath(aFontDirName);
   rv = dir->GetDirectoryEntries(getter_AddRefs(dirIterator));
   if (NS_FAILED(rv)) {
     FONT_CATALOG_PRINTF(("failed to open dir (get iterator) for %s", 
@@ -1141,20 +1137,19 @@ nsFT2FontCatalog::HandleFontDir(FT_Library aFreeTypeLibrary,
       goto cleanup_and_return;
     }
     //char *path;
-    dirEntry->GetPath(&fileName);
-    FONT_CATALOG_PRINTF(("dirEntry = \"%s\"", fileName));
+    dirEntry->GetNativePath(fileName);
+    FONT_CATALOG_PRINTF(("dirEntry = \"%s\"", fileName.get()));
     rv = dirEntry->IsFile(&isFile);
     if (NS_SUCCEEDED(rv) && isFile) {
       PRInt64 modtime;
       dirEntry->GetLastModifiedTime(&modtime);
-      current = AddFceIfCurrent(fileName, fontFileNamesHash,
+      current = AddFceIfCurrent(fileName.get(), fontFileNamesHash,
                              modtime, dirFontCatalog);
       if (!current) {
         // Ignore the font summary itself
-        nsDependentCString name(fileName);
-        if (name.Equals(fontSummaryFilename) ||
-            name.Equals(fallbackFontSummaryFilename)) {
-          FONT_CATALOG_PRINTF(("font summary %s is not a font", fileName));
+        if (fileName.Equals(fontSummaryFilename) ||
+            fileName.Equals(fallbackFontSummaryFilename)) {
+          FONT_CATALOG_PRINTF(("font summary %s is not a font", fileName.get()));
           current = PR_TRUE;
         }
         // If not in font summary, try the fallback summary
@@ -1168,7 +1163,7 @@ nsFT2FontCatalog::HandleFontDir(FT_Library aFreeTypeLibrary,
           }
           if (fallbackFceHash) {
             summary_needs_update = PR_TRUE;
-            current = AddFceIfCurrent(fileName, fallbackFceHash,
+            current = AddFceIfCurrent(fileName.get(), fallbackFceHash,
                               modtime, dirFontCatalog);
           }
         }
@@ -1180,7 +1175,7 @@ nsFT2FontCatalog::HandleFontDir(FT_Library aFreeTypeLibrary,
         if (!current) {
           summary_needs_update = PR_TRUE;
           HandleFontFile(aFreeTypeLibrary, dirFontCatalog,
-                                      fileName);
+                                      fileName.get());
         }
       }
     }

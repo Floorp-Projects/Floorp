@@ -431,7 +431,7 @@ function finishAccount(account, accountData) {
         var sigFileName = accountData.signatureFileName;
       
         var sigFile = gMailSession.getDataFilesDir("messenger");
-        sigFile.appendUnicode(sigFileName);
+        sigFile.append(sigFileName);
         destIdentity.signature = sigFile;
     }
 

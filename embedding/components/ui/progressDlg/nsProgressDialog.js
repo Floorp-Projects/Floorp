@@ -375,7 +375,7 @@ nsProgressDialog.prototype = {
             }
         } else {
             // Target is the destination file.
-            this.setValue( "target", this.target.unicodePath );
+            this.setValue( "target", this.target.path );
         }
 
         // Set source field.
@@ -476,7 +476,7 @@ nsProgressDialog.prototype = {
 
     // Get filename from target file.
     fileName: function() {
-        return this.target ? this.target.unicodeLeafName : "";
+        return this.target ? this.target.leafName : "";
     },
 
     // Set the dialog title.

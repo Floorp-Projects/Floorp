@@ -38,29 +38,34 @@
 #ifndef INSTALLCLEANUPDEFINES_H
 #define INSTALLCLEANUPDEFINES_H
 
-#define CLEANUP_MESSAGE_FILENAME  "cmessage.txt"
+// simple hack for xpicleanup.exe
+#ifndef NS_LITERAL_CSTRING
+#define NS_LITERAL_CSTRING(x) (x)
+#endif
+
+#define CLEANUP_MESSAGE_FILENAME  NS_LITERAL_CSTRING("cmessage.txt")
 
 #ifndef XP_MAC
-#define CLEANUP_REGISTRY "xpicleanup.dat"
+#define CLEANUP_REGISTRY          NS_LITERAL_CSTRING("xpicleanup.dat")
 #endif
 
 #if defined (XP_MAC)
-#define CLEANUP_REGISTRY  "XPICleanup Data"
-#define ESSENTIAL_FILES  "Essential Files"
+#define CLEANUP_REGISTRY          NS_LITERAL_CSTRING("XPICleanup Data")
+#define ESSENTIAL_FILES           NS_LITERAL_CSTRING("Essential Files")
 #ifdef DEBUG
-#define CLEANUP_UTIL "XPICleanupDebug"
+#define CLEANUP_UTIL              NS_LITERAL_CSTRING("XPICleanupDebug")
 #else
-#define CLEANUP_UTIL "XPICleanup"
+#define CLEANUP_UTIL              NS_LITERAL_CSTRING("XPICleanup")
 #endif //DEBUG
 
 #elif defined (XP_WIN)
-#define CLEANUP_UTIL "xpicleanup.exe"
+#define CLEANUP_UTIL              NS_LITERAL_CSTRING("xpicleanup.exe")
 
 #elif defined (XP_OS2)
-#define CLEANUP_UTIL "xpicleanup.exe"
+#define CLEANUP_UTIL              NS_LITERAL_CSTRING("xpicleanup.exe")
 
 #else
-#define CLEANUP_UTIL "xpicleanup"
+#define CLEANUP_UTIL              NS_LITERAL_CSTRING("xpicleanup")
 
 #endif
 

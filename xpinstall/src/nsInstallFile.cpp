@@ -140,7 +140,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         else
         {
             nsresult rv = inPartialPath.Mid(subString, offset, nodeLength);
-            mFinalFile->Append(NS_LossyConvertUCS2toASCII(subString).get());
+            mFinalFile->Append(NS_ConvertUCS2toUTF8(subString));
             offset += nodeLength + 1;
             if (!finished)
                 location = inPartialPath.FindChar('/', offset);
@@ -200,7 +200,7 @@ void nsInstallFile::CreateAllFolders(nsInstall *inInstall, nsIFile *inFolderPath
     inFolderPath->Exists(&flagExists);
     if(!flagExists)
     {
-        char *szPath = nsnull;
+        nsCAutoString szPath;
 
         inFolderPath->GetParent(getter_AddRefs(nsfsFolderPath));
         CreateAllFolders(inInstall, nsfsFolderPath, error);
@@ -208,9 +208,8 @@ void nsInstallFile::CreateAllFolders(nsInstall *inInstall, nsIFile *inFolderPath
         inFolderPath->Create(nsIFile::DIRECTORY_TYPE, 0755); //nsIFileXXX: What kind of permissions are required here?
         ++mFolderCreateCount;
 
-        inFolderPath->GetPath(&szPath);
-        nsStrFolder.AssignWithConversion(szPath);
-        nsMemory::Free(szPath);
+        inFolderPath->GetPath(szPath);
+        nsStrFolder.Assign(NS_ConvertUTF8toUCS2(szPath));
         ilc = new nsInstallLogComment(inInstall, NS_LITERAL_STRING("CreateFolder"), nsStrFolder, error);
         if(ilc == nsnull)
             *error = nsInstall::OUT_OF_MEMORY;
@@ -293,8 +292,8 @@ PRInt32 nsInstallFile::Complete()
     
     if ( mRegister && (0 == err || nsInstall::REBOOT_NEEDED == err) ) 
     {
-        nsXPIDLCString path;
-        mFinalFile->GetPath(getter_Copies(path));
+        nsCAutoString path;
+        mFinalFile->GetNativePath(path);
         VR_Install( NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(*mVersionRegistryName).get()),
                     NS_CONST_CAST(char*, path.get()),
                     NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(*mVersionInfo).get()),
@@ -358,9 +357,9 @@ char* nsInstallFile::toString()
 
         if(interimCStr)
         {
-            nsXPIDLCString fname;
+            nsCAutoString fname;
             if (mFinalFile)
-                mFinalFile->GetPath(getter_Copies(fname));
+                mFinalFile->GetNativePath(fname);
 
             PR_snprintf( buffer, RESBUFSIZE, interimCStr, fname.get() );
             Recycle(interimCStr);
@@ -396,9 +395,9 @@ PRInt32 nsInstallFile::CompleteFileMove()
 
     if(mMode & WIN_SHARED_FILE)
     {
-      nsXPIDLCString path;
-      mFinalFile->GetPath(getter_Copies(path));
-      RegisterSharedFile(path, mReplaceFile);
+      nsCAutoString path;
+      mFinalFile->GetNativePath(path);
+      RegisterSharedFile(path.get(), mReplaceFile);
     }
 
     return result;  

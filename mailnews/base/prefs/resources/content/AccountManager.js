@@ -869,7 +869,7 @@ function getFormElementValue(formElement) {
     if (formElement.value) {
       var localfile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
 
-      localfile.initWithUnicodePath(formElement.value);
+      localfile.initWithPath(formElement.value);
       return localfile;
     }
     else {
@@ -952,7 +952,7 @@ function setFormElementValue(formElement, value) {
     if (value) {
       var localfile = value.QueryInterface(Components.interfaces.nsILocalFile);
       try {
-        formElement.value = localfile.unicodePath;
+        formElement.value = localfile.path;
       } catch (ex) {
         dump("Still need to fix uninitialized nsIFile problem!\n");
       }

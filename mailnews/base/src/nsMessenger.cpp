@@ -48,6 +48,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIFileSpec.h"
+#include "nsILocalFile.h"
 #ifdef XP_MAC
 #include "nsIAppleFileDecoder.h"
 #endif
@@ -206,30 +207,26 @@ ConvertBufToPlainText(nsString &aConBuf)
 
 nsresult ConvertAndSanitizeFileName(const char * displayName, PRUnichar ** unicodeResult, char ** result)
 {
-  char * unescapedName = PL_strdup(displayName);
-  if (!unescapedName)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsCAutoString unescapedName(displayName);
 
   /* we need to convert the UTF-8 fileName to platform specific character set.
      The display name is in UTF-8 because it has been escaped from JS
   */ 
-  nsUnescape(unescapedName);
-  nsAutoString ucs2Str = NS_ConvertUTF8toUCS2(unescapedName);
-  PR_FREEIF(unescapedName);
+  NS_UnescapeURL(unescapedName);
 
   nsresult rv = NS_OK;
 #if defined(XP_MAC)
   /* We need to truncate the name to 31 characters, this even on MacOS X until the file API
-     correctly support long file name. Using a nsILocalFIle will do the trick...
+     correctly support long file name. Using a nsILocalFile will do the trick...
   */
   nsCOMPtr<nsILocalFile> aLocalFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(aLocalFile->SetUnicodeLeafName(ucs2Str.get())))
+  if (NS_SUCCEEDED(aLocalFile->SetLeafName(unescapedName)))
   {
-    PRUnichar * tempStr;
-    aLocalFile->GetUnicodeLeafName(&tempStr);
-    ucs2Str.Adopt(tempStr);
+    aLocalFile->GetLeafName(unescapedName);
   }
 #endif
+
+  NS_ConvertUTF8toUCS2 ucs2Str(unescapedName);
 
   // replace platform specific path separator and illegale characters to avoid any confusion
   ucs2Str.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
@@ -525,7 +522,7 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
                 return NS_ERROR_FAILURE;
 
             nsCOMPtr<nsILocalFile> localFile;
-            nsXPIDLCString filePath;
+            nsCAutoString filePath;
             
             rv = filePicker->GetFile(getter_AddRefs(localFile));
             if (NS_FAILED(rv)) return rv;
@@ -533,9 +530,10 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
             rv = SetLastSaveDirectory(localFile);
             NS_ENSURE_SUCCESS(rv,rv);
 
-            rv = localFile->GetPath(getter_Copies(filePath));
+            rv = localFile->GetNativePath(filePath);
             if (NS_FAILED(rv)) return rv;
-            fileSpec = (const char*) filePath;
+
+            fileSpec = filePath.get();
             return NS_OK;
         }
     }
@@ -788,7 +786,7 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
 
   PRInt16 dialogResult;
   nsCOMPtr<nsILocalFile> localFile;
-  nsCOMPtr <nsILocalFile> lastSaveDir;
+  nsCOMPtr<nsILocalFile> lastSaveDir;
   nsCOMPtr<nsIFileSpec> fileSpec;
   nsXPIDLCString filePath;
   nsXPIDLString defaultDisplayString;
@@ -826,12 +824,10 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
   if (NS_FAILED(rv)) goto done;
   
   (void)SetLastSaveDirectory(localFile);
-  
-  rv = localFile->GetPath(getter_Copies(filePath));
-  fileSpec = do_CreateInstance("@mozilla.org/filespec;1", &rv);
+
+  rv = NS_NewFileSpecFromIFile(localFile, getter_AddRefs(fileSpec));
   if (NS_FAILED(rv)) goto done;
 
-  fileSpec->SetNativePath(filePath);
   rv = SaveAttachment(fileSpec, unescapedUrl, messageUri, contentType, nsnull);
 
 done:
@@ -880,8 +876,8 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
     rv = SetLastSaveDirectory(localFile);
     if (NS_FAILED(rv)) 
       goto done;
-    
-    rv = localFile->GetPath(getter_Copies(dirName));
+
+    rv = localFile->GetNativePath(dirName);
     if (NS_FAILED(rv)) goto done;
     rv = NS_NewFileSpec(getter_AddRefs(fileSpec));
     if (NS_FAILED(rv)) goto done;
@@ -978,10 +974,9 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         if (NS_FAILED(rv)) 
           goto done;
         
-        nsXPIDLCString tmpFileName;
-        rv = localFile->GetLeafName(getter_Copies(tmpFileName));
+        nsCAutoString fileName;
+        rv = localFile->GetLeafName(fileName);
         if (NS_FAILED(rv)) goto done;
-        nsCAutoString fileName(tmpFileName);
             
         // First, check if they put ANY extension on the file, if not,
         // then we should look at the type of file they have chosen and
@@ -1003,11 +998,9 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         // XXX argh!  converting from nsILocalFile to nsFileSpec ... oh baby, lets drop from unicode to ascii too
         //        nsXPIDLString path;
         //        localFile->GetUnicodePath(getter_Copies(path));
-        nsXPIDLCString path;
-        localFile->GetPath(getter_Copies(path));
-        nsCOMPtr<nsIFileSpec> fileSpec = do_CreateInstance("@mozilla.org/filespec;1", &rv);
+        nsCOMPtr<nsIFileSpec> fileSpec;
+        rv = NS_NewFileSpecFromIFile(localFile, getter_AddRefs(fileSpec));
         if (NS_FAILED(rv)) goto done;
-        fileSpec->SetNativePath(path);
 
         aListener = new nsSaveMsgListener(fileSpec, this);
         if (!aListener) {

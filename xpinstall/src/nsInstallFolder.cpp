@@ -139,14 +139,14 @@ void
 nsInstallFolder::GetDirectoryPath(nsCString& aDirectoryPath)
 {
   PRBool flagIsDir;
-  nsXPIDLCString  thePath;
+  nsCAutoString thePath;
   
   aDirectoryPath.SetLength(0);
 
     if (mFileSpec != nsnull)
     {
       // We want the NATIVE path.
-      mFileSpec->GetPath(getter_Copies(thePath));
+      mFileSpec->GetNativePath(thePath);
       aDirectoryPath.Assign(thePath);
 
       mFileSpec->IsDirectory(&flagIsDir);
@@ -528,14 +528,12 @@ nsInstallFolder::AppendXPPath(const nsString& aRelativePath)
             start = curr+1;
         }
             
-        nsresult rv = mFileSpec->AppendUnicode(segment.get());
+        nsresult rv = mFileSpec->Append(NS_ConvertUCS2toUTF8(segment));
         if (NS_FAILED(rv))
         {
             // Unicode converters not present (likely wizard case)
             // so do our best with the vanilla conversion.
-            nsCAutoString tmp;
-            tmp.AssignWithConversion(segment);
-            mFileSpec->Append(tmp.get());
+            mFileSpec->AppendNative(NS_LossyConvertUCS2toASCII(segment));
         }
     } while ( start < aRelativePath.Length() );
 }
@@ -581,11 +579,11 @@ nsInstallFolder::ToString(nsAutoString* outString)
   if (!mFileSpec || !outString)
       return NS_ERROR_NULL_POINTER;
 
-  nsXPIDLString  tempUC;
-  nsresult rv = mFileSpec->GetUnicodePath(getter_Copies(tempUC));
+  nsCAutoString temp;
+  nsresult rv = mFileSpec->GetPath(temp);
   if (NS_SUCCEEDED(rv))
   {
-      outString->Assign(tempUC);
+      outString->Assign(NS_ConvertUTF8toUCS2(temp));
   }
   else
   {
@@ -594,9 +592,9 @@ nsInstallFolder::ToString(nsAutoString* outString)
 
       // XXX NOTE we can make sure our filenames are ASCII, but we have no
       // control over the directory name which might be localized!!!
-      nsXPIDLCString temp;
-      rv = mFileSpec->GetPath(getter_Copies(temp));
-      outString->AssignWithConversion(temp);
+      nsCAutoString temp;
+      rv = mFileSpec->GetPath(temp);
+      outString->Assign(NS_ConvertUTF8toUCS2(temp));
   }
 
   PRBool flagIsFile;

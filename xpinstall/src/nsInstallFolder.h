@@ -35,13 +35,13 @@
 #include "nsSpecialSystemDirectory.h"
 
 #ifdef XP_MAC
-#define INSTALL_PLUGINS_DIR     "Plug-ins"
-#define INSTALL_COMPONENTS_DIR  "Components"
-#define INSTALL_CHROME_DIR      "Chrome"
+#define INSTALL_PLUGINS_DIR     NS_LITERAL_CSTRING("Plug-ins")
+#define INSTALL_COMPONENTS_DIR  NS_LITERAL_CSTRING("Components")
+#define INSTALL_CHROME_DIR      NS_LITERAL_CSTRING("Chrome")
 #else
-#define INSTALL_PLUGINS_DIR     "plugins"
-#define INSTALL_COMPONENTS_DIR  "components"
-#define INSTALL_CHROME_DIR      "chrome"
+#define INSTALL_PLUGINS_DIR     NS_LITERAL_CSTRING("plugins")
+#define INSTALL_COMPONENTS_DIR  NS_LITERAL_CSTRING("components")
+#define INSTALL_CHROME_DIR      NS_LITERAL_CSTRING("chrome")
 #endif
 
 class nsInstallFolder

@@ -37,7 +37,7 @@
 
 #include "ApplIDs.h"
 
-static char* GetResCString(PRInt32 stringIndex, Str255& buf);
+static const nsACString &GetResCString(PRInt32 stringIndex, Str255& buf);
   
 
 //*****************************************************************************
@@ -84,13 +84,13 @@ CAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile 
     {
         rv = GetProductDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->Append(GetResCString(str_AppRegistryName, strBuf));
+            rv = localFile->AppendNative(GetResCString(str_AppRegistryName, strBuf));
     }
     else if (nsCRT::strcmp(prop, NS_APP_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
-            rv = localFile->AppendRelativePath(GetResCString(str_DefaultsDirName, strBuf));
+            rv = localFile->AppendRelativeNativePath(GetResCString(str_DefaultsDirName, strBuf));
     }
     else if (nsCRT::strcmp(prop, NS_APP_PREF_DEFAULTS_50_DIR) == 0)
     {
@@ -211,7 +211,7 @@ NS_METHOD CAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFil
     rv = directoryService->Get(prop, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;   
 
-    rv = localDir->AppendRelativePath(mProductDirName);
+    rv = localDir->AppendRelativeNativePath(nsDependentCString(mProductDirName));
     if (NS_FAILED(rv)) return rv;
     rv = localDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)
@@ -259,12 +259,12 @@ NS_METHOD CAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aLo
 // Static Routines
 //****************************************************************************************
 
-static char* GetResCString(PRInt32 stringIndex, Str255& buf)
+static const nsACString &GetResCString(PRInt32 stringIndex, Str255& buf)
 {
     GetIndString(buf, STRx_FileLocProviderStrings, stringIndex);
     if (!buf[0]) {
         NS_ASSERTION(PR_FALSE, "Directory name resource is missing.");
-        return nsnull;
+        return nsCString();
     }
     
     // Because of different availability of Pascal to C conversion routines
@@ -273,5 +273,5 @@ static char* GetResCString(PRInt32 stringIndex, Str255& buf)
     memmove(buf, buf + 1, len);
     buf[len] = '\0';
     
-    return (char *)buf;
+    return nsDependentCString((char *)buf);
 }

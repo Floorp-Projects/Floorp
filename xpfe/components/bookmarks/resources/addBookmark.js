@@ -268,7 +268,7 @@ function getNormalizedURL(url)
   try {
     const kLF = Components.classes["@mozilla.org/file/local;1"]
                           .createInstance(Components.interfaces.nsILocalFile);
-    kLF.initWithUnicodePath(url);
+    kLF.initWithPath(url);
     if (kLF.exists()) {
       var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                 .getService(Components.classes.nsIIOService);

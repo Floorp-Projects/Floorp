@@ -25,7 +25,6 @@
 #include "nsNetUtil.h"
 #include "nsEscape.h"
 
-#include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 #include "nsILocalFile.h"
 
@@ -357,7 +356,7 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
         //       platform.
 
         nsCOMPtr<nsILocalFile> filePath;
-        nsCAutoString file; 
+        nsresult rv;
 
         // this is not the real fix but a temporary fix
         // in order to really fix the problem, we need to change the 
@@ -380,14 +379,13 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
         // all the Unicode data come in is correctly converted. 
         if (PossiblyByteExpandedFileName(aIn)) {
           // removes high byte
-          file.AssignWithConversion(aIn);
+          rv = NS_NewNativeLocalFile(NS_LossyConvertUCS2toASCII(aIn), PR_FALSE, getter_AddRefs(filePath));
         }
         else {
-          // converts from Unicode to FS Charset
-          ConvertStringURIToFileCharset(aIn, file);
+          // input is unicode
+          rv = NS_NewLocalFile(NS_ConvertUCS2toUTF8(aIn), PR_FALSE, getter_AddRefs(filePath));
         }
 
-        nsresult rv = NS_NewLocalFile(file.get(), PR_FALSE, getter_AddRefs(filePath));
         if (NS_SUCCEEDED(rv))
         {
             NS_GetURLSpecFromFile(filePath, aOut);
@@ -448,37 +446,6 @@ const char * nsDefaultURIFixup::GetCharsetForUrlBar()
 #endif
   return charset;
 }
-
-nsresult nsDefaultURIFixup::ConvertStringURIToFileCharset(nsString& aIn, 
-                                                          nsCString& aOut)
-{
-    aOut = "";
-    // We probably should cache ccm here.
-    // get a charset converter from the manager
-    nsCOMPtr<nsICharsetConverterManager> ccm(do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID));
-    NS_ENSURE_TRUE(ccm, NS_ERROR_FAILURE);
-   
-    // for file url, we need to convert the nsString to the file system
-    // charset before we pass to NS_NewURI
-    NS_ConvertASCIItoUCS2 fsCharset(GetFileSystemCharset());
-    nsCOMPtr<nsIUnicodeEncoder> fsEncoder;
-    NS_ENSURE_SUCCESS(ccm->GetUnicodeEncoder(&fsCharset, 
-        getter_AddRefs(fsEncoder)), NS_ERROR_FAILURE);
-
-    PRInt32 bufLen = 0;
-    NS_ENSURE_SUCCESS(fsEncoder->GetMaxLength(aIn.get(), aIn.Length(),
-        &bufLen), NS_ERROR_FAILURE);
-    aOut.SetCapacity(bufLen+1);
-    PRInt32 srclen = aIn.Length();
-    NS_ENSURE_SUCCESS(fsEncoder->Convert(aIn.get(), &srclen, 
-        (char*)aOut.get(), &bufLen), NS_ERROR_FAILURE);
-
-    ((char*)aOut.get())[bufLen]='\0';
-    aOut.SetLength(bufLen);
-
-    return NS_OK;
-}
-
 
 nsresult nsDefaultURIFixup::KeywordURIFixup(const PRUnichar* aStringURI, 
                                             nsIURI** aURI)

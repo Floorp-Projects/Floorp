@@ -59,6 +59,11 @@ public:
     // nsILocalFileMac interface
     NS_DECL_NSILOCALFILEMAC
 
+public:
+
+    static void GlobalInit();
+    static void GlobalShutdown();
+
 protected:
 
     void        MakeDirty();
@@ -74,12 +79,21 @@ protected:
 
     nsresult    TestFinderFlag(PRUint16 flagMask, PRBool *outFlagSet, PRBool testTargetSpec = PR_TRUE);
 
-    nsresult    MoveCopy( nsIFile* newParentDir, const char* newName, PRBool isCopy, PRBool followLinks );
+    nsresult    MoveCopy( nsIFile* newParentDir, const nsACString &newName, PRBool isCopy, PRBool followLinks );
 
     // Passing nsnull for the extension uses leaf name
     nsresult    SetOSTypeAndCreatorFromExtension(const char* extension = nsnull);
 
     nsresult    ExtensionIsOnExceptionList(const char *extension, PRBool *onList);
+
+    // XXX needs impl
+    static PRBool FSCharsetIsUTF8() { return PR_FALSE; }
+    
+    // XXX we should compute and store these values
+    PRBool        LeafIsASCII() { return PR_FALSE; }
+    PRBool        PathIsASCII() { return PR_FALSE; }
+
+	NS_DECL_NSLOCALFILE_UNICODE_METHODS
 
 private:
     nsLocalFile(const nsLocalFile& srcFile);

@@ -149,7 +149,7 @@ nsDiskCacheMap::Open(nsILocalFile *  cacheDirectory)
     rv = cacheDirectory->Clone(getter_AddRefs(file));
     nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file, &rv));
     if (NS_FAILED(rv))  return rv;
-    rv = localFile->Append("_CACHE_MAP_");
+    rv = localFile->Append(NS_LITERAL_CSTRING("_CACHE_MAP_"));
     if (NS_FAILED(rv))  return rv;
     
     // open the file
@@ -799,7 +799,7 @@ nsDiskCacheMap::GetFileForDiskCacheRecord(nsDiskCacheRecord * record,
     PRInt16 generation = record->Generation();
     char name[32];
     ::sprintf(name, "%08X%c%02X", record->HashNumber(),  (meta ? 'm' : 'd'), generation);
-    rv = file->Append(name);
+    rv = file->AppendNative(nsDependentCString(name));
     if (NS_FAILED(rv))  return rv;
     
     NS_IF_ADDREF(*result = file);
@@ -834,7 +834,7 @@ nsDiskCacheMap::GetBlockFileForIndex(PRUint32 index, nsILocalFile ** result)
     
     char name[32];
     ::sprintf(name, "_CACHE_%03d_", index + 1);
-    rv = file->Append(name);
+    rv = file->AppendNative(nsDependentCString(name));
     if (NS_FAILED(rv))  return rv;
     
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);

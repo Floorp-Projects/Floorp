@@ -35,10 +35,10 @@
 #include <errno.h>
 
 #include "nscore.h"
-#include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsLocalFile.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
+#include "nsReadableUtils.h"
 
 /** 
  *  we need these for statfs()
@@ -113,20 +113,51 @@ public:
     // nsILocalFile
     NS_DECL_NSILOCALFILE
 
+public:
+    static void GlobalInit();
+    static void GlobalShutdown();
+    static PRBool FSCharsetIsUTF8();
+
 protected:
-    PRBool mHaveCachedStat;
-    struct stat mCachedStat;
-    nsXPIDLCString mPath;
-    
+    struct stat  mCachedStat;
+    nsCString    mPath;
+    PRPackedBool mHaveCachedStat;
+    PRInt8       mPathIsASCII; // -1 if unknown
+    PRInt8       mLeafIsASCII; // -1 if unknown
+
+    NS_DECL_NSLOCALFILE_UNICODE_METHODS
+
+    // XXX these results should probably be cached
+    PRBool PathIsASCII() {
+        if (mPathIsASCII == -1)
+            mPathIsASCII = IsASCII(mPath);
+        return mPathIsASCII;
+    }
+    PRBool LeafIsASCII() {
+        if (mLeafIsASCII == -1) {
+            nsACString::const_iterator begin, end;
+            LocateNativeLeafName(begin, end);
+            mLeafIsASCII = IsASCII(Substring(begin, end));
+        }
+        return mLeafIsASCII;
+    }
+
+    void LocateNativeLeafName(nsACString::const_iterator &,
+                              nsACString::const_iterator &);
+
     nsresult CopyDirectoryTo(nsIFile *newParent);
     nsresult CreateAllAncestors(PRUint32 permissions);
-    nsresult GetLeafNameRaw(const char **_retval);
-    nsresult GetTargetPathName(nsIFile *newParent, const char *newName,
-                               char **_retval);
+    nsresult GetNativeTargetPathName(nsIFile *newParent,
+                                     const nsACString &newName,
+                                     nsACString &_retval);
 
-    void InvalidateCache() { mHaveCachedStat = PR_FALSE; }
+    void InvalidateCache() {
+        mHaveCachedStat = PR_FALSE;
+        // not the most optimal place to clear these, but it works...
+        mPathIsASCII = -1;
+        mLeafIsASCII = -1;
+    }
     nsresult FillStatCache();
-
 };
 
 #endif /* _nsLocalFileUNIX_H_ */

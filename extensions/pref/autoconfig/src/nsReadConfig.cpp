@@ -221,18 +221,18 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName,
             return rv;
         
 #ifdef XP_MAC
-        jsFile->Append("Essential Files");
+        jsFile->Append(NS_LITERAL_CSTRING("Essential Files"));
 #endif
     } else {
         rv = NS_GetSpecialDirectory(NS_APP_DEFAULTS_50_DIR,
                                     getter_AddRefs(jsFile));
         if (NS_FAILED(rv)) 
             return rv;
-        rv = jsFile->Append("autoconfig");
+        rv = jsFile->Append(NS_LITERAL_CSTRING("autoconfig"));
         if (NS_FAILED(rv))
             return rv;
     }
-    rv = jsFile->Append(aFileName);
+    rv = jsFile->Append(nsDependentCString(aFileName));
     if (NS_FAILED(rv)) 
         return rv;
 
@@ -259,9 +259,9 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName,
             for (PRUint32 i = 0; i < amt; i++)
                 buf[i] -= obscure_value;
         }
-        nsXPIDLCString path;
+        nsCAutoString path;
 
-        jsFile->GetPath(getter_Copies(path));
+        jsFile->GetNativePath(path);
         nsCAutoString fileURL;
         fileURL = NS_LITERAL_CSTRING("file:///") + path;
         rv = EvaluateAdminConfigScript(buf, amt, fileURL.get(), 

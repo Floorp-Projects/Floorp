@@ -40,6 +40,7 @@
 #include "nsAddrBookSession.h"
 #include "nsIAddrBookSession.h"
 #include "nsIFileSpec.h"
+#include "nsILocalFile.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
@@ -179,14 +180,15 @@ NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsFileSpec * *userDir)
 
   nsresult rv;		
   nsCOMPtr<nsIFile> profileDir;
-  nsXPIDLCString pathBuf;
+  nsCAutoString pathBuf;
 
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = profileDir->GetPath(getter_Copies(pathBuf));
+
+  rv = profileDir->GetNativePath(pathBuf);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *userDir = new nsFileSpec(pathBuf);
+  *userDir = new nsFileSpec(pathBuf.get());
   NS_ENSURE_TRUE(*userDir, NS_ERROR_OUT_OF_MEMORY);
 
   return rv;

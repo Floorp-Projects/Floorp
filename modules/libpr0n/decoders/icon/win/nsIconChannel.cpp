@@ -161,7 +161,7 @@ void InvertRows(unsigned char * aInitialBuffer, PRUint32 sizeOfBuffer, PRUint32 
   nsMemory::Free(temporaryRowHolder);
 }
 
-nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, char ** aContentType, char ** aFileExtension)
+nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsACString &aContentType, nsACString &aFileExtension)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMozIconURI> iconURI (do_QueryInterface(mUrl, &rv));
@@ -298,10 +298,10 @@ void ConvertMaskBitMap(unsigned char * aBitMaskBuffer, PBITMAPINFOHEADER pBitMap
 NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
   nsXPIDLCString contentType;
-  nsXPIDLCString filePath;
+  nsCAutoString filePath;
   nsCOMPtr<nsIFile> localFile; // file we want an icon for
   PRUint32 desiredImageSize;
-  nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(localFile), &desiredImageSize, getter_Copies(contentType), getter_Copies(filePath));
+  nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(localFile), &desiredImageSize, contentType, filePath);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // if the file exists, we are going to use it's real attributes...otherwise we only want to use it for it's extension...
@@ -312,7 +312,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
  
   if (localFile)
   {
-    localFile->GetPath(getter_Copies(filePath));
+    localFile->GetNativePath(filePath);
     localFile->Exists(&fileExists);
   }
 
@@ -324,7 +324,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
   else
     infoFlags |= SHGFI_SMALLICON;
 
-  if ( (!filePath.get()) && (contentType.get() && *contentType.get()) ) // if we have a content type without a file extension...then use it!
+  if ( (filePath.IsEmpty()) && (contentType.get() && *contentType.get()) ) // if we have a content type without a file extension...then use it!
   {
     nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
     nsCOMPtr<nsIMIMEInfo> mimeObject;
@@ -336,10 +336,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
       nsXPIDLCString fileExt;
       mimeObject->GetPrimaryExtension(getter_Copies(fileExt));
       // we need to insert a '.' b4 the extension...
-      nsCAutoString formattedFileExt;
-      formattedFileExt = ".";
-      formattedFileExt.Append(fileExt.get());
-      filePath.Assign(formattedFileExt);
+      filePath = NS_LITERAL_CSTRING(".") + fileExt;
     }
   }
 

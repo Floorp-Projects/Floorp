@@ -40,6 +40,7 @@
 /* Implementation of xptiWorkingSet. */
 
 #include "xptiprivate.h"
+#include "nsString.h"
 
 #define XPTI_STRING_ARENA_BLOCK_SIZE    (1024 * 1)
 #define XPTI_STRUCT_ARENA_BLOCK_SIZE    (1024 * 1)
@@ -416,11 +417,11 @@ PRBool xptiWorkingSet::DirectoryAtMatchesPersistentDescriptor(PRUint32 i,
         return PR_FALSE;
 
     nsCOMPtr<nsILocalFile> descDir;
-    nsresult rv = NS_NewLocalFile(nsnull, PR_FALSE, getter_AddRefs(descDir));
+    nsresult rv = NS_NewLocalFile(nsCString(), PR_FALSE, getter_AddRefs(descDir));
     if(NS_FAILED(rv))
         return PR_FALSE;
 
-    rv = descDir->SetPersistentDescriptor(inDesc);
+    rv = descDir->SetPersistentDescriptor(nsDependentCString(inDesc));
     if(NS_FAILED(rv))
         return PR_FALSE;
     

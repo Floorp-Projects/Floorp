@@ -233,14 +233,14 @@ nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
 		            if (NS_SUCCEEDED(rv))
 		            {
 		                nsCOMPtr<nsILocalFile> newChild(do_QueryInterface(destClone));
-		                nsXPIDLCString leafName;
-		                dirEntry->GetLeafName(getter_Copies(leafName));
+		                nsCAutoString leafName;
+		                dirEntry->GetLeafName(leafName);
 		                newChild->AppendRelativePath(leafName);
 		                rv = RecursiveCopy(dirEntry, newChild);
 		            }
 		        }
 		        else
-		            rv = dirEntry->CopyTo(destDir, nsnull);
+		            rv = dirEntry->CopyTo(destDir, nsCString());
 		    }
 		
 		}
@@ -439,18 +439,18 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
     rv = GetCurrentProfileDir(getter_AddRefs(profileDir));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString  pathBuf;
-    rv = profileDir->GetPath(getter_Copies(pathBuf));
+    nsCAutoString pathBuf;
+    rv = profileDir->GetNativePath(pathBuf);
     if (NS_FAILED(rv)) return rv;
 
     // -UILocale or -contentLocale has been specified, but
     // user has selected UILocale and contentLocale for this profile
     // on profileManager
     // We should not set here
-    nsCStringKey key((const char *)pathBuf);
+    nsCStringKey key(pathBuf);
     if (NS_PTR_TO_INT32(gLocaleProfiles->Get(&key)) == PR_TRUE) {
 #ifdef DEBUG_profile_verbose
-        printf(" already set UILocale and contentLocale: %s\n", NS_STATIC_CAST(const char*, pathBuf));
+        printf(" already set UILocale and contentLocale: %s\n", pathBuf.get());
         printf(" will not install locale\n");
 #endif
         return NS_OK;
@@ -461,9 +461,9 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
     if (NS_FAILED(rv)) return rv;
 
     // Install to the profile
-    nsFileSpec fileSpec((const char *)pathBuf);
-    nsFileURL  fileURL(fileSpec);
-    const char* fileStr = fileURL.GetURLString();
+    nsCAutoString fileStr;
+    rv = NS_GetURLSpecFromFile(profileDir, fileStr);
+    if (NS_FAILED(rv)) return rv;
 
     // NEED TO FIX: when current UILocale and contentLocale are same with specified locales,
     // we shouldn't install them again here. But packageRegistry->GetSelectedLocale() doesn't
@@ -855,7 +855,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             nsAutoString currProfileDirString; currProfileDirString.AssignWithConversion(strtok(NULL, " "));
         
             if (!currProfileDirString.IsEmpty()) {
-                rv = NS_NewUnicodeLocalFile(currProfileDirString.get(), PR_TRUE, getter_AddRefs(currProfileDir));
+                rv = NS_NewLocalFile(NS_ConvertUCS2toUTF8(currProfileDirString), PR_TRUE, getter_AddRefs(currProfileDir));
                 NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
             }
             else {
@@ -867,9 +867,9 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 if (NS_FAILED(rv)) return rv;
             }
 
-            nsXPIDLString currProfilePath;
-            currProfileDir->GetUnicodePath(getter_Copies(currProfilePath));
-            rv = CreateNewProfile(currProfileName.get(), currProfilePath, nsnull, PR_TRUE);
+            nsCAutoString currProfilePath;
+            currProfileDir->GetPath(currProfilePath);
+            rv = CreateNewProfile(currProfileName.get(), NS_ConvertUTF8toUCS2(currProfilePath).get(), nsnull, PR_TRUE);
             if (NS_SUCCEEDED(rv)) {
                 *profileDirSet = PR_TRUE;
                 mCurrentProfileAvailable = PR_TRUE;
@@ -1043,7 +1043,12 @@ NS_IMETHODIMP nsProfile::GetProfilePath(const PRUnichar *profileName, PRUnichar 
         if (NS_SUCCEEDED(rv))
             prettyDir = parentDir;
     }
-    return prettyDir->GetUnicodePath(_retval);
+    nsCAutoString path;
+    rv = prettyDir->GetPath(path);
+    if (NS_FAILED(rv)) return rv;
+
+    *_retval = ToNewUnicode(NS_ConvertUTF8toUCS2(path));
+    return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP nsProfile::GetOriginalProfileDir(const PRUnichar *profileName, nsILocalFile **originalDir)
@@ -1083,7 +1088,7 @@ NS_IMETHODIMP nsProfile::GetProfileLastModTime(const PRUnichar *profileName, PRI
     rv = GetProfileDir(profileName, getter_AddRefs(profileDir));
     if (NS_FAILED(rv))
         return rv;
-    rv = profileDir->Append("prefs.js");  
+    rv = profileDir->Append(NS_LITERAL_CSTRING("prefs.js"));
     if (NS_FAILED(rv))
         return rv;
     return profileDir->GetLastModifiedTime(_retval);
@@ -1328,7 +1333,7 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
   rv = aDir->Clone(getter_AddRefs(prefFile));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = prefFile->Append("prefs.js");
+  rv = prefFile->Append(NS_LITERAL_CSTRING("prefs.js"));
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = prefFile->Exists(&exists);
@@ -1356,16 +1361,16 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
     if (NS_SUCCEEDED(rv)) {
       rv = dirEntry->IsDirectory(&isDir);
       if (NS_SUCCEEDED(rv) && isDir) {
-        nsXPIDLCString leafName;
-        rv = dirEntry->GetLeafName(getter_Copies(leafName));
-	 	if (NS_SUCCEEDED(rv) && (const char *)leafName) {
-		  PRUint32 length = strlen((const char *)leafName);
+        nsCAutoString leafName;
+        rv = dirEntry->GetNativeLeafName(leafName);
+	 	if (NS_SUCCEEDED(rv) && !leafName.IsEmpty()) {
+		  PRUint32 length = leafName.Length();
 		  // check if the filename is the right length, len("xxxxxxxx.slt")
 		  if (length == (SALT_SIZE + kSaltExtensionCString.Length())) {
 			// check that the filename ends with ".slt"
-			if (nsCRT::strncmp((const char *)leafName + SALT_SIZE, kSaltExtensionCString.get(), kSaltExtensionCString.Length()) == 0) {
+			if (nsCRT::strncmp(leafName.get() + SALT_SIZE, kSaltExtensionCString.get(), kSaltExtensionCString.Length()) == 0) {
 			  // found a salt directory, use it
-			  rv = aDir->Append((const char *)leafName);
+			  rv = aDir->AppendNative(leafName);
 			  return rv;
 			}
 		  }
@@ -1394,7 +1399,7 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
   printf("directory name: %s\n",saltStr.get());
 #endif
 
-  rv = aDir->Append(saltStr.get());
+  rv = aDir->AppendNative(saltStr);
   NS_ENSURE_SUCCESS(rv,rv);
 
   exists = PR_FALSE;
@@ -1415,16 +1420,15 @@ nsresult nsProfile::IsProfileDirSalted(nsIFile *profileDir, PRBool *isSalted)
     *isSalted = PR_FALSE;
     
     // 1. The name of the profile dir has to end in ".slt"
-    nsXPIDLCString leafName;
-    rv = profileDir->GetLeafName(getter_Copies(leafName));
+    nsCAutoString leafName;
+    rv = profileDir->GetNativeLeafName(leafName);
     if (NS_FAILED(rv)) return rv;
 
     PRBool endsWithSalt = PR_FALSE;    
-    nsDependentCString leafNameString(leafName.get());
-    if (leafNameString.Length() >= kSaltExtensionCString.Length())
+    if (leafName.Length() >= kSaltExtensionCString.Length())
     {
         nsReadingIterator<char> stringEnd;
-        leafNameString.EndReading(stringEnd);
+        leafName.EndReading(stringEnd);
 
         nsReadingIterator<char> stringStart = stringEnd;
         stringStart.advance( -(NS_STATIC_CAST(PRInt32, kSaltExtensionCString.Length())) );
@@ -1541,16 +1545,16 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
             profileDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
 
         // append profile name
-        profileDir->AppendUnicode(profileName);
+        profileDir->Append(NS_ConvertUCS2toUTF8(profileName));
     }
     else {
     
-        rv = NS_NewUnicodeLocalFile(nativeProfileDir, PR_TRUE, (nsILocalFile **)((nsIFile **)getter_AddRefs(profileDir)));
+        rv = NS_NewLocalFile(NS_ConvertUCS2toUTF8(nativeProfileDir), PR_TRUE, (nsILocalFile **)((nsIFile **)getter_AddRefs(profileDir)));
 
         // this prevents people from choosing there profile directory
         // or another directory, and remove it when they delete the profile.
         // append profile name
-        profileDir->AppendUnicode(profileName);
+        profileDir->Append(NS_ConvertUCS2toUTF8(profileName));
     }
 
 
@@ -1633,12 +1637,13 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
         printf(" contentLocale=%s\n", temp2.get());
 #endif
 
-        nsXPIDLCString  pathBuf;
-        rv = profileDir->GetPath(getter_Copies(pathBuf));
+        nsCAutoString pathBuf;
+        rv = profileDir->GetNativePath(pathBuf);
         NS_ENSURE_SUCCESS(rv, rv);
-        nsFileSpec fileSpec((const char *)pathBuf);
-        nsFileURL  fileURL(fileSpec);
-        const char* fileStr = fileURL.GetURLString();
+
+        nsCAutoString fileStr;
+        rv = NS_GetURLSpecFromFile(profileDir, fileStr);
+        if (NS_FAILED(rv)) return rv;
 
         if (uiLocale && uiLocale[0]) {
             rv = chromeRegistry->SelectLocaleForProfile(uiLocale, 
@@ -1646,7 +1651,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
             // Remember which profile has been created with the UILocale
             // didn't use gProfileDataAccess because just needed one time
             if (NS_SUCCEEDED(rv)) {
-                nsCStringKey key((const char *)pathBuf);
+                nsCStringKey key(pathBuf);
                 gLocaleProfiles->Put(&key, (void*)PR_TRUE);
             }
         }
@@ -1657,17 +1662,15 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
             rv = profDefaultsDir->Clone(getter_AddRefs(locProfDefaultsDir));
             if (NS_FAILED(rv)) return rv;
         
-            locProfDefaultsDir->AppendUnicode(contentLocale);
+            locProfDefaultsDir->Append(NS_ConvertUCS2toUTF8(contentLocale));
             rv = locProfDefaultsDir->Exists(&exists);
             if (NS_SUCCEEDED(rv) && exists) {
                 profDefaultsDir = locProfDefaultsDir; // transfers ownership
 #if defined(DEBUG_profile_verbose)
-                nsXPIDLString profilePath;
-                rv = profDefaultsDir->GetUnicodePath(getter_Copies(profilePath));
-                if (NS_SUCCEEDED(rv)) {
-                    nsCAutoString temp5; temp5.AssignWithConversion(profilePath);
-                    printf(" profDefaultsDir is set to: %s\n", temp5.get());
-                }
+                nsCAutoString profilePath;
+                rv = profDefaultsDir->GetNativePath(profilePath);
+                if (NS_SUCCEEDED(rv))
+                    printf(" profDefaultsDir is set to: %s\n", profilePath.get());
 #endif
             }
 
@@ -1676,7 +1679,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
             // Remember which profile has been created with the UILocale
             // didn't use gProfileDataAccess because just needed one time
             if (NS_SUCCEEDED(rv)) {
-                nsCStringKey key((const char *)pathBuf);
+                nsCStringKey key(pathBuf);
                 gLocaleProfiles->Put(&key, (void*)PR_TRUE);
             }
         }
@@ -2031,7 +2034,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 }
 
 nsresult
-nsProfile::CopyDefaultFile(nsIFile *profDefaultsDir, nsIFile *newProfDir, const char *fileName)
+nsProfile::CopyDefaultFile(nsIFile *profDefaultsDir, nsIFile *newProfDir, const nsACString &fileName)
 {
     nsresult rv;
     nsCOMPtr<nsIFile> defaultFile;
@@ -2040,11 +2043,11 @@ nsProfile::CopyDefaultFile(nsIFile *profDefaultsDir, nsIFile *newProfDir, const 
     rv = profDefaultsDir->Clone(getter_AddRefs(defaultFile));
     if (NS_FAILED(rv)) return rv;
     
-    defaultFile->Append(fileName);
+    defaultFile->AppendNative(fileName);
     rv = defaultFile->Exists(&exists);
     if (NS_FAILED(rv)) return rv;
     if (exists)
-        rv = defaultFile->CopyTo(newProfDir, fileName);
+        rv = defaultFile->CopyToNative(newProfDir, fileName);
     else
         rv = NS_ERROR_FILE_NOT_FOUND;
 
@@ -2071,11 +2074,10 @@ nsProfile::EnsureProfileFileExists(nsIFile *aFile)
     rv = CloneProfileDirectorySpec(getter_AddRefs(profDir));
     if (NS_FAILED(rv)) return rv;
     
-    char *leafName;
-    rv = aFile->GetLeafName(&leafName);
+    nsCAutoString leafName;
+    rv = aFile->GetNativeLeafName(leafName);
     if (NS_FAILED(rv)) return rv;    
     rv = CopyDefaultFile(defaultsDir, profDir, leafName);
-    Recycle(leafName);
     
     return rv;
 }
@@ -2100,7 +2102,7 @@ nsProfile::DefineLocaleDefaultsDir()
             nsXPIDLString localeName;
             rv = packageRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(), getter_Copies(localeName));
             if (NS_SUCCEEDED(rv))
-                rv = localeDefaults->AppendUnicode(localeName);
+                rv = localeDefaults->Append(NS_ConvertUCS2toUTF8(localeName));
         }
         (void) directoryService->Undefine(NS_APP_PROFILE_DEFAULTS_50_DIR);
         rv = directoryService->Define(NS_APP_PROFILE_DEFAULTS_50_DIR, localeDefaults);
@@ -2166,16 +2168,16 @@ nsProfile::MigrateProfileInternal(const PRUnichar* profileName,
     nsCOMPtr<nsILocalFile> newProfDirLocal(do_QueryInterface(newProfDir, &rv));
     if (NS_FAILED(rv)) return rv;
         
-    nsXPIDLCString oldProfDirStr;
-    nsXPIDLCString newProfDirStr;
+    nsCAutoString oldProfDirStr;
+    nsCAutoString newProfDirStr;
 
-    rv = oldProfDirLocal->GetPersistentDescriptor(getter_Copies(oldProfDirStr));
+    rv = oldProfDirLocal->GetPersistentDescriptor(oldProfDirStr);
     if (NS_FAILED(rv)) return rv;
-    rv = newProfDirLocal->GetPersistentDescriptor(getter_Copies(newProfDirStr));
+    rv = newProfDirLocal->GetPersistentDescriptor(newProfDirStr);
     if (NS_FAILED(rv)) return rv;
 
     // you can do this a bunch of times.
-    rv = pPrefMigrator->AddProfilePaths(oldProfDirStr, newProfDirStr);  
+    rv = pPrefMigrator->AddProfilePaths(oldProfDirStr.get(), newProfDirStr.get());  
 
     rv = pPrefMigrator->ProcessPrefs(PR_TRUE); // param is ignored
     if (NS_FAILED(rv)) return rv;
@@ -2263,7 +2265,7 @@ nsProfile::MigrateProfile(const PRUnichar* profileName)
     if (NS_FAILED(rv)) 
       return rv;
 
-    rv = newProfDir->AppendUnicode(profileName);
+    rv = newProfDir->Append(NS_ConvertUCS2toUTF8(profileName));
     if (NS_FAILED(rv)) 
       return rv;
     
@@ -2299,14 +2301,13 @@ nsProfile::RemigrateProfile(const PRUnichar* profileName)
     NS_ENSURE_SUCCESS(rv,rv);
 
     // In case of error, we'll restore what we've renamed.
-    nsXPIDLCString origDirLeafName;
-    rv = profileDir->GetLeafName(getter_Copies(origDirLeafName));
+    nsCAutoString origDirLeafName;
+    rv = profileDir->GetNativeLeafName(origDirLeafName);
     NS_ENSURE_SUCCESS(rv,rv);
      
     // Backup what we're remigrating by renaming it and leaving in place
     // XXX todo: what if <xxxxxxxx>.slt-old already exists?
-    nsCAutoString newDirLeafName(origDirLeafName + NS_LITERAL_CSTRING("-old"));
-    rv = profileDir->MoveTo(nsnull, newDirLeafName.get());
+    rv = profileDir->MoveToNative(nsnull, origDirLeafName + NS_LITERAL_CSTRING("-old"));
     NS_ENSURE_SUCCESS(rv,rv);
     
     // Create a new directory for the remigrated profile
@@ -2317,7 +2318,7 @@ nsProfile::RemigrateProfile(const PRUnichar* profileName)
         
     if (NS_FAILED(rv)) {
         newProfileDir->Remove(PR_TRUE);
-        profileDir->MoveTo(nsnull, origDirLeafName);
+        profileDir->MoveToNative(nsnull, origDirLeafName);
     }
     return rv;
 }
@@ -2415,7 +2416,7 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr<nsILocalFile> destDir(do_QueryInterface(aFile, &rv));
         if (NS_FAILED(rv)) return rv;
-        destDir->AppendRelativeUnicodePath(newProfile);
+        destDir->AppendRelativePath(NS_ConvertUCS2toUTF8(newProfile));
 
         // Find a unique name in the dest dir
         rv = destDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0775);
@@ -2453,11 +2454,11 @@ nsProfile::CreateDefaultProfile(void)
     rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(profileRootDir));
     if (NS_FAILED(rv)) return rv;
     
-    nsXPIDLString profilePath;
-    rv = profileRootDir->GetUnicodePath(getter_Copies(profilePath));
+    nsCAutoString profilePath;
+    rv = profileRootDir->GetPath(profilePath);
     if (NS_FAILED(rv)) return rv;
 
-    rv = CreateNewProfile(DEFAULT_PROFILE_NAME, profilePath, nsnull, PR_TRUE);
+    rv = CreateNewProfile(DEFAULT_PROFILE_NAME, NS_ConvertUTF8toUCS2(profilePath).get(), nsnull, PR_TRUE);
 
     return rv;
 }
@@ -2516,19 +2517,19 @@ nsProfile::IsRegStringSet(const PRUnichar *profileName, char **regString)
  
 // File Name Defines
 
-#define PREFS_FILE_50_NAME          "prefs.js"
-#define USER_CHROME_DIR_50_NAME     "chrome"
-#define LOCAL_STORE_FILE_50_NAME    "localstore.rdf"
-#define HISTORY_FILE_50_NAME        "history.dat"
-#define PANELS_FILE_50_NAME         "panels.rdf"
-#define MIME_TYPES_FILE_50_NAME     "mimeTypes.rdf"
-#define BOOKMARKS_FILE_50_NAME      "bookmarks.html"
-#define DOWNLOADS_FILE_50_NAME      "downloads.rdf"
-#define SEARCH_FILE_50_NAME         "search.rdf" 
-#define MAIL_DIR_50_NAME            "Mail"
-#define IMAP_MAIL_DIR_50_NAME       "ImapMail"
-#define NEWS_DIR_50_NAME            "News"
-#define MSG_FOLDER_CACHE_DIR_50_NAME "panacea.dat"
+#define PREFS_FILE_50_NAME           NS_LITERAL_CSTRING("prefs.js")
+#define USER_CHROME_DIR_50_NAME      NS_LITERAL_CSTRING("chrome")
+#define LOCAL_STORE_FILE_50_NAME     NS_LITERAL_CSTRING("localstore.rdf")
+#define HISTORY_FILE_50_NAME         NS_LITERAL_CSTRING("history.dat")
+#define PANELS_FILE_50_NAME          NS_LITERAL_CSTRING("panels.rdf")
+#define MIME_TYPES_FILE_50_NAME      NS_LITERAL_CSTRING("mimeTypes.rdf")
+#define BOOKMARKS_FILE_50_NAME       NS_LITERAL_CSTRING("bookmarks.html")
+#define DOWNLOADS_FILE_50_NAME       NS_LITERAL_CSTRING("downloads.rdf")
+#define SEARCH_FILE_50_NAME          NS_LITERAL_CSTRING("search.rdf")
+#define MAIL_DIR_50_NAME             NS_LITERAL_CSTRING("Mail")
+#define IMAP_MAIL_DIR_50_NAME        NS_LITERAL_CSTRING("ImapMail")
+#define NEWS_DIR_50_NAME             NS_LITERAL_CSTRING("News")
+#define MSG_FOLDER_CACHE_DIR_50_NAME NS_LITERAL_CSTRING("panacea.dat")
 
 NS_IMETHODIMP
 nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)

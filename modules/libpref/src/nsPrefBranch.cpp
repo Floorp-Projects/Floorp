@@ -357,7 +357,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
       return rv;
     
     nsCOMPtr<nsILocalFile> theFile;
-    rv = NS_NewLocalFile(nsnull, PR_TRUE, getter_AddRefs(theFile));
+    rv = NS_NewLocalFile(nsCString(), PR_TRUE, getter_AddRefs(theFile));
     if (NS_FAILED(rv))
       return rv;
     rv = theFile->SetRelativeDescriptor(fromFile, Substring(++keyEnd, strEnd));
@@ -420,11 +420,11 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
   if (aType.Equals(NS_GET_IID(nsILocalFile))) {
     nsCOMPtr<nsILocalFile> file = do_QueryInterface(aValue);
-    nsXPIDLCString descriptorString;
+    nsCAutoString descriptorString;
 
-    rv = file->GetPersistentDescriptor(getter_Copies(descriptorString));
+    rv = file->GetPersistentDescriptor(descriptorString);
     if (NS_SUCCEEDED(rv)) {
-      rv = SetCharPref(aPrefName, descriptorString);
+      rv = SetCharPref(aPrefName, descriptorString.get());
     }
     return rv;
   }

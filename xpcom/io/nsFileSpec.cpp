@@ -48,6 +48,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsILocalFile.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -1300,7 +1301,7 @@ NS_FileSpecToIFile(nsFileSpec* fileSpec, nsILocalFile* *result)
         file = do_QueryInterface(psmAppMacFile, &rv);
     }
 #else
-    rv = file->InitWithPath(fileSpec->GetNativePathCString());
+    rv = file->InitWithNativePath(nsDependentCString(fileSpec->GetNativePathCString()));
 #endif
     if (NS_FAILED(rv)) return rv;
 

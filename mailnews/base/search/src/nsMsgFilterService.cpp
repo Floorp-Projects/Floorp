@@ -199,13 +199,13 @@ nsresult nsMsgFilterService::BackUpFilterFile(nsIFileSpec *aFilterFile, nsIMsgWi
   nsCOMPtr <nsILocalFile> backupFile;
   rv = NS_FileSpecToIFile(&parentDirSpec, getter_AddRefs(backupFile));
   NS_ENSURE_SUCCESS(rv,rv);
-  backupFile->Append("rulesbackup.dat");
+  backupFile->Append(NS_LITERAL_CSTRING("rulesbackup.dat"));
   PRBool exists;
   backupFile->Exists(&exists);
   if (exists)
     backupFile->Remove(PR_FALSE);
 
-  return localFilterFile->CopyTo(localParentDir, "rulesbackup.dat");
+  return localFilterFile->CopyTo(localParentDir, NS_LITERAL_CSTRING("rulesbackup.dat"));
 }
 
 nsresult nsMsgFilterService::AlertBackingUpFilterFile(nsIMsgWindow *aMsgWindow)
