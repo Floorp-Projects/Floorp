@@ -132,22 +132,26 @@ nsRDFResource::GetValue(const char* *uri) const
 NS_IMETHODIMP
 nsRDFResource::EqualsResource(const nsIRDFResource* resource, PRBool* result) const
 {
+    NS_PRECONDITION(resource != nsnull, "null ptr");
+    NS_PRECONDITION(result != nsnull, "null ptr");
+
     if (!resource || !result)
         return NS_ERROR_NULL_POINTER;
 
-    const char *uri;
-    if (NS_SUCCEEDED(resource->GetValue(&uri))) {
-        return NS_SUCCEEDED(EqualsString(uri, result)) ? NS_OK : NS_ERROR_FAILURE;
-    }
-
-    return NS_ERROR_FAILURE;
+    // nsIRDFResource interfaces are unique
+    *result = ((nsIRDFResource*) this) == resource;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsRDFResource::EqualsString(const char* uri, PRBool* result) const
 {
+    NS_PRECONDITION(uri != nsnull, "null ptr");
+    NS_PRECONDITION(result != nsnull, "null ptr");
+
     if (!uri || !result)
         return NS_ERROR_NULL_POINTER;
+
     *result = nsCRT::strcmp(uri, mURI) == 0;
     return NS_OK;
 }
