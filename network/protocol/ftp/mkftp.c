@@ -30,6 +30,8 @@
 #include "mktcp.h"
 #include "mkgeturl.h"
 #include "prerror.h"
+#include "prmem.h"
+#include "plstr.h"
 
 #define FTP_PORT 21
 

@@ -49,6 +49,8 @@
 #include "xp_error.h"
 #include "libi18n.h"
 #include "prtime.h"
+#include "prmem.h"
+#include "plstr.h"
 
 
 /* for XP_GetString() */
