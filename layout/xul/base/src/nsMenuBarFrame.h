@@ -32,6 +32,7 @@
 #include "nsCOMPtr.h"
 #include "nsToolbarFrame.h"
 #include "nsMenuBarListener.h"
+#include "nsMenuListener.h"
 #include "nsIMenuParent.h"
 #include "nsIWidget.h"
 
