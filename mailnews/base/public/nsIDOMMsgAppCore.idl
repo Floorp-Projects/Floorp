@@ -41,6 +41,7 @@ interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
     void SetWindow(in nsIDOMWindow ptr);
     void OpenURL(in string str);
     void DeleteMessages(in nsIDOMXULTreeElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node);
+    void DeleteFolders(in nsIRDFCompositeDataSource db, in nsIDOMXULElement parentFolder, in nsIDOMXULElement folder);
 	void CopyMessages(in nsIDOMXULElement srcFolderElement, in nsIDOMXULElement dstFolderElement, in nsIDOMNodeList messages,
 					  in boolean isMove);
     nsISupports GetRDFResourceForMessage(in nsIDOMXULTreeElement tree, in nsIDOMNodeList node);
@@ -48,6 +49,8 @@ interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
 	void ViewAllMessages(in nsIRDFCompositeDataSource database);
 	void ViewUnreadMessages(in nsIRDFCompositeDataSource database);
 	void ViewAllThreadMessages(in nsIRDFCompositeDataSource database);
+	void MarkMessagesRead(in nsIRDFCompositeDataSource database, in nsIDOMNodeList messages,
+						  in boolean markRead);
 	void NewFolder(in nsIRDFCompositeDataSource database, in nsIDOMXULElement parentFolderElement,
 				   in string name);
     void AccountManager(in nsIDOMWindow parent);

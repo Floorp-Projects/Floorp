@@ -6,7 +6,6 @@
 #define __gen_nsIDOMMsgAppCore_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
 
 #ifdef XPIDL_JS_STUBS
@@ -17,6 +16,7 @@ class nsIDOMNodeList; /* forward decl */
 class nsIDOMXULTreeElement; /* forward decl */
 class nsIDOMXULElement; /* forward decl */
 class nsIRDFCompositeDataSource; /* forward decl */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIDOMWindow.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULTreeElement.h"
@@ -51,6 +51,9 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
   /* void DeleteMessages (in nsIDOMXULTreeElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node); */
   NS_IMETHOD DeleteMessages(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolder, nsIDOMNodeList *node) = 0;
 
+  /* void DeleteFolders (in nsIRDFCompositeDataSource db, in nsIDOMXULElement parentFolder, in nsIDOMXULElement folder); */
+  NS_IMETHOD DeleteFolders(nsIRDFCompositeDataSource *db, nsIDOMXULElement *parentFolder, nsIDOMXULElement *folder) = 0;
+
   /* void CopyMessages (in nsIDOMXULElement srcFolderElement, in nsIDOMXULElement dstFolderElement, in nsIDOMNodeList messages, in boolean isMove); */
   NS_IMETHOD CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *dstFolderElement, nsIDOMNodeList *messages, PRBool isMove) = 0;
 
@@ -68,6 +71,9 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
 
   /* void ViewAllThreadMessages (in nsIRDFCompositeDataSource database); */
   NS_IMETHOD ViewAllThreadMessages(nsIRDFCompositeDataSource *database) = 0;
+
+  /* void MarkMessagesRead (in nsIRDFCompositeDataSource database, in nsIDOMNodeList messages, in boolean markRead); */
+  NS_IMETHOD MarkMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMNodeList *messages, PRBool markRead) = 0;
 
   /* void NewFolder (in nsIRDFCompositeDataSource database, in nsIDOMXULElement parentFolderElement, in string name); */
   NS_IMETHOD NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement, const char *name) = 0;
