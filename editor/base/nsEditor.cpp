@@ -542,6 +542,8 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   {
     printf("ERROR: Failed to get Prefs Service instance.\n");
   }
+
+#ifdef NEVER
   // TODO: Cache basic preferences?
   //       Register callbacks for preferences that we need to 
   //       respond to while running
@@ -586,6 +588,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   nsString value;
   ret = mStringBundle->GetStringFromName("editor.foo", value);
 */
+#endif	// NEVER
 
 	mPresShell->SetCaretEnabled(PR_TRUE);
 
