@@ -66,7 +66,7 @@ char* nsGfxAutoTextControlFrame::eventName[] = {"onstartlookup", "onautocomplete
 nsGfxAutoTextControlFrame::nsGfxAutoTextControlFrame() :
 	mLookupInterval(300),
 	mLookupTimer(nsnull),
-	mUseBlur(PR_FALSE)
+	mUseBlurr(PR_FALSE)
 {
 	PRInt32 i;
 	for (i = 0; i < LAST_ID; i ++)
@@ -114,12 +114,12 @@ nsresult nsGfxAutoTextControlFrame::HandleEvent(nsIPresContext& aPresContext,
 					
 					case NS_VK_DELETE	:
 					case NS_VK_BACK		:
-						if (mUseBlur)
+						if (mUseBlurr)
 							PrimeTimer();
 						break;
 					
 					default				:
-						if (mUseBlur)
+						if (mUseBlurr)
 						{
 							nsString emptyStr("");
 							SetAutoCompleteString(emptyStr);
@@ -184,7 +184,7 @@ void nsGfxAutoTextControlFrame::ReadAttributes(nsIContent* aContent)
 	if (NS_SUCCEEDED(aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::autocompletetype, val)))
 	{
 		if (! val.IsEmpty())
-			mUseBlur = (val == "blur");
+			mUseBlurr = (val == "blurr");
 	}
 }
 
