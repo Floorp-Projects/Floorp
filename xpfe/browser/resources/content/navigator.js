@@ -315,11 +315,12 @@ function Startup()
 	
     // Create the browser instance component.
     createBrowserInstance();
+    
+	window.content.appCore= appCore;
     if (appCore == null) {
         // Give up.
         window.close();
     }
-
     // Initialize browser instance..
     appCore.setWebShellWindow(window);
     
@@ -436,7 +437,11 @@ function Shutdown()
 	}
 	service += "&AlisTargetURI=" + targetURI;
 
-	window.content.location.href = service;
+	//window.content.location.href = service;
+	if (appCore)
+	  appCore.loadUrl(service);
+    else
+	  dump("BrowserAppCore is not initialised\n");
   }
 
   function RefreshUrlbar()
@@ -844,7 +849,11 @@ function Shutdown()
 	}
 	else
 	{
-  	  window.content.location.href = url;
+  	  //window.content.location.href = url;
+	  if (appCore)
+	     appCore.loadUrl(url);
+	  else
+	     dump("BrowserAppCore is not initialised\n");
     	RefreshUrlbar();
   	}
   }
@@ -878,11 +887,23 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 	if ((window.content.location.href == searchStr) || (searchStr == '')) 
 	{
 		if (!(defaultSearchURL == fallbackDefaultSearchURL)) {
-			window.content.location.href = defaultSearchURL;
+		//	window.content.location.href = defaultSearchURL;
+		// Call in to BrowserAppCore instead of replacing 
+		// the url in the content area so that B/F buttons work right
+		    if (appCore)
+			  appCore.loadUrl(defaultSearchURL);
+			else
+			  dump("BrowserAppCore is not initialised\n");
 		}
 		else
 		{
-			window.content.location.href = "http://search.netscape.com/"
+			//window.content.location.href = "http://search.netscape.com/"
+			// Call in to BrowserAppCore instead of replacing 
+		    // the url in the content area so that B/F buttons work right
+			if (appCore)
+			   appCore.loadUrl("http://search.netscape.com/");
+			else
+			   dump("BrowserAppCore is not initialised\n");
 		}
 	}
 	else
@@ -933,7 +954,13 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
 					}
 				}
 			}  
-			window.content.location.href = defaultSearchURL;
+		//	window.content.location.href = defaultSearchURL
+		// Call in to BrowserAppCore instead of replacing 
+		// the url in the content area so that B/F buttons work right
+		    if (appCore)
+			   appCore.loadUrl(defaultSearchURL);
+			else
+			   dump("BrowserAppCore is not initialised\n");
 		}
 	}
 
