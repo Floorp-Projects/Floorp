@@ -143,6 +143,17 @@ sub sql_position {
     }
 }
 
+sub sql_group_by {
+    my ($self, $needed_columns, $optional_columns) = @_;
+
+    # MySQL allows to specify all columns as ANSI SQL requires, but also
+    # allow you to specify just minimal subset to get unique result.
+    # According to MySQL documentation, the less columns you specify
+    # the faster the query runs.
+    return "GROUP BY $needed_columns";
+}
+
+
 sub bz_lock_tables {
     my ($self, @tables) = @_;
 

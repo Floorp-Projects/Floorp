@@ -104,6 +104,7 @@ sub init {
     my @supptables;
     my @wherepart;
     my @having;
+    my @groupby;
     @fields = @$fieldsref if $fieldsref;
     my @specialchart;
     my @andlist;
@@ -597,6 +598,9 @@ sub init {
              # (see http://bugzilla.mozilla.org/show_bug.cgi?id=145588#c35).
              my $select_term =
                "(SUM($term1)/COUNT($term1) + $term2) AS relevance";
+
+             # add the column not used in aggregate function explicitly
+             push(@groupby, 'bugs.short_desc');
 
              # Users can specify to display the relevance field, in which case
              # it'll show up in the list of fields being selected, and we need
@@ -1302,8 +1306,6 @@ sub init {
         if ($specialorderjoin{$splitfield[0]}) {
             push(@supptables, $specialorderjoin{$splitfield[0]});
         }
-        # FIXME: Some DBs require ORDER BY items to also
-        # be in GROUP BY.
     }
 
     my %suppseen = ("bugs" => 1);
@@ -1358,7 +1360,17 @@ sub init {
         }
     }
 
-    $query .= ") GROUP BY bugs.bug_id";
+    foreach my $field (@fields) {
+        next if ($field =~ /(AVG|SUM|COUNT|MAX|MIN|VARIANCE)\s*\(/i ||
+                 $field =~ /^\d+$/ || $field eq "bugs.bug_id");
+        if ($field =~ /.*AS\s+(\w+)$/i) {
+            push(@groupby, $1) if !grep($_ eq $1, @groupby);
+        } else {
+            push(@groupby, $field) if !grep($_ eq $field, @groupby);
+        }
+    }
+    $query .= ") " . $dbh->sql_group_by("bugs.bug_id", join(', ', @groupby));
+
 
     if (@having) {
         $query .= " HAVING " . join(" AND ", @having);

@@ -30,6 +30,7 @@ use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::User;
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 
 use vars qw($template $vars);
 
@@ -70,8 +71,10 @@ if ($action eq "") {
 
     SendSQL("SELECT keyworddefs.id, keyworddefs.name, keyworddefs.description,
                     COUNT(keywords.bug_id)
-             FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id = keywords.keywordid
-             GROUP BY keyworddefs.id
+             FROM keyworddefs LEFT JOIN keywords
+               ON keyworddefs.id = keywords.keywordid " .
+             $dbh->sql_group_by('keyworddefs.id',
+                    'keyworddefs.name, keyworddefs.description') . "
              ORDER BY keyworddefs.name");
 
     while (MoreSQLData()) {

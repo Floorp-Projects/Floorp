@@ -310,8 +310,9 @@ if ($action eq 'del') {
     my $dbh = Bugzilla->dbh;
 
     my $sth = $dbh->prepare('SELECT count(bug_id), product_id, target_milestone
-                             FROM bugs
-                             GROUP BY product_id, target_milestone
+                             FROM bugs ' .
+                            $dbh->sql_group_by('product_id,
+                                                target_milestone') . '
                              HAVING product_id = ?
                                 AND target_milestone = ?');
 

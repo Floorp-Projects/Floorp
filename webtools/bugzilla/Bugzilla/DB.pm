@@ -213,9 +213,14 @@ sub sql_position {
     return "POSITION($fragment IN $text)";
 }
 
-#####################################################################
-# General Info Methods
-#####################################################################
+sub sql_group_by {
+    my ($self, $needed_columns, $optional_columns) = @_;
+
+    my $expression = "GROUP BY $needed_columns";
+    $expression .= ", " . $optional_columns if defined($optional_columns);
+    
+    return $expression;
+}
 
 sub sql_string_concat {
     my ($self, @params) = @_;
@@ -245,6 +250,10 @@ sub sql_fulltext_search {
            join("%${quote} AND LOWER($column) LIKE ${quote}%", @words) .
            "%${quote}) THEN 1 ELSE 0 END";
 }
+
+#####################################################################
+# General Info Methods
+#####################################################################
 
 # XXX - Needs to be documented.
 sub bz_server_version {
@@ -785,6 +794,21 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
  Params:      $fragment = the string fragment we are searching for (scalar)
               $text = the text to search (scalar)
  Returns:     formatted SQL for substring search (scalar)
+
+=item C<sql_group_by>
+
+ Description: Outputs proper SQL syntax for grouping the result of a query.
+              For ANSI SQL databases, we need to group by all columns we are
+              querying for (except for columns used in aggregate functions).
+              Some databases require (or even allow) to specify only one
+              or few columns if the result is uniquely defined. For those
+              databases, the default implementation needs to be overloaded.
+ Params:      $needed_columns = string with comma separated list of columns
+              we need to group by to get expected result (scalar)
+              $optional_columns = string with comma separated list of all
+              other columns we are querying for, but which are not in the
+              required list.
+ Returns:     formatted SQL for row grouping (scalar)
 
 =item C<sql_string_concat>
 

@@ -35,11 +35,14 @@ use vars qw($vars $template);
 Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 
 SendSQL("SELECT keyworddefs.name, keyworddefs.description, 
                 COUNT(keywords.bug_id)
-         FROM keyworddefs LEFT JOIN keywords ON keyworddefs.id=keywords.keywordid
-         GROUP BY keyworddefs.id
+         FROM keyworddefs LEFT JOIN keywords
+         ON keyworddefs.id = keywords.keywordid " .
+         $dbh->sql_group_by('keyworddefs.id',
+                            'keyworddefs.name, keyworddefs.description') . "
          ORDER BY keyworddefs.name");
 
 my @keywords;

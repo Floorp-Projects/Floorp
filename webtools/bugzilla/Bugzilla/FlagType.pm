@@ -120,7 +120,8 @@ sub match {
     my @tables = @base_tables;
     my @columns = @base_columns;
     my $having = "";
-    
+    my $dbh = Bugzilla->dbh;
+
     # Include a count of the number of flags per type if requested.
     if ($include_count) { 
         push(@columns, "COUNT(flags.id)");
@@ -136,7 +137,9 @@ sub match {
     my $where_clause = "WHERE " . join(" AND ", @criteria);
     
     my $query = "$select_clause $from_clause $where_clause";
-    $query .= " GROUP BY flagtypes.id " if ($include_count || $having ne "");
+    $query .= " " . $dbh->sql_group_by('flagtypes.id',
+              join(', ', @base_columns[2..$#base_columns]))
+                    if ($include_count || $having ne "");
     $query .= " HAVING $having " if $having ne "";
     $query .= " ORDER BY flagtypes.sortkey, flagtypes.name";
     

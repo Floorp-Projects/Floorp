@@ -102,7 +102,8 @@ if (defined $cgi->param('rebuildvotecache')) {
     Status("OK, now rebuilding vote cache.");
     $dbh->bz_lock_tables('bugs WRITE', 'votes READ');
     SendSQL("UPDATE bugs SET votes = 0");
-    SendSQL("SELECT bug_id, SUM(vote_count) FROM votes GROUP BY bug_id");
+    SendSQL("SELECT bug_id, SUM(vote_count) FROM votes " .
+            $dbh->sql_group_by('bug_id'));
     my %votes;
     while (@row = FetchSQLData()) {
         my ($id, $v) = (@row);
@@ -482,7 +483,8 @@ while (@row = FetchSQLData()) {
 }
 
 Status("Checking cached vote counts");
-SendSQL("SELECT bug_id, SUM(vote_count) FROM votes GROUP BY bug_id");
+SendSQL("SELECT bug_id, SUM(vote_count) FROM votes " .
+        $dbh->sql_group_by('bug_id'));
 
 while (@row = FetchSQLData()) {
     my ($id, $v) = (@row);

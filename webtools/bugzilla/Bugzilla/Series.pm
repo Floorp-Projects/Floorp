@@ -106,7 +106,9 @@ sub initFromDatabase {
         "WHERE series.series_id = $series_id AND " .
         "(public = 1 OR creator = " . Bugzilla->user->id . " OR " .
         "(ugm.group_id IS NOT NULL)) " . 
-        "GROUP BY series_id");
+        $dbh->sql_group_by('series.series_id', 'cc1.name, cc2.name, ' .
+                           'series.name, series.creator, series.frequency, ' .
+                           'series.query, series.public'));
     
     if (@series) {
         $self->initFromParameters(@series);

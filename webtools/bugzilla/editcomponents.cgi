@@ -139,8 +139,9 @@ unless ($product) {
 
     if ($showbugcounts){
         SendSQL("SELECT products.name, products.description, COUNT(bug_id)
-                 FROM products LEFT JOIN bugs ON products.id = bugs.product_id
-                 GROUP BY products.name
+                 FROM products LEFT JOIN bugs
+                   ON products.id = bugs.product_id " .
+                $dbh->sql_group_by('products.name', 'products.description') . "
                  ORDER BY products.name");
     } else {
         SendSQL("SELECT products.name, products.description
@@ -184,17 +185,19 @@ unless ($action) {
     my @components = ();
 
     if ($showbugcounts) {
-        SendSQL("SELECT name,description, initialowner,
+        SendSQL("SELECT name, description, initialowner,
                         initialqacontact, COUNT(bug_id)
-                 FROM components LEFT JOIN bugs ON 
-                      components.id = bugs.component_id
-                 WHERE components.product_id = $product_id
-                 GROUP BY name");
+                 FROM components LEFT JOIN bugs
+                   ON components.id = bugs.component_id
+                 WHERE components.product_id = $product_id " .
+                $dbh->sql_group_by('name',
+                    'description, initialowner, initialqacontact'));
     } else {
         SendSQL("SELECT name, description, initialowner, initialqacontact
                  FROM components 
-                 WHERE product_id = $product_id
-                 GROUP BY name");
+                 WHERE product_id = $product_id " .
+                $dbh->sql_group_by('name',
+                    'description, initialowner, initialqacontact'));
     }        
 
     while (MoreSQLData()) {

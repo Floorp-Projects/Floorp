@@ -206,8 +206,15 @@ sub queue {
     # Group the records by flag ID so we don't get multiple rows of data
     # for each flag.  This is only necessary because of the code that
     # removes flags on bugs the user is unauthorized to access.
-    $query .= " GROUP BY flags.id " . 
-              "HAVING cntuseringroups = cntbugingroups OR canseeanyway ";
+    $query .= ' ' . $dbh->sql_group_by('flags.id',
+               'flagtypes.name, flags.status, flags.bug_id, bugs.short_desc,
+                products.name, components.name, flags.attach_id,
+                attachments.description, requesters.realname,
+                requesters.login_name, requestees.realname,
+                requestees.login_name, flags.creation_date,
+                cclist_accessible, bugs.reporter, bugs.reporter_accessible,
+                bugs.assigned_to');
+    $query .= " HAVING cntuseringroups = cntbugingroups OR canseeanyway ";
 
     # Group the records, in other words order them by the group column
     # so the loop in the display template can break them up into separate

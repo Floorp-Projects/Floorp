@@ -475,9 +475,9 @@ DefineColumn("assigned_to"       , "map_assigned_to.login_name" , "Assignee"    
 DefineColumn("reporter"          , "map_reporter.login_name"    , "Reporter"         );
 DefineColumn("qa_contact"        , "map_qa_contact.login_name"  , "QA Contact"       );
 if ($format->{'extension'} eq 'html') {
-    DefineColumn("assigned_to_realname", "CASE WHEN map_assigned_to.realname = '' THEN map_assigned_to.login_name ELSE map_assigned_to.realname END", "Assignee"  );
-    DefineColumn("reporter_realname"   , "CASE WHEN map_reporter.realname    = '' THEN map_reporter.login_name    ELSE map_reporter.realname    END", "Reporter"  );
-    DefineColumn("qa_contact_realname" , "CASE WHEN map_qa_contact.realname  = '' THEN map_qa_contact.login_name  ELSE map_qa_contact.realname  END", "QA Contact");
+    DefineColumn("assigned_to_realname", "CASE WHEN map_assigned_to.realname = '' THEN map_assigned_to.login_name ELSE map_assigned_to.realname END AS assigned_to_realname", "Assignee"  );
+    DefineColumn("reporter_realname"   , "CASE WHEN map_reporter.realname    = '' THEN map_reporter.login_name    ELSE map_reporter.realname    END AS reporter_realname"   , "Reporter"  );
+    DefineColumn("qa_contact_realname" , "CASE WHEN map_qa_contact.realname  = '' THEN map_qa_contact.login_name  ELSE map_qa_contact.realname  END AS qa_contact_realname" , "QA Contact");
 } else {
     DefineColumn("assigned_to_realname", "map_assigned_to.realname" , "Assignee"         );
     DefineColumn("reporter_realname"   , "map_reporter.realname"    , "Reporter"         );
@@ -501,7 +501,7 @@ DefineColumn("remaining_time"    , "bugs.remaining_time"        , "Remaining Hou
 DefineColumn("actual_time"       , "(SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) AS actual_time", "Actual Hours");
 DefineColumn("percentage_complete","(100*((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id))/((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id))+bugs.remaining_time))) AS percentage_complete", "% Complete"); 
 DefineColumn("relevance"         , "relevance"                  , "Relevance"        );
-DefineColumn("deadline"          , $dbh->sql_date_format('bugs.deadline', '%Y-%m-%d'), "Deadline");
+DefineColumn("deadline"          , $dbh->sql_date_format('bugs.deadline', '%Y-%m-%d') . " AS deadline", "Deadline");
 
 ################################################################################
 # Display Column Determination
@@ -881,7 +881,7 @@ if (@bugidlist) {
             "AND group_control_map.group_id=bug_group_map.group_id " .
             "WHERE bugs.bug_id = bug_group_map.bug_id " .
             "AND bugs.bug_id IN (" . join(',',@bugidlist) . ") " .
-            "GROUP BY bugs.bug_id");
+            $dbh->sql_group_by('bugs.bug_id'));
     $sth->execute();
     while (my ($bug_id, $min_membercontrol) = $sth->fetchrow_array()) {
         $min_membercontrol{$bug_id} = $min_membercontrol;

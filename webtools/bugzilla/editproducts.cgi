@@ -297,10 +297,14 @@ if (Param('useclassification')) {
     unless ($classification) {
         PutHeader("Select classification");
 
-        SendSQL("SELECT classifications.name,classifications.description,COUNT(classification_id) as total
+        SendSQL("SELECT classifications.name, classifications.description,
+                        COUNT(classification_id) AS total
              FROM classifications
-             LEFT JOIN products ON classifications.id=products.classification_id
-             GROUP BY classifications.id
+             LEFT JOIN products
+               ON classifications.id = products.classification_id " .
+             $dbh->sql_group_by('classifications.id',
+                                'classifications.name,
+                                 classifications.description') . "
              ORDER BY name");
         print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
         print "  <TH ALIGN=\"left\">Edit products of ...</TH>\n";
@@ -361,7 +365,11 @@ unless ($action) {
              $classification);
     }
 
-    $query .= " GROUP BY products.name ORDER BY products.name";
+    $query .= " " . $dbh->sql_group_by('products.name',
+                                       'products.description, disallownew,
+                                        votesperuser, maxvotesperbug,
+                                        votestoconfirm');
+    $query .= " ORDER BY products.name";
 
     $vars->{'products'} = $dbh->selectall_arrayref($query,
                                                    {'Slice' => {}},
@@ -727,10 +735,10 @@ if ($action eq 'del') {
     print "</TD>\n</TR><TR>\n";
     print "  <TD VALIGN=\"top\">Bugs:</TD>\n";
     print "  <TD VALIGN=\"top\">";
-    SendSQL("SELECT count(bug_id),product_id
-             FROM bugs
-             GROUP BY product_id
-             HAVING product_id=$product_id");
+    SendSQL("SELECT count(bug_id), product_id
+             FROM bugs " .
+            $dbh->sql_group_by('product_id') . "
+             HAVING product_id = $product_id");
     my $bugs = FetchOneColumn();
     print $bugs || 'none';
 
@@ -978,10 +986,10 @@ if ($action eq 'edit') {
     print "</TD>\n</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Bugs:</TH>\n";
     print "  <TD>";
-    SendSQL("SELECT count(bug_id),product_id
-             FROM bugs
-             GROUP BY product_id
-             HAVING product_id=$product_id");
+    SendSQL("SELECT count(bug_id), product_id
+             FROM bugs " .
+            $dbh->sql_group_by('product_id') . "
+             HAVING product_id = $product_id");
     my $bugs = '';
     $bugs = FetchOneColumn() if MoreSQLData();
     print $bugs || 'none';
@@ -1038,11 +1046,11 @@ if ($action eq 'updategroupcontrols') {
         if (@now_na) {
             SendSQL("SELECT groups.name, COUNT(bugs.bug_id) 
                      FROM bugs, bug_group_map, groups
-                     WHERE groups.id IN(" . join(',',@now_na) . ")
+                     WHERE groups.id IN(" . join(', ', @now_na) . ")
                      AND bug_group_map.group_id = groups.id
                      AND bug_group_map.bug_id = bugs.bug_id
-                     AND bugs.product_id = $product_id
-                     GROUP BY groups.name");
+                     AND bugs.product_id = $product_id " .
+                    $dbh->sql_group_by('groups.name'));
             while (MoreSQLData()) {
                 my ($groupname, $bugcount) = FetchSQLData();
                 my %g = ();
@@ -1059,10 +1067,10 @@ if ($action eq 'updategroupcontrols') {
                      LEFT JOIN bug_group_map
                      ON bug_group_map.group_id = groups.id
                      AND bug_group_map.bug_id = bugs.bug_id
-                     WHERE groups.id IN(" . join(',',@now_mandatory) . ")
+                     WHERE groups.id IN(" . join(', ', @now_mandatory) . ")
                      AND bugs.product_id = $product_id
-                     AND bug_group_map.bug_id IS NULL
-                     GROUP BY groups.name");
+                     AND bug_group_map.bug_id IS NULL " .
+                    $dbh->sql_group_by('groups.name'));
             while (MoreSQLData()) {
                 my ($groupname, $bugcount) = FetchSQLData();
                 my %g = ();
@@ -1487,7 +1495,8 @@ if ($action eq 'editgroupcontrols') {
             "WHERE isbuggroup != 0 " .
             "AND (isactive != 0 OR entry IS NOT NULL " .
             "OR bugs.bug_id IS NOT NULL) " .
-            "GROUP BY name");
+            $dbh->sql_group_by('name', 'id, entry, membercontrol,
+                                othercontrol, canedit, isactive'));
     my @groups = ();
     while (MoreSQLData()) {
         my %group = ();

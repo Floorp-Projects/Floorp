@@ -682,6 +682,7 @@ sub userDataToVars {
     my $userid = shift;
     my $user = new Bugzilla::User($userid);
     my $query;
+    my $dbh = Bugzilla->dbh;
 
     $user->derive_groups();
 
@@ -717,8 +718,7 @@ sub userDataToVars {
                  AND directbless.user_id = ?
                  AND directbless.isbless = 1
                  AND directbless.grant_type = ?
-           GROUP BY id
-          },
+          } . $dbh->sql_group_by('id'),
         'id', undef,
         ($userid, GRANT_DIRECT,
          $userid, GRANT_REGEXP,
@@ -733,8 +733,7 @@ sub userDataToVars {
                   AND ggm.member_id = ugm.group_id
                   AND ugm.isbless = 0
                   AND ggm.grant_type = ?
-                GROUP BY id
-               };
+               } . $dbh->sql_group_by('id');
     foreach (@{$dbh->selectall_arrayref($query, undef, ($userid, GROUP_BLESS))}) {
         # Merge indirect bless permissions into permission variable.
         $vars->{'permissions'}{${$_}[0]}{'indirectbless'} = 1;

@@ -567,6 +567,8 @@ sub GetBug {
     # Returns a hash of information about a target bug.
     my ($id) = @_;
 
+    my $dbh = Bugzilla->dbh;
+
     # Save the currently running query (if any) so we do not overwrite it.
     &::PushGlobalSQLState();
 
@@ -574,8 +576,9 @@ sub GetBug {
                           COUNT(bug_group_map.group_id)
                 FROM      bugs LEFT JOIN bug_group_map
                             ON (bugs.bug_id = bug_group_map.bug_id)
-                WHERE     bugs.bug_id = $id
-                GROUP BY  bugs.bug_id");
+                WHERE     bugs.bug_id = $id " .
+                $dbh->sql_group_by('bugs.bug_id',
+                                   'short_desc, product_id, component_id'));
 
     my $bug = { 'id' => $id };
     

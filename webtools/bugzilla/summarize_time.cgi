@@ -236,8 +236,9 @@ sub query_work_by_buglist {
                WHERE  longdescs.bug_id IN ($buglist) AND 
                       longdescs.who = profiles.userid AND
                       bugs.bug_id = longdescs.bug_id 
-                      $date_bits
-               GROUP BY longdescs.bug_id, profiles.login_name
+                      $date_bits } .
+            $dbh->sql_group_by('longdescs.bug_id, profiles.login_name',
+                               'bugs.short_desc, bugs.bug_status') . qq{
                ORDER BY longdescs.bug_when};
     my $sth = $dbh->prepare($q);
     $sth->execute(@{$date_values});
@@ -314,8 +315,9 @@ sub get_inactive_bugs {
             FROM   longdescs, bugs
             WHERE  longdescs.bug_id IN ($buglist) AND 
                    bugs.bug_id = longdescs.bug_id 
-                   $date_bits
-            GROUP BY longdescs.bug_id
+                   $date_bits } .
+         $dbh->sql_group_by('longdescs.bug_id',
+                            'bugs.short_desc, bugs.bug_status') . qq{
             ORDER BY longdescs.bug_when};
     $sth = $dbh->prepare($q);
     $sth->execute(@{$date_values});

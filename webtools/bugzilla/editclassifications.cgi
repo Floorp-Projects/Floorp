@@ -111,12 +111,15 @@ unless ($action) {
     #   - must use "group by classifications.id" instead of
     #     products.classification_id. Otherwise it won't look for all
     #     classification ids, just the ones used by the products.
-    my $sth = $dbh->prepare("SELECT classifications.id,classifications.name,
+    my $sth = $dbh->prepare("SELECT classifications.id, classifications.name,
                                     classifications.description,
-                                    COUNT(classification_id) as total
+                                    COUNT(classification_id) AS total
                              FROM classifications
-                             LEFT JOIN products ON classifications.id=products.classification_id
-                             GROUP BY classifications.id
+                             LEFT JOIN products
+                             ON classifications.id = products.classification_id
+                            " . $dbh->sql_group_by('classifications.id',
+                                         'classifications.name,
+                                          classifications.description') . "
                              ORDER BY name");
     $sth->execute();
     while (my ($id,$classification,$description,$total) = $sth->fetchrow_array()) {

@@ -166,8 +166,15 @@ sub initBug  {
     WHERE bugs.bug_id = ?
       AND classifications.id = products.classification_id
       AND products.id = bugs.product_id
-      AND components.id = bugs.component_id
-    GROUP BY bugs.bug_id";
+      AND components.id = bugs.component_id " .
+    $dbh->sql_group_by('bugs.bug_id', 'alias, products.classification_id,
+      classifications.name, bugs.product_id, products.name, version,
+      rep_platform, op_sys, bug_status, resolution, priority,
+      bug_severity, bugs.component_id, components.name, assigned_to,
+      reporter, bug_file_loc, short_desc, target_milestone,
+      qa_contact, status_whiteboard, creation_ts, 
+      delta_ts, reporter_accessible, cclist_accessible,
+      estimated_time, remaining_time, deadline');
 
   my $bug_sth = $dbh->prepare($query);
   $bug_sth->execute($bug_id);
@@ -717,12 +724,12 @@ sub CountOpenDependencies {
     my $dbh = Bugzilla->dbh;
 
     my $sth = $dbh->prepare(
-          "SELECT blocked, count(bug_status) " .
+          "SELECT blocked, COUNT(bug_status) " .
             "FROM bugs, dependencies " .
            "WHERE blocked IN (" . (join "," , @bug_list) . ") " .
              "AND bug_id = dependson " .
              "AND bug_status IN ('" . (join "','", &::OpenStates())  . "') " .
-        "GROUP BY blocked ");
+          $dbh->sql_group_by('blocked'));
     $sth->execute();
 
     while (my ($bug_id, $dependencies) = $sth->fetchrow_array()) {
