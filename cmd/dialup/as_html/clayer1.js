@@ -359,13 +359,16 @@ pages[52][2]=new method("ok.htm","parent.content.go('ok.htm')",true);
 pages[52][3]=new method("okreboot.htm","parent.content.go('okreboot.htm')",true);
 pages[52][4]=new method("error.htm","parent.content.go('error.htm')",true);
 
+// 53 - 57 are used in the New Account path
 
 // Added to accommodate Netcenter Screen
-pages[53]=new Array();
-pages[53][0]=new page("ipreview/inpvw5a.htm",null,null);
-pages[53][1]=new method("ipreview/inpvw6.htm","parent.content.go('')",true);
+pages[58]=new Array();
+pages[58][0]=new page("ipreview/inpvw5a.htm",null,null);
+pages[58][1]=new method("ipreview/inpvw6.htm","parent.content.go('')",true);
 
 
+// NB: if you add new pages here, make sure that the array indices are not already
+// being used
 
 
 function checkShowIntroFlag()
