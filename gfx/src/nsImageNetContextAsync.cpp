@@ -183,6 +183,33 @@ ImageConsumer::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHa
 }
 
 NS_IMETHODIMP 
+ImageConsumer::GetParentContentListener(nsIURIContentListener** aParent)
+{
+  *aParent = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+ImageConsumer::SetParentContentListener(nsIURIContentListener* aParent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+ImageConsumer::GetLoadCookie(nsISupports ** aLoadCookie)
+{
+  *aLoadCookie = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+ImageConsumer::SetLoadCookie(nsISupports * aLoadCookie)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP 
 ImageConsumer::CanHandleContent(const char * aContentType,
                                 nsURILoadCommand aCommand,
                                 const char * aWindowTarget,
@@ -626,7 +653,6 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
       (void)channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND);
     }
     
-    nsCOMPtr<nsISupports> openContext (do_QueryInterface(mLoadGroup));
     nsCOMPtr<nsISupports> window (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, ic)));
 
     // let's try uri dispatching...
@@ -640,9 +666,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
       }
 
       rv = pURILoader->OpenURI(channel, loadCmd, nsnull /* window target */, 
-                               window,
-                               group, 
-                               getter_AddRefs(openContext));
+                               window);
     }
     // rv = channel->AsyncRead(0, -1, nsnull, ic);
     if (NS_FAILED(rv)) goto error;
