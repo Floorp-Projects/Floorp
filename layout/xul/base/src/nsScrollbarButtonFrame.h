@@ -37,6 +37,9 @@ class nsScrollbarButtonFrame : public nsTitledButtonFrame,
 {
 public:
 
+  // Overrides
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+
   friend nsresult NS_NewScrollBarButtonFrame(nsIFrame** aNewFrame);
 
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 

@@ -93,6 +93,8 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
                       nsIStyleContext* aContext,
                       nsIFrame*        aPrevInFlow)
 {
+  nsresult rv = nsTableCellFrame::Init(aPresContext, aContent, aParent, aContext,
+                                aPrevInFlow);
   // Figure out if we allow events.
   nsString attrValue;
   nsresult result = aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::treeallowevents, attrValue);
@@ -130,8 +132,7 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
 		}
   }
 
-  return nsTableCellFrame::Init(aPresContext, aContent, aParent, aContext,
-                                aPrevInFlow);
+  return rv;
 }
 
 nsTableFrame* nsTreeCellFrame::GetTreeFrame()

@@ -403,8 +403,6 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
 
   mCurrentIndex = aNewIndex;
 
-  //printf("The position changed! The new index is: %d\n", aNewIndex);
- 
   if (mContentChain) {
     NS_ERROR("This is bad!");
     return NS_OK;
@@ -711,17 +709,29 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
     if (rowCount < 0)
       rowCount = 0;
 
-    // Our page size is the # of rows instantiated.
-    PRInt32 pageRowCount;
-    GetRowCount(pageRowCount);
+    nsString maxpos;
+    if (!mIsFull) {
+      // We are not full. This means that we are not allowed to scroll any further. We are
+      // at the max position right now.
+      scrollbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, maxpos);
+    }
+    else {
+      // Our page size is the # of rows instantiated.
+      PRInt32 pageRowCount;
+      GetRowCount(pageRowCount);
 
-    rowCount -= (pageRowCount-2);
+      if (pageRowCount < 2)
+        pageRowCount = 2;
 
-    char ch[100];
-    sprintf(ch,"%d", rowCount);
-    
+      rowCount -= (pageRowCount-2);
+
+      char ch[100];
+      sprintf(ch,"%d", rowCount);
+      maxpos = ch;
+    }
+
     // Make sure our position is accurate.
-    scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, nsString(ch), PR_FALSE);
+    scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, maxpos, PR_FALSE);
 
     // We must be constrained, or a scrollbar makes no sense.
     nsSize    kidMaxElementSize;
