@@ -54,7 +54,7 @@
         <treechildren>
           <treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading">
             <treerow>
-              <treecell class="treecell-indented-folder" crop="right" 
+              <treecell class="treecell-indent" crop="right" 
                         src="rdf:http://home.netscape.com/NC-rdf#Icon"
                         value="rdf:http://home.netscape.com/NC-rdf#Name" />
             </treerow>
