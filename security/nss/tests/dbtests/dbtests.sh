@@ -62,7 +62,7 @@
 ########################################################################
 dbtest_init()
 {
-  SCRIPTNAME="dbtest.sh"
+  SCRIPTNAME="dbtests.sh"
   if [ -z "${CLEANUP}" ] ; then     # if nobody else is responsible for
       CLEANUP="${SCRIPTNAME}"       # cleaning this script will do it
   fi
@@ -75,7 +75,7 @@ dbtest_init()
       . cert.sh
   fi
 
-  SCRIPTNAME="dbtest.sh"
+  SCRIPTNAME="dbtests.sh"
   DBTEST_LOG=${HOSTDIR}/dbtest.log    #we don't want all the errormessages 
          # in the output.log, otherwise we can't tell what's a real error
   RONLY_DIR=${HOSTDIR}/ronlydir
@@ -123,7 +123,7 @@ dbtest_main()
     fi
     dbtest -r -d ./non_existant_dir
     ret=$?
-    if [ $ret -ne 45 ]; then
+    if [ $ret -ne 46 ]; then
       html_failed "<TR><TD> Dbtest readonly succeeded in a nonexisting directory $ret"
     else
       html_passed "<TR><TD> Dbtest readonly failed in a nonexisting dir $ret" 
@@ -149,7 +149,7 @@ dbtest_main()
     fi
     dbtest -r -d $EMPTY_DIR
     ret=$?
-    if [ $ret -ne 45 ]; then
+    if [ $ret -ne 46 ]; then
       html_failed "<TR><TD> Dbtest readonly succeeded in an empty directory $ret"
     else
       html_passed "<TR><TD> Dbtest readonly failed in an empty dir $ret" 
@@ -179,7 +179,7 @@ dbtest_main()
 
     dbtest -d $RONLY_DIR
     ret=$?
-    if [ $ret -ne 45 ]; then
+    if [ $ret -ne 46 ]; then
       html_failed "<TR><TD> Dbtest r/w succeeded in an readonly directory $ret"
     else
       html_passed "<TR><TD> Dbtest r/w failed in an readonly dir $ret" 
