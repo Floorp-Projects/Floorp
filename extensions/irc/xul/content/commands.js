@@ -73,11 +73,11 @@ function initCommands()
          ["create-tab-for-view", cmdCreateTabForView,                        0],
          ["op",                cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
          ["dcc-accept",        cmdDCCAccept,                       CMD_CONSOLE],
-         ["dcc-chat",          cmdDCCChat,          CMD_NEED_NET | CMD_CONSOLE],
+         ["dcc-chat",          cmdDCCChat,          CMD_NEED_SRV | CMD_CONSOLE],
          ["dcc-close",         cmdDCCClose,                        CMD_CONSOLE],
          ["dcc-decline",       cmdDCCDecline,                      CMD_CONSOLE],
          ["dcc-list",          cmdDCCList,                         CMD_CONSOLE],
-         ["dcc-send",          cmdDCCSend,          CMD_NEED_NET | CMD_CONSOLE],
+         ["dcc-send",          cmdDCCSend,          CMD_NEED_SRV | CMD_CONSOLE],
          ["deop",              cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
          ["describe",          cmdDescribe,         CMD_NEED_SRV | CMD_CONSOLE],
          ["hop",               cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
@@ -133,6 +133,7 @@ function initCommands()
          ["nick",              cmdNick,                            CMD_CONSOLE],
          ["notify",            cmdNotify,           CMD_NEED_SRV | CMD_CONSOLE],
          ["open-at-startup",   cmdOpenAtStartup,                   CMD_CONSOLE],
+         ["pass",              cmdPass,             CMD_NEED_NET | CMD_CONSOLE],
          ["ping",              cmdPing,             CMD_NEED_SRV | CMD_CONSOLE],
          ["plugin-pref",       cmdPref,                            CMD_CONSOLE],
          ["pref",              cmdPref,                            CMD_CONSOLE],
@@ -456,7 +457,7 @@ function dispatchCommand (command, e, flags)
     }
 
     function parseAlias(aliasLine, e) {
-        /* Only 1 of these will be presented to the user. Math.max is used to 
+        /* Only 1 of these will be presented to the user. Math.max is used to
            supply the 'worst' error */
         const ALIAS_ERR_REQ_PRMS = 1;
         const ALIAS_ERR_REQ_SRV = 2;
@@ -482,7 +483,7 @@ function dispatchCommand (command, e, flags)
             if (single)
             {
                 // Simple 1-parameter replace
-                if (arrayHasElementAt(parameters, single - 1)) 
+                if (arrayHasElementAt(parameters, single - 1))
                 {
                     paramsUsed = Math.max(paramsUsed, single);
                     return parameters[single-1];
@@ -494,12 +495,12 @@ function dispatchCommand (command, e, flags)
             if (cumulative)
             {
                 // Cumulative Replace: parameters cumulative and up
-                if (arrayHasElementAt(parameters, cumulative - 1)) 
+                if (arrayHasElementAt(parameters, cumulative - 1))
                 {
-                    paramsUsed = parameters.length; 
+                    paramsUsed = parameters.length;
                     // there are never leftover parameters for $(somenumber+)
                     return parameters.slice(cumulative - 1).join(" ");
-                } 
+                }
                 maxParamsAsked = Math.max(maxParamsAsked, cumulative);
                 errorMsg = Math.max(ALIAS_ERR_REQ_PRMS, errorMsg);
                 return match;
@@ -508,7 +509,7 @@ function dispatchCommand (command, e, flags)
             {
                 // Ranged replace: parameters start through end
                 //'decrement to correct 0-based index.
-                if (start > end) 
+                if (start > end)
                 {
                     var iTemp = end;
                     end = start;
@@ -516,12 +517,12 @@ function dispatchCommand (command, e, flags)
                     // We obviously have a very stupid user, but we're nice
                 }
                 start--;
-                if (arrayHasElementAt(parameters, start) && 
-                    arrayHasElementAt(parameters, end - 1)) 
+                if (arrayHasElementAt(parameters, start) &&
+                    arrayHasElementAt(parameters, end - 1))
                 {
                     paramsUsed = Math.max(paramsUsed,end);
                     return parameters.slice(start, end).join(" ");
-                } 
+                }
                 maxParamsAsked = Math.max(maxParamsAsked, end);
                 errorMsg = Math.max(ALIAS_ERR_REQ_PRMS, errorMsg);
                 return match;
@@ -541,7 +542,7 @@ function dispatchCommand (command, e, flags)
                 if (e.channel)
                     return e.channel.unicodeName;
 
-                if (e.user) 
+                if (e.user)
                     return e.user.unicodeName;
 
                 errorMsg = ALIAS_ERR_REQ_RECIP;
@@ -557,8 +558,8 @@ function dispatchCommand (command, e, flags)
 
         var paramsUsed = 0;
         var maxParamsAsked = 0;
-        
-        /* set parameters array and escaping \ and ; in parameters so the 
+
+        /* set parameters array and escaping \ and ; in parameters so the
          * parameters don't get split up by the command list split later on */
         e.inputData = e.inputData.replace(/([\\;])/g, "\\$1");
         var parameters = e.inputData.match(/\S+/g);
@@ -575,26 +576,26 @@ function dispatchCommand (command, e, flags)
             switch (errorMsg)
             {
                 case ALIAS_ERR_REQ_PRMS:
-                    display(getMsg(MSG_ERR_REQUIRED_NR_PARAM, 
-                                   [maxParamsAsked - parameters.length, 
+                    display(getMsg(MSG_ERR_REQUIRED_NR_PARAM,
+                                   [maxParamsAsked - parameters.length,
                                     maxParamsAsked]), MT_ERROR);
                     break;
                 case ALIAS_ERR_REQ_SRV:
-                    display(getMsg(MSG_ERR_NEED_SERVER, e.command.name), 
+                    display(getMsg(MSG_ERR_NEED_SERVER, e.command.name),
                             MT_ERROR);
                     break;
                 case ALIAS_ERR_REQ_RECIP:
-                    display(getMsg(MSG_ERR_NEED_RECIP, e.command.name), 
+                    display(getMsg(MSG_ERR_NEED_RECIP, e.command.name),
                             MT_ERROR);
                     break;
             }
             return null;
         }
-        
+
         // return the revised command line.
         if (paramsUsed < parameters.length)
         {
-            var pmstring = parameters.slice(paramsUsed, 
+            var pmstring = parameters.slice(paramsUsed,
                                             parameters.length).join(" ");
             display(getMsg(MSG_EXTRA_PARAMS, pmstring), MT_WARN);
         }
@@ -646,33 +647,33 @@ function dispatchCommand (command, e, flags)
         /* dispatch an alias (semicolon delimited list of subcommands) */
         if ("beforeHooks" in e.command)
             callHooks (e.command, true);
-        
+
         var commandList;
         //Don't make use of e.inputData if we have multiple commands in 1 alias
         if (e.command.func.match(/\$\(.*\)|(?:^|[^\\])(?:\\\\)*;/))
             commandList = parseAlias(e.command.func, e);
         else
-            commandList = e.command.func + " " + e.inputData; 
-        
-        if (commandList == null) 
+            commandList = e.command.func + " " + e.inputData;
+
+        if (commandList == null)
             return null;
         commandList = commandList.split(";");
 
         i = 0;
         while (i < commandList.length) {
-            if (commandList[i].match(/(?:^|[^\\])(?:\\\\)*$/) || 
-                (i == commandList.length - 1)) 
+            if (commandList[i].match(/(?:^|[^\\])(?:\\\\)*$/) ||
+                (i == commandList.length - 1))
             {
                 commandList[i] = commandList[i].replace(/\\(.)/g, "$1");
                 i++;
-            } 
-            else 
+            }
+            else
             {
                 commandList[i] = commandList[i] + ";" + commandList[i + 1];
                 commandList.splice(i + 1, 1);
             }
         }
-        
+
         for (i = 0; i < commandList.length; ++i)
         {
             var newEvent = Clone(e);
@@ -2193,7 +2194,7 @@ function cmdWhoIs(e)
 {
     for (var i = 0; i < e.nicknameList.length; i++)
     {
-        if ((i < e.nicknameList.length - 1) && 
+        if ((i < e.nicknameList.length - 1) &&
             (e.server.toLowerCase(e.nicknameList[i]) ==
              e.server.toLowerCase(e.nicknameList[i + 1])))
         {
@@ -2403,6 +2404,20 @@ function cmdOpenAtStartup(e)
             display(getMsg(MSG_STARTUP_NOTFOUND, url));
         }
     }
+}
+
+function cmdPass(e)
+{
+    /* Check we are connected, or at least pretending to be connected, so this
+     * can actually send something.
+     */
+   if ((e.network.state != NET_ONLINE) && !e.server.isConnected)
+   {
+       feedback(e, MSG_ERR_NOT_CONNECTED);
+       return;
+   }
+
+   e.server.sendData("PASS " + fromUnicode(e.password, e.server) + "\n");
 }
 
 function cmdPing (e)
