@@ -35,6 +35,7 @@
 #include "nsString.h"
 #include "nsIParser.h"
 #include "prtypes.h"
+#include "nsIUnicodeDecoder.h"
 #include <fstream.h>
 
 
@@ -265,7 +266,13 @@ class nsScanner {
 
       static void SelfTest();
 
+      /**
+       *  Change the charset and the Unicode Decoder
+       */      
+      nsresult SetDocumentCharset(nsString& aCharset);
+
   protected:
+
     enum {eBufferSizeThreshold=512};
 
       /**
@@ -276,6 +283,10 @@ class nsScanner {
        */
       nsresult FillBuffer(void);
 
+      /**
+       *  Initialize the charset and the Unicode Decoder
+       */
+      void InitUnicodeDecoder();
 
       fstream*        mFileStream;
       nsString        mBuffer;
@@ -285,6 +296,8 @@ class nsScanner {
       PRUint32        mTotalRead;
       PRBool          mOwnsStream;
       PRBool          mIncremental;
+      nsString        mCharset;
+      nsIUnicodeDecoder *mUnicodeDecoder;
 };
 
 #endif
