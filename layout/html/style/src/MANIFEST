@@ -16,3 +16,4 @@ nsICSSDeclaration.h
 nsIHTMLCSSStyleSheet.h
 nsIHTMLStyleSheet.h
 nsHTMLValue.h
+nsICSSFrameConstructor.h
