@@ -1,39 +1,52 @@
 todo for AOL August 1st deadline:
 ---------------------------------
 
+o click on gif, jpg, txt
+
+o http://www.aol.com/netfind
+  o fix the size of the iframe
+  o look into the parsing bug's
+
+o http://www.magicbit.com/links/travel.htm; why is the SMART-NET image
+  at the bottom instead of at the baseline?
+
+o http://www.altavista.com looks wrong. why?
+  why does it go into an infinite loop during a -f run?
+
+o bug2.html
+
+o UMR bug because of painting during reflow
+
 o implement base tag support:
   o frame, iframe, frameset
   o layer
 
 o TEST base tag support:
-  x images
-  x links
-  x image maps (area tags)
   o script src=
   o style src=
 
 o missing space after ampersand on http://home.netscape.com
 
 o fast scroll to #ref for a link targeted at the same document as is
-currently showing
+  currently showing
 
-force-refresh needs to get the nsIScrollableView and update that view,
-not the root view
+o force-refresh needs to get the nsIScrollableView and update that view,
+  not the root view
 
 o f:/html/bug8.html (descent bug in vertically align children)
 
-Viewer:
-  make the print-preview menu item work
-  select-all and copy menu items
-  fix link-over status
+o Viewer:
+  o make the print-preview menu item work
+  o select-all and copy menu items
+  o fix link-over status
 
-fix floating tables
-  x need to update floating-frames lists on LineData's as the placeholders move
+o fix floating tables
   o current-line floaters need to go in previous line's bcl list; if first line
     then they go in the block-frame's pending floater list
   o <block><floater>... we need a place to hang current-line floaters!!!
   o http://www.news.com
   o http://www.usatoday.com/ 
+  o http://www.mrshowbiz.com/
 
 o block-frame: DidReflow and content-appended can be smarter; right now
   we did-reflow the whole caboodle whereas we could keep a bit in the
@@ -45,25 +58,27 @@ o fix blocks inside of inlines; need to find the block's inline-layout
   state and see where the block child is with respect to the left edge
   of the line.
 
-iframe on infoseek
+o iframe on infoseek
 
 x table tag is closing paragraphs
 
-mark/insert-at-mark for parser???
+o mark/insert-at-mark for parser???
 
-www.cnn.com: crash
+o www.cnn.com: crash
 
-performance:
+o performance:
   o people.netscape.com
 
-initial black reflow bug
+o initial black reflow bug
 
-slide show resize bug
+o slide show resize bug
 
-fix assertion on LCIC in nscssblockframe::content-inserted when
-running rotate.html/js test
+o fix assertion on LCIC in nscssblockframe::content-inserted when
+  running rotate.html/js test
 
-docloader needs to disconnect itself as an observer when it's done
+o docloader needs to disconnect itself as an observer when it's done
+
+o fix limited stack depth in content sink
 
 ----------------------------------------------------------------------
 
@@ -73,6 +88,8 @@ ebina margin bugs:
   P's in LI's
   f:/html/bug3.html (yikes!)
   f:/html/bug6.html 
+  www.infoseek.com; see steve's mail (date july 21st)
+  www.w3.org
 
 tinderbox: add selftest to our makefile so that it will run whatever
 we want and verify the results of a build
@@ -102,6 +119,8 @@ o turn noisy code in nsContainerFrame into NS_FRAME_TRACE calls
 
 o implement the LINK tag including base attributes for style sheets
   and other linked objects
+
+o LINK rel=stylesheet href=... type=text/css
 
 ----------------------------------------
 
