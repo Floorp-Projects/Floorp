@@ -238,6 +238,8 @@ CompositeEnumeratorImpl::HasMoreElements(PRBool* aResult)
 
             rv = GetEnumerator(datasource, &mCurrent);
             if (NS_FAILED(rv)) return rv;
+            if (rv == NS_RDF_NO_VALUE)
+                continue;
 
             NS_ASSERTION(mCurrent != nsnull, "you're always supposed to return an enumerator from GetEnumerator, punk.");
             if (! mCurrent)
