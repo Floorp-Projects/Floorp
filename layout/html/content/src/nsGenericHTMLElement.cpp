@@ -587,6 +587,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
 {
   nsresult res = NS_OK;
 
+  *aOffsetParent = nsnull;
+
   aRect.x = aRect.y = 0;
   aRect.Empty();
  
@@ -634,6 +636,9 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
             // If the tag of this frame matches the one passed in, break here
             parentContent->GetTag(*getter_AddRefs(tag));
             if (tag.get() == aOffsetParentTag) {
+              *aOffsetParent = parentContent;
+              NS_IF_ADDREF(*aOffsetParent);
+
               break;
             }
           }
@@ -646,9 +651,6 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
           parent->GetParent(&parent);
         }
 
-        *aOffsetParent = parentContent;
-        NS_IF_ADDREF(*aOffsetParent);
-          
         // For the origin, add in the border for the frame
         const nsStyleSpacing* spacing;
         nsStyleCoord coord;
