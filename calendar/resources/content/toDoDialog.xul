@@ -41,14 +41,12 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<?xul-overlay href="chrome://calendar/content/timepicker/timepicker-overlay.xul"?>
 
 <!-- CSS File with all styles specific to the dialog -->
 <?xml-stylesheet href="chrome://calendar/skin/eventDialog.css" ?>
 <?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
-
-<?xml-stylesheet href="chrome://calendar/content/datepicker/datepicker.css" ?>
-<?xml-stylesheet href="chrome://calendar/content/datepicker/calendar.css" ?>
+<?xml-stylesheet
+ href="chrome://calendar/content/datetimepickers/datetimepicker.css" ?>
 
 <!-- CSS for selecting contacts to invite to event -->
 <?xml-stylesheet href="chrome://calendar/skin/selectAddresses.css" ?>
@@ -117,9 +115,7 @@
 </dataset>
 
 
-<!-- Picker popups -->
-
-   <popup  id="oe-time-picker-popup"  position="after_start" oncommand="onTimePick( this )" value=""/>
+<!-- Dialog content -->
 
    <vbox id="standard-dialog-content"  flex="1">
    
@@ -160,20 +156,8 @@
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newevent.startdate.label;"/>
                         </hbox>
-                        <hbox  id="start-date-box" align="center">
-                            <datepicker id="start-date-picker" value="" ondatepick="onDatePick( this );"/>
-                            <textbox id="start-time-text"
-                                     readonly="true"
-                                     value=""
-                                     onmousedown="prepareTimePicker('start-time-text')"
-                                     popup="oe-time-picker-popup"
-                                     position="after_start"/>
-                            <image id="start-time-button"
-                                   class="event-time-button-class"
-                                   onmousedown="prepareTimePicker('start-time-text')"
-                                   popup="oe-time-picker-popup"
-                                   position="after_start"/>
-                        </hbox>
+                        <datetimepicker id="start-datetime" value=""
+                         onchange="onDateTimePick( this );"/>
                      </row>
                      
                      <!--  Due Date -->    
@@ -181,20 +165,8 @@
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newtodo.duedate.label;"/>
                         </hbox>
-                        <hbox  id="due-date-box" align="center">
-                            <datepicker id="due-date-picker" value="" ondatepick="onDatePick( this );"/>
-                            <textbox id="due-time-text"
-                                     readonly="true"
-                                     value=""
-                                     onmousedown="prepareTimePicker('due-time-text')"
-                                     popup="oe-time-picker-popup"
-                                     position="after_start"/>
-                            <image id="end-time-button"
-                                   class="event-time-button-class"
-                                   onmousedown="prepareTimePicker('due-time-text')"
-                                   popup="oe-time-picker-popup"
-                                   position="after_start"/>
-                        </hbox>
+                        <datetimepicker id="due-datetime" value="" 
+                         onchange="onDateTimePick( this );"/>
                      </row>
               
                      <!-- End Time Warning -->    
@@ -560,8 +532,9 @@
                                        oncommand="commandUntil()"/>
                                  <spacer id="until-spacer"/>
                                  <datepicker id="repeat-end-date-picker"
+                                             disable-controller="repeat"
                                              value=""
-                                             ondatepick="commandUntil()"/>
+                                             onchange="commandUntil()"/>
                               </hbox>
                               <label id="repeat-time-warning"
                                      class="warning-text-class"
@@ -585,7 +558,7 @@
                                  <hbox align="center">
                                     <datepicker id="exceptions-date-picker"
                                                 disable-controller="repeat"
-                                                ondatepick="updateAddExceptionButton();"
+                                                onchange="updateAddExceptionButton();"
                                                 value=""/>
                                  </hbox>
                                  <button id="exception-add-button"

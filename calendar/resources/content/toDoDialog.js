@@ -83,20 +83,17 @@ var debugenabled=false;
 var gEvent;          // event being edited
 var gOnOkFunction;   // function to be called when user clicks OK
 
-var gTimeDifference = 3600000;  //when editing an event, we change the due time if the start time is changing. This is the difference for the event time.
-var gDateDifference = 3600000;  //this is the difference for the dates, not the times.
+var gDuration = -1;   // used to preserve duration when changing event start.
 
 const DEFAULT_ALARM_LENGTH = 15; //default number of time units, an alarm goes off before an event
 
-var gMode = ''; //what mode are we in? new or edit...
-
-const kRepeatDay_0 = 1; //Sunday
-const kRepeatDay_1 = 2; //Monday
-const kRepeatDay_2 = 4; //Tuesday
-const kRepeatDay_3 = 8; //Wednesday
-const kRepeatDay_4 = 16;//Thursday
-const kRepeatDay_5 = 32;//Friday
-const kRepeatDay_6 = 64;//Saturday
+const kRepeatDay_0 = 1<<0;//Sunday
+const kRepeatDay_1 = 1<<1;//Monday
+const kRepeatDay_2 = 1<<2;//Tuesday
+const kRepeatDay_3 = 1<<3;//Wednesday
+const kRepeatDay_4 = 1<<4;//Thursday
+const kRepeatDay_5 = 1<<5;//Friday
+const kRepeatDay_6 = 1<<6;//Saturday
 
 
 var gStartDate = new Date( );
@@ -115,8 +112,6 @@ function loadCalendarEventDialog()
    // Get arguments, see description at top of file
    
    var args = window.arguments[0];
-   
-   gMode = args.mode;
    
    gOnOkFunction = args.onOk;
    gEvent = args.calendarEvent.QueryInterface(Components.interfaces.oeIICalTodo);
@@ -138,16 +133,12 @@ function loadCalendarEventDialog()
 
    // fill in fields from the event
    gStartDate.setTime( gEvent.start.getTime() );
-   document.getElementById( "start-date-picker" ).value = gStartDate;
+   document.getElementById( "start-datetime" ).value = gStartDate;
    
    gDueDate.setTime(gEvent.due.getTime() );
-   document.getElementById( "due-date-picker" ).value = gDueDate;
+   document.getElementById( "due-datetime" ).value = gDueDate;
    
-   setTimeFieldValue( "start-time-text", gStartDate );
-   setTimeFieldValue( "due-time-text", gDueDate );
-   
-   gTimeDifference = gDueDate.getTime() - gStartDate.getTime(); //the time difference in ms
-   gDateDifference = gTimeDifference; //the time difference in ms
+   gDuration = gDueDate.getTime() - gStartDate.getTime(); //in ms
    
    if ( gEvent.recurForever ) 
    {
@@ -547,9 +538,8 @@ function checkDueTime()
 
 function checkDueDate()
 {
-   // Bad to get into floats.
-   var startDate = document.getElementById( "start-date-picker" ).value; 
-   var dueDate = document.getElementById( "due-date-picker" ).value; 
+   var startDate = document.getElementById( "start-datetime" ).value; 
+   var dueDate = document.getElementById( "due-datetime" ).value; 
    
    if( startDate.getFullYear() == dueDate.getFullYear() &&
        startDate.getMonth() == dueDate.getMonth() &&
@@ -622,8 +612,6 @@ function setOkButton(state)
       document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).setAttribute( "disabled", true );
    else
       document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).removeAttribute( "disabled" );
-
-
 }
 
 function updateOKButton()
@@ -639,140 +627,43 @@ function updateOKButton()
 *   Called when a datepicker is finished, and a date was picked.
 */
 
-function onDatePick( datepicker )
+function onDateTimePick( dateTimePicker )
 {
-   var ThisDate = new Date( datepicker.value);
+   var pickedDateTime = new Date( dateTimePicker.value);
 
-   if( datepicker.id == "due-date-picker" )
+   if( dateTimePicker.id == "due-datetime" )
    {
-      gDueDate.setMonth( ThisDate.getMonth() );
-      gDueDate.setDate( ThisDate.getDate() );
-      gDueDate.setFullYear( ThisDate.getFullYear() );
-      
-      //get the new due time by adding on the time difference to the start time.
-      gDateDifference = gDueDate.getTime() - gStartDate.getTime();
+     gDueDate = pickedDateTime;
+     // save the duration
+     gDuration = gDueDate.getTime() - gStartDate.getTime();
       
       updateOKButton();
       return;
    }
 
-   if( datepicker.id == "start-date-picker" )
+   if( dateTimePicker.id == "start-datetime" )
    {
-      gStartDate.setMonth( ThisDate.getMonth() );
-      gStartDate.setDate( ThisDate.getDate() );
-      gStartDate.setFullYear( ThisDate.getFullYear() );
-
-      //get the new due time by adding on the time difference to the start time.
-      gDueDate.setTime( gStartDate.getTime() + gDateDifference );
-         
-      document.getElementById( "due-date-picker" ).value = gDueDate;
-
-      setTimeFieldValue( "due-time-text", gDueDate );
+     gStartDate = pickedDateTime;
+     // preserve the previous duration by changing end
+     gDueDate.setTime( gStartDate.getTime() + gDuration );
+     document.getElementById( "due-datetime" ).value = gDueDate;
    }
 
-   var Now = new Date();
+   var now = new Date();
 
-   //change the due date of recurring events to today, if the new date is after today and repeat is not checked.
-
-   if ( datepicker.value.getTime() > Now.getTime() && !getFieldValue( "repeat-checkbox", "checked" ) ) 
+   // change the end date of recurring events to today, 
+   // if the new date is after today and repeat is not checked.
+   if ( pickedDateTime.getTime() > now.getTime() &&
+        !getFieldValue( "repeat-checkbox", "checked" ) ) 
    {
-      document.getElementById( "repeat-end-date-picker" ).value = datepicker.value;
+     document.getElementById( "repeat-end-date-picker" ).value = pickedDateTime;
    }
    updateAdvancedWeekRepeat();
-      
    updateAdvancedRepeatDayOfMonth();
-
    updateAddExceptionButton();
-
    updateOKButton();
 }
 
-
-/**
-*   Called when an item with a time picker is clicked, BEFORE the picker is shown.
-*/
-
-function prepareTimePicker( timeFieldName )
-{
-   // get the popup and the field we are editing
-   var timePickerPopup = document.getElementById( "oe-time-picker-popup" );
-   var timeField = document.getElementById( timeFieldName );
-   
-   // tell the time picker the time to edit.
-   setFieldValue( "oe-time-picker-popup", timeField.editDate, "value" );
-   
-   // remember the time field that is to be updated by adding a 
-   // property "timeField" to the popup.
-   
-   timePickerPopup.timeField = timeField;
-}
-
-
-/**
-*   Called when a timepicker is finished, and a time was picked.
-*/
-
-function onTimePick( timepopup )
-{
-   var ThisDate = timepopup.value;
-
-   if( timepopup.timeField.id == "due-time-text" )
-   {
-      gDueDate.setHours( ThisDate.getHours() );
-      gDueDate.setMinutes( ThisDate.getMinutes() );
-
-      //if we are changing the due time, change the global duration.
-      gTimeDifference = gDueDate.getTime() - gStartDate.getTime(); //the time difference in ms
-      
-      if ( gTimeDifference < 0 ) 
-      {
-         gTimeDifference = 0;
-      }
-   }
-
-   if( timepopup.timeField.id == "start-time-text" )
-   {
-      gStartDate.setHours( ThisDate.getHours() );
-      gStartDate.setMinutes( ThisDate.getMinutes() );
-
-      //get the new due time by adding on the time difference to the start time.
-      gDueDate.setTime( gStartDate.getTime() + gTimeDifference );
-      
-      document.getElementById( "due-date-picker" ).value = gDueDate;
-
-      setTimeFieldValue( "due-time-text", gDueDate );
-   }
-
-   // display the new time in the textbox
-   timepopup.timeField.value = formatTime( timepopup.value );
-   
-   // remember the new date in a property, "editDate".  we created on the time textbox
-   timepopup.timeField.editDate = timepopup.value;
-
-   updateOKButton();
-}
-
-/**
-*   Called when an item with a datepicker is clicked, BEFORE the picker is shown.
-*/
-
-function prepareDatePicker( dateFieldName )
-{
-   // get the popup and the field we are editing
-   
-   var datePickerPopup = document.getElementById( "oe-date-picker-popup" );
-   var dateField = document.getElementById( dateFieldName );
-   
-   // tell the date picker the date to edit.
-   
-   setFieldValue( "oe-date-picker-popup", dateField.editDate, "value" );
-   
-   // remember the date field that is to be updated by adding a 
-   // property "dateField" to the popup.
-   
-   datePickerPopup.dateField = dateField;
-}
-   
 /**
 *   Called when the repeat checkbox is clicked.
 */
@@ -1126,7 +1017,7 @@ function setAdvancedWeekRepeat()
    }
   
    //get the day number for today.
-   var dayNumber = document.getElementById( "start-date-picker" ).value.getDay();
+   var dayNumber = document.getElementById( "start-datetime" ).value.getDay();
    
    setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "checked" );
 
@@ -1160,7 +1051,7 @@ function getAdvancedWeekRepeat()
 function updateAdvancedWeekRepeat()
 {
    //get the day number for today.
-   var dayNumber = document.getElementById( "start-date-picker" ).value.getDay();
+   var dayNumber = document.getElementById( "start-datetime" ).value.getDay();
    
    //uncheck them all if the repeat checkbox is checked
    var repeatCheckBox = document.getElementById( "repeat-checkbox" );
@@ -1197,7 +1088,7 @@ function updateAdvancedWeekRepeat()
 function updateAdvancedRepeatDayOfMonth()
 {
    //get the day number for today.
-   var dayNumber = document.getElementById( "start-date-picker" ).value.getDate();
+   var dayNumber = document.getElementById( "start-datetime" ).value.getDate();
    
    var dayExtension = getDayExtension( dayNumber );
 
@@ -1271,7 +1162,7 @@ function addException( dateToAdd )
    {
       //get the date from the date and time box.
       //returns a date object
-      var dateToAdd = document.getElementById( "exceptions-date-picker" ).value;
+      dateToAdd = document.getElementById( "exceptions-date-picker" ).value;
    }
    
    if( isAlreadyException( dateToAdd ) )
@@ -1319,7 +1210,7 @@ function getDayExtension( dayNumber )
 function getDayOfWeek( )
 {
    //get the day number for today.
-   var dayNumber = document.getElementById( "start-date-picker" ).value.getDay();
+   var dayNumber = document.getElementById( "start-datetime" ).value.getDay();
    
    var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
 
@@ -1333,7 +1224,7 @@ function getDayOfWeek( )
 function getWeekNumberOfMonth()
 {
    //get the day number for today.
-   var startTime = document.getElementById( "start-date-picker" ).value;
+   var startTime = document.getElementById( "start-datetime" ).value;
    
    var oldStartTime = startTime;
 
@@ -1358,7 +1249,7 @@ function getWeekNumberOfMonth()
 function isLastDayOfWeekOfMonth()
 {
    //get the day number for today.
-   var startTime = document.getElementById( "start-date-picker" ).value;
+   var startTime = document.getElementById( "start-datetime" ).value;
    
    var oldStartTime = startTime;
 
@@ -1479,9 +1370,6 @@ function setFieldValue( elementId, newValue, propertyName  )
    {
       var field = document.getElementById( elementId );
       
-      if( !field )
-         alert( elementId+" not found" );
-
       if( newValue === false )
       {
          field.removeAttribute( propertyName );
@@ -1598,8 +1486,6 @@ function setTimeFieldValue( elementId, newDate  )
 
 /**
 *   Take a Date object and return a displayable date string i.e.: May 5, 1959
-*  :TODO: This should be moved into DateFormater and made to use some kind of
-*         locale or user date format preference.
 */
 
 function formatDate( date )
@@ -1618,7 +1504,6 @@ function formatTime( time )
    return timeString;
 }
 
-
 function debug( text )
 {
     if( debugenabled )
@@ -1627,11 +1512,11 @@ function debug( text )
 
 function checkStartAndDueDates()
 {
-   var StartDate = document.getElementById( "start-date-picker" ).value;
+   var startDate = document.getElementById( "start-datetime" ).value;
 
-   var dueDate = document.getElementById( "due-date-picker" ).value;
+   var dueDate = document.getElementById( "due-datetime" ).value;
       
-   if( DueDate.getTime() < StartDate.getTime() )
+   if( dueDate.getTime() < startDate.getTime() )
    {
       //show alert message, disable OK button
       document.getElementById( "start-date-warning" ).removeAttribute( "collapsed" );
