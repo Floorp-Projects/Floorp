@@ -751,7 +751,7 @@
     tooltip="aTooltip" tooltiptext="&alignLeft.tooltip;" >
     <observes element="cmd_align" attribute="state" onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'left')" />
   </button>
-  <button class="button-toolbar" id="align-center-button"   oncommand="doStatefulCommand('cmd_align', 'center')"tooltip="
+  <button class="button-toolbar" id="align-center-button"   oncommand="doStatefulCommand('cmd_align', 'center')"
     tooltip="aTooltip" tooltiptext="&alignCenter.tooltip;" >
     <observes element="cmd_align" attribute="state" onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'center')"/>
   </button>
