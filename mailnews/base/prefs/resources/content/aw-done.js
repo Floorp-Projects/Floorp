@@ -145,6 +145,33 @@ function donePageInit() {
         setDivTextFromForm("server.username", null);
     }
     setDivTextFromForm("newsServer.name", newsServerName);
+
+    var isPop = false;
+    if (pageData.server && pageData.server.servertype) {
+      isPop = (pageData.server.servertype.value == "pop3");
+    }
+
+    hideShowDownloadMsgsUI(isPop);
+}
+
+function hideShowDownloadMsgsUI(isPop)
+{
+  // only show the "download messages now" UI
+  // if this is a pop account, we are online, and this was opened
+  // from the 3 pane
+  var downloadMsgs = document.getElementById("downloadMsgs");
+  if (isPop) {
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    if (!ioService.offline) {
+      if ((window.opener.location.href == "chrome://messenger/content/messenger.xul") || (window.opener.location.href == "chrome://messenger/content/mail3PaneWindowVertLayout.xul")) {
+        downloadMsgs.hidden = false;
+        return;
+      }
+    }
+  }
+ 
+  // else hide it
+  downloadMsgs.hidden = true;
 }
 
 function setDivTextFromForm(divid, value) {

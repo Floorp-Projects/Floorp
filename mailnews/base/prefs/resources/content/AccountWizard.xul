@@ -257,7 +257,7 @@ Rights Reserved.
       </grid>
       <separator/>
       <hbox id="downloadMsgsBox">
-        <checkbox id="downloadMsgs" label="&downloadOnLogin.label;" checked="true"/>
+        <checkbox id="downloadMsgs" hidden="true" label="&downloadOnLogin.label;" checked="true"/>
       </hbox>
       <spacer flex="1"/>
       <description>&clickFinish.label;</description>
