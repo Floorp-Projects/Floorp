@@ -9,7 +9,7 @@ var gLdapService = null;
 
 function Startup()
 {
-  if ( window.arguments && window.arguments[0] ) {
+  if ( "arguments" in window && window.arguments[0] ) {
     gCurrentDirectory = window.arguments[0].selectedDirectory;
     gCurrentDirectoryString = window.arguments[0].selectedDirectoryString;
     fillSettings();
