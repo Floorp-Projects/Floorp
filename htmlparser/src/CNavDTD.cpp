@@ -616,6 +616,15 @@ PRInt32 CNavDTD::HandleEndToken(CToken* aToken) {
       }
       break;
 
+    case eHTMLTag_td:
+    case eHTMLTag_th:
+      result=CloseContainersTo(tokenTagType,PR_TRUE); 
+      // Empty the transient style stack (we just closed any extra
+      // ones off so it's safe to do it now) because they don't carry
+      // forward across table cell boundaries.
+      mStyleStackPos = 0;
+      break;
+
     default:
       if(IsContainer(tokenTagType)){
         result=CloseContainersTo(tokenTagType,PR_TRUE); 
