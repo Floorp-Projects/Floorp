@@ -53,6 +53,7 @@ protected:
     nsCString   *mAppVersion;
     nsCString   *mAppLanguage;
     nsCString   *mAppPlatform;
+    PRBool      mOffline;
 };
 
 #endif // nsIOService_h__
