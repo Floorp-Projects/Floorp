@@ -32,6 +32,7 @@
 #include "nsIMonument.h"
 #include "nsIBoxLayout.h"
 #include "nsMonumentLayout.h"
+#include "nsTempleLayout.h"
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
@@ -117,6 +118,7 @@ nsXULTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         nsTempleLayout* temple = nsnull;
         nsIBox* templeBox = nsnull;
         mon->GetOtherTemple(box, &temple, &templeBox);
+        NS_IF_RELEASE(temple);
         
         nsMonumentIterator iter(templeBox);
         nsIBox* child = nsnull;
