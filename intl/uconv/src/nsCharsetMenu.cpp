@@ -854,12 +854,12 @@ nsresult nsCharsetMenu::AddFromPrefsToMenu(
 {
   nsresult res = NS_OK;
 
-  char * value = NULL;
-  res = aPref->CopyCharPref(aKey, &value);
+  PRUnichar * value = NULL;
+  res = aPref->GetLocalizedUnicharPref(aKey, &value);
   if (NS_FAILED(res)) return res;
 
   if (value != NULL) {
-    res = AddFromStringToMenu(value, aRDFServ, aCCMan, aArray, aContainer, 
+    res = AddFromStringToMenu(NS_ConvertUCS2toUTF8(value), aRDFServ, aCCMan, aArray, aContainer, 
       aDecs, aIDPrefix);
     nsMemory::Free(value);
   }
