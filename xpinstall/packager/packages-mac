@@ -252,7 +252,7 @@ viewer:chrome:pipnss.jar
 ; all the pref files must be part of base
 ; to prevent migration bugs
 viewer:defaults:pref:*
-viewer:defaults:autoconfig:prefcalls.js
+viewer:defaults:autoconfig:*
 viewer:res:arrow.gif
 viewer:res:loading-image.gif
 viewer:res:broken-image.gif

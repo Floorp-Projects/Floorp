@@ -215,7 +215,7 @@ bin\chrome\chromelist.txt
 ; all the pref files must be part of base
 ; to prevent migration bugs
 bin\defaults\pref\*
-bin\defaults\autoconfig\prefcalls.js
+bin\defaults\autoconfig\*
 bin\res\ua.css
 bin\res\html.css
 bin\res\quirk.css
