@@ -1,27 +1,31 @@
 box#sidebarbox
 {
-  height: 200px; 
   width: 200px;
+  min-width: 10px;
 }
 
 splitter#sidebarsplitter
-  border: 1px solid outset
+{
+  border: 1px solid outset;
 }
 
-box#sidebarbox[hidden="true"] {
-  display: none
+box#sidebarbox[hidden="true"]
+{
+  display: none;
 }
 
-splitter#sidebarsplitter[hidden="true"] {
-  display: none
+splitter#sidebarsplitter[hidden="true"]
+{
+  display: none;
 }
 
 box#sidebarpanels
 {
-  overflow: auto
+  overflow: auto;
 }
 
-iframe.panelframe {
+iframe.panelframe 
+{
   width:  100px;
   height: 125px;
   border: 0px;
