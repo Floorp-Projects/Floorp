@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.14 2002/08/08 01:55:34 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.15 2002/08/24 00:46:21 jpierre%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -467,7 +467,7 @@ CERT_DecodeDERCrlEx(PRArenaPool *narena, SECItem *derSignedCrl, int type,
 	break;
 
     case SEC_KRL_TYPE:
-	rv = SEC_ASN1DecodeItem
+	rv = SEC_QuickDERDecodeItem
 	     (arena, crl, cert_SignedKrlTemplate, derSignedCrl);
 	break;
     default:

@@ -34,7 +34,7 @@
 /*
  * Support for various policy related extensions
  *
- * $Id: polcyxtn.c,v 1.1 2000/03/31 19:42:44 relyea%netscape.com Exp $
+ * $Id: polcyxtn.c,v 1.2 2002/08/24 00:46:35 jpierre%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -157,7 +157,7 @@ CERT_DecodeCertificatePoliciesExtension(SECItem *extnValue)
     policies->arena = arena;
 
     /* decode the policy info */
-    rv = SEC_ASN1DecodeItem(arena, policies, CERT_CertificatePoliciesTemplate,
+    rv = SEC_QuickDERDecodeItem(arena, policies, CERT_CertificatePoliciesTemplate,
 			    extnValue);
 
     if ( rv != SECSuccess ) {
@@ -224,7 +224,7 @@ CERT_DecodeUserNotice(SECItem *noticeItem)
     userNotice->arena = arena;
 
     /* decode the user notice */
-    rv = SEC_ASN1DecodeItem(arena, userNotice, CERT_UserNoticeTemplate, 
+    rv = SEC_QuickDERDecodeItem(arena, userNotice, CERT_UserNoticeTemplate, 
 			    noticeItem);
 
     if ( rv != SECSuccess ) {
@@ -250,7 +250,7 @@ CERT_DecodeUserNotice(SECItem *noticeItem)
 				userNotice->derNoticeReference.len);
 
 	/* OK, no decode it */
-    	rv = SEC_ASN1DecodeItem(arena, &userNotice->noticeReference, 
+    	rv = SEC_QuickDERDecodeItem(arena, &userNotice->noticeReference, 
 	    CERT_NoticeReferenceTemplate, &tmpbuf);
 
 	PORT_Free(tmpbuf.data); tmpbuf.data = NULL;
@@ -468,7 +468,7 @@ CERT_DecodeOidSequence(SECItem *seqItem)
     oidSeq->arena = arena;
 
     /* decode the user notice */
-    rv = SEC_ASN1DecodeItem(arena, oidSeq, CERT_OidSeqTemplate, seqItem);
+    rv = SEC_QuickDERDecodeItem(arena, oidSeq, CERT_OidSeqTemplate, seqItem);
 
     if ( rv != SECSuccess ) {
 	goto loser;

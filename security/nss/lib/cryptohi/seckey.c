@@ -921,7 +921,7 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
       case SEC_OID_PKCS1_RSA_ENCRYPTION:
 	pubk->keyType = rsaKey;
 	prepare_rsa_pub_key_for_asn1(pubk);
-	rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_RSAPublicKeyTemplate, &os);
+	rv = SEC_QuickDERDecodeItem(arena, pubk, SECKEY_RSAPublicKeyTemplate, &os);
 	if (rv == SECSuccess)
 	    return pubk;
 	break;
@@ -929,7 +929,7 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
       case SEC_OID_SDN702_DSA_SIGNATURE:
 	pubk->keyType = dsaKey;
 	prepare_dsa_pub_key_for_asn1(pubk);
-	rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_DSAPublicKeyTemplate, &os);
+	rv = SEC_QuickDERDecodeItem(arena, pubk, SECKEY_DSAPublicKeyTemplate, &os);
 	if (rv != SECSuccess) break;
 
         rv = SECKEY_DSADecodePQG(arena, pubk,
@@ -940,10 +940,10 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
       case SEC_OID_X942_DIFFIE_HELMAN_KEY:
 	pubk->keyType = dhKey;
 	prepare_dh_pub_key_for_asn1(pubk);
-	rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_DHPublicKeyTemplate, &os);
+	rv = SEC_QuickDERDecodeItem(arena, pubk, SECKEY_DHPublicKeyTemplate, &os);
 	if (rv != SECSuccess) break;
 
-        rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_DHParamKeyTemplate,
+        rv = SEC_QuickDERDecodeItem(arena, pubk, SECKEY_DHParamKeyTemplate,
                                  &spki->algorithm.parameters); 
 
 	if (rv == SECSuccess) return pubk;
@@ -963,12 +963,12 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
 	pubk->keyType = keaKey;
 
 	prepare_kea_pub_key_for_asn1(pubk);
-        rv = SEC_ASN1DecodeItem(arena, pubk,
+        rv = SEC_QuickDERDecodeItem(arena, pubk,
                                 SECKEY_KEAPublicKeyTemplate, &os);
         if (rv != SECSuccess) break;
 
 
-        rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_KEAParamsTemplate,
+        rv = SEC_QuickDERDecodeItem(arena, pubk, SECKEY_KEAParamsTemplate,
                         &spki->algorithm.parameters);
 
 	if (rv == SECSuccess)
@@ -982,7 +982,7 @@ seckey_ExtractPublicKey(CERTSubjectPublicKeyInfo *spki)
         rv = SECITEM_CopyItem(arena,&pubk->u.kea.publicValue,&os);
         if (rv != SECSuccess) break;
  
-        rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_KEAParamsTemplate,
+        rv = SEC_QuickDERDecodeItem(arena, pubk, SECKEY_KEAParamsTemplate,
                         &spki->algorithm.parameters);
 
 	if (rv == SECSuccess)
@@ -1443,7 +1443,7 @@ SECKEY_DecodeDERPublicKey(SECItem *pubkder)
 	pubk->pkcs11Slot = NULL;
 	pubk->pkcs11ID = 0;
 	prepare_rsa_pub_key_for_asn1(pubk);
-	rv = SEC_ASN1DecodeItem(arena, pubk, SECKEY_RSAPublicKeyTemplate,
+	rv = SEC_QuickDERDecodeItem(arena, pubk, SECKEY_RSAPublicKeyTemplate,
 				pubkder);
 	if (rv == SECSuccess)
 	    return pubk;
@@ -1516,7 +1516,7 @@ SECKEY_DecodeDERSubjectPublicKeyInfo(SECItem *spkider)
 		PORT_ArenaZAlloc(arena, sizeof (CERTSubjectPublicKeyInfo));
     if (spki != NULL) {
 	spki->arena = arena;
-	rv = SEC_ASN1DecodeItem(arena,spki,
+	rv = SEC_QuickDERDecodeItem(arena,spki,
 				CERT_SubjectPublicKeyInfoTemplate,spkider);
 	if (rv == SECSuccess)
 	    return spki;
@@ -1583,14 +1583,14 @@ SECKEY_ConvertAndDecodePublicKeyAndChallenge(char *pkacstr, char *challenge,
 
     /* decode the outer wrapping of signed data */
     PORT_Memset(&sd, 0, sizeof(CERTSignedData));
-    rv = SEC_ASN1DecodeItem(arena, &sd, CERT_SignedDataTemplate, &signedItem );
+    rv = SEC_QuickDERDecodeItem(arena, &sd, CERT_SignedDataTemplate, &signedItem );
     if ( rv ) {
 	goto loser;
     }
 
     /* decode the public key and challenge wrapper */
     PORT_Memset(&pkac, 0, sizeof(CERTPublicKeyAndChallenge));
-    rv = SEC_ASN1DecodeItem(arena, &pkac, CERT_PublicKeyAndChallengeTemplate, 
+    rv = SEC_QuickDERDecodeItem(arena, &pkac, CERT_PublicKeyAndChallengeTemplate, 
 			    &sd.data);
     if ( rv ) {
 	goto loser;

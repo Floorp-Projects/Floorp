@@ -332,7 +332,7 @@ FORT_GetSWFile(SECItem *initBits)
     if (sw_init_file == NULL) goto fail;
 
     /* ANS1 decode the complete init file */
-    rv = SEC_ASN1DecodeItem(arena,sw_init_file,fortSwFortezzaInitFile,initBits);
+    rv = SEC_QuickDERDecodeItem(arena,sw_init_file,fortSwFortezzaInitFile,initBits);
     if (rv != SECSuccess) {
 	goto fail;
     }

@@ -397,7 +397,7 @@ CERT_FindBitStringExtension (CERTCertExtension **extensions, int tag,
 	goto loser;
     }
 
-    rv = SEC_ASN1DecodeItem(arena, &tmpItem, SEC_BitStringTemplate, 
+    rv = SEC_QuickDERDecodeItem(arena, &tmpItem, SEC_BitStringTemplate, 
 			    &wrapperItem);
 
     if ( rv != SECSuccess ) {

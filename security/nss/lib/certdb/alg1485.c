@@ -776,7 +776,7 @@ CERT_DerNameToAscii(SECItem *dername)
 	goto loser;
     }
     
-    rv = SEC_ASN1DecodeItem(arena, &name, CERT_NameTemplate, dername);
+    rv = SEC_QuickDERDecodeItem(arena, &name, CERT_NameTemplate, dername);
     
     if ( rv != SECSuccess ) {
 	goto loser;

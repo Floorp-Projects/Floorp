@@ -35,7 +35,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.11 2002/08/04 02:50:40 jpierre%netscape.com Exp $
+ * $Id: ocsp.c,v 1.12 2002/08/24 00:47:30 jpierre%netscape.com Exp $
  */
 
 #include "prerror.h"
@@ -572,7 +572,7 @@ CERT_DecodeOCSPRequest(SECItem *src)
     }
     dest->arena = arena;
 
-    rv = SEC_ASN1DecodeItem(arena, dest, ocsp_OCSPRequestTemplate, src);
+    rv = SEC_QuickDERDecodeItem(arena, dest, ocsp_OCSPRequestTemplate, src);
     if (rv != SECSuccess) {
 	if (PORT_GetError() == SEC_ERROR_BAD_DER)
 	    PORT_SetError(SEC_ERROR_OCSP_MALFORMED_REQUEST);
@@ -1304,7 +1304,7 @@ ocsp_DecodeBasicOCSPResponse(PRArenaPool *arena, SECItem *src)
 	goto loser;
     }
 
-    rv = SEC_ASN1DecodeItem(arena, basicResponse,
+    rv = SEC_QuickDERDecodeItem(arena, basicResponse,
 			    ocsp_BasicOCSPResponseTemplate, src);
     if (rv != SECSuccess) {
 	if (PORT_GetError() == SEC_ERROR_BAD_DER)
@@ -1333,7 +1333,7 @@ ocsp_DecodeBasicOCSPResponse(PRArenaPool *arena, SECItem *src)
     if (responderID == NULL) {
 	goto loser;
     }
-    rv = SEC_ASN1DecodeItem(arena, responderID, responderIDTemplate,
+    rv = SEC_QuickDERDecodeItem(arena, responderID, responderIDTemplate,
 			    &responseData->derResponderID);
     if (rv != SECSuccess) {
 	if (PORT_GetError() == SEC_ERROR_BAD_DER)
@@ -1433,7 +1433,7 @@ CERT_DecodeOCSPResponse(SECItem *src)
     }
     response->arena = arena;
 
-    rv = SEC_ASN1DecodeItem(arena, response, ocsp_OCSPResponseTemplate, src);
+    rv = SEC_QuickDERDecodeItem(arena, response, ocsp_OCSPResponseTemplate, src);
     if (rv != SECSuccess) {
 	if (PORT_GetError() == SEC_ERROR_BAD_DER)
 	    PORT_SetError(SEC_ERROR_OCSP_MALFORMED_RESPONSE);

@@ -155,7 +155,7 @@ CERT_DecodeCRLDistributionPoints (PRArenaPool *arena, SECItem *encodedValue)
 	    break;
 	}
 	    
-	rv = SEC_ASN1DecodeItem
+	rv = SEC_QuickDERDecodeItem
 	     (arena, &value->distPoints, CERTCRLDistributionPointsTemplate,
 	      encodedValue);
 	if (rv != SECSuccess)
@@ -173,7 +173,7 @@ CERT_DecodeCRLDistributionPoints (PRArenaPool *arena, SECItem *encodedValue)
 		    SECItem innerDER;
 		
 		    innerDER.data = NULL;
-		    rv = SEC_ASN1DecodeItem
+		    rv = SEC_QuickDERDecodeItem
 			 (arena, point, FullNameTemplate, &(point->derDistPoint));
 		    if (rv != SECSuccess)
 			break;
@@ -184,7 +184,7 @@ CERT_DecodeCRLDistributionPoints (PRArenaPool *arena, SECItem *encodedValue)
 			break;
 		}
 		else if ( relativeDistinguishedName) {
-		    rv = SEC_ASN1DecodeItem
+		    rv = SEC_QuickDERDecodeItem
 			 (arena, point, RelativeNameTemplate, &(point->derDistPoint));
 		    if (rv != SECSuccess)
 			break;
