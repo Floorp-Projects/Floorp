@@ -418,6 +418,96 @@ nsWindow::~nsWindow()
 
 //-------------------------------------------------------------------------
 //
+// Utility method for implementing both Create(nsIWidget ...) and
+// Create(nsNativeWidget...)
+//-------------------------------------------------------------------------
+
+nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData,
+                      nsNativeWidget aNativeParent)
+{
+    
+    BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
+       aAppShell, aToolkit, aInitData);
+
+      // See if the caller wants to explictly set clip children
+    DWORD style = WindowStyle();
+    if (nsnull != aInitData) {
+      if (aInitData->clipChildren) {
+        style |= WS_CLIPCHILDREN;
+      } else {
+        style &= ~WS_CLIPCHILDREN;
+      }
+    }
+
+    // Switch to the "main gui thread" if necessary... This method must
+    // be executed on the "gui thread"...
+    //
+  
+    nsToolkit* toolkit = (nsToolkit *)mToolkit;
+    if (! toolkit->IsGuiThread()) {
+        DWORD args[5];
+        args[0] = (DWORD)aParent;
+        args[1] = (DWORD)&aRect;
+        args[2] = (DWORD)aHandleEventFunction;
+        args[3] = (DWORD)aContext;
+        args[4] = (DWORD)aToolkit;
+        args[5] = (DWORD)aInitData;
+
+        if (nsnull != aParent) {
+           // nsIWidget parent dispatch
+          MethodInfo info(this, nsWindow::CREATE, 6, args);
+          toolkit->CallMethod(&info);
+           return NS_OK;
+        }
+        else {
+            // Native parent dispatch
+          MethodInfo info(this, nsWindow::CREATE_NATIVE, 5, args);
+          toolkit->CallMethod(&info);
+          return NS_OK;
+        }
+    }
+ 
+    HWND parent;
+    if (nsnull != aParent) {
+       // has a nsIWidget parent
+      parent = ((aParent) ? (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW) : nsnull);
+       aParent->AddChild(this);
+    }
+    else {
+        // has a nsNative parent
+       parent = aNativeParent;
+    }
+
+    mWnd = ::CreateWindowEx(WindowExStyle(),
+                            WindowClass(),
+                            "",
+                            style,
+                            aRect.x,
+                            aRect.y,
+                            aRect.width,
+                            GetHeight(aRect.height),
+                            parent,
+                            NULL,
+                            nsToolkit::mDllInstance,
+                            NULL);
+   
+    VERIFY(mWnd);
+
+    // call the event callback to notify about creation
+
+    DispatchStandardEvent(NS_CREATE);
+    SubclassWindow(TRUE);
+    return(NS_OK);
+}
+
+//-------------------------------------------------------------------------
+//
 // Create the proper widget
 //
 //-------------------------------------------------------------------------
@@ -429,63 +519,9 @@ NS_METHOD nsWindow::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-    BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
-       aAppShell, aToolkit, aInitData);
-
-    //
-    // Switch to the "main gui thread" if necessary... This method must
-    // be executed on the "gui thread"...
-    //
-    nsToolkit* toolkit = (nsToolkit *)mToolkit;
-    if (! toolkit->IsGuiThread()) {
-        DWORD args[5];
-        args[0] = (DWORD)aParent;
-        args[1] = (DWORD)&aRect;
-        args[2] = (DWORD)aHandleEventFunction;
-        args[3] = (DWORD)aContext;
-        args[4] = (DWORD)aToolkit;
-        args[5] = (DWORD)aInitData;
-        MethodInfo info(this, nsWindow::CREATE, 6, args);
-        toolkit->CallMethod(&info);
-        return NS_OK;
-    }
-
-
-    // See if the caller wants to explictly set clip children
-    DWORD style = WindowStyle();
-    if (nsnull != aInitData) {
-      if (aInitData->clipChildren) {
-        style |= WS_CLIPCHILDREN;
-      } else {
-        style &= ~WS_CLIPCHILDREN;
-      }
-    }
-
-    mWnd = ::CreateWindowEx(WindowExStyle(),
-                            WindowClass(),
-                            "",
-                            style,
-                            aRect.x,
-                            aRect.y,
-                            aRect.width,
-                            GetHeight(aRect.height),
-                            (aParent) ? (HWND)aParent->GetNativeData(NS_NATIVE_WINDOW):
-                                        (HWND)NULL,
-                            NULL,
-                            nsToolkit::mDllInstance,
-                            NULL);
-    
-    if (aParent) {
-        aParent->AddChild(this);
-    }
-
-    VERIFY(mWnd);
-
-    // call the event callback to notify about creation
-
-    DispatchStandardEvent(NS_CREATE);
-    SubclassWindow(TRUE);
-    return NS_OK;
+    return(StandardWindowCreate(aParent, aRect, aHandleEventFunction,
+                         aContext, aAppShell, aToolkit, aInitData,
+                         nsnull));
 }
 
 
@@ -494,6 +530,7 @@ NS_METHOD nsWindow::Create(nsIWidget *aParent,
 // create with a native parent
 //
 //-------------------------------------------------------------------------
+
 NS_METHOD nsWindow::Create(nsNativeWidget aParent,
                          const nsRect &aRect,
                          EVENT_CALLBACK aHandleEventFunction,
@@ -502,57 +539,11 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
                          nsIToolkit *aToolkit,
                          nsWidgetInitData *aInitData)
 {
-    BaseCreate(nsnull, aRect, aHandleEventFunction, aContext, 
-               aAppShell, aToolkit, aInitData);
-   
-    //
-    // Switch to the "main gui thread" if necessary... This method must
-    // be executed on the "gui thread"...
-    //
-    nsToolkit* toolkit = (nsToolkit *)mToolkit;
-    if (!toolkit->IsGuiThread()) {
-        DWORD args[5];
-        args[0] = (DWORD)aParent;
-        args[1] = (DWORD)&aRect;
-        args[2] = (DWORD)aHandleEventFunction;
-        args[3] = (DWORD)aContext;
-        args[4] = (DWORD)aToolkit;
-        args[5] = (DWORD)aInitData;
-        MethodInfo info(this, nsWindow::CREATE_NATIVE, 5, args);
-        toolkit->CallMethod(&info);
-        return NS_OK;
-    }
-
-    // See if the caller wants to explictly set clip children
-    DWORD style = WindowStyle();
-    if (nsnull != aInitData) {
-      if (aInitData->clipChildren) {
-        style |= WS_CLIPCHILDREN;
-      } else {
-        style &= ~WS_CLIPCHILDREN;
-      }
-    }
-
-    mWnd = ::CreateWindowEx(WindowExStyle(),
-                            WindowClass(),
-                            "",
-                            style,
-                            aRect.x,
-                            aRect.y,
-                            aRect.width,
-                            GetHeight(aRect.height),
-                            (HWND)aParent,
-                            NULL,
-                            nsToolkit::mDllInstance,
-                            NULL);
-    
-    VERIFY(mWnd);
-
-    // call the event callback to notify about creation
-    DispatchStandardEvent(NS_CREATE);
-    SubclassWindow(TRUE);
-    return NS_OK;
+    return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
+                         aContext, aAppShell, aToolkit, aInitData,
+                         aParent));
 }
+
 
 //-------------------------------------------------------------------------
 //
