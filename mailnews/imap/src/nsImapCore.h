@@ -65,6 +65,7 @@ typedef PRUint16 imapMessageFlagsType;
 #define kOnlineHierarchySeparatorNil '|'
 
 #define IMAP_URL_TOKEN_SEPARATOR ">"
+#define kUidUnknown -1
 
 // I think this should really go in an imap.h equivalent file
 typedef enum {

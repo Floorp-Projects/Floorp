@@ -783,11 +783,14 @@ void nsImapProtocol::ProcessSelectedStateURL()
 	nsIImapUrl::nsImapAction imapAction; 
 	PRBool					bMessageIdsAreUids = PR_TRUE;
 	imapMessageFlagsType	msgFlags = 0;
+	const char					*hostName = nsnull;
+	nsString2				urlHost(eOneByte);
 
 	// this can't fail, can it?
 	nsresult res = m_runningUrl->GetImapAction(&imapAction);
 	m_runningUrl->MessageIdsAreUids(&bMessageIdsAreUids);
 	m_runningUrl->GetMsgFlags(&msgFlags);
+	m_runningUrl->GetHost(&hostName);
 
 	res = m_runningUrl->CreateServerSourceFolderPathString(&mailboxName);
     if (mailboxName && NS_SUCCEEDED(res))
@@ -849,26 +852,20 @@ void nsImapProtocol::ProcessSelectedStateURL()
 //			RefreshACLForFolderIfNecessary(mailboxName);
 		}
         
-        PRBool uidValidityOk = TRUE;
+        PRBool uidValidityOk = PR_TRUE;
         if (GetServerStateParser().LastCommandSuccessful() && selectIssued && 
            (imapAction != nsIImapUrl::nsImapSelectFolder) && (imapAction != nsIImapUrl::nsImapLiteSelectFolder))
         {
-#ifdef HAVE_PORT
         	uid_validity_info *uidStruct = (uid_validity_info *) PR_Malloc(sizeof(uid_validity_info));
         	if (uidStruct)
         	{
         		uidStruct->returnValidity = kUidUnknown;
-				uidStruct->hostName = m_runningUrl->GetUrlHost();
-        		uidStruct->canonical_boxname = m_runningUrl->CreateCanonicalSourceFolderPathString();
-			    TImapFEEvent *endEvent = 
-			        new TImapFEEvent(GetStoredUIDValidity,    // function to call
-			                        this,                     // access to current entry/context
-			                        (void *) uidStruct,
-									FALSE);       // retain storage ownership here
+				uidStruct->hostName = hostName;
+        		m_runningUrl->CreateCanonicalSourceFolderPathString(&uidStruct->canonical_boxname);
+				if (m_imapMiscellaneous)
+				{
+					m_imapMiscellaneous->GetStoredUIDValidity(this, uidStruct);
 
-			    if (endEvent)
-			    {
-			        fFEEventQueue->AdoptEventToEnd(endEvent);
 			        WaitForFEEventCompletion();
 			        
 			        // error on the side of caution, if the fe event fails to set uidStruct->returnValidity, then assume that UIDVALIDITY
@@ -884,7 +881,6 @@ void nsImapProtocol::ProcessSelectedStateURL()
         	}
         	else
         		HandleMemoryFailure();
-#endif
         }
             
         if (GetServerStateParser().LastCommandSuccessful() && !DeathSignalReceived() && (uidValidityOk || imapAction == nsIImapUrl::nsImapDeleteAllMsgs))
@@ -1385,6 +1381,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
     }
     else if (!DeathSignalReceived())
         HandleMemoryFailure();
+
 }
 
 void nsImapProtocol::AutoSubscribeToMailboxIfNecessary(const char *mailboxName)
@@ -2470,6 +2467,7 @@ PRBool	nsImapProtocol::GetShowAttachmentsInline()
     }
     return PR_FALSE;
 }
+
 
 PRMonitor *nsImapProtocol::GetDataMemberMonitor()
 {
