@@ -213,7 +213,7 @@ SampleFactoryImpl::CreateInstance(nsISupports *aOuter,
      * sets the pointer to null.  This macro should be
      * used instead of a direct |inst->Release()| call since
      * the macro records tracing information if
-     * MOZ_TRACE_XPCOM_REFCNT is defined.
+     * NS_BUILD_REFCNT_LOGGING is defined.
      */
     NS_IF_RELEASE(inst);
     return rv;
