@@ -54,11 +54,8 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE : (emoticonsAndStructs.label) 'Emoticons' are also known as 'Smileys', e.g. :-)   -->
 <!ENTITY convertEmoticons.label           "Display emoticons as graphics.">
 <!ENTITY convertEmoticons.accesskey       "c">
-<!ENTITY convertStructs.label             "Display structured phrases as HTML styles.">
-<!ENTITY convertStructs.accesskey         "s">
 
 <!-- Tooltips  -->  
 <!ENTITY convertEmoticons.tooltip "Convert Emoticons">  
-<!ENTITY convertStructs.tooltip "Convert Structs">  
 
 

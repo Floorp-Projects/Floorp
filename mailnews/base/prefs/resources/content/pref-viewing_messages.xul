@@ -15,7 +15,7 @@
 
   <script language="javascript">
   <![CDATA[
-    _elementIDs = ["mailFixedWidthMessages", "mailQuotedStyle", "mailQuotedSize", "wrapLongLines", "displayGlyph", "displayStruct", "mailCitationColor", "sendDefaultCharsetList", "forceCharsetOverride"];
+    _elementIDs = ["mailFixedWidthMessages", "mailQuotedStyle", "mailQuotedSize", "wrapLongLines", "displayGlyph", "mailCitationColor", "sendDefaultCharsetList", "forceCharsetOverride"];
 
     function Startup()
     {
@@ -115,9 +115,6 @@
       <checkbox class="iconic" id="displayGlyph" value="&convertEmoticons.label;" accesskey="&convertEmoticons.accesskey;"
                 pref="true" preftype="bool" prefstring="mail.display_glyph"
                 prefattribute="checked" tooltip="aTooltip" tooltiptext="&convertEmoticons.tooltip;"/>		
-      <checkbox id="displayStruct" value="&convertStructs.label;" accesskey="&convertStructs.accesskey;" 
-                pref="true" preftype="bool" prefstring="mail.display_struct"
-                prefattribute="checked" tooltip="aTooltip" tooltiptext="&convertStructs.tooltip;"/>
     </box>
   </titledbox>
 
