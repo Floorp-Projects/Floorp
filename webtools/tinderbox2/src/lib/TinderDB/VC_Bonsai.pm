@@ -90,7 +90,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.5 $ )[1];
+$VERSION = ( qw $Revision: 1.6 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -171,7 +171,7 @@ sub find_last_data {
 sub apply_db_updates {
   my ($self, $tree,) = @_;
 
-  my ($tree_state) = TinderHeader::gettree_header('TreeState', $tree);
+  my ($new_tree_state) = TinderHeader::gettree_header('TreeState', $tree);
   my ($last_tree_data, $second2last_tree_data, $last_cvs_data) = 
     find_last_data($tree);
 
@@ -402,7 +402,8 @@ sub status_table_row {
 
     my ($vc_info);
     foreach $key ('module','branch',) {
-      $vc_info .= "$key: $TreeData::VC_TREE{$tree}{$key} <br>\n";
+      my ($value) = $TreeData::VC_TREE{$tree}{$key};
+      $vc_info .= "$key: $value <br>\n";
     }
 
     # define a table, to show what was checked in for each author
