@@ -597,6 +597,11 @@
       <property name="editorShell"
                 readonly="true"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).editorShell"/>
+      <property name="webNavigation"
+                onget="return this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);"
+                readonly="true"/>
+      <property name="contentDocument" readonly="true"
+                onget="return this.webNavigation.document;"/>
     </implementation>
   </binding>
 
@@ -605,6 +610,11 @@
       <property name="docShell"
                 readonly="true"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIIFrameBoxObject).docShell"/>
+      <property name="webNavigation"
+                onget="return this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);"
+                readonly="true"/>
+      <property name="contentDocument" readonly="true"
+                onget="return this.webNavigation.document;"/>
     </implementation>
   </binding>
 
