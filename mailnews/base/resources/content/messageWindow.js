@@ -489,6 +489,11 @@ var MessageWindowController =
 					gDBView.getCommandStatus(nsMsgViewCommandType.deleteMsg, enabled, checkStatus);
 					return enabled.value;
 				}
+      case "cmd_canHaveFilter":
+        var loadedFolder = GetLoadedMsgFolder();
+        if (!(loadedFolder && loadedFolder.server.canHaveFilters))
+          return false;
+
 			case "cmd_reply":
 			case "button_reply":
 			case "cmd_replySender":
@@ -500,11 +505,6 @@ var MessageWindowController =
 			case "cmd_forwardInline":
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
-      case "cmd_canHaveFilter":
-        var loadedFolder = GetLoadedMsgFolder();
-        if (!(loadedFolder && loadedFolder.server.canHaveFilters))
-          return false;
-
 			case "button_delete":
 			case "cmd_shiftDelete":
 			case "cmd_print":

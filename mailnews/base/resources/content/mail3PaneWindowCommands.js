@@ -247,6 +247,11 @@ var DefaultController =
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
 			case "cmd_markAsFlagged":
+      case "cmd_label1":
+      case "cmd_label2":
+      case "cmd_label3":
+      case "cmd_label4":
+      case "cmd_label5":
       case "button_file":
 			case "cmd_file":
 			case "cmd_emptyTrash":
@@ -320,6 +325,10 @@ var DefaultController =
         if ((GetNumSelectedMessages() == 1) && gDBView)
           gDBView.getCommandStatus(nsMsgViewCommandType.toggleThreadWatched, enabled, checkStatus);
         return enabled.value;
+      case "cmd_canHaveFilter":
+        var loadedFolder = GetLoadedMsgFolder();
+        if (!(loadedFolder && loadedFolder.server.canHaveFilters) || !(IsMessageDisplayedInMessagePane()))
+          return false;
       case "cmd_reply":
       case "button_reply":
       case "cmd_replySender":
@@ -331,10 +340,6 @@ var DefaultController =
       case "cmd_forwardInline":
       case "cmd_forwardAttachment":
       case "cmd_editAsNew":
-      case "cmd_canHaveFilter":
-        var loadedFolder = GetLoadedMsgFolder();
-        if (!(loadedFolder && loadedFolder.server.canHaveFilters) || !(IsMessageDisplayedInMessagePane()))
-          return false;
       case "cmd_openMessage":
       case "button_print":
       case "cmd_print":
@@ -357,6 +362,11 @@ var DefaultController =
       case "cmd_markAsFlagged":
       case "button_file":
       case "cmd_file":
+      case "cmd_label1":
+      case "cmd_label2":
+      case "cmd_label3":
+      case "cmd_label4":
+      case "cmd_label5":
         return ( GetNumSelectedMessages() > 0 );
       case "cmd_editDraft":
                 return (gIsEditableMsgFolder && (GetNumSelectedMessages() > 0));
@@ -601,6 +611,21 @@ var DefaultController =
 			case "cmd_markAsFlagged":
 				MsgMarkAsFlagged(null);
 				return;
+      case "cmd_label1":
+        gDBView.doCommand(nsMsgViewCommandType.label1);
+        return; 
+      case "cmd_label2":
+        gDBView.doCommand(nsMsgViewCommandType.label2);
+        return; 
+      case "cmd_label3":
+        gDBView.doCommand(nsMsgViewCommandType.label3);
+        return; 
+      case "cmd_label4":
+        gDBView.doCommand(nsMsgViewCommandType.label4);
+        return; 
+      case "cmd_label5":
+        gDBView.doCommand(nsMsgViewCommandType.label5);
+        return; 
 			case "cmd_emptyTrash":
 				MsgEmptyTrash();
 				return;

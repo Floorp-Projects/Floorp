@@ -48,6 +48,8 @@ Rights Reserved.
   <splitter class="tree-splitter"/>
   <outlinercol id="priorityCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&priorityColumn.label;"/>
   <splitter class="tree-splitter"/>
+  <outlinercol id="labelCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&labelColumn.label;"/>
+  <splitter class="tree-splitter"/>
   <outlinercol id="unreadCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&unreadColumn.label;"/>
   <splitter class="tree-splitter"/>
   <outlinercol id="totalCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&totalColumn.label;"/>

@@ -233,6 +233,18 @@ Rights Reserved.
     <command id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.preventBubble()" disabled="true"/>
 </commandset>
 
+<commandset id="mailLabelMenuItems"
+              commandupdater="true"
+              events="create-menu-label"
+              oncommandupdate="goUpdateMailMenuItems(this)">
+
+    <command id="cmd_label1" oncommand="goDoCommand('cmd_label1');" disabled="true"/>
+    <command id="cmd_label2" oncommand="goDoCommand('cmd_label2');" disabled="true"/>
+    <command id="cmd_label3" oncommand="goDoCommand('cmd_label3');" disabled="true"/>
+    <command id="cmd_label4" oncommand="goDoCommand('cmd_label4');" disabled="true"/>
+    <command id="cmd_label5" oncommand="goDoCommand('cmd_label5');" disabled="true"/>
+</commandset>
+
 <broadcasterset id="mailBroadcasters">
   <!-- File Menu -->
   <broadcaster id="Communicator:WorkMode"/>
@@ -1198,6 +1210,16 @@ Rights Reserved.
           </menupopup>
         </rule>
       </template>
+    </menu>
+    <menuseparator/>
+    <menu label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
+      <menupopup onpopupshowing="InitMessageLabel()">
+        <menuitem type="checkbox" id="labelMenuItem1" label="&labelCmd1.label;" accesskey="&labelCmd1.accesskey;" observes="cmd_label1"/>
+        <menuitem type="checkbox" id="labelMenuItem2" label="&labelCmd2.label;" accesskey="&labelCmd2.accesskey;" observes="cmd_label2"/>
+        <menuitem type="checkbox" id="labelMenuItem3" label="&labelCmd3.label;" accesskey="&labelCmd3.accesskey;" observes="cmd_label3"/>
+        <menuitem type="checkbox" id="labelMenuItem4" label="&labelCmd4.label;" accesskey="&labelCmd4.accesskey;" observes="cmd_label4"/>
+        <menuitem type="checkbox" id="labelMenuItem5" label="&labelCmd5.label;" accesskey="&labelCmd5.accesskey;" observes="cmd_label5"/>
+      </menupopup>
     </menu>
     <menuseparator/>
     <menu label="&markMenu.label;" accesskey="&markMenu.accesskey;">

@@ -86,6 +86,7 @@ Rights Reserved.
     <commandset id="mailToolbarItems"/>
     <commandset id="mailGetMsgMenuItems"/>
     <commandset id="mailMarkMenuItems"/>
+    <commandset id="mailLabelMenuItems"/>
 	<commandset id="tasksCommands"/>
     <commandset id="commandKeys"/>
   </commandset>

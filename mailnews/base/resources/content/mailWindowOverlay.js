@@ -267,6 +267,13 @@ function InitMessageMark()
     document.commandDispatcher.updateCommands('create-menu-mark');
 }
 
+function InitMessageLabel()
+{
+dump("initing message label\n");
+    document.commandDispatcher.updateCommands('create-menu-label');
+  /* this code should probably get the label strings and change the menu labels */
+}
+
 function InitMarkReadItem(id)
 {
     var areMessagesRead = SelectedMessagesAreRead();
