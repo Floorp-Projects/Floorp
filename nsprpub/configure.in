@@ -1682,15 +1682,16 @@ mips-sony-newsos*)
         DSO_CFLAGS=-KPIC
         DSO_LDOPTS='-G -h $(notdir $@) -z combreloc -z defs'
     fi
-    if test -z "$GNU_AS"; then
-        ASFLAGS="$ASFLAGS -Wa,-P"
-    fi
     if test -n "$GNU_CC"; then
         CFLAGS="$CFLAGS -Wall"
         CXXFLAGS="$CXXFLAGS -Wall"
         if test -n "$USE_MDUPDATE"; then
             CFLAGS="$CFLAGS -MDupdate \$(DEPENDENCIES)"
             CXXFLAGS="$CXXFLAGS -MDupdate \$(DEPENDENCIES)"
+        fi
+        GCC_AS=`$CC -print-prog-name=as`
+        if test "`echo | $GCC_AS -v 2>&1 | grep -c GNU`" != "0"; then
+            GNU_AS=1
         fi
     else
         CFLAGS="$CFLAGS -xstrconst"
@@ -1701,17 +1702,27 @@ mips-sony-newsos*)
         fi
         _OPTIMIZE_FLAGS=-xO4
     fi
+    if test -z "$GNU_AS"; then
+        ASFLAGS="$ASFLAGS -Wa,-P"
+    fi
     if test -n "$USE_64"; then
         if test -n "$GNU_CC"; then
             CC="$CC -m64"
             CXX="$CXX -m64"
         else
-            CC="$CC -xarch=v9"
-            CXX="$CXX -xarch=v9"
+            if test "$OS_TEST" = "i86pc"; then
+                CC="$CC -xarch=amd64"
+                CXX="$CXX -xarch=amd64"
+            else
+                CC="$CC -xarch=v9"
+                CXX="$CXX -xarch=v9"
+            fi
         fi
     fi
     if test "$OS_TEST" = "i86pc"; then
-        AC_DEFINE(i386)
+        if test -z "$USE_64"; then
+            AC_DEFINE(i386)
+        fi
         CPU_ARCH_TAG=_$OS_TEST
         # The default debug format, DWARF (-g), is not supported by gcc
         # on i386-ANY-sysv4/solaris, but the stabs format is.  It is
@@ -2346,7 +2357,11 @@ case "$target" in
         AC_DEFINE(_REENTRANT)
         AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
         if test "$OS_TEST" = "i86pc"; then
-            PR_MD_ASFILES=os_SunOS_x86.s
+            if test -n "$USE_64"; then
+               PR_MD_ASFILES=os_SunOS_x86_64.s
+            else
+               PR_MD_ASFILES=os_SunOS_x86.s
+            fi
         else
             PR_MD_ASFILES=os_SunOS.s
             if test -n "$USE_64"; then
