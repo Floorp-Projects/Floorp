@@ -264,21 +264,15 @@ checkbox {
   behavior: url(resource:/chrome/xulBindings.xml#checkbox);
 }
 
-checkbox.iconic {
-  behavior: url(resource:/chrome/xulBindings.xml#checkbox-iconic);
-}
+radio 
+  {
+    behavior              : url(resource:/chrome/radioBindings.xml#radio);
+  }
 
-radio {
-  behavior: url(resource:/chrome/xulBindings.xml#radio);
-}
-
-radio.iconic {
-  behavior: url(resource:/chrome/xulBindings.xml#radio-iconic);
-}
-
-radiogroup {
-  behavior: url(resource:/chrome/xulBindings.xml#radiogroup);
-}
+radiogroup 
+  {
+    behavior              : url(resource:/chrome/radioBindings.xml#radiogroup);
+  }
 
 button, button.left {
   behavior: url(resource:/chrome/xulBindings.xml#buttonleft);

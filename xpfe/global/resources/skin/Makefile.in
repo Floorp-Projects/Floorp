@@ -35,6 +35,7 @@ endif
 EXPORT_CHROME	= xul.css \
 		htmlBindings.xml \
 		xulBindings.xml \
+		radioBindings.xml \
 		menulistBindings.xml \
 		$(NULL)
 
