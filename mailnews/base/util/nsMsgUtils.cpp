@@ -61,38 +61,36 @@ static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCNntpUrlCID, NS_NNTPURL_CID);
 
-nsresult GetMessageServiceContractIDForURI(const char *uri, nsString &contractID)
+nsresult GetMessageServiceContractIDForURI(const char *uri, nsCString &contractID)
 {
+  nsresult rv = NS_OK;
+  //Find protocol
+  nsCAutoString uriStr(uri);
+  PRInt32 pos = uriStr.FindChar(':');
+  if(pos == kNotFound)
+    return NS_ERROR_FAILURE;
 
-	nsresult rv = NS_OK;
-	//Find protocol
-	nsAutoString uriStr; uriStr.AssignWithConversion(uri);
-	PRInt32 pos = uriStr.FindChar(':');
-	if(pos == -1)
-		return NS_ERROR_FAILURE;
-	nsString protocol;
-	uriStr.Left(protocol, pos);
+  nsCAutoString protocol;
+  uriStr.Left(protocol, pos);
 
-	//Build message service contractid
-	contractID.AssignWithConversion("@mozilla.org/messenger/messageservice;1?type=");
-	contractID += protocol;
+  //Build message service contractid
+  contractID = "@mozilla.org/messenger/messageservice;1?type=";
+  contractID += protocol.get();
 
-	return rv;
+  return rv;
 }
 
 nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messageService)
 {
 
-	nsAutoString contractID;
+	nsCAutoString contractID;
 	nsresult rv;
 
 	rv = GetMessageServiceContractIDForURI(uri, contractID);
 
 	if(NS_SUCCEEDED(rv))
 	{
-    nsCAutoString contractidC;
-    contractidC.AssignWithConversion(contractID);
-		rv = nsServiceManager::GetService((const char *) contractidC, NS_GET_IID(nsIMsgMessageService),
+		rv = nsServiceManager::GetService(contractID.get(), NS_GET_IID(nsIMsgMessageService),
 		           (nsISupports**)messageService, nsnull);
 	}
 
@@ -102,15 +100,13 @@ nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messag
 
 nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *messageService)
 {
-	nsAutoString contractID;
+	nsCAutoString contractID;
 	nsresult rv;
 
 	rv = GetMessageServiceContractIDForURI(uri, contractID);
 	if(NS_SUCCEEDED(rv))
   {
-    nsCAutoString contractidC;
-    contractidC.AssignWithConversion(contractID);
-		rv = nsServiceManager::ReleaseService(contractidC, messageService);
+		rv = nsServiceManager::ReleaseService(contractID.get(), messageService);
   }
 	return rv;
 }

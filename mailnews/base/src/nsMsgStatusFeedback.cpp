@@ -243,14 +243,13 @@ NS_IMETHODIMP nsMsgStatusFeedback::SetDocShell(nsIDocShell *shell, nsIDOMWindowI
      nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(aWindow));
      if (piDOMWindow)
      {
-        nsAutoString msgStatusFeedbackWinId; msgStatusFeedbackWinId.AssignWithConversion("MsgStatusFeedback");
-        piDOMWindow->GetObjectProperty(msgStatusFeedbackWinId.get(), getter_AddRefs(xpConnectObj));
+        piDOMWindow->GetObjectProperty(NS_LITERAL_STRING("MsgStatusFeedback").get(), getter_AddRefs(xpConnectObj));
         mStatusFeedback = do_QueryInterface(xpConnectObj);
      }
   }
 
-	mWindow = aWindow;
-	return NS_OK;
+  mWindow = aWindow;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgStatusFeedback::OnProgress(nsIRequest *request, nsISupports* ctxt, 

@@ -443,7 +443,8 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
           str = NS_LITERAL_STRING("true");
   }
   if (!str.IsEmpty())
-    rv = createNode(str, target, getRDFService());
+    rv = createNode(str.get(), target, getRDFService());
+
   //if we have an empty string and we don't have an error value, then 
   //we don't have a value for RDF.
   else if(NS_SUCCEEDED(rv))

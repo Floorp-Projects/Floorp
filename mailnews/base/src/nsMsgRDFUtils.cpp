@@ -40,63 +40,6 @@
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 
- 
-
-static PRBool
-peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, const char *parameter)
-{
-    // STRING USE WARNING: is any conversion really required here at all?
-
-	char *r1Str, *r2Str;
-	nsAutoString r1nsStr, r2nsStr;
-
-	r1->GetValue(&r1Str);
-	r2->GetValue(&r2Str);
-
-	r2nsStr.AssignWithConversion(r2Str);
-	r1nsStr.AssignWithConversion(r1Str);
-	nsMemory::Free(r2Str);
-	nsMemory::Free(r1Str);
-
-	//Look to see if there are any parameters
-	PRInt32 paramStart = r2nsStr.FindChar('?');
-	//If not, then it's not this parameter.
-	if(paramStart == -1)
-	{
-		return PR_FALSE;
-	}
-
-	nsAutoString r2propStr;
-	//Get the string before the '?"
-	r2nsStr.Left(r2propStr, paramStart);
-	//If the two properties are equal, then search parameters.
-	if(r2propStr == r1nsStr)
-	{
-		nsAutoString params;
-		r2nsStr.Right(params, r2nsStr.Length() - 1 - paramStart);
-		PRInt32 parameterPos = params.Find(parameter);
-		return (parameterPos != -1);
-	}
-	//Otherwise the properties aren't equal.
-	else
-	{
-		return PR_FALSE;
-	}
-	return PR_FALSE;
-}
-
-PRBool
-peqCollationSort(nsIRDFResource *r1, nsIRDFResource *r2)
-{
-	return peqWithParameter(r1, r2, "collation=true");
-}
-
-PRBool
-peqSort(nsIRDFResource* r1, nsIRDFResource* r2)
-{
-	return peqWithParameter(r1, r2, "sort=true");
-}
-
 nsresult createNode(const PRUnichar *str, nsIRDFNode **node, nsIRDFService *rdfService)
 {
   nsresult rv;
@@ -104,45 +47,15 @@ nsresult createNode(const PRUnichar *str, nsIRDFNode **node, nsIRDFService *rdfS
 
   if (str) {
     rv = rdfService->GetLiteral(str, getter_AddRefs(value));
-  } else {
-	PRUnichar blankStr[] = { 0 };
-	rv = rdfService->GetLiteral(blankStr, getter_AddRefs(value));
+  } 
+  else {
+    rv = rdfService->GetLiteral(NS_LITERAL_STRING("").get(), getter_AddRefs(value));
   }
+
   if (NS_SUCCEEDED(rv)) {
     *node = value;
     NS_IF_ADDREF(*node);
   }
-  return rv;
-}
-
-nsresult createNode(nsString& str, nsIRDFNode **node, nsIRDFService *rdfService)
-{
-	*node = nsnull;
-	nsresult rv; 
-	if (!rdfService) return NS_ERROR_NULL_POINTER;  
-	nsCOMPtr<nsIRDFLiteral> value;
-	rv = rdfService->GetLiteral(str.get(), getter_AddRefs(value));
-	if(NS_SUCCEEDED(rv)) {
-		*node = value;
-		NS_IF_ADDREF(*node);
-	}
-	return rv;
-}
-
-nsresult createNode(const char* charstr, nsIRDFNode **node, nsIRDFService *rdfService)
-{
-  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
-  // use nsString to convert to unicode
-	if (!rdfService) return NS_ERROR_NULL_POINTER;  
-	nsCOMPtr<nsIRDFLiteral> value;
-  nsAutoString str; str.AssignWithConversion(charstr);
-
-  rv = rdfService->GetLiteral(NS_ConvertUTF8toUCS2(charstr).get(), getter_AddRefs(value));
-  
-	if(NS_SUCCEEDED(rv)) {
-		*node = value;
-		NS_IF_ADDREF(*node);
-	}
   return rv;
 }
 

@@ -371,13 +371,11 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindowInternal *aWindow)
    nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(aWindow));
    if (piDOMWindow)
    {
-      nsAutoString msgWindowCommandsWinId; 
-		  msgWindowCommandsWinId.AssignWithConversion("MsgWindowCommands");
-      piDOMWindow->GetObjectProperty(msgWindowCommandsWinId.get(), getter_AddRefs(xpConnectObj));
+      piDOMWindow->GetObjectProperty(NS_LITERAL_STRING("MsgWindowCommands").get(), getter_AddRefs(xpConnectObj));
       mMsgWindowCommands = do_QueryInterface(xpConnectObj);
-    }
+   }
 
-	return rv;
+   return rv;
 }
 
 NS_IMETHODIMP nsMsgWindow::StopUrls()

@@ -135,18 +135,6 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_DOWNLOADSELECTED NC_NAMESPACE_URI "DownloadSelectedMessages"
 
 
-//Returns PR_TRUE if r1 is equal to r2 and r2 is the sort property.
-PRBool
-peqSort(nsIRDFResource* r1, nsIRDFResource* r2);
-
-//Returns PR_TRUE if r1 is equal to r2 and r2 is the collation property.
-PRBool
-peqCollationSort(nsIRDFResource* r1, nsIRDFResource* r2);
-
-//Given an nsString, create an nsIRDFNode
-nsresult createNode(nsString& str, nsIRDFNode **node, nsIRDFService *rdfService);
-nsresult createNode(const char*, nsIRDFNode **, nsIRDFService *rdfService);
-
 nsresult createNode(const PRUnichar *str, nsIRDFNode **, nsIRDFService *rdfService);
 
 //Given a PRTime create an nsIRDFNode that is really a date literal.

@@ -1088,7 +1088,7 @@ nsMsgFolderDataSource::createFolderTreeNameNode(nsIMsgFolder *folder,
   if(NS_SUCCEEDED(rv)) 
     CreateUnreadMessagesNameString(unreadMessages, nameString);	
 
-  createNode(nameString, target, getRDFService());
+  createNode(nameString.get(), target, getRDFService());
   return NS_OK;
 }
 
@@ -1136,8 +1136,10 @@ nsMsgFolderDataSource::createFolderSpecialNode(nsIMsgFolder *folder,
     specialFolderString = NS_LITERAL_STRING("Drafts").get();
   else if(flags & MSG_FOLDER_FLAG_TEMPLATES)
     specialFolderString = NS_LITERAL_STRING("Templates").get();
-  else
+  else {
+    // XXX why do this at all? or just ""
     specialFolderString = NS_LITERAL_STRING("none").get();
+  }
   
   createNode(specialFolderString, target, getRDFService());
   return NS_OK;
@@ -1156,7 +1158,10 @@ nsMsgFolderDataSource::createFolderServerTypeNode(nsIMsgFolder* folder,
   rv = server->GetType(getter_Copies(serverType));
   if (NS_FAILED(rv)) return rv;
 
-  createNode(serverType.get(), target, getRDFService());
+  nsAutoString type;
+  type.AssignWithConversion(serverType.get());
+
+  createNode(type.get(), target, getRDFService());
   return NS_OK;
 }
 
@@ -1660,7 +1665,7 @@ nsMsgFolderDataSource::NotifyFolderTreeNameChanged(nsIMsgFolder* aFolder,
     CreateUnreadMessagesNameString(aUnreadMessages, newNameString);	
 			
     nsCOMPtr<nsIRDFNode> newNameNode;
-    createNode(newNameString, getter_AddRefs(newNameNode), getRDFService());
+    createNode(newNameString.get(), getter_AddRefs(newNameNode), getRDFService());
     nsCOMPtr<nsIRDFResource> folderResource =
     do_QueryInterface(aFolder);
     NotifyPropertyChanged(folderResource, kNC_FolderTreeName, newNameNode);
