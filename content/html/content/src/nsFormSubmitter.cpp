@@ -55,7 +55,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsSpecialSystemDirectory.h"
 #include "nsLinebreakConverter.h"
 #include "nsIPlatformCharset.h"
-static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 #include "nsICharsetConverterManager.h"
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
@@ -74,7 +73,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,
 //BIDI
 #ifdef IBMBIDI
 #include "nsIUBidiUtils.h"
-static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
+//static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
 #endif
 //end
 #define CONTENT_DISP "Content-Disposition: form-data; name=\""
