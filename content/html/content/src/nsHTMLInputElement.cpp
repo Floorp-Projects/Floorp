@@ -1907,7 +1907,14 @@ nsHTMLInputElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 
                                              nsChangeHint& aHint) const
 {
   if (aAttribute == nsHTMLAtoms::value) {
-    aHint = NS_STYLE_HINT_REFLOW;
+    if (mType == NS_FORM_INPUT_BUTTON ||
+        mType == NS_FORM_INPUT_RESET ||
+        mType == NS_FORM_INPUT_SUBMIT) {
+      aHint = NS_STYLE_HINT_CONTENT;
+    }
+    else {
+      aHint = NS_STYLE_HINT_ATTRCHANGE;
+    }
   }
   else if ((aAttribute == nsHTMLAtoms::align) ||
            (aAttribute == nsHTMLAtoms::type)) {
