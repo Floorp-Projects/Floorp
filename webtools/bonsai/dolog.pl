@@ -312,6 +312,8 @@ sub mail_notification {
     print S @outlist, "\n";
     print S ".\n";
     get_response_code(250);
+    print S "QUIT\n";
+    close(S);
 }
 
 sub stdout_notification { 
@@ -328,8 +330,6 @@ sub stdout_notification {
     print  "\n";
     print  @outlist, "\n";
     print  ".\n";
-    print S "QUIT\n";
-    close(S);
 }
 
 # Quotify a string, suitable for invoking a shell process
