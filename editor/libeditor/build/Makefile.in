@@ -55,9 +55,6 @@ REQUIRES	= xpcom \
 		  appshell \
 		  xuldoc \
 		  commandhandler \
-		  gfx \
-		  widget \
-		  txtsvc \
 		  $(NULL)
 
 ifdef MOZ_PLAINTEXT_EDITOR_ONLY
@@ -74,7 +71,6 @@ else
 CPPSRCS = nsEditorRegistration.cpp
 SHARED_LIBRARY_LIBS = \
 		../html/$(LIB_PREFIX)htmleditor_s.$(LIB_SUFFIX)      \
-		../../txtsvc/src/$(LIB_PREFIX)txtsvc_s.$(LIB_SUFFIX) \
 		$(NULL)
 #		../composer/src/$(LIB_PREFIX)composer_s.$(LIB_SUFFIX)    
 endif
@@ -98,6 +94,5 @@ include $(topsrcdir)/config/rules.mk
 INCLUDES        += -I$(topsrcdir)/editor/libeditor/base \
                    -I$(topsrcdir)/editor/libeditor/text \
                    -I$(topsrcdir)/editor/libeditor/html \
-                   -I$(topsrcdir)/editor/txtsvc/src \
                    -I$(topsrcdir)/editor/composer/src
 
