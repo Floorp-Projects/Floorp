@@ -4489,24 +4489,21 @@ nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
 inline const nsStyleStruct* 
 nsRuleNode::GetParentData(const nsStyleStructID aSID)
 {
+  NS_PRECONDITION(mDependentBits & nsCachedStyleData::GetBitForSID(aSID),
+                  "should be called when node depends on parent data");
+  NS_ASSERTION(mStyleData.GetStyleData(aSID) == nsnull,
+               "both struct and dependent bits present");
   // Walk up the rule tree from this rule node (towards less specific
   // rules).
-  for (nsRuleNode* ruleNode = mParent; ruleNode; ruleNode = ruleNode->mParent)
-  {
-    const nsStyleStruct *currStruct = ruleNode->mStyleData.GetStyleData(aSID);
-    if (currStruct) {
-      // We found a rule with fully specified data.  We don't need to go
-      // up the tree any further, since the remainder of this branch has
-      // already been computed.
-      return currStruct;
-    }
-    NS_ASSERTION(ruleNode->mDependentBits &
-                 nsCachedStyleData::GetBitForSID(aSID),
-                 "dependent bits improperly set");
+  PRUint32 bit = nsCachedStyleData::GetBitForSID(aSID);
+  nsRuleNode *ruleNode = mParent;
+  while (ruleNode->mDependentBits & bit) {
+    NS_ASSERTION(ruleNode->mStyleData.GetStyleData(aSID) == nsnull,
+                 "both struct and dependent bits present");
+    ruleNode = ruleNode->mParent;
   }
 
-  NS_NOTREACHED("dependent bits set on root or improperly set");
-  return nsnull;
+  return ruleNode->mStyleData.GetStyleData(aSID);
 }
 
 const nsStyleStruct* 
@@ -4514,21 +4511,21 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
                          nsStyleContext* aContext,
                          PRBool aComputeData)
 {
-  const nsStyleStruct* data = mStyleData.GetStyleData(aSID);
-  if (data)
-    return data; // We have a fully specified struct. Just return it.
-
+  const nsStyleStruct *data;
   if (mDependentBits & nsCachedStyleData::GetBitForSID(aSID)) {
     // We depend on an ancestor for this struct since the cached struct
     // it has is also appropriate for this rule node.  Just go up the
     // rule tree and return the first cached struct we find.
     data = GetParentData(aSID);
-    if (data)
-      return data;
-    NS_NOTREACHED("dependent bits set but no cached struct present");
+    NS_ASSERTION(data, "dependent bits set but no cached struct present");
+    return data;
   }
 
-  if (!aComputeData)
+  data = mStyleData.GetStyleData(aSID);
+  if (NS_LIKELY(data != nsnull))
+    return data; // We have a fully specified struct. Just return it.
+
+  if (NS_UNLIKELY(!aComputeData))
     return nsnull;
 
   // Nothing is cached.  We'll have to delve further and examine our rules.
@@ -4539,7 +4536,7 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
 #undef STYLE_STRUCT
 #undef STYLE_STRUCT_TEST
 
-  if (data)
+  if (NS_LIKELY(data != nsnull))
     return data;
 
   NS_NOTREACHED("could not create style struct");
