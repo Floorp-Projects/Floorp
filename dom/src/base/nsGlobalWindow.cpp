@@ -1628,6 +1628,14 @@ GlobalWindowImpl::OpenDialog(JSContext *cx,
   return res;
 }
 
+NS_IMETHODIMP
+GlobalWindowImpl::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+                              PRInt32 aXPos, PRInt32 aYPos, 
+                              const nsString& aPopupType, const nsString& aPopupAlignment)
+{
+  return NS_OK;
+}
+
 nsresult 
 GlobalWindowImpl::CheckWindowName(JSContext *cx, nsString& aName)
 {

@@ -27,6 +27,7 @@
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMNavigator.h"
+#include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMScreen.h"
 #include "nsIDOMHistory.h"
@@ -41,6 +42,7 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINavigatorIID, NS_IDOMNAVIGATOR_IID);
+static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIScreenIID, NS_IDOMSCREEN_IID);
 static NS_DEFINE_IID(kIHistoryIID, NS_IDOMHISTORY_IID);
@@ -51,6 +53,7 @@ static NS_DEFINE_IID(kIEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 
 NS_DEF_PTR(nsIDOMNavigator);
+NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMDocument);
 NS_DEF_PTR(nsIDOMScreen);
 NS_DEF_PTR(nsIDOMHistory);
@@ -1345,6 +1348,75 @@ WindowSetInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
 
 //
+// Native method CreatePopup
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowCreatePopup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMElementPtr b0;
+  nsIDOMElementPtr b1;
+  PRInt32 b2;
+  PRInt32 b3;
+  nsAutoString b4;
+  nsAutoString b5;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 6) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIElementIID,
+                                           "Element",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
+                                           kIElementIID,
+                                           "Element",
+                                           cx,
+                                           argv[1])) {
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToInt32(cx, argv[2], (int32 *)&b2)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToInt32(cx, argv[3], (int32 *)&b3)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertJSValToString(b4, cx, argv[4]);
+
+    nsJSUtils::nsConvertJSValToString(b5, cx, argv[5]);
+
+    if (NS_OK != nativeThis->CreatePopup(b0, b1, b2, b3, b4, b5)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function createPopup requires 6 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Open
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1690,6 +1762,7 @@ static JSFunctionSpec WindowMethods[] =
   {"clearInterval",          WindowClearInterval,     1},
   {"setTimeout",          WindowSetTimeout,     0},
   {"setInterval",          WindowSetInterval,     0},
+  {"createPopup",          WindowCreatePopup,     6},
   {"open",          WindowOpen,     0},
   {"openDialog",          WindowOpenDialog,     0},
   {"captureEvent",          EventCapturerCaptureEvent,     1},

@@ -26,6 +26,7 @@
 #include "jsapi.h"
 
 class nsIDOMNavigator;
+class nsIDOMElement;
 class nsIDOMDocument;
 class nsIDOMScreen;
 class nsIDOMHistory;
@@ -136,6 +137,8 @@ public:
 
   NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn)=0;
 
+  NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, PRInt32 aXPos, PRInt32 aYPos, const nsString& aPopupType, const nsString& aPopupAlignment)=0;
+
   NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
 
   NS_IMETHOD    OpenDialog(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
@@ -197,6 +200,7 @@ public:
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID);  \
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn);  \
   NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn);  \
+  NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, PRInt32 aXPos, PRInt32 aYPos, const nsString& aPopupType, const nsString& aPopupAlignment);  \
   NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
   NS_IMETHOD    OpenDialog(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
 
@@ -257,6 +261,7 @@ public:
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID) { return _to ClearInterval(aTimerID); }  \
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to SetTimeout(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, PRInt32* aReturn) { return _to SetInterval(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, PRInt32 aXPos, PRInt32 aYPos, const nsString& aPopupType, const nsString& aPopupAlignment) { return _to CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType, aPopupAlignment); }  \
   NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to Open(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    OpenDialog(JSContext *cx, jsval *argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to OpenDialog(cx, argv, argc, aReturn); }  \
 
