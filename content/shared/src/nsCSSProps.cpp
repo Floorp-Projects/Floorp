@@ -150,6 +150,7 @@ const PRInt32 nsCSSProps::kBorderCollapseKTable[] = {
 
 const PRInt32 nsCSSProps::kBorderColorKTable[] = {
   eCSSKeyword_transparent, NS_STYLE_COLOR_TRANSPARENT,
+  eCSSKeyword__moz_use_text_color, NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR,
   -1,-1
 };
 
