@@ -544,18 +544,18 @@ pre_call_clean_up:
     {
         // Only throw the exception and fail if the JS code threw something
         // that does indicate a failure; i.e. 'throw 0' is not really a failure
-        nsresult e_code;
-        if(NS_SUCCEEDED(xpc_exception->GetCode(&e_code)) && NS_FAILED(e_code))
+        nsresult e_result;
+        if(NS_SUCCEEDED(xpc_exception->GetResult(&e_result)) && NS_FAILED(e_result))
         {
             xpc->SetPendingException(xpc_exception);
             NS_RELEASE(xpc_exception);
             mXPCContext->SetException(nsnull);
-            retval = e_code;
+            retval = e_result;
             success = JS_FALSE;
         }
         else
         {
-            pending_result = e_code;
+            pending_result = e_result;
             NS_RELEASE(xpc_exception);
         }
     }

@@ -94,9 +94,9 @@ XPCJSThrower::ThrowBadResultException(nsresult rv,
     {
         JSBool success = JS_FALSE;
         xpc->SetPendingException(nsnull);
-        nsresult code;
+        nsresult e_result;
 
-        if(NS_SUCCEEDED(e->GetCode(&code)) && code == result)
+        if(NS_SUCCEEDED(e->GetResult(&e_result)) && e_result == result)
         {
             if(!ThrowExceptionObject(cx, e))
                 JS_ReportOutOfMemory(cx);

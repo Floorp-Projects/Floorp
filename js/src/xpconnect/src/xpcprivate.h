@@ -946,7 +946,7 @@ public:
     NS_DECL_NSIXPCEXCEPTION
 
     static nsXPCException* NewException(const char *aMessage,
-                                        nsresult aCode,
+                                        nsresult aResult,
                                         nsIJSStackFrameLocation *aLocation,
                                         nsISupports *aData,
                                         PRInt32 aLeadingFramesToTrim);
@@ -965,7 +965,7 @@ protected:
     void Reset();
 private:
     char*                       mMessage;
-    nsresult                    mCode;
+    nsresult                    mResult;
     char*                       mName;
     nsIJSStackFrameLocation*    mLocation;
     nsISupports*                mData;
