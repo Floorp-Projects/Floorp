@@ -59,6 +59,7 @@ class nsCaret : public nsICaret,
   	NS_IMETHOD    SetCaretReadOnly(PRBool inMakeReadonly);
 		NS_IMETHOD 		GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBool& outIsCollapsed, nsIDOMSelection *inDOMSel);
 		NS_IMETHOD 		ClearFrameRefs(nsIFrame* aFrame);
+		NS_IMETHOD 		EraseCaret();
 	
 	  //nsIDOMSelectionListener interface
 	  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel, short aReason);

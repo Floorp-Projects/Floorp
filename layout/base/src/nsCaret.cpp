@@ -327,14 +327,23 @@ NS_IMETHODIMP nsCaret::ClearFrameRefs(nsIFrame* aFrame)
 	return NS_OK;	
 }
 
+NS_IMETHODIMP nsCaret::EraseCaret()
+{
+  if (mDrawn)
+    DrawCaret();
+  return NS_OK;
+}
+
 
 #ifdef XP_MAC
 #pragma mark -
 #endif
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *aDomSel, short)
+NS_IMETHODIMP nsCaret::NotifySelectionChanged(nsIDOMDocument *, nsIDOMSelection *aDomSel, short aReason)
 {
+  if (aReason & nsIDOMSelectionListener::MOUSEUP_REASON)//this wont do
+    return NS_OK;
 	if (mVisible)
 		StopBlinking();
   nsCOMPtr<nsIDOMSelection> domSel(do_QueryReferent(mDomSelectionWeak));
@@ -665,6 +674,7 @@ void nsCaret::DrawCaretWithContext(nsIRenderingContext* inRendContext)
 	localRC->SetColor(NS_RGB(255,255,255));
 	localRC->InvertRect(mCaretRect);
 	ToggleDrawnStatus();
+
 }
 
 //-----------------------------------------------------------------------------
