@@ -2291,7 +2291,8 @@ nsBaseIBFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       PostPlaceLine(aState, aLine, brc.GetMaxElementSize());
 
       // Notify anyone who cares that the line has been placed
-      DidPlaceLine(aState, aLine, brc.GetCollapsedTopMargin(),
+      DidPlaceLine(aState, aLine,
+                   applyTopMargin ? brc.GetCollapsedTopMargin() : 0,
                    brc.GetCollapsedBottomMargin(), aKeepReflowGoing);
     }
     else {
@@ -3675,7 +3676,7 @@ nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 
   nscoord newY = mCurrentBand.ClearFloaters(aY - mBorderPadding.top,
                                             aBreakType);
-  mY = newY;
+  mY = newY + mBorderPadding.top;
   GetAvailableSpace();
 
 #ifdef NOISY_INCREMENTAL_REFLOW
