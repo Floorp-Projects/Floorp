@@ -323,6 +323,7 @@ get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, v
     // PR_ASSERT(PR_FALSE);
     return NULL;
 }
+
 static jobject PR_CALLBACK
 get_java_wrapper_impl(JNIEnv *pJNIEnv, jint jsobject)
 {
@@ -342,6 +343,16 @@ get_java_wrapper_impl(JNIEnv *pJNIEnv, jint jsobject)
        return NULL;
     }
     return pJSObjectWrapper;
+}
+
+static jint PR_CALLBACK
+unwrap_java_wrapper_impl(JNIEnv *jEnv, jobject java_wrapper)
+{
+    jint obj = 0;
+ 
+    /* todo: insert code that calls the plugin that does the unwrapping. */
+
+    return obj;
 }
 
 static JSBool PR_CALLBACK
@@ -462,10 +473,6 @@ get_java_vm_impl(JNIEnv* env)
 
 PR_END_EXTERN_C
 
-
-/*
- * Callbacks for client-specific jsjava glue
- */
 static JSJCallbacks jsj_callbacks = {
     map_jsj_thread_to_js_context_impl,
     map_js_context_to_jsj_thread_impl,
@@ -475,6 +482,7 @@ static JSJCallbacks jsj_callbacks = {
     exit_js_impl,
     NULL,       // error_print
     get_java_wrapper_impl,
+    NULL /*unwrap_java_wrapper_impl*/, /* enable when implemented by plugin. */
     create_java_vm_impl,
     destroy_java_vm_impl,
     attach_current_thread_impl,
