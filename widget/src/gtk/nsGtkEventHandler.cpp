@@ -197,6 +197,23 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_INSERT,     GDK_Insert },
   { NS_VK_DELETE,     GDK_Delete },
 
+  // keypad keys
+  { NS_VK_LEFT,       GDK_KP_Left },
+  { NS_VK_RIGHT,      GDK_KP_Right },
+  { NS_VK_UP,         GDK_KP_Up },
+  { NS_VK_DOWN,       GDK_KP_Down },
+  { NS_VK_PAGE_UP,    GDK_KP_Page_Up },
+    // Not sure what these are
+    //{ NS_VK_,       GDK_KP_Prior },
+    //{ NS_VK_,        GDK_KP_Next },
+    // GDK_KP_Begin is the 5 on the non-numlock keypad
+    //{ NS_VK_,        GDK_KP_Begin },
+  { NS_VK_PAGE_DOWN,  GDK_KP_Page_Down },
+  { NS_VK_HOME,       GDK_KP_Home },
+  { NS_VK_END,        GDK_KP_End },
+  { NS_VK_INSERT,     GDK_KP_Insert },
+  { NS_VK_DELETE,     GDK_KP_Delete },
+
   { NS_VK_MULTIPLY,   GDK_KP_Multiply },
   { NS_VK_ADD,        GDK_KP_Add },
   { NS_VK_SEPARATOR,  GDK_KP_Separator },
@@ -304,6 +321,52 @@ PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
   // XXX We need to get meta, too, when/if gtk adds supports for it.
   if ((aGEK->state & GDK_CONTROL_MASK) || (aGEK->state & GDK_MOD1_MASK))
   {
+    // Keypad keys are an exception: they return a value different
+    // from their non-keypad equivalents, but mozilla doesn't distinguish.
+    switch (aGEK->keyval)
+    {
+      case GDK_KP_Space:
+        return ' ';
+      case GDK_KP_Tab:
+        return '\t';
+      case GDK_KP_Enter:
+        return 0;
+      case GDK_KP_Equal:
+        return '=';
+      case GDK_KP_Multiply:
+        return '*';
+      case GDK_KP_Add:
+        return '+';
+      case GDK_KP_Separator:
+        return '|';
+      case GDK_KP_Subtract:
+        return '-';
+      case GDK_KP_Decimal:
+        return '.';
+      case GDK_KP_Divide:
+        return '/';
+      case GDK_KP_0:
+        return '0';
+      case GDK_KP_1:
+        return '1';
+      case GDK_KP_2:
+        return '2';
+      case GDK_KP_3:
+        return '3';
+      case GDK_KP_4:
+        return '4';
+      case GDK_KP_5:
+        return '5';
+      case GDK_KP_6:
+        return '6';
+      case GDK_KP_7:
+        return '7';
+      case GDK_KP_8:
+        return '8';
+      case GDK_KP_9:
+        return '9';
+    }
+
     if (!isprint(aGEK->keyval))
       return 0;
     return (PRUint32)aGEK->keyval;
@@ -391,8 +454,8 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
       anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
 
 #if defined(DEBUG_akkana_not) || defined (DEBUG_ftang)
-    printf("Key Press event: gtk string = '%s', keyval = '%c',\n",
-           aGEK->string, aGEK->keyval);
+    printf("Key Press event: gtk string = '%s', keyval = '%c' = %d,\n",
+           aGEK->string, aGEK->keyval, aGEK->keyval);
     printf("    --> keyCode = 0x%x, char code = '%c'",
            anEvent.keyCode, anEvent.charCode);
     if (anEvent.isShift)
