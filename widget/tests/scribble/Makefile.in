@@ -123,7 +123,7 @@ EX_LIBS = \
 	-lmozdbm \
 	$(NULL)
 
-PROGS   = main
+PROGS   = scribble
 
 TARGETS = $(PROGS)
 
