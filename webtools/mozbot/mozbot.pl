@@ -33,6 +33,7 @@
 #                 Josh Soref <timeless@bemail.org>
 #                 Ian Hickson <mozbot@hixie.ch>
 #                 Ken Coar <ken.coar@golux.com>
+#                 Adam Di Carlo <adam@onshored.com>
 #
 # mozbot.pl harrison@netscape.com 1998-10-14
 # "irc bot for the gang on #mozilla"
