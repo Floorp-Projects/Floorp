@@ -243,7 +243,6 @@ var paletteDNDObserver = {
   },
   onDrop: function(aEvent, aXferData, aDragSession)
   {
-    alert("DROP HAPPENED.");
     var itemID = aXferData.data;
     
     var item = null;
@@ -251,7 +250,6 @@ var paletteDNDObserver = {
     var toolbar = document.getElementById("cloneToolbar");
     var toolbarItem = toolbar.firstChild;
     while (toolbarItem) {
-      alert("looping.");
       if (toolbarItem.firstChild.id == itemID) {
         item = toolbarItem;
         break;
@@ -279,8 +277,7 @@ var paletteDNDObserver = {
 
     // Now insertBefore |item| in the right place.
     var target = aEvent.target;
-    alert(target);
-
+    
     if (target == palette) {
       alert("Target and palette are the same.");
       target = palette.lastChild.lastChild;
