@@ -49,6 +49,7 @@
     <command id="cmd_NormalizeTable"      oncommand="goDoCommand('cmd_NormalizeTable')"/>
     <command id="cmd_tableJoinCells"      oncommand="goDoCommand('cmd_tableJoinCells')"/>
     <command id="cmd_tableSplitCell"      oncommand="goDoCommand('cmd_tableSplitCell')"/>
+    <command id="cmd_editTable"           oncommand="goDoCommand('cmd_editTable')"/>
   </commandset>
 
   <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
