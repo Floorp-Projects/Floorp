@@ -109,7 +109,7 @@ public:
 
   void shut();
   PRBool add(nsActivePlugin * plugin);
-  PRBool remove(nsActivePlugin * plugin);
+  PRBool remove(nsActivePlugin * plugin, PRBool * lastInstance = nsnull);
   nsActivePlugin * find(nsIPluginInstance* instance);
   nsActivePlugin * find(char * mimetype);
   nsActivePlugin * findStopped(char * url);

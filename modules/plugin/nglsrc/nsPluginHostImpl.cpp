@@ -394,7 +394,7 @@ PRBool nsActivePluginList::IsLastInstance(nsActivePlugin * plugin)
   return PR_TRUE;
 }
 
-PRBool nsActivePluginList::remove(nsActivePlugin * plugin)
+PRBool nsActivePluginList::remove(nsActivePlugin * plugin, PRBool * lastInstance)
 {
   if(mFirst == nsnull)
     return PR_FALSE;
@@ -413,7 +413,12 @@ PRBool nsActivePluginList::remove(nsActivePlugin * plugin)
         mLast = prev;
 
       // see if this is going to be the last instance of a plugin
-      if(IsLastInstance(p))
+      PRBool lastinst = IsLastInstance(p);
+
+      if(lastInstance)
+        *lastInstance = lastinst;
+
+      if(lastinst)
       {
         nsIPlugin *nsiplugin = p->mPlugin.get();
         
@@ -4083,9 +4088,35 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
     // if the plugin does not want to be 'cached' just remove it
     PRBool doCache = PR_TRUE;
     aInstance->GetValue(nsPluginInstanceVariable_DoCacheBool, (void *) &doCache);
-    if (!doCache)
+
+    // we also do that for 4x plugin, shall we? Let's see if it is
+    nsPluginTag * pluginTag = nsnull;
+    PRBool oldSchool = PR_FALSE;
+    for(pluginTag = mPlugins; pluginTag != nsnull; pluginTag = pluginTag->mNext)
     {
-      mActivePluginList.remove(plugin);
+      if(pluginTag->mEntryPoint == plugin->mPlugin)
+      {
+        oldSchool = pluginTag->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL ? PR_TRUE : PR_FALSE;
+        break;
+      }
+    }
+
+    if (!doCache || oldSchool)
+    {
+      PRBool lastInstance = PR_FALSE;
+      mActivePluginList.remove(plugin, &lastInstance);
+
+      // and if this is the last instance we should unload the library 
+      // and clear mEntryPoint and mLibrary member of the pluginTag
+      if(lastInstance)
+      {
+        pluginTag->mEntryPoint = nsnull;
+        if ((nsnull != pluginTag->mLibrary) && pluginTag->mCanUnloadLibrary)
+        {
+          PR_UnloadLibrary(pluginTag->mLibrary);
+          pluginTag->mLibrary = nsnull;
+        }
+      }
     }
     else
     {
