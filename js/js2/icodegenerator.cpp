@@ -1219,9 +1219,9 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                 }
                 else 
                     if (i->op->getKind() == ExprNode::index) {
-                        BinaryExprNode *b = static_cast<BinaryExprNode *>(i->op);
-                        TypedRegister base = genExpr(b->op1);
-                        ret = call(getElement(base, genExpr(b->op2)), base, args);
+                        InvokeExprNode *ii = static_cast<InvokeExprNode *>(i->op);
+                        TypedRegister base = genExpr(ii->op);
+                        ret = call(getElement(base, genExpr(ii->pairs->value)), base, args);     // FIXME, only taking first index
                     }
                     else
                         ASSERT("WAH!");
@@ -1229,13 +1229,13 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         break;
     case ExprNode::index :
         {
-            BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            TypedRegister base = genExpr(b->op1);
+            InvokeExprNode *i = static_cast<InvokeExprNode *>(p);
+            TypedRegister base = genExpr(i->op);
             JSClass *clazz = dynamic_cast<JSClass*>(base.second);
             if (clazz) {
                 // look for operator [] and invoke it
             }
-            TypedRegister index = genExpr(b->op2);
+            TypedRegister index = genExpr(i->pairs->value);     // FIXME, only taking first index
             ret = getElement(base, index);
         }
         break;
@@ -1275,9 +1275,9 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                 }
                 else
                     if (u->op->getKind() == ExprNode::index) {
-                        BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
-                        TypedRegister base = genExpr(b->op1);
-                        TypedRegister index = genExpr(b->op2);
+                        InvokeExprNode *i = static_cast<InvokeExprNode *>(u->op);
+                        TypedRegister base = genExpr(i->op);
+                        TypedRegister index = genExpr(i->pairs->value);    // FIXME, only taking first index
                         ret = getElement(base, index);
                         ret = binaryOp(xcrementOp, ret, loadImmediate(1.0));
                         setElement(base, index, ret);
@@ -1300,9 +1300,9 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                 }
                 else
                     if (u->op->getKind() == ExprNode::index) {
-                        BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
-                        TypedRegister base = genExpr(b->op1);
-                        TypedRegister index = genExpr(b->op2);
+                        InvokeExprNode *i = static_cast<InvokeExprNode *>(u->op);
+                        TypedRegister base = genExpr(i->op);
+                        TypedRegister index = genExpr(i->pairs->value);    // FIXME, only taking first index
                         ret = elementXcr(base, index, xcrementOp);
                     }
                     else
@@ -1351,9 +1351,9 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                 }
                 else
                     if (b->op1->getKind() == ExprNode::index) {
-                        BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
-                        TypedRegister base = genExpr(lb->op1);
-                        TypedRegister index = genExpr(lb->op2);
+                        InvokeExprNode *i = static_cast<InvokeExprNode *>(b->op1);
+                        TypedRegister base = genExpr(i->op);
+                        TypedRegister index = genExpr(i->pairs->value);    // FIXME, only taking first index
                         setElement(base, index, ret);
                     }
                     else
@@ -1384,9 +1384,9 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                 }
                 else
                     if (b->op1->getKind() == ExprNode::index) {
-                        BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
-                        TypedRegister base = genExpr(lb->op1);
-                        TypedRegister index = genExpr(lb->op2);
+                        InvokeExprNode *i = static_cast<InvokeExprNode *>(b->op1);
+                        TypedRegister base = genExpr(i->op);
+                        TypedRegister index = genExpr(i->pairs->value);   // FIXME, only taking first index
                         TypedRegister v = getElement(base, index);
                         ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), v, ret);
                         setElement(base, index, ret);
@@ -1442,7 +1442,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             TypedRegister r1 = genExpr(b->op1);
             TypedRegister r2 = genExpr(b->op2);
-            ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), r1, r2);
+            ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), r2, r1);
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
                     branchFalse(falseBranch, ret);

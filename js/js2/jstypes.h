@@ -133,6 +133,7 @@ namespace JSTypes {
         JSType*& operator=(JSType* type)                { return (tag = type_tag, this->type = type); }
         
         bool isFunction() const                         { return (tag == function_tag); }
+        bool isArray() const                            { return (tag == array_tag); }
         bool isObject() const                           { return ((tag == object_tag) || (tag == function_tag) || (tag == array_tag) || (tag == type_tag)); }
         bool isString() const                           { return (tag == string_tag); }
         bool isBoolean() const                          { return (tag == boolean_tag); }
@@ -381,12 +382,18 @@ namespace JSTypes {
      * Private representation of a JavaScript array.
      */
     class JSArray : public JSObject {
+        static JSObject* ArrayPrototypeObject;
+        static JSString* ArrayString;
+
         JSValues elements;
         uint32 top;
     public:
-        JSArray() : elements(1) { top = 0; }
-        JSArray(uint32 size) : elements(size) { top = size; }
-        JSArray(const JSValues &v) : elements(v) {}
+
+        static void initArrayObject(JSScope *g);
+
+        JSArray() : JSObject(ArrayPrototypeObject), elements(1)                     { setClass(ArrayString); top = 0; }
+        JSArray(uint32 size) : JSObject(ArrayPrototypeObject), elements(size)       { setClass(ArrayString); top = size; }
+        JSArray(const JSValues &v) : JSObject(ArrayPrototypeObject), elements(v)    { setClass(ArrayString); }
 
         uint32 length()
         {
@@ -466,6 +473,7 @@ namespace JSTypes {
 
     class JSException : public gc_base {
     public:
+        JSException(String &mess) : value(JSValue(new JSString(mess))) { }
         JSException(char *mess) : value(JSValue(new JSString(mess))) { }
         JSException(JSValue v) : value(v) { }
         JSValue value;
@@ -668,6 +676,7 @@ namespace JSTypes {
 
         bool getValue() { return mValue; }
     };
+
 
 } /* namespace JSTypes */    
 } /* namespace JavaScript */
