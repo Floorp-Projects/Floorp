@@ -26,6 +26,7 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
+#include "nsIViewManager.h"
 #include "nsIFrame.h"
 #include "nsIURL.h"
 #include "nsITimer.h"
@@ -227,14 +228,40 @@ nsWebCrawler::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
     fputs(tmp, stdout);
     printf("\n");
   }
+  return NS_OK;
+}
 
+void
+nsWebCrawler:: EndLoadURL(nsIWebShell* aShell,
+                          const PRUnichar* aURL,
+                          PRInt32 aStatus)
+{
   if (nsnull == aURL) {
-    return NS_OK;
+    return;
+  }
+
+  nsAutoString tmp(aURL);
+  if (mVerbose) {
+    printf("Crawler: done loading ");
+    fputs(tmp, stdout);
+    printf("\n");
+  }
+
+  // Make sure the document bits make it to the screen at least once
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+    nsIViewManager* vm;
+    vm = shell->GetViewManager();
+    if (nsnull != vm) {
+      vm->EnableRefresh();
+      NS_RELEASE(vm);
+    }
+    NS_RELEASE(shell);
   }
 
   // Skip url post-processing for non-document urls
-  if (!mCurrentURL.Equals(aURL->GetSpec())) {
-    return NS_OK;
+  if (!mCurrentURL.Equals(tmp)) {
+    return;
   }
 
   if ((nsnull != mFilter) || (nsnull != mOutputDir)) {
@@ -245,14 +272,19 @@ nsWebCrawler::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
         nsIListFilter *filter = nsIFrame::GetFilter(mFilter);
         if (nsnull!=mOutputDir)
         {
-          FILE *fp = GetOutputFile(aURL);
-          if (nsnull!=fp)
-          {
-            root->DumpRegressionData(fp, 0);
-            fclose(fp);
+          nsIURL* url;
+          nsresult rv = NS_NewURL(&url, tmp);
+          if (NS_SUCCEEDED(rv) && (nsnull != url)) {
+            FILE *fp = GetOutputFile(url);
+            if (nsnull!=fp)
+            {
+              root->DumpRegressionData(fp, 0);
+              fclose(fp);
+            }
+            else
+              printf("could not open output file for %s\n", url->GetFile());
+            NS_RELEASE(url);
           }
-          else
-            printf("could not open output file for %s\n", aURL->GetFile());
         }
         else
           root->DumpRegressionData(stdout, 0);
@@ -285,8 +317,6 @@ nsWebCrawler::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
   if (0 == mDelay) {
     LoadNextURL();
   }
-
-  return NS_OK;
 }
 
 FILE * nsWebCrawler::GetOutputFile(nsIURL *aURL)
@@ -372,7 +402,7 @@ nsWebCrawler::Start()
   // Enable observing each URL load...
   nsIWebShell* shell = nsnull;
   mBrowser->GetWebShell(shell);
-  shell->SetObserver((nsIStreamObserver*)this);
+  shell->SetObserver(this);
 
   LoadNextURL();
 }
