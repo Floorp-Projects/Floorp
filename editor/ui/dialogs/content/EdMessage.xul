@@ -46,10 +46,10 @@
   <!-- spring style="height: 15px"/ -->
   <box align="horizontal" style="margin: 10px">
     <spring flex="100%"/>
-    <titledbutton class="MsgButton" id="button1" onclick="onButton(1)"/> 
-    <titledbutton class="MsgButton" id="button2" onclick="onButton(2)"/>
-    <titledbutton class="MsgButton" id="button3" onclick="onButton(3)"/>
-    <titledbutton class="MsgButton" id="button4" onclick="onButton(4)"/>
+    <titledbutton class="push MsgButton" id="button1" onclick="onButton(1)"/> 
+    <titledbutton class="push MsgButton" id="button2" onclick="onButton(2)"/>
+    <titledbutton class="push MsgButton" id="button3" onclick="onButton(3)"/>
+    <titledbutton class="push MsgButton" id="button4" onclick="onButton(4)"/>
     <spring flex="100%"/>
   </box>
 </window>

@@ -200,7 +200,7 @@
                   </html:td>
                   <html:td>
                       <html:input type="text" id="bgimage.text" style="width: 70%;"/>
-                      <titledbutton value="&tableChooseImage.label;" id="bgimage.button"/>
+                      <titledbutton class="push" value="&tableChooseImage.label;" id="bgimage.button"/>
                   </html:td>
                 </html:tr>
                 <html:tr>
@@ -228,10 +228,10 @@
                     </html:select>
                   </html:td>
                   <html:td>
-                    <titledbutton value="&cellSelectionPrevious.label;" id="previous.button"/>
+                    <titledbutton class="push" value="&cellSelectionPrevious.label;" id="previous.button"/>
                   </html:td>
                   <html:td>
-                    <titledbutton value="&cellSelectionNext.label;" id="next.button"/>
+                    <titledbutton class="push" value="&cellSelectionNext.label;" id="next.button"/>
                   </html:td>
                 </html:tr>
               </html:table>
@@ -365,7 +365,7 @@
                   </html:td>
                   <html:td>
                       <html:input type="text" id="cellbgimage.text" style="width: 70%;"/>
-                      <titledbutton value="&tableChooseImage.label;" id="cellbgimage.button"/>
+                      <titledbutton class="push" value="&tableChooseImage.label;" id="cellbgimage.button"/>
                   </html:td>
                 </html:tr>
                 <html:tr>

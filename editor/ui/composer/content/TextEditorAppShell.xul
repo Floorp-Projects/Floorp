@@ -123,13 +123,11 @@
 
 <toolbox>
    <!-- toolbar filled out from editorOverlay -->
-   <toolbar id="EditToolbar">
+   <toolbar id="EditToolbar" class="standard" persist="collapsed">
       <titledbutton id="newButton"/>
       <titledbutton id="openButton"/>
       <titledbutton id="saveButton"/>
-
-      <html:div class="separator" align="vertical" />
-
+      <toolbarseparator/>
       <titledbutton id="printButton"/>
       <titledbutton id="findButton"/>
       <titledbutton id="spellingButton"/>

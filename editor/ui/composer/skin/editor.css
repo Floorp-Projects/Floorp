@@ -54,85 +54,67 @@ toolbar#EditToolbar titledbutton#SaveButton[dirty="true"] {
   list-style-image:url(chrome://editor/skin/images/savemod.gif); 
 }
 
-toolbar#FormatToolbar titledbutton:hover {
-  border: 1px solid transparent;
-	background-image:url("chrome://editor/skin/images/hover-teal.gif");
-	background-repeat: no-repeat;
-  background-position: center center;
+toolbar#FormatToolbar titledbutton[class~=format] {
+  margin: 2px 2px 2px 2px;
+	padding: 2px;
+	text-decoration: none;
+	color: inherit;
 }
 
-toolbar#FormatToolbar titledbutton:active {
-  border: 1px inset white;
+toolbar#FormatToolbar titledbutton[class~=format]:hover {
+/* What we should use, but this has a blue border that doesn't look good against gray toolbars 
+	background-image:url("chrome://global/skin/otherbutton28-bg-hover.gif");
+*/
 	background-image:url("chrome://editor/skin/images/hover-teal.gif");
 	background-repeat: no-repeat;
   background-position: center center;
+	text-decoration: none;
+  /* global class="plain" should do this! */
 }
-/*
-titledbutton[class~=popup]:hover {
-  border: 1px solid white;
-  list-style-image:url(chrome://editor/skin/images/savefile.gif); 
+
+toolbar#FormatToolbar titledbutton[class~=format]:active {
+  margin: 3px 1px 1px 3px;
 }
-*/
+
 /* 
 Experimental: a flat look for buttons that show "set" state, like bold
-toolbar#FormatToolbar titledbutton[toggled="1"] {
+toolbar#FormatToolbar titledbutton[class~=format][toggled="1"] {
   border: 1px solid #003366;
 }
 */
 
-/*
-toolbar#FormatToolbar titledbutton[toggled="1"] {
- background-color: #AACCCC;
-}
-*/
-
-/* Use negative margins to bring buttons together to look like one */
-toolbar#FormatToolbar titledbutton#TextColorPopupButton {
-  margin-right: -3px;
-}
-
-toolbar#FormatToolbar titledbutton#BackColorPopupButton {
-  margin-left: -3px;
+toolbar#FormatToolbar titledbutton[class~=TextAttribute] {
+	/* Make these narrower */
+  padding: 2px 0px;
+  min-width: 18px; 
+  width: 18px; 
+  /*height: 16px; */
+  /* padding: 2px 0px 0px 0px;*/
+  font-size: 19px; 
+  font-family: times, serif, sans-serif;
 }
 
 toolbar#FormatToolbar titledbutton#boldButton {
-  min-width: 16px; 
-  font-size: 19px; 
   font-weight: bold; 
-  font-family: times, serif, sans-serif;
-  height: 16px;
-  padding: 0px;
-  padding-top: 2px;
-}
-
-toolbar#FormatToolbar titledbutton#boldButton:hover {
-  text-decoration: none;
 }
 
 toolbar#FormatToolbar titledbutton#italicButton {
-  min-width: 16px; 
-  font-size: 19px; 
   font-weight: bold; 
-  font-family: times, serif, sans-serif; 
   font-style:  italic;
-  height: 16px;
-  padding: 0px;
-  padding-top: 2px;
-}
-
-toolbar#FormatToolbar titledbutton#italicButton:hover {
-  text-decoration: none;
 }
 
 toolbar#FormatToolbar titledbutton#underlineButton {
-  min-width: 16px; 
-  font-size: 19px; 
   font-weight: normal; 
-  font-family: times, serif, sans-serif; 
   text-decoration: underline;
-  height: 16px;
-  padding: 0px;
-  padding-top: 2px;
+}
+
+/* Use negative margins to bring buttons together to look like one */
+toolbar#FormatToolbar titledbutton#TextColorPopupButton {
+  margin-right: -2px;
+}
+
+toolbar#FormatToolbar titledbutton#BackColorPopupButton {
+  margin-left: -2px;
 }
 
 box#DisplayModeBar titledbutton[class~=DisplayModeButton] {
@@ -171,13 +153,11 @@ box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"] {
 box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"]:hover {
   background-color: #66AAAA;
   color: white;
-  text-decoration: none;
 }
 
 box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"]:active {
   background-color: #33FFFF;
   color: black;
-  text-decoration: none;
 }
 
 box#DisplayModeBar div.VerticalSeparator { 

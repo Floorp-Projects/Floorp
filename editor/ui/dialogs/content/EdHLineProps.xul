@@ -79,7 +79,7 @@
   <box align="horizontal">
     <html:label><html:input type="checkbox" id="3dShading"/>&threeDShading.label;</html:label>
     <spring flex="100%"/>
-    <titledbutton id="SaveDefault" onclick="onSaveDefault()" value="&saveSettings.label;"/>
+    <titledbutton class="push" id="SaveDefault" onclick="onSaveDefault()" value="&saveSettings.label;"/>
   </box>
   <!-- from EdDialogOverlay -->
   <box id="AdvancedEditButton"/>

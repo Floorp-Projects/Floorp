@@ -551,47 +551,47 @@
     <titledbutton id="newButton"   class="button28" src="&newEditorIcon.url;"     observes="cmd_newEditor" value="&newMenu.label;" />
     <titledbutton id="openButton"  class="button28" src="&openEditorIcon.url;"    observes="Editor:Open"/>
     <titledbutton id="saveButton"  class="button28" src="&saveIcon.url;"          observes="Editor:Save"/>
-    <titledbutton id="printButton" src="&printIcon.url;"         observes="Editor:Print"/>
-    <titledbutton id="findButton"  src="&findIcon.url;"          observes="Editor:Find"/>
-    <titledbutton id="spellingButton" src="&spellingIcon.url;" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
+    <titledbutton id="printButton" class="other28"     src="&printIcon.url;"         observes="Editor:Print"/>
+    <titledbutton id="findButton"  class="other28"     src="&findIcon.url;"          observes="Editor:Find"/>
+    <titledbutton id="spellingButton" class="other28"  src="&spellingIcon.url;" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
 
-    <titledbutton id="imageButton" src="&imageIcon.url;" value="&imageToolbarCmd.label;" onclick="EditorInsertImage()"/>
-    <titledbutton id="hlineButton" src="&hlineIcon.url;" value="&hruleToolbarCmd.label;" onclick="EditorInsertHLine()"/>
-    <titledbutton id="tableButton" src="&tableIcon.url;" value="&tableToolbarCmd.label;" onclick="EditorInsertOrEditTable(true)"/>
-    <titledbutton id="linkButton"  src="&linkIcon.url;"  value="&linkToolbarCmd.label;"  onclick="EditorInsertLink()"/>
-    <titledbutton id="namedAnchorButton" src="&anchorIcon.url;" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
+    <titledbutton id="imageButton" class="other28" src="&imageIcon.url;" value="&imageToolbarCmd.label;" onclick="EditorInsertImage()"/>
+    <titledbutton id="hlineButton" class="other28" src="&hlineIcon.url;" value="&hruleToolbarCmd.label;" onclick="EditorInsertHLine()"/>
+    <titledbutton id="tableButton" class="other28" src="&tableIcon.url;" value="&tableToolbarCmd.label;" onclick="EditorInsertOrEditTable(true)"/>
+    <titledbutton id="linkButton"  class="other28" src="&linkIcon.url;"  value="&linkToolbarCmd.label;"  onclick="EditorInsertLink()"/>
+    <titledbutton id="namedAnchorButton" class="other28" src="&anchorIcon.url;" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
 
     <!-- Formatting toolbar items -->
     <titledbutton style="width:68pt" id="ParagraphPopupButton" value="&paragraphToolbarMenu.label;" class="popup" align="left" popupanchor="bottomleft">
        <observes element="Editor:Paragraph:Format" attribute="format" onbroadcast="onParagraphFormatChange()"/>
     </titledbutton>
-    <titledbutton id="FontFacePopupButton" value="&fontToolbarMenu.label;" class="popup" align="right" popupanchor="bottomleft"/>
-    <titledbutton id="FontSizePopupButton" value="&sizeToolbarMenu.label;" class="popup" align="right" popupanchor="bottomleft"/>
-    <titledbutton id="TextColorPopupButton" src="chrome://editor/skin/images/text-color.gif" class="popup" popupanchor="bottomleft"/>
-    <titledbutton id="BackColorPopupButton" src="chrome://editor/skin/images/backcolor.gif" class="popup" popupanchor="bottomleft"/>
+    <titledbutton id="FontFacePopupButton" class="format popup" value="&fontToolbarMenu.label;" align="right" popupanchor="bottomleft"/>
+    <titledbutton id="FontSizePopupButton" class="format popup" value="&sizeToolbarMenu.label;" align="right" popupanchor="bottomleft"/>
+    <titledbutton id="TextColorPopupButton" class="format popup" src="chrome://editor/skin/images/text-color.gif" popupanchor="bottomleft"/>
+    <titledbutton id="BackColorPopupButton" class="format popup" src="chrome://editor/skin/images/backcolor.gif"  popupanchor="bottomleft"/>
 
     <!-- can't just use observes here because we don't want the value from the broadcaster -->
-    <titledbutton id="boldButton" value="&formatToolbar.boldChar;" align="center" onclick="EditorToggleStyle('bold')">
+    <titledbutton id="boldButton" class="format TextAttribute" value="&formatToolbar.boldChar;" align="center" onclick="EditorToggleStyle('bold')">
       <observes element="Editor:Bold" attribute="bold" onbroadcast="onStyleChange('bold')"/>
     </titledbutton>
-    <titledbutton id="italicButton" value="&formatToolbar.italicChar;" align="center" onclick="EditorToggleStyle('italic')">
+    <titledbutton id="italicButton" class="format TextAttribute" value="&formatToolbar.italicChar;" align="center" onclick="EditorToggleStyle('italic')">
       <observes element="Editor:Italic" attribute="italic" onbroadcast="onStyleChange('italic')"/>
     </titledbutton>
-    <titledbutton id="underlineButton" value="&formatToolbar.underlineChar;" align="center" onclick="EditorToggleStyle('underline')">
+    <titledbutton id="underlineButton" class="format TextAttribute" value="&formatToolbar.underlineChar;" align="center" onclick="EditorToggleStyle('underline')">
       <observes element="Editor:Underline" attribute="underline" onbroadcast="onStyleChange('underline')"/>
     </titledbutton>
 
-    <titledbutton id="ulButton" src="&bulletListIcon.url;" onclick="EditorMakeOrChangeList('ul')">
+    <titledbutton id="ulButton" class="format" src="&bulletListIcon.url;" onclick="EditorMakeOrChangeList('ul')">
         <observes element="Editor:Paragraph:ListType" attribute="format" onbroadcast="onListFormatChange('ul')"/>
     </titledbutton>
 
-    <titledbutton id="olButton" src="&numberListIcon.url;" align="bottom" onclick="EditorMakeOrChangeList('ol')">
+    <titledbutton id="olButton" class="format" src="&numberListIcon.url;" align="bottom" onclick="EditorMakeOrChangeList('ol')">
         <observes element="Editor:Paragraph:ListType" attribute="format" onbroadcast="onListFormatChange('ol')"/>
     </titledbutton>
 
-    <titledbutton id="outdentButton" src="&outdentIcon.url;" align="bottom" onclick="EditorIndent('outdent')"/>
-    <titledbutton id="indentButton" src="&indentIcon.url;" align="bottom" onclick="EditorIndent('indent')"/>
-    <titledbutton id="AlignPopupButton" src="&alignpopupIcon.url;" align="bottom" class="popup" popupanchor="bottomleft"/>
+    <titledbutton id="outdentButton" class="format" src="&outdentIcon.url;" align="bottom" onclick="EditorIndent('outdent')"/>
+    <titledbutton id="indentButton" class="format" src="&indentIcon.url;" align="bottom" onclick="EditorIndent('indent')"/>
+    <titledbutton id="AlignPopupButton" class="format popup" src="&alignpopupIcon.url;" align="bottom" popupanchor="bottomleft"/>
 
 
     <!-- DEBUG only -->

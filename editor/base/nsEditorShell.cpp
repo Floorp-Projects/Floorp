@@ -163,7 +163,7 @@ GetDocument(nsIWebShell *aWebShell, nsIDocument **aDoc )
 
 // Utility to set and attribute of an element (used for throbber)
 static nsresult 
-SetXULDocAttribute( nsIWebShell *shell, const char *id, 
+SetChromeAttribute( nsIWebShell *shell, const char *id, 
                     const char *name,  const nsString &value )
 {
   nsCOMPtr<nsIDocument> doc;
@@ -3547,7 +3547,8 @@ nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
 {
   // Start the throbber
   // TODO: We should also start/stop it for saving and publishing?
-  return SetXULDocAttribute( mWebShell, "Editor:Throbber", "busy", "true" );
+  SetChromeAttribute( mWebShell, "Editor:Throbber", "busy", "true" );
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3568,8 +3569,7 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel,
     nsCOMPtr<nsIURI>  aUrl;
     channel->GetURI(getter_AddRefs(aUrl));
     res = PrepareDocumentForEditing(aUrl);
-    if (NS_SUCCEEDED(res))
-      res = SetXULDocAttribute( mWebShell, "Editor:Throbber", "busy", "false" );
+    SetChromeAttribute( mWebShell, "Editor:Throbber", "busy", "false" );
   }
   
   return res;

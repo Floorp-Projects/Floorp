@@ -172,12 +172,11 @@ function Startup()
       linkTextInput = null;
     }
   }
-  var moreAtt =  MoreFewerButton.getAttribute("more");
-  dump("More att: "+moreAtt+"\n");
-
-  // Set the bool to the OPPOSITE of the current state,
-  //   onMoreFewer will toggle it
-  SeeMore = (moreAtt == "1");
+  // Set SeeMore bool to the OPPOSITE of the current state,
+  //   which is automatically saved by using the 'persist="more"' 
+  //   attribute on the MoreFewerButton button
+  //   onMoreFewer will toggle it and redraw the dialog
+  SeeMore = (MoreFewerButton.getAttribute("more") != "1");
   onMoreFewer();
 }
 
@@ -411,11 +410,4 @@ function onOK()
     return true;
   }
   return false;
-}
-
-
-function onUnload()
-{
-  dump("Unloading LinkProperties -- More value is "+SeeMore+"\n");
-  document.persist("MoreFewerButton", "more");
 }
