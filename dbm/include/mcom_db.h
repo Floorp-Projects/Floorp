@@ -190,7 +190,7 @@
 #define LITTLE_ENDIAN   1234
 #endif
 
-#if defined(_WINDOWS)
+#if defined(_WINDOWS) || defined(XP_OS2_VACPP)
 #ifdef BYTE_ORDER
 #undef BYTE_ORDER
 #endif
@@ -220,6 +220,14 @@
 
 #ifndef XP_OS2 
 #define MAXPATHLEN 	1024               
+#endif
+
+#ifdef XP_OS2_VACPP
+#include <os2.h>
+#define	MAXPATHLEN	CCHMAXPATH
+#define	EPERM		EINVAL
+#define	ENOTDIR		EBADPOS
+#define	S_ISDIR(s)	((s) & S_IFDIR)
 #endif
 
 #define	EFTYPE		EINVAL		/* POSIX 1003.1 format errno. */
