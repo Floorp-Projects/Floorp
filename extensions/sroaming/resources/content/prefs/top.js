@@ -135,7 +135,7 @@ function ActivationWarning()
 		       .getService(Components.interfaces.nsIPrefBranch);
     try
     {
-      showWarning = prefBranch.getBoolPref("roaming.showInitialWarning");
+      var showWarning = prefBranch.getBoolPref("roaming.showInitialWarning");
       if (!showWarning)
         return;
     } catch(e) {}

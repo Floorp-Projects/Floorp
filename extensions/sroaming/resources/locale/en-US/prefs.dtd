@@ -42,26 +42,22 @@
 <!ENTITY descr.label              "Roaming Access allows you to retrieve and store your user profile information from/on a Roaming Access server. Your profile information will then be retrieved from the server on startup and transferred to it on shutdown.">
 <!ENTITY descrFiles.label         "If Roaming Access is enabled (in the Roaming User pane), the following parts of your profile will be transferred to and from the Roaming Access server.">
 <!ENTITY enabled.label            "Enable remote profile storage">
-<!ENTITY enabled.accesskey        "e">
+<!ENTITY enabled.accesskey        "E">
 <!ENTITY method.label             "Server Information">
-<!ENTITY methodSelect.label       "Transfer Method">
-<!ENTITY methodSelect.accesskey   "m">
-<!ENTITY files.label              "Item Selection">
-<!ENTITY filesDescr.label         "User profile items selected below will be transferred to/from the server.">
-<!ENTITY filesList.accesskey      "i">
 
-
-<!ENTITY methodCopy.label         "File copy">
+<!ENTITY methodCopy.label         "File Copy">
 <!ENTITY methodStream.label       "HTTP / FTP">
 
-<!ENTITY streamURL.label          "Base URL">
-<!ENTITY streamURL.accesskey      "u">
-<!ENTITY streamUsername.label     "Username">
-<!ENTITY streamUsername.accesskey "Username">
+<!ENTITY streamURL.label          "Base URL:">
+<!ENTITY streamURL.accesskey      "a">
+<!ENTITY streamUsername.label     "Username:">
+<!ENTITY streamUsername.accesskey "U">
 <!ENTITY streamSavePW.label       "Save password">
-<!ENTITY streamSavePW.accesskey   "s">
-<!ENTITY streamPassword.label     "Password">
-<!ENTITY streamPassword.accesskey "p">
+<!ENTITY streamSavePW.accesskey   "S">
+<!ENTITY streamPassword.label     "Password:">
+<!ENTITY streamPassword.accesskey "P">
 
-<!ENTITY copyDir.label            "Copy to/from directory">
-<!ENTITY copyDir.accesskey        "d">
+<!ENTITY copyDir.label            "Copy to/from directory:">
+<!ENTITY browse.label             "Browse...">
+<!ENTITY browse.accesskey         "B">
+<!ENTITY filepicker.title         "Select Directory">

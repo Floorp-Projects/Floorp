@@ -59,10 +59,6 @@
   <stringbundle id="bundle_roaming_filedescr" src="chrome://sroaming/locale/filedescr.properties"/>
   <vbox id="roamingSettings" flex="1">
 
-  <groupbox id="files" flex="1">
-    <caption label="&files.label;" />
-    <vbox flex="1">
-
 <!--
   Defaults are set in the default pref "roaming.default.files", displayed
   names in filedescr.properties.
@@ -153,9 +149,6 @@
                   filename="secmod.db"
                   label="" />
       </listbox>
-    </vbox>
-  </groupbox>
-
   </vbox>
 
 </page>

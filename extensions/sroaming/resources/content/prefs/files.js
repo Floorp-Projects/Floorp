@@ -135,7 +135,7 @@ function DataToUI()
     var found = false;
     for (var i2 = 0, l2 = children.length; i2 < l2; i2++)
     {
-      var checkbox = children[i2];
+      checkbox = children[i2];
       if ("getAttribute" in checkbox
           && checkbox.getAttribute("type") == "checkbox"
           // Somebody adds unwanted nodes as children to listbox :-(

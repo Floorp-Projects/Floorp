@@ -155,8 +155,8 @@ RoamingPrefs.prototype =
       /* to understand the structure of the registry,
          see comment at the const defs above */
       // get the Roaming reg branch
-      registry = Components.classes["@mozilla.org/registry;1"]
-                           .createInstance(Components.interfaces.nsIRegistry);
+      var registry = Components.classes["@mozilla.org/registry;1"]
+                     .createInstance(Components.interfaces.nsIRegistry);
       registry.openWellKnownRegistry(registry.ApplicationRegistry);
       this.registry = registry;
       var profMan = Components.classes["@mozilla.org/profile/manager;1"]
@@ -309,7 +309,7 @@ RoamingPrefs.prototype =
   verifyData : function()
   {
     if (!this.Enabled)
-      return;
+      return true;
 
     var errorProp; // see showError();
     var errorVal;  // dito
@@ -419,15 +419,6 @@ function SwitchDeck(page, deckElement)
   deckElement.setAttribute("selectedIndex", page);
 }
 
-function EnableElement(enabled, triggerElement, elementID)
-{
-  var element = document.getElementById(elementID);
-  if(!enabled)
-    element.setAttribute("disabled", "true");
-  else
-    element.removeAttribute("disabled");
-}
-
 function EnableTree(enabled, element)
 {
   if (!element || !element.setAttribute)
@@ -453,4 +444,30 @@ function InitElement(elementID)
 function E(elementID)
 {
   return document.getElementById(elementID);
+}
+
+function Browse()
+{
+  const nsIFilePicker = Components.interfaces.nsIFilePicker;
+
+  var fp = Components.classes["@mozilla.org/filepicker;1"]
+           .createInstance(nsIFilePicker);
+  var currentFolder = Components.classes["@mozilla.org/file/local;1"]
+                      .createInstance(Components.interfaces.nsILocalFile);
+  var currentFolderTextbox = document.getElementById("copyDir");
+  
+  try {
+    currentFolder.initWithPath(currentFolderTextbox.value);
+    fp.displayDirectory = currentFolder;
+  }
+  catch (ex) {
+    dump("initWithPath failed. Reason: " + ex);
+  }
+
+  fp.init(window, E("browseButton").getAttribute("filepickertitle"),
+          nsIFilePicker.modeGetFolder);
+  
+  if (fp.show() == nsIFilePicker.returnOK)
+    // convert the nsILocalFile into a nsIFileSpec 
+    currentFolderTextbox.value = fp.file.path;
 }

@@ -59,14 +59,16 @@
   <stringbundle id="bundle_roaming_prefs" src="chrome://sroaming/locale/prefs.properties"/>
   <stringbundle id="bundle_roaming_filedescr" src="chrome://sroaming/locale/filedescr.properties"/>
 
-  <checkbox id="enabled"
-            aoncommand="EnableTree(this.checked, E('roamingSettings'));
-                        parent.roaming.enabled = this.checked;"
-            oncommand="ActivationWarning(); SwitchChanged();"
-            class="indent"
-            label="&enabled.label;"
-            accesskey="&enabled.accesskey;"
-            />
+  <vbox align="start">
+    <checkbox id="enabled"
+              aoncommand="EnableTree(this.checked, E('roamingSettings'));
+                          parent.roaming.enabled = this.checked;"
+              oncommand="ActivationWarning(); SwitchChanged();"
+              class="indent"
+              label="&enabled.label;"
+              accesskey="&enabled.accesskey;"
+              />
+  </vbox>
 
   <groupbox id="method">
     <caption label="&method.label;" />
@@ -115,11 +117,13 @@
                </row>
                <row>
                   <hbox />
-                  <checkbox id="streamSavePW"
-                            oncommand="SwitchChanged();"
-                            label="&streamSavePW.label;"
-                            accesskey="&streamSavePW.accesskey;"
-                            />
+                  <vbox align="start">
+                    <checkbox id="streamSavePW"
+                              oncommand="SwitchChanged();"
+                              label="&streamSavePW.label;"
+                              accesskey="&streamSavePW.accesskey;"
+                              />
+                  </vbox>
                </row>
                <row>
                   <hbox align="center">
@@ -134,11 +138,20 @@
          </grid>
       </vbox>
       <vbox id="copySettings">
-        <label control="copyDir"
-               value="&copyDir.label;"
-               accesskey="&copyDir.accesskey;"
-               />
-        <textbox id="copyDir" />
+        <separator class="thin" />
+        <label value="&copyDir.label;" />
+        <hbox>
+          <textbox id="copyDir"
+                   readonly="true"
+                   flex="1"
+                   />
+          <button id="browseButton"
+                  label="&browse.label;" 
+                  accesskey="&browse.accesskey;"
+                  filepickertitle="&filepicker.title;"
+                  onclick="Browse();"
+                  /> 
+        </hbox>
       </vbox>
     </deck>
   </groupbox>
