@@ -227,7 +227,7 @@ function backupCerts()
   fp.init(window,
           bundle.GetStringFromName("chooseP12BackupFileDialog"),
           nsIFilePicker.modeSave);
-  fp.appendFilter("PKCS12 Files (*.p12)", "*.p12");
+  fp.appendFilter("PKCS12 Files", "*.p12");
   fp.appendFilters(nsIFilePicker.filterAll);
   var rv = fp.show();
   if (rv == nsIFilePicker.returnOK || rv == nsIFilePicker.returnReplace) {
@@ -268,7 +268,7 @@ function restoreCerts()
   fp.init(window,
           bundle.GetStringFromName("chooseP12RestoreFileDialog"),
           nsIFilePicker.modeOpen);
-  fp.appendFilter("PKCS12 Files (*.p12)", "*.p12");
+  fp.appendFilter("PKCS12 Files", "*.p12;*.pfx");
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
     var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
