@@ -31,7 +31,6 @@
 #include "nsSocketTransportService.h"
 #include "nsAutoLock.h"
 #include "nsIDNSService.h"
-#include "nsString2.h"
 #include "nsISocketProvider.h"
 #include "nsISocketProviderService.h"
 
