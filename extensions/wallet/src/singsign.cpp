@@ -3184,20 +3184,23 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 }
 
 #else
-PUBLIC void
+#include "prtypes.h"
+extern "C" {
+void
 SI_RestoreSignonData
     (char* URLName, char* name, char** value)
 {
 }
 
-PUBLIC void
+void
 SI_RememberSignonData
        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt)
 {
 }
 
-PUBLIC void
-SI_DisplaySignonInfoAsHTML(MWContext *context)
+void
+SI_DisplaySignonInfoAsHTML(struct MWContext *context)
 {
+}
 }
 #endif
