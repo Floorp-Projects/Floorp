@@ -32,6 +32,7 @@
  
 interface nsISHistory;				
 interface nsISHEntry;
+interface nsIURI;
 
 [scriptable, uuid(F5D9E7B0-D930-11d3-B057-00A024FFC08C)]
 interface nsIWebNavigation : nsISupports
@@ -123,9 +124,9 @@ interface nsIWebNavigation : nsISupports
 	readonly attribute nsIDOMDocument document;
 	
 	/*
-	Retrieves the current URI that is loaded.
+	The current URI that is loaded.
 	*/
-	readonly attribute wstring currentURI;
+	readonly attribute nsIURI currentURI;
 	
 	/*
 	The session history object used to store the session history for the session.

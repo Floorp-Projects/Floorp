@@ -96,11 +96,6 @@ interface nsIDocShell : nsISupports
 	*/
 	void stopLoad();
 
-	/*
-	The current URI that is loaded.
-	*/
-	readonly attribute nsIURI currentURI;
-
   /* clients may get and set an nsIDocumentLoaderObserver, which will be notified
    * during loadURI, loadURIVia, and setDocument
    */
