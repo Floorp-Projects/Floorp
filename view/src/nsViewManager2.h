@@ -155,13 +155,16 @@ private:
 					const nsRect &aDamageRect, nsRect &aGlobalRect, PRBool &aResult);
 	PRBool CreateDisplayList(nsIView *aView, PRInt32 *aIndex, nscoord aOriginX, nscoord aOriginY,
 	                       nsIView *aRealView, const nsRect *aDamageRect = nsnull,
-	                       nsIView *aTopView = nsnull, nsVoidArray *aArray = nsnull,
-	                       nscoord aX = 0, nscoord aY = 0);
-	PRBool AddToDisplayList(nsVoidArray *aArray, PRInt32 *aIndex,
-	                      nsIView *aView, nsRect &aRect, PRUint32 aFlags);
+	                       nsIView *aTopView = nsnull, nscoord aX = 0, nscoord aY = 0);
+	PRBool AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect &aRect, PRUint32 aFlags);
+	nsresult PartitionDisplayList(void);	                       
 	void ShowDisplayList(PRInt32 flatlen);
-	void ComputeViewOffset(nsIView *aView, nscoord *aX, nscoord *aY, PRInt32 aFlag);
-	PRBool DoesViewHaveNativeWidget(nsIView &aView);
+	void ComputeViewOffset(nsIView *aView, nsPoint *aOrigin, PRInt32 aFlag);
+
+	// Predicates
+	PRBool DoesViewHaveNativeWidget(nsIView* aView);
+	PRBool IsClipView(nsIView* aView);
+
 	void PauseTimer(void);
 	void RestartTimer(void);
 
@@ -193,6 +196,8 @@ private:
   PRInt32           mUpdateCnt;
   PRInt32           mUpdateBatchCnt;
   nsVoidArray       *mDisplayList;
+  PRInt32			mDisplayListCount;
+  nsVoidArray		*mFrontToBackList;
   nsIScrollableView *mRootScrollable;
 
   //from here to public should be static and locked... MMP

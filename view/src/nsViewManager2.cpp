@@ -41,19 +41,28 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 
 #define NO_DOUBLE_BUFFER
 
-//display list flags
-#define RENDER_VIEW   0x0000
-#define VIEW_INCLUDED 0x0001
-#define PUSH_CLIP     0x0002
-#define POP_CLIP      0x0004
+// display list flags
+#define RENDER_VIEW		0x0000
+#define VIEW_INCLUDED	0x0001
+#define PUSH_CLIP		0x0002
+#define POP_CLIP		0x0004
 
-#define DISPLAYLIST_INC  1
-
-//display list elements
+// display list elements
 struct DisplayListElement {
-  nsIView*	mView;
-  nsRect	mClip;
-  PRUint32	mFlags;
+	nsIView*			mView;
+	nsRect				mClip;
+	PRUint32			mFlags;
+};
+
+/**
+ * FrontToBackElements represent bundles of views that are traversed from
+ * front to back, but are individually rendered back to front. At worst
+ * there will be a single, opaque view in each bundle.
+ */
+struct FrontToBackElements {
+	DisplayListElement* mFirstElement;
+	PRInt32				mCount;
+	nsRect				mClip;
 };
 
 static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
@@ -104,16 +113,15 @@ static NS_DEFINE_IID(knsViewManagerIID, NS_IVIEWMANAGER_IID);
 
 nsViewManager2::nsViewManager2()
 {
-  NS_INIT_REFCNT();
-  mVMCount++;
-  mUpdateBatchCnt = 0;
-  mCompositeListeners = nsnull;
+	NS_INIT_REFCNT();
+	mVMCount++;
+	// NOTE:  we use a zeroing operator new, so all data members are
+	// assumed to be cleared here.
 }
 
 nsViewManager2::~nsViewManager2()
 {
-  if (nsnull != mTimer)
-  {
+  if (nsnull != mTimer) {
     mTimer->Cancel();     //XXX this should not be necessary. MMP
     NS_RELEASE(mTimer);
   }
@@ -631,7 +639,7 @@ static Boolean caps_lock()
 void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
 {
 	PRBool isFloatingView = PR_FALSE;
-	if (NS_SUCCEEDED(aRootView->GetFloating(isFloatingView)) && isFloatingView) {
+	if (PR_FALSE && NS_SUCCEEDED(aRootView->GetFloating(isFloatingView)) && isFloatingView) {
 		// floating views are rendered locally (and act globally).
 		// Paint the view. The clipping rect was set above set don't clip again.
 		aRootView->Paint(aRC, aRect, NS_VIEW_FLAG_CLIP_SET, aResult);
@@ -639,15 +647,29 @@ void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, c
 		// otherwise, use display list to render non-floating views.
 		PRBool clipEmpty;
 
-		// create the display list. shouldn't we be able to just create this once?
+		// compute this view's origin, and mark it and all parent views.
 		nsPoint origin(0, 0);
-		ComputeViewOffset(aRootView, &origin.x, &origin.y, 1);
+		ComputeViewOffset(aRootView, &origin, 1);
 		
-		PRInt32 count = 0;
-		CreateDisplayList(mRootView, &count, origin.x, origin.y, aRootView, &aRect);
+		// create the display list.
+		if (mDisplayList == nsnull) {
+			mDisplayList = new nsVoidArray(8);
+			NS_ASSERTION((mDisplayList != nsnull), "couldn't create display list.");
+			if (mDisplayList == nsnull) {
+				// not enough memory for a display list, punt and draw the view recursively.
+				aRootView->Paint(aRC, aRect, NS_VIEW_FLAG_CLIP_SET, aResult);
+				return;
+			}
+		}
+		mDisplayListCount = 0;
+		CreateDisplayList(mRootView, &mDisplayListCount, origin.x, origin.y, aRootView, &aRect);
+		
+		// now, partition this display list into "front-to-back" bundles, and then draw each bundle
+		// with successively more and more restrictive clipping.
+		PartitionDisplayList();
 		
 		// draw all views in the display list, from back to front.
-		for (PRInt32 i = count - 1; i>= 0; --i) {
+		for (PRInt32 i = mDisplayListCount - 1; i>= 0; --i) {
 			DisplayListElement* element = NS_STATIC_CAST(DisplayListElement*, mDisplayList->ElementAt(i));
 			if (element->mFlags & PUSH_CLIP) {
 				aRC.PushState();
@@ -659,6 +681,8 @@ void nsViewManager2::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, c
 				RenderView(element->mView, aRC, aRect, element->mClip, aResult);
 			}
 		}
+		
+    	ComputeViewOffset(aRootView, nsnull, 0);
 	}
 }
 
@@ -1311,35 +1335,35 @@ NS_IMETHODIMP nsViewManager2::SetViewVisibility(nsIView *aView, nsViewVisibility
 
 NS_IMETHODIMP nsViewManager2::SetViewZIndex(nsIView *aView, PRInt32 aZIndex)
 {
-  nsresult  rv;
+	nsresult  rv = NS_OK;
 
-  NS_ASSERTION(!(nsnull == aView), "no view");
+	NS_ASSERTION((aView != nsnull), "no view");
 
-  PRInt32 oldidx;
+#if 0
+	// a little hack to check out a theory:  don't let floating views have any other z-index.
+	PRBool isFloating = PR_FALSE;
+	aView->GetFloating(isFloating);
+	if (isFloating) {
+		NS_ASSERTION((aZIndex == 0x7FFFFFFF), "floating view's z-index messed up");
+		aZIndex = 0x7FFFFFFF;
+	}
+#endif
 
-  aView->GetZIndex(oldidx);
+	PRInt32 oldidx;
+	aView->GetZIndex(oldidx);
 
-  if (oldidx != aZIndex)
-  {
-    nsIView *parent;
-
-    aView->GetParent(parent);
-
-    if (nsnull != parent)
-    {
-      //we don't just call the view manager's RemoveChild()
-      //so that we can avoid two trips trough the UpdateView()
-      //code (one for removal, one for insertion). MMP
-
-      parent->RemoveChild(aView);
-      UpdateTransCnt(aView, nsnull);
-      rv = InsertChild(parent, aView, aZIndex);
-    }
-    else
-      rv = NS_OK;
-  }
-  else
-    rv = NS_OK;
+	if (oldidx != aZIndex) {
+		nsIView *parent;
+		aView->GetParent(parent);
+		if (nsnull != parent) {
+			//we don't just call the view manager's RemoveChild()
+			//so that we can avoid two trips trough the UpdateView()
+			//code (one for removal, one for insertion). MMP
+			parent->RemoveChild(aView);
+			UpdateTransCnt(aView, nsnull);
+			rv = InsertChild(parent, aView, aZIndex);
+		}
+	}
 
   return rv;
 }
@@ -1844,27 +1868,14 @@ NS_IMETHODIMP nsViewManager2::ForceUpdate()
 
 
 PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
-                                          nscoord aOriginX, nscoord aOriginY, nsIView *aRealView,
-                                          const nsRect *aDamageRect, nsIView *aTopView,
-                                          nsVoidArray *aArray, nscoord aX, nscoord aY)
+                                         nscoord aOriginX, nscoord aOriginY, nsIView *aRealView,
+                                         const nsRect *aDamageRect, nsIView *aTopView,
+                                         nscoord aX, nscoord aY)
 {
-	PRInt32     numkids, zindex;
-	PRBool      retval = PR_FALSE;
-	nsIClipView *clipper = nsnull;
-	nsPoint     *point;
-	nsIView     *child = nsnull;
+	PRBool retval = PR_FALSE;
 
-	NS_ASSERTION(!(!aView), "no view");
-	NS_ASSERTION(!(!aIndex), "no index");
-
-	if (!aArray) {
-		if (!mDisplayList)
-			mDisplayList = new nsVoidArray(8);
-
-		aArray = mDisplayList;
-		if (!aArray)
-			return PR_TRUE;
-	}
+	NS_ASSERTION((aView != nsnull), "no view");
+	NS_ASSERTION((aIndex != nsnull), "no index");
 
 	if (!aTopView)
 		aTopView = aView;
@@ -1880,18 +1891,25 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 	lrect.x += aX;
 	lrect.y += aY;
 
-	aView->QueryInterface(NS_GET_IID(nsIClipView), (void **)&clipper);
-	aView->GetChildCount(numkids);
-	aView->GetScratchPoint(&point);
+	// is this a clip view?
+	PRBool isClipView = IsClipView(aView);
+	
+	// is this view above the currently compositing root view?
+	PRUint32 isParentView = 0;
+	aView->GetCompositorFlags(&isParentView);
 
-	PRBool hasWidget = DoesViewHaveNativeWidget(*aView);
+	// does the view have a widget?
+	PRBool hasWidget = DoesViewHaveNativeWidget(aView);
 
-	if (numkids > 0) {
-		if (clipper && (!hasWidget || (hasWidget && point->x))) {
+	nsIView *childView = nsnull;
+	PRInt32 childCount;
+	aView->GetChildCount(childCount);
+	if (childCount > 0) {
+		if (isClipView && (!hasWidget || (hasWidget && isParentView))) {
 			lrect.x -= aOriginX;
 			lrect.y -= aOriginY;
 
-			retval = AddToDisplayList(aArray, aIndex, aView, lrect, POP_CLIP);
+			retval = AddToDisplayList(aIndex, aView, lrect, POP_CLIP);
 
 			if (retval)
 				return retval;
@@ -1900,16 +1918,17 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 			lrect.y += aOriginY;
 		}
 
-		if (!hasWidget || (hasWidget && point->x))
+		if (!hasWidget || (hasWidget && isParentView))
 		//    if ((aView == aTopView) || (aView == aRealView))
 		//    if ((aView == aTopView) || !hasWidget || (aView == aRealView))
 		//    if ((aView == aTopView) || !(hasWidget && clipper) || (aView == aRealView))
 		{
-			for (aView->GetChild(0, child); nsnull != child; child->GetNextSibling(child)) {
-				child->GetZIndex(zindex);
+			for (aView->GetChild(0, childView); nsnull != childView; childView->GetNextSibling(childView)) {
+				PRInt32 zindex;
+				childView->GetZIndex(zindex);
 				if (zindex < 0)
 					break;
-				retval = CreateDisplayList(child, aIndex, aOriginX, aOriginY, aRealView, aDamageRect, aTopView, aArray, lrect.x, lrect.y);
+				retval = CreateDisplayList(childView, aIndex, aOriginX, aOriginY, aRealView, aDamageRect, aTopView, lrect.x, lrect.y);
 				if (retval)
 					break;
 			}
@@ -1920,9 +1939,9 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 	lrect.y -= aOriginY;
 
 	//  if (clipper)
-	if (clipper && (!hasWidget || (hasWidget && point->x))) {
-		if (numkids > 0)
-			retval = AddToDisplayList(aArray, aIndex, aView, lrect, PUSH_CLIP);
+	if (isClipView && (!hasWidget || (hasWidget && isParentView))) {
+		if (childCount > 0)
+			retval = AddToDisplayList(aIndex, aView, lrect, PUSH_CLIP);
 	} else if (!retval)	{
 		nsViewVisibility  vis;
 		float             opacity;
@@ -1941,18 +1960,18 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 
 		if ((nsViewVisibility_kShow == vis) && (opacity > 0.0f) && overlap)
 		{
-			retval = AddToDisplayList(aArray, aIndex, aView, lrect, 0);
+			retval = AddToDisplayList(aIndex, aView, lrect, 0);
 
 			if (retval || !trans && (opacity == 1.0f) && (irect == *aDamageRect))
 				retval = PR_TRUE;
 		}
 
 		// any children with negative z-indices?
-		if (!retval && nsnull != child) {
+		if (!retval && nsnull != childView) {
 			lrect.x += aOriginX;
 			lrect.y += aOriginY;
-			for (; nsnull != child; child->GetNextSibling(child)) {
-				retval = CreateDisplayList(child, aIndex, aOriginX, aOriginY, aRealView, aDamageRect, aTopView, aArray, lrect.x, lrect.y);
+			for (; nsnull != childView; childView->GetNextSibling(childView)) {
+				retval = CreateDisplayList(childView, aIndex, aOriginX, aOriginY, aRealView, aDamageRect, aTopView, lrect.x, lrect.y);
 				if (retval)
 					break;
 			}
@@ -1962,24 +1981,36 @@ PRBool nsViewManager2::CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 	return retval;
 }
 
-PRBool nsViewManager2::AddToDisplayList(nsVoidArray *aArray, PRInt32 *aIndex, nsIView *aView, nsRect &aRect, PRUint32 aFlags)
+PRBool nsViewManager2::AddToDisplayList(PRInt32 *aIndex, nsIView *aView, nsRect &aRect, PRUint32 aFlags)
 {
-  PRInt32 index = (*aIndex)++;
-  DisplayListElement* element = (DisplayListElement*) mDisplayList->ElementAt(index);
-  if (element == nsnull) {
-    element = new DisplayListElement;
-    if (element == nsnull) {
-      *aIndex = index;
-      return PR_TRUE;
-    }
-    mDisplayList->ReplaceElementAt(element, index);
-  }
-  
-  element->mView = aView;
-  element->mClip = aRect;
-  element->mFlags = aFlags;
-  
-  return PR_FALSE;
+	PRInt32 index = (*aIndex)++;
+	DisplayListElement* element = (DisplayListElement*) mDisplayList->ElementAt(index);
+	if (element == nsnull) {
+		element = new DisplayListElement;
+		if (element == nsnull) {
+			*aIndex = index;
+			return PR_TRUE;
+		}
+		mDisplayList->ReplaceElementAt(element, index);
+	}
+
+	element->mView = aView;
+	element->mClip = aRect;
+	element->mFlags = aFlags;
+
+	return PR_FALSE;
+}
+
+nsresult nsViewManager2::PartitionDisplayList()
+{
+	nsVoidArray* frontToBackList = mFrontToBackList;
+	if (frontToBackList == nsnull) {
+		frontToBackList = mFrontToBackList = new nsVoidArray(8);
+		if (frontToBackList == nsnull)
+			return NS_ERROR_OUT_OF_MEMORY;
+	}
+	
+	return NS_OK;
 }
 
 void nsViewManager2::ShowDisplayList(PRInt32 flatlen)
@@ -1995,8 +2026,7 @@ void nsViewManager2::ShowDisplayList(PRInt32 flatlen)
 
   printf("### display list length=%d ###\n", flatlen);
 
-  for (cnt = 0; cnt < flatlen; cnt += DISPLAYLIST_INC)
-  {
+  for (cnt = 0; cnt < flatlen; cnt++) {
     nsIView   *view, *parent;
     nsRect    rect;
     PRUint32  flags;
@@ -2044,37 +2074,39 @@ void nsViewManager2::ShowDisplayList(PRInt32 flatlen)
   }
 }
 
-void nsViewManager2::ComputeViewOffset(nsIView *aView, nscoord *aX, nscoord *aY, PRInt32 aFlag)
+void nsViewManager2::ComputeViewOffset(nsIView *aView, nsPoint *aOrigin, PRInt32 aFlag)
 {
-  nsIView *parent;
-  nsRect  bounds;
-  nsPoint *point;
+	// Mark the view with specified flags.
+	aView->SetCompositorFlags(aFlag);
 
-  aView->GetScratchPoint(&point);
+	// compute the view's global position in the view hierarchy.
+	if (aOrigin) {
+		nsRect bounds;
+		aView->GetBounds(bounds);
+		aOrigin->x += bounds.x;
+		aOrigin->y += bounds.y;
+	}
 
-  point->x = aFlag;
-
-  aView->GetBounds(bounds);
-
-  if (aX && aY)
-  {
-    *aX += bounds.x;
-    *aY += bounds.y;
-  }
-
-  aView->GetParent(parent);
-
-  if (parent)
-    ComputeViewOffset(parent, aX, aY, aFlag);
+	nsIView *parent;
+	aView->GetParent(parent);
+	if (parent)
+		ComputeViewOffset(parent, aOrigin, aFlag);
 }
 
-PRBool nsViewManager2::DoesViewHaveNativeWidget(nsIView &aView)
+PRBool nsViewManager2::DoesViewHaveNativeWidget(nsIView* aView)
 {
-  nsCOMPtr<nsIWidget> widget;
-  aView.GetWidget(*getter_AddRefs(widget));
-  if (nsnull != widget)
-    return (nsnull != widget->GetNativeData(NS_NATIVE_WIDGET));
-  return PR_FALSE;
+	nsCOMPtr<nsIWidget> widget;
+	aView->GetWidget(*getter_AddRefs(widget));
+	if (nsnull != widget)
+		return (nsnull != widget->GetNativeData(NS_NATIVE_WIDGET));
+	return PR_FALSE;
+}
+
+PRBool nsViewManager2::IsClipView(nsIView* aView)
+{
+	nsIClipView *clipView = nsnull;
+	nsresult rv = aView->QueryInterface(NS_GET_IID(nsIClipView), (void **)&clipView);
+	return (rv == NS_OK && clipView != nsnull);
 }
 
 void nsViewManager2::PauseTimer(void)
