@@ -1077,7 +1077,12 @@ if ($my_webservergroup) {
     fixPerms('css', $<, $webservergid, 027, 1);
     chmod 0644, 'globals.pl';
     chmod 0644, 'RelationSet.pm';
+
+    # Don't use fixPerms here, because it won't change perms on the directory
+    # unless its using recursion
+    chown $<, $webservergid, 'data';
     chmod 0771, 'data';
+    chown $<, $webservergid, 'graphs';
     chmod 0770, 'graphs';
 } else {
     # get current gid from $( list
@@ -1090,7 +1095,12 @@ if ($my_webservergroup) {
     fixPerms('*', $<, $gid, 022);
     fixPerms('template', $<, $gid, 022, 1);
     fixPerms('css', $<, $gid, 022, 1);
+
+    # Don't use fixPerms here, because it won't change perms on the directory
+    # unless its using recursion
+    chown $<, $gid, 'data';
     chmod 0777, 'data';
+    chown $<, $gid, 'graphs';
     chmod 01777, 'graphs';
 }
 
