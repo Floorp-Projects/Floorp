@@ -12,6 +12,15 @@ interface nsMsgLogonRedirectionStates
 	const long Validating = 4;
 };
 
+typedef long nsMsgLogonRedirectionServiceID;
+
+[scriptable, uuid(182CB845-EB0D-11d3-98B7-001083010E9B)]
+interface nsMsgLogonRedirectionServiceIDs
+{
+	const long Imap = 0;
+	const long Smtp = 1;
+};
+
 [scriptable, uuid(3c882b66-df4f-11d3-b9f9-00108335942a)]
 interface nsIMsgLogonRedirectionRequester : nsISupports
 {
@@ -29,7 +38,7 @@ interface nsIMsgLogonRedirectionRequester : nsISupports
 [scriptable, uuid(0c2e96ac-e0ae-11d3-a560-0060b0fc04b7)] 
 interface nsIMsgLogonRedirector : nsISupports 
 { 
- void Logon(in string userName, in string password, in nsIMsgLogonRedirectionRequester listener); 
+ void Logon(in string userName, in string password, in nsIMsgLogonRedirectionRequester listener, in nsMsgLogonRedirectionServiceID aServiceID); 
  void Logoff(in string userName); /* might not need this one */ 
 }; 
 
