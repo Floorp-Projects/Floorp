@@ -432,6 +432,16 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
             }
           }
           break;
+        case NS_VK_HOME: 
+        case NS_VK_END:
+          if (!mCurrentFocus) {
+            nsIScrollableView* sv = GetNearestScrollingView(aView);
+            if (sv) {
+              nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
+              sv->ScrollByWhole((keyEvent->keyCode != NS_VK_HOME) ? PR_TRUE : PR_FALSE);
+            }
+          }
+          break;
         case NS_VK_DOWN: 
         case NS_VK_UP:
           if (!mCurrentFocus) {

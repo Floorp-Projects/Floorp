@@ -31,11 +31,3 @@
                                                           in DOMString nameSpace)
                                                           raises(DOMException);     Range                     createRange();
    };
-
-   interface EventCapturer : EventReceiver {
-/* IID: { 0xa6cf906c, 0x15b3, 0x11d2, \
-  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
-
-     void                      captureEvent(in wstring type);
-     void                      releaseEvent(in wstring type);
-   };

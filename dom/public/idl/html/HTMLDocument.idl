@@ -43,4 +43,8 @@
      void                      open(/* ... */);
      void                      write(/* ... */);
      void                      writeln(/* ... */);
+
+     void captureEvents(in long eventFlags);
+     void releaseEvents(in long eventFlags);
+     void routeEvent(in Event evt);
    };

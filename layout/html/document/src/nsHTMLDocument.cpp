@@ -78,6 +78,7 @@
 #include "nsGenericDOMNodeList.h"
 #include "nsICSSLoader.h"
 #include "nsIHTTPChannel.h"
+#include "nsIEventListenerManager.h"
 
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionAdaptor.h"
@@ -2212,6 +2213,36 @@ nsHTMLDocument::GetSelection(nsString& aReturn)
 {
   //XXX TBImplemented
   aReturn.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::CaptureEvents(PRInt32 aEventFlags)
+{
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    //mManager->CaptureEvent(aListener);
+    NS_RELEASE(manager);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::ReleaseEvents(PRInt32 aEventFlags)
+{
+  if (nsnull != mListenerManager) {
+    //mListenerManager->ReleaseEvent(aListener);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::RouteEvent(nsIDOMEvent* aEvt)
+{
+  //XXX Not the best solution -joki
   return NS_OK;
 }
 

@@ -32,6 +32,7 @@ class nsIDOMBarProp;
 class nsIDOMScreen;
 class nsIDOMHistory;
 class nsIDOMWindowCollection;
+class nsIDOMEvent;
 class nsIDOMWindow;
 
 #define NS_IDOMWINDOW_IID \
@@ -160,6 +161,16 @@ public:
 
   NS_IMETHOD    SetInterval(JSContext* cx, jsval* argv, PRUint32 argc, PRInt32* aReturn)=0;
 
+  NS_IMETHOD    CaptureEvents(PRInt32 aEventFlags)=0;
+
+  NS_IMETHOD    ReleaseEvents(PRInt32 aEventFlags)=0;
+
+  NS_IMETHOD    RouteEvent(nsIDOMEvent* aEvt)=0;
+
+  NS_IMETHOD    EnableExternalCapture()=0;
+
+  NS_IMETHOD    DisableExternalCapture()=0;
+
   NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, PRInt32 aXPos, PRInt32 aYPos, const nsString& aPopupType, const nsString& aAnchorAlignment, const nsString& aPopupAlignment, nsIDOMWindow** aReturn)=0;
 
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
@@ -234,6 +245,11 @@ public:
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID);  \
   NS_IMETHOD    SetTimeout(JSContext* cx, jsval* argv, PRUint32 argc, PRInt32* aReturn);  \
   NS_IMETHOD    SetInterval(JSContext* cx, jsval* argv, PRUint32 argc, PRInt32* aReturn);  \
+  NS_IMETHOD    CaptureEvents(PRInt32 aEventFlags);  \
+  NS_IMETHOD    ReleaseEvents(PRInt32 aEventFlags);  \
+  NS_IMETHOD    RouteEvent(nsIDOMEvent* aEvt);  \
+  NS_IMETHOD    EnableExternalCapture();  \
+  NS_IMETHOD    DisableExternalCapture();  \
   NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, PRInt32 aXPos, PRInt32 aYPos, const nsString& aPopupType, const nsString& aAnchorAlignment, const nsString& aPopupAlignment, nsIDOMWindow** aReturn);  \
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
   NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
@@ -306,6 +322,11 @@ public:
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID) { return _to ClearInterval(aTimerID); }  \
   NS_IMETHOD    SetTimeout(JSContext* cx, jsval* argv, PRUint32 argc, PRInt32* aReturn) { return _to SetTimeout(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    SetInterval(JSContext* cx, jsval* argv, PRUint32 argc, PRInt32* aReturn) { return _to SetInterval(cx, argv, argc, aReturn); }  \
+  NS_IMETHOD    CaptureEvents(PRInt32 aEventFlags) { return _to CaptureEvents(aEventFlags); }  \
+  NS_IMETHOD    ReleaseEvents(PRInt32 aEventFlags) { return _to ReleaseEvents(aEventFlags); }  \
+  NS_IMETHOD    RouteEvent(nsIDOMEvent* aEvt) { return _to RouteEvent(aEvt); }  \
+  NS_IMETHOD    EnableExternalCapture() { return _to EnableExternalCapture(); }  \
+  NS_IMETHOD    DisableExternalCapture() { return _to DisableExternalCapture(); }  \
   NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, PRInt32 aXPos, PRInt32 aYPos, const nsString& aPopupType, const nsString& aAnchorAlignment, const nsString& aPopupAlignment, nsIDOMWindow** aReturn) { return _to CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType, aAnchorAlignment, aPopupAlignment, aReturn); }  \
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to Open(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to OpenDialog(cx, argv, argc, aReturn); }  \

@@ -34,7 +34,7 @@
 
         void  dump(in wstring str);
         void  alert(/* ... */);
-	boolean  confirm(/* ... */);
+	      boolean  confirm(/* ... */);
         DOMString  prompt(/* ... */);
         void  focus();
         void  blur();
@@ -58,6 +58,12 @@
         long setTimeout(/* ... */);
         long setInterval(/* ... */);
 
+        void captureEvents(in long eventFlags);
+        void releaseEvents(in long eventFlags);
+        void routeEvent(in Event evt);
+        void enableExternalCapture();
+        void disableExternalCapture();
+        
         Window createPopup(in Element element, in Element popupContent,
                            in long xPos, in long yPos, 
                            in DOMString popupType, in DOMString anchorAlignment,
@@ -66,14 +72,6 @@
         Window open(/* ... */);
         Window openDialog(/* ... */);
       };
-
-     interface EventCapturer : EventReceiver {
-/* IID: { 0xa6cf906c, 0x15b3, 0x11d2, \
-  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
-
-       void   captureEvent(in wstring type);
-	   void   releaseEvent(in wstring type);
-     };
 
      interface EventTarget {
  /* IID: { 0x1c773b30, 0xd1cf, 0x11d2, \

@@ -128,6 +128,9 @@ public:
 
   NS_IMETHOD    GetRangeOffset(PRInt32* aRangeOffset);
 
+  NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble);
+  NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble);
+
   // nsIPrivateDOMEvent interface
   NS_IMETHOD    DuplicatePrivateData();
   NS_IMETHOD    SetTarget(nsIDOMNode* aNode);

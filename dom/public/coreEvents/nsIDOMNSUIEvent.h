@@ -34,41 +34,41 @@ class nsIDOMNSUIEvent : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSUIEVENT_IID; return iid; }
   enum {
-    EVENT_MOUSEDOWN = 1,
-    EVENT_MOUSEUP = 2,
-    EVENT_MOUSEOVER = 4,
-    EVENT_MOUSEOUT = 8,
-    EVENT_MOUSEMOVE = 16,
-    EVENT_MOUSEDRAG = 32,
-    EVENT_CLICK = 64,
-    EVENT_DBLCLICK = 128,
-    EVENT_KEYDOWN = 256,
-    EVENT_KEYUP = 512,
-    EVENT_KEYPRESS = 1024,
-    EVENT_DRAGDROP = 2048,
-    EVENT_FOCUS = 4096,
-    EVENT_BLUR = 8192,
-    EVENT_SELECT = 16384,
-    EVENT_CHANGE = 32768,
-    EVENT_RESET = 65536,
-    EVENT_SUBMIT = 131072,
-    EVENT_SCROLL = 262144,
-    EVENT_LOAD = 524288,
-    EVENT_UNLOAD = 1048576,
-    EVENT_XFER_DONE = 2097152,
-    EVENT_ABORT = 4194304,
-    EVENT_ERROR = 8388608,
-    EVENT_LOCATE = 16777216,
-    EVENT_MOVE = 33554432,
-    EVENT_RESIZE = 67108864,
-    EVENT_FORWARD = 134217728,
-    EVENT_HELP = 268435456,
-    EVENT_BACK = 536870912,
-    EVENT_TEXT = 1073741824,
-    EVENT_ALT_MASK = 1,
-    EVENT_CONTROL_MASK = 2,
-    EVENT_SHIFT_MASK = 4,
-    EVENT_META_MASK = 8
+    MOUSEDOWN = 1,
+    MOUSEUP = 2,
+    MOUSEOVER = 4,
+    MOUSEOUT = 8,
+    MOUSEMOVE = 16,
+    MOUSEDRAG = 32,
+    CLICK = 64,
+    DBLCLICK = 128,
+    KEYDOWN = 256,
+    KEYUP = 512,
+    KEYPRESS = 1024,
+    DRAGDROP = 2048,
+    FOCUS = 4096,
+    BLUR = 8192,
+    SELECT = 16384,
+    CHANGE = 32768,
+    RESET = 65536,
+    SUBMIT = 131072,
+    SCROLL = 262144,
+    LOAD = 524288,
+    UNLOAD = 1048576,
+    XFER_DONE = 2097152,
+    ABORT = 4194304,
+    ERROR = 8388608,
+    LOCATE = 16777216,
+    MOVE = 33554432,
+    RESIZE = 67108864,
+    FORWARD = 134217728,
+    HELP = 268435456,
+    BACK = 536870912,
+    TEXT = 1073741824,
+    ALT_MASK = 1,
+    CONTROL_MASK = 2,
+    SHIFT_MASK = 4,
+    META_MASK = 8
   };
 
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX)=0;
@@ -84,6 +84,9 @@ public:
   NS_IMETHOD    GetRangeParent(nsIDOMNode** aRangeParent)=0;
 
   NS_IMETHOD    GetRangeOffset(PRInt32* aRangeOffset)=0;
+
+  NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble)=0;
+  NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble)=0;
 };
 
 
@@ -95,6 +98,8 @@ public:
   NS_IMETHOD    GetWhich(PRUint32* aWhich);  \
   NS_IMETHOD    GetRangeParent(nsIDOMNode** aRangeParent);  \
   NS_IMETHOD    GetRangeOffset(PRInt32* aRangeOffset);  \
+  NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble);  \
+  NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble);  \
 
 
 
@@ -106,6 +111,8 @@ public:
   NS_IMETHOD    GetWhich(PRUint32* aWhich) { return _to GetWhich(aWhich); } \
   NS_IMETHOD    GetRangeParent(nsIDOMNode** aRangeParent) { return _to GetRangeParent(aRangeParent); } \
   NS_IMETHOD    GetRangeOffset(PRInt32* aRangeOffset) { return _to GetRangeOffset(aRangeOffset); } \
+  NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble) { return _to GetCancelBubble(aCancelBubble); } \
+  NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble) { return _to SetCancelBubble(aCancelBubble); } \
 
 
 #endif // nsIDOMNSUIEvent_h__
