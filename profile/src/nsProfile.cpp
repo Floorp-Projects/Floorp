@@ -91,7 +91,6 @@
 #define INSTALLER_CMD_LINE_ARG         "-installer"
 #define CREATE_PROFILE_CMD_LINE_ARG    "-CreateProfile"
 #define PROFILE_CMD_LINE_ARG "-P"   
-#define SHRIMP_CMD_LINE_ARG  "-Shrimp"
 
 #define PREF_CONFIRM_AUTOMIGRATION     "profile.confirm_automigration"
 #define SHRIMP_PREF                    "shrimp.startup.enable"
@@ -113,7 +112,6 @@
 static nsProfileAccess*    gProfileDataAccess = nsnull;
 static PRInt32          gDataAccessInstCount = 0;
 static PRBool           mCurrentProfileAvailable = PR_FALSE;
-static PRBool           gShrimpFlag = PR_FALSE;
 
 // IID and CIDs of all the services needed
 static NS_DEFINE_CID(kIProfileIID, NS_IPROFILE_IID);
@@ -267,6 +265,12 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
     if (NS_FAILED(rv))
         return rv;
 
+    PRBool shrimpPrefEnabled = PR_FALSE;
+    prefs->GetBoolPref(SHRIMP_PREF, &shrimpPrefEnabled);
+
+    if (shrimpPrefEnabled)
+        profileURLStr = "";
+
     if (profileURLStr.Length() == 0)
     {
         // This means that there was no command-line argument to force
@@ -288,10 +292,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
             profileURLStr = PROFILE_SELECTION_URL;
     }
 
-    PRBool shrimpPrefEnabled = PR_FALSE;
-    prefs->GetBoolPref(SHRIMP_PREF, &shrimpPrefEnabled);
-
-    if ((profileURLStr.Length() != 0) && !(shrimpPrefEnabled && gShrimpFlag))
+    if ((profileURLStr.Length() != 0) && !(shrimpPrefEnabled))
     {
         rv = NS_NewURI(getter_AddRefs(profileURL), (const char *)profileURLStr);
 
@@ -561,16 +562,6 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     {        
         if (cmdResult) {
             profileURLStr = PROFILE_WIZARD_URL;
-        }
-    }
-
-    // Start Profile Wizard
-    rv = cmdLineArgs->GetCmdLineValue(SHRIMP_CMD_LINE_ARG, &cmdResult);
-    if (NS_SUCCEEDED(rv))
-    {        
-        if (cmdResult) {
-            gShrimpFlag = PR_TRUE;
-            profileURLStr = "";
         }
     }
 
