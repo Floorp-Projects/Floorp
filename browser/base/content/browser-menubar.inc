@@ -22,13 +22,12 @@
                 <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" oncommand="PrintUtils.showPageSetup();"/>
                 <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" oncommand="PrintUtils.printPreview(onEnterPrintPreview, onExitPrintPreview);"/>
                 <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="printKb" command="cmd_print"/>
-                <menuseparator/>
-                <menuitem id="goOfflineMenuitem"
-                          label="&goOfflineCmd.label;" accesskey="&goOfflineCmd.accesskey;" 
-                          type="checkbox" oncommand="BrowserOffline.toggleOfflineStatus();"/>
 #ifndef XP_MACOSX
                 <menuseparator/>
 #endif
+                <menuitem id="goOfflineMenuitem"
+                          label="&goOfflineCmd.label;" accesskey="&goOfflineCmd.accesskey;" 
+                          type="checkbox" oncommand="BrowserOffline.toggleOfflineStatus();"/>
                 <menuitem id="menu_FileQuitItem" 
 #ifdef XP_WIN
 			  label="&quitApplicationCmdWin.label;"
