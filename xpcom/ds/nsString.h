@@ -113,13 +113,13 @@ public:
    * This constructor accepts a unichar string
    * @param   aCString is a ptr to a 2-byte cstr
    */
-  nsCString(const PRUnichar* aString,PRInt32 aLength=-1);
+//nsCString(const PRUnichar* aString,PRInt32 aLength=-1);
 
   /**
    * This is a copy constructor that accepts an nsStr
    * @param   reference to another nsCString
    */
-  nsCString(const nsStr&);
+//nsCString(const nsStr&);
 #endif
 
   /**
@@ -414,27 +414,20 @@ public:
   nsCString& Assign(char aChar);
 
   nsCString& Assign(const nsStr& aString,PRInt32 aCount=-1);
-  nsCString& Assign(const PRUnichar* aString,PRInt32 aCount=-1) { AssignWithConversion(aString, aCount); return *this; }
-  nsCString& Assign(PRUnichar aChar)                            { AssignWithConversion(aChar); return *this; }
-
-  /**
-   * Functionally equivalent to assign or operator=
-   * 
-   */
-  nsCString& SetString(const char* aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
-  nsCString& SetString(const nsStr& aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
+//nsCString& Assign(const PRUnichar* aString,PRInt32 aCount=-1) { AssignWithConversion(aString, aCount); return *this; }
+//nsCString& Assign(PRUnichar aChar)                            { AssignWithConversion(aChar); return *this; }
 
   /**
    * here come a bunch of assignment operators...
    * @param   aString: string to be added to this
    * @return  this
    */
-  nsCString& operator=(PRUnichar aChar)           {AssignWithConversion(aChar); return *this;}
+//nsCString& operator=(PRUnichar aChar)           {AssignWithConversion(aChar); return *this;}
   nsCString& operator=(char aChar)                {return Assign(aChar);}
-  nsCString& operator=(const PRUnichar* aString)  {AssignWithConversion(aString); return *this;}
+//nsCString& operator=(const PRUnichar* aString)  {AssignWithConversion(aString); return *this;}
 
   nsCString& operator=(const nsCString& aString)  {return Assign(aString);}
-  nsCString& operator=(const nsStr& aString)      {return Assign(aString);}
+//nsCString& operator=(const nsStr& aString)      {return Assign(aString);}
   nsCString& operator=(const char* aCString)      {return Assign(aCString);}
 
     // Yes, I know this makes assignment from a |nsSubsumeString| not do the special thing
@@ -468,15 +461,15 @@ public:
 #endif
 
 #ifndef NEW_STRING_APIS
-  nsCString& Append(const nsStr& aString,PRInt32 aCount=-1);
+//nsCString& Append(const nsStr& aString,PRInt32 aCount=-1);
   nsCString& Append(const nsCString& aString,PRInt32 aCount);
   nsCString& Append(const nsCString& aString)           {return Append(aString,(PRInt32)aString.mLength);}
   nsCString& Append(const char* aString,PRInt32 aCount=-1);
   nsCString& Append(char aChar);
 
-  nsCString& Append(PRUnichar aChar)                    {AppendWithConversion(aChar); return *this;}
-  nsCString& Append(PRInt32 aInteger,PRInt32 aRadix=10) {AppendInt(aInteger,aRadix); return *this;}
-  nsCString& Append(float aFloat)                       {AppendFloat(aFloat); return *this;}
+//nsCString& Append(PRUnichar aChar)                    {AppendWithConversion(aChar); return *this;}
+//nsCString& Append(PRInt32 aInteger,PRInt32 aRadix=10) {AppendInt(aInteger,aRadix); return *this;}
+//nsCString& Append(float aFloat)                       {AppendFloat(aFloat); return *this;}
 
   /**
    * Here's a bunch of methods that append varying types...
@@ -486,9 +479,9 @@ public:
   nsCString& operator+=(const nsCString& aString) {return Append(aString,(PRInt32)aString.mLength);}
   nsCString& operator+=(const char* aCString)     {return Append(aCString);}
 
-  nsCString& operator+=(const PRUnichar aChar)    {return Append(aChar);}
+//nsCString& operator+=(const PRUnichar aChar)    {return Append(aChar);}
   nsCString& operator+=(const char aChar)         {return Append(aChar);}
-  nsCString& operator+=(const int anInt)          {return Append(anInt,10);}
+//nsCString& operator+=(const int anInt)          {return Append(anInt,10);}
 #endif
              
   /*
@@ -544,7 +537,7 @@ public:
    *
    *  @return number of chars inserted into this.
    */
-  nsCString& Insert(const nsCString& aCopy,PRUint32 anOffset,PRInt32 aCount=-1);
+  void Insert(const nsCString& aCopy,PRUint32 anOffset,PRInt32 aCount=-1);
 
   /**
    * Insert a given string into this string at
@@ -554,7 +547,7 @@ public:
    * @param   anOffset is insert pos in str 
    * @return  the number of chars inserted into this string
    */
-  nsCString& Insert(const char* aChar,PRUint32 anOffset,PRInt32 aCount=-1);
+  void Insert(const char* aChar,PRUint32 anOffset,PRInt32 aCount=-1);
 
   /**
    * Insert a single char into this string at
@@ -564,8 +557,8 @@ public:
    * @param   anOffset is insert pos in str 
    * @return  the number of chars inserted into this string
    */
-  nsCString& Insert(PRUnichar aChar,PRUint32 anOffset)  {InsertWithConversion(aChar,anOffset); return *this;}
-  nsCString& Insert(char aChar,PRUint32 anOffset);
+//void Insert(PRUnichar aChar,PRUint32 anOffset)  {InsertWithConversion(aChar,anOffset);}
+  void Insert(char aChar,PRUint32 anOffset);
 #endif
 
   /*
@@ -577,7 +570,7 @@ public:
    *  @return *this
    */
 #ifndef NEW_STRING_APIS
-  nsCString& Cut(PRUint32 anOffset,PRInt32 aCount);
+  void Cut(PRUint32 anOffset,PRInt32 aCount);
 #endif
 
 
@@ -680,12 +673,12 @@ public:
   PRBool  EqualsIgnoreCase(const PRUnichar* aString,PRInt32 aCount=-1) const;
 
 #ifndef NEW_STRING_APIS
-  virtual PRInt32 Compare(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
-    return CompareWithConversion(aString,aIgnoreCase,aCount);
-  }
-  virtual PRInt32 Compare(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
-    return CompareWithConversion(aString,aIgnoreCase,aCount);
-  }
+//virtual PRInt32 Compare(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
+//  return CompareWithConversion(aString,aIgnoreCase,aCount);
+//}
+//virtual PRInt32 Compare(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
+//  return CompareWithConversion(aString,aIgnoreCase,aCount);
+//}
 
   virtual PRInt32 Compare(const nsStr &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
 
@@ -707,9 +700,9 @@ public:
     return EqualsWithConversion(aString,aIgnoreCase,aCount);
   }
 
-  PRBool  Equals(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
-    return EqualsWithConversion(aString,aIgnoreCase,aCount);
-  }
+//PRBool  Equals(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
+//  return EqualsWithConversion(aString,aIgnoreCase,aCount);
+//}
 
   PRBool  Equals(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
 
@@ -722,7 +715,7 @@ public:
    */
   PRBool  operator==(const nsStr &aString) const;
   PRBool  operator==(const char* aString) const;
-  PRBool  operator==(const PRUnichar* aString) const;
+//PRBool  operator==(const PRUnichar* aString) const;
 
   /**
    * These methods perform a !compare of a given string type to this 
@@ -731,7 +724,7 @@ public:
    */
   PRBool  operator!=(const nsStr &aString) const;
   PRBool  operator!=(const char* aString) const;
-  PRBool  operator!=(const PRUnichar* aString) const;
+//PRBool  operator!=(const PRUnichar* aString) const;
 
   /**
    * These methods test if a given string is < than this
@@ -740,7 +733,7 @@ public:
    */
   PRBool  operator<(const nsStr &aString) const;
   PRBool  operator<(const char* aString) const;
-  PRBool  operator<(const PRUnichar* aString) const;
+//PRBool  operator<(const PRUnichar* aString) const;
 
   /**
    * These methods test if a given string is > than this
@@ -749,7 +742,7 @@ public:
    */
   PRBool  operator>(const nsStr &S) const;
   PRBool  operator>(const char* aString) const;
-  PRBool  operator>(const PRUnichar* aString) const;
+//PRBool  operator>(const PRUnichar* aString) const;
 
   /**
    * These methods test if a given string is <= than this
@@ -758,7 +751,7 @@ public:
    */
   PRBool  operator<=(const nsStr &S) const;
   PRBool  operator<=(const char* aString) const;
-  PRBool  operator<=(const PRUnichar* aString) const;
+//PRBool  operator<=(const PRUnichar* aString) const;
 
   /**
    * These methods test if a given string is >= than this
@@ -767,7 +760,7 @@ public:
    */
   PRBool  operator>=(const nsStr &S) const;
   PRBool  operator>=(const char* aString) const;
-  PRBool  operator>=(const PRUnichar* aString) const;
+//PRBool  operator>=(const PRUnichar* aString) const;
 #endif // !defined(NEW_STRING_APIS)
 
   void    DebugDump(void) const;
@@ -815,9 +808,9 @@ public:
     nsCAutoString(const CBufDescriptor& aBuffer);
 
 #ifndef NEW_STRING_APIS
-    nsCAutoString(const PRUnichar* aString,PRInt32 aLength=-1);
-    nsCAutoString(const nsStr& aString);
-    nsCAutoString(PRUnichar aChar);
+//  nsCAutoString(const PRUnichar* aString,PRInt32 aLength=-1);
+//  nsCAutoString(const nsStr& aString);
+//  nsCAutoString(PRUnichar aChar);
 #endif
 
 #ifdef AIX
@@ -831,8 +824,8 @@ public:
     nsCAutoString& operator=(const nsCAutoString& aString) {nsCString::Assign(aString); return *this;}
     nsCAutoString& operator=(const nsCString& aString) {nsCString::Assign(aString); return *this;}
     nsCAutoString& operator=(const char* aCString) {nsCString::Assign(aCString); return *this;}
-    nsCAutoString& operator=(const PRUnichar* aString) {nsCString::Assign(aString); return *this;}
-    nsCAutoString& operator=(PRUnichar aChar) {nsCString::Assign(aChar); return *this;}
+//  nsCAutoString& operator=(const PRUnichar* aString) {nsCString::Assign(aString); return *this;}
+//  nsCAutoString& operator=(PRUnichar aChar) {nsCString::Assign(aChar); return *this;}
     nsCAutoString& operator=(char aChar) {nsCString::Assign(aChar); return *this;}
 #endif
 
