@@ -45,8 +45,6 @@
 /* callbacks from widgets */
 static void value_changed_cb (GtkAdjustment *adjustment, gpointer data);
 
-static gboolean expose_event_cb (GtkWidget *widget, GdkEventExpose *event);
-
 nsScrollbar::nsScrollbar(PRBool aIsVertical)
 {
     if (aIsVertical)
@@ -477,9 +475,6 @@ nsScrollbar::NativeCreate(nsIWidget        *aParent,
     g_signal_connect(G_OBJECT(mAdjustment), "value_changed",
                      G_CALLBACK(value_changed_cb), this);
 
-    g_signal_connect(G_OBJECT(mWidget), "expose_event",
-                     G_CALLBACK(expose_event_cb), NULL);
-
     LOG(("nsScrollbar [%p] %s %p %lx\n", (void *)this,
          (mOrientation == GTK_ORIENTATION_VERTICAL)
          ? "vertical" : "horizontal", 
@@ -577,14 +572,3 @@ value_changed_cb (GtkAdjustment *adjustment, gpointer data)
     scrollbar->OnValueChanged();
 }
 
-/* static */
-gboolean
-expose_event_cb (GtkWidget *widget, GdkEventExpose *event)
-{
-    printf("scrollbar expose event %p %d %d %d %d\n", (void *)event->window,
-           event->area.x,
-           event->area.y,
-           event->area.width,
-           event->area.height);
-    return FALSE;
-}
