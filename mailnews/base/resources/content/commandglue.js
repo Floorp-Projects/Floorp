@@ -1,6 +1,16 @@
 var msgAppCore;
 var composeAppCore;
 
+var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
+RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+
+//put this in a function so we can change the position in hierarchy if we have to.
+function GetFolderTree()
+{
+	var folderTree = frames[0].frames[0].document.getElementById('folderTree'); 
+	return folderTree;
+}
+
 function FindMsgAppCore()
 {
   msgAppCore = XPAppCoresManager.Find("MsgAppCore");
@@ -175,3 +185,29 @@ function MsgPreferences()
   }
 }
 
+
+function GetSelectedFolderResource()
+{
+	var folderTree = GetFolderTree();
+	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
+	var selectedFolder = selectedFolderList[0];
+	var uri = selectedFolder.getAttribute('id');
+
+
+	var folderResource = RDF.GetResource(uri);
+	return folderResource;
+
+}
+
+function SetFolderCharset(folderResource, aCharset)
+{
+	var folderTree = GetFolderTree();
+
+	var db = folderTree.database;
+	var db2 = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
+
+	var charsetResource = RDF.GetLiteral(aCharset);
+	var charsetProperty = RDF.GetResource("http://home.netscape.com/NC-rdf#Charset");
+
+	db2.Assert(folderResource, charsetProperty, charsetResource, true);
+}

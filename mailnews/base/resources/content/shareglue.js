@@ -24,6 +24,8 @@ function MessengerSetDefaultCharacterSet(aCharset)
   if (appCore != null) {
     dump(aCharset);dump("\n");
     appCore.SetDocumentCharset(aCharset);
+	var folderResource = GetSelectedFolderResource();
+	SetFolderCharset(folderResource, aCharset);
     MsgReload();
   } else {
     dump("MsgAppCore has not been created!\n");
