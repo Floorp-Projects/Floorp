@@ -267,7 +267,7 @@ namespace MetaData {
 
                 CompilationData *oldData = startCompilationUnit(bCon, bCon->mSource, bCon->mSourceLocation);
                 ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-                RootKeeper rk(&runtimeFrame);
+                DEFINE_ROOTKEEPER(rk, runtimeFrame);
                 runtimeFrame->instantiate(env);
                 runtimeFrame->thisObject = thisValue;
                 runtimeFrame->assignArguments(this, fnObj, argv, argc);
@@ -591,7 +591,7 @@ namespace MetaData {
         // XXX could speed up by pushing knowledge of single namespace?
         LookupKind lookup(false, JS2VAL_NULL);
         Multiname *mn = new Multiname(name, meta->publicNamespace);
-        RootKeeper rk(&mn);
+        DEFINE_ROOTKEEPER(rk, mn);
         return defaultReadProperty(meta, base, limit, mn, &lookup, phase, rval);
     }
 
@@ -600,7 +600,7 @@ namespace MetaData {
         // XXX could speed up by pushing knowledge of single namespace & lookup?
         LookupKind lookup(false, JS2VAL_NULL);
         Multiname *mn = new Multiname(name, meta->publicNamespace);
-        RootKeeper rk(&mn);
+        DEFINE_ROOTKEEPER(rk, mn);
         return defaultDeleteProperty(meta, base, limit, mn, &lookup, result);
     }
 
@@ -609,7 +609,7 @@ namespace MetaData {
         // XXX could speed up by pushing knowledge of single namespace?
         LookupKind lookup(false, JS2VAL_NULL);
         Multiname *mn = new Multiname(name, meta->publicNamespace);
-        RootKeeper rk(&mn);
+        DEFINE_ROOTKEEPER(rk, mn);
         return defaultWriteProperty(meta, base, limit, mn, &lookup, createIfMissing, newValue);
     }
 
@@ -666,7 +666,7 @@ namespace MetaData {
                             || ( (JS2VAL_TO_OBJECT(base)->kind == PackageKind) && !checked_cast<Package *>(JS2VAL_TO_OBJECT(base))->sealed)) ) {
                 QualifiedName qName = multiname->selectPrimaryName(meta);
                 Multiname *mn = new Multiname(qName);
-                RootKeeper rk(&mn);
+                DEFINE_ROOTKEEPER(rk, mn);
                 if ( (meta->findBaseInstanceMember(limit, mn, ReadAccess) == NULL)
                         && (meta->findCommonMember(&base, mn, ReadAccess, true) == NULL) ) {
                     meta->createDynamicProperty(JS2VAL_TO_OBJECT(base), &qName, newValue, ReadWriteAccess, false, true);

@@ -35,8 +35,6 @@
 #define js2value_h___
 
 
-#define JS2_BIT(n)       ((uint32)1 << (n))
-#define JS2_BITMASK(n)   (JS2_BIT(n) - 1)
 /*
  * Type tags stored in the low bits of a js2val.
  */
@@ -67,11 +65,11 @@
 
 /* Type tag bitfield length and derived macros. */
 #define JS2VAL_TAGBITS           4
-#define JS2VAL_TAGMASK           JS2_BITMASK(JS2VAL_TAGBITS)
+#define JS2VAL_TAGMASK           JS_BITMASK(JS2VAL_TAGBITS)
 #define JS2VAL_TAG(v)            ((v) & JS2VAL_TAGMASK)
 #define JS2VAL_SETTAG(v,t)       ((v) | (t))
 #define JS2VAL_CLRTAG(v)         ((v) & ~(js2val)JS2VAL_TAGMASK)
-#define JS2VAL_ALIGN             JS2_BIT(JS2VAL_TAGBITS)
+#define JS2VAL_ALIGN             JS_BIT(JS2VAL_TAGBITS)
 
 #define JS2VAL_INT_POW2(n)       ((js2val)1 << (n))
 #define JS2VAL_INT_MAX           (JS2VAL_INT_POW2(30) - 1)

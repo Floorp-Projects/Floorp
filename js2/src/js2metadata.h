@@ -147,16 +147,22 @@ enum Hint { NoHint, NumberHint, StringHint };
 
 class PondScum {
 public:    
+
     void resetMark()        { size &= 0x7FFFFFFF; }
     void mark()             { size |= 0x80000000; }
     bool isMarked()         { return ((size & 0x80000000) != 0); }
-    uint32 getSize()        { return size & 0x7FFFFFFF; }
-    void setSize(uint32 sz) { ASSERT((sz & 0x8000000) == 0); size = (sz & 0x7FFFFFFF); }
+
+    void setIsJS2Object()   { size |= 0x40000000; }
+    bool isJS2Object()      { return ((size & 0x40000000) != 0); }
+
+    uint32 getSize()        { return size & 0x3FFFFFFF; }
+    void setSize(uint32 sz) { ASSERT((sz & 0xC000000) == 0); size = (sz & 0x3FFFFFFF); }
 
     Pond *owner;    // for a piece of scum in use, this points to it's own Pond
                     // otherwise it's a link to the next item on the free list
 private:
     uint32 size;    // The high bit is used as the gc mark flag
+                    // The next high bit is the flag that mark JS2Objects (1) or generic pointers
 };
 
 // A pond is a place to get chunks of PondScum from and to return them to
@@ -166,7 +172,7 @@ class Pond {
 public:
     Pond(size_t sz, Pond *nextPond);
     
-    void *allocFromPond(size_t sz);
+    void *allocFromPond(size_t sz, bool isJS2Object);
     uint32 returnToPond(PondScum *p);
 
     void resetMarks();
@@ -187,6 +193,8 @@ public:
 #define GCMARKOBJECT(n) if ((n) && !(n)->isMarked()) { (n)->markObject(); (n)->markChildren(); }
 #define GCMARKVALUE(v) JS2Object::markJS2Value(v)
 
+class RootKeeper;
+
 class JS2Object {
 // Every object is either undefined, null, a Boolean,
 // a number, a string, a namespace, a compound attribute, a class, a method closure, 
@@ -198,18 +206,23 @@ public:
     ObjectKind kind;
 
     static Pond pond;
+#ifdef DEBUG
+    static std::list<RootKeeper *> rootList;
+    typedef std::list<RootKeeper *>::iterator RootIterator;
+    static RootIterator addRoot(RootKeeper *t);
+#else
     static std::list<PondScum **> rootList;
     typedef std::list<PondScum **>::iterator RootIterator;
-
-    static uint32 gc();
     static RootIterator addRoot(void *t);   // pass the address of any JS2Object pointer
                                             // Note: Not the address of a JS2VAL!
+#endif
+    static uint32 gc();
     static void removeRoot(RootIterator ri);
 
-    static void *alloc(size_t s);
+    static void *alloc(size_t s, bool isJS2Object = false);
     static void unalloc(void *p);
 
-    void *operator new(size_t s)    { return alloc(s); }
+    void *operator new(size_t s)    { return alloc(s, true); }
     void operator delete(void *p)   { unalloc(p); }
 
     virtual void markChildren()     { } // XXX !!!! XXXX these are supposed to not have vtables !!!!
@@ -222,11 +235,32 @@ public:
 
 class RootKeeper {
 public:
-    RootKeeper(void *t) : ri(JS2Object::addRoot(t)) { }
+#ifdef DEBUG
+    RootKeeper(void *p, int line, char *pfile) : p((PondScum **)p), line(line)
+    {
+        file = new char[strlen(pfile) + 1];
+        strcpy(file, pfile);
+        ri = JS2Object::addRoot(this);
+    }
+#else
+    RootKeeper(void *p) :{ ri = JS2Object::addRoot(p); }
+#endif
     ~RootKeeper() { JS2Object::removeRoot(ri); }
 
     JS2Object::RootIterator ri;
+
+#ifdef DEBUG
+    PondScum **p;
+    int line;
+    char *file;
+#endif
 };
+
+#ifdef DEBUG
+#define DEFINE_ROOTKEEPER(rk_var, obj) RootKeeper rk_var(&obj, __LINE__, __FILE__);
+#else
+#define DEFINE_ROOTKEEPER(rk_var, obj) RootKeeper rk_var(&obj);
+#endif
 
 class Attribute : public JS2Object {
 public:
@@ -1247,8 +1281,6 @@ public:
     
     // The one and only 'public' namespace
     Namespace *publicNamespace;
-
-    Multiname *mn1, *mn2;           // useful, gc-rooted multiname temps.
 
     LocalMember *forbiddenMember;  // just need one of these hanging around
 

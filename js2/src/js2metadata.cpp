@@ -88,10 +88,10 @@ namespace MetaData {
     FunctionInstance *JS2Metadata::validateStaticFunction(FunctionDefinition *fnDef, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env)
     {
         ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
-        RootKeeper rk1(&compileFrame);
+        DEFINE_ROOTKEEPER(rk1, compileFrame);
         
         FunctionInstance *result = new FunctionInstance(this, functionClass->prototype, functionClass);
-        RootKeeper rk2(&result);
+        DEFINE_ROOTKEEPER(rk2, result);
         result->fWrap = new FunctionWrapper(unchecked, compileFrame, env);
         fnDef->fWrap = result->fWrap;
 
@@ -140,7 +140,7 @@ namespace MetaData {
     void JS2Metadata::ValidateStmt(Context *cxt, Environment *env, Plurality pl, StmtNode *p) 
     {
         CompoundAttribute *a = NULL;
-        RootKeeper rk(&a);
+        DEFINE_ROOTKEEPER(rk, a);
         Frame *curTopFrame = env->getTopFrame();
 
         try {
@@ -2858,7 +2858,7 @@ doUnary:
         if (s) {
             for (NamespaceListIterator nli = multiname->nsList->begin(), nlend = multiname->nsList->end(); (nli != nlend); nli++) {
                 Multiname *mn = new Multiname(multiname->name, *nli);
-                RootKeeper rk(&mn);
+                DEFINE_ROOTKEEPER(rk, mn);
                 InstanceMember *m = findBaseInstanceMember(s, mn, access);
                 if (mBase == NULL)
                     mBase = m;
@@ -3235,8 +3235,6 @@ static const uint8 urlCharType[256] =
         world(world),
         engine(new JS2Engine(world)),
         publicNamespace(new Namespace(engine->public_StringAtom)),
-        mn1(new Multiname(NULL, publicNamespace)),
-        mn2(new Multiname(NULL, publicNamespace)),
         bCon(new BytecodeContainer()),
         glob(new Package(new Namespace(&world.identifiers["internal"]))),
         env(new Environment(new MetaData::SystemFrame(), glob)),
@@ -3244,9 +3242,6 @@ static const uint8 urlCharType[256] =
         showTrees(false)
     {
         engine->meta = this;
-
-        JS2Object::addRoot(&mn1);
-        JS2Object::addRoot(&mn2);
 
         cxt.openNamespaces.clear();
         cxt.openNamespaces.push_back(publicNamespace);
@@ -3713,7 +3708,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     bool JS2Metadata::hasOwnProperty(JS2Object *obj, const String *name)
     {
         Multiname *mn = new Multiname(name, publicNamespace);
-        RootKeeper rk(&mn);
+        DEFINE_ROOTKEEPER(rk, mn);
         js2val val = OBJECT_TO_JS2VAL(obj);
         return (findCommonMember(&val, mn, ReadWriteAccess, true) != NULL);
     }
@@ -4224,14 +4219,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     void ParameterFrame::assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount)
     {
         Multiname *mn = new Multiname(NULL, meta->publicNamespace);
-        RootKeeper rk1(&mn);
+        DEFINE_ROOTKEEPER(rk1, mn);
 
         ASSERT(pluralFrame->kind == ParameterKind);
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         ASSERT((plural->positionalCount == 0) || (plural->positional != NULL));
         
         SimpleInstance *argsObj = new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass);;
-        RootKeeper rk2(&argsObj);
+        DEFINE_ROOTKEEPER(rk2, argsObj);
 
         // Add the 'arguments' property
         String *name = &meta->world.identifiers["arguments"];
@@ -4326,17 +4321,28 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
  ************************************************************************************/
 
     Pond JS2Object::pond(POND_SIZE, NULL);
+#ifdef DEBUG
+    std::list<RootKeeper *> JS2Object::rootList;
+#else
     std::list<PondScum **> JS2Object::rootList;
+#endif
 
-    // Add a pointer to a gc-allocated object to the root list
+    // Add a pointer to the (address of a) gc-allocated object to the root list
     // (Note - we hand out an iterator, so it's essential to
     // use something like std::list that doesn't mess with locations)
+#ifdef DEBUG
+    JS2Object::RootIterator JS2Object::addRoot(RootKeeper *t)
+    {
+        return rootList.insert(rootList.end(), t);
+    }
+#else
     JS2Object::RootIterator JS2Object::addRoot(void *t)
     {
         PondScum **p = (PondScum **)t;
         ASSERT(p);
         return rootList.insert(rootList.end(), p);
     }
+#endif
 
     // Remove a root pointer
     void JS2Object::removeRoot(RootIterator ri)
@@ -4348,26 +4354,44 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     uint32 JS2Object::gc()
     {
         pond.resetMarks();
-        // Anything on the root list is a pointer to a JS2Object.
-        for (std::list<PondScum **>::iterator i = rootList.begin(), end = rootList.end(); (i != end); i++) {
+        // Anything on the root list may also be a pointer to a JS2Object.
+        for (RootIterator i = rootList.begin(), end = rootList.end(); (i != end); i++) {
+#ifdef DEBUG
+            RootKeeper *r = *i;
+            if (*(r->p)) {
+                PondScum *p = (*(r->p) - 1);
+                ASSERT(p->owner && (p->getSize() >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
+                if (p->isJS2Object()) {
+                    JS2Object *obj = (JS2Object *)(p + 1);
+                    GCMARKOBJECT(obj)
+                }
+                else
+                    mark(p);
+            }
+#else
             if (**i) {
                 PondScum *p = (**i) - 1;
                 ASSERT(p->owner && (p->getSize() >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
-                JS2Object *obj = (JS2Object *)(p + 1);
-                GCMARKOBJECT(obj)
+                if (p->isJS2Object()) {
+                    JS2Object *obj = (JS2Object *)(p + 1);
+                    GCMARKOBJECT(obj)
+                }
+                else
+                    mark(p);
             }
+#endif
         }
         return pond.moveUnmarkedToFreeList();
     }
 
     // Allocate a chunk of size s
-    void *JS2Object::alloc(size_t s)
+    void *JS2Object::alloc(size_t s, bool isJS2Object)
     {
         s += sizeof(PondScum);
         // make sure that the thing is a multiple of 16 bytes
         if (s & 0xF) s += 16 - (s & 0xF);
         ASSERT(s <= 0x7FFFFFFF);
-        void *p = pond.allocFromPond(s);
+        void *p = pond.allocFromPond(s, isJS2Object);
         ASSERT(((ptrdiff_t)p & 0xF) == 0);
         return p;
     }
@@ -4429,7 +4453,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     }
     
     // Allocate from this or the next Pond (make a new one if necessary)
-    void *Pond::allocFromPond(size_t sz)
+    void *Pond::allocFromPond(size_t sz, bool isJS2Object)
     {
 
         // See if there's room left...
@@ -4459,15 +4483,16 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 // there isn't one; run the gc
             uint32 released = JS2Object::gc();
             if (released > sz)
-                return JS2Object::alloc(sz - sizeof(PondScum));
+                return JS2Object::alloc(sz - sizeof(PondScum), isJS2Object);
                 nextPond = new Pond(sz, nextPond);
             }
-            return nextPond->allocFromPond(sz);
+            return nextPond->allocFromPond(sz, isJS2Object);
         }
         // there was room, so acquire it
         PondScum *p = (PondScum *)pondTop;
         p->owner = this;
         p->setSize(sz);
+        if (isJS2Object) p->setIsJS2Object();
         pondTop += sz;
         pondSize -= sz;
 #ifdef DEBUG

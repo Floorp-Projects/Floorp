@@ -83,7 +83,7 @@ js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 newLength)
             }
         }
         Multiname *mn = new Multiname(meta->engine->length_StringAtom, meta->publicNamespace);
-        RootKeeper rk(&mn);
+        DEFINE_ROOTKEEPER(rk, mn);
         LookupKind lookup(false, JS2VAL_NULL);
         defaultWriteProperty(meta, OBJECT_TO_JS2VAL(obj), meta->arrayClass, mn, &lookup, true, result);
     }
@@ -98,7 +98,7 @@ js2val Array_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *
 {
     js2val thatValue = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *arrInst = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(thatValue));
-    RootKeeper rk(&arrInst);
+    DEFINE_ROOTKEEPER(rk, arrInst);
     if (argc > 0) {
         if (argc == 1) {
             if (JS2VAL_IS_NUMBER(argv[0])) {
@@ -290,8 +290,8 @@ static js2val Array_reverse(JS2Metadata *meta, const js2val thisValue, js2val * 
     // XXX Need to root the Strings somewhere, this'll do for now..
     Multiname *mn1 = new Multiname(meta->publicNamespace);
     Multiname *mn2 = new Multiname(meta->publicNamespace);
-    RootKeeper rk1(&mn1);
-    RootKeeper rk2(&mn2);
+    DEFINE_ROOTKEEPER(rk1, mn1);
+    DEFINE_ROOTKEEPER(rk2, mn2);
 
     for (uint32 k = 0; k < halfway; k++) {
         bool deleteResult;
@@ -345,8 +345,8 @@ static js2val Array_shift(JS2Metadata *meta, const js2val thisValue, js2val * /*
     // XXX Need to root the Strings somewhere, this'll do for now..
     Multiname *mn1 = new Multiname(meta->publicNamespace);
     Multiname *mn2 = new Multiname(meta->publicNamespace);
-    RootKeeper rk1(&mn1);
-    RootKeeper rk2(&mn2);
+    DEFINE_ROOTKEEPER(rk1, mn1);
+    DEFINE_ROOTKEEPER(rk2, mn2);
 
     js2val result;
     bool deleteResult;
@@ -425,8 +425,8 @@ static js2val Array_slice(JS2Metadata *meta, const js2val thisValue, js2val *arg
     // XXX Need to root the Strings somewhere, this'll do for now..
     Multiname *mn1 = new Multiname(meta->publicNamespace);
     Multiname *mn2 = new Multiname(meta->publicNamespace);
-    RootKeeper rk1(&mn1);
-    RootKeeper rk2(&mn2);
+    DEFINE_ROOTKEEPER(rk1, mn1);
+    DEFINE_ROOTKEEPER(rk2, mn2);
     uint32 n = 0;
     while (start < end) {
         mn1->name = meta->engine->numberToString(start);
@@ -584,7 +584,7 @@ static js2val Array_sort(JS2Metadata *meta, const js2val thisValue, js2val *argv
         JS2Class *c = meta->objectType(thisObj);
         // XXX Need to root the Strings somewhere, this'll do for now..
         Multiname *mn1 = new Multiname(meta->publicNamespace);
-        RootKeeper rk1(&mn1);
+        DEFINE_ROOTKEEPER(rk1, mn1);
         for (i = 0; i < length; i++) {
             mn1->name = meta->engine->numberToString(i);
             c->readPublic(meta, &thatValue, c, mn1->name, RunPhase, &vec[i]);                
@@ -643,8 +643,8 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         // XXX Need to root the Strings somewhere, this'll do for now..
         Multiname *mn1 = new Multiname(meta->publicNamespace);
         Multiname *mn2 = new Multiname(meta->publicNamespace);
-        RootKeeper rk1(&mn1);
-        RootKeeper rk2(&mn2);
+        DEFINE_ROOTKEEPER(rk1, mn1);
+        DEFINE_ROOTKEEPER(rk2, mn2);
 
         for (k = 0; k < deleteCount; k++) {
             mn1->name = meta->engine->numberToString(start + k);
@@ -682,7 +682,7 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
                     bool deleteResult;
                     mn1->name = meta->engine->numberToString(k + deleteCount - 1);
                     mn2->name = meta->engine->numberToString(k + newItemCount - 1);
-                    if (meta->hasOwnProperty(thisObj, meta->mn1->name)) {
+                    if (meta->hasOwnProperty(thisObj, mn1->name)) {
                         js2val rval;
                         c->readPublic(meta, &thatValue, c, mn1->name, RunPhase, &rval);                
                         meta->arrayClass->writePublic(meta, result, meta->arrayClass, mn2->name, true, rval);
@@ -716,8 +716,8 @@ static js2val Array_unshift(JS2Metadata *meta, const js2val thisValue, js2val *a
     // XXX Need to root the Strings somewhere, this'll do for now..
     Multiname *mn1 = new Multiname(meta->publicNamespace);
     Multiname *mn2 = new Multiname(meta->publicNamespace);
-    RootKeeper rk1(&mn1);
-    RootKeeper rk2(&mn2);
+    DEFINE_ROOTKEEPER(rk1, mn1);
+    DEFINE_ROOTKEEPER(rk2, mn2);
 
     for (k = length; k > 0; k--) {
         bool deleteResult;

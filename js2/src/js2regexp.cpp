@@ -183,7 +183,7 @@ namespace MetaData {
         // XXX Change constructors to take js2val pointer for the result (which would be an already
         // rooted pointer).
         RegExpInstance *thisInst = new RegExpInstance(meta, meta->regexpClass->prototype, meta->regexpClass);
-        RootKeeper rk(&thisInst);
+        DEFINE_ROOTKEEPER(rk, thisInst);
         js2val thatValue = OBJECT_TO_JS2VAL(thisInst);
         REuint32 flags = 0;
 

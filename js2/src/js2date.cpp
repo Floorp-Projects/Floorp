@@ -871,7 +871,7 @@ js2val Date_Constructor(JS2Metadata *meta, const js2val /* thisValue */, js2val 
 {
     js2val thatValue = OBJECT_TO_JS2VAL(new DateInstance(meta, meta->dateClass->prototype, meta->dateClass));
     DateInstance *thisInst = checked_cast<DateInstance *>(JS2VAL_TO_OBJECT(thatValue));
-    RootKeeper rk(&thisInst);
+    DEFINE_ROOTKEEPER(rk, thisInst);
 
     /* Date called as constructor */
     if (argc == 0) {

@@ -59,7 +59,7 @@ js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val 
 {
     js2val thatValue = OBJECT_TO_JS2VAL(new StringInstance(meta, meta->stringClass->prototype, meta->stringClass));
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thatValue));
-    RootKeeper rk(&strInst);
+    DEFINE_ROOTKEEPER(rk, strInst);
     if (argc > 0)
         strInst->mValue = meta->engine->allocStringPtr(meta->toString(argv[0]));
     else
@@ -169,7 +169,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
     }
     else {
         ArrayInstance *A = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
-        RootKeeper rk(&A);
+        DEFINE_ROOTKEEPER(rk, A);
         int32 index = 0;
         int32 lastIndex = 0;
         while (true) {
@@ -405,7 +405,7 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
 
     js2val result = OBJECT_TO_JS2VAL(new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass));
     ArrayInstance *A = checked_cast<ArrayInstance *>(JS2VAL_TO_OBJECT(result));
-    RootKeeper rk(&A);
+    DEFINE_ROOTKEEPER(rk, A);
 
     uint32 lim;
     js2val separatorV = (argc > 0) ? argv[0] : JS2VAL_UNDEFINED;
