@@ -1,0 +1,28 @@
+<!-- extracted from content/viewSource.xul -->
+
+<!-- LOCALIZATION NOTE (mainWindow.title) : DONT_TRANSLATE --> 
+<!ENTITY mainWindow.title "&brandShortName;"> 
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE --> 
+<!ENTITY mainWindow.titlemodifier "&brandShortName;"> 
+<!-- LOCALIZATION NOTE (mainWindow.titlemodifierseparator) : DONT_TRANSLATE -->
+<!ENTITY mainWindow.titlemodifierseparator " - ">
+<!ENTITY mainWindow.preface "Source of: ">
+
+<!ENTITY menu_wrapLongLines.title "Wrap Long Lines"> 
+<!ENTITY menu_wrapLongLines.accesskey "W">
+
+<!ENTITY menu_highlightSyntax.label "Syntax Highlighting">
+<!ENTITY menu_highlightSyntax.accesskey "H">
+
+<!ENTITY findNextCmd.label "Find Next">
+<!ENTITY findNextCmd.accesskey "n">
+<!ENTITY helpMenu.label            "Help">
+<!ENTITY helpMenu.accesskey        "H">
+<!ENTITY releaseCmd.label          "Release Notes">
+<!ENTITY releaseCmd.accesskey      "R">
+<!ENTITY aboutCmd.label         "About &brandShortName;">
+<!ENTITY aboutCmd.accesskey       "A">
+<!ENTITY fileMenu.label           "File">
+<!ENTITY fileMenu.accesskey       "F">
+<!ENTITY viewMenu.label           "View">
+<!ENTITY viewMenu.accesskey       "V">
