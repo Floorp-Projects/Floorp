@@ -56,6 +56,10 @@ interface nsIContentFilter : nsISupports
    * that results (if any) from all filter callbacks is what will be used
    * for transaction purposes (undo/redo) except for the open event.
    *
+   * The willDeleteSelection parameter is offered for filters who want to
+   * handle the insertion themselves and need to handle drag/drop correctly.
+   * The flag is true when the editor intends to delete the selection.
+   *
    * Callers who want to cancel all insertion can simply set
    * continueWithInsertion to PR_FALSE and return.
    * Note: If cancellation occurs during the "open" event, the editor will
@@ -87,7 +91,8 @@ interface nsIContentFilter : nsISupports
    *
    * @param mimeType          the mimetype used for retrieving data
    * @param contentSourceURL  location where docFragment came from
-   * @param docFragment       fragment of node to be inserted
+   * @param willDeleteSelection tells hook if selection will/should be deleted
+   * @param docFragment         fragment of node to be inserted
    * @param contentStartNode    node under which content to be inserted begins
    * @param contentStartOffset  start offset within contentStartNode
    * @param contentEndNode      node under which content to be inserted ends
@@ -99,6 +104,7 @@ interface nsIContentFilter : nsISupports
 
   void notifyOfInsertion(in AString mimeType,
                          in nsIURL contentSourceURL,
+                         in PRBool willDeleteSelection,
                          inout nsIDOMNode docFragment,
                          inout nsIDOMNode contentStartNode,
                          inout long contentStartOffset,
