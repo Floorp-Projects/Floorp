@@ -65,6 +65,6 @@ function viewCert()
     cert = isupport.QueryInterface(nsIX509Cert);
   }
 
-  window.openDialog('chrome://pippki/content/viewCertDetails.xul', cert.dbKey,
-                    'chrome,width=500,height=400,resizable=1');
+  window.openDialog('chrome://pippki/content/certViewer.xul', cert.dbKey,
+                    'chrome');
 }

@@ -293,8 +293,8 @@ function viewCerts()
     } else {
       windowName = selected_certs[t][1];
     }
-    window.open('chrome://pippki/content/viewCertDetails.xul', windowName,
-                'chrome,width=500,height=400,resizable=1');
+    window.open('chrome://pippki/content/certViewer.xul', windowName,
+                'chrome');
   }
 }
 
