@@ -5211,6 +5211,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
       if (NS_FAILED(anonymousItems->QueryElementAt(i, NS_GET_IID(nsIContent), getter_AddRefs(content))))
         continue;
 
+      content->SetNativeAnonymous(PR_TRUE);
       content->SetParent(aParent);
       content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
 

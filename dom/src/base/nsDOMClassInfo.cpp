@@ -340,6 +340,9 @@ static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
   (DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
   nsIXPCScriptable::WANT_GETPROPERTY)
 
+#define DOMCLASSINFO_STANDARD_FLAGS                                           \
+  (nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::DOM_OBJECT)
+
 
 #ifdef NS_DEBUG
 #define NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                \
@@ -2322,7 +2325,7 @@ nsDOMClassInfo::GetImplementationLanguage(PRUint32 *aImplLanguage)
 NS_IMETHODIMP
 nsDOMClassInfo::GetFlags(PRUint32 *aFlags)
 {
-  *aFlags = nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::DOM_OBJECT;
+  *aFlags = DOMCLASSINFO_STANDARD_FLAGS;
 
   return NS_OK;
 }
@@ -4118,6 +4121,13 @@ nsNodeSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNodeSH::GetFlags(PRUint32 *aFlags)
+{
+  *aFlags = DOMCLASSINFO_STANDARD_FLAGS | nsIClassInfo::CONTENT_NODE;
+
+  return NS_OK;
+}
 
 // EventReciever helper
 
@@ -4776,6 +4786,14 @@ nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   return nsNodeSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
+}
+
+NS_IMETHODIMP
+nsDocumentSH::GetFlags(PRUint32* aFlags)
+{
+  *aFlags = DOMCLASSINFO_STANDARD_FLAGS;
+
+  return NS_OK;
 }
 
 

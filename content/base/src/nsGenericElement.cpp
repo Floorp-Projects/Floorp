@@ -1856,6 +1856,22 @@ nsGenericElement::SetParent(nsIContent* aParent)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsGenericElement::IsNativeAnonymous() const
+{
+  return !!(GetFlags() & GENERIC_ELEMENT_IS_ANONYMOUS);
+}
+
+NS_IMETHODIMP_(void)
+nsGenericElement::SetNativeAnonymous(PRBool aAnonymous)
+{
+  if (aAnonymous) {
+    SetFlags(GENERIC_ELEMENT_IS_ANONYMOUS);
+  } else {
+    UnsetFlags(GENERIC_ELEMENT_IS_ANONYMOUS);
+  }
+}
+
 nsresult
 nsGenericElement::GetNameSpaceID(PRInt32& aNameSpaceID) const
 {
