@@ -34,7 +34,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.18 2003/09/19 04:14:50 jpierre%netscape.com Exp $
+ * $Id: cmssiginfo.c,v 1.19 2003/11/15 00:09:51 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -56,10 +56,13 @@
  * SIGNERINFO
  */
 NSSCMSSignerInfo *
-nss_cmssignerinfo_create(NSSCMSMessage *cmsg, NSSCMSSignerIDSelector type, CERTCertificate *cert, SECItem *subjKeyID, SECKEYPublicKey *pubKey, SECKEYPrivateKey *signingKey, SECOidTag digestalgtag);
+nss_cmssignerinfo_create(NSSCMSMessage *cmsg, NSSCMSSignerIDSelector type, 
+	CERTCertificate *cert, SECItem *subjKeyID, SECKEYPublicKey *pubKey, 
+	SECKEYPrivateKey *signingKey, SECOidTag digestalgtag);
 
 NSSCMSSignerInfo *
-NSS_CMSSignerInfo_CreateWithSubjKeyID(NSSCMSMessage *cmsg, SECItem *subjKeyID, SECKEYPublicKey *pubKey, SECKEYPrivateKey *signingKey, SECOidTag digestalgtag)
+NSS_CMSSignerInfo_CreateWithSubjKeyID(NSSCMSMessage *cmsg, SECItem *subjKeyID, 
+	SECKEYPublicKey *pubKey, SECKEYPrivateKey *signingKey, SECOidTag digestalgtag)
 {
     return nss_cmssignerinfo_create(cmsg, NSSCMSSignerID_SubjectKeyID, NULL, subjKeyID, pubKey, signingKey, digestalgtag); 
 }
@@ -71,7 +74,9 @@ NSS_CMSSignerInfo_Create(NSSCMSMessage *cmsg, CERTCertificate *cert, SECOidTag d
 }
 
 NSSCMSSignerInfo *
-nss_cmssignerinfo_create(NSSCMSMessage *cmsg, NSSCMSSignerIDSelector type, CERTCertificate *cert, SECItem *subjKeyID, SECKEYPublicKey *pubKey, SECKEYPrivateKey *signingKey, SECOidTag digestalgtag)
+nss_cmssignerinfo_create(NSSCMSMessage *cmsg, NSSCMSSignerIDSelector type, 
+	CERTCertificate *cert, SECItem *subjKeyID, SECKEYPublicKey *pubKey, 
+	SECKEYPrivateKey *signingKey, SECOidTag digestalgtag)
 {
     void *mark;
     NSSCMSSignerInfo *signerinfo;
@@ -646,7 +651,7 @@ NSS_CMSSignerInfo_GetSignerEmailAddress(NSSCMSSignerInfo *sinfo)
     if ((signercert = NSS_CMSSignerInfo_GetSigningCertificate(sinfo, NULL)) == NULL)
 	return NULL;
 
-    if (signercert->emailAddr == NULL)
+    if (!signercert->emailAddr || !signercert->emailAddr[0])
 	return NULL;
 
     return (PORT_Strdup(signercert->emailAddr));
@@ -916,11 +921,12 @@ NSS_SMIMESignerInfo_SaveSMIMEProfile(NSSCMSSignerInfo *signerinfo)
 	/* no preferred cert found?
 	 * find the cert the signerinfo is signed with instead */
 	cert = NSS_CMSSignerInfo_GetSigningCertificate(signerinfo, certdb);
-	if (cert == NULL || cert->emailAddr == NULL)
+	if (cert == NULL || cert->emailAddr == NULL || !cert->emailAddr[0])
 	    return SECFailure;
     }
 
-    /* verify this cert for encryption (has been verified for signing so far) */    /* don't verify this cert for encryption. It may just be a signing cert.
+    /* verify this cert for encryption (has been verified for signing so far) */
+    /* don't verify this cert for encryption. It may just be a signing cert.
      * that's OK, we can still save the S/MIME profile. The encryption cert
      * should have already been saved */
 #ifdef notdef

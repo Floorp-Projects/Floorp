@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.55 2003/09/19 04:08:48 jpierre%netscape.com Exp $
+ * $Id: certdb.c,v 1.56 2003/11/15 00:09:49 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -565,7 +565,7 @@ cert_GetCertType(CERTCertificate *cert)
 	 * to be used for email
 	 */
 	if ( ( nsCertType & NS_CERT_TYPE_SSL_CLIENT ) &&
-	    cert->emailAddr ) {
+	    cert->emailAddr && cert->emailAddr[0]) {
 	    nsCertType |= NS_CERT_TYPE_EMAIL;
 	}
 	/*
@@ -2164,7 +2164,7 @@ CERT_SaveImportedCert(CERTCertificate *cert, SECCertUsage usage,
 		trust.emailFlags = CERTDB_VALID_CA;
 	    }
 	} else {
-	    if ( cert->emailAddr == NULL ) {
+	    if ( !cert->emailAddr || !cert->emailAddr[0] ) {
 		saveit = PR_FALSE;
 	    }
 	    

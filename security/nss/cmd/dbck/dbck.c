@@ -304,7 +304,7 @@ dumpSubjectEntry(certDBEntrySubject *entry, int num, PRFileDesc *outfile)
     PR_fprintf(outfile, "## %s\n", subjectName);
     if (entry->nickname)
 	PR_fprintf(outfile, "## Subject nickname:  %s\n", entry->nickname);
-    if (entry->emailAddr)
+    if (entry->emailAddr && entry->emailAddr[0])
 	PR_fprintf(outfile, "## Subject email address:  %s\n", 
 	           entry->emailAddr);
     PR_fprintf(outfile, "## This subject has %d cert(s).\n", entry->ncerts);
@@ -443,7 +443,7 @@ mapSubjectEntries(certDBArray *dbArray)
 	} else {
 	    subjMap->pNickname = NoNickname;
 	}
-	if (subjectEntry->emailAddr) {
+	if (subjectEntry->emailAddr && subjectEntry->emailAddr[0]) {
 	    /* Subject should have an smime entry, so create a link. */
 	    for (mElem = PR_LIST_HEAD(&dbArray->smime.link);
 	         mElem != &dbArray->smime.link; mElem = PR_NEXT_LINK(mElem)) {
@@ -794,7 +794,7 @@ verboseOutput(certDBArray *dbArray, dbDebugInfo *info)
 		PR_fprintf(info->out, "-->(MISSING NICKNAME ENTRY)\n");
 	    }
 	}
-	if (subjectEntry->emailAddr) {
+	if (subjectEntry->emailAddr && subjectEntry->emailAddr[0]) {
 	    /* walk each subject handle to it's smime entry */
 	    if (map_handle_is_ok(info, smap->pSMime, -1)) {
 		ref = ((certDBEntryMap *)smap->pSMime->appData)->index;
@@ -1060,7 +1060,7 @@ IsEmailCert(CERTCertificate *cert)
     /* XXX Nelson has cert for KTrilli which does not have either
      * of above but is email cert (has cert->emailAddr). 
      */
-    if (!tmp1 && !tmp2 && !cert->emailAddr) {
+    if (!tmp1 && !tmp2 && !(cert->emailAddr && cert->emailAddr[0])) {
 	return NULL;
     }
 
@@ -1085,7 +1085,7 @@ IsEmailCert(CERTCertificate *cert)
 	    return NULL;
     }
 
-    if (cert->emailAddr) {
+    if (cert->emailAddr && cert->emailAddr[0]) {
 	email = PORT_Strdup(cert->emailAddr);
     } else {
 	if (tmp1)
@@ -1137,7 +1137,7 @@ deleteAllEntriesForCert(CERTCertDBHandle *handle, CERTCertificate *cert,
 	DeleteDBCertEntry(handle, &subjectEntry->certKeys[i]);
     }
     DeleteDBSubjectEntry(handle, &cert->derSubject);
-    if (subjectEntry->emailAddr) {
+    if (subjectEntry->emailAddr && subjectEntry->emailAddr[0]) {
 	smimeEntry = ReadDBSMimeEntry(handle, subjectEntry->emailAddr);
 	if (smimeEntry) {
 	    if (SECITEM_ItemsAreEqual(&subjectEntry->derSubject,
@@ -1500,7 +1500,7 @@ findNewestSubjectForEmail(CERTCertDBHandle *handle, int subjectNum,
 	subjectEntry2 = (certDBEntrySubject*)&subjects.entries[i];
 	if (!subjectEntry2)
 	    continue;
-	if (subjectEntry2->emailAddr && 
+	if (subjectEntry2->emailAddr && subjectEntry2->emailAddr[0] &&
 	     PORT_Strcmp(subjectEntry1->emailAddr, 
 	                 subjectEntry2->emailAddr) == 0) {
 	    /*  Found a subject using the same email address.  */
@@ -1513,7 +1513,8 @@ findNewestSubjectForEmail(CERTCertDBHandle *handle, int subjectNum,
 	smimeEntry = (certDBEntrySMime*)&smime.entries[i];
 	if (smimeEntry->common.arena == NULL)
 	    continue;
-	if (PORT_Strcmp(subjectEntry1->emailAddr, smimeEntry->emailAddr) == 0) {
+	if (smimeEntry->emailAddr && smimeEntry->emailAddr[0] && 
+	    PORT_Strcmp(subjectEntry1->emailAddr, smimeEntry->emailAddr) == 0) {
 	    /*  Find which of the subjects uses this S/MIME entry.  */
 	    for (j=0; j<ns && *subjectWithSMime < 0; j++) {
 		sNum = subjectsForEmail[j];

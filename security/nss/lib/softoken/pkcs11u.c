@@ -1199,9 +1199,10 @@ pk11_FindCertAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	return pk11_NewTokenAttribute(type,cert->derSN.data,
 						cert->derSN.len, PR_FALSE);
     case CKA_NETSCAPE_EMAIL:
-	return cert->emailAddr ? pk11_NewTokenAttribute(type, cert->emailAddr,
-				PORT_Strlen(cert->emailAddr), PR_FALSE) :
-					(PK11Attribute *) &pk11_StaticNullAttr;
+	return (cert->emailAddr && cert->emailAddr[0])
+	    ? pk11_NewTokenAttribute(type, cert->emailAddr,
+	                             PORT_Strlen(cert->emailAddr), PR_FALSE) 
+	    : (PK11Attribute *) &pk11_StaticNullAttr;
     default:
 	break;
     }

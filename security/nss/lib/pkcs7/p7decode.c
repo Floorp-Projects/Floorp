@@ -34,7 +34,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.13 2003/10/17 17:56:55 relyea%netscape.com Exp $
+ * $Id: p7decode.c,v 1.14 2003/11/15 00:09:50 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1835,7 +1835,7 @@ savecert:
      * Only save the smime profile if we are checking an email message and
      * the cert has an email address in it.
      */
-    if ( ( cert->emailAddr != NULL ) &&
+    if ( cert->emailAddr && cert->emailAddr[0] &&
 	( ( certusage == certUsageEmailSigner ) ||
 	 ( certusage == certUsageEmailRecipient ) ) ) {
 	SECItem *profile = NULL;
@@ -2005,7 +2005,7 @@ sec_pkcs7_get_signer_cert_info(SEC_PKCS7ContentInfo *cinfo, int selector)
 	container = CERT_GetCommonName (&signercert->subject);
 	break;
       case sec_email_address:
-	if(signercert->emailAddr) {
+	if(signercert->emailAddr && signercert->emailAddr[0]) {
 	    container = PORT_Strdup(signercert->emailAddr);
 	} else {
 	    container = NULL;

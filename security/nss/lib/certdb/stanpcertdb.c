@@ -293,7 +293,7 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
                                             (NSSUTF8 *)nickname, 
                                             PORT_Strlen(nickname));
     }
-    if (cc->emailAddr) {
+    if (cc->emailAddr && cc->emailAddr[0]) {
 	c->email = nssUTF8_Create(c->object.arena, 
 	                          nssStringType_PrintableString, 
 	                          (NSSUTF8 *)cc->emailAddr, 
