@@ -82,8 +82,6 @@
 
 #include "nsGenericElement.h" // for nsCheapVoidArray
 
-class nsISizeOfHandler;
-
 class nsIDocument;
 class nsIRDFService;
 class nsISupportsArray;
@@ -439,7 +437,6 @@ public:
 #ifdef DEBUG
     NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
     NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const { return NS_OK; }
-    NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
     NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                               nsEvent* aEvent,
@@ -501,10 +498,6 @@ public:
                                    void** aHandler);
     NS_IMETHOD GetCompiledEventHandler(nsIAtom *aName, void** aHandler);
 
-#ifdef DEBUG
-    virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
-#endif
-    
     // nsIChromeEventHandler
     NS_DECL_NSICHROMEEVENTHANDLER
 

@@ -151,10 +151,6 @@ public:
 
   NS_IMETHOD IsImageComplete(PRBool* aComplete);
 
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
-
   NS_IMETHOD OnStartDecode(imgIRequest *aRequest, nsIPresContext *aCX);
   NS_IMETHOD OnStartContainer(imgIRequest *aRequest, nsIPresContext *aCX, imgIContainer *aImage);
   NS_IMETHOD OnStartFrame(imgIRequest *aRequest, nsIPresContext *aCX, gfxIImageFrame *aFrame);

@@ -67,7 +67,6 @@ public:
 #ifdef DEBUG 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
- NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
   // nsIContent
@@ -204,21 +203,4 @@ nsXMLNotation::DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const
 {
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsXMLNotation::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-  PRUint32 sum;
-  nsGenericDOMDataNode::SizeOf(aSizer, &sum);
-  PRUint32 ssize;
-  mName.SizeOf(aSizer, &ssize);
-  sum = sum - sizeof(mName) + ssize;
-  mPublicId.SizeOf(aSizer, &ssize);
-  sum = sum - sizeof(mPublicId) + ssize;
-  mSystemId.SizeOf(aSizer, &ssize);
-  sum = sum - sizeof(mSystemId) + ssize;
-  return NS_OK;
-}
 #endif
-

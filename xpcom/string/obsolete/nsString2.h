@@ -92,7 +92,6 @@ class UTF8traits
   class nsAFlatString { public: virtual ~nsAString() { } };
 #endif
 
-class nsISizeOfHandler;
 class nsCString;
 
 
@@ -433,14 +432,6 @@ public:
    */
   static  PRBool IsSpace(PRUnichar ch);
 
-#ifdef DEBUG
-  /**
-   * Retrieve the size of this string
-   * @return string length
-   */
-  virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
-
 private:
     // NOT TO BE IMPLEMENTED
     //  these signatures help clients not accidentally call the wrong thing helped by C++ automatic integral promotion
@@ -498,14 +489,6 @@ public:
     nsAutoString& operator=( const PRUnichar* aPtr )                                { Assign(aPtr); return *this; }
     nsAutoString& operator=( PRUnichar aChar )                                      { Assign(aChar); return *this; }
 
-#ifdef DEBUG
-    /**
-     * Retrieve the size of this string
-     * @return string length
-     */
-    virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
-    
     PRUnichar mBuffer[kDefaultStringSize];
 };
 

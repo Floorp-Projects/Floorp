@@ -439,16 +439,3 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
 
   return rv;
 }
-
-
-#ifdef DEBUG
-nsresult
-nsDOMAttributeMap::SizeOfNamedNodeMap(nsIDOMNamedNodeMap* aMap,
-                                      nsISizeOfHandler* aSizer,
-                                      PRUint32* aResult)
-{
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-  *aResult = sizeof(nsDOMAttributeMap);
-  return NS_OK;
-}
-#endif

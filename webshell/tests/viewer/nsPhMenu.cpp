@@ -231,10 +231,6 @@ struct MenuList_s DemoList[18] =
   CreateMenuItem(menu, "Dump Style Sheets", VIEWER_DUMP_STYLE_SHEETS);
   CreateMenuItem(menu, "Dump Style Contexts", VIEWER_DUMP_STYLE_CONTEXTS);
   CreateMenuItem(menu, NULL, 0);
-  CreateMenuItem(menu, "Show Content Size", VIEWER_SHOW_CONTENT_SIZE);
-  CreateMenuItem(menu, "Show Frame Size", VIEWER_SHOW_FRAME_SIZE);
-  CreateMenuItem(menu, "Show Style Size", VIEWER_SHOW_STYLE_SIZE);
-  CreateMenuItem(menu, NULL, 0);
   CreateMenuItem(menu, "Debug Save", VIEWER_DEBUGSAVE);
   CreateMenuItem(menu, "Debug Output Text", VIEWER_DISPLAYTEXT);
   CreateMenuItem(menu, "Debug Output HTML", VIEWER_DISPLAYHTML);

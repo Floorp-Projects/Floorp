@@ -51,7 +51,6 @@
 #include "nsIEventListenerManager.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsISizeOfHandler.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -2006,14 +2005,6 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   return ret;
 }
 
-#ifdef DEBUG
-PRUint32
-nsGenericElement::BaseSizeOf(nsISizeOfHandler *aSizer) const
-{
-  return 0;
-}
-#endif
-
 NS_IMETHODIMP
 nsGenericElement::GetContentID(PRUint32* aID)
 {
@@ -3103,20 +3094,6 @@ struct nsGenericAttribute
     NS_IF_RELEASE(mNodeInfo);
   }
 
-#ifdef DEBUG
-  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
-    if (!aResult) {
-      return NS_ERROR_NULL_POINTER;
-    }
-    PRUint32 sum = sizeof(*this) - sizeof(mValue);
-    PRUint32 ssize;
-    mValue.SizeOf(aSizer, &ssize);
-    sum += ssize;
-    *aResult = sum;
-    return NS_OK;
-  }
-#endif
-
   nsINodeInfo* mNodeInfo;
   nsString     mValue;
 };
@@ -3981,31 +3958,3 @@ nsGenericContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 
   return NS_OK;
 }
-
-#ifdef DEBUG
-PRUint32
-nsGenericContainerElement::BaseSizeOf(nsISizeOfHandler *aSizer) const
-{
-  PRUint32 sum = 0;
-  if (mAttributes) {
-    // Add in array of attributes size
-    PRUint32 asize;
-    mAttributes->SizeOf(aSizer, &asize);
-    sum += asize;
-
-    // Add in each attributes size
-    PRInt32 i, n = mAttributes->Count();
-    for (i = 0; i < n; i++) {
-      const nsGenericAttribute* attr = (const nsGenericAttribute*)
-        mAttributes->ElementAt(i);
-      if (attr) {
-        PRUint32 asum = 0;
-        attr->SizeOf(aSizer, &asum);
-        sum += asum;
-      }
-    }
-  }
-
-  return sum;
-}
-#endif

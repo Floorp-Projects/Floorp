@@ -45,7 +45,6 @@
 #include "nsHTMLValue.h"
 #include "nsHTMLParts.h"
 #include "nsLayoutAtoms.h"
-#include "nsISizeOfHandler.h"
 
 #ifdef INCLUDE_XUL
 #include "nsINameSpaceManager.h"
@@ -205,17 +204,5 @@ NS_IMETHODIMP
 nsAreaFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("Area"), aResult);
-}
-
-NS_IMETHODIMP
-nsAreaFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsBlockFrame::SizeOf(aHandler, aResult);
-  *aResult += sizeof(*this) - sizeof(nsBlockFrame);
-
-  return NS_OK;
 }
 #endif

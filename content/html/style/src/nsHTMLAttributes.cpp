@@ -51,7 +51,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
 #include "nsVoidArray.h"
-#include "nsISizeOfHandler.h"
 #include "nsCOMPtr.h"
 #include "nsUnicharUtils.h"
 
@@ -291,16 +290,6 @@ struct HTMLAttribute {
     return PR_FALSE;
   }
 
-#ifdef DEBUG
-  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
-    if (!aResult) {
-      return NS_ERROR_NULL_POINTER;
-    }
-    *aResult = sizeof(*this);
-    return NS_OK;
-  }
-#endif
-
   nsHTMLAttrName  mAttribute;
   nsHTMLValue     mValue;
   HTMLAttribute*  mNext;
@@ -358,8 +347,6 @@ public:
 
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
-
-  void SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult);
 #endif
 
   nsIHTMLStyleSheet*  mSheet;
@@ -792,33 +779,6 @@ nsHTMLMappedAttributes::List(FILE* out, PRInt32 aIndent) const
     attr = attr->mNext;
   }
   return NS_OK;
-}
-
-/******************************************************************************
-* SizeOf method:
-*
-*  Self (reported as nsHTMLMappedAttributes's size): 
-*    1) sizeof(*this)
-*
-*  Contained / Aggregated data (not reported as nsHTMLMappedAttributes's size):
-*    none
-*
-*  Children / siblings / parents:
-*    none
-*    
-******************************************************************************/
-void nsHTMLMappedAttributes::SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult)
-{
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-  if(! uniqueItems->AddItem((void*)this)){
-    // this is already accounted for
-    return;
-  }
-  nsCOMPtr<nsIAtom> tag;
-  tag = do_GetAtom("HTMLMappedAttributes");
-  aResult = sizeof(*this);
-  aSizer->AddSize(tag, aResult);
 }
 #endif
 
@@ -1582,48 +1542,6 @@ nsHTMLAttributes::List(FILE* out, PRInt32 aIndent) const
     fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
   }
   return NS_OK;
-}
-
-void nsHTMLAttributes::SizeOf(nsISizeOfHandler* aSizer, PRUint32 &aResult)
-{
-  PRUint32 sum = 0;
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-  if(! uniqueItems->AddItem((void*)this)){
-    // this is already accounted for
-    return;
-  }
-
-  // XXX step through this again
-  sum = sizeof(*this);
-  if (mAttrNames != mNameBuffer) {
-    sum += sizeof(*mAttrNames) * mAttrSize;
-  }
-  if (mFirstUnmapped) {
-    HTMLAttribute* ha = mFirstUnmapped;
-    while (ha) {
-      PRUint32 asum = 0;
-      ha->SizeOf(aSizer, &asum);  // XXX Unique???
-      sum += asum;
-      ha = ha->mNext;
-    }
-  }
-  if (mMapped) {
-    PRBool recorded;
-    aSizer->RecordObject((void*)mMapped, &recorded);
-    if (!recorded) {
-      PRUint32 asum = 0;
-      mMapped->SizeOf(aSizer, asum);  // XXX Unique???
-      sum += asum;
-    }
-  }
-
-  aResult = sum;
-
-  nsCOMPtr<nsIAtom> tag;
-  tag = do_GetAtom("nsHTMLAttributes");
-  aSizer->AddSize(tag, aResult);
 }
 #endif
 

@@ -42,8 +42,6 @@
 
 #include "nsISupports.h"
 
-class nsISizeOfHandler;
-
 class nsIStyleSheet;
 class nsIPresContext;
 class nsIContent;
@@ -64,8 +62,6 @@ public:
 
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
-
-  virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize) = 0;
 #endif
 };
 

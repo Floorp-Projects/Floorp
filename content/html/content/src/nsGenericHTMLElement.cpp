@@ -64,7 +64,6 @@
 #include "nsILink.h"
 #include "nsILinkHandler.h"
 #include "nsPIDOMWindow.h"
-#include "nsISizeOfHandler.h"
 #include "nsIStyleRule.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
@@ -2540,21 +2539,6 @@ nsGenericHTMLElement::IsContentOfType(PRUint32 aFlags)
 {
   return !(aFlags & ~(eELEMENT | eHTML));
 }
-
-#ifdef DEBUG
-PRUint32
-nsGenericHTMLElement::BaseSizeOf(nsISizeOfHandler* aSizer) const
-{
-  PRUint32 sum = 0;
-  if (mAttributes) {
-    PRUint32 attrs = 0;
-    mAttributes->SizeOf(aSizer, attrs);
-    sum += attrs;
-  }
-  return sum;
-}
-#endif
-
 
 //----------------------------------------------------------------------
 

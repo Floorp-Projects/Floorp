@@ -966,28 +966,6 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
   else NS_ASSERTION(PR_FALSE, "program error");
 }
 
-#ifdef DEBUG
-void nsTableCellMap::SizeOf(nsISizeOfHandler* aHandler, 
-                            PRUint32*         aResult) const
-{
-  NS_PRECONDITION(aResult, "null OUT parameter pointer");
-  PRUint32 sum = sizeof(*this);
-
-  // Add in the size of the void arrays. Because we have emnbedded objects
-  // and not pointers to void arrays, we need to subtract out the size of the
-  // embedded object so it isn't double counted
-  PRUint32 voidArraySize;
-
-  mCols.SizeOf(aHandler, &voidArraySize);
-  sum += voidArraySize - sizeof(mCols);
-
-  // XXX need to so something for mBCInfo
-  *aResult = sum;
-}
-#endif
-
-// nsCellMap
-
 nsCellMap::nsCellMap(nsTableRowGroupFrame& aRowGroup)
   : mRowCount(0), mRowGroupFrame(&aRowGroup), mNextSibling(nsnull)
 {
@@ -2389,21 +2367,3 @@ PRBool nsCellMap::ColHasSpanningCells(nsTableCellMap& aMap,
   }
   return PR_FALSE;
 }
-
-#ifdef DEBUG
-void nsCellMap::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  NS_PRECONDITION(aResult, "null OUT parameter pointer");
-  PRUint32 sum = sizeof(*this);
-
-  // Add in the size of the void arrays. Because we have emnbedded objects
-  // and not pointers to void arrays, we need to subtract out the size of the
-  // embedded object so it isn't double counted
-  PRUint32 voidArraySize;
-
-  mRows.SizeOf(aHandler, &voidArraySize);
-  sum += voidArraySize - sizeof(mRows);
-
-  *aResult = sum;
-}
-#endif

@@ -359,16 +359,6 @@ public:
 
   PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
 
-
-
-#ifdef DEBUG
-  /**
-   * Retrieve the size of this string
-   * @return string length
-   */
-  virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
-
 private:
     // NOT TO BE IMPLEMENTED
     //  these signatures help clients not accidentally call the wrong thing helped by C++ automatic integral promotion
@@ -424,14 +414,6 @@ public:
     nsCAutoString& operator=( const char* aPtr )                          { Assign(aPtr); return *this; }
     nsCAutoString& operator=( char aChar )                                { Assign(aChar); return *this; }
 
-#ifdef DEBUG
-    /**
-     * Retrieve the size of this string
-     * @return string length
-     */
-    virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
-    
     char mBuffer[kDefaultStringSize];
 };
 

@@ -158,7 +158,6 @@ public:
   
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
   NS_IMETHOD GetContentForEvent(nsIPresContext* aPresContext,
                                 nsEvent* aEvent,
@@ -755,15 +754,5 @@ NS_IMETHODIMP
 CanvasFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("Canvas"), aResult);
-}
-
-NS_IMETHODIMP
-CanvasFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = sizeof(*this);
-  return NS_OK;
 }
 #endif

@@ -46,10 +46,6 @@
 #include "nsLayoutAtoms.h"
 
 #ifdef DEBUG
-#include "nsISizeOfHandler.h"
-#endif
-
-#ifdef DEBUG
 static PRInt32 ctorCount;
 PRInt32 nsLineBox::GetCtorCount() { return ctorCount; }
 #endif
@@ -506,43 +502,6 @@ nsLineBox::GetCombinedArea(nsRect* aResult)
 #endif
   }
 }
-
-#ifdef DEBUG
-nsIAtom*
-nsLineBox::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  NS_PRECONDITION(aResult, "null OUT parameter pointer");
-  *aResult = sizeof(*this);
-
-  nsIAtom* atom;
-  if (IsBlock()) {
-    atom = nsLayoutAtoms::lineBoxBlockSmall;
-    if (mBlockData) {
-      atom = nsLayoutAtoms::lineBoxBlockBig;
-      *aResult += sizeof(*mBlockData);
-    }
-  }
-  else {
-    atom = nsLayoutAtoms::lineBoxSmall;
-    if (mInlineData) {
-      atom = nsLayoutAtoms::lineBoxBig;
-      *aResult += sizeof(*mInlineData);
-
-      // Add in the size needed for floaters associated with this line
-      if (HasFloaters()) {
-        PRUint32  floatersSize;
-        mInlineData->mFloaters.SizeOf(aHandler, &floatersSize);
-
-        // Base size of embedded object was included in sizeof(*this) above
-        floatersSize -= sizeof(mInlineData->mFloaters);
-        aHandler->AddSize(nsLayoutAtoms::lineBoxFloaters, floatersSize);
-      }
-    }
-  }
-
-  return atom;
-}
-#endif
 
 //----------------------------------------------------------------------
 
@@ -1066,20 +1025,6 @@ nsFloaterCacheList::Remove(nsFloaterCache* aElement)
     fcp = &fc->mNext;
   }
 }
-
-#ifdef DEBUG
-void
-nsFloaterCacheList::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  NS_PRECONDITION(aResult, "null OUT parameter pointer");
-  *aResult = sizeof(*this);
-
-  // Add in the space for each floater
-  for (nsFloaterCache* cache = Head(); cache; cache = cache->Next()) {
-    *aResult += sizeof(*cache);
-  }
-}
-#endif
 
 //----------------------------------------------------------------------
 

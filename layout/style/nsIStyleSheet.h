@@ -41,8 +41,6 @@
 #include <stdio.h>
 #include "nsISupports.h"
 
-class nsISizeOfHandler;
-
 class nsIAtom;
 class nsString;
 class nsIURI;
@@ -108,8 +106,6 @@ public:
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
-
-  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize) = 0;
 #endif
 
 };

@@ -46,7 +46,6 @@ struct nsHTMLReflowState;
 struct nsMargin;
 class nsTableCellFrame;
 class nsStyleCoord;
-class nsISizeOfHandler;
 
 class nsITableLayoutStrategy
 {
@@ -79,10 +78,6 @@ public:
                                        const nsHTMLReflowState& aReflowState,
                                        nscoord                  aAvailWidth,
                                        float                    aPixelToTwips)=0;
-
-#ifdef DEBUG
-  virtual void SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
-#endif
 };
 
 #endif

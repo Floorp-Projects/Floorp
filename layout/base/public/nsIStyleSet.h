@@ -60,7 +60,6 @@ class nsRuleNode;
 struct nsFindFrameHint;
 
 #include "nsVoidArray.h"
-class nsISizeOfHandler;
 
 class nsICSSPseudoComparator;
 
@@ -314,7 +313,6 @@ public:
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) = 0;
   virtual void ListContexts(nsIFrame* aRootFrame, FILE* out = stdout, PRInt32 aIndent = 0) = 0;
-  virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize) = 0;
 #endif
 
   virtual void ResetUniqueStyleItems(void) = 0;

@@ -42,7 +42,6 @@
 #include "nsAString.h"
 
 class nsIFormControl;
-class nsISizeOfHandler;
 class nsIDOMHTMLInputElement;
 class nsIRadioVisitor;
 class nsISimpleEnumerator;

@@ -66,7 +66,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsITextContent.h"
 #include "nsStyleChangeList.h"
-#include "nsISizeOfHandler.h"
 #include "nsIFocusTracker.h"
 #include "nsIFrameSelection.h"
 #include "nsSpaceManager.h"
@@ -6274,28 +6273,6 @@ NS_IMETHODIMP
 nsBlockFrame::VerifyTree() const
 {
   // XXX rewrite this
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aHandler || !aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  PRUint32 sum = sizeof(*this);
-
-  // Add in size of each line object
-  for (const_line_iterator line = begin_lines(), line_end = end_lines();
-       line != line_end;
-       ++line) {
-    PRUint32  lineBoxSize;
-    nsIAtom* atom = line->SizeOf(aHandler, &lineBoxSize);
-    aHandler->AddSize(atom, lineBoxSize);
-  }
-
-  *aResult = sum;
   return NS_OK;
 }
 #endif

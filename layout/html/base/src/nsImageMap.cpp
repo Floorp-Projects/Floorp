@@ -44,7 +44,6 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
-#include "nsISizeOfHandler.h"
 #include "nsTextFragment.h"
 #include "nsIContent.h"
 #include "nsIDOMHTMLElement.h"
@@ -90,10 +89,6 @@ public:
   void GetAltText(nsAString& aAltText) const;
   PRBool GetHasURL() const { return mHasURL; }
   void GetArea(nsIContent** aArea) const;
-
-#ifdef DEBUG
-  virtual void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
 
   nsCOMPtr<nsIContent> mArea;
   nscoord* mCoords;
@@ -152,18 +147,6 @@ Area::GetArea(nsIContent** aArea) const
   *aArea = mArea;
   NS_IF_ADDREF(*aArea);
 }
-
-#ifdef DEBUG
-void
-Area::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (aResult) {
-    PRUint32 sum = sizeof(*this);
-    sum += mNumCoords * sizeof(nscoord);
-    *aResult = sum;
-  }
-}
-#endif
 
 #include <stdlib.h>
 
@@ -1246,21 +1229,3 @@ nsImageMap::Destroy(void)
     }
   }
 }
-
-#ifdef DEBUG
-void
-nsImageMap::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (aResult) {
-    PRUint32 sum = sizeof(*this);
-    PRInt32 i, n = mAreas.Count();
-    for (i = 0; i < n; i++) {
-      Area* area = (Area*) mAreas.ElementAt(i);
-      PRUint32 areaSize;
-      area->SizeOf(aHandler, &areaSize);
-      sum += areaSize;
-    }
-    *aResult = sum;
-  }
-}
-#endif

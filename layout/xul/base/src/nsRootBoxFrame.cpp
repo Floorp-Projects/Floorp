@@ -116,7 +116,6 @@ public:
   
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
   nsIFrame* mPopupSetFrame;
@@ -360,15 +359,5 @@ NS_IMETHODIMP
 nsRootBoxFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("RootBox"), aResult);
-}
-
-NS_IMETHODIMP
-nsRootBoxFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = sizeof(*this);
-  return NS_OK;
 }
 #endif

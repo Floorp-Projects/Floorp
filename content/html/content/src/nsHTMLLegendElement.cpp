@@ -45,7 +45,6 @@
 #include "nsIPresContext.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
-#include "nsISizeOfHandler.h"
 
 
 class nsHTMLLegendElement : public nsGenericHTMLContainerFormElement,
@@ -83,9 +82,6 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 };
 
 nsresult
@@ -214,16 +210,6 @@ nsHTMLLegendElement::AttributeToString(nsIAtom* aAttribute,
   return nsGenericHTMLContainerFormElement::AttributeToString(aAttribute,
                                                               aValue, aResult);
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLLegendElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif
 
 nsresult
 nsHTMLLegendElement::Reset()

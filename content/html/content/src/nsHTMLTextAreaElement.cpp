@@ -57,7 +57,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsITextControlFrame.h"
 #include "nsIEventStateManager.h"
-#include "nsISizeOfHandler.h"
 #include "nsLinebreakConverter.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
@@ -140,10 +139,6 @@ public:
 
   nsresult GetInnerHTML(nsAString& aInnerHTML);
   nsresult SetInnerHTML(const nsAString& aInnerHTML);
-
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 
 protected:
   nsCOMPtr<nsIControllers> mControllers;
@@ -784,19 +779,6 @@ nsHTMLTextAreaElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
   return ReplaceContentsWithText(aInnerHTML, PR_TRUE);
 }
-
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLTextAreaElement::SizeOf(nsISizeOfHandler* aSizer,
-                              PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif
-
 
 // Controllers Methods
 

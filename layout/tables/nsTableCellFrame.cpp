@@ -1425,19 +1425,6 @@ void nsTableCellFrame::GetCollapseOffset(nsIPresContext* aPresContext,
   }
 }
 
-#ifdef DEBUG
-NS_IMETHODIMP
-nsTableCellFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  PRUint32 sum = sizeof(*this);
-  *aResult = sum;
-  return NS_OK;
-}
-#endif
-
 // nsBCTableCellFrame
 
 nsBCTableCellFrame::nsBCTableCellFrame()
@@ -1561,17 +1548,3 @@ nsBCTableCellFrame::PaintUnderlay(nsIPresContext&           aPresContext,
   // don't paint the children if it's pass1
   aPaintChildren = (aFlags & BORDER_COLLAPSE_BACKGROUNDS);  
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsBCTableCellFrame::SizeOf(nsISizeOfHandler* aHandler, 
-                           PRUint32*         aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  PRUint32 sum = sizeof(*this);
-  *aResult = sum;
-  return NS_OK;
-}
-#endif

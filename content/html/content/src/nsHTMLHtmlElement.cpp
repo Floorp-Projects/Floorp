@@ -66,10 +66,6 @@ public:
 
   // nsIDOMHTMLHtmlElement
   NS_DECL_NSIDOMHTMLHTMLELEMENT
-
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 };
 
 
@@ -152,14 +148,3 @@ nsHTMLHtmlElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 
 NS_IMPL_STRING_ATTR(nsHTMLHtmlElement, Version, version)
-
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLHtmlElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif

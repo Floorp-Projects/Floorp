@@ -78,23 +78,6 @@ public:
    */
   NS_IMETHOD  DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData) = 0;
 
-  /**
-   * Get the size of the frame object. The size value should include
-   * all subordinate data referenced by the frame that is not
-   * accounted for by child frames. However, this value should not
-   * include the content objects, style contexts, views or other data
-   * that lies logically outside the frame system.
-   *
-   * If the implementation so chooses, instead of returning the total
-   * subordinate data it may instead use the sizeof handler to store
-   * away subordinate data under its own key so that the subordinate
-   * data may be tabulated independently of the frame itself.
-   *
-   * The caller is responsible for recursing over all child-lists that
-   * the frame supports.
-   */
-  NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
-
   NS_IMETHOD  VerifyTree() const = 0;
 
   /**
@@ -139,9 +122,6 @@ public:
   // Show frame border of event target
   static void ShowEventTargetFrameBorder(PRBool aEnable);
   static PRBool GetShowEventTargetFrameBorder();
-
-  virtual void SizeOfStyleContext(nsISizeOfHandler* aSizeOfHandler,
-                                  PRUint32& aSize) = 0;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;

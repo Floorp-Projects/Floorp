@@ -86,9 +86,6 @@ public:
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 
 protected:
 
@@ -215,18 +212,6 @@ nsHTMLOptGroupElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                                        aDOMEvent, aFlags,
                                                        aEventStatus);
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLOptGroupElement::SizeOf(nsISizeOfHandler* aSizer,
-                              PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif
-
 
 void
 nsHTMLOptGroupElement::GetSelect(nsISelectElement **aSelectElement)

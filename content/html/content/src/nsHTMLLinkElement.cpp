@@ -183,9 +183,6 @@ public:
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 
 protected:
   virtual void GetStyleSheetURL(PRBool* aIsInline,
@@ -361,16 +358,6 @@ nsHTMLLinkElement::HandleDOMEvent(nsIPresContext* aPresContext,
   return HandleDOMEventForAnchors(this, aPresContext, aEvent, aDOMEvent,
                                   aFlags, aEventStatus);
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLLinkElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif
 
 NS_IMETHODIMP
 nsHTMLLinkElement::GetLinkState(nsLinkState &aState)

@@ -43,9 +43,6 @@
 #include "nsIAtom.h"
 
 class nsIContent;
-#ifdef DEBUG
-class nsISizeOfHandler;
-#endif
 
 /**
  * This class provides a late-bound collection of elements that are
@@ -64,10 +61,6 @@ public:
   NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMNode** aReturn);
 
   NS_IMETHOD ParentDestroyed();
-
-#ifdef DEBUG
-  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 
 protected:
   nsIContent* mParent;

@@ -55,7 +55,6 @@
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
-#include "nsISizeOfHandler.h"
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"
@@ -111,9 +110,6 @@ public:
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 
 protected:
   PRInt8 mType;
@@ -634,16 +630,6 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   return ret;
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLButtonElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif
 
 nsresult
 nsHTMLButtonElement::GetDefaultValue(nsAString& aDefaultValue)

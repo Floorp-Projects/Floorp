@@ -99,10 +99,6 @@ public:
                                       PRInt32 aModType,
                                       PRInt32& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 };
 
 nsresult
@@ -448,15 +444,3 @@ nsHTMLSharedContainerElement::GetAttributeMappingFunction(nsMapRuleToAttributesF
   return
     nsGenericHTMLContainerElement::GetAttributeMappingFunction(aMapRuleFunc);
 }
-
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLSharedContainerElement::SizeOf(nsISizeOfHandler* aSizer,
-                                     PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif

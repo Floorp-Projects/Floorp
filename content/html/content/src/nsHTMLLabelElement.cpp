@@ -49,7 +49,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
-#include "nsISizeOfHandler.h"
 #include "nsIFormControlFrame.h"
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
@@ -187,9 +186,6 @@ public:
                      PRBool aNotify);
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                        PRBool aNotify);
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 
 protected:
   already_AddRefed<nsIContent> GetForContent();
@@ -424,16 +420,6 @@ nsHTMLLabelElement::SetFocus(nsIPresContext* aContext)
   // Do nothing (yes, really)!
   return NS_OK;
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLLabelElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif
 
 nsresult
 nsHTMLLabelElement::Reset()

@@ -47,7 +47,6 @@
 class nsIPresShell;
 class nsIFrame;
 class nsVoidArray;
-class nsISizeOfHandler;
 struct nsSize;
 
 #define NS_SPACE_MANAGER_CACHE_SIZE 4
@@ -320,8 +319,6 @@ public:
    * Dump the state of the spacemanager out to a file
    */
   nsresult List(FILE* out);
-
-  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
 protected:

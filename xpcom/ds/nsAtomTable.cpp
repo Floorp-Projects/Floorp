@@ -41,7 +41,6 @@
 #include "nsCRT.h"
 #include "pldhash.h"
 #include "prenv.h"
-#include "nsISizeOfHandler.h"
 
 /**
  * The shared hash table for atom lookups.
@@ -241,16 +240,6 @@ AtomImpl::GetUnicode(const PRUnichar **aResult) /*FIX: const */
 {
   NS_PRECONDITION(aResult, "null out param");
   *aResult = mString;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AtomImpl::SizeOf(nsISizeOfHandler* aHandler, PRUint32* _retval) /*FIX: const */
-{
-#ifdef DEBUG
-  NS_PRECONDITION(_retval, "null out param");
-  *_retval = sizeof(*this) + nsCRT::strlen(mString) * sizeof(PRUnichar);
-#endif
   return NS_OK;
 }
 

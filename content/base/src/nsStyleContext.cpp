@@ -47,7 +47,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
-#include "nsISizeOfHandler.h"
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
 #include "prenv.h"
@@ -732,70 +731,6 @@ void nsStyleContext::List(FILE* out, PRInt32 aIndent)
       child->List(out, aIndent + 1);
       child = child->mNextSibling;
     } while (mEmptyChild != child);
-  }
-}
-
-
-/******************************************************************************
-* SizeOf method:
-*  
-*  Self (reported as nsStyleContext's size): 
-*    1) sizeof(*this) which gets all of the data members
-*    2) adds in the size of the PseudoTag, if there is one
-*  
-*  Children / siblings / parents:
-*    1) We recurse over the mChild and mEmptyChild instances if they exist.
-*       These instances will then be accumulated seperately (not part of 
-*       the containing instance's size)
-*    2) We recurse over the siblings of the Child and Empty Child instances
-*       and count then seperately as well.
-*    3) We recurse over our direct siblings (if any).
-*   
-******************************************************************************/
-void nsStyleContext::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
-{
-  NS_ASSERTION(aSizeOfHandler, "SizeOf handler cannot be null");
-
-  // first get the unique items collection
-  UNIQUE_STYLE_ITEMS(uniqueItems);
-
-  if(! uniqueItems->AddItem((void*)this) ){
-    // object has already been accounted for
-    return;
-  }
-
-  PRUint32 localSize=0;
-
-  // get or create a tag for this instance
-  nsCOMPtr<nsIAtom> tag;
-  tag = do_GetAtom("nsStyleContext");
-  // get the size of an empty instance and add to the sizeof handler
-  aSize = sizeof(*this);
-  // add in the size of the member mPseudoTag
-  if (mPseudoTag){
-    mPseudoTag->SizeOf(aSizeOfHandler, &localSize);
-    aSize += localSize;
-  }
-  aSizeOfHandler->AddSize(tag,aSize);
-
-  // now follow up with the child (and empty child) recursion
-  if (nsnull != mChild) {
-    nsStyleContext* child = mChild;
-    do {
-      child->SizeOf(aSizeOfHandler, localSize);
-      child = child->mNextSibling;
-    } while (mChild != child);
-  }
-  if (nsnull != mEmptyChild) {
-    nsStyleContext* child = mEmptyChild;
-    do {
-      child->SizeOf(aSizeOfHandler, localSize);
-      child = child->mNextSibling;
-    } while (mEmptyChild != child);
-  }
-  // and finally our direct siblings (if any)
-  if (nsnull != mNextSibling) {
-    mNextSibling->SizeOf(aSizeOfHandler, localSize);
   }
 }
 

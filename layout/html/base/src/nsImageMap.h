@@ -90,10 +90,6 @@ public:
    */
   void Destroy(void);
   
-#ifdef DEBUG
-  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
-
   // nsISupports
   NS_DECL_ISUPPORTS
 

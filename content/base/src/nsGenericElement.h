@@ -592,10 +592,6 @@ public:
   static PLDHashTable sRangeListsHash;
 
 protected:
-#ifdef DEBUG
-  virtual PRUint32 BaseSizeOf(nsISizeOfHandler *aSizer) const;
-#endif
-
   PRBool HasDOMSlots() const
   {
     return !(mFlagsOrSlots & GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS);
@@ -805,10 +801,6 @@ public:
 #endif
 
 protected:
-#ifdef DEBUG
-  virtual PRUint32 BaseSizeOf(nsISizeOfHandler *aSizer) const;
-#endif
-
   /**
    * The attributes (stored as nsGenericAttribute*)
    * @see nsGenericAttribute

@@ -82,7 +82,6 @@ public:
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
 #ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 

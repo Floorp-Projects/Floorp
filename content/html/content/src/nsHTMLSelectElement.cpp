@@ -235,9 +235,6 @@ public:
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
 
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);   
 
@@ -2416,13 +2413,3 @@ nsHTMLOptionCollection::IndexOf(nsIContent* aOption)
 
   return mElements->IndexOf(aOption);
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsHTMLSelectElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
-
-  return NS_OK;
-}
-#endif

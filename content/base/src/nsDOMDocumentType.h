@@ -43,7 +43,6 @@
 #include "nsIContent.h"
 #include "nsGenericDOMDataNode.h"
 #include "nsString.h"
-#include "nsISizeOfHandler.h"
 
 // XXX DocumentType is currently implemented by inheriting the generic
 // CharacterData object, even though DocumentType is not character
@@ -74,10 +73,6 @@ public:
 
   // nsIContent
   NS_IMETHOD GetTag(nsIAtom*& aResult) const;
-
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-#endif
 
 protected:
   nsString mName;

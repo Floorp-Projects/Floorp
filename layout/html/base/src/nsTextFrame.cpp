@@ -441,7 +441,6 @@ public:
   
 #ifdef DEBUG
   NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
@@ -890,10 +889,6 @@ public:
   }
   virtual nsIFrame* GetFirstInFlow() const;
   
-#ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
-
 protected:
   nsIFrame* mPrevInFlow;
 };
@@ -970,19 +965,6 @@ nsContinuingTextFrame::GetFirstInFlow() const
   } while (previous);
   return firstInFlow;
 }
-
-#ifdef DEBUG
-NS_IMETHODIMP
-nsContinuingTextFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = sizeof(*this);
-  return NS_OK;
-}
-#endif
-
 
 inline nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB)
 {
@@ -6118,16 +6100,6 @@ nsTextFrame::IsEmpty(nsCompatibility aCompatMode,
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
-nsTextFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = sizeof(*this);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsTextFrame::GetFrameName(nsAString& aResult) const
 {

@@ -42,7 +42,6 @@
 #include "nsVoidArray.h"
 #include "nsPlaceholderFrame.h"
 #include "nsILineIterator.h"
-#include "nsISizeOfHandler.h"
 
 class nsSpaceManager;
 class nsLineBox;
@@ -117,10 +116,6 @@ public:
   void Remove(nsFloaterCache* aElement);
 
   void Append(nsFloaterCacheFreeList& aList);
-
-#ifdef DEBUG
-  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
-#endif
 
 protected:
   nsFloaterCache* mHead;
@@ -405,7 +400,6 @@ public:
                    PRBool *aResult) const;
 
 #ifdef DEBUG
-  nsIAtom* SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
   static PRInt32 GetCtorCount();
 #endif
 
