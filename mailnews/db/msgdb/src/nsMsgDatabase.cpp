@@ -974,8 +974,8 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	// OK, remove from cache first and close the store.
 //	RemoveFromCache(this);
         // clear out db ptr in folder info; it's about to be invalid
-        if (m_dbFolderInfo)
-          m_dbFolderInfo->m_mdb = nsnull;
+  if (m_dbFolderInfo)
+    m_dbFolderInfo->m_mdb = nsnull;
 	NS_IF_RELEASE(m_dbFolderInfo);
 	m_dbFolderInfo = nsnull;
 
@@ -992,7 +992,7 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	if (m_mdbStore)
 	{
 		m_mdbStore->CloseMdbObject(m_mdbEnv);
-                m_mdbEnv = nsnull;
+    m_mdbEnv = nsnull;
 		m_mdbStore = nsnull;
 	}
 	Release();
@@ -3170,11 +3170,8 @@ nsIMsgThread *nsMsgDatabase::GetThreadForReference(nsCString &msgID, nsIMsgDBHdr
 
 nsIMsgThread *	nsMsgDatabase::GetThreadForSubject(nsCString &subject)
 {
-//	NS_ASSERTION(PR_FALSE, "not implemented yet.");
-	nsIMsgThread *thread = NULL;
+	nsIMsgThread *thread = nsnull;
 
-    //nsIMsgDBHdr	*msgHdr = nsnull;
-    //nsresult rv = NS_OK;
 	mdbYarn	subjectYarn;
 
 	subjectYarn.mYarn_Buf = (void*)subject.get();
@@ -3184,19 +3181,21 @@ nsIMsgThread *	nsMsgDatabase::GetThreadForSubject(nsCString &subject)
 
 	nsIMdbRow	*threadRow;
 	mdbOid		outRowId;
-	mdb_err result = GetStore()->FindRow(GetEnv(), m_threadRowScopeToken,
-		m_threadSubjectColumnToken, &subjectYarn,  &outRowId, &threadRow);
-	if (NS_SUCCEEDED(result) && threadRow)
-	{
-		//Get key from row
-		mdbOid outOid;
-		nsMsgKey key = 0;
-		if (threadRow->GetOid(GetEnv(), &outOid) == NS_OK)
-			key = outOid.mOid_Id;
-		// find thread header for header whose message id we matched.
-		thread = GetThreadForThreadId(key);
-	}
-
+  if (m_mdbStore)
+  {
+	  mdb_err result = m_mdbStore->FindRow(GetEnv(), m_threadRowScopeToken,
+		  m_threadSubjectColumnToken, &subjectYarn,  &outRowId, &threadRow);
+	  if (NS_SUCCEEDED(result) && threadRow)
+	  {
+		  //Get key from row
+		  mdbOid outOid;
+		  nsMsgKey key = 0;
+		  if (threadRow->GetOid(GetEnv(), &outOid) == NS_OK)
+			  key = outOid.mOid_Id;
+		  // find thread header for header whose message id we matched.
+		  thread = GetThreadForThreadId(key);
+	  }
+  }
 	return thread;
 }
 
