@@ -71,6 +71,8 @@ CPPSRCS		= \
 		nsAFMObject.cpp \
 		nsGfxFactoryPS.cpp \
 		nsTempfilePS.cpp \
+		nsPrintJobPS.cpp \
+		nsPrintJobFactoryPS.cpp \
 		$(NULL)
 
 EXPORTS		= \

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ex: set tabstop=8 softtabstop=2 shiftwidth=2 expandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,6 +22,7 @@
  *
  * Contributor(s):
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Ken Herron <kherron@fastmail.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -59,6 +61,9 @@
 #include "nsPostScriptObj.h"
 #include "nspr.h"
 #include "nsILanguageAtomService.h"
+#include "nsType8.h"
+#include "nsPrintJobPS.h"
+#include "nsPrintJobFactoryPS.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *nsDeviceContextPSLM = PR_NewLogModule("nsDeviceContextPS");
@@ -89,6 +94,7 @@ nsDeviceContextPS :: nsDeviceContextPS()
   : DeviceContextImpl(),
   mSpec(nsnull),
   mParentDeviceContext(nsnull),
+  mPrintJob(nsnull),
   mPSObj(nsnull),
   mPSFontGeneratorList(nsnull)
 { 
@@ -108,13 +114,8 @@ nsDeviceContextPS::~nsDeviceContextPS()
 {
   PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::~nsDeviceContextPS()\n"));
 
-  if (mPSObj) {
-    delete mPSObj;
-    mPSObj = nsnull;
-  }
-  
-  /* nsCOMPtr<> will dispose the objects... */
-  mSpec = nsnull;
+  delete mPSObj;
+  delete mPrintJob;
   mParentDeviceContext = nsnull;
 
 #ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
@@ -134,8 +135,8 @@ NS_IMETHODIMP
 nsDeviceContextPS::SetSpec(nsIDeviceContextSpec* aSpec)
 {
   PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::SetSpec()\n"));
-
-  nsresult  rv = NS_ERROR_FAILURE;
+  NS_PRECONDITION(!mPSObj, "Already have a postscript object");
+  NS_PRECONDITION(!mPrintJob, "Already have a printjob object");
 
 #ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
   NS_ASSERTION(instance_counter < 2, "Cannot have more than one print device context.");
@@ -145,24 +146,23 @@ nsDeviceContextPS::SetSpec(nsIDeviceContextSpec* aSpec)
 #endif /* WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS */
 
   mSpec = aSpec;
-  
-  nsCOMPtr<nsIDeviceContextSpecPS> psSpec;
 
   mPSObj = new nsPostScriptObj();
   if (!mPSObj)
     return  NS_ERROR_OUT_OF_MEMORY; 
 
-  psSpec = do_QueryInterface(mSpec, &rv);
+  nsresult rv;
+  nsCOMPtr<nsIDeviceContextSpecPS> psSpec = do_QueryInterface(mSpec, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = mPSObj->Init(psSpec);
-
-    if (NS_FAILED(rv)) {
-      delete mPSObj;
-      mPSObj = nsnull;
-    }
+    if (NS_SUCCEEDED(rv))
+      rv = nsPrintJobFactoryPS::CreatePrintJob(psSpec, mPrintJob);
   }
-  
-  return rv;  
+  if (NS_FAILED(rv) && mPSObj) {
+    delete mPSObj;
+    mPSObj = nsnull;
+  }
+  return rv;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsDeviceContextPS,
@@ -415,12 +415,10 @@ static PRBool PR_CALLBACK
 GeneratePSFontCallback(nsHashKey *aKey, void *aData, void* aClosure)
 {
   nsPSFontGenerator* psFontGenerator = (nsPSFontGenerator*)aData;
-  nsPostScriptObj *psObj = (nsPostScriptObj*)aClosure;
-  NS_ENSURE_TRUE(psFontGenerator && psObj, PR_FALSE);
+  NS_ENSURE_TRUE(psFontGenerator && aClosure, PR_FALSE);
 
-  FILE *f = psObj->GetPrintFile();
-  if (f)
-    psFontGenerator->GeneratePSFont(f);
+  if (aClosure)
+    psFontGenerator->GeneratePSFont((FILE *)aClosure);
   return PR_TRUE;
 }
 
@@ -433,26 +431,48 @@ NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
   PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG, ("nsDeviceContextPS::EndDocument()\n"));
 
   NS_ENSURE_TRUE(mPSObj != nsnull, NS_ERROR_NULL_POINTER);
-  
+
+  // Finish the document and print it...
+  nsresult rv = mPSObj->end_document();
+  if (NS_SUCCEEDED(rv)) {
+    FILE *submitFP;
+    rv = mPrintJob->StartSubmission(&submitFP);
+    if (NS_ERROR_GFX_PRINTING_NOT_IMPLEMENTED == rv) {
+      // This was probably a print-preview operation
+      rv = NS_OK;
+    }
+    else if (NS_SUCCEEDED(rv)) {
+      NS_ASSERTION(submitFP, "No print job submission handle");
+
+      // Start writing the print job to the job handler
+      mPSObj->write_prolog(submitFP);
+
 #ifdef MOZ_ENABLE_FREETYPE2
-  // Before output Type8 font, check whether printer support CID font
-  if (mFTPEnable && mPSFontGeneratorList)
-    if (mPSFontGeneratorList->Count() > 0)
-      mPSObj->add_cid_check();
+      // Before output Type8 font, check whether printer support CID font
+      if (mFTPEnable && mPSFontGeneratorList)
+        if (mPSFontGeneratorList->Count() > 0)
+          AddCIDCheckCode(submitFP);
 #endif
  
-  /* Core of TrueType printing:
-   *   enumerate items("nsPSFontGenerator") in hashtable
-   *   to generate Type8 font and output to Postscript file
-   */
-  if (mPSFontGeneratorList)
-    mPSFontGeneratorList->Enumerate(GeneratePSFontCallback, (void *) mPSObj);
+      /* Core of TrueType printing:
+       *   enumerate items("nsPSFontGenerator") in hashtable
+       *   to generate Type8 font and output to Postscript file
+       */
+      if (mPSFontGeneratorList)
+        mPSFontGeneratorList->Enumerate(GeneratePSFontCallback,
+            (void *) submitFP);
 
-  /* Finish the document and print it... */  
-  nsresult rv = mPSObj->end_document();
+      rv = mPSObj->write_script(submitFP);
+      if (NS_SUCCEEDED(rv))
+        rv = mPrintJob->FinishSubmission();
+    }
+  }
 
-  delete mPSObj;
-  mPSObj = nsnull;
+  delete mPrintJob;
+  mPrintJob = nsnull;
+
+  PR_LOG(nsDeviceContextPSLM, PR_LOG_DEBUG,
+      ("nsDeviceContextPS::EndDocument() return value %d\n", rv));
 
   return rv;
 }
@@ -467,9 +487,8 @@ NS_IMETHODIMP nsDeviceContextPS::AbortDocument(void)
 
   NS_ENSURE_TRUE(mPSObj != nsnull, NS_ERROR_NULL_POINTER);
   
-  delete mPSObj;
-  mPSObj = nsnull;
-  
+  delete mPrintJob;
+  mPrintJob = nsnull;
   return NS_OK;
 }
 

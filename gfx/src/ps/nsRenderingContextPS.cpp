@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *   Leon Sha <leon.sha@sun.com>
+ *   Ken Herron <kherron@fastmail.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1316,7 +1317,7 @@ NS_IMETHODIMP nsRenderingContextPS::RenderPostScriptDataFragment(const unsigned 
   // Reset the coordinate system to point-sized. The origin and Y axis
   // orientation are already correct.
   mPSObj->scale(TWIPS_PER_POINT_FLOAT, TWIPS_PER_POINT_FLOAT);
-  fwrite(aData, aDatalen, 1, mPSObj->mPrintSetup->tmpBody);
+  fwrite(aData, aDatalen, 1, mPSObj->GetScriptHandle());
 
   return NS_OK;
 }
