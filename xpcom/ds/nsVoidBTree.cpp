@@ -289,7 +289,7 @@ nsVoidBTree::InsertElementAt(void* aElement, PRInt32 aIndex)
         // We're still in the index. Find the right leaf.
         Node* next = nsnull;
 
-        PRInt32 count = current->GetCount();
+        count = current->GetCount();
         for (PRInt32 i = 0; i < count; ++i) {
             Node* child = NS_REINTERPRET_CAST(Node*, current->GetElementAt(i));
 
@@ -422,7 +422,7 @@ nsVoidBTree::RemoveElementAt(PRInt32 aIndex)
         // We're still in the index. Find the right leaf.
         Node* next = nsnull;
 
-        PRInt32 count = current->GetCount();
+        count = current->GetCount();
         for (PRInt32 i = 0; i < count; ++i) {
             Node* child = NS_REINTERPRET_CAST(Node*, current->GetElementAt(i));
 

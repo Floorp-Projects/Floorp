@@ -148,7 +148,7 @@ protected:
         void InsertElementAt(void* aElement, PRInt32 aIndex);
         void RemoveElementAt(PRInt32 aIndex);
 
-    private:
+    protected:
         // XXX Not to be implemented
         Node();
         ~Node();
@@ -272,14 +272,14 @@ public:
     public:
         ConstIterator() : mIsSingleton(PR_TRUE), mElement(nsnull) {}
 
-        ConstIterator(ConstIterator& aOther) : mIsSingleton(aOther.mIsSingleton) {
+        ConstIterator(const ConstIterator& aOther) : mIsSingleton(aOther.mIsSingleton) {
             if (mIsSingleton)
                 mElement = aOther.mElement;
             else
                 mPath = aOther.mPath; }
 
         ConstIterator&
-        operator=(ConstIterator& aOther) {
+        operator=(const ConstIterator& aOther) {
             mIsSingleton = aOther.mIsSingleton;
             if (mIsSingleton)
                 mElement = aOther.mElement;
@@ -308,7 +308,7 @@ public:
         ConstIterator operator--(int) {
             ConstIterator temp(*this);
             Prev();
-            return *this; }
+            return temp; }
 
         PRBool operator==(const ConstIterator& aOther) const {
             return mIsSingleton ? mElement == aOther.mElement
