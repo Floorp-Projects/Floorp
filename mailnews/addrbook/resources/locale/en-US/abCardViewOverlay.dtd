@@ -26,6 +26,6 @@ Rights Reserved.
 <!-- Special Box Headings, for mailing lists -->
 <!ENTITY description.heading "Description">
 <!ENTITY addresses.heading "Addresses">
-<!-- For Map It -->
-<!ENTITY mapItButton.label "Map It!">
+<!-- For Map It! -->
+<!ENTITY mapItButton.label "Get Map">
 
