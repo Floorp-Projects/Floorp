@@ -145,7 +145,11 @@ NS_IMETHODIMP nsAccessible::GetName(nsAString& aName)
     }
   }
 
-  content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aName);
+  if (NS_CONTENT_ATTR_NOT_THERE ==
+      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aName)) {
+    aName.SetIsVoid(PR_TRUE);
+  }
+
   return NS_OK;
 }
 
@@ -1261,7 +1265,10 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
   if (!aCanAggregateSubtree) {
     // Don't use AppendFlatStringFromSubtree for container widgets like menulist
     // Still try the title as as fallback method in that case.
-    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aLabel);
+    if (NS_CONTENT_ATTR_NOT_THERE ==
+        content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aLabel)) {
+      aLabel.SetIsVoid(PR_TRUE);
+    }
     return NS_OK;
   }
 
