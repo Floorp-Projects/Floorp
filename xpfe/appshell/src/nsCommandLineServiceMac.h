@@ -29,6 +29,7 @@
 
 #include "nscore.h"
 #include "nsError.h"
+#include "nsString.h"
 
 #include "nsAEDefs.h"
 
@@ -41,7 +42,6 @@ public:
 
   enum
   {
-    kMaxBufferSize  = 512,
     kMaxTokens      = 20  
   };
 
@@ -50,7 +50,6 @@ public:
 
   nsresult        Initialize(int& argc, char**& argv);
   
-  PRBool          EnsureCommandLine();
   nsresult        AddToCommandLine(const char* inArgText);
   nsresult        AddToCommandLine(const char* inOptionString, const FSSpec& inFileSpec);
   nsresult        AddToEnvironmentVars(const char* inArgText);
@@ -66,8 +65,10 @@ protected:
 
   nsresult        OpenWindow(const char *chrome, const PRUnichar *url);
   
-  char*           mArgBuffer; // the command line itself
-  char**          mArgs;      // array of pointers into argBuffer
+  nsCString       mTempArgsString;    // temp storage for args as we accumulate them
+  char*           mArgsBuffer;        // final, immutable container for args
+  
+  char**          mArgs;              // array of pointers into argBuffer
 
   PRBool          mStartedUp;
 

@@ -59,7 +59,7 @@ nsMacCommandLine nsMacCommandLine::sMacCommandLine;
 
 //----------------------------------------------------------------------------------------
 nsMacCommandLine::nsMacCommandLine()
-: mArgBuffer(NULL)
+: mArgsBuffer(NULL)
 , mArgs(NULL)
 , mStartedUp(PR_FALSE)
 //----------------------------------------------------------------------------------------
@@ -72,6 +72,8 @@ nsMacCommandLine::~nsMacCommandLine()
 //----------------------------------------------------------------------------------------
 {
   ShutdownAEHandlerClasses();
+  nsMemory::Free(mArgsBuffer);
+  mArgsBuffer = NULL;
 }
 
 
@@ -84,6 +86,9 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
   mArgs[0] = nsnull;
   argc = 0;
   argv = mArgs;
+
+  // init the args buffer with the program name
+  mTempArgsString.Assign("mozilla");
 
   // Set up AppleEvent handling.
   OSErr err = CreateAEHandlerClasses(false);
@@ -105,25 +110,27 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
   {
     ::WaitNextEvent(highLevelEventMask, &anEvent, 0, nsnull);
     if (anEvent.what == kHighLevelEvent)
+    {
+      // here we process startup odoc/pdoc events, which can 
+      // add items to the command line.
       err = ::AEProcessAppleEvent(&anEvent);
+    }
   }
-
   
   // we've started up now
   mStartedUp = PR_TRUE;
+
+  // Care! We have to ensure that the addresses we pass out in
+  // argv continue to point to valid memory. Because we can't guarantee
+  // anything about the way that nsCString works, we make a copy
+  // of the buffer, which is never freed until the command line handler
+  // goes way (and, since it's static, that is at library unload time).
   
-  if (!mArgBuffer)      // no arguments from anywhere
-    return NS_OK;
-
-  // Release some unneeded memory
-  char* oldBuffer = mArgBuffer;
-  mArgBuffer = new char[PL_strlen(mArgBuffer) + 1];
-  PL_strcpy(mArgBuffer, oldBuffer);
-  delete [] oldBuffer;
-
+  mArgsBuffer = mTempArgsString.ToNewCString();
+  mTempArgsString.Truncate();   // it's job is done
+  
   // Parse the buffer.
-  int     rowNumber = 0;
-  char* strtokFirstParam = mArgBuffer;
+  char* strtokFirstParam = mArgsBuffer;
   while (argc < kMaxTokens)
   {
     // Get the next token.  Initialize strtok by passing the string the
@@ -147,37 +154,17 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
     delete [] oldArgs;
     argv = mArgs;
   }
-  
+
   return NS_OK;
 }
-
-
-//----------------------------------------------------------------------------------------
-PRBool nsMacCommandLine::EnsureCommandLine()
-//----------------------------------------------------------------------------------------
-{
-  if (mArgBuffer)
-    return PR_TRUE;
-
-  mArgBuffer = new char[kMaxBufferSize];
-  if (!mArgBuffer)
-    return PR_FALSE;
-
-  PL_strcpy(mArgBuffer, "mozilla"); // argv[0]
-  return PR_TRUE;
-}
-
 
 //----------------------------------------------------------------------------------------
 nsresult nsMacCommandLine::AddToCommandLine(const char* inArgText)
 //----------------------------------------------------------------------------------------
 {
-  if (!EnsureCommandLine())
-    return NS_ERROR_OUT_OF_MEMORY;
-
   if (*inArgText != ' ')
-    PL_strcat(mArgBuffer, " ");
-  PL_strcat(mArgBuffer, inArgText);
+    mTempArgsString.Append(" ");
+  mTempArgsString.Append(inArgText);
   return NS_OK;
 }
 
@@ -186,13 +173,10 @@ nsresult nsMacCommandLine::AddToCommandLine(const char* inArgText)
 nsresult nsMacCommandLine::AddToCommandLine(const char* inOptionString, const FSSpec& inFileSpec)
 //----------------------------------------------------------------------------------------
 {
-  if (!EnsureCommandLine())
-    return NS_ERROR_OUT_OF_MEMORY;
-
   // Convert the filespec to a URL
   nsFileSpec nsspec(inFileSpec);
   nsFileURL fileAsURL(nsspec);
-  PL_strcat(mArgBuffer, " ");
+  mTempArgsString.Append(" ");
   AddToCommandLine(inOptionString);
   AddToCommandLine(fileAsURL.GetAsString());
   return NS_OK;
