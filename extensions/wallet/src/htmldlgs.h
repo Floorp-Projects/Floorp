@@ -13,7 +13,6 @@
 #include "jsotypes.h"
 #include "plstr.h"
 #include "seccomon.h"
-#include "xpgetstr.h"
 
 #define PORT_Strlen(s) 	strlen(s)
 
@@ -245,12 +244,11 @@ XP_GetDialogStrings(int stringnum)
 
   /* init the header */
   header->arena = arena;
-  header->basestringnum = stringnum;
 
 #ifdef	XP_MAC
   goto loser;
 #else
-  src = XP_GetString(stringnum);
+  src = "%0%%1%%2%";
 
 #endif
   len = PORT_Strlen(src);
@@ -261,23 +259,7 @@ XP_GetDialogStrings(int stringnum)
     goto loser;
   }
 
-  while (!done) { /* Concatenate pieces to form message */
-    PORT_Memcpy(dst, src, len+1);
-    done = 1;
-    if (XP_STRSTR(src, "%-cont-%")) { /* Continuation */
-      src = XP_GetString(++stringnum);
-      len = PORT_Strlen(src);
-      header->contents =
-        (char *)PORT_ArenaGrow(arena,
-        header->contents, size, size + len);
-      if (header->contents == NULL) {
-        goto loser;
-      }
-      dst = header->contents + size - 1;
-      size += len;
-      done = 0;
-    }
-  }
+  PORT_Memcpy(dst, src, len+1);
 
   /* At this point we should have the complete message in
      header->contents, including like %-cont-%, which will be
