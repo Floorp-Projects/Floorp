@@ -441,6 +441,15 @@ endif
 
 ifdef MOZ_JAVA
 DEFINES		+= -DJAVA
+ifdef MOZ_OJI
+error You can't define both MOZ_JAVA and MOZ_OJI anymore. 
+endif
+JAVA_OR_OJI	= 1
+endif
+
+ifdef MOZ_OJI
+DEFINES		+= -DOJI
+JAVA_OR_OJI	= 1
 endif
 
 ifndef NO_MOCHA
@@ -572,5 +581,6 @@ ZPWDLL		= libzpw.$(DLL_SUFFIX)
 endif
 
 JAVA_DEFINES	+= -DAWTSDLL=\"$(AWTSDLL)\" -DCONDLL=\"$(CONDLL)\" -DJBNDLL=\"$(JBNDLL)\" -DJDBDLL=\"$(JDBDLL)\" \
-		   -DJSJDLL=\"$(JSJDLL)\" -DNETDLL=\"$(NETDLL)\" -DNSCDLL=\"$(NSCDLL)\" -DZPWDLL=\"$(ZPWDLL)\"
+		   -DJSJDLL=\"$(JSJDLL)\" -DNETDLL=\"$(NETDLL)\" -DNSCDLL=\"$(NSCDLL)\" -DZPWDLL=\"$(ZPWDLL)\" \
+                   -DJAR_NAME=\"$(JAR_NAME)\"
 

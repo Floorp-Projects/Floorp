@@ -29,6 +29,9 @@
 #define NETSCAPE 1
 #define OTUNIXERRORS 1		/* We want OpenTransport error codes */
 
+#define OJI 1
+#define MOCHA 1
+
 /*
 	This compiles in heap dumping utilities and other good stuff
  for developers -- maybe we only want it in for a special SDK

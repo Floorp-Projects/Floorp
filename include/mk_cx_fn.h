@@ -144,9 +144,11 @@ FE_DEFINE(GetTextFrame, void, (MWContext *, LO_TextStruct *, int32, int32, XP_Re
 FE_DEFINE(GetDefaultBackgroundColor, void, (MWContext* context, LO_Color* color))
 #endif
 #endif
+#ifdef TRANSPARENT_APPLET
 /* these functions are to allow dealyed native window applet creation and transparent applet */
 FE_DEFINE(HandleClippingView, void, (MWContext *pContext, struct LJAppletData *appletD, int x, int y, int width, int height))
 FE_DEFINE(DrawJavaApp, void, (MWContext *pContext, int iLocation, LO_JavaAppStruct *pJava))
+#endif
 
 #undef FE_DEFINE
 #undef MAKE_FE_FUNCS_PREFIX
