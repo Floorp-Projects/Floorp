@@ -181,7 +181,7 @@ PRInt32 nsThrobber::gNumThrobbers;
 nsThrobber::nsThrobber()
 {
   NS_INIT_REFCNT();
-  if (0 == ++gNumThrobbers) {
+  if (0 == gNumThrobbers++) {
     gThrobbers = new nsVoidArray;
   }
   AddThrobber(this);
