@@ -2111,6 +2111,14 @@ lo_NewElement(MWContext *context, lo_DocState *state, intn type,
 	}
 	else
 	{
+		eptr->lo_any.width = 0;
+		eptr->lo_any.height = 0;
+		eptr->lo_any.x_offset = 0;
+		eptr->lo_any.y_offset = 0;
+		eptr->lo_any.x = 0;
+		eptr->lo_any.y = 0;
+		eptr->lo_any.line_height = 0;
+
 		eptr->lo_any.next = NULL;
 		eptr->lo_any.prev = NULL;
 #ifdef EDITOR

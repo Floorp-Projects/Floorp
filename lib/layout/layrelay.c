@@ -1705,8 +1705,6 @@ void lo_AppendFloatInLineList(MWContext *context,
 	float_dummy->lo_any.ele_id = NEXT_ELEMENT;
 	float_dummy->lo_any.x = state->x;
 	float_dummy->lo_any.y = state->y;
-	float_dummy->lo_any.width = 0;
-	float_dummy->lo_any.height = 0;
 	float_dummy->lo_any.next = restOfLine;
 	float_dummy->lo_any.prev = NULL;
 
