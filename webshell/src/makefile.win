@@ -47,6 +47,10 @@ LINCS=-I..\public -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
       -I$(PUBLIC)\editor -I$(PUBLIC)\rdf \
       -I$(PUBLIC)\oji \
       -I$(PUBLIC)\uconv \
+      -I$(PUBLIC)\strres \
+      -I$(PUBLIC)\locale \
+      -I$(PUBLIC)\unicharutil \
+      -I$(PUBLIC)\intl \
       -I$(PUBLIC)\caps
 
 MAKE_OBJ_TYPE = DLL
