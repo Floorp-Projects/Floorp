@@ -41,13 +41,6 @@
 #include "nsComboBox.h"
 #include "nsLookAndFeel.h"
 #include "nsLabel.h"
-#ifdef LOSER
-#include "nsMenuBar.h"
-#include "nsMenu.h"
-#include "nsMenuItem.h"
-#include "nsPopUpMenu.h"
-#include "nsContextMenu.h"
-#endif
 #include "nsFontRetrieverService.h"
 
 // Drag & Drop, Clipboard
