@@ -556,7 +556,7 @@ Archive=psm.xpi
 $InstallSize$:psm
 $InstallSizeArchive$:psm.xpi
 Attributes=SELECTED|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\Components\psm.xpt
+Force Upgrade File0=[SETUP PATH]\Components\pipnss.dll
 Force Upgrade File1=[SETUP PATH]\psm.exe
 
 [Core]
