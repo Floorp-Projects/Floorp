@@ -27,7 +27,8 @@ PROG5 = .\$(OBJDIR)\PropertiesTest.exe
 PROG6 = .\$(OBJDIR)\TestAutoLock.exe
 PROG7 = .\$(OBJDIR)\TestThreads.exe
 PROG8 = .\$(OBJDIR)\TestObserverService.exe
-PROG9 = .\$(OBJDIR)\TestPipes.exe
+PROG9 = .\$(OBJDIR)\TestBuffers.exe
+PROG10 = .\$(OBJDIR)\TestPipes.exe
 RESFILE = timer.res
 PROGRAMS = $(PROG0) $(PROG1) \
 !ifdef MODULAR_NETLIB
@@ -40,6 +41,7 @@ PROGRAMS = $(PROG0) $(PROG1) \
         $(PROG7) \
         $(PROG8) \
         $(PROG9) \
+        $(PROG10) \
 	$(NULL)
 
 LINCS=-I..\src -I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib -I$(PUBLIC)\raptor
@@ -73,6 +75,7 @@ install:: $(PROGRAMS)
         $(MAKE_INSTALL) $(PROG7) $(DIST)\bin
         $(MAKE_INSTALL) $(PROG8) $(DIST)\bin
         $(MAKE_INSTALL) $(PROG9) $(DIST)\bin
+        $(MAKE_INSTALL) $(PROG10) $(DIST)\bin
 
 clobber::
 	rm -f $(DIST)\bin\TimerTest.exe
@@ -123,4 +126,7 @@ $(PROG7): $(OBJDIR) TestThreads.cpp
 
 $(PROG8): $(OBJDIR) TestObserverService.cpp
 
-$(PROG9): $(OBJDIR) TestPipes.cpp
+$(PROG9): $(OBJDIR) TestBuffers.cpp
+
+$(PROG10): $(OBJDIR) TestPipes.cpp
+

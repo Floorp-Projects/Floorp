@@ -40,6 +40,8 @@ EXPORTS =                       \
         nsIObserverList.h       \
         nsIObserver.h           \
 	nsQuickSort.h	\
+	nsIPageManager.h	\
+	nsIBuffer.h     	\
         $(NULL)
 
 MODULE = raptor 
