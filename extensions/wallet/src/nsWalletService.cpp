@@ -280,6 +280,28 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
           /* got to the form elements at long last */ 
           PRUint32 numElements;
           elements->GetLength(&numElements);
+          /* get number of passwords on form */
+          PRInt32 passwordCount = 0;
+          for (PRUint32 elementXX = 0; elementXX < numElements; elementXX++) {
+            nsCOMPtr<nsIDOMNode> elementNode;
+            elements->Item(elementXX, getter_AddRefs(elementNode));
+            if (nsnull != elementNode) {
+              nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(elementNode));
+              if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
+                nsAutoString type("");
+                rv = inputElement->GetType(type);
+                if (NS_SUCCEEDED(rv)) {
+                  if (type.Compare("password", PR_TRUE) == 0) {
+                    passwordCount++;
+                  }
+                }
+              }
+            }
+          }
+          /* don't prefill if there were no passwords on the form */
+          if (passwordCount == 0) {
+            continue;
+          }
           for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
             nsCOMPtr<nsIDOMNode> elementNode;
             elements->Item(elementX, getter_AddRefs(elementNode));
@@ -296,12 +318,17 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
                     if (NS_SUCCEEDED(rv)) {
                       PRUnichar* nameString = field.ToNewUnicode();
                       if (nameString) {
-                        PRUnichar* valueString = NULL;
-                        SINGSIGN_RestoreSignonData(URLName, nameString, &valueString, elementNumber++);
-                        if (valueString) {
-                          nsAutoString value(valueString);                                    
-                          rv = inputElement->SetValue(value);
-                          // warning! don't delete valueString
+                        /* note: we do not want to prefill if there is a default value */
+                        nsAutoString value;
+                        rv = inputElement->GetValue(value);
+                        if (NS_FAILED(rv) || value.Length() == 0) {
+                          PRUnichar* valueString = NULL;
+                          SINGSIGN_RestoreSignonData(URLName, nameString, &valueString, elementNumber++);
+                          if (valueString) {
+                            nsAutoString value(valueString);                                    
+                            rv = inputElement->SetValue(value);
+                            // warning! don't delete valueString
+                          }
                         }
                         Recycle(nameString);
                       }
