@@ -62,6 +62,7 @@
 #include "SplitElementTxn.h"
 #include "JoinElementTxn.h"
 
+#include "nsIStringStream.h"
 
 #define HACK_FORCE_REDRAW 1
 

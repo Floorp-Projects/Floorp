@@ -58,21 +58,12 @@
 #include "PlaceholderTxn.h"
 #include "InsertTextTxn.h"
 
+#include "nsIFileStream.h"
+#include "nsIStringStream.h"
+
 
 class nsIFrame;
 
-#ifdef XP_UNIX
-#include <strstream.h>
-#endif
-
-#ifdef XP_MAC
-#include <sstream>
-#include <string>
-#endif
-
-#ifdef XP_PC
-#include <strstrea.h>
-#endif
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -99,6 +90,9 @@ static NS_DEFINE_CID(kCContentIteratorCID,   NS_CONTENTITERATOR_CID);
 
 static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_CID(kCRangeCID,    NS_RANGE_CID);
+
+static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
+static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -953,45 +947,19 @@ NS_IMETHODIMP nsTextEditor::Insert(nsString& aInputString)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#ifdef XP_MAC 
-static void WriteFromStringstream(stringstream& aIn, nsString& aOutputString)
-{
-  string      theString = aIn.str();
-
-	aOutputString.SetLength(0);											// empty the string
-	aOutputString += theString.data();
-	aOutputString.SetLength(theString.length());		// make sure it's terminated
-	
-	/* relace LF with CR. Don't do this here, because strings passed out
-	   to JavaScript need LF termination.
-	PRUnichar		lineFeed = '\n';
-	PRUnichar		carriageReturn = '\r';
-	aOutputString.ReplaceChar(lineFeed, carriageReturn);
-	*/
-}
-#else
-static void WriteFromOstrstream(ostrstream& aIn, nsString& aOutputString)
-{
-  char* strData = aIn.str();		// get a copy of the buffer (unterminated)
-
-	aOutputString.SetLength(0);		// empty the string
-	aOutputString += strData;
-	aOutputString.SetLength(aIn.pcount());		// terminate
-
-  // in ostrstreams if you call the str() function
-  // then you are responsible for deleting the string
-  delete [] strData;
-}
-#endif
-
 NS_IMETHODIMP nsTextEditor::OutputText(nsString& aOutputString)
 {
-#ifdef XP_MAC
-  stringstream outStream;
-#else
-  ostrstream outStream;
-#endif
+  return OutputText(nsnull,&aOutputString,nsnull);
+}
 
+NS_IMETHODIMP nsTextEditor::OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride)
+{
+  return OutputText(aOutputStream,nsnull,aCharsetOverride);
+}
+
+
+NS_IMETHODIMP nsTextEditor::OutputText(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride)
+{ 
   nsresult rv = NS_ERROR_FAILURE;
   nsIPresShell* shell = nsnull;
   
@@ -1019,53 +987,55 @@ NS_IMETHODIMP nsTextEditor::OutputText(nsString& aOutputString)
                                                  kCParserIID, 
                                                  (void **)&parser);
 
-      if (NS_OK == rv) {
+      if (NS_SUCCEEDED(rv)) {
         nsIHTMLContentSink* sink = nsnull;
+        
+        if (NS_SUCCEEDED(rv))
+        {
+          
+          if (aOutputString != nsnull)
+            rv = NS_New_HTMLToTXT_SinkStream(&sink,aOutputString); 
+          else if (aOutputStream != nsnull)
+            rv = NS_New_HTMLToTXT_SinkStream(&sink,aOutputStream,aCharsetOverride);
 
-        rv = NS_New_HTMLToTXT_SinkStream(&sink);
-     	 if (NS_OK == rv) {
-	  			// what't this cast doing here, Greg?
-	        ((nsHTMLContentSinkStream*)sink)->SetOutputStream(outStream);
-
-	        if (NS_OK == rv) {
-	          parser->SetContentSink(sink);
-	    
-	          parser->SetDocumentCharset(charset, kCharsetFromPreviousLoading);
-
-	          nsIDTD* dtd = nsnull;
+          if (sink && NS_SUCCEEDED(rv))
+          {
+ 	          parser->SetContentSink(sink);
+            parser->SetDocumentCharset(charset, kCharsetFromPreviousLoading);
+ 	          nsIDTD* dtd = nsnull;
 	          rv = NS_NewXIFDTD(&dtd);
 	          if (NS_OK == rv) {
 	            parser->RegisterDTD(dtd);
 	            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
 	          }
-#ifdef XP_MAC
-	          WriteFromStringstream(outStream, aOutputString);
-#else
-	          WriteFromOstrstream(outStream, aOutputString);
-#endif
 
 	          NS_IF_RELEASE(dtd);
 	          NS_IF_RELEASE(sink);
+            NS_IF_RELEASE(parser);
           }
-        }
-        NS_RELEASE(parser);
+
+        }        
       }
     }
     NS_RELEASE(shell);
   }
-  
   return rv;
 }
 
 
-
 NS_IMETHODIMP nsTextEditor::OutputHTML(nsString& aOutputString)
 {
-#ifdef XP_MAC
-  stringstream outStream;
-#else
-  ostrstream outStream;
-#endif
+  return OutputHTML(nsnull,&aOutputString,nsnull);
+}
+
+NS_IMETHODIMP nsTextEditor::OutputHTML(nsIOutputStream* aOutputStream,nsString* aCharsetOverride)
+{
+  return OutputHTML(aOutputStream,nsnull,aCharsetOverride);
+}
+
+
+NS_IMETHODIMP nsTextEditor::OutputHTML(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride)
+{
   
   nsresult rv = NS_ERROR_FAILURE;
   nsIPresShell* shell = nsnull;
@@ -1097,10 +1067,12 @@ NS_IMETHODIMP nsTextEditor::OutputHTML(nsString& aOutputString)
       if (NS_OK == rv) {
         nsIHTMLContentSink* sink = nsnull;
 
-        rv = NS_New_HTML_ContentSinkStream(&sink);
+        if (aOutputStream)
+          rv = NS_New_HTML_ContentSinkStream(&sink,aOutputStream,aCharsetOverride);
+        else if (aOutputString)
+          rv = NS_New_HTML_ContentSinkStream(&sink,aOutputString);
   
-      	if (NS_OK == rv) {
-	        ((nsHTMLContentSinkStream*)sink)->SetOutputStream(outStream);
+      	if (sink && NS_SUCCEEDED(rv)) {
 
 	        if (NS_OK == rv) {
 	          parser->SetContentSink(sink);
@@ -1113,11 +1085,6 @@ NS_IMETHODIMP nsTextEditor::OutputHTML(nsString& aOutputString)
 	            parser->RegisterDTD(dtd);
 	            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
 	          }
-#ifdef XP_MAC
-	          WriteFromStringstream(outStream, aOutputString);
-#else
-	          WriteFromOstrstream(outStream, aOutputString);
-#endif
 	          NS_IF_RELEASE(dtd);
 	          NS_IF_RELEASE(sink);
 	        }
