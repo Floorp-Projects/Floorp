@@ -77,40 +77,68 @@ nsDefaultURIFixup::CreateExposableURI(nsIURI *aURI, nsIURI **aReturn)
     PRBool isWyciwyg = PR_FALSE;
     aURI->SchemeIs("wyciwyg", &isWyciwyg);
 
-    if (!isWyciwyg)
+    nsCAutoString userPass;
+    aURI->GetUserPass(userPass);
+
+    // most of the time we can just AddRef and return
+    if (!isWyciwyg && userPass.IsEmpty())
     {
         *aReturn = aURI;
         NS_ADDREF(*aReturn);
         return NS_OK;
     }
 
-    nsCAutoString path;
-    nsresult rv = aURI->GetPath(path);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRUint32 pathLength = path.Length();
-    if (pathLength <= 2)
+    // Rats, we have to massage the URI
+    nsCOMPtr<nsIURI> uri;
+    if (isWyciwyg)
     {
-        return NS_ERROR_FAILURE;
-    }
+        nsCAutoString path;
+        nsresult rv = aURI->GetPath(path);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-    // Path is of the form "//123/http://foo/bar", with a variable number of digits.
-    // To figure out where the "real" URL starts, search path for a '/', starting at 
-    // the third character.
-    PRInt32 slashIndex = path.FindChar('/', 2);
-    if (slashIndex == kNotFound)
-    {
-        return NS_ERROR_FAILURE;
-    }
+        PRUint32 pathLength = path.Length();
+        if (pathLength <= 2)
+        {
+            return NS_ERROR_FAILURE;
+        }
 
-    // Get the charset of the original URI so we can pass it to our fixed up URI.
-    nsCAutoString charset;
-    aURI->GetOriginCharset(charset);
+        // Path is of the form "//123/http://foo/bar", with a variable number of digits.
+        // To figure out where the "real" URL starts, search path for a '/', starting at 
+        // the third character.
+        PRInt32 slashIndex = path.FindChar('/', 2);
+        if (slashIndex == kNotFound)
+        {
+            return NS_ERROR_FAILURE;
+        }
 
-    rv = NS_NewURI(aReturn,
+        // Get the charset of the original URI so we can pass it to our fixed up URI.
+        nsCAutoString charset;
+        aURI->GetOriginCharset(charset);
+
+        rv = NS_NewURI(getter_AddRefs(uri),
                    Substring(path, slashIndex + 1, pathLength - slashIndex - 1),
                    charset.get());
-    NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else
+    {
+        // clone the URI so zapping user:pass doesn't change the original
+        nsresult rv = aURI->Clone(getter_AddRefs(uri));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // hide user:pass unless overridden by pref
+    PRBool hideUserPass = PR_TRUE;
+    if (mPrefBranch)
+    {
+        mPrefBranch->GetBoolPref("browser.fixup.hide_user_pass", &hideUserPass);
+    }
+    if (hideUserPass)
+        uri->SetUserPass(EmptyCString());
+
+    // return the fixed-up URI
+    *aReturn = uri;
+    NS_ADDREF(*aReturn);
     return NS_OK;
 }
 

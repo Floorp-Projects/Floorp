@@ -59,6 +59,7 @@ pref("slider.snapMultiplier", 6);
 pref("browser.fixup.alternate.enabled", true);
 pref("browser.fixup.alternate.prefix", "www.");
 pref("browser.fixup.alternate.suffix", ".com");
+pref("browser.fixup.hide_user_pass", true);
 
 // Scripts & Windows prefs
 pref("browser.block.target_new_window",     false);
