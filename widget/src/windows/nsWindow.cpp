@@ -1499,7 +1499,10 @@ static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent 
   if (nsnull != aCurrentMenu) {
     nsIMenuListener * listener;
     if (NS_OK == aCurrentMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
-      listener->MenuDeselected(aEvent);
+      //listener->MenuDeselected(aEvent);
+
+	  listener->MenuDestruct(aEvent);
+
       NS_RELEASE(listener);
     }
   }
@@ -1507,16 +1510,38 @@ static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent 
   if (nsnull != aNewMenu)  {
     nsIMenuListener * listener;
     if (NS_OK == aNewMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
-      listener->MenuSelected(aEvent);
+      //listener->MenuSelected(aEvent);
+
+	  //listener->MenuConstruct(aEvent, this, null);
+
       NS_RELEASE(listener);
+
     }
+
   }
+
 }
 
 
+
+
+
 //-------------------------------------------------------------------------
-nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aFlags, UINT aCommand)
+
+nsresult nsWindow::MenuHasBeenSelected(
+
+  HMENU aNativeMenu, 
+
+  UINT  aItemNum, 
+
+  UINT  aFlags, 
+
+  UINT  aCommand)
+
 {
+
+  // Build nsMenuEvent
+
   nsMenuEvent event;
   event.mCommand = aCommand;
   event.eventStructType = NS_MENU_EVENT;
@@ -1524,7 +1549,8 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
 
   // The MF_POPUP flag tells us if we are a menu item or a menu
   // the aItemNum is either the command ID of the menu item or 
-  // the position of the menu as a child pf its parent
+  // the position of the menu as a child of its parent
+
   PRBool isMenuItem = !(aFlags & MF_POPUP);
 
   // uItem is the position of the item that was clicked
@@ -1555,7 +1581,50 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
     if (aNativeMenu == nativeMenuBar) {
       mMenuBar->GetMenuAt(aItemNum, hitMenu);
       if (mHitMenu != hitMenu) {
-        AdjustMenus(mHitMenu, hitMenu, event);
+		  //mHitMenu, hitMenu, event
+
+//AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent & aEvent) 
+
+{
+
+  if (nsnull != mHitMenu) {
+
+    nsIMenuListener * listener;
+
+    if (NS_OK == mHitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+
+      //listener->MenuDeselected(aEvent);
+
+	  listener->MenuDestruct(event);
+
+      NS_RELEASE(listener);
+
+    }
+
+  }
+
+
+
+  if (nsnull != hitMenu)  {
+
+    nsIMenuListener * listener;
+
+    if (NS_OK == hitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+
+      //listener->MenuSelected(aEvent);
+
+	  listener->MenuConstruct(event, this, NULL, NULL);
+
+      NS_RELEASE(listener);
+
+    }
+
+  }
+
+}
+
+
+
         NS_IF_RELEASE(mHitMenu);
         mHitMenu = hitMenu;
       } else {

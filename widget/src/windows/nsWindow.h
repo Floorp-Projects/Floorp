@@ -149,6 +149,7 @@ protected:
     virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
     virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
     nsresult                MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aFlags, UINT aCommand);
+    nsresult                DynamicMenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aFlags, UINT aCommand);
     nsIMenuItem *           FindMenuItem(nsIMenu * aMenu, PRUint32 aId);
     nsIMenu *               FindMenu(nsIMenu * aMenu, HMENU aNativeMenu, PRInt32 &aDepth);
 

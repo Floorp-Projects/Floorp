@@ -624,6 +624,47 @@ void nsWebShellWindow::LoadSubMenu(
 }
 
 //----------------------------------------
+void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow) 
+{
+  // locate the window element which holds toolbars and menus and commands
+  nsCOMPtr<nsIDOMElement> element;
+  aDOMDoc->GetDocumentElement(getter_AddRefs(element));
+  if (!element) {
+    return;
+  }
+  nsCOMPtr<nsIDOMNode> window(do_QueryInterface(element));
+
+  nsresult rv;
+  int endCount = 0;
+  nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(nsAutoString("menubar"), window, endCount, 1));
+  if (menubarNode) {
+    nsIMenuBar * pnsMenuBar = nsnull;
+    rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, kIMenuBarIID, (void**)&pnsMenuBar);
+    if (NS_OK == rv) {
+      if (nsnull != pnsMenuBar) {
+        //pnsMenuBar->Create(aParentWindow);
+      
+        // set pnsMenuBar as a nsMenuListener on aParentWindow
+        nsCOMPtr<nsIMenuListener> menuListener;
+        pnsMenuBar->QueryInterface(kIMenuListenerIID, getter_AddRefs(menuListener));
+        //aParentWindow->AddMenuListener(menuListener);
+
+        //fake event
+        nsMenuEvent fake;
+        menuListener->MenuConstruct(fake, aParentWindow, menubarNode, mWebShell);
+                  
+        // Give the aParentWindow this nsMenuBar to hold onto.
+        //aParentWindow->SetMenuBar(pnsMenuBar);
+      
+        // HACK: force a paint for now
+        //pnsMenuBar->Paint();
+       
+      } // end if ( nsnull != pnsMenuBar )
+    }
+  } // end if (menuBar)
+} // nsWebShellWindow::LoadMenus
+
+//----------------------------------------
 void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow) 
 {
   // locate the window element which holds toolbars and menus and commands
@@ -924,7 +965,13 @@ nsWebShellWindow::OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus)
   ///////////////////////////////
   nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("this"))); // XXX "this" is a small kludge for code reused
   if (menubarDOMDoc)
+  {
+    #ifdef XP_PC
+    DynamicLoadMenus(menubarDOMDoc, mWindow);
+    #else
     LoadMenus(menubarDOMDoc, mWindow);
+    #endif
+  }
 
   SetSizeFromXUL();
   SetTitleFromXUL();
@@ -1143,8 +1190,13 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
   // Find the Menubar DOM  and Load the menus, hooking them up to the loaded commands
   ///////////////////////////////
   nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("this"))); // XXX "this" is a small kludge for code reused
-  if (menubarDOMDoc)
+  if (menubarDOMDoc) {
+    #ifdef XP_PC
+    DynamicLoadMenus(menubarDOMDoc, mWindow);
+    #else
     LoadMenus(menubarDOMDoc, mWindow);
+    #endif
+  }
 
   SetSizeFromXUL();
   SetTitleFromXUL();
