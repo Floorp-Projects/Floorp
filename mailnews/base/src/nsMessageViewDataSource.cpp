@@ -17,7 +17,7 @@
  */
 
 #include "nsMessageViewDataSource.h"
-#include "nsRDFCursorUtils.h"
+#include "nsEnumeratorUtils.h"
 #include "nsRDFCID.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
@@ -166,7 +166,7 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTarget(nsIRDFResource* source,
 NS_IMETHODIMP nsMessageViewDataSource::GetSources(nsIRDFResource* property,
 						nsIRDFNode* target,
 						PRBool tv,
-						nsIRDFAssertionCursor** sources)
+						nsISimpleEnumerator** sources)
 {
 	if(mDataSource)
 		return mDataSource->GetSources(property, target, tv, sources);
@@ -177,7 +177,7 @@ NS_IMETHODIMP nsMessageViewDataSource::GetSources(nsIRDFResource* property,
 NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 						nsIRDFResource* property,    
 						PRBool tv,
-						nsIRDFAssertionCursor** targets)
+						nsISimpleEnumerator** targets)
 {
 	nsresult rv = NS_ERROR_FAILURE;
 
@@ -198,8 +198,8 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 					new nsMessageViewThreadEnumerator(threads);
 				if(!threadEnumerator)
 					return NS_ERROR_OUT_OF_MEMORY;
-				nsRDFEnumeratorAssertionCursor* cursor =
-					new nsRDFEnumeratorAssertionCursor(this, source, kNC_MessageChild, threadEnumerator);
+				nsAdapterEnumerator* cursor =
+					new nsAdapterEnumerator(threadEnumerator);
 				NS_IF_RELEASE(threads);
 				if (cursor == nsnull)
 					return NS_ERROR_OUT_OF_MEMORY;
@@ -216,8 +216,8 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 					new nsMessageViewMessageEnumerator(messages, mShowStatus);
 				if(!messageEnumerator)
 					return NS_ERROR_OUT_OF_MEMORY;
-				nsRDFEnumeratorAssertionCursor* cursor =
-					new nsRDFEnumeratorAssertionCursor(this, source, kNC_MessageChild, messageEnumerator);
+				nsAdapterEnumerator* cursor =
+					new nsAdapterEnumerator(messageEnumerator);
 				NS_IF_RELEASE(messages);
 				if (cursor == nsnull)
 					return NS_ERROR_OUT_OF_MEMORY;
@@ -250,8 +250,8 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 						new nsMessageViewMessageEnumerator(messages, mShowStatus);
 					if(!messageEnumerator)
 						return NS_ERROR_OUT_OF_MEMORY;
-					nsRDFEnumeratorAssertionCursor* cursor =
-						new nsRDFEnumeratorAssertionCursor(this, source, kNC_MessageChild, messageEnumerator);
+					nsAdapterEnumerator* cursor =
+						new nsAdapterEnumerator(messageEnumerator);
 					NS_IF_RELEASE(messages);
 					if (cursor == nsnull)
 						return NS_ERROR_OUT_OF_MEMORY;
@@ -328,7 +328,7 @@ NS_IMETHODIMP nsMessageViewDataSource::RemoveObserver(nsIRDFObserver* n)
 }
 
 NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsIn(nsIRDFNode* node,
-						 nsIRDFArcsInCursor** labels)
+						 nsISimpleEnumerator** labels)
 {
 	if(mDataSource)
 		return mDataSource->ArcLabelsIn(node, labels);
@@ -337,7 +337,7 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsIn(nsIRDFNode* node,
 }
 
 NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
-						  nsIRDFArcsOutCursor** labels)
+						  nsISimpleEnumerator** labels)
 {
 	
 	nsIMessage *message;
@@ -377,8 +377,8 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
 			NS_IF_RELEASE(folder);
 		}
 		NS_IF_RELEASE(message);
-		nsRDFArrayArcsOutCursor* cursor =
-			new nsRDFArrayArcsOutCursor(this, source, arcs);
+		nsArrayEnumerator* cursor =
+			new nsArrayEnumerator(arcs);
 		NS_RELEASE(arcs);
 		if (cursor == nsnull)
 			return NS_ERROR_OUT_OF_MEMORY;
@@ -392,7 +392,7 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
 		return NS_OK;
 } 
 
-NS_IMETHODIMP nsMessageViewDataSource::GetAllResources(nsIRDFResourceCursor** aCursor)
+NS_IMETHODIMP nsMessageViewDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 {
 	if(mDataSource)
 		return mDataSource->GetAllResources(aCursor);

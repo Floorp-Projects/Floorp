@@ -64,11 +64,11 @@ public:
                        PRBool aTruthValue,
                        nsIRDFResource **_retval);
 
-  /* nsIRDFAssertionCursor GetSources (in nsIRDFResource property, in nsIRDFNode aTarget, in boolean aTruthValue); */
+  /* nsISimpleEnumerator GetSources (in nsIRDFResource property, in nsIRDFNode aTarget, in boolean aTruthValue); */
   NS_IMETHOD GetSources(nsIRDFResource *property,
                         nsIRDFNode *aTarget,
                         PRBool aTruthValue,
-                        nsIRDFAssertionCursor **_retval);
+                        nsISimpleEnumerator **_retval);
 
   /* nsIRDFNode GetTarget (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
   NS_IMETHOD GetTarget(nsIRDFResource *source,
@@ -76,11 +76,11 @@ public:
                        PRBool aTruthValue,
                        nsIRDFNode **_retval);
 
-  /* nsIRDFAssertionCursor GetTargets (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
+  /* nsISimpleEnumerator GetTargets (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
   NS_IMETHOD GetTargets(nsIRDFResource *source,
                         nsIRDFResource *property,
                         PRBool aTruthValue,
-                        nsIRDFAssertionCursor **_retval);
+                        nsISimpleEnumerator **_retval);
 
   /* void Assert (in nsIRDFResource aSource, in nsIRDFResource property, in nsIRDFNode aTarget, in boolean aTruthValue); */
   NS_IMETHOD Assert(nsIRDFResource *source,
@@ -106,14 +106,14 @@ public:
   /* void RemoveObserver (in nsIRDFObserver aObserver); */
   NS_IMETHOD RemoveObserver(nsIRDFObserver *aObserver);
 
-  /* nsIRDFArcsInCursor ArcLabelsIn (in nsIRDFNode aNode); */
-  NS_IMETHOD ArcLabelsIn(nsIRDFNode *aNode, nsIRDFArcsInCursor **_retval);
+  /* nsISimpleEnumerator ArcLabelsIn (in nsIRDFNode aNode); */
+  NS_IMETHOD ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval);
 
-  /* nsIRDFArcsOutCursor ArcLabelsOut (in nsIRDFResource aSource); */
-  NS_IMETHOD ArcLabelsOut(nsIRDFResource *source, nsIRDFArcsOutCursor **_retval);
+  /* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource aSource); */
+  NS_IMETHOD ArcLabelsOut(nsIRDFResource *source, nsISimpleEnumerator **_retval);
 
-  /* nsIRDFResourceCursor GetAllResources (); */
-  NS_IMETHOD GetAllResources(nsIRDFResourceCursor **_retval);
+  /* nsISimpleEnumerator GetAllResources (); */
+  NS_IMETHOD GetAllResources(nsISimpleEnumerator **_retval);
 
   /* void Flush (); */
   NS_IMETHOD Flush();
@@ -263,12 +263,12 @@ nsMsgAccountManagerDataSource::GetSource(nsIRDFResource *property,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsIRDFAssertionCursor GetSources (in nsIRDFResource property, in nsIRDFNode aTarget, in boolean aTruthValue); */
+/* nsISimpleEnumerator GetSources (in nsIRDFResource property, in nsIRDFNode aTarget, in boolean aTruthValue); */
 NS_IMETHODIMP
 nsMsgAccountManagerDataSource::GetSources(nsIRDFResource *property,
                                    nsIRDFNode *aTarget,
                                    PRBool aTruthValue,
-                                   nsIRDFAssertionCursor **_retval)
+                                   nsISimpleEnumerator **_retval)
 {
 
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -292,12 +292,12 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
 }
 
 
-/* nsIRDFAssertionCursor GetTargets (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
+/* nsISimpleEnumerator GetTargets (in nsIRDFResource aSource, in nsIRDFResource property, in boolean aTruthValue); */
 NS_IMETHODIMP
 nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
                                    nsIRDFResource *property,
                                    PRBool aTruthValue,
-                                   nsIRDFAssertionCursor **_retval)
+                                   nsISimpleEnumerator **_retval)
 {
   nsresult rv = NS_RDF_NO_VALUE;
 
@@ -370,27 +370,27 @@ nsMsgAccountManagerDataSource::RemoveObserver(nsIRDFObserver *aObserver)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsIRDFArcsInCursor ArcLabelsIn (in nsIRDFNode aNode); */
+/* nsISimpleEnumerator ArcLabelsIn (in nsIRDFNode aNode); */
 NS_IMETHODIMP
 nsMsgAccountManagerDataSource::ArcLabelsIn(nsIRDFNode *aNode,
-                                    nsIRDFArcsInCursor **_retval)
+                                    nsISimpleEnumerator **_retval)
 {
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsIRDFArcsOutCursor ArcLabelsOut (in nsIRDFResource aSource); */
+/* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource aSource); */
 NS_IMETHODIMP
 nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
-                                     nsIRDFArcsOutCursor **_retval)
+                                     nsISimpleEnumerator **_retval)
 {
 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* nsIRDFResourceCursor GetAllResources (); */
+/* nsISimpleEnumerator GetAllResources (); */
 NS_IMETHODIMP
-nsMsgAccountManagerDataSource::GetAllResources(nsIRDFResourceCursor **_retval)
+nsMsgAccountManagerDataSource::GetAllResources(nsISimpleEnumerator **_retval)
 {
 
   return NS_ERROR_NOT_IMPLEMENTED;

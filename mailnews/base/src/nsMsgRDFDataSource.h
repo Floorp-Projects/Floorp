@@ -49,13 +49,13 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
                        PRBool aTruthValue,
                        nsIRDFResource **_retval);
 
-  /* nsIRDFAssertionCursor GetSources (in nsIRDFResource aProperty,
+  /* nsISimpleEnumerator GetSources (in nsIRDFResource aProperty,
      in nsIRDFNode aTarget,
      in boolean aTruthValue); */
   NS_IMETHOD GetSources(nsIRDFResource *aProperty,
                         nsIRDFNode *aTarget,
                         PRBool aTruthValue,
-                        nsIRDFAssertionCursor **_retval);
+                        nsISimpleEnumerator **_retval);
 
   /* nsIRDFNode GetTarget (in nsIRDFResource aSource,
      in nsIRDFResource aProperty,
@@ -65,13 +65,13 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
                        PRBool aTruthValue,
                        nsIRDFNode **_retval);
 
-  /* nsIRDFAssertionCursor GetTargets (in nsIRDFResource aSource,
+  /* nsISimpleEnumerator GetTargets (in nsIRDFResource aSource,
      in nsIRDFResource aProperty,
      in boolean aTruthValue); */
   NS_IMETHOD GetTargets(nsIRDFResource *aSource,
                         nsIRDFResource *aProperty,
                         PRBool aTruthValue,
-                        nsIRDFAssertionCursor **_retval);
+                        nsISimpleEnumerator **_retval);
 
   /* void Assert (in nsIRDFResource aSource,
      in nsIRDFResource aProperty,
@@ -105,16 +105,16 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
   /* void RemoveObserver (in nsIRDFObserver aObserver); */
   NS_IMETHOD RemoveObserver(nsIRDFObserver *aObserver);
 
-  /* nsIRDFArcsInCursor ArcLabelsIn (in nsIRDFNode aNode); */
+  /* nsISimpleEnumerator ArcLabelsIn (in nsIRDFNode aNode); */
   NS_IMETHOD ArcLabelsIn(nsIRDFNode *aNode,
-                         nsIRDFArcsInCursor **_retval);
+                         nsISimpleEnumerator **_retval);
 
-  /* nsIRDFArcsOutCursor ArcLabelsOut (in nsIRDFResource aSource); */
+  /* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource aSource); */
   NS_IMETHOD ArcLabelsOut(nsIRDFResource *aSource,
-                          nsIRDFArcsOutCursor **_retval);
+                          nsISimpleEnumerator **_retval);
 
-  /* nsIRDFResourceCursor GetAllResources (); */
-  NS_IMETHOD GetAllResources(nsIRDFResourceCursor **_retval);
+  /* nsISimpleEnumerator GetAllResources (); */
+  NS_IMETHOD GetAllResources(nsISimpleEnumerator **_retval);
 
   /* void Flush (); */
   NS_IMETHOD Flush();

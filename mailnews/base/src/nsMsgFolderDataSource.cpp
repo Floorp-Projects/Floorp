@@ -28,7 +28,7 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsIRDFNode.h"
-#include "nsRDFCursorUtils.h"
+#include "nsEnumeratorUtils.h"
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -41,7 +41,6 @@ static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIRDFCursorIID, NS_IRDFCURSOR_IID);
 
 nsIRDFResource* nsMsgFolderDataSource::kNC_Child;
 nsIRDFResource* nsMsgFolderDataSource::kNC_MessageChild;
@@ -198,7 +197,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTarget(nsIRDFResource* source,
 NS_IMETHODIMP nsMsgFolderDataSource::GetSources(nsIRDFResource* property,
                                                 nsIRDFNode* target,
                                                 PRBool tv,
-                                                nsIRDFAssertionCursor** sources)
+                                                nsISimpleEnumerator** sources)
 {
   PR_ASSERT(0);
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -207,7 +206,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetSources(nsIRDFResource* property,
 NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
                                                 nsIRDFResource* property,    
                                                 PRBool tv,
-                                                nsIRDFAssertionCursor** targets)
+                                                nsISimpleEnumerator** targets)
 {
   nsresult rv = NS_RDF_NO_VALUE;
 
@@ -221,8 +220,8 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
       rv = folder->GetSubFolders(&subFolders);
       if (NS_FAILED(rv)) return rv;
       //folder->GetMessages(&subFolders);
-      nsRDFEnumeratorAssertionCursor* cursor =
-        new nsRDFEnumeratorAssertionCursor(this, source, kNC_Child, subFolders);
+      nsAdapterEnumerator* cursor =
+        new nsAdapterEnumerator(subFolders);
       NS_IF_RELEASE(subFolders);
       if (cursor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -236,8 +235,8 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 
       rv = folder->GetMessages(&messages);
       if (NS_FAILED(rv)) return rv;
-      nsRDFEnumeratorAssertionCursor* cursor =
-        new nsRDFEnumeratorAssertionCursor(this, source, kNC_MessageChild, messages);
+      nsAdapterEnumerator* cursor =
+        new nsAdapterEnumerator(messages);
       NS_IF_RELEASE(messages);
       if (cursor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -247,8 +246,8 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
     }
     else if(peq(kNC_Name, property) || peq(kNC_SpecialFolder, property))
     {
-      nsRDFSingletonAssertionCursor* cursor =
-        new nsRDFSingletonAssertionCursor(this, source, property);
+      nsSingletonEnumerator* cursor =
+        new nsSingletonEnumerator(property);
       if (cursor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(cursor);
@@ -261,10 +260,8 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 	  //create empty cursor
 	  nsISupportsArray *assertions;
       NS_NewISupportsArray(&assertions);
-	  nsRDFArrayAssertionCursor* cursor = 
-		  new nsRDFArrayAssertionCursor(this,
-                              source, property, 
-                              assertions);
+	  nsArrayEnumerator* cursor = 
+		  new nsArrayEnumerator(assertions);
 	  if(cursor == nsnull)
 		  return NS_ERROR_OUT_OF_MEMORY;
 	  NS_ADDREF(cursor);
@@ -360,14 +357,14 @@ nsresult nsMsgFolderDataSource::NotifyObservers(nsIRDFResource *subject,
 }
 
 NS_IMETHODIMP nsMsgFolderDataSource::ArcLabelsIn(nsIRDFNode* node,
-                                                 nsIRDFArcsInCursor** labels)
+                                                 nsISimpleEnumerator** labels)
 {
   PR_ASSERT(0);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
-                                                  nsIRDFArcsOutCursor** labels)
+                                                  nsISimpleEnumerator** labels)
 {
   nsISupportsArray *arcs=nsnull;
   nsresult rv = NS_RDF_NO_VALUE;
@@ -388,8 +385,8 @@ NS_IMETHODIMP nsMsgFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
     NS_NewISupportsArray(&arcs);
   }
 
-  nsRDFArrayArcsOutCursor* cursor =
-    new nsRDFArrayArcsOutCursor(this, source, arcs);
+  nsArrayEnumerator* cursor =
+    new nsArrayEnumerator(arcs);
   NS_RELEASE(arcs);
   
   if (cursor == nsnull)
@@ -431,7 +428,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsIMsgFolder *folder,
 }
 
 NS_IMETHODIMP
-nsMsgFolderDataSource::GetAllResources(nsIRDFResourceCursor** aCursor)
+nsMsgFolderDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 {
   NS_NOTYETIMPLEMENTED("sorry!");
   return NS_ERROR_NOT_IMPLEMENTED;

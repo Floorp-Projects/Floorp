@@ -23,7 +23,7 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "rdf.h"
-#include "nsRDFCursorUtils.h"
+#include "nsEnumeratorUtils.h"
 #include "nsIMessage.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
@@ -36,7 +36,6 @@ static NS_DEFINE_CID(kMsgHeaderParserCID,			NS_MSGHEADERPARSER_CID);
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIRDFCursorIID, NS_IRDFCURSOR_IID);
 
 
 nsIRDFResource* nsMsgMessageDataSource::kNC_Subject;
@@ -202,7 +201,7 @@ nsresult nsMsgMessageDataSource::GetSenderName(nsAutoString& sender, nsAutoStrin
 NS_IMETHODIMP nsMsgMessageDataSource::GetSources(nsIRDFResource* property,
                                                 nsIRDFNode* target,
                                                 PRBool tv,
-                                                nsIRDFAssertionCursor** sources)
+                                                nsISimpleEnumerator** sources)
 {
   PR_ASSERT(0);
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -211,7 +210,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetSources(nsIRDFResource* property,
 NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
                                                 nsIRDFResource* property,    
                                                 PRBool tv,
-                                                nsIRDFAssertionCursor** targets)
+                                                nsISimpleEnumerator** targets)
 {
 	nsresult rv = NS_RDF_NO_VALUE;
 
@@ -220,8 +219,8 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 		if(peq(kNC_Subject, property) || peq(kNC_Date, property) ||
 			peq(kNC_Status, property))
 		{
-			nsRDFSingletonAssertionCursor* cursor =
-				new nsRDFSingletonAssertionCursor(this, source, property, PR_FALSE);
+			nsSingletonEnumerator* cursor =
+				new nsSingletonEnumerator(source);
 			if (cursor == nsnull)
 				return NS_ERROR_OUT_OF_MEMORY;
 			NS_ADDREF(cursor);
@@ -234,10 +233,8 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 	  //create empty cursor
 	  nsISupportsArray *assertions;
 	  NS_NewISupportsArray(&assertions);
-	  nsRDFArrayAssertionCursor* cursor = 
-		  new nsRDFArrayAssertionCursor(this,
-							  source, property, 
-							  assertions);
+	  nsArrayEnumerator* cursor = 
+		  new nsArrayEnumerator(assertions);
 	  if(cursor == nsnull)
 		  return NS_ERROR_OUT_OF_MEMORY;
 	  NS_ADDREF(cursor);
@@ -293,14 +290,14 @@ NS_IMETHODIMP nsMsgMessageDataSource::RemoveObserver(nsIRDFObserver* n)
 
 
 NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsIn(nsIRDFNode* node,
-                                                 nsIRDFArcsInCursor** labels)
+                                                 nsISimpleEnumerator** labels)
 {
   PR_ASSERT(0);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsOut(nsIRDFResource* source,
-                                                  nsIRDFArcsOutCursor** labels)
+                                                  nsISimpleEnumerator** labels)
 {
   nsISupportsArray *arcs=nsnull;
   nsresult rv = NS_RDF_NO_VALUE;
@@ -320,8 +317,8 @@ NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsOut(nsIRDFResource* source,
     NS_NewISupportsArray(&arcs);
   }
 
-  nsRDFArrayArcsOutCursor* cursor =
-    new nsRDFArrayArcsOutCursor(this, source, arcs);
+  nsArrayEnumerator* cursor =
+    new nsArrayEnumerator(arcs);
   NS_RELEASE(arcs);
   
   if (cursor == nsnull)
@@ -348,7 +345,7 @@ nsMsgMessageDataSource::getMessageArcLabelsOut(nsIMessage *folder,
 
 
 NS_IMETHODIMP
-nsMsgMessageDataSource::GetAllResources(nsIRDFResourceCursor** aCursor)
+nsMsgMessageDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 {
   NS_NOTYETIMPLEMENTED("sorry!");
   return NS_ERROR_NOT_IMPLEMENTED;
