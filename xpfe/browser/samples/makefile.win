@@ -28,6 +28,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) dexparamdialog.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) dexsimplemaster.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) dexsimpledialog.xul $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) tab.xul $(DIST)\bin\res\samples
 
 clobber::
 	rm -f $(DIST)\res\samples\dexanimmaster.xul
@@ -36,3 +37,4 @@ clobber::
 	rm -f $(DIST)\res\samples\dexparamdialog.xul
 	rm -f $(DIST)\res\samples\dexsimplemaster.xul
 	rm -f $(DIST)\res\samples\dexsimpledialog.xul
+	rm -f $(DIST)\res\samples\tab.xul
