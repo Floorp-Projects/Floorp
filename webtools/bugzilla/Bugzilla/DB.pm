@@ -175,10 +175,10 @@ sub _handle_error {
 }
 
 # List of abstract methods we are checking the derived class implements
-our @_abstract_methods = qw(new sql_regexp sql_not_regexp sql_limit
-                            sql_to_days sql_date_format sql_interval
-                            bz_lock_tables bz_unlock_tables
-                            REQUIRED_VERSION PROGRAM_NAME);
+our @_abstract_methods = qw(REQUIRED_VERSION PROGRAM_NAME
+                            new sql_regexp sql_not_regexp sql_limit sql_to_days
+                            sql_date_format sql_interval
+                            bz_lock_tables bz_unlock_tables);
 
 # This overriden import method will check implementation of inherited classes
 # for missing implementation of abstract methods
@@ -214,6 +214,35 @@ sub sql_position {
 #####################################################################
 # General Info Methods
 #####################################################################
+
+sub sql_string_concat {
+    my ($self, @params) = @_;
+    
+    return join(' || ', @params);
+}
+
+sub sql_fulltext_search {
+    my ($self, $column, $text) = @_;
+
+    # This is as close as we can get to doing full text search using
+    # standard ANSI SQL, without real full text search support. DB specific
+    # modules shoud override this, as this will be always much slower.
+
+    # the text is already sql-quoted, so we need to remove the quotes first
+    my $quote = substr($self->quote(''), 0, 1);
+    $text = $1 if ($text =~ /^$quote(.*)$quote$/);
+
+    # make the string lowercase to do case insensitive search
+    my $lower_text = lc($text);
+
+    # split the text we search for to separate words
+    my @words = split(/\s+/, $lower_text);
+
+    # search for occurence of all specified words in the column
+    return "CASE WHEN (LOWER($column) LIKE ${quote}%" .
+           join("%${quote} AND LOWER($column) LIKE ${quote}%", @words) .
+           "%${quote}) THEN 1 ELSE 0 END";
+}
 
 # XXX - Needs to be documented.
 sub bz_server_version {
@@ -713,6 +742,26 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
  Params:      $fragment = the string fragment we are searching for (scalar)
               $text = the text to search (scalar)
  Returns:     formatted SQL for substring search (scalar)
+
+=item C<sql_string_concat>
+
+ Description: Returns SQL syntax for concatenating multiple strings (constants
+              or values from table columns) together.
+ Params:      @params = array of column names or strings to concatenate
+ Returns:     formatted SQL for concatenating specified strings
+
+=item C<sql_fulltext_search>
+
+ Description: Returns SQL syntax for performing a full text search for
+              specified text on a given column.
+              There is a ANSI SQL version of this method implemented using
+              LIKE operator, but it's not a real full text search. DB specific
+              modules shoud override this, as this generic implementation will
+              be always much slower. This generic implementation returns
+              'relevance' as 0 for no match, or 1 for a match.
+ Params:      $column = name of column to search (scalar)
+              $text = text to search for (scalar)
+ Returns:     formatted SQL for for full text search
 
 =item C<bz_lock_tables>
 

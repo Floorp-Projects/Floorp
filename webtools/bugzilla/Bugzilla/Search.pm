@@ -545,14 +545,14 @@ sub init {
              # "content" is an alias for columns containing text for which we
              # can search a full-text index and retrieve results by relevance, 
              # currently just bug comments (and summaries to some degree).
-             # There's only one way to search a full-text index
-             # ("MATCH (...) AGAINST (...)"), so we only accept the "matches"
-             # operator, which is specific to full-text index searches.
+             # There's only one way to search a full-text index, so we only
+             # accept the "matches" operator, which is specific to full-text
+             # index searches.
 
              # Add the longdescs table to the query so we can search comments.
              my $table = "longdescs_$chartid";
-             push(@supptables, "INNER JOIN longdescs $table ON bugs.bug_id " . 
-                               "= $table.bug_id");
+             push(@supptables, "INNER JOIN longdescs AS $table " .
+                               "ON bugs.bug_id = $table.bug_id");
              if (Param("insidergroup") 
                  && !&::UserInGroup(Param("insidergroup")))
              {
@@ -563,11 +563,13 @@ sub init {
              # $term1 searches comments.
              # $term2 searches summaries, which contributes to the relevance
              # ranking in SELECT but doesn't limit which bugs get retrieved.
-             my $term1 = "MATCH($table.thetext) AGAINST(".&::SqlQuote($v).")";
-             my $term2 = "MATCH(bugs.short_desc) AGAINST(".&::SqlQuote($v).")";
+             my $term1 = $dbh->sql_fulltext_search("${table}.thetext",
+                                                   ::SqlQuote($v));
+             my $term2 = $dbh->sql_fulltext_search("bugs.short_desc",
+                                                   ::SqlQuote($v));
 
              # The term to use in the WHERE clause.
-             $term = $term1;
+             $term = "$term1 > 0";
 
              # In order to sort by relevance (in case the user requests it),
              # we SELECT the relevance value and give it an alias so we can
@@ -770,9 +772,11 @@ sub init {
              push(@supptables, "LEFT JOIN flagtypes $flagtypes " . 
                                "ON $flags.type_id = $flagtypes.id");
              
-             # Generate the condition by running the operator-specific function.
-             # Afterwards the condition resides in the global $term variable.
-             $ff = "CONCAT($flagtypes.name, $flags.status)";
+             # Generate the condition by running the operator-specific
+             # function. Afterwards the condition resides in the global $term
+             # variable.
+             $ff = $dbh->sql_string_concat("${flagtypes}.name",
+                                           "$flags.status");
              &{$funcsbykey{",$t"}};
              
              # If this is a negative condition (f.e. flag isn't "review+"),

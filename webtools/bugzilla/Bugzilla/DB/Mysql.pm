@@ -88,13 +88,25 @@ sub sql_not_regexp {
 }
 
 sub sql_limit {
-    my ($self, $limit,$offset) = @_;
+    my ($self, $limit, $offset) = @_;
 
     if (defined($offset)) {
         return "LIMIT $offset, $limit";
     } else {
         return "LIMIT $limit";
     }
+}
+
+sub sql_string_concat {
+    my ($self, @params) = @_;
+    
+    return 'CONCAT(' . join(', ', @params) . ')';
+}
+
+sub sql_fulltext_search {
+    my ($self, $column, $text) = @_;
+
+    return "MATCH($column) AGAINST($text)";
 }
 
 sub sql_to_days {
