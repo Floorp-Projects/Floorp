@@ -371,7 +371,7 @@
           <menuitem label="Frames" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_frame_index.html'"/>
           <menuitem label="Tables" oncommand="window._content.location.href='resource:/res/samples/test6.html'"/>
           <menuitem label="Applets" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_applet.html'"/>
-          <menuitem label="JavaScript" oncommand="window._content.location.href='http://www.abcnews.com'"/>
+          <menuitem label="JavaScript" oncommand="window._content.location.href='http://mozilla.org/quality/browser/standards/javascript/tcmatrix/index.html'"/>
           <menuitem label="GIF Images" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html'"/>
           <menuitem label="JPEG Images" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
           <menuitem label="PNG Images" oncommand="window._content.location.href='http://www.libpng.org/pub/png/png-MagnoliaAlpha.html'"/>
