@@ -196,14 +196,11 @@ EOF
     i[3456]86:NetBSD:*:*)
 	echo ${UNAME_MACHINE}-unknown-netbsd${UNAME_RELEASE}
 	exit 0 ;;
-    alpha:Linux:*:*)
+    *:Linux:*:*)
 	echo ${UNAME_MACHINE}-unknown-linux
 	exit 0 ;;
-    i[3456]86:Linux:*:*)
-	echo ${UNAME_MACHINE}-unknown-linux
-	exit 0 ;;
-    ppc:Linux:*:*)
-	echo ${UNAME_MACHINE}-unknown-linux
+    i[3456]86:UnixWare:*:*)
+	echo ${UNAME_MACHINE}-sco-unixware${UNAME_VERSION}
 	exit 0 ;;
     i[3456]86:UNIX_SV:4.*:* | i[3456]86:SYSTEM_V:4.*:*)
 	if grep Novell /usr/include/link.h >/dev/null 2>/dev/null; then
