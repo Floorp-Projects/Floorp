@@ -55,7 +55,7 @@ use Chatbot::Eliza;
 
 $|++;
 
-my $VERSION = "1.18"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.19"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %msgcmds = (
@@ -114,7 +114,7 @@ my $last_moon = 0;
 
 # leave @trees empty if you don't want tinderbox details
 
-my @trees = qw (Mozilla-External raptor);
+my @trees = qw (Mozilla-External SeaMonkey);
 my $trees;
 my $status;
 my $last_tree;
