@@ -193,8 +193,9 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray )
   
   unsigned int numDragItems = 0;
   inArray->Count ( &numDragItems ) ;
-  for ( int itemIndex = 0; itemIndex < numDragItems; ++itemIndex ) {  
-    nsCOMPtr<nsITransferable> currItem ( do_QueryInterface(inArray->ElementAt(itemIndex)) );
+  for ( int itemIndex = 0; itemIndex < numDragItems; ++itemIndex ) {
+    nsCOMPtr<nsISupports> temp ( inArray->ElementAt(itemIndex) );
+    nsCOMPtr<nsITransferable> currItem ( do_QueryInterface(temp) );
     if ( currItem ) {   
       nsVoidArray* flavorList = nsnull;
       if ( NS_SUCCEEDED(currItem->FlavorsTransferableCanExport(&flavorList)) ) {
@@ -422,7 +423,8 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, unsigned int 
     
   OSErr retVal = noErr;
   
-  nsCOMPtr<nsITransferable> item ( do_QueryInterface(inDragItems->ElementAt(inItemIndex)) );
+  nsCOMPtr<nsISupports> temp ( inDragItems->ElementAt(inItemIndex) );
+  nsCOMPtr<nsITransferable> item ( do_QueryInterface(temp) );
   if ( item ) {   
     nsString mimeFlavor;
     nsMimeMapperMac::MapMacOSTypeToMimeType ( inFlavor, mimeFlavor ); 

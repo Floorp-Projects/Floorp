@@ -97,8 +97,8 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
   if (aAttribute == nsHTMLAtoms::value) {
 
     /*
-      nsCOMPtr<nsIAtom> show (do_QueryInterface(NS_NewAtom(":-moz-deck-showing")));
-      nsCOMPtr<nsIAtom> hide (do_QueryInterface(NS_NewAtom(":-moz-deck-hidden")));
+      nsCOMPtr<nsIAtom> show ( getter_AddRefs(NS_NewAtom(":-moz-deck-showing")) );
+      nsCOMPtr<nsIAtom> hide ( getter_AddRefs(NS_NewAtom(":-moz-deck-hidden")) );
 
       if (nsnull != mSelected) 
         ForceResolveToPseudoElement(*aPresContext,mSelected, hide);
@@ -755,7 +755,7 @@ nsDeckFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleCon
   }
 
   // get our hidden pseudo
-  nsCOMPtr<nsIAtom> hide (do_QueryInterface(NS_NewAtom(":-moz-deck-hidden")));
+  nsCOMPtr<nsIAtom> hide ( getter_AddRefs(NS_NewAtom(":-moz-deck-hidden")) );
 
   nsIStyleContext* newSC;
 
