@@ -30,7 +30,6 @@
 #include <OLE2.h>
 #include "OLEIDL.H"
 
-static const char * MULTI_MIME = "Mozilla/IDataObjectCollectionFormat";
 
 static NS_DEFINE_IID(kIDragServiceIID, NS_IDRAGSERVICE_IID);
 static NS_DEFINE_IID(kIDragSessionIID, NS_IDRAGSESSION_IID);

@@ -172,7 +172,7 @@ STDMETHODIMP nsDataObjCollection::GetDataHere(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
 //-----------------------------------------------------
 STDMETHODIMP nsDataObjCollection::QueryGetData(LPFORMATETC pFE)
 {
-  UINT format = nsClipboard::GetFormat("multiple");
+  UINT format = nsClipboard::GetFormat(MULTI_MIME);
   PRNTDEBUG("nsDataObjCollection::QueryGetData  ");
 
   PRNTDEBUG3("format: %d  Mulitple: %d\n", pFE->cfFormat, format);
