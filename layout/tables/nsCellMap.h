@@ -108,10 +108,6 @@ public:
   /** return the actual number of rows in the table represented by this CellMap */
   PRInt32 GetRowCount() const;
 
-  // temporary until nsTableFrame::GetCellData uses GetCellFrameAt
-  nsTableCellFrame* GetCellFrameOriginatingAt(PRInt32 aRowX, 
-                                              PRInt32 aColX);
-
   nsTableCellFrame* GetCellInfoAt(PRInt32  aRowX, 
                                   PRInt32  aColX, 
                                   PRBool*  aOriginates = nsnull, 
@@ -220,11 +216,6 @@ public:
 
   /** return the actual number of rows in the table represented by this CellMap */
   PRInt32 GetRowCount() const;
-
-  // temporary until nsTableFrame::GetCellData uses GetCellFrameAt
-  nsTableCellFrame* GetCellFrameOriginatingAt(nsTableCellMap& aMap,
-                                              PRInt32         aRowX, 
-                                              PRInt32         aColX);
 
   nsTableCellFrame* GetCellInfoAt(nsTableCellMap& aMap,
                                   PRInt32         aRowX, 

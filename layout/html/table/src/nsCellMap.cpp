@@ -424,22 +424,6 @@ nsTableCellMap::Dump() const
 #endif
 
 nsTableCellFrame* 
-nsTableCellMap::GetCellFrameOriginatingAt(PRInt32         aRowIndex, 
-                                          PRInt32         aColIndex)
-{
-  PRInt32 rowIndex = aRowIndex;
-  nsCellMap* cellMap = mFirstMap;
-  while (cellMap) {
-    if (cellMap->GetRowCount() > rowIndex) {
-      return cellMap->GetCellFrameOriginatingAt(*this, rowIndex, aColIndex);
-    }
-    rowIndex -= cellMap->GetRowCount();
-    cellMap = cellMap->GetNextSibling();
-  }
-  return nsnull;
-}
-
-nsTableCellFrame* 
 nsTableCellMap::GetCellInfoAt(PRInt32  aRowIndex, 
                               PRInt32  aColIndex, 
                               PRBool*  aOriginates, 
@@ -1740,18 +1724,6 @@ void nsCellMap::SetMapCellAt(nsTableCellMap& aMap,
     else NS_ASSERTION(PR_FALSE, "SetMapCellAt called with col index > table map num cols");
   }
   else NS_ASSERTION(PR_FALSE, "SetMapCellAt called with row index > num rows");
-}
-
-nsTableCellFrame* 
-nsCellMap::GetCellFrameOriginatingAt(nsTableCellMap& aMap,
-                                     PRInt32         aRowX, 
-                                     PRInt32         aColX)
-{
-  CellData* data = GetCellAt(aMap, aRowX, aColX);
-  if (data && data->IsOrig()) {
-    return data->GetCellFrame();
-  }
-  return nsnull;
 }
 
 nsTableCellFrame* 

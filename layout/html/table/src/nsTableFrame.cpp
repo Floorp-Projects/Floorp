@@ -1313,6 +1313,10 @@ nsTableFrame::SetSelected(nsIPresContext* aPresContext,
     }
   }
 #endif
+  // Must call base class to set mSelected state and trigger repaint of frame
+  // Note that in current version, aRange and aSpread are ignored,
+  //   only this frame is considered
+  nsFrame::SetSelected(aPresContext, aRange, aSelected, aSpread);
   return NS_OK;//return nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
   
 }
@@ -4554,8 +4558,6 @@ nsTableFrame::GetCellDataAt(PRInt32        aRowIndex,
                             PRInt32&       aActualColSpan,
                             PRBool&        aIsSelected)
 {
-  nsresult result;
-  nsTableCellMap* cellMap = GetCellMap();
   // Initialize out params
   aCell = nsnull;
   aStartRowIndex = 0;
@@ -4564,79 +4566,16 @@ nsTableFrame::GetCellDataAt(PRInt32        aRowIndex,
   aColSpan = 0;
   aIsSelected = PR_FALSE;
 
+  nsTableCellMap* cellMap = GetCellMap();
   if (!cellMap) { return NS_ERROR_NOT_INITIALIZED;}
 
-  // Return a special error value if an index is out of bounds
-  // This will pass the NS_SUCCEEDED() test
-  // Thus we can iterate indexes to get all cells in a row or col
-  //   and stop when aCell is returned null.
-  PRInt32 rowCount = cellMap->GetRowCount();
-  PRInt32 colCount = cellMap->GetColCount();
+  PRBool originates;
+  PRInt32 colSpan; // Is this the "effective" or "html" value?
 
-  if (aRowIndex >= rowCount || aColIndex >= colCount)
-  {
-    return NS_TABLELAYOUT_CELL_NOT_FOUND;
-  }
-  nsTableCellFrame *cellFrame = cellMap->GetCellFrameOriginatingAt(aRowIndex, aColIndex);
-  if (!cellFrame)
-  { 
-    PRInt32 rowSpan, colSpan;
-    PRInt32 row = aStartRowIndex;
-    PRInt32 col = aStartColIndex;
+  nsTableCellFrame *cellFrame = cellMap->GetCellInfoAt(aRowIndex, aColIndex, &originates, &colSpan);
+  if (!cellFrame) return NS_TABLELAYOUT_CELL_NOT_FOUND;
 
-    // We didn't find a cell at requested location,
-    //  most probably because of ROWSPAN and/or COLSPAN > 1
-    // Find the cell that extends into the location we requested,
-    //  starting at the most likely indexes supplied by the caller
-    //  in aStartRowIndex and aStartColIndex;
-    cellFrame = cellMap->GetCellFrameOriginatingAt(row, col);
-    if (cellFrame)
-    {
-      //The nsTableFrame version returns actual value
-      // when nsTableCellFrame's return values are "HTML" (i.e., may = 0)
-      rowSpan = GetEffectiveRowSpan(*cellFrame);
-      colSpan = GetEffectiveColSpan(*cellFrame);
-
-      // Check if this extends into the location we want
-      if( aRowIndex >= row && aRowIndex < row+rowSpan && 
-          aColIndex >= col && aColIndex < col+colSpan) 
-      {
-CELL_FOUND:
-        aStartRowIndex = row;
-        aStartColIndex = col;
-        aActualRowSpan = rowSpan;
-        aActualColSpan = colSpan;
-        aRowSpan = cellFrame->GetRowSpan();
-        aColSpan = cellFrame->GetColSpan();
-        // I know jumps aren't cool, but it's efficient!
-        goto TEST_IF_SELECTED;
-      } else {
-        // Suggested indexes didn't work,
-        // Scan through entire table to find the spanned cell
-        for (row = 0; row < rowCount; row++ )
-        {
-          for (col = 0; col < colCount; col++)
-          {
-            cellFrame = cellMap->GetCellFrameOriginatingAt(row, col);
-            if (cellFrame)
-            {
-              rowSpan = GetEffectiveRowSpan(*cellFrame);
-              colSpan = GetEffectiveColSpan(*cellFrame);
-              if( aRowIndex >= row && aRowIndex < row+rowSpan && 
-                  aColIndex >= col && aColIndex < col+colSpan) 
-              {
-                goto CELL_FOUND;
-              }
-            }
-          }
-          col = 0;
-        }
-      }
-      return NS_TABLELAYOUT_CELL_NOT_FOUND; // We didn't find a cell
-    }
-  }
-
-  result = cellFrame->GetRowIndex(aStartRowIndex);
+  nsresult result= cellFrame->GetRowIndex(aStartRowIndex);
   if (NS_FAILED(result)) return result;
   result = cellFrame->GetColIndex(aStartColIndex);
   if (NS_FAILED(result)) return result;
@@ -4648,7 +4587,6 @@ CELL_FOUND:
   result = cellFrame->GetSelected(&aIsSelected);
   if (NS_FAILED(result)) return result;
 
-TEST_IF_SELECTED:
   // do this last, because it addrefs, 
   // and we don't want the caller leaking it on error
   nsCOMPtr<nsIContent>content;
@@ -4657,7 +4595,7 @@ TEST_IF_SELECTED:
   {
     content->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)(&aCell));
   }   
-                                         
+                                        
   return result;
 }
 
