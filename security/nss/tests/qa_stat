@@ -167,7 +167,11 @@ setQAsysvars()
 		TESTNUMBER=`echo $MACHINE | sed -e 's/.*\.//'`
 		SYSNAME=`echo $MACHINE | sed -e 's/\..*//'`
 		Debug "SYSNAME= $SYSNAME"
-		QA_SYS_OS=`grep $SYSNAME $TMP_PLATFORMLIST_FILE | sed -e "s/${SYSNAME}_//"`
+		QA_SYS_OS=`grep $SYSNAME $TMP_PLATFORMLIST_FILE | uniq | sed \
+			-e "s/${SYSNAME}_//" \
+			-e "s/WINNT_WINNT WINNT_WIN95/Windows NT/" \
+			-e "s/WINNT_WINNT/Windows NT/" \
+			-e "s/WINNT_WIN95/Windows 95/" `
 		Debug "QA_SYS_OS= $QA_SYS_OS"
 	fi
 	BUILD_SYS=`echo $BUILDPLATFORM | sed -e 's/\.OBJ//' -e 's/_DBG/ Debug/' \
@@ -358,15 +362,17 @@ rsaperf()
 {
 	grep RSAPERF */output.log | grep -v "_DBG" > $TMP_PERF_FILE
 	
-    #echo '&nbsp;'
-	#echo '<br>&nbsp;'
+    echo '&nbsp;'
+	echo '<br>&nbsp;'
+	echo '<center>'
+	echo '<h1>'
+	echo '<a NAME="Performance list"></a>Performance list</h1></center>'
+	echo '&nbsp;'
 	echo '<table BORDER WIDTH="100%" NOSAVE >'
 	echo '<tr NOSAVE>'
 	echo '<td NOSAVE><b><font size=+1>Build-OS and version</font></b></td>'
 	echo ''
 	echo '<td><b><font size=+1>Systemname</font></b></td>'
-	echo ''
-	echo '<td><b><font size=+1>Testnumber</font></b></td>'
 	echo ''
 	echo '<td><b><font size=+1># of iterations</font></b></td>'
 	echo ''
@@ -374,22 +380,21 @@ rsaperf()
 	echo ''
 	echo '<td><b><font size=+1>Total</font></b></td>'
 	echo ''
-	echo '<td></td>'
+	echo '<td><b><font size=+1>QA time / #</font></b></td>'
 	echo '</tr>'
-	cat $TMP_PERF_FILE | while read machine BUILDPLATFORM no_iter t1 t2 total total_unit t3 t4 t5 average average_unit
+	cat $TMP_PERF_FILE | while read MACHINE BUILDPLATFORM no_iter t1 t2 total total_unit t3 t4 t5 average average_unit
 	do
 		BUILD_SYS=`echo $BUILDPLATFORM | sed -e 's/\.OBJ//' \
 			-e 's/_DBG/ Debug/' \
 			-e 's/_OPT/ Optimized/'  -e 's/_64/ 64bit/' -e 's/_glibc_PTH//' \
 			-e 's/_/ /'`
-		testnum=`echo $machine | sed -e 's/[^\.]*\.//' -e 's/\/.*//'`
-		machine=`echo $machine | sed -e 's/\..*//'`
+		TESTNUMBER=`echo $MACHINE | sed -e 's/[^\.]*\.//' -e 's/\/.*//'`
+		MACHINE=`echo $MACHINE | sed -e 's/\..*//'`
+		TESTDATE=`ls -ld ${MACHINE}.${TESTNUMBER} | awk '{ print $5, $6, $7 }'`
 		echo '<tr>'
 		echo '<td>'$BUILD_SYS'</td>'
 		echo ''
-		echo '<td>'$machine'</td>'
-		echo ''
-		echo '<td>'$testnum'</td>'
+		echo '<td>'$MACHINE'</td>'
 		echo ''
 		echo '<td>'$no_iter'</td>'
 		echo ''
@@ -397,7 +402,8 @@ rsaperf()
 		echo ''
 		echo '<td>'$total' '$total_unit'</td>'
 		echo ''
-		echo '<td></td>'
+		echo '<td>'$TESTDATE $TESTNUMBER'</td>'
+		echo ''
 		echo '</tr>'
 	done
 	echo '</table>'
@@ -423,9 +429,10 @@ check_platforms $RFILE
 
 html_eot >>$HTML_FILE
 
-echo '<a NAME="errorlist"></a>' >> $HTML_FILE
 
 rsaperf >>$HTML_FILE
+
+echo '<a NAME="errorlist"></a>' >> $HTML_FILE
 
 qa_errorlist 2  | sed -e "s/^/<br>/" >>$HTML_FILE
 
