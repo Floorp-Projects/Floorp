@@ -356,8 +356,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     /* FIXME -- Should reset dct_method and dither mode
      * for final pass of progressive JPEG
      */
-    mInfo.dct_method = JDCT_FASTEST;
-    mInfo.dither_mode = JDITHER_ORDERED;
+    mInfo.dct_method =  JDCT_ISLOW;
+    mInfo.dither_mode = JDITHER_FS;
     mInfo.do_fancy_upsampling = FALSE;
     mInfo.enable_2pass_quant = FALSE;
     mInfo.do_block_smoothing = TRUE;
