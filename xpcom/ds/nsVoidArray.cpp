@@ -24,7 +24,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsString.h"
 
-static PRInt32 kGrowArrayBy = 8;
+static const PRInt32 kGrowArrayBy = 8;
 
 const PRInt32 nsVoidArray::kArrayOwnerMask = 1 << 31;
 const PRInt32 nsVoidArray::kArraySizeMask = ~nsVoidArray::kArrayOwnerMask;
