@@ -74,6 +74,11 @@ public:
     return NS_OK;
   }
 
+  virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void DoConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
+
+
   nsIAtom* GetTag() const {return nsnull;}
   void     SetAttribute(const nsString& aName,const nsString& aValue) {;}
   nsContentAttr GetAttribute(const nsString& aName, nsString& aRet) const {return eContentAttr_NotThere;}
@@ -92,6 +97,18 @@ protected:
 };
 
 SimpleContent::SimpleContent()
+{
+}
+
+void SimpleContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
+{
+}
+
+void SimpleContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
+{
+}
+
+void SimpleContent::DoConvertToXIF(nsXIFConverter& aConverter) const
 {
 }
 

@@ -26,6 +26,7 @@
 class nsIEventListenerManager;
 class nsIArena;
 class nsIAtom;
+class nsXIFConverter;
 
 /**
  * Abstract base class for un-tagged html content objects. Supports

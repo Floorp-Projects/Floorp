@@ -30,7 +30,10 @@ class nsISizeOfHandler;
 class nsString;
 class nsString;
 class nsVoidArray;
+class nsXIFConverter;
 class nsIDOMEvent;
+class nsIContent;
+
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
@@ -126,6 +129,26 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 
   /**
+   * Translate the content object into the (XIF) XML Interchange Format
+   * XIF is an intermediate form of the content model, the buffer
+   * will then be parsed into any number of formats including HTML, TXT, etc.
+
+   * Pattern for Containers
+   * BeginConvertToXIF -- opens a container
+   * DoConvertToXIF -- writes out element attribute information (if any exists)
+   * FinishConvertToXIF -- closes a container
+
+   * Pattern for Leafs
+   * BeginConvertToXIF -- does nothing
+   * DoConvertToXIF -- writes out the element and any attribute information (if any exists)
+   * FinishConvertToXIF -- does nothing
+
+  */
+  virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const = 0;
+  virtual void DoConvertToXIF(nsXIFConverter& aConverter) const = 0;
+  virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const = 0;
+
+  /**
    * Add this object's size information to the sizeof handler and
    * any objects that it can reach.
    */
@@ -135,7 +158,6 @@ public:
                                   nsGUIEvent* aEvent,
                                   nsIDOMEvent* aDOMEvent,
                                   nsEventStatus& aEventStatus) = 0;
-
 };
 
 #endif /* nsIContent_h___ */

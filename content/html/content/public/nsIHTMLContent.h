@@ -26,6 +26,7 @@ class nsISupportsArray;
 class nsIStyleRule;
 class nsIStyleContext;
 class nsIPresContext;
+class nsXIFConverter;
 
 // IID for the nsIHTMLContent class
 #define NS_IHTMLCONTENT_IID   \
@@ -75,7 +76,9 @@ public:
   // to encode non 7 bit characters
   virtual void ToHTMLString(nsString& aResult) const = 0;
 
+
   virtual void ToHTML(FILE* out) const = 0;
+
 
   /**
    * Used by the html content's delegate to create a frame

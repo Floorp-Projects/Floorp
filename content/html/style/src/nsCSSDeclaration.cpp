@@ -22,6 +22,8 @@
 #include "nsCSSPropIDs.h"
 #include "nsUnitConversion.h"
 
+#include "nsStyleConsts.h"
+
 //#define DEBUG_REFS
 
 static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
@@ -2006,6 +2008,107 @@ NS_HTML nsresult
   }
 
   return it->QueryInterface(kICSSDeclarationIID, (void **) aInstancePtrResult);
+}
+
+
+
+void nsCSSValue::AppendToCSSString(nsString& aBuffer, PRInt32 aPropID) const
+{
+  if (eCSSUnit_Null == mUnit) {
+    return;
+  }
+
+  if (eCSSUnit_String == mUnit) {
+    if (nsnull != mValue.mString) {
+      aBuffer.Append('"');
+      aBuffer.Append(*(mValue.mString));
+      aBuffer.Append('"');
+    }
+    else {
+      aBuffer.Append("null str");
+    }
+  }
+  else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
+
+    if (aPropID == PROP_FONT_SIZE && mUnit == eCSSUnit_Enumerated)
+    {
+      PRBool found = PR_TRUE;
+      switch (mValue.mInt)
+      {
+        case NS_STYLE_FONT_SIZE_XXSMALL:  aBuffer.Append("xx-small"); break;
+        case NS_STYLE_FONT_SIZE_XSMALL:   aBuffer.Append("x-small");  break;
+        case NS_STYLE_FONT_SIZE_SMALL:    aBuffer.Append("small");    break;
+        case NS_STYLE_FONT_SIZE_MEDIUM:   aBuffer.Append("medium");   break;
+        case NS_STYLE_FONT_SIZE_LARGE:    aBuffer.Append("large");    break;
+        case NS_STYLE_FONT_SIZE_XLARGE:   aBuffer.Append("x-large");  break;
+        case NS_STYLE_FONT_SIZE_XXLARGE:  aBuffer.Append("xx-large"); break;
+        case NS_STYLE_FONT_SIZE_LARGER:   aBuffer.Append("larger");   break;
+        case NS_STYLE_FONT_SIZE_SMALLER:  aBuffer.Append("smaller");  break;
+        
+        default:
+          found = PR_FALSE;
+      }
+      if (found)
+        return;
+      
+    }
+    aBuffer.Append(mValue.mInt, 10);
+    aBuffer.Append("[0x");
+    aBuffer.Append(mValue.mInt, 16);
+    aBuffer.Append(']');
+  }
+  else if (eCSSUnit_Color == mUnit){
+    aBuffer.Append("rgb(");
+    aBuffer.Append(NS_GET_R(mValue.mColor), 10);
+    aBuffer.Append(",");
+    aBuffer.Append(NS_GET_G(mValue.mColor), 10);
+    aBuffer.Append(",");
+    aBuffer.Append(NS_GET_B(mValue.mColor), 10);
+    aBuffer.Append(')');
+    return;
+  }
+  else if (eCSSUnit_Percent == mUnit) {
+    aBuffer.Append(mValue.mFloat * 100.0f);
+  }
+  else if (eCSSUnit_Percent < mUnit) {
+    aBuffer.Append(mValue.mFloat);
+  }
+
+  switch (mUnit) {
+    case eCSSUnit_Null:       break;
+    case eCSSUnit_Auto:       aBuffer.Append("auto"); break;
+    case eCSSUnit_Inherit:    aBuffer.Append("inherit"); break;
+    case eCSSUnit_None:       aBuffer.Append("none"); break;
+    case eCSSUnit_String:     break;
+    case eCSSUnit_Integer:    aBuffer.Append("int");  break;
+    case eCSSUnit_Enumerated: aBuffer.Append("enum"); break;
+    case eCSSUnit_Color:      aBuffer.Append("rbga"); break;
+    case eCSSUnit_Percent:    aBuffer.Append("%");    break;
+    case eCSSUnit_Number:     aBuffer.Append("#");    break;
+    case eCSSUnit_Inch:       aBuffer.Append("in");   break;
+    case eCSSUnit_Foot:       aBuffer.Append("ft");   break;
+    case eCSSUnit_Mile:       aBuffer.Append("mi");   break;
+    case eCSSUnit_Millimeter: aBuffer.Append("mm");   break;
+    case eCSSUnit_Centimeter: aBuffer.Append("cm");   break;
+    case eCSSUnit_Meter:      aBuffer.Append("m");    break;
+    case eCSSUnit_Kilometer:  aBuffer.Append("km");   break;
+    case eCSSUnit_Point:      aBuffer.Append("pt");   break;
+    case eCSSUnit_Pica:       aBuffer.Append("pc");   break;
+    case eCSSUnit_Didot:      aBuffer.Append("dt");   break;
+    case eCSSUnit_Cicero:     aBuffer.Append("cc");   break;
+    case eCSSUnit_EM:         aBuffer.Append("em");   break;
+    case eCSSUnit_EN:         aBuffer.Append("en");   break;
+    case eCSSUnit_XHeight:    aBuffer.Append("ex");   break;
+    case eCSSUnit_CapHeight:  aBuffer.Append("cap");  break;
+    case eCSSUnit_Pixel:      aBuffer.Append("px");   break;
+  }
+  aBuffer.Append(' ');
+}
+
+void nsCSSValue::ToCSSString(nsString& aBuffer, PRInt32 aPropID) const
+{
+  aBuffer.Truncate();
+  AppendToCSSString(aBuffer, aPropID);
 }
 
 

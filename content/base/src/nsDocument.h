@@ -26,8 +26,11 @@
 #include "nsIDOMEventCapturer.h"
 
 class nsISelection;
+class nsXIFConverter;
 class nsIEventListenerManager;
-class nsIParser;
+struct nsCSSSelector;
+class  nsICSSDeclaration;
+class  nsIParser;
 
 class nsPostData : public nsIPostData {
 public:
@@ -184,6 +187,19 @@ public:
                     nsIContent * aEnd, 
                     PRBool     & aInRange);
 
+  /**
+    * Converts the document or a selection of the 
+    * document to XIF (XML Interchange Format)
+    * and places the result in aBuffer.
+    
+    * NOTE: we may way to place the result in a stream,
+    * but we will use a string for now -- gpk
+  */
+  virtual void ToXIF(nsString & aBuffer, PRBool aUseSelection);
+  
+  virtual void CSSSelectorToXIF(nsXIFConverter& aConverter, nsCSSSelector& aSelector);
+  virtual void CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDeclaration& aDeclaration);
+  virtual void StyleSheetsToXIF(nsXIFConverter& aConverter);
 
 public:
   
@@ -240,6 +256,7 @@ public:
 
 protected:
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);  // subclass hook
+  virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
 
   nsDocument();
   virtual ~nsDocument(); 

@@ -22,6 +22,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"
 #include "nsIURL.h"
+#include "nsXIFConverter.h"
 #include "nsISizeOfHandler.h"
 
 #undef SCALE
@@ -39,9 +40,21 @@ public:
   virtual PRBool IsInside(nscoord x, nscoord y) = 0;
   virtual void Draw(nsIPresContext& aCX,
                     nsIRenderingContext& aRC) = 0;
-  virtual void GetShapeName(nsString& aResult) = 0;
+  virtual void GetShapeName(nsString& aResult) const = 0;
 
   void ToHTML(nsString& aResult);
+
+
+  /**
+   * Translate the content object into the (XIF) XML Interchange Format
+   * XIF is an intermediate form of the content model, the buffer
+   * will then be parsed into any number of formats including HTML, TXT, etc.
+   */
+  virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void DoConvertToXIF(nsXIFConverter& aConverter) const;
+  virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
+
+
 
   const nsString& GetBase() const { return mBase; }
   const nsString& GetHREF() const { return mHREF; }
@@ -291,6 +304,64 @@ void Area::ToHTML(nsString& aResult)
   aResult.Append('>');
 }
 
+/**
+ * Translate the content object into the (XIF) XML Interchange Format
+ * XIF is an intermediate form of the content model, the buffer
+ * will then be parsed into any number of formats including HTML, TXT, etc.
+ */
+
+void Area::BeginConvertToXIF(nsXIFConverter& aConverter) const
+{
+  nsAutoString  tag("area");
+  aConverter.BeginStartTag(tag);
+}
+
+void Area::FinishConvertToXIF(nsXIFConverter& aConverter) const
+{
+  nsAutoString  tag("area");
+  aConverter.FinishStartTag(tag,PR_TRUE);
+}
+
+void Area::DoConvertToXIF(nsXIFConverter& aConverter) const
+{
+  nsAutoString name("shape");
+  nsAutoString shape;
+  GetShapeName(shape);
+  aConverter.AddAttribute(name,shape);
+   
+
+  nsAutoString  coords;
+  if (nsnull != mCoords) {
+    PRInt32 i, n = mNumCoords;
+    for (i = 0; i < n; i++) {
+      coords.Append(mCoords[i], 10);
+      if (i < n - 1) {
+        coords.Append(',');
+      }
+    }
+  }
+  name.SetString("coords");
+  aConverter.AddAttribute(name,coords);
+
+  name.SetString("href");
+  aConverter.AddAttribute(name,mHREF);
+
+  
+  if (0 < mTarget.Length()) {
+    name.SetString("target");
+    aConverter.AddAttribute(name,mTarget);
+  }
+  if (0 < mAltText.Length()) {
+    name.SetString("alt");
+    aConverter.AddAttribute(name,mTarget);
+  }
+  if (mSuppressFeedback) {
+    name.SetString("suppress");
+    aConverter.AddAttribute(name);
+  }
+}
+
+
 //----------------------------------------------------------------------
 
 class DefaultArea : public Area {
@@ -303,7 +374,7 @@ public:
   virtual PRBool IsInside(nscoord x, nscoord y);
   virtual void Draw(nsIPresContext& aCX,
                     nsIRenderingContext& aRC);
-  virtual void GetShapeName(nsString& aResult);
+  virtual void GetShapeName(nsString& aResult) const;
 };
 
 DefaultArea::DefaultArea(const nsString& aBaseURL, const nsString& aHREF,
@@ -326,7 +397,7 @@ void DefaultArea::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
 {
 }
 
-void DefaultArea::GetShapeName(nsString& aResult)
+void DefaultArea::GetShapeName(nsString& aResult) const
 {
   aResult.Append("default");
 }
@@ -343,7 +414,7 @@ public:
   virtual PRBool IsInside(nscoord x, nscoord y);
   virtual void Draw(nsIPresContext& aCX,
                     nsIRenderingContext& aRC);
-  virtual void GetShapeName(nsString& aResult);
+  virtual void GetShapeName(nsString& aResult) const;
 };
 
 RectArea::RectArea(const nsString& aBaseURL, const nsString& aHREF,
@@ -390,7 +461,7 @@ void RectArea::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
   }
 }
 
-void RectArea::GetShapeName(nsString& aResult)
+void RectArea::GetShapeName(nsString& aResult) const
 {
   aResult.Append("rect");
 }
@@ -407,7 +478,7 @@ public:
   virtual PRBool IsInside(nscoord x, nscoord y);
   virtual void Draw(nsIPresContext& aCX,
                     nsIRenderingContext& aRC);
-  virtual void GetShapeName(nsString& aResult);
+  virtual void GetShapeName(nsString& aResult) const;
 };
 
 PolyArea::PolyArea(const nsString& aBaseURL, const nsString& aHREF,
@@ -500,7 +571,7 @@ void PolyArea::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
   }
 }
 
-void PolyArea::GetShapeName(nsString& aResult)
+void PolyArea::GetShapeName(nsString& aResult) const
 {
   aResult.Append("polygon");
 }
@@ -517,7 +588,7 @@ public:
   virtual PRBool IsInside(nscoord x, nscoord y);
   virtual void Draw(nsIPresContext& aCX,
                     nsIRenderingContext& aRC);
-  virtual void GetShapeName(nsString& aResult);
+  virtual void GetShapeName(nsString& aResult) const;
 };
 
 CircleArea::CircleArea(const nsString& aBaseURL, const nsString& aHREF,
@@ -568,7 +639,7 @@ void CircleArea::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
   }
 }
 
-void CircleArea::GetShapeName(nsString& aResult)
+void CircleArea::GetShapeName(nsString& aResult) const
 {
   aResult.Append("circle");
 }
