@@ -11,6 +11,8 @@
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 <!ENTITY viewsourcetitle.preface "Source for: ">
 
+<!ENTITY nothingAvailable.label "(Nothing Available)">
+
 <!ENTITY browserCmd.label					"New Navigator Window">
 <!ENTITY browserCmd.accesskey				"n">
 <!ENTITY openCmd.label "Open Web Location...">
