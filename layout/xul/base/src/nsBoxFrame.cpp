@@ -99,8 +99,6 @@ public:
   virtual ~nsBoxDebugInner() {}
 
 public:
-    nsCOMPtr<nsIStyleContext> mHorizontalDebugStyle;
-    nsCOMPtr<nsIStyleContext> mVerticalDebugStyle;
     nsBoxFrame* mOuter;
 
     float mP2t;
@@ -117,10 +115,15 @@ public:
                                      PRInt32&        aCursor);
 
 
-    static PRBool gDebug;
+    static nsIStyleContext* mHorizontalDebugStyle;
+    static nsIStyleContext* mVerticalDebugStyle;
+    static PRInt32 gDebug;
 };
 
-PRBool nsBoxDebugInner::gDebug = PR_FALSE;
+nsIStyleContext* nsBoxDebugInner::mHorizontalDebugStyle;
+nsIStyleContext* nsBoxDebugInner::mVerticalDebugStyle;
+
+PRInt32 nsBoxDebugInner::gDebug = 0;
 
 class nsInfoListImpl: public nsInfoList
 {
@@ -914,13 +917,17 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
        }
 
        if (mState & NS_STATE_IS_ROOT) {
-            // see if someone turned on debugging
+
+           // see if someone turned on debugging
+            PRBool debug = PR_FALSE;
             nsCOMPtr<nsIPref> pref;
             aPresContext->GetPrefs(getter_AddRefs(pref));
-            nsBoxDebugInner::gDebug = PR_FALSE;
             if (pref) {
-	            pref->GetBoolPref("xul.debug.box", &nsBoxDebugInner::gDebug);
+	            pref->GetBoolPref("xul.debug.box", &debug);
             }
+
+            if (debug)
+               nsBoxDebugInner::gDebug++;
 
 #ifdef DEBUG_REFLOW  
            printf("-------- BOX IS ROOT --------\n");
@@ -985,7 +992,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
            
     if (aReflowState.reason == eReflowReason_Initial ) 
     {
-        if (nsBoxDebugInner::gDebug) {
+        if (nsBoxDebugInner::gDebug > 0) {
             if (!mInner->mDebugInner) {
                     mInner->mDebugInner = new nsBoxDebugInner(this);
                     mInner->UpdatePseudoElements(aPresContext);
@@ -2557,6 +2564,26 @@ nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
+nsBoxFrame::Destroy(nsIPresContext* aPresContext)
+{
+
+// if we are root remove 1 from the debug count.
+  if (mState & NS_STATE_IS_ROOT &&  nsBoxDebugInner::gDebug > 0) 
+  {
+      nsBoxDebugInner::gDebug--;
+      if (nsBoxDebugInner::gDebug == 0)
+      {
+         NS_RELEASE(mInner->mDebugInner->mHorizontalDebugStyle);
+         NS_RELEASE(mInner->mDebugInner->mVerticalDebugStyle);
+         mInner->mDebugInner->mHorizontalDebugStyle = nsnull;
+         mInner->mDebugInner->mVerticalDebugStyle = nsnull;
+      }
+  }
+
+  return nsHTMLContainerFrame::Destroy(aPresContext);
+} 
+
+NS_IMETHODIMP
 nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIPresShell& aPresShell,
                             nsIAtom* aListName,
@@ -2983,8 +3010,8 @@ nsBoxDebugInner::DrawSpring(nsIPresContext* aPresContext, nsIRenderingContext& a
 void
 nsBoxFrameInner::UpdatePseudoElements(nsIPresContext* aPresContext) 
 {
-    nsCOMPtr<nsIStyleContext> hs;
-    nsCOMPtr<nsIStyleContext> vs;
+    if (mDebugInner->mHorizontalDebugStyle || mDebugInner->mVerticalDebugStyle)
+        return;
 
     nsCOMPtr<nsIContent> content;
     GetContentOf(mOuter, getter_AddRefs(content));
@@ -2992,15 +3019,13 @@ nsBoxFrameInner::UpdatePseudoElements(nsIPresContext* aPresContext)
 	nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-horizontal-box-debug")) );
 	aPresContext->ProbePseudoStyleContextFor(content, atom, mOuter->mStyleContext,
 										  PR_FALSE,
-										  getter_AddRefs(hs));
+										  &mDebugInner->mHorizontalDebugStyle);
 
   	atom = getter_AddRefs(NS_NewAtom(":-moz-vertical-box-debug"));
 	aPresContext->ProbePseudoStyleContextFor(content, atom, mOuter->mStyleContext,
 										  PR_FALSE,
-										  getter_AddRefs(vs));
+										  &mDebugInner->mVerticalDebugStyle);
 
-    mDebugInner->mHorizontalDebugStyle = hs;
-    mDebugInner->mVerticalDebugStyle = vs;
     aPresContext->GetScaledPixelsToTwips(&mDebugInner->mP2t);
 
 }
@@ -3011,7 +3036,7 @@ nsBoxFrameInner::GetDebugInset(nsMargin& inset)
 {
     inset.SizeTo(0,0,0,0);
 
-    if (mDebugInner) 
+    if (nsBoxDebugInner::gDebug > 0) 
     {
         nsIStyleContext* style;
         if (mOuter->mState & NS_STATE_IS_HORIZONTAL)
@@ -3224,13 +3249,13 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
                             char tagValue[100];
                             tagString.ToCString(tagValue,100);
 
+                            printf("----- ");
                
     #ifdef NS_DEBUG
-                            printf("----- ");
                             nsFrame::ListTag(stdout, mOuter);
-                            printf(" Tag='%s', id='%s' class='%s'---------------\n", tagValue, idValue, kClassValue);
     #endif
 
+                            printf(" Tag='%s', id='%s' class='%s'---------------\n", tagValue, idValue, kClassValue);
                         
 
                         childFrame->GetContent(getter_AddRefs(content));
@@ -3247,11 +3272,11 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
                             tag->ToString(tagString);
                             tagString.ToCString(tagValue,100);
 
-#ifdef NS_DEBUG
                             printf("child #%d: ", count);
-                            nsFrame::ListTag(stdout, childFrame);
-                            printf("Tag='%s', id='%s' class='%s'\n", tagValue, idValue, kClassValue);
+#ifdef NS_DEBUG
+                            nsFrame::ListTag(stdout, childFrame);                            
 #endif
+                            printf(" Tag='%s', id='%s' class='%s'\n", tagValue, idValue, kClassValue);
 
                         }
 
