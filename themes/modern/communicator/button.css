@@ -40,8 +40,15 @@
   .button-toolbar > .button-internal-box > .button-text-container,
   .button-toolbar > .button-internal-box > .button-text-container > .button-text
     {
-      padding               : 0;
-      margin                : 0;
+      padding               : 0px;
+      margin                : 0px;
+    }
+
+  button.bookmarkfolder.button-toolbar:hover,
+  button.bookmarkitem.button-toolbar:hover
+    {
+      text-decoration     : underline;
+      cursor              : pointer;
     }
 
   .button-toolbar:hover:active > .button-internal-box
@@ -49,7 +56,7 @@
       padding               : 2px 2px 0px 4px;
       border                : none;
     }
-
+    
   .button-toolbar:hover:active[home-dragover="true"] > .button-internal-box
     {
       padding               : 1px 3px 1px 3px;
@@ -224,11 +231,14 @@
   button.button-toolbar-3 
     {
 	  -moz-binding			: url("chrome://global/skin/globalBindings.xml#three-slice-button");
-      font-weight           : bold;
       background-color      : transparent;
       border				: 0px;
       margin				: 3px 7px 2px 0px;
     }
+
+  .button-toolbar-3 > box > box > .button-text-box {
+      font-weight           : bold;
+  }
 
   button.button-toolbar-3[disabled="true"], .button-toolbar-3[disabled="true"]:hover, .button-toolbar-3[disabled="true"]:hover:active
     {

@@ -40,6 +40,11 @@
      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-left");
    }
  
+   menubutton.button-toolbar:hover > .menubutton-internal-box > .menubutton-single-text 
+    {
+      text-decoration: underline;
+    }
+ 
   .button-toolbar > .menubutton-internal-box
     {
       border                : none;
