@@ -215,6 +215,7 @@ class nsEditorAppCore : public nsBaseAppCore,
 		nsString						mEditorTypeString;	// string which describes which editor type will be instantiated (lowercased)
     nsCOMPtr<nsISupports>	 	mEditor;						// this can be either an HTML or plain text (or other?) editor
 
+    nsCOMPtr<nsISupports>   mSearchContext;		// context used for search and replace. Owned by the appshell.
 };
 
 #endif // nsEditorAppCore_h___

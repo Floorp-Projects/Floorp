@@ -1274,17 +1274,31 @@ nsEditorAppCore::DoFind(PRBool aFindNext)
   if (!mContentAreaWebShell)
     return NS_ERROR_NOT_INITIALIZED;
 
+  PRBool foundIt = PR_FALSE;
+  
   // Get find component.
-  nsIFindComponent *finder;
+  nsIFindComponent *findComponent;
   nsresult rv = nsServiceManager::GetService( NS_IFINDCOMPONENT_PROGID,
                                      nsIFindComponent::GetIID(),
-                                     (nsISupports**)&finder );
-  if ( NS_SUCCEEDED(rv) && finder )
+                                     (nsISupports**)&findComponent );
+  if ( NS_SUCCEEDED(rv) && findComponent )
   {
-    rv = (aFindNext) ? finder->FindNext(mContentAreaWebShell) : finder->Find(mContentAreaWebShell);
-
+    // make the search context if we need to
+    if (!mSearchContext)
+    {
+      rv = findComponent->CreateContext( mContentAreaWebShell, nsnull, getter_AddRefs(mSearchContext));
+    }
+    
+    if (NS_SUCCEEDED(rv))
+    {
+	    if (aFindNext)
+	      rv = findComponent->FindNext(mSearchContext, &foundIt);
+	    else
+	      rv = findComponent->Find(mSearchContext, &foundIt);
+    }
+    
     // Release the service.
-    nsServiceManager::ReleaseService( NS_IFINDCOMPONENT_PROGID, finder );
+    nsServiceManager::ReleaseService( NS_IFINDCOMPONENT_PROGID, findComponent );
   }
   else
   {
