@@ -2920,16 +2920,6 @@ if test "$MOZ_ENDER_LITE"; then
 fi
 AC_SUBST(MOZ_ENDER_LITE)
 
-dnl Turn on malloc tracing
-NS_TRACE_MALLOC=
-MOZ_ARG_ENABLE_BOOL(trace-malloc,
-[  --enable-trace-malloc   Enable malloc tracing],
-  NS_TRACE_MALLOC=1 )
-if test "$NS_TRACE_MALLOC"; then
-  AC_DEFINE(NS_TRACE_MALLOC)
-fi
-AC_SUBST(NS_TRACE_MALLOC)
-
 dnl Turn on reflow counting
 MOZ_REFLOW_PERF=
 MOZ_ARG_ENABLE_BOOL(reflow-perf,
@@ -3307,7 +3297,25 @@ MOZ_ARG_ENABLE_BOOL(elf-dynstr-gc,
     USE_ELF_DYNSTR_GC=1,
     USE_ELF_DYNSTR_GC= )
 
-AC_SUBST(USE_ELF_DYNSTR_GC)
+dnl Don't AC_SUBST it here, because we might override it below for
+dnl trace-malloc.
+
+dnl ========================================================
+dnl =
+dnl = --enable-trace-malloc
+dnl = 
+dnl ========================================================
+NS_TRACE_MALLOC=
+MOZ_ARG_ENABLE_BOOL(trace-malloc,
+[  --enable-trace-malloc   Enable malloc tracing],
+  NS_TRACE_MALLOC=1 )
+if test "$NS_TRACE_MALLOC"; then
+  # Please, Mr. Linker Man, don't take away our symbol names
+  MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
+  USE_ELF_DYNSTR_GC=
+  AC_DEFINE(NS_TRACE_MALLOC)
+fi
+AC_SUBST(NS_TRACE_MALLOC)
 
 dnl ========================================================
 dnl =
@@ -4099,6 +4107,7 @@ AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(BUILD_IDLC)
 
+AC_SUBST(USE_ELF_DYNSTR_GC)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 AC_SUBST(MOZ_COMPONENT_XPCOM_LIBS)
