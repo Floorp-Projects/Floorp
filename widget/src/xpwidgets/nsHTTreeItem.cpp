@@ -178,18 +178,13 @@ void nsHTTreeItem::GetTextForColumn(nsTreeColumn* pColumn, nsString& nodeText) c
 	pColumn->GetColumnName(columnName);
 
 	// Look for a child of the content node that has this name as its tag.
-#if defined(SEPARATE_COLUMN_GROUP)
-	nsIContent* pColumnNode = FindChildWithName("columns");
-	if (pColumnNode) {
-    nsIContent* pChildNode = pColumnNode->FindChildWithName(columnName);
-    if (pChildNode)
-      nsHTDataModel::GetChildTextForNode(pChildNode, nodeText);
-  }
-#else
-  nsIContent* pChildNode = FindChildWithName(columnName);
-	if (pChildNode)
-		nsHTDataModel::GetChildTextForNode(pChildNode, nodeText);
-#endif
+	nsIContent* pColumnNode = nsHTDataModel::FindChildWithName(mContentNode, "columns");
+	if (pColumnNode) 
+	{
+		nsIContent* pChildNode = nsHTDataModel::FindChildWithName(pColumnNode, columnName);
+		if (pChildNode)
+			nsHTDataModel::GetChildTextForNode(pChildNode, nodeText);
+	}
 }
 
 // image request observer implementation

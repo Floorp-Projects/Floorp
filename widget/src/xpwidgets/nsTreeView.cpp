@@ -649,7 +649,7 @@ void nsTreeView::PaintTreeRows(nsIRenderingContext* drawCtx,
 		nsRect remainderRect(0, yPosition, rect.width, rect.height - yPosition);
 		nscolor viewBGColor = NS_RGB(240,240,240);
 		drawCtx->SetColor(viewBGColor);
-		drawCtx->FillRect(rect);
+		drawCtx->FillRect(remainderRect);
 	}
 }
 

@@ -49,25 +49,3 @@ void nsHTItem::SetIndentationLevelDelegate(PRUint32 n)
 {
 	mIndentationLevel = n;
 }
-
-nsIContent* nsHTItem::FindChildWithName(const nsString& name) const
-{
-	PRInt32 count;
-	mContentNode->ChildCount(count);
-	for (PRInt32 i = 0; i < count; i++)
-	{
-		nsIAtom* pAtom = nsnull;
-		nsIContent* pChild = nsnull;
-		mContentNode->ChildAt(i, pChild);
-		pChild->GetTag(pAtom);
-		nsString answer;
-		pAtom->ToString(answer);
-		NS_IF_RELEASE(pAtom);
-		if (answer.EqualsIgnoreCase(name))
-			return pChild;
-		else NS_IF_RELEASE(pChild);
-	}
-
-	return nsnull;
-}
-
