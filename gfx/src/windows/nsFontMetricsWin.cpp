@@ -260,7 +260,7 @@ nscoord nsFontMetricsWin :: GetWidth(nsIDeviceContext *aContext, const nsString&
 
   float app2dev = aContext->GetAppUnitsToDevUnits();
   float app2twip = app2dev * aContext->GetDevUnitsToTwips();
-  printf("[%s] %d  %d = %d\n", str, size.cx, nscoord(((float)size.cx)*aContext->GetDevUnitsToTwips()), GetWidth(str));
+  //printf("[%s] %d  %d = %d\n", str, size.cx, nscoord(((float)size.cx)*aContext->GetDevUnitsToTwips()), GetWidth(str));
 
   delete[] str;
   return nscoord(((float)size.cx)*aContext->GetDevUnitsToTwips());
