@@ -50,7 +50,7 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
 }
 
 nsresult
-NS_OpenURI(nsIInputStream* *result, nsIURI* uri, 
+NS_OpenURI(nsIChannel* *result, nsIURI* uri, 
            nsILoadGroup* group)
 {
     nsresult rv;
@@ -61,20 +61,33 @@ NS_OpenURI(nsIInputStream* *result, nsIURI* uri,
     rv = serv->NewChannelFromURI("load", uri, nsnull, &channel);
     if (NS_FAILED(rv)) return rv;
 
-    nsIInputStream* inStr;
-    rv = channel->OpenInputStream(0, -1, &inStr);
-    if (NS_FAILED(rv)) goto done;
-
     if (group) {
         rv = group->AddChannel(channel);
         if (NS_FAILED(rv)) {
-            NS_RELEASE(inStr);
-            goto done;
+            NS_RELEASE(channel);
+            return rv;
         }
     }
-    *result = inStr;
-  done:
+    *result = channel;
+    return rv;
+}
+
+nsresult
+NS_OpenURI(nsIInputStream* *result, nsIURI* uri, 
+           nsILoadGroup* group)
+{
+    nsresult rv;
+    nsIChannel* channel;
+
+    rv = NS_OpenURI(&channel, uri, group);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIInputStream* inStr;
+    rv = channel->OpenInputStream(0, -1, &inStr);
     NS_RELEASE(channel);
+    if (NS_FAILED(rv)) return rv;
+
+    *result = inStr;
     return rv;
 }
 

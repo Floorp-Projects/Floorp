@@ -38,6 +38,10 @@ extern nsresult
 NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI = nsnull);
 
 extern nsresult
+NS_OpenURI(nsIChannel* *result, nsIURI* uri,
+           nsILoadGroup* group = nsnull);
+
+extern nsresult
 NS_OpenURI(nsIInputStream* *result, nsIURI* uri,
            nsILoadGroup* group = nsnull);
 
