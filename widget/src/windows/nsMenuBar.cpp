@@ -79,6 +79,16 @@ nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
 	return nsEventStatus_eIgnore;
 }
 
+nsEventStatus nsMenuBar::MenuConstruct(const nsMenuEvent & aMenuEvent)
+{
+	return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenuBar::MenuDestruct(const nsMenuEvent & aMenuEvent)
+{
+	return nsEventStatus_eIgnore;
+}
+
 //-------------------------------------------------------------------------
 //
 // nsMenuBar constructor
@@ -238,5 +248,12 @@ NS_METHOD nsMenuBar::SetNativeData(void * aData)
 NS_METHOD nsMenuBar::Paint()
 {
   mParent->Invalidate(PR_TRUE);
+  return NS_OK;
+}
+
+NS_METHOD nsMenuBar::ConstructMenuBar(nsIDOMElement * menubarElement)
+{
+  // Build the menubar
+  //mDOMElement = menubarElement; 
   return NS_OK;
 }

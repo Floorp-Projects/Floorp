@@ -480,6 +480,7 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   printf("Menu Selected %s\n", menuLabel);
   delete[] menuLabel;
   if (nsnull != mListener) {
+    NS_ASSERTION(false, "get debugger");
     mListener->MenuSelected(aMenuEvent);
   }
   return nsEventStatus_eIgnore;
@@ -497,3 +498,27 @@ nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
+//-------------------------------------------------------------------------
+nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent)
+{
+  char* menuLabel = GetACPString(mLabel);
+  printf("Menu Selected %s\n", menuLabel);
+  delete[] menuLabel;
+  if (nsnull != mListener) {
+    NS_ASSERTION(false, "get debugger");
+    mListener->MenuSelected(aMenuEvent);
+  }
+  return nsEventStatus_eIgnore;
+}
+
+//-------------------------------------------------------------------------
+nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
+{
+  char* menuLabel = GetACPString(mLabel);
+  printf("Menu Deselected %s\n", menuLabel);
+  delete[] menuLabel;
+  if (nsnull != mListener) {
+    mListener->MenuDeselected(aMenuEvent);
+  }
+  return nsEventStatus_eIgnore;
+}
