@@ -94,8 +94,6 @@ extern void ProcessCookiesAndTrustLabels( ActiveEntry *ce );
 #pragma profile on
 #endif
 
-#define VERSION_STRING "HTTP/1.1"
-
 #define MAX_CACHED_HTTP_CONNECTIONS 4
 
 #define INTERNET_KEYWORD_METATAG "Content-keywords"
@@ -125,6 +123,12 @@ PUBLIC char * FE_UsersFromField=0;    /* User's name/email address not used yet 
 PRIVATE XP_List * http_connection_list=0;
 PRIVATE IdentifyMeEnum http_identification_method = DoNotIdentifyMe;
 PRIVATE Bool sendRefererHeader=TRUE;
+
+
+PUBLIC const HTTP_Version DEFAULT_VERSION = ONE_POINT_ONE;
+PRIVATE const char *VERSION_STRING_ONE_ONE  = "HTTP/1.1";
+PRIVATE const char *VERSION_STRING_ONE_ZERO = "HTTP/1.0";
+#define VERSION_STRING_LEN 8
 
 /* definitions of state for the state machine design
  */
@@ -158,12 +162,6 @@ typedef struct _HTTPConnection {
     XP_Bool secure;         /* is it a secure connection? */
     XP_Bool doNotSendConHdr;
 } HTTPConnection;
-
-typedef enum {
-    POINT_NINE,
-    ONE_POINT_O,
-    ONE_POINT_ONE
-} HTTP_Version;
 
 /* structure to hold data pertaining to the active state of
  * a transfer in progress.
@@ -725,6 +723,7 @@ net_send_proxy_tunnel_request (ActiveEntry *ce)
   char *host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
   char *command=0;
   char *auth = NULL;
+  const char *ver = VERSION_STRING_ONE_ONE;
 
     StrAllocCopy(command, "CONNECT ");
   StrAllocCat(command, host);
@@ -736,7 +735,10 @@ net_send_proxy_tunnel_request (ActiveEntry *ce)
     StrAllocCat(command, small_buf);
     }
 
-  StrAllocCat(command, " "VERSION_STRING"\n");
+  if (ONE_POINT_ONE != DEFAULT_VERSION)
+      ver = VERSION_STRING_ONE_ZERO;
+
+  sprintf(command, "%c%s%c", ' ', ver, '\n');
     
   /*
    * Check if proxy is requiring authorization.
@@ -986,6 +988,7 @@ net_build_http_request (URL_Struct * URL_s,
     size_t csize;        /* size of command */
     const char *tempURL=NULL;
     char *proxyServer=NULL;
+    *line_buffer='\0';
         
     /* begin the request */
     switch(URL_s->method) {
@@ -1088,12 +1091,14 @@ net_build_http_request (URL_Struct * URL_s,
     }
 
     if(http1) {
+        const char *ver = VERSION_STRING_ONE_ONE;
+        if (ONE_POINT_ONE != DEFAULT_VERSION)
+            ver = VERSION_STRING_ONE_ZERO;
         BlockAllocCat(*command, csize, " ", 1);
         csize += 1;
-        BlockAllocCat(*command, csize, 
-            VERSION_STRING, 
-            PL_strlen(VERSION_STRING));
-        csize += PL_strlen(VERSION_STRING);
+        PR_ASSERT(VERSION_STRING_LEN == PL_strlen(ver));
+        BlockAllocCat(*command, csize, ver, VERSION_STRING_LEN);
+        csize += VERSION_STRING_LEN;
         /* finish the line */
         BlockAllocCat(*command, csize, CRLF, 2); /* CR LF, as in rfc 977 */
         csize += 2;
