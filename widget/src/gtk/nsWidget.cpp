@@ -56,6 +56,8 @@ nsWidget::nsWidget()
   mBounds.y = 0;
   mBounds.width = 0;
   mBounds.height = 0;
+  mIsDestroying = PR_FALSE;
+  mOnDestroyCalled = PR_FALSE;
   mIsToplevel = PR_FALSE;
   mUpdateArea.SetRect(0, 0, 0, 0);
 }
@@ -96,30 +98,22 @@ NS_IMETHODIMP nsWidget::Destroy(void)
          this, mIsDestroying ? "yes" : "no", mWidget, mParent);
 #endif
   GtkAllocation *old_size = NULL;
-
   if (!mIsDestroying) {
     nsBaseWidget::Destroy();
   }
-
   if (mWidget) {
     // see if we need to destroy the old size information
     old_size = (GtkAllocation *) gtk_object_get_data(GTK_OBJECT(mWidget), "mozilla.old_size");
     if (old_size) {
       g_free(old_size);
     }
-
     // prevent the widget from causing additional events
     mEventCallback = nsnull;
-
-    // destroy the gtk widget
     ::gtk_widget_destroy(mWidget);
     mWidget = nsnull;
-
-    if (!mOnDestroyCalled)
+    if (PR_FALSE == mOnDestroyCalled)
       OnDestroy();
-
   }
-
   return NS_OK;
 }
 
@@ -130,17 +124,15 @@ void nsWidget::OnDestroy()
   mOnDestroyCalled = PR_TRUE;
   // release references to children, device context, toolkit + app shell
   nsBaseWidget::OnDestroy();
-
   // dispatch the event
   if (!mIsDestroying) {
-
     // dispatching of the event may cause the reference count to drop
     // to 0 and result in this object being destroyed. To avoid that,
     // add a reference and then release it after dispatching the event
-
-    AddRef();
+    nsrefcnt old = mRefCnt;
+    mRefCnt = 99;
     DispatchStandardEvent(NS_DESTROY);
-    Release();
+    mRefCnt = old;
   }
 }
 
@@ -153,7 +145,6 @@ void nsWidget::OnDestroy()
 nsIWidget *nsWidget::GetParent(void)
 {
 //  NS_NOTYETIMPLEMENTED("nsWidget::GetParent");
-  NS_ADDREF(mParent);
   return mParent;
 }
 
@@ -188,14 +179,26 @@ NS_METHOD nsWidget::Show(PRBool bState)
 
 NS_METHOD nsWidget::IsVisible(PRBool &aState)
 {
-    if (mWidget)
-    {
-      aState = GTK_WIDGET_VISIBLE(mWidget);
+    if (mWidget) {
+      gint RealVis = GTK_WIDGET_VISIBLE(mWidget);
+      aState = mShown;
+      g_return_val_if_fail(RealVis == mShown, NS_ERROR_FAILURE);
     }
     else
-    {
-      aState = PR_FALSE;
-    }
+      aState = PR_TRUE;
+
+//
+// Why isnt the following good enough ? -ramiro
+//
+//     if (nsnull != mWidget)
+//     {
+//       aState = GTK_WIDGET_VISIBLE(mWidget);
+//     }
+//     else
+//     {
+//       aState = PR_FALSE;
+//     }
+
     return NS_OK;
 }
 
@@ -675,7 +678,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   BaseCreate(aParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
   mParent = aParent;
-  //NS_IF_ADDREF(mParent);
+  NS_IF_ADDREF(mParent);
 
   if (aNativeParent) {
     parentWidget = GTK_WIDGET(aNativeParent);
