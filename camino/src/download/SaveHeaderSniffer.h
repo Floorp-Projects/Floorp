@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   David Hyatt  <hyatt@netscape.com>
+ *   David Hyatt  <hyatt@mozilla.org>
  *   Simon Fraser <sfraser@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of

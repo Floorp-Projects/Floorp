@@ -20,7 +20,7 @@
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
-*    David Hyatt <hyatt@apple.com> (Original Author)
+*    David Hyatt <hyatt@mozilla.org> (Original Author)
 *    David Haas <haasd@cae.wisc.edu>
 * 
 *

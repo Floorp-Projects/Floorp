@@ -18,7 +18,7 @@
 * Rights Reserved.
 *
 * Contributor(s):
-*   David Hyatt <hyatt@netscape.com> (Original Author)
+*   David Hyatt <hyatt@mozilla.org> (Original Author)
 */
 
 #import <AppKit/AppKit.h>

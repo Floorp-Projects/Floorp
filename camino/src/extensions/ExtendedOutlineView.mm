@@ -20,7 +20,7 @@
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
-*   David Hyatt <hyatt@netscape.com> (Original Author)
+*   David Hyatt <hyatt@mozilla.org> (Original Author)
 *   Max Horn <max@quendi.de> (Context menu, tooltip code, and editing)
 *   Josh Aas <josha@mac.com> (contextual menu fixups)
 *
