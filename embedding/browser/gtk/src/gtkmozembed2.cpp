@@ -846,3 +846,20 @@ gtk_moz_embed_get_nsIWebBrowser  (GtkMozEmbed *embed, nsIWebBrowser **retval)
   if (embedPrivate->mWindow)
     embedPrivate->mWindow->GetWebBrowser(retval);
 }
+
+PRUnichar *
+gtk_moz_embed_get_title_unicode (GtkMozEmbed *embed)
+{
+  PRUnichar *retval = nsnull;
+  EmbedPrivate *embedPrivate;
+                   
+  g_return_val_if_fail ((embed != NULL), NULL);
+  g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), NULL);
+  
+  embedPrivate = (EmbedPrivate *)embed->data;
+                   
+  if (embedPrivate->mWindow)
+    retval = embedPrivate->mWindow->mTitle.ToNewUnicode();
+                   
+  return retval;
+}
