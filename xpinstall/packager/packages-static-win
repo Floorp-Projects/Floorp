@@ -254,13 +254,14 @@ bin\chrome\chatzilla\*
 
 [psm]
 bin\nssckbi.dll
+;bin\components\pipboot.dll
+bin\components\pipboot.xpt
 ;bin\components\pipnss.dll
 bin\components\pipnss.xpt
 ;bin\components\pippki.dll
 bin\components\pippki.xpt
 bin\chrome\pipnss.jar
 bin\chrome\pippki.jar
-bin\res\nssifail.txt
 
 [inspector]
 bin\components\inspector.dll

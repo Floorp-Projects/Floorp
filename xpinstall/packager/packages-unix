@@ -354,13 +354,14 @@ bin/components/nsSample.js
 
 [psm]
 bin/libnssckbi.so
+bin/components/libpipboot.so
+bin/components/pipboot.xpt
 bin/components/libpipnss.so
 bin/components/pipnss.xpt
 bin/components/libpippki.so
 bin/components/pippki.xpt
 bin/chrome/pipnss.jar
 bin/chrome/pippki.jar
-bin/res/nssifail.txt
 
 [inspector]
 bin/components/inspector.so
