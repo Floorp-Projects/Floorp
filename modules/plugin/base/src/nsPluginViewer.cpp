@@ -997,6 +997,10 @@ NS_IMETHODIMP pluginInstanceOwner :: CreateWidget(void)
   else
     return NS_ERROR_FAILURE;
 
+#if defined(XP_MAC)
+  FixUpPluginWindow();
+#endif
+
   return rv;
 }
 
