@@ -174,8 +174,6 @@ tree.list {
   /* same as in menulist.css */
   margin: 1px 5px 2px 5px;
   border: 1px inset #B4C3D4;
-  width: 10em;
-  height: 3em;
   /* use rows="#" in XUL to define height */
 }
 
