@@ -75,9 +75,24 @@ $options{mng}			= 1;
 $options{ldap}			= 0;
 $options{xmlextras}		= 0;
 
-$options{jar_manifests} = 1;        # use jar.mn files for resources, not MANIFESTs
-$options{jars}    		= 1;        # build jar files
-$options{chrome_files}  = 0;        # install files in chrome as well as making jar files.
+# -------------------------- Chrome and jar-related options -----------------------------------------
+
+$options{jar_manifests} = 1;        # use jar.mn files for resources, not MANIFESTs. This must be ON,
+                                    # unless you want to use the obsolete (and probably bitrotted)
+                                    # MANIFEST files to install resources.
+
+
+# These two options determine whether you get jar files, or loose files in chrome.
+# Either one or both option must be turned on.
+                                                                        
+$options{chrome_jars}   = 1;        # build jar files
+$options{chrome_files}  = 0;        # install regular files in chrome
+
+$options{use_jars}      = 1;        # This option determines whether chrome comes out of jars
+                                    # or regular files at runtime (by affecting installed-chrome.txt).
+                                    # If 1, $options{chrome_jars} must be 1.
+
+# ------------------------ End chrome and jar-related options ----------------------------------------
 
 # Don't change these (where should they go?)
 $optiondefines{mathml}{MOZ_MATHML}		= 1;
