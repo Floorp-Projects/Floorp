@@ -297,7 +297,7 @@
 #define NS_MSG_PRINTENGINE_CID                  \
   { /* 91FD6B19-E0BC-11d3-8F97-000064657374 */  \
     0x91fd6b19, 0xe0bc, 0x11d3,			\
-  { 0x8f, 0x97, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } };
+  { 0x8f, 0x97, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
 //
 // nsMsgServiceProviderService
@@ -353,5 +353,16 @@
 #define NS_MSGFILTERDELEGATEFACTORY_IMAP_PROGID \
   NS_MSGFILTERDELEGATEFACTORY_PROGID_PREFIX "imap"
 
+
+//
+// nsMsgFilterDataSource
+//
+#define NS_MSGFILTERDATASOURCE_PROGID \
+  NS_RDF_DATASOURCE_PROGID_PREFIX "msgfilters"
+
+/* d97edfb5-bcbe-4a15-a4fb-fbf2f958b388 */
+#define NS_MSGFILTERDATASOURCE_CID \
+  {0xd97edfb5, 0xbcbe, 0x4a15, \
+    { 0xa4, 0xfb, 0xfb, 0xf2, 0xf9, 0x58, 0xb3, 0x88 }}
 
 #endif // nsMessageBaseCID_h__
