@@ -206,7 +206,7 @@ NS_IMETHODIMP
 nsJAR::GetFile(nsIFile* *result)
 {
   *result = mZipFile;
-  NS_ADDREF(*result);
+  NS_IF_ADDREF(*result);
   return NS_OK;
 }
 
