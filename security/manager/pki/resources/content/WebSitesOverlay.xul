@@ -32,7 +32,7 @@
          xmlns:cert="http://netscape.com/rdf-cert#" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <box id="webCerts" orient="vertical">
+  <vbox id="webCerts">
     <html>&certmgr.websites;</html>
     <separator class="thin"/>
     <outliner id="server-outliner" multiple="true"
@@ -47,7 +47,7 @@
       <outlinercol id="certdbkeycol" collapsed="true" flex="1"/>
       <outlinerbody flex="1"/>
     </outliner>
-    <box>
+    <hbox>
       <button id="websites_viewButton" class="normal" 
               label="&certmgr.view.label;" orient="horizontal" 
               disabled="true" onclick="viewCerts();"/>
@@ -62,6 +62,6 @@
       <button id="websites_deleteButton" class="normal" 
               label="&certmgr.delete.label;" orient="horizontal" 
               disabled="true" onclick="deleteCerts();"/>
-    </box>
-  </box>
+    </hbox>
+  </vbox>
 </overlay>
