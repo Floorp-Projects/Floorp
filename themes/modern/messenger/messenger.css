@@ -260,12 +260,12 @@ box#messagepanebox
  * this belongs in the mail filter window
  */
 
-treeitem[Enabled="true"] > treerow > treecell.enabledcol > .tree-button {
-  list-style-image: url("chrome://messenger/skin/unreadmail.gif");
+.enabledcol {
+  list-style-image: url("chrome://messenger/skin/readmail.gif");
 }
 
-treecell.enabledcol > .tree-button {
-  list-style-image: url("chrome://messenger/skin/readmail.gif");
+.enabledcol[value="true"] {
+  list-style-image: url("chrome://messenger/skin/unreadmail.gif");
 }
 
 searchattribute {
