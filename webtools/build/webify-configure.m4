@@ -18,9 +18,11 @@ dnl
 divert(-1)dnl Throw away output until we want it
 changequote([, ])
 
-dnl webify-configure.m4 - Read in configure.in and spit out
-dnl    html appropriate to configure the options.
-
+dnl webify-configure.m4 - Read in configure.in and print options to stdout.
+dnl
+dnl Usage:
+dnl    m4 webify-configure.in configure.in
+dnl 
 dnl Send comments, improvements, bugs to Steve Lamm (slamm@netscape.com).
 
 
