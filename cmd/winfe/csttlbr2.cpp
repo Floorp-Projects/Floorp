@@ -1185,7 +1185,7 @@ void CCustToolbar::OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler )
 	}
 }
 
-void CCustToolbar::Customize(CLinkToolbar *pLinkToolbar, int nSelectedButton)
+void CCustToolbar::Customize(CRDFToolbar *pLinkToolbar, int nSelectedButton)
 {
 }
 
@@ -1632,7 +1632,7 @@ LRESULT CCustToolbar::OnDragToolbarOver(WPARAM wParam, LPARAM lParam)
 LRESULT CCustToolbar::OnCustomize(WPARAM wParam, LPARAM lParam)
 {
 
-	CLinkToolbar *pToolbar = (CLinkToolbar *)CWnd::FromHandlePermanent((HWND)lParam);
+	CRDFToolbar *pToolbar = (CRDFToolbar *)CWnd::FromHandlePermanent((HWND)lParam);
 	int nButton = LOWORD(wParam);
 
 	Customize(pToolbar, wParam);

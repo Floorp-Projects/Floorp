@@ -811,11 +811,7 @@ void CToolbarButton::OnLButtonDown(UINT nFlags, CPoint point)
 		{
 			m_hMenuTimer = SetTimer(IDT_MENU, MENU_DELAY_MS, NULL);
 		}
-		else if(m_dwButtonStyle & TB_HAS_IMMEDIATE_MENU)
-		{
-			m_hMenuTimer = SetTimer(IDT_MENU, 0, NULL);
-		}
-
+		
 		RedrawWindow();
 	}
 	if(m_pToolTipText != NULL)
@@ -902,7 +898,13 @@ void CToolbarButton::OnLButtonUp(UINT nFlags, CPoint point)
                 // Cursor is still over the button, so back to button up look
 			    m_eState = eBUTTON_UP;
 			    if(m_bButtonDown)
-				    OnAction();
+				{
+					if (m_dwButtonStyle & TB_HAS_IMMEDIATE_MENU)
+					{
+						m_hMenuTimer = SetTimer(IDT_MENU, 0, NULL);
+					}
+					else OnAction();
+				}
             }
 		}
 		else

@@ -1430,7 +1430,7 @@ CSize CDropMenu::DrawImage(CDC * pDC, const CRect & rect, CDropMenuColumn *pColu
 		}
 		else if (pItem->GetIconType() == ARBITRARY_URL)
 		{
-			NSNavCenterImage* pImage = pItem->GetCustomIcon();
+			CRDFImage* pImage = pItem->GetCustomIcon();
 			HDC hDC = pDC->m_hDC;
 			int left = ptDst.x;
 			int top = ptDst.y;
@@ -1438,14 +1438,14 @@ CSize CDropMenu::DrawImage(CDC * pDC, const CRect & rect, CDropMenuColumn *pColu
 			int imageHeight = 16;
 			COLORREF bkColor = (bIsSelected && (!m_bShowFeedback || eSelType == eON || eSelType == eNONE)) ? 
 				GetSysColor(COLOR_HIGHLIGHT) : GetSysColor(COLOR_MENU);
-			if (pImage && pImage->CompletelyLoaded()) 
+			if (pImage && pImage->FrameLoaded()) 
 			{
 				// Now we draw this bad boy.
 				if (pImage->m_BadImage) 
 				{		 
 					// display broken icon.
 					HDC tempDC = ::CreateCompatibleDC(hDC);
-					HBITMAP hOldBmp = (HBITMAP)::SelectObject(tempDC,  NSNavCenterImage::m_hBadImageBitmap);
+					HBITMAP hOldBmp = (HBITMAP)::SelectObject(tempDC,  CRDFImage::m_hBadImageBitmap);
 					::StretchBlt(hDC, 
 						 left, top,
 						imageWidth, imageHeight, 

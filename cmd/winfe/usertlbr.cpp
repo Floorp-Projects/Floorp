@@ -34,14 +34,14 @@ extern "C" {
 #define MAX_TOOLBAR_BUTTONS 60
 #define MAX_TOOLBAR_ROWS 3
 
-int CLinkToolbar::m_nMinToolbarButtonChars = 15;
-int CLinkToolbar::m_nMaxToolbarButtonChars = 30;
+int CRDFToolbar::m_nMinToolbarButtonChars = 15;
+int CRDFToolbar::m_nMaxToolbarButtonChars = 30;
 
 //////////////////////////////////////////////////////////////////////////////////////
-//							CLinkToolbarButtonDropTarget
+//							CRDFToolbarButtonDropTarget
 //////////////////////////////////////////////////////////////////////////////////////
 
-DROPEFFECT CLinkToolbarButtonDropTarget::ProcessDragEnter(CWnd *pWnd, COleDataObject *pDataObject, 
+DROPEFFECT CRDFToolbarButtonDropTarget::ProcessDragEnter(CWnd *pWnd, COleDataObject *pDataObject, 
 			DWORD dwKeyState, CPoint point)
 {
 
@@ -50,26 +50,26 @@ DROPEFFECT CLinkToolbarButtonDropTarget::ProcessDragEnter(CWnd *pWnd, COleDataOb
 	return ProcessDragOver(pWnd, pDataObject, dwKeyState, point);
 }
 
-DROPEFFECT CLinkToolbarButtonDropTarget::ProcessDragOver(CWnd *pWnd, COleDataObject *pDataObject, 
+DROPEFFECT CRDFToolbarButtonDropTarget::ProcessDragOver(CWnd *pWnd, COleDataObject *pDataObject, 
 			DWORD dwKeyState, CPoint point)
 {
-	CLinkToolbarButton* pButton = (CLinkToolbarButton*)m_pButton;
+	CRDFToolbarButton* pButton = (CRDFToolbarButton*)m_pButton;
 
 	// Treat as a drop onto the folder.
 	return RDFGLOBAL_TranslateDropAction(pButton->GetNode(), pDataObject, 2);
 }
 
-BOOL CLinkToolbarButtonDropTarget::ProcessDrop(CWnd *pWnd, COleDataObject *pDataObject, 
+BOOL CRDFToolbarButtonDropTarget::ProcessDrop(CWnd *pWnd, COleDataObject *pDataObject, 
 			DROPEFFECT dropEffect, CPoint point)
 {
 	// Treat as a drop onto the folder.
-	CLinkToolbarButton* pButton = (CLinkToolbarButton*)m_pButton;
+	CRDFToolbarButton* pButton = (CRDFToolbarButton*)m_pButton;
 	RDFGLOBAL_PerformDrop(pDataObject, pButton->GetNode(), 2);
 	return TRUE;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
-//							CLinkToolbarButton
+//							CRDFToolbarButton
 //////////////////////////////////////////////////////////////////////////////////////
 static HBITMAP m_hbmpBM = NULL;
 static HBITMAP m_hbmpBMSelected = NULL;
@@ -78,7 +78,7 @@ static HBITMAP m_hbmpSelectedFolder = NULL;
 static HBITMAP m_hbmpFolderOpen =  NULL;
 static int nBitmapRefCount = 0;
 
-CLinkToolbarButton::CLinkToolbarButton()
+CRDFToolbarButton::CRDFToolbarButton()
 {
 	m_bShouldShowRMMenu = TRUE;
 
@@ -90,7 +90,7 @@ CLinkToolbarButton::CLinkToolbarButton()
 }
 
 
-CLinkToolbarButton::~CLinkToolbarButton()
+CRDFToolbarButton::~CRDFToolbarButton()
 {
 	if(m_Node && HT_IsContainer(m_Node))
 	{
@@ -127,7 +127,7 @@ CLinkToolbarButton::~CLinkToolbarButton()
 	}
 }
 
-int CLinkToolbarButton::Create(CWnd *pParent, int nToolbarStyle, CSize noviceButtonSize, CSize advancedButtonSize,
+int CRDFToolbarButton::Create(CWnd *pParent, int nToolbarStyle, CSize noviceButtonSize, CSize advancedButtonSize,
 								LPCTSTR pButtonText, LPCTSTR pToolTipText,
 								LPCTSTR pStatusText, 
 								CSize bitmapSize, int nMaxTextChars, int nMinTextChars, BOOKMARKITEM bookmark,
@@ -166,19 +166,19 @@ int CLinkToolbarButton::Create(CWnd *pParent, int nToolbarStyle, CSize noviceBut
 	return bResult;
 }
 
-CSize CLinkToolbarButton::GetMinimalButtonSize(void)
+CSize CRDFToolbarButton::GetMinimalButtonSize(void)
 {
     CString szText(HT_GetNodeName(m_Node));
     return GetButtonSizeFromChars(szText, m_nMinTextChars);
 }
 
-CSize CLinkToolbarButton::GetMaximalButtonSize(void)
+CSize CRDFToolbarButton::GetMaximalButtonSize(void)
 {
     CString szText(HT_GetNodeName(m_Node));
     return GetButtonSizeFromChars(szText, m_nMaxTextChars);
 }
 
-void CLinkToolbarButton::OnAction(void)
+void CRDFToolbarButton::OnAction(void)
 {
 	if(m_Node && !HT_IsContainer(m_Node))
 	{
@@ -186,12 +186,13 @@ void CLinkToolbarButton::OnAction(void)
 			ASSERT(pCX != NULL);
 			if (pCX != NULL)
 			{
-				pCX->NormalGetUrl((LPTSTR)HT_GetNodeURL(m_Node));
+				if (!HT_Launch(m_Node, pCX->GetContext()))
+					pCX->NormalGetUrl((LPTSTR)HT_GetNodeURL(m_Node));
 			}
 	}
 }
 
-void CLinkToolbarButton::FillInOleDataSource(COleDataSource *pDataSource)
+void CRDFToolbarButton::FillInOleDataSource(COleDataSource *pDataSource)
 {
 	CLIPFORMAT cfHTNode = (CLIPFORMAT)RegisterClipboardFormat(NETSCAPE_HTNODE_FORMAT);
     HANDLE hString = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,1);
@@ -205,12 +206,12 @@ void CLinkToolbarButton::FillInOleDataSource(COleDataSource *pDataSource)
 	
 }
 
-BOOKMARKITEM CLinkToolbarButton::GetBookmarkItem(void)
+BOOKMARKITEM CRDFToolbarButton::GetBookmarkItem(void)
 {
 	return m_bookmark;
 }
 
-void CLinkToolbarButton::SetBookmarkItem(BOOKMARKITEM bookmark)
+void CRDFToolbarButton::SetBookmarkItem(BOOKMARKITEM bookmark)
 {
 /*	m_bookmark = bookmark;
     CString strText(bookmark.szText);
@@ -218,7 +219,7 @@ void CLinkToolbarButton::SetBookmarkItem(BOOKMARKITEM bookmark)
 	*/
 }
 
-void CLinkToolbarButton::SetNode(HT_Resource pNode, BOOL bAddRef)
+void CRDFToolbarButton::SetNode(HT_Resource pNode, BOOL bAddRef)
 {
 	if (pNode == NULL)
 		return;
@@ -255,7 +256,7 @@ void CLinkToolbarButton::SetNode(HT_Resource pNode, BOOL bAddRef)
 
 }
 
-void CLinkToolbarButton::EditTextChanged(char *pText)
+void CRDFToolbarButton::EditTextChanged(char *pText)
 {
 	if (pText)
 	{
@@ -266,25 +267,25 @@ void CLinkToolbarButton::EditTextChanged(char *pText)
 	}
     RemoveTextEdit();
 
-	((CLinkToolbar*)GetParent())->LayoutButtons(-1);
+	((CRDFToolbar*)GetParent())->LayoutButtons(-1);
 }
 
-void CLinkToolbarButton::DrawPicturesAndTextMode(HDC hDC, CRect rect)
+void CRDFToolbarButton::DrawPicturesAndTextMode(HDC hDC, CRect rect)
 {
 	 DrawBitmapOnSide(hDC, rect);
 }
 
-void CLinkToolbarButton::DrawPicturesMode(HDC hDC, CRect rect)
+void CRDFToolbarButton::DrawPicturesMode(HDC hDC, CRect rect)
 {
 	DrawBitmapOnSide(hDC, rect);
 }
 
-void CLinkToolbarButton::DrawButtonText(HDC hDC, CRect rcTxt, CSize sizeTxt, CString strTxt)
+void CRDFToolbarButton::DrawButtonText(HDC hDC, CRect rcTxt, CSize sizeTxt, CString strTxt)
 {
     CToolbarButton::DrawButtonText(hDC, rcTxt, sizeTxt, strTxt);
 }
 
-CSize CLinkToolbarButton::GetButtonSizeFromChars(CString s, int c)
+CSize CRDFToolbarButton::GetButtonSizeFromChars(CString s, int c)
 {
     if(m_nToolbarStyle != TB_TEXT)
 		return(GetBitmapOnSideSize(s, c));
@@ -292,18 +293,18 @@ CSize CLinkToolbarButton::GetButtonSizeFromChars(CString s, int c)
 		return(GetTextOnlySize(s, c));
 }
 
-void CLinkToolbarButton::GetPicturesAndTextModeTextRect(CRect &rect)
+void CRDFToolbarButton::GetPicturesAndTextModeTextRect(CRect &rect)
 {
 	GetBitmapOnSideTextRect(rect);
 }
 
-void CLinkToolbarButton::GetPicturesModeTextRect(CRect &rect)
+void CRDFToolbarButton::GetPicturesModeTextRect(CRect &rect)
 {
 	GetBitmapOnSideTextRect(rect);
 }
 
 
-BOOL CLinkToolbarButton::CreateRightMouseMenu(void)
+BOOL CRDFToolbarButton::CreateRightMouseMenu(void)
 {
 	if (m_bShouldShowRMMenu)
 	{
@@ -334,12 +335,12 @@ BOOL CLinkToolbarButton::CreateRightMouseMenu(void)
 	return m_bShouldShowRMMenu;
 }
 
-CWnd* CLinkToolbarButton::GetMenuParent(void)
+CWnd* CRDFToolbarButton::GetMenuParent(void)
 {
 	return this;
 }
 
-BOOL CLinkToolbarButton::OnCommand(UINT wParam, LONG lParam)
+BOOL CRDFToolbarButton::OnCommand(UINT wParam, LONG lParam)
 {
 	BOOL bRtn = TRUE;
 	
@@ -386,13 +387,14 @@ BOOL CLinkToolbarButton::OnCommand(UINT wParam, LONG lParam)
 			ASSERT(pCX != NULL);
 			if (pCX != NULL)
 			{
-				pCX->NormalGetUrl((LPTSTR)HT_GetNodeURL(theNode));
+				if (!HT_Launch(theNode, pCX->GetContext()))
+					pCX->NormalGetUrl((LPTSTR)HT_GetNodeURL(theNode));
 			}
 		}
 	}
 	else 
 	{
-		bRtn = CLinkToolbarButtonBase::OnCommand(wParam, lParam);
+		bRtn = CRDFToolbarButtonBase::OnCommand(wParam, lParam);
 	}
 	
 	return(bRtn);
@@ -400,11 +402,11 @@ BOOL CLinkToolbarButton::OnCommand(UINT wParam, LONG lParam)
 } 
 
 ///////////////////////////////////////////////////////////////////////////////////
-//									CLinkToolbarButton Messages
+//									CRDFToolbarButton Messages
 ///////////////////////////////////////////////////////////////////////////////////
 
-BEGIN_MESSAGE_MAP(CLinkToolbarButton, CLinkToolbarButtonBase)
-	//{{AFX_MSG_MAP(CLinkToolbarButton)
+BEGIN_MESSAGE_MAP(CRDFToolbarButton, CRDFToolbarButtonBase)
+	//{{AFX_MSG_MAP(CRDFToolbarButton)
 	ON_MESSAGE(NSDRAGMENUOPEN, OnDragMenuOpen) 
 	ON_MESSAGE(DM_FILLINMENU, OnFillInMenu)
 	ON_MESSAGE(DT_DROPOCCURRED, OnDropMenuDropOccurred)
@@ -415,7 +417,7 @@ BEGIN_MESSAGE_MAP(CLinkToolbarButton, CLinkToolbarButtonBase)
 
 END_MESSAGE_MAP()
 
-LRESULT CLinkToolbarButton::OnDragMenuOpen(WPARAM wParam, LPARAM lParam)
+LRESULT CRDFToolbarButton::OnDragMenuOpen(WPARAM wParam, LPARAM lParam)
 {
 // Set our drop menu's user data.
 	if (m_pDropMenu)
@@ -438,7 +440,7 @@ LRESULT CLinkToolbarButton::OnDragMenuOpen(WPARAM wParam, LPARAM lParam)
 
 }
 
-LRESULT CLinkToolbarButton::OnFillInMenu(WPARAM wParam, LPARAM lParam)
+LRESULT CRDFToolbarButton::OnFillInMenu(WPARAM wParam, LPARAM lParam)
 {
 // Set our drop menu's user data.
 	if (m_pDropMenu)
@@ -455,7 +457,7 @@ LRESULT CLinkToolbarButton::OnFillInMenu(WPARAM wParam, LPARAM lParam)
 	return 1;
 }
 
-LRESULT CLinkToolbarButton::OnDropMenuDraggingOccurred(WPARAM wParam, LPARAM lParam)
+LRESULT CRDFToolbarButton::OnDropMenuDraggingOccurred(WPARAM wParam, LPARAM lParam)
 {
 	CDropMenuDragData* pData = (CDropMenuDragData*)lParam;
 	UINT nCommand = pData->m_nCommand;
@@ -483,7 +485,7 @@ LRESULT CLinkToolbarButton::OnDropMenuDraggingOccurred(WPARAM wParam, LPARAM lPa
 
 }
 
-LRESULT CLinkToolbarButton::OnDropMenuDropOccurred(WPARAM wParam, LPARAM lParam)
+LRESULT CRDFToolbarButton::OnDropMenuDropOccurred(WPARAM wParam, LPARAM lParam)
 {
 	CDropMenuDragData* pData = (CDropMenuDragData*)lParam;
 	UINT nCommand = pData->m_nCommand;
@@ -508,7 +510,7 @@ LRESULT CLinkToolbarButton::OnDropMenuDropOccurred(WPARAM wParam, LPARAM lParam)
 	return 1;
 }
 	
-LRESULT CLinkToolbarButton::OnDropMenuClosed(WPARAM wParam, LPARAM lParam)
+LRESULT CRDFToolbarButton::OnDropMenuClosed(WPARAM wParam, LPARAM lParam)
 {
 	int nCount;
 	if(m_pDropMenu != NULL)
@@ -532,7 +534,7 @@ LRESULT CLinkToolbarButton::OnDropMenuClosed(WPARAM wParam, LPARAM lParam)
 	return 1;
 }
 
-void CLinkToolbarButton::OnSysColorChange( )
+void CRDFToolbarButton::OnSysColorChange( )
 {
 	if(nBitmapRefCount > 0)
 	{
@@ -578,10 +580,10 @@ void CLinkToolbarButton::OnSysColorChange( )
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//							CLinkToolbarButton Helpers
+//							CRDFToolbarButton Helpers
 ///////////////////////////////////////////////////////////////////////////
 
-void CLinkToolbarButton::FillInMenu(HT_Resource theNode)
+void CRDFToolbarButton::FillInMenu(HT_Resource theNode)
 {
 	m_pCachedDropMenu->CreateOverflowMenuItem(ID_HOTLIST_VIEW, CString(szLoadString(IDS_MORE_BOOKMARKS)), NULL, NULL );
 
@@ -629,7 +631,7 @@ void CLinkToolbarButton::FillInMenu(HT_Resource theNode)
 	m_pCachedDropMenu = NULL;
 }
 
-UINT CLinkToolbarButton::GetBitmapID(void)
+UINT CRDFToolbarButton::GetBitmapID(void)
 {
 	if (m_nBitmapID != 0)
 		return m_nBitmapID;
@@ -639,12 +641,12 @@ UINT CLinkToolbarButton::GetBitmapID(void)
 	else return IDB_USERBTN;
 }
 
-UINT CLinkToolbarButton::GetBitmapIndex(void)
+UINT CRDFToolbarButton::GetBitmapIndex(void)
 {
 	return 0;
 }
 
-void CLinkToolbarButton::SetTextWithoutResize(CString text)
+void CRDFToolbarButton::SetTextWithoutResize(CString text)
 {
     if(m_pButtonText != NULL)
 	{
@@ -655,12 +657,12 @@ void CLinkToolbarButton::SetTextWithoutResize(CString text)
 	XP_STRCPY(m_pButtonText, text);
 }
 
-void CLinkToolbarButton::LoadComplete(HT_Resource r)
+void CRDFToolbarButton::LoadComplete(HT_Resource r)
 {
 	Invalidate();
 }
 
-void CLinkToolbarButton::DrawCustomIcon(HDC hDC, int x, int y)
+void CRDFToolbarButton::DrawCustomIcon(HDC hDC, int x, int y)
 {
 	int size = UseLargeIcons() ? 23 : 16;
 	DrawArbitraryURL(m_Node, x, y, size, size, hDC, 
@@ -669,7 +671,7 @@ void CLinkToolbarButton::DrawCustomIcon(HDC hDC, int x, int y)
 }
 
 
-void CLinkToolbarButton::DrawLocalIcon(HDC hDC, int x, int y)
+void CRDFToolbarButton::DrawLocalIcon(HDC hDC, int x, int y)
 {
 	if (m_Node)
 		DrawLocalFileIcon(m_Node, x, y, hDC);
@@ -677,21 +679,21 @@ void CLinkToolbarButton::DrawLocalIcon(HDC hDC, int x, int y)
 
 
 ///////////////////////////////////////////////////////////////////////////
-//							Class CLinkToolbarDropTarget
+//							Class CRDFToolbarDropTarget
 ///////////////////////////////////////////////////////////////////////////
 
-void CLinkToolbarDropTarget::Toolbar(CLinkToolbar *pToolbar)
+void CRDFToolbarDropTarget::Toolbar(CRDFToolbar *pToolbar)
 {
 	m_pToolbar = pToolbar;
 }
 
-DROPEFFECT CLinkToolbarDropTarget::OnDragEnter(CWnd * pWnd,	COleDataObject * pDataObject,
+DROPEFFECT CRDFToolbarDropTarget::OnDragEnter(CWnd * pWnd,	COleDataObject * pDataObject,
 											   DWORD dwKeyState, CPoint point)
 {
 	return OnDragOver(pWnd, pDataObject, dwKeyState, point);	
 }
 
-DROPEFFECT CLinkToolbarDropTarget::OnDragOver(CWnd * pWnd, COleDataObject * pDataObject,
+DROPEFFECT CRDFToolbarDropTarget::OnDragOver(CWnd * pWnd, COleDataObject * pDataObject,
 											  DWORD dwKeyState, CPoint point )
 {
 	int nStartX = 0;
@@ -700,11 +702,11 @@ DROPEFFECT CLinkToolbarDropTarget::OnDragOver(CWnd * pWnd, COleDataObject * pDat
 
     int currentRow = 0;
 
-	CLinkToolbarButton* pButton = NULL;
+	CRDFToolbarButton* pButton = NULL;
 
 	for(int i = 0; i < m_pToolbar->GetNumButtons(); i++)
 	{
-        pButton = (CLinkToolbarButton*)(m_pToolbar->GetNthButton(i));
+        pButton = (CRDFToolbarButton*)(m_pToolbar->GetNthButton(i));
 		pButton->GetClientRect(&buttonRect);
 	    pButton->MapWindowPoints(m_pToolbar, &buttonRect);
         
@@ -748,7 +750,7 @@ DROPEFFECT CLinkToolbarDropTarget::OnDragOver(CWnd * pWnd, COleDataObject * pDat
 	return RDFGLOBAL_TranslateDropAction(theNode, pDataObject, m_pToolbar->GetDragFraction());
 }
 
-BOOL CLinkToolbarDropTarget::OnDrop(CWnd * pWnd, COleDataObject * pDataObject,
+BOOL CRDFToolbarDropTarget::OnDrop(CWnd * pWnd, COleDataObject * pDataObject,
 			DROPEFFECT dropEffect, CPoint point)
 {
 	HT_Resource theNode = HT_TopNode(HT_GetSelectedView(m_pToolbar->GetPane()));
@@ -760,10 +762,10 @@ BOOL CLinkToolbarDropTarget::OnDrop(CWnd * pWnd, COleDataObject * pDataObject,
 	return TRUE;
 }
 
-// End CLinkToolbarDropTarget implementation
+// End CRDFToolbarDropTarget implementation
 
 ///////////////////////////////////////////////////////////////////////////
-//							Class CLinkToolbar
+//							Class CRDFToolbar
 ///////////////////////////////////////////////////////////////////////////
 #define LINKTOOLBARHEIGHT 21
 #define SPACE_BETWEEN_ROWS 2
@@ -771,7 +773,7 @@ BOOL CLinkToolbarDropTarget::OnDrop(CWnd * pWnd, COleDataObject * pDataObject,
 // The Event Handler for HT notifications on the personal toolbar
 static void ptNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened) 
 {
-  CLinkToolbar* theToolbar = (CLinkToolbar*)ns->data;
+  CRDFToolbar* theToolbar = (CRDFToolbar*)ns->data;
   if (n != NULL)
   {
 	HT_View theView = HT_GetView(n);
@@ -791,7 +793,7 @@ static void ptNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatH
 				else 
 				{
 					// Toolbar button menu.  Populate it.
-					CLinkToolbarButton* theButton = (CLinkToolbarButton*)(HT_GetNodeFEData(n));
+					CRDFToolbarButton* theButton = (CRDFToolbarButton*)(HT_GetNodeFEData(n));
 					theButton->FillInMenu(n);
 				}
 			}
@@ -811,7 +813,7 @@ static void ptNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatH
 				if (HT_EVENT_NODE_DELETED_DATA == whatHappened)
 				{
 					// Destroy the toolbar button
-					CLinkToolbarButton* pButton = (CLinkToolbarButton*)HT_GetNodeFEData(n);
+					CRDFToolbarButton* pButton = (CRDFToolbarButton*)HT_GetNodeFEData(n);
 					if (theToolbar->m_hWnd)
 					  theToolbar->RemoveButton(pButton);
 					else theToolbar->DecrementButtonCount();
@@ -826,7 +828,7 @@ static void ptNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatH
 			}
 			else if (whatHappened == HT_EVENT_NODE_VPROP_CHANGED)
 			{
-				CLinkToolbarButton* pButton = (CLinkToolbarButton*)HT_GetNodeFEData(n);
+				CRDFToolbarButton* pButton = (CRDFToolbarButton*)HT_GetNodeFEData(n);
 				pButton->SetText(HT_GetNodeName(n)); // Update our name.
 				theToolbar->LayoutButtons(-1);
 			}
@@ -835,7 +837,7 @@ static void ptNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatH
   }
 }
 
-CLinkToolbar::CLinkToolbar(int nMaxButtons, int nToolbarStyle, int nPicturesAndTextHeight, int nPicturesHeight,
+CRDFToolbar::CRDFToolbar(int nMaxButtons, int nToolbarStyle, int nPicturesAndTextHeight, int nPicturesHeight,
 						   int nTextHeight)
 	 : CNSToolbar2(nMaxButtons, nToolbarStyle, nPicturesAndTextHeight, nPicturesHeight, nTextHeight)
 {
@@ -852,7 +854,7 @@ CLinkToolbar::CLinkToolbar(int nMaxButtons, int nToolbarStyle, int nPicturesAndT
 		HT_SetPaneFEData(m_PersonalToolbarPane, this);
 }
 
-CLinkToolbar* CLinkToolbar::CreateUserToolbar(CWnd* pParent)
+CRDFToolbar* CRDFToolbar::CreateUserToolbar(CWnd* pParent)
 {
 	// read in the maximum size we're allowing for personal toolbar items
 	int32 nMaxToolbarButtonChars;
@@ -870,7 +872,7 @@ CLinkToolbar* CLinkToolbar::CreateUserToolbar(CWnd* pParent)
 	else
 		m_nMinToolbarButtonChars = CASTINT(nMinToolbarButtonChars);
 
-	CLinkToolbar* pToolbar = new CLinkToolbar(MAX_TOOLBAR_BUTTONS,theApp.m_pToolbarStyle, 43, 27, 27);
+	CRDFToolbar* pToolbar = new CRDFToolbar(MAX_TOOLBAR_BUTTONS,theApp.m_pToolbarStyle, 43, 27, 27);
 
 	if (pToolbar->Create(pParent))
 	{
@@ -883,7 +885,7 @@ CLinkToolbar* CLinkToolbar::CreateUserToolbar(CWnd* pParent)
 	return pToolbar;
 }
 
-CLinkToolbar::~CLinkToolbar()
+CRDFToolbar::~CRDFToolbar()
 {
 	if (m_PersonalToolbarPane)
 	{
@@ -893,7 +895,7 @@ CLinkToolbar::~CLinkToolbar()
 	}
 }
 
-int CLinkToolbar::Create(CWnd *pParent)
+int CRDFToolbar::Create(CWnd *pParent)
 {
 
 	int result = CNSToolbar2::Create(pParent);
@@ -909,7 +911,7 @@ int CLinkToolbar::Create(CWnd *pParent)
 	return result;
 }
 
-void CLinkToolbar::FillInToolbar()
+void CRDFToolbar::FillInToolbar()
 {
 	if (!m_PersonalToolbarPane)
 		return;
@@ -932,12 +934,12 @@ void CLinkToolbar::FillInToolbar()
 	LayoutButtons(-1);
 }
 
-void CLinkToolbar::AddHTButton(HT_Resource item)
+void CRDFToolbar::AddHTButton(HT_Resource item)
 {
 	if (HT_IsSeparator(item))
 		return;
 
-	CLinkToolbarButton* pButton = new CLinkToolbarButton;
+	CRDFToolbarButton* pButton = new CRDFToolbarButton;
 	BOOKMARKITEM bookmark;
 
 	XP_STRCPY(bookmark.szText, HT_GetNodeName(item));
@@ -953,7 +955,7 @@ void CLinkToolbar::AddHTButton(HT_Resource item)
 		
 	if(HT_IsContainer(item))
 	{
-		CLinkToolbarButtonDropTarget *pDropTarget = new CLinkToolbarButtonDropTarget;
+		CRDFToolbarButtonDropTarget *pDropTarget = new CRDFToolbarButtonDropTarget;
 		pButton->SetDropTarget(pDropTarget);
 	}
 
@@ -962,14 +964,14 @@ void CLinkToolbar::AddHTButton(HT_Resource item)
 	AddButtonAtIndex(pButton); // Have to put the button in the array, since the toolbar base class depends on it.
 }
 
-int CLinkToolbar::GetHeight(void)
+int CRDFToolbar::GetHeight(void)
 {
     return m_nNumberOfRows * (LINKTOOLBARHEIGHT + SPACE_BETWEEN_ROWS) + SPACE_BETWEEN_ROWS;
 }
 
 
 
-void CLinkToolbar::SetMinimumRows(int rowWidth)
+void CRDFToolbar::SetMinimumRows(int rowWidth)
 {
     int rowCount = 1;
     int totalLine = 0;
@@ -988,7 +990,7 @@ void CLinkToolbar::SetMinimumRows(int rowWidth)
     while (rowCount < MAX_TOOLBAR_ROWS && (item = HT_GetNextItem(cursor)))
 	{
         // Get the current button
-		CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
+		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
         if (!pButton) // Separator
 			continue;
 
@@ -1008,7 +1010,7 @@ void CLinkToolbar::SetMinimumRows(int rowWidth)
     SetRows(rowCount); 
 }
     
-void CLinkToolbar::ComputeLayoutInfo(CLinkToolbarButton* pButton, int numChars, int rowWidth, int& usedSpace)
+void CRDFToolbar::ComputeLayoutInfo(CRDFToolbarButton* pButton, int numChars, int rowWidth, int& usedSpace)
 {
    CString originalText = HT_GetNodeName(pButton->GetNode());
 
@@ -1049,7 +1051,7 @@ void CLinkToolbar::ComputeLayoutInfo(CLinkToolbarButton* pButton, int numChars, 
 
 }
 
-void CLinkToolbar::LayoutButtons(int nIndex)
+void CRDFToolbar::LayoutButtons(int nIndex)
 {
     int width = m_nWidth;
 
@@ -1089,7 +1091,7 @@ void CLinkToolbar::LayoutButtons(int nIndex)
     while ((item = HT_GetNextItem(cursor)))
 	{
         // Get the current button
-		CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
+		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
 		if (!pButton)
 			continue;
 
@@ -1116,7 +1118,7 @@ void CLinkToolbar::LayoutButtons(int nIndex)
 		while ((item = HT_GetNextItem(cursor)))
 		{
 			// Get the current button
-			CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
+			CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
 			if (!pButton)  // Separator
 				continue;
 
@@ -1142,7 +1144,7 @@ void CLinkToolbar::LayoutButtons(int nIndex)
 	while ((item = HT_GetNextItem(cursor)))
 	{
         // Get the current button
-		CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
+		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
         if (!pButton)  // Separator
 			continue;
 
@@ -1172,7 +1174,7 @@ void CLinkToolbar::LayoutButtons(int nIndex)
         GetParentFrame()->RecalcLayout();    
 }
 
-void CLinkToolbar::WidthChanged(int animWidth)
+void CRDFToolbar::WidthChanged(int animWidth)
 {
     CRect rect;
    
@@ -1207,7 +1209,7 @@ void CLinkToolbar::WidthChanged(int animWidth)
     while ((item = HT_GetNextItem(cursor)))
 	{
         // Get the current button
-		CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
+		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
         if (!pButton)  // Separator
 			continue;
 
@@ -1234,7 +1236,7 @@ void CLinkToolbar::WidthChanged(int animWidth)
 		while ((item = HT_GetNextItem(cursor)))
 		{
 			// Get the current button
-			CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
+			CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
 			if (!pButton)
 				continue;
 
@@ -1261,7 +1263,7 @@ void CLinkToolbar::WidthChanged(int animWidth)
     while ((item = HT_GetNextItem(cursor)))
 	{
         // Get the current button
-		CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
+		CRDFToolbarButton* pButton = (CRDFToolbarButton*)(HT_GetNodeFEData(item));
         if (!pButton)
 			continue;
 
@@ -1291,17 +1293,17 @@ void CLinkToolbar::WidthChanged(int animWidth)
 
 
 ///////////////////////////////////////////////////////////////////////////////////
-//									CLinkToolbar Messages
+//									CRDFToolbar Messages
 ///////////////////////////////////////////////////////////////////////////////////
 
-BEGIN_MESSAGE_MAP(CLinkToolbar, CNSToolbar2)
+BEGIN_MESSAGE_MAP(CRDFToolbar, CNSToolbar2)
 	//{{AFX_MSG_MAP(CNSToolbar2)
 	ON_WM_RBUTTONDOWN()
 	//}}AFX_MSG_MAP
 
 END_MESSAGE_MAP()
 
-void CLinkToolbar::OnRButtonDown(UINT nFlags, CPoint point)
+void CRDFToolbar::OnRButtonDown(UINT nFlags, CPoint point)
 {
 	m_MenuCommandMap.Clear();
 	HT_View theView = HT_GetSelectedView(m_PersonalToolbarPane);
@@ -1333,7 +1335,7 @@ void CLinkToolbar::OnRButtonDown(UINT nFlags, CPoint point)
 	}
 }
 
-BOOL CLinkToolbar::OnCommand( WPARAM wParam, LPARAM lParam )
+BOOL CRDFToolbar::OnCommand( WPARAM wParam, LPARAM lParam )
 {
 	if (wParam >= FIRST_HT_MENU_ID && wParam <= LAST_HT_MENU_ID)
 	{

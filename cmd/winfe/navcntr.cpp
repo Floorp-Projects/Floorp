@@ -226,7 +226,7 @@ int CSelectorButton::Create(CWnd *pParent, int nToolbarStyle, CSize noviceButton
 	HT_View theView = HT_GetSelectedView(m_Pane);
 	
 	BOOKMARKITEM bookmark; // For now, create with the pictures style. No text ever.
-	return CLinkToolbarButton::Create(pParent, TB_PICTURES, noviceButtonSize, advancedButtonSize,
+	return CRDFToolbarButton::Create(pParent, TB_PICTURES, noviceButtonSize, advancedButtonSize,
 		   pButtonText, pToolTipText, pStatusText, bitmapSize, nMaxTextChars, nMinTextChars,
 		   bookmark, HT_TopNode(theView), dwButtonStyle);
 }
@@ -382,7 +382,7 @@ BEGIN_MESSAGE_MAP(CSelector, CView)
 	ON_WM_RBUTTONDOWN()
 	ON_WM_MOUSEMOVE()
 	ON_WM_TIMER()
-
+	ON_MESSAGE(NSBUTTONDRAGGING, OnButtonDrag)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -888,11 +888,10 @@ void CSelector::RearrangeIcons()
 	}
 }
 
-CSelectorButton* CSelector::GetButtonFromPoint(CPoint point, BOOL& onButton)
+CSelectorButton* CSelector::GetButtonFromPoint(CPoint point, int& dragFraction)
 {
 	CRect buttonRect;
-	onButton = FALSE;
-
+	
 	CNSNavFrame* pFrame = (CNSNavFrame*)GetParentFrame();
 	int32 dockStyle = pFrame->GetDockStyle();
 
@@ -910,7 +909,13 @@ CSelectorButton* CSelector::GetButtonFromPoint(CPoint point, BOOL& onButton)
         
 			if (buttonRect.PtInRect(point))
 			{
-				onButton = TRUE;
+				int hitY = point.y;
+				if (point.y >= buttonRect.top && point.y <= buttonRect.top + buttonRect.Height()/4.0)
+					dragFraction = 1;
+				else if (point.y >= buttonRect.bottom - buttonRect.Height()/4.0)
+					dragFraction = 3;
+				else dragFraction = 2;
+
 				return pButton;
 			}
 
@@ -918,15 +923,23 @@ CSelectorButton* CSelector::GetButtonFromPoint(CPoint point, BOOL& onButton)
 				dockStyle == DOCKSTYLE_VERTRIGHT) 
 			{
 				if (point.y <= buttonRect.bottom)
-				return pButton;
+				{
+					dragFraction = 1;
+					return pButton;
+				}
 			}
 			else
 			{
 				if (point.x <= buttonRect.right)
-				return pButton;
+				{
+					dragFraction = 1;
+					return pButton;
+				}
 			}
 		}
 	}
+
+	dragFraction = 2;
 	return NULL;
 }
 
@@ -1063,8 +1076,8 @@ BOOL CSelectorDropTarget::OnDrop(CWnd* pWnd,
 		pSelector->KillSwitchTimer();
 	if (theView)
 	{
-		// Do a drop.  For now just use drag fractions of 2.
-		RDFGLOBAL_PerformDrop(pDataObject, HT_TopNode(theView), 2);
+		// Do a drop.
+		RDFGLOBAL_PerformDrop(pDataObject, HT_TopNode(theView), pSelector->GetDragFraction());
 	}
 	
 	
@@ -1143,6 +1156,36 @@ BOOL CSelectorDropTarget::OnDrop(CWnd* pWnd,
 
 }
 
+LRESULT CSelector::OnButtonDrag(WPARAM wParam, LPARAM lParam)
+{
+	HWND hWnd = (HWND) lParam;
+
+	CWnd *pButton = CWnd::FromHandle(hWnd);
+
+	COleDataSource * pDataSource = new COleDataSource;  
+	CSelectorButton* pSelButton = (CSelectorButton*)pButton;
+	
+    pSelButton->FillInOleDataSource(pDataSource);
+	
+	// Need to clear the selection, since I use that for dropping stuff.
+	HT_SetSelection(HT_TopNode(pSelButton->GetHTView()));
+
+    // Don't start drag until outside this rect 
+    RECT rectDragStart;
+	pButton->GetClientRect(&rectDragStart);
+	pButton->MapWindowPoints(this, &rectDragStart);
+
+	DROPEFFECT effect;
+	CToolbarDropSource * pDropSource = new CToolbarDropSource;
+
+    effect=pDataSource->DoDragDrop(DROPEFFECT_COPY | DROPEFFECT_LINK | DROPEFFECT_MOVE | DROPEFFECT_SCROLL | DROPEFFECT_NONE,
+                            &rectDragStart, pDropSource);
+	
+	delete pDropSource;
+	delete pDataSource;
+	
+	return 1;
+}
 
 DROPEFFECT CSelectorDropTarget::OnDragEnter(CWnd* pWnd, 
                 COleDataObject* pDataObject, DWORD dwKeyState, CPoint point )
@@ -1154,22 +1197,24 @@ DROPEFFECT CSelectorDropTarget::OnDragOver(CWnd* pWnd,
                 COleDataObject* pDataObject, DWORD dwKeyState, CPoint point )
 {
 	CSelector* pSelector = (CSelector*)pWnd;
-	BOOL onButton;
+	int dragFraction;
 
-	CSelectorButton* pButton = pSelector->GetButtonFromPoint(point, onButton);
+	CSelectorButton* pButton = pSelector->GetButtonFromPoint(point, dragFraction);
 	HT_Resource theNode = pButton ? pButton->GetNode() : NULL;
 	
-	// Give some drag feedback.  For now just use drag fractions of 2.
-	DROPEFFECT answer = RDFGLOBAL_TranslateDropAction(theNode, pDataObject, 2);
+	// Give some drag feedback. 
+	DROPEFFECT answer = RDFGLOBAL_TranslateDropAction(theNode, pDataObject, dragFraction);
 
-	if (pButton != pSelector->GetDragButton()) // User is over a different button
+	if (pButton != pSelector->GetDragButton() || dragFraction != pSelector->GetDragFraction()) 
 	{
+		// User is over a different button or different part of the same button
 		if (pSelector->GetSwitchTimer() != 0)
 			pSelector->KillSwitchTimer();	// Kill the existing pane switch timer.
 		
 		pSelector->SetDragButton(pButton);
+		pSelector->SetDragFraction(dragFraction);
 		
-		if (answer != DROPEFFECT_NONE) // Set the pane switching timer if the user can drop here.
+		if (answer != DROPEFFECT_NONE && dragFraction == 2) // Set the pane switching timer if the user can drop here.
 			pSelector->SetSwitchTimer();
 		else
 		{

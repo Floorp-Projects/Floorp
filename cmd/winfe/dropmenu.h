@@ -113,7 +113,7 @@ public:
 	void *	   GetUserData(void) { return m_pUserData; }
 	void	   SetIcon(void* pIcon, IconType iconType) { m_pCustomIcon = pIcon; m_nIconType = iconType; }
 	HICON	   GetLocalFileIcon() { return (HICON)m_pCustomIcon; }
-	NSNavCenterImage* GetCustomIcon() { return (NSNavCenterImage*)m_pCustomIcon; }
+	CRDFImage* GetCustomIcon() { return (CRDFImage*)m_pCustomIcon; }
 	IconType GetIconType() { return m_nIconType; }
 };
 

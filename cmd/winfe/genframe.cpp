@@ -691,10 +691,8 @@ void CGenericFrame::FinishMenuExpansion(HT_Resource pRoot)
 			m_BookmarksGarbageList->Add(item);
 		
 			// Add the URL to the map. We need to do this because Windows doesn't
-			// allow any client data to be associated with menu items. Note that
-			// we aren't making a copy of the string
-			m_pHotlistMenuMap->SetAt(FIRST_BOOKMARK_MENU_ID + m_nBookmarkItems,
-				HT_GetNodeURL(pEntry));
+			// allow any client data to be associated with menu items.
+			m_pHotlistMenuMap->SetAt(FIRST_BOOKMARK_MENU_ID + m_nBookmarkItems, pEntry);
 		} 	
 
 		// Even though separators and pull-right sub-menus don't have command IDs,
@@ -3058,13 +3056,21 @@ BOOL CGenericFrame::OnCommand(UINT wParam,LONG lParam)
 		ASSERT(nLastSelectedCmdID == nID && nLastSelectedData);
 		if (nLastSelectedCmdID != nID || !nLastSelectedData)
 			return FALSE;
+
+		char* nodeURL = HT_GetNodeURL((HT_Resource)nLastSelectedData);
+
 #ifdef EDITOR        
         // It is much safer to go through Composer's LoadUrl routine
 	    if(EDT_IS_EDITOR(GetMainContext()->GetContext()))
-    	    FE_LoadUrl((char*)nLastSelectedData, TRUE);
+    	    FE_LoadUrl(nodeURL, TRUE);
         else
 #endif
- 		    GetMainContext()->NormalGetUrl((char*)nLastSelectedData);
+		{
+			// Add HT_Launch support
+			if (!HT_Launch((HT_Resource)nLastSelectedData, GetMainContext()->GetContext()))
+				GetMainContext()->NormalGetUrl(nodeURL);
+		}
+
 		return TRUE;
 	}
 

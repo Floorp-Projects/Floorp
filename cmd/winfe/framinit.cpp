@@ -364,7 +364,7 @@ int CMainFrame::CreateLocationBar()
 
 int CMainFrame::CreateLinkBar(void)
 {
-	m_barLinks = CLinkToolbar::CreateUserToolbar(this);
+	m_barLinks = CRDFToolbar::CreateUserToolbar(this);
 
 	CButtonToolbarWindow *pWindow = new CButtonToolbarWindow(m_barLinks, theApp.m_pToolbarStyle, 43, 27, eSMALL_HTAB);
 

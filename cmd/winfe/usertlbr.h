@@ -34,12 +34,12 @@
 #include "rdfacc.h"
 #include "cxicon.h"
 
-#define CLinkToolbarButtonDropTargetBase	CToolbarButtonDropTarget
+#define CRDFToolbarButtonDropTargetBase	CToolbarButtonDropTarget
 
-class CLinkToolbarButtonDropTarget : public CLinkToolbarButtonDropTargetBase
+class CRDFToolbarButtonDropTarget : public CRDFToolbarButtonDropTargetBase
 {
 	public:
-		CLinkToolbarButtonDropTarget(){m_pButton = NULL;}
+		CRDFToolbarButtonDropTarget(){m_pButton = NULL;}
 	protected:
 		virtual DROPEFFECT ProcessDragEnter(CWnd *pWnd, COleDataObject *pDataObject, 
 			DWORD dwKeyState, CPoint point);
@@ -50,9 +50,9 @@ class CLinkToolbarButtonDropTarget : public CLinkToolbarButtonDropTargetBase
 
 }; 
 
-#define CLinkToolbarButtonBase CDragableToolbarButton
+#define CRDFToolbarButtonBase CDragableToolbarButton
 
-class CLinkToolbarButton: public CLinkToolbarButtonBase, public CCustomImageObject {
+class CRDFToolbarButton: public CRDFToolbarButtonBase, public CCustomImageObject {
 
 protected:
 	HT_Resource m_Node;				// The resource corresponding to the RDF node
@@ -67,8 +67,8 @@ protected:
 	CRDFCommandMap m_MenuCommandMap;	// Command map for back-end generated right mouse menu commands.
 
 public:
-	CLinkToolbarButton();
-	~CLinkToolbarButton();
+	CRDFToolbarButton();
+	~CRDFToolbarButton();
 
 	int Create(CWnd *pParent, int nToolbarStyle, CSize noviceButtonSize, CSize advancedButtonSize,
 			   LPCTSTR pButtonText, LPCTSTR pToolTipText, 
@@ -117,7 +117,7 @@ protected:
 	
 protected:
 		// Generated message map functions
-	//{{AFX_MSG(CLinkToolbarButton)
+	//{{AFX_MSG(CRDFToolbarButton)
 	afx_msg LRESULT OnDragMenuOpen(WPARAM, LPARAM);
     afx_msg BOOL OnCommand(UINT wParam,LONG lParam);
 	afx_msg LRESULT OnDropMenuDropOccurred(WPARAM, LPARAM);
@@ -137,23 +137,23 @@ void ptNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened
 
 /****************************************************************************
 *
-*	Class: CLinkToolbarDropTarget
+*	Class: CRDFToolbarDropTarget
 *
 *	DESCRIPTION:
 *		This class provides a drag-drop target for the bookmark quick file
 *		button.
 *
 ****************************************************************************/
-class CLinkToolbar;
+class CRDFToolbar;
 
-class CLinkToolbarDropTarget : public COleDropTarget
+class CRDFToolbarDropTarget : public COleDropTarget
 {
 private:
-	CLinkToolbar *m_pToolbar;
+	CRDFToolbar *m_pToolbar;
 
 public:
-	CLinkToolbarDropTarget() {m_pToolbar = NULL;}
-	void Toolbar(CLinkToolbar *pToolbar);
+	CRDFToolbarDropTarget() {m_pToolbar = NULL;}
+	void Toolbar(CRDFToolbar *pToolbar);
 	 
 protected:
 
@@ -168,28 +168,28 @@ protected:
 
 };
 
-class CLinkToolbar : public CNSToolbar2 {
+class CRDFToolbar : public CNSToolbar2 {
 
 private:
-	CLinkToolbarDropTarget m_DropTarget;
+	CRDFToolbarDropTarget m_DropTarget;
 	HT_Pane m_PersonalToolbarPane;
 	CRDFCommandMap m_MenuCommandMap;	// Command map for back-end generated right mouse menu commands.
 	
     int m_nNumberOfRows;
 
-	CLinkToolbarButton* m_pDragButton;
+	CRDFToolbarButton* m_pDragButton;
 	int m_iDragFraction;
 
 	static int m_nMinToolbarButtonChars;
 	static int m_nMaxToolbarButtonChars;
 
 public:
-	CLinkToolbar(int nMaxButtons, int nToolbarStyle, int nPicturesAndTextHeight, int nPicturesHeight,
+	CRDFToolbar(int nMaxButtons, int nToolbarStyle, int nPicturesAndTextHeight, int nPicturesHeight,
 				 int nTextHeight);
-	~CLinkToolbar();
+	~CRDFToolbar();
 
 	// Used to create toolbars
-	static CLinkToolbar* CreateUserToolbar(CWnd* pParent);
+	static CRDFToolbar* CreateUserToolbar(CWnd* pParent);
 
 	int Create(CWnd *pParent);
 	virtual int GetHeight(void);
@@ -215,15 +215,15 @@ public:
 	void SetDragFraction(int i) { m_iDragFraction = i; }
 	int GetDragFraction() { return m_iDragFraction; }
 
-	void SetDragButton(CLinkToolbarButton* pButton) { m_pDragButton = pButton; }
-	CLinkToolbarButton* GetDragButton() { return m_pDragButton; }
+	void SetDragButton(CRDFToolbarButton* pButton) { m_pDragButton = pButton; }
+	CRDFToolbarButton* GetDragButton() { return m_pDragButton; }
 
 protected:
     // Helper function used in conjunction with LayoutButtons
-    void ComputeLayoutInfo(CLinkToolbarButton* pButton, int numChars, int rowWidth, int& usedSpace);
+    void ComputeLayoutInfo(CRDFToolbarButton* pButton, int numChars, int rowWidth, int& usedSpace);
 
 	// Generated message map functions
-	//{{AFX_MSG(CLinkToolbar)
+	//{{AFX_MSG(CRDFToolbar)
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 	afx_msg BOOL OnCommand( WPARAM wParam, LPARAM lParam );
 	//}}AFX_MSG

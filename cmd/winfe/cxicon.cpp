@@ -22,38 +22,41 @@
 #include "winproto.h"
 #include "helper.h"
 
-HBITMAP NSNavCenterImage::m_hBadImageBitmap = NULL;
-int NSNavCenterImage::refCount = 0;
+HBITMAP CRDFImage::m_hBadImageBitmap = NULL;
+int CRDFImage::refCount = 0;
 
-NSNavCenterImage::NSNavCenterImage(const char * url)
+CRDFImage::CRDFImage(const char * url)
 {
 	m_nRefCount = 0;
 	pUrl = _strdup( url);
 	bmpInfo = NULL;
 	m_bCompletelyLoaded = FALSE;
+	m_bFrameLoaded = FALSE;
 	bits = 0;
 	maskbits = 0;
+	
 	m_BadImage = FALSE;
-	NSNavCenterImage::refCount++;
+	CRDFImage::refCount++;
 	iconContext = NULL;
+	pairCount = 0;
 }
 
-NSNavCenterImage::~NSNavCenterImage()
+CRDFImage::~CRDFImage()
 {
-	XP_FREE( bmpInfo);
-	CDCCX::HugeFree(bits);
-	CDCCX::HugeFree(maskbits);
+//	XP_FREE( bmpInfo);
+//	CDCCX::HugeFree(bits);
+//	CDCCX::HugeFree(maskbits);
 	free(pUrl);
 	
-	NSNavCenterImage::refCount--;
+	CRDFImage::refCount--;
 	if (refCount == 0)
 	{
-		if (NSNavCenterImage::m_hBadImageBitmap)
-			VERIFY(::DeleteObject(NSNavCenterImage::m_hBadImageBitmap));
+		if (CRDFImage::m_hBadImageBitmap)
+			VERIFY(::DeleteObject(CRDFImage::m_hBadImageBitmap));
 	}
 }
 
-void NSNavCenterImage::AddListener(CCustomImageObject* pObject, HT_Resource r)
+void CRDFImage::AddListener(CCustomImageObject* pObject, HT_Resource r)
 {
 	// We only want to have one copy of the same image in this list.
 	for (POSITION pos = resourceList.GetHeadPosition();
@@ -78,7 +81,7 @@ void NSNavCenterImage::AddListener(CCustomImageObject* pObject, HT_Resource r)
 	}
 }
 
-void NSNavCenterImage::RemoveListener(CCustomImageObject *pObject)
+void CRDFImage::RemoveListener(CCustomImageObject *pObject)
 {
 	// Listener has been destroyed.  Need to get all references to it out of the list.
 	// Just do this by NULLing out the pObject field of the iconcallbackinfo structs.
@@ -100,7 +103,30 @@ void NSNavCenterImage::RemoveListener(CCustomImageObject *pObject)
 	}
 }
 
-void NSNavCenterImage::DestroyContext()
+void CRDFImage::RemoveListenerForSpecificResource(CCustomImageObject *pObject, HT_Resource r)
+{
+	// Listener has been destroyed.  Need to get all references to it out of the list.
+	// Just do this by NULLing out the pObject field of the iconcallbackinfo structs.
+	for (POSITION pos = resourceList.GetHeadPosition();
+		 pos != NULL; )
+	{
+		CIconCallbackInfo* pInfo = (CIconCallbackInfo*)resourceList.GetNext(pos);
+		if (pInfo->pObject == pObject && pInfo->pResource == r)
+		{	
+			pInfo->pObject = NULL;
+			m_nRefCount--;
+			if (m_nRefCount == 0 && iconContext)
+			{
+				iconContext->Interrupt();
+				DestroyContext();
+				return;
+			}
+		}
+	}
+}
+
+
+void CRDFImage::DestroyContext()
 {
 	iconContext->DeleteContextDC();
 	iconContext->NiceDestruction();
@@ -109,14 +135,19 @@ void NSNavCenterImage::DestroyContext()
 	resourceList.RemoveAll();
 }
 
-BOOL NSNavCenterImage::CompletelyLoaded()
+BOOL CRDFImage::FrameLoaded()
 {
-	return (m_bCompletelyLoaded);
+	return (m_bFrameLoaded);
 }
 
-BOOL NSNavCenterImage::SuccessfullyLoaded()
+BOOL CRDFImage::FrameSuccessfullyLoaded()
 {
-	return (m_bCompletelyLoaded && bits);
+	return (m_bFrameLoaded && bits);
+}
+
+BOOL CRDFImage::CompletelyLoaded()
+{
+	return m_bCompletelyLoaded;
 }
 
 void Icon_GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)  
@@ -125,17 +156,18 @@ void Icon_GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)
 	if(iStatus < 0 && pUrl->error_msg != NULL)	
 	{
 		void* pData;
-		NSNavCenterImage* theImage = NULL;
+		CRDFImage* theImage = NULL;
 		if (CHTFEData::m_CustomURLCache.Lookup(pUrl->address, pData))
-			theImage = (NSNavCenterImage*)pData;
+			theImage = (CRDFImage*)pData;
 
 		if (theImage) 
 		{  // Since we cannot load this url, replace it with a bad image.
-			theImage->maskbits = 0;
-			theImage->bits = 0;
 			theImage->m_BadImage = TRUE;
-			if (!NSNavCenterImage::m_hBadImageBitmap)
-				NSNavCenterImage::m_hBadImageBitmap = ::LoadBitmap(AfxGetResourceHandle(), MAKEINTRESOURCE(IDB_IMAGE_BAD));
+			theImage->bits = 0;
+			theImage->maskbits = 0;
+			theImage->bmpInfo = 0;
+			if (!CRDFImage::m_hBadImageBitmap)
+				CRDFImage::m_hBadImageBitmap = ::LoadBitmap(AfxGetResourceHandle(), MAKEINTRESOURCE(IDB_IMAGE_BAD));
 			theImage->CompleteCallback();
 		}
 	}
@@ -188,7 +220,7 @@ static BOOL ValidNSBitmapFormat(char* extension)
 	return FALSE;
 }
 
-void NSNavCenterImage::ProcessIcon() 
+void CRDFImage::ProcessIcon() 
 {
 	char *ext = FE_FindFileExt(pUrl);
 	if (ValidNSBitmapFormat(ext)) 
@@ -224,7 +256,7 @@ void NSNavCenterImage::ProcessIcon()
 	}
 }
 
-void NSNavCenterImage::CompleteCallback()
+void CRDFImage::CompleteCallback()
 {
 	m_bCompletelyLoaded = TRUE;
 	while (!resourceList.IsEmpty())
@@ -241,7 +273,20 @@ void NSNavCenterImage::CompleteCallback()
 	DestroyContext();
 }
 
-CXIcon::CXIcon(NSNavCenterImage* theImage)
+void CRDFImage::CompleteFrameCallback()
+{
+	m_bFrameLoaded = TRUE;
+	for (POSITION pos = resourceList.GetHeadPosition(); pos != NULL; )
+	{
+		CIconCallbackInfo* callback = (CIconCallbackInfo*)(resourceList.GetNext(pos));
+		if (callback->pObject)
+		{
+			callback->pObject->LoadComplete(callback->pResource);
+		}
+	}
+}
+
+CXIcon::CXIcon(CRDFImage* theImage)
 {
     MWContext *pContext = GetContext();
     m_cxType = IconCX;
@@ -263,59 +308,40 @@ BITMAPINFO * CXIcon::NewPixmap(NI_Pixmap *pImage, BOOL isMask)
 	if (isMask)
 		m_mask = pImage;
 	else m_image = pImage;
-	
+
 	return CDCCX::NewPixmap(pImage, isMask);
 }
 
+int CXIcon::DisplayPixmap(NI_Pixmap* image, NI_Pixmap* mask, int32 x, int32 y, int32 x_offset, int32 y_offset, int32 width, int32 height, LTRB& Rect)
+{
+	m_image = image;
+	m_mask = mask;
+
+	m_icon->bmpInfo = FillBitmapInfoHeader(image);
+	m_icon->bits = image->bits;
+	if (mask)
+		m_icon->maskbits = mask->bits;
+
+	m_icon->CompleteFrameCallback();
+	return 1;
+}
 
 void CXIcon::ImageComplete(NI_Pixmap* image)
 {
-	FEBitmapInfo *imageInfo;
-	imageInfo = (FEBitmapInfo*) image->client_data;
-	BITMAPINFOHEADER* header = (BITMAPINFOHEADER*)imageInfo->bmpInfo;
-	if (image == m_image)
+	// Will get a call for both the mask and for the image.  
+	if (m_image && m_mask)
 	{
-		int nColorTable;
-		if (GetBitsPerPixel() == 16 || GetBitsPerPixel() == 32)
-			nColorTable = 3;
-		else if (GetBitsPerPixel() < 16)
-			nColorTable = 1 << GetBitsPerPixel();
-		else {
-			ASSERT(GetBitsPerPixel() == 24);
-			nColorTable = 0;
-		}
-
-		m_icon->bmpInfo = FillBitmapInfoHeader(image);
-		m_icon->bits = HugeAlloc(header->biSizeImage, 1);
-		memcpy( m_icon->bits, image->bits, header->biSizeImage );
-	}
-	else 
-	{
-		m_icon->maskbits = HugeAlloc(header->biSizeImage, 1);
-		memcpy( m_icon->maskbits, image->bits, header->biSizeImage );
-	}
-
-	delete imageInfo;
-	image->client_data = 0;
-	if (m_image && m_mask) 
-	{
-		if (m_icon->maskbits && m_icon->bits) 
-		{
-			CDCCX::HugeFree(m_image->bits);
-			m_image->bits = 0;
-			CDCCX::HugeFree(m_mask->bits);
-			m_mask->bits = 0;
+		if (m_icon->pairCount == 2)
 			m_icon->CompleteCallback();
-		}
+		else m_icon->pairCount++;
 	}
-	else 
+	else
 	{
-		// We do not have mask, so we don't need to wait for mask.
-		CDCCX::HugeFree(m_image->bits);
-		m_image->bits = 0;
+		// We have no mask.
 		m_icon->CompleteCallback();
 	}
 }
+
 	//	Don't display partial images.
 void CXIcon::AllConnectionsComplete(MWContext *pContext)
 {
@@ -330,14 +356,14 @@ void CXIcon::NiceDestruction()
 
 // ========================= CCustomImageObject Helpers =============================
 
-NSNavCenterImage* CCustomImageObject::LookupImage(const char* url, HT_Resource r)
+CRDFImage* CCustomImageObject::LookupImage(const char* url, HT_Resource r)
 {
 	// Find the image.
 	void* pData;
-	NSNavCenterImage* pImage = NULL;
+	CRDFImage* pImage = NULL;
 	if (CHTFEData::m_CustomURLCache.Lookup(url, pData))
 	{
-		pImage = (NSNavCenterImage*)pData;
+		pImage = (CRDFImage*)pData;
 
 		// Add ourselves to the callback list if the image hasn't completely loaded.
 		if (!pImage->CompletelyLoaded())
@@ -350,7 +376,7 @@ NSNavCenterImage* CCustomImageObject::LookupImage(const char* url, HT_Resource r
 	else
 	{
 		// Create a new NavCenter image.
-		pImage = new NSNavCenterImage(url);
+		pImage = new CRDFImage(url);
 		pImage->AddListener(this, r);
 		CHTFEData::m_CustomURLCache.SetAt(url, pImage);
 	}
@@ -366,19 +392,19 @@ CCustomImageObject::~CCustomImageObject()
 		 pos != NULL; )
 	{
 		// Enumerate over the list and call remove listener on each image.
-		NSNavCenterImage* pImage = (NSNavCenterImage*)loadingImagesList.GetNext(pos);
+		CRDFImage* pImage = (CRDFImage*)loadingImagesList.GetNext(pos);
 		pImage->RemoveListener(this);
 	}
 }
 
-void CCustomImageObject::AddLoadingImage(NSNavCenterImage* pImage)
+void CCustomImageObject::AddLoadingImage(CRDFImage* pImage)
 {
 	// We only want to have one copy of the same image in this list.
 	for (POSITION pos = loadingImagesList.GetHeadPosition();
 		 pos != NULL; )
 	{
 		// Enumerate over the list and call remove listener on each image.
-		NSNavCenterImage* pNavImage = (NSNavCenterImage*)loadingImagesList.GetNext(pos);
+		CRDFImage* pNavImage = (CRDFImage*)loadingImagesList.GetNext(pos);
 		if (pNavImage == pImage)
 			return;
 	}
@@ -387,7 +413,7 @@ void CCustomImageObject::AddLoadingImage(NSNavCenterImage* pImage)
 	loadingImagesList.AddHead(pImage);
 }
 
-void CCustomImageObject::RemoveLoadingImage(NSNavCenterImage* pImage)
+void CCustomImageObject::RemoveLoadingImage(CRDFImage* pImage)
 {
 	// Should only occur once in our list.  Find and remove.
 	POSITION pos = loadingImagesList.Find(pImage);

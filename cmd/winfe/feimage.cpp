@@ -27,6 +27,7 @@
 #include "feimage.h"
 #include "il_types.h"
 #include "cxdc.h"
+#include "cxicon.h"
 
 JMC_PUBLIC_API(void)
 _IMGCB_NewPixmap(struct IMGCB* self, jint op, void* displayContext, jint width, jint height, IL_Pixmap* image, IL_Pixmap* mask)

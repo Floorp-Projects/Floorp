@@ -150,6 +150,7 @@ void CNSNavFrame::CreateNewNavCenter(CNSGenFrame* pParentFrame, BOOL useViewType
 // Determine the pixels we should consume if docked
 	int32 width;
 	PREF_GetIntPref(gPrefDockPercentage, &width);
+    if ((int)width > 400) width = 400;
 	m_DockSize = (int)width;
 	
 // Read in our dockstyle

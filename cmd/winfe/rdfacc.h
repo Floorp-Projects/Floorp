@@ -22,7 +22,7 @@
 #include "cxstubs.h"
 
 class CCustomImageObject;
-class NSNavCenterImage;
+class CRDFImage;
 
 enum IconType { BUILTIN_BITMAP, LOCAL_FILE, ARBITRARY_URL }; // TODO: Use this icon type for the tree AND the toolbars
 
@@ -45,7 +45,7 @@ public:
 		while (pos != NULL)
 		{
 			m_CustomURLCache.GetNextAssoc(pos, key, pData);
-			NSNavCenterImage* pImage = (NSNavCenterImage*)pData;
+			CRDFImage* pImage = (CRDFImage*)pData;
 			delete pImage;
 		}
 	}
@@ -57,7 +57,7 @@ public:
 	  //			   "no extension" is used to represent files with no extension
 
 	static CMapStringToPtr m_CustomURLCache;
-	  // Hashed on the URL of the image.  Holds pointers to NSNavCenterImages.
+	  // Hashed on the URL of the image.  Holds pointers to CRDFImages.
 };
 
 class CRDFColumn : public CObject
@@ -173,15 +173,15 @@ public:
 BOOL IsLocalFile(const char* pURL);
 BOOL IsExecutableURL(const char* pURL);
 HICON DrawLocalFileIcon(HT_Resource r, int left, int top, HDC hdc);
-NSNavCenterImage* DrawArbitraryURL(HT_Resource r, int left, int top, int imageWidth, 
+CRDFImage* DrawArbitraryURL(HT_Resource r, int left, int top, int imageWidth, 
 								   int imageHeight, HDC hDC, COLORREF bkColor,
 								   CCustomImageObject* pObject, BOOL largeIcon);
 
 HICON FetchLocalFileIcon(HT_Resource r);
-NSNavCenterImage* FetchCustomIcon(HT_Resource r, CCustomImageObject* pObject, BOOL largeIcon);
+CRDFImage* FetchCustomIcon(HT_Resource r, CCustomImageObject* pObject, BOOL largeIcon);
 IconType DetermineIconType(HT_Resource pNode, BOOL largeIcon);
 
-void PaintBackground(HDC hdc, CRect rect, NSNavCenterImage* pImage, int ySrcOffset = -1);
+void PaintBackground(HDC hdc, CRect rect, CRDFImage* pImage, int ySrcOffset = -1);
 		// This function tiles and paints the background image in the tree.
 void ResolveToPaletteColor(COLORREF& color, HPALETTE hPal);
 #endif // RDFACC_H

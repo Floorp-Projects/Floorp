@@ -59,7 +59,7 @@ private:
 //	Some static public data, initialized in framinit.cpp
     static int    m_FirstFrame;
 	CURLBar		* m_barLocation;
-	CLinkToolbar *m_barLinks;
+	CRDFToolbar *m_barLinks;
 	CCommandToolbar *m_pCommandToolbar;
 
 

@@ -63,7 +63,7 @@
 
 class CRDFContentView;
 
-class CSelectorButton : public CLinkToolbarButton
+class CSelectorButton : public CRDFToolbarButton
 {
 friend class CSelector;
 
@@ -221,17 +221,24 @@ public:
 	HBRUSH GetHtBrush() {return hHtBrush;}
 
 	void SetDragButton(CSelectorButton* pButton) { m_pDragButton = pButton; };
+	void SetDragFraction(int dragFraction) { m_iDragFraction = dragFraction; }
+
 	CSelectorButton* GetDragButton() { return m_pDragButton; }
+	int GetDragFraction() { return m_iDragFraction; }
+
 	UINT GetSwitchTimer() { return m_hPaneSwitchTimer; }
 	void KillSwitchTimer() { KillTimer(IDT_PANESWITCH); m_hPaneSwitchTimer = 0; }
 	void SetSwitchTimer() { m_hPaneSwitchTimer = SetTimer(IDT_PANESWITCH, IDT_SWITCHDELAY, NULL); }
 
-	CSelectorButton* GetButtonFromPoint(CPoint point, BOOL& onButton);
+	CSelectorButton* GetButtonFromPoint(CPoint point, int& dragFraction);
 	
 	afx_msg void OnRButtonUp ( UINT nFlags, CPoint point );
 	afx_msg void OnLButtonDown (UINT nFlags, CPoint point );
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+
+	// Message that is called when a button is being dragged.
+	LRESULT OnButtonDrag(WPARAM wParam, LPARAM lParam);
 
 	// function needed for NavFram.cpp
 	void RearrangeIcons();
@@ -257,6 +264,8 @@ protected:
 	HBRUSH hHtBrush;
 
 	CSelectorButton* m_pDragButton; // The button that is currently hovered over in a drag.
+	int m_iDragFraction;			// The drag fraction.
+
 	UINT m_hPaneSwitchTimer;
 
 	CPoint m_PointHit;	// The point hit on a mouse down on the selector bar (not on one of the buttons).

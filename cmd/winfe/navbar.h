@@ -28,7 +28,7 @@
 class CSelectorButton;
 
 /*  This class may yet be of use.  For now comment it out.
-class CNavMenuButton : public CLinkToolbarButton
+class CNavMenuButton : public CRDFToolbarButton
 {
 protected:
 	HT_View m_HTView; // Pointer to HT_View if one exists.
@@ -57,7 +57,7 @@ class CNavMenuBar : public CWnd, public CCustomImageObject
 	COLORREF m_ForegroundColor;
 	COLORREF m_BackgroundColor;
 	CString m_BackgroundImageURL;
-	NSNavCenterImage* m_pBackgroundImage;
+	CRDFImage* m_pBackgroundImage;
 	HT_View m_View; // The current HT_View.
 
 public:

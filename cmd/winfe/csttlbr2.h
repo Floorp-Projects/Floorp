@@ -207,7 +207,7 @@ public:
 
 };
 
-class CLinkToolbar;
+class CRDFToolbar;
 
 class CCustToolbar : public CControlBar {
 
@@ -273,7 +273,7 @@ public:
 
 	virtual void OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler );
 
-	void Customize(CLinkToolbar *pLinkToolbar = NULL, int nSelectedButton = 0);
+	void Customize(CRDFToolbar *pRDFToolbar = NULL, int nSelectedButton = 0);
 	BOOL GetSaveToolbarInfo(void);
 	void SetSaveToolbarInfo(BOOL bSaveToolbarInfo);
 	void SetNewParentFrame(CFrameWnd *pParent);

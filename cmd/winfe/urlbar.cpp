@@ -25,6 +25,7 @@
 #include "hk_funcs.h"
 #include "prefapi.h"
 #include "glhist.h"
+#include "navfram.h"
 
 extern void wfe_Progress(MWContext *pContext, const char *pMessage);
 
@@ -690,7 +691,20 @@ BOOL CEditWnd::PreTranslateMessage ( MSG * msg )
 				{
 					if ( strlen ( new_url ) )
 					{
-						pCX->NormalGetUrl(new_url);
+						CNSGenFrame* pFrame = (CNSGenFrame*)GetTopLevelFrame();
+						BOOL doNormalLoad = TRUE;
+						if (pFrame)
+						{
+							CNSNavFrame* pNavCenter = pFrame->GetDockedNavCenter();
+							if (pNavCenter)
+							{
+								HT_Pane thePane = pNavCenter->GetHTPane();
+								doNormalLoad = !HT_LaunchURL(thePane, new_url, pCX->GetContext());
+							}
+						}
+						
+						if (doNormalLoad)
+							pCX->NormalGetUrl(new_url);
 					}
 					XP_FREE(new_url);
 				}
@@ -698,7 +712,20 @@ BOOL CEditWnd::PreTranslateMessage ( MSG * msg )
 				{
 					if ( strlen ( url ) )
 					{
-						pCX->NormalGetUrl(url);
+						CNSGenFrame* pFrame = (CNSGenFrame*)GetTopLevelFrame();
+						BOOL doNormalLoad = TRUE;
+						if (pFrame)
+						{
+							CNSNavFrame* pNavCenter = pFrame->GetDockedNavCenter();
+							if (pNavCenter)
+							{
+								HT_Pane thePane = pNavCenter->GetHTPane();
+								doNormalLoad = !HT_LaunchURL(thePane, (char*)(const char*)url, pCX->GetContext());
+							}
+						}
+						
+						if (doNormalLoad)
+							pCX->NormalGetUrl(url);
 					}
 				}
 			 }

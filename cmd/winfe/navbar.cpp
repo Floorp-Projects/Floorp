@@ -32,7 +32,7 @@
 extern "C" RDF_NCVocab gNavCenter;
 
 /* This class may yet be of use.  For now comment it out.
-BEGIN_MESSAGE_MAP(CNavMenuButton, CLinkToolbarButton)
+BEGIN_MESSAGE_MAP(CNavMenuButton, CRDFToolbarButton)
 	ON_MESSAGE(NSDRAGMENUOPEN, OnDragMenuOpen) 
 END_MESSAGE_MAP()
 
@@ -221,7 +221,7 @@ void CNavMenuBar::OnPaint( )
 		m_pBackgroundImage = LookupImage(m_BackgroundImageURL, NULL);
 	}
 
-	if (m_pBackgroundImage && m_pBackgroundImage->SuccessfullyLoaded())
+	if (m_pBackgroundImage && m_pBackgroundImage->FrameSuccessfullyLoaded())
 	{
 		// Draw the strip of the background image that should be placed
 		// underneath this line.

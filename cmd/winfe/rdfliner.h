@@ -117,7 +117,7 @@ private:
 	BOOL	 m_bDrawDividers;				// Whether or not dividers should be drawn
 
 	CString m_BackgroundImageURL;			// The URL of the background image.
-	NSNavCenterImage* m_pBackgroundImage;	// The image for the background.
+	CRDFImage* m_pBackgroundImage;	// The image for the background.
 
 public:
     CRDFOutliner (HT_Pane thePane, HT_View theView, CRDFOutlinerParent* theParent);
@@ -357,7 +357,7 @@ private:
 	CRDFCommandMap columnMap;
 	COLORREF m_ForegroundColor;
 	COLORREF m_BackgroundColor;
-	NSNavCenterImage* m_pBackgroundImage;
+	CRDFImage* m_pBackgroundImage;
 	CString m_BackgroundImageURL;
 
 public:
