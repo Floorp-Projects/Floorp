@@ -388,6 +388,14 @@ function initDebugger()
     console.jsds.debuggerHook = console._executionHook;
     console.jsds.scriptHook = console._scriptHook;
     //dbg.interruptHook = interruptHooker;
+
+    var enumer = new Object();
+    enumer.enumerateScript = function (script)
+    {
+        addScript(script);
+        return true;
+    }
+    console.jsds.enumerateScripts(enumer);
 }
 
 function displayCallStack ()
