@@ -21,10 +21,11 @@
 
 #include "nsIToolkit.h"
 #include "nsRepeater.h"
-struct PLEventQueue;
-class nsWindow;
+#include "nsDeleteObserver.h"
 
+struct PLEventQueue;
 struct MethodInfo;
+class nsWindow;
 
 /**
  * Wrapper around the thread running the message pump.
@@ -32,7 +33,7 @@ struct MethodInfo;
  * execute within the same thread that created the widget under Win32.
  */ 
 
-class nsToolkit : public nsIToolkit, public Repeater
+class nsToolkit : public nsIToolkit, public Repeater, public nsDeleteObserver
 {
 
 public:
@@ -49,9 +50,10 @@ public:
 	
 	// Event Queue
 	static PLEventQueue*	GetEventQueue(){ return sPLEventQueue; }
-	// LPeriodical interface
+	// Repeater interface
 	virtual	void	RepeatAction(const EventRecord& inMacEvent);
-
+	// DeleteObserver
+	virtual void	NotifyDelete(void* aDeletedObject);
 private:
 	static nsWindow*	mFocusedWidget;
 	static PLEventQueue*	sPLEventQueue;

@@ -20,11 +20,13 @@
 
 #include <Events.h>
 #include <MacWindows.h>
-#include "nsWindow.h"
+#include "nsDeleteObserver.h"
 #include "nsCOMPtr.h"
+#include "nsGUIEvent.h"
 
+class nsWindow;
 
-class nsMacEventHandler
+class nsMacEventHandler : public nsDeleteObserver
 {
 public:
 		nsMacEventHandler(nsWindow* aTopLevelWidget);
@@ -45,6 +47,9 @@ protected:
 									EventRecord&	aOSEvent,
 									nsMouseEvent&	aMouseEvent,
 									PRUint32		aMessage);
+
+public:
+	virtual void	NotifyDelete(void* aDeletedObject);
 
 protected:
 	nsWindow*			mTopLevelWidget;

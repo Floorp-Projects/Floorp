@@ -17,8 +17,9 @@
  */
 
 #include <LowMem.h>
-
 #include "nsMacEventHandler.h"
+#include "nsWindow.h"
+#include "nsToolkit.h"
 #include "prinrval.h"
 
 // from MacHeaders.c
@@ -45,6 +46,21 @@ nsMacEventHandler::nsMacEventHandler(nsWindow* aTopLevelWidget)
 
 nsMacEventHandler::~nsMacEventHandler()
 {
+	if (mLastWidgetPointed)
+		mLastWidgetPointed->RemoveDeleteObserver(this);
+
+	if (mLastWidgetHit)
+		mLastWidgetHit->RemoveDeleteObserver(this);
+}
+
+
+void nsMacEventHandler::NotifyDelete(void* aDeletedObject)
+{
+	if (mLastWidgetPointed == aDeletedObject)
+		mLastWidgetPointed = nsnull;
+
+	if (mLastWidgetHit == aDeletedObject)
+		mLastWidgetHit = nsnull;
 }
 
 
@@ -367,7 +383,14 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 				// dispatch the event
 				retVal = widgetHit->DispatchMouseEvent(mouseEvent);
 			}
+
+			if (mLastWidgetHit)
+				mLastWidgetHit->RemoveDeleteObserver(this);
+
 			mLastWidgetHit = widgetHit;
+
+			if (mLastWidgetHit)
+				mLastWidgetHit->AddDeleteObserver(this);
 			break;
 		}
 	}
@@ -392,8 +415,10 @@ PRBool nsMacEventHandler::HandleMouseUpEvent(
 	if ((widgetReleased != nsnull) && (widgetReleased != mLastWidgetHit))
 		retVal |= widgetReleased->DispatchMouseEvent(mouseEvent);
 
-	if (mLastWidgetHit != nsnull)
+	if (mLastWidgetHit)
 	{
+		mLastWidgetHit->RemoveDeleteObserver(this);
+
 		retVal |= mLastWidgetHit->DispatchMouseEvent(mouseEvent);
 		mLastWidgetHit = nsnull;
 	}
@@ -420,17 +445,22 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent(
 	{
 		if (mLastWidgetPointed != nsnull)
 		{
+			mLastWidgetPointed->RemoveDeleteObserver(this);
+
 			mouseEvent.widget = mLastWidgetPointed;
 				mouseEvent.message = NS_MOUSE_EXIT;
 				retVal |= mLastWidgetPointed->DispatchMouseEvent(mouseEvent);
 				mLastWidgetPointed = nsnull;
 			mouseEvent.widget = widgetPointed;
 		}
+
 		if (widgetPointed != nsnull)
 		{
+			widgetPointed->AddDeleteObserver(this);
+
+			mLastWidgetPointed = widgetPointed;
 			mouseEvent.message = NS_MOUSE_ENTER;
 			retVal |= widgetPointed->DispatchMouseEvent(mouseEvent);
-			mLastWidgetPointed = widgetPointed;
 		}
 	}
 	else

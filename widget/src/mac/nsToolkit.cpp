@@ -28,7 +28,7 @@ PLEventQueue*	nsToolkit::sPLEventQueue = nsnull;
 extern "C" NS_EXPORT PLEventQueue* GetMacPLEventQueue()
 {
 	return nsToolkit::GetEventQueue();
- }
+}
  
 //=================================================================
 /*  Constructor
@@ -50,6 +50,12 @@ nsToolkit::nsToolkit(): Repeater()
  */
 nsToolkit::~nsToolkit()
 {
+	if (mFocusedWidget)
+	{
+	  mFocusedWidget->RemoveDeleteObserver(this);
+	  mFocusedWidget = nsnull;
+	}
+
 	StopRepeating();
 }
 
@@ -71,16 +77,20 @@ void nsToolkit::SetFocus(nsWindow *aFocusWidget)
 	// tell the old widget, it is not focused
 	if (mFocusedWidget)
 	{
+		mFocusedWidget->RemoveDeleteObserver(this);
+
 		guiEvent.message = NS_LOSTFOCUS;
 		guiEvent.widget = mFocusedWidget;
 		mFocusedWidget->DispatchWindowEvent(guiEvent);
-		mFocusedWidget = nil;
+		mFocusedWidget = nsnull;
 	}
 	
 	// let the new one know
 	if (aFocusWidget)
 	{
-		mFocusedWidget =  aFocusWidget;
+		mFocusedWidget = aFocusWidget;
+		mFocusedWidget->AddDeleteObserver(this);
+
 		guiEvent.message = NS_GOTFOCUS;
 		guiEvent.widget = mFocusedWidget;		
 		mFocusedWidget->DispatchWindowEvent(guiEvent);
@@ -123,4 +133,14 @@ void	nsToolkit::RepeatAction(const EventRecord& /*inMacEvent*/)
 {
 	// Handle pending NSPR events
 	PL_ProcessPendingEvents( sPLEventQueue );
+}
+
+
+//=================================================================
+/*   
+ */
+void	nsToolkit::NotifyDelete(void* aDeletedObject)
+{
+	if (mFocusedWidget == aDeletedObject)
+		mFocusedWidget = nsnull;
 }
