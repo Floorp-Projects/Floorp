@@ -326,7 +326,10 @@ nsresult
 NS_NewScrollPortFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewGfxScrollFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot);
+NS_NewHTMLScrollFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot);
+
+nsresult
+NS_NewXULScrollFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot);
 
 nsresult
 NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
@@ -3803,7 +3806,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
                                                      viewportPseudoStyle);
 
       // Note that the viewport scrollframe is always built with
-      // overflow:auto style. This forces nsGfxScrollFrame to create
+      // overflow:auto style. This forces the scroll frame to create
       // anonymous content for both scrollbars. This is necessary even
       // if the HTML or BODY elements are overriding the viewport
       // scroll style to 'hidden' --- dynamic style changes might put
@@ -4982,7 +4985,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
   // would be inefficient.
 
   // nsGenericElement::SetDocument ought to keep a list like this one,
-  // but it can't because nsGfxScrollFrames get around this.
+  // but it can't because scroll frames get around this.
   if (!aIsRoot &&
       aTag != nsHTMLAtoms::input &&
       aTag != nsHTMLAtoms::textarea &&
@@ -5804,7 +5807,15 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell*            aPresSh
   nsRefPtr<nsStyleContext> contentStyle = aContentStyle;
 
   if (!gfxScrollFrame) {
-    NS_NewGfxScrollFrame(aPresShell, &gfxScrollFrame, aIsRoot);
+    nsCOMPtr<nsIBox> box = do_QueryInterface(aParentFrame);
+
+    // Build a XULScrollFrame when the parent is a box, because XULScrollFrames
+    // do box layout well. Otherwise build an HTMLScrollFrame.
+    if (box) {
+      NS_NewXULScrollFrame(aPresShell, &gfxScrollFrame, aIsRoot);
+    } else {
+      NS_NewHTMLScrollFrame(aPresShell, &gfxScrollFrame, aIsRoot);
+    }
 
     InitAndRestoreFrame(aPresContext, aState, aContent, 
                         aParentFrame, contentStyle, nsnull, gfxScrollFrame);
@@ -6019,7 +6030,7 @@ nsCSSFrameConstructor::InitGfxScrollFrame(nsIPresShell*            aPresShell,
 
   aAnonymousFrames.AddChild(aScrollPortFrame);
 
-  // if there are any anonymous children for the nsGfxScrollFrame create frames for them.
+  // if there are any anonymous children for the scroll frame, create frames for them.
   CreateAnonymousFrames(aPresShell, aPresContext, aState, aContent, aDocument, aNewFrame,
                         PR_FALSE, aAnonymousFrames);
 
@@ -7328,7 +7339,7 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell*    aPresShell,
     // Check to see if the content is a select and 
     // then if it has a drop down (thus making it a combobox)
     // The drop down is a ListControlFrame derived from a 
-    // nsGfxScrollFrame then get the area frame and that will be the parent
+    // nsHTMLScrollFrame then get the area frame and that will be the parent
     // What is unclear here, is if any of this fails, should it return
     // the nsComboboxControlFrame or null?
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;

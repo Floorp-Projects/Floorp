@@ -48,27 +48,19 @@ class nsIScrollableView;
 class nsIPresContext;
 class nsIPresShell;
 class nsIContent;
-class nsGfxScrollFrame;
 class nsIAtom;
 class nsIDocument;
+class nsIScrollFrameInternal;
 
 class nsGfxScrollFrameInner : public nsIScrollPositionListener {
-
 public:
-
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter);
+  nsGfxScrollFrameInner(nsBoxFrame* aOuter);
 
-  struct ScrollbarStyles {
-    // one of NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN,
-    // NS_STYLE_OVERFLOW_VISIBLE, NS_STYLE_OVERFLOW_AUTO
-    PRInt32 mHorizontal;
-    PRInt32 mVertical;
-    ScrollbarStyles(PRInt32 h, PRInt32 v) : mHorizontal(h), mVertical(v) {}
-  };
+  typedef nsIScrollableFrame::ScrollbarStyles ScrollbarStyles;
   ScrollbarStyles GetScrollbarStylesFromFrame() const;
 
   nsIScrollableFrame::nsScrollPref GetScrollPreference() const;
@@ -135,7 +127,7 @@ public:
   nsIBox* mScrollAreaBox;
   nsIBox* mScrollCornerBox;
   nscoord mOnePixel;
-  nsGfxScrollFrame* mOuter;
+  nsBoxFrame* mOuter;
   nscoord mMaxElementWidth;
 
   // The last dir value we saw in AddHorizontalScrollbar.  Use PRInt16
@@ -164,11 +156,134 @@ public:
  * Scroll frames don't support incremental changes, i.e. you can't replace
  * or remove the scrolled frame
  */
-class nsGfxScrollFrame : public nsBoxFrame,
+class nsHTMLScrollFrame : public nsBoxFrame,
+                          public nsIScrollableFrame,
+                          public nsIAnonymousContentCreator {
+public:
+  friend nsresult NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, 
+                                        PRBool aIsRoot);
+
+  // Called to set the child frames. We typically have three: the scroll area,
+  // the vertical scrollbar, and the horizontal scrollbar.
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
+
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
+                  nsHTMLReflowMetrics&     aDesiredSize,
+                  const nsHTMLReflowState& aReflowState,
+                  nsReflowStatus&          aStatus);
+
+  // Because there can be only one child frame, these two function return
+  // NS_ERROR_FAILURE
+  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList);
+
+  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
+                     nsIPresShell&   aPresShell,
+                     nsIAtom*        aListName,
+                     nsIFrame*       aOldFrame,
+                     nsIFrame*       aNewFrame);
+
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
+
+  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame);
+
+
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
+                                           const nsPoint&  aPoint,
+                                           nsIContent **   aNewContent,
+                                           PRInt32&        aContentOffset,
+                                           PRInt32&        aContentOffsetEnd,
+                                           PRBool&         aBeginFrameContent);
+
+  // nsIAnonymousContentCreator
+  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+                                    nsISupportsArray& aAnonymousItems);
+  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+                            nsIContent *      aContent,
+                            nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
+
+  // nsIBox methods
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD GetPadding(nsMargin& aPadding);
+
+  // nsIScrollableFrame
+  NS_IMETHOD GetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *&aScrolledFrame) const;
+  NS_IMETHOD GetScrollableView(nsIPresContext* aContext, nsIScrollableView** aResult);
+
+  NS_IMETHOD GetScrollPosition(nsIPresContext* aContext, nscoord &aX, nscoord& aY) const;
+  NS_IMETHOD ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
+
+  NS_IMETHOD SetScrollbarVisibility(nsIPresContext* aPresContext,
+                                    PRBool aVerticalVisible,
+                                    PRBool aHorizontalVisible);
+
+  NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult);
+
+  NS_IMETHOD CurPosAttributeChanged(nsIPresContext* aPresContext,
+                                    nsIContent* aChild,
+                                    PRInt32 aModType);
+
+  NS_IMETHOD  GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const;
+
+  virtual nsMargin GetActualScrollbarSizes() const;
+  virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
+  virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const;
+
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::scrollFrame
+   */
+  virtual nsIAtom* GetType() const;
+  
+#ifdef NS_DEBUG
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
+#endif
+
+  virtual nsresult GetContentOf(nsIContent** aContent);
+
+protected:
+  nsHTMLScrollFrame(nsIPresShell* aShell, PRBool aIsRoot);
+  virtual PRIntn GetSkipSides() const;
+
+private:
+  friend class nsGfxScrollFrameInner;
+  nsGfxScrollFrameInner mInner;
+};
+
+/**
+ * The scroll frame creates and manages the scrolling view
+ *
+ * It only supports having a single child frame that typically is an area
+ * frame, but doesn't have to be. The child frame must have a view, though
+ *
+ * Scroll frames don't support incremental changes, i.e. you can't replace
+ * or remove the scrolled frame
+ */
+class nsXULScrollFrame : public nsBoxFrame,
                          public nsIScrollableFrame,
                          public nsIAnonymousContentCreator {
 public:
-  friend nsresult NS_NewGfxScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, 
+  friend nsresult NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, 
                                        PRBool aIsRoot);
 
   // Called to set the child frames. We typically have three: the scroll area,
@@ -254,6 +369,7 @@ public:
 
   virtual nsMargin GetActualScrollbarSizes() const;
   virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
+  virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const;
 
   /**
    * Get the "type" of the frame
@@ -268,12 +384,8 @@ public:
 
   virtual nsresult GetContentOf(nsIContent** aContent);
 
-  static nsGfxScrollFrame* GetScrollFrameForPort(nsIFrame* aPort);
-
-  virtual nsGfxScrollFrameInner::ScrollbarStyles GetScrollbarStyles() const;
-
 protected:
-  nsGfxScrollFrame(nsIPresShell* aShell, PRBool aIsRoot);
+  nsXULScrollFrame(nsIPresShell* aShell, PRBool aIsRoot);
   virtual PRIntn GetSkipSides() const;
 
 private:

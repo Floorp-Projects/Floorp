@@ -73,6 +73,16 @@ public:
   NS_IMETHOD GetScrolledFrame(nsIPresContext* aPresContext,
                               nsIFrame *&aScrolledFrame) const = 0;
 
+  struct ScrollbarStyles {
+    // one of NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN,
+    // NS_STYLE_OVERFLOW_VISIBLE, NS_STYLE_OVERFLOW_AUTO
+    PRInt32 mHorizontal;
+    PRInt32 mVertical;
+    ScrollbarStyles(PRInt32 h, PRInt32 v) : mHorizontal(h), mVertical(v) {}
+  };
+
+  virtual ScrollbarStyles GetScrollbarStyles() const = 0;
+
   /**
    * Return the actual sizes of all possible scrollbars. Returns 0 for scrollbar
    * positions that don't have a scrollbar or where the scrollbar is not visible.
