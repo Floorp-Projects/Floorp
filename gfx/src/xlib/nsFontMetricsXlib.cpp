@@ -529,6 +529,7 @@ static nsFontCharSetMapXlib gCharSetMap[] =
   { "sun-fontspecific",   &FLG_NONE,    &Unknown       },
   { "sunolcursor-1",      &FLG_NONE,    &Unknown       },
   { "sunolglyph-1",       &FLG_NONE,    &Unknown       },
+  { "symbol-fontspecific",&FLG_NONE,    &Special       },
   { "tis620.2529-1",      &FLG_NONE,    &TIS620        },
   { "tis620.2533-0",      &FLG_NONE,    &TIS620        },
   { "tis620.2533-1",      &FLG_NONE,    &TIS620        },
