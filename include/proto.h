@@ -391,6 +391,9 @@ extern void LO_DisplayFormElement(LO_FormElementStruct *form);
 */
 XP_Bool LO_IsEmptyCell(LO_CellStruct *cell);
 
+Bool LO_LayingOut(MWContext * context);
+
+
 #ifdef DOM
 /* Returns true if the layout element is enclosed
    in <SPAN> </SPAN> */
