@@ -890,7 +890,7 @@ nsTextInputSelectionImpl::PageMove(PRBool aForward, PRBool aExtend)
 
     CommonPageMove(aForward, aExtend, scrollableView, this);
   }
-  return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, true);
+  return ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
 }
 
 NS_IMETHODIMP
