@@ -294,6 +294,10 @@ public class Main extends ScriptableObject {
                     // Already printed message, so just fall through.
                 }
                 catch (JavaScriptException jse) {
+                	// Need to propagate ThreadDeath exceptions.
+                	Object value = jse.getValue();
+                	if (value instanceof ThreadDeath)
+                		throw (ThreadDeath) value;
                     Context.reportError(ToolErrorReporter.getMessage(
                         "msg.uncaughtJSException",
                         jse.getMessage()));
@@ -356,6 +360,10 @@ public class Main extends ScriptableObject {
                 // Already printed message, so just fall through.
             }
             catch (JavaScriptException jse) {
+	        	// Need to propagate ThreadDeath exceptions.
+	        	Object value = jse.getValue();
+	        	if (value instanceof ThreadDeath)
+	        		throw (ThreadDeath) value;
                 Context.reportError(ToolErrorReporter.getMessage(
                     "msg.uncaughtJSException",
                     jse.getMessage()));
