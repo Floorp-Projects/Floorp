@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.33 2001/05/30 18:15:30 wtc%netscape.com Exp $
+ *  $Id: mpi.c,v 1.34 2001/05/31 00:12:18 wtc%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -3144,7 +3144,7 @@ mp_err   s_mp_norm(mp_int *a, mp_int *b, mp_digit *pd)
   d = 0;
   mask  = DIGIT_MAX & ~(DIGIT_MAX >> 1);	/* mask is msb of digit */
   b_msd = DIGIT(b, USED(b) - 1);
-  while ((b_msd & mask) == 0) {
+  while (!(b_msd & mask)) {
     b_msd <<= 1;
     ++d;
   }
