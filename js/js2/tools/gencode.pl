@@ -12,8 +12,9 @@ my $opcode_maxlen = 0;
 #
 # * super: Class to inherit from, if super is Instruction_(1|2|3), the script
 #          will automatically append the correct template info based on |params|
-# * super_has_print: Set to 1 if you want to inherit the print() method from the
-#                    superclass, set to 0 (or just don't set) otherwise.
+# * super_has_print: Set to 1 if you want to inherit the print() and print_args()
+#                    methods from the superclass, set to 0 (or just don't set)
+#                    to generate print methods.
 # * rem: Remark you want to show up after the enum def, and inside the class.
 # * params: The parameter list expected by the constructor, you can specify a
 #           default value, using the syntax, [ ("Type = default") ].
@@ -91,13 +92,13 @@ $ops{"NEW_OBJECT"} =
   {
    super  => "Instruction_1",
    rem    => "dest",
-   params => [ ("Register" ) ]
+   params => [ ("Register") ]
   };
 $ops{"NEW_ARRAY"} =
   {
    super  => "Instruction_1",
    rem    => "dest",
-   params => [ ("Register" ) ]
+   params => [ ("Register") ]
   };
 $ops{"GET_PROP"} =
   {
@@ -272,16 +273,17 @@ sub collect {
                          $print_body . ";\n" .
                          $init_tab . $tab . $tab . "return f;\n" .
                          $init_tab . $tab . "}\n");
+
+        $class_decs .= ($init_tab . $tab . "virtual Formatter& print_args " .
+                        "(Formatter &f, JSValues &registers) {\n" .
+                        $init_tab . $tab . $tab . &get_printargs_body(@types) .
+                        "\n" .
+                        $init_tab . $tab . "}\n");
+
     } else {
         $class_decs .= $init_tab . $tab . 
-          "/* print() inherited from $super */\n";
+          "/* print() and print_args() inherited from $super */\n";
     }
-
-    $class_decs .= ($init_tab . $tab . "virtual Formatter& print_args " .
-                    "(Formatter &f, JSValues &registers) {\n" .
-                    $init_tab . $tab . $tab . &get_printargs_body(@types) .
-                    "\n" .
-                    $init_tab . $tab . "}\n");
 
     $class_decs .= $init_tab . "};\n\n";
 }
