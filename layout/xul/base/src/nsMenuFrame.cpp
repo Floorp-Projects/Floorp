@@ -1486,10 +1486,16 @@ nsMenuFrame::Execute()
   event.isMeta = PR_FALSE;
   event.clickCount = 0;
   event.widget = nsnull;
+  // The order of the nsIViewManager and nsIPresShell COM pointers is
+  // important below.  We want the pres shell to get released before the
+  // associated view manager on exit from this function.
+  // See bug 54233.
+  nsCOMPtr<nsIViewManager> kungFuDeathGrip;
   nsCOMPtr<nsIPresShell> shell;
   nsresult result = mPresContext->GetShell(getter_AddRefs(shell));
   nsIFrame* me = this;
   if (NS_SUCCEEDED(result) && shell) {
+    shell->GetViewManager(getter_AddRefs(kungFuDeathGrip));
     shell->HandleDOMEventWithTarget(mContent, &event, &status);
   }
 
@@ -1499,8 +1505,8 @@ nsMenuFrame::Execute()
   content->GetDocument(*getter_AddRefs(doc));
 
   nsIFrame* primary = nsnull;
-  shell->GetPrimaryFrameFor(content, &primary);
-  
+  if (shell) shell->GetPrimaryFrameFor(content, &primary);
+
   // Now properly close them all up.
   if (doc && (primary == me) && mMenuParent) // <-- HACK IS HERE. ICK.
     mMenuParent->DismissChain();
