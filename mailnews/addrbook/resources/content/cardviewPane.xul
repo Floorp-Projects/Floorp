@@ -36,11 +36,17 @@
 				<html:div class="CardViewHeading" id="cvhHome">Home</html:div>
 				<spring class="CardViewHeadingSpace"/>
 				<html:div class="CardViewText" id="cvHomeAddress">*</html:div>
+				<html:div class="CardViewText" id="cvHomeAddress2">*</html:div>
 				<html:div class="CardViewText" id="cvHomeCityStZip">*</html:div>
+				<html:div class="CardViewText" id="cvHomeCountry">*</html:div>
 			</box>
 			
 			<box id="cvbOther" align="vertical" class="CardView">
 				<html:div class="CardViewHeading" id="cvhOther">Other</html:div>
+				<html:div class="CardViewText" id="cvCustom1">*</html:div>
+				<html:div class="CardViewText" id="cvCustom2">*</html:div>
+				<html:div class="CardViewText" id="cvCustom3">*</html:div>
+				<html:div class="CardViewText" id="cvCustom4">*</html:div>
 				<html:div class="CardViewText" id="cvNotes">*</html:div>
 			</box>
 		</box>
@@ -63,9 +69,12 @@
 				<html:div class="CardViewHeading" id="cvhWork">Work</html:div>
 				<spring class="CardViewHeadingSpace"/>
 				<html:div class="CardViewText" id="cvJobTitle">*</html:div>
-				<html:div class="CardViewText" id="cvComapny">*</html:div>
+				<html:div class="CardViewText" id="cvDepartment">*</html:div>
+				<html:div class="CardViewText" id="cvCompany">*</html:div>
 				<html:div class="CardViewText" id="cvWorkAddress">*</html:div>
+				<html:div class="CardViewText" id="cvWorkAddress2">*</html:div>
 				<html:div class="CardViewText" id="cvWorkCityStZip">*</html:div>
+				<html:div class="CardViewText" id="cvWorkCountry">*</html:div>
 			</box>
 		</box>
 		

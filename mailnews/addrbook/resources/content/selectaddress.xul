@@ -33,8 +33,8 @@ Rights Reserved.
 	<!ENTITY bccButton.label	"Bcc:"> 
 	<!ENTITY stopButton.label	".Stop"> 
 	<!ENTITY searchButton.label	".Search..."> 
-	<!ENTITY newButton.label	".New..."> 
-	<!ENTITY editButton.label	".Edit..."> 
+	<!ENTITY newButton.label	"New..."> 
+	<!ENTITY editButton.label	"Edit..."> 
 	<!ENTITY viewButton.label	".View"> 
 	<!ENTITY removeButton.label	"Remove"> 
 	<!ENTITY okButton.label		".OK"> 

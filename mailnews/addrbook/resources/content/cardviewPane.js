@@ -1,3 +1,13 @@
+var zWork = "Work: ";
+var zHome = "Home: ";
+var zFax = "Fax: ";
+var zCellular = "Cellular: ";
+var zPager = "Pager: ";
+var zCustom1 = "Custom 1: ";
+var zCustom2 = "Custom 2: ";
+var zCustom3 = "Custom 3: ";
+var zCustom4 = "Custom 4: ";
+
 var rdf;
 var cvData;
 
@@ -26,9 +36,15 @@ function OnLoadAddressBook()
 	// Home section
 	cvData.cvhHome			= doc.getElementById("cvhHome");
 	cvData.cvHomeAddress	= doc.getElementById("cvHomeAddress");
+	cvData.cvHomeAddress2	= doc.getElementById("cvHomeAddress2");
 	cvData.cvHomeCityStZip	= doc.getElementById("cvHomeCityStZip");
+	cvData.cvHomeCountry	= doc.getElementById("cvHomeCountry");
 	// Other section
 	cvData.cvhOther			= doc.getElementById("cvhOther");
+	cvData.cvCustom1		= doc.getElementById("cvCustom1");
+	cvData.cvCustom2		= doc.getElementById("cvCustom2");
+	cvData.cvCustom3		= doc.getElementById("cvCustom3");
+	cvData.cvCustom4		= doc.getElementById("cvCustom4");
 	cvData.cvNotes			= doc.getElementById("cvNotes");
 	// Phone section
 	cvData.cvhPhone			= doc.getElementById("cvhPhone");
@@ -40,9 +56,12 @@ function OnLoadAddressBook()
 	// Work section
 	cvData.cvhWork			= doc.getElementById("cvhWork");
 	cvData.cvJobTitle		= doc.getElementById("cvJobTitle");
+	cvData.cvDepartment		= doc.getElementById("cvDepartment");
 	cvData.cvCompany		= doc.getElementById("cvCompany");
 	cvData.cvWorkAddress	= doc.getElementById("cvWorkAddress");
+	cvData.cvWorkAddress2	= doc.getElementById("cvWorkAddress2");
 	cvData.cvWorkCityStZip	= doc.getElementById("cvWorkCityStZip");
+	cvData.cvWorkCountry	= doc.getElementById("cvWorkCountry");
 }
 	
 function DisplayCardViewPane(abNode)
@@ -51,8 +70,12 @@ function DisplayCardViewPane(abNode)
 	var cardResource = parent.parent.rdf.GetResource(uri);
 	var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
 	
-	var name = card.DisplayName;// FIX ME - this should be displayName
+	var name = card.DisplayName;
 	
+	var nickname;
+	if ( card.NickName )
+		nickname = "\"" + card.NickName + "\"";
+		
 	var data = parent.parent.cvData;
 	var visible;
 	
@@ -66,28 +89,37 @@ function DisplayCardViewPane(abNode)
 	
 	/* Name section */
 	cvSetNode(data.cvhName, name);
-	cvSetNode(data.cvNickname, "\"" + card.NickName + "\"");
+	cvSetNode(data.cvNickname, nickname);
 	cvSetNode(data.cvEmail1, card.PrimaryEmail);
 	cvSetNode(data.cvEmail2, card.SecondEmail);
 	/* Home section */
-	visible = cvSetNode(data.cvHomeAddress, "not yet supported");
-	visible = cvSetNode(data.cvHomeCityStZip, "not yet supported") || visible;
+	visible = cvSetNode(data.cvHomeAddress, card.HomeAddress);
+	visible = cvSetNode(data.cvHomeAddress2, card.HomeAddress2) || visible;
+	visible = cvSetCityStateZip(data.cvHomeCityStZip, card.HomeCity, card.HomeState, card.HomeZipCode) || visible;
+	visible = cvSetNode(data.cvHomeCountry, card.HomeCountry) || visible;
 	cvSetVisible(data.cvhHome, visible);
 	/* Other section */
-	visible = cvSetNode(data.cvNotes, "not yet supported");
+	visible = cvSetNodeWithLabel(data.cvCustom1, zCustom1, card.Custom1);
+	visible = cvSetNodeWithLabel(data.cvCustom2, zCustom2, card.Custom2) || visible;
+	visible = cvSetNodeWithLabel(data.cvCustom3, zCustom3, card.Custom3) || visible;
+	visible = cvSetNodeWithLabel(data.cvCustom4, zCustom4, card.Custom4) || visible;
+	visible = cvSetNode(data.cvNotes, card.Notes) || visible;
 	cvSetVisible(data.cvhOther, visible);
 	/* Phone section */
-	visible = cvSetPhone(data.cvPhWork, "Work: ", card.WorkPhone);
-	visible = cvSetPhone(data.cvPhHome, "Home: ", card.HomePhone) || visible;
-	visible = cvSetPhone(data.cvPhFax, "Fax: ", card.FaxNumber) || visible;
-	visible = cvSetPhone(data.cvPhCellular, "Cellular: ", card.CellularNumber) || visible;
-	visible = cvSetPhone(data.cvPhPager, "Pager: ", card.PagerNumber) || visible;
+	visible = cvSetNodeWithLabel(data.cvPhWork, zWork, card.WorkPhone);
+	visible = cvSetNodeWithLabel(data.cvPhHome, zHome, card.HomePhone) || visible;
+	visible = cvSetNodeWithLabel(data.cvPhFax, zFax, card.FaxNumber) || visible;
+	visible = cvSetNodeWithLabel(data.cvPhCellular, zCellular, card.CellularNumber) || visible;
+	visible = cvSetNodeWithLabel(data.cvPhPager, zPager, card.PagerNumber) || visible;
 	cvSetVisible(data.cvhPhone, visible);
 	/* Work section */
-	visible = cvSetNode(data.cvJobTitle, "not yet supported");
+	visible = cvSetNode(data.cvJobTitle, card.JobTitle);
+	visible = cvSetNode(data.cvDepartment, card.Department) || visible;
 	visible = cvSetNode(data.cvCompany, card.Company) || visible;
-	visible = cvSetNode(data.cvWorkAddress, "not yet supported") || visible;
-	visible = cvSetNode(data.cvWorkCityStZip, "not yet supported") || visible;
+	visible = cvSetNode(data.cvWorkAddress, card.WorkAddress) || visible;
+	visible = cvSetNode(data.cvWorkAddress2, card.WorkAddress2) || visible;
+	visible = cvSetCityStateZip(data.cvWorkCityStZip, card.WorkCity, card.WorkState, card.WorkZipCode) || visible;
+	visible = cvSetNode(data.cvWorkCountry, card.WorkCountry) || visible;
 	cvSetVisible(data.cvhWork, visible);
 }
 
@@ -127,12 +159,30 @@ function ClearCardViewPane()
 	cvSetVisible(data.cvWorkCityStZip, false);
 }
 
-function cvSetPhone(node, phone, text)
+function cvSetNodeWithLabel(node, label, text)
 {
 	if ( text )
-		return cvSetNode(node, phone + text);
+		return cvSetNode(node, label + text);
 	else
 		return cvSetNode(node, "");
+}
+
+function cvSetCityStateZip(node, city, state, zip)
+{
+	var text;
+	
+	if ( city )
+	{
+		text = city;
+		if ( state || zip )
+			text += ", ";
+	}
+	if ( state )
+		text += state + " ";
+	if ( zip )
+		text += zip;
+	
+	return cvSetNode(node, text);
 }
 
 function cvSetNode(node, text)

@@ -44,6 +44,12 @@ function SelectAddressCancelButton()
 	top.window.close();
 }
 
+
+function SelectAddressNewButton()
+{
+	AbNewCard();
+}
+
 function SelectAddressEditButton()
 {
 	var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();

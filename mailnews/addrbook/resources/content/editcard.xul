@@ -53,8 +53,7 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		onload="top.OnLoadEditCard()"
-		flex="100%"
+		style="width:100%; height:100%; border:none"
 		align="vertical">
 
 	<tabcontrol align="vertical" style="margin: 5px; border: 2px groove white">
@@ -64,7 +63,7 @@
 	      <tab>&Other.tab;</tab>
 	   </tabbox>
 	   
-	   <tabpanel include="chrome://addressbook/content/nsFrag2.xul" align="vertical" style="width:100%">
+	   <tabpanel include="chrome://addressbook/content/nsFrag2.xul" align="vertical" flex="100%">
 
 			<!-- ** Name Tab ** -->
 			<box index="name" align="vertical" flex="100%">
@@ -134,12 +133,12 @@
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="WorkPhone">&WorkPhone.label;</html:label>
+							<html:label for="HomePhone">&WorkPhone.label;</html:label>
 							<html:input id="HomePhone" type="text" class="CardEdit"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
-							<html:label for="WorkPhone">&WorkPhone.label;</html:label>
+							<html:label for="FaxPhone">&WorkPhone.label;</html:label>
 							<html:input id="FaxNumber" type="text" class="CardEdit"/>
 						</box>
 						<box align="horizontal">

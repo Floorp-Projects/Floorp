@@ -1,4 +1,12 @@
 var card;
+var newCard = -1;
+var editCardTitlePrefix = "Card for ";
+
+function OnLoadNewCard()
+{
+	top.card = newCard;
+}
+
 
 function OnLoadEditCard()
 {
@@ -10,7 +18,9 @@ function OnLoadEditCard()
 			// keep card in global for later
 			top.card = window.arguments[0].card;
 			
-			GetCardValues(top.card, frames["browser.editcard"].document)
+			GetCardValues(top.card, frames["browser.editcard"].document);
+			
+			//top.window.setAttribute('title', editCardTitlePrefix + top.card.DisplayName);
 		}
 	}
 }

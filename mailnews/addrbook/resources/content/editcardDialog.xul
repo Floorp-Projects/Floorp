@@ -3,15 +3,13 @@
 
 <!DOCTYPE window
 [
-<!-- Title -->
-	<!ENTITY editcardWindow.title "Card for *********">
 ]> 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		title="&editcardWindow.title;"
+		onload="OnLoadEditCard()"
 		class="dialog"
-		width="400" style="height:100%"
+		width="400" style="height:100%; padding:0px"
 		align="vertical">
 
 	<html:script language="JavaScript" src="chrome://addressbook/content/editcard.js"/>
@@ -24,7 +22,7 @@
 	
 	<spring style="height:10px"/>
 	
-	<box align="horizontal" flex="100%">
+	<box align="horizontal">
 		<spring flex="100%"/>
 		<titledbutton id="ok" value="OK" class="push" onclick="EditCardOKButton()" />	
 		<spring style="width:10px"/>
