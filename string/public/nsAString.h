@@ -114,8 +114,15 @@ class NS_COM nsAString
       // nsAString( const self_type& );         // auto-generated copy-constructor OK (again, only because we're abstract)
       virtual ~nsAString() { }                  // ...yes, I expect to be sub-classed
 
-
+      enum {
+        kHasStackBuffer = 0x00000001  // Has and is using a buffer on
+                                      // the stack (that could be copied
+                                      // to the heap if
+                                      // GetSharedBufferHandle() is
+                                      // called).
+      };
       virtual PRUint32                          GetImplementationFlags() const;
+
       virtual const        buffer_handle_type*  GetFlatBufferHandle()    const;
       virtual const        buffer_handle_type*  GetBufferHandle()        const;
       virtual const shared_buffer_handle_type*  GetSharedBufferHandle()  const;
@@ -358,8 +365,15 @@ class NS_COM nsACString
       // nsACString( const self_type& );        // auto-generated copy-constructor OK (again, only because we're abstract)
       virtual ~nsACString() { }                 // ...yes, I expect to be sub-classed
 
-
+      enum {
+        kHasStackBuffer = 0x00000001  // Has and is using a buffer on
+                                      // the stack (that could be copied
+                                      // to the heap if
+                                      // GetSharedBufferHandle() is
+                                      // called).
+      };
       virtual PRUint32                          GetImplementationFlags() const;
+
       virtual const        buffer_handle_type*  GetFlatBufferHandle()    const;
       virtual const        buffer_handle_type*  GetBufferHandle()        const;
       virtual const shared_buffer_handle_type*  GetSharedBufferHandle()  const;
