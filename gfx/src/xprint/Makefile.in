@@ -87,6 +87,7 @@ EXPORTS		= \
 		nsIDeviceContextXPrint.h \
 		nsGfxXPrintCID.h \
 		nsIDeviceContextSpecXPrint.h \
+		xprintutil.h \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_XPRINT_LDFLAGS)

@@ -97,16 +97,29 @@ nsDeviceContextSpecXlib::~nsDeviceContextSpecXlib()
 {
 }
 
-#ifdef USE_XPRINT
+/* Use both PostScript and Xprint module */
+#if defined(USE_XPRINT) && defined(USE_POSTSCRIPT)
 NS_IMPL_ISUPPORTS3(nsDeviceContextSpecXlib,
                    nsIDeviceContextSpec,
                    nsIDeviceContextSpecPS,
                    nsIDeviceContextSpecXp)
-#else
+/* Use only PostScript module */
+#elif !defined(USE_XPRINT) && defined(USE_POSTSCRIPT)
 NS_IMPL_ISUPPORTS2(nsDeviceContextSpecXlib,
                    nsIDeviceContextSpec,
                    nsIDeviceContextSpecPS)
-#endif /* USE_XPRINT */
+/* Use only Xprint module module */
+#elif defined(USE_XPRINT) && !defined(USE_POSTSCRIPT)
+NS_IMPL_ISUPPORTS2(nsDeviceContextSpecXlib,
+                   nsIDeviceContextSpec,
+                   nsIDeviceContextSpecXp)
+/* Both Xprint and PostScript module are missing */
+#elif !defined(USE_XPRINT) && !defined(USE_POSTSCRIPT)
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecXlib,
+                   nsIDeviceContextSpec)
+#else
+#error "This should not happen"
+#endif
 
 /** -------------------------------------------------------
  */
@@ -404,6 +417,7 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::GetPageSizeInTwips(PRInt32 *aWidth, PRInt
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetPrintMethod(PrintMethod &aMethod)
 {
+#if defined(USE_POSTSCRIPT) && defined(USE_XPRINT)
   /* printer names for the PostScript module alwas start with 
    * the NS_POSTSCRIPT_DRIVER_NAME string */
   if (strncmp(mPrinter, NS_POSTSCRIPT_DRIVER_NAME, 
@@ -411,8 +425,16 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::GetPrintMethod(PrintMethod &aMethod)
     aMethod = pmXprint;
   else
     aMethod = pmPostScript;
-    
   return NS_OK;
+#elif defined(USE_XPRINT)
+  aMethod = pmXprint;
+  return NS_OK;
+#elif defined(USE_POSTSCRIPT)
+  aMethod = pmPostScript;
+  return NS_OK;
+#else
+  return NS_ERROR_UNEXPECTED;
+#endif
 }
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::ClosePrintManager()
@@ -540,16 +562,13 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   }  
 #endif /* USE_XPRINT */
 
-  /* add an entry for the default printer (see nsPostScriptObj.cpp) */
-  mGlobalPrinterList->AppendString(
-    nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME "default")));
-  mGlobalNumPrinters++;
-
-  /* get the list of printers */
-  char *printerList = nsnull;
+#ifdef USE_POSTSCRIPT
+  /* Get the list of PostScript-module printers */
+  char   *printerList           = nsnull;
+  PRBool  added_default_printer = PR_FALSE; /* Did we already add the default printer ? */
   
-  /* the env var MOZILLA_PRINTER_LIST can "override" the prefs */
-  printerList = PR_GetEnv("MOZILLA_PRINTER_LIST");
+  /* The env var MOZILLA_POSTSCRIPT_PRINTER_LIST can "override" the prefs */
+  printerList = PR_GetEnv("MOZILLA_POSTSCRIPT_PRINTER_LIST");
   
   if (!printerList) {
     nsresult rv;
@@ -560,8 +579,8 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   }  
 
   if (printerList) {
-    char *tok_lasts;
-    char *name;
+    char       *tok_lasts;
+    const char *name;
     
     /* PL_strtok_r() will modify the string - copy it! */
     printerList = strdup(printerList);
@@ -572,6 +591,10 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
          name != nsnull ; 
          name = PL_strtok_r(nsnull, " ", &tok_lasts) )
     {
+      /* Is this the "default" printer ? */
+      if (!strcmp(name, "default"))
+        added_default_printer = PR_TRUE;
+
       mGlobalPrinterList->AppendString(
         nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME)) + 
         nsString(NS_ConvertASCIItoUCS2(name)));
@@ -580,6 +603,16 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     
     free(printerList);
   }
+
+  /* Add an entry for the default printer (see nsPostScriptObj.cpp) if we
+   * did not add it already... */
+  if (!added_default_printer)
+  {
+    mGlobalPrinterList->AppendString(
+      nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME "default")));
+    mGlobalNumPrinters++;
+  }  
+#endif /* USE_POSTSCRIPT */  
       
   if (mGlobalNumPrinters == 0)
     return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE; 

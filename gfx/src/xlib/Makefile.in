@@ -123,9 +123,12 @@ ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_BSD_SOURCE
 endif
 
+ifdef MOZ_ENABLE_POSTSCRIPT
+DEFINES         += -DUSE_POSTSCRIPT
+endif
+
 ifdef MOZ_ENABLE_XPRINT
 DEFINES         += -DUSE_XPRINT
-INCLUDES	+= -I$(srcdir)/../xprint
 EXTRA_DSO_LDOPTS += $(MOZ_XPRINT_LDFLAGS)
 endif
 
@@ -139,7 +142,8 @@ ifdef MOZ_ENABLE_XPRINT
 export:: $(addprefix $(srcdir)/../xprint/,$(XPU_LCSRCS)) $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
 	$(INSTALL) $^ .
 else
-export:: $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
-	$(INSTALL) $^ .
+# disabled until X11SHARED_LCPPSRCS becomes non-empty
+# export:: $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS))
+#	$(INSTALL) $^ .
 endif
 
