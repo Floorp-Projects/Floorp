@@ -373,7 +373,18 @@ NS_IMETHODIMP nsDeviceContextWin :: CheckFontExistence(const nsString& aFontName
   PRBool  isthere = PR_FALSE;
 
   char    fontName[LF_FACESIZE];
-  aFontName.ToCString(fontName, LF_FACESIZE);
+
+  const PRUnichar* unicodefontname = aFontName.GetUnicode();
+
+  int outlen = ::WideCharToMultiByte(CP_ACP, 0, aFontName.GetUnicode(), aFontName.Length(), 
+	                                 fontName, LF_FACESIZE, NULL, NULL);
+  if(outlen > 0)
+	  fontName[outlen] = '\0'; // null terminate
+
+  // somehow the WideCharToMultiByte failed, let's try the old code
+  if(0 == outlen) 
+	  aFontName.ToCString(fontName, LF_FACESIZE);
+
   ::EnumFontFamilies(hdc, fontName, (FONTENUMPROC)fontcallback, (LPARAM)&isthere);
 
   ::ReleaseDC(hwnd, hdc);
