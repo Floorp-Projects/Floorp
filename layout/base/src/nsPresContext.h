@@ -22,17 +22,25 @@
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
 #include "nsFont.h"
+#include "nsCRT.h"
 class nsIImageGroup;
 
 // Base class for concrete presentation context classes
 class nsPresContext : public nsIPresContext {
 public:
+  void* operator new(size_t sz) {
+    void* rv = new char[sz];
+    nsCRT::zero(rv, sz);
+    return rv;
+  }
+
   // nsISupports methods
   NS_DECL_ISUPPORTS
 
   // nsIPresContext methods
-  virtual nsresult Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs);
-  virtual void SetShell(nsIPresShell* aShell);
+  NS_IMETHOD Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs);
+  NS_IMETHOD Stop(void);
+  NS_IMETHOD SetShell(nsIPresShell* aShell);
   virtual nsIPresShell* GetShell();
   NS_IMETHOD GetPrefs(nsIPref*& aPrefs);
   NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode);
@@ -52,8 +60,8 @@ public:
   virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
   virtual const nsFont& GetDefaultFont(void);
   virtual const nsFont& GetDefaultFixedFont(void);
-  virtual PRInt32 GetFontScaler(void);
-  virtual void SetFontScaler(PRInt32 aScaler);
+  NS_IMETHOD GetFontScaler(PRInt32& aResult);
+  NS_IMETHOD SetFontScaler(PRInt32 aScaler);
   NS_IMETHOD GetDefaultColor(nscolor& aColor);
   NS_IMETHOD GetDefaultBackgroundColor(nscolor& aColor);
   NS_IMETHOD SetDefaultColor(const nscolor& aColor);
@@ -70,8 +78,8 @@ public:
   NS_IMETHOD GetContainer(nsISupports** aResult);
   NS_IMETHOD SetLinkHandler(nsILinkHandler* aHander);
   NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult);
-  virtual void GetVisibleArea(nsRect& aResult);
-  virtual void SetVisibleArea(const nsRect& r);
+  NS_IMETHOD GetVisibleArea(nsRect& aResult);
+  NS_IMETHOD SetVisibleArea(const nsRect& r);
   virtual float GetPixelsToTwips() const;
   virtual float GetTwipsToPixels() const;
   NS_IMETHOD GetScaledPixelsToTwips(float &aScale) const;
@@ -98,6 +106,7 @@ protected:
   nsIEventStateManager* mEventManager;
   nsCompatibility       mCompatibilityMode;
   nsIURL*               mBaseURL;
+  PRBool                mStopped;
 
 #ifdef DEBUG
   PRBool                mInitialized;

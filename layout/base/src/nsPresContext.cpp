@@ -55,8 +55,7 @@ PrefChangedCallback(const char* aPrefName, void* instance_data)
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 
 nsPresContext::nsPresContext()
-  : mVisibleArea(0, 0, 0, 0),
-    mDefaultFont("Times", NS_FONT_STYLE_NORMAL,
+  : mDefaultFont("Times", NS_FONT_STYLE_NORMAL,
                  NS_FONT_VARIANT_NORMAL,
                  NS_FONT_WEIGHT_NORMAL,
                  0,
@@ -68,18 +67,7 @@ nsPresContext::nsPresContext()
                       NSIntPointsToTwips(10))
 {
   NS_INIT_REFCNT();
-  mShell = nsnull;
-  mDeviceContext = nsnull;
-  mPrefs = nsnull;
-  mImageGroup = nsnull;
-  mLinkHandler = nsnull;
-  mContainer = nsnull;
-  mEventManager = nsnull;
-
-  mFontScaler = 0;  
-
   mCompatibilityMode = eCompatibility_NavQuirks;
-  mBaseURL = nsnull;
 
 #ifdef _WIN32
   // XXX This needs to be elsewhere, e.g., part of nsIDeviceContext
@@ -89,27 +77,13 @@ nsPresContext::nsPresContext()
   mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
   mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
 #endif
-
-#ifdef DEBUG
-  mInitialized = PR_FALSE;
-#endif
 }
 
 nsPresContext::~nsPresContext()
 {
   mShell = nsnull;
 
-  // XXX there is a race between an async notify and this code because
-  // the presentation shell code deletes the frame tree first and then
-  // deletes us. We need an "Deactivation" hook for this code too
-
-  // Release all the image loaders
-  PRInt32 n = mImageLoaders.Count();
-  for (PRInt32 i = 0; i < n; i++) {
-    nsIFrameImageLoader* loader;
-    loader = (nsIFrameImageLoader*) mImageLoaders.ElementAt(i);
-    NS_RELEASE(loader);
-  }
+  Stop();
 
   if (nsnull != mImageGroup) {
     // Interrupt any loading images. This also stops all looping
@@ -227,7 +201,7 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
   }
 }
 
-nsresult
+NS_IMETHODIMP
 nsPresContext::Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs)
 {
   NS_ASSERTION(!(mInitialized == PR_TRUE), "attempt to reinit pres context");
@@ -256,7 +230,7 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs)
 
 // Note: We don't hold a reference on the shell; it has a reference to
 // us
-void
+NS_IMETHODIMP
 nsPresContext::SetShell(nsIPresShell* aShell)
 {
   NS_IF_RELEASE(mBaseURL);
@@ -269,6 +243,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
       NS_RELEASE(doc);
     }
   }
+  return NS_OK;
 }
 
 nsIPresShell*
@@ -382,16 +357,18 @@ nsPresContext::GetDefaultFixedFont(void)
   return mDefaultFixedFont;
 }
 
-PRInt32 
-nsPresContext::GetFontScaler(void)
+NS_IMETHODIMP
+nsPresContext::GetFontScaler(PRInt32& aResult)
 {
-  return mFontScaler;
+  aResult = mFontScaler;
+  return NS_OK;
 }
 
-void 
+NS_IMETHODIMP 
 nsPresContext::SetFontScaler(PRInt32 aScaler)
 {
   mFontScaler = aScaler;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -422,16 +399,18 @@ nsPresContext::SetDefaultBackgroundColor(const nscolor& aColor)
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsPresContext::GetVisibleArea(nsRect& aResult)
 {
   aResult = mVisibleArea;
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsPresContext::SetVisibleArea(const nsRect& r)
 {
   mVisibleArea = r;
+  return NS_OK;
 }
 
 float
@@ -510,6 +489,10 @@ nsPresContext::StartLoadImage(const nsString& aURL,
                               PRBool aNeedSizeUpdate,
                               nsIFrameImageLoader*& aLoaderResult)
 {
+  if (mStopped) {
+    return NS_OK;
+  }
+
 #ifdef NOISY_IMAGES
   nsIDocument* doc = mShell->GetDocument();
   if (nsnull != doc) {
@@ -520,7 +503,7 @@ nsPresContext::StartLoadImage(const nsString& aURL,
     }
     NS_RELEASE(doc);
   }
-  printf("start load for %p (", aTargetFrame);
+  printf("%p: start load for %p (", this, aTargetFrame);
   fputs(aURL, stdout);
   printf(")\n");
 #endif
@@ -588,6 +571,21 @@ nsPresContext::StartLoadImage(const nsString& aURL,
 }
 
 NS_IMETHODIMP
+nsPresContext::Stop(void)
+{
+  PRInt32 n = mImageLoaders.Count();
+  for (PRInt32 i = 0; i < n; i++) {
+    nsIFrameImageLoader* loader;
+    loader = (nsIFrameImageLoader*) mImageLoaders.ElementAt(i);
+    loader->StopImageLoad();
+    NS_RELEASE(loader);
+  }
+  mImageLoaders.Clear();
+  mStopped = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPresContext::StopLoadImage(nsIFrame* aForFrame)
 {
   nsIFrameImageLoader* loader;
@@ -607,7 +605,7 @@ nsPresContext::StopLoadImage(nsIFrame* aForFrame)
         }
         NS_RELEASE(doc);
       }
-      printf("stop load for %p\n", aForFrame);
+      printf("%p: stop load for %p\n", this, aForFrame);
 #endif
       loader->StopImageLoad();
       NS_RELEASE(loader);
