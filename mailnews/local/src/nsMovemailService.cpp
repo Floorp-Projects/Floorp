@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if defined(DEBUG_adam) || defined(DEBUG_seth)
-#define MOVEMAIL_DEBUG
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
 #endif
 
 #include <unistd.h>    // for link(), used in spool-file locking
@@ -70,6 +70,17 @@
 #include "nsCOMPtr.h"
 #include "nsMsgFolderFlags.h"
 
+#include "prlog.h"
+#if defined(PR_LOGGING)
+//
+// export NSPR_LOG_MODULES=Movemail:5
+//
+static PRLogModuleInfo *gMovemailLog = nsnull;
+#define LOG(args) PR_LOG(gMovemailLog, PR_LOG_DEBUG, args)
+#else
+#define LOG(args)
+#endif
+
 #define PREF_MAIL_ROOT_MOVEMAIL "mail.root.movemail"            // old - for backward compatibility only
 #define PREF_MAIL_ROOT_MOVEMAIL_REL "mail.root.movemail-rel"
 
@@ -83,9 +94,11 @@ const char * gDefaultSpoolPaths[] = {
 
 nsMovemailService::nsMovemailService()
 {
-#ifdef MOVEMAIL_DEBUG
-    fprintf(stderr, "*** MURRR, new nsMovemailService\n");
+#if defined(PR_LOGGING)
+    if (!gMovemailLog)
+        gMovemailLog = PR_NewLogModule("Movemail");
 #endif
+    LOG(("nsMovemailService created: 0x%x\n", this));
     mStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_CONTRACTID);
 }
 
@@ -105,11 +118,7 @@ nsMovemailService::CheckForNewMail(nsIUrlListener * aUrlListener,
                                    nsIURI ** aURL)
 {
     nsresult rv = NS_OK;
-
-#ifdef MOVEMAIL_DEBUG
-    fprintf(stderr, "*** WOOWOOWOO check\n");
-#endif
-
+    LOG(("nsMovemailService::CheckForNewMail\n"));
     return rv;
 }
 
@@ -179,18 +188,10 @@ PRBool ObtainSpoolLock(const char *spoolnameStr,
     // ... perhaps not, MakeUnique implementation looks racey -- use mktemp()?
 
     // step 1: create SPOOLNAME.mozlock
-#ifdef MOVEMAIL_DEBUG
-    fprintf(stderr, "\n ...... maker(%s) ......\n",
-            mozlockstr.get());
-#endif
     rv = tmplocfile->Create(nsIFile::NORMAL_FILE_TYPE, 0666);
-    if ( (NS_FAILED(rv) &&
-          rv != NS_ERROR_FILE_ALREADY_EXISTS) ||
-         !tmplocfile) {
+    if ( NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS) {
         // can't create our .mozlock file... game over already
-#ifdef MOVEMAIL_DEBUG
-        fprintf(stderr, "\n cannot create blah.mozlock file! \n");
-#endif
+        LOG(("Failed to create file %s\n", mozlockstr.get()));
         return PR_FALSE;
     }
 
@@ -206,10 +207,7 @@ PRBool ObtainSpoolLock(const char *spoolnameStr,
             link(mozlockstr.get(),lockstr.get());
 
         retry_count++;
-
-#ifdef MOVEMAIL_DEBUG
-        fprintf(stderr, "[try#%d] ", retry_count);
-#endif
+        LOG(("Attempt %d of %d to create lock file", retry_count, seconds));
 
         if ((seconds > 0) &&
             (link_result == -1)) {
@@ -218,25 +216,15 @@ PRBool ObtainSpoolLock(const char *spoolnameStr,
             PR_Sleep(sleepTime);
         }
     } while ((link_result == -1) && (retry_count < seconds));
-#ifdef MOVEMAIL_DEBUG
-    fprintf(stderr, "<<link result: %d>>", link_result);
-#endif
+    LOG(("Link result: %d", link_result));
 
     // step 3: remove .mozlock file, in any case
     rv = tmplocfile->Remove(PR_FALSE /* non-recursive */);
-#ifdef MOVEMAIL_DEBUG
     if (NS_FAILED(rv)) {
         // Could not delete our .mozlock file... very unusual, but
         // not fatal.
-        fprintf(stderr,
-                "\nBizarre, could not delete our .mozlock file.  Oh well.\n");
+        LOG(("Unable to delete %s", mozlockstr.get()));
     }
-#endif
-
-#ifdef MOVEMAIL_DEBUG
-    fprintf(stderr, "::got to the end! %s\n",
-            (link_result == 0) ? "GOT LOCK" : "DID NOT GET LOCK");
-#endif
 
     // step 4: now we know whether we succeeded or failed
     if (link_result == 0)
@@ -250,10 +238,7 @@ PRBool ObtainSpoolLock(const char *spoolnameStr,
 // we're the ones who made the lock in the first place!)
 PRBool YieldSpoolLock(const char *spoolnameStr)
 {
-#ifdef MOVEMAIL_DEBUG
-    fprintf(stderr, "<<Attempting lockfile removal: %s.lock>>",
-            spoolnameStr);
-#endif
+    LOG(("YieldSpoolLock(%s)", spoolnameStr));
 
     nsCAutoString lockstr(spoolnameStr);
     lockstr.Append(".lock");
@@ -280,9 +265,7 @@ PRBool YieldSpoolLock(const char *spoolnameStr)
             return PR_FALSE;
     }
 
-#ifdef MOVEMAIL_DEBUG
-    fprintf(stderr, " LOCK YIELDING WAS SUCCESSFUL.\n");
-#endif
+    LOG(("YieldSpoolLock was successful."));
 
     // Success.
     return PR_TRUE;
@@ -296,6 +279,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                               nsIMovemailIncomingServer *movemailServer,
                               nsIURI ** aURL)
 {
+    LOG(("nsMovemailService::GetNewMail"));
     nsresult rv = NS_OK;
 
     nsCOMPtr<nsIMsgIncomingServer> in_server =
@@ -431,9 +415,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                     // then the file mysteriously ended) then abort
                     // parsing.
                     if (numlines == 0 && !*buffer && spoolfile.eof()) {
-#ifdef MOVEMAIL_DEBUG
-                        fprintf(stderr, "*** Utterly empty spool file\n");
-#endif
+                        LOG(("Empty spool file"));
                         break;   // end the parsing loop right here
                     }
 
@@ -497,12 +479,7 @@ freebuff_and_unlock:
 
     in_server->SetServerBusy(PR_FALSE);
 
-#ifdef MOVEMAIL_DEBUG
-    fprintf(stderr, "*** YEAHYEAHYEAH get, %s\n",
-            NS_FAILED(rv) ? "MISERABLE FAILURE" :
-            "UNPRECEDENTED SUCCESS");
-#endif
-
+    LOG(("GetNewMail returning rv=%d", rv));
     return rv;
 }
 
