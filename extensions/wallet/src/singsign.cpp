@@ -785,6 +785,15 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
             if (user_count > 1) {
                 SI_LoadSignonData(TRUE);
                 url = si_GetURL(URLName);
+                if (url == NULL) {
+                  /*
+                   * This will happen if user fails to unlock database
+                   * in SI_LoadSignonData above
+                   */
+                  XP_FREE(list);
+                  XP_FREE(users);
+                  return NULL;
+                }
             }
             user_ptr = url->signonUser_list;
 
