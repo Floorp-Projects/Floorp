@@ -1977,7 +1977,6 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
 
     // Also create and hold on to our UI data source.
     NS_NewChromeUIDataSource(mChromeDataSource, &mUIDataSource);
-    mRDFService->RegisterDataSource(mUIDataSource, PR_FALSE);
   }
   
   if (aUseProfile) {
