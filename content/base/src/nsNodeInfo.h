@@ -66,7 +66,7 @@ public:
   NS_IMETHOD_(PRBool) Equals(const nsAString& aName, const nsAString& aPrefix,
                              PRInt32 aNamespaceID) const;
   NS_IMETHOD_(PRBool) NamespaceEquals(const nsAString& aNamespaceURI) const;
-  NS_IMETHOD_(PRBool) QualifiedNameEquals(const nsAString& aQualifiedName) const;
+  NS_IMETHOD_(PRBool) QualifiedNameEquals(const nsACString& aQualifiedName) const;
 
   NS_IMETHOD NameChanged(nsIAtom *aName, nsINodeInfo*& aResult);
   NS_IMETHOD PrefixChanged(nsIAtom *aPrefix, nsINodeInfo*& aResult);

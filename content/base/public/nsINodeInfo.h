@@ -269,7 +269,8 @@ public:
                              const nsAString& aPrefix,
                              PRInt32 aNamespaceID) const = 0;
   NS_IMETHOD_(PRBool) NamespaceEquals(const nsAString& aNamespaceURI) const = 0;
-  NS_IMETHOD_(PRBool) QualifiedNameEquals(const nsAString& aQualifiedName) const = 0;
+  // switch to UTF8 - this allows faster access for consumers
+  NS_IMETHOD_(PRBool) QualifiedNameEquals(const nsACString& aQualifiedName) const = 0;
 
   /*
    * This is a convinience method that creates a new nsINodeInfo that differs

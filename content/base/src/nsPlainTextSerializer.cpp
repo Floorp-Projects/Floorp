@@ -1807,8 +1807,8 @@ nsPlainTextSerializer::GetAttributeValue(const nsIParserNode* aNode,
     }
   }
   else if (aNode) {
-    const PRUnichar *name; 
-    aName->GetUnicode(&name);
+    nsAutoString name; 
+    aName->ToString(name);
 
     PRInt32 count = aNode->GetAttributeCount();
     for (PRInt32 i=0;i<count;i++) {

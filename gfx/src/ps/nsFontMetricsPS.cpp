@@ -866,13 +866,13 @@ nsFontPSFreeType::FindFont(PRUnichar aChar, const nsFont& aFont,
       aFontMetrics->GetLangGroup(getter_AddRefs(lang));
       if (!lang)
         lang = NS_NewAtom("x-western");
-      const PRUnichar *langStr;
-      lang->GetUnicode(&langStr);
+      const char *langStr;
+      lang->GetUTF8String(&langStr);
       if (langStr)
-        fpi.lang.AppendWithConversion(langStr);
-      gUsersLocale->GetUnicode(&langStr);
+        fpi.lang.Append(langStr);
+      gUsersLocale->GetUTF8String(&langStr);
       if (langStr)
-        locale.AppendWithConversion(langStr);
+        locale.Append(langStr);
       if (NS_IS_BOLD(fpi.nsfont->weight))
         fpi.weight = nsIFontCatalogService::kFCWeightBold;
       else
