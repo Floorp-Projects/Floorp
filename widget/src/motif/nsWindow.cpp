@@ -286,8 +286,6 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent,
     mainWindow = ::XtVaCreateManagedWidget("mainWindow",
 					   xmMainWindowWidgetClass,
 					   parentWidget, 
-  					   XmNwidth, aRect.width,
-  					   XmNheight, aRect.height,
   					   nsnull);
 
     frameParent = mainWindow;
