@@ -166,6 +166,9 @@ nsSupportsArray::LastIndexOf(const nsISupports* aPossibleElement)
 NS_IMETHODIMP_(PRBool)
 nsSupportsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex)
 {
+  if (!aElement) {
+    return PR_FALSE;
+  }
   if (aIndex <= mCount) {
     if (mArraySize < (mCount + 1)) {  // need to grow the array
       mArraySize += kGrowArrayBy;
