@@ -23,12 +23,12 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
                 Dan Rosen <dr@netscape.com>
 -->
 
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://global-platform/locale/printdialog.dtd">
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="onLoad();"
-  onaccept="return onAccept();"
+  ondialogaccept="return onAccept();"
   title="&printDialog.title;"
   persist="screenX screenY"
   screenX="24" screenY="24">

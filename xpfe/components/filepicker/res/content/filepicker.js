@@ -44,7 +44,7 @@ function filepickerLoad() {
   gFilePickerBundle = document.getElementById("bundle_filepicker");
 
   textInput = document.getElementById("textInput");
-  okButton = document.getElementById("ok");
+  okButton = document.documentElement.getButton("accept");
   outlinerView = new nsFileView();
   outlinerView.selectionCallback = onSelect;
 
@@ -104,7 +104,6 @@ function filepickerLoad() {
   }
 
   // setup the dialogOverlay.xul button handlers
-  doSetOKCancel(selectOnOK, onCancel);
   retvals.buttonStatus = nsIFilePicker.returnCancel;
 
   var outliner = document.getElementById("directoryOutliner");

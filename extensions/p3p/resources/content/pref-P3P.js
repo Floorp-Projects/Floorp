@@ -407,7 +407,7 @@ function doCustomize() {
     // Rather than try to figure out which radio button is currently checked in
     // order to uncheck it, we just get all the radio buttons in the group and uncheck them all.
     var level = document.getElementById( "P3PLevel" );
-    var groupElements = document.getElementsByAttribute( "group", "P3PLevel" );
+    var groupElements = level.getElementsByTagName("radio");
     for( var i = 0; i < groupElements.length; i++ ) {
       if( groupElements[i] != level && groupElements[i].checked ) {
         groupElements[i].checked = false;

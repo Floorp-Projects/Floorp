@@ -104,8 +104,6 @@ function selectCancelButton()
 
 function selectOnLoad()
 {
-    doSetOKCancel(selectOkButton,selectCancelButton);
-
     gMsgWindow = Components.classes[msgWindowContractID].createInstance(Components.interfaces.nsIMsgWindow);
     gMsgWindow.SetDOMWindow(window);
 

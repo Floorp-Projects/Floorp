@@ -53,7 +53,7 @@ function initDialog()
   dialog.caseSensitive   = document.getElementById("dialog.caseSensitive");
   dialog.wrap            = document.getElementById("dialog.wrap");
   dialog.searchBackwards = document.getElementById("dialog.searchBackwards");
-  dialog.find            = document.getElementById("ok");
+  dialog.find            = document.documentElement.getButton("accept");
   dialog.cancel          = document.getElementById("cancel");
 
   dialog.fileLabel       = document.getElementById("fileLabel");
@@ -99,7 +99,7 @@ function initDialog()
   dialog.fileInput       = document.getElementById("fileInput");
   dialog.chooseButton    = document.getElementById("chooseFile");
 
-  dialog.print           = document.getElementById("ok");
+  dialog.print           = document.documentElement.getButton("accept");
 
   dialog.enabled         = false;
 }

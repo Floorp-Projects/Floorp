@@ -41,6 +41,7 @@
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="askViewZoom"
   title="&askViewZoom.title;"
+  ondialogaccept="return onAccept();"
   onload="onLoad();">
 
   <script type="application/x-javascript" src="chrome://communicator/content/askViewZoom.js"/>

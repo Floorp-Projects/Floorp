@@ -27,7 +27,6 @@ Contributors:
 <?xml-stylesheet href="chrome://messenger/skin/folderPane.css" type="text/css"?>
 
 <?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/msgSynchronize.dtd" >
 <dialog	xmlns:nc="http://home.netscape.com/NC-rdf#"
@@ -37,7 +36,9 @@ Contributors:
         title="&MsgSelect.label;"
         width="450" height="400"
         persist="width height"
-        onload="selectOnLoad();">
+        onload="selectOnLoad();"
+        ondialogaccept="return selectOkButton();"
+        ondialogcancel="return selectCancelButton();">
 		
 <script src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>

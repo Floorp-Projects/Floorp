@@ -27,7 +27,7 @@
 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPageProperties.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://editor/locale/EditorPageProperties.dtd">
 
 <dialog title="&windowTitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -23,7 +23,7 @@
 
 -->
 
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 
 <!DOCTYPE window [
   <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -36,6 +36,8 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
         onload="window.dialog = new nsHelperAppLauncherDialog()"
+        ondialogaccept="return window.dialog.onOK();"
+        ondialogcancel="return window.dialog.onCancel();"
         style="width: 40em;"
         persist="screenX screenY"
         screenX="24" screenY="24">
@@ -83,7 +85,5 @@
             </hbox>
         </vbox>
     </hbox>
-
-    <separator class="groove"/>
            
 </dialog>

@@ -75,7 +75,7 @@ function OnLoad()
         // this is not i18n friendly, fix this
         var infotext = downloadHeadersInfoText1 + " " + args.articleCount + " " + downloadHeadersInfoText2;
         setText('info',infotext);
-        var okbutton = document.getElementById("ok");
+        var okbutton = document.documentElement.getButton("accept");
         okbutton.setAttribute("label", okButtonText);
         setText("newsgroupLabel", args.groupName);
     }

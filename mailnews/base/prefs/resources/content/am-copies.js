@@ -188,7 +188,7 @@ function noteSelectionChange(radioItemId)
 {
     var checkedElem = document.getElementById(radioItemId);
     var modeValue  = checkedElem.getAttribute("value");
-    var radioGroup = checkedElem.getAttribute("group");
+    var radioGroup = checkedElem.radioGroup.getAttribute("id");
     switch (radioGroup)
     {
         case "doFcc" :
