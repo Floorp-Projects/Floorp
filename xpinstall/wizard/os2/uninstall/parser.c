@@ -42,57 +42,22 @@ BOOL DeleteOrDelayUntilReboot(PSZ szFile)
   FileDelete(szFile);
   if(FileExists(szFile))
   {
-    bDelayDelete = TRUE;
-#ifdef OLDCODE
-    if(GetWindowsDirectory(szWinDir, sizeof(szWinDir)) == 0)
-      return(FALSE);
-#endif
-
-    strcpy(szWininitFile, szWinDir);
-    AppendBackSlash(szWininitFile, sizeof(szWininitFile));
-    strcat(szWininitFile, "wininit.ini");
-
-    if(FileExists(szWininitFile) == FALSE)
-      bWriteRenameSection = TRUE;
-    else
-      bWriteRenameSection = FALSE;
-
-    if((ofp = fopen(szWininitFile, "a+")) == NULL)
-      return(FALSE);
-
-    if(bWriteRenameSection == TRUE)
-      fprintf(ofp, "[RENAME]\n");
-
-    fprintf(ofp, "NUL=%s\n", szFile);
-    fclose(ofp);
+    DosReplaceModule(szFile, NULL, NULL);
+    FileDelete(szFile);
   }
-  else
-    bDelayDelete = FALSE;
 
-  return(bDelayDelete);
+  return TRUE;
 }
 
 void RemoveUninstaller(PSZ szUninstallFilename)
 {
-#ifdef OLDCODE
-  char      szBuf[MAX_BUF];
-  char      szWinDir[MAX_BUF];
   char      szUninstallFile[MAX_BUF];
 
-  if(SearchForUninstallKeys(szUninstallFilename))
-    /* Found the uninstall file name in the windows registry uninstall
-     * key sections.  We should not try to delete ourselves. */
-    return;
-
-  if(GetWindowsDirectory(szWinDir, sizeof(szWinDir)) == 0)
-    return;
-
-  strcpy(szBuf, szWinDir);
-  AppendBackSlash(szBuf, sizeof(szBuf));
-  strcat(szBuf, szUninstallFilename);
-  GetShortPathName(szBuf, szUninstallFile, sizeof(szUninstallFile));
+  strcpy(szUninstallFile, ugUninstall.szLogPath);
+  strcat(szUninstallFile, "\\");
+  strcat(szUninstallFile, szUninstallFilename);
   DeleteOrDelayUntilReboot(szUninstallFile);
-#endif
+  DirectoryRemove(ugUninstall.szLogPath, FALSE);
 }
 
 sil *InitSilNodes(char *szInFile)
