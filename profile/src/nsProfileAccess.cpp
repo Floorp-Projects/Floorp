@@ -35,6 +35,7 @@
 #include "nsFileStream.h"
 #include "nsEscape.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsILocalFile.h"
 
 #define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
@@ -1248,13 +1249,27 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         // For example something like %20 would probably be interpreted as a space
         // There is some problem I guess in sending a space as itself
 
+#if defined(XP_MAC)
+        // 4.x profiles coming from japanese machine are already in unicode.
+        // So, there is no need to decode into unicode further.
+        
+        // Unescape profile name.
+        nsCAutoString temp; 
+        temp = (const char*) NS_ConvertUCS2toUTF8(profile);
+        nsCAutoString profileName(nsUnescape( NS_CONST_CAST(char*, temp.GetBuffer())));
+        nsAutoString convertedProfName((const PRUnichar*) NS_ConvertUTF8toUCS2(profileName));
+
+        // Unescape profile location
+        nsCAutoString tempLoc; 
+        tempLoc = (const char*) NS_ConvertUCS2toUTF8(profLoc);
+        nsCAutoString profileLocation(nsUnescape( NS_CONST_CAST(char*, tempLoc.GetBuffer())));
+        nsAutoString convertedProfLoc((const PRUnichar*) NS_ConvertUTF8toUCS2(profileLocation));
+#else
         nsCAutoString temp; temp.AssignWithConversion(profile);
 
         nsCAutoString profileName(nsUnescape( NS_CONST_CAST(char*, temp.GetBuffer())));
         nsAutoString convertedProfName;
         ConvertStringToUnicode(charSet, profileName.GetBuffer(), convertedProfName);
-
-        profileItem->profileName  = convertedProfName;
 
         // Unescape profile location and convert it to the right format
         nsCAutoString tempLoc; tempLoc.AssignWithConversion(profLoc);
@@ -1262,7 +1277,9 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         nsCAutoString profileLocation(nsUnescape( NS_CONST_CAST(char*, tempLoc.GetBuffer())));
         nsAutoString convertedProfLoc;
         ConvertStringToUnicode(charSet, profileLocation.GetBuffer(), convertedProfLoc);
+#endif
 
+        profileItem->profileName  = convertedProfName;
         profileItem->profileLocation = convertedProfLoc;
 
         profileItem->isMigrated.AssignWithConversion(REGISTRY_NO_STRING);
@@ -1367,7 +1384,7 @@ nsProfileAccess::UpdateProfileArray()
     for (PRInt32 idx = 0; idx < m4xCount; idx++)
     {
         ProfileStruct* profileItem = (ProfileStruct *) (m4xProfiles->ElementAt(idx));		
-        nsFileSpec profileDir(profileItem->profileLocation);
+
 
         PRBool exists;
         exists = ProfileExists(profileItem->profileName.GetUnicode());
@@ -1379,16 +1396,17 @@ nsProfileAccess::UpdateProfileArray()
             continue;
         }
 
-        nsXPIDLCString profileDirString;	
-        nsCOMPtr<nsIFileSpec>spec;
-        rv = NS_NewFileSpecWithSpec(profileDir, getter_AddRefs(spec));
+        nsCOMPtr<nsILocalFile> locProfileDir (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+        rv = locProfileDir->InitWithUnicodePath((profileItem->profileLocation).GetUnicode());
         if (NS_FAILED(rv)) return rv;
-
-        rv = spec->GetPersistentDescriptorString(getter_Copies(profileDirString));
+        
+        nsXPIDLString profileDirString;        
+        rv = locProfileDir->GetUnicodePath(getter_Copies(profileDirString));
+        if (NS_FAILED(rv)) return rv;
 
         if (NS_SUCCEEDED(rv) && profileDirString)
         {
-            profileItem->profileLocation.AssignWithConversion(profileDirString);
+            profileItem->profileLocation = profileDirString;
             SetValue(profileItem);
         }
     }
