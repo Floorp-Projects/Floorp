@@ -25,15 +25,6 @@
 #include <windows.h>
 #endif
 
-#ifdef XP_MAC
-#define LOCALE_DLL_NAME "NSLOCALE_DLL"
-#elif defined(XP_PC)
-#define LOCALE_DLL_NAME "NSLOCALE.DLL"
-#else
-#define LOCALE_DLL_NAME "libnslocale.so"
-#endif
-
-
 NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
 NS_DEFINE_CID(kLocaleCID, NS_LOCALE_CID);
@@ -44,6 +35,10 @@ NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 #ifdef XP_PC
 NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
 NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
+
+#define USER_DEFINED_PRIMARYLANG	0x0200
+#define USER_DEFINED_SUBLANGUAGE	0x20
+
 #endif
 
 
@@ -332,7 +327,8 @@ win32locale_test(void)
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
-	NS_ASSERTION(loc_id!=0,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
 
 	delete locale;
 
@@ -344,7 +340,8 @@ win32locale_test(void)
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
-	NS_ASSERTION(loc_id!=0,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(USER_DEFINED_PRIMARYLANG,USER_DEFINED_SUBLANGUAGE),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
 
 	delete locale;
 
@@ -353,19 +350,211 @@ win32locale_test(void)
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
-	NS_ASSERTION(loc_id!=0,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_DEFAULT),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
 
 	delete locale;
 	win32Locale->Release();
 }
-	
+
+void
+win32locale_conversion_test(void)
+{
+	nsresult			result;
+	nsIWin32Locale*		win32Locale;
+	nsString*			locale;
+	LCID				loc_id;
+
+	result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
+									NULL,
+									kIWin32LocaleIID,
+									(void**)&win32Locale);
+	NS_ASSERTION(win32Locale!=NULL,"nsLocaleTest: factory_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	//
+	// check english variants
+	//
+	locale = new nsString("en");	// generic english
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_DEFAULT),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	locale = new nsString("en-US");	// US english
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	locale = new nsString("en-GB");	// UK english
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_UK),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	locale = new nsString("en-CA");	// Canadian english
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_CAN),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	//
+	// japanese
+	//
+	locale = new nsString("ja");
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_JAPANESE,SUBLANG_DEFAULT),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	locale = new nsString("ja-JP");
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_JAPANESE,SUBLANG_DEFAULT),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	//
+	// chinese Locales
+	//
+	locale = new nsString("zh");
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_CHINESE,SUBLANG_DEFAULT),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	locale = new nsString("zh-CN");
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_CHINESE,SUBLANG_CHINESE_SIMPLIFIED),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	locale = new nsString("zh-TW");
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_CHINESE,SUBLANG_CHINESE_TRADITIONAL),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	//
+	// german and variants
+	//
+	locale = new nsString("de");
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_GERMAN,SUBLANG_DEFAULT),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	locale = new nsString("de-DE");
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_GERMAN,SUBLANG_GERMAN),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	locale = new nsString("de-AT");
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_GERMAN,SUBLANG_GERMAN_AUSTRIAN),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	//
+	// french and it's variants
+	//
+	locale = new nsString("fr");
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_FRENCH,SUBLANG_DEFAULT),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	locale = new nsString("fr-FR");
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_FRENCH,SUBLANG_FRENCH),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	locale = new nsString("fr-CA");
+	loc_id = 0;
+
+	result = win32Locale->GetPlatformLocale(locale,&loc_id);
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetPlatformLocale failed.");
+	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_FRENCH,SUBLANG_FRENCH_CANADIAN),SORT_DEFAULT),
+		"nsLocaleTest: GetPlatformLocale failed.");
+	delete locale;
+
+	//
+	// delete the XPCOM inteface
+	//
+	win32Locale->Release();
+}
+
+void
+win32locale_reverse_conversion_test(void)
+{
+	nsresult			result;
+	nsIWin32Locale*		win32Locale;
+	nsString*			locale, *xp_locale;
+	LCID				loc_id;
+
+	result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
+									NULL,
+									kIWin32LocaleIID,
+									(void**)&win32Locale);
+	NS_ASSERTION(win32Locale!=NULL,"nsLocaleTest: factory_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+	//
+	// english and variants
+	//
+	win32Locale->Release();
+}
+
 	
 #endif XP_PC
 
 int
 main(int argc, char** argv)
 {
-    nsresult res; 
 
 	//
 	// what are we doing?
@@ -374,31 +563,6 @@ main(int argc, char** argv)
 	printf("---------------------\n");
 	printf("This test has completed successfully if no error messages are printed.\n");
 
-	//
-	// register the Locale Factory
-	//
-	res = nsComponentManager::RegisterComponent(kLocaleFactoryCID,
-                                 NULL,
-                                 NULL,
-                                 LOCALE_DLL_NAME,
-                                 PR_FALSE,
-                                 PR_FALSE);
-	NS_ASSERTION(res==NS_OK,"nsLocaleTest: RegisterComponent failed.");
-
-#ifdef XP_PC
-
-	//
-	// register the Windows specific factory
-	//
-	res = nsComponentManager::RegisterComponent(kWin32LocaleFactoryCID,
-								NULL,
-								NULL,
-								LOCALE_DLL_NAME,
-								PR_FALSE,
-								PR_FALSE);
-	NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register nsIWin32LocaleFactory failed.");
-
-#endif
 	//
 	// run the nsILocaleFactory tests (nsILocale gets tested in the prcoess)
 	//
@@ -413,6 +577,8 @@ main(int argc, char** argv)
 	//
 	win32factory_create_interface();
 	win32locale_test();
+	win32locale_conversion_test();
+	win32locale_reverse_conversion_test();
 
 #endif
 
