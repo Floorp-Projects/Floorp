@@ -58,6 +58,13 @@
 
 #include "nsIPref.h"
 
+static void
+ConvertKeyEventToContextMenuEvent(const nsKeyEvent* inKeyEvent,
+                                  nsMouseEvent* outCMEvent);
+
+static inline PRBool
+IsContextMenuKey(const nsKeyEvent& inKeyEvent);
+
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
@@ -89,6 +96,76 @@ nsWidget *nsWidget::sFocusWindow = 0;
 // this is the last time that an event happened.  we keep this
 // around so that we can synth drag events properly
 guint32 nsWidget::sLastEventTime = 0;
+
+// we should convert the context key to context menu event in the OnKey member
+// function, and dispatch the NS_CONTEXTMENU_KEY instead of a normal key event.
+PRBool nsWidget::OnKey(nsKeyEvent &aEvent)
+{
+
+  PRBool    ret = PR_FALSE;
+  PRBool    releaseWidget = PR_FALSE;
+  nsWidget *widget = nsnull;
+
+  // rewrite the key event to the window with 'de focus
+  if (sFocusWindow) {
+    widget = sFocusWindow;
+    NS_ADDREF(widget);
+    aEvent.widget = sFocusWindow;
+    releaseWidget = PR_TRUE;
+  }
+  if (mEventCallback) {
+    // before we dispatch a key, check if it's the context menu key.
+    // If so, send a context menu key event instead.
+    if (IsContextMenuKey(aEvent)) {
+      nsMouseEvent contextMenuEvent;
+      ConvertKeyEventToContextMenuEvent(&aEvent, &contextMenuEvent);
+      ret = DispatchWindowEvent(&contextMenuEvent);
+    }
+    else
+      ret = DispatchWindowEvent(&aEvent);
+  }
+
+  if (releaseWidget)
+    NS_RELEASE(widget);
+
+  return ret;
+}
+
+//
+// ConvertKeyEventToContextMenuEvent
+//
+// Take a key event and all of its attributes at convert it into
+// a context menu event. We want just about  everything (focused
+// widget, etc) but a few fields should be tweaked. See also the
+// implemention for the Mac
+
+static void
+ConvertKeyEventToContextMenuEvent(const nsKeyEvent* inKeyEvent,
+                                  nsMouseEvent* outCMEvent)
+{
+  *(nsInputEvent *)outCMEvent = *(nsInputEvent *)inKeyEvent;
+  outCMEvent->eventStructType = NS_MOUSE_EVENT;
+  outCMEvent->message = NS_CONTEXTMENU_KEY;
+  outCMEvent->isShift = outCMEvent->isControl = PR_FALSE;
+  outCMEvent->isAlt = outCMEvent->isMeta = PR_FALSE;
+  outCMEvent->clickCount = 0;
+  outCMEvent->acceptActivation = PR_FALSE;
+}
+ 
+
+// IsContextMenuKey
+//
+// Check if the event should be a context menu event instead. Currently,
+// that is a Shift-F10 in linux.
+//
+static inline PRBool
+IsContextMenuKey(const nsKeyEvent& inKeyEvent)
+{
+   enum { kContextMenuKey = NS_VK_F10 };
+
+   return (inKeyEvent.keyCode == kContextMenuKey && inKeyEvent.isShift &&
+            !inKeyEvent.isControl && !inKeyEvent.isMeta && !inKeyEvent.isAlt);
+}
 
 PRBool nsWidget::OnInput(nsInputEvent &aEvent)
 {
