@@ -43,6 +43,8 @@
 #include "nsIDOMSelectionListener.h"
 #include "nsIContentIterator.h"
 
+#include "nsIDOMText.h"
+
 //included for desired x position;
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -226,7 +228,7 @@ public:
   NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection **aDomSelection);
   NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
   NS_IMETHOD RepaintSelection(nsIPresContext* aPresContext, SelectionType aType);
-  NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame);
+  NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
   NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
@@ -905,6 +907,7 @@ nsRangeList::ConstrainFrameAndPointToAnchorSubtree(nsIPresContext *aPresContext,
   nsresult result;
   nsCOMPtr<nsIDOMNode> anchorNode;
   PRInt32 anchorOffset = 0;
+  PRInt32 anchorFrameOffset = 0;
 
   if (! mDomSelections[SELECTION_NORMAL])
     return NS_ERROR_NULL_POINTER;
@@ -928,7 +931,7 @@ nsRangeList::ConstrainFrameAndPointToAnchorSubtree(nsIPresContext *aPresContext,
   if (!anchorContent)
     return NS_ERROR_FAILURE;
   
-  result = GetFrameForNodeOffset(anchorContent, anchorOffset, &anchorFrame);
+  result = GetFrameForNodeOffset(anchorContent, anchorOffset, &anchorFrame, &anchorFrameOffset);
 
   //
   // Now find the root of the subtree containing the anchor's content.
@@ -1551,55 +1554,128 @@ nsRangeList::RepaintSelection(nsIPresContext* aPresContext, SelectionType aType)
 }
  
 NS_IMETHODIMP
-nsRangeList::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame)
+nsRangeList::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)
 {
-  if (!aNode || !aReturnFrame)
+  if (!aNode || !aReturnFrame || !aReturnOffset)
     return NS_ERROR_NULL_POINTER;
+
+  if (aOffset < 0)
+    return NS_ERROR_FAILURE;
+
+  *aReturnOffset = aOffset;
+
   nsresult result;
   PRBool canContainChildren = PR_FALSE;
+
   result = aNode->CanContainChildren(canContainChildren);
+
+  if (NS_FAILED(result))
+    return result;
+
   if (canContainChildren)
   {
-    if (aOffset >= 0)
-    {
-      if (mHint == HINTLEFT && aOffset > 0)//we should back up a little
-        result = aNode->ChildAt(aOffset-1, aNode);
-      else {
-        PRInt32 childCount = 0;
-        PRInt32 offset = aOffset;
+    PRInt32 childIndex  = 0;
+    PRInt32 numChildren = 0;
 
-        result = aNode->ChildCount(childCount);
+    if (mHint == HINTLEFT)
+    {
+      if (aOffset > 0)
+        childIndex = aOffset - 1;
+      else
+        childIndex = aOffset;
+    }
+    else // HINTRIGHT
+    {
+      result = aNode->ChildCount(numChildren);
+
+      if (NS_FAILED(result))
+        return result;
+
+      if (aOffset >= numChildren)
+      {
+        if (numChildren > 0)
+          childIndex = numChildren - 1;
+        else
+          childIndex = 0;
+      }
+      else
+        childIndex = aOffset;
+    }
+
+    result = aNode->ChildAt(childIndex, aNode);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (!aNode)
+      return NS_ERROR_FAILURE;
+
+#ifdef DONT_DO_THIS_YET
+    // XXX: We can't use this code yet because the hinting
+    //      can cause us to attatch to the wrong line frame.
+
+    // Now that we have the child node, check if it too
+    // can contain children. If so, call this method again!
+
+    result = aNode->CanContainChildren(canContainChildren);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (canContainChildren)
+    {
+      PRInt32 newOffset = 0;
+
+      if (aOffset > childIndex)
+      {
+        result = aNode->ChildCount(numChildren);
 
         if (NS_FAILED(result))
           return result;
 
-        if (childCount <= 0)
-          return NS_ERROR_FAILURE;
-
-        if (aOffset >= childCount)
-          offset = childCount - 1;
-
-        result = aNode->ChildAt(offset, aNode);
+        newOffset = numChildren;
       }
-      if (NS_FAILED(result))
-        return result;
-      if (!aNode) //out of bounds?
-        return NS_ERROR_FAILURE;
+
+      return GetFrameForNodeOffset(aNode, newOffset, aReturnFrame,aReturnOffset);
+    }
+    else
+#endif // DONT_DO_THIS_YET
+    {
+      // Check to see if aNode is a text node. If it is, translate
+      // aOffset into an offset into the text node.
+
+      nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(aNode);
+
+      if (textNode)
+      {
+        if (aOffset > childIndex)
+        {
+          PRUint32 textLength = 0;
+
+          result = textNode->GetLength(&textLength);
+
+          if (NS_FAILED(result))
+            return NS_ERROR_FAILURE;
+
+          *aReturnOffset = (PRInt32)textLength;
+        }
+        else
+          *aReturnOffset = 0;
+      }
     }
   }
   
-	result = mTracker->GetPrimaryFrameFor(aNode, aReturnFrame);
-	if (NS_FAILED(result))
-		return result;
+  result = mTracker->GetPrimaryFrameFor(aNode, aReturnFrame);
+  if (NS_FAILED(result))
+    return result;
 	
-	if (!*aReturnFrame)
-		return NS_ERROR_UNEXPECTED;
+  if (!*aReturnFrame)
+    return NS_ERROR_UNEXPECTED;
 		
-	// find the child frame containing the offset we want
-	result = (*aReturnFrame)->GetChildFrameContainingOffset(aOffset, mHint, &aOffset, aReturnFrame);
-	return result;
+  // find the child frame containing the offset we want
+  result = (*aReturnFrame)->GetChildFrameContainingOffset(*aReturnOffset, mHint, &aOffset, aReturnFrame);
+  return result;
 }
-
 
 NS_IMETHODIMP 
 nsRangeList::CharacterMove(PRBool aForward, PRBool aExtend)
@@ -2210,10 +2286,11 @@ nsDOMSelection::GetPrimaryFrameForAnchorNode(nsIFrame **aReturnFrame)
   if (!aReturnFrame)
     return NS_ERROR_NULL_POINTER;
   
+  PRInt32 frameOffset = 0;
   *aReturnFrame = 0;
   nsCOMPtr<nsIContent> content = do_QueryInterface(FetchAnchorNode());
   if (content)
-    return mRangeList->GetFrameForNodeOffset(content, FetchAnchorOffset(),aReturnFrame);
+    return mRangeList->GetFrameForNodeOffset(content, FetchAnchorOffset(),aReturnFrame, &frameOffset);
   return NS_ERROR_FAILURE;
 }
 
@@ -2223,11 +2300,12 @@ nsDOMSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
   if (!aReturnFrame)
     return NS_ERROR_NULL_POINTER;
   
+  PRInt32 frameOffset = 0;
   *aReturnFrame = 0;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(FetchFocusNode());
   if (content)
-    return mRangeList->GetFrameForNodeOffset(content, FetchFocusOffset(),aReturnFrame);
+    return mRangeList->GetFrameForNodeOffset(content, FetchFocusOffset(),aReturnFrame, &frameOffset);
   return NS_ERROR_FAILURE;
 }
 
@@ -4019,8 +4097,10 @@ nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
     return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+  PRInt32 frameOffset = 0;
+
   if (content)
-    result = mRangeList->GetFrameForNodeOffset(content, nodeOffset, &frame);
+    result = mRangeList->GetFrameForNodeOffset(content, nodeOffset, &frame, &frameOffset);
   else
     result = NS_ERROR_FAILURE;
   if(NS_FAILED(result))
@@ -4039,7 +4119,7 @@ nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
   if (nodeType == nsIDOMNode::TEXT_NODE)
   {
     nsIFrame *childFrame = 0;
-    PRInt32 frameOffset  = 0;
+    frameOffset  = 0;
 
     result = frame->GetChildFrameContainingOffset(nodeOffset, mRangeList->mHint, &frameOffset, &childFrame);
 

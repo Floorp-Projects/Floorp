@@ -221,9 +221,10 @@ public:
    *  the offset into that frame. 
    * @param aNode input parameter for the node to look at
    * @param aOffset offset into above node.
-   * @param aResultFrame will contain the return frame. MUST NOT BE NULL or will return error
+   * @param aReturnFrame will contain the return frame. MUST NOT BE NULL or will return error
+   * @param aReturnOffset will contain offset into frame.
    */
-  NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame)=0;
+  NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)=0;
 
   /** CharacterMove will generally be called from the nsiselectioncontroller implementations.
    *  the effect being the selection will move one character left or right.
