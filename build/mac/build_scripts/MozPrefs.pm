@@ -71,16 +71,23 @@ sub WriteDefaultPrefsFile($)
 % You can use this file to customize the Mozilla build system.
 % The following kinds of lines are allowable:
 %   Comment lines, which start with a '%' in the first column
-%   Lines which modify the default build settings. Examples are:
+%   Lines which modify the default build settings. For the list of flags,
+%   see MozBuildFlags.pm. Examples are:
 %
-%    pull        runtime         1       % just pull runtime
-%    options     mng             1       % turn mng on
-%    build       jars            0       % don't build jar files
+%    pull        runtime         1                    % just pull runtime
+%    options     mng             1                    % turn mng on
+%    build       jars            0                    % don't build jar files
 %   
 %   Line containing the special 'buildfrom' flag, which specifies
 %   where to start the build. Example:
 %   
 %    buildfrom   nglayout                % where to start the build
+%
+%   Lines which specify the location of the files used to store paths
+%   to the CodeWarrior IDE, and the MacCVS Pro session file. Examples:
+%
+%    filepath   idepath         ::codewarrior.txt
+%    filepath   sessionpath     :sessionpath.txt
 %
 %   Lines which modify the build settings like %main::DEBUG.
 %   Any lines which do not match either of the above are assumed
@@ -93,6 +100,8 @@ EOS
 
   $file_contents =~ s/%/#/g;
    
+  local(*PREFS_FILE);
+
   open(PREFS_FILE, "> $file_path") || die "Could not write default prefs file\n";
   print PREFS_FILE ($file_contents);
   close(PREFS_FILE);
@@ -111,7 +120,7 @@ sub HandlePrefSet($$$$)
   my($flags, $name, $value, $desc) = @_;
 
   if (SetArrayValue($flags, $name, $value)) {
-    print "Prefs set $desc flag $name to $value\n";
+    print "Prefs set $desc flag '$name' to '$value'\n";
   } else {
     die "$desc setting '$name' is not a valid option\n";
   }
@@ -153,9 +162,11 @@ sub HandleBuildFromPref($$)
 #
 #-------------------------------------------------------------------------------
 
-sub ReadPrefsFile($$$$)
+sub ReadPrefsFile($$$$$)
 {
-  my($file_path, $pull_flags, $build_flags, $options_flags) = @_;
+  my($file_path, $pull_flags, $build_flags, $options_flags, $filepath_flags) = @_;
+  
+  local(*PREFS_FILE);
   
   if (open(PREFS_FILE, "< $file_path"))
   {
@@ -169,7 +180,7 @@ sub ReadPrefsFile($$$$)
         next;
       }
       
-      if ($line =~ /^\s*(\w+)\s+(\w+)\s+(\w+)\s*/)
+      if ($line =~ /^\s*(\w+)\s+(\w+)\s+([^\s]+)\s*/)
       {
         my($array_name) = $1;      
         my($option_name) = $2;
@@ -186,6 +197,10 @@ sub ReadPrefsFile($$$$)
         elsif ($array_name eq "options")
         {
           HandlePrefSet($options_flags, $option_name, $option_value, "Options");
+        }
+        elsif ($array_name eq "filepath" && $option_name && $option_value)
+        {
+          HandlePrefSet($filepath_flags, $option_name, $option_value, "Filepath");
         }
         else
         {
@@ -232,16 +247,16 @@ sub ReadPrefsFile($$$$)
 #
 #-------------------------------------------------------------------------------
 
-sub ReadMozUserPrefs($$$$)
+sub ReadMozUserPrefs($$$$$)
 {
-  my($prefs_file_name, $pull_flags, $build_flags, $options_flags) = @_;
+  my($prefs_file_name, $pull_flags, $build_flags, $options_flags, $filepath_flags) = @_;
   
   if ($prefs_file_name eq "") { return; }
   
   my($prefs_path) = GetPrefsFolder();
   $prefs_path .= ":$prefs_file_name";
 
-  ReadPrefsFile($prefs_path, $pull_flags, $build_flags, $options_flags);
+  ReadPrefsFile($prefs_path, $pull_flags, $build_flags, $options_flags, $filepath_flags);
 }
 
 1;

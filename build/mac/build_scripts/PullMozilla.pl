@@ -36,6 +36,7 @@ use MozillaBuildList;
 my(%pull);
 my(%build);
 my(%options);
+my(%filepaths);
 my(%optiondefines);
 
 
@@ -47,4 +48,4 @@ $MOZ_SRC = cwd();
 my($do_checkout)    = 1;
 my($do_build)       = 0;
 
-RunBuild($do_checkout, $do_build, "");
+RunBuild($do_checkout, $do_build, "Pull prefs");

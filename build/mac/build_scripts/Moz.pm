@@ -456,12 +456,13 @@ sub GetFileModDate($)
 #//--------------------------------------------------------------------------------------------------
 #// LaunchCodeWarrior
 #//--------------------------------------------------------------------------------------------------
-sub LaunchCodeWarrior()
+sub LaunchCodeWarrior($)
 {
+  my($idepath_file) = @_;   # full path to IDE location file
   my($cur_dir) = cwd();
   
-  # this both launches and writes idepath.txt
-  CodeWarriorLib::activate();
+  # this both launches and writes the IDE path file
+  CodeWarriorLib::activate($idepath_file);
   
   chdir($cur_dir);
 }

@@ -40,6 +40,7 @@ $VERSION = '1.02';
 
 my($app)  = 'CWIE';
 my($scriptDir) = cwd();         # could use $0 for this
+my($ide_loc_file) = "";
 
 # 0 == don't switch CWIE to front app in do_event(), 1 == do switch
 # note: activate() still switches when called
@@ -223,7 +224,7 @@ sub _appIsFrontmost($)
 
 Launches CodeWarrior and brings it to the front.
 
-Once found, path will be saved in ':idepath.txt' for future reference.
+Once found, path will be saved in $idepath_file for future reference.
 Edit or delete this file to change the location of the IDE.  If app is
 moved, C<activate()> will prompt for a new location.
 
@@ -234,9 +235,11 @@ GUSI routines built-in to MacPerl for a Choose Directory dialog box.
 
 =cut
 
-sub activate () {
-	local(*F);
-	my($filepath, $appath, $psi) = (':idepath.txt');
+sub activate ($) {
+
+    $ide_loc_file = @_[0];     # save in global
+        
+	my($filepath, $appath, $psi) = ($ide_loc_file);
 
 	foreach $psi (values(%Process)) {
 		if ($psi->processSignature() eq $app) {
@@ -336,7 +339,7 @@ sub getCodeWarriorPath($)
 {
     my($subfolder)=@_;
     
-    my($app_path) = _read_appath(":idepath.txt");
+    my($app_path) = _read_appath($ide_loc_file);
     if ($app_path eq "") { die "Error: Failed to get CodeWarrior IDE path\n"; }
     
     my($codewarrior_root) = $app_path;
@@ -357,7 +360,7 @@ sub getCodeWarriorIDEName()
 {
     my($subfolder)=@_;
 
-    my($app_path) = _read_appath(":idepath.txt");
+    my($app_path) = _read_appath($ide_loc_file);
     if ($app_path eq "") { die "Error: Failed to get CodeWarrior IDE path\n"; }
 
     my(@codewarrior_path) = split(/:/, $app_path);
@@ -480,6 +483,7 @@ sub _save_appath ($$) {
 	my($cwd) = cwd();	# remember the current working dir
 	chdir($scriptDir);	# change dir to the script dir
 
+	local(*F);
 	open(F, '>' . $_[0]) or die $!;
 	print F $_[1];
 	close(F);
@@ -497,6 +501,8 @@ sub _read_appath ($) {
 	if (! -e $filepath) {
 		return "";
 	}
+
+	local(*F);
 	open(F, $filepath);
 	my($appath) = <F>;
 	close(F);
@@ -507,7 +513,7 @@ sub _read_appath ($) {
 
 
 sub _test ($) {
-	activate();
+	activate($ide_loc_file);
 	my($path) = $_[0];
 	build_project(
 	  "${path}modules:xml:macbuild:XML.mcp", '',

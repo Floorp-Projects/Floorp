@@ -306,21 +306,22 @@ sub SetupBuildLog($)
 {
     my($timestamped_log) = @_;
     
+    my $logdir = ":Build Logs:";
+    if (! -d $logdir)
+    {
+        mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
+    }
+
     if ($timestamped_log)
     {
         #Use time-stamped names so that you don't clobber your previous log file!
         my $now = localtime();
         while ($now =~ s@:@.@) {} # replace all colons by periods
-        my $logdir = ":Build Logs:";
-        if (! -d $logdir)
-        {
-            mkdir $logdir, 0777 || die "Couldn't create directory $logdir";
-        }
-        OpenErrorLog("$logdir$now");
+        OpenErrorLog("${logdir}${now}");
     }
     else
     {
-        OpenErrorLog("Mozilla build log");
+        OpenErrorLog("${logdir}Mozilla build log");
     }
 }
 
