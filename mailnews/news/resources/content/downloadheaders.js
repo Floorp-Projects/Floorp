@@ -31,9 +31,9 @@ var serverid = null;
 var markreadElement = null;
 var numberElement = null;
 
-var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
-var server = accountManager.getIncomingServer(serverid);
-var nntpServer = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
+var server = null;
+var nntpServer = null;
+
 
 
 function OnLoad()
@@ -50,6 +50,10 @@ function OnLoad()
 		dump("new message count = " + newmessages + "\n");
 		dump("newsgroup name = " + newsgroupname + "\n");
 		dump("serverid = " + serverid + "\n");
+
+		var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+		server = accountManager.getIncomingServer(serverid);
+		nntpServer = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
 
 		var downloadHeadersTitlePrefix = Bundle.GetStringFromName("downloadHeadersTitlePrefix");
 		var downloadHeadersInfoText1 = Bundle.GetStringFromName("downloadHeadersInfoText1");
@@ -82,4 +86,6 @@ function setDivText(divname, value) {
 function OkButtonCallback() {
 	nntpServer.maxArticles = numberElement.value;
 	nntpServer.markOldRead = markreadElement.checked;
+
+	return true;
 }

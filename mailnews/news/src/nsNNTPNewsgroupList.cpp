@@ -445,6 +445,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				args.Append(*last - *first + 1);
 				args.Append(",");
 				args.Append(m_groupName);
+				args.Append(",");
 
 				// get the server key
 				nsXPIDLCString serverKey;
