@@ -918,6 +918,7 @@ PRBool CSSParserImpl::GetToken(nsresult& aErrorCode, PRBool aSkipWS)
 PRBool CSSParserImpl::GetURLToken(nsresult& aErrorCode, PRBool aSkipWS)
 {
   for (;;) {
+    // XXXldb This pushback code doesn't make sense.
     if (! mHavePushBack) {
       if (! mScanner.NextURL(aErrorCode, mToken)) {
         break;
