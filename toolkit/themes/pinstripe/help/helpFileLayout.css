@@ -55,10 +55,6 @@ h3 { color: #009; font-size: 1em; margin-bottom: 0px; margin-top: 35px; }
 
 dt { font-weight: bold; }
 
-p {
-	text-indent: 15px;
-}
-
 .contentsBox, 
 .contentsBox > ul,
 li {
