@@ -625,14 +625,8 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   nsBoxLayoutState state(aPresContext, aReflowState, aDesiredSize);
 
   // coelesce reflows if we are root.
-  if (state.HandleReflow(this, mState & NS_STATE_IS_ROOT)) {
-     aDesiredSize.width  = 10;
-     aDesiredSize.height = 10;
-     aDesiredSize.ascent = 0;
-     aDesiredSize.descent = 0;
-     return NS_OK;
-  }
-
+  state.HandleReflow(this, PR_FALSE);
+  
   nsSize computedSize(aReflowState.mComputedWidth,aReflowState.mComputedHeight);
 
   nsMargin m;
@@ -665,7 +659,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   else
      computedSize.width += m.left + m.right;
 
-  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE || aReflowState.mComputedHeight == 0)
+  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE)
      computedSize.height = prefSize.height;
   else
      computedSize.height += m.top + m.bottom;
