@@ -158,17 +158,14 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
 
     var titleMessage, dialogMessage;
     try {
-        var stringBundle = srGetStrBundle("chrome://communicator/locale/sidebar/sidebar.properties");
-        var brandStringBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+        var stringBundle = srGetStrBundle("chrome://browser/locale/sidebar/sidebar.properties");
         if (stringBundle) {
-            sidebarName = brandStringBundle.GetStringFromName("sidebarName");            
             titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
             dialogMessage = stringBundle.GetStringFromName("addEngineConfirmMessage");
             dialogMessage = dialogMessage.replace(/%title%/, suggestedTitle);
             dialogMessage = dialogMessage.replace(/%category%/, suggestedCategory);
             dialogMessage = dialogMessage.replace(/%url%/, engineURL);
             dialogMessage = dialogMessage.replace(/#/g, "\n");
-            dialogMessage = dialogMessage.replace(/%name%/, sidebarName);
         }
     }
     catch (e) {
