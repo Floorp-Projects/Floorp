@@ -31,7 +31,7 @@
 #include "nsIURL.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
-
+#include "nsIFileSpec.h"
 // This is a helper class used to encapsulate code shared between all of the
 // mailnews protocol objects (imap, news, pop, smtp, etc.) In particular,
 // it unifies the core networking code for the protocols. My hope is that
