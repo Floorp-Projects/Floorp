@@ -19,12 +19,11 @@ DEPTH=..\..\..
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestCSSScanner.exe
-PROG2 = .\$(OBJDIR)\TestHTMLTagLookup.exe
-PROG3 = .\$(OBJDIR)\TestCSSPropertyLookup.exe
-PROG4 = .\$(OBJDIR)\TestCSSParser.exe
-PROG5 = .\$(OBJDIR)\TestAttributes.exe
-PROG6 = .\$(OBJDIR)\TestInlineFrame.exe
-PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6)
+PROG2 = .\$(OBJDIR)\TestCSSPropertyLookup.exe
+PROG3 = .\$(OBJDIR)\TestCSSParser.exe
+PROG4 = .\$(OBJDIR)\TestAttributes.exe
+PROG5 = .\$(OBJDIR)\TestInlineFrame.exe
+PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5)
 
 DEFINES = -D_IMPL_NS_HTML
 
@@ -69,11 +68,9 @@ install:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG3) $(DIST)\bin
 	$(MAKE_INSTALL) $(PROG4) $(DIST)\bin
 	$(MAKE_INSTALL) $(PROG5) $(DIST)\bin
-	$(MAKE_INSTALL) $(PROG6) $(DIST)\bin
 
 clobber::
 	rm -f $(DIST)\bin\TestCSSScanner.exe
-	rm -f $(DIST)\bin\TestHTMLTagLookup.exe
 	rm -f $(DIST)\bin\TestCSSPropertyLookup.exe
 	rm -f $(DIST)\bin\TestCSSParser.exe
 	rm -f $(DIST)\bin\TestAttributes.exe
@@ -97,12 +94,10 @@ clobber::
 
 $(PROG1): $(OBJDIR) TestCSSScanner.cpp
 
-$(PROG2): $(OBJDIR) TestHTMLTagLookup.cpp
+$(PROG2): $(OBJDIR) TestCSSPropertyLookup.cpp
 
-$(PROG3): $(OBJDIR) TestCSSPropertyLookup.cpp
+$(PROG3): $(OBJDIR) TestCSSParser.cpp
 
-$(PROG4): $(OBJDIR) TestCSSParser.cpp
+$(PROG4): $(OBJDIR) TestAttributes.cpp
 
-$(PROG5): $(OBJDIR) TestAttributes.cpp
-
-$(PROG6): $(OBJDIR) TestInlineFrame.cpp
+$(PROG5): $(OBJDIR) TestInlineFrame.cpp
