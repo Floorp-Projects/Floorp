@@ -81,6 +81,7 @@ nsDOMAttributeMap::~nsDOMAttributeMap()
 {
   if (nsnull != mAttributes) {
     PL_HashTableEnumerateEntries(mAttributes, RemoveAttributes, nsnull);
+    PL_HashTableDestroy(mAttributes);
   }
 }
 
