@@ -470,7 +470,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     {
         // do nothing; return NS_OK; for queuing
     }
-	else if (cnt < maxConnections && aEventQueue)
+	else if (cnt < ((PRUint32)maxConnections) && aEventQueue)
 	{	
 		// create a new connection and add it to the connection cache
 		// we may need to flag the protocol connection as busy so we don't get

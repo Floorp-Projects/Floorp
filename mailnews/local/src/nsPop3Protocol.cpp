@@ -275,6 +275,7 @@ allow deleting of messages that have been kept on a POP3 server due to their siz
 a preference to keep the messages on the server. When "deleting" messages we load
 our state file, mark any messages we have for deletion and then re-save the state file.
 */
+#ifdef OBSOLETE_CODE
 extern char* ReadPopData(char *hostname, char* username, char* maildirectory);
 extern void SavePopData(char *data, char* maildirectory);
 extern void net_pop3_delete_if_in_server(char *data, char *uidl, PRBool *changed);
@@ -322,6 +323,15 @@ void net_pop3_delete_if_in_server(char *data, char *uidl, PRBool *changed)
 	}
 }
 
+void KillPopData(char* data)
+{
+	if (!data)
+		return;
+	net_pop3_free_state((Pop3UidlHost*) data);
+}
+
+#endif 
+
 static void
 net_pop3_free_state(Pop3UidlHost* host) 
 {
@@ -343,13 +353,6 @@ net_pop3_free_state(Pop3UidlHost* host)
 	PR_Free(host);
 	host = h;
   }
-}
-
-void KillPopData(char* data)
-{
-	if (!data)
-		return;
-	net_pop3_free_state((Pop3UidlHost*) data);
 }
 
 // nsPop3Protocol class implementation
