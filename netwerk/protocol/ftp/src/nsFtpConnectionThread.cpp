@@ -455,17 +455,21 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
 
     const char* currLine = lines.get();
     while (*currLine) {
-       PRInt32 eolLength = strcspn(currLine, CRLF);
+        PRInt32 eolLength = strcspn(currLine, CRLF);
+        PRInt32 currLineLength = strlen(currLine);
 
-       if (eolLength == 0 && currLine[0] == '\0')
-           break;
+        // if currLine is empty or only contains CR or LF, then bail.  we can
+        // sometimes get an ODA event with the full response line + CR without
+        // the trailing LF.  the trailing LF might come in the next ODA event.
+        // because we are happy enough to process a response line ending only
+        // in CR, we need to take care to discard the extra LF (bug 191220).
+        if (eolLength == 0 && currLineLength <= 1)
+            break;
 
-       PRInt32 currLineLength = strlen(currLine);
-
-       if (eolLength == currLineLength) {
-           mControlReadCarryOverBuf.Assign(currLine);
-           break;
-       }
+        if (eolLength == currLineLength) {
+            mControlReadCarryOverBuf.Assign(currLine);
+            break;
+        }
 
         // Append the current segment, including the LF
         nsCAutoString line;
