@@ -26,8 +26,10 @@
 #include "nsIHTMLContent.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIDocument.h"
 #include "nsIReflowCommand.h"
 #include "nsIRenderingContext.h"
+#include "nsIURL.h"
 #include "prprf.h"
 
 nsBulletFrame::nsBulletFrame()
@@ -340,7 +342,22 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   nscoord ascent;
 
   if (myList->mListStyleImage.Length() > 0) {
-    mImageLoader.SetURL(myList->mListStyleImage);
+    mImageLoader.SetURLSpec(myList->mListStyleImage);
+    nsIURL* baseURL = nsnull;
+    nsIHTMLContent* htmlContent;
+    if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+      htmlContent->GetBaseURL(baseURL);
+      NS_RELEASE(htmlContent);
+    }
+    else {
+      nsIDocument* doc;
+      if (NS_SUCCEEDED(mContent->GetDocument(doc))) {
+        doc->GetBaseURL(baseURL);
+        NS_RELEASE(doc);
+      }
+    }
+    mImageLoader.SetBaseURL(baseURL);
+    NS_IF_RELEASE(baseURL);
     mImageLoader.GetDesiredSize(aCX, aReflowState, this, UpdateBulletCB,
                                 aMetrics);
     if (!mImageLoader.GetLoadImageFailed()) {

@@ -27,6 +27,7 @@ class nsIStyleContext;
 class nsIPresContext;
 class nsXIFConverter;
 class nsIHTMLAttributes;
+class nsIURL;
 
 // IID for the nsIHTMLContent class
 #define NS_IHTMLCONTENT_IID   \
@@ -70,6 +71,22 @@ public:
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsString& aValue,
                                nsHTMLValue& aResult) = 0;
+
+  /**
+   * Get the base URL for any relative URLs within this piece
+   * of content. Generally, this is the document's base URL,
+   * but certain content carries a local base for backward
+   * compatibility.
+   */
+  NS_IMETHOD GetBaseURL(nsIURL*& aBaseURL) const = 0;
+
+  /**
+   * Get the base target for any links within this piece
+   * of content. Generally, this is the document's base target,
+   * but certain content carries a local base for backward
+   * compatibility.
+   */
+  NS_IMETHOD GetBaseTarget(nsString& aBaseTarget) const = 0;
 
   /**
    * Translate this piece of content to html. Note that this only
