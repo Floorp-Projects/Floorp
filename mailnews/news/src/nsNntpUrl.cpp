@@ -513,7 +513,7 @@ nsresult nsNntpUrl::GetMessageToPost(nsINNTPNewsgroupPost **aPost)
 NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 {
     nsresult rv = NS_OK;
-    nsNativeFileSpec pathResult;
+    nsFileSpec pathResult;
     
     if (!aMsgHdr) return NS_ERROR_NULL_POINTER;
 
@@ -540,7 +540,9 @@ NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
         return rv;
     }
     
-    rv = newsDBFactory->Open(pathResult, PR_TRUE, getter_AddRefs(newsDB), PR_FALSE);
+	nsCOMPtr <nsIFileSpec> dbFileSpec;
+	NS_NewFileSpecWithSpec(pathResult, getter_AddRefs(dbFileSpec));
+    rv = newsDBFactory->Open(dbFileSpec, PR_TRUE, getter_AddRefs(newsDB), PR_FALSE);
     
     if (NS_FAILED(rv) || (!newsDB)) {
         return rv;

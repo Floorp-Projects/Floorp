@@ -57,7 +57,7 @@ public:
 
   //////////////////////////////////////////////////////////////////////////////
   // nsIMsgDatabase methods:
-  NS_IMETHOD Open(nsFileSpec &folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading);
+  NS_IMETHOD Open(nsIFileSpec *folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading);
   NS_IMETHOD Close(PRBool forceCommit);
 
   // argh, these two shouldn't be Interface methods, but I can't diddle the interfaces

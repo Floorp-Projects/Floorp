@@ -29,12 +29,18 @@ nsImapMailDatabase::~nsImapMailDatabase()
 {
 }
 
-NS_IMETHODIMP nsImapMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
+NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
 {
 	nsImapMailDatabase	*mailDB;
 	PRBool			summaryFileExists;
 	struct stat		st;
 	PRBool			newFile = PR_FALSE;
+	if (!aFolderName)
+		return NS_ERROR_NULL_POINTER;
+
+	nsFileSpec		folderName;
+	aFolderName->GetFileSpec(&folderName);
+
 	nsLocalFolderSummarySpec	summarySpec(folderName);
 
 #ifdef DEBUG_bienvenu

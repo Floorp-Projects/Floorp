@@ -394,15 +394,11 @@ nsresult nsImapMailFolder::GetDatabase()
 		nsresult rv = GetPath(getter_AddRefs(pathSpec));
 		if (NS_FAILED(rv)) return rv;
 
-		nsFileSpec path;
-		rv = pathSpec->GetFileSpec(&path);
-		if (NS_FAILED(rv)) return rv;
-
 		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 
 		rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDBFactory));
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
-			folderOpen = mailDBFactory->Open(path, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+			folderOpen = mailDBFactory->Open(pathSpec, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
 
 		if(mDatabase)
 		{
@@ -533,7 +529,9 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
         nsCOMPtr<nsIMsgDatabase> unusedDB;
-		rv = mailDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB), PR_TRUE);
+		nsCOMPtr <nsIFileSpec> dbFileSpec;
+		NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
+		rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB), PR_TRUE);
 
         if (NS_SUCCEEDED(rv) && unusedDB)
         {
@@ -547,8 +545,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 			}
 
 			//Now let's create the actual new folder
-			rv = AddSubfolder(folderNameStr,
-                                            getter_AddRefs(child));
+			rv = AddSubfolder(folderNameStr, getter_AddRefs(child));
             unusedDB->SetSummaryValid(PR_TRUE);
 			unusedDB->Commit(kLargeCommit);
             unusedDB->Close(PR_TRUE);
@@ -861,11 +858,7 @@ nsresult nsImapMailFolder::GetDBFolderInfoAndDB(
 		rv = GetPath(getter_AddRefs(pathSpec));
 		if (NS_FAILED(rv)) return rv;
 
-		nsFileSpec dbName;
-		rv = pathSpec->GetFileSpec(&dbName);
-		if (NS_FAILED(rv)) return rv;
-
-		openErr = mailDBFactory->Open(dbName, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
+		openErr = mailDBFactory->Open(pathSpec, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
 	}
 
     *db = mailDB;
@@ -1144,7 +1137,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     {
         // if we pass in PR_TRUE for upgrading, the db code will ignore the
         // summary out of date problem for now.
-        rv = mailDBFactory->Open(dbName, PR_TRUE, (nsIMsgDatabase **)
+        rv = mailDBFactory->Open(pathSpec, PR_TRUE, (nsIMsgDatabase **)
                                  getter_AddRefs(mDatabase), PR_TRUE);
         if (NS_FAILED(rv))
             return rv;
@@ -1184,7 +1177,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			
 			// Create a new summary file, update the folder message counts, and
 			// Close the summary file db.
-			rv = mailDBFactory->Open(dbName, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+			rv = mailDBFactory->Open(pathSpec, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
 
 			// ********** Important *************
 			// David, help me here I don't know this is right or wrong

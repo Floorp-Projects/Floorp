@@ -287,8 +287,11 @@ NS_IMETHODIMP nsMailboxUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
 
 		rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), 
 														 (void **) getter_AddRefs(mailDBFactory));
+		nsCOMPtr <nsIFileSpec> dbFileSpec;
+		NS_NewFileSpecWithSpec(*m_filePath, getter_AddRefs(dbFileSpec));
+
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
-			rv = mailDBFactory->Open((nsFileSpec&) *m_filePath, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(mailDB), PR_FALSE);
+			rv = mailDBFactory->Open(dbFileSpec, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(mailDB), PR_FALSE);
 		if (NS_SUCCEEDED(rv) && mailDB) // did we get a db back?
 			rv = mailDB->GetMsgHdrForKey(m_messageKey, aMsgHdr);
 	}

@@ -38,9 +38,16 @@ nsresult nsNewsDatabase::MessageDBOpenUsingURL(const char * groupURL)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsNewsDatabase::Open(nsFileSpec &newsgroupName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
+NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
 {
   nsNewsDatabase	        *newsDB;
+
+  if (!aNewsgroupName)
+	return NS_ERROR_NULL_POINTER;
+
+  nsFileSpec				newsgroupName;
+  aNewsgroupName->GetFileSpec(&newsgroupName);
+
   nsNewsSummarySpec	        summarySpec(newsgroupName);
   nsresult                  err = NS_OK;
 

@@ -38,11 +38,16 @@ nsMailDatabase::~nsMailDatabase()
 
 
 
-NS_IMETHODIMP nsMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
+NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
 {
 	nsMailDatabase	*mailDB;
 	PRBool			summaryFileExists;
 	PRBool			newFile = PR_FALSE;
+	nsFileSpec		folderName;
+
+	if (!aFolderName)
+		return NS_ERROR_NULL_POINTER;
+	aFolderName->GetFileSpec(&folderName);
 	nsLocalFolderSummarySpec	summarySpec(folderName);
 
 	nsIDBFolderInfo	*folderInfo = NULL;

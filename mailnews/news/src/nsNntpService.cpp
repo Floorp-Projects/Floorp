@@ -202,7 +202,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   printf("ConvertNewsMessageURI2NewsURI(%s,??) -> %s %u\n", messageURI, newsgroupName.GetBuffer(), *key);
 #endif
 
-  nsNativeFileSpec pathResult;
+  nsFileSpec pathResult;
 
   rv = nsNewsURI2Path(kNewsMessageRootURI, messageUriWithoutKey.GetBuffer(), pathResult);
   if (NS_FAILED(rv)) {
@@ -217,7 +217,9 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
     return rv;
   }
 
-  rv = newsDBFactory->Open(pathResult, PR_TRUE, getter_AddRefs(newsDB), PR_FALSE);
+  nsCOMPtr <nsIFileSpec> dbFileSpec;
+  NS_NewFileSpecWithSpec(pathResult, getter_AddRefs(dbFileSpec));
+  rv = newsDBFactory->Open(dbFileSpec, PR_TRUE, getter_AddRefs(newsDB), PR_FALSE);
     
   if (NS_FAILED(rv) || (!newsDB)) {
     return rv;

@@ -151,7 +151,7 @@ nsresult
 nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
 {
     if (*db == nsnull) {
-        nsNativeFileSpec path;
+        nsFileSpec path;
 		nsresult rv = nsNewsURI2Path(kNewsRootURI, uri, path);
 		if (NS_FAILED(rv)) return rv;
 
@@ -160,7 +160,9 @@ nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
 
         rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &newsDBFactory);
         if (NS_SUCCEEDED(rv) && newsDBFactory) {
-                newsDBOpen = newsDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) db, PR_FALSE);
+				nsCOMPtr <nsIFileSpec> dbFileSpec;
+				NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
+                newsDBOpen = newsDBFactory->Open(dbFileSpec, PR_TRUE, (nsIMsgDatabase **) db, PR_FALSE);
 #ifdef DEBUG_NEWS
                 if (NS_SUCCEEDED(newsDBOpen)) {
                     printf ("newsDBFactory->Open() succeeded\n");

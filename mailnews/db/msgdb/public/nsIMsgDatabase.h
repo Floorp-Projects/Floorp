@@ -73,7 +73,7 @@ public:
 class nsIMsgDatabase : public nsIDBChangeAnnouncer {
 public:
   // open local folder...
-  NS_IMETHOD Open(nsFileSpec &folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading) = 0;
+  NS_IMETHOD Open(nsIFileSpec *folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading) = 0;
   NS_IMETHOD Close(PRBool forceCommit) = 0;
   NS_IMETHOD OpenMDB(const char *dbName, PRBool create) = 0;
   NS_IMETHOD CloseMDB(PRBool commit) = 0;

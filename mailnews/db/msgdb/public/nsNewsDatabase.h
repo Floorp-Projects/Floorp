@@ -35,7 +35,7 @@ public:
   virtual ~nsNewsDatabase();
   virtual  nsresult         MessageDBOpenUsingURL(const char * groupURL);
   char *GetGroupURL()       { return m_groupURL; }
-  NS_IMETHOD				Open(nsFileSpec &newsgroupName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/);
+  NS_IMETHOD				Open(nsIFileSpec *newsgroupName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/);
   NS_IMETHOD				Close(PRBool forceCommit);
   NS_IMETHOD				ForceClosed();
   NS_IMETHOD				Commit(nsMsgDBCommitType commitType);

@@ -82,7 +82,11 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURI* aURL, const char *aCont
 			nsCOMPtr<nsIMsgDatabase> mailDB;
 			rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDB));
 			if (NS_SUCCEEDED(rv) && mailDB)
-				rv = mailDB->Open(dbName, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB), PR_TRUE);
+			{
+				nsCOMPtr <nsIFileSpec> dbFileSpec;
+				NS_NewFileSpecWithSpec(dbName, getter_AddRefs(dbFileSpec));
+				rv = mailDB->Open(dbFileSpec, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB), PR_TRUE);
+			}
 			NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
 			printf("url file = %s\n", fileName);
 		}
@@ -1369,7 +1373,11 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 	nsCOMPtr<nsIMsgDatabase> mailDB;
 	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDB));
 	if (NS_SUCCEEDED(rv) && mailDB)
-		rv = mailDB->Open(folder, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB), PR_FALSE);
+	{
+		nsCOMPtr <nsIFileSpec> dbFileSpec;
+		NS_NewFileSpecWithSpec(folder, getter_AddRefs(dbFileSpec));
+		rv = mailDB->Open(dbFileSpec, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB), PR_FALSE);
+	}
 //	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
     if (NS_FAILED(rv)) 
 		return rv;

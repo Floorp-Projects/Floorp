@@ -504,17 +504,13 @@ nsresult nsMsgNewsFolder::GetDatabase()
 		rv = GetPath(getter_AddRefs(pathSpec));
 		if (NS_FAILED(rv)) return rv;
 
-		nsFileSpec path;
-		rv = pathSpec->GetFileSpec(&path);
-		if (NS_FAILED(rv)) return rv;
-
 		nsresult folderOpen = NS_OK;
 		nsCOMPtr <nsIMsgDatabase> newsDBFactory;
 
 		rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
 		if (NS_SUCCEEDED(rv) && newsDBFactory)
 		{
-			folderOpen = newsDBFactory->Open(path, PR_TRUE, getter_AddRefs(mDatabase), PR_FALSE);
+			folderOpen = newsDBFactory->Open(pathSpec, PR_TRUE, getter_AddRefs(mDatabase), PR_FALSE);
 #ifdef DEBUG_NEWS
       if (NS_SUCCEEDED(folderOpen)) {
         printf ("newsDBFactory->Open() succeeded\n");
@@ -872,7 +868,9 @@ nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, ns
 
 	nsresult rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(newsDBFactory));
 	if (NS_SUCCEEDED(rv) && newsDBFactory) {
-		openErr = newsDBFactory->Open(*mPath, PR_FALSE, (nsIMsgDatabase **) &newsDB, PR_FALSE);
+		nsCOMPtr <nsIFileSpec> dbFileSpec;
+		NS_NewFileSpecWithSpec(*mPath, getter_AddRefs(dbFileSpec));
+		openErr = newsDBFactory->Open(dbFileSpec, PR_FALSE, (nsIMsgDatabase **) &newsDB, PR_FALSE);
 	}
   else {
     return rv;

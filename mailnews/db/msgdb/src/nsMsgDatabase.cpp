@@ -491,7 +491,7 @@ void nsMsgDatabase::NativeToUnix(char*& ioPath)
 }
 #endif /* XP_MAC */
 
-NS_IMETHODIMP nsMsgDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
+NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *folderName, PRBool create, nsIMsgDatabase** pMessageDB, PRBool upgrading /*=PR_FALSE*/)
 {
 	NS_ASSERTION(FALSE, "must override");
 	return NS_ERROR_NOT_IMPLEMENTED;
