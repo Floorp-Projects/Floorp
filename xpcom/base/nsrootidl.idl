@@ -35,6 +35,7 @@ typedef long                PRInt32  ;
 typedef long long           PRInt64  ;
 
 typedef unsigned long       nsrefcnt ;
+typedef unsigned long       nsresult ;
 
 [ptr]         native voidStar(void);
 [ref]         native voidRef(void);
