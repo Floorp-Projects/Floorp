@@ -21,10 +21,10 @@
 
 export::
 	$(INSTALL) -m 555 $(GDEPTH)/msgsdk/C/include/*.h $(SOURCE_XP_DIR)/public/msgsdk/
-	$(INSTALL) -m 555 $(GDEPTH)/msgsdk/C/protocol/Smtp/include/*.h $(SOURCE_XP_DIR)/public/msgsdk/
-	$(INSTALL) -m 555 $(GDEPTH)/msgsdk/C/protocol/Imap4/include/*.h $(SOURCE_XP_DIR)/public/msgsdk/
-	$(INSTALL) -m 555 $(GDEPTH)/msgsdk/C/protocol/Mime/include/*.h $(SOURCE_XP_DIR)/public/msgsdk/
-	$(INSTALL) -m 555 $(GDEPTH)/msgsdk/C/protocol/Pop3/include/*.h $(SOURCE_XP_DIR)/public/msgsdk/
+	$(INSTALL) -m 555 $(GDEPTH)/msgsdk/C/protocol/SMTP/include/*.h $(SOURCE_XP_DIR)/public/msgsdk/
+	$(INSTALL) -m 555 $(GDEPTH)/msgsdk/C/protocol/IMAP4/include/*.h $(SOURCE_XP_DIR)/public/msgsdk/
+	$(INSTALL) -m 555 $(GDEPTH)/msgsdk/C/protocol/MIME/include/*.h $(SOURCE_XP_DIR)/public/msgsdk/
+	$(INSTALL) -m 555 $(GDEPTH)/msgsdk/C/protocol/POP3/include/*.h $(SOURCE_XP_DIR)/public/msgsdk/
 	$(INSTALL) -m 555 $(GDEPTH)/msgsdk/C/built/$(OS_ARCH)-export-full-sdk/lib/*.lib $(SOURCE_XP_DIR)/$(OBJDIR)/lib/
 ifeq ($(OS_ARCH),WINNT)
 	$(INSTALL) -m 555 $(GDEPTH)/msgsdk/C/built/$(OS_ARCH)-export-full-sdk/lib/*.dll $(SOURCE_XP_DIR)/$(OBJDIR)/bin/
