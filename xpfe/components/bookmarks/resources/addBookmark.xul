@@ -84,22 +84,16 @@
 
   <box id="folderbox" orient="vertical" flex="1">
     <separator/>
-    <grid flex="1">
-      <columns>
-        <column/>
-        <column flex="1"/>
-      </columns>
-      <rows>
-        <row autostretch="never" valign="top">
+    <box autostretch="never" valign="top">
           <text id="createinlabel" class="label" value="&createin.label;"/>
           <box autostretch="never" valign="top" flex="1">
             <tree id="folders" flex="1" style="height: 12em; width: 0px"
                   class="inset" ref="NC:BookmarksRoot" datasources="rdf:bookmarks"
                   template="file-bookmarks-template"
                   onselect="onTreeSelect();" onkeypress="event.preventBubble();">
-              <treecols>
+              <treecolgroup>
                 <treecol flex="1"/>
-              </treecols>
+              </treecolgroup>
         
               <template id="file-bookmarks-template">
                 <rule iscontainer="true">
@@ -127,9 +121,7 @@
                       oncommand="useDefaultFolder();"/>
             </box>
           </box>
-        </row>
-      </rows>
-    </grid>
+    </box>
     <separator/>
   </box>
 
