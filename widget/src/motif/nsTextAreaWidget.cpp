@@ -98,6 +98,7 @@ NS_METHOD nsTextAreaWidget::Create(nsIWidget *aParent,
     SetReadOnly(PR_TRUE, oldReadOnly);
   }
 
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -109,6 +110,7 @@ NS_METHOD nsTextAreaWidget::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+  return NS_OK;
 }
 
 

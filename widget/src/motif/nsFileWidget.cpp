@@ -201,7 +201,6 @@ void nsFileWidget::GetFilterListArray(nsString& aFilterList)
     aFilterList.Append('\0');
   }
   aFilterList.Append('\0'); 
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

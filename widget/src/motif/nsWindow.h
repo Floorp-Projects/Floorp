@@ -60,7 +60,7 @@ public:
  
 
 
-    NS_IMETHOD            PreCreateWidget(nsWidgetInitData *aWidgetInitData) {}
+    NS_IMETHOD            PreCreateWidget(nsWidgetInitData *aWidgetInitData) { return NS_OK; }
     // nsIWidget interface
     NS_IMETHOD            Create(nsIWidget *aParent,
                                      const nsRect &aRect,
