@@ -779,7 +779,8 @@ morkBuilder::OnValueMid(morkEnv* ev, const morkSpan& inSpan,
     mork_token* metaSlot = mBuilder_MetaTokenSlot;
     if ( metaSlot )
     {
-      if ( valOid->mOid_Scope == morkStore_kColumnSpaceScope )
+    	mork_scope valScope = valOid->mOid_Scope;
+      if ( !valScope || valScope == morkStore_kColumnSpaceScope )
       {
         if ( ev->Good() && valMid.HasSomeId() )
         {
