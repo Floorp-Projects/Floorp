@@ -566,7 +566,7 @@ ImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
     nscoord   width = MeasureString(fm, str, strLen, aRect.width, maxFit);
     
     // Display the text
-    aRenderingContext.DrawString(str, maxFit, aRect.x, y, 0);
+    aRenderingContext.DrawString(str, maxFit, aRect.x, y);
 
     // Move to the next line
     str += maxFit;

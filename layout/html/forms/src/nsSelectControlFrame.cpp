@@ -826,11 +826,11 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
           aRenderingContext.SetColor(NS_RGB(0,0,0));
           aRenderingContext.FillRect(rect); 
           aRenderingContext.SetColor(NS_RGB(255,255,255));
-          aRenderingContext.DrawString(text, x, y, 0); 
+          aRenderingContext.DrawString(text, x, y); 
           aRenderingContext.SetColor(currentColor);
         } else {
           if (!mIsComboBox || (mIsComboBox && -1 == selectedIndex && 0 == i)) {
-            aRenderingContext.DrawString(text, x, y, 0); 
+            aRenderingContext.DrawString(text, x, y); 
           }
         }
 
