@@ -234,7 +234,8 @@ nsCodebasePrincipal::Equals(nsIPrincipal *aOther, PRBool *result)
     otherCodebase->GetURI(getter_AddRefs(otherURI));
 
     NS_ENSURE_TRUE(otherURI, NS_ERROR_FAILURE);
-    return gScriptSecMan->SecurityCompareURIs(mURI, otherURI, result);
+    return nsScriptSecurityManager::GetScriptSecurityManager()
+           ->SecurityCompareURIs(mURI, otherURI, result);
 }
 
 //////////////////////////////////////////

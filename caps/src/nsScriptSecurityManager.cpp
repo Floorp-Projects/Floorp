@@ -2703,7 +2703,7 @@ nsresult nsScriptSecurityManager::Init()
     return NS_OK;
 }
 
-nsScriptSecurityManager *nsScriptSecurityManager::gScriptSecMan = nsnull;
+static nsScriptSecurityManager *gScriptSecMan = nsnull;
 
 jsval nsScriptSecurityManager::sEnabledID   = JSVAL_VOID;
 
