@@ -38,11 +38,6 @@ DIRS= \
 !if defined(SMART_MAIL) 
     pop3 \
 !endif
-!ifndef MODULAR_NETLIB
-    dataurl \
-    js \
-    marimba \
-!endif
 !if defined(MOZ_MAIL_NEWS)
     smtp \
 !endif

@@ -23,14 +23,6 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 MODULE		= cnetinit
 
-ifndef MODULAR_NETLIB
-LIBRARY_NAME	= cnetinit
-
-CSRCS		= \
-	cnetinit.c	\
-	$(NULL)
-endif
-
 EXPORTS= $(srcdir)/cnetinit.h
 
 REQUIRES	= netcache network img layer fileurl httpurl ftpurl abouturl \

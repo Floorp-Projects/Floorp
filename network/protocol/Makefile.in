@@ -34,14 +34,6 @@ DIRS	= about	\
         sockstub \
 	$(NULL)
 
-ifndef MODULAR_NETLIB
-DIRS += \
-	dataurl	\
-	js	\
-	marimba	\
-	$(NULL)
-endif
-
 ifdef MOZ_LDAP
 DIRS += ldap \
 	$(NULL)

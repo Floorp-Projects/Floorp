@@ -42,14 +42,6 @@ CSRCS		= \
 	txview.c	\
 	$(NULL)
 
-ifndef MODULAR_NETLIB
-CSRCS += \
-	cvmime.c	\
-	cvpics.c	\
-	cvview.c	\
-	$(NULL)
-endif
-
 EXPORTS= \
     nsINetPlugin.h \
     nsINetPluginInstance.h \
@@ -66,13 +58,6 @@ EXPORTS= \
     cvplugin.h  \
     cvunzip.h   \
     cvjscfg.h
-
-ifndef MODULAR_NETLIB
-EXPORTS += \
-    cvmime.h    \
-    cvpics.h    \
-    $(NULL)
-endif
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
