@@ -269,13 +269,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
         }
 
         if (activeLink == this) {
-          nsEventStatus status;
-          nsMouseEvent event;
-          event.eventStructType = NS_MOUSE_EVENT;
-          event.message = NS_MOUSE_LEFT_CLICK;
-          HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
-
-          if (nsEventStatus_eConsumeNoDefault != status) {
+          if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
             nsAutoString base, target;
             GetAttribute(nsString(NS_HTML_BASE_HREF), base);
             GetAttribute(nsString("target"), target);

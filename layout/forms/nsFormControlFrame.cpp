@@ -643,21 +643,7 @@ NS_METHOD nsFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
 	    break;
     case NS_MOUSE_LEFT_BUTTON_UP:
 	    if (eMouseDown == mLastMouseState) {
-		    //widget->SetFocus();
-        float t2p = aPresContext.GetTwipsToPixels();
-        SetClickPoint(NSTwipsToIntPixels(aEvent->point.x, t2p),
-                      NSTwipsToIntPixels(aEvent->point.y, t2p));   
-
-        nsEventStatus mStatus = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_MOUSE_EVENT;
-        event.message = NS_MOUSE_LEFT_CLICK;
-        mContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, mStatus);
-        
-        if (nsEventStatus_eConsumeNoDefault != mStatus) {
-          MouseClicked(&aPresContext);
-		      //return PR_FALSE;
-        }
+        MouseClicked(&aPresContext);
 	    } 
 	    mLastMouseState = eMouseEnter;
 	    break;

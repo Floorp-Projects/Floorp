@@ -469,14 +469,8 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
 	        break;
         case NS_MOUSE_LEFT_BUTTON_UP:
 	        if (eMouseDown == mLastMouseState) {
-            ShiftContents(aPresContext, PR_FALSE);
-            nsEventStatus status = nsEventStatus_eIgnore;
-            nsMouseEvent event;
-            event.eventStructType = NS_MOUSE_EVENT;
-            event.message = NS_MOUSE_LEFT_CLICK;
-            mContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
-        
-            if (nsEventStatus_eConsumeNoDefault != status) {
+            if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
+              ShiftContents(aPresContext, PR_FALSE);
               MouseClicked(&aPresContext);
             }
 	          mLastMouseState = eMouseUp;

@@ -213,26 +213,20 @@ nsXMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
         }
 
         if (activeLink == this) {
-          nsEventStatus status;
-          nsMouseEvent event;
-          event.eventStructType = NS_MOUSE_EVENT;
-          event.message = NS_MOUSE_LEFT_CLICK;
-          HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
-
-          if (nsEventStatus_eConsumeNoDefault != status) {
+          if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
             nsAutoString show, href, base, target;
-	    nsLinkVerb verb = eLinkVerb_Replace;
-	    base.Truncate();
-	    target.Truncate();
+	          nsLinkVerb verb = eLinkVerb_Replace;
+	          base.Truncate();
+	          target.Truncate();
             GetAttribute(nsString("href"), href);
             GetAttribute(nsString("show"), show);
-	    // XXX Should probably do this using atoms 
-	    if (show.Equals("new")) {
-	      verb = eLinkVerb_New;
-	    }
-	    else if (show.Equals("embed")) {
-	      verb = eLinkVerb_Embed;
-	    }
+	          // XXX Should probably do this using atoms 
+	          if (show.Equals("new")) {
+	            verb = eLinkVerb_New;
+	          }
+	          else if (show.Equals("embed")) {
+	            verb = eLinkVerb_Embed;
+	          }
             mInner.TriggerLink(aPresContext, verb, base, href, target, PR_TRUE);
             aEventStatus = nsEventStatus_eConsumeNoDefault; 
           }

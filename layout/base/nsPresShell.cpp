@@ -1041,8 +1041,8 @@ NS_IMETHODIMP PresShell :: HandleEvent(nsIView         *aView,
       //Once we have the targetFrame, handle the event in this order
       nsIEventStateManager *manager;
       if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
-        //1. Give event to event manager for state changes and generation of synthetic events.
-        rv = manager->HandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus);
+        //1. Give event to event manager for pre event state changes and generation of synthetic events.
+        rv = manager->PreHandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus);
 
         //2. Give event to the DOM for third party and JS use.
         if (nsnull != mCurrentEventFrame && NS_OK == rv) {
@@ -1052,13 +1052,18 @@ NS_IMETHODIMP PresShell :: HandleEvent(nsIView         *aView,
                                                DOM_EVENT_INIT, aEventStatus);
             NS_RELEASE(targetContent);
           }
-        }
 
-        //3. Give event to the Frames for browser default processing.
-        // XXX The event isn't translated into the local coordinate space
-        // of the frame...
-        if (nsnull != mCurrentEventFrame && NS_OK == rv) {
-          rv = mCurrentEventFrame->HandleEvent(*mPresContext, aEvent, aEventStatus);
+          //3. Give event to the Frames for browser default processing.
+          // XXX The event isn't translated into the local coordinate space
+          // of the frame...
+          if (nsnull != mCurrentEventFrame && NS_OK == rv) {
+            rv = mCurrentEventFrame->HandleEvent(*mPresContext, aEvent, aEventStatus);
+
+            //4. Give event to event manager for post event state changes and generation of synthetic events.
+            if (nsnull != mCurrentEventFrame && NS_OK == rv) {
+              rv = manager->PostHandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus);
+            }
+          }
         }
         NS_RELEASE(manager);
       }

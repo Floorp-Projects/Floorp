@@ -40,7 +40,12 @@ class nsIEventStateManager : public nsISupports {
 
 public:
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD PreHandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent *aEvent, 
+                         nsIFrame* aTargetFrame,
+                         nsEventStatus& aStatus) = 0;
+
+  NS_IMETHOD PostHandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent *aEvent, 
                          nsIFrame* aTargetFrame,
                          nsEventStatus& aStatus) = 0;
