@@ -171,7 +171,15 @@ public:
 
   // nsIFormControl
   NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD Reset();
+  NS_IMETHOD IsSuccessful(nsIContent* aSubmitElement, PRBool *_retval);
+  NS_IMETHOD GetMaxNumValues(PRInt32 *_retval);
+  NS_IMETHOD GetNamesValues(PRInt32 aMaxNumValues,
+                            PRInt32& aNumValues,
+                            nsString* aValues,
+                            nsString* aNames);
 
+  // nsIContent
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
@@ -372,8 +380,9 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
               // Find out of this is a form element.
               if (NS_SUCCEEDED(rv)) {
                 nsIFormControlFrame* control;
-                nsresult gotFrame = GetPrimaryFrame(node, control);
-                isFormElement = NS_SUCCEEDED(gotFrame) && control;
+                GetPrimaryFrame(node, control, PR_TRUE, PR_FALSE);
+
+                isFormElement = control != nsnull;
               }
             }
           }
@@ -399,9 +408,9 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
                   // Find out of this is a form element.
                   nsIFormControlFrame* control;
 
-                  nsresult gotFrame = GetPrimaryFrame(node, control);
+                  GetPrimaryFrame(node, control, PR_TRUE, PR_FALSE);
 
-                  isFormElement = NS_SUCCEEDED(gotFrame) && control;
+                  isFormElement = control != nsnull;
                 }
               }
             }
@@ -432,3 +441,34 @@ nsHTMLLabelElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
   return NS_OK;
 }
 #endif
+
+nsresult
+nsHTMLLabelElement::Reset()
+{
+  return NS_OK;
+}
+
+nsresult
+nsHTMLLabelElement::IsSuccessful(nsIContent* aSubmitElement,
+                                 PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLLabelElement::GetMaxNumValues(PRInt32 *_retval)
+{
+  *_retval = 0;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLLabelElement::GetNamesValues(PRInt32 aMaxNumValues,
+                                   PRInt32& aNumValues,
+                                   nsString* aValues,
+                                   nsString* aNames)
+{
+  aNumValues = 0;
+  return NS_OK;
+}

@@ -74,7 +74,15 @@ public:
 
   // nsIFormControl
   NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD Reset();
+  NS_IMETHOD IsSuccessful(nsIContent* aSubmitElement, PRBool *_retval);
+  NS_IMETHOD GetMaxNumValues(PRInt32 *_retval);
+  NS_IMETHOD GetNamesValues(PRInt32 aMaxNumValues,
+                            PRInt32& aNumValues,
+                            nsString* aValues,
+                            nsString* aNames);
 
+  // nsIContent
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
                                nsHTMLValue& aResult);
@@ -238,3 +246,34 @@ nsHTMLLegendElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
   return NS_OK;
 }
 #endif
+
+nsresult
+nsHTMLLegendElement::Reset()
+{
+  return NS_OK;
+}
+
+nsresult
+nsHTMLLegendElement::IsSuccessful(nsIContent* aSubmitElement,
+                                  PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLLegendElement::GetMaxNumValues(PRInt32 *_retval)
+{
+  *_retval = 0;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLLegendElement::GetNamesValues(PRInt32 aMaxNumValues,
+                                    PRInt32& aNumValues,
+                                    nsString* aValues,
+                                    nsString* aNames)
+{
+  aNumValues = 0;
+  return NS_OK;
+}

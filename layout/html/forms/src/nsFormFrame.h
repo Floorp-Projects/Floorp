@@ -37,7 +37,6 @@
 #ifndef nsFormFrame_h___
 #define nsFormFrame_h___
 
-#include "nsIFormManager.h"
 #include "nsBlockFrame.h"
 #include "nsVoidArray.h"
 #include "nsIFileSpec.h"
@@ -58,8 +57,7 @@ class nsFormFrame;
 class nsIUnicodeEncoder;
 class nsRadioControlGroup;
 
-class nsFormFrame : public nsBlockFrame, 
-                    public nsIFormManager
+class nsFormFrame : public nsBlockFrame
 {
 public:
   nsFormFrame();
@@ -71,12 +69,6 @@ public:
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
-
-  // nsIFormManager
-
-  NS_IMETHOD OnReset(nsIPresContext* aPresContext);
-
-  NS_IMETHOD OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame);
 
   // other methods 
 
@@ -92,23 +84,16 @@ public:
   void RemoveRadioControlFrame(nsIFormControlFrame * aFrame);
   nsresult GetRadioInfo(nsIFormControlFrame* aFrame, nsString& aName, nsRadioControlGroup *& aGroup);
 
-  NS_IMETHOD GetMethod(PRInt32* aMethod);
-  NS_IMETHOD GetEnctype(PRInt32* aEnctype);
-  NS_IMETHOD GetTarget(nsString* aTarget);
-  NS_IMETHOD GetAction(nsString* aAction);
-
-  // Detection of first form to notify observers
-  static PRBool gFirstFormSubmitted;
-  // Detection of first password field to notify any password manager
-  // style modules
-  static PRBool gInitPasswordManager;
-
   // static helper functions for nsIFormControls
   
   static PRBool GetDisabled(nsIFrame* aChildFrame, nsIContent* aContent = 0);
   static PRBool GetReadonly(nsIFrame* aChildFrame, nsIContent* aContent = 0);
-  static nsresult GetName(nsIFrame* aChildFrame, nsString& aName, nsIContent* aContent = 0);
-  static nsresult GetValue(nsIFrame* aChildFrame, nsString& aValue, nsIContent* aContent = 0);
+  static nsresult GetName(nsIFrame* aChildFrame,
+                          nsAString& aName,
+                          nsIContent* aContent = 0);
+  static nsresult GetValue(nsIFrame* aChildFrame,
+                           nsAString& aValue,
+                           nsIContent* aContent = 0);
   static void StyleChangeReflow(nsIPresContext* aPresContext,
                                 nsIFrame* aFrame);
   static nsresult GetRadioGroupSelectedContent(nsGfxRadioControlFrame* aControl,
@@ -130,31 +115,10 @@ protected:
                           nsRadioControlGroup *    aGroup,
                           nsGfxRadioControlFrame * aRadioToIgnore = nsnull);
 
-  nsresult ProcessValue(nsIFormProcessor& aFormProcessor, nsIFormControlFrame* aFrameControl, const nsString& aName, nsString& aNewValue);
-  nsresult ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBool aIsPost, nsString& aData, nsIFormControlFrame* aFrame);
-  nsresult ProcessAsMultipart(nsIFormProcessor* aFormProcessor,
-                              nsIFile** aMultipartDataFile,
-                              nsIFormControlFrame* aFrame);
-  PRUint32 GetFileNameWithinPath(nsString aPathName);
-  nsresult GetContentType(char* aPathName, char** aContentType);
-  
-  // i18n helper routines
-  nsString* URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder);
-  char* UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder* encoder);
-  
-  NS_IMETHOD GetEncoder(nsIUnicodeEncoder** encoder);
-  NS_IMETHOD GetPlatformEncoder(nsIUnicodeEncoder** encoder);
-  void GetSubmitCharset(nsString& oCharset);
-
   nsVoidArray          mFormControls;
   nsVoidArray          mRadioGroups;
-#ifdef IBMBIDI
-//ahmed
-  nsAutoString         mCharset;            // The charset in use
-  PRUint8              mTextDir;            // The direction of the text 
-  PRUint8              mCtrlsModAtSubmit;   // The text mode of the control (logical/visual)
-                                            // Direction and text mode are set by Bidi Options in Preferences
-#endif
+
+  static PRBool gInitPasswordManager;
 };
 
 #endif // nsFormFrame_h___

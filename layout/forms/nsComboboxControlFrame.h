@@ -57,12 +57,12 @@
 #include "nsVoidArray.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsISelectControlFrame.h"
-#include "nsIStatefulFrame.h"
 #include "nsIRollupListener.h"
 #include "nsIPresState.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsITextContent.h"
 #include "nsIScrollableViewProvider.h"
+#include "nsIStatefulFrame.h"
 
 class nsFormFrame;
 class nsIView;
@@ -82,9 +82,9 @@ class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIComboboxControlFrame,
                                public nsIAnonymousContentCreator,
                                public nsISelectControlFrame,
-                               public nsIStatefulFrame,
                                public nsIRollupListener,
-                               public nsIScrollableViewProvider
+                               public nsIScrollableViewProvider,
+                               public nsIStatefulFrame
 {
 public:
   friend nsresult NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags);
@@ -144,19 +144,16 @@ public:
 
      // nsIFormControlFrame
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
-  NS_IMETHOD GetName(nsString* aName);
+  NS_IMETHOD GetName(nsAString* aName);
   NS_IMETHOD GetType(PRInt32* aType) const;
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
   void       SetFocus(PRBool aOn, PRBool aRepaint);
   void       ScrollIntoView(nsIPresContext* aPresContext);
   virtual void InitializeControl(nsIPresContext* aPresContext);
-  virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   virtual void   SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
-  virtual void   Reset(nsIPresContext* aPresContext);
-  virtual PRInt32 GetMaxNumValues();
-  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                nsString* aValues, nsString* aNames);
+  NS_IMETHOD OnContentReset();
+
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                      const nsFont*&  aFont);
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
@@ -192,15 +189,13 @@ public:
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
   NS_IMETHOD RemoveOption(nsIPresContext* aPresContext, PRInt32 index);
-  NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
   NS_IMETHOD DoneAddingContent(PRBool aIsDone);
-  NS_IMETHOD OptionDisabled(nsIContent * aContent);
-  NS_IMETHOD MakeSureSomethingIsSelected(nsIPresContext* aPresContext); // Default to option 0
-
-  //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
+  NS_IMETHOD OnOptionSelected(nsIPresContext* aPresContext,
+                              PRInt32 aIndex,
+                              PRBool aSelected);
+  NS_IMETHOD GetDummyFrame(nsIFrame** aFrame);
+  NS_IMETHOD SetDummyFrame(nsIFrame* aFrame);
 
   //nsIRollupListener
   // NS_DECL_NSIROLLUPLISTENER
@@ -218,6 +213,10 @@ public:
 
   // nsIScrollableViewProvider
   NS_IMETHOD GetScrollableView(nsIScrollableView** aView);
+
+  //nsIStatefulFrame
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
 protected:
   NS_IMETHOD CreateDisplayFrame(nsIPresContext* aPresContext);
@@ -249,7 +248,7 @@ protected:
   void ShowPopup(PRBool aShowPopup);
   void ShowList(nsIPresContext* aPresContext, PRBool aShowList);
   void SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nscoord aHeight);
-  void InitTextStr(nsIPresContext* aPresContext, PRBool aUpdate);
+  void InitTextStr();
   nsresult GetPrimaryComboFrame(nsIPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame);
   NS_IMETHOD ToggleList(nsIPresContext* aPresContext);
 
@@ -277,9 +276,6 @@ protected:
   nsIFrame*                mDropdownFrame;           // dropdown list frame
   nsIFrame*                mTextFrame;               // display area frame
   nsIListControlFrame *    mListControlFrame;        // ListControl Interface for the dropdown frame
-
-  
-  nsCOMPtr<nsIPresState> mPresState;               // Need cache state when list is null
 
   // Resize Reflow Optimization
   nsSize                mCacheSize;

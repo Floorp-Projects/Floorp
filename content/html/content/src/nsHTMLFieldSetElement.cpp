@@ -74,8 +74,14 @@ public:
 
   // nsIFormControl
   NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD Reset();
+  NS_IMETHOD IsSuccessful(nsIContent* aSubmitElement, PRBool *_retval);
+  NS_IMETHOD GetMaxNumValues(PRInt32 *_retval);
+  NS_IMETHOD GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                            nsString* aValues, nsString* aNames);
 
 #ifdef DEBUG
+  // nsIContent
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 };
@@ -195,3 +201,34 @@ nsHTMLFieldSetElement::SizeOf(nsISizeOfHandler* aSizer,
   return NS_OK;
 }
 #endif
+
+nsresult
+nsHTMLFieldSetElement::Reset()
+{
+  return NS_OK;
+}
+
+nsresult
+nsHTMLFieldSetElement::IsSuccessful(nsIContent* aSubmitElement,
+                                    PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLFieldSetElement::GetMaxNumValues(PRInt32 *_retval)
+{
+  *_retval = 0;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLFieldSetElement::GetNamesValues(PRInt32 aMaxNumValues,
+                                      PRInt32& aNumValues,
+                                      nsString* aValues,
+                                      nsString* aNames)
+{
+  aNumValues = 0;
+  return NS_OK;
+}

@@ -89,6 +89,7 @@ public:
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_IMETHOD OnContentReset();
 
   NS_IMETHOD Reflow(nsIPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -107,14 +108,7 @@ public:
                               PRInt32         aModType, 
                               PRInt32         aHint);
 
-  virtual PRInt32 GetMaxNumValues();
-
-  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                nsString* aValues, nsString* aNames);
-
-  NS_IMETHOD     GetName(nsString* aName);
-  virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
-  virtual void   Reset(nsIPresContext* aPresContext);
+  NS_IMETHOD     GetName(nsAString* aName);
   NS_IMETHOD     GetType(PRInt32* aType) const;
   void           SetFocus(PRBool aOn, PRBool aRepaint);
   void           ScrollIntoView(nsIPresContext* aPresContext);

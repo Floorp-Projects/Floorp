@@ -349,7 +349,7 @@ public:
   //XXX These three create a dependency between content and frames 
   static nsresult GetPrimaryFrame(nsIHTMLContent* aContent,
                                   nsIFormControlFrame *&aFormControlFrame,
-                                  PRBool aFlushNotifications=PR_TRUE);
+                                  PRBool aFlushContent, PRBool aFlushReflows);
   static nsresult GetPrimaryPresState(nsIHTMLContent* aContent,
                                       nsIPresState** aPresState);
   static nsresult GetPresContext(nsIHTMLContent* aContent,
@@ -533,6 +533,14 @@ public:
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
                      PRBool aRemoveFromForm = PR_TRUE);
   NS_IMETHOD Init();
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
+  {
+    return NS_OK;
+  }
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
+  {
+    return NS_OK;
+  }
 
   // nsIContent
   NS_IMETHOD SetParent(nsIContent *aParent);
@@ -575,6 +583,14 @@ public:
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
                      PRBool aRemoveFromForm = PR_TRUE);
   NS_IMETHOD Init();
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
+  {
+    return NS_OK;
+  }
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
+  {
+    return NS_OK;
+  }
 
   // nsIContent
   NS_IMETHOD SetParent(nsIContent *aParent);

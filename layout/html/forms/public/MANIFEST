@@ -12,3 +12,4 @@ nsIFormProcessor.h
 nsISelectControlFrame.h
 nsIGfxTextControlFrame.h
 nsIFormManager.h
+nsIImageControlFrame.h

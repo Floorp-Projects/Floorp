@@ -40,6 +40,11 @@
 
 #include "nsISupports.h"
 class nsIDOMHTMLFormElement;
+class nsIPresContext;
+class nsIPresState;
+class nsIContent;
+class nsString;
+class nsIFormProcessor;
 
 #define NS_FORM_BROWSE          0
 #define NS_FORM_BUTTON_BUTTON   1
@@ -72,38 +77,60 @@ class nsIDOMHTMLFormElement;
 
 
 /**
-  * Interface which all form controls (e.g. buttons, checkboxes, text,
-  * radio buttons, select, etc) implement in addition to their dom specific interface. 
- **/
-class nsIFormControl : public nsISupports {
+ * Interface which all form controls (e.g. buttons, checkboxes, text,
+ * radio buttons, select, etc) implement in addition to their dom specific
+ * interface.
+ */
+class nsIFormControl : public nsISupports
+{
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IFORMCONTROL_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMCONTROL_IID)
 
   /**
-    * Get the form for this form control. 
-    * @param aForm the form to get
-    * @return NS_OK
-    */
+   * Get the form for this form control.
+   * @param aForm the form to get
+   * @return NS_OK
+   */
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm) = 0;
 
   /**
-    * Set the form for this form control.
-    * @param aForm the form
-    * @return NS_OK
-    */
+   * Set the form for this form control.
+   * @param aForm the form
+   * @return NS_OK
+   */
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
                      PRBool aRemoveFromForm = PR_TRUE) = 0;
 
   /**
-    * Get the type of this control
-    * @param aType the type to be returned
-    * @return NS_OK
-    */
+   * Get the type of this control
+   * @param aType the type to be returned
+   * @return NS_OK
+   */
   NS_IMETHOD GetType(PRInt32* aType) = 0;
 
-  NS_IMETHOD Init() = 0;
+  NS_IMETHOD Reset() = 0;
 
+  NS_IMETHOD IsSuccessful(nsIContent* aSubmitElement, PRBool *_retval) = 0;
+
+  NS_IMETHOD GetMaxNumValues(PRInt32 *_retval) = 0;
+
+  NS_IMETHOD GetNamesValues(PRInt32 aMaxNumValues,
+                            PRInt32& aNumValues,
+                            nsString* aValues,
+                            nsString* aNames) = 0;
+
+  /**
+   * Save to presentation state
+   */
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext,
+                       nsIPresState** aState) = 0;
+
+  /**
+   * Restore from presentation state
+   */
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext,
+                          nsIPresState* aState) = 0;
 };
 
 #endif /* nsIFormControl_h___ */

@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLOptionElement.h"
+#include "nsIOptionElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventReceiver.h"
@@ -56,7 +57,6 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsISelectElement.h"
-#include "nsISelectControlFrame.h"
 #include "nsIComboboxControlFrame.h"
 
 // Notify/query select frame for selected state
@@ -67,11 +67,13 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsCOMPtr.h"
+#include "nsLayoutAtoms.h"
 
 
 class nsHTMLOptionElement : public nsGenericHTMLContainerElement,
                             public nsIDOMHTMLOptionElement,
-                            public nsIJSNativeInitializer
+                            public nsIJSNativeInitializer,
+                            public nsIOptionElement
 {
 public:
   nsHTMLOptionElement();
@@ -105,15 +107,22 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
+  // nsIOptionElement
+  NS_IMETHOD GetSelectedInternal(PRBool* aValue);
+  NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify);
+  NS_IMETHOD GetValueOrText(nsAString& aValue);
+
 protected:
   // Get the primary frame associated with this content
   nsresult GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame,
-                           PRBool aFlushNotifications = PR_TRUE);
+                           PRBool aFlushContent, PRBool aFlushReflows);
 
   // Get the select content element that contains this option, this
   // intentionally does not return nsresult, all we care about is if
   // there's a select associated with this option or not.
-  void GetSelect(nsIDOMHTMLSelectElement *&aSelectElement);
+  void GetSelect(nsIDOMHTMLSelectElement **aSelectElement);
+
+  PRBool mIsInitialized;
 };
 
 nsresult
@@ -163,6 +172,7 @@ NS_NewHTMLOptionElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLOptionElement::nsHTMLOptionElement()
 {
+  mIsInitialized = PR_FALSE;
 }
 
 nsHTMLOptionElement::~nsHTMLOptionElement()
@@ -181,6 +191,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLOptionElement,
                                     nsGenericHTMLContainerElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLOptionElement)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
+  NS_INTERFACE_MAP_ENTRY(nsIOptionElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLOptionElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -220,7 +231,7 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
   *aForm = nsnull;
 
   nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
-  GetSelect(*getter_AddRefs(selectElement));
+  GetSelect(getter_AddRefs(selectElement));
 
   nsCOMPtr<nsIFormControl> selectControl(do_QueryInterface(selectElement));
 
@@ -231,87 +242,95 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsHTMLOptionElement::GetSelected(PRBool* aValue) 
+NS_IMETHODIMP
+nsHTMLOptionElement::GetSelectedInternal(PRBool* aValue)
 {
-  NS_ENSURE_ARG_POINTER(aValue);
-  *aValue = PR_FALSE;
+  // If it's not initialized, initialize it.
+  if (!mIsInitialized) {
+    mIsInitialized = PR_TRUE;
+    PRBool selected;
+    GetDefaultSelected(&selected);
+    // This does not need to be SetSelected (which sets selected in the select)
+    // because we *will* be initialized when we are placed into a select.  Plus
+    // it seems like that's just inviting an infinite loop.
+    SetSelectedInternal(selected, PR_TRUE);
+  }
+  nsAutoString tmpVal;
+  nsresult rv = GetAttr(kNameSpaceID_None,
+                        nsLayoutAtoms::optionSelectedPseudo,
+                        tmpVal);
+  *aValue = !(NS_FAILED(rv) || NS_CONTENT_ATTR_NOT_THERE == rv);
+  return NS_OK;
+}
 
-  nsIFormControlFrame* formControlFrame = nsnull;
-
-  // DO NOT flush pending reflows here
-  GetPrimaryFrame(formControlFrame, PR_FALSE);
-
-  if (formControlFrame) {
-    PRInt32 indx;
-
-    GetIndex(&indx);
-
-    if (indx >= 0) {
-      nsAutoString value;
-
-      value.AppendInt(indx, 10); // Save the index in base 10
-
-      formControlFrame->GetProperty(nsHTMLAtoms::selected, value);
-
-      *aValue = value.EqualsWithConversion("1");
-    }
+NS_IMETHODIMP
+nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
+{
+  mIsInitialized = PR_TRUE;
+  // This affects the display, but what the hey, it's a good place for it
+  PRInt32 ind;
+  GetIndex(&ind);
+  if (aValue) {
+    return SetAttr(kNameSpaceID_None,
+                   nsLayoutAtoms::optionSelectedPseudo,
+                   NS_LITERAL_STRING(""),
+                   aNotify);
   } else {
-    // Note: The select content obj maintains all the PresState
-    // so defer to it to get the answer
+    return UnsetAttr(kNameSpaceID_None,
+                     nsLayoutAtoms::optionSelectedPseudo,
+                     aNotify);
+  }
+}
 
-    nsCOMPtr<nsIDOMNode> parentNode;
-    GetParentNode(getter_AddRefs(parentNode));
-
-    nsCOMPtr<nsISelectElement> selectElement(do_QueryInterface(parentNode));
-
-    if (selectElement) {
-      return selectElement->IsOptionSelected(this, aValue);
-    }
+NS_IMETHODIMP
+nsHTMLOptionElement::GetValueOrText(nsAString& aValue)
+{
+  nsHTMLValue value;
+  nsresult rv = GetHTMLAttribute(nsHTMLAtoms::value, value);
+  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
+    // XXX When an equivalent of CompressWhitespace exists for nsAString,
+    // somebody please clean this up.  The only reason I can think that we're
+    // we're doing it anyway is because GetText() leaves whitespace around if
+    // the text is all whitespace we apparently want to compress even that.
+    nsAutoString getVal;
+    rv = GetText(getVal);
+    getVal.CompressWhitespace();
+    aValue = getVal;
+  } else {
+    // Need to use GetValue to get the real value because it does extra
+    // processing on the return value. (i.e it trims it.)
+    rv = GetValue(aValue);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP 
+nsHTMLOptionElement::GetSelected(PRBool* aValue)
+{
+  NS_ENSURE_ARG_POINTER(aValue);
+  *aValue = PR_FALSE;
+
+  // If there is no select element, return the selected
+  return GetSelectedInternal(aValue);
+}
+
+NS_IMETHODIMP
 nsHTMLOptionElement::SetSelected(PRBool aValue)
 {
-  nsIFormControlFrame* fcFrame = nsnull;
-
-  // DO NOT flush pending reflows here
-  nsresult result = GetPrimaryFrame(fcFrame, PR_FALSE);
-
-  if (NS_SUCCEEDED(result) && fcFrame) {
-    nsISelectControlFrame* selectFrame = nsnull;
-    result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),
-                                     (void **) &selectFrame);
-
-    if (NS_SUCCEEDED(result) && (selectFrame)) {
-      PRInt32 indx;
-
-      GetIndex(&indx);
-
-      if (indx >= 0) {
-        // this will flush pending reflows
-        return selectFrame->SetOptionSelected(indx, aValue);
-      }
-    }
+  // Note: The select content obj maintains all the PresState
+  // so defer to it to get the answer
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
+  GetSelect(getter_AddRefs(selectElement));
+  nsCOMPtr<nsISelectElement> selectInt(do_QueryInterface(selectElement));
+  if (selectInt) {
+    // This should end up calling SetSelectedInternal
+    return selectInt->SetOptionSelected(this, aValue);
   } else {
-    // Note: The select content obj maintains all the PresState
-    // so defer to it to get the answer
-    nsCOMPtr<nsIDOMNode> parentNode;
-    result = NS_OK;
-
-    GetParentNode(getter_AddRefs(parentNode));
-
-    nsCOMPtr<nsISelectElement> selectElement(do_QueryInterface(parentNode));
-
-    if (selectElement) {
-      return selectElement->SetOptionSelected(this, aValue);
-    }
+    return SetSelectedInternal(aValue, PR_TRUE);
   }
 
-  return result;
+  return NS_OK;
 }
 
 //NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected)
@@ -319,39 +338,26 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
 //NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label)
 NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value)
 
-NS_IMETHODIMP                                                      
-nsHTMLOptionElement::GetDisabled(PRBool* aDisabled)                             
-{                                                                  
-  nsHTMLValue val;                                                 
+NS_IMETHODIMP
+nsHTMLOptionElement::GetDisabled(PRBool* aDisabled)
+{
+  nsHTMLValue val;
   nsresult rv = GetHTMLAttribute(nsHTMLAtoms::disabled, val);
   *aDisabled = (NS_CONTENT_ATTR_NOT_THERE != rv);
   return NS_OK;
-}         
+}
                                                          
-NS_IMETHODIMP                                                      
-nsHTMLOptionElement::SetDisabled(PRBool aDisabled)                       
-{                                                                  
+NS_IMETHODIMP
+nsHTMLOptionElement::SetDisabled(PRBool aDisabled)
+{
   nsresult rv = NS_OK;
   nsHTMLValue empty(eHTMLUnit_Empty);
 
+
   if (aDisabled) {
     rv = SetHTMLAttribute(nsHTMLAtoms::disabled, empty, PR_TRUE);
-    if (NS_SUCCEEDED(rv)) {
-      nsIFormControlFrame* fcFrame = nsnull;
-      nsresult result = GetPrimaryFrame(fcFrame);
-      if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
-        nsISelectControlFrame* selectFrame = nsnull;
-
-        result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),
-                                         (void **)&selectFrame);
-
-        if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
-          selectFrame->OptionDisabled(this);
-        }
-      }
-    }
   } else {
-    rv = UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::selected, PR_TRUE);
+    rv = UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::disabled, PR_TRUE);
   }
 
   return NS_OK;
@@ -372,19 +378,20 @@ nsHTMLOptionElement::SetLabel(const nsAReadableString& aValue)
 
   result = nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_HTML,
                                                   nsHTMLAtoms::label,
-                                                  aValue, PR_TRUE); 
+                                                  aValue, PR_TRUE);
+  // XXX Why does this only happen to the combobox?  and what about
+  // when the text gets set and label is blank?
   if (NS_SUCCEEDED(result)) {
     nsIFormControlFrame* fcFrame = nsnull;
 
-    result = GetPrimaryFrame(fcFrame);
+    GetPrimaryFrame(fcFrame, PR_TRUE, PR_FALSE);
 
-    if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
+    if (fcFrame) {
       nsIComboboxControlFrame* selectFrame = nsnull;
 
-      result = fcFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame),
-                                       (void **) &selectFrame);
+      CallQueryInterface(fcFrame, &selectFrame);
 
-      if (NS_SUCCEEDED(result) && selectFrame) {
+      if (selectFrame) {
         selectFrame->UpdateSelection(PR_FALSE, PR_TRUE, 0);
       }
     }
@@ -416,11 +423,6 @@ nsHTMLOptionElement::SetDefaultSelected(PRBool aDefaultSelected)
     rv = UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::selected, PR_TRUE);
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    // When setting DefaultSelected, we must also reset Selected (DOM Errata)
-    rv = SetSelected(aDefaultSelected);
-  }
-
   return rv;
 }
 
@@ -434,7 +436,7 @@ nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
   // Get our containing select content object.
   nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
 
-  GetSelect(*getter_AddRefs(selectElement));
+  GetSelect(getter_AddRefs(selectElement));
 
   if (selectElement) {
     // Get the options from the select object.
@@ -600,15 +602,14 @@ nsHTMLOptionElement::SetText(const nsAReadableString& aText)
 
   if (NS_SUCCEEDED(result)) {
     nsIFormControlFrame* fcFrame = nsnull;
-    result = GetPrimaryFrame(fcFrame);
+    GetPrimaryFrame(fcFrame, PR_TRUE, PR_FALSE);
 
-    if (NS_SUCCEEDED(result) && fcFrame) {
+    if (fcFrame) {
       nsIComboboxControlFrame* selectFrame = nsnull;
 
-      result = fcFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame),
-                                       (void **)&selectFrame);
+      CallQueryInterface(fcFrame, &selectFrame);
 
-      if (NS_SUCCEEDED(result) && selectFrame) {
+      if (selectFrame) {
         selectFrame->UpdateSelection(PR_FALSE, PR_TRUE, 0);
       }
     }
@@ -623,13 +624,14 @@ nsHTMLOptionElement::SetText(const nsAReadableString& aText)
 
 nsresult
 nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormControlFrame,
-                                     PRBool aFlushNotifications)
+                                     PRBool aFlushContent,
+                                     PRBool aFlushReflows)
 {
   nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
 
   nsresult res = NS_ERROR_FAILURE; // This should be NS_OK;
 
-  GetSelect(*getter_AddRefs(selectElement));
+  GetSelect(getter_AddRefs(selectElement));
 
   if (selectElement) {
     nsCOMPtr<nsIHTMLContent> selectContent(do_QueryInterface(selectElement));
@@ -637,7 +639,8 @@ nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormControlFrame,
     if (selectContent) {
       res = nsGenericHTMLElement::GetPrimaryFrame(selectContent,
                                                   aIFormControlFrame,
-                                                  aFlushNotifications);
+                                                  aFlushContent,
+                                                  aFlushReflows);
     }
   }
 
@@ -646,42 +649,21 @@ nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormControlFrame,
 
 // Get the select content element that contains this option
 void
-nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement *&aSelectElement)
+nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement **aSelectElement)
 {
-  aSelectElement = nsnull;
+  *aSelectElement = nsnull;
 
   // Get the containing element (Either a select or an optGroup)
-  nsCOMPtr<nsIDOMNode> parentNode;
-
-  GetParentNode(getter_AddRefs(parentNode));
-
-  if (parentNode) {
-    nsresult res;
-    res = parentNode->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
-                                     (void**)&aSelectElement);
-
-    // If we are in an OptGroup we need to GetParentNode again (at least once)
-    if (NS_FAILED(res)) {
-      nsCOMPtr<nsIDOMHTMLOptGroupElement> optgroupElement;
-
-      while (parentNode) { // Be ready for nested OptGroups
-        // Don't need the optgroupElement, just seeing if it IS one.
-        optgroupElement = do_QueryInterface(parentNode);
-
-        if (optgroupElement) {
-          nsIDOMNode* tmpNode = parentNode.get();
-
-          tmpNode->GetParentNode(getter_AddRefs(parentNode));
-        } else {
-          break; // Break out if not a OptGroup (hopefully we have a select)
-        }
-      }
-
-      if (parentNode) {
-        parentNode->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
-                                   (void**)&aSelectElement);
-      }
+  nsCOMPtr<nsIContent> parent;
+  nsCOMPtr<nsIContent> prevParent;
+  GetParent(*getter_AddRefs(parent));
+  while (parent) {
+    CallQueryInterface(parent, aSelectElement);
+    if (*aSelectElement) {
+      break;
     }
+    prevParent = parent;
+    prevParent->GetParent(*getter_AddRefs(parent));
   }
 }
 
@@ -746,8 +728,8 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
         // The third (optional) parameter is the defaultSelected value
         JSBool defaultSelected;
         if ((JS_TRUE == JS_ValueToBoolean(aContext,
-                                         argv[2],
-                                         &defaultSelected)) &&
+                                          argv[2],
+                                          &defaultSelected)) &&
             (JS_TRUE == defaultSelected)) {
           nsHTMLValue empty(eHTMLUnit_Empty);
 
@@ -758,10 +740,15 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
           }          
         }
 
-        // XXX Since we don't store the selected state, we can't deal
-        // with the fourth (optional) parameter that is meant to specify
-        // whether the option element should be currently selected or
-        // not. Does anyone depend on this behavior?
+        // XXX This is *untested* behavior.  Should work though.
+        if (argc > 3) {
+          JSBool selected;
+          if (JS_TRUE == JS_ValueToBoolean(aContext,
+                                           argv[3],
+                                           &selected)) {
+            return SetSelected(selected);
+          }
+        }
       }
     }
   }

@@ -87,7 +87,7 @@ nsRadioControlGroup::SetCheckedRadio(nsGfxRadioControlFrame* aRadio)
 }
 
 void
-nsRadioControlGroup::GetName(nsString& aNameResult) const
+nsRadioControlGroup::GetName(nsAString& aNameResult) const
 {
   aNameResult = mName;
 }

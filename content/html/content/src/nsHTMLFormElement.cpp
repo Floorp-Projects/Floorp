@@ -39,6 +39,7 @@
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsIFormManager.h"
+#include "nsFormSubmitter.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMNSHTMLFormElement.h"
 #include "nsIHTMLDocument.h"
@@ -52,7 +53,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
-#include "nsIPresShell.h"   
+#include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsISizeOfHandler.h"
@@ -62,6 +63,7 @@
 #include "nsHashtable.h"
 #include "nsContentList.h"
 #include "nsGUIEvent.h"
+#include "nsIFormSubmitObserver.h"
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
@@ -126,6 +128,8 @@ protected:
   nsresult DoSubmitOrReset(nsIPresContext* aPresContext,
                            nsEvent* aEvent,
                            PRInt32 aMessage);
+
+  NS_IMETHOD OnReset(nsIPresContext* aPresContext);
   nsresult RemoveSelfAsWebProgressListener();
 
   nsFormControlList*       mControls;
@@ -186,6 +190,7 @@ protected:
 
   nsSupportsHashtable mNameLookupTable;
 };
+
 
 static PRBool
 IsNamedFormControl(nsIFormControl* aFormControl)
@@ -355,7 +360,27 @@ NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Action, action)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Enctype, enctype)
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, Method, method)
-NS_IMPL_STRING_ATTR(nsHTMLFormElement, Target, target)
+
+NS_IMETHODIMP
+nsHTMLFormElement::GetTarget(nsAWritableString& aValue)
+{
+  aValue.Truncate();
+  nsresult rv = nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_HTML,
+                                                       nsHTMLAtoms::target,
+                                                       aValue);
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    rv = GetBaseTarget(aValue);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::SetTarget(const nsAString& aValue)
+{
+  return nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_HTML,
+                                                nsHTMLAtoms::target,
+                                                aValue, PR_TRUE);
+}
 
 NS_IMETHODIMP
 nsHTMLFormElement::Submit()
@@ -500,40 +525,45 @@ nsHTMLFormElement::DoSubmitOrReset(nsIPresContext* aPresContext,
     doc->FlushPendingNotifications();
   }
 
-  // Get the form manager
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  NS_ENSURE_TRUE(shell, NS_OK);
-
-  nsIFrame* frame = nsnull;
-  shell->GetPrimaryFrameFor(this, &frame);
-  NS_ENSURE_TRUE(frame, NS_OK);
-
-  nsIFormManager* formMan = nsnull;
-  frame->QueryInterface(NS_GET_IID(nsIFormManager), (void**)&formMan);
-  NS_ENSURE_TRUE(formMan, NS_OK);
+  // JBK Don't get form frames anymore - bug 34297
 
   // Submit or Reset the form
   nsresult rv = NS_OK;
   if (NS_FORM_RESET == aMessage) {
-    rv = formMan->OnReset(aPresContext);
+    rv = OnReset(aPresContext);
   }
   else if (NS_FORM_SUBMIT == aMessage) {
-    nsIFrame *originatingFrame = nsnull;
+    nsIContent *originatingElement = nsnull;
 
     // Get the originating frame (failure is non-fatal)
     if (aEvent) {
       if (NS_FORM_EVENT == aEvent->eventStructType) {
-        nsIContent *originator = ((nsFormEvent *)aEvent)->originator;
-        if (originator) {
-          shell->GetPrimaryFrameFor(originator, &originatingFrame);
-        }
+        originatingElement = ((nsFormEvent *)aEvent)->originator;
       }
     }
 
-    rv = formMan->OnSubmit(aPresContext, originatingFrame);
+    // Pass the form originator
+    rv = nsFormSubmitter::OnSubmit(this, aPresContext, originatingElement);
   }
   return rv;
+}
+
+// JBK moved from nsFormFrame - bug 34297
+NS_IMETHODIMP
+nsHTMLFormElement::OnReset(nsIPresContext* aPresContext)
+{
+  // JBK walk the elements[] array instead of form frame controls - bug 34297
+  PRUint32 numElements;
+  GetElementCount(&numElements);
+  for (PRUint32 elementX = 0; (elementX < numElements); elementX++) {
+    nsCOMPtr<nsIFormControl> controlNode;
+    GetElementAt(elementX, getter_AddRefs(controlNode));
+    if (controlNode) {
+      controlNode->Reset();
+    }
+  }
+
+  return NS_OK;
 }
 
 // nsIForm
@@ -761,8 +791,6 @@ nsFormControlList::GetNamedObject(const nsAReadableString& aName,
     return NS_OK;
   }
   
-  nsresult rv = NS_OK;
-
   // Get the hash entry
   nsStringKey key(aName);
 

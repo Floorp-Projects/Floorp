@@ -2203,7 +2203,7 @@ FrameManager::RestoreFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFram
 
   nsCAutoString stateKey;
   rv = GenerateStateKey(content, aID, stateKey);
-  if(NS_FAILED(rv) || stateKey.IsEmpty()) {
+  if (NS_FAILED(rv) || stateKey.IsEmpty()) {
     return rv;
   }
 
@@ -2365,8 +2365,17 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
 
       nsCOMPtr<nsIContent> formContent(do_QueryInterface(formElement));
       mHTMLForms->IndexOf(formContent, index, PR_FALSE);
+      if (index <= -1) {
+        mHTMLForms->IndexOf(formContent, index, PR_TRUE);
+      }
       NS_ASSERTION(index > -1,
                    "nsFrameManager::GenerateStateKey didn't find form index!");
+      if (index <= -1) {
+        PRUint32 formsLength;
+        // Assume the form index is going to be added to the form content next
+        mHTMLForms->GetLength(&formsLength, PR_FALSE);
+        index = (PRInt32)formsLength;
+      }
       if (index > -1) {
         KeyAppendInt(index, aKey);
 

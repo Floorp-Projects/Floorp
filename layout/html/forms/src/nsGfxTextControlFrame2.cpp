@@ -69,7 +69,6 @@
 #include "nsFormControlFrame.h" //for registering accesskeys
 #include "nsIDeviceContext.h" // to measure fonts
 #include "nsIPresState.h" //for saving state
-#include "nsLinebreakConverter.h" //to strip out carriage returns
 
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -111,6 +110,7 @@
 #endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
+#include "nsITextControlElement.h"
 
 #include "nsITransactionManager.h"
 #include "nsITransactionListener.h"
@@ -322,7 +322,7 @@ nsTextInputListener::KeyPress(nsIDOMEvent* aKeyEvent)
         nsIDOMKeyEvent::DOM_VK_ENTER==keyCode)
     {
       nsAutoString curValue;
-      mFrame->GetText(&curValue,PR_FALSE);
+      mFrame->GetText(&curValue);
 
       // If the text control's contents have changed, fire
       // off an onChange().
@@ -428,7 +428,7 @@ nsTextInputListener::Focus(nsIDOMEvent* aEvent)
     editor->AddEditorObserver(this);
   }
   
-  nsresult rv = mFrame->GetText(&mFocusedValue, PR_FALSE);
+  nsresult rv = mFrame->GetText(&mFocusedValue);
   if (NS_FAILED(rv)) return rv;
   
   return NS_OK;
@@ -448,7 +448,7 @@ nsTextInputListener::Blur (nsIDOMEvent* aEvent)
     editor->RemoveEditorObserver(this);
 
   }  
-  mFrame->GetText(&blurValue,PR_FALSE);
+  mFrame->GetText(&blurValue);
   if (!mFocusedValue.Equals(blurValue))//different fire onchange
   {
     mFocusedValue = blurValue;
@@ -1340,7 +1340,6 @@ NS_IMETHODIMP nsGfxTextControlFrame2::GetAccessible(nsIAccessible** aAccessible)
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    nsIAccessible* acc = nsnull;
     return accService->CreateHTMLTextFieldAccessible(NS_STATIC_CAST(nsIFrame*, this), aAccessible);
   }
 
@@ -1370,8 +1369,14 @@ NS_IMETHODIMP
 nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
 {
   // notify the editor that we are going away
-  if (mEditor)
-  {
+  if (mEditor) {
+    nsAutoString value;
+    GetTextControlFrameState(value);
+    // Tell the content the final value
+    nsCOMPtr<nsITextControlElement> control = do_QueryInterface(mContent);
+    if (control) {
+      control->SetValueInternal(value);
+    }
     mEditor->PreDestroy();
   }
   
@@ -1414,15 +1419,16 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
 //unregister self from content
   mTextListener->SetFrame(nsnull);
   nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
-  if (mFormFrame) {
+  if (mFormFrame)
+  {
     mFormFrame->RemoveFormControlFrame(*this);
     mFormFrame = nsnull;
-  mTextListener->SetFrame(nsnull);
+    mTextListener->SetFrame(nsnull);
   }
-  nsCOMPtr<nsIDOMEventReceiver> erP;
   if (mTextListener)
   {
-    if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)
+    nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(mContent);
+    if (erP)
     {
       erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener  *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
       erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*,mTextListener), NS_GET_IID(nsIDOMKeyListener));
@@ -1834,8 +1840,8 @@ nsGfxTextControlFrame2::ReflowNavQuirks(nsIPresContext*          aPresContext,
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
-                               nsIContent *      aContent,
-                               nsIFrame**        aFrame)
+                                       nsIContent *      aContent,
+                                       nsIFrame**        aFrame)
 {
   aContent = nsnull;
   return NS_ERROR_FAILURE;
@@ -1856,27 +1862,28 @@ nsGfxTextControlFrame2::SetInitialValue()
   // during frame construction. This was causing other form controls
   // to display wrong values.
 
-  if (!mEditor)
-    return NS_ERROR_NOT_INITIALIZED;
-
   // Check if this method has been called already.
   // If so, just return early.
 
   if (mUseEditor)
     return NS_OK;
 
-// Get the default value for the textfield.
+  // If the editor is not here, return failure.
+  if (!mEditor)
+    return NS_ERROR_NOT_INITIALIZED;
 
+  // Get the current value of the textfield.
   nsAutoString defaultValue;
-  nsresult rv = NS_OK;
-
-  if (mCachedState)
+  // If we have a cached state, use that.
+  if (mCachedState) {
     defaultValue = mCachedState->get();
-  else
-    rv = GetText(&defaultValue, PR_TRUE);
-
-  if (NS_FAILED(rv))
-    return rv;
+  } else {
+    // The content will know to get the default value if it needs to.
+    nsCOMPtr<nsITextControlElement> control = do_QueryInterface(mContent);
+    if (control) {
+      control->GetValueInternal(defaultValue);
+    }
+  }
 
   // If we have a default value, insert it under the div we created
   // above, but be sure to use the editor so that '*' characters get
@@ -1885,11 +1892,10 @@ nsGfxTextControlFrame2::SetInitialValue()
 
   mUseEditor = PR_TRUE;
 
-  if (defaultValue.Length() > 0)
-  {
+  if (!defaultValue.IsEmpty()) {
     PRUint32 editorFlags = 0;
 
-    rv = mEditor->GetFlags(&editorFlags);
+    nsresult rv = mEditor->GetFlags(&editorFlags);
 
     if (NS_FAILED(rv))
       return rv;
@@ -2432,7 +2438,7 @@ nsGfxTextControlFrame2::GetSkipSides() const
 
 //IMPLEMENTING NS_IFORMCONTROLFRAME
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetName(nsString* aResult)
+nsGfxTextControlFrame2::GetName(nsAString* aResult)
 {
   nsresult rv = NS_FORM_NOTOK;
   if (mContent) {
@@ -2517,34 +2523,6 @@ void    nsGfxTextControlFrame2::ScrollIntoView(nsIPresContext* aPresContext)
 
 void    nsGfxTextControlFrame2::MouseClicked(nsIPresContext* aPresContext){}
 
-void    nsGfxTextControlFrame2::Reset(nsIPresContext* aPresContext)
-{
-  nsAutoString temp;
-  GetText(&temp, PR_TRUE);
-  SetTextControlFrameState(temp);
-}
-
-PRInt32 nsGfxTextControlFrame2::GetMaxNumValues(){return 1;}/**/
-
-PRBool  nsGfxTextControlFrame2::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                nsString* aValues, nsString* aNames)
-{
-  if (!aValues || !aNames) { return PR_FALSE; }
-
-  nsAutoString name;
-  nsresult result = GetName(&name);
-  if ((aMaxNumValues <= 0) || (NS_CONTENT_ATTR_NOT_THERE == result)) {
-    return PR_FALSE;
-  }
-
-  aNames[0] = name;  
-  aNumValues = 1;
-
-  GetText(&(aValues[0]), PR_FALSE);
-  // XXX: error checking
-  return PR_TRUE;
-}
-
 nscoord 
 nsGfxTextControlFrame2::GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
@@ -2571,16 +2549,6 @@ nsGfxTextControlFrame2::SetFormFrame(nsFormFrame* aFormFrame)
   mFormFrame = aFormFrame; 
 }
 
-
-//---------------------------------------------------------
-PRBool
-nsGfxTextControlFrame2::IsSuccessful(nsIFormControlFrame* aSubmitter)
-{
-  nsAutoString name;
-  PRBool disabled = PR_FALSE;
-  nsFormControlHelper::GetDisabled(mContent, &disabled);
-  return !disabled && (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
-}
 
 NS_IMETHODIMP 
 nsGfxTextControlFrame2::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
@@ -2999,14 +2967,8 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
 
   if (nsHTMLAtoms::value == aAttribute) 
   {
-    if (mEditor && mContent)
-    {
-      nsString value;
-      mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, value);
-      mEditor->EnableUndo(PR_FALSE);      // wipe out undo info
-      SetTextControlFrameState(value);    // set new text value
-      mEditor->EnableUndo(PR_TRUE);       // fire up a new txn stack
-    }
+    // XXX If this should happen when value= attribute is set, shouldn't it
+    // happen when .value is set too?
     if (aHint != NS_STYLE_HINT_REFLOW)
       nsFormFrame::StyleChangeReflow(aPresContext, this);
   } 
@@ -3101,40 +3063,23 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::GetText(nsString* aText, PRBool aInitialValue)
+nsGfxTextControlFrame2::GetText(nsString* aText)
 {
   nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
   PRInt32 type;
   GetType(&type);
-  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) 
-  {
-    if (PR_TRUE==aInitialValue)
-    {
-      rv = nsFormControlHelper::GetInputElementValue(mContent, aText, aInitialValue);
-    }
-    else
-    {
-      GetTextControlFrameState(*aText);
-    }
+  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
+    GetTextControlFrameState(*aText);
     RemoveNewlines(*aText);
-  } 
-  else 
-  {
-    nsIDOMHTMLTextAreaElement* textArea = nsnull;
-    rv = mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLTextAreaElement), (void**)&textArea);
-    if ((NS_OK == rv) && textArea) {
-      if (PR_TRUE == aInitialValue) {
-        rv = textArea->GetDefaultValue(*aText);
+  } else {
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(mContent);
+    if (textArea) {
+      if (mEditor) {
+        nsCOMPtr<nsIEditorIMESupport> imeSupport = do_QueryInterface(mEditor);
+        if (imeSupport)
+          imeSupport->ForceCompositionEnd();
       }
-      else {
-        if(mEditor) {
-          nsCOMPtr<nsIEditorIMESupport> imeSupport = do_QueryInterface(mEditor);
-          if(imeSupport) 
-            imeSupport->ForceCompositionEnd();
-        }
-        rv = textArea->GetValue(*aText);
-      }
-      NS_RELEASE(textArea);
+      rv = textArea->GetValue(*aText);
     }
   }
   return rv;
@@ -3193,10 +3138,6 @@ nsGfxTextControlFrame2::SubmitAttempt()
   PRInt32 type;
   GetType(&type);
   if (mFormFrame && mTextSelImpl && NS_FORM_TEXTAREA != type) {
-    nsIContent *formContent = nsnull;
-
-    nsEventStatus status = nsEventStatus_eIgnore;
-
     nsWeakPtr &shell = mTextSelImpl->GetPresShell();
     nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(shell);
     if (!presShell) return;
@@ -3332,7 +3273,7 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
   }
   else if (mCachedState)
     aValue.Assign(*mCachedState);
-}     
+}
 
 
 // END IMPLEMENTING NS_IFORMCONTROLFRAME
@@ -3344,10 +3285,12 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
   {
     nsAutoString currentValue;
     GetTextControlFrameState(currentValue);
-    if (PR_TRUE==IsSingleLineTextControl()) {
+    if (IsSingleLineTextControl())
+    {
       RemoveNewlines(currentValue); 
     }
-    if (PR_FALSE==currentValue.Equals(aValue))  // this is necessary to avoid infinite recursion
+    // this is necessary to avoid infinite recursion
+    if (!currentValue.Equals(aValue))
     {
       nsCOMPtr<nsISelection> domSel;
       nsCOMPtr<nsISelectionPrivate> selPriv;
@@ -3367,19 +3310,20 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
 
       nsCOMPtr<nsIDOMDocument>domDoc;
       nsresult rv = mEditor->GetDocument(getter_AddRefs(domDoc));
-			if (NS_FAILED(rv)) return;
-			if (!domDoc) return;
+      if (NS_FAILED(rv)) return;
+      if (!domDoc) return;
       mSelCon->SelectAll();
       nsCOMPtr<nsIPlaintextEditor> htmlEditor = do_QueryInterface(mEditor);
-			if (!htmlEditor) return;
+      if (!htmlEditor) return;
 
-			// get the flags, remove readonly and disabled, set the value, restore flags
-			PRUint32 flags, savedFlags;
-			mEditor->GetFlags(&savedFlags);
-			flags = savedFlags;
-			flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
-			flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
-			mEditor->SetFlags(flags);
+      // get the flags, remove readonly and disabled, set the value,
+      // restore flags
+      PRUint32 flags, savedFlags;
+      mEditor->GetFlags(&savedFlags);
+      flags = savedFlags;
+      flags &= ~(nsIPlaintextEditor::eEditorDisabledMask);
+      flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
+      mEditor->SetFlags(flags);
       if (currentValue.Length() < 1)
         mEditor->DeleteSelection(nsIEditor::eNone);
       else {
@@ -3519,51 +3463,13 @@ nsGfxTextControlFrame2::GetWidthInCharacters() const
 NS_IMETHODIMP
 nsGfxTextControlFrame2::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
-  NS_ENSURE_ARG_POINTER(aState);
-
-  // Don't save state before we are initialized
-  if (!mUseEditor && !mCachedState) {
-    return NS_OK;
-  }
-
-  // Never save passwords in session history
-  PRInt32 type;
-  GetType(&type);
-  if (NS_FORM_INPUT_PASSWORD == type) {
-    return NS_OK;
-  }
-
-  // Get the value string
-  nsString stateString;
-  nsresult res = GetProperty(nsHTMLAtoms::value, stateString);
-  NS_ENSURE_SUCCESS(res, res);
-
-  // XXX Removed comparison between current and default state to
-  // XXX temporarily fix bug 69365 (mail reply all looses addresses)
-
-  // XXX Should use nsAutoString above but ConvertStringLineBreaks requires mOwnsBuffer!
-  res = nsLinebreakConverter::ConvertStringLineBreaks(stateString,
-           nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakContent);
-  NS_ASSERTION(NS_SUCCEEDED(res), "Converting linebreaks failed!");
-
-  // Construct a pres state and store value in it.
-  res = NS_NewPresState(aState);
-  NS_ENSURE_SUCCESS(res, res);
-  res = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), stateString);
-  return res;
+  return nsFormControlHelper::SaveContentState(this, aPresContext, aState);
 }
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
-  NS_ENSURE_ARG_POINTER(aState);
-
-  // Set the value to the stored state.
-  nsAutoString stateString;
-  nsresult res = aState->GetStateProperty(NS_LITERAL_STRING("value"), stateString);
-  NS_ENSURE_SUCCESS(res, res);
-
-  return SetProperty(aPresContext, nsHTMLAtoms::value, stateString);
+  return nsFormControlHelper::RestoreContentState(this, aPresContext, aState);
 }
 
 NS_IMETHODIMP
@@ -3588,8 +3494,11 @@ nsGfxTextControlFrame2::GetScrollableView(nsIScrollableView** aView)
 PRBool
 nsGfxTextControlFrame2::IsScrollable() const
 {
-  if (!IsSingleLineTextControl())
-    return PR_TRUE;
-  return PR_FALSE;
+  return !IsSingleLineTextControl();
 }
 
+NS_IMETHODIMP
+nsGfxTextControlFrame2::OnContentReset()
+{
+  return NS_OK;
+}

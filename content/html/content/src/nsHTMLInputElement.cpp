@@ -39,6 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
+#include "nsITextControlElement.h"
 #include "nsIControllers.h"
 #include "nsIEditorController.h"
 #include "nsIFocusController.h"
@@ -79,6 +80,9 @@
 #include "nsICheckboxControlFrame.h"
 #include "nsIRadioControlFrame.h"
 #include "nsIFormManager.h"
+#include "nsIImageControlFrame.h"
+#include "nsLinebreakConverter.h" //to strip out carriage returns
+#include "nsReadableUtils.h"
 
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMEventReceiver.h"
@@ -94,7 +98,8 @@ typedef nsIGfxTextControlFrame2 textControlPlace;
 
 class nsHTMLInputElement : public nsGenericHTMLLeafFormElement,
                            public nsIDOMHTMLInputElement,
-                           public nsIDOMNSHTMLInputElement
+                           public nsIDOMNSHTMLInputElement,
+                           public nsITextControlElement
 {
 public:
   nsHTMLInputElement();
@@ -107,88 +112,7 @@ public:
   NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafFormElement::)
 
   // nsIDOMElement
-    // can't use the macro here because input type=text needs to notify up to 
-    // frame system on SetAttribute("value");
-  NS_IMETHOD GetTagName(nsAWritableString& aTagName) {
-    return nsGenericHTMLLeafFormElement::GetTagName(aTagName);
-  }
-  NS_IMETHOD GetAttribute(const nsAReadableString& aName,
-                          nsAWritableString& aReturn) {      
-    return nsGenericHTMLLeafFormElement::GetAttribute(aName, aReturn);
-  }
-  NS_IMETHOD SetAttribute(const nsAReadableString& aName,
-                          const nsAReadableString& aValue) { 
-    nsAutoString valueAttribute;
-    nsHTMLAtoms::value->ToString(valueAttribute);
-    if (PR_TRUE==valueAttribute.Equals(aName)) {
-      SetValue(aValue);
-      // Don't return here, need to set the attribute in the content model too.
-    }
-    return nsGenericHTMLLeafFormElement::SetAttribute(aName, aValue);
-  }                                                                        
-  NS_IMETHOD RemoveAttribute(const nsAReadableString& aName) {
-    return nsGenericHTMLLeafFormElement::RemoveAttribute(aName);
-  }                                                                        
-  NS_IMETHOD GetAttributeNode(const nsAReadableString& aName,
-                              nsIDOMAttr** aReturn) {                      
-    return nsGenericHTMLLeafFormElement::GetAttributeNode(aName, aReturn);
-  }                                                                        
-  NS_IMETHOD SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
-    return nsGenericHTMLLeafFormElement::SetAttributeNode(aNewAttr, aReturn);
-  }                                                                        
-  NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) {
-    return nsGenericHTMLLeafFormElement::RemoveAttributeNode(aOldAttr,
-                                                             aReturn);
-  }                                                                        
-  NS_IMETHOD GetElementsByTagName(const nsAReadableString& aTagname,
-                                  nsIDOMNodeList** aReturn) {              
-    return nsGenericHTMLLeafFormElement::GetElementsByTagName(aTagname,
-                                                              aReturn);
-  }                                                                        
-  NS_IMETHOD GetAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aLocalName,
-                            nsAWritableString& aReturn) {
-    return nsGenericHTMLLeafFormElement::GetAttributeNS(aNamespaceURI,
-                                                        aLocalName, aReturn);
-  }
-  NS_IMETHOD SetAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aQualifiedName,
-                            const nsAReadableString& aValue) {
-    return nsGenericHTMLLeafFormElement::SetAttributeNS(aNamespaceURI,
-                                                        aQualifiedName,
-                                                        aValue);
-  }
-  NS_IMETHOD RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
-                               const nsAReadableString& aLocalName) {
-    return nsGenericHTMLLeafFormElement::RemoveAttributeNS(aNamespaceURI,
-                                                           aLocalName);
-  }
-  NS_IMETHOD GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,
-                                const nsAReadableString& aLocalName,
-                                nsIDOMAttr** aReturn) {
-    return nsGenericHTMLLeafFormElement::GetAttributeNodeNS(aNamespaceURI,
-                                                            aLocalName,
-                                                            aReturn);
-  }
-  NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
-    return nsGenericHTMLLeafFormElement::SetAttributeNodeNS(aNewAttr, aReturn);
-  }
-  NS_IMETHOD GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
-                                    const nsAReadableString& aLocalName,
-                                    nsIDOMNodeList** aReturn) {
-    return nsGenericHTMLLeafFormElement::GetElementsByTagNameNS(aNamespaceURI,
-                                                                aLocalName,
-                                                                aReturn);
-  }
-  NS_IMETHOD HasAttribute(const nsAReadableString& aName, PRBool* aReturn) {
-    return nsGenericHTMLLeafFormElement::HasAttribute(aName, aReturn);
-  }
-  NS_IMETHOD HasAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aLocalName,
-                            PRBool* aReturn) {
-    return nsGenericHTMLLeafFormElement::HasAttributeNS(aNamespaceURI,
-                                                        aLocalName, aReturn);
-  }
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLLeafFormElement::)
 
   // nsIDOMHTMLElement
   NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafFormElement::)
@@ -201,7 +125,17 @@ public:
 
   // Overriden nsIFormControl methods
   NS_IMETHOD GetType(PRInt32* aType);
+  NS_IMETHOD Reset();
+  NS_IMETHOD IsSuccessful(nsIContent* aSubmitElement, PRBool *_retval);
+  NS_IMETHOD GetMaxNumValues(PRInt32 *_retval);
+  NS_IMETHOD GetNamesValues(PRInt32 aMaxNumValues,
+                            PRInt32& aNumValues,
+                            nsString* aValues,
+                            nsString* aNames);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
+  // nsIContent
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
@@ -221,10 +155,16 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
+  // nsITextControlElement
+  NS_IMETHOD GetValueInternal(nsAWritableString& str);
+  NS_IMETHOD SetValueInternal(nsAReadableString& str);
+
 protected:
   // Helper method
   void SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
                            PRBool aValue);
+  NS_IMETHOD SetValueSecure(const nsAReadableString& aValue,
+                            PRBool aCheckSecurity);
 
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
   nsresult MouseClickForAltText(nsIPresContext* aPresContext);
@@ -250,6 +190,7 @@ protected:
   PRInt8                   mType;
   PRPackedBool             mSkipFocusEvent;
   PRPackedBool             mHandlingClick;
+  char*                    mValue;
 };
 
 // construction, destruction
@@ -286,12 +227,17 @@ nsHTMLInputElement::nsHTMLInputElement()
   mType = NS_FORM_INPUT_TEXT; // default value
   mSkipFocusEvent = PR_FALSE;
   mHandlingClick = PR_FALSE;
+  mValue = nsnull;
 }
 
 nsHTMLInputElement::~nsHTMLInputElement()
 {
   // Null out form's pointer to us - no ref counting here!
   SetForm(nsnull);
+
+  if (mValue) {
+    nsMemory::Free(mValue);
+  }
 }
 
 
@@ -306,6 +252,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLInputElement,
                                     nsGenericHTMLLeafFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLInputElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLInputElement)
+  NS_INTERFACE_MAP_ENTRY(nsITextControlElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLInputElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -433,6 +380,24 @@ nsHTMLInputElement::SetType(const nsAReadableString& aValue)
                                                PR_TRUE);
 }
 
+NS_IMETHODIMP
+nsHTMLInputElement::GetValueInternal(nsAWritableString& aValue)
+{
+  aValue.Truncate();
+  if (!mValue) {
+    GetDefaultValue(aValue);
+
+    mValue = ToNewUTF8String(aValue);
+    if (!mValue) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  } else {
+    aValue = NS_ConvertUTF8toUCS2(mValue);
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsHTMLInputElement::GetValue(nsAWritableString& aValue)
 {
@@ -441,20 +406,12 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
   if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type ||
       NS_FORM_INPUT_FILE == type) {
     nsIFormControlFrame* formControlFrame = nsnull;
-    if (NS_SUCCEEDED(GetPrimaryFrame(this, formControlFrame))) {
-      if (formControlFrame) {
-        formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
-      }
-    }
-    else {
-      // Retrieve the presentation state instead.
-      nsCOMPtr<nsIPresState> presState;
-      GetPrimaryPresState(this, getter_AddRefs(presState));
+    GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
 
-      // Obtain the value property from the presentation state.
-      if (presState) {
-        presState->GetStateProperty(NS_LITERAL_STRING("value"), aValue);
-      }
+    if (formControlFrame) {
+      formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
+    } else {
+      GetValueInternal(aValue);
     }
       
     return NS_OK;
@@ -475,27 +432,44 @@ nsHTMLInputElement::GetValue(nsAWritableString& aValue)
   return rv;
 }
 
+NS_IMETHODIMP
+nsHTMLInputElement::SetValueInternal(nsAReadableString& aValue)
+{
+  if (mValue) {
+    nsMemory::Free(mValue);
+  }
+
+  mValue = ToNewUTF8String(aValue);
+
+  return mValue ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
 NS_IMETHODIMP 
 nsHTMLInputElement::SetValue(const nsAReadableString& aValue)
+{
+  return SetValueSecure(aValue, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetValueSecure(const nsAReadableString& aValue,
+                                   PRBool aCheckSecurity)
 {
   PRInt32 type;
   GetType(&type);
   if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type ||
       NS_FORM_INPUT_FILE == type) {
-    if (NS_FORM_INPUT_FILE == type) {
-      nsresult result;
+    if (aCheckSecurity && NS_FORM_INPUT_FILE == type) {
+      nsresult rv;
       nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-               do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
-      if (NS_FAILED(result)) 
-        return result;
+               do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
 
       PRBool enabled;
-
-      result = securityManager->IsCapabilityEnabled("UniversalFileRead",
-                                                    &enabled);
-
-      if (NS_FAILED(result)) {
-        return result;
+      rv = securityManager->IsCapabilityEnabled("UniversalFileRead", &enabled);
+      if (NS_FAILED(rv)) {
+        return rv;
       }
 
       if (!enabled) {
@@ -506,24 +480,14 @@ nsHTMLInputElement::SetValue(const nsAReadableString& aValue)
     }
 
     nsIFormControlFrame* formControlFrame = nsnull;
+    GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
 
-    if (NS_SUCCEEDED(GetPrimaryFrame(this, formControlFrame))) {
-      if (formControlFrame ) { 
-        nsIPresContext* presContext;
-        GetPresContext(this, &presContext);
-        formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
-        NS_IF_RELEASE(presContext);
-      }
-    }
-    else {
-      // Retrieve the presentation state instead.
-      nsCOMPtr<nsIPresState> presState;
-      GetPrimaryPresState(this, getter_AddRefs(presState));
-
-      // Obtain the value property from the presentation state.
-      if (presState) {
-        presState->SetStateProperty(NS_LITERAL_STRING("value"), aValue);
-      }
+    if (formControlFrame) {
+      nsCOMPtr<nsIPresContext> presContext;
+      GetPresContext(this, getter_AddRefs(presContext));
+      formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
+    } else {
+      SetValueInternal(aValue);
     }
     return NS_OK;
   }
@@ -539,10 +503,11 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
 {
   nsAutoString value; value.AssignWithConversion("0");
   nsIFormControlFrame* formControlFrame = nsnull;
-  if (NS_SUCCEEDED(GetPrimaryFrame(this, formControlFrame))) {
-    if (formControlFrame) {
-      formControlFrame->GetProperty(nsHTMLAtoms::checked, value);
-    }
+
+  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+
+  if (formControlFrame) {
+    formControlFrame->GetProperty(nsHTMLAtoms::checked, value);
   }
   else {
     // Retrieve the presentation state instead.
@@ -594,7 +559,9 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
   GetPresContext(this, getter_AddRefs(presContext));
 
   nsIFormControlFrame* formControlFrame = nsnull;
-  if (NS_SUCCEEDED(GetPrimaryFrame(this, formControlFrame))) {
+  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+
+  if (formControlFrame) {
     // the value is being toggled
     nsAutoString val; val.AssignWithConversion(aValue ? "1" : "0");
 
@@ -715,7 +682,7 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
 
   nsIFormControlFrame* formControlFrame = nsnull;
 
-  GetPrimaryFrame(this, formControlFrame);
+  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
 
   if (formControlFrame) {
     formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
@@ -736,8 +703,7 @@ nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
   nsresult rv = NS_OK;
 
   nsIFormControlFrame* formControlFrame = nsnull;
-
-  GetPrimaryFrame(this, formControlFrame);
+  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
 
   if (formControlFrame) {
     formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
@@ -823,8 +789,9 @@ nsHTMLInputElement::Select()
       }
 
       nsIFormControlFrame* formControlFrame = nsnull;
-      rv = GetPrimaryFrame(this, formControlFrame);
-      if (NS_SUCCEEDED(rv)) {
+      rv = GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+
+      if (formControlFrame) {
         formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
 
         // Now Select all the text!
@@ -840,7 +807,7 @@ void
 nsHTMLInputElement::SelectAll(nsIPresContext* aPresContext)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame);
+  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
 
   if (formControlFrame) {
     formControlFrame->SetProperty(aPresContext, nsHTMLAtoms::select,
@@ -972,21 +939,20 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   //                This pointer is only valid until
   //                nsGenericHTMLLeafFormElement::HandleDOMEvent
   nsIFormControlFrame* formControlFrame = nsnull;
-  rv = GetPrimaryFrame(this, formControlFrame, PR_FALSE);
+  rv = GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
-  nsIFrame* formFrame = nsnull;
+  if (formControlFrame) {
+    nsIFrame* formFrame = nsnull;
+    CallQueryInterface(formControlFrame, &formFrame);
+    if (formFrame) {
+      const nsStyleUserInterface* uiStyle;
+      formFrame->GetStyleData(eStyleStruct_UserInterface,
+                              (const nsStyleStruct *&)uiStyle);
 
-  if (formControlFrame &&
-      NS_SUCCEEDED(formControlFrame->QueryInterface(NS_GET_IID(nsIFrame),
-                                                    (void **)&formFrame)) &&
-      formFrame) {
-    const nsStyleUserInterface* uiStyle;
-    formFrame->GetStyleData(eStyleStruct_UserInterface,
-                            (const nsStyleStruct *&)uiStyle);
-
-    if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
-        uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
-      return NS_OK;
+      if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
+          uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
+        return NS_OK;
+      }
     }
   }
 
@@ -1082,10 +1048,11 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           // Get the currently selected button from the radio group
           // we get access to that via the nsIRadioControlFrame interface
           // because the current grouping is kept in the frame.
-          nsIRadioControlFrame * rb = nsnull;
-          if (formControlFrame != nsnull) {
-            nsresult resv = formControlFrame->QueryInterface(NS_GET_IID(nsIRadioControlFrame), (void**)&rb);
-            if (NS_SUCCEEDED(resv) && rb) {
+          if (formControlFrame) {
+            nsIRadioControlFrame * rb = nsnull;
+            CallQueryInterface(formControlFrame, &rb);
+
+            if (rb) {
               rb->GetRadioGroupSelectedContent(getter_AddRefs(selectedRadiobtn));
             }
           }
@@ -1106,17 +1073,17 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   // Try script event handlers first if its not a focus/blur event
   //we dont want the doc to get these
-  nsresult ret = nsGenericHTMLLeafFormElement::HandleDOMEvent(aPresContext,
-                                                              aEvent,
-                                                              aDOMEvent,
-                                                              aFlags,
-                                                              aEventStatus);
-
+  rv = nsGenericHTMLLeafFormElement::HandleDOMEvent(aPresContext,
+                                                    aEvent,
+                                                    aDOMEvent,
+                                                    aFlags,
+                                                    aEventStatus);
+  // XXX Should we check if the event failed?
   // now check to see if the event was "cancelled"
-  if (nsEventStatus_eConsumeNoDefault == *aEventStatus && checkWasSet &&
-      (type == NS_FORM_INPUT_CHECKBOX || type == NS_FORM_INPUT_RADIO)) {
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus && checkWasSet
+      && (type == NS_FORM_INPUT_CHECKBOX || type == NS_FORM_INPUT_RADIO)) {
     // if it was cancelled and a radio button, then set the old
-    // selceted btn to TRUE. if it is a checkbox then set it to it's
+    // selected btn to TRUE. if it is a checkbox then set it to its
     // original value
     if (selectedRadiobtn) {
       nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(selectedRadiobtn));
@@ -1130,7 +1097,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   // Bugscape 2369: Frame might have changed during event handler
   formControlFrame = nsnull;
-  rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame, PR_FALSE);
+  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
   // Finish the special file control processing...
   if (oldTarget) {
@@ -1548,7 +1515,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::GetTextLength(PRInt32* aTextLength)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame);
+  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
 
   if (formControlFrame) {
     nsCOMPtr<textControlPlace>
@@ -1566,7 +1533,7 @@ nsHTMLInputElement::SetSelectionRange(PRInt32 aSelectionStart,
                                       PRInt32 aSelectionEnd)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame);
+  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
 
   if (formControlFrame) {
     nsCOMPtr<textControlPlace>
@@ -1592,7 +1559,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::SetSelectionStart(PRInt32 aSelectionStart)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame);
+  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
 
   if (formControlFrame) {
     nsCOMPtr<textControlPlace>
@@ -1619,7 +1586,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::SetSelectionEnd(PRInt32 aSelectionEnd)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame);
+  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
 
   if (formControlFrame) {
     nsCOMPtr<textControlPlace>
@@ -1637,7 +1604,7 @@ nsHTMLInputElement::GetSelectionRange(PRInt32* aSelectionStart,
                                       PRInt32* aSelectionEnd)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame);
+  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
 
   if (formControlFrame) {
     nsCOMPtr<textControlPlace>
@@ -1696,3 +1663,290 @@ nsHTMLInputElement::FireEventForAccessibility(nsIPresContext* aPresContext,
   return NS_OK;
 }
 #endif
+
+nsresult
+nsHTMLInputElement::Reset()
+{
+  nsresult rv = NS_OK;
+  PRInt32 type;
+  GetType(&type);
+
+  // Seems like a dumb idea to reset image.
+  switch (type) {
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_RADIO:
+    {
+      PRBool resetVal;
+      GetDefaultChecked(&resetVal);
+      rv = SetChecked(resetVal);
+      break;
+    }
+    case NS_FORM_INPUT_HIDDEN:
+    case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_TEXT:
+    {
+      nsAutoString resetVal;
+      GetDefaultValue(resetVal);
+      rv = SetValue(resetVal);
+      break;
+    }
+    case NS_FORM_INPUT_FILE:
+    {
+      // Resetting it to blank should not perform security check
+      rv = SetValueSecure(NS_LITERAL_STRING(""), PR_FALSE);
+      break;
+    }
+    default:
+      break;
+  }
+  return rv;
+}
+
+nsresult
+nsHTMLInputElement::IsSuccessful(nsIContent* aSubmitElement,
+                                 PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+
+  // if it's disabled, it won't submit
+  PRBool disabled;
+  nsresult rv = GetDisabled(&disabled);
+  if (disabled) {
+    return NS_OK;
+  }
+
+  PRInt32 type;
+  GetType(&type);
+  
+  // if it dosn't have a name it we don't submit
+  if (type != NS_FORM_INPUT_IMAGE) {
+    nsAutoString val;
+    rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, val);
+    if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+      return NS_OK;
+    }
+  }
+
+  switch (type) {
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_RADIO:
+    {
+      GetChecked(_retval);
+      break;
+    }
+    case NS_FORM_INPUT_HIDDEN:
+    case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_TEXT:
+    {
+      *_retval = PR_TRUE;
+      break;
+    }
+    case NS_FORM_INPUT_FILE:
+    {
+      nsAutoString val;
+      GetValue(val);
+      *_retval = !val.IsEmpty();
+      break;
+    }
+    case NS_FORM_INPUT_RESET:
+    case NS_FORM_INPUT_BUTTON:
+    {
+      *_retval = PR_FALSE;
+      break;
+    }
+    case NS_FORM_INPUT_SUBMIT:
+    case NS_FORM_INPUT_IMAGE:
+    {
+      *_retval = (this == aSubmitElement);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsHTMLInputElement::GetMaxNumValues(PRInt32 *_retval)
+{
+  PRInt32 type;
+  GetType(&type);
+  *_retval = type == NS_FORM_INPUT_IMAGE ? 2 : 1;
+  return NS_OK;
+}
+
+nsresult
+nsHTMLInputElement::GetNamesValues(PRInt32 aMaxNumValues,
+                                   PRInt32& aNumValues,
+                                   nsString* aValues,
+                                   nsString* aNames)
+{
+  nsresult rv;
+
+  PRInt32 type;
+  GetType(&type);
+  
+  switch (type) {
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_RADIO:
+    {
+      NS_ENSURE_TRUE(aMaxNumValues >= 1, NS_ERROR_UNEXPECTED);
+      
+      GetName(aNames[0]);
+      GetValue(aValues[0]);
+      aNumValues = 1;
+      
+      break;
+    }
+    case NS_FORM_INPUT_HIDDEN:
+    case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_TEXT:
+    {
+      NS_ENSURE_TRUE(aMaxNumValues >= 1, NS_ERROR_UNEXPECTED);
+      
+      GetName(aNames[0]);
+      GetValue(aValues[0]);
+      aNumValues = 1;
+      
+      break;
+    }
+    case NS_FORM_INPUT_FILE:
+    {
+      NS_ENSURE_TRUE(aMaxNumValues >= 1, NS_ERROR_UNEXPECTED);
+      
+      GetName(aNames[0]);
+      GetValue(aValues[0]);
+      aNumValues = 1;
+      
+      break;
+    }
+    case NS_FORM_INPUT_IMAGE:
+    {
+      NS_ENSURE_TRUE(aMaxNumValues >= 2, NS_ERROR_UNEXPECTED);
+
+      // Go to the frame to find out where it was clicked.  This is the only
+      // case where I can actually see using the frame, because you're talking
+      // about a value--mouse click--that is rightfully the domain of the frame.
+      //
+      // If the frame isn't there or isn't an ImageControlFrame, then we're not
+      // submitting these values no matter *how* nicely you ask.
+      PRInt32 clickedX;
+      PRInt32 clickedY;
+      nsIFormControlFrame* formControlFrame = nsnull;
+      GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+
+      nsCOMPtr<nsIImageControlFrame> imageControlFrame(
+          do_QueryInterface(formControlFrame));
+      if (imageControlFrame) {
+        imageControlFrame->GetClickedX(&clickedX);
+        imageControlFrame->GetClickedY(&clickedY);
+      } else {
+        aNumValues = 0;
+        return NS_OK;
+      }
+     
+      // Convert the values to strings for submission
+      char buf[20];
+      sprintf(&buf[0], "%d", clickedX);
+      aValues[0].AssignWithConversion(&buf[0]);
+      sprintf(&buf[0], "%d", clickedY);
+      aValues[1].AssignWithConversion(&buf[0]);
+  
+      // Figure out the proper name of the x and y values
+      nsAutoString name;
+      rv = GetName(name);
+      aNumValues = 2;
+      if (!name.IsEmpty()) {
+        aNames[0] = name;
+        aNames[0].Append(NS_LITERAL_STRING(".x"));
+        aNames[1] = name;
+        aNames[1].Append(NS_LITERAL_STRING(".y"));
+      } else {
+        // If the Image Element has no name, simply return x and y
+        // to Nav and IE compatability.
+        aNames[0] = NS_LITERAL_STRING("x");
+        aNames[1] = NS_LITERAL_STRING("y");
+      }
+
+      break;
+    }
+    case NS_FORM_INPUT_RESET:
+    case NS_FORM_INPUT_BUTTON:
+    {
+      aNumValues = 0;
+
+      break;
+    }
+    case NS_FORM_INPUT_SUBMIT:
+    {
+      NS_ENSURE_TRUE(aMaxNumValues >= 1, NS_ERROR_UNEXPECTED);
+      
+      GetName(aNames[0]);
+      GetValue(aValues[0]);
+      aNumValues = 1;
+
+      break;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SaveState(nsIPresContext* aPresContext,
+                              nsIPresState** aState)
+{
+  nsresult rv = NS_OK;
+
+  PRInt32 type;
+  GetType(&type);
+  
+  switch (type) {
+    // Never save passwords in session history
+    case NS_FORM_INPUT_PASSWORD:
+      break;
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_INPUT_FILE:
+      nsresult rv = GetPrimaryPresState(this, aState);
+      if (*aState) {
+        nsString value;
+        GetValue(value);
+        // XXX Should use nsAutoString above but ConvertStringLineBreaks
+        // requires mOwnsBuffer!
+        rv = nsLinebreakConverter::ConvertStringLineBreaks(
+                 value,
+                 nsLinebreakConverter::eLinebreakPlatform,
+                 nsLinebreakConverter::eLinebreakContent);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
+        rv = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), value);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "value save failed!");
+      }
+      break;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::RestoreState(nsIPresContext* aPresContext,
+                                 nsIPresState* aState)
+{
+  nsresult rv = NS_OK;
+
+  PRInt32 type;
+  GetType(&type);
+  
+  switch (type) {
+    // Never save passwords in session history
+    case NS_FORM_INPUT_PASSWORD:
+      break;
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_INPUT_FILE:
+      nsAutoString value;
+      rv = aState->GetStateProperty(NS_LITERAL_STRING("value"), value);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
+      SetValue(value);
+      break;
+  }
+
+  return rv;
+}
+

@@ -69,11 +69,6 @@ public:
   /**
    * Sets the select state of the option at index
    */
-  NS_IMETHOD SetOptionSelected(PRInt32 index, PRBool value) = 0;
-  
-  /**
-   * Sets the select state of the option at index
-   */
   NS_IMETHOD GetOptionSelected(PRInt32 index, PRBool* value) = 0;
 
   /**
@@ -82,16 +77,17 @@ public:
   NS_IMETHOD DoneAddingContent(PRBool aIsDone) = 0;
 
   /**
-   * Notification that an option has been disabled
+   * Notify the frame when an option is selected
    */
-
-  NS_IMETHOD OptionDisabled(nsIContent * aContent) = 0;
+  NS_IMETHOD OnOptionSelected(nsIPresContext* aPresContext,
+                              PRInt32 aIndex,
+                              PRBool aSelected) = 0;
 
   /**
-   * This only applies to Comboboxes, no-op for ListBoxes
+   * For the content model to tell if there's a dummy frame or not
    */
-  NS_IMETHOD MakeSureSomethingIsSelected(nsIPresContext* aPresContext) = 0;
-
+  NS_IMETHOD GetDummyFrame(nsIFrame** aFrame) = 0;
+  NS_IMETHOD SetDummyFrame(nsIFrame* aFrame) = 0;
 };
 
 #endif

@@ -73,9 +73,9 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIListControlFrame.h"
+#include "nsISelectControlFrame.h"
 #include "nsIRadioControlFrame.h"
 #include "nsICheckboxControlFrame.h"
-#include "nsIListControlFrame.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsITextContent.h"
@@ -967,7 +967,7 @@ public:
   }
 
   already_AddRefed<nsIContent> get() const {
-    nsIContent* result;
+    nsIContent* result = nsnull;
     if (mNodes) {
       nsCOMPtr<nsIDOMNode> node;
       mNodes->Item(mIndex, getter_AddRefs(node));
@@ -1541,7 +1541,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
       rv = NS_NewFileControlFrame(aPresShell, &aFrame);
     }
     else if (val.EqualsIgnoreCase("hidden")) {
-      rv = ConstructButtonControlFrame(aPresShell, aPresContext, aFrame);
+      rv = NS_OK;
     }
     else if (val.EqualsIgnoreCase("image")) {
       rv = NS_NewImageControlFrame(aPresShell, &aFrame);
@@ -3930,14 +3930,15 @@ nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIPresShell*    aPresShell
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructButtonControlFrame(nsIPresShell*        aPresShell, 
-                                                   nsIPresContext*     		aPresContext,
-                                                	 nsIFrame*&          		aNewFrame)
+nsCSSFrameConstructor::ConstructButtonControlFrame(nsIPresShell*   aPresShell,
+                                                   nsIPresContext* aPresContext,
+                                                   nsIFrame*&      aNewFrame)
 {
   nsresult rv = NS_OK;
-	if (GetFormElementRenderingMode(aPresContext, eWidgetType_Button) == eWidgetRendering_Gfx)
-		rv = NS_NewGfxButtonControlFrame(aPresShell, &aNewFrame);
-	else
+  if (GetFormElementRenderingMode(aPresContext, eWidgetType_Button)
+      == eWidgetRendering_Gfx)
+    rv = NS_NewGfxButtonControlFrame(aPresShell, &aNewFrame);
+  else
     NS_ASSERTION(0, "We longer support native widgets");
 
   if (NS_FAILED(rv)) {
@@ -3947,10 +3948,10 @@ nsCSSFrameConstructor::ConstructButtonControlFrame(nsIPresShell*        aPresShe
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresShell*        aPresShell, 
-                                                 nsIPresContext*          aPresContext,
-                                                 nsIFrame*&               aNewFrame,
-                                                 nsIContent*              aContent)
+nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresShell*   aPresShell,
+                                                 nsIPresContext* aPresContext,
+                                                 nsIFrame*&      aNewFrame,
+                                                 nsIContent*     aContent)
 {
   if (!aPresContext) { return NS_ERROR_NULL_POINTER;}
   nsresult rv = NS_OK;
@@ -4236,20 +4237,10 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsIPresShell*        aPresShell,
     nsresult result = aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
                                                  (void**)getter_AddRefs(selectElement));
     if (NS_SUCCEEDED(result) && selectElement) {
-      PRUint32 numOptions = 0;
-      result = selectElement->GetLength(&numOptions);
-      if (NS_SUCCEEDED(result) && 0 == numOptions) { 
-        nsCOMPtr<nsIStyleContext> styleContext;
-        nsIFrame*         generatedFrame = nsnull; 
-        scrolledFrame->GetStyleContext(getter_AddRefs(styleContext));
-        if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, scrolledFrame, aContent, 
-                                        styleContext, nsLayoutAtoms::dummyOptionPseudo, 
-                                        PR_FALSE, &generatedFrame)) { 
-          // Add the generated frame to the child list 
-          childItems.AddChild(generatedFrame); 
-        } 
-      }
-    } 
+      AddDummyFrameToSelect(aPresContext, aPresShell, aState,
+                            scrollFrame, scrolledFrame, &childItems,
+                            aContent, selectElement);
+    }
     //////////////////////////////////////////////////
     //////////////////////////////////////////////////
     
@@ -4511,7 +4502,8 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
           ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
         }
         isReplaced = PR_TRUE;
-        rv = CreateInputFrame(aPresShell, aPresContext, aContent, newFrame, aStyleContext);
+        rv = CreateInputFrame(aPresShell, aPresContext,
+                              aContent, newFrame, aStyleContext);
       }
       else if (nsHTMLAtoms::textarea == aTag) {
         if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
@@ -5531,6 +5523,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
                display->mDisplay == NS_STYLE_DISPLAY_INLINE_STACK) {
         processChildren = PR_TRUE;
         isReplaced = PR_TRUE;
+
 
         rv = NS_NewStackFrame(aPresShell, &newFrame);
 
@@ -8231,48 +8224,89 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 
 
 nsresult
+nsCSSFrameConstructor::AddDummyFrameToSelect(nsIPresContext*  aPresContext,
+                                        nsIPresShell*    aPresShell,
+                                        nsFrameConstructorState& aState,
+                                        nsIFrame*        aListFrame,
+                                        nsIFrame*        aParentFrame,
+                                        nsFrameItems*    aChildItems,
+                                        nsIContent*      aContainer,
+                                        nsIDOMHTMLSelectElement* aSelectElement)
+{
+  PRUint32 numOptions = 0;
+  nsresult rv = aSelectElement->GetLength(&numOptions);
+  if (NS_SUCCEEDED(rv) && 0 == numOptions) {
+    nsISelectControlFrame* listFrame = nsnull;
+    CallQueryInterface(aListFrame, &listFrame);
+    if (listFrame) {
+      nsIFrame* dummyFrame;
+      listFrame->GetDummyFrame(&dummyFrame);
+
+      if (!dummyFrame) {
+        nsCOMPtr<nsIStyleContext> styleContext;
+        nsIFrame*         generatedFrame = nsnull;
+        aParentFrame->GetStyleContext(getter_AddRefs(styleContext));
+        if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState,
+                                        aParentFrame, aContainer,
+                                        styleContext,
+                                        nsLayoutAtoms::dummyOptionPseudo,
+                                        PR_FALSE, &generatedFrame)) {
+          // Add the generated frame to the child list
+          if (aChildItems) {
+            aChildItems->AddChild(generatedFrame);
+          } else {
+            nsCOMPtr<nsIFrameManager> frameManager;
+            aPresShell->GetFrameManager(getter_AddRefs(frameManager));
+            if (frameManager) {
+              frameManager->AppendFrames(aPresContext, *aPresShell,
+                                         aParentFrame, nsnull, generatedFrame);
+            }
+          }
+
+          listFrame->SetDummyFrame(generatedFrame);
+          return NS_OK;
+        }
+      }
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
 nsCSSFrameConstructor::RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
                                                   nsIPresShell *  aPresShell,
                                                   nsIContent*     aContainer,
                                                   nsIContent*     aChild,
                                                   nsIDOMHTMLSelectElement * aSelectElement)
 {
-  //check to see if there is one item,
-  // meaning we need to remove the dummy frame
+  // Check to see if this is the first thing we have added to this frame.
+  
   PRUint32 numOptions = 0;
-  nsresult result = aSelectElement->GetLength(&numOptions);
-  if (NS_SUCCEEDED(result)) {
-    if (0 == numOptions) { 
-      nsIFrame* parentFrame;
-      nsIFrame* childFrame;
-      // Get the childFrame for the added child (option)
-      // then get the child's parent frame which should be an area frame
-      aPresShell->GetPrimaryFrameFor(aChild, &childFrame);
-      if (nsnull != childFrame) {
-        childFrame->GetParent(&parentFrame);
+  nsresult rv = aSelectElement->GetLength(&numOptions);
+  if (NS_SUCCEEDED(rv) && numOptions > 0) {
+    nsIFrame* frame;
+    aPresShell->GetPrimaryFrameFor(aContainer, &frame);
+    if (frame) {
+      nsISelectControlFrame* listFrame = nsnull;
+      CallQueryInterface(frame, &listFrame);
 
-        // Now loop through all the child looking fr the frame whose content 
-        // is equal to the select element's content
-        // this is because when gernated content is created it stuff the parent content
-        // pointer into the generated frame, so in this case it has the select content
-        parentFrame->FirstChild(aPresContext, nsnull, &childFrame);
-        nsCOMPtr<nsIContent> selectContent = do_QueryInterface(aSelectElement);
-        while (nsnull != childFrame) {
-          nsIContent * content;
-          childFrame->GetContent(&content);
-      
-          // Found the dummy frame so get the FrameManager and 
-          // delete/remove the dummy frame
-          if (selectContent.get() == content) {
-            nsCOMPtr<nsIFrameManager> frameManager;
-            aPresShell->GetFrameManager(getter_AddRefs(frameManager));
-            frameManager->RemoveFrame(aPresContext, *aPresShell, parentFrame, nsnull, childFrame);
-            NS_IF_RELEASE(content);
-            return NS_OK;
-          }
+      if (listFrame) {
+        nsIFrame* dummyFrame;
+        listFrame->GetDummyFrame(&dummyFrame);
 
-          NS_IF_RELEASE(content);
-          childFrame->GetNextSibling(&childFrame);
+        if (dummyFrame) {
+          listFrame->SetDummyFrame(nsnull);
+
+          // get the child's parent frame (which ought to be the list frame)
+          nsIFrame* parentFrame;
+          dummyFrame->GetParent(&parentFrame);
+
+          nsCOMPtr<nsIFrameManager> frameManager;
+          aPresShell->GetFrameManager(getter_AddRefs(frameManager));
+          frameManager->RemoveFrame(aPresContext, *aPresShell,
+                                    parentFrame, nsnull, dummyFrame);
+          return NS_OK;
         }
       }
     }
@@ -9024,37 +9058,27 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   // When the last item is removed from a select, 
   // we need to add a pseudo frame so select gets sized as the best it can
   // so here we see if it is a select and then we get the number of options
-  nsresult result = NS_ERROR_FAILURE;
   if (aContainer && childFrame) {
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = do_QueryInterface(aContainer);
     if (selectElement) {
-      PRUint32 numOptions = 0;
-      result = selectElement->GetLength(&numOptions);
-      nsIFrame * selectFrame;                             // XXX temp needed only native controls
-      shell->GetPrimaryFrameFor(aContainer, &selectFrame);// XXX temp needed only native controls
+      // XXX temp needed only native controls
+      nsIFrame* selectFrame;
+      // XXX temp needed only native controls
+      shell->GetPrimaryFrameFor(aContainer, &selectFrame);
 
       // For "select" add the pseudo frame after the last item is deleted
       nsIFrame* parentFrame = nsnull;
       childFrame->GetParent(&parentFrame);
-      if (parentFrame == selectFrame) { // XXX temp needed only native controls
+      if (parentFrame == selectFrame) {
         return NS_ERROR_FAILURE;
       }
-      if (NS_SUCCEEDED(result) && shell && parentFrame && 1 == numOptions) { 
-  
-        nsIStyleContext*          styleContext   = nsnull; 
-        nsIFrame*                 generatedFrame = nsnull; 
-        nsFrameConstructorState   state(aPresContext, nsnull, nsnull, nsnull, nsnull);
-
-        //shell->GetPrimaryFrameFor(aContainer, &contentFrame);
-        parentFrame->GetStyleContext(&styleContext); 
-        if (CreateGeneratedContentFrame(shell, aPresContext, state, parentFrame, aContainer, 
-                                        styleContext, nsLayoutAtoms::dummyOptionPseudo, 
-                                        PR_FALSE, &generatedFrame)) { 
-          // Add the generated frame to the child list 
-          frameManager->AppendFrames(aPresContext, *shell, parentFrame, nsnull, generatedFrame);
-        }
-        NS_IF_RELEASE(styleContext);
-      } 
+      if (shell && parentFrame) {
+        nsFrameConstructorState state(aPresContext,
+                                      nsnull, nsnull, nsnull, nsnull);
+        AddDummyFrameToSelect(aPresContext, shell, state,
+                              selectFrame, parentFrame, nsnull,
+                              aContainer, selectElement);
+      }
     } 
   }
 
@@ -11271,7 +11295,7 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIPresShell* aPresShell,
     if (insertionPoint) {
       // If the insertion point is a scrollable, then walk ``through''
       // it to get the scrolled frame.
-      nsIScrollableFrame* scroll;
+      nsIScrollableFrame* scroll = nsnull;
       CallQueryInterface(insertionPoint, &scroll);
       if (scroll)
         scroll->GetScrolledFrame(nsnull, insertionPoint);

@@ -42,7 +42,7 @@
 #include "nsFont.h"
 class nsFormFrame;
 class nsIPresContext;
-class nsString;
+class nsAString;
 class nsIContent;
 class nsIPresState;
 
@@ -66,10 +66,9 @@ public:
   NS_IMETHOD SetComboboxFrame(nsIFrame* aComboboxFrame) = 0;
 
   /**
-   * Get the Selected Item's String
-   *
+   * Get the display string for an item
    */
-  NS_IMETHOD GetSelectedItem(nsString & aStr) = 0;
+  NS_IMETHOD GetOptionText(PRInt32 aIndex, nsAString & aStr) = 0;
 
   /**
    * Get the Selected Item's index
@@ -113,28 +112,12 @@ public:
   /**
    *
    */
-  NS_IMETHOD UpdateSelection(PRBool aDoDispatchEvent, PRBool aForceUpdate, nsIContent* aContent) = 0;
-
-  /**
-   *
-   */
-  NS_IMETHOD SetPresState(nsIPresState * aState) = 0;
+  NS_IMETHOD UpdateSelection() = 0;
 
   /**
    *
    */
   NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) = 0;
-
-  /**
-   *
-   */
-  NS_IMETHOD SaveStateInternal(nsIPresContext* aPresContext,
-                               nsIPresState** aState) = 0;
-  /**
-   *
-   */
-  NS_IMETHOD RestoreStateInternal(nsIPresContext* aPresContext,
-                                  nsIPresState* aState) = 0;
 
   /**
    *  Return the the frame that the options will be inserted into

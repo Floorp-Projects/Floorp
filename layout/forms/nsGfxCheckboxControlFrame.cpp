@@ -285,12 +285,7 @@ void
 nsGfxCheckboxControlFrame::InitializeControl(nsIPresContext* aPresContext)
 {
   nsFormControlFrame::InitializeControl(aPresContext);
-
-  PRBool checked = PR_FALSE;
-  nsresult result = GetDefaultCheckState(&checked);
-  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-    SetCheckboxState (aPresContext, checked ? eOn : eOff );
-  }
+  nsFormControlHelper::Reset(this, aPresContext);
 }
 
 //------------------------------------------------------------
@@ -502,54 +497,6 @@ NS_IMETHODIMP nsGfxCheckboxControlFrame::GetProperty(nsIAtom* aName, nsAWritable
   return NS_OK;     
 }
 
-//------------------------------------------------------------
-PRInt32 
-nsGfxCheckboxControlFrame::GetMaxNumValues()
-{
-  return 1;
-}
-  
-//------------------------------------------------------------
-PRBool
-nsGfxCheckboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                       nsString* aValues, nsString* aNames)
-{
-  nsAutoString name;
-  nsresult nameResult = GetName(&name);
-  if ((aMaxNumValues <= 0) || (NS_CONTENT_ATTR_HAS_VALUE != nameResult)) {
-    return PR_FALSE;
-  }
-
-  PRBool result = PR_TRUE;
-  CheckState state = GetCheckboxState();
-
-  nsAutoString value;
-  nsresult valueResult = GetValue(&value);
-   
-   if (eOn != state) {
-      result = PR_FALSE;
-   } else {
-     if (NS_CONTENT_ATTR_HAS_VALUE != valueResult) {
-       aValues[0].AssignWithConversion("on");
-     } else {
-       aValues[0] = value;
-     }
-     aNames[0] = name;
-     aNumValues = 1;
-  }
- 
-  return result;
-}
-
-//------------------------------------------------------------
-void 
-nsGfxCheckboxControlFrame::Reset(nsIPresContext* aPresContext) 
-{
-  PRBool checked;
-  GetDefaultCheckState(&checked);
-  SetCheckboxState (aPresContext, checked ? eOn : eOff );
-}  
-
 
 //------------------------------------------------------------
 //
@@ -705,3 +652,9 @@ nsGfxCheckboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   return rv;
 }
 #endif
+
+NS_IMETHODIMP
+nsGfxCheckboxControlFrame::OnContentReset()
+{
+  return NS_OK;
+}

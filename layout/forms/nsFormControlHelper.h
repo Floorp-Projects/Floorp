@@ -51,6 +51,7 @@ class nsIView;
 //class nsIPresContext;
 class nsStyleCoord;
 class nsFormFrame;
+class nsIPresState;
 //class nsIStyleContext;
 
 #define CSS_NOTSET -1
@@ -154,9 +155,16 @@ public:
   // Map platform line endings (CR, CRLF, LF) to DOM line endings (LF)
   static void PlatformToDOMLineBreaks(nsString &aString);
 
-  static nsresult GetValue(nsIContent* aContent, nsString* aResult);
-  static nsresult GetName(nsIContent* aContent, nsString* aResult);
+  static nsresult GetValue(nsIContent* aContent, nsAString* aResult);
+  static nsresult GetName(nsIContent* aContent, nsAString* aResult);
   static nsresult GetInputElementValue(nsIContent* aContent, nsString* aText, PRBool aInitialValue);
+  static nsresult Reset(nsIFrame* aFrame, nsIPresContext* aPresContext);
+  static nsresult SaveContentState(nsIFrame* aFrame,
+                                   nsIPresContext* aPresContext,
+                                   nsIPresState** aState);
+  static nsresult RestoreContentState(nsIFrame* aFrame,
+                                      nsIPresContext* aPresContext,
+                                      nsIPresState* aState);
 
  /** 
   * Utility to convert a string to a PRBool

@@ -150,11 +150,8 @@ public:
   virtual const nsIID& GetIID(); 
 
   NS_IMETHOD GetType(PRInt32* aType) const;
-  NS_IMETHOD GetName(nsString* aName);
-  NS_IMETHOD GetValue(nsString* aName);
-  virtual PRInt32 GetMaxNumValues();
-  virtual PRBool  GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                 nsString* aValues, nsString* aNames);
+  NS_IMETHOD GetName(nsAString* aName);
+  NS_IMETHOD GetValue(nsAString* aName);
 
   /**
     * Respond to a enter key being pressed
@@ -178,8 +175,6 @@ public:
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
   virtual void ScrollIntoView(nsIPresContext* aPresContext);
-  virtual void Reset(nsIPresContext* aPresContext);
-  virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
 
   /**
     * Perform opertations before the widget associated with this frame has been

@@ -611,11 +611,20 @@ protected:
                            PRBool                   aParentIsBlock,
                            nsTableCreator*          aTableCreator = nsnull);
 
-  nsresult CreateInputFrame(nsIPresShell* aPresShell,
-                            nsIPresContext  *aPresContext,
-                            nsIContent      *aContent, 
-                            nsIFrame        *&aFrame,
-                            nsIStyleContext *aStyleContext);
+  nsresult CreateInputFrame(nsIPresShell*    aPresShell,
+                            nsIPresContext*  aPresContext,
+                            nsIContent*      aContent,
+                            nsIFrame*&       aFrame,
+                            nsIStyleContext* aStyleContext);
+
+  nsresult AddDummyFrameToSelect(nsIPresContext* aPresContext,
+                                 nsIPresShell*   aPresShell,
+                                 nsFrameConstructorState& aState,
+                                 nsIFrame*       aListFrame,
+                                 nsIFrame*       aParentFrame,
+                                 nsFrameItems*   aChildItems,
+                                 nsIContent*     aContainer,
+                                 nsIDOMHTMLSelectElement* aSelectElement);
 
   nsresult RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
                                       nsIPresShell *  aPresShell,

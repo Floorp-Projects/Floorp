@@ -23,6 +23,7 @@ DEPTH=..\..\..\..
 
 EXPORTS=nsIFormManager.h \
   nsIListControlFrame.h \
+  nsIImageControlFrame.h \
   nsIComboboxControlFrame.h \
   nsIRadioControlFrame.h \
   nsICheckboxControlFrame.h \
@@ -30,7 +31,7 @@ EXPORTS=nsIFormManager.h \
   nsIFormSubmitObserver.h \
   nsIFormProcessor.h \
   nsISelectControlFrame.h \
-  nsIGfxTextControlFrame.h 
+  nsIGfxTextControlFrame.h
 
 MODULE=layout 
 

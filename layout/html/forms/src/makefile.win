@@ -93,7 +93,7 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsGfxCheckboxControlFrame.obj \
   .\$(OBJDIR)\nsGfxRadioControlFrame.obj \
   .\$(OBJDIR)\nsIsIndexFrame.obj \
-  .\$(OBJDIR)\nsRadioControlGroup.obj 
+  .\$(OBJDIR)\nsRadioControlGroup.obj
 
 
 LINCS= -I..\..\base\src   \

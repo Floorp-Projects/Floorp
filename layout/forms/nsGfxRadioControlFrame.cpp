@@ -246,46 +246,6 @@ nsGfxRadioControlFrame::GetRadioGroupSelectedContent(nsIContent ** aRadioBtn)
 }
 
 
-//--------------------------------------------------------------
-PRBool
-nsGfxRadioControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                    nsString* aValues, nsString* aNames)
-{
-  nsAutoString name;
-  nsresult result = GetName(&name);
-  if ((aMaxNumValues <= 0) || (NS_CONTENT_ATTR_HAS_VALUE != result)) {
-    return PR_FALSE;
-  }
-
-  PRBool state = GetRadioState();
-
-  if(PR_TRUE != state) {
-    return PR_FALSE;
-  }
-
-  nsAutoString value;
-  result = GetValue(&value);
-  
-  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-    aValues[0] = value;
-  } else {
-    aValues[0].AssignWithConversion("on");
-  }
-  aNames[0]  = name;
-  aNumValues = 1;
-
-  return PR_TRUE;
-}
-
-//--------------------------------------------------------------
-void 
-nsGfxRadioControlFrame::Reset(nsIPresContext* aPresContext) 
-{
-  PRBool checked = PR_TRUE;
-  GetDefaultCheckState(&checked);
-  SetCurrentCheckState(checked);
-}  
-
 NS_IMETHODIMP
 nsGfxRadioControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                           nsGUIEvent* aEvent,
@@ -385,13 +345,7 @@ void
 nsGfxRadioControlFrame::InitializeControl(nsIPresContext* aPresContext)
 {
   nsFormControlFrame::InitializeControl(aPresContext);
-
-   // set the widget to the initial state
-  PRBool checked = PR_FALSE;
-  nsresult result = GetDefaultCheckState(&checked);
-  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-    SetRadioState(aPresContext, checked);
-  }
+  nsFormControlHelper::Reset(this, aPresContext);
 }
 
 //----------------------------------------------------------------------
@@ -474,3 +428,9 @@ nsGfxRadioControlFrame::Reflow(nsIPresContext*          aPresContext,
   return rv;
 }
 #endif
+
+NS_IMETHODIMP
+nsGfxRadioControlFrame::OnContentReset()
+{
+  return NS_OK;
+}

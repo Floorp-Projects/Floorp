@@ -206,23 +206,6 @@ nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
-PRBool
-nsFileControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
-{
-  nsAutoString name;
-  PRBool disabled = PR_FALSE;
-  nsFormControlHelper::GetDisabled(mContent, &disabled);
-  return !disabled && (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
-}
-
-void 
-nsFileControlFrame::Reset(nsIPresContext* aPresContext)
-{
-  if (mTextFrame) {
-    mTextFrame->Reset(aPresContext);
-  }
-}
-
 NS_IMETHODIMP 
 nsFileControlFrame::GetType(PRInt32* aType) const
 {
@@ -506,7 +489,7 @@ nsFileControlFrame::GetSkipSides() const
 
 
 NS_IMETHODIMP
-nsFileControlFrame::GetName(nsString* aResult)
+nsFileControlFrame::GetName(nsAString* aResult)
 {
   nsresult result = NS_FORM_NOTOK;
   if (mContent) {
@@ -526,34 +509,6 @@ nsFileControlFrame::GetName(nsString* aResult)
   return result;
 }
 
-
-
-PRInt32 
-nsFileControlFrame::GetMaxNumValues()
-{
-  return 1;
-}
-  
-PRBool
-nsFileControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
-                                   nsString* aValues, nsString* aNames)
-{
-  nsAutoString name;
-  nsresult result = GetName(&name);
-  if ((aMaxNumValues <= 0) || (NS_CONTENT_ATTR_HAS_VALUE != result)) {
-    return PR_FALSE;
-  }
-
-  // use our name and the text widgets value 
-  aNames[0] = name;
-  nsresult status = PR_FALSE;
-
-  if (NS_SUCCEEDED(mTextFrame->GetProperty(nsHTMLAtoms::value, aValues[0]))) {
-    aNumValues = 1;
-    status = PR_TRUE;
-  }
-  return status;
-}
 
 NS_IMETHODIMP
 nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
@@ -751,5 +706,11 @@ nsFileControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aSt
   aState->GetStateProperty(NS_LITERAL_STRING("value"), string);
   SetProperty(aPresContext, nsHTMLAtoms::value, string);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileControlFrame::OnContentReset()
+{
   return NS_OK;
 }

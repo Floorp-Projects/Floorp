@@ -56,7 +56,7 @@ public:
 
   nsGfxRadioControlFrame* GetCheckedRadio();
   void                 SetCheckedRadio(nsGfxRadioControlFrame* aRadio);
-  void                 GetName(nsString& aNameResult) const;
+  void                 GetName(nsAString& aNameResult) const;
 
 protected:
   nsString             mName;
