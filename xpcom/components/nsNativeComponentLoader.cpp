@@ -362,28 +362,43 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr)
     // an error.
     dll->MarkForUnload(PR_FALSE);
 
-    
+    PRBool canUnload = PR_FALSE;
+
     // Get the module object
     nsCOMPtr<nsIModule> mobj;
     /* XXXshaver cheat and use the global component manager */
     rv = dll->GetModule(nsComponentManagerImpl::gComponentManager,
                         getter_AddRefs(mobj));
-    if (NS_FAILED(rv))
+    if (NS_SUCCEEDED(rv))
         {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                   ("nsComponentManager: Cannot get module object for %s", dll->GetNativePath()));
-            return  rv;
+            rv = mobj->CanUnload(nsComponentManagerImpl::gComponentManager, &canUnload);
+            if (NS_FAILED(rv))
+                {
+                    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                           ("nsComponentManager: nsIModule::CanUnload() returned error for %s.",
+                            dll->GetNativePath()));
+                    return rv;
+                }
         }
+#ifndef OBSOLETE_MODULE_LOADING
+    else
+        {
+            // Try the old method of module unloading
+            nsCanUnloadProc proc = (nsCanUnloadProc)dll->FindSymbol("NSCanUnload");
+            if (proc)
+                {
+                    canUnload = proc(serviceMgr);
+                }
+            else
+                {
+                    PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+                           ("nsComponentManager: Unload cant get nsIModule or CanUnload for %s",
+                            dll->GetNativePath()));
+                    return rv;
+                }
+        }
+#endif /* OBSOLETE_MODULE_LOADING */
 
-    PRBool canUnload;
-    rv = mobj->CanUnload(nsComponentManagerImpl::gComponentManager, &canUnload);
-    if (NS_FAILED(rv))
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                   ("nsComponentManager: nsIModule::CanUnload() returned error for %s.", dll->GetNativePath()));
-            return rv;
-        }
-        
     if (canUnload)
         {
             if (dllMarkedForUnload)
@@ -852,9 +867,10 @@ nsNativeComponentLoader::OnRegister(const nsIID &aCID, const char *aType,
 nsresult
 nsNativeComponentLoader::UnloadAll(PRInt32 aWhen)
 {
-#ifdef DEBUG_shaver
-    fprintf(stderr, "nNCL:UnloadAll(%d)\n", aWhen);
-#endif
+    PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsNativeComponentLoader: Unloading...."));
+
+    // Cycle through the dlls checking to see if they want to be unloaded
+    mDllStore->Enumerate(nsFreeLibraryEnum, NULL);
     return NS_OK;
 }
 
