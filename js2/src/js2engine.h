@@ -90,8 +90,8 @@ enum JS2Op {
     eNext,
     eForValue,
 
-    eSlotRead,          // <slot index:u16>
-    eSlotWrite,         // <slot index:u16>
+    eFrameSlotRead,     // <slot index:u16>
+    eFrameSlotWrite,    // <slot index:u16>
 
     eLexicalRead,       // <multiname index:u16>
     eLexicalWrite,      // <multiname index:u16>
@@ -107,6 +107,10 @@ enum JS2Op {
     eBracketReadForRef,
     eBracketWriteRef,
     eBracketDelete,
+    eSlotRead,           // <slot index:u16>
+    eSlotWrite,          // <slot index:u16>
+    eSlotRef,            // <slot index:u16>
+    eSlotDelete,         // <slot index:u16>
 
     eReturn,
     eReturnVoid,
@@ -136,6 +140,10 @@ enum JS2Op {
     eBracketPostDec,
     eBracketPreInc,
     eBracketPreDec,
+    eSlotPostInc,       // <slot index:u16>
+    eSlotPostDec,       // <slot index:u16>
+    eSlotPreInc,        // <slot index:u16>
+    eSlotPreDec,        // <slot index:u16>
 
 };
 

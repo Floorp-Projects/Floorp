@@ -1008,3 +1008,88 @@
             indexVal = JS2VAL_VOID;
         }
         break;
+
+    case eSlotPostInc:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            baseVal = pop();
+            ASSERT(JS2VAL_IS_OBJECT(baseVal));
+            JS2Object *obj = JS2VAL_TO_OBJECT(baseVal);
+            ASSERT((obj->kind == FixedInstanceKind) || (obj->kind == DynamicInstanceKind));
+            if (obj->kind == FixedInstanceKind)
+                a = checked_cast<FixedInstance *>(obj)->slots[slotIndex].value;
+            else
+                a = checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value;
+            float64 num = meta->toFloat64(a);
+            if (obj->kind == FixedInstanceKind)
+                checked_cast<FixedInstance *>(obj)->slots[slotIndex].value = allocNumber(num + 1.0);
+            else
+                checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value = allocNumber(num + 1.0);
+            pushNumber(num);
+            baseVal = JS2VAL_VOID;
+        }
+        break;
+    case eSlotPostDec:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            baseVal = pop();
+            ASSERT(JS2VAL_IS_OBJECT(baseVal));
+            JS2Object *obj = JS2VAL_TO_OBJECT(baseVal);
+            ASSERT((obj->kind == FixedInstanceKind) || (obj->kind == DynamicInstanceKind));
+            if (obj->kind == FixedInstanceKind)
+                a = checked_cast<FixedInstance *>(obj)->slots[slotIndex].value;
+            else
+                a = checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value;
+            float64 num = meta->toFloat64(a);
+            if (obj->kind == FixedInstanceKind)
+                checked_cast<FixedInstance *>(obj)->slots[slotIndex].value = allocNumber(num - 1.0);
+            else
+                checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value = allocNumber(num - 1.0);
+            pushNumber(num);
+            baseVal = JS2VAL_VOID;
+        }
+        break;
+    case eSlotPreInc:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            baseVal = pop();
+            ASSERT(JS2VAL_IS_OBJECT(baseVal));
+            JS2Object *obj = JS2VAL_TO_OBJECT(baseVal);
+            ASSERT((obj->kind == FixedInstanceKind) || (obj->kind == DynamicInstanceKind));
+            if (obj->kind == FixedInstanceKind)
+                a = checked_cast<FixedInstance *>(obj)->slots[slotIndex].value;
+            else
+                a = checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value;
+            float64 num = meta->toFloat64(a);
+            a = pushNumber(num + 1.0);
+            if (obj->kind == FixedInstanceKind)
+                checked_cast<FixedInstance *>(obj)->slots[slotIndex].value = a;
+            else
+                checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value = a;
+            baseVal = JS2VAL_VOID;
+        }
+        break;
+    case eSlotPreDec:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            baseVal = pop();
+            ASSERT(JS2VAL_IS_OBJECT(baseVal));
+            JS2Object *obj = JS2VAL_TO_OBJECT(baseVal);
+            ASSERT((obj->kind == FixedInstanceKind) || (obj->kind == DynamicInstanceKind));
+            if (obj->kind == FixedInstanceKind)
+                a = checked_cast<FixedInstance *>(obj)->slots[slotIndex].value;
+            else
+                a = checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value;
+            float64 num = meta->toFloat64(a);
+            a = pushNumber(num - 1.0);
+            if (obj->kind == FixedInstanceKind)
+                checked_cast<FixedInstance *>(obj)->slots[slotIndex].value = a;
+            else
+                checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value = a;
+            baseVal = JS2VAL_VOID;
+        }
+        break;

@@ -904,7 +904,7 @@ namespace MetaData {
 
                 Reference *r = EvalExprNode(env, phase, sw->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
-                bCon->emitOp(eSlotWrite, p->pos);
+                bCon->emitOp(eFrameSlotWrite, p->pos);
                 bCon->addShort(swVarIndex);
 
                 // First time through, generate the conditional waterfall 
@@ -913,7 +913,7 @@ namespace MetaData {
                     if (s->getKind() == StmtNode::Case) {
                         ExprStmtNode *c = checked_cast<ExprStmtNode *>(s);
                         if (c->expr) {
-                            bCon->emitOp(eSlotRead, c->pos);
+                            bCon->emitOp(eFrameSlotRead, c->pos);
                             bCon->addShort(swVarIndex);
                             Reference *r = EvalExprNode(env, phase, c->expr, &exprType);
                             if (r) r->emitReadBytecode(bCon, c->pos);
@@ -2174,7 +2174,19 @@ doUnary:
 
                 if (b->op2->getKind() == ExprNode::identifier) {
                     IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(b->op2);
-                    returnRef = new DotReference(&i->name);
+                    if (*exprType) {
+                        MemberDescriptor m2;
+                        Multiname multiname(&i->name);
+                        if (findStaticMember(*exprType, &multiname, ReadAccess, CompilePhase, &m2)) {
+                            if (m2.qname) {
+                                InstanceMember *m = findInstanceMember(*exprType, m2.qname, ReadAccess);
+                                if (m->kind == InstanceMember::InstanceVariableKind)
+                                    returnRef = new SlotReference(checked_cast<InstanceVariable *>(m)->slotIndex);
+                            }
+                        }
+                    }
+                    if (returnRef == NULL)
+                        returnRef = new DotReference(&i->name);
                 } 
                 else {
                     if (b->op2->getKind() == ExprNode::qualify) {

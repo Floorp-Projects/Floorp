@@ -440,8 +440,8 @@ namespace MetaData {
         { eNext,  "Next", 0 },
         { eForValue,  "ForValue", 0 },
 
-        { eSlotRead,  "SlotRead", U16 },          // <slot index:u16>
-        { eSlotWrite,  "SlotWrite", U16 },         // <slot index:u16>
+        { eFrameSlotRead,  "FrameSlotRead", U16 },          // <slot index:u16>
+        { eFrameSlotWrite,  "FrameSlotWrite", U16 },         // <slot index:u16>
 
         { eLexicalRead,  "LexicalRead", NAME_INDEX },       // <multiname index:u16>
         { eLexicalWrite,  "LexicalWrite", NAME_INDEX },      // <multiname index:u16>
@@ -457,6 +457,10 @@ namespace MetaData {
         { eBracketReadForRef,  "BracketReadForRef", 0 },
         { eBracketWriteRef,  "BracketWriteRef", 0 },
         { eBracketDelete,  "BracketDelete", 0 },
+        { eSlotRead,  "SlotRead", U16 },            // <slot index:u16>
+        { eSlotWrite,  "SlotWrite", U16 },          // <slot index:u16>
+        { eSlotRef,  "SlotRef", U16 },              // <slot index:u16>
+        { eSlotDelete,  "SlotDelete", U16 },        // <slot index:u16>
 
         { eReturn,  "Return", 0 },
         { eReturnVoid,  "ReturnVoid", 0 },
@@ -485,7 +489,11 @@ namespace MetaData {
         { eBracketPostInc,  "BracketPostInc", 0 },
         { eBracketPostDec,  "BracketPostDec", 0 },
         { eBracketPreInc,  "BracketPreInc", 0 },
-        { eBracketPreDec,  "BracketPreDec", 0 }
+        { eBracketPreDec,  "BracketPreDec", 0 },
+        { eSlotPostInc,  "SlotPostInc", U16 },      // <slot index:u16>
+        { eSlotPostDec, "SlotPostDec", U16 },       // <slot index:u16>
+        { eSlotPreInc, "SlotPreInc", U16 },         // <slot index:u16>
+        { eSlotPreDec, "SlotPreDec", U16 },         // <slot index:u16>
 
     };
 

@@ -738,6 +738,27 @@ public:
     virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotDelete, pos); bCon->addMultiname(propertyMultiname); }
 };
 
+class SlotReference : public Reference {
+// A special case of a DotReference with an Sl instead of a D
+public:
+    SlotReference(uint32 slotIndex) : slotIndex(slotIndex) { }
+
+    virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eSlotRead, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eSlotWrite, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eSlotRef, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadForInvokeBytecode(bCon, pos); }
+    virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
+
+    virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eSlotPostInc, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eSlotPostDec, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eSlotPreInc, pos); bCon->addShort((uint16)slotIndex); }
+    virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eSlotPreDec, pos); bCon->addShort((uint16)slotIndex); }
+
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eFalse, pos); /* bCon->emitOp(eSlotDelete, pos); bCon->addShort((uint16)slotIndex); */ }
+
+    uint32 slotIndex;
+};
+
 
 class NamedArgument {
 public:

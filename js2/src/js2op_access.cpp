@@ -217,7 +217,7 @@
         }
         break;
 
-    case eSlotWrite:
+    case eFrameSlotWrite:
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
@@ -227,7 +227,7 @@
         }
         break;
 
-    case eSlotRead:
+    case eFrameSlotRead:
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
@@ -236,5 +236,49 @@
         }
         break;
 
+    case eSlotWrite:
+        {
+            a = pop();
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            b = pop();
+            ASSERT(JS2VAL_IS_OBJECT(b));
+            JS2Object *obj = JS2VAL_TO_OBJECT(b);
+            ASSERT((obj->kind == FixedInstanceKind) || (obj->kind == DynamicInstanceKind));
+            if (obj->kind == FixedInstanceKind)
+                checked_cast<FixedInstance *>(obj)->slots[slotIndex].value = a;
+            else
+                checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value = a;
+        }
+        break;
 
+    case eSlotRead:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            b = pop();
+            ASSERT(JS2VAL_IS_OBJECT(b));
+            JS2Object *obj = JS2VAL_TO_OBJECT(b);
+            ASSERT((obj->kind == FixedInstanceKind) || (obj->kind == DynamicInstanceKind));
+            if (obj->kind == FixedInstanceKind)
+                push(checked_cast<FixedInstance *>(obj)->slots[slotIndex].value);
+            else
+                push(checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value);
+        }
+        break;
+
+    case eSlotRef:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            b = top();
+            ASSERT(JS2VAL_IS_OBJECT(b));
+            JS2Object *obj = JS2VAL_TO_OBJECT(b);
+            ASSERT((obj->kind == FixedInstanceKind) || (obj->kind == DynamicInstanceKind));
+            if (obj->kind == FixedInstanceKind)
+                push(checked_cast<FixedInstance *>(obj)->slots[slotIndex].value);
+            else
+                push(checked_cast<DynamicInstance *>(obj)->slots[slotIndex].value);
+        }
+        break;
 
