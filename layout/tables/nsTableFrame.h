@@ -431,6 +431,9 @@ public:
 
   NS_METHOD GetBorderPlusMarginPadding(nsMargin& aResult);
 
+  PRBool HasNonPercentSpanningPercent() const;
+  void SetHasNonPercentSpanningPercent(PRBool aValue);
+
   static void DebugReflow(char*                     aMessage,
                          const nsIFrame*            aFrame,
                          const nsHTMLReflowState*   aState, 
@@ -884,6 +887,7 @@ protected:
   nsBorderEdges mBorderEdges;       // one list of border segments for each side of the table frame
                                     // used only for the collapsing border model
   nscoord      mPercentBasisForRows;
+  PRPackedBool mNonPercentSpansPercent;
 };
 
 
@@ -897,6 +901,16 @@ inline PRBool nsTableFrame::IsRowGroup(PRInt32 aDisplayType) const
 inline nscoord nsTableFrame::GetPercentBasisForRows()
 {
   return mPercentBasisForRows;
+}
+
+inline PRBool nsTableFrame::HasNonPercentSpanningPercent() const
+{
+  return mNonPercentSpansPercent;
+}
+
+inline void nsTableFrame::SetHasNonPercentSpanningPercent(PRBool aValue)
+{
+  mNonPercentSpansPercent = aValue;
 }
 
 enum nsTableIteration {
