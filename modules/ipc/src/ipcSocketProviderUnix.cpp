@@ -75,21 +75,6 @@ ipcIOLayerConnect(PRFileDesc* fd, const PRNetAddr* a, PRIntervalTime timeout)
     if (status != PR_SUCCESS)
         return status;
 
-    struct stat st;
-
-#ifdef XP_MACOSX
-    //
-    // on OSX 10.1.5, |fstat| fails completely if given a file descriptor to a
-    // socket.  however, |stat| succeeds.  using |stat| is not ideal since there
-    // is now a race between this code and a potential attacker.
-    //
-    // XXX come up with a better security check.
-    //
-    if (stat(ipcIOSocketPath, &st) == -1) {
-        NS_ERROR("stat failed");
-        return PR_FAILURE;
-    }
-#else
     //
     // now that we have a connected socket; do some security checks on the
     // file descriptor.
@@ -101,15 +86,32 @@ ipcIOLayerConnect(PRFileDesc* fd, const PRNetAddr* a, PRIntervalTime timeout)
     //
     int unix_fd = PR_FileDesc2NativeHandle(fd->lower);  
 
+    struct stat st;
     if (fstat(unix_fd, &st) == -1) {
         NS_ERROR("stat failed");
         return PR_FAILURE;
     }
-#endif
 
     if (st.st_uid != getuid() && st.st_uid != geteuid()) {
-        NS_ERROR("userid check failed");
-        return PR_FAILURE;
+        //
+        // on OSX 10.1.5, |fstat| has a bug when passed a file descriptor to
+        // a socket.  it incorrectly returns a UID of 0.  however, |stat|
+        // succeeds, but using |stat| introduces a race condition.
+        //
+        // XXX come up with a better security check.
+        //
+        if (st.st_uid != 0) {
+            NS_ERROR("userid check failed");
+            return PR_FAILURE;
+        }
+        if (stat(ipcIOSocketPath, &st) == -1) {
+            NS_ERROR("stat failed");
+            return PR_FAILURE;
+        }
+        if (st.st_uid != getuid() && st.st_uid != geteuid()) {
+            NS_ERROR("userid check failed");
+            return PR_FAILURE;
+        }
     }
 
     return PR_SUCCESS;
