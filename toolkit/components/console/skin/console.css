@@ -13,7 +13,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -22,7 +22,7 @@
  *  Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -106,18 +106,15 @@
 /* ::::: icons ::::: */
 
 .console-row[type="error"],
-.console-row[type="exception"],
-toolbarbutton[observes="Console:modeErrors"] {
+.console-row[type="exception"] {
   list-style-image: url("chrome://global/skin/icons/Error.png");
 }
 
-.console-row[type="warning"],
-toolbarbutton[observes="Console:modeWarnings"] {
+.console-row[type="warning"] {
   list-style-image: url("chrome://global/skin/icons/Warning.png");
 }
 
-.console-row[type="message"],
-toolbarbutton[observes="Console:modeMessages"] {
+.console-row[type="message"] {
   list-style-image: url("chrome://global/skin/icons/Message.png");
 }
 
@@ -133,4 +130,47 @@ toolbarbutton[observes="Console:modeMessages"] {
 
 toolbarseparator {
   min-height: 1em;
+}
+
+
+/* Toolbar icons */
+
+toolbar#ToolbarMode toolbarbutton {
+  list-style-image: url("chrome://global/skin/console/Console-toolbar.png");
+}
+
+toolbarbutton[observes="Console:modeAll"] {
+  -moz-image-region: rect(0px, 32px, 32px, 0px);
+}
+toolbarbutton[observes="Console:modeAll"]:hover,
+toolbarbutton[observes="Console:modeAll"][checked="true"] {
+  -moz-image-region: rect(32px, 32px, 64px, 0px);
+}
+
+toolbarbutton[observes="Console:modeErrors"] {
+  -moz-image-region: rect(0px, 64px, 32px, 32px);
+}
+toolbarbutton[observes="Console:modeErrors"]:hover,
+toolbarbutton[observes="Console:modeErrors"][checked="true"] {
+  -moz-image-region: rect(32px, 64px, 64px, 32px);
+}
+
+toolbarbutton[observes="Console:modeWarnings"] {
+  -moz-image-region: rect(0px, 96px, 32px, 64px);
+}
+toolbarbutton[observes="Console:modeWarnings"]:hover,
+toolbarbutton[observes="Console:modeWarnings"][checked="true"] {
+  -moz-image-region: rect(32px, 96px, 64px, 64px);
+}
+
+toolbarbutton[observes="Console:modeMessages"] {
+  -moz-image-region: rect(0px, 128px, 32px, 96px);
+}
+toolbarbutton[observes="Console:modeMessages"]:hover,
+toolbarbutton[observes="Console:modeMessages"][checked="true"] {
+  -moz-image-region: rect(32px, 128px, 64px, 96px);
+}
+
+toolbar#ToolbarMode toolbarbutton[observes="Console:clear"] {
+  list-style-image: none;
 }
