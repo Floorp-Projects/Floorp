@@ -59,11 +59,7 @@ function getJSClass(obj)
 
 function findType(obj)
 {
-  var nativeToString = obj.toString;
-  obj.toString = cnObjectToString;
-  var sType = obj.toString();
-  obj.toString = nativeToString;
-  return sType;
+  return cnObjectToString.apply(obj);
 }
 
 
