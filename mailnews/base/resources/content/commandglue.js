@@ -207,13 +207,13 @@ function ChangeFolderByURI(uri)
 
   gBeforeFolderLoadTime = new Date();
 
-  if(msgfolder.ManyHeadersToDownload())
+  if(msgfolder.manyHeadersToDownload())
   {
 	try
 	{
 		gCurrentLoadingFolderURI = uri;
-		msgfolder.StartFolderLoading();
-		msgfolder.UpdateFolder();
+		msgfolder.startFolderLoading();
+		msgfolder.updateFolder();
 	}
 	catch(ex)
 	{

@@ -538,7 +538,7 @@ nsMsgLocalMailFolder::GetMessages(nsISimpleEnumerator* *result)
 
 
 
-NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
+NS_IMETHODIMP nsMsgLocalMailFolder::GetFolderURL(char **url)
 {
 	const char *urlScheme = "mailbox:";
 
@@ -1264,7 +1264,7 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
 
 	PRBool isLocked;
 
-	IsLocked(&isLocked);
+	GetLocked(&isLocked);
 	if(!isLocked)
 		AcquireSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
 	else

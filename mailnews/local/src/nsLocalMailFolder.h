@@ -95,7 +95,7 @@ public:
 
 	NS_IMETHOD GetPrettyName(PRUnichar** prettyName);	// Override of the base, for top-level mail folder
 
-	NS_IMETHOD BuildFolderURL(char **url);
+	NS_IMETHOD GetFolderURL(char **url);
 
 	NS_IMETHOD UpdateSummaryTotals(PRBool force) ;
 

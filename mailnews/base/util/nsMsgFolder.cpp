@@ -139,6 +139,55 @@ nsMsgFolder::Init(const char* aURI)
   return nsRDFResource::Init(aURI);
 }
 
+
+  // nsICollection methods:
+NS_IMETHODIMP
+nsMsgFolder::Count(PRUint32 *result) {
+  return mSubFolders->Count(result);
+}
+
+NS_IMETHODIMP
+nsMsgFolder::GetElementAt(PRUint32 i, nsISupports* *result) {
+  return mSubFolders->GetElementAt(i, result);
+}
+
+NS_IMETHODIMP
+nsMsgFolder::QueryElementAt(PRUint32 i, const nsIID & iid, void * *result) {
+  return mSubFolders->QueryElementAt(i, iid, result);
+}
+
+NS_IMETHODIMP
+nsMsgFolder::SetElementAt(PRUint32 i, nsISupports* value) {
+  return mSubFolders->SetElementAt(i, value);
+}
+
+NS_IMETHODIMP
+nsMsgFolder::AppendElement(nsISupports *aElement) {
+  return mSubFolders->AppendElement(aElement);
+}
+
+NS_IMETHODIMP
+nsMsgFolder::RemoveElement(nsISupports *aElement) {
+  return mSubFolders->RemoveElement(aElement);
+}
+
+NS_IMETHODIMP
+nsMsgFolder::Enumerate(nsIEnumerator* *result) {
+  // nsMsgFolders only have subfolders, no message elements
+  return mSubFolders->Enumerate(result);
+}
+
+NS_IMETHODIMP
+nsMsgFolder::Clear(void) {
+  return mSubFolders->Clear();
+}
+
+NS_IMETHODIMP
+nsMsgFolder::GetURI(char* *name) {
+  return nsRDFResource::GetValue(name);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef PRBool
@@ -314,7 +363,7 @@ nsMsgFolder::HasMessage(nsIMessage *message, PRBool *hasMessage)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsMsgFolder::BuildFolderURL(char **url)
+NS_IMETHODIMP nsMsgFolder::GetFolderURL(char **url)
 {
 	if(*url)
 	{
@@ -1190,7 +1239,7 @@ NS_IMETHODIMP nsMsgFolder::GetAllowsPosting(PRBool *allowsPosting)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::DisplayRecipients(PRBool *displayRecipients)
+NS_IMETHODIMP nsMsgFolder::GetDisplayRecipients(PRBool *displayRecipients)
 {
 	nsresult rv;
 
@@ -1261,7 +1310,7 @@ NS_IMETHODIMP nsMsgFolder::TestSemaphore(nsISupports *semHolder, PRBool *result)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::IsLocked(PRBool *isLocked)
+NS_IMETHODIMP nsMsgFolder::GetLocked(PRBool *isLocked)
 { 
 	*isLocked =  mSemaphoreHolder != NULL;
 	return  NS_OK;

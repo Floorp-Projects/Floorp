@@ -412,7 +412,7 @@ nsMsgNewsFolder::GetMessages(nsISimpleEnumerator* *result)
   return rv;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::BuildFolderURL(char **url)
+NS_IMETHODIMP nsMsgNewsFolder::GetFolderURL(char **url)
 {
   const char *urlScheme = "news:";
 

@@ -26,9 +26,6 @@
 #include "nsEscape.h"
 #include "nsCRT.h"
 
-/* for the XP_TO_UPPER stuff */
-#include "net.h"
-
 // mscott: this is lame...I know....
 #define MK_OUT_OF_MEMORY  1
 

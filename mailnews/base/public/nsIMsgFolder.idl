@@ -49,17 +49,22 @@ interface nsIMsgFolder : nsIFolder {
   void AddUnique(in nsISupports element);
   void ReplaceElement(in nsISupports element, in nsISupports newElement);
   
-	nsISimpleEnumerator GetMessages();
-	nsISimpleEnumerator GetThreads();
-	void StartFolderLoading();
-	void EndFolderLoading();
+  nsISimpleEnumerator getMessages();
+	nsISimpleEnumerator getThreads();
+  
+	void startFolderLoading();
+	void endFolderLoading();
+  
 	/* get new headers for db */
-	void UpdateFolder();
-	nsIMsgThread GetThreadForMessage(in nsIMessage message);
-	boolean HasMessage(in nsIMessage message);
-  nsIEnumerator GetVisibleSubFolders();
+	void updateFolder();
+  
+	nsIMsgThread getThreadForMessage(in nsIMessage message);
+	boolean hasMessage(in nsIMessage message);
+  
+  nsIEnumerator getVisibleSubFolders();
 	readonly attribute wstring prettiestName;
-	string BuildFolderURL();
+
+  readonly attribute string folderURL;
 
 	readonly attribute boolean deleteIsMoveToTrash;
 	readonly attribute boolean showDeletedMessages;
@@ -70,27 +75,28 @@ interface nsIMsgFolder : nsIFolder {
 	void OnCloseFolder ();
 	void Delete ();
 
-	void DeleteSubFolders(in nsISupportsArray folders);
-	void PropagateDelete(in nsIMsgFolder folder, in boolean deleteStorage);
-	void RecursiveDelete(in boolean deleteStorage);
+	void deleteSubFolders(in nsISupportsArray folders);
+	void propagateDelete(in nsIMsgFolder folder, in boolean deleteStorage);
+	void recursiveDelete(in boolean deleteStorage);
 
-	void CreateSubfolder(in string folderName);
+	void createSubfolder(in string folderName);
 
-  void Compact();
-  void EmptyTrash();
+  void compact();
+  void emptyTrash();
 
-	void Rename(in string name);
-	void Adopt(in nsIMsgFolder srcFolder, out unsigned long outPos);
+	void rename(in string name);
+	void adopt(in nsIMsgFolder srcFolder, out unsigned long outPos);
 
-	boolean ContainsChildNamed(in string name);
-	boolean IsAncestorOf(in nsIMsgFolder folder);
+	boolean containsChildNamed(in string name);
+	boolean isAncestorOf(in nsIMsgFolder folder);
 
-	string GenerateUniqueSubfolderName(in string prefix, in nsIMsgFolder otherFolder);
+	string generateUniqueSubfolderName(in string prefix,
+                                     in nsIMsgFolder otherFolder);
 
-	void UpdateSummaryTotals(in boolean force);
-	void SummaryChanged();
-	long GetNumUnread(in boolean deep);
-	long GetTotalMessages(in boolean deep);
+	void updateSummaryTotals(in boolean force);
+	void summaryChanged();
+	long getNumUnread(in boolean deep);
+	long getTotalMessages(in boolean deep);
 
 	readonly attribute unsigned long expungedBytesCount;
 	readonly attribute boolean deletable;
@@ -98,73 +104,74 @@ interface nsIMsgFolder : nsIFolder {
 	readonly attribute boolean canBeRenamed;
 	readonly attribute boolean requiresCleanup;
 
-	void ClearRequiresCleanup();
+	void clearRequiresCleanup();
 
-	boolean ManyHeadersToDownload();
+	boolean manyHeadersToDownload();
 
 	readonly attribute boolean knowsSearchNntpExtension;
 	readonly attribute boolean allowsPosting;
 
-	boolean DisplayRecipients();
+	readonly attribute boolean displayRecipients;
 
 	readonly attribute string relativePathName;
 	readonly attribute unsigned long sizeOnDisk;
 
-	void RememberPassword(in string password);
-	string GetRememberedPassword();
-	boolean UserNeedsToAuthenticateForFolder(in boolean displayOnly);
-	string GetUsername();
-	string GetHostname();
-
+	void rememberPassword(in string password);
+	readonly attribute string rememberedPassword;
+	boolean userNeedsToAuthenticateForFolder(in boolean displayOnly);
+  readonly attribute string username;
+  readonly attribute string hostname;
   
-	void SetFlag(in unsigned long flag);
-	void ClearFlag(in unsigned long flag);
-	boolean GetFlag(in unsigned long flag);
+	void setFlag(in unsigned long flag);
+	void clearFlag(in unsigned long flag);
+	boolean getFlag(in unsigned long flag);
 
-	void ToggleFlag (in unsigned long flag);
-	void OnFlagChange (in unsigned long flag);
-	unsigned long GetFlags();
+	void toggleFlag (in unsigned long flag);
+	void onFlagChange (in unsigned long flag);
+  
+	readonly attribute unsigned long flags;
 
-	void GetFoldersWithFlag(in unsigned long flags, out nsIMsgFolder result,
+	void getFoldersWithFlag(in unsigned long flags, out nsIMsgFolder result,
                          in unsigned long resultsize, out unsigned long numFolders);
 
-	void GetExpansionArray(in nsISupportsArray expansionArray);
+	void getExpansionArray(in nsISupportsArray expansionArray);
 
-	void DeleteMessages(in nsISupportsArray message, in nsITransactionManager
-                      txnMgr,in boolean deleteStorage);
+	void deleteMessages(in nsISupportsArray message,
+                      in nsITransactionManager txnMgr,
+                      in boolean deleteStorage);
 
-  void CopyMessages(in nsIMsgFolder srcFolder, in nsISupportsArray messages,
+  void copyMessages(in nsIMsgFolder srcFolder, in nsISupportsArray messages,
                     in boolean isMove, in nsITransactionManager txnMgr,
                     in nsIMsgCopyServiceListener listener);
 
-  void CopyFileMessage(in nsIFileSpec fileSpec, in nsIMessage msgToReplace,
+  void copyFileMessage(in nsIFileSpec fileSpec, in nsIMessage msgToReplace,
                        in boolean isDraft, in nsITransactionManager txnMgr,
                        in nsIMsgCopyServiceListener listener);
 
-  void AcquireSemaphore (in nsISupports semHolder);
-  void ReleaseSemaphore (in nsISupports semHolder);
-  boolean TestSemaphore (in nsISupports semHolder);
-  boolean IsLocked();
+  void acquireSemaphore (in nsISupports semHolder);
+  void releaseSemaphore (in nsISupports semHolder);
+  boolean testSemaphore (in nsISupports semHolder);
+  readonly attribute boolean locked;
 
-	nsIMessage CreateMessageFromMsgDBHdr(in nsIMsgDBHdr msgDBHdr);
-	void GetNewMessages();
+	nsIMessage createMessageFromMsgDBHdr(in nsIMsgDBHdr msgDBHdr);
+	void getNewMessages();
 
-	void WriteToFolderCache(in nsIMsgFolderCache folderCache);
+	void writeToFolderCache(in nsIMsgFolderCache folderCache);
 	attribute wstring charset;
-	attribute unsigned long BiffState;
-	attribute long NumNewMessages;
+	attribute unsigned long biffState;
+	attribute long numNewMessages;
 
-	readonly attribute wstring NewMessagesNotificationDescription;
-	readonly attribute nsIMsgFolder RootFolder;
+	readonly attribute wstring newMessagesNotificationDescription;
+	readonly attribute nsIMsgFolder rootFolder;
   readonly attribute nsIMsgDatabase msgDatabase;
 
-	readonly attribute nsIFileSpec Path;
+	readonly attribute nsIFileSpec path;
 
-	void MarkMessagesRead(in nsISupportsArray messages, in boolean markRead);
-	void MarkAllMessagesRead();
-	void MarkMessagesFlagged(in nsISupportsArray messages, in boolean markFlagged);
+	void markMessagesRead(in nsISupportsArray messages, in boolean markRead);
+	void markAllMessagesRead();
+	void markMessagesFlagged(in nsISupportsArray messages, in boolean markFlagged);
 
-	nsIMsgFolder GetChildWithURI(in string uri, in boolean deep);
+	nsIMsgFolder getChildWithURI(in string uri, in boolean deep);
 };
 
 

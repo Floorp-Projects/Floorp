@@ -76,7 +76,7 @@ var folderListener = {
 					gCurrentLoadingFolderURI="";
 					var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
 					if(msgFolder)
-						msgFolder.EndFolderLoading();
+						msgFolder.endFolderLoading();
 					RerootFolder(uri);
 				}
 			}

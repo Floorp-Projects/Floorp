@@ -34,7 +34,9 @@ class nsIMsgFolderCacheElement;
   * class derived from nsMsgFolder for those folders that use an nsIMsgDatabase
   */ 
 
-class NS_MSG_BASE nsMsgDBFolder: public nsMsgFolder, public nsIDBChangeListener, public nsIUrlListener
+class NS_MSG_BASE nsMsgDBFolder:  public nsMsgFolder,
+                                        public nsIDBChangeListener,
+                                        public nsIUrlListener
 {
 public: 
 	nsMsgDBFolder(void);

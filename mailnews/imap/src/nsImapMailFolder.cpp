@@ -707,7 +707,7 @@ NS_IMETHODIMP nsImapMailFolder::GetPrettyName(PRUnichar ** prettyName)
 	return GetName(prettyName);
 }
     
-NS_IMETHODIMP nsImapMailFolder::BuildFolderURL(char **url)
+NS_IMETHODIMP nsImapMailFolder::GetFolderURL(char **url)
 {
     nsresult rv = NS_ERROR_FAILURE;
     return rv;
