@@ -391,6 +391,22 @@ nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)
   return result;
 }
 
+NS_IMETHODIMP 
+nsTextServicesDocument::GetDocument(nsIDOMDocument **aDoc)
+{
+  if (!aDoc)
+    return NS_ERROR_NULL_POINTER;
+
+  *aDoc = nsnull; // init out param
+  if (!mDOMDocument)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  *aDoc = mDOMDocument;
+  NS_ADDREF(*aDoc);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsTextServicesDocument::SetFilter(nsITextServicesFilter *aFilter)
 {
