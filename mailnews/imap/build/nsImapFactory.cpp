@@ -220,7 +220,7 @@ static Components gComponents[] = {
     { "Imap Host Session List", &kCImapHostSessionList,
       nsnull },
     { "Imap Incoming Server", &kCImapIncomingServer,
-      "component://netscape/messenger/server&type=imap" },
+      NS_IMAPINCOMINGSERVER_PROGID },
     { "Mail/News Imap Resource Factory", &kCImapResource,
       NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap" },
     { "Imap Service", &kCImapService,

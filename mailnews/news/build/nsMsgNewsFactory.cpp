@@ -26,7 +26,6 @@
 #include "nsIGenericFactory.h"
 
 #include "msgCore.h"
-#include "nsMsgBaseCID.h"
 #include "pratom.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"

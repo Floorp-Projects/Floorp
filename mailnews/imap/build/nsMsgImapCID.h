@@ -26,6 +26,7 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
+#include "nsMsgBaseCID.h"
 
 #define NS_IMAPURL_CID							\
 { /* 21A89611-DC0D-11d2-806C-006008128C4E */	\
@@ -34,6 +35,9 @@
 
 #define NS_IMAPPROTOCOLINFO_PROGID \
   NS_MSGPROTOCOLINFO_PROGID_PREFIX "imap"
+
+#define NS_IMAPINCOMINGSERVER_PROGID  \
+  NS_MSGINCOMINGSERVER_PROGID_PREFIX "imap"
 
 #define NS_IMAPSERVICE_CID						  \
 { /* C5852B22-EBE2-11d2-95AD-000064657374 */      \

@@ -26,6 +26,8 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
+#include "nsMsgBaseCID.h"
+
 //
 // nsLocalMailFolderResourceCID
 //
@@ -43,7 +45,7 @@
 // nsPop3IncomingServer
 //
 #define NS_POP3INCOMINGSERVER_PROGID \
-  "component://netscape/messenger/server&type=pop3"
+  NS_MSGINCOMINGSERVER_PROGID_PREFIX "pop3"
 
 #define NS_POP3INCOMINGSERVER_CID									\
 { /* D2876E51-E62C-11d2-B7FC-00805F05FFA5 */			\
@@ -54,7 +56,7 @@
 // nsNoIncomingServer
 //
 #define NS_NOINCOMINGSERVER_PROGID \
-  "component://netscape/messenger/server&type=none"
+  NS_MSGINCOMINGSERVER_PROGID_PREFIX "none"
 
 #define NS_NOINCOMINGSERVER_CID            	\
 { /* {ca5ffe7e-5f47-11d3-9a51-004005263078} */	\
