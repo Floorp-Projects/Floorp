@@ -1,9 +1,6 @@
 <!-- LOCALIZATION NOTE : FILE 'Languages' preferences dialog -->
-<!ENTITY  languages.customize.prefLangDescript          "Choose in order of preference the language(s)
-			                                                  in which you prefer to view web pages. Web 
-                                                        pages are sometimes available in several
-                                                        languages. Navigator presents pages in the 
-                                                        available language you most prefer.">
+<!ENTITY  languages.customize.prefLangDescript          "Web pages are sometimes available in more than one language.
+                                                         Choose languages for displaying web pages, in order of preference.">
 <!ENTITY languages.customize.window.title               "Languages">
 <!ENTITY languages.customize.lHeader                    "Languages">
 <!ENTITY languages.customize.rHeader                    "Languages in which webpages are displayed">
