@@ -228,6 +228,7 @@ private:
 
     JSContext2XPCContextMap*  GetContextMap() const {return mContextMap;}
     JSBool GenerateStringIDs(JSContext* cx);
+    void PurgeXPCContextList();
 
 private:
     static const char* mStrings[IDX_TOTAL_COUNT];

@@ -135,7 +135,7 @@ GetISupportsFromJSObject(JSContext* cx, JSObject* obj, nsISupports** iface)
 }
 
 /***************************************************************************/
-// This copied from nsJSUtils.cpp in DOMLand
+// These are copied from nsJSUtils.cpp in DOMLand
  
 static nsresult 
 GetStaticScriptGlobal(JSContext* aContext,
@@ -174,6 +174,34 @@ GetStaticScriptContext(JSContext* aContext,
   return scriptContext ? NS_OK : NS_ERROR_FAILURE;
 }  
 
+static nsresult 
+GetDynamicScriptContext(JSContext *aContext,
+                        nsIScriptContext** aScriptContext)
+{
+  // XXX We rely on the rule that if any JSContext in our JSRuntime has a 
+  // private set then that private *must* be a pointer to an nsISupports.
+  nsISupports *supports = (nsIScriptContext*) JS_GetContextPrivate(aContext);
+  if (!supports)
+      return nsnull;
+  return supports->QueryInterface(NS_GET_IID(nsIScriptContext),
+                                  (void**)aScriptContext);
+}
+
+#if 0
+// never called.
+static nsresult 
+GetDynamicScriptGlobal(JSContext* aContext,
+                       nsIScriptGlobalObject** aNativeGlobal)
+{
+  nsIScriptGlobalObject* nativeGlobal = nsnull;
+  nsCOMPtr<nsIScriptContext> scriptCX;
+  GetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+  if (scriptCX) {
+    *aNativeGlobal = nativeGlobal = scriptCX->GetGlobalObject();
+  }
+  return nativeGlobal ? NS_OK : NS_ERROR_FAILURE;
+}  
+#endif
 /***************************************************************************/
 /***************************************************************************/
 
@@ -668,6 +696,8 @@ XPCConvert::NativeInterface2JSObject(JSContext* cx,
             // is a DOM object
             nsCOMPtr<nsIScriptContext> scriptCX;
             GetStaticScriptContext(cx, scope, getter_AddRefs(scriptCX));
+            if(!scriptCX)
+                GetDynamicScriptContext(cx, getter_AddRefs(scriptCX));
             JSObject* aJSObj = nsnull;
             if(scriptCX &&
                NS_SUCCEEDED(owner->GetScriptObject(scriptCX, (void **)&aJSObj)))
