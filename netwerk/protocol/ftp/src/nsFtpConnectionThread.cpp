@@ -934,7 +934,7 @@ nsFtpConnectionThread::R_pwd() {
         lNewMsg.Mid(path, start-1, lNewMsg.Length() - start);*/
         nsString2 path = lNewMsg;
         nsString2 ptr;
-        PRInt32 start;
+        PRInt32 start=0;
 
         if (path.First() != '/') {
             start = path.FindChar('/');
@@ -942,7 +942,7 @@ nsFtpConnectionThread::R_pwd() {
                 path.Right(ptr, start);
             } else {
                 // if we couldn't find a slash, check for back slashes and switch them out.
-                PRInt32 start = path.FindChar('\\');
+                start = path.FindChar('\\');
                 if (start > -1) {
                     path.ReplaceChar("\\", '/');
                 }
