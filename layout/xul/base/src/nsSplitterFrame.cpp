@@ -81,7 +81,12 @@ public:
     mOuter = aSplitter;
     mPressed = PR_FALSE;
   }
-  virtual ~nsSplitterFrameInner() {}
+  
+  virtual ~nsSplitterFrameInner()
+  {
+    delete[] mChildInfosBefore;
+    delete[] mChildInfosAfter;
+  }
 
   // mouse listener
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
