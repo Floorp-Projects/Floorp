@@ -419,111 +419,6 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
-      case HTMLDOCUMENT_REFERRER:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetReferrer(prop);
-        
-        break;
-      }
-      case HTMLDOCUMENT_FILESIZE:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetFileSize(prop);
-        
-        break;
-      }
-      case HTMLDOCUMENT_FILECREATEDDATE:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetFileCreatedDate(prop);
-        
-        break;
-      }
-      case HTMLDOCUMENT_FILEMODIFIEDDATE:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetFileModifiedDate(prop);
-        
-        break;
-      }
-      case HTMLDOCUMENT_FILEUPDATEDDATE:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetFileUpdatedDate(prop);
-        
-        break;
-      }
-      case HTMLDOCUMENT_DOMAIN:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetDomain(prop);
-        
-        break;
-      }
-      case HTMLDOCUMENT_URL:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetURL(prop);
-        
-        break;
-      }
       case HTMLDOCUMENT_BODY:
       {
         nsIDOMHTMLElement* prop;
@@ -544,121 +439,6 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
       
         a->SetBody(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
-      case HTMLDOCUMENT_IMAGES:
-      {
-        nsIDOMHTMLCollection* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLCollectionIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLCollection");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetImages(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
-      case HTMLDOCUMENT_APPLETS:
-      {
-        nsIDOMHTMLCollection* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLCollectionIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLCollection");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetApplets(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
-      case HTMLDOCUMENT_LINKS:
-      {
-        nsIDOMHTMLCollection* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLCollectionIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLCollection");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetLinks(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
-      case HTMLDOCUMENT_FORMS:
-      {
-        nsIDOMHTMLCollection* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLCollectionIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLCollection");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetForms(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
-      case HTMLDOCUMENT_ANCHORS:
-      {
-        nsIDOMHTMLCollection* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLCollectionIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLCollection");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetAnchors(prop);
         if (prop) NS_RELEASE(prop);
         break;
       }
@@ -782,7 +562,7 @@ HTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
   if (argc >= 0) {
 
-    if (NS_OK != nativeThis->Open()) {
+    if (NS_OK != nativeThis->Open(cx, argv+0, argc-0)) {
       return JS_FALSE;
     }
 
@@ -838,7 +618,6 @@ HTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 {
   nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsAutoString b0;
 
   *rval = JSVAL_NULL;
 
@@ -847,24 +626,16 @@ HTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  if (argc >= 0) {
 
-    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
-    if (nsnull != jsstring0) {
-      b0.SetString(JS_GetStringChars(jsstring0));
-    }
-    else {
-      b0.SetString("");   // Should this really be null?? 
-    }
-
-    if (NS_OK != nativeThis->Write(b0)) {
+    if (NS_OK != nativeThis->Write(cx, argv+0, argc-0)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function write requires 1 parameters");
+    JS_ReportError(cx, "Function write requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -880,7 +651,6 @@ HTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 {
   nsIDOMHTMLDocument *nativeThis = (nsIDOMHTMLDocument*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsAutoString b0;
 
   *rval = JSVAL_NULL;
 
@@ -889,24 +659,16 @@ HTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  if (argc >= 0) {
 
-    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
-    if (nsnull != jsstring0) {
-      b0.SetString(JS_GetStringChars(jsstring0));
-    }
-    else {
-      b0.SetString("");   // Should this really be null?? 
-    }
-
-    if (NS_OK != nativeThis->Writeln(b0)) {
+    if (NS_OK != nativeThis->Writeln(cx, argv+0, argc-0)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function writeln requires 1 parameters");
+    JS_ReportError(cx, "Function writeln requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -1054,19 +816,19 @@ JSClass HTMLDocumentClass = {
 static JSPropertySpec HTMLDocumentProperties[] =
 {
   {"title",    HTMLDOCUMENT_TITLE,    JSPROP_ENUMERATE},
-  {"referrer",    HTMLDOCUMENT_REFERRER,    JSPROP_ENUMERATE},
-  {"fileSize",    HTMLDOCUMENT_FILESIZE,    JSPROP_ENUMERATE},
-  {"fileCreatedDate",    HTMLDOCUMENT_FILECREATEDDATE,    JSPROP_ENUMERATE},
-  {"fileModifiedDate",    HTMLDOCUMENT_FILEMODIFIEDDATE,    JSPROP_ENUMERATE},
-  {"fileUpdatedDate",    HTMLDOCUMENT_FILEUPDATEDDATE,    JSPROP_ENUMERATE},
-  {"domain",    HTMLDOCUMENT_DOMAIN,    JSPROP_ENUMERATE},
-  {"URL",    HTMLDOCUMENT_URL,    JSPROP_ENUMERATE},
+  {"referrer",    HTMLDOCUMENT_REFERRER,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"fileSize",    HTMLDOCUMENT_FILESIZE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"fileCreatedDate",    HTMLDOCUMENT_FILECREATEDDATE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"fileModifiedDate",    HTMLDOCUMENT_FILEMODIFIEDDATE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"fileUpdatedDate",    HTMLDOCUMENT_FILEUPDATEDDATE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"domain",    HTMLDOCUMENT_DOMAIN,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"URL",    HTMLDOCUMENT_URL,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"body",    HTMLDOCUMENT_BODY,    JSPROP_ENUMERATE},
-  {"images",    HTMLDOCUMENT_IMAGES,    JSPROP_ENUMERATE},
-  {"applets",    HTMLDOCUMENT_APPLETS,    JSPROP_ENUMERATE},
-  {"links",    HTMLDOCUMENT_LINKS,    JSPROP_ENUMERATE},
-  {"forms",    HTMLDOCUMENT_FORMS,    JSPROP_ENUMERATE},
-  {"anchors",    HTMLDOCUMENT_ANCHORS,    JSPROP_ENUMERATE},
+  {"images",    HTMLDOCUMENT_IMAGES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"applets",    HTMLDOCUMENT_APPLETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"links",    HTMLDOCUMENT_LINKS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"forms",    HTMLDOCUMENT_FORMS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"anchors",    HTMLDOCUMENT_ANCHORS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"cookie",    HTMLDOCUMENT_COOKIE,    JSPROP_ENUMERATE},
   {0}
 };
@@ -1079,8 +841,8 @@ static JSFunctionSpec HTMLDocumentMethods[] =
 {
   {"open",          HTMLDocumentOpen,     0},
   {"close",          HTMLDocumentClose,     0},
-  {"write",          HTMLDocumentWrite,     1},
-  {"writeln",          HTMLDocumentWriteln,     1},
+  {"write",          HTMLDocumentWrite,     0},
+  {"writeln",          HTMLDocumentWriteln,     0},
   {"getElementById",          HTMLDocumentGetElementById,     1},
   {"getElementsByName",          HTMLDocumentGetElementsByName,     1},
   {0}

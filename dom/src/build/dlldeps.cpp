@@ -18,6 +18,8 @@
 #include "nsJSEnvironment.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMNavigator.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMHTMLCollection.h"
 #include "nsIScriptEventListener.h"
 
 // Force references to all of the symbols that we want exported from
@@ -28,5 +30,7 @@ void XXXDomNeverCalled()
   nsJSContext* jcx = new nsJSContext(0);
   NS_NewScriptGlobalObject(0);
   NS_NewScriptNavigator(0, 0, 0, 0);
+  NS_NewScriptHTMLDocument(0, 0, 0, 0);
+  NS_NewScriptHTMLCollection(0, 0, 0, 0);
   NS_NewScriptEventListener(0, 0, 0);
 }

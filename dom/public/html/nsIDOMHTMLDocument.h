@@ -24,6 +24,7 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMDocument.h"
+#include "jsapi.h"
 
 class nsIDOMElement;
 class nsIDOMHTMLElement;
@@ -42,54 +43,42 @@ public:
   NS_IMETHOD    SetTitle(const nsString& aTitle)=0;
 
   NS_IMETHOD    GetReferrer(nsString& aReferrer)=0;
-  NS_IMETHOD    SetReferrer(const nsString& aReferrer)=0;
 
   NS_IMETHOD    GetFileSize(nsString& aFileSize)=0;
-  NS_IMETHOD    SetFileSize(const nsString& aFileSize)=0;
 
   NS_IMETHOD    GetFileCreatedDate(nsString& aFileCreatedDate)=0;
-  NS_IMETHOD    SetFileCreatedDate(const nsString& aFileCreatedDate)=0;
 
   NS_IMETHOD    GetFileModifiedDate(nsString& aFileModifiedDate)=0;
-  NS_IMETHOD    SetFileModifiedDate(const nsString& aFileModifiedDate)=0;
 
   NS_IMETHOD    GetFileUpdatedDate(nsString& aFileUpdatedDate)=0;
-  NS_IMETHOD    SetFileUpdatedDate(const nsString& aFileUpdatedDate)=0;
 
   NS_IMETHOD    GetDomain(nsString& aDomain)=0;
-  NS_IMETHOD    SetDomain(const nsString& aDomain)=0;
 
   NS_IMETHOD    GetURL(nsString& aURL)=0;
-  NS_IMETHOD    SetURL(const nsString& aURL)=0;
 
   NS_IMETHOD    GetBody(nsIDOMHTMLElement** aBody)=0;
   NS_IMETHOD    SetBody(nsIDOMHTMLElement* aBody)=0;
 
   NS_IMETHOD    GetImages(nsIDOMHTMLCollection** aImages)=0;
-  NS_IMETHOD    SetImages(nsIDOMHTMLCollection* aImages)=0;
 
   NS_IMETHOD    GetApplets(nsIDOMHTMLCollection** aApplets)=0;
-  NS_IMETHOD    SetApplets(nsIDOMHTMLCollection* aApplets)=0;
 
   NS_IMETHOD    GetLinks(nsIDOMHTMLCollection** aLinks)=0;
-  NS_IMETHOD    SetLinks(nsIDOMHTMLCollection* aLinks)=0;
 
   NS_IMETHOD    GetForms(nsIDOMHTMLCollection** aForms)=0;
-  NS_IMETHOD    SetForms(nsIDOMHTMLCollection* aForms)=0;
 
   NS_IMETHOD    GetAnchors(nsIDOMHTMLCollection** aAnchors)=0;
-  NS_IMETHOD    SetAnchors(nsIDOMHTMLCollection* aAnchors)=0;
 
   NS_IMETHOD    GetCookie(nsString& aCookie)=0;
   NS_IMETHOD    SetCookie(const nsString& aCookie)=0;
 
-  NS_IMETHOD    Open()=0;
+  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc)=0;
 
   NS_IMETHOD    Close()=0;
 
-  NS_IMETHOD    Write(const nsString& aText)=0;
+  NS_IMETHOD    Write(JSContext *cx, jsval *argv, PRUint32 argc)=0;
 
-  NS_IMETHOD    Writeln(const nsString& aText)=0;
+  NS_IMETHOD    Writeln(JSContext *cx, jsval *argv, PRUint32 argc)=0;
 
   NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn)=0;
 

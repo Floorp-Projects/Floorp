@@ -63,7 +63,7 @@ GetHTMLCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case HTMLCOLLECTION_LENGTH:
       {
-        PRInt32 prop;
+        PRUint32 prop;
         if (NS_OK == a->GetLength(&prop)) {
           *vp = INT_TO_JSVAL(prop);
         }
@@ -129,22 +129,7 @@ SetHTMLCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case HTMLCOLLECTION_LENGTH:
-      {
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a number");
-          return JS_FALSE;
-        }
-      
-        a->SetLength(prop);
-        
-        break;
-      }
+      case 0:
       default:
       {
         nsIJSScriptObject *object;
@@ -241,7 +226,7 @@ HTMLCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   nsIDOMHTMLCollection *nativeThis = (nsIDOMHTMLCollection*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMNode* nativeRet;
-  PRInt32 b0;
+  PRUint32 b0;
 
   *rval = JSVAL_NULL;
 
@@ -368,7 +353,7 @@ JSClass HTMLCollectionClass = {
 //
 static JSPropertySpec HTMLCollectionProperties[] =
 {
-  {"length",    HTMLCOLLECTION_LENGTH,    JSPROP_ENUMERATE},
+  {"length",    HTMLCOLLECTION_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
