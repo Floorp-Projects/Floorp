@@ -56,7 +56,7 @@ const PRUint32 kThrobFrequency = 66;   // animation frequency in milliseconds
 
 CThrobber::CThrobber() :
    mImages(nsnull),
-   mNumImages(0), mCompletedImages(0), mIndex(0), mRunning(false),
+   mNumImages(2), mCompletedImages(0), mRunning(false),
    mImageGroup(nsnull)
 {
    NS_INIT_REFCNT(); // caller must add ref as normal
@@ -68,16 +68,22 @@ CThrobber::CThrobber() :
 CThrobber::CThrobber(LStream*	inStream) :
    LControl(inStream),
    mImages(nsnull),
-   mNumImages(0), mCompletedImages(0), mIndex(0), mRunning(false),
+   mNumImages(2), mCompletedImages(0), mRunning(false),
    mImageGroup(nsnull)
 {
    mRefCnt = 1; // PowerPlant is making us, and it sure isn't going to do an AddRef.
   
    LStr255  tempStr;
+
+   mDefImageURL[0] = '\0';
    *inStream >> (StringPtr) tempStr;
-   mFileNamePattern.AssignWithConversion((char *)&tempStr[1], (PRInt32)tempStr.Length());
+   memcpy(mDefImageURL, (char *)&tempStr[1], (PRInt32)tempStr.Length());
+   mDefImageURL[(PRInt32)tempStr.Length()] = '\0';
    
-   mNumImages = mMaxValue;
+   mAnimImageURL[0] = '\0';
+   *inStream >> (StringPtr) tempStr;
+   memcpy(mAnimImageURL, (char *)&tempStr[1], (PRInt32)tempStr.Length());
+   mAnimImageURL[(PRInt32)tempStr.Length()] = '\0';
 }
 
 
@@ -140,7 +146,7 @@ void CThrobber::FinishCreateSelf()
       Throw_(NS_ERROR_GET_CODE(rv));
    mWidget->Create(parentWidget, r, HandleThrobberEvent, NULL);
    
-   rv = LoadImages(mFileNamePattern, mNumImages);
+   rv = LoadImages();
    if (NS_SUCCEEDED(rv))
       AddThrobber(this); 
 }
@@ -178,42 +184,13 @@ void CThrobber::DrawSelf()
 
    //cx->SetClipRect(bounds, nsClipCombine_kReplace, clipState);
 
-   cx->SetColor(NS_RGB(255, 255, 255));
-   cx->DrawLine(0, bounds.height - 1, 0, 0);
-   cx->DrawLine(0, 0, bounds.width, 0);
-
-   cx->SetColor(NS_RGB(128, 128, 128));
-   cx->DrawLine(bounds.width - 1, 1, bounds.width - 1, bounds.height - 1);
-   cx->DrawLine(bounds.width - 1, bounds.height - 1, 0, bounds.height - 1);
-
-   imgreq = (*mImages)[mIndex];
-
-   if ((nsnull == imgreq) || (nsnull == (img = imgreq->GetImage())))
+   PRUint32 index = mRunning ? kAnimImageIndex : kDefaultImageIndex;
+   imgreq = index < mImages->size() ? (*mImages)[index] : nsnull;
+   img = imgreq ? imgreq->GetImage() : nsnull;
+   
+   if (img)
    {
-     char str[10];
-     nsFont tfont = nsFont("monospace", 0, 0, 0, 0, 10);
-     nsIFontMetrics *met;
-     nscoord w, h;
-
-     cx->SetColor(NS_RGB(0, 0, 0));
-     cx->FillRect(1, 1, bounds.width - 2, bounds.height - 2);
-
-     PR_snprintf(str, sizeof(str), "%02d", mIndex);
-
-     cx->SetColor(NS_RGB(255, 255, 255));
-     cx->SetFont(tfont);
-     cx->GetFontMetrics(met);
-     if (nsnull != met)
-     {
-       cx->GetWidth(str, w);
-       met->GetHeight(h);
-       cx->DrawString(str, PRUint32(2), (bounds.width - w) >> 1, (bounds.height - h) >> 1);
-       NS_RELEASE(met);
-     }
-   }
-   else
-   {
-     cx->DrawImage(img, 1, 1);
+     cx->DrawImage(img, 0, 0);
      NS_RELEASE(img);
    }
 }
@@ -253,6 +230,8 @@ void CThrobber::Start()
 void CThrobber::Stop()
 {
    mRunning = false;
+   FocusDraw();
+   mWidget->Invalidate(PR_TRUE);
 }
 
 
@@ -268,12 +247,11 @@ void CThrobber::AdjustFrame(Boolean inRefresh)
 }
 
 
-NS_METHOD CThrobber::LoadImages(const nsString& aFileNameMask, PRInt32 aNumImages)
+NS_METHOD CThrobber::LoadImages()
 {
   nsresult rv;
-  char url[2000];
 
-  mImages = new vector<nsIImageRequest*>(mNumImages);
+  mImages = new vector<nsIImageRequest*>(mNumImages, nsnull);
   if (nsnull == mImages) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -292,20 +270,25 @@ NS_METHOD CThrobber::LoadImages(const nsString& aFileNameMask, PRInt32 aNumImage
   }
   mTimer->Init(ThrobTimerCallback, this, kThrobFrequency, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
     
-  char * mask = aFileNameMask.ToNewCString();
-  for (PRInt32 cnt = 0; cnt < mNumImages; cnt++)
-  {
-    PR_snprintf(url, sizeof(url), mask, cnt);
     nscolor bgcolor = NS_RGB(0, 0, 0);
-    (*mImages)[cnt] = mImageGroup->GetImage(url,
-                                             (nsIImageRequestObserver *)this,
-                                             &bgcolor,
-                                             mFrameSize.width - 2,
-                                             mFrameSize.height - 2, 0);
+  
+  // Get the default image
+  if (strlen(mDefImageURL)) {
+      (*mImages)[kDefaultImageIndex] = mImageGroup->GetImage(mDefImageURL,
+                                               (nsIImageRequestObserver *)this,
+                                               nsnull /*&bgcolor*/,
+                                               mFrameSize.width,
+                                               mFrameSize.height, 0);
   }
 
-  if (nsnull != mask)
-    nsCRT::free(mask);
+  // Get the animated image
+  if (strlen(mAnimImageURL)) {
+      (*mImages)[kAnimImageIndex] = mImageGroup->GetImage(mAnimImageURL,
+                                               (nsIImageRequestObserver *)this,
+                                               nsnull /*&bgcolor*/,
+                                               mFrameSize.width,
+                                               mFrameSize.height, 0);
+  }
 
   mWidget->Invalidate(PR_TRUE);
 
@@ -340,9 +323,6 @@ void CThrobber::DestroyImages()
 void CThrobber::Tick()
 {
   if (mRunning) {
-    mIndex++;
-    if (mIndex >= mNumImages)
-      mIndex = 0;
     FocusDraw();
     mWidget->Invalidate(PR_TRUE);
   } else if (mCompletedImages == (PRUint32)mNumImages) {

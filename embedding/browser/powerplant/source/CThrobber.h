@@ -91,16 +91,19 @@ public:
 	virtual void            Stop();
  protected:
 
+   enum { kDefaultImageIndex = 0, kAnimImageIndex };
+   
    void                    AdjustFrame(Boolean inRefresh);
-   nsresult                LoadImages(const nsString& aFileNameMask, PRInt32 aNumImages);
+   nsresult                LoadImages();
    void                    DestroyImages();
    void                    Tick();
    
-   nsString                mFileNamePattern;   
+   char                    mDefImageURL[256], mAnimImageURL[256];
+       
    nsCOMPtr<nsIWidget>     mWidget;
    vector<nsIImageRequest*> *mImages;
    bool                    mRunning;
-   SInt32                  mNumImages, mCompletedImages, mIndex;
+   SInt32                  mNumImages, mCompletedImages;
    nsIImageGroup           *mImageGroup;
    nsCOMPtr<nsITimer>      mTimer;
    
