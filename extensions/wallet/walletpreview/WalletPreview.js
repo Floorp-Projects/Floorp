@@ -113,8 +113,8 @@ function Startup() {
 }
 
 function EncodeVerticalBars(s) {
-  s = s.replace(/^+/gi, "^1");
-  s = s.replace(/\|+/gi, "^2");
+  s = s.replace(/\^/g, "^1");
+  s = s.replace(/\|/g, "^2");
   return s;
 }
 
