@@ -1283,7 +1283,7 @@ nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *si
 
   for (nsDirectoryIterator dir(inputPath, PR_FALSE); dir.Exists(); dir++)
   {
-    nsFileSpec fileOrDirName = (nsFileSpec&)dir;
+    nsFileSpec fileOrDirName = dir.Spec();
     folderName = fileOrDirName.GetLeafName();
     fileOrDirNameStr.AssignWithConversion(folderName);
     if (nsStringEndsWith(fileOrDirNameStr, MAIL_SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, NEWS_SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
@@ -1416,7 +1416,7 @@ nsPrefMigration::CopyAndRenameNewsrcFiles(nsIFileSpec * newPathSpec)
 
   for (nsDirectoryIterator dir(oldPath, PR_FALSE); dir.Exists(); dir++)
   {
-    nsFileSpec fileOrDirName = (nsFileSpec&)dir; //set first file or dir to a nsFileSpec
+    nsFileSpec fileOrDirName = dir.Spec(); //set first file or dir to a nsFileSpec
     folderName = fileOrDirName.GetLeafName();    //get the filename without the full path
     fileOrDirNameStr.AssignWithConversion(folderName);
 
@@ -1474,7 +1474,7 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * oldPathSpec, nsIFileSpec *newP
   
   for (nsDirectoryIterator dir(oldPath, PR_FALSE); dir.Exists(); dir++)
   {
-    nsFileSpec fileOrDirName = (nsFileSpec&)dir; //set first file or dir to a nsFileSpec
+    nsFileSpec fileOrDirName = dir.Spec(); //set first file or dir to a nsFileSpec
     folderName = fileOrDirName.GetLeafName();    //get the filename without the full path
     fileOrDirNameStr.AssignWithConversion(folderName);
 
