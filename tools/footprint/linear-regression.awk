@@ -29,12 +29,21 @@
 # the provisions above, a recipient may use your version of this
 # file under either the MPL or the GPL.
 #
-    {
-    sx += $1;
-    sy += $2;
-    sxy += $1 * $2;
-    sx2 += $1 * $1; }
+BEGIN {
+        if (!Skip) Skip = 0;
+      }
+
+NR>Skip {
+     sx += $1;
+     sy += $2;
+     sxy += $1 * $2;
+     sx2 += $1 * $1;
+#     print NR " " sx " " sy " " sxy " " sx2
+     }
+
 END {
-    b1 = (NR * sxy - sx * sy) / (NR * sx2 - sx * sx);
-    b0 = (sy - b1 * sx ) / NR;
-    print b1, "* x +", b0; }
+    DataPoints = NR - Skip;
+    b1 = (DataPoints * sxy - sx * sy) / (DataPoints * sx2 - sx * sx);
+    b0 = (sy - b1 * sx ) / DataPoints;
+    print b1, "* x +", b0; 
+    }
