@@ -46,16 +46,33 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+
 nsChromeUIDataSource::nsChromeUIDataSource(nsIRDFDataSource* aComposite)
 {
 	NS_INIT_REFCNT();
   mComposite = aComposite;
   mComposite->AddObserver(this);
+
+  nsresult rv;
+  rv = nsServiceManager::GetService(kRDFServiceCID,
+                                    NS_GET_IID(nsIRDFService),
+                                    (nsISupports**)&mRDFService);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+
+  mRDFService->RegisterDataSource(this, PR_FALSE);
 }
 
 nsChromeUIDataSource::~nsChromeUIDataSource()
 {
   mComposite->RemoveObserver(this);
+
+  mRDFService->UnregisterDataSource(this);
+
+  if (mRDFService) {
+    nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
+    mRDFService = nsnull;
+  }
 }
 
 NS_IMPL_ISUPPORTS2(nsChromeUIDataSource, nsIRDFDataSource, nsIRDFObserver);
@@ -386,10 +403,10 @@ NS_NewChromeUIDataSource(nsIRDFDataSource* aComposite, nsIRDFDataSource** aResul
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
+    // No addrefs. The composite addrefs us already.
     nsChromeUIDataSource* ChromeUIDataSource = new nsChromeUIDataSource(aComposite);
     if (ChromeUIDataSource == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(ChromeUIDataSource);
     *aResult = ChromeUIDataSource;
     return NS_OK;
 }
