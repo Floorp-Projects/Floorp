@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *    Yueheng Xu, yueheng.xu@intel.com
  */
 
 #include "nsUnicodeToGB2312V2.h"
@@ -38,23 +39,27 @@ nsUnicodeToGB2312V2::nsUnicodeToGB2312V2()
   PRUnichar unicode;
   PRUint16 i;
 
-  for ( i=0; i<MAX_GBK_LENGTH; i++ )
+    if ( !gUnicodeToGBKTableInitialized )
     {
-      
-      left =  ( i / 0x00BF + 0x0081);
-      right = ( i % 0x00BF+ 0x0040);
-      unicode = GBKToUnicodeTable[i];
-      
-      // to reduce size of UnicodeToGBKTable, we only do direct unicode to GB 
-      // table mapping between unicode 0x4E00 and 0xA000. Others by searching
-      // GBKToUnicodeTable. There is a trade off between memory usage and speed.
-      if ( (unicode >= 0x4E00 ) && ( unicode <= 0xA000 ))
+      for ( i=0; i<MAX_GBK_LENGTH; i++ )
         {
-          unicode -= 0x4E00; 
-          UnicodeToGBKTable[unicode].leftbyte = left;
-          UnicodeToGBKTable[unicode].rightbyte = right;
-        }
-    } 
+          
+          left =  ( i / 0x00BF + 0x0081);
+          right = ( i % 0x00BF+ 0x0040);
+          unicode = GBKToUnicodeTable[i];
+      
+          // to reduce size of UnicodeToGBKTable, we only do direct unicode to GB 
+          // table mapping between unicode 0x4E00 and 0xA000. Others by searching
+          // GBKToUnicodeTable. There is a trade off between memory usage and speed.
+          if ( (unicode >= 0x4E00 ) && ( unicode <= 0xA000 ))
+            {
+              unicode -= 0x4E00; 
+              UnicodeToGBKTable[unicode].leftbyte = left;
+              UnicodeToGBKTable[unicode].rightbyte = right;
+            }
+        } 
+      gUnicodeToGBKTableInitialized = PR_TRUE;
+    }
 }
 
 NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc, 
@@ -63,17 +68,17 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc,
                                                  PRInt32 * aDestLength)
 {
 	PRInt32 i=0;
-	PRInt32 iSrcLength = *aSrcLength;
+	PRInt32 iSrcLength = 0;
   DByte *pDestDBCode;
   DByte *pSrcDBCode; 
 	PRInt32 iDestLength = 0;
   PRUnichar unicode;
   PRUint8 left, right;
-  
+  nsresult res = NS_OK;
 	PRUnichar *pSrc = (PRUnichar *)aSrc;
 	pDestDBCode = (DByte *)aDest;
   
-  for (i=0;i< iSrcLength;i++)
+  while (iSrcLength < *aSrcLength)
 	{
 		pDestDBCode = (DByte *)aDest;
     
@@ -97,7 +102,7 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc,
                 if ( unicode  == GBKToUnicodeTable[i] )
                   {
                     //this manipulation handles the little endian / big endian issues
-                    left = (char) ( i / 0x00BF + 0x0081) | 0x80  ;
+                    left = (char) ( i / 0x00BF + 0x0081) | 0x80;
                     right = (char) ( i % 0x00BF+ 0x0040) | 0x80;
                     pDestDBCode->leftbyte = left;  
                     pDestDBCode->rightbyte = right;  
@@ -108,7 +113,7 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc,
         //	UnicodeToGBK( *pSrc, pDestDBCode);
         aDest += 2;	// increment 2 bytes
         pDestDBCode = (DByte *)aDest;
-        iDestLength +=2;
+        iDestLength +=2; // each GB char count as two in char* string
       }
 		else
       {
@@ -118,18 +123,20 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc,
         aDest++; // increment 1 byte
         iDestLength +=1;
       }
+    iSrcLength++ ;   // each unicode char just count as one in PRUnichar* string
 		pSrc++;	 // increment 2 bytes
     
-		if ( iDestLength >= (*aDestLength) )
+		if ( iDestLength >= (*aDestLength) && (iSrcLength < *aSrcLength ))
       {
+        res = NS_OK_UENC_MOREOUTPUT;
         break;
       }
 	}
   
 	*aDestLength = iDestLength;
-	*aSrcLength = i;
+	*aSrcLength = iSrcLength;
   
-  return NS_OK;
+  return res;
 }
 
 
@@ -174,14 +181,14 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::FillInfo(PRUint32 *aInfo)
         continue;
 
       // valid GBK columns are in 0x41 to 0xFE
-      for( j=0x0041;j<0x00FF;j++)
+      for( j=0x0040;j<0x00FF;j++)
         {
           //HZ and GB2312 starts at col 0x21 | 0x80 = 0xA1
           if ( j < 0xA1 )
             continue;
           
           // k is index in GBKU.H table
-          k = (i - 0x0081)*(0x00FE - 0x0080)+(j-0x0041);
+          k = (i - 0x0081)*0x00BF+(j-0x0040);
           
           SrcUnicode = GBKToUnicodeTable[k];
           if (( SrcUnicode != 0xFFFF ) && (SrcUnicode != 0xFFFD) )
@@ -190,6 +197,11 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::FillInfo(PRUint32 *aInfo)
             }            
         }
     }                   
-  
+
+  //GB2312 font lib also have single byte ASCII characters, set them here
+  for ( SrcUnicode = 0x0000; SrcUnicode <= 0x00FF; SrcUnicode++);
+  {
+    SET_REPRESENTABLE(aInfo, SrcUnicode);
+  }     
   return NS_OK;
 }
