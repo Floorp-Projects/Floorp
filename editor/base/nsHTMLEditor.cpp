@@ -3349,7 +3349,7 @@ nsHTMLEditor::GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::MakeOrChangeList(const nsString& aListType)
+nsHTMLEditor::MakeOrChangeList(const nsString& aListType, PRBool entireList)
 {
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
@@ -3367,6 +3367,7 @@ nsHTMLEditor::MakeOrChangeList(const nsString& aListType)
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kMakeList);
   ruleInfo.blockType = &aListType;
+  ruleInfo.entireList = entireList;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
 

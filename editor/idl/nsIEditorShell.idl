@@ -206,7 +206,7 @@ interface nsIEditorShell : nsISupports
 
   void InsertBreak();
   
-  void MakeOrChangeList(in wstring listType);
+  void MakeOrChangeList(in wstring listType, in PRBool entireList);
   void RemoveList(in wstring listType);
   void Indent(in wstring indent);
   void Align(in wstring align);
