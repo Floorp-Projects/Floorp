@@ -1499,7 +1499,11 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
 
     wsprintf(szVariable, "Software\\Netscape\\Netscape 6\\%s", szBuf);
   }
-  else if(lstrcmpi(szVariable, "NetscapeInstantMessenger CurrentVersion") == 0)
+  else if(lstrcmpi(szVariable, "WinRegKey Netscape Instant Messenger") == 0)
+  {
+    lstrcpy(szVariable, "Software\\Netscape\\Netscape Instant Messenger");
+  }
+  else if(lstrcmpi(szVariable, "Netscape Instant Messenger CurrentVersion") == 0)
   {
     /* parse for the current Netscape WinReg key */
     GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Netscape\\Netscape Instant Messenger", "CurrentVersion", szBuf, sizeof(szBuf));

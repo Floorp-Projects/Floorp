@@ -376,7 +376,7 @@ void OutputSetupTitle(HDC hDC)
     /* Set shadow color to black and draw shadow */
     SetTextColor(hDC, 0);
     iShadowOffset = (int)(sgProduct.iSetupTitle0FontSize / 6);
-    TextOut(hDC, iLine0x + iShadowOffset, iLine0y + iShadowOffset, sgProduct.szSetupTitle0, lstrlen(sgProduct.szSetupTitle0));
+    TextOut(hDC, iLine0x + iShadowOffset, iLine0y + iShadowOffset, TEXT(sgProduct.szSetupTitle0), lstrlen(sgProduct.szSetupTitle0));
   }
 
   /* Set font color and draw; color format is 0x00bbggrr - where b is blue, g is green, and r is red */
@@ -384,7 +384,7 @@ void OutputSetupTitle(HDC hDC)
   SetTextColor(hDC, sgProduct.crSetupTitle0FontColor);
 
   /* draw text */
-  TextOut(hDC, iLine0x, iLine0y, sgProduct.szSetupTitle0, lstrlen(sgProduct.szSetupTitle0));
+  TextOut(hDC, iLine0x, iLine0y, TEXT(sgProduct.szSetupTitle0), lstrlen(sgProduct.szSetupTitle0));
 
 
 /*
@@ -417,7 +417,7 @@ void OutputSetupTitle(HDC hDC)
     /* Set shadow color to black and draw shadow */
     SetTextColor(hDC, 0);
     iShadowOffset = (int)(sgProduct.iSetupTitle1FontSize / 6);
-    TextOut(hDC, iLine1x + iShadowOffset, iLine1y + iShadowOffset, sgProduct.szSetupTitle1, lstrlen(sgProduct.szSetupTitle1));
+    TextOut(hDC, iLine1x + iShadowOffset, iLine1y + iShadowOffset, TEXT(sgProduct.szSetupTitle1), lstrlen(sgProduct.szSetupTitle1));
   }
 
   /* Set font color and draw; color format is 0x00bbggrr - where b is blue, g is green, and r is red */
@@ -425,7 +425,7 @@ void OutputSetupTitle(HDC hDC)
   SetTextColor(hDC, sgProduct.crSetupTitle1FontColor);
 
   /* draw text */
-  TextOut(hDC, iLine1x, iLine1y, sgProduct.szSetupTitle1, lstrlen(sgProduct.szSetupTitle1));
+  TextOut(hDC, iLine1x, iLine1y, TEXT(sgProduct.szSetupTitle1), lstrlen(sgProduct.szSetupTitle1));
 
 
 /*
@@ -459,7 +459,7 @@ void OutputSetupTitle(HDC hDC)
     SetTextColor(hDC, 0);
 
     iShadowOffset = (int)(sgProduct.iSetupTitle2FontSize / 6);
-    TextOut(hDC, iLine2x + iShadowOffset, iLine2y + iShadowOffset, sgProduct.szSetupTitle2, lstrlen(sgProduct.szSetupTitle2));
+    TextOut(hDC, iLine2x + iShadowOffset, iLine2y + iShadowOffset, TEXT(sgProduct.szSetupTitle2), lstrlen(sgProduct.szSetupTitle2));
   }
 
   /* Set font color and draw; color format is 0x00bbggrr - where b is blue, g is green, and r is red */
@@ -467,7 +467,7 @@ void OutputSetupTitle(HDC hDC)
   SetTextColor(hDC, sgProduct.crSetupTitle2FontColor);
 
   /* draw text */
-  TextOut(hDC, iLine2x, iLine2y, sgProduct.szSetupTitle2, lstrlen(sgProduct.szSetupTitle2));
+  TextOut(hDC, iLine2x, iLine2y, TEXT(sgProduct.szSetupTitle2), lstrlen(sgProduct.szSetupTitle2));
 
   SelectObject(hDC, hfontOld);
   DeleteObject(hfontTmp0);
@@ -1659,7 +1659,7 @@ void DeInitDlgProgramFolder(diPF *diDialog)
   FreeMemory(&(diDialog->szMessage0));
 }
 
-HRESULT InitDlgSiteSelector(diSS *diDialog)
+HRESULT InitDlgAdvancedSettings(diSS *diDialog)
 {
   diDialog->bShowDialog = FALSE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -1670,7 +1670,7 @@ HRESULT InitDlgSiteSelector(diSS *diDialog)
   return(0);
 }
 
-void DeInitDlgSiteSelector(diSS *diDialog)
+void DeInitDlgAdvancedSettings(diSS *diDialog)
 {
   FreeMemory(&(diDialog->szTitle));
   FreeMemory(&(diDialog->szMessage0));
@@ -3961,7 +3961,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     return(1);
   if(InitDlgProgramFolder(&diProgramFolder))
     return(1);
-  if(InitDlgSiteSelector(&diSiteSelector))
+  if(InitDlgAdvancedSettings(&diAdvancedSettings))
     return(1);
   if(InitDlgStartInstall(&diStartInstall))
     return(1);
@@ -4126,12 +4126,12 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diProgramFolder.bShowDialog = TRUE;
 
-  /* Site Selector dialog */
-  GetPrivateProfileString("Dialog Site Selector",       "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Site Selector",       "Title",        "", diSiteSelector.szTitle,          MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Site Selector",       "Message0",     "", diSiteSelector.szMessage0,       MAX_BUF, szFileIniConfig);
+  /* Advanced Settings dialog */
+  GetPrivateProfileString("Dialog Advanced Settings",       "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Advanced Settings",       "Title",        "", diAdvancedSettings.szTitle,      MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Advanced Settings",       "Message0",     "", diAdvancedSettings.szMessage0,   MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
-    diSiteSelector.bShowDialog = TRUE;
+    diAdvancedSettings.bShowDialog = TRUE;
 
   /* Start Install dialog */
   GetPrivateProfileString("Dialog Start Install",       "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
@@ -4198,7 +4198,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
       diSelectAdditionalComponents.bShowDialog  = FALSE;
       diWindowsIntegration.bShowDialog          = FALSE;
       diProgramFolder.bShowDialog               = FALSE;
-      diSiteSelector.bShowDialog                = FALSE;
+      diAdvancedSettings.bShowDialog            = FALSE;
       diStartInstall.bShowDialog                = FALSE;
       break;
   }
@@ -4872,7 +4872,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
 
     wsprintf(szVariable, "Software\\Netscape\\Netscape 6\\%s", szBuf);
   }
-  else if(lstrcmpi(szVariable, "NetscapeInstantMessenger CurrentVersion") == 0)
+  else if(lstrcmpi(szVariable, "Netscape Instant Messenger CurrentVersion") == 0)
   {
     /* parse for the current Netscape WinReg key */
     GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Netscape\\Netscape Instant Messenger", "CurrentVersion", szBuf, sizeof(szBuf));
@@ -5285,7 +5285,7 @@ void DeInitialize()
   DeInitSDObject();
   DeInitDlgReboot(&diReboot);
   DeInitDlgStartInstall(&diStartInstall);
-  DeInitDlgSiteSelector(&diSiteSelector);
+  DeInitDlgAdvancedSettings(&diAdvancedSettings);
   DeInitDlgProgramFolder(&diProgramFolder);
   DeInitDlgWindowsIntegration(&diWindowsIntegration);
   DeInitDlgSelectComponents(&diSelectAdditionalComponents);

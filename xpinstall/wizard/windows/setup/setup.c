@@ -82,7 +82,7 @@ diSC            diSelectComponents;
 diSC            diSelectAdditionalComponents;
 diWI            diWindowsIntegration;
 diPF            diProgramFolder;
-diSS            diSiteSelector;
+diSS            diAdvancedSettings;
 diSI            diStartInstall;
 diR             diReboot;
 siSD            siSDObject;

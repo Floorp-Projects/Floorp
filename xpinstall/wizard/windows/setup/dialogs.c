@@ -1489,11 +1489,6 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
 
-      if((diSiteSelector.bShowDialog == FALSE) || (GetTotalArchivesToDownload() == 0))
-        ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_SITE_SELECTOR), SW_HIDE);
-      else
-        ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_SITE_SELECTOR), SW_SHOW);
-
       break;
 
     case WM_COMMAND:
@@ -1510,7 +1505,7 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
             break;
           }
           lstrcpy(sgProduct.szProgramFolderName, szBuf);
-          dwWizardState = DLG_SITE_SELECTOR;
+          dwWizardState = DLG_ADVANCED_SETTINGS;
 
           DestroyWindow(hDlg);
           PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
@@ -1519,12 +1514,6 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
         case IDWIZBACK:
           DestroyWindow(hDlg);
           PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
-          break;
-
-        case IDC_BUTTON_SITE_SELECTOR:
-          dwWizardState = DLG_PROGRAM_FOLDER;
-          DestroyWindow(hDlg);
-          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
 
         case IDC_LIST:
@@ -1547,7 +1536,7 @@ LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG l
   return(0);
 }
 
-LRESULT CALLBACK DlgProcSiteSelector(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+LRESULT CALLBACK DlgAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   RECT  rDlg;
   HWND  hwndCBSiteSelector;
@@ -1560,8 +1549,8 @@ LRESULT CALLBACK DlgProcSiteSelector(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
   switch(msg)
   {
     case WM_INITDIALOG:
-      SetWindowText(hDlg, diSiteSelector.szTitle);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diSiteSelector.szMessage0);
+      SetWindowText(hDlg, diAdvancedSettings.szTitle);
+      SetDlgItemText(hDlg, IDC_MESSAGE0, diAdvancedSettings.szMessage0);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
@@ -1599,7 +1588,7 @@ LRESULT CALLBACK DlgProcSiteSelector(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
         case IDWIZNEXT:
           iIndex = SendMessage(hwndCBSiteSelector, CB_GETCURSEL, 0, 0);
           SendMessage(hwndCBSiteSelector, CB_GETLBTEXT, (WPARAM)iIndex, (LPARAM)szSiteSelectorDescription);
-          dwWizardState = DLG_WINDOWS_INTEGRATION;
+          dwWizardState = DLG_ADVANCED_SETTINGS;
 
           DestroyWindow(hDlg);
           PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
@@ -1637,6 +1626,11 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
 
+      if((diAdvancedSettings.bShowDialog == FALSE) || (GetTotalArchivesToDownload() == 0))
+        ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_SITE_SELECTOR), SW_HIDE);
+      else
+        ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_SITE_SELECTOR), SW_SHOW);
+
       break;
 
     case WM_COMMAND:
@@ -1648,8 +1642,15 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
           break;
 
         case IDWIZBACK:
+          dwWizardState = DLG_ADVANCED_SETTINGS;
           DestroyWindow(hDlg);
           PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
+          break;
+
+        case IDC_BUTTON_SITE_SELECTOR:
+          dwWizardState = DLG_PROGRAM_FOLDER;
+          DestroyWindow(hDlg);
+          PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
           break;
 
         case IDCANCEL:
@@ -1934,24 +1935,24 @@ void DlgSequenceNext()
         InstantiateDialog(dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
       else
       {
-        dwWizardState = DLG_SITE_SELECTOR;
+        dwWizardState = DLG_ADVANCED_SETTINGS;
         PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
       }
       break;
 
     case DLG_PROGRAM_FOLDER:
-      dwWizardState = DLG_SITE_SELECTOR;
+      dwWizardState = DLG_ADVANCED_SETTINGS;
       gbProcessingXpnstallFiles = FALSE;
-      if(diSiteSelector.bShowDialog)
-        InstantiateDialog(dwWizardState, diSiteSelector.szTitle, DlgProcSiteSelector);
+      if(diAdvancedSettings.bShowDialog)
+        InstantiateDialog(dwWizardState, diAdvancedSettings.szTitle, DlgAdvancedSettings);
       else
       {
-        dwWizardState = DLG_WINDOWS_INTEGRATION;
+        dwWizardState = DLG_ADVANCED_SETTINGS;
         PostMessage(hWndMain, WM_COMMAND, IDWIZNEXT, 0);
       }
       break;
 
-    case DLG_SITE_SELECTOR:
+    case DLG_ADVANCED_SETTINGS:
       dwWizardState = DLG_START_INSTALL;
       gbProcessingXpnstallFiles = FALSE;
       if(diStartInstall.bShowDialog)
@@ -2031,15 +2032,15 @@ void DlgSequencePrev()
   switch(dwWizardState)
   {
     case DLG_START_INSTALL:
-      dwWizardState = DLG_SITE_SELECTOR;
+      dwWizardState = DLG_ADVANCED_SETTINGS;
       gbProcessingXpnstallFiles = FALSE;
-      if(diSiteSelector.bShowDialog)
-        InstantiateDialog(dwWizardState, diSiteSelector.szTitle, DlgProcSiteSelector);
+      if(diAdvancedSettings.bShowDialog)
+        InstantiateDialog(dwWizardState, diAdvancedSettings.szTitle, DlgAdvancedSettings);
       else
         PostMessage(hWndMain, WM_COMMAND, IDWIZBACK, 0);
       break;
 
-    case DLG_SITE_SELECTOR:
+    case DLG_ADVANCED_SETTINGS:
       dwWizardState = DLG_PROGRAM_FOLDER;
       gbProcessingXpnstallFiles = FALSE;
       if(diProgramFolder.bShowDialog)

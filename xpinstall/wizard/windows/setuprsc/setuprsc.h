@@ -2,7 +2,6 @@
 // Microsoft Developer Studio generated include file.
 // Used by setuprsc.rc
 //
-
 #ifndef WINVER
 #define WINVER 0x0400
 #endif
@@ -104,6 +103,7 @@
 #define DLG_EXTRACTING                  2009
 #define DLG_RESTART                     10206
 #define DLG_SITE_SELECTOR               10207
+#define DLG_ADVANCED_SETTINGS           10207
 #define DLG_SELECT_ADDITIONAL_COMPONENTS 10208
 #define IDB_BOX_CHECKED                 10304
 #define IDB_BOX_UNCHECKED               10306
