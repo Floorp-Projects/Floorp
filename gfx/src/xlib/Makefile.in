@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-LIBRARY_NAME = gfxxlib
+LIBRARY_NAME = gfx_$(MOZ_GFX_TOOLKIT)
 
 MODULE=raptor 
 

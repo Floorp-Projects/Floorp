@@ -100,10 +100,10 @@
       * since that is the default.
      **/
     #ifndef WIDGET_DLL
-    #define WIDGET_DLL "libwidgetgtk"MOZ_DLL_SUFFIX
+    #define WIDGET_DLL "libwidget_gtk"MOZ_DLL_SUFFIX
     #endif
     #ifndef GFXWIN_DLL
-    #define GFXWIN_DLL "libgfxgtk"MOZ_DLL_SUFFIX
+    #define GFXWIN_DLL "libgfx_gtk"MOZ_DLL_SUFFIX
     #endif
     #define VIEW_DLL   "libraptorview"MOZ_DLL_SUFFIX
     #define WEB_DLL    "libraptorwebwidget"MOZ_DLL_SUFFIX
