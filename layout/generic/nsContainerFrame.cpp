@@ -380,10 +380,13 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
   }
 
 #ifdef DEBUG
+  nsSize* saveMaxElementSize = aDesiredSize.maxElementSize;
+#ifdef REALLY_NOISY_MAX_ELEMENT_SIZE
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = nscoord(0xdeadbeef);
     aDesiredSize.maxElementSize->height = nscoord(0xdeadbeef);
   }
+#endif
 #endif
 
   // Send the WillReflow notification, and reflow the child frame
@@ -392,6 +395,12 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               aStatus);
 
 #ifdef DEBUG
+  if (saveMaxElementSize != aDesiredSize.maxElementSize) {
+    printf("nsContainerFrame: ");
+    nsFrame::ListTag(stdout, aKidFrame);
+    printf(" changed the maxElementSize *pointer* (baaaad boy!)\n");
+  }
+#ifdef REALLY_NOISY_MAX_ELEMENT_SIZE
   if ((nsnull != aDesiredSize.maxElementSize) &&
       ((nscoord(0xdeadbeef) == aDesiredSize.maxElementSize->width) ||
        (nscoord(0xdeadbeef) == aDesiredSize.maxElementSize->height))) {
@@ -401,6 +410,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
     aDesiredSize.maxElementSize->width = 0;
     aDesiredSize.maxElementSize->height = 0;
   }
+#endif
 #endif
 
   // If the reflow was successful and the child frame is complete, delete any
