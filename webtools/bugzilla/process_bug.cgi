@@ -928,6 +928,8 @@ sub LogDependencyActivity {
         # Figure out what's really different...
         my ($removed, $added) = DiffStrings($oldstr, $newstr);
         LogActivityEntry($i,$target,$removed,$added);
+        # update timestamp on target bug so midairs will be triggered
+        SendSQL("UPDATE bugs SET delta_ts=NOW() WHERE bug_id=$i");
         return 1;
     }
     return 0;
