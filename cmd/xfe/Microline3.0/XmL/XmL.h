@@ -244,6 +244,8 @@ typedef struct
 /* XFE Additions */
 #define XmNhideUnhideButtons "hideUnhideButtons"
 #define XmCHideUnhideButtons "HideUnhideButtons"
+#define XmNsingleClickActivation "singleClickActivation"
+#define XmCSingleClickActivation "SingleClickActivation"
 #define XmNuseTextWidget "useTextWidget"
 #define XmCUseTextWidget "UseTextWidget"
 #if 0
@@ -413,6 +415,7 @@ typedef struct _XmLGridCallbackStruct
 	/* xfe added callback reason */
 #define XmCR_RESIZE_GRID     929
 #define XmCR_SHOW_POPUP      930
+#define XmCR_SINGLECLICK     931
 
 /* Grid defines */
 
