@@ -48,8 +48,6 @@ xpcom.dll
 components\xpcom_base.xpt
 components\xpcom_components.xpt
 components\xpcom_ds.xpt
-components\xpcom_eventloop_windows.xpt
-components\xpcom_eventloop_xp.xpt
 components\xpcom_io.xpt
 components\xpcom_nativeapp.xpt
 components\xpcom_thread.xpt
@@ -69,7 +67,6 @@ components\gkgfxwin.dll
 components\gkwidget.dll   
 components\widget.xpt
 components\gfx.xpt                      
-components\gkview.dll                   
 
 ; layout
 moz_art_lgpl.dll
@@ -107,7 +104,6 @@ components\appshell.dll
 components\appshell.xpt                 
 components\docshell.dll                 
 components\docshell_base.xpt            
-components\urildr.dll
 components\uriloader.xpt
 components\chrome.dll                   
 components\chrome.xpt                   
@@ -129,7 +125,6 @@ components\profile.dll
 components\profile.xpt
 
 ; session history
-components\shistory.dll
 components\shistory.xpt
 
 ; optional typeaheadfind 
@@ -165,7 +160,6 @@ components\dom_xbl.xpt
 components\dom_xul.xpt
 
 ; "javascript:" URLs
-components\jsurl.dll
 components\jsurl.xpt
 
 ; editor

@@ -19,7 +19,6 @@
 #include "nsJARURI.h"
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
-#include "nsFileSpec.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"

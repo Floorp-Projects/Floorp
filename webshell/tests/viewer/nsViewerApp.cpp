@@ -62,7 +62,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsWebCrawler.h"
-#include "nsSpecialSystemDirectory.h"    // For exe dir
 #include "prprf.h"
 #include "plstr.h"
 #include "prenv.h"

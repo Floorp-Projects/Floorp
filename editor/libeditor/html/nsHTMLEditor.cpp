@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsICaret.h"
+#include "nsCRT.h"
 
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -95,7 +96,6 @@
 #include "nsIDOMNSRange.h"
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
-#include "nsFileSpec.h"
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"

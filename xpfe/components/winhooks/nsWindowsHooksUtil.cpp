@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include <windows.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "nsString.h"

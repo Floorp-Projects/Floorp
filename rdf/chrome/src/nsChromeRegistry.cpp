@@ -44,8 +44,6 @@
 
 #include <string.h>
 #include "nsCOMPtr.h"
-#include "nsIFileSpec.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsIChromeRegistry.h"
 #include "nsChromeRegistry.h"
 #include "nsChromeUIDataSource.h"

@@ -45,6 +45,8 @@ bin/libxpcom.so
 bin/libxpistub.so
 bin/components/libxpinstall.so
 bin/components/libjar50.so
+bin/libxpcom_compat.so
+bin/components/libxpcom_compat_c.so
 
 [browser]
 bin/mozilla

@@ -38,20 +38,6 @@
 #include "nsSegmentedBuffer.h"
 #include "nsCRT.h"
 
-nsSegmentedBuffer::nsSegmentedBuffer()
-    : mSegmentSize(0), mMaxSize(0), 
-      mSegAllocator(nsnull), mSegmentArray(nsnull),
-      mSegmentArrayCount(0),
-      mFirstSegmentIndex(0), mLastSegmentIndex(0)
-{
-}
-
-nsSegmentedBuffer::~nsSegmentedBuffer()
-{
-    Empty();
-    NS_IF_RELEASE(mSegAllocator);
-}
-
 nsresult
 nsSegmentedBuffer::Init(PRUint32 segmentSize, PRUint32 maxSize,
                         nsIMemory* allocator)

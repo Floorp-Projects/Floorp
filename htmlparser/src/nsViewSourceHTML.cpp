@@ -83,6 +83,8 @@
 #include "nsIPrefBranch.h"
 #include "nsUnicharUtils.h"
 
+#include "nsIServiceManager.h"
+
 #include "COtherDTD.h"
 #include "nsElementTable.h"
 

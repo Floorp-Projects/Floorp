@@ -115,6 +115,8 @@
 #include "nsISelectElement.h"
 #include "nsLayoutErrors.h"
 #include "nsAutoPtr.h"
+#include "nsScrollPortFrame.h"
+#include "nsXULAtoms.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
@@ -5274,9 +5276,9 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
       aTag != nsHTMLAtoms::input &&
       aTag != nsHTMLAtoms::textarea &&
       aTag != nsHTMLAtoms::combobox &&
-      aTag != nsHTMLAtoms::isindex &&
+      aTag != nsHTMLAtoms::isindex
 #ifdef INCLUDE_XUL
-      aTag != nsXULAtoms::scrollbar
+      && aTag != nsXULAtoms::scrollbar
 #endif
       )
     return NS_OK;

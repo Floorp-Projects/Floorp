@@ -886,7 +886,7 @@ ShowNativePrintDialog(HWND              aHWnd,
   char* dbStr = GetACPString(nsString(printerName));
   NS_ENSURE_TRUE(dbStr, NS_ERROR_FAILURE);
 
-  PRUint32 len = nsCRT::strlen(dbStr);
+  PRUint32 len = strlen(dbStr);
   hDevNames = (HGLOBAL)::GlobalAlloc(GHND, len+sizeof(DEVNAMES)+1);
   DEVNAMES* pDevNames = (DEVNAMES*)::GlobalLock(hDevNames);
   pDevNames->wDriverOffset = sizeof(DEVNAMES);

@@ -66,6 +66,7 @@
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
 #include "nsExpatDriver.h"
+#include "nsIServiceManager.h"
 //#define rickgdebug 
 
 #define NS_PARSER_FLAG_DTD_VERIFICATION       0x00000001
@@ -1517,8 +1518,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIRequestObserver* aListener,PRBool aVeri
  * @param   aStream is the i/o source
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsIInputStream& aStream,const nsACString& aMimeType,PRBool aVerifyEnabled, void* aKey,nsDTDMode aMode){
-
+nsresult nsParser::Parse(nsIInputStream* aStream,const nsACString& aMimeType,PRBool aVerifyEnabled, void* aKey,nsDTDMode aMode){
   if (aVerifyEnabled) {
     mFlags |= NS_PARSER_FLAG_DTD_VERIFICATION;
   }
@@ -1531,9 +1531,9 @@ nsresult nsParser::Parse(nsIInputStream& aStream,const nsACString& aMimeType,PRB
   //ok, time to create our tokenizer and begin the process
   nsAutoString theUnknownFilename(NS_LITERAL_STRING("unknown"));
 
-  nsInputStream input(&aStream);
+  // references 
+  nsScanner* theScanner=new nsScanner(theUnknownFilename,aStream,mCharset,mCharsetSource);
 
-  nsScanner* theScanner=new nsScanner(theUnknownFilename,input,mCharset,mCharsetSource);
   CParserContext* pc=new CParserContext(theScanner,aKey,mCommand,0);
   if(pc && theScanner) {
     PushContext(*pc);
@@ -2605,23 +2605,6 @@ PRBool nsParser::DidTokenize(PRBool aIsFinalChunk){
   }
   return result;
 }
-
-#ifdef DEBUG
-void nsParser::DebugDumpSource(nsOutputStream& aStream) {
-  PRInt32 theIndex=-1;
-
-  nsITokenizer* theTokenizer=0;
-  PRInt32 type = mParserContext && mParserContext->mDTD ? 
-    mParserContext->mDTD->GetType() : NS_IPARSER_FLAG_HTML;
-  if(NS_SUCCEEDED(mParserContext->GetTokenizer(type, theTokenizer))){
-    CToken* theToken;
-    while(nsnull != (theToken=theTokenizer->GetTokenAt(++theIndex))) {
-      // theToken->DebugDumpToken(out);
-      theToken->DebugDumpSource(aStream);
-    }
-  }
-}
-#endif
 
 /** 
  * Get the channel associated with this parser

@@ -27,14 +27,17 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
-CPPSRCS		= regExport.cpp regxpcom.cpp
+CPPSRCS		= regxpcom.cpp
+
 REQUIRES	= string \
-          $(NULL)
+		  embedstring \
+	          $(NULL)
+
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
-LIBS		= \
-		$(XPCOM_LIBS) \
+LIBS            = \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

@@ -31,14 +31,15 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.35 2003/02/04 01:37:22 kaie%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.36 2003/03/15 01:03:55 dougt%netscape.com Exp $
  */
 
 #include "prmem.h"
 #include "prprf.h"
 
 #include "nsISupportsArray.h"
-#include "nsIFileSpec.h"
+#include "nsIFile.h"
+#include "nsNetUtil.h"
 #include "nsILocalFile.h"
 #include "nsIDirectoryService.h"
 #include "nsIWindowWatcher.h"
@@ -50,7 +51,6 @@
 #include "nsPKCS12Blob.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsFileStream.h"
 #include "nsXPIDLString.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsNSSHelper.h"
@@ -59,7 +59,7 @@
 #include "nsPK11TokenDB.h"
 #include "nsICertificateDialogs.h"
 #include "nsNSSShutDown.h"
-
+#include "nsCRT.h"
 #include "pk11func.h"
 #include "secerr.h"
 
@@ -527,31 +527,29 @@ nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsILocalFile *file)
   nsresult rv;
   SECStatus srv;
   PRUint32 amount;
-  unsigned char buf[PIP_PKCS12_BUFFER_SIZE];
-  // everybody else is doin' it
-  nsCOMPtr<nsIFileSpec> tempSpec;
-  rv = NS_NewFileSpecFromIFile(file, getter_AddRefs(tempSpec));
-  if (NS_FAILED(rv)) return rv;
-  nsInputFileStream fileStream(tempSpec);
+  char buf[PIP_PKCS12_BUFFER_SIZE];
+
+  nsCOMPtr<nsIInputStream> fileStream;
+  NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);
+
   while (PR_TRUE) {
-    amount = fileStream.read(buf, PIP_PKCS12_BUFFER_SIZE);
-    if (amount < 0) {
-      fileStream.close();
-      return NS_ERROR_FAILURE;
+    rv = fileStream->Read(buf, PIP_PKCS12_BUFFER_SIZE, &amount);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
     // feed the file data into the decoder
-    srv = SEC_PKCS12DecoderUpdate(dcx, buf, amount);
+    srv = SEC_PKCS12DecoderUpdate(dcx, 
+				  (unsigned char*) buf, 
+				  amount);
     if (srv) {
       // don't allow the close call to overwrite our precious error code
       int pr_err = PORT_GetError();
-      fileStream.close();
       PORT_SetError(pr_err);
       return NS_ERROR_ABORT;
     }
     if (amount < PIP_PKCS12_BUFFER_SIZE)
       break;
   }
-  fileStream.close();
   return NS_OK;
 }
 

@@ -72,8 +72,7 @@ class NS_COM nsHashKey {
         VoidKey,
         IDKey,
         CStringKey,
-        StringKey,
-        OpaqueKey
+        StringKey
     };
     nsHashKeyType GetKeyType() const { return mKeyType; }
   protected:
@@ -423,38 +422,6 @@ class NS_COM nsStringKey : public nsHashKey {
   protected:
     PRUnichar*  mStr;
     PRUint32    mStrLen;
-    Ownership   mOwnership;
-};
-
-// for opaque buffers of data which may contain nulls
-class NS_COM nsOpaqueKey : public nsHashKey {
-  public:
-
-    // NB: when serializing, NEVER_OWN keys are deserialized as OWN.
-    enum Ownership {
-        NEVER_OWN,  // very long lived, even clones don't need to copy it.
-        OWN_CLONE,  // as long lived as this key. But clones make a copy.
-        OWN         // to be free'd in key dtor. Clones make their own copy.
-    };
-
-    nsOpaqueKey(const nsOpaqueKey& aKey);
-    nsOpaqueKey(const char* buf, PRUint32 bufLen, Ownership own = OWN_CLONE);
-    ~nsOpaqueKey(void);
-
-    PRUint32 HashCode(void) const;
-    PRBool Equals(const nsHashKey* aKey) const;
-    nsHashKey* Clone() const;
-    nsOpaqueKey(nsIObjectInputStream* aStream, nsresult *aResult);
-    nsresult Write(nsIObjectOutputStream* aStream) const;
-
-    // For when the owner of the hashtable wants to peek at the actual
-    // string in the key. No copy is made, so be careful.
-    const char* GetBuffer() const { return mBuf; }
-    PRUint32 GetBufferLength() const { return mBufLen; }
-
-  protected:
-    char*       mBuf;
-    PRUint32    mBufLen;
     Ownership   mOwnership;
 };
 

@@ -23,8 +23,8 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIFileSpec.idl"
-#include "nsIFile.idl"
+
+interface nsIFile;
 
 /**
  * nsPIXPIStubHook

@@ -31,10 +31,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ctl
 LIBRARY_NAME	= ctl
-EXPORT_LIBRARY = 1
+Expcom_obsolete_LIBRARY = 1
 IS_COMPONENT	= 1
 
-REQUIRES	= xpcom \
+REQUIRES	= xpobsolete \
+		  xpcom \
 		  string \
 		  uconv \
 		  locale \

@@ -50,6 +50,8 @@ bin/xpcom.dll
 bin/xpistub.dll
 ;bin/zlib.dll
 bin/mozz.dll
+bin/xpcom_compat.dll
+bin/components/xpcom_compat_c.dll
 bin/components/jar50.dll
 bin/components/xpinstal.dll
 
@@ -139,7 +141,6 @@ bin/components/xultmpl.xpt
 bin/components/gklayout.dll
 bin/components/gkparser.dll
 bin/components/gkplugin.dll
-bin/components/gkview.dll
 bin/components/imgmng.dll
 bin/components/imglib2.dll
 bin/components/imglib2.xpt
@@ -149,7 +150,6 @@ bin/components/intl.xpt
 bin/components/chardet.xpt
 bin/components/jar.xpt
 bin/components/jsconsole-clhandler.js
-bin/components/jsurl.dll
 bin/components/jsurl.xpt
 bin/components/layout_base.xpt
 bin/components/layout_xul.xpt
@@ -205,7 +205,6 @@ bin/components/mozuconv.dll
 bin/components/uconv.xpt
 bin/components/ucvmath.dll
 bin/components/unicharutil.xpt
-bin/components/urildr.dll
 bin/components/uriloader.xpt
 bin/components/exthandler.xpt
 bin/components/util.xpt

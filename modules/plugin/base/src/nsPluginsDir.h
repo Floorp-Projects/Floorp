@@ -39,7 +39,7 @@
 #define nsPluginsDir_h___
 
 #include "nsError.h"
-#include "nsFileSpec.h"
+#include "nsIFile.h"
 
 /**
  * nsPluginsDir is nearly obsolete. Directory Service should be used instead.
@@ -51,7 +51,7 @@ public:
 	/**
 	 * Determines whether or not the given file is actually a plugin file.
 	 */
-	static PRBool IsPluginFile(const nsFileSpec& fileSpec);
+	static PRBool IsPluginFile(nsIFile* file);
 };
 
 struct PRLibrary;
@@ -77,15 +77,16 @@ struct nsPluginInfo {
  * library. Insulates core nsIPluginHost implementations from these
  * details.
  */
-class nsPluginFile : public nsFileSpec {
+class nsPluginFile {
   PRLibrary* pLibrary;
+  nsCOMPtr<nsIFile> mPlugin;
 public:
 	/**
 	 * If spec corresponds to a valid plugin file, constructs a reference
 	 * to a plugin file on disk. Plugins are typically located using the
 	 * nsPluginsDir class.
 	 */
-	nsPluginFile(const nsFileSpec& spec);
+	nsPluginFile(nsIFile* spec);
 	virtual ~nsPluginFile();
 
 	/**

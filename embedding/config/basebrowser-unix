@@ -52,6 +52,7 @@ components/libgfxps.so
 components/libgfxxprint.so
 components/gfx.xpt 
 components/libwidget_gtk.so
+components/libwidget_gtk2.so
 components/widget.xpt
 
 ; layout
@@ -59,7 +60,6 @@ libmoz_art_lgpl.so
 res/dtd/xhtml11.dtd
 components/libgklayout.so                   
 components/libhtmlpars.so                 
-components/libgkview.so                   
 components/layout_base.xpt              
 components/layout_xul.xpt               
 components/content_base.xpt
@@ -91,7 +91,6 @@ components/libcookie.so
 ; appshell, docshell, uriloader, chrome, components
 components/libdocshell.so                 
 components/docshell.xpt
-components/liburiloader.so
 components/uriloader.xpt
 components/libchrome.so                   
 components/chrome.xpt                   
@@ -113,7 +112,6 @@ components/libprofile.so
 components/profile.xpt
 
 ; session history
-components/libshistory.so
 components/shistory.xpt
 
 ; optional typeaheadfind 
@@ -152,7 +150,6 @@ components/dom_xbl.xpt
 components/dom_xul.xpt
 
 ; "javascript:" URLs
-components/libjsurl.so
 components/jsurl.xpt
 
 ; editor
@@ -224,7 +221,7 @@ res/unixcharset.properties
 ; res/strres.properties 
 
 ; required prefs files
-defaults/pref/all.js
+;defaults/pref/all.js
 defaults/pref/unix.js
 
 

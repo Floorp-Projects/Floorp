@@ -25,7 +25,6 @@
 #include "nsIRegistry.h"
 #include "nsXPIDLString.h"
 #include "nsVoidArray.h"
-#include "nsIFileSpec.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 

@@ -113,11 +113,11 @@ typedef unsigned long HMTX;
 #include "nsIController.h"
 #include "nsIFocusController.h"
 #include "nsGUIEvent.h"
-#include "nsIFileStream.h"
 #include "nsISHistoryInternal.h"
 
 #include "nsIHttpChannel.h"
 #include "nsIUploadChannel.h"
+#include "nsISeekableStream.h"
 
 #include "nsILocaleService.h"
 #include "nsIStringBundle.h"

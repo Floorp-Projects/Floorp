@@ -1489,40 +1489,6 @@ nsCParserNode* nsNodeAllocator::CreateNode(CToken* aToken,
 
 #ifdef DEBUG
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle) {
-#ifdef RICKG_DEBUG
-
-#include <fstream.h>
-
-  const char* prefix="     ";
-  fstream out(aFilename,ios::out);
-  out << "==================================================" << endl;
-  out << aTitle << endl;
-  out << "==================================================";
-  int i,j=0;
-  int written;
-  for(i=1;i<eHTMLTag_text;++i){
-    const char* tag=nsHTMLTags::GetCStringValue((eHTMLTags)i);
-    out << endl << endl << "Tag: <" << tag << ">" << endl;
-    out << prefix;
-    written=0;
-    if(theDTD.IsContainer(i)) {
-      for(j=1;j<eHTMLTag_text;++j){
-        if(15==written) {
-          out << endl << prefix;
-          written=0;
-        }
-        if(theDTD.CanContain(i,j)){
-          tag=nsHTMLTags::GetCStringValue((eHTMLTags)j);
-          if(tag) {
-            out<< tag << ", ";
-            ++written;
-          }
-        }
-      }//for
-    }
-    else out<<"(not container)" << endl;
-  }
-#endif
 }
 #endif
 

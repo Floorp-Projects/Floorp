@@ -192,7 +192,7 @@ class NS_COM nsRecyclingAllocator {
 // ----------------------------------------------------------------------
 
 // Wrapping the nsRecyclingAllocator with nsIMemory
-class NS_COM nsRecyclingAllocatorImpl : public nsRecyclingAllocator, public nsIRecyclingAllocator {
+class nsRecyclingAllocatorImpl : public nsRecyclingAllocator, public nsIRecyclingAllocator {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIMEMORY

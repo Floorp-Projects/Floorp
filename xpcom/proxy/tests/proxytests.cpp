@@ -43,7 +43,6 @@
 #include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-#include "nsSpecialSystemDirectory.h"    // For exe dir
 
 #include "nscore.h"
 #include "nspr.h"

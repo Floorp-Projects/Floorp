@@ -29,7 +29,6 @@
 #include <X11/Xlib.h>
 
 #include "nsCOMPtr.h"
-#include "nsFileSpec.h"
 #include "nsCRT.h"
 #include "nsISupportsArray.h"
 #include "nsXPCOM.h"
@@ -590,12 +589,12 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
       g_print("\n         XmbTextListToTextProperty failed.  returned %d\n", status);
       g_print("          text is \"%s\"\n", tmpData[0]);
 #endif
-      numberOfBytes = nsCRT::strlen(NS_REINTERPRET_CAST(const char *, data));
+      numberOfBytes = strlen(NS_REINTERPRET_CAST(const char *, data));
     } else {
       if (foo > 0 && tmpData[0] != 0 && (*tmpData[0]) != 0) {
         data = tmpData[0];
       }
-      numberOfBytes = nsCRT::strlen(NS_REINTERPRET_CAST(const char *, data));
+      numberOfBytes = strlen(NS_REINTERPRET_CAST(const char *, data));
 #ifdef DEBUG_CLIPBOARD
       g_print("\n        XmbTextListToTextProperty succeeded\n");
       g_print("          text is \"%s\"\n", data);

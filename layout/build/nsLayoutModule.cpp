@@ -128,6 +128,15 @@
 #include "nsIAutoCopy.h"
 #include "nsIPrintPreviewContext.h"
 #include "nsCSSLoader.h"
+#include "nsXULAtoms.h"
+#include "nsLayoutCID.h"
+
+// view stuff
+#include "nsViewsCID.h"
+#include "nsView.h"
+#include "nsScrollingView.h"
+#include "nsScrollPortView.h"
+#include "nsViewManager.h"
 
 class nsIDocumentLoaderFactory;
 
@@ -148,7 +157,6 @@ class nsIDocumentLoaderFactory;
 #include "nsIXULPrototypeDocument.h"
 #include "nsIXULPrototypeDocument.h"
 #include "nsIXULSortService.h"
-#include "nsXULAtoms.h"
 #include "nsXULContentUtils.h"
 #include "nsXULElement.h"
 
@@ -220,9 +228,9 @@ Initialize(nsIModule* aSelf)
   nsHTMLAtoms::AddRefAtoms();
   nsXBLAtoms::AddRefAtoms();
   nsLayoutAtoms::AddRefAtoms();
+  nsXULAtoms::AddRefAtoms();
 
 #ifdef MOZ_XUL
-  nsXULAtoms::AddRefAtoms();
   nsXULContentUtils::Init();
 #endif
 
@@ -283,16 +291,17 @@ Shutdown(nsIModule* aSelf)
   nsXBLAtoms::ReleaseAtoms();
   nsLayoutAtoms::ReleaseAtoms();
 
+  nsXULAtoms::ReleaseAtoms();
+  nsRepeatService::Shutdown();
+  nsStackLayout::Shutdown();
+  nsBox::Shutdown();
+
 #ifdef MOZ_XUL
   nsXULContentUtils::Finish();
-  nsXULAtoms::ReleaseAtoms();
   nsXULElement::ReleaseGlobals();
   nsXULPrototypeElement::ReleaseGlobals();
   nsXULPrototypeScript::ReleaseGlobals();
-  nsRepeatService::Shutdown();
   nsSprocketLayout::Shutdown();
-  nsStackLayout::Shutdown();
-  nsBox::Shutdown();
 #endif
 
 #ifdef MOZ_MATHML
@@ -360,6 +369,35 @@ nsresult NS_NewFrameLoader(nsIFrameLoader** aResult);
 nsresult NS_NewSyncLoadDOMService(nsISyncLoadDOMService** aResult);
 nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
 
+extern nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
+extern nsresult NS_CreateCSSFrameConstructor(nsICSSFrameConstructor** aResult);
+extern nsresult NS_NewLayoutHistoryState(nsILayoutHistoryState** aResult);
+extern nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
+extern nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult);
+
+extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
+extern nsresult NS_NewDomSelection(nsISelection** aResult);
+extern nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
+extern nsresult NS_NewRange(nsIDOMRange** aResult);
+extern nsresult NS_NewRangeUtils(nsIRangeUtils** aResult);
+extern nsresult NS_NewContentIterator(nsIContentIterator** aResult);
+extern nsresult NS_NewPreContentIterator(nsIContentIterator** aResult);
+extern nsresult NS_NewGenRegularIterator(nsIContentIterator** aResult);
+extern nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aResult);
+extern nsresult NS_NewGenSubtreeIterator(nsIContentIterator** aInstancePtrResult);
+extern nsresult NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
+extern nsresult NS_NewHTMLElementFactory(nsIElementFactory** aResult);
+extern nsresult NS_NewXMLElementFactory(nsIElementFactory** aResult);
+extern nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult);
+extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
+extern nsresult NS_NewXBLService(nsIXBLService** aResult);
+extern nsresult NS_NewBindingManager(nsIBindingManager** aResult);
+extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
+extern nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
+extern nsresult NS_NewFrameLoader(nsIFrameLoader** aResult);
+extern nsresult NS_NewSyncLoadDOMService(nsISyncLoadDOMService** aResult);
+extern nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
+
 #ifdef MOZ_XUL
 nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
 NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
@@ -402,6 +440,7 @@ MAKE_CTOR(CreateNewPresState,           nsIPresState,           NS_NewPresState)
 MAKE_CTOR(CreateNewGalleyContext,       nsIPresContext,         NS_NewGalleyContext)
 MAKE_CTOR(CreateNewPrintContext,        nsIPrintContext,        NS_NewPrintContext)
 MAKE_CTOR(CreateNewPrintPreviewContext, nsIPrintPreviewContext, NS_NewPrintPreviewContext)
+#ifdef MOZ_XUL
 MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
 MAKE_CTOR(CreateNewListBoxObject,       nsIBoxObject,           NS_NewListBoxObject)
 MAKE_CTOR(CreateNewMenuBoxObject,       nsIBoxObject,           NS_NewMenuBoxObject)
@@ -411,6 +450,7 @@ MAKE_CTOR(CreateNewEditorBoxObject,     nsIBoxObject,           NS_NewEditorBoxO
 MAKE_CTOR(CreateNewIFrameBoxObject,     nsIBoxObject,           NS_NewIFrameBoxObject)
 MAKE_CTOR(CreateNewScrollBoxObject,     nsIBoxObject,           NS_NewScrollBoxObject)
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
+#endif
 MAKE_CTOR(CreateNewAutoCopyService,     nsIAutoCopyService,     NS_NewAutoCopyService)
 MAKE_CTOR(CreateSelectionImageService,  nsISelectionImageService,NS_NewSelectionImageService)
 MAKE_CTOR(CreateCaret,                  nsICaret,               NS_NewCaret)
@@ -488,6 +528,38 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsInspectorCSSUtils)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentAreaDragDrop)
 MAKE_CTOR(CreateSyncLoadDOMService,       nsISyncLoadDOMService,       NS_NewSyncLoadDOMService)
+
+// views are not refcounted, so this is the same as
+// NS_GENERIC_FACTORY_CONSTRUCTOR without the NS_ADDREF/NS_RELEASE
+#define NS_GENERIC_FACTORY_CONSTRUCTOR_NOREFS(_InstanceClass)                 \
+static NS_IMETHODIMP                                                          \
+_InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
+                            void **aResult)                                   \
+{                                                                             \
+    nsresult rv;                                                              \
+                                                                              \
+    _InstanceClass * inst;                                                    \
+                                                                              \
+    *aResult = NULL;                                                          \
+    if (NULL != aOuter) {                                                     \
+        rv = NS_ERROR_NO_AGGREGATION;                                         \
+        return rv;                                                            \
+    }                                                                         \
+                                                                              \
+    NS_NEWXPCOM(inst, _InstanceClass);                                        \
+    if (NULL == inst) {                                                       \
+        rv = NS_ERROR_OUT_OF_MEMORY;                                          \
+        return rv;                                                            \
+    }                                                                         \
+    rv = inst->QueryInterface(aIID, aResult);                                 \
+                                                                              \
+    return rv;                                                                \
+}                                                                             \
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager)
+NS_GENERIC_FACTORY_CONSTRUCTOR_NOREFS(nsView)
+NS_GENERIC_FACTORY_CONSTRUCTOR_NOREFS(nsScrollingView)
+NS_GENERIC_FACTORY_CONSTRUCTOR_NOREFS(nsScrollPortView)
 
 static NS_IMETHODIMP
 CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -654,6 +726,7 @@ static const nsModuleComponentInfo gComponents[] = {
     CreateNewPrintPreviewContext },
   // XXX end ick
 
+#ifdef MOZ_XUL
   { "XUL Box Object",
     NS_BOXOBJECT_CID,
     "@mozilla.org/layout/xul-boxobject;1",
@@ -698,6 +771,7 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_TREEBOXOBJECT_CID,
     "@mozilla.org/layout/xul-boxobject-tree;1",
     CreateNewTreeBoxObject },
+#endif
 
   { "AutoCopy Service",
     NS_AUTOCOPYSERVICE_CID,
@@ -1015,6 +1089,11 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1",
     CreateComputedDOMStyle },
 
+  { "XUL Controllers",
+    NS_XULCONTROLLERS_CID,
+    "@mozilla.org/xul/xul-controllers;1",
+    NS_NewXULControllers },
+
 #ifdef MOZ_XUL
   { "XUL Sort Service",
     NS_XULSORTSERVICE_CID,
@@ -1046,11 +1125,6 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/xul/xul-popup-listener;1",
     CreateXULPopupListener },
 
-  { "XUL Controllers",
-    NS_XULCONTROLLERS_CID,
-    "@mozilla.org/xul/xul-controllers;1",
-    NS_NewXULControllers },
-
   { "XUL Prototype Cache",
     NS_XULPROTOTYPECACHE_CID,
     "@mozilla.org/xul/xul-prototype-cache;1",
@@ -1065,6 +1139,11 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_XULELEMENTFACTORY_CID,
     NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
     CreateXULElementFactory },
+#else
+  { "XML Element Factory",
+	NS_XULELEMENTFACTORY_CID,
+    NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+    CreateXMLElementFactory },
 #endif
 
 #ifdef MOZ_MATHML
@@ -1113,8 +1192,16 @@ static const nsModuleComponentInfo gComponents[] = {
   { "SyncLoad DOM Service",
     NS_SYNCLOADDOMSERVICE_CID,
     NS_SYNCLOADDOMSERVICE_CONTRACTID,
-    CreateSyncLoadDOMService }
+    CreateSyncLoadDOMService },
 
+  // view stuff
+  { "View Manager", NS_VIEW_MANAGER_CID, "@mozilla.org/view-manager;1",
+    nsViewManagerConstructor },
+  { "View", NS_VIEW_CID, "@mozilla.org/view;1", nsViewConstructor },
+  { "Scrolling View", NS_SCROLLING_VIEW_CID, "@mozilla.org/scrolling-view;1",
+    nsScrollingViewConstructor },
+  { "Scroll Port View", NS_SCROLL_PORT_VIEW_CID,
+    "@mozilla.org/scroll-port-view;1", nsScrollPortViewConstructor }
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsLayoutModule, gComponents, Initialize, Shutdown)

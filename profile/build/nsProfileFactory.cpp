@@ -48,7 +48,7 @@ static const nsModuleComponentInfo components[] =
       NS_PROFILE_CID,
       NS_PROFILE_CONTRACTID, 
       nsProfileConstructor,
-     }
+    },
 };
 
 NS_IMPL_NSGETMODULE(nsProfileModule, components);

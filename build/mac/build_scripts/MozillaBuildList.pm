@@ -851,6 +851,8 @@ sub BuildClientDist()
 
     #LIBREG
     InstallFromManifest(":mozilla:modules:libreg:include:MANIFEST",                "$distdirectory:libreg:");
+    InstallFromManifest(":mozilla:modules:libreg:xpcom:MANIFEST",                  "$distdirectory:mozreg:");
+    InstallFromManifest(":mozilla:modules:libreg:xpcom:MANIFEST_IDL",              "$distdirectory:idl:");
 
     #STRING
     InstallFromManifest(":mozilla:string:public:MANIFEST",                         "$distdirectory:string:");
@@ -1427,6 +1429,7 @@ sub BuildIDLProjects()
     	BuildIDLProject(":mozilla:security:manager:boot:macbuild:pipbootIDL.xml",		"pipboot");
     }
     
+    BuildIDLProject(":mozilla:modules:libreg:xpcom:macbuild:mozregIDL.xml",         "mozreg");    
     BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.xml",             "libpref");
     BuildIDLProject(":mozilla:modules:libutil:macbuild:libutilIDL.xml",             "libutil");
     BuildIDLProject(":mozilla:modules:libjar:macbuild:libjarIDL.xml",               "libjar");
@@ -1701,6 +1704,7 @@ sub BuildCommonProjects()
 
     BuildOneProject(":mozilla:modules:libreg:macbuild:libreg.xml",              "libreg$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:xpcom:macbuild:xpcomPPC.xml",                     "xpcom$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProject(":mozilla:modules:libreg:xpcom:macbuild:mozreg.xml",        "mozreg$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:js:macbuild:JavaScript.xml",                      "JavaScript$D.shlb", 1, $main::ALIAS_SYM_FILES, 0); 
     BuildOneProject(":mozilla:js:macbuild:LiveConnect.xml",                     "LiveConnect$D.$S", 1, $main::ALIAS_SYM_FILES, 0);
 

@@ -41,7 +41,7 @@
  * to the xpcom module.
  */
 
-struct NS_COM nsDiscriminatedUnion
+struct nsDiscriminatedUnion
 {
     union {
         PRInt8         mInt8Value;

@@ -206,7 +206,7 @@ nsresult nsCollationUnix::GetSortKeyLen(const nsCollationStrength strength,
   res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
   if (NS_SUCCEEDED(res) && str != NULL) {
     if (mUseCodePointOrder) {
-      *outLen = nsCRT::strlen(str);
+      *outLen = strlen(str);
     }
     else {
       DoSetLocale();
@@ -239,7 +239,7 @@ nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength,
   res = mCollation->UnicodeToChar(stringNormalized, &str, mCharset);
   if (NS_SUCCEEDED(res) && str != NULL) {
     if (mUseCodePointOrder) {
-      *outLen = nsCRT::strlen(str);
+      *outLen = strlen(str);
       memcpy(key, str, *outLen);
     }
     else {

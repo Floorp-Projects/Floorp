@@ -40,18 +40,19 @@
 #include "nsXPIDLString.h"
 #include "nsIStringBundle.h"
 #include "nsIPref.h"
-#include "nsIFileSpec.h"
 #include "nsILocalFile.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "prmem.h"
 #include "nsComObsolete.h"
+#include "plstr.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define LOCALIZATION "chrome://cookie/locale/cookie.properties"
 
 nsresult
-ckutil_getChar(nsInputFileStream& strm, 
+ckutil_getChar(nsIInputStream* strm, 
                char *buffer, PRInt32 bufsize, 
                PRInt32& next, PRInt32& count, 
                char& c) {
@@ -62,7 +63,13 @@ ckutil_getChar(nsInputFileStream& strm,
       count = bufsize;
       return NS_ERROR_FAILURE;
     }
-    count = strm.read(buffer, bufsize);
+
+    
+    PRUint32 theCount;
+    strm->Read(buffer, bufsize, &theCount);
+    
+    count = theCount;
+
     next = 0;
     if (count == 0) {
       next = bufsize;
@@ -80,7 +87,7 @@ ckutil_getChar(nsInputFileStream& strm,
  * strip carriage returns and line feeds from end of line
  */
 PUBLIC PRInt32
-CKutil_GetLine(nsInputFileStream& strm, char *buffer, PRInt32 bufsize,
+CKutil_GetLine(nsIInputStream* strm, char *buffer, PRInt32 bufsize,
                PRInt32& next, PRInt32& count, nsACString& aLine) {
 
   /* read the line */
@@ -121,21 +128,8 @@ CKutil_Localize(const PRUnichar *genericString) {
 }
 
 PUBLIC nsresult
-CKutil_ProfileDirectory(nsFileSpec& dirSpec) {
-  nsresult res;
-  nsCOMPtr<nsIFile> aFile;
-  nsCOMPtr<nsIFileSpec> tempSpec;
-  
-  res = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(aFile));
-  if (NS_FAILED(res)) return res;
-  
-  // TODO: When the calling code can take an nsIFile,
-  // this conversion to nsFileSpec can be avoided. 
-  res = NS_NewFileSpecFromIFile(aFile, getter_AddRefs(tempSpec));
-  if (NS_FAILED(res)) return res;
-  res = tempSpec->GetFileSpec(&dirSpec);
-  
-  return res;
+CKutil_ProfileDirectory(nsIFile** out) {
+  return NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, out);
 }
 
 PUBLIC char *

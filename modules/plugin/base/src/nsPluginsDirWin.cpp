@@ -52,7 +52,7 @@
 #include "windows.h"
 #include "winbase.h"
 
-
+#include "nsString.h"
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -164,13 +164,17 @@ static void FreeStringArray(PRUint32 variants, char ** array)
 
 /* nsPluginsDir implementation */
 
-PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
+PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
+    PRBool ret = PR_FALSE;
+    nsCAutoString path;
+    if (NS_FAILED(file->GetNativePath(path)))
+        return PR_FALSE;
+
+    const char *pathname = path.get();
 	const char* filename;
 	char* extension;
 	PRUint32 len;
-	const char* pathname = fileSpec.GetCString();
-
 	// this is most likely a path, so skip to the filename
 	filename = PL_strrchr(pathname, '\\');
 	if(filename)
@@ -185,20 +189,19 @@ PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 	    ++extension;
 
 	if(len > 5)
-	{
+ 	{
 		if(!PL_strncasecmp(filename, "np", 2) && !PL_strcasecmp(extension, "dll"))
-			return PR_TRUE;
-	}
-
-	return PR_FALSE;
+ 			return PR_TRUE;
+ 	}
+    return ret;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
 /* nsPluginFile implementation */
 
-nsPluginFile::nsPluginFile(const nsFileSpec& spec)
-	:	nsFileSpec(spec)
+nsPluginFile::nsPluginFile(nsIFile* file)
+: mPlugin(file)
 {
 	// nada
 }
@@ -215,34 +218,39 @@ nsPluginFile::~nsPluginFile()
 nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 {
 	// How can we convert to a full path names for using with NSPR?
-	const char* path = this->GetCString();
-  char* index;
-  char* pluginFolderPath = PL_strdup(path);
+    if (!mPlugin)
+        return NS_ERROR_NULL_POINTER;
 
-  index = PL_strrchr(pluginFolderPath, '\\');
-  *index = 0;
+    nsCAutoString temp;
+    mPlugin->GetNativePath(temp);
 
+    char* index;
+    char* pluginFolderPath = PL_strdup(temp.get());
+    
+    index = PL_strrchr(pluginFolderPath, '\\');
+    *index = 0;
+    
 	BOOL restoreOrigDir = FALSE;
 	char aOrigDir[MAX_PATH + 1];
 	DWORD dwCheck = ::GetCurrentDirectory(sizeof(aOrigDir), aOrigDir);
 	NS_ASSERTION(dwCheck <= MAX_PATH + 1, "Error in Loading plugin");
 
 	if (dwCheck <= MAX_PATH + 1)
-		{
+  	{
 		restoreOrigDir = ::SetCurrentDirectory(pluginFolderPath);
 		NS_ASSERTION(restoreOrigDir, "Error in Loading plugin");
-		}
-
-	outLibrary = PR_LoadLibrary(path);
-
+    }
+    
+	outLibrary = PR_LoadLibrary(temp.get());
+    
 	if (restoreOrigDir)
-		{
-		BOOL bCheck = ::SetCurrentDirectory(aOrigDir);
+	{
+        BOOL bCheck = ::SetCurrentDirectory(aOrigDir);
 		NS_ASSERTION(bCheck, "Error in Loading plugin");
-		}
-
-  PL_strfree(pluginFolderPath);
-
+    }
+    
+    PL_strfree(pluginFolderPath);
+    
 	return NS_OK;
 }
 
@@ -251,20 +259,28 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
  */
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
-  nsresult res = NS_OK;
+    nsresult res = NS_OK;
 	DWORD zerome, versionsize;
 	char* verbuf = nsnull;
-	const char* path = this->GetCString();
 
-  versionsize = ::GetFileVersionInfoSize((char*)path, &zerome);
+	const char* path;
+
+    if (!mPlugin)
+        return NS_ERROR_NULL_POINTER;
+
+    nsCAutoString temp;
+    mPlugin->GetNativePath(temp);
+    path = temp.get();
+    
+    versionsize = ::GetFileVersionInfoSize((char*)path, &zerome);
 	if (versionsize > 0)
 		verbuf = (char *)PR_Malloc(versionsize);
 	if(!verbuf)
 		return NS_ERROR_OUT_OF_MEMORY;
-
+    
 	if(::GetFileVersionInfo((char*)path, NULL, versionsize, verbuf))
-	{
-		info.fName = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\ProductName");
+    {
+        info.fName = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\ProductName");
 		info.fDescription = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\FileDescription");
 
 		char *mimeType = GetKeyValue(verbuf, "\\StringFileInfo\\040904E4\\MIMEType");
@@ -275,11 +291,11 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 		info.fMimeTypeArray = MakeStringArray(info.fVariantCount, mimeType);
 		info.fMimeDescriptionArray = MakeStringArray(info.fVariantCount, mimeDescription);
 		info.fExtensionArray = MakeStringArray(info.fVariantCount, extensions);
-    info.fFileName = PL_strdup(path);
-
-    PL_strfree(mimeType);
-    PL_strfree(mimeDescription);
-    PL_strfree(extensions);
+        info.fFileName = PL_strdup(path);
+        
+        PL_strfree(mimeType);
+        PL_strfree(mimeDescription);
+        PL_strfree(extensions);
 	}
 	else
 		res = NS_ERROR_FAILURE;

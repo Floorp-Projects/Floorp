@@ -62,7 +62,6 @@
 #include "nsPluginNativeWindow.h"
 
 class ns4xPlugin;
-class nsFileSpec;
 class nsIComponentManager;
 class nsIFile;
 class nsIChannel;

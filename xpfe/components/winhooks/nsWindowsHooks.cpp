@@ -76,7 +76,6 @@
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
 #include "nsIFileStream.h"
-#include "nsFileSpec.h"
 
 #define RUNKEY "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
 

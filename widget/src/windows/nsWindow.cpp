@@ -109,7 +109,8 @@
 #include "nsITheme.h"
 
 // For SetIcon
-#include "nsSpecialSystemDirectory.h"
+#include "nsILocalFile.h"
+#include "nsCRT.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
 #include "nsIFile.h"

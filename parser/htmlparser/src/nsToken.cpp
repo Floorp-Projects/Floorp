@@ -111,38 +111,6 @@ nsresult CToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode) {
   return result;
 }
 
-
-#ifdef DEBUG
-/**
- *  This debug method causes the token to dump its content
- *  to the given stream (formated for debugging).
- *  
- *  @update gess 3/25/98
- *  @param  ostream -- output stream to accept output data
- */
-void CToken::DebugDumpToken(nsOutputStream& anOutputStream) {
-  anOutputStream << "[" << GetClassName() << "] ";
-  PRUint32 i=0;
-  PRUint32 theLen=GetStringValue().Length();
-  for(i=0;i<theLen;++i){
-    anOutputStream << NS_ConvertUCS2toUTF8(GetStringValue()).get();
-  }
-  anOutputStream << " TypeID: " << mTypeID << " AttrCount: " << mAttrCount << nsEndl;
-}
-
-/**
- *  This debug method causes the token to dump its content
- *  to the given stream, formated as text.
- *  
- *  @update gess 3/25/98
- *  @param  ostream -- output stream to accept output data
- */
-void CToken::DebugDumpSource(nsOutputStream& anOutputStream) {
-  anOutputStream << NS_ConvertUCS2toUTF8(GetStringValue()).get();
-}
-#endif
-
-
 /**
  * Get string of full contents, suitable for debug dump.
  * It should look exactly like the input source.

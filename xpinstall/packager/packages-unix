@@ -47,6 +47,8 @@ bin/libxpistub.so
 bin/libmozz.so
 bin/components/libxpinstall.so
 bin/components/libjar50.so
+bin/libxpcom_compat.so
+bin/components/libxpcom_compat_c.so
 
 [browser]
 bin/mozilla
@@ -121,7 +123,6 @@ bin/components/libgfxps.so
 bin/components/libgfxxprint.so
 bin/components/libimglib2.so
 bin/components/libimgmng.so
-bin/components/libjsurl.so
 bin/components/libi18n.so
 bin/components/libmork.so
 bin/components/libmozfind.so
@@ -135,13 +136,10 @@ bin/components/content_xslt.xpt
 bin/components/libgklayout.so
 bin/components/libgkplugin.so
 bin/components/libhtmlpars.so
-bin/components/libgkview.so
 bin/components/librdf.so
-bin/components/libshistory.so
 bin/components/libtxmgr.so
 bin/components/libuconv.so
 bin/components/libucvmath.so
-bin/components/liburiloader.so
 bin/components/libwebbrwsr.so
 bin/components/webBrowser_core.xpt
 bin/components/libwallet.so

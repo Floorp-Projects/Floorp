@@ -498,6 +498,7 @@ XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
 
 MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/bin $(NSPR_LIBS)'
 MOZ_COMPONENT_XPCOM_LIBS='$(XPCOM_LIBS)'
+MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib -lxpcom_compat'
 
 _PLATFORM_DEFAULT_TOOLKIT=gtk
 MOZ_WIDGET_TOOLKIT_LDFLAGS='-lwidget_$(MOZ_WIDGET_TOOLKIT)'
@@ -1034,6 +1035,7 @@ case "$target" in
         XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         MOZ_COMPONENT_XPCOM_LIBS='$(XPCOM_LIBS)'
+        MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcom_compat.lib'
     fi
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
@@ -1259,6 +1261,7 @@ case "$target" in
         AC_DEFINE(OS2EMX_PLAIN_CHAR)
         MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/lib $(NSPR_LIBS)'
         MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib'
+        MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom_compat.lib'
         XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
         MOZ_JS_LIBS='$(DIST)/lib/libmozjs.lib'
         MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/libxpcom.lib'
@@ -1305,6 +1308,7 @@ case "$target" in
         MKCSHLIB='$(LD) $(DSO_LDOPTS)'
         MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
         MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
+        MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcom_compat.lib'
         XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
         MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.$(LIB_SUFFIX)'
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.$(LIB_SUFFIX)'
@@ -3373,6 +3377,57 @@ if test "$ACCESSIBILITY"; then
 fi
 
 dnl ========================================================
+dnl xpfe/components on by default
+dnl ========================================================
+MOZ_XPFE_COMPONENTS=1
+MOZ_ARG_DISABLE_BOOL(xpfe-components,
+[  --disable-xpfe-components    Disable xpfe components],
+    MOZ_XPFE_COMPONENTS= )
+
+dnl ========================================================
+dnl xpinstall support on by default
+dnl ========================================================
+MOZ_XPINSTALL=1
+MOZ_ARG_DISABLE_BOOL(xpinstall,
+[  --disable-xpinstall Disable xpinstall support],
+    MOZ_XPINSTALL= )
+if test "$MOZ_XPINSTALL"; then
+    AC_DEFINE(MOZ_XPINSTALL)
+fi
+
+dnl ========================================================
+dnl Single profile support off by default
+dnl ========================================================
+MOZ_SINGLE_PROFILE=
+MOZ_ARG_ENABLE_BOOL(single-profile,
+[  --enable-single-profile Enable single profile support ],
+    MOZ_SINGLE_PROFILE=1,
+    MOZ_SINGLE_PROFILE= )
+
+dnl ========================================================
+dnl xpcom js loader support on by default
+dnl ========================================================
+MOZ_JSLOADER=1
+MOZ_ARG_DISABLE_BOOL(jsloader,
+[  --disable-jsloader Disable xpcom js loader support],
+    MOZ_JSLOADER= )
+if test "$MOZ_JSLOADER"; then
+    AC_DEFINE(MOZ_JSLOADER)
+fi
+
+dnl ========================================================
+dnl use native unicode converters
+dnl ========================================================
+MOZ_USE_NATIVE_UCONV=
+MOZ_ARG_ENABLE_BOOL(native-uconv,
+[  --enable-native-uconv enable iconv support],
+    MOZ_USE_NATIVE_UCONV=1 )
+if test "$MOZ_USE_NATIVE_UCONV"; then
+    AC_DEFINE(MOZ_USE_NATIVE_UCONV)
+fi
+
+
+dnl ========================================================
 dnl Libeditor can be build as plaintext-only,
 dnl or as a full html and text editing component.
 dnl We build both by default.
@@ -4590,8 +4645,10 @@ dnl = Cleanup section for misc ordering snafus
 dnl =
 if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC"; then
     XPCOM_GLUE_LIBS='$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX)'
+    MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/$(LIB_PREFIX)xpcom_compat.$(LIB_SUFFIX)'
 else
     XPCOM_GLUE_LIBS='-L${DIST}/bin -L${DIST}/lib -lxpcomglue -lstring_s -lstring_obsolete_s'
+    MOZ_XPCOM_OBSOLETE_LIBS='-L${DIST}/bin -L${DIST}/lib -lxpcom_compat'
 fi
 
 dnl ========================================================
@@ -4685,6 +4742,8 @@ AC_SUBST(MOZ_LOG_REFCNT)
 AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_XPCTOOLS)
+AC_SUBST(MOZ_JSLOADER)
+AC_SUBST(MOZ_USE_NATIVE_UCONV)
 AC_SUBST(MOZ_INSURE)
 AC_SUBST(MOZ_INSURE_DIRS)
 AC_SUBST(MOZ_INSURE_EXCLUDE_DIRS)
@@ -4714,6 +4773,9 @@ AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)
 AC_SUBST(SUNCTL)
 AC_SUBST(ACCESSIBILITY)
+AC_SUBST(MOZ_XPINSTALL)
+AC_SUBST(MOZ_SINGLE_PROFILE)
+AC_SUBST(MOZ_XPFE_COMPONENTS)
 AC_SUBST(MOZ_USER_DIR)
 
 AC_SUBST(ENABLE_STRIP)
@@ -4722,6 +4784,7 @@ AC_SUBST(USE_PREBINDING)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 AC_SUBST(MOZ_COMPONENT_XPCOM_LIBS)
+AC_SUBST(MOZ_XPCOM_OBSOLETE_LIBS)
 AC_SUBST(XPCOM_LIBS)
 
 AC_SUBST(MOZ_BUILD_ROOT)

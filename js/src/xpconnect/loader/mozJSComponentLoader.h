@@ -26,7 +26,6 @@
 #include "nsIXPConnect.h"
 #include "nsIModule.h"
 #include "nsSupportsArray.h"
-#include "nsIFileSpec.h"
 #include "nsIFile.h"
 #ifndef XPCONNECT_STANDALONE
 #include "nsIPrincipal.h"

@@ -29,7 +29,6 @@
 #include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-#include "nsSpecialSystemDirectory.h" 
 #include "nsILocalFile.h"
 
 #include "nscore.h"
@@ -96,9 +95,6 @@ PR_PUBLIC_API(nsresult) XPI_Init(
                                     pfnXPIProgress      progressCB )
 {
     nsresult              rv;
-    nsCOMPtr<nsIFileSpec> nsIfsDirectory;
-    nsFileSpec            nsfsDirectory;
-    nsFileSpec            nsfsRegFile;
 
     //--------------------------------------------------------------------
     // Initialize XPCOM and AutoRegister() its components
@@ -181,7 +177,6 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     // is Mozilla. Use the given directory as the "Program" folder.
     //--------------------------------------------------------------------
     nsCOMPtr<nsPIXPIStubHook>   hook = do_QueryInterface(gXPI);
-    nsFileSpec                  dirSpec( aProgramDir );
     nsCOMPtr<nsILocalFile>      iDirSpec;
   
 #if XP_MAC
@@ -252,9 +247,6 @@ PR_PUBLIC_API(PRInt32) XPI_Install(
     nsresult                rv = NS_ERROR_NULL_POINTER;
     nsString                args; args.AssignWithConversion(aArgs);
     nsCOMPtr<nsILocalFile>  iFile;
-    nsFileSpec              file(aFile);
-    nsFileURL               URL(file);
-    nsString                URLstr; URLstr.AssignWithConversion(URL.GetURLString());
 
     gInstallStatus = -322; // unique stub error code
     
@@ -268,7 +260,7 @@ PR_PUBLIC_API(PRInt32) XPI_Install(
 
     if (iFile && gXPI)
         rv = gXPI->InstallJar( iFile,
-                               URLstr.get(),
+                               nsnull,
                                args.get(),
                                nsnull,
                                (aFlags | XPI_NO_NEW_THREAD),

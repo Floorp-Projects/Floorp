@@ -38,8 +38,7 @@
 #include "nsIPlatformCharset.h"
 #include "nsIOS2Locale.h"
 #include "nsCOMPtr.h"
-#include "nsFileSpec.h" /* for nsAutoString */
-
+#include "nsString.h"
 
 NS_IMPL_ISUPPORTS1(nsCollationOS2, nsICollation)
 

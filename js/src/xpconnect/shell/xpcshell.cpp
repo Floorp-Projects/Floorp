@@ -73,8 +73,6 @@
 #include "jsarena.h"
 #include "jscntxt.h"
 
-#include "nsSpecialSystemDirectory.h"	// For exe dir
-
 #include "nsIJSContextStack.h"
 
 /***************************************************************************/
@@ -196,7 +194,7 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
 
     char *bytes = JS_GetStringBytes(str);
-    bytes = nsCRT::strdup(bytes);
+    bytes = strdup(bytes);
 
 #ifdef XP_MAC
     for (char *c = bytes; *c; c++)

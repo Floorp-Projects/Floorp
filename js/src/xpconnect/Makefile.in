@@ -38,7 +38,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public idl loader src shell
+DIRS		= public idl
+
+ifdef MOZ_JSLOADER
+DIRS         +=  loader
+endif
+
+DIRS         += src shell
 
 ifdef ENABLE_TESTS
 DIRS		+= tests

@@ -38,7 +38,6 @@
 
 #include "nsStringBundle.h"
 #include "nsID.h"
-#include "nsFileSpec.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIStringBundle.h"
@@ -80,6 +79,7 @@
 #include "nsIEventQueueService.h"
 
 #include "prenv.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);

@@ -71,7 +71,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
-#include "nsIFileStream.h" // for nsISeekableStream
+#include "nsISeekableStream.h"
 #include "nsNetUtil.h"
 #include "nsIProgressEventSink.h"
 #include "nsIDocument.h"
@@ -121,8 +121,6 @@
 #include "windows.h"
 #include "winbase.h"
 #endif
-
-#include "nsFileSpec.h"
 
 #include "nsPluginDocLoaderFactory.h"
 
@@ -4238,23 +4236,28 @@ public:
 #endif
     }
 
-    nsFileSpec spec;
+    const char *name;
+    nsCString leafName;
     if (mPluginTag.mFullPath)
     {
 #if !(defined(XP_MAC) || defined(XP_MACOSX))
       NS_ERROR("Only MAC should be using nsPluginTag::mFullPath!");
 #endif
-      spec = mPluginTag.mFullPath;
+      char* spec = mPluginTag.mFullPath;
+
+      nsCOMPtr<nsILocalFile> pluginPath;
+      NS_NewNativeLocalFile(nsDependentCString(spec), PR_TRUE,
+                            getter_AddRefs(pluginPath));
+
+      pluginPath->GetNativeLeafName(leafName);
+      name = leafName.get();
     }
     else
     {
-      spec = mPluginTag.mFileName;
+       name = mPluginTag.mFileName;
     }
 
-    char* name = spec.GetLeafName();
     nsresult rv = DoCharsetConversion(mUnicodeDecoder, name, aFilename);
-    if (name)
-      nsCRT::free(name);
     return rv;
   }
 
@@ -4487,12 +4490,14 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 
     if (nsnull == pluginTag->mLibrary)  // if we haven't done this yet
     {
+
+     nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
 #if !(defined(XP_MAC) || defined(XP_MACOSX))
-      nsFileSpec file(pluginTag->mFileName);
+      file->InitWithNativePath(nsDependentCString(pluginTag->mFileName));
 #else
       if (nsnull == pluginTag->mFullPath)
         return NS_ERROR_FAILURE;
-      nsFileSpec file(pluginTag->mFullPath);
+      file->InitWithNativePath(nsDependentCString(pluginTag->mFullPath));
 #endif
       nsPluginFile pluginFile(file);
       PRLibrary* pluginLibrary = NULL;
@@ -4787,11 +4792,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     if (NS_FAILED(rv))
       continue;
     
-    nsFileSpec file(filePath.get());
-    PRBool wasSymlink;  
-    file.ResolveSymlink(wasSymlink);
-
-    if (nsPluginsDir::IsPluginFile(file)) {
+    if (nsPluginsDir::IsPluginFile(dirEntry)) {
       pluginFileinDirectory * item = new pluginFileinDirectory();
       if (!item) 
         return NS_ERROR_OUT_OF_MEMORY;
@@ -4801,7 +4802,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       dirEntry->GetLastModifiedTime(&fileModTime);
 
       item->mModTime = fileModTime;
-      item->mFilename.AssignWithConversion(file.GetCString());
+      item->mFilename.AssignWithConversion(filePath.get());
       pluginFilesArray.AppendElement(item);
     }
   } // end round of up of plugin files
@@ -4813,12 +4814,14 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
   // finally, go through the array, looking at each entry and continue processing it
   for (PRInt32 i = 0; i < pluginFilesArray.Count(); i++) {
     pluginFileinDirectory* pfd = NS_STATIC_CAST(pluginFileinDirectory*, pluginFilesArray[i]);
-    nsFileSpec file(pfd->mFilename);
+    nsCOMPtr <nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
+    nsCOMPtr <nsILocalFile> localfile = do_QueryInterface(file);
+    localfile->InitWithPath(pfd->mFilename);
     PRInt64 fileModTime = pfd->mModTime;
-    delete pfd;
+    //delete pfd;
 
     // Look for it in our cache
-    nsPluginTag *pluginTag = RemoveCachedPluginsInfo(file.GetCString());
+    nsPluginTag *pluginTag = RemoveCachedPluginsInfo(NS_ConvertUCS2toUTF8(pfd->mFilename).get());
 
     if (pluginTag) {
       // If plugin changed, delete cachedPluginTag and dont use cache
@@ -6427,12 +6430,16 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
     return rv;
 
   // now make sure it's a plugin
-  nsFileSpec file(filePath.get());
-  if (!nsPluginsDir::IsPluginFile(file))
+  nsCOMPtr<nsILocalFile> localfile;
+  NS_NewNativeLocalFile(filePath, 
+                        PR_TRUE,
+                        getter_AddRefs(localfile));
+
+  if (!nsPluginsDir::IsPluginFile(localfile))
     return rv;
   
   // try to get the mime info and descriptions out of the plugin
-  nsPluginFile pluginFile(file);
+  nsPluginFile pluginFile(localfile);
   nsPluginInfo info = { sizeof(info) };
   if (NS_FAILED(pluginFile.GetPluginInfo(info)))
     return rv;

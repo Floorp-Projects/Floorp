@@ -81,7 +81,7 @@
 #include "prenv.h"
 #endif
 
-#include "nsSpecialSystemDirectory.h"
+#include "SpecialSystemDirectory.h"
 #include "nsAppFileLocationProvider.h"
 
 #if defined(XP_MAC)
@@ -820,7 +820,8 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
 
 	// check to see if it is one of our defaults
         
-    if (inAtom == nsDirectoryService::sCurrentProcess)
+    if (inAtom == nsDirectoryService::sCurrentProcess || 
+        inAtom == nsDirectoryService::sOS_CurrentProcessDirectory )
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
     }
@@ -842,6 +843,9 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
         localFile->AppendNative(COMPONENT_DIRECTORY);           
         localFile->AppendNative(XPTI_REGISTRY_NAME);           
     }
+    
+    // Unless otherwise set, the core pieces of the GRE exist
+    // in the current process directory.
     else if (inAtom == nsDirectoryService::sGRE_Directory)
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
@@ -851,7 +855,8 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
         if (localFile)
              localFile->AppendNative(COMPONENT_DIRECTORY);
-     }
+    }
+
     else if (inAtom == nsDirectoryService::sComponentDirectory)
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
@@ -860,105 +865,85 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     }
     else if (inAtom == nsDirectoryService::sOS_DriveDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS_DriveDirectory);
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(OS_DriveDirectory, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sOS_TemporaryDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS_TemporaryDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(OS_TemporaryDirectory, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sOS_CurrentProcessDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS_CurrentProcessDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(OS_CurrentProcessDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sOS_CurrentWorkingDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS_CurrentWorkingDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(OS_CurrentWorkingDirectory, getter_AddRefs(localFile)); 
     }
        
 #if defined(XP_MAC)
     else if (inAtom == nsDirectoryService::sDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_SystemDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_SystemDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sDesktopDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_DesktopDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_DesktopDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sHomeDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_DocumentsDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_DocumentsDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sTrashDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_TrashDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_TrashDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sStartupDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_StartupDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_StartupDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sShutdownDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_ShutdownDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_ShutdownDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sAppleMenuDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_AppleMenuDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_AppleMenuDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sControlPanelDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_ControlPanelDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_ControlPanelDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sExtensionDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_ExtensionDirectory);
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_ExtensionDirectory, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sFontsDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_FontsDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_FontsDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sClassicPreferencesDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_ClassicPreferencesDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_ClassicPreferencesDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sPreferencesDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_PreferencesDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_PreferencesDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sDocumentsDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_DocumentsDirectory);
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_DocumentsDirectory, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sInternetSearchDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_InternetSearchDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_InternetSearchDirectory, getter_AddRefs(localFile)); 
     }   
     else if (inAtom == nsDirectoryService::sDefaultDownloadDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_DefaultDownloadDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_DefaultDownloadDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sUserLibDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_UserLibDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Mac_UserLibDirectory, getter_AddRefs(localFile)); 
     }
 #elif defined (XP_MACOSX)
     else if (inAtom == nsDirectoryService::sHomeDirectory)
@@ -1014,197 +999,159 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
 #elif defined (XP_WIN)
     else if (inAtom == nsDirectoryService::sSystemDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_SystemDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_SystemDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sWindowsDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_WindowsDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_WindowsDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sHomeDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_HomeDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_HomeDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sDesktop)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Desktop); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Desktop, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sPrograms)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Programs); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Programs, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sControls)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Controls); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Controls, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sPrinters)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Printers); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Printers, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sPersonal)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Personal); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Personal, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sFavorites)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Favorites); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Favorites, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sStartup)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Startup);
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Startup, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sRecent)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Recent); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Recent, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sSendto)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Sendto); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Sendto, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sBitbucket)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Bitbucket); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Bitbucket, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sStartmenu)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Startmenu); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Startmenu, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sDesktopdirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Desktopdirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Desktopdirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sDrives)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Drives);
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Drives, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sNetwork)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Network); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Network, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sNethood)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Nethood); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Nethood, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sFonts)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Fonts);
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Fonts, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sTemplates)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Templates); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Templates, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sCommon_Startmenu)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Common_Startmenu); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Common_Startmenu, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sCommon_Programs)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Common_Programs); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Common_Programs, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sCommon_Startup)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Common_Startup); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Common_Startup, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sCommon_Desktopdirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Common_Desktopdirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Common_Desktopdirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sAppdata)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Appdata); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Appdata, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sPrinthood)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Printhood); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Printhood, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sWinCookiesDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Cookies); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Win_Cookies, getter_AddRefs(localFile)); 
     }
 #elif defined (XP_UNIX)
 
     else if (inAtom == nsDirectoryService::sLocalDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Unix_LocalDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Unix_LocalDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sLibDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Unix_LibDirectory);
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Unix_LibDirectory, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sHomeDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Unix_HomeDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(Unix_HomeDirectory, getter_AddRefs(localFile)); 
     }
 #elif defined (XP_OS2)
     else if (inAtom == nsDirectoryService::sSystemDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_SystemDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(OS2_SystemDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sOS2Directory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_OS2Directory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(OS2_OS2Directory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sHomeDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_HomeDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(OS2_HomeDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sDesktopDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_DesktopDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(OS2_DesktopDirectory, getter_AddRefs(localFile)); 
     }
 #elif defined (XP_BEOS)
     else if (inAtom == nsDirectoryService::sSettingsDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::BeOS_SettingsDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(BeOS_SettingsDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sHomeDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::BeOS_HomeDirectory);
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(BeOS_HomeDirectory, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sDesktopDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::BeOS_DesktopDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(BeOS_DesktopDirectory, getter_AddRefs(localFile)); 
     }
     else if (inAtom == nsDirectoryService::sSystemDirectory)
     {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::BeOS_SystemDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        rv = GetSpecialSystemDirectory(BeOS_SystemDirectory, getter_AddRefs(localFile)); 
     }
 #endif
 
@@ -1213,7 +1160,9 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
 
 	if (localFile && NS_SUCCEEDED(rv))
 		return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
-
+#ifdef DEBUG_dougt
+    printf("Failed to find directory for key: %s\n", prop);
+#endif
 	return rv;
 }
 

@@ -43,16 +43,17 @@
 #include "nsIExpatSink.h"
 #include "nsIContentSink.h"
 #include "nsParserMsgUtils.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsIURL.h"
 #include "nsIUnicharInputStream.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
 #include "prmem.h"
 #include "nsTextFormatter.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsCRT.h"
 
 static const char* kWhitespace = " \r\n\t"; // Optimized for typical cases
-static const char* kDTDDirectory = "res/dtd/";
+static const char kDTDDirectory[] = "res/dtd/";
 
 /***************************** EXPAT CALL BACKS *******************************/
 
@@ -267,14 +268,29 @@ IsLoadableDTD(const nsCatalogData* aCatalogData, nsCOMPtr<nsIURI>* aDTD)
       return PR_FALSE;
     }
   }
-  nsSpecialSystemDirectory dtdPath(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  dtdPath += PromiseFlatCString(nsDependentCString(kDTDDirectory) + fileName).get();
-  if (dtdPath.Exists()) {
+  
+  nsCOMPtr<nsIFile> dtdPath;
+  NS_GetSpecialDirectory(NS_OS_CURRENT_PROCESS_DIR, 
+                         getter_AddRefs(dtdPath));
+
+  if (!dtdPath)
+    return PR_FALSE;
+
+  nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(dtdPath);
+
+  nsCAutoString path;
+  path = NS_LITERAL_CSTRING(kDTDDirectory) + fileName;
+  lfile->AppendRelativeNativePath(path);
+
+  PRBool exists;
+  dtdPath->Exists(&exists);
+
+  if (exists) {
     // The DTD was found in the local DTD directory.
-    // Set aDTD to a file: url pointing to the local DTD
-    nsFileURL dtdFile(dtdPath);
+    // Set aDTD to a file: url pointing to the local DT
     nsCOMPtr<nsIURI> dtdURI;
-    NS_NewURI(getter_AddRefs(dtdURI), dtdFile.GetURLString());
+    NS_NewFileURI(getter_AddRefs(dtdURI), dtdPath); 
+
     if (dtdURI) {
       *aDTD = dtdURI;
       isLoadable = PR_TRUE;

@@ -43,8 +43,10 @@
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
-#include "nsFileSpec.h"
 #include "nsReadableUtils.h"
+#include "nsIInputStream.h"
+#include "nsILocalFile.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
@@ -118,8 +120,6 @@ nsScanner::nsScanner(const nsAString& anHTMLString, const nsString& aCharset, PR
   mSlidingBuffer->BeginReading(mCurrentPosition);
   mMarkPosition = mCurrentPosition;
   mIncremental=PR_FALSE;
-  mOwnsStream=PR_FALSE;
-  mInputStream=0;
   mUnicodeDecoder = 0;
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
@@ -149,10 +149,15 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
   mIncremental=PR_TRUE;
   mCountRemaining = 0;
   mTotalRead=0;
-  mOwnsStream=aCreateStream;
-  mInputStream=0;
+
   if(aCreateStream) {
-		mInputStream = new nsInputFileStream(nsFileSpec(aFilename));
+    nsCOMPtr<nsILocalFile> file;
+    nsCOMPtr<nsIInputStream> fileStream;
+    
+    NS_NewLocalFile(aFilename, PR_TRUE, getter_AddRefs(file));
+    if (file)
+      NS_NewLocalFileInputStream(getter_AddRefs(mInputStream), file);
+
   } //if
   mUnicodeDecoder = 0;
   mCharsetSource = kCharsetUninitialized;
@@ -168,7 +173,7 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
  *  @param   aFilename --
  *  @return  
  */
-nsScanner::nsScanner(const nsAString& aFilename,nsInputStream& aStream,const nsString& aCharset, PRInt32 aSource) :
+nsScanner::nsScanner(const nsAString& aFilename,nsIInputStream* aStream,const nsString& aCharset, PRInt32 aSource) :
     mFilename(aFilename)
 {  
   MOZ_COUNT_CTOR(nsScanner);
@@ -183,8 +188,7 @@ nsScanner::nsScanner(const nsAString& aFilename,nsInputStream& aStream,const nsS
   mIncremental=PR_FALSE;
   mCountRemaining = 0;
   mTotalRead=0;
-  mOwnsStream=PR_FALSE;
-  mInputStream=&aStream;
+  mInputStream=aStream;
   mUnicodeDecoder = 0;
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
@@ -254,11 +258,10 @@ nsScanner::~nsScanner() {
   MOZ_COUNT_DTOR(nsScanner);
 
   if(mInputStream) {
-    mInputStream->close();
-    if(mOwnsStream)
-      delete mInputStream;
+    mInputStream->Close();
+    mInputStream = 0;
   }
-  mInputStream=0;
+
   NS_IF_RELEASE(mUnicodeDecoder);
 }
 
@@ -424,14 +427,13 @@ nsresult nsScanner::FillBuffer(void) {
     result=kEOF;
   }
   else {
-    PRInt32 numread=0;
-    char* buf = new char[kBufsize+1];
+    PRUint32 numread=0;
+    char buf[kBufsize+1];
     buf[kBufsize]=0;
 
     if(mInputStream) {
-    	numread = mInputStream->read(buf, kBufsize);
+    	result = mInputStream->Read(buf, kBufsize, &numread);
       if (0 == numread) {
-        delete [] buf;
         return kEOF;
       }
     }
@@ -441,7 +443,6 @@ nsresult nsScanner::FillBuffer(void) {
       PRUnichar* unichars = ToNewUnicode(str);
       AppendToBuffer(unichars, unichars+numread, unichars+kBufsize+1);
     }
-    delete [] buf;
     mTotalRead+=numread;
   }
 

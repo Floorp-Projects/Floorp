@@ -44,8 +44,11 @@ REQUIRES	= xpcom \
 		  sidebar \
 		  plugin \
 		  necko \
+		  jsurl \
+		  uconv \
 		  $(NULL)
-IS_COMPONENT    = 1
+
+IS_COMPONENT=1
 MODULE_NAME	= DOM_components
 
 ifeq ($(OS_ARCH),WINNT)
@@ -64,6 +67,7 @@ CPPSRCS		= \
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)jsdombase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)jsurl_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
