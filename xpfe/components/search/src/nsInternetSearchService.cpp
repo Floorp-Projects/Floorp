@@ -346,10 +346,9 @@ searchModePrefCallback(const char *pref, void *aClosure)
 
 	if (searchDS->prefs)
 	{
-		PRInt32		searchMode=0;
-		searchDS->prefs->GetIntPref(pref, &searchMode);
+		searchDS->prefs->GetIntPref(pref, &searchDS->gBrowserSearchMode);
 #ifdef	DEBUG
-		printf("searchModePrefCallback: '%s' = %d\n", pref, searchMode);
+		printf("searchModePrefCallback: '%s' = %d\n", pref, searchDS->gBrowserSearchMode);
 #endif
 		searchDS->Assert(searchDS->kNC_LastSearchRoot, searchDS->kNC_LastSearchMode, searchDS->kTrueLiteral, PR_TRUE);
 	}
@@ -359,11 +358,12 @@ searchModePrefCallback(const char *pref, void *aClosure)
 static	nsIRDFService		*gRDFService = nsnull;
 static	nsIRDFContainerUtils	*gRDFC = nsnull;
 PRInt32				InternetSearchDataSource::gRefCnt = 0;
+PRInt32				InternetSearchDataSource::gBrowserSearchMode = 0;
 nsIRDFDataSource		*InternetSearchDataSource::mInner = nsnull;
 nsCOMPtr<nsISupportsArray>	InternetSearchDataSource::mUpdateArray;
 nsCOMPtr<nsIRDFDataSource>	InternetSearchDataSource::mLocalstore;
 nsCOMPtr<nsIRDFDataSource>	InternetSearchDataSource::categoryDataSource;
-PRBool				InternetSearchDataSource::mEngineListBuilt;
+PRBool				InternetSearchDataSource::gEngineListBuilt = PR_FALSE;
 nsCOMPtr<nsILoadGroup>		InternetSearchDataSource::mBackgroundLoadGroup;
 nsCOMPtr<nsILoadGroup>		InternetSearchDataSource::mLoadGroup;
 nsCOMPtr<nsIPref>		InternetSearchDataSource::prefs;
@@ -494,6 +494,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		if (NS_SUCCEEDED(rv) && (prefs))
 		{
 			prefs->RegisterCallback("browser.search.mode", searchModePrefCallback, this);
+			prefs->GetIntPref("browser.search.mode", &gBrowserSearchMode);
 		}
 	}
 }
@@ -933,7 +934,7 @@ InternetSearchDataSource::Init()
 		}
 	}
 
-	mEngineListBuilt = PR_FALSE;
+	gEngineListBuilt = PR_FALSE;
 
 	// Register as a profile change obsevrer
   nsCOMPtr<nsIObserverService> observerService = 
@@ -953,9 +954,9 @@ InternetSearchDataSource::DeferredInit()
 {
 	nsresult	rv = NS_OK;
 
-	if (mEngineListBuilt == PR_FALSE)
+	if (gEngineListBuilt == PR_FALSE)
 	{
-		mEngineListBuilt = PR_TRUE;
+		gEngineListBuilt = PR_TRUE;
 
 		// get available search engines
 		nsCOMPtr<nsIFile>			nativeDir;
@@ -1225,7 +1226,7 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 	{	
 		// defer search engine discovery until needed; small startup time improvement
 		if (((source == kNC_SearchEngineRoot) || isSearchURI(source)) && (property == kNC_Child)
-			&& (mEngineListBuilt == PR_FALSE))
+			&& (gEngineListBuilt == PR_FALSE))
 		{
 			DeferredInit();
 		}
@@ -2505,7 +2506,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	*resultURL = nsnull;
 
 	// if we haven't already, load in the engines
-	if (mEngineListBuilt == PR_FALSE)	DeferredInit();
+	if (gEngineListBuilt == PR_FALSE)	DeferredInit();
 
 	nsresult			rv;
 	nsCOMPtr<nsIRDFResource>	engine;
@@ -2650,7 +2651,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 	shortURL.Truncate(optionsOffset);
 
 	// if we haven't already, load in the engines
-	if (mEngineListBuilt == PR_FALSE)	DeferredInit();
+	if (gEngineListBuilt == PR_FALSE)	DeferredInit();
 
 	// look in available engines to see if any of them appear
 	// to match this url (minus the GET options)
@@ -5079,7 +5080,7 @@ InternetSearchDataSource::webSearchFinalize(nsIChannel* channel, nsIInternetSear
 	const PRUnichar	*uniBuf = nsnull;
 	if (NS_SUCCEEDED(rv = context->GetBufferConst(&uniBuf)) && (uniBuf))
 	{
-		if (mParent)
+		if (mParent && (gBrowserSearchMode>0))
 		{
 			// save HTML result page for this engine
 			nsCOMPtr<nsIRDFLiteral>	htmlLiteral;
@@ -5489,7 +5490,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 			
 			// set HTML response chunk
 			const PRUnichar	*htmlResponseUni = resultItem.get();
-			if (htmlResponseUni)
+			if (htmlResponseUni && (gBrowserSearchMode>0))
 			{
 				nsCOMPtr<nsIRDFLiteral>	htmlResponseLiteral;
 				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(htmlResponseUni, getter_AddRefs(htmlResponseLiteral))))
