@@ -124,8 +124,8 @@ sub Told {
                                 |  (?:you|u)
                                    (?:\s+are|\s+r|'re|r) \s+
                                    (?:an?\s+)?
-                                   (?:really\s+)?
-                                   (?:idiot|stupid|dumb|moron|moronic)
+                                   (?:really\s+)*
+                                   (?:idiot|stupid|dumb|moron|moronic|useless)
                                    (?:\s+bot)?
                                 |  i \s+ hate \s+ (?:you|u)
                                 |  bi+tch)
@@ -141,7 +141,7 @@ sub Told {
         if ($self->{'hitEnabled'}) {
             $self->PerformOnOther($event, 'hit', $1);
         }
-    } elsif ($message =~ /^\s*(?:die|get\s+a\s+life|kiss\s+my\s+ass)[!1.\s]*$/osi) {
+    } elsif ($message =~ /^\s*(?:useless|die|get\s+a\s+life|kiss\s+my\s+ass|you\s+stupid\s+piece\s+o[f']?\s+code)[!1.\s]*$/osi) {
         $self->Perform($event, 'unhappy');
     } elsif ($message =~ /^\s*sorry\b/osi) { # note that any trailing text is ignored
         $self->Perform($event, 'apology');
@@ -191,7 +191,7 @@ sub Heard {
         $self->Perform($event, 'thanks');
     } elsif (($message =~ /^\s*(?:good\s+bot)[!1.\s]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'happy');
-    } elsif (($message =~ /^\s*(?:bad\s+bot|foo[l\']?|idiot|dumb\s+bot|moron|moronic\s+bot)[!.\s]*?$/osi) and ($self->canAssumeThanks($event))) {
+    } elsif (($message =~ /^\s*(?:bad|foo[l\']?|idiot|dumb|useless|moron|moronic)(?:\s+bot)?[!.\s]*?$/osi) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'unhappy');
     } elsif (($message =~ /^\s*bad\s*$me[!.\s]*$/si) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'unhappy');
@@ -264,7 +264,7 @@ sub Felt {
         $self->Perform($event, 'yousuck');
     } elsif ($message =~ /^\s*(?:glares|stares)\s+at\s+$me[\s!1.]*$/si) {
         $self->Perform($event, 'yousuck');
-    } elsif ($message =~ /^\s*(?:hugs|kisses|loves)\s+$me[\s!1.]*$/si) {
+    } elsif ($message =~ /^\s*(?:hugs|cuddles|snuggles(?:\s+up\s*to|\s+with)?|kisses|loves)\s+$me[\s!1.]*$/si) {
         $self->Perform($event, 'vhappy');
     } elsif ($message =~ /^\s*(?:bites|spanks)\s+$me[\s.]*$/si) {
         $self->Perform($event, 'kinky');
