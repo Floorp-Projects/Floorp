@@ -176,7 +176,7 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
   mAbortInProcess = PR_FALSE;
   mLastErrorReported = NS_OK;
   mEditor = nsnull;
-  mMultipartRelatedAttachmentCount = 0;
+  mMultipartRelatedAttachmentCount = -1;
   mCompFields = nsnull;     /* Where to send the message once it's done */
   mSendMailAlso = PR_FALSE;
   mOutputFile = nsnull;
@@ -527,6 +527,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
                       // what headers to append/set to the main 
                       // message body.)
 
+  PRUint32 multipartRelatedCount = GetMultipartRelatedCount(); // The number of related part we will have to generate
+
   nsCOMPtr<nsIPrompt> promptObject; // only used if we have to show an alert here....
   GetDefaultPrompt(getter_AddRefs(promptObject));
 
@@ -789,16 +791,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     maincontainer = m_related_part;
     maincontainerISrelatedpart = PR_TRUE;
 
-    const char *relPartType = m_related_part->GetType();
-    if (relPartType && !strcmp(relPartType, MULTIPART_RELATED))
-      // outer shell is m/related,
-      // mainbody wants to be the HTML lump within
-      mainbody = m_related_part->GetChild(0);
-    else
-      // outer shell is text/html, 
-      // so mainbody wants to be the same lump
-      mainbody = maincontainer;
-
+    mainbody = m_related_part->GetChild(0);
     mainbody->SetMainPart(PR_TRUE);
   }
 
@@ -824,6 +817,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     m_plaintext->PickEncoding(mCompFields->GetCharacterSet(), this);
     const char *charset = mCompFields->GetCharacterSet();
     hdrs = mime_generate_attachment_headers(m_plaintext->m_type,
+                        nsnull,
                         m_plaintext->m_encoding,
                         m_plaintext->m_description,
                         m_plaintext->m_x_mac_type,
@@ -856,40 +850,13 @@ nsMsgComposeAndSend::GatherMimeAttachments()
       if (status < 0)
         goto FAIL;
 
-      // Only create multipart related if its really necessary...
-      if (mMultipartRelatedAttachmentCount > 0)
-      {
-        mpartcontainer = new nsMsgSendPart(this);
-        if (!mpartcontainer)
-          goto FAILMEM;
+      status = maincontainer->AddChild(plainpart);
+      if (status < 0)
+        goto FAIL;
 
-        status = mpartcontainer->SetType(MULTIPART_RELATED);
-        if (status < 0)
-          goto FAIL;
-
-        status = mpartcontainer->AddChild(htmlpart);
-        if (status < 0)
-          goto FAIL;
-
-        // Hang stuff off of the maincontainer...
-        status = maincontainer->AddChild(plainpart);
-        if (status < 0)
-          goto FAIL;
-
-        status = maincontainer->AddChild(mpartcontainer);
-        if (status < 0)
-          goto FAIL;
-      }
-      else    // Just a single HTML doc for the HTML mail
-      {
-        status = maincontainer->AddChild(plainpart);
-        if (status < 0)
-          goto FAIL;
-
-        status = maincontainer->AddChild(htmlpart);
-        if (status < 0)
-          goto FAIL;
-      }
+      status = maincontainer->AddChild(htmlpart);
+      if (status < 0)
+        goto FAIL;
 
       // Create the encoder for the plaintext part here,
       // because we aren't the main part (attachment1).
@@ -928,41 +895,32 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     }
   }
 
-  if (  (multipart_p && (!mCompFields->GetUseMultipartAlternative()))  ||
-        mCompFields->GetUseMultipartAlternative() && (m_attachment_count > mMultipartRelatedAttachmentCount) 
-        )
+  // check if we need to encapsulate the message in a multipart/mixed or multipart/digest
+  if (m_attachment_count > multipartRelatedCount) 
   {
     toppart = new nsMsgSendPart(this);
     if (!toppart)
       goto FAILMEM;
 
-    // This is JUST multpart related!
-    if ( (mMultipartRelatedAttachmentCount > 0) &&
-         (m_attachment_count == mMultipartRelatedAttachmentCount) )
-      status = toppart->SetType(MULTIPART_RELATED);
-    else
-      status = toppart->SetType(m_digest_p ? MULTIPART_DIGEST : MULTIPART_MIXED);
-
+    status = toppart->SetType(m_digest_p ? MULTIPART_DIGEST : MULTIPART_MIXED);
     if (status < 0)
       goto FAIL;
 
     status = toppart->AddChild(maincontainer);
     if (status < 0)
       goto FAIL;
+  }
+  else
+    toppart = maincontainer;
 
-    if (!m_crypto_closure && m_attachment_count > mMultipartRelatedAttachmentCount)
-    {
-      status = toppart->SetBuffer(MIME_MULTIPART_BLURB);
-    }
+  if (!m_crypto_closure && m_attachment_count > 0)
+  {
+    status = toppart->SetBuffer(MIME_MULTIPART_BLURB);
     if (status < 0)
       goto FAIL;
   }
-  else
-  {
-    toppart = maincontainer;
-  }
 
-  /* Write out the message headers.
+   /* Write out the message headers.
    */
   headers = mime_generate_headers (mCompFields, mCompFields->GetCharacterSet(),
                                    m_deliver_mode, promptObject, &status);
@@ -1028,6 +986,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   {
     const char *charset = mCompFields->GetCharacterSet();
     hdrs = mime_generate_attachment_headers (m_attachment1_type,
+                        nsnull,
                          m_attachment1_encoding,
                          0, 0, 0, 0, 0,
                          m_digest_p,
@@ -1092,19 +1051,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
         // Now, we need to add this part to the m_related_part member so the 
         // message will be generated correctly.
         if (m_attachments[i].mMHTMLPart)
-        {
-          if (mCompFields->GetUseMultipartAlternative()) 
-          { 
-            PreProcessPart(&(m_attachments[i]), mpartcontainer);
-          }
-          else
-          {
-            if (m_attachment_count > mMultipartRelatedAttachmentCount)
-              PreProcessPart(&(m_attachments[i]), m_related_part);
-            else
-              PreProcessPart(&(m_attachments[i]), toppart);
-          }
-        }
+          PreProcessPart(&(m_attachments[i]), m_related_part);
       }
     }
 
@@ -1245,7 +1192,9 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
     }
   else
     ma->mURL->GetSpec(turl);
-  hdrs = mime_generate_attachment_headers (ma->m_type, ma->m_encoding,
+  hdrs = mime_generate_attachment_headers (ma->m_type,
+                                           ma->m_type_param,
+                                           ma->m_encoding,
                                            ma->m_description,
                                            ma->m_x_mac_type,
                                            ma->m_x_mac_creator,
@@ -1399,23 +1348,241 @@ mime_encoder_output_fn(const char *buf, PRInt32 size, void *closure)
   nsMsgComposeAndSend *state = (nsMsgComposeAndSend *) closure;
   return mime_write_message_body (state, (char *) buf, size);
 }
+ 
+nsresult
+nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData *attachment, PRBool *acceptObject)
+{
+  NS_ENSURE_ARG_POINTER(node);
+  NS_ENSURE_ARG_POINTER(attachment);
+  NS_ENSURE_ARG_POINTER(acceptObject);
+
+  nsresult rv;
+
+  // Reset this structure to null!
+  memset(attachment, 0, sizeof(nsMsgAttachmentData));
+  *acceptObject = PR_FALSE;
+
+  // Check if the object has an moz-do-not-send attribute set. If it's the case,
+  // we must ignore it
+
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(node);
+  if (domElement)
+  {
+    nsAutoString attributeValue;
+    if (NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("moz-do-not-send"), attributeValue)))
+      if (attributeValue.Equals(NS_LITERAL_STRING("true"), nsCaseInsensitiveStringComparator()))
+        return NS_OK;
+  }
+    
+  // Now, we know the types of objects this node can be, so we will do
+  // our query interface here and see what we come up with 
+  nsCOMPtr<nsIDOMHTMLBodyElement>     body = (do_QueryInterface(node));
+  nsCOMPtr<nsIDOMHTMLImageElement>    image = (do_QueryInterface(node));
+  nsCOMPtr<nsIDOMHTMLLinkElement>     link = (do_QueryInterface(node));
+  nsCOMPtr<nsIDOMHTMLAnchorElement>   anchor = (do_QueryInterface(node));
+    
+  // First, try to see if the body as a background image
+  if (body)
+  {
+    nsAutoString    tUrl;
+    if (NS_SUCCEEDED(body->GetBackground(tUrl)))
+    {
+      nsCAutoString turlC;
+      turlC.AssignWithConversion(tUrl);
+      if (NS_SUCCEEDED(nsMsgNewURL(&attachment->url, turlC.get())))      
+        NS_IF_ADDREF(attachment->url);
+      else
+        return NS_OK;
+    }
+  }
+  else if (image)        // Is this an image?
+  {
+    nsString    tUrl;
+    nsString    tName;
+    nsString    tDesc;
+    
+    // Create the URI
+    if (NS_FAILED(image->GetSrc(tUrl)))
+      return NS_ERROR_FAILURE;
+    nsCAutoString turlC;
+    turlC.AssignWithConversion(tUrl);
+    if (NS_FAILED(nsMsgNewURL(&attachment->url, turlC.get())))
+    {
+      // Well, the first time failed...which means we probably didn't get
+      // the full path name...
+      //
+      nsIDOMDocument    *ownerDocument = nsnull;
+      node->GetOwnerDocument(&ownerDocument);
+      if (ownerDocument)
+      {
+        nsIDocument     *doc = nsnull;
+        if (NS_FAILED(ownerDocument->QueryInterface(NS_GET_IID(nsIDocument),(void**)&doc)) || !doc)
+          return NS_ERROR_OUT_OF_MEMORY;
+        
+        nsCAutoString spec;
+        nsCOMPtr<nsIURI> uri;
+        doc->GetDocumentURL(getter_AddRefs(uri));
+        
+        if (!uri)
+          return NS_ERROR_OUT_OF_MEMORY;
+        
+        uri->GetSpec(spec);
+        
+        // Ok, now get the path to the root doc and tack on the name we
+        // got from the GetSrc() call....
+        NS_ConvertUTF8toUCS2 workURL(spec);
+        
+        PRInt32 loc = workURL.RFind("/");
+        if (loc >= 0)
+          workURL.SetLength(loc+1);
+        workURL.Append(tUrl);
+        NS_ConvertUCS2toUTF8 workurlC(workURL);
+        if (NS_FAILED(nsMsgNewURL(&attachment->url, workurlC.get())))
+        {
+          // rhp - just try to continue and send it without this image.
+          return NS_OK;
+        }
+      }
+    }
+    
+    NS_IF_ADDREF(attachment->url);
+    
+    rv = image->GetName(tName);
+    NS_ENSURE_SUCCESS(rv, rv);
+    attachment->real_name = ToNewCString(tName);
+    
+    image->GetLongDesc(tDesc);
+    NS_ENSURE_SUCCESS(rv, rv);
+    attachment->description = ToNewCString(tDesc);
+    
+  }
+  else if (link)        // Is this a link?
+  {
+    nsString    tUrl;
+    
+    // Create the URI
+    rv = link->GetHref(tUrl);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCAutoString turlC;
+    turlC.AssignWithConversion(tUrl);
+    rv = nsMsgNewURL(&attachment->url, turlC.get());
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    NS_IF_ADDREF(attachment->url);
+  }
+  else if (anchor)
+  {
+    nsString    tUrl;
+    nsString    tName;
+    
+    // Create the URI
+    rv = anchor->GetHref(tUrl);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCAutoString turlC;
+    turlC.AssignWithConversion(tUrl);
+    rv = nsMsgNewURL(&attachment->url, turlC.get());
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    NS_IF_ADDREF(attachment->url);
+    
+    rv = anchor->GetName(tName);
+    NS_ENSURE_SUCCESS(rv, rv);
+    attachment->real_name = ToNewCString(tName);
+  }
+  else
+  {
+    // If we get here, we got something we didn't expect!
+    // Just try to continue and send it without this thing.
+    return NS_OK;
+  }
+    
+  //
+  // Before going further, check if we are dealing with a local file and
+  // if it's the case be sure the file exist!
+  PRBool schemeIsFile = PR_FALSE;
+  rv = attachment->url->SchemeIs("file", &schemeIsFile);
+  if (NS_SUCCEEDED(rv) && schemeIsFile)
+  {
+    nsCOMPtr<nsIFileURL> fileUrl (do_QueryInterface(attachment->url));
+    if (fileUrl)
+    {
+      PRBool isAValidFile = PR_FALSE;
+
+      nsCOMPtr<nsIFile> aFile;
+      rv = fileUrl->GetFile(getter_AddRefs(aFile));
+      if (NS_SUCCEEDED(rv) && aFile)
+      {
+        nsCOMPtr<nsILocalFile> aLocalFile (do_QueryInterface(aFile));
+        if (aLocalFile)
+        {
+          rv = aLocalFile->IsFile(&isAValidFile);
+          if (NS_FAILED(rv))
+            isAValidFile = PR_FALSE;
+        }
+      }
+      
+      if (! isAValidFile)
+        return NS_OK;
+    }  
+  }
+  
+  *acceptObject = PR_TRUE;
+  return NS_OK;
+}
+
 
 PRUint32
-nsMsgComposeAndSend::GetMultipartRelatedCount(void)
+nsMsgComposeAndSend::GetMultipartRelatedCount(PRBool forceToBeCalculated /*=PR_FALSE*/)
 {
   nsresult                  rv = NS_OK;
-  nsCOMPtr<nsISupportsArray> aNodeList;
   PRUint32                  count;
 
+  if (mMultipartRelatedAttachmentCount != -1 && !forceToBeCalculated)
+    return (PRUint32)mMultipartRelatedAttachmentCount;
+
+  //First time here, let's calculate the correct number of related part we need to generate
+  mMultipartRelatedAttachmentCount = 0;
   if (!mEditor)
     return 0;
 
-  rv = mEditor->GetEmbeddedObjects(getter_AddRefs(aNodeList));
-  if ((NS_FAILED(rv) || (!aNodeList)))
+  rv = mEditor->GetEmbeddedObjects(getter_AddRefs(mEmbeddedObjectList));
+  if ((NS_FAILED(rv) || (!mEmbeddedObjectList)))
     return 0;
 
-  if (NS_SUCCEEDED(aNodeList->Count(&count)))
+  if (NS_SUCCEEDED(mEmbeddedObjectList->Count(&count)))
+  {
+    if (count > 0)
+    {
+      // Let parse the list to count the number of valid objects. BTW, we can remove the others from the list
+      nsMsgAttachmentData attachment;
+
+      PRInt32 i;
+      nsCOMPtr<nsIDOMNode> node;
+      nsCOMPtr <nsISupports> isupp;
+
+      for (i = count - 1, count = 0; i >= 0; i --)
+      {
+        // Reset this structure to null!
+        memset(&attachment, 0, sizeof(nsMsgAttachmentData));
+        
+        // now we need to get the element in the array and do the magic
+        // to process this element.
+        //
+        mEmbeddedObjectList->QueryElementAt(i, NS_GET_IID(nsIDOMNode), getter_AddRefs(node));
+        if (!node)
+          continue;
+    
+        PRBool acceptObject = PR_FALSE;
+        rv = GetEmbeddedObjectInfo(node, &attachment, &acceptObject);
+        if (NS_SUCCEEDED(rv) && acceptObject)
+          count ++;
+        else
+          mEmbeddedObjectList->DeleteElementAt(i);
+      }
+    }
+    mMultipartRelatedAttachmentCount = (PRInt32)count;
     return count;
+  }
   else
     return 0;
 }
@@ -1670,27 +1837,18 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
 {
   PRUint32                  multipartCount = GetMultipartRelatedCount();
   nsresult                  rv = NS_OK;
-  nsCOMPtr<nsISupportsArray> aNodeList;
   PRUint32                  i; 
   PRInt32                   j = -1;
+  PRUint32                  k;
+  PRInt32                   duplicateOf;
   domSaveStruct             *domSaveArray = nsnull;
   
   // Sanity check to see if we should be here or not...if not, just return
   if (!mEditor)
     return NS_OK;
   
-  // First, check to see if the multipartCount still matches
-  // what we got before. It always should, BUT If it doesn't, 
-  // we will have memory problems and we should just return 
-  // with an error.
-  if ((multipartCount != mMultipartRelatedAttachmentCount) || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_17)) {
+   if (!mEmbeddedObjectList) 
     return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
-  }
-  
-  rv = mEditor->GetEmbeddedObjects(getter_AddRefs(aNodeList));
-  if ((NS_FAILED(rv) || (!aNodeList))) {
-    return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
-  }
   
   nsMsgAttachmentData   attachment;
   PRInt32               locCount = -1;
@@ -1703,6 +1861,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     memset(domSaveArray, 0, sizeof(domSaveStruct) * multipartCount);
   }
 
+  nsCOMPtr<nsIDOMNode> node;
   for (i = mPreloadedAttachmentCount; i < (mPreloadedAttachmentCount + multipartCount); i++)
   {
     // Reset this structure to null!
@@ -1719,270 +1878,118 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     // Ok, now we need to get the element in the array and do the magic
     // to process this element.
     //
-    nsCOMPtr<nsIDOMNode>   node;
     
-    {
-      nsCOMPtr <nsISupports> isupp = getter_AddRefs(aNodeList->ElementAt(locCount));
-      
-      if (!isupp) {
-        return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
-      }
-      
-      node = do_QueryInterface(isupp);
-      if (!node) {
-        return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
-      }
-    }
+    mEmbeddedObjectList->QueryElementAt(locCount, NS_GET_IID(nsIDOMNode), getter_AddRefs(node));
+    if (!node)
+      return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
     
+    PRBool acceptObject = PR_FALSE;
+    rv = GetEmbeddedObjectInfo(node, &attachment, &acceptObject);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_MIME_MPART_ATTACHMENT_ERROR);
+
+    if (!acceptObject)
+        continue;
+   
     j++;
     domSaveArray[j].node = node;
     
+    // check if we have alreay attached this object, don't need to attach it twice
+    duplicateOf = -1;
+    for (k = mPreloadedAttachmentCount; k < i; k++)
+    {
+      PRBool isEqual = PR_FALSE;
+      (void)attachment.url->Equals(m_attachments[k].mURL, &isEqual);
+      if (isEqual)
+      {
+        duplicateOf = k;
+        break;
+      }
+    }
 
-    // Check if the object has an moz-do-not-send attribute set. If it's the case,
-    // we must ignore it and just continue with the next one
+    if (duplicateOf == -1)
     {
-      nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(node);
-      if (domElement)
+      //
+      // Now we have to get all of the interesting information from
+      // the nsIDOMNode we have in hand...
+      m_attachments[i].mURL = attachment.url;
+  
+      PR_FREEIF(m_attachments[i].m_override_type);
+      m_attachments[i].m_override_type = PL_strdup (attachment.real_type);
+      PR_FREEIF(m_attachments[i].m_override_encoding);
+      m_attachments[i].m_override_encoding = PL_strdup (attachment.real_encoding);
+      PR_FREEIF(m_attachments[i].m_desired_type);
+      m_attachments[i].m_desired_type = PL_strdup (attachment.desired_type);
+      PR_FREEIF(m_attachments[i].m_description);
+      m_attachments[i].m_description = PL_strdup (attachment.description);
+      PR_FREEIF(m_attachments[i].m_real_name);
+      m_attachments[i].m_real_name = PL_strdup (attachment.real_name);
+      PR_FREEIF(m_attachments[i].m_x_mac_type);
+      m_attachments[i].m_x_mac_type = PL_strdup (attachment.x_mac_type);
+      PR_FREEIF(m_attachments[i].m_x_mac_creator);
+      m_attachments[i].m_x_mac_creator = PL_strdup (attachment.x_mac_creator);
+  
+      PR_FREEIF(m_attachments[i].m_charset);
+      m_attachments[i].m_charset = PL_strdup (mCompFields->GetCharacterSet());
+      PR_FREEIF(m_attachments[i].m_encoding);
+      m_attachments[i].m_encoding = PL_strdup ("7bit");
+  
+      if (m_attachments[i].mURL)
+        msg_pick_real_name(&m_attachments[i], nsnull, mCompFields->GetCharacterSet());
+  
+      //
+      // Next, generate a content id for use with this part
+      //    
+      nsXPIDLCString email;
+      mUserIdentity->GetEmail(getter_Copies(email));
+      m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, email.get());  
+  
+      if (!m_attachments[i].m_content_id)
+        return NS_ERROR_OUT_OF_MEMORY;
+  
+      //
+      // Start counting the attachments which are going to come from mail folders
+      // and from NNTP servers.
+      //
+      if (m_attachments[i].mURL)
       {
-        nsAutoString attributeValue;
-        if (NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("moz-do-not-send"), attributeValue)))
-        {
-          if (attributeValue.Equals(NS_LITERAL_STRING("true"),
-                                    nsCaseInsensitiveStringComparator()))
-            continue;
-        }
+        nsIURI *uri = m_attachments[i].mURL;
+        PRBool match = PR_FALSE;
+        if ((NS_SUCCEEDED(uri->SchemeIs("mailbox", &match)) && match) ||
+           (NS_SUCCEEDED(uri->SchemeIs("imap", &match)) && match))
+          (*aMailboxCount)++;
+        else if ((NS_SUCCEEDED(uri->SchemeIs("news", &match)) && match) ||
+                (NS_SUCCEEDED(uri->SchemeIs("snews", &match)) && match))
+          (*aNewsCount)++;
       }
-    }
-    
-    // Now, we know the types of objects this node can be, so we will do
-    // our query interface here and see what we come up with 
-    nsCOMPtr<nsIDOMHTMLBodyElement>     body = (do_QueryInterface(node));
-    nsCOMPtr<nsIDOMHTMLImageElement>    image = (do_QueryInterface(node));
-    nsCOMPtr<nsIDOMHTMLLinkElement>     link = (do_QueryInterface(node));
-    nsCOMPtr<nsIDOMHTMLAnchorElement>   anchor = (do_QueryInterface(node));
-    
-    // First, try to see if the body as a background image
-    if (body)
-    {
-      nsAutoString    tUrl;
-      if (NS_SUCCEEDED(body->GetBackground(tUrl)))
-      {
-        nsCAutoString turlC;
-        turlC.AssignWithConversion(tUrl);
-        if (NS_SUCCEEDED(nsMsgNewURL(&attachment.url, turlC.get())))      
-          NS_IF_ADDREF(attachment.url);
-        else
-          continue;
-      }
-    }
-    else if (image)        // Is this an image?
-    {
-      nsString    tUrl;
-      nsString    tName;
-      nsString    tDesc;
-      
-      // Create the URI
-      if (NS_FAILED(image->GetSrc(tUrl)))
-        return NS_ERROR_FAILURE;
-      nsCAutoString turlC;
-      turlC.AssignWithConversion(tUrl);
-      if (NS_FAILED(nsMsgNewURL(&attachment.url, turlC.get())))
-      {
-        // Well, the first time failed...which means we probably didn't get
-        // the full path name...
-        //
-        nsIDOMDocument    *ownerDocument = nsnull;
-        node->GetOwnerDocument(&ownerDocument);
-        if (ownerDocument)
-        {
-          nsIDocument     *doc = nsnull;
-          if (NS_FAILED(ownerDocument->QueryInterface(NS_GET_IID(nsIDocument),(void**)&doc)) || !doc)
-          {
-            return NS_ERROR_OUT_OF_MEMORY;
-          }
-          
-          nsCAutoString spec;
-          nsCOMPtr<nsIURI> uri;
-          doc->GetDocumentURL(getter_AddRefs(uri));
-          
-          if (!uri)
-            return NS_ERROR_OUT_OF_MEMORY;
-          
-          uri->GetSpec(spec);
-          
-          // Ok, now get the path to the root doc and tack on the name we
-          // got from the GetSrc() call....
-          NS_ConvertUTF8toUCS2 workURL(spec);
-          
-          PRInt32 loc = workURL.RFind("/");
-          if (loc >= 0)
-            workURL.SetLength(loc+1);
-          workURL.Append(tUrl);
-          NS_ConvertUCS2toUTF8 workurlC(workURL);
-          if (NS_FAILED(nsMsgNewURL(&attachment.url, workurlC.get())))
-          {
-            // rhp - just try to continue and send it without this image.
-            continue;
-          }
-        }
-      }
-      
-      NS_IF_ADDREF(attachment.url);
-      
-      if (NS_FAILED(image->GetName(tName)))
-        return NS_ERROR_OUT_OF_MEMORY;
-      attachment.real_name = ToNewCString(tName);
-      
-      if (NS_FAILED(image->GetLongDesc(tDesc)))
-        return NS_ERROR_OUT_OF_MEMORY;
-      attachment.description = ToNewCString(tDesc);
-      
-    }
-    else if (link)        // Is this a link?
-    {
-      nsString    tUrl;
-      
-      // Create the URI
-      if (NS_FAILED(link->GetHref(tUrl)))
-        return NS_ERROR_FAILURE;
-      nsCAutoString turlC;
-      turlC.AssignWithConversion(tUrl);
-      if (NS_FAILED(nsMsgNewURL(&attachment.url, turlC.get())))
-        return NS_ERROR_OUT_OF_MEMORY;
-      
-      NS_IF_ADDREF(attachment.url);
-    }
-    else if (anchor)
-    {
-      nsString    tUrl;
-      nsString    tName;
-      
-      // Create the URI
-      if (NS_FAILED(anchor->GetHref(tUrl)))
-        return NS_ERROR_FAILURE;
-      nsCAutoString turlC;
-      turlC.AssignWithConversion(tUrl);
-      if (NS_FAILED(nsMsgNewURL(&attachment.url, turlC.get())))
-        return NS_ERROR_OUT_OF_MEMORY;
-      
-      NS_IF_ADDREF(attachment.url);
-      
-      if (NS_FAILED(anchor->GetName(tName)))
-        return NS_ERROR_OUT_OF_MEMORY;
-      attachment.real_name = ToNewCString(tName);
-    }
-    else
-    {
-      // If we get here, we got something we didn't expect!
-      // Just try to continue and send it without this thing.
-      continue;
-    }
-    
-    //
-    // Before going further, check if we are dealing with a local file and
-    // if it's the case be sure the file exist!
-    {
-      nsCOMPtr<nsIFileURL> fileUrl (do_QueryInterface(attachment.url));
-      if (fileUrl)
-      {
-        PRBool isAValidFile = PR_FALSE;
-
-        nsCOMPtr<nsIFile> aFile;
-        rv = fileUrl->GetFile(getter_AddRefs(aFile));
-        if (NS_SUCCEEDED(rv) && aFile)
-        {
-          nsCOMPtr<nsILocalFile> aLocalFile (do_QueryInterface(aFile));
-          if (aLocalFile)
-          {
-            rv = aLocalFile->IsFile(&isAValidFile);
-            if (NS_FAILED(rv))
-              isAValidFile = PR_FALSE;
-          }
-        }
-        
-        if (! isAValidFile)
-          continue;
-      }  
-    }
-    
-    // 
-    // Now we have to get all of the interesting information from
-    // the nsIDOMNode we have in hand...
-    
-    m_attachments[i].mURL = attachment.url;
-    
-    PR_FREEIF(m_attachments[i].m_override_type);
-    m_attachments[i].m_override_type = PL_strdup (attachment.real_type);
-    PR_FREEIF(m_attachments[i].m_override_encoding);
-    m_attachments[i].m_override_encoding = PL_strdup (attachment.real_encoding);
-    PR_FREEIF(m_attachments[i].m_desired_type);
-    m_attachments[i].m_desired_type = PL_strdup (attachment.desired_type);
-    PR_FREEIF(m_attachments[i].m_description);
-    m_attachments[i].m_description = PL_strdup (attachment.description);
-    PR_FREEIF(m_attachments[i].m_real_name);
-    m_attachments[i].m_real_name = PL_strdup (attachment.real_name);
-    PR_FREEIF(m_attachments[i].m_x_mac_type);
-    m_attachments[i].m_x_mac_type = PL_strdup (attachment.x_mac_type);
-    PR_FREEIF(m_attachments[i].m_x_mac_creator);
-    m_attachments[i].m_x_mac_creator = PL_strdup (attachment.x_mac_creator);
-    
-    PR_FREEIF(m_attachments[i].m_charset);
-    m_attachments[i].m_charset = PL_strdup (mCompFields->GetCharacterSet());
-    PR_FREEIF(m_attachments[i].m_encoding);
-    m_attachments[i].m_encoding = PL_strdup ("7bit");
-    
-    if (m_attachments[i].mURL)
-      msg_pick_real_name(&m_attachments[i], nsnull, mCompFields->GetCharacterSet());
-    
-    //
-    // Next, generate a content id for use with this part
-    //    
-    nsXPIDLCString email;
-    mUserIdentity->GetEmail(getter_Copies(email));
-    m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, email.get());  
-    
-    if (!m_attachments[i].m_content_id)
-      return NS_ERROR_OUT_OF_MEMORY;
-    
-    //
-    // Start counting the attachments which are going to come from mail folders
-    // and from NNTP servers.
-    //
-    if (m_attachments[i].mURL)
-    {
-      nsIURI *uri = m_attachments[i].mURL;
-      PRBool match = PR_FALSE;
-      if ((NS_SUCCEEDED(uri->SchemeIs("mailbox", &match)) && match) ||
-         (NS_SUCCEEDED(uri->SchemeIs("imap", &match)) && match))
-        (*aMailboxCount)++;
-      else if ((NS_SUCCEEDED(uri->SchemeIs("news", &match)) && match) ||
-              (NS_SUCCEEDED(uri->SchemeIs("snews", &match)) && match))
-        (*aNewsCount)++;
     }
     
     // Ok, cleanup the temp structure...
-    PR_FREEIF(attachment.real_name);
-    PR_FREEIF(attachment.description);
-    PR_FREEIF(attachment.real_type);
-    PR_FREEIF(attachment.real_encoding);
-    PR_FREEIF(attachment.desired_type);
-    PR_FREEIF(attachment.x_mac_type);
-    PR_FREEIF(attachment.x_mac_creator); 
+    PR_Free(attachment.real_name);
+    PR_Free(attachment.description);
+    PR_Free(attachment.real_type);
+    PR_Free(attachment.real_encoding);
+    PR_Free(attachment.desired_type);
+    PR_Free(attachment.x_mac_type);
+    PR_Free(attachment.x_mac_creator); 
     
     //
     // Ok, while we are here, we should whack the DOM with the generated 
     // Content-ID for this object. This will be necessary for generating
     // the HTML we need.
     //
-    nsString      domURL;
-    if (m_attachments[i].m_content_id)  
+    nsString domURL;
+    if (m_attachments[duplicateOf == -1 ? i : duplicateOf].m_content_id)  
     {
       nsString   newSpec(NS_LITERAL_STRING("cid:"));
+      newSpec.AppendWithConversion(m_attachments[duplicateOf == -1 ? i : duplicateOf].m_content_id);
 
-        // STRING USE WARNING: this is probably not needed.  Strings are created empty by default.
-      domURL.SetLength(0);
+      // Now, we know the types of objects this node can be, so we will do
+      // our query interface here and see what we come up with 
+      nsCOMPtr<nsIDOMHTMLBodyElement>     body = (do_QueryInterface(domSaveArray[j].node));
+      nsCOMPtr<nsIDOMHTMLImageElement>    image = (do_QueryInterface(domSaveArray[j].node));
+      nsCOMPtr<nsIDOMHTMLLinkElement>     link = (do_QueryInterface(domSaveArray[j].node));
+      nsCOMPtr<nsIDOMHTMLAnchorElement>   anchor = (do_QueryInterface(domSaveArray[j].node));
 
-      newSpec.AppendWithConversion(m_attachments[i].m_content_id);
       if (anchor)
       {
         anchor->GetHref(domURL);
@@ -2056,30 +2063,20 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     return NS_ERROR_OUT_OF_MEMORY;  
 
   m_related_part->SetMimeDeliveryState(this);
-
-  if (m_attachment_count == mMultipartRelatedAttachmentCount)
-  {
-    // Set the body contents...
-    m_related_part->SetBuffer(m_attachment1_body);
-    m_related_part->SetType(m_attachment1_type);
-  }
-  else    // We have a multipart related email with attachments!
-  {
-    m_related_part->SetType(MULTIPART_RELATED);
+  m_related_part->SetType(MULTIPART_RELATED);
     
-    // We are now going to use the m_related_part as a way to store the 
-    // MHTML message for this email.
-    //
-    m_related_body_part = new nsMsgSendPart(this);
-    if (!m_related_body_part)
-      return NS_ERROR_OUT_OF_MEMORY;
-    
-    // Set the body contents...
-    m_related_body_part->SetBuffer(m_attachment1_body);
-    m_related_body_part->SetType(m_attachment1_type);
-    
-    m_related_part->AddChild(m_related_body_part);
-  }
+  // We are now going to use the m_related_part as a way to store the 
+  // MHTML message for this email.
+  //
+  m_related_body_part = new nsMsgSendPart(this);
+  if (!m_related_body_part)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  // Set the body contents...
+  m_related_body_part->SetBuffer(m_attachment1_body);
+  m_related_body_part->SetType(m_attachment1_type);
+  
+  m_related_part->AddChild(m_related_body_part);
 
   return rv;
 }
@@ -2235,6 +2232,8 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
             }
           }
         }
+        else
+          element->GetContentTypeParam(&m_attachments[newLoc].m_type_param);
 
 #ifdef XP_MAC
         //We always need to snarf the file to figure out how to send it, maybe we need to use apple double...
@@ -2268,10 +2267,10 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
           }
         }
 
-          PR_FREEIF(m_attachments[newLoc].m_x_mac_type);
-          element->GetMacType(&m_attachments[newLoc].m_x_mac_type);
-          PR_FREEIF(m_attachments[newLoc].m_x_mac_creator);
-          element->GetMacCreator(&m_attachments[newLoc].m_x_mac_creator);
+        PR_FREEIF(m_attachments[newLoc].m_x_mac_type);
+        element->GetMacType(&m_attachments[newLoc].m_x_mac_type);
+        PR_FREEIF(m_attachments[newLoc].m_x_mac_creator);
+        element->GetMacCreator(&m_attachments[newLoc].m_x_mac_creator);
 
         ++newLoc;
       }
@@ -2395,10 +2394,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
   // Count the attachments we have to go retrieve! Keep in mind, that these
   // will be APPENDED to the current list of URL's that we have gathered if
   // this is a multpart/related send operation
-  if (mEditor)
-    mRemoteAttachmentCount = mMultipartRelatedAttachmentCount = GetMultipartRelatedCount();
-  else
-    mRemoteAttachmentCount = mMultipartRelatedAttachmentCount = 0;  // The constructor took care of this, but just to be sure
+  mRemoteAttachmentCount = GetMultipartRelatedCount();
 
   // For now, manually add the remote attachments in the comp field!
   mRemoteAttachmentCount += mCompFieldRemoteAttachments;
@@ -2517,9 +2513,10 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 
   // First, handle the multipart related attachments if any...
   //
-  PRInt32     mailbox_count = 0, news_count = 0;
+  PRInt32 mailbox_count = 0, news_count = 0;
+  PRInt32 multipartRelatedCount = GetMultipartRelatedCount();
 
-  if ((mEditor) && (mMultipartRelatedAttachmentCount > 0))
+  if (multipartRelatedCount > 0)
   {
     nsresult rv = ProcessMultipartRelated(&mailbox_count, &news_count);
     if (NS_FAILED(rv))
@@ -2532,7 +2529,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
   //
   // Now add the comp field remote attachments...
   //
-  if (NS_FAILED( AddCompFieldRemoteAttachments( (mPreloadedAttachmentCount + mMultipartRelatedAttachmentCount), 
+  if (NS_FAILED( AddCompFieldRemoteAttachments( (mPreloadedAttachmentCount + multipartRelatedCount), 
                                                  &mailbox_count, &news_count) ))
     return NS_ERROR_INVALID_ARG;
 
@@ -2544,7 +2541,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
   {
     PRInt32     locCount = -1;
 
-    for (i = (mPreloadedAttachmentCount + mMultipartRelatedAttachmentCount + mCompFieldRemoteAttachments); i < m_attachment_count; i++) 
+    for (i = (mPreloadedAttachmentCount + GetMultipartRelatedCount() + mCompFieldRemoteAttachments); i < m_attachment_count; i++) 
     {
       locCount++;
       m_attachments[i].mDeleteFile = PR_TRUE;
@@ -2953,6 +2950,9 @@ nsMsgComposeAndSend::Init(
   //Reset last error
   mLastErrorReported = NS_OK;
   
+  //Let make sure we retreive the correct number of related parts. It may have changed since last time
+  GetMultipartRelatedCount(PR_TRUE);
+
   nsXPIDLString msg;
   if (!mComposeBundle)
     mComposeBundle = do_GetService(NS_MSG_COMPOSESTRINGSERVICE_CONTRACTID);

@@ -275,7 +275,9 @@ public:
 
   // Deal with multipart related data
   nsresult    ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aNewsCount); 
-  PRUint32    GetMultipartRelatedCount(void);
+  nsresult    GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData *attachment, PRBool *acceptObject);
+  PRUint32    GetMultipartRelatedCount(PRBool forceToBeCalculated = PR_FALSE);
+  nsCOMPtr<nsISupportsArray> mEmbeddedObjectList; // it's initialized when calling GetMultipartRelatedCount
 
   // Body processing
   nsresult    SnarfAndCopyBody(const char  *attachment1_body,
@@ -359,7 +361,7 @@ public:
 
   PRUint32                mPreloadedAttachmentCount;
   PRUint32                mRemoteAttachmentCount;
-  PRUint32                mMultipartRelatedAttachmentCount; // the number of mpart related attachments
+  PRInt32                 mMultipartRelatedAttachmentCount; // the number of mpart related attachments, -1 means it has not been yet initialized
 
   PRUint32                mCompFieldLocalAttachments;     // the number of file:// attachments in the comp fields
   PRUint32                mCompFieldRemoteAttachments;    // the number of remote attachments in the comp fields
