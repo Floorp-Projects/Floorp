@@ -35,7 +35,7 @@ tab {
     padding: 0px 3px;
 }
 
-titledbutton#MoreFewerButton {
+titledbutton#MoreFewerButton[more="0"] {
   list-style-image: url(chrome://global/skin/scroll-down.gif)
 }
 titledbutton#MoreFewerButton[more="1"] {

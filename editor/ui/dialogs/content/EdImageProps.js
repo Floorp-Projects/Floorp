@@ -219,7 +219,7 @@ function onMoreFewer()
 // This has too many bugs to use now (10/22/99)
     dialog.MoreRow.style.visibility     = "collapse";
 //    dialog.MoreRow.setAttribute("style","display: none");
-    dialog.MoreFewerButton.removeAttribute("more");
+    dialog.MoreFewerButton.setAttribute("more","0");
   }
   else
   {

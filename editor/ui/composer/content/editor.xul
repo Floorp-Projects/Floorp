@@ -56,6 +56,7 @@
   
   <!-- broadcaster nodes are appended here from the overlays -->
   <broadcasterset id="broadcasterset">
+    <broadcaster id="Editor:Throbber" busy="false"/>
 	</broadcasterset>
 	
 	<!-- keys are appended from the overlay -->
@@ -135,25 +136,25 @@
       <titledbutton id="openButton"/>
       <titledbutton id="saveButton"/>
       
-      <!-- html:div class="separator" align="vertical" /-->
-
       <titledbutton id="printButton"/>
       <titledbutton id="findButton"/>
       <titledbutton id="spellingButton"/>
-
-      <html:div class="separator" align="vertical" />
 
       <titledbutton id="imageButton"/>
       <titledbutton id="hlineButton"/>
       <titledbutton id="tableButton"/>
 
-      <!-- html:div class="separator" align="vertical" / -->
-
       <titledbutton id="linkButton"/>
       <titledbutton id="namedAnchorButton"/>
 
-      <!-- html:div class="separator" align="vertical" / -->
       <spring flex="100%"/>
+
+		  <box id="toolbar_throbber_box" align="vertical">
+			  <titledbutton id="Throbber" onclick="window.open('http://www.mozilla.org/editor');">
+				  <observes element="Editor:Throbber" attribute="busy"/>
+			  </titledbutton>
+		  </box>
+
     </toolbar>
     
     <toolbar id="FormatToolbar" persist="collapsed">
@@ -179,21 +180,13 @@
         <menupopup id="BackColorPopup"/>
       </menu>
       
-      <!-- html:div class="separator" align="vertical" / -->
-
       <titledbutton id="boldButton"/>
       <titledbutton id="italicButton"/>
       <titledbutton id="underlineButton"/>
-
-      <!-- html:div class="separator" align="vertical" / -->
-
       <titledbutton id="ulButton"/>
       <titledbutton id="olButton"/>
-
       <titledbutton id="outdentButton"/>
       <titledbutton id="indentButton"/>
-
-      <!-- html:div class="separator" align="vertical" / -->
 
       <menu>
         <titledbutton id="AlignPopupButton"/>
@@ -213,19 +206,22 @@
   <box id="appcontent" align="vertical" flex="100%">
     <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
 
-    <box align="horizontal" id="DisplayModeBar" style="padding-top: 0px;">
-      <spring class="spacer"/>
-        <!-- This is a pain: can't use CSS margin to add extra space above text? -->
-        <box align="vertical">
-        <spring style="height: 2px"/>
-        <html:div style="margin-left: 3px">&displayMode.label;</html:div>
-        </box>
-      <spring class="spacer"/>
+    <box align="horizontal" id="DisplayModeBar">
+      <spring class="spacer5"/>
+      <html:div>&displayMode.label;</html:div>
+      <spring class="spacer3"/>
       <titledbutton id="EditModeButton"    class="DisplayModeButton" selected="1" value="&editModeButton.label;"    onclick="EditorSetDisplayStyle(0)"/>
       <titledbutton id="BrowserModeButton" class="DisplayModeButton" selected="0" value="&browserModeButton.label;" onclick="EditorSetDisplayStyle(1)"/>
       <html:div class="VerticalSeparator"/>
-      <!-- <html:div id="LeftGrayBorder"/> -->
       <spring flex="100%"/>
+<!--
+Use this when implemented...
+      <html:div>View Mode:</html:div>
+      <spring class="spacer3"/>
+      <titledbutton id="HTMLModeButton"    class="DisplayModeButton" selected="0" value="HTML Source"  onclick="EditorSetDisplayStyle(1)"/>
+      <titledbutton id="TagModeButton"     class="DisplayModeButton" selected="0" value="Tag Tree"     onclick="EditorSetDisplayStyle(1)"/>
+      <titledbutton id="PreviewModeButton" class="DisplayModeButton" selected="0" value="Full Preview" onclick="EditorSetDisplayStyle(0)"/>
+-->
     </box>
 
     <!-- status bar, from editorOverlay.xul -->
