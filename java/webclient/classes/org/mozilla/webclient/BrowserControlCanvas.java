@@ -52,7 +52,7 @@ import java.awt.*;
 
  * See concrete subclasses for scope info.
 
- * @version $Id: BrowserControlCanvas.java,v 1.5 1999/12/03 01:55:26 edburns%acm.org Exp $
+ * @version $Id: BrowserControlCanvas.java,v 1.6 1999/12/06 23:42:13 edburns%acm.org Exp $
 
  * @see	org.mozilla.webclient.win32.Win32BrowserControlCanvas
 
@@ -98,8 +98,11 @@ private Rectangle		windowRelativeBounds;
 //
 
 /**
- * Initialize the BrowserControlMozillaShim. For now,
- * this initializes the Mozilla registry.
+
+ * just initialize all the ivars.  the initialize() method must be called
+ * before an instance of this class can be used.  Instances are created
+ * in BrowserControlFactory.newBrowserControl().
+
  */
 protected BrowserControlCanvas () 
 {
