@@ -5943,51 +5943,51 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     }
     // End of TREE CONSTRUCTION code here (there's more later on in the function)
 
-    // TOOLBAR CONSTRUCTION
-    else if (aTag == nsXULAtoms::toolbox) {
-      processChildren = PR_TRUE;
-      rv = NS_NewToolboxFrame(aPresShell, &newFrame);
+//      // TOOLBAR CONSTRUCTION
+//      else if (aTag == nsXULAtoms::toolbox) {
+//        processChildren = PR_TRUE;
+//        rv = NS_NewToolboxFrame(aPresShell, &newFrame);
 
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-      aStyleContext->GetStyleData(eStyleStruct_Display);
+//        const nsStyleDisplay* display = (const nsStyleDisplay*)
+//        aStyleContext->GetStyleData(eStyleStruct_Display);
 
-      if (IsScrollable(aPresContext, display)) {
+//        if (IsScrollable(aPresContext, display)) {
 
-        // build the scrollframe
-        // set the top to be the newly created scrollframe
-        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                         topFrame, aStyleContext);
+//          // build the scrollframe
+//          // set the top to be the newly created scrollframe
+//          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+//                           topFrame, aStyleContext);
 
-        // we have a scrollframe so the parent becomes the scroll frame.
-        newFrame->GetParent(&aParentFrame);
-        primaryFrameSet = PR_TRUE;
+//          // we have a scrollframe so the parent becomes the scroll frame.
+//          newFrame->GetParent(&aParentFrame);
+//          primaryFrameSet = PR_TRUE;
 
-        frameHasBeenInitialized = PR_TRUE;
+//          frameHasBeenInitialized = PR_TRUE;
 
-      }
-    }
-    else if (aTag == nsXULAtoms::toolbar) {
+//        }
+//      }
+//      else if (aTag == nsXULAtoms::toolbar) {
 
-      processChildren = PR_TRUE;
-      rv = NS_NewToolbarFrame(aPresShell, &newFrame);
+//        processChildren = PR_TRUE;
+//        rv = NS_NewToolbarFrame(aPresShell, &newFrame);
 
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-      aStyleContext->GetStyleData(eStyleStruct_Display);
+//        const nsStyleDisplay* display = (const nsStyleDisplay*)
+//        aStyleContext->GetStyleData(eStyleStruct_Display);
 
-       if (IsScrollable(aPresContext, display)) {
+//         if (IsScrollable(aPresContext, display)) {
 
-        // set the top to be the newly created scrollframe
-        BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
-                         topFrame, aStyleContext);
+//          // set the top to be the newly created scrollframe
+//          BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
+//                           topFrame, aStyleContext);
 
-        // we have a scrollframe so the parent becomes the scroll frame.
-        newFrame->GetParent(&aParentFrame);
-        primaryFrameSet = PR_TRUE;
+//          // we have a scrollframe so the parent becomes the scroll frame.
+//          newFrame->GetParent(&aParentFrame);
+//          primaryFrameSet = PR_TRUE;
 
-        frameHasBeenInitialized = PR_TRUE;
+//          frameHasBeenInitialized = PR_TRUE;
 
-      }
-    }
+//        }
+//      }
     else if (aTag == nsXULAtoms::toolbaritem) {
       processChildren = PR_TRUE;
       rv = NS_NewToolbarItemFrame(aPresShell, &newFrame);
