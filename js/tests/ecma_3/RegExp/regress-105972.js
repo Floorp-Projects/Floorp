@@ -42,7 +42,13 @@ var expectedmatches = new Array();
 
 
 /*
- * The bug: this match was coming up null in Rhino and SpiderMonkey...
+ * The bug: this match was coming up null in Rhino and SpiderMonkey.
+ * It should match the whole string. The reason:
+ *
+ * The * operator is greedy, but *? is non-greedy: it will bail out
+ * on the simplest match it can find. But the pattern here asks us
+ * to match till the end of the string. So the simplest match must
+ * go all the way out to the end, and *? has no choice but to do it.
  */
 status = inSection(1);
 pattern = /^.*?$/;
@@ -53,7 +59,9 @@ addThis();
 
 
 /*
- * Leave off the '$' condition - here we expect the empty string
+ * Leave off the '$' condition - here we expect the empty string.
+ * Unlike the above pattern, we don't have to match till the end of
+ * the string, so the non-greedy operator *? doesn't try to...
  */
 status = inSection(2);
 pattern = /^.*?/;
