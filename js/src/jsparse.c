@@ -3120,9 +3120,14 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         }
         /* FALL THROUGH */
 
+      case TOK_STAR:
+        /* The * in 'import *;' parses as a nullary star node. */
+        if (pn->pn_arity == PN_NULLARY)
+            break;
+        /* FALL THROUGH */
+
       case TOK_SHOP:
       case TOK_MINUS:
-      case TOK_STAR:
       case TOK_DIVOP:
         if (pn1->pn_type == TOK_NUMBER && pn2->pn_type == TOK_NUMBER) {
             jsdouble d, d2;
