@@ -758,7 +758,7 @@ nsresult nsRange::PopRanges(nsCOMPtr<nsIDOMNode> aDestNode, PRInt32 aOffset, nsC
     {
        nsRange* theRange;
        PRInt32 loop = 0;
-       while (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))))
+       while (nsnull != (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))))
        {
           nsCOMPtr<nsIDOMNode> domNode;
           res = GetDOMNodeFromContent(cN, &domNode);
