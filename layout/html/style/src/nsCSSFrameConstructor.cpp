@@ -10656,7 +10656,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
       // data that this rule cached in the rule tree.
       if (primaryStyleFrame) {
         styleContext = primaryStyleFrame->GetStyleContext();
-        styleContext->AddRef();
       } else {
         // We might be in the undisplayed map.  Retrieve the style context from there.
         nsCOMPtr<nsIFrameManager> frameManager;
@@ -10676,8 +10675,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 #endif
       }
     }
-    if (styleContext)
-      styleContext->Release();
   }
 
   // first see if we need to manage the style system: 
