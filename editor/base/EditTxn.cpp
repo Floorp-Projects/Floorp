@@ -50,7 +50,7 @@ nsresult EditTxn::Redo(void)
 nsresult EditTxn::GetIsTransient(PRBool *aIsTransient)
 {
   if (nsnull!=aIsTransient)
-    *aIsTransient = PR_TRUE;
+    *aIsTransient = PR_FALSE;
   return NS_OK;
 }
 

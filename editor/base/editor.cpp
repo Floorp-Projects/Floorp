@@ -826,17 +826,18 @@ nsresult nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
 }
 
 nsresult 
-nsEditor::DeleteSelection()
+nsEditor::DeleteSelection(nsIEditor::Direction aDir)
 {
   EditAggregateTxn *txn;
-  nsresult result = CreateTxnForDeleteSelection(&txn);
+  nsresult result = CreateTxnForDeleteSelection(aDir, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
   return result;
 }
 
-nsresult nsEditor::CreateTxnForDeleteSelection(EditAggregateTxn ** aTxn)
+nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir, 
+                                               EditAggregateTxn  ** aTxn)
 {
   nsresult result;
   // allocate the out-param transaction
@@ -854,21 +855,52 @@ nsresult nsEditor::CreateTxnForDeleteSelection(EditAggregateTxn ** aTxn)
       enumerator->First();  
       nsISupports *currentItem;
       result = enumerator->CurrentItem(&currentItem);
-      while ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+      /*while */ if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
       {
         nsCOMPtr<nsIDOMRange> range(currentItem);
-        DeleteRangeTxn *txn;
-        result = TransactionFactory::GetNewTransaction(kDeleteRangeTxnIID, (EditTxn **)&txn);
-        if (nsnull!=txn)
+        PRBool isCollapsed;
+        range->GetIsCollapsed(&isCollapsed);
+        if (PR_FALSE==isCollapsed)
         {
-          txn->Init(range);
-          (*aTxn)->AppendChild(txn);
+          DeleteRangeTxn *txn;
+          result = TransactionFactory::GetNewTransaction(kDeleteRangeTxnIID, (EditTxn **)&txn);
+          if (nsnull!=txn)
+          {
+            txn->Init(range);
+            (*aTxn)->AppendChild(txn);
+          }
+          else
+            result = NS_ERROR_OUT_OF_MEMORY;
         }
         else
-          result = NS_ERROR_OUT_OF_MEMORY;
+        { // we have an insertion point.  delete the thing in front of it or behind it, depending on aDir
+          nsCOMPtr<nsIDOMNode> node;
+          PRInt32 offset;
+          PRInt32 length=1;
+          result = range->GetStartParent(getter_AddRefs(node));
+          result = range->GetStartOffset(&offset);
+          nsCOMPtr<nsIDOMCharacterData> text = node.get();
+          if (node)
+          { // we have text, so delete a char at the proper offset
+            // XXX: doesn't handle beginning/end of text node, which needs to jump to next|prev node
+            if (nsIEditor::eRTL==aDir)
+            {
+              if (0!=offset)
+                offset --;
+            }
+            DeleteTextTxn *txn;
+            result = CreateTxnForDeleteText(text, offset, length, &txn);
+            (*aTxn)->AppendChild(txn);
+          }
+        }
+        // XXX: should call IsDone -- waiting for fix from greg
+        // when fixed, change if to while
         if (NS_SUCCEEDED(result))
         {
           nsresult nextResult = enumerator->Next();
+          // XXX hack for now
+          if (nextResult==NS_ERROR_FAILURE)
+            return result;
           if (NS_SUCCEEDED(nextResult))
           {
             result = enumerator->CurrentItem(&currentItem);

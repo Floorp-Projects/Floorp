@@ -49,13 +49,6 @@ nsresult InsertTextTxn::Undo(void)
   return (mElement->DeleteData(mOffset, length));
 }
 
-nsresult InsertTextTxn::GetIsTransient(PRBool *aIsTransient)
-{
-  if (nsnull!=aIsTransient)
-    *aIsTransient = PR_FALSE;
-  return NS_OK;
-}
-
 nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   // set out param default value

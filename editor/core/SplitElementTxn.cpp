@@ -71,13 +71,6 @@ nsresult SplitElementTxn::Redo(void)
   return result;
 }
 
-nsresult SplitElementTxn::GetIsTransient(PRBool *aIsTransient)
-{
-  if (nsnull!=aIsTransient)
-    *aIsTransient = PR_FALSE;
-  return NS_OK;
-}
-
 nsresult SplitElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   if (nsnull!=aDidMerge)

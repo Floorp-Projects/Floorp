@@ -49,13 +49,6 @@ nsresult DeleteTextTxn::Undo(void)
   return (mElement->InsertData(mOffset, mDeletedText));
 }
 
-nsresult DeleteTextTxn::GetIsTransient(PRBool *aIsTransient)
-{
-  if (nsnull!=aIsTransient)
-    *aIsTransient = PR_FALSE;
-  return NS_OK;
-}
-
 nsresult DeleteTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   if (nsnull!=aDidMerge)

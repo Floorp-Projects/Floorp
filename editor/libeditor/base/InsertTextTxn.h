@@ -50,8 +50,6 @@ public:
 
   virtual nsresult Undo(void);
 
-  virtual nsresult GetIsTransient(PRBool *aIsTransient);
-
   virtual nsresult Merge(PRBool *aDidMerge, nsITransaction *aTransaction);
 
   virtual nsresult Write(nsIOutputStream *aOutputStream);

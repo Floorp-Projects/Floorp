@@ -93,13 +93,6 @@ nsresult CreateElementTxn::Redo(void)
   return result;
 }
 
-nsresult CreateElementTxn::GetIsTransient(PRBool *aIsTransient)
-{
-  if (nsnull!=aIsTransient)
-    *aIsTransient = PR_FALSE;
-  return NS_OK;
-}
-
 nsresult CreateElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   if (nsnull!=aDidMerge)
