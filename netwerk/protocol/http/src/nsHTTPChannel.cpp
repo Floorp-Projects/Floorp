@@ -836,7 +836,7 @@ nsHTTPChannel::CheckCache()
     //if (mLoadAttributes & nsIChannel::CACHE_AS_FILE)
     //    mCacheEntry->SetStoragePolicy(nsICache::STORE_ON_DISK_AS_FILE);
     //else if (mLoadAttributes & nsIChannel::INHIBIT_PERSISTENT_CACHING)
-        mCacheEntry->SetStoragePolicy(nsICache::STORE_IN_MEMORY);
+    //    mCacheEntry->SetStoragePolicy(nsICache::STORE_IN_MEMORY);
 #else
     // If this is the first time we've been called for this channel,
     // retrieve an existing cache entry or create a new one.
@@ -1139,6 +1139,7 @@ nsHTTPChannel::ReadFromCache()
 
     // Pump the cache data downstream
 #ifdef MOZ_NEW_CACHE
+    LOG(("\n>>>> Reading from Cache <<<<\n"));
     rv = mCacheTransport->AsyncRead(listener, mResponseContext,
                                     0, ULONG_MAX, 0,
                                     getter_AddRefs(mCacheReadRequest));
@@ -1161,6 +1162,9 @@ nsHTTPChannel::CacheAbort(PRUint32 statusCode)
 #ifdef MOZ_NEW_CACHE
         // Doom the cache entry.
         rv = mCacheEntry->Doom();
+
+        mCacheTransport = 0;
+        mCacheReadRequest = 0;
 #else
         // Set the stored content length to zero
         rv = mCacheEntry->SetStoredContentLength(0);
@@ -1223,7 +1227,9 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
 #endif
 
 #ifdef MOZ_NEW_CACHE
-    NS_ENSURE_TRUE(mCachedContentIsValid == PR_FALSE, NS_OK);
+    //NS_ENSURE_TRUE(mCachedContentIsValid == PR_FALSE, NS_OK);
+    if (mCachedContentIsValid)
+        return NS_OK;
 #else
     // XXX why is this check necessary?
     //
@@ -1383,6 +1389,8 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
 
     rv = tee->Init(aListener, out);
     if (NS_FAILED(rv)) return rv;
+
+    LOG(("Preparing to write data into the cache [url=%s]\n", mRequest->Spec()));
 
     return CallQueryInterface(tee, aResult);
 #else
@@ -1856,7 +1864,8 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
             }
     
 #ifdef MOZ_NEW_CACHE 
-            mCacheEntry->Doom();
+            if (dontCache)
+                mCacheEntry->Doom();
 #else
             if (dontCache)
                 mCacheEntry->SetStoredContentLength(0);
@@ -2515,6 +2524,7 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
     mResponseDataListener = 0/* aListener */;
 
 #ifdef MOZ_NEW_CACHE
+    LOG((">>>> Reading from Cache <<<<\n"));
     rv = mCacheTransport->AsyncRead(cacheListener, mResponseContext,
                                     0, ULONG_MAX, 0,
                                     getter_AddRefs(mCacheReadRequest));
@@ -2834,6 +2844,8 @@ nsHTTPChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
 {
     LOG(("nsHTTPChannel::OnCacheEntryAvailable [this=%x entry=%x "
          "access=%x status=%x]\n", this, entry, access, status));
+
+    LOG(("Got cache entry descriptor: access=%x\n", access));
 
     if (NS_SUCCEEDED(status)) {
         mCacheEntry = entry;
