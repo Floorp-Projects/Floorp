@@ -6,8 +6,8 @@
 # partitions and this will require making get_filename() less regular
 # then we have defined it here.
 
-# $Revision: 1.5 $ 
-# $Date: 2000/09/18 19:26:22 $ 
+# $Revision: 1.6 $ 
+# $Date: 2000/09/22 15:03:32 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/FileStructure.pm,v $ 
 # $Name:  $ 
@@ -133,7 +133,7 @@ sub get_filename {
      # the per tree time stamp file to ensure all updates are at least 
      # $MIN_TABLE_SPACING apart
      
-     'update_time_stamp'  => "$tree_dir/db/Mail.time.stamp",
+     'update_time_stamp'  => "$tree_dir/db/Mail.Build.time.stamp",
      
      # where the tree specific generated html pages are placed
      # in this directory
