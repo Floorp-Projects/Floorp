@@ -6944,10 +6944,6 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
       rv = cacheEntry->NewTransport(m_loadGroup, getter_AddRefs(cacheChannel));
       if (NS_SUCCEEDED(rv))
       {
-        // .and force the url to remove its reference on the mock channel...this is to solve
-        // a nasty reference counting problem...
-        imapUrl->SetMockChannel(nsnull);
-
         // if we are going to read from the cache, then create a mock stream listener class and use it
         nsImapCacheStreamListener * cacheListener = new nsImapCacheStreamListener();
         NS_ADDREF(cacheListener);
@@ -6961,6 +6957,11 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
           // if the msg is unread, we should mark it read on the server. This lets
           // the code running this url we're loading from the cache, if it cares.
           imapUrl->SetMsgLoadingFromCache(PR_TRUE);
+
+          // and force the url to remove its reference on the mock channel...this is to solve
+          // a nasty reference counting problem...
+          imapUrl->SetMockChannel(nsnull);
+
           // be sure to set the cache entry's security info status as our security info status...
           nsCOMPtr<nsISupports> securityInfo;
           cacheEntry->GetSecurityInfo(getter_AddRefs(securityInfo));
