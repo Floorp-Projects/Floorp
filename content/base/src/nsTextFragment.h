@@ -40,6 +40,7 @@
 
 #include "nsAString.h"
 class nsString;
+class nsCString;
 
 // XXX should this normalize the code to keep a \u0000 at the end?
 
@@ -204,6 +205,11 @@ public:
    * Append the contents of this string fragment to aString
    */
   void AppendTo(nsString& aString) const;
+
+  /**
+   * Append the contents of this string fragment to aCString
+   */
+  void AppendTo(nsCString& aCString) const;
 
   /**
    * Make a copy of the fragments contents starting at offset for

@@ -500,12 +500,22 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
 {
 #if 1
   nsresult rv = NS_OK;
+  PRInt32 length = 0;
 
-  nsAutoString old_data;
+  // See bugzilla bug 77585.
+  if (mText.Is2b() || (!IsASCII(aData))) {
+    nsAutoString old_data;
+    mText.AppendTo(old_data);
+    length = old_data.Length();
+    rv = SetText(old_data + aData, PR_FALSE);
+  } else {
+    nsCAutoString old_data;
+    mText.AppendTo(old_data);
+    length = old_data.Length();
+    old_data.AppendWithConversion(aData);
+    rv = SetText(old_data.get(), old_data.Length(), PR_FALSE);
+  }
 
-  mText.AppendTo(old_data);
-
-  rv = SetText(old_data + aData, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Trigger a reflow
@@ -516,7 +526,7 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
     nsTextContentChangeData* tccd = nsnull;
     rv = NS_NewTextContentChangeData(&tccd);
     if (NS_SUCCEEDED(rv)) {
-      tccd->SetData(nsITextContentChangeData::Append, old_data.Length(),
+      tccd->SetData(nsITextContentChangeData::Append, length,
                     aData.Length());
       rv = mDocument->ContentChanged(this, tccd);
       NS_RELEASE(tccd);
