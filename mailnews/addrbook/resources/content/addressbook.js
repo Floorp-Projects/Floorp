@@ -564,8 +564,17 @@ function SetStatusText(total)
   try {
     var statusText;
 
-    if (gSearchInput.value) 
-      statusText = gAddressBookBundle.getFormattedString("matchesFound", [total]);   
+    if (gSearchInput.value) {
+      if (total == 0)
+        statusText = gAddressBookBundle.getString("noMatchFound");
+      else
+      {
+        if (total == 1)
+          statusText = gAddressBookBundle.getString("matchFound");
+        else  
+          statusText = gAddressBookBundle.getFormattedString("matchesFound", [total]);
+      }
+    } 
     else
       statusText = gAddressBookBundle.getFormattedString("totalCardStatus", [gAbView.directory.dirName, total]);   
 

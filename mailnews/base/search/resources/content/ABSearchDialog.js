@@ -58,7 +58,15 @@ var gSearchAbViewListener = {
   onSelectionChanged: function() {
   },
   onCountChanged: function(total) {
-    var statusText = gAddressBookBundle.getFormattedString("matchesFound", [total]);   
+    if (total == 0)
+      var statusText = gAddressBookBundle.getString("noMatchFound");  
+    else
+    {
+      if (total == 1)
+        var statusText = gAddressBookBundle.getString("matchFound");
+      else  
+        var statusText = gAddressBookBundle.getFormattedString("matchesFound", [total]);
+    }
     gStatusText.setAttribute("label", statusText);
   }
 };
