@@ -1124,7 +1124,10 @@ nsProfile::GetCurrentProfile(PRUnichar **profileName)
     NS_ENSURE_ARG_POINTER(profileName);
     *profileName = nsnull;
 
-    gProfileDataAccess->GetCurrentProfile(profileName);
+    if (!mCurrentProfileName.IsEmpty()) 
+      *profileName = ToNewUnicode(mCurrentProfileName);
+    else 
+      gProfileDataAccess->GetCurrentProfile(profileName);
     return (*profileName == nsnull) ? NS_ERROR_FAILURE : NS_OK;
 }
 
@@ -1821,12 +1824,24 @@ nsProfile::RenameProfile(const PRUnichar* oldName, const PRUnichar* newName)
         return NS_ERROR_FAILURE;
     }
 
+    PRBool renamedIsCurrent = mCurrentProfileName.Equals(oldName);
+
     // Copy reg keys
     rv = CopyRegKey(oldName, newName);
     if (NS_FAILED(rv)) return rv;
      
     // Delete old profile entry
     rv = DeleteProfile(oldName, PR_FALSE /* don't delete files */);
+
+    // If the profile being renamed is the current profile,
+    // change the current profile name.
+    if (renamedIsCurrent) {
+        gProfileDataAccess->SetCurrentProfile(newName);
+        gProfileDataAccess->mForgetProfileCalled = PR_FALSE;
+        mCurrentProfileName.Assign(newName);    
+        mCurrentProfileAvailable = PR_TRUE;
+    }
+
     if (NS_FAILED(rv)) return rv;
      
 	/* note, we do not rename the directory on disk to the new name
@@ -1844,9 +1859,6 @@ nsProfile::RenameProfile(const PRUnichar* oldName, const PRUnichar* newName)
 	 *
 	 * bad things would happen if we tried to rename the directory
 	 */
-    
-    rv = ForgetCurrentProfile();
-    if (NS_FAILED(rv)) return rv;
 
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry(nsnull);
