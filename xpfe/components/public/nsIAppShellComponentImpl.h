@@ -386,8 +386,7 @@ NSGetFactory( nsISupports *aServiceMgr, \
 } \
 /* NSCanUnload implementation */\
 extern "C" NS_EXPORT PRBool \
-NSCanUnload( nsISupports* aServiceMgr ) { \
-      className::SetServiceManager( aServiceMgr ); \
+NSCanUnload( nsISupports* ) { \
       return nsInstanceCounter::CanUnload(); \
 } \
 NS_IMPL_IAPPSHELLCOMPONENTIMPL_CTORDTOR( className ) \
