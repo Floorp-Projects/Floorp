@@ -979,7 +979,6 @@ function IfFourSidesSameStyle(propertyBase, propertySuffix, value, checkboxID, p
     if (elt) {
       value = elt.value;
     }
-    else return;
   }
   var xulElt = document.getElementById(previewID);
   var sideArray = [ "left", "right", "bottom" ];
@@ -1001,8 +1000,8 @@ function ToggleFourBorderSidesSameStyle(elt)
   var sideArray = [ "left", "right", "bottom" ];
 
   var style = getSpecifiedStyle("border-top-style");
-  if (!style || style == "")
-    style = "unspecified";
+  /*if (!style || style == "")
+    style = "unspecified";*/
   var color = gDialog.topBorderColorInput.value;
   var width = getSpecifiedStyle("border-top-width");
 
@@ -1058,7 +1057,7 @@ function EnableUI(elt, enabled)
 //   the current value of the property and if it is already a length,
 //   build the menu keeping the same numeric part and browsing all the
 //   possible units.
-function InitLengthUnitMenuPopup(elt, property, id)
+function InitLengthUnitMenuPopup(elt, property, id, allowsPercentages)
 {
   var value = elt.parentNode.value;
   var re = /([+-]?\d*\.\d+|[+-]?\d+)\D*/ ;
@@ -1075,28 +1074,15 @@ function InitLengthUnitMenuPopup(elt, property, id)
   }
 
   // below is an array of all valid CSS length units
-  var unitsArray = [ "px", "%", "pt", "cm", "in", "mm", "pc", "em", "ex" ];
-  var j, newitem;
-  for (j=0; j<unitsArray.length; j++) {
+  var unitsArray = [ "%", "px", "pt", "cm", "in", "mm", "pc", "em", "ex" ];
+  var j, newitem, start = 0;
+  if (!allowsPercentages)
+    start = 1;
+  for (j=start; j<unitsArray.length; j++) {
     var itemValue = numPart + unitsArray[j];
     newitem = document.createElementNS(XUL_NS, "menuitem");
     newitem.setAttribute("label", itemValue);
-    if (id)
-      newitem.setAttribute("oncommand", "onPullDownChanged(" +
-                                        "'" + property + "'" +
-                                        ", " +
-                                        "'" + itemValue + "'" +
-                                        ", " +
-                                        "'" + id + "'"
-                                        +");");
-    else
-      newitem.setAttribute("oncommand", "onPullDownChanged(" +
-                                        "'" + property + "'" +
-                                        ", " +
-                                        "'" + itemValue + "'" +
-                                        ", " +
-                                        "null"
-                                        +");");
+    newitem.setAttribute("value", itemValue);
     if (child)
       elt.insertBefore(newitem, child);
     else
@@ -1191,7 +1177,7 @@ function initLocalFontFaceMenu(menuPopup)
 //   param String id
 function DoMenulistCommand(elt, property, id) {
   var choice = elt.selectedItem;
-  var value = choice.getAttribute("value");
+  var value = choice.value;
   onPullDownChanged(property, value, id);
   if (property == "border-top-style") {
     // this one is a special case : we need to check if the checkbox

@@ -1,6 +1,6 @@
 
 
-var gVersion = "0.1.7";
+var gVersion = "0.2.1";
 
 var err = initInstall("CaScadeS", "cascades", gVersion);
 logComment("initInstall: " + err);

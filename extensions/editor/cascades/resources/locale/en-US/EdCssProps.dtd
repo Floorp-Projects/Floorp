@@ -65,6 +65,8 @@
 <!ENTITY unspecifiedValue.label				"unspecified">
 <!ENTITY predefFontFamilyRadio.label		"predefined:">
 <!ENTITY fontSize.label						"Font size:">
+<!ENTITY lineHeight.label                   "Line height:">
+<!ENTITY normalLineHeight.label             "normal">
 <!ENTITY color.label						"Color:">
 <!ENTITY fontWeight.label					"Font weight:">
 <!ENTITY normalValue.label					"Normal">
