@@ -57,7 +57,7 @@ public:
   * @return     void
   *
   */
-  virtual void Create(nsIWidget *aParent,
+  NS_IMETHOD Create(nsIWidget *aParent,
                       nsString& aTitle,
                       nsMode aMode,
                       nsIDeviceContext *aContext = nsnull,
@@ -76,7 +76,7 @@ public:
   *
   */
 
-  virtual void SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[]) = 0;
+  NS_IMETHOD SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[]) = 0;
 
  /**
   * Show File Dialog. The dialog is displayed modally.
@@ -93,7 +93,7 @@ public:
   * @param aFile on exit it contains the file or directory selected
   */
   
-  virtual void GetFile(nsString& aFile) = 0;
+  NS_IMETHOD GetFile(nsString& aFile) = 0;
 
 
  /**
@@ -103,7 +103,7 @@ public:
   * @return     void
   *
   */
-  virtual void SetDefaultString(nsString& aString) = 0;
+  NS_IMETHOD SetDefaultString(nsString& aString) = 0;
 
 };
 

@@ -45,25 +45,25 @@ public:
   virtual PRBool    OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool    OnPaint();
   virtual PRBool    OnResize(nsRect &aWindowRect);
-  virtual void      GetBounds(nsRect &aRect);
+
+  NS_IMETHOD        GetBounds(nsRect &aRect);
 
 
   // nsIListBox interface
-  void      SetMultipleSelection(PRBool aMultipleSelections);
-  void      AddItemAt(nsString &aItem, PRInt32 aPosition);
-  PRInt32   FindItem(nsString &aItem, PRInt32 aStartPos);
-  PRInt32   GetItemCount();
-  PRBool    RemoveItemAt(PRInt32 aPosition);
-  PRBool    GetItemAt(nsString& anItem, PRInt32 aPosition);
-  void      GetSelectedItem(nsString& aItem);
-  PRInt32   GetSelectedIndex();
-  void      AllowMultipleSelections(PRBool aMultiple);
-  PRInt32   GetSelectedCount();
-  void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-  void      SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-  void      SelectItem(PRInt32 aPosition);
-  void      Deselect() ;
-  void      PreCreateWidget(nsWidgetInitData *aInitData);
+  NS_IMETHOD SetMultipleSelection(PRBool aMultipleSelections);
+  NS_IMETHOD AddItemAt(nsString &aItem, PRInt32 aPosition);
+  PRInt32    FindItem(nsString &aItem, PRInt32 aStartPos);
+  PRInt32    GetItemCount();
+  PRBool     RemoveItemAt(PRInt32 aPosition);
+  PRBool     GetItemAt(nsString& anItem, PRInt32 aPosition);
+  NS_IMETHOD GetSelectedItem(nsString& aItem);
+  PRInt32    GetSelectedIndex();
+  PRInt32    GetSelectedCount();
+  NS_IMETHOD GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+  NS_IMETHOD SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+  NS_IMETHOD SelectItem(PRInt32 aPosition);
+  NS_IMETHOD Deselect() ;
+  NS_IMETHOD PreCreateWidget(nsWidgetInitData *aInitData);
 
    // nsWindow interface
   virtual   PRBool AutoErase();

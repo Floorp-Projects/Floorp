@@ -37,7 +37,7 @@ public:
   nsDialog();
   virtual ~nsDialog();
 
-  virtual void  Create(nsIWidget *aParent,
+  NS_IMETHOD    Create(nsIWidget *aParent,
                        const nsRect &aRect,
                        EVENT_CALLBACK aHandleEventFunction,
                        nsIDeviceContext *aContext,
@@ -57,7 +57,7 @@ public:
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);
-  virtual void GetBounds(nsRect &aRect);
+  NS_IMETHOD     GetBounds(nsRect &aRect);
 
 protected:
   virtual LPCTSTR WindowClass();

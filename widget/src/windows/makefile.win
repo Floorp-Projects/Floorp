@@ -34,12 +34,19 @@ MODULE=raptor
 DEFINES =-D_IMPL_NS_WIDGET
 
 OBJS =                             \
+	.\$(OBJDIR)\nsMenuButton.obj  \
+	.\$(OBJDIR)\nsPopUpMenu.obj  \
+	.\$(OBJDIR)\nsToolbarItemHolder.obj  \
+	.\$(OBJDIR)\nsToolbarManager.obj  \
+	.\$(OBJDIR)\nsImageButton.obj  \
+	.\$(OBJDIR)\nsToolBar.obj  \
+	.\$(OBJDIR)\nsMenuBar.obj  \
+	.\$(OBJDIR)\nsMenu.obj  \
+	.\$(OBJDIR)\nsMenuItem.obj  \
 	.\$(OBJDIR)\nsObject.obj         \
 	.\$(OBJDIR)\nsWindow.obj         \
-	.\$(OBJDIR)\nsWidgetFactory.obj  \
 	.\$(OBJDIR)\nsButton.obj         \
 	.\$(OBJDIR)\nsCheckButton.obj    \
-	.\$(OBJDIR)\nsRadioGroup.obj     \
 	.\$(OBJDIR)\nsRadioButton.obj    \
 	.\$(OBJDIR)\nsListBox.obj        \
 	.\$(OBJDIR)\nsComboBox.obj       \
@@ -56,6 +63,7 @@ OBJS =                             \
 	.\$(OBJDIR)\nsLabel.obj    \
 	.\$(OBJDIR)\nsToolkit.obj        \
 	.\$(OBJDIR)\nsWidgetSupport.obj  \
+	.\$(OBJDIR)\nsWidgetFactory.obj  \
 	$(NULL)
 
 LINCS=                                  \

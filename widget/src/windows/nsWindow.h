@@ -27,6 +27,8 @@
 #include "nsIWidget.h"
 #include "nsIEnumerator.h"
 
+#include "nsIMenuBar.h"
+
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
 #include "nsStringUtil.h"
@@ -51,16 +53,15 @@ public:
     nsWindow();
     virtual ~nsWindow();
 
-    virtual void            PreCreateWidget(nsWidgetInitData *aWidgetInitData) {}
     // nsIWidget interface
-    virtual void            Create(nsIWidget *aParent,
+    NS_IMETHOD            Create(nsIWidget *aParent,
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
                                      nsIAppShell *aAppShell = nsnull,
                                      nsIToolkit *aToolkit = nsnull,
                                      nsWidgetInitData *aInitData = nsnull);
-    virtual void            Create(nsNativeWidget aParent,
+    NS_IMETHOD              Create(nsNativeWidget aParent,
                                      const nsRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
                                      nsIDeviceContext *aContext,
@@ -68,37 +69,42 @@ public:
                                      nsIToolkit *aToolkit = nsnull,
                                      nsWidgetInitData *aInitData = nsnull);
 
-    virtual void            Destroy();
+    NS_IMETHOD              Destroy();
     virtual nsIWidget*      GetParent(void);
-    virtual void            Show(PRBool bState);
-    virtual void            Move(PRUint32 aX, PRUint32 aY);
-    virtual void            Resize(PRUint32 aWidth,
+    NS_IMETHOD              Show(PRBool bState);
+    NS_IMETHOD              IsVisible(PRBool & aState);
+
+    NS_IMETHOD              Move(PRUint32 aX, PRUint32 aY);
+    NS_IMETHOD              Resize(PRUint32 aWidth,
                                    PRUint32 aHeight,
                                    PRBool   aRepaint);
-    virtual void            Resize(PRUint32 aX,
+    NS_IMETHOD              Resize(PRUint32 aX,
                                    PRUint32 aY,
                                    PRUint32 aWidth,
                                    PRUint32 aHeight,
                                    PRBool   aRepaint);
-    virtual void            Enable(PRBool bState);
-    virtual void            SetFocus(void);
-    virtual void            GetBounds(nsRect &aRect);
-    virtual void            SetBackgroundColor(const nscolor &aColor);
+    NS_IMETHOD              Enable(PRBool bState);
+    NS_IMETHOD              SetFocus(void);
+    NS_IMETHOD              GetBounds(nsRect &aRect);
+    NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
     virtual nsIFontMetrics* GetFont(void);
-    virtual void            SetFont(const nsFont &aFont);
-    virtual void            SetCursor(nsCursor aCursor);
-    virtual void            Invalidate(PRBool aIsSynchronous);
+    NS_IMETHOD              SetFont(const nsFont &aFont);
+    NS_IMETHOD              SetCursor(nsCursor aCursor);
+    NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
     virtual void*           GetNativeData(PRUint32 aDataType);
-    virtual void            SetColorMap(nsColorMap *aColorMap);
-    virtual void            Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-    virtual void            SetTitle(const nsString& aTitle); 
-    virtual void            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
-    virtual void            RemoveTooltips();
-    virtual void            UpdateTooltips(nsRect* aNewTips[]);
-    virtual void            WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
-    virtual void            ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
-    virtual void            BeginResizingChildren(void);
-    virtual void            EndResizingChildren(void);
+    NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
+    NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+    NS_IMETHOD              SetTitle(const nsString& aTitle); 
+    NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar); 
+    NS_IMETHOD              SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
+    NS_IMETHOD              RemoveTooltips();
+    NS_IMETHOD              UpdateTooltips(nsRect* aNewTips[]);
+    NS_IMETHOD              WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
+    NS_IMETHOD              ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
+    NS_IMETHOD              BeginResizingChildren(void);
+    NS_IMETHOD              EndResizingChildren(void);
+    NS_IMETHOD              GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
+    NS_IMETHOD              SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
 
     virtual void            SetUpForPaint(HDC aHDC);
    	virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
@@ -167,6 +173,13 @@ protected:
     PRBool      mIsAltDown;
     PRBool      mIsDestroying;
     PRBool      mOnDestroyCalled;
+    PRBool      mIsVisible;
+    // XXX Temporary, should not be caching the font
+    nsFont *    mFont;
+
+    PRInt32     mPreferredWidth;
+    PRInt32     mPreferredHeight;
+
 
     // Enumeration of the methods which are accessable on the "main GUI thread"
     // via the CallMethod(...) mechanism...

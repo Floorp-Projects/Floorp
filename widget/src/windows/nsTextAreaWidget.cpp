@@ -158,9 +158,10 @@ DWORD nsTextAreaWidget::WindowExStyle()
 //
 //-------------------------------------------------------------------------
 
-void nsTextAreaWidget::GetBounds(nsRect &aRect)
+NS_METHOD nsTextAreaWidget::GetBounds(nsRect &aRect)
 {
     nsWindow::GetNonClientBounds(aRect);
+    return NS_OK;
 }
 
 

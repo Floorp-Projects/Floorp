@@ -57,7 +57,7 @@ nsDialog::nsDialog() : nsWindow(), nsIDialog()
 // Create the proper widget
 //
 //-------------------------------------------------------------------------
-void nsDialog::Create(nsIWidget *aParent,
+NS_METHOD nsDialog::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -65,7 +65,8 @@ void nsDialog::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-  nsWindow::Create(aParent,aRect,aHandleEventFunction,aContext,aAppShell,aToolkit,aInitData);
+  return nsWindow::Create(aParent,aRect,aHandleEventFunction,aContext,aAppShell,aToolkit,aInitData);
+  
 }
 
 
@@ -166,7 +167,8 @@ LPCTSTR nsDialog::WindowClass()
 //-------------------------------------------------------------------------
 DWORD nsDialog::WindowStyle()
 { 
-  return DS_MODALFRAME; 
+  //return DS_MODALFRAME; 
+  return WS_CAPTION | WS_SYSMENU;
 }
 
 //-------------------------------------------------------------------------
@@ -176,9 +178,9 @@ DWORD nsDialog::WindowStyle()
 //-------------------------------------------------------------------------
 DWORD nsDialog::WindowExStyle()
 {
-  return WS_EX_DLGMODALFRAME;
+  //return WS_EX_DLGMODALFRAME;
+  return WS_EX_TOOLWINDOW | WS_EX_TOPMOST;
 }
-
 
 //-------------------------------------------------------------------------
 //
@@ -186,8 +188,8 @@ DWORD nsDialog::WindowExStyle()
 //
 //-------------------------------------------------------------------------
 
-void nsDialog::GetBounds(nsRect &aRect)
+NS_METHOD nsDialog::GetBounds(nsRect &aRect)
 {
-    nsWindow::GetBounds(aRect);
+  return nsWindow::GetBounds(aRect);
 }
 

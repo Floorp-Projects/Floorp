@@ -153,14 +153,3 @@ DWORD nsButton::WindowExStyle()
 }
 
 
-//-------------------------------------------------------------------------
-//
-// get position/dimensions
-//
-//-------------------------------------------------------------------------
-
-void nsButton::GetBounds(nsRect &aRect)
-{
-    nsWindow::GetBounds(aRect);
-}
-

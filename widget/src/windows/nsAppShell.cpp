@@ -40,13 +40,16 @@ nsAppShell::nsAppShell()
 //
 //-------------------------------------------------------------------------
 
-void nsAppShell::Create(int* argc, char ** argv)
+NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 {
+  return NS_OK;
 }
 
-void nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener) 
+//-------------------------------------------------------------------------
+NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener) 
 {
   mDispatchListener = aDispatchListener;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -74,9 +77,10 @@ nsresult nsAppShell::Run()
 //
 //-------------------------------------------------------------------------
 
-void nsAppShell::Exit()
+NS_METHOD nsAppShell::Exit()
 {
   PostQuitMessage(0);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

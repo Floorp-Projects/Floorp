@@ -170,9 +170,10 @@ DWORD nsTextWidget::WindowExStyle()
 //
 //-------------------------------------------------------------------------
 
-void nsTextWidget::GetBounds(nsRect &aRect)
+NS_METHOD nsTextWidget::GetBounds(nsRect &aRect)
 {
     nsWindow::GetNonClientBounds(aRect);
+    return NS_OK;
 }
 
 

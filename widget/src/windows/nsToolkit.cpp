@@ -205,17 +205,17 @@ void nsToolkit::CreateUIThread()
 //
 //
 //-------------------------------------------------------------------------
-void nsToolkit::Init(PRThread *aThread)
+NS_METHOD nsToolkit::Init(PRThread *aThread)
 {
     // Store the thread ID of the thread containing the message pump.  
     // If no thread is provided create one
     if (NULL != aThread) {
         CreateInternalWindow(aThread);
-    }
-    else {
+    } else {
         // create a thread where the message pump will run
         CreateUIThread();
     }
+    return NS_OK;
 }
 
 

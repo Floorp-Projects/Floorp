@@ -39,6 +39,15 @@
 #include "nsWindow.h"
 #include "nsDialog.h"
 #include "nsLabel.h"
+#include "nsMenuBar.h"
+#include "nsMenu.h"
+#include "nsMenuItem.h"
+#include "nsPopUpMenu.h"
+#include "nsImageButton.h"
+#include "nsMenuButton.h"
+#include "nsToolbar.h"
+#include "nsToolbarManager.h"
+#include "nsToolbarItemHolder.h"
 #include "nsAppShell.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
@@ -61,6 +70,15 @@ static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCDialog,        NS_DIALOG_CID);
 static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
+static NS_DEFINE_IID(kCMenuBar,       NS_MENUBAR_CID);
+static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
+static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
+static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
+static NS_DEFINE_IID(kCToolBar,       NS_TOOLBAR_CID);
+static NS_DEFINE_IID(kCToolBarManager,  NS_TOOLBARMANAGER_CID);
+static NS_DEFINE_IID(kCToolBarItemHolder,  NS_TOOLBARITEMHOLDER_CID);
+static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
+static NS_DEFINE_IID(kCMenuButton,     NS_MENUBUTTON_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
@@ -159,9 +177,9 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCRadioButton)) {
         inst = (nsISupports*)(nsWindow*)new nsRadioButton();
     }
-    else if (mClassID.Equals(kCRadioGroup)) {
-        inst = (nsISupports*)new nsRadioGroup();
-    }
+    //else if (mClassID.Equals(kCRadioGroup)) {
+    //    inst = (nsISupports*)(nsObject*)new nsRadioGroup();
+    //}
     else if (mClassID.Equals(kCFileOpen)) {
         inst = (nsISupports*)new nsFileWidget();
     }
@@ -200,6 +218,33 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     }
     else if (mClassID.Equals(kCLabel)) {
         inst = (nsISupports*)(nsWindow*)new nsLabel();
+    }
+    else if (mClassID.Equals(kCMenuBar)) {
+        inst = (nsISupports*)(nsWindow*)new nsMenuBar();
+    }
+    else if (mClassID.Equals(kCMenu)) {
+        inst = (nsISupports*)(nsWindow*)new nsMenu();
+    }
+    else if (mClassID.Equals(kCMenuItem)) {
+        inst = (nsISupports*)new nsMenuItem();
+    }
+    else if (mClassID.Equals(kCImageButton)) {
+        inst = (nsISupports*)(nsWindow*)new nsImageButton();
+    }
+    else if (mClassID.Equals(kCMenuButton)) {
+        inst = (nsISupports*)(nsWindow*)new nsMenuButton();
+    }
+    else if (mClassID.Equals(kCToolBar)) {
+        inst = (nsISupports*)(nsWindow*)new nsToolbar();
+    }
+    else if (mClassID.Equals(kCToolBarManager)) {
+        inst = (nsISupports*)(nsWindow*)new nsToolbarManager();
+    }
+    else if (mClassID.Equals(kCToolBarItemHolder)) {
+        inst = (nsISupports*)(nsIToolbarItemHolder *) new nsToolbarItemHolder();
+    }
+    else if (mClassID.Equals(kCPopUpMenu)) {
+        inst = (nsISupports*)(nsWindow*)new nsPopUpMenu();
     }/* */
   
     if (inst == NULL) {  

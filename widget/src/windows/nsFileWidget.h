@@ -40,7 +40,7 @@ class nsFileWidget : public nsIFileWidget
 
     // nsIWidget interface
   
-    virtual void            Create( nsIWidget *aParent,
+    NS_IMETHOD            Create( nsIWidget *aParent,
                                     nsString& aTitle,
                                     nsMode aMode,
                                     nsIDeviceContext *aContext = nsnull,
@@ -50,9 +50,9 @@ class nsFileWidget : public nsIFileWidget
 
     // nsIFileWidget part
     virtual PRBool          Show();
-    virtual void            GetFile(nsString& aFile);
-    virtual void            SetDefaultString(nsString& aFile);
-    virtual void            SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[]);
+    NS_IMETHOD            GetFile(nsString& aFile);
+    NS_IMETHOD            SetDefaultString(nsString& aFile);
+    NS_IMETHOD            SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[]);
   
   protected:
 
