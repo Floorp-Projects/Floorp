@@ -763,7 +763,7 @@ void nsWindow::SetFont(const nsFont &aFont)
         XmFontList      fontList = NULL;
         XmFontListEntry entry    = NULL;
         XFontStruct * fontStruct = XQueryFont(XtDisplay(mWidget), 
-                                              metrics->GetFontHandle());
+                                              (XID)metrics->GetFontHandle());
         if (fontStruct != NULL) {
           entry = XmFontListEntryCreate(XmFONTLIST_DEFAULT_TAG, 
                                         XmFONT_IS_FONT, fontStruct);
