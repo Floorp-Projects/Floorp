@@ -136,9 +136,7 @@ NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
 
 
 /*********nsFrameIterator************/
-NS_IMPL_ADDREF(nsFrameIterator)
-
-NS_IMPL_RELEASE(nsFrameIterator)
+NS_IMPL_ISUPPORTS2(nsFrameIterator, nsIEnumerator, nsIBidirectionalEnumerator)
 
 nsFrameIterator::nsFrameIterator()
 {
@@ -147,26 +145,6 @@ nsFrameIterator::nsFrameIterator()
   mCurrent = nsnull;
   mStart = nsnull;
   NS_INIT_REFCNT();
-}
-
-
-NS_IMETHODIMP
-nsFrameIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void *)(nsISupports *)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIEnumeratorIID)) {
-    *aInstancePtr = (void*)NS_STATIC_CAST(nsIEnumerator*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
 }
 
 
