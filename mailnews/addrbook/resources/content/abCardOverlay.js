@@ -136,13 +136,60 @@ function OnLoadNewCard()
   moveToAlertPosition();
 }
 
+// find the index in addressLists for the card that is being saved.
+function findCardIndex(directory)
+{
+  var index = -1;
+  var listCardsCount = directory.addressLists.Count();
+  for ( var i = 0;  i < listCardsCount; i++ ) {
+    var card = directory.addressLists.QueryElementAt(i, Components.interfaces.nsIAbCard);
+    if (editCard.card.equals(card)) {
+      index = i;
+      break;
+    }
+  }
+  return index;
+}
 
 function EditCardOKButton()
 {
+
+  // See if this card is in any mailing list
+  // if so then we need to update the addresslists of those mailing lists
+  var index = -1;
+  var directory = GetDirectoryFromURI(editCard.abURI);
+
+  // if the directory is a mailing list we need to search all the mailing lists
+  // in the parent directory if the card exists.
+  if (directory.isMailList) {
+    var parentURI = GetParentDirectoryFromMailingListURI(editCard.abURI);
+    directory = GetDirectoryFromURI(parentURI);
+  }
+
+  var listDirectoriesCount = directory.addressLists.Count();
+  var foundDirectories = new Array();
+  var foundDirectoriesCount = 0;
+  var i;
+  // create a list of mailing lists and the index where the card is at.
+  for ( i=0;  i < listDirectoriesCount; i++ ) {
+    var subdirectory = directory.addressLists.QueryElementAt(i, Components.interfaces.nsIAbDirectory);
+    index = findCardIndex(subdirectory);
+    if (index > -1)
+    {
+      foundDirectories[foundDirectoriesCount] = {directory:subdirectory, index:index};
+      foundDirectoriesCount++;
+    }
+  }
+  
   SetCardValues(editCard.card, document);
 
   editCard.card.editCardToDatabase(editCard.abURI);
   
+  for (i=0; i<foundDirectoriesCount; i++) {
+      // Update the addressLists item for this card
+      foundDirectories[i].directory.addressLists.
+              SetElementAt(foundDirectories[i].index, editCard.card);
+  }
   NotifySaveListeners();
 
   // callback to allow caller to update
