@@ -47,20 +47,23 @@ PRBool PrintPreviewContext::IsPaginated()
   return PR_TRUE;
 }
 
-// XXX assumes a 1/2 margin around all sides
 nscoord PrintPreviewContext::GetPageWidth()
 {
 #if 0
+  // XXX assumes a 1/2 margin around all sides
   return (nscoord) NS_INCHES_TO_TWIPS(7.5);
 #else
-  // For testing purposes make the page width 95% of the visible area
-  return mVisibleArea.width * 95 / 100;
+  // For testing purposes make the page width smaller than the visible
+  // area
+  nscoord sbar = NS_TO_INT_ROUND(mDeviceContext->GetScrollBarWidth());
+  return mVisibleArea.width - sbar - 2*100;
 #endif
 }
 
 nscoord PrintPreviewContext::GetPageHeight()
 {
 #if 0
+  // XXX assumes a 1/2 margin around all sides
   return (nscoord) NS_INCHES_TO_TWIPS(10);
 #else
   // For testing purposes make the page height 60% of the visible area
