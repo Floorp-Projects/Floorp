@@ -164,8 +164,8 @@ nsAddrDatabase::nsAddrDatabase()
 
 nsAddrDatabase::~nsAddrDatabase()
 {
-//	Close(FALSE);	// better have already been closed.
-    if (m_ChangeListeners) 
+	Close(FALSE);	// better have already been closed.
+    if (m_ChangeListeners)
 	{
         // better not be any listeners, because we're going away.
         NS_ASSERTION(m_ChangeListeners->Count() == 0, "shouldn't have any listeners");
