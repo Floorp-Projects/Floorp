@@ -314,12 +314,6 @@ endif
 ifeq (,$(filter modules/libpr0n, $(BUILD_MODULE_CVS)))
   CVSCO_IMGLIB2 :=
 endif
-else
-ifndef MOZ_NSS_AUTOCONF
-  # Do not pull PSM/NSS by default
-  CVSCO_PSM :=
-  CVSCO_NSS :=
-endif
 endif
 
 ####################################
