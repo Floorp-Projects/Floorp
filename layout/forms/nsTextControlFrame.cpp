@@ -1493,9 +1493,7 @@ nsTextControlFrame::CalculateSizeStandard(nsIPresContext*       aPresContext,
   } else {
     // This is to account for the anonymous <br> having a 1 twip width
     // in Full Standards mode, see BRFrame::Reflow and bug 228752.
-    nsCompatibility mode;
-    aPresContext->GetCompatibilityMode(&mode);
-    if (mode == eCompatibility_FullStandards) {
+    if (aPresContext->CompatibilityMode() == eCompatibility_FullStandards) {
       aDesiredSize.width += 1;
     }
   }

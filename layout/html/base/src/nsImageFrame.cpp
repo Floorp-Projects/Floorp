@@ -484,9 +484,7 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
     useSizedBox = PR_FALSE;
   }
   else {
-    nsCompatibility mode;
-    mPresContext->GetCompatibilityMode(&mode);
-    if (mode != eCompatibility_NavQuirks) {
+    if (mPresContext->CompatibilityMode() != eCompatibility_NavQuirks) {
       useSizedBox = PR_FALSE;
     }
     else {
@@ -756,9 +754,7 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
       // used if inline alt expansion is used instead)
       // XXX: we need this in composer, but it is also good for
       // XXX: general quirks mode to always have room for the icon
-      nsCompatibility mode;
-      aPresContext->GetCompatibilityMode(&mode);
-      if (mode == eCompatibility_NavQuirks) {
+      if (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks) {
         mIntrinsicSize.SizeTo(NSIntPixelsToTwips(ICON_SIZE+(2*(ICON_PADDING+ALT_BORDER_WIDTH)), p2t),
                               NSIntPixelsToTwips(ICON_SIZE+(2*(ICON_PADDING+ALT_BORDER_WIDTH)), p2t));
       }

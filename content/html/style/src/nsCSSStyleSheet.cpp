@@ -3139,7 +3139,7 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
 
   // get the compat. mode (unless it is provided)
   if(!aCompat) {
-    mPresContext->GetCompatibilityMode(&mCompatMode);
+    mCompatMode = mPresContext->CompatibilityMode();
   } else {
     mCompatMode = *aCompat;
   }
@@ -4318,11 +4318,8 @@ CSSRuleProcessor::GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium)
   }
 
   if (mSheets) {
-    nsCompatibility quirkMode;
-    aPresContext->GetCompatibilityMode(&quirkMode);
-
     cascade = new RuleCascadeData(aMedium,
-                                  eCompatibility_NavQuirks == quirkMode);
+                                  eCompatibility_NavQuirks == aPresContext->CompatibilityMode());
     if (cascade) {
       CascadeEnumData data(aMedium, cascade->mRuleHash.Arena());
       mSheets->EnumerateForwards(CascadeSheetRulesInto, &data);

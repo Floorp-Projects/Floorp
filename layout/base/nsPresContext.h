@@ -152,8 +152,8 @@ public:
    * All users must explicitly set the compatibility mode rather than
    * relying on a default.
    */
-  NS_IMETHOD GetCompatibilityMode(nsCompatibility* aModeResult) = 0;
-  NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode) = 0;
+  nsCompatibility CompatibilityMode() const { return mCompatibilityMode; }
+  virtual void    SetCompatibilityMode(nsCompatibility aMode) = 0;
 
   /**
    * Access the image animation mode for this context
@@ -579,6 +579,7 @@ protected:
                                         // from gfx back to layout.
   nsIEventStateManager* mEventManager;  // [STRONG]
 
+  nsCompatibility       mCompatibilityMode;
 };
 
 // Bit values for StartLoadImage's aImageStatus

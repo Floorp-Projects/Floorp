@@ -870,13 +870,11 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache* aFloatCache,
 
   // Can the float fit here?
   PRBool keepFloatOnSameLine = PR_FALSE;
-  nsCompatibility mode;
-  mPresContext->GetCompatibilityMode(&mode);
 
   while (! CanPlaceFloat(region, floatDisplay->mFloats)) {
     // Nope. try to advance to the next band.
     if (NS_STYLE_DISPLAY_TABLE != floatDisplay->mDisplay ||
-          eCompatibility_NavQuirks != mode ) {
+          eCompatibility_NavQuirks != mPresContext->CompatibilityMode() ) {
 
       mY += mAvailSpaceRect.height;
       GetAvailableSpace();

@@ -4957,8 +4957,6 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   }
   else {
     const nsStyleDisplay* floatDisplay = floatFrame->GetStyleDisplay();
-    nsCompatibility mode;
-    aState.mPresContext->GetCompatibilityMode(&mode);
 
     nsIFrame* prevInFlow;
     floatFrame->GetPrevInFlow(&prevInFlow);
@@ -4967,7 +4965,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
       availWidth = prevInFlow->GetRect().width;
     }
     else if (NS_STYLE_DISPLAY_TABLE != floatDisplay->mDisplay ||
-             eCompatibility_NavQuirks != mode ) {
+             eCompatibility_NavQuirks != aState.mPresContext->CompatibilityMode() ) {
       availWidth = aState.mContentArea.width;
     }
     else {

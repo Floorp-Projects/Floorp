@@ -1670,8 +1670,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
   nsStyleCoord        bordStyleRadius[4];
   PRInt16             borderRadii[4],i;
   float               percent;
-  nsCompatibility     compatMode;
-  aPresContext->GetCompatibilityMode(&compatMode);
+  nsCompatibility     compatMode = aPresContext->CompatibilityMode();
 
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the border.  DO not get the data from aForFrame, since the passed in style context

@@ -271,11 +271,11 @@ nsTableFrame::Init(nsIPresContext*  aPresContext,
   }
   else {
     NS_ASSERTION(!mTableLayoutStrategy, "strategy was created before Init was called");
-    nsCompatibility mode;
-    aPresContext->GetCompatibilityMode(&mode);
     // create the strategy
-    mTableLayoutStrategy = (IsAutoLayout()) ? new BasicTableLayoutStrategy(this, eCompatibility_NavQuirks == mode)
-                                            : new FixedTableLayoutStrategy(this);
+    mTableLayoutStrategy = (IsAutoLayout()) ?
+      new BasicTableLayoutStrategy(this,
+                eCompatibility_NavQuirks == aPresContext->CompatibilityMode())
+      : new FixedTableLayoutStrategy(this);
   }
 
   return rv;
@@ -2762,9 +2762,7 @@ nsTableFrame::GetBCBorder(nsIPresContext* aPresContext) const
   BCPropertyData* propData = 
     (BCPropertyData*)nsTableFrame::GetProperty(aPresContext, (nsIFrame*)this, nsLayoutAtoms::tableBCProperty, PR_FALSE);
   if (propData) {
-    nsCompatibility mode;
-    aPresContext->GetCompatibilityMode(&mode);
-    if (eCompatibility_NavQuirks != mode) {
+    if (eCompatibility_NavQuirks != aPresContext->CompatibilityMode()) {
       nscoord smallHalf, largeHalf;
 
       DivideBCBorderSize(propData->mTopBorderWidth, smallHalf, largeHalf);
@@ -2799,9 +2797,7 @@ nsTableFrame::GetBCMargin(nsIPresContext*  aPresContext) const
                                                nsLayoutAtoms::tableBCProperty,
                                                PR_FALSE);
   if (propData) {
-    nsCompatibility mode;
-    aPresContext->GetCompatibilityMode(&mode);
-    if (eCompatibility_NavQuirks != mode) {
+    if (eCompatibility_NavQuirks != aPresContext->CompatibilityMode()) {
       nscoord smallHalf, largeHalf;
 
       DivideBCBorderSize(propData->mTopBorderWidth, smallHalf, largeHalf);
@@ -2837,9 +2833,7 @@ nsTableFrame::GetChildAreaOffset(nsIPresContext*          aPresContext,
 {
   nsMargin offset(0,0,0,0);
   if (IsBorderCollapse()) {
-    nsCompatibility mode;
-    aPresContext->GetCompatibilityMode(&mode);
-    if (eCompatibility_NavQuirks == mode) {
+    if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode()) {
       nsTableFrame* firstInFlow = (nsTableFrame*)GetFirstInFlow(); if (!firstInFlow) ABORT1(offset);
       nscoord smallHalf, largeHalf;
       GET_PIXELS_TO_TWIPS(aPresContext, p2t);
