@@ -398,7 +398,7 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name,
 
     if (NS_FAILED(rv))
     {
-      unicodeHeaderValue.Assign(NS_ConvertUTF8toUCS2(name));
+      CopyUTF8toUTF16(name, unicodeHeaderValue);
 
       // but it's not really a failure if we didn't have a converter
       // in the first place

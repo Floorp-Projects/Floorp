@@ -120,7 +120,7 @@ MimeInlineTextHTMLAsPlaintext_parse_eof (MimeObject *obj, PRBool abort_p)
     | nsIDocumentEncoder::OutputBodyOnly;
   HTML2Plaintext(cb, asPlaintext, flags, 80);
 
-  nsCAutoString resultCStr = NS_ConvertUCS2toUTF8(asPlaintext);
+  NS_ConvertUTF16toUTF8 resultCStr(asPlaintext);
   // TODO parse each line independently
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_line(
                              resultCStr.BeginWriting(),

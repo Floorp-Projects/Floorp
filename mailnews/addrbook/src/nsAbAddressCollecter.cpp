@@ -222,8 +222,7 @@ nsresult nsAbAddressCollecter::AutoCollectScreenName(nsIAbCard *aCard, const cha
       strcmp(domain,"netscape.net"))
     return NS_OK;
 
-  nsAutoString userName(NS_ConvertASCIItoUCS2(aEmail).get());
-  userName.SetLength(atPos - aEmail);
+  NS_ConvertASCIItoUTF16 userName(Substring(aEmail, atPos));
 
   rv = aCard->SetAimScreenName(userName.get());
   NS_ENSURE_SUCCESS(rv,rv);

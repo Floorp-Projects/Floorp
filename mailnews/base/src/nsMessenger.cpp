@@ -611,7 +611,7 @@ nsMessenger::LoadURL(nsIDOMWindowInternal *aWin, const char *aURL)
   
   SetDisplayCharset("UTF-8");
   
-  nsAutoString uriString(NS_ConvertASCIItoUCS2(aURL).get());
+  NS_ConvertASCIItoUTF16 uriString(aURL);
   // Cleanup the empty spaces that might be on each end.
   uriString.Trim(" ");
   // Eliminate embedded newlines, which single-line text fields now allow:
@@ -2031,7 +2031,8 @@ nsSaveMsgListener::OnDataAvailable(nsIRequest* request,
       if (NS_SUCCEEDED(rv))
       {
         if ( (m_doCharsetConversion) && (m_outputFormat == ePlainText) )
-          m_msgBuffer.Append(NS_ConvertUTF8toUCS2(m_dataBuffer, readCount));
+          AppendUTF8toUTF16(Substring(m_dataBuffer, m_dataBuffer + readCount),
+                            m_msgBuffer);
         else
           rv = m_outputStream->Write(m_dataBuffer, readCount, &writeCount);
 

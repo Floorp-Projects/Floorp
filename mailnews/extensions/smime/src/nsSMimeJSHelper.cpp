@@ -414,21 +414,20 @@ nsresult nsSMimeJSHelper::getMailboxList(nsIMsgCompFields *compFields, PRUint32 
   
   {
     nsCString all_recipients;
-    nsDependentCString comma(",");
 
-    NS_ConvertUCS2toUTF8 utf8_to(to);
-    if (!utf8_to.IsEmpty()) {
-      all_recipients += utf8_to + comma;
+    if (!to.IsEmpty()) {
+      AppendUTF16toUTF8(to, all_recipients);
+      all_recipients.Append(',');
     }
 
-    NS_ConvertUCS2toUTF8 utf8_cc(cc);
-    if (!utf8_cc.IsEmpty()) {
-      all_recipients += utf8_cc + comma;
+    if (!cc.IsEmpty()) {
+      AppendUTF16toUTF8(cc, all_recipients);
+      all_recipients.Append(',');
     }
 
-    NS_ConvertUCS2toUTF8 utf8_bcc(bcc);
-    if (!utf8_bcc.IsEmpty()) {
-      all_recipients += utf8_bcc + comma;
+    if (!bcc.IsEmpty()) {
+      AppendUTF16toUTF8(bcc, all_recipients);
+      all_recipients.Append(',');
     }
 
     all_recipients += ng;

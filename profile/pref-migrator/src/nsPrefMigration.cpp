@@ -1719,7 +1719,7 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * aPathSpec, PRBool aReadSubdirs
   rv = NS_FileSpecToIFile(&path, getter_AddRefs(localFileDirectory));
   if (NS_FAILED(rv))
     return rv;
-  nsAutoString newName = NS_ConvertUTF8toUCS2(aNewName);
+  NS_ConvertUTF8toUTF16 newName(aNewName);
   localFileOld->CopyTo(localFileDirectory, newName);
 
   return NS_OK;

@@ -614,7 +614,7 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 
   // If callers pass in a content type then use it, else get it from the header.
   if (!useThisCType.IsEmpty())
-   bodyType.Assign(NS_ConvertASCIItoUCS2(useThisCType.get()));
+    CopyASCIItoUTF16(useThisCType, bodyType);
   else
   {
 	bodyType = headerVal;

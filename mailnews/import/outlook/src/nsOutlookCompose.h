@@ -147,7 +147,7 @@ private:
 		val.Truncate();
 		nsCString	hVal;
 		GetHeaderValue( pData, dataLen, pHeader, hVal, PR_TRUE);
-		val.Assign(NS_ConvertUTF8toUCS2(hVal));
+		CopyUTF8toUTF16(hVal, val);
 	}
 	void		ExtractCharset( nsString& str);
 	void		ExtractType( nsString& str);

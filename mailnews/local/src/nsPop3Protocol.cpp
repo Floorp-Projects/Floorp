@@ -1077,8 +1077,8 @@ nsPop3Protocol::Error(PRInt32 err_code)
                 }
 
                 nsAutoString message(alertString + NS_LITERAL_STRING(" ") +
-                                     serverSaidPrefix + NS_LITERAL_STRING(" ") +
-                                     NS_ConvertASCIItoUCS2(m_commandResponse));
+                                     serverSaidPrefix + NS_LITERAL_STRING(" "));
+                AppendASCIItoUTF16(m_commandResponse, message);
                 dialog->Alert(nsnull,message.get()); 
               }
             }

@@ -572,7 +572,7 @@ nsAbLDAPAutoCompFormatter::ProcessFormat(const nsAString & aFormat,
 
                 // this character gets treated as a literal
                 //
-                (*aValue).Append(NS_ConvertUCS2toUTF8(nsDependentString(iter.get(), 1))); //XXXjag poke me about string generators
+                AppendUTF16toUTF8(nsDependentString(iter.get(), 1), *aValue); //XXXjag poke me about string generators
             }
         }
 
@@ -690,7 +690,7 @@ nsAbLDAPAutoCompFormatter::AppendFirstAttrValue(
 
     // append the value to our string; then free the array of results
     //
-    aValue.Append(NS_ConvertUCS2toUTF8(values[0]));
+    AppendUTF16toUTF8(values[0], aValue);
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(numVals, values);
 
     // if this attribute wasn't required, we fall through to here, and return 

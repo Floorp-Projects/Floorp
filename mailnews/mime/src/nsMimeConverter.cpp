@@ -120,9 +120,9 @@ nsMimeConverter::DecodeMimeHeader(const char *header,
   decodedCstr = MIME_DecodeMimeHeader(header, default_charset,
                                       override_charset, eatContinuations);
   if (nsnull == decodedCstr) {
-    decodedString = NS_ConvertUTF8toUCS2(header);
+    CopyUTF8toUTF16(header, decodedString);
   } else {
-    decodedString = NS_ConvertUTF8toUCS2(decodedCstr);
+    CopyUTF8toUTF16(decodedCstr, decodedString);
     PR_FREEIF(decodedCstr);
   }
 

@@ -47,8 +47,8 @@
 
 extern PRLogModuleInfo *PALMSYNC;
 
-#define CONVERT_ASSIGNTO_UNICODE(d, s, convertCRLF)  d.SetLength(0);\
-                                        if((char*) s) d=NS_ConvertASCIItoUCS2((const char*)s);\
+#define CONVERT_ASSIGNTO_UNICODE(d, s, convertCRLF)  d.Truncate();\
+                                        if((char*) s) AppendASCIItoUTF16((char*)s, d);\
                                         if (convertCRLF) \
                                           d.ReplaceSubstring(NS_LITERAL_STRING("\x0D\x0A").get(),NS_LITERAL_STRING(" ").get());
 
@@ -819,8 +819,7 @@ void nsAbIPCCard::CopyValue(PRBool isUnicode, nsString & attribValue, LPTSTR * r
             *result = Str;
         } 
         else { 
-            nsCAutoString cStr; 
-            cStr = NS_LossyConvertUCS2toASCII(attribValue);
+            NS_LossyConvertUTF16toASCII cStr(attribValue);
             // These strings are defined as wide in the idl, so we need to add up to 3
             // bytes of 0 byte padding at the end (if the string is an odd number of 
             // bytes long, we need one null byte to pad out the last char to a wide char
@@ -947,15 +946,14 @@ void nsAbIPCCard::JoinAddress(PRBool isUnicode, LPTSTR *ptrAddress, nsString &ad
   else
   { 
     char * str = (char *) CoTaskMemAlloc(strLength);
-    nsCAutoString cStr;
     if(address1.Length())
     {
-      cStr = NS_LossyConvertUCS2toASCII(address1); 
+      NS_LossyConvertUTF16toASCII cStr(address1);
       strncpy(str, cStr.get(), strLength-1);
       str[strLength-1] = '\0';
       if(address2.Length())
       {
-        cStr = NS_LossyConvertUCS2toASCII(address2);
+        LossyCopyUTF16toASCII(address2, cStr);
         strncat(str, "\x0A", strLength-1);
         strncat(str, cStr.get(), strLength-1);
         str[strLength-1] = '\0';
@@ -963,7 +961,7 @@ void nsAbIPCCard::JoinAddress(PRBool isUnicode, LPTSTR *ptrAddress, nsString &ad
     }
     else
     {
-      cStr = NS_LossyConvertUCS2toASCII(address2);
+      NS_LossyConvertUTF16toASCII cStr(address2);
       strncpy(str, cStr.get(), strLength-1);
       str[strLength-1] = '\0';
     }

@@ -518,7 +518,7 @@ nsresult AddressBookParser::ParseFile()
 
     // If a name is found then use it, otherwise use the filename as last resort.
     if (NS_FAILED(rv) || dirName.IsEmpty())
-        dirName = NS_ConvertASCIItoUCS2(leafName);
+      CopyASCIItoUTF16(leafName, dirName);
     parentDir->CreateDirectoryByURI(dirName, mDbUri, mMigrating);
         
     rv = ParseLDIFFile();
@@ -1897,7 +1897,8 @@ nsresult nsAddressBook::AppendProperty(const char *aProperty, const PRUnichar *a
  
   // if the string is not safe "as is", base64 encode it
   if (IsSafeLDIFString(aValue)) {
-    aResult += NS_LITERAL_CSTRING(": ") + NS_LossyConvertUCS2toASCII(aValue);
+    aResult.AppendLiteral(": ");
+    LossyAppendUTF16toASCII(aValue, aResult);
   }
   else {
     char *base64Str = PL_Base64Encode(NS_ConvertUCS2toUTF8(aValue).get(), 0, nsnull);

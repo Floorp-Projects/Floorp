@@ -271,7 +271,6 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::PopulateAuthData()
             return rv;
 
         if (!passwordFound.IsEmpty())
-            // XXX This needs CopyUCS2toUTF8
             CopyUTF16toUTF8(passwordFound, mAuthPswd);
     }
 

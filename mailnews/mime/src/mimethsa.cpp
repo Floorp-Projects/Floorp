@@ -182,7 +182,7 @@ printf(" E4\n");
 printf(" E5\n");
 #endif
 
-  nsCAutoString resultCStr = NS_ConvertUCS2toUTF8(sanitized);
+  NS_ConvertUTF16toUTF8 resultCStr(sanitized);
 #ifdef DEBUG_BenB
 printf(" E6\n");
 #endif

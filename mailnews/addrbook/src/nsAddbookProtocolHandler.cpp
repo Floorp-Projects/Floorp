@@ -155,7 +155,7 @@ nsAddbookProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
     rv = aURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    errorString.Append(NS_ConvertUTF8toUCS2(spec));
+    AppendUTF8toUTF16(spec, errorString);
     rv = GenerateXMLOutputChannel(errorString, addbookUrl, aURI, _retval);
     NS_ENSURE_SUCCESS(rv,rv);
     return NS_OK;
@@ -183,7 +183,7 @@ nsAddbookProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
     nsCAutoString spec;
     rv = aURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv,rv);
-    output.Append(NS_ConvertUTF8toUCS2(spec));
+    AppendUTF8toUTF16(spec, output);
   }
  
   rv = GenerateXMLOutputChannel(output, addbookUrl, aURI, _retval);

@@ -402,7 +402,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsIMsgRuleAction *aFilterAction, nsIMsgDBH
     buffer.SetCapacity(512);  
     
     buffer = "Applied filter \"";
-    buffer +=  NS_ConvertUCS2toUTF8(filterName).get();
+    AppendUTF16toUTF8(filterName, buffer);
     buffer +=  "\" to message from ";
     buffer +=  (const char*)author;
     buffer +=  " - ";

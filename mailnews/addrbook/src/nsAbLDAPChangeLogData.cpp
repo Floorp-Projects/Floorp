@@ -292,9 +292,8 @@ nsresult nsAbLDAPProcessChangeLogData::GetAuthData()
                                             getter_Copies(username), getter_Copies(password), 
                                             &btnResult);
     if(NS_SUCCEEDED(rv) && btnResult) {
-        // XXX This needs CopyUCS2toUTF8
-        mAuthUserID.Assign(NS_ConvertUCS2toUTF8(username));
-        mAuthPswd.Assign(NS_ConvertUCS2toUTF8(password));
+        CopyUTF16toUTF8(username, mAuthUserID);
+        CopyUTF16toUTF8(password, mAuthPswd);
         mDirServerInfo->enableAuth=PR_TRUE;
         mDirServerInfo->savePassword=PR_TRUE;
     }
@@ -342,8 +341,7 @@ nsresult nsAbLDAPProcessChangeLogData::ParseRootDSEEntry(nsILDAPMessage *aMessag
             continue;
         if(vals.GetSize()) {
             if (!PL_strcasecmp(attrs[i], "changelog"))
-                // XXX This needs CopyUCS2toUTF8
-                mRootDSEEntry.changeLogDN.Assign(NS_ConvertUCS2toUTF8(vals[0]));
+                CopyUTF16toUTF8(vals[0], mRootDSEEntry.changeLogDN);
             if (!PL_strcasecmp(attrs[i], "firstChangeNumber"))
                 mRootDSEEntry.firstChangeNumber = atol(NS_LossyConvertUCS2toASCII(vals[0]).get());
             if (!PL_strcasecmp(attrs[i], "lastChangeNumber"))

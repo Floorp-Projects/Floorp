@@ -5266,7 +5266,7 @@ nsImapMailFolder::FillInFolderProps(nsIMsgImapFolderProps *aFolderProps)
     else
     {
       // is this right? It doesn't leak, does it?
-      uniOwner.Assign(NS_ConvertASCIItoUCS2(owner.get()));
+      CopyASCIItoUTF16(owner, uniOwner);
     }
     const PRUnichar *params[] = { uniOwner.get() };
     rv = bundle->FormatStringFromID(IMAP_OTHER_USERS_FOLDER_TYPE_DESCRIPTION, params, 1, getter_Copies(folderTypeDesc));

@@ -229,10 +229,10 @@ char *nsMsgSearchNews::EncodeTerm (nsIMsgSearchTerm *term)
 
     
 	if (leadingStar)
-      pattern.Append("*");
-    pattern.Append(NS_ConvertUCS2toUTF8(escapedValue));
+      pattern.Append('*');
+    AppendUTF16toUTF8(escapedValue, pattern);
 	if (trailingStar)
-      pattern.Append("*");
+      pattern.Append('*');
 
 	// Combine the XPAT command syntax with the attribute and the pattern to
 	// form the term encoding

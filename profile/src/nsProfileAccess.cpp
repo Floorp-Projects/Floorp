@@ -1124,9 +1124,9 @@ nsProfileAccess::Get4xProfileInfo(nsIFile *registryFile, PRBool fromImport)
 #if defined(XP_MAC) || defined(XP_MACOSX)
         // 4.x profiles coming from japanese machine are already in unicode.
         // So, there is no need to decode into unicode further.
-        NS_ConvertUCS2toUTF8 temp(profile);
+        NS_ConvertUTF16toUTF8 temp(profile);
         nsCAutoString profileName(nsUnescape(temp.BeginWriting()));
-        nsAutoString convertedProfName(NS_ConvertUTF8toUCS2(profileName).get());
+        NS_ConvertUTF8toUTF16 convertedProfName(profileName);
 #else
         nsCAutoString temp; temp.AssignWithConversion(profile);
 
@@ -1415,9 +1415,9 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         // So, there is no need to decode into unicode further.
 
         // Unescape profile location
-        NS_ConvertUCS2toUTF8 tempLoc(profLoc);
+        NS_ConvertUTF16toUTF8 tempLoc(profLoc);
         nsCAutoString profileLocation(nsUnescape(tempLoc.BeginWriting()));
-        nsAutoString convertedProfLoc(NS_ConvertUTF8toUCS2(profileLocation).get());
+        NS_ConvertUTF8toUTF16 convertedProfLoc(profileLocation);
 #else
         nsCAutoString charSet;
         rv = GetPlatformCharset(charSet);
@@ -1504,7 +1504,7 @@ nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         if (NS_FAILED(rv)) return rv;
         if (leafCreated)
             resolvedLocation->Remove(PR_FALSE);
-        regData = NS_ConvertUTF8toUCS2(descBuf);
+        AppendUTF8toUTF16(descBuf, regData);
 #else
         rv = resolvedLocation->GetPath(regData);
         if (NS_FAILED(rv)) return rv;
@@ -1572,7 +1572,7 @@ nsresult ProfileStruct::ExternalizeMigratedFromLocation(nsIRegistry *aRegistry, 
 #else
         nsAutoString path;
         rv = migratedFrom->GetPath(path);
-        regData = NS_ConvertUCS2toUTF8(path);
+        AppendUTF16toUTF8(path, regData);
 #endif
 
         if (NS_SUCCEEDED(rv))

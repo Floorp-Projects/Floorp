@@ -114,7 +114,7 @@ nsMsgSearchValueImpl::ToString(PRUnichar **aResult)
     nsAutoString resultStr;
     resultStr.AssignLiteral("[nsIMsgSearchValue: ");
     if (IS_STRING_ATTRIBUTE(mValue.attribute)) {
-        resultStr.Append(NS_ConvertUTF8toUCS2(mValue.string));
+        AppendUTF8toUTF16(mValue.string, resultStr);
         return NS_OK;
     }
 

@@ -1105,8 +1105,8 @@ nsresult nsImapIncomingServer::GetPFCForStringId(PRBool createIfMissing, PRInt32
   NS_ENSURE_SUCCESS(rv, rv);
   nsCAutoString pfcMailUri(pfcURI);
 //  pfcMailUri.Append(".sbd");
-  pfcMailUri.Append("/");
-  pfcMailUri.Append(NS_ConvertUCS2toUTF8(pfcName).get());
+  pfcMailUri.Append('/');
+  AppendUTF16toUTF8(pfcName, pfcMailUri);
   pfcParent->GetChildWithURI(pfcMailUri.get(), PR_FALSE, PR_FALSE /* caseInsensitive*/, aFolder);
   if (!*aFolder && createIfMissing)
   {
@@ -2087,7 +2087,7 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString, nsIM
 			nsAutoString message(serverSaidPrefix);
       // the alert string from the server IS UTF-8!!! We must convert it to unicode
       // correctly before appending it to our error message string...
-			message.Append(NS_ConvertUTF8toUCS2(whereRealMessage ? whereRealMessage : aString));
+			AppendUTF8toUTF16(whereRealMessage ? whereRealMessage : aString, message);
 			rv = dialog->Alert(nsnull, message.get());
 
 			PR_Free(serverSaidPrefix);

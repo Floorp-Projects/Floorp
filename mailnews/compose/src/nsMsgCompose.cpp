@@ -1796,8 +1796,9 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
         if (!myGetter.IsEmpty())
         {
           nsCAutoString buf;
-          mCiteReference = NS_LITERAL_STRING("mid")
-             + NS_ConvertASCIItoUCS2(NS_EscapeURL(myGetter, esc_FileBaseName | esc_Forced, buf));
+          mCiteReference.AssignLiteral("mid");
+          AppendASCIItoUTF16(NS_EscapeURL(myGetter, esc_FileBaseName | esc_Forced, buf),
+                             mCiteReference);
         }
       }
 
