@@ -27,10 +27,6 @@ CHROME_CONTENT_DIR = global\content
 CHROME_CONTENT = \
 	.\platformGlobalOverlay.xul \
 	.\platformDialogOverlay.xul \
-	.\platformBrowserBindings.xul \
-	.\platformInputBindings.xul \
-	.\platformTextAreaBindings.xul \
-	.\platformEditorBindings.xul \
 	.\platformHTMLBindings.xml \
 	$(NULL)
 
