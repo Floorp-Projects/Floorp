@@ -190,8 +190,7 @@ nsTreeCellFrame::HandleEvent(nsIPresContext& aPresContext,
     HandleMouseExitEvent(aPresContext, aEvent, aEventStatus);
   else if (aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK)
 		HandleDoubleClickEvent(aPresContext, aEvent, aEventStatus);
-
-
+ 
   return NS_OK;
 }
 
@@ -245,13 +244,55 @@ nsTreeCellFrame::HandleMouseExitEvent(nsIPresContext& aPresContext,
 {
   if (mIsHeader)
   {
-	  // Nothing to do?
   }
   else
   {
     // Set our hover to false
     Hover(aPresContext, PR_FALSE);
   }
+  return NS_OK;
+}
+
+PRBool
+nsTreeCellFrame::CanResize(nsPoint& aPoint) {
+  nsRect rect;
+  GetRect(rect);
+  PRInt32 diff = (rect.x + rect.width) - aPoint.x;
+
+  nsCOMPtr<nsIContent> parent;
+  mContent->GetParent(*getter_AddRefs(parent));
+  PRInt32 index;
+  parent->IndexOf(mContent, index);
+  PRInt32 count;
+  parent->ChildCount(count);
+  count--;
+
+  if ((index > 0 && diff <= 60) || ((rect.width - diff) <= 60 && index < count)) {
+    return PR_TRUE;
+  }
+  
+  return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsTreeCellFrame::GetCursor(nsIPresContext& aPresContext,
+                                     nsPoint&        aPoint,
+                                     PRInt32&        aCursor)
+{
+  if (mIsHeader) {
+    // Figure out if the point is over the resize stuff.
+    nsRect rect;
+    GetRect(rect);
+    PRInt32 diff = (rect.x + rect.width) - aPoint.x;
+
+    if (CanResize(aPoint)) {
+      aCursor = NS_STYLE_CURSOR_W_RESIZE;
+    }
+    else {
+      aCursor = NS_STYLE_CURSOR_DEFAULT;
+    }
+  }
+  else aCursor = NS_STYLE_CURSOR_DEFAULT;
   return NS_OK;
 }
 
