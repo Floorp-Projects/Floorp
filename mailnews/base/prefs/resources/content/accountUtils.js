@@ -101,10 +101,10 @@ function showMailIntegrationDialog() {
     if (mapiRegistry && mapiRegistry.showDialog) {
         const prefbase = "system.windows.lock_ui.";
         try {
-            prefService = Components.classes["@mozilla.org/preferences-service;1"]
+            var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService()
                           .QueryInterface(Components.interfaces.nsIPrefService);
-            prefBranch = prefService.getBranch(prefbase);
+            var prefBranch = prefService.getBranch(prefbase);
         
             if (prefBranch && prefBranch.prefIsLocked("defaultMailClient")) {
                 prefLocked = true;
