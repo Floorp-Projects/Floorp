@@ -460,10 +460,13 @@ MOZCONFIG2CONFIGURATOR := build/autoconf/mozconfig2configurator
 webconfig:
 	@cd $(TOPSRCDIR); \
 	url=`$(MOZCONFIG2CONFIGURATOR) $(TOPSRCDIR)`; \
-	echo Running netscape with the following url: ;\
+	echo Running mozilla with the following url: ;\
 	echo ;\
 	echo $$url ;\
-	netscape -remote "openURL($$url)" || netscape $$url ;\
+	mozilla -remote "openURL($$url)" || \
+	netscape -remote "openURL($$url)" || \
+	mozilla $$url || \
+	netscape $$url ;\
 	echo ;\
 	echo   1. Fill out the form on the browser. ;\
 	echo   2. Save the results to $(WEBCONFIG_FILE)
