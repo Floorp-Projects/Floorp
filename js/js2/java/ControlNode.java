@@ -21,6 +21,11 @@ class ControlNode {
         gList.addElement(this);
     }
     
+    ExpressionNode getExpression()
+    {
+        return expr;
+    }
+    
     void setNext(ControlNode aNext)
     {
         next = aNext;
@@ -28,7 +33,7 @@ class ControlNode {
     
     ControlNode eval(Environment theEnv)
     {
-        expr.eval(theEnv);
+        if (expr != null) expr.eval(theEnv);
         return next;
     }
     
@@ -36,12 +41,12 @@ class ControlNode {
     {
         StringBuffer result = new StringBuffer("ControlNode ");
         result.append(index);
-        result.append("\nexpr:\n");
+        result.append("\nexpr:  ");
         if (expr == null)
             result.append("expr = null\n");
         else
             result.append(expr.print(""));
-        result.append("next:\n");
+        result.append("next:  ");
         if (next == null)
             result.append("next = null\n");
         else

@@ -6,7 +6,8 @@ class Brenda {
 		try {
 			JSLexer lexer = new JSLexer((args != null) ? new DataInputStream(new FileInputStream(args[0])) : new DataInputStream(System.in));
 			JSParser parser = new JSParser(lexer);
-			ControlNodeGroup tree = parser.statements(0);
+			ControlNodeGroup tree = new ControlNodeGroup();
+			parser.statements(0, tree);
 			System.out.println(ControlNode.printAll());
 			
             Environment theEnv = new Environment();
