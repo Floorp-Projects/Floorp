@@ -78,10 +78,6 @@ box#url-bar-box {
 /*end urlbar stuff*/
 
 
-toolbox#main-toolbox {
-   min-width: 10px;
-}
-
 iframe#content-frame {
  min-width: 0px;
  min-height: 0px;
@@ -93,12 +89,25 @@ input[type="text"]#urlbar {
 
 
 /**
- * PersonalToolbar
+ * Toolbox
  */
 toolbox#main-toolbox {
+	min-width: 10px;
 	background-color: #CCCCCC;
 }
 
+toolbox#main-toolbox:toolbox-normal {
+	background-color: #CCCCCC;
+}
+
+toolbox#main-toolbox:toolbox-rollover {
+	background-color: #CCCCCC;
+}
+
+
+/**
+ * PersonalToolbar
+ */
 toolbar#PersonalToolbar {
 	overflow: hidden;
 	min-width: 1px;

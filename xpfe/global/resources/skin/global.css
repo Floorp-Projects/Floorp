@@ -100,24 +100,19 @@ window.dialog {
 /******* ToolBox & ToolBar *******/
 
 toolbox { 
-      background-color:#999999; 
+  background-color:#999999; 
 } 
 
 :toolbox-normal { 
- background-color: #003366; 
- background-image: url("chrome://global/skin/taskbar-tab.gif"); 
- background-repeat: no-repeat; 
- color: lightgray; 
- border: solid #003366 1px; 
-
+  background-color: #003366; 
+  background-image: url("chrome://global/skin/taskbar-tab.gif"); 
+  background-repeat: no-repeat; 
 } 
 
 :toolbox-rollover { 
- background-color: #99cccc; 
- background-image: url("chrome://global/skin/taskbar-tab-hover.gif"); 
- background-repeat: no-repeat; 
- color: green; 
- border: outset #99cccc 1px; 
+  background-color: #99cccc; 
+  background-image: url("chrome://global/skin/taskbar-tab-hover.gif"); 
+  background-repeat: no-repeat; 
 } 
 
 toolbar.standard {
@@ -130,10 +125,10 @@ toolbar.standard {
 }
 
 /**
- * normal buttons used in 'standard toolbar'
+ * round buttons used in 'standard toolbar'
  */
-toolbar.standard titledbutton {
-	background-image:none;
+titledbutton.button28 {
+	background-image: url("chrome://global/skin/button28-bg.gif");
 	background-repeat: no-repeat;
 	background-position: 50% 4px;
 	background-color: transparent;
@@ -145,107 +140,119 @@ toolbar.standard titledbutton {
 	font-size: smaller;
 }
 
-toolbar.standard titledbutton:hover {
-	background-image:url("chrome://global/skin/otherbutton28-bg-hover.gif");
-	color: #FFFFFF;
-	text-decoration: none;
+titledbutton.button28:hover {
+	background-image:url("chrome://global/skin/button28-bg-hover.gif");
 	border: none;
+	color: #CCFFFF;
+	text-decoration: none;
 }
 
-toolbar.standard titledbutton:active {
+titledbutton.button28:active {
+	background-image:url("chrome://global/skin/button28-bg-active.gif");
+	border: none;
+	color: #CCFFFF;
+	text-decoration: none;
+}
+
+titledbutton.button28[disabled="true"] {
+	background-image:url("chrome://global/skin/button28-bg-disabled.gif");
+	border: none;
+	color: #669999;
+	text-decoration: none;
+}
+
+titledbutton.button28[disabled="true"]:hover {
+	background-image:url("chrome://global/skin/button28-bg-disabled.gif");
+	border: none;
+	color: #669999;
+	text-decoration: none;
+}
+
+titledbutton.button28[disabled="true"]:active {
+	background-image:url("chrome://global/skin/button28-bg-disabled.gif");
+	border: none;
+	color: #669999;
+	text-decoration: none;
+}
+
+
+/**
+ * normal buttons used in 'standard toolbar'
+ */
+titledbutton.other28 {
+	background-image: none;
+	background-color: transparent;
+	color: #CCFFFF;
+	border: none;
+	padding: 0px;
+	min-width: 28px;
+	margin: 3px 7px 1px 1px;
+	font-size: smaller;
+}
+
+titledbutton.other28:hover {
+	background-image:url("chrome://global/skin/otherbutton28-bg-hover.gif");
+	background-repeat: no-repeat;
+	background-position: 50% 4px;
+	color: #CCFFFF;
+	border: none;
+	text-decoration: none;
+}
+
+titledbutton.other28:active {
 	background-image:url("chrome://global/skin/otherbutton28-bg-active.gif");
-	color: #FFFFFF;
+	background-repeat: no-repeat;
+	background-position: 50% 4px;
+	color: #CCFFFF;
+	border: none;
 	text-decoration: none;
 	margin: 4px 6px 0px 2px;
 }
 
-toolbar.standard titledbutton[disabled="true"] { 
+titledbutton.other28[disabled="true"] { 
 	margin: 3px 7px 1px 1px;
+	color: #669999;
+	border: none;
+	text-decoration: none;
 }
 
-/**
- * round buttons used in 'standard toolbar'
- */
-toolbar titledbutton.button28 {
-	background-image:url("chrome://global/skin/button28-bg.gif");
+titledbutton.other28[disabled="true"]:hover {
+	background-image: none;
+	color: #669999;
+	border: none;
+	text-decoration: none;
 }
 
-toolbar titledbutton.button28[disabled="true"] {
-	background-image:url("chrome://global/skin/button28-bg-disabled.gif");
+titledbutton.other28[disabled="true"]:active {
+	background-image: none;
+	color: #669999;
+	border: none;
+	text-decoration: none;
 }
-
-toolbar titledbutton.button28[disabled="true"]:hover {
-	background-image:url("chrome://global/skin/button28-bg-disabled.gif");
-}
-
-toolbar titledbutton.button28[disabled="true"]:active {
-	background-image:url("chrome://global/skin/button28-bg-disabled.gif");
-}
-
-toolbar titledbutton.button28:hover {
-	background-image:url("chrome://global/skin/button28-bg-hover.gif");
-}
-
-toolbar titledbutton.button28:active {
-	background-image:url("chrome://global/skin/button28-bg-active.gif");
-}
-
 
 /**
  * 32px round buttons (used in Navigation Toolbar)
  */
 /* have to explicitly set the border and padding to ensure that more specific rules 
    for disabled and active titledbuttons don't apply */
-toolbar titledbutton.button32 {
+titledbutton.button32 {
 	background-repeat: no-repeat;
 	background-position: 50% 0px;
 	background-color: transparent;
 	color: #CCFFFF;
 	min-width: 36px;
 	min-height: 36px;
-
 	border: none;
 	padding: 0px;
 	margin-left: 1px;
 	margin-bottom: 1px;
 	margin-top: 6px;
 	margin-right: 6px;
-
 	font-size: smaller;
 	background-image:url("chrome://global/skin/button32-bg.gif");
 }
 
-toolbar titledbutton.button32[disabled="true"] {
-	border: none;
-	padding: 0px;
-	margin-left: 1px;
-	margin-bottom: 1px;
-	margin-top: 6px;
-	margin-right: 6px;
-	background-image:url("chrome://global/skin/button32-bg-disabled.gif");
-}
-
-toolbar titledbutton.button32[disabled="true"]:hover {
-	border: none;
-	padding: 0px;
-	margin-left: 1px;
-	margin-bottom: 1px;
-	margin-top: 6px;
-	margin-right: 6px;
-	background-image:url("chrome://global/skin/button32-bg-disabled.gif");
-}
-
-toolbar titledbutton.button32[disabled="true"]:active {
-	border: none;
-	padding: 0px;
-	margin-left: 1px;
-	margin-bottom: 1px;
-	margin-top: 6px;
-	margin-right: 6px;
-	background-image:url("chrome://global/skin/button32-bg-disabled.gif");
-}
-
-toolbar titledbutton.button32:hover {
+titledbutton.button32:hover {
 	border: none;
 	padding: 0px;
 	margin-left: 1px;
@@ -255,7 +262,7 @@ toolbar titledbutton.button32:hover {
 	background-image:url("chrome://global/skin/button32-bg-hover.gif");
 }
 
-toolbar titledbutton.button32:active {
+titledbutton.button32:active {
 	border: none;
 	padding: 0px;
 	margin-top: 7px;
@@ -263,6 +270,36 @@ toolbar titledbutton.button32:active {
 	margin-bottom: 0px;
 	margin-right: 5px;
 	background-image:url("chrome://global/skin/button32-bg-active.gif");
+}
+
+titledbutton.button32[disabled="true"] {
+	border: none;
+	padding: 0px;
+	margin-left: 1px;
+	margin-bottom: 1px;
+	margin-top: 6px;
+	margin-right: 6px;
+	background-image:url("chrome://global/skin/button32-bg-disabled.gif");
+}
+
+titledbutton.button32[disabled="true"]:hover {
+	border: none;
+	padding: 0px;
+	margin-left: 1px;
+	margin-bottom: 1px;
+	margin-top: 6px;
+	margin-right: 6px;
+	background-image:url("chrome://global/skin/button32-bg-disabled.gif");
+}
+
+titledbutton.button32[disabled="true"]:active {
+	border: none;
+	padding: 0px;
+	margin-left: 1px;
+	margin-bottom: 1px;
+	margin-top: 6px;
+	margin-right: 6px;
+	background-image:url("chrome://global/skin/button32-bg-disabled.gif");
 }
 
 /**
@@ -287,6 +324,10 @@ titledbutton#Throbber[busy="true"] {
 }
 
 
+toolbar {
+    background-color: #CCCCCC;
+}
+
 toolbar.standard #toolbar_throbber_box { 
 	background-color: #CCCCCC;
 	min-width: 59px;
@@ -296,49 +337,42 @@ toolbar.standard #toolbar_throbber_box {
 	background-position: 100% 0%;
 }
 
-toolbar {
-    background-color: #CCCCCC;
-}
-
-toolbar titledbutton {
+titledbutton.toolbar {
   border: 1px solid transparent;
 }
 
-toolbar.main-bar titledbutton[align="bottom"]{
-	min-width: 3.5em;
-}
-
-toolbar titledbutton:hover {
+titledbutton.toolbar:hover {
   border: 1px outset white;
   color:#333366;
   text-decoration: underline;
 }
  
-toolbar titledbutton:hover:-moz-outline {
+titledbutton.toolbar:hover:-moz-outline {
    border : 1px solid black;
 }
  
-toolbar titledbutton:active {
+titledbutton.toolbar:active {
   text-decoration:none;
   border: 1px inset;
 }
 
-toolbar titledbutton:active:-moz-outline {
+titledbutton.toolbar:active:-moz-outline {
    border : 1px solid black;
 }
  
-toolbar titledbutton[disabled="true"] {
+titledbutton.toolbar[disabled="true"] {
 	border: 1px solid transparent;
 }
 
-toolbar titledbutton[disabled="true"]:hover {
+titledbutton.toolbar[disabled="true"]:hover {
 	border: 1px solid transparent;
 }
 
-toolbar titledbutton[disabled="true"]:active {
+titledbutton.toolbar[disabled="true"]:active {
 	border: 1px solid transparent;
 	padding: 2px;
 }
+
 
 /**
  * status-bar
@@ -348,15 +382,22 @@ box#status-bar {
 	background-color: #CCCCCC;
 }
 
-box#status-bar titledbutton {
+titledbutton.status-bar {
 	border: none;
 	padding: 0px;
 	margin: 0px;
 	min-width: 3em;
 }
 
-box#status-bar titledbutton:hover {
+titledbutton.status-bar:hover {
      text-decoration: none;
+}
+
+/* removing margin and padding from normal mousedown titledbutton behavior */
+titledbutton.status-bar:active {
+	border: none;
+	padding: 0px;
+	margin: 0px;
 }
 
 #status-bar-leftcap {
@@ -373,13 +414,6 @@ box#status-bar titledbutton:hover {
 	background-image: url("chrome://global/skin/gray-bottomright.gif");
 	background-position: 100% 100%;
 	background-repeat: no-repeat;
-}
-
-/* removing margin and padding from normal mousedown titledbutton behavior */
-box#status-bar titledbutton:active {
-	border: none;
-	padding: 0px;
-	margin: 0px;
 }
 
 /******* Splitters *******/
@@ -555,6 +589,12 @@ menuseparator {
   margin: 2px;
 }
 
+toolbarseparator { 
+  min-width: 2em; 
+  max-width: 2em;
+  width: 2em; 
+}
+
 menubar > menu {
   border: 1px solid transparent;
   padding-top: 2px;
@@ -687,77 +727,55 @@ menu[menuactive="true"] > .menu-right {
 
 /******** Titled buttons **********/
 
-titledbutton {
-   /* -moz-border-radius: 2px; XXX */
+titledbutton.push {
   border: 1px outset white;
   padding: 2px;
   margin: 2px;
   text-align: center;
-  font: inherit;
   background-color:inherit;
   background-image: inherit;
 }
 
-window.dialog titledbutton{
-	min-width: 5em;
-}
-
-titledbutton[class~=popup] {
-	list-style-image:url(chrome://global/skin/taskbar-popup-arrow.gif);
-}
-
-titledbutton:hover {
+titledbutton.push:hover {
 	border: 1px outset white;
 	color:#003366;
 	text-decoration:underline;
 	padding: 2px;
 }
  
-titledbutton:hover:-moz-outline {
+titledbutton.push:hover:-moz-outline {
    border : 1px solid black;
    color:#003366;
    padding: 2px;
 }
  
-titledbutton:active {
-
+titledbutton.push:active {
   text-decoration:none;
   border: 1px inset;
-
   padding-left: 3px;
   padding-right: 1px;
   padding-top: 3px;
   padding-bottom: 1px;
 }
 
-titledbutton[toggled="1"] {
+titledbutton.push[toggled="1"] {
   border: 1px white inset;
-
   padding-left: 3px;
   padding-right: 1px;
   padding-top: 3px;
   padding-bottom: 1px;
 }
 
-titledbutton[toggled="2"] {
+titledbutton.push[toggled="2"] {
    background-color: lightgray;
    border: 1px solid gray;
 }
 
-titledbutton[default] {
-	/* border-color: black; */
-	font-weight: bold;
-	list-style-image: url("chrome://global/skin/return.gif");
-	/* FIX ME - temporary workaround to offset the lack of a way to align text and image */
-	padding-right: 2em;
-}
-
-titledbutton:active:-moz-outline {
+titledbutton.push:active:-moz-outline {
    border : 1px solid black;
-
 }
  
-titledbutton[disabled="true"] {
+titledbutton.push[disabled="true"] {
 	background-color:inherit;
   	background-image: inherit;
 	border : 1px solid #999999;
@@ -765,7 +783,7 @@ titledbutton[disabled="true"] {
 	text-decoration: none;
 }
 
-titledbutton[disabled="true"]:hover {
+titledbutton.push[disabled="true"]:hover {
   	background-color:inherit;
   	background-image: inherit;
 	border : 1px solid #999999;
@@ -773,12 +791,30 @@ titledbutton[disabled="true"]:hover {
 	text-decoration: none;
 }
 
-titledbutton[disabled="true"]:active {
+titledbutton.push[disabled="true"]:active {
   	background-color:inherit;
   	background-image: inherit;
 	border : 1px solid #999999;
 	color: #999999;
 	text-decoration: none;
+}
+
+titledbutton.dialog {
+  min-width: 5em;
+}
+
+titledbutton.dialog[default] {
+	/* border-color: black; */
+	font-weight: bold;
+	list-style-image: url("chrome://global/skin/return.gif");
+	
+	/* FIX ME - temporary workaround to offset the lack of a way to align text and image */
+	padding-right: 2em;
+	max-width: 5em;
+}
+
+titledbutton[class~=popup] {
+	list-style-image:url(chrome://global/skin/taskbar-popup-arrow.gif);
 }
 
 /* special class for plain titledbuttons */
@@ -867,19 +903,20 @@ tree {
 }
 
 treeitem[selected="true"] > treerow { 
- color: white;
- background-color: #336699;
+  color: white;
+  background-color: #336699;
 }
 
 treecell { 
- white-space: nowrap;
- vertical-align: middle;
+  white-space: nowrap;
+  vertical-align: middle;
 } 
 
-treehead treerow treecell { 
- background-color: #CCCCCC; 
- /*border: thin darkgray solid; */
- color: black;
+treehead > treerow > treecell { 
+  background-color: #CCCCCC; 
+  color: black;
+  border-right: 1px outset white;
+  padding-left: 5px;
 } 
 
 treecell.image > titledbutton {
@@ -921,6 +958,7 @@ treecell.image > titledbutton:active {
 
 treecell {
  vertical-align: middle;
+ padding-left: 2px;
 }
 
 treeitem > treerow > treecell > .tree-icon > .twisty {

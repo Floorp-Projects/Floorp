@@ -1,5 +1,4 @@
 var goPrefWindow = 0;
-var goDefaultController = 0;
 
 function goPageSetup()
 {
