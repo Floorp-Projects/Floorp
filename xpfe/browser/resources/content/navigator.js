@@ -320,7 +320,7 @@ nsXULBrowserWindow.prototype =
 
     // We should probably not do this if the value has changed since the user
     // searched
-    document.getElementById("urlbar").value = location;
+    gURLBar.value = location;
 
     UpdateBackForwardButtons();
   },
@@ -1399,11 +1399,10 @@ function ShowAndSelectContentsOfURLBar()
   if (navBar.getAttribute("hidden") == "true")
     goToggleToolbar('nav-bar','cmd_viewnavbar');
  
-  var urlBar = document.getElementById("urlbar");
-  if (urlBar.value)
-    urlBar.select();
+  if (gURLBar.value)
+    gURLBar.select();
   else
-    urlBar.focus();
+    gURLBar.focus();
 }
   
   
