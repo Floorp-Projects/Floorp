@@ -34,6 +34,9 @@ CFLAGS       +=-DDEBUG_$(USERNAME)
 ifdef NSPR20
 DEFINES     += -DNSPR20
 endif
+ifdef MOZ_TREX
+DEFINES     += -DMOZ_TREX
+endif
 
 MOZ_TOOLS_FLIPPED=$(MOZ_TOOLS:\=/)
 DOCXX         = $(MOZ_TOOLS_FLIPPED)/bin/docxx
