@@ -77,6 +77,8 @@ LLIBS =                                \
 !endif	
 	$(NULL)
 
+MISCDEP=$(OURLIBS)
+
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(DLL)
