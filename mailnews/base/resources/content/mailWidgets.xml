@@ -265,7 +265,7 @@
        currently handles arbitrary text entry, and menulists for priority and
        status
   -->
-  <binding id="searchvalue" name="searchValue" extends="xul:deck">
+  <binding id="searchvalue" name="searchValue">
     <!-- yeah yeah, this stuff needs to be localized. I'm working on it! -->
     <content>
       <xul:textbox flex="1" class="search-value-textbox"/>

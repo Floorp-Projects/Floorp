@@ -406,6 +406,7 @@ searchoperator
 
 searchvalue 
   {
+    display: -moz-xul-deck;
     -moz-binding          : url(chrome://messenger/content/mailWidgets.xml#searchvalue);
   }
 
