@@ -172,11 +172,7 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 		nsRect bounds = mBounds;
 		bounds.x = bounds. y = 0;
 		nsRectToMacRect(bounds, macRect);
-#if TARGET_CARBON
 		::ValidWindowRect(mWindowPtr, &macRect);
-#else
-		::ValidRect(&macRect);
-#endif
 	}
 	return PR_FALSE;
 }

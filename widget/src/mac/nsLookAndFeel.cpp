@@ -21,6 +21,8 @@
  */
 
 #include "nsLookAndFeel.h"
+#include "nsCarbonHelpers.h"
+
  
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
@@ -82,12 +84,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
        	if (thePort)
        	{
           RGBColor macColor;
-#if TARGET_CARBON
-          GetPortHiliteColor(thePort,&macColor);
-#else
-          GrafVars** grafVars = (GrafVars**)((CGrafPtr)thePort)->grafVars;
-          macColor = (*grafVars)->rgbHiliteColor;
-#endif
+          ::GetPortHiliteColor(thePort,&macColor);
           aColor = NS_RGB(macColor.red>>8, macColor.green>>8, macColor.blue>>8);
        	}
        	else

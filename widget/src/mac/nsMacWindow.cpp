@@ -30,8 +30,7 @@
 #include "nsIDragSession.h"
 #include "nsIDragSessionMac.h"
 #include "nsGUIEvent.h"
-
-#include <LowMem.h>
+#include "nsCarbonHelpers.h"
 
 
 // Define Class IDs -- i hate having to do this
@@ -278,11 +277,7 @@ nsMacWindow::~nsMacWindow()
 	if (mWindowPtr)
 	{
 		if (mWindowMadeHere)
-#if TARGET_CARBON
 			::DisposeWindow(mWindowPtr);
-#else
-			::CloseWindow(mWindowPtr);
-#endif
 		
 		// clean up DragManager stuff
 		::RemoveTrackingHandler ( sDragTrackingHandlerUPP, mWindowPtr );
@@ -411,29 +406,15 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 		wRect.right --;
 		wRect.bottom --;
 #endif
-#if TARGET_CARBON
-		::OffsetRect(&wRect, hOffset, vOffset + ::GetMBarHeight());
-#else
 		if (eWindowType_popup != mWindowType)
-			::OffsetRect(&wRect, hOffset, vOffset + ::LMGetMBarHeight());
+			::OffsetRect(&wRect, hOffset, vOffset + ::GetMBarHeight());
 		else
 			::OffsetRect(&wRect, hOffset, vOffset);
-#endif	
 		
 		// HACK!!!!! This really should be part of the window manager
 		// Make sure window bottom of window doesn't exceed max monitor size
-#if TARGET_CARBON
 		Rect tempRect;
-		GetRegionBounds(GetGrayRgn(), &tempRect);
-#else
-		RgnHandle	theGrayRegion = GetGrayRgn();
-		Rect		tempRect;
-		SetRect(&tempRect,
-				(**theGrayRegion).rgnBBox.left,
-				(**theGrayRegion).rgnBBox.top,
-				(**theGrayRegion).rgnBBox.right,
-				(**theGrayRegion).rgnBBox.bottom);
-#endif
+		::GetRegionBounds(::GetGrayRgn(), &tempRect);
 
 		if (wRect.bottom > tempRect.bottom)
 		{
@@ -441,11 +422,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 			wRect.bottom -= bottomPinDelta;
 		}
 		
-#if TARGET_CARBON
 		mWindowPtr = ::NewCWindow(nil, &wRect, "\p", false, wDefProcID, (WindowRef)-1, goAwayFlag, (long)nsnull);
-#else
-		mWindowPtr = ::NewCWindow(nil, &wRect, "\p", false, wDefProcID, (GrafPort*)-1, goAwayFlag, (long)nsnull);
-#endif
 		mWindowMadeHere = PR_TRUE;
 	}
 	else
@@ -523,12 +500,14 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
   {
     if ( mAcceptsActivation )
     {
-    Rect	windowrect;
     Point	topleft,botright;
     
       ::ShowWindow(mWindowPtr);
       ::SelectWindow(mWindowPtr);
-      windowrect = (**((WindowPeek)mWindowPtr)->contRgn).rgnBBox;
+      RgnHandle contentRgn = NewRgn();
+      ::GetWindowRegion ( mWindowPtr, kWindowContentRgn, contentRgn );
+      Rect windowrect;
+      ::GetRegionBounds(contentRgn, &windowrect);
       
       // on some windows (with pop ups) the ::ShowWindow will not invalidate the parent 
       // properly
@@ -598,17 +577,12 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 		return NS_OK;
 	} else if (mWindowMadeHere){
 		// make sure the window stays visible
-#if TARGET_CARBON
 		Rect screenRect;
 		::GetRegionBounds(::GetGrayRgn(), &screenRect);
 
 		Rect portBounds;
 		::GetWindowPortBounds(mWindowPtr, &portBounds);
 		short windowWidth = portBounds.right - portBounds.left;
-#else
-		Rect screenRect = (**::GetGrayRgn()).rgnBBox;
-		short windowWidth = mWindowPtr->portRect.right - mWindowPtr->portRect.left;
-#endif
 		if (((PRInt32)aX) < screenRect.left - windowWidth)
 			aX = screenRect.left - windowWidth;
 		else if (((PRInt32)aX) > screenRect.right)
@@ -632,12 +606,7 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 
 		// move the window if it has not been moved yet
 		// (ie. if this function isn't called in response to a DragWindow event)
-#if TARGET_CARBON
 		Point macPoint = topLeft(portBounds);
-#else
-		Point macPoint;
-		macPoint = topLeft(mWindowPtr->portRect);
-#endif
 		::LocalToGlobal(&macPoint);
 		if (macPoint.h != aX || macPoint.v != aY)
 			::MoveWindow(mWindowPtr, aX, aY, false);
@@ -664,12 +633,8 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 void nsMacWindow::MoveToGlobalPoint(PRInt32 aX, PRInt32 aY)
 {
-#if TARGET_CARBON
 	Rect screenRect;
 	::GetRegionBounds(::GetGrayRgn(), &screenRect);
-#else
-	Rect screenRect = (**::GetGrayRgn()).rgnBBox;
-#endif
 
 	if (mIsDialog) {
 		aX -= kDialogMarginWidth;
@@ -690,12 +655,8 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 {
 	if (mWindowMadeHere)
 	{
-#if TARGET_CARBON
 		Rect macRect;
 		::GetWindowPortBounds ( mWindowPtr, &macRect );
-#else
-		Rect macRect = mWindowPtr->portRect;
-#endif
 #ifdef WINDOW_SIZE_TWEAKING
 		macRect.right ++;
 		macRect.bottom ++;
@@ -716,12 +677,8 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 
 NS_IMETHODIMP nsMacWindow::GetScreenBounds(nsRect &aRect) {
 
-#if TARGET_CARBON
-		Rect screenRect;
-		::GetRegionBounds(::GetGrayRgn(), &screenRect);
-#else
-		Rect screenRect = (**::GetGrayRgn()).rgnBBox;
-#endif
+	Rect screenRect;
+	::GetRegionBounds(::GetGrayRgn(), &screenRect);
 
    nsRect localBounds;
 

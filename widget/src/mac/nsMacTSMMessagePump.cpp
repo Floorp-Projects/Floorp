@@ -27,6 +27,8 @@
 #include <Script.h>
 #include <TextServices.h>
 
+#include "nsCarbonHelpers.h"
+
 
 //-------------------------------------------------------------------------
 //
@@ -80,15 +82,9 @@ nsMacTSMMessagePump::~nsMacTSMMessagePump()
 	err = AERemoveEventHandler(kTextServiceClass,kUpdateActiveInputArea,mUpdateUPP,false);
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::InstallTSMAEHandlers: AEInstallEventHandlers[Update] failed");
 
-#if TARGET_CARBON
- 	(void)DisposeAEEventHandlerUPP(mPos2OffsetUPP);
- 	(void)DisposeAEEventHandlerUPP(mOffset2PosUPP);
- 	(void)DisposeAEEventHandlerUPP(mUpdateUPP);
-#else
-	(void)DisposeRoutineDescriptor(mPos2OffsetUPP);
-	(void)DisposeRoutineDescriptor(mOffset2PosUPP);
-	(void)DisposeRoutineDescriptor(mUpdateUPP);
-#endif
+ 	::DisposeAEEventHandlerUPP(mPos2OffsetUPP);
+ 	::DisposeAEEventHandlerUPP(mOffset2PosUPP);
+ 	::DisposeAEEventHandlerUPP(mUpdateUPP);
 
 }
 //-------------------------------------------------------------------------
@@ -280,7 +276,7 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
   	}
   	
 #if TARGET_CARBON
-	// еее Fix Me !!!!!
+	// еее Fix Me! Can't access |text.dataHandle| under Carbon!!!!!
  	res = eventHandler->HandleUpdateInputArea((char*)textPtr,textScript,fixLength,hiliteRangePtr);
 #else
 	nsCAutoString mbcsText;
@@ -304,6 +300,7 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 	// clean up
 	//
 #if !TARGET_CARBON
+    // Can't access |hiliteRangeArray.dataHandle| under Carbon!!!!!
 	if(hiliteRangePtr)
 		::HUnlock(hiliteRangeArray.dataHandle);
 #endif

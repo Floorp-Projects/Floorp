@@ -55,6 +55,8 @@
 #include <LowMem.h>
 #include <Devices.h>
 
+#include "nsCarbonHelpers.h"
+
 #ifndef topLeft
 #define topLeft(r)	(((Point *) &(r))[0])
 #endif
@@ -351,11 +353,7 @@ void nsMacMessagePump::DoUpdate(EventRecord &anEvent)
 	WindowPtr whichWindow = reinterpret_cast<WindowPtr>(anEvent.message)	;
 	GrafPtr savePort;
 	::GetPort(&savePort);
-#if TARGET_CARBON
 	::SetPortWindowPort(whichWindow);
-#else
-	::SetPort(whichWindow);
-#endif
 	::BeginUpdate(whichWindow);
 	// The app can do its own updates here
 	DispatchOSEventToRaptor(anEvent, whichWindow);
@@ -395,11 +393,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
 			case inContent:
 			{
-#if TARGET_CARBON
 				::SetPortWindowPort(whichWindow);
-#else
-				::SetPort(whichWindow);
-#endif
 				if (IsWindowHilited(whichWindow))
 					DispatchOSEventToRaptor(anEvent, whichWindow);
 				else
@@ -409,19 +403,11 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
 			case inDrag:
 			{
-#if TARGET_CARBON
 				::SetPortWindowPort(whichWindow);
-#else
-				::SetPort(whichWindow);
-#endif
 				if (!(anEvent.modifiers & cmdKey))
 					::SelectWindow(whichWindow);
-#if TARGET_CARBON
 				Rect screenRect;
 				::GetRegionBounds(::GetGrayRgn(), &screenRect);
-#else
-				Rect screenRect = (**::GetGrayRgn()).rgnBBox;
-#endif
 				::DragWindow(whichWindow, anEvent.where, &screenRect);
 
 				// Dispatch the event because some windows may want to know that they have been moved.
@@ -431,18 +417,12 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				::GetMouse(&anEvent.where);
 				::LocalToGlobal(&anEvent.where);
 #else
-  #if TARGET_CARBON
 				RgnHandle strucRgn = NewRgn();
 				::GetWindowRegion ( whichWindow, kWindowStructureRgn, strucRgn );
 				Rect strucRect;
 				::GetRegionBounds(strucRgn, &strucRect);
 				::SetPt(&anEvent.where, strucRect.left, strucRect.top);
 				::DisposeRgn ( strucRgn );
-  #else
-				RgnHandle strucRgn = ((WindowPeek)whichWindow)->strucRgn;
-				Rect* strucRect = &(*strucRgn)->rgnBBox;
-				::SetPt(&anEvent.where, strucRect->left, strucRect->top);
-  #endif
 #endif
 				DispatchOSEventToRaptor(anEvent, whichWindow);
 				break;
@@ -450,11 +430,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
 			case inGrow:
 			{
-#if TARGET_CARBON
 				::SetPortWindowPort(whichWindow);
-#else
-				::SetPort(whichWindow);
-#endif
 
 				// use the cmd-key to do the opposite of the DRAW_ON_RESIZE setting.
 				Boolean cmdKeyDown = (anEvent.modifiers & cmdKey) != 0;
@@ -473,12 +449,9 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 						::LocalToGlobal(&newPt);
 						if (::DeltaPoint(oldPt, newPt))
 						{
-#if TARGET_CARBON
 							Rect portRect;
 							::GetWindowPortBounds(whichWindow, &portRect);
-#else
-							Rect portRect = whichWindow->portRect;
-#endif
+
 							short	width = newPt.h - origin.h;
 							short	height = newPt.v - origin.v;
 							if (width < kMinWindowWidth)
@@ -509,24 +482,17 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				}
 				else
 				{
-#if TARGET_CARBON
 					Rect sizeRect;
 					::GetRegionBounds(::GetGrayRgn(), &sizeRect);
-#else
-					Rect sizeRect = (**::GetGrayRgn()).rgnBBox;
-#endif
+					
 					sizeRect.top = kMinWindowHeight;
 					sizeRect.left = kMinWindowWidth;
 					long newSize = ::GrowWindow(whichWindow, anEvent.where, &sizeRect);
 					if (newSize != 0)
 						::SizeWindow(whichWindow, newSize & 0x0FFFF, (newSize >> 16) & 0x0FFFF, true);
 					::DrawGrowIcon(whichWindow);
-#if TARGET_CARBON
 					Rect portRect;
 					Point newPt = botRight(*::GetWindowPortBounds(whichWindow, &portRect));
-#else
-					Point newPt = botRight(whichWindow->portRect);
-#endif
 					::LocalToGlobal(&newPt);
 					anEvent.where = newPt;	// important!
 					DispatchOSEventToRaptor(anEvent, whichWindow);
@@ -536,11 +502,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
 			case inGoAway:
 			{
-#if TARGET_CARBON
 				::SetPortWindowPort(whichWindow);
-#else
-				::SetPort(whichWindow);
-#endif
 				if (::TrackGoAway(whichWindow, anEvent.where))
 					DispatchOSEventToRaptor(anEvent, whichWindow);
 				break;
@@ -560,33 +522,22 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 					Boolean		sectFlag;
 					
 					GetPort(&savePort);
-#if TARGET_CARBON
 					::SetPortWindowPort(whichWindow);
 					Rect windRect;
 					::GetWindowPortBounds(whichWindow, &windRect);
 					::EraseRect(&windRect);
-#else
-					SetPort(whichWindow);
-					EraseRect(&whichWindow->portRect);
-#endif
 				
 					if (partCode == inZoomOut) {
-#if !TARGET_CARBON
-						WindowPeek wPeek = (WindowPeek)whichWindow;
-						Rect windRect = whichWindow->portRect;
-#endif
 						LocalToGlobal((Point *)&windRect.top);
 						LocalToGlobal((Point *)&windRect.bottom);
-#if TARGET_CARBON
+
 						RgnHandle structRgn = ::NewRgn();
 						::GetWindowRegion ( whichWindow, kWindowStructureRgn, structRgn );
 						Rect structRgnBounds;
 						::GetRegionBounds ( structRgn, &structRgnBounds );
 						wTitleHeight = windRect.top - 1 - structRgnBounds.top;
 						::DisposeRgn ( structRgn );
-#else
-						wTitleHeight = windRect.top - 1 - (*(wPeek->strucRgn))->rgnBBox.top;
-#endif
+
 						windRect.top -= wTitleHeight;
 						gdNthDevice = GetDeviceList();
 						while (gdNthDevice)
@@ -612,11 +563,7 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 							tempRect.top + wTitleHeight + 3,
 							tempRect.right - 64,
 							tempRect.bottom - 3);
-#if TARGET_CARBON
 						::SetWindowStandardState ( whichWindow, &zoomRect );
-#else
-						(**(WStateDataHandle)(wPeek->dataHandle)).stdState = zoomRect;
-#endif
 					}
 				
 					SetPort(savePort);
@@ -782,11 +729,7 @@ extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently r
 void  nsMacMessagePump::DoActivate(EventRecord &anEvent)
 {
 	WindowPtr whichWindow = (WindowPtr)anEvent.message;
-#if TARGET_CARBON
 	::SetPortWindowPort(whichWindow);
-#else
-	::SetPort(whichWindow);
-#endif
 	if (anEvent.modifiers & activeFlag)
 	{
 		::BringToFront(whichWindow);

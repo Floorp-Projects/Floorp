@@ -25,6 +25,7 @@
 #include <StandardFile.h>
 #include <ICAPI.h>
 #include "nsMacControl.h"
+#include "nsCarbonHelpers.h"
 
 #include "nsFileSpec.h"
 
@@ -302,13 +303,8 @@ nsFileWidget :: PutFile ( Str255 & inTitle, Str255 & inDefaultName, FSSpec* outS
 		} // if user clicked OK	
 	} // if can get dialog options
 	
-	if ( eventProc ) {
-#if TARGET_CARBON
+	if ( eventProc )
 		::DisposeNavEventUPP(eventProc);
-#else
-		::DisposeRoutineDescriptor(eventProc);
-#endif
-	}
 	
 	return retVal;
 	
@@ -376,13 +372,8 @@ nsFileWidget :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec*
 		} // if user clicked OK	
 	} // if can get dialog options
 	
-	if ( eventProc ) {
-#if TARGET_CARBON
+	if ( eventProc )
 		::DisposeNavEventUPP(eventProc);
-#else
-		::DisposeRoutineDescriptor(eventProc);
-#endif
-	}
 		
 	return retVal;
 
@@ -447,13 +438,8 @@ nsFileWidget :: GetFolder ( Str255 & inTitle, FSSpec* outSpec  )
 		} // if user clicked OK	
 	} // if can get dialog options
 	
-	if ( eventProc ) {
-#if TARGET_CARBON
+	if ( eventProc )
 		::DisposeNavEventUPP(eventProc);
-#else
-		::DisposeRoutineDescriptor(eventProc);
-#endif
-	}
 		
 	return retVal;
 
