@@ -327,6 +327,12 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
   return rv;
 }
 
+void 
+nsMenuFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
+{
+  
+}
+
 void
 nsMenuFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 {
@@ -340,4 +346,5 @@ nsMenuFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 void
 nsMenuFrame::SelectFirstItem()
 {
+  //XXX Fill in!
 }

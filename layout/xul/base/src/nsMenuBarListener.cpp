@@ -260,13 +260,22 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   nsCOMPtr<nsIDOMUIEvent> theEvent = do_QueryInterface(aKeyEvent);
 
-  // On a press of the ALT key by itself, we toggle the menu's 
-  // active/inactive state.
-  // Test Alt attribute
-	PRBool isAlt = PR_FALSE;
-	theEvent->GetAltKey(&isAlt);
-  
   PRBool active = mMenuBarFrame->IsActive();
+  
+  // Get the character code.
+  nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aKeyEvent);
+  if (uiEvent) {
+    // See if a letter was pressed.
+    PRUint32 charCode;
+    uiEvent->GetCharCode(&charCode);
+    if ((active || mAltKeyDown) && (charCode >= NS_VK_A && charCode <= NS_VK_Z)) {
+      // Do shortcut navigation.
+      mAltKeyDown = PR_FALSE; // Clear this. ALT presses are irrelevant now.
+      
+      mMenuBarFrame->ShortcutNavigation(charCode, active);
+    }
+  }
+
   if (active)
     return NS_ERROR_BASE; // I am consuming event
   return NS_OK; // means I am NOT consuming event

@@ -370,6 +370,12 @@ nsMenuPopupFrame::CaptureMouseEvents(PRBool aGrabMouseEvents)
   return NS_OK;
 }
 
+void 
+nsMenuPopupFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
+{
+
+}
+
 void
 nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 {

@@ -58,6 +58,7 @@ public:
 // Non-interface helpers
   void ToggleMenuActiveState();
   void KeyboardNavigation(PRUint32 aDirection);
+  void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
 
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.
