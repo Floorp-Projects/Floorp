@@ -348,6 +348,9 @@ CONFIG_STATUS_DEPS := \
 	$(TOPSRCDIR)/configure \
 	$(TOPSRCDIR)/allmakefiles.sh \
 	$(TOPSRCDIR)/.mozconfig.mk \
+	$(TOPSRCDIR)/directory/c-sdk/ldap/configure \
+	$(TOPSRCDIR)/nsprpub/configure \
+	$(TOPSRCDIR)/nsprpub/config/prdepend.h \
 	$(wildcard $(TOPSRCDIR)/mailnews/makefiles) \
 	$(NULL)
 
