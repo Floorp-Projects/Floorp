@@ -1154,6 +1154,10 @@ case "$target" in
     DSO_LDOPTS='-shared -Wl,-soname -Wl,$(notdir $@)'
     OS_LIBS="$OS_LIBS -lc"
     _OPTIMIZE_FLAGS=-O2
+    _DEBUG_FLAGS="-g -fno-inline"  # most people on linux use gcc/gdb, and that
+                                   # combo is not yet good at debugging inlined
+                                   # functions (even when using DWARF2 as the
+                                   # debugging format)
     COMPILER_TAG=_glibc
     if echo "$OS_TEST" | grep -c 86 >/dev/null; then
         CPU_ARCH=x86
