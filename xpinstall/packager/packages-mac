@@ -94,6 +94,7 @@ viewer:Components:dom_events.xpt
 viewer:Components:dom_html.xpt
 viewer:Components:dom_range.xpt
 viewer:Components:dom_stylesheets.xpt
+viewer:Components:dom_traversal.xpt
 viewer:Components:dom_views.xpt
 viewer:Components:dom_xbl.xpt
 viewer:Components:dom_xul.xpt

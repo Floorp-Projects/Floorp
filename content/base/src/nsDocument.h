@@ -32,6 +32,7 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentStyle.h"
 #include "nsIDOMDocumentRange.h"
+#include "nsIDOMDocumentTraversal.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDiskDocument.h"
@@ -203,6 +204,7 @@ class nsDocument : public nsIDocument,
                    public nsIDOMDocumentStyle,
                    public nsIDOMDocumentView,
                    public nsIDOMDocumentRange,
+                   public nsIDOMDocumentTraversal,
                    public nsIDOMDocumentXBL,
                    public nsIDOM3Node,
                    public nsIDiskDocument,
@@ -485,6 +487,9 @@ public:
 
   // nsIDOMDocumentRange
   NS_DECL_NSIDOMDOCUMENTRANGE
+
+  // nsIDOMDocumentTraversal
+  NS_DECL_NSIDOMDOCUMENTTRAVERSAL
 
   // nsIDOMDocumentXBL
   NS_DECL_NSIDOMDOCUMENTXBL

@@ -39,6 +39,7 @@
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIDOMDocumentRange.h"
+#include "nsIDOMDocumentTraversal.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsISelection.h"
 #include "nsIDOMXULCommandDispatcher.h"
@@ -106,6 +107,7 @@ class nsXULDocument : public nsIDocument,
                       public nsIDOMDocumentView,
                       public nsIDOMDocumentXBL,
                       public nsIDOMDocumentRange,
+                      public nsIDOMDocumentTraversal,
                       public nsIDOMNSDocument,
                       public nsIDOM3Node,
                       public nsIDOMDocumentStyle,
@@ -375,6 +377,9 @@ public:
 
     // nsIDOMDocumentRange interface
     NS_DECL_NSIDOMDOCUMENTRANGE
+
+    // nsIDOMDocumentTraversal interface
+    NS_DECL_NSIDOMDOCUMENTTRAVERSAL
 
     // nsIDOMNSDocument interface
     NS_DECL_NSIDOMNSDOCUMENT

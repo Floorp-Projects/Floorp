@@ -53,6 +53,7 @@ CPPSRCS =				\
 	nsRange.cpp			\
 	nsTextContentChangeData.cpp	\
 	nsTextNode.cpp			\
+	nsTreeWalker.cpp		\
 	nsXMLContentSerializer.cpp	\
 	nsHTMLContentSerializer.cpp	\
     nsParserUtils.cpp               \
@@ -89,6 +90,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsRange.obj			\
 	.\$(OBJDIR)\nsTextContentChangeData.obj	\
 	.\$(OBJDIR)\nsTextNode.obj		\
+	.\$(OBJDIR)\nsTreeWalker.obj		\
 	.\$(OBJDIR)\nsXMLContentSerializer.obj	\
 	.\$(OBJDIR)\nsHTMLContentSerializer.obj	\
 	.\$(OBJDIR)\nsParserUtils.obj           \
