@@ -183,27 +183,27 @@ public:
 
 public: //for methods who access nsTextControlFrame directly
 
-  NS_IMETHOD InternalContentChanged();//notify that we have some kind of change.
+  void FireOnInput();//notify that we have some kind of change.
   /**
    * Find out whether this is a single line text control.  (text or password)
    * @return whether this is a single line text control
    */
-  virtual PRBool IsSingleLineTextControl() const;
+  PRBool IsSingleLineTextControl() const;
   /**
    * Find out whether this control is a textarea.
    * @return whether this is a textarea text control
    */
-  virtual PRBool IsTextArea() const;
+  PRBool IsTextArea() const;
   /**
    * Find out whether this control edits plain text.  (Currently always true.)
    * @return whether this is a plain text control
    */
-  virtual PRBool IsPlainTextControl() const;
+  PRBool IsPlainTextControl() const;
   /**
    * Find out whether this is a password control (input type=password)
    * @return whether this is a password ontrol
    */
-  virtual PRBool IsPasswordTextControl() const;
+  PRBool IsPasswordTextControl() const;
   void SetValueChanged(PRBool aValueChanged);
   /** Called when the frame is focused, to remember the value for onChange. */
   nsresult InitFocusedValue();

@@ -59,7 +59,6 @@
 #include "nsIElementFactory.h"
 #include "nsIHTMLContent.h"
 #include "nsIEditorIMESupport.h"
-#include "nsIEditorObserver.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
@@ -90,8 +89,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h" //getframetype
 //for keylistener for "return" check
-#include "nsIDOMKeyListener.h" 
-#include "nsIDOMKeyEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDocument.h" //observe documents to send onchangenotifications
@@ -117,8 +114,8 @@
 #include "nsIDOMNode.h"
 #include "nsITextControlElement.h"
 
+#include "nsIEditorObserver.h"
 #include "nsITransactionManager.h"
-#include "nsITransactionListener.h"
 #include "nsIDOMText.h" //for multiline getselection
 
 
@@ -156,11 +153,9 @@ static nsresult GetElementFactoryService(nsIElementFactory **aFactory)
 }
 
 
-class nsTextInputListener : public nsIDOMKeyListener,
-                            public nsISelectionListener,
+class nsTextInputListener : public nsISelectionListener,
                             public nsIDOMFocusListener,
                             public nsIEditorObserver,
-                            public nsITransactionListener,
                             public nsSupportsWeakReference
 {
 public:
@@ -176,53 +171,20 @@ public:
    */
   void SetFrame(nsTextControlFrame *aFrame){mFrame = aFrame;}
 
-/*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
 
-/*BEGIN interfaces in to the keylister base interface. must be supplied to handle pure virtual interfaces
-  see the nsIDOMKeyListener interface implementation for details
-  */
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
-  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
-  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
-/*END interfaces from nsIDOMKeyListener*/
-/*BEGIN nsISelectionListener Interface*/
-  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel, PRInt16 aReason);
-/*END nsISelectionListener*/
-
-/* BEGIN EditorObserver*/
-  NS_IMETHOD EditAction();
-/*END EditorObserver*/
+  NS_DECL_NSISELECTIONLISTENER
 
   /** nsIDOMFocusListener interfaces 
     * used to propagate focus, blur, and change notifications
     * @see nsIDOMFocusListener
     */
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
   NS_IMETHOD Focus(nsIDOMEvent* aEvent);
   NS_IMETHOD Blur (nsIDOMEvent* aEvent);
   /* END interfaces from nsIDOMFocusListener*/
 
-
-  /** nsITransactionListener interfaces
-    */
-  
-  NS_IMETHOD WillDo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
-  NS_IMETHOD DidDo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aDoResult);
-  NS_IMETHOD WillUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
-  NS_IMETHOD DidUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aUndoResult);
-  NS_IMETHOD WillRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
-  NS_IMETHOD DidRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aRedoResult);
-  NS_IMETHOD WillBeginBatch(nsITransactionManager *aManager, PRBool *aInterrupt);
-  NS_IMETHOD DidBeginBatch(nsITransactionManager *aManager, nsresult aResult);
-  NS_IMETHOD WillEndBatch(nsITransactionManager *aManager, PRBool *aInterrupt);
-  NS_IMETHOD DidEndBatch(nsITransactionManager *aManager, nsresult aResult);
-  NS_IMETHOD WillMerge(nsITransactionManager *aManager, nsITransaction *aTopTransaction,
-                       nsITransaction *aTransactionToMerge, PRBool *aInterrupt);
-  NS_IMETHOD DidMerge(nsITransactionManager *aManager, nsITransaction *aTopTransaction,
-                      nsITransaction *aTransactionToMerge,
-                      PRBool aDidMerge, nsresult aMergeResult);
-
+  NS_DECL_NSIEDITOROBSERVER
 
 protected:
 
@@ -234,8 +196,16 @@ protected:
   
   PRPackedBool    mSelectionWasCollapsed;
   PRPackedBool    mKnowSelectionCollapsed;
-
-  PRPackedBool    mFirstDoOfFirstUndo;
+  /**
+   * Whether we had undo items or not the last time we got EditAction()
+   * notification (when this state changes we update undo and redo menus)
+   */
+  PRPackedBool    mHadUndoItems;
+  /**
+   * Whether we had redo items or not the last time we got EditAction()
+   * notification (when this state changes we update undo and redo menus)
+   */
+  PRPackedBool    mHadRedoItems;
 };
 
 
@@ -243,97 +213,25 @@ protected:
  * nsTextEditorListener implementation
  */
 
-NS_IMPL_ADDREF(nsTextInputListener)
-
-NS_IMPL_RELEASE(nsTextInputListener)
-
-
 nsTextInputListener::nsTextInputListener()
 : mFrame(nsnull)
 , mSelectionWasCollapsed(PR_TRUE)
 , mKnowSelectionCollapsed(PR_FALSE)
-, mFirstDoOfFirstUndo(PR_TRUE)
+, mHadUndoItems(PR_FALSE)
+, mHadRedoItems(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 }
-
-
 
 nsTextInputListener::~nsTextInputListener() 
 {
 }
 
+NS_IMPL_ISUPPORTS5(nsTextInputListener, nsISelectionListener,
+                   nsIDOMEventListener, nsIDOMFocusListener,
+                   nsIEditorObserver, nsISupportsWeakReference)
 
-NS_IMPL_QUERY_INTERFACE6(nsTextInputListener,
-                          nsIDOMKeyListener,
-                          nsISelectionListener,
-                          nsIDOMFocusListener,
-                          nsIEditorObserver,
-                          nsITransactionListener,
-                          nsISupportsWeakReference)
-
-nsresult
-nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
-}
-
-// individual key handlers return NS_OK to indicate NOT consumed
-// by default, an error is returned indicating event is consumed
-// joki is fixing this interface.
-nsresult
-nsTextInputListener::KeyDown(nsIDOMEvent* aKeyEvent)
-{
-  return NS_OK;
-}
-
-
-nsresult
-nsTextInputListener::KeyUp(nsIDOMEvent* aKeyEvent)
-{
-  return NS_OK;
-}
-
-
-nsresult
-nsTextInputListener::KeyPress(nsIDOMEvent* aKeyEvent)
-{
-  if (!mFrame)
-    return NS_OK;
-  nsCOMPtr<nsIDOMKeyEvent>keyEvent;
-  keyEvent = do_QueryInterface(aKeyEvent);
-  if (!keyEvent) 
-  {
-    //non-key event passed to keydown.  bad things.
-    return NS_OK;
-  }
-  
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aKeyEvent);
-  if(privateEvent) 
-  {
-    PRBool dispatchStopped;
-    privateEvent->IsDispatchStopped(&dispatchStopped);
-    if(dispatchStopped)
-      return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent = do_QueryInterface(aKeyEvent);
-  if(nsUIEvent) 
-  {
-    PRBool defaultPrevented;
-    nsUIEvent->GetPreventDefault(&defaultPrevented);
-    if(defaultPrevented)
-      return NS_OK;
-  }
-
-  mFrame->SetValueChanged(PR_TRUE);
-
-  return NS_OK;
-}
-
-//END KeyListener
-
-//BEGIN NS_IDOMSELECTIONLISTENER
+// BEGIN nsIDOMSelectionListener
 
 NS_IMETHODIMP
 nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* aSel, PRInt16 aReason)
@@ -395,35 +293,37 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
   return UpdateTextInputCommands(NS_LITERAL_STRING("select"));
 }
 
-//EDITOR INTERFACE
+// END nsIDOMSelectionListener
 
-NS_IMETHODIMP nsTextInputListener::EditAction()
+// BEGIN nsIFocusListener
+
+NS_IMETHODIMP
+nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  return mFrame?mFrame->InternalContentChanged():NS_ERROR_NULL_POINTER;
+  return NS_OK;
 }
 
-//END NS_IDOMSELECTIONLISTENER
-//focuslistener
-
-nsresult
+NS_IMETHODIMP
 nsTextInputListener::Focus(nsIDOMEvent* aEvent)
 {
-  if (!mFrame) return NS_OK;
+  if (!mFrame)
+    return NS_OK;
+
   nsCOMPtr<nsIEditor> editor;
   mFrame->GetEditor(getter_AddRefs(editor));
   if (editor) {
     editor->AddEditorObserver(this);
   }
-  
+
   return mFrame->InitFocusedValue();
 }
 
-nsresult
+NS_IMETHODIMP
 nsTextInputListener::Blur(nsIDOMEvent* aEvent)
 {
   if (!mFrame)
     return NS_OK;
-    
+
   nsCOMPtr<nsIEditor> editor;
   mFrame->GetEditor(getter_AddRefs(editor));
   if (editor) {
@@ -432,141 +332,75 @@ nsTextInputListener::Blur(nsIDOMEvent* aEvent)
 
   return mFrame->CheckFireOnChange();
 }
-//END focuslistener
+
+// END nsIFocusListener
 
 
-NS_IMETHODIMP nsTextInputListener::WillDo(nsITransactionManager *aManager,
-  nsITransaction *aTransaction, PRBool *aInterrupt)
+// BEGIN nsIEditorObserver
+
+NS_IMETHODIMP
+nsTextInputListener::EditAction()
 {
-  *aInterrupt = PR_FALSE;
-  return NS_OK;
-}
+  //
+  // Update the undo / redo menus
+  //
+  nsCOMPtr<nsIEditor> editor;
+  mFrame->GetEditor(getter_AddRefs(editor));
 
-NS_IMETHODIMP nsTextInputListener::DidDo(nsITransactionManager *aManager,
-  nsITransaction *aTransaction, nsresult aDoResult)
-{
-  // we only need to update if the undo count is now 1
-  PRInt32 undoCount;
-  aManager->GetNumberOfUndoItems(&undoCount);
-  if (undoCount == 1)
-  {
-    if (mFirstDoOfFirstUndo)
-      UpdateTextInputCommands(NS_LITERAL_STRING("undo"));
+  nsCOMPtr<nsITransactionManager> manager;
+  editor->GetTransactionManager(getter_AddRefs(manager));
+  NS_ENSURE_TRUE(manager, NS_ERROR_FAILURE);
 
-    mFirstDoOfFirstUndo = PR_FALSE;
+  // Get the number of undo / redo items
+  PRInt32 numUndoItems = 0;
+  PRInt32 numRedoItems = 0;
+  manager->GetNumberOfUndoItems(&numUndoItems);
+  manager->GetNumberOfRedoItems(&numRedoItems);
+  if (numUndoItems && !mHadUndoItems || !numUndoItems && mHadUndoItems ||
+      numRedoItems && !mHadRedoItems || !numRedoItems && mHadRedoItems) {
+    // Modify the menu if undo or redo items are different
+    UpdateTextInputCommands(NS_LITERAL_STRING("undo"));
+
+    mHadUndoItems = numUndoItems != 0;
+    mHadRedoItems = numRedoItems != 0;
   }
-  
+
+  // Make sure we know we were changed (do NOT set this to false if there are
+  // no undo items; JS could change the value and we'd still need to save it)
+  mFrame->SetValueChanged(PR_TRUE);
+
+  // Fire input event
+  mFrame->FireOnInput();
+
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTextInputListener::WillUndo(nsITransactionManager *aManager,
-  nsITransaction *aTransaction, PRBool *aInterrupt)
+// END nsIEditorObserver
+
+
+nsresult
+nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate)
 {
-  *aInterrupt = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTextInputListener::DidUndo(nsITransactionManager *aManager,
-  nsITransaction *aTransaction, nsresult aUndoResult)
-{
-  PRInt32 undoCount;
-  aManager->GetNumberOfUndoItems(&undoCount);
-  if (undoCount == 0)
-    mFirstDoOfFirstUndo = PR_TRUE;    // reset the state for the next do
-
-  UpdateTextInputCommands(NS_LITERAL_STRING("undo"));
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTextInputListener::WillRedo(nsITransactionManager *aManager,
-  nsITransaction *aTransaction, PRBool *aInterrupt)
-{
-  *aInterrupt = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTextInputListener::DidRedo(nsITransactionManager *aManager,  
-  nsITransaction *aTransaction, nsresult aRedoResult)
-{
-  UpdateTextInputCommands(NS_LITERAL_STRING("undo"));
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTextInputListener::WillBeginBatch(nsITransactionManager *aManager, PRBool *aInterrupt)
-{
-  *aInterrupt = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTextInputListener::DidBeginBatch(nsITransactionManager *aManager, nsresult aResult)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTextInputListener::WillEndBatch(nsITransactionManager *aManager, PRBool *aInterrupt)
-{
-  *aInterrupt = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTextInputListener::DidEndBatch(nsITransactionManager *aManager, nsresult aResult)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTextInputListener::WillMerge(nsITransactionManager *aManager,
-        nsITransaction *aTopTransaction, nsITransaction *aTransactionToMerge, PRBool *aInterrupt)
-{
-  *aInterrupt = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsTextInputListener::DidMerge(nsITransactionManager *aManager,
-      nsITransaction *aTopTransaction, nsITransaction *aTransactionToMerge,
-      PRBool aDidMerge, nsresult aMergeResult)
-{
-  return NS_OK;
-}
-
-
-
-nsresult nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate)
-{
-  if (!mFrame) return NS_ERROR_NOT_INITIALIZED;
-  
   nsCOMPtr<nsIContent> content;
   nsresult rv = mFrame->GetContent(getter_AddRefs(content));
-  if (NS_FAILED(rv)) 
-    return rv;
-  if (!content) 
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
   
   nsCOMPtr<nsIDocument> doc;
   rv = content->GetDocument(*getter_AddRefs(doc));
-  if (NS_FAILED(rv)) 
-    return rv;
-  if (!doc)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
   rv = doc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-  if (NS_FAILED(rv))
-    return rv;
-  if (!scriptGlobalObject)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_TRUE(scriptGlobalObject, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(scriptGlobalObject, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-  if (!domWindow)
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(scriptGlobalObject);
+  NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
 
   return domWindow->UpdateCommands(commandsToUpdate);
 }
 
 
-//END NSTEXTINPUTLISTENER
+// END nsTextInputListener
 
 #ifdef XP_MAC
 #pragma mark -
@@ -1438,17 +1272,6 @@ nsTextControlFrame::PreDestroy(nsIPresContext* aPresContext)
     if (erP)
     {
       erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener  *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
-      // register the event listeners with the DOM event reveiver
-      nsCOMPtr<nsIDOMEventGroup> sysGroup;
-      nsresult rv = erP->GetSystemEventGroup(getter_AddRefs(sysGroup));
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIDOM3EventTarget> dom3Targ(do_QueryInterface(erP));
-        if (dom3Targ) {
-          rv = dom3Targ->RemoveGroupedEventListener(NS_LITERAL_STRING("keypress"), 
-                                                    NS_STATIC_CAST(nsIDOMKeyListener *,mTextListener), 
-                                                    PR_FALSE, sysGroup);
-        }
-      }
     }
   }
 
@@ -1764,7 +1587,7 @@ nsTextControlFrame::InitEditor()
     SetValue(defaultValue);
 
     rv = mEditor->EnableUndo(PR_TRUE);
-    NS_ASSERTION(!rv,"Transaction Manager must have failed");
+    NS_ASSERTION(NS_SUCCEEDED(rv),"Transaction Manager must have failed");
     // Now restore the original editor flags.
 
     rv = mEditor->SetFlags(editorFlags);
@@ -2045,18 +1868,6 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     selPriv->AddSelectionListener(NS_STATIC_CAST(nsISelectionListener *, mTextListener));
   }
   
-  // also set up the text listener as a transaction listener on the editor
-  if (mEditor && mTextListener)
-  {
-    nsCOMPtr<nsITransactionManager> txMgr;
-    rv = mEditor->GetTransactionManager(getter_AddRefs(txMgr));
-    if (NS_FAILED(rv)) return rv;
-    if (!txMgr) return NS_ERROR_NULL_POINTER;
-
-    rv = txMgr->AddListener(NS_STATIC_CAST(nsITransactionListener*, mTextListener));
-    if (NS_FAILED(rv)) return rv;
-  }  
-
   if (mContent)
   {
     rv = mEditor->GetFlags(&editorFlags);
@@ -2915,18 +2726,16 @@ nsTextControlFrame::DoesAttributeExist(nsIAtom *aAtt)
 }
 
 // this is where we propagate a content changed event
-NS_IMETHODIMP
-nsTextControlFrame::InternalContentChanged()
+void
+nsTextControlFrame::FireOnInput()
 {
-  NS_PRECONDITION(mContent, "illegal to call unless we map to a content node");
+  NS_ASSERTION(mContent, "illegal to call unless we map to a content node");
 
-  if (!mContent) { return NS_ERROR_NULL_POINTER; }
-
-  if (PR_FALSE==mNotifyOnInput) { 
-    return NS_OK; // if notification is turned off, just return ok
+  if (!mNotifyOnInput) { 
+    return; // if notification is turned off, do nothing
   } 
   
-  // Dispatch the change event
+  // Dispatch the "input" event
   nsEventStatus status = nsEventStatus_eIgnore;
   nsGUIEvent event;
   event.eventStructType = NS_GUI_EVENT;
@@ -2934,15 +2743,24 @@ nsTextControlFrame::InternalContentChanged()
   event.message = NS_FORM_INPUT;
   event.flags = NS_EVENT_FLAG_INIT;
 
-  // Have the content handle the event, propagating it according to normal DOM rules.
+  // Have the content handle the event, propagating it according to normal
+  // DOM rules.
   nsWeakPtr &shell = mTextSelImpl->GetPresShell();
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(shell);
-  if (!presShell) 
-    return NS_ERROR_FAILURE;
+  NS_ASSERTION(presShell, "No pres shell");
+  if (!presShell) {
+    return;
+  }
+
   nsCOMPtr<nsIPresContext> context;
-  if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
-      return presShell->HandleEventWithTarget(&event, nsnull, mContent, NS_EVENT_FLAG_INIT, &status); 
-  return NS_ERROR_FAILURE;
+  presShell->GetPresContext(getter_AddRefs(context));
+  NS_ASSERTION(context, "No pres context");
+  if (!context) {
+    return;
+  }
+
+  presShell->HandleEventWithTarget(&event, nsnull, mContent,
+                                   NS_EVENT_FLAG_INIT, &status); 
 }
 
 nsresult
@@ -3176,21 +2994,6 @@ nsTextControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)
   {
     // register the event listeners with the DOM event reveiver
-
-    nsCOMPtr<nsIDOMEventGroup> sysGroup;
-    rv = erP->GetSystemEventGroup(getter_AddRefs(sysGroup));
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIDOM3EventTarget> dom3Targ(do_QueryInterface(erP));
-      if (dom3Targ) {
-        rv = dom3Targ->AddGroupedEventListener(NS_LITERAL_STRING("keypress"), 
-                                               NS_STATIC_CAST(nsIDOMKeyListener *,mTextListener), 
-                                               PR_FALSE, sysGroup);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register key listener");
-      }
-    }
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register event listeners on nsTextControlFrame");
-
-
     rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
     nsCOMPtr<nsIPresShell> shell;
