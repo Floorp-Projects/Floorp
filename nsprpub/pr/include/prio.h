@@ -316,7 +316,8 @@ typedef PRInt64 (PR_CALLBACK *PRSeek64FN)(PRFileDesc *fd, PRInt64 offset, PRSeek
 typedef PRStatus (PR_CALLBACK *PRFileInfoFN)(PRFileDesc *fd, PRFileInfo *info);
 typedef PRStatus (PR_CALLBACK *PRFileInfo64FN)(PRFileDesc *fd, PRFileInfo64 *info);
 typedef PRInt32 (PR_CALLBACK *PRWritevFN)(
-    PRFileDesc *fd, const PRIOVec *iov, PRInt32 size, PRIntervalTime timeout);
+    PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size,
+    PRIntervalTime timeout);
 typedef PRStatus (PR_CALLBACK *PRConnectFN)(
     PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout);
 typedef PRFileDesc* (PR_CALLBACK *PRAcceptFN) (
@@ -695,10 +696,11 @@ PR_EXTERN(PRInt32) PR_Write(PRFileDesc *fd,const void *buf,PRInt32 amount);
  ***************************************************************************
  */
 
-#define PR_MAX_IOVECTOR_SIZE 16   /* 'size' must be <= */
+#define PR_MAX_IOVECTOR_SIZE 16   /* 'iov_size' must be <= */
 
 PR_EXTERN(PRInt32) PR_Writev(
-    PRFileDesc *fd, const PRIOVec *iov, PRInt32 size, PRIntervalTime timeout);
+    PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size,
+    PRIntervalTime timeout);
 
 /*
  ***************************************************************************
