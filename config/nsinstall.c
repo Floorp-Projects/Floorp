@@ -275,15 +275,15 @@ main(int argc, char **argv)
     xchdir(cwd);
     tdlen = strlen(todir);
 
-    uid = owner ? touid(owner) : -1;
-    gid = group ? togid(group) : -1;
+    uid = owner ? touid(owner) : (uid_t)(-1);
+    gid = group ? togid(group) : (gid_t)(-1);
 
     while (--argc > 0) {
 	name = *argv++;
 	len = strlen(name);
 	base = xbasename(name);
 	bnlen = strlen(base);
-	toname = xmalloc(tdlen + 1 + bnlen + 1);
+	toname = xmalloc((unsigned int)(tdlen + 1 + bnlen + 1));
 	sprintf(toname, "%s/%s", todir, base);
 	exists = (lstat(toname, &tosb) == 0);
 
@@ -305,7 +305,7 @@ main(int argc, char **argv)
 		if (linkprefix) {
 		    /* -L implies -l and prefixes names with a $cwd arg. */
 		    len += lplen + 1;
-		    linkname = xmalloc(len + 1);
+		    linkname = xmalloc((unsigned int)(len + 1));
 		    sprintf(linkname, "%s/%s", linkprefix, name);
 		} else if (dorelsymlink) {
 		    /* Symlink the relative path from todir to source name. */
@@ -329,7 +329,7 @@ main(int argc, char **argv)
 	    /* Check for a pre-existing symlink with identical content. */
 	    if ((exists && (!S_ISLNK(tosb.st_mode) ||
 						readlink(toname, buf, sizeof buf) != len ||
-						strncmp(buf, name, len) != 0)) || 
+						strncmp(buf, name, (unsigned int)len) != 0)) || 
 			((stat(name, &fromsb) == 0) && 
 			 (fromsb.st_mtime > tosb.st_mtime))) {
 		(void) (S_ISDIR(tosb.st_mode) ? rmdir : unlink)(toname);
@@ -370,7 +370,7 @@ main(int argc, char **argv)
 
 	    bp = buf;
 	    while ((cc = read(fromfd, bp, sizeof buf)) > 0) {
-		while ((wc = write(tofd, bp, cc)) > 0) {
+		while ((wc = write(tofd, bp, (unsigned int)cc)) > 0) {
 		    if ((cc -= wc) == 0)
 			break;
 		    bp += wc;
