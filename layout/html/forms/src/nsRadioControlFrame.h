@@ -19,6 +19,7 @@
 #ifndef nsRadioControlFrame_h___
 #define nsRadioControlFrame_h___
 
+#include "nsIRadioControlFrame.h"
 #include "nsFormControlFrame.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
@@ -26,10 +27,11 @@ class nsIAtom;
 
 // nsRadioControlFrame
 
-class nsRadioControlFrame : public nsFormControlFrame 
+class nsRadioControlFrame : public nsFormControlFrame, public nsIRadioControlFrame
 {
 public:
   nsRadioControlFrame();
+  ~nsRadioControlFrame();
     // nsFormControlFrame overrides
   nsresult RequiresWidget(PRBool &aHasWidget);
 
@@ -49,6 +51,10 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
+   //nsIRadioControlFrame methods
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_IMETHOD SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext);
+
   virtual PRBool GetChecked(PRBool aGetInitialValue);
   virtual void   SetChecked(PRBool aValue, PRBool aSetInitialValue);
 
@@ -62,6 +68,12 @@ public:
   virtual const nsIID& GetCID();
 
   virtual const nsIID& GetIID();
+
+  NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
+                                   nsIStyleContext* aParentContext,
+                                   PRInt32 aParentChange,
+                                   nsStyleChangeList* aChangeList,
+                                   PRInt32* aLocalChange);
 
   //
   // XXX: The following paint methods are TEMPORARY. It is being used to get printing working
@@ -97,6 +109,12 @@ protected:
                               nsSize& aDesiredWidgetSize);
     //GFX-rendered state variables
   PRBool mChecked;
+
+  nsIStyleContext*     mRadioButtonFaceStyle;
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 };
 
 // nsRadioControlGroup
@@ -120,7 +138,9 @@ protected:
   nsString             mName;
   nsVoidArray          mRadios;
   nsRadioControlFrame* mCheckedRadio;
+ 
 };
+
 
 #endif
 

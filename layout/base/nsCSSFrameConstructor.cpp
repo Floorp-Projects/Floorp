@@ -49,6 +49,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIComboboxControlFrame.h"
+#include "nsIRadioControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -122,6 +123,7 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIComboboxControlFrameIID, NS_ICOMBOBOXCONTROLFRAME_IID);
+static NS_DEFINE_IID(kIRadioControlFrameIID,    NS_IRADIOCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIListControlFrameIID,     NS_ILISTCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
 static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
@@ -765,7 +767,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresContext *aPresContext,
       rv = ConstructTextControlFrame(aPresContext, aFrame);
     }
     else if (val.EqualsIgnoreCase("radio")) {
-      rv = NS_NewRadioControlFrame(&aFrame);
+      rv = ConstructRadioControlFrame(aPresContext, aFrame, aContent);
     }
     else if (val.EqualsIgnoreCase("text")) {
       rv = ConstructTextControlFrame(aPresContext, aFrame);
@@ -2234,6 +2236,23 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresContext*  aPresContext,
 }
 
 nsresult
+nsCSSFrameConstructor::ConstructRadioControlFrame(nsIPresContext*  aPresContext,
+                                                 nsIFrame*&   aNewFrame,
+                                                 nsIContent*  aContent)
+{
+  nsresult rv = NS_NewRadioControlFrame(&aNewFrame);
+  nsCOMPtr<nsIStyleContext> radioStyle;
+  aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::radioPseudo, 
+    radioStyle, PR_FALSE, getter_AddRefs(radioStyle));
+  nsIRadioControlFrame* radio = nsnull;
+  if (NS_SUCCEEDED(aNewFrame->QueryInterface(kIRadioControlFrameIID, (void**)&radio))) {
+    radio->SetRadioButtonFaceStyleContext(radioStyle);
+    NS_RELEASE(radio);
+  }
+ return rv;
+}
+
+nsresult
 nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresContext*          aPresContext,
                                                  nsIFrame*&               aNewFrame)
 {
@@ -2711,7 +2730,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     else if (aTag == nsXULAtoms::fontpicker)
       rv = NS_NewFontPickerFrame(&newFrame);
     else if (aTag == nsXULAtoms::radio)
-      rv = NS_NewRadioControlFrame(&newFrame);
+      rv = ConstructRadioControlFrame(aPresContext, newFrame, aContent);
     else if (aTag == nsXULAtoms::text)
       rv = ConstructTextControlFrame(aPresContext, newFrame);
     else if (aTag == nsXULAtoms::widget)

@@ -126,7 +126,7 @@ nsListControlFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
    // on in the HandleEvent. The GetFrameForPointUsing is always called before the HandleEvent.
    //
   nsresult rv;
-  
+  mHitFrame = nsnull;  
   nsIFrame *childFrame;
   FirstChild(nsnull, &childFrame);
   rv = GetFrameForPointUsing(aPoint, nsnull, aFrame);
@@ -424,7 +424,7 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   mDisplayed = PR_TRUE;
-   
+  
   return NS_OK;
 }
 
@@ -766,12 +766,15 @@ nsListControlFrame :: CaptureMouseEvents(PRBool aGrabMouseEvents)
 
   if (view) {
     view->GetViewManager(*getter_AddRefs(viewMan));
-
+//    nsIWidget* widget = nsnull;
+//    view->GetWidget(widget);
     if (viewMan) {
       if (aGrabMouseEvents) {
         viewMan->GrabMouseEvents(view,result);
+//        widget->CaptureMouse(PR_TRUE);
       } else {
         viewMan->GrabMouseEvents(nsnull,result);
+//        widget->CaptureMouse(PR_FALSE);
       }
     }
   }
@@ -779,6 +782,37 @@ nsListControlFrame :: CaptureMouseEvents(PRBool aGrabMouseEvents)
   return NS_OK;
 }
 
+nsIView* nsListControlFrame::GetViewFor(nsIWidget* aWidget)
+{           
+  nsIView*  view = nsnull;
+  void*     clientData;
+
+  NS_PRECONDITION(nsnull != aWidget, "null widget ptr");
+	
+  // The widget's client data points back to the owning view
+  if (aWidget && NS_SUCCEEDED(aWidget->GetClientData(clientData))) {
+    view = (nsIView*)clientData;
+  }
+
+  return view;
+}
+
+// Determine if a view is an ancestor of another view.
+
+PRBool nsListControlFrame::IsAncestor(nsIView* aAncestor, nsIView* aChild)
+{
+  nsIView* view = aChild;
+  while (nsnull != view) {
+    if (view == aAncestor)
+       // Is an ancestor
+      return(PR_TRUE);
+    else {
+      view->GetParent(view);
+    }
+  }
+   // Not an ancestor
+  return(PR_FALSE);
+}
 
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aPresContext, 
@@ -786,15 +820,26 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aP
                                                        nsEventStatus&  aEventStatus)
 {
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-   // Don't do anything unless a frame was target of the event.
-  if (nsnull == mHitFrame) {
-    if (IsInDropDownMode() == PR_TRUE) {
-      mComboboxFrame->ListWasSelected(&aPresContext); 
-    }
-    return NS_OK;
-   }
-  }
-
+    if (nsnull == mHitFrame) {
+        // Button down without hitting a frame in the drop down list.
+     
+         // May need to give the scrollbars a chance at the event.
+         // The drop down list's scrollbar view will be a descendant
+         // of the drop down list's view. So check to see if the view
+         // that associated with event's widget is a descendant.
+         // If so, then we do not pop the drop down list back up.
+        nsIView* eventView = GetViewFor(aEvent->widget);
+        nsIView* view=nsnull;
+        GetView(&view);
+        if (PR_TRUE == IsAncestor(view, eventView)) {
+          return NS_OK;
+        }
+         // Roll the drop-down list back up.
+      mComboboxFrame->ListWasSelected(&aPresContext);     
+      return NS_OK;
+      }
+  } 
+  
   // Mouse Move behavior is as follows:
   // When the DropDown occurs, if an item is selected it displayed as being selected.
   // It may or may not be currently visible, when the mouse is moved across any item 
@@ -817,29 +862,24 @@ NS_IMETHODIMP nsListControlFrame::HandleLikeDropDownListEvent(nsIPresContext& aP
           mSelectedIndex = newSelectedIndex;
         }
       }
-    }
-
-
+    }       
   } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+    // Start by finding the newly "hit" content from the hit frame
+      if (nsnull != mHitFrame) {
+        PRInt32 index = GetSelectedIndex(mHitFrame);
+        if (kNothingSelected != index) {
+          SetFrameSelected(index, PR_TRUE);  
+          mSelectedIndex = index;
+        }
+    
       if (mComboboxFrame) {
         mComboboxFrame->ListWasSelected(&aPresContext); 
       } 
-           
-  } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-    // Start by finding the newly "hit" content from the hit frame
-    if (nsnull != mHitFrame) {
-      PRInt32 index = GetSelectedIndex(mHitFrame);
-      if (kNothingSelected != index) {
-        SetFrameSelected(index, PR_TRUE);  
-        mSelectedIndex = index;
-      }
-    }
-
-    if (mComboboxFrame) {
-      mComboboxFrame->ListWasSelected(&aPresContext); 
     } 
 
   } 
+
+  aEventStatus = nsEventStatus_eConsumeNoDefault; 
   return NS_OK;
 }
 
@@ -886,8 +926,6 @@ NS_IMETHODIMP nsListControlFrame::HandleEvent(nsIPresContext& aPresContext,
   } else {
     HandleLikeListEvent(aPresContext, aEvent, aEventStatus);
   }
-
-  aEventStatus = nsEventStatus_eConsumeNoDefault;
 
   return NS_OK;
 }
@@ -993,10 +1031,7 @@ NS_IMETHODIMP
 nsListControlFrame::AboutToDropDown()
 {
     // Resync the view's position with the frame.
-  nsRect rect;
-  GetRect(rect);
-  MoveTo(rect.x, rect.y);
-  return NS_OK;
+  return(SyncViewWithFrame());
 }
 
 
@@ -1470,7 +1505,105 @@ nsresult nsListControlFrame::CreateScrollingViewWidget(nsIView* aView, const nsS
     return nsScrollFrame::CreateScrollingViewWidget(aView, aPosition);
   }
 }
+
+void
+nsListControlFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView, 
+  nsPoint& aPoint)
+{
+  aPoint.x = 0;
+  aPoint.y = 0;
  
+  nsIView *parent;
+  nsRect bounds;
+
+  parent = aView;
+  while (nsnull != parent) {
+    parent->GetBounds(bounds);
+    aPoint.x += bounds.x;
+    aPoint.y += bounds.y;
+    parent->GetParent(parent);
+  }
+}
+ 
+
+//----------------------------------------------------------------------
+nsresult 
+nsListControlFrame::SyncViewWithFrame()
+{
+    // Resync the view's position with the frame.
+    // The problem is the dropdown's view is attached directly under
+    // the root view. This means it's view needs to have it's coordinates calculated
+    // as if it were in it's normal position in the view hierarchy.
+
+  nsPoint parentPos;
+  nsCOMPtr<nsIViewManager> viewManager;
+
+     //Get parent frame
+  nsIFrame* parent;
+  GetParentWithView(&parent);
+  NS_ASSERTION(parent, "GetParentWithView failed");
+
+  // Get parent view
+  nsIView* parentView = nsnull;
+  parent->GetView(&parentView);
+
+  parentView->GetViewManager(*getter_AddRefs(viewManager));
+  GetViewOffset(viewManager, parentView, parentPos);
+  nsIView* view = nsnull;
+  GetView(&view);
+
+  nsIView* containingView = nsnull;
+  nsPoint offset;
+  GetOffsetFromView(offset, &containingView);
+  nsSize size;
+  GetSize(size);
+  
+  viewManager->ResizeView(view, mRect.width, mRect.height);
+  viewManager->MoveViewTo(view, parentPos.x + offset.x, parentPos.y + offset.y );
+
+  return NS_OK;
+}
+
+nsresult
+nsListControlFrame::GetScrollingParentView(nsIFrame* aParent, nsIView** aParentView)
+{
+  if (IsInDropDownMode() == PR_TRUE) {
+     // Use the parent frame to get the view manager
+    nsIView* parentView = nsnull;
+    nsresult rv = aParent->GetView(&parentView);
+    NS_ASSERTION(parentView, "GetView failed");
+    nsCOMPtr<nsIViewManager> viewManager;
+    parentView->GetViewManager(*getter_AddRefs(viewManager));
+    NS_ASSERTION(viewManager, "GetViewManager failed");
+
+     // Ask the view manager for the root view and
+     // use it as the parent for popup scrolling lists.
+     // Using the normal view as the parent causes the 
+     // drop-down list to be clipped to a parent view. 
+     // Using the root view as the parent
+     // prevents this from happening. 
+    viewManager->GetRootView(*aParentView);
+    NS_ASSERTION(aParentView, "GetRootView failed");  
+    return rv;
+   } else {
+     return nsScrollFrame::GetScrollingParentView(aParent, aParentView);
+   }
+}
+
+NS_IMETHODIMP
+nsListControlFrame::DidReflow(nsIPresContext& aPresContext,
+                   nsDidReflowStatus aStatus)
+{
+  if (PR_TRUE == IsInDropDownMode()) 
+  {
+    nsresult rv = nsScrollFrame::DidReflow(aPresContext, aStatus);
+    SyncViewWithFrame();
+    return rv;
+  } else {
+    return nsScrollFrame::DidReflow(aPresContext, aStatus);
+  }
+}
+
 
 
 

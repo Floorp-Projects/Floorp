@@ -27,6 +27,7 @@ class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLCollection;
 class nsIDOMHTMLOptionElement;
 class nsIComboboxControlFrame;
+class nsIViewManager;
 
 /**
  * Frame-based listbox.
@@ -65,6 +66,8 @@ public:
                    nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Deselect();
+  
+  NS_IMETHOD DidReflow(nsIPresContext& aPresContext, nsDidReflowStatus aStatus);
 
       // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
@@ -122,17 +125,19 @@ public:
   nsIContent* GetOptionContent(PRUint32 aIndex);
   PRBool IsContentSelected(nsIContent* aContent);
   PRBool IsFrameSelected(PRUint32 aIndex);
-  void   SetFrameSelected(PRUint32 aIndex, PRBool aSelected);
- 
-protected:
-   // nsScrollFrame overrides
-   // Override the widget created for the list box so a Borderless top level widget is created
-   // for drop-down lists.
-  virtual nsresult CreateScrollingViewWidget(nsIView* aView,const nsStylePosition* aPosition);
+  void SetFrameSelected(PRUint32 aIndex, PRBool aSelected);
+  void GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
 
+protected:
+ 
   nsListControlFrame();
   virtual ~nsListControlFrame();
 
+  // nsScrollFrame overrides
+   // Override the widget created for the list box so a Borderless top level widget is created
+   // for drop-down lists.
+  virtual nsresult CreateScrollingViewWidget(nsIView* aView,const nsStylePosition* aPosition);
+  virtual nsresult GetScrollingParentView(nsIFrame* aParent, nsIView** aParentView);
   PRInt32 GetNumberOfOptions();
 
   nsIFrame * GetOptionFromChild(nsIFrame* aParentFrame);
@@ -142,6 +147,9 @@ protected:
                                  nsIFrame**     aFrame);
 
   // Utility methods
+  PRBool IsAncestor(nsIView* aAncestor, nsIView* aChild);
+  nsIView* GetViewFor(nsIWidget* aWidget);
+  nsresult SyncViewWithFrame();
   PRBool IsInDropDownMode();
   PRBool IsOptionElement(nsIContent* aContent);
   PRBool IsOptionElementFrame(nsIFrame *aFrame);

@@ -163,18 +163,27 @@ nsScrollFrame::CreateScrollingViewWidget(nsIView* aView, const nsStylePosition* 
 }
 
 nsresult
+nsScrollFrame::GetScrollingParentView(nsIFrame* aParent, nsIView** aParentView)
+{
+  nsresult rv = aParent->GetView(aParentView);
+  NS_ASSERTION(aParentView, "GetParentWithView failed");
+  return(rv);
+}
+
+nsresult
 nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
 {
   nsIView*  view;
 
-  // Get parent view
+   //Get parent frame
   nsIFrame* parent;
   GetParentWithView(&parent);
   NS_ASSERTION(parent, "GetParentWithView failed");
-  nsIView* parentView;
-  parent->GetView(&parentView);
-  NS_ASSERTION(parentView, "GetParentWithView failed");
 
+  // Get parent view
+  nsIView* parentView = nsnull;
+  GetScrollingParentView(parent, &parentView);
+ 
   // Get the view manager
   nsIViewManager* viewManager;
   parentView->GetViewManager(viewManager);

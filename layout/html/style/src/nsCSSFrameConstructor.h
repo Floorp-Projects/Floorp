@@ -380,6 +380,9 @@ protected:
                                         nsIFrame*        aParentFrame,
                                         nsIFrame*&       aFrame);
 
+  nsresult ConstructRadioControlFrame(nsIPresContext*    aPresContext,
+                                      nsIFrame*&         aNewFrame,
+                                      nsIContent*        aContent);
 
   nsresult ConstructTextControlFrame(nsIPresContext*          aPresContext,
                                      nsIFrame*&               aNewFrame);
