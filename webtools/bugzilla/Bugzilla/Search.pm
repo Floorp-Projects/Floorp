@@ -70,6 +70,7 @@ sub init {
     @fields = @$fieldsref if $fieldsref;
     my @specialchart;
     my @andlist;
+    my %chartfields;
 
     &::GetVersionTable();
     
@@ -362,12 +363,12 @@ sub init {
          "^(?:assigned_to|reporter|qa_contact),(?:notequals),(%\\w+%)" => sub {
              $term = "bugs.$f <> " . pronoun($1, $user);
           },
-         "^(assigned_to|reporter)," => sub {
+         "^(assigned_to|reporter),(?!changed)" => sub {
              push(@supptables, "profiles AS map_$f");
              push(@wherepart, "bugs.$f = map_$f.userid");
              $f = "map_$f.login_name";
          },
-         "^qa_contact," => sub {
+         "^qa_contact,(?!changed)" => sub {
              push(@supptables,
                   "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid");
              $f = "COALESCE(map_$f.login_name,'')";
@@ -445,7 +446,7 @@ sub init {
                  &$ref;
              }
          },
-         "^cc," => sub {
+         "^cc,(?!changed)" => sub {
              my $chartseq = $chartid;
              if ($chartid eq "") {
                  $chartseq = "CC$sequence";
@@ -776,7 +777,7 @@ sub init {
                                      $term);
          },
 
-         "^keywords," => sub {
+         "^keywords,(?!changed)" => sub {
              &::GetVersionTable();
              my @list;
              my $table = "keywords_$chartid";
@@ -812,7 +813,7 @@ sub init {
              }
          },
 
-         "^dependson," => sub {
+         "^dependson,(?!changed)" => sub {
                 my $table = "dependson_" . $chartid;
                 push(@supptables, "dependencies $table");
                 $ff = "$table.$f";
@@ -821,7 +822,7 @@ sub init {
                 push(@wherepart, "$table.blocked = bugs.bug_id");
          },
 
-         "^blocked," => sub {
+         "^blocked,(?!changed)" => sub {
                 my $table = "blocked_" . $chartid;
                 push(@supptables, "dependencies $table");
                 $ff = "$table.$f";
@@ -830,7 +831,7 @@ sub init {
                 push(@wherepart, "$table.dependson = bugs.bug_id");
          },
 
-         "^alias," => sub {
+         "^alias,(?!changed)" => sub {
              $ff = "COALESCE(bugs.alias, '')";
              my $ref = $funcsbykey{",$t"};
              &$ref;
@@ -950,51 +951,45 @@ sub init {
                  $term = "NOT (" . join(" OR ", @list) . ")";
              }
          },
-         ",changedbefore" => sub {
+         ",(changedbefore|changedafter)" => sub {
+             my $operator = ($t =~ /before/) ? '<' : '>';
              my $table = "act_$chartid";
-             my $ftable = "fielddefs_$chartid";
-             push(@supptables, "bugs_activity $table");
-             push(@supptables, "fielddefs $ftable");
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
-             push(@wherepart, "$table.fieldid = $ftable.fieldid");
-             $term = "($ftable.name = '$f' AND $table.bug_when < $q)";
+             my $fieldid = $chartfields{$f};
+             if (!$fieldid) {
+                 ThrowCodeError("invalid_field_name", {field => $f});
+             }
+             push(@supptables, "LEFT JOIN bugs_activity $table " .
+                               "ON $table.bug_id = bugs.bug_id " .
+                               "AND $table.fieldid = $fieldid " .
+                               "AND $table.bug_when $operator " . 
+                               &::SqlQuote(SqlifyDate($v)) );
+             $term = "($table.bug_when IS NOT NULL)";
          },
-         ",changedafter" => sub {
+         ",(changedfrom|changedto)" => sub {
+             my $operator = ($t =~ /from/) ? 'removed' : 'added';
              my $table = "act_$chartid";
-             my $ftable = "fielddefs_$chartid";
-             push(@supptables, "bugs_activity $table");
-             push(@supptables, "fielddefs $ftable");
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
-             push(@wherepart, "$table.fieldid = $ftable.fieldid");
-             $term = "($ftable.name = '$f' AND $table.bug_when > $q)";
-         },
-         ",changedfrom" => sub {
-             my $table = "act_$chartid";
-             my $ftable = "fielddefs_$chartid";
-             push(@supptables, "bugs_activity $table");
-             push(@supptables, "fielddefs $ftable");
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
-             push(@wherepart, "$table.fieldid = $ftable.fieldid");
-             $term = "($ftable.name = '$f' AND $table.removed = $q)";
-         },
-         ",changedto" => sub {
-             my $table = "act_$chartid";
-             my $ftable = "fielddefs_$chartid";
-             push(@supptables, "bugs_activity $table");
-             push(@supptables, "fielddefs $ftable");
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
-             push(@wherepart, "$table.fieldid = $ftable.fieldid");
-             $term = "($ftable.name = '$f' AND $table.added = $q)";
+             my $fieldid = $chartfields{$f};
+             if (!$fieldid) {
+                 ThrowCodeError("invalid_field_name", {field => $f});
+             }
+             push(@supptables, "LEFT JOIN bugs_activity $table " .
+                               "ON $table.bug_id = bugs.bug_id " .
+                               "AND $table.fieldid = $fieldid " .
+                               "AND $table.$operator = $q");
+             $term = "($table.bug_when IS NOT NULL)";
          },
          ",changedby" => sub {
              my $table = "act_$chartid";
-             my $ftable = "fielddefs_$chartid";
-             push(@supptables, "bugs_activity $table");
-             push(@supptables, "fielddefs $ftable");
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
-             push(@wherepart, "$table.fieldid = $ftable.fieldid");
+             my $fieldid = $chartfields{$f};
+             if (!$fieldid) {
+                 ThrowCodeError("invalid_field_name", {field => $f});
+             }
              my $id = &::DBNameToIdAndCheck($v);
-             $term = "($ftable.name = '$f' AND $table.who = $id)";
+             push(@supptables, "LEFT JOIN bugs_activity $table " .
+                               "ON $table.bug_id = bugs.bug_id " .
+                               "AND $table.fieldid = $fieldid " .
+                               "AND $table.who = $id");
+             $term = "($table.bug_when IS NOT NULL)";
          },
          );
     my @funcnames;
@@ -1120,11 +1115,10 @@ sub init {
 # $suppstring = String which is pasted into query containing all table names
 
     # get a list of field names to verify the user-submitted chart fields against
-    my %chartfields;
-    &::SendSQL("SELECT name FROM fielddefs");
+    &::SendSQL("SELECT name, fieldid FROM fielddefs");
     while (&::MoreSQLData()) {
-        my ($name) = &::FetchSQLData();
-        $chartfields{$name} = 1;
+        my ($name, $id) = &::FetchSQLData();
+        $chartfields{$name} = $id;
     }
 
     $row = 0;
