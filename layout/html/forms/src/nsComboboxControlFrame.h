@@ -205,10 +205,6 @@ public:
                             nscoord aHeight, 
                             nsRect aAbsoluteTwipsRect, 
                             nsRect aAbsolutePixelRect);
-  nsresult GetAbsoluteFramePosition(nsIPresContext* aPresContext,
-                                    nsIFrame *aFrame, 
-                                    nsRect& aAbsoluteTwipsRect, 
-                                    nsRect& aAbsolutePixelRect);
 protected:
   void ShowPopup(PRBool aShowPopup);
   void ShowList(nsIPresContext* aPresContext, PRBool aShowList);

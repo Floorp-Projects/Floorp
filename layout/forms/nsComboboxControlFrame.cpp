@@ -679,84 +679,6 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext* aPresContext,
 }
 
 
-// Calculate a frame's position in screen coordinates
-nsresult
-nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
-                                                 nsIFrame *aFrame, 
-                                                 nsRect& aAbsoluteTwipsRect, 
-                                                 nsRect& aAbsolutePixelRect)
-{
-  //XXX: This code needs to take the view's offset into account when calculating
-  //the absolute coordinate of the frame.
-  nsresult rv = NS_OK;
- 
-  aFrame->GetRect(aAbsoluteTwipsRect);
-  // zero these out, 
-  // because the GetOffsetFromView figures them out
-  aAbsoluteTwipsRect.x = 0;
-  aAbsoluteTwipsRect.y = 0;
-
-    // Get conversions between twips and pixels
-  float t2p;
-  float p2t;
-  aPresContext->GetTwipsToPixels(&t2p);
-  aPresContext->GetPixelsToTwips(&p2t);
-  
-   // Add in frame's offset from it it's containing view
-  nsIView *containingView = nsnull;
-  nsPoint offset;
-  rv = aFrame->GetOffsetFromView(aPresContext, offset, &containingView);
-  if (NS_SUCCEEDED(rv) && (nsnull != containingView)) {
-    aAbsoluteTwipsRect.x += offset.x;
-    aAbsoluteTwipsRect.y += offset.y;
-
-    nsPoint viewOffset;
-    containingView->GetPosition(&viewOffset.x, &viewOffset.y);
-    nsIView * parent;
-    containingView->GetParent(parent);
-    while (nsnull != parent) {
-      nsPoint po;
-      parent->GetPosition(&po.x, &po.y);
-      viewOffset.x += po.x;
-      viewOffset.y += po.y;
-      nsIScrollableView * scrollView;
-      if (NS_OK == containingView->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&scrollView)) {
-        nscoord x;
-        nscoord y;
-        scrollView->GetScrollPosition(x, y);
-        viewOffset.x -= x;
-        viewOffset.y -= y;
-      }
-      nsIWidget * widget;
-      parent->GetWidget(widget);
-      if (nsnull != widget) {
-        // Add in the absolute offset of the widget.
-        nsRect absBounds;
-        nsRect lc;
-        widget->WidgetToScreen(lc, absBounds);
-        // Convert widget coordinates to twips   
-        aAbsoluteTwipsRect.x += NSIntPixelsToTwips(absBounds.x, p2t);
-        aAbsoluteTwipsRect.y += NSIntPixelsToTwips(absBounds.y, p2t);   
-        NS_RELEASE(widget);
-        break;
-      }
-      parent->GetParent(parent);
-    }
-    aAbsoluteTwipsRect.x += viewOffset.x;
-    aAbsoluteTwipsRect.y += viewOffset.y;
-  }
-
-   // convert to pixel coordinates
-  if (NS_SUCCEEDED(rv)) {
-   aAbsolutePixelRect.x = NSTwipsToIntPixels(aAbsoluteTwipsRect.x, t2p);
-   aAbsolutePixelRect.y = NSTwipsToIntPixels(aAbsoluteTwipsRect.y, t2p);
-   aAbsolutePixelRect.width = NSTwipsToIntPixels(aAbsoluteTwipsRect.width, t2p);
-   aAbsolutePixelRect.height = NSTwipsToIntPixels(aAbsoluteTwipsRect.height, t2p);
-  }
-
-  return rv;
-}
-
 ////////////////////////////////////////////////////////////////
 // Experimental Reflow
 ////////////////////////////////////////////////////////////////
@@ -1868,8 +1790,9 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
 
   nsRect rect;
   this->GetRect(rect);
-  GetAbsoluteFramePosition(mPresContext, this,  absoluteTwips, absolutePixels);
-  PositionDropdown(mPresContext, rect.height, absoluteTwips, absolutePixels);
+  if (NS_SUCCEEDED(nsFormControlFrame::GetAbsoluteFramePosition(mPresContext, this,  absoluteTwips, absolutePixels))) {
+    PositionDropdown(mPresContext, rect.height, absoluteTwips, absolutePixels);
+  }
   return NS_OK;
 }
 
@@ -1879,9 +1802,9 @@ nsComboboxControlFrame::GetAbsoluteRect(nsRect* aRect)
   nsRect absoluteTwips;
   nsRect rect;
   this->GetRect(rect);
-  GetAbsoluteFramePosition(mPresContext, this,  absoluteTwips, *aRect);
+  nsresult rv = nsFormControlFrame::GetAbsoluteFramePosition(mPresContext, this,  absoluteTwips, *aRect);
 
-  return NS_OK;
+  return rv;
 }
 
 ///////////////////////////////////////////////////////////////
