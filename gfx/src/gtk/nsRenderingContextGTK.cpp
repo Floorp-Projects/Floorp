@@ -751,7 +751,10 @@ NS_IMETHODIMP nsRenderingContextGTK::GetWidth(PRUnichar aC, nscoord &aWidth)
 
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const nsString& aString, nscoord &aWidth)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
+  char* cStr = aString.ToNewCString();
+  NS_IMETHODIMP ret = GetWidth(cStr, aString.Length(), aWidth);
+  delete[] cStr;
+  return ret;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString, nscoord &aWidth)
@@ -776,6 +779,11 @@ NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString,
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const PRUnichar *aString,
                                               PRUint32 aLength, nscoord &aWidth)
 {
+    nsString nsStr;
+    nsStr.SetString(aString, aLength);
+    char* cStr = nsStr.ToNewCString();
+    GetWidth(cStr, aLength, aWidth);
+    delete[] cStr;
 }
 
 NS_IMETHODIMP 
@@ -795,7 +803,7 @@ nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
 
   mTMatrix->TransformCoord(&x,&y);
 
-  ::gdk_draw_text (mRenderingSurface->drawable, NULL,
+  ::gdk_draw_text (mRenderingSurface->drawable, mCurrentFont,
                    mRenderingSurface->gc,
                    x, y, aString, aLength);
 
@@ -837,6 +845,11 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawString(const PRUnichar *aString, PRUint
                                                 nscoord aWidth,
                                                 const nscoord* aSpacing)
 {
+  nsString nsStr;
+  nsStr.SetString(aString, aLength);
+  char* cStr = nsStr.ToNewCString();
+  DrawString(cStr, aLength, aX, aY, aWidth, aSpacing);
+  delete[] cStr;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawString(const nsString& aString, 
@@ -844,6 +857,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawString(const nsString& aString,
                                                 nscoord aWidth,
                                                 const nscoord* aSpacing)
 {
+  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth, aSpacing);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
