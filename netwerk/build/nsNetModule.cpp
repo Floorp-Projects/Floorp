@@ -84,8 +84,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppleFileDecoder)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "nsMIMEService.h"
-#include "nsXMLMIMEDataSource.h"
 #include "nsMIMEInfoImpl.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEInfoImpl)
@@ -792,11 +790,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     { "Cache Manager",NS_CACHE_MANAGER_CID,     NS_NETWORK_CACHE_MANAGER_CONTRACTID,nsCacheManagerConstructor },
 #endif
     // from netwerk/mime:
-    { "xml mime datasource", 
-      NS_XMLMIMEDATASOURCE_CID,
-      NS_XMLMIMEDATASOURCE_CONTRACTID,
-      nsXMLMIMEDataSource::Create
-    },
     { "xml mime INFO", 
       NS_MIMEINFO_CID,
       NS_MIMEINFO_CONTRACTID,

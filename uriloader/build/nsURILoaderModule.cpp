@@ -83,8 +83,6 @@ static const nsModuleComponentInfo components[] = {
   {  NS_PREFETCHSERVICE_CLASSNAME, NS_PREFETCHSERVICE_CID, NS_PREFETCHSERVICE_CONTRACTID,
      nsPrefetchServiceConstructor, },
 #if defined(XP_MAC) || defined(XP_MACOSX)
-  { "MacMIME data source", NS_NATIVEMIMEDATASOURCE_CID, NS_NATIVEMIMEDATASOURCE_CONTRACTID,
-    nsMacMIMEDataSourceConstructor, },
   { "Internet Config Service", NS_INTERNETCONFIGSERVICE_CID, NS_INTERNETCONFIGSERVICE_CONTRACTID,
     nsInternetConfigServiceConstructor, },
 #endif
