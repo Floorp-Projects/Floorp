@@ -742,19 +742,19 @@ nsXMLElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
 // nsIStyledContent implementation
 
 NS_IMETHODIMP
-nsXMLElement::GetID(nsIAtom*& aResult) const
+nsXMLElement::GetID(nsIAtom** aResult) const
 {
-  nsresult rv;  
   nsCOMPtr<nsIAtom> atom;
-  rv = mNodeInfo->GetIDAttributeAtom(getter_AddRefs(atom));
-  
-  aResult = nsnull;
+  nsresult rv = mNodeInfo->GetIDAttributeAtom(getter_AddRefs(atom));
+
+  *aResult = nsnull;
   if (NS_SUCCEEDED(rv) && atom) {
     nsAutoString value;
     rv = nsGenericContainerElement::GetAttr(kNameSpaceID_Unknown, atom,
                                             value);
-    if (NS_SUCCEEDED(rv))
-      aResult = NS_NewAtom(value);
+    if (NS_SUCCEEDED(rv)) {
+      *aResult = NS_NewAtom(value);
+    }
   }
 
   return rv;
