@@ -147,7 +147,8 @@ nsAutoIndexBuffer::GrowTo(PRInt32 aAtLeast)
 
 // Helper class for managing blinking text
 
-class nsBlinkTimer : public nsITimerCallback {
+class nsBlinkTimer : public nsITimerCallback
+{
 public:
   nsBlinkTimer();
   virtual ~nsBlinkTimer();
@@ -166,6 +167,13 @@ public:
 
   NS_IMETHOD_(void) Notify(nsITimer *timer);
 
+  static nsresult AddBlinkFrame(nsIPresContext* aPresContext, nsIFrame* aFrame);
+  static nsresult RemoveBlinkFrame(nsIFrame* aFrame);
+  
+  static PRBool   GetBlinkIsOff() { return sBlinkTextOff; }
+  
+protected:
+
   struct FrameData {
     nsIPresContext* mPresContext;  // pres context associated with the frame
     nsIFrame*       mFrame;
@@ -176,13 +184,20 @@ public:
       : mPresContext(aPresContext), mFrame(aFrame) {}
   };
 
-  nsITimer* mTimer;
-  nsVoidArray mFrames;
+  nsITimer*       mTimer;
+  nsVoidArray     mFrames;
   nsIPresContext* mPresContext;
+
+protected:
+
+  static nsBlinkTimer* sTextBlinker;
+  static PRBool        sBlinkTextOff;
+  
 };
 
-static PRBool gBlinkTextOff;
-static nsBlinkTimer* gTextBlinker;
+nsBlinkTimer* nsBlinkTimer::sTextBlinker = nsnull;
+PRBool        nsBlinkTimer::sBlinkTextOff = PR_FALSE;
+
 #ifdef NOISY_BLINK
 static PRTime gLastTick;
 #endif
@@ -196,6 +211,7 @@ nsBlinkTimer::nsBlinkTimer()
 nsBlinkTimer::~nsBlinkTimer()
 {
   Stop();
+  sTextBlinker = nsnull;
 }
 
 void nsBlinkTimer::Start()
@@ -253,7 +269,7 @@ NS_IMETHODIMP_(void) nsBlinkTimer::Notify(nsITimer *timer)
   // Toggle blink state bit so that text code knows whether or not to
   // render. All text code shares the same flag so that they all blink
   // in unison.
-  gBlinkTextOff = PRBool(!gBlinkTextOff);
+  sBlinkTextOff = PRBool(!sBlinkTextOff);
 
 #ifndef REPEATING_TIMERS
   // XXX hack to get auto-repeating timers; restart before doing
@@ -290,6 +306,38 @@ NS_IMETHODIMP_(void) nsBlinkTimer::Notify(nsITimer *timer)
     NS_RELEASE(vm);
   }
 }
+
+
+// static
+nsresult nsBlinkTimer::AddBlinkFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
+{
+  if (!sTextBlinker)
+  {
+    sTextBlinker = new nsBlinkTimer;
+    if (!sTextBlinker) return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  NS_ADDREF(sTextBlinker);
+
+  sTextBlinker->AddFrame(aPresContext, aFrame);
+  return NS_OK;
+}
+
+
+// static
+nsresult nsBlinkTimer::RemoveBlinkFrame(nsIFrame* aFrame)
+{
+  NS_ASSERTION(sTextBlinker, "Should have blink timer here");
+  
+  nsBlinkTimer* blinkTimer = sTextBlinker;    // copy so we can call NS_RELEASE on it
+  if (!blinkTimer) return NS_OK;
+  
+  blinkTimer->RemoveFrame(aFrame);  
+  NS_RELEASE(blinkTimer);
+  
+  return NS_OK;
+}
+
 
 //----------------------------------------------------------------------
 
@@ -748,22 +796,13 @@ NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 nsTextFrame::nsTextFrame()
 {
-  if (nsnull == gTextBlinker) {
-    // Create text timer the first time out
-    gTextBlinker = new nsBlinkTimer();
-  }
-  NS_ADDREF(gTextBlinker);
 }
 
 nsTextFrame::~nsTextFrame()
 {
-  if (0 != (mState & TEXT_BLINK_ON)) {
-    NS_ASSERTION(nsnull != gTextBlinker, "corrupted blinker");
-    gTextBlinker->RemoveFrame(this);
-  }
-  if (0 == gTextBlinker->Release()) {
-    // Release text timer when the last text frame is gone
-    gTextBlinker = nsnull;
+  if (0 != (mState & TEXT_BLINK_ON))
+  {
+    nsBlinkTimer::RemoveBlinkFrame(this);
   }
 }
 
@@ -868,7 +907,7 @@ nsTextFrame::Paint(nsIPresContext* aPresContext,
   if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
     return NS_OK;
   }
-  if ((0 != (mState & TEXT_BLINK_ON)) && gBlinkTextOff) {
+  if ((0 != (mState & TEXT_BLINK_ON)) && nsBlinkTimer::GetBlinkIsOff()) {
     return NS_OK;
   }
   nsIStyleContext* sc = mStyleContext;
@@ -3045,13 +3084,13 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   if (ts.mFont->mFont.decorations & NS_STYLE_TEXT_DECORATION_BLINK) {
     if (0 == (mState & TEXT_BLINK_ON)) {
       mState |= TEXT_BLINK_ON;
-      gTextBlinker->AddFrame(aPresContext, this);
+      nsBlinkTimer::AddBlinkFrame(aPresContext, this);
     }
   }
   else {
     if (0 != (mState & TEXT_BLINK_ON)) {
       mState &= ~TEXT_BLINK_ON;
-      gTextBlinker->RemoveFrame(this);
+      nsBlinkTimer::RemoveBlinkFrame(this);
     }
   }
 
