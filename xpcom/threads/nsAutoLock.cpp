@@ -29,7 +29,7 @@
 #include "prlock.h"
 #include "prthread.h"
 #include "nsDebug.h"
-#include "nsVector.h"
+#include "nsVoidArray.h"
 
 static PRUintn      LockStackTPI = (PRUintn)-1;
 static PLHashTable* OrderTable = 0;
@@ -37,11 +37,11 @@ static PRLock*      OrderTableLock = 0;
 
 static const char* LockTypeNames[] = {"Lock", "Monitor", "CMonitor"};
 
-struct nsNamedVector : public nsVector {
+struct nsNamedVector : public nsVoidArray {
     const char* mName;
 
     nsNamedVector(const char* name = 0, PRUint32 initialSize = 0)
-        : nsVector(initialSize),
+        : nsVoidArray(initialSize),
           mName(name)
     {
     }
@@ -57,12 +57,7 @@ _purge_one(PLHashEntry* he, PRIntn cnt, void* arg)
         delete vec;
         return HT_ENUMERATE_REMOVE;
     }
-    for (PRUint32 i = 0, n = vec->GetSize(); i < n; i++) {
-        if (vec->Get(i) == arg) {
-            vec->Remove(i);
-            break;
-        }
-    }
+    vec->RemoveElement(arg);
     return HT_ENUMERATE_NEXT;
 }
 
@@ -136,8 +131,8 @@ static PRBool Reachable(PLHashTable* table, const void* goal, const void* start)
     PR_ASSERT(goal);
     PR_ASSERT(start);
     nsNamedVector* vec = GetVector(table, start);
-    for (PRUint32 i = 0, n = vec->GetSize(); i < n; i++) {
-        void* addr = vec->Get(i);
+    for (PRUint32 i = 0, n = vec->Count(); i < n; i++) {
+        void* addr = vec->ElementAt(i);
         if (addr == goal || Reachable(table, goal, addr))
             return PR_TRUE;
     }
@@ -157,16 +152,16 @@ static PRBool WellOrdered(const void* addr1, const void* addr2,
     // Check whether we've already asserted (addr1 < addr2).
     nsNamedVector* vec1 = GetVector(table, addr1);
     if (vec1) {
-        for (i = 0, n = vec1->GetSize(); i < n; i++)
-            if (vec1->Get(i) == addr2)
+        for (i = 0, n = vec1->Count(); i < n; i++)
+            if (vec1->ElementAt(i) == addr2)
                 break;
 
         if (i == n) {
             // Now check for (addr2 < addr1) and return false if so.
             nsNamedVector* vec2 = GetVector(table, addr2);
             if (vec2) {
-                for (i = 0, n = vec2->GetSize(); i < n; i++) {
-                    void* addri = vec2->Get(i);
+                for (i = 0, n = vec2->Count(); i < n; i++) {
+                    void* addri = vec2->ElementAt(i);
                     PR_ASSERT(addri);
                     if (addri == addr1 || Reachable(table, addr1, addri)) {
                         *vec1p = vec1;
@@ -179,7 +174,7 @@ static PRBool WellOrdered(const void* addr1, const void* addr2,
                 if (rv) {
                     // Assert (addr1 < addr2) into the order table.
                     // XXX fix plvector/nsVector to use const void*
-                    vec1->Add((void*) addr2);
+                    vec1->AppendElement((void*) addr2);
                 }
             }
         }
