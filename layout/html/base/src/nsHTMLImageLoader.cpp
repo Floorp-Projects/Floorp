@@ -145,22 +145,16 @@ nsHTMLImageLoader::Update(nsIPresContext* aPresContext,
          aStatus, mImageLoader, mCallBack,
          mFlags.mSquelchCallback ? "yes" : "no");
 #endif
-
-  if (!mFlags.mNeedSizeNotification &&
-      NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
-    // remove the size available bit since it is not needed
-    aStatus &= ~NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE;
-    // check if any status left
-    if (aStatus == NS_IMAGE_LOAD_STATUS_NONE)
-      return;
-  }
-
   if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
     if (mImageLoader) {
       mImageLoader->GetSize(mIntrinsicImageSize);
       if (mFlags.mNeedIntrinsicImageSize) {
         mFlags.mHaveIntrinsicImageSize = PR_TRUE;
       }
+    }
+    if ((NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE == aStatus) &&
+        !mFlags.mNeedSizeNotification) {
+      return;
     }
   }
 
