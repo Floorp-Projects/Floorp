@@ -3238,6 +3238,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             isPrototypeInstance = true;
             dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
         }
+        if (dMap == NULL)
+            return false; // 'None'
         for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
             if (i->first == *name) {
                 *rval = i->second;

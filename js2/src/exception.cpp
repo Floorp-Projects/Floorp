@@ -55,6 +55,7 @@ static const char *const kindStrings[] = {
     "Definition error",                     // a monkey is a small cup of milk
     "Bad Value error",                      // bad value, no biscuit
     "Compile expression error",             // invalid compile-time execution 
+    "Property access error",                // you're at the wrong house 
     "Uninitialized error",                  // read before write
     "Argument mismatch error",              // bad argument type/number
 };
