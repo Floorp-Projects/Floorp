@@ -54,7 +54,7 @@ calItemBase.prototype = {
     },
 
     mImmutable: false,
-    get isMutable() { return this. mImmutable; },
+    get isMutable() { return !this.mImmutable; },
 
     makeItemBaseImmutable: function() {
         if (this.mImmutable)

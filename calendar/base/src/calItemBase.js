@@ -12,7 +12,7 @@ calItemBase.prototype = {
     },
 
     mImmutable: false,
-    get isMutable() { return this. mImmutable; },
+    get isMutable() { return !this.mImmutable; },
 
     makeItemBaseImmutable: function() {
         if (this.mImmutable)
@@ -36,6 +36,7 @@ calItemBase.prototype = {
 
         this.mProperties = Components.classes["@mozilla.org/hash-property-bag;1"].
                            createInstance(Components.interfaces.nsIWritablePropertyBag);
+
 
         this.mRecurrenceInfo = null;
         this.mAttachments = null;
