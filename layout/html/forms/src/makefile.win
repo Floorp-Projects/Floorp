@@ -30,7 +30,7 @@ REQUIRES=xpcom raptor js
 CPPSRCS= \
   nsGfxListControlFrame.cpp \
   nsFormControlHelper.cpp \
-	nsComboboxControlFrame.cpp \
+  nsComboboxControlFrame.cpp \
   nsListControlFrame.cpp \
   nsFormFrame.cpp \
   nsFormControlFrame.cpp \
@@ -90,14 +90,11 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
+CHROME_DIR	= communicator
+CHROME_L10N_DIR	= locale\layout
+CHROME_L10N	= .\HtmlForm.properties
+
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
-	rm -f $(DIST)\bin\chrome\communicator\locale\layout\HtmlForm.properties
-
-install:: $(DLL)
-	$(MAKE_INSTALL) HtmlForm.properties $(DIST)\bin\chrome\communicator\locale\layout
