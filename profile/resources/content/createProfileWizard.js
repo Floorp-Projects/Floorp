@@ -91,7 +91,7 @@ function onFinish()
 
   var profName = wizardManager.WSM.PageData["newProfile1_2"].ProfileName.value;
   dump("**** profName: "+ profName + "\n");
-  var profDir = wizardManager.WSM.PageData["newProfile1_2"].ProfileDir.value;
+  var profDir = wizardManager.WSM.PageData["newProfile1_2"].ProfileDir.rootFolder;
   proceed = processCreateProfileData( profName, profDir );
 	if( proceed ) {
 		if( window.opener ) {
@@ -144,6 +144,7 @@ function processCreateProfileData( aProfName, aProfDir )
       }
     }
 
+    dump("*** going to create a new profile called " + aProfName + " in folder: " + aProfDir + "\n");
 		profile.createNewProfile( aProfName, aProfDir );
 		return true;
   }
