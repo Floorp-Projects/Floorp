@@ -644,7 +644,7 @@ nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPre
           }
           theSpaces+=8;
           theOffset++;
-          theTextOffset=theOffset+1;
+          theTextOffset=theOffset;
         }
         break;
 
