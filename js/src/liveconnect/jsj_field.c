@@ -266,7 +266,7 @@ jsj_GetJavaFieldValue(JSContext *cx, JNIEnv *jEnv, JavaFieldSpec *field_spec,
     JS_BEGIN_MACRO                                                           \
     if (is_static_field)                                                     \
         java_value.member =                                                  \
-            (*jEnv)->GetStatic##Type##Field(jEnv, java_obj, fieldID);        \
+            (*jEnv)->GetStatic##Type##Field(jEnv, (*jEnv)->GetObjectClass(jEnv, java_obj), fieldID);        \
     else                                                                     \
         java_value.member =                                                  \
             (*jEnv)->Get##Type##Field(jEnv, java_obj, fieldID);              \
