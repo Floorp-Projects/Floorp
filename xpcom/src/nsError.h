@@ -55,6 +55,7 @@ typedef PRUint32 nsresult;
 #define NS_ERROR_MODULE_CALENDAR  5
 #define NS_ERROR_MODULE_NETWORK   6
 #define NS_ERROR_MODULE_PLUGINS   7
+#define NS_ERROR_MODULE_LAYOUT    8
 
 /**
  * @name Standard Error Handling Macros
