@@ -1314,7 +1314,7 @@ Wallet_KeySet() {
 PUBLIC PRBool
 Wallet_KeyTimedOut() {
   time_t curTime = time(NULL);
-  if (Wallet_KeySet() && (curTime > keyExpiresTime)) {
+  if (Wallet_KeySet() && (curTime >= keyExpiresTime)) {
     keySet = PR_FALSE;
     return PR_TRUE;
   }
@@ -1325,6 +1325,13 @@ PUBLIC void
 Wallet_KeyResetTime() {
   if (Wallet_KeySet()) {
     keyExpiresTime = time(NULL) + keyDuration;
+  }
+}
+
+PRIVATE void
+wallet_KeyTimeoutImmediately() {
+  if (Wallet_KeySet()) {
+    keyExpiresTime = time(NULL);
   }
 }
 
@@ -1408,11 +1415,6 @@ Wallet_KeySize() {
     strm.close();
     return ret;
   }
-}
-
-PRIVATE void
-wallet_UnsetKey() {
-  keySet = PR_FALSE;
 }
 
 PUBLIC PRBool
@@ -2429,7 +2431,7 @@ wallet_Initialize(PRBool fetchTables) {
    * fetchTables parameter was added and it is set to PR_FALSE in the case of the
    * wallet editor and PR_TRUE in all other cases
    */
-  if (!wallet_tablesInitialized & fetchTables) {
+  if (!wallet_tablesInitialized && fetchTables) {
 #ifdef DEBUG
 //wallet_ClearStopwatch();
 //wallet_ResumeStopwatch();
@@ -2504,9 +2506,10 @@ void WLLT_ChangePassword() {
     return;
   }
 
-  /* read in user data using old key */
+  /* force the user to supply old database key, for security */
+  wallet_KeyTimeoutImmediately();
 
-  wallet_UnsetKey(); /* force user to reenter old key again, for security */
+  /* read in user data using old key */
   wallet_Initialize(PR_TRUE);
 #ifdef SingleSignon
   SI_LoadSignonData(PR_TRUE);
