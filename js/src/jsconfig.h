@@ -335,7 +335,7 @@
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
 #define JS_HAS_REPLACE_LAMBDA   1       /* has string.replace(re, lambda) */
 #define JS_HAS_SCRIPT_OBJECT    1       /* has (new Script("x++")).exec() */
-#define JS_HAS_XDR              0       /* has XDR API and internal support */
+#define JS_HAS_XDR              1       /* has XDR API and internal support */
 #define JS_HAS_XDR_FREEZE_THAW  0       /* has XDR freeze/thaw script methods */
 #define JS_HAS_EXCEPTIONS       0       /* has exception handling */
 #define JS_HAS_UNDEFINED        1       /* has global "undefined" property */
@@ -392,7 +392,7 @@
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
 #define JS_HAS_REPLACE_LAMBDA   1       /* has string.replace(re, lambda) */
 #define JS_HAS_SCRIPT_OBJECT    1       /* has (new Script("x++")).exec() */
-#define JS_HAS_XDR              0       /* has XDR API and internal support */
+#define JS_HAS_XDR              1       /* has XDR API and internal support */
 #define JS_HAS_XDR_FREEZE_THAW  0       /* has XDR freeze/thaw script methods */
 #define JS_HAS_EXCEPTIONS       1       /* has exception handling */
 #define JS_HAS_UNDEFINED        1       /* has global "undefined" property */
@@ -449,7 +449,7 @@
 #define JS_HAS_SHARP_VARS       1       /* has #n=, #n# for object literals */
 #define JS_HAS_REPLACE_LAMBDA   1       /* has string.replace(re, lambda) */
 #define JS_HAS_SCRIPT_OBJECT    1       /* has (new Script("x++")).exec() */
-#define JS_HAS_XDR              0       /* has XDR API and internal support */
+#define JS_HAS_XDR              1       /* has XDR API and internal support */
 #define JS_HAS_XDR_FREEZE_THAW  0       /* has XDR freeze/thaw script methods */
 #define JS_HAS_EXCEPTIONS       1       /* has exception handling */
 #define JS_HAS_UNDEFINED        1       /* has global "undefined" property */
