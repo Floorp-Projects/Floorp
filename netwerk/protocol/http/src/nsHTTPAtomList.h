@@ -34,6 +34,11 @@
   The first argument to HTTP_ATOM is the C++ name of the atom
   The second argument it HTTP_ATOM is the string value of the atom
 
+  In case a new header is to be added to this list then make sure you 
+  understand and add the "standard form" of that header. A standard form
+  is a case compatible form of a header as in the standard form of
+  "content-type" is "Content-Type" This occurs in nsHTTPHeaderArray.cpp
+  in function GetStandardHeaderName()
  ******/
 
 HTTP_ATOM(Accept,                    "accept")
