@@ -81,7 +81,6 @@ class nsProxyCreateInstance : public nsIProxyCreateInstance
 nsProxyCreateInstance::nsProxyCreateInstance()
 {
     NS_INIT_ISUPPORTS();
-    NS_ADDREF_THIS();
 }
 
 nsProxyCreateInstance::~nsProxyCreateInstance()
@@ -252,11 +251,14 @@ nsProxyObjectManager::GetProxy(  nsIEventQueue *destQueue,
     // 1. Create a proxy for creating an instance on another thread.
 
     nsIProxyCreateInstance* ciProxy = nsnull;
-    nsProxyCreateInstance* ciObject = new nsProxyCreateInstance();
+
+    nsProxyCreateInstance* ciObject = new nsProxyCreateInstance(); 
     
     if (ciObject == nsnull)
         return NS_ERROR_NULL_POINTER;
 
+    NS_ADDREF(ciObject);
+    
     nsresult rv = GetProxyForObject(destQueue, 
                                     NS_GET_IID(nsIProxyCreateInstance), 
                                     ciObject, 
@@ -265,7 +267,7 @@ nsProxyObjectManager::GetProxy(  nsIEventQueue *destQueue,
     
     if (NS_FAILED(rv))
     {
-        delete ciObject;
+        NS_RELEASE(ciObject);
         return rv;
     }
         
@@ -282,9 +284,7 @@ nsProxyObjectManager::GetProxy(  nsIEventQueue *destQueue,
     // 3.  Delete the create instance proxy and its real object.
     
     NS_RELEASE(ciProxy);
-    delete ciObject;
-    ciObject = nsnull;
-
+    NS_RELEASE(ciObject);
 
     // 4.  Check to see if creating the requested instance failed.
     if ( NS_FAILED(rv))
@@ -296,7 +296,6 @@ nsProxyObjectManager::GetProxy(  nsIEventQueue *destQueue,
 
     rv = GetProxyForObject(destQueue, aIID, aObj, proxyType, aProxyObject);
 
-    
     // 6. release ownership of aObj so that aProxyObject owns it.
     
     NS_RELEASE(aObj);
