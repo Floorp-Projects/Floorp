@@ -679,7 +679,8 @@ nsWSRunObject::GetWSNodes()
   // block boundary.
   nsresult res = NS_OK;
   
-  nsCOMPtr<nsIDOMNode> blockParent, curStartNode, curEndNode;
+  nsCOMPtr<nsIDOMNode> blockParent;
+  DOMPoint start(mNode, mOffset), end(mNode, mOffset);
   if (IsBlockNode(mNode)) blockParent = mNode;
   else blockParent = mHTMLEditor->GetBlockNodeParent(mNode);
 
@@ -718,48 +719,22 @@ nsWSRunObject::GetWSNodes()
             mLastNBSPOffset = pos;
           }
         }
+        start.SetPoint(mNode,pos);
       }
     }
-    if (!mStartNode)
-    {
-      // we didnt find beginning of whitespace.  remember this text node
-      // (and offset 0) as the extent to which we have looked back.
-      curStartNode = mNode;
-    }
   }
-  PRInt32 curStartOffset=0;
+
   nsCOMPtr<nsIDOMNode> priorNode;
   while (!mStartNode)
   {
     // we haven't found the start of ws yet.  Keep looking
-    
-    // do we have a curStartNode? If not, get one.
-    if (!curStartNode)
-    {
-      res = GetPreviousWSNode(mNode, mOffset, blockParent, address_of(curStartNode));
-      NS_ENSURE_SUCCESS(res, res);
-      priorNode = curStartNode;
-    }
-    else
-    {
-      res = GetPreviousWSNode(curStartNode, blockParent, address_of(priorNode));
-      NS_ENSURE_SUCCESS(res, res);
-    }
+    res = GetPreviousWSNode(start, blockParent, address_of(priorNode));
+    NS_ENSURE_SUCCESS(res, res);
     if (priorNode)
     {
       if (IsBlockNode(priorNode))
       {
-        // we encountered a new block.  therefore no more ws.
-        if (mHTMLEditor->IsTextNode(curStartNode))
-        {
-          mStartNode = curStartNode;
-          mStartOffset = curStartOffset;
-        }
-        else
-        {
-          mHTMLEditor->GetNodeLocation(curStartNode, address_of(mStartNode), &mStartOffset);
-          mStartOffset++;
-        }
+        start.GetPoint(mStartNode, mStartOffset);
         mStartReason = eOtherBlock;
       }
       else if (mHTMLEditor->IsTextNode(priorNode))
@@ -796,71 +771,28 @@ nsWSRunObject::GetWSNodes()
               mLastNBSPOffset = pos;
             }
           }
+          start.SetPoint(priorNode,pos);
         }
-        if (!mStartNode)
-        {
-          // we didnt find beginning of whitespace.  remember this text node
-          // (and offset 0) as the extent to which we have looked back.
-          curStartNode = priorNode;
-          curStartOffset = 0;
-        }
-      }
-      else if (nsTextEditUtils::IsBreak(priorNode))
-      {
-        // we encountered a break.  therefore no more ws.
-        if (mHTMLEditor->IsTextNode(curStartNode))
-        {
-          mStartNode = curStartNode;
-          mStartOffset = curStartOffset;
-        }
-        else
-        {
-          mHTMLEditor->GetNodeLocation(curStartNode, address_of(mStartNode), &mStartOffset);
-          mStartOffset++;
-        }
-        mStartReason = eBreak;
       }
       else
       {
-        // it's a special node, like <img>, that is not a block and not
+        // it's a break or a special node, like <img>, that is not a block and not
         // a break but still serves as a terminator to ws runs.
-        if (mHTMLEditor->IsTextNode(curStartNode))
-        {
-          mStartNode = curStartNode;
-          mStartOffset = curStartOffset;
-        }
+        start.GetPoint(mStartNode, mStartOffset);
+        if (nsTextEditUtils::IsBreak(priorNode))
+          mStartReason = eBreak;
         else
-        {
-          mHTMLEditor->GetNodeLocation(curStartNode, address_of(mStartNode), &mStartOffset);
-          mStartOffset++;
-        }
-        mStartReason = eSpecial;
+          mStartReason = eSpecial;
       }
     }
     else
     {
       // no prior node means we exhausted blockParent
-      if (!curStartNode)
-      {
-        // we never found anything to work with, so start 
-        // is at beginning of block parent
-        mStartNode = blockParent;
-        mStartOffset = 0;
-      }
-      else if (mHTMLEditor->IsTextNode(curStartNode))
-      {
-        mStartNode = curStartNode;
-        mStartOffset = curStartOffset;
-      }
-      else
-      {
-        mHTMLEditor->GetNodeLocation(curStartNode, address_of(mStartNode), &mStartOffset);
-        mStartOffset++;
-      }
+      start.GetPoint(mStartNode, mStartOffset);
       mStartReason = eThisBlock;
     } 
   }
-  PRInt32 curEndOffset=0;  
+  
   // then look ahead to find following ws nodes
   if (mHTMLEditor->IsTextNode(mNode))
   {
@@ -896,14 +828,8 @@ nsWSRunObject::GetWSNodes()
             mFirstNBSPOffset = pos;
           }
         }
+        end.SetPoint(mNode,pos);
       }
-    }
-    if (!mEndNode)
-    {
-      // we didnt find end of whitespace.  remember this text node
-      // (and offset len) as the extent to which we have looked ahead.
-      curEndNode = mNode;
-      curEndOffset = len;
     }
   }
 
@@ -911,33 +837,14 @@ nsWSRunObject::GetWSNodes()
   while (!mEndNode)
   {
     // we haven't found the end of ws yet.  Keep looking
-
-    // do we have a curEndNode? If not, get one.
-    if (!curEndNode)
-    {
-      res = GetNextWSNode(mNode, mOffset, blockParent, address_of(curEndNode));
-      NS_ENSURE_SUCCESS(res, res);
-      nextNode = curEndNode;
-    }
-    else
-    {
-      res = GetNextWSNode(curEndNode, blockParent, address_of(nextNode));
-      NS_ENSURE_SUCCESS(res, res);
-    }
+    res = GetNextWSNode(end, blockParent, address_of(nextNode));
+    NS_ENSURE_SUCCESS(res, res);
     if (nextNode)
     {
       if (IsBlockNode(nextNode))
       {
         // we encountered a new block.  therefore no more ws.
-        if (mHTMLEditor->IsTextNode(curEndNode))
-        {
-          mEndNode = curEndNode;
-          mEndOffset = curEndOffset;
-        }
-        else
-        {
-          mHTMLEditor->GetNodeLocation(curEndNode, address_of(mEndNode), &mEndOffset);
-        }
+        end.GetPoint(mEndNode, mEndOffset);
         mEndReason = eOtherBlock;
       }
       else if (mHTMLEditor->IsTextNode(nextNode))
@@ -975,66 +882,25 @@ nsWSRunObject::GetWSNodes()
               mFirstNBSPOffset = pos;
             }
           }
+          end.SetPoint(nextNode,pos+1);
         }
-        if (!mEndNode)
-        {
-          // we didnt find end of whitespace.  remember this text node
-          // (and offset len) as the extent to which we have looked ahead.
-          curEndNode = nextNode;
-          curEndOffset = len;
-        }
-      }
-      else if (nsTextEditUtils::IsBreak(nextNode))
-      {
-        // we encountered a break.  therefore no more ws.
-        if (mHTMLEditor->IsTextNode(curEndNode))
-        {
-          mEndNode = curEndNode;
-          mEndOffset = curEndOffset;
-        }
-        else
-        {
-          mHTMLEditor->GetNodeLocation(curEndNode, address_of(mEndNode), &mEndOffset);
-        }
-        mEndReason = eBreak;
       }
       else
       {
-        // it's a special node, like <img>, that is not a block and not
-        // a break but still serves as a terminator to ws runs.
-        if (mHTMLEditor->IsTextNode(curEndNode))
-        {
-          mEndNode = curEndNode;
-          mEndOffset = curEndOffset;
-        }
+        // we encountered a break or a special node, like <img>, 
+        // that is not a block and not a break but still 
+        // serves as a terminator to ws runs.
+        end.GetPoint(mEndNode, mEndOffset);
+        if (nsTextEditUtils::IsBreak(nextNode))
+          mStartReason = eBreak;
         else
-        {
-          mHTMLEditor->GetNodeLocation(curEndNode, address_of(mEndNode), &mEndOffset);
-        }
-        mEndReason = eSpecial;
+          mStartReason = eSpecial;
       }
     }
     else
     {
       // no next node means we exhausted blockParent
-      if (!curEndNode)
-      {
-        // we never found anything to work with, so end 
-        // is at end of block parent
-        mEndNode = blockParent;
-        PRUint32 count;
-        mHTMLEditor->GetLengthOfDOMNode(blockParent, count);
-        mEndOffset = count;
-      }
-      else if (mHTMLEditor->IsTextNode(curEndNode))
-      {
-        mEndNode = curEndNode;
-        mEndOffset = curEndOffset;
-      }
-      else
-      {
-        mHTMLEditor->GetNodeLocation(curEndNode, address_of(mEndNode), &mEndOffset);
-      }
+      end.GetPoint(mEndNode, mEndOffset);
       mEndReason = eThisBlock;
     } 
   }
@@ -1272,50 +1138,15 @@ nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode,
 }
 
 nsresult 
-nsWSRunObject::GetNextWSNode(nsIDOMNode *aStartNode, 
-                             nsIDOMNode *aBlockParent, 
-                             nsCOMPtr<nsIDOMNode> *aNextNode)
+nsWSRunObject::GetPreviousWSNode(DOMPoint aPoint,
+                                nsIDOMNode  *aBlockParent, 
+                                nsCOMPtr<nsIDOMNode> *aPriorNode)
 {
-  // can't really recycle various getnext/prior routines because we have special needs
-  // here.  Need to step into inline containers but not block containers.
-  if (!aStartNode || !aBlockParent || !aNextNode) return NS_ERROR_NULL_POINTER;
-  
-  *aNextNode = 0;
-  nsresult res = aStartNode->GetNextSibling(getter_AddRefs(*aNextNode));
-  NS_ENSURE_SUCCESS(res, res);
-  nsCOMPtr<nsIDOMNode> temp, curNode = aStartNode;
-  while (!*aNextNode)
-  {
-    // we have exhausted nodes in parent of aStartNode.
-    res = curNode->GetParentNode(getter_AddRefs(temp));
-    NS_ENSURE_SUCCESS(res, res);
-    if (!temp) return NS_ERROR_NULL_POINTER;
-    if (temp == aBlockParent)
-    {
-      // we have exhausted nodes in the block parent.  The convention here is to return null.
-      *aNextNode = nsnull;
-      return NS_OK;
-    }
-    // we have a parent: look for next sibling
-    res = temp->GetNextSibling(getter_AddRefs(*aNextNode));
-    NS_ENSURE_SUCCESS(res, res);
-    curNode = temp;
-  }
-  // we have a next node.  If it's a block, return it.
-  if (IsBlockNode(*aNextNode))
-    return NS_OK;
-  // else if it's a container, get deep leftmost child
-  else if (mHTMLEditor->IsContainer(*aNextNode))
-  {
-    temp = mHTMLEditor->GetLeftmostChild(*aNextNode);
-    if (temp)
-      *aNextNode = temp;
-    return NS_OK;
-  }
-  // else return the node itself
-  return NS_OK;
+  nsCOMPtr<nsIDOMNode> node;
+  PRInt32 offset;
+  aPoint.GetPoint(node, offset);
+  return GetPreviousWSNode(node,offset,aBlockParent,aPriorNode);
 }
-
 
 nsresult 
 nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode,
@@ -1367,6 +1198,62 @@ nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode,
   }
   // else return the node itself
   return NS_OK;
+}
+
+nsresult 
+nsWSRunObject::GetNextWSNode(nsIDOMNode *aStartNode, 
+                             nsIDOMNode *aBlockParent, 
+                             nsCOMPtr<nsIDOMNode> *aNextNode)
+{
+  // can't really recycle various getnext/prior routines because we have special needs
+  // here.  Need to step into inline containers but not block containers.
+  if (!aStartNode || !aBlockParent || !aNextNode) return NS_ERROR_NULL_POINTER;
+  
+  *aNextNode = 0;
+  nsresult res = aStartNode->GetNextSibling(getter_AddRefs(*aNextNode));
+  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsIDOMNode> temp, curNode = aStartNode;
+  while (!*aNextNode)
+  {
+    // we have exhausted nodes in parent of aStartNode.
+    res = curNode->GetParentNode(getter_AddRefs(temp));
+    NS_ENSURE_SUCCESS(res, res);
+    if (!temp) return NS_ERROR_NULL_POINTER;
+    if (temp == aBlockParent)
+    {
+      // we have exhausted nodes in the block parent.  The convention here is to return null.
+      *aNextNode = nsnull;
+      return NS_OK;
+    }
+    // we have a parent: look for next sibling
+    res = temp->GetNextSibling(getter_AddRefs(*aNextNode));
+    NS_ENSURE_SUCCESS(res, res);
+    curNode = temp;
+  }
+  // we have a next node.  If it's a block, return it.
+  if (IsBlockNode(*aNextNode))
+    return NS_OK;
+  // else if it's a container, get deep leftmost child
+  else if (mHTMLEditor->IsContainer(*aNextNode))
+  {
+    temp = mHTMLEditor->GetLeftmostChild(*aNextNode);
+    if (temp)
+      *aNextNode = temp;
+    return NS_OK;
+  }
+  // else return the node itself
+  return NS_OK;
+}
+
+nsresult 
+nsWSRunObject::GetNextWSNode(DOMPoint aPoint,
+                             nsIDOMNode  *aBlockParent, 
+                             nsCOMPtr<nsIDOMNode> *aNextNode)
+{
+  nsCOMPtr<nsIDOMNode> node;
+  PRInt32 offset;
+  aPoint.GetPoint(node, offset);
+  return GetNextWSNode(node,offset,aBlockParent,aNextNode);
 }
 
 nsresult 

@@ -4837,6 +4837,7 @@ nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOut
 }
 #endif
 
+
 ///////////////////////////////////////////////////////////////////////////
 // IsEmptyNode: figure out if aNode is an empty node.
 //               A block can have children and still be considered empty,
@@ -4851,6 +4852,7 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
 {
   if (!aNode || !outIsEmptyNode) return NS_ERROR_NULL_POINTER;
   *outIsEmptyNode = PR_TRUE;
+  nsresult res = NS_OK;
   
   // effeciency hack - special case if it's a text node
   if (nsEditor::IsTextNode(aNode))
@@ -4887,28 +4889,14 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
   PRBool isListItemOrCell = 
        nsHTMLEditUtils::IsListItem(aNode) || nsHTMLEditUtils::IsTableCell(aNode);
        
-  // iterate over node. if no children, or all children are either 
+  // loop over children of node. if no children, or all children are either 
   // empty text nodes or non-editable, then node qualifies as empty
-  nsCOMPtr<nsIContentIterator> iter;
-  nsCOMPtr<nsIContent> nodeAsContent = do_QueryInterface(aNode);
-  if (!nodeAsContent) return NS_ERROR_FAILURE;
-  nsresult res = nsComponentManager::CreateInstance(kCContentIteratorCID,
-                                        nsnull,
-                                        NS_GET_IID(nsIContentIterator), 
-                                        getter_AddRefs(iter));
-  if (NS_FAILED(res)) return res;
-  res = iter->Init(nodeAsContent);
-  if (NS_FAILED(res)) return res;
-    
-  while (NS_ENUMERATOR_FALSE == iter->IsDone())
+  nsCOMPtr<nsIDOMNode> child;
+  aNode->GetFirstChild(getter_AddRefs(child));
+   
+  while (child)
   {
-    nsCOMPtr<nsIDOMNode> node;
-    nsCOMPtr<nsIContent> content;
-    res = iter->CurrentNode(getter_AddRefs(content));
-    if (NS_FAILED(res)) return res;
-    node = do_QueryInterface(content);
-    if (!node) return NS_ERROR_FAILURE;
- 
+    nsCOMPtr<nsIDOMNode> node = child;
     // is the node editable and non-empty?  if so, return false
     if (nsEditor::IsEditable(node))
     {
@@ -4936,16 +4924,16 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
           if (isVisible) 
           {
             *outIsEmptyNode = PR_FALSE;
-            break;
+            return NS_OK;
           }
         }
         else if (length)
         {
           *outIsEmptyNode = PR_FALSE;
-          break;
+          return NS_OK;
         }
       }
-      else  // an editable, non-text node. we aren't an empty block 
+      else  // an editable, non-text node.  we need to check it's content.
       {
         // is it the node we are iterating over?
         if (node.get() == aNode) break;
@@ -4964,14 +4952,14 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
             if (nsHTMLEditUtils::IsList(node) || nsHTMLEditUtils::IsTable(node))
             {
               *outIsEmptyNode = PR_FALSE;
-              break;
+              return NS_OK;
             }
           }
           // is it a form widget?
           else if (nsHTMLEditUtils::IsFormWidget(aNode))
           {
             *outIsEmptyNode = PR_FALSE;
-            break;
+            return NS_OK;
           }
           
           PRBool isEmptyNode;
@@ -4981,13 +4969,12 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
           {
             // otherwise it ain't empty
             *outIsEmptyNode = PR_FALSE;
-            break;
+            return NS_OK;
           }
         }
       }
     }
-    res = iter->Next();
-    if (NS_FAILED(res)) return res;
+    node->GetNextSibling(getter_AddRefs(child));
   }
   
   return NS_OK;

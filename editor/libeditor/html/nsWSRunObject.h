@@ -239,6 +239,27 @@ class nsWSRunObject
       WSPoint(nsITextContent *aTextNode, PRInt32 aOffset, PRUnichar aChar) : 
                      mTextNode(aTextNode),mOffset(aOffset),mChar(aChar) {}
     };
+
+    // general dom point utility struct
+    struct DOMPoint
+    {
+      nsCOMPtr<nsIDOMNode> node;
+      PRInt32 offset;
+      
+      DOMPoint() : node(0),offset(0) {}
+      DOMPoint(nsIDOMNode *aNode, PRInt32 aOffset) : 
+                     node(aNode),offset(aOffset) {}
+      void SetPoint(nsIDOMNode *aNode, PRInt32 aOffset)
+      {
+        node = aNode; offset = aOffset;
+      }
+      void GetPoint(nsCOMPtr<nsIDOMNode> &aNode, PRInt32 &aOffset)
+      {
+        aNode = node; aOffset = offset;
+      }
+    };
+    
+    
     
     // protected methods ---------------------------------------------------------
     // tons of utility methods.  
@@ -251,16 +272,22 @@ class nsWSRunObject
     nsresult GetPreviousWSNode(nsIDOMNode *aStartNode, 
                                nsIDOMNode *aBlockParent, 
                                nsCOMPtr<nsIDOMNode> *aPriorNode);
-    nsresult GetNextWSNode(nsIDOMNode *aStartNode, 
-                           nsIDOMNode *aBlockParent, 
-                           nsCOMPtr<nsIDOMNode> *aNextNode);
     nsresult GetPreviousWSNode(nsIDOMNode *aStartNode,
                                PRInt16      aOffset, 
                                nsIDOMNode  *aBlockParent, 
                                nsCOMPtr<nsIDOMNode> *aPriorNode);
+    nsresult GetPreviousWSNode(DOMPoint aPoint,
+                               nsIDOMNode  *aBlockParent, 
+                               nsCOMPtr<nsIDOMNode> *aPriorNode);
+    nsresult GetNextWSNode(nsIDOMNode *aStartNode, 
+                           nsIDOMNode *aBlockParent, 
+                           nsCOMPtr<nsIDOMNode> *aNextNode);
     nsresult GetNextWSNode(nsIDOMNode *aStartNode,
                            PRInt16     aOffset, 
                            nsIDOMNode *aBlockParent, 
+                           nsCOMPtr<nsIDOMNode> *aNextNode);
+    nsresult GetNextWSNode(DOMPoint aPoint,
+                           nsIDOMNode  *aBlockParent, 
                            nsCOMPtr<nsIDOMNode> *aNextNode);
     nsresult PrepareToDeleteRangePriv(nsWSRunObject* aEndObject);
     nsresult PrepareToSplitAcrossBlocksPriv();
