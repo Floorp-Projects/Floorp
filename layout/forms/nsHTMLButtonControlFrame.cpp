@@ -815,12 +815,23 @@ nsresult nsHTMLButtonControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsIPresContext* aPresContext,
                                                     nsIAtom* aName, const nsAReadableString& aValue)
 {
+  if (nsHTMLAtoms::value == aName) {
+    nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
+    if (formControl) {
+      return formControl->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, aValue, PR_TRUE);
+    }
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLButtonControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
-  aValue.Truncate();
+  if (nsHTMLAtoms::value == aName) {
+    nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
+    if (formControl) {
+      formControl->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, aValue);
+    }
+  }
   return NS_OK;
 }
 
