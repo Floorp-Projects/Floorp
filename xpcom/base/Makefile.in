@@ -30,7 +30,7 @@ MODULE		= xpcom
 XPIDL_MODULE	= xpcom_base
 LIBRARY_NAME	= xpcombase_s
 
-REQUIRES	= string
+REQUIRES	= string boehm
 
 CPPSRCS		= \
 		nsLogging.cpp \
