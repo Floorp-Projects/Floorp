@@ -8,12 +8,10 @@ open( LOG, ">ctor-dtor-report" ) || print "can't open $?\n";
 
 @path_fields = split(/\//,$curdir);
 
-pop(@path_fields);
-pop(@path_fields);
-
 $path = join ("/",@path_fields);
 
-open (REPORT, "find $path -name \"*.o\" -print | xargs nm -Bno | egrep \"_GLOBAL_\.[ID]\" 2>&1 |" ) || die "open: $! \n";
+print "Searching in " . $path . "\n";
+open (REPORT, "find $path -name \"*.o\" -print | xargs nm -Bno | egrep \"_GLOBAL_\.[ID]|_tcf\" 2>&1 |" ) || die "open: $! \n";
 
 while (<REPORT>) {
     print $_;
