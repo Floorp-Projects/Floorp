@@ -4,4 +4,5 @@
 <!ENTITY ViewPicker.accesskey "i">
 <!ENTITY ViewPickerPeople.label "People I Know">
 <!ENTITY ViewPickerCustomView.label "Customize...">
-
+<!ENTITY ViewPickerAll.label "All">
+<!ENTITY ViewPickerUnread.label "Unread">

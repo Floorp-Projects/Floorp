@@ -39,8 +39,8 @@
       <label id="ViewPickerText" value="&ViewPicker.label;" control="viewPicker"  accesskey="&ViewPicker.accesskey;"/>
       <menulist id="viewPicker" oncreate="FillLabelValues();" oncommand="viewChange(this);">
        <menupopup id="viewPickerPopup">
-         <menuitem value="0" label="All" />
-         <menuitem value="1" label="Unread"/>
+         <menuitem value="0" label="&ViewPickerAll.label;"/>
+         <menuitem value="1" label="&ViewPickerUnread.label;"/>
          <menuseparator/>
          <menuitem value="2" id="labelMenuItem1"/>
          <menuitem value="3" id="labelMenuItem2"/>
