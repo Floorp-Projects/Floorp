@@ -86,13 +86,6 @@
 					&remSignCheck.label; 
 				</html:label>
 			</html:div>
-			<html:div>
-			<html:input type="checkbox" checked="true" id="pref:0:bool:wallet.captureForms" />
-				<html:label for="pref:0:bool:wallet.captureForms" accesskey="c" tabindex="0">
-					&capFormsCheck.label;
-				</html:label>
-			</html:div>
-
 				
 	</html:fieldset>
 	</box>
