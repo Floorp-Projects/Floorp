@@ -62,12 +62,10 @@ I2_LOCALE		= iso88592
 
 ifeq ($(OS_RELEASE),3.2)
 PLATFORM_FLAGS		+= -qtune=601 -DAIXV3 -DAIX3_2_5
-PORT_FLAGS		+= -DSW_THREADS
 else
 PLATFORM_FLAGS		+= -qtune=604 -qnosom -DAIXV4
 endif
 ifeq ($(OS_RELEASE),4.1)
-PORT_FLAGS		+= -DSW_THREADS
 OS_LIBS			+= -lsvld 
 DSO_LDOPTS		= -bM:SRE -bh:4 -bnoentry
 AIX_NSPR		= $(DIST)/bin/libnspr_shr.a
@@ -82,7 +80,7 @@ AIX_NSPR_LINK		= -L$(DIST)/bin -lnspr_shr -blibpath:/usr/local/lib/netscape:/usr
 AIX_NSPR_DIST_LINK	= -L$(DIST)/bin -lnspr_shr -blibpath:.:../dist/$(OBJDIR)/bin:../../dist/$(OBJDIR)/bin:../../../dist/$(OBJDIR)/bin:/usr/lib:/lib
 endif
 ifneq (,$(filter 4.2 4.3,$(OS_RELEASE)))
-PORT_FLAGS		+= -DSW_THREADS -DHAVE_SNPRINTF
+PORT_FLAGS		+= -DHAVE_SNPRINTF
 OS_LIBS			+= -ldl 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 DSO_LDOPTS		= -brtl -bM:SRE -bnoentry -bexpall -berok
@@ -92,8 +90,13 @@ endif
 # Overrides for defaults in config.mk (or wherever)
 ######################################################################
 
+ifeq ($(USE_PTHREADS),1)
+CC			= xlC_r
+CCC			= xlC_r
+else
 CC			= cc
 CCC			= xlC
+endif
 BSDECHO			= $(DIST)/bin/bsdecho
 RANLIB			= /usr/ccs/bin/ranlib
 WHOAMI			= /bin/whoami
@@ -101,24 +104,19 @@ WHOAMI			= /bin/whoami
 ifneq ($(OS_RELEASE),3.2)
 UNZIP_PROG		= $(CONTRIB_BIN)unzip
 ZIP_PROG		= $(CONTRIB_BIN)zip
+else
+ifdef NETSCAPE_HIERARCHY
+PERL			= perl5
+endif
 endif
 
 ######################################################################
 # Other
 ######################################################################
 
-ifdef SERVER_BUILD
-CC			= xlC_r
-# In order to automatically generate export lists, we need to use -g with -O
-OPTIMIZER		= -g -O
-PORT_FLAGS		+= -DFORCE_PR_LOG -D_PR_PTHREADS -UHAVE_CVAR_BUILT_ON_SEM -DFD_SETSIZE=4096
+ifneq ($(USE_PTHREADS),1)
+PORT_FLAGS		+= -DSW_THREADS
 endif
-
-#ifeq ($(PTHREADS_USER),1)
-#USE_PTHREADS		=
-#else
-#USE_PTHREADS		= 1
-#endif
 
 MUST_BOOTLEG_ALLOCA	= 1
 BUILD_UNIX_PLUGINS	= 1 
