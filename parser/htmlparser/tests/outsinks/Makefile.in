@@ -34,7 +34,6 @@ CPPSRCS		= \
 		$(NULL)
 
 LIBS		= \
-		-L$(DIST)/bin/components -lhtmlpars \
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NSPR_LIBS) \
