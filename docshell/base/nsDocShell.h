@@ -206,7 +206,11 @@ protected:
    NS_IMETHOD ShouldPersistInSessionHistory(nsIURI* aURI, PRBool* aShouldPersist);
    NS_IMETHOD AddToSessionHistory(nsIURI* aURI, nsIChannel *aChannel);
    NS_IMETHOD UpdateCurrentSessionHistory();
+#ifdef SH_IN_FRAMES
+   NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry, nsDocShellInfoLoadType aLoadType);
+#else
    NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry);
+#endif 
 //   NS_IMETHOD GetCurrentSHE(PRInt32 aChildOffset, nsISHEntry ** aResult);
    NS_IMETHOD PersistLayoutHistoryState();
    NS_IMETHOD CloneAndReplace(nsISHEntry * srcEntry, nsISHEntry * aCloneRef,
@@ -259,7 +263,7 @@ protected:
    PRBool                     mAllowPlugins;
    PRInt32                    mViewMode;
 
-   PRInt32                    mOffset;  // Offset in the parent's child list.
+   PRInt32                    mChildOffset;  // Offset in the parent's child list.
    // Reference to the SHEntry for this docshell until the page is destroyed.
    // Somebody give me better name
    nsCOMPtr<nsISHEntry>       OSHE; 

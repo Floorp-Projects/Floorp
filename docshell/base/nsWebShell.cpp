@@ -132,6 +132,8 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_C
 #define DETECT_WEBSHELL_LEAKS
 #endif
 
+//#ifdef SH_IN_FRAMES 1
+
 #ifdef NS_DEBUG
 /**
  * Note: the log module is created during initialization which
@@ -745,8 +747,11 @@ NS_IMETHODIMP nsWebShell::GoTo(PRInt32 aIndex)
    NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
    UpdateCurrentSessionHistory();  
-
+#ifdef SH_IN_FRAMES
+   NS_ENSURE_SUCCESS(LoadHistoryEntry(entry, nsIDocShellLoadInfo::loadHistory), NS_ERROR_FAILURE);
+#else
    NS_ENSURE_SUCCESS(LoadHistoryEntry(entry), NS_ERROR_FAILURE);
+#endif
 
    return NS_OK;
 }
@@ -1019,8 +1024,11 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
 
         nsCOMPtr<nsISupports> owner;
         GetCurrentDocumentOwner(getter_AddRefs(owner));
-        
+#ifdef SH_IN_FRAMES
+		InternalLoad(uri, mCurrentURI, owner, target, aPostDataStream, nsIDocShellLoadInfo::loadLink, nsnull); 
+#else
         InternalLoad(uri, mCurrentURI, owner, target, aPostDataStream, nsIDocShellLoadInfo::loadLink); 
+#endif  /* SH_IN_FRAMES */
       }
       break;
     case eLinkVerb_Embed:
@@ -1136,6 +1144,9 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
       during this load handler. */
    nsCOMPtr<nsIWebShell> kungFuDeathGrip(this);
 
+   // Clear the LSHE reference in docshell to indicate document loading
+   // is done one way or another.
+   LSHE = nsnull;
    if(mScriptGlobal && !mEODForCurrentDocument && NS_SUCCEEDED(aStatus))
       {
       if(mContentViewer)

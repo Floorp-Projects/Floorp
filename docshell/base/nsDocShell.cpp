@@ -225,12 +225,16 @@ NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
       aLoadInfo->GetReferrer(getter_AddRefs(referrer));
       aLoadInfo->GetLoadType(&loadType);
       aLoadInfo->GetOwner(getter_AddRefs(owner));
-   }
 #ifdef SH_IN_FRAMES
 	  aLoadInfo->GetSHEntry(getter_AddRefs(loadInfoSHEntry));
-#endif 
+#endif
+   }
+ 
 
 #ifdef SH_IN_FRAMES
+   if (loadInfoSHEntry)
+	   NS_ENSURE_SUCCESS(LoadHistoryEntry(loadInfoSHEntry, loadType), NS_ERROR_FAILURE);
+   else
       NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, owner, nsnull, nsnull, loadType, loadInfoSHEntry), NS_ERROR_FAILURE);
 #else
       NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, owner, nsnull, nsnull, loadType), NS_ERROR_FAILURE);
@@ -726,6 +730,19 @@ NS_IMETHODIMP nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
    return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShell::SetChildOffset(PRInt32 aChildOffset)
+{
+  mChildOffset = aChildOffset;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetChildOffset(PRInt32 *aChildOffset)
+{
+  NS_ENSURE_ARG_POINTER(aChildOffset);
+  *aChildOffset = mChildOffset;
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsDocShell::nsIDocShellTreeNode
 //*****************************************************************************   
@@ -737,6 +754,8 @@ NS_IMETHODIMP nsDocShell::GetChildCount(PRInt32 *aChildCount)
   return NS_OK;
 }
 
+
+
 NS_IMETHODIMP nsDocShell::AddChild(nsIDocShellTreeItem *aChild)
 {
    NS_ENSURE_ARG_POINTER(aChild);
@@ -745,11 +764,17 @@ NS_IMETHODIMP nsDocShell::AddChild(nsIDocShellTreeItem *aChild)
    mChildren.AppendElement(aChild);
    NS_ADDREF(aChild);
 
+   // Set the child's index in the parent's children list 
+   // XXX What if the parent had different types of children?
+   // XXX in that case docshell hierarchyand SH hierarchy won't match.
+   aChild->SetChildOffset((mChildren.Count())-1);
+
    PRInt32 childType = ~mItemType; // Set it to not us in case the get fails
    aChild->GetItemType(&childType);
    if(childType != mItemType)
       return NS_OK;    
    // Everything below here is only done when the child is the same type.
+
 
    aChild->SetTreeOwner(mTreeOwner);
 
@@ -871,6 +896,7 @@ NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName,
 
 NS_IMETHODIMP nsDocShell::GetCanGoBack(PRBool* aCanGoBack)
 {
+#ifndef SH_IN_FRAMES
    NS_ENSURE_ARG_POINTER(aCanGoBack);
    *aCanGoBack = PR_FALSE;
    if (mSessionHistory == nsnull) {
@@ -883,12 +909,13 @@ NS_IMETHODIMP nsDocShell::GetCanGoBack(PRBool* aCanGoBack)
    NS_ENSURE_SUCCESS(mSessionHistory->GetIndex(&index), NS_ERROR_FAILURE);
    if(index > 0)
       *aCanGoBack = PR_TRUE;
-
+#endif 
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GetCanGoForward(PRBool* aCanGoForward)
 {
+#ifndef SH_IN_FRAMES
    NS_ENSURE_ARG_POINTER(aCanGoForward);
    *aCanGoForward = PR_FALSE;
    if (mSessionHistory == nsnull) {
@@ -905,12 +932,13 @@ NS_IMETHODIMP nsDocShell::GetCanGoForward(PRBool* aCanGoForward)
 
    if((index >= 0) && (index < (count - 1)))
       *aCanGoForward = PR_TRUE;
-
+#endif 
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GoBack()
 {
+#ifndef SH_IN_FRAMES
    if (mSessionHistory == nsnull) {
       return NS_OK;
    }
@@ -935,12 +963,13 @@ NS_IMETHODIMP nsDocShell::GoBack()
 
   
    NS_ENSURE_SUCCESS(LoadHistoryEntry(previousEntry), NS_ERROR_FAILURE);
-
+#endif 
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::GoForward()
 {
+#ifndef SH_IN_FRAMES
    if (mSessionHistory == nsnull) {
       return NS_OK;
    }
@@ -964,8 +993,15 @@ NS_IMETHODIMP nsDocShell::GoForward()
    
 
    NS_ENSURE_SUCCESS(LoadHistoryEntry(nextEntry), NS_ERROR_FAILURE);
-
+#endif 
    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GotoIndex(PRInt32 aIndex)
+{
+   
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
@@ -1993,11 +2029,11 @@ NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer,
     // Determine if this type of load should update history   
     switch(mLoadType)
     {
-    case loadHistory:
-    case loadReloadNormal:
-    case loadReloadBypassCache:
-    case loadReloadBypassProxy:
-    case loadReloadBypassProxyAndCache:
+    case nsIDocShellLoadInfo::loadHistory:
+    case nsIDocShellLoadInfo::loadReloadNormal:
+    case nsIDocShellLoadInfo::loadReloadBypassCache:
+    case nsIDocShellLoadInfo::loadReloadBypassProxy:
+    case nsIDocShellLoadInfo::loadReloadBypassProxyAndCache:
         updateHistory = PR_FALSE;
         break;
     default:
@@ -2862,8 +2898,10 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
         NS_ERROR("Need to update case");
         break;
     } 
+
+
 #ifdef SH_IN_FRAMES
-	   if (!LSHE && updateHistory) { // Page load not from SH
+	   if (!LSHE && updateHistory && (mItemType == typeContent)) { // Page load not from SH
       /* If no LSHE by this time, then this page load was not initiated 
 	   * from SH. Now check, if you 
 	   * can get your SHEntry from your parent's LSHE. This will help
@@ -2872,14 +2910,16 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
 	   * on back/forward and went to a  frameset page. and currently,
 	   * a subframe in that page is being loaded.
 	   */
+	   nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+       GetSameTypeParent(getter_AddRefs(parentAsItem));
        nsCOMPtr<nsISHEntry>   she;
 	   nsCOMPtr<nsIWebNavigation> parent;
 	   // Get your SHEntry from your parent
-	   if (mParent) {
-	      parent = do_QueryInterface(mParent);
+	   if (parentAsItem) {
+	      parent = do_QueryInterface(parentAsItem);
 	      if (!parent)
 		     return NS_ERROR_FAILURE;
-          parent->GetSHEForChild(mOffset, getter_AddRefs(she));
+          parent->GetSHEForChild(mChildOffset, getter_AddRefs(she));
 	   }
 	   
 	   if (!she) { // Parent didn't have any SHEntry for you
@@ -2892,7 +2932,7 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
             ShouldPersistInSessionHistory(aURI, &shouldPersist);
 
             nsCOMPtr<nsISHEntry> entry;
-            if(loadNormalReplace == mLoadType)
+            if(nsIDocShellLoadInfo::loadNormalReplace == mLoadType)
 			{
               PRInt32 index = 0;
               mSessionHistory->GetIndex(&index);
@@ -2924,10 +2964,11 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
                               NS_ERROR_FAILURE);
 			}
 		    else {
-				NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
-			   // OSHE could be null here
-			  NS_ENSURE_SUCCESS(parent->AddChildSHEntry(OSHE, she), 
+				if (parent) {
+			       // OSHE could be null here
+			       NS_ENSURE_SUCCESS(parent->AddChildSHEntry(nsnull /* OSHE */, entry), 
 				              NS_ERROR_FAILURE);
+				}
 		   }
 	   }  //!she
 	   // Set the LSHE for non-SH initiated loads.
@@ -3196,7 +3237,11 @@ NS_IMETHODIMP nsDocShell::UpdateCurrentSessionHistory()
    
 }
 
+#ifdef SH_IN_FRAMES
+NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, nsDocShellInfoLoadType   aLoadType)
+#else
 NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
+#endif
 {
    nsCOMPtr<nsIURI> uri;
    nsCOMPtr<nsIInputStream> postData;
@@ -3228,7 +3273,7 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
     
 
 #ifdef SH_IN_FRAMES
-   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, nsnull, postData, nsIDocShellLoadInfo::loadHistory, aEntry),
+   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, nsnull, postData, aLoadType, aEntry),
       NS_ERROR_FAILURE);
 #else
    NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, nsnull, postData, nsIDocShellLoadInfo::loadHistory),

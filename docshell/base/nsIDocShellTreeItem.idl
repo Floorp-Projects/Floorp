@@ -131,5 +131,8 @@ interface nsIDocShellTreeItem : nsISupports
 	addref'd before handing it to them. 
 	*/
 	attribute nsIDocShellTreeOwner treeOwner;
+
+	/* The offset of yourself in your parent's child list */
+	attribute long childOffset;
 };
 

@@ -46,6 +46,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIWebShell.h"
 #include "nsIUrlbarHistory.h"
+#include "nsISHistory.h"
 
 class nsIDocShell;
 class nsIScriptContext;
@@ -58,6 +59,7 @@ class nsIFindComponent;
 
 
 #define SHISTORY_POPUP_LIST 10
+//#define SH_IN_FRAMES
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsBrowserInstance:
@@ -103,7 +105,9 @@ class nsBrowserInstance : public nsIBrowserInstance,
     PRBool              mIsClosed;
 
     nsCOMPtr<nsIXULBrowserWindow> mXULBrowserWindow;
-
+#ifdef SH_IN_FRAMES
+	nsCOMPtr<nsISHistory>   mSessionHistory;
+#endif
     nsIScriptContext   *mContentScriptContext;			// weak reference
 
     nsWeakPtr          mContentWindowWeak;

@@ -337,6 +337,18 @@ NS_IMETHODIMP nsWebBrowser::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
    return mDocShellTreeOwner->SetTreeOwner(aTreeOwner);
 }
 
+NS_IMETHODIMP nsWebBrowser::SetChildOffset(PRInt32 aChildOffset)
+{
+  // Not implemented
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowser::GetChildOffset(PRInt32 *aChildOffset)
+{
+  // Not implemented
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsWebBrowser::nsIWebNavigation
 //*****************************************************************************
@@ -381,6 +393,13 @@ NS_IMETHODIMP nsWebBrowser::Reload(PRInt32 aReloadType)
    NS_ENSURE_STATE(mDocShell);
 
    return mDocShellAsNav->Reload(aReloadType);
+}
+
+NS_IMETHODIMP nsWebBrowser::GotoIndex(PRInt32 aIndex)
+{
+   NS_ENSURE_STATE(mDocShell);
+
+   return mDocShellAsNav->GotoIndex(aIndex);
 }
 
 NS_IMETHODIMP nsWebBrowser::Stop()
