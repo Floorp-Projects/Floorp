@@ -52,9 +52,8 @@ public:
 	NS_DECL_ISUPPORTS 
 
 	nsMsgNewsFactory(const nsCID &aClass,
-		             const char* aClassName,
-                     const char* aProgID,
-					 nsISupports*);
+                   const char* aClassName,
+                   const char* aProgID);
 
 	// nsIFactory methods   
 	NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
@@ -66,31 +65,22 @@ protected:
 	nsCID mClassID;
 	char* mClassName;
 	char* mProgID;
-	nsIServiceManager* mServiceManager;
 };   
 
 nsMsgNewsFactory::nsMsgNewsFactory(const nsCID &aClass,
                            const char* aClassName,
-                           const char* aProgID,
-                           nsISupports *compMgrSupports)
+                           const char* aProgID)
   : mClassID(aClass),
     mClassName(nsCRT::strdup(aClassName)),
     mProgID(nsCRT::strdup(aProgID))
 {
 	NS_INIT_REFCNT();
-
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFactory::nsMsgNewsFactory()\n");
-#endif
-
-	compMgrSupports->QueryInterface(nsIServiceManager::GetIID(), (void **)&mServiceManager);
 }   
 
 nsMsgNewsFactory::~nsMsgNewsFactory()   
 {
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
   
-	NS_IF_RELEASE(mServiceManager);
 	PL_strfree(mClassName);
 	PL_strfree(mProgID);
 }   
@@ -119,15 +109,12 @@ nsresult nsMsgNewsFactory::QueryInterface(const nsIID &aIID, void **aResult)
 NS_IMPL_ADDREF(nsMsgNewsFactory)
 NS_IMPL_RELEASE(nsMsgNewsFactory)
 
-nsresult nsMsgNewsFactory::CreateInstance(nsISupports *aOuter,
-                             const nsIID &aIID,
-                             void **aResult)  
+nsresult nsMsgNewsFactory::CreateInstance(nsISupports * /* aOuter */,
+                                          const nsIID &aIID,
+                                          void **aResult)  
 {  
-#ifdef DEBUG_sspitzer_
-	printf("nsMsgNewsFactory::CreateInstance()\n");
-#endif
-	nsISupports *inst = nsnull;
 	nsresult rv = NS_OK;
+  
 
 	if (aResult == nsnull)  
 		return NS_ERROR_NULL_POINTER;  
@@ -140,33 +127,54 @@ nsresult nsMsgNewsFactory::CreateInstance(nsISupports *aOuter,
 	// do they want a news datasource ?
 	if (mClassID.Equals(kNntpUrlCID)) 
 	{		
-		inst = NS_STATIC_CAST(nsINntpUrl *, new nsNntpUrl(nsnull, nsnull));
+    nsNntpUrl *url = new nsNntpUrl(nsnull, nsnull);
+    if (url)
+      rv = url->QueryInterface(aIID, aResult);
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_FAILED(rv) && url) 
+      delete url;
 	}
 	else if (mClassID.Equals(kNntpServiceCID))
 	{
-		inst = NS_STATIC_CAST(nsINntpService *, new nsNntpService());
+    nsNntpService *service = new nsNntpService();
+    if (service)
+      rv = service->QueryInterface(aIID, aResult);
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_FAILED(rv) && service) 
+      delete service;
 	}
  	else if (mClassID.Equals(kNewsFolderResourceCID)) 
 	{
-		inst = NS_STATIC_CAST(nsIMsgNewsFolder *, new nsMsgNewsFolder());
+    nsMsgNewsFolder *folder = new nsMsgNewsFolder();
+    if (folder)
+      rv = folder->QueryInterface(aIID, aResult);
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_FAILED(rv) && folder) 
+      delete folder;
 	} 
 	else if (mClassID.Equals(kNntpIncomingServerCID)) 
 	{
-		return NS_NewNntpIncomingServer(aIID, aResult);
+    rv = NS_NewNntpIncomingServer(nsISupports::GetIID(), aResult);
 	}
 	else if (mClassID.Equals(kNewsMessageResourceCID)) 
  	{
- 		inst = NS_STATIC_CAST(nsIMessage*, new nsNewsMessage());
+    nsNewsMessage *message = new nsNewsMessage();
+    if (message)
+      rv = message->QueryInterface(aIID, aResult);
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    
+    if (NS_FAILED(rv) && message) 
+      delete message;
  	}
 	else
 		return NS_NOINTERFACE;
-
-	if (inst == nsnull)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	rv = inst->QueryInterface(aIID, aResult);
-	if (NS_FAILED(rv))
-		delete inst;
 
 	return rv;
 }  
@@ -184,7 +192,7 @@ nsresult nsMsgNewsFactory::LockFactory(PRBool aLock)
 ////////////////////////////////////////////////////////////////////////////////
 
 // return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* /* aServMgr */,
                                            const nsCID &aClass,
                                            const char *aClassName,
                                            const char *aProgID,
@@ -193,14 +201,14 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 	if (nsnull == aFactory)
 		return NS_ERROR_NULL_POINTER;
 	
-	*aFactory = new nsMsgNewsFactory(aClass, aClassName, aProgID, aServMgr);
+	*aFactory = new nsMsgNewsFactory(aClass, aClassName, aProgID);
 	if (aFactory)
 		return (*aFactory)->QueryInterface(nsIFactory::GetIID(),(void**)aFactory);
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) 
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* /* aServMgr */) 
 {
 	return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
