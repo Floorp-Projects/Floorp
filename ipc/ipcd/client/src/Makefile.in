@@ -55,8 +55,8 @@ REQUIRES	= \
             $(NULL)
 
 CPPSRCS		= \
+            ipcdclient.cpp \
             ipcService.cpp \
-            ipcTransport.cpp \
             ipcModuleFactory.cpp \
             $(NULL)
 

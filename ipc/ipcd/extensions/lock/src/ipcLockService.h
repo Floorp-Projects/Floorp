@@ -39,9 +39,8 @@
 #define ipcLockService_h__
 
 #include "ipcILockService.h"
-#include "ipcIService.h"
-#include "ipcIMessageObserver.h"
 #include "ipcList.h"
+#include "ipcdclient.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
 
@@ -53,18 +52,20 @@ public:
     NS_DECL_IPCILOCKSERVICE
     NS_DECL_IPCIMESSAGEOBSERVER
 
-    ipcLockService();
-    virtual ~ipcLockService();
-
-    nsresult Init();
+    ipcLockService() : mSyncLockName(nsnull) {}
+    ~ipcLockService() { IPC_Shutdown(); }
+    NS_HIDDEN_(nsresult) Init();
 
 private:
-    void NotifyComplete(const char *lockName, nsresult status);
-
-    nsCOMPtr<ipcIService> mIPCService;
+    NS_HIDDEN_(void) NotifyComplete(const char *lockName, nsresult status);
 
     // map from lockname to locknotify for pending notifications
-    nsSupportsHashtable mPendingTable;
+    nsSupportsHashtable  mPendingTable;
+
+    // if non-null, then this is the name of the lock we are trying to
+    // synchronously acquire.
+    const char          *mSyncLockName;
+    nsresult             mSyncLockStatus;
 };
 
 #endif // !ipcLockService_h__

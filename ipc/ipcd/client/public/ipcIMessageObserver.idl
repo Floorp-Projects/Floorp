@@ -44,6 +44,9 @@
 interface ipcIMessageObserver : nsISupports
 {
     /**
+     * @param aSenderID
+     *        the client id of the sender of this message.  if sent by the
+     *        daemon (or a deamon module), then this will have a value of 0.
      * @param aTarget
      *        the target of the message, corresponding to the target this
      *        observer was registered under.  this parameter is passed to allow
@@ -53,7 +56,8 @@ interface ipcIMessageObserver : nsISupports
      * @param aDataLen
      *        the data length of the message.
      */
-    void onMessageAvailable(in nsIDRef       aTarget,
+    void onMessageAvailable(in unsigned long aSenderID,
+                            in nsIDRef       aTarget,
                            [array, const, size_is(aDataLen)]
                             in octet         aData,
                             in unsigned long aDataLen);

@@ -211,7 +211,7 @@ IPC_ShutdownModuleReg()
 }
 
 void
-IPC_NotifyClientUp(ipcClient *client)
+IPC_NotifyModulesClientUp(ipcClient *client)
 {
     for (int i = 0; i < ipcModuleCount; ++i) {
         ipcModuleRegEntry &entry = ipcModules[i];
@@ -221,7 +221,7 @@ IPC_NotifyClientUp(ipcClient *client)
 }
 
 void
-IPC_NotifyClientDown(ipcClient *client)
+IPC_NotifyModulesClientDown(ipcClient *client)
 {
     for (int i = 0; i < ipcModuleCount; ++i) {
         ipcModuleRegEntry &entry = ipcModules[i];

@@ -40,6 +40,8 @@
 #include "ipcIClientQueryHandler.h"
 #include "ipcILockService.h"
 #include "ipcILockNotify.h"
+#include "ipcCID.h"
+#include "ipcLockCID.h"
 
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
@@ -75,7 +77,6 @@ static const nsID kTestTargetID =
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static nsIEventQueue* gEventQ = nsnull;
 static PRBool gKeepRunning = PR_TRUE;
-//static PRInt32 gMsgCount = 0;
 static ipcIService *gIpcServ = nsnull;
 static ipcILockService *gIpcLockServ = nsnull;
 
@@ -84,8 +85,19 @@ SendMsg(ipcIService *ipc, PRUint32 cID, const nsID &target, const char *data, PR
 {
     printf("*** sending message: [to-client=%u dataLen=%u]\n", cID, dataLen);
 
-    ipc->SendMessage(cID, target, (const PRUint8 *) data, dataLen, sync);
-//    gMsgCount++;
+    nsresult rv;
+
+    rv = ipc->SendMessage(cID, target, (const PRUint8 *) data, dataLen);
+    if (NS_FAILED(rv)) {
+        printf("*** sending message failed: rv=%x\n", rv);
+        return;
+    }
+
+    if (sync) {
+        rv = ipc->WaitMessage(cID, target, nsnull, PR_UINT32_MAX);
+        if (NS_FAILED(rv))
+            printf("*** waiting for message failed: rv=%x\n", rv);
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -95,25 +107,19 @@ class myIpcMessageObserver : public ipcIMessageObserver
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_IPCIMESSAGEOBSERVER
-
-    myIpcMessageObserver() {}
 };
-
 NS_IMPL_ISUPPORTS1(myIpcMessageObserver, ipcIMessageObserver)
 
 NS_IMETHODIMP
-myIpcMessageObserver::OnMessageAvailable(const nsID &target, const PRUint8 *data, PRUint32 dataLen)
+myIpcMessageObserver::OnMessageAvailable(PRUint32 sender, const nsID &target, const PRUint8 *data, PRUint32 dataLen)
 {
-    printf("*** got message: [%s]\n", (const char *) data);
-
-//    if (--gMsgCount == 0)
-//        gKeepRunning = PR_FALSE;
-
+    printf("*** got message: [sender=%u data=%s]\n", sender, (const char *) data);
     return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
 
+#if 0
 class myIpcClientQueryHandler : public ipcIClientQueryHandler
 {
 public:
@@ -160,6 +166,7 @@ myIpcClientQueryHandler::OnQueryComplete(PRUint32 aQueryID,
 
     return NS_OK;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 
@@ -205,16 +212,17 @@ int main(int argc, char **argv)
         rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
         RETURN_IF_FAILED(rv, "GetThreadEventQueue");
 
+        printf("*** getting ipc service\n");
         nsCOMPtr<ipcIService> ipcServ(do_GetService(IPC_SERVICE_CONTRACTID, &rv));
         RETURN_IF_FAILED(rv, "do_GetService(ipcServ)");
         NS_ADDREF(gIpcServ = ipcServ);
 
         if (argc > 1) {
             printf("*** using client name [%s]\n", argv[1]);
-            gIpcServ->AddClientName(argv[1]);
+            gIpcServ->AddName(argv[1]);
         }
 
-        ipcServ->SetMessageObserver(kTestTargetID, new myIpcMessageObserver());
+        ipcServ->DefineTarget(kTestTargetID, new myIpcMessageObserver());
 
         const char data[] =
                 "01 this is a really long message.\n"
@@ -279,9 +287,18 @@ int main(int argc, char **argv)
                 "60 this is a really long message.\n";
         SendMsg(ipcServ, 0, kTestTargetID, data, sizeof(data), PR_TRUE);
 
-        PRUint32 queryID;
-        nsCOMPtr<ipcIClientQueryHandler> handler(new myIpcClientQueryHandler());
-        ipcServ->QueryClientByName("foopy", handler, PR_FALSE, &queryID);
+//        PRUint32 queryID;
+//        nsCOMPtr<ipcIClientQueryHandler> handler(new myIpcClientQueryHandler());
+//        ipcServ->QueryClientByName("foopy", handler, PR_FALSE, &queryID);
+
+        PRUint32 foopyID;
+        nsresult foopyRv = ipcServ->ResolveClientName("foopy", &foopyID);
+        printf("*** query for 'foopy' returned [rv=%x id=%u]\n", foopyRv, foopyID);
+
+        if (NS_SUCCEEDED(foopyRv)) {
+            const char hello[] = "hello friend!";
+            SendMsg(ipcServ, foopyID, kTestTargetID, hello, sizeof(hello));
+        }
 
         //
         // test lock service

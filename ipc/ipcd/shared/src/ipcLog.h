@@ -38,6 +38,7 @@
 #ifndef ipcLog_h__
 #define ipcLog_h__
 
+#include "nscore.h"
 #include "prtypes.h"
 
 #ifdef DEBUG
@@ -47,8 +48,8 @@
 #ifdef IPC_LOGGING
 
 extern PRBool ipcLogEnabled;
-extern void IPC_InitLog(const char *prefix);
-extern void IPC_Log(const char *fmt, ...);
+extern NS_HIDDEN_(void) IPC_InitLog(const char *prefix);
+extern NS_HIDDEN_(void) IPC_Log(const char *fmt, ...);
 
 #define IPC_LOG(_args)         \
     PR_BEGIN_MACRO             \

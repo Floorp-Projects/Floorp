@@ -42,6 +42,9 @@
 
 class ipcMessage;
 
+#define IPC_METHOD_PRIVATE_(type)   NS_HIDDEN_(type)
+#define IPC_METHOD_PRIVATE          IPC_METHOD_PRIVATE_(nsresult)
+
 /* ------------------------------------------------------------------------- */
 /* Platform specific IPC connection API.
  */
@@ -57,7 +60,7 @@ class ipcMessage;
  *
  * NOTE: This function must be called on the main thread.
  */
-nsresult IPC_Connect(const char *daemonPath);
+IPC_METHOD_PRIVATE IPC_Connect(const char *daemonPath);
 
 /**
  * IPC_Disconnect
@@ -68,7 +71,7 @@ nsresult IPC_Connect(const char *daemonPath);
  *
  * NOTE: This function must be called on the main thread.
  */
-nsresult IPC_Disconnect();
+IPC_METHOD_PRIVATE IPC_Disconnect();
 
 /**
  * IPC_SendMsg
@@ -82,7 +85,7 @@ nsresult IPC_Disconnect();
  *
  * NOTE: This function may be called on any thread.
  */
-nsresult IPC_SendMsg(ipcMessage *msg);
+IPC_METHOD_PRIVATE IPC_SendMsg(ipcMessage *msg);
 
 /* ------------------------------------------------------------------------- */
 /* Cross-platform IPC connection methods.
@@ -99,7 +102,7 @@ nsresult IPC_SendMsg(ipcMessage *msg);
  * @param daemonPath
  *        Specifies the path to the IPC daemon executable.
  */
-nsresult IPC_SpawnDaemon(const char *daemonPath);
+IPC_METHOD_PRIVATE IPC_SpawnDaemon(const char *daemonPath);
 
 /* ------------------------------------------------------------------------- */
 /* IPC connection callbacks (not implemented by the connection code).
@@ -115,7 +118,7 @@ nsresult IPC_SpawnDaemon(const char *daemonPath);
  * described by the |error| parameter.  If |error| is NS_OK, then it means the
  * connection was closed in response to a call to IPC_Disconnect.
  */
-void IPC_OnConnectionEnd(nsresult error);
+IPC_METHOD_PRIVATE_(void) IPC_OnConnectionEnd(nsresult error);
 
 /**
  * IPC_OnMessageAvailable
@@ -124,6 +127,6 @@ void IPC_OnConnectionEnd(nsresult error);
  * daemon.  The ipcMessage object, |msg|, must be deleted by the implementation
  * of IPC_OnMessageAvailable when the object is no longer needed.
  */
-void IPC_OnMessageAvailable(ipcMessage *msg);
+IPC_METHOD_PRIVATE_(void) IPC_OnMessageAvailable(ipcMessage *msg);
 
 #endif // ipcConnection_h__

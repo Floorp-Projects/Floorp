@@ -88,26 +88,28 @@ class ipcMessage
 public:
     ipcMessage()
         : mNext(NULL)
+        , mMetaData(0)
         , mMsgHdr(NULL)
         , mMsgOffset(0)
         , mMsgComplete(PR_FALSE)
         { }
     ipcMessage(const nsID &target, const char *data, PRUint32 dataLen)
         : mNext(NULL)
+        , mMetaData(0)
         , mMsgHdr(NULL)
         , mMsgOffset(0)
         { Init(target, data, dataLen); }
-   ~ipcMessage();
+   ~ipcMessage() NS_HIDDEN;
 
     //
     // reset message to uninitialized state
     //
-    void Reset();
+    NS_HIDDEN_(void) Reset();
 
     // 
     // create a copy of this message
     //
-    ipcMessage *Clone() const;
+    NS_HIDDEN_(ipcMessage *) Clone() const;
 
     //
     // initialize message
@@ -117,7 +119,7 @@ public:
     //   data    - message data (may be null to leave data uninitialized)
     //   dataLen - message data len
     //
-    PRStatus Init(const nsID &target, const char *data, PRUint32 dataLen);
+    NS_HIDDEN_(PRStatus) Init(const nsID &target, const char *data, PRUint32 dataLen);
 
     //
     // copy data into the message's data section, starting from offset.  this
@@ -128,7 +130,7 @@ public:
     //   data    - data to write
     //   dataLen - number of bytes to write
     //
-    PRStatus SetData(PRUint32 offset, const char *data, PRUint32 dataLen);
+    NS_HIDDEN_(PRStatus) SetData(PRUint32 offset, const char *data, PRUint32 dataLen);
 
     //
     // access message flags
@@ -161,31 +163,38 @@ public:
     //   data    - message data (must not be null)
     //   dataLen - message data length 
     //
-    PRBool Equals(const nsID &target, const char *data, PRUint32 dataLen) const;
-    PRBool Equals(const ipcMessage *msg) const;
+    NS_HIDDEN_(PRBool) Equals(const nsID &target, const char *data, PRUint32 dataLen) const;
+    NS_HIDDEN_(PRBool) Equals(const ipcMessage *msg) const;
 
     //
     // write the message to a buffer segment; segment need not be large
     // enough to hold entire message.  called repeatedly.
     //
-    PRStatus WriteTo(char     *buf,
-                     PRUint32  bufLen,
-                     PRUint32 *bytesWritten,
-                     PRBool   *complete);
+    NS_HIDDEN_(PRStatus) WriteTo(char     *buf,
+                                 PRUint32  bufLen,
+                                 PRUint32 *bytesWritten,
+                                 PRBool   *complete);
 
     //
     // read the message from a buffer segment; segment need not contain
     // the entire messgae.  called repeatedly.
     //
-    PRStatus ReadFrom(const char *buf,
-                      PRUint32    bufLen,
-                      PRUint32   *bytesRead,
-                      PRBool     *complete);
+    NS_HIDDEN_(PRStatus) ReadFrom(const char *buf,
+                                  PRUint32    bufLen,
+                                  PRUint32   *bytesRead,
+                                  PRBool     *complete);
 
     //
     // a message can be added to a singly-linked list.
     //
     class ipcMessage *mNext;
+
+    //
+    // meta data associated with this message object.  the owner of the
+    // ipcMessage object is free to use this field for any purpose.  by
+    // default, it is initialized to 0.
+    //
+    PRUint32          mMetaData;
 
 private:
     ipcMessageHeader *mMsgHdr;

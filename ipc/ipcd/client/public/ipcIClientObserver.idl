@@ -46,6 +46,6 @@ interface ipcIClientObserver : nsISupports
     const unsigned long CLIENT_UP   = 1;
     const unsigned long CLIENT_DOWN = 2;
     
-    void onClientStatus(in unsigned long aClientID,
-                        in unsigned long aClientStatus);
+    void onClientStateChange(in unsigned long aClientID,
+                             in unsigned long aClientState);
 };

@@ -40,6 +40,8 @@
 #include "nsICategoryManager.h"
 #include "ipcService.h"
 #include "ipcConfig.h"
+#include "ipcCID.h"
+#include "ipcLockCID.h"
 
 //-----------------------------------------------------------------------------
 // Define the contructor function for the objects
@@ -93,6 +95,45 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ipcLockService, Init)
 #include "tmTransactionService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(tmTransactionService)
 
+#if 0
+#include "ipcDConnectService.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ipcDConnectService, Init)
+
+// enable this code to make the IPC DCONNECT service auto-start.
+NS_METHOD
+ipcDConnectServiceRegisterProc(nsIComponentManager *aCompMgr,
+                               nsIFile *aPath,
+                               const char *registryLocation,
+                               const char *componentType,
+                               const nsModuleComponentInfo *info)
+{
+    //
+    // add ipcService to the XPCOM startup category
+    //
+    nsCOMPtr<nsICategoryManager> catman(do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
+    if (catman) {
+        nsXPIDLCString prevEntry;
+        catman->AddCategoryEntry(NS_XPCOM_STARTUP_OBSERVER_ID, "ipcDConnectService",
+                                 IPC_DCONNECTSERVICE_CONTRACTID, PR_TRUE, PR_TRUE,
+                                 getter_Copies(prevEntry));
+    }
+    return NS_OK;
+}
+
+NS_METHOD
+ipcDConnectServiceUnregisterProc(nsIComponentManager *aCompMgr,
+                                 nsIFile *aPath,
+                                 const char *registryLocation,
+                                 const nsModuleComponentInfo *info)
+{
+    nsCOMPtr<nsICategoryManager> catman(do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
+    if (catman)
+        catman->DeleteCategoryEntry(NS_XPCOM_STARTUP_OBSERVER_ID, 
+                                    IPC_DCONNECTSERVICE_CONTRACTID, PR_TRUE);
+    return NS_OK;
+}
+#endif
+
 //-----------------------------------------------------------------------------
 // Define a table of CIDs implemented by this module along with other
 // information like the function to create an instance, contractid, and
@@ -118,6 +159,12 @@ static const nsModuleComponentInfo components[] = {
     IPC_TRANSACTIONSERVICE_CID,
     IPC_TRANSACTIONSERVICE_CONTRACTID,
     tmTransactionServiceConstructor },
+#if 0
+  { IPC_DCONNECTSERVICE_CLASSNAME,
+    IPC_DCONNECTSERVICE_CID,
+    IPC_DCONNECTSERVICE_CONTRACTID,
+    ipcDConnectServiceConstructor },
+#endif
 };
 
 //-----------------------------------------------------------------------------

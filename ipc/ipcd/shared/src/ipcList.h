@@ -161,6 +161,17 @@ public:
 
     PRBool  IsEmpty() const { return mHead == NULL; }
 
+    //
+    // moves contents of list to another list
+    //
+    void MoveTo(ipcList<T> &other)
+    {
+        other.mHead = mHead;
+        other.mTail = mTail;
+        mHead = NULL;
+        mTail = NULL;
+    }
+
 protected:
     void AdvanceHead()
     {

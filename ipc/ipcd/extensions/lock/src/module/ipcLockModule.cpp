@@ -119,66 +119,76 @@ ipcLockModule_AcquireLock(PRUint32 cid, PRUint8 flags, const char *key)
     }
 }
 
-static void
-ipcLockModule_ReleaseLock(PRUint32 cid, const char *key)
+static PRBool
+ipcLockModule_ReleaseLockHelper(PRUint32 cid, const char *key, ipcLockContext *ctx)
 {
     printf("$$$ releasing lock [key=%s]\n", key);
 
+    PRBool removeEntry = PR_FALSE;
+
+    //
+    // lock is already acquired _or_ maybe client is on the pending list.
+    //
+    if (ctx->mOwnerID == cid) {
+        if (ctx->mNextPending) {
+            //
+            // remove this element from the list.  since this is the
+            // first element in the list, instead of removing it we
+            // shift the data from the next context into this one and
+            // delete the next context.
+            //
+            ipcLockContext *next = ctx->mNextPending;
+            ctx->mOwnerID = next->mOwnerID;
+            ctx->mNextPending = next->mNextPending;
+            delete next;
+            //
+            // notify client that it now owns the lock
+            //
+            ipcLockModule_Send(ctx->mOwnerID, key, IPC_LOCK_OP_STATUS_ACQUIRED);
+        }
+        else {
+            delete ctx;
+            removeEntry = PR_TRUE;
+        }
+    }
+    else {
+        ipcLockContext *prev;
+        for (;;) {
+            prev = ctx;
+            ctx = ctx->mNextPending;
+            if (!ctx)
+                break;
+            if (ctx->mOwnerID == cid) {
+                // remove ctx from list
+                prev->mNextPending = ctx->mNextPending;
+                delete ctx;
+                break;
+            }
+        }
+    }
+
+    return removeEntry;
+}
+
+static void
+ipcLockModule_ReleaseLock(PRUint32 cid, const char *key)
+{
     if (!gLockTable)
         return;
 
     ipcLockContext *ctx;
 
     ctx = (ipcLockContext *) PL_HashTableLookup(gLockTable, key);
-    if (ctx) {
-        //
-        // lock is already acquired _or_ maybe client is on the pending list.
-        //
-        if (ctx->mOwnerID == cid) {
-            if (ctx->mNextPending) {
-                //
-                // remove this element from the list.  since this is the
-                // first element in the list, instead of removing it we
-                // shift the data from the next context into this one and
-                // delete the next context.
-                //
-                ipcLockContext *next = ctx->mNextPending;
-                ctx->mOwnerID = next->mOwnerID;
-                ctx->mNextPending = next->mNextPending;
-                delete next;
-                //
-                // notify client that it now owns the lock
-                //
-                ipcLockModule_Send(ctx->mOwnerID, key, IPC_LOCK_OP_STATUS_ACQUIRED);
-            }
-            else {
-                delete ctx;
-                PL_HashTableRemove(gLockTable, key);
-            }
-        }
-        else {
-            ipcLockContext *prev;
-            for (;;) {
-                prev = ctx;
-                ctx = ctx->mNextPending;
-                if (!ctx)
-                    break;
-                if (ctx->mOwnerID == cid) {
-                    // remove ctx from list
-                    prev->mNextPending = ctx->mNextPending;
-                    delete ctx;
-                    break;
-                }
-            }
-        }
-    }
+    if (ctx && ipcLockModule_ReleaseLockHelper(cid, key, ctx))
+        PL_HashTableRemove(gLockTable, key);
 }
 
 PR_STATIC_CALLBACK(PRIntn)
 ipcLockModule_ReleaseByCID(PLHashEntry *he, PRIntn i, void *arg)
 {
     PRUint32 cid = *(PRUint32 *) arg;
-    ipcLockModule_ReleaseLock(cid, (const char *) he->key);
+    ipcLockModule_ReleaseLockHelper(cid, (const char *) he->key,
+                                    (ipcLockContext *) he->value);
     return HT_ENUMERATE_NEXT;
 }
 
