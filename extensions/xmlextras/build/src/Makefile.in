@@ -56,16 +56,23 @@ SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)xmlextrasschema_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)xmlextraswsdl_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)xmlextrassoap_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)xmlextrasproxy_s.$(LIB_SUFFIX) \
 	$(NULL)
 DEFINES += -DMOZ_SOAP
 endif
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../base/src \
+		$(NULL)
+
+ifdef MOZ_SOAP
+LOCAL_INCLUDES	+= \
 		-I$(srcdir)/../../soap/src \
 		-I$(srcdir)/../../schema/src \
 		-I$(srcdir)/../../wsdl/src \
+		-I$(srcdir)/../../proxy/src \
 		$(NULL)
+endif
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \

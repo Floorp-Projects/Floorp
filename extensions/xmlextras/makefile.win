@@ -27,6 +27,7 @@ DIRS= \
 	schema \
 	soap \
 	wsdl \
+	proxy \
 !endif
 	build \
 !if !defined(DISABLE_TESTS)

@@ -118,6 +118,8 @@ NS_DECL_CLASSINFO(nsSchemaAttributeGroup)
 NS_DECL_CLASSINFO(nsSchemaAttributeGroupRef)
 NS_DECL_CLASSINFO(nsSchemaAnyAttribute)
 NS_DECL_CLASSINFO(nsSchemaFacet)
+NS_DECL_CLASSINFO(nsSOAPArray)
+NS_DECL_CLASSINFO(nsSOAPArrayType)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWSDLLoader)
 NS_DECL_CLASSINFO(nsWSDLLoader)
@@ -127,6 +129,7 @@ NS_DECL_CLASSINFO(nsWSDLMessage)
 NS_DECL_CLASSINFO(nsWSDLPart)
 NS_DECL_CLASSINFO(nsSOAPPortBinding)
 NS_DECL_CLASSINFO(nsSOAPOperationBinding)
+NS_DECL_CLASSINFO(nsSOAPMessageBinding)
 NS_DECL_CLASSINFO(nsSOAPPartBinding)
 #endif
 
@@ -427,6 +430,14 @@ static nsModuleComponentInfo components[] = {
     nsnull, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSchemaFacet), nsnull, 
     &NS_CLASSINFO_NAME(nsSchemaFacet), nsIClassInfo::DOM_OBJECT },
+  { "SOAPArray", NS_SOAPARRAY_CID, NS_SOAPARRAY_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPArray), nsnull, 
+    &NS_CLASSINFO_NAME(nsSOAPArray), nsIClassInfo::DOM_OBJECT },
+  { "SOAPArrayType", NS_SOAPARRAYTYPE_CID, NS_SOAPARRAYTYPE_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPArrayType), nsnull, 
+    &NS_CLASSINFO_NAME(nsSOAPArrayType), nsIClassInfo::DOM_OBJECT },
   { "WSDLLoader", NS_WSDLLOADER_CID, NS_WSDLLOADER_CONTRACTID,
     nsWSDLLoaderConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsWSDLLoader), nsnull,
@@ -455,6 +466,10 @@ static nsModuleComponentInfo components[] = {
     NS_SOAPOPERATIONBINDING_CONTRACTID, nsnull, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPOperationBinding), nsnull, 
     &NS_CLASSINFO_NAME(nsSOAPOperationBinding), nsIClassInfo::DOM_OBJECT },
+  { "SOAPMessageBinding", NS_SOAPMESSAGEBINDING_CID, 
+    NS_SOAPMESSAGEBINDING_CONTRACTID, nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPMessageBinding), nsnull, 
+    &NS_CLASSINFO_NAME(nsSOAPMessageBinding), nsIClassInfo::DOM_OBJECT },
   { "SOAPPartBinding", NS_SOAPPARTBINDING_CID, NS_SOAPPARTBINDING_CONTRACTID, 
     nsnull, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPPartBinding), nsnull, 
