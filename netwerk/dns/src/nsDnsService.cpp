@@ -874,6 +874,9 @@ nsDNSService::nsDNSService()
 #if defined(XP_MAC)
     , mServiceRef(nsnull)
 #endif
+#if defined(XP_WIN)
+    , mDNSWindow(nsnull)
+#endif
 #ifdef DNS_TIMING
     , mCount(0)
     , mTimes(0)
