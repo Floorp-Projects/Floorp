@@ -649,15 +649,11 @@ _pl_NativeNotify(PLEventQueue* self)
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
-    BOOL rc = FALSE;
-
-    if (self == _pr_MainEventQueue) {
-       rc = WinPostMsg( self->eventReceiverWindow, _pr_PostEventMsgId,
+    BOOL rc = WinPostMsg( self->eventReceiverWindow, _pr_PostEventMsgId,
                        0, MPFROMP(self));
-    }
     return (rc == TRUE) ? PR_SUCCESS : PR_FAILURE;
 }/* --- end _pl_NativeNotify() --- */
-#endif /* Winxx */
+#endif /* XP_OS2 */
 
 #if defined(XP_UNIX)
 static PRStatus
