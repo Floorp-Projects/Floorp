@@ -57,17 +57,20 @@ ASM_SUFFIX  = .asm
 PROG_SUFFIX = .exe
 
 
+ifdef XP_OS2_EMX
+
 #
 # On OS/2 we proudly support gbash...
 #
 SHELL = GBASH.EXE
-CCC			= icc -q -DXP_OS2 -DOS2=4 -N10
-LINK			= ilink
+CCC			= gcc
+LINK			= gcc
 AR                      = emxomfar -p256 r $@
 # Keep AR_FLAGS blank so that we do not have to change rules.mk
 AR_FLAGS                = 
 RANLIB 			= @echo OS2 RANLIB
 BSDECHO 		= @echo OS2 BSDECHO
+FILTER    = emxexp
 
 ifndef NO_SHARED_LIB
 WRAP_MALLOC_LIB         = 
@@ -82,7 +85,7 @@ DSO_LDOPTS              = -Zomf -Zdll -Zmt -Zcrtdll -Zlinker /NOO
 # DLL_SUFFIX              = .dll
 SHLIB_LDSTARTFILE	= 
 SHLIB_LDENDFILE		= 
-endif
+endif   #NO_SHARED_LIB
 
 OS_CFLAGS          = -Wall -W -Wno-unused -Wpointer-arith -Wcast-align -Zmtd -Zomf -Zmt  -DDEBUG -DDEBUG_wintrinh -DTRACING -g
 
@@ -92,9 +95,8 @@ NSPR_LIBS	= -lplds4 -lplc4 -lnspr4
 NSPR_INCLUDE_DIR =   
 
 
-
 ifdef BUILD_OPT
-OPTIMIZER		= -O+ -Oi 
+OPTIMIZER		= -O6 
 DEFINES 		+= -UDEBUG -U_DEBUG -DNDEBUG
 DLLFLAGS		= -DLL -OUT:$@ -MAP:$(@:.dll=.map)
 EXEFLAGS    		= -PMTYPE:VIO -OUT:$@ -MAP:$(@:.exe=.map) -nologo -NOE
@@ -106,7 +108,65 @@ DLLFLAGS		= -DEBUG -DLL -OUT:$@ -MAP:$(@:.dll=.map)
 EXEFLAGS    		= -DEBUG -PMTYPE:VIO -OUT:$@ -MAP:$(@:.exe=.map) -nologo -NOE
 OBJDIR_TAG 		= _DBG
 LDFLAGS 		= -DEBUG 
-endif
+endif   # BUILD_OPT
+
+else    # XP_OS2_VACPP
+
+#
+# On OS/2 we proudly support gbash...
+#
+SHELL = GBASH.EXE
+CCC			= icc -q -DXP_OS2 -DOS2=4 -N10
+LINK			= -ilink
+AR		= -ilib /NOL /NOI /O:$(subst /,\\,$@)
+# Keep AR_FLAGS blank so that we do not have to change rules.mk
+AR_FLAGS                = 
+RANLIB 			= @echo OS2 RANLIB
+BSDECHO 		= @echo OS2 BSDECHO
+FILTER    = cppfilt -b -p -q
+
+ifndef NO_SHARED_LIB
+WRAP_MALLOC_LIB         = 
+WRAP_MALLOC_CFLAGS      = 
+DSO_CFLAGS              = 
+DSO_PIC_CFLAGS          = 
+MKSHLIB                 = $(LD) $(DSO_LDOPTS)
+MKCSHLIB                = $(LD) $(DSO_LDOPTS)
+MKSHLIB_FORCE_ALL       = 
+MKSHLIB_UNFORCE_ALL     = 
+DSO_LDOPTS              = 
+# DLL_SUFFIX              = .dll
+SHLIB_LDSTARTFILE	= 
+SHLIB_LDENDFILE		= 
+endif   #NO_SHARED_LIB
+
+OS_CFLAGS          = /Q /qlibansi /Gd /Gm /Su4 /Mp /Tl-
+INCLUDES        += -I$(CORE_DEPTH)/../dist/include
+DEFINES         += -DXP_OS2_VACPP -DTCPV40HDRS
+
+# Where the libraries are
+NSPR_LIBS	= $(DIST)/lib/nspr4.lib $(DIST)/lib/plc4.lib $(DIST)/lib/plds4.lib
+MOZ_COMPONENT_NSPR_LIBS=-L$(DIST)/lib $(NSPR_LIBS)
+NSPR_INCLUDE_DIR =   
+
+
+ifdef BUILD_OPT
+OPTIMIZER		= -O+ -Oi 
+DEFINES 		+= -UDEBUG -U_DEBUG -DNDEBUG
+DLLFLAGS		= /DLL /O:$@ /INC:_dllentry /MAP:$(@:.dll=.map)
+EXEFLAGS    		= -PMTYPE:VIO -OUT:$@ -MAP:$(@:.exe=.map) -nologo -NOE
+OBJDIR_TAG 		= _OPT
+LDFLAGS     = /FREE /NODEBUG /NOE /LINENUMBERS /nologo
+else
+OS_CFLAGS   += /Ti+
+DEFINES 		+= -DDEBUG -D_DEBUG -DDEBUGPRINTS     #HCT Need += to avoid overidding manifest.mn 
+DLLFLAGS		= /DEBUG /DLL /O:$@ /INC:_dllentry /MAP:$(@:.dll=.map)
+EXEFLAGS    		= -DEBUG -PMTYPE:VIO -OUT:$@ -MAP:$(@:.exe=.map) -nologo -NOE
+OBJDIR_TAG 		= _DBG
+LDFLAGS 		= /FREE /DE /NOE /LINENUMBERS /nologo 
+endif   # BUILD_OPT
+
+endif   # XP_OS2_VACPP
 
 # OS/2 use nsinstall that is included in the toolkit.
 # since we do not wish to support and maintain 3 version of nsinstall in mozilla, nspr and nss

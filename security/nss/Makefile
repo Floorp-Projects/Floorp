@@ -87,9 +87,9 @@ endif
 	mv $(DIST)/lib/dbm32.lib $(DIST)/lib/dbm.lib
 else
 ifeq ($(OS_ARCH),OS2)
-	cp -r $(DIST)/../include $(DIST)
-	cp -r $(DIST)/../lib $(DIST)
-	mv $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX) $(DIST)/lib/libdbm.$(LIB_SUFFIX)
+	cp -rf $(DIST)/../include $(DIST)
+	cp -rf $(DIST)/../lib $(DIST)
+	cp -f $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX) $(DIST)/lib/libdbm.$(LIB_SUFFIX)
 else
 	$(NSINSTALL) -L ../../dist include $(DIST)
 	$(NSINSTALL) -L ../../dist lib $(DIST)

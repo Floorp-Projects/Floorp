@@ -138,6 +138,14 @@ ifeq ($(OS_ARCH),Linux)
 	OS_RELEASE := $(basename $(OS_RELEASE))
 endif
 
+#
+# For OS/2
+#
+ifeq ($(OS_ARCH),OS_2)
+	OS_ARCH = OS2
+	OS_RELEASE := $(shell uname -v)
+endif
+
 #######################################################################
 # Master "Core Components" macros for getting the OS target           #
 #######################################################################
@@ -226,7 +234,11 @@ endif
 # This variable is used to get OS_CONFIG.mk.
 #
 
+ifeq ($(OS_ARCH),OS2)
+OS_CONFIG = $(OS_TARGET)
+else
 OS_CONFIG = $(OS_TARGET)$(OS_RELEASE)
+endif
 
 #
 # OBJDIR_TAG depends on the predefined variable BUILD_OPT,
@@ -288,14 +300,5 @@ ifdef USE_DEBUG_RTL
 endif
 endif
 endif
-endif
-
-#
-# For OS/2
-#
-ifeq ($(OS_ARCH), OS_2)
-OS_ARCH		:= OS2
-OS_RELEASE	:= $(shell uname -v)
-OS_CONFIG	:= $(OS_ARCH)
 endif
 

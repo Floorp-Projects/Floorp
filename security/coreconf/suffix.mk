@@ -115,13 +115,9 @@ endif
 #
 
 ifndef PROG_SUFFIX
-	ifeq ($(OS_ARCH), WINNT)
+	ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 		PROG_SUFFIX = .exe
 	else
-	    ifeq ($(OS_ARCH), OS2)
-		PROG_SUFFIX = .exe
-	    else
 		PROG_SUFFIX =
-	    endif
 	endif
 endif

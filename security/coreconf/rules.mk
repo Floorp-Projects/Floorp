@@ -297,7 +297,11 @@ else
 	$(MKPROG) $(OBJS) -Fe$@ -link $(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
 endif
 else
+ifdef XP_OS2_VACPP
+	$(MKPROG) -Fe$@ $(CFLAGS) $(OBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
+else
 	$(MKPROG) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS)
+endif
 endif
 ifneq ($(POLICY),)
 	-$(PLCYPATCH) $(PLCYPATCH_ARGS) $@
@@ -351,7 +355,19 @@ else
 	$(LINK_DLL) -MAP $(DLLBASE) $(OBJS) $(SUB_SHLOBJS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $(OS_LIBS) $(LD_LIBS)
 endif
 else
+ifeq ($(OS_ARCH),OS2)
+	@cmd /C "echo LIBRARY $(notdir $(basename $(SHARED_LIBRARY))) INITINSTANCE TERMINSTANCE >$@.def"
+	@cmd /C "echo PROTMODE >>$@.def"
+	@cmd /C "echo CODE    LOADONCALL MOVEABLE DISCARDABLE >>$@.def"
+	@cmd /C "echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >>$@.def"	
+	@cmd /C "echo EXPORTS >>$@.def"
+	@cmd /C "$(FILTER) $(OBJS) >>$@.def"
+endif #OS2
+ifdef XP_OS2_VACPP
+	$(MKSHLIB) $(DLLFLAGS) $(LDFLAGS) $(OBJS) $(SUB_SHLOBJS) $(LD_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $@.def
+else
 	$(MKSHLIB) -o $@ $(OBJS) $(SUB_SHLOBJS) $(LD_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS)
+endif
 	chmod +x $@
 endif
 endif
@@ -416,7 +432,11 @@ else
 	$(CC) -Fo$@ -c $(CFLAGS) $*.c
 endif
 else
+ifdef XP_OS2_VACPP
+	$(CC) -Fo$@ -c $(CFLAGS) $*.c
+else
 	$(CC) -o $@ -c $(CFLAGS) $*.c
+endif
 endif
 
 ifneq ($(OS_ARCH), WINNT)
@@ -858,7 +878,7 @@ endif
 
 -include $(DEPENDENCIES)
 
-ifneq ($(OS_ARCH),WINNT)
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 # Can't use sed because of its 4000-char line length limit, so resort to perl
 .DEFAULT:
 	@perl -e '                                                            \
