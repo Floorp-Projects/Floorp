@@ -203,6 +203,15 @@ public:
                         PRInt32& aOutNumColumns,
                         PRInt32 *& aOutColumnIndexes);
 
+  /** return the row span of a cell, taking into account row span magic at the bottom
+    * of a table.
+    * @param aRowIndex  the first row that contains the cell
+    * @param aCell      the content object representing the cell
+    * @return  the row span, correcting for row spans that extend beyond the bottom
+    *          of the table.
+    */
+  virtual PRInt32  GetEffectiveRowSpan(PRInt32 aRowIndex, nsTableCellFrame *aCell);
+
   // For DEBUGGING Purposes Only
   NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
@@ -341,15 +350,6 @@ protected:
   void      MapBorderMarginPadding(nsIPresContext* aPresContext);
   void      MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
-
-  /** return the row span of a cell, taking into account row span magic at the bottom
-    * of a table.
-    * @param aRowIndex  the first row that contains the cell
-    * @param aCell      the content object representing the cell
-    * @return  the row span, correcting for row spans that extend beyond the bottom
-    *          of the table.
-    */
-  virtual PRInt32  GetEffectiveRowSpan(PRInt32 aRowIndex, nsTableCellFrame *aCell);
 
   /** build as much of the CellMap as possible from the info we have so far 
     */
