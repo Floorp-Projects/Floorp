@@ -1301,11 +1301,6 @@ nsGlobalHistory::OpenDB()
   rv = historyFile->GetFileSpec(&dbfile);
   if (NS_FAILED(rv)) return rv;
 
-  // Leaving XPCOM, entering Mork. The IID is a lie; the component
-  // manager appears to be used solely to get dynamic loading of the
-  // Mork DLL.
-  nsIMdbFactory* factory;
-
   static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);
   nsCOMPtr<nsIMdbFactoryFactory> factoryfactory;
   rv = nsComponentManager::CreateInstance(kMorkCID,
@@ -1314,6 +1309,10 @@ nsGlobalHistory::OpenDB()
                                           getter_AddRefs(factoryfactory));
   if (NS_FAILED(rv)) return rv;
 
+  // Leaving XPCOM, entering MDB. They may look like XPCOM interfaces,
+  // but they're not. The 'factory' is an interface; however, it isn't
+  // reference counted. So no, this isn't a leak.
+  nsIMdbFactory* factory;
   rv = factoryfactory->GetMdbFactory(&factory);
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create mork factory factory");
   if (NS_FAILED(rv)) return rv;
@@ -1324,21 +1323,21 @@ nsGlobalHistory::OpenDB()
   NS_ASSERTION((err == 0), "unable to create mdb env");
   if (err != 0) return NS_ERROR_FAILURE;
 
-	nsIMdbHeap* dbHeap = 0;
-	mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
+  nsIMdbHeap* dbHeap = 0;
+  mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
 
   if (dbfile.Exists()) {
     mdb_bool canopen = 0;
     mdbYarn outfmt = { nsnull, 0, 0, 0, 0, nsnull };
 
-    nsMdbPtr<nsIMdbFile> oldFileAnchor(mEnv); // ensures file is released
-		err = factory->OpenOldFile(mEnv, dbHeap, dbfile.GetNativePathCString(),
-			 dbFrozen, getter_Acquires(oldFileAnchor));
-		nsIMdbFile* oldFile = oldFileAnchor;
+    nsMdbPtr<nsIMdbFile> oldFile(mEnv); // ensures file is released
+    err = factory->OpenOldFile(mEnv, dbHeap, dbfile.GetNativePathCString(),
+                               dbFrozen, getter_Acquires(oldFile));
+
     if ((err != 0) || !oldFile) return NS_ERROR_FAILURE;
 
-		err = factory->CanOpenFilePort(mEnv, oldFile, // the file to investigate
-			&canopen, &outfmt);
+    err = factory->CanOpenFilePort(mEnv, oldFile, // the file to investigate
+                                   &canopen, &outfmt);
 
     // XXX possible that format out of date, in which case we should
     // just re-write the file.
@@ -1377,10 +1376,10 @@ nsGlobalHistory::OpenDB()
   }
   else {
 
-    nsMdbPtr<nsIMdbFile> newFileAnchor(mEnv); // ensures file is released
-		err = factory->CreateNewFile(mEnv, dbHeap, dbfile.GetNativePathCString(),
-			 getter_Acquires(newFileAnchor));
-		nsIMdbFile* newFile = newFileAnchor;
+    nsMdbPtr<nsIMdbFile> newFile(mEnv); // ensures file is released
+    err = factory->CreateNewFile(mEnv, dbHeap, dbfile.GetNativePathCString(),
+                                 getter_Acquires(newFile));
+
     if ((err != 0) || !newFile) return NS_ERROR_FAILURE;
 
     mdbOpenPolicy policy = { { 0, 0 }, 0, 0 };
