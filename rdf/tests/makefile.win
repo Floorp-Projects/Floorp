@@ -22,6 +22,7 @@ MODULE=rdf
 DIRS=\
         rdfcat          \
         rdfpoll         \
+	domds		\
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
