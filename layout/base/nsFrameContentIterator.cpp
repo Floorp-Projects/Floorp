@@ -100,15 +100,13 @@ GetNextChildFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
   aFrame = aFrame->GetLastInFlow();
 
   // Get its next sibling
-  nsIFrame* nextSibling;
-  aFrame->GetNextSibling(&nextSibling);
+  nsIFrame* nextSibling = aFrame->GetNextSibling();
 
   // If there's no next sibling, then check if the parent frame
   // has a next-in-flow and look there
   if (!nextSibling) {
     nsIFrame* parent;
-    aFrame->GetParent(&parent);
-    parent->GetNextInFlow(&parent);
+    aFrame->GetParent()->GetNextInFlow(&parent);
 
     if (parent) {
       parent->FirstChild(aPresContext, nsnull, &nextSibling);
@@ -162,11 +160,10 @@ GetPrevChildFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
   // Get its previous sibling. Because we have a singly linked list we
   // need to search from the first child
-  nsIFrame* parent;
+  nsIFrame* parent = aFrame->GetParent();
   nsIFrame* firstChild;
   nsIFrame* prevSibling;
 
-  aFrame->GetParent(&parent);
   parent->FirstChild(aPresContext, nsnull, &firstChild);
 
   NS_ASSERTION(firstChild, "parent has no first child");
@@ -220,9 +217,9 @@ NS_IMETHODIMP
 nsFrameContentIterator::CurrentNode(nsIContent **aNode)
 {
   if (mCurrentChild) {
-    mCurrentChild->GetContent(aNode);
+    *aNode = mCurrentChild->GetContent();
+    NS_IF_ADDREF(*aNode);
     return NS_OK;
-
   } else {
     *aNode = nsnull;
     return NS_ERROR_FAILURE;
@@ -244,10 +241,7 @@ nsFrameContentIterator::PositionAt(nsIContent* aCurNode)
   // with the matching content object
   mParentFrame->FirstChild(mPresContext, nsnull, &child);
   while (child) {
-    nsCOMPtr<nsIContent>  content;
-
-    child->GetContent(getter_AddRefs(content));
-    if (content.get() == aCurNode) {
+    if (child->GetContent() == aCurNode) {
       break;
     }
     child = ::GetNextChildFrame(mPresContext, child);
@@ -278,11 +272,7 @@ NS_NewFrameContentIterator(nsIPresContext*      aPresContext,
   }
   
   // Make sure the frame corresponds to generated content
-#ifdef DEBUG
-  nsFrameState  frameState;
-  aFrame->GetFrameState(&frameState);
-  NS_ASSERTION(frameState & NS_FRAME_GENERATED_CONTENT, "unexpected frame");
-#endif
+  NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT, "unexpected frame");
 
   nsFrameContentIterator* it = new nsFrameContentIterator(aPresContext, aFrame);
   if (!it) {
