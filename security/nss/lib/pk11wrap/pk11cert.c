@@ -1249,8 +1249,11 @@ static PRStatus
 collect_certs(NSSCertificate *c, void *arg)
 {
     nssList *list = (nssList *)arg;
-    /* Add the cert to the return list */
-    nssList_AddUnique(list, (void *)c);
+    /* Add the cert to the return list if not present */
+    if (!nssList_Get(list, (void *)c)) {
+	nssCertificate_AddRef(c);
+	nssList_Add(list, (void *)c);
+    }
     return PR_SUCCESS;
 }
 
@@ -1327,7 +1330,6 @@ PK11_FindCertsFromNickname(char *nickname, void *wincx) {
 	count = nssList_Count(nameList);
 	foundCerts = nss_ZNEWARRAY(NULL, NSSCertificate *, count + 1);
 	nssList_GetArray(nameList, (void **)foundCerts, count);
-	nssList_Clear(nameList, cert_destructor);
 	nssList_Destroy(nameList);
     }
     if (slot) {

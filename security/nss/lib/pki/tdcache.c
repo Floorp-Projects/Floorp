@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.18 $ $Date: 2002/01/03 20:09:24 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.19 $ $Date: 2002/01/09 21:09:21 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -488,6 +488,7 @@ add_subject_entry
 	log_cert_ref("added to existing subject list", cert);
 #endif
     } else {
+	NSSDER *subject;
 	/* Create a new subject list for the subject */
 	list = nssList_Create(arena, PR_FALSE);
 	if (!list) {
@@ -504,7 +505,11 @@ add_subject_entry
 	    return nssrv;
 	}
 	/* Add the subject list to the cache */
-	nssrv = nssHash_Add(cache->subject, &cert->subject, ce);
+	subject = nssItem_Duplicate(&cert->subject, arena, NULL);
+	if (!subject) {
+	    return PR_FAILURE;
+	}
+	nssrv = nssHash_Add(cache->subject, subject, ce);
 	if (nssrv != PR_SUCCESS) {
 	    return nssrv;
 	}
@@ -535,11 +540,16 @@ add_nickname_entry
 	 */
 	return PR_FAILURE;
     } else {
+	NSSUTF8 *nickname;
 	ce = new_cache_entry(arena, subjectList);
 	if (!ce) {
 	    return PR_FAILURE;
 	}
-	nssrv = nssHash_Add(cache->nickname, cert->nickname, ce);
+	nickname = nssUTF8_Duplicate(cert->nickname, arena);
+	if (!nickname) {
+	    return PR_FAILURE;
+	}
+	nssrv = nssHash_Add(cache->nickname, nickname, ce);
 #ifdef DEBUG_CACHE
 	log_cert_ref("created nickname for", cert);
 #endif
@@ -570,6 +580,7 @@ add_email_entry
 	log_cert_ref("added subject to email for", cert);
 #endif
     } else {
+	NSSASCII7 *email;
 	/* Create a new list of subject lists, add this subject */
 	subjects = nssList_Create(arena, PR_TRUE);
 	if (!subjects) {
@@ -585,7 +596,11 @@ add_email_entry
 	if (!ce) {
 	    return PR_FAILURE;
 	}
-	nssrv = nssHash_Add(cache->email, &cert->email, ce);
+	email = nssUTF8_Duplicate(cert->email, arena);
+	if (!email) {
+	    return PR_FAILURE;
+	}
+	nssrv = nssHash_Add(cache->email, email, ce);
 	if (nssrv != PR_SUCCESS) {
 	    return nssrv;
 	}
@@ -714,6 +729,8 @@ nssTrustDomain_AddCertsToCache
 		if (c != certs[i]) {
 		    NSSCertificate_Destroy(certs[i]);
 		    certs[i] = c;
+		} else {
+		    NSSCertificate_Destroy(c);
 		}
 		nss_ClearErrorStack();
 		continue;

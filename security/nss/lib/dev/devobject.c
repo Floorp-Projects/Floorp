@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.10 $ $Date: 2002/01/08 15:37:36 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.11 $ $Date: 2002/01/09 21:09:19 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -56,9 +56,9 @@ static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.10 $ $
 #endif /* BASE_H */
 
 /* XXX */
-#ifndef PKIT_H
-#include "pkit.h"
-#endif /* PKIT_H */
+#ifndef PKI_H
+#include "pki.h"
+#endif /* PKI_H */
 
 /* XXX */
 #ifndef NSSPKI_H
@@ -462,6 +462,7 @@ retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
     }
     found = PR_FALSE;
     if (cert) {
+	nssCertificate_AddRef(cert);
 	instances = cert->object.instances;
 	for (ci  = (nssCryptokiInstance *)nssListIterator_Start(instances);
 	     ci != (nssCryptokiInstance *)NULL;
