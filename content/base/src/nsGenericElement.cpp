@@ -734,6 +734,12 @@ nsDOMSlots::IsEmpty()
           mContentID < GENERIC_ELEMENT_CONTENT_ID_MAX_VALUE);
 }
 
+PR_STATIC_CALLBACK(void)
+NopClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+  // Do nothing
+}
+
 // static
 void
 nsGenericElement::Shutdown()
@@ -744,6 +750,24 @@ nsGenericElement::Shutdown()
     NS_ASSERTION(sRangeListsHash.entryCount == 0,
                  "nsGenericElement's range hash not empty at shutdown!");
 
+    // We're already being shut down and if there are entries left in
+    // this hash at this point it means we leaked nsGenericElements or
+    // nsGenericDOMDataNodes. Since we're already partly through the
+    // shutdown process it's too late to release what's held on to by
+    // this hash (since the teardown code relies on some things being
+    // around that aren't around any more) so we rather leak what's
+    // already leaked in stead of crashing trying to release what
+    // should've been released much earlier on.
+
+    // Copy the ops out of the hash table
+    PLDHashTableOps hash_table_ops = *sRangeListsHash.ops;
+
+    // Set the clearEntry hook to be a nop
+    hash_table_ops.clearEntry = NopClearEntry;
+
+    // Set the ops in the hash table to be the new ops
+    sRangeListsHash.ops = &hash_table_ops;
+
     PL_DHashTableFinish(&sRangeListsHash);
 
     sRangeListsHash.ops = nsnull;
@@ -753,7 +777,18 @@ nsGenericElement::Shutdown()
     NS_ASSERTION(sEventListenerManagersHash.entryCount == 0,
                  "nsGenericElement's event listener manager hash not empty "
                  "at shutdown!");
-    
+
+    // See comment above.
+
+    // Copy the ops out of the hash table
+    PLDHashTableOps hash_table_ops = *sEventListenerManagersHash.ops;
+
+    // Set the clearEntry hook to be a nop
+    hash_table_ops.clearEntry = NopClearEntry;
+
+    // Set the ops in the hash table to be the new ops
+    sEventListenerManagersHash.ops = &hash_table_ops;
+
     PL_DHashTableFinish(&sEventListenerManagersHash);
 
     sEventListenerManagersHash.ops = nsnull;
@@ -2480,7 +2515,8 @@ nsGenericElement::DoneCreatingElement()
  * aChild is one of aNode's ancestors. -- jst@citec.fi
  */
 
-static PRBool isSelfOrAncestor(nsIContent *aNode, nsIContent *aChild)
+static PRBool
+isSelfOrAncestor(nsIContent *aNode, nsIContent *aChild)
 {
   if (aNode == aChild)
     return PR_TRUE;
