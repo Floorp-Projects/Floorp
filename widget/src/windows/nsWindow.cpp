@@ -58,6 +58,7 @@
 
 #include "nsNativeDragTarget.h"
 #include "nsIRollupListener.h"
+#include "nsIMenuRollup.h"
 #include "nsIRegion.h"
 
 //~~~ windowless plugin support
@@ -606,6 +607,92 @@ nsWindow::IsScrollbar(HWND aWnd) {
   return PR_FALSE;
 }
 
+
+//
+// DealWithPopups
+//
+// Handle events that may cause a popup (combobox, XPMenu, etc) to need to rollup.
+//
+BOOL
+nsWindow :: DealWithPopups ( UINT inMsg, LRESULT* outResult )
+{
+  if ( gRollupListener && gRollupWidget) {
+
+     // All mouse wheel events cause the popup to rollup.
+     // XXX: Need something more reliable then WM_MOUSEWHEEL.
+     // This event is not always generated. The mouse wheel
+     // is plugged into the scrollbar scrolling in odd ways
+     // which make it difficult to find a message which will
+     // reliably be generated when the mouse wheel changes position
+    if ((inMsg == WM_MOUSEWHEEL) || (inMsg == uMSH_MOUSEWHEEL)) {
+      gRollupListener->Rollup();
+      *outResult = TRUE;
+      return TRUE;
+    }
+    
+    if (inMsg == WM_ACTIVATE || inMsg == WM_NCLBUTTONDOWN || inMsg == WM_LBUTTONDOWN ||
+      inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN || 
+      inMsg == WM_NCMBUTTONDOWN || inMsg == WM_NCRBUTTONDOWN || inMsg == WM_MOUSEACTIVATE) {
+      // Rollup if the event is outside the popup.
+      PRBool rollup = !nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget);
+      
+      // If we're dealing with menus, we probably have submenus and we don't
+      // want to rollup if the click is in a parent menu of the current submenu.
+      if (rollup) {
+        nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
+        if ( menuRollup ) {
+          nsCOMPtr<nsISupportsArray> widgetChain;
+          menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) );
+          if ( widgetChain ) {
+            PRUint32 count = 0;
+            widgetChain->Count(&count);
+            for ( PRUint32 i = 0; i < count; ++i ) {
+              nsCOMPtr<nsISupports> genericWidget;
+              widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) );
+              nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
+              if ( widget ) {
+                nsIWidget* temp = widget.get();
+                if ( nsWindow::EventIsInsideWindow((nsWindow*)temp) ) {
+                  rollup = PR_FALSE;
+                  break;
+                }
+              }
+            } // foreach parent menu widget
+          }
+        } // if rollup listener knows about menus
+      }
+
+      if (inMsg == WM_MOUSEACTIVATE) {
+        // Prevent the click inside the popup from causing a change in window
+        // activation. Since the popup is shown non-activated, we need to eat 
+        // any requests to activate the window while it is displayed. Windows 
+        // will automatically activate the popup on the mousedown otherwise.
+        if (!rollup) {
+          *outResult = MA_NOACTIVATE;
+          return TRUE;
+        }
+      }
+      // if we've determined that we should still rollup everything, do it.
+      else if ( rollup ) {
+        gRollupListener->Rollup();
+
+        // return TRUE tells Windows that the event is consumed, 
+        // false allows the event to be dispatched
+        //
+        // So if we are NOT supposed to be consuming events, let it go through
+        if (gRollupConsumeRollupEvent) {
+          *outResult = TRUE;
+          return TRUE;
+        } 
+      }
+    } // if event that might trigger a popup to rollup    
+  } // if rollup listeners registered
+
+  return FALSE;
+
+} // DealWithPopups
+
+
 //-------------------------------------------------------------------------
 //
 // the nsWindow procedure for all nsWindows in this toolkit
@@ -613,44 +700,9 @@ nsWindow::IsScrollbar(HWND aWnd) {
 //-------------------------------------------------------------------------
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-     // check to see if we have a rollup listener registered
-    if (nsnull != gRollupListener && nsnull != gRollupWidget) {
-  
-       // All mouse wheel events cause the popup to rollup.
-       // XXX: Need something more reliable then WM_MOUSEWHEEL.
-       // This event is not always generated. The mouse wheel
-       // is plugged into the scrollbar scrolling in odd ways
-       // which make it difficult to find a message which will
-       // reliably be generated when the mouse wheel changes position
-      if ((msg == WM_MOUSEWHEEL) || (msg == uMSH_MOUSEWHEEL)) {
-        gRollupListener->Rollup();
-        return TRUE;
-      }
-      
-      if (msg == WM_ACTIVATE || msg == WM_NCLBUTTONDOWN || msg == WM_LBUTTONDOWN ||
-        msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN || 
-        msg == WM_NCMBUTTONDOWN || msg == WM_NCRBUTTONDOWN) {
-        // Rollup if the event is outside the popup
-        if (PR_FALSE == nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget)) {
-          gRollupListener->Rollup();
-          // return TRUE tells Windows that the event is consumed, 
-          // false allows the event to be dispatched
-          //
-          // So if we are NOT supposed to be consuming events, let it go through
-          if (gRollupConsumeRollupEvent) {
-            return TRUE;
-          } 
-        }
-      }
-
-      if ((msg == WM_MOUSEACTIVATE) && (nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget))) {
-        // Prevent the click inside the popup from causing a change in window
-        // activation. Since the popup is shown non-activated, we need to eat 
-        // any requests to activate the window while it is displayed. Windows 
-        // will automatically activate the popup on the mousedown otherwise.
-        return MA_NOACTIVATE;
-      }
-    }
+    LRESULT popupHandlingResult;
+    if ( DealWithPopups(msg, &popupHandlingResult) )
+      return popupHandlingResult;
 
     // Get the window which caused the event and ask it to process the message
     nsWindow *someWindow = (nsWindow*)::GetWindowLong(hWnd, GWL_USERDATA);
