@@ -110,6 +110,7 @@
 #include "nsLayoutCID.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsCSSAtoms.h"
 
 #if defined(DEBUG_rods) || defined(DEBUG_bryner)
 //#define DEBUG_DOCSHELL_FOCUS
@@ -3528,16 +3529,16 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       if (newHover) {
         nsCOMPtr<nsIContent> parent;
         newHover->GetParent(*getter_AddRefs(parent));
-        doc1->ContentStatesChanged(newHover, parent);
+        doc1->ContentStatesChanged(newHover, parent, nsCSSAtoms::hoverPseudo);
         while (parent && parent != commonHoverParent) {
           parent->GetParent(*getter_AddRefs(newHover));
           if (newHover && newHover != commonHoverParent) {
             newHover->GetParent(*getter_AddRefs(parent));
             if (parent == commonHoverParent) {
-              doc1->ContentStatesChanged(newHover, nsnull);
+              doc1->ContentStatesChanged(newHover, nsnull, nsCSSAtoms::hoverPseudo);
             }
             else {
-              doc1->ContentStatesChanged(newHover, parent);
+              doc1->ContentStatesChanged(newHover, parent, nsCSSAtoms::hoverPseudo);
             }
           }
           else {
@@ -3549,16 +3550,16 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       if (oldHover) {
         nsCOMPtr<nsIContent> parent;
         oldHover->GetParent(*getter_AddRefs(parent));
-        doc1->ContentStatesChanged(oldHover, parent);
+        doc1->ContentStatesChanged(oldHover, parent, nsCSSAtoms::hoverPseudo);
         while (parent && parent != commonHoverParent) {
           parent->GetParent(*getter_AddRefs(oldHover));
           if (oldHover && oldHover != commonHoverParent) {
             oldHover->GetParent(*getter_AddRefs(parent));
             if (parent == commonHoverParent) {
-              doc1->ContentStatesChanged(oldHover, nsnull);
+              doc1->ContentStatesChanged(oldHover, nsnull, nsCSSAtoms::hoverPseudo);
             }
             else {
-              doc1->ContentStatesChanged(oldHover, parent);
+              doc1->ContentStatesChanged(oldHover, parent, nsCSSAtoms::hoverPseudo);
             }
           }
           else {
@@ -3567,23 +3568,23 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
         }
       }
 
-      doc1->ContentStatesChanged(notifyContent[0], notifyContent[1]);
+      doc1->ContentStatesChanged(notifyContent[0], notifyContent[1], nsnull);
       if (notifyContent[2]) {  // more that two notifications are needed (should be rare)
         // XXX a further optimization here would be to group the notification pairs
         // together by parent/child, only needed if more than two content changed
         // (ie: if [0] and [2] are parent/child, then notify (0,2) (1,3))
-        doc1->ContentStatesChanged(notifyContent[2], notifyContent[3]);
+        doc1->ContentStatesChanged(notifyContent[2], notifyContent[3], nsnull);
         if (notifyContent[4]) {  // more that two notifications are needed (should be rare)
-          doc1->ContentStatesChanged(notifyContent[4], nsnull);
+          doc1->ContentStatesChanged(notifyContent[4], nsnull, nsnull);
         }
       }
       doc1->EndUpdate();
 
       if (doc2) {
         doc2->BeginUpdate();
-        doc2->ContentStatesChanged(notifyContent[1], notifyContent[2]);
+        doc2->ContentStatesChanged(notifyContent[1], notifyContent[2], nsnull);
         if (notifyContent[3]) {
-          doc1->ContentStatesChanged(notifyContent[3], notifyContent[4]);
+          doc1->ContentStatesChanged(notifyContent[3], notifyContent[4], nsnull);
         }
         doc2->EndUpdate();
       }

@@ -337,7 +337,8 @@ nsXULTemplateBuilder::ContentChanged(nsIDocument *aDocument,
 NS_IMETHODIMP
 nsXULTemplateBuilder::ContentStatesChanged(nsIDocument* aDocument,
                                            nsIContent* aContent1,
-                                           nsIContent* aContent2)
+                                           nsIContent* aContent2,
+                                           nsIAtom* aChangedPseudoClass)
 {
     return NS_OK;
 }

@@ -278,7 +278,9 @@ public:
     NS_IMETHOD ContentChanged(nsIContent* aContent,
                               nsISupports* aSubContent);
 
-    NS_IMETHOD ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2);
+    NS_IMETHOD ContentStatesChanged(nsIContent* aContent1,
+                                    nsIContent* aContent2,
+                                    nsIAtom* aChangedPseudoClass);
 
     NS_IMETHOD AttributeChanged(nsIContent* aChild,
                                 PRInt32 aNameSpaceID,

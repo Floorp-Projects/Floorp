@@ -65,13 +65,6 @@ public:
    * of view.  This should only be used by SelectElement, really.
    * Everyone else is safe using GetSelected() on the DOMHTMLOptionElement.
    */
-  NS_IMETHOD GetSelectedInternal(PRBool* aValue) = 0;
-
-  /**
-   * Check whether the option element is selected from its own point
-   * of view.  This should only be used by SelectElement, really.
-   * Everyone else is safe using GetSelected() on the DOMHTMLOptionElement.
-   */
   NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify) = 0;
 
   /**

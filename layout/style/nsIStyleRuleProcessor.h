@@ -90,9 +90,10 @@ struct RuleProcessorData {
   PRPackedBool      mIsHTMLContent; // if content, then does QI on HTMLContent, true or false
   PRPackedBool      mIsHTMLLink;    // if content, calls nsStyleUtil::IsHTMLLink
   PRPackedBool      mIsSimpleXLink; // if content, calls nsStyleUtil::IsSimpleXLink
-  nsLinkState       mLinkState;     // if a link, this is the state, otherwise unknown
   PRPackedBool      mIsQuirkMode;   // Possibly remove use of this in SelectorMatches?
   PRPackedBool      mHasAttributes; // if content, content->GetAttrCount() > 0
+  PRPackedBool      mIsChecked;     // checked/selected attribute for option and select elements
+  nsLinkState       mLinkState;     // if a link, this is the state, otherwise unknown
   PRInt32           mEventState;    // if content, eventStateMgr->GetContentState()
   PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
   RuleProcessorData* mPreviousSiblingData;

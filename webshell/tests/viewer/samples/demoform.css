@@ -59,7 +59,7 @@ option {
  background-color:green;
 }
 
-option[_moz-option-selected] {
+option:checked {
   color:red;
   background-color:yellow;
 }

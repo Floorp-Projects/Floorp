@@ -770,7 +770,8 @@ nsMenuBarX::ContentChanged( nsIDocument * aDocument, nsIContent * aContent, nsIS
 }
 
 NS_IMETHODIMP
-nsMenuBarX::ContentStatesChanged( nsIDocument * aDocument, nsIContent  * aContent1, nsIContent  * aContent2)
+nsMenuBarX::ContentStatesChanged( nsIDocument * aDocument, nsIContent  * aContent1,
+                                  nsIContent  * aContent2, nsIAtom * aChangedPseudoClass)
 {
   return NS_OK;
 }

@@ -70,6 +70,7 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSStyleRule.h"
@@ -3232,6 +3233,7 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
   mIsHTMLContent = PR_FALSE;
   mIsHTMLLink = PR_FALSE;
   mIsSimpleXLink = PR_FALSE;
+  mIsChecked = PR_FALSE;
   mLinkState = eLinkState_Unknown;
   mEventState = NS_EVENT_STATE_UNSPECIFIED;
   mNameSpaceID = kNameSpaceID_Unknown;
@@ -3299,6 +3301,15 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
        nsStyleUtil::IsSimpleXlink(aContent, mPresContext, &mLinkState)) {
       mIsSimpleXLink = PR_TRUE;
     } 
+
+    if (mIsHTMLContent) {
+      PRBool isChecked = PR_FALSE;
+      if (mContentTag == nsHTMLAtoms::option) {
+        nsCOMPtr<nsIDOMHTMLOptionElement> optEl = do_QueryInterface(mContent);
+        optEl->GetSelected(&isChecked);
+      }
+      mIsChecked = isChecked;
+    }
   }
 }
 
@@ -3589,6 +3600,14 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         else {
           result = localFalse;  // not a link
         }
+      }
+      else if (nsCSSAtoms::checkedPseudo == pseudoClass->mAtom) {
+        // This pseudoclass matches the selected state on the following elements:
+        //  <option>
+        //  <input type=checkbox>
+        //  <input type=radio>
+        if (aTestState)
+          result = data.mIsChecked ? localTrue : localFalse;
       }
       else {
         result = localFalse;  // unknown pseudo class

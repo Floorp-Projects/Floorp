@@ -1028,7 +1028,8 @@ public:
                             nsISupports* aSubContent);
   NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
                                   nsIContent* aContent1,
-                                  nsIContent* aContent2);
+                                  nsIContent* aContent2,
+                                  nsIAtom* aChangedPseudoClass);
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
                               PRInt32      aNameSpaceID,
@@ -5095,10 +5096,12 @@ PresShell::ContentChanged(nsIDocument *aDocument,
 NS_IMETHODIMP
 PresShell::ContentStatesChanged(nsIDocument* aDocument,
                                 nsIContent* aContent1,
-                                nsIContent* aContent2)
+                                nsIContent* aContent2,
+                                nsIAtom* aChangedPseudoClass)
 {
   WillCauseReflow();
-  nsresult rv = mStyleSet->ContentStatesChanged(mPresContext, aContent1, aContent2);
+  nsresult rv = mStyleSet->ContentStatesChanged(mPresContext, aContent1, aContent2,
+                                                aChangedPseudoClass);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
 
