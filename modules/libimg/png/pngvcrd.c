@@ -2,13 +2,22 @@
  *
  * For Intel x86 CPU and Microsoft Visual C++ compiler
  *
- * libpng 1.0.8 - July 24, 2000
+ * libpng 1.0.9 - January 31, 2001
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998, 1999, 2000 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2001 Glenn Randers-Pehrson
  * Copyright (c) 1998, Intel Corporation
  *
  * Contributed by Nirav Chhatrapati, Intel Corporation, 1998
  * Interface to libpng contributed by Gilles Vollant, 1999
+ * Debugging and cleanup by Greg Roelofs, 2000, 2001
+ *
+ * In png_do_read_interlace() in libpng versions 1.0.3a through 1.0.4d,
+ * a sign error in the post-MMX cleanup code for each pixel_depth resulted
+ * in bad pixels at the beginning of some rows of some images, and also
+ * (due to out-of-range memory reads and writes) caused heap corruption
+ * when compiled with MSVC 6.0.  The error was fixed in version 1.0.4e.
+ *
+ * [png_read_filter_row_mmx_avg() bpp == 2 bugfix, GRR 20000916]
  *
  */
 
@@ -17,19 +26,11 @@
 
 #if defined(PNG_ASSEMBLER_CODE_SUPPORTED) && defined(PNG_USE_PNGVCRD)
 
-/*
-   One of these might need to be defined.
-#define DISABLE_PNGVCRD_COMBINE
-#define DISABLE_PNGVCRD_INTERLACE
-*/
-
 static int mmx_supported=2;
 
-void /* PRIVATE */
-png_read_filter_row_c(png_structp png_ptr, png_row_infop row_info,
-   png_bytep row, png_bytep prev_row, int filter);
 
-static int mmxsupport()
+int PNGAPI
+png_mmx_support(void)
 {
   int mmx_supported_local = 0;
   _asm {
@@ -81,6 +82,7 @@ NOT_SUPPORTED:
   //mmx_supported_local=0; // test code for force don't support MMX
   //printf("MMX : %u (1=MMX supported)\n",mmx_supported_local);
 
+  mmx_supported = mmx_supported_local;
   return mmx_supported_local;
 }
 
@@ -104,19 +106,12 @@ png_combine_row(png_structp png_ptr, png_bytep row, int mask)
 #ifdef PNG_USE_LOCAL_ARRAYS
    const int png_pass_inc[7] = {8, 8, 4, 4, 2, 2, 1};
 #endif
-#ifdef DISABLE_PNGVCRD_COMBINE
-   int save_mmx_supported = mmx_supported;
-#endif
 
    png_debug(1,"in png_combine_row_asm\n");
 
-#ifdef DISABLE_PNGVCRD_COMBINE
-   if ((png_ptr->transformations & PNG_INTERLACE) && png_ptr->pass != 6)
-       mmx_supported = 0;
-   else
-#endif
-       if (mmx_supported == 2)
-           mmx_supported = mmxsupport();
+   if (mmx_supported == 2) {
+       png_mmx_support();
+   }
 
    if (mask == 0xff)
    {
@@ -305,7 +300,7 @@ png_combine_row(png_structp png_ptr, png_bytep row, int mask)
 
             __int64 mask0=0x0102040810204080;
 
-            if (mmx_supported)
+            if ( mmx_supported )
             {
                srcptr = png_ptr->row_buf + 1;
                dstptr = row;
@@ -405,7 +400,7 @@ end8:
             __int64 mask1=0x0101020204040808,
                     mask0=0x1010202040408080;
 
-            if (mmx_supported)
+            if ( mmx_supported )
             {
                srcptr = png_ptr->row_buf + 1;
                dstptr = row;
@@ -525,7 +520,7 @@ end16:
             len     = (png_ptr->width)&~7;
             diff = (png_ptr->width)&7;
 
-            if (mmx_supported)
+            if ( mmx_supported )
             {
                _asm
                {
@@ -656,7 +651,7 @@ end24:
             len     = (png_ptr->width)&~7;
             diff = (png_ptr->width)&7;
 
-            if (mmx_supported)
+            if ( mmx_supported )
             {
                _asm
                {
@@ -790,7 +785,7 @@ end32:
                     mask1=0x2020202040404040,
                     mask0=0x4040808080808080;
 
-            if (mmx_supported)
+            if ( mmx_supported )
             {
                srcptr = png_ptr->row_buf + 1;
                dstptr = row;
@@ -961,43 +956,27 @@ end48:
       } /* end switch (png_ptr->row_info.pixel_depth) */
    } /* end if (non-trivial mask) */
 
-#ifdef DISABLE_PNGVCRD_COMBINE
-   mmx_supported = save_mmx_supported;
-#endif
-
 } /* end png_combine_row() */
 
 
 #if defined(PNG_READ_INTERLACING_SUPPORTED)
 
 void /* PRIVATE */
-png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
-   png_uint_32 transformations)
+png_do_read_interlace(png_structp png_ptr)
 {
+   png_row_infop row_info = &(png_ptr->row_info);
+   png_bytep row = png_ptr->row_buf + 1;
+   int pass = png_ptr->pass;
+   png_uint_32 transformations = png_ptr->transformations;
 #ifdef PNG_USE_LOCAL_ARRAYS
    const int png_pass_inc[7] = {8, 8, 4, 4, 2, 2, 1};
-#endif
-#ifdef DISABLE_PNGVCRD_INTERLACE
-   int save_mmx_supported = mmx_supported;
 #endif
 
    png_debug(1,"in png_do_read_interlace\n");
 
-#ifdef DISABLE_PNGVCRD_INTERLACE
-   /* In libpng versions 1.0.3a through 1.0.4d,
-    * a sign error in the post-MMX cleanup code for each pixel_depth resulted
-    * in bad pixels at the beginning of some rows of some images, and also
-    * (due to out-of-range memory reads and writes) caused heap corruption
-    * when compiled with MSVC 6.0.  The error was fixed in version 1.0.4e,
-    * and the code appears to work completely correctly, so it is enabled
-    * by default.
-    */
-   if (1)  /* all passes caused a heap problem in the old code */
-      mmx_supported = 0;
-   else
-#endif
-       if (mmx_supported == 2)
-           mmx_supported = mmxsupport();
+   if (mmx_supported == 2) {
+       png_mmx_support();
+   }
 
    if (row != NULL && row_info != NULL)
    {
@@ -1195,7 +1174,8 @@ png_do_read_interlace(png_row_infop row_info, png_bytep row, int pass,
             // sign fix by GRR
             // NOTE:  there is NO MMX code for 48-bit and 64-bit images
 
-            if (mmx_supported) // use MMX routine if machine supports it
+            // use MMX routine if machine supports it
+            if ( mmx_supported )
             {
                if (pixel_bytes == 3)
                {
@@ -1883,9 +1863,6 @@ loop4_pass4:
          (png_uint_32)row_info->pixel_depth + 7) >> 3);
    }
 
-#ifdef DISABLE_PNGVCRD_INTERLACE
-   mmx_supported = save_mmx_supported;
-#endif
 }
 
 #endif /* PNG_READ_INTERLACING_SUPPORTED */
@@ -2117,8 +2094,8 @@ davg4lp:
       case 2:
       {
          ActiveMask.use  = 0x000000000000ffff;
-         ShiftBpp.use = 24;   // == 3 * 8
-         ShiftRem.use = 40;   // == 64 - 24
+         ShiftBpp.use = 16;   // == 2 * 8     [BUGFIX]
+         ShiftRem.use = 48;   // == 64 - 16   [BUGFIX]
          _asm {
             // Load ActiveMask
             movq mm7, ActiveMask
@@ -2133,7 +2110,7 @@ davg4lp:
                               // (we correct position in loop below)
 davg2lp:
             movq mm0, [edi + ebx]
-            psllq mm2, ShiftRem  // shift data to position correctly
+            psrlq mm2, ShiftRem  // shift data to position correctly   [BUGFIX]
             movq mm1, [esi + ebx]
             // Add (Prev_row/2) to Average
             movq mm3, mm5
@@ -3321,7 +3298,7 @@ dsub3lp:
       case 1:
       {
          // Placed here just in case this is a duplicate of the
-         // non-MMX code for the SUB filter in png_read_filter_row above
+         // non-MMX code for the SUB filter in png_read_filter_row below
          //
          //         png_bytep rp;
          //         png_bytep lp;
@@ -3656,61 +3633,50 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
    row, png_bytep prev_row, int filter)
 {
 #ifdef PNG_DEBUG
-   char filnm[6];
+   char filnm[10];
 #endif
-#define UseMMX 1
 
-   if (mmx_supported == 2)
-       mmx_supported = mmxsupport();
-
-   if (!mmx_supported)
-   {
-       png_read_filter_row_c(png_ptr, row_info, row, prev_row, filter);
-       return ;
+   if (mmx_supported == 2) {
+       png_mmx_support();
    }
 
 #ifdef PNG_DEBUG
    png_debug(1, "in png_read_filter_row\n");
-#  if (UseMMX == 1)
-   png_debug1(0,"%s, ", "MMX");
-#  else
-   png_debug1(0,"%s, ", "x86");
-#  endif
    switch (filter)
    {
-      case 0: sprintf(filnm, "None ");
+      case 0: sprintf(filnm, "none");
          break;
-      case 1: sprintf(filnm, "Sub  ");
+      case 1: sprintf(filnm, "sub-%s", "MMX");
          break;
-      case 2: sprintf(filnm, "Up   ");
+      case 2: sprintf(filnm, "up-%s", "MMX");
          break;
-      case 3: sprintf(filnm, "Avg  ");
+      case 3: sprintf(filnm, "avg-%s", "MMX");
          break;
-      case 4: sprintf(filnm, "Paeth");
+      case 4: sprintf(filnm, "Paeth-%s", "MMX");
          break;
-      default: sprintf(filnm, "Unknw");
+      default: sprintf(filnm, "unknw");
          break;
    }
    png_debug2(0,"row=%5d, %s, ", png_ptr->row_number, filnm);
    png_debug2(0, "pd=%2d, b=%d, ", (int)row_info->pixel_depth,
       (int)((row_info->pixel_depth + 7) >> 3));
    png_debug1(0,"len=%8d, ", row_info->rowbytes);
-#endif
+#endif /* PNG_DEBUG */
 
    switch (filter)
    {
       case PNG_FILTER_VALUE_NONE:
          break;
+
       case PNG_FILTER_VALUE_SUB:
       {
-#if (UseMMX == 1)
-         if ((row_info->pixel_depth > 8) &&
-            (row_info->rowbytes >= 128) )
+         if (
+             (row_info->pixel_depth >= PNG_MMX_BITDEPTH_THRESHOLD_DEFAULT) &&
+             (row_info->rowbytes >= PNG_MMX_ROWBYTES_THRESHOLD_DEFAULT))
          {
             png_read_filter_row_mmx_sub(row_info, row);
          }
          else
-#endif
          {
             png_uint_32 i;
             png_uint_32 istop = row_info->rowbytes;
@@ -3723,41 +3689,43 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
                *rp = (png_byte)(((int)(*rp) + (int)(*lp++)) & 0xff);
                rp++;
             }
-         }  //end !UseMMX
+         }
          break;
       }
+
       case PNG_FILTER_VALUE_UP:
       {
-#if (UseMMX == 1)
-         if ((row_info->pixel_depth > 8) &&
-             (row_info->rowbytes >= 128) )
+         if (
+             (row_info->pixel_depth >= PNG_MMX_BITDEPTH_THRESHOLD_DEFAULT) &&
+             (row_info->rowbytes >= PNG_MMX_ROWBYTES_THRESHOLD_DEFAULT))
          {
             png_read_filter_row_mmx_up(row_info, row, prev_row);
-         }  //end if UseMMX
+         }
          else
-#endif
          {
-            png_bytep rp;
-            png_bytep pp;
             png_uint_32 i;
-            for (i = 0, rp = row, pp = prev_row;
-               i < row_info->rowbytes; i++, rp++, pp++)
+            png_uint_32 istop = row_info->rowbytes;
+            png_bytep rp = row;
+            png_bytep pp = prev_row;
+
+            for (i = 0; i < istop; ++i)
             {
-                  *rp = (png_byte)(((int)(*rp) + (int)(*pp)) & 0xff);
+               *rp = (png_byte)(((int)(*rp) + (int)(*pp++)) & 0xff);
+               rp++;
             }
-         }  //end !UseMMX
+         }
          break;
       }
+
       case PNG_FILTER_VALUE_AVG:
       {
-#if (UseMMX == 1)
-         if ((row_info->pixel_depth > 8) &&
-             (row_info->rowbytes >= 128) )
+         if (
+             (row_info->pixel_depth >= PNG_MMX_BITDEPTH_THRESHOLD_DEFAULT) &&
+             (row_info->rowbytes >= PNG_MMX_ROWBYTES_THRESHOLD_DEFAULT))
          {
             png_read_filter_row_mmx_avg(row_info, row, prev_row);
-         }  //end if UseMMX
+         }
          else
-#endif
          {
             png_uint_32 i;
             png_bytep rp = row;
@@ -3779,19 +3747,19 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
                   ((int)(*pp++ + *lp++) >> 1)) & 0xff);
                rp++;
             }
-         }  //end !UseMMX
+         }
          break;
       }
+
       case PNG_FILTER_VALUE_PAETH:
       {
-#if (UseMMX == 1)
-         if ((row_info->pixel_depth > 8) &&
-             (row_info->rowbytes >= 128) )
+         if (
+             (row_info->pixel_depth >= PNG_MMX_BITDEPTH_THRESHOLD_DEFAULT) &&
+             (row_info->rowbytes >= PNG_MMX_ROWBYTES_THRESHOLD_DEFAULT))
          {
             png_read_filter_row_mmx_paeth(row_info, row, prev_row);
-         }  //end if UseMMX
+         }
          else
-#endif
          {
             png_uint_32 i;
             png_bytep rp = row;
@@ -3842,13 +3810,15 @@ png_read_filter_row(png_structp png_ptr, png_row_infop row_info, png_bytep
                *rp = (png_byte)(((int)(*rp) + p) & 0xff);
                rp++;
             }
-         }  //end !UseMMX
+         }
          break;
       }
+
       default:
-         png_warning(png_ptr, "Ignoring bad adaptive filter type");
+         png_warning(png_ptr, "Ignoring bad row filter type");
          *row=0;
          break;
    }
 }
-#endif
+
+#endif /* PNG_ASSEMBLER_CODE_SUPPORTED && PNG_USE_PNGVCRD */
