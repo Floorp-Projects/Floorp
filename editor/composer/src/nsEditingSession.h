@@ -46,6 +46,11 @@
 #endif
 
 #include "nsIEditor.h"
+#include "nsITimer.h"
+
+#ifndef __gen_nsIControllers_h__
+#include "nsIControllers.h"
+#endif
 
 #ifndef __gen_nsIDocShell_h__
 #include "nsIDocShell.h"
@@ -59,7 +64,7 @@
 #include "nsIEditingSession.h"
 #endif
 
-
+#include "nsString.h"
 
 #define NS_EDITINGSESSION_CID                            \
 { 0xbc26ff01, 0xf2bd, 0x11d4, { 0xa7, 0x3c, 0xe5, 0xa4, 0xb5, 0xa8, 0xbd, 0xfc } }
@@ -67,6 +72,12 @@
 
 class nsIWebProgress;
 class nsIEditorDocShell;
+class nsIChannel;
+
+#ifndef FULL_EDITOR_HTML_SUPPORT
+class nsEditorParserObserver;
+#endif
+
 
 class nsComposerCommandsUpdater;
 
@@ -88,33 +99,60 @@ public:
   // nsIEditingSession
   NS_DECL_NSIEDITINGSESSION
 
-
 protected:
 
-  nsresult        GetDocShellFromWindow(nsIDOMWindow *inWindow, nsIDocShell** outDocShell);  
-  nsresult        GetEditorDocShellFromWindow(nsIDOMWindow *inWindow, nsIEditorDocShell** outDocShell);
-  nsresult        SetupFrameControllers(nsIDOMWindow *inWindow, PRBool aSetupComposerController);
+  nsresult        GetDocShellFromWindow(nsIDOMWindow *aWindow, 
+                                        nsIDocShell** outDocShell);
+  nsresult        GetEditorDocShellFromWindow(nsIDOMWindow *aWindow, 
+                                              nsIEditorDocShell** outDocShell);
   
-  nsresult        SetEditorOnControllers(nsIDOMWindow *inWindow, nsIEditor* inEditor);
+  nsresult        SetupEditorCommandController(const char *aControllerClassName,
+                                               nsIDOMWindow *aWindow,
+                                               nsISupports *aRefCon,
+                                               PRUint32 *aControllerId);
+  nsresult        SetEditorOnControllers(nsIDOMWindow *aWindow, 
+                                         nsIEditor* aEditor);
+  nsresult        SetRefConOnControllerById(nsIControllers* aControllers, 
+                                            nsISupports* aRefCon,
+                                            PRUint32 aID);
 
   nsresult        PrepareForEditing();
+
+  static void     TimerCallback(nsITimer *aTimer, void *aClosure);
+  nsCOMPtr<nsITimer>  mLoadBlankDocTimer;
   
   // progress load stuff
   nsresult        StartDocumentLoad(nsIWebProgress *aWebProgress);
-  nsresult        EndDocumentLoad(nsIWebProgress *aWebProgress, nsIChannel* aChannel, nsresult aStatus);
-  nsresult        StartPageLoad(nsIWebProgress *aWebProgress);
-  nsresult        EndPageLoad(nsIWebProgress *aWebProgress, nsIChannel* aChannel, nsresult aStatus);
+  nsresult        EndDocumentLoad(nsIWebProgress *aWebProgress, 
+                                  nsIChannel* aChannel, nsresult aStatus);
+  nsresult        StartPageLoad(nsIChannel *aChannel);
+  nsresult        EndPageLoad(nsIWebProgress *aWebProgress, 
+                              nsIChannel* aChannel, nsresult aStatus);
   
   PRBool          NotifyingCurrentDocument(nsIWebProgress *aWebProgress);
 
 protected:
 
-  nsWeakPtr       mEditingShell;      // weak ptr back to our editing (web) shell. It owns us.
-  PRBool          mDoneSetup;         // have we prepared for editing yet?
+  nsWeakPtr       mEditingShell;// weak ptr to the editing (web) shell that owns us
+  PRBool          mDoneSetup;    // have we prepared for editing yet?
 
-  nsComposerCommandsUpdater    *mStateMaintainer;      // we hold the owning ref to this.
-  const char *    mEditorClassString; //we need this to hold onto the type for invoking editor after loading uri  
+  // Used to prevent double creation of editor because nsIWebProgressListener
+  //  receives a STATE_STOP notification before the STATE_START 
+  //  for our document, so we wait for the STATE_START, then STATE_STOP 
+  //  before creating an editor
+  PRBool          mCanCreateEditor; 
+
+  // THE REMAINING MEMBER VARIABLES WILL BECOME A SET WHEN WE EDIT
+  // MORE THAN ONE EDITOR PER EDITING SESSION
+  nsCOMPtr<nsISupports> mStateMaintainer;  // we hold the owning ref to this
+  
+  // Save the editor type so we can create the editor after loading uri
+  nsCString       mEditorType; 
   PRUint32        mEditorFlags;
+  PRUint32        mEditorStatus;
+  PRUint32        mBaseCommandControllerId;
+  PRUint32        mDocStateControllerId;
+  PRUint32        mHTMLCommandControllerId;
 };
 
 

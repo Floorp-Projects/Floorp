@@ -203,7 +203,8 @@ nsXULControllers::GetControllerAt(PRUint32 aIndex, nsIController **_retval)
 NS_IMETHODIMP
 nsXULControllers::AppendController(nsIController *controller)
 {
-  nsXULControllerData*  controllerData = new nsXULControllerData(mCurControllerID++, controller);
+  // This assigns controller IDs starting at 1 so we can use 0 to test if an ID was obtained
+  nsXULControllerData*  controllerData = new nsXULControllerData(++mCurControllerID, controller);
   if (!controllerData) return NS_ERROR_OUT_OF_MEMORY;
   PRBool  appended = mControllers.AppendElement((void *)controllerData);
   NS_ASSERTION(appended, "Appending controller failed");

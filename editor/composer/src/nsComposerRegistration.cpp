@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Michael Judge  <mjudge@netscape.com>
+ *   Charles Manske <cmanske@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,11 +40,11 @@
 
 #include "nsIGenericFactory.h"
 
-#include "nsEditorShell.h"          // for the CID
 #include "nsEditingSession.h"       // for the CID
 #include "nsComposerController.h"   // for the CID
 #include "nsEditorSpellCheck.h"     // for the CID
 #include "nsEditorService.h"
+#include "nsIControllerContext.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -50,11 +52,77 @@
 // NOTE: This creates an instance of objects by using the default constructor
 //
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditingSession)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsComposerController)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorSpellCheck)
+
+
+NS_IMETHODIMP nsEditorDocStateControllerConstructor(nsISupports *aOuter, REFNSIID aIID, 
+                                              void **aResult)
+{
+  static PRBool sDocStateCommandsRegistered = PR_FALSE;
+
+  nsresult rv;
+  nsCOMPtr<nsIControllerContext> context =
+      do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  if (!context)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIControllerCommandManager> composerCommandManager(
+      do_GetService(NS_COMPOSERSCONTROLLERCOMMANDMANAGER_CONTRACTID, &rv));
+
+  if (NS_FAILED(rv))
+    return rv;
+  if (!composerCommandManager)
+    return NS_ERROR_OUT_OF_MEMORY;
+  if (!sDocStateCommandsRegistered)
+  {
+    rv = nsComposerController::RegisterEditorDocStateCommands(composerCommandManager);
+    if (NS_FAILED(rv))
+    {
+      return rv;
+    }
+    sDocStateCommandsRegistered = PR_TRUE;
+  }
+  
+  context->SetControllerCommandManager(composerCommandManager);
+  return context->QueryInterface(aIID, aResult);
+}
+
+NS_IMETHODIMP nsHTMLEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID, 
+                                              void **aResult)
+{
+  static PRBool sHTMLCommandsRegistered = PR_FALSE;
+
+  nsresult rv;
+  nsCOMPtr<nsIControllerContext> context =
+      do_CreateInstance("@mozilla.org/embedcomp/base-command-controller;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  if (!context)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIControllerCommandManager> composerCommandManager(
+      do_GetService(NS_COMPOSERSCONTROLLERCOMMANDMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  if (!composerCommandManager)
+    return NS_ERROR_OUT_OF_MEMORY;
+  if (!sHTMLCommandsRegistered)
+  {
+    rv = nsComposerController::RegisterHTMLEditorCommands(composerCommandManager);
+    if (NS_FAILED(rv))
+    {
+      return rv;
+    }
+    sHTMLCommandsRegistered = PR_TRUE;
+  }
+  
+  context->SetControllerCommandManager(composerCommandManager);
+  return context->QueryInterface(aIID, aResult);
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
@@ -62,13 +130,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorSpellCheck)
 // class name.
 //
 static const nsModuleComponentInfo components[] = {
-    { "Composer Controller", NS_COMPOSERCONTROLLER_CID,
-      "@mozilla.org/editor/composercontroller;1",
-      nsComposerControllerConstructor, },
-    { "Editor Shell Component", NS_EDITORSHELL_CID,
-      "@mozilla.org/editor/editorshell;1", nsEditorShellConstructor, },
-    { "Editor Shell Spell Checker", NS_EDITORSHELL_CID,
-      "@mozilla.org/editor/editorspellcheck;1", nsEditorShellConstructor, },
+    { "Editor DocState Controller", NS_EDITORDOCSTATECONTROLLER_CID,
+      "@mozilla.org/editor/editordocstatecontroller;1",
+      nsEditorDocStateControllerConstructor, },
+    { "HTML Editor Controller", NS_HTMLEDITORCONTROLLER_CID,
+      "@mozilla.org/editor/htmleditorcontroller;1",
+      nsHTMLEditorControllerConstructor, },
     { "Editing Session", NS_EDITINGSESSION_CID,
       "@mozilla.org/editor/editingsession;1", nsEditingSessionConstructor, },
     { "Editor Service", NS_EDITORSERVICE_CID,

@@ -102,4 +102,8 @@ interface nsIControllerCommandManager : nsISupports
 
 #define NS_CONTROLLERCOMMANDMANAGER_CONTRACTID \
  "@mozilla.org/embedcomp/controller-command-manager;1"
+#define NS_COMPOSERSCONTROLLERCOMMANDMANAGER_CONTRACTID \
+"@mozilla.org/embedcomp/composers-controller-command-manager;1"
+#define NS_COMPOSERSCONTROLLERCOMMANDMANAGER_CID \
+{ 0xb0e54f80, 0xc274, 0x4765, { 0x9e, 0x36, 0xd0, 0x0a, 0xcd, 0x38, 0x92, 0x9c } }
 %}

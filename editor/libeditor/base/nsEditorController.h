@@ -42,69 +42,16 @@
 #define NS_EDITORCONTROLLER_CID \
 { 0x26fb965c, 0x9de6, 0x11d3, { 0xbc, 0xcc, 0x0, 0x60, 0xb0, 0xfc, 0x76, 0xbd } }
 
-
-#include "nsIController.h"
-#include "nsIEditorController.h"
-#include "nsIControllerCommand.h"
-#include "nsIControllerCommandManager.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-
-#include "nsHashtable.h"
-#include "nsString.h"
-#include "nsWeakPtr.h"
-
-class nsIEditor;
+class nsIControllerCommandManager;
 
 
 // the editor controller is used for both text widgets, and basic text editing
 // commands in composer. The refCon that gets passed to its commands is an nsIEditor.
 
-class nsEditorController :  public nsIController,
-                            public nsIEditorController,
-                            public nsIInterfaceRequestor,
-                            public nsICommandController
+class nsEditorController 
 {
 public:
-
-          nsEditorController();
-  virtual ~nsEditorController();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-    
-  // nsIController
-  NS_DECL_NSICONTROLLER
-
-  // nsICommandController
-  NS_DECL_NSICOMMANDCONTROLLER
-
-  /** init the controller */
-  NS_IMETHOD Init(nsISupports *aCommandRefCon);
-
-  /** Set the cookie that is passed to commands
-   */
-  NS_IMETHOD SetCommandRefCon(nsISupports *aCommandRefCon);
-
-  // nsIInterfaceRequestor
-  NS_DECL_NSIINTERFACEREQUESTOR
-  
-protected:
-
-   //if editor is null then look to mContent. this is for dual use of window and content
-   //attached controller.
-   nsISupports *mCommandRefCon;
-   
-   nsCOMPtr<nsIControllerCommandManager> mCommandManager;     // our reference to the command manager
-   
-private:
-
-  static nsresult GetEditorCommandManager(nsIControllerCommandManager* *outCommandManager);
   static nsresult RegisterEditorCommands(nsIControllerCommandManager* inCommandManager);
-  
-  // the singleton command manager
-  static nsWeakPtr sEditorCommandManager;       // common editor (i.e. text widget) commands
-   
 };
 
 #endif /* nsEditorController_h__ */

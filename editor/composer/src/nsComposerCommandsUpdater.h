@@ -18,7 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Simon Fraser <sfraser@netscape.com>
+ *   Simon Fraser   <sfraser@netscape.com>
+ *   Michael Judge  <mjudge@netscape.com>
+ *   Charles Manske <cmanske@netscape.com>
  */
 
 
@@ -35,7 +37,6 @@
 #include "nsIDocumentStateListener.h"
 #include "nsITransactionListener.h"
 
-class nsIEditor;
 class nsIDocShell;
 class nsITransactionManager;
 
@@ -80,7 +81,7 @@ public:
                       PRBool aDidMerge, nsresult aMergeResult);
 
 
-  nsresult      SetEditor(nsIEditor* aEditor);
+  nsresult   Init(nsIDOMWindow* aDOMWindow);
 
 protected:
 
@@ -92,21 +93,15 @@ protected:
   
   PRBool        SelectionIsCollapsed();
   nsresult      UpdateDirtyState(PRBool aNowDirty);  
-  nsresult      CallUpdateCommands(const nsAString& aCommand);
+  nsresult      UpdateOneCommand(const char* aCommand);
+  nsresult      UpdateCommandGroup(const nsAString& aCommandGroup);
   
   nsresult      PrimeUpdateTimer();
   void          TimerCallback();
-
-  
-  // this class should not hold references to the editor or editorShell. Doing
-  // so would result in cirular reference chains.
-  
-  nsIEditor*   	mEditor;		 // the HTML editor
-
-  nsIDocShell*  mDocShell;
-  
   nsCOMPtr<nsITimer>  mUpdateTimer;
-    
+
+  nsIDOMWindow* mDOMWindow;  // Weak reference
+  nsIDocShell*  mDocShell;   // Weak reference
   PRInt8        mDirtyState;  
   PRInt8        mSelectionCollapsed;  
   PRPackedBool  mFirstDoOfFirstUndo;
@@ -114,7 +109,7 @@ protected:
 
 };
 
-extern "C" nsresult NS_NewComposerCommandsUpdater(nsIEditor* aEditor, nsISelectionListener** aInstancePtrResult);
+extern "C" nsresult NS_NewComposerCommandsUpdater(nsISelectionListener** aInstancePtrResult);
 
 
 #endif // nsComposerCommandsUpdater_h__
