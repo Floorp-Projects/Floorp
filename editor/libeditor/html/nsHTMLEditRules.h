@@ -65,85 +65,14 @@ protected:
   nsresult ReturnInListItem(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
 
   // helper methods
-  static nsresult GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
-  static nsresult GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
-  static nsresult GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
-  static nsresult GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
-  
   static nsresult GetTabAsNBSPs(nsString *outString);
   static nsresult GetTabAsNBSPsAndSpace(nsString *outString);
-  
-  static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
-  static PRBool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
-  static PRBool IsInlineNode(nsIDOMNode *aNode);
-  static PRBool IsBlockNode(nsIDOMNode *aNode);
-  static nsCOMPtr<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
-  static PRBool HasSameBlockNodeParent(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
-  
-  static PRBool IsTextOrElementNode(nsIDOMNode *aNode);
-  static PRBool IsTextNode(nsIDOMNode *aNode);
-  static PRBool IsEmptyTextNode(nsIDOMNode *aNode);
-  
-  static PRInt32 GetIndexOf(nsIDOMNode *aParent, nsIDOMNode *aChild);
-  static nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset);
-  
+    
   static PRBool IsHeader(nsIDOMNode *aNode);
   static PRBool IsParagraph(nsIDOMNode *aNode);
   static PRBool IsListItem(nsIDOMNode *aNode);
   static PRBool IsBreak(nsIDOMNode *aNode);
- 
-  static nsCOMPtr<nsIDOMNode> NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir);
-  static nsresult GetStartNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset);
-  static nsresult GetEndNodeAndOffset(nsIDOMSelection *aSelection, nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
-  
-  nsresult IsPreformatted(nsIDOMNode *aNode, PRBool *aResult);
-  nsresult IsNextCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
-  nsresult IsPrevCharWhitespace(nsIDOMNode *aParentNode, PRInt32 aOffset, PRBool *aResult);
-
-  nsresult SplitNodeDeep(nsIDOMNode *aNode, nsIDOMNode *aSplitPointParent, PRInt32 aSplitPointOffset);
-  nsresult JoinNodeDeep(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMSelection *aSelection); 
-
-  // data
-  static nsIAtom *sAAtom;
-  static nsIAtom *sAddressAtom;
-  static nsIAtom *sBigAtom;
-  static nsIAtom *sBlinkAtom;
-  static nsIAtom *sBAtom;
-  static nsIAtom *sCiteAtom;
-  static nsIAtom *sCodeAtom;
-  static nsIAtom *sDfnAtom;
-  static nsIAtom *sEmAtom;
-  static nsIAtom *sFontAtom;
-  static nsIAtom *sIAtom;
-  static nsIAtom *sKbdAtom;
-  static nsIAtom *sKeygenAtom;
-  static nsIAtom *sNobrAtom;
-  static nsIAtom *sSAtom;
-  static nsIAtom *sSampAtom;
-  static nsIAtom *sSmallAtom;
-  static nsIAtom *sSpacerAtom;
-  static nsIAtom *sSpanAtom;      
-  static nsIAtom *sStrikeAtom;
-  static nsIAtom *sStrongAtom;
-  static nsIAtom *sSubAtom;
-  static nsIAtom *sSupAtom;
-  static nsIAtom *sTtAtom;
-  static nsIAtom *sUAtom;
-  static nsIAtom *sVarAtom;
-  static nsIAtom *sWbrAtom;
- 
-  static nsIAtom *sH1Atom;
-  static nsIAtom *sH2Atom;
-  static nsIAtom *sH3Atom;
-  static nsIAtom *sH4Atom;
-  static nsIAtom *sH5Atom;
-  static nsIAtom *sH6Atom;
-  static nsIAtom *sParagraphAtom;
-  static nsIAtom *sListItemAtom;
-  static nsIAtom *sBreakAtom;
-  
-  
-  static PRInt32 sInstanceCount;
+   
 };
 
 #endif //nsHTMLEditRules_h__

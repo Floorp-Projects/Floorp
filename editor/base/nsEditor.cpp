@@ -2000,7 +2000,8 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
           rightNodeAsText->SubstringData(0, aOffset, leftText);
           rightNodeAsText->DeleteData(0, aOffset);
           // fix left node
-          leftNodeAsText->SetData(leftText);          
+          leftNodeAsText->SetData(leftText);
+          // moose          
         }
         else
         {  // otherwise it's an interior node, so shuffle around the children
@@ -3177,6 +3178,31 @@ nsEditor::GetTag(nsIDOMNode *aNode)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// GetTagString: digs out string for the tag of this node
+//                    
+nsresult 
+nsEditor::GetTagString(nsIDOMNode *aNode, nsString& outString)
+{
+  nsCOMPtr<nsIAtom> atom;
+  
+  if (!aNode) 
+  {
+    NS_NOTREACHED("null node passed to nsEditor::GetTag()");
+    return NS_ERROR_NULL_POINTER;
+  }
+  
+  atom = GetTag(aNode);
+  if (atom)
+  {
+    atom->ToString(outString);
+    return NS_OK;
+  }
+  
+  return NS_ERROR_FAILURE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // NodesSameType: do these nodes have the same tag?
 //                    
 PRBool 
@@ -3205,9 +3231,7 @@ nsEditor::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
 PRBool
 nsEditor::IsBlockNode(nsIDOMNode *aNode)
 {
-  PRBool retVal = PR_FALSE;
-  IsNodeInline(aNode, retVal);
-  return retVal;
+  return !IsInlineNode(aNode);
 }
 
 
@@ -3217,7 +3241,9 @@ nsEditor::IsBlockNode(nsIDOMNode *aNode)
 PRBool
 nsEditor::IsInlineNode(nsIDOMNode *aNode)
 {
-  return !IsBlockNode(aNode);
+  PRBool retVal = PR_FALSE;
+  IsNodeInline(aNode, retVal);
+  return retVal;
 }
 
 
@@ -3640,8 +3666,8 @@ nsEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
 //                split.
 nsresult
 nsEditor::SplitNodeDeep(nsIDOMNode *aNode, 
-                               nsIDOMNode *aSplitPointParent, 
-                               PRInt32 aSplitPointOffset)
+                        nsIDOMNode *aSplitPointParent, 
+                        PRInt32 aSplitPointOffset)
 {
   if (!aNode || !aSplitPointParent) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMNode> nodeToSplit = do_QueryInterface(aSplitPointParent);
@@ -3676,8 +3702,8 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
 //                appropriate.  
 nsresult
 nsEditor::JoinNodeDeep(nsIDOMNode *aLeftNode, 
-                              nsIDOMNode *aRightNode,
-                              nsIDOMSelection *aSelection) 
+                       nsIDOMNode *aRightNode,
+                       nsIDOMSelection *aSelection) 
 {
   if (!aLeftNode || !aRightNode) return NS_ERROR_NULL_POINTER;
 
