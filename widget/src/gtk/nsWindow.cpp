@@ -3395,6 +3395,7 @@ nsWindow::OnDragDropSignal        (GtkWidget        *aWidget,
   InitDragEvent(event);
 
   event.message = NS_DRAGDROP_DROP;
+  event.widget = innerMostWidget;
   event.point.x = retx;
   event.point.y = rety;
 

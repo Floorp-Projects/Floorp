@@ -1901,6 +1901,7 @@ nsWindow::OnDragDropEvent(GtkWidget *aWidget,
     innerMostWidget->DispatchEvent(&event, status);
 
     event.message = NS_DRAGDROP_DROP;
+    event.widget = innerMostWidget;
     event.point.x = retx;
     event.point.y = rety;
 
