@@ -75,7 +75,7 @@ function find()
     var findTitle = bundle.stringBundle.formatStringFromName(
                       "ShortFindTitle", [gSearchField.value], 1);
     var bmks = Components.classes[BMARKS_CONTRACTID].getService(nsIBookmarksService);
-    bmks.AddBookmark(searchURI, findTitle, bmks.BOOKMARK_FIND_TYPE, null);
+    bmks.addBookmarkImmediately(searchURI, findTitle, bmks.BOOKMARK_FIND_TYPE, null);
   }
 
   return true;
