@@ -702,7 +702,28 @@ nsresult
 GConfProxy::GetIntPref(const char *aMozKey, PRInt32 *retval)
 {
     NS_ENSURE_TRUE(mInitialized, NS_ERROR_FAILURE);
-    *retval = GConfClientGetInt(mGConfClient, MozKey2GConfKey(aMozKey), NULL);
+    if (strcmp (aMozKey, "network.proxy.type") == 0) {
+	gchar *str;
+
+	str = GConfClientGetString(mGConfClient,
+	                           MozKey2GConfKey (aMozKey), NULL);
+
+	if (str) {
+		if (strcmp (str, "manual") == 0)
+			*retval = 1;
+		else if (strcmp (str, "auto") == 0)
+			*retval = 2;
+		else
+			*retval = 0;
+
+		g_free (str);
+	} else
+		*retval = 0;
+    } else {
+    	*retval = GConfClientGetInt(mGConfClient, 
+	                            MozKey2GConfKey(aMozKey), NULL);
+    }
+
     return NS_OK;
 }
 
