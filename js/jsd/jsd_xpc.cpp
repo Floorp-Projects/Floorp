@@ -29,6 +29,7 @@
  * file under either the MPL or the GPL.
  *
  * Contributor(s):
+ *   Robert Ginda, <rginda@netscape.com>
  *
  */
 
@@ -41,12 +42,21 @@
 #include "jsdebug.h"
 #include "prmem.h"
 
+/* XXX this stuff is used by NestEventLoop, a temporary hack to be refactored
+ * later */
+#include "nsWidgetsCID.h"
+#include "nsIAppShell.h"
+#include "nsIJSContextStack.h"
+
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+
 const char jsdServiceContractID[] = "@mozilla.org/js/jsd/debugger-service;1";
 
 /*******************************************************************************
  * reflected jsd data structures
  *******************************************************************************/
 
+/* Contexts */
 NS_IMPL_THREADSAFE_ISUPPORTS1(jsdContext, jsdIContext); 
 
 NS_IMETHODIMP
@@ -59,7 +69,64 @@ jsdContext::GetJSDContext(JSDContext **_rval)
     return NS_OK;
 }
 
+/* Objects */
+NS_IMPL_THREADSAFE_ISUPPORTS1(jsdObject, jsdIObject); 
+
+NS_IMETHODIMP
+jsdObject::GetJSDContext(JSDContext **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = mCx;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdObject::GetJSDObject(JSDObject **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = mObject;
+    return NS_OK;
+}
+
+/* Properties */
+NS_IMPL_THREADSAFE_ISUPPORTS1(jsdProperty, jsdIProperty); 
+
+NS_IMETHODIMP
+jsdProperty::GetJSDContext(JSDContext **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = mCx;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdProperty::GetJSDProperty(JSDProperty **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = mProperty;
+    return NS_OK;
+}
+
+/* Scripts */
 NS_IMPL_THREADSAFE_ISUPPORTS1(jsdScript, jsdIScript); 
+
+NS_IMETHODIMP
+jsdScript::GetJSDContext(JSDContext **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = mCx;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 jsdScript::GetJSDScript(JSDScript **_rval)
@@ -77,27 +144,33 @@ jsdScript::GetIsActive(PRBool *_rval)
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
+    JSD_LockScriptSubsystem(mCx);
     *_rval = JSD_IsActiveScript(mCx, mScript);
+    JSD_UnlockScriptSubsystem(mCx);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-jsdScript::GetFileName(PRUnichar **_rval)
+jsdScript::GetFileName(char **_rval)
 {
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
-    *_rval = nsCString(JSD_GetScriptFilename(mCx, mScript)).ToNewUnicode();
+    JSD_LockScriptSubsystem(mCx);
+    *_rval = nsCString(JSD_GetScriptFilename(mCx, mScript)).ToNewCString();
+    JSD_UnlockScriptSubsystem(mCx);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-jsdScript::GetFunctionName(PRUnichar **_rval)
+jsdScript::GetFunctionName(char **_rval)
 {
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
-    *_rval = nsCString(JSD_GetScriptFunctionName(mCx, mScript)).ToNewUnicode();
+    JSD_LockScriptSubsystem(mCx);
+    *_rval = nsCString(JSD_GetScriptFunctionName(mCx, mScript)).ToNewCString();
+    JSD_UnlockScriptSubsystem(mCx);
     return NS_OK;
 }
 
@@ -107,7 +180,9 @@ jsdScript::GetBaseLineNumber(PRUint32 *_rval)
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
+    JSD_LockScriptSubsystem(mCx);
     *_rval = JSD_GetScriptBaseLineNumber(mCx, mScript);
+    JSD_UnlockScriptSubsystem(mCx);
     return NS_OK;
 }
 
@@ -117,11 +192,159 @@ jsdScript::GetLineExtent(PRUint32 *_rval)
     if (!_rval)
         return NS_ERROR_NULL_POINTER;
     
+    JSD_LockScriptSubsystem(mCx);
     *_rval = JSD_GetScriptLineExtent(mCx, mScript);
+    JSD_UnlockScriptSubsystem(mCx);
     return NS_OK;
 }
 
+/* Stack Frames */
+NS_IMPL_THREADSAFE_ISUPPORTS1(jsdStackFrame, jsdIStackFrame); 
+
+NS_IMETHODIMP
+jsdStackFrame::GetJSDContext(JSDContext **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = mCx;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::GetJSDThreadState(JSDThreadState **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = mThreadState;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::GetJSDStackFrameInfo(JSDStackFrameInfo **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = mStackFrameInfo;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::GetCallingFrame(jsdIStackFrame **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDStackFrameInfo *sfi = JSD_GetCallingStackFrame (mCx, mThreadState,
+                                                       mStackFrameInfo);
+    *_rval = jsdStackFrame::FromPtr (mCx, mThreadState, sfi);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::GetScript(jsdIScript **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+
+    JSDScript *script = JSD_GetScriptForStackFrame (mCx, mThreadState,
+                                                    mStackFrameInfo);
+    *_rval = jsdScript::FromPtr (mCx, script);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::GetPc(PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = JSD_GetPCForStackFrame (mCx, mThreadState, mStackFrameInfo);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::GetCallee(jsdIValue **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDValue *jsdv = JSD_GetCallObjectForStackFrame (mCx, mThreadState,
+                                                     mStackFrameInfo);
+    
+    *_rval = jsdValue::FromPtr (mCx, jsdv);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::GetScope(jsdIValue **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDValue *jsdv = JSD_GetScopeChainForStackFrame (mCx, mThreadState,
+                                                     mStackFrameInfo);
+    
+    *_rval = jsdValue::FromPtr (mCx, jsdv);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdStackFrame::GetThisValue(jsdIValue **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDValue *jsdv = JSD_GetThisForStackFrame (mCx, mThreadState,
+                                               mStackFrameInfo);
+    
+    *_rval = jsdValue::FromPtr (mCx, jsdv);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+jsdStackFrame::Eval (const nsAReadableString &bytes, const char *fileName,
+                     PRUint32 line, jsdIValue **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+
+    jsval jv;
+
+    const nsSharedBufferHandle<PRUnichar> *h = bytes.GetSharedBufferHandle();
+    const PRUnichar *char_bytes = h->DataStart();
+
+    if (!JSD_EvaluateUCScriptInStackFrame (mCx, mThreadState, mStackFrameInfo,
+                                           char_bytes, bytes.Length(), fileName,
+                                           line, &jv))
+        return NS_ERROR_FAILURE;
+    
+    JSDValue *jsdv = JSD_NewValue (mCx, jv);
+    *_rval = jsdValue::FromPtr (mCx, jsdv);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}        
+
+/* Thread States */
 NS_IMPL_THREADSAFE_ISUPPORTS1(jsdThreadState, jsdIThreadState); 
+
+NS_IMETHODIMP
+jsdThreadState::GetJSDContext(JSDContext **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = mCx;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 jsdThreadState::GetJSDThreadState(JSDThreadState **_rval)
@@ -130,6 +353,287 @@ jsdThreadState::GetJSDThreadState(JSDThreadState **_rval)
         return NS_ERROR_NULL_POINTER;
     
     *_rval = mThreadState;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdThreadState::GetFrameCount (PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = JSD_GetCountOfStackFrames (mCx, mThreadState);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdThreadState::GetTopFrame (jsdIStackFrame **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDStackFrameInfo *sfi = JSD_GetStackFrame (mCx, mThreadState);
+    
+    *_rval = jsdStackFrame::FromPtr (mCx, mThreadState, sfi);
+    NS_IF_ADDREF (*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdThreadState::GetPendingException(jsdIValue **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDValue *jsdv = JSD_GetException (mCx, mThreadState);
+    
+    *_rval = jsdValue::FromPtr (mCx, jsdv);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdThreadState::SetPendingException(jsdIValue *aException)
+{
+    JSDValue *jsdv;
+    
+    nsresult rv = aException->GetJSDValue (&jsdv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
+    
+    if (!JSD_SetException (mCx, mThreadState, jsdv))
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}
+
+/* Thread States */
+NS_IMPL_THREADSAFE_ISUPPORTS1(jsdValue, jsdIValue);
+
+NS_IMETHODIMP
+jsdValue::GetJSDContext(JSDContext **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = mCx;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetJSDValue (JSDValue **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = mValue;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetIsFunction (PRBool *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = JSD_IsValueFunction (mCx, mValue);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetIsNative (PRBool *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = JSD_IsValueNative (mCx, mValue);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetIsNumber (PRBool *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = JSD_IsValueNumber (mCx, mValue);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetIsPrimitive (PRBool *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = JSD_IsValuePrimitive (mCx, mValue);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetJsType (PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+
+    /* XXX surely this can be done better. */
+    if (JSD_IsValueDouble(mCx, mValue))
+        *_rval = TYPE_DOUBLE;
+    else if (JSD_IsValueInt(mCx, mValue))
+        *_rval = TYPE_INT;
+    else if (JSD_IsValueFunction(mCx, mValue))
+        *_rval = TYPE_FUNCTION;
+    else if (JSD_IsValueNull(mCx, mValue))
+        *_rval = TYPE_NULL;
+    else if (JSD_IsValueObject(mCx, mValue))
+        *_rval = TYPE_OBJECT;
+    else if (JSD_IsValueString(mCx, mValue))
+        *_rval = TYPE_STRING;
+    else if (JSD_IsValueVoid(mCx, mValue))
+        *_rval = TYPE_VOID;
+    else
+        return NS_ERROR_FAILURE;    
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetJsPrototype (jsdIValue **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+
+    JSDValue *jsdv = JSD_GetValuePrototype (mCx, mValue);
+    *_rval = jsdValue::FromPtr (mCx, jsdv);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetJsParent (jsdIValue **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+
+    JSDValue *jsdv = JSD_GetValueParent (mCx, mValue);
+    *_rval = jsdValue::FromPtr (mCx, jsdv);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetJsClassName(char **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = nsCString(JSD_GetValueClassName(mCx, mValue)).ToNewCString();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetJsConstructor (jsdIValue **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+
+    JSDValue *jsdv = JSD_GetValueConstructor (mCx, mValue);
+    *_rval = jsdValue::FromPtr (mCx, jsdv);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetJsFunctionName(char **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = nsCString(JSD_GetValueFunctionName(mCx, mValue)).ToNewCString();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetBooleanValue(PRBool *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = JSD_GetValueBoolean (mCx, mValue);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetDoubleValue(double *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    _rval = JSD_GetValueDouble (mCx, mValue);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetIntValue(PRInt32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    *_rval = JSD_GetValueInt (mCx, mValue);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetObjectValue(jsdIObject **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSDObject *obj;
+    obj = JSD_GetObjectForValue (mCx, mValue);
+    *_rval = jsdObject::FromPtr (mCx, obj);
+    NS_IF_ADDREF(*_rval);
+    return NS_OK;
+}
+    
+NS_IMETHODIMP
+jsdValue::GetStringValue(char **_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    JSString *jstr_val = JSD_GetValueString(mCx, mValue);
+    *_rval = nsCString(JS_GetStringBytes(jstr_val)).ToNewCString();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetProperties (jsdIProperty ***propArray, PRUint32 *length)
+{
+    /* XXX how do I allocate this in an XPCOM way? */
+    *propArray = 0;
+    *length = 0;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::GetProperty (const char *name, jsdIProperty **_rval)
+{
+    JSContext *cx = JSD_GetDefaultJSContext (mCx);
+    /* not rooting this */
+    JSString *jstr_name = JS_NewStringCopyZ (cx, name);
+
+    JSDProperty *prop = JSD_GetValueProperty (mCx, mValue, jstr_name);
+    
+    *_rval = jsdProperty::FromPtr (mCx, prop);
+    NS_IF_ADDREF (*_rval);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdValue::Refresh()
+{
+    JSD_RefreshValue (mCx, mValue);
     return NS_OK;
 }
 
@@ -151,13 +655,13 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
     NS_PRECONDITION (callerdata, "no callerdata for jsds_ExecutionHookProc.");
     
     jsdIExecutionHook *hook = NS_STATIC_CAST(jsdIExecutionHook *, callerdata);
-    nsISupports *is_rv = 0;
+    jsdIValue *js_rv = 0;
     
     PRUint32 hook_rv = JSD_HOOK_RETURN_CONTINUE;
     
     hook->OnExecute (jsdContext::FromPtr(jsdc),
-                     jsdThreadState::FromPtr(jsdthreadstate),
-                     type, &is_rv, &hook_rv);
+                     jsdThreadState::FromPtr(jsdc, jsdthreadstate),
+                     type, &js_rv, &hook_rv);
     return hook_rv;
 }
 
@@ -200,6 +704,71 @@ jsdService::Init (void)
     
     return NS_OK;
 }
+
+NS_IMETHODIMP
+jsdService::EnterNestedEventLoop (PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+    
+    nsCOMPtr<nsIAppShell> appShell(do_CreateInstance(kAppShellCID));
+    NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
+
+    appShell->Create(0, nsnull);
+    appShell->Spinup();
+    // Store locally so it doesn't die on us
+
+    nsCOMPtr<nsIJSContextStack> 
+        stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
+    nsresult rv = NS_OK;
+    PRUint32 nestLevel = ++mNestedLoopLevel;
+    
+    if(stack && NS_SUCCEEDED(stack->Push(nsnull)))
+    {
+        while(NS_SUCCEEDED(rv) && mNestedLoopLevel >= nestLevel)
+        {
+            void* data;
+            PRBool isRealEvent;
+            //PRBool processEvent;
+            
+            rv = appShell->GetNativeEvent(isRealEvent, data);
+            if(NS_SUCCEEDED(rv))
+            {
+                appShell->DispatchNativeEvent(isRealEvent, data);
+            }
+        }
+        JSContext* cx;
+        stack->Pop(&cx);
+        NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
+    }
+    else
+        rv = NS_ERROR_FAILURE;
+    
+    appShell->Spindown();
+
+    NS_ASSERTION (mNestedLoopLevel <= nestLevel,
+                  "nested event didn't unwind properly");
+    if (mNestedLoopLevel == nestLevel)
+        --mNestedLoopLevel;
+
+    *_rval = mNestedLoopLevel;
+    return rv;
+}
+
+NS_IMETHODIMP
+jsdService::ExitNestedEventLoop (PRUint32 *_rval)
+{
+    if (!_rval)
+        return NS_ERROR_NULL_POINTER;
+
+    if (mNestedLoopLevel > 0)
+        --mNestedLoopLevel;
+    else
+        return NS_ERROR_FAILURE;
+
+    *_rval = mNestedLoopLevel;    
+    return NS_OK;
+}    
 
 /* hook attribute get/set functions */
 
