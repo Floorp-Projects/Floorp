@@ -72,7 +72,9 @@ NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
   return nsDocument::QueryInterface(aIID, aInstancePtr);
 }
 
-void nsHTMLDocument::LoadURL(nsIURL* aURL, nsIPostData* aPostData)
+NS_IMETHODIMP
+nsHTMLDocument::LoadURL(nsIURL* aURL, nsIStreamListener* aListener,
+                        nsIPostData* aPostData)
 {
   // Delete references to style sheets - this should be done in superclass...
   PRInt32 index = mStyleSheets.Count();
@@ -123,12 +125,13 @@ void nsHTMLDocument::LoadURL(nsIURL* aURL, nsIPostData* aPostData)
       }
 
       parser->SetContentSink(sink);
-      parser->Parse(aURL);
+      parser->Parse(aURL, aListener);
       NS_RELEASE(sink);
     }
     NS_RELEASE(parser);
   }
-  //XXX return NS_OK;
+
+  return rv;
 }
 
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENTOBSERVER_IID);
