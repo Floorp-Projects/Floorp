@@ -95,7 +95,7 @@ static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
 #define MSG_HASH_SIZE 512
 
-const PRInt32 kMaxHdrsInCache = 512;  // this will be used on discovery, since we don't know total, and after loading (and sorting), on a new header, we'll use this.
+const PRInt32 kMaxHdrsInCache = 512;  // this will be used on discovery, since we don't know total
 
 // special keys
 static const nsMsgKey kAllMsgHdrsTableKey = 1; 
@@ -4258,5 +4258,15 @@ NS_IMETHODIMP nsMsgDatabase::GetDefaultSortType(nsMsgViewSortTypeValue *aDefault
 {
   NS_ENSURE_ARG_POINTER(aDefaultSortType);
   *aDefaultSortType = nsMsgViewSortType::byDate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDatabase::ResetHdrCacheSize(PRUint32 aSize)
+{
+  if (m_cacheSize > aSize) 
+  {  
+    m_cacheSize = aSize;
+    ClearHdrCache(PR_FALSE);
+  }
   return NS_OK;
 }

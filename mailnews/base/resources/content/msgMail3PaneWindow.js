@@ -56,6 +56,7 @@ var gHaveLoadedMessage;
 
 var gDisplayStartupPage = false;
 
+
 // the folderListener object
 var folderListener = {
     OnItemAdded: function(parentItem, item, view) { },
@@ -103,7 +104,6 @@ var folderListener = {
                var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
                if(msgFolder) {
                  msgFolder.endFolderLoading();
-                 
                  // suppress command updating when rerooting the folder
                  // when rerooting, we'll be clearing the selection
                  // which will cause us to update commands.
@@ -112,6 +112,10 @@ var folderListener = {
                  }
                  if (gRerootOnFolderLoad)
                    RerootFolder(uri, msgFolder, gCurrentLoadingFolderViewType, gCurrentLoadingFolderViewFlags, gCurrentLoadingFolderSortType, gCurrentLoadingFolderSortOrder);
+
+                 var db = msgFolder.getMsgDatabase(msgWindow);
+                 if (db) 
+                   db.resetHdrCacheSize(100);
                  
                  if (gDBView) {
                    gDBView.suppressCommandUpdating = false;
@@ -560,18 +564,7 @@ function loadStartFolder(initialUri)
         {
             // Perform biff on the server to check for new mail, except for imap
             if (defaultServer.type != "imap")
-            {
-               var localFolder = inboxFolder.QueryInterface(Components.interfaces.nsIMsgLocalMailFolder);
-               if (localFolder)
-               { 
-                   if (!localFolder.parsingInbox)
-                       defaultServer.PerformBiff();
-                   else
-                       localFolder.checkForNewMessagesAfterParsing = true;
-               }              
-               else  //it can be only nntp
-                   defaultServer.PerformBiff();
-            }
+              defaultServer.PerformBiff();         
         } 
 
         // because the "open" state persists, we'll call
