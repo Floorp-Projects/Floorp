@@ -1835,6 +1835,281 @@ FoundFont:
     return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsRenderingContextWin::GetWidth(const PRUnichar *aString,
+                                PRInt32          aLength,
+                                PRInt32          aAvailWidth,
+                                PRInt32*         aBreaks,
+                                PRInt32          aNumBreaks,
+                                nscoord&         aWidth,
+                                PRInt32&         aNumCharsFit,
+                                PRInt32*         aFontID)
+{
+  NS_PRECONDITION(aBreaks[aNumBreaks - 1] == aLength, "invalid break array");
+
+  if (nsnull != mFontMetrics) {
+    // If we need to back up this state represents the last place we could
+    // break. We can use this to avoid remeasuring text
+    struct PrevBreakState {
+      PRInt32   mBreakIndex;
+      nscoord   mWidth;
+
+      PrevBreakState() {
+        mBreakIndex = -1;  // not known (hasn't been computed)
+        mWidth = 0;
+      }
+    };
+
+    PRUnichar*          pstr = (PRUnichar *)(const PRUnichar *)aString;
+    nsFontMetricsWin*   metrics = (nsFontMetricsWin*) mFontMetrics;
+    nsFontWin*          prevFont = nsnull;
+    PrevBreakState      prevBreakState;
+    
+    // Initialize OUT parameter
+    aNumCharsFit = 0;
+
+    // Setup the font and foreground color
+    SetupFontAndColor();
+
+    // Iterate each character in the string and determine which font to use
+    HFONT     selectedFont = mCurrFont;
+    nscoord   width = 0;
+    PRInt32   start = 0;
+    PRInt32   i = 0;
+    PRBool    allDone = PR_FALSE;
+    while (!allDone) {
+      nsFontWin*        currFont = nsnull;
+      nsFontMetricsWin* fontMetricsWin;
+      nscoord           aveCharWidth;
+
+      // First search the fonts we already have loaded
+      nsFontWin** font = metrics->mLoadedFonts;
+      nsFontWin** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      while (font < end) {
+        if (FONT_HAS_GLYPH((*font)->mMap, pstr[i])) {
+          currFont = *font;
+          goto FoundFont;
+        }
+        font++;  // try the next font
+      }
+
+      // No match in the already loaded fonts. Find a new font
+      currFont = metrics->FindFont(mDC, pstr[i]);
+
+     FoundFont:
+      // See if this is the same font we found for the previous character.
+      // If so, then keep accumulating characters
+      if (prevFont) {
+        if (currFont != prevFont) {
+          // The font has changed. We need to measure the existing text using
+          // the previous font
+          goto MeasureText;
+        }
+      }
+      else {
+        prevFont = currFont;  // remember this font
+      }
+
+      // Advance to the next character
+      if (++i >= aLength) {
+        allDone = PR_TRUE;
+        goto MeasureText;  // measure any remaining text
+      }
+      continue;
+
+     MeasureText:
+      // Make sure the font is selected
+      if (prevFont->mFont != selectedFont) {
+        ::SelectObject(mDC, prevFont->mFont);
+        selectedFont = prevFont->mFont;
+      }
+
+      // Get the average character width
+      fontMetricsWin = (nsFontMetricsWin*)mFontMetrics;
+      fontMetricsWin->GetAveCharWidth(aveCharWidth);
+      while (start < i) {
+        // Estimate how many characters will fit. Do that by diving the available
+        // space by the average character width
+        PRInt32 estimatedNumChars = (aAvailWidth - width) / aveCharWidth;
+
+        // Make sure the estimated number of characters is at least 1
+        if (estimatedNumChars < 1) {
+          estimatedNumChars = 1;
+        }
+
+        // Find the nearest break offset
+        PRInt32 estimatedBreakOffset = start + estimatedNumChars;
+        PRInt32 breakIndex = -1;  // not computed
+        PRBool  inMiddleOfSegment = PR_FALSE;
+        nscoord numChars;
+
+        // Avoid scanning the break array in the case where we think all
+        // the text should fit
+        if (i <= estimatedBreakOffset) {
+          // Everything should fit
+          numChars = i - start;
+
+        } else {
+          // Find the nearest place to break that is less than or equal to
+          // the estimated break offset
+          breakIndex = prevBreakState.mBreakIndex;
+          while (aBreaks[breakIndex + 1] <= estimatedBreakOffset) {
+            breakIndex++;
+          }
+          NS_ASSERTION(aBreaks[breakIndex] <= estimatedBreakOffset, "bad break index");
+
+          // We found a place to break that is before the estimated break
+          // offset. Where we break depends on whether the text crosses a
+          // segment boundary
+          if (start < aBreaks[breakIndex]) {
+            // The text crosses at least one segment boundary so measure to the
+            // break point just before the estimated break offset
+            numChars = aBreaks[breakIndex] - start;
+
+          } else {
+            // See whether there is another segment boundary between this one
+            // and the end of the text
+            if ((breakIndex < (aNumBreaks - 1)) && (aBreaks[breakIndex] < i)) {
+              breakIndex++;
+              numChars = aBreaks[breakIndex] - start;
+
+            } else {
+              NS_ASSERTION(i != aBreaks[breakIndex], "don't expect to be at segment boundary");
+
+              // The text is all within the same segment
+              numChars = i - start;
+
+              // Remember we're in the middle of a segment and not in between
+              // two segments
+              inMiddleOfSegment = PR_TRUE;
+            }
+          }
+        }
+
+        // Measure the text
+        PRInt32 pxWidth;
+        nscoord twWidth;
+        if ((1 == numChars) && (pstr[start] == ' ')) {
+          fontMetricsWin->GetSpaceWidth(twWidth);
+
+        } else {
+          pxWidth = prevFont->GetWidth(mDC, &pstr[start], numChars);
+          twWidth = NSToCoordRound(float(pxWidth) * mP2T);
+        }
+
+        // See if the text fits
+        PRBool  textFits = (twWidth + width) <= aAvailWidth;
+
+        // If the text fits then update the width and the number of
+        // characters that fit
+        if (textFits) {
+          aNumCharsFit += numChars;
+          width += twWidth;
+
+          // If we computed the break index and we're not in the middle
+          // of a segment then this is a spot that we can back up to if
+          // we need to so remember this state
+          if ((breakIndex != -1) && !inMiddleOfSegment) {
+            prevBreakState.mBreakIndex = breakIndex;
+            prevBreakState.mWidth = width;
+          }
+
+        } else {
+          // The text didn't fit. If we're out of room then we're all done
+          allDone = PR_TRUE;
+          
+          // See if we can just back up to the previous saved state and not
+          // have to measure any text
+          if (prevBreakState.mBreakIndex != -1) {
+            PRBool  canBackup;
+
+            // If we're in the middle of a word then the break index
+            // must be the same if we can use it. If we're at a segment
+            // boundary, then if the saved state is for the previous
+            // break index then we can use it
+            if (inMiddleOfSegment) {
+              canBackup = prevBreakState.mBreakIndex == breakIndex;
+            } else {
+              canBackup = prevBreakState.mBreakIndex == (breakIndex - 1);
+            }
+
+            if (canBackup) {
+              aNumCharsFit = aBreaks[prevBreakState.mBreakIndex];
+              width = prevBreakState.mWidth;
+              break;
+            }
+          }
+          
+          i = start + numChars;
+          // Find the break index just before the end of the text
+          if (breakIndex == -1) {
+            breakIndex = 0;
+            while (aBreaks[breakIndex + 1] < i) {
+              breakIndex++;
+            }
+          }
+
+          if (0 == breakIndex) {
+            // There's no place to back up to so even though the text doesn't fit
+            // return it anyway
+            aNumCharsFit += numChars;
+            width += twWidth;
+            break;
+          }
+
+          // Repeatedly back up until we get to where the text fits or we're
+          // all the way back to the first word
+          width += twWidth;
+          while ((breakIndex > 0) && (width > aAvailWidth)) {
+            start = aBreaks[breakIndex];
+            numChars = i - start;
+            if ((1 == numChars) && (pstr[start] == ' ')) {
+              fontMetricsWin->GetSpaceWidth(twWidth);
+
+            } else {
+              pxWidth = prevFont->GetWidth(mDC, &pstr[start], numChars);
+              twWidth = NSToCoordRound(float(pxWidth) * mP2T);
+            }
+
+            width -= twWidth;
+            aNumCharsFit = start;
+            breakIndex--;
+            i = start;
+          }
+        }
+
+        start += numChars;
+      }
+
+      // We're done measuring that run
+      if (!allDone) {
+        prevFont = currFont;
+        NS_ASSERTION(start == i, "internal error");
+  
+        // Advance to the next character
+        if (++i >= aLength) {
+          allDone = PR_TRUE;
+        }
+      }
+    }
+
+    aWidth = width;
+
+    if (selectedFont != mCurrFont) {
+      // Restore the font
+      ::SelectObject(mDC, mCurrFont);
+    }
+
+    if (nsnull != aFontID) {
+      *aFontID = 0;
+    }
+
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
                                                   nscoord aX, nscoord aY,
                                                   const nscoord* aSpacing)
