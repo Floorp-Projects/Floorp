@@ -520,6 +520,9 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
   NS_ASSERTION(! mScannerInited, "already have scanner");
 
   mScanner.Init(aInput, aSheetURI, aLineNumber);
+#ifdef DEBUG
+  mScannerInited = PR_TRUE;
+#endif
   mBaseURL = aBaseURI;
 
   mHavePushBack = PR_FALSE;
