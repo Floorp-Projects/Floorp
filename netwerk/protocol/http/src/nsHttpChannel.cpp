@@ -33,6 +33,8 @@
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIFileStream.h"
+#include "nsCExternalHandlerService.h"
+#include "nsIMIMEService.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsString2.h"
@@ -1555,7 +1557,7 @@ nsHttpChannel::GetCurrentPath(char **path)
 // nsHttpChannel::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS9(nsHttpChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS10(nsHttpChannel,
                               nsIRequest,
                               nsIChannel,
                               nsIRequestObserver,
@@ -1564,6 +1566,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS9(nsHttpChannel,
                               nsIInterfaceRequestor,
                               nsIProgressEventSink,
                               nsICachingChannel,
+                              nsIUploadChannel,
                               nsICacheListener)
 
 //-----------------------------------------------------------------------------
@@ -2021,7 +2024,7 @@ nsHttpChannel::GetUploadStream(nsIInputStream **stream)
 }
 
 NS_IMETHODIMP
-nsHttpChannel::SetUploadStream(nsIInputStream *stream)
+nsHttpChannel::SetUploadStream(nsIInputStream *stream, const char* contentType, PRInt32 contentLength)
 {
     mUploadStream = stream;
     if (mUploadStream)
@@ -2029,6 +2032,33 @@ nsHttpChannel::SetUploadStream(nsIInputStream *stream)
     else
         mRequestHead.SetMethod(nsHttp::Get);
     return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsHttpChannel::SetUploadFile(nsIFile *file, const char* contentType, PRInt32 contentLength)
+{
+    if (!file) return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+    // Grab a file input stream
+    nsCOMPtr<nsIInputStream> stream;
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), file);    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    // get the content type
+    if (contentType)
+        return SetUploadStream(stream, contentType, contentLength); 
+
+    nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString mimeType;
+    rv = MIMEService->GetTypeFromFile(file, getter_Copies(mimeType));
+    if (NS_FAILED(rv)) return rv;
+
+    // set the stream on ourselves
+    return SetUploadStream(stream, mimeType, contentLength); 
 }
 
 NS_IMETHODIMP

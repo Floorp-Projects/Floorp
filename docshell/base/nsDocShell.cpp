@@ -66,6 +66,7 @@
 #include "nsEscape.h"
 
 // Interfaces Needed
+#include "nsIUploadChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIDataChannel.h"
 #include "nsIProgressEventSink.h"
@@ -4519,7 +4520,11 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
                 postDataRandomAccess->Seek(PR_SEEK_SET, 0);
             }
 
-            httpChannel->SetUploadStream(aPostData);
+            nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
+            NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
+
+            // we really need to have a content type associated with this stream!!
+            uploadChannel->SetUploadStream(aPostData,nsnull, -1);
             /* If there is a valid postdata *and* it is a History Load,
              * set up the cache key on the channel, to retrieve the
              * data only from the cache. When there is a postdata
@@ -4993,6 +4998,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     // Get the post data from the channel
     nsCOMPtr<nsIInputStream> inputStream;
     if (aChannel) {
+
         nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
 
         if (httpChannel) {

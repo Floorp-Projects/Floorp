@@ -29,7 +29,7 @@
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 
-#include "nsIFTPChannel.h"
+#include "nsIUploadChannel.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -159,10 +159,9 @@ main(int argc, char* argv[])
     rv = ioService->NewChannelFromURI(uri, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
 	
-    // since we are testing now, we know it is a ftp url.  
     // QI and set the upload stream
-    nsCOMPtr<nsIFTPChannel> ftpChannel(do_QueryInterface(channel));
-    ftpChannel->SetUploadStream(uploadStream);
+    nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
+    uploadChannel->SetUploadStream(uploadStream, nsnull);
 
     // create a dummy listener
     InputTestConsumer* listener;

@@ -85,9 +85,10 @@ nsFTPChannel::~nsFTPChannel()
     if (mLock) PR_DestroyLock(mLock);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS8(nsFTPChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS9(nsFTPChannel,
                               nsIChannel,
                               nsIFTPChannel,
+                              nsIUploadChannel,
                               nsIRequest,
                               nsIInterfaceRequestor, 
                               nsIProgressEventSink,
@@ -656,18 +657,25 @@ nsFTPChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
     return NS_OK;
 }
 
-
 NS_IMETHODIMP
-nsFTPChannel::SetUploadStream(nsIInputStream *stream)
+nsFTPChannel::SetUploadStream(nsIInputStream *stream, const char *contentType, PRInt32 contentLength)
 {
     mUploadStream = stream;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFTPChannel::GetUploadStream(nsIInputStream **stream)
+nsFTPChannel::SetUploadFile(nsIFile *file, const char *contentType, PRInt32 contentLength)
 {
-    NS_IF_ADDREF(*stream = mUploadStream);
-    return NS_OK;
-}
+    if (!file) return NS_ERROR_NULL_POINTER;
 
+    nsresult rv;
+    // Grab a file input stream
+    nsCOMPtr<nsIInputStream> stream;
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), file);    
+    if (NS_FAILED(rv))
+        return rv;
+
+    // set the stream on ourselves
+    return SetUploadStream(stream, nsnull, -1); 
+}

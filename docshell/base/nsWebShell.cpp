@@ -108,7 +108,7 @@ typedef unsigned long HMTX;
 #include "nsIFileStream.h"
 
 #include "nsIHttpChannel.h" // add this to the ick include list...we need it to QI for post data interface
-
+#include "nsIUploadChannel.h"
 
 #include "nsILocaleService.h"
 #include "nsIStringBundle.h"
@@ -885,12 +885,38 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
   //
   // If the page load failed, then deal with the error condition...
   // Errors are handled as follows:
-  //   1. Send the URI to a keyword server (if enabled)
-  //   2. If the error was DNS failure, then add www and .com to the URI
+  //   1. Check to see if it a file not found error.
+  //   2. Send the URI to a keyword server (if enabled)
+  //   3. If the error was DNS failure, then add www and .com to the URI
   //      (if appropriate).
-  //   3. Throw an error dialog box...
+  //   4. Throw an error dialog box...
   //
+
   if(url && NS_FAILED(aStatus)) {
+    if (aStatus == NS_ERROR_FILE_NOT_FOUND) {
+      nsCOMPtr<nsIPrompt> prompter;
+      nsCOMPtr<nsIStringBundle> stringBundle;
+      GetPromptAndStringBundle(getter_AddRefs(prompter), 
+                                getter_AddRefs(stringBundle));
+       if (stringBundle && prompter) {
+        nsXPIDLString messageStr;
+        nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("fileNotFound").get(), 
+                                                      getter_Copies(messageStr));
+          
+        if (NS_SUCCEEDED(rv) && messageStr) {
+          nsXPIDLCString spec;
+          url->GetPath(getter_Copies(spec));
+
+          PRUnichar *msg = nsTextFormatter::smprintf(messageStr, (const char*)spec);
+          if (!msg) return NS_ERROR_OUT_OF_MEMORY;
+          
+          prompter->Alert(nsnull, msg);
+          nsTextFormatter::smprintf_free(msg);
+        }
+      }
+      return NS_OK;
+    }  
+      
     nsXPIDLCString host;
 
     rv = url->GetHost(getter_Copies(host));
@@ -1109,8 +1135,8 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
             nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
  
             if(httpChannel) {
-              httpChannel->GetUploadStream(getter_AddRefs(inputStream));
               httpChannel->GetReferrer(getter_AddRefs(referrer));
+              httpChannel->GetUploadStream(getter_AddRefs(inputStream));
             }
           }
           nsCOMPtr<nsIRandomAccessStore> postDataRandomAccess(do_QueryInterface(inputStream));

@@ -42,6 +42,7 @@
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
 #include "nsIFTPChannel.h"
+#include "nsIUploadChannel.h"
 
 #include "nsICacheService.h"
 #include "nsICacheEntryDescriptor.h"
@@ -57,6 +58,7 @@
 #define FTP_CACHE_CONTROL_CONNECTION 1
 
 class nsFTPChannel : public nsIFTPChannel,
+                     public nsIUploadChannel,
                      public nsIInterfaceRequestor,
                      public nsIProgressEventSink,
                      public nsIStreamListener, 
@@ -66,13 +68,14 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
+    NS_DECL_NSIUPLOADCHANNEL
     NS_DECL_NSIFTPCHANNEL
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIPROGRESSEVENTSINK
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSICACHELISTENER
-
+    
     // nsFTPChannel methods:
     nsFTPChannel();
     virtual ~nsFTPChannel();
@@ -107,7 +110,7 @@ protected:
     PRUint32                        mSourceOffset;
     PRInt32                         mAmount;
     nsCOMPtr<nsILoadGroup>          mLoadGroup;
-    nsCAutoString                   mContentType;
+    nsCString                       mContentType;
     PRInt32                         mContentLength;
     nsCOMPtr<nsISupports>           mOwner;
 

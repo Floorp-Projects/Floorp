@@ -39,6 +39,7 @@
 #include "nsIObserverService.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIHttpChannel.h"
+#include "nsIUploadChannel.h"
 #include "nsIByteRangeRequest.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
@@ -4889,8 +4890,11 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
           postDataRandomAccess(do_QueryInterface(postDataStream));
           if (postDataRandomAccess)
             postDataRandomAccess->Seek(PR_SEEK_SET, 0);
-          
-          httpChannel->SetUploadStream(postDataStream);
+
+          nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
+          NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
+
+          uploadChannel->SetUploadStream(postDataStream, nsnull, -1);
 
           if (newPostData)
           {

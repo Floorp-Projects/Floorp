@@ -38,6 +38,7 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheListener.h"
 #include "nsITransport.h"
+#include "nsIUploadChannel.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
@@ -55,6 +56,7 @@ class nsHttpChannel : public nsIHttpChannel
                     , public nsIInterfaceRequestor
                     , public nsIProgressEventSink
                     , public nsICachingChannel
+                    , public nsIUploadChannel
                     , public nsICacheListener
 {
 public:
@@ -67,6 +69,7 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIPROGRESSEVENTSINK
     NS_DECL_NSICACHINGCHANNEL
+    NS_DECL_NSIUPLOADCHANNEL
     NS_DECL_NSICACHELISTENER
 
     nsHttpChannel();
