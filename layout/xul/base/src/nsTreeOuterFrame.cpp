@@ -80,6 +80,13 @@ nsTreeOuterFrame::Init(nsIPresContext*  aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP
+nsTreeOuterFrame::AdjustZeroWidth()
+{
+  // don't do anything, tables change 0 width into auto
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsTreeOuterFrame::HandleEvent(nsIPresContext* aPresContext, 
                              nsGUIEvent*     aEvent,

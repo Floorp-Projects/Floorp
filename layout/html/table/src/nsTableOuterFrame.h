@@ -69,6 +69,8 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
+  NS_IMETHOD AdjustZeroWidth();
+
   /**  @see nsIFrame::SetInitialChildList */    
   NS_IMETHOD  SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
