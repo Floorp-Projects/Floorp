@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.20 1999/03/22 04:12:41 leif%netscape.com Exp $
+# $Id: Conn.pm,v 1.21 1999/03/30 01:16:45 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -106,7 +106,7 @@ sub DESTROY
 sub init
 {
   my $self = shift;
-  my $ret, $ld;
+  my ($ret, $ld);
 
   if (defined($self->{"certdb"}) && ($self->{"certdb"} ne ""))
     {
@@ -229,7 +229,7 @@ sub printError
 sub search
 {
   my ($self, $basedn, $scope, $filter, $attrsonly, @attrs) = @_;
-  my $resv, $entry;
+  my ($resv, $entry);
   my $res = \$resv;
 
   $scope = Mozilla::LDAP::Utils::str2Scope($scope);
@@ -270,7 +270,7 @@ sub search
 sub searchURL
 {
   my ($self, $url, $attrsonly) = @_;
-  my $resv, $entry;
+  my ($resv, $entry);
   my $res = \$resv;
 
   if (defined($self->{"ldres"}))
@@ -298,7 +298,7 @@ sub nextEntry
 {
   my $self = shift;
   my (%entry, @ocorder, @vals);
-  my $attr, $lcattr, $obj, $ldentry, $berv, $dn, $count;
+  my ($attr, $lcattr, $obj, $ldentry, $berv, $dn, $count);
   my $ber = \$berv;
 
   # I use the object directly, to avoid setting the "change" flags
@@ -416,7 +416,7 @@ sub add
 {
   my ($self, $entry) = @_;
   my (%ent);
-  my $ref, $key, $val;
+  my ($ref, $key, $val);
   my ($ret, $gotcha) = (1, 0);
 
   $ref = ref($entry);
@@ -478,7 +478,7 @@ sub modifyRDN
 	{
 	  shift(@vals);
 	  unshift(@vals, ($rdn));
-	  $ld->{"dn"} = join(@vals);
+	  $self->{"dn"} = join(@vals);
 	}
     }
 
@@ -494,7 +494,7 @@ sub update
 {
   my ($self, $entry) = @_;
   my (@vals, @arr, %mod, %new);
-  my $key, $val;
+  my ($key, $val);
   my $ret = 1;
   local $_;
 
@@ -504,7 +504,8 @@ sub update
 
       if (defined($entry->{"_${key}_modified_"}))
 	{
-	  @vals = @{$entry->{$key}};
+	  undef @vals;
+	  @vals = @{$entry->{$key}} if (defined($entry->{$key});
 	  if ($#vals == $[)
 	    {
 	      $mod{$key} = { "rb", [$vals[$[]] };
@@ -547,6 +548,8 @@ sub update
   # This is here for debug purposes only...
   if ($main::LDAP_DEBUG)
     {
+      my $op;
+
       foreach $key (@arr)
 	{
 	  print "Working on $key\n";
