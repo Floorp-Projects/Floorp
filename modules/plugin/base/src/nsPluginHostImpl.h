@@ -64,7 +64,7 @@ public:
 
   ~nsPluginTag();
 
-  void TryUnloadPlugin();
+  void TryUnloadPlugin(PRBool aForceShutdown = PR_FALSE);
 
   nsPluginTag   *mNext;
   char          *mName;
