@@ -30,6 +30,8 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
+ *
+ * $Id: tlsprf.c,v 1.2 2003/02/07 23:09:35 nelsonb%netscape.com Exp $
  */
 
 #include "pkcs11i.h"
@@ -165,41 +167,43 @@ static void pk11_TLSPRFNull(void *data, PRBool freeit)
 } 
 
 typedef struct {
-    PRUint32	cxSize;		/* size of allocated block, in bytes.        */
-    PRUint32	cxKeyLen;	/* number of bytes of cxBuf containing key.  */
-    PRUint32	cxDataLen;	/* number of bytes of cxBuf containing data. */
-    SECStatus	cxRv;		/* records failure of void functions.        */
-    PRBool	cxIsFIPS;	/* true if conforming to FIPS 198.           */
-    unsigned char cxBuf[512];	/* actual size may be larger than 512.       */
+    PRUint32	   cxSize;	/* size of allocated block, in bytes.        */
+    PRUint32       cxBufSize;   /* sizeof buffer at cxBufPtr.                */
+    unsigned char *cxBufPtr;	/* points to real buffer, may be cxBuf.      */
+    PRUint32	   cxKeyLen;	/* bytes of cxBufPtr containing key.         */
+    PRUint32	   cxDataLen;	/* bytes of cxBufPtr containing data.        */
+    SECStatus	   cxRv;	/* records failure of void functions.        */
+    PRBool	   cxIsFIPS;	/* true if conforming to FIPS 198.           */
+    unsigned char  cxBuf[512];	/* actual size may be larger than 512.       */
 } TLSPRFContext;
 
 static void
 pk11_TLSPRFHashUpdate(TLSPRFContext *cx, const unsigned char *data, 
                         unsigned int data_len)
 {
-    PRUint32 bytesUsed = PK11_OFFSETOF(TLSPRFContext, cxBuf) + 
-                         cx->cxKeyLen + cx->cxDataLen;
+    PRUint32 bytesUsed = cx->cxKeyLen + cx->cxDataLen;
 
     if (cx->cxRv != SECSuccess)	/* function has previously failed. */
     	return;
-    if (bytesUsed + data_len > cx->cxSize) {
+    if (bytesUsed + data_len > cx->cxBufSize) {
 	/* We don't use realloc here because 
 	** (a) realloc doesn't zero out the old block, and 
 	** (b) if realloc fails, we lose the old block.
 	*/
-	PRUint32 blockSize = bytesUsed + data_len + 512;
-    	TLSPRFContext *new_cx = (TLSPRFContext *)PORT_Alloc(blockSize);
-	if (!new_cx) {
+	PRUint32 newBufSize = bytesUsed + data_len + 512;
+    	unsigned char * newBuf = (unsigned char *)PORT_Alloc(newBufSize);
+	if (!newBuf) {
 	   cx->cxRv = SECFailure;
 	   return;
 	}
-	PORT_Memcpy(new_cx, cx, cx->cxSize);
-	new_cx->cxSize = blockSize;
-
-	PORT_ZFree(cx, cx->cxSize);
-	cx = new_cx;
+	PORT_Memcpy(newBuf, cx->cxBufPtr, bytesUsed);
+	if (cx->cxBufPtr != cx->cxBuf) {
+	    PORT_ZFree(cx->cxBufPtr, bytesUsed);
+	}
+	cx->cxBufPtr  = newBuf;
+	cx->cxBufSize = newBufSize;
     }
-    PORT_Memcpy(cx->cxBuf + cx->cxKeyLen + cx->cxDataLen, data, data_len);
+    PORT_Memcpy(cx->cxBufPtr + bytesUsed, data, data_len);
     cx->cxDataLen += data_len;
 }
 
@@ -227,10 +231,10 @@ pk11_TLSPRFUpdate(TLSPRFContext *cx,
     if (cx->cxRv != SECSuccess)
     	return cx->cxRv;
 
-    secretItem.data = cx->cxBuf;
+    secretItem.data = cx->cxBufPtr;
     secretItem.len  = cx->cxKeyLen;
 
-    seedItem.data = cx->cxBuf + cx->cxKeyLen;
+    seedItem.data = cx->cxBufPtr + cx->cxKeyLen;
     seedItem.len  = cx->cxDataLen;
 
     sigItem.data = sig;
@@ -273,8 +277,11 @@ pk11_TLSPRFVerify(TLSPRFContext *cx,
 static void
 pk11_TLSPRFHashDestroy(TLSPRFContext *cx, PRBool freeit)
 {
-    if (freeit)
+    if (freeit) {
+	if (cx->cxBufPtr != cx->cxBuf) 
+	    PORT_ZFree(cx->cxBufPtr, cx->cxBufSize);
 	PORT_ZFree(cx, cx->cxSize);
+    }
 }
 
 CK_RV
@@ -302,10 +309,12 @@ pk11_TLSPRFInit(PK11SessionContext *context,
     prf_cx->cxSize    = blockSize;
     prf_cx->cxKeyLen  = keySize;
     prf_cx->cxDataLen = 0;
-    prf_cx->cxRv        = SECSuccess;
+    prf_cx->cxBufSize = blockSize - PK11_OFFSETOF(TLSPRFContext, cxBuf);
+    prf_cx->cxRv      = SECSuccess;
     prf_cx->cxIsFIPS  = (key->slot->slotID == FIPS_SLOT_ID);
+    prf_cx->cxBufPtr  = prf_cx->cxBuf;
     if (keySize)
-	PORT_Memcpy(prf_cx->cxBuf, keyVal->attrib.pValue, keySize);
+	PORT_Memcpy(prf_cx->cxBufPtr, keyVal->attrib.pValue, keySize);
 
     context->hashInfo    = (void *) prf_cx;
     context->cipherInfo  = (void *) prf_cx;
