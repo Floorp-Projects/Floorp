@@ -2,6 +2,12 @@
 // Microsoft Developer Studio generated include file.
 // Used by setuprsc.rc
 //
+
+#ifndef WINVER
+#define WINVER 0x0400
+#endif
+#include "winresrc.h"
+
 #define IDS_ERROR_FILE_NOT_FOUND        3
 #define IDRESUME                        3
 #define IDPAUSE                         4
@@ -38,10 +44,6 @@
 #define IDC_CHECK2                      1023
 #define IDC_LIST2                       1023
 #define IDC_LIST                        1023
-#ifndef WINVER
-#define WINVER 0x0400
-#endif
-#include "winresrc.h"
 #define IDC_CHECK3                      1024
 #define IDC_EDIT_LICENSE                1024
 #define IDC_CHECK0                      1025
@@ -103,6 +105,7 @@
 #define DLG_PROGRAM_FOLDER              2007
 #define DLG_START_INSTALL               2008
 #define DLG_EXTRACTING                  2009
+#define DLG_QUICK_LAUNCH                2010
 #define DLG_RESTART                     10206
 #define DLG_SITE_SELECTOR               10207
 #define DLG_ADVANCED_SETTINGS           10207
@@ -110,6 +113,7 @@
 #define DLG_UPGRADE                     10209
 #define DLG_DOWNLOAD_OPTIONS            10210
 #define DLG_DOWNLOADING                 10211
+#define DLG_START_INSTALL1              10212
 #define IDB_BOX_CHECKED                 10304
 #define IDB_BOX_UNCHECKED               10306
 #define IDB_BOX_CHECKED_DISABLED        10307

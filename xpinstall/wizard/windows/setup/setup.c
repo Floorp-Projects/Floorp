@@ -80,6 +80,7 @@ setupGen        sgProduct;
 diS             diSetup;
 diW             diWelcome;
 diL             diLicense;
+diQL            diQuickLaunch;
 diST            diSetupType;
 diSC            diSelectComponents;
 diSC            diSelectAdditionalComponents;

@@ -77,6 +77,7 @@ extern BOOL             gbRestrictedAccess;
 extern setupGen         sgProduct;
 extern diS              diSetup;
 extern diW              diWelcome;
+extern diQL             diQuickLaunch;
 extern diL              diLicense;
 extern diST             diSetupType;
 extern diSC             diSelectComponents;
