@@ -43,7 +43,11 @@ Rights Reserved.
 
   <template>
   	<rule>
-    <treechildren>
+          <treechildren onclick="ThreadPaneOnClick(event);"
+			ondragover="return DragOverTree(event);"
+			ondraggesture="return BeginDragThreadTree(event);"
+			ondragdrop="return DropOnThreadTree(event);"> 
+
 		<treeitem uri="..."
 			 Status="rdf:http://home.netscape.com/NC-rdf#Status"
   			 Flagged="rdf:http://home.netscape.com/NC-rdf#Flagged"
@@ -85,21 +89,21 @@ Rights Reserved.
 	</rule>
   </template>
 
-  <treecols id="theThreadColumns">
+  <treecolgroup id="theThreadColumns">
 	  <treecol persist="hidden width" fixed="true" width="20" id="ThreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#Thread"/>
-	  <treecol persist="hidden width" width="7*" flex="7" id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
-	  <treecol persist="hidden width" width="4*" flex="4" id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
+	  <treecol persist="hidden width" width="7*" id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
+	  <treecol persist="hidden width" width="4*" id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
 	  <treecol persist="hidden width" fixed="true" width="20" id="UnreadButtonColumn"/>
-	  <treecol persist="hidden width" width="2*" flex="2" id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
-	  <treecol persist="hidden width" width="1*" flex="1" id="PriorityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Priority"/>
+	  <treecol persist="hidden width" width="2*" id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
+	  <treecol persist="hidden width" width="1*" id="PriorityColumn" rdf:resource="http://home.netscape.com/NC-rdf#Priority"/>
 	  <treecol persist="hidden width" fixed="true" width="20" id="FlaggedButtonColumn"/>
-	  <treecol persist="hidden width" width="1*" flex="1" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
-	  <treecol persist="hidden width" width="1*" flex="1" id="SizeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Size"/>
-	  <treecol persist="hidden width" width="1*" flex="1" id="UnreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-	  <treecol persist="hidden width" width="1*" flex="1" id="TotalColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+	  <treecol persist="hidden width" width="1*" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
+	  <treecol persist="hidden width" width="1*" id="SizeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Size"/>
+	  <treecol persist="hidden width" width="1*" id="UnreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+	  <treecol persist="hidden width" width="1*" id="TotalColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
 	  <treecol persist="hidden width" fixed="true" width="1" id="OrderReceivedColumn" rdf:resource="http://home.netscape.com/NC-rdf#OrderReceived"/>
 	  <treecol persist="width" fixed="true" width="16" id="PopupColumn"/>
-  </treecols>
+  </treecolgroup>
 
   <treehead>
     <treerow id="headRow">
@@ -126,9 +130,6 @@ Rights Reserved.
 		</treecell>
 	</treerow>
   </treehead>
-  <treechildren flex="1" onclick="ThreadPaneOnClick(event);"
-			ondragover="return DragOverTree(event);"
-			ondraggesture="return BeginDragThreadTree(event);"
-			ondragdrop="return DropOnThreadTree(event);"/> 
+
 </tree>
 </overlay>
