@@ -71,7 +71,7 @@ EXTRA_DSO_LDOPTS = \
 
 LIBS            = \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)embedstring_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)embedstring.$(LIB_SUFFIX) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
