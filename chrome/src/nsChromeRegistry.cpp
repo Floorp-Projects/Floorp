@@ -54,8 +54,6 @@ DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, archive);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, displayname);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, name);
 
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Description);
-
 // This nasty function should disappear when we land Necko completely and 
 // change chrome://global/skin/foo to chrome://skin@global/foo
 //
