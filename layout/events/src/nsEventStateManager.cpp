@@ -412,6 +412,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           // Obtain focus info from the command dispatcher.
           commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
           commandDispatcher->GetFocusedElement(getter_AddRefs(focusedElement));
+          
+          commandDispatcher->SetSuppressFocusScroll(PR_TRUE);
         }
       }
 
@@ -442,6 +444,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             // Obtain focus info from the command dispatcher.
             commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
             commandDispatcher->GetFocusedElement(getter_AddRefs(focusedElement));
+            
+            commandDispatcher->SetSuppressFocusScroll(PR_TRUE);
           }
         }
 	    }
@@ -465,6 +469,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       if (commandDispatcher) {
         commandDispatcher->SetActive(PR_TRUE);
         commandDispatcher->SetSuppressFocus(PR_FALSE); // Unsuppress and let the command dispatcher listen again.
+        commandDispatcher->SetSuppressFocusScroll(PR_FALSE);
       }  
     }
   break;
