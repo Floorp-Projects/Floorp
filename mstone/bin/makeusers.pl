@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -55,7 +55,7 @@
 #   [ -x maxstores ]
 #   [ -3 ]
 #
-# perl/bin/perl -Ibin -- bin/makeusers.pl -d mailhost.example.com -m mailhost.example.com -b 'o=example.com' -u mailhost-test -n 100 -4 -o mailhost100.ldif
+#perl -Ibin -- bin/makeusers.pl -d mailhost.example.com -m mailhost.example.com -b 'o=example.com' -u mailhost-test -n 100 -4 -o mailhost100.ldif
 
 # Create the ldif for the user accounts and/or broadcast, postmaster account.
 #

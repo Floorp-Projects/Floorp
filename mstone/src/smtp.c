@@ -148,6 +148,7 @@ SmtpParseEnd (pmail_command_t cmd,
 #define MSG_TRAILER CRLF "." CRLF
 
     pish->msgsize = statbuf.st_size;
+    pish->msgMailFrom = NULL;
     pish->msgdata = (char *) mycalloc(pish->msgsize+strlen(MSG_TRAILER)+1);
 
     if ((bytesRead = read(fd, pish->msgdata, pish->msgsize)) <= 0) {
@@ -164,6 +165,45 @@ SmtpParseEnd (pmail_command_t cmd,
     }
 
     pish->msgdata[pish->msgsize] = 0;
+
+    /* clean up message to rfc822 style */
+
+#define PROTO_HEADER "SMTP"
+#define PROTO_MAIL_FROM "\nMAIL FROM:"
+#define PROTO_DATA "\nDATA\n"
+
+    D_PRINTF (stderr, "checking for PROTO_HEADER [%s]\n", PROTO_HEADER);
+    if (strncmp(pish->msgdata, PROTO_HEADER, strlen(PROTO_HEADER)) == 0) {
+	    char *cp, *cp2;
+	    int off;
+
+	    D_PRINTF(stderr, "got PROTO_HEADER\n");
+	    D_PRINTF(stderr, "find PROTO_MAIL_FROM...\n");
+	    cp = strstr(pish->msgdata, PROTO_MAIL_FROM); 
+	    if (cp != NULL) {
+		    cp += strlen(PROTO_MAIL_FROM);
+		    cp2 = strchr(cp, '\n');
+		    off = cp2 - cp;
+		    pish->msgMailFrom = (char *) mycalloc(off+1);
+		    memcpy(pish->msgMailFrom, cp, off);
+		    pish->msgMailFrom[off] = 0;
+		    D_PRINTF(stderr, "got PROTO_MAIL_FROM:%s\n",pish->msgMailFrom);
+	    }
+
+	    D_PRINTF(stderr, "find PROTO_DATA...\n");
+	    cp = strstr(pish->msgdata, PROTO_DATA);
+	    if (cp != NULL) {
+		    off = cp - pish->msgdata;
+		    off += strlen(PROTO_DATA);
+		    D_PRINTF(stderr, "got past PROTO_DATA at off=%d\n", off);
+		    char *newmsg = (char *) mycalloc(pish->msgsize+strlen(MSG_TRAILER)+1-off);
+		    memcpy(newmsg, pish->msgdata+off, pish->msgsize-off+1);
+		    myfree(pish->msgdata);
+		    pish->msgdata = newmsg;
+		    D_PRINTF(stderr, "done msg shrink\n");
+	    }
+    }
+
 
     strcat(pish->msgdata, MSG_TRAILER);
 
@@ -798,7 +838,11 @@ sendSMTPLoop(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, void *mystat
     pish_command_t	*pish = (pish_command_t *)cmd->data;
 
     /* send MAIL FROM:<username> */
-    sprintf(command, "MAIL FROM:<%s>%s", pish->smtpMailFrom, CRLF);
+    if (pish->msgMailFrom != NULL) {
+	sprintf(command, "MAIL FROM:%s%s", pish->msgMailFrom, CRLF);
+    } else {
+	sprintf(command, "MAIL FROM:<%s>%s", pish->smtpMailFrom, CRLF);
+    }
     event_start(ptcx, &stats->cmd);
     rc = doSmtpCommandResponse(ptcx, ptcx->sock, command, respBuffer, sizeof(respBuffer));
     event_stop(ptcx, &stats->cmd);

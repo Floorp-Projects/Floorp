@@ -58,6 +58,7 @@ if (-r "$resultbase/index.html") {
 		     "^<!-- INSERT TAGS HERE",
 		     $entry);
 } else {			# create index from scratch
+    system ("cd $resultbase; ln -s ../doc .");
     open(INDEXNEW, ">$resultbase/index.new") || 
 	die "Couldn't open $resultbase/index.new: $!";
 

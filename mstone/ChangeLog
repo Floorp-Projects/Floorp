@@ -1,3 +1,17 @@
+2004-06-14  Dan Christian  <robodan@idiom.com>
+
+	* Makefile (VERSION): Bump version to 4.3
+
+	* Make build work on recent versions of Linux and Solaris
+
+	* Make ssh the default way to get a remote shell
+
+	* Support SVG graph output (not supported by all browsers)
+
+	* Use rfc822 style from addresses
+
+	* Fix documentation link on index page to be local
+
 2000-04-28  Dan Christian  <dac@x.cx>
 
 	* http and wmap now use common routines from http-util

@@ -36,10 +36,11 @@
 # Where the online docs live
 #$mailstoneURL =
 #    "http://home.netscape.com/eng/server/messaging/4.1/mailston/stone.htm";
-$mailstoneURL =
-    "http://developer.iplanet.com/docs/manuals/messaging.html";
+#$mailstoneURL =
+#    "http://developer.iplanet.com/docs/manuals/messaging.html";
 #$mailstoneURL =
 #    "http://docs.iplanet.com/docs/manuals/messaging/nms415/mailstone/stone.htm"
+$mailstoneURL = "http:doc/MailStone.html";
 
 # Subdirs for results (each under a timestamp dir).  Should just hardwire.
 $tmpbase = "tmp";
@@ -695,11 +696,13 @@ sub setConfigDefaults {		# set CONFIG defaults
 	unless($params{TEMPDIR});
 
     # Set default remote shell
-    $params{RSH} = "/usr/bin/rsh"
+    #$params{RSH} = "/usr/bin/rsh"
+    $params{RSH} = "ssh"
 	unless($params{RSH});
 
     # Set default remote copy
-    $params{RCP} = "/usr/bin/rcp"
+    #$params{RCP} = "/usr/bin/rcp"
+    $params{RCP} = "scp"
 	unless($params{RCP});
 
     # Size of generated gifs

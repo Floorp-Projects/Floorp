@@ -25,7 +25,7 @@ export sleep_time=${sleep_time:-5}
 export save_dir=${save_dir:-"results.save"}
 
 # Basic sanity test
-if [[ ! -x perl/bin/perl || ! -f .license ]] ; then # see if setup was ever run
+if [[ ! -x /usr/bin/perl || ! -f .license ]] ; then # see if setup was ever run
    echo "Critical files are missing.  Run setup."
    exit 2;
 fi
@@ -115,7 +115,7 @@ run_test () {
 
   echo  "\nRunning:" mstone $testname -b "$desc $desc_conf" $extra_args "$@"
   # We actually bypass the mstone script
-  perl/bin/perl -Ibin -- bin/mailmaster.pl -w conf/$testname.wld  -b "$desc $desc_conf" $extra_args "$@"
+  /usr/bin/perl -Ibin -- bin/mailmaster.pl -w conf/$testname.wld  -b "$desc $desc_conf" $extra_args "$@"
   stat=$?
 
   # BUG if another test is running at the same time, this is wrong
