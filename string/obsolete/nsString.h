@@ -40,11 +40,13 @@
 class NS_BASE nsString {
   public: 
 
-                          nsString(const char* anISOLatin1="");
+                          nsString();
+                          nsString(const char* anISOLatin1);
                           nsString(const nsString&);
                           nsString(const PRUnichar* aUnicode);    
   protected:
-                          nsString(PRBool aSubclassBuffer); // special subclas constructor
+                          // special subclass constructor
+                          nsString(PRBool aSubclassBuffer);
   public:
   virtual                 ~nsString();
 
@@ -58,12 +60,6 @@ class NS_BASE nsString {
   //@{
             PRUnichar*    GetUnicode(void) const;
                           operator PRUnichar*() const;
-
-#if 0
-  // This is NOT allowed because it has to do a malloc to
-  // create the iso-latin-1 version of the unicode string
-                          operator char*() const;
-#endif
 
             PRUnichar*    operator()() const;
             PRUnichar     operator()(PRInt32 i) const;
@@ -199,7 +195,6 @@ typedef PRUnichar chartype;
             chartype*       mStr;
             PRInt32         mLength;
             PRInt32         mCapacity;
-            static PRInt32  mInstanceCount;
 };
 
 extern NS_BASE int fputs(const nsString& aString, FILE* out);

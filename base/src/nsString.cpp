@@ -37,23 +37,25 @@ const char* kNullPointerError = "Error: unexpected null ptr";
 //**********************************************
 
 
-PRInt32 nsString::mInstanceCount=0;
+/**
+ * Default constructor. We assume that this string will have
+ * a bunch of Append's or SetString's done to it, therefore
+ * we start with a mid sized buffer.
+ */
+nsString::nsString() {
+  mLength = mCapacity = 0;
+  mStr = 0;
+  // Size to 4*kGrowthDelta (EnsureCapacityFor adds in kGrowthDelta so
+  // subtract it before calling)
+  EnsureCapacityFor(4*kGrowthDelta - kGrowthDelta);
+}
 
-/**-------------------------------------------------------
- *  Default constructor
- *  
- *  @update  gess 3/31/98
- *  @param   
- *  @return  
- *------------------------------------------------------*/
-nsString::nsString(const char* anISOLatin1/*=""*/) {  
+nsString::nsString(const char* anISOLatin1) {  
   mLength=mCapacity=0;
   mStr=0;
   PRInt32 len=strlen(anISOLatin1);
   EnsureCapacityFor(len);
   this->SetString(anISOLatin1,len);
-  if(++mInstanceCount==1)
-    SelfTest();
 }
 
 /*-------------------------------------------------------
@@ -67,8 +69,6 @@ nsString::nsString(const nsString &aString) {
   mStr=0;
   EnsureCapacityFor(aString.mLength);
   this->SetString(aString.mStr,aString.mLength);
-  if(++mInstanceCount==1)
-    SelfTest();
 }
 
 /*-------------------------------------------------------
@@ -83,8 +83,6 @@ nsString::nsString(const PRUnichar* aUnicodeStr){
   PRInt32 len=(aUnicodeStr) ? nsCRT::strlen(aUnicodeStr) : 0;
   EnsureCapacityFor(len);
   this->SetString(aUnicodeStr,len);
-  if(++mInstanceCount==1)
-    SelfTest();
 }
 
 /*-------------------------------------------------------
@@ -103,8 +101,6 @@ nsString::nsString(PRBool aSubclassBuffer)
     EnsureCapacityFor(1);
     this->SetString("");
   }
-  if(++mInstanceCount==1)
-    SelfTest();
 }
 
 /*-------------------------------------------------------
@@ -409,7 +405,8 @@ void nsString::ToUpperCase()
  *------------------------------------------------------*/
 void nsString::ToLowerCase(nsString& aOut) const
 {
-  aOut.SetLength(mLength);
+  aOut.EnsureCapacityFor(mLength);
+  aOut.mLength = mLength;
   chartype* to = aOut.mStr;
   chartype* from = mStr;
   chartype* end = from + mLength;
@@ -431,7 +428,8 @@ void nsString::ToLowerCase(nsString& aOut) const
  *------------------------------------------------------*/
 void nsString::ToUpperCase(nsString& aOut) const
 {
-  aOut.SetLength(mLength);
+  aOut.EnsureCapacityFor(mLength);
+  aOut.mLength = mLength;
   chartype* to = aOut.mStr;
   chartype* from = mStr;
   chartype* end = from + mLength;
@@ -494,7 +492,7 @@ PRUnichar* nsString::ToNewUnicode() const
  *------------------------------------------------------*/
 void nsString::ToString(nsString& aString) const
 {
-  aString.SetLength(0);
+  aString.mLength = 0;
   aString.Append(mStr, mLength);
 }
 
