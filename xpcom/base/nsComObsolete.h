@@ -36,7 +36,7 @@
 #ifndef nsComObsolete_h__
 #define nsComObsolete_h__
 
-// These _IMPL_NS_*  defines should move into their own directories. 
+/* These _IMPL_NS_*  defines should move into their own directories.  */
 #ifdef _IMPL_NS_BASE
 #define NS_BASE NS_EXPORT
 #else
