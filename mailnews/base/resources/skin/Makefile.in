@@ -26,9 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/skin
+CHROME_DIR=messenger
+CHROME_SKIN_DIR=skin
+CHROME_TYPE=skin
 
-EXPORT_RESOURCE_SAMPLES = \
+CHROME_SKIN = \
 		messenger.css \
 		folderPane.css \
 		threadPane.css \
@@ -110,14 +112,9 @@ EXPORT_RESOURCE_SAMPLES = \
 		server-remote.gif \
 		server-news-lock.gif \
 		server-remote-lock.gif \
-    attach.gif  \
-    addtoab.gif \
+		attach.gif  \
+		addtoab.gif \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
 

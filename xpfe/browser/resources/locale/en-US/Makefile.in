@@ -26,7 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_RESOURCE_CONTENT = \
+CHROME_DIR=navigator
+CHROME_L10N_DIR=locale
+CHROME_TYPE=locale
+
+CHROME_L10N = \
 		$(srcdir)/navigator.dtd \
 		$(srcdir)/openLocation.dtd \
 		$(srcdir)/openLocation.properties \
@@ -36,7 +40,4 @@ EXPORT_RESOURCE_CONTENT = \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/navigator/locale
 
