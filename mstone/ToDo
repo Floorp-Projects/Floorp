@@ -14,11 +14,6 @@ More graphs for multiple runs
 
 Option to drop a fraction of connections
 
-Cache multiple DNS lookups
-	Right now we cache one DNS lookup.  With virtual hosts, we may
-need more than one.  Having one host cached and the rest not could
-skew results.
-
 IMAP delete without reading
 	Just get the message list and delete everything.  This could
 be the fastest way to drain out the store.
