@@ -255,8 +255,9 @@ nsFileChannel::EnsureFile()
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mFile);
     if (localFile)
         localFile->SetFollowLinks(PR_TRUE);
-
+    return NS_OK;
 }
+
 nsresult
 nsFileChannel::GetFileTransport(nsITransport **trans)
 {
