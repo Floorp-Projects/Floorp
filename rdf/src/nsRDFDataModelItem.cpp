@@ -22,7 +22,7 @@
 
 static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDMItemIID,      NS_IDMITEM_IID);
-static NS_DEFINE_IID(kIRDFResourceIID, NS_IDMITEM_IID);
+static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
