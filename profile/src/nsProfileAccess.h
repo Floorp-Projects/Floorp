@@ -33,10 +33,6 @@
 #include <windows.h>
 #endif
 
-#ifdef XP_UNIX
-#include <signal.h>
-#endif
-
 class ProfileStruct
 {    
 public:
@@ -202,8 +198,7 @@ private:
     LHANDLE                 mLockFileHandle;
 #elif defined (XP_UNIX)
     static void             RemovePidLockFiles();
-    static void             FatalSignalHandler(int signo, siginfo_t* info,
-                                               void* context);
+    static void             FatalSignalHandler(int signo);
     static PRCList          mPidLockList;
     char*                   mPidLockFileName;
     int                     mLockFileDesc;
