@@ -2791,8 +2791,8 @@ protected:
 
     static nsIXULSortService* gXULSortService;
 
-    static nsString    kTrueStr;
-    static nsString    kFalseStr;
+    static nsString* kTrueStr;
+    static nsString* kFalseStr;
 
     PRBool mIsBuilding;
 
@@ -2887,8 +2887,8 @@ protected:
 nsrefcnt            nsXULTemplateBuilder::gRefCnt = 0;
 nsIXULSortService*  nsXULTemplateBuilder::gXULSortService = nsnull;
 
-nsString nsXULTemplateBuilder::kTrueStr;
-nsString nsXULTemplateBuilder::kFalseStr;
+nsString* nsXULTemplateBuilder::kTrueStr = nsnull;
+nsString* nsXULTemplateBuilder::kFalseStr = nsnull;
 
 PRInt32  nsXULTemplateBuilder::kNameSpaceID_RDF;
 PRInt32  nsXULTemplateBuilder::kNameSpaceID_XUL;
@@ -4075,6 +4075,9 @@ nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
 
     --gRefCnt;
     if (gRefCnt == 0) {
+        delete kTrueStr;
+        delete kFalseStr;
+
         NS_IF_RELEASE(kNC_Title);
         NS_IF_RELEASE(kNC_child);
         NS_IF_RELEASE(kNC_Column);
@@ -4117,8 +4120,10 @@ nsXULTemplateBuilder::Init()
     if (gRefCnt++ == 0) {
         nsXULAtoms::AddRef();
 
-        kTrueStr.AssignWithConversion("true");
-        kFalseStr.AssignWithConversion("false");
+        kTrueStr = new nsString(NS_LITERAL_STRING("true"));
+        if (!kTrueStr) return NS_ERROR_OUT_OF_MEMORY;
+        kFalseStr = new nsString(NS_LITERAL_STRING("false"));
+        if (!kFalseStr) return NS_ERROR_OUT_OF_MEMORY;
 
         nsresult rv;
 
@@ -5481,11 +5486,12 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (NS_FAILED(rv)) return rv;
 
             if (iscontainer) {
-                realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::container, kTrueStr, PR_FALSE);
+                realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::container,
+                                      *kTrueStr, PR_FALSE);
 
                 if (! (mFlags & eDontTestEmpty)) {
                     realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty,
-                                          isempty ? kTrueStr : kFalseStr,
+                                          isempty ? *kTrueStr : *kFalseStr,
                                           PR_FALSE);
                 }
             }
@@ -6476,7 +6482,7 @@ nsXULTemplateBuilder::IsOpen(nsIContent* aElement)
     if (NS_FAILED(rv)) return PR_FALSE;
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        if (value == kTrueStr)
+        if (value == *kTrueStr)
             return PR_TRUE;
     }
 
@@ -6802,20 +6808,23 @@ nsXULTemplateBuilder::SetContainerAttrs(nsIContent *aElement, const Match* aMatc
     PRBool iscontainer, isempty;
     CheckContainer(VALUE_TO_IRDFRESOURCE(containerval), &iscontainer, &isempty);
 
-    const nsString& newcontainer = iscontainer ? kTrueStr : kFalseStr;
+    const nsString* newcontainer = iscontainer ? kTrueStr : kFalseStr;
 
-    if (oldcontainer != newcontainer) {
-        aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::container, newcontainer, PR_TRUE);
+    if (oldcontainer != *newcontainer) {
+        aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::container,
+                               *newcontainer, PR_TRUE);
     }
 
     if (! (mFlags & eDontTestEmpty)) {
         nsAutoString oldempty;
         aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::empty, oldempty);
 
-        const nsString& newempty = (iscontainer && isempty) ? kTrueStr : kFalseStr;
+        const nsString* newempty = (iscontainer && isempty)
+                                     ? kTrueStr : kFalseStr;
 
-        if (oldempty != newempty) {
-            aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty, newempty, PR_TRUE);
+        if (oldempty != *newempty) {
+            aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty,
+                                   *newempty, PR_TRUE);
         }
     }
 
