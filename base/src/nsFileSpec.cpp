@@ -19,27 +19,12 @@
 #include "nsFileSpec.h"
 
 #include "nsFileStream.h"
+#include "nsDebug.h"
 
 #include "prtypes.h"
 
-#ifdef NS_USING_STL
-
-#include <strstream>
-
-#else
-
-#include <ostream.h>
-#include <strstream.h>
-
-#endif
-
-#ifdef NS_USING_NAMESPACE
-	using std::ends;
-	using std::ostrstream;
-#endif
-
 #include <string.h>
-#include "nsDebug.h"
+#include <stdio.h>
 
 //========================================================================================
 NS_NAMESPACE nsFileSpecHelpers
@@ -394,10 +379,9 @@ void nsNativeFileSpec::MakeUnique()
 	for (short index = 1; index < 1000 && Exists(); index++)
 	{
 		// start with "Picture-1.jpg" after "Picture.jpg" exists
-		char buf[nsFileSpecHelpers::kMaxFilenameLength + 1];
-		ostrstream newName(buf, nsFileSpecHelpers::kMaxFilenameLength);
-		newName << leafName << "-" << index << suffix << '\0'; // should be: << std::ends;
-		SetLeafName(newName.str()); // or: SetLeafName(buf)
+		char newName[nsFileSpecHelpers::kMaxFilenameLength + 1];
+		sprintf(newName, "%s-%d%s", leafName, index, suffix);
+		SetLeafName(newName);
 	}
 	if (*suffix)
 		delete [] suffix;
