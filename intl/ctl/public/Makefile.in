@@ -19,6 +19,8 @@
 # 1999 Red Hat Software.
 #
 # Contributor(s):
+#   Prabhat Hegde (prabhat.hegde@sun.com)
+#
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@

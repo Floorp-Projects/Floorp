@@ -1,7 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * XPCTL : nsCtlLEModule.cpp
  *
- * The contents of this file are subject to the Mozilla Public	
+ * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
@@ -20,7 +20,8 @@
  * by Red Hat Software. Portions created by Redhat are Copyright (C) 
  * 1999 Red Hat Software.
  * 
- * Contributor(s): 
+ * Contributor(s):
+ *   Prabhat Hegde (prabhat.hegde@sun.com)
  */
 
 #include "nsCOMPtr.h"
@@ -32,6 +33,7 @@
 #include "nsULE.h"
 #include "nsICharsetConverterManager.h"
 #include "nsUnicodeToTIS620.h"
+#include "nsUnicodeToSunIndic.h"
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -48,17 +50,23 @@ PRInt32 g_LockCount = 0;
 
 NS_CONVERTER_REGISTRY_START
 NS_UCONV_REG_UNREG_ENCODER("tis620-2", NS_UNICODETOTIS620_CID)
+NS_UCONV_REG_UNREG_ENCODER("x-sun-unicode-india-0", NS_UNICODETOSUNINDIC_CID)
 NS_CONVERTER_REGISTRY_END
 
 NS_IMPL_NSUCONVERTERREGSELF
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTIS620);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToSunIndic);
 
 static const nsModuleComponentInfo components[] =
 {
   { ENCODER_NAME_BASE "tis620-2" , NS_UNICODETOTIS620_CID,
     NS_UNICODEENCODER_CONTRACTID_BASE "tis620-2",
     nsUnicodeToTIS620Constructor,
+    nsUConverterRegSelf, nsUConverterUnregSelf },
+  { ENCODER_NAME_BASE "x-sun-unicode-india-0" , NS_UNICODETOSUNINDIC_CID,
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-sun-unicode-india-0",
+    nsUnicodeToSunIndicConstructor,
     nsUConverterRegSelf, nsUConverterUnregSelf },
   { "Unicode Layout Engine", NS_ULE_CID, NS_ULE_PROGID, 
     nsULEConstructor, NULL, NULL }

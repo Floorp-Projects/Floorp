@@ -1,4 +1,3 @@
-#
 # The contents of this file are subject to the Mozilla Public	
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -11,58 +10,41 @@
 # 
 # The Original Code is mozilla.org code.
 # The Initial Developer of the Original Code is Sun Microsystems,
-# Inc.  Portions created by SUN are Copyright (C) 2000 SUN
+# Inc.  Portions created by SUN are Copyright (C) 2002 SUN
 # Microsystems, Inc. All Rights Reserved.
-#
-# This module 'XPCTL Interface' is based on Pango (www.pango.org) 
-# by Red Hat Software. Portions created by Redhat are Copyright (C) 
-# 1999 Red Hat Software.
 # 
 # Contributor(s):
 #   Prabhat Hegde (prabhat.hegde@sun.com)
 #
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= ctl
-LIBRARY_NAME	= ctl
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-
-REQUIRES	= xpcom \
-		  string \
-		  uconv \
-		  locale \
-		  $(NULL)
-
+MODULE		= mozpango-dvngx
+LIBRARY_NAME	= mozpango-dvngx
+EXPORT_LIBRARY	= 1
 EXTRA_DSO_LIBS	= mozpango
 
-CPPSRCS		= \
-	nsULE.cpp \
-	nsUnicodeToTIS620.cpp \
-	nsUnicodeToSunIndic.cpp \
-	nsCtlLEModule.cpp \
-	$(NULL)
+CSRCS		= \
+		dvng-x.c \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += -I$(srcdir)/pangoLite
+LOCAL_INCLUDES	+= \
+		-I$(srcdir)/../pangoLite \
+		$(NULL)
 
-ifdef MOZ_ENABLE_GTK2
-  CXXFLAGS        += $(MOZ_GTK2_CFLAGS)
-  EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
-else
-  CXXFLAGS  += $(GLIB_CFLAGS)
-  EXTRA_DSO_LDOPTS += $(GLIB_GMODULE_LIBS)
-endif
+CFLAGS		+= $(GLIB_CFLAGS)
 
 EXTRA_DSO_LDOPTS += \
-	$(MOZ_COMPONENT_LIBS) \
-	-L$(DIST)/lib \
-	$(EXTRA_DSO_LIBS) \
-	$(NULL)
+		-L$(DIST)/lib \
+		$(EXTRA_DSO_LIBS) \
+		$(GLIB_LIBS) \
+		$(GLIB_GMODULE_LIBS) \
+		$(NULL)
+

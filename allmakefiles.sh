@@ -203,6 +203,7 @@ intl/ctl/public/Makefile
 intl/ctl/src/Makefile
 intl/ctl/src/pangoLite/Makefile
 intl/ctl/src/thaiShaper/Makefile
+intl/ctl/src/hindShaper/Makefile
 "
 fi
 

@@ -21,6 +21,7 @@
  * 1999 Red Hat Software.
  *
  * Contributor(s):
+ *   Prabhat Hegde (prabhat.hegde@sun.com)
  */
 
 #ifndef nsILE_h__
@@ -50,4 +51,5 @@ public:
   NS_IMETHOD GetRangeOfCluster(const PRUnichar*, PRUint32,
                                const PRInt32, PRInt32*, PRInt32*) = 0;
 };
-#endif // nsILE_h
+#endif /* !nsILE_h */
+

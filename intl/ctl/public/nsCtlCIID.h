@@ -21,10 +21,16 @@
  * 1999 Red Hat Software.
  *
  * Contributor(s):
+ *   Prabhat Hegde (prabhat.hegde@sun.com)
  */
 
 #ifndef nsCtlCIID_h___
 #define nsCtlCIID_h___
+
+// Class ID for UnicodeToSunIndia font encoding converter for *nix
+#define NS_UNICODETOSUNINDIC_CID \
+{ 0xc270e4e7, 0x3915, 0x43fe, \
+ { 0xbc, 0xb0, 0x57, 0x4e, 0x68, 0xaf, 0x6b, 0xaf } }
 
 // Class ID for UnicodeToTIS620 charset converter for *nix
 #define NS_UNICODETOTIS620_CID \
@@ -34,7 +40,7 @@
 // 1B285478-11B7-4EA3-AF47-2A7D117845AC
 #define NS_ILE_IID \
 { 0x1b285478, 0x11b7, 0x4ea3, \
-	{ 0xaf, 0x47, 0x2a, 0x7d, 0x11, 0x78, 0x45, 0xac } }
+{ 0xaf, 0x47, 0x2a, 0x7d, 0x11, 0x78, 0x45, 0xac } }
 
 #define NS_ILE_PROGID "@mozilla.org/extensions/ctl;1"
 
@@ -53,7 +59,7 @@
 // D9E30F46-0EB5-4763-A7BD-26DECB30952F
 #define NS_ISHAPEDTEXT_IID \
 { 0xd9e30f46, 0x0eb5, 0x4763, \
-	{ 0xa7, 0xbd, 0x26, 0xde, 0xcb, 0x30, 0x95, 0x2f } }
+{ 0xa7, 0xbd, 0x26, 0xde, 0xcb, 0x30, 0x95, 0x2f } }
 
 // {2997A657-AD7B-4036-827C-FBB3B443845B}
 #define NS_SHAPEDTEXT_CID \
@@ -67,4 +73,4 @@
 
 #define NS_SHAPEDTEXT_PROGID "component://netscape/extensions/ctl/nsShapedText"
 
-#endif
+#endif /* !nsCtlCIID_h___ */
