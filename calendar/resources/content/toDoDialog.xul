@@ -181,7 +181,7 @@
                            <checkbox id="completed-checkbox" oncommand="updateCompletedItemEnabled()"/>
                            <textbox disabled="true" class="date-text-class" id="completed-date-text" readonly="true" value=""      onmousedown="prepareDatePicker('completed-date-text')" popup="oe-date-picker-popup" position="after_start"/>
                            <image disabled="true" id="completed-date-button" class="event-date-button-class" onmousedown="prepareDatePicker('completed-date-text')" popup="oe-date-picker-popup" position="after_start"/>
-                            <spacer minwidth="30px"/>  
+                            <spacer/>  
                             <menulist  id="percent-complete-menulist" editable="true" oncommand="percentCompleteCommand()">
                                 <menupopup>
                                     <menuitem label="0" value="0"/>
