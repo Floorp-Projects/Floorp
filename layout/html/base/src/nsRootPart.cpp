@@ -353,8 +353,8 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext&      aPresContext,
         nsSize          pageSize(aPresContext.GetPageWidth(),
                                  aPresContext.GetPageHeight());
         nsIDeviceContext *dx = aPresContext.GetDeviceContext();
-        float             sbWidth;
-        dx->GetScrollBarWidth(sbWidth);
+        float             sbWidth, sbHeight;
+        dx->GetScrollBarDimensions(sbWidth, sbHeight);
         PRInt32 extra = aReflowState.maxSize.width - PAGE_SPACING_TWIPS*2 -
           pageSize.width - NSToCoordRound(sbWidth);
         NS_RELEASE(dx);

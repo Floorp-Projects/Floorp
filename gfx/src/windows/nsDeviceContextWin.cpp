@@ -67,14 +67,9 @@ NS_IMETHODIMP nsDeviceContextWin::Init(nsNativeWidget aWidget)
   return DeviceContextImpl::Init(aWidget);
 }
 
-NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarWidth(float &aWidth) const
+NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
   aWidth = ::GetSystemMetrics(SM_CXVSCROLL) * mDevUnitsToAppUnits;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarHeight(float &aHeight) const
-{
   aHeight = ::GetSystemMetrics(SM_CXHSCROLL) * mDevUnitsToAppUnits;
   return NS_OK;
 }

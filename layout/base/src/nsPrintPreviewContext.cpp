@@ -55,8 +55,8 @@ nscoord PrintPreviewContext::GetPageWidth()
 #else
   // For testing purposes make the page width smaller than the visible
   // area
-  float sbWidth;
-  mDeviceContext->GetScrollBarWidth(sbWidth);
+  float sbWidth, sbHeight;
+  mDeviceContext->GetScrollBarDimensions(sbWidth, sbHeight);
   nscoord sbar = NSToCoordRound(sbWidth);
   return mVisibleArea.width - sbar - 2*100;
 #endif

@@ -91,20 +91,13 @@ NS_IMETHODIMP nsDeviceContextUnix :: Init(nsNativeWidget aNativeWidget)
 }
 
 
-NS_IMETHODIMP nsDeviceContextUnix :: GetScrollBarWidth(float &aWidth) const
+NS_IMETHODIMP nsDeviceContextUnix :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
   // XXX Should we push this to widget library
   aWidth = 240.0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextUnix :: GetScrollBarHeight(float &aHeight) const
-{
-  // XXX Should we push this to widget library
   aHeight = 240.0;
   return NS_OK;
 }
-
 
 nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface(nsIRenderingContext &aContext)
 {
