@@ -521,7 +521,7 @@ nsButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
     case NS_KEY_DOWN:
       if (NS_KEY_EVENT == aEvent->eventStructType) {
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-        if (NS_VK_SPACE == keyEvent->keyCode) {
+        if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
           MouseClicked(&aPresContext);
         }
       }
