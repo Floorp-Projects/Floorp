@@ -103,12 +103,10 @@ NS_NewURI(nsIURI* *result,
           nsIURI* baseURI = nsnull,
           nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
-    char* specStr = ToNewUTF8String(spec); // this forces a single byte char*
-    if (specStr == nsnull)
+    NS_ConvertUCS2toUTF8 specStr(spec); // this forces a single byte char*
+    if (!spec.IsEmpty() && specStr.IsEmpty())
         return NS_ERROR_OUT_OF_MEMORY;
-    nsresult rv = NS_NewURI(result, specStr, baseURI, ioService);
-    nsMemory::Free(specStr);
-    return rv;
+    return NS_NewURI(result, specStr.get(), baseURI, ioService);
 }
 
 
