@@ -86,7 +86,7 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer,
 
 
 /**
- * DEPRACATED API: use NS_EscapeURLPart/NS_UnescapeURL instead
+ * DEPRECATED API: use NS_EscapeURLPart/NS_UnescapeURL instead
  */
 NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result);
 NS_COM nsresult nsStdUnescape(char* str, char **result);
@@ -110,7 +110,7 @@ enum EscapeMask {
   esc_Param         = 128,
   esc_Query         = 256,
   esc_Ref           = 512,
-  esc_Forced        = 1024
+  esc_Forced        = 1024  /* forces escaping of existing escape sequences */
 };
 
 /**
