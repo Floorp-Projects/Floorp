@@ -112,9 +112,6 @@ static nsProfileAccess*    gProfileDataAccess = nsnull;
 static PRInt32          gDataAccessInstCount = 0;
 static PRBool           mCurrentProfileAvailable = PR_FALSE;
 
-static PRBool           sHaveRedundantDirectory = PR_FALSE;
-static nsFileSpec       sRedundantDirectory;
-
 // IID and CIDs of all the services needed
 static NS_DEFINE_CID(kIProfileIID, NS_IPROFILE_IID);
 static NS_DEFINE_CID(kBookmarksCID, NS_BOOKMARKS_SERVICE_CID);      
@@ -900,7 +897,7 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName, const PRUnichar* nativ
     rv = SetProfileDir(profileName, dirSpec);
 
 #if defined(DEBUG_profile)
-    ("after SetProfileDir\n");
+    printf("after SetProfileDir\n");
 #endif
 
     // Get profile defaults folder..
