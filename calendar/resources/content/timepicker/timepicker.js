@@ -371,4 +371,16 @@ oeTimePicker.calcNearestFiveMinutes = function( time )
    return minutesByFive;
 }
 
+oeTimePicker.increaseMinute = function( minuteItem, minuteNumber )
+{
+   // set the minutes in the selected time
+
+   oeTimePicker.gSelectedTime.setMinutes( oeTimePicker.gSelectedTime.getMinutes()+minuteNumber );
+
+   oeTimePicker.selectMinuteItem( minuteItem );
+
+   oeTimePicker.selectTime();
+
+   oeTimePicker.gPopup.hidePopup();
+}
 

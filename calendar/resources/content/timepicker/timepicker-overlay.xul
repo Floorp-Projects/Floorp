@@ -249,7 +249,40 @@
                 <column class="oe-time-picker-five-minute-column-class" flex="1"/>
             </columns>
             <rows >
-           
+          
+                <row flex="1"  >
+                    <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-0" onclick="oeTimePicker.increaseMinute(this, 60)">
+                        <spacer flex="1" />
+                        <box><label class="oe-time-picker-five-minute-number-class"  value="+1h" /></box>
+                        <spacer flex="1" />
+                    </vbox>
+                    <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-5" onclick="oeTimePicker.increaseMinute(this, 30)">
+                        <spacer flex="1" />
+                        <box><label class="oe-time-picker-five-minute-number-class"  value="+:30" /></box>
+                        <spacer flex="1" />
+                    </vbox>
+                    <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-10" onclick="oeTimePicker.increaseMinute(this, 15)">
+                        <spacer flex="1" />
+                        <box><label class="oe-time-picker-five-minute-number-class"  value="+:15" /></box>
+                        <spacer flex="1" />
+                    </vbox>
+                    <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-15" onclick="oeTimePicker.increaseMinute(this, 10)">
+                        <spacer flex="1" />
+                        <box><label class="oe-time-picker-five-minute-number-class"  value="+:10" /></box>
+                        <spacer flex="1" />
+                    </vbox>
+                    <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-20" onclick="oeTimePicker.increaseMinute(this, 5)">
+                        <spacer flex="1" />
+                        <box><label class="oe-time-picker-five-minute-number-class"  value="+:05" /></box>
+                        <spacer flex="1" />
+                    </vbox>
+                    <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-25" onclick="oeTimePicker.increaseMinute(this, -30)">
+                        <spacer flex="1" />
+                        <box><label class="oe-time-picker-five-minute-number-class"  value="-:30" /></box>
+                        <spacer flex="1" />
+                    </vbox>
+                </row>
+ 
                 <row flex="1"  >
                     <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-0" onclick="oeTimePicker.clickMinute(this, 0)">
                         <spacer flex="1" />
@@ -341,6 +374,39 @@
             </columns>
             <rows >
            
+                <row flex="1"  >
+                    <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-0" onclick="oeTimePicker.increaseMinute(this, 60)">
+                        <spacer flex="1" />
+                        <box><label class="oe-time-picker-five-minute-number-class"  value="+1h" /></box>
+                        <spacer flex="1" />
+                    </vbox>
+                    <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-5" onclick="oeTimePicker.increaseMinute(this, 30)">
+                        <spacer flex="1" />
+                        <box><label class="oe-time-picker-five-minute-number-class"  value="+:30" /></box>
+                        <spacer flex="1" />
+                    </vbox>
+                    <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-10" onclick="oeTimePicker.increaseMinute(this, 15)">
+                        <spacer flex="1" />
+                        <box><label class="oe-time-picker-five-minute-number-class"  value="+:15" /></box>
+                        <spacer flex="1" />
+                    </vbox>
+                    <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-15" onclick="oeTimePicker.increaseMinute(this, 10)">
+                        <spacer flex="1" />
+                        <box><label class="oe-time-picker-five-minute-number-class"  value="+:10" /></box>
+                        <spacer flex="1" />
+                    </vbox>
+                    <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-20" onclick="oeTimePicker.increaseMinute(this, 5)">
+                        <spacer flex="1" />
+                        <box><label class="oe-time-picker-five-minute-number-class"  value="+:05" /></box>
+                        <spacer flex="1" />
+                    </vbox>
+                    <vbox class="oe-time-picker-five-minute-box-class" id="oe-time-picker-five-minute-box-25" onclick="oeTimePicker.increaseMinute(this, -30)">
+                        <spacer flex="1" />
+                        <box><label class="oe-time-picker-five-minute-number-class"  value="-:30" /></box>
+                        <spacer flex="1" />
+                    </vbox>
+                </row>
+
                 <row flex="1"  >
                     <vbox class="oe-time-picker-one-minute-box-class" id="oe-time-picker-one-minute-box-0" onclick="oeTimePicker.clickMinute(this, 0)">
                         <spacer flex="1" />
