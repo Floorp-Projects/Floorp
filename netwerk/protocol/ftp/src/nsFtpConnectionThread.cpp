@@ -185,6 +185,17 @@ NS_IMETHODIMP
 DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode)
 {
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder OnStopRequest [status=%x]\n", this, statusCode)); 
+    
+    nsCOMPtr<nsITransportRequest> trequest(do_QueryInterface(request));
+    if (trequest)
+    {
+        nsCOMPtr<nsITransport> trans;
+        trequest->GetTransport(getter_AddRefs(trans));
+        nsCOMPtr<nsISocketTransport> sTrans (do_QueryInterface(trans));
+        if (sTrans)
+            sTrans->SetReuseConnection(PR_FALSE);
+    }
+
     if (mListener)
         return mListener->OnStopRequest(this, ctxt, statusCode);
     
@@ -762,9 +773,6 @@ nsFtpState::Process()
             
             if (FTP_ERROR == mState)
                 mInternalError = NS_ERROR_FAILURE;
-
-            //(DONE)
-            mNextState = FTP_COMPLETE;
             
             break;
             
@@ -1181,25 +1189,14 @@ nsFtpState::S_retr() {
 FTP_STATE
 nsFtpState::R_retr() {
 
-    if (mResponseCode/100 == 1) {
-        // see if there's another response in this read.
-        // this can happen if the server sends back two
-        // responses before we've processed the first one.
-        PRInt32 loc = -1;
-        loc = mResponseMsg.FindChar(nsCRT::LF);
-        if (loc > -1) {
-            PRInt32 err;
-            nsCAutoString response;
-            mResponseMsg.Mid(response, loc, mResponseMsg.Length() - (loc+1));
-            if (response.Length()) {
-                PRInt32 code = response.ToInteger(&err);
-                if (code/100 == 2)
-                    return FTP_COMPLETE;
-                return FTP_S_CWD;
-            }
-        }
-        return FTP_READ_BUF;
+    if (mResponseCode/100 == 2) {
+        //(DONE)
+        mNextState = FTP_COMPLETE;
+        return FTP_COMPLETE;
     }
+
+    if (mResponseCode/100 == 1) 
+         return FTP_READ_BUF;
     
     return FTP_S_CWD;
 }
@@ -1386,7 +1383,7 @@ nsFtpState::R_pasv() {
     nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(mDPipe, &rv);
     if (NS_FAILED(rv)) return FTP_ERROR;
 
-    if (NS_FAILED(sTrans->SetReuseConnection(PR_FALSE))) return FTP_ERROR;
+    if (NS_FAILED(sTrans->SetReuseConnection(PR_TRUE))) return FTP_ERROR;
 
     if (!mDRequestForwarder) {
         mDRequestForwarder = new DataRequestForwarder;
