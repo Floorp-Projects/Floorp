@@ -1223,7 +1223,7 @@ nsEventStateManager::FireContextClick()
         if (formCtrl) {
           // of all form controls, only ones dealing with text are
           // allowed to have context menus
-          PRInt32 formCtrlType = formCtrl->GetType();
+          PRInt32 type = formCtrl->GetType();
 
           allowedToDispatch = (type == NS_FORM_INPUT_TEXT ||
                                type == NS_FORM_INPUT_PASSWORD ||
