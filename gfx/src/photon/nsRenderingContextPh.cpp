@@ -1008,7 +1008,28 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth( const PRUnichar *aString, PRUint
 	return ret_code;
 	}
 
-NS_IMETHODIMP nsRenderingContextPh :: DrawString( const char *aString, PRUint32 aLength, nscoord aX, nscoord aY, const nscoord* aSpacing ) {
+NS_IMETHODIMP
+nsRenderingContextPh::GetTextDimensions(const char* aString, PRUint32 aLength,
+                                        nsTextDimensions& aDimensions)
+{
+  mFontMetrics->GetMaxAscent(aDimensions.ascent);
+  mFontMetrics->GetMaxDescent(aDimensions.descent);
+  return GetWidth(aString, aLength, aDimensions.width);
+}
+
+NS_IMETHODIMP
+nsRenderingContextPh::GetTextDimensions(const PRUnichar *aString,
+                                        PRUint32 aLength,
+                                        nsTextDimensions &aDimensions,
+                                        PRInt32 *aFontID)
+{
+  //XXX need fix for bug 96609
+  mFontMetrics->GetMaxAscent(aDimensions.ascent);
+  mFontMetrics->GetMaxDescent(aDimensions.descent);
+  return GetWidth(aString, aLength, aDimensions.width);
+}
+
+NS_IMETHODIMP nsRenderingContextPh :: DrawString2( const char *aString, PRUint32 aLength, nscoord aX, nscoord aY, const nscoord* aSpacing ) {
 
 	if( mClipRegion->IsEmpty() ) return NS_ERROR_FAILURE;
 
@@ -1019,7 +1040,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString( const char *aString, PRUint32 
 		mTranMatrix->TransformCoord( &aX, &aY );
 		PhPoint_t pos = { aX, aY };
 		SELECT( mSurface );
-		PgDrawTextChars( aString, aLength, &pos, Pg_TEXT_LEFT | Pg_TEXT_TOP );
+		PgDrawTextChars( aString, aLength, &pos, Pg_TEXT_LEFT );
 		}
 	else {
 		nscoord x = aX;
@@ -1032,18 +1053,30 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString( const char *aString, PRUint32 
 			mTranMatrix->TransformCoord(&xx, &yy);
 			PhPoint_t pos = { xx, yy };
 			SELECT(mSurface);
-			PgDrawText( &ch, 1, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
+			PgDrawText( &ch, 1, &pos, Pg_TEXT_LEFT );
 			x += *aSpacing++;
 			}
 		}
 	return NS_OK;
 	}
 
-NS_IMETHODIMP nsRenderingContextPh :: DrawString( const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY, PRInt32 aFontID, const nscoord* aSpacing ) {
+NS_IMETHODIMP nsRenderingContextPh :: DrawString2( const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY, PRInt32 aFontID, const nscoord* aSpacing ) {
 	NS_ConvertUCS2toUTF8 theUnicodeString( aString, aLength );
 	const char *p = theUnicodeString.get( );
-	return DrawString( p, strlen( p ), aX, aY, aSpacing );
+	return DrawString2( p, strlen( p ), aX, aY, aSpacing );
 	}
+
+NS_IMETHODIMP nsRenderingContextPh :: DrawString( const char *aString, PRUint32 aLength, nscoord aX, nscoord aY, PRInt32 aFontID, const nscoord* aSpacing ) {
+  nscoord y;
+  mFontMetrics->GetMaxAscent(y);
+  return DrawString2( aString, strlen( p ), aX, aY + y, aSpacing );
+  }
+
+NS_IMETHODIMP nsRenderingContextPh :: DrawString( const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY, PRInt32 aFontID, const nscoord* aSpacing ) {
+  nscoord y;
+  mFontMetrics->GetMaxAscent(y);
+  return DrawString2( aString, strlen( p ), aX, aY + y, aSpacing );
+  }
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawString( const nsString& aString, nscoord aX, nscoord aY, PRInt32 aFontID, const nscoord* aSpacing ) {
 	NS_ConvertUCS2toUTF8 theUnicodeString( aString.get(), aString.Length() );

@@ -1120,7 +1120,88 @@ FoundFont:
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextQT::DrawString(const char *aString,
+NS_IMETHODIMP
+nsRenderingContextQT::GetTextDimensions(const char* aString, PRUint32 aLength,
+                                        nsTextDimensions& aDimensions)
+{
+  mFontMetrics->GetMaxAscent(aDimensions.ascent);
+  mFontMetrics->GetMaxDescent(aDimensions.descent);
+  return GetWidth(aString, aLength, aDimensions.width);
+}
+
+NS_IMETHODIMP
+nsRenderingContextQT::GetTextDimensions(const PRUnichar *aString,
+                                        PRUint32 aLength,
+                                        nsTextDimensions &aDimensions,
+                                        PRInt32 *aFontID)
+{
+  aDimensions.Clear();
+  if (0 == aLength) 
+    return NS_OK;
+  if (nsnull == aString)
+    return NS_ERROR_FAILURE;
+
+  nsFontMetricsQT *metrics = (nsFontMetricsQT*)mFontMetrics;
+  nsFontQT *prevFont = nsnull;
+  int rawWidth = 0, rawAscent = 0, rawDescent = 0;
+  PRUint32 start = 0;
+  PRUint32 i;
+
+  for (i = 0; i < aLength; i++) {
+    PRUnichar c = aString[i];
+    nsFontQT* currFont = nsnull;
+    if (mCurrentFont->SupportsChar(c)) {
+      currFont = mCurrentFont;
+      goto FoundFont;
+    }
+    else {
+      nsFontQT **font = metrics->mLoadedFonts;
+      nsFontQT **lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      while (font < lastFont) {
+        if ((*font)->SupportsChar(c)) {
+          currFont = *font;
+          goto FoundFont; // for speed -- avoid "if" statement
+        }
+        font++;
+      }
+      currFont = metrics->FindFont(c);
+    }
+FoundFont:
+    if (prevFont) {
+      if (currFont != prevFont) {
+        rawWidth += prevFont->GetWidth(&aString[start], i - start);
+        if (rawAscent < prevFont->mFontMetrics->ascent())
+          rawAscent = prevFont->mFontMetrics->ascent();
+        if (rawDescent < prevFont->mFontMetrics->descent())
+          rawDescent = prevFont->mFontMetrics->descent();
+        prevFont = currFont;
+        start = i;
+      }
+    }
+    else {
+      prevFont = currFont;
+      start = i;
+    }
+  } 
+  if (prevFont) {
+    rawWidth += prevFont->GetWidth(&aString[start], i - start);
+    if (rawAscent < prevFont->mFontMetrics->ascent())
+      rawAscent = prevFont->mFontMetrics->ascent();
+    if (rawDescent < prevFont->mFontMetrics->descent())
+      rawDescent = prevFont->mFontMetrics->descent();
+  }
+
+  aDimensions.width = NSToCoordRound(rawWidth * mP2T);
+  aDimensions.ascent = NSToCoordRound(rawAscent * mP2T);
+  aDimensions.descent = NSToCoordRound(rawDescent * mP2T);
+
+  if (nsnull != aFontID)
+    *aFontID = 0;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRenderingContextQT::DrawString2(const char *aString,
                                                PRUint32 aLength,
                                                nscoord aX, nscoord aY,
                                                const nscoord *aSpacing)
@@ -1134,11 +1215,6 @@ NS_IMETHODIMP nsRenderingContextQT::DrawString(const char *aString,
     nscoord x = aX;
     nscoord y = aY;
 
-    // Substract xFontStruct ascent since drawing specifies baseline
-    if (mFontMetrics) {
-      mFontMetrics->GetMaxAscent(y);
-      y += aY;
-    }
     UpdateGC();
 
     if (nsnull != aSpacing) {
@@ -1165,7 +1241,28 @@ NS_IMETHODIMP nsRenderingContextQT::DrawString(const char *aString,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextQT::DrawString(const PRUnichar *aString,
+NS_IMETHODIMP
+nsRenderingContextQT::DrawString(const char *aString, PRUint32 aLength,
+                                 nscoord aX, nscoord aY,
+                                 const nscoord* aSpacing)
+{
+  nscoord y;
+  mFontMetrics->GetMaxAscent(y);
+  return DrawString2(aString, aLength, aX, aY + y, aSpacing);
+}
+
+NS_IMETHODIMP
+nsRenderingContextQT::DrawString(const PRUnichar *aString, PRUint32 aLength,
+                                   nscoord aX, nscoord aY,
+                                   PRInt32 aFontID,
+                                   const nscoord* aSpacing)
+{
+  nscoord y;
+  mFontMetrics->GetMaxAscent(y);
+  return DrawString2(aString, aLength, aX, aY + y, aFontID, aSpacing);
+}
+
+NS_IMETHODIMP nsRenderingContextQT::DrawString2(const PRUnichar *aString,
                                                PRUint32 aLength,
                                                nscoord aX,nscoord aY,
                                                PRInt32 aFontID,
@@ -1178,11 +1275,7 @@ NS_IMETHODIMP nsRenderingContextQT::DrawString(const PRUnichar *aString,
       return NS_ERROR_FAILURE;
 
     nscoord x = aX;
-    nscoord y;
-
-    mFontMetrics->GetMaxAscent(y);
-    y += aY;
-    aY = y;
+    nscoord y = aY;
 
     mTranMatrix->TransformCoord(&x,&y);
  
