@@ -68,6 +68,15 @@ EXPORTS		= \
 		nscore.h \
 		$(NULL)
 
+ifdef NS_TRACE_MALLOC
+CSRCS           += nsTraceMalloc.c
+EXPORTS         += nsTraceMalloc.h
+DEFINES         += -DNS_TRACE_MALLOC
+SIMPLE_PROGRAMS = bloatblame
+
+LIBS            += $(NSPR_LIBS)
+endif
+
 XPIDLSRCS	= \
 		nsrootidl.idl \
 		nsISupports.idl \
