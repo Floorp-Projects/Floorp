@@ -48,6 +48,20 @@ public class Interpreter extends LabelTable {
 
     public static final boolean printICode = false;
 
+// Additional interpreter-specific codes
+    static final int
+    // To indicating a line number change in icodes.
+        LINE_ICODE                      = TokenStream.LAST_TOKEN + 1,
+        SOURCEFILE_ICODE                = TokenStream.LAST_TOKEN + 2,
+
+    // To place breakpoints
+        BREAKPOINT_ICODE                = TokenStream.LAST_TOKEN + 3;
+
+    private static final int
+    // To store shorts and ints inline
+        SHORTNUMBER_ICODE               = TokenStream.LAST_TOKEN + 4,
+        INTNUMBER_ICODE                 = TokenStream.LAST_TOKEN + 5;
+
     public IRFactory createIRFactory(TokenStream ts,
                                      ClassNameHelper nameHelper, Scriptable scope)
     {
@@ -233,7 +247,7 @@ public class Interpreter extends LabelTable {
             if (lineNumber > 0 && itsData.itsLineNumberTable != null) {
                 itsData.itsLineNumberTable.put(lineNumber, iCodeTop);
             }
-            iCodeTop = addByte(TokenStream.LINE, iCodeTop);
+            iCodeTop = addByte(LINE_ICODE, iCodeTop);
             iCodeTop = addShort(lineNumber, iCodeTop);
         }
 
@@ -404,7 +418,7 @@ public class Interpreter extends LabelTable {
             case TokenStream.CALL : {
                     if (itsSourceFile != null && (itsData.itsSourceFile == null || ! itsSourceFile.equals(itsData.itsSourceFile)))
                         itsData.itsSourceFile = itsSourceFile;
-                    iCodeTop = addByte(TokenStream.SOURCEFILE, iCodeTop);
+                    iCodeTop = addByte(SOURCEFILE_ICODE, iCodeTop);
 
                     int childCount = 0;
                     short nameIndex = -1;
@@ -439,7 +453,7 @@ public class Interpreter extends LabelTable {
                     if (childCount > itsData.itsMaxArgs)
                         itsData.itsMaxArgs = childCount;
 
-                    iCodeTop = addByte(TokenStream.SOURCEFILE, iCodeTop);
+                    iCodeTop = addByte(SOURCEFILE_ICODE, iCodeTop);
                 }
                 break;
 
@@ -789,11 +803,11 @@ public class Interpreter extends LabelTable {
                         iCodeTop = addByte(TokenStream.ONE, iCodeTop);
                     }
                     else if ((short)inum == inum) {
-                        iCodeTop = addByte(TokenStream.SHORTNUMBER, iCodeTop);
+                        iCodeTop = addByte(SHORTNUMBER_ICODE, iCodeTop);
                         iCodeTop = addShort(inum, iCodeTop);
                     }
                     else {
-                        iCodeTop = addByte(TokenStream.INTNUMBER, iCodeTop);
+                        iCodeTop = addByte(INTNUMBER_ICODE, iCodeTop);
                         iCodeTop = addInt(inum, iCodeTop);
                     }
                 }
@@ -1246,7 +1260,7 @@ public class Interpreter extends LabelTable {
                         case TokenStream.FALSE :
                         case TokenStream.TRUE :
                         case TokenStream.UNDEFINED :
-                        case TokenStream.SOURCEFILE :
+                        case SOURCEFILE_ICODE :
                             out.println(tname);
                             break;
                         case TokenStream.GOSUB :
@@ -1301,13 +1315,13 @@ public class Interpreter extends LabelTable {
                                 pc += 4;
                             }
                             break;
-                        case TokenStream.SHORTNUMBER : {
+                        case SHORTNUMBER_ICODE : {
                                 int value = getShort(iCode, pc);
                                 out.println(tname + " " + value);
                                 pc += 2;
                             }
                             break;
-                        case TokenStream.INTNUMBER : {
+                        case INTNUMBER_ICODE : {
                                 int value = getInt(iCode, pc);
                                 out.println(tname + " " + value);
                                 pc += 4;
@@ -1332,7 +1346,7 @@ public class Interpreter extends LabelTable {
                                         + strings[getShort(iCode, pc)] + "\"");
                             pc += 2;
                             break;
-                        case TokenStream.LINE : {
+                        case LINE_ICODE : {
                                 int line = getShort(iCode, pc);
                                 out.println(tname + " : " + line);
                                 pc += 2;
@@ -1975,13 +1989,13 @@ public class Interpreter extends LabelTable {
                         stack[++stackTop] = strings[getShort(iCode, pc + 1)];
                         pc += 2;
                         break;
-                    case TokenStream.SHORTNUMBER :
+                    case SHORTNUMBER_ICODE :
                         ++stackTop;
                         stack[stackTop] = DBL_MRK;
                         sDbl[stackTop] = getShort(iCode, pc + 1);
                         pc += 2;
                         break;
-                    case TokenStream.INTNUMBER :
+                    case INTNUMBER_ICODE :
                         ++stackTop;
                         stack[stackTop] = DBL_MRK;
                         sDbl[stackTop] = getInt(iCode, pc + 1);
@@ -2158,16 +2172,16 @@ public class Interpreter extends LabelTable {
                         stack[++stackTop] = theData.itsRegExpLiterals[i];
                         pc += 2;
                         break;
-                    case TokenStream.SOURCEFILE :
+                    case SOURCEFILE_ICODE :
                         cx.interpreterSourceFile = theData.itsSourceFile;
                         break;
-                    case TokenStream.LINE :
-                    case TokenStream.BREAKPOINT :
+                    case LINE_ICODE :
+                    case BREAKPOINT_ICODE :
                         i = getShort(iCode, pc + 1);
                         cx.interpreterLine = i;
                         if (frame != null)
                             frame.setLineNumber(i);
-                        if ((iCode[pc] & 0xff) == TokenStream.BREAKPOINT ||
+                        if ((iCode[pc] & 0xff) == BREAKPOINT_ICODE ||
                             cx.inLineStepMode)
                         {
                             cx.getDebuggableEngine().

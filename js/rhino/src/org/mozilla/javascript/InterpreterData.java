@@ -68,21 +68,26 @@ class InterpreterData implements Serializable {
 
     public boolean placeBreakpoint(int line) { // XXX throw exn?
         int offset = getOffset(line);
-        if (offset != -1 && (itsICode[offset] == (byte)TokenStream.LINE ||
-                             itsICode[offset] == (byte)TokenStream.BREAKPOINT))
-        {
-            itsICode[offset] = (byte) TokenStream.BREAKPOINT;
-            return true;
+        if (offset != -1) {
+            int icode = 0xFF & itsICode[offset];
+            if (icode == Interpreter.BREAKPOINT_ICODE) {
+                return true;
+            }else if (icode == Interpreter.LINE_ICODE) {
+                itsICode[offset] = (byte) Interpreter.BREAKPOINT_ICODE;
+                return true;
+            }
         }
         return false;
     }
 
     public boolean removeBreakpoint(int line) {
         int offset = getOffset(line);
-        if (offset != -1 && itsICode[offset] == (byte) TokenStream.BREAKPOINT)
-        {
-            itsICode[offset] = (byte) TokenStream.LINE;
-            return true;
+        if (offset != -1) {
+            int icode = 0xFF & itsICode[offset];
+            if (icode == Interpreter.BREAKPOINT_ICODE) {
+                itsICode[offset] = (byte) Interpreter.LINE_ICODE;
+                return true;
+            }
         }
         return false;
     }

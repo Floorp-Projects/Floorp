@@ -248,185 +248,166 @@ public class TokenStream {
         USELOCAL    = 145,
         SCRIPT      = 146,   // top-level node for entire script
 
-        /**
-         * For the interpreted mode indicating a line number change in icodes.
-         */
-        LINE        = 147,
-        SOURCEFILE  = 148,
-
-        // For debugger
-        BREAKPOINT  = 149,
-
-        // For Interpreter to store shorts and ints inline
-        SHORTNUMBER = 150,
-        INTNUMBER   = 151;
+        LAST_TOKEN  = 146;
 
     // end enum
 
 
-    /* for mapping int token types to printable strings.
-     * make sure to add 1 to index before using these!
-     */
-    private static String names[];
-    private static void checkNames() {
-        if (Context.printTrees && names == null) {
-            String[] a = {
-                "error",
-                "eof",
-                "eol",
-                "popv",
-                "enterwith",
-                "leavewith",
-                "return",
-                "goto",
-                "ifeq",
-                "ifne",
-                "dup",
-                "setname",
-                "bitor",
-                "bitxor",
-                "bitand",
-                "eq",
-                "ne",
-                "lt",
-                "le",
-                "gt",
-                "ge",
-                "lsh",
-                "rsh",
-                "ursh",
-                "add",
-                "sub",
-                "mul",
-                "div",
-                "mod",
-                "bitnot",
-                "neg",
-                "new",
-                "delprop",
-                "typeof",
-                "nameinc",
-                "propinc",
-                "eleminc",
-                "namedec",
-                "propdec",
-                "elemdec",
-                "getprop",
-                "setprop",
-                "getelem",
-                "setelem",
-                "call",
-                "name",
-                "number",
-                "string",
-                "zero",
-                "one",
-                "null",
-                "this",
-                "false",
-                "true",
-                "sheq",
-                "shne",
-                "closure",
-                "object",
-                "pop",
-                "pos",
-                "varinc",
-                "vardec",
-                "bindname",
-                "throw",
-                "in",
-                "instanceof",
-                "gosub",
-                "retsub",
-                "callspecial",
-                "getthis",
-                "newtemp",
-                "usetemp",
-                "getbase",
-                "getvar",
-                "setvar",
-                "undefined",
-                "try",
-                "endtry",
-                "newscope",
-                "typeofname",
-                "enuminit",
-                "enumnext",
-                "getproto",
-                "getparent",
-                "setproto",
-                "setparent",
-                "scope",
-                "getscopeparent",
-                "thisfn",
-                "jthrow",
-                "semi",
-                "lb",
-                "rb",
-                "lc",
-                "rc",
-                "lp",
-                "rp",
-                "comma",
-                "assign",
-                "hook",
-                "colon",
-                "or",
-                "and",
-                "eqop",
-                "relop",
-                "shop",
-                "unaryop",
-                "inc",
-                "dec",
-                "dot",
-                "primary",
-                "function",
-                "export",
-                "import",
-                "if",
-                "else",
-                "switch",
-                "case",
-                "default",
-                "while",
-                "do",
-                "for",
-                "break",
-                "continue",
-                "var",
-                "with",
-                "catch",
-                "finally",
-                "reserved",
-                "nop",
-                "not",
-                "pre",
-                "post",
-                "void",
-                "block",
-                "arraylit",
-                "objlit",
-                "label",
-                "target",
-                "loop",
-                "enumdone",
-                "exprstmt",
-                "parent",
-                "convert",
-                "jsr",
-                "newlocal",
-                "uselocal",
-                "script",
-                "line",
-                "sourcefile",
-                "breakpoint",
-                "shortnumber",
-                "intnumber",
-            };
-            names = a;
+    public static String tokenToName(int token) {
+        if (Context.printTrees) {
+            switch (token) {
+                case ERROR:           return "error";
+                case EOF:             return "eof";
+                case EOL:             return "eol";
+                case POPV:            return "popv";
+                case ENTERWITH:       return "enterwith";
+                case LEAVEWITH:       return "leavewith";
+                case RETURN:          return "return";
+                case GOTO:            return "goto";
+                case IFEQ:            return "ifeq";
+                case IFNE:            return "ifne";
+                case DUP:             return "dup";
+                case SETNAME:         return "setname";
+                case BITOR:           return "bitor";
+                case BITXOR:          return "bitxor";
+                case BITAND:          return "bitand";
+                case EQ:              return "eq";
+                case NE:              return "ne";
+                case LT:              return "lt";
+                case LE:              return "le";
+                case GT:              return "gt";
+                case GE:              return "ge";
+                case LSH:             return "lsh";
+                case RSH:             return "rsh";
+                case URSH:            return "ursh";
+                case ADD:             return "add";
+                case SUB:             return "sub";
+                case MUL:             return "mul";
+                case DIV:             return "div";
+                case MOD:             return "mod";
+                case BITNOT:          return "bitnot";
+                case NEG:             return "neg";
+                case NEW:             return "new";
+                case DELPROP:         return "delprop";
+                case TYPEOF:          return "typeof";
+                case NAMEINC:         return "nameinc";
+                case PROPINC:         return "propinc";
+                case ELEMINC:         return "eleminc";
+                case NAMEDEC:         return "namedec";
+                case PROPDEC:         return "propdec";
+                case ELEMDEC:         return "elemdec";
+                case GETPROP:         return "getprop";
+                case SETPROP:         return "setprop";
+                case GETELEM:         return "getelem";
+                case SETELEM:         return "setelem";
+                case CALL:            return "call";
+                case NAME:            return "name";
+                case NUMBER:          return "number";
+                case STRING:          return "string";
+                case ZERO:            return "zero";
+                case ONE:             return "one";
+                case NULL:            return "null";
+                case THIS:            return "this";
+                case FALSE:           return "false";
+                case TRUE:            return "true";
+                case SHEQ:            return "sheq";
+                case SHNE:            return "shne";
+                case CLOSURE:         return "closure";
+                case OBJECT:          return "object";
+                case POP:             return "pop";
+                case POS:             return "pos";
+                case VARINC:          return "varinc";
+                case VARDEC:          return "vardec";
+                case BINDNAME:        return "bindname";
+                case THROW:           return "throw";
+                case IN:              return "in";
+                case INSTANCEOF:      return "instanceof";
+                case GOSUB:           return "gosub";
+                case RETSUB:          return "retsub";
+                case CALLSPECIAL:     return "callspecial";
+                case GETTHIS:         return "getthis";
+                case NEWTEMP:         return "newtemp";
+                case USETEMP:         return "usetemp";
+                case GETBASE:         return "getbase";
+                case GETVAR:          return "getvar";
+                case SETVAR:          return "setvar";
+                case UNDEFINED:       return "undefined";
+                case TRY:             return "try";
+                case ENDTRY:          return "endtry";
+                case NEWSCOPE:        return "newscope";
+                case TYPEOFNAME:      return "typeofname";
+                case ENUMINIT:        return "enuminit";
+                case ENUMNEXT:        return "enumnext";
+                case GETPROTO:        return "getproto";
+                case GETPARENT:       return "getparent";
+                case SETPROTO:        return "setproto";
+                case SETPARENT:       return "setparent";
+                case SCOPE:           return "scope";
+                case GETSCOPEPARENT:  return "getscopeparent";
+                case THISFN:          return "thisfn";
+                case JTHROW:          return "jthrow";
+                case SEMI:            return "semi";
+                case LB:              return "lb";
+                case RB:              return "rb";
+                case LC:              return "lc";
+                case RC:              return "rc";
+                case LP:              return "lp";
+                case RP:              return "rp";
+                case COMMA:           return "comma";
+                case ASSIGN:          return "assign";
+                case HOOK:            return "hook";
+                case COLON:           return "colon";
+                case OR:              return "or";
+                case AND:             return "and";
+                case EQOP:            return "eqop";
+                case RELOP:           return "relop";
+                case SHOP:            return "shop";
+                case UNARYOP:         return "unaryop";
+                case INC:             return "inc";
+                case DEC:             return "dec";
+                case DOT:             return "dot";
+                case PRIMARY:         return "primary";
+                case FUNCTION:        return "function";
+                case EXPORT:          return "export";
+                case IMPORT:          return "import";
+                case IF:              return "if";
+                case ELSE:            return "else";
+                case SWITCH:          return "switch";
+                case CASE:            return "case";
+                case DEFAULT:         return "default";
+                case WHILE:           return "while";
+                case DO:              return "do";
+                case FOR:             return "for";
+                case BREAK:           return "break";
+                case CONTINUE:        return "continue";
+                case VAR:             return "var";
+                case WITH:            return "with";
+                case CATCH:           return "catch";
+                case FINALLY:         return "finally";
+                case RESERVED:        return "reserved";
+                case NOP:             return "nop";
+                case NOT:             return "not";
+                case PRE:             return "pre";
+                case POST:            return "post";
+                case VOID:            return "void";
+                case BLOCK:           return "block";
+                case ARRAYLIT:        return "arraylit";
+                case OBJLIT:          return "objlit";
+                case LABEL:           return "label";
+                case TARGET:          return "target";
+                case LOOP:            return "loop";
+                case ENUMDONE:        return "enumdone";
+                case EXPRSTMT:        return "exprstmt";
+                case PARENT:          return "parent";
+                case CONVERT:         return "convert";
+                case JSR:             return "jsr";
+                case NEWLOCAL:        return "newlocal";
+                case USELOCAL:        return "uselocal";
+                case SCRIPT:          return "script";
+            }
+            return "<unknown="+token+">";
         }
+        return "";
     }
 
     /* This function uses the cached op, string and number fields in
@@ -435,35 +416,30 @@ public class TokenStream {
      */
     public String tokenToString(int token) {
         if (Context.printTrees) {
-            checkNames();
-            if (token + 1 >= names.length)
-                return null;
+            String name = tokenToName(token);
 
-            if (token == UNARYOP ||
-                token == ASSIGN ||
-                token == PRIMARY ||
-                token == EQOP ||
-                token == SHOP ||
-                token == RELOP) {
-                return names[token + 1] + " " + names[this.op + 1];
+            switch (token) {
+                case UNARYOP:
+                case ASSIGN:
+                case PRIMARY:
+                case EQOP:
+                case SHOP:
+                case RELOP:
+                    return name + " " + tokenToName(this.op);
+
+                case STRING:
+                case OBJECT:
+                case NAME:
+                    return name + " `" + this.string + "'";
+
+                case NUMBER:
+                    return "NUMBER " + this.number;
             }
 
-            if (token == STRING || token == OBJECT || token == NAME)
-                return names[token + 1] + " `" + this.string + "'";
-
-            if (token == NUMBER)
-                return "NUMBER " + this.number;
-
-            return names[token + 1];
+            return name;
         }
         return "";
     }
-
-    public static String tokenToName(int type) {
-        checkNames();
-        return names == null ? "" : names[type + 1];
-    }
-
 
     private int stringToKeyword(String name) {
 // #string_id_map#
