@@ -734,7 +734,7 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
       nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(nodeToExamine);
       if (elem)
       {
-        nsAutoString typeAttrName; typeAttrName.Assign(NS_LITERAL_STRING("align"));
+        nsAutoString typeAttrName(NS_LITERAL_STRING("align"));
         nsAutoString typeAttrVal;
         res = elem->GetAttribute(typeAttrName, typeAttrVal);
         typeAttrVal.ToLowerCase();
@@ -868,9 +868,8 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAWritableString &outFormat)
   outFormat.Truncate(0);
   
   PRBool bMixed = PR_FALSE;
-  nsAutoString formatStr; 
   // using "x" as an uninitialized value, since "" is meaningful
-  formatStr.Assign(NS_LITERAL_STRING("x"));
+  nsAutoString formatStr(NS_LITERAL_STRING("x")); 
   
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
   nsresult res = GetParagraphFormatNodes(address_of(arrayOfNodes), PR_TRUE);
@@ -1086,7 +1085,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
   if (NS_FAILED(res)) return res;
 
   // dont put text in places that cant have it
-  nsAutoString textTag; textTag.Assign(NS_LITERAL_STRING("__moz_text"));
+  nsAutoString textTag(NS_LITERAL_STRING("__moz_text"));
   if (!mHTMLEditor->IsTextNode(selNode) && !mHTMLEditor->CanContainTag(selNode, textTag))
     return NS_ERROR_FAILURE;
 
@@ -1182,7 +1181,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
       NS_NAMED_LITERAL_STRING(tabStr, "\t");
       NS_NAMED_LITERAL_STRING(newlineStr, "\n");
       char specialChars[] = {'\t','\n',0};
-      nsAutoString tabString; tabString.Assign(NS_LITERAL_STRING("    "));
+      nsAutoString tabString(NS_LITERAL_STRING("    "));
       while (unicodeBuf && (pos != -1) && (pos < (PRInt32)inString->Length()))
       {
         PRInt32 oldPos = pos;
@@ -2527,8 +2526,7 @@ nsHTMLEditRules::WillMakeDefListItem(nsISelection *aSelection,
                                      PRBool *aHandled)
 {
   // for now we let WillMakeList handle this
-  nsAutoString listType; 
-  listType.Assign(NS_LITERAL_STRING("dl"));
+  nsAutoString listType(NS_LITERAL_STRING("dl"));
   return WillMakeList(aSelection, &listType, aEntireList, aCancel, aHandled, aItemType);
 }
 
@@ -2746,7 +2744,7 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
   {
     nsCOMPtr<nsIDOMNode> parent, theBlock;
     PRInt32 offset;
-    nsAutoString quoteType; quoteType.Assign(NS_LITERAL_STRING("blockquote"));
+    nsAutoString quoteType(NS_LITERAL_STRING("blockquote"));
     
     // get selection location
     res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(parent), &offset);
@@ -2867,7 +2865,7 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
         // or if this node doesn't go in blockquote we used earlier.
         if (!curQuote) 
         {
-          nsAutoString quoteType; quoteType.Assign(NS_LITERAL_STRING("blockquote"));
+          nsAutoString quoteType(NS_LITERAL_STRING("blockquote"));
           res = SplitAsNeeded(&quoteType, address_of(curParent), &offset);
           if (NS_FAILED(res)) return res;
           res = mHTMLEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curQuote));
@@ -3388,7 +3386,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
   {
     PRInt32 offset;
     nsCOMPtr<nsIDOMNode> brNode, parent, theDiv, sib;
-    nsAutoString divType; divType.Assign(NS_LITERAL_STRING("div"));
+    nsAutoString divType(NS_LITERAL_STRING("div"));
     res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(parent), &offset);
     if (NS_FAILED(res)) return res;
     res = SplitAsNeeded(&divType, address_of(parent), &offset);
@@ -3455,7 +3453,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
     if (nsHTMLEditUtils::SupportsAlignAttr(curNode))
     {
       nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(curNode);
-      nsAutoString attr; attr.Assign(NS_LITERAL_STRING("align"));
+      nsAutoString attr(NS_LITERAL_STRING("align"));
       res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
       if (NS_FAILED(res)) return res;
       // clear out curDiv so that we don't put nodes after this one into it
@@ -3488,7 +3486,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
     // or if this node doesn't go in div we used earlier.
     if (!curDiv || transitionList[i])
     {
-      nsAutoString divType; divType.Assign(NS_LITERAL_STRING("div"));
+      nsAutoString divType(NS_LITERAL_STRING("div"));
       res = SplitAsNeeded(&divType, address_of(curParent), &offset);
       if (NS_FAILED(res)) return res;
       res = mHTMLEditor->CreateNode(divType, curParent, offset, getter_AddRefs(curDiv));
@@ -3497,7 +3495,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
       mNewBlock = curDiv;
       // set up the alignment on the div
       nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(curDiv);
-      nsAutoString attr; attr.Assign(NS_LITERAL_STRING("align"));
+      nsAutoString attr(NS_LITERAL_STRING("align"));
       res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
       if (NS_FAILED(res)) return res;
       // curDiv is now the correct thing to put curNode in
@@ -3573,19 +3571,19 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAReadableString *
     // the cell already has a div containing all of it's content: just
     // act on this div.
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(firstChild);
-    nsAutoString attr; attr.Assign(NS_LITERAL_STRING("align"));
+    nsAutoString attr(NS_LITERAL_STRING("align"));
     res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
     if (NS_FAILED(res)) return res;
   }
   else
   {
     // else we need to put in a div, set the alignment, and toss in all the children
-    nsAutoString divType; divType.Assign(NS_LITERAL_STRING("div"));
+    nsAutoString divType(NS_LITERAL_STRING("div"));
     res = mHTMLEditor->CreateNode(divType, aNode, 0, getter_AddRefs(divNode));
     if (NS_FAILED(res)) return res;
     // set up the alignment on the div
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(divNode);
-    nsAutoString attr; attr.Assign(NS_LITERAL_STRING("align"));
+    nsAutoString attr(NS_LITERAL_STRING("align"));
     res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
     if (NS_FAILED(res)) return res;
     // tuck the children into the end of the active div
@@ -5293,7 +5291,7 @@ nsHTMLEditRules::MakeBlockquote(nsISupportsArray *arrayOfNodes)
     // if no curBlock, make one
     if (!curBlock)
     {
-      nsAutoString quoteType; quoteType.Assign(NS_LITERAL_STRING("blockquote"));
+      nsAutoString quoteType(NS_LITERAL_STRING("blockquote"));
       res = SplitAsNeeded(&quoteType, address_of(curParent), &offset);
       if (NS_FAILED(res)) return res;
       res = mHTMLEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curBlock));

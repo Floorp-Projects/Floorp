@@ -77,12 +77,12 @@ nsHTMLEditUtils::IsHeader(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if ( (tag.EqualsWithConversion("h1")) ||
-       (tag.EqualsWithConversion("h2")) ||
-       (tag.EqualsWithConversion("h3")) ||
-       (tag.EqualsWithConversion("h4")) ||
-       (tag.EqualsWithConversion("h5")) ||
-       (tag.EqualsWithConversion("h6")) )
+  if ( (tag.Equals(NS_LITERAL_STRING("h1"))) ||
+       (tag.Equals(NS_LITERAL_STRING("h2"))) ||
+       (tag.Equals(NS_LITERAL_STRING("h3"))) ||
+       (tag.Equals(NS_LITERAL_STRING("h4"))) ||
+       (tag.Equals(NS_LITERAL_STRING("h5"))) ||
+       (tag.Equals(NS_LITERAL_STRING("h6"))) )
   {
     return PR_TRUE;
   }
@@ -110,9 +110,9 @@ nsHTMLEditUtils::IsListItem(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.EqualsWithConversion("li") ||
-      tag.EqualsWithConversion("dd") ||
-      tag.EqualsWithConversion("dt"))
+  if (tag.Equals(NS_LITERAL_STRING("li")) ||
+      tag.Equals(NS_LITERAL_STRING("dd")) ||
+      tag.Equals(NS_LITERAL_STRING("dt")))
   {
     return PR_TRUE;
   }
@@ -129,10 +129,10 @@ nsHTMLEditUtils::IsTableElement(nsIDOMNode *node)
   NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTableElement");
   nsAutoString tagName;
   nsEditor::GetTagString(node,tagName);
-  if (tagName.EqualsWithConversion("table") || tagName.EqualsWithConversion("tr") || 
-      tagName.EqualsWithConversion("td")    || tagName.EqualsWithConversion("th") ||
-      tagName.EqualsWithConversion("thead") || tagName.EqualsWithConversion("tfoot") ||
-      tagName.EqualsWithConversion("tbody") || tagName.EqualsWithConversion("caption"))
+  if (tagName.Equals(NS_LITERAL_STRING("table")) || tagName.Equals(NS_LITERAL_STRING("tr")) || 
+      tagName.Equals(NS_LITERAL_STRING("td"))    || tagName.Equals(NS_LITERAL_STRING("th")) ||
+      tagName.Equals(NS_LITERAL_STRING("thead")) || tagName.Equals(NS_LITERAL_STRING("tfoot")) ||
+      tagName.Equals(NS_LITERAL_STRING("tbody")) || tagName.Equals(NS_LITERAL_STRING("caption")))
   {
     return PR_TRUE;
   }
@@ -169,7 +169,7 @@ nsHTMLEditUtils::IsTableCell(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.EqualsWithConversion("td") || tag.EqualsWithConversion("th"))
+  if (tag.Equals(NS_LITERAL_STRING("td")) || tag.Equals(NS_LITERAL_STRING("th")))
   {
     return PR_TRUE;
   }
@@ -187,9 +187,9 @@ nsHTMLEditUtils::IsTableCellOrCaption(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if (tag.EqualsWithConversion("td") || 
-      tag.EqualsWithConversion("th") ||
-      tag.EqualsWithConversion("caption") )
+  if (tag.Equals(NS_LITERAL_STRING("td")) || 
+      tag.Equals(NS_LITERAL_STRING("th")) ||
+      tag.Equals(NS_LITERAL_STRING("caption")) )
   {
     return PR_TRUE;
   }
@@ -207,9 +207,9 @@ nsHTMLEditUtils::IsList(nsIDOMNode *node)
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
-  if ( (tag.EqualsWithConversion("dl")) ||
-       (tag.EqualsWithConversion("ol")) ||
-       (tag.EqualsWithConversion("ul")) )
+  if ( (tag.Equals(NS_LITERAL_STRING("dl"))) ||
+       (tag.Equals(NS_LITERAL_STRING("ol"))) ||
+       (tag.Equals(NS_LITERAL_STRING("ul"))) )
   {
     return PR_TRUE;
   }
@@ -368,7 +368,7 @@ nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
   if (IsBlockquote(node))
   {
     nsCOMPtr<nsIDOMElement> bqElem = do_QueryInterface(node);
-    nsAutoString typeAttrName; typeAttrName.AssignWithConversion("type");
+    nsAutoString typeAttrName(NS_LITERAL_STRING("type"));
     nsAutoString typeAttrVal;
     nsresult res = bqElem->GetAttribute(typeAttrName, typeAttrVal);
     typeAttrVal.ToLowerCase();
@@ -439,22 +439,22 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
   nsAutoString tag;
   nsEditor::GetTagString(aNode, tag);
   tag.ToLowerCase();
-  if (tag.EqualsWithConversion("hr") ||
-      tag.EqualsWithConversion("table") ||
-      tag.EqualsWithConversion("tbody") ||
-      tag.EqualsWithConversion("tfoot") ||
-      tag.EqualsWithConversion("thead") ||
-      tag.EqualsWithConversion("tr") ||
-      tag.EqualsWithConversion("td") ||
-      tag.EqualsWithConversion("th") ||
-      tag.EqualsWithConversion("div") ||
-      tag.EqualsWithConversion("p") ||
-      tag.EqualsWithConversion("h1") ||
-      tag.EqualsWithConversion("h2") ||
-      tag.EqualsWithConversion("h3") ||
-      tag.EqualsWithConversion("h4") ||
-      tag.EqualsWithConversion("h5") ||
-      tag.EqualsWithConversion("h6")) {
+  if (tag.Equals(NS_LITERAL_STRING("hr")) ||
+      tag.Equals(NS_LITERAL_STRING("table")) ||
+      tag.Equals(NS_LITERAL_STRING("tbody")) ||
+      tag.Equals(NS_LITERAL_STRING("tfoot")) ||
+      tag.Equals(NS_LITERAL_STRING("thead")) ||
+      tag.Equals(NS_LITERAL_STRING("tr")) ||
+      tag.Equals(NS_LITERAL_STRING("td")) ||
+      tag.Equals(NS_LITERAL_STRING("th")) ||
+      tag.Equals(NS_LITERAL_STRING("div")) ||
+      tag.Equals(NS_LITERAL_STRING("p")) ||
+      tag.Equals(NS_LITERAL_STRING("h1")) ||
+      tag.Equals(NS_LITERAL_STRING("h2")) ||
+      tag.Equals(NS_LITERAL_STRING("h3")) ||
+      tag.Equals(NS_LITERAL_STRING("h4")) ||
+      tag.Equals(NS_LITERAL_STRING("h5")) ||
+      tag.Equals(NS_LITERAL_STRING("h6"))) {
     return PR_TRUE;
   }
   return PR_FALSE;

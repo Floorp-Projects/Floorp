@@ -110,11 +110,11 @@ nsTextEditUtils::HasMozAttr(nsIDOMNode *node)
   nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(node);
   if (elem)
   {
-    nsAutoString typeAttrName; typeAttrName.AssignWithConversion("type");
+    nsAutoString typeAttrName(NS_LITERAL_STRING("type"));
     nsAutoString typeAttrVal;
     nsresult res = elem->GetAttribute(typeAttrName, typeAttrVal);
     typeAttrVal.ToLowerCase();
-    if (NS_SUCCEEDED(res) && (typeAttrVal.EqualsWithConversion("_moz")))
+    if (NS_SUCCEEDED(res) && (typeAttrVal.Equals(NS_LITERAL_STRING("_moz"))))
       return PR_TRUE;
   }
   return PR_FALSE;

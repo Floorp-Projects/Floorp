@@ -193,7 +193,7 @@ NS_IMETHODIMP nsHTMLEditor::SetColSpan(nsIDOMElement *aCell, PRInt32 aColSpan)
   if (!aCell) return NS_ERROR_NULL_POINTER;
   nsAutoString newSpan;
   newSpan.AppendInt(aColSpan, 10);
-  nsAutoString colSpan; colSpan.AssignWithConversion("colspan");
+  nsAutoString colSpan(NS_LITERAL_STRING("colspan"));
   return SetAttribute(aCell, colSpan, newSpan);
 }
 
@@ -202,7 +202,7 @@ NS_IMETHODIMP nsHTMLEditor::SetRowSpan(nsIDOMElement *aCell, PRInt32 aRowSpan)
   if (!aCell) return NS_ERROR_NULL_POINTER;
   nsAutoString newSpan;
   newSpan.AppendInt(aRowSpan, 10);
-  nsAutoString rowSpan; rowSpan.AssignWithConversion("rowspan");
+  nsAutoString rowSpan(NS_LITERAL_STRING("rowspan"));
   return SetAttribute(aCell, rowSpan, newSpan);
 }
 
@@ -1893,7 +1893,7 @@ nsHTMLEditor::CopyCellBackgroundColor(nsIDOMElement *destCell, nsIDOMElement *so
   if (!destCell || !sourceCell) return NS_ERROR_NULL_POINTER;
 
   // Copy backgournd color to new cell
-  nsAutoString bgcolor; bgcolor.AssignWithConversion("bgcolor");
+  nsAutoString bgcolor(NS_LITERAL_STRING("bgcolor"));
   nsAutoString color;
   PRBool isSet;
   nsresult res = GetAttributeValue(sourceCell, bgcolor, color, &isSet);
@@ -3297,7 +3297,7 @@ nsHTMLEditor::GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsS
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_FAILURE;
 
-  nsAutoString tdName; tdName.AssignWithConversion("td");
+  nsAutoString tdName(NS_LITERAL_STRING("td"));
 
   // Try to get the first selected cell
   nsCOMPtr<nsIDOMElement> tableOrCellElement;
@@ -3314,8 +3314,8 @@ nsHTMLEditor::GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsS
   }
   else
   {
-    nsAutoString tableName; tableName.AssignWithConversion("table");
-    nsAutoString trName; trName.AssignWithConversion("tr");
+    nsAutoString tableName(NS_LITERAL_STRING("table"));
+    nsAutoString trName(NS_LITERAL_STRING("tr"));
 
     nsCOMPtr<nsIDOMNode> anchorNode;
     res = selection->GetAnchorNode(getter_AddRefs(anchorNode));

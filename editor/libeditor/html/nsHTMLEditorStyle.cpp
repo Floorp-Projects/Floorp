@@ -1410,11 +1410,12 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
     res = SplitNode(node, aStartOffset, getter_AddRefs(tmp));
     if (NS_FAILED(res)) return res;
   }
-  
+
+  nsAutoString nodeType(aSizeChange==1 ? NS_LITERAL_STRING("big") : NS_LITERAL_STRING("small"));
   // look for siblings that are correct type of node
   nsCOMPtr<nsIDOMNode> sibling;
   GetPriorHTMLSibling(node, address_of(sibling));
-  if (sibling && NodeIsType(sibling, NS_ConvertASCIItoUCS2(aSizeChange==1 ? "big" : "small")))
+  if (sibling && NodeIsType(sibling, nodeType))
   {
     // previous sib is already right kind of inline node; slide this over into it
     res = MoveNode(node, sibling, -1);
@@ -1422,7 +1423,7 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
   }
   sibling = nsnull;
   GetNextHTMLSibling(node, address_of(sibling));
-  if (sibling && NodeIsType(sibling, NS_ConvertASCIItoUCS2(aSizeChange==1 ? "big" : "small")))
+  if (sibling && NodeIsType(sibling, nodeType))
   {
     // following sib is already right kind of inline node; slide this over into it
     res = MoveNode(node, sibling, 0);
@@ -1430,7 +1431,7 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
   }
   
   // else reparent the node inside font node with appropriate relative size
-  res = InsertContainerAbove(node, address_of(tmp), NS_ConvertASCIItoUCS2(aSizeChange==1 ? "big" : "small"));
+  res = InsertContainerAbove(node, address_of(tmp), nodeType);
   return res;
 }
 
@@ -1452,14 +1453,13 @@ nsHTMLEditor::RelativeFontChangeHelper( PRInt32 aSizeChange,
 
   nsresult res = NS_OK;
   nsAutoString tag;
-  if (aSizeChange == 1) tag.AssignWithConversion("big");
-  else tag.AssignWithConversion("small");
+  if (aSizeChange == 1) tag.Assign(NS_LITERAL_STRING("big"));
+  else tag.Assign(NS_LITERAL_STRING("small"));
   nsCOMPtr<nsIDOMNodeList> childNodes;
   PRInt32 j;
   PRUint32 childCount;
   nsCOMPtr<nsIDOMNode> childNode;
-  nsAutoString attr;
-  attr.AssignWithConversion("size");
+  nsAutoString attr(NS_LITERAL_STRING("size"));
   
   // if this is a font node with size, put big/small inside it
   if (NodeIsType(aNode, nsIEditProperty::font) && HasAttr(aNode, &attr))
@@ -1590,12 +1590,10 @@ nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAWritableString &outFace)
   if (!aMixed)
       return NS_ERROR_FAILURE;
   *aMixed = PR_TRUE;
-  //outFace.Assign(NS_LITERAL_STRING(""));
   outFace.SetLength(0);
 
   nsresult res;
-  nsAutoString faceStr;
-  faceStr.Assign(NS_LITERAL_STRING("face"));
+  nsAutoString faceStr(NS_LITERAL_STRING("face"));
   PRBool first, any, all;
   
   
@@ -1635,7 +1633,7 @@ nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAWritableString &aOutColor)
   aOutColor.SetLength(0);
   
   nsresult res;
-  nsAutoString colorStr; colorStr.Assign(NS_LITERAL_STRING("color"));
+  nsAutoString colorStr(NS_LITERAL_STRING("color"));
   PRBool first, any, all;
   
   res = GetInlinePropertyBase(nsIEditProperty::font, &colorStr, nsnull, &first, &any, &all, &aOutColor);
