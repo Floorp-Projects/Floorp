@@ -272,7 +272,9 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
             rv = pChannel->SetNotificationCallbacks(notificationCallbacks);
             if (NS_FAILED(rv)) goto done;
 
-            if (mCheckForProxy)
+            PRBool checkForProxy = PR_FALSE;
+            rv = mProxySvc->GetProxyEnabled(&checkForProxy);
+            if (checkForProxy)
             {
                 rv = mProxySvc->ExamineForProxy(i_URL, pChannel);
                 if (NS_FAILED(rv)) goto done;
@@ -520,7 +522,6 @@ nsHTTPHandler::SetVendorComment(const PRUnichar* aComment)
 
 nsHTTPHandler::nsHTTPHandler():
     mAcceptLanguages(nsnull),
-    mCheckForProxy(PR_FALSE),
     mDoKeepAlive(PR_FALSE),
     mReferrerLevel(0)
 {
@@ -1024,14 +1025,6 @@ nsHTTPHandler::PrefsChanged(const char* pref)
         PRINTF_CYAN;
         printf("network.sendRefererHeader = %d\n", mReferrerLevel);
 #endif
-    }
-
-    if (bChangedAll || !PL_strcmp(pref, "network.proxy.type"))
-    {
-        PRInt32 type = -1;
-        rv = mPrefs->GetIntPref("network.proxy.type",&type);
-        if (NS_SUCCEEDED(rv))
-            mCheckForProxy = (type != 0);
     }
 
     // Things read only during initialization...
