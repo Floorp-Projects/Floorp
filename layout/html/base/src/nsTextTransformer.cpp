@@ -254,6 +254,7 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen,
   PRInt32 fragLen = frag->GetLength();
   PRInt32 offset = mOffset;
   PRInt32 prevBufferPos = mBufferPos;
+  PRBool breakAfterThis = PR_FALSE;
   const unsigned char* cp = (const unsigned char*)frag->Get1b() + offset;
   union {
     unsigned char* bp1;
@@ -266,16 +267,24 @@ nsTextTransformer::ScanNormalAsciiText_F(PRInt32* aWordLen,
     bp2 += mBufferPos;
   }
 
-  for (; offset < fragLen; offset++) {
+  for (; offset < fragLen && !breakAfterThis; offset++) {
     unsigned char ch = *cp++;
-    if (XP_IS_SPACE(ch)) {
-      break;
-    }
     if (CH_NBSP == ch) {
       ch = ' ';
       *aWasTransformed = PR_TRUE;
     }
-    else if (IS_DISCARDED(ch)) {
+    if (XP_IS_SPACE(ch)) {
+      break;
+    }
+/*    if (CH_NBSP == ch) {
+      ch = ' ';
+      *aWasTransformed = PR_TRUE;
+	   if (offset == mOffset)
+			breakAfterThis = PR_TRUE;
+		else
+			break;
+    }
+ */   else if (IS_DISCARDED(ch)) {
       // Strip discarded characters from the transformed output
       continue;
     }
@@ -632,6 +641,23 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
           wordLen = 1;
           isWhitespace = PR_TRUE;
         }
+        else if (CH_NBSP == firstChar) {
+          wordLen = 1;
+          isWhitespace = PR_TRUE;
+          *aWasTransformed = PR_TRUE;
+
+		    // Make sure we have enough room in the transform buffer
+		    if (mBufferPos >= mTransformBuf.mBufferLen) {
+			   mTransformBuf.GrowBy(128);
+			 }
+
+			 offset++;
+		    if (mTransformedTextIsAscii) {
+			   ((unsigned char*)mTransformBuf.mBuffer)[mBufferPos++] = ' ';
+			 } else {
+			   mTransformBuf.mBuffer[mBufferPos++] = PRUnichar(' ');
+			 }
+		  }
         else if (frag->Is2b()) {
           offset = ScanNormalUnicodeText_F(aForLineBreak, &wordLen, aWasTransformed);
         }
@@ -795,13 +821,14 @@ nsTextTransformer::ScanNormalAsciiText_B(PRInt32* aWordLen)
   PRUnichar* bp = mTransformBuf.GetBufferEnd();
   PRUnichar* startbp = mTransformBuf.GetBuffer();
 
+
   while (--offset >= 0) {
     PRUnichar ch = frag->CharAt(offset);
-    if (XP_IS_SPACE(ch)) {
-      break;
-    }
     if (CH_NBSP == ch) {
       ch = ' ';
+    }
+    if (XP_IS_SPACE(ch)) {
+      break;
     }
     else if (IS_DISCARDED(ch)) {
       continue;
@@ -1009,6 +1036,12 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
           wordLen = 1;
           isWhitespace = PR_TRUE;
         }
+        else if (CH_NBSP == firstChar) {
+          wordLen = 1;
+          isWhitespace = PR_TRUE;
+			 mTransformBuf.mBuffer[mTransformBuf.mBufferLen - 1] = ' ';
+			 offset--;
+		  }
         else if (frag->Is2b()) {
           offset = ScanNormalUnicodeText_B(aForLineBreak, &wordLen);
         }
