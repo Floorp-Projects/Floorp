@@ -454,93 +454,136 @@ NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 //
 // Scroll the bits of a window
 //
+// This routine is extra-complicated because Photon does not clip PhBlit
+// calls correctly. Mozilla expects blits (and other draw commands) to be
+// clipped around sibling widgets (and child widgets in some cases). Photon
+// does not do this. So most of the grunge below achieves this "clipping"
+// manually by breaking the scrollable rect down into smaller, unobscured
+// rects that can be safely blitted. To make it worse, the invalidation rects
+// must be manually calulated...
+//
+//   Ye have been warn'd -- enter at yer own risk.
+//
+// DVS
+//
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Scroll aDx=<%d aDy=<%d> aClipRect=<%p> - Not Implemented.\n", aDx, aDy, aClipRect));
 
   PtWidget_t *widget;
-  PhRid_t     rid;
 
   if( IsChild() )
-  {
-//    widget = mRawDraw;
     widget = mWidget;
-    rid = PtWidgetRid( mWidget );
-  }
   else
-  {
     widget = mClientWidget;
-    rid = PtWidgetRid( mClientWidget );
-  }
 
   if( widget )
   {
-    PhRect_t    rect;
+    PhRect_t    rect,clip;
     PhPoint_t   offset = { aDx, aDy };
     PhArea_t    area;
+    PhRid_t     rid = PtWidgetRid( widget );
+    PhTile_t    *clipped_tiles, *sib_tiles, *tile;
+    PhTile_t    *offset_tiles, *intersection;
 
-    PtWidgetArea( widget, &area );
+    // Take our nice, clean client-rect and shatter it into lots (maybe) of
+    // unobscured tiles. sib_tiles represents the rects occupied by siblings
+    // in front of our window - but its not needed here.
 
-    // Ignore clipping for now...
+    if( GetSiblingClippedRegion( &clipped_tiles, &sib_tiles ) == NS_OK )
+    {
 
-    rect.ul.x = /*origin.x +*/ area.pos.x;
-    rect.ul.y = /*origin.y +*/ area.pos.y;
-    rect.lr.x = rect.ul.x + area.size.w - 1;
-    rect.lr.y = rect.ul.y + area.size.h - 1;
+      // Now we need to calc the actual blit tiles. We do this by making a copy
+      // of the client-rect tiles (clipped_tiles) and offseting them by (-aDx,-aDy)
+      // then intersecting them with the original clipped_tiles. These new tiles (there
+      // may be none) can be safely blitted to the new location (+aDx,+aDy).
 
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  blit rect = %ld,%ld,%ld,%ld\n", rect.ul.x, rect.ul.y, rect.lr.x, rect.lr.y ));
+      offset_tiles = PhCopyTiles( clipped_tiles );
+      offset.x = -aDx;
+      offset.y = -aDy;
+      PhTranslateTiles( offset_tiles, &offset );
+      tile = PhCopyTiles( offset_tiles ); // Just a temp copy for next cmd
+      if (( tile = PhClipTilings( tile, clipped_tiles, &intersection ) ) != NULL )
+      {
+         PhFreeTiles( tile );
+      }
 
-    if( aClipRect )
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  clip rect = %ld,%ld,%ld,%ld\n", aClipRect->x, aClipRect->y, aClipRect->width, aClipRect->height ));
-    else
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  no clip rect\n" ));
+      // Apply passed-in clipping, if available
+      // REVISIT - this wont work, PhBlits ignore clipping
 
-    PgFlush();
-    PhBlit( rid, &rect, &offset );
+      if( aClipRect )
+      {
+        clip.ul.x = aClipRect->x;
+        clip.ul.y = aClipRect->y;
+        clip.lr.x = clip.ul.x + aClipRect->width - 1;
+        clip.lr.y = clip.ul.y + aClipRect->height - 1;
+        PgSetUserClip( &clip );
+      }
 
-    // Invalidate exposed area...
+      // Make sure video buffer is up-to-date
+      PgFlush();
 
-    if( aDx > 0 )
-      rect.lr.x = rect.ul.x + aDx;
-    else if( aDx < 0 )
-      rect.ul.x = rect.lr.x + aDx;
+      offset.x = aDx;
+      offset.y = aDy;
 
-    if( aDy > 0 )
-      rect.lr.y = rect.ul.y + aDy;
-    else if( aDy < 0 )
-      rect.ul.y = rect.lr.y + aDy;
+      // Blit individual tiles
+      tile = intersection;
+      while( tile )
+      {
+        PhBlit( rid, &tile->rect, &offset );
+        tile = tile->next;
+      }
 
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  dmg rect = %ld,%ld,%ld,%ld\n", rect.ul.x, rect.ul.y, rect.lr.x, rect.lr.y ));
-  
-    PtDamageExtent( widget, &rect );
+      PhFreeTiles( offset_tiles );
 
-	// move all the children
-PtWidget_t *w;
-PtArg_t  arg;
-PhPoint_t *pos;
-PhPoint_t p;
+      if( aClipRect )
+        PgSetUserClip( nsnull );
 
-	for( w = PtWidgetChildFront( mWidget ); 
-	     w; 
-	     w = PtWidgetBrotherBehind( w ) ) 
-	{ 
-//		printf ("move: %lu\n",w);
-		PtSetArg( &arg, Pt_ARG_POS, &pos, 0 );
-		PtGetResources( w, 1, &arg ) ;
-//		printf ("old pos: %d %d\n",pos->x,pos->y);
-		p = *pos;
-		p.x += aDx;
-		p.y += aDy;
-//		printf ("new pos: %d %d\n",p.x,p.y);
-		PtSetArg( &arg, Pt_ARG_POS, &p, 0 );
-		PtSetResources( w, 1, &arg ) ;
-		PtDamageWidget(w);
-	} 
+      // Now we must invalidate all of the exposed areas. This is similar to the
+      // first processes: Make a copy of the clipped_tiles, offset by (+aDx,+aDy)
+      // then clip (not intersect) these from the original clipped_tiles. This
+      // results in the invalidated tile list.
+
+      offset_tiles = PhCopyTiles( clipped_tiles );
+      PhTranslateTiles( offset_tiles, &offset );
+      clipped_tiles = PhClipTilings( clipped_tiles, offset_tiles, nsnull );
+      tile = clipped_tiles;
+      while( tile )
+      {
+        PtDamageExtent( widget, &(tile->rect));
+        tile = tile->next;
+      }
+
+      PhFreeTiles( offset_tiles );
+      PhFreeTiles( clipped_tiles );
+      PhFreeTiles( sib_tiles );
+
+      // Manually move all the child-widgets
+
+      PtWidget_t *w;
+      PtArg_t    arg;
+      PhPoint_t  *pos;
+      PhPoint_t  p;
+
+      for( w=PtWidgetChildFront( widget ); w; w=PtWidgetBrotherBehind( w )) 
+      { 
+        PtSetArg( &arg, Pt_ARG_POS, &pos, 0 );
+        PtGetResources( w, 1, &arg ) ;
+        p = *pos;
+        p.x += aDx;
+        p.y += aDy;
+        //		printf ("new pos: %d %d\n",p.x,p.y);
+        PtSetArg( &arg, Pt_ARG_POS, &p, 0 );
+        PtSetResources( w, 1, &arg ) ;
+        PtDamageWidget(w);
+      } 
+    }
   }
   
   return NS_OK;
 }
+
 
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 {
@@ -1069,22 +1112,8 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
     if( rect.lr.x >= area.size.w ) rect.lr.x = area.size.w - 1;
     if( rect.lr.y >= area.size.h ) rect.lr.y = area.size.h - 1;
 
-    // Make damage relative to widgets parent
     nsDmg.x = rect.ul.x + area.pos.x;
     nsDmg.y = rect.ul.y + area.pos.y;
-
-    // Get the position of the child window instead of pWidgets pos since it's always 0,0.
-
-//    PtWidget_t * parent = PtWidgetParent( pWidget );
-//    if( parent )
-//    {
-//      PtWidgetArea( parent, &area );
-//      nsDmg.x = area.pos.x + rect.ul.x;
-//      nsDmg.y = area.pos.y + rect.ul.y;
-//    }
-//    else
-//      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  No parent!\n" ));
-
     nsDmg.width = rect.lr.x - rect.ul.x + 1;
     nsDmg.height = rect.lr.y - rect.ul.y + 1;
 
@@ -1193,62 +1222,60 @@ void nsWindow::ScreenToWidget( PhPoint_t &pt )
   pt.y -= y;
 }
 
-#if 0
 
-NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
+NS_METHOD nsWindow::GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctiles )
 {
-  return nsWidget::Invalidate( aIsSynchronous );
-}
+  nsresult res = NS_ERROR_FAILURE;
 
-
-NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
-{
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Invalidate %p (%ld,%ld,%ld,%ld)\n", this, aRect.x, aRect.y, aRect.width, aRect.height ));
-
-  if( mWidget )
+  if(( btiles ) && ( ctiles ))
   {
-    PhRect_t extent;
-    PhArea_t area;
+    *btiles = PhGetTile();
+    if( *btiles )
+    {
+      PhTile_t   *tile, *last;
+      PtWidget_t *w;
+      PhArea_t   *area;
+      PtArg_t    arg;
 
-    PtWidgetArea( mWidget, &area );
+      PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
+      PtGetResources( mWidget, 1, &arg );
+      (*btiles)->rect.ul.x = area->pos.x;
+      (*btiles)->rect.ul.y = area->pos.y;
+      (*btiles)->rect.lr.x = area->pos.x + area->size.w - 1;
+      (*btiles)->rect.lr.y = area->pos.y + area->size.h - 1;
+      (*btiles)->next = nsnull;
 
-    extent.ul.x = aRect.x + area.pos.x;
-    extent.ul.y = aRect.y + area.pos.y;
-    extent.lr.x = extent.ul.x + aRect.width - 1;
-    extent.lr.y = extent.ul.y + aRect.height - 1;
- 
+      *ctiles = last = nsnull;
 
-    PtDamageExtent( mWidget, &extent );
+      for( w=PtWidgetBrotherInFront( mWidget ); w; w=PtWidgetBrotherInFront( w )) 
+      { 
+        PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
+        PtGetResources( w, 1, &arg );
+        tile = PhGetTile();
+        if( tile )
+        {
+          tile->rect.ul.x = area->pos.x;
+          tile->rect.ul.y = area->pos.y;
+          tile->rect.lr.x = area->pos.x + area->size.w - 1;
+          tile->rect.lr.y = area->pos.y + area->size.h - 1;
+          tile->next = NULL;
+          if( !*ctiles )
+            *ctiles = tile;
+          if( last )
+            last->next = tile;
+          last = tile;
+        }
+      }
 
-/*
-if (PtWidgetChildFront(mWidget))
-    PtDamageExtent( PtWidgetChildFront(mWidget), &extent );
-else
-    PtDamageExtent( mWidget, &extent );
-*/
-
-#if 0
-  PtWidget_t *w;
-
-	for( w = PtWidgetChildFront( mWidget ); 
-	     w; 
-	     w = PtWidgetBrotherBehind( w ) ) 
-	{ 
-//		printf ("damage: %lu\n",w);
-		PtDamageExtent(w,&extent);
-	} 
-#endif
-
-    // REVISIT - PtFlush may be unstable & cause crashes...
-    if( aIsSynchronous )
-      PtFlush();
+      if( *ctiles )
+      {
+        // We have siblings... now clip'em
+        *btiles = PhClipTilings( *btiles, *ctiles, nsnull );
+        res = NS_OK;
+      }  
+    }
   }
-  else
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Invalidate - mWidget is NULL!\n" ));
 
-  return NS_OK;
+  return res;
 }
-#endif
-
 

@@ -19,7 +19,7 @@
 #ifndef nsCheckButton_h__
 #define nsCheckButton_h__
 
-#include "nsWindow.h"
+#include "nsWidget.h"
 #include "nsICheckButton.h"
 #include <Pt.h>
 

@@ -104,6 +104,7 @@ protected:
 //  static int  RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
   PRBool      HandleEvent( PtCallbackInfo_t* aCbInfo );
   void        ScreenToWidget( PhPoint_t &pt );
+  NS_METHOD   GetSiblingClippedRegion( PhTile_t **btiles, PhTile_t **ctiles );
 
   PtWidget_t  *mClientWidget;
   PtWidget_t  *mRawDraw;
