@@ -377,6 +377,7 @@ HRESULT nsDataObj::GetText(nsIDataFlavor * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
   hGlobalMemory = (HGLOBAL)::GlobalAlloc(GHND, (DWORD)len);
   if (hGlobalMemory != NULL) {
     pGlobalMemory = (PSTR)::GlobalLock(hGlobalMemory);
+    PSTR pstr = pGlobalMemory;
 
     // need to use memcpy here
     char* s = data;
@@ -386,7 +387,7 @@ HRESULT nsDataObj::GetText(nsIDataFlavor * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
     }
 
     // Put data on Clipboard
-    GlobalUnlock(hGlobalMemory);
+    ::GlobalUnlock(hGlobalMemory);
   }
 
   aSTG.hGlobal = hGlobalMemory;
