@@ -32,6 +32,7 @@
 #include "nsIMsgProtocolInfo.h"
 #include "nsIMsgWindow.h"
 #include "nsINntpUrl.h"
+#include "nsICmdLineHandler.h"
 
 class nsIURI;
 class nsIUrlListener;
@@ -39,7 +40,8 @@ class nsIUrlListener;
 class nsNntpService : public nsINntpService,
                       public nsIMsgMessageService,
                       public nsIProtocolHandler,
-                      public nsIMsgProtocolInfo
+                      public nsIMsgProtocolInfo,
+                      public nsICmdLineHandler
 {
 public:
 
@@ -48,10 +50,21 @@ public:
   NS_DECL_NSIMSGMESSAGESERVICE
   NS_DECL_NSIPROTOCOLHANDLER
   NS_DECL_NSIMSGPROTOCOLINFO
+  NS_DECL_NSICMDLINEHANDLER
   
   // nsNntpService
   nsNntpService();
   virtual ~nsNntpService();
+
+  static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr,
+                                nsIFile *aPath,
+                                const char *registryLocation,
+                                const char *componentType);
+
+  static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr,
+                                  nsIFile *aPath,
+                                  const char *registryLocation);
+
 protected:
   nsresult ConvertNewsMessageURI2NewsURI(const char *messageURI,
                                          nsCString &newsURI,

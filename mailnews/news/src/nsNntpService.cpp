@@ -47,6 +47,8 @@
 #include "nsFileLocations.h"
 #include "nsIMsgAccountManager.h"
 #include "nsINntpIncomingServer.h"
+#include "nsICmdLineHandler.h"
+#include "nsICategoryManager.h"
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -78,11 +80,12 @@ nsNntpService::~nsNntpService()
 NS_IMPL_THREADSAFE_ADDREF(nsNntpService);
 NS_IMPL_THREADSAFE_RELEASE(nsNntpService);
 
-NS_IMPL_QUERY_INTERFACE4(nsNntpService,
+NS_IMPL_QUERY_INTERFACE5(nsNntpService,
                          nsINntpService,
                          nsIMsgMessageService,
                          nsIProtocolHandler,
-                         nsIMsgProtocolInfo) 
+                         nsIMsgProtocolInfo,
+                         nsICmdLineHandler) 
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsIMsgMessageService support
@@ -1140,5 +1143,98 @@ nsNntpService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAnd
 	// this makes sense, since there is no "Drafts" folder on a news server.
 	// they'll point to the ones on "Local Folders"
 	*aDefaultCopiesAndFoldersPrefsToServer = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpService::GetCommandLineArgument(char **aCommandLineArgument)
+{
+    if (!aCommandLineArgument) return NS_ERROR_FAILURE;
+
+    *aCommandLineArgument = PL_strdup("-news");
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpService::GetPrefNameForStartup(char **aPrefNameForStartup)
+{
+    if (!aPrefNameForStartup) return NS_ERROR_FAILURE;
+
+    *aPrefNameForStartup = PL_strdup("general.startup.news");
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask)
+{
+    if (!aChromeUrlForTask) return NS_ERROR_FAILURE;
+
+    *aChromeUrlForTask = PL_strdup("chrome://messenger/content/");
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpService::GetHelpText(char **aHelpText)
+{
+    if (!aHelpText) return NS_ERROR_FAILURE;
+
+    *aHelpText = PL_strdup("Start with news window.");
+
+    return NS_OK;
+}
+
+NS_METHOD nsNntpService::RegisterProc(nsIComponentManager *aCompMgr,
+                                           nsIFile *aPath,
+                                           const char *registryLocation,
+                                           const char *componentType)
+
+{
+    // Register ourselves into the COMMAND_LINE_ARGUMENT_HANDLERS
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCID cid = NS_NNTPSERVICE_CID;
+    char *cidString = cid.ToString();
+
+#ifdef DEBUG_sspitzer
+    printf("XXX: registering %s with %s\n",cidString,COMMAND_LINE_ARGUMENT_HANDLERS);
+#endif /* DEBUG_sspitzer */
+
+    nsXPIDLCString prevEntry;
+    rv = catman->AddCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, cidString, "News Cmd Line Handler", PR_TRUE, PR_TRUE, getter_Copies(prevEntry));
+
+    nsAllocator::Free(cidString);
+
+    return NS_OK;
+
+}
+
+NS_METHOD nsNntpService::UnregisterProc(nsIComponentManager *aCompMgr,
+                                             nsIFile *aPath,
+                                             const char *registryLocation)
+{
+    nsresult rv;
+
+
+    nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCID cid = NS_NNTPSERVICE_CID;
+    char *cidString = cid.ToString();
+
+#ifdef DEBUG_sspitzer
+    printf("XXX: unregistering %s with %s\n",cidString,COMMAND_LINE_ARGUMENT_HANDLERS);
+#endif /* DEBUG_sspitzer */
+
+    nsXPIDLCString prevEntry;
+    rv = catman->DeleteCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, cidString, PR_TRUE, getter_Copies(prevEntry));
+
+    nsAllocator::Free(cidString);
+
+    // Return value is not used from this function.
     return NS_OK;
 }
