@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla,v 1.7 2000/06/06 22:57:24 cls%seawood.org Exp $
+## $Id: mozilla,v 1.8 2000/06/17 00:54:07 brendan%mozilla.org Exp $
 ## 
 ## Usage:
 ##
@@ -40,7 +40,7 @@ MOZILLA_BIN="mozilla-bin"
 
 while [ $# -gt 0 ]
 do
-  case $1 in
+  case "$1" in
     -p | -pure)
       MOZILLA_BIN="mozilla-bin.pure"
       shift
@@ -55,11 +55,12 @@ do
       shift 2
       ;;
     *)
-      moreargs="$moreargs $1"
+      moreargs="$moreargs \"$1\""
       shift 1
       ;;
   esac
 done
 
-echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN $moreargs ${1+"$@"}	
-$dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN $moreargs ${1+"$@"}
+eval "set -- $moreargs"
+echo $dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
+$dist_bin/run-mozilla.sh $script_args $dist_bin/$MOZILLA_BIN "$@"
