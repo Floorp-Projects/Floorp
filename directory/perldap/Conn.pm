@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.7 1998/07/30 03:08:03 leif Exp $
+# $Id: Conn.pm,v 1.8 1998/07/30 09:51:35 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -51,7 +51,7 @@ sub new
       $hash = $_[0];
       $self->{host} = $hash->{host};
       $self->{port} = $hash->{port};
-      $self->{binddn} = $hash->{$bind};
+      $self->{binddn} = $hash->{bind};
       $self->{bindpasswd} = $hash->{pswd};
       $self->{certdb} = $hash->{cert};
     }
@@ -153,9 +153,9 @@ sub isURL
 sub getError 
 {
   my ($self) = @_;
-  my ($matched, $err);
+  my ($matched, $msg);
 
-  return ldap_get_lderrno($self->{ld}, \$matched, "");
+  return ldap_get_lderrno($self->{ld}, $matched, $msg);
 }
 
 
@@ -376,7 +376,7 @@ sub add
 sub update
 {
   my($self, $entry) = @_;
-  my(@args, @vals, %new);
+  my(@vals, %mod, %new, @arr);
   my($key, $val);
   my $ret = 1;
   local $_;
@@ -390,23 +390,28 @@ sub update
 	  @vals = @{$entry->{$key}};
 	  if ($#vals == $[)
 	    {
-	      push(@args, "replace", $key, $vals[$[]);
+	      $mod{$key} = { "rb", [$vals[$[]] };
 	    }
 	  else
 	    {
+	      @arr = ();
 	      grep(($new{$_} = 1), @vals);
 	      foreach (@{$entry->{"_${key}_save_"}})
 		{
 		  if (! $new{$_})
 		    {
-		      push(@args, "delete", $key, $_);
+		      push(@arr, $_);
 		    }
 		  $new{$_} = 0;
 		}
+	      $mod{$key}{"db"} = [@arr] if ($#arr >= $[);
+
+	      @arr = ();
 	      foreach (keys(%new))
 		{
-		  push(@args, "add", $key, $_) if ($new{$_} == 1);
+		  push(@arr, $_) if ($new{$_} == 1);
 		}
+	      $mod{$key}{"ab"} = [@arr] if ($#arr >= $[);
 	    }
 
 	  delete $entry->{_self_obj_}->{"_${key}_modified_"};
@@ -414,13 +419,32 @@ sub update
 	}
       elsif ($entry->{"_${key}_deleted_"})
 	{
-	  push(@args, "delete", $key, "");
+	  $mod{$key} = { "db", [] };
 	  undef @{$entry->{"_${key}_save_"}};
 	  delete $entry->{_self_obj_}->{"_${key}_deleted_"};
 	}
     }
-  $ret = ldap_modify($self->{ld}, $entry->{dn}, \@args)
-    if ($#args > $[);
+
+  @arr = keys %mod;
+  # This is here for debug purposes only...
+  if ($main::LDAP_DEBUG)
+    {
+      foreach $key (@arr)
+	{
+	  print "Working on $key\n";
+	  foreach $op (keys %{$mod{$key}})
+	    {
+	      print "\tDoing operation: $op\n";
+	      foreach $val (@{$mod{$key}{$op}})
+		{
+		  print "\t\t$val\n";
+		}
+	    }
+	}
+    }
+
+  $ret = ldap_modify($self->{ld}, $entry->{dn}, \%mod)
+    if ($#arr >= $[);
 
   return (!$ret);
 }
