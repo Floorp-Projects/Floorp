@@ -283,7 +283,12 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
 #else
     aChromeURL->GetFile(&file);
 #endif
+
     nsAutoString restOfURL(file);
+
+#ifdef NECKO
+    nsCRT::free(file);
+#endif //NECKO
     
     // Find the second slash.
     nsAutoString packageType("content");
