@@ -1132,7 +1132,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   // this event.  But to allow middle mouse button paste to work we must allow 
   // middle clicks to go to text fields anyway.
   PRBool noContentDispatch = aEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
-  if (type == NS_FORM_INPUT_TEXT && aEvent->message == NS_MOUSE_MIDDLE_CLICK) {
+  if ((type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD) &&
+      aEvent->message == NS_MOUSE_MIDDLE_CLICK) {
     aEvent->flags &= ~NS_EVENT_FLAG_NO_CONTENT_DISPATCH;
   }
 
