@@ -283,7 +283,6 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     persist.saveDocument(persistArgs.source, persistArgs.target, filesFolder, 
                          persistArgs.contentType, encodingFlags, kWrapColumn);
   } else {
-    dump("*** src = " + source + ", tgt = " + persistArgs.target + ", persist = " + persist + "\n");
     dl.init(source, persistArgs.target, null, null, null, persist);
     persist.saveURI(source, null, null, persistArgs.postData, null, persistArgs.target);
   }
