@@ -77,6 +77,7 @@
 #include "nsIXULDocumentInfo.h"
 #include "nsIXULParentDocument.h"
 #include "nsIHTMLContentContainer.h"
+#include "nsXPIDLString.h"
 
 #include "nsIDocumentLoader.h"
 #include "nsIWebShell.h"
@@ -231,10 +232,11 @@ protected:
                                   void* aRef,
                                   nsresult aStatus);
 
-    nsresult EvaluateScript(nsString& aScript, PRUint32 aLineNo);
+    nsresult EvaluateScript(nsString& aScript, nsIURI* aURI, PRUint32 aLineNo);
 
     nsresult CloseScript(const nsIParserNode& aNode);
 
+    nsCOMPtr<nsIURI> mCurrentScriptURL;
     PRBool mInScript;
     PRUint32 mScriptLineNo;
 
@@ -1310,17 +1312,9 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
     }
 
     // Otherwise, we couldn't find anything, so just gensym one...
-#ifdef NECKO
-    char* url;
-#else
-    const char* url;
-#endif
-    mDocumentURL->GetSpec(&url);
-    nsresult rv = rdf_CreateAnonymousResource(url, aResource);
-#ifdef NECKO
-    nsCRT::free(url);
-#endif
-    return rv;
+    nsXPIDLCString url;
+    mDocumentURL->GetSpec(getter_Copies(url));
+    return rdf_CreateAnonymousResource(nsCAutoString(url), aResource);
 }
 
 nsresult
@@ -1639,6 +1633,11 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
             // onto it as opaque data.
             NS_ADDREF(this);
 
+            // Set the current script URL so that the
+            // DoneLoadingScript() call can get report the right file
+            // if there are errors in the script.
+            mCurrentScriptURL = url;
+
             nsIUnicharStreamLoader* loader;
             rv = NS_NewUnicharStreamLoader(&loader,
                                            url, 
@@ -1674,7 +1673,7 @@ XULContentSinkImpl::DoneLoadingScript(nsIUnicharStreamLoader* aLoader,
 
     if (NS_OK == aStatus) {
         // XXX We have no way of indicating failure. Silently fail?
-        sink->EvaluateScript(aData, 0);
+        sink->EvaluateScript(aData, sink->mCurrentScriptURL, 0);
     }
     else {
         NS_ERROR("error loading script");
@@ -1694,7 +1693,7 @@ XULContentSinkImpl::DoneLoadingScript(nsIUnicharStreamLoader* aLoader,
 
 
 nsresult
-XULContentSinkImpl::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
+XULContentSinkImpl::EvaluateScript(nsString& aScript, nsIURI* aURI, PRUint32 aLineNo)
 {
     nsresult rv = NS_OK;
 
@@ -1709,15 +1708,10 @@ XULContentSinkImpl::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
                 NS_RELEASE(owner);
                 return rv;
             }
-        
-            nsIURI* docURL = mDocument->GetDocumentURL();
-#ifdef NECKO
-            char* url;
-#else
-            const char* url;
-#endif
-            if (docURL) {
-                (void)docURL->GetSpec(&url);
+
+            nsXPIDLCString url;
+            if (aURI) {
+                (void)aURI->GetSpec(getter_Copies(url));
             }
 
             nsAutoString val;
@@ -1725,10 +1719,6 @@ XULContentSinkImpl::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
 
             context->EvaluateString(aScript, url, aLineNo, 
                                     val, &isUndefined);
-#ifdef NECKO
-            nsCRT::free(url);
-#endif
-            NS_IF_RELEASE(docURL);
       
             NS_RELEASE(context);
             NS_RELEASE(owner);
@@ -1745,7 +1735,8 @@ XULContentSinkImpl::CloseScript(const nsIParserNode& aNode)
     if (mInScript) {
         nsAutoString script;
         script.SetString(mText, mTextLength);
-        result = EvaluateScript(script, mScriptLineNo);
+        nsCOMPtr<nsIURI> docURL = dont_AddRef(mDocument->GetDocumentURL());
+        result = EvaluateScript(script, docURL, mScriptLineNo);
         FlushText(PR_FALSE);
         mInScript = PR_FALSE;
     }
