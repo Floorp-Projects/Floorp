@@ -1475,25 +1475,27 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
               res = nsWSRunObject::PrepareToDeleteNode(mHTMLEditor, priorNode);
               if (NS_FAILED(res)) return res;
             }
+            // remember prior sibling to prior node, if any
+            nsCOMPtr<nsIDOMNode> sibling, stepbrother;  
+            mHTMLEditor->GetPriorHTMLSibling(priorNode, address_of(sibling));
             // delete the break, and join like nodes if appropriate
             res = mHTMLEditor->DeleteNode(priorNode);
             if (NS_FAILED(res)) return res;
             // we did something, so lets say so.
             *aHandled = PR_TRUE;
-            // get new prior node
-            res = mHTMLEditor->GetPriorHTMLNode(startNode, address_of(priorNode));
-            if (NS_FAILED(res)) return res;
-            // are they in same block?
-            if (priorNode && mHTMLEditor->HasSameBlockNodeParent(startNode, priorNode)) 
+            // is there a prior node and are they siblings?
+            if (sibling)
+              sibling->GetNextSibling(getter_AddRefs(stepbrother));
+            if (startNode == stepbrother) 
             {
               // are they same type?
-              if (mHTMLEditor->IsTextNode(priorNode))
+              if (mHTMLEditor->IsTextNode(stepbrother))
               {
                 // if so, join them!
-                res = JoinNodesSmart(priorNode,startNode,address_of(selNode),&selOffset);
+                res = JoinNodesSmart(sibling, startNode, address_of(selNode), &selOffset);
                 if (NS_FAILED(res)) return res;
                 // fix up selection
-                res = aSelection->Collapse(selNode,selOffset);
+                res = aSelection->Collapse(selNode, selOffset);
               }
             }
             return res;
@@ -1619,25 +1621,27 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
               res = nsWSRunObject::PrepareToDeleteNode(mHTMLEditor, nextNode);
               if (NS_FAILED(res)) return res;
             }
+            // remember prior sibling to prior node, if any
+            nsCOMPtr<nsIDOMNode> sibling, stepbrother;  
+            mHTMLEditor->GetNextHTMLSibling(nextNode, address_of(sibling));
             // delete the break, and join like nodes if appropriate
             res = mHTMLEditor->DeleteNode(nextNode);
             if (NS_FAILED(res)) return res;
             // we did something, so lets say so.
             *aHandled = PR_TRUE;
-            // get new next node
-            res = mHTMLEditor->GetNextHTMLNode(startNode, address_of(nextNode));
-            if (NS_FAILED(res)) return res;
-            // are they in same block?
-            if (nextNode && mHTMLEditor->HasSameBlockNodeParent(startNode, nextNode)) 
+            // is there a prior node and are they siblings?
+            if (sibling)
+              sibling->GetPreviousSibling(getter_AddRefs(stepbrother));
+            if (startNode == stepbrother) 
             {
               // are they same type?
-              if ( mHTMLEditor->IsTextNode(nextNode) )
+              if (mHTMLEditor->IsTextNode(stepbrother))
               {
                 // if so, join them!
-                res = JoinNodesSmart(startNode,nextNode,address_of(selNode),&selOffset);
+                res = JoinNodesSmart(startNode, sibling, address_of(selNode), &selOffset);
                 if (NS_FAILED(res)) return res;
                 // fix up selection
-                res = aSelection->Collapse(selNode,selOffset);
+                res = aSelection->Collapse(selNode, selOffset);
               }
             }
             return res;
@@ -4035,6 +4039,44 @@ nsHTMLEditRules::PromoteRange(nsIDOMRange *inRange,
   if (NS_FAILED(res)) return res;
   res = inRange->GetEndOffset(&endOffset);
   if (NS_FAILED(res)) return res;
+  
+  // MOOSE major hack:
+  // GetPromotedPoint doesn't really do the right thing for collapsed ranges
+  // inside block elements that contain nothing but a solo <br>.  It's easier
+  // to put a workaround here than to revamp GetPromotedPoint.  :-(
+  if ( (startNode == endNode) && (startOffset == endOffset))
+  {
+    nsCOMPtr<nsIDOMNode> block;
+    if (IsBlockNode(startNode)) 
+      block = startNode;
+    else
+      block = mHTMLEditor->GetBlockNodeParent(startNode);
+    if (block)
+    {
+      PRBool bIsEmptyNode = PR_FALSE;
+      // check for body
+      nsCOMPtr<nsIDOMElement> bodyElement;
+      nsCOMPtr<nsIDOMNode> bodyNode;
+      res = mHTMLEditor->GetRootElement(getter_AddRefs(bodyElement));
+      if (NS_FAILED(res)) return res;
+      if (!bodyElement) return NS_ERROR_UNEXPECTED;
+      bodyNode = do_QueryInterface(bodyElement);
+      if (block != bodyNode)
+      {
+        // ok, not body, check if empty
+        res = mHTMLEditor->IsEmptyNode(block, &bIsEmptyNode, PR_TRUE, PR_FALSE);
+      }
+      if (bIsEmptyNode)
+      {
+        PRUint32 numChildren;
+        nsEditor::GetLengthOfDOMNode(block, numChildren); 
+        startNode = block;
+        endNode = block;
+        startOffset = 0;
+        endOffset = numChildren;
+      }
+    }
+  }
   
   // make a new adjusted range to represent the appropriate block content.
   // this is tricky.  the basic idea is to push out the range endpoints
