@@ -1194,7 +1194,7 @@ Exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 global_resolve(JSContext *cx, JSObject *obj, jsval id)
 {
-#if defined DEBUG && defined XP_UNIX
+#if defined(SHELL_HACK) && defined(DEBUG) && defined(XP_UNIX)
     /*
      * Do this expensive hack only for unoptimized Unix builds, which are not
      * used for benchmarking.
