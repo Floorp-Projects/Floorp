@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.91 2005/02/17 15:10:53 mkanat%kerio.com Exp $ -->
+<!-- $Id: installation.xml,v 1.92 2005/03/09 18:59:24 travis%sedsystems.ca Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -122,9 +122,10 @@
       </note> 
            
       <para>If you install from something other than a packaging/installation
-      system (such as .rpm, .dep, .exe, or .msi) make sure the MySQL server
-      is started when the machine boots.
-      </para>      
+      system, such as .rpm (Redhat Package), .deb (Debian Package), .exe
+      (Windows Executable), or .msi (Microsoft Installer), make sure the MySQL
+      server is started when the machine boots.
+      </para>
 
     </section>
     
