@@ -200,7 +200,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aURL,
     nsresult rv = NS_OK;
 
     // Make sure we've been initialized.
-    if ( mAppShell ) {
+    if ( GetAppShell() ) {
         // Open "Unknown file type" dialog.
         nsCOMPtr<nsIWebShellWindow> newWindow;
     
@@ -231,13 +231,13 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aURL,
             nsUnknownContentDialog *dialog = new nsUnknownContentDialog( channelUri, aContentType, aDocLoader );
 #endif // NECKO
     
-            rv = mAppShell->CreateTopLevelWindow( nsnull,
-                                                  url,
-                                                  PR_TRUE,
-                                                  getter_AddRefs(newWindow),
-                                                  nsnull,
-                                                  dialog,
-                                                  0, 0 );
+            rv = GetAppShell()->CreateTopLevelWindow( nsnull,
+                                                      url,
+                                                      PR_TRUE,
+                                                      getter_AddRefs(newWindow),
+                                                      nsnull,
+                                                      dialog,
+                                                      0, 0 );
     
             // Give find dialog the window pointer (if it worked).
             if ( NS_SUCCEEDED(rv) ) {
@@ -438,4 +438,5 @@ nsUnknownContentDialog::OnSave() {
 // Generate base nsIAppShellComponent implementation.
 NS_IMPL_IAPPSHELLCOMPONENT( nsUnknownContentTypeHandler,
                             nsIUnknownContentTypeHandler,
-                            NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID )
+                            NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID,
+                            0 )

@@ -626,7 +626,7 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
 {
     nsresult rv = NS_OK;
 
-    if ( aContext && mAppShell )
+    if ( aContext && GetAppShell() )
     {
         Context *context = (Context*)aContext;
 
@@ -657,14 +657,14 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
         nsFindDialog *dialog = new nsFindDialog( this, context );
 
         nsCOMPtr<nsIWebShellWindow> newWindow;
-        rv = mAppShell->CreateTopLevelWindow( nsnull,
-                                              url,
-                                              PR_TRUE,
-                                              getter_AddRefs(newWindow),
-                                              nsnull,
-                                              dialog,
-                                              0,
-                                              0 );
+        rv = GetAppShell()->CreateTopLevelWindow( nsnull,
+                                                  url,
+                                                  PR_TRUE,
+                                                  getter_AddRefs(newWindow),
+                                                  nsnull,
+                                                  dialog,
+                                                  0,
+                                                  0 );
 
         if ( NS_SUCCEEDED( rv ) ) {
             // Tell the dialog its nsIWebShellWindow.
@@ -740,4 +740,4 @@ nsFindComponent::ResetContext( nsISupports *aContext,
 // nsFindComponent::Context implementation...
 NS_IMPL_ISUPPORTS( nsFindComponent::Context, nsCOMTypeInfo<nsISupports>::GetIID() )
 
-NS_IMPL_IAPPSHELLCOMPONENT( nsFindComponent, nsIFindComponent, NS_IFINDCOMPONENT_PROGID )
+NS_IMPL_IAPPSHELLCOMPONENT( nsFindComponent, nsIFindComponent, NS_IFINDCOMPONENT_PROGID, 0 )
