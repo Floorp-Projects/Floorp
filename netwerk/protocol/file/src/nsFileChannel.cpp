@@ -372,6 +372,12 @@ nsFileChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     if (mState != QUIESCENT)
         return NS_ERROR_IN_PROGRESS;
 
+    PRBool exists;
+    rv = Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists)
+        return NS_ERROR_FAILURE;        // XXX probably need NS_BASE_STREAM_FILE_NOT_FOUND or something
+
     rv = NS_NewPipe(&mBufferInputStream, &mBufferOutputStream,
                     NS_FILE_TRANSPORT_SEGMENT_SIZE,
                     NS_FILE_TRANSPORT_BUFFER_SIZE, PR_TRUE, this);
