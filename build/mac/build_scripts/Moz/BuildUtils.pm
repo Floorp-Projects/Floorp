@@ -63,7 +63,6 @@ sub SetupDefaultBuildOptions($$)
     # configuration variables that globally affect what is built
     #-------------------------------------------------------------
     $main::DEBUG                  = $debug;
-    $main::CARBON                 = 0;    # turn on to build with TARGET_CARBON
     $main::PROFILE                = 0;
     $main::RUNTIME                = 0;    # turn on to just build runtime support and NSPR projects
     $main::GC_LEAK_DETECTOR       = 0;    # turn on to use GC leak detection
