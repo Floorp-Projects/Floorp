@@ -356,8 +356,23 @@ GlyphHit(const char *line, char **outputHTML, PRInt32 *glyphTextLen)
     *glyphTextLen = 3;
     return PR_TRUE;
   }
+  else if ( (len >= 3) && (!PL_strncasecmp(line, ";-)", 3)) )
+  {
+    *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/wink.gif\" height=17 width=17 align=ABSCENTER>");
+    if (!(*outputHTML))
+      return PR_FALSE;
+    *glyphTextLen = 3;
+    return PR_TRUE;
+  }
+  else if ( (len >= 3) && (!PL_strncasecmp(line, ":-P", 3)) )
+  {
+    *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/sick.gif\" height=17 width=17 align=ABSCENTER>");
+    if (!(*outputHTML))
+      return PR_FALSE;
+    *glyphTextLen = 3;
+    return PR_TRUE;
+  }
 
- 
   return PR_FALSE;
 }
 
