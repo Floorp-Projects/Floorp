@@ -20,6 +20,7 @@
  * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
+ * Patrick Beard
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -37,6 +38,7 @@
 package org.mozilla.javascript.optimizer;
 
 import java.util.*;
+import org.mozilla.classfile.ClassManager;
 
 /**
  * Load generated classes that implement JavaScript scripts
@@ -50,20 +52,28 @@ final class JavaScriptClassLoader extends ClassLoader {
     }
     
     public Class defineClass(String name, byte data[]) {
+        ClassLoader loader = getClass().getClassLoader();
+        if (loader != null) {
+            Class clazz = ClassManager.defineClass(loader, name, data);
+            if (clazz != null)
+                return clazz;
+        }
         return super.defineClass(name, data, 0, data.length);
     }
 
     protected Class loadClass(String name, boolean resolve)
         throws ClassNotFoundException
     {
-        Class clazz = findLoadedClass(name);
-        if (clazz == null) {
-            // Experimental change for JShell, use outer class loader.
-            ClassLoader loader = JavaScriptClassLoader.class.getClassLoader();
-            if (loader != null)
-                return loader.loadClass(name);
-            clazz = findSystemClass(name);
+        Class clazz;
+        ClassLoader loader = getClass().getClassLoader();
+        if (loader != null) {
+            clazz = ClassManager.loadClass(loader, name, resolve);
+            if (clazz != null)
+                return clazz;
         }
+        clazz = findLoadedClass(name);
+        if (clazz == null)
+            clazz = findSystemClass(name);
         if (resolve)
             resolveClass(clazz);
         return clazz;

@@ -105,8 +105,9 @@ public class JavaAdapter extends ScriptableObject {
                                                       ctorObj);
                 }
                 superClass = c;
+            } else {
+                intfs[interfaceCount++] = c;
             }
-            intfs[interfaceCount++] = c;
         }
         
         if (superClass == null)
@@ -818,18 +819,28 @@ public class JavaAdapter extends ScriptableObject {
     
     static final class MyClassLoader extends ClassLoader {
         public Class defineClass(String name, byte data[]) {
+            ClassLoader loader = getClass().getClassLoader();
+            if (loader != null) {
+                Class clazz = ClassManager.defineClass(loader, name, data);
+                if (clazz != null)
+                    return clazz;
+            }
             return super.defineClass(name, data, 0, data.length);
         }
 
         protected Class loadClass(String name, boolean resolve)
             throws ClassNotFoundException
         {
-            Class clazz = findLoadedClass(name);
+            Class clazz;
+            ClassLoader loader = getClass().getClassLoader();
+            if (loader != null) {
+                clazz = ClassManager.loadClass(loader, name, resolve);
+                if (clazz != null)
+                    return clazz;
+            }
+            clazz = findLoadedClass(name);
             if (clazz == null) {
-                ClassLoader loader = getClass().getClassLoader();
                 try {
-                    if (loader != null)
-                        return loader.loadClass(name);
                     clazz = findSystemClass(name);
                 } catch (ClassNotFoundException e) {
                     return ScriptRuntime.loadClassName(name);

@@ -892,6 +892,9 @@ public abstract class ScriptableObject implements Scriptable {
                     continue;
                 }
             }
+            // ignore any compiler generated methods.
+            if (name.indexOf('$') != -1)
+                continue;
             if (name.equals(ctorName))
                 continue;
             String prefix = null;
