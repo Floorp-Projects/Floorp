@@ -97,7 +97,10 @@ Rights Reserved.
                       <treechildren>
                         <treeitem uri="...">
                           <treerow>
-                            <treecell><text value="http://home.netscape.com/NC-rdf#DirName" /></treecell>
+                            <treecell>
+								<treeindentation />
+								<titledbutton value="rdf:http://home.netscape.com/NC-rdf#DirName" align="left" />
+                            </treecell>
                           </treerow>
                         </treeitem>
                       </treechildren>

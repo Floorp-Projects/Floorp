@@ -1,9 +1,12 @@
 function AbNewCardDialog()
 {
+	var myURI = GetResultTreeDirectory().getAttribute('ref');
+	dump("myURI = " + myURI + "\n");
+	
 	var dialog = window.openDialog("chrome://addressbook/content/newcardDialog.xul",
 								   "abNewCard",
 								   "chrome",
-								   {abURI:GetResultTreeDirectory().getAttribute('id')});
+								   {abURI:GetResultTreeDirectory().getAttribute('ref')});
 
 	return dialog;
 }
@@ -13,7 +16,7 @@ function AbEditCardDialog(card, okCallback)
 	var dialog = window.openDialog("chrome://addressbook/content/editcardDialog.xul",
 								   "abEditCard",
 								   "chrome",
-								   {abURI:GetResultTreeDirectory().getAttribute('id'),
+								   {abURI:GetResultTreeDirectory().getAttribute('ref'),
 								    card:card, okCallback:okCallback});
 	
 	return dialog;
@@ -42,22 +45,20 @@ function AbDelete()
 function GetDirectoryTree()
 {
 	var directoryTree = frames["directoryFrame"].document.getElementById('dirTree');
+	dump("directoryTree = " + directoryTree + "\n");
 	return directoryTree;
 }
 
 function GetResultTree()
 {
 	var cardTree = frames["resultsFrame"].document.getElementById('resultTree');
+	dump("cardTree = " + cardTree + "\n");
 	return cardTree;
 }
 
 function GetResultTreeDirectory()
 {
-	var tree = GetResultTree();
-	var treechildrenList = tree.getElementsByTagName('treechildren');
-	
-	if ( treechildrenList.length == 1 )
-		return(treechildrenList[0]);
+	return(GetResultTree());
 }
 
 
