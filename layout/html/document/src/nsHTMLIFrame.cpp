@@ -18,6 +18,7 @@
 
 #include "nsHTMLContainer.h"
 #include "nsLeafFrame.h"
+#include "nsHTMLContainerFrame.h"
 #include "nsIWebWidget.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -33,9 +34,12 @@
 #include "nsViewsCID.h"
 #include "nsHTMLAtoms.h"
 #include "nsIScrollableView.h"
+#include "nsStyleCoord.h"
+#include "nsIStyleContext.h"
+#include "nsCSSLayout.h"
 
 #include "nsIDocumentLoader.h"
-
+class nsHTMLIFrame;
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebWidgetIID, NS_IWEBWIDGET_IID);
@@ -49,7 +53,9 @@ static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 static NS_DEFINE_IID(kIViewerContainerIID, NS_IVIEWERCONTAINER_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 
-// XXX temporary until doc manager/loader is in place
+/*******************************************************************************
+ * TempObserver XXX temporary until doc manager/loader is in place
+ ******************************************************************************/
 class TempObserver : public nsIStreamObserver
 {
 public:
@@ -72,6 +78,9 @@ protected:
   nsString mOverTarget;
 };
 
+/*******************************************************************************
+ * FrameLoadingInfo 
+ ******************************************************************************/
 class FrameLoadingInfo : public nsISupports
 {
 public:
@@ -87,12 +96,39 @@ public:
   nsSize mFrameSize;
 };
 
+/*******************************************************************************
+ * nsHTMLIFrameOuterFrame
+ ******************************************************************************/
+class nsHTMLIFrameOuterFrame : public nsHTMLContainerFrame {
 
-class nsHTMLIFrameFrame : public nsLeafFrame, public nsIWebFrame, public nsIViewerContainer {
+public:
+  nsHTMLIFrameOuterFrame(nsIContent* aContent, nsIFrame* aParent);
+
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
+
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus);
+  nscoord GetBorderWidth(nsIPresContext& aPresContext);
+
+protected:
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsReflowState& aReflowState,
+                              nsReflowMetrics& aDesiredSize);
+  virtual PRIntn GetSkipSides() const;
+};
+
+/*******************************************************************************
+ * nsHTMLIFrameInnerFrame
+ ******************************************************************************/
+class nsHTMLIFrameInnerFrame : public nsLeafFrame, public nsIWebFrame, public nsIViewerContainer {
 
 public:
 
-  nsHTMLIFrameFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsHTMLIFrameInnerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   /**
     * @see nsIFrame::Paint
@@ -122,11 +158,13 @@ public:
 
   float GetTwipsToPixels();
 
+  NS_IMETHOD GetParentContent(nsHTMLIFrame*& aContent);
+
   NS_DECL_ISUPPORTS
 
 protected:
 
-  virtual ~nsHTMLIFrameFrame();
+  virtual ~nsHTMLIFrameInnerFrame();
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
@@ -140,6 +178,9 @@ protected:
   TempObserver* mTempObserver;
 };
 
+/*******************************************************************************
+ * nsHTMLIFrame
+ ******************************************************************************/
 class nsHTMLIFrame : public nsHTMLContainer {
 public:
  
@@ -152,13 +193,16 @@ public:
   PRBool GetURL(nsString& aURLSpec);
   PRBool GetName(nsString& aName);
   nsScrollPreference GetScrolling();
+  virtual void MapAttributesInto(nsIStyleContext* aContext,
+                                 nsIPresContext* aPresContext);
+  PRBool GetFrameBorder();
 
 #if 0
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
                                      nsHTMLValue& aValue) const;
+#endif
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-#endif
 
 protected:
   nsHTMLIFrame(nsIAtom* aTag, nsIWebWidget* aParentWebWidget);
@@ -169,13 +213,113 @@ protected:
 
   friend nsresult NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
                                    nsIAtom* aTag, nsIWebWidget* aWebWidget);
-  friend class nsHTMLIFrameFrame;
+  friend class nsHTMLIFrameInnerFrame;
 
 };
 
-// nsHTMLIFrameFrame
+/*******************************************************************************
+ * nsHTMLIFrameOuterFrame
+ ******************************************************************************/
+nsHTMLIFrameOuterFrame::nsHTMLIFrameOuterFrame(nsIContent* aContent, nsIFrame* aParent)
+  : nsHTMLContainerFrame(aContent, aParent)
+{
+}
 
-nsHTMLIFrameFrame::nsHTMLIFrameFrame(nsIContent* aContent, nsIFrame* aParentFrame)
+nscoord
+nsHTMLIFrameOuterFrame::GetBorderWidth(nsIPresContext& aPresContext)
+{
+  if (nsnull == mStyleContext) {// make sure the style context is set
+    GetStyleContext(&aPresContext, mStyleContext);
+  }
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  nsStyleCoord leftBorder;
+  spacing->mBorder.GetLeft(leftBorder);
+  nsStyleUnit unit = leftBorder.GetUnit(); 
+  if (eStyleUnit_Coord == unit) {
+    return leftBorder.GetCoordValue();
+  }
+  return 0;
+}
+
+PRIntn
+nsHTMLIFrameOuterFrame::GetSkipSides() const
+{
+  return 0;
+}
+
+void 
+nsHTMLIFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                                  const nsReflowState& aReflowState,
+                                  nsReflowMetrics& aDesiredSize)
+{
+  float p2t = aPresContext->GetPixelsToTwips();
+
+  nsSize size;
+  PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, aReflowState, size);
+
+  if (0 == (ss & NS_SIZE_HAS_WIDTH)) {
+    size.width = (nscoord)(200.0 * p2t + 0.5);
+  }
+  if (0 == (ss & NS_SIZE_HAS_HEIGHT)) {
+    size.height = (nscoord)(200 * p2t + 0.5);
+  }
+
+  aDesiredSize.width  = size.width;
+  aDesiredSize.height = size.height;
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
+}
+
+NS_IMETHODIMP
+nsHTMLIFrameOuterFrame::Paint(nsIPresContext& aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         const nsRect& aDirtyRect)
+{
+  printf("outer paint %d %d %d %d \n", aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  if (nsnull != mFirstChild) {
+    mFirstChild->Paint(aPresContext, aRenderingContext, aDirtyRect);
+  }
+  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+}
+
+NS_IMETHODIMP
+nsHTMLIFrameOuterFrame::Reflow(nsIPresContext*      aPresContext,
+                               nsReflowMetrics&     aDesiredSize,
+                               const nsReflowState& aReflowState,
+                               nsReflowStatus&      aStatus)
+{
+  // Always get the size so that the caller knows how big we are
+  GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
+
+  if (nsnull == mFirstChild) {
+    mFirstChild = new nsHTMLIFrameInnerFrame(mContent, this);
+    mChildCount = 1;
+  }
+  
+  nscoord borderWidth  = GetBorderWidth(*aPresContext);
+  nscoord borderWidth2 = 2 * borderWidth;
+  nsSize innerSize(aDesiredSize.width - borderWidth2, aDesiredSize.height - borderWidth2);
+
+  // Reflow the child and get its desired size
+  nsReflowState kidReflowState(mFirstChild, aReflowState, innerSize);
+  mFirstChild->WillReflow(*aPresContext);
+  nsReflowMetrics ignore(nsnull);
+  aStatus = ReflowChild(mFirstChild, aPresContext, ignore, kidReflowState);
+  NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+  
+  // Place and size the child
+  nsRect rect(borderWidth, borderWidth, innerSize.width, innerSize.height);
+  mFirstChild->SetRect(rect);
+  mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+
+  return NS_OK;
+}
+
+/*******************************************************************************
+ * nsHTMLIFrameInnerFrame
+ ******************************************************************************/
+nsHTMLIFrameInnerFrame::nsHTMLIFrameInnerFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsLeafFrame(aContent, aParentFrame)
 {
   NS_INIT_REFCNT();
@@ -191,18 +335,18 @@ nsHTMLIFrameFrame::nsHTMLIFrameFrame(nsIContent* aContent, nsIFrame* aParentFram
   NSRepository::CreateInstance(kCDocumentLoaderCID, nsnull, kIDocumentLoaderIID, (void**)&mDocLoader);
 }
 
-nsHTMLIFrameFrame::~nsHTMLIFrameFrame()
+nsHTMLIFrameInnerFrame::~nsHTMLIFrameInnerFrame()
 {
   NS_IF_RELEASE(mWebWidget);
   NS_IF_RELEASE(mDocLoader);
   NS_RELEASE(mTempObserver);
 }
 
-NS_IMPL_ADDREF(nsHTMLIFrameFrame);
-NS_IMPL_RELEASE(nsHTMLIFrameFrame);
+NS_IMPL_ADDREF(nsHTMLIFrameInnerFrame);
+NS_IMPL_RELEASE(nsHTMLIFrameInnerFrame);
 
 nsresult
-nsHTMLIFrameFrame::QueryInterface(const nsIID& aIID,
+nsHTMLIFrameInnerFrame::QueryInterface(const nsIID& aIID,
                                  void** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
@@ -227,13 +371,13 @@ nsHTMLIFrameFrame::QueryInterface(const nsIID& aIID,
   return nsLeafFrame::QueryInterface(aIID, aInstancePtrResult);
 }
 
-nsIWebWidget* nsHTMLIFrameFrame::GetWebWidget()
+nsIWebWidget* nsHTMLIFrameInnerFrame::GetWebWidget()
 {
   NS_IF_ADDREF(mWebWidget);
   return mWebWidget;
 }
 
-float nsHTMLIFrameFrame::GetTwipsToPixels()
+float nsHTMLIFrameInnerFrame::GetTwipsToPixels()
 {
   nsISupports* parentSup;
   if (mWebWidget) {
@@ -261,26 +405,35 @@ float nsHTMLIFrameFrame::GetTwipsToPixels()
 
 
 NS_METHOD
-nsHTMLIFrameFrame::MoveTo(nscoord aX, nscoord aY)
+nsHTMLIFrameInnerFrame::MoveTo(nscoord aX, nscoord aY)
 {
   return nsLeafFrame::MoveTo(aX, aY);
 }
 
 NS_METHOD
-nsHTMLIFrameFrame::SizeTo(nscoord aWidth, nscoord aHeight)
+nsHTMLIFrameInnerFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 {
   return nsLeafFrame::SizeTo(aWidth, aWidth);
 }
 
 NS_IMETHODIMP
-nsHTMLIFrameFrame::Paint(nsIPresContext& aPresContext,
+nsHTMLIFrameInnerFrame::Paint(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect)
 {
+  printf("inner paint %d %d %d %d \n", aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   if (nsnull != mWebWidget) {
-    mWebWidget->Show();
+    //mWebWidget->Show();
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLIFrameInnerFrame::GetParentContent(nsHTMLIFrame*& aContent)
+{
+  nsHTMLIFrameOuterFrame* parent;
+  GetGeometricParent((nsIFrame*&)parent);
+  return parent->GetContent((nsIContent*&)aContent);
 }
 
 
@@ -300,13 +453,14 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
 }
 
 NS_IMETHODIMP
-nsHTMLIFrameFrame::Embed(nsIDocumentWidget* aDocViewer, 
-                         const char* aCommand,
-                         nsISupports* aExtraInfo)
+nsHTMLIFrameInnerFrame::Embed(nsIDocumentWidget* aDocViewer, 
+                              const char* aCommand,
+                              nsISupports* aExtraInfo)
 {
   nsresult rv;
   nsIWebWidget* ww;
-  nsHTMLIFrame* content = (nsHTMLIFrame*)mContent;
+  nsHTMLIFrame* content;
+  GetParentContent(content);
 
   if (nsnull != mWebWidget) {
     mWebWidget->SetLinkHandler(nsnull);
@@ -375,38 +529,35 @@ nsHTMLIFrameFrame::Embed(nsIDocumentWidget* aDocViewer,
                    NS_TO_INT_ROUND(aSize.height * t2p));
   mWebWidget->Init(widget->GetNativeData(NS_NATIVE_WIDGET), webBounds, 
                    content->GetScrolling());
+  NS_RELEASE(content);
   NS_RELEASE(widget);
 
-  mWebWidget->Show();
+  //mWebWidget->Show();
   mCreatingViewer = PR_FALSE;
 
   return NS_OK;
 }
 
-
-
 NS_IMETHODIMP
-nsHTMLIFrameFrame::Reflow(nsIPresContext*      aPresContext,
-                          nsReflowMetrics&     aDesiredSize,
-                          const nsReflowState& aReflowState,
-                          nsReflowStatus&      aStatus)
+nsHTMLIFrameInnerFrame::Reflow(nsIPresContext*      aPresContext,
+                               nsReflowMetrics&     aDesiredSize,
+                               const nsReflowState& aReflowState,
+                               nsReflowStatus&      aStatus)
 {
   nsresult rv = NS_OK;
 
-  // Always get the size so that the caller knows how big we are
-  GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
-
+  // use the max size set in aReflowState by the nsHTMLIFrameOuterFrame as our size
   if ((nsnull == mWebWidget) && (!mCreatingViewer)) {
     FrameLoadingInfo *frameInfo;
 
-    nsHTMLIFrame* content = (nsHTMLIFrame*)mContent;
+    nsHTMLIFrame* content;
+    GetParentContent(content);
+
     nsAutoString url;
     content->GetURL(url);
     nsSize size;
 
-    size.SizeTo(aDesiredSize.width, aDesiredSize.height);
-
-    frameInfo = new FrameLoadingInfo(size);
+    frameInfo = new FrameLoadingInfo(aReflowState.maxSize);
     NS_ADDREF(frameInfo);
 
     if (nsnull != mDocLoader) {
@@ -414,7 +565,7 @@ nsHTMLIFrameFrame::Reflow(nsIPresContext*      aPresContext,
 
       // load the document
       nsString absURL;
-      TempMakeAbsURL(mContent, url, absURL);
+      TempMakeAbsURL(content, url, absURL);
 
       rv = mDocLoader->LoadURL(absURL,          // URL string
                                nsnull,          // Command
@@ -424,13 +575,20 @@ nsHTMLIFrameFrame::Reflow(nsIPresContext*      aPresContext,
                                mTempObserver);  // Observer
     }
     NS_RELEASE(frameInfo);
+    NS_RELEASE(content);
   }
+
+  aDesiredSize.width  = aReflowState.maxSize.width;
+  aDesiredSize.height = aReflowState.maxSize.height;
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
+
   aStatus = NS_FRAME_COMPLETE;
   return rv;
 }
 
 void 
-nsHTMLIFrameFrame::GetDesiredSize(nsIPresContext* aPresContext,
+nsHTMLIFrameInnerFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                   const nsReflowState& aReflowState,
                                   nsReflowMetrics& aDesiredSize)
 {
@@ -442,8 +600,9 @@ nsHTMLIFrameFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredSize.descent = 0;
 }
 
-// nsHTMLIFrame
-
+/*******************************************************************************
+ * nsHTMLIFrame
+ ******************************************************************************/
 nsHTMLIFrame::nsHTMLIFrame(nsIAtom* aTag, nsIWebWidget* aParentWebWidget)
   : nsHTMLContainer(aTag), mParentWebWidget(aParentWebWidget)
 {
@@ -454,13 +613,30 @@ nsHTMLIFrame::~nsHTMLIFrame()
   mParentWebWidget = nsnull;
 }
 
+void nsHTMLIFrame::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
+{
+  nsHTMLValue val;
+  if (ParseImageProperty(aAttribute, aString, val)) { // convert width or height to pixels
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
+  }
+  nsHTMLContainer::SetAttribute(aAttribute, aString);
+}
+
+void nsHTMLIFrame::MapAttributesInto(nsIStyleContext* aContext, 
+                                     nsIPresContext* aPresContext)
+{
+  MapImagePropertiesInto(aContext, aPresContext);
+  MapImageBorderInto(aContext, aPresContext, nsnull);
+}
+
 nsresult
 nsHTMLIFrame::CreateFrame(nsIPresContext*  aPresContext,
                           nsIFrame*        aParentFrame,
                           nsIStyleContext* aStyleContext,
                           nsIFrame*&       aResult)
 {
-  nsIFrame* frame = new nsHTMLIFrameFrame(this, aParentFrame);
+  nsIFrame* frame = new nsHTMLIFrameOuterFrame(this, aParentFrame);
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -546,6 +722,21 @@ nsScrollPreference nsHTMLIFrame::GetScrolling()
   return nsScrollPreference_kAuto;
 }
 
+PRBool nsHTMLIFrame::GetFrameBorder()
+{
+  nsHTMLValue value;
+  if (eContentAttr_HasValue == (GetAttribute(nsHTMLAtoms::frameborder, value))) {
+    if (eHTMLUnit_String == value.GetUnit()) {
+      nsAutoString frameborder;
+      value.GetStringValue(frameborder);
+      if (frameborder.EqualsIgnoreCase("0")) {
+        return PR_FALSE;
+      } 
+    }
+  }
+  return PR_TRUE;
+}
+
 nsresult
 NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
                  nsIAtom* aTag, nsIWebWidget* aWebWidget)
@@ -563,11 +754,9 @@ NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-
-
-
-
-
+/*******************************************************************************
+ * FrameLoadingInfo
+ ******************************************************************************/
 FrameLoadingInfo::FrameLoadingInfo(const nsSize& aSize)
 {
   NS_INIT_REFCNT();
@@ -580,14 +769,14 @@ FrameLoadingInfo::FrameLoadingInfo(const nsSize& aSize)
  */
 NS_IMPL_ISUPPORTS(FrameLoadingInfo,kISupportsIID);
 
-
-
-
 // XXX temp implementation
 
 NS_IMPL_ADDREF(TempObserver);
 NS_IMPL_RELEASE(TempObserver);
 
+/*******************************************************************************
+ * TempObserver
+ ******************************************************************************/
 nsresult
 TempObserver::QueryInterface(const nsIID& aIID,
                             void** aInstancePtrResult)
