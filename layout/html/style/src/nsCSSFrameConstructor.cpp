@@ -10340,9 +10340,15 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
-  nsIFrame*     primaryFrame;
-  
-  shell->GetPrimaryFrameFor(aContent, &primaryFrame);
+
+  // Get the frame associated with the content which is the highest in the frame tree
+  nsIFrame* primaryFrame;
+  shell->GetPrimaryFrameFor(aContent, &primaryFrame); 
+  // Get the frame associated with the content whose style context is highest in the style context tree
+  nsIFrame* primaryStyleFrame = nsnull;
+  if (primaryFrame) {
+    primaryFrame->GetStyleContextProvider(aPresContext, &primaryStyleFrame);
+  }
 
   PRBool  reconstruct = PR_FALSE;
   PRBool  restyle = PR_FALSE;
@@ -10434,8 +10440,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
         // This style rule exists and we need to blow away any computed data that this
         // rule cached in the rule tree.
         rule = getter_AddRefs((nsIStyleRule*)val.GetISupportsValue());
-        if (primaryFrame)
-          primaryFrame->GetStyleContext(getter_AddRefs(styleContext));
+        if (primaryStyleFrame)
+          primaryStyleFrame->GetStyleContext(getter_AddRefs(styleContext));
         else {
           // We might be in the undisplayed map.  Retrieve the style context from there.
           nsCOMPtr<nsIFrameManager> frameManager;

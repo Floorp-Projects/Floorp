@@ -3994,17 +3994,11 @@ nsFrame::ReflowCommandNotify(nsIPresShell*        aShell,
 }
 
 NS_IMETHODIMP 
-nsFrame::GetParentStyleContextProvider(nsIPresContext* aPresContext,
-                                       nsIFrame** aProviderFrame, 
-                                       nsContextProviderRelationship& aRelationship)
+nsFrame::GetStyleContextProvider(nsIPresContext* aPresContext,
+                                 nsIFrame**      aProviderFrame)
 {
-  NS_ASSERTION(aPresContext && aProviderFrame, "null arguments: aPresContext and-or aProviderFrame");
-  if (aProviderFrame) {
-    // parent context provider is the parent frame by default
-    *aProviderFrame = mParent;
-    aRelationship = eContextProvider_Ancestor;
-  }
-  return ((aProviderFrame != nsnull) && (*aProviderFrame != nsnull)) ? NS_OK : NS_ERROR_FAILURE;
+  *aProviderFrame = this;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------------
