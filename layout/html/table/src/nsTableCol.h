@@ -150,12 +150,6 @@ inline void nsTableCol::SetRepeat (int aRepeat)
   ResetColumns ();
 }
 
-inline void nsTableCol::ResetColumns ()
-{
-  if (nsnull != mColGroup)
-    mColGroup->ResetColumns ();
-}
-
 #endif
 
 

@@ -272,6 +272,12 @@ nsTableCol::CreateFrame(nsIPresContext* aPresContext,
   return rv;
 }
 
+void nsTableCol::ResetColumns ()
+{
+  if (nsnull != mColGroup)
+    mColGroup->ResetColumns ();
+}
+
 /* ---------- Global Functions ---------- */
 
 nsresult
