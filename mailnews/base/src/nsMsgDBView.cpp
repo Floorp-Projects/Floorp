@@ -865,8 +865,10 @@ nsresult nsMsgDBView::GetFolderForViewIndex(nsMsgViewIndex index, nsIMsgFolder *
 nsresult nsMsgDBView::GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDatabase **db)
 {
   *db = m_db;
+  NS_IF_ADDREF(*db);
   return NS_OK;
 }
+
 NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, PRUnichar ** aValue)
 {
   nsresult rv = NS_OK;
@@ -2852,8 +2854,7 @@ nsMsgViewIndex nsMsgDBView::GetIndexForThread(nsIMsgDBHdr *hdr)
 		// and put new header before found header, or at end.
 		for (PRInt32 i = GetSize() - 1; i >= 0; i--) 
 		{
-			char level = m_levels[i];
-			if (level == 0)
+			if (m_levels[i])
 			{
 				if (insertKey < m_keys.GetAt(i))
 					prevInsertIndex = i;
@@ -2884,8 +2885,7 @@ nsMsgViewIndex nsMsgDBView::GetIndexForThread(nsIMsgDBHdr *hdr)
 		// new header before found header, or at beginning.
 		for (PRInt32 i = 0; i < GetSize(); i++) 
 		{
-			char level = m_levels[i];
-			if (level == 0)
+			if (m_levels[i])
 			{
 				if (insertKey > m_keys.GetAt(i))
 				{
@@ -3042,13 +3042,13 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndex(nsIMsgDBHdr *msgHdr)
 
 nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)
 {
-	PRUint32	flags = 0;
+  PRUint32	flags = 0;
 #ifdef DEBUG_bienvenu
-	NS_ASSERTION((int) m_keys.GetSize() == m_flags.GetSize() && (int) m_keys.GetSize() == m_levels.GetSize(), "view arrays out of sync!");
+  NS_ASSERTION((int) m_keys.GetSize() == m_flags.GetSize() && (int) m_keys.GetSize() == m_levels.GetSize(), "view arrays out of sync!");
 #endif
   msgHdr->GetFlags(&flags);
-	if (flags & MSG_FLAG_IGNORED && !GetShowingIgnored())
-		return NS_OK;
+  if (flags & MSG_FLAG_IGNORED && !GetShowingIgnored())
+    return NS_OK;
 
   nsMsgKey msgKey, threadId;
   nsMsgKey threadParent;
@@ -3057,40 +3057,52 @@ nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)
   msgHdr->GetThreadParent(&threadParent);
 
   // ### this isn't quite right, is it? Should be checking that our thread parent key is none?
-	if (threadParent == nsMsgKey_None) 
-		flags |= MSG_VIEW_FLAG_ISTHREAD;
-	nsMsgViewIndex insertIndex = GetInsertIndex(msgHdr);
-	if (insertIndex == nsMsgViewIndex_None)
-	{
-		// if unreadonly, level is 0 because we must be the only msg in the thread.
-    char levelToAdd = 0; // ### TODO ((m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) != 0) ? 0 : msgHdr->GetLevel();
+  if (threadParent == nsMsgKey_None) 
+    flags |= MSG_VIEW_FLAG_ISTHREAD;
+  nsMsgViewIndex insertIndex = GetInsertIndex(msgHdr);
+  if (insertIndex == nsMsgViewIndex_None)
+  {
+	// if unreadonly, level is 0 because we must be the only msg in the thread.
+    PRInt32 levelToAdd = 0;
+#if 0 
+    if (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly)) 
+    {
+        levelToAdd = FindLevelInThread(msgHdr, insertIndex);
+    }
+#endif
 
     if (m_sortOrder == nsMsgViewSortOrder::ascending)
-		{
-			m_keys.Add(msgKey);
-			m_flags.Add(flags);
-			m_levels.Add(levelToAdd);
-			NoteChange(m_keys.GetSize() - 1, 1, nsMsgViewNotificationCode::insertOrDelete);
-		}
-		else
-		{
-			m_keys.InsertAt(0, msgKey);
-			m_flags.InsertAt(0, flags);
-			m_levels.InsertAt(0, levelToAdd);
-			NoteChange(0, 1, nsMsgViewNotificationCode::insertOrDelete);
-		}
-		m_sortValid = PR_FALSE;
+	{
+	  m_keys.Add(msgKey);
+	  m_flags.Add(flags);
+      m_levels.Add(levelToAdd);
+      NoteChange(m_keys.GetSize() - 1, 1, nsMsgViewNotificationCode::insertOrDelete);
 	}
 	else
 	{
-		m_keys.InsertAt(insertIndex, msgKey);
-		m_flags.InsertAt(insertIndex, flags);
-    char level = 0; // ### TODO (m_sortType == nsMsgViewSortType::byThread) ? 0 : msgHdr->GetLevel();
-		m_levels.InsertAt(insertIndex, level);
-    NoteChange(insertIndex, 1, nsMsgViewNotificationCode::insertOrDelete);
+      m_keys.InsertAt(0, msgKey);
+      m_flags.InsertAt(0, flags);
+      m_levels.InsertAt(0, levelToAdd);
+      NoteChange(0, 1, nsMsgViewNotificationCode::insertOrDelete);
 	}
-	OnHeaderAddedOrDeleted();
-	return NS_OK;
+	m_sortValid = PR_FALSE;
+  }
+  else
+  {
+    m_keys.InsertAt(insertIndex, msgKey);
+    m_flags.InsertAt(insertIndex, flags);
+    PRInt32 level = 0; 
+#if 0 
+    if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
+    {
+        level = FindLevelInThread(msgHdr, insertIndex);
+    }
+#endif
+    m_levels.InsertAt(insertIndex, level);
+    NoteChange(insertIndex, 1, nsMsgViewNotificationCode::insertOrDelete);
+  }
+  OnHeaderAddedOrDeleted();
+  return NS_OK;
 }
 
 nsresult nsMsgDBView::InsertHdrAt(nsIMsgDBHdr *msgHdr, nsMsgViewIndex insertIndex)
@@ -3103,7 +3115,13 @@ nsresult nsMsgDBView::InsertHdrAt(nsIMsgDBHdr *msgHdr, nsMsgViewIndex insertInde
 	NoteStartChange(insertIndex, 1, nsMsgViewNotificationCode::changed);
 	m_keys.SetAt(insertIndex, msgKey);
 	m_flags.SetAt(insertIndex, flags);
-  char level = 0; // ### TODO (m_sortType == nsMsgViewSortType::byThread) ? 0 : msgHdr->GetLevel()
+    PRInt32 level = 0;
+#if 0
+    if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
+    {
+      level = FindLevelInThread(msgHdr, insertIndex);
+    }
+#endif
 	m_levels.SetAt(insertIndex, level);
 	NoteEndChange(insertIndex, 1, nsMsgViewNotificationCode::changed);
 	OnHeaderAddedOrDeleted();
@@ -3116,7 +3134,7 @@ PRBool nsMsgDBView::WantsThisThread(nsIMsgThread * /*threadHdr*/)
   return PR_TRUE; // default is to want all threads.
 }
 
-PRInt32 nsMsgDBView::FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgKey msgKey, nsMsgViewIndex startOfThreadViewIndex)
+PRInt32 nsMsgDBView::FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThreadViewIndex)
 {
   nsMsgKey threadParent;
   msgHdr->GetThreadParent(&threadParent);
@@ -3164,7 +3182,7 @@ nsresult	nsMsgDBView::ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex st
       // ### TODO - how about hasChildren flag?
 			m_flags.InsertAt(viewIndex, msgFlags & ~MSG_VIEW_FLAGS);
       // ### TODO this is going to be tricky - might use enumerators
-      PRInt32 level = FindLevelInThread(msgHdr, msgKey, startOfThreadViewIndex);
+      PRInt32 level = FindLevelInThread(msgHdr, startOfThreadViewIndex);
 			m_levels.InsertAt(viewIndex, level); 
 			// turn off thread or elided bit if they got turned on (maybe from new only view?)
 			if (i > 0)	
@@ -3361,7 +3379,7 @@ NS_IMETHODIMP nsMsgDBView::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator
   // this will force the outliner to ask for the cell values
   // since we don't have a db and we don't have any keys, 
   // the thread pane goes blank
-  mOutliner->Invalidate();
+  if (mOutliner) mOutliner->Invalidate();
 
   return NS_OK;
 }
@@ -4256,3 +4274,14 @@ nsresult nsMsgDBView::GetFolders(nsISupportsArray **aFolders)
     return NS_OK;
 }
 
+nsresult nsMsgDBView::AdjustRowCount(PRInt32 rowCountBeforeSort, PRInt32 rowCountAfterSort)
+{
+  PRInt32 rowChange = rowCountBeforeSort - rowCountAfterSort;
+
+  if (rowChange) {
+    // this is not safe to use when you have a selection
+    // RowCountChanged() will call AdjustSelection()
+    if (mOutliner) mOutliner->RowCountChanged(0, rowChange);
+  }
+  return NS_OK;
+}

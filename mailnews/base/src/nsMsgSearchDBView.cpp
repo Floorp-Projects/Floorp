@@ -139,7 +139,7 @@ nsresult nsMsgSearchDBView::GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDataba
   nsCOMPtr <nsIMsgFolder> aFolder;
   GetFolderForViewIndex(index, getter_AddRefs(aFolder));
   if (aFolder)
-    return aFolder->GetMsgDatabase(nsnull, getter_AddRefs(db));
+    return aFolder->GetMsgDatabase(nsnull, db);
   else
     return NS_MSG_INVALID_DBVIEW_INDEX;
 }
@@ -531,10 +531,9 @@ NS_IMETHODIMP nsMsgSearchDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgView
 
     // the sort may have changed the number of rows
     // before we restore the selection, tell the outliner
-    PRInt32 rowCountAfterSort = GetSize();
-    if (rowCountBeforeSort != rowCountAfterSort) {
-      mOutliner->RowCountChanged(rowCountBeforeSort, rowCountBeforeSort - rowCountAfterSort);
-    }
+    // do this before we call restore selection
+    // this is safe when there is no selection. 
+    rv = AdjustRowCount(rowCountBeforeSort, GetSize());
 
     RestoreSelection(&preservedSelection);
     if (mOutliner) mOutliner->Invalidate();

@@ -126,6 +126,12 @@ protected:
   nsresult SaveSelection(nsMsgKeyArray * aMsgKeyArray);
   nsresult RestoreSelection(nsMsgKeyArray * aMsgKeyArray);
 
+  // this is not safe to use when you have a selection
+  // RowCountChanged() will call AdjustSelection() 
+  // it should be called after SaveSelection() and before
+  // RestoreSelection()
+  nsresult AdjustRowCount(PRInt32 rowCountBeforeSort, PRInt32 rowCountAfterSort);
+
   nsresult GetSelectedIndices(nsUInt32Array *selection);
   nsresult GenerateURIForMsgKey(nsMsgKey aMsgKey, nsIMsgFolder *folder, char ** aURI);
 // routines used in building up view
@@ -172,7 +178,7 @@ protected:
 
   nsresult	ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex viewIndex, PRUint32 *pNumListed);
   nsresult	ListUnreadIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex startOfThreadViewIndex, PRUint32 *pNumListed);
-  PRInt32   FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgKey msgKey, nsMsgViewIndex startOfThreadViewIndex);
+  PRInt32   FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThreadViewIndex);
 	PRInt32	  GetSize(void) {return(m_keys.GetSize());}
 
   // notification api's

@@ -522,9 +522,6 @@ function CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
       // news defaults to threaded mode
       viewFlags = nsMsgViewFlagsType.kThreadedDisplay;
     }
-    else {
-      viewFlags &= nsMsgViewFlagsType.kThreadedDisplay;
-    }
   }
 
   if (!sortType) {
