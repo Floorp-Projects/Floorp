@@ -150,7 +150,16 @@ typedef void * nsNativeDeviceContext;
 /* requested plex mode not supported by printer */
 #define NS_ERROR_GFX_PRINTER_PLEX_NOT_SUPPORTED \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+31)
-  
+/* The document is still being loaded */
+#define NS_ERROR_GFX_PRINTER_DOC_IS_BUSY \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+32)
+/* Printing is not implemented */
+#define NS_ERROR_GFX_PRINTING_NOT_IMPLEMENTED \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+33)
+/* Cannot load the matching print module */
+#define NS_ERROR_GFX_COULD_NOT_LOAD_PRINT_MODULE \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+34)   
+      
 /**
  * Conts need for Print Preview
  */

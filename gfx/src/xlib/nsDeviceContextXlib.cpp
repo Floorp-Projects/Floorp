@@ -442,7 +442,7 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDeviceContextFor(nsIDeviceContextSpec *aDe
     nsCOMPtr<nsIDeviceContextXp> dcxp(do_CreateInstance(kCDeviceContextXp, &rv));
     NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create Xp Device context.");    
     if (NS_FAILED(rv)) 
-      return rv;
+      return NS_ERROR_GFX_COULD_NOT_LOAD_PRINT_MODULE;
     
     rv = dcxp->SetSpec(aDevice);
     if (NS_FAILED(rv)) 
@@ -468,7 +468,7 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDeviceContextFor(nsIDeviceContextSpec *aDe
     nsCOMPtr<nsIDeviceContextPS> dcps(do_CreateInstance(kCDeviceContextPS, &rv));
     NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context.");
     if (NS_FAILED(rv)) 
-      return rv;
+      return NS_ERROR_GFX_COULD_NOT_LOAD_PRINT_MODULE;
   
     rv = dcps->SetSpec(aDevice);
     if (NS_FAILED(rv)) 
