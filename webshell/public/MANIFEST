@@ -10,7 +10,6 @@ nsIDocStreamLoaderFactory.h
 nsIDocumentLoader.h
 nsIDocumentLoaderObserver.h
 nsILinkHandler.h
-nsIModalWindowSupport.h
 nsIRefreshURI.h
 nsIUrlDispatcher.h
 nsIWebShell.h
