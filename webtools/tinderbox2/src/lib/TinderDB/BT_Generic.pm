@@ -40,11 +40,6 @@
 
 package TinderDB::BT;
 
-# the raw CVS implemenation of the Version Control DB for Tinderbox.
-# This column of the status table will report who has changed files in
-# the CVS repository and what files they have changed.
-
-
 #   We store the hash of all names who modified the tree at a
 #   particular time as follows:
 
@@ -74,7 +69,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.12 $ )[1];
+$VERSION = ( qw $Revision: 1.13 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
