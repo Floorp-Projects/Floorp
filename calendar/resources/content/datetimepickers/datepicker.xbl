@@ -116,12 +116,8 @@
             onset="this.update(val,false)"
             onget="return this.mValue"/>
 
-        <property name="onchange" 
-            onset="this.kCallback = val;"/>
-
         <constructor>
             <![CDATA[
-                //java.lang.System.err.println(">>datepicker() "+this);
                 //var hbox = document.getAnonymousElementByAttribute(this,"id","hbox");
                 var hbox = document.getAnonymousNodes(this)[0];
                 this.kTextBox = hbox.childNodes[0];
@@ -137,16 +133,13 @@
                 this.mValue = null;
                 var val = this.getAttribute("value");
                 if (val) {
-                    //java.lang.System.err.println("val='"+val+"'");
                     this.value = new Date(val); // setting value property calls update
                 } else {
-                    //java.lang.System.err.println("no value attribute");
                     this.value = new Date();
                 }
                 this.kCallback = null;
                 val = this.getAttribute("onchange");
                 if (val) this.kCallback = function() { eval(val); };
-                //java.lang.System.err.println("<<datepicker() this.value="+this.value);
             ]]>
         </constructor>
 
@@ -160,7 +153,8 @@
                 } else {
                     this.mValue = aValue;
                     this.kTextBox.value = this.formatDate(this.mValue);
-                    if( this.kCallback && refresh != false )
+                    // called before constructor, so check aRefresh before kCallBack
+                    if( refresh != false && this.kCallback )
                         this.kCallback();
                 }
             ]]></body>
