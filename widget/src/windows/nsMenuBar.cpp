@@ -114,8 +114,7 @@ nsMenuBar::~nsMenuBar()
 NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 {
   mMenu = CreateMenu();
-  mParent = aParent;
-  NS_ADDREF(mParent);
+  SetParent(aParent);
   return NS_OK;
 
 }
@@ -125,6 +124,16 @@ NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 {
   aParent = mParent;
   NS_ADDREF(mParent);
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuBar::SetParent(nsIWidget *aParent)
+{
+
+  NS_IF_RELEASE(mParent);
+  mParent = aParent;
+  NS_IF_ADDREF(mParent);
   return NS_OK;
 }
 

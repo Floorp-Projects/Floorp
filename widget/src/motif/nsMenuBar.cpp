@@ -99,8 +99,7 @@ nsMenuBar::~nsMenuBar()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 {
-  mParent = aParent;
-  NS_ADDREF(mParent);
+  SetParent(aParent);
   Widget parentWidget = (Widget)mParent->GetNativeData(NS_NATIVE_WIDGET);
   Widget mainWindow = XtParent(parentWidget);
   mMenu = XmCreateMenuBar(mainWindow, "menubar", nsnull, 0);
@@ -114,6 +113,16 @@ NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 {
  // XXX: Shouldn't this do an addref here? or is this just internal
   aParent = mParent;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuBar::SetParent(nsIWidget *aParent)
+{
+
+  NS_IF_RELEASE(mParent);
+  mParent = aParent;
+  NS_IF_ADDREF(mParent);
   return NS_OK;
 }
 
