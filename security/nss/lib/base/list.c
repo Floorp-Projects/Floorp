@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.13 $ $Date: 2002/02/05 03:53:50 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.14 $ $Date: 2002/02/05 22:08:12 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -353,7 +353,7 @@ NSS_IMPLEMENT nssListIterator *
 nssList_CreateIterator(nssList *list)
 {
     nssListIterator *rvIterator;
-    rvIterator = nss_ZNEW(list->arena, nssListIterator);
+    rvIterator = nss_ZNEW(NULL, nssListIterator);
     if (!rvIterator) {
 	return NULL;
     }
