@@ -311,7 +311,7 @@ function fillFolderPaneContextMenu()
   EnableMenuItem("folderPaneContext-markNewsgroupAllRead", true);
 
 // End of News folder context menu =======================================
-  
+
   ShowMenuItem("folderPaneContext-markMailFolderAllRead", (numSelected <= 1) && ! isNewsgroup);
   EnableMenuItem("folderPaneContext-markMailFolderAllRead", true);
 

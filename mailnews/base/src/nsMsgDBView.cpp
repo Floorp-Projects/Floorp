@@ -137,7 +137,6 @@ nsMsgDBView::nsMsgDBView()
   mSuppressMsgDisplay = PR_FALSE;
   mSuppressCommandUpdating = PR_FALSE;
   mSuppressChangeNotification = PR_FALSE;
-  mTreatRecipientAsAuthor = PR_FALSE;
   mIsNews = PR_FALSE;
   mDeleteModel = nsMsgImapDeleteModels::MoveToTrash;
   m_deletingRows = PR_FALSE;
@@ -502,11 +501,7 @@ nsresult nsMsgDBView::FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aSenderString)
   if (!mHeaderParser)
     mHeaderParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
 
-  nsresult rv = NS_OK;
-  if (mTreatRecipientAsAuthor)
-    rv = aHdr->GetMime2DecodedRecipients(getter_Copies(unparsedAuthor));
-  else
-    rv = aHdr->GetMime2DecodedAuthor(getter_Copies(unparsedAuthor));
+  nsresult rv = aHdr->GetMime2DecodedAuthor(getter_Copies(unparsedAuthor));
   
   // *sigh* how sad, we need to convert our beautiful unicode string to utf8 
   // so we can extract the name part of the address...then convert it back to 
@@ -523,6 +518,32 @@ nsresult nsMsgDBView::FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aSenderString)
   }
   // if we got here then just return the original string
   *aSenderString = nsCRT::strdup(unparsedAuthor);
+  return NS_OK;
+}
+
+nsresult nsMsgDBView::FetchRecipient(nsIMsgHdr * aHdr, PRUnichar ** aRecipientString)
+{
+  nsXPIDLString unparsedRecipient;
+  if (!mHeaderParser)
+    mHeaderParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
+
+  nsresult rv = aHdr->GetMime2DecodedRecipients(getter_Copies(unparsedRecipient));
+  
+  // *sigh* how sad, we need to convert our beautiful unicode string to utf8 
+  // so we can extract the name part of the address...then convert it back to 
+  // unicode again.
+  if (mHeaderParser)
+  {
+    nsXPIDLCString name;
+    rv = mHeaderParser->ExtractHeaderAddressName("UTF-8", NS_ConvertUCS2toUTF8(unparsedRecipient).get(), getter_Copies(name));
+    if (NS_SUCCEEDED(rv) && (const char*)name)
+    {
+      *aRecipientString = nsCRT::strdup(NS_ConvertUTF8toUCS2(name).get());
+      return NS_OK;
+    }
+  }
+  // if we got here then just return the original string
+  *aRecipientString = nsCRT::strdup(unparsedRecipient);
   return NS_OK;
 }
 
@@ -1503,6 +1524,10 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, n
       rv = FetchStatus(m_flags[aRow], getter_Copies(valueText));
     aValue.Assign(valueText);
     break;
+  case 'r': // recipient
+    rv = FetchRecipient(msgHdr, getter_Copies(valueText));
+    aValue.Assign(valueText);
+    break;
   case 'd':  // date
     rv = FetchDate(msgHdr, getter_Copies(valueText));
     aValue.Assign(valueText);
@@ -1691,12 +1716,11 @@ NS_IMETHODIMP nsMsgDBView::PerformActionOnCell(const PRUnichar *action, PRInt32 
 // end nsITreeView Implementation Methods
 ///////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRBool aTreatRecipientAsAuthor, PRInt32 *pCount)
+NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount)
 {
   m_viewFlags = viewFlags;
   m_sortOrder = sortOrder;
   m_sortType = sortType;
-  mTreatRecipientAsAuthor = aTreatRecipientAsAuthor;
 
   nsMsgViewTypeValue viewType;
 
@@ -5803,7 +5827,6 @@ nsresult nsMsgDBView::CopyDBView(nsMsgDBView *aNewMsgDBView, nsIMessenger *aMess
   aNewMsgDBView->mIsNews = mIsNews;
   aNewMsgDBView->mHeaderParser = mHeaderParser;
   aNewMsgDBView->mDeleteModel = mDeleteModel;
-  aNewMsgDBView->mTreatRecipientAsAuthor = mTreatRecipientAsAuthor;
   aNewMsgDBView->m_flags.CopyArray(m_flags);
   aNewMsgDBView->m_levels.CopyArray(m_levels);
   aNewMsgDBView->m_keys.CopyArray(m_keys);

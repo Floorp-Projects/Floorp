@@ -158,6 +158,7 @@ protected:
   PRPackedBool  mSuppressChangeNotification;
   virtual const char * GetViewName(void) {return "MsgDBView"; }
   nsresult FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aAuthorString);
+  nsresult FetchRecipient(nsIMsgHdr * aHdr, PRUnichar ** aRecipientString);
   nsresult FetchSubject(nsIMsgHdr * aMsgHdr, PRUint32 aFlags, PRUnichar ** aValue);
   nsresult FetchDate(nsIMsgHdr * aHdr, PRUnichar ** aDateString);
   nsresult FetchStatus(PRUint32 aFlags, PRUnichar ** aStatusString);
@@ -337,7 +338,6 @@ protected:
   // and decendents of those folders
   // (like the "Sent" folder, "Sent/Old Sent")
   // the Sender column really shows recipients.
-  PRPackedBool mTreatRecipientAsAuthor; 
   PRPackedBool mIsNews;          // we have special icons for news, and for news, we show lines instead of size
   PRPackedBool m_sortValid;
   PRUint8      m_saveRestoreSelectionDepth;

@@ -170,14 +170,14 @@ function MsgSortByDate()
     MsgSortThreadPane(nsMsgViewSortType.byDate);
 }
 
-function MsgSortBySenderOrRecipient()
+function MsgSortBySender()
 {
-    if (IsSpecialFolderSelected(MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE)) {
-      MsgSortThreadPane(nsMsgViewSortType.byRecipient);
-    }
-    else {
-      MsgSortThreadPane(nsMsgViewSortType.byAuthor);
-    }
+    MsgSortThreadPane(nsMsgViewSortType.byAuthor);
+}
+
+function MsgSortByRecipient()
+{
+    MsgSortThreadPane(nsMsgViewSortType.byRecipient);
 }
 
 function MsgSortByStatus()
@@ -373,7 +373,7 @@ function ThreadPaneOnLoad()
   var tree = GetThreadTree();
 
   tree.addEventListener("click",ThreadPaneOnClick,true);
-
+  
   // The mousedown event listener below should only be added in the thread
   // pane of the mailnews 3pane window, not in the advanced search window.
   if(tree.parentNode.id == "searchResultListBox")

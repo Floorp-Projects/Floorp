@@ -20,6 +20,7 @@ Rights Reserved.
 
 <!ENTITY threadColumn.label "Thread">
 <!ENTITY senderColumn.label "Sender">
+<!ENTITY recipientColumn.label "Recipient">
 <!ENTITY subjectColumn.label "Subject">
 <!ENTITY dateColumn.label "Date">
 <!ENTITY priorityColumn.label "Priority">
@@ -39,6 +40,7 @@ Rights Reserved.
 <!ENTITY columnChooser.tooltip "Click to select columns to display">
 <!ENTITY threadColumn.tooltip "Click to display message threads"> 
 <!ENTITY senderColumn.tooltip "Click to sort by sender">
+<!ENTITY recipientColumn.tooltip "Click to sort by recipient">
 <!ENTITY subjectColumn.tooltip "Click to sort by subject">
 <!ENTITY dateColumn.tooltip "Click to sort by date">
 <!ENTITY priorityColumn.tooltip "Click to sort by priority">
