@@ -100,14 +100,14 @@ mn {
 
 mi {
   color: red;
-  font-style: italic;
+/*  font-style: normal; */
 /*  border: 1px solid blue; */
 }
 
 mo {
-  font-style: normal;
-  border: 1px solid black;
-  background-color: blue;
+/*  font-style: normal; */
+/*  border: 1px solid black; */
+/*  background-color: blue; */
 }
 
 merror {
@@ -151,6 +151,10 @@ mtr {
   vertical-align: inherit;
   background-color: inherit;
 valign: baseline;
+}
+
+:-moz-math-font-style-italic {
+  font-style: italic;
 }
 
 :-moz-math-font-style-normal {
