@@ -178,7 +178,7 @@ int main1(int argc, char* argv[])
   nsIDOMAppCoresManager *appCoresManager = nsnull;
   nsIURI* url = nsnull;
   nsIPref *prefs = nsnull;
-  nsIWalletService *walletService;
+  nsIWalletService *walletService = nsnull;
 
 #ifdef NECKO
   nsICookieService *cookieService = nsnull;
