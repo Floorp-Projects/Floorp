@@ -59,18 +59,6 @@ public:
                                const PRUint8* key2, const PRUint32 len2, 
                                PRInt32* result) 
                                {*result = mCollation->CompareRawSortKey(key1, len1, key2, len2);return NS_OK;}
-
-  NS_IMETHOD GetASCIISortKeyLen(const nsCollationStrength strength, 
-                                const PRUnichar* stringIn, PRUint32* outLen);
-
-  NS_IMETHOD CreateASCIISortKey(const nsCollationStrength strength, 
-                                const PRUnichar* stringIn, char* key, PRUint32 *outLen)
-                                {return mCollation->CreateASCIISortKey(this, strength, stringIn, key, outLen);}
-
-  NS_IMETHOD CompareASCIISortKey(const char* key1, const PRUint32 len1, 
-                                 const char* key2, const PRUint32 len2, 
-                                 PRInt32* result)
-                                 {return CompareRawSortKey((PRUint8 *) key1, len1, (PRUint8 *) key2, len2, result);}
    
   // init this interface to a specified locale (should only be called by collation factory)
   //
@@ -80,15 +68,5 @@ public:
 
   virtual ~nsCollationOS2();
 };
-
-inline nsresult nsCollationOS2::GetASCIISortKeyLen(const nsCollationStrength strength, 
-                                                   const PRUnichar* stringIn, PRUint32* outLen)
-{
-  NS_ENSURE_ARG_POINTER(stringIn);
-  nsresult rv = GetSortKeyLen(strength, nsDependentString(stringIn), outLen);
-  if (NS_SUCCEEDED(rv))
-    *outLen *= 2;
-  return rv;
-}
 
 #endif /* nsCollationOS2_h__ */ 
