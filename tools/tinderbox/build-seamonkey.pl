@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.24 $ ';
+$Version = '$Revision: 1.25 $ ';
 
 
 sub PrintUsage {
@@ -763,8 +763,8 @@ sub RunBloatTest {
   # Set up a timer with a signal handler.
   $SIG{ALRM} = \&killer;
 
-  # Wait 30 seconds, then kill the process if it's still alive.
-  alarm 30;
+  # Wait 60 seconds, then kill the process if it's still alive.
+  alarm 60;
 
   $status = waitpid($pid, 0);
 
