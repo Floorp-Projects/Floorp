@@ -773,7 +773,8 @@ NS_METHOD nsWindow::Restore(void)
 }
 */
 
-NS_IMETHODIMP nsMacWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+NS_IMETHODIMP nsMacWindow::ConstrainPosition(PRBool aAllowSlop,
+                                             PRInt32 *aX, PRInt32 *aY)
 {
   if (eWindowType_popup == mWindowType || !mWindowMadeHere)
     return NS_OK;
@@ -784,7 +785,6 @@ NS_IMETHODIMP nsMacWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
   // get the window bounds
   Rect portBounds;
   ::GetWindowPortBounds(mWindowPtr, &portBounds);
-  short pos;
   short windowWidth = portBounds.right - portBounds.left;
   short windowHeight = portBounds.bottom - portBounds.top;
 
@@ -813,21 +813,34 @@ NS_IMETHODIMP nsMacWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
   } else
     ::GetRegionBounds(::GetGrayRgn(), &screenRect);
 
-  pos = screenRect.left;
-  if (windowWidth > kWindowPositionSlop)
-    pos -= windowWidth - kWindowPositionSlop;
-  if (*aX < pos)
-    *aX = pos;
-  else if (*aX >= screenRect.right - kWindowPositionSlop)
-    *aX = screenRect.right - kWindowPositionSlop;
+  if (aAllowSlop) {
+    short pos;
+    pos = screenRect.left;
+    if (windowWidth > kWindowPositionSlop)
+      pos -= windowWidth - kWindowPositionSlop;
+    if (*aX < pos)
+      *aX = pos;
+    else if (*aX >= screenRect.right - kWindowPositionSlop)
+      *aX = screenRect.right - kWindowPositionSlop;
 
-  pos = screenRect.top;
-  if (windowHeight > kWindowPositionSlop)
-    pos -= windowHeight - kWindowPositionSlop;
-  if (*aY < pos)
-    *aY = pos;
-  else if (*aY >= screenRect.bottom - kWindowPositionSlop)
-    *aY = screenRect.bottom - kWindowPositionSlop;
+    pos = screenRect.top;
+    if (windowHeight > kWindowPositionSlop)
+      pos -= windowHeight - kWindowPositionSlop;
+    if (*aY < pos)
+      *aY = pos;
+    else if (*aY >= screenRect.bottom - kWindowPositionSlop)
+      *aY = screenRect.bottom - kWindowPositionSlop;
+  } else {
+    if (*aX < screenRect.left)
+      *aX = screenRect.left;
+    else if (*aX >= screenRect.right - windowWidth)
+      *aX = screenRect.right - windowWidth;
+
+    if (*aY < screenRect.top)
+      *aY = screenRect.top;
+    else if (*aY >= screenRect.bottom - windowHeight)
+      *aY = screenRect.bottom - windowHeight;
+  }
 
   return NS_OK;
 }
