@@ -298,6 +298,10 @@ function WalletAction( action )
   }
 
   if (action == "encrypt" || action == "obscure") {
+    wallet = Components.classes['component://netscape/wallet/wallet-service'];
+    wallet = wallet.getService();
+    wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
+    wallet.WALLET_InitReencryptCallback(window._content);
     if (action == "encrypt") {
       this.pref.SetBoolPref("wallet.crypto", true);
     } else if (action == "obscure") {
