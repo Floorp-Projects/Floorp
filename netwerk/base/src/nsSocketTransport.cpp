@@ -541,9 +541,11 @@ nsSocketTransport::CompleteAsyncRead()
     mSelectFlags &= ~PR_POLL_READ;
     mBytesExpected = -1;
 
-    mReadRequest->OnStop();
-    NS_RELEASE(mReadRequest);
+    nsSocketReadRequest *readRequest = mReadRequest;
     mReadRequest = nsnull;
+
+    readRequest->OnStop();
+    NS_RELEASE(readRequest);
 
     mSocketRef--;
 }
@@ -560,9 +562,11 @@ nsSocketTransport::CompleteAsyncWrite()
 
     mSelectFlags &= ~PR_POLL_WRITE;
 
-    mWriteRequest->OnStop();
-    NS_RELEASE(mWriteRequest);
+    nsSocketWriteRequest *writeRequest = mWriteRequest;
     mWriteRequest = nsnull;
+
+    writeRequest->OnStop();
+    NS_RELEASE(writeRequest);
 
     mSocketRef--;
 }
