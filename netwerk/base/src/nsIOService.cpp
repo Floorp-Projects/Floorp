@@ -311,7 +311,8 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     // and service manager stuff
 
     rv = GetCachedProtocolHandler(scheme, result);
-    if (NS_SUCCEEDED(rv)) return NS_OK;
+    if (NS_SUCCEEDED(rv))
+        return rv;
 
     PRBool externalProtocol = PR_FALSE;
     PRBool listedProtocol   = PR_TRUE;
@@ -333,56 +334,59 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
         ToLowerCase(contractID);
 
         rv = CallGetService(contractID.get(), result);
-    }
-    
-    if (externalProtocol || NS_FAILED(rv)) {
+        if (NS_SUCCEEDED(rv)) {
+            CacheProtocolHandler(scheme, *result);
+            return rv;
+        }
 
-      // If the pref for this protocol was explicitly set to false, we want to
-      // use our special "blocked protocol" handler.  That will ensure we don't
-      // open any channels for this protocol.
-      if (listedProtocol && !externalProtocol) {
-        rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default-blocked",
-                            result);
-        if (NS_FAILED(rv)) return NS_ERROR_UNKNOWN_PROTOCOL;
-      }
-      else {
+        // If the pref for this protocol was explicitly set to false, we want
+        // to use our special "blocked protocol" handler.  That will ensure we
+        // don't open any channels for this protocol.
+        if (listedProtocol) {
+            rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default-blocked",
+                                result);
+            if (NS_FAILED(rv))
+                return NS_ERROR_UNKNOWN_PROTOCOL;
+        }
+    }
     
 #ifdef MOZ_X11
-        // check to see whether GnomeVFS can handle this URI scheme.  if it can
-        // create a nsIURI for the "scheme:", then we assume it has support for
-        // the requested protocol.  otherwise, we failover to using the default
-        // protocol handler.
+    // check to see whether GnomeVFS can handle this URI scheme.  if it can
+    // create a nsIURI for the "scheme:", then we assume it has support for
+    // the requested protocol.  otherwise, we failover to using the default
+    // protocol handler.
 
-        // XXX should this be generalized into something that searches a
-        // category?  (see bug 234714)
+    // XXX should this be generalized into something that searches a
+    // category?  (see bug 234714)
 
-        rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"moz-gnomevfs",
-                            result);
+    rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"moz-gnomevfs",
+                        result);
+    if (NS_SUCCEEDED(rv)) {
+        nsCAutoString spec(scheme);
+        spec.Append(':');
+
+        nsIURI *uri;
+        rv = (*result)->NewURI(spec, nsnull, nsnull, &uri);
         if (NS_SUCCEEDED(rv)) {
-          nsCAutoString spec(scheme);
-          spec.Append(':');
-          nsCOMPtr<nsIURI> uri;
-          rv = (*result)->NewURI(spec, nsnull, nsnull, getter_AddRefs(uri));
-          if (NS_SUCCEEDED(rv))
-            return NS_OK;
-          NS_RELEASE(*result);
+            NS_RELEASE(uri);
+            return rv;
         }
+
+        NS_RELEASE(*result);
+    }
 #endif
 
-        // Okay we don't have a protocol handler to handle this url type, so use
-        // the default protocol handler.  This will cause urls to get dispatched
-        // out to the OS ('cause we can't do anything with them) when we try to
-        // read from a channel created by the default protocol handler.
+    // Okay we don't have a protocol handler to handle this url type, so use
+    // the default protocol handler.  This will cause urls to get dispatched
+    // out to the OS ('cause we can't do anything with them) when we try to
+    // read from a channel created by the default protocol handler.
 
-        rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default",
-                            result);
-        if (NS_FAILED(rv)) return NS_ERROR_UNKNOWN_PROTOCOL;
-      }
-    }
+    rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default",
+                        result);
+    if (NS_FAILED(rv))
+        return NS_ERROR_UNKNOWN_PROTOCOL;
 
-    CacheProtocolHandler(scheme, *result);
-
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
