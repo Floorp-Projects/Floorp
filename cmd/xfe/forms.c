@@ -897,6 +897,9 @@ form_element_get_size(FEFormData *fed,
   font_list = 0;
   XtVaGetValues (element_widget, XmNfontList, &font_list, 0);
   
+#ifdef ENDER
+  if (form_type != FORM_TYPE_HTMLAREA)
+#endif /* ENDER */
   fe_HackTranslations (context, element_widget);
 
   fe_font_list_metrics (context, form, font_list, &ascent, &descent);
