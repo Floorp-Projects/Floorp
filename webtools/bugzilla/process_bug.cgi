@@ -249,6 +249,11 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^reassignbycomponent$/ && do {
+        if ($::FORM{'product'} eq $::dontchange) {
+            print "You must specify a product to help determine the new\n";
+            print "owner of these bugs.\n";
+            exit 0
+        }
         if ($::FORM{'component'} eq $::dontchange) {
             print "You must specify a component whose owner should get\n";
             print "assigned these bugs.\n";
