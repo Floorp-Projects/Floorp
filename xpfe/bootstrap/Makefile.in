@@ -31,8 +31,8 @@ TOOLKIT_BASE_LIB    = -lgmbase$(MOZ_TOOLKIT)
 
 ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
 TOOLKIT_CFLAGS = \
-        -DWIDGET_DLL = \"libwidgetgtk.so\" \
-        -DGFXWIN_DLL = \"libgfxgtk.so\" \
+        -DWIDGET_DLL=\"libwidgetgtk.so\" \
+        -DGFXWIN_DLL=\"libgfxgtk.so\" \
         $(TK_GTK_CFLAGS)
 
 TOOLKIT_CPPSRCS = \
@@ -43,8 +43,8 @@ TOOLKIT_LIBS = $(TK_GTK_LIBS)
 else
 ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
 TOOLKIT_CFLAGS = \
-        -DWIDGET_DLL = \"libwidgetmotif.so\" \
-        -DGFXWIN_DLL = \"libgfxmotif.so\" \
+        -DWIDGET_DLL=\"libwidgetmotif.so\" \
+        -DGFXWIN_DLL=\"libgfxmotif.so\" \
         $(TK_MOTIF_CFLAGS)
 
 TOOLKIT_CPPSRCS = \
@@ -128,6 +128,7 @@ CPP_OBJS =			\
  ./$(OBJDIR)/nsUnixStubs.o	\
  $(NULL)
 
+CFLAGS += $(TOOLKIT_CFLAGS)
 
 TARGETS = $(PROGS)
 
