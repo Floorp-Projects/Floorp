@@ -130,7 +130,8 @@ nsObserverListEnumerator::CurrentItem( nsISupports** aItemPtr )
 		if ( !aItemPtr || !weakPtr )
 			return NS_ERROR_NULL_POINTER;
 
-		return weakPtr->QueryReferent(NS_GET_IID(nsIObserver), aItemPtr);
+		return weakPtr->QueryReferent(NS_GET_IID(nsIObserver),
+                                      (void **)aItemPtr);
 	}
 
 NS_IMETHODIMP
