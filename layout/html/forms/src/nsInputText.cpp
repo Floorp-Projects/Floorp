@@ -113,15 +113,16 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                  nsReflowMetrics& aDesiredLayoutSize,
                                  nsSize& aDesiredWidgetSize)
 {
+  nsInputTextType textType = GetTextType();
   // get the css size and let the frame use or override it
   nsSize styleSize;
-  GetStyleSize(*aPresContext, aMaxSize, styleSize);
+  GetStyleSize(*aPresContext, styleSize);
 
   nsSize size;
   
   PRBool widthExplicit, heightExplicit;
   PRInt32 ignore;
-  if ((kInputTextText == GetTextType()) || (kInputTextPassword == GetTextType())) {
+  if ((kInputTextText == textType) || (kInputTextPassword == textType)) {
     nsInputDimensionSpec textSpec(nsHTMLAtoms::size, PR_FALSE, nsHTMLAtoms::value,
                                   20, PR_FALSE, nsnull, 1);
     CalculateSize(aPresContext, this, styleSize, textSpec, size, 
@@ -133,8 +134,17 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
     CalculateSize(aPresContext, this, styleSize, areaSpec, size, 
                   widthExplicit, heightExplicit, ignore);
   }
-  if (!heightExplicit && (kInputTextArea != GetTextType())) {
-    size.height += 100;
+  if (!heightExplicit) {
+    if (kInputTextArea == textType) {
+      size.height += gScrollBarWidth;
+    } 
+    else {
+      size.height += 100;
+    }
+  }
+
+  if (!widthExplicit && (kInputTextArea == textType)) {
+    size.width += gScrollBarWidth;
   }
 
   aDesiredLayoutSize.width  = size.width;

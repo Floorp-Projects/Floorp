@@ -56,6 +56,7 @@ public:
 
   virtual const nsIID& GetIID();
 
+  NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
   PRBool IsComboBox();
 
 protected:
@@ -192,7 +193,7 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   // get the css size 
   nsSize styleSize;
-  GetStyleSize(*aPresContext, aMaxSize, styleSize);
+  GetStyleSize(*aPresContext, styleSize);
 
   // get the size of the longest child
   PRInt32 maxWidth = 1;
@@ -251,6 +252,13 @@ nsSelectFrame::GetWidgetInitData()
   NS_RELEASE(content);
 
   return data;
+}
+
+NS_METHOD
+nsSelectFrame::SizeTo(nscoord aWidth, nscoord aHeight)
+{
+  nscoord height = (IsComboBox()) ? mWidgetSize.height : aHeight;
+  return nsInputFrame::SizeTo(aWidth, height);
 }
 
 void 

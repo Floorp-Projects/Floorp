@@ -36,6 +36,7 @@
 #include "nsHTMLForms.h"
 #include "nsStyleConsts.h"
 
+#define ALIGN_UNSET PRUint8(-1);
 static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 
@@ -49,7 +50,7 @@ nsInput::nsInput(nsIAtom* aTag, nsIFormManager* aManager)
     mFormMan->AddFormControl(&mControl);
   }
   mSize  = ATTR_NOTSET; 
-  mAlign = nsnull;
+  mAlign = ALIGN_UNSET;
   mWidth = ATTR_NOTSET;
   mHeight= ATTR_NOTSET;
   mLastClickPoint.x = -1;
@@ -88,11 +89,10 @@ void nsInput::SetContent(const nsString& aValue)
 }
 
 void nsInput::MapAttributesInto(nsIStyleContext* aContext, 
-                                nsIPresContext* aPresContext)
+                                  nsIPresContext* aPresContext)
 {
-#if 0
-  XXX
-  if (ATTR_NOTSET != mAlign) {
+  // if (ALIGN_UNSET != mAlign) { XXX why won't this compile 
+  if (-1 != mAlign) {
     nsStyleDisplay* display = (nsStyleDisplay*)
       aContext->GetData(kStyleDisplaySID);
     nsStyleText* text = (nsStyleText*)
@@ -104,15 +104,14 @@ void nsInput::MapAttributesInto(nsIStyleContext* aContext,
     case NS_STYLE_TEXT_ALIGN_RIGHT:
       display->mFloats = NS_STYLE_FLOAT_RIGHT;
       break;
-#if 0
     default:
-      text->mVerticalAlignFlags = mAlign;
+      text->mVerticalAlign.SetIntValue(mAlign, eStyleUnit_Enumerated);
       break;
-#endif
     }
   }
-#endif
+  MapImagePropertiesInto(aContext, aPresContext);
 }
+
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 
@@ -290,16 +289,26 @@ void nsInput::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   } 
   else if (aAttribute == nsHTMLAtoms::width) {
     CacheAttribute(aValue, ATTR_NOTSET, mWidth);
+    nsInputSuper::SetAttribute(aAttribute, aValue); // is this needed?
   } 
   else if (aAttribute == nsHTMLAtoms::height) {
     CacheAttribute(aValue, ATTR_NOTSET, mHeight);
+    nsInputSuper::SetAttribute(aAttribute, aValue); // is this needed?
   } 
   else if (aAttribute == nsHTMLAtoms::value) {
     CacheAttribute(aValue, mValue);
   } 
   else if (aAttribute == nsHTMLAtoms::align) {
-    CacheAttribute(aValue, ATTR_NOTSET, mAlign);
-  } 
+    nsHTMLValue val;
+    if (ParseAlignParam(aValue, val)) {
+      mAlign = val.GetIntValue();
+      // Reflect the attribute into the syle system
+      nsHTMLTagContent::SetAttribute(aAttribute, val);  // is this needed?
+    } else {
+      mAlign = ALIGN_UNSET;
+    }
+    return;
+  }
   else {
     nsInputSuper::SetAttribute(aAttribute, aValue); 
   }

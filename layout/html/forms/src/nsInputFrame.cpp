@@ -46,7 +46,7 @@
 #include "nsHTMLForms.h"
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"
-
+#include "nsCSSLayout.h"
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
@@ -70,6 +70,8 @@ nsInputFrame::nsInputFrame(nsIContent* aContent, nsIFrame* aParentFrame)
 nsInputFrame::~nsInputFrame()
 {
 }
+
+PRInt32 nsInputFrame::gScrollBarWidth = 360;
 
 NS_METHOD nsInputFrame::SetRect(const nsRect& aRect)
 {
@@ -188,7 +190,7 @@ nsInputFrame::GetDesiredSize(nsIPresContext* aPresContext,
 {
   // get the css size and let the frame use or override it
   nsSize styleSize;
-  GetStyleSize(*aPresContext, aMaxSize, styleSize);
+  GetStyleSize(*aPresContext, styleSize);
 
   // subclasses should always override this method, but if not and no css, make it small
   aDesiredLayoutSize.width  = (styleSize.width  > CSS_NOTSET) ? styleSize.width  : 144;
@@ -236,10 +238,9 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 	  nsIPresShell   *presShell = aPresContext->GetShell();     // need to release
 	  nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
 
-    nsSize widgetSize;
-    GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, widgetSize);
+    GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, mWidgetSize);
 
-    nsRect boundBox(0, 0, widgetSize.width, widgetSize.height); 
+    nsRect boundBox(0, 0, mWidgetSize.width, mWidgetSize.height); 
 
     nsIFrame* parWithView;
 	  nsIView *parView;
@@ -283,8 +284,7 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
 	  NS_IF_RELEASE(presShell); 
   }
   else {
-    nsSize widgetSize;
-    GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, widgetSize);
+    GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, mWidgetSize);
 
     // If we are being reflowed and have a view, hide the view until
     // we are told to paint (which is when our location will have
@@ -415,6 +415,19 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
 }
 
 void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext,
+                                nsSize& aSize)
+{
+  PRIntn ss = nsCSSLayout::GetStyleSize(&aPresContext, this, aSize);
+  if (0 == (ss & NS_SIZE_HAS_WIDTH)) {
+    aSize.width = CSS_NOTSET;
+  }
+  if (0 == (ss & NS_SIZE_HAS_HEIGHT)) {
+    aSize.height = CSS_NOTSET;
+  }
+}
+
+#if 0
+void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext,
                                 const nsSize& aMaxSize, nsSize& aSize)
 {
   nsInput* input;
@@ -455,6 +468,7 @@ nsInputFrame::GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim,
 
   return result;
 }
+#endif
 
 nscoord 
 nsInputFrame::GetTextSize(nsIPresContext& aPresContext, nsIFrame* aFrame,

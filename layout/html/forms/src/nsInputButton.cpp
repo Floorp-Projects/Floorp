@@ -424,7 +424,7 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
   else {
     nsSize styleSize;
-    GetStyleSize(*aPresContext, aMaxSize, styleSize);
+    GetStyleSize(*aPresContext, styleSize);
 
     if (kButton_Image == GetButtonType()) { // there is an image
       float p2t = aPresContext->GetPixelsToTwips();
@@ -432,8 +432,8 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
         GetImage(*aPresContext, PR_FALSE);
 
         // Use dimensions from style attributes
-        aDesiredLayoutSize.width  = nscoord(styleSize.width  * p2t);
-        aDesiredLayoutSize.height = nscoord(styleSize.height * p2t);
+        aDesiredLayoutSize.width  = nscoord(styleSize.width);
+        aDesiredLayoutSize.height = nscoord(styleSize.height);
       } else {
         nsIImage* image = GetImage(*aPresContext, PR_TRUE);
         if (nsnull == image) {

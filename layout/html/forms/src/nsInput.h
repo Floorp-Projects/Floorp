@@ -177,7 +177,7 @@ protected:
   nsString*       mName;
   nsString*       mValue;
   PRInt32         mSize;
-  PRInt32         mAlign;
+  PRUint8         mAlign;
   PRInt32         mWidth;
   PRInt32         mHeight;
 
