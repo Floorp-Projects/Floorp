@@ -4033,7 +4033,7 @@ nsImapService::HandleContent(const char * aContentType, const char * aCommand, n
       nsCOMPtr <nsIMessengerWindowService> messengerWindowService = do_GetService(NS_MESSENGERWINDOWSERVICE_CONTRACTID,&rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = messengerWindowService->OpenMessengerWindowWithUri("mail:3pane", uriStr.get());
+      rv = messengerWindowService->OpenMessengerWindowWithUri("mail:3pane", uriStr.get(), nsMsgKey_None);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

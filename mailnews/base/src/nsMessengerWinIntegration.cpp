@@ -57,6 +57,7 @@
 
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
@@ -66,6 +67,7 @@
 #include "prprf.h"
 #include "nsIWeakReference.h"
 #include "nsIStringBundle.h"
+#include "nsIAlertsService.h"
 
 #define XP_SHSetUnreadMailCounts "SHSetUnreadMailCountW"
 #define XP_SHEnumerateUnreadMailAccounts "SHEnumerateUnreadMailAccountsW"
@@ -77,6 +79,9 @@
 #define MAIL_COMMANDLINE_ARG " -mail"
 #define TIMER_INTERVAL_PREF "mail.windows_xp_integration.unread_count_interval"
 #define IDI_MAILBIFF 101
+
+#define NEW_MAIL_ALERT_ICON "chrome://messenger/skin/icons/new-mail-alert.png"
+#define SHOW_ALERT_PREF "mail.biff.show_alert"
 
 // since we are including windows.h in this file, undefine get user name....
 #ifdef GetUserName
@@ -117,6 +122,39 @@ static void activateWindow( nsIDOMWindowInternal *win )
     win->Focus();
 }
 // end shameless copying from nsNativeAppWinSupport.cpp
+
+static void openMailWindow(const PRUnichar * aMailWindowName, const PRUnichar * aFolderUri)
+{
+  nsCOMPtr<nsIWindowMediator> mediator ( do_GetService(NS_WINDOWMEDIATOR_CONTRACTID) );
+  if (mediator)
+  {
+    nsCOMPtr<nsIDOMWindowInternal> domWindow;
+    mediator->GetMostRecentWindow( aMailWindowName, getter_AddRefs(domWindow));
+    if (domWindow)
+    {
+      nsCOMPtr<nsISupports> xpConnectObj;
+      nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(domWindow));
+      if (piDOMWindow)
+      {
+        piDOMWindow->GetObjectProperty(NS_LITERAL_STRING("MsgWindowCommands").get(), getter_AddRefs(xpConnectObj));
+        nsCOMPtr<nsIMsgWindowCommands> msgWindowCommands = do_QueryInterface(xpConnectObj);
+        if (msgWindowCommands)
+          msgWindowCommands->SelectFolder(NS_ConvertUCS2toUTF8(aFolderUri).get());
+      }
+
+      activateWindow(domWindow);
+    }
+    else
+    {
+      // the user doesn't have a mail window open already so open one for them...
+      nsCOMPtr <nsIMessengerWindowService> messengerWindowService = do_GetService(NS_MESSENGERWINDOWSERVICE_CONTRACTID);
+      // if we want to preselect the first account with new mail, here is where we would try to generate
+      // a uri to pass in (and add code to the messenger window service to make that work)
+      if (messengerWindowService) 
+        messengerWindowService->OpenMessengerWindowWithUri("mail:3pane", NS_ConvertUCS2toUTF8(aFolderUri).get(), nsMsgKey_None);
+    }
+  }
+}
 
 // Message window encapsulation.
 struct MessageWindow 
@@ -210,26 +248,9 @@ struct MessageWindow
       {
          if ( lp == WM_LBUTTONDBLCLK ) 
          {
-           nsCOMPtr<nsIWindowMediator> mediator ( do_GetService(NS_WINDOWMEDIATOR_CONTRACTID) );
-           if (mediator)
-           {
-             nsCOMPtr<nsIDOMWindowInternal> domWindow;
-             nsAutoString mailName;
-             mailName.AssignWithConversion(mailWinName());
-
-             mediator->GetMostRecentWindow( mailName.get(), getter_AddRefs(domWindow));
-             if (domWindow)
-               activateWindow(domWindow);
-             else
-             {
-               // the user doesn't have a mail window open already so open one for them...
-                nsCOMPtr <nsIMessengerWindowService> messengerWindowService = do_GetService(NS_MESSENGERWINDOWSERVICE_CONTRACTID);
-                // if we want to preselect the first account with new mail, here is where we would try to generate
-                // a uri to pass in (and add code to the messenger window service to make that work)
-                if (messengerWindowService) 
-                  messengerWindowService->OpenMessengerWindowWithUri("mail:3pane", nsnull);
-             }
-           }
+           nsAutoString mailName;
+           mailName.AssignWithConversion(mailWinName());
+           openMailWindow(mailName.get(), nsnull);
          }
       }
      
@@ -256,9 +277,9 @@ nsMessengerWinIntegration::nsMessengerWinIntegration()
 
   mBiffStateAtom = getter_AddRefs(NS_NewAtom("BiffState"));
   mBiffIconVisible = PR_FALSE;
+  mSuppressBiffIcon = PR_FALSE;
   mBiffIconInitialized = PR_FALSE;
   mUseWideCharBiffIcon = PR_FALSE;
-
   NS_NewISupportsArray(getter_AddRefs(mFoldersWithNewMail));
 }
 
@@ -286,6 +307,7 @@ NS_INTERFACE_MAP_BEGIN(nsMessengerWinIntegration)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMessengerOSIntegration)
    NS_INTERFACE_MAP_ENTRY(nsIMessengerOSIntegration)
    NS_INTERFACE_MAP_ENTRY(nsIFolderListener)
+   NS_INTERFACE_MAP_ENTRY(nsIAlertListener)
 NS_INTERFACE_MAP_END
 
 
@@ -472,6 +494,66 @@ nsresult nsMessengerWinIntegration::GetStringBundle(nsIStringBundle **aBundle)
   return rv;
 }
 
+nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertText, const char * aFolderURI)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIPref> prefService;
+  prefService = do_GetService(NS_PREF_CONTRACTID, &rv);  
+  PRBool showAlert = PR_TRUE; 
+  
+  if (prefService)
+    prefService->GetBoolPref(SHOW_ALERT_PREF, &showAlert);
+  
+  if (showAlert)
+  {
+    nsCOMPtr<nsIAlertsService> alertsService (do_GetService(NS_ALERTSERVICE_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr<nsIAlertListener> alertListener (do_QueryInterface(NS_STATIC_CAST(nsIMessengerOSIntegration*, this)));
+  
+      nsCOMPtr<nsIStringBundle> bundle; 
+      GetStringBundle(getter_AddRefs(bundle));
+      if (bundle)
+      {
+        nsXPIDLString alertTitle;
+        bundle->GetStringFromName(NS_LITERAL_STRING("newMail_Alert_Title").get(), getter_Copies(alertTitle));
+        rv = alertsService->ShowAlertNotification(NEW_MAIL_ALERT_ICON, alertTitle, aAlertText, PR_TRUE, 
+         NS_ConvertASCIItoUCS2(aFolderURI).get(), alertListener); 
+      }
+      else
+        rv = NS_ERROR_FAILURE;
+    }
+  }
+
+  if (!showAlert || NS_FAILED(rv)) // go straight to showing the system tray icon.
+    OnAlertFinished(nsnull);
+
+  return rv;
+}
+
+NS_IMETHODIMP nsMessengerWinIntegration::OnAlertFinished(const PRUnichar * aAlertCookie)
+{
+  // okay we are done showing the alert....now put an icon in the system tray
+  if (!mSuppressBiffIcon)
+  {
+    GenericShellNotify(NIM_ADD);
+    mBiffIconVisible = PR_TRUE;
+  }
+
+  mSuppressBiffIcon = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMessengerWinIntegration::OnAlertClickCallback(const PRUnichar * aAlertCookie)
+{
+  // make sure we don't insert the icon in the system tray since the user clicked on the alert.
+  mSuppressBiffIcon = PR_TRUE;
+  openMailWindow(NS_LITERAL_STRING("mail:3pane").get(), aAlertCookie);
+ 
+  return NS_OK;
+}
+
 void nsMessengerWinIntegration::FillToolTipInfo()
 {
   // iterate over all the folders in mFoldersWithNewMail
@@ -534,11 +616,75 @@ void nsMessengerWinIntegration::FillToolTipInfo()
 
   if (!mBiffIconVisible)
   {
-    GenericShellNotify(NIM_ADD);
-    mBiffIconVisible = PR_TRUE;
+    nsXPIDLCString folderURI;
+    GetFirstFolderWithNewMail(getter_Copies(folderURI));
+    ShowAlertMessage(toolTipText.get(), folderURI);
   }
   else
    GenericShellNotify( NIM_MODIFY);
+}
+
+// get the first top level folder which we know has new mail, then enumerate over all the subfolders
+// looking for the first real folder with new mail. Return the folderURI for that folder.
+nsresult nsMessengerWinIntegration::GetFirstFolderWithNewMail(char ** aFolderURI)
+{
+  nsresult rv;
+  NS_ENSURE_TRUE(mFoldersWithNewMail, NS_ERROR_FAILURE); 
+
+  nsCOMPtr<nsISupports> supports;
+  nsCOMPtr<nsIMsgFolder> folder;
+  nsCOMPtr<nsIWeakReference> weakReference;
+  PRInt32 numNewMessages = 0;
+
+  PRUint32 count = 0;
+  mFoldersWithNewMail->Count(&count);
+
+  if (!count)  // kick out if we don't have any folders with new mail
+    return NS_OK;
+
+  supports = getter_AddRefs(mFoldersWithNewMail->ElementAt(0));
+  weakReference = do_QueryInterface(supports);
+  folder = do_QueryReferent(weakReference);
+  
+  if (folder)
+  {
+    PRUint32 biffState = nsIMsgFolder::nsMsgBiffState_NoMail; 
+    nsCOMPtr<nsIMsgFolder> msgFolder;
+    // enumerate over the folders under this root folder till we find one with new mail....
+    nsCOMPtr<nsISupportsArray> allFolders;
+    NS_NewISupportsArray(getter_AddRefs(allFolders));
+    rv = folder->ListDescendents(allFolders);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIEnumerator> enumerator;
+    allFolders->Enumerate(getter_AddRefs(enumerator));
+    if (enumerator)
+    {
+      nsCOMPtr<nsISupports> supports;
+      nsresult more = enumerator->First();
+      while (NS_SUCCEEDED(more))
+      {
+        rv = enumerator->CurrentItem(getter_AddRefs(supports));
+        if (supports)
+        {			
+          msgFolder = do_QueryInterface(supports, &rv);
+          if (msgFolder)
+          {
+            numNewMessages = 0;   
+            msgFolder->GetNumNewMessages(PR_FALSE, &numNewMessages);
+            if (numNewMessages)
+              break; // kick out of the while loop
+            more = enumerator->Next();
+          }
+        } // if we have a folder
+      }  // if we have more potential folders to enumerate
+    }  // if enumerator
+    
+    if (msgFolder)
+      msgFolder->GetURI(aFolderURI);
+  }
+
+  return NS_OK;
 }
 
 void nsMessengerWinIntegration::DestroyBiffIcon()

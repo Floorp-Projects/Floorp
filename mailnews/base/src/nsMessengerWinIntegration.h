@@ -22,6 +22,7 @@
  * Contributor(s): 
  * Seth Spitzer <sspitzer@netscape.com>
  * Bhuvan Racham <racham@netscape.com>
+ * Scott MacGregor <mscott@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -44,6 +45,7 @@
 
 #include "nsIMessengerOSIntegration.h"
 #include "nsIFolderListener.h"
+#include "nsIAlertsService.h"
 #include "nsIAtom.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
@@ -67,7 +69,8 @@ typedef BOOL (_stdcall *fnShellNotifyW)(DWORD dwMessage, PNOTIFYICONDATAW lpdata
 class nsIStringBundle; 
 
 class nsMessengerWinIntegration : public nsIMessengerOSIntegration,
-                                  public nsIFolderListener
+                                  public nsIFolderListener,
+                                  public nsIAlertListener
 {
 public:
   nsMessengerWinIntegration();
@@ -77,6 +80,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMESSENGEROSINTEGRATION
   NS_DECL_NSIFOLDERLISTENER
+  NS_DECL_NSIALERTLISTENER
 
 private:
   
@@ -89,6 +93,8 @@ private:
   void SetToolTipStringOnIconData(const PRUnichar * aToolTipString);
   void DestroyBiffIcon();
   PRUint32 GetToolTipSize(); // available space for the tooltip string
+  nsresult ShowAlertMessage(const PRUnichar * aAlertText, const char * aFolderURI);
+  nsresult GetFirstFolderWithNewMail(char ** aFolderURI);
 
   nsresult GetStringBundle(nsIStringBundle **aBundle);
   nsCOMPtr<nsISupportsArray> mFoldersWithNewMail;  // keep track of all the root folders with pending new mail
@@ -101,6 +107,7 @@ private:
                                      // this flag is set to true when we are doing that
   PRPackedBool mBiffIconVisible;
   PRPackedBool mBiffIconInitialized;
+  PRPackedBool mSuppressBiffIcon;
   
   // "might" because we don't know until we check 
   // what type of server is associated with the default account

@@ -960,15 +960,10 @@ function MsgOpenNewWindowForFolder(uri, key)
     uriToOpen = GetSelectedFolderURI();
 
   if (uriToOpen) {
-    var layoutType = gPrefs.getIntPref("mail.pane_config");
-
-    var paramBlock = Components.classes["@mozilla.org/embedcomp/dialogparam;1"].createInstance(Components.interfaces.nsIDialogParamBlock);
-    paramBlock.SetString(0, uriToOpen);
-    paramBlock.SetInt(0, keyToSelect);
-    if(layoutType == 0)
-      window.openDialog("chrome://messenger/content/messenger.xul", "_blank", "all,chrome,dialog=no,status,toolbar", paramBlock);
-    else
-      window.openDialog("chrome://messenger/content/mail3PaneWindowVertLayout.xul", "_blank", "all,chrome,dialog=no,status,toolbar", paramBlock);
+   // get the messenger window open service and ask it to open a new window for us
+   var mailWindowService = Components.classes["@mozilla.org/messenger/windowservice;1"].getService(Components.interfaces.nsIMessengerWindowService);
+   if (mailWindowService)
+     mailWindowService.openMessengerWindowWithUri(uriToOpen, keyToSelect);
   }
 }
 

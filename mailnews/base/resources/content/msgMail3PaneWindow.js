@@ -475,14 +475,13 @@ function OnLoadMessenger()
   AddToSession();
   //need to add to session before trying to load start folder otherwise listeners aren't
   //set up correctly.
+  // argument[0] --> folder uri
+  // argument[1] --> optional message key
+
   if ("arguments" in window && window.arguments[0])
   {
-    param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
-    if( !param )
-      dump( " error getting param block interface\n" );
-
-    gStartFolderUri = param.GetString( 0 ) ;
-    gStartMsgKey = param.GetInt( 0 ); 
+    gStartFolderUri = window.arguments[0];
+    gStartMsgKey = window.arguments[1];
   }
   else
   {

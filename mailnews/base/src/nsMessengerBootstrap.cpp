@@ -97,35 +97,42 @@ NS_IMETHODIMP nsMessengerBootstrap::GetChromeUrlForTask(char **aChromeUrlForTask
   return NS_OK; 
 }
 
-// Utility function to open a messenger window and pass an argument string to it.
-static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *uri, nsMsgKey key ) {
+NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(const char *windowType, const char * aFolderURI, nsMsgKey aMessageKey)
+{
+	nsresult rv = NS_OK;
 
-  nsresult rv;
+	nsXPIDLCString chromeurl;
+	rv = GetChromeUrlForTask(getter_Copies(chromeurl));
+	if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsISupportsArray> argsArray;
+  rv = NS_NewISupportsArray(getter_AddRefs(argsArray));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // create scriptable versions of our strings that we can store in our nsISupportsArray....
+  if (aFolderURI)
+  {
+    nsCOMPtr<nsISupportsString> scriptableFolderURI (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+    NS_ENSURE_TRUE(scriptableFolderURI, NS_ERROR_FAILURE);
+
+    scriptableFolderURI->SetData(aFolderURI);
+    argsArray->AppendElement(scriptableFolderURI);
+
+    nsCOMPtr<nsISupportsPRUint32> scriptableMessageKey (do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID));
+    NS_ENSURE_TRUE(scriptableMessageKey, NS_ERROR_FAILURE);
+    scriptableMessageKey->SetData(aMessageKey);
+    argsArray->AppendElement(scriptableMessageKey);
+  }
+  
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1", &rv));
-  if (NS_FAILED(rv)) 
-    return rv;
-  ioParamBlock->SetString(0, uri);
-  ioParamBlock->SetInt(0, key);
-  nsCOMPtr <nsISupports> supports = do_QueryInterface(ioParamBlock);
-  nsCOMPtr<nsIDOMWindow> newWindow;
-  return wwatch->OpenWindow(0, NS_ConvertUCS2toUTF8(chrome).get(), "_blank",
-                 "chrome,dialog=no,all", supports,
-                 getter_AddRefs(newWindow));
-}
 
-NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(const char *windowType, const char *uri)
-{
-  nsresult rv = NS_OK;
-  
-  nsXPIDLCString chromeurl;
- 
-  rv = GetChromeUrlForTask(getter_Copies(chromeurl));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
   // we need to use the "mailnews.reuse_thread_window2" pref
-  // to determine if we should open a new window, or use an existing one.
-  return openWindow(NS_ConvertUTF8toUCS2(chromeurl).get(), uri ? 
-                    NS_ConvertUTF8toUCS2(uri).get() : nsnull, nsMsgKey_None);
+	// to determine if we should open a new window, or use an existing one.
+  nsCOMPtr<nsIDOMWindow> newWindow;
+  rv = wwatch->OpenWindow(0, chromeurl.get(), "_blank",
+                 "chrome,dialog=no,all", argsArray,
+                 getter_AddRefs(newWindow));
+
+  return NS_OK;
 }
