@@ -100,6 +100,49 @@ function SelectAndScrollToKey(aMsgKey)
   return true;
 }
 
+// A helper routine called after a folder is loaded to make sure
+// we select and scroll to the correct message (could be the first new message,
+// could be the last displayed message, etc.)
+// returns true if we ended up scrolling to a message
+function ScrollToMessageAfterFolderLoad (folder)
+{
+  var scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
+  if (!scrolled && folder && pref.getBoolPref("mailnews.remember_selected_message")) 
+  {
+    // if we failed to scroll to a new message,
+    // reselect the last selected message
+    var lastMessageLoaded = folder.lastMessageLoaded;
+         
+    if (lastMessageLoaded != nsMsgKey_None)
+      scrolled = SelectAndScrollToKey(lastMessageLoaded);
+  }
+  
+  if (!scrolled) 
+  {
+    // if we still haven't scrolled,
+    // scroll to the newest, which might be the top or the bottom
+    // depending on our sort order and sort type
+    if (gDBView.sortOrder == nsMsgViewSortOrder.ascending) 
+    {
+      switch (gDBView.sortType) 
+      {
+        case nsMsgViewSortType.byDate: 
+        case nsMsgViewSortType.byId: 
+        case nsMsgViewSortType.byThread: 
+         scrolled = ScrollToMessage(nsMsgNavigationType.lastMessage, true, false /* selectMessage */);
+         break;
+      }
+    }
+      
+    // if still we haven't scrolled,
+    // scroll to the top.
+    if (!scrolled)
+      EnsureRowInThreadTreeIsVisible(0);
+  }   
+  
+  return scrolled;
+}
+
 // the folderListener object
 var folderListener = {
     OnItemAdded: function(parentItem, item) { },
@@ -128,7 +171,7 @@ var folderListener = {
            var uri = folder.URI;
            var rerootingFolder = (uri == gCurrentFolderToReroot);
            if (rerootingFolder) {
-            viewDebug("uri = gCurrentFolderToReroot, setting gQSViewIsDirty\n");
+             viewDebug("uri = gCurrentFolderToReroot, setting gQSViewIsDirty\n");
              gQSViewIsDirty = true;
              gCurrentFolderToReroot = null;
              var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
@@ -181,53 +224,10 @@ var folderListener = {
              }
            }
            if (uri == gCurrentLoadingFolderURI) {
-             // NOTE,
-             // if you change the scrolling code below,
-             // double check the scrolling logic in
-             // searchBar.js, restorePreSearchView()
              viewDebug("uri == current loading folder uri\n");
              gCurrentLoadingFolderURI = "";
 
-             // if we didn't just scroll, 
-             // scroll to the first new message
-             // but don't select it
-             if (!scrolled && pref.getBoolPref("mailnews.scroll_to_new_message"))
-               scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
-
-             if (!scrolled && pref.getBoolPref("mailnews.remember_selected_message")) {
-               // if we failed to scroll to a new message,
-               // reselect the last selected message
-               var lastMessageLoaded = msgFolder.lastMessageLoaded;
-                 
-               if (lastMessageLoaded != nsMsgKey_None) {
-                 scrolled = SelectAndScrollToKey(lastMessageLoaded);
-               }
-             }
-
-             if (!scrolled) {
-               // if we still haven't scrolled,
-               // scroll to the newest, which might be the top or the bottom
-               // depending on our sort order and sort type
-               if (gDBView.sortOrder == nsMsgViewSortOrder.ascending) {
-                 switch (gDBView.sortType) {
-                   case nsMsgViewSortType.byDate: 
-                   case nsMsgViewSortType.byId: 
-                   case nsMsgViewSortType.byThread: 
-                     scrolled = ScrollToMessage(nsMsgNavigationType.lastMessage, true, false /* selectMessage */);
-                     break;
-                 }
-               }
-
-               // if still we haven't scrolled,
-               // scroll to the top.
-               if (!scrolled)
-                 EnsureRowInThreadTreeIsVisible(0);
-             }            
-
-             // NOTE,
-             // if you change the scrolling code above,
-             // double check the scrolling logic in
-             // searchBar.js, restorePreSearchView()
+             scrolled = ScrollToMessageAfterFolderLoad(msgFolder);   
 
              SetBusyCursor(window, false);
            }

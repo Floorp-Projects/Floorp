@@ -119,6 +119,9 @@ var gSearchNotificationListener =
           vFolder.updateSummaryTotals(true); // force update from db.
           var msgdb = vFolder.getMsgDatabase(msgWindow);
           msgdb.Commit(MSG_DB_LARGE_COMMIT);
+
+          // now that we have finished loading a virtual folder, scroll to the correct message
+          ScrollToMessageAfterFolderLoad(vFolder);
         }
     },
 
@@ -315,43 +318,8 @@ function restorePreSearchView()
       ClearMessagePane();
   }
 
-  // NOTE,
-  // if you change the scrolling code below,
-  // double check the scrolling logic in
-  // msgMail3PaneWindow.js, "FolderLoaded" event code
   if (!scrolled)
-  {
-    // if we didn't just scroll, 
-    // scroll to the first new message
-    // but don't select it
-    if (pref.getBoolPref("mailnews.scroll_to_new_message"))
-      scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
-    if (!scrolled) 
-    {
-      // if we still haven't scrolled,
-      // scroll to the newest, which might be the top or the bottom
-      // depending on our sort order and sort type
-      if (sortOrder == nsMsgViewSortOrder.ascending) 
-      {
-        switch (sortType) 
-        {
-          case nsMsgViewSortType.byDate: 
-          case nsMsgViewSortType.byId: 
-          case nsMsgViewSortType.byThread: 
-            scrolled = ScrollToMessage(nsMsgNavigationType.lastMessage, true, false /* selectMessage */);
-            break;
-        }
-      }
-      // if still we haven't scrolled,
-      // scroll to the top.
-      if (!scrolled)
-        EnsureRowInThreadTreeIsVisible(0);
-    }
-  }
-  // NOTE,
-  // if you change the scrolling code above,
-  // double check the scrolling logic in
-  // msgMail3PaneWindow.js, "FolderLoaded" event code
+    ScrollToMessageAfterFolderLoad(null);
 }
 
 function onSearch(aSearchTerms)
