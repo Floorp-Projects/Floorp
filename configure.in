@@ -1815,6 +1815,12 @@ AC_SUBST(XCFLAGS)
 AC_SUBST(XLDFLAGS)
 AC_SUBST(XLIBS)
 
+if test "$MOZ_ENABLE_GTK" || test "$MOZ_ENABLE_QT" \
+|| test "$MOZ_ENABLE_XLIB" || test "$MOZ_ENABLE_MOTIF"
+then
+AC_DEFINE(MOZ_X11)
+fi
+
 dnl Check for GLib and libIDL.
 dnl ========================================================
 SKIP_IDL_CHECK="no"
