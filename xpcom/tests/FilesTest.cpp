@@ -586,6 +586,18 @@ int FilesTest::SpecialSystemDirectories()
         mConsole <<   "nsnull"  << nsEndl;
         return Failed();
     }
+
+    systemDir = nsSpecialSystemDirectory::OS_CurrentProcessDirectory;
+    mConsole << "OS_CurrentProcessDirectory yields \t";
+    if (systemDir.Valid())
+    {
+        (nsOutputStream)mConsole << systemDir << nsEndl;
+    }
+    else
+    {
+        mConsole <<   "nsnull"  << nsEndl;
+        return Failed();
+    }
     
 #ifdef XP_MAC
     systemDir = nsSpecialSystemDirectory::Mac_SystemDirectory;
@@ -839,7 +851,6 @@ int FilesTest::RunAllTests()
     Banner("Move");
     if (Move("mumble/moveFile.txt", "mumble/move") != 0)
         return -1;
-
     Banner("Execute");
 #ifdef XP_MAC
     // This path is hard-coded to test on jrm's machine.  Finding an app
