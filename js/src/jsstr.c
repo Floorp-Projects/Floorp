@@ -2679,16 +2679,6 @@ js_SkipWhiteSpace(const jschar *s)
     return s;
 }
 
-jschar *
-js_strncpy(jschar *t, const jschar *s, size_t n)
-{
-    size_t i;
-
-    for (i = 0; i < n; i++)
-        t[i] = s[i];
-    return t;
-}
-
 #define INFLATE_STRING_BODY                                                   \
     for (i = 0; i < length; i++)                                              \
         chars[i] = (unsigned char) bytes[i];                                  \
