@@ -3,11 +3,13 @@
 <!ENTITY accountManagerTitle.label "Mail &amp; Newsgroups Account Settings">
 
 <!ENTITY addAccountButton.label "Add Account...">
+<!ENTITY addAccountButton.accesskey "A">
 <!ENTITY setDefaultButton.label "Set as Default">
+<!ENTITY setDefaultButton.accesskey "f">
 <!ENTITY duplicateButton.label "Duplicate">
 <!ENTITY removeButton.label "Remove Account">
+<!ENTITY removeButton.accesskey "R">
 
-<!ENTITY nameCol.label "Name">
 <!ENTITY duplicate.label "Duplicate">
 
 <!-- AccountManager.xul -->

@@ -49,13 +49,17 @@
 
   <vbox>
     <button id="addButton"
-       oncommand="onAdd(event);" label="&smtpListAdd.label;"/>
+            oncommand="onAdd(event);" label="&smtpListAdd.label;"
+            accesskey="&smtpListAdd.accesskey;"/>
     <button id="editButton" disabled="true"
-       oncommand="onEdit(event);" label="&smtpListEdit.label;"/>
+            oncommand="onEdit(event);" label="&smtpListEdit.label;"
+            accesskey="&smtpListEdit.accesskey;"/>
     <button id="deleteButton" disabled="true"
-       oncommand="onDelete(event);" label="&smtpListDelete.label;"/>
+            oncommand="onDelete(event);" label="&smtpListDelete.label;"
+            accesskey="&smtpListDelete.accesskey;"/>
     <button id="setDefaultButton" disabled="true"
-       oncommand="onSetDefault(event);" label="&smtpListSetDefault.label;"/>
+            oncommand="onSetDefault(event);" label="&smtpListSetDefault.label;"
+            accesskey="&smtpListSetDefault.accesskey;"/>
   </vbox>
 </hbox>
 

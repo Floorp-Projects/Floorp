@@ -26,6 +26,7 @@
   <hbox>
     <spacer flex="1"/>
     <button label="&advanced.label;" oncommand="onAdvanced(event);"
+            accesskey="&advanced.accesskey;"
             wsm_persist="true" id="smtp.advancedbutton" 
             prefstring="mail.smtpserver.%serverkey%.advanced.disable"/>
   </hbox>

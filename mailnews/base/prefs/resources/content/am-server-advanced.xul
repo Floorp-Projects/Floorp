@@ -46,7 +46,8 @@
       <description style="width: 20em; ">&smtpDesc.label;</description>
       <separator class="thin"/>
       <hbox align="center">
-        <label value="&smtpName.label;" control="smtpServerList"/>
+        <label value="&smtpName.label;" control="smtpServerList"
+               accesskey="&smtpName.accesskey;"/>
         <menulist datasources="rdf:smtp"
                   containment="http://home.netscape.com/NC-rdf#child"
                   ref="NC:smtpservers" amsa_persist="true"
@@ -72,21 +73,26 @@
     <!-- IMAP Tab -->
     <vbox id="imapTabPanel">
       <hbox>
-        <label value="&serverDirectory.label;"/>
+        <label value="&serverDirectory.label;"
+               accesskey="&serverDirectory.accesskey;"
+               control="serverDirectory"/>
         <textbox amsa_persist="true" id="serverDirectory"/>
       </hbox>
 
       <checkbox amsa_persist="true" id="usingSubscription"
-                label="&usingSubscription.label;"/>
+                label="&usingSubscription.label;"
+                accesskey="&usingSubscription.accesskey;"/>
 
       <checkbox amsa_persist="true" id="dualUseFolders"
-                label="&dualUseFolders.label;"/>
+                label="&dualUseFolders.label;"
+                accesskey="&dualUseFolders.accesskey;"/>
 
       <separator class="groove"/>
       <row>
         <hbox align="center">
           <label control="maximumConnectionsNumber"
-                 value="&maximumConnectionsNumber.label;"/>
+                 value="&maximumConnectionsNumber.label;"
+                 accesskey="&maximumConnectionsNumber.accesskey;"/>
           <textbox amsa_persist="true" size="3" id="maximumConnectionsNumber"/>
         </hbox>
       </row>
@@ -102,20 +108,20 @@
         <rows>
           <row>
             <separator class="indent"/>
-            <label control="personalNamespace"
-                   value="&personalNamespace.label;"/>
+            <label control="personalNamespace" value="&personalNamespace.label;"
+                   accesskey="&personalNamespace.accesskey;"/>
             <textbox amsa_persist="true" id="personalNamespace" />
           </row>
           <row>
             <separator class="indent"/>
-            <label control="publicNamespace"
-                   value="&publicNamespace.label;"/>
+            <label control="publicNamespace" value="&publicNamespace.label;"
+                   accesskey="&publicNamespace.accesskey;"/>
             <textbox amsa_persist="true" id="publicNamespace"/>
           </row>
           <row>
             <separator class="indent"/>
-            <label control="otherUsersNamespace"
-                   value="&otherUsersNamespace.label;"/>
+            <label control="otherUsersNamespace" value="&otherUsersNamespace.label;"
+                   accesskey="&otherUsersNamespace.accesskey;"/>
             <textbox amsa_persist="true" id="otherUsersNamespace"/>
           </row>
         </rows>
@@ -129,7 +135,8 @@
           <row>
             <separator class="indent"/>
             <checkbox amsa_persist="true" id="overrideNamespaces"
-                      label="&overrideNamespaces.label;"/>
+                      label="&overrideNamespaces.label;"
+                      accesskey="&overrideNamespaces.accesskey;"/>
           </row>
         </rows>
       </grid>

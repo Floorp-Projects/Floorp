@@ -3,12 +3,21 @@
 <!ENTITY encryptionGroupTitle.label "Encryption">
 <!ENTITY encryptionChoiceLabel.label "Default encryption setting when sending messages:">
 <!ENTITY neverEncrypt.label "Never (do not use encryption)">
+<!ENTITY neverEncrypt.accesskey "N">
 <!ENTITY alwaysEncryptMessage.label "Required (can't send message unless all recipients have certificates)">
+<!ENTITY alwaysEncryptMessage.accesskey "u">
 <!ENTITY encryptionCert.message "Use this certificate to encrypt &amp; decrypt messages sent to you:">
 <!ENTITY encryptionCert.notselected "No certificate set">
-<!ENTITY certificate.button "Select...">
-<!ENTITY certificate_clear.button "Clear">
+<!ENTITY digitalSign.certificate.button "Select...">
+<!ENTITY digitalSign.certificate.accesskey "S">
+<!ENTITY digitalSign.certificate_clear.button "Clear">
+<!ENTITY digitalSign.certificate_clear.accesskey "C">
+<!ENTITY encryption.certificate.button "Select...">
+<!ENTITY encryption.certificate.accesskey "e">
+<!ENTITY encryption.certificate_clear.button "Clear">
+<!ENTITY encryption.certificate_clear.accesskey "r">
 <!ENTITY signingGroupTitle.label "Digital Signing">
 <!ENTITY signMessage.label "Digitally sign messages (by default)">
+<!ENTITY signMessage.accesskey "D">
 <!ENTITY signingCert.message "Use this certificate to digitally sign messages you send:">
 <!ENTITY signingCert.notselected "No certificate set">

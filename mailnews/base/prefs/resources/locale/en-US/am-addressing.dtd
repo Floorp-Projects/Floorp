@@ -5,29 +5,28 @@
 <!ENTITY addressingText.label      "When looking up addresses:">
 <!-- LOCALIZATION NOTE (override.label) : do not translate "LDAP" in below line -->
 <!ENTITY useGlobal.label           "Use my global LDAP server preferences for this account">
+<!ENTITY useGlobal.accesskey       "U">
 <!ENTITY editDirectories.label     "Edit Directories...">
+<!ENTITY editDirectories.accesskey "E">
 <!-- LOCALIZATION NOTE (directories.label) : do not translate "LDAP" in below line -->
 <!ENTITY directories.label         "Use a different LDAP server:">
+<!ENTITY directories.accesskey     "d">
 
 <!-- am-addressing.xul -->
 
 <!ENTITY compositionGroupTitle.label "Composition">
 <!-- LOCALIZATION NOTE (useHtml.label) : do not translate "html" in below line -->
-<!ENTITY useHtml.label "Compose messages in HTML format">
+<!ENTITY useHtml.label                        "Compose messages in HTML format">
+<!ENTITY useHtml.accesskey                    "C">
 <!ENTITY autoQuote.label                      "Automatically quote the original message when replying">
-<!ENTITY autoQuote.accesskey                  "A">
+<!ENTITY autoQuote.accesskey                  "q">
 <!-- LOCALIZATION NOTE (then.label): This will concatenate with the 4 strings that follow. -->
 <!ENTITY then.label                           "Then,">
 <!ENTITY then.accesskey                       "t">
 <!ENTITY aboveQuote.label                     "start my reply above the quote">
-<!ENTITY aboveQuote.accesskey                 "v">
 <!ENTITY belowQuote.label                     "start my reply below the quote">
-<!ENTITY belowQuote.accesskey                 "b">
 <!ENTITY selectAndQuote.label                 "select the quote">
-<!ENTITY selectAndQuote.accesskey             "e">
 <!ENTITY place.label                          "and place my signature">
 <!ENTITY place.accesskey                      "p">
 <!ENTITY belowText.label                      "below the quote (recommended)">
-<!ENTITY belowText.accesskey                  "b">
 <!ENTITY aboveText.label                      "below my reply (above the quote)">
-<!ENTITY aboveText.accesskey                  "v">

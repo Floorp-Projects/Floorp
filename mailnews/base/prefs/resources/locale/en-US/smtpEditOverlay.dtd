@@ -1,12 +1,19 @@
 <!ENTITY serverName.label "Server Name:">
+<!ENTITY serverName.accesskey "S">
 <!ENTITY serverPort.label "Port:">
+<!ENTITY serverPort.accesskey "P">
 <!ENTITY alwaysUseUsername.label "Use name and password">
+<!ENTITY alwaysUseUsername.accesskey "U">
 <!ENTITY userName.label "User Name:">
-<!ENTITY savePassword.label "Save my password">
+<!ENTITY userName.accesskey "m">
 <!ENTITY isSecure.label "Use secure connection:">
 <!ENTITY neverSecure.label "No">
+<!ENTITY neverSecure.accesskey "N">
 <!ENTITY sometimesSecure.label "TLS, if available">
+<!ENTITY sometimesSecure.accesskey "a">
 <!ENTITY alwaysSecure.label "TLS">
+<!ENTITY alwaysSecure.accesskey "T">
 <!ENTITY alwaysSmtpS.label "SSL">
+<!ENTITY alwaysSmtpS.accesskey "L">
 <!ENTITY smtpEditTitle.label "SMTP Server">
 <!ENTITY serverPortDefault.label "Default:">

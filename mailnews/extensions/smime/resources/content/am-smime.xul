@@ -53,17 +53,20 @@ Contributors:
              readonly="true" disabled="true"/>
 
       <button id="signingCertSelectButton"
-              label="&certificate.button;"
+              label="&digitalSign.certificate.button;"
+              accesskey="&digitalSign.certificate.accesskey;"
               oncommand="smimeSelectCert('identity.signing_cert_name')"/>
  
       <button id="signingCertClearButton"
-              label="&certificate_clear.button;"
+              label="&digitalSign.certificate_clear.button;"
+              accesskey="&digitalSign.certificate_clear.accesskey;"
               oncommand="smimeClearCert('identity.signing_cert_name')"/>
     </hbox>
     
     <separator class="thin"/>
 
-    <checkbox id="identity.sign_mail" wsm_persist="true" label="&signMessage.label;"/>
+    <checkbox id="identity.sign_mail" wsm_persist="true"
+              label="&signMessage.label;" accesskey="&signMessage.accesskey;"/>
   </groupbox>
 
   <groupbox id="encryption.titlebox">
@@ -76,11 +79,13 @@ Contributors:
                readonly="true" disabled="true"/>
 
       <button id="encryptionCertSelectButton"
-              label="&certificate.button;"
+              label="&encryption.certificate.button;"
+              accesskey="&encryption.certificate.accesskey;"
               oncommand="smimeSelectCert('identity.encryption_cert_name')"/>
       
       <button id="encryptionCertClearButton"
-              label="&certificate_clear.button;"
+              label="&encryption.certificate_clear.button;"
+              accesskey="&encryption.certificate_clear.accesskey;"
               oncommand="smimeClearCert('identity.encryption_cert_name')"/>
     </hbox>
 
@@ -90,10 +95,10 @@ Contributors:
 
     <radiogroup id="encryptionChoices">
       <radio id="encrypt_mail_never" wsm_persist="true" value="0"
-             label="&neverEncrypt.label;"/>
+             label="&neverEncrypt.label;" accesskey="&neverEncrypt.accesskey;"/>
 
       <radio id="encrypt_mail_always" wsm_persist="true" value="2"
-              label="&alwaysEncryptMessage.label;"/>
+             label="&alwaysEncryptMessage.label;" accesskey="&alwaysEncryptMessage.accesskey;"/>
     </radiogroup>
   </groupbox>    
 </page>

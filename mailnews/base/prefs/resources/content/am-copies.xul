@@ -46,6 +46,7 @@
 
     <hbox align="center">
       <checkbox wsm_persist="true" id="identity.doFcc" label="&fccMailFolder.label;" 
+                accesskey="&fccMailFolder.accesskey;"
                 prefattribute="value"
                 prefstring="mail.identity.%identitykey%.fcc"
                 oncommand="setupFccItems();"/>
@@ -60,6 +61,7 @@
           <row align="center">
             <radio id="fcc_selectAccount" 
                    value="0" label="&sentFolderOn.label;"
+                   accesskey="&sentFolderOn.accesskey;"
                    oncommand="setPickersState('msgFccAccountPicker', 'msgFccFolderPicker', event)" 
                    observes="broadcaster_doFcc"/>
   	    <menulist id="msgFccAccountPicker"
@@ -68,7 +70,8 @@
           </row> 
           <row align="center">
             <radio id="fcc_selectFolder" 
-	           value="1" label="&otherFolder.label;"
+                   value="1" label="&sentInOtherFolder.label;"
+                   accesskey="&sentInOtherFolder.accesskey;"
                    oncommand="setPickersState('msgFccFolderPicker', 'msgFccAccountPicker', event)" 
                    observes="broadcaster_doFcc"/>
   	    <menulist id="msgFccFolderPicker" 
@@ -81,6 +84,8 @@
 
     <hbox align="center">
       <checkbox wsm_persist="true" id="identity.doBcc" label="&bccAddress.label;"
+                accesskey="&bccAddress.accesskey;"
+                control="identity.doBccList"
                 oncommand="setupBccTextbox();"
                 prefattribute="value" 
                 prefstring="mail.identity.%identitykey%.doBcc"/>
@@ -108,7 +113,8 @@
           <row align="center">
             <radio id="draft_selectAccount" 
                    oncommand="setPickersState('msgDraftsAccountPicker', 'msgDraftsFolderPicker', event)"
-                   value="0" label="&draftsFolderOn.label;"/>
+                   value="0" label="&draftsFolderOn.label;"
+                   accesskey="&draftsFolderOn.accesskey;"/>
  	    <menulist id="msgDraftsAccountPicker" 
 	              oncommand="noteSelectionChange('draft_selectAccount')"
                       flex="1"/>
@@ -116,7 +122,8 @@
           <row align="center">
             <radio id="draft_selectFolder" 
                    oncommand="setPickersState('msgDraftsFolderPicker', 'msgDraftsAccountPicker', event)"
-                   value="1" label="&otherFolder.label;"/>
+                   value="1" label="&draftInOtherFolder.label;"
+                   accesskey="&draftInOtherFolder.accesskey;"/>
   	    <menulist id="msgDraftsFolderPicker"
                       oncommand="noteSelectionChange('draft_selectFolder')" 
                       flex="1"/>
@@ -138,7 +145,8 @@
           <row align="center">
             <radio id="tmpl_selectAccount" 
                    oncommand="setPickersState('msgStationeryAccountPicker', 'msgStationeryFolderPicker', event)"
-                   value="0" label="&templatesFolderOn.label;"/>
+                   value="0" label="&templatesFolderOn.label;"
+                   accesskey="&templatesFolderOn.accesskey;"/>
   	    <menulist id="msgStationeryAccountPicker"
                       oncommand="noteSelectionChange('tmpl_selectAccount')" 
                       flex="1"/>
@@ -146,7 +154,8 @@
           <row align="center">
             <radio id="tmpl_selectFolder" 
                    oncommand="setPickersState('msgStationeryFolderPicker', 'msgStationeryAccountPicker', event)"
-                  value="1" label="&otherFolder.label;"/>
+                   value="1" label="&templateInOtherFolder.label;"
+                   accesskey="&templateInOtherFolder.accesskey;"/>
             <menulist id="msgStationeryFolderPicker"
                       oncommand="noteSelectionChange('tmpl_selectFolder')" 
                       flex="1"/>
@@ -156,6 +165,7 @@
     </radiogroup>
     <hbox align="center">
       <checkbox wsm_persist="true" id="identity.showSaveMsgDlg" label="&saveMessageDlg.label;"
+                accesskey="&saveMessageDlg.accesskey;"
                 prefattribute="value"
                 prefstring="mail.identity.%identitykey%.showSaveMsgDlg"/>
     </hbox>

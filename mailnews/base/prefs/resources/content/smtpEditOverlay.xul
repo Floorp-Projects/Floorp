@@ -33,12 +33,13 @@
 
   <vbox id="smtpServerEditor">
     <hbox align = "center">
-          <label value="&serverName.label;"/>
+          <label value="&serverName.label;" accesskey="&serverName.accesskey;" control="smtp.hostname"/>
           <textbox id="smtp.hostname" flex="1"
                    preftype="string"
                    class="uri-element"
                    prefstring="mail.smtpserver.%serverkey%.hostname"/>
-            <label value="&serverPort.label;"/>
+            <label value="&serverPort.label;" accesskey="&serverPort.accesskey;"
+                   control="smtp.port"/>
             <textbox id="smtp.port" size="5"
                      preftype="int"
                      prefstring="mail.smtpserver.%serverkey%.port"/>
@@ -51,13 +52,15 @@
       <label hidden="true" id="smtp.authMethod"/>
       <hbox align="center">
       <checkbox id="smtp.useUsername" label="&alwaysUseUsername.label;"
+                accesskey="&alwaysUseUsername.accesskey;"
                 oncommand="onUseUsername(event.target,true);"
                 prefattribute="value"
                 prefstring="mail.smtpserver.%serverkey%.use_username"/>
       </hbox>                
-      <vbox style="margin-left: 2em">
+      <vbox class="indent">
         <hbox align="center">
-          <label id="smtpusernamelabel" value="&userName.label;"/>
+          <label id="smtpusernamelabel" value="&userName.label;"
+                 accesskey="&userName.accesskey;" control="smtp.username"/>
           <textbox id="smtp.username" flex="1"
                    preftype="string"
                    prefstring="mail.smtpserver.%serverkey%.username"/>
@@ -71,13 +74,17 @@
        <label value="&isSecure.label;"/>
      </hbox>
      <radiogroup id="smtp.trySSL"
-                prefstring="mail.smtpserver.%serverkey%.try_ssl"
-                oncommand="selectProtocol(0);">
-       <hbox style="margin-left: 2em">
-         <radio value="0" label="&neverSecure.label;" id="smtp.neverSecure"/>
-         <radio value="1" label="&sometimesSecure.label;" id="smtp.sometimesSecure"/>
-         <radio value="2" label="&alwaysSecure.label;" id="smtp.alwaysSecure"/>
-        <radio value="3" label="&alwaysSmtpS.label;" id="smtp.alwaysSmtpS"/>
+                 prefstring="mail.smtpserver.%serverkey%.try_ssl"
+                 oncommand="selectProtocol(0);">
+       <hbox class="indent">
+         <radio value="0" id="smtp.neverSecure"
+                label="&neverSecure.label;" accesskey="&neverSecure.accesskey;"/>
+         <radio value="1" id="smtp.sometimesSecure"
+                label="&sometimesSecure.label;" accesskey="&sometimesSecure.accesskey;"/>
+         <radio value="2" id="smtp.alwaysSecure"
+                label="&alwaysSecure.label;" accesskey="&alwaysSecure.accesskey;"/>
+         <radio value="3" id="smtp.alwaysSmtpS"
+                label="&alwaysSmtpS.label;" accesskey="&alwaysSmtpS.accesskey;"/>
        </hbox>
      </radiogroup>
   </vbox>

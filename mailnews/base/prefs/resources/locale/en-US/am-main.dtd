@@ -3,20 +3,26 @@
 <!ENTITY accountTitle.label "Account Settings">
 <!ENTITY accountSettingsDesc.label "The following information is needed before you can send messages. If you do not know the information requested, please contact your system administrator or Internet Service Provider.">
 <!ENTITY accountName.label "Account Name:">
+<!ENTITY accountName.accesskey "N">
 <!ENTITY accountNameDesc.label "The account name is used to identify each account">
 <!ENTITY identityTitle.label "Identity">
 <!ENTITY identityDesc.label "Each account has an identity, which is the information that other people see when they read your messages.">
 <!ENTITY name.label "Your Name:">
+<!ENTITY name.accesskey "Y">
 <!ENTITY email.label "Email Address:">
+<!ENTITY email.accesskey "E">
 <!ENTITY replyTo.label "Reply-to Address:">
+<!ENTITY replyTo.accesskey "s">
 <!ENTITY organization.label "Organization:">
+<!ENTITY organization.accesskey "O">
 <!ENTITY signature.label "Attach this signature:">
+<!ENTITY signature.accesskey "t">
 <!ENTITY edit.label "Edit...">
 <!ENTITY choose.label "Choose...">
+<!ENTITY choose.accesskey "C">
 <!ENTITY editVCard.label "Edit Card...">
-<!ENTITY sampleSig1.label "Sample Signature 1">
-<!ENTITY sampleSig2.label "Sample Signature 2">
-<!ENTITY sampleSig3.label "Sample Signature 3">
+<!ENTITY editVCard.accesskey "d">
 <!-- LOCALIZATION NOTE (attachVCard.label) : do not translate "vCard" in below line -->
 <!ENTITY attachVCard.label "Attach my vCard to messages">
-<!ENTITY advancedButton.label "Advanced...">
+<!ENTITY attachVCard.accesskey "v">
+

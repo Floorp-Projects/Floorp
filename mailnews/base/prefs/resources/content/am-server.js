@@ -116,7 +116,7 @@ function onAdvanced()
     serverSettings.serverDirectory = document.getElementById("imap.serverDirectory").getAttribute("value");
     serverSettings.otherUsersNamespace = document.getElementById("imap.otherUsersNamespace").getAttribute("value");
     serverSettings.overrideNamespaces = document.getElementById("imap.overrideNamespaces").checked;
-}
+  }
 
   dump("Opening dialog..\n");
   window.openDialog("chrome://messenger/content/am-server-advanced.xul",

@@ -53,6 +53,7 @@ Contributors:
     <caption label="&compositionGroupTitle.label;"/>
     <hbox align="center">
       <checkbox wsm_persist="true" id="identity.composeHtml" label="&useHtml.label;"
+                accesskey="&useHtml.accesskey;"
                 prefattribute="value"
                 prefstring="mail.identity.%identitykey%.compose_html"/>
     </hbox>
@@ -66,24 +67,24 @@ Contributors:
                 prefstring="mail.identity.%identitykey%.auto_quote"/>
     </hbox>
     <hbox class="indent" align="center" id="thenBox">
-      <label value="&then.label;" accesskey="&then.accesskey;" control="quoteList"/>
+      <label value="&then.label;" accesskey="&then.accesskey;" control="identity.replyOnTop"/>
       <menulist wsm_persist="true" id="identity.replyOnTop" oncommand="quoteEnabling();"
                 pref="true" preftype="int" prefattribute="value"
                 prefstring="mail.identity.%identitykey%.reply_on_top">
         <menupopup>
-          <menuitem value="1" label="&aboveQuote.label;" accesskey="&aboveQuote.accesskey;"/>
-          <menuitem value="0" label="&belowQuote.label;" accesskey="&belowQuote.accesskey;"/>
-          <menuitem value="2" label="&selectAndQuote.label;" accesskey="&selectAndQuote.accesskey;"/>
+          <menuitem value="1" label="&aboveQuote.label;"/>
+          <menuitem value="0" label="&belowQuote.label;"/>
+          <menuitem value="2" label="&selectAndQuote.label;"/>
         </menupopup>
       </menulist>        
     </hbox>
     <hbox class="indent" align="center" id="placeBox">
-      <label value="&place.label;" accesskey="&place.accesskey;" control="sigPosList"/>
+      <label value="&place.label;" accesskey="&place.accesskey;" control="identity.sig_bottom"/>
       <menulist wsm_persist="true" id="identity.sig_bottom" genericattr="true"
                 pref="true" preftype="bool" prefattribute="value">
         <menupopup>
-          <menuitem value="true" label="&belowText.label;" accesskey="&belowText.accesskey;"/>
-          <menuitem value="false" label="&aboveText.label;" accesskey="&aboveText.accesskey;"/>
+          <menuitem value="true" label="&belowText.label;"/>
+          <menuitem value="false" label="&aboveText.label;"/>
         </menupopup>
       </menulist>
     </hbox>
@@ -95,13 +96,16 @@ Contributors:
     <description>&addressingText.label;</description>
     <radiogroup class="indent" id="ldapAutocomplete" wsm_persist="true" oncommand="enabling();">
       <observes element="identity.overrideGlobalPref" attribute="disabled"/>
-      <radio id="useGlobalPref" value="0" label="&useGlobal.label;"/>
-      <radio id="directories" value="1" label="&directories.label;"/>
+      <radio id="useGlobalPref" value="0" label="&useGlobal.label;"
+             accesskey="&useGlobal.accesskey;"/>
+      <radio id="directories" value="1" label="&directories.label;"
+             accesskey="&directories.accesskey;"/>
       <hbox class="indent">
         <menulist id="directoriesList" wsm_persist="true" style="min-width: 16em;">
           <menupopup onpopupshowing="createDirectoriesList(false);" id="directoriesListPopup"/>
         </menulist>
-        <button id="editButton" label="&editDirectories.label;" oncommand="onEditDirectories();"/>
+        <button id="editButton" label="&editDirectories.label;"
+                accesskey="&editDirectories.accesskey;" oncommand="onEditDirectories();"/>
       </hbox>
     </radiogroup>      
   </groupbox>

@@ -1,4 +1,6 @@
 <!ENTITY accountTitle.label "Account Settings">
 <!ENTITY accountSettingsDesc.label "The following is a special account.  There are no identities associated with it.">
 <!ENTITY accountName.label "Account Name:">
+<!ENTITY accountName.accesskey "N">
 <!ENTITY localPath.label "Local directory:">
+<!ENTITY localPath.accesskey "L">
