@@ -200,10 +200,6 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     margin-left           : 0px;
   }
 
-#print-button {
-	list-style-image:url("chrome://global/skin/print.gif");
-}
-
 #print-button 
   {
     list-style-image      : url("chrome://global/skin/print.gif");

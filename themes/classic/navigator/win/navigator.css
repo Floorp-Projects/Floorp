@@ -223,10 +223,6 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     padding               : 2px;
   }
 
-#print-button {
-	list-style-image:url("chrome://global/skin/print.gif");
-}
-
 #print-button 
   {
     list-style-image      : url("chrome://global/skin/print.gif");
