@@ -1227,7 +1227,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   //nsIAtom* tag = NS_NewAtom("mozcombodisplay");
   nsIAtom* tag = NS_NewAtom("input");
   NS_NewHTMLInputElement(&mDisplayContent, tag);
-  NS_ADDREF(mDisplayContent);
+  //NS_ADDREF(mDisplayContent);
   mDisplayContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("button"), PR_FALSE);
 
     //XXX: Do not use nsHTMLAtoms::id use nsHTMLAtoms::kClass instead. There will end up being multiple
@@ -1240,7 +1240,7 @@ nsComboboxControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
   // create button which drops the list down
   tag = NS_NewAtom("input");
   NS_NewHTMLInputElement(&mButtonContent, tag);
-  NS_ADDREF(mButtonContent);
+  //NS_ADDREF(mButtonContent);
   mButtonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("button"), PR_FALSE);
   aChildList.AppendElement(mButtonContent);
 
