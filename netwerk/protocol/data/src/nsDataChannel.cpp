@@ -171,7 +171,7 @@ nsDataChannel::ParseData() {
 
     char *dataBuffer = nsnull;
     PRBool cleanup = PR_FALSE;
-    if (!mContentType.Find("text") && !lBase64) {
+    if (!lBase64 && ((strncmp(mContentType.get(),"text/",5) == 0) || mContentType.Find("xml") != kNotFound)) {
         // it's text, don't compress spaces
         dataBuffer = comma+1;
     } else {
