@@ -38,7 +38,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
-#include <wingdi.h>
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
 #include "nsCCookieManager.h"
