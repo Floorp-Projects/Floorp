@@ -36,8 +36,8 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  webBrowser_core \
 		  content \
-		  raptor \
 		  gfx \
+		  htmlparser \
 		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
