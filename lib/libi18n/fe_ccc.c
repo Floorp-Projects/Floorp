@@ -347,6 +347,10 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 		{CS_X_BIG5,		CS_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 		{CS_BIG5,		CS_X_BIG5,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_CGK},
 
+
+		/* UNICODE */
+		{CS_UTF8,		CS_UTF8,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_UTF8},
+
                 /*************** Vietnamese ****************/
                 {CS_VIET_VIQR,   CS_VIET_VIQR,   0, (CCCFunc)0, 0},
                 {CS_VIET_VISCII, CS_VIET_VISCII, 0, (CCCFunc)0, 0},
@@ -382,9 +386,6 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
                 {CS_VIET_VISCII, CS_UTF8,   0,      (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
                 {CS_UTF8,        CS_VIET_VISCII, 0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_UTF8},
                 /*******************************************/
-
-		/* UNICODE */
-		{CS_UTF8,		CS_UTF8,		0, (CCCFunc)mz_mbNullConv,	INTL_CHARLEN_UTF8},
 
 		{CS_UTF8,		CS_UCS2,		0, (CCCFunc)mz_utf82ucs,	0},
 		{CS_UTF8,		CS_UTF7,		0, (CCCFunc)mz_utf82utf7,	0},
