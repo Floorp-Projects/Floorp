@@ -81,6 +81,8 @@ protected:
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
   PRInt16                mSelectedType;
 
+  static char            mLastUsedDirectory[];
+
 };
 
 #endif // nsFilePicker_h__
