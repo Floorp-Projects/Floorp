@@ -109,10 +109,6 @@ NS_IMPL_ISUPPORTS2(nsFtpConnectionThread, nsIRunnable, nsIRequest);
 
 nsFtpConnectionThread::nsFtpConnectionThread() {
     NS_INIT_REFCNT();
-    mHandler = nsnull;
-    mEventQueue = nsnull;
-    mListener = nsnull;
-    mSyncListener = nsnull;
     mAction = GET;
     mUsePasv = PR_TRUE;
     mState = FTP_S_USER;
@@ -122,9 +118,6 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
     mConnected = PR_FALSE;
     mResetMode = PR_FALSE;
     mList      = PR_FALSE;
-    mChannel = nsnull;
-    mContext = nsnull;
-    mDPipe = nsnull;
     mKeepRunning = PR_TRUE;
     mUseDefaultPath = PR_TRUE;
     mContinueRead = PR_FALSE;
@@ -133,25 +126,14 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
     mCachedConn = PR_FALSE;
     mInternalError = NS_OK; // start out on the up 'n up.
     mSentStart = PR_FALSE;
-    mFTPContext = nsnull;
-    mCPipe = nsnull;
-    mDPipe = nsnull;
     mConn = nsnull;
-    mConnCache = nsnull;
+    mFTPContext = nsnull;
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
-    NS_RELEASE(mListener);
-    NS_RELEASE(mSyncListener);
-    NS_RELEASE(mChannel);
-    NS_IF_RELEASE(mContext);
-    NS_IF_RELEASE(mEventQueue);
-    NS_RELEASE(mFTPContext);
-    NS_RELEASE(mUrl);
-
     // lose the socket transport
     NS_RELEASE(mSTS);
-    NS_IF_RELEASE(mHandler);
+    NS_RELEASE(mFTPContext);
 
     nsAllocator::Free(mURLSpec);
 }
@@ -160,7 +142,7 @@ nsresult
 nsFtpConnectionThread::Process() {
     nsresult rv;
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() started for %x (spec =%s)\n", mUrl, mURLSpec));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() started for %x (spec =%s)\n", mURL, mURLSpec));
  
     while (mKeepRunning) {
 
@@ -182,7 +164,7 @@ nsFtpConnectionThread::Process() {
                 PRUint32 read;
                 rv = mCInStream->Read(buffer, NS_FTP_BUFFER_READ_SIZE, &read);
                 if (NS_FAILED(rv)) {
-                    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - READ_BUF - Read() FAILED with rv = %d\n", mUrl, rv));
+                    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - READ_BUF - Read() FAILED with rv = %d\n", mURL, rv));
                     mInternalError = NS_ERROR_FAILURE;
                     mState = FTP_ERROR;
                     break;
@@ -190,12 +172,12 @@ nsFtpConnectionThread::Process() {
 
                 if (0 == read) {
                     // EOF
-                    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - READ_BUF received EOF\n", mUrl));
+                    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - READ_BUF received EOF\n", mURL));
                     mState = FTP_COMPLETE;
                     break;
                 }
                 buffer[read] = '\0';
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - READ_BUF - read \"%s\" (%d bytes)", mUrl, buffer, read));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - READ_BUF - read \"%s\" (%d bytes)", mURL, buffer, read));
 
                 // get the response code out.
                 if (!mContinueRead) {
@@ -255,7 +237,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_ERROR:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - ERROR\n", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - ERROR\n", mURL));
 
                 // if something went wrong, delete this connection entry and don't
                 // bother putting it in the cache.
@@ -269,7 +251,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_COMPLETE:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - COMPLETE\n", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - COMPLETE\n", mURL));
                 // push through all of the pertinent state into the cache entry;
                 mConn->mCwd = mCwd;
                 mConn->mUseDefaultPath = mUseDefaultPath;
@@ -288,7 +270,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_S_USER:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_USER - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_USER - ", mURL));
                 rv = S_user();
                 if (NS_FAILED(rv)) {
                     mInternalError = NS_ERROR_FTP_LOGIN;
@@ -314,7 +296,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_S_PASS:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_PASS - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_PASS - ", mURL));
                 rv = S_pass();
                 if (NS_FAILED(rv)) {
                     mInternalError = NS_ERROR_FTP_LOGIN;
@@ -340,7 +322,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_S_SYST:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_SYST - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_SYST - ", mURL));
                 rv = S_syst();
                 if (NS_FAILED(rv)) {
                     mInternalError = rv;
@@ -366,7 +348,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_S_ACCT:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_ACCT - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_ACCT - ", mURL));
                 rv = S_acct();
                 if (NS_FAILED(rv)) {
                     mInternalError = NS_ERROR_FTP_LOGIN;
@@ -392,7 +374,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_S_MACB:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_MACB - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_MACB - ", mURL));
                 rv = S_macb();
                 if (NS_FAILED(rv)) {
                     mInternalError = rv;
@@ -418,7 +400,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_S_PWD:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_PWD - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_PWD - ", mURL));
                 rv = S_pwd();
                 if (NS_FAILED(rv)) {
                     mInternalError = rv;
@@ -444,7 +426,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_S_MODE:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_MODE - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_MODE - ", mURL));
                 rv = S_mode();
                 if (NS_FAILED(rv)) {
                     mInternalError = NS_ERROR_FTP_MODE;
@@ -470,7 +452,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_S_CWD:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_CWD - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_CWD - ", mURL));
                 rv = S_cwd();
                 if (NS_FAILED(rv)) {
                     mInternalError = NS_ERROR_FTP_CWD;
@@ -496,7 +478,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_S_SIZE:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_SIZE - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_SIZE - ", mURL));
                 rv = S_size();
                 if (NS_FAILED(rv)) {
                     mInternalError = rv;
@@ -522,7 +504,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_S_MDTM:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_MDTM - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_MDTM - ", mURL));
                 rv = S_mdtm();
                 if (NS_FAILED(rv)) {
                     mInternalError = rv;
@@ -548,7 +530,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_S_LIST:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_LIST - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_LIST - ", mURL));
                 rv = S_list();
                 if (NS_FAILED(rv)) {
                     mInternalError = rv;
@@ -557,8 +539,8 @@ nsFtpConnectionThread::Process() {
                 } else {
                     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("SUCCEEDED\n"));
                     // get the data channel ready
-                    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_LIST - Opening data stream ", mUrl));
-                    rv = mDPipe->OpenInputStream(0, -1, &mDInStream);
+                    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_LIST - Opening data stream ", mURL));
+                    rv = mDPipe->OpenInputStream(0, -1, getter_AddRefs(mDInStream));
                     if (NS_FAILED(rv)) {
                         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("FAILED\n"));
                         return rv;
@@ -579,14 +561,14 @@ nsFtpConnectionThread::Process() {
                     mInternalError = NS_ERROR_FAILURE;
                 mNextState = FTP_COMPLETE;
                 mDInStream->Close();
-                NS_RELEASE(mDInStream);
+                mDInStream = 0;
                 break;
                 }
                 // END: FTP_R_LIST
 
             case FTP_S_RETR:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_RETR - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_RETR - ", mURL));
                 rv = S_retr();
                 if (NS_FAILED(rv)) {
                     mInternalError = rv;
@@ -595,8 +577,8 @@ nsFtpConnectionThread::Process() {
                 } else {
                     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("SUCCEEDED\n"));
                     // get the data channel ready
-                    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_RETR - Opening data stream ", mUrl));
-                    rv = mDPipe->OpenInputStream(0, -1, &mDInStream);
+                    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_RETR - Opening data stream ", mURL));
+                    rv = mDPipe->OpenInputStream(0, -1, getter_AddRefs(mDInStream));
                     if (NS_FAILED(rv)) {
                         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("FAILED\n"));
                         return rv;
@@ -617,7 +599,7 @@ nsFtpConnectionThread::Process() {
                     mInternalError = NS_ERROR_FAILURE;
                 mNextState = FTP_COMPLETE;
                 mDInStream->Close();
-                NS_RELEASE(mDInStream);
+                mDInStream = 0;
                 break;
                 }
                 // END: FTP_R_RETR
@@ -628,7 +610,7 @@ nsFtpConnectionThread::Process() {
 //////////////////////////////
             case FTP_S_PASV:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_PASV - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_PASV - ", mURL));
                 rv = S_pasv();
                 if (NS_FAILED(rv)) {
                     mInternalError = NS_ERROR_FTP_PASV;
@@ -657,7 +639,7 @@ nsFtpConnectionThread::Process() {
 //////////////////////////////
             case FTP_S_DEL_FILE:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_DEL_FILE - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_DEL_FILE - ", mURL));
                 rv = S_del_file();
                 if (NS_FAILED(rv)) {
                     mInternalError = rv;
@@ -683,7 +665,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_S_DEL_DIR:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_DEL_DIR - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_DEL_DIR - ", mURL));
                 rv = S_del_dir();
                 if (NS_FAILED(rv)) {
                     mInternalError = NS_ERROR_FTP_DEL_DIR;
@@ -709,7 +691,7 @@ nsFtpConnectionThread::Process() {
 
             case FTP_S_MKDIR:
                 {
-                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_MKDIR - ", mUrl));
+                PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - S_MKDIR - ", mURL));
                 rv = S_mkdir();
                 if (NS_FAILED(rv)) {
                     mInternalError = NS_ERROR_FTP_MKDIR;
@@ -739,7 +721,7 @@ nsFtpConnectionThread::Process() {
         } // END: switch 
     } // END: while loop
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() ended for %x (spec =%s)\n\n\n", mUrl, mURLSpec));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() ended for %x (spec =%s)\n\n\n", mURL, mURLSpec));
 
     return NS_OK;
 }
@@ -765,7 +747,7 @@ nsFtpConnectionThread::S_user() {
             static nsAutoString message;
             if (message.Length() < 1) {
                 char *host;
-                rv = mUrl->GetHost(&host);
+                rv = mURL->GetHost(&host);
                 if (NS_FAILED(rv)) return rv;
                 message = "Enter username and password for "; //TODO localize it!
                 message += host;
@@ -781,7 +763,7 @@ nsFtpConnectionThread::S_user() {
     }
     usernameStr.Append(FTP_CRLF);
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, usernameStr.GetBuffer()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, usernameStr.GetBuffer()));
 
     rv = mCOutStream->Write(usernameStr.GetBuffer(), usernameStr.Length(), &bytes);
     return rv;
@@ -829,7 +811,7 @@ nsFtpConnectionThread::S_pass() {
             static nsAutoString message;
             if (message.Length() < 1) {
                 char *host;
-                rv = mUrl->GetHost(&host);
+                rv = mURL->GetHost(&host);
                 if (NS_FAILED(rv)) return rv;
                 message = "Enter password for "; //TODO localize it!
 		        message += mUsername;
@@ -846,7 +828,7 @@ nsFtpConnectionThread::S_pass() {
     }
     passwordStr.Append(FTP_CRLF);
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, passwordStr.GetBuffer()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, passwordStr.GetBuffer()));
 
     rv = mCOutStream->Write(passwordStr.GetBuffer(), passwordStr.Length(), &bytes);
     return rv;
@@ -872,7 +854,7 @@ nsFtpConnectionThread::S_syst() {
     char *buffer = "SYST" FTP_CRLF;
     PRUint32 bytes;
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, buffer));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, buffer));
 
     return mCOutStream->Write(buffer, PL_strlen(buffer), &bytes);
 }
@@ -900,7 +882,7 @@ nsFtpConnectionThread::S_acct() {
     char *buffer = "ACCT noaccount" FTP_CRLF;
     PRUint32 bytes;
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, buffer));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, buffer));
 
     return mCOutStream->Write(buffer, PL_strlen(buffer), &bytes);
 }
@@ -918,7 +900,7 @@ nsFtpConnectionThread::S_macb() {
     char *buffer = "MACB ENABLE" FTP_CRLF;
     PRUint32 bytes;
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, buffer));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, buffer));
 
     return mCOutStream->Write(buffer, PL_strlen(buffer), &bytes);
 }
@@ -942,7 +924,7 @@ nsFtpConnectionThread::S_pwd() {
     char *buffer = "PWD" FTP_CRLF;
     PRUint32 bytes;
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, buffer));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, buffer));
 
     return mCOutStream->Write(buffer, PL_strlen(buffer), &bytes);
 }
@@ -1019,7 +1001,7 @@ nsFtpConnectionThread::R_pwd() {
         if (ptr.Length()) {
 
             char *initialPath = nsnull;
-            rv = mUrl->GetPath(&initialPath);
+            rv = mURL->GetPath(&initialPath);
             if (NS_FAILED(rv)) return FTP_ERROR;
 
             if (ptr.Last() == '/') {
@@ -1032,7 +1014,7 @@ nsFtpConnectionThread::R_pwd() {
             nsAllocator::Free(initialPath);
 
             const char *p = ptr.GetBuffer();
-            rv = mUrl->SetPath(p);
+            rv = mURL->SetPath(p);
             if (NS_FAILED(rv)) return FTP_ERROR;
         }
     }
@@ -1058,7 +1040,7 @@ nsFtpConnectionThread::S_mode() {
         buffer = "TYPE A" FTP_CRLF;
     }
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, buffer));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, buffer));
 
     return mCOutStream->Write(buffer, PL_strlen(buffer), &bytes);
 }
@@ -1087,7 +1069,7 @@ nsFtpConnectionThread::S_cwd() {
     nsresult rv;
     char *path;
     PRUint32 bytes;
-    rv = mUrl->GetPath(&path);
+    rv = mURL->GetPath(&path);
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString cwdStr("CWD ");
@@ -1118,7 +1100,7 @@ nsFtpConnectionThread::S_cwd() {
     }
     nsAllocator::Free(path);
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, cwdStr.GetBuffer()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, cwdStr.GetBuffer()));
 
     cwdStr.Mid(mCwdAttempt, 3, cwdStr.Length() - 4);
 
@@ -1159,7 +1141,7 @@ nsFtpConnectionThread::S_size() {
     nsresult rv;
     char *path;
     PRUint32 bytes;
-    rv = mUrl->GetPath(&path);
+    rv = mURL->GetPath(&path);
     if (NS_FAILED(rv)) return rv;
 
     // XXX should the actual file name be parsed out???
@@ -1176,7 +1158,7 @@ nsFtpConnectionThread::S_size() {
 
     nsAllocator::Free(path);
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, sizeBuf.GetBuffer()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, sizeBuf.GetBuffer()));
 
     rv = mCOutStream->Write(sizeBuf.GetBuffer(), sizeBuf.Length(), &bytes);
     return rv;
@@ -1204,7 +1186,7 @@ nsFtpConnectionThread::S_mdtm() {
     nsresult rv;
     char *path;
     PRUint32 bytes;
-    rv = mUrl->GetPath(&path);
+    rv = mURL->GetPath(&path);
     if (NS_FAILED(rv)) return rv;
 
     /*if (mServerType == FTP_VMS_TYPE) {
@@ -1217,7 +1199,7 @@ nsFtpConnectionThread::S_mdtm() {
     mdtmStr.Append(FTP_CRLF);
     nsAllocator::Free(path);
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, mdtmStr.GetBuffer()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, mdtmStr.GetBuffer()));
 
     rv = mCOutStream->Write(mdtmStr.GetBuffer(), mdtmStr.Length(), &bytes);
     return rv;
@@ -1269,7 +1251,7 @@ nsFtpConnectionThread::S_list() {
     else
         buffer = "NLST" FTP_CRLF;
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, buffer));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, buffer));
 
     return mCOutStream->Write(buffer, PL_strlen(buffer), &bytes);
 }
@@ -1288,7 +1270,7 @@ nsFtpConnectionThread::R_list() {
     // setup a listener to push the data into. This listener sits inbetween the
     // unconverted data of fromType, and the final listener in the chain (in this case
     // the mListener).
-    nsIStreamListener *converterListener = nsnull;
+    nsCOMPtr<nsIStreamListener> converterListener;
 
     NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
     if (NS_FAILED(rv)) {
@@ -1303,7 +1285,7 @@ nsFtpConnectionThread::R_list() {
 
     rv = StreamConvService->AsyncConvertData(fromStr.GetUnicode(),
                                              toStr.GetUnicode(),
-                                             mSyncListener, mUrl, &converterListener);
+                                             mSyncListener, mURL, getter_AddRefs(converterListener));
     if (NS_FAILED(rv)) {
         return FTP_ERROR;
     }
@@ -1319,47 +1301,31 @@ nsFtpConnectionThread::R_list() {
     while (1) {
         PRUint32 read;
         char *listBuf = (char*)nsAllocator::Alloc(NS_FTP_BUFFER_READ_SIZE + 1);
-        if (!listBuf) {
-            NS_RELEASE(converterListener);
-            return FTP_ERROR;
-        }
+        if (!listBuf) return FTP_ERROR;
 
         rv = mDInStream->Read(listBuf, NS_FTP_BUFFER_READ_SIZE, &read);
         if (NS_FAILED(rv)) {
-            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x R_list() data pipe read failed w/ rv = %d\n", mUrl, rv));
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x R_list() data pipe read failed w/ rv = %d\n", mURL, rv));
             nsAllocator::Free(listBuf);
-            NS_RELEASE(converterListener);
             return FTP_ERROR;
         } else if (read < 1) {
             // EOF
-            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x R_list() data pipe read hit EOF\n", mUrl));
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x R_list() data pipe read hit EOF\n", mURL));
             nsAllocator::Free(listBuf);
-            NS_RELEASE(converterListener);
             return FTP_READ_BUF;
         }
         listBuf[read] = '\0';
 
-        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x R_list() data pipe read %d bytes:\n%s\n", mUrl, read, listBuf));
+        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x R_list() data pipe read %d bytes:\n%s\n", mURL, read, listBuf));
 
-        nsISupports *stringStrmSup = nsnull;
-        rv = NS_NewCharInputStream(&stringStrmSup, listBuf); // char streams keep ref to buffer
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(converterListener);
-            return FTP_ERROR;
-        }
+        nsCOMPtr<nsISupports> stringStreamSup;
+        rv = NS_NewCharInputStream(getter_AddRefs(stringStreamSup), listBuf);
+        if (NS_FAILED(rv)) return FTP_ERROR;
 
-        nsCOMPtr<nsIInputStream> listStream = do_QueryInterface(stringStrmSup, &rv);
-        NS_RELEASE(stringStrmSup);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(converterListener);
-            return FTP_ERROR;
-        }
+        nsCOMPtr<nsIInputStream> listStream = do_QueryInterface(stringStreamSup, &rv);
 
         rv = converterListener->OnDataAvailable(mChannel, mFTPContext, listStream, 0, read);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(converterListener);
-            return FTP_ERROR;
-        }
+        if (NS_FAILED(rv)) return FTP_ERROR;
     }
 
 
@@ -1375,7 +1341,7 @@ nsFtpConnectionThread::S_retr() {
     nsresult rv;
     char *path;
     PRUint32 bytes;
-    rv = mUrl->GetPath(&path);
+    rv = mURL->GetPath(&path);
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString retrStr("RETR ");
@@ -1389,7 +1355,7 @@ nsFtpConnectionThread::S_retr() {
     nsAllocator::Free(path);
     retrStr.Append(FTP_CRLF);
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, retrStr.GetBuffer()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, retrStr.GetBuffer()));
 
     rv = mCOutStream->Write(retrStr.GetBuffer(), retrStr.Length(), &bytes);
     return rv;
@@ -1414,16 +1380,13 @@ nsFtpConnectionThread::R_retr() {
         if (NS_FAILED(rv)) return FTP_ERROR;
 
         char *contentType;
-        rv = MIMEService->GetTypeFromURI(mUrl, &contentType);
+        rv = MIMEService->GetTypeFromURI(mURL, &contentType);
 
         // if we fail, we want to push the data on up anyway. let the app figure
         // out what to do.
         if (NS_SUCCEEDED(rv)) {
             mFTPContext->SetContentType(contentType);
         }
-
-        nsISupports *ctxtSup = nsnull;
-        rv = mFTPContext->QueryInterface(NS_GET_IID(nsISupports), (void**)&ctxtSup);
 
         nsIBufferInputStream *bufInStrm = nsnull;
         nsIBufferOutputStream *bufOutStrm = nsnull;
@@ -1462,7 +1425,6 @@ nsFtpConnectionThread::R_retr() {
 
         // we're done filling this end of the pipe. close it.
         bufOutStrm->Close();
-        NS_RELEASE(ctxtSup);
         NS_RELEASE(inStream);
 
         return FTP_READ_BUF;
@@ -1482,7 +1444,7 @@ nsFtpConnectionThread::S_pasv() {
     char *buffer = "PASV" FTP_CRLF;
     PRUint32 bytes;
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, buffer));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, buffer));
 
     return mCOutStream->Write(buffer, PL_strlen(buffer), &bytes);
 }
@@ -1555,14 +1517,14 @@ nsFtpConnectionThread::R_pasv() {
     nsAllocator::Free(response);
 
     // now we know where to connect our data channel
-    rv = mSTS->CreateTransport(host.GetBuffer(), port, nsnull, &mDPipe); // the data channel
+    rv = mSTS->CreateTransport(host.GetBuffer(), port, nsnull, getter_AddRefs(mDPipe)); // the data channel
     if (NS_FAILED(rv)) return FTP_ERROR;
 
     if (mAction == GET) {
         // Setup the data channel for file reception
     } else {
         // get the output stream so we can write to the server
-        rv = mDPipe->OpenOutputStream(0, &mDOutStream);
+        rv = mDPipe->OpenOutputStream(0, getter_AddRefs(mDOutStream));
         if (NS_FAILED(rv)) return FTP_ERROR;
     }
 
@@ -1593,7 +1555,7 @@ nsFtpConnectionThread::S_del_file() {
     nsresult rv;
     char *filename;
     PRUint32 bytes;
-    rv = mUrl->GetPath(&filename); // XXX we should probably check to 
+    rv = mURL->GetPath(&filename); // XXX we should probably check to 
                                    // XXX make sure we have an actual filename.
     if (NS_FAILED(rv)) return rv;
 
@@ -1602,7 +1564,7 @@ nsFtpConnectionThread::S_del_file() {
     delStr.Append(FTP_CRLF);
     nsAllocator::Free(filename);
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, delStr.GetBuffer()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, delStr.GetBuffer()));
 
     rv = mCOutStream->Write(delStr.GetBuffer(), delStr.Length(), &bytes);
     return rv;
@@ -1622,7 +1584,7 @@ nsFtpConnectionThread::S_del_dir() {
     nsresult rv;
     char *dir;
     PRUint32 bytes;
-    rv = mUrl->GetPath(&dir);
+    rv = mURL->GetPath(&dir);
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString delDirStr("RMD ");
@@ -1630,7 +1592,7 @@ nsFtpConnectionThread::S_del_dir() {
     delDirStr.Append(FTP_CRLF);
     nsAllocator::Free(dir);
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, delDirStr.GetBuffer()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, delDirStr.GetBuffer()));
 
     rv = mCOutStream->Write(delDirStr.GetBuffer(), delDirStr.Length(), &bytes);
     return rv;
@@ -1649,7 +1611,7 @@ nsFtpConnectionThread::S_mkdir() {
     nsresult rv;
     char *dir;
     PRUint32 bytes;
-    rv = mUrl->GetPath(&dir);
+    rv = mURL->GetPath(&dir);
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString mkdirStr("MKD ");
@@ -1657,7 +1619,7 @@ nsFtpConnectionThread::S_mkdir() {
     mkdirStr.Append(FTP_CRLF);
     nsAllocator::Free(dir);
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mUrl, mkdirStr.GetBuffer()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Writing \"%s\"\n", mURL, mkdirStr.GetBuffer()));
 
     rv = mCOutStream->Write(mkdirStr.GetBuffer(), mkdirStr.Length(), &bytes);
     return rv;
@@ -1693,10 +1655,10 @@ nsFtpConnectionThread::Run() {
     // COMMAND CHANNEL SETUP
     /////////////////////////
     char *host;
-    rv = mUrl->GetHost(&host);
+    rv = mURL->GetHost(&host);
     if (NS_FAILED(rv)) return rv;
     PRInt32 port;
-    rv = mUrl->GetPort(&port);
+    rv = mURL->GetPort(&port);
     if (NS_FAILED(rv)) return rv;
 
     // use a cached connection if there is one.
@@ -1707,13 +1669,9 @@ nsFtpConnectionThread::Run() {
         mCachedConn = PR_TRUE;
         // we were passed in a connection to use
         mCPipe = mConn->mSocketTransport;
-        NS_ADDREF(mCPipe);
 
-        mCInStream = mConn->mInputStream;
-        NS_ADDREF(mCInStream);
-
+        mCInStream  = mConn->mInputStream;
         mCOutStream = mConn->mOutputStream;
-        NS_ADDREF(mCOutStream);
 
         mServerType = mConn->mServerType;
         mCwd        = mConn->mCwd;
@@ -1721,15 +1679,15 @@ nsFtpConnectionThread::Run() {
         mUseDefaultPath = mConn->mUseDefaultPath;
     } else {
         // build our own
-        rv = mSTS->CreateTransport(host, port, nsnull, &mCPipe); // the command channel
+        rv = mSTS->CreateTransport(host, port, nsnull, getter_AddRefs(mCPipe)); // the command channel
         nsAllocator::Free(host);
         if (NS_FAILED(rv)) return rv;
 
         // get the output stream so we can write to the server
-        rv = mCPipe->OpenOutputStream(0, &mCOutStream);
+        rv = mCPipe->OpenOutputStream(0, getter_AddRefs(mCOutStream));
         if (NS_FAILED(rv))  return rv;
 
-        rv = mCPipe->OpenInputStream(0, -1, &mCInStream);
+        rv = mCPipe->OpenInputStream(0, -1, getter_AddRefs(mCInStream));
         if (NS_FAILED(rv)) return rv;
 
         // cache this stuff.
@@ -1749,7 +1707,7 @@ nsFtpConnectionThread::Run() {
         PRUint32 read;
         rv = mCInStream->Read(greetBuf, NS_FTP_BUFFER_READ_SIZE, &read);
         if (NS_FAILED(rv)) {
-            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x nsFTPConnTrd::Run() greeting read failed with rv = %d\n", mUrl, rv));
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x nsFTPConnTrd::Run() greeting read failed with rv = %d\n", mURL, rv));
             return rv;
         }
 
@@ -1806,10 +1764,6 @@ nsFtpConnectionThread::Run() {
     mConnected = PR_TRUE;
 
     rv = Process();
-
-    // close the command and data channel (if we have a data channel)
-    NS_RELEASE(mCPipe);
-    NS_IF_RELEASE(mDPipe);
 
     return rv;
 }
@@ -1887,54 +1841,43 @@ nsFtpConnectionThread::Init(nsIEventQueue* aFTPEventQ,
                             nsISupports* aContext) {
     nsresult rv;
 
-    mHandler = aHandler;
-    NS_ADDREF(mHandler);
-
-    NS_ASSERTION(aEventQ, "FTP: thread needs an event queue to post events to");
-    mEventQueue = aEventQ;
-    NS_IF_ADDREF(mEventQueue);
-
     NS_ASSERTION(aFTPEventQ, "FTP: thread needs an event queue to process");
     mFTPEventQueue = aFTPEventQ;
-    NS_ADDREF(mFTPEventQueue);
 
     NS_ASSERTION(aChannel, "FTP: thread needs a channel");
 
     NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
     if(NS_FAILED(rv)) return rv;
 
-    rv = pIProxyObjectManager->GetProxyObject(mEventQueue, 
+    rv = pIProxyObjectManager->GetProxyObject(aEventQ, 
                                               NS_GET_IID(nsIStreamListener), 
                                               aChannel,
                                               PROXY_ASYNC | PROXY_ALWAYS,
-                                              (void**)&mListener);
+                                              getter_AddRefs(mListener));
     if (NS_FAILED(rv)) return rv;
 
-    rv = pIProxyObjectManager->GetProxyObject(mEventQueue, 
+    rv = pIProxyObjectManager->GetProxyObject(aEventQ, 
                                               NS_GET_IID(nsIStreamListener), 
                                               aChannel,
                                               PROXY_SYNC | PROXY_ALWAYS,
-                                              (void**)&mSyncListener);
+                                              getter_AddRefs(mSyncListener));
     if (NS_FAILED(rv)) return rv;
 
-    rv = pIProxyObjectManager->GetProxyObject(mEventQueue, 
+    rv = pIProxyObjectManager->GetProxyObject(aEventQ, 
                                               NS_GET_IID(nsIChannel), 
                                               aChannel,
                                               PROXY_SYNC | PROXY_ALWAYS,
-                                              (void**)&mChannel);
+                                              getter_AddRefs(mChannel));
     if (NS_FAILED(rv)) return rv;
 
     mContext = aContext;
-    NS_IF_ADDREF(mContext);
-    
-    mUrl = aUrl;
-    NS_ADDREF(mUrl);
+    mURL = aUrl;
 
-    mUrl->GetSpec(&mURLSpec);
+    mURL->GetSpec(&mURLSpec);
 
     // pull any username and/or password out of the uri
     char *preHost = nsnull;
-    rv = mUrl->GetPreHost(&preHost);
+    rv = mURL->GetPreHost(&preHost);
     if (NS_FAILED(rv)) return rv;
     
     if (preHost) {
@@ -1948,10 +1891,10 @@ nsFtpConnectionThread::Init(nsIEventQueue* aFTPEventQ,
     }
 
     char *host;
-    rv = mUrl->GetHost(&host);
+    rv = mURL->GetHost(&host);
     if (NS_FAILED(rv)) return rv;
     PRInt32 port;
-    rv = mUrl->GetPort(&port);
+    rv = mURL->GetPort(&port);
     if (NS_FAILED(rv)) return rv;
 
     mCacheKey.SetString(host);
@@ -1962,6 +1905,7 @@ nsFtpConnectionThread::Init(nsIEventQueue* aFTPEventQ,
     nsFTPContext *dataCtxt = new nsFTPContext();
     if (!dataCtxt) return NS_ERROR_OUT_OF_MEMORY;
     rv = dataCtxt->QueryInterface(NS_GET_IID(nsIFTPContext), (void**)&mFTPContext);
+    //mFTPContext = NS_STATIC_CAST(nsIFTPContext*, dataCtxt);
     if (NS_FAILED(rv)) return rv;
 
     // get a proxied ptr to the FTP protocol handler service so we can control
@@ -1970,7 +1914,7 @@ nsFtpConnectionThread::Init(nsIEventQueue* aFTPEventQ,
                                               NS_GET_IID(nsIConnectionCache), 
                                               aHandler,
                                               PROXY_SYNC | PROXY_ALWAYS,
-                                              (void**)&mConnCache);
+                                              getter_AddRefs(mConnCache));
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -1989,8 +1933,8 @@ nsFtpConnectionThread::StopProcessing() {
     PRUnichar* errorMsg = nsnull;
     nsresult rv;
 
-    NS_RELEASE(mCOutStream);
-    NS_RELEASE(mCInStream);
+    mCOutStream = 0;
+    mCInStream  = 0;
 
     // if we haven't sent an OnStartRequest() yet, fire one now. We don't want
     // to blidly send an OnStop if we haven't "started" anything.
@@ -2090,7 +2034,7 @@ nsFtpConnectionThread::FindGetState(void) {
     nsresult rv;
     FTP_STATE result = FTP_ERROR;
 
-    rv = mUrl->GetPath(&path);
+    rv = mURL->GetPath(&path);
     if (NS_FAILED(rv)) return FTP_ERROR;
 
     if (mServerType == FTP_VMS_TYPE) {

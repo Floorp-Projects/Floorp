@@ -36,6 +36,7 @@
 #include "nsIConnectionCache.h"
 #include "nsConnectionCacheObj.h"
 #include "nsIProtocolHandler.h"
+#include "nsCOMPtr.h"
 
 // ftp server types
 #define FTP_GENERIC_TYPE     0
@@ -184,9 +185,8 @@ private:
 
     // Private members
 
-    nsIEventQueue*      mEventQueue;        // used to communicate outside this thread
-    nsIEventQueue*      mFTPEventQueue;     // the eventq for this thread.
-    nsIURI*             mUrl;
+    nsCOMPtr<nsIEventQueue> mFTPEventQueue;     // the eventq for this thread.
+    nsCOMPtr<nsIURI>    mURL;
 
     FTP_STATE           mState;             // the current state
     FTP_STATE           mNextState;         // the next state
@@ -194,14 +194,14 @@ private:
 
     nsISocketTransportService *mSTS;        // the socket transport service;
 
-    nsIChannel          *mCPipe;            // the command channel transport
-    nsIChannel          *mDPipe;            // the data channel transport
+    nsCOMPtr<nsIChannel> mCPipe;            // the command channel transport
+    nsCOMPtr<nsIChannel> mDPipe;            // the data channel transport
 
-    nsIOutputStream*    mCOutStream;        // command channel output
-    nsIInputStream*     mCInStream;         // command channel input
+    nsCOMPtr<nsIOutputStream>    mCOutStream;        // command channel output
+    nsCOMPtr<nsIInputStream>     mCInStream;         // command channel input
 
-    nsIOutputStream*    mDOutStream;        // data channel output
-    nsIInputStream*     mDInStream;         // data channel input
+    nsCOMPtr<nsIOutputStream>    mDOutStream;        // data channel output
+    nsCOMPtr<nsIInputStream>     mDInStream;         // data channel input
 
     PRInt32             mResponseCode;      // the last command response code.
     nsCAutoString       mResponseMsg;       // the last command response text
@@ -234,15 +234,14 @@ private:
     PRBool              mSentStart;         // have we sent an OnStartRequest() notification
     nsresult            mInternalError;     // represents internal state errors
 
-    nsIStreamListener*  mListener;          // the listener we want to call
-                                            // during our event firing.
-    nsIStreamListener*  mSyncListener;      // a syncronous version of our listener
+    nsCOMPtr<nsIStreamListener>     mListener;          // the listener we want to call
+                                                        // during our event firing.
+    nsCOMPtr<nsIStreamListener>     mSyncListener;      // a syncronous version of our listener
 
-    nsIChannel*         mChannel;
-    nsISupports*        mContext;
-    nsIFTPContext*      mFTPContext;        // FTP channel specific context.
-    nsIConnectionCache* mConnCache;         // the nsISupports proxy ptr to the FTP proto handler
-    nsIProtocolHandler* mHandler;           // The protocol handler that created this.
+    nsCOMPtr<nsIChannel>            mChannel;
+    nsCOMPtr<nsISupports>           mContext;
+    nsIFTPContext*                  mFTPContext;        // FTP channel specific context.
+    nsCOMPtr<nsIConnectionCache>    mConnCache;         // the nsISupports proxy ptr to the FTP proto handler
     nsConnectionCacheObj* mConn;            // The cached connection.
     PRBool              mKeepRunning;       // thread event loop boolean
 
