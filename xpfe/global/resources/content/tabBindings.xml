@@ -65,12 +65,29 @@
         ]]>
         </setter>
       </property>
+	  
+	  <method name="advanceSelectedTab">
+	    <parameter name="aDir"/>
+	    <body>
+	    <![CDATA[
+		  var next = null;
+	      if (aDir == -1) 
+		  	next = this.selectedTab.previousSibling;
+	      else if (aDir == 1) 
+		  	next = this.selectedTab.nextSibling;
+		  if (next) {
+		    this.selectedTab = next;
+		    next.focus();
+		  }
+	    ]]>
+	    </body>
+      </method>
     </implementation>
     <handlers>
       <handler event="bindingattached">
       <![CDATA[
         // first and last tabs need to be able to have unique styles
-        // and also need to select first tab on startup. 
+        // and also need to select first tab on startup.
         var tabs = this.getElementsByTagName("tab");
         if (tabs.length) {
           if (tabs.length > 1) {
@@ -79,8 +96,10 @@
           }
           else if (tabs.length == 1)
             tabs[0].setAttribute("first-tab", "true");
-          this.selectedTab = tabs[0];
         }
+        this.selectedTab = tabs[0];
+        var o = this.getAttribute("orient");
+        if (!o || o == "") this.setAttribute("orient", "horizontal");
       ]]>
       </handler>
     </handlers>
@@ -97,7 +116,7 @@
 
   <binding id="tab" extends="xul:button">
     <content>
-      <xul:box class="tab-box">
+      <xul:box class="tab-box" flex="1" autostretch="never" orient="horizontal">
         <xul:image class="tab-image" inherits="src"/>
         <xul:text class="tab-text" inherits="value,accesskey,crop"/>
       </xul:box>
@@ -142,6 +161,26 @@
         if (!this.selected) this.selected = true;
       ]]>
       </handler>
+	  <handler event="keypress" keycode="vk_left">
+	  <![CDATA[
+	    this.parentNode.advanceSelectedTab(-1);
+	  ]]>
+	  </handler>
+	  <handler event="keypress" keycode="vk_right">
+	  <![CDATA[
+	    this.parentNode.advanceSelectedTab(1);
+	  ]]>
+	  </handler>
+	  <handler event="keypress" keycode="vk_up">
+	  <![CDATA[
+	    this.parentNode.advanceSelectedTab(-1);
+	  ]]>
+	  </handler>
+	  <handler event="keypress" keycode="vk_down">
+	  <![CDATA[
+	    this.parentNode.advanceSelectedTab(1);
+	  ]]>
+	  </handler>
     </handlers>
   </binding>
   
