@@ -24,6 +24,12 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= util
 
+XPIDL_MODULE = util
+
+XPIDLSRCS =                   \
+	nsIFileLocator.idl        \
+	$(NULL)
+
 EXPORTS		= $(srcdir)/xp_obs.h $(srcdir)/stopwatch.h
 
 include $(topsrcdir)/config/rules.mk

@@ -18,8 +18,15 @@
 
 # 
 
-MODULE=util 
+MODULE=util
+XPIDL_MODULE=util
+
 DEPTH=..\..\.. 
+
+XPIDLSRCS =                         \
+        .\nsITimeRecorder.idl		\
+        $(NULL)
+
 EXPORTS=xp_obs.h stopwatch.h
 
 
