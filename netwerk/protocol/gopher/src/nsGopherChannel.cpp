@@ -350,6 +350,7 @@ nsGopherChannel::GetContentType(nsACString &aContentType)
 
     switch(mType) {
     case '0':
+    case 'h':
         aContentType = NS_LITERAL_CSTRING(TEXT_HTML);
         break;
     case '1':
