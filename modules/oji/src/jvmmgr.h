@@ -22,6 +22,7 @@
 #include "xp_core.h"    /* include first because of Bool problem */
 #include "prtypes.h"
 #include "nsCom.h"
+#include "nsError.h"	/* for nsresult */
 #include "jni.h"
 
 struct nsJVMMgr;
@@ -216,6 +217,9 @@ JVM_GetJNIEnv(void);
 
 PR_IMPLEMENT(void)
 JVM_ReleaseJNIEnv(JNIEnv *pJNIEnv);
+
+PR_EXTERN(nsresult)
+JVM_SpendTime(PRUint32 timeMillis);
 
 PR_EXTERN(PRBool)
 JVM_MaybeStartupLiveConnect(void);
