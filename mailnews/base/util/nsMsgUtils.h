@@ -56,3 +56,4 @@ nsresult NS_NewMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator,
 
 nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriority *outPriority);
 
+nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriority p, nsString2 *outName);

@@ -21,6 +21,7 @@
 #include "nsFileSpec.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
+#include "nsString2.h"
 
 nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID)
 {
@@ -190,4 +191,35 @@ nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriority *outPri
 		//return nsMsgNoPriority;
 }
 
+
+nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriority p, nsString2 *outName)
+{
+	if (!outName)
+		return NS_ERROR_NULL_POINTER;
+	switch (p)
+	{
+	case nsMsgPriorityNotSet:
+	case nsMsgPriorityNone:
+		*outName = "None";
+		break;
+	case nsMsgPriorityLowest:
+		*outName = "Lowest";
+		break;
+	case nsMsgPriorityLow:
+		*outName = "Low";
+		break;
+	case nsMsgPriorityNormal:
+		*outName = "Normal";
+		break;
+	case nsMsgPriorityHigh:
+		*outName = "High";
+		break;
+	case nsMsgPriorityHighest:
+		*outName = "Highest";
+		break;
+	default:
+		NS_ASSERTION(PR_FALSE, "invalid priority value");
+	}
+	return NS_OK;
+}
 
