@@ -23,7 +23,6 @@ MODULE	= plugimpl
 
 EXPORTS =        \
         nppg.h   \
-        npupp.h  \
         npglue.h \
         nppriv.h
 
