@@ -152,6 +152,9 @@ interface nsIMsgCompose : nsISupports {
   /* ... */
   void abort();
     
+  /* ... */
+  void quoteMessage(in string msgURI);
+
   /*
     AttachmentPrettyName will return only the leafName if the it's a file URL.
     It will also convert the filename to the right character set.

@@ -93,6 +93,8 @@ var gLastElementToHaveFocus;
 var gSuppressCommandUpdating;
 var gReceiptOptionChanged;
 
+var gMailSession;
+
 const kComposeAttachDirPrefName = "mail.compose.attach.dir";
 
 function InitializeGlobalVariables()
@@ -126,6 +128,7 @@ function InitializeGlobalVariables()
   gSendDefaultCharset = null;
   gCharsetTitle = null;
   gCharsetConvertManager = Components.classes['@mozilla.org/charset-converter-manager;1'].getService(Components.interfaces.nsICharsetConverterManager2);
+  gMailSession = Components.classes["@mozilla.org/messenger/services/session;1"].getService(Components.interfaces.nsIMsgMailSession);
 
   // We are storing the value of the bool logComposePerformance inorder to avoid logging unnecessarily.
   if (sMsgComposeService)
@@ -149,6 +152,7 @@ function ReleaseGlobalVariables()
   gLDAPSession = null;
   gCharsetConvertManager = null;
   gMsgCompose = null;
+  gMailSession = null;
 }
 
 function disableEditableFields()
@@ -428,7 +432,7 @@ var defaultController =
       case "cmd_selectAddress":
       case "cmd_spelling":
       case "cmd_outputFormat":
-//      case "cmd_quoteMessage":
+      case "cmd_quoteMessage":
       case "cmd_rewrap":
 
         return true;
@@ -508,8 +512,11 @@ var defaultController =
         return !focusedElement;
       case "cmd_outputFormat":
         return composeHTML;
-//      case "cmd_quoteMessage":
-//        return mailSession && mailSession.topmostMsgWindow;
+      case "cmd_quoteMessage":
+        try {
+          gMailSession.topmostMsgWindow;
+          return true;
+        } catch (ex) { return false; }
       case "cmd_rewrap":
         return !composeHTML && !focusedElement;
 
@@ -607,7 +614,7 @@ var defaultController =
 
       //Options Menu
       case "cmd_selectAddress"      : if (defaultController.isCommandEnabled(command)) SelectAddress();         break;
-//      case "cmd_quoteMessage"       : if (defaultController.isCommandEnabled(command)) QuoteSelectedMessage();  break;
+      case "cmd_quoteMessage"       : if (defaultController.isCommandEnabled(command)) QuoteSelectedMessage();  break;
       case "cmd_rewrap"             : editorShell.Rewrap(false);                                                break;
       default:
 //        dump("##MsgCompose: don't know what to do with command " + command + "!\n");
@@ -618,6 +625,20 @@ var defaultController =
   onEvent: function(event)
   {
 //    dump("DefaultController:onEvent\n");
+  }
+}
+
+function QuoteSelectedMessage()
+{
+  if (gMsgCompose) {
+    var mailWindow = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
+                     .getService(Components.interfaces.nsIWindowMediator).getMostRecentWindow("mail:3pane");
+    if (mailWindow) {
+      var selectedURIs = mailWindow.GetSelectedMessages();
+      if (selectedURIs)
+        for (i = 0; i < selectedURIs.length; i++)
+          gMsgCompose.quoteMessage(selectedURIs[i]);
+    }
   }
 }
 

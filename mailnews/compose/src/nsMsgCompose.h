@@ -174,7 +174,8 @@ public:
                                 PRBool headersOnly,
                                 nsIMsgIdentity *identity,
                                 const char *charset,
-                                PRBool charetOverride);
+                                PRBool charetOverride, 
+                                PRBool quoteOriginal);
     virtual ~QuotingOutputStreamListener(void);
 
     NS_DECL_ISUPPORTS
@@ -184,6 +185,7 @@ public:
     NS_IMETHOD  SetComposeObj(nsIMsgCompose *obj);
 	  NS_IMETHOD  ConvertToPlainText(PRBool formatflowed = PR_FALSE);
 	  NS_IMETHOD	SetMimeHeaders(nsIMimeHeaders * headers);
+    NS_IMETHOD InsertToCompose(nsIEditorShell *aEditorShell, PRBool aHTMLEditor);
 
 private:
     nsWeakPtr                 mWeakComposeObj;
@@ -199,6 +201,7 @@ private:
     nsCOMPtr<nsIUnicodeDecoder> mUnicodeDecoder;
     PRInt32                   mUnicodeBufferCharacterLength;
     PRUnichar*                mUnicodeConversionBuffer;
+    PRBool                    mQuoteOriginal;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////

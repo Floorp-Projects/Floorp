@@ -175,7 +175,7 @@ NS_IMETHODIMP nsMsgQuote::GetStreamListener(nsIStreamListener ** aStreamListener
 
 nsresult
 nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListener * aQuoteMsgStreamListener,
-                         const char * aMsgCharSet)
+                         const char * aMsgCharSet, PRBool headersOnly)
 {
   nsresult  rv;
 
@@ -194,11 +194,6 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   rv = msgService->GetUrlForUri(msgURI, getter_AddRefs(aURL), nsnull);
   if (NS_FAILED(rv)) return rv;
 
-  PRBool bAutoQuote = PR_TRUE;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-  if (NS_SUCCEEDED(rv))
-    prefs->GetBoolPref("mail.auto_quote", &bAutoQuote);
-
   nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(aURL, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -207,7 +202,7 @@ nsMsgQuote::QuoteMessage(const char *msgURI, PRBool quoteHeaders, nsIStreamListe
   if (!queryPart.IsEmpty())
     queryPart.Append('&');
 
-  if (! bAutoQuote) /* We don't need to quote the message body but we still need to extract the headers */
+  if (headersOnly) /* We don't need to quote the message body but we still need to extract the headers */
     queryPart.Append("header=only");
   else if (quoteHeaders)
     queryPart.Append("header=quote");

@@ -598,8 +598,8 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
           nsresult                  rv;
 
           // get parent and offset of mailcite
-          rv = GetNodeLocation(nodeInserted, address_of(parent), &offset); 
-          if ( NS_FAILED(rv) || (!parent))
+          rv = GetNodeLocation(nodeInserted, address_of(parent), &offset);
+          if (NS_FAILED(rv) || (!parent))
           {
             editor->BeginningOfDocument();
             break;
@@ -1625,7 +1625,8 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
                                                          PRBool headersOnly,
                                                          nsIMsgIdentity *identity,
                                                          const char *charset,
-                                                         PRBool charetOverride) 
+                                                         PRBool charetOverride, 
+                                                         PRBool quoteOriginal)
 { 
   nsresult rv;
   mQuoteHeaders = quoteHeaders;
@@ -1633,6 +1634,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
   mIdentity = identity;
   mUnicodeBufferCharacterLength = 0;
   mUnicodeConversionBuffer = nsnull;
+  mQuoteOriginal = quoteOriginal;
 
   if (! mHeadersOnly)
   {
@@ -1865,7 +1867,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
       compose->SetCiteReference(mCiteReference);
 
     if (mHeaders && (type == nsIMsgCompType::Reply || type == nsIMsgCompType::ReplyAll || type == nsIMsgCompType::ReplyToSender ||
-                     type == nsIMsgCompType::ReplyToGroup || type == nsIMsgCompType::ReplyToSenderAndGroup))
+                     type == nsIMsgCompType::ReplyToGroup || type == nsIMsgCompType::ReplyToSenderAndGroup) && mQuoteOriginal)
     {
       nsCOMPtr<nsIMsgCompFields> compFields;
       compose->GetCompFields(getter_AddRefs(compFields));
@@ -2034,7 +2036,8 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
     composeService->TimeStamp("Done with MIME. Now we're updating the UI elements", PR_FALSE);
 #endif
 
-    compose->NotifyStateListeners(eComposeFieldsReady, NS_OK);
+    if (mQuoteOriginal)
+      compose->NotifyStateListeners(eComposeFieldsReady, NS_OK);
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
     composeService->TimeStamp("Addressing widget, window title and focus are now set, time to insert the body", PR_FALSE);
@@ -2065,7 +2068,10 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
     nsCOMPtr<nsIEditorShell>editor;
     if (NS_SUCCEEDED(compose->GetEditor(getter_AddRefs(editor))) && editor)
     {
-      compose->ConvertAndLoadComposeWindow(editor, mCitePrefix, mMsgBody, mSignature, PR_TRUE, composeHTML);
+      if (mQuoteOriginal)
+        compose->ConvertAndLoadComposeWindow(editor, mCitePrefix, mMsgBody, mSignature, PR_TRUE, composeHTML);
+      else
+        InsertToCompose(editor, composeHTML);
     }
   }
   return rv;
@@ -2167,6 +2173,71 @@ QuotingOutputStreamListener::SetMimeHeaders(nsIMimeHeaders * headers)
   return NS_OK;
 }
 
+NS_IMETHODIMP QuotingOutputStreamListener::InsertToCompose(nsIEditorShell *aEditorShell, PRBool aHTMLEditor)
+{
+  // First, get the nsIEditor interface for future use
+  nsCOMPtr<nsIEditor> editor;
+  nsCOMPtr<nsIDOMNode> nodeInserted;
+
+  TranslateLineEnding(mMsgBody);
+
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+
+  // Now, insert it into the editor...
+  if (editor)
+    editor->EnableUndo(PR_TRUE);
+
+  aEditorShell->BeginBatchChanges();
+
+  if (!mMsgBody.IsEmpty())
+  {
+    if (!mCitePrefix.IsEmpty())
+      aEditorShell->InsertSource(mCitePrefix.get());
+
+    nsAutoString empty;
+    aEditorShell->InsertAsCitedQuotation(mMsgBody.get(),
+                                         empty.get(),
+                                         PR_TRUE,
+                                         NS_LITERAL_STRING("UTF-8").get(),
+                                         getter_AddRefs(nodeInserted));
+  }
+
+  aEditorShell->EndBatchChanges();
+
+  if (editor)
+  {
+    nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(editor);
+    if (textEditor)
+    {
+      nsCOMPtr<nsISelection> selection;
+      nsCOMPtr<nsIDOMNode>   parent;
+      PRInt32                offset;
+      nsresult               rv;
+
+      // get parent and offset of mailcite
+      rv = GetNodeLocation(nodeInserted, address_of(parent), &offset);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // get selection
+      editor->GetSelection(getter_AddRefs(selection));
+      if (selection)
+      {
+        // place selection after mailcite
+        selection->Collapse(parent, offset+1);
+        // insert a break at current selection
+        textEditor->InsertLineBreak();
+        selection->Collapse(parent, offset+1);
+      }
+      nsCOMPtr<nsISelectionController> selCon;
+      editor->GetSelectionController(getter_AddRefs(selCon));
+
+      if (selCon)
+        selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_ANCHOR_REGION);
+    }
+  }
+
+  return NS_OK;
+}
 
 NS_IMPL_ISUPPORTS1(QuotingOutputStreamListener, nsIStreamListener)
 ////////////////////////////////////////////////////////////////////////////////////
@@ -2189,6 +2260,38 @@ NS_IMETHODIMP nsMsgCompose::GetType(MSG_ComposeType *aType)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgCompose::QuoteMessage(const char *msgURI)
+{
+  nsresult    rv;
+
+  mQuotingToFollow = PR_FALSE;
+  
+  // Create a mime parser (nsIStreamConverter)!
+  mQuote = do_CreateInstance(NS_MSGQUOTE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create the consumer output stream.. this will receive all the HTML from libmime
+  mQuoteStreamListener =
+    new QuotingOutputStreamListener(msgURI, PR_FALSE, PR_FALSE, m_identity,
+                                    m_compFields->GetCharacterSet(), mCharsetOverride, PR_FALSE);
+  
+  if (!mQuoteStreamListener)
+  {
+#ifdef NS_DEBUG
+    printf("Failed to create mQuoteStreamListener\n");
+#endif
+    return NS_ERROR_FAILURE;
+  }
+  NS_ADDREF(mQuoteStreamListener);
+
+  mQuoteStreamListener->SetComposeObj(this);
+
+  rv = mQuote->QuoteMessage(msgURI, PR_FALSE, mQuoteStreamListener, 
+                            mCharsetOverride ? m_compFields->GetCharacterSet() : "", PR_FALSE);
+  return rv;
+}
+
 nsresult
 nsMsgCompose::QuoteOriginalMessage(const char *originalMsgURI, PRInt32 what) // New template
 {
@@ -2209,7 +2312,7 @@ nsMsgCompose::QuoteOriginalMessage(const char *originalMsgURI, PRInt32 what) // 
   // Create the consumer output stream.. this will receive all the HTML from libmime
   mQuoteStreamListener =
     new QuotingOutputStreamListener(originalMsgURI, what != 1, !bAutoQuote, m_identity,
-                                    m_compFields->GetCharacterSet(), mCharsetOverride);
+                                    m_compFields->GetCharacterSet(), mCharsetOverride, PR_TRUE);
   
   if (!mQuoteStreamListener)
   {
@@ -2223,7 +2326,7 @@ nsMsgCompose::QuoteOriginalMessage(const char *originalMsgURI, PRInt32 what) // 
   mQuoteStreamListener->SetComposeObj(this);
 
   rv = mQuote->QuoteMessage(originalMsgURI, what != 1, mQuoteStreamListener, 
-                            mCharsetOverride ? m_compFields->GetCharacterSet() : "");
+                            mCharsetOverride ? m_compFields->GetCharacterSet() : "", !bAutoQuote);
   return rv;
 }
 

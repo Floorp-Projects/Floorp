@@ -100,8 +100,8 @@
 <!ENTITY attachVCardCmd.label ".Include Personal Card (vCard)">
 	<!ENTITY attachVCardCmd.accesskey "P">
 
-<!ENTITY quoteOrigCmd.label ".Quote Original Message">
-	<!ENTITY quoteOrigCmd.accesskey "Q">
+<!ENTITY quoteCmd.label "Quote Message">
+	<!ENTITY quoteCmd.accesskey "Q">
 <!ENTITY editRewrapCmd.label "Rewrap">
 <!ENTITY editRewrapCmd.accesskey  "R">
 <!ENTITY selectAddressCmd.label "Select Addresses...">

@@ -128,7 +128,7 @@
   <!-- Options Menu -->
   <command id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
   <command id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
-  <!-- command id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/ -->
+  <command id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/>
   <command id="cmd_rewrap" oncommand="goDoCommand('cmd_rewrap')"/>
   <command id="cmd_insert"/>
 </commandset>
@@ -289,7 +289,7 @@
         <menupopup id="optionsMenuPopup"> 
           <menuitem label="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" command="cmd_selectAddress"/>
           <menuitem label="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" command="cmd_spelling"/>
-          <!--menuitem label="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" command="cmd_quoteMessage"/-->  
+          <menuitem label="&quoteCmd.label;" accesskey="&quoteCmd.accesskey;" command="cmd_quoteMessage"/>
           <menuitem label="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" command="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
           <menuseparator/>
           <menuitem id="returnReceiptMenu" type="checkbox" label="&returnReceiptMenu.label;" accesskey="&returnReceiptMenu.accesskey;" checked="false" oncommand="ToggleReturnReceipt(event.target)"/>
