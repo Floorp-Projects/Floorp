@@ -29,8 +29,9 @@
 //
 ////////////////////////////////////////////////////////////
 nsSchema::nsSchema(nsISchemaCollection* aCollection,
-                   const nsAReadableString& aTargetNamespace) 
-  : mTargetNamespace(aTargetNamespace)
+                   const nsAReadableString& aTargetNamespace,
+                   const nsAReadableString& aSchemaNamespace) 
+  : mTargetNamespace(aTargetNamespace), mSchemaNamespace(aSchemaNamespace)
 {
   NS_INIT_ISUPPORTS();
   mCollection = aCollection;  // Weak reference
@@ -48,6 +49,14 @@ NS_IMETHODIMP
 nsSchema::GetTargetNamespace(nsAWritableString& aTargetNamespace)
 {
   aTargetNamespace.Assign(mTargetNamespace);
+  return NS_OK;
+}
+
+/* readonly attribute wstring schemaNamespace; */
+NS_IMETHODIMP 
+nsSchema::GetSchemaNamespace(nsAWritableString& aSchemaNamespace)
+{
+  aSchemaNamespace.Assign(mSchemaNamespace);
   return NS_OK;
 }
 

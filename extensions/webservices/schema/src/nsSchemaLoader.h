@@ -216,6 +216,7 @@ protected:
                             const nsAReadableString& aTypeName,
                             nsISchemaType** aType);
   nsresult GetBuiltinType(const nsAReadableString& aName,
+                          const nsAReadableString& aNamespace,
                           nsISchemaType** aType);
   nsresult GetSOAPType(const nsAReadableString& aName,
                        const nsAReadableString& aNamespace,

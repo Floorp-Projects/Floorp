@@ -493,7 +493,7 @@ nsSchemaLoader::GetType(const nsAReadableString & aName,
                         nsISchemaType **_retval)
 {
   if (IsSchemaNamespace(aNamespace)) {
-    return GetBuiltinType(aName, _retval);
+    return GetBuiltinType(aName, aNamespace, _retval);
   }
 
   if (IsSOAPNamespace(aNamespace)) {
@@ -681,10 +681,11 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement *element,
   nsresult rv = NS_OK;
 
   // Get target namespace and create the schema instance
-  nsAutoString targetNamespace;
+  nsAutoString targetNamespace, schemaNamespace;
   element->GetAttribute(NS_LITERAL_STRING("targetNamespace"), 
                         targetNamespace);
-  nsSchema* schemaInst = new nsSchema(this, targetNamespace);
+  element->GetNamespaceURI(schemaNamespace);
+  nsSchema* schemaInst = new nsSchema(this, targetNamespace, schemaNamespace);
   nsCOMPtr<nsISchema> schema = schemaInst;
   if (!schema) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -807,7 +808,7 @@ nsSchemaLoader::GetSOAPType(const nsAReadableString& aName,
   nsresult rv = NS_OK;
   nsAutoString concat(aNamespace);
   concat.Append(aName);
-  nsStringKey key(aName);
+  nsStringKey key(concat);
   nsCOMPtr<nsISupports> sup = dont_AddRef(mSOAPTypeHash.Get(&key));
   if (sup) {
     rv = CallQueryInterface(sup, aType);
@@ -845,10 +846,13 @@ nsSchemaLoader::GetSOAPType(const nsAReadableString& aName,
 
 nsresult
 nsSchemaLoader::GetBuiltinType(const nsAReadableString& aName,
+                               const nsAReadableString& aNamespace,
                                nsISchemaType** aType)
 {
   nsresult rv = NS_OK;
-  nsStringKey key(aName);
+  nsAutoString concat(aName);
+  concat.Append(aNamespace);
+  nsStringKey key(concat);
   nsCOMPtr<nsISupports> sup = dont_AddRef(mBuiltinTypesHash.Get(&key));
   if (sup) {
     rv = CallQueryInterface(sup, aType);
@@ -996,7 +1000,8 @@ nsSchemaLoader::GetBuiltinType(const nsAReadableString& aName,
       return NS_ERROR_SCHEMA_UNKNOWN_TYPE;
     }
 
-    nsSchemaBuiltinType* builtin = new nsSchemaBuiltinType(typeVal);
+    nsSchemaBuiltinType* builtin = new nsSchemaBuiltinType(typeVal,
+                                                           aNamespace);
     if (!builtin) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1042,26 +1047,6 @@ nsSchemaLoader::GetNewOrUsedType(nsSchema* aSchema,
     }
   }
 
-#if 0
-  if (namespaceURI.Length() > 0) {
-    if (IsSchemaNamespace(namespaceURI)) {
-      return GetBuiltinType(localName, aType);
-    }
-
-    // XXX Currently we only understand the schema namespace or the
-    // target namspace. When we start dealing with includes and imports, 
-    // we can search for types in other namespaces.
-    nsAutoString targetNamespace;
-    aSchema->GetTargetNamespace(targetNamespace);
-    if (!namespaceURI.Equals(targetNamespace)) {
-      return NS_ERROR_SCHEMA_UNKNOWN_TARGET_NAMESPACE;
-    }
-  }
-  
-  // We don't have a namespace, so get the local type 
-  rv = aSchema->GetTypeByName(localName, aType);
-#endif
-  
   // If we didn't get a type, we need to create a placeholder
   if (NS_SUCCEEDED(rv) && !*aType) {
     nsSchemaTypePlaceholder* placeholder = new nsSchemaTypePlaceholder(aSchema,
@@ -1174,7 +1159,10 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
     }
 
     if (!schemaType) {
+      nsAutoString ns;
+      aElement->GetNamespaceURI(ns);
       rv = GetBuiltinType(NS_LITERAL_STRING("anyType"),
+                          ns,
                           getter_AddRefs(schemaType));
       if (NS_FAILED(rv)) {
         return rv;

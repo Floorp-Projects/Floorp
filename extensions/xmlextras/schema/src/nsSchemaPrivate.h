@@ -43,7 +43,8 @@ class nsSchema : public nsISchema
 {
 public:
   nsSchema(nsISchemaCollection* aCollection,
-           const nsAReadableString& aTargetNamespace);
+           const nsAReadableString& aTargetNamespace,
+           const nsAReadableString& aSchemaNamespace);
   virtual ~nsSchema();
 
   NS_DECL_ISUPPORTS
@@ -61,6 +62,7 @@ public:
 
 protected:
   nsString mTargetNamespace;
+  nsString mSchemaNamespace;
   nsSupportsArray mTypes;
   nsSupportsHashtable mTypesHash;
   nsSupportsArray mAttributes;
@@ -98,7 +100,8 @@ protected:
 class nsSchemaBuiltinType : public nsISchemaBuiltinType
 {
 public:
-  nsSchemaBuiltinType(PRUint16 aBuiltinType);
+  nsSchemaBuiltinType(PRUint16 aBuiltinType,
+                      const nsAReadableString& aName);
   virtual ~nsSchemaBuiltinType();
 
   NS_DECL_ISUPPORTS
@@ -109,6 +112,7 @@ public:
 
 protected:
   PRUint16 mBuiltinType;
+  nsString mNamespace;
 };
 
 class nsSchemaListType : public nsSchemaComponentBase,
