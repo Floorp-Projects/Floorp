@@ -143,8 +143,14 @@ private:
 
   nsAutoString mAppName;      
   nsAutoString mEmailPrefix;  
-  nsXPIDLString mProfileName;  
   nsCString mShellDllPath;
+
+#ifdef MOZ_THUNDERBIRD
+  nsString mProfilePath;
+#else
+  nsXPIDLString mProfileName;
+#endif
+
 
   PRInt32   mCurrentUnreadCount;
   PRInt32   mLastUnreadCountWrittenToRegistry;

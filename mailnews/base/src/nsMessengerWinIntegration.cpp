@@ -52,7 +52,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgFolderFlags.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsIProfile.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsIDirectoryService.h"
 
 #include "nsIWindowMediator.h"
@@ -69,13 +69,19 @@
 #include "nsIStringBundle.h"
 #include "nsIAlertsService.h"
 
+#ifdef MOZ_THUNDERBIRD
+#define PROFILE_COMMANDLINE_ARG " -profile "
+#else
+#include "nsIProfile.h"
+#define PROFILE_COMMANDLINE_ARG " -p "
+#endif
+
 #define XP_SHSetUnreadMailCounts "SHSetUnreadMailCountW"
 #define XP_SHEnumerateUnreadMailAccounts "SHEnumerateUnreadMailAccountsW"
 #define ShellNotifyWideVersion "Shell_NotifyIconW"
 #define UNREADMAILNODEKEY "Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail\\"
 #define SHELL32_DLL NS_LITERAL_CSTRING("shell32.dll")
 #define DOUBLE_QUOTE "\""
-#define PROFILE_COMMANDLINE_ARG " -p "
 #define MAIL_COMMANDLINE_ARG " -mail"
 #define TIMER_INTERVAL_PREF "mail.windows_xp_integration.unread_count_interval"
 #define IDI_MAILBIFF 101
@@ -453,11 +459,23 @@ nsMessengerWinIntegration::Init()
 
   if (mStoreUnreadCounts)
   {
+#ifdef MOZ_THUNDERBIRD
+    // get current profile path for the commandliner
+    nsCOMPtr<nsIFile> profilePath;
+    rv = directoryService->Get(NS_APP_USER_PROFILE_50_DIR, 
+                               NS_GET_IID(nsIFile), 
+                               getter_AddRefs(profilePath));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = profilePath->GetPath(mProfilePath);
+    NS_ENSURE_SUCCESS(rv, rv);
+#else
   // get current profile name to fill in commandliner. 
     nsCOMPtr<nsIProfile> profileService = do_GetService(NS_PROFILE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   profileService->GetCurrentProfile(getter_Copies(mProfileName));
+#endif
 
   // get application path 
   char appPath[_MAX_PATH] = {0};
@@ -1003,19 +1021,25 @@ nsMessengerWinIntegration::UpdateRegistryWithCurrent()
   // ""<absolute path to application>" -p foo -mail" where absolute
   // path to application is extracted from mAppName
   nsAutoString commandLinerForAppLaunch;
-  commandLinerForAppLaunch.Assign(NS_LITERAL_STRING(DOUBLE_QUOTE).get());
-  commandLinerForAppLaunch.Append(mAppName.get());
-  commandLinerForAppLaunch.Append(NS_LITERAL_STRING(DOUBLE_QUOTE).get());
-  commandLinerForAppLaunch.Append(NS_LITERAL_STRING(PROFILE_COMMANDLINE_ARG).get());
-  commandLinerForAppLaunch.Append(mProfileName.get());
-  commandLinerForAppLaunch.Append(NS_LITERAL_STRING(MAIL_COMMANDLINE_ARG).get());
+  commandLinerForAppLaunch.Assign(NS_LITERAL_STRING(DOUBLE_QUOTE));
+  commandLinerForAppLaunch.Append(mAppName);
+  commandLinerForAppLaunch.Append(NS_LITERAL_STRING(DOUBLE_QUOTE));
+  commandLinerForAppLaunch.Append(NS_LITERAL_STRING(PROFILE_COMMANDLINE_ARG));
+#ifdef MOZ_THUNDERBIRD
+  commandLinerForAppLaunch.Append(NS_LITERAL_STRING(DOUBLE_QUOTE));
+  commandLinerForAppLaunch.Append(mProfilePath);
+  commandLinerForAppLaunch.Append(NS_LITERAL_STRING(DOUBLE_QUOTE));
+#else
+  commandLinerForAppLaunch.Append(mProfileName);
+#endif
+  commandLinerForAppLaunch.Append(NS_LITERAL_STRING(MAIL_COMMANDLINE_ARG));
 
   if (!commandLinerForAppLaunch.IsEmpty())
   {
     nsAutoString pBuffer;
 
     if (!mEmailPrefix.IsEmpty()) {
-      pBuffer.Assign(mEmailPrefix.get());					
+      pBuffer.Assign(mEmailPrefix);
       pBuffer.AppendWithConversion(mEmail);
     }
     else {
