@@ -312,7 +312,8 @@
                        template="bookmarksMenuTemplate" 
                        ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
                        oncommand="BookmarksUtils.loadBookmarkBrowser(event, event.target, this.database)">
-          <menupopup onpopupshowing="if (event.target == this) BookmarksToolbar.updateOverflowMenu(this);"/>
+          <menupopup id="bookmarks-chevron-popup"
+                     onpopupshowing="if (event.target == this) BookmarksToolbar.updateOverflowMenu(this);"/>
         </toolbarbutton>
       </hbox>
     </toolbar>

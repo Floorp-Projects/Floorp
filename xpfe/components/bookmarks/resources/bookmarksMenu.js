@@ -112,6 +112,8 @@ var BookmarksMenu = {
       break;
     case "bookmarks-chevron":
       parent = "NC:PersonalToolbarFolder";
+      item = document.getElementById("bookmarks-ptf").lastChild;
+      aOrientation == BookmarksUtils.DROP_AFTER;
       break;
     default:
       if (aOrientation == BookmarksUtils.DROP_ON)
@@ -151,6 +153,7 @@ var BookmarksMenu = {
     case "BookmarksMenu":
       return "NC:BookmarksRoot";
     case "PersonalToolbar":
+    case "bookmarks-chevron":
       return "NC:PersonalToolbarFolder";
     case "bookmarks-button":
       return "NC:BookmarksRoot";
@@ -432,6 +435,12 @@ var BookmarksMenuDNDObserver = {
     else
       BookmarksUtils.moveSelection("drag", selection, selTarget);
 
+    var chevron = document.getElementById("bookmarks-chevron");
+    if (chevron.getAttribute("open") == "true") {
+      BookmarksToolbar.resizeFunc(null);
+      BookmarksToolbar.updateOverflowMenu(document.getElementById("bookmarks-chevron-popup"));
+    }
+
     // show again the menuseparator
     if (menuTarget.hasChildNodes() &&
         menuTarget.lastChild.id == "openintabs-menuitem") {
@@ -449,6 +458,7 @@ var BookmarksMenuDNDObserver = {
            target.id.substring(0,5) != "find:"         ||
            target.id == "BookmarksMenu"                ||
            target.id == "bookmarks-button"             ||
+           target.id == "bookmarks-chevron"            ||
            target.id == "bookmarks-ptf";
   },
 
