@@ -20,9 +20,8 @@
 # Contributor(s):
 # Chris Waterson <waterson@netscape.com>
 # 
-# $Id: make-data.pl,v 1.3 1999/11/17 19:15:05 waterson%netscape.com Exp $
+# $Id: make-data.pl,v 1.4 1999/11/17 22:26:50 waterson%netscape.com Exp $
 #
-
 use 5.004;
 use strict;
 use Getopt::Long;
@@ -31,7 +30,7 @@ use POSIX "sys_wait_h";
 $::opt_dir = ".";
 $::opt_app = "mozilla-bin -f bloaturls.txt";
 
-GetOptions("dir=s", "app=s");
+GetOptions("dir=s", "app=s", "email=s");
 
 sub ForkAndWait($$$) {
     my ($dir, $app, $timeout) = @_;
@@ -49,8 +48,7 @@ sub ForkAndWait($$$) {
         while ($timeout--) {
             sleep 1;
             my $status = POSIX::waitpid($pid, WNOHANG());
-            return 0 if $pid == $status;
-            return -1 if $status < 0;
+            return 0 if $status != 0;
         }
 
         kill("TERM", $pid);
@@ -137,17 +135,21 @@ foreach $class (@leakyclasses) {
         $ENV{"XPCOM_MEM_REFCNT_LOG"} = $refcntlogfile;
         $ENV{"XPCOM_MEM_LOG_OBJECTS"} = $object;
 
-        if (ForkAndWait($::opt_dir, $::opt_app, 60) < 0) {
+        if (ForkAndWait($::opt_dir, $::opt_app, 600) < 0) {
             print "  * Timed out; discarding.\n";
             unlink $refcntlogfile;
         }
     }
 }
 
-# Now zip up all of the datafiles into YYYYMMDD.zip
 {
+    # Now zip up all of the datafiles into YYYYMMDD.zip
     my $zipfile = POSIX::strftime("%Y%m%d.zip", localtime(time));
     system("zip -m $zipfile *.log");
+
+    # ...and mail it off to the server
+    system("cat $zipfile | uuencode $zipfile | mail $::opt_email")
+        if $::opt_email;
 }
 
 
