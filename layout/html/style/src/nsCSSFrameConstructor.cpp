@@ -3359,6 +3359,19 @@ nsCSSFrameConstructor::ConstructDocElementTableFrame(nsIPresShell*        aPresS
   return NS_OK;
 }
 
+static PRBool CheckOverflow(nsPresContext* aPresContext,
+                            const nsStyleDisplay* aDisplay)
+{
+  if (aDisplay->mOverflow == NS_STYLE_OVERFLOW_VISIBLE)
+    return PR_FALSE;
+
+  if (aDisplay->mOverflow == NS_STYLE_OVERFLOW_CLIP)
+    aPresContext->SetViewportOverflowOverride(NS_STYLE_OVERFLOW_HIDDEN);
+  else
+    aPresContext->SetViewportOverflowOverride(aDisplay->mOverflow);
+  return PR_TRUE;
+}
+
 /**
  * This checks the root element and the HTML BODY, if any, for an "overflow" property
  * that should be applied to the viewport. If one is found then we return the
@@ -3384,14 +3397,12 @@ nsCSSFrameConstructor::PropagateScrollToViewport(nsPresContext* aPresContext)
 
   // Check the style on the document root element
   nsStyleSet *styleSet = aPresContext->PresShell()->StyleSet();
-  nsRefPtr<nsStyleContext> styleContext;
-  styleContext = styleSet->ResolveStyleFor(docElement, nsnull);
-  if (!styleContext) {
+  nsRefPtr<nsStyleContext> rootStyle;
+  rootStyle = styleSet->ResolveStyleFor(docElement, nsnull);
+  if (!rootStyle) {
     return nsnull;
   }
-  const nsStyleDisplay* display = styleContext->GetStyleDisplay();
-  if (display->mOverflow != NS_STYLE_OVERFLOW_VISIBLE) {
-    aPresContext->SetViewportOverflowOverride(display->mOverflow);
+  if (CheckOverflow(aPresContext, rootStyle->GetStyleDisplay())) {
     // tell caller we stole the overflow style from the root element
     return docElement;
   }
@@ -3417,15 +3428,13 @@ nsCSSFrameConstructor::PropagateScrollToViewport(nsPresContext* aPresContext)
     return nsnull;
   }
 
-  nsRefPtr<nsStyleContext> bodyContext;
-  bodyContext = styleSet->ResolveStyleFor(bodyElement, styleContext);
-  if (!bodyContext) {
+  nsRefPtr<nsStyleContext> bodyStyle;
+  bodyStyle = styleSet->ResolveStyleFor(bodyElement, rootStyle);
+  if (!bodyStyle) {
     return nsnull;
   }
 
-  display = bodyContext->GetStyleDisplay();
-  if (display->mOverflow != NS_STYLE_OVERFLOW_VISIBLE) {
-    aPresContext->SetViewportOverflowOverride(display->mOverflow);
+  if (CheckOverflow(aPresContext, bodyStyle->GetStyleDisplay())) {
     // tell caller we stole the overflow style from the body element
     return bodyElement;
   }
