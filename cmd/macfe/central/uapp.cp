@@ -56,6 +56,8 @@
 #include "mimages.h"
 #include "mplugin.h"
 #include "prpriv.h"
+#include "URDFUtilities.h"	// for LaunchURL
+
 
 #if defined (JAVA)
 #include "mjava.h"
@@ -2932,12 +2934,16 @@ void CFrontApp::DoGetURL( const cstring& url )
 	if (CAppleEventHandler::GetKioskMode() == KioskOn)
 		return;
 	
-	// Is this REALLY necessary?
-	(CFrontApp::GetApplication())->ProperStartup( NULL, FILE_TYPE_NONE );	// Making sure that we have the prefs loaded
-
-	URL_Struct* theURL = NET_CreateURLStruct(url, NET_DONT_RELOAD);
-	if (theURL)
-		CURLDispatcher::DispatchURL(theURL, NULL);
+	if (CFrontApp::GetApplication()->HasProperlyStartedUp()) {
+		// HT may want a crack at this URL for handling ftp/aft/etc. If it doesn't want it,
+		// do the normal dispatch. It's ok to call this again after calling 
+		// URDFUtilities::LaunchNode(). Both are quick. (pinkerton)
+		if ( !URDFUtilities::LaunchURL(url) ) {
+			URL_Struct* theURL = NET_CreateURLStruct(url, NET_DONT_RELOAD);
+			if (theURL)
+				CURLDispatcher::DispatchURL(theURL, NULL);
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -3430,7 +3436,37 @@ char** content_type_ret )
 			{
 			data = ::GetResource ('Tang', ABOUT_MOZILLA_FLAME);
 			*content_type_ret = IMAGE_GIF;
-			}		
+			}	
+		else if ( dataName == "history.gif" )						// NavCenter GIFs
+			{
+			data = ::GetResource ('Tang', ABOUT_HISTORYGIF_TANG);
+			*content_type_ret = IMAGE_GIF;
+			}	
+		else if ( dataName == "personal.gif" )
+			{
+			data = ::GetResource ('Tang', ABOUT_PERSONALGIF_TANG);
+			*content_type_ret = IMAGE_GIF;
+			}	
+		else if ( dataName == "search.gif" )
+			{
+			data = ::GetResource ('Tang', ABOUT_SEARCHGIF_TANG);
+			*content_type_ret = IMAGE_GIF;
+			}	
+		else if ( dataName == "sitemap.gif" )
+			{
+			data = ::GetResource ('Tang', ABOUT_SITEMAPGIF_TANG);
+			*content_type_ret = IMAGE_GIF;
+			}	
+		else if ( dataName == "file.gif" )
+			{
+			data = ::GetResource ('Tang', ABOUT_FILESGIF_TANG);
+			*content_type_ret = IMAGE_GIF;
+			}	
+		else if ( dataName == "guide.gif" )
+			{
+			data = ::GetResource ('Tang', ABOUT_GUIDEGIF_TANG);
+			*content_type_ret = IMAGE_GIF;
+			}	
 		else
 			{
 			data = ::GetResource ('TEXT', ABOUT_BLANK_TEXT);
