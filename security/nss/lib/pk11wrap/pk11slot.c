@@ -90,6 +90,15 @@ PK11DefaultArrayEntry PK11_DefaultArray[] = {
 const int num_pk11_default_mechanisms = 
                 sizeof(PK11_DefaultArray) / sizeof(PK11_DefaultArray[0]);
 
+PK11DefaultArrayEntry *
+PK11_GetDefaultArray(int *size)
+{
+    if (size) {
+	*size = num_pk11_default_mechanisms;
+    }
+    return PK11_DefaultArray;
+}
+
 /*
  * These  slotlists are lists of modules which provide default support for
  *  a given algorithm or mechanism.
@@ -1670,6 +1679,7 @@ PK11_ReadMechanismList(PK11SlotInfo *slot)
 {
     CK_ULONG count;
     CK_RV crv;
+    int i;
 
     if (slot->mechanismList) {
 	PORT_Free(slot->mechanismList);
@@ -1701,6 +1711,14 @@ PK11_ReadMechanismList(PK11SlotInfo *slot)
 	return SECSuccess;
     }
     slot->mechanismCount = count;
+    PORT_Memset(slot->mechanismBits, 0, sizeof(slot->mechanismBits));
+
+    for (i=0; i < count; i++) {
+	CK_MECHANISM_TYPE mech = slot->mechanismList[i];
+	if (mech < 0x7ff) {
+	    slot->mechanismBits[mech & 0xff] |= 1 << (mech >> 8);
+	}
+    }
     return SECSuccess;
 }
 
@@ -2457,6 +2475,12 @@ PK11_DoesMechanism(PK11SlotInfo *slot, CK_MECHANISM_TYPE type)
 	return slot->hasRandom;
     }
 
+    /* for most mechanism, bypass the linear lookup */
+    if (type < 0x7ff) {
+	return (slot->mechanismBits[type & 0xff] & (1 << (type >> 8)))  ?
+		PR_TRUE : PR_FALSE;
+    }
+	   
     for (i=0; i < (int) slot->mechanismCount; i++) {
 	if (slot->mechanismList[i] == type) return PR_TRUE;
     }
