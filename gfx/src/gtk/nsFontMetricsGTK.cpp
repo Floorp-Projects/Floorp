@@ -24,6 +24,7 @@
 #include <gdk/gdkx.h>
 
 
+#define NOISY_FONTS 1
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 

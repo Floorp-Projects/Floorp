@@ -17,13 +17,15 @@
  */
 
 #include <math.h>
-#include <gtk/gtk.h>
 
 #include "nspr.h"
 #include "il_util.h"
 
 #include "nsDeviceContextGTK.h"
 #include "../nsGfxCIID.h"
+
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
@@ -116,7 +118,41 @@ NS_IMETHODIMP nsDeviceContextGTK::ConvertPixel(nscolor aColor,
 
 NS_IMETHODIMP nsDeviceContextGTK::CheckFontExistence(const nsString& aFontName)
 {
-  return NS_OK;
+  char        **fnames = nsnull;
+  PRInt32     namelen = aFontName.Length() + 1;
+  char        *wildstring = (char *)PR_Malloc(namelen + 200);
+  float       t2d;
+  GetTwipsToDevUnits(t2d);
+  PRInt32     dpi = NSToIntRound(t2d * 1440);
+  int         numnames = 0;
+  XFontStruct *fonts;
+  nsresult    rv = NS_ERROR_FAILURE;
+  
+  if (nsnull == wildstring)
+    return NS_ERROR_UNEXPECTED;
+  
+  if (abs(dpi - 75) < abs(dpi - 100))
+    dpi = 75;
+  else
+    dpi = 100;
+  
+  char* fontName = aFontName.ToNewCString();
+  PR_snprintf(wildstring, namelen + 200,
+             "*-%s-*-*-normal--*-*-%d-%d-*-*-*",
+             fontName, dpi, dpi);
+  delete [] fontName;
+  
+  fnames = ::XListFontsWithInfo(GDK_DISPLAY(), wildstring, 1, &numnames, &fonts);
+  
+  if (numnames > 0)
+  {
+    ::XFreeFontInfo(fnames, fonts, numnames);
+    rv = NS_OK;
+  }
+  
+  PR_Free(wildstring);
+  
+  return rv;
 }
 
 
