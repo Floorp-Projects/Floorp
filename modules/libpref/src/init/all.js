@@ -607,6 +607,7 @@ pref("intl.charsetmenu.browser.more2",      "chrome://navigator/locale/navigator
 pref("intl.charsetmenu.browser.more3",      "chrome://navigator/locale/navigator.properties");
 pref("intl.charsetmenu.browser.more4",      "chrome://navigator/locale/navigator.properties");
 pref("intl.charsetmenu.browser.more5",      "chrome://navigator/locale/navigator.properties");
+pref("intl.charsetmenu.browser.unicode",    "chrome://navigator/locale/navigator.properties");
 pref("intl.charsetmenu.mailedit",           "chrome://navigator/locale/navigator.properties");
 pref("intl.charsetmenu.browser.cache",      "");
 pref("intl.charsetmenu.mailview.cache",     "");
