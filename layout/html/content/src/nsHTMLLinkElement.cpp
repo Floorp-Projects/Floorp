@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLLinkElement.h"
+#include "nsIDOMLinkStyle.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -45,7 +46,8 @@ class nsHTMLLinkElement : public nsIDOMHTMLLinkElement,
                           public nsIJSScriptObject,
                           public nsILink,
                           public nsIHTMLContent,
-                          public nsIStyleSheetLinkingElement
+                          public nsIStyleSheetLinkingElement,
+                          public nsIDOMLinkStyle
 {
 public:
   nsHTMLLinkElement(nsINodeInfo *aNodeInfo);
@@ -100,6 +102,9 @@ public:
   // nsIStyleSheetLinkingElement  
   NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
+
+  // nsIDOMLinkStyle
+  NS_DECL_IDOMLINKSTYLE
 
 protected:
   nsGenericHTMLLeafElement mInner;
@@ -161,6 +166,11 @@ nsHTMLLinkElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(NS_GET_IID(nsILink))) {
     *aInstancePtr = (void*)(nsILink*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMLinkStyle))) {
+    *aInstancePtr = (void*)(nsIDOMLinkStyle*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -381,3 +391,18 @@ nsHTMLLinkElement::GetHrefCString(char* &aBuf)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLLinkElement::GetSheet(nsIDOMStyleSheet** aSheet)
+{
+  NS_ENSURE_ARG_POINTER(aSheet);
+  *aSheet = 0;
+
+  if (mStyleSheet)
+    mStyleSheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet), (void **)aSheet);
+
+  // Always return NS_OK to avoid throwing JS exceptions if mStyleSheet 
+  // is not a nsIDOMStyleSheet
+  return NS_OK;
+}
+

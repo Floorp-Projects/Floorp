@@ -35,12 +35,16 @@
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
 #include "nsIDOMHTMLStyleElement.h"
+#include "nsIDOMStyleSheet.h"
+#include "nsIDOMLinkStyle.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIHTMLStyleElementIID, NS_IDOMHTMLSTYLEELEMENT_IID);
+static NS_DEFINE_IID(kIStyleSheetIID, NS_IDOMSTYLESHEET_IID);
+static NS_DEFINE_IID(kILinkStyleIID, NS_IDOMLINKSTYLE_IID);
 
 //
 // HTMLStyleElement property ids
@@ -48,7 +52,8 @@ static NS_DEFINE_IID(kIHTMLStyleElementIID, NS_IDOMHTMLSTYLEELEMENT_IID);
 enum HTMLStyleElement_slots {
   HTMLSTYLEELEMENT_DISABLED = -1,
   HTMLSTYLEELEMENT_MEDIA = -2,
-  HTMLSTYLEELEMENT_TYPE = -3
+  HTMLSTYLEELEMENT_TYPE = -3,
+  LINKSTYLE_SHEET = -4
 };
 
 /***********************************************************************/
@@ -103,6 +108,26 @@ GetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           rv = a->GetType(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case LINKSTYLE_SHEET:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_LINKSTYLE_SHEET, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMStyleSheet* prop;
+          nsIDOMLinkStyle* b;
+          if (NS_OK == a->QueryInterface(kILinkStyleIID, (void **)&b)) {
+            rv = b->GetSheet(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
         }
         break;
@@ -251,6 +276,7 @@ static JSPropertySpec HTMLStyleElementProperties[] =
   {"disabled",    HTMLSTYLEELEMENT_DISABLED,    JSPROP_ENUMERATE},
   {"media",    HTMLSTYLEELEMENT_MEDIA,    JSPROP_ENUMERATE},
   {"type",    HTMLSTYLEELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {"sheet",    LINKSTYLE_SHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
