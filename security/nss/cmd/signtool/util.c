@@ -809,8 +809,10 @@ InitCrypto(char *cert_dir, PRBool readOnly)
 			  NULL /*wincx*/) != SECSuccess) {
 				fprintf(stderr, "%s: Unable to authenticate to %s.\n",
 					PROGRAM_NAME, PK11_GetSlotName(slotinfo));
+				PK11_FreeSlot(slotinfo);
 				return -1;
 			}
+			PK11_FreeSlot(slotinfo);
 		}
 
 		/* Make sure there is a password set on the internal key slot */
@@ -833,9 +835,11 @@ InitCrypto(char *cert_dir, PRBool readOnly)
 			  NULL /*wincx*/) != SECSuccess) {
 				fprintf(stderr, "%s: Unable to authenticate to %s.\n",
 					PROGRAM_NAME, PK11_GetSlotName(slotinfo));
+				PK11_FreeSlot(slotinfo);
 				return -1;
 			}
 		}
+		PK11_FreeSlot(slotinfo);
 	}
 
 	return 0;
