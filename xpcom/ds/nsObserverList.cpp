@@ -102,6 +102,10 @@ nsresult nsObserverList::RemoveObserver(nsIObserver** anObserver)
         return NS_ERROR_NULL_POINTER;
     }  
 
+    if(!mObserverList) {
+        return NS_ERROR_FAILURE;
+    }
+
 	if(*anObserver) {
 		removed = mObserverList->RemoveElement(*anObserver);  
 		return removed ? NS_OK : NS_ERROR_FAILURE;
@@ -118,6 +122,10 @@ NS_IMETHODIMP nsObserverList::EnumerateObserverList(nsIEnumerator** anEnumerator
     if (anEnumerator == NULL)
     {
         return NS_ERROR_NULL_POINTER;
+    }
+
+    if(!mObserverList) {
+        return NS_ERROR_FAILURE;
     }
     
  	return mObserverList->Enumerate(anEnumerator);
