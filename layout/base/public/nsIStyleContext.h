@@ -75,7 +75,7 @@ protected:
 struct nsStyleSpacing: public nsStyleStruct {
   nsStyleSides  mMargin;          // [reset] length, percent, auto, inherit
   nsStyleSides  mPadding;         // [reset] length, percent, inherit
-  nsStyleSides  mBorder;          // [reset] length, percent, See nsStyleConsts.h for enum
+  nsStyleSides  mBorder;          // [reset] length, enum (see nsStyleConsts.h)
 
   nsStyleCoord  mBorderRadius;    // [reset] length, percent, inherit
 
