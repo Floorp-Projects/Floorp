@@ -69,6 +69,7 @@ CPP_OBJS =					\
   .\$(OBJDIR)\nsTextEditRules.obj     \
   .\$(OBJDIR)\TextEditorTest.obj      \
   .\$(OBJDIR)\nsHTMLEditRules.obj     \
+  .\$(OBJDIR)\nsHTMLEditUtils.obj     \
   .\$(OBJDIR)\nsEditorEventListeners.obj		\
 	.\$(OBJDIR)\nsEditProperty.obj	    \
   .\$(OBJDIR)\EditTxn.obj             \
