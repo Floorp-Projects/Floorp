@@ -1195,18 +1195,23 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 	 	}
 	}
 
-	if (! widgetHit)
-		widgetHit = mTopLevelWidget->FindWidgetHit(hitPoint);
-
-	if (widgetHit)
-	{
-		nsRect bounds;
-		widgetHit->GetBounds(bounds);
-		nsPoint widgetOrigin(bounds.x, bounds.y);
-		widgetHit->LocalToWindowCoordinate(widgetOrigin);
-		widgetHitPoint.MoveBy(-widgetOrigin.x, -widgetOrigin.y);
+	// if the mouse is in the grow box, pretend like it has left the window
+	WindowPtr ignored = nsnull;
+	short partCode = ::FindWindow ( aOSEvent.where, &ignored );
+	if ( partCode != inGrow ) {
+		if (! widgetHit)
+			widgetHit = mTopLevelWidget->FindWidgetHit(hitPoint);
+	
+		if (widgetHit)
+		{
+			nsRect bounds;
+			widgetHit->GetBounds(bounds);
+			nsPoint widgetOrigin(bounds.x, bounds.y);
+			widgetHit->LocalToWindowCoordinate(widgetOrigin);
+			widgetHitPoint.MoveBy(-widgetOrigin.x, -widgetOrigin.y);
+		}
 	}
-
+	
 	// nsEvent
 	aMouseEvent.eventStructType = NS_MOUSE_EVENT;
 	aMouseEvent.message		= aMessage;
