@@ -209,8 +209,8 @@ layout/xml/document/Makefile
 layout/xml/document/public/Makefile
 layout/xml/document/src/Makefile
 layout/xul/Makefile
-layout/xul/base/public/Makefile
 layout/xul/base/Makefile
+layout/xul/base/public/Makefile
 layout/xul/base/src/Makefile
 layout/xul/content/Makefile
 layout/xul/content/src/Makefile
