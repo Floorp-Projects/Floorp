@@ -5,3 +5,4 @@
 <!ENTITY text.label               "Text">
 <!ENTITY useSmallIcons.label      "Use Small Icons">
 <!ENTITY restoreDefaultSet.label  "Restore Default Set">
+<!ENTITY window.title             "Customize Toolbar">
