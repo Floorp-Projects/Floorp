@@ -109,6 +109,11 @@ public:
   
   // nsIClassInfo interface
   NS_DECL_NSICLASSINFO
+  
+  virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
+                                  nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus* aEventStatus);
 
 protected:
   // to be implemented by subclasses:

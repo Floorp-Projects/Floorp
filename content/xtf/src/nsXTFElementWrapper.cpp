@@ -46,6 +46,9 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocument.h"
 #include "nsHTMLAtoms.h" // XXX only needed for nsHTMLAtoms::id
+#include "nsIEventListenerManager.h"
+#include "nsIDOMEvent.h"
+#include "nsGUIEvent.h"
 
 nsXTFElementWrapper::nsXTFElementWrapper(nsINodeInfo* aNodeInfo)
     : nsXTFElementWrapperBase(aNodeInfo),
@@ -558,3 +561,48 @@ nsXTFElementWrapper::HandledByInner(nsIAtom *attr) const
     mAttributeHandler->HandlesAttribute(attr, &retval);
   return retval;
 }
+
+nsresult
+nsXTFElementWrapper::HandleDOMEvent(nsPresContext* aPresContext,
+                                    nsEvent* aEvent,
+                                    nsIDOMEvent** aDOMEvent,
+                                    PRUint32 aFlags,
+                                    nsEventStatus* aEventStatus)
+{
+  nsresult rv = nsXTFElementWrapperBase::HandleDOMEvent(aPresContext, aEvent,
+                                                        aDOMEvent, aFlags,
+                                                        aEventStatus);
+
+  if (NS_FAILED(rv) ||
+      (nsEventStatus_eIgnore != *aEventStatus) ||
+      !(mNotificationMask & nsIXTFElement::NOTIFY_HANDLE_DEFAULT) ||
+      (aFlags & (NS_EVENT_FLAG_SYSTEM_EVENT | NS_EVENT_FLAG_CAPTURE)))
+    return rv;
+
+  nsIDOMEvent* domEvent = nsnull;
+  if (!aDOMEvent)
+    aDOMEvent = &domEvent;
+
+  if (!*aDOMEvent) {
+    // We haven't made a DOMEvent yet.  Force making one now.
+    nsCOMPtr<nsIEventListenerManager> listenerManager;
+    if (NS_FAILED(rv = GetListenerManager(getter_AddRefs(listenerManager))))
+      return rv;
+
+    nsAutoString empty;
+    if (NS_FAILED(rv = listenerManager->CreateEvent(aPresContext, aEvent,
+                                                    empty, aDOMEvent)))
+      return rv;
+  }
+  if (!*aDOMEvent)
+    return NS_ERROR_FAILURE;
+  
+  PRBool defaultHandled = PR_FALSE;
+  nsIXTFElement * xtfElement = GetXTFElement();
+  if (xtfElement)
+    rv = xtfElement->HandleDefault(*aDOMEvent, &defaultHandled);
+  if (defaultHandled)
+    *aEventStatus = nsEventStatus_eConsumeNoDefault;
+  return rv;
+}
+
