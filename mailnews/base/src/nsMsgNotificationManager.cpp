@@ -253,7 +253,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 
 	ds->Assert(notificationResource, kNC_Type, kNC_NewMessages, PR_TRUE);
 
-	PRUnichar* folderDescription;
+	PRUnichar* folderDescription = nsnull;
 	rv = folder->GetNewMessagesNotificationDescription(&folderDescription);
 	if(NS_SUCCEEDED(rv) && folderDescription)
 	{

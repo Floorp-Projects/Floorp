@@ -633,6 +633,7 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
   nsXPIDLCString serverType;
   rv = m_prefs->CopyCharPref(serverTypePref, getter_Copies(serverType));
   
+  PR_smprintf_free(NS_CONST_CAST(char*, serverTypePref));
     // the server type doesn't exist. That's bad.
   if (NS_FAILED(rv))
     return NS_ERROR_NOT_INITIALIZED;
