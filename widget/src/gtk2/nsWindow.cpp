@@ -1453,6 +1453,10 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     default:
         break;
     }
+    // Disable the double buffer because it will make the caret crazy
+    // For bug#153805 (Gtk2 double buffer makes carets misbehave) 
+    if( mContainer )
+        gtk_widget_set_double_buffered (GTK_WIDGET(mContainer),FALSE);
 
     // label the drawing area with this object so we can find our way
     // home
