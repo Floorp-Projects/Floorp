@@ -159,7 +159,7 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=$ProductName$ Setup - Setup Type
 ;*** LOCALIZE ME BABY ***
-Message0=Click the type of setup you prefer, then click Next.
+Message0=Choose the installation directory, then click Next.
 Readme Filename=readme.txt
 Readme App=notepad.exe
 
@@ -167,9 +167,9 @@ Readme App=notepad.exe
 ; set (Setup Type0, Setup Type1, Setup Type2, Setup Type3).
 [Setup Type0]
 ;*** LOCALIZE ME BABY ***
-Description Short=&MFCEmbed
+;Description Short=&MFCEmbed
 ;*** LOCALIZE ME BABY ***
-Description Long=Install MFCEmbed.
+;Description Long=Install MFCEmbed.
 
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
@@ -178,7 +178,7 @@ C0=Component MFCEmbed
 C1=Component Uninstaller
 
 [Dialog Select Components]
-Show Dialog=TRUE
+Show Dialog=FALSE
 ;*** LOCALIZE ME BABY ***
 Title=$ProductName$ Setup - Select Components
 ;*** LOCALIZE ME BABY ***
