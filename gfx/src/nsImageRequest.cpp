@@ -37,7 +37,19 @@ ImageRequestImpl::ImageRequestImpl()
 
 ImageRequestImpl::~ImageRequestImpl()
 {
-  delete mObservers;
+  // Delete the list of observers, and release the reference to the image
+  // request observer object
+  if (nsnull != mObservers) {
+    for (PRInt32 cnt = 0; cnt < mObservers->Count(); cnt++)
+    {
+      nsIImageRequestObserver* observer;
+      observer = (nsIImageRequestObserver*)mObservers->ElementAt(cnt);
+
+      NS_IF_RELEASE(observer);
+      mObservers->ReplaceElementAt(nsnull, cnt);
+    }
+    delete mObservers;
+  }
 
   // XP Observer list destroyed by the image library
 }
