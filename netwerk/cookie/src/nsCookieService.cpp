@@ -1064,8 +1064,16 @@ nsCookieService::Read()
     // by successively decrementing the lastAccessed time
     lastAccessedCounter -= nsInt64(1);
 
-    // add new cookie to the list
-    AddCookieToList(newCookie);
+    if (!AddCookieToList(newCookie)) {
+      // It is purpose that created us; purpose that connects us;
+      // purpose that pulls us; that guides us; that drives us.
+      // It is purpose that defines us; purpose that binds us.
+      // When a cookie no longer has purpose, it has a choice:
+      // it can return to the source to be deleted, or it can go
+      // into exile, and stay hidden inside the Matrix.
+      // Let's choose deletion.
+      delete newCookie;
+    }
   }
 
   mCookieChanged = PR_FALSE;
@@ -2169,25 +2177,24 @@ nsCookieService::RemoveCookieFromList(nsListIter &aIter)
   mCookieChanged = PR_TRUE;
 }
 
-void
+PRBool
 nsCookieService::AddCookieToList(nsCookie *aCookie)
 {
   nsCookieEntry *entry = mHostTable.PutEntry(aCookie->Host().get());
 
-  // addref the element now, so if we fail we can release it.
-  // this allows a caller to pass in a zero-refcount element
-  // so they can avoid excess addrefs/releases.
-  NS_ADDREF(aCookie);
   if (!entry) {
-    NS_RELEASE(aCookie);
     NS_ERROR("can't insert element into a null entry!");
-    return;
+    return PR_FALSE;
   }
+
+  NS_ADDREF(aCookie);
 
   aCookie->Next() = entry->Head();
   entry->Head() = aCookie;
   ++mCookieCount;
   mCookieChanged = PR_TRUE;
+
+  return PR_TRUE;
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)

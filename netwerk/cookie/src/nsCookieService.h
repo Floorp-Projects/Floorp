@@ -173,7 +173,7 @@ class nsCookieService : public nsICookieService
     PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, nsDependentCString &aCookieHeader, nsInt64 aServerTime, nsCookieStatus aStatus, nsCookiePolicy aPolicy);
     void                          AddInternal(nsCookie *aCookie, nsInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader);
     void                          RemoveCookieFromList(nsListIter &aIter);
-    void                          AddCookieToList(nsCookie *aCookie);
+    PRBool                        AddCookieToList(nsCookie *aCookie);
     static PRBool                 GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentSingleFragmentCSubstring &aTokenString, nsDependentSingleFragmentCSubstring &aTokenValue, PRBool &aEqualsFound);
     static PRBool                 ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
     static PRBool                 IsIPAddress(const nsAFlatCString &aHost);
