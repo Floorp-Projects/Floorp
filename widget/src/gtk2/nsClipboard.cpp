@@ -354,7 +354,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
             }
 
             for (PRInt32 j = 0; j < n_targets; j++) {
-                gchar *atom_name = gdk_atom_name(targets[i]);
+                gchar *atom_name = gdk_atom_name(targets[j]);
                 if (!strcmp(atom_name, (const char *)myStr))
                     *_retval = PR_TRUE;
 
