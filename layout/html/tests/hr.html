@@ -1,0 +1,64 @@
+<HTML>
+<BODY>
+<HR ALIGN="center" NOSHADE SIZE="5" WIDTH="50">
+
+<P>
+Use the buttons below to set values for the different attributes for the HR shown
+above.  
+</P>
+
+<FORM>
+<P>
+Set <I>size</I> to
+<INPUT TYPE="text" NAME="size" VALUE="5">
+<INPUT TYPE="button" VALUE="Change Size" onClick="changeSize(); return true;">
+</P>
+<P>
+Set <I>align</I> to
+<SELECT SIZE="1" NAME="align">
+<OPTION SELECTED VALUE="center">Center</OPTION>
+<OPTION VALUE="left">Left</OPTION>
+<OPTION VALUE="right">Right</OPTION>
+</SELECT>
+<INPUT TYPE="button" VALUE="Change Align" onClick="changeAlign(); return true;">
+</P>
+<P>
+Set <I>noshade</I> to
+<SELECT SIZE="1" NAME="noshade">
+<OPTION SELECTED VALUE="true" >True</OPTION>
+<OPTION VALUE="false">False</OPTION>
+</SELECT>
+<INPUT TYPE="button" VALUE="Change NoShade" onClick="changeNoShade(); return true;">
+</P>
+<P>
+Set <I>width</I> to
+<INPUT TYPE="text" NAME="width" VALUE="50">
+<INPUT TYPE="button" VALUE="Change Width" onClick="changeWidth(); return true;">
+</P>
+
+</FORM>
+<SCRIPT>
+var hr = document.getElementsByTagName("hr")[0];
+function changeSize() {
+   hr.size = document.forms[0].size.value;
+}
+function changeAlign() {   
+   if (document.forms[0].align.selectedIndex == 0)
+      hr.align = "center";
+   else if (document.forms[0].align.selectedIndex == 1)
+      hr.align = "left";
+   else
+      hr.align = "right";
+}
+function changeNoShade(value) {   
+   if (document.forms[0].noshade.selectedIndex == 0)
+      hr.noShade = true;
+   else
+      hr.noShade = false;
+}
+function changeWidth(width) {
+   hr.width = document.forms[0].width.value;
+}
+</SCRIPT>
+</BODY>
+</HTML>
