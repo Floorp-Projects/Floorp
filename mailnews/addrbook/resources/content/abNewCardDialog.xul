@@ -44,7 +44,7 @@ Rights Reserved.
 
   <hbox align="center" valign="center">
 
-    <label control="abPopup" value="&chooseAddressBook.label;"/>
+    <label control="abPopup" value="&chooseAddressBook.label;" accesskey="&chooseAddressBook.accesskey;"/>
     <menulist id="abPopup">
       <menupopup id="abPopup-menupopup" 
                  ref="moz-abdirectory://" 
