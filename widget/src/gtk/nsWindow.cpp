@@ -246,21 +246,41 @@ nsWindow::DestroyNative(void)
 void
 nsWindow::DestroyNativeChildren(void)
 {
-  
-  nsCOMPtr <nsIEnumerator> children (getter_AddRefs(GetChildren()));
-  
-  if (children) {
-    children->First();
-    do {
-      nsCOMPtr<nsISupports> child;
-      if (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
-        nsCOMPtr<nsIWidget> childWindow = do_QueryInterface(child);
-        childWindow->Destroy();
-        // only one of these should be on at a time...
-        //        printf("destroying child ref=%i\n", childWindow->Release());
-      }
-    } while(NS_SUCCEEDED(children->Next()));
+
+  Display     *display;
+  Window       window;
+  Window       root_return;
+  Window       parent_return;
+  Window      *children_return = NULL;
+  unsigned int nchildren_return = 0;
+  unsigned int i = 0;
+
+  if (mSuperWin)
+  {
+    display = GDK_DISPLAY();
+    window = GDK_WINDOW_XWINDOW(mSuperWin->bin_window);
+    if (window && !((GdkWindowPrivate *)mSuperWin->bin_window)->destroyed)
+    {
+      //DumpWindowTree();
+      // get a list of children for this window
+      XQueryTree(display, window, &root_return, &parent_return,
+                 &children_return, &nchildren_return);
+      // walk the list of children
+      for (i=0; i < nchildren_return; i++)
+      {
+        Window child_window = children_return[i];
+        nsWindow *thisWindow = GetnsWindowFromXWindow(child_window);
+        if (thisWindow)
+        {
+          thisWindow->Destroy();
+        }
+      }      
+    }
   }
+
+  // free up this struct
+  if (children_return)
+    XFree(children_return);
 }
 
 // This function will try to take a given native X window and try 
@@ -278,15 +298,19 @@ nsWindow::GetnsWindowFromXWindow(Window aWindow)
   {
     return NULL;
   }
-  gpointer data;
+  gpointer data = NULL;
   // see if this is a real widget
   gdk_window_get_user_data(thisWindow, &data);
   if (data)
   {
     if (GTK_IS_OBJECT(data))
+    {
       return (nsWindow *)gtk_object_get_data(GTK_OBJECT(data), "nsWindow");
+    }
     else
+    {
       return NULL;
+    }
   }
   else
   {
@@ -320,7 +344,7 @@ nsWindow::GetInnerMostWindow(Window aOriginWindow,
   Window       window;
   Window       root_return;
   Window       parent_return;
-  Window      *children_return;
+  Window      *children_return = NULL;
   unsigned int nchildren_return;
   unsigned int i;
   Window       returnWindow = None;
