@@ -384,12 +384,16 @@ static float64 testFunctionCall(World &world, float64 n)
     return result.f64;    
 }
 
-JSValue *print(const JSValues &argv)
+JSValue print(const JSValues &argv)
 {
-    for (int i = 0; i < argv.size(); i++)
-        stdOut << argv[i];
+    size_t n = argv.size();
+    if (n > 0) {
+        stdOut << argv[0];
+        for (size_t i = 1; i < n; ++i)
+            stdOut << ' ' << argv[i];
+    }
     stdOut << "\n";
-    return new JSValue();       // undefined???
+    return kUndefinedValue;
 }
 
 static void testPrint(World &world)
