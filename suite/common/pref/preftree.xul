@@ -1,33 +1,30 @@
 <?xml version="1.0"?>
+
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY appear.label "Appearance">
-<!ENTITY fonts.label "Fonts">
-<!ENTITY colors.label "Colors">
-<!ENTITY navigator.label "Navigator">
-<!ENTITY languages.label "Languages">
-<!ENTITY applications.label "Applications">
-<!ENTITY smartBrowse.label "Smart Browsing">
-<!ENTITY mail.label "Mail &amp; Newsgroups">
-<!ENTITY address.label "Addressing">
-<!ENTITY mess.label "Messages">
-<!ENTITY windowSet.label "Window Settings">
-<!ENTITY copyFolder.label "Copies &amp; Folders">
-<!ENTITY format.label "Formatting">
-<!ENTITY return.label "Return Receipts">
-<!ENTITY disk.label "Disk Space">
-<!ENTITY compose.label "Composer">
-<!ENTITY publish.label "Publish">
-<!ENTITY offline.label "Offline">
-<!ENTITY advance.label "Advanced">
-<!ENTITY down.label "Download">
-<!ENTITY cache.label "Cache">
-<!ENTITY proxies.label "Proxies">
-<!ENTITY smart.label "Smart Update">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://pref/locale/preftree.dtd" >
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="ChangePanelURL(pref-appearance.xul);"
@@ -103,7 +100,7 @@
       <treechildren>
         <treeitem open="true">
           <treerow>
-            <treecell><treeindentation/>&languages.label;</treecell>
+            <treecell name="about:blank"><treeindentation/>&languages.label;</treecell>
           </treerow>
         </treeitem>
 

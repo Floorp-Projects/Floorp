@@ -1,30 +1,35 @@
 <?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
 
-<!DOCTYPE window [
-<!ENTITY  title.label "Composer">
-<!ENTITY  lHeader "Composer">
-<!ENTITY  rHeader "Set general preferences for the authoring Web pages">
-<!ENTITY  authorName "Author Name">
-<!ENTITY  AutoSaveCheck.label "Automatically save page every">
-<!ENTITY  minText "minutes">
-<!ENTITY  exterLegand.label "External Editors">
-<!ENTITY  htmlSource "HTML Source:">
-<!ENTITY  chooseButton.label "Choose...">
-<!ENTITY  fontSizeHeader "Font Size Mode">
-<!ENTITY  img "Images:">
-<!ENTITY  relSizeRadio.label "Show relative size as points based on your Navigator font sizes">
-<!ENTITY  relfontRadio.label "Show relative HTML font scale: -2, -1, 0, +1, +2, +3, +4">
-<!ENTITY  relScaleRadio.label "Show relative HTML scale and absolute &quot;point-size&quot; attributes">
-]> 
-
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-composer.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="return StartUp('Composer');"  alighn="vertical" title="&title.label;">
 
-<html:script language="javascript" src="PrefsWindow.js"/>
+<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 <html:div flex="100%">
 	<box id="header" style="width:100%" align="horizontal">  
 		  <spring style="width:20px"/>

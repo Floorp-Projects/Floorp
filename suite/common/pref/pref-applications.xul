@@ -1,21 +1,28 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<!DOCTYPE window
-[
-<!ENTITY window.title "Advanced">
-<!ENTITY lHeader "Applications">
-<!ENTITY rHeader "Specify helper applications for different file types">
-<!ENTITY descript "Description">
-<!ENTITY aimLaunchSelect.label "AOL Instant Messenger Launch">
-<!ENTITY newTypeButton.label "New Type...">
-<!ENTITY editButton.label "Edit...">
-<!ENTITY removeButton.label "Remove">
-<!ENTITY file "File type details">
-<!ENTITY exten "Extention:">
-<!ENTITY mimeType "Mime Type:">
-<!ENTITY handle "Handled By:">
-]>
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-applications.dtd" >
 
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
