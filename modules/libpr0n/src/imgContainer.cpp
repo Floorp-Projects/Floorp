@@ -636,7 +636,7 @@ void imgContainer::FillWithColor(gfxIImageFrame *aFrame, gfx_color color)
         for(PRUint32 y=0; y<iheight; y++) {
           PRUint8* rgbRowIndex = foo;
           for (PRUint32 x=0; x<iwidth; x++) {
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(MOZ_WIDGET_PHOTON)
             *rgbRowIndex++ = (backgroundColor & 0x00FF0000) >> 16;
             *rgbRowIndex++ = (backgroundColor & 0x0000FF00) >> 8;
             *rgbRowIndex++ = backgroundColor & 0x000000FF;
