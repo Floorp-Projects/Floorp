@@ -391,6 +391,7 @@ private:
   nsView            *mKeyGrabber;
   PRInt32           mUpdateCnt;
   PRInt32           mUpdateBatchCnt;
+  PRUint32          mUpdateBatchFlags;
   nsIScrollableView *mRootScrollable;
   PRInt32           mCachingWidgetChanges;
   nscolor           mDefaultBackgroundColor;

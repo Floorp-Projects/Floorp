@@ -9935,7 +9935,7 @@ ApplyRenderingChangeToTree(nsPresContext* aPresContext,
   gInApplyRenderingChangeToTree = PR_FALSE;
 #endif
 
-  viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+  viewManager->EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
 }
 
 nsresult
@@ -13709,6 +13709,20 @@ nsCSSFrameConstructor::PostRestyleEvent(nsIContent* aContent,
       mRestyleEventQueue = eventQueue;
     }
   }
+}
+
+void nsCSSFrameConstructor::RestyleEvent::HandleEvent() {
+  nsCSSFrameConstructor* constructor =
+    NS_STATIC_CAST(nsCSSFrameConstructor*, owner);
+  nsIPresShell* shell = constructor->mDocument->GetShellAt(0);
+  nsPresContext* context = shell->GetPresContext();
+  nsIViewManager* viewManager = context->GetViewManager();
+  NS_ASSERTION(viewManager, "Must have view manager for update");
+
+  viewManager->BeginUpdateViewBatch();
+  constructor->ProcessPendingRestyles();
+  constructor->mRestyleEventQueue = nsnull;
+  viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 }
 
 PR_STATIC_CALLBACK(void*)
