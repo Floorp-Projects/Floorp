@@ -323,9 +323,9 @@ nsHttpPipeline::GetSecurityCallbacks(nsIInterfaceRequestor **result)
 }
 
 void
-nsHttpPipeline::OnTransportStatus(nsresult status, PRUint32 progress)
+nsHttpPipeline::OnTransportStatus(nsresult status, PRUint64 progress)
 {
-    LOG(("nsHttpPipeline::OnStatus [this=%x status=%x progress=%u]\n",
+    LOG(("nsHttpPipeline::OnStatus [this=%x status=%x progress=%llu]\n",
         this, status, progress));
 
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");

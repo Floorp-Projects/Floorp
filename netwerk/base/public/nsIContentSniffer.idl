@@ -49,7 +49,7 @@ interface nsIContentSniffer : nsISupports
    * @param aData Data to check
    * @param aLength Length of the data
    *
-   * @throw NS_ERROR_NOT_AVAILABLE if no MIME type could be determinted.
+   * @throw NS_ERROR_NOT_AVAILABLE if no MIME type could be determined.
    */
   ACString getMIMETypeFromContent([const,array,size_is(aLength)] in octet aData,
                                   in unsigned long aLength);

@@ -184,7 +184,7 @@ protected:
 class nsXMLHttpProgressEvent : public nsIDOMLSProgressEvent
 {
 public:
-  nsXMLHttpProgressEvent(nsIDOMEvent * aInner, PRUint32 aCurrentProgress, PRUint32 aMaxProgress);
+  nsXMLHttpProgressEvent(nsIDOMEvent * aInner, PRUint64 aCurrentProgress, PRUint64 aMaxProgress);
   virtual ~nsXMLHttpProgressEvent();
 
   NS_DECL_ISUPPORTS
@@ -193,8 +193,8 @@ public:
 
 protected:
   nsCOMPtr<nsIDOMEvent> mInner;
-  PRUint32 mCurProgress;
-  PRUint32 mMaxProgress;
+  PRUint64 mCurProgress;
+  PRUint64 mMaxProgress;
 };
 
 #endif

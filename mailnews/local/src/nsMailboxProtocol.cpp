@@ -133,7 +133,10 @@ nsresult nsMailboxProtocol::OpenMultipleMsgTransport(PRUint32 offset, PRInt32 si
       do_GetService(kStreamTransportServiceCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = serv->CreateInputTransport(m_multipleMsgMoveCopyStream, offset, size, PR_FALSE, getter_AddRefs(m_transport));
+  // XXX 64-bit
+  rv = serv->CreateInputTransport(m_multipleMsgMoveCopyStream, nsInt64(offset),
+                                  nsInt64(size), PR_FALSE,
+                                  getter_AddRefs(m_transport));
 
   return rv;
 }
@@ -656,7 +659,10 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
   {
     PRInt32 contentLength = 0;
     GetContentLength(&contentLength);
-    mProgressEventSink->OnProgress(this, m_channelContext, mCurrentProgress, contentLength);
+    // XXX 64-bit
+    mProgressEventSink->OnProgress(this, m_channelContext,
+                                   nsUint64(mCurrentProgress),
+                                   nsUint64(contentLength));
   }
   
   if (NS_FAILED(rv)) return -1;

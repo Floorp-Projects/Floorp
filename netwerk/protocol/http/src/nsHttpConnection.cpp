@@ -579,7 +579,8 @@ nsHttpConnection::OnSocketWritable()
             // here to reflect the fact that we are waiting.  this message will be
             // trumped (overwritten) if the server responds quickly.
             //
-            mTransaction->OnTransportStatus(nsISocketTransport::STATUS_WAITING_FOR, 0);
+            mTransaction->OnTransportStatus(nsISocketTransport::STATUS_WAITING_FOR,
+                                            LL_ZERO);
 
             rv = mSocketIn->AsyncWait(this, 0, 0, nsnull); // start reading
             again = PR_FALSE;
@@ -770,8 +771,8 @@ nsHttpConnection::OnOutputStreamReady(nsIAsyncOutputStream *out)
 NS_IMETHODIMP
 nsHttpConnection::OnTransportStatus(nsITransport *trans,
                                     nsresult status,
-                                    PRUint32 progress,
-                                    PRUint32 progressMax)
+                                    PRUint64 progress,
+                                    PRUint64 progressMax)
 {
     if (mTransaction)
         mTransaction->OnTransportStatus(status, progress);

@@ -42,7 +42,7 @@ interface nsIFile;
 
 /**
  * A channel may optionally implement this interface to allow clients
- * to effect its behavior with respect to how it uses the cache service.
+ * to affect its behavior with respect to how it uses the cache service.
  *
  * This interface provides:
  *   1) Support for "stream as file" semantics (for JAR and plugins).

@@ -50,6 +50,7 @@
 #include "nsAutoLock.h"
 #include "nsCOMPtr.h"
 #include "netCore.h"
+#include "nsInt64.h"
 #include "prmem.h"
 #include "pratom.h"
 #include "plstr.h"
@@ -847,7 +848,7 @@ nsSocketTransport::SendStatus(nsresult status)
     LOG(("nsSocketTransport::SendStatus [this=%x status=%x]\n", this, status));
 
     nsCOMPtr<nsITransportEventSink> sink;
-    PRUint32 progress;
+    PRUint64 progress;
     {
         nsAutoLock lock(mLock);
         sink = mEventSink;
@@ -864,7 +865,7 @@ nsSocketTransport::SendStatus(nsresult status)
         }
     }
     if (sink)
-        sink->OnTransportStatus(this, status, progress, PR_UINT32_MAX);
+        sink->OnTransportStatus(this, status, progress, LL_MAXUINT);
 }
 
 nsresult

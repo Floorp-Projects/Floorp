@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -96,6 +95,7 @@
 
 #include "nsCWebBrowser.h"
 #include "nsUnicharUtils.h"
+#include "nsInt64.h"
 
 #include "nsIParser.h"
 #include "nsEditorMode.h"
@@ -1857,7 +1857,7 @@ nsBrowserWindow::ShowMenuBar(PRBool aShow)
 
 NS_IMETHODIMP
 nsBrowserWindow::OnProgress(nsIRequest* request, nsISupports *ctxt,
-                            PRUint32 aProgress, PRUint32 aProgressMax)
+                            PRUint64 aProgress, PRUint64 aProgressMax)
 {
   nsresult rv;
 
@@ -1874,10 +1874,10 @@ nsBrowserWindow::OnProgress(nsIRequest* request, nsISupports *ctxt,
       AppendUTF8toUTF16(str, url);
     }
     url.AppendLiteral(": progress ");
-    url.AppendInt(aProgress, 10);
-    if (0 != aProgressMax) {
+    url.AppendInt(PRInt64(aProgress), 10);
+    if (nsUint64(0) != aProgressMax) {
       url.AppendLiteral(" (out of ");
-      url.AppendInt(aProgressMax, 10);
+      url.AppendInt(PRInt64(aProgressMax), 10);
       url.Append(NS_LITERAL_STRING(")"));
     }
     PRUint32 size;

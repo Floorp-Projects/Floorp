@@ -38,7 +38,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(39befdb9-fa76-469b-85dc-a617b81f26eb)]
+[scriptable, uuid(C1B1F426-7E83-4759-9F88-0E1B17F49366)]
 interface nsIByteRangeRequest : nsISupports
 {
     /** 
@@ -51,10 +51,10 @@ interface nsIByteRangeRequest : nsISupports
     /** 
      * Absolute start position in remote file for this request.
      */
-    readonly attribute long startRange;
+    readonly attribute long long startRange;
 
     /**
      * Absolute end postion in remote file for this request
      */
-    readonly attribute long endRange;
+    readonly attribute long long endRange;
 };

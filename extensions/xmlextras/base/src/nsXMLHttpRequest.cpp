@@ -1824,7 +1824,7 @@ nsXMLHttpRequest::OnRedirect(nsIHttpChannel *aHttpChannel,
 //
 
 NS_IMETHODIMP
-nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint32 aProgress, PRUint32 aProgressMax)
+nsXMLHttpRequest::OnProgress(nsIRequest *aRequest, nsISupports *aContext, PRUint64 aProgress, PRUint64 aProgressMax)
 {
   if (mOnProgressListener)
   {
@@ -1893,7 +1893,7 @@ nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 }
 
 // DOM event class to handle progress notifications
-nsXMLHttpProgressEvent::nsXMLHttpProgressEvent(nsIDOMEvent * aInner, PRUint32 aCurrentProgress, PRUint32 aMaxProgress)
+nsXMLHttpProgressEvent::nsXMLHttpProgressEvent(nsIDOMEvent * aInner, PRUint64 aCurrentProgress, PRUint64 aMaxProgress)
 {
   mInner = aInner; 
   mCurProgress = aCurrentProgress;
@@ -1922,13 +1922,15 @@ NS_IMETHODIMP nsXMLHttpProgressEvent::GetInput(nsIDOMLSInput * *aInput)
 
 NS_IMETHODIMP nsXMLHttpProgressEvent::GetPosition(PRUint32 *aPosition)
 {
-  *aPosition = mCurProgress;
+  // XXX can we change the iface?
+  LL_L2UI(*aPosition, mCurProgress);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsXMLHttpProgressEvent::GetTotalSize(PRUint32 *aTotalSize)
 {
-  *aTotalSize = mMaxProgress;
+  // XXX can we change the iface?
+  LL_L2UI(*aTotalSize, mMaxProgress);
   return NS_OK;
 }
 

@@ -65,7 +65,7 @@ public:
     virtual void GetSecurityCallbacks(nsIInterfaceRequestor **) = 0;
 
     // called to report socket status (see nsITransportEventSink)
-    virtual void OnTransportStatus(nsresult status, PRUint32 progress) = 0;
+    virtual void OnTransportStatus(nsresult status, PRUint64 progress) = 0;
 
     // called to check the transaction status.
     virtual PRBool   IsDone() = 0;
@@ -89,7 +89,7 @@ public:
 #define NS_DECL_NSAHTTPTRANSACTION \
     void SetConnection(nsAHttpConnection *); \
     void GetSecurityCallbacks(nsIInterfaceRequestor **); \
-    void OnTransportStatus(nsresult status, PRUint32 progress); \
+    void OnTransportStatus(nsresult status, PRUint64 progress); \
     PRBool   IsDone(); \
     nsresult Status(); \
     PRUint32 Available(); \

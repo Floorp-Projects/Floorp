@@ -45,6 +45,7 @@
 #include "nsSocketTransportService2.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsInt64.h"
 
 #include "nsISocketTransport.h"
 #include "nsIInterfaceRequestor.h"
@@ -73,7 +74,7 @@ public:
 
     PRBool   IsReferenced() { return mReaderRefCnt > 0; }
     nsresult Condition()    { return mCondition; }
-    PRUint32 ByteCount()    { return mByteCount; }
+    PRUint64 ByteCount()    { return mByteCount; }
 
     // called by the socket transport on the socket thread...
     void OnSocketReady(nsresult condition);
@@ -86,7 +87,7 @@ private:
     nsresult                         mCondition;
     nsCOMPtr<nsIInputStreamCallback> mCallback;
     PRUint32                         mCallbackFlags;
-    PRUint32                         mByteCount;
+    nsUint64                         mByteCount;
 };
 
 //-----------------------------------------------------------------------------
@@ -103,7 +104,7 @@ public:
 
     PRBool   IsReferenced() { return mWriterRefCnt > 0; }
     nsresult Condition()    { return mCondition; }
-    PRUint32 ByteCount()    { return mByteCount; }
+    PRUint64 ByteCount()    { return mByteCount; }
 
     // called by the socket transport on the socket thread...
     void OnSocketReady(nsresult condition); 
@@ -120,7 +121,7 @@ private:
     nsresult                          mCondition;
     nsCOMPtr<nsIOutputStreamCallback> mCallback;
     PRUint32                          mCallbackFlags;
-    PRUint32                          mByteCount;
+    nsUint64                          mByteCount;
 };
 
 //-----------------------------------------------------------------------------

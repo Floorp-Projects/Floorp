@@ -103,7 +103,7 @@ public:
                   nsIProxyInfo* proxyInfo,
                   nsICacheSession* session);
 
-    nsresult SetupState(PRUint32 startPos, const nsACString& entityID);
+    nsresult SetupState(PRUint64 startPos, const nsACString& entityID);
     nsresult GenerateCacheKey(nsACString &cacheKey);
     
     nsresult AsyncOpenAt(nsIStreamListener *listener, nsISupports *ctxt,

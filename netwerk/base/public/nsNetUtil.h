@@ -85,6 +85,7 @@
 #include "nsIPersistentProperties2.h"
 #include "nsISyncStreamListener.h"
 #include "nsInterfaceRequestorAgg.h"
+#include "nsInt64.h"
 
 // Helper, to simplify getting the I/O service.
 inline const nsGetServiceByCIDWithError
@@ -333,8 +334,8 @@ NS_NewInputStreamChannel(nsIChannel      **result,
 inline nsresult
 NS_NewInputStreamPump(nsIInputStreamPump **result,
                       nsIInputStream      *stream,
-                      PRInt32              streamPos = -1,
-                      PRInt32              streamLen = -1,
+                      PRInt64              streamPos = nsInt64(-1),
+                      PRInt64              streamLen = nsInt64(-1),
                       PRUint32             segsize = 0,
                       PRUint32             segcount = 0,
                       PRBool               closeWhenDone = PR_FALSE)
@@ -772,7 +773,7 @@ NS_BackgroundInputStream(nsIInputStream **aResult,
         do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsITransport> inTransport;
-        rv = sts->CreateInputTransport(aStream, -1, -1, PR_TRUE,
+        rv = sts->CreateInputTransport(aStream, nsInt64(-1), nsInt64(-1), PR_TRUE,
                                        getter_AddRefs(inTransport));
         if (NS_SUCCEEDED(rv))
             rv = inTransport->OpenInputStream(nsITransport::OPEN_BLOCKING,
@@ -796,7 +797,7 @@ NS_BackgroundOutputStream(nsIOutputStream **aResult,
         do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsITransport> inTransport;
-        rv = sts->CreateOutputTransport(aStream, -1, -1, PR_TRUE,
+        rv = sts->CreateOutputTransport(aStream, nsInt64(-1), nsInt64(-1), PR_TRUE,
                                         getter_AddRefs(inTransport));
         if (NS_SUCCEEDED(rv))
             rv = inTransport->OpenOutputStream(nsITransport::OPEN_BLOCKING,

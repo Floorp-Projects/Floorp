@@ -462,8 +462,10 @@ nsWyciwygChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctx,
   
   rv = mListener->OnDataAvailable(this, mListenerContext, input, offset, count);
 
+  // XXX handle 64-bit stuff for real
   if (mProgressSink && NS_SUCCEEDED(rv) && !(mLoadFlags & LOAD_BACKGROUND))
-    mProgressSink->OnProgress(this, nsnull, offset + count, mContentLength);
+    mProgressSink->OnProgress(this, nsnull, nsUint64(offset + count),
+                              nsUint64(mContentLength));
 
   return rv; // let the pump cancel on failure
 }
@@ -577,7 +579,7 @@ nsWyciwygChannel::ReadFromCache()
     return rv;
   NS_ENSURE_TRUE(mCacheInputStream, NS_ERROR_UNEXPECTED);
 
-  rv = NS_NewInputStreamPump(getter_AddRefs(mPump), mCacheInputStream, -1);
+  rv = NS_NewInputStreamPump(getter_AddRefs(mPump), mCacheInputStream);
   if (NS_FAILED(rv)) return rv;
 
   // Pump the cache data downstream

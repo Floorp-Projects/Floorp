@@ -398,8 +398,11 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
         //
         // create asynchronous output stream wrapping file output stream.
         //
+        // XXX 64-bit upload length would be nice; it would require a new
+        // nsIUploadChannel, though.
         nsCOMPtr<nsITransport> transport;
-        rv = sts->CreateOutputTransport(fileOut, -1, mUploadLength, PR_TRUE,
+        rv = sts->CreateOutputTransport(fileOut, nsInt64(-1),
+                                        nsInt64(mUploadLength), PR_TRUE,
                                         getter_AddRefs(transport));
         if (NS_FAILED(rv)) return rv;
 
@@ -439,7 +442,7 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
         // create asynchronous input stream wrapping file input stream.
         //
         nsCOMPtr<nsITransport> transport;
-        rv = sts->CreateInputTransport(mStream, -1, -1, PR_TRUE,
+        rv = sts->CreateInputTransport(mStream, nsInt64(-1), nsInt64(-1), PR_TRUE,
                                        getter_AddRefs(transport));
         if (NS_FAILED(rv)) return rv;
 
@@ -563,7 +566,7 @@ nsFileChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
 
 NS_IMETHODIMP
 nsFileChannel::OnTransportStatus(nsITransport *trans, nsresult status,
-                                 PRUint32 progress, PRUint32 progressMax)
+                                 PRUint64 progress, PRUint64 progressMax)
 {
     // suppress status notification if channel is no longer pending!
     if (mProgressSink && NS_SUCCEEDED(mStatus) && mRequest && !(mLoadFlags & LOAD_BACKGROUND)) {

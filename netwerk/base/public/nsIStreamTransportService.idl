@@ -48,7 +48,7 @@ interface nsIOutputStream;
  * into a fully asynchronous stream that can be read/written without 
  * blocking the main thread.
  */
-[scriptable, uuid(3e0f7a3b-65fd-4e10-92f3-56a8f4622f55)]
+[scriptable, uuid(8268D474-EFBF-494f-A152-E8A8616F4E52)]
 interface nsIStreamTransportService : nsISupports
 {
     /**
@@ -71,8 +71,8 @@ interface nsIStreamTransportService : nsISupports
      * @return nsITransport instance.
      */
     nsITransport createInputTransport(in nsIInputStream aStream,
-                                      in long aStartOffset,
-                                      in long aReadLimit,
+                                      in long long aStartOffset,
+                                      in long long aReadLimit,
                                       in boolean aCloseWhenDone);
 
     /**
@@ -95,7 +95,7 @@ interface nsIStreamTransportService : nsISupports
      * @return nsITransport instance.
      */
     nsITransport createOutputTransport(in nsIOutputStream aStream,
-                                       in long aStartOffset,
-                                       in long aWriteLimit,
+                                       in long long aStartOffset,
+                                       in long long aWriteLimit,
                                        in boolean aCloseWhenDone);
 };

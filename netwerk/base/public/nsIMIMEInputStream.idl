@@ -61,7 +61,7 @@ interface nsIMIMEInputStream : nsIInputStream
      * @param name   name of the header
      * @param value  value of the header
      */
-    void addHeader([const] in string name, [const] in string value);
+    void addHeader(in string name, in string value);
 
     /**
      * Sets data-stream. May not be called once the stream has been started

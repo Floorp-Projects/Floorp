@@ -2103,8 +2103,8 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIRequest *request,
                                                      nsISupports* aContext,
-                                                     PRUint32 aProgress,
-                                                     PRUint32 aProgressMax)
+                                                     PRUint64 aProgress,
+                                                     PRUint64 aProgressMax)
 {
   nsresult rv = NS_OK;
   return rv;
@@ -2187,12 +2187,15 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
   {
     // get the absolute offset of the request, if one exists.
     nsCOMPtr<nsIByteRangeRequest> brr = do_QueryInterface(request);
-    PRInt32 absoluteOffset = 0;
     if (brr) {
       if (!mDataForwardToRequest)
         return NS_ERROR_FAILURE;
 
-      brr->GetStartRange(&absoluteOffset);
+      PRInt64 absoluteOffset64 = LL_ZERO;
+      brr->GetStartRange(&absoluteOffset64);
+
+      // XXX handle 64-bit for real
+      PRInt32 absoluteOffset = (PRInt32)nsInt64(absoluteOffset64);
 
       // we need to track how much data we have forwarded to the
       // plugin.
@@ -2263,8 +2266,10 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   // for ByteRangeRequest we're just updating the mDataForwardToRequest hash and return.
   nsCOMPtr<nsIByteRangeRequest> brr = do_QueryInterface(request);
   if (brr) {
-    PRInt32 absoluteOffset = 0;
-    brr->GetStartRange(&absoluteOffset);
+    PRInt64 absoluteOffset64 = LL_ZERO;
+    brr->GetStartRange(&absoluteOffset64);
+    // XXX support 64-bit offsets
+    PRInt32 absoluteOffset = (PRInt32)nsInt64(absoluteOffset64);
 
     nsPRUintKey key(absoluteOffset);
 

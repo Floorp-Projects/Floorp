@@ -246,7 +246,9 @@ nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, PRUint32 aStartPosition, P
       do_GetService(kStreamTransportServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = sts->CreateInputTransport(stream, aStartPosition, aReadCount, PR_TRUE, getter_AddRefs(m_transport));
+  rv = sts->CreateInputTransport(stream, nsInt64(aStartPosition),
+                                 nsInt64(aReadCount), PR_TRUE,
+                                 getter_AddRefs(m_transport));
 
   m_socketIsOpen = PR_FALSE;
 	return rv;
@@ -468,7 +470,7 @@ nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
         
         nsCOMPtr<nsIInputStreamPump> pump;
         rv = NS_NewInputStreamPump(getter_AddRefs(pump),
-          m_inputStream, -1, m_readCount);
+          m_inputStream, nsInt64(-1), m_readCount);
         if (NS_FAILED(rv)) return rv;
         
         m_request = pump; // keep a reference to the pump so we can cancel it
@@ -656,7 +658,7 @@ nsMsgProtocol::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCall
 
 NS_IMETHODIMP
 nsMsgProtocol::OnTransportStatus(nsITransport *transport, nsresult status,
-                                 PRUint32 progress, PRUint32 progressMax)
+                                 PRUint64 progress, PRUint64 progressMax)
 {
   if ((mLoadFlags & LOAD_BACKGROUND) || !m_url)
     return NS_OK;

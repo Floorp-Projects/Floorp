@@ -60,7 +60,7 @@ public:
     NS_DECL_NSIINPUTSTREAMCALLBACK
 
     nsInputStreamPump(); 
-    virtual ~nsInputStreamPump();
+    ~nsInputStreamPump();
 
 protected:
 

@@ -8179,8 +8179,10 @@ PRBool nsImapMockChannel::ReadFromLocalCache()
         cacheListener->Init(m_channelListener, this);
 
         // create a stream pump that will async read the specified amount of data.
+        // XXX make offset/size 64-bit ints
         nsCOMPtr<nsIInputStreamPump> pump;
-        rv = NS_NewInputStreamPump(getter_AddRefs(pump), fileStream, offset, size);
+        rv = NS_NewInputStreamPump(getter_AddRefs(pump), fileStream,
+                                   nsInt64(offset), nsInt64(size));
         if (NS_SUCCEEDED(rv))
           rv = pump->AsyncRead(cacheListener, m_channelContext);
 
@@ -8448,7 +8450,7 @@ nsImapMockChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
 
 NS_IMETHODIMP
 nsImapMockChannel::OnTransportStatus(nsITransport *transport, nsresult status,
-                                     PRUint32 progress, PRUint32 progressMax)
+                                     PRUint64 progress, PRUint64 progressMax)
 {
   if (NS_FAILED(m_cancelStatus) || (mLoadFlags & LOAD_BACKGROUND) || !m_url)
     return NS_OK;

@@ -59,6 +59,7 @@
 #include "nsIStringEnumerator.h"
 #include "nsCRT.h"
 #include "nsSupportsArray.h"
+#include "nsInt64.h"
 
 #include "nsCExternalHandlerService.h"
 
@@ -145,8 +146,8 @@ struct OutputData
     nsCOMPtr<nsIURI> mFile;
     nsCOMPtr<nsIURI> mOriginalLocation;
     nsCOMPtr<nsIOutputStream> mStream;
-    PRInt32 mSelfProgress;
-    PRInt32 mSelfProgressMax;
+    nsInt64 mSelfProgress;
+    nsInt64 mSelfProgressMax;
     PRPackedBool mCalcFileExt;
 
     OutputData(nsIURI *aFile, nsIURI *aOriginalLocation, PRBool aCalcFileExt) :
@@ -169,8 +170,8 @@ struct OutputData
 struct UploadData
 {
     nsCOMPtr<nsIURI> mFile;
-    PRInt32 mSelfProgress;
-    PRInt32 mSelfProgressMax;
+    nsInt64 mSelfProgress;
+    nsInt64 mSelfProgressMax;
 
     UploadData(nsIURI *aFile) :
         mFile(aFile),
@@ -924,8 +925,8 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
 /* void onProgress (in nsIRequest request, in nsISupports ctxt,
     in unsigned long aProgress, in unsigned long aProgressMax); */
 NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
-    nsIRequest *request, nsISupports *ctxt, PRUint32 aProgress,
-    PRUint32 aProgressMax)
+    nsIRequest *request, nsISupports *ctxt, PRUint64 aProgress,
+    PRUint64 aProgressMax)
 {
     if (!mProgressListener)
     {
@@ -938,23 +939,24 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
     OutputData *data = (OutputData *) mOutputMap.Get(&key);
     if (data)
     {
-        data->mSelfProgress = aProgress;
-        data->mSelfProgressMax = aProgressMax;
+        data->mSelfProgress = PRInt64(aProgress);
+        data->mSelfProgressMax = PRInt64(aProgressMax);
     }
     else
     {
         UploadData *upData = (UploadData *) mUploadList.Get(&key);
         if (upData)
         {
-            upData->mSelfProgress = aProgress;
-            upData->mSelfProgressMax = aProgressMax;
+            upData->mSelfProgress = PRInt64(aProgress);
+            upData->mSelfProgressMax = PRInt64(aProgressMax);
         }
     }
 
     // Notify listener of total progress
     CalcTotalProgress();
-    mProgressListener->OnProgressChange(nsnull, request, aProgress,
-            aProgressMax, mTotalCurrentProgress, mTotalMaxProgress);
+    // XXX this truncates 64-bit to 32bit
+    mProgressListener->OnProgressChange(nsnull, request, nsUint64(aProgress),
+            nsUint64(aProgressMax), mTotalCurrentProgress, mTotalMaxProgress);
 
     return NS_OK;
 
@@ -2371,7 +2373,7 @@ nsWebBrowserPersist::CalcTotalProgress()
     }
 
     // XXX this code seems pretty bogus and pointless
-    if (mTotalCurrentProgress == 0 && mTotalMaxProgress == 0)
+    if (mTotalCurrentProgress == LL_ZERO && mTotalMaxProgress == LL_ZERO)
     {
         // No output streams so we must be complete
         mTotalCurrentProgress = 10000;

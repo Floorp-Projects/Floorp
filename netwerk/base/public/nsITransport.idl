@@ -166,7 +166,7 @@ interface nsITransport : nsISupports
     const unsigned long STATUS_WRITING = 0x804b0009;
 };
 
-[scriptable, uuid(561de8af-1b74-4cd4-8479-89447d48185c)]
+[scriptable, uuid(EDA4F520-67F7-484b-A691-8C3226A5B0A6)]
 interface nsITransportEventSink : nsISupports
 {
     /**
@@ -187,6 +187,6 @@ interface nsITransportEventSink : nsISupports
      */
     void onTransportStatus(in nsITransport aTransport,
                            in nsresult aStatus,
-                           in unsigned long aProgress,
-                           in unsigned long aProgressMax);
+                           in unsigned long long aProgress,
+                           in unsigned long long aProgressMax);
 };

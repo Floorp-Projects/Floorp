@@ -114,7 +114,7 @@ NS_IMPL_ISUPPORTS1(TransportEventForwarder, nsITransportEventSink)
 
 NS_IMETHODIMP
 TransportEventForwarder::OnTransportStatus(nsITransport *transport, nsresult status,
-                                           PRUint32 progress, PRUint32 progressMax)
+                                           PRUint64 progress, PRUint64 progressMax)
 {
     // We only want to forward the resolving and connecting states of the
     // control connection and report the data connection for the rest of the
@@ -156,7 +156,7 @@ public:
     NS_FORWARD_NSICHANNEL(mFTPChannel->)
     NS_FORWARD_NSIFTPCHANNEL(mFTPChannel->)
     
-    PRUint32 GetBytesTransfered() {return mBytesTransfered;}
+    PRUint64 GetBytesTransfered() {return mBytesTransfered;}
     void Uploading(PRBool value, PRUint32 uploadCount);
     void SetRetrying(PRBool retry);
     
@@ -169,8 +169,8 @@ protected:
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     nsCString                         mEntityID;
 
-    PRUint32 mBytesTransfered;
-    PRUint32 mBytesToUpload;
+    nsUint64 mBytesTransfered;
+    nsUint64 mBytesToUpload;
     PRPackedBool   mDelayedOnStartFired;
     PRPackedBool   mUploading;
     PRPackedBool   mRetrying;
@@ -369,6 +369,7 @@ DataRequestForwarder::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, ns
         if (NS_FAILED(rv)) return rv;
     }
 
+    // XXX mBytesTransfered will get truncated from 64-bit to 32-bit
     rv = mListener->OnDataAvailable(this, ctxt, input, mBytesTransfered, count); 
     if (NS_SUCCEEDED(rv))
         mBytesTransfered += count;
@@ -378,7 +379,7 @@ DataRequestForwarder::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, ns
 // nsITransportEventSink methods
 NS_IMETHODIMP
 DataRequestForwarder::OnTransportStatus(nsITransport *transport, nsresult status,
-                                        PRUint32 progress, PRUint32 progressMax)
+                                        PRUint64 progress, PRUint64 progressMax)
 {
     if (mEventSink) {
         mEventSink->OnStatus(nsnull, nsnull, status, nsnull);
@@ -386,8 +387,8 @@ DataRequestForwarder::OnTransportStatus(nsITransport *transport, nsresult status
         if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
             status == nsISocketTransport::STATUS_SENDING_TO) {
             // compute progress based on whether we are uploading or receiving...
-            PRUint32 count = mUploading ? progress       : mBytesTransfered;
-            PRUint32 max   = mUploading ? mBytesToUpload : progressMax;
+            PRUint64 count = mUploading ? progress                 : PRUint64(mBytesTransfered);
+            PRUint64 max   = mUploading ? PRUint64(mBytesToUpload) : progressMax;
             mEventSink->OnProgress(this, nsnull, count, max);
         }
     }
@@ -427,7 +428,7 @@ nsFtpState::nsFtpState()
     
     mControlConnection = nsnull;
     mDRequestForwarder = nsnull;
-    mFileSize          = LL_MaxUint();
+    mFileSize          = LL_MAXUINT;
 
     // make sure handler stays around
     NS_ADDREF(gFtpHandler);
@@ -1438,7 +1439,7 @@ nsFtpState::R_mdtm() {
     }
     
     // We weren't asked to resume
-    if (mStartPos == PRUint32(-1))
+    if (mStartPos == LL_MAXUINT)
         return FTP_S_RETR;
 
     //if (our entityID == supplied one (if any))
@@ -1497,9 +1498,9 @@ nsFtpState::S_list() {
     // dir listings aren't resumable
     NS_ASSERTION(mSuppliedEntityID.IsEmpty(),
                  "Entity ID given to directory request");
-    NS_ASSERTION(mStartPos == PRUint32(-1) || mStartPos == 0,
+    NS_ASSERTION(mStartPos == LL_MAXUINT || mStartPos == nsUint64(0),
                  "Non-initial start position given to directory request");
-    if (!mSuppliedEntityID.IsEmpty() || (mStartPos != PRUint32(-1) && mStartPos != 0)) {
+    if (!mSuppliedEntityID.IsEmpty() || (mStartPos != LL_MAXUINT && mStartPos != nsUint64(0))) {
         // If we reach this code, then the caller is in error
         return NS_ERROR_NOT_RESUMABLE;
     }
@@ -1596,7 +1597,8 @@ nsresult
 nsFtpState::S_rest() {
     
     nsCAutoString restString("REST ");
-    restString.AppendInt(mStartPos, 10);
+    // The PRInt64 cast is needed to avoid ambiguity
+    restString.AppendInt(PRInt64(PRUint64(mStartPos)), 10);
     restString.Append(CRLF);
 
     return SendFTPCommand(restString);
@@ -1913,7 +1915,8 @@ nsFtpState::R_pasv() {
 
         // pump data to the request forwarder...
         nsCOMPtr<nsIInputStreamPump> pump;
-        rv = NS_NewInputStreamPump(getter_AddRefs(pump), input, -1, -1, 0, 0, PR_TRUE);
+        rv = NS_NewInputStreamPump(getter_AddRefs(pump), input, nsInt64(-1),
+                                   nsInt64(-1), 0, 0, PR_TRUE);
         if (NS_FAILED(rv)) {
             LOG(("(%x) NS_NewInputStreamPump failed (rv=%x)\n", this, rv));
             return FTP_ERROR;
@@ -2159,7 +2162,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
                  nsIFTPEventSink* sink,
                  nsICacheEntryDescriptor* cacheEntry,
                  nsIProxyInfo* proxyInfo,
-                 PRUint32 startPos,
+                 PRUint64 startPos,
                  const nsACString& entity) 
 {
     // Build a proxy for the FTP event sink since we may need to call

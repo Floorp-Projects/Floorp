@@ -434,12 +434,12 @@ nsFingerChannel::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
 
 NS_IMETHODIMP
 nsFingerChannel::OnTransportStatus(nsITransport *trans, nsresult status,
-                                   PRUint32 progress, PRUint32 progressMax)
+                                   PRUint64 progress, PRUint64 progressMax)
 {
     // suppress status notification if channel is no longer pending!
     if (mProgressSink && NS_SUCCEEDED(mStatus) && mPump && !(mLoadFlags & LOAD_BACKGROUND)) {
         mProgressSink->OnStatus(this, nsnull, status,
-                                NS_ConvertUTF8toUCS2(mHost).get());
+                                NS_ConvertUTF8toUTF16(mHost).get());
 
         if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
             status == nsISocketTransport::STATUS_SENDING_TO) {

@@ -5927,7 +5927,10 @@ nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
             nsCOMPtr<nsIRequest> request = do_QueryInterface(mockChannel);
             if (!request) return NS_ERROR_FAILURE;
 
-          progressSink->OnProgress(request, nsnull, aInfo->currentProgress, aInfo->maxProgress);
+            // XXX handle 64-bit ints for real
+            progressSink->OnProgress(request, nsnull,
+                                     nsUint64(aInfo->currentProgress),
+                                     nsUint64(aInfo->maxProgress));
           if (aInfo->message)
             progressSink->OnStatus(request, nsnull, NS_OK, aInfo->message);      // XXX i18n message
 

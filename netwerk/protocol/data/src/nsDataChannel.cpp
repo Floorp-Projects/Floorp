@@ -41,6 +41,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsNetUtil.h"
+#include "nsInt64.h"
 #include "nsILoadGroup.h"
 #include "plbase64.h"
 #include "prmem.h"
@@ -348,7 +349,7 @@ nsDataChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     mListener = aListener;
     mOpened = PR_TRUE;
 
-    nsresult rv = mPump->Init(mDataStream, -1, -1, 0, 0, PR_FALSE);
+    nsresult rv = mPump->Init(mDataStream, nsInt64(-1), nsInt64(-1), 0, 0, PR_FALSE);
     if (NS_FAILED(rv))
         return rv;
 

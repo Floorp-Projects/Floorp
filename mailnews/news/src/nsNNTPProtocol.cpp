@@ -839,9 +839,10 @@ PRBool nsNNTPProtocol::ReadFromLocalCache()
         cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this), mailnewsUrl);
 
         // create a stream pump that will async read the specified amount of data.
+        // XXX make offset and size 64-bit ints
         nsCOMPtr<nsIInputStreamPump> pump;
         rv = NS_NewInputStreamPump(getter_AddRefs(pump),
-                                   fileStream, offset, size);
+                                   fileStream, nsInt64(offset), nsInt64(size));
         if (NS_SUCCEEDED(rv))
           rv = pump->AsyncRead(cacheListener, m_channelContext);
 
@@ -5344,8 +5345,10 @@ nsresult nsNNTPProtocol::CloseSocket()
 
 void nsNNTPProtocol::SetProgressBarPercent(PRUint32 aProgress, PRUint32 aProgressMax)
 {
+  // XXX 64-bit
   if (mProgressEventSink)
-    mProgressEventSink->OnProgress(this, m_channelContext, aProgress, aProgressMax);                                       
+    mProgressEventSink->OnProgress(this, m_channelContext, nsUint64(aProgress),
+                                   nsUint64(aProgressMax));                                       
 }
 
 nsresult

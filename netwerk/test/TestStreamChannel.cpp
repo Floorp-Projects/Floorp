@@ -184,9 +184,9 @@ public:
     }
 
     NS_IMETHOD OnProgress(nsIRequest *req, nsISupports *ctx,
-                          PRUint32 progress, PRUint32 progressMax)
+                          PRUint64 progress, PRUint64 progressMax)
     {
-        LOG(("MyCallbacks::OnProgress [progress=%u/%u]\n", progress, progressMax));
+        LOG(("MyCallbacks::OnProgress [progress=%llu/%llu]\n", progress, progressMax));
         return NS_OK;
     }
 };

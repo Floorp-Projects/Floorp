@@ -286,9 +286,9 @@ nsHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **cb)
 }
 
 void
-nsHttpTransaction::OnTransportStatus(nsresult status, PRUint32 progress)
+nsHttpTransaction::OnTransportStatus(nsresult status, PRUint64 progress)
 {
-    LOG(("nsHttpTransaction::OnSocketStatus [this=%x status=%x progress=%u]\n",
+    LOG(("nsHttpTransaction::OnSocketStatus [this=%x status=%x progress=%llu]\n",
         this, status, progress));
 
     if (!mTransportSink)
@@ -300,7 +300,7 @@ nsHttpTransaction::OnTransportStatus(nsresult status, PRUint32 progress)
     if (status == nsISocketTransport::STATUS_RECEIVING_FROM)
         return;
 
-    PRUint32 progressMax;
+    nsUint64 progressMax;
 
     if (status == nsISocketTransport::STATUS_SENDING_TO) {
         // suppress progress when only writing request headers
@@ -309,10 +309,10 @@ nsHttpTransaction::OnTransportStatus(nsresult status, PRUint32 progress)
 
         // when uploading, we include the request headers in the progress
         // notifications.
-        progressMax = mRequestSize;
+        progressMax = mRequestSize; // XXX mRequestSize is 32-bit!
     }
     else {
-        progress = 0;
+        progress = LL_ZERO;
         progressMax = 0;
     }
 
@@ -833,7 +833,7 @@ nsHttpTransaction::HandleContent(char *buf,
     if (*contentRead) {
         // update count of content bytes read and report progress...
         mContentRead += *contentRead;
-        /*
+        /* when uncommenting, take care of 64-bit integers w/ PR_MAX...
         if (mProgressSink)
             mProgressSink->OnProgress(nsnull, nsnull, mContentRead, PR_MAX(0, mContentLength));
         */
