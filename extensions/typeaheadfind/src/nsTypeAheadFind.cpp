@@ -852,7 +852,7 @@ nsTypeAheadFind::BackOneChar(PRBool *aIsBackspaceUsed)
 
   // ----------- Perform the find ------------------
   mIsFindingText = PR_TRUE; // so selection won't call CancelFind()
-  if (NS_FAILED(FindItNow(presShell, findBackwards, mLinksOnlyPref, PR_FALSE))) {
+  if (NS_FAILED(FindItNow(presShell, findBackwards, mLinksOnly, PR_FALSE))) {
     DisplayStatus(PR_FALSE, nsnull, PR_FALSE); // Display failure status
   }
   mIsFindingText = PR_FALSE;
