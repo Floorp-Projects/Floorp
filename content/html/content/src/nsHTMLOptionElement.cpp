@@ -222,6 +222,9 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP 
 nsHTMLOptionElement::GetSelected(PRBool* aValue) 
 {
+  NS_ENSURE_ARG_POINTER(aValue);
+  *aValue = PR_FALSE;
+
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = GetPrimaryFrame(formControlFrame);
   if (NS_SUCCEEDED(rv)) {
@@ -232,7 +235,21 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
       formControlFrame->GetProperty(nsHTMLAtoms::selected, value);
       *aValue = value.EqualsWithConversion("1");
     }
+  } else {
+    // Note: The select content obj maintains all the PresState
+    // so defer to it to get the answer
+    rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMNode> parentNode;
+    if (NS_SUCCEEDED(this->GetParentNode(getter_AddRefs(parentNode)))) {
+      if (parentNode) {
+        nsCOMPtr<nsISelectElement> selectElement(do_QueryInterface(parentNode));
+        if (selectElement) {
+          return selectElement->IsOptionSelected(this, aValue);
+        }
+      }
+    }
   }
+
   return rv;
 }
 
@@ -248,7 +265,20 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
       PRInt32 indx;
       result = GetIndex(&indx);
       if (NS_SUCCEEDED(result)) {
-        selectFrame->SetOptionSelected(indx, aValue);
+        return selectFrame->SetOptionSelected(indx, aValue);
+      }
+    }
+  } else {
+    // Note: The select content obj maintains all the PresState
+    // so defer to it to get the answer
+    nsCOMPtr<nsIDOMNode> parentNode;
+    result = NS_ERROR_FAILURE;
+    if (NS_SUCCEEDED(this->GetParentNode(getter_AddRefs(parentNode)))) {
+      if (parentNode) {
+        nsCOMPtr<nsISelectElement> selectElement(do_QueryInterface(parentNode));
+        if (selectElement) {
+          return selectElement->SetOptionSelected(this, aValue);
+        }
       }
     }
   }

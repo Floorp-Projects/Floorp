@@ -29,6 +29,7 @@
 { 0xa6cf90f6, 0x15b3, 0x11d2,    \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
 
+class nsIDOMHTMLOptionElement;
 
 /** 
  * This interface is used to notify a SELECT when OPTION
@@ -65,6 +66,17 @@ public:
   * to the select during document loading.
   */
   NS_IMETHOD IsDoneAddingContent(PRBool * aIsDone) = 0;
+
+  /**
+  * Returns whether we're the option is selected
+  */
+  NS_IMETHOD IsOptionSelected(nsIDOMHTMLOptionElement* anOption, PRBool * aIsSelected) = 0;
+
+  /**
+  * Sets an option selected or delselected
+  */
+  NS_IMETHOD SetOptionSelected(nsIDOMHTMLOptionElement* anOption, PRBool aIsSelected) = 0;
+
 };
 
 #endif // nsISelectElement_h___
