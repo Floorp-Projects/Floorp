@@ -308,7 +308,7 @@ fe_CreateNewContext(MWContextType type, Widget w, fe_colormap *cmap,
 	CONTEXT_DATA (context)->colormap = cmap;
 
     // set image library Callback functions 
-    CONTEXT_DATA (context)->DisplayPixmap = (DisplayPixmapPtr)DisplayPixmap;
+    CONTEXT_DATA (context)->DisplayPixmap = (DisplayPixmapPtr)fe_DisplayPixmap;
     CONTEXT_DATA (context)->NewPixmap     = (NewPixmapPtr)NULL;
     CONTEXT_DATA (context)->ImageComplete = (ImageCompletePtr)NULL;
 
