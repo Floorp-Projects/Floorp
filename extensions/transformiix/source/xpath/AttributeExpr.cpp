@@ -69,27 +69,8 @@ AttributeExpr::AttributeExpr(String& name)
  * @return the result of the evaluation
 **/
 ExprResult* AttributeExpr::evaluate(Node* context, ContextState* cs) {
-
-    NodeSet* nodeSet = new NodeSet();
-    if ( !context ) return nodeSet;
-    NamedNodeMap* atts = context->getAttributes();
-    if ( atts ) {
-        PRUint32 i = 0;
-        if ( isNameWild && isNamespaceWild ) {
-            for ( ; i < atts->getLength(); i++ )
-                nodeSet->add(atts->item(i));
-        }
-        else {
-            for ( ; i < atts->getLength(); i++ ) {
-                Node* attr = atts->item(i);
-                if (matches(attr, context, cs)) {
-                    nodeSet->add(attr);
-                    if (!isNameWild) break;
-                }
-            }
-        }
-    }
-    return nodeSet;
+    NS_ASSERTION(0, "AttributeExpr::evaluate called");
+    return 0;
 } //-- evaluate
 
 /**

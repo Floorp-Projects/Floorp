@@ -96,18 +96,15 @@ void PathExpr::addExpr(Expr* expr, PathOperator pathOp)
 **/
 ExprResult* PathExpr::evaluate(Node* context, ContextState* cs)
 {
-    //-- add selectExpr functionality here
+    if (!context || !expressions.getLength())
+        return new StringResult("error");
 
-    if (!context || (expressions.getLength() == 0))
-            return new NodeSet(0);
-
-    NodeSet* nodes = new NodeSet();
+    NodeSet* nodes = new NodeSet(context);
     if (!nodes) {
         // XXX ErrorReport: out of memory
         NS_ASSERTION(0, "out of memory");
         return 0;
     }
-    nodes->add(context);
 
     ListIterator iter(&expressions);
     PathExprItem* pxi;
@@ -133,7 +130,7 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs)
             }
 
             if (tmpNodes) {
-                resNodes->copyInto(*tmpNodes);
+                tmpNodes->add(resNodes);
                 delete resNodes;
             }
             else
@@ -159,8 +156,9 @@ void PathExpr::evalDescendants (Expr* expr, Node* context,
     if (!res || (res->getResultType() != ExprResult::NODESET)) {
         //XXX ErrorReport: report nonnodeset error
     }
-    else
-        ((NodeSet*)res)->copyInto(*resNodes);
+    else {
+        resNodes->add((NodeSet*)res);
+    }
     delete res;
 
     MBool filterWS = cs->isStripSpaceAllowed(context);

@@ -131,7 +131,7 @@ void ProcessorState::addAttributeSet(Element* aAttributeSet,
             if (!node->getLocalName(&nodeName) || !nodeName)
                 continue;
             if (nodeName == txXSLTAtoms::attribute)
-                attSet->add(node);
+                attSet->append(node);
             TX_RELEASE_ATOM(nodeName);
         }
         node = node->getNextSibling();
@@ -427,8 +427,6 @@ NodeSet* ProcessorState::getAttributeSet(const String& aName)
     if (!attset)
         return attset;
 
-    attset->setDuplicateChecking(MB_FALSE);
-
     ImportFrame* frame;
     txListIterator frameIter(&mImportFrames);
     frameIter.resetToEnd();
@@ -436,7 +434,7 @@ NodeSet* ProcessorState::getAttributeSet(const String& aName)
     while ((frame = (ImportFrame*)frameIter.previous())) {
         NodeSet* nodes = (NodeSet*)frame->mNamedAttributeSets.get(aName);
         if (nodes)
-            nodes->copyInto(*attset);
+            attset->append(nodes);
     }
     return attset;
 }
@@ -964,49 +962,6 @@ FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
    return new ErrorFunctionCall(err);
 
 } //-- resolveFunctionCall
-
-
-/**
- * Sorts the given NodeSet by DocumentOrder.
- * @param nodes the NodeSet to sort
- *
- * Note: I will be moving this functionality elsewhere soon
-**/
-void ProcessorState::sortByDocumentOrder(NodeSet* nodes) {
-    if (!nodes || (nodes->size() < 2))
-        return;
-
-    NodeSet sorted(nodes->size());
-    sorted.setDuplicateChecking(MB_FALSE);
-    sorted.add(nodes->get(0));
-
-    int i, k;
-    for (i = 1; i < nodes->size(); i++) {
-        Node* node = nodes->get(i);
-        for (k = i - 1; k >= 0; k--) {
-            Node* tmpNode = sorted.get(k);
-            if (node->compareDocumentPosition(tmpNode) > 0) {
-                sorted.add(k + 1, node);
-                break;
-            }
-            else if (k == 0) {
-                sorted.add(0, node);
-                break;
-            }
-        }
-    }
-
-    //-- save current state of duplicates checking
-    MBool checkDuplicates = nodes->getDuplicateChecking();
-    nodes->setDuplicateChecking(MB_FALSE);
-    nodes->clear();
-    for (i = 0; i < sorted.size(); i++) {
-        nodes->add(sorted.get(i));
-    }
-    nodes->setDuplicateChecking(checkDuplicates);
-    sorted.clear();
-
-} //-- sortByDocumentOrder
 
   //-------------------/
  //- Private Methods -/

@@ -40,23 +40,14 @@ RootExpr::RootExpr(MBool aSerialize) {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* RootExpr::evaluate(Node* context, ContextState* cs) {
-    NodeSet* nodeSet = new NodeSet();
-    if (!nodeSet) {
-        // XXX ErrorReport: out of memory
-        NS_ASSERTION(0, "out of memory");
-        return 0;
-    }
-    
+ExprResult* RootExpr::evaluate(Node* context, ContextState* cs)
+{
     if (!context)
-        return nodeSet;
+        return new StringResult("error");
 
     if (context->getNodeType() != Node::DOCUMENT_NODE)
-        nodeSet->add(context->getOwnerDocument());
-    else
-        nodeSet->add(context);
-
-    return nodeSet;
+        return new NodeSet(context->getOwnerDocument());
+    return new NodeSet(context);
 } //-- evaluate
 
 /**

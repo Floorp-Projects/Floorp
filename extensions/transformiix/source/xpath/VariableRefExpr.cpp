@@ -59,11 +59,7 @@ ExprResult* VariableRefExpr::evaluate(Node* context, ContextState* cs) {
             //-- NodeSet
             case ExprResult::NODESET :
             {
-                NodeSet* src = (NodeSet*)exprResult;
-                NodeSet* dest = new NodeSet(src->size());
-                for ( int i = 0; i < src->size(); i++)
-                    dest->add(src->get(i));
-                copyOfResult = dest;
+                copyOfResult = new NodeSet(*(NodeSet*)exprResult);
                 break;
             }
             //-- NumberResult
@@ -96,4 +92,3 @@ void VariableRefExpr::toString(String& str) {
     str.append('$');
     str.append(name);
 } //-- toString
-

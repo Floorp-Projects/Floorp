@@ -178,7 +178,7 @@ NodeSet* Numbering::getAncestorsOrSelf
         if ((from) && from->matches(parent, parent->getParentNode(), ps)) break;
 
         if (countExpr->matches(parent, parent->getParentNode(), ps)) {
-            nodeSet->add(parent);
+            nodeSet->append(parent);
             if (findNearest) break;
         }
         parent = parent->getParentNode();
