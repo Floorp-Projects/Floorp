@@ -27,7 +27,7 @@
 #include "nsIOutputStream.h"
 #include "nsISmtpUrl.h"
 
-/* states of the machine
+ /* states of the machine
  */
 typedef enum _SmtpState {
 SMTP_RESPONSE = 0, 
@@ -68,9 +68,8 @@ typedef enum _SmtpAuthMethod {
 class nsSmtpProtocol : public nsIStreamListener
 {
 public:
-	// Creating a protocol instance requires the URL which needs to be run AND it requires
-	// a transport layer. 
-	nsSmtpProtocol(nsIURL * aURL, nsITransport * transportLayer);
+	// Creating a protocol instance requires the URL which needs to be run.
+	nsSmtpProtocol(nsIURL * aURL);
 	
 	virtual ~nsSmtpProtocol();
 
@@ -139,6 +138,7 @@ private:
 	PRInt32		m_continuationResponse;
     char       *m_responseText;   /* text returned from Smtp server */
 	char	   *m_hostName;
+	PRUint32    m_port;
 
 	char	   *m_addressCopy;
 	char	   *m_addresses;
@@ -163,7 +163,7 @@ private:
 	PRInt32	  CloseConnection(); // releases and closes down this protocol instance...
 
 	// initialization function given a new url and transport layer
-	void Initialize(nsIURL * aURL, nsITransport * transportLayer);
+	void Initialize(nsIURL * aURL);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Communication methods --> Reading and writing protocol

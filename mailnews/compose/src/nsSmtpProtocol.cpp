@@ -27,6 +27,8 @@
 #include "nsMsgRFC822Parser.h"
 #include "nsFileStream.h"
 
+#include "nsINetService.h"
+
 #include "rosetta.h"
 
 #include "allxpstr.h"
@@ -35,6 +37,9 @@
 #include "prerror.h"
 #include "prprf.h"
 #include "nsEscape.h"
+
+
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
 /* the output_buffer_size must be larger than the largest possible line
  * 2000 seems good for news
@@ -204,11 +209,11 @@ NS_IMPL_ADDREF(nsSmtpProtocol)
 NS_IMPL_RELEASE(nsSmtpProtocol)
 NS_IMPL_QUERY_INTERFACE(nsSmtpProtocol, nsIStreamListener::GetIID()); /* we need to pass in the interface ID of this interface */
 
-nsSmtpProtocol::nsSmtpProtocol(nsIURL * aURL, nsITransport * transportLayer)
+nsSmtpProtocol::nsSmtpProtocol(nsIURL * aURL)
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
-  Initialize(aURL, transportLayer);
+  Initialize(aURL);
 }
 
 nsSmtpProtocol::~nsSmtpProtocol()
@@ -228,17 +233,13 @@ nsSmtpProtocol::~nsSmtpProtocol()
 	NS_IF_RELEASE(m_transport);
 }
 
-void nsSmtpProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
+void nsSmtpProtocol::Initialize(nsIURL * aURL)
 {
 	NS_PRECONDITION(aURL, "invalid URL passed into Smtp Protocol");
+	nsresult rv = NS_OK;
 
 	m_flags = 0;
-
-	// grab a reference to the transport interface
-	if (transportLayer)
-		NS_ADDREF(transportLayer);
-
-	m_transport = transportLayer;
+	m_port = SMTP_PORT;
 
 	// query the URL for a nsISmtpUrl
 	m_runningURL = NULL; // initialize to NULL
@@ -252,25 +253,48 @@ void nsSmtpProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 			// it returns the interface to us...we'll release when we are done
 		}
 	}
-	
-	m_outputStream = NULL;
-	m_outputConsumer = NULL;
-
-	nsresult rv = m_transport->GetOutputStream(&m_outputStream);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to create an output stream");
-	rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to provide us with an output consumer!");
-
-	// register self as the consumer for the socket...
-	rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register Smtp instance as a consumer on the socket");
 
 	const char * hostName = NULL;
-	aURL->GetHost(&hostName);
+	if (m_runningURL)
+	{
+		m_runningURL->GetHost(&hostName);
+		m_runningURL->GetHostPort(&m_port);
+	}
+
 	if (hostName)
 		m_hostName = PL_strdup(hostName);
 	else
 		m_hostName = NULL;
+
+
+
+	m_outputStream = nsnull;
+	m_outputConsumer = nsnull;
+	m_transport = nsnull;
+
+	nsINetService* pNetService;
+	rv = nsServiceManager::GetService(kNetServiceCID,
+                                        nsINetService::GetIID(),
+                                        (nsISupports**)&pNetService);
+    if (NS_SUCCEEDED(rv) && pNetService) 
+	{
+		rv = pNetService->CreateSocketTransport(&m_transport, m_port, m_hostName);
+		if (NS_SUCCEEDED(rv) && m_transport)
+		{
+			rv = m_transport->GetOutputStream(&m_outputStream);
+			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create an output stream");
+
+			rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
+			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create an output consumer");
+
+			// register self as the consumer for the socket...
+			rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
+			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register NNTP instance as a consumer on the socket");
+		} // if m_transport
+                
+		(void)nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
+	} // if net service
+	
 
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;
