@@ -36,6 +36,8 @@
 const nsIPK11Token = Components.interfaces.nsIPK11Token;
 const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
 const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
+const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
 
 var internal_token;
 
@@ -95,9 +97,10 @@ function changePasswordSettings()
 
 function ChangePW()
 {
-  window.open("chrome://pippki/content/changepassword.xul",
-              internal_token.tokenName,
-              "chrome,resizable=1,modal=1,dialog=1");
+  var params = Components.classes[nsDialogParamBlock].getService(nsIDialogParamBlock);
+  params.SetString(1,"_blank");
+  window.openDialog("chrome://pippki/content/changepassword.xul","",
+              "chrome,resizable=1,modal=1,dialog=1",params);
 }
 
 function ResetPW()

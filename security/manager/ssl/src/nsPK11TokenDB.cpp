@@ -184,7 +184,9 @@ NS_IMETHODIMP nsPK11Token::GetMinimumPasswordLength(PRInt32 *aMinimumPasswordLen
 /* readonly attribute boolean needsUserInit; */
 NS_IMETHODIMP nsPK11Token::GetNeedsUserInit(PRBool *aNeedsUserInit)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+     *aNeedsUserInit = PK11_NeedUserInit(mSlot);
+     return NS_OK;
+
 }
 
 /* boolean checkPassword (in wstring password); */

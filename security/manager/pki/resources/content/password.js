@@ -26,56 +26,104 @@ const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 const nsPKCS11ModuleDB = "@mozilla.org/security/pkcs11moduledb;1";
 const nsIPKCS11ModuleDB = Components.interfaces.nsIPKCS11ModuleDB;
 const nsIPKCS11Slot = Components.interfaces.nsIPKCS11Slot;
+const nsIPK11Token = Components.interfaces.nsIPK11Token;
+
 
 var params;
-var tokenName;
+var tokenName="";
 var pw1;
 
 function onLoad()
 {
+
   pw1 = document.getElementById("pw1");
+  try {
+     params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
+     tokenName = params.getString(1)
+	  
+  }catch(exception)
+	 {tokenName = self.name;}
 
-  if ("arguments" in window) {
-    params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
-    tokenName = params.GetString(1);
+  if(tokenName=="" || tokenName=="_blank") {
+     var sectokdb = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
+     var tokenList = sectokdb.listTokens();
+     var enumElement;
+     i=0;
+     var menu = document.getElementById("tokenMenu");
+     try {
+        for ( ; !tokenList.isDone(); tokenList.next()) {
+           enumElement = tokenList.currentItem();
+           var token = enumElement.QueryInterface(nsIPK11Token);
+           if(token.needsLogin() || !(token.needsUserInit)) {
+              var menuItemNode = document.createElement("menuitem");
+              menuItemNode.setAttribute("value", token.tokenName);
+              menuItemNode.setAttribute("label", token.tokenName);
+              menu.firstChild.appendChild(menuItemNode);
+              if (i == 0) {
+                 menu.selectedItem = menuItemNode;
+                 tokenName = token.tokenName;
+              }
+              i++;
+           }
+        }
+     }catch(exception){}
   } else {
-    tokenName = self.name;
+    var sel = document.getElementById("tokenMenu");
+    sel.setAttribute("hidden", "true");
+    var tag = document.getElementById("tokenName");
+    tag.setAttribute("value",tokenName);
   }
+	 	 
+  process();
+}
 
-  // Set token name in display
-  var t = document.getElementById("tokenName");
-  t.setAttribute("value", tokenName);
+function onMenuChange()
+{
+   //get the selected token
+   var list = document.getElementById("tokenMenu");
+   tokenName = list.value;
 
-  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+   process();
+}
 
-  // If the token is unitialized, don't use the old password box.
-  // Otherwise, do.
-  var secmoddb = Components.
-                  classes[nsPKCS11ModuleDB].
-                  getService(nsIPKCS11ModuleDB);
-  var slot = secmoddb.findSlotByName(tokenName);
-  if (slot) {
-    var oldpwbox = document.getElementById("oldpw");
-    var status = slot.status;
-    if (status == nsIPKCS11Slot.SLOT_UNINITIALIZED
-        || status == nsIPKCS11Slot.SLOT_READY) {
-      oldpwbox.setAttribute("disabled", "true");
-      oldpwbox.setAttribute("type", "text");
-      oldpwbox.setAttribute("value", 
-                            bundle.GetStringFromName("password_not_set")); 
-      if (status == nsIPKCS11Slot.SLOT_READY) {
-        oldpwbox.setAttribute("inited", "empty");
-      } else {
-        oldpwbox.setAttribute("inited", "true");
-      }
-      // Select first password field
-      document.getElementById('pw1').focus();
-    } else {
-      // Select old password field
-      oldpwbox.setAttribute("inited", "false");
-      oldpwbox.focus();
-    }
-  }
+
+function process()
+{
+   var secmoddb = Components.classes[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
+   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+
+   // If the token is unitialized, don't use the old password box.
+   // Otherwise, do.
+
+   var slot = secmoddb.findSlotByName(tokenName);
+   if (slot) {
+     var oldpwbox = document.getElementById("oldpw");
+     var msgBox = document.getElementById("message");
+     var status = slot.status;
+     if (status == nsIPKCS11Slot.SLOT_UNINITIALIZED
+         || status == nsIPKCS11Slot.SLOT_READY) {
+      
+       oldpwbox.setAttribute("hidden", "true");
+       msgBox.setAttribute("value", bundle.GetStringFromName("password_not_set")); 
+       msgBox.setAttribute("hidden", "false");
+
+       if (status == nsIPKCS11Slot.SLOT_READY) {
+         oldpwbox.setAttribute("inited", "empty");
+       } else {
+         oldpwbox.setAttribute("inited", "true");
+       }
+      
+       // Select first password field
+       document.getElementById('pw1').focus();
+    
+     } else {
+       // Select old password field
+       oldpwbox.setAttribute("hidden", "false");
+       msgBox.setAttribute("hidden", "true");
+       oldpwbox.setAttribute("inited", "false");
+       oldpwbox.focus();
+     }
+   }
 
   if (params) {
     // Return value 0 means "canceled"
