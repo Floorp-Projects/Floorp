@@ -48,7 +48,6 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
     fTotalDownloadSize(0),
     fCurrentCommandTag(nil),
     fSelectedMailboxName(nil),
-    fFlagState(nil),
     fIMAPstate(kNonAuthenticated),
 	fLastChunk(PR_FALSE),
 	fServerIsNetscape3xServer(PR_FALSE),
@@ -74,7 +73,6 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
 nsImapServerResponseParser::~nsImapServerResponseParser()
 {
 	PR_FREEIF( fCurrentCommandTag );
-	//delete fFlagState;	// not our object
 	delete fSearchResults; 
 	PR_FREEIF( fMailAccountUrl );
 	PR_FREEIF( fFolderAdminUrl );
@@ -128,7 +126,7 @@ PRBool	nsImapServerResponseParser::CommandFailed()
 	return fCurrentCommandFailed;
 }
 
-void nsImapServerResponseParser::SetFlagState(nsImapFlagAndUidState *state)
+void nsImapServerResponseParser::SetFlagState(nsIImapFlagAndUidState *state)
 {
 	fFlagState = state;
 }
@@ -1408,9 +1406,8 @@ void nsImapServerResponseParser::resp_text_code()
 					 fSupportsUserDefinedFlags |= kImapMsgSupportMDNSentFlag;
 				}
 			} while (!at_end_of_line() && ContinueParse());
-			if (GetCurrentFlagState())
-				GetCurrentFlagState()->
-					SetSupportedUserFlags(fSupportsUserDefinedFlags);
+			if (fFlagState)
+				fFlagState->SetSupportedUserFlags(fSupportsUserDefinedFlags);
 
 		}
 		else if (!PL_strcasecmp(fNextToken,"READ-ONLY]"))

@@ -48,13 +48,8 @@ public:
     
     imapMessageFlagsType GetMessageFlagsFromUID(PRUint32 uid, PRBool *foundIt, PRInt32 *ndx);
 	PRBool				 IsLastMessageUnseen(void);
-    void				 ExpungeByIndex(PRUint32 index);
-	// adds to sorted list.  protects against duplicates and going past fNumberOfMessageSlotsAllocated  
-    void				 AddUidFlagPair(PRUint32 uid, imapMessageFlagsType flags);
     
     PRUint32			 GetHighestNonDeletedUID();
-	void				 Reset(PRUint32 howManyLeft);
-    void                 SetSupportedUserFlags(PRUint16 flags);
     PRUint16               GetSupportedUserFlags() { return fSupportedUserFlags; };
 
 private:

@@ -412,7 +412,7 @@ private:
 	PRBool					m_pseudoInterrupted;
 	PRBool					m_active;
 	PRBool					m_threadShouldDie;
-	nsImapFlagAndUidState	m_flagState;
+	nsImapFlagAndUidState	*m_flagState;
 	nsMsgBiffState			m_currentBiffState;
     // manage the IMAP server command tags
     char m_currentServerCommandTag[10];   // enough for a billion

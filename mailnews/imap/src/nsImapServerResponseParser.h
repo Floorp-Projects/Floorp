@@ -120,8 +120,6 @@ public:
 	const char *GetManageFolderUrl() {return fFolderAdminUrl;}
 
 
-	nsImapFlagAndUidState     *GetCurrentFlagState() { return fFlagState; }
-
     // Call this when adding a pipelined command to the session
     void IncrementNumberOfTaggedResponsesExpected(const char *newExpectedTag);
     
@@ -130,7 +128,7 @@ public:
 	void ClearLastFetchChunkReceived(); 
 	virtual PRUint16	SupportsUserFlags() { return fSupportsUserDefinedFlags; };
     virtual PRUint16  SettablePermanentFlags() { return fSettablePermanentFlags;};
-	void SetFlagState(nsImapFlagAndUidState *state);
+	void SetFlagState(nsIImapFlagAndUidState *state);
 
 	PRBool GetDownloadingHeaders();
 	PRBool GetFillingInShell();
@@ -216,7 +214,7 @@ private:
     
     nsImapSearchResultSequence    *fSearchResults;
     
-    nsImapFlagAndUidState     *fFlagState;		// NOT owned by us, it's a copy, do not destroy
+    nsCOMPtr <nsIImapFlagAndUidState> fFlagState;		// NOT owned by us, it's a copy, do not destroy
     
     eIMAPstate               fIMAPstate;
 	PRBool					 fWaitingForMoreClientInput;

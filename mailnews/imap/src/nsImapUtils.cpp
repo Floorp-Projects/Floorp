@@ -269,6 +269,10 @@ nsImapMailboxSpec::nsImapMailboxSpec()
 
 nsImapMailboxSpec::~nsImapMailboxSpec()
 {
+	if (allocatedPathName)
+		nsCRT::free(allocatedPathName);
+	if (unicharPathName)
+		nsCRT::free(unicharPathName);
 }
 
 NS_IMPL_GETSET(nsImapMailboxSpec, Folder_UIDVALIDITY, PRInt32, folder_UIDVALIDITY);

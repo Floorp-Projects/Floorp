@@ -212,7 +212,7 @@ nsresult nsImapProtocol::GlobalInitialization()
 }
 
 nsImapProtocol::nsImapProtocol() : 
-    m_parser(*this), m_flagState(kImapFlagAndUidStateSize, PR_FALSE)
+    m_parser(*this)
 {
   NS_INIT_REFCNT();
   m_flags = 0;
@@ -221,6 +221,7 @@ nsImapProtocol::nsImapProtocol() :
   m_gotFEEventCompletion = PR_FALSE;
     m_connectionStatus = 0;
   m_hostSessionList = nsnull;
+  m_flagState = nsnull;
     
   if (!gInitialized)
     GlobalInitialization();
@@ -321,10 +322,16 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
   if (!aSinkEventQueue || !aHostSessionList)
         return NS_ERROR_NULL_POINTER;
 
+   m_flagState = new nsImapFlagAndUidState(kImapFlagAndUidStateSize, PR_FALSE);
+   if (!m_flagState)
+	   return NS_ERROR_OUT_OF_MEMORY;
+
+   NS_ADDREF(m_flagState);
+
     m_sinkEventQueue = dont_QueryInterface(aSinkEventQueue);
     m_hostSessionList = aHostSessionList; // no ref count...host session list has life time > connection
     m_parser.SetHostSessionList(aHostSessionList);
-    m_parser.SetFlagState(&m_flagState);
+    m_parser.SetFlagState(m_flagState);
 
   // Now initialize the thread for the connection and create appropriate monitors
   if (m_thread == nsnull)
@@ -2213,7 +2220,7 @@ void nsImapProtocol::SelectMailbox(const char *mailboxName)
 
   PRInt32 numOfMessagesInFlagState = 0;
   nsIImapUrl::nsImapAction imapAction; 
-  m_flagState.GetNumberOfMessages(&numOfMessagesInFlagState);
+  m_flagState->GetNumberOfMessages(&numOfMessagesInFlagState);
   res = m_runningUrl->GetImapAction(&imapAction);
   // if we've selected a mailbox, and we're not going to do an update because of the
   // url type, but don't have the flags, go get them!
@@ -2910,8 +2917,8 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     nsCString fetchStr;
     PRInt32 added = 0, deleted = 0;
 
-    m_flagState.GetNumberOfMessages(&added);
-    deleted = m_flagState.GetNumberOfDeletedMessages();
+    m_flagState->GetNumberOfMessages(&added);
+    deleted = m_flagState->GetNumberOfDeletedMessages();
 
     if (!added || (added == deleted))
     {
@@ -2921,7 +2928,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
       if (!DeathSignalReceived()) // only expunge if not reading messages manually and before fetching new
       {
         // ### TODO read gExpungeThreshhold from prefs.
-        if ((m_flagState.GetNumberOfDeletedMessages() >= 20/* gExpungeThreshold */)  && GetDeleteIsMoveToTrash() )
+        if ((m_flagState->GetNumberOfDeletedMessages() >= 20/* gExpungeThreshold */)  && GetDeleteIsMoveToTrash() )
           Expunge();  // might be expensive, test for user cancel
       }
 
@@ -2987,7 +2994,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     GetServerStateParser().ResetFlagInfo(0);
   PR_FREEIF(new_spec->allocatedPathName); 
   PR_FREEIF(new_spec->hostName);
-  PR_FREEIF(new_spec);
+  NS_IF_RELEASE(new_spec);
 }
 
 void nsImapProtocol::UpdatedMailboxSpec(nsImapMailboxSpec *aSpec)
@@ -3087,7 +3094,7 @@ NS_IMETHODIMP nsImapProtocol::GetFlagsForUID(PRUint32 uid, PRBool *foundIt, imap
 {
   PRInt32 i;
 
-  imapMessageFlagsType flags = m_flagState.GetMessageFlagsFromUID(uid, foundIt, &i);
+  imapMessageFlagsType flags = m_flagState->GetMessageFlagsFromUID(uid, foundIt, &i);
   if (*foundIt)
     *resultFlags = flags;
   return NS_OK;
@@ -3098,7 +3105,7 @@ NS_IMETHODIMP nsImapProtocol::GetSupportedUserFlags(PRUint16 *supportedFlags)
   if (!supportedFlags)
     return NS_ERROR_NULL_POINTER;
 
-  *supportedFlags = m_flagState.GetSupportedUserFlags();
+  *supportedFlags = m_flagState->GetSupportedUserFlags();
   return NS_OK;
 }
 void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields)
@@ -3149,14 +3156,14 @@ void nsImapProtocol::PeriodicBiff()
     {
     Noop(); // check the latest number of messages
     PRInt32 numMessages = 0;
-    m_flagState.GetNumberOfMessages(&numMessages);
+    m_flagState->GetNumberOfMessages(&numMessages);
         if (GetServerStateParser().NumberOfMessages() != numMessages)
         {
       PRUint32 id = GetServerStateParser().HighestRecordedUID() + 1;
       nsCString fetchStr;           // only update flags
       PRUint32 added = 0, deleted = 0;
       
-      deleted = m_flagState.GetNumberOfDeletedMessages();
+      deleted = m_flagState->GetNumberOfDeletedMessages();
       added = numMessages;
       if (!added || (added == deleted)) // empty keys, get them all
         id = 1;
@@ -3166,7 +3173,7 @@ void nsImapProtocol::PeriodicBiff()
       fetchStr.Append(":*"); 
       FetchMessage(fetchStr, kFlags, PR_TRUE);
 
-      if (((PRUint32) m_flagState.GetHighestNonDeletedUID() >= id) && m_flagState.IsLastMessageUnseen())
+      if (((PRUint32) m_flagState->GetHighestNonDeletedUID() >= id) && m_flagState->IsLastMessageUnseen())
         m_currentBiffState = nsMsgBiffState_NewMail;
       else
         m_currentBiffState = nsMsgBiffState_NoMail;
@@ -3838,7 +3845,6 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
                 {
                     m_imapServerSink->PossibleImapMailbox(boxNameCopy, 
 									adoptedBoxSpec->hierarchySeparator, adoptedBoxSpec->box_flags);
-//                    WaitForFEEventCompletion();
                 
                     PRBool useSubscription = PR_FALSE;
 
@@ -3880,6 +3886,7 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
         }
       }
         }
+        NS_IF_RELEASE( adoptedBoxSpec);
         break;
     case kDiscoverBaseFolderInProgress:
         {
@@ -3896,8 +3903,7 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
             m_deletableChildren->AppendElement((void*)
                 adoptedBoxSpec->allocatedPathName);
             PR_FREEIF(adoptedBoxSpec->hostName);
-//			delete adoptedBoxSpec->flagState;
-            PR_FREEIF( adoptedBoxSpec);
+            NS_IF_RELEASE( adoptedBoxSpec);
         }
         break;
   case kListingForInfoOnly:
@@ -3910,13 +3916,13 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
                                   adoptedBoxSpec->hierarchySeparator);
       m_listedMailboxList.AppendElement((void*) mb);
             PR_FREEIF(adoptedBoxSpec->allocatedPathName);
-            PR_FREEIF(adoptedBoxSpec);
+            NS_IF_RELEASE(adoptedBoxSpec);
     }
     break;
   case kDiscoveringNamespacesOnly:
     {
             PR_FREEIF(adoptedBoxSpec->allocatedPathName);
-            PR_FREEIF(adoptedBoxSpec);
+            NS_IF_RELEASE(adoptedBoxSpec);
     }
     break;
     default:

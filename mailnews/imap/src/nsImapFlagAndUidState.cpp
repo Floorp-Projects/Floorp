@@ -123,33 +123,35 @@ nsImapFlagAndUidState::~nsImapFlagAndUidState()
 	PR_FREEIF(fFlags);
 }
 	
-void
+NS_IMETHODIMP
 nsImapFlagAndUidState::SetSupportedUserFlags(uint16 flags)
 {
 	fSupportedUserFlags |= flags;
+	return NS_OK;
 }
 
 
 // we need to reset our flags, (re-read all) but chances are the memory allocation needed will be
 // very close to what we were already using
 
-void nsImapFlagAndUidState::Reset(PRUint32 howManyLeft)
+NS_IMETHODIMP nsImapFlagAndUidState::Reset(PRUint32 howManyLeft)
 {
     PR_CEnterMonitor(this);
 	if (!howManyLeft)
 		fNumberOfMessagesAdded = fNumberDeleted = 0;		// used space is still here
     PR_CExitMonitor(this);
+	return NS_OK;
 }
 
 
 // Remove (expunge) a message from our array, since now it is gone for good
 
-void nsImapFlagAndUidState::ExpungeByIndex(PRUint32 msgIndex)
+NS_IMETHODIMP nsImapFlagAndUidState::ExpungeByIndex(PRUint32 msgIndex)
 {
 	PRUint32 counter = 0;
 	
 	if ((PRUint32) fNumberOfMessagesAdded < msgIndex)
-		return;
+		return NS_ERROR_INVALID_ARG;
 
     PR_CEnterMonitor(this);
 	msgIndex--;
@@ -162,11 +164,12 @@ void nsImapFlagAndUidState::ExpungeByIndex(PRUint32 msgIndex)
 		fFlags[counter] = fFlags[counter + 1];
 	}
     PR_CExitMonitor(this);
+	return NS_OK;
 }
 
 
 	// adds to sorted list.  protects against duplicates and going past fNumberOfMessageSlotsAllocated  
-void nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType flags)
+NS_IMETHODIMP nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType flags)
 {
     PR_CEnterMonitor(this);
 	// make sure there is room for this pair
@@ -186,7 +189,7 @@ void nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType fl
 		if (flags & kImapMsgDeletedFlag)
 			fNumberDeleted++;
 	    PR_CExitMonitor(this);
-		return;
+		return NS_OK;
 	}
 	
 	// search for the slot for this uid-flag pair
@@ -219,6 +222,7 @@ void nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType fl
 		fFlags[insertionIndex] = flags;
 	}
     PR_CExitMonitor(this);
+	return NS_OK;
 }
 
 	

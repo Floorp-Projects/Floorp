@@ -29,5 +29,9 @@ interface nsIImapFlagAndUidState : nsISupports
 	readonly attribute long numberOfRecentMessages;
     void GetUidOfMessage(in long zeroBasedIndex, out unsigned long result);
     void GetMessageFlags(in long zeroBasedIndex, out unsigned short result);
+	void ExpungeByIndex(in unsigned long zeroBasedIndex);
+	void AddUidFlagPair(in unsigned long uid, in unsigned short flags);
+	void Reset(in unsigned long howManyLeft);
+	void SetSupportedUserFlags(in unsigned short flags);
 };
 
