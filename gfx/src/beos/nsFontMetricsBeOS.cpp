@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set cindent ts=2 sts=2 sw=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -45,7 +46,8 @@
 #include "nsIServiceManager.h" 
 #include "nsICharsetConverterManager.h" 
 #include "nsISaveAsCharset.h" 
-#include "nsIPref.h" 
+#include "nsIPrefService.h" 
+#include "nsIPrefBranch.h"
 #include "nsCOMPtr.h" 
 #include "nspr.h" 
 #include "nsHashtable.h" 
@@ -58,8 +60,6 @@
  
 #undef NOISY_FONTS
 #undef REALLY_NOISY_FONTS
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsFontMetricsBeOS::nsFontMetricsBeOS()
   :mEmulateBold(PR_FALSE)
@@ -83,22 +83,6 @@ nsFontMetricsBeOS::~nsFontMetricsBeOS()
  
 NS_IMPL_ISUPPORTS1(nsFontMetricsBeOS, nsIFontMetrics) 
  
-static PRBool IsASCIIFontName(const nsString& aName) 
-{ 
-  PRUint32 len = aName.Length(); 
-  const PRUnichar* str = aName.get(); 
-  for (PRUint32 i = 0; i < len; i++) 
-  { 
-    /* 
-     * X font names are printable ASCII, ignore others (for now) 
-     */ 
-    if ((str[i] < 0x20) || (str[i] > 0x7E))
-      return PR_FALSE; 
-  } 
-
-  return PR_TRUE; 
-} 
-
 // a structure to hold a font family list
 typedef struct nsFontEnumParamsBeOS {
   nsFontMetricsBeOS *metrics;
@@ -144,29 +128,26 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   app2twip *= app2dev;
   float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip)))) / app2twip;
 
-
   // process specified fonts from first item of the array.
   // stop processing next when a real font found;
   PRBool fontfound = PR_FALSE;
-  PRBool isfixed = PR_FALSE;;
+  PRBool isfixed = PR_FALSE;
   for (int i=0 ; i<param.family.Count() && !fontfound ; i++) 
   {
     nsString *fam = param.family.StringAt(i);
     PRBool isgeneric = ( param.isgeneric[i] ) ? PR_TRUE: PR_FALSE;
-    char *family = ToNewUTF8String(*fam);
+    NS_ConvertUTF16toUTF8 family(*fam);
     // Fallback
-    isfixed = (strstr(family,"monospace") != nsnull || strstr(family,"fixed")!=nsnull);
+    isfixed = family.Equals("monospace") || family.Equals("fixed");
     if (!isgeneric) 
     {
       // non-generic font
-      if (count_font_styles((font_family)family) <= 0) 
+      if (count_font_styles((font_family)family.get()) <= 0) 
       {
-        // the specified font is not exist in this computer.
-        nsMemory::Free(family);
+        // the specified font does not exist on this computer.
         continue;
       }
-      mFontHandle.SetFamilyAndStyle( (font_family)family, NULL );
-      nsMemory::Free(family);
+      mFontHandle.SetFamilyAndStyle( (font_family)family.get(), NULL );
       fontfound = PR_TRUE;
       break;
     } 
@@ -178,20 +159,20 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
       const char *lang;
       aLangGroup->GetUTF8String( &lang );
       char prop[256];
-      sprintf( prop, "font.name.%s.%s", family, lang );
-
-      nsMemory::Free(family);
+      snprintf( prop, sizeof(prop), "%s.%s", family.get(), lang );
 
       // look up prefs
       nsXPIDLCString real_family;
-      nsresult res = NS_ERROR_FAILURE;
+      nsresult res;
       //NS_WITH_SERVICE( nsIPref, prefs, kPrefCID, &res );
-      nsCOMPtr<nsIPref> prefs = do_GetService( kPrefCID, &res );
-      if (res == NS_OK) 
+      nsCOMPtr<nsIPrefService> prefs = do_GetService( NS_PREFSERVICE_CONTRACTID, &res );
+      if (NS_SUCCEEDED(res)) 
       {
-        prefs->CopyCharPref( prop, getter_Copies(real_family));
+        nsCOMPtr<nsIPrefBranch> branch;
+        prefs->GetBranch("font.name.", getter_AddRefs(branch));
+        branch->GetCharPref(prop, getter_Copies(real_family));
 
-        if (real_family.get() && strlen(real_family.get()) <= B_FONT_FAMILY_LENGTH + 1  && count_font_styles((font_family)real_family.get()) > 0) 
+        if (!real_family.IsEmpty() && real_family.Length() <= B_FONT_FAMILY_LENGTH  && count_font_styles((font_family)real_family.get()) > 0) 
         {
           mFontHandle.SetFamilyAndStyle( (font_family)real_family.get(), NULL );
           fontfound = PR_TRUE;
@@ -199,13 +180,13 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
         }
       } 
       // not successful. use system font.
-	  if (isfixed)
+      if (isfixed)
         mFontHandle = be_fixed_font;
       else
         mFontHandle = be_plain_font;
       fontfound = PR_TRUE;
       break;
-    } 
+    }
   }
 
   // if got no font, then use system font.
@@ -447,15 +428,13 @@ NS_IMETHODIMP  nsFontMetricsBeOS::GetFontHandle(nsFontHandle &aHandle)
 nsresult 
 nsFontMetricsBeOS::FamilyExists(const nsString& aName) 
 { 
-  if (!IsASCIIFontName(aName)) 
+  if (!IsASCII(aName)) 
     return NS_ERROR_FAILURE; 
  
   nsCAutoString name; 
   name.AssignWithConversion(aName.get()); 
   ToLowerCase(name); 
   PRBool  isthere = PR_FALSE; 
- 
-  char* cStr = ToNewCString(name); 
  
   int32 numFamilies = count_font_families(); 
   for (int32 i = 0; i < numFamilies; i++) 
@@ -464,7 +443,7 @@ nsFontMetricsBeOS::FamilyExists(const nsString& aName)
     uint32 flags; 
     if (get_font_family(i, &family, &flags) == B_OK) 
     { 
-      if (strcmp(family, cStr) == 0) 
+      if (name.Equals(family) == 0) 
       {
         isthere = PR_TRUE; 
         break; 
@@ -472,9 +451,7 @@ nsFontMetricsBeOS::FamilyExists(const nsString& aName)
     } 
   } 
  
-  //printf("%s there? %s\n", cStr, isthere?"Yes":"No" ); 
-       
-  delete[] cStr; 
+  //printf("%s there? %s\n", name.get(), isthere?"Yes":"No" ); 
  
   if (PR_TRUE == isthere) 
     return NS_OK; 
