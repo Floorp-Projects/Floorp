@@ -183,17 +183,12 @@ function ComposeStartup()
 			window.editorShell.SetToolbarWindow(window);
 			window.editorShell.RegisterDocumentStateListener(editorDocumentListener);
 
-			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
-			msgCompose.editor = window.editorShell;			
 			
 	    	var msgCompFields = msgCompose.compFields;
 	    	if (msgCompFields)
 	    	{
-	    		if (args.body) //We need to set the body before calling LoadFields();
+	    		if (args.body) //We need to set the body before setting msgCompose.editor;
 	    			msgCompFields.SetBody(args.body);
-
-				//Now we are ready to load all the fields (to, cc, subject, body, etc...)  depending of the type of the message
-				msgCompose.LoadFields();
 
 	    		if (args.to)
 	    			msgCompFields.SetTo(args.to);
@@ -203,7 +198,7 @@ function ComposeStartup()
 	    			msgCompFields.SetBcc(args.bcc);
 	    		if (args.newsgroups)
 	    			msgCompFields.SetNewsgroups(args.newsgroups);
-	    		if (args.subject) 
+	    		if (args.subject)
 	    			msgCompFields.SetSubject(args.subject);
 			
 				var subjectValue = msgCompFields.GetSubject();
@@ -212,6 +207,9 @@ function ComposeStartup()
 				}
 			}
 			
+			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
+			msgCompose.editor = window.editorShell;
+
 			document.getElementById("msgRecipient#1").focus();
 		}
 	}
