@@ -596,6 +596,22 @@ nsDownloadManager::CancelDownload(const nsACString & aTargetPath)
 }
 
 NS_IMETHODIMP
+nsDownloadManager::PauseDownload(nsIDownload* aDownload)
+{
+  NS_ENSURE_ARG_POINTER(aDownload);
+  return NS_STATIC_CAST(nsDownload*, aDownload)->Suspend();
+}
+
+NS_IMETHODIMP
+nsDownloadManager::ResumeDownload(const nsACString & aTargetPath)
+{
+  nsDownload* dl = mCurrDownloads.GetWeak(aTargetPath);
+  if (!dl)
+    return NS_ERROR_NOT_AVAILABLE;
+  return dl->Resume();
+}
+
+NS_IMETHODIMP
 nsDownloadManager::RemoveDownload(const nsACString & aTargetPath)
 {
   // RemoveDownload is for downloads not currently in progress. Having it
@@ -785,7 +801,7 @@ nsDownloadManager::OpenProgressDialogFor(nsIDownload* aDownload, nsIDOMWindow* a
   aDownload->GetMIMEInfo(getter_AddRefs(mimeInfo));
 
   dialog->Init(source, target, nsnull, mimeInfo, startTime, nsnull); 
-  dialog->SetObserver(this);
+  dialog->SetObserver(internalDownload);
 
   // now set the listener so we forward notifications to the dialog
   nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(dialog);
@@ -832,24 +848,7 @@ NS_IMETHODIMP
 nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
 {
   nsresult rv;
-  if (nsCRT::strcmp(aTopic, "oncancel") == 0) {
-    nsCOMPtr<nsIProgressDialog> dialog = do_QueryInterface(aSubject);
-    nsCOMPtr<nsIURI> target;
-    dialog->GetTarget(getter_AddRefs(target));
-
-    nsCAutoString path;
-    rv = GetFilePathUTF8(target, path); 
-    if (NS_FAILED(rv)) return rv;
-    
-    nsDownload* download = mCurrDownloads.GetWeak(path);
-    if (download) {
-      // unset dialog since it's closing
-      download->SetDialog(nsnull);
-      
-      return CancelDownload(path);  
-    }
-  }
-  else if (nsCRT::strcmp(aTopic, "profile-approve-change") == 0) {
+  if (nsCRT::strcmp(aTopic, "profile-approve-change") == 0) {
     // Only run this on profile switch
     if (!NS_LITERAL_STRING("switch").Equals(aData))
       return NS_OK;
@@ -922,7 +921,7 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownload
 
-NS_IMPL_ISUPPORTS3(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener)
+NS_IMPL_ISUPPORTS4(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener, nsIObserver)
 
 nsDownload::nsDownload(nsDownloadManager* aManager,
                        nsIURI* aTarget,
@@ -947,6 +946,49 @@ nsDownload::~nsDownload()
 
   mDownloadManager->AssertProgressInfoFor(path);
 }
+
+nsresult
+nsDownload::Suspend()
+{
+  if (!mRequest)
+    return NS_ERROR_UNEXPECTED;
+  return mRequest->Suspend();
+}
+
+nsresult
+nsDownload::Resume()
+{
+  if (!mRequest)
+    return NS_ERROR_UNEXPECTED;
+  return mRequest->Resume();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIObserver
+NS_IMETHODIMP
+nsDownload::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
+{
+  if (strcmp(aTopic, "onpause") == 0) {
+    return Suspend();
+  }
+  if (strcmp(aTopic, "onresume") == 0) {
+    return Resume();
+  }
+  if (strcmp(aTopic, "oncancel") == 0) {
+    SetDialog(nsnull);
+
+    nsCAutoString path;
+    nsresult rv = GetFilePathUTF8(mTarget, path);
+    // XXX why can't nsDownload cancel itself without help from the dl manager?
+    if (NS_SUCCEEDED(rv))
+      mDownloadManager->CancelDownload(path);
+    // Ignoring return value; this function will get called twice,
+    // and bad things happen if we return a failure code the second time.
+  }
+
+  return NS_OK;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener

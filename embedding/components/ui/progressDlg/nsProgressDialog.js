@@ -125,8 +125,6 @@ nsProgressDialog.prototype = {
     get displayName()       { return this.mDisplayName; },
     set displayName(newval) { return this.mDisplayName = newval; },
     get paused()            { return this.mPaused; },
-    get request()           { return this.mRequest; },
-    set request(newval)     { return this.mRequest = newval; },
     get completed()         { return this.mCompleted; },
     get mode()              { return this.mMode; },
     get percent()           { return this.mPercent; },
@@ -215,9 +213,6 @@ nsProgressDialog.prototype = {
                                 aMaxSelfProgress,
                                 aCurTotalProgress,
                                 aMaxTotalProgress ) {
-        // Remember the request; this will also initialize the pause/resume stuff.
-        this.request = aRequest;
-
         var overallProgress = aCurTotalProgress;
 
         // Get current time.
@@ -761,13 +756,9 @@ nsProgressDialog.prototype = {
             var string = pausing ? "resume" : "pause";
             this.dialogElement( "pauseResume" ).label = this.getString(string);
 
-            // If we have a request, suspend/resume it.
-            if ( this.request ) {
-                if ( pausing ) {
-                    this.request.suspend();
-                } else {
-                    this.request.resume();
-                }
+            // If we have an observer, tell it to suspend/resume
+            if ( this.observer ) {
+                this.observer.observe( this, pausing ? "onpause" : "onresume" , "" );
             }
         }
         return this.mPaused = pausing;
