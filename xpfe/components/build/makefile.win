@@ -43,6 +43,7 @@ REQUIRES	= xpcom \
 		  content \
 		  history \
 		  search \
+                  alerts \
 		  progressDlg \
 		  related \
 		  urlbarhistory \
@@ -70,6 +71,7 @@ SUB_LIBRARIES=                           \
         $(DIST)\lib\appcompintl_s.lib    \
         $(DIST)\lib\related_s.lib        \
         $(DIST)\lib\search_s.lib         \
+        $(DIST)\lib\alerts_s.lib         \
         $(DIST)\lib\timebomb_s.lib       \
         $(DIST)\lib\urlbarhistory_s.lib  \
         $(DIST)\lib\urlwidgt_s.lib       \
@@ -100,6 +102,7 @@ INCS = $(INCS)                                       \
         -I$(DEPTH)\xpfe\components\urlbarhistory\src \
         -I$(DEPTH)\xpfe\components\urlwidget         \
         -I$(DEPTH)\xpfe\components\winhooks          \
+        -I$(DEPTH)\xpfe\components\alerts\src        \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
