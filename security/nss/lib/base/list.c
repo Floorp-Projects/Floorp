@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.15 $ $Date: 2002/03/01 02:13:42 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.16 $ $Date: 2002/03/15 22:09:45 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -127,6 +127,9 @@ nssList_Create
     }
     list = nss_ZNEW(arena, nssList);
     if (!list) {
+	if (!arenaOpt) {
+	    NSSArena_Destroy(arena);
+	}
 	return (nssList *)NULL;
     }
     if (threadSafe) {
