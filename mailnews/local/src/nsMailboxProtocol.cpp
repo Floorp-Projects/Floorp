@@ -327,7 +327,8 @@ PRInt32 nsMailboxProtocol::SetupReadMessage()
 			if (msgHdr)
 			{
 				msgHdr->GetMessageSize(&messageSize);
-				msgHdr->Release();
+				//XXXXX Don't release until we fix the nsMsgHdr RDF problem.
+//				msgHdr->Release();
 			}
 			mailDb->Close(PR_TRUE);
 		}
