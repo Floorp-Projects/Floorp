@@ -876,8 +876,6 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
         // the placeholder
         aHypotheticalBox.mTop = lineBox->mBounds.YMost();
       } else {
-        nsPoint placeholderOffset;
-        
         // Just use the placeholder's y-offset
         aHypotheticalBox.mTop = placeholderOffset.y;
       }
