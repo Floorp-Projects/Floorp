@@ -79,7 +79,7 @@ protected:
   virtual PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 );
 
 public:
-  virtual const PRUnichar* get() const { return GetUnicode(); }
+  virtual const PRUnichar* get() const;
 
 public:
   /**
@@ -162,7 +162,6 @@ public:
      * Retrieve const ptr to internal buffer; DO NOT TRY TO FREE IT!
      */
   const char* GetBuffer(void) const;
-  const PRUnichar* GetUnicode(void) const;
 
    /**
      * Set nth character.

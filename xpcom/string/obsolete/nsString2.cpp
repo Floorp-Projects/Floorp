@@ -246,7 +246,7 @@ const char* nsString::GetBuffer(void) const {
  * @update  gess1/4/99
  * @return  ptr to internal (2-byte) buffer;
  */
-const PRUnichar* nsString::GetUnicode(void)  const {
+const PRUnichar* nsString::get() const {
   const PRUnichar* result=(eOneByte==mCharSize) ? 0 : mUStr;
   return result;
 }
