@@ -356,15 +356,8 @@ nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame)
 {
-  if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
-    return NS_ERROR_FAILURE;
-
- // if it is not inside us or not in the layer in which we paint, fail
-  if (!mRect.Contains(aPoint)) 
-      return NS_ERROR_FAILURE;
-  
   nsresult result = nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
-  if ((result != NS_OK) || (*aFrame == this)) {
+  if (NS_FAILED(result) || *aFrame == this) {
     return result;
   }
   nsIContent* content = (*aFrame)->GetContent();
