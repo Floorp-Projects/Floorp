@@ -133,17 +133,14 @@
       </vbox>
       <vbox>
         <button id="disableExtension" label="Disable Extension" oncommand="toggleExtension();"/> <!-- XXXdwh localize -->
-        <button label="Uninstall Extension" oncommand="uninstallExtension();"/> <!-- XXXdwh localize -->
-        <vbox flex="1">
-          <spacer flex="1"/>
-          <hbox align="start">
-          <html:a class="themesLink" href="&getNewThemesURL;"
-              style="padding-left:4px; display: block;" target="_new">Get New Extensions</html:a>
-          </hbox>
-        </vbox>
+        <button disabled="true" label="Uninstall Extension" oncommand="uninstallExtension();"/> <!-- XXXdwh localize -->
       </vbox>
     </hbox>
     <separator/>
+    <hbox align="start">
+          <html:a class="themesLink" href="&getNewThemesURL;"
+              style="padding-left:4px; display: block;" target="_new">Get New Extensions</html:a>
+    </hbox>
   </vbox>
 
   </tabpanels>
