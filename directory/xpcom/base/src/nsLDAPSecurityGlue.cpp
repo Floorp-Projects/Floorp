@@ -67,7 +67,7 @@ nsLDAPSSLFreeSocketClosure(nsLDAPSSLSocketClosure **aClosure)
 // Replacement close() function, which cleans up local stuff associated
 // with this socket, and then calls the real close function.
 //
-static int LDAP_CALLBACK
+extern "C" int LDAP_CALLBACK
 nsLDAPSSLClose(int s, struct lextiof_socket_private *socketarg)
 {
     PRLDAPSocketInfo socketInfo;
@@ -103,7 +103,7 @@ nsLDAPSSLClose(int s, struct lextiof_socket_private *socketarg)
 
 // Replacement connection function.  Calls the real connect function,
 // 
-static int LDAP_CALLBACK
+extern "C" int LDAP_CALLBACK
 nsLDAPSSLConnect(const char *hostlist, int defport, int timeout,
 		 unsigned long options, 
 		 struct lextiof_session_private *sessionarg,
@@ -264,7 +264,7 @@ nsLDAPSSLFreeSessionClosure(nsLDAPSSLSessionClosure **aSessionClosure)
 // Replacement session handle disposal code.  First cleans up our local
 // stuff, then calls the original session handle disposal function.
 //
-static void LDAP_CALLBACK
+extern "C" void LDAP_CALLBACK
 nsLDAPSSLDisposeHandle(LDAP *ld, struct lextiof_session_private *sessionarg)
 {
     PRLDAPSessionInfo sessionInfo;
