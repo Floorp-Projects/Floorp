@@ -54,8 +54,12 @@ enum {
     dlog_ConfirmCheck = 1284,
     dlog_Prompt = 1285,
     dlog_PromptNameAndPass = 1286,
-    dlog_PromptPassword = 1287,
-    dlog_Universal = 1288
+    dlog_PromptPassword = 1287
+};
+
+// Printing
+enum {
+    dlog_OS9PrintProgress = 1290
 };
 
 // Profile Mgmt

@@ -44,6 +44,7 @@
 
 #include "CBrowserShell.h"
 #include "CBrowserWindow.h"
+#include "CPrintAttachment.h"
 #include "ApplIDs.h"
 
 // ---------------------------------------------------------------------------
@@ -71,7 +72,7 @@ NS_IMETHODIMP CWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
     // we're ignoring aParent,
     // but since windows on the Mac don't have parents anyway...
     try {
-        LWindow *theWindow = CreateWindowInternal(aChromeFlags, -1, -1);
+        LWindow *theWindow = CreateWindowInternal(aChromeFlags, PR_FALSE, -1, -1);
         CBrowserShell *browser = dynamic_cast<CBrowserShell*>(theWindow->FindPaneByID(CBrowserShell::paneID_MainBrowser));
         ThrowIfNil_(browser);
         browser->GetWebBrowserChrome(_retval);
@@ -105,6 +106,7 @@ nsresult CWindowCreator::Initialize()
 }
 
 LWindow* CWindowCreator::CreateWindowInternal(PRUint32 inChromeFlags,
+                                              PRBool enablePrinting,
                                               PRInt32 width, PRInt32 height)
 {
     const SInt16 kStatusBarHeight = 16;
@@ -233,7 +235,14 @@ LWindow* CWindowCreator::CreateWindowInternal(PRUint32 inChromeFlags,
         statusView->PlaceInSuperFrameAt(0, windowSize.height - kStatusBarHeight + 1, false);
         statusView->ResizeFrameTo(windowSize.width - 15, kStatusBarHeight, false);
     }        
-    
+
+    if (enablePrinting)
+    {
+        CPrintAttachment *printAttachment = new CPrintAttachment(CBrowserShell::paneID_MainBrowser);
+        ThrowIfNil_(printAttachment);
+        theWindow->AddAttachment(printAttachment);
+    }
+        
     // Now the window is constructed...
     theWindow->FinishCreate();        
 
