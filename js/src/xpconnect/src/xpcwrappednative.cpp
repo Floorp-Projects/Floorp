@@ -2243,9 +2243,12 @@ XPCWrappedNative::ToString(XPCCallContext& ccx,
     {
         return nsnull;
     }
-
-    sz = JS_smprintf("[xpconnect wrapped %s" FMT_ADDR "]",
-                       name PARAM_ADDR(this));
+    const char* fmt = "[xpconnect wrapped %s" FMT_ADDR "]";
+    if (si)
+    {
+        fmt = "[object %s" FMT_ADDR "]";
+    }
+    sz = JS_smprintf(fmt, name PARAM_ADDR(this));
 
     JS_smprintf_free(name);
 
