@@ -2386,7 +2386,10 @@ nsCSSRendering::FindNonTransparentBackground(nsIStyleContext* aContext,
   NS_ASSERTION(context, "Cannot find NonTransparentBackground in a null context" );
   
   while (context) {
-    ::GetStyleData(context, &result);
+    // Have to .get() because some compilers won't match the template
+    // otherwise (they don't look for implicit type conversions while doing
+    // template matching?).
+    ::GetStyleData(context.get(), &result);
     if (0 == (result->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
       break;
 
