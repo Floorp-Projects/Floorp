@@ -415,7 +415,8 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
 
         if (PR_TRUE==okToAdd)
         {
-          ColSpanStruct *colSpanInfo = new ColSpanStruct(colSpan, colIndex, width);
+          nscoord colwidth=PR_MAX(width, cellMinWidth);
+          ColSpanStruct *colSpanInfo = new ColSpanStruct(colSpan, colIndex, colwidth);
           if (nsnull==colSpanList)
             colSpanList = new nsVoidArray();
           colSpanList->AppendElement(colSpanInfo);
@@ -791,17 +792,19 @@ void BasicTableLayoutStrategy::DistributeFixedSpace(nsVoidArray *aColSpanList)
       mTableFrame->GetColumnFrame(colIndex+i, colFrame);
       float percent;
       percent = ((float)(colFrame->GetEffectiveMaxColWidth()))/((float)totalEffectiveWidth);
-      nscoord newColWidth = (nscoord)(totalColWidth*percent);
+      nscoord newColWidth = NSToCoordRound(((float)totalColWidth)*percent);
       nscoord minColWidth = colFrame->GetEffectiveMinColWidth();
       nscoord oldColWidth = mTableFrame->GetColumnWidth(colIndex+i);
       if (newColWidth>minColWidth)
       {
         if (gsDebug==PR_TRUE) 
+        {
           printf("  assigning fixed col width for spanning cells:  column %d set to %d\n", 
                  colIndex+i, newColWidth);
+          printf("  minCW = %d oldCW = %d\n", minColWidth, oldColWidth);
+        }
         mTableFrame->SetColumnWidth(colIndex+i, newColWidth);
         colFrame->SetEffectiveMaxColWidth(newColWidth);
-        mMaxTableWidth += (newColWidth-oldColWidth);
       }
     }
   }
@@ -1278,8 +1281,9 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsHTMLReflowState
     }
     else
     { // need to maintain this so we know how much we have left over at the end
-      mTableFrame->SetColumnWidth(colIndex, colFrame->GetMaxColWidth());
-      widthOfFixedTableColumns += colFrame->GetMaxColWidth() + colInset;
+      nscoord maxEffectiveColWidth = colFrame->GetEffectiveMaxColWidth();
+      mTableFrame->SetColumnWidth(colIndex, maxEffectiveColWidth);
+      widthOfFixedTableColumns += maxEffectiveColWidth + colInset;
     }
     tableWidth += mTableFrame->GetColumnWidth(colIndex) + colInset;
   }
