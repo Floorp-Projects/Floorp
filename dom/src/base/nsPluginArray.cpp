@@ -88,9 +88,11 @@ NS_IMPL_RELEASE(nsPluginArray)
 NS_IMETHODIMP
 nsPluginArray::GetLength(PRUint32* aLength)
 {
-  if (mPluginHost && NS_SUCCEEDED(mPluginHost->GetPluginCount(aLength)))
-    return NS_OK;
-  return NS_ERROR_FAILURE;
+  if (mPluginHost)
+    return mPluginHost->GetPluginCount(aLength);
+  
+  *aLength = 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -261,21 +263,29 @@ nsresult
 nsPluginArray::GetPlugins()
 {
   nsresult rv = GetLength(&mPluginCount);
-  if (rv == NS_OK) {
+  if (NS_SUCCEEDED(rv)) {
     mPluginArray = new nsIDOMPlugin*[mPluginCount];
-    if (mPluginArray != nsnull) {
-      rv = mPluginHost->GetPlugins(mPluginCount, mPluginArray);
-      if (rv == NS_OK) {
-        // need to wrap each of these with a nsPluginElement, which
-        // is scriptable.
-        for (PRUint32 i = 0; i < mPluginCount; i++) {
-          nsIDOMPlugin* wrapper = new nsPluginElement(mPluginArray[i]);
-          NS_IF_ADDREF(wrapper);
-          mPluginArray[i] = wrapper;
-        }
+    if (!mPluginArray)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    if (!mPluginCount)
+      return NS_OK;
+
+    rv = mPluginHost->GetPlugins(mPluginCount, mPluginArray);
+    if (NS_SUCCEEDED(rv)) {
+      // need to wrap each of these with a nsPluginElement, which
+      // is scriptable.
+      for (PRUint32 i = 0; i < mPluginCount; i++) {
+        nsIDOMPlugin* wrapper = new PluginElement(mPluginArray[i]);
+        NS_IF_ADDREF(wrapper);
+        mPluginArray[i] = wrapper;
       }
     } else {
-      rv = NS_ERROR_OUT_OF_MEMORY;
+      /* XXX this code is all broken. If GetPlugins fails, there's no contract
+       *     explaining what should happen. Instead of deleting elements in an
+       *     array of random pointers, we mark the array as 0 length.
+       */
+      mPluginCount = 0;
     }
   }
   return rv;
