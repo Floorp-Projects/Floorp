@@ -34,6 +34,7 @@ the local dll. So far,
 #include "prmem.h"
 
 #include "nsCRT.h"
+#include "xp_mcom.h"
 
 PR_BEGIN_EXTERN_C
 int MK_UNABLE_TO_LOCATE_FILE = -1;
@@ -62,7 +63,13 @@ int XP_MSG_UNKNOWN = -26;
 int XP_MSG_COMPRESS_REMOVE = -27;	
 PR_END_EXTERN_C
 
+
+
 #if defined(XP_MAC)
+
+#ifndef UNIXMINUSMACTIME
+#define UNIXMINUSMACTIME 2082844800UL
+#endif
 
 /* prototypes for local routines */
 static void  shortsort(char *lo, char *hi, unsigned width,
