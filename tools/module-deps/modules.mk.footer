@@ -1,8 +1,8 @@
 
 # There's always an exception to the rule...
 # XSLT has a special standalone mode that uses ifdefs to maintain a reduced dependency list.
-BM_DIRS_transformiix = xpcom expat extensions/transformiix
-BM_CVS_transformiix = xpcom expat extensions/transformiix
+BM_DIRS_transformiix = xpcom parser/expat extensions/transformiix
+BM_CVS_transformiix = xpcom parser/expat extensions/transformiix
 
 #
 # Tally

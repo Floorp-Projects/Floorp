@@ -225,18 +225,17 @@ rdf/build: rdf: xpcom string content htmlparser necko
 rdf/tests: :
 rdf/tests/rdfcat: : xpcom rdf necko
 rdf/tests/rdfpoll: : xpcom string rdf necko
-expat: expat:
-expat/xmlparse: expat:
-expat/xmltok: expat:
-htmlparser: htmlparser:
-htmlparser/public: htmlparser:
-htmlparser/src: htmlparser: xpcom string necko util uconv unicharutil expat layout dom pref nkcache intl
-htmlparser/robot: : xpcom string htmlparser necko docshell uriloader unicharutil
-htmlparser/robot/test: : xpcom string
-htmlparser/tests: :
-htmlparser/tests/outsinks: : xpcom string htmlparser necko layout content
-htmlparser/tests/grabpage: : xpcom string necko
-htmlparser/tests/html: : xpcom string necko
+parser/expat: expat:
+parser/expat/lib: expat:
+parser/htmlparser: htmlparser:
+parser/htmlparser/public: htmlparser:
+parser/htmlparser/src: htmlparser: xpcom string necko util uconv unicharutil expat layout dom pref nkcache intl
+parser/htmlparser/robot: : xpcom string htmlparser necko docshell uriloader unicharutil
+parser/htmlparser/robot/test: : xpcom string
+parser/htmlparser/tests: :
+parser/htmlparser/tests/outsinks: : xpcom string htmlparser necko layout content
+parser/htmlparser/tests/grabpage: : xpcom string necko
+parser/htmlparser/tests/html: : xpcom string necko
 gfx: gfx:
 gfx/public: gfx:
 gfx/idl: gfx:

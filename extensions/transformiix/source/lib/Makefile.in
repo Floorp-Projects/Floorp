@@ -61,7 +61,6 @@ SHARED_LIBRARY_LIBS = \
         $(DIST)/lib/$(LIB_PREFIX)txxsltfunctions_s.$(LIB_SUFFIX) \
         $(DIST)/lib/$(LIB_PREFIX)txxsltutil_s.$(LIB_SUFFIX) \
         $(DIST)/lib/$(LIB_PREFIX)expat_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)xmltok_s.$(LIB_SUFFIX) \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk
