@@ -936,7 +936,7 @@ nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
   }
 
   if (aMaxTotalProgress > 0)
-    mPercentComplete = aCurTotalProgress * 100 / aMaxTotalProgress;
+    mPercentComplete = (PRInt32)((PRFloat64)aCurTotalProgress * 100 / aMaxTotalProgress + .5);
   else
     mPercentComplete = -1;
 
