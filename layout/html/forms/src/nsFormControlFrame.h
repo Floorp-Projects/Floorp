@@ -243,8 +243,20 @@ public:
                                      const nsRect& aDirtyRect,
                                      const nsRect& aRect);
 
+  /**
+   * Helper routine to that returns the height of the screen
+   *
+   */
   static nsresult GetScreenHeight(nsIPresContext* aPresContext, nscoord& aHeight);
 
+  /**
+   * Helper method to get the absolute position of a frame
+   *
+   */
+  static nsresult GetAbsoluteFramePosition(nsIPresContext* aPresContext,
+                                           nsIFrame *aFrame, 
+                                           nsRect& aAbsoluteTwipsRect, 
+                                           nsRect& aAbsolutePixelRect);
 protected:
 
   virtual ~nsFormControlFrame();
