@@ -496,6 +496,12 @@ public class Interpreter extends LabelTable {
                 */
                     Node target = (Node)(node.getProp(Node.TARGET_PROP));
                     target.putProp(Node.FINALLY_PROP, node);
+                    // Bug 115717 is due to adding a GOSUB here before
+                    // we insert an ENDTRY. I'm not sure of the best way
+                    // to fix this; perhaps we need to maintain a stack
+                    // of pending trys and have some knowledge of how 
+                    // many trys we need to close when we perform a 
+                    // GOTO or GOSUB.
                     iCodeTop = addGoto(node, TokenStream.GOSUB, iCodeTop);
                 }
                 break;
