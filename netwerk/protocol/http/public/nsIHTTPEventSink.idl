@@ -23,7 +23,7 @@
  */
 
 #include "nsISupports.idl"
-interface nsIURI;
+interface nsIChannel;
 
 [scriptable, uuid(e5cf0c64-1dd1-11b2-b704-c889f2be4793)]
 interface nsIHTTPEventSink : nsISupports
@@ -39,5 +39,5 @@ interface nsIHTTPEventSink : nsISupports
     /**
      * Fired when a redirect occurs due to a HTTP response (like 302)
      */
-    void onRedirect(in nsISupports aContext, in nsIURI aNewLocation);
+    void onRedirect(in nsIChannel aOldChannel, in nsIChannel aNewChannel);
 };

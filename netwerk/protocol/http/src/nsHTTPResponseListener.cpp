@@ -446,9 +446,12 @@ nsHTTPServerListener::OnDataAvailable(nsIRequest *request,
     // happen if a redirect has been processed...
     //
     if (!mResponseDataListener) {
-        // XXX: What should the return code be?
-        LOG(("nsHTTPServerListener::OnDataAvailable -- returning NS_BINDING_ABORTED\n"));
-        rv = NS_BINDING_ABORTED;
+        mChannel->GetStatus(&rv);
+        if (NS_SUCCEEDED(rv)) {
+            // Make sure that a failure code is returned!
+            rv = NS_BINDING_ABORTED;
+        }
+        LOG(("nsHTTPServerListener::OnDataAvailable -- returning failure code %x.\n", rv));
     }
 
     if (NS_SUCCEEDED(rv) && i_Length) {

@@ -75,6 +75,7 @@ protected:
     nsWeakPtr                       mObserver;
     
     nsresult                        mStatus;
+    PRBool                          mIsCanceling;
 };
 
 #endif // nsLoadGroup_h__

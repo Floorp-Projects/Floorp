@@ -444,75 +444,84 @@ nsDocLoaderImpl::Destroy()
 NS_IMETHODIMP
 nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 {
-    // called each time a request is added to the group.
-    nsresult rv;
+  // called each time a request is added to the group.
 
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
-        nsXPIDLString name;
-        request->GetName(getter_Copies(name));
+  if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
+    nsXPIDLString name;
+    request->GetName(getter_Copies(name));
 
-        PRUint32 count = 0;
-        if (mLoadGroup)
-            mLoadGroup->GetActiveCount(&count);
+    PRUint32 count = 0;
+    if (mLoadGroup)
+      mLoadGroup->GetActiveCount(&count);
 
-        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG,
-               ("DocLoader:%p: OnStartRequest[%p](%s) mIsLoadingDocument=%s, %u active URLs",
-                this, request, NS_ConvertUCS2toUTF8(name).get(),
-                (mIsLoadingDocument ? "true" : "false"),
-                count));
-    }
-#endif
+    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG,
+           ("DocLoader:%p: OnStartRequest[%p](%s) mIsLoadingDocument=%s, %u active URLs",
+            this, request, NS_ConvertUCS2toUTF8(name).get(),
+            (mIsLoadingDocument ? "true" : "false"),
+            count));
+  }
+#endif /* PR_LOGGING */
     
-    PRUint32 loadFlags = 0;
-    request->GetLoadFlags(&loadFlags);
+  PRUint32 loadFlags = 0;
+  request->GetLoadFlags(&loadFlags);
 
-    if (!mIsLoadingDocument && (loadFlags & nsIChannel::LOAD_DOCUMENT_URI)) {
-        mIsLoadingDocument = PR_TRUE;
-        ClearInternalProgress(); // only clear our progress if we are starting a new load....
-    }
+  if (!mIsLoadingDocument && (loadFlags & nsIChannel::LOAD_DOCUMENT_URI)) {
+      mIsLoadingDocument = PR_TRUE;
+      ClearInternalProgress(); // only clear our progress if we are starting a new load....
+  }
 
+  //
+  // Only fire an OnStartDocumentLoad(...) if the document loader
+  // has initiated a load...  Otherwise, this notification has
+  // resulted from a request being added to the load group.
+  //
+  if (mIsLoadingDocument) {
     //
-    // Only fire an OnStartDocumentLoad(...) if the document loader
-    // has initiated a load...  Otherwise, this notification has
-    // resulted from a request being added to the load group.
+    // Create a new nsRequestInfo for the request that is starting to
+    // load...
     //
-    if (mIsLoadingDocument) {
-        PRUint32 count;
+    AddRequestInfo(request);
 
-        rv = mLoadGroup->GetActiveCount(&count);
-        if (NS_FAILED(rv)) return rv;
-        //
-        // Create a new nsRequestInfo for the request that is starting to
-        // load...
-        //
-        AddRequestInfo(request);
+    if (loadFlags & nsIChannel::LOAD_DOCUMENT_URI) {
+      //
+      // Make sure that hte document channel is null at this point...
+      // (unless its been redirected)
+      //
+      NS_ASSERTION((loadFlags & nsIChannel::LOAD_REPLACE) ||
+                   !(mDocumentRequest.get()),
+                   "Overwriting an existing document channel!");
 
-        if ((1 == count) && (loadFlags & nsIChannel::LOAD_DOCUMENT_URI)) {
-            // This request is associated with the entire document...
-            mDocumentRequest = do_QueryInterface(request);
-            mLoadGroup->SetDefaultLoadRequest(mDocumentRequest); 
-        
-            // Update the progress status state
-            mProgressStateFlags = nsIWebProgressListener::STATE_START;
+      // This request is associated with the entire document...
+      mDocumentRequest = request;
+      mLoadGroup->SetDefaultLoadRequest(request); 
 
-            doStartDocumentLoad();
-            FireOnStartDocumentLoad(this, request);
-        } 
-        else {
-          doStartURLLoad(request);
-          FireOnStartURLLoad(this, request);
-        }
+      // Only fire the start document load notification for the first
+      // document URI...  Do not fire it again for redirections
+      //
+      if (!(loadFlags & nsIChannel::LOAD_REPLACE)) {
+        // Update the progress status state
+        mProgressStateFlags = nsIWebProgressListener::STATE_START;
 
-        NS_POSTCONDITION((1 != count) || mDocumentRequest,
-                         "first request does not have nsIChannel::LOAD_DOCUMENT_URI set");
-    }
-    else {
-      ClearRequestInfoList();
-      doStartURLLoad(request);
-      FireOnStartURLLoad(this, request);
-    }
-    
+        // Fire the start document load notification
+        doStartDocumentLoad();
+        FireOnStartDocumentLoad(this, request);
+
+        return NS_OK;
+      }
+    } 
+  }
+  else {
+    // The DocLoader is not busy, so clear out any cached information...
+    ClearRequestInfoList();
+  }
+
+  NS_ASSERTION(!mIsLoadingDocument || mDocumentRequest,
+               "mDocumentRequest MUST be set for the duration of a page load!");
+
+  doStartURLLoad(request);
+  FireOnStartURLLoad(this, request);
+
   return NS_OK;
 }
 
@@ -524,22 +533,22 @@ nsDocLoaderImpl::OnStopRequest(nsIRequest *aRequest,
   nsresult rv = NS_OK;
 
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
-        nsXPIDLString name;
-        aRequest->GetName(getter_Copies(name));
+  if (PR_LOG_TEST(gDocLoaderLog, PR_LOG_DEBUG)) {
+    nsXPIDLString name;
+    aRequest->GetName(getter_Copies(name));
 
-        PRUint32 count = 0;
-        if (mLoadGroup)
-            mLoadGroup->GetActiveCount(&count);
+    PRUint32 count = 0;
+    if (mLoadGroup)
+      mLoadGroup->GetActiveCount(&count);
 
-        PR_LOG(gDocLoaderLog, PR_LOG_DEBUG,
-               ("DocLoader:%p: OnStopRequest[%p](%s) status=%x mIsLoadingDocument=%s, %u active URLs",
-                this, aRequest, NS_ConvertUCS2toUTF8(name).get(),
-                aStatus, (mIsLoadingDocument ? "true" : "false"),
-                count));
-    }
+    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG,
+           ("DocLoader:%p: OnStopRequest[%p](%s) status=%x mIsLoadingDocument=%s, %u active URLs",
+           this, aRequest, NS_ConvertUCS2toUTF8(name).get(),
+           aStatus, (mIsLoadingDocument ? "true" : "false"),
+           count));
+  }
 #endif
-    
+
   //
   // Only fire the OnEndDocumentLoad(...) if the document loader 
   // has initiated a load...
@@ -582,7 +591,7 @@ nsDocLoaderImpl::OnStopRequest(nsIRequest *aRequest,
     // The load group for this DocumentLoader is idle...
     //
     if (0 == count) {
-      DocLoaderIsEmpty(aStatus);
+      DocLoaderIsEmpty();
     }
   }
   else {
@@ -614,7 +623,7 @@ NS_IMETHODIMP nsDocLoaderImpl::GetDocumentChannel(nsIChannel ** aChannel)
 }
 
 
-void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
+void nsDocLoaderImpl::DocLoaderIsEmpty()
 {
   if (mIsLoadingDocument) {
     PRBool busy = PR_FALSE;
@@ -631,7 +640,8 @@ void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
 
       nsCOMPtr<nsIRequest> docRequest = mDocumentRequest;
 
-      mDocumentRequest = null_nsCOMPtr();
+      NS_ASSERTION(mDocumentRequest, "No Document Request!");
+      mDocumentRequest = 0;
       mIsLoadingDocument = PR_FALSE;
 
       // Update the progress status state - the document is done
@@ -656,7 +666,7 @@ void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
       FireOnEndDocumentLoad(this, docRequest, loadGroupStatus);
 
       if (mParent) {
-        mParent->DocLoaderIsEmpty(loadGroupStatus);
+        mParent->DocLoaderIsEmpty();
       }
     }
   }
@@ -1304,6 +1314,7 @@ void nsDocLoaderImpl::FireOnStateChange(nsIWebProgress *aProgress,
          this, (const char *)buffer, aStateFlags));
 #endif /* DEBUG */
 
+  NS_ASSERTION(aRequest, "Firing OnStateChange(...) notification with a NULL request!");
 
   /*                                                                           
    * First notify any listeners of the new state info...
@@ -1477,33 +1488,31 @@ NS_IMETHODIMP nsDocLoaderImpl::OnHeadersAvailable(nsISupports * aContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsISupports * aContext, nsIURI * aNewLocation)
+NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsIChannel *aOldChannel, nsIChannel *aNewChannel)
 {
-  // we have a problem in that this method doesn't give us enough information about
-  // the url being redirected. We need to know if the url is the document url or some other
-  // part of the document (like an image). Proper implementation requires this, otherwise
-  // we end up setting the url bar location to a redirected image url when we didn't want to.
-  // for now, we'll make the implementation empty.
+  if (aOldChannel)
+  {
+    nsLoadFlags loadFlags = 0;
+    PRInt32 stateFlags = nsIWebProgressListener::STATE_REDIRECTING |
+                         nsIWebProgressListener::STATE_IS_REQUEST;
 
- if (aContext)
- {
-   PRInt32 stateFlags = nsIWebProgressListener::STATE_REDIRECTING |
-                        nsIWebProgressListener::STATE_IS_REQUEST |
-                        nsIWebProgressListener::STATE_IS_NETWORK;
-   nsCOMPtr<nsIRequest> request (do_QueryInterface(aContext));
-   // if the current channel == the document channel (then we must be getting a redirect on the
-   // actual document and not a part in the document so be sure to set the state is document flag
-   // and to reset mDocumentRequest...
-   if (request.get() == mDocumentRequest.get())
-   {
-     stateFlags |= nsIWebProgressListener::STATE_IS_DOCUMENT;
-     mDocumentRequest = request; // reset the document channel
-   }
+    aOldChannel->GetLoadFlags(&loadFlags);
+    // If the document channel is being redirected, then indicate that the
+    // document is being redirected in the notification...
+    if (loadFlags & nsIChannel::LOAD_DOCUMENT_URI)
+    {
+      stateFlags |= nsIWebProgressListener::STATE_IS_DOCUMENT;
 
-   FireOnStateChange(this, request, stateFlags, NS_OK);
- }
+#if defined(DEBUG)
+      nsCOMPtr<nsIRequest> request(do_QueryInterface(aOldChannel));
+      NS_ASSERTION(request == mDocumentRequest, "Wrong Document Channel");
+#endif /* DEBUG */
+    }
 
- return NS_OK;
+    FireOnStateChange(this, aOldChannel, stateFlags, NS_OK);
+  }
+
+  return NS_OK;
 }
 
 

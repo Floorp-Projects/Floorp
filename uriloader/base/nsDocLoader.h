@@ -87,7 +87,7 @@ protected:
 
     nsresult SetDocLoaderParent(nsDocLoaderImpl * aLoader);
     nsresult RemoveChildGroup(nsDocLoaderImpl *aLoader);
-    void DocLoaderIsEmpty(nsresult aStatus);
+    void DocLoaderIsEmpty();
 
     void FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
                                  nsIRequest *request);
