@@ -223,7 +223,8 @@ static PRBool
 hash_empty(XP_HashTable hash)
 {
   PRBool result = PR_TRUE;
-  XP_Maphash(hash, hash_empty_mapper, &result);
+  XP_Maphash(hash, (char (*) (xp_HashTable *, const void *, void*, void *))
+             hash_empty_mapper, &result);
   return result;
 }
 
@@ -270,7 +271,9 @@ net_pop3_write_state(Pop3UidlHost* host, const char* mailDirectory)
         outFileStream << " ";
         outFileStream << host->user;
         outFileStream << LINEBREAK;
-        XP_Maphash(host->hash, net_pop3_write_mapper, &outFileStream);
+        XP_Maphash(host->hash,
+                   (char (*) (xp_HashTable *, const void *, void*, void *)) 
+                   net_pop3_write_mapper, &outFileStream);
     }
   }
   outFileStream.close();
@@ -572,7 +575,7 @@ nsPop3Protocol::Load(nsIURL* aURL)
 
     m_transport->Open(aURL);
 
-    return ProcessPop3State(aURL, NULL, NULL);
+    return ProcessPop3State(aURL, nsnull, nsnull);
 }
 
 void
@@ -1308,6 +1311,7 @@ nsPop3Protocol::StartUseTopForFakeUidl()
 	
     /* may set delete_server_message_during_top_traversal to true */
     XP_Maphash(m_pop3ConData->uidlinfo->hash,
+               (char (*)(xp_HashTable *, const void *, void *, void *))
                net_pop3_check_for_hash_messages_marked_delete, m_pop3ConData);
 	
     return (SendFakeUidlTop());
@@ -2131,7 +2135,6 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
          */
         m_pop3ConData->real_new_counter++;		
         /* (rb) count only real messages being downloaded */
-        const char* urlSpec = 0;
 
         m_nsIPop3Sink->IncorporateBegin(uidl, m_nsIPop3URL, flags,
                                         &m_pop3ConData->msg_closure);  

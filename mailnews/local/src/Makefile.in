@@ -32,6 +32,12 @@ CPPSRCS = \
 	nsPop3Sink.cpp \
 	$(NULL)
 
+EXPORTS= \
+	nsPop3Protocol.h \
+	nsPop3URL.h \
+	nsPop3Sink.h \
+	$(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
