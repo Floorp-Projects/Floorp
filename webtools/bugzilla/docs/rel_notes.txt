@@ -6,7 +6,7 @@ Insert nice little intro for version 2.18 here.
 *** ABOUT THIS VERSION ***
 **************************
 
-This is a development snapshot release of Bugzilla.  As such the remainer of
+This is a development snapshot release of Bugzilla.  As such the remainder of
 these release notes have NOT been updated (we usually do this just prior to a
 stable release).  For information about a development snapshot release, the
 best source of information is on our website (http://www.bugzilla.org/) in
@@ -32,8 +32,9 @@ problems with your installation.
 It is also recommended that if you can, you immediately fix
 any problems you find.  Be aware that if the sanity check page
 contains more errors after an upgrade, it doesn't necessarily
-mean there are more errors in your database, as it is likely
-they weren't being checked for in the old version.
+mean there are more errors in your database, as additional
+tests are added to the sanity check over time, and it is likely
+those errors weren't being checked for in the old version.
 
 Failure to do this may mean that bugzilla will not
 work correctly.
@@ -46,12 +47,13 @@ see the Bugzilla Guide for more information.
 
 *** Dependency Requirements ***
 
-MySQL v3.22.5
-Perl v5.005
+MySQL v3.23.6
+Perl v5.6.0
+CGI v2.88
 DBI v1.13
 DBD::MySQL v1.2209
 AppConfig v1.52
-Template Toolkit v2.07
+Template Toolkit v2.08
 Text::Wrap v20001.0131
 File::Spec v0.82
 Data::Dumper, Date::Parse, CGI::Carp (any)
