@@ -2071,19 +2071,9 @@ nsresult nsLocalFile::MoveCopy(nsIFile* aParentDir, const nsAString& newName, PR
   if (!newParentDir) {
     if (newName.IsEmpty())
       return NS_ERROR_INVALID_ARG;
-    // A move with no new parent dir is a simple rename.    
-    if (!isCopy) {
-      err = ::FSRenameUnicode(&srcRef, newName.Length(), PromiseFlatString(newName).get(), kTextEncodingUnknown, &newRef);
-      if (err != noErr)
-        return MacErrorMapper(err);
-      mFSRef = newRef;
-      return NS_OK;
-    }
-    else {
-      rv = GetParent(getter_AddRefs(newParentDir));
-      if (NS_FAILED(rv))
-        return rv;    
-    }
+    rv = GetParent(getter_AddRefs(newParentDir));
+    if (NS_FAILED(rv))
+      return rv;    
   }
   
   // If newParentDir does not exist, create it
@@ -2112,6 +2102,25 @@ nsresult nsLocalFile::MoveCopy(nsIFile* aParentDir, const nsAString& newName, PR
     // don't update mFSRef on a copy
   }
   else {
+    // According to the API: "If 'this' is a file, and the destination file already
+    // exists, moveTo will replace the old file."
+    FSCatalogInfo catalogInfo;
+    HFSUniStr255 leafName;
+    err = ::FSGetCatalogInfo(&srcRef, kFSCatInfoNodeFlags, &catalogInfo,
+                             newName.IsEmpty() ? &leafName : nsnull, nsnull, nsnull);
+    if (err == noErr) {      
+      if (!(catalogInfo.nodeFlags & kFSNodeIsDirectoryMask)) {
+        FSRef oldFileRef;
+        if (newName.IsEmpty())
+          err = ::FSMakeFSRefUnicode(&destRef, leafName.length, leafName.unicode,
+                    kTextEncodingUnknown, &oldFileRef);
+        else
+          err = ::FSMakeFSRefUnicode(&destRef, newName.Length(), PromiseFlatString(newName).get(),
+                    kTextEncodingUnknown, &oldFileRef);
+        if (err == noErr)
+          ::FSDeleteObject(&oldFileRef);
+      }
+    }
     // First, try the quick way which works only within the same volume
     err = ::FSMoveRenameObjectUnicode(&srcRef, &destRef,
               newName.Length(), newName.Length() ? PromiseFlatString(newName).get() : nsnull,
@@ -2122,11 +2131,10 @@ nsresult nsLocalFile::MoveCopy(nsIFile* aParentDir, const nsAString& newName, PR
       err = ::FSCopyObject(&srcRef, &destRef,
                            newName.Length(), newName.Length() ? PromiseFlatString(newName).get() : nsnull,
                            0, kFSCatInfoNone, false, false, nsnull, nsnull, &newRef);
-
-      if (err == noErr)
-        mFSRef = newRef;
-      err = ::FSDeleteObjects(&srcRef);
+      ::FSDeleteObjects(&srcRef);
     }
+    if (err == noErr)
+      mFSRef = newRef;
   }
   return MacErrorMapper(err);
 }
