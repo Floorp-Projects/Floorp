@@ -47,7 +47,9 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#ifdef DEBUG_pavlov
 #define DEBUG_EVENTS 1
+#endif
 
 struct EventInfo {
   nsWidget *widget;  // the widget
