@@ -33,158 +33,55 @@
   class="dialog"
   windowtype="sidebar:customize"
   onload="Init();"
-  align="vertical"
+  orient="vertical"
   persist="width height"
   width="500" height="394">
 
   <script language="javascript" src="chrome://communicator/content/pref/pref-charset.js"></script>
 
-  <box class="box-smallheader"
-	 title="&charset.customize.left.header;"
-         id="confirm_text"
-   	 value="&charset.customize.save.popup;"
-         description="&charset.customize.right.header;"/>
-
-
+  <keyset id="keyset"/>
+  
+  <box class="box-smallheader" title="&charset.customize.left.header;" id="confirm_text"/>
 
   <!-- The two-pane -->
-  <!-- horz 2 -->
-  <box align="horizontal" flex="1">
-
-
-    <!-- Spacing between the left window border and first list box -->
-    <spring style="width:2em"/>
-
-    <!-- All of the panels that are available -->
-	<!-- vert 1 -->
-	<box align="vertical" flex="1">
-
-    <separator/>
-	  <html>
-	      &charset.customize.additional.label;
-    </html>
-
-	  <!-- horz 2a -->
-      <box align="horizontal" class="box-group" flex="1">
-
+  <box flex="1">
+  	<box orient="vertical" flex="1">
+	    <text class="label" value="&charset.customize.additional.label;" crop="right"/>
       <!-- Available Charsets Tree -->
-      <tree id="available_charsets" flex="1"
-		onclick="SelectAvailableCharset();"
-        datasources="rdf:null"
-        indent="false"
-        multiple="true"
-        style="height:0px">
-         <!-- We explicitly create a 'treechildren' so we can refer
-              to it from the script -->
-        <treechildren id="available_charsets_root">
-	     </treechildren>
-        </tree> 
-
-		</box>
-		<!-- horz 2a -->
-
-	  <!-- Add Charset Button -->
-	  <!-- horz 3 -->
-      <box align="horizontal" class="button-group">
-        <button id="add_button" 
-		  onclick="AddAvailableCharset();"
-          class="dialog push"
-          value="&charset.customize.add.label;"
-          disabled="true"/>
+      <tree class="inset" id="available_charsets" flex="1" onselect="SelectAvailableCharset();" 
+            datasources="rdf:null" indent="false" multiple="true">
+        <treechildren id="available_charsets_root"/>
+      </tree> 
+      <separator class="thin"/>
+      <box autostretch="never">
+        <button id="add_button" oncommand="AddAvailableCharset();" class="dialog"
+                value="&charset.customize.add.label;" disabled="true"/>
       </box>
-	  <!-- horz 3 -->
-
     </box> 
-	<!-- vert 1 -->
-    
-    <!-- Spacing between the left and right halves of the dialog -->
-
-    <spring style="width:2em"/>
-
-    <!-- The charsets that the user currently has chosen -->
-    <!-- vert 2 -->
-	<box align="vertical" flex="1">
-
-    <separator/>
-		<html>
-			&charset.customize.current.label;
-		</html>
-
-	  <!-- horz 4 -->
-      <box align="horizontal" class="box-group" flex="1">
-
-		<!-- Active Charsets Tree -->
-        <tree id="active_charsets" flex="1"
-		  onclick="SelectActiveCharset();"
-          datasources="rdf:null"
-	      indent="false"
-          multiple="true"
-          style="height:0px">
-         <!-- We explicitly create a 'treechildren' so we can refer
-              to it from the script -->
-         <treechildren id="active_charsets_root">
-	     </treechildren>
-       </tree>
-
+    <separator orient="vertical"/>
+  	<box orient="vertical" flex="1">
+	    <text class="label" value="&charset.customize.current.label;" crop="right"/>
+      <tree class="inset" id="active_charsets" flex="1" onselect="SelectActiveCharset();" datasources="rdf:null"
+	          indent="false" multiple="true">
+        <treechildren id="active_charsets_root"/>
+      </tree>
+      <separator class="thin"/>
+      <box autostretch="never">
+        <button id="remove_button" oncommand="RemoveActiveCharset();" class="dialog" disabled="true"
+                value="&charset.customize.remove.label;" />
       </box>
-	  <!-- koriz 4 -->
-
-      <!-- The Remove Charset Button -->
-	  <!-- horz 5 -->
-      <box align="horizontal" class="button-group">
-        <button id="remove_button" onclick="RemoveActiveCharset();"
-          class="dialog push" disabled="true"
-          value="&charset.customize.remove.label;" />
-      </box>
-	  <!-- horz 5 -->
-
     </box> 
-	<!-- vert 2 -->
-       <!-- Spacing between the right selector and "Reorder" -->
-       <spring style="width:8px"/>
-
-        <!-- The Reorder Button -->
-
-		<!-- vert 3 -->
-        <box align="vertical">
-          <spring flex="50%"/>
-          <button onclick="MoveUp();" id="up" class="borderless up"
-          value="&charset.customize.moveUp.label;" accesskey="&charset.customize.moveUp.accesskey;" />
-
-      	  <!-- 
-            <html>
-            &charset.customize.reorder.label;
-            </html>
-           -->
-          
-          <button onclick="MoveDown();" id="down"
-            class="borderless down"
-            value="&charset.customize.moveDown.label;" accesskey="&charset.customize.moveDown.accesskey;" />
-          <spring flex="50%"/>
-        </box>
-		<!-- vert 3 -->
-
-
+    <box orient="vertical">
+      <spring flex="1"/>
+      <button oncommand="MoveUp();" id="up" class="button-moveup" />
+      <button oncommand="MoveDown();" id="down" class="button-movedown"/>
+      <spring flex="1"/>
+    </box>
   </box>
-  <!-- horz 2 -->	
 
   <separator class="groove"/>
 
-  <!-- The 'Save' and 'Cancel' buttons -->
-  <!-- horz 6 -->
-  <box align="horizontal">
-    <spring flex="48%"/>
-    <button id="save_button" onclick="Save();"
-       class="dialog push"
-       value="&charset.customize.save.label;"
-       disabled="true"/>
-    <spring flex="4%"/>
-    <button onclick="window.close()"
-       class="dialog push"
-       value="&charset.customize.cancel.label;" />
-    <spring flex="48%"/>
-  </box>
-  <!-- horz 6 -->
+  <box id="okCancelButtonsRight"/>
   
 </window>
 
