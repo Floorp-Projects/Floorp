@@ -69,6 +69,18 @@ public:
                                      nsIToolkit *aToolkit = nsnull,
                                      nsWidgetInitData *aInitData = nsnull);
 
+     // Utility method for implementing both Create(nsIWidget ...) and
+     // Create(nsNativeWidget...)
+
+    virtual nsresult        StandardWindowCreate(nsIWidget *aParent,
+                            const nsRect &aRect,
+                            EVENT_CALLBACK aHandleEventFunction,
+                            nsIDeviceContext *aContext,
+                            nsIAppShell *aAppShell,
+                            nsIToolkit *aToolkit,
+                            nsWidgetInitData *aInitData,
+                            nsNativeWidget aNativeParent = nsnull);
+
     NS_IMETHOD              Destroy();
     virtual nsIWidget*      GetParent(void);
     NS_IMETHOD              Show(PRBool bState);
