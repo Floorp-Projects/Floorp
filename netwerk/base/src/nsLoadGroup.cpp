@@ -431,8 +431,6 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
     rv = channel->GetLoadAttributes(&flags);
     if (NS_FAILED(rv)) return rv;
 
-    SetDefaultLoadAttributes(flags);
-
     //
     // Add the channel to the list of active channels...
     //
