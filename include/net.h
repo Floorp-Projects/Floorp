@@ -36,8 +36,6 @@
 #include "xp_list.h"
 #include "msgtypes.h"
 
-#include "xp_error.h"
-
 #ifdef XP_UNIX
 #include <sys/param.h> /* for MAXPATHLEN */
 #endif
