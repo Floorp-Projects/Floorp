@@ -148,9 +148,16 @@ public:
      *   NULL is returned for the resultSegment.
      * @param resultSegment - The resulting read segment.
      * @param resultSegmentLength - The resulting read segment length.
-     * @return NS_BASE_STREAM_EOF - if requested offset is at or 
-     *   beyond the write cursor
-     * @return NS_OK - if a read segment is successfully returned
+     *
+     * @return NS_OK - if a read segment is successfully returned, or if
+     *   the requested offset is at or beyond the write cursor (in which case
+     *   the resultSegment will be nsnull and the resultSegmentLen will be 0)
+     * @return NS_BASE_STREAM_WOULD_BLOCK - if the buffer size becomes 0
+     * @return any error set by SetCondition if the requested offset is at
+     *   or beyond the write cursor (in which case the resultSegment will be
+     *   nsnull and the resultSegmentLen will be 0). Note that NS_OK will be
+     *   returned if SetCondition has not been called. 
+     * @return any error returned by OnEmpty
      */
     NS_IMETHOD GetReadSegment(PRUint32 segmentLogicalOffset,
                               const char* *resultSegment,
@@ -214,6 +221,12 @@ public:
      * Returns the raw char buffer segment and its length available for writing.
      * @param resultSegment - The resulting write segment.
      * @param resultSegmentLength - The resulting write segment length.
+     *
+     * @return NS_OK - if there is a segment available to write to
+     * @return NS_BASE_STREAM_CLOSED - if ReaderClosed has been called
+     * @return NS_BASE_STREAM_WOULD_BLOCK - if the max buffer size is exceeded
+     * @return NS_ERROR_OUT_OF_MEMORY - if a new segment could not be allocated
+     * @return any error returned by OnFull
      */
     NS_IMETHOD GetWriteSegment(char* *resultSegment,
                                PRUint32 *resultSegmentLen) = 0;
