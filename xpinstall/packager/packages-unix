@@ -77,6 +77,8 @@ bin/components/autocomplete.xpt
 bin/components/appshell.xpt
 bin/components/caps.xpt
 bin/components/cookie.xpt
+bin/components/libjsd.so
+bin/components/jsdservice.xpt
 bin/components/libjsdom.so
 bin/components/dom.xpt
 bin/components/dom_base.xpt
@@ -330,6 +332,9 @@ bin/chrome/messenger.jar
 bin/components/chatzilla-service.js
 bin/chrome/chatzilla.jar
 
+[venkman]
+bin/components/venkman-service.js
+bin/chrome/venkman.jar
 
 [talkback]
 ; Dummy talkback.xpi must be generated so deliver.pl and 
