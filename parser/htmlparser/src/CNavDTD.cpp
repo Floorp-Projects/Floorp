@@ -1188,9 +1188,11 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
     case eHTMLTag_frameset:
       {
-        static char okTags[]={eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes,0};
+        static char okTags[]={eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes,
+                              eHTMLTag_newline,eHTMLTag_whitespace,0};
         result=PRBool(0!=strchr(okTags,aChild));
       }
+      break;
 
     case eHTMLTag_h1: case eHTMLTag_h2:
     case eHTMLTag_h3: case eHTMLTag_h4:
