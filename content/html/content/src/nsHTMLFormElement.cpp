@@ -44,7 +44,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsDOMError.h"
 #include "nsLayoutUtils.h"
-#include "nsHashTable.h"
+#include "nsHashtable.h"
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 64;
 
