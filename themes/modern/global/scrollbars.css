@@ -37,14 +37,14 @@ scrollbar {
 /* ::::: slider ::::: */
 
 slider {
-  height: 14px;
+  height: 15px;
   background: url("chrome://global/skin/scrollbar/slider-hrz-mid.gif") repeat-x;
 }
 
 slider[orient="vertical"] {
   border-top: 0px;
   border-bottom: 0px;
-  width: 14px;
+  width: 15px;
   background: url("chrome://global/skin/scrollbar/slider-vrt-mid.gif") repeat-y;
 }
 
@@ -52,7 +52,7 @@ slider[orient="vertical"] {
 
 thumb {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#thumb-horizontal");
-  height: 14px;
+  height: 15px;
 }
 
 .thumb-horz-spacer-left {
@@ -102,18 +102,18 @@ thumb[orient="vertical"] {
 .thumb-vert-spacer-top {
   background: url("chrome://global/skin/scrollbar/thumb-vrt-top.gif") no-repeat;
   height: 3px;
-  width: 14px;
+  width: 15px;
 }
 
 .thumb-vert-box-middle {
   background: url("chrome://global/skin/scrollbar/thumb-vrt-mid.gif") repeat-y;
-  width: 14px;
+  width: 15px;
 }
 
 .thumb-vert-spacer-bottom {
   background: url("chrome://global/skin/scrollbar/thumb-vrt-btm.gif") no-repeat;
   height: 3px;
-  width: 14px;
+  width: 15px;
 }
 
 .thumb-vert-grippy {
