@@ -20,6 +20,9 @@
   var defaultStatus = "default status text";
   var explicitURL = false;
 
+/*
+// pinkerton 9/21/99
+// disabling d&d code for pre-alpha thang
   function BeginDragPersonalToolbar ( event )
   {
     //XXX we rely on a capturer to already have determined which item the mouse was over
@@ -195,7 +198,7 @@
     return true;
 
   } // DragOverPersonalToolbar
-
+*/
 
 function UpdateHistory(event)
 {
