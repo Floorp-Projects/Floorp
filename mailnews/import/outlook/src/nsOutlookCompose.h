@@ -126,7 +126,7 @@ private:
 		val.Truncate();
 		nsCString	hVal;
 		GetHeaderValue( pData, dataLen, pHeader, hVal, PR_TRUE);
-		val = hVal;
+		val.AssignWithConversion(hVal);
 	}
 	void		ExtractCharset( nsString& str);
 	void		ExtractType( nsString& str);

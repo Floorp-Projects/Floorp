@@ -1140,7 +1140,7 @@ BOOL CMapiApi::GetStringFromProp( LPSPropValue pVal, nsCString& val, BOOL delVal
 		val = pVal->Value.lpszA;
 	}
 	else if ( pVal && (PROP_TYPE( pVal->ulPropTag) == PT_UNICODE)) {
-		val = (PRUnichar *) pVal->Value.lpszW;
+		val.AssignWithConversion((PRUnichar *) pVal->Value.lpszW);
 	}
 	else if (pVal && (PROP_TYPE( pVal->ulPropTag) == PT_NULL)) {
 		val.Truncate();
@@ -1256,8 +1256,8 @@ void CMapiApi::ReportLongProp( const char *pTag, LPSPropValue pVal)
 		nsCString	num;
 		nsCString	num2;
 
-		num.Append( (PRInt32) pVal->Value.l);
-		num2.Append( (PRInt32) pVal->Value.l, 16);
+		num.AppendInt( (PRInt32) pVal->Value.l);
+		num2.AppendInt( (PRInt32) pVal->Value.l, 16);
 		MAPI_TRACE3( "%s %s, 0x%s\n", pTag, num, num2);
 	}
 	else if (pVal && (PROP_TYPE( pVal->ulPropTag) == PT_NULL)) {
@@ -1380,9 +1380,9 @@ void CMapiApi::ListPropertyValue( LPSPropValue pVal, nsCString& s)
 			s += strVal;
 		break;
 		case PT_LONG:
-			s.Append( (PRInt32) pVal->Value.l);
+			s.AppendInt( (PRInt32) pVal->Value.l);
 			s += ", 0x";
-			s.Append( (PRInt32) pVal->Value.l, 16);
+			s.AppendInt( (PRInt32) pVal->Value.l, 16);
 			s += nBuff;
 		break;
 		case PT_BOOLEAN:

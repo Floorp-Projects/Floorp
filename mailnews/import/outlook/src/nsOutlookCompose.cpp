@@ -195,7 +195,8 @@ nsresult nsOutlookCompose::CreateIdentity( void)
     NS_WITH_PROXIED_SERVICE(nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, NS_UI_THREAD_EVENTQ, &rv);
     if (NS_FAILED(rv)) return( rv);
 	rv = accMgr->CreateIdentity( &m_pIdentity);
-	nsString	name = "Import Identity";
+	nsString	name;
+	name.AssignWithConversion("Import Identity");
 	if (m_pIdentity) {
 		m_pIdentity->SetFullName( name.GetUnicode());
 		m_pIdentity->SetIdentityName( name.GetUnicode());
@@ -480,7 +481,7 @@ void nsOutlookCompose::ExtractType( nsString& str)
 	// valid multipart!
 	if (str.Length() > 10) {
 		str.Left( tStr, 10);
-		if (!tStr.Compare( "multipart/", PR_TRUE))
+		if (!tStr.CompareWithConversion( "multipart/", PR_TRUE))
 			str.Truncate();
 	}
 }

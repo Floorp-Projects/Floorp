@@ -288,11 +288,11 @@ PRBool OutlookSettings::DoIMAPServer( nsIMsgAccountManager *pMgr, HKEY hKey, cha
 			BYTE *pAccName = nsOutlookRegUtil::GetValueBytes( hKey, "Account Name");
 			nsString	prettyName;
 			if (pAccName) {
-				prettyName = (const char *)pAccName;
+				prettyName.AssignWithConversion((const char *)pAccName);
 				nsOutlookRegUtil::FreeValueBytes( pAccName);
 			}
 			else
-				prettyName = (const char *)pServerName;
+				prettyName.AssignWithConversion((const char *)pServerName);
 
 			PRUnichar *pretty = prettyName.ToNewUnicode();
 			
@@ -353,11 +353,11 @@ PRBool OutlookSettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, cha
 			BYTE *pAccName = nsOutlookRegUtil::GetValueBytes( hKey, "Account Name");
 			nsString	prettyName;
 			if (pAccName) {
-				prettyName = (const char *)pAccName;
+				prettyName.AssignWithConversion((const char *)pAccName);
 				nsOutlookRegUtil::FreeValueBytes( pAccName);
 			}
 			else
-				prettyName = (const char *)pServerName;
+				prettyName.AssignWithConversion((const char *)pServerName);
 
 			PRUnichar *pretty = prettyName.ToNewUnicode();
 			
@@ -454,7 +454,8 @@ void OutlookSettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *
 		nsCOMPtr<nsIMsgIdentity>	id;
 		rv = pMgr->CreateIdentity( getter_AddRefs( id));
 		if (id) {
-			nsString name = pName;
+			nsString name;
+			name.AssignWithConversion(pName);
 			id->SetFullName( name.GetUnicode());
 			id->SetIdentityName( name.GetUnicode());
 			id->SetEmail( pEmail);

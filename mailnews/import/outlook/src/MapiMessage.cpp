@@ -263,7 +263,7 @@ BOOL CMapiMessage::IsMultipart( void)
 {
 	nsCString	left;
 	m_mimeContentType.Left( left, 10);
-	if (!left.Compare( "multipart/", PR_TRUE))
+	if (!left.CompareWithConversion( "multipart/", PR_TRUE))
 		return( TRUE);
 	return( FALSE);
 }
@@ -273,7 +273,7 @@ void CMapiMessage::GenerateBoundary( void)
 	m_mimeBoundary = "===============_NSImport_Boundary_";
 	PRUint32 t = ::GetTickCount();
 	nsCString	hex;
-	hex.Append( (PRInt32) t, 16);
+	hex.AppendInt( (PRInt32) t, 16);
 	m_mimeBoundary += hex;
 	m_mimeBoundary += "====";
 }
@@ -305,9 +305,9 @@ void CMapiMessage::ProcessHeaderLine( nsCString& line)
 	line.Left( left8, 8);
 	line.Left( left5, 5);
 
-	if (!left13.Compare( "Mime-Version:", PR_TRUE))
+	if (!left13.CompareWithConversion( "Mime-Version:", PR_TRUE))
 		m_bMimeVersion = TRUE;
-	else if (!left13.Compare( "Content-Type:", PR_TRUE)) {
+	else if (!left13.CompareWithConversion( "Content-Type:", PR_TRUE)) {
 		// Note: this isn't a complete parser, the content type
 		// we extract could have rfc822 comments in it
 		len = 13;
@@ -331,9 +331,9 @@ void CMapiMessage::ProcessHeaderLine( nsCString& line)
 				len++;
 			if (len - start) {
 				line.Mid( tStr, start, len - start);
-				if (!tStr.Compare( "boundary", PR_TRUE))
+				if (!tStr.CompareWithConversion( "boundary", PR_TRUE))
 					haveB = TRUE;
-				else if (!tStr.Compare( "charset", PR_TRUE))
+				else if (!tStr.CompareWithConversion( "charset", PR_TRUE))
 					haveC = TRUE;
 			}
 			len++;
@@ -346,12 +346,12 @@ void CMapiMessage::ProcessHeaderLine( nsCString& line)
 				while (len < line.Length()) {
 					if (slash) {
 						slash = FALSE;
-						tStr += line.CharAt( len);
+						tStr.AppendWithConversion(line.CharAt( len));
 					}
 					else if (line.CharAt( len) == '"')
 						break;
 					else if (line.CharAt( len) != '\\')
-						tStr += line.CharAt( len);
+						tStr.AppendWithConversion(line.CharAt( len));
 					else
 						slash = TRUE;
 					len++;
@@ -368,7 +368,7 @@ void CMapiMessage::ProcessHeaderLine( nsCString& line)
 			}
 			tStr.Truncate();
 			while ((len < line.Length()) && (line.CharAt( len) != ';')) {
-				tStr += line.CharAt( len);
+				tStr.AppendWithConversion(line.CharAt( len));
 				len++;
 			}
 			len++;
@@ -383,14 +383,14 @@ void CMapiMessage::ProcessHeaderLine( nsCString& line)
 
 		}
 	}
-	else if (!left26.Compare( "Content-Transfer-Encoding:", PR_TRUE)) {
+	else if (!left26.CompareWithConversion( "Content-Transfer-Encoding:", PR_TRUE)) {
 		m_bMimeEncoding = TRUE;
 	}
-	else if (!left8.Compare( "Subject:", PR_TRUE))
+	else if (!left8.CompareWithConversion( "Subject:", PR_TRUE))
 		m_bHasSubject = TRUE;
-	else if (!left5.Compare( "From:", PR_TRUE))
+	else if (!left5.CompareWithConversion( "From:", PR_TRUE))
 		m_bHasFrom = TRUE;
-	else if (!left5.Compare( "Date: ", PR_TRUE))
+	else if (!left5.CompareWithConversion( "Date: ", PR_TRUE))
 		m_bHasDate = TRUE;
 }
 
