@@ -26,6 +26,7 @@
   ======================================================================= */
 
 @namespace url(http://www.w3.org/1999/xhtml);
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* :::::::::: button :::::::::: */
 
@@ -33,9 +34,8 @@ button,
 input[type="button"],
 input[type="submit"],
 input[type="reset"] {
-  -moz-appearance: button;
+  /* -moz-appearance: button; */
   margin: 1px 5px 2px 5px;
-  min-width: 6.3em;
   border: 3px solid;
   -moz-border-top-colors: transparent ThreeDHighlight ThreeDLightShadow;
   -moz-border-right-colors: transparent ThreeDDarkShadow ThreeDShadow;
@@ -45,14 +45,33 @@ input[type="reset"] {
   color: ButtonText;
 }
 
-.button-box {
+xul|*.button-box {
   border: 1px solid transparent;
-  padding: 1px 4px 2px 3px;
+  padding: 0px 4px 1px 3px;
 }
 
-.button-box-text {
+xul|*.button-box-text {
   margin: 0 !important;
   text-align: center;
+}
+
+/* .......... active/open/checked state .......... */
+
+button:hover:active,
+input[type="button"]:hover:active,
+input[type="submit"]:hover:active,
+input[type="reset"]:hover:active {
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow transparent;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow transparent;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow transparent;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow transparent;
+}
+
+button:hover:active > xul|*.button-box,
+input[type="button"]:hover:active > xul|*.button-box,
+input[type="submit"]:hover:active > xul|*.button-box,
+input[type="reset"]:hover:active > xul|*.button-box {
+  padding: 1px 3px 0px 4px;
 }
 
 /* .......... focused state .......... */
@@ -67,10 +86,10 @@ input[type="reset"]:focus {
   -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight transparent;
 }
 
-button:focus > .button-box,
-input[type="button"]:focus > .button-box,
-input[type="submit"]:focus > .button-box,
-input[type="reset"]:focus > .button-box {
+button:focus > xul|*.button-box,
+input[type="button"]:focus > xul|*.button-box,
+input[type="submit"]:focus > xul|*.button-box,
+input[type="reset"]:focus > xul|*.button-box {
   border: 1px dotted ThreeDDarkShadow;
 }
 
@@ -87,10 +106,10 @@ input[type="reset"][disabled="true"] {
   color: GrayText;
 }
 
-button[disabled="true"] > .button-box,
-input[type="button"][disabled="true"] > .button-box,
-input[type="submit"][disabled="true"] > .button-box,
-input[type="reset"][diasbled="true"] > .button-box {
-  padding: 1px 4px 2px 3px !important;
+button[disabled="true"] > xul|*.button-box,
+input[type="button"][disabled="true"] > xul|*.button-box,
+input[type="submit"][disabled="true"] > xul|*.button-box,
+input[type="reset"][diasbled="true"] > xul|*.button-box {
+  padding: 0px 4px 1px 3px !important;
 }
 
