@@ -99,6 +99,8 @@
   </commandset>
 
   <broadcasterset id="mailBroadcasters">
+    <broadcaster id="mailHideMenus" hidden="true"/>
+    <broadcaster id="mailDisableKeys" disabled="true"/>
     <!-- File Menu -->
     <broadcaster id="Communicator:WorkMode"/>
     <!-- Edit Menu -->
@@ -123,7 +125,7 @@
         <menuitem label="&CreateFilter.label;"
                   accesskey="&CreateFilter.accesskey;"
                   oncommand="CreateFilter(document.popupNode)"
-                  observes="cmd_createFilterFromPopup"/>  
+                  command="cmd_createFilterFromPopup"/>  
     </popup>
 
     <popup id="allHeadersPopup"  onpopupshowing="return fillAllHeadersPopup(document.popupNode);" popupanchor="bottomleft">

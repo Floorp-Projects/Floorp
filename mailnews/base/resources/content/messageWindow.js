@@ -244,7 +244,6 @@ function IsCurrentLoadedFolder(folder)
 
 function OnLoadMessageWindow()
 {
-	HideMenus();
   AddMailOfflineObserver();
 	CreateMailWindowGlobals();
 	CreateMessageWindowGlobals();
@@ -399,77 +398,6 @@ function extractMsgKeyFromURI()
   }
 
   return msgKey;
-}
-
-function HideMenus()
-{
-    var messagePaneMenuitem = document.getElementById('menu_showMessagePane');
-    if (messagePaneMenuitem)
-        messagePaneMenuitem.hidden = true;
-
-    var folderPaneMenuitem = document.getElementById('menu_showFolderPane');
-    if (folderPaneMenuitem)
-        folderPaneMenuitem.hidden = true;
-
-	var showSearchToolbar = document.getElementById('menu_showSearchToolbar');
-	if (showSearchToolbar)
-		showSearchToolbar.setAttribute("hidden", "true");
-
-	var showSearch_showMessage_Separator = document.getElementById('menu_showSearch_showMessage_Separator');
-	if (showSearch_showMessage_Separator)
-		showSearch_showMessage_Separator.setAttribute("hidden", "true");
-
-	var expandOrCollapseMenu = document.getElementById('menu_expandOrCollapse');
-	if (expandOrCollapseMenu)
-		expandOrCollapseMenu.setAttribute("hidden", "true");
-
-	var renameFolderMenu = document.getElementById('menu_renameFolder');
-	if (renameFolderMenu)
-		renameFolderMenu.setAttribute("hidden", "true");
-
-	var viewMessagesMenu = document.getElementById('viewMessagesMenu');
-	if (viewMessagesMenu)
-		viewMessagesMenu.setAttribute("hidden", "true");
-
-	var viewMessageViewMenu = document.getElementById('viewMessageViewMenu');
-	if (viewMessageViewMenu)
-		viewMessageViewMenu.setAttribute("hidden", "true");
-
-	var viewMessagesMenuSeparator = document.getElementById('viewMessagesMenuSeparator');
-	if (viewMessagesMenuSeparator)
-		viewMessagesMenuSeparator.setAttribute("hidden", "true");
-
-	var openMessageMenu = document.getElementById('openMessageWindowMenuitem');
-	if (openMessageMenu)
-		openMessageMenu.setAttribute("hidden", "true");
-
-	var viewSortMenu = document.getElementById('viewSortMenu');
-	if (viewSortMenu)
-		viewSortMenu.setAttribute("hidden", "true");
-
-	var emptryTrashMenu = document.getElementById('menu_emptyTrash');
-	if (emptryTrashMenu)
-		emptryTrashMenu.setAttribute("hidden", "true");
-
-	var menuProperties = document.getElementById('menu_properties');
-	if (menuProperties)
-		menuProperties.setAttribute("hidden", "true");
-
-	var compactFolderMenu = document.getElementById('menu_compactFolder');
-	if (compactFolderMenu)
-		compactFolderMenu.setAttribute("hidden", "true");
-
-	var trashSeparator = document.getElementById('trashMenuSeparator');
-	if (trashSeparator)
-		trashSeparator.setAttribute("hidden", "true");
-
-	var goStartPageSeparator = document.getElementById('goStartPageSeparator');
-	if (goStartPageSeparator)
-		goStartPageSeparator.hidden = true;
-
-  var goStartPage = document.getElementById('goStartPage');
-	if (goStartPage)
-   goStartPage.hidden = true;
 }
 
 function OnUnloadMessageWindow()

@@ -669,7 +669,7 @@ function UpdateMailPaneConfig() {
     messagePaneSplitter.orient = desiredParent.orient;
     messenger.SetWindow(null, null);
     messenger.SetWindow(window, msgWindow);
-    if (gDBView)
+    if (gDBView && GetNumSelectedMessages() == 1)
       gDBView.reloadMessage();
   }
 }
@@ -681,12 +681,6 @@ const MailPaneConfigObserver = {
       UpdateMailPaneConfig();
   }
 };
-
-function UpdateMailPaneConfigMenu(menuitems) {
-  var pane_config = GetMailPaneConfig();
-  for (var i = 0; i < menuitems.length; i++)
-    menuitems[i].setAttribute("checked", i == pane_config);
-}
 
 /* Functions related to startup */
 function OnLoadMessenger()
