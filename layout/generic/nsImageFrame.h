@@ -57,7 +57,6 @@ class nsILoadGroup;
 struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
 struct nsSize;
-class nsIPrefBranch;
 
 class nsImageFrame;
 
@@ -296,7 +295,7 @@ private:
     NS_DECL_NSIOBSERVER
 
   private:
-    void GetPrefs(nsIPrefBranch *aPrefService);
+    void GetPrefs();
 
   public:
     nsCOMPtr<imgIRequest> mLoadingImage;

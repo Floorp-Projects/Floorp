@@ -116,7 +116,7 @@ protected:
 
   nsresult AddContentAsLeaf(nsIContent *aContent);
 
-  static void SplitXMLName(const nsAString& aString, nsIAtom **aPrefix,
+  static void SplitXMLName(const nsAFlatString& aString, nsIAtom **aPrefix,
                            nsIAtom **aTagName);
   PRInt32 GetNameSpaceId(nsIAtom* aPrefix);
   already_AddRefed<nsINameSpace> PopNameSpaces();

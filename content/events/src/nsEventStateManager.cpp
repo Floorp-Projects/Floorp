@@ -81,9 +81,9 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
+#include "nsIPrefBranchInternal.h"
 
 #include "nsIServiceManager.h"
-#include "nsIPrefService.h"
 #include "nsIScriptSecurityManager.h"
 
 #include "nsIChromeEventHandler.h"
@@ -209,40 +209,37 @@ CurrentEventShepherd::~CurrentEventShepherd()
 /******************************************************************/
 
 nsEventStateManager::nsEventStateManager()
-  : mGestureDownPoint(0,0),
+  : mLockCursor(0),
+    mCurrentTarget(nsnull),
+    mLastMouseOverFrame(nsnull),
+    mLastDragOverFrame(nsnull),
+    // init d&d gesture state machine variables
+    mIsTrackingDragGesture(PR_FALSE),
+    mGestureDownPoint(0,0),
     mGestureDownRefPoint(0,0),
+    mGestureDownFrame(nsnull),
     mCurrentFocusFrame(nsnull),
+    mLastFocusedWith(eEventFocusedByUnknown),
+    mCurrentTabIndex(0),
+    mCurrentEvent(0),
+    mPresContext(nsnull),
+    mLClickCount(0),
+    mMClickCount(0),
+    mRClickCount(0),
+    mConsumeFocusEvents(PR_FALSE),
+    mNormalLMouseEventInProcess(PR_FALSE),
     m_haveShutdown(PR_FALSE),
     mClearedFrameRefsDuringEvent(PR_FALSE),
-    mDOMEventLevel(0)
-{
-  mLastMouseOverFrame = nsnull;
-  mLastDragOverFrame = nsnull;
-  mCurrentTarget = nsnull;
-
-  mConsumeFocusEvents = PR_FALSE;
-  mLockCursor = 0;
-  mCurrentEvent = 0;
-
-  // init d&d gesture state machine variables
-  mIsTrackingDragGesture = PR_FALSE;
-  mGestureDownFrame = nsnull;
-
-  mLClickCount = 0;
-  mMClickCount = 0;
-  mRClickCount = 0;
-  mLastFocusedWith = eEventFocusedByUnknown;
-  mPresContext = nsnull;
-  mCurrentTabIndex = 0;
-  mAccessKeys = nsnull;
-  mBrowseWithCaret = PR_FALSE;
-  mNormalLMouseEventInProcess = PR_FALSE;
-  mTabbedThroughDocument = PR_FALSE;
-
+    mBrowseWithCaret(PR_FALSE),
+    mTabbedThroughDocument(PR_FALSE),
+    mDOMEventLevel(0),
+    mAccessKeys(nsnull)
 #ifdef CLICK_HOLD_CONTEXT_MENUS
-  mEventDownWidget = nsnull;
+    ,
+    mEventDownWidget(nsnull),
+    mEventPresContext(nsnull)
 #endif
-  
+{
   ++sESMInstanceCount;
 }
 
@@ -252,41 +249,44 @@ nsEventStateManager::Init()
   nsresult rv;
   nsCOMPtr<nsIObserverService> observerService = 
            do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_SUCCEEDED(rv))
-  {
-    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = getPrefBranch();
+  observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
 
-  if (NS_SUCCEEDED(rv)) {
+  nsCOMPtr<nsIPrefBranchInternal> prefBranch =
+    do_QueryInterface(nsContentUtils::GetPrefBranch());
+
+  if (prefBranch) {
     if (sESMInstanceCount == 1) {
-      mPrefBranch->GetBoolPref("nglayout.events.dispatchLeftClickOnly",
-                               &sLeftClickOnly);
+      sLeftClickOnly =
+        nsContentUtils::GetBoolPref("nglayout.events.dispatchLeftClickOnly",
+                                    sLeftClickOnly);
 
-      mPrefBranch->GetIntPref("ui.key.generalAccessKey",
-                              &sGeneralAccesskeyModifier);
+      sGeneralAccesskeyModifier =
+        nsContentUtils::GetIntPref("ui.key.generalAccessKey",
+                                   sGeneralAccesskeyModifier);
 
-      mPrefBranch->GetIntPref("accessibility.tabfocus", &sTabFocusModel);
+      sTabFocusModel = nsContentUtils::GetIntPref("accessibility.tabfocus",
+                                                  sTabFocusModel);
     }
-    mPrefBranch->AddObserver("accessibility.accesskeycausesactivation", this, PR_TRUE);
-    mPrefBranch->AddObserver("accessibility.browsewithcaret", this, PR_TRUE);
-    mPrefBranch->AddObserver("accessibility.tabfocus", this, PR_TRUE);
-    mPrefBranch->AddObserver("nglayout.events.dispatchLeftClickOnly", this, PR_TRUE);
-    mPrefBranch->AddObserver("ui.key.generalAccessKey", this, PR_TRUE);
+    prefBranch->AddObserver("accessibility.accesskeycausesactivation", this, PR_TRUE);
+    prefBranch->AddObserver("accessibility.browsewithcaret", this, PR_TRUE);
+    prefBranch->AddObserver("accessibility.tabfocus", this, PR_TRUE);
+    prefBranch->AddObserver("nglayout.events.dispatchLeftClickOnly", this, PR_TRUE);
+    prefBranch->AddObserver("ui.key.generalAccessKey", this, PR_TRUE);
 #if 0
-    mPrefBranch->AddObserver("mousewheel.withaltkey.action", this, PR_TRUE);
-    mPrefBranch->AddObserver("mousewheel.withaltkey.numlines", this, PR_TRUE);
-    mPrefBranch->AddObserver("mousewheel.withaltkey.sysnumlines", this, PR_TRUE);
-    mPrefBranch->AddObserver("mousewheel.withcontrolkey.action", this, PR_TRUE);
-    mPrefBranch->AddObserver("mousewheel.withcontrolkey.numlines", this, PR_TRUE);
-    mPrefBranch->AddObserver("mousewheel.withcontrolkey.sysnumlines", this, PR_TRUE);
-    mPrefBranch->AddObserver("mousewheel.withnokey.action", this, PR_TRUE);
-    mPrefBranch->AddObserver("mousewheel.withnokey.numlines", this, PR_TRUE);
-    mPrefBranch->AddObserver("mousewheel.withnokey.sysnumlines", this, PR_TRUE);
-    mPrefBranch->AddObserver("mousewheel.withshiftkey.action", this, PR_TRUE);
-    mPrefBranch->AddObserver("mousewheel.withshiftkey.numlines", this, PR_TRUE);
-    mPrefBranch->AddObserver("mousewheel.withshiftkey.sysnumlines", this, PR_TRUE);
+    prefBranch->AddObserver("mousewheel.withaltkey.action", this, PR_TRUE);
+    prefBranch->AddObserver("mousewheel.withaltkey.numlines", this, PR_TRUE);
+    prefBranch->AddObserver("mousewheel.withaltkey.sysnumlines", this, PR_TRUE);
+    prefBranch->AddObserver("mousewheel.withcontrolkey.action", this, PR_TRUE);
+    prefBranch->AddObserver("mousewheel.withcontrolkey.numlines", this, PR_TRUE);
+    prefBranch->AddObserver("mousewheel.withcontrolkey.sysnumlines", this, PR_TRUE);
+    prefBranch->AddObserver("mousewheel.withnokey.action", this, PR_TRUE);
+    prefBranch->AddObserver("mousewheel.withnokey.numlines", this, PR_TRUE);
+    prefBranch->AddObserver("mousewheel.withnokey.sysnumlines", this, PR_TRUE);
+    prefBranch->AddObserver("mousewheel.withshiftkey.action", this, PR_TRUE);
+    prefBranch->AddObserver("mousewheel.withshiftkey.numlines", this, PR_TRUE);
+    prefBranch->AddObserver("mousewheel.withshiftkey.sysnumlines", this, PR_TRUE);
 #endif
   }
 
@@ -317,9 +317,7 @@ nsEventStateManager::~nsEventStateManager()
     NS_IF_RELEASE(gLastFocusedDocument);
   }
 
-  if (mAccessKeys) {
-    delete mAccessKeys;
-  }
+  delete mAccessKeys;
 
   if (!m_haveShutdown) {
     Shutdown();
@@ -342,46 +340,32 @@ nsEventStateManager::~nsEventStateManager()
 nsresult
 nsEventStateManager::Shutdown()
 {
-  if (mPrefBranch) {
-    mPrefBranch->RemoveObserver("accessibility.accesskeycausesactivation", this);
-    mPrefBranch->RemoveObserver("accessibility.browsewithcaret", this);
-    mPrefBranch->RemoveObserver("accessibility.tabfocus", this);
-    mPrefBranch->RemoveObserver("nglayout.events.dispatchLeftClickOnly", this);
-    mPrefBranch->RemoveObserver("ui.key.generalAccessKey", this);
+  nsCOMPtr<nsIPrefBranchInternal> prefBranch =
+    do_QueryInterface(nsContentUtils::GetPrefBranch());
+
+  if (prefBranch) {
+    prefBranch->RemoveObserver("accessibility.accesskeycausesactivation", this);
+    prefBranch->RemoveObserver("accessibility.browsewithcaret", this);
+    prefBranch->RemoveObserver("accessibility.tabfocus", this);
+    prefBranch->RemoveObserver("nglayout.events.dispatchLeftClickOnly", this);
+    prefBranch->RemoveObserver("ui.key.generalAccessKey", this);
 #if 0
-    mPrefBranch->RemoveObserver("mousewheel.withshiftkey.action", this);
-    mPrefBranch->RemoveObserver("mousewheel.withshiftkey.numlines", this);
-    mPrefBranch->RemoveObserver("mousewheel.withshiftkey.sysnumlines", this);
-    mPrefBranch->RemoveObserver("mousewheel.withcontrolkey.action", this);
-    mPrefBranch->RemoveObserver("mousewheel.withcontrolkey.numlines", this);
-    mPrefBranch->RemoveObserver("mousewheel.withcontrolkey.sysnumlines", this);
-    mPrefBranch->RemoveObserver("mousewheel.withaltkey.action", this);
-    mPrefBranch->RemoveObserver("mousewheel.withaltkey.numlines", this);
-    mPrefBranch->RemoveObserver("mousewheel.withaltkey.sysnumlines", this);
-    mPrefBranch->RemoveObserver("mousewheel.withnokey.action", this);
-    mPrefBranch->RemoveObserver("mousewheel.withnokey.numlines", this);
-    mPrefBranch->RemoveObserver("mousewheel.withnokey.sysnumlines", this);
+    prefBranch->RemoveObserver("mousewheel.withshiftkey.action", this);
+    prefBranch->RemoveObserver("mousewheel.withshiftkey.numlines", this);
+    prefBranch->RemoveObserver("mousewheel.withshiftkey.sysnumlines", this);
+    prefBranch->RemoveObserver("mousewheel.withcontrolkey.action", this);
+    prefBranch->RemoveObserver("mousewheel.withcontrolkey.numlines", this);
+    prefBranch->RemoveObserver("mousewheel.withcontrolkey.sysnumlines", this);
+    prefBranch->RemoveObserver("mousewheel.withaltkey.action", this);
+    prefBranch->RemoveObserver("mousewheel.withaltkey.numlines", this);
+    prefBranch->RemoveObserver("mousewheel.withaltkey.sysnumlines", this);
+    prefBranch->RemoveObserver("mousewheel.withnokey.action", this);
+    prefBranch->RemoveObserver("mousewheel.withnokey.numlines", this);
+    prefBranch->RemoveObserver("mousewheel.withnokey.sysnumlines", this);
 #endif
-    mPrefBranch = nsnull;
   }
 
   m_haveShutdown = PR_TRUE;
-  return NS_OK;
-}
-
-nsresult
-nsEventStateManager::getPrefBranch()
-{
-  nsresult rv = NS_OK;
-
-  if (!mPrefBranch) {
-    mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  }
-
-  if (NS_FAILED(rv)) return rv;
-
-  if (!mPrefBranch) return NS_ERROR_FAILURE;
-
   return NS_OK;
 }
 
@@ -398,18 +382,22 @@ nsEventStateManager::Observe(nsISupports *aSubject,
 
     nsDependentString data(someData);
     if (data.Equals(NS_LITERAL_STRING("accessibility.accesskeycausesactivation"))) {
-      mPrefBranch->GetBoolPref("accessibility.accesskeycausesactivation", &sKeyCausesActivation);
+      sKeyCausesActivation =
+        nsContentUtils::GetBoolPref("accessibility.accesskeycausesactivation",
+                                    sKeyCausesActivation);
     } else if (data.Equals(NS_LITERAL_STRING("accessibility.browsewithcaret"))) {
-      PRBool browseWithCaret;
-      ResetBrowseWithCaret(&browseWithCaret);
+      ResetBrowseWithCaret();
     } else if (data.Equals(NS_LITERAL_STRING("accessibility.tabfocus"))) {
-      mPrefBranch->GetIntPref("accessibility.tabfocus", &sTabFocusModel);
+      sTabFocusModel = nsContentUtils::GetIntPref("accessibility.tabfocus",
+                                                  sTabFocusModel);
     } else if (data.Equals(NS_LITERAL_STRING("nglayout.events.dispatchLeftClickOnly"))) {
-      mPrefBranch->GetBoolPref("nglayout.events.dispatchLeftClickOnly",
-                               &sLeftClickOnly);
+      sLeftClickOnly =
+        nsContentUtils::GetBoolPref("nglayout.events.dispatchLeftClickOnly",
+                                    sLeftClickOnly);
     } else if (data.Equals(NS_LITERAL_STRING("ui.key.generalAccessKey"))) {
-      mPrefBranch->GetIntPref("ui.key.generalAccessKey",
-                              &sGeneralAccesskeyModifier);
+      sGeneralAccesskeyModifier =
+        nsContentUtils::GetIntPref("ui.key.generalAccessKey",
+                                   sGeneralAccesskeyModifier);
 #if 0
     } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withaltkey.action"))) {
     } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withaltkey.numlines"))) {
@@ -678,7 +666,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         NS_IF_ADDREF(gLastFocusedDocument);
       }
 
-      ResetBrowseWithCaret(&mBrowseWithCaret);
+      ResetBrowseWithCaret();
     }
 
     break;
@@ -1989,9 +1977,6 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
     break;
   case NS_MOUSE_SCROLL:
     if (nsEventStatus_eConsumeNoDefault != *aStatus) {
-      nsresult rv;
-      rv = getPrefBranch();
-      if (NS_FAILED(rv)) return rv;
 
       // Build the preference keys, based on the event properties.
       nsMouseScrollEvent *msEvent = (nsMouseScrollEvent*) aEvent;
@@ -2027,13 +2012,11 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       nsCAutoString sysNumLinesKey(baseKey);
       sysNumLinesKey.Append(sysnumlinesslot);
 
-      PRInt32 action = 0;
+      PRInt32 action = nsContentUtils::GetIntPref(actionKey.get());
       PRInt32 numLines = 0;
-      PRBool useSysNumLines;
+      PRBool useSysNumLines =
+        nsContentUtils::GetBoolPref(sysNumLinesKey.get());
 
-      mPrefBranch->GetIntPref(actionKey.get(), &action);
-      mPrefBranch->GetBoolPref(sysNumLinesKey.get(),
-                               &useSysNumLines);
       if (useSysNumLines) {
         numLines = msEvent->delta;
         if (msEvent->scrollFlags & nsMouseScrollEvent::kIsFullPage)
@@ -2057,8 +2040,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           nsCAutoString numLinesKey(baseKey);
           numLinesKey.Append(numlinesslot);
 
-          mPrefBranch->GetIntPref(numLinesKey.get(),
-                                  &numLines);
+          numLines = nsContentUtils::GetIntPref(numLinesKey.get());
 
           bool swapDirs = (numLines < 0);
           PRInt32 userSize = swapDirs ? -numLines : numLines;
@@ -3845,14 +3827,9 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent,
 NS_IMETHODIMP
 nsEventStateManager::GetEventRelatedContent(nsIContent** aContent)
 {
-  if (mCurrentRelatedContent) {
-    *aContent = mCurrentRelatedContent;
-    NS_IF_ADDREF(*aContent);
-    return NS_OK;      
-  }
-  
-  *aContent = nsnull;
-  return NS_OK;
+  *aContent = mCurrentRelatedContent;
+  NS_IF_ADDREF(*aContent);
+  return NS_OK;      
 }
 
 NS_IMETHODIMP
@@ -5071,52 +5048,49 @@ nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell,
 }
 
 
-NS_IMETHODIMP
-nsEventStateManager::GetBrowseWithCaret(PRBool *aBrowseWithCaret)
+PRBool
+nsEventStateManager::GetBrowseWithCaret()
 {
-  NS_ENSURE_ARG_POINTER(aBrowseWithCaret);
-  *aBrowseWithCaret = mBrowseWithCaret;
-  return NS_OK;
+  return mBrowseWithCaret;
 }
 
-NS_IMETHODIMP
-nsEventStateManager::ResetBrowseWithCaret(PRBool *aBrowseWithCaret)
+void
+nsEventStateManager::ResetBrowseWithCaret()
 {
   // This is called when browse with caret changes on the fly
   // or when a document gets focused 
 
-  *aBrowseWithCaret = PR_FALSE;
-  if (!mPresContext) return NS_ERROR_FAILURE;
-  
+  if (!mPresContext)
+    return;
+
   nsCOMPtr<nsISupports> pcContainer = mPresContext->GetContainer();
   PRInt32 itemType;
   nsCOMPtr<nsIDocShellTreeItem> shellItem(do_QueryInterface(pcContainer));
   if (!shellItem)
-    return NS_ERROR_FAILURE;
+    return;
 
   shellItem->GetItemType(&itemType);
 
   if (itemType == nsIDocShellTreeItem::typeChrome) 
-    return NS_OK;  // Never browse with caret in chrome
+    return;  // Never browse with caret in chrome
 
-  mPrefBranch->GetBoolPref("accessibility.browsewithcaret", aBrowseWithCaret);
+  PRPackedBool browseWithCaret =
+    nsContentUtils::GetBoolPref("accessibility.browsewithcaret");
 
-  if (mBrowseWithCaret == *aBrowseWithCaret)
-    return NS_OK; // already set this way, don't change caret at all
+  if (mBrowseWithCaret == browseWithCaret)
+    return; // already set this way, don't change caret at all
 
-  mBrowseWithCaret = *aBrowseWithCaret;
+  mBrowseWithCaret = browseWithCaret;
 
   nsIPresShell *presShell = mPresContext->GetPresShell();
 
   // Make caret visible or not, depending on what's appropriate
   if (presShell) {
-    return SetContentCaretVisible(presShell, mCurrentFocus,
-                                  *aBrowseWithCaret &&
-                                  (!gLastFocusedDocument ||
-                                   gLastFocusedDocument == mDocument));
+    SetContentCaretVisible(presShell, mCurrentFocus,
+                           browseWithCaret &&
+                           (!gLastFocusedDocument ||
+                            gLastFocusedDocument == mDocument));
   }
-
-  return NS_ERROR_FAILURE;
 }
 
 

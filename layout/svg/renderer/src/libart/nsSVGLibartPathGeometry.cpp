@@ -49,7 +49,6 @@
 #include "nsSVGFill.h"
 #include "nsSVGStroke.h"
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
 #include "nsMemory.h"
 #include "prdtoa.h"
 

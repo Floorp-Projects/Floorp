@@ -1593,7 +1593,7 @@ nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes,
                                        PRBool aInitCapture)
 {
   EventArrayType arrayType = eEventArrayType_None;
-  PRUint8 bits;
+  PRUint8 bits = 0;
 
   if (aEventTypes & nsIDOMNSEvent::MOUSEDOWN) {
     arrayType = eEventArrayType_Mouse;

@@ -48,6 +48,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
+#include "nsContentUtils.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsImageMap.h"
@@ -92,7 +93,6 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIPrefService.h"
 #include "gfxIImageFrame.h"
@@ -1944,15 +1944,14 @@ nsImageFrame::IconLoad::IconLoad(imgIDecoderObserver *aObserver)
   : mLoadObserver(aObserver),
     mIconsLoaded(0)
 {
-  nsCOMPtr<nsIPrefBranch> prefService =
-    do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIPrefBranchInternal> prefBranch =
+    do_QueryInterface(nsContentUtils::GetPrefBranch());
 
   // register observers
-  nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefService);
   for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kIconLoadPrefs); ++i)
-    pbi->AddObserver(kIconLoadPrefs[i], this, PR_FALSE);
+    prefBranch->AddObserver(kIconLoadPrefs[i], this, PR_FALSE);
 
-  GetPrefs(prefService);
+  GetPrefs();
 }
 
 
@@ -1970,32 +1969,21 @@ nsImageFrame::IconLoad::Observe(nsISupports *aSubject, const char* aTopic,
       break;
 #endif
 
-  nsCOMPtr<nsIPrefBranch> prefService = do_QueryInterface(aSubject);
-  GetPrefs(prefService);
+  GetPrefs();
   return NS_OK;
 }
 
-void nsImageFrame::IconLoad::GetPrefs(nsIPrefBranch *aPrefService)
+void nsImageFrame::IconLoad::GetPrefs()
 {
-  if (aPrefService) {
-    PRBool boolPref;
-    PRInt32 intPref;
-    if (NS_SUCCEEDED(aPrefService->GetBoolPref("browser.display.force_inline_alttext", &boolPref))) {
-      mPrefForceInlineAltText = boolPref;
-    } else {
-      mPrefForceInlineAltText = PR_FALSE;
-    }
-    if (NS_SUCCEEDED(aPrefService->GetIntPref("network.image.imageBehavior", &intPref)) && intPref == 2) {
-      mPrefAllImagesBlocked = PR_TRUE;
-    } else {
-      mPrefAllImagesBlocked = PR_FALSE;
-    }
-    if (NS_SUCCEEDED(aPrefService->GetBoolPref("browser.display.show_image_placeholders", &boolPref))) {
-      mPrefShowPlaceholders = boolPref;
-    } else {
-      mPrefShowPlaceholders = PR_TRUE;
-    }
-  }
+  mPrefForceInlineAltText =
+    nsContentUtils::GetBoolPref("browser.display.force_inline_alttext");
+
+  mPrefAllImagesBlocked =
+    nsContentUtils::GetIntPref("network.image.imageBehavior") == 2;
+
+  mPrefShowPlaceholders =
+    nsContentUtils::GetBoolPref("browser.display.show_image_placeholders",
+                                PR_TRUE);
 }
 
 NS_IMPL_ISUPPORTS2(nsImageListener, imgIDecoderObserver, imgIContainerObserver)

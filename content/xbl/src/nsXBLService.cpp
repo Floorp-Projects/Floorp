@@ -79,9 +79,6 @@
 #include "nsISyncLoadDOMService.h"
 #include "nsIDOM3Node.h"
 
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-
 #include "nsIPresShell.h"
 #include "nsIDocumentObserver.h"
 #include "nsFrameManager.h"
@@ -487,9 +484,8 @@ nsXBLService::nsXBLService(void)
 
 #ifdef MOZ_XUL
     // Find out if the XUL cache is on or off
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch)
-      prefBranch->GetBoolPref(kDisableChromeCachePref, &gDisableChromeCache);
+    gDisableChromeCache = nsContentUtils::GetBoolPref(kDisableChromeCachePref,
+                                                      gDisableChromeCache);
 
     CallGetService("@mozilla.org/xul/xul-prototype-cache;1", &gXULCache);
 #endif

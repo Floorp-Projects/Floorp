@@ -40,8 +40,6 @@
 #include "nsPlainTextSerializer.h"
 #include "nsILineBreakerFactory.h"
 #include "nsLWBrkCIID.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsIDOMText.h"
@@ -204,33 +202,30 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   mLineBreakDue = PR_FALSE;
   mFloatingLines = -1;
 
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (!prefBranch) {
-    NS_WARNING("Could not get a pref branch!");
-    return NS_OK;
-  }
-
-  PRBool tempBool = PR_FALSE;
   if (mFlags & nsIDocumentEncoder::OutputFormatted) {
     // Get some prefs that controls how we do formatted output
-    prefBranch->GetBoolPref(PREF_STRUCTS, &tempBool);
-    mStructs = tempBool;
-    prefBranch->GetIntPref(PREF_HEADER_STRATEGY, &mHeaderStrategy);
+    mStructs = nsContentUtils::GetBoolPref(PREF_STRUCTS, mStructs);
+
+    mHeaderStrategy =
+      nsContentUtils::GetIntPref(PREF_HEADER_STRATEGY, mHeaderStrategy);
+
     // The quotesPreformatted pref is a temporary measure. See bug 69638.
-    prefBranch->GetBoolPref("editor.quotesPreformatted", &tempBool);
-    mQuotesPreformatted = tempBool;
+    mQuotesPreformatted =
+      nsContentUtils::GetBoolPref("editor.quotesPreformatted",
+                                  mQuotesPreformatted);
+
     // DontWrapAnyQuotes is set according to whether plaintext mail
     // is wrapping to window width -- see bug 134439.
     // We'll only want this if we're wrapping and formatted.
     if (mFlags & nsIDocumentEncoder::OutputWrap || mWrapColumn > 0) {
-      prefBranch->GetBoolPref("mail.compose.wrap_to_window_width", &tempBool);
-      mDontWrapAnyQuotes = tempBool;
+      mDontWrapAnyQuotes =
+        nsContentUtils::GetBoolPref("mail.compose.wrap_to_window_width",
+                                    mDontWrapAnyQuotes);
     }
   }
 
   // XXX We should let the caller pass this in.
-  prefBranch->GetBoolPref("browser.frames.enabled", &tempBool);
-  if (tempBool) {
+  if (nsContentUtils::GetBoolPref("browser.frames.enabled")) {
     mFlags &= ~nsIDocumentEncoder::OutputNoFramesContent;
   }
   else {

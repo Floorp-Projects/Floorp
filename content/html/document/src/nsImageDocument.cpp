@@ -55,7 +55,6 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsStyleContext.h"
-#include "nsIPrefService.h"
 #include "nsAutoPtr.h"
 #include "nsMediaDocument.h"
 #include "nsStyleSet.h"
@@ -218,12 +217,8 @@ nsImageDocument::Init()
   nsresult rv = nsMediaDocument::Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefBranch) {
-    PRBool temp = PR_FALSE;
-    prefBranch->GetBoolPref(AUTOMATIC_IMAGE_RESIZING_PREF, &temp);
-    mImageResizingEnabled = temp;
-  }
+  mImageResizingEnabled =
+    nsContentUtils::GetBoolPref(AUTOMATIC_IMAGE_RESIZING_PREF);
 
   return NS_OK;
 }

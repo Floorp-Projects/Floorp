@@ -115,13 +115,12 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "nsHTMLAtoms.h"
 
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-
 #include "nsScriptEventManager.h"
 #include "nsIXPathEvaluatorInternal.h"
 #include "nsIElementFactory.h"
 #include "nsIParserService.h"
+
+#include "nsIScriptContext.h"
 
 #ifdef DEBUG
 #include "nsICharsetAlias.h"
@@ -4175,13 +4174,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
   }
 
   if (!have_contentLanguage) {
-    nsCOMPtr<nsIPrefBranch> prefBranch =
-      do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-    if (prefBranch) {
-      prefBranch->GetCharPref("intl.accept_languages",
-                              getter_Copies(mContentLanguage));
-    }
+    mContentLanguage = nsContentUtils::GetCharPref("intl.accept_languages");
   }
 }
 

@@ -98,9 +98,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPrefLocalizedString.h"
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIProgrammingLanguage.h"
@@ -136,6 +134,7 @@
 #include "nsIControllerContext.h"
 #include "nsGlobalWindowCommands.h"
 #include "nsAutoPtr.h"
+#include "nsContentUtils.h"
 
 #include "plbase64.h"
 
@@ -156,7 +155,6 @@
 #include "nsIPopupWindowManager.h"
 
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
-static nsIPrefBranch       *gPrefBranch                = nsnull;
 static PRInt32              gRefCnt                    = 0;
 static PRInt32              gOpenPopupSpamCount        = 0;
 nsIXPConnect *GlobalWindowImpl::sXPConnect             = nsnull;
@@ -237,6 +235,7 @@ GlobalWindowImpl::GlobalWindowImpl()
     mRunningTimeout(nsnull),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
+    mMutationBits(0),
     mFirstDocumentLoad(PR_TRUE),
     mIsScopeClear(PR_TRUE),
     mIsDocumentLoaded(PR_FALSE),
@@ -248,7 +247,6 @@ GlobalWindowImpl::GlobalWindowImpl()
     mGlobalObjectOwner(nsnull),
     mDocShell(nsnull),
     mCurrentEvent(0),
-    mMutationBits(0),
     mChromeEventHandler(nsnull),
     mFrameElement(nsnull)
 {
@@ -261,10 +259,6 @@ GlobalWindowImpl::GlobalWindowImpl()
 #ifdef DEBUG
   printf("++DOMWINDOW == %d\n", gRefCnt);
 #endif
-
-  if (!gPrefBranch) {
-    CallGetService(NS_PREFSERVICE_CONTRACTID, &gPrefBranch);
-  }
 
   if (!sXPConnect) {
     CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
@@ -287,12 +281,6 @@ GlobalWindowImpl::~GlobalWindowImpl()
   mDocument = nsnull;           // Forces Release
 
   CleanUp();
-
-  if (!gRefCnt) {
-    // Destroy the Pref Branch last, since some things need
-    // to use it before it goes away.
-    NS_IF_RELEASE(gPrefBranch);
-  }
 }
 
 // static
@@ -2119,17 +2107,11 @@ GlobalWindowImpl::Dump(const nsAString& aStr)
     // enable output from dump() or not, in debug builds it's always
     // enabled.
 
-    if (!gPrefBranch) {
-      return NS_OK;
-    }
-
-    PRBool enable_dump = PR_FALSE;
-
     // if pref doesn't exist, disable dump output.
-    nsresult rv = gPrefBranch->GetBoolPref("browser.dom.window.dump.enabled",
-                                           &enable_dump);
+    PRBool enable_dump =
+      nsContentUtils::GetBoolPref("browser.dom.window.dump.enabled");
 
-    if (NS_FAILED(rv) || !enable_dump) {
+    if (!enable_dump) {
       return NS_OK;
     }
   }
@@ -2563,24 +2545,15 @@ GlobalWindowImpl::Home()
   if (!mDocShell)
     return NS_OK;
 
-  NS_ENSURE_STATE(gPrefBranch);
+  nsAdoptingString homeURL =
+    nsContentUtils::GetLocalizedStringPref(PREF_BROWSER_STARTUP_HOMEPAGE);
 
-  nsCOMPtr<nsIPrefLocalizedString> url;
-  gPrefBranch->GetComplexValue(PREF_BROWSER_STARTUP_HOMEPAGE,
-                               NS_GET_IID(nsIPrefLocalizedString),
-                               getter_AddRefs(url));
-  nsString homeURL;
-  if (url) {
-    nsXPIDLString tmp;
-    url->GetData(getter_Copies(tmp));
-    homeURL = tmp;
-  }
-  else {
+  if (homeURL.IsEmpty()) {
     // if all else fails, use this
 #ifdef DEBUG_seth
     printf("all else failed.  using %s as the home page\n", DEFAULT_HOME_PAGE);
 #endif
-    homeURL.AssignWithConversion(DEFAULT_HOME_PAGE);
+    CopyASCIItoUTF16(DEFAULT_HOME_PAGE, homeURL);
   }
 
   nsresult rv;
@@ -2979,10 +2952,8 @@ void FirePopupWindowEvent(nsIDOMDocument* aDoc)
 PRBool
 GlobalWindowImpl::CanSetProperty(const char *aPrefName)
 {
-  NS_ENSURE_STATE(gPrefBranch);
-
-  PRBool prefValue = PR_TRUE;
-  gPrefBranch->GetBoolPref(aPrefName, &prefValue);
+  PRBool prefValue =
+    nsContentUtils::GetBoolPref(aPrefName, PR_TRUE);
 
   // If the pref is set to true, we can not set the property
   // and vice versa.
@@ -3009,15 +2980,12 @@ GlobalWindowImpl::CheckForAbusePoint()
       return openAllowed;
   }
 
-  if (!gPrefBranch)
-    return openAllowed;
-
   PRUint32 abuse = openAllowed; // level of abuse we've detected
 
-  PRInt32 intPref = 0;
-
   // disallow windows after a user-defined click delay
-  gPrefBranch->GetIntPref("dom.disable_open_click_delay", &intPref);
+  PRInt32 intPref =
+    nsContentUtils::GetIntPref("dom.disable_open_click_delay");
+
   if (intPref != 0) {
     PRTime now = PR_Now();
     PRTime ll_delta;
@@ -3054,10 +3022,8 @@ GlobalWindowImpl::CheckForAbusePoint()
     }
 
     // fetch pref string detailing which events are allowed
-    nsXPIDLCString eventPref;
-    gPrefBranch->GetCharPref("dom.popup_allowed_events",
-                            getter_Copies(eventPref));
-    nsCAutoString eventPrefStr(eventPref);
+    const nsAdoptingCString& eventPref =
+      nsContentUtils::GetCharPref("dom.popup_allowed_events");
 
     // generally if an event handler is running, new windows are disallowed.
     // check for exceptions:
@@ -3170,9 +3136,9 @@ GlobalWindowImpl::CheckForAbusePoint()
 
   // limit the number of simultaneously open popups
   if (abuse == openAbused || abuse == openControlled) {
-    intPref = 0;
-    nsresult gotPref = gPrefBranch->GetIntPref("dom.popup_maximum", &intPref);
-    if (NS_SUCCEEDED(gotPref) && intPref >= 0 && gOpenPopupSpamCount >= intPref)
+    intPref = nsContentUtils::GetIntPref("dom.popup_maximum", -1);
+
+    if (intPref >= 0 && gOpenPopupSpamCount >= intPref)
       abuse = openOverridden;
   }
 
@@ -3539,9 +3505,9 @@ GlobalWindowImpl::Close()
       PRBool inChrome = PR_TRUE;
       rv = secMan->SubjectPrincipalIsSystem(&inChrome);
       if (NS_SUCCEEDED(rv) && !inChrome) {
-        PRBool allowClose = PR_TRUE;
-        gPrefBranch->GetBoolPref("dom.allow_scripts_to_close_windows",
-                                 &allowClose);
+        PRBool allowClose =
+          nsContentUtils::GetBoolPref("dom.allow_scripts_to_close_windows",
+                                      PR_TRUE);
         if (!allowClose) {
           // We're blocking the close operation
           // report localized error msg in JS console
@@ -6186,22 +6152,12 @@ NavigatorImpl::GetPlugins(nsIDOMPluginArray **aPlugins)
 NS_IMETHODIMP
 NavigatorImpl::GetCookieEnabled(PRBool *aCookieEnabled)
 {
-  *aCookieEnabled = PR_FALSE;
+  *aCookieEnabled =
+    (nsContentUtils::GetIntPref("network.cookie.cookieBehavior",
+                                COOKIE_BEHAVIOR_REJECT) !=
+     COOKIE_BEHAVIOR_REJECT);
 
-  nsCOMPtr<nsIPrefBranch> prefBranch(gPrefBranch);
-  if (!prefBranch) {
-    prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    NS_ENSURE_STATE(prefBranch);
-  }
-
-  PRInt32 cookieBehaviorPref;
-  nsresult rv = prefBranch->GetIntPref("network.cookie.cookieBehavior",
-                                       &cookieBehaviorPref);
-  if (NS_SUCCEEDED(rv)) {
-    *aCookieEnabled = cookieBehaviorPref != COOKIE_BEHAVIOR_REJECT;
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -6228,17 +6184,8 @@ NavigatorImpl::JavaEnabled(PRBool *aReturn)
 
 #ifdef OJI
   // determine whether user has enabled java.
-  nsCOMPtr<nsIPrefBranch> prefBranch(gPrefBranch);
-  if (!prefBranch) {
-    prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    NS_ENSURE_STATE(prefBranch);
-  }
-
   // if pref doesn't exist, map result to false.
-  if (NS_FAILED(prefBranch->GetBoolPref("security.enable_java", aReturn))) {
-    *aReturn = PR_FALSE;
-    return NS_OK;
-  }
+  *aReturn = nsContentUtils::GetBoolPref("security.enable_java");
 
   // if Java is not enabled, result is false and return reight away
   if (!*aReturn)
@@ -6324,11 +6271,8 @@ NavigatorImpl::Preference()
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPrefBranch> prefBranch(gPrefBranch);
-  if (!prefBranch) {
-    prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    NS_ENSURE_STATE(prefBranch);
-  }
+  nsIPrefBranch *prefBranch = nsContentUtils::GetPrefBranch();
+  NS_ENSURE_STATE(prefBranch);
 
   JSString *str = ::JS_ValueToString(cx, argv[0]);
   NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);

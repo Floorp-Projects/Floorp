@@ -74,8 +74,6 @@
 #include "prinrval.h"
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsIViewObserver.h"
 #include "nsContainerFrame.h"
 #include "nsIDeviceContext.h"
@@ -83,6 +81,7 @@
 #include "nsIDOMEvent.h"
 #include "nsGUIEvent.h"
 #include "nsHTMLParts.h"
+#include "nsContentUtils.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsReflowPath.h"
@@ -1774,17 +1773,13 @@ PresShell::Init(nsIDocument* aDocument,
   }
 
   if (gMaxRCProcessingTime == -1) {
-    // First, set the defaults
-    gMaxRCProcessingTime = NS_MAX_REFLOW_TIME;
-    gAsyncReflowDuringDocLoad = PR_TRUE;
+    gMaxRCProcessingTime =
+      nsContentUtils::GetIntPref("layout.reflow.timeslice",
+                                 NS_MAX_REFLOW_TIME);
 
-    // Get the prefs service
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch) {
-      prefBranch->GetIntPref("layout.reflow.timeslice", &gMaxRCProcessingTime);
-      prefBranch->GetBoolPref("layout.reflow.async.duringDocLoad",
-                              &gAsyncReflowDuringDocLoad);
-    }
+    gAsyncReflowDuringDocLoad =
+      nsContentUtils::GetBoolPref("layout.reflow.async.duringDocLoad",
+                                  PR_TRUE);
   }
 
   // cache the observation service
@@ -1804,23 +1799,18 @@ PresShell::Init(nsIDocument* aDocument,
 
 #ifdef MOZ_REFLOW_PERF
     if (mReflowCountMgr) {
-      // Get the prefs service
-      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-      if (prefBranch) {
-        PRBool paintFrameCounts       = PR_FALSE;
-        PRBool dumpFrameCounts        = PR_FALSE;
-        PRBool dumpFrameByFrameCounts = PR_FALSE;
-        prefBranch->GetBoolPref("layout.reflow.showframecounts",
-                                &paintFrameCounts);
-        prefBranch->GetBoolPref("layout.reflow.dumpframecounts",
-                                &dumpFrameCounts);
-        prefBranch->GetBoolPref("layout.reflow.dumpframebyframecounts",
-                                &dumpFrameByFrameCounts);
+      PRBool paintFrameCounts =
+        nsContentUtils::GetBoolPref("layout.reflow.showframecounts");
 
-        mReflowCountMgr->SetDumpFrameCounts(dumpFrameCounts);
-        mReflowCountMgr->SetDumpFrameByFrameCounts(dumpFrameByFrameCounts);
-        mReflowCountMgr->SetPaintFrameCounts(paintFrameCounts);
-      }
+      PRBool dumpFrameCounts =
+        nsContentUtils::GetBoolPref("layout.reflow.dumpframecounts");
+
+      PRBool dumpFrameByFrameCounts =
+        nsContentUtils::GetBoolPref("layout.reflow.dumpframebyframecounts");
+
+      mReflowCountMgr->SetDumpFrameCounts(dumpFrameCounts);
+      mReflowCountMgr->SetDumpFrameByFrameCounts(dumpFrameByFrameCounts);
+      mReflowCountMgr->SetPaintFrameCounts(paintFrameCounts);
     }
 #endif
 
@@ -2892,15 +2882,17 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       mPaintingSuppressed = PR_FALSE;
     else {
       // Initialize the timer.
-      PRInt32 delay = PAINTLOCK_EVENT_DELAY; // Use this value if we fail to get the pref value.
-      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-      if (prefBranch)
-        prefBranch->GetIntPref("nglayout.initialpaint.delay", &delay);
+
+      // Default to PAINTLOCK_EVENT_DELAY if we can't get the pref value.
+      PRInt32 delay =
+        nsContentUtils::GetIntPref("nglayout.initialpaint.delay",
+                                   PAINTLOCK_EVENT_DELAY);
 
       nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mPaintSuppressionTimer);
       ti->SetIdle(PR_FALSE);
 
-      mPaintSuppressionTimer->InitWithFuncCallback(sPaintSuppressionCallback, this, delay, 
+      mPaintSuppressionTimer->InitWithFuncCallback(sPaintSuppressionCallback,
+                                                   this, delay, 
                                                    nsITimer::TYPE_ONE_SHOT);
     }
   }
@@ -4059,15 +4051,14 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
                                NS_PRESSHELL_SCROLL_ANYWHERE);
 
       if (NS_SUCCEEDED(rv)) {
-        // Should we select the target?
-        // This action is controlled by a preference: the default is to not select.
-        PRBool selectAnchor = PR_FALSE;
-        nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-        if (prefBranch) {
-          prefBranch->GetBoolPref("layout.selectanchor", &selectAnchor);
-        }
-        // Even if select anchor pref is false, we must still move the caret there.
-        // That way tabbing will start from the new location
+        // Should we select the target? This action is controlled by a
+        // preference: the default is to not select.
+        PRBool selectAnchor =
+          nsContentUtils::GetBoolPref("layout.selectanchor");
+
+        // Even if select anchor pref is false, we must still move the
+        // caret there. That way tabbing will start from the new
+        // location
         if (!jumpToRange) {
           jumpToRange = do_CreateInstance(kRangeCID);
           nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));

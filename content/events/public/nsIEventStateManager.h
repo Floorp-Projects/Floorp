@@ -101,9 +101,8 @@ public:
   NS_IMETHOD ContentRemoved(nsIContent* aContent) = 0;
   NS_IMETHOD EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK) = 0;
 
-  // This is called when browse with caret changes on the fly
-  NS_IMETHOD GetBrowseWithCaret(PRBool *aBrowseWithCaret) = 0;
-  NS_IMETHOD ResetBrowseWithCaret(PRBool *aBrowseWithCaret) = 0;
+  // Return whether browse with caret is enabled or not
+  virtual PRBool GetBrowseWithCaret() = 0;
 
   // This is called after find text or when a cursor movement key is pressed
   // If aCanFocusDoc == PR_TRUE, the current document will be focused if caret is not on a focusable element

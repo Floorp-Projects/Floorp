@@ -41,6 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsContentUtils.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULPrototypeDocument.h"
@@ -51,7 +52,6 @@
 #include "plstr.h"
 #include "nsIDocument.h"
 #include "nsIXBLDocumentInfo.h"
-#include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsXULDocument.h"
 #include "nsIJSRuntimeService.h"
@@ -144,9 +144,8 @@ static const char kDisableXULCachePref[] = "nglayout.debug.disable_xul_cache";
 PR_STATIC_CALLBACK(int)
 DisableXULCacheChangedCallback(const char* aPref, void* aClosure)
 {
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    if (prefs)
-        prefs->GetBoolPref(kDisableXULCachePref, &gDisableXULCache);
+    gDisableXULCache =
+        nsContentUtils::GetBoolPref(kDisableXULCachePref, gDisableXULCache);
 
     // Flush the cache, regardless
     static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
@@ -191,38 +190,33 @@ NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
-    nsXULPrototypeCache* result = new nsXULPrototypeCache();
+    nsRefPtr<nsXULPrototypeCache> result = new nsXULPrototypeCache();
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv;
 
     if (!(result->mPrototypeTable.Init() &&
           result->mStyleSheetTable.Init() &&
           result->mScriptTable.Init() &&
           result->mXBLDocTable.Init() &&
           result->mFastLoadURITable.Init())) {
-        delete result;
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-        // XXX Ignore return values.
-        prefs->GetBoolPref(kDisableXULCachePref, &gDisableXULCache);
-        prefs->RegisterCallback(kDisableXULCachePref, DisableXULCacheChangedCallback, nsnull);
-    }
+    // XXX Ignore return values.
+    gDisableXULCache =
+        nsContentUtils::GetBoolPref(kDisableXULCachePref, gDisableXULCache);
+    nsContentUtils::RegisterPrefCallback(kDisableXULCachePref,
+                                         DisableXULCacheChangedCallback,
+                                         nsnull);
 
-    NS_ADDREF(result);
-    rv = result->QueryInterface(aIID, aResult);
+    nsresult rv = result->QueryInterface(aIID, aResult);
 
     nsCOMPtr<nsIObserverService> obsSvc(do_GetService("@mozilla.org/observer-service;1"));
     if (obsSvc && NS_SUCCEEDED(rv)) {
-        obsSvc->AddObserver(result, "chrome-flush-skin-caches", PR_FALSE);
-        obsSvc->AddObserver(result, "chrome-flush-caches", PR_FALSE);
+        nsXULPrototypeCache *p = result;
+        obsSvc->AddObserver(p, "chrome-flush-skin-caches", PR_FALSE);
+        obsSvc->AddObserver(p, "chrome-flush-caches", PR_FALSE);
     }
-
-    NS_RELEASE(result);
 
     return rv;
 }
@@ -689,20 +683,24 @@ nsXULPrototypeCache::StartFastLoadingURI(nsIURI* aURI, PRInt32 aDirectionFlags)
 PR_STATIC_CALLBACK(int)
 FastLoadPrefChangedCallback(const char* aPref, void* aClosure)
 {
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    if (prefs) {
-        PRBool wasEnabled = !gDisableXULFastLoad;
-        prefs->GetBoolPref(kDisableXULFastLoadPref, &gDisableXULFastLoad);
+    PRBool wasEnabled = !gDisableXULFastLoad;
+    gDisableXULFastLoad =
+        nsContentUtils::GetBoolPref(kDisableXULFastLoadPref,
+                                    gDisableXULFastLoad);
 
-        if (wasEnabled && gDisableXULFastLoad) {
-            static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
-            nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService(kXULPrototypeCacheCID));
-            if (cache)
-                cache->AbortFastLoads();
-        }
+    if (wasEnabled && gDisableXULFastLoad) {
+        static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
+        nsCOMPtr<nsIXULPrototypeCache> cache =
+            do_GetService(kXULPrototypeCacheCID);
 
-        prefs->GetBoolPref(kChecksumXULFastLoadFilePref, &gChecksumXULFastLoadFile);
+        if (cache)
+            cache->AbortFastLoads();
     }
+
+    gChecksumXULFastLoadFile =
+        nsContentUtils::GetBoolPref(kChecksumXULFastLoadFilePref,
+                                    gChecksumXULFastLoadFile);
+
     return 0;
 }
 
@@ -810,20 +808,21 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
     if (! fastLoadService)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-    if (prefs) {
-        prefs->GetBoolPref(kDisableXULFastLoadPref, &gDisableXULFastLoad);
-        prefs->GetBoolPref(kChecksumXULFastLoadFilePref, &gChecksumXULFastLoadFile);
-        prefs->RegisterCallback(kDisableXULFastLoadPref,
-                                FastLoadPrefChangedCallback,
-                                nsnull);
-        prefs->RegisterCallback(kChecksumXULFastLoadFilePref,
-                                FastLoadPrefChangedCallback,
-                                nsnull);
+    gDisableXULFastLoad =
+        nsContentUtils::GetBoolPref(kDisableXULFastLoadPref,
+                                    gDisableXULFastLoad);
+    gChecksumXULFastLoadFile =
+        nsContentUtils::GetBoolPref(kChecksumXULFastLoadFilePref,
+                                    gChecksumXULFastLoadFile);
+    nsContentUtils::RegisterPrefCallback(kDisableXULFastLoadPref,
+                                         FastLoadPrefChangedCallback,
+                                         nsnull);
+    nsContentUtils::RegisterPrefCallback(kChecksumXULFastLoadFilePref,
+                                         FastLoadPrefChangedCallback,
+                                         nsnull);
 
-        if (gDisableXULFastLoad)
-            return NS_ERROR_NOT_AVAILABLE;
-    }
+    if (gDisableXULFastLoad)
+        return NS_ERROR_NOT_AVAILABLE;
 
     // Get the chrome directory to validate against the one stored in the
     // FastLoad file, or to store there if we're generating a new file.

@@ -50,6 +50,7 @@
 #include "nsIScriptContext.h"
 #include "nsCOMArray.h"
 #include "nsIStatefulFrame.h"
+#include "nsIPref.h"
 
 class nsIXPConnect;
 class nsIContent;
@@ -66,6 +67,8 @@ class nsIURI;
 class imgIDecoderObserver;
 class imgIRequest;
 class imgILoader;
+class nsIPrefBranch;
+class nsIPref;
 
 class nsContentUtils
 {
@@ -283,6 +286,23 @@ public:
                                        nsINodeInfoManager* aNodeInfoManager,
                                        nsINodeInfo** aNodeInfo);
 
+  static nsAdoptingCString GetCharPref(const char *aPref);
+  static PRPackedBool GetBoolPref(const char *aPref,
+                                  PRBool aDefault = PR_FALSE);
+  static PRInt32 GetIntPref(const char *aPref, PRInt32 aDefault = 0);
+  static nsAdoptingString GetLocalizedStringPref(const char *aPref);
+  static nsAdoptingString GetStringPref(const char *aPref);
+  static void RegisterPrefCallback(const char *aPref,
+                                   PrefChangedFunc aCallback,
+                                   void * aClosure);
+  static void UnregisterPrefCallback(const char *aPref,
+                                     PrefChangedFunc aCallback,
+                                     void * aClosure);
+  static nsIPrefBranch *GetPrefBranch()
+  {
+    return sPrefBranch;
+  }
+
   static nsresult GetDocumentAndPrincipal(nsIDOMNode* aNode,
                                           nsIDocument** aDocument,
                                           nsIPrincipal** aPrincipal);
@@ -336,8 +356,12 @@ private:
 
   static nsIIOService *sIOService;
 
+  static nsIPrefBranch *sPrefBranch;
+
+  static nsIPref *sPref;
+
   static imgILoader* sImgLoader;
-  
+
   static PRBool sInitialized;
 };
 

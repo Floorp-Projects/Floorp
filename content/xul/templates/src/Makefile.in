@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  layout \
 		  content \
+		  pref \
 		  widget \
 		  dom \
 		  rdf \

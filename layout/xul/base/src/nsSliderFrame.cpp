@@ -73,10 +73,9 @@
 #include "nsRepeatService.h"
 #include "nsBoxLayoutState.h"
 #include "nsSprocketLayout.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #include "nsGUIEvent.h"
+#include "nsContentUtils.h"
 
 PRBool nsSliderFrame::gMiddlePref = PR_FALSE;
 PRInt32 nsSliderFrame::gSnapMultiplier = 6;
@@ -123,21 +122,20 @@ nsSliderFrame::~nsSliderFrame()
 
 NS_IMETHODIMP
 nsSliderFrame::Init(nsIPresContext*  aPresContext,
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsStyleContext*  aContext,
-              nsIFrame*        aPrevInFlow)
+                    nsIContent*      aContent,
+                    nsIFrame*        aParent,
+                    nsStyleContext*  aContext,
+                    nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext,
+                                  aPrevInFlow);
 
   static PRBool gotPrefs = PR_FALSE;
   if (!gotPrefs) {
     gotPrefs = PR_TRUE;
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefBranch) {
-      prefBranch->GetBoolPref("middlemouse.scrollbarPosition", &gMiddlePref);
-      prefBranch->GetIntPref("slider.snapMultiplier", &gSnapMultiplier);
-    }
+
+    gMiddlePref = nsContentUtils::GetBoolPref("middlemouse.scrollbarPosition");
+    gSnapMultiplier = nsContentUtils::GetIntPref("slider.snapMultiplier");
   }
 
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);

@@ -68,8 +68,6 @@
 #include "nsISelectionListener.h"
 #include "nsIContentIterator.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 
 // for IBMBIDI
 #include "nsFrameTraversal.h"
@@ -929,24 +927,17 @@ nsSelection::nsSelection()
   mSelectingTableCellMode = 0;
   mSelectedCellIndex = 0;
 
-
-  
   // Check to see if the autocopy pref is enabled
   //   and add the autocopy listener if it is
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefBranch) {
-    static char pref[] = "clipboard.autocopy";
-    PRBool autoCopy = PR_FALSE;
-    if (NS_SUCCEEDED(prefBranch->GetBoolPref(pref, &autoCopy)) && autoCopy) {
-      nsCOMPtr<nsIAutoCopyService> autoCopyService = 
-        do_GetService("@mozilla.org/autocopy;1");
+  if (nsContentUtils::GetBoolPref("clipboard.autocopy")) {
+    nsCOMPtr<nsIAutoCopyService> autoCopyService = 
+      do_GetService("@mozilla.org/autocopy;1");
 
-      if (autoCopyService) {
-        PRInt8 index =
-          GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
-        if (mDomSelections[index]) {
-          autoCopyService->Listen(mDomSelections[index]);
-        }
+    if (autoCopyService) {
+      PRInt8 index =
+        GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+      if (mDomSelections[index]) {
+        autoCopyService->Listen(mDomSelections[index]);
       }
     }
   }

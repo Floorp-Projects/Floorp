@@ -59,8 +59,6 @@
 #include "nsIFormProcessor.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
 #include "nsLinebreakConverter.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
@@ -692,12 +690,8 @@ nsFSMultipartFormData::nsFSMultipartFormData(const nsACString& aCharset,
     : nsFormSubmission(aCharset, aEncoder, aFormProcessor, aBidiOptions)
 {
   // XXX I can't *believe* we have a pref for this.  ifdef, anyone?
-  mBackwardsCompatibleSubmit = PR_FALSE;
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefBranch) {
-    prefBranch->GetBoolPref("browser.forms.submit.backwards_compatible",
-                            &mBackwardsCompatibleSubmit);
-  }
+  mBackwardsCompatibleSubmit =
+    nsContentUtils::GetBoolPref("browser.forms.submit.backwards_compatible");
 }
 
 nsresult

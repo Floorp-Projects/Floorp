@@ -142,8 +142,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIViewManager.h"
 #include "nsIView.h"
 
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
 #include "nsIContentViewerEdit.h"
@@ -738,13 +736,8 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
     mPrt->mPrintSettings->GetPrintSilent(&printSilently);
 
     // Check prefs for a default setting as to whether we should print silently
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch) {
-      PRBool alwaysPrintSilent;
-      if (NS_SUCCEEDED(prefBranch->GetBoolPref("print.always_print_silent", &alwaysPrintSilent))) {
-        printSilently = alwaysPrintSilent;
-      }
-    }
+    printSilently = nsContentUtils::GetBoolPref("print.always_print_silent",
+                                                printSilently);
 
     // Ask dialog to be Print Shown via the Plugable Printing Dialog Service
     // This service is for the Print Dialog and the Print Progress Dialog
@@ -1586,10 +1579,7 @@ nsPrintEngine::CheckDocumentForPPCaching()
   // Only check if it is the first time into PP
   if (!mOldPrtPreview) {
     // First check the Pref
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch) {
-      prefBranch->GetBoolPref("print.always_cache_old_pres", &cacheOldPres);
-    }
+    cacheOldPres = nsContentUtils::GetBoolPref("print.always_cache_old_pres");
 
     // Temp fix for FrameSet Print Preview Bugs
     if (!cacheOldPres && mPrt->mPrintObject->mFrameType == eFrameSet) {
@@ -1660,10 +1650,8 @@ nsPrintEngine::ShowPrintProgress(PRBool aIsForPrinting, PRBool& aDoNotify)
   // if it is already being shown then don't bother to find out if it should be
   // so skip this and leave mShowProgressDialog set to FALSE
   if (!mPrt->mProgressDialogIsShown) {
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch) {
-      prefBranch->GetBoolPref("print.show_print_progress", &mPrt->mShowProgressDialog);
-    }
+    mPrt->mShowProgressDialog =
+      nsContentUtils::GetBoolPref("print.show_print_progress");
   }
 
   // Turning off the showing of Print Progress in Prefs overrides
@@ -2218,9 +2206,8 @@ nsresult nsPrintEngine::CleanupOnFailure(nsresult aResult, PRBool aIsPrinting)
 void
 nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
 {
-  nsresult rv;
-  
-  PR_PL(("nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError=%lx, PRBool aIsPrinting=%d)\n", (long)rv, (int)aIsPrinting));
+
+  PR_PL(("nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError=%lx, PRBool aIsPrinting=%d)\n", (long)aPrintError, (int)aIsPrinting));
 
   static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
   nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(kCStringBundleServiceCID);
@@ -2230,7 +2217,7 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
     return;
   }
   nsCOMPtr<nsIStringBundle> myStringBundle;
-  rv = stringBundleService->CreateBundle(NS_ERROR_GFX_PRINTER_BUNDLE_URL, getter_AddRefs(myStringBundle));
+  nsresult rv = stringBundleService->CreateBundle(NS_ERROR_GFX_PRINTER_BUNDLE_URL, getter_AddRefs(myStringBundle));
   if (NS_FAILED(rv)) {
     PR_PL(("ShowPrintErrorDialog(): CreateBundle() failure for NS_ERROR_GFX_PRINTER_BUNDLE_URL, rv=%lx\n", (long)rv));
     return;
@@ -5017,14 +5004,10 @@ PRBool nsPrintEngine::mIsDoingRuntimeTesting = PR_FALSE;
 void 
 nsPrintEngine::InitializeTestRuntimeError()
 {
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefBranch) {
-    mIsDoingRuntimeTesting = PR_FALSE;
-    prefBranch->GetBoolPref("print.doing_runtime_error_checking", &mIsDoingRuntimeTesting);
-  }
+  mIsDoingRuntimeTesting =
+    nsContentUtils::GetBoolPref("print.doing_runtime_error_checking");
 
   mLayoutDebugObj = do_GetService("@mozilla.org/debug/debugobject;1");
-
 }
 
 PRBool 

@@ -89,6 +89,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIAuthPrompt.h"
 #include "nsIScriptGlobalObjectOwner.h"
+#include "nsIJSContextStack.h"
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"

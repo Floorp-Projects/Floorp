@@ -46,6 +46,9 @@
 #include "nsAString.h"
 #include "nsPrintfCString.h"
 #include "nsUnicharUtils.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
@@ -82,6 +85,7 @@
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsHTMLAtoms.h"
+#include "nsISupportsPrimitives.h"
 #include "nsLayoutAtoms.h"
 #include "imgIDecoderObserver.h"
 #include "imgIRequest.h"
@@ -100,6 +104,8 @@ nsIThreadJSContextStack *nsContentUtils::sThreadJSContextStack = nsnull;
 nsIParserService *nsContentUtils::sParserService = nsnull;
 nsINameSpaceManager *nsContentUtils::sNameSpaceManager = nsnull;
 nsIIOService *nsContentUtils::sIOService = nsnull;
+nsIPrefBranch *nsContentUtils::sPrefBranch = nsnull;
+nsIPref *nsContentUtils::sPref = nsnull;
 imgILoader *nsContentUtils::sImgLoader = nsnull;
 
 PRBool nsContentUtils::sInitialized = PR_FALSE;
@@ -117,6 +123,12 @@ nsContentUtils::Init()
   nsresult rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
                                &sSecurityManager);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // It's ok to not have a pref service.
+  CallGetService(NS_PREFSERVICE_CONTRACTID, &sPrefBranch);
+
+  // It's ok to not have prefs too.
+  CallGetService(NS_PREF_CONTRACTID, &sPref);
 
   rv = NS_GetNameSpaceManager(&sNameSpaceManager);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1676,6 +1688,104 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                                nsnull,               /* existing request*/
                                aRequest);
 }
+
+// static
+nsAdoptingCString
+nsContentUtils::GetCharPref(const char *aPref)
+{
+  nsAdoptingCString result;
+
+  if (sPrefBranch) {
+    sPrefBranch->GetCharPref(aPref, getter_Copies(result));
+  }
+
+  return result;
+}
+
+// static
+PRPackedBool
+nsContentUtils::GetBoolPref(const char *aPref, PRBool aDefault)
+{
+  PRBool result;
+
+  if (!sPrefBranch ||
+      NS_FAILED(sPrefBranch->GetBoolPref(aPref, &result))) {
+    result = aDefault;
+  }
+
+  return (PRPackedBool)result;
+}
+
+// static
+PRInt32
+nsContentUtils::GetIntPref(const char *aPref, PRInt32 aDefault)
+{
+  PRInt32 result;
+
+  if (!sPrefBranch ||
+      NS_FAILED(sPrefBranch->GetIntPref(aPref, &result))) {
+    result = aDefault;
+  }
+
+  return result;
+}
+
+// static
+nsAdoptingString
+nsContentUtils::GetLocalizedStringPref(const char *aPref)
+{
+  nsAdoptingString result;
+
+  if (sPrefBranch) {
+    nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
+    sPrefBranch->GetComplexValue(aPref, NS_GET_IID(nsIPrefLocalizedString),
+                                 getter_AddRefs(prefLocalString));
+    if (prefLocalString) {
+      prefLocalString->GetData(getter_Copies(result));
+    }
+  }
+
+  return result;
+}
+
+// static
+nsAdoptingString
+nsContentUtils::GetStringPref(const char *aPref)
+{
+  nsAdoptingString result;
+
+  if (sPrefBranch) {
+    nsCOMPtr<nsISupportsString> theString;
+    sPrefBranch->GetComplexValue(aPref, NS_GET_IID(nsISupportsString),
+                                 getter_AddRefs(theString));
+    if (theString) {
+      theString->ToString(getter_Copies(result));
+    }
+  }
+
+  return result;
+}
+
+// static
+void
+nsContentUtils::RegisterPrefCallback(const char *aPref,
+                                     PrefChangedFunc aCallback,
+                                     void * aClosure)
+{
+  if (sPref)
+    sPref->RegisterCallback(aPref, aCallback, aClosure);
+}
+
+// static
+void
+nsContentUtils::UnregisterPrefCallback(const char *aPref,
+                                       PrefChangedFunc aCallback,
+                                       void * aClosure)
+{
+  if (sPref)
+    sPref->UnregisterCallback(aPref, aCallback, aClosure);
+}
+
 
 void
 nsCxPusher::Push(nsISupports *aCurrentTarget)

@@ -41,7 +41,6 @@
 #include "nsIEventStateManager.h"
 #include "nsGUIEvent.h"
 #include "nsIContent.h"
-#include "nsIPrefBranchInternal.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsHashtable.h"
@@ -141,8 +140,8 @@ public:
 
   NS_IMETHOD ShiftFocus(PRBool aForward, nsIContent* aStart=nsnull);
 
-  NS_IMETHOD GetBrowseWithCaret(PRBool *aBrowseWithCaret);
-  NS_IMETHOD ResetBrowseWithCaret(PRBool *aBrowseWithCaret);
+  virtual PRBool GetBrowseWithCaret();
+  void ResetBrowseWithCaret();
 
   NS_IMETHOD MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus);
   NS_IMETHOD MoveCaretToFocus();
@@ -221,7 +220,6 @@ protected:
                         PRBool aScrollPage,
                         PRBool aUseTargetFrame);
   void ForceViewUpdate(nsIView* aView);
-  nsresult getPrefBranch();
   void DoScrollHistory(PRInt32 direction);
   void DoScrollTextsize(nsIFrame *aTargetFrame, PRInt32 adjustment);
   nsresult ChangeTextSize(PRInt32 change);
@@ -249,6 +247,8 @@ protected:
   void BeforeDispatchEvent() { ++mDOMEventLevel; }
   void AfterDispatchEvent();
 
+  PRInt32     mLockCursor;
+
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
   nsCOMPtr<nsIContent> mCurrentTargetContent;
@@ -275,9 +275,7 @@ protected:
   nsIFrame* mCurrentFocusFrame;
   PRInt32 mLastFocusedWith;
   PRInt32 mCurrentTabIndex;
-  PRBool      mConsumeFocusEvents;
-  PRInt32     mLockCursor;
-  nsEvent    *mCurrentEvent;
+  nsEvent *mCurrentEvent;
 
   // DocShell Traversal Data Memebers
   nsCOMPtr<nsIContent> mLastContentFocus;
@@ -295,28 +293,29 @@ protected:
   PRUint32 mMClickCount;
   PRUint32 mRClickCount;
 
+  PRPackedBool mConsumeFocusEvents;
+
   PRPackedBool mNormalLMouseEventInProcess;
 
-  //Hashtable for accesskey support
-  nsSupportsHashtable *mAccessKeys;
-
-  // For preferences handling
-  nsCOMPtr<nsIPrefBranchInternal> mPrefBranch;
   PRPackedBool m_haveShutdown;
 
   // To inform people that dispatched events that frames have been cleared and
   // they need to drop frame refs
   PRPackedBool mClearedFrameRefsDuringEvent;
 
+  // So we don't have to keep checking accessibility.browsewithcaret pref
+  PRPackedBool mBrowseWithCaret;
+
+  // Recursion guard for tabbing
+  PRPackedBool mTabbedThroughDocument;
+
   // The number of events we are currently nested in (currently just applies to
   // those handlers that care about clearing frame refs)
   PRInt32 mDOMEventLevel;
 
-  // So we don't have to keep checking accessibility.browsewithcaret pref
-  PRBool mBrowseWithCaret;
+  //Hashtable for accesskey support
+  nsSupportsHashtable *mAccessKeys;
 
-  // Recursion guard for tabbing
-  PRBool mTabbedThroughDocument;
   nsCOMArray<nsIDocShell> mTabbingFromDocShells;
 
 #ifdef CLICK_HOLD_CONTEXT_MENUS

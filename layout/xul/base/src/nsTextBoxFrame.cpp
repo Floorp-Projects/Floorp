@@ -58,9 +58,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsMenuBarListener.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#include "nsIPrefLocalizedString.h"
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
@@ -69,6 +66,7 @@
 #include "nsIEventStateManager.h"
 #include "nsITheme.h"
 #include "nsUnicharUtils.h"
+#include "nsContentUtils.h"
 
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
@@ -199,23 +197,8 @@ nsTextBoxFrame::AlwaysAppendAccessKey()
   {
     gAccessKeyPrefInitialized = PR_TRUE;
 
-    nsCOMPtr<nsIPrefBranch> prefBranch =
-      do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-    if (prefBranch) 
-    {
-      nsCOMPtr<nsIPrefLocalizedString> prefValue;
-      prefBranch->GetComplexValue("intl.menuitems.alwaysappendaccesskeys",
-                                  NS_GET_IID(nsIPrefLocalizedString),
-                                  getter_AddRefs(prefValue));
-      if (prefValue)
-      {
-        nsXPIDLString prefString;
-        prefValue->ToString(getter_Copies(prefString));
-        gAlwaysAppendAccessKey =
-          nsDependentString(prefString).Equals(NS_LITERAL_STRING("true"));
-      }
-    }
+    gAlwaysAppendAccessKey =
+        nsContentUtils::GetCharPref("intl.menuitems.alwaysappendaccesskeys").Equals("true");
   }
   return gAlwaysAppendAccessKey;
 }

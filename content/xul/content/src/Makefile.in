@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  caps \
 		  rdf \
 		  xpconnect \
+		  pref \
 		  locale \
 		  lwbrk \
 		  xuldoc \

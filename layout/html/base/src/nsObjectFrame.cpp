@@ -119,10 +119,6 @@
 #include "nsIClassInfo.h"
 #include "jsapi.h"
 
-// XXX temporary for Mac double buffering pref
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-
 // XXX For temporary paint code
 #include "nsStyleContext.h"
 
@@ -801,11 +797,8 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
   // Turn off double buffering on the Mac. This depends on bug 49743 and partially
   // fixes 32327, 19931 amd 51787
 #if defined(XP_MAC) || defined(XP_MACOSX)
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  PRBool doubleBuffer = PR_FALSE;
-  if (prefBranch) {
-    prefBranch->GetBoolPref("plugin.enable_double_buffer", &doubleBuffer);
-  }
+  PRBool doubleBuffer =
+    nsContentUtils::GetBoolPref("plugin.enable_double_buffer");
   
   viewMan->AllowDoubleBuffering(doubleBuffer);
 #endif

@@ -81,9 +81,6 @@
 #include "nsIViewManager.h"
 #include "nsIView.h"
 
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#include "nsIPrefLocalizedString.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -2348,7 +2345,8 @@ SetChildTextZoom(nsIMarkupDocumentViewer* aChild, void* aClosure)
   aChild->SetTextZoom(textZoomInfo->mTextZoom);
 }
 
-NS_IMETHODIMP DocumentViewerImpl::SetTextZoom(float aTextZoom)
+NS_IMETHODIMP
+DocumentViewerImpl::SetTextZoom(float aTextZoom)
 {
   if (mDeviceContext) {
     float oldTextZoom = 1.0;  // just in case mDeviceContext doesn't implement
@@ -2367,7 +2365,8 @@ NS_IMETHODIMP DocumentViewerImpl::SetTextZoom(float aTextZoom)
   return CallChildren(SetChildTextZoom, &textZoomInfo);
 }
 
-NS_IMETHODIMP DocumentViewerImpl::GetTextZoom(float* aTextZoom)
+NS_IMETHODIMP
+DocumentViewerImpl::GetTextZoom(float* aTextZoom)
 {
   NS_ENSURE_ARG_POINTER(aTextZoom);
 
@@ -2379,35 +2378,18 @@ NS_IMETHODIMP DocumentViewerImpl::GetTextZoom(float* aTextZoom)
   return NS_OK;
 }
 
-// XXX: SEMANTIC CHANGE!
-//      returns a copy of the string.  Caller is responsible for freeing result
-//      using Recycle(aDefaultCharacterSet)
-NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(nsACString& aDefaultCharacterSet)
+NS_IMETHODIMP
+DocumentViewerImpl::GetDefaultCharacterSet(nsACString& aDefaultCharacterSet)
 {
   NS_ENSURE_STATE(mContainer);
 
   if (mDefaultCharacterSet.IsEmpty())
   {
-    nsXPIDLString defCharset;
-
-    nsCOMPtr<nsIWebShell> webShell;
-    webShell = do_QueryInterface(mContainer);
-    if (webShell)
-    {
-      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-      if (prefBranch) {
-        nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
-        prefBranch->GetComplexValue("intl.charset.default",
-                                    NS_GET_IID(nsIPrefLocalizedString),
-                                    getter_AddRefs(prefLocalString));
-        if (prefLocalString) {
-          prefLocalString->GetData(getter_Copies(defCharset));
-        }
-      }
-    }
+    const nsAdoptingString& defCharset =
+      nsContentUtils::GetLocalizedStringPref("intl.charset.default");
 
     if (!defCharset.IsEmpty())
-      CopyUCS2toASCII(defCharset, mDefaultCharacterSet);
+      LossyCopyUTF16toASCII(defCharset, mDefaultCharacterSet);
     else
       mDefaultCharacterSet.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
   }

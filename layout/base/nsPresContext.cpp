@@ -37,7 +37,6 @@
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIPref.h"
 #include "nsILinkHandler.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsStyleSet.h"
@@ -72,6 +71,8 @@
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
+
+#include "nsContentUtils.h"
 
 // Needed for Start/Stop of Image Animation
 #include "imgIContainer.h"
@@ -134,6 +135,8 @@ static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
 
+  // NOTE! nsPresContext::operator new() zeroes out all members, so don't
+  // bother initializing members to 0.
 
 nsPresContext::nsPresContext()
   : mDefaultVariableFont("serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
@@ -151,6 +154,10 @@ nsPresContext::nsPresContext()
     mDefaultFantasyFont("fantasy", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL, 
       NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12))
 {
+
+  // NOTE! nsPresContext::operator new() zeroes out all members, so don't
+  // bother initializing members to 0.
+
   mCompatibilityMode = eCompatibility_FullStandards;
   mImageAnimationMode = imgIContainer::kNormalAnimMode;
   mImageAnimationModePref = imgIContainer::kNormalAnimMode;
@@ -158,40 +165,25 @@ nsPresContext::nsPresContext()
   SetBackgroundImageDraw(PR_TRUE);		// always draw the background
   SetBackgroundColorDraw(PR_TRUE);
 
-  mShell = nsnull;
-  mLinkHandler = nsnull;
-  mContainer = nsnull;
-
   mViewportStyleOverflow = NS_STYLE_OVERFLOW_AUTO;
 
-  mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
   mBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
   
   mUseDocumentColors = PR_TRUE;
   mUseDocumentFonts = PR_TRUE;
 
   // the minimum font-size is unconstrained by default
-  mMinimumFontSize = 0;
 
   mLinkColor = NS_RGB(0x00, 0x00, 0xEE);
   mActiveLinkColor = NS_RGB(0xEE, 0x00, 0x00);
   mVisitedLinkColor = NS_RGB(0x55, 0x1A, 0x8B);
   mUnderlineLinks = PR_TRUE;
 
-  mUseFocusColors = PR_FALSE;
   mFocusTextColor = mDefaultColor;
   mFocusBackgroundColor = mBackgroundColor;
   mFocusRingWidth = 1;
-  mFocusRingOnAnything = PR_FALSE;
 
   mLanguageSpecificTransformType = eLanguageSpecificTransformType_Unknown;
-  mIsRenderingOnlySelection = PR_FALSE;
-#ifdef IBMBIDI
-  mIsVisual = PR_FALSE;
-  mBidiUtils = nsnull;
-  mIsBidiSystem = PR_FALSE;
-  mBidi = 0;
-#endif // IBMBIDI
 }
 
 nsPresContext::~nsPresContext()
@@ -207,23 +199,34 @@ nsPresContext::~nsPresContext()
   }
 
   // Unregister preference callbacks
-  if (mPrefs) {
-    mPrefs->UnregisterCallback("font.", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.display.", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.underline_anchors", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.anchor_color", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.active_color", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.visited_color", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("network.image.imageBehavior", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("image.animation_mode", nsPresContext::PrefChangedCallback, (void*)this);
+  nsContentUtils::UnregisterPrefCallback("font.",
+                                         nsPresContext::PrefChangedCallback,
+                                         this);
+  nsContentUtils::UnregisterPrefCallback("browser.display.",
+                                         nsPresContext::PrefChangedCallback,
+                                         this);
+  nsContentUtils::UnregisterPrefCallback("browser.underline_anchors",
+                                         nsPresContext::PrefChangedCallback,
+                                         this);
+  nsContentUtils::UnregisterPrefCallback("browser.anchor_color",
+                                         nsPresContext::PrefChangedCallback,
+                                         this);
+  nsContentUtils::UnregisterPrefCallback("browser.active_color",
+                                         nsPresContext::PrefChangedCallback,
+                                         this);
+  nsContentUtils::UnregisterPrefCallback("browser.visited_color",
+                                         nsPresContext::PrefChangedCallback,
+                                         this);
+  nsContentUtils::UnregisterPrefCallback("network.image.imageBehavior",
+                                         nsPresContext::PrefChangedCallback,
+                                         this);
+  nsContentUtils::UnregisterPrefCallback("image.animation_mode",
+                                         nsPresContext::PrefChangedCallback,
+                                         this);
 #ifdef IBMBIDI
-    mPrefs->UnregisterCallback("bidi.", PrefChangedCallback, (void*)this);
-#endif
-  }
-#ifdef IBMBIDI
-  if (mBidiUtils) {
-    delete mBidiUtils;
-  }
+  nsContentUtils::UnregisterPrefCallback("bidi.", PrefChangedCallback, this);
+
+  delete mBidiUtils;
 #endif // IBMBIDI
 
   NS_IF_RELEASE(mDeviceContext);
@@ -250,7 +253,7 @@ static const char* const kGenericFont[] = {
 void
 nsPresContext::GetFontPreferences()
 {
-  if (!mPrefs || !mLanguage)
+  if (!mLanguage)
     return;
 
   /* Fetch the font prefs to be used -- see bug 61883 for details.
@@ -280,18 +283,19 @@ nsPresContext::GetFontPreferences()
   langGroupAtom->ToString(langGroup);
 
   nsCAutoString pref;
-  nsXPIDLString value;
-  nsXPIDLCString cvalue;
 
   // get the current applicable font-size unit
   enum {eUnit_unknown = -1, eUnit_px, eUnit_pt};
   PRInt32 unit = eUnit_px;
-  nsresult rv = mPrefs->CopyCharPref("font.size.unit", getter_Copies(cvalue));
-  if (NS_SUCCEEDED(rv)) {
-    if (!PL_strcmp(cvalue.get(), "px")) {
+
+  nsAdoptingCString cvalue =
+    nsContentUtils::GetCharPref("font.size.unit");
+
+  if (!cvalue.IsEmpty()) {
+    if (cvalue.Equals("px")) {
       unit = eUnit_px;
     }
-    else if (!PL_strcmp(cvalue.get(), "pt")) {
+    else if (cvalue.Equals("pt")) {
       unit = eUnit_pt;
     }
     else {
@@ -301,13 +305,12 @@ nsPresContext::GetFontPreferences()
   }
 
   // get font.minimum-size.[langGroup]
-  PRInt32 size;
 
   pref.Assign("font.minimum-size.");
   AppendUTF16toUTF8(langGroup, pref);
 
-  rv = mPrefs->GetIntPref(pref.get(), &size);
-  if (NS_SUCCEEDED(rv)) {
+  PRInt32 size = nsContentUtils::GetIntPref(pref.get());
+  if (size > 0) {
     if (unit == eUnit_px) {
       mMinimumFontSize = NSFloatPixelsToTwips((float)size, p2t);
     }
@@ -338,13 +341,15 @@ nsPresContext::GetFontPreferences()
     // in GFX and will be queried there when hunting for alternative fonts)
     if (eType == eDefaultFont_Variable) {
       MAKE_FONT_PREF_KEY(pref, "font.name", generic_dot_langGroup);
-      rv = mPrefs->CopyUnicharPref(pref.get(), getter_Copies(value));
-      if (NS_SUCCEEDED(rv)) {
+
+      nsAdoptingString value =
+        nsContentUtils::GetStringPref(pref.get());
+      if (!value.IsEmpty()) {
         font->name.Assign(value);
       }
       else {
-        rv = mPrefs->CopyUnicharPref("font.default", getter_Copies(value));
-        if (NS_SUCCEEDED(rv)) {
+        value = nsContentUtils::GetStringPref("font.default");
+        if (!value.IsEmpty()) {
           mDefaultVariableFont.name.Assign(value);
         }
       } 
@@ -372,8 +377,8 @@ nsPresContext::GetFontPreferences()
     // get font.size.[generic].[langGroup]
     // size=0 means 'Auto', i.e., generic fonts retain the size of the variable font
     MAKE_FONT_PREF_KEY(pref, "font.size", generic_dot_langGroup);
-    rv = mPrefs->GetIntPref(pref.get(), &size);
-    if (NS_SUCCEEDED(rv) && size > 0) {
+    size = nsContentUtils::GetIntPref(pref.get());
+    if (size > 0) {
       if (unit == eUnit_px) {
         font->size = NSFloatPixelsToTwips((float)size, p2t);
       }
@@ -385,14 +390,14 @@ nsPresContext::GetFontPreferences()
     // get font.size-adjust.[generic].[langGroup]
     // XXX only applicable on GFX ports that handle |font-size-adjust|
     MAKE_FONT_PREF_KEY(pref, "font.size-adjust", generic_dot_langGroup);
-    rv = mPrefs->CopyCharPref(pref.get(), getter_Copies(cvalue));
-    if (NS_SUCCEEDED(rv)) {
+    cvalue = nsContentUtils::GetCharPref(pref.get());
+    if (!cvalue.IsEmpty()) {
       font->sizeAdjust = (float)atof(cvalue.get());
     }
 
 #ifdef DEBUG_rbs
     printf("%s Family-list:%s size:%d sizeAdjust:%.2f\n",
-            generic_dot_langGroup.get(),
+           generic_dot_langGroup.get(),
            NS_ConvertUCS2toUTF8(font->name).get(), font->size,
            font->sizeAdjust);
 #endif
@@ -403,8 +408,6 @@ void
 nsPresContext::GetDocumentColorPreferences()
 {
   PRBool usePrefColors = PR_TRUE;
-  PRBool boolPref;
-  nsXPIDLCString colorStr;
   nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryReferent(mContainer));
   if (docShell) {
     PRInt32 docShellType;
@@ -413,15 +416,23 @@ nsPresContext::GetDocumentColorPreferences()
       usePrefColors = PR_FALSE;
   }
   if (usePrefColors) {
-    if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_system_colors", &boolPref))) {
-      usePrefColors = !boolPref;
-    }
+    usePrefColors =
+      !nsContentUtils::GetBoolPref("browser.display.use_system_colors",
+                                   PR_FALSE);
   }
+
   if (usePrefColors) {
-    if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.foreground_color", getter_Copies(colorStr)))) {
+    nsAdoptingCString colorStr =
+      nsContentUtils::GetCharPref("browser.display.foreground_color");
+
+    if (!colorStr.IsEmpty()) {
       mDefaultColor = MakeColorPref(colorStr);
     }
-    if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.background_color", getter_Copies(colorStr)))) {
+
+    colorStr =
+      nsContentUtils::GetCharPref("browser.display.background_color");
+
+    if (!colorStr.IsEmpty()) {
       mBackgroundColor = MakeColorPref(colorStr);
     }
   }
@@ -434,102 +445,124 @@ nsPresContext::GetDocumentColorPreferences()
                            mBackgroundColor);
   }
 
-  if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_document_colors", &boolPref))) {
-    mUseDocumentColors = boolPref;
-  }
+  mUseDocumentColors =
+    nsContentUtils::GetBoolPref("browser.display.use_document_colors",
+                                mUseDocumentColors);
 }
 
 void
 nsPresContext::GetUserPreferences()
 {
-  PRInt32 prefInt;
-
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.base_font_scaler", &prefInt))) {
-    mFontScaler = prefInt;
-  }
+  mFontScaler =
+    nsContentUtils::GetIntPref("browser.display.base_font_scaler",
+                               mFontScaler);
 
   // * document colors
   GetDocumentColorPreferences();
 
   // * link colors
-  PRBool boolPref;
-  nsXPIDLCString colorStr;
-  if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.underline_anchors", &boolPref))) {
-    mUnderlineLinks = boolPref;
-  }
-  if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.anchor_color", getter_Copies(colorStr)))) {
+  mUnderlineLinks =
+    nsContentUtils::GetBoolPref("browser.underline_anchors", mUnderlineLinks);
+
+  nsAdoptingCString colorStr =
+    nsContentUtils::GetCharPref("browser.anchor_color");
+
+  if (!colorStr.IsEmpty()) {
     mLinkColor = MakeColorPref(colorStr);
   }
-  if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.active_color", getter_Copies(colorStr)))) {
+
+  colorStr =
+    nsContentUtils::GetCharPref("browser.active_color");
+
+  if (!colorStr.IsEmpty()) {
     mActiveLinkColor = MakeColorPref(colorStr);
   }
-  if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.visited_color", getter_Copies(colorStr)))) {
+
+  colorStr = nsContentUtils::GetCharPref("browser.visited_color");
+
+  if (!colorStr.IsEmpty()) {
     mVisitedLinkColor = MakeColorPref(colorStr);
   }
 
+  mUseFocusColors =
+    nsContentUtils::GetBoolPref("browser.display.use_focus_colors",
+                                mUseFocusColors);
 
-  if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.use_focus_colors", &boolPref))) {
-    mUseFocusColors = boolPref;
-    mFocusTextColor = mDefaultColor;
-    mFocusBackgroundColor = mBackgroundColor;
-    if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.focus_text_color", getter_Copies(colorStr)))) {
-      mFocusTextColor = MakeColorPref(colorStr);
-    }
-    if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.display.focus_background_color", getter_Copies(colorStr)))) {
-      mFocusBackgroundColor = MakeColorPref(colorStr);
-    }
+  mFocusTextColor = mDefaultColor;
+  mFocusBackgroundColor = mBackgroundColor;
+
+  colorStr = nsContentUtils::GetCharPref("browser.display.focus_text_color");
+
+  if (!colorStr.IsEmpty()) {
+    mFocusTextColor = MakeColorPref(colorStr);
   }
 
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.focus_ring_width", &prefInt))) {
-    mFocusRingWidth = prefInt;
+  colorStr =
+    nsContentUtils::GetCharPref("browser.display.focus_background_color");
+
+  if (!colorStr.IsEmpty()) {
+    mFocusBackgroundColor = MakeColorPref(colorStr);
   }
 
-  if (NS_SUCCEEDED(mPrefs->GetBoolPref("browser.display.focus_ring_on_anything", &boolPref))) {
-    mFocusRingOnAnything = boolPref;
-  }
+  mFocusRingWidth =
+    nsContentUtils::GetIntPref("browser.display.focus_ring_width",
+                               mFocusRingWidth);
+
+  mFocusRingOnAnything =
+    nsContentUtils::GetBoolPref("browser.display.focus_ring_on_anything",
+                                mFocusRingOnAnything);
 
   // * use fonts?
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.use_document_fonts", &prefInt))) {
-    mUseDocumentFonts = prefInt == 0 ? PR_FALSE : PR_TRUE;
-  }
-  
+  mUseDocumentFonts =
+    nsContentUtils::GetIntPref("browser.display.use_document_fonts") != 0;
+
   GetFontPreferences();
 
   // * image animation
-  char* animatePref = 0;
-  nsresult rv = mPrefs->CopyCharPref("image.animation_mode", &animatePref);
-  if (NS_SUCCEEDED(rv) && animatePref) {
-    if (!nsCRT::strcmp(animatePref, "normal"))
-      mImageAnimationModePref = imgIContainer::kNormalAnimMode;
-    else if (!nsCRT::strcmp(animatePref, "none"))
-      mImageAnimationModePref = imgIContainer::kDontAnimMode;
-    else if (!nsCRT::strcmp(animatePref, "once"))
-      mImageAnimationModePref = imgIContainer::kLoopOnceAnimMode;
-    nsMemory::Free(animatePref);
-  }
+  const nsAdoptingCString& animatePref =
+    nsContentUtils::GetCharPref("image.animation_mode");
+  if (animatePref.Equals("normal"))
+    mImageAnimationModePref = imgIContainer::kNormalAnimMode;
+  else if (animatePref.Equals("none"))
+    mImageAnimationModePref = imgIContainer::kDontAnimMode;
+  else if (animatePref.Equals("once"))
+    mImageAnimationModePref = imgIContainer::kLoopOnceAnimMode;
 
 #ifdef IBMBIDI
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.direction", &prefInt))) {
-     SET_BIDI_OPTION_DIRECTION(mBidi, prefInt);
-  }
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.texttype", &prefInt))) {
-     SET_BIDI_OPTION_TEXTTYPE(mBidi, prefInt);
-  }
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.controlstextmode", &prefInt))) {
-     SET_BIDI_OPTION_CONTROLSTEXTMODE(mBidi, prefInt);
-  }
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.clipboardtextmode", &prefInt))) {
-     SET_BIDI_OPTION_CLIPBOARDTEXTMODE(mBidi, prefInt);
-  }
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.numeral", &prefInt))) {
-     SET_BIDI_OPTION_NUMERAL(mBidi, prefInt);
-  }
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.support", &prefInt))) {
-     SET_BIDI_OPTION_SUPPORT(mBidi, prefInt);
-  }
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("bidi.characterset", &prefInt))) {
-     SET_BIDI_OPTION_CHARACTERSET(mBidi, prefInt);
-  }
+  PRInt32 prefInt =
+    nsContentUtils::GetIntPref("bidi.direction",
+                               GET_BIDI_OPTION_DIRECTION(mBidi));
+  SET_BIDI_OPTION_DIRECTION(mBidi, prefInt);
+
+  prefInt =
+    nsContentUtils::GetIntPref("bidi.texttype",
+                               GET_BIDI_OPTION_TEXTTYPE(mBidi));
+  SET_BIDI_OPTION_TEXTTYPE(mBidi, prefInt);
+
+  prefInt =
+    nsContentUtils::GetIntPref("bidi.controlstextmode",
+                               GET_BIDI_OPTION_CONTROLSTEXTMODE(mBidi));
+  SET_BIDI_OPTION_CONTROLSTEXTMODE(mBidi, prefInt);
+
+  prefInt =
+    nsContentUtils::GetIntPref("bidi.clipboardtextmode",
+                               GET_BIDI_OPTION_CLIPBOARDTEXTMODE(mBidi));
+  SET_BIDI_OPTION_CLIPBOARDTEXTMODE(mBidi, prefInt);
+
+  prefInt =
+    nsContentUtils::GetIntPref("bidi.numeral",
+                               GET_BIDI_OPTION_NUMERAL(mBidi));
+  SET_BIDI_OPTION_NUMERAL(mBidi, prefInt);
+
+  prefInt =
+    nsContentUtils::GetIntPref("bidi.support",
+                               GET_BIDI_OPTION_SUPPORT(mBidi));
+  SET_BIDI_OPTION_SUPPORT(mBidi, prefInt);
+
+  prefInt =
+    nsContentUtils::GetIntPref("bidi.characterset",
+                               GET_BIDI_OPTION_CHARACTERSET(mBidi));
+  SET_BIDI_OPTION_CHARACTERSET(mBidi, prefInt);
 #endif
 }
 
@@ -588,31 +621,46 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
     return rv;
   }
 
-  mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
-  mPrefs = do_GetService(NS_PREF_CONTRACTID);
-  if (mPrefs) {
-    // Register callbacks so we're notified when the preferences change
-    mPrefs->RegisterCallback("font.", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.display.", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.underline_anchors", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.anchor_color", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.active_color", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.visited_color", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("network.image.imageBehavior", nsPresContext::PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("image.animation_mode", nsPresContext::PrefChangedCallback, (void*)this);
-#ifdef IBMBIDI
-    mPrefs->RegisterCallback("bidi.", PrefChangedCallback, (void*)this);
-#endif
-
-    // Initialize our state from the user preferences
-    GetUserPreferences();
-  }
-
   mEventManager = new nsEventStateManager();
   if (!mEventManager)
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(mEventManager);
+
+  mLangService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
+
+  // Register callbacks so we're notified when the preferences change
+  nsContentUtils::RegisterPrefCallback("font.",
+                                       nsPresContext::PrefChangedCallback,
+                                       this);
+  nsContentUtils::RegisterPrefCallback("browser.display.",
+                                       nsPresContext::PrefChangedCallback,
+                                       this);
+  nsContentUtils::RegisterPrefCallback("browser.underline_anchors",
+                                       nsPresContext::PrefChangedCallback,
+                                       this);
+  nsContentUtils::RegisterPrefCallback("browser.anchor_color",
+                                       nsPresContext::PrefChangedCallback,
+                                       this);
+  nsContentUtils::RegisterPrefCallback("browser.active_color",
+                                       nsPresContext::PrefChangedCallback,
+                                       this);
+  nsContentUtils::RegisterPrefCallback("browser.visited_color",
+                                       nsPresContext::PrefChangedCallback,
+                                       this);
+  nsContentUtils::RegisterPrefCallback("network.image.imageBehavior",
+                                       nsPresContext::PrefChangedCallback,
+                                       this);
+  nsContentUtils::RegisterPrefCallback("image.animation_mode",
+                                       nsPresContext::PrefChangedCallback,
+                                       this);
+#ifdef IBMBIDI
+  nsContentUtils::RegisterPrefCallback("bidi.", PrefChangedCallback,
+                                       this);
+#endif
+
+  // Initialize our state from the user preferences
+  GetUserPreferences();
 
   rv = mEventManager->Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1044,7 +1092,8 @@ nsPresContext::GetBidiUtils(nsBidiPresUtils** aBidiUtils)
   return rv;
 }
 
-NS_IMETHODIMP   nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
+NS_IMETHODIMP
+nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
 {
   mBidi = aSource;
   if (IBMBIDI_TEXTDIRECTION_RTL == GET_BIDI_OPTION_DIRECTION(mBidi)
@@ -1065,7 +1114,9 @@ NS_IMETHODIMP   nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
   }
   return NS_OK;
 }
-NS_IMETHODIMP   nsPresContext::GetBidi(PRUint32* aDest) const
+
+NS_IMETHODIMP
+nsPresContext::GetBidi(PRUint32* aDest) const
 {
   if (aDest)
     *aDest = mBidi;

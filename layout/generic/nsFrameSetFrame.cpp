@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
 #include "nsFrameSetFrame.h"
+#include "nsContentUtils.h"
 #include "nsIHTMLContent.h"
 #include "nsLeafFrame.h"
 #include "nsHTMLContainerFrame.h"
@@ -63,9 +64,6 @@
 #include "nsIComponentManager.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefBranchInternal.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsINameSpaceManager.h"
@@ -82,7 +80,7 @@
 #define ALL_VIS    0x000F
 #define NONE_VIS   0x0000
 
-static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 /*******************************************************************************
  * nsFramesetDrag
@@ -241,32 +239,17 @@ nsHTMLFramesetFrame::nsHTMLFramesetFrame()
   mChildFrameborder    = nsnull;
   mChildBorderColors   = nsnull;
   mForceFrameResizability = PR_FALSE;
-  mPrefBranchWeakRef   = nsnull;
 }
 
 nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
 {
-  delete [] mRowSizes;
-  delete [] mColSizes;
+  delete[] mRowSizes;
+  delete[] mColSizes;
   delete[] mVerBorders;
   delete[] mHorBorders;
 
-  mRowSizes = mColSizes = nsnull;
-
-  nsCOMPtr<nsIPrefBranchInternal> prefBranch =
-    do_QueryReferent(mPrefBranchWeakRef);
-
-  if (prefBranch) {
-#ifdef DEBUG
-    nsresult rv =
-#endif
-    prefBranch->RemoveObserver(kFrameResizePref, this);
-
-    NS_ASSERTION(NS_SUCCEEDED(rv),
-		 "Can't remove frameset as pref branch observer");
-  }
-
-  mPrefBranchWeakRef = nsnull;
+  nsContentUtils::UnregisterPrefCallback(kFrameResizePref,
+                                         FrameResizePrefCallback, this);
 }
 
 nsresult nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID, 
@@ -274,10 +257,9 @@ nsresult nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID,
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
-  } else if (aIID.Equals(NS_GET_IID(nsHTMLFramesetFrame))) {
-    *aInstancePtr = (void*)this;
-    return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsIObserver))) {
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsHTMLFramesetFrame))) {
     *aInstancePtr = (void*)this;
     return NS_OK;
   } 
@@ -285,42 +267,34 @@ nsresult nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID,
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
-nsrefcnt nsHTMLFramesetFrame::AddRef(void)
+// static
+int
+nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
 {
-  return 0;
-}
+  nsHTMLFramesetFrame *frame =
+    NS_REINTERPRET_CAST(nsHTMLFramesetFrame *, aClosure);
 
-nsrefcnt nsHTMLFramesetFrame::Release(void)
-{
-  return 0;
-}
-
-NS_IMETHODIMP
-nsHTMLFramesetFrame::Observe(nsISupports* aObject, const char* aAction,
-                             const PRUnichar* aPrefName)
-{
-  nsAutoString prefName(aPrefName);
-  if (prefName.Equals(NS_LITERAL_STRING(kFrameResizePref))) {
-    nsIDocument* doc = mContent->GetDocument();
-    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
-    if (doc) {
-      doc->AttributeWillChange(mContent,
-                               kNameSpaceID_None,
-                               nsHTMLAtoms::frameborder);
-    }
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_QueryInterface(aObject));
-    if (prefBranch) {
-      prefBranch->GetBoolPref(kFrameResizePref, &mForceFrameResizability);
-    }
-    RecalculateBorderResize();
-    if (doc) {
-      doc->AttributeChanged(mContent,
-                            kNameSpaceID_None,
-                            nsHTMLAtoms::frameborder,
-                            nsIDOMMutationEvent::MODIFICATION);
-    }
+  nsIDocument* doc = frame->mContent->GetDocument();
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
+  if (doc) {
+    doc->AttributeWillChange(frame->mContent,
+                             kNameSpaceID_None,
+                             nsHTMLAtoms::frameborder);
   }
-  return NS_OK;
+
+  frame->mForceFrameResizability =
+    nsContentUtils::GetBoolPref(kFrameResizePref,
+                                frame->mForceFrameResizability);
+
+  frame->RecalculateBorderResize();
+  if (doc) {
+    doc->AttributeChanged(frame->mContent,
+                          kNameSpaceID_None,
+                          nsHTMLAtoms::frameborder,
+                          nsIDOMMutationEvent::MODIFICATION);
+  }
+
+  return 0;
 }
 
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
@@ -997,12 +971,10 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
 
   PRBool firstTime = (eReflowReason_Initial == aReflowState.reason);
   if (firstTime) {
-    nsCOMPtr<nsIPrefBranchInternal> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch) {
-      mPrefBranchWeakRef = do_GetWeakReference(prefBranch);
-      prefBranch->AddObserver(kFrameResizePref, this, PR_FALSE);
-      prefBranch->GetBoolPref(kFrameResizePref, &mForceFrameResizability);
-    }
+    nsContentUtils::RegisterPrefCallback(kFrameResizePref,
+                                         FrameResizePrefCallback, this);
+    mForceFrameResizability =
+      nsContentUtils::GetBoolPref(kFrameResizePref);
   }
   
   // subtract out the width of all of the potential borders. There are

@@ -398,10 +398,10 @@ nsXMLContentSink::SetParser(nsIParser* aParser)
 
 // static
 void
-nsXMLContentSink::SplitXMLName(const nsAString& aString, nsIAtom **aPrefix,
+nsXMLContentSink::SplitXMLName(const nsAFlatString& aString, nsIAtom **aPrefix,
                                nsIAtom **aLocalName)
 {
-  nsReadingIterator<PRUnichar> iter, end;
+  nsAFlatString::const_iterator iter, end;
 
   aString.BeginReading(iter);
   aString.EndReading(end);
