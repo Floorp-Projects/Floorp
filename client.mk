@@ -62,6 +62,11 @@ BUILD_MODULES = all
 # Defines
 #
 CWD := $(shell pwd)
+
+ifeq "$(CWD)" "/"
+CWD   := /.
+endif
+
 ifneq (, $(wildcard client.mk))
 # Ran from mozilla directory
 ROOTDIR   := $(shell dirname $(CWD))
@@ -70,6 +75,10 @@ else
 # Ran from mozilla/.. directory (?)
 ROOTDIR   := $(CWD)
 TOPSRCDIR := $(CWD)/mozilla
+endif
+
+ifeq "$(ROOTDIR)" "/"
+ROOTDIR   := /.
 endif
 
 AUTOCONF := autoconf
