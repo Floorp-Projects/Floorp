@@ -486,14 +486,14 @@ HRESULT STDMETHODCALLTYPE CIEHtmlDocument::get_lastModified(BSTR __RPC_FAR *p)
     {
         return E_UNEXPECTED;
     }
-    nsCOMPtr<nsIDOMNSHTMLDocument> htmlDoc = do_QueryInterface(mDOMDocument);
-    if (!htmlDoc)
+    nsCOMPtr<nsIDOMNSDocument> doc = do_QueryInterface(mDOMDocument);
+    if (!doc)
     {
         return E_FAIL;
     }
     USES_CONVERSION;
     nsAutoString val;
-    htmlDoc->GetLastModified(val);
+    doc->GetLastModified(val);
     *p = ::SysAllocString(W2COLE(val.get()));
     return S_OK;
 }
