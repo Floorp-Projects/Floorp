@@ -97,7 +97,7 @@ sub Told {
         if ($message =~ /^\s*mute\s+(\S+?)\s+in\s+(\S+?)\s*$/osi) {
             my $tree = $1 eq 'Tinderbox' ? '' : $1;
             my $treeName = $tree eq '' ? 'all trees' : "trees named $tree";
-            if (($tree eq '') or (grep($_ eq $tree, @{$self->{'trees'}}))) {
+            if (($tree eq '') or (grep $_ eq $tree, @{$self->{'trees'}})) {
                 $self->{'mutes'}->{$tree} .= " $2";
                 $self->saveConfig();
                 $self->say($event, "$event->{'from'}: Tinderbox notifications for $treeName muted in channel $2.");
@@ -107,7 +107,7 @@ sub Told {
         } elsif ($message =~ /^\s*unmute\s+(\S+?)\s+in\s+(\S+?)\s*$/osi) {
             my $tree = $1 eq 'Tinderbox' ? '' : $1;
             my $treeName = $tree eq '' ? 'all trees' : "trees named $tree";
-            if (($tree eq '') or (grep($_ eq $tree, @{$self->{'trees'}}))) {
+            if (($tree eq '') or (grep $_ eq $tree, @{$self->{'trees'}})) {
                 my %mutedChannels = map { lc($_) => 1 } split(/ /o, $self->{'mutes'}->{$1});
                 delete($mutedChannels{lc($2)}); # get rid of any mentions of that channel
                 $self->{'mutes'}->{$1} = join(' ', keys(%mutedChannels));

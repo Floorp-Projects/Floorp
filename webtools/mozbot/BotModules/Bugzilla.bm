@@ -205,7 +205,7 @@ sub GotURI {
         }
 
         my $prefix;
-        if (grep({$_ eq $event->{'from'}} @{$self->{'skipPrefixFor'}})) {
+        if (grep {$_ eq $event->{'from'}} @{$self->{'skipPrefixFor'}}) {
             # they don't want to have the report prefixed with their name
             $prefix = '';
         } else {
