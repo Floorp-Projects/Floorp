@@ -1635,12 +1635,14 @@ get_params(PRArenaPool *arena, bltestParams *params,
     case bltestDES_CBC:
     case bltestDES_EDE_CBC:
     case bltestRC2_CBC:
+    case bltestAES_CBC:
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "iv", j);
 	load_file_data(arena, &params->sk.iv, filename, bltestBinary);
     case bltestDES_ECB:
     case bltestDES_EDE_ECB:
     case bltestRC2_ECB:
     case bltestRC4:
+    case bltestAES_ECB:
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
 	load_file_data(arena, &params->sk.key, filename, bltestBinary);
 	break;
@@ -1991,6 +1993,7 @@ enum {
     opt_SeedFile,
     opt_InputOffset,
     opt_OutputOffset,
+    opt_MonteCarlo,
     opt_CmdLine
 };
 
@@ -2036,6 +2039,7 @@ static secuCommandFlag bltest_options[] =
     { /* opt_SeedFile	  */ 'z', PR_FALSE, 0, PR_FALSE },
     { /* opt_InputOffset  */ '1', PR_TRUE,  0, PR_FALSE },
     { /* opt_OutputOffset */ '2', PR_TRUE,  0, PR_FALSE },
+    { /* opt_MonteCarlo   */ '3', PR_FALSE, 0, PR_FALSE },
     { /* opt_CmdLine	  */ '-', PR_FALSE, 0, PR_FALSE }
 };
 
@@ -2332,7 +2336,17 @@ int main(int argc, char **argv)
     misalignBuffer(cipherInfo.arena, &cipherInfo.output, outoff);
 
     if (!bltest.commands[cmd_Nonce].activated) {
-	cipherDoOp(&cipherInfo);
+	if (bltest.options[opt_MonteCarlo].activated) {
+	    int mciter;
+	    for (mciter=0; mciter<10000; mciter++) {
+		cipherDoOp(&cipherInfo);
+		memcpy(cipherInfo.input.buf.data,
+		       cipherInfo.output.buf.data,
+		       cipherInfo.input.buf.len);
+	    }
+	} else {
+	    cipherDoOp(&cipherInfo);
+	}
 	cipherFinish(&cipherInfo);
 	finishIO(&cipherInfo.output, outfile);
     }
