@@ -188,7 +188,7 @@ sub execute_js_tests {
                 if ( $passed == 1 && !$js_quiet) {
                     &js_print( " PASSED!\n " , "&nbsp;&nbsp;<font color=#009900>",
                         "</font><br>" );
-                } else { 
+                } else {
                     if ($passed == -1) {
                         &js_print_suitename;
                         &js_print_filename;
@@ -235,7 +235,11 @@ sub setup_env {
 
     chdir $src_dir;
 
-    $shell_command = "java org.mozilla.javascript.tools.shell.Main ";
+    $shell_command = "java";
+    if ($js_classpath) {
+        $shell_command .= " -cp " . $js_classpath;
+    }
+    $shell_command .= " org.mozilla.javascript.tools.shell.Main ";
 
     # set the output file name.  let's base its name on the date and platform,
     # and give it a sequence number.
@@ -278,6 +282,8 @@ sub parse_args {
             $js_verbose = 1;
         } elsif ( $ARGV[$i] eq '-f' ) {
             $js_output = $ARGV[++$i];
+        } elsif ( $ARGV[$i] eq '-c' ) {
+            $js_classpath = $ARGV[++$i];
         } elsif ( $ARGV[$i] eq '--o' ) {
             $get_output = 1;
         } elsif ($ARGV[$i] eq '--e' ) {
