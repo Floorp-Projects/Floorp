@@ -85,7 +85,7 @@ function testRealError()
         if (e.fileName.search (/-50447\.js$/i) == -1)
             reportFailure ("expected fileName to end with '-50447.js'");
 
-        reportCompare (61, e.lineNumber,
+        reportCompare (81, e.lineNumber,
                        "lineNumber property returned unexpected value.");
     }
 
