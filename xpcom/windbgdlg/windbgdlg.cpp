@@ -41,11 +41,37 @@
 /* Windows only app to show a modal debug dialog - launched by nsDebug.cpp */
 
 #include <windows.h>
+#include <stdlib.h>
 
 int WINAPI 
 WinMain(HINSTANCE  hInstance, HINSTANCE  hPrevInstance, 
         LPSTR  lpszCmdLine, int  nCmdShow)
 {
+    /* support for auto answering based on words in the assertion.
+     * the assertion message is sent as a series of arguements (words) to the commandline.
+     * set a "word" to 0xffffffff to let the word not affect this code.
+     * set a "word" to 0xfffffffe to show the dialog.
+     * set a "word" to 0x5 to ignore (program should continue).
+     * set a "word" to 0x4 to retry (should fall into debugger).
+     * set a "word" to 0x3 to abort (die).
+     */
+    DWORD regType;
+    DWORD regValue = -1;
+    HKEY hkeyCU, hkeyLM;
+    RegOpenKeyEx(HKEY_CURRENT_USER, "Software\\mozilla.org\\windbgdlg", 0, KEY_READ, &hkeyCU);
+    RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\mozilla.org\\windbgdlg", 0, KEY_READ, &hkeyLM);
+    for (int i = __argc - 1; regValue == (DWORD)-1 && i; --i) {
+        DWORD regLength = sizeof regValue;
+        if ((hkeyCU && RegQueryValueEx(hkeyCU, __argv[i], 0, &regType, (LPBYTE)&regValue, &regLength) != ERROR_SUCCESS) ||
+            (hkeyLM && RegQueryValueEx(hkeyLM, __argv[i], 0, &regType, (LPBYTE)&regValue, &regLength) != ERROR_SUCCESS))
+            regValue = -1;
+    }
+    if (hkeyCU)
+        RegCloseKey(hkeyCU);
+    if (hkeyLM)
+        RegCloseKey(hkeyLM);
+    if (regValue != (DWORD)-1 && regValue != (DWORD)-2)
+        return regValue;
     static char msg[4048];
 
     wsprintf(msg,
