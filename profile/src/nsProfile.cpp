@@ -1629,8 +1629,9 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
     else {
     
         rv = NS_NewLocalFile(nsDependentString(nativeProfileDir), PR_TRUE, (nsILocalFile **)((nsIFile **)getter_AddRefs(profileDir)));
+        if (NS_FAILED(rv)) return rv;
 
-        // this prevents people from choosing there profile directory
+        // this prevents people from choosing their profile directory
         // or another directory, and remove it when they delete the profile.
         // append profile name
         profileDir->Append(nsDependentString(profileName));
