@@ -92,6 +92,7 @@ static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 #define DEFAULT_HOST	"news.mozilla.org"
 #define DEFAULT_PORT	NEWS_PORT		/* we get this value from nntpCore.h */
 #define DEFAULT_URL_TYPE  "news://"	/* do NOT change this value until netlib re-write is done...*/
+#define DEFAULT_ARTICLE "37099AC5.8D0EB52@netscape.com"
 
 //extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure, 
 //											  URL_Struct *url, MWContext *context);
@@ -423,9 +424,6 @@ nsresult nsNntpTestDriver::ReadAndDispatchCommand()
     case 7:
         status = OnPostMessage();
         break;
-	case 8:
-		status = OnRunURL();
-		break;
 	default:
 		status = OnExit();
 		break;
@@ -442,10 +440,9 @@ nsresult nsNntpTestDriver::ListCommands()
 	printf("2) Get (and subscribe) to a group. \n");
 	printf("3) List ids. \n");
 	printf("4) Get an article. \n");
-	printf("5) Perform Search. \n");
-	printf("6) Read NewsRC file. \n");
+	printf("5) Perform Search. (not working)\n");
+	printf("6) Read NewsRC file. (not working)\n");
     printf("7) Post a message. \n");
-	printf("8) Run a news URL. \n");
 	printf("9) Exit the test application. \n");
 	return NS_OK;
 }
@@ -516,8 +513,8 @@ nsresult nsNntpTestDriver::OnListArticle()
 	// first, prompt the user for the name of the group to fetch
 	// prime article number with a default value...
 	m_userData[0] = '\0';
-	PL_strcpy(m_userData, "37099AC5.8D0EB52@netscape.com");
-	rv = PromptForUserDataAndBuildUrl("Article Number to Fetch (note, the default only lives on news.mozilla.org): ");
+	PL_strcpy(m_userData, DEFAULT_ARTICLE);
+	rv = PromptForUserDataAndBuildUrl("Article to Fetch (note, the default ("DEFAULT_ARTICLE") only lives on "DEFAULT_HOST"): ");
 	// no prompt for url data....just append a '*' to the url data and run it...
 	m_urlString[0] = '\0';
 	PL_strcpy(m_urlString, m_urlSpec);
@@ -629,29 +626,6 @@ nsNntpTestDriver::OnPostMessage()
     
     m_url->SetMessageToPost(post);
     
-    printf("Running %s\n", m_urlString);
-    rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */);
-
-	return rv;
-}
-
-nsresult
-nsNntpTestDriver::OnRunURL()
-{
-    nsresult rv = NS_OK;
-
-    rv = PromptForUserDataAndBuildUrl("URL (be careful...): ");
-    sprintf(m_urlString, "%s",m_userData);
-    
-	if (m_protocolInitialized == PR_FALSE) {
-		rv = InitializeProtocol(m_urlString);
-        if (NS_FAILED(rv) || (m_url == nsnull)) {
-            return rv;
-        }
-    }
-	else
-		m_url->SetSpec(m_urlString); // reset spec
-
     printf("Running %s\n", m_urlString);
     rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */);
 
