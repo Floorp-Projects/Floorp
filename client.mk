@@ -109,13 +109,19 @@ MODULES_suite :=                                \
   mozilla/db/sqlite3                            \
   $(NULL)
 
+LOCALES_suite :=                                \
+  netwerk                                       \
+  dom                                           \
+  $(NULL)
+
 MODULES_toolkit :=                              \
   $(MODULES_suite)                              \
   mozilla/chrome                                \
   $(NULL)
 
 LOCALES_toolkit :=                              \
-  mozilla/toolkit/locales                       \
+  $(LOCALES_suite)                              \
+  toolkit                                       \
   $(NULL)
 
 MODULES_browser :=                              \
@@ -127,7 +133,7 @@ MODULES_browser :=                              \
 
 LOCALES_browser :=                              \
   $(LOCALES_toolkit)                            \
-  mozilla/browser/locales                       \
+  browser                                       \
   $(NULL)
 
 BOOTSTRAP_browser := mozilla/browser/config/mozconfig
@@ -141,7 +147,7 @@ MODULES_mail :=                                 \
 
 LOCALES_mail :=                                 \
   $(LOCALES_toolkit)                            \
-  mozilla/mail/locales                          \
+  mail                                          \
   $(NULL)
 
 BOOTSTRAP_mail := mozilla/mail/config/mozconfig
@@ -457,30 +463,17 @@ else
 override MOZ_CO_LOCALES := $(subst $(comma), ,$(MOZ_CO_LOCALES))
 
 ifeq (all,$(MOZ_CO_LOCALES))
-MOZCONFIG_MODULES += $(addsuffix /all-locales,$(LOCALE_DIRS))
+MOZCONFIG_MODULES += $(foreach project,$(MOZ_PROJECT_LIST),mozilla/$(project)/locales/all-locales)
 
-FASTUPDATE_LOCALES := \
-  for dir in $(LOCALE_DIRS); do \
-    for locale in `cat $$dir/all-locales`; do \
-      fast_update $(CVS) $(CVS_FLAGS) -d $(LOCALES_CVSROOT) co $$dir/$$locale; \
-    done; \
-  done 
-
-CHECKOUT_LOCALES := \
-  for dir in $(LOCALE_DIRS); do \
-    for locale in `cat $$dir/all-locales`; do \
-      cvs_co $(CVS) $(CVS_FLAGS) -d $(LOCALES_CVSROOT) co $(LOCALES_CO_FLAGS) $$dir/$$locale; \
-    done; \
-  done
-
+LOCALE_CO_DIRS := $(sort $(foreach project,$(MOZ_PROJECT_LIST),$(foreach locale,$(shell cat mozilla/$(project)/locales/all-locales),$(foreach dir,$(LOCALES_$(project)),l10n/$(locale)/$(dir)))))
 else # MOZ_CO_LOCALES != all
-LOCALE_CO_DIRS = $(foreach locale,$(MOZ_CO_LOCALES),$(addsuffix /$(locale),$(LOCALE_DIRS)))
+LOCALE_CO_DIRS = $(foreach locale,$(MOZ_CO_LOCALES),$(foreach dir,$(LOCALE_DIRS),l10n/$(locale)/$(dir)))
+endif
 
 CVSCO_LOCALES := $(CVS) $(CVS_FLAGS) -d $(LOCALES_CVSROOT) co $(LOCALES_CO_FLAGS) $(LOCALE_CO_DIRS)
 
 FASTUPDATE_LOCALES := fast_update $(CVSCO_LOCALES)
 CHECKOUT_LOCALES := cvs_co $(CVSCO_LOCALES)
-endif
 endif #MOZ_CO_LOCALES
 
 #######################################################################
