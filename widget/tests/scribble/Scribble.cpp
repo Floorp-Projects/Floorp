@@ -315,6 +315,8 @@ nsEventStatus PR_CALLBACK HandleEventCheck(nsGUIEvent *aEvent)
                         // a sort of random rect
                         nsRect rect;
                         scribbleData.drawPane->GetBounds(rect);
+                        nscoord	x = rect.x;
+                        nscoord	y = rect.y;
                         nscoord width = rect.width;
                         nscoord height = rect.height;
 
@@ -324,7 +326,7 @@ nsEventStatus PR_CALLBACK HandleEventCheck(nsGUIEvent *aEvent)
                             for (int i = 0; i < 100; i++) {
                                 drawCtx->SetColor((nscolor)rand());
 
-                                rect.MoveTo(rand() % width, rand() % height);
+                                rect.MoveTo(x+(rand() % width),y+( rand() % height));
                                 rect.SizeTo(rand() % (width - rect.x), 
                                             rand() % (height - rect.y));
                                 drawCtx->DrawEllipse(rect);
@@ -334,7 +336,7 @@ nsEventStatus PR_CALLBACK HandleEventCheck(nsGUIEvent *aEvent)
                             for (int i = 0; i < 100; i++) {
                                 drawCtx->SetColor((nscolor)rand());
 
-                                rect.MoveTo(rand() % width, rand() % height);
+                                rect.MoveTo(x+(rand() % width),y+( rand() % height));
                                 rect.SizeTo(rand() % (width - rect.x), 
                                             rand() % (height - rect.y));
                                 drawCtx->DrawRect(rect);
@@ -505,7 +507,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     // Add the scribble/lines section
     //
 
-    // create the "Scribble" check button
+    // create the "Scribble" radio button
     rect.SetRect(50, 50, 100, 25);  
 
     nsRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (void **)&(scribbleData.scribble));
@@ -516,7 +518,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     //scribbleData.scribble->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     scribbleData.scribble->Show(PR_TRUE);
 
-    // create the "Lines" check button
+    // create the "Lines" radio button
     rect.SetRect(50, 75, 100, 25);  
 
     nsRepository::CreateInstance(kCRadioButtonCID, nsnull, kIRadioButtonIID, (void **)&(scribbleData.lines));
@@ -527,12 +529,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     //scribbleData.lines->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     scribbleData.lines->Show(PR_TRUE);
 
-
-#ifdef NOTNOW
-
-    //
     // Add the circle/rectangle section
-    //
 
     // create the "Circles" check button
     nsICheckButton * checkButton;
@@ -542,7 +539,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     checkButton->Create(controlPane, rect, HandleEventCheck, NULL);
     nsString cbLabel2("Circles");
     checkButton->SetLabel(cbLabel2);
-    checkButton->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    //checkButton->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     checkButton->Show(PR_TRUE);
     NS_RELEASE(checkButton);
 
@@ -553,9 +550,13 @@ nsresult CreateApplication(int * argc, char ** argv)
     checkButton->Create(controlPane, rect, HandleEventCheck, NULL);
     nsString cbLabel3("Rectangles");
     checkButton->SetLabel(cbLabel3);
-    checkButton->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    //checkButton->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     checkButton->Show(PR_TRUE);
     NS_RELEASE(checkButton);
+
+
+#ifdef NOTNOW
+
 
     //
     // Add the color section
