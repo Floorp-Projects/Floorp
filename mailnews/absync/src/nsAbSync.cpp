@@ -2198,10 +2198,16 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
 
   if (ErrorFromServer(&errorString))
   {
-    PRUnichar   *outValue = GetString(NS_LITERAL_STRING("syncServerError").get());
-    PRUnichar   *msgValue;
+    PRUnichar   *msgValue, *outValue=nsnull;
 
+    // Covert server exceed max record msg here.
+    if (! nsCRT::strncasecmp(errorString, SYNC_ERROR_EXCEED_MAX_RECORD, nsCRT::strlen(SYNC_ERROR_EXCEED_MAX_RECORD)))
+      msgValue = GetString(NS_LITERAL_STRING("exceedMaxRecordError").get());
+    else
+    {
+      outValue = GetString(NS_LITERAL_STRING("syncServerError").get());
     msgValue = nsTextFormatter::smprintf(outValue, errorString);
+    }
 
     DisplayErrorMessage(msgValue);
 

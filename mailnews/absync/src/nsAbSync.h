@@ -136,6 +136,9 @@ typedef struct {
 #define SYNC_GROUP_TYPE                  3
 #define SYNC_UNKNOWN_TYPE                0
 
+// Server errors that need to be converted to more user-friendly ones.
+#define SYNC_ERROR_EXCEED_MAX_RECORD     "exceed max record"
+
 //
 // We need this structure for mapping our field names to the server
 // field names
