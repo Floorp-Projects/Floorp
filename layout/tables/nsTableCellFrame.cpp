@@ -372,6 +372,32 @@ PRInt32 nsTableCellFrame::GetColSpan()
 }
 
 
+void DebugCheckChildSize(nsIFrame* aChild, nsHTMLReflowMetrics& aMet, nsSize& aAvailSize)
+{
+  if (aMet.width > aAvailSize.width) {
+    nsAutoString tmp;
+    aChild->GetFrameName(tmp);
+    printf("WARNING: cell %s content has desired width %d given avail width %d\n",
+            tmp, aMet.width, aAvailSize.width);
+  }
+  if ((aMet.width < 0) || (aMet.width > 30000)) {
+    printf("WARNING: cell content %X has large width %d \n", aChild, aMet.width);
+  }
+  if ((aMet.height < 0) || (aMet.height > 30000)) {
+    printf("WARNING: cell content %X has large height %d \n", aChild, aMet.height);
+  }
+  if (aMet.maxElementSize) {
+    nscoord tmp = aMet.maxElementSize->width;
+    if ((tmp < 0) || (tmp > 30000)) {
+      printf("WARNING: cell content %X has large max element width %d \n", aChild, tmp);
+    }
+    tmp = aMet.maxElementSize->height;
+    if ((tmp < 0) || (tmp > 30000)) {
+      printf("WARNING: cell content %X has large max element height %d \n", aChild, tmp);
+    }
+  }
+}
+
 /**
   */
 NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
@@ -430,7 +456,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
 
   if (eReflowReason_Incremental == aReflowState.reason) 
   {
-    // XXX We *must* do this otherwise incremental reflow that's
+    // We *must* do this otherwise incremental reflow that's
     // passing through will not work right.
     nsIFrame* next;
     aReflowState.reflowCommand->GetNext(next);
@@ -474,21 +500,13 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
 
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState, aStatus);
 #ifdef NS_DEBUG
-  if (kidSize.width > availSize.width)
-  {
-    printf("WARNING: cell ");
-    nsAutoString tmp;
-    firstKid->GetFrameName(tmp);
-    fputs(tmp, stdout);
-    printf(" content returned desired width %d given avail width %d\n",
-            kidSize.width, availSize.width);
-  }
+  DebugCheckChildSize(firstKid, kidSize, availSize);
 #endif
 
   // Nav4 hack for 0 dimensioned cells.  
   // Empty cells are assigned a width and height of 4px
   // see testcase "cellHeights.html"
-  if (eReflowReason_Initial == aReflowState.reason)
+  if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth) 
   {
     if ((0==kidSize.width) && (0==kidSize.height))
       SetContentEmpty(PR_TRUE);
@@ -497,7 +515,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   }
   if (0==kidSize.width)
   {
-    if (eReflowReason_Initial == aReflowState.reason) 
+    if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth) 
     {
       float p2t;
       aPresContext.GetScaledPixelsToTwips(&p2t);
