@@ -47,6 +47,10 @@
 
 #include "prlog.h"
 
+#ifdef NS_DEBUG
+#include "prprf.h"
+#endif
+
 #if defined(PR_LOGGING) && defined(DEBUG_danm)
 /* found these logs useful in conjunction with netlibStreamEvent logging
    from netwerk. */
@@ -508,6 +512,21 @@ nsEventQueueImpl::AppendQueue(nsIEventQueue *aQueue)
                "event queue repeatedly appended to queue chain");
 */
   rv = NS_ERROR_NO_INTERFACE;
+
+#ifdef NS_DEBUG
+  int depth = 0;
+  nsEventQueueImpl *next = this;
+  while (next && depth < 100) {
+    next = NS_STATIC_CAST(nsEventQueueImpl *, next->mYoungerQueue);
+    ++depth;
+  }
+  if (depth > 5) {
+    char warning[80];
+    PR_snprintf(warning, sizeof(warning),
+      "event queue chain length is %d. this is almost certainly a leak.", depth);
+    NS_WARNING(warning);
+  }
+#endif
 
   // (be careful doing this outside nsEventQueueService's mEventQMonitor)
 
