@@ -51,12 +51,12 @@
 #define FATAL_ERROR "Fatal error [%d]: %s\n"
 #define WARNING "Warning [%d]: %s\n"
 #define DESCRIPTION "Description"
-#define DOWNLOADING "Downloading..."
-#define PREPARING "Preparing installer modules..."
-#define EXTRACTING "Extracting installer files..."
-#define INSTALLING "Installing..."
+#define DOWNLOADING "Downloading %s..."
+#define PREPARING "Preparing %s..."
+#define EXTRACTING "Extracting %s..."
 #define INSTALLING_XPI "Installing %s..."
 #define PROCESSING_FILE "Processing file %d of %d..."
+#define EXTRACTING_FILES "Extracting files..."
 
 
 /*--------------------------------------------------------------------*
@@ -128,7 +128,7 @@
 /*--------------------------------------------------------------------*
  *   Macros
  *--------------------------------------------------------------------*/
-#define TMP_DIR_TEMPLATE "%s/.tmp.xi.%d" // <cwd>/.tmp.xi.<N>
+#define TMP_DIR_TEMPLATE "/tmp/.tmp.xi.%d"
 #define TMP_EXTRACT_SUBDIR "bin"
 #define XPI_DIR "./xpi"
 
@@ -188,11 +188,17 @@ do {                                                    \
 #define XI_ASSERT(_expr, _msg)                                              \
 do {                                                                        \
     if (!(_expr))                                                           \
-        printf("%s %d: Assertion failed! %s \n", __FILE__, __LINE__, _msg); \
+        printf("%s %d: ASSERTION FAILED! %s \n", __FILE__, __LINE__, _msg); \
 } while(0);
 #else
 #define XI_ASSERT(_expr, _msg)
 #endif
+
+#define XI_GTK_UPDATE_UI()                              \
+do {                                                    \
+    while (gtk_events_pending())                        \
+        gtk_main_iteration();                           \
+} while (0);
 
 
 #ifndef TRUE

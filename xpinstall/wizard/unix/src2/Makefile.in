@@ -51,7 +51,6 @@ CPPSRCS		= \
 
 LIBS        = \
         `gtk-config --libs` \
-        -lpthread \
         $(NULL)
 
 LOCAL_INCLUDES += -I$(srcdir)/../../../stub

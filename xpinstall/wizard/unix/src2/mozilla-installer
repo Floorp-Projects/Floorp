@@ -30,7 +30,7 @@
 #   mozilla-installer-bin GTK based binary installer.
 #
 #   The mozilla-installer-bin binary is an install wizard that
-#   collects user preferences about modules to install and where 
+#   collects user preferences about modules to install and where to
 #   install them.  The program then proceeds to install Mozilla.
 #
 #=====================================================================
@@ -45,4 +45,6 @@ export PATH
 MOZILLA_FIVE_HOME=.
 export MOZILLA_FIVE_HOME
 
-exec ./mozilla-installer-bin --sync
+./mozilla-installer-bin --sync
+
+rm -rf /tmp/.tmp.xi.*

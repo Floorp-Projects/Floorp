@@ -26,7 +26,6 @@
 #include "nsXInstaller.h"
 #include "nsXIEngine.h"
 #include <signal.h>
-#include <pthread.h>
 
 static char         *sXPInstallEngine;
 static GtkWidget    *sMsg0Label;
@@ -34,7 +33,7 @@ static GtkWidget    *sMajorLabel;
 static GtkWidget    *sMinorLabel;
 static GtkWidget    *sMajorProgBar;
 static GtkWidget    *sMinorProgBar;
-static int          sActivity;
+static int          bDownload = FALSE;
 
 nsInstallDlg::nsInstallDlg() :
     mMsg0(NULL)
@@ -77,9 +76,7 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("Next");
     int bCus;
-    pthread_t eng_th;
     nsComponentList *comps = NULL;
-    pthread_t *me = (pthread_t *) malloc(sizeof(pthread_t));
 
     if (aData != gCtx->idlg) return;
     if (gCtx->bMoving)
@@ -96,26 +93,24 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
         gtk_widget_hide(gCtx->cancel);
 
     // initialize progress bar cleanly
-    if (nsXIEngine::ExistAllXPIs(bCus, comps))
-        gtk_label_set_text(GTK_LABEL(sMajorLabel), PREPARING);
+    int totalComps = 0;
+    if (nsXIEngine::ExistAllXPIs(bCus, comps, &totalComps))
+        bDownload = FALSE;
     else
-        gtk_label_set_text(GTK_LABEL(sMajorLabel), DOWNLOADING);
-    gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), TRUE);
-    gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), 1);
+        bDownload = TRUE;
+
+    gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), FALSE);
+    gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), (gfloat) 0);
+    gtk_label_set_text(GTK_LABEL(sMajorLabel), "");
     gtk_widget_show(sMajorLabel);
     gtk_widget_show(sMajorProgBar);
 
     gtk_widget_hide(gCtx->back);
     gtk_widget_hide(gCtx->next);
     gtk_widget_hide(sMsg0Label);
+    XI_GTK_UPDATE_UI();
 
-    pthread_mutex_init(&gCtx->prog_mutex, NULL);
-    pthread_cond_init(&gCtx->prog_cv, NULL);
-
-    *me = pthread_self();
-    pthread_create(&eng_th, NULL, WorkDammitWork, (void*) me);
-
-    gtk_timeout_add(1, ProgressUpdater, NULL);
+    WorkDammitWork((void*) NULL);
 
     gCtx->bMoving = TRUE;
     return;
@@ -192,8 +187,11 @@ nsInstallDlg::Show(int aDirection)
 
         // vbox with two widgets packed in: label0 / progmeter0 (major)
         vbox = gtk_vbox_new(FALSE, 0);
+        hbox = gtk_hbox_new(FALSE, 0);
         sMajorLabel = gtk_label_new("");
-        gtk_box_pack_start(GTK_BOX(vbox), sMajorLabel, FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(hbox), sMajorLabel, FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+        gtk_widget_show(hbox);
         gtk_widget_show(sMajorLabel);
 
         sMajorProgBar = gtk_progress_bar_new();
@@ -207,8 +205,11 @@ nsInstallDlg::Show(int aDirection)
 
         // vbox with two widgets packed in: label1 / progmeter1 (minor)
         vbox = gtk_vbox_new(FALSE, 0);
+        hbox = gtk_hbox_new(FALSE, 0);
         sMinorLabel = gtk_label_new("");
-        gtk_box_pack_start(GTK_BOX(vbox), sMinorLabel, FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(hbox), sMinorLabel, FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+        gtk_widget_show(hbox);
         gtk_widget_show(sMinorLabel);
 
         sMinorProgBar = gtk_progress_bar_new();
@@ -308,107 +309,20 @@ nsInstallDlg::WorkDammitWork(void *arg)
     xpiengine = comps->GetCompByArchive(sXPInstallEngine);
 
     // 1> download
-    sActivity = nsInstallDlg::ACT_DOWNLOAD;
     XI_ERR_BAIL(engine->Download(bCus, comps));
 
     // 2> extract engine
-    sActivity = nsInstallDlg::ACT_EXTRACT;
     XI_ERR_BAIL(engine->Extract(xpiengine));
     
     // 3> install .xpis
-    sActivity = nsInstallDlg::ACT_INSTALL;
     XI_ERR_BAIL(engine->Install(bCus, comps, gCtx->opt->mDestination));
-
-    // destroy installer engine thread object
-    XI_IF_DELETE(engine);
-
-    pthread_mutex_lock(&gCtx->prog_mutex);
-    gCtx->bDone = TRUE;
-    gCtx->threadTurn = nsXIContext::UI_THREAD;
-    pthread_cond_signal(&gCtx->prog_cv);
-    pthread_mutex_unlock(&gCtx->prog_mutex);
-
-    DUMP("pre pthread_exit");
-    pthread_exit((void *) 0);
-    DUMP("post pthread_exit");
 
 BAIL:
     // destroy installer engine thread object
     XI_IF_DELETE(engine);
+    gtk_main_quit();
 
     return NULL;
-}
-
-static int bExtractStarted = FALSE;
-static int bInstallStarted = FALSE;
-
-gint
-nsInstallDlg::ProgressUpdater(gpointer aData)
-{
-    int status = 0;
-
-    while (gtk_events_pending())
-        gtk_main_iteration();
-
-    if (gCtx->bDone)
-    {
-        pthread_cond_destroy(&gCtx->prog_cv);
-        pthread_mutex_destroy(&gCtx->prog_mutex);
-
-        // XXX gdk_flush();
-        gtk_main_quit();
-        return 0;
-    }
-
-    switch (sActivity)
-    {
-        case nsInstallDlg::ACT_DOWNLOAD: 
-            // DUMP("Downloading...");
-            status = 1;
-            break;
-
-        case nsInstallDlg::ACT_EXTRACT:
-            // DUMP("Extracting...");
-            if (!bExtractStarted)
-            {
-                gtk_label_set_text(GTK_LABEL(sMajorLabel), EXTRACTING);
-                gtk_widget_show(sMajorLabel);
-
-                bExtractStarted = TRUE;
-            }
-            status = 1;
-            break;
-
-        case nsInstallDlg::ACT_INSTALL:
-            // DUMP("Installing...");
-            if (!bInstallStarted)
-            {
-                gtk_label_set_text(GTK_LABEL(sMajorLabel), INSTALLING);
-                gtk_widget_show(sMajorLabel);
-
-                bInstallStarted = TRUE;
-            }
-
-            pthread_mutex_lock(&gCtx->prog_mutex);
-            while (gCtx->threadTurn != nsXIContext::UI_THREAD && !gCtx->bDone)
-                pthread_cond_wait(&gCtx->prog_cv, &gCtx->prog_mutex);
-
-            gtk_widget_show(sMinorLabel);
-            gtk_widget_show(sMinorProgBar);
-
-            if (!gCtx->bDone)
-                gCtx->threadTurn = nsXIContext::ENGINE_THREAD;
-
-            pthread_mutex_unlock(&gCtx->prog_mutex);
-
-            status = 1;
-            break;
-
-        default:
-            break;
-    }
-
-    return status;
 }
 
 void
@@ -416,12 +330,19 @@ nsInstallDlg::XPIProgressCB(const char *aMsg, int aVal, int aMax)
 {
     // DUMP("XPIProgressCB");
 
+    if (!aMsg)
+        return;
+
+    static int updates = 0;
     char msg[64];
     char *colon = NULL, *lastSlash = NULL;
-    memset(msg, 0, 64);
 
     if (aMax > 0)
     {
+        // reset for next component
+        if (updates)
+            updates = 0;
+
         gfloat percent = (gfloat)((gfloat)aVal/(gfloat)aMax);
 #ifdef DEBUG
     printf("progress percent: %f\taVal: %d\taMax: %d\n", percent, aVal, aMax);
@@ -434,11 +355,17 @@ nsInstallDlg::XPIProgressCB(const char *aMsg, int aVal, int aMax)
     }
     else
     {
+        updates++;
+        if (updates > 5)
+            updates = 0;
+        gfloat percent = (gfloat)((gfloat)updates/(gfloat)5);
+
         gtk_progress_set_activity_mode(GTK_PROGRESS(sMinorProgBar), TRUE);
-        gtk_progress_bar_update(GTK_PROGRESS_BAR(sMinorProgBar), 1);
+        gtk_progress_bar_update(GTK_PROGRESS_BAR(sMinorProgBar), percent);
         gtk_widget_show(sMinorProgBar);
 
         /* tack on XPInstall action */
+        memset(msg, 0, 64);
         colon = strchr(aMsg, ':');
         if (colon)
             strncpy(msg, aMsg, colon - aMsg);
@@ -456,32 +383,67 @@ nsInstallDlg::XPIProgressCB(const char *aMsg, int aVal, int aMax)
     gtk_label_set_text(GTK_LABEL(sMinorLabel), msg);
     gtk_widget_draw(sMinorLabel, NULL);
 
-    while (gtk_events_pending())
-        gtk_main_iteration();
+    XI_GTK_UPDATE_UI();
 }
 
 void
-nsInstallDlg::MajorProgressCB(char *aCompName, int aCompNum, int aTotalComps)
+nsInstallDlg::MajorProgressCB(char *aName, int aNum, int aTotal, int aActivity)
 {
     // DUMP("MajorProgressCB");
 
     char msg[256];
 
-    if (!aCompName)
+    if (!aName)
         return;
 
-    memset(msg, 0, 256);
-    sprintf(msg, INSTALLING_XPI, aCompName);
-   
-    gtk_label_set_text(GTK_LABEL(sMajorLabel), ""); 
-    gtk_widget_show(sMajorLabel);
+#ifdef DEBUG
+    printf("%s %d: Name = %s\tNum = %d\tTotal = %d\tAct = %d\n", 
+    __FILE__, __LINE__, aName, aNum, aTotal, aActivity);
+#endif
+
+    switch (aActivity)
+    {
+        case ACT_DOWNLOAD:
+            if (bDownload)
+                sprintf(msg, DOWNLOADING, aName);
+            else
+                sprintf(msg, PREPARING, aName);
+            break;
+
+        case ACT_EXTRACT:
+            sprintf(msg, EXTRACTING, aName);
+            break;
+
+        case ACT_INSTALL:
+            sprintf(msg, INSTALLING_XPI, aName);
+            break;
+
+        default:
+            break;
+    }
+
     gtk_label_set_text(GTK_LABEL(sMajorLabel), msg);
     gtk_widget_show(sMajorLabel);
 
-    if (aTotalComps <= 0)
+    if (aTotal <= 0)
+    {
+        XI_ASSERT(0, "aTotal was <= 0");
+        XI_GTK_UPDATE_UI();
         return;
+    }
 
-    gfloat percent = (gfloat)((gfloat)aCompNum/(gfloat)aTotalComps);
+    gfloat percent = (gfloat)((gfloat)aNum/(gfloat)aTotal);
     gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), percent);
     gtk_widget_show(sMajorProgBar);
+
+    // reset minor progress ui
+    if (aActivity == ACT_INSTALL)
+    {
+        gtk_label_set_text(GTK_LABEL(sMinorLabel), "");
+        gtk_progress_bar_update(GTK_PROGRESS_BAR(sMinorProgBar), (gfloat)0);
+        gtk_widget_show(sMinorLabel);
+        gtk_widget_show(sMinorProgBar);
+    }
+
+    XI_GTK_UPDATE_UI();
 }

@@ -75,7 +75,7 @@ public:
     int     Install(int aCustom, nsComponentList *aComps, char *aDestination);
 
     static void ProgressCallback(const char* aMsg, PRInt32 aVal, PRInt32 aMax);
-    static int  ExistAllXPIs(int aCustom, nsComponentList *aComps);
+    static int  ExistAllXPIs(int aCustom, nsComponentList *aComps, int *aTotal);
 
 private:
     int     MakeUniqueTmpDir();
@@ -87,6 +87,8 @@ private:
     int     CopyToTmp(int aCustom, nsComponentList *aComps);
 
     char    *mTmp;
+    int     mTotalComps;
+    char    *mOriginalDir;
 };
 
 #endif /* _NS_XIENGINE_H_ */

@@ -400,8 +400,8 @@ nsSetupTypeDlg::Show(int aDirection)
 
         if (!gCtx->opt->mDestination)
         {
-            gCtx->opt->mDestination = (char *) malloc(1024 * sizeof(char));
-            getcwd(gCtx->opt->mDestination, 1024);
+            gCtx->opt->mDestination = (char*)malloc(MAXPATHLEN * sizeof(char));
+            getcwd(gCtx->opt->mDestination, MAXPATHLEN);
         }
         sFolder = gtk_label_new(gCtx->opt->mDestination);
         gtk_label_set_line_wrap(GTK_LABEL(sFolder), TRUE);
@@ -674,14 +674,13 @@ nsSetupTypeDlg::VerifyDestination()
     int stat_err = 0;
     struct stat dummy; 
     GtkWidget *yesButton, *noButton, *label;
-    char message[1024];
+    char message[MAXPATHLEN];
     
     stat_err = stat(gCtx->opt->mDestination, &dummy);
     if (stat_err == 0)
         return OK;
 
     // destination doesn't exist so ask user if we should create it
-    memset(message, 0, 1024);
     sprintf(message, DOESNT_EXIST, gCtx->opt->mDestination);
 
     sCreateDestDlg = gtk_dialog_new();
@@ -752,7 +751,7 @@ nsSetupTypeDlg::DeleteOldInst()
 
     int err = OK;
     struct stat dummy;
-    char path[1024];
+    char path[MAXPATHLEN];
     GtkWidget *label = NULL;
     GtkWidget *deleteBtn = NULL; /* delete button */
     GtkWidget *cancelBtn = NULL; /* cancel button */
@@ -760,7 +759,7 @@ nsSetupTypeDlg::DeleteOldInst()
     char *msg = NULL, *msgPtr = NULL, *msgChunkPtr = NULL;
     char msgChunk[65];
 
-    memset(path, 0, 1024);
+    memset(path, 0, MAXPATHLEN);
     ConstructPath(path, gCtx->opt->mDestination, sLegacyChecks->GetFilename());
     DUMP(path);
 
@@ -822,12 +821,11 @@ nsSetupTypeDlg::DeleteInstDelete(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("DeleteInstDelete");
 
-    char cwd[1024];
-    memset(cwd, 0, 1024);
+    char cwd[MAXPATHLEN];
 
     sDelInstUp = FALSE;
 
-    getcwd(cwd, 1024);
+    getcwd(cwd, MAXPATHLEN);
     chdir(gCtx->opt->mDestination);
     system("rm -rf *");
     chdir(cwd);

@@ -29,6 +29,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/param.h>
 #include <gtk/gtk.h>
 
 /*------------------------------------------------------------------*

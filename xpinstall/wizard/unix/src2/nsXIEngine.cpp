@@ -42,7 +42,9 @@ static char sCoreLibs[ CORE_LIB_COUNT * 2 ][ 32 ] =
 };
 
 nsXIEngine::nsXIEngine() :
-    mTmp(NULL)
+    mTmp(NULL),
+    mTotalComps(0),
+    mOriginalDir(NULL)
 {
 }
 
@@ -50,15 +52,11 @@ nsXIEngine::~nsXIEngine()
 {
     DUMP("~nsXIEngine");
 
-    char cwd[1024];
-    memset(cwd, 0, 1024);
-    DUMP(cwd);
-
-    // rm tmp dir
-    chdir("../..");
-    rmdir(mTmp);
+    // reset back to original directory
+    chdir(mOriginalDir);
 
     XI_IF_FREE(mTmp);
+    XI_IF_FREE(mOriginalDir);
 }
 
 int     
@@ -82,9 +80,10 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
         return E_DIR_CREATE;
 
     // if all .xpis exist in the ./xpi dir (blob/CD) we don't need to download
-    if (ExistAllXPIs(aCustom, aComps))
+    if (ExistAllXPIs(aCustom, aComps, &mTotalComps))
         return CopyToTmp(aCustom, aComps);
 
+    int currCompNum = 1;
     while (currComp)
     {
         if ( (aCustom == TRUE && currComp->IsSelected()) || (aCustom == FALSE) )
@@ -99,8 +98,16 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
                 err = ParseURL(currURL, &currHost, &currDir);
                 if (err == OK)
                 {
+                    // update UI
+                    nsInstallDlg::MajorProgressCB(currComp->GetDescShort(),
+                        currCompNum, mTotalComps, nsInstallDlg::ACT_DOWNLOAD);
+            
                     err = FTPAnonGet(currHost, currDir, currComp->GetArchive());
-                    if (err == OK) break;  // no need to failover
+                    if (err == OK) 
+                    {
+                        currCompNum++;
+                        break;  // no need to failover
+                    }
                 }
             }
         }
@@ -116,7 +123,7 @@ nsXIEngine::Extract(nsComponent *aXPIEngine)
 {
     DUMP("Extract");
    
-    char path[1024];
+    char path[MAXPATHLEN];
     char bindir[512];
     char unzipcmd[512];
     struct stat dummy;
@@ -131,6 +138,10 @@ nsXIEngine::Extract(nsComponent *aXPIEngine)
 
     for (i = 0; i < CORE_LIB_COUNT*2; i++)
     {
+        // update UI
+        nsInstallDlg::MajorProgressCB(sCoreLibs[i+1], ((i+2)/2),
+            CORE_LIB_COUNT, nsInstallDlg::ACT_EXTRACT);
+
         sprintf(unzipcmd, "unzip %s -d %s %s%s > /dev/null", 
                 path, mTmp, sCoreLibs[i], sCoreLibs[i+1]);
         i++;
@@ -152,27 +163,20 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
     int err = OK;
     xpistub_t stub;
     char *old_LD_LIBRARY_PATH = NULL;
-    char new_LD_LIBRARY_PATH[256];
+    char new_LD_LIBRARY_PATH[MAXPATHLEN];
     int i;
     int compNum = 1;
-    int totalComps;
     nsComponent *currComp = NULL;
 
     if (!aComps || !aDestination)
         return E_PARAM;
 
     // handle LD_LIBRARY_PATH settings
-    memset(new_LD_LIBRARY_PATH, 0, 256);
     sprintf(new_LD_LIBRARY_PATH, "%s/bin:.", mTmp);
     DUMP(new_LD_LIBRARY_PATH);
     old_LD_LIBRARY_PATH = getenv("LD_LIBRARY_PATH");
     setenv("LD_LIBRARY_PATH", new_LD_LIBRARY_PATH, 1);
  
-    if (aCustom)
-        totalComps = aComps->GetLengthSelected();
-    else
-        totalComps = aComps->GetLength();
-
     currComp = aComps->GetHead();
     err = LoadXPIStub(&stub, aDestination);
     if (err == OK)
@@ -186,7 +190,7 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
                   (!aCustom)  )
             {
                 nsInstallDlg::MajorProgressCB(currComp->GetDescShort(),
-                                             compNum, totalComps);
+                    compNum, mTotalComps, nsInstallDlg::ACT_INSTALL);
                 err = InstallXPI(currComp, &stub);
                 if (err != OK)
                     ErrorHandler(err); // handle and continue
@@ -210,20 +214,14 @@ nsXIEngine::MakeUniqueTmpDir()
 {
     int err = OK;
     int i;
-    char buf[1024];
-    char cwd[1024];
+    char buf[MAXPATHLEN];
     char cmd[1030];
     struct stat dummy;
     mTmp = NULL;
 
-    memset(cwd, 0, 1024);
-    if (!getcwd(cwd, 1024))
-        return E_MEM;
-
     for (i = 0; i < MAX_TMP_DIRS; i++)
     {
-        memset(buf, 0, 1024);
-        sprintf(buf, TMP_DIR_TEMPLATE, cwd, i);
+        sprintf(buf, TMP_DIR_TEMPLATE, i);
         if (-1 == stat(buf, &dummy))
             break; 
     }
@@ -282,7 +280,7 @@ int
 nsXIEngine::FTPAnonGet(char *aHost, char *aDir, char *aArchive)
 {
     int err = OK;
-    char qualifiedPath[1024];
+    char qualifiedPath[MAXPATHLEN];
     char basename[256];
     char ftpcmds[1024];
     struct stat dummy;
@@ -316,8 +314,8 @@ nsXIEngine::LoadXPIStub(xpistub_t *aStub, char *aDestination)
 {
     int err = OK;
 
-    char libpath[1024];
-    char libloc[1024];
+    char libpath[MAXPATHLEN];
+    char libloc[MAXPATHLEN];
 	char *dlerr;
     nsresult rv = 0;
 
@@ -327,14 +325,16 @@ nsXIEngine::LoadXPIStub(xpistub_t *aStub, char *aDestination)
     if (!aStub || !aDestination)
         return E_PARAM;
 
+    /* save original directory to reset it after installing */
+    mOriginalDir = (char *) malloc(MAXPATHLEN * sizeof(char));
+    getcwd(mOriginalDir, MAXPATHLEN);
+
     /* chdir to library location for dll deps resolution */
-    memset(libloc, 0, 1024);
     sprintf(libloc, "%s/bin", mTmp);
     chdir(libloc);
     
 	/* open the library */
-    memset(libpath, 0, 1024);
-    getcwd(libpath, 1024);
+    getcwd(libpath, MAXPATHLEN);
     sprintf(libpath, "%s/%s", libpath, XPISTUB);
 
 #ifdef DEBUG
@@ -387,13 +387,12 @@ int
 nsXIEngine::InstallXPI(nsComponent *aXPI, xpistub_t *aStub)
 {
     int err = OK;
-    char xpipath[1024];
+    char xpipath[MAXPATHLEN];
     nsresult rv = 0;
 
     if (!aStub || !aXPI)
         return E_PARAM;
 
-    memset(xpipath, 0, 1024);
     sprintf(xpipath, "../%s", aXPI->GetArchive());
     DUMP(xpipath);
 
@@ -456,19 +455,16 @@ nsXIEngine::ProgressCallback(const char* aMsg, PRInt32 aVal, PRInt32 aMax)
 {
     // DUMP("ProgressCallback");
     
-    pthread_mutex_lock(&gCtx->prog_mutex);
-
     nsInstallDlg::XPIProgressCB(aMsg, (int)aVal, (int)aMax);
-
-    gCtx->threadTurn = nsXIContext::UI_THREAD;
-
-    pthread_cond_signal(&gCtx->prog_cv);
-    pthread_mutex_unlock(&gCtx->prog_mutex);
 }
 
 int 
-nsXIEngine::ExistAllXPIs(int aCustom, nsComponentList *aComps)
+nsXIEngine::ExistAllXPIs(int aCustom, nsComponentList *aComps, int *aTotal)
 {
+    // param check
+    if (!aComps || !aTotal)
+        return E_PARAM;
+    
     int bAllExist = TRUE;
     nsComponent *currComp = aComps->GetHead();
     char currArchivePath[256];
@@ -478,17 +474,18 @@ nsXIEngine::ExistAllXPIs(int aCustom, nsComponentList *aComps)
     {
         if ( (aCustom == TRUE && currComp->IsSelected()) || (aCustom == FALSE) )
         {
-            memset(currArchivePath, 0, 256);
             sprintf(currArchivePath, "%s/%s", XPI_DIR, currComp->GetArchive());
             DUMP(currArchivePath);
             
             if (0 != stat(currArchivePath, &dummy))
                 return FALSE;
+
+            (*aTotal)++;
         }
         
         currComp = currComp->GetNext();
     }
-    
+
     return bAllExist;
 }
 
@@ -499,14 +496,20 @@ nsXIEngine::CopyToTmp(int aCustom, nsComponentList *aComps)
     nsComponent *currComp = aComps->GetHead();
     char cmd[256];
 
+    int currCompNum = 1;
     while (currComp)
     {
         if ( (aCustom == TRUE && currComp->IsSelected()) || (aCustom == FALSE) )
         {
-            memset(cmd, 0, 256);
             sprintf(cmd, "cp %s/%s %s", XPI_DIR, currComp->GetArchive(), mTmp); 
             DUMP(cmd);
+
+            // update UI
+            nsInstallDlg::MajorProgressCB(currComp->GetDescShort(),
+                currCompNum, mTotalComps, nsInstallDlg::ACT_DOWNLOAD);
+
             system(cmd);
+            currCompNum++;
         }
         
         currComp = currComp->GetNext();

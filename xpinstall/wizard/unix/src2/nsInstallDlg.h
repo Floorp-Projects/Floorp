@@ -40,17 +40,16 @@ public:
     static void     Back(GtkWidget *aWidget, gpointer aData);
     static void     Next(GtkWidget *aWidget, gpointer aData);
 
-    int     Parse(nsINIParser* aParser);
+    int             Parse(nsINIParser* aParser);
 
-    int     Show(int aDirection);
-    int     Hide(int aDirection);
+    int             Show(int aDirection);
+    int             Hide(int aDirection);
 
-    static void     *WorkDammitWork(void *arg); // worker thread main
-    static gint     ProgressUpdater(gpointer aData);
+    static void     *WorkDammitWork(void *arg); // install start
 
-    static void    XPIProgressCB(const char *aMsg, int aVal, int aMax);
-    static void    MajorProgressCB(char *aCompName, int aCompNum, 
-                                   int aTotalComps);
+    static void     XPIProgressCB(const char *aMsg, int aVal, int aMax);
+    static void     MajorProgressCB(char *aName, int aNum, int aTotal, 
+                                    int aActivity);
 
     enum
     {
@@ -62,11 +61,11 @@ public:
 /*------------------------------------------------------------------*
  *   INI Properties
  *------------------------------------------------------------------*/
-    int     SetMsg0(char *aMsg);
-    char    *GetMsg0();
+    int             SetMsg0(char *aMsg);
+    char            *GetMsg0();
 
 private:
-    char    *mMsg0;
+    char            *mMsg0;
 };
 
 #endif /* _NS_INSTALLDLG_H_ */

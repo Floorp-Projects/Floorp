@@ -117,6 +117,13 @@ nsComponentList::GetLengthSelected()
     int numSelected = 0;
     nsComponent *curr;
 
+    /* NOTE:
+     * ----
+     * If copies of components are help by this list rather than pointers 
+     * then this method will return an inaccurate number.  Due to 
+     * architecture be very careful when using this method.
+     */
+
     curr = mHead;
     if (!curr) return 0;
 
