@@ -38,13 +38,13 @@ nsMsgRecipientArray::~nsMsgRecipientArray()
 /* the following macro actually implement addref, release and query interface for our class. */
 NS_IMPL_ISUPPORTS(nsMsgRecipientArray, nsCOMTypeInfo<nsMsgRecipientArray>::GetIID());
 
-nsresult nsMsgRecipientArray::StringAt(PRInt32 index, PRUnichar **_retval)
+nsresult nsMsgRecipientArray::StringAt(PRInt32 idx, PRUnichar **_retval)
 {
 	if (!_retval || !m_array)
 		return NS_ERROR_NULL_POINTER;
 	
 	nsString aStr;
-	m_array->StringAt(index, aStr);
+	m_array->StringAt(idx, aStr);
 	*_retval = aStr.ToNewUnicode();
 	return NS_OK;
 }
