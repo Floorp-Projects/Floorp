@@ -984,35 +984,35 @@ nsXULDocument::SetRootContent(nsIContent* aRoot)
 NS_IMETHODIMP
 nsXULDocument::AppendToProlog(nsIContent* aContent)
 {
-    PR_ASSERT(0);
+    NS_ASSERTION(0, "not implemented");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsXULDocument::AppendToEpilog(nsIContent* aContent)
 {
-    PR_ASSERT(0);
+    NS_ASSERTION(0, "not implemented");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsXULDocument::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
-    PR_ASSERT(0);
+    NS_ASSERTION(0, "not implemented");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsXULDocument::IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const
 {
-    PR_ASSERT(0);
+    NS_ASSERTION(0, "not implemented");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsXULDocument::GetChildCount(PRInt32& aCount)
 {
-    PR_ASSERT(0);
+    NS_ASSERTION(0, "not implemented");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1592,7 +1592,7 @@ NS_IMETHODIMP
 nsXULDocument::GetSelection(nsIDOMSelection** aSelection)
 {
     if (!mSelection) {
-        PR_ASSERT(0);
+        NS_ASSERTION(0,"not initialized");
         *aSelection = nsnull;
         return NS_ERROR_NOT_INITIALIZED;
     }
@@ -1682,14 +1682,14 @@ nsXULDocument::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aS
 NS_IMETHODIMP
 nsXULDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 {
-    PR_ASSERT(0);
+    NS_ASSERTION(0,"CreateXIF");
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
-    PR_ASSERT(0);
+    NS_ASSERTION(0,"ToXIF");
     return NS_OK;
 }
 
@@ -1711,19 +1711,19 @@ nsXULDocument::FlushPendingNotifications()
 void
 nsXULDocument::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
-    PR_ASSERT(0);
+    NS_ASSERTION(0,"BeginConvertToXIF");
 }
 
 void
 nsXULDocument::ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
-    PR_ASSERT(0);
+    NS_ASSERTION(0,"ConvertChildrenToXIF");
 }
 
 void
 nsXULDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
-    PR_ASSERT(0);
+    NS_ASSERTION(0,"FinishConvertToXIF");
 }
 
 PRBool
@@ -1919,7 +1919,7 @@ nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsXULDocument::GetContentById(const nsString& aName, nsIContent** aContent)
 {
-    PR_ASSERT(0);
+    NS_ASSERTION(0,"not implemented");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1927,7 +1927,7 @@ nsXULDocument::GetContentById(const nsString& aName, nsIContent** aContent)
 NS_IMETHODIMP
 nsXULDocument::SetTransformMediator(nsITransformMediator* aMediator)
 {
-    PR_ASSERT(0);
+    NS_ASSERTION(0,"not implemented");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
