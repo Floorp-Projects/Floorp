@@ -32,6 +32,7 @@ XPIDLSRCS	= \
                   nsIProfile.idl \
                   nsIProfileInternal.idl \
                   nsIProfileStartupListener.idl \
+                  nsIProfileChangeStatus.idl \
                   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
