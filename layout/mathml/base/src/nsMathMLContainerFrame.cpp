@@ -1060,32 +1060,9 @@ nsMathMLContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
                                          PRInt32         aModType, 
                                          PRInt32         aHint)
 {
-  nsresult rv = nsHTMLContainerFrame::AttributeChanged(aPresContext, aChild,
-                                                       aNameSpaceID, aAttribute, aModType, aHint);
-  if (NS_FAILED(rv)) return rv;
-
-  // check if this is an attribute that can affect the embellished hierarchy
-  // in a significant way. We handle this here to avoid duplication of code.
-  if (nsMathMLAtoms::accent_ == aAttribute ||
-      nsMathMLAtoms::accentunder_ == aAttribute ||
-      nsMathMLAtoms::movablelimits_ == aAttribute) {
-
-    // set the target as the parent of our outermost embellished container
-    // (we ensure that we are the core, not just a sibling of the core)
-    nsIFrame* target = this;
-    nsEmbellishData embellishData;
-    do {
-      target->GetParent(&target);
-      GetEmbellishDataFrom(target, embellishData);
-    } while (embellishData.coreFrame == this);
-
-    // we have automatic data to update in the children of the target frame
-    return ReLayoutChildren(aPresContext, target);
-  }
-
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
-  return mParent->ReflowDirtyChild(presShell, this);
+  return ReflowDirtyChild(presShell, nsnull);
 }
 
 // helper function to reflow token elements

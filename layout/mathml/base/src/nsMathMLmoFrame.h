@@ -73,6 +73,14 @@ public:
   ReflowDirtyChild(nsIPresShell* aPresShell,
                    nsIFrame*     aChild);
 
+  NS_IMETHOD
+  AttributeChanged(nsIPresContext* aPresContext,
+                   nsIContent*     aContent,
+                   PRInt32         aNameSpaceID,
+                   nsIAtom*        aAttribute,
+                   PRInt32         aModType, 
+                   PRInt32         aHint);
+
   // This method is called by the parent frame to ask <mo> 
   // to stretch itself.
   NS_IMETHOD
