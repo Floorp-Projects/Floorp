@@ -509,15 +509,14 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
 
 nsImapProtocol::~nsImapProtocol()
 {
-  PR_FREEIF(m_userName);
-  PR_FREEIF(m_serverKey);
-  PR_FREEIF(m_fetchBodyIdList);
+  PR_Free(m_userName);
+  PR_Free(m_serverKey);
+  PR_Free(m_fetchBodyIdList);
 
   NS_IF_RELEASE(m_flagState);
 
-  PR_FREEIF(m_dataOutputBuf);
-  if (m_inputStreamBuffer)
-    delete m_inputStreamBuffer;
+  PR_Free(m_dataOutputBuf);
+  delete m_inputStreamBuffer;
 
   // **** We must be out of the thread main loop function
   NS_ASSERTION(m_imapThreadIsRunning == PR_FALSE, "Oops, thread is still running.\n");
@@ -1898,8 +1897,8 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
           }
         }
         
-        PR_FREEIF(urlHostName);
-        PR_FREEIF(urlUserName);
+        PR_Free(urlHostName);
+        PR_Free(urlUserName);
       }
     }
   }
@@ -2899,7 +2898,14 @@ nsImapProtocol::FetchMessage(const char * messageIds,
             headersToDL = PR_smprintf("%s %s",dbHeaders, arbitraryHeaders.get());
 
           if (aolImapServer)
-            what = nsCRT::strdup(" XAOL-ENVELOPE INTERNALDATE)");
+          {
+            // we're not going to use the envelope command on Sent Items because it 
+            // replaces sender with recipient.
+            if (strcmp(GetServerStateParser().GetSelectedMailboxName(), "Sent Items"))
+              what = strdup(" XAOL-ENVELOPE INTERNALDATE)");
+            else
+              what = strdup(" BODY.PEEK[HEADER.FIELDS (From To Subject)] INTERNALDATE)");
+          }
           else if (gUseEnvelopeCmd)
             what = PR_smprintf(" ENVELOPE BODY.PEEK[HEADER.FIELDS (%s)])", headersToDL);
           else
@@ -4065,10 +4071,10 @@ void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char 
         m_imapServerSink->AddFolderRights(mailboxName, userName, rights);
       }
     }
-    PR_FREEIF(aclRightsInfo->hostName);
-    PR_FREEIF(aclRightsInfo->mailboxName);
-    PR_FREEIF(aclRightsInfo->rights);
-    PR_FREEIF(aclRightsInfo->userName);
+    PR_Free(aclRightsInfo->hostName);
+    PR_Free(aclRightsInfo->mailboxName);
+    PR_Free(aclRightsInfo->rights);
+    PR_Free(aclRightsInfo->userName);
     
     delete aclRightsInfo;
   }
@@ -4129,15 +4135,15 @@ void nsImapProtocol::ClearAllFolderRights(const char *mailboxName,
 
     if (aclRightsInfo->hostName && aclRightsInfo->mailboxName)
     {
-            if (m_imapExtensionSink)
-            {
-                m_imapExtensionSink->ClearFolderRights(this, aclRightsInfo);
-            WaitForFEEventCompletion();
-            }
-        }
-        PR_FREEIF(aclRightsInfo->hostName);
-        PR_FREEIF(aclRightsInfo->mailboxName);
-
+      if (m_imapExtensionSink)
+      {
+        m_imapExtensionSink->ClearFolderRights(this, aclRightsInfo);
+        WaitForFEEventCompletion();
+      }
+    }
+    PR_Free(aclRightsInfo->hostName);
+    PR_Free(aclRightsInfo->mailboxName);
+    
     delete aclRightsInfo;
   }
   else
@@ -4436,7 +4442,7 @@ nsImapProtocol::AlertUserEventUsingId(PRUint32 aMessageId)
       nsCOMPtr<nsIMsgWindow> msgWindow;
       GetMsgWindow(getter_AddRefs(msgWindow));
       m_imapServerSink->FEAlert(progressString, msgWindow);
-      PR_FREEIF(progressString);
+      PR_Free(progressString);
     } 
   }
 }
@@ -4495,8 +4501,8 @@ nsImapProtocol::ShowProgress()
 		    progressString = nsTextFormatter::smprintf(m_progressString, (const PRUnichar *) unicodeMailboxName, ++m_progressIndex, m_progressCount);
 		    if (progressString)
 		    {
-			  PercentProgressUpdateEvent(progressString, m_progressIndex,m_progressCount);
-			  nsTextFormatter::smprintf_free(progressString);
+			    PercentProgressUpdateEvent(progressString, m_progressIndex,m_progressCount);
+			    nsTextFormatter::smprintf_free(progressString);
 		    }
 	    }
     }
@@ -4505,7 +4511,7 @@ nsImapProtocol::ShowProgress()
 void
 nsImapProtocol::ProgressEventFunctionUsingId(PRUint32 aMsgId)
 {
-    if (m_imapMiscellaneousSink && aMsgId != m_lastProgressStringId)
+  if (m_imapMiscellaneousSink && aMsgId != m_lastProgressStringId)
   {
     m_imapMiscellaneousSink->ProgressStatus(this, aMsgId, nsnull);
     m_lastProgressStringId = aMsgId;
