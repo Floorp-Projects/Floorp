@@ -76,8 +76,8 @@ public:
     virtual nsresult GetWebNavigation(nsIWebNavigation **aWebNav);
     // Return the nsIDOMWindow object
     virtual nsresult GetDOMWindow(nsIDOMWindow **aDOMWindow);
-    // Return the nsIPref object
-    virtual nsresult GetPrefs(nsIPref **aPrefs);
+    // Return the nsIPrefBranch object
+    virtual nsresult GetPrefs(nsIPrefBranch **aPrefBranch);
     // Return the valid state of the browser
     virtual PRBool BrowserIsValid();
 };

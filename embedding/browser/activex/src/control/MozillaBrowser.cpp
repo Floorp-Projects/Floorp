@@ -86,7 +86,6 @@ static HANDLE s_hHackedNonReentrancy = NULL;
 
 static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
 static NS_DEFINE_CID(kHelperAppLauncherDialogCID, NS_HELPERAPPLAUNCHERDIALOG_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 class PrintListener : public nsIWebProgressListener
 {
@@ -1032,7 +1031,7 @@ HRESULT CMozillaBrowser::Initialize()
     rv = NS_InitEmbedding(binDir, directoryProvider);
 
     // Load preferences service
-    mPrefs = do_GetService(kPrefCID, &rv);
+    mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))
     {
         NG_ASSERT(0);
@@ -1122,7 +1121,7 @@ HRESULT CMozillaBrowser::Terminate()
     {
 #endif
 
-    mPrefs = nsnull;
+    mPrefBranch = nsnull;
     NS_TermEmbedding();
 
 #ifdef HACK_NON_REENTRANCY
@@ -1501,8 +1500,8 @@ HRESULT CMozillaBrowser::PrintDocument(BOOL promptUser)
     // Disable print progress dialog (XUL)
     PRBool oldShowPrintProgress = FALSE;
     const char *kShowPrintProgressPref = "print.show_print_progress";
-    mPrefs->GetBoolPref(kShowPrintProgressPref, &oldShowPrintProgress);
-    mPrefs->SetBoolPref(kShowPrintProgressPref, PR_FALSE);
+    mPrefBranch->GetBoolPref(kShowPrintProgressPref, &oldShowPrintProgress);
+    mPrefBranch->SetBoolPref(kShowPrintProgressPref, PR_FALSE);
 
     // Print
     PrintListener *listener = new PrintListener;
@@ -1518,7 +1517,7 @@ HRESULT CMozillaBrowser::PrintDocument(BOOL promptUser)
     {
         printSettings->SetPrintSilent(oldPrintSilent);
     }
-    mPrefs->SetBoolPref(kShowPrintProgressPref, oldShowPrintProgress);
+    mPrefBranch->SetBoolPref(kShowPrintProgressPref, oldShowPrintProgress);
 
     return S_OK;
 }
@@ -1727,12 +1726,12 @@ nsresult CMozillaBrowser::GetDOMWindow(nsIDOMWindow **aDOMWindow)
     return mWebBrowser->GetContentDOMWindow(aDOMWindow);
 }
 
-nsresult CMozillaBrowser::GetPrefs(nsIPref **aPrefs)
+nsresult CMozillaBrowser::GetPrefs(nsIPrefBranch **aPrefBranch)
 {
-    if (mPrefs)
-        *aPrefs = mPrefs;
-    NS_IF_ADDREF(*aPrefs);
-    return (*aPrefs) ? NS_OK : NS_ERROR_FAILURE;
+    if (mPrefBranch)
+        *aPrefBranch = mPrefBranch;
+    NS_IF_ADDREF(*aPrefBranch);
+    return (*aPrefBranch) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 PRBool CMozillaBrowser::BrowserIsValid()

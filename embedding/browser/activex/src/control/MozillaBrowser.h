@@ -376,7 +376,7 @@ protected:
     nsCOMPtr<nsIDOMNode>    mContextNode;
     
     // Prefs service
-    nsCOMPtr<nsIPref>       mPrefs;
+    nsCOMPtr<nsIPrefBranch> mPrefBranch;
 
     // Flag to indicate if browser is created or not
     BOOL                    mValidBrowserFlag;
@@ -423,7 +423,7 @@ public:
 // IWebBrowserImpl overrides
     virtual nsresult GetWebNavigation(nsIWebNavigation **aWebNav);
     virtual nsresult GetDOMWindow(nsIDOMWindow **aDOMWindow);
-    virtual nsresult GetPrefs(nsIPref **aPref);
+    virtual nsresult GetPrefs(nsIPrefBranch **aPrefBranch);
     virtual PRBool BrowserIsValid();
     // IWebBrowser
     virtual HRESULT STDMETHODCALLTYPE get_Parent(IDispatch __RPC_FAR *__RPC_FAR *ppDisp);

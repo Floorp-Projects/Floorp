@@ -42,7 +42,8 @@
 #include <mshtml.h>
 
 #include "nsIWebNavigation.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsIDOMWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsIWindowWatcher.h"
@@ -92,8 +93,8 @@ public:
     virtual nsresult GetWebNavigation(nsIWebNavigation **aWebNav) = 0;
     // Return the nsIDOMWindow object
     virtual nsresult GetDOMWindow(nsIDOMWindow **aDOMWindow) = 0;
-    // Return the nsIPref object
-    virtual nsresult GetPrefs(nsIPref **aPrefs) = 0;
+    // Return the nsIPrefBranch object
+    virtual nsresult GetPrefs(nsIPrefBranch **aPrefBranch) = 0;
     // Return the valid state of the browser
     virtual PRBool BrowserIsValid() = 0;
 
@@ -173,15 +174,22 @@ public:
         CComBSTR bstrUrl(L"http://home.netscape.com/");
 
         // Find the home page stored in prefs
-        nsCOMPtr<nsIPref> prefs;
-        if (NS_SUCCEEDED(GetPrefs(getter_AddRefs(prefs))))
+        nsCOMPtr<nsIPrefBranch> prefBranch;
+        if (NS_SUCCEEDED(GetPrefs(getter_AddRefs(prefBranch))))
         {
-            nsXPIDLString homePage;
-            nsresult rv;
-            rv = prefs->GetLocalizedUnicharPref("browser.startup.homepage", getter_Copies(homePage));
-            if (rv == NS_OK)
+            nsCOMPtr<nsIPrefLocalizedString> homePage;
+            prefBranch->GetComplexValue("browser.startup.homepage",
+                                            NS_GET_IID(nsIPrefLocalizedString),
+                                            getter_AddRefs(homePage));
+
+            if (homePage)
             {
-                bstrUrl = homePage.get();;
+                nsXPIDLString homePageString;
+                nsresult rv = homePage->ToString(getter_Copies(homePageString));
+                if (NS_SUCCEEDED(rv))
+                {
+                    bstrUrl = homePageString.get();
+                }
             }
         }
 
@@ -197,14 +205,16 @@ public:
 
         CComBSTR bstrUrl(L"http://search.netscape.com/");
 
+        //NOTE:    This code has not been implemented yet
+#if 0
         // Find the home page stored in prefs
-        nsCOMPtr<nsIPref> prefs;
-        if (NS_SUCCEEDED(GetPrefs(getter_AddRefs(prefs))))
+        nsCOMPtr<nsIPrefBranch> prefBranch;
+        if (NS_SUCCEEDED(GetPrefs(getter_AddRefs(prefBranch))))
         {
             // TODO find and navigate to the search page stored in prefs
             //      and not this hard coded address
         }
-
+#endif
         // Navigate to the search page
         Navigate(bstrUrl, NULL, NULL, NULL, NULL);
     

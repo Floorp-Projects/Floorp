@@ -73,7 +73,8 @@
 
 #include "nsIHTTPChannel.h"
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIURL.h"
 #include "nsIBaseWindow.h"
 #include "nsIWebBrowser.h"
