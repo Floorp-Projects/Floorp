@@ -52,17 +52,17 @@ Rights Reserved.
 						<box align="horizontal" flex="100%">
 							<spring flex="100%"/>
 							<html:label for="FirstName">&FirstName.label;</html:label>
-							<html:input type="text" id="FirstName" class="CardEdit" onkeypress="top.GenerateDisplayName()" />
+							<html:input type="text" id="FirstName" class="CardEdit" onkeyup="top.GenerateDisplayName()" />
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
 							<html:label for="LastName">&LastName.label;</html:label>
-							<html:input id="LastName" type="text" class="CardEdit" onkeypress="top.GenerateDisplayName()"/>
+							<html:input id="LastName" type="text" class="CardEdit" onkeyup="top.GenerateDisplayName()"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
 							<html:label for="DisplayName">&DisplayName.label;</html:label>
-							<html:input id="DisplayName" type="text" class="CardEdit" onkeypress="top.DisplayNameChanged()"/>
+							<html:input id="DisplayName" type="text" class="CardEdit" onkeyup="top.DisplayNameChanged()"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
