@@ -716,6 +716,35 @@ pref("mousewheel.withshiftkey.sysnumlines",true);
 pref("mousewheel.withaltkey.action",2);
 pref("mousewheel.withaltkey.numlines",1);
 pref("mousewheel.withaltkey.sysnumlines",false);
+
+// on platforms where scroll messages differ between horizontal scroll
+// and back/forward button events we can activate them by default
+#ifdef XP_WIN
+#define HORIZSCROLL_AVAILABLE
+#endif
+#ifdef XP_MACOSX
+#define HORIZSCROLL_AVAILABLE
+#endif
+#ifdef XP_OS2
+#define HORIZSCROLL_AVAILABLE
+#endif
+#ifdef HORIZSCROLL_AVAILABLE
+// activate horizontal scrolling by default
+pref("mousewheel.horizscroll.withnokey.action",0);
+pref("mousewheel.horizscroll.withnokey.numlines",1);
+pref("mousewheel.horizscroll.withnokey.sysnumlines",true);
+pref("mousewheel.horizscroll.withcontrolkey.action",0);
+pref("mousewheel.horizscroll.withcontrolkey.numlines",1);
+pref("mousewheel.horizscroll.withcontrolkey.sysnumlines",true);
+pref("mousewheel.horizscroll.withshiftkey.action",0);
+pref("mousewheel.horizscroll.withshiftkey.numlines",1);
+pref("mousewheel.horizscroll.withshiftkey.sysnumlines",true);
+pref("mousewheel.horizscroll.withaltkey.action",2);
+pref("mousewheel.horizscroll.withaltkey.numlines",1);
+pref("mousewheel.horizscroll.withaltkey.sysnumlines",true);
+#endif
+#ifndef HORIZSCROLL_AVAILABLE
+// disable horizontal scrolling to be able to use back/forward buttons
 pref("mousewheel.horizscroll.withnokey.action",2);
 pref("mousewheel.horizscroll.withnokey.numlines",-1);
 pref("mousewheel.horizscroll.withnokey.sysnumlines",false);
@@ -728,6 +757,7 @@ pref("mousewheel.horizscroll.withshiftkey.sysnumlines",false);
 pref("mousewheel.horizscroll.withaltkey.action",2);
 pref("mousewheel.horizscroll.withaltkey.numlines",-1);
 pref("mousewheel.horizscroll.withaltkey.sysnumlines",false);
+#endif
 
 pref("profile.confirm_automigration",true);
 // profile.migration_behavior determines how the profiles root is set
