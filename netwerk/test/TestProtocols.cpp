@@ -44,6 +44,7 @@
 #include "nsIHTTPChannel.h"
 #include "nsIHttpEventSink.h" 
 #include "nsIEventSinkGetter.h" 
+#include "netCore.h" // dns error code
 
 #ifdef NECKO
 // this test app handles cookies.
@@ -291,6 +292,9 @@ InputTestConsumer::OnStopRequest(nsIChannel* channel,
     printf("\nFinished loading: %s  Status Code: %x\n", info->Name(), aStatus);
     if (bHTTPURL)
         printf("\tHTTP Status: %u\n", httpStatus);
+     if (NS_ERROR_DNS_DOES_NOT_EXIST == aStatus) {
+         printf("\tDNS lookup failed.\n");
+     }
     printf("\tRead: %d bytes.\n", info->mBytesRead);
     printf("\tTime to connect: %.3f seconds\n", connectTime);
     printf("\tTime to read: %.3f seconds.\n", readTime);
