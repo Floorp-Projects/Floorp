@@ -3816,6 +3816,9 @@ struct _CookieViewerDialog {
  */
 char *GetTrustLabelString(char *CookieName)
 {
+#ifdef XP_MAC
+return NULL;
+#else
     XP_List * list_ptr, *Tptr;
     TrustEntry *TEntry;
     net_CookiePermissionStruct *cookperm;
@@ -4064,6 +4067,7 @@ char *GetTrustLabelString(char *CookieName)
     PR_FREEIF(szBy);
 
     return szTemp;
+#endif
 }
 
 
