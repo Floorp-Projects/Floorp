@@ -108,6 +108,6 @@ close(SF);
 
 ################################################################################
 
-printf "<pre><a href=$summary>\nleaks: %10d %+8.2f%%\n", leaksDelta("TOTAL");
-printf "bloat: %10d %+8.2f%%\n</a></pre>\n", bloatDelta("TOTAL");
+printf "<pre><font size=-1><a href=$summary>\nleaks: %10d %+8.2f%%\n", leaksDelta("TOTAL");
+printf "bloat: %10d %+8.2f%%\n</a></font></pre>\n", bloatDelta("TOTAL");
 
