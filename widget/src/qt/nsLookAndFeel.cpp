@@ -26,6 +26,8 @@
 #include <qpalette.h>
 #include "nsWidget.h"
 
+#include "nsXPLookAndFeel.h"
+
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 #define GDK_COLOR_TO_NS_RGB(c) \
@@ -53,6 +55,14 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor()\n"));
     nsresult    res         = NS_OK;
+
+    if (mXPLookAndFeel)
+    {
+        res = mXPLookAndFeel->GetColor(aID, aColor);
+        if (NS_SUCCEEDED(res))
+            return res;
+    }
+
     QPalette    palette     = qApp->palette();
     QColorGroup normalGroup = palette.normal();
     QColorGroup activeGroup = palette.active();
@@ -108,6 +118,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::GetMetric()\n"));
     nsresult res = NS_OK;
+
+    if (mXPLookAndFeel)
+    {
+        res = mXPLookAndFeel->GetMetric(aID, aMetric);
+        if (NS_SUCCEEDED(res))
+            return res;
+    }
+
     switch (aID) 
     {
     case eMetric_WindowTitleHeight:
@@ -188,6 +206,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID,
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::GetMetric()\n"));
     nsresult res = NS_OK;
+
+    if (mXPLookAndFeel)
+    {
+        res = mXPLookAndFeel->GetMetric(aID, aMetric);
+        if (NS_SUCCEEDED(res))
+            return res;
+    }
+
     switch (aID) 
     {
     case eMetricFloat_TextFieldVerticalInsidePadding:
@@ -227,6 +253,13 @@ NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
                                         const PRInt32             aFontSize, 
                                         nsSize &aSize)
 {
+  if (mXPLookAndFeel)
+  {
+    nsresult rv = mXPLookAndFeel->GetNavSize(aWidgetID, aFontID, aFontSize, aSize);
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
+
   aSize.width  = 0;
   aSize.height = 0;
   return NS_ERROR_NOT_IMPLEMENTED;

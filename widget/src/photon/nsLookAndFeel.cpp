@@ -24,12 +24,16 @@
 #include <Pt.h>
 #include "nsFont.h"
 #include "nsPhWidgetLog.h"
+
+#include "nsXPLookAndFeel.h"
  
 NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
 
 nsLookAndFeel::nsLookAndFeel() : nsILookAndFeel()
 {
   NS_INIT_REFCNT();
+
+  (void)NS_NewXPLookAndFeel(getter_AddRefs(mXPLookAndFeel));
 }
 
 nsLookAndFeel::~nsLookAndFeel()
@@ -41,6 +45,13 @@ nsLookAndFeel::~nsLookAndFeel()
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
   nsresult res = NS_OK;
+
+  if (mXPLookAndFeel)
+  {
+    res = mXPLookAndFeel->GetColor(aID, aColor);
+    if (NS_SUCCEEDED(res))
+      return res;
+  }
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor this=<%p> mRefCnt=<%d>\n", this, mRefCnt));
 
@@ -106,6 +117,13 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
   nsresult res = NS_OK;
+
+  if (mXPLookAndFeel)
+  {
+    res = mXPLookAndFeel->GetMetric(aID, aMetric);
+    if (NS_SUCCEEDED(res))
+      return res;
+  }
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetMetric\n"));
 
@@ -185,6 +203,13 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
 {
   nsresult res = NS_OK;
 
+  if (mXPLookAndFeel)
+  {
+    res = mXPLookAndFeel->GetMetric(aID, aMetric);
+    if (NS_SUCCEEDED(res))
+      return res;
+  }
+
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsLookAndFeel::GetMetric with float aID=<%d>\n", aID));
 
   switch( aID )
@@ -228,6 +253,13 @@ NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
                                         const PRInt32             aFontSize, 
                                         nsSize &aSize)
 {
+  if (mXPLookAndFeel)
+  {
+    nsresult rv = mXPLookAndFeel->GetNavSize(aWidgetID, aFontID, aFontSize, aSize);
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
+
   aSize.width  = 0;
   aSize.height = 0;
   return NS_ERROR_NOT_IMPLEMENTED;

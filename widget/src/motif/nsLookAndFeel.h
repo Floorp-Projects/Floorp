@@ -23,6 +23,7 @@
 #ifndef __nsLookAndFeel
 #define __nsLookAndFeel
 #include "nsILookAndFeel.h"
+#include "nsCOMPtr.h"
 
 class nsLookAndFeel: public nsILookAndFeel {
   NS_DECL_ISUPPORTS
@@ -45,6 +46,9 @@ public:
                         const PRInt32             aFontSize, 
                         nsSize &aSize);
 #endif
+
+protected:
+  nsCOMPtr<nsILookAndFeel> mXPLookAndFeel;
 };
 
 #endif

@@ -22,6 +22,8 @@
 
 #include "nsLookAndFeel.h"
 #include "nsFont.h"
+
+#include "nsXPLookAndFeel.h"
  
 //static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 //NS_IMPL_ISUPPORTS(nsLookAndFeel, NS_ILOOKANDFEEL_IID)
@@ -41,6 +43,14 @@ nsLookAndFeel::~nsLookAndFeel()
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
   nsresult res = NS_OK;
+
+  if (mXPLookAndFeel)
+  {
+    res = mXPLookAndFeel->GetColor(aID, aColor);
+    if (NS_SUCCEEDED(res))
+      return res;
+  }
+
   int idx;
   switch (aID) {
     case eColor_WindowBackground:
@@ -91,6 +101,14 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
   nsresult res = NS_OK;
+
+  if (mXPLookAndFeel)
+  {
+    res = mXPLookAndFeel->GetMetric(aID, aMetric);
+    if (NS_SUCCEEDED(res))
+      return res;
+  }
+
   switch (aID) {
     case eMetric_WindowTitleHeight:
         aMetric = 0;
@@ -162,6 +180,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)
 {
   nsresult res = NS_OK;
+
+  if (mXPLookAndFeel)
+  {
+    res = mXPLookAndFeel->GetMetric(aID, aMetric);
+    if (NS_SUCCEEDED(res))
+      return res;
+  }
+
   switch (aID) {
     case eMetricFloat_TextFieldVerticalInsidePadding:
         aMetric = 0.25f;
@@ -200,6 +226,13 @@ NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
                                         const PRInt32             aFontSize, 
                                         nsSize &aSize)
 {
+  if (mXPLookAndFeel)
+  {
+    nsresult rv = mXPLookAndFeel->GetNavSize(aWidgetID, aFontID, aFontSize, aSize);
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
+
   aSize.width  = 0;
   aSize.height = 0;
   return NS_ERROR_NOT_IMPLEMENTED;

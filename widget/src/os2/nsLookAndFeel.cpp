@@ -23,6 +23,8 @@
 #include "nsColor.h"
 #include "nsWidgetDefs.h"
 
+#include "nsXPLookAndFeel.h"
+
 #include <stdio.h>
  
 // XPCom scaffolding
@@ -36,6 +38,13 @@ nsLookAndFeel::nsLookAndFeel()
 // Colours
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
+   if (mXPLookAndFeel)
+   {
+      res = mXPLookAndFeel->GetColor(aID, aColor);
+      if (NS_SUCCEEDED(res))
+         return res;
+   }
+
    int idx = 0;
    switch (aID)
    {
@@ -70,6 +79,13 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 // metrics
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
+   if (mXPLookAndFeel)
+   {
+      res = mXPLookAndFeel->GetMetric(aID, aMetric);
+      if (NS_SUCCEEDED(res))
+         return res;
+   }
+
    long svalue = 0;
    aMetric = 0;
    ULONG ulPels = 0;
@@ -169,6 +185,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric( const nsMetricFloatID aID,
                                         float &aMetric)
 {
    nsresult res = NS_OK;
+
+   if (mXPLookAndFeel)
+   {
+      res = mXPLookAndFeel->GetMetric(aID, aMetric);
+      if (NS_SUCCEEDED(res))
+         return res;
+   }
+
    switch( aID)
    {
       case eMetricFloat_TextFieldVerticalInsidePadding:
@@ -209,6 +233,13 @@ NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
                                         const PRInt32             aFontSize, 
                                         nsSize &aSize)
 {
+  if (mXPLookAndFeel)
+  {
+    nsresult rv = mXPLookAndFeel->GetNavSize(aWidgetID, aFontID, aFontSize, aSize);
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
+
   aSize.width  = 0;
   aSize.height = 0;
   return NS_ERROR_NOT_IMPLEMENTED;
