@@ -547,7 +547,8 @@ nsresult nsMsgNewsFolder::GetDatabase()
 			rv = mDatabase->AddListener(this);
       if (NS_FAILED(rv)) return rv;
        
-      UpdateSummaryTotals();
+      rv = UpdateSummaryTotals();
+      if (NS_FAILED(rv)) return rv;
 		}
 	}
 	return NS_OK;
@@ -556,6 +557,9 @@ nsresult nsMsgNewsFolder::GetDatabase()
 NS_IMETHODIMP
 nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
 {
+#ifdef DEBUG_seth
+  printf("nsMsgNewsFolder::GetMessages()\n");
+#endif
   // number_to_show is a tempory hack to allow newsgroups
   // with thousands of message to work.  the way it works is
   // we return a cropped enumerator back to to the caller
@@ -564,6 +568,7 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
 
   PRInt32 number_to_show;
   nsresult rv = NS_OK;
+
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && prefs) {
     rv = prefs->GetIntPref(PREF_NEWS_MAX_HEADERS_TO_SHOW, &number_to_show);
@@ -631,7 +636,6 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
         }
       }
     }
-    return rv;
   }
   else {
     rv = GetDatabase();
@@ -645,8 +649,11 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
           rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator, this, &messageEnumerator);
         *result = messageEnumerator;
     }
-    return rv;   
   }
+
+  rv = GetNewMessages();
+  if (NS_FAILED(rv)) return rv;
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::BuildFolderURL(char **url)
@@ -993,6 +1000,10 @@ nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, ns
 
 NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals()
 {
+#ifdef DEBUG_seth
+	printf("nsMsgNewsFolder::UpdateSummaryTotals()\n");
+#endif
+
 	PRInt32 oldUnreadMessages = mNumUnreadMessages;
 	PRInt32 oldTotalMessages = mNumTotalMessages;
 	//We need to read this info from the database
@@ -1267,7 +1278,6 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
 
 NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message)
 {
-	
   nsresult rv; 
   NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
   if (NS_FAILED(rv)) return rv;
@@ -1278,27 +1288,23 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, 
 	nsCOMPtr <nsIRDFResource> res;
 
 	rv = msgDBHdr->GetMessageKey(&key);
-
-	if(NS_SUCCEEDED(rv))
-		rv = nsBuildNewsMessageURI(mURI, key, &msgURI);
+  if (NS_FAILED(rv)) return rv;
   
-	if(NS_SUCCEEDED(rv))
-	{
-		rv = rdfService->GetResource(msgURI, getter_AddRefs(res));
-  }
-	if(msgURI) {
-		PR_FREEIF(msgURI);
-    msgURI = nsnull;
-  }
+  rv = nsBuildNewsMessageURI(mURI, key, &msgURI);
+  if (NS_FAILED(rv)) return rv;
   
-  if(NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDBMessage> messageResource = do_QueryInterface(res);
-    if(messageResource)
-      {
-        messageResource->SetMsgDBHdr(msgDBHdr);
-        *message = messageResource;
-        NS_IF_ADDREF(*message);
-      }
+  rv = rdfService->GetResource(msgURI, getter_AddRefs(res));
+  
+  PR_FREEIF(msgURI);
+  msgURI = nsnull;
+  
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIDBMessage> messageResource = do_QueryInterface(res);
+  if(messageResource) {
+    messageResource->SetMsgDBHdr(msgDBHdr);
+    *message = messageResource;
+    NS_IF_ADDREF(*message);
   }
   
 	return rv;
