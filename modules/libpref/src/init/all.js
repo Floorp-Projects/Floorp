@@ -419,3 +419,5 @@ pref("mousewheel.withshiftkey",2);
 pref("mousewheel.withshiftkey.numlines",1);	
 pref("mousewheel.withaltkey",0);	
 pref("mousewheel.withaltkey.numlines",10);	
+
+pref("profile.confirm_automigration",true);
