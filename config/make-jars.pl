@@ -21,9 +21,9 @@ use Getopt::Std;
 use Cwd;
 use File::stat;
 use Time::localtime;
-use Cwd;
 use File::Copy;
 use File::Path;
+use File::Spec;
 use IO::File;
 use Config;
 require mozLock;
@@ -60,8 +60,9 @@ if (defined($::opt_f)) {
 
 if ("$fileformat" ne "jar" &&
     "$fileformat" ne "flat" &&
+    "$fileformat" ne "symlink" &&
     "$fileformat" ne "both") {
-    print "File format specified by -f option must be one of: jar, flat, or both.\n";
+    print "File format specified by -f option must be one of: jar, flat, both, or symlink.\n";
     exit(1);
 }
 
@@ -162,7 +163,7 @@ sub JarIt
     my $oldDir = cwd();
     chdir("$destPath/$jarfile");
 
-    if ("$fileformat" eq "flat") {
+    if ("$fileformat" eq "flat" || "$fileformat" eq "symlink") {
 	unlink("../$jarfile.jar") if ( -e "../$jarfile.jar");
 	chdir($oldDir);
         return 0;
@@ -229,6 +230,27 @@ sub JarIt
     #print "cd $oldDir\n";
 }
 
+sub _moz_rel2abs
+{
+    my ($path, $keep_file) = @_;
+    $path = File::Spec->rel2abs($path, $objdir);
+    my ($volume, $dirs, $file) = File::Spec->splitpath($path);
+    my (@dirs) = reverse File::Spec->splitdir($dirs);
+    my ($up) = File::Spec->updir();
+    foreach (reverse 0 .. $#dirs) {
+      splice(@dirs, $_, 2) if ($dirs[$_] eq $up);
+    }
+    $dirs = File::Spec->catdir(reverse @dirs);
+    return File::Spec->catpath($volume, $dirs, $keep_file && $file);
+}
+
+sub _moz_abs2rel
+{
+    my ($target, $linkname) = @_;
+    $target = _moz_rel2abs($target, 1);
+    $linkname = _moz_rel2abs($linkname);
+    return File::Spec->abs2rel($target, $linkname);
+}
 
 sub RegIt
 {
@@ -237,7 +259,7 @@ sub RegIt
     #print "RegIt:  $chromeDir, $jarFileName, $chromeType, $pkgName\n";
 
     my $line;
-    if ($fileformat eq "flat")  {
+    if ($fileformat eq "flat" || $fileformat eq "symlink") {
 	$line = "$chromeType,install,url,resource:/chrome/$jarFileName/$chromeType/$pkgName/";
     } else {
 	$line = "$chromeType,install,url,jar:resource:/chrome/$jarFileName.jar!/$chromeType/$pkgName/";
@@ -391,6 +413,10 @@ sub EnsureFileInDir
 		    die "Preprocessing of $file failed: ".($? >> 8);
 		}
 	    }
+        } elsif ("$fileformat" eq "symlink") {
+            $file = _moz_abs2rel($file, $destPath);
+            symlink($file, $destPath) || die "symlink($file, $destPath) failed: $!";
+            return 1;
         } else {
             copy($file, $destPath) || die "copy($file, $destPath) failed: $!";
         }
