@@ -279,7 +279,7 @@ void CNsIWebNav::StopUriTest(char *theUrl)
 
    qaTests->qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
 						nsIWebNavigation::LOAD_FLAGS_NONE);
-   rv = qaTests->qaWebNav->Stop();
+   rv = qaTests->qaWebNav->Stop(nsIWebNavigation::STOP_ALL);
    sprintf(theTotalString, "%s%s%s", "Stop(): ", theUrl, " test");
    RvTestResult(rv, theTotalString, 2);
 }
