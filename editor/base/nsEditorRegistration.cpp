@@ -25,130 +25,331 @@
 #include "nsEditorCID.h"
 
 #include "nsEditorShell.h"		// for the CID
-#include "nsEditorShellFactory.h"
 
 #include "nsEditor.h"				// for gInstanceCount
-#include "nsEditorFactory.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
+#ifdef ENABLE_EDITOR_API_LOG
+#include "nsHTMLEditorLog.h"
+#endif // ENABLE_EDITOR_API_LOG
 
-static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kHTMLEditorCID,        NS_HTMLEDITOR_CID);
+static NS_DEFINE_CID(kEditorShellCID,       NS_EDITORSHELL_CID);
 
 
-static NS_DEFINE_IID(kHTMLEditorCID,        NS_HTMLEDITOR_CID);
-static NS_DEFINE_IID(kEditorShellCID,       NS_EDITORSHELL_CID);
-
-
-/*
-we must be good providers of factories etc. this is where to put ALL editor exports
-*/
-//BEGIN EXPORTS
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServMgr, 
-                                           const nsCID & aClass, 
-                                           const char * aClassName,
-                                           const char * aProgID,
-                                           nsIFactory ** aFactory)
+// Module implementation
+class nsEditorModule : public nsIModule
 {
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
+public:
+    nsEditorModule();
+    virtual ~nsEditorModule();
+
+    NS_DECL_ISUPPORTS
+
+    NS_DECL_NSIMODULE
+
+protected:
+    nsresult Initialize();
+
+    void Shutdown();
+
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mEditorFactory;
+    nsCOMPtr<nsIGenericFactory> mEditorShellFactory;
+};
+
+
+
+//----------------------------------------------------------------------
+
+nsEditorModule::nsEditorModule()
+    : mInitialized(PR_FALSE)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsEditorModule::~nsEditorModule()
+{
+    Shutdown();
+}
+
+NS_IMPL_ISUPPORTS(nsEditorModule, NS_GET_IID(nsIModule))
+
+// Perform our one-time intialization for this module
+nsresult
+nsEditorModule::Initialize()
+{
+    if (mInitialized) {
+        return NS_OK;
+    }
+    mInitialized = PR_TRUE;
+    return NS_OK;
+}
+
+// Shutdown this module, releasing all of the module resources
+void
+nsEditorModule::Shutdown()
+{
+    // Release the factory objects
+    mEditorFactory = nsnull;
+    mEditorShellFactory = nsnull;
+}
+
+
+static NS_IMETHODIMP                 
+CreateNewEditor(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
+{
+    if (!aResult) {                                                  
+        return NS_ERROR_INVALID_POINTER;                             
+    }
+    if (aOuter) {                                                    
+        *aResult = nsnull;                                           
+        return NS_ERROR_NO_AGGREGATION;                              
+    }   
+
+	// XXX Fix me.
+    // XXX Need to cast to interface first to avoid "ambiguous conversion..." error
+    // XXX because of multiple nsISupports in the class hierarchy
+	nsISupports *inst;
+#ifdef ENABLE_EDITOR_API_LOG
+    inst = (nsISupports *)(nsIHTMLEditor*)new nsHTMLEditorLog();
+#else
+    inst = (nsISupports *)(nsIHTMLEditor*)new nsHTMLEditor();
+#endif // ENABLE_EDITOR_API_LOG
+    if (inst == NULL) {                                             
+        *aResult = nsnull;                                           
+        return NS_ERROR_OUT_OF_MEMORY;                                                   
+    } 
+
+	NS_ADDREF(inst);
+    nsresult rv = inst->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }                                                                
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      
+
+    return rv;
+}
+
+
+static NS_IMETHODIMP                 
+CreateNewEditorShell(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
+{
+    if (!aResult) {                                                  
+        return NS_ERROR_INVALID_POINTER;                             
+    }
+    if (aOuter) {                                                    
+        *aResult = nsnull;                                           
+        return NS_ERROR_NO_AGGREGATION;                              
+    }
+
+    nsIEditorShell* inst = nsnull;
+    nsresult rv = NS_NewEditorShell(&inst);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+        return rv;                                                   
+    } 
+    rv = inst->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }                                                                
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      
+
+    return rv;              
+}
+
+
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP
+nsEditorModule::GetClassObject(nsIComponentManager *aCompMgr,
+                               const nsCID& aClass,
+                               const nsIID& aIID,
+                               void** r_classObj)
+{
+    nsresult rv;
+
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *r_classObj = NULL;
+
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) {
+        rv = Initialize();
+        if (NS_FAILED(rv)) {
+            // Initialization failed! yikes!
+            return rv;
+        }
+    }
+
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
+    if (aClass.Equals(kHTMLEditorCID)) {
+        if (!mEditorFactory) {
+            // Create and save away the factory object for creating
+            // new instances of EditorFactory. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mEditorFactory),
+                                      CreateNewEditor);
+        }
+        fact = mEditorFactory;
+    }
+    else if (aClass.Equals(kEditorShellCID)) {
+        if (!mEditorShellFactory) {
+            // Create and save away the factory object for creating
+            // new instances of EditorShellFactory. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mEditorShellFactory),
+                                      CreateNewEditorShell);
+        }
+        fact = mEditorShellFactory;
+    }
+    else {
+        rv = NS_ERROR_FACTORY_NOT_REGISTERED;
+#ifdef DEBUG
+        char* cs = aClass.ToString();
+        printf("+++ nsEditorModule: unable to create factory for %s\n", cs);
+        nsCRT::free(cs);
+#endif
+    }
+
+    if (fact) {
+        rv = fact->QueryInterface(aIID, r_classObj);
+    }
+
+    return rv;
+}
+
+//----------------------------------------
+
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
+
+// The list of components we register
+static Components gComponents[] = {
+    { "HTML Editor", &kHTMLEditorCID,
+      "component://netscape/editor/htmleditor", },
+    { "Editor Shell Component", &kEditorShellCID,
+      "component://netscape/editor/editorshell", },
+    { "Editor Shell Spell Checker", &kEditorShellCID,
+      "component://netscape/editor/editorspellcheck", },
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
+
+NS_IMETHODIMP
+nsEditorModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                             nsIFileSpec* aPath,
+                             const char* registryLocation,
+                             const char* componentType)
+{
+    nsresult rv = NS_OK;
+
+#ifdef DEBUG
+    printf("*** Registering Editor components\n");
+#endif
+
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsEditorModule: unable to register %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+            break;
+        }
+        cp++;
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsEditorModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                               nsIFileSpec* aPath,
+                               const char* registryLocation)
+{
+#ifdef DEBUG
+    printf("*** Unregistering Editor components\n");
+#endif
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsEditorModule: unable to unregister %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+        }
+        cp++;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+{
+    if (!okToUnload) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------------------------
+
+static nsEditorModule *gModule = NULL;
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
+
+    NS_ENSURE_ARG_POINTER(return_cobj);
+    NS_ENSURE_NOT(gModule, NS_ERROR_FAILURE);
+
+    // Create and initialize the module instance
+    nsEditorModule *m = new nsEditorModule();
+    if (!m) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
+    if (NS_FAILED(rv)) {
+        delete m;
+        m = nsnull;
+    }
+    gModule = m;                  // WARNING: Weak Reference
+    return rv;
+}
+
+//!!!!!! This is obsolete is needs to be removed.  It should be removed after the calls to
+//!!!!!! it are removed.
+
+//if more than one person asks for the monitor at the same time for the FIRST time, we are screwed
+PRMonitor *GetEditorMonitor()
+{
+  static PRMonitor *ns_editlock = nsnull;
+  if (nsnull == ns_editlock)
+  {
+    ns_editlock = (PRMonitor *)1; //how long will the next line take?  lets cut down on the chance of reentrancy
+    ns_editlock = PR_NewMonitor();
   }
-
-  *aFactory = nsnull;
-
-  nsresult rv;
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* componentManager = nsnull;
-  rv = servMgr->GetService(kComponentManagerCID, nsIComponentManager::GetIID(), 
-                         (nsISupports**)&componentManager);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = NS_NOINTERFACE;
-  
-  if (aClass.Equals(kHTMLEditorCID)) {
-    rv = GetEditorFactory(aFactory, aClass);
-    if (NS_FAILED(rv)) goto done;
-  }
-  else if (aClass.Equals(kEditorShellCID)) {
-    rv = GetEditorShellFactory(aFactory, aClass, aClassName, aProgID);
-    if (NS_FAILED(rv)) goto done;  
-  }
-
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, componentManager);
-
-  return rv;
+  else if ((PRMonitor *)1 == ns_editlock)
+    return GetEditorMonitor();
+  return ns_editlock;
 }
-
-extern "C" NS_EXPORT PRBool
-NSCanUnload(nsISupports* aServMgr)
-{
-  return nsEditor::gInstanceCount; 
-}
-
-
-
-extern "C" NS_EXPORT nsresult 
-NSRegisterSelf(nsISupports* aServMgr, const char *path)
-{
-  nsresult rv;
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-
-  rv = compMgr->RegisterComponent(kHTMLEditorCID, NULL, NULL, path, 
-                                  PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-  rv = compMgr->RegisterComponent(kEditorShellCID,
-                                  "Editor Shell Component",
-                                  "component://netscape/editor/editorshell",
-                                  path, PR_TRUE, PR_TRUE);
-
-  if (NS_FAILED(rv)) goto done;
-  rv = compMgr->RegisterComponent(kEditorShellCID,
-                                  "Editor Shell Spell Checker",
-                                  "component://netscape/editor/editorspellcheck",
-                                  path, PR_TRUE, PR_TRUE);
-
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
-}
-
-extern "C" NS_EXPORT nsresult 
-NSUnregisterSelf(nsISupports* aServMgr, const char *path)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-/*
-  rv = compMgr->UnregisterComponent(kEditorCID, path);
-  if (NS_FAILED(rv)) goto done;
-  rv = compMgr->UnregisterComponent(kTextEditorCID, path);
-  if (NS_FAILED(rv)) goto done;
-*/
-  rv = compMgr->UnregisterComponent(kHTMLEditorCID, path);
-  if (NS_FAILED(rv)) goto done;
-  rv = compMgr->UnregisterComponent(kEditorShellCID, path);
-
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
-}
-
-//END EXPORTS
-
-
