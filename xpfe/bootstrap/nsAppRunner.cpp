@@ -226,7 +226,7 @@ public:
   static int32 Main(void *args)
   {
     nsBeOSApp *app = new nsBeOSApp((sem_id)args);
-    if (NULL == app)
+    if (nsnull == app)
       return B_ERROR;
     return app->Run();
   }
@@ -343,10 +343,10 @@ static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
 // If your platform implements these functions if def out this code.
 #if !defined (XP_MAC) && !defined(MOZ_WIDGET_COCOA) && !defined(MOZ_WIDGET_PHOTON) && !defined( XP_PC ) && !defined( XP_BEOS ) && !defined(MOZ_WIDGET_GTK)
 
-nsresult NS_CreateSplashScreen( nsISplashScreen **aResult )
+nsresult NS_CreateSplashScreen(nsISplashScreen **aResult)
 {
     nsresult rv = NS_OK;
-    if ( aResult ) {
+    if (aResult) {
         *aResult = 0;
     } else {
         rv = NS_ERROR_NULL_POINTER;
@@ -377,10 +377,10 @@ PRBool NS_CanRun()
 //
 #if !defined( XP_PC ) && !defined(MOZ_WIDGET_GTK)
 
-nsresult NS_CreateNativeAppSupport( nsINativeAppSupport **aResult )
+nsresult NS_CreateNativeAppSupport(nsINativeAppSupport **aResult)
 {
     nsresult rv = NS_OK;
-    if ( aResult ) {
+    if (aResult) {
         *aResult = 0;
     } else {
         rv = NS_ERROR_NULL_POINTER;
@@ -764,7 +764,7 @@ static PRBool IsStartupCommand(const char *arg)
   return PR_FALSE;
 }
 
-static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs, PRBool *windowOpened)
+static nsresult HandleArbitraryStartup(nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs, PRBool *windowOpened)
 {
 	nsresult rv;
 	PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
@@ -839,7 +839,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
 // This should be done by app shell enumeration someday
 nsresult DoCommandLines(nsICmdLineService* cmdLine, PRBool heedGeneralStartupPrefs, PRBool *windowOpened)
 {
-  NS_ENSURE_ARG( windowOpened );
+  NS_ENSURE_ARG(windowOpened);
   *windowOpened = PR_FALSE;
 
   nsresult rv;
@@ -995,7 +995,7 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
 }
 
 
-static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
+static nsresult Ensure1Window(nsICmdLineService* cmdLineArgs)
 {
   nsresult rv;
 
@@ -1027,7 +1027,7 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
     PRBool more;
 
     windowEnumerator->HasMoreElements(&more);
-    if ( !more )
+    if (!more)
     {
       // No window exists so lets create a browser one
       PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
@@ -1225,7 +1225,7 @@ static void ShowOSAlertFromFile(int argc, char **argv, const char *alert_filenam
   gtk_init(&argc, &argv);
   #endif
 
-  ShowOSAlert( messageToShow );
+  ShowOSAlert(messageToShow);
 }
 
 static nsresult VerifyInstallation(int argc, char **argv)
@@ -1311,7 +1311,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
 #ifndef XP_MAC
   // Unbuffer debug output (necessary for automated QA performance scripts).
-  setbuf( stdout, 0 );
+  setbuf(stdout, 0);
 #endif
 
 #if defined(FREEBSD)
@@ -1344,7 +1344,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 #if XP_MAC
   stTSMCloser  tsmCloser;
 
-  rv = InitializeMacCommandLine( argc, argv);
+  rv = InitializeMacCommandLine(argc, argv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Initializing AppleEvents failed");
 #endif
 
@@ -1353,7 +1353,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // that people are busily modifying components and will be angry if
   // their changes aren't noticed.
     nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                     NULL /* default */);
+                                     nsnull /* default */);
 #endif
 
 
@@ -1473,11 +1473,11 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   PRBool windowOpened = PR_FALSE;
 #ifdef XP_MAC
   // if we do no command line args on the mac, it says argc is 0, and not 1
-  rv = DoCommandLines( cmdLineArgs, ((argc == 1) || (argc == 0)), &windowOpened );
+  rv = DoCommandLines(cmdLineArgs, ((argc == 1) || (argc == 0)), &windowOpened);
 #else
-  rv = DoCommandLines( cmdLineArgs, (argc == 1), &windowOpened );
+  rv = DoCommandLines(cmdLineArgs, (argc == 1), &windowOpened);
 #endif /* XP_MAC */
-  if ( NS_FAILED(rv) )
+  if (NS_FAILED(rv))
   {
     NS_WARNING("failed to process command line");
     return rv;
@@ -1485,7 +1485,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   // Make sure there exists at least 1 window.
   NS_TIMELINE_ENTER("Ensure1Window");
-  rv = Ensure1Window( cmdLineArgs );
+  rv = Ensure1Window(cmdLineArgs);
   NS_TIMELINE_LEAVE("Ensure1Window");
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to Ensure1Window");
   if (NS_FAILED(rv)) return rv;
@@ -1811,13 +1811,13 @@ int main(int argc, char* argv[])
   // Note: this object is not released here.  It is passed to main1 which
   //       has responsibility to release it.
   nsINativeAppSupport *nativeApp = 0;
-  nsresult rv = NS_CreateNativeAppSupport( &nativeApp );
+  nsresult rv = NS_CreateNativeAppSupport(&nativeApp);
 
   // See if we can run.
   if (nativeApp)
   {
     PRBool canRun = PR_FALSE;
-    rv = nativeApp->Start( &canRun );
+    rv = nativeApp->Start(&canRun);
     if (!canRun) {
         return 1;
     }
@@ -1836,7 +1836,7 @@ int main(int argc, char* argv[])
     // If showing splash screen and platform doesn't implement
     // nsINativeAppSupport, then use older nsISplashScreen interface.
     rv = NS_CreateSplashScreen(&splash);
-    NS_ASSERTION( NS_SUCCEEDED(rv), "NS_CreateSplashScreen failed" );
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_CreateSplashScreen failed");
   }
   // If the platform has a splash screen, show it ASAP.
   if (dosplash && nativeApp) {
@@ -1847,8 +1847,8 @@ int main(int argc, char* argv[])
 
   NS_TIMELINE_MARK("InitXPCom...");
 
-  rv = NS_InitXPCOM2(NULL, NULL, NULL);
-  NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
+  rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
 
   NS_TIMELINE_MARK("...InitXPCOM done");
 
@@ -1860,7 +1860,8 @@ int main(int argc, char* argv[])
   // always exit in that case.
   remoterv = HandleRemoteArguments(argc, argv, &argused);
   if (argused) {
-    NS_ShutdownXPCOM(NULL);
+    if (NS_SUCCEEDED(rv)) // only call NS_ShutdownXPCOM if Init succeeded.
+      NS_ShutdownXPCOM(nsnull);
     return remoterv;
   }
 #endif
@@ -1873,8 +1874,10 @@ int main(int argc, char* argv[])
     NS_ASSERTION(NS_SUCCEEDED(rv), "DoOnShutdown failed");
   }
 
-  rv = NS_ShutdownXPCOM( NULL );
-  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+  if (NS_SUCCEEDED(rv)) { // only call NS_ShutdownXPCOM if Init succeeded.
+      rv = NS_ShutdownXPCOM(nsnull);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+  }
 
   return TranslateReturnValue(mainResult);
 }
@@ -1882,9 +1885,9 @@ int main(int argc, char* argv[])
 #if defined( XP_PC ) && defined( WIN32 )
 // We need WinMain in order to not be a console app.  This function is
 // unused if we are a console application.
-int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR args, int)
 {
     // Do the real work.
-    return main( __argc, __argv );
+    return main(__argc, __argv);
 }
 #endif // XP_PC && WIN32
