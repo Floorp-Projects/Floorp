@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.11 $ $Date: 2002/01/08 15:37:33 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.12 $ $Date: 2002/01/23 17:39:27 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -86,6 +86,9 @@ nsslist_get_matching_element(nssList *list, void *data)
     PRCList *link;
     nssListElement *node;
     node = list->head;
+    if (!node) {
+	return NULL;
+    }
     link = &node->link;
     while (node) {
 	/* using a callback slows things down when it's just compare ... */
@@ -276,7 +279,9 @@ nssList_Remove(nssList *list, void *data)
 	}
 	PR_REMOVE_LINK(&node->link);
 	nss_ZFreeIf(node);
-	--list->count;
+	if (--list->count == 0) {
+	    list->head = NULL;
+	}
     }
     NSSLIST_UNLOCK_IF(list);
     return PR_SUCCESS;
