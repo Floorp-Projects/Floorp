@@ -73,8 +73,8 @@ public:
                            PRBool aDeep,
                            nsIDOMNode** aReturn);
   NS_IMETHOD    CreateElementNS(const nsString& aNamespaceURI,
-                                const nsString& aQualifiedName,
-                                nsIDOMElement** aReturn);
+                               const nsString& aQualifiedName,
+                               nsIDOMElement** aReturn);
   NS_IMETHOD    CreateAttributeNS(const nsString& aNamespaceURI,
                                   const nsString& aQualifiedName,
                                   nsIDOMAttr** aReturn);

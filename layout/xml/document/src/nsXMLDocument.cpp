@@ -771,6 +771,15 @@ nsXMLDocument::ImportNode(nsIDOMNode* aImportedNode,
 }
 
 NS_IMETHODIMP
+nsXMLDocument::CreateAttributeNS(const nsString& aNamespaceURI,
+                                 const nsString& aQualifiedName,
+                                 nsIDOMAttr** aReturn)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsXMLDocument::CreateElementNS(const nsString& aNamespaceURI,
                                const nsString& aQualifiedName,
                                nsIDOMElement** aReturn)
@@ -785,17 +794,19 @@ nsXMLDocument::CreateElementNS(const nsString& aNamespaceURI,
   PRInt32 namespaceID;
   nodeInfo->GetNamespaceID(namespaceID);
 
-  nsIContent* content;
+  nsCOMPtr<nsIContent> content;
   if (namespaceID == kNameSpaceID_HTML) {
-    nsIHTMLContent* htmlContent;
+/*    nsCOMPtr<nsIHTMLContent> htmlContent;
 
-    rv = NS_CreateHTMLElement(&htmlContent, nodeInfo);
-    content = (nsIContent*)htmlContent;
+    rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo);
+    content = do_QueryInterface(htmlContent);
+    */
+    rv = NS_ERROR_NOT_IMPLEMENTED; //do we want html elements from here??
   }
   else {
-    nsIXMLContent* xmlContent;
-    rv = NS_NewXMLElement(&xmlContent, nodeInfo);
-    content = NS_STATIC_CAST(nsIXMLContent *, xmlContent);
+    nsCOMPtr<nsIXMLContent> xmlContent;
+    rv = NS_NewXMLElement(getter_AddRefs(xmlContent), nodeInfo);
+    content = do_QueryInterface(xmlContent);
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -803,15 +814,6 @@ nsXMLDocument::CreateElementNS(const nsString& aNamespaceURI,
   content->SetContentID(mNextContentID++);
 
   return content->QueryInterface(kIDOMElementIID, (void**)aReturn);
-}
-
-NS_IMETHODIMP
-nsXMLDocument::CreateAttributeNS(const nsString& aNamespaceURI,
-                                 const nsString& aQualifiedName,
-                                 nsIDOMAttr** aReturn)
-{
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
