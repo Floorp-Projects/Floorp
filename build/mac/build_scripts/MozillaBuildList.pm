@@ -594,15 +594,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:webshell:public:MANIFEST_IDL",                   "$distdirectory:idl:");
     InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",          "$distdirectory:webshell:");
 
-    #CONTENT
-    
-    open(OUTPUT, ">:mozilla:content:build:gbdate.h") || die "could not open gbdate.h";
-    my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
-    # localtime returns year minus 1900
-    $year = $year + 1900;
-    printf(OUTPUT "#define PRODUCT_VERSION \"%04d%02d%02d\"\n", $year, 1+$mon, $mday);
-    close(OUTPUT);
-    
+    #CONTENT    
     InstallFromManifest(":mozilla:content:base:public:MANIFEST",                   "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:base:public:MANIFEST_IDL",               "$distdirectory:idl:");
     InstallFromManifest(":mozilla:content:base:src:MANIFEST",                      "$distdirectory:content:");
@@ -615,6 +607,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:content:html:document:src:MANIFEST",             "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:html:style:public:MANIFEST",             "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:html:style:src:MANIFEST",                "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:shared:public:MANIFEST",                 "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:xbl:public:MANIFEST",                    "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:xml:content:public:MANIFEST",            "$distdirectory:content:");
     InstallFromManifest(":mozilla:content:xml:document:public:MANIFEST",           "$distdirectory:content:");
@@ -629,8 +622,6 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:layout:build:MANIFEST",                          "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:base:public:MANIFEST",                    "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:base:public:MANIFEST_IDL",                "$distdirectory:idl:");
-    # InstallFromManifest(":mozilla:layout:html:document:src:MANIFEST",              "$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:html:style:public:MANIFEST",              "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:style:src:MANIFEST",                 "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:base:src:MANIFEST",                  "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:forms:public:MANIFEST",              "$distdirectory:layout:");
@@ -689,7 +680,6 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",                          "$distdirectory:idl:");
     InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",                       "$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",                       "$distdirectory:rdf:");
-    InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",                    "$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:datasource:public:MANIFEST",                 "$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:build:MANIFEST",                             "$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:tests:domds:MANIFEST",                       "$distdirectory:idl:");
@@ -1361,6 +1351,12 @@ sub BuildLayoutProjects()
     
     StartBuildModule("nglayout");
 
+    open(OUTPUT, ">:mozilla:content:build:gbdate.h") || die "could not open gbdate.h";
+    my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
+    # localtime returns year minus 1900
+    $year = $year + 1900;
+    printf(OUTPUT "#define PRODUCT_VERSION \"%04d%02d%02d\"\n", $year, 1+$mon, $mday);
+    close(OUTPUT);
 
     #//
     #// Build Layout projects
@@ -1372,6 +1368,11 @@ sub BuildLayoutProjects()
     BuildOneProjectWithOutput(":mozilla:gfx:macbuild:gfx.mcp",            "gfx$C$D.shlb", "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:dom:macbuild:dom.mcp",                            "dom$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",              "plugin$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+
+    # Static library shared between different content- and layout-related libraries
+    BuildOneProject(":mozilla:content:macbuild:contentshared.mcp",              "contentshared$D.o", 0, 0, 0);
+    MakeAlias(":mozilla:content:macbuild:contentshared$D.o",                    ":mozilla:dist:content:");
+
     BuildOneProject(":mozilla:content:macbuild:content.mcp",                    "content$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     if ($main::options{mathml})
     {
