@@ -201,14 +201,8 @@ nsDOMStyleDeclaration::GetPropertyValue(const nsString& aPropertyName,
 
   aReturn.SetLength(0);
   if ((NS_OK == result) && (nsnull != decl)) {
-    char prop[50];
-    aPropertyName.ToCString(prop, sizeof(prop));
-    result = decl->GetValue(prop, val);
+    result = decl->GetValue(aPropertyName, aReturn);
     NS_RELEASE(decl);
-    if (NS_OK == result) {
-      PRInt32 propID = nsCSSProps::LookupName(prop);
-      nsCSSValue::ValueToString(aReturn, val, propID);
-    }
   }
 
   return result;
