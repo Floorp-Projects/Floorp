@@ -399,6 +399,7 @@ pref("mail.server.default.mime_parts_on_demand", true);
 pref("mail.server.default.max_articles", 500);
 pref("mail.server.default.notify.on", true);
 pref("mail.server.default.mark_old_read", false);
+pref("mail.server.default.empty_trash_on_exit", false);
 
 pref("mail.smtpserver.default.auth_method", 2); // auth login
 
