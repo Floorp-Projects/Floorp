@@ -112,33 +112,6 @@ PRInt32 nsTableRowGroupFrame::GetStartRowIndex()
   return result;
 }
 
-NS_METHOD nsTableRowGroupFrame::GetMaxColumns(PRInt32 &aMaxColumns)
-{
-  aMaxColumns=0;
-  // loop through children, remembering the max of the columns in each row
-  nsIFrame *childFrame = GetFirstFrame();
-  while (PR_TRUE)
-  {
-    if (nsnull==childFrame)
-      break;
-    const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
-    {
-      PRInt32 colCount = ((nsTableRowFrame *)childFrame)->GetMaxColumns();
-      aMaxColumns = PR_MAX(aMaxColumns, colCount);
-    }
-    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
-      PRInt32 rgColCount;
-      ((nsTableRowGroupFrame*)childFrame)->GetMaxColumns(rgColCount);
-      aMaxColumns = PR_MAX(aMaxColumns, rgColCount);
-    }
-
-    GetNextFrame(childFrame, &childFrame);
-  }
-  return NS_OK;
-}
-
 nsresult
 nsTableRowGroupFrame::InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame)
 {
@@ -1209,7 +1182,7 @@ nsTableRowGroupFrame::AppendFrames(nsIPresContext* aPresContext,
     nsTableFrame* tableFrame = nsnull;
     nsTableFrame::GetTableFrame(this, tableFrame);
     if (tableFrame) {
-      tableFrame->AppendRows(*aPresContext, rows);
+      tableFrame->AppendRows(*aPresContext, *this, rows);
 
       // Because the number of columns may have changed invalidate the column widths
       tableFrame->InvalidateColumnWidths();
@@ -1257,7 +1230,7 @@ nsTableRowGroupFrame::InsertFrames(nsIPresContext* aPresContext,
     if (tableFrame) {
       nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, nsLayoutAtoms::tableRowFrame);
       PRInt32 rowIndex = (prevRow) ? prevRow->GetRowIndex() : 0;
-      tableFrame->InsertRows(*aPresContext, rows, rowIndex, PR_TRUE);
+      tableFrame->InsertRows(*aPresContext, *this, rows, rowIndex, PR_TRUE);
 
       // Reflow the new frames. They're already marked dirty, so generate a reflow
       // command that tells us to reflow our dirty child frames

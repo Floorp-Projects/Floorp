@@ -236,7 +236,8 @@ void nsTableBorderCollapser::ComputeLeftBorderForEdgeAt(nsIPresContext* aPresCon
   // we need to factor in the table's horizontal borders.
   // but we can't compute that length here because we don't know how thick top and bottom borders are
   // see DidComputeHorizontalCollapsingBorders
-  if (cellFrame) {
+  if (nsnull!=cellFrame)
+  {
     border->mInsideNeighbor = cellFrame->mBorderEdges;
     cellFrame->SetBorderEdge(NS_SIDE_LEFT, aRowIndex, aColIndex, border, 0);  // set the left edge of the cell frame
   }
@@ -248,7 +249,7 @@ void nsTableBorderCollapser::ComputeRightBorderForEdgeAt(nsIPresContext* aPresCo
                                                          PRInt32         aRowIndex, 
                                                          PRInt32         aColIndex)
 {
-  nsCellMap* cellMap = mTableFrame.GetCellMap();
+  nsTableCellMap* cellMap = mTableFrame.GetCellMap();
   if (!cellMap) {
     return;
   }
@@ -274,22 +275,19 @@ void nsTableBorderCollapser::ComputeRightBorderForEdgeAt(nsIPresContext* aPresCo
     for (PRInt32 colIndex = aColIndex + 1; colIndex < colCount; colIndex++) {
 		  CellData* cd = cellMap->GetCellAt(aRowIndex, colIndex);
 		  if (cd) { // there's really a cell at (aRowIndex, colIndex)
-			  if (!cd->mOrigCell) { // the cell at (aRowIndex, colIndex) is the result of a span
+			  if (cd->IsSpan()) { // the cell at (aRowIndex, colIndex) is the result of a span
 				  nsTableCellFrame* cell = nsnull;
-          if (cd->mRowSpanData)
-            cell = cd->mRowSpanData->mOrigCell;
-          else if (cd->mColSpanData)
-            cell = cd->mColSpanData->mOrigCell;
+          cell = cellMap->GetCellFrame(aRowIndex, colIndex, *cd, PR_TRUE);
 				  NS_ASSERTION(cell, "bad cell map state, missing real cell");
 				  PRInt32 realRowIndex;
           cell->GetRowIndex (realRowIndex);
 				  if (realRowIndex!=aRowIndex) { // the span is caused by a rowspan
-					  rightNeighborFrame = cd->mRowSpanData->mOrigCell;
+					  rightNeighborFrame = cell;
 					  break;
 				  }
 			  }
         else {
-          rightNeighborFrame = cd->mOrigCell;
+          rightNeighborFrame = cd->GetCellFrame();
           break;
         }
 		  }
@@ -375,7 +373,7 @@ void nsTableBorderCollapser::ComputeTopBorderForEdgeAt(nsIPresContext* aPresCont
                                                        PRInt32         aRowIndex, 
                                                        PRInt32         aColIndex)
 {
-  nsCellMap* cellMap = mTableFrame.GetCellMap();
+  nsTableCellMap* cellMap = mTableFrame.GetCellMap();
   if (!cellMap) {
     return;
   }
@@ -464,7 +462,7 @@ void nsTableBorderCollapser::ComputeBottomBorderForEdgeAt(nsIPresContext* aPresC
                                                           PRInt32         aRowIndex, 
                                                           PRInt32         aColIndex)
 {
-  nsCellMap* cellMap = mTableFrame.GetCellMap();
+  nsTableCellMap* cellMap = mTableFrame.GetCellMap();
   if (!cellMap) {
     return;
   }
@@ -489,23 +487,19 @@ void nsTableBorderCollapser::ComputeBottomBorderForEdgeAt(nsIPresContext* aPresC
     for (PRInt32 rowIndex = aRowIndex + 1; rowIndex < rowCount; rowIndex++) {
 		  CellData* cd = cellMap->GetCellAt(rowIndex, aColIndex);
 		  if (cd) { // there's really a cell at (rowIndex, aColIndex)
-        if (!cd->mOrigCell) {
+        if (cd->IsSpan()) {
 			    // the cell at (rowIndex, aColIndex) is the result of a span
-				  nsTableCellFrame* cell = nsnull;
-          if (cd->mRowSpanData)  // XXX should we check for a row span
-            cell = cd->mRowSpanData->mOrigCell;
-          else if (cd->mColSpanData)
-            cell = cd->mColSpanData->mOrigCell;
+				  nsTableCellFrame* cell = cellMap->GetCellFrame(rowIndex, aColIndex, *cd, PR_FALSE);
 				  NS_ASSERTION( cell, "bad cell map state, missing real cell");
 				  PRInt32 realColIndex;
           cell->GetColIndex (realColIndex);
 				  if (realColIndex!=aColIndex) { // the span is caused by a colspan
-					  bottomNeighborFrame = cd->mColSpanData->mOrigCell;
+					  bottomNeighborFrame = cell;
 					  break;
 				  }
 			  }
         else {
-          bottomNeighborFrame = cd->mOrigCell;
+          bottomNeighborFrame = cd->GetCellFrame();
           break;
         }
 		  }

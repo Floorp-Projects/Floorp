@@ -438,7 +438,7 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*        aPres
   if (PR_TRUE == innerTableNeedsReflow) {
     // Compute the width to use for the table. In the case of an auto sizing
     // table this represents the maximum available width
-    nscoord tableWidth = nsTableFrame::CalcBorderBoxWidth(aReflowState.reflowState);
+    nscoord tableWidth = ((nsTableFrame*)mInnerTableFrame)->CalcBorderBoxWidth(aReflowState.reflowState);
 
     // If the caption max element size is larger, then use it instead.
     // XXX: caption align = left|right ignored here!
