@@ -402,7 +402,6 @@ nsImapProtocol::nsImapProtocol() :
 
   m_checkForNewMailDownloadsHeaders = PR_TRUE;  // this should be on by default
   m_hierarchyNameState = kNoOperationInProgress;
-  m_onlineBaseFolderExists = PR_FALSE;
   m_discoveryStatus = eContinue;
 
   m_overRideUrlConnectionInfo = PR_FALSE;
@@ -4147,15 +4146,6 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
     GetImapServerKey(), kPersonalNamespace, ns);
   const char *nsPrefix = ns ? ns->GetPrefix() : 0;
   
-  nsCString canonicalSubDir;
-  if (nsPrefix)
-  {
-    PRUnichar slash = '/';
-    canonicalSubDir = nsPrefix;
-    if (canonicalSubDir.Length() && canonicalSubDir.Last() == slash)
-      canonicalSubDir.SetLength((PRUint32) canonicalSubDir.Length()-1);
-  }
-  
   switch (m_hierarchyNameState)
   {
   case kListingForCreate:
@@ -4163,11 +4153,6 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
   case kDiscoverTrashFolderInProgress:
   case kListingForInfoAndDiscovery:
     {
-      if (canonicalSubDir.Length() &&
-        PL_strstr(adoptedBoxSpec->allocatedPathName,
-        canonicalSubDir.get()))
-        m_onlineBaseFolderExists = PR_TRUE;
-      
       if (ns && nsPrefix) // if no personal namespace, there can be no Trash folder
       {
         PRBool onlineTrashFolderExists = PR_FALSE;
@@ -4277,12 +4262,6 @@ nsImapProtocol::DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec)
         NS_IF_RELEASE( adoptedBoxSpec);
         break;
     case kDiscoverBaseFolderInProgress:
-      {
-        if (canonicalSubDir.Length() &&
-          PL_strstr(adoptedBoxSpec->allocatedPathName,
-          canonicalSubDir.get()))
-          m_onlineBaseFolderExists = PR_TRUE;
-      }
       break;
     case kDeleteSubFoldersInProgress:
       {

@@ -651,7 +651,6 @@ private:
         kListingForCreate
     };
     EMailboxHierarchyNameState m_hierarchyNameState;
-  PRBool m_onlineBaseFolderExists;
   EMailboxDiscoverStatus m_discoveryStatus;
   nsVoidArray m_listedMailboxList;
   nsVoidArray* m_deletableChildren;
