@@ -260,6 +260,25 @@ sub quietly_check_login() {
 
 
 
+sub CheckEmailSyntax {
+    my ($addr) = (@_);
+    if ($addr !~ /^[^@, ]*@[^@, ]*\.[^@, ]*$/) {
+        print "Content-type: text/html\n\n";
+
+        print "<H1>Invalid e-mail address entered.</H1>\n";
+        print "The e-mail address you entered\n";
+        print "(<b>$addr</b>) didn't match our minimal\n";
+        print "syntax checking for a legal email address.  A legal\n";
+        print "address must contain exactly one '\@', and at least one\n";
+        print "'.' after the \@, and may not contain any commas or.\n";
+        print "spaces.\n";
+        print "<p>Please click <b>back</b> and try again.\n";
+        exit;
+    }
+}
+
+
+
 sub confirm_login {
     my ($nexturl) = (@_);
 
@@ -272,19 +291,8 @@ sub confirm_login {
 
 	my $enteredlogin = $::FORM{"Bugzilla_login"};
         my $enteredpwd = $::FORM{"Bugzilla_password"};
-	if ($enteredlogin !~ /^[^@, ]*@[^@, ]*\.[^@, ]*$/) {
-            print "Content-type: text/html\n\n";
+        CheckEmailSyntax($enteredlogin);
 
-            print "<H1>Invalid e-mail address entered.</H1>\n";
-            print "The e-mail address you entered\n";
-            print "(<b>$enteredlogin</b>) didn't match our minimal\n";
-            print "syntax checking for a legal email address.  A legal\n";
-            print "address must contain exactly one '\@', and at least one\n";
-            print "'.' after the \@, and may not contain any commas or.\n";
-	    print "spaces.\n";
-            print "<p>Please click <b>back</b> and try again.\n";
-            exit;
-        }
         my $realcryptpwd  = PasswordForLogin($::FORM{"Bugzilla_login"});
         
         if (defined $::FORM{"PleaseMailAPassword"}) {
