@@ -3304,16 +3304,9 @@ nsHTTPChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerLevel)
         nsCAutoString ref(spec.get());
         nsXPIDLCString prehost; 
         referrer->GetPreHost(getter_Copies(prehost));
-        if (prehost.get()) {
-            PRUint32 prehostLocation = ref.Find(prehost.get(), PR_TRUE);
-            PRInt32 remainingStart = prehostLocation +
-                    PL_strlen(prehost.get()) + 1; // 1 for @
-            ref = Substring(NS_READABLE_CAST(char, ref),
-                    (PRUint32) 0,
-                    (PRUint32) prehostLocation) +
-                Substring(NS_READABLE_CAST(char, ref),
-                    (PRUint32) remainingStart,
-                    (PRUint32) ref.Length()-remainingStart);
+        if (prehost && *prehost) {
+            PRUint32 prehostLocation = PRUint32(ref.Find(prehost, PR_TRUE));
+            ref.Cut(prehostLocation, nsCharTraits<char>::length(prehost) + 1); // + 1 for @
         }
 
         if ((referrerLevel == nsIHTTPChannel::REFERRER_NON_HTTP) || 
