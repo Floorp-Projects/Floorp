@@ -76,12 +76,12 @@ GtkItemFactoryEntry menu_items[] =
   { "/Edit/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
   { "/Edit/Find in Page",		"F",	(GIFC)gtk_ifactory_cb,	VIEWER_EDIT_FINDINPAGE,	nsnull },
 
-#ifdef _DEBUG
+#ifdef DEBUG
   { "/_Debug",				nsnull,	nsnull,			0,			"<Branch>"	},
   { "/Debug/_Visual Debugging",		"V",	(GIFC)gtk_ifactory_cb,	VIEWER_VISUAL_DEBUGGING,nsnull },
-  { "/Debug/_Reflow Test",		"R",	(GIFC)gtk_ifactory_cb,	VIEWER_REFLOW_TESTING,	nsnull },
+  { "/Debug/_Reflow Test",		"R",	(GIFC)gtk_ifactory_cb,	VIEWER_REFLOW_TEST,	nsnull },
   { "/Debug/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
-  { "/Debug/Dump _Content",		"C",	(GIFC)gtk_ifactory_cb,	VIEWER_DUMP_CONTENTS,	nsnull },
+  { "/Debug/Dump _Content",		"C",	(GIFC)gtk_ifactory_cb,	VIEWER_DUMP_CONTENT,	nsnull },
   { "/Debug/Dump _Frames",		"F",	(GIFC)gtk_ifactory_cb,	VIEWER_DUMP_FRAMES,	nsnull },
   { "/Debug/Dump _Views",		"V",	(GIFC)gtk_ifactory_cb,	VIEWER_DUMP_VIEWS,	nsnull },
   { "/Debug/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
