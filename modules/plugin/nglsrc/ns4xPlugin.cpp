@@ -321,7 +321,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
     memset((void*) &callbacks, 0, sizeof(callbacks));
     callbacks.size = sizeof(callbacks);	
 
-	nsPluginsDir pluginsDir;
+	nsPluginsDir pluginsDir(PLUGINS_DIR_LOCATION_MAC_OLD);
 	if(!pluginsDir.Valid())
 		return NS_ERROR_FAILURE;
 		
