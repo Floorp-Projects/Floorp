@@ -330,9 +330,10 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
   nsStyleFont font;
   mStyleContext->GetStyle(eStyleStruct_Font, font);
   nsCOMPtr<nsIFontMetrics> fm;
-  aPresContext->GetMetricsFor(font.mFont, getter_AddRefs(fm));
+  aReflowState.rendContext->SetFont(font.mFont);
+  aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
   nscoord axisHeight, em;
-  GetAxisHeight(fm, axisHeight);
+  GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
   em = NSToCoordRound(float(font.mFont.size));
  
   nscoord fontAscent, fontDescent;

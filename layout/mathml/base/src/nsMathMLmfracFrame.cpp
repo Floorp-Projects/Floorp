@@ -355,7 +355,8 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   }
   else {
     // Rule 15d, App. G, TeXbook
-    GetAxisHeight (fm, axisHeight);
+//    GetAxisHeight (fm, axisHeight);
+    GetAxisHeight(aRenderingContext, fm, axisHeight);
 
     // min clearance between numerator or denominator and middle of bar
 

@@ -441,13 +441,18 @@ public:
       ruleThickness = NSToCoordRound (40.000f/430.556f * xHeight);
     }
 
-  // the rule thickness is not accurately obtained using the x-height.
-  // Here is a slow GetRuleThickness() which obtains the rule
-  // thickness by actually measuring the overbar char U+00AF
+  // Some parameters are not accurately obtained using the x-height.
+  // Here are some slower variants to obtain the desired metrics
+  // by actually measuring some characters
   static void
   GetRuleThickness(nsIRenderingContext& aRenderingContext, 
                    nsIFontMetrics*      aFontMetrics,
                    nscoord&             aRuleThickness);
+
+  static void
+  GetAxisHeight(nsIRenderingContext& aRenderingContext, 
+                nsIFontMetrics*      aFontMetrics,
+                nscoord&             aAxisHeight);
 
 protected:
 

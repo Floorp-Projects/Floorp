@@ -131,9 +131,6 @@ nsMathMLmoFrame::Paint(nsIPresContext*      aPresContext,
       aRenderingContext.SetColor(NS_RGB(0,255,255));
       nscoord x = mReference.x + mBoundingMetrics.leftBearing;
       nscoord y = mReference.y - mBoundingMetrics.ascent;
-//nsRect rect;
-//mMathMLChar.GetRect(rect);
-//y = rect.y;
       nscoord w = mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing;
       nscoord h = mBoundingMetrics.ascent + mBoundingMetrics.descent;
       aRenderingContext.DrawRect(x,y,w,h);
@@ -558,9 +555,10 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   nsStyleFont font;
   mStyleContext->GetStyle(eStyleStruct_Font, font);
   nsCOMPtr<nsIFontMetrics> fm;
-  aPresContext->GetMetricsFor(font.mFont, getter_AddRefs(fm));
+  aRenderingContext.SetFont(font.mFont);
+  aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
   nscoord fontAscent, fontDescent, axisHeight;
-  GetAxisHeight(fm, axisHeight);
+  GetAxisHeight(aRenderingContext, fm, axisHeight);
   fm->GetMaxAscent(fontAscent);
   fm->GetMaxDescent(fontDescent);
 
