@@ -667,10 +667,19 @@ function prepareForStartup()
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
 
+  // Manually hook up session and global history for the first browser
+  // so that we don't have to load global history before bringing up a
+  // window.
   // Wire up session and global history before any possible
   // progress notifications for back/forward button updating
   webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
                                            .createInstance(Components.interfaces.nsISHistory);
+  var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  os.addObserver(gBrowser.browsers[0], "browser:purge-session-history", false);
+
+  // remove the disablehistory attribute so the browser cleans up, as
+  // though it had done this work itself
+  gBrowser.browsers[0].removeAttribute("disablehistory");
 
   // enable global history
   gBrowser.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
@@ -687,9 +696,6 @@ function delayedStartup()
 {
   var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
   os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
-  
-  // We have to do this because we manually hook up history for the first browser in prepareForStartup
-  os.addObserver(gBrowser.browsers[0], "browser:purge-session-history", false);
   os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
   os.addObserver(gXPInstallObserver, "xpinstall-install-edit-prefs", false);
   os.addObserver(gXPInstallObserver, "xpinstall-install-edit-permissions", false);
@@ -902,7 +908,6 @@ function Shutdown()
   var os = Components.classes["@mozilla.org/observer-service;1"]
     .getService(Components.interfaces.nsIObserverService);
   os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
-  os.removeObserver(gBrowser.browsers[0], "browser:purge-session-history");
   os.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
   os.removeObserver(gXPInstallObserver, "xpinstall-install-edit-permissions");
   os.removeObserver(gXPInstallObserver, "xpinstall-install-edit-prefs");
