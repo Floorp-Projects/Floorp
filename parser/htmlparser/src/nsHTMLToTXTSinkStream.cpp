@@ -472,8 +472,8 @@ PRBool nsHTMLToTXTSinkStream::IsConverted(const nsIParserNode& aNode)
       NS_SUCCEEDED(rv)
       &&
       (
-        value.EqualsWithConversion("txt", PR_TRUE, 3) ||
-        value.EqualsWithConversion("\"txt", PR_TRUE, 4)
+        value.EqualsWithConversion("moz-txt", PR_TRUE, 7) ||
+        value.EqualsWithConversion("\"moz-txt", PR_TRUE, 8)
       )
     );
 }
@@ -908,8 +908,8 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_text)
   {
-    /* Check, if some other MUA (e.g. 4.x) recognized the URL in
-       plain text and inserted an <a> element. If yes, output only once. */
+    /* Check, if some other MUA (e.g. 4.x) recognized the URI in
+       plain text and inserted an <a> element. If yes, output URI only once. */
     if (!mURL.IsEmpty() && mURL == text)
       mURL.Truncate();
     if (
@@ -1797,4 +1797,3 @@ PRInt32 unicharwidth(const PRUnichar* pwcs, PRInt32 n)
 
   return width;
 }
-
