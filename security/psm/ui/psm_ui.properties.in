@@ -6610,7 +6610,7 @@ bad_server_cert_expired_content:
 
 
 bad_server_cert_expired_top_type="text/html"
-bad_server_cert_hdrs=""
+bad_server_cert_expired_hdrs=""
 bad_server_cert_expired_top_content:
 {top_frame bad_server_cert_expired_title,alert1gif,35,35}
 :bad_server_cert_expired_top_content
@@ -6638,7 +6638,7 @@ bad_server_cert_not_yet_valid_content:
 
 
 bad_server_cert_not_yet_valid_top_type="text/html"
-bad_server_cert_not_yet_valid_hdrs=""
+bad_server_cert_not_yet_valid_top_hdrs=""
 bad_server_cert_not_yet_valid_top_content:
 {top_frame bad_server_cert_not_yet_valid_title,alert1gif,35,35}
 :bad_server_cert_not_yet_valid_top_content
@@ -6736,7 +6736,7 @@ bad_server_cert_domain_content:
 
 
 bad_server_cert_domain_top_type="text/html"
-bad_server_cert_hdrs=""
+bad_server_cert_domain_hdrs=""
 bad_server_cert_domain_top_content:
 {top_frame bad_server_cert_domain_title,alert1gif,35,35}
 :bad_server_cert_domain_top_content
@@ -8004,7 +8004,7 @@ cert_renewal_content:
 
 
 cert_renewal_top_type="text/html"
-bad_server_cert_hdrs=""
+cert_renewal_top__hdrs=""
 cert_renewal_top_content:
 {top_frame cert_renewal_title,certgif,35,35}
 :cert_renewal_top_content
