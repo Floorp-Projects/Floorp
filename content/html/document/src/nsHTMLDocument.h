@@ -269,12 +269,12 @@ protected:
   static PRBool TryParentCharset(nsIDocumentCharsetInfo*  aDocInfo,
                                  PRInt32& charsetSource, 
                                  nsAString& aCharset);
-  static PRBool TryWeakDocTypeDefault(PRInt32& aCharsetSource, 
+  static PRBool UseWeakDocTypeDefault(PRInt32& aCharsetSource, 
                                       nsAString& aCharset);
   static PRBool TryChannelCharset(nsIChannel *aChannel, 
                                   PRInt32& aCharsetSource, 
                                   nsAString& aCharset);
-  static PRBool TryUserDefaultCharset(nsIMarkupDocumentViewer* aMarkupDV,
+  static PRBool TryDefaultCharset(nsIMarkupDocumentViewer* aMarkupDV,
                                       PRInt32& aCharsetSource, 
                                       nsAString& aCharset);
 
