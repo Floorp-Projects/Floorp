@@ -280,7 +280,7 @@ NS_IMETHODIMP
 nsHTMLImageElement::GetComplete(PRBool* aComplete)
 {
   NS_PRECONDITION(aComplete, "Null out param!");
-  *aComplete = PR_FALSE;
+  *aComplete = PR_TRUE;
 
   if (!mCurrentRequest) {
     return NS_OK;
@@ -288,7 +288,9 @@ nsHTMLImageElement::GetComplete(PRBool* aComplete)
 
   PRUint32 status;
   mCurrentRequest->GetImageStatus(&status);
-  *aComplete = ((status & imgIRequest::STATUS_LOAD_COMPLETE) != 0);
+  *aComplete =
+    (status &
+     (imgIRequest::STATUS_LOAD_COMPLETE | imgIRequest::STATUS_ERROR)) != 0;
 
   return NS_OK;
 }
