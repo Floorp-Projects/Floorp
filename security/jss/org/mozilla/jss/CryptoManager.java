@@ -52,7 +52,7 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.15 $ $Date: 2002/12/13 06:12:28 $
+ * @version $Revision: 1.16 $ $Date: 2003/04/09 21:30:19 $
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -747,9 +747,7 @@ public final class CryptoManager implements TokenSupplier
 
     /**
      * This function sets the global password callback.  It is
-     * not thread-safe to change this. A better strategy than using
-     * callbacks is to explicitly login to the tokens you need to use.
-     * Password callbacks are then only used as a last resort.
+     * not thread-safe to change this.
      * <p>The callback may be NULL, in which case password callbacks will
      * fail gracefully.
      */
