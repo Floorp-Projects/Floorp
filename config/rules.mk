@@ -373,6 +373,27 @@ endif
 endif
 
 #
+# On NetBSD a.out systems, use -Bsymbolic.  This fixes what would otherwise be
+# fatal symbol name clashes between components.
+#
+ifeq ($(OS_ARCH),NetBSD)
+ifeq ($(DLL_SUFFIX),.so.1.0)
+ifdef IS_COMPONENT
+EXTRA_DSO_LDOPTS += -Wl,-Bsymbolic
+endif
+endif
+endif
+
+ifeq ($(OS_ARCH),NetBSD)
+ifneq (,$(filter arc cobalt hpcmips mipsco newsmips pmax sgimips,$(OS_TEST)))
+ifeq ($(MODULE),layout)
+OS_CFLAGS += -Wa,-xgot
+OS_CXXFLAGS += -Wa,-xgot
+endif
+endif
+endif
+
+#
 # HP-UXBeOS specific section: for COMPONENTS only, add -Bsymbolic flag
 # which uses internal symbols first
 #
@@ -1413,7 +1434,7 @@ showbuild:
 	@echo "OS_CFLAGS          = $(OS_CFLAGS)"
 	@echo "COMPILE_CFLAGS     = $(COMPILE_CFLAGS)"
 	@echo "CXXFLAGS           = $(CXXFLAGS)"
-	@echo "OS_CXXFLAGS        = $(OS_CFXXFLAGS)"
+	@echo "OS_CXXFLAGS        = $(OS_CXXFLAGS)"
 	@echo "COMPILE_CXXFLAGS   = $(COMPILE_CXXFLAGS)"
 	@echo "LDFLAGS            = $(LDFLAGS)"
 	@echo "OS_LDFLAGS         = $(OS_LDFLAGS)"
