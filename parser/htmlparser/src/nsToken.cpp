@@ -164,15 +164,14 @@ void CToken::DebugDumpSource(nsOutputStream& anOutputStream) {
  * @update	gess5/11/98
  * @param   name is a char* value containing new string value
  */
-void CToken::SetStringValue(const char* name){
+void CToken::SetCStringValue(const char* name){
   mTextValue.AssignWithConversion(name);
 }
 
 /**
  * Setter method for the string value of this token
  */
-void CToken::SetStringValue(nsString& aStr)
-{
+void CToken::SetStringValue(nsString& aStr) {
   mTextValue = aStr;
 }
 

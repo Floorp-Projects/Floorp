@@ -100,7 +100,7 @@ public:
 
                         CHTMLToken(eHTMLTags aTag);
                         CHTMLToken(const nsString& aString,eHTMLTags aTag=eHTMLTag_unknown);
-    virtual void        SetStringValue(const char* name);
+    virtual void        SetCStringValue(const char* name);
     virtual nsString&   GetStringValueXXX(void);
 
 protected:

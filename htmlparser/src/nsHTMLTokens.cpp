@@ -70,7 +70,7 @@ CHTMLToken::CHTMLToken(eHTMLTags aTag) : CToken(aTag) {
  * @update	gess5/11/98
  * @param   name is a char* value containing new string value
  */
-void CHTMLToken::SetStringValue(const char* name){
+void CHTMLToken::SetCStringValue(const char* name){
   if(name) {
     mTextValue.AssignWithConversion(name);
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
@@ -324,7 +324,7 @@ void CStartToken::AppendSource(nsString& anOutputString){
  *  @return  
  */
 CEndToken::CEndToken(eHTMLTags aTag) : CHTMLToken(aTag) {
-  SetStringValue(GetTagName(aTag));
+  SetCStringValue(GetTagName(aTag));
 }
 
 

@@ -141,6 +141,41 @@ void CParserContext::SetMimeType(const nsString& aMimeType){
   else if(mMimeType.EqualsWithConversion(kXIFTextContentType))
     mDocType=eXMLText;
 }
+
+/*************************************************************************************************
+  First, let's define our modalities:
+
+     1. compatibility-mode: behave as much like nav4 as possible (unless it's too broken to bother)
+     2. standard-mode: do html as well as you can per spec, and throw out navigator quirks
+     3. strict-mode: adhere to the strict DTD specificiation to the highest degree possible
+
+  Assume the doctype is in the following form:
+    <!DOCTYPE [Top Level Element] [Availability] "[Registration]// [Owner-ID]     //  [Type] [desc-text] // [Language]" "URI|text-identifier"> 
+              [HTML]              [PUBLIC|...]    [+|-]            [W3C|IETF|...]     [DTD]  "..."          [EN]|...]   "..."  
+
+
+  Here are the new rules for DTD handling; comments welcome:
+
+       - strict dtd's enable strict-mode (and naturally our strict DTD):
+            - example: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+            - example: <!DOCTYPE \"ISO/IEC 15445:1999//DTD HTML//EN\">
+
+       - XHTML and XML documents are always strict:
+            - example:  <!DOCTYPE \"-//W3C//DTD XHTML 1.0 Strict//EN\">
+
+       - transitional, frameset, etc. without URI enables compatibility-mode:
+            - example: <!DOCTYPE \"-//W3C//DTD HTML 4.01 Transitional//EN\">
+
+          - unless the URI points to the strict.dtd, then we use strict:
+            -  example: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+
+       - doctypes with systemID's or internal subset are handled in strict:
+            - example: <!DOCTYPE HTML PUBLIC PublicID SystemID>
+            - example: <!DOCTYPE HTML (PUBLIC PublicID SystemID? | SYSTEM SystemID) [ Internal-SS ]>
+
+       - all other doctypes are handled in compatibility-mode
+
+*****************************************************************************************************/
  
 /**
  *  This is called when it's time to find out 
@@ -155,19 +190,15 @@ eParseMode CParserContext::DetermineParseMode(const nsString& theBuffer) {
 
   mParseMode = eParseMode_unknown;
     
-  PRInt32 theIndex=theBuffer.Find("<!",PR_FALSE,-1);
-  if(kNotFound<theIndex)
-    theIndex=theBuffer.Find("DOCTYPE",PR_TRUE,theIndex+1,10);
-
+  PRInt32 theIndex=theBuffer.Find("DOCTYPE",PR_TRUE,0,10);
   if(kNotFound<theIndex) {
   
     //good, we found "DOCTYPE" -- now go find it's end delimiter '>'
     PRInt32 theGTPos=theBuffer.FindChar(kGreaterThan,theIndex+1);
     PRInt32 theEnd=(kNotFound==theGTPos) ? 512 : MinInt(512,theGTPos);
-    PRInt32 theSubIndex=theBuffer.Find("//DTD",PR_TRUE,theIndex+8,theEnd-(theIndex+8));
+    PRInt32 theSubIndex=theBuffer.Find("//DTD",PR_TRUE,theIndex+8,theEnd-(theIndex+8));  //skip to the type and desc-text...
     PRInt32 theErr=0;
     PRInt32 theMajorVersion=3;
-
 
     //note that if we don't find '>', then we just scan the first 512 bytes.
 
@@ -199,7 +230,7 @@ eParseMode CParserContext::DetermineParseMode(const nsString& theBuffer) {
               theMajorVersion=3;
             }
             else {
-              theSubIndex=theBuffer.Find("HYPERTEXT MARKUP LANGUAGE",PR_TRUE,theStartPos,theCount);
+              theSubIndex=theBuffer.Find("HYPERTEXT MARKUP",PR_TRUE,theStartPos,theCount);
               if(0<=theSubIndex) {
                 mDocType=eHTML3Text;
                 mParseMode=eParseMode_quirks;
@@ -214,15 +245,16 @@ eParseMode CParserContext::DetermineParseMode(const nsString& theBuffer) {
       theCount=theEnd-theStartPos;
       nsAutoString theNum;
 
+        //get the next substring from the buffer, which should be a number.
+        //now see what the version number is...
+
       theStartPos=theBuffer.FindCharInSet("123456789",theStartPos);
       if(0<=theStartPos) {
         theBuffer.Mid(theNum,theStartPos-1,3);
         theMajorVersion=theNum.ToInteger(&theErr);
       }
-      
-        //get the next substring from the buffer, which should be a number.
-        //now see what the version number is...
 
+      //now see what the
       theStartPos+=3;
       theCount=theEnd-theStartPos;
       if((theBuffer.Find("TRANSITIONAL",PR_TRUE,theStartPos,theCount)>kNotFound)||
@@ -231,7 +263,17 @@ eParseMode CParserContext::DetermineParseMode(const nsString& theBuffer) {
          (theBuffer.Find("LATIN1", PR_TRUE,theStartPos,theCount) >kNotFound)    ||
          (theBuffer.Find("SYMBOLS",PR_TRUE,theStartPos,theCount) >kNotFound)    ||
          (theBuffer.Find("SPECIAL",PR_TRUE,theStartPos,theCount) >kNotFound)) {
-        mParseMode=eParseMode_noquirks;
+        mParseMode=eParseMode_quirks;
+      }
+
+      //one last thing: look for a URI that specifies the strict.dtd
+      theStartPos+=6;
+      theCount=theEnd-theStartPos;
+      theSubIndex=theBuffer.Find("STRICT.DTD",PR_TRUE,theStartPos,theCount);
+      if(0<theSubIndex) {
+        //Since we found it, regardless of what's in the descr-text, kick into strict mode.
+        mParseMode=eParseMode_strict;
+        mDocType=eHTML4Text;
       }
 
       if(eXHTMLText!=mDocType) {
@@ -252,7 +294,7 @@ eParseMode CParserContext::DetermineParseMode(const nsString& theBuffer) {
           } //switch
         }
       }
-
+ 
     } //if
     else {
       PRInt32 thePos=theBuffer.Find("HTML",PR_TRUE,1,50);
@@ -266,15 +308,7 @@ eParseMode CParserContext::DetermineParseMode(const nsString& theBuffer) {
     }
   }
   else if(kNotFound<(theIndex=theBuffer.Find("?XML",PR_TRUE,0,128))) {
-      mParseMode=eParseMode_noquirks;
-  }
-  else {
-      //this is debug only, and will go away by the time we ship...
-    theIndex=theBuffer.Find("NOQUIRKS",PR_TRUE,0,128);
-    mDocType=eHTML4Text;
-    if(kNotFound<theIndex) {
-      mParseMode=eParseMode_noquirks;
-    }
+    mParseMode=eParseMode_strict;
   }
 
   if(theModeStr) {
