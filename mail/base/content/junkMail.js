@@ -254,9 +254,6 @@ function conditionallyEnableUI(id)
     document.getElementById("purge").disabled = !enabled;
     document.getElementById("purgeInterval").disabled = !enabled || !checked;
     document.getElementById("purgeLabel").disabled = !enabled;
-    
-    if (!document.getElementById("manualMarkMode").disabled)
-      document.getElementById("manualMarkMode0").disabled = !enabled;
   }
 
   if (id == "purge") {
