@@ -69,11 +69,11 @@ DIRS=nu
 
 EXTRA_LIBS=
 
-!ifdef NU_CACHE
+#!ifdef NU_CACHE
 REQUIRES= network nspr2 cache
-!else
-REQUIRES= network nspr2
-!endif
+#!else
+#REQUIRES= network nspr2
+#!endif
 
 EXPORTS= netcache.h
 
@@ -93,9 +93,7 @@ LINCS= \
     -I$(XPDIST)\public\java 	\
     -I$(XPDIST)\public\fileurl 	\
     -I$(XPDIST)\public\security \
-!ifdef NU_CACHE
     -I$(XPDIST)\public\cache 	\
-!endif
     -I$(XPDIST)\public\jtools
 #!endif
 
