@@ -400,6 +400,7 @@ bin/components/msgmdn.dll
 bin/components/mdn-service.js
 ;bin/components/nsSetDefaultMail.js
 ;bin/components/nsUnsetDefaultMail.js
+bin/components/bayesfilt.dll
 bin/components/msgmailviews.xpt
 bin/components/msgmailviews.dll
 

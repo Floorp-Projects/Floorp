@@ -349,6 +349,7 @@ viewer:Components:smime-service.js
 viewer:Components:msgmdn.shlb
 viewer:Components:msgmdn.xpt
 viewer:Components:mdn-service.js
+viewer:Components:bayesianFilter.shlb
 viewer:Components:mailviews.xpt
 viewer:Components:mailviews.shlb
 
