@@ -3024,3 +3024,4 @@ nsPostScriptObj::initlanggroup()
   gPrefs->EnumerateChildren(kUnicodeFontPrefix,
 	    PrefEnumCallback, (void *) this);
 }
+
