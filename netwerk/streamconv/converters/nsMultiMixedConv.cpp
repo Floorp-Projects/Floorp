@@ -241,7 +241,6 @@ nsMultiMixedConv::OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
     nsCAutoString boundaryString(bndry);
     if (attrib) *attrib = ';';
     boundaryString.StripWhitespace();
-    boundaryString.Insert("--", 0);
 
     mToken = boundaryString.ToNewCString();
     if (!mToken) return NS_ERROR_OUT_OF_MEMORY;
@@ -508,17 +507,31 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
 char *
 nsMultiMixedConv::FindToken(char *aCursor, PRUint32 aLen) {
     // strnstr without looking for null termination
-    PRUint32 ll = mTokenLen;
     const char *token = mToken;
+    char *cur = aCursor;
 
 	NS_ASSERTION(token && aCursor && *token, "bad data");
 
-    if( ll > aLen ) return nsnull;
+    if( mTokenLen > aLen ) return nsnull;
 
-    for( ; aLen >= ll; aCursor++, aLen-- )
+    for( ; aLen >= mTokenLen; aCursor++, aLen-- )
         if( *token == *aCursor)
-            if(!memcmp(aCursor, token, ll) )
+            if(!memcmp(aCursor, token, mTokenLen) ) {
+                if ( (aCursor - cur) >= 2) {
+                    // back the cursor up over a double dash for backwards compat.
+                    if ( (*(aCursor-1) == '-') && (*(aCursor-2) == '-') ) {
+                        aCursor -= 2;
+                        aLen += 2;
+
+                        // we're playing w/ double dash tokens, adjust.
+                        nsCString newToken("--");
+                        newToken.Append(mToken);
+                        mToken = newToken.ToNewCString();
+                        mTokenLen += 2;
+                    }
+                }
                 return aCursor;
+            }
 
     return nsnull;
 }
