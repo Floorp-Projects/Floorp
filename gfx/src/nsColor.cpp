@@ -27,7 +27,10 @@ static int ComponentValue(const char* aColorSpec, int aLen, int color, int dpc)
     aColorSpec += (color * dpc);
     while (--dpc >= 0) {
       char ch = *aColorSpec++;
-      if ((ch >= '0') && (ch <= '9')) {
+      if ((ch == 'o') || (ch == 'O')) { // letter O == zero
+        component = component*16;
+      }
+      else if ((ch >= '0') && (ch <= '9')) {
         component = component*16 + (ch - '0');
       } else {
         // "ch&7" handles lower and uppercase hex alphabetics
@@ -61,7 +64,9 @@ static PRBool HexToRGB(const char* aColorSpec, PRBool aStrict, nscolor* aResult)
       char ch = aColorSpec[i];
       if (((ch >= '0') && (ch <= '9')) ||
           ((ch >= 'a') && (ch <= 'f')) ||
-          ((ch >= 'A') && (ch <= 'F'))) {
+          ((ch >= 'A') && (ch <= 'F')) || 
+          ((! aStrict) && 
+           ((ch == 'o') || (ch == 'O')))) {  // Nav let Oh's == zeros, egads
         // Legal character
         continue;
       }
