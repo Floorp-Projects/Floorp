@@ -22,6 +22,11 @@
 DEPTH=..\..\..
 
 
-DIRS=vcard smimestub resources
+DIRS=	vcard \
+	resources \
+!if !defined(BUILD_SMIME)
+	smimestub \
+!endif
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

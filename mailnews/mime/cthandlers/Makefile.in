@@ -26,7 +26,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= vcard smimestub
+DIRS = vcard
+
+ifndef BUILD_SMIME
+DIRS += smimestub
+endif
+
+DIRS += resources
 
 include $(topsrcdir)/config/rules.mk
 
