@@ -227,7 +227,7 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
   // it may not be, if you migrated from older versions, or switched between
   // a mozilla build and a commercial build, which have different columns.
   nsAutoString actualSortColumn;
-  if (generatedNameColumnId.Equals(colID) && mCards.Count()) {
+  if (!generatedNameColumnId.Equals(colID) && mCards.Count()) {
     nsIAbCard *card = ((AbCard *)(mCards.ElementAt(0)))->card;
     nsXPIDLString value;
     // XXX todo

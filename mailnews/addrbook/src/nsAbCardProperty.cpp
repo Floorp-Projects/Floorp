@@ -347,7 +347,9 @@ NS_IMETHODIMP nsAbCardProperty::GetCardValue(const char *attrname, PRUnichar **v
       break;
   }
 
-  NS_ENSURE_SUCCESS(rv,rv);
+  // don't assert here, as failure is expected in certain cases
+  // we call GetCardValue() from nsAbView::Init() to determine if the 
+  // saved sortColumn is valid or not.
   return rv;
 }
 
