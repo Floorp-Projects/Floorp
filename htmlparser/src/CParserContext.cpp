@@ -108,8 +108,10 @@ CParserContext::~CParserContext(){
 
   MOZ_COUNT_DTOR(CParserContext);
 
-  if(mScanner)
+  if(mScanner) {
     delete mScanner;
+    mScanner=nsnull;
+  }
 
   if(mTransferBuffer)
     delete [] mTransferBuffer;

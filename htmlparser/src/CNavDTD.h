@@ -377,7 +377,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual nsresult  Terminate(void) { return mDTDState=NS_ERROR_HTMLPARSER_STOPPARSING; }
+    virtual nsresult  Terminate(nsIParser* aParser=nsnull) { return mDTDState=NS_ERROR_HTMLPARSER_STOPPARSING; }
 
     /**
      * Give rest of world access to our tag enums, so that CanContain(), etc,

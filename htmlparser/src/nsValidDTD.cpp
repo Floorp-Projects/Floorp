@@ -366,7 +366,7 @@ nsITokenRecycler* CValidDTD::GetTokenRecycler(void){
  * @param 
  * @return
  */
-nsresult  CValidDTD::Terminate(void)
+nsresult  CValidDTD::Terminate(nsIParser* aParser)
 {
   return NS_ERROR_HTMLPARSER_STOPPARSING;
 }

@@ -228,7 +228,7 @@ class CValidDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual nsresult  Terminate(void);
+    virtual nsresult  Terminate(nsIParser* aParser=nsnull);
 
     /**
      * Give rest of world access to our tag enums, so that CanContain(), etc,

@@ -850,7 +850,7 @@ nsITokenRecycler* CRtfDTD::GetTokenRecycler(void){
  * @param 
  * @return
  */
-nsresult  CRtfDTD::Terminate(void)
+nsresult  CRtfDTD::Terminate(nsIParser* aParser)
 {
   return NS_ERROR_HTMLPARSER_STOPPARSING;
 }

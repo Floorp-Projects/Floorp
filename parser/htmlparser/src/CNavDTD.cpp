@@ -239,13 +239,22 @@ const nsIID& CNavDTD::GetMostDerivedIID(void)const {
  *  @return  
  */
 CNavDTD::~CNavDTD(){
-  delete mHeadContext;
-  delete mBodyContext;
+  if(mHeadContext) {
+    delete mHeadContext;
+    mHeadContext=0;
+  }
+  
+  if(mBodyContext) {
+    delete mBodyContext;
+    mBodyContext=0;
+  }
 
   NS_IF_RELEASE(mTokenizer);
 
-  if(mTempContext)
+  if(mTempContext) {
     delete mTempContext;
+    mTempContext=0;
+  }
 
  // delete mNodeRecycler;
 
