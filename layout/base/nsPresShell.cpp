@@ -786,11 +786,8 @@ PresShell::Init(nsIDocument* aDocument,
 
     // Get the prefs service
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
-    if (NS_SUCCEEDED(result)) {
-      PRInt32 timeSlice;
-      prefs->GetIntPref("layout.reflow.timeslice", &timeSlice);
-      // Enable after fixing the Mac build
-      // LL_I2L(gMaxRCProcessingTime, timeSlice);
+    if (NS_SUCCEEDED(result)) {      
+      prefs->GetIntPref("layout.reflow.timeslice", &gMaxRCProcessingTime);
       prefs->GetBoolPref("layout.reflow.async", &gDoAsyncReflow);
     }
   }
@@ -1918,11 +1915,18 @@ PresShell::ProcessReflowCommands()
       VERIFY_STYLE_TREE;
 
       if (gDoAsyncReflow) {
-        // Enable after fixing the Mac build
-        // LL_SUB(diff, afterReflow, beforeReflow);      
-        // LL_ADD(mAccumulatedReflowTime, mAccumulatedReflowTime, diff);
-        // if (LL_CMP(mAccumulatedReflowTime, >, gMaxRCProcessingTime))
+        PRInt64 totalTime;
+        PRInt64 maxTime;
+        LL_SUB(diff, afterReflow, beforeReflow);
+
+        LL_I2L(totalTime, mAccumulatedReflowTime);
+        LL_ADD(totalTime, totalTime, diff);
+        LL_L2I(mAccumulatedReflowTime, totalTime);
+
+        LL_I2L(maxTime, gMaxRCProcessingTime);
+        if (LL_CMP(totalTime, >, maxTime))
           break;
+          
       }
     }
     NS_IF_RELEASE(rcx);
@@ -1934,11 +1938,9 @@ PresShell::ProcessReflowCommands()
         PostReflowEvent();
       }
 #ifdef DEBUG
-      if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
-        PRInt32 reflowTime;
-        // Enable after fixing the Mac build
-        // LL_L2I(reflowTime, mAccumulatedReflowTime);
-        printf("Time spent in PresShell::ProcessReflowCommands(), this=%p, time=%d micro seconds\n", this, reflowTime);
+      if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {        
+        printf("Time spent in PresShell::ProcessReflowCommands(), this=%p, time=%d micro seconds\n", 
+          this, mAccumulatedReflowTime);
       }
 #endif
       mAccumulatedReflowTime = 0;
