@@ -30,9 +30,7 @@ Requirements:
    Preferably, perl version 5.004 or newer should be used.
    
 2. Mozilla\xpinstall\wizard\windows needs to be built.
-  a. to build it, MFC must be installed with VC6
-  b. set MOZ_MFC=1 in the build environment
-  c. run nmake -f makefile.win from the above directory
+  a. run nmake -f makefile.win from the above directory
 
 
 Build.pl requires no parameters.  When it finishes, it will have created a

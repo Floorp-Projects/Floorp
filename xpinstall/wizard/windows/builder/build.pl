@@ -40,16 +40,15 @@ if($ENV{MOZ_SRC} eq "")
   exit(1);
 }
 
-$DEPTH        = "$ENV{MOZ_SRC}\\mozilla";
-$cwdBuilder   = "$DEPTH\\xpinstall\\wizard\\windows\\builder";
-$cwdBuilder   =~ s/\//\\/g; # convert slashes to backslashes for Dos commands to work
-$cwdDist      = GetCwd("dist",     $DEPTH, $cwdBuilder);
-$cwdDistWin   = GetCwd("distwin",  $DEPTH, $cwdBuilder);
-$cwdInstall   = GetCwd("install",  $DEPTH, $cwdBuilder);
-$cwdPackager  = GetCwd("packager", $DEPTH, $cwdBuilder);
-$verPartial   = "5.0.0.";
-$ver          = $verPartial . GetVersion($DEPTH);
-$ftpStr       = "ftp://not.needed.com/because/the/xpi/files/will/be/located/in/the/same/dir/as/the/installer";
+$DEPTH         = "$ENV{MOZ_SRC}\\mozilla";
+$cwdBuilder    = "$DEPTH\\xpinstall\\wizard\\windows\\builder";
+$cwdBuilder    =~ s/\//\\/g; # convert slashes to backslashes for Dos commands to work
+$cwdDist       = GetCwd("dist",     $DEPTH, $cwdBuilder);
+$cwdDistWin    = GetCwd("distwin",  $DEPTH, $cwdBuilder);
+$cwdInstall    = GetCwd("install",  $DEPTH, $cwdBuilder);
+$cwdPackager   = GetCwd("packager", $DEPTH, $cwdBuilder);
+$verPartial    = "5.0.0.";
+$ver           = $verPartial . GetVersion($DEPTH);
 
 if(-e "$cwdDist\\stage")
 {
@@ -60,7 +59,7 @@ mkdir("$cwdDist\\stage", 775);
 system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin -d $cwdDist\\stage -f $cwdPackager\\packages-win -o dos -v");
 
 chdir("$cwdPackager\\windows");
-system("perl makeall.pl $ver $ftpStr $cwdDist\\stage $cwdDistWin\\install");
+system("perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install");
 chdir($cwdBuilder);
 
 # Copy the .xpi files to the same directory as setup.exe.

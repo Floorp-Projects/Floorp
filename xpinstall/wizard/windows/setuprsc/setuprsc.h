@@ -5,11 +5,6 @@
 
 #include "winresrc.h"
 
-#ifdef IDC_STATIC
-#undef IDC_STATIC
-#endif
-#define IDC_STATIC                     (-1)
-
 #define IDS_ERROR_DIALOG_CREATE         1
 #define IDS_ERROR_FAILED                2
 #define IDS_ERROR_FILE_NOT_FOUND        3
@@ -64,7 +59,6 @@
 #define IDC_CHECK2                      1023
 #define IDC_LIST2                       1023
 #define IDC_LIST                        1023
-#define WINVER                          0x400
 #define IDC_CHECK3                      1024
 #define IDC_EDIT_LICENSE                1024
 #define IDC_CHECK0                      1025
@@ -91,6 +85,7 @@
 #define IDC_BUTTON1                     1055
 #define IDC_README                      1055
 #define IDC_DOWNLOAD_SIZE               1058
+#define IDC_SITE_SELECTOR               1059
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003
@@ -102,8 +97,11 @@
 #define DLG_START_INSTALL               2008
 #define DLG_EXTRACTING                  2009
 #define DLG_RESTART                     10206
+#define DLG_SITE_SELECTOR               10207
+#define DLG_SELECT_ADDITIONAL_COMPONENTS 10208
 #define IDB_BOX_CHECKED                 10304
 #define IDB_BOX_UNCHECKED               10306
+#define IDB_BOX_CHECKED_DISABLED        10307
 #define IDC_RADIO_TYPICAL               11007
 #define IDC_RADIO_ST0                   11007
 #define IDC_RADIO_CUSTOM                11008
@@ -118,6 +116,8 @@
 #define IDS_MSG_CREATE_DIRECTORY        11015
 #define IDS_STR_CREATE_DIRECTORY        11016
 #define IDS_ERROR_PROGRAM_FOLDER_NAME   11017
+#define IDS_CB_DEFAULT                  11018
+#define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
@@ -126,7 +126,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        112
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1059
+#define _APS_NEXT_CONTROL_VALUE         1061
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

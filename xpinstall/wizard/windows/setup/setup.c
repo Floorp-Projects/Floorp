@@ -34,6 +34,7 @@ HINSTANCE       hSDInst;
 HINSTANCE       hXPIStubInst;
 
 HBITMAP         hbmpBoxChecked;
+HBITMAP         hbmpBoxCheckedDisabled;
 HBITMAP         hbmpBoxUnChecked;
 
 HANDLE          hAccelTable;
@@ -55,6 +56,8 @@ LPSTR           szSetupDir;
 LPSTR           szTempDir;
 LPSTR           szFileIniConfig;
 
+LPSTR           szSiteSelectorDescription;
+
 DWORD           dwWizardState;
 DWORD           dwSetupType;
 DWORD           dwOSType;
@@ -74,13 +77,16 @@ diW             diWelcome;
 diL             diLicense;
 diST            diSetupType;
 diSC            diSelectComponents;
+diSC            diSelectAdditionalComponents;
 diWI            diWindowsIntegration;
 diPF            diProgramFolder;
+diSS            diSiteSelector;
 diSI            diStartInstall;
 diR             diReboot;
 siSD            siSDObject;
 siCF            siCFCoreFile;
 siC             *siComponents;
+ssi             *ssiSiteSelector;
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
 {

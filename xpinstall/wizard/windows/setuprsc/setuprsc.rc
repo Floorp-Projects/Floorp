@@ -1,5 +1,6 @@
 //Microsoft Developer Studio generated resource script.
 //
+
 #define WINVER 0x400
 #include "setuprsc.h"
 
@@ -145,15 +146,15 @@ BEGIN
                     WS_EX_STATICEDGE
 END
 
-DLG_PROGRAM_FOLDER DIALOG DISCARDABLE  51, 56, 316, 205
+DLG_PROGRAM_FOLDER DIALOGEX 51, 56, 316, 205
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_PROGRAM_FOLDER,101,64,204,12,ES_AUTOHSCROLL
     LISTBOX         IDC_LIST,101,94,204,77,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
     PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
-    DEFPUSHBUTTON   "&Install",IDWIZNEXT,188,186,53,14
+    DEFPUSHBUTTON   "&Next",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_MESSAGE0,101,11,204,33,NOT WS_GROUP
     LTEXT           "&Program Folder:",IDC_STATIC,101,54,105,8
@@ -247,6 +248,49 @@ BEGIN
     CONTROL         "",IDC_GAUGE_ARCHIVE,"GaugeArchive",0x0,9,21,175,11
 END
 
+DLG_SITE_SELECTOR DIALOGEX 51, 56, 315, 205
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Install",IDWIZNEXT,188,186,53,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
+    COMBOBOX        IDC_SITE_SELECTOR,101,49,198,124,CBS_DROPDOWNLIST | 
+                    CBS_SORT | CBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
+    LTEXT           "Select the region you wish to download from, or leave it on Default for Setup to automatically determine the best place to download from releative to where you are.",
+                    IDC_MESSAGE0,101,11,204,33,NOT WS_GROUP
+    CONTROL         108,-1,"Static",SS_BITMAP,11,11,80,160,WS_EX_CLIENTEDGE
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ,11,179,295,1,
+                    WS_EX_STATICEDGE
+END
+
+DLG_SELECT_ADDITIONAL_COMPONENTS DIALOGEX 51, 56, 316, 205
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
+    DEFPUSHBUTTON   "&Next >",IDWIZNEXT,188,186,53,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
+    LTEXT           "",IDC_MESSAGE0,101,10,204,19,NOT WS_GROUP
+    LTEXT           "&Additional Components",IDC_STATIC,101,32,125,8
+    GROUPBOX        "Description",IDC_STATIC,101,115,204,22
+    LTEXT           "",IDC_STATIC_DESCRIPTION,106,124,195,8
+    GROUPBOX        "",IDC_STATIC,101,140,204,33
+    LTEXT           "",IDC_DOWNLOAD_SIZE,105,160,92,8,NOT WS_GROUP
+    LTEXT           "",IDC_SPACE_AVAILABLE,206,160,94,8,NOT WS_GROUP
+    CONTROL         108,IDC_STATIC,"Static",SS_BITMAP,11,11,83,162,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
+                    WS_EX_STATICEDGE
+    LISTBOX         IDC_LIST_COMPONENTS,101,42,204,67,LBS_OWNERDRAWFIXED | 
+                    LBS_HASSTRINGS | LBS_USETABSTOPS | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_HSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "",IDC_STATIC,241,32,63,8,0,WS_EX_RIGHT
+    LTEXT           "Total download size:",IDC_STATIC,105,148,92,9
+    LTEXT           "Space Available:",IDC_STATIC,206,148,94,9
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -265,6 +309,7 @@ IDI_SETUP               ICON    DISCARDABLE     "setup.ico"
 IDB_BOX_UNCHECKED       BITMAP  FIXED IMPURE    "box_unch.bmp"
 IDB_BOX_CHECKED         BITMAP  FIXED IMPURE    "box_chec.bmp"
 IDB_BITMAP_WELCOME      BITMAP  DISCARDABLE     "bitmap1.bmp"
+IDB_BOX_CHECKED_DISABLED BITMAP  FIXED IMPURE    "box_ch_d.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -338,6 +383,7 @@ BEGIN
                             "The following directory does not exist:%sWould you like to create it?"
     IDS_STR_CREATE_DIRECTORY "Create Directory?"
     IDS_ERROR_PROGRAM_FOLDER_NAME "Invalid program folder name entered."
+    IDS_CB_DEFAULT          "Default"
 END
 
 #endif    // English (U.S.) resources

@@ -60,6 +60,8 @@ typedef int PRInt32;
 #define FILE_INI_CONFIG                 "config.ini"
 #define FILE_IDI_GETCONFIGINI           "getconfigini.idi"
 #define FILE_IDI_GETARCHIVES            "getarchives.idi"
+#define FILE_IDI_GETREDIRECT            "getredirect.idi"
+#define FILE_INI_REDIRECT               "redirect.ini"
 
 /* PP: Parse Path */
 #define PP_FILENAME_ONLY                1
@@ -115,6 +117,14 @@ typedef int PRInt32;
 #define SIC_LAUNCHAPP                   4
 #define SIC_DOWNLOAD_REQUIRED           8
 #define SIC_DOWNLOAD_ONLY               16
+#define SIC_ADDITIONAL                  32
+#define SIC_DISABLED                    64
+
+/* AC: Additional Components */
+#define AC_NONE                         0
+#define AC_COMPONENTS                   1
+#define AC_ADDITIONAL_COMPONENTS        2
+#define AC_ALL                          3
 
 /* OS: Operating System */
 #define OS_WIN95_DEBUTE                 1
@@ -162,7 +172,7 @@ typedef struct stStruct
   DWORD dwCItems;
   DWORD dwCItemsSelected[MAX_BUF]; /* components */
   DWORD dwAItems;
-  DWORD dwAItemsSelected[MAX_BUF]; /* additions */
+//  DWORD dwAItemsSelected[MAX_BUF]; /* additions */
   LPSTR szDescriptionShort;
   LPSTR szDescriptionLong;
 } st;
@@ -214,6 +224,13 @@ typedef struct dlgProgramFolder
   LPSTR szTitle;
   LPSTR szMessage0;
 } diPF;
+
+typedef struct dlgSiteSelector
+{
+  BOOL  bShowDialog;
+  LPSTR szTitle;
+  LPSTR szMessage0;
+} diSS;
 
 typedef struct dlgStartInstall
 {
@@ -301,6 +318,15 @@ struct sinfoComponent
   siCD            *siCDDependees;
   siC             *Next;
   siC             *Prev;
+};
+
+typedef struct ssInfo ssi;
+struct ssInfo
+{
+  LPSTR szDescription;
+  LPSTR szDomain;
+  ssi   *Next;
+  ssi   *Prev;
 };
 
 #endif

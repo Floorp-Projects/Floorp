@@ -132,14 +132,14 @@ void GetTotalArchivesToInstall(void)
 
   dwIndex0        = 0;
   dwTotalArchives = 0;
-  siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+  siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   while(siCObject)
   {
     if((siCObject->dwAttributes & SIC_SELECTED) && !(siCObject->dwAttributes & SIC_LAUNCHAPP))
       ++dwTotalArchives;
 
     ++dwIndex0;
-    siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+    siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
 }
 
@@ -179,7 +179,7 @@ HRESULT SmartUpdateJars()
     dwCurrentArchive  = 0;
     dwTotalArchives   = (dwTotalArchives * 2) + 1;
     bBarberBar        = FALSE;
-    siCObject         = SiCNodeGetObject(dwIndex0, TRUE);
+    siCObject         = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
     while(siCObject)
     {
       /* launch smartupdate engine for earch jar to be installed */
@@ -250,7 +250,7 @@ HRESULT SmartUpdateJars()
       }
 
       ++dwIndex0;
-      siCObject = SiCNodeGetObject(dwIndex0, TRUE);
+      siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
     }
 
     pfnXpiExit();
