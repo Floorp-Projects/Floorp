@@ -2,7 +2,7 @@
 <!ENTITY name.label                 "Name:">
 <!ENTITY name.accesskey             "n">
 <!ENTITY description.label          "Create as a subfolder of:">
-<!ENTITY description.accesskey      "c">
+<!ENTITY description.accesskey      "C">
 <!ENTITY searchCriteriaText.label   "Modify the search criteria used for this saved search:">
 <!ENTITY searchCriteriaButton.label "Search Criteria...">
 <!ENTITY searchCriteriaButton.accesskey "S">
@@ -11,4 +11,7 @@
 
 <!ENTITY folderSelectionCaption.label "Select the folders to search: ">
 <!ENTITY chooseFoldersButton.label "Choose...">
-<!ENTITY chooseFoldersButton.accesskey "C">
+<!ENTITY chooseFoldersButton.accesskey "h">
+
+<!ENTITY searchOnline.label "Search Online (Gives up-to-date results for IMAP and News folders but increases time to open the folder)">
+<!ENTITY searchOnline.accesskey "O">

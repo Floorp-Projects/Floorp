@@ -2910,6 +2910,11 @@ nsresult nsMsgAccountManager::LoadVirtualFolders()
           buffer.Cut(0, 6);
           dbFolderInfo->SetCharPtrProperty("searchStr", buffer.get());
         }
+        else if (dbFolderInfo && Substring(buffer, 0, 13).Equals("searchOnline="))
+        {
+          buffer.Cut(0, 13);
+          dbFolderInfo->SetBooleanProperty("searchOnline", buffer.Equals("true"));
+        }
       }
     }
   }
@@ -2965,12 +2970,15 @@ NS_IMETHODIMP nsMsgAccountManager::SaveVirtualFolders()
             rv = msgFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db)); // force db to get created.
             nsXPIDLCString srchFolderUri;
             nsXPIDLCString searchTerms; 
+            PRBool searchOnline = PR_FALSE;
+            dbFolderInfo->GetBooleanProperty("searchOnline", PR_FALSE, &searchOnline);
             dbFolderInfo->GetCharPtrProperty("searchFolderUri", getter_Copies(srchFolderUri));
             dbFolderInfo->GetCharPtrProperty("searchStr", getter_Copies(searchTerms));
             folderRes->GetValueConst(&uri);
             WriteLineToOutputStream("uri=", uri, outputStream);
             WriteLineToOutputStream("scope=", srchFolderUri.get(), outputStream);
             WriteLineToOutputStream("terms=", searchTerms.get(), outputStream);
+            WriteLineToOutputStream("searchOnline=", searchOnline ? "true" : "false", outputStream);
           }
         }
       }

@@ -49,7 +49,7 @@
         title="&virtualFolderProperties.title;"
         onload="onLoad();"
         buttons="accept,cancel"
-        style="width: 50em; height: 26em;"
+        style="width: 50em; height: 28em;"
 	      ondialogaccept="return onOK();">
 
   <stringbundleset id="stringbundleset">
@@ -96,7 +96,11 @@
     </rows>
   </grid>
 
-  <separator/>
+  <hbox flex="1">
+    <checkbox id="searchOnline" label="&searchOnline.label;" accesskey="&searchOnline.accesskey;"/>
+  </hbox>
+
+  <separator class="thin"/>
 
   <vbox flex="2">
     <label value="&searchTermCaption.label;"/>

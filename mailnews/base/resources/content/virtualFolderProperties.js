@@ -91,6 +91,7 @@ function onLoad()
     doEnabling(); // we only need to disable/enable the OK button for new virtual folders
   }
   
+  updateOnlineSearchState();
   doSetOKCancel(onOK, onCancel);
 }
 
@@ -106,6 +107,28 @@ function setupSearchRows(aSearchTerms)
     onMore(null);
 }
 
+function updateOnlineSearchState()
+{
+  var enableCheckbox = false;
+  var checkbox = document.getElementById('searchOnline');
+  // only enable the checkbox for selection, for online servers
+  var srchFolderUriArray = gSearchFolderURIs.split('|');
+  if (srchFolderUriArray[0])
+  {
+    var realFolderRes = GetResourceFromUri(srchFolderUriArray[0]);
+    var realFolder = realFolderRes.QueryInterface(Components.interfaces.nsIMsgFolder);
+    enableCheckbox =  realFolder.server.offlineSupportLevel; // anything greater than 0 is an online server like IMAP or news
+  }
+
+  if (enableCheckbox)
+    checkbox.removeAttribute('disabled');
+  else
+  {
+    checkbox.setAttribute('disabled', true);
+    checkbox.checked = false;
+  }
+}
+
 function InitDialogWithVirtualFolder(aVirtualFolderURI)
 {
   // when editing an existing folder, hide the folder picker that stores the parent location of the folder
@@ -119,6 +142,7 @@ function InitDialogWithVirtualFolder(aVirtualFolderURI)
   
   gSearchFolderURIs = dbFolderInfo.getCharPtrProperty("searchFolderUri");
   var searchTermString = dbFolderInfo.getCharPtrProperty("searchStr");
+  document.getElementById('searchOnline').checked = dbFolderInfo.getBooleanProperty("searchOnline", false);
   
   // work around to get our search term string converted into a real array of search terms
   var filterService = Components.classes["@mozilla.org/messenger/services/filters;1"].getService(Components.interfaces.nsIMsgFilterService);
@@ -141,6 +165,7 @@ function onOK()
   var name = gDialog.nameField.value;
   var uri = gDialog.picker.getAttribute("uri");
   var messengerBundle = document.getElementById("bundle_messenger");
+  var searchOnline = document.getElementById('searchOnline').checked;
 
   if (!gSearchFolderURIs)
   {  
@@ -162,6 +187,7 @@ function onOK()
     // set the original folder name as well.
     dbFolderInfo.setCharPtrProperty("searchStr", searchTermString);
     dbFolderInfo.setCharPtrProperty("searchFolderUri", gSearchFolderURIs);
+    dbFolderInfo.setBooleanProperty("searchOnline", searchOnline);    
     msgDatabase.Close(true);
 
     var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
@@ -185,7 +211,7 @@ function onOK()
     // XXX: Add code to make sure a folder with this name does not already exist before creating the virtual folder...
     // Alert the user here if that is the case.
     saveSearchTerms(gSearchTermSession.searchTerms, gSearchTermSession);
-    CreateVirtualFolder(name, parentFolder, gSearchFolderURIs, gSearchTermSession.searchTerms);
+    CreateVirtualFolder(name, parentFolder, gSearchFolderURIs, gSearchTermSession.searchTerms, searchOnline);
   }
 
   return true;
@@ -210,7 +236,11 @@ function doEnabling()
 
 function chooseFoldersToSearch()
 {
-  var folder  = GetMsgFolderFromUri(window.arguments[0].preselectedURI, false);
+  // if we have some search folders already, then root the folder picker dialog off the account
+  // for those folders. Otherwise fall back to the preselectedfolderURI which is the parent folder
+  // for this new virtual folder.
+  var srchFolderUriArray = gSearchFolderURIs.split('|');    
+  var folder  = GetMsgFolderFromUri(srchFolderUriArray[0] ? srchFolderUriArray[0] : window.arguments[0].preselectedURI, false);
   var dialog = window.openDialog("chrome://messenger/content/virtualFolderListDialog.xul", "",
                                  "chrome,titlebar,modal,centerscreen,resizable",
                                  {serverURI:folder.rootFolder.URI,
@@ -222,6 +252,7 @@ function chooseFoldersToSearch()
 function onFolderListDialogCallback(searchFolderURIs)
 {
   gSearchFolderURIs = searchFolderURIs;
+  updateOnlineSearchState(); // we may have changed the server type we are searching...
 }
 
 function onEnterInSearchTerm()

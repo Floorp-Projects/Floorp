@@ -851,6 +851,7 @@ function FolderPaneSelectionChange()
                     gCurrentVirtualFolderUri = uriToLoad;
                     var srchFolderUri = dbFolderInfo.getCharPtrProperty("searchFolderUri");
                     var srchFolderUriArray = srchFolderUri.split('|');
+                    var searchOnline = dbFolderInfo.getBooleanProperty("searchOnline", false);
                     // cross folder search
                     var filterService = Components.classes["@mozilla.org/messenger/services/filters;1"].getService(Components.interfaces.nsIMsgFilterService);
                     var filterList = filterService.getTempFilterList(msgFolder);
@@ -860,7 +861,7 @@ function FolderPaneSelectionChange()
                     {
                       viewType = nsMsgViewType.eShowVirtualFolderResults;
                       gXFVirtualFolderTerms = CreateGroupedSearchTerms(tempFilter.searchTerms);
-                      setupXFVirtualFolderSearch(srchFolderUriArray, gXFVirtualFolderTerms);
+                      setupXFVirtualFolderSearch(srchFolderUriArray, gXFVirtualFolderTerms, searchOnline);
                       gSearchInput.showingSearchCriteria = false;
                       // need to set things up so that reroot folder issues the search
                     }
@@ -1053,7 +1054,7 @@ function getSearchTermString(searchTerms)
   return condition;
 }
 
-function  CreateVirtualFolder(newName, parentFolder, searchFolderURIs, searchTerms)
+function  CreateVirtualFolder(newName, parentFolder, searchFolderURIs, searchTerms, searchOnline))
 {
   // ### need to make sure view/folder doesn't exist.
   if (searchFolderURIs && (searchFolderURIs != "") && newName && (newName != "")) 
@@ -1069,6 +1070,7 @@ function  CreateVirtualFolder(newName, parentFolder, searchFolderURIs, searchTer
       // set the original folder name as well.
       dbFolderInfo.setCharPtrProperty("searchStr", searchTermString);
       dbFolderInfo.setCharPtrProperty("searchFolderUri", searchFolderURIs);
+      dbFolderInfo.setBooleanProperty("searchOnline", searchOnline);
       vfdb.summaryValid = true;
       vfdb.Close(true);
       parentFolder.NotifyItemAdded(newFolder);
@@ -1114,7 +1116,7 @@ function GetScopeForFolder(folder)
   return folder.server.searchScope;
 }
 
-function setupXFVirtualFolderSearch(folderUrisToSearch, searchTerms)
+function setupXFVirtualFolderSearch(folderUrisToSearch, searchTerms, searchOnline)
 {
     var count = new Object;
   var i;
@@ -1128,7 +1130,7 @@ function setupXFVirtualFolderSearch(folderUrisToSearch, searchTerms)
       var realFolderRes = GetResourceFromUri(folderUrisToSearch[i]);
       var realFolder = realFolderRes.QueryInterface(Components.interfaces.nsIMsgFolder);
       if (!realFolder.isServer)
-        gSearchSession.addScopeTerm(GetScopeForFolder(realFolder), realFolder);
+        gSearchSession.addScopeTerm(!searchOnline ? nsMsgSearchScope.offlineMail : GetScopeForFolder(realFolder), realFolder);
     }
 
     var termsArray = searchTerms.QueryInterface(Components.interfaces.nsISupportsArray);
