@@ -120,9 +120,9 @@ nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection 
     mClipboard = do_GetService(kCClipboardCID, &rv);
     if (NS_FAILED(rv))
       return rv;
-  }
-  if (DRAGGING == aReason)
-    return NS_OK;//dont care if we are still dragging.
+  } 
+  if (!(aReason & nsIDOMSelectionListener::MOUSEUP_REASON))
+    return NS_OK;//dont care if we are still dragging. or if its not from a mouseup
   PRBool collapsed;
   if (!aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)) || collapsed) {
 #ifdef DEBUG_CLIPBOARD
