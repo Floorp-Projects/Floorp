@@ -2541,6 +2541,23 @@ nsPrintEngine::ReflowDocList(nsPrintObject* aPO, PRBool aSetPixelScale, PRBool a
     return NS_ERROR_FAILURE;
   }
 
+  // Check to see if the Iframe has been hidden
+  // then we don't want to print it.
+  if (aPO->mFrameType == eIFrame) {
+    nsIFrame * frame;
+    aPO->mParent->mPresShell->GetPrimaryFrameFor(aPO->mContent, &frame);
+    if (frame) {
+      nsCOMPtr<nsIStyleContext> sc;
+      frame->GetStyleContext(getter_AddRefs(sc));
+      if (sc) {
+        const nsStyleVisibility* vis = (const nsStyleVisibility*)sc->GetStyleData(eStyleStruct_Visibility);
+        if (!vis->IsVisible()) {
+          aPO->mDontPrint = PR_TRUE;
+        }
+      }
+    }
+  }
+
   PRInt32 cnt = aPO->mKids.Count();
   for (PRInt32 i=0;i<cnt;i++) {
     if (NS_FAILED(ReflowDocList((nsPrintObject *)aPO->mKids[i], aSetPixelScale, aDoCalcShrink))) {
