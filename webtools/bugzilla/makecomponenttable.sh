@@ -118,6 +118,9 @@ insert into components (value, program, initialowner) values ("Viewer App", "NGL
 insert into components (value, program, initialowner) values ("Widget Set", "NGLayout", "kmcclusk@netscape.com");
 insert into components (value, program, initialowner) values ("XPCOM", "NGLayout", "scullin@netscape.com");
 
+insert into components (value, program, initialowner) values ("Bonsai", "Webtools", "terry@mozilla.org");
+insert into components (value, program, initialowner) values ("Bugzilla", "Webtools", "terry@mozilla.org");
+insert into components (value, program, initialowner) values ("Tinderbox", "Webtools", "terry@mozilla.org");
 
 
 select * from components;
