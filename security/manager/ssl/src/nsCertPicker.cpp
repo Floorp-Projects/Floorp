@@ -66,7 +66,6 @@ nsCertPicker::~nsCertPicker()
 /* nsIX509Cert pick (in nsIInterfaceRequestor ctx, in wstring title, in wstring infoPrompt, in PRInt32 certUsage, in boolean allowInvalid, in boolean allowDuplicateNicknames, out boolean canceled); */
 NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, const PRUnichar *title, const PRUnichar *infoPrompt, PRInt32 certUsage, PRBool allowInvalid, PRBool allowDuplicateNicknames, PRBool *canceled, nsIX509Cert **_retval)
 {
-  PRInt32 i = 0;
   PRInt32 selectedIndex = -1;
   PRUnichar **certNicknameList = nsnull;
   PRUnichar **certDetailsList = nsnull;
@@ -111,12 +110,15 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, const PRUnic
     certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
     certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
 
-    for (i = 0, node = CERT_LIST_HEAD(certList);
-         !CERT_LIST_END(node, certList);
-         ++i, node = CERT_LIST_NEXT(node)
+    PRInt32 CertsToUse;
+
+    for (CertsToUse = 0, node = CERT_LIST_HEAD(certList);
+         !CERT_LIST_END(node, certList) && CertsToUse < nicknames->numnicknames;
+         node = CERT_LIST_NEXT(node)
         )
     {
       nsNSSCertificate *tempCert = new nsNSSCertificate(node->cert);
+
       if (tempCert) {
 
         // XXX we really should be using an nsCOMPtr instead of manually add-refing,
@@ -124,19 +126,26 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, const PRUnic
 
         NS_ADDREF(tempCert);
 
-        nsAutoString i_nickname(NS_ConvertUTF8toUCS2(nicknames->nicknames[i]));
+        nsAutoString i_nickname(NS_ConvertUTF8toUCS2(nicknames->nicknames[CertsToUse]));
         nsAutoString nickWithSerial;
         nsAutoString details;
         
         if (NS_SUCCEEDED(tempCert->FormatUIStrings(i_nickname, nickWithSerial, details))) {
-          certNicknameList[i] = ToNewUnicode(nickWithSerial);
-          certDetailsList[i] = ToNewUnicode(details);
+          certNicknameList[CertsToUse] = ToNewUnicode(nickWithSerial);
+          certDetailsList[CertsToUse] = ToNewUnicode(details);
+        }
+        else {
+          certNicknameList[CertsToUse] = nsnull;
+          certDetailsList[CertsToUse] = nsnull;
         }
 
         NS_RELEASE(tempCert);
+
+        ++CertsToUse;
       }
     }
-
+    
+    PRInt32 i = 0;
     nsICertPickDialogs *dialogs = nsnull;
     rv = getNSSDialogs((void**)&dialogs, NS_GET_IID(nsICertPickDialogs));
 
@@ -144,9 +153,9 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, const PRUnic
       /* Throw up the cert picker dialog and get back the index of the selected cert */
       rv = dialogs->PickCertificate(ctx, title, infoPrompt,
         (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
-        nicknames->numnicknames, &selectedIndex, canceled);
+        CertsToUse, &selectedIndex, canceled);
 
-      for (i = 0; i < nicknames->numnicknames; ++i) {
+      for (i = 0; i < CertsToUse; ++i) {
         nsMemory::Free(certNicknameList[i]);
         nsMemory::Free(certDetailsList[i]);
       }
@@ -188,5 +197,5 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, const PRUnic
   if (certList) {
     CERT_DestroyCertList(certList);
   }
-  return NS_OK;
+  return rv;
 }

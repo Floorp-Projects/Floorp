@@ -1637,7 +1637,6 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
   }
   else {
     /* user selects a cert to present */
-    int i;
     nsIClientAuthDialogs *dialogs = NULL;
     PRInt32 selectedIndex = -1;
     PRUnichar **certNicknameList = NULL;
@@ -1716,12 +1715,15 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
     certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
 
-    for (i = 0, node = CERT_LIST_HEAD(certList);
-         !CERT_LIST_END(node, certList);
-         ++i, node = CERT_LIST_NEXT(node)
+    PRInt32 CertsToUse;
+
+    for (CertsToUse = 0, node = CERT_LIST_HEAD(certList);
+         !CERT_LIST_END(node, certList) && CertsToUse < nicknames->numnicknames;
+         node = CERT_LIST_NEXT(node)
         )
     {
       nsNSSCertificate *tempCert = new nsNSSCertificate(node->cert);
+
       if (tempCert) {
       
         // XXX we really should be using an nsCOMPtr instead of manually add-refing,
@@ -1729,15 +1731,21 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
         
         NS_ADDREF(tempCert);
 
-        nsAutoString i_nickname(NS_ConvertUTF8toUCS2(nicknames->nicknames[i]));
+        nsAutoString i_nickname(NS_ConvertUTF8toUCS2(nicknames->nicknames[CertsToUse]));
         nsAutoString nickWithSerial;
         nsAutoString details;
         if (NS_SUCCEEDED(tempCert->FormatUIStrings(i_nickname, nickWithSerial, details))) {
-          certNicknameList[i] = ToNewUnicode(nickWithSerial);
-          certDetailsList[i] = ToNewUnicode(details);
+          certNicknameList[CertsToUse] = ToNewUnicode(nickWithSerial);
+          certDetailsList[CertsToUse] = ToNewUnicode(details);
+        }
+        else {
+          certNicknameList[CertsToUse] = nsnull;
+          certDetailsList[CertsToUse] = nsnull;
         }
 
         NS_RELEASE(tempCert);
+        
+        ++CertsToUse;
       }
     }
 
@@ -1748,9 +1756,10 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 
     rv = dialogs->ChooseCertificate(info, cn.get(), org.get(), issuer.get(), 
       (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
-      nicknames->numnicknames, &selectedIndex, &canceled);
+      CertsToUse, &selectedIndex, &canceled);
 
-    for (i = 0; i < nicknames->numnicknames; ++i) {
+    int i;
+    for (i = 0; i < CertsToUse; ++i) {
       nsMemory::Free(certNicknameList[i]);
       nsMemory::Free(certDetailsList[i]);
     }
