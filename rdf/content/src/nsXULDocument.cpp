@@ -159,10 +159,10 @@ static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
 #define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 
-const nsForwardReference::State nsForwardReference::kPasses[] = {
-    nsForwardReference::State::eConstruction,
-    nsForwardReference::State::eHookup,
-    nsForwardReference::State::eDone
+const nsForwardReference::Phase nsForwardReference::kPasses[] = {
+    nsForwardReference::eConstruction,
+    nsForwardReference::eHookup,
+    nsForwardReference::eDone
 };
 
 
@@ -217,7 +217,7 @@ nsXULDocument::nsXULDocument(void)
       mCharSetID("UTF-8"),
       mDisplaySelection(PR_FALSE),
       mIsPopup(PR_FALSE),
-      mResolutionPhase(nsForwardReference::State::eStart),
+      mResolutionPhase(nsForwardReference::eStart),
       mState(eState_Master)
 {
     NS_INIT_REFCNT();
@@ -1814,7 +1814,7 @@ nsXULDocument::SetForm(nsIDOMHTMLFormElement* aForm)
 NS_IMETHODIMP
 nsXULDocument::AddForwardReference(nsForwardReference* aRef)
 {
-    if (mResolutionPhase < aRef->GetState()) {
+    if (mResolutionPhase < aRef->GetPhase()) {
         mForwardReferences.AppendElement(aRef);
     }
     else {
@@ -1829,7 +1829,7 @@ nsXULDocument::AddForwardReference(nsForwardReference* aRef)
 NS_IMETHODIMP
 nsXULDocument::ResolveForwardReferences()
 {
-    if (mResolutionPhase == nsForwardReference::State::eDone)
+    if (mResolutionPhase == nsForwardReference::eDone)
         return NS_OK;
 
     // Resolve each outstanding 'forward' reference. We iterate
@@ -1838,7 +1838,7 @@ nsXULDocument::ResolveForwardReferences()
     // guaranteed to converge because we've "closed the gate" to new
     // forward references.
 
-    const nsForwardReference::State* pass = nsForwardReference::kPasses;
+    const nsForwardReference::Phase* pass = nsForwardReference::kPasses;
     while ((mResolutionPhase = *pass) != nsForwardReference::eDone) {
         PRInt32 previous = 0;
         while (mForwardReferences.Count() && mForwardReferences.Count() != previous) {
@@ -1847,7 +1847,7 @@ nsXULDocument::ResolveForwardReferences()
             for (PRInt32 i = 0; i < mForwardReferences.Count(); ++i) {
                 nsForwardReference* fwdref = NS_REINTERPRET_CAST(nsForwardReference*, mForwardReferences[i]);
 
-                if (fwdref->GetState() == *pass) {
+                if (fwdref->GetPhase() == *pass) {
                     nsForwardReference::Result result = fwdref->Resolve();
 
                     switch (result) {
@@ -2446,7 +2446,7 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
 
     // If it's not there yet, we may be able to defer hookup until
     // later.
-    if (listener && !resolved && (mResolutionPhase != nsForwardReference::State::eDone)) {
+    if (listener && !resolved && (mResolutionPhase != nsForwardReference::eDone)) {
         BroadcasterHookup* hookup = new BroadcasterHookup(this, aElement);
         if (! hookup)
             return NS_ERROR_OUT_OF_MEMORY;

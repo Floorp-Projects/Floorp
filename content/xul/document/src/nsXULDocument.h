@@ -519,7 +519,7 @@ protected:
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
     nsVoidArray mForwardReferences;
-    nsForwardReference::State mResolutionPhase;
+    nsForwardReference::Phase mResolutionPhase;
 
     // The following are pointers into the content model which provide access to
     // the objects triggering either a popup or a tooltip. These are marked as
@@ -651,7 +651,7 @@ protected:
 
         virtual ~BroadcasterHookup();
 
-        virtual State GetState() { return eHookup; }
+        virtual Phase GetPhase() { return eHookup; }
         virtual Result Resolve();
     };
 
@@ -676,7 +676,7 @@ protected:
 
         virtual ~OverlayForwardReference();
 
-        virtual State GetState() { return eConstruction; }
+        virtual Phase GetPhase() { return eConstruction; }
         virtual Result Resolve();
     };
 
