@@ -20,6 +20,7 @@
 
 #include "nsIFileStream.h"
 #include "nsFileStream.h"
+#include "nsIComponentManager.h"	// For CreateInstance()
 
 #include "prmem.h"
 
@@ -708,3 +709,33 @@ nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result)
 {
 	return nsDirectoryIteratorImpl::Create(nsnull, nsIDirectoryIterator::GetIID(), (void**)result);
 }
+
+//----------------------------------------------------------------------------------------
+// Convinence functions for creating instances
+//----------------------------------------------------------------------------------------
+nsIFileSpec* NS_CreateFileSpec()
+{
+    // #include nsIComponentManager.h
+    nsIFileSpec* spec = nsnull;
+    nsresult rv = nsComponentManager::CreateInstance(
+    	(const char*)NS_FILESPEC_PROGID,
+    	(nsISupports*)nsnull,
+    	(const nsID&)nsIFileSpec::GetIID(),
+    	(void**)&spec);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
+    return spec;
+}
+
+nsIDirectoryIterator* NS_CreateDirectoryIterator()
+{
+    // #include nsIComponentManager.h
+    nsIDirectoryIterator* iter = nsnull;
+    nsresult rv = nsComponentManager::CreateInstance(
+    	(const char*)NS_DIRECTORYITERATOR_PROGID,
+    	(nsISupports*)nsnull,
+    	(const nsID&)nsIDirectoryIterator::GetIID(),
+    	(void**)&iter);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a directory iterator.");
+    return iter;
+}
+

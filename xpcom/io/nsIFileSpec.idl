@@ -24,7 +24,6 @@
 
 %{C++
 #include "nsFileSpec.h" // for factory method
-#include "nsIComponentManager.h" // for CreateInstance
 %}
 
 interface nsIFileURL;
@@ -140,33 +139,9 @@ NS_COM nsresult NS_NewFileSpecWithSpec(nsFileSpec aSrcFileSpec, nsIFileSpec **re
 NS_COM nsresult NS_NewFileSpec(nsIFileSpec** result);
 NS_COM nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result);
 
-// Factory methods if you do not link with xpcom. Consider using these
-// with nsCOMPtr, too (though it requires linking with xpcom).
-inline nsIFileSpec* NS_CreateFileSpec()
-{
-    // #include nsIComponentManager.h
-    nsIFileSpec* spec = nsnull;
-    nsresult rv = nsComponentManager::CreateInstance(
-    	(const char*)NS_FILESPEC_PROGID,
-    	(nsISupports*)nsnull,
-    	(const nsID&)nsIFileSpec::GetIID(),
-    	(void**)&spec);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
-    return spec;
-}
-
-inline nsIDirectoryIterator* NS_CreateDirectoryIterator()
-{
-    // #include nsIComponentManager.h
-    nsIDirectoryIterator* iter = nsnull;
-    nsresult rv = nsComponentManager::CreateInstance(
-    	(const char*)NS_DIRECTORYITERATOR_PROGID,
-    	(nsISupports*)nsnull,
-    	(const nsID&)nsIDirectoryIterator::GetIID(),
-    	(void**)&iter);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a directory iterator.");
-    return iter;
-}
+// Convinience functions for creation of xpcom objects
+NS_COM nsIFileSpec* NS_CreateFileSpec();
+NS_COM nsIDirectoryIterator* NS_CreateDirectoryIterator();
 
 #define NS_BOOL_ACCESSOR(_method) { PRBool yes; return NS_SUCCEEDED(f->_method(&yes)) && yes; }
 inline PRBool Exists(nsIFileSpec* f) NS_BOOL_ACCESSOR(exists)
