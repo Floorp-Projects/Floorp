@@ -265,8 +265,7 @@ nsresult nsPref::getLockPrefFileInfo()
 //----------------------------------------------------------------------------------------
 {
     nsresult rv = NS_OK;
-    PrefResult result = PREF_NOERROR;
-
+ 
     gLockFileName = nsnull;
     gLockVendor = nsnull;
  
@@ -505,13 +504,13 @@ NS_IMETHODIMP nsPref::ReadUserPrefs()
     }
     if (NS_SUCCEEDED(rv))
 		  useUserPrefFile(); 
-/*
+
 #ifndef NS_DEBUG
 #ifndef XP_MAC
     rv = useLockPrefFile();
 #endif
 #endif
-*/
+
     return rv;
 }
 
