@@ -346,6 +346,8 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("nsFileControlFrame", aReflowState.reason);
 
+  aStatus = NS_FRAME_COMPLETE;
+
   if (mFormFrame == nsnull && eReflowReason_Initial == aReflowState.reason) {
     // add ourself as an nsIFormControlFrame
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
