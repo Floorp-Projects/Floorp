@@ -47,18 +47,18 @@ const JSValue kTrue = JSValue(true);
 const JSValue kFalse = JSValue(false);
 const JSValue kNull = JSValue((JSObject*)NULL);
 
-const JSType Any_Type = JSType(widenCString("any"), NULL);
-const JSType Integer_Type = JSType(widenCString("Integer"), &Any_Type);
-const JSType Number_Type = JSType(widenCString("Number"), &Integer_Type);
-const JSType Character_Type = JSType(widenCString("Character"), &Any_Type);
-const JSType String_Type = JSType(widenCString("String"), &Character_Type);
-const JSType Function_Type = JSType(widenCString("Function"), &Any_Type);
-const JSType Array_Type = JSType(widenCString("Array"), &Any_Type);
-const JSType Type_Type = JSType(widenCString("Type"), &Any_Type);
-const JSType Boolean_Type = JSType(widenCString("Boolean"), &Any_Type);
-const JSType Null_Type = JSType(widenCString("Null"), &Any_Type);
-const JSType Void_Type = JSType(widenCString("void"), &Any_Type);
-const JSType None_Type = JSType(widenCString("none"), &Any_Type);
+JSType Any_Type = JSType(widenCString("any"), NULL);
+JSType Integer_Type = JSType(widenCString("Integer"), &Any_Type);
+JSType Number_Type = JSType(widenCString("Number"), &Integer_Type);
+JSType Character_Type = JSType(widenCString("Character"), &Any_Type);
+JSType String_Type = JSType(widenCString("String"), &Character_Type);
+JSType Function_Type = JSType(widenCString("Function"), &Any_Type);
+JSType Array_Type = JSType(widenCString("Array"), &Any_Type);
+JSType Type_Type = JSType(widenCString("Type"), &Any_Type);
+JSType Boolean_Type = JSType(widenCString("Boolean"), &Any_Type);
+JSType Null_Type = JSType(widenCString("Null"), &Any_Type);
+JSType Void_Type = JSType(widenCString("void"), &Any_Type);
+JSType None_Type = JSType(widenCString("none"), &Any_Type);
 
 
 #ifdef IS_LITTLE_ENDIAN
