@@ -42,7 +42,7 @@ MISCDEP=$(LLIBS)
 
 OBJS=   \
 	.\$(OBJDIR)\mkreg.obj	\
-!ifdef SMART_MAIL
+!if defined(SMART_MAIL) || defined(MOZ_MAIL_COMPOSE)
 	.\$(OBJDIR)\mkbuf.obj	\
 !endif
 	$(NULL)
@@ -50,7 +50,7 @@ OBJS=   \
 
 CSRCS =	\
 	mkreg.c	\
-!ifdef SMART_MAIL
+!if defined(SMART_MAIL) || defined(MOZ_MAIL_COMPOSE)
 	mkbuf.c \
 !endif
 	$(NULL)
@@ -65,7 +65,7 @@ EXTRA_LIBS=
 REQUIRES= network
 EXPORTS= \
 	mkreg.h \
-!ifdef SMART_MAIL
+!if defined(SMART_MAIL) || defined(MOZ_MAIL_COMPOSE)
 	mkbuf.h \
 !endif
 	$(NULL);
@@ -78,7 +78,7 @@ C_OBJS = \
 #!if "$(MOZ_BITS)" != "16"
 LINCS= \
 	-I$(PUBLIC)\network \
-!ifdef SMART_MAIL
+!if defined(SMART_MAIL) || defined(MOZ_MAIL_COMPOSE)
 	-I$(DEPTH)\lib\xp \
 !endif
 	$(NULL)

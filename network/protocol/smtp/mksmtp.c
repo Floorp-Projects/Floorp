@@ -26,7 +26,6 @@
 
 #if defined(MOZILLA_CLIENT) || defined(LIBNET_SMTP)
 #if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
-
 #include "mkgeturl.h"
 #include "mksmtp.h"
 #include "mime.h"
@@ -1300,13 +1299,15 @@ HG61365
 
 		/* Tell the message library and front end to pop up an edit window.
 		 */
-		cpane = MSG_ComposeMessage (CE_WINDOW_ID,
+#ifdef XP_UNIX
+        cpane = MSG_ComposeMessage (CE_WINDOW_ID,
 									from, reply_to, to, cc, bcc, fcc,
 									newsgroups, followup_to, organization,
 									subject, references, other_random_headers,
 									priority, attachment, newspost_url, body,
 									force_plain_text,
 									html_part);
+#endif //XP_UNIX
 
 #ifdef MOZ_MAIL_NEWS
 		if (cpane && CE_URL_S->fe_data) {
