@@ -105,12 +105,6 @@
             <treecell url="chrome://browser/content/pref/pref-download.xul" label="&download.label;"/>
           </treerow>
         </treeitem>
-        <!-- Taking out Policies panel b/c bug 44121
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-policies.xul" label="&policies.label;"/>
-          </treerow>
-        </treeitem> -->
       </treechildren>
     </treeitem>
     
@@ -166,12 +160,6 @@
           </treerow>
         </treeitem>
       </treechildren>
-    </treeitem>
-
-    <treeitem id="offlineItem">
-      <treerow>
-        <treecell url="chrome://browser/content/pref/pref-offline.xul" label="&offline.label;"/> 
-      </treerow>
     </treeitem>
   </treechildren>
 </tree>

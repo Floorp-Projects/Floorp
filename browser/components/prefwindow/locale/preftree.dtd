@@ -16,10 +16,6 @@
 <!--LOCALIZATION NOTE (smartBrowse.label): DONT_TRANSLATE -->
 <!ENTITY smartBrowse.label "Smart Browsing">
 <!ENTITY tabWindows.label "Tabbed Browsing">
-<!ENTITY compose.label "Composer">
-<!ENTITY editing.label "New Page Settings">
-<!ENTITY publish.label "Publish">
-<!ENTITY offline.label "Offline &amp; Disk Space">
 <!ENTITY security.label "Privacy &amp; Security">
 <!ENTITY advance.label "Advanced">
 <!ENTITY down.label "Download">
