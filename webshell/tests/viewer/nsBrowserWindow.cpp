@@ -1395,7 +1395,9 @@ nsBrowserWindow::DoToggleSelection()
       PRBool  current = doc->GetDisplaySelection();
       doc->SetDisplaySelection(!current);
       ForceRefresh();
+      NS_RELEASE(doc);
     }
+    NS_RELEASE(shell);
   }
 }
 
