@@ -73,11 +73,11 @@ ipcTransport::Init(const nsACString &appName,
                    const nsACString &socketPath,
                    ipcTransportObserver *obs)
 {
-    LOG(("ipcTransport::Init\n"));
-
     mAppName = appName;
     mSocketPath = socketPath;
     mObserver = obs;
+
+    LOG(("ipcTransport::Init [app-name=%s]\n", mAppName.get()));
 
     // XXX service should be the observer
     nsCOMPtr<nsIObserverService> observ(do_GetService("@mozilla.org/observer-service;1"));
