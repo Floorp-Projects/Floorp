@@ -2451,7 +2451,6 @@ FindCanvasBackground(nsIPresContext* aPresContext,
   // allow that yet, do we?)
   nsIFrame *firstChild;
   aForFrame->FirstChild(aPresContext, nsnull, &firstChild);
-  NS_ASSERTION(firstChild, "no first child");
   if (firstChild) {
     const nsStyleBackground *result;
     GetStyleData(firstChild, &result);
@@ -2481,7 +2480,8 @@ FindCanvasBackground(nsIPresContext* aPresContext,
     *aBackground = result;
   } else {
     // This should always give transparent, so we'll fill it in with the
-    // default color if needed.  But this should never happen anyway...
+    // default color if needed.  This seems to happen a bit while a page is
+    // being loaded.
     GetStyleData(aForFrame, aBackground);
   }
   
