@@ -50,7 +50,16 @@ else
   MOZ_OBJ=$MOZ_TEST_BASE/mozilla/
 fi
 
-MOZ_TEST_VIEWER="${MOZ_OBJ}dist/bin/mozilla-viewer.sh -- -d 500"
+w1='uname | grep WIN'
+if [ "$w1" = "" ]; then
+ MOZ_TEST_VIEWER="${MOZ_OBJ}dist/bin/mozilla-viewer.sh -- -d 500"
+else
+ MOZ_TEST_VIEWER="${MOZ_OBJ}dist/bin/viewer.exe"
+ if test -f $MOZ_TEST_VIEWER; then
+ else
+  MOZ_TEST_VIEWER="${MOZ_OBJ}dist/win32_d.obj/bin/viewer.exe"
+ fi
+fi
 # These are needed by runtests.sh
 MOZ_TEST_VIEWER=`nodots $MOZ_TEST_VIEWER`
 MOZ_TEST_BASE=`nodots $MOZ_TEST_BASE`
