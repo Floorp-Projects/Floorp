@@ -63,7 +63,7 @@ PRUint32  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PR
 { 
   if (!mIsReadOnly) {
     NS_ALLOC_STR_BUF(buf, aText, 512);
-    XmTextInsert(mWidget, aStartPosbuf);
+    XmTextInsert(mWidget, aStartPos, buf);
     NS_FREE_STR_BUF(buf);
   }
   return(0);
@@ -76,7 +76,7 @@ void  nsTextHelper::RemoveText()
   blank[0] = 0;
 
   if (!mIsReadOnly) {
-    XmTextSetString(mWidget, buf);
+    XmTextSetString(mWidget, blank);
   }
 }
 
@@ -89,6 +89,7 @@ void  nsTextHelper::SetPassword(PRBool aIsPassword)
 //-------------------------------------------------------------------------
 PRBool  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag)
 {
+  NS_ASSERTION(mWidget != nsnull, "SetReadOnly - Widget is NULL, Create may not have been called!");
   PRBool oldSetting = mIsReadOnly;
   mIsReadOnly = aReadOnlyFlag;
   XmTextSetEditable(mWidget, aReadOnlyFlag);
@@ -137,7 +138,7 @@ void  nsTextHelper::SetCaretPosition(PRUint32 aPosition)
 //-------------------------------------------------------------------------
 PRUint32  nsTextHelper::GetCaretPosition()
 {
-  return (PRUin32)XmTextGetInsertionPosition(mWidget);
+  return (PRUint32)XmTextGetInsertionPosition(mWidget);
 }
 
 //-------------------------------------------------------------------------

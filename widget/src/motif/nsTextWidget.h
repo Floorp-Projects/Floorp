@@ -52,8 +52,7 @@ public:
               nsWidgetInitData *aInitData = nsnull);
 
 
-  virtual PRBool  OnPaint();
-  virtual PRBool  OnMove(PRInt32 aX, PRInt32 aY);
+  virtual PRBool  OnPaint(nsPaintEvent & aEvent);
   virtual PRBool  OnResize(nsRect &aWindowRect);
 
   // nsTextHelper Interface
@@ -69,13 +68,14 @@ public:
   virtual void      GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
   virtual void      SetCaretPosition(PRUint32 aPosition);
   virtual PRUint32  GetCaretPosition();
-  virtual void      PreCreateWidget(nsWidgetInitData *aInitData);
   virtual PRBool    AutoErase();
 
 protected:
     PRBool  mIsPasswordCallBacksInstalled;
 
 private:
+  PRBool mMakeReadOnly;
+  PRBool mMakePassword;
 
   // this should not be public
   static PRInt32 GetOuterOffset() {
@@ -105,7 +105,6 @@ private:
     virtual void      GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
     virtual void      SetCaretPosition(PRUint32 aPosition);
     virtual PRUint32  GetCaretPosition();
-    virtual void      PreCreateWidget(nsWidgetInitData *aInitData);
     virtual PRBool    AutoErase();
 
   };

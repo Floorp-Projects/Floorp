@@ -25,7 +25,7 @@
  * Base class for nsTextAreaWidget and nsTextWidget
  */
 
-class nsTextHelper : public nsWindow, public nsITextWidget
+class nsTextHelper : public nsWindow
 {
 
 public:
@@ -44,7 +44,7 @@ public:
     virtual void      GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
     virtual void      SetCaretPosition(PRUint32 aPosition);
     virtual PRUint32  GetCaretPosition();
-    virtual void      PreCreateWidget(nsWidgetInitData *aInitData);
+    //virtual void      PreCreateWidget(nsWidgetInitData *aInitData);
     virtual PRBool    AutoErase();
 
 protected:
