@@ -308,6 +308,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    * the charset of this folder
    */
 	attribute wstring charset;
+	attribute boolean charsetOverride;
 	attribute unsigned long biffState;
 
   /**

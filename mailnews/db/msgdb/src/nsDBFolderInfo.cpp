@@ -49,6 +49,7 @@ static const char * kKnownArtsSetColumnName = "knownArts";
 static const char * kExpiredMarkColumnName = "expiredMark";
 static const char * kVersionColumnName = "version";
 static const char * kCharacterSetColumnName = "charSet";
+static const char * kCharacterSetOverrideColumnName = "charSetOverride";
 static const char * kLocaleColumnName = "locale";
 
 static const char * MAILNEWS_VIEW_DEFAULT_CHARSET = "mailnews.view_default_charset";
@@ -629,6 +630,21 @@ nsDBFolderInfo::GetCharPtrCharacterSet(char **result)
 NS_IMETHODIMP nsDBFolderInfo::SetCharacterSet(nsString *charSet) 
 {
 	return SetProperty(kCharacterSetColumnName, charSet);
+}
+
+NS_IMETHODIMP nsDBFolderInfo::GetCharacterSetOverride(PRBool *characterSetOverride) 
+{
+  *characterSetOverride = PR_FALSE;
+  PRUint32 propertyValue;
+  nsresult rv = GetUint32Property(kCharacterSetOverrideColumnName, &propertyValue);
+  if (NS_SUCCEEDED(rv))
+    *characterSetOverride = propertyValue;
+  return rv;
+}
+
+NS_IMETHODIMP nsDBFolderInfo::SetCharacterSetOverride(PRBool characterSetOverride) 
+{
+  return SetUint32Property(kCharacterSetOverrideColumnName, characterSetOverride);
 }
 
 NS_IMETHODIMP

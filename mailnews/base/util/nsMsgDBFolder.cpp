@@ -316,8 +316,31 @@ NS_IMETHODIMP nsMsgDBFolder::SetCharset(const PRUnichar * aCharset)
 		nsAutoString charset(aCharset);
 		rv = folderInfo->SetCharacterSet(&charset);
 		db->Commit(nsMsgDBCommitType::kLargeCommit);
+		mCharset.Assign(aCharset);  // synchronize member variable
 	}
 	return rv;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::GetCharsetOverride(PRBool *aCharsetOverride)
+{
+  *aCharsetOverride = mCharsetOverride;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::SetCharsetOverride(PRBool aCharsetOverride)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIDBFolderInfo> folderInfo;
+  nsCOMPtr<nsIMsgDatabase> db; 
+  rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+  if(NS_SUCCEEDED(rv))
+  {
+    rv = folderInfo->SetCharacterSetOverride(aCharsetOverride);
+    db->Commit(nsMsgDBCommitType::kLargeCommit);
+    mCharsetOverride = aCharsetOverride;  // synchronize member variable
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::GetHasNewMessages(PRBool *hasNewMessages)
@@ -493,6 +516,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 				folderInfo->GetCharacterSet2(&mCharset, &defaultUsed);
 				if (defaultUsed)
 					mCharset.AssignWithConversion("");
+				folderInfo->GetCharacterSetOverride(&mCharsetOverride);
         
 				if (db) {
 					PRBool hasnew;

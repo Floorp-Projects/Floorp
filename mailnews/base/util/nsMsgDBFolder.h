@@ -59,6 +59,8 @@ public:
     NS_IMETHOD HasMessagesOfType(nsIMsgWindow *aMsgWindow, PRUint32 viewType, PRBool *hasMessages);
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset);
 	NS_IMETHOD SetCharset(const PRUnichar * aCharset);
+	NS_IMETHOD GetCharsetOverride(PRBool *aCharsetOverride);
+	NS_IMETHOD SetCharsetOverride(PRBool aCharsetOverride);
 	//NS_IMETHOD HasNewMessages(PRBool *hasNewMessages);
 	NS_IMETHOD GetFirstNewMessage(nsIMessage **firstNewMessage);
 	NS_IMETHOD ClearNewMessages();
@@ -122,6 +124,7 @@ protected:
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;
 	nsString mCharset;
+	PRBool mCharsetOverride;
 	PRBool mAddListener;
 	PRBool mNewMessages;
   PRBool mGettingNewMessages;
