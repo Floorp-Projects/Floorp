@@ -153,13 +153,6 @@ nsresult DeleteRangeTxn::Redo(void)
   return result;
 }
 
-nsresult DeleteRangeTxn::GetIsTransient(PRBool *aIsTransient)
-{
-  if (nsnull!=aIsTransient)
-    *aIsTransient = PR_FALSE;
-  return NS_OK;
-}
-
 nsresult DeleteRangeTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   if (nsnull!=aDidMerge)

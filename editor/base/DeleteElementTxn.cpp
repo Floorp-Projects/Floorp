@@ -113,13 +113,6 @@ nsresult DeleteElementTxn::Redo(void)
   return result;
 }
 
-nsresult DeleteElementTxn::GetIsTransient(PRBool *aIsTransient)
-{
-  if (nsnull!=aIsTransient)
-    *aIsTransient = PR_FALSE;
-  return NS_OK;
-}
-
 nsresult DeleteElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
   if (nsnull!=aDidMerge)

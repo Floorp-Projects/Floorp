@@ -18,6 +18,7 @@
 
 #include "TransactionFactory.h"
 // transactions this factory knows how to build
+#include "EditAggregateTxn.h"
 #include "InsertTextTxn.h"
 #include "DeleteTextTxn.h"
 #include "CreateElementTxn.h"
@@ -27,6 +28,7 @@
 #include "SplitElementTxn.h"
 #include "JoinElementTxn.h"
 
+static NS_DEFINE_IID(kEditAggregateTxnIID,  EDIT_AGGREGATE_TXN_IID);
 static NS_DEFINE_IID(kInsertTextTxnIID,     INSERT_TEXT_TXN_IID);
 static NS_DEFINE_IID(kDeleteTextTxnIID,     DELETE_TEXT_TXN_IID);
 static NS_DEFINE_IID(kCreateElementTxnIID,  CREATE_ELEMENT_TXN_IID);
@@ -65,6 +67,8 @@ TransactionFactory::GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult)
     *aResult = new SplitElementTxn();
   else if (aTxnType.Equals(kJoinElementTxnIID))
     *aResult = new JoinElementTxn();
+  else if (aTxnType.Equals(kEditAggregateTxnIID))
+    *aResult = new EditAggregateTxn();
   
   if (nsnull==*aResult)
     result = NS_ERROR_INVALID_ARG;

@@ -136,58 +136,11 @@ nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
     {
       switch(keyCode) {
       case nsIDOMEvent::VK_BACK:
-        {
-          if (PR_FALSE==ctrlKey)
-          {
-            // XXX: for now, just grab the first text node
-            nsCOMPtr<nsIDOMNode> currentNode;
-            nsCOMPtr<nsIDOMNode> textNode;
-            nsCOMPtr<nsIDOMCharacterData> text;
-            if (NS_SUCCEEDED(mEditor->GetCurrentNode(getter_AddRefs(currentNode))) && 
-                NS_SUCCEEDED(mEditor->GetFirstTextNode(currentNode,getter_AddRefs(textNode))) && 
-                NS_SUCCEEDED(textNode->QueryInterface(kIDOMCharacterDataIID, getter_AddRefs(text)))) 
-            {
-              // XXX: for now, just append the text
-              PRUint32 offset;
-              text->GetLength(&offset);
-              nsresult result = mEditor->DeleteText(text, offset-1, 1);
-            }
-          }
-          else
-          {
-            mEditor->DeleteSelection();
-          }
-        }
+        mEditor->DeleteSelection(nsIEditor::eRTL);
         break;
 
       case nsIDOMEvent::VK_DELETE:
-        {
-          if (PR_FALSE==ctrlKey)
-          {
-            // XXX: for now, just grab the first text node
-            nsCOMPtr<nsIDOMNode> currentNode;
-            nsCOMPtr<nsIDOMNode> textNode;
-            nsCOMPtr<nsIDOMCharacterData> text;
-            if (NS_SUCCEEDED(mEditor->GetCurrentNode(getter_AddRefs(currentNode))) && 
-                NS_SUCCEEDED(mEditor->GetFirstTextNode(currentNode,getter_AddRefs(textNode))) && 
-                NS_SUCCEEDED(textNode->QueryInterface(kIDOMCharacterDataIID, getter_AddRefs(text)))) 
-            {
-              nsresult result = mEditor->DeleteText(text, 0, 1);
-            }
-          }
-          else
-          { // XXX: delete the first P we find
-            nsAutoString pTag("P");
-            nsCOMPtr<nsIDOMNode> currentNode;
-            nsCOMPtr<nsIDOMNode> parentNode;
-            nsCOMPtr<nsIDOMElement> element;
-            if (NS_SUCCEEDED(mEditor->GetFirstNodeOfType(nsnull, pTag, getter_AddRefs(currentNode))))
-            {
-              currentNode->GetParentNode(getter_AddRefs(parentNode));
-              nsresult result = mEditor->DeleteElement(parentNode, currentNode);
-            }
-          }
-        }
+        mEditor->DeleteSelection(nsIEditor::eLTR);
         break;
 
       case nsIDOMEvent::VK_RETURN:

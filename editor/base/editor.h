@@ -162,7 +162,7 @@ public:
   nsresult DeleteElement(nsIDOMNode * aParent,
                          nsIDOMNode * aElement);
 
-  nsresult DeleteSelection();
+  nsresult DeleteSelection(nsIEditor::Direction aDir);
 
   nsresult InsertText(const nsString& aStringToInsert);
 
@@ -215,7 +215,8 @@ protected:
                                   PRUint32             aLength,
                                   DeleteTextTxn      **aTxn);
 
-  nsresult CreateTxnForDeleteSelection(EditAggregateTxn ** aTxn);
+  nsresult CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
+                                       EditAggregateTxn  ** aTxn);
 
 
 };
