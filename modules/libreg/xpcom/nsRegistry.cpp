@@ -94,6 +94,8 @@ protected:
 #ifdef EXTRA_THREADSAFE
     PRLock *mregLock;	// libreg isn't threadsafe. Use locks to synchronize.
 #endif
+    char *mCurRegFile;	// these are to prevent open from opening the registry again
+    uint32 mCurRegID;
 }; // nsRegistry
 
 
@@ -363,7 +365,7 @@ NS_IMPL_ISUPPORTS1( nsRegistryValue,        nsIRegistryValue )
 | NR_StartupRegistry.                                                          |
 ------------------------------------------------------------------------------*/
 nsRegistry::nsRegistry() 
-    : mReg( 0 ) {
+    : mReg(0), mCurRegFile(NULL), mCurRegID(0) {
     NS_INIT_REFCNT();
 
     // Ensure libreg is started.
@@ -387,6 +389,8 @@ nsRegistry::~nsRegistry() {
     if( mReg ) {
         Close();
     }
+    if (mCurRegFile)
+      nsCRT::free(mCurRegFile);
 #ifdef EXTRA_THREADSAFE
     if (mregLock) {
         PR_DestroyLock(mregLock);
@@ -406,12 +410,27 @@ NS_IMETHODIMP nsRegistry::Open( const char *regFile ) {
     if( !regFile ) {
         return OpenDefault();
     }
+
+    if (mCurRegFile && !nsCRT::strcmp(regFile, mCurRegFile))
+    {
+        // Already open
+        return NS_OK;
+    }
+
     // Ensure existing registry is closed.
     Close();
     // Open specified registry.
     PR_Lock(mregLock);
     err = NR_RegOpen((char*)regFile, &mReg );
     PR_Unlock(mregLock);
+    
+    // Store filename to prevent further opening of registry
+    if (mCurRegFile)
+      nsCRT::free(mCurRegFile);
+    // No error checking. If this fails, we will close/open the
+    // registry again even if it is the same file. So what.
+    mCurRegFile = nsCRT::strdup(regFile);
+
     // Convert the result.
     return regerr2nsresult( err );
 }
@@ -422,6 +441,12 @@ NS_IMETHODIMP nsRegistry::Open( const char *regFile ) {
 ------------------------------------------------------------------------------*/
 NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( uint32 regid ) {
     REGERR err = REGERR_OK;
+
+    if (mCurRegID == regid)
+    {
+        // Already opened.
+        return NS_OK;
+    }
 
     // Ensure existing registry is closed.
     Close();
@@ -459,6 +484,10 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( uint32 regid ) {
     PR_Unlock(mregLock);
     // Cleanup
     delete registryLocation;
+
+    // Store the registry that was opened for optimizing future opens.
+    mCurRegID = regid;
+
     // Convert the result.
     return regerr2nsresult( err );
 }
@@ -489,6 +518,10 @@ NS_IMETHODIMP nsRegistry::Close() {
         err = NR_RegClose( mReg );
         PR_Unlock(mregLock);
         mReg = 0;
+        if (mCurRegFile)
+          nsCRT::free(mCurRegFile);
+        mCurRegFile = NULL;
+        mCurRegID = 0;
     }
     return regerr2nsresult( err );
 }
