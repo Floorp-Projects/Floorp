@@ -80,7 +80,7 @@ static HINSTANCE g_hInst = NULL;
 #ifdef NS_NET_FILE
 
 #include "nsNetFile.h"
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_UNIX)
 static nsNetFileInit* netFileInit = nsnull;
 #else
 static nsNetFileInit netFileInit;
@@ -1303,7 +1303,7 @@ struct nsNetlibInit {
   }
 };
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_UNIX)
 static nsNetlibInit* netlibInit = nsnull;
 #else
 static nsNetlibInit netlibInit;
@@ -1320,7 +1320,7 @@ NS_NET nsresult NS_NewINetService(nsINetService** aInstancePtrResult,
         return NS_ERROR_NO_AGGREGATION;
     }
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_UNIX)
     // Perform static initialization...
     if (nsnull == netlibInit) {
         netlibInit = new nsNetlibInit;
