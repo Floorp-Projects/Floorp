@@ -444,8 +444,10 @@ extern int    fe_SwatchMatrixGetColor(Widget, Position p_x, Position p_y,
 						XColor* color_r);
 extern Widget fe_CreateSwatchMatrix(Widget parent, char* name, Arg*, Cardinal);
 extern void fe_AddSwatchMatrixCallback(Widget matrix, char* name, XtCallbackProc, XtPointer);
+extern Widget fe_CreateSwatch(Widget parent, char* name, Arg*, Cardinal);
 
 extern Boolean fe_contextIsValid( MWContext *context );
+extern XP_Bool FE_browserIsReadOnly(void);
 extern void fe_SetGridFocus (MWContext *context);
 extern void fe_MochaFocusNotify (MWContext *context, LO_Element *element);
 extern void fe_MochaBlurNotify (MWContext *context, LO_Element *element);
@@ -1132,6 +1134,7 @@ typedef struct fe_ContextData
   Cursor col_sel_cursor;
   Cursor cel_sel_cursor;
   Cursor resize_col_cursor;
+  Cursor resize_row_cursor;
   Cursor resize_tab_cursor;
   Cursor add_col_cursor;
   Cursor add_row_cursor;

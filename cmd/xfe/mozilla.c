@@ -462,9 +462,12 @@ XtResource fe_Resources [] =
   { "resizeColumnCursor", XtCCursor, XtRCursor, sizeof (Cursor),
     XtOffset (fe_ContextData *, resize_col_cursor),
     XtRString, "left_side" },
+  { "resizeRowCursor", XtCCursor, XtRCursor, sizeof (Cursor),
+    XtOffset (fe_ContextData *, resize_row_cursor),
+    XtRString, "top_side" },
   { "resizeTableCursor", XtCCursor, XtRCursor, sizeof (Cursor),
     XtOffset (fe_ContextData *, resize_tab_cursor),
-    XtRString, "left_side" },
+    XtRString, "bottom_right_corner" },
   { "addColumnCursor", XtCCursor, XtRCursor, sizeof (Cursor),
     XtOffset (fe_ContextData *, add_col_cursor),
     XtRString, "right_side" },
@@ -4782,6 +4785,14 @@ fe_read_screen_for_rng (Display *dpy, Screen *screen)
     if (fe_globalData.show_splash)
       PR_XUnlock();
 #endif
+}
+
+/* Are we running in read-only mode?  Then we shouldn't be able to
+ * do things like modify the bookmarks file.
+ */
+XP_Bool FE_browserIsReadOnly(void)
+{
+    return fe_globalData.all_databases_locked;
 }
 
 /*****************************

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -933,7 +933,7 @@ fe_EditorCleanup(MWContext* context)
 	 *    for a new doc, as that'll mean dialogs, and .....
 	 */
 	if (context->type != MWContextMessageComposition &&
-		!EDT_IS_NEW_DOCUMENT(context) &&
+            !EDT_IS_NEW_DOCUMENT(context) &&
 		(!EDT_IsBlocked(context) && EDT_DirtyFlag(context))) {
 		fe_EditorPreferencesGetAutoSave(context, &as_enabled, &as_time);
 		if (as_enabled)
@@ -6083,15 +6083,34 @@ void xfe_GetShiftAndCtrl(XEvent* event, Boolean* shiftP, Boolean* ctrlP)
     }
 }
 
+/* TEMPORARY HACK ALERT!!!
+ * The backend doesn't keep track of which cell in a table is selected
+ * for purposes of transition from within-cell selection extend to
+ * inter-cell selection, and relies on the front-end to handle that.
+ * But that means that each editor instance needs to keep track of the
+ * selected cell (if any), which means this code would have to live in
+ * EditorView.cpp.  But that means a lot of code change which I won't
+ * be able to check in for quite some time due to the stability freeze.
+ * So as a TEMPORARY measure, they're implemented as statics and we
+ * count on the unliklihood of selection-extending in multiple windows
+ * at once.  (Safe for drag-select, unsafe for shift-ctrl-click.) Yuck.
+ */
+static LO_Element* edElement = 0;
+static XP_Bool crossedCellBoundary = FALSE;
+static m_resizingTable = FALSE;
+static XP_Rect m_sizingRect;
+
+
 /*
  * NOTE:  because of this routine and its explicit need to disown the
  *        primary selection, we can't select text in the editor and then
  *        middle mouse paste it into another location in the same window...
  *
  *        - any ideas on how we might get around this one?...
- *
- *        :-l
- *
+ */
+/* fe_EditorGrabFocus is called on starting a selection,
+ * and when extending a selection with control-left-click
+ * (followed then by fe_EditorSelectionExtend).
  */
 void
 fe_EditorGrabFocus(MWContext* context, XEvent *event)
@@ -6102,6 +6121,11 @@ fe_EditorGrabFocus(MWContext* context, XEvent *event)
   Time time;
     LO_Element*   leHit = 0;
     ED_HitType    iTableHit; 
+
+#undef DEBUG_TABLE_SELECTION
+#ifdef DEBUG_TABLE_SELECTION
+    printf("fe_EditorGrabFocus\n");
+#endif /* DEBUG_TABLE_SELECTION */
 
 #ifdef DREDD_EDITOR
   fe_UserActivity(context); /* tell the app who has focus */
@@ -6134,50 +6158,114 @@ fe_EditorGrabFocus(MWContext* context, XEvent *event)
 
   fe_EventLOCoords(context, event, &x, &y); /* get the doc co-ords */
 
-  /*
-   *    Do this first, so the EDT_ClearSelection() in the call doesn't
+  /* see if we're in a table first... */
+  iTableHit = EDT_GetTableHitRegion(context, x, y, &leHit, False);
+  if (iTableHit == ED_HIT_SIZE_TABLE_WIDTH
+      || iTableHit == ED_HIT_SIZE_TABLE_HEIGHT
+      || iTableHit == ED_HIT_SIZE_COL || iTableHit == ED_HIT_SIZE_ROW
+      || iTableHit == ED_HIT_ADD_ROWS || iTableHit == ED_HIT_ADD_COLS)
+  {
+#ifdef DEBUG_TABLE_SELECTION
+      printf("resizing\n");
+#endif /* DEBUG_TABLE_SELECTION */
+      if( EDT_StartSizing(context, leHit, x, y, FALSE, &m_sizingRect) )
+      {
+          m_resizingTable = TRUE;
+          edElement = leHit;
+      }
+      return;
+  }
+  m_resizingTable = FALSE;
+
+  /*    Do this first, so the EDT_ClearSelection() in the call doesn't
    *    blow away what EDT_StartSelection() does!
-   *
    */
   fe_EditorDisownSelection(context, time, False); /* give up selection */
 
-  /* see if we're in a table first... */
-  iTableHit = EDT_GetTableHitRegion(context, x, y, &leHit, False);
   if ( iTableHit != ED_HIT_NONE )
   {
       Boolean shift, ctrl;
       xfe_GetShiftAndCtrl(event, &shift, &ctrl);
+#ifdef DEBUG_TABLE_SELECTION
+      printf("iTableHit: %d\n", iTableHit);
+#endif /* DEBUG_TABLE_SELECTION */
 
+      if (iTableHit == ED_HIT_SEL_CELL)
+          edElement = leHit;
       EDT_SelectTableElement(context, x, y,
                              leHit, iTableHit,
                              ctrl,      /* bModifierKeyPressed */
-                             FALSE);    /*bExtendSelection*/
-                           /*shift);    -*bExtendSelection*/
-      return;
+                             FALSE);    /* bExtendSelection */
   }
-  /* for some reason, EDT_GetTableHitRegion returns ED_HIT_NONE in a cell */
+  /* EDT_GetTableHitRegion returns ED_HIT_NONE inside a cell */
   else if (leHit && leHit->type == LO_CELL)
   {
+      /* Two cases: we might be starting a new selection (click alone),
+       * or we might be extending the selection with control-click.
+       */
       Boolean shift, ctrl;
       xfe_GetShiftAndCtrl(event, &shift, &ctrl);
+#ifdef DEBUG_TABLE_SELECTION
+      printf("cell: edElement = 0x%x, shift = %d, ctrl = %d\n",
+             edElement, shift, ctrl);
+#endif /* DEBUG_TABLE_SELECTION */
 
-      EDT_SelectTableElement(context, x, y,
-                             leHit, ED_HIT_SEL_CELL,
-                             ctrl,      /* bModifierKeyPressed */
-                             shift);    /*bExtendSelection*/
-      return;
+      /* Reset crossedCellBoundary if we're in a different table
+       * from the old edElement, or if there was no old edElement.
+       */
+      if (!ctrl || !edElement
+          || (lo_GetParentTable(context, edElement)
+              != lo_GetParentTable(context, leHit)))
+      {
+          edElement = leHit;
+          crossedCellBoundary = FALSE;
+      }
+      else
+      {
+          /* Control-selection to add cell to existing selection:
+           * select old cell as well as new one.
+           */
+#ifdef DEBUG_TABLE_SELECTION
+          printf("control-selection.  edElement = 0x%x\n", edElement);
+#endif /* DEBUG_TABLE_SELECTION */
+          if (edElement)
+              EDT_SelectTableElement(context, x, y,
+                                     edElement, ED_HIT_SEL_CELL,
+                                     ctrl,      /* bModifierKeyPressed */
+                                     FALSE);    /* bExtendSelection */
+          EDT_SelectTableElement(context, x, y,
+                                 leHit, ED_HIT_SEL_CELL,
+                                 ctrl,      /* bModifierKeyPressed */
+                                 FALSE);    /* bExtendSelection */
+          edElement = 0;
+          crossedCellBoundary = TRUE;
+          return;
+      }
+  }
+  else
+  {
+      edElement = 0;
+      crossedCellBoundary = FALSE;
   }
 
   EDT_StartSelection(context, x, y);
 }
 
+/* We never call fe_EditorSelectionBegin(), as far as I can tell. ...Akk */
 void
 fe_EditorSelectionBegin(MWContext* context, XEvent *event)
 {
     unsigned long x, y;
     Time time;
     LO_Element*   leHit = 0;
-    ED_HitType    iTableHit; 
+    ED_HitType    iTableHit;
+
+#ifdef DEBUG_TABLE_SELECTION
+    printf("fe_EditorSelectionBegin\n");
+#endif /* DEBUG_TABLE_SELECTION */
+
+    edElement = 0;
+    crossedCellBoundary = FALSE;
 
     /* don't do this -- Japanese input method requires focus
     fe_NeutralizeFocus (context);
@@ -6229,26 +6317,19 @@ fe_EditorSelectionBegin(MWContext* context, XEvent *event)
                                leHit, iTableHit,
                                ctrl,    /* bModifierKeyPressed */
                                shift);  /*bExtendSelection*/
-        return;
-    }
-    /* for some reason, EDT_GetTableHitRegion returns ED_HIT_NONE in a cell */
-    else if (leHit && leHit->type == LO_CELL)
-    {
-        Boolean shift, ctrl;
-        xfe_GetShiftAndCtrl(event, &shift, &ctrl);
-
-        EDT_SelectTableElement(context, x, y,
-                               leHit, ED_HIT_SEL_CELL,
-                               ctrl,      /* bModifierKeyPressed */
-                               shift);    /*bExtendSelection*/
+        edElement = leHit;
         return;
     }
 
-    else
-        /* need to implement disown */
-        EDT_StartSelection(context, x, y);
+    /* EDT_GetTableHitRegion returns ED_HIT_NONE in a cell */
+    if (leHit && leHit->type == LO_CELL)
+        edElement = leHit;
+
+    /* need to implement disown */
+    EDT_StartSelection(context, x, y);
 }
 
+/* This is called on dragging, and also on shift-click */
 void
 fe_EditorSelectionExtend(MWContext* context, XEvent *event)
 {
@@ -6257,6 +6338,10 @@ fe_EditorSelectionExtend(MWContext* context, XEvent *event)
     unsigned long y;
     LO_Element*   leHit = 0;
     ED_HitType    iTableHit; 
+
+#ifdef DEBUG_TABLE_SELECTION
+    printf("fe_EditorSelectionExtend\n");
+#endif /* DEBUG_TABLE_SELECTION */
 
     time = fe_getTimeFromEvent(context, event); /* get the time */
 
@@ -6272,6 +6357,41 @@ fe_EditorSelectionExtend(MWContext* context, XEvent *event)
     }
 
     fe_editor_keep_pointer_visible(context, x, y);
+
+    if (m_resizingTable)
+    {
+        GC gc;
+        XGCValues gcv;
+        Drawable drawable = CONTEXT_DATA(context)->drawable->xdrawable;
+#if FEEDBACK_WITH_TABLE_BORDER_COLOR
+        /* colors come back as 0, 0, 0 and don't show up */
+        LO_TableStruct* ts = &(edElement->lo_table);
+        gcv.foreground = fe_GetPixel(context,
+                                     ts->border_color.red,
+                                     ts->border_color.green,
+                                     ts->border_color.blue);
+        printf("RGB = %d %d %d\n", ts->border_color.red,
+               ts->border_color.green, ts->border_color.blue);
+#else /* FEEDBACK_WITH_TABLE_BORDER_COLOR */
+        gcv.foreground = fe_GetPixel(context, 0xff, 0xff, 0xff);
+#endif /* FEEDBACK_WITH_TABLE_BORDER_COLOR */
+        gcv.function = GXxor;
+        gc = fe_GetGC(CONTEXT_WIDGET(context),
+                      GCForeground|GCFunction, &gcv);
+        XDrawRectangle(XtDisplay(CONTEXT_WIDGET(context)), drawable, gc,
+                       m_sizingRect.left, m_sizingRect.top,
+                       m_sizingRect.right - m_sizingRect.left,
+                       m_sizingRect.bottom - m_sizingRect.top);
+        if (EDT_GetSizingRect(context, x, y, FALSE, &m_sizingRect))
+        {
+            /* show feedback */
+            XDrawRectangle(XtDisplay(CONTEXT_WIDGET(context)), drawable, gc,
+                           m_sizingRect.left, m_sizingRect.top,
+                           m_sizingRect.right - m_sizingRect.left,
+                           m_sizingRect.bottom - m_sizingRect.top);
+        }
+        return;
+    }
 
 #ifdef DONT_rhess
     /* 
@@ -6292,18 +6412,36 @@ fe_EditorSelectionExtend(MWContext* context, XEvent *event)
 
     if (leHit && leHit->type == LO_CELL)
     {
-        Boolean shift, ctrl;
-        xfe_GetShiftAndCtrl(event, &shift, &ctrl);
+        if (edElement && leHit != edElement)
+        {
+            Boolean shift, ctrl;
+            xfe_GetShiftAndCtrl(event, &shift, &ctrl);
 
-        EDT_SelectTableElement(context, x, y,
-                               leHit, ED_HIT_SEL_CELL,
-                               ctrl,      /* bModifierKeyPressed */
-                               TRUE);    /*bExtendSelection*/
-        return;
+            if (!crossedCellBoundary)
+            {
+                 fe_EditorDisownSelection(context, time, False);
+                 EDT_SelectTableElement(context, x, y,
+                                        edElement, ED_HIT_SEL_CELL,
+                                        FALSE,      /* bModifierKeyPressed */
+                                        FALSE);    /*bExtendSelection*/
+                 crossedCellBoundary = TRUE;
+            }
+
+            EDT_SelectTableElement(context, x, y,
+                                   leHit, ED_HIT_SEL_CELL,
+                                   ctrl,      /* bModifierKeyPressed */
+                                   TRUE);    /*bExtendSelection*/
+        }
+        else
+        {
+            /* edElement = leHit; */
+            EDT_ExtendSelection(context, x, y);
+        }
     }
 
-    /* need to implement own */
-    EDT_ExtendSelection(context, x, y);
+    else
+      /* need to implement own */
+      EDT_ExtendSelection(context, x, y);
 
 #ifdef DONT_rhess
     fe_EditorOwnSelection (context, time, False, False);
@@ -6330,6 +6468,10 @@ fe_EditorSelectionEnd(MWContext *context, XEvent *event)
     LO_Element*   leHit = 0;
     ED_HitType    iTableHit; 
 
+#ifdef DEBUG_TABLE_SELECTION
+    printf("fe_EditorSelectionEnd\n");
+#endif /* DEBUG_TABLE_SELECTION */
+
     fe_UserActivity(context);
     time = fe_getTimeFromEvent(context, event); /* get the time */
 
@@ -6340,9 +6482,22 @@ fe_EditorSelectionEnd(MWContext *context, XEvent *event)
 		CONTEXT_DATA(context)->editor.ascroll_data.timer_id = 0;
 	}
 
+    if (m_resizingTable)
+    {
+#ifdef DEBUG_TABLE_SELECTION
+        printf("Ending table resize: [%d, %d, %d, %d]\n",
+               m_sizingRect.left, m_sizingRect.right, m_sizingRect.top,
+               m_sizingRect.bottom);
+#endif /* DEBUG_TABLE_SELECTION */
+        EDT_EndSizing(context);
+        m_resizingTable = FALSE;
+        return;
+    }
+
     /* see if we're in a table first... */
     iTableHit = EDT_GetTableHitRegion( context, x, y, &leHit, FALSE );
     if ( iTableHit == ED_HIT_SEL_TABLE
+        || iTableHit == ED_HIT_SEL_CELL
         || iTableHit == ED_HIT_SEL_ALL_CELLS
         || iTableHit == ED_HIT_SEL_COL
         || iTableHit == ED_HIT_SEL_ROW )
@@ -6353,7 +6508,7 @@ fe_EditorSelectionEnd(MWContext *context, XEvent *event)
                                leHit, iTableHit,
                                ctrl,    /* bModifierKeyPressed */
                                shift);  /*bExtendSelection*/
-        return;
+        /*return;*/
     }
 
     /* need to implement own */
@@ -6661,6 +6816,9 @@ fe_editor_motion_action(Widget widget, XEvent *event,
 
         switch ( iTableHit ) { 
             case ED_HIT_SEL_TABLE:
+#ifdef DEBUG_TABLE_SELECTION
+#define DEBUG_motion
+#endif
 #ifdef DEBUG_motion
                 fprintf(stderr, "ED_HIT_SEL_TABLE:\n");
 #endif
@@ -6695,16 +6853,35 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 cursor = CONTEXT_DATA(context)->cel_sel_cursor;
                 break; 
 
-#ifdef ED_HIT_SIZE_TABLE
-            case ED_HIT_SIZE_TABLE:  
+            case ED_HIT_DRAG_TABLE:  
 #ifdef DEBUG_motion
-                fprintf(stderr, "ED_HIT_SIZE_TABLE:\n");
+                fprintf(stderr, "ED_HIT_DRAG_TABLE:\n");
 #endif
                 cursor = CONTEXT_DATA(context)->resize_tab_cursor;
                 break; 
-#endif /* ED_HIT_SIZE_TABLE */
 
-            case ED_HIT_SIZE_COL:  
+            case ED_HIT_SIZE_TABLE_WIDTH:
+#ifdef DEBUG_motion
+                fprintf(stderr, "ED_HIT_SIZE_TABLE_WIDTH:\n");
+#endif
+                cursor = CONTEXT_DATA(context)->resize_tab_cursor;
+                break; 
+
+            case ED_HIT_SIZE_TABLE_HEIGHT:
+#ifdef DEBUG_motion
+                fprintf(stderr, "ED_HIT_SIZE_TABLE_HEIGHT:\n");
+#endif
+                cursor = CONTEXT_DATA(context)->resize_tab_cursor;
+                break; 
+
+            case ED_HIT_SIZE_ROW:
+#ifdef DEBUG_motion
+                fprintf(stderr, "ED_HIT_SIZE_ROW:\n");
+#endif
+                cursor = CONTEXT_DATA(context)->resize_row_cursor;
+                break; 
+
+            case ED_HIT_SIZE_COL:
 #ifdef DEBUG_motion
                 fprintf(stderr, "ED_HIT_SIZE_COL:\n");
 #endif
