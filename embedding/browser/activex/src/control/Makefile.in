@@ -56,6 +56,8 @@ REQUIRES = \
     helperAppDlg \
     exthandler \
     mimetype \
+    composer \
+    commandhandler \
     ax_common \
     $(NULL)
 
