@@ -29,7 +29,7 @@ namespace Silverstone.Manticore.App
 
       // Initialize default and user preferences
       mPreferences = new Preferences();
-      // mPreferences.InitializeDefaults("default-prefs.xml");
+      mPreferences.InitializeDefaults("default-prefs.xml");
       mPreferences.LoadPreferencesFile("user-prefs.xml");
 
       OpenNewBrowser();

@@ -49,20 +49,29 @@ namespace Silverstone.Manticore.LayoutAbstraction
   using AxMOZILLACONTROLLib;
   using MOZILLACONTROLLib;
 
+  using Silverstone.Manticore.BrowserWindow;
+
   public class WebBrowser : ContainerControl
   {
     private AxWebBrowser trident;
     private AxMozillaBrowser gecko;
 
-    public WebBrowser()
+    private BrowserWindow mBrowserWindow;
+
+    public WebBrowser(BrowserWindow aBrowserWindow)
     {
+      mBrowserWindow = aBrowserWindow;
       this.Dock = DockStyle.Fill;
-	}
+    }
 
     public void RealizeLayoutEngine()
     {
-      if (gecko == null && trident == null)
-        SwitchLayoutEngine("gecko"); // XXX Should be pref-based.
+      if (gecko == null && trident == null) {
+        String layoutEngine = mBrowserWindow.application.Prefs.GetStringPref("browser.layoutengine");
+        if (layoutEngine == "") 
+          layoutEngine = "gecko";
+        SwitchLayoutEngine(layoutEngine);
+      }
     }
 
     public void SwitchLayoutEngine(String id)

@@ -113,7 +113,7 @@ namespace Silverstone.Manticore.BrowserWindow
       statusBar.Panels.AddRange(new StatusBarPanel[] {docStatePanel, statusPanel, progressPanel, zonePanel});
       statusBar.ShowPanels = true;
 
-      webBrowser = new WebBrowser();
+      webBrowser = new WebBrowser(this);
       this.Controls.Add(webBrowser);
 
       this.Controls.Add(statusBar);
