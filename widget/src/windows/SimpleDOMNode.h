@@ -76,6 +76,12 @@ class SimpleDOMNode : public ISimpleDOMNode
         /* [length_is][size_is][out] */ BSTR __RPC_FAR *attribValues,
         /* [out][retval] */ unsigned short __RPC_FAR *numAttribs);
   
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_attributesForNames( 
+        /* [in] */ unsigned short maxAttribs,
+        /* [length_is][size_is][in] */ BSTR __RPC_FAR *attribNames,
+        /* [length_is][size_is][in] */ short __RPC_FAR *nameSpaceID,
+        /* [length_is][size_is][retval] */ BSTR __RPC_FAR *attribValues);
+  
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_computedStyle( 
         /* [in] */ unsigned short maxStyleProperties,
         /* [in] */ boolean useAlternateView,
