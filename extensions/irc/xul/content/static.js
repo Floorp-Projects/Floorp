@@ -410,10 +410,10 @@ function initHost(obj)
 
     obj.munger = new CMunger();
     obj.munger.enabled = true;
+    obj.munger.addRule ("link", obj.linkRE, insertLink);
     obj.munger.addRule ("mailto",
        /(?:\s|\W|^)((mailto:)?[^<>\[\]()\'\"\s]+@[^.<>\[\]()\'\"\s]+\.[^<>\[\]()\'\"\s]+)/i,
                         insertMailToLink);
-    obj.munger.addRule ("link", obj.linkRE, insertLink);
     obj.munger.addRule ("bugzilla-link", /(?:\s|\W|^)(bug\s+#?\d{3,6})/i,
                         insertBugzillaLink);
     obj.munger.addRule ("channel-link",
@@ -458,10 +458,10 @@ function insertLink (matchText, containerTag)
 
     var href;
     
-    if (matchText.indexOf ("://") == -1)
-        href = "http://" + matchText;
-    else
+    if (matchText.match (/^[a-zA-Z-]+:/))
         href = matchText;
+    else
+        href = "http://" + matchText;
     
     var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:a");
