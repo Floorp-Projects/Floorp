@@ -12,11 +12,6 @@
     <!-- Composer Charset Menu -->
     <menu id="composerCharsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:ComposerCharsetMenuRoot" oncommand="ComposerMultiplexHandler(event)" oncreate="UpdateMenus()">
         <template>
-            <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
-                <menupopup>
-                <menuitem type="radio" name="detectorGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                </menupopup>
-            </rule>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                 <menupopup>
                 <menuseparator uri="..." />
@@ -30,6 +25,17 @@
         </template>
 
         <menupopup id="composerCharsetMenuPopup">
+        <menu value="&charsetMenuAutodet.label;"  datasources="rdf:charset-menu" ref="NC:BrowserAutodetMenuRoot">
+            <template>
+                <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
+                    <menupopup>
+                    <menuitem type="radio" name="detectorGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
         <menu value="&charsetMenuMore.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
             <template>
                 <rule>
@@ -104,11 +110,6 @@
     <!-- Mail View Charset Menu -->
     <menu id="mailviewCharsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:MailviewCharsetMenuRoot" oncommand="MailMultiplexHandler(event)" oncreate="UpdateMailMenus()">
         <template>
-            <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
-                <menupopup>
-                <menuitem type="radio" name="detectorGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                </menupopup>
-            </rule>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                 <menupopup>
                 <menuseparator uri="..." />
@@ -122,6 +123,17 @@
         </template>
 
         <menupopup>
+        <menu value="&charsetMenuAutodet.label;"  datasources="rdf:charset-menu" ref="NC:BrowserAutodetMenuRoot">
+            <template>
+                <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
+                    <menupopup>
+                    <menuitem type="radio" name="detectorGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
         <menu value="&charsetMenuMore.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
             <template>
                 <rule>
@@ -212,11 +224,6 @@
     <!-- Charset Menu -->
     <menu id="charsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot" oncommand="MultiplexHandler(event)" oncreate="UpdateMenus(event)">
         <template>
-            <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
-                <menupopup>
-                <menuitem type="radio" name="detectorGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                </menupopup>
-            </rule>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                 <menupopup>
                 <menuseparator uri="..." />
@@ -230,6 +237,17 @@
         </template>
 
         <menupopup>
+        <menu value="&charsetMenuAutodet.label;"  datasources="rdf:charset-menu" ref="NC:BrowserAutodetMenuRoot">
+            <template>
+                <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
+                    <menupopup>
+                    <menuitem type="radio" name="detectorGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    </menupopup>
+                </rule>
+            </template>
+            <menupopup>
+            </menupopup>
+        </menu>
         <menu value="&charsetMenuMore.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
             <template>
                 <rule>

@@ -1,5 +1,6 @@
 <!-- extracted from charsetOverlay.xul -->
 <!ENTITY charsetMenu.label				"Character Coding">
+<!ENTITY charsetMenuAutodet.label			"Auto-Detect">
 <!ENTITY charsetMenuMore.label				"More">
 <!ENTITY charsetMenuMore1.label				"West European">
 <!ENTITY charsetMenuMore2.label				"East European">
