@@ -590,7 +590,7 @@ PRInt32 _ToInteger(nsCString& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
   char theChar=0;
   char theDigit=0;
   while(--cp>=aString.mStr){
-    char theChar=*cp;
+    theChar=*cp;
     if((theChar>='0') && (theChar<='9')){
       theDigit=theChar-'0';
     }
