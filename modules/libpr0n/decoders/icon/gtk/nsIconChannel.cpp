@@ -70,7 +70,7 @@ static nsresult
 pngfile_to_channel(const char* aFilename, nsIChannel** aChannel) {
   // Now we have to create an uri for the file...
   nsCOMPtr<nsILocalFile> lf;
-  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(tmpfile), PR_FALSE,
+  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(aFilename), PR_FALSE,
                                       getter_AddRefs(lf));
   if (NS_FAILED(rv))
     return rv;
@@ -86,7 +86,7 @@ pngfile_to_channel(const char* aFilename, nsIChannel** aChannel) {
   if (NS_FAILED(rv))
     return rv;
 
-  rv = NS_NewInputStreamChannel(getter_AddRefs(mRealChannel), realURI, is,
+  rv = NS_NewInputStreamChannel(aChannel, realURI, is,
                                 NS_LITERAL_CSTRING("image/png"));
   return rv;
 }
