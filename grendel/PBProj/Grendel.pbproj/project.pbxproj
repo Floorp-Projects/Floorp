@@ -5,6 +5,84 @@
 	};
 	objectVersion = 32;
 	objects = {
+		0123C91F00804E9E7F000001 = {
+			children = (
+				03CC35770078508F7F000001,
+				03CC35780078508F7F000001,
+				03CC35790078508F7F000001,
+				03CC357A0078508F7F000001,
+				03CC357B0078508F7F000001,
+				03CC357C0078508F7F000001,
+				03CC357D0078508F7F000001,
+			);
+			isa = PBXGroup;
+			name = Java;
+			refType = 4;
+		};
+		0123C920008067917F000001 = {
+			buildActionMask = 2147483647;
+			dstPath = Java;
+			dstSubfolderSpec = 7;
+			files = (
+				0123C921008067E97F000001,
+				0123C922008067E97F000001,
+				0123C923008067E97F000001,
+				0123C924008067E97F000001,
+				0123C925008067E97F000001,
+				0123C926008067E97F000001,
+				0123C927008067E97F000001,
+			);
+			isa = PBXCopyFilesBuildPhase;
+			name = "Copy Files";
+		};
+		0123C921008067E97F000001 = {
+			fileRef = 03CC35770078508F7F000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0123C922008067E97F000001 = {
+			fileRef = 03CC35780078508F7F000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0123C923008067E97F000001 = {
+			fileRef = 03CC35790078508F7F000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0123C924008067E97F000001 = {
+			fileRef = 03CC357A0078508F7F000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0123C925008067E97F000001 = {
+			fileRef = 03CC357B0078508F7F000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0123C926008067E97F000001 = {
+			fileRef = 03CC357C0078508F7F000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0123C927008067E97F000001 = {
+			fileRef = 03CC357D0078508F7F000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0123C928008068F77F000001 = {
+			fileRef = 03CC3585007850C47F000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		01F12F4CFEC8CE2211DB9C8B = {
 			buildStyles = (
 				0E20B662001FAFA711DB9C8B,
@@ -22,7 +100,6 @@
 			children = (
 				03CC3574007850637F000001,
 				03CC3575007850637F000001,
-				03CC3576007850637F000001,
 				10F9BF63FEEDA25E11DB9C8B,
 				01F12F4FFEC8CEF111DB9C8B,
 			);
@@ -49,67 +126,54 @@
 		};
 		03CC3575007850637F000001 = {
 			children = (
+				0123C91F00804E9E7F000001,
 				03CC3585007850C47F000001,
 			);
 			isa = PBXGroup;
 			name = Resources;
 			refType = 4;
 		};
-		03CC3576007850637F000001 = {
-			children = (
-				03CC35770078508F7F000001,
-				03CC35780078508F7F000001,
-				03CC35790078508F7F000001,
-				03CC357A0078508F7F000001,
-				03CC357B0078508F7F000001,
-				03CC357C0078508F7F000001,
-				03CC357D0078508F7F000001,
-			);
-			isa = PBXGroup;
-			name = "External Frameworks";
-			refType = 4;
-		};
 		03CC35770078508F7F000001 = {
 			isa = PBXFileReference;
 			name = activation.jar;
-			path = ../extlib/activation.jar;
-			refType = 2;
+			path = /Volumes/Bespin/SourceCode/Grendel/mozilla/grendel/extlib/activation.jar;
+			refType = 0;
 		};
 		03CC35780078508F7F000001 = {
 			isa = PBXFileReference;
 			name = jaxp.jar;
-			path = ../extlib/jaxp.jar;
-			refType = 2;
+			path = /Volumes/Bespin/SourceCode/Grendel/mozilla/grendel/extlib/jaxp.jar;
+			refType = 0;
 		};
 		03CC35790078508F7F000001 = {
 			isa = PBXFileReference;
 			name = jhall.jar;
-			path = ../extlib/jhall.jar;
-			refType = 2;
+			path = /Volumes/Bespin/SourceCode/Grendel/mozilla/grendel/extlib/jhall.jar;
+			refType = 0;
 		};
 		03CC357A0078508F7F000001 = {
 			isa = PBXFileReference;
 			name = ldapjdk.jar;
-			path = ../extlib/ldapjdk.jar;
-			refType = 2;
+			path = /Volumes/Bespin/SourceCode/Grendel/mozilla/grendel/extlib/ldapjdk.jar;
+			refType = 0;
 		};
 		03CC357B0078508F7F000001 = {
 			isa = PBXFileReference;
 			name = mail.jar;
-			path = ../extlib/mail.jar;
-			refType = 2;
+			path = /Volumes/Bespin/SourceCode/Grendel/mozilla/grendel/extlib/mail.jar;
+			refType = 0;
 		};
 		03CC357C0078508F7F000001 = {
 			isa = PBXFileReference;
 			name = OROMatcher.jar;
-			path = ../extlib/OROMatcher.jar;
-			refType = 2;
+			path = /Volumes/Bespin/SourceCode/Grendel/mozilla/grendel/extlib/OROMatcher.jar;
+			refType = 0;
 		};
 		03CC357D0078508F7F000001 = {
 			isa = PBXFileReference;
 			name = parser.jar;
-			path = ../extlib/parser.jar;
-			refType = 2;
+			path = /Volumes/Bespin/SourceCode/Grendel/mozilla/grendel/extlib/parser.jar;
+			refType = 0;
 		};
 		03CC357E0078508F7F000001 = {
 			fileRef = 03CC35770078508F7F000001;
@@ -7637,7 +7701,6 @@
 				03CC3DBF007855CA7F000001,
 				03CC3DC0007855CA7F000001,
 				03CC3DC1007855CA7F000001,
-				03CC3DC2007855CA7F000001,
 				03CC3DC3007855CA7F000001,
 				03CC3DC4007855CA7F000001,
 				03CC3DC5007855CA7F000001,
@@ -7818,11 +7881,6 @@
 		03CC3DC1007855CA7F000001 = {
 			isa = PBXFileReference;
 			path = ListenerListState.java;
-			refType = 4;
-		};
-		03CC3DC2007855CA7F000001 = {
-			isa = PBXFileReference;
-			path = Makefile;
 			refType = 4;
 		};
 		03CC3DC3007855CA7F000001 = {
@@ -8459,12 +8517,6 @@
 			settings = {
 			};
 		};
-		03CC3E32007855CA7F000001 = {
-			fileRef = 03CC3DC2007855CA7F000001;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		06D05853FF24F2DB11DB9C8B = {
 			isa = PBXApplicationReference;
 			path = Grendel.app;
@@ -8498,13 +8550,15 @@
 				1601BCDCFEEE210811DB9C8B,
 				1601BCDEFEEE210811DB9C8B,
 				1601BCDFFEEE210811DB9C8B,
+				0123C920008067917F000001,
 				1601BCE2FEEE210811DB9C8B,
 			);
 			buildSettings = {
 				JAVA_COMPILER = /usr/bin/javac;
-				JAVA_COMPILER_FLAGS = "";
+				JAVA_COMPILER_FLAGS = "-deprecation";
 				JAVA_ONLY = YES;
 				JAVA_SOURCE_SUBDIR = ../sources;
+				OPTIMIZATION_CFLAGS = "";
 				PRODUCT_NAME = Grendel;
 			};
 			conditionalBuildSettings = {
@@ -9231,7 +9285,6 @@
 				03CC3D87007853A07F000001,
 				03CC3D88007853A07F000001,
 				03CC3D89007853A07F000001,
-				03CC3E32007855CA7F000001,
 			);
 			isa = PBXJavaArchiveBuildPhase;
 			name = "Java Archive Files";
@@ -9240,6 +9293,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1601BCE1FEEE210811DB9C8B,
+				0123C928008068F77F000001,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
