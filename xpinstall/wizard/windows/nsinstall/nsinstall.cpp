@@ -620,6 +620,7 @@ ExtractFilesProc(HANDLE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG lParam)
 	HRSRC	hResInfo;
 	HGLOBAL	hGlobal;
 	LPBYTE	lpBytes;
+	LPBYTE	lptr;
 	LPBYTE	lpBytesUnCmp;
 	HANDLE	hFile;
 	char	szStatus[128];
@@ -655,7 +656,17 @@ ExtractFilesProc(HANDLE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG lParam)
 	  GetFullTempPathName("Archive.lst", sizeof(szArcLstFile), szArcLstFile);
     WritePrivateProfileString("Archives", lpszName, "TRUE", szArcLstFile);
 
-    lpBytesUnCmp = (LPBYTE)malloc((*(LPDWORD)(lpBytes + sizeof(DWORD))) + 1);
+    lptr = (LPBYTE)malloc((*(LPDWORD)(lpBytes + sizeof(DWORD))) + 1);
+    if(!lptr)
+    {
+      char szBuf[512];
+
+      LoadString(hInst, IDS_ERROR_OUT_OF_MEMORY, szBuf, sizeof(szBuf));
+      MessageBox(NULL, szBuf, NULL, MB_OK | MB_ICONEXCLAMATION);
+      return FALSE;
+    }
+
+    lpBytesUnCmp = lptr;
     dwSizeUnCmp  = *(LPDWORD)(lpBytes + sizeof(DWORD));
 
 		// Copy the file. The first DWORD specifies the size of the file
@@ -679,6 +690,9 @@ ExtractFilesProc(HANDLE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG lParam)
 				wsprintf(szBuf, szText, szTmpFile);
 				MessageBox(NULL, szBuf, szTitle, MB_OK | MB_ICONEXCLAMATION);
 				FreeResource(hResInfo);
+        if(lptr)
+          free(lptr);
+
 				return FALSE;
 			}
 
@@ -697,6 +711,8 @@ ExtractFilesProc(HANDLE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG lParam)
 
 	// Release the resource
 	FreeResource(hResInfo);
+  if(lptr)
+    free(lptr);
 
 	return TRUE;  // keep enumerating
 }
