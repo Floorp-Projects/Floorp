@@ -533,3 +533,137 @@ input[type="file"] > input[type="text"] {
   input[type="file"] { height: 2em; }
 }
 
+#if OSARCH=="OS2"
+input {
+  font: medium serif; font-family: inherit
+}
+
+select {
+  font: medium serif; font-family: inherit
+}
+
+optgroup {
+  font: medium serif; font-family: inherit
+}
+
+input[type="reset"],
+input[type="button"],
+input[type="submit"] { 
+  font: medium serif; font-family: inherit
+}
+
+#endif
+
+#if MOZ_DEFAULT_TOOLKIT=="cocoa"
+/* makes sure enabled and disabled input and text area fields are drawn */
+input,
+textarea,
+input[disabled],
+textarea[disabled] {
+  border-width: 2px;
+  padding: 0px 1px 0px 1px;
+  font-size: 11px;
+  margin: 1px 1px 1px 1px;
+  background-color: -moz-field;
+}
+
+select {
+  -moz-appearance: menulist;
+  margin: 1px 1px 1px 1px;
+  background-color: transparent !important;
+  color: -moz-FieldText !important;
+  font-size: 11px;
+  direction: ltr;
+}
+
+/* Need the "select[size][multiple]" selector to override the settings on
+  'select[size="1"]', eg if one has <select size="1" multiple> */
+select[size],
+select[multiple],
+select[size][multiple] {
+  -moz-appearance: listbox;
+  margin: 1px 1px 1px 1px;
+  background-color: transparent !important;
+}
+
+select[size="0"],
+select[size="1"] {
+  -moz-appearance: menulist;
+  margin: 1px 1px 1px 1px;
+  background-color: transparent !important;
+}
+
+/* make sure nothing paints for the menulist button, since the button is
+  painted as part of the menulist. */
+select > input[type="button"],
+select > input[type="button"]:active {
+  background-image: none !important;
+}
+
+option[disabled],
+optgroup[disabled],
+select[disabled] {
+  color: GrayText !important;
+}
+
+/* margins makes sure they are aligned with the text baseline */
+input[type="checkbox"] {
+  -moz-appearance: checkbox-small;
+  width: 15px;
+  height: 15px;
+  margin: 1px 2px 0px 3px;
+}
+
+input[type="radio"] {
+  -moz-appearance: radio-small;
+  width: 15px;
+  height: 16px;
+  margin: 1px 2px -3px 3px;
+}
+
+input[type="reset"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"]:active:hover,
+input[type="button"]:active:hover,
+input[type="submit"]:active:hover {
+  -moz-appearance: button-small;
+  font-size: 11px;
+  margin: 2px 1px 2px 1px;
+  padding: 0;
+  border-width: 2px 8px 2px 8px;
+  color: -moz-FieldText !important;
+  min-width: 24px;
+}
+
+/* makes sure diabled buttons have the same style as enabled buttons */
+input[type="reset"][disabled]:active,
+input[type="reset"][disabled],
+input[type="button"][disabled]:active,
+input[type="button"][disabled],
+input[type="submit"][disabled]:active,
+input[type="submit"][disabled] {
+  margin: 2px 1px 2px 1px;
+  padding: 0;
+  border-width: 2px 8px 2px 8px;
+  min-width: 24px;
+  color: GrayText !important;
+}
+
+/* this draws the square button */
+button,
+button[disabled],
+button:active:hover,
+button[disabled]:active {
+  -moz-appearance: none;
+}
+
+/* this turns off the mozilla focus ring shown inside clicked or selecetd buttons */
+input[type="reset"]::-moz-focus-inner,
+input[type="button"]::-moz-focus-inner,
+input[type="submit"]::-moz-focus-inner,
+input[type="file"] > input[type="button"]::-moz-focus-inner {
+  border: 0;
+}
+
+#endif

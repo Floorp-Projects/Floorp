@@ -327,7 +327,6 @@ bin/res/ua.css
 bin/res/html.css
 bin/res/quirk.css
 bin/res/forms.css
-bin/res/platform-forms.css
 bin/res/EditorOverride.css
 bin/res/grabber.gif
 bin/res/table-add-column-after-active.gif

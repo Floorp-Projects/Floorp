@@ -155,7 +155,7 @@ protected:
   nsCOMPtr<nsIAtom> mFocusedAtom;
 
   // these should be set to appropriate platform values by the subclass, to
-  // match the values in platform-forms.css.  These defaults match forms.css
+  // match the values in forms.css.  These defaults match forms.css
   static nsMargin                  sButtonBorderSize;
   static nsMargin                  sButtonDisabledBorderSize;
   static PRUint8                   sButtonActiveBorderStyle;
