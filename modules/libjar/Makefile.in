@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
 # Linux and Solaris installer needs standalone libjar
-ifneq (,$(filter Linux SunOS5,$(OS_ARCH)))
+ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
 DIRS		= standalone
 endif
 
