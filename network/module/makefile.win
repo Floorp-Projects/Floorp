@@ -62,6 +62,7 @@ OBJS=                                   \
         .\$(OBJDIR)\nsHttpUrl.obj       \
         .\$(OBJDIR)\nsStubContext.obj   \
         .\$(OBJDIR)\nsNetStubs.obj      \
+	.\$(OBJDIR)\nsNetIDs.obj	\
         $(NULL)
 
 #//------------------------------------------------------------------------

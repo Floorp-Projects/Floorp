@@ -42,7 +42,7 @@ extern "C" {
 
 extern "C" {
 
-#if defined(XP_PC) || defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_WIN)
 DB *
 dbopen(const char *fname, int flags,int mode, DBTYPE type, 
        const void *openinfo)
@@ -1307,31 +1307,6 @@ LO_getNextTabableElement( MWContext *context, LO_TabFocusData *pCurrentFocus, in
     MOZ_FUNCTION_STUB;
     return FALSE;
 }
-
-/*
- * Random libnet functions...
- */
-NET_StreamClass *
-NET_NewStream          (char                 *name,
-                        MKStreamWriteFunc     process,
-                        MKStreamCompleteFunc  complete,
-                        MKStreamAbortFunc     abort,
-                        MKStreamWriteReadyFunc ready,
-                        void                 *streamData,
-                        MWContext            *windowID)
-{
-    return NULL;
-}
-
-#ifdef DEBUG
-MODULE_PRIVATE void
-NET_DisplayStreamInfoAsHTML(ActiveEntry *cur_entry)
-{
-	MOZ_FUNCTION_STUB;
-}
-#endif /* DEBUG */
-
-
 
 PUBLIC int
 NET_ParseNetHelpURL(URL_Struct *URL_s)

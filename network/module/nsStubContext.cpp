@@ -417,9 +417,10 @@ extern "C" {
  *Find a converter routine to create a stream and return the stream struct
  */
 PUBLIC NET_StreamClass * 
-NET_StreamBuilder  (FO_Present_Types format_out,
-                    URL_Struct  *URL_s,
-                    MWContext   *context)
+NET_NGLayoutConverter(FO_Present_Types format_out,
+                      void *converter_obj,
+                      URL_Struct  *URL_s,
+                      MWContext   *context)
 {
     NET_StreamClass *stream = NULL;
     PRBool bSuccess = PR_TRUE;

@@ -16,10 +16,18 @@
  * Reserved.
  */
 
+#include "nsRepository.h"
 #include "nsNetService.h"
 #include "nsNetStream.h"
 #include "net.h"
+extern "C" {
+#include "mkutils.h"
+#include "mkgeturl.h"
 #include "mktrace.h"
+#include "mkstream.h"
+#include "cvchunk.h"
+};
+#include "netcache.h"
 #include "plstr.h"
 
 #include "nsString.h"
@@ -54,6 +62,12 @@ extern const char *XP_AppName;
 extern const char *XP_AppLanguage;
 extern const char *XP_AppPlatform;
 #endif
+
+PUBLIC NET_StreamClass * 
+NET_NGLayoutConverter(FO_Present_Types format_out,
+                      void *converter_obj,
+                      URL_Struct  *URL_s,
+                      MWContext   *context);
 };
 
 /*
@@ -85,6 +99,17 @@ nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
 
     /* Initialize the file extension -> content-type mappings */
     NET_InitFileFormatTypes(nsnull, nsnull);
+
+    NET_FinishInitNetLib();
+
+    NET_RegisterContentTypeConverter("*", FO_CACHE_AND_NGLAYOUT, NULL,
+                                     NET_CacheConverter);
+    NET_RegisterContentTypeConverter("*", FO_NGLAYOUT, NULL,
+                                     NET_NGLayoutConverter);
+
+    NET_RegisterUniversalEncodingConverter("chunked",
+                                           NULL,
+                                           NET_ChunkedDecoderStream);
 
     mContainer = aContainerApp;
     NS_IF_ADDREF(mContainer);
@@ -199,7 +224,7 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
 
     /* Start the URL load... */
     NET_GetURL (URL_s,                      /* URL_Struct      */
-                FO_CACHE_AND_PRESENT,       /* FO_Present_type */
+                FO_CACHE_AND_NGLAYOUT,      /* FO_Present_type */
                 (MWContext *)m_stubContext, /* MWContext       */
                 bam_exit_routine);          /* Exit routine... */
 
@@ -284,7 +309,7 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
 
         /* Start the URL load... */
         NET_GetURL (URL_s,                      /* URL_Struct      */
-                    FO_CACHE_AND_PRESENT,       /* FO_Present_type */
+                    FO_CACHE_AND_NGLAYOUT,      /* FO_Present_type */
                     (MWContext *)m_stubContext, /* MWContext       */
                     bam_exit_routine);          /* Exit routine... */
 
