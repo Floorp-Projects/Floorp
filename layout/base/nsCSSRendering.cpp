@@ -2000,6 +2000,16 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     srcRect.width = tileWidth;
     srcRect.height = tileHeight;
 
+    // create a bigger tile
+    // XXX pushing state to fix clipping problem, need to look into why the clip is set here
+    aRenderingContext.PushState();
+    PRBool  clip;
+    nsRect  clipRect;
+    clipRect = srcRect;
+    clipRect.width = x1-x0;
+    clipRect.height = y1-y0;
+    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clip);
+
     // copy the initial image to our buffer
     aRenderingContext.DrawImage(image,srcRect.x,srcRect.y,tileWidth,tileHeight);
     //if(anchor.x<0) {
@@ -2016,11 +2026,15 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       }
     }
 
-    // create a bigger tile
+
     aRenderingContext.GetDrawingSurface(&theSurface);
     TileImage(aRenderingContext,theSurface,srcRect,x1-x0,y1-y0,flag);
 
-    // use the tile to fill in the rest of the image
+     // setting back the clip from the background clip push
+    aRenderingContext.PopState(clip);
+
+
+   // use the tile to fill in the rest of the image
     destRect = srcRect;
 
     for(y=srcRect.y;y<y1;y+=srcRect.height){
