@@ -28,8 +28,8 @@
 #endif
 
 #ifdef DEBUG_rods
-#define DO_REFLOW_DEBUG
-#define DO_REFLOW_COUNTER
+//#define DO_REFLOW_DEBUG
+//#define DO_REFLOW_COUNTER
 //#define DO_UNCONSTRAINED_CHECK
 //#define DO_PIXELS
 //#define DO_NEW_REFLOW
