@@ -361,15 +361,6 @@ private:
      */
     nsresult AddLeaf(const nsIParserNode& aNode);
 
-    /**
-     * Causes auto-closures of context vector stack in order to find a 
-     * proper home for the given child. Propagation may also occur as 
-     * a fall out.
-     * @update	gess5/11/98
-     * @param   child to be added (somewhere) to context vector stack.
-     * @return  TRUE if succeeds, otherwise FALSE
-     */
-    nsresult ReduceContextStackFor(eHTMLTags aChildTag);
 
     /**
      * Attempt forward and/or backward propagation for the given

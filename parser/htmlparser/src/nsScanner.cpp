@@ -48,7 +48,7 @@ const int   kBufsize=64;
  *  @return  
  */
 nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharsetSource aSource) : 
-  mBuffer(anHTMLString), mFilename("")
+  mBuffer(anHTMLString), mFilename(""), mUnicodeXferBuf("")
 {
   mTotalRead=mBuffer.Length();
   mIncremental=PR_FALSE;
@@ -72,7 +72,7 @@ nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharset
  *  @return  
  */
 nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& aCharset, nsCharsetSource aSource) : 
-    mBuffer(""), mFilename(aFilename)
+    mBuffer(""), mFilename(aFilename), mUnicodeXferBuf("")
 {
   mIncremental=PR_TRUE;
   mOffset=0;
@@ -87,7 +87,6 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
   mCharset = "";
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
-
 }
 
 /**
@@ -100,7 +99,7 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
  *  @return  
  */
 nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& aCharset, nsCharsetSource aSource) :
-    mBuffer(""), mFilename(aFilename) 
+    mBuffer(""), mFilename(aFilename) , mUnicodeXferBuf("")
 {    
   mIncremental=PR_FALSE;
   mOffset=0;
@@ -249,9 +248,12 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
  
   if(mUnicodeDecoder) {
     PRInt32 unicharBufLen = 0;
-      mUnicodeDecoder->GetMaxLength(aBuffer, aLen, &unicharBufLen);
-      PRUnichar *unichars = new PRUnichar [ unicharBufLen+1 ];
-	  nsresult res;
+    mUnicodeDecoder->GetMaxLength(aBuffer, aLen, &unicharBufLen);
+    mUnicodeXferBuf.SetCapacity(unicharBufLen+32);
+    mUnicodeXferBuf.Truncate();
+    PRUnichar *unichars = (PRUnichar*)mUnicodeXferBuf.GetUnicode();
+	  
+    nsresult res;
 	  do {
 	    PRInt32 srcLength = aLen;
 		  PRInt32 unicharLength = unicharBufLen;
@@ -286,7 +288,7 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
           // we continue convert the bytes data into Unicode 
           // if we have conversion error and we have more data.
 
-	  delete[] unichars;
+	  // delete[] unichars;
   }
   else {
     mBuffer.Append(aBuffer,aLen);
@@ -295,6 +297,7 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
 
   return PR_TRUE;
 }
+
 
 PRBool nsScanner::Append(const PRUnichar* aBuffer, PRUint32 aLen){
   mBuffer.Append(aBuffer,aLen);
@@ -374,13 +377,12 @@ nsresult nsScanner::Eof() {
  */
 nsresult nsScanner::GetChar(PRUnichar& aChar) {
   nsresult result=NS_OK;
-  
-  aChar=0;
+  aChar=0;  
   if(mOffset>=(PRUint32)mBuffer.Length()) 
     result=Eof();
 
   if(NS_OK == result) {
-    aChar=mBuffer.CharAt(mOffset++);
+    aChar=GetCharAt(mBuffer,mOffset++);
   }
   return result;
 }
@@ -401,7 +403,7 @@ nsresult nsScanner::Peek(PRUnichar& aChar) {
     result=Eof();
 
   if(NS_OK == result) {
-    aChar=mBuffer.CharAt(mOffset); 
+    aChar=GetCharAt(mBuffer,mOffset);
   }
   return result;
 }
@@ -430,12 +432,58 @@ nsresult nsScanner::PutBack(PRUnichar aChar) {
  *  @return  error status
  */
 nsresult nsScanner::SkipWhitespace(void) {
+
+  PRUnichar         theChar=0;
+  nsresult          result=Peek(theChar);
+  const PRUnichar*  theBuf=mBuffer.GetUnicode();
+  PRInt32           theOrigin=mOffset;
+  PRBool            found=PR_FALSE;  
+
+#if 1
+  while(NS_OK==result) {
+ 
+    theChar=theBuf[mOffset++];
+    if(theChar) {
+      switch(theChar) {
+        case ' ':
+        case '\r':
+        case '\n':
+        case '\b':
+        case '\t':
+          found=PR_TRUE;
+          break;
+        default:
+          found=PR_FALSE;
+          break;
+      }
+      if(!found) {
+        mOffset-=1;
+        break;
+      }
+    }
+    else {
+      mOffset-=1;
+      result=Peek(theChar);
+      theBuf=mBuffer.GetUnicode();
+      theOrigin=mOffset;
+    }
+  }
+
+  //DoErrTest(aString);
+
+  return result;
+
+#endif
+
+#if 0
   static const char* gSpaces=" \n\r\t\b";
   
   int len=strlen(gSpaces);
   CBufDescriptor buf(gSpaces,PR_TRUE,len+1,len);
   nsAutoString theWS(buf);
   return SkipOver(theWS);
+#endif
+
 }
 
 /**
@@ -446,6 +494,7 @@ nsresult nsScanner::SkipWhitespace(void) {
  *  @return  error code
  */
 nsresult nsScanner::SkipOver(PRUnichar aSkipChar){
+
   PRUnichar ch=0;
   nsresult   result=NS_OK;
 
@@ -460,6 +509,7 @@ nsresult nsScanner::SkipOver(PRUnichar aSkipChar){
     else break;
   } //while
   return result;
+
 }
 
 /**
@@ -470,6 +520,7 @@ nsresult nsScanner::SkipOver(PRUnichar aSkipChar){
  *  @return  error code
  */
 nsresult nsScanner::SkipOver(nsString& aSkipSet){
+
   PRUnichar theChar=0;
   nsresult  result=NS_OK;
 
@@ -485,6 +536,7 @@ nsresult nsScanner::SkipOver(nsString& aSkipSet){
     else break;
   } //while
   return result;
+
 }
 
 
@@ -515,6 +567,21 @@ nsresult nsScanner::SkipTo(nsString& aValidSet){
 }
 
 
+void DoErrTest(nsString& aString) {
+  PRInt32 pos=aString.FindChar(0);
+  if(kNotFound<pos) {
+    if(aString.Length()-1!=pos) 
+      int x=10;
+  }
+}
+
+void DoErrTest(nsCString& aString) {
+  PRInt32 pos=aString.FindChar(0);
+  if(kNotFound<pos) {
+    if(aString.Length()-1!=pos) 
+      int x=10;
+  }
+}
 
 /**
  *  Skip over chars as long as they're in aValidSet
@@ -527,6 +594,160 @@ nsresult nsScanner::SkipTo(nsString& aValidSet){
 nsresult nsScanner::SkipPast(nsString& aValidSet){
   NS_NOTYETIMPLEMENTED("Error: SkipPast not yet implemented.");
   return NS_OK;
+}
+
+/**
+ *  Consume characters until you find the terminal char
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aString receives new data from stream
+ *  @param   addTerminal tells us whether to append terminal to aString
+ *  @return  error code
+ */
+nsresult nsScanner::ReadIdentifier(nsString& aString) {
+
+  PRUnichar         theChar=0;
+  nsresult          result=Peek(theChar);
+  const PRUnichar*  theBuf=mBuffer.GetUnicode();
+  PRInt32           theOrigin=mOffset;
+  PRBool            found=PR_FALSE;  
+
+  while(NS_OK==result) {
+ 
+    theChar=theBuf[mOffset++];
+    if(theChar) {
+      found=PR_FALSE;
+      switch(theChar) {
+        case ':':
+        case '_':
+        case '-':
+          found=PR_TRUE;
+          break;
+        default:
+          if(('a'<=theChar) && (theChar<='z'))
+            found=PR_TRUE;
+          else if(('A'<=theChar) && (theChar<='Z'))
+            found=PR_TRUE;
+          else if(('0'<=theChar) && (theChar<='9'))
+            found=PR_TRUE;
+          break;
+      }
+
+      if(!found) {
+        mOffset-=1;
+        aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+        break;
+      }
+    }
+    else {
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      mOffset-=1;
+      result=Peek(theChar);
+      theBuf=mBuffer.GetUnicode();
+      theOrigin=mOffset;
+    }
+  }
+
+  //DoErrTest(aString);
+
+  return result;
+}
+
+/**
+ *  Consume characters until you find the terminal char
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aString receives new data from stream
+ *  @param   addTerminal tells us whether to append terminal to aString
+ *  @return  error code
+ */
+nsresult nsScanner::ReadNumber(nsString& aString) {
+
+  PRUnichar         theChar=0;
+  nsresult          result=Peek(theChar);
+  const PRUnichar*  theBuf=mBuffer.GetUnicode();
+  PRInt32           theOrigin=mOffset;
+  PRBool            found=PR_FALSE;  
+
+  while(NS_OK==result) {
+ 
+    theChar=theBuf[mOffset++];
+    if(theChar) {
+      found=PR_FALSE;
+      if(('a'<=theChar) && (theChar<='f'))
+        found=PR_TRUE;
+      else if(('A'<=theChar) && (theChar<='F'))
+        found=PR_TRUE;
+      else if(('0'<=theChar) && (theChar<='9'))
+        found=PR_TRUE;
+      if(!found) {
+        mOffset-=1;
+        aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+        break;
+      }
+    }
+    else {
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      mOffset-=1;
+      result=Peek(theChar);
+      theBuf=mBuffer.GetUnicode();
+      theOrigin=mOffset;
+    }
+  }
+
+  //DoErrTest(aString);
+
+  return result;
+}
+
+/**
+ *  Consume characters until you find the terminal char
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aString receives new data from stream
+ *  @param   addTerminal tells us whether to append terminal to aString
+ *  @return  error code
+ */
+nsresult nsScanner::ReadWhitespace(nsString& aString) {
+
+  PRUnichar         theChar=0;
+  nsresult          result=Peek(theChar);
+  const PRUnichar*  theBuf=mBuffer.GetUnicode();
+  PRInt32           theOrigin=mOffset;
+  PRBool            found=PR_FALSE;  
+
+  while(NS_OK==result) {
+ 
+    theChar=theBuf[mOffset++];
+    if(theChar) {
+      switch(theChar) {
+        case ' ':
+        case '\b':
+        case '\t':
+          found=PR_TRUE;
+          break;
+        default:
+          found=PR_FALSE;
+          break;
+      }
+      if(!found) {
+        mOffset-=1;
+        aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+        break;
+      }
+    }
+    else {
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      mOffset-=1;
+      result=Peek(theChar);
+      theBuf=mBuffer.GetUnicode();
+      theOrigin=mOffset;
+    }
+  }
+
+  //DoErrTest(aString);
+
+  return result;
 }
 
 /**
@@ -546,23 +767,36 @@ nsresult nsScanner::ReadWhile(nsString& aString,
 
   NS_ASSERTION(((PR_FALSE==anOrderedSet) || aValidSet.IsOrdered()),kUnorderedStringError);
 
-  PRUnichar theChar=0;
-  nsresult   result=NS_OK;
+  PRUnichar         theChar=0;
+  nsresult          result=Peek(theChar);
+  const PRUnichar*  theBuf=mBuffer.GetUnicode();
+  PRInt32           theOrigin=mOffset;
 
   while(NS_OK==result) {
-    result=GetChar(theChar);
-    if(NS_OK==result) {
+ 
+    theChar=theBuf[mOffset++];
+    if(theChar) {
       PRInt32 pos=(anOrderedSet) ? aValidSet.BinarySearch(theChar) : aValidSet.FindChar(theChar);
       if(kNotFound==pos) {
-        if(addTerminal)
-          aString+=theChar;
-        else PutBack(theChar);
+        if(!addTerminal)
+          mOffset-=1;
+        aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
         break;
       }
-      else aString+=theChar;
+    }
+    else {
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      mOffset-=1;
+      result=Peek(theChar);
+      theBuf=mBuffer.GetUnicode();
+      theOrigin=mOffset;
     }
   }
+
+  //DoErrTest(aString);
+
   return result;
+
 }
 
 /**
@@ -582,23 +816,36 @@ nsresult nsScanner::ReadWhile(nsString& aString,
 
   NS_ASSERTION(((PR_FALSE==anOrderedSet) || aValidSet.IsOrdered()),kUnorderedStringError);
 
-  PRUnichar theChar=0;
-  nsresult   result=NS_OK;
+  PRUnichar         theChar=0;
+  nsresult          result=Peek(theChar);
+  const PRUnichar*  theBuf=mBuffer.GetUnicode();
+  PRInt32           theOrigin=mOffset;
 
   while(NS_OK==result) {
-    result=GetChar(theChar);
-    if(NS_OK==result) {
+ 
+    theChar=theBuf[mOffset++];
+    if(theChar) {
       PRInt32 pos=(anOrderedSet) ? aValidSet.BinarySearch(theChar) : aValidSet.FindChar(theChar);
       if(kNotFound==pos) {
-        if(addTerminal)
-          aString+=theChar;
-        else PutBack(theChar);
+        if(!addTerminal)
+          mOffset-=1;
+        aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
         break;
       }
-      else aString+=theChar;
+    }
+    else {
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      mOffset-=1;
+      result=Peek(theChar);
+      theBuf=mBuffer.GetUnicode();
+      theOrigin=mOffset;
     }
   }
+
+  //DoErrTest(aString);
+
   return result;
+
 }
 
 /**
@@ -648,23 +895,37 @@ nsresult nsScanner::ReadUntil(nsString& aString,
   
   NS_ASSERTION(((PR_FALSE==anOrderedSet) || aTerminalSet.IsOrdered()),kUnorderedStringError);
 
-  PRUnichar theChar=0;
-  nsresult  result=NS_OK;
 
-  while(NS_OK == result) {
-    result=GetChar(theChar);
-    if(NS_OK==result) {
+  PRUnichar         theChar=0;
+  nsresult          result=Peek(theChar);
+  const PRUnichar*  theBuf=mBuffer.GetUnicode();
+  PRInt32           theOrigin=mOffset;
+
+  while(NS_OK==result) {
+ 
+    theChar=theBuf[mOffset++];
+    if(theChar) {
       PRInt32 pos=(anOrderedSet) ? aTerminalSet.BinarySearch(theChar) : aTerminalSet.FindChar(theChar);
       if(kNotFound!=pos) {
-        if(addTerminal)
-          aString+=theChar;
-        else PutBack(theChar);
+        if(!addTerminal)
+          mOffset-=1;
+        aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
         break;
       }
-      else aString+=theChar;
+    }
+    else {
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      mOffset-=1;
+      result=Peek(theChar);
+      theBuf=mBuffer.GetUnicode();
+      theOrigin=mOffset;
     }
   }
+
+  //DoErrTest(aString);
+
   return result;
+
 }
 
 /**
@@ -684,24 +945,38 @@ nsresult nsScanner::ReadUntil(nsString& aString,
   
   NS_ASSERTION(((PR_FALSE==anOrderedSet) || aTerminalSet.IsOrdered()),kUnorderedStringError);
 
-  PRUnichar theChar=0;
-  nsresult  result=NS_OK;
 
-  while(NS_OK == result) {
-    result=GetChar(theChar);
-    if(NS_OK==result) {
+  PRUnichar         theChar=0;
+  nsresult          result=Peek(theChar);
+  const PRUnichar*  theBuf=mBuffer.GetUnicode();
+  PRInt32           theOrigin=mOffset;
+
+  while(NS_OK==result) {
+ 
+    theChar=theBuf[mOffset++];
+    if(theChar) {
       PRInt32 pos=(anOrderedSet) ? aTerminalSet.BinarySearch(theChar) : aTerminalSet.FindChar(theChar);
       if(kNotFound!=pos) {
-        if(addTerminal)
-          aString+=theChar;
-        else PutBack(theChar);
+        if(!addTerminal)
+          mOffset-=1;
+        aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
         break;
       }
-      else aString+=theChar;
+    }
+    else {
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+      mOffset-=1;
+      result=Peek(theChar);
+      theBuf=mBuffer.GetUnicode();
+      theOrigin=mOffset;
     }
   }
+
+  //DoErrTest(aString);
+
   return result;
 }
+
 
 /**
  *  Consume characters until you encounter one contained in given
@@ -744,18 +1019,35 @@ nsresult nsScanner::ReadUntil(nsString& aString,
                              PRBool addTerminal){
   PRUnichar theChar=0;
   nsresult  result=NS_OK;
+  PRInt32 thePos=0;
+
+  const PRUnichar*  theBuf=mBuffer.GetUnicode();
+  PRInt32           theOrigin=mOffset;
+  result=Peek(theChar);
+  PRUint32 theLen=mBuffer.Length();
 
   while(NS_OK==result) {
-    result=GetChar(theChar);
-    if(theChar==aTerminalChar) {
-      if(addTerminal)
-        aString+=theChar;
-      else PutBack(theChar);
-      break;
+    
+    theChar=theBuf[mOffset++];
+    if(theChar) {
+      if(aTerminalChar==theChar) {
+        if(!addTerminal)
+          mOffset-=1;
+        aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
+        break;
+      }
     }
-    else aString+=theChar;
+    else {
+      aString.Append(&theBuf[theOrigin],theLen-theOrigin-1);
+      mOffset=theLen;
+      result=Peek(theChar);
+      theLen=mBuffer.Length();
+    }
   }
+
+  //DoErrTest(aString);
   return result;
+
 }
 
 /**

@@ -95,7 +95,6 @@
 class nsIHTMLContentSink;
 class nsIDTDDebug;
 class nsIParserNode;
-class CITokenHandler;
 class nsParser;
 class nsDTDContext;
 class nsEntryStack;
@@ -315,7 +314,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   aChild -- tag type of child
      * @return  True if closure was achieved -- other false
      */
-    virtual PRBool ForwardPropagate(nsEntryStack& aTagStack,eHTMLTags aParentTag,eHTMLTags aChildTag);
+    virtual PRBool ForwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTMLTags aChildTag);
 
     /**
      * This method tries to design a context map (without actually
@@ -326,7 +325,16 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param   aChild -- tag type of child
      * @return  True if closure was achieved -- other false
      */
-    virtual PRBool BackwardPropagate(nsEntryStack& aTagStack,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
+    virtual PRBool BackwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
+
+    /**
+     * Attempt forward and/or backward propagation for the given
+     * child within the current context vector stack.
+     * @update	gess5/11/98
+     * @param   type of child to be propagated.
+     * @return  TRUE if succeeds, otherwise FALSE
+     */
+    nsresult CreateContextStackFor(eHTMLTags aChildTag);
 
     /**
      * Ask parser if a given container is open ANYWHERE on stack
@@ -386,17 +394,6 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * become useful.
      */
     NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const;
-
-
-    /** 
-     * The following methods are use to create and manage
-     * the dynamic set of token handlers.
-     * @update	gess5/11/98
-     */
-    void            InitializeDefaultTokenHandlers();
-    CITokenHandler* GetTokenHandler(eHTMLTokenTypes aType) const;
-    CITokenHandler* AddTokenHandler(CITokenHandler* aHandler);
-    void            DeleteTokenHandlers(void);
 
 
     /**
@@ -474,25 +471,6 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     nsresult AddHeadLeaf(nsIParserNode& aNode);
 
     /**
-     * Causes auto-closures of context vector stack in order to find a 
-     * proper home for the given child. Propagation may also occur as 
-     * a fall out.
-     * @update	gess5/11/98
-     * @param   child to be added (somewhere) to context vector stack.
-     * @return  error code - 0 if all went well.
-     */
-    nsresult ReduceContextStackFor(eHTMLTags aChildTag);
-
-    /**
-     * Attempt forward and/or backward propagation for the given
-     * child within the current context vector stack.
-     * @update	gess5/11/98
-     * @param   type of child to be propagated.
-     * @return  TRUE if succeeds, otherwise FALSE
-     */
-    nsresult CreateContextStackFor(eHTMLTags aChildTag);
-
-    /**
      * This set of methods is used to create and manage the set of
 	   * transient styles that occur as a result of poorly formed HTML
    	 * or bugs in the original navigator.
@@ -521,8 +499,6 @@ protected:
 
     nsIHTMLContentSink* mSink;
 
-    CITokenHandler*     mTokenHandlers[eToken_last];
-
     nsDTDContext*       mHeadContext;
     nsDTDContext*       mBodyContext;
     nsDTDContext*       mFormContext;
@@ -548,6 +524,7 @@ protected:
 
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;
+
 };
 
 extern NS_HTMLPARS nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult);

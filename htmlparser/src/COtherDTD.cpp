@@ -601,22 +601,6 @@ nsresult COtherDTD::CreateContextStackFor(eHTMLTags aChildTag){
 
 
 /**
- *  This method gets called to ensure that the context
- *  stack is properly set up for the given child. 
- *  We pop containers off the stack (all the way down 
- *  html) until we get a container that can contain
- *  the given child.
- *  
- *  @update  gess 4/8/98
- *  @param   
- *  @return  
- */
-nsresult COtherDTD::ReduceContextStackFor(eHTMLTags aChildTag){
-  return CNavDTD::ReduceContextStackFor(aChildTag);
-}
-
-
-/**
  * This method causes all explicit style-tag containers that
  * are opened to be reflected on our internal style-stack.
  *
