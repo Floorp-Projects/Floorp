@@ -86,9 +86,6 @@
 #define NS_MAILBOXSERVICE_PROGID4 \
   NS_NETWORK_PROTOCOL_PROGID_PREFIX "mailbox"
 
-#define NS_MAILBOXSERVICE_PROGID5 \
-  NS_NETWORK_PROTOCOL_PROGID_PREFIX "mailboxMessage"
-
 #define NS_MAILBOXSERVICE_CID                         \
 { /* EEF82462-CB69-11d2-8065-006008128C4E */      \
  0xeef82462, 0xcb69, 0x11d2,                      \
@@ -175,6 +172,15 @@
 { 0x8597ab60, 0xd4e2, 0x11d2,                  \
     { 0x80, 0x69, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
 
+/* 15263446-D55E-11d3-98B1-001083010E9B */
+#define NS_MSG_LOCALSTRINGSERVICE_CID          \
+{ 0x15263446, 0xd55e, 0x11d3,                  \
+    { 0x98, 0xb1, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } }
 
+#define NS_MSG_MAILBOXSTRINGSERVICE_PROGID \
+  NS_MAILNEWS_STRINGSERVICE_PROGID_PREFIX "mailbox"
+
+#define NS_MSG_POPSTRINGSERVICE_PROGID \
+  NS_MAILNEWS_STRINGSERVICE_PROGID_PREFIX "pop3"
 
 #endif // nsMsgLocalCID_h__

@@ -36,6 +36,7 @@
 #include "nsPop3IncomingServer.h"
 #include "nsNoIncomingServer.h"
 #include "nsLocalMessage.h"
+#include "nsLocalStringBundle.h"
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_CID(kMailboxUrlCID, NS_MAILBOXURL_CID);
@@ -49,6 +50,8 @@ static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
 static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
 static NS_DEFINE_CID(kNoIncomingServerCID, NS_NOINCOMINGSERVER_CID);
 static NS_DEFINE_CID(kParseMailMsgStateCID, NS_PARSEMAILMSGSTATE_CID);
+static NS_DEFINE_CID(kLocalStringServiceCID, NS_MSG_LOCALSTRINGSERVICE_CID);
+
 
 // private factory declarations for each component we know how to produce
 
@@ -63,6 +66,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLocalMessage)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParseMailMessageState)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPop3IncomingServer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoIncomingServer)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLocalStringService)
 
 // Module implementation for the sample library
 class nsMsgLocalModule : public nsIModule
@@ -92,6 +96,7 @@ protected:
     nsCOMPtr<nsIGenericFactory> mParseMailMsgStateFactory;
     nsCOMPtr<nsIGenericFactory> mPop3IncomingServerFactory;
     nsCOMPtr<nsIGenericFactory> mNoIncomingServerFactory;
+    nsCOMPtr<nsIGenericFactory> mLocalStringBundleFactory;
 };
 
 
@@ -133,6 +138,7 @@ void nsMsgLocalModule::Shutdown()
     mParseMailMsgStateFactory = null_nsCOMPtr();
     mPop3IncomingServerFactory = null_nsCOMPtr();
     mNoIncomingServerFactory = null_nsCOMPtr();
+    mLocalStringBundleFactory = null_nsCOMPtr();
 }
 
 // Create a factory object for creating instances of aClass.
@@ -227,6 +233,12 @@ NS_IMETHODIMP nsMsgLocalModule::GetClassObject(nsIComponentManager *aCompMgr,
             rv = NS_NewGenericFactory(getter_AddRefs(mNoIncomingServerFactory), &nsNoIncomingServerConstructor);
         fact = mNoIncomingServerFactory;
     }
+    else if (aClass.Equals(kLocalStringServiceCID)) 
+    {
+      if (!mLocalStringBundleFactory)
+       rv = NS_NewGenericFactory(getter_AddRefs(mLocalStringBundleFactory), &nsLocalStringServiceConstructor);
+      fact = mLocalStringBundleFactory;
+    }
     
     if (fact)
         rv = fact->QueryInterface(aIID, r_classObj);
@@ -252,8 +264,6 @@ static Components gComponents[] = {
       NS_MAILBOXSERVICE_PROGID3 },
     { "Mailbox Protocol Handler", &kMailboxServiceCID,
       NS_MAILBOXSERVICE_PROGID4 },
-    { "Mailbox Message Protocol Handler", &kMailboxServiceCID,
-      NS_MAILBOXSERVICE_PROGID5 },
     { "Mailbox Parser", &kMailboxParserCID,
       NS_MAILBOXPARSER_PROGID },
     { "Pop3 URL", &kPop3UrlCID,
@@ -277,7 +287,11 @@ static Components gComponents[] = {
     { "No Incoming Server", &kNoIncomingServerCID,
       NS_NOINCOMINGSERVER_PROGID },
     { "Parse MailMessage State", &kParseMailMsgStateCID,
-      NS_PARSEMAILMSGSTATE_PROGID }
+      NS_PARSEMAILMSGSTATE_PROGID },
+    { "Mailbox String Bundle Service", &kLocalStringServiceCID,
+      NS_MSG_MAILBOXSTRINGSERVICE_PROGID },
+    { "Pop String Bundle Service", &kLocalStringServiceCID,
+      NS_MSG_POPSTRINGSERVICE_PROGID },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
