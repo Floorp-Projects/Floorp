@@ -496,10 +496,10 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 	rv = pathSpec->GetFileSpec(&path);
 	if (NS_FAILED(rv)) return rv;
 
-	if (!path.Exists())
-	{
-		path.CreateDir();
-	}
+//	if (!path.Exists())
+//	{
+//		path.CreateDir();
+//	}
 
 	rv = CreateDirectoryForFolder(path);
 	if(NS_FAILED(rv))
@@ -2899,6 +2899,7 @@ nsImapMailFolder::CreateDirectoryForFolder(nsFileSpec &path) //** dup
 		if(NS_FAILED(rv))
 			return rv;
 
+		nsFileSpec tempPath(path, PR_TRUE);	// create incoming directories.
 		//If that doesn't exist, then we have to create this directory
 		if(!path.IsDirectory())
 		{

@@ -1228,7 +1228,7 @@ nsresult nsImapIncomingServer::GetUnverifiedFolders(nsISupportsArray *aFoldersAr
 
 nsresult nsImapIncomingServer::GetUnverifiedSubFolders(nsIFolder *parentFolder, nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders)
 {
-	nsresult rv = NS_ERROR_FAILURE;
+	nsresult rv = NS_OK;
 
 	nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(parentFolder);
 	PRBool verified;
@@ -1264,7 +1264,11 @@ nsresult nsImapIncomingServer::GetUnverifiedSubFolders(nsIFolder *parentFolder, 
 			{
 				nsCOMPtr <nsIFolder> childFolder = do_QueryInterface(child, &rv);
 				if (NS_SUCCEEDED(rv) && childFolder)
-					GetUnverifiedSubFolders(childFolder, aFoldersArray, aNumUnverifiedFolders);
+				{
+					rv = GetUnverifiedSubFolders(childFolder, aFoldersArray, aNumUnverifiedFolders);
+					if (!NS_SUCCEEDED(rv))
+						break;
+				}
 			}
 		}
 		delete simpleEnumerator;
