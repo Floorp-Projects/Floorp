@@ -85,7 +85,6 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
   NS_IMETHOD ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup);
 
   NS_IMETHOD CreateShell(nsIPresContext* aContext,

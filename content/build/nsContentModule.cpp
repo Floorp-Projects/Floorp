@@ -97,6 +97,7 @@
 #include "nsISelection.h"
 #include "nsITextContent.h"
 #include "nsIXBLService.h"
+#include "nsIFrameLoader.h"
 #include "nsLayoutAtoms.h"
 #include "nsPlainTextSerializer.h"
 #include "mozSanitizingSerializer.h"
@@ -276,6 +277,7 @@ extern nsresult NS_NewXBLService(nsIXBLService** aResult);
 extern nsresult NS_NewBindingManager(nsIBindingManager** aResult);
 extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
 extern nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
+extern nsresult NS_NewFrameLoader(nsIFrameLoader** aResult);
 
 #ifdef MOZ_XUL
 extern nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
@@ -348,6 +350,7 @@ MAKE_CTOR(CreateSanitizingHTMLSerializer, nsIContentSerializer,        NS_NewSan
 MAKE_CTOR(CreateXBLService,               nsIXBLService,               NS_NewXBLService)
 MAKE_CTOR(CreateBindingManager,           nsIBindingManager,           NS_NewBindingManager)
 MAKE_CTOR(CreateContentPolicy,            nsIContentPolicy,            NS_NewContentPolicy)
+MAKE_CTOR(CreateFrameLoader,              nsIFrameLoader,              NS_NewFrameLoader)
 MAKE_CTOR(CreateNodeInfoManager,          nsINodeInfoManager,          NS_NewNodeInfoManager)
 MAKE_CTOR(CreateComputedDOMStyle,         nsIComputedDOMStyle,         NS_NewComputedDOMStyle)
 #ifdef MOZ_XUL
@@ -741,6 +744,11 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_CONTENTPOLICY_CID,
     NS_CONTENTPOLICY_CONTRACTID,
     CreateContentPolicy },
+
+  { "Frame Loader",
+    NS_FRAMELOADER_CID,
+    NS_FRAMELOADER_CONTRACTID,
+    CreateFrameLoader },
 
   { "NodeInfoManager",
     NS_NODEINFOMANAGER_CID,

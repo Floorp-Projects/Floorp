@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -253,22 +253,12 @@ inLayoutUtils::GetSubDocumentFor(nsIDOMNode* aNode)
     nsCOMPtr<nsIDocument> doc;
     content->GetDocument(*getter_AddRefs(doc));
     if (doc) {
-      nsCOMPtr<nsIPresShell> shell;
-      doc->GetShellAt(0, getter_AddRefs(shell));
-      if (shell) {
-        nsCOMPtr<nsISupports> supports;
-        shell->GetSubShellFor(content, getter_AddRefs(supports));
-        nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(supports);
-        if (docShell) {
-          nsCOMPtr<nsIContentViewer> contentViewer;
-          docShell->GetContentViewer(getter_AddRefs(contentViewer));
-          if (contentViewer) {
-            nsCOMPtr<nsIDOMDocument> domdoc;
-            contentViewer->GetDOMDocument(getter_AddRefs(domdoc));
-            return domdoc;
-          }
-        }
-      }
+      nsCOMPtr<nsIDocument> sub_doc;
+      doc->GetSubDocumentFor(content, getter_AddRefs(sub_doc));
+
+      nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(sub_doc));
+
+      return domdoc;
     }
   }
   
@@ -279,6 +269,7 @@ nsIDOMNode*
 inLayoutUtils::GetContainerFor(nsIDOMDocument* aDoc)
 {
   nsCOMPtr<nsIDOMNode> container;
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
 
   // get the doc shell for this document and look for the parent doc shell
   nsCOMPtr<nsIDOMWindowInternal> win = inLayoutUtils::GetWindowFor(aDoc);
@@ -297,9 +288,17 @@ inLayoutUtils::GetContainerFor(nsIDOMDocument* aDoc)
   nsCOMPtr<nsIPresShell> presShell;
   parentDocShell->GetPresShell(getter_AddRefs(presShell));
 
-  nsCOMPtr<nsIContent> content;
-  presShell->FindContentForShell(docShell, getter_AddRefs(content));
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
+  nsCOMPtr<nsIDocument> parent_doc;
+  presShell->GetDocument(getter_AddRefs(parent_doc));
+
+  nsCOMPtr<nsIDOMNode> node;
+
+  if (parent_doc) {
+    nsCOMPtr<nsIContent> content;
+    parent_doc->FindContentForSubDocument(doc, getter_AddRefs(content));
+
+    node = do_QueryInterface(content);
+  }
 
   return node;
 }

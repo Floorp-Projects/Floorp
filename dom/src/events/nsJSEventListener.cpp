@@ -151,9 +151,11 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     nsEvent* event;
     priv->GetInternalNSEvent(&event);
     if (event->message == NS_SCRIPT_ERROR) {
-      nsScriptErrorEvent *scriptEvent = NS_STATIC_CAST(nsScriptErrorEvent*, event);
+      nsScriptErrorEvent *scriptEvent =
+        NS_STATIC_CAST(nsScriptErrorEvent*, event);
+
       argv = ::JS_PushArguments(cx, &stackPtr, "WWi", scriptEvent->errorMsg,
-                              scriptEvent->fileName, scriptEvent->lineNr);
+                                scriptEvent->fileName, scriptEvent->lineNr);
       NS_ENSURE_TRUE(argv, NS_ERROR_OUT_OF_MEMORY);
       argc = 3;
       handledScriptError = PR_TRUE;

@@ -416,28 +416,15 @@ nsHTMLDocument::Init()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
-{
-  nsresult result = nsDocument::Reset(aChannel, aLoadGroup);
-  nsCOMPtr<nsIURI> aURL;
-
-  if (aChannel) {
-    result = aChannel->GetURI(getter_AddRefs(aURL));
-    if (NS_FAILED(result))
-        return result;
-  }
-
-  return BaseResetToURI(aURL);
-}
-
 
 NS_IMETHODIMP
 nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
 {
   nsresult result = nsDocument::ResetToURI(aURI, aLoadGroup);
+
   if (NS_SUCCEEDED(result))
     result = BaseResetToURI(aURI);
+
   return result;
 }
 
@@ -469,7 +456,7 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
                                                   NS_GET_IID(nsIHTMLStyleSheet),
                                                   (void**)&mAttrStyleSheet);
       if (NS_SUCCEEDED(result)) {
-        result = mAttrStyleSheet->Init(aURL,this);
+        result = mAttrStyleSheet->Init(aURL, this);
         if (NS_FAILED(result)) {
           NS_RELEASE(mAttrStyleSheet);
         }
@@ -1479,7 +1466,7 @@ nsHTMLDocument::FlushPendingNotifications(PRBool aFlushReflows,
     }
   }
 
-  if ((isSafeToFlush) && (mParser)) {
+  if (isSafeToFlush && mParser) {
     nsCOMPtr<nsIContentSink> sink;
     
     // XXX Ack! Parser doesn't addref sink before passing it back
@@ -3777,34 +3764,33 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 PRBool
 nsHTMLDocument::GetBodyContent()
 {
-  nsCOMPtr<nsIDOMElement> root;
+  nsCOMPtr<nsIContent> root;
 
-  GetDocumentElement(getter_AddRefs(root));
+  GetRootContent(getter_AddRefs(root));
 
   if (!root) {  
     return PR_FALSE;
   }
 
-  NS_NAMED_LITERAL_STRING(bodyStr, "BODY");
-  nsCOMPtr<nsIDOMNode> child;
-  root->GetFirstChild(getter_AddRefs(child));
+  PRInt32 i, child_count;
+  root->ChildCount(child_count);
 
-  while (child) {
-    nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(child));
+  for (i = 0; i < child_count; i++) {
+    nsCOMPtr<nsIContent> child;
 
-    if (domElement) {
-      nsAutoString tagName;
-      domElement->GetTagName(tagName);
+    root->ChildAt(i, *getter_AddRefs(child));
+    NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
 
-      ToUpperCase(tagName);
-      if (bodyStr.Equals(tagName)) {
-        mBodyContent = child;
+    nsCOMPtr<nsINodeInfo> ni;
+    child->GetNodeInfo(*getter_AddRefs(ni));
 
-        return PR_TRUE;
-      }
+    if (ni && ni->Equals(nsHTMLAtoms::body) &&
+        (ni->NamespaceEquals(kNameSpaceID_None) ||
+         ni->NamespaceEquals(kNameSpaceID_HTML))) {
+      mBodyContent = do_QueryInterface(child);
+
+      return PR_TRUE;
     }
-    nsIDOMNode *tmpNode = child;
-    tmpNode->GetNextSibling(getter_AddRefs(child));
   }
 
   return PR_FALSE;

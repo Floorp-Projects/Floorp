@@ -308,8 +308,8 @@ static nsGenericHTMLElement::EnumTable kCellScopeTable[] = {
 
 NS_IMETHODIMP
 nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
-                                   const nsAString& aValue,
-                                   nsHTMLValue& aResult)
+                                          const nsAString& aValue,
+                                          nsHTMLValue& aResult)
 {
   /* ignore these attributes, stored simply as strings
      abbr, axis, ch, headers
@@ -379,8 +379,8 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLTableCellElement::AttributeToString(nsIAtom* aAttribute,
-                                   const nsHTMLValue& aValue,
-                                   nsAString& aResult) const
+                                          const nsHTMLValue& aValue,
+                                          nsAString& aResult) const
 {
   /* ignore these attributes, stored already as strings
      abbr, axis, ch, headers
@@ -409,7 +409,8 @@ nsHTMLTableCellElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static 
-void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData)
+void MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+                           nsRuleData* aData)
 {
   if (!aAttributes || !aData)
     return;

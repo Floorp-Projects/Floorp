@@ -416,6 +416,8 @@ nsContentDLF::CreateDocument(const char* aCommand,
       break;
     docv->SetUAStyleSheet(gUAStyleSheet);
 
+    doc->SetContainer(aContainer);
+
     // Initialize the document to begin loading the data.  An
     // nsIStreamListener connected to the parser is returned in
     // aDocListener.
@@ -512,6 +514,9 @@ nsContentDLF::CreateRDFDocument(const char* aCommand,
    * An nsIStreamListener connected to the parser is returned in
    * aDocListener.
    */
+
+  doc->SetContainer(aContainer);
+
   rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener, PR_TRUE);
   if (NS_SUCCEEDED(rv)) {
     /*
