@@ -186,9 +186,6 @@ dnl ========================================================
 AC_CHECK_LIB(c, strcpy)
 AC_CHECK_LIB(m, atan)
 AC_CHECK_LIB(dl, dlopen)
-AC_CHECK_LIB(thread, thr_create)
-AC_CHECK_LIB(pthread, pthread_create)
-AC_CHECK_LIB(pcthreads, pthread_create)
 AC_CHECK_LIB(resolv, res_gethostbyaddr)
 AC_CHECK_LIB(socket, getnetbyaddr)
 AC_CHECK_LIB(util, login)
@@ -325,14 +322,8 @@ AC_ARG_ENABLE(async-dns,
 	    NO_UNIX_ASYNC_DNS=1
 	fi] )
 
-AC_ARG_ENABLE(shack,
-[  --enable-shack          HTML-embeddable native widgets (experimental)],
-	[if test "$enableval" = "yes"; then
-	    SHACK=1
-	fi] )
-
 AC_ARG_ENABLE(shared,
-[  --disable-shared        disable building of internal shared libs],
+[  --disable-shared        disable building of internal shared libs (broken)],
 	[if test "$enableval" = "no"; then
 	    NO_SHARED_LIB=1
 	fi] )
@@ -350,7 +341,7 @@ AC_ARG_ENABLE(tests,
 	fi])
 
 AC_ARG_ENABLE(homedir,
-[  --enable-homedir=\$val   set the homedir to \$val (defaults to .mozilla, broken for gnomefe)],
+[  --enable-homedir=\$val   set the homedir to \$val (broken)],
 	[ res=`echo $enableval | grep -c "\/"`
 	    if [ test $res != 0 ]; then
 		AC_MSG_ERROR("Homedir must be single relative path.")
@@ -360,10 +351,17 @@ AC_ARG_ENABLE(homedir,
 	MOZ_USER_DIR='\".mozilla\"' )
 
 AC_ARG_ENABLE(smart-mail,
-[  --enable-smart-mail       enable HTML/RDF-based client-side mail (untested)],
+[  --enable-smart-mail     enable HTML/RDF-based client-side mail (untested)],
 	[if test "$enableval" = "yes"; then
 	    MOZ_SMART_MAIL=1
 	fi])
+
+AC_ARG_ENABLE(dom,
+[  --enable-dom            enable Level-1 Document Object Model support (broken)],
+	[if test "$enableval" = "yes"; then
+    	    AC_DEFINE(DOM)
+	    MOZ_DOM=1
+	fi] )
 
 AC_SUBST(MOZ_FE)
 AC_SUBST(MOZ_SECURITY)
@@ -377,12 +375,12 @@ AC_SUBST(MOZ_DARK)
 AC_SUBST(NO_EDITOR)
 AC_SUBST(UNIX_SKIP_ASSERTS)
 AC_SUBST(NO_UNIX_ASYNC_DNS)
-AC_SUBST(SHACK)
 AC_SUBST(NO_SHARED_LIB)
 AC_SUBST(NO_STATIC_LIB)
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_SMART_MAIL)
+AC_SUBST(MOZ_DOM)
 
 dnl Checks for X libraries.
 dnl ========================================================
@@ -493,7 +491,7 @@ dnl     fi
 dnl system PNG Support
 dnl ========================================================
 AC_ARG_WITH(png, 
-[  --with-png		  use of system libpng if present],
+[  --with-png		  use system libpng if present],
         syspng=$withval, syspng=no)
 
 if test "$syspng" = yes; then
@@ -635,6 +633,7 @@ lib/Makefile
 lib/htmldlgs/Makefile
 lib/layout/Makefile
 lib/libaddr/Makefile
+lib/libdom/Makefile
 lib/libi18n/Makefile
 lib/libi18n/unicode/Makefile
 lib/libi18n/unicode/tbltool/Makefile
