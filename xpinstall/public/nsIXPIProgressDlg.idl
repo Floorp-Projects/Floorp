@@ -36,6 +36,7 @@ interface nsIXPIProgressDlg : nsISupports
     void SetHeading( in wstring aHeading );
     void SetActionText( in wstring aText );
     void SetProgress( in long aValue, in long aMax );
+    void StartInstallPhase();
 
     boolean GetCancelStatus();
 };

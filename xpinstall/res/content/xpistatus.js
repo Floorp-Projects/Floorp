@@ -29,12 +29,10 @@ var manager;
 function onLoad() 
 {
     var i = 0;
-	var row = 0;
-	var moduleName;
-	var URL;
+	 var row = 0;
+	 var moduleName;
+	 var URL;
     var numberOfDialogTreeElements;
-
-    dump ("In onLoad handler \n");
 
 	param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
 	if ( !param )
@@ -79,10 +77,10 @@ function addTreeItem(num, modName, url)
   body.appendChild(newitem);
 }
 
-
-
 function cancel() 
 {
-    window.close();
-}
+    if (manager)
+        manager.CancelInstall();
 
+    // window is closed by native impl after cleanup
+}
