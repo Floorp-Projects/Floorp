@@ -175,7 +175,9 @@ MAPFILE=.\$(OBJDIR)\$(MAPFILE)
 #//------------------------------------------------------------------------
 $(DIRS)::
 !if "$(WINOS)" == "WIN95"
+!if defined(VERBOSE)
     @echo +++ make: cannot recursively make on win95 using command.com, use w95make.
+!endif
 !else
     @echo +++ make: %MAKE_ARGS% in $(MAKEDIR)\$@
 	@cd $@
