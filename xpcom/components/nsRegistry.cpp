@@ -23,6 +23,13 @@
 #include "prmem.h"
 #include "prlock.h"
 
+/* extra locking for the paranoid */
+/* #define EXTRA_THREADSAFE */
+#ifndef EXTRA_THREADSAFE
+#define PR_Lock(x)           (void)0
+#define PR_Unlock(x)         (void)0
+#endif
+
 /*-------------------------------- nsRegistry ----------------------------------
 | This class implements the nsIRegistry interface using the functions          |
 | provided by libreg (as declared in mozilla/modules/libreg/include/NSReg.h).  |
@@ -30,7 +37,14 @@
 | Since that interface is designed to match the libreg function, this class    |
 | is implemented with each member function being a simple wrapper for the      |
 | corresponding libreg function.                                               |
+|                                                                              |
+| #define EXTRA_THREADSAFE if you are worried about libreg thread safety.      |
+| It should not be necessary, but I'll leave in the code for the paranoid.     |
 ------------------------------------------------------------------------------*/
+
+
+
+
 struct nsRegistry : public nsIRegistry {
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
@@ -77,7 +91,9 @@ struct nsRegistry : public nsIRegistry {
 
 protected:
     HREG   mReg; // Registry handle.
+#ifdef EXTRA_THREADSAFE
     PRLock *mregLock;	// libreg isn't threadsafe. Use locks to synchronize.
+#endif
 }; // nsRegistry
 
 
@@ -118,7 +134,6 @@ struct nsRegSubtreeEnumerator : public nsIEnumerator {
 
 protected:
     NS_IMETHOD advance(); // Implementation file; does appropriate NR_RegEnum call.
-    PRLock *mregLock;
     HREG    mReg;   // Handle to registry we're affiliated with.
     RKEY    mKey;   // Base key being enumerated.
     char    mName[MAXREGPATHLEN]; // The name of the current key which is in mNext
@@ -126,6 +141,9 @@ protected:
     REGENUM mNext;  // Lookahead value.
     uint32  mStyle; // Style (indicates all or some);
     PRBool  mDone;  // Done flag.
+#ifdef EXTRA_THREADSAFE
+    PRLock *mregLock;
+#endif
 }; // nsRegSubtreeEnumerator
 
 
@@ -166,9 +184,11 @@ struct nsRegistryNode : public nsIRegistryNode {
     
 protected:
     HREG    mReg;  // Handle to registry this node is part of.
-    PRLock *mregLock;
     char    mName[MAXREGPATHLEN]; // Buffer to hold name.
     RKEY    mChildKey;	// Key corresponding to mName
+#ifdef EXTRA_THREADSAFE
+    PRLock *mregLock;
+#endif
 }; // nsRegistryNode
 
 
@@ -192,12 +212,14 @@ struct nsRegistryValue : public nsIRegistryValue {
 protected:
     nsresult getInfo(); // Get registry info.
     HREG    mReg;  // Handle to registry this node is part of.
-    PRLock *mregLock;
     RKEY    mKey;  // Key this node is under.
     REGENUM mEnum; // Copy of corresponding content of parent enumerator.
     REGINFO mInfo; // Value info.
     char    mName[MAXREGNAMELEN]; // Buffer to hold name.
     REGERR  mErr; // XXX This causes this class to be NON THREAD SAFE
+#ifdef EXTRA_THREADSAFE
+    PRLock *mregLock;
+#endif
 }; // nsRegistryValue
 
 
@@ -367,7 +389,9 @@ nsRegistry::nsRegistry()
         libregStarted = PR_TRUE;
     }
 
+#ifdef EXTRA_THREADSAFE
     mregLock = PR_NewLock();
+#endif
 
     return;
 }
@@ -379,9 +403,11 @@ nsRegistry::~nsRegistry() {
     if( mReg ) {
         Close();
     }
+#ifdef EXTRA_THREADSAFE
     if (mregLock) {
         PR_DestroyLock(mregLock);
     }
+#endif
     return;
 }
 
@@ -1064,16 +1090,20 @@ nsRegSubtreeEnumerator::nsRegSubtreeEnumerator( HREG hReg, RKEY rKey, PRBool all
 
     mName[0] = '\0';
 
+#ifdef EXTRA_THREADSAFE
     // Create a registry lock
     mregLock = PR_NewLock();
+#endif
     return;
 }
 
 nsRegSubtreeEnumerator::~nsRegSubtreeEnumerator()
 {
+#ifdef EXTRA_THREADSAFE
     if (mregLock) {
         PR_DestroyLock(mregLock);
     }
+#endif
 }
 
 /*----------------------- nsRegSubtreeEnumerator::First ------------------------
@@ -1235,16 +1265,20 @@ nsRegistryNode::nsRegistryNode( HREG hReg, char *name, RKEY childKey )
     PR_ASSERT(name != NULL);
     strcpy(mName, name);
 
+#ifdef EXTRA_THREADSAFE
     mregLock = PR_NewLock();
+#endif
     
     return;
 }
 
 nsRegistryNode::~nsRegistryNode()
 {
+#ifdef EXTRA_THREADSAFE
     if (mregLock) {
         PR_DestroyLock(mregLock);
     }
+#endif
 }
 
 /*-------------------------- nsRegistryNode::GetName ---------------------------
@@ -1278,15 +1312,19 @@ NS_IMETHODIMP nsRegistryNode::GetKey( nsIRegistry::Key *r_key ) {
 nsRegistryValue::nsRegistryValue( HREG hReg, RKEY key, REGENUM slot )
     : mReg( hReg ), mKey( key ), mEnum( slot ), mErr( -1 ) {
     NS_INIT_REFCNT();
+#ifdef EXTRA_THREADSAFE
     mregLock = PR_NewLock();
+#endif
     return;
 }
 
 nsRegistryValue::~nsRegistryValue()
 {
+#ifdef EXTRA_THREADSAFE
     if (mregLock) {
         PR_DestroyLock(mregLock);
     }
+#endif
 }
 
 /*------------------------- nsRegistryValue::GetName ---------------------------
