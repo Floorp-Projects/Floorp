@@ -371,19 +371,19 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 		// the event is supposed to not have been handled)
 		if (focusedWidget == gEventDispatchHandler.GetActive())
 		{
-			nsCOMPtr<nsWindow> grandParent;
-			nsCOMPtr<nsWindow> parent ( dont_AddRef((nsWindow*)focusedWidget->GetParent()) );
+			nsCOMPtr<nsIWidget> grandParent;
+			nsCOMPtr<nsIWidget> parent ( dont_AddRef(focusedWidget->GetParent()) );
 			while (parent)
 			{
 				menuEvent.widget = parent;
-				eventHandled = parent->DispatchWindowEvent(menuEvent);
+				eventHandled = (static_cast<nsWindow*>(static_cast<nsIWidget*>(parent)))->DispatchWindowEvent(menuEvent);
 				if (eventHandled)
 				{
 					break;
 				}
 				else
 				{
-					grandParent = dont_AddRef((nsWindow*)parent->GetParent());
+					grandParent = dont_AddRef(parent->GetParent());
 					parent = grandParent;
 				}
 			}
@@ -1099,7 +1099,6 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 			nsWindow* widgetHit = (nsWindow*)mouseEvent.widget;
 			if (widgetHit)
 			{
-				ResetInputState();	
 #ifdef NOTNOW
 				if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
 					nsRect	widgetRect,newrect;

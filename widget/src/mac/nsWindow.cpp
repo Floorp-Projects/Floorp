@@ -93,7 +93,7 @@ inline void GetPortVisibleRegion(GrafPtr port, RgnHandle visRgn)
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this)
+nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this), nsIKBStateControl()
 {
   gInstanceClassName = "nsWindow";
 
@@ -142,7 +142,7 @@ nsWindow::~nsWindow()
 			nsISupports* child;
 			if (NS_SUCCEEDED(children->CurrentItem(&child)))
 			{
-				nsWindow* childWindow = static_cast<nsWindow*>(child);
+				nsWindow* childWindow = static_cast<nsWindow*>(static_cast<nsIWidget*>(child));
 				NS_RELEASE(child);
 
 				childWindow->mParent = nsnull;
@@ -177,6 +177,22 @@ nsWindow::~nsWindow()
 	}
 }
 
+NS_IMPL_ADDREF(nsWindow);
+NS_IMPL_RELEASE(nsWindow);
+nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+	if (NULL == aInstancePtr) {
+	    return NS_ERROR_NULL_POINTER;
+	}
+
+	if (aIID.Equals(nsIKBStateControl::GetIID())) {
+	    *aInstancePtr = (void*) ((nsIKBStateControl*)this);
+	    AddRef();
+	    return NS_OK;
+	}
+
+	return nsBaseWidget::QueryInterface(aIID,aInstancePtr);
+}
 
 //-------------------------------------------------------------------------
 //
@@ -1210,7 +1226,7 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 		do {
 			nsISupports* child;
 			if (NS_SUCCEEDED(children->CurrentItem(&child))) {
-				nsWindow* childWindow = static_cast<nsWindow*>(child);
+				nsWindow* childWindow = static_cast<nsWindow*>(static_cast<nsIWidget*>(child));
 
 				nsRect childBounds;
 				childWindow->GetBounds(childBounds);
@@ -1394,7 +1410,7 @@ scrollChildren:
 			nsISupports* child;
 			if (NS_SUCCEEDED(children->CurrentItem(&child)))
 			{
-				nsWindow* childWindow = static_cast<nsWindow*>(child);
+				nsWindow* childWindow = static_cast<nsWindow*>(static_cast<nsIWidget*>(child));
 				NS_RELEASE(child);
 
 				nsRect bounds;
@@ -1664,7 +1680,7 @@ void nsWindow::CalcWindowRegions()
 				nsISupports* child;
 				if (NS_SUCCEEDED(children->CurrentItem(&child)))
 				{
-					nsWindow* childWindow = static_cast<nsWindow*>(child);
+					nsWindow* childWindow = static_cast<nsWindow*>(static_cast<nsIWidget*>(child));
 					NS_RELEASE(child);
 					
 					PRBool visible;
@@ -1773,7 +1789,7 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 			nsISupports* child;
 			if (NS_SUCCEEDED(children->CurrentItem(&child)))
       {
-      	nsWindow* childWindow = static_cast<nsWindow*>(child);
+      	nsWindow* childWindow = static_cast<nsWindow*>(static_cast<nsIWidget*>(child));
 				NS_RELEASE(child);
 
 			  nsWindow* deeperHit = childWindow->FindWidgetHit(aThePoint);
@@ -1932,4 +1948,40 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& title)
 {
   NS_ASSERTION(0, "Would some Mac person please implement me? Thanks.");
   return NS_OK;
+}
+
+#pragma mark -
+
+
+NS_IMETHODIMP nsWindow::ResetInputState()
+{
+	// currently, the nsMacEventHandler is owned by nsMacWindow, which is the top level window
+	// we deletgate this call to it's parent
+  nsCOMPtr<nsIWidget> parent = getter_AddRefs(GetParent());
+  NS_ASSERTION(parent, "cannot get parent");
+  if(parent)
+  {
+  	nsCOMPtr<nsIKBStateControl> kb = do_QueryInterface(parent);
+ 	  NS_ASSERTION(kb, "cannot get parent");
+  	if(kb) {
+  		return kb->ResetInputState();
+  	}
+  }
+	return NS_ERROR_ABORT;
+}
+NS_IMETHODIMP nsWindow::PasswordFieldInit()
+{
+	// currently, the nsMacEventHandler is owned by nsMacWindow, which is the top level window
+	// we deletgate this call to it's parent
+  nsCOMPtr<nsIWidget> parent = getter_AddRefs(GetParent());
+  NS_ASSERTION(parent, "cannot get parent");
+  if(parent)
+  {
+  	nsCOMPtr<nsIKBStateControl> kb = do_QueryInterface(parent);
+ 	  NS_ASSERTION(kb, "cannot get parent");
+  	if(kb) {
+  		return kb->PasswordFieldInit();
+  	}
+  }
+	return NS_ERROR_ABORT;
 }

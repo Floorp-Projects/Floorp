@@ -27,6 +27,7 @@
 #include "nsDeleteObserver.h"
 
 #include "nsIWidget.h"
+#include "nsIKBStateControl.h"
 #include "nsIAppShell.h"
 
 #include "nsIMouseListener.h"
@@ -73,12 +74,18 @@ protected:
 //
 //-------------------------------------------------------------------------
 
-class nsWindow : public nsBaseWidget, public nsDeleteObserved
+class nsWindow : public nsBaseWidget, public nsDeleteObserved, public nsIKBStateControl
 {
+private:
+	typedef nsBaseWidget Inherited;
 
 public:
                             nsWindow();
     virtual                 ~nsWindow();
+		// nsISupports
+		NS_IMETHOD_(nsrefcnt) AddRef();
+		NS_IMETHOD_(nsrefcnt) Release();
+		NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
     // nsIWidget interface
     NS_IMETHOD              Create(nsIWidget *aParent,
@@ -179,6 +186,11 @@ public:
   	virtual void			AcceptFocusOnClick(PRBool aBool) { mAcceptFocusOnClick = aBool;};
   	PRBool					AcceptFocusOnClick() { return mAcceptFocusOnClick;};
 	void 					Flash(nsPaintEvent	&aEvent);
+
+public:
+  	// nsIKBStateControl interface
+  	NS_IMETHOD ResetInputState();
+    NS_IMETHOD PasswordFieldInit();
 
 protected:
 
