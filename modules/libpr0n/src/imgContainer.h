@@ -44,21 +44,23 @@
 #include "nsCOMPtr.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
+#include "nsIProperties.h"
 
 
 #define NS_IMGCONTAINER_CID \
-{ /* 5e04ec5e-1dd2-11b2-8fda-c4db5fb666e0 */         \
-     0x5e04ec5e,                                     \
-     0x1dd2,                                         \
-     0x11b2,                                         \
-    {0x8f, 0xda, 0xc4, 0xdb, 0x5f, 0xb6, 0x66, 0xe0} \
+{ /* 27f0682c-ff64-4dd2-ae7a-668e59f2fd38 */         \
+     0x27f0682c,                                     \
+     0xff64,                                         \
+     0x4dd2,                                         \
+    {0xae, 0x7a, 0x66, 0x8e, 0x59, 0xf2, 0xfd, 0x38} \
 }
 
-class imgContainer : public imgIContainer
+class imgContainer : public imgIContainer, public nsIProperties
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGICONTAINER
+  NS_FORWARD_SAFE_NSIPROPERTIES(mProperties)
 
   imgContainer();
   virtual ~imgContainer();
@@ -66,6 +68,7 @@ public:
 private:
   nsIntSize mSize;
   nsCOMPtr<gfxIImageFrame> mFrame;
+  nsCOMPtr<nsIProperties>  mProperties;
 };
 
 #endif /* __imgContainer_h__ */
