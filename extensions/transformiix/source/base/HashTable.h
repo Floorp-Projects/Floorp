@@ -52,27 +52,47 @@ class HashTable
 
   //Added the provided object to the hash table.  If the item already exists,
   //replace it, and delete the old copy.
+#ifdef MOZ_XSL
+  void add(MITREObject* obj, void* hashValue);
+#else
   void add(MITREObject* obj, Int32 hashValue);
+#endif
 
   //Locate and Retrieve the specified object based on the provided value.
+#ifdef MOZ_XSL
+  MITREObject* retrieve(void* hashValue);
+#else
   MITREObject* retrieve(Int32 hashValue);
+#endif
 
   //Locate, Remove, and Return the specified object based on the provided value.
+#ifdef MOZ_XSL
+  MITREObject* remove(void* hashValue);
+#else
   MITREObject* remove(Int32 hashValue);
+#endif
 
  private:
   typedef struct _HashItem
   {
     _HashItem* prevItem;
     _HashItem* nextItem;
+#ifdef MOZ_XSL
+    void* hashValue;
+#else
     Int32 hashValue;
+#endif
     MITREObject* objPtr;
   }HashItem;
 
 
   HashItem* table[HASHTABLE_SIZE];
 
-  HashItem* retrieveHashItem(Int32  hashValue);
+#ifdef MOZ_XSL
+  HashItem* retrieveHashItem(void* hashValue);
+#else
+  HashItem* retrieveHashItem(Int32 hashValue);
+#endif
 };
 
 #endif

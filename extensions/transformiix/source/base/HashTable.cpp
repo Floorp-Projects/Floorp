@@ -63,9 +63,13 @@ HashTable::~HashTable()
 //
 //Compute the bin from the Hash value, and store the object in the table
 //
+#ifdef MOZ_XSL
+void HashTable::add(MITREObject* obj, void* hashValue)
+#else
 void HashTable::add(MITREObject* obj, Int32 hashValue)
+#endif
 {
-    Int32 bin = hashValue % HASHTABLE_SIZE;
+    Int32 bin = (Int32)hashValue % HASHTABLE_SIZE;
     HashItem* newHashItem = new HashItem;
     HashItem* existingItem = NULL;
 
@@ -100,7 +104,11 @@ void HashTable::add(MITREObject* obj, Int32 hashValue)
 //
 //Locate the object specified by the hashValue
 //
+#ifdef MOZ_XSL
+MITREObject* HashTable::retrieve(void* hashValue)
+#else
 MITREObject* HashTable::retrieve(Int32 hashValue)
+#endif
 {
     HashItem* searchValue = retrieveHashItem(hashValue);
 
@@ -114,9 +122,13 @@ MITREObject* HashTable::retrieve(Int32 hashValue)
 //Locate the object specified by the hashValue, remove it from the table
 //and return the orriginal object to the caller
 //
+#ifdef MOZ_XSL
+MITREObject* HashTable::remove(void* hashValue)
+#else
 MITREObject* HashTable::remove(Int32 hashValue)
+#endif
 {
-    Int32 bin = hashValue % HASHTABLE_SIZE;
+    Int32 bin = (Int32)hashValue % HASHTABLE_SIZE;
     MITREObject* returnObj = NULL;
     HashItem* searchItem = table[bin];
 
@@ -145,9 +157,13 @@ MITREObject* HashTable::remove(Int32 hashValue)
     }
 }
 
-HashTable::HashItem* HashTable::retrieveHashItem(Int32  hashValue)
+#ifdef MOZ_XSL
+HashTable::HashItem* HashTable::retrieveHashItem(void* hashValue)
+#else
+HashTable::HashItem* HashTable::retrieveHashItem(Int32 hashValue)
+#endif
 {
-    Int32 bin = hashValue % HASHTABLE_SIZE;
+    Int32 bin = (Int32)hashValue % HASHTABLE_SIZE;
     HashItem* searchItem = NULL;
 
     //Goto the calculated bin, and begin a linear search for the specified
