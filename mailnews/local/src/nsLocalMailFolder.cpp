@@ -150,13 +150,11 @@ nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
-NS_IMPL_RELEASE_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
-NS_IMPL_QUERY_INTERFACE_INHERITED3(nsMsgLocalMailFolder,
-                                   nsMsgDBFolder,
-                                   nsICopyMessageListener,
-                                   nsIMsgLocalMailFolder,
-                                   nsIJunkMailClassificationListener)
+NS_IMPL_ISUPPORTS_INHERITED3(nsMsgLocalMailFolder,
+                             nsMsgDBFolder,
+                             nsICopyMessageListener,
+                             nsIMsgLocalMailFolder,
+                             nsIJunkMailClassificationListener)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1396,6 +1394,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, ns
   }
   return NS_OK;
 }
+
 NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(PRUnichar ** prettyName)
 {
   return nsMsgDBFolder::GetPrettyName(prettyName);
@@ -1418,7 +1417,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::SetPrettyName(const PRUnichar *aName)
 NS_IMETHODIMP nsMsgLocalMailFolder::GetName(PRUnichar **aName)
 {
   ReadDBFolderInfo(PR_FALSE);
-  return nsMsgFolder::GetName(aName);
+  return nsMsgDBFolder::GetName(aName);
 }
 
 NS_IMETHODIMP
