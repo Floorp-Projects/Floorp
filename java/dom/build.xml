@@ -26,11 +26,11 @@
 
 -->
 
-<project name="webclient" default="main" basedir=".">
+<project name="javadom" default="main" basedir=".">
 
-  <property name="Name" value="webclient"/>
-  <property name="name" value="webclient"/>
-  <property name="version" value="20020916"/>
+  <property name="Name" value="javadom"/>
+  <property name="name" value="javadom"/>
+  <property name="version" value="20030111"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
@@ -53,7 +53,7 @@
 <!-- ************ Where are we building into? ***************************** -->
 
   <!-- The base directory for component sources -->
-  <property name="source.home" value="${basedir}/classes_spec"/>
+  <property name="source.home" value="${basedir}/classes"/>
 
   <!-- Construct compile classpath -->
   <path id="compile.classpath">
@@ -61,9 +61,9 @@
   </path>
 
   <target name="main" 
-          depends="compile.classes_spec,compile.src_share,compile.src_moz"/>
+          depends="compile.classes,compile.src"/> <!--,compile.jni"/>-->
 
-  <target name="compile.classes_spec">
+  <target name="compile.classes">
 
     <javac destdir="${build.home}"
              debug="${compile.debug}"
@@ -71,35 +71,19 @@
           optimize="${compile.optimize}">
       <classpath refid="compile.classpath"/>
       <src path="${source.home}"/>
-      <patternset>
-            <include name="org/mozilla/webclient/wrapper_native/gtk/*" 
-                     if="build.unix.classes"/>
-      </patternset>
-      <patternset>
-            <include name="org/mozilla/webclient/wrapper_native/win32/*" 
-                     if="build.win32.classes"/>
-      </patternset>
 
-      <!-- PENDING(edburns): include additional patternsets for ICE,
-           HotJava, etc -->
-
-      <include name="org/mozilla/webclient/*"/>
-      <include name="org/mozilla/webclient/wrapper_native/*"/>
-      <include name="org/mozilla/webclient/test/*"/>
     </javac>
 
   </target>
 
-  <target name="compile.src_share" depends="compile.javah.headers">
+  <target name="compile.src">
 
-    <exec os="SunOS" dir="${basedir}/src_share" failonerror="yes" 
+    <exec os="SunOS" dir="${basedir}/src" failonerror="yes" 
                      executable="gmake"/>
-    <exec os="Linux" dir="${basedir}/src_share" failonerror="yes" 
+    <exec os="Linux" dir="${basedir}/src" failonerror="yes" 
                      executable="make"/>
-    <exec os="Windows 2000" dir="${basedir}/src_share" executable="nmake" 
-                     failonerror="yes">
-      <arg line="-f makefile.win"/>
-    </exec>
+    <exec os="Windows 2000" dir="${basedir}/src" executable="make" 
+                     failonerror="yes"/>
 
   </target>
 
@@ -172,89 +156,44 @@
 
   </target>
 
-
-
-  <target name="compile.src_moz" depends="compile.src_share">
-
-    <exec os="SunOS" dir="${basedir}/src_moz" executable="gmake" 
-                     failonerror="yes">
-    </exec>
-    <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
-                     failonerror="yes">
-    </exec>
-    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="nmake" 
-                     failonerror="yes">
-      <arg line="-f makefile.win"/>
-    </exec>
-
-    <exec os="SunOS" dir="${basedir}/src_moz" executable="gmake" 
-                     failonerror="yes">
-      <arg line="buildRunems"/>
-    </exec>
-    <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
-                     failonerror="yes">
-      <arg line="buildRunems"/>
-    </exec>
-    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="nmake" 
-                     failonerror="yes">
-      <arg line="-f makefile.win buildRunems"/>
-    </exec>
-
-  </target>
-
-
   <target name="clean">
 
-    <ant antfile="build-tests.xml" target="clean"/>   
-
-    <exec os="SunOS" dir="${basedir}/src_moz" executable="gmake" 
+    <exec os="SunOS" dir="${basedir}/src" executable="gmake" 
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
-    <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
+    <exec os="Linux" dir="${basedir}/src" executable="make" 
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
-    <exec os="Windows 2000" dir="${basedir}/src_moz" executable="make" 
+    <exec os="Windows 2000" dir="${basedir}/src" executable="make" 
                      failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
 
-    <exec os="SunOS" dir="${basedir}/src_share" executable="gmake"
+    <exec os="SunOS" dir="${basedir}/jni" executable="gmake" 
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
-    <exec os="Linux" dir="${basedir}/src_share" executable="make"
+    <exec os="Linux" dir="${basedir}/jni" executable="make" 
           failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
-    <exec os="Windows 2000" dir="${basedir}/src_share" executable="make" 
+    <exec os="Windows 2000" dir="${basedir}/jni" executable="make" 
                      failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
 
-    <delete >
-      <fileset dir="${basedir}/src_share">
-        <include name="*.h"/>
-        <exclude name="bal_util.h"/>
-        <exclude name="jni_util_export.h"/>
-        <exclude name="jni_util.h"/>
-      </fileset>
-    </delete>
 
-    <delete file="${basedir}/src_moz/gtk/GtkBrowserControlCanvas.h"/>
-    <delete file="${basedir}/src_moz/win32/Win32BrowserControlCanvas.h"/>
-
-
-    <delete dir="${build.home}/org/mozilla/webclient"/>
+    <delete dir="${build.home}/org/mozilla/dom"/>
 
   </target>
 

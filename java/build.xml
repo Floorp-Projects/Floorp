@@ -71,16 +71,7 @@
 
   <target name="dom">
 
-    <exec os="SunOS" dir="${basedir}/dom" executable="gmake" 
-                     failonerror="yes">
-    </exec>
-    <exec os="Linux" dir="${basedir}/dom" executable="make" 
-                     failonerror="yes">
-    </exec>
-    <exec os="Windows 2000" dir="${basedir}/dom" executable="nmake" 
-                     failonerror="yes">
-      <arg line="-f makefile.win"/>
-    </exec>
+    <ant dir="${basedir}/dom"/>
 
   </target>
 
@@ -96,18 +87,7 @@
 
     <ant dir="${basedir}/util" target="clean"/>
 
-    <exec os="SunOS" dir="${basedir}/dom" executable="make" 
-                     failonerror="yes">
-      <arg line="clean"/>
-    </exec>
-    <exec os="Linux" dir="${basedir}/dom" executable="make" 
-                     failonerror="yes">
-      <arg line="clean"/>
-    </exec>
-    <exec os="Windows 2000" dir="${basedir}/dom" executable="nmake" 
-                     failonerror="yes">
-      <arg line="-f makefile.win clean"/>
-    </exec>
+    <ant dir="${basedir}/dom" target="clean"/>
 
     <ant dir="${basedir}/webclient" target="clean"/>
 

@@ -64,6 +64,9 @@ ifeq ($(OS_ARCH),Linux)
 	-ljvm -lhpi
  DEFINES	+= -DDISABLE_JIT
 else
+ifeq ($(OS_ARCH),WINNT)
+ INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/win32/
+else
  INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/solaris
  DSO_LDOPTS	+= \
 	-L$(JAVAHOME)/jre/lib/sparc \
@@ -74,6 +77,9 @@ else
 	-R$(JAVAHOME)/jre/lib/sparc/native_threads \
 	-ljvm -lhpi
 endif
+endif
+
+# ifeq (($OS_ARCH),SunOS)
 
 EXPORTS 	= \
 	nsIJavaDOM.h 
