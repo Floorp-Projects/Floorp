@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "java_lang_ClassLoader.h"
+#include "java_io_InputStream.h"
 #include "FieldOrMethod.h"
 #include "JavaVM.h"
 #include "JavaString.h"
