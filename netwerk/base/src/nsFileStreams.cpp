@@ -254,7 +254,10 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
     nsresult rv;
     PRBool isDir;
     rv = mFile->IsDirectory(&isDir);
-    if (NS_SUCCEEDED(rv) && isDir) {
+    if (NS_FAILED(rv))  // file or directory does not exist
+        return rv;
+    
+    if (isDir) {
         rv = nsDirectoryIndexStream::Create(mFile, aInputStream);
         PR_LOG(gFileIOLog, PR_LOG_DEBUG,
                ("nsFileIO: opening local dir %s for input (%x)",
