@@ -24,7 +24,6 @@ CPPSRCS =				\
 	nsAbsoluteFrame.cpp		\
 	nsBRPart.cpp			\
 	nsBodyFrame.cpp			\
-	nsBodyPart.cpp			\
 	nsGlobalVariables.cpp		\
 	nsHRPart.cpp			\
 	nsHTMLAtoms.cpp			\
