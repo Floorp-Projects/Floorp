@@ -46,6 +46,7 @@
 
 #include "nsCURILoader.h"
 #include "nsIURIContentListener.h"
+#include "nsIHTTPChannel.h"
 
 static NS_DEFINE_IID(kIImageNetContextIID, IL_INETCONTEXT_IID);
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
@@ -246,6 +247,7 @@ ImageConsumer::DoContent(const char * aContentType,
 NS_IMETHODIMP
 ImageConsumer::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
 {
+  PRUint32 httpStatus;
   if (mInterrupted) {
     mStatus = MK_INTERRUPTED;
     return NS_ERROR_ABORT;
@@ -255,6 +257,15 @@ ImageConsumer::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
   if (mBuffer == nsnull) {
     mStatus = MK_IMAGE_LOSSAGE;
     return NS_ERROR_ABORT;
+  }
+
+  nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(channel));
+  if (pHTTPCon) {
+    pHTTPCon->GetResponseStatus(&httpStatus);
+    if (httpStatus == 404) {
+      mStatus = MK_IMAGE_LOSSAGE;
+      return NS_ERROR_ABORT;
+    }
   }
 
   ilINetReader *reader = mURL->GetReader(); //ptn test: nsCOMPtr??
