@@ -79,16 +79,16 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug52506.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug53690-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug53690-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug53891.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug54450.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug5538.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug55527.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug55545.html
-# Non-existant test case?
-#file:///s|/mozilla/layout/html/tests/table/bugs/bug55563.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug55694.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug55789.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug56024.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug56024.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug56201.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug56563.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug57378.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug57828.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug57828.html
