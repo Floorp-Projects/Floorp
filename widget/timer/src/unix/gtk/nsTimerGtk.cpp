@@ -21,36 +21,21 @@
  *  Alexander Larsson (alla@lysator.liu.se)
  */
 
+#define INTERVAL 10
+
+#include "nsVoidArray.h"
 #include "nsTimerGtk.h"
 #include "nsCOMPtr.h"
 
-static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
+#include <time.h>
 
-// extern "C" int  NS_TimeToNextTimeout(struct timeval *aTimer);
-// extern "C" void NS_ProcessTimeouts(void);
+static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
 extern "C" gboolean nsTimerExpired(gpointer aCallData);
 
-/* Note that "priority" in terms of glib is in the sense of the priority the 
-   timer has in the face of other dispatchable items in the glib inner loop, 
-   not relative timer priorities. There is a small danger here that was exposed    by appshellservice, which at one point used timers in handling apshell exit 
-   cleanup. In the face of it receiving g_io dispatches from glib, it never was
-   seeing the timer, and thus we hung (see bug 27855). Ultimately we fixed the
-   problem by avoiding the use of timers. IMHO, the safest thing for us to do 
-   here would be to always set a priority of G_PRIORITY_DEFAULT. */
-
-static gint calc_priority(PRUint32 aPriority)
-{
-	return G_PRIORITY_DEFAULT;
-}
-
 PRBool nsTimerGtk::FireTimeout()
 {
-  if (mType == NS_TYPE_REPEATING_PRECISE) {
-    mTimerId = g_timeout_add_full(calc_priority(mPriority),
-                                  mDelay, nsTimerExpired, this, NULL);
-  }
-
+  //printf("%p FireTimeout() priority = %i\n", this, mPriority);
   // because Notify can cause 'this' to get destroyed, we need to hold a ref
   nsCOMPtr<nsITimer> kungFuDeathGrip = this;
   
@@ -60,39 +45,32 @@ PRBool nsTimerGtk::FireTimeout()
   else if (mCallback != NULL) {
     mCallback->Notify(this); // Fire the timer
   }
-
-  return (mType == NS_TYPE_REPEATING_SLACK);
+  
+  return ((mType == NS_TYPE_REPEATING_SLACK) || (mType == NS_TYPE_REPEATING_PRECISE));
 }
 
 void nsTimerGtk::SetDelay(PRUint32 aDelay)
 {
-  if (aDelay!=mDelay) {
-    Cancel();
-    mDelay=aDelay;
-    mTimerId = g_timeout_add_full(calc_priority(mPriority),
-                                  mDelay, nsTimerExpired, this, NULL);
-  }
-};
+  mDelay=aDelay;
+}
 
 void nsTimerGtk::SetPriority(PRUint32 aPriority)
 {
-  if (aPriority!=mPriority) {
-    Cancel();
-    mPriority = aPriority;
-    mTimerId = g_timeout_add_full(calc_priority(mPriority),
-                                  mDelay, nsTimerExpired, this, NULL);
-  }
+  mPriority = aPriority;
 }
 
 void nsTimerGtk::SetType(PRUint32 aType)
 {
-  if (aType!=mType) {
-    Cancel();
-    mType = aType;
-    mTimerId = g_timeout_add_full(calc_priority(mPriority),
-                                  mDelay, nsTimerExpired, this, NULL);
-  }
+  mType = aType;
 }
+
+nsVoidArray *nsTimerGtk::gHighestList = (nsVoidArray *)nsnull;
+nsVoidArray *nsTimerGtk::gHighList = (nsVoidArray *)nsnull;
+nsVoidArray *nsTimerGtk::gNormalList = (nsVoidArray *)nsnull;
+nsVoidArray *nsTimerGtk::gLowList = (nsVoidArray *)nsnull;
+nsVoidArray *nsTimerGtk::gLowestList = (nsVoidArray *)nsnull;
+PRBool nsTimerGtk::gTimeoutAdded = PR_FALSE;
+PRBool nsTimerGtk::gProcessingTimer = PR_FALSE;
 
 nsTimerGtk::nsTimerGtk()
 {
@@ -100,77 +78,183 @@ nsTimerGtk::nsTimerGtk()
   NS_INIT_REFCNT();
   mFunc = NULL;
   mCallback = NULL;
-  mNext = NULL;
-  mTimerId = 0;
   mDelay = 0;
   mClosure = NULL;
   mPriority = 0;
+  mSchedTime = 0;
   mType = NS_TYPE_ONE_SHOT;
 }
 
 nsTimerGtk::~nsTimerGtk()
 {
 //  printf("nsTimerGtk::~nsTimerGtk called for %p\n", this);
-
   Cancel();
   NS_IF_RELEASE(mCallback);
 }
 
-nsresult 
-nsTimerGtk::Init(nsTimerCallbackFunc aFunc,
+/* inline */
+void process_timers(nsVoidArray *array)
+{
+  int ret;
+  PRUint32 now = (PRUint32) time((time_t *) NULL) * 1000;
+  PRInt32 count = array->Count();
+  
+  if (count == 0)
+    return;
+  //  printf("count == %i\n", count);
+  
+  nsTimerGtk *timer;
+  int i;
+  
+  for( i = count; i >= 0; i--) {
+    timer = (nsTimerGtk*)array->ElementAt(i);
+    if( timer && now >= timer->mSchedTime + timer->mDelay ) {
+      ret = timer->FireTimeout();
+      if( ret == 0 ) {
+        array->RemoveElement(timer);
+      }
+    }
+  }
+}
+
+int TimerCallbackFunc( gpointer data )
+{
+  NS_ASSERTION( nsTimerGtk::gProcessingTimer == PR_FALSE,
+                "TimerCallbackFunc(): Timer reentrance" );
+
+  nsTimerGtk::gProcessingTimer = PR_TRUE;
+
+  process_timers(nsTimerGtk::gHighestList);
+  process_timers(nsTimerGtk::gHighList);
+  process_timers(nsTimerGtk::gNormalList);
+
+  gboolean hasEvents = g_main_pending();
+  if (hasEvents == FALSE) {
+    process_timers(nsTimerGtk::gLowList);
+    process_timers(nsTimerGtk::gLowestList);
+  }
+  
+  nsTimerGtk::gProcessingTimer = PR_FALSE;
+  return PR_TRUE;
+}
+
+nsresult nsTimerGtk::Init(nsTimerCallbackFunc aFunc,
                  void *aClosure,
                  PRUint32 aDelay,
                  PRUint32 aPriority,
-                 PRUint32 aType
-                )
+                 PRUint32 aType)
 {
-  //printf("nsTimerGtk::Init called with func + closure for %p\n", this);
-    mFunc = aFunc;
-    mClosure = aClosure;
-    mPriority = aPriority;
-    mType = aType;
-    mDelay = aDelay;
+  //printf("%p nsTimerGtk::Init() mDelay = %i\n", this, aDelay);
+  mFunc = aFunc;
+  mClosure = aClosure;
+  mPriority = aPriority;
+  mType = aType;
+  mDelay = aDelay;
+  mSchedTime = (PRUint32) time((time_t *) NULL) * 1000;
 
-    mTimerId = g_timeout_add_full(calc_priority(mPriority),
-                                  mDelay, nsTimerExpired, this, NULL);
- 
-    return NS_OK;
+  if (!gTimeoutAdded) {
+    nsTimerGtk::gHighestList = new nsVoidArray;
+    nsTimerGtk::gHighList = new nsVoidArray;
+    nsTimerGtk::gNormalList = new nsVoidArray;
+    nsTimerGtk::gLowList = new nsVoidArray;
+    nsTimerGtk::gLowestList = new nsVoidArray;
+    gtk_timeout_add ( INTERVAL, TimerCallbackFunc, (gpointer) this );
+    nsTimerGtk::gTimeoutAdded = PR_TRUE;
+  }
+
+  switch (aPriority)
+  {
+  case NS_PRIORITY_HIGHEST:
+    nsTimerGtk::gHighestList->InsertElementAt(this, 0);
+    break;
+  case NS_PRIORITY_HIGH:
+    nsTimerGtk::gHighList->InsertElementAt(this, 0);
+    break;
+  case NS_PRIORITY_NORMAL:
+    nsTimerGtk::gNormalList->InsertElementAt(this, 0);
+    break;
+  case NS_PRIORITY_LOW:
+    nsTimerGtk::gLowList->InsertElementAt(this, 0);
+    break;
+  case NS_PRIORITY_LOWEST:
+    nsTimerGtk::gLowestList->InsertElementAt(this, 0);
+    break;
+  }
+  
+  return NS_OK;
 }
 
-nsresult 
-nsTimerGtk::Init(nsITimerCallback *aCallback,
+nsresult nsTimerGtk::Init(nsITimerCallback *aCallback,
                  PRUint32 aDelay,
                  PRUint32 aPriority,
                  PRUint32 aType
                  )
 {
-  //printf("nsTimerGtk::Init called with callback only for %p\n", this);
-    mCallback = aCallback;
-    NS_ADDREF(mCallback);
-    mPriority = aPriority;
-    mType = aType;
-    mDelay = aDelay;
+  mCallback = aCallback;
+  NS_ADDREF(mCallback);
+  mPriority = aPriority;
+  mType = aType;
+  mDelay = aDelay;
+  mSchedTime = (PRUint32) time((time_t *) NULL) * 1000;
+  
+  if (!gTimeoutAdded) {
+    nsTimerGtk::gHighestList = new nsVoidArray;
+    nsTimerGtk::gHighList = new nsVoidArray;
+    nsTimerGtk::gNormalList = new nsVoidArray;
+    nsTimerGtk::gLowList = new nsVoidArray;
+    nsTimerGtk::gLowestList = new nsVoidArray;
+    gtk_timeout_add (INTERVAL, TimerCallbackFunc, (gpointer) this );
+    nsTimerGtk::gTimeoutAdded = PR_TRUE;
+  }
+  
+  switch (aPriority)
+  {
+  case NS_PRIORITY_HIGHEST:
+    nsTimerGtk::gHighestList->InsertElementAt(this, 0);
+    break;
+  case NS_PRIORITY_HIGH:
+    nsTimerGtk::gHighList->InsertElementAt(this, 0);
+    break;
+  case NS_PRIORITY_NORMAL:
+    nsTimerGtk::gNormalList->InsertElementAt(this, 0);
+    break;
+  case NS_PRIORITY_LOW:
+    nsTimerGtk::gLowList->InsertElementAt(this, 0);
+    break;
+  case NS_PRIORITY_LOWEST:
+    nsTimerGtk::gLowestList->InsertElementAt(this, 0);
+    break;
+  }
 
-    mTimerId = g_timeout_add_full(calc_priority(mPriority),
-                                  mDelay, nsTimerExpired, this, NULL);
- 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS1(nsTimerGtk, nsITimer)
 
-void
-nsTimerGtk::Cancel()
+void nsTimerGtk::Cancel()
 {
-  //printf("nsTimerGtk::Cancel called for %p\n", this);
-
-  if (mTimerId)
-    g_source_remove(mTimerId);
+  switch (mPriority)
+  {
+  case NS_PRIORITY_HIGHEST:
+    nsTimerGtk::gHighestList->RemoveElement(this);
+    break;
+  case NS_PRIORITY_HIGH:
+    nsTimerGtk::gHighList->RemoveElement(this);
+    break;
+  case NS_PRIORITY_NORMAL:
+    nsTimerGtk::gNormalList->RemoveElement(this);
+    break;
+  case NS_PRIORITY_LOW:
+    nsTimerGtk::gLowList->RemoveElement(this);
+    break;
+  case NS_PRIORITY_LOWEST:
+    nsTimerGtk::gLowestList->RemoveElement(this);
+    break;
+  }
 }
 
 gboolean nsTimerExpired(gpointer aCallData)
 {
-  //printf("nsTimerExpired for %p\n", aCallData);
   nsTimerGtk* timer = (nsTimerGtk *)aCallData;
   return timer->FireTimeout();
 }
@@ -178,17 +262,17 @@ gboolean nsTimerExpired(gpointer aCallData)
 #ifdef MOZ_MONOLITHIC_TOOLKIT
 nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
-    NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-    if (nsnull == aInstancePtrResult) {
-      return NS_ERROR_NULL_POINTER;
-    }  
-
-    nsTimerGtk *timer = new nsTimerGtk();
-    if (nsnull == timer) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }  
+  
+  nsTimerGtk *timer = new nsTimerGtk();
+  if (nsnull == timer) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
 
 int NS_TimeToNextTimeout(struct timeval *aTimer) 

@@ -31,13 +31,16 @@
 /*
  * Implementation of timers using Gtk timer facility 
  */
+
+class nsVoidArray;
+
 class nsTimerGtk : public nsITimer 
 {
 public:
 
   nsTimerGtk();
   virtual ~nsTimerGtk();
-
+  
   virtual nsresult Init(nsTimerCallbackFunc aFunc,
                 void *aClosure,
                 PRUint32 aDelay,
@@ -68,15 +71,22 @@ public:
 
   PRBool FireTimeout();
 
-private:
+  static nsVoidArray  *gHighestList;
+  static nsVoidArray  *gHighList;
+  static nsVoidArray  *gNormalList;
+  static nsVoidArray  *gLowList;
+  static nsVoidArray  *gLowestList;
+  static PRBool        gTimeoutAdded;
+  static PRBool        gProcessingTimer;
+
+  PRUint32             mSchedTime;
   PRUint32             mDelay;
+private:
   PRUint32             mPriority;
   PRUint32             mType;
   nsTimerCallbackFunc  mFunc;
   void *               mClosure;
   nsITimerCallback *   mCallback;
-  nsTimerGtk *         mNext;
-  guint                mTimerId;
 };
 
 #endif // __nsTimerGtk_h
