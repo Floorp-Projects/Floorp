@@ -34,7 +34,7 @@ native nsSize (nsSize);
 
 
 interface nsIDOMDocument;
-
+interface nsIDOMNode;
 
 [scriptable, uuid(CBA22C53-FCCE-11d2-96D4-0060B0FB9956)]
 interface nsIDragSession : nsISupports
@@ -67,6 +67,12 @@ interface nsIDragSession : nsISupports
     * originated in the same document.
     */
   readonly attribute nsIDOMDocument sourceDocument;
+
+  /**
+    * The dom node that was originally dragged to start the session, which will be null if the
+    * drag originated outside the application.
+    */
+  readonly attribute nsIDOMNode sourceNode;
 
   /**
     * Get data from a Drag&Drop. Can be called while the drag is in process
