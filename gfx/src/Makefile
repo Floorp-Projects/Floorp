@@ -32,7 +32,8 @@ LCFLAGS=-D_IMPL_NS_GFX
 CPPSRCS=nsColor.cpp nsColorNames.cpp nsColorNamesRGB.cpp nsFont.cpp \
     nsImageGroup.cpp nsImageManager.cpp nsImageNetContextAsync.cpp \
     nsImageRenderer.cpp nsImageRequest.cpp nsImageSystemServices.cpp \
-    nsImageURL.cpp nsRect.cpp nsTransform2D.cpp nsFontCache.cpp nsDeviceContext.cpp 
+    nsImageURL.cpp nsRect.cpp nsTransform2D.cpp nsFontCache.cpp \
+	nsDeviceContext.cpp nsImageNetContextSync.cpp
 
 EXPORTS=nsColor.h nsColorNames.h nsCoord.h nsFont.h nsRect.h nsPoint.h \
     nsSize.h nsMargin.h nsTransform2D.h nsIRenderingContext.h \
