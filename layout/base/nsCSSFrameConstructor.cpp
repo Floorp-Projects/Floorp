@@ -5077,11 +5077,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       else if (aTag == nsXULAtoms::text || aTag == nsHTMLAtoms::label ||
                aTag == nsXULAtoms::description) {
         isReplaced = PR_TRUE;
-        if (aTag == nsHTMLAtoms::label || aTag == nsXULAtoms::description) {
-          nsAutoString value;
-          if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value) ==
-              NS_CONTENT_ATTR_NOT_THERE)
-            return NS_OK;
+        if ((aTag == nsHTMLAtoms::label || aTag == nsXULAtoms::description) && 
+            (! aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::value))) {
+          return NS_OK;
         }
         rv = NS_NewTextBoxFrame(aPresShell, &newFrame);
       }
