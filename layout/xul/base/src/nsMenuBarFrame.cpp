@@ -475,9 +475,9 @@ nsMenuBarFrame::CreateDismissalListener()
   if (!doc)
     return NS_OK;
 
-  doc->GetScriptContextOwner(...);
+  // doc->GetScriptContextOwner(...);
 
-  owner->GetScriptGlobalObject(...);
+  // owner->GetScriptGlobalObject(...);
 
   // qi global object to an nsidomwindow
 
