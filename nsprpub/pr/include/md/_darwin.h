@@ -68,6 +68,7 @@
  * thread-safe.  AI_V4MAPPED|AI_ADDRCONFIG doesn't work either.
  */
 #define _PR_HAVE_GETHOSTBYNAME2
+#define _PR_HAVE_GETADDRINFO
 /*
  * On Mac OS X 10.2, gethostbyaddr fails with h_errno=NO_RECOVERY
  * if you pass an IPv4-mapped IPv6 address to it.

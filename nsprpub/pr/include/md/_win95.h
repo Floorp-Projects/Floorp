@@ -51,6 +51,23 @@
 
 #define HAVE_DLL
 #undef  HAVE_THREAD_AFFINITY
+#define _PR_HAVE_GETADDRINFO
+#define _PR_INET6_PROBE
+#ifndef _PR_INET6
+#define AF_INET6 23
+struct addrinfo {
+    int ai_flags;
+    int ai_family;
+    int ai_socktype;
+    int ai_protocol;
+    size_t ai_addrlen;
+    char *ai_canonname;
+    struct sockaddr *ai_addr;
+    struct addrinfo *ai_next;
+};
+#define AI_CANONNAME 0x2
+#endif
+#define _PR_HAVE_THREADSAFE_GETHOST
 #define _PR_HAVE_ATOMIC_OPS
 #define PR_HAVE_WIN32_NAMED_SHARED_MEMORY
 

@@ -276,51 +276,41 @@ static PRInt32 PR_CALLBACK Ipv6ToIpv4SocketRecvFrom(PRFileDesc *fd, void *buf,
 
 #if defined(_PR_INET6_PROBE)
 PRBool _pr_ipv6_is_present;
-PR_EXTERN(PRBool) _pr_test_ipv6_socket();
-#if defined(_PR_HAVE_GETIPNODEBYNAME)
-void *_pr_getipnodebyname_fp;
-void *_pr_getipnodebyaddr_fp;
-void *_pr_freehostent_fp;
+extern PRBool _pr_test_ipv6_socket(void);
+
+#if !defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYNAME)
+extern PRStatus _pr_find_getipnodebyname(void);
 #endif
+
+#if !defined(_PR_INET6) && defined(_PR_HAVE_GETADDRINFO)
+extern PRStatus _pr_find_getaddrinfo(void);
 #endif
+
+static PRBool
+_pr_probe_ipv6_presence(void)
+{
+#if !defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYNAME)
+    if (_pr_find_getipnodebyname() != PR_SUCCESS)
+        return PR_FALSE;
+#endif
+
+#if !defined(_PR_INET6) && defined(_PR_HAVE_GETADDRINFO)
+    if (_pr_find_getaddrinfo() != PR_SUCCESS)
+        return PR_FALSE;
+#endif
+
+    return _pr_test_ipv6_socket();
+}
+#endif  /* _PR_INET6_PROBE */
 
 PRStatus _pr_init_ipv6()
 {
     const PRIOMethods *stubMethods;
 
 #if defined(_PR_INET6_PROBE)
-
-#if !defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYNAME)
-	PRLibrary *lib;	
-#if defined(VMS)
-#define GETIPNODEBYNAME getenv("GETIPNODEBYNAME")
-#define GETIPNODEBYADDR getenv("GETIPNODEBYADDR")
-#define FREEHOSTENT     getenv("FREEHOSTENT")
-#else
-#define GETIPNODEBYNAME "getipnodebyname"
-#define GETIPNODEBYADDR "getipnodebyaddr"
-#define FREEHOSTENT     "freehostent"
-#endif
-	_pr_getipnodebyname_fp = PR_FindSymbolAndLibrary(GETIPNODEBYNAME, &lib);
-	if (NULL != _pr_getipnodebyname_fp) {
-		_pr_freehostent_fp = PR_FindSymbol(lib, FREEHOSTENT);
-		if (NULL != _pr_freehostent_fp) {
-			_pr_getipnodebyaddr_fp = PR_FindSymbol(lib, GETIPNODEBYADDR);
-			if (NULL != _pr_getipnodebyaddr_fp)
-				_pr_ipv6_is_present = PR_TRUE;
-			else
-				_pr_ipv6_is_present = PR_FALSE;
-		} else
-			_pr_ipv6_is_present = PR_FALSE;
-		(void)PR_UnloadLibrary(lib);
-	} else
-		_pr_ipv6_is_present = PR_FALSE;
-	if (PR_TRUE == _pr_ipv6_is_present)
-#endif
-	
-	_pr_ipv6_is_present = _pr_test_ipv6_socket();
-	if (PR_TRUE == _pr_ipv6_is_present)
-			return PR_SUCCESS;
+    _pr_ipv6_is_present = _pr_probe_ipv6_presence();
+    if (PR_TRUE == _pr_ipv6_is_present)
+        return PR_SUCCESS;
 #endif
 
     _pr_ipv6_to_ipv4_id = PR_GetUniqueIdentity("Ipv6_to_Ipv4 layer");

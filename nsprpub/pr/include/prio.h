@@ -139,6 +139,10 @@ typedef enum PRTransmitFileFlags {
 #define PR_AF_INET6 100
 #endif
 
+#ifndef PR_AF_UNSPEC
+#define PR_AF_UNSPEC 0
+#endif
+
 /*
 **************************************************************************
 ** A network address

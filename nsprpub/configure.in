@@ -1731,6 +1731,22 @@ mips-sony-newsos*)
         fi
         ;;
     esac
+    case "${target_os}" in
+    solaris2.3*)
+        ;;
+    solaris2.4*)
+        ;;
+    solaris2.5*)
+        ;;
+    solaris2.6*)
+        ;;
+    solaris2.7*)
+        ;;
+    *)
+        # Solaris 8 or higher has IPv6.
+        AC_DEFINE(_PR_INET6)
+        ;;
+    esac
     if test "$OS_TEST" = "sun4u"; then
         # 64-bit Solaris requires SPARC V9 architecture, so the following
         # is not needed.

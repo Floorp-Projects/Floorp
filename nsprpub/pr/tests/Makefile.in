@@ -76,6 +76,7 @@ CSRCS =             \
 	foreign.c	    \
 	forktest.c	    \
 	fsync.c	        \
+	getai.c			\
 	gethost.c		\
 	getproto.c		\
 	i2l.c		    \

@@ -82,6 +82,7 @@
 #define _PR_HAVE_INET_NTOP
 #define _PR_HAVE_GETIPNODEBYNAME
 #define _PR_HAVE_GETIPNODEBYADDR
+#define _PR_HAVE_GETADDRINFO
 #endif
 
 /* Initialization entry points */
