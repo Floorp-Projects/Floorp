@@ -247,6 +247,15 @@ nsProperties::SkipLine(PRInt32 c)
   return c;
 }
 
+nsPropertiesFactory::nsPropertiesFactory()
+{
+  NS_INIT_REFCNT();
+}
+
+nsPropertiesFactory::~nsPropertiesFactory()
+{
+}
+
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 NS_IMPL_ISUPPORTS(nsPropertiesFactory, kIFactoryIID);
