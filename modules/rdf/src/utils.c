@@ -655,7 +655,7 @@ CookieAssert(RDFT rdf, RDF_Resource u, RDF_Resource s, void *v,
 		/* handle command in 'v' on 'u' */
 		if (startsWith(COOKIE_CMD_PREFIX, resourceID(vu)))
 		{
-			if (!XP_STRCMP(resourceID(vu), COOKIE_CMD_HOSTS))
+			if (!strcmp(resourceID(vu), COOKIE_CMD_HOSTS))
 			{
 				/* do whatever is appropriate for the cmd */
 			}

@@ -52,6 +52,7 @@ RDF_SetResourceLock
 RDF_Shutdown
 RDF_StdVocab
 RDF_Unassert
+RDF_AddCookieResource
 # RDFglueExit
 # RDFglueInitialize
 # __initialize
