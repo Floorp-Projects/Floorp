@@ -660,6 +660,10 @@ void invisible()
 			WritePrivateProfileString("Setup Type1",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
 			if (Components[i].additional && !(Components[i].launchapp) && !(Components[i].invisible))
 				WritePrivateProfileString(Components[i].compname, "Attributes", "SELECTED|ADDITIONAL", iniDstPath);
+			else if (!(Components[i].disabled) && !(Components[i].additional) && !(Components[i].invisible))
+				WritePrivateProfileString(Components[i].compname, "Attributes", "SELECTED|FORCE_UPGRADE", iniDstPath);
+			else if (Components[i].additional && Components[i].launchapp && !(Components[i].invisible))
+				WritePrivateProfileString(Components[i].compname, "Attributes", "SELECTED|LAUNCHAPP|ADDITIONAL", iniDstPath);
 			componentOrder++;
 		}
 		else
