@@ -805,7 +805,7 @@ js_MarkScript(JSContext *cx, JSScript *script, void *arg)
     length = map->length;
     vector = map->vector;
     for (i = 0; i < length; i++)
-        js_MarkAtom(cx, vector[i], arg);
+        GC_MARK_ATOM(cx, vector[i], arg);
 }
 
 jssrcnote *

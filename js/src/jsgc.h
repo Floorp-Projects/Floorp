@@ -97,6 +97,13 @@ js_UnlockGCThing(JSContext *cx, void *thing);
 extern void
 js_MarkAtom(JSContext *cx, JSAtom *atom, void *arg);
 
+/* We avoid a large number of unnecessary calls by doing the flag check first */
+#define GC_MARK_ATOM(cx, atom, arg)                                           \
+    JS_BEGIN_MACRO                                                            \
+        if (!((atom)->flags & ATOM_MARK))                                     \
+            js_MarkAtom(cx, atom, arg);                                       \
+    JS_END_MACRO
+
 extern void
 js_MarkGCThing(JSContext *cx, void *thing, void *arg);
 

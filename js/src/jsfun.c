@@ -1055,7 +1055,7 @@ fun_mark(JSContext *cx, JSObject *obj, void *arg)
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
     if (fun) {
         if (fun->atom)
-            js_MarkAtom(cx, fun->atom, arg);
+            GC_MARK_ATOM(cx, fun->atom, arg);
         if (fun->script)
             js_MarkScript(cx, fun->script, arg);
     }
