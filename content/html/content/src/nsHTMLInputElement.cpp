@@ -166,7 +166,6 @@ protected:
   PRBool                   mSkipFocusEvent;
   nsCOMPtr<nsIControllers> mControllers;
   nsCOMPtr<nsIXBLBinding>  mBinding;
-  PRBool                   mDidMouseDown;
 
 
   PRBool IsImage() const {
@@ -200,7 +199,6 @@ nsHTMLInputElement::nsHTMLInputElement(nsIAtom* aTag)
   mType = NS_FORM_INPUT_TEXT; // default value
   mForm = nsnull;
   mSkipFocusEvent = PR_FALSE;
-  mDidMouseDown   = PR_FALSE;
   //nsTraceRefcnt::Create((nsIFormControl*)this, "nsHTMLFormControlElement", __FILE__, __LINE__);
 }
 
@@ -747,10 +745,6 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       }                                                                         
       break; // NS_FOCUS_CONTENT
 
-      case NS_BLUR_CONTENT:
-        mDidMouseDown = PR_FALSE;
-        break; // NS_BLUR_CONTENT
-          
       case NS_KEY_PRESS:
       {
         nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
@@ -809,29 +803,22 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           }
         } break;
 
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
-        mDidMouseDown = PR_TRUE;
-        break;
-
-      case NS_MOUSE_LEFT_BUTTON_UP:
+      case NS_MOUSE_LEFT_CLICK:
       {
-        if (mDidMouseDown) {
-          PRInt32 type;
-          GetType(&type);
-          switch(type) {
-            case NS_FORM_INPUT_CHECKBOX:
-              {
-                PRBool checked;
-                GetChecked(&checked);
-                SetChecked(!checked);
-              }
-              break;
-            case NS_FORM_INPUT_RADIO:
-              SetChecked(PR_TRUE);
-              break;
-          } //switch 
-        }
-        mDidMouseDown = PR_FALSE;
+        PRInt32 type;
+        GetType(&type);
+        switch(type) {
+          case NS_FORM_INPUT_CHECKBOX:
+            {
+              PRBool checked;
+              GetChecked(&checked);
+              SetChecked(!checked);
+            }
+            break;
+          case NS_FORM_INPUT_RADIO:
+            SetChecked(PR_TRUE);
+            break;
+        } //switch 
       } break;// NS_MOUSE_LEFT_BUTTON_DOWN
 
     } //switch 
