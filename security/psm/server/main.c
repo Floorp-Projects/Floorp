@@ -156,23 +156,7 @@ static SSMStatus SSM_InstallSMIMEPolicy(void)
  */
 SECStatus Utility_SetPolicy(long which, int policy)
 {
-    if (which == POLICY_TYPE_INDEX) {
-        switch (policy) {
-        case SVRPLCYDomestic:
-            policyType = ssmDomestic;
-            break;
-        case SVRPLCYExport:
-            policyType = ssmExport;
-            break;
-        case SVRPLCYFrance:
-            policyType = ssmFrance;
-            break;
-        default:
-            /* This is an unknown policy type. */
-            PR_ASSERT(0);
-            break;
-        }
-    }
+    policyType = ssmDomestic;
     return SECSuccess;
 }
 #endif

@@ -61,6 +61,7 @@
 #include "profile.h"
 #include "prefs.h"
 #include "ocsp.h"
+
 #ifdef XP_MAC
 #include "macshell.h"
 #endif
@@ -414,9 +415,6 @@ SSMStatus SSMControlConnection_Shutdown(SSMResource *arg, SSMStatus status)
     return rv;
 }
 
-#ifdef XP_MAC
-extern PRBool gShouldQuit;
-#endif
 
 SSMStatus SSMControlConnection_Destroy(SSMResource *res, 
                                       PRBool doFree)
@@ -468,7 +466,7 @@ SSMStatus SSMControlConnection_Destroy(SSMResource *res,
 	SSM_ReleaseLockFile();
 #endif
 #ifdef XP_MAC
-		gShouldQuit = PR_TRUE; // tell primordial thread to quit
+		SetQuitFlag(PR_TRUE); // tell primordial thread to quit
 #else
         exit(0);
 #endif
@@ -824,7 +822,8 @@ ssm_certdb_name_cb(void *arg, int dbVersion)
 
 #ifdef XP_MAC
 	/* on Mac, :: means parent directory. does non-Mac get // with Seamonkey? */
-	return PR_smprintf("%sCertificates%s", configdir, dbver);
+    PR_ASSERT(configdir[strlen(configdir) - 1] == ':');
+    return PR_smprintf("%sCertificates%s", configdir, dbver);
 #else
     return PR_smprintf("%s/cert%s.db", configdir, dbver);
 #endif
@@ -845,7 +844,8 @@ static char *ssm_keydb_name_cb(void *arg, int dbVersion)
       break;
     }
 #ifdef XP_MAC
-	return PR_smprintf("%s:Key Database%s", configdir, dbver);
+    PR_ASSERT(configdir[strlen(configdir) - 1] == ':');
+    return PR_smprintf("%sKey Database%s", configdir, dbver);
 #else
     return PR_smprintf("%s/key%s.db", configdir, dbver);
 #endif
@@ -925,7 +925,8 @@ ssm_OpenSecModDB(const char * configdir)
 #ifdef XP_UNIX
     secmodname = PR_smprintf("%s/secmodule.db", configdir);
 #elif defined(XP_MAC)
-	secmodname = PR_smprintf("%s:Security Modules", configdir);
+    PR_ASSERT(configdir[strlen(configdir) - 1] == ':');
+    secmodname = PR_smprintf("%sSecurity Modules", configdir);
 #else
     secmodname = PR_smprintf("%s/secmod.db", configdir);
 #endif
@@ -951,26 +952,7 @@ ssm_ShutdownNSS(SSMControlConnection *ctrl)
 SSMPolicyType
 SSM_ConvertSVRPlcyToSSMPolicy(PRInt32 policy)
 {
-    SSMPolicyType retVal;
-    switch (policy) {
-#ifdef XP_MAC
-	default:
-#endif
-    case SVRPLCYDomestic:
-        retVal = ssmDomestic;
-        break;
-    case SVRPLCYExport:
-        retVal = ssmExport;
-        break;
-    case SVRPLCYFrance:
-        retVal = ssmFrance;
-        break;
-#ifndef XP_MAC
-    default:
-        retVal = ssmUnknownPolicy;
-#endif
-    }
-    return retVal;
+    return ssmDomestic;
 }
 #endif
 
