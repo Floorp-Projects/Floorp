@@ -35,7 +35,7 @@ typedef enum EViewType {
   VIEW_NONE=-1,
   VIEW_BROWSER,
   VIEW_HTML,
-  VIEW_NAVCENTER,
+  VIEW_NAVCENTER
 } EViewType;
 
 
