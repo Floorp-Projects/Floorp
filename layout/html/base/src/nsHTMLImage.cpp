@@ -75,10 +75,12 @@ protected:
   nsIImageMap* GetImageMap();
 
   nsHTMLImageLoader mImageLoader;
+  nsIImageMap* mImageMap;
 
   void TriggerLink(nsIPresContext& aPresContext,
                    const nsString& aURLSpec,
-                   const nsString& aTargetSpec);
+                   const nsString& aTargetSpec,
+                   PRBool aClick);
 };
 
 class ImagePart : public nsHTMLTagContent {
@@ -350,8 +352,11 @@ ImageFrame::~ImageFrame()
 NS_METHOD
 ImageFrame::DeleteFrame()
 {
+  NS_IF_RELEASE(mImageMap);
+
   // Release image loader first so that it's refcnt can go to zero
   mImageLoader.DestroyLoader();
+
   return nsLeafFrame::DeleteFrame();
 }
 
@@ -419,44 +424,51 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
 nsIImageMap*
 ImageFrame::GetImageMap()
 {
-  ImagePart* part = (ImagePart*)mContent;
-  if (nsnull == part->mUseMap) {
-    return nsnull;
-  }
+  if (nsnull == mImageMap) {
+    ImagePart* part = (ImagePart*)mContent;
+    if (nsnull == part->mUseMap) {
+      return nsnull;
+    }
 
-  nsIDocument* doc = mContent->GetDocument();
-  if (nsnull == doc) {
-    return nsnull;
-  }
+    nsIDocument* doc = mContent->GetDocument();
+    if (nsnull == doc) {
+      return nsnull;
+    }
 
-  nsAutoString mapName(*part->mUseMap);
-  if (mapName.First() == '#') {
-    mapName.Cut(0, 1);
-  }
-  nsIHTMLDocument* hdoc;
-  nsresult rv = doc->QueryInterface(kIHTMLDocumentIID, (void**)&hdoc);
-  NS_RELEASE(doc);
-  if (NS_OK == rv) {
-    nsIImageMap* map;
-    rv = hdoc->GetImageMap(mapName, &map);
-    NS_RELEASE(hdoc);
+    nsAutoString mapName(*part->mUseMap);
+    if (mapName.First() == '#') {
+      mapName.Cut(0, 1);
+    }
+    nsIHTMLDocument* hdoc;
+    nsresult rv = doc->QueryInterface(kIHTMLDocumentIID, (void**)&hdoc);
+    NS_RELEASE(doc);
     if (NS_OK == rv) {
-      return map;
+      nsIImageMap* map;
+      rv = hdoc->GetImageMap(mapName, &map);
+      NS_RELEASE(hdoc);
+      if (NS_OK == rv) {
+        mImageMap = map;
+      }
     }
   }
-
-  return nsnull;
+  NS_IF_ADDREF(mImageMap);
+  return mImageMap;
 }
 
 void
 ImageFrame::TriggerLink(nsIPresContext& aPresContext,
                         const nsString& aURLSpec,
-                        const nsString& aTargetSpec)
+                        const nsString& aTargetSpec,
+                        PRBool aClick)
 {
   nsILinkHandler* handler;
   if (NS_OK == aPresContext.GetLinkHandler(&handler)) {
-    // Now pass on absolute url to the click handler
-    handler->OnLinkClick(this, aURLSpec, aTargetSpec);
+    if (aClick) {
+      handler->OnLinkClick(this, aURLSpec, aTargetSpec);
+    }
+    else {
+      handler->OnOverLink(this, aURLSpec, aTargetSpec);
+    }
   }
 }
 
@@ -466,39 +478,40 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
                         nsGUIEvent* aEvent,
                         nsEventStatus& aEventStatus)
 {
+  nsIImageMap* map;
   aEventStatus = nsEventStatus_eIgnore; 
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_UP:
-    {
-      nsIImageMap* map = GetImageMap();
-      if (nsnull != map) {
-        nsIURL* docURL = nsnull;
-        nsIDocument* doc = mContent->GetDocument();
-        if (nsnull != doc) {
-          docURL = doc->GetDocumentURL();
-          NS_RELEASE(doc);
-        }
-
-        // Translate coordinates to pixels
-        float t2p = aPresContext.GetTwipsToPixels();
-        nscoord x = nscoord(t2p * aEvent->point.x);
-        nscoord y = nscoord(t2p * aEvent->point.y);
-
-        // Ask map if the x,y coordinates are in a clickable area
-        PRBool suppress;
-        nsAutoString absURL, target, altText;
-        nsresult r = map->IsInside(x, y, docURL, absURL, target, altText,
-                                   &suppress);
-        NS_IF_RELEASE(docURL);
-        NS_RELEASE(map);
-        if (NS_OK == r) {
-          // We hit a clickable area. Time to go somewhere...
-          TriggerLink(aPresContext, absURL, target);
-          aEventStatus = nsEventStatus_eConsumeNoDefault; 
-        }
-        break;
+  case NS_MOUSE_MOVE:
+    map = GetImageMap();
+    if (nsnull != map) {
+      nsIURL* docURL = nsnull;
+      nsIDocument* doc = mContent->GetDocument();
+      if (nsnull != doc) {
+        docURL = doc->GetDocumentURL();
+        NS_RELEASE(doc);
       }
+
+      // Translate coordinates to pixels
+      float t2p = aPresContext.GetTwipsToPixels();
+      nscoord x = nscoord(t2p * aEvent->point.x);
+      nscoord y = nscoord(t2p * aEvent->point.y);
+
+      // Ask map if the x,y coordinates are in a clickable area
+      PRBool suppress;
+      nsAutoString absURL, target, altText;
+      nsresult r = map->IsInside(x, y, docURL, absURL, target, altText,
+                                 &suppress);
+      NS_IF_RELEASE(docURL);
+      NS_RELEASE(map);
+      if (NS_OK == r) {
+        // We hit a clickable area. Time to go somewhere...
+        TriggerLink(aPresContext, absURL, target,
+                    aEvent->message == NS_MOUSE_LEFT_BUTTON_UP);
+        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+      }
+      break;
     }
     // FALL THROUGH
 
@@ -506,7 +519,6 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
     // Let default event handler deal with it
     return nsLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }
-
   return NS_OK;
 }
 
