@@ -29,4 +29,4 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 libs chrome::
-	$(REGCHROME) content messenger-mapi messenger.jar
+	@$(REGCHROME) content messenger-mapi messenger.jar

@@ -29,5 +29,5 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 libs::
-	$(REGCHROME) content help help.jar
-	$(REGCHROME) locale en-US/help en-US.jar
+	@$(REGCHROME) content help help.jar
+	@$(REGCHROME) locale en-US/help en-US.jar

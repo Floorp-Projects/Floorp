@@ -40,9 +40,9 @@ ifeq ($(OS_ARCH),WINNT)
 endif
 
 libs::
-	$(REGCHROME) content inspector inspector.jar
-	$(REGCHROME) locale en-US/inspector inspector.jar
-	$(REGCHROME) skin modern/inspector inspector.jar
-	$(REGCHROME) skin classic/inspector inspector.jar
+	@$(REGCHROME) content inspector inspector.jar
+	@$(REGCHROME) locale en-US/inspector inspector.jar
+	@$(REGCHROME) skin modern/inspector inspector.jar
+	@$(REGCHROME) skin classic/inspector inspector.jar
 
 

@@ -29,4 +29,4 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 libs chrome::
-	$(REGCHROME) locale en-US/messenger-mapi en-win.jar
+	@$(REGCHROME) locale en-US/messenger-mapi en-win.jar
