@@ -128,7 +128,7 @@ PRBool nsPluginsDir::IsPluginFile( const nsFileSpec &fileSpec)
 {
    PRBool rc = PR_FALSE;
 
-   const char *leafname = fileSpec.GetLeafName();
+   char *leafname = fileSpec.GetLeafName();
 
    if( nsnull != leafname)
    {
@@ -220,9 +220,4 @@ nsresult nsPluginFile::GetPluginInfo( nsPluginInfo &info)
       DosFreeModule( hPlug);
 
    return rc;
-}
-
-nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
-{
-  return NS_OK;
 }
