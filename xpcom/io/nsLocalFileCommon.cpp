@@ -190,7 +190,7 @@ nsLocalFile::GetRelativeDescriptor(nsILocalFile *fromFile, nsACString& _retval)
       return NS_ERROR_FAILURE;
     
     for (nodeIndex = 0; nodeIndex < thisNodeCnt && nodeIndex < fromNodeCnt; nodeIndex++) {
-      if (!nsCRT::strcmp(thisNodes[nodeIndex], fromNodes[nodeIndex]))
+      if (nsCRT::strcmp(thisNodes[nodeIndex], fromNodes[nodeIndex]))
         break;
     }
     
