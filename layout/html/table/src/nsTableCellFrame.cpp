@@ -1031,7 +1031,7 @@ void nsTableCellFrame::RecalcLayoutData(nsTableFrame* aTableFrame,
 }
 
 #if 0       //QQQ
-void nsTableCellFrame::List(FILE* out, PRInt32 aIndent) const
+void nsTableCellFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
   PRInt32 indent;
 

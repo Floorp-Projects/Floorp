@@ -516,16 +516,17 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
   PRBool    isFirst=PR_TRUE;
 
   for (;;) {
+    // what row am I?
+    // to handle rows with no cells, this block must be done before the "Get the next content object" block
+    if (PR_TRUE==isFirst)
+      SetRowIndex(aState.tableFrame->GetNextAvailRowIndex());
+
     // Get the next content object
     nsIContent* cell;
     mContent->ChildAt(kidIndex, cell);
     if (nsnull == cell) {
       break;  // no more content
     }
-
-    // what row am I?
-    if (PR_TRUE==isFirst)
-      SetRowIndex(aState.tableFrame->GetNextAvailRowIndex());
 
     // what column does this cell belong to?
     colIndex = aState.tableFrame->GetNextAvailColIndex(mRowIndex, colIndex);
