@@ -1744,6 +1744,7 @@ nsHTMLEditor::SplitCellIntoColumns(nsIDOMElement *aTable, PRInt32 aRowIndex, PRI
                                    nsIDOMElement **aNewCell)
 {
   if (!aTable) return NS_ERROR_NULL_POINTER;
+  if (aNewCell) *aNewCell = nsnull;
 
   nsCOMPtr<nsIDOMElement> cell;
   PRInt32 startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
@@ -1762,11 +1763,21 @@ nsHTMLEditor::SplitCellIntoColumns(nsIDOMElement *aTable, PRInt32 aRowIndex, PRI
   res = SetColSpan(cell, aColSpanLeft);
   if (NS_FAILED(res)) return res;
   
-  // Insert new cell after using the remaining span;
-  res = InsertCell(cell, actualRowSpan, aColSpanRight, PR_TRUE, PR_FALSE, aNewCell);
+  // Insert new cell after using the remaining span
+  //  and always get the new cell so we can copy the background color;
+  nsCOMPtr<nsIDOMElement> newCell;
+  res = InsertCell(cell, actualRowSpan, aColSpanRight, PR_TRUE, PR_FALSE, getter_AddRefs(newCell));
   if (NS_FAILED(res)) return res;
-
-  return CopyCellBackgroundColor(*aNewCell, cell);
+  if (newCell)
+  {
+    if (aNewCell)
+    {
+      *aNewCell = newCell.get();
+      NS_ADDREF(*aNewCell);
+    }
+    res = CopyCellBackgroundColor(newCell, cell);
+  }
+  return res;
 }
 
 NS_IMETHODIMP
@@ -1775,6 +1786,7 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
                                 nsIDOMElement **aNewCell)
 {
   if (!aTable) return NS_ERROR_NULL_POINTER;
+  if (aNewCell) *aNewCell = nsnull;
 
   nsCOMPtr<nsIDOMElement> cell;
   PRInt32 startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan, actualColSpan;
@@ -1857,7 +1869,25 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
   res = SetRowSpan(cell, aRowSpanAbove);
   if (NS_FAILED(res)) return res;
 
-  res = InsertCell(cell2, aRowSpanBelow, actualColSpan, insertAfter, PR_FALSE, aNewCell);
+
+  // Insert new cell after using the remaining span
+  //  and always get the new cell so we can copy the background color;
+  nsCOMPtr<nsIDOMElement> newCell;
+  res = InsertCell(cell2, aRowSpanBelow, actualColSpan, insertAfter, PR_FALSE, getter_AddRefs(newCell));
+  if (NS_FAILED(res)) return res;
+  if (newCell)
+  {
+    if (aNewCell)
+    {
+      *aNewCell = newCell.get();
+      NS_ADDREF(*aNewCell);
+    }
+    res = CopyCellBackgroundColor(newCell, cell2);
+  }
+  return res;
+
+
+
   if (NS_FAILED(res)) return res;
 
   return CopyCellBackgroundColor(*aNewCell, cell);
@@ -1899,7 +1929,7 @@ nsHTMLEditor::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElemen
   if (aNewCell)
   {
     nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(newNode);
-    *aNewCell = newElement;
+    *aNewCell = newElement.get();
     NS_ADDREF(*aNewCell);
   }
 

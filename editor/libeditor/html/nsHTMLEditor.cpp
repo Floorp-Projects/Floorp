@@ -464,8 +464,7 @@ nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
       PRBool newMetaCharset = PR_TRUE; 
 
       // get a list of META tags 
-        // can't use |NS_LITERAL_STRING| here until |GetElementsByTagName| is fixed to accept readables
-      result = domdoc->GetElementsByTagName(NS_ConvertASCIItoUCS2("meta"), getter_AddRefs(metaList)); 
+      result = domdoc->GetElementsByTagName(NS_LITERAL_STRING("meta"), getter_AddRefs(metaList)); 
       if (NS_SUCCEEDED(result) && metaList) { 
         PRUint32 listLength = 0; 
         (void) metaList->GetLength(&listLength); 
@@ -479,19 +478,16 @@ nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
           const NS_ConvertASCIItoUCS2 content("charset="); 
           nsString currentValue; 
 
-            // can't use |NS_LITERAL_STRING| here until |GetAttribute| is fixed to accept readables
-          if (NS_FAILED(metaElement->GetAttribute(NS_ConvertASCIItoUCS2("http-equiv"), currentValue))) continue; 
+          if (NS_FAILED(metaElement->GetAttribute(NS_LITERAL_STRING("http-equiv"), currentValue))) continue; 
 
           if (kNotFound != currentValue.Find("content-type", PR_TRUE)) { 
-            if (NS_FAILED(metaElement->GetAttribute(NS_ConvertASCIItoUCS2("content"), currentValue))) continue; 
-              // can't use |NS_LITERAL_STRING| here until |GetAttribute| is fixed to accept readables
+            if (NS_FAILED(metaElement->GetAttribute(NS_LITERAL_STRING("content"), currentValue))) continue; 
 
             PRInt32 offset = currentValue.Find(content.GetUnicode(), PR_TRUE); 
             if (kNotFound != offset) {
               currentValue.Left(newMetaString, offset); // copy current value before "charset=" (e.g. text/html) 
               newMetaString.Append(content); 
               newMetaString.Append(characterSet); 
-              // can't use |NS_LITERAL_STRING| here until |SetAttributeSetAttribute| is fixed to accept readables
              result = nsEditor::SetAttribute(metaElement, NS_ConvertASCIItoUCS2("content"), newMetaString); 
               if (NS_SUCCEEDED(result)) 
                 newMetaCharset = PR_FALSE; 
@@ -506,8 +502,7 @@ nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
         nsCOMPtr<nsIDOMNode>headNode; 
         nsCOMPtr<nsIDOMNode>resultNode; 
 
-          // can't use |NS_LITERAL_STRING| here until |GetElementsByTagName| is fixed to accept readables
-        result = domdoc->GetElementsByTagName(NS_ConvertASCIItoUCS2("head"),getter_AddRefs(headList)); 
+        result = domdoc->GetElementsByTagName(NS_LITERAL_STRING("head"),getter_AddRefs(headList)); 
         if (NS_SUCCEEDED(result) && headList) { 
           headList->Item(0, getter_AddRefs(headNode)); 
           if (headNode) { 
@@ -522,14 +517,12 @@ nsHTMLEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
               metaElement = do_QueryInterface(resultNode); 
               if (metaElement) { 
                 // not undoable, undo should undo CreateNode 
-                  // can't use |NS_LITERAL_STRING| here until |SetAttribute| is fixed to accept readables
-                result = metaElement->SetAttribute(NS_ConvertASCIItoUCS2("http-equiv"), NS_ConvertASCIItoUCS2("Content-Type")); 
+                result = metaElement->SetAttribute(NS_LITERAL_STRING("http-equiv"), NS_LITERAL_STRING("Content-Type")); 
                 if (NS_SUCCEEDED(result)) { 
                   newMetaString.AssignWithConversion("text/html;charset="); 
                   newMetaString.Append(characterSet); 
                   // not undoable, undo should undo CreateNode 
-                  // can't use |NS_LITERAL_STRING| here until |SetAttribute| is fixed to accept readables
-                  result = metaElement->SetAttribute(NS_ConvertASCIItoUCS2("content"), newMetaString); 
+                  result = metaElement->SetAttribute(NS_LITERAL_STRING("content"), newMetaString); 
                 } 
               } 
             } 
@@ -2432,12 +2425,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTMLWithCharset(const nsString& aInputString,
   nsAutoString inputString (aInputString);  // hope this does copy-on-write
  
   // Windows linebreaks: Map CRLF to LF:
-  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                               NS_LITERAL_STRING("\n"));
+  inputString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r\n"),
+                               NS_ConvertASCIItoUCS2("\n"));
  
   // Mac linebreaks: Map any remaining CR to LF:
-  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r"),
-                               NS_LITERAL_STRING("\n"));
+  inputString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r"),
+                               NS_ConvertASCIItoUCS2("\n"));
 
   ForceCompositionEnd();
   nsAutoEditBatch beginBatching(this);
@@ -2601,12 +2594,12 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsString &aSourceToInsert)
   nsAutoString inputString (aSourceToInsert);  // hope this does copy-on-write
  
   // Windows linebreaks: Map CRLF to LF:
-  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
-                               NS_LITERAL_STRING("\n"));
+  inputString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r\n"),
+                               NS_ConvertASCIItoUCS2("\n"));
  
   // Mac linebreaks: Map any remaining CR to LF:
-  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r"),
-                               NS_LITERAL_STRING("\n"));
+  inputString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r"),
+                               NS_ConvertASCIItoUCS2("\n"));
 
   nsAutoEditBatch beginBatching(this);
 
@@ -2626,6 +2619,10 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsString &aSourceToInsert)
   nsCOMPtr<nsIDOMDocumentFragment> docfrag;
   res = nsrange->CreateContextualFragment(inputString,
                                           getter_AddRefs(docfrag));
+
+  //XXXX BUG: This is not returning the text between <title> ... </title>
+  // Special code is needed in JS to handle title anyway, so it really doesn't matter!
+
   if (NS_FAILED(res))
   {
 #ifdef DEBUG
@@ -2682,14 +2679,14 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsString& aSourceString)
 
   // Find where the <body> tag starts.
   // If user mangled that, then abort
-  PRInt32 bodyStart = aSourceString.Find(NS_LITERAL_STRING("<body"), PR_TRUE);
+  PRInt32 bodyStart = aSourceString.Find(NS_ConvertASCIItoUCS2("<body"), PR_TRUE);
   if (bodyStart == -1) return NS_ERROR_FAILURE;
 
-  PRInt32 headStart = aSourceString.Find(NS_LITERAL_STRING("<head"), PR_TRUE);
+  PRInt32 headStart = aSourceString.Find(NS_ConvertASCIItoUCS2("<head"), PR_TRUE);
   if (headStart == -1) return NS_ERROR_FAILURE;
 
   // Find the index after "<head>"
-  PRInt32 headEnd = aSourceString.Find(NS_LITERAL_STRING("</head"), PR_TRUE);
+  PRInt32 headEnd = aSourceString.Find(NS_ConvertASCIItoUCS2("</head"), PR_TRUE);
 
   // We'll be forgiving and assume head ends before body
   if (headEnd == -1) headEnd = bodyStart;
@@ -2724,7 +2721,7 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsString& aSourceString)
   
   // Kludge of the year: fool the parser by replacing "body" with "div" so we get a node
   bodyString.ToLowerCase();
-  bodyString.ReplaceSubstring(NS_LITERAL_STRING("body"), NS_LITERAL_STRING("div"));
+  bodyString.ReplaceSubstring(NS_ConvertASCIItoUCS2("body"), NS_ConvertASCIItoUCS2("div"));
 
   nsCOMPtr<nsIDOMRange> range;
   res = selection->GetRangeAt(0, getter_AddRefs(range));
@@ -4054,26 +4051,26 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
     return NS_ERROR_FAILURE;
 
   // Mark the new element dirty, so it will be formatted
-  newElement->SetAttribute(NS_ConvertASCIItoUCS2("_moz_dirty"), nsAutoString());
+  newElement->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), nsAutoString());
 
   // Set default values for new elements
   if (TagName.EqualsWithConversion("hr"))
   {
     // Note that we read the user's attributes for these from prefs (in InsertHLine JS)
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("align"),NS_ConvertASCIItoUCS2("center"));
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("width"),NS_ConvertASCIItoUCS2("100%"));
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("size"),NS_ConvertASCIItoUCS2("2"));
+    newElement->SetAttribute(NS_LITERAL_STRING("align"),NS_LITERAL_STRING("center"));
+    newElement->SetAttribute(NS_LITERAL_STRING("width"),NS_LITERAL_STRING("100%"));
+    newElement->SetAttribute(NS_LITERAL_STRING("size"),NS_LITERAL_STRING("2"));
   } else if (TagName.EqualsWithConversion("table"))
   {
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("cellpadding"),NS_ConvertASCIItoUCS2("2"));
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("cellspacing"),NS_ConvertASCIItoUCS2("2"));
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("border"),NS_ConvertASCIItoUCS2("1"));
+    newElement->SetAttribute(NS_LITERAL_STRING("cellpadding"),NS_LITERAL_STRING("2"));
+    newElement->SetAttribute(NS_LITERAL_STRING("cellspacing"),NS_LITERAL_STRING("2"));
+    newElement->SetAttribute(NS_LITERAL_STRING("border"),NS_LITERAL_STRING("1"));
   } else if (TagName.EqualsWithConversion("tr"))
   {
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("valign"),NS_ConvertASCIItoUCS2("top"));
+    newElement->SetAttribute(NS_LITERAL_STRING("valign"),NS_LITERAL_STRING("top"));
   } else if (TagName.EqualsWithConversion("td"))
   {
-    newElement->SetAttribute(NS_ConvertASCIItoUCS2("valign"),NS_ConvertASCIItoUCS2("top"));
+    newElement->SetAttribute(NS_LITERAL_STRING("valign"),NS_LITERAL_STRING("top"));
   }
   // ADD OTHER TAGS HERE
 
@@ -5487,11 +5484,11 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
         nsCOMPtr<nsIDOMElement> preElement (do_QueryInterface(preNode));
         if (preElement)
         {
-          preElement->SetAttribute(NS_ConvertASCIItoUCS2("_moz_quote"),
-                                   NS_ConvertASCIItoUCS2("true"));
+          preElement->SetAttribute(NS_LITERAL_STRING("_moz_quote"),
+                                   NS_LITERAL_STRING("true"));
           // set style to not have unwanted vertical margins
-          preElement->SetAttribute(NS_ConvertASCIItoUCS2("style"),
-                                   NS_ConvertASCIItoUCS2("margin: 0 0 0 0px;"));
+          preElement->SetAttribute(NS_LITERAL_STRING("style"),
+                                   NS_LITERAL_STRING("margin: 0 0 0 0px;"));
         }
 
         // and set the selection inside it:
@@ -5949,7 +5946,7 @@ nsHTMLEditor::GetHeadContentsAsHTML(nsString& aOutputString)
   {
     // Selection always includes <body></body>,
     //  so terminate there
-    PRInt32 offset = aOutputString.Find(NS_LITERAL_STRING("<body"), PR_TRUE);
+    PRInt32 offset = aOutputString.Find(NS_ConvertASCIItoUCS2("<body"), PR_TRUE);
     if (offset > 0)
     {
       // Ensure the string ends in a newline

@@ -1783,14 +1783,36 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               if ( (urlstring.CompareWithConversion("file", PR_TRUE, 4) != 0 )
                 && (urlstring.CompareWithConversion("about:blank", PR_TRUE, -1) != 0) )
               {
+                // remove cruft before file name including '/'
+                // if the url ends with a '/' then the whole string will be cut
                 PRInt32 index = urlstring.RFindChar((PRUnichar)'/', PR_FALSE, -1, -1 );
                 if ( index != -1 )
                 {
-                  // remove cruft before file name including '/'
-                  // if the url ends with a '/' then the whole string will be cut
                   urlstring.Cut(0, index + 1);
                   if (urlstring.Length() > 0)
-                    fileName.Assign( urlstring );
+                  {
+                    // Then truncate at any existing "#", "?" or "." since we replace with ".html"
+                    index = urlstring.RFindChar((PRUnichar)'.', PR_FALSE, -1, -1 );
+                    if ( index != -1)
+                      urlstring.Truncate(index);
+                    if (urlstring.Length() > 0)
+                    {
+                      index = urlstring.RFindChar((PRUnichar)'#', PR_FALSE, -1, -1 );
+                      if ( index != -1)
+                        urlstring.Truncate(index);
+                      if (urlstring.Length() > 0)
+                      {
+                        index = urlstring.RFindChar((PRUnichar)'?', PR_FALSE, -1, -1 );
+                        if ( index != -1)
+                          urlstring.Truncate(index);
+                      }
+                    }
+                    if (urlstring.Length() > 0)
+                    {
+                      fileName.Assign( urlstring );
+                      fileName.AppendWithConversion(".html");
+                    }
+                  }
                 }
               }
               
