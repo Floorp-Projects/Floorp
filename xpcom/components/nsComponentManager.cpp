@@ -38,7 +38,7 @@
 // CAUTION: Arena align mask needs to be defined before including plarena.h
 //          currently from nsComponentManager.h
 #define PL_ARENA_CONST_ALIGN_MASK 7
-#define NS_CM_BLOCK_SIZE (1024)
+#define NS_CM_BLOCK_SIZE (1024 * 8)
 
 #include "NSReg.h"
 #include "nsAutoLock.h"
@@ -124,6 +124,9 @@ const static char XPCOM_ABSCOMPONENT_PREFIX[] = "abs:";
 const static char XPCOM_RELCOMPONENT_PREFIX[] = "rel:";
 const static char XPCOM_GRECOMPONENT_PREFIX[] = "gre:";
 
+static const char gIDFormat[] = 
+  "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
+
 // Nonexistent factory entry
 // This is used to mark non-existent contractid mappings
 static nsFactoryEntry * kNonExistentContractID = (nsFactoryEntry*) 1;
@@ -140,8 +143,20 @@ static nsFactoryEntry * kNonExistentContractID = (nsFactoryEntry*) 1;
 NS_DEFINE_CID(kEmptyCID, NS_EMPTY_IID);
 NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 
+#define UID_STRING_LENGTH 39
+
 // Set to true from NS_ShutdownXPCOM.
 extern PRBool gXPCOMShuttingDown;
+
+static void GetIDString(const nsID& aCID, char buf[UID_STRING_LENGTH])
+{
+    PR_snprintf(buf, UID_STRING_LENGTH, gIDFormat,
+                aCID.m0, (PRUint32) aCID.m1, (PRUint32) aCID.m2,
+                (PRUint32) aCID.m3[0], (PRUint32) aCID.m3[1],
+                (PRUint32) aCID.m3[2], (PRUint32) aCID.m3[3],
+                (PRUint32) aCID.m3[4], (PRUint32) aCID.m3[5],
+                (PRUint32) aCID.m3[6], (PRUint32) aCID.m3[7]);
+}
 
 nsresult
 nsCreateInstanceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) const
@@ -229,16 +244,21 @@ nsGetServiceFromCategory::operator()(const nsIID& aIID, void** aInstancePtr) con
 ////////////////////////////////////////////////////////////////////////////////
 // Arena helper functions
 ////////////////////////////////////////////////////////////////////////////////
-static inline char *
-ArenaStrdup(const char *s, PLArenaPool *arena)
+char *
+ArenaStrndup(const char *s, PRUint32 len, PLArenaPool *arena)
 {
     void *mem;
     // Include trailing null in the len
-    PRInt32 len = strlen(s) + 1;
-    PL_ARENA_ALLOCATE(mem, arena, len);
+    PL_ARENA_ALLOCATE(mem, arena, len+1);
     if (mem)
-        memcpy(mem, s, len);
+        memcpy(mem, s, len+1);
     return NS_STATIC_CAST(char *, mem);
+}
+
+char*
+ArenaStrdup(const char *s, PLArenaPool *arena)
+{
+    return ArenaStrndup(s, strlen(s), arena);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -352,11 +372,12 @@ static PLDHashTableOps contractID_DHashTableOps = {
 MOZ_DECL_CTOR_COUNTER(nsFactoryEntry)
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, 
                                const char *aLocation,
+                               PRUint32 locationlen,
                                int aType)
     : cid(aClass), typeIndex(aType)
 {
     // Arena allocate the location string
-    location = ArenaStrdup(aLocation, &nsComponentManagerImpl::gComponentManager->mArena);
+    location = ArenaStrndup(aLocation, locationlen, &nsComponentManagerImpl::gComponentManager->mArena);
 }
 
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory)
@@ -663,7 +684,8 @@ ConvertContractIDKeyToString(PLDHashTable *table,
     const nsContractIDTableEntry *entry = 
         NS_REINTERPRET_CAST(const nsContractIDTableEntry *, hdr);
 
-    wrapper->SetData(nsDependentCString(entry->mContractID));
+    wrapper->SetData(nsDependentCString(entry->mContractID,
+                                        entry->mContractIDLen));
     *retval = wrapper;
     NS_ADDREF(*retval);
     return NS_OK;    
@@ -731,11 +753,11 @@ nsresult nsComponentManagerImpl::Init(void)
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        // Minimum alpha uses k=3 because nsFactoryTableEntry saves three
+        // Minimum alpha uses k=2 because nsFactoryTableEntry saves two
         // words compared to what a chained hash table requires.
         PL_DHashTableSetAlphaBounds(&mFactories,
                                     0.875,
-                                    PL_DHASH_MIN_ALPHA(&mFactories, 3));
+                                    PL_DHASH_MIN_ALPHA(&mFactories, 2));
     }
 
     if (!mContractIDs.ops) {
@@ -746,11 +768,13 @@ nsresult nsComponentManagerImpl::Init(void)
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        // Minimum alpha uses k=2 because nsContractIDTableEntry saves two
-        // words compared to what a chained hash table requires.
+        // Minimum alpha uses k=1 because nsContractIDTableEntry saves one
+        // word compared to what a chained hash table requires.
+#if 0
         PL_DHashTableSetAlphaBounds(&mContractIDs,
                                     0.875,
-                                    PL_DHASH_MIN_ALPHA(&mContractIDs, 2));
+                                    PL_DHASH_MIN_ALPHA(&mContractIDs, 1));
+#endif
     }
     if (mMon == nsnull) {
         mMon = nsAutoMonitor::NewMonitor("nsComponentManagerImpl");
@@ -962,12 +986,14 @@ nsComponentManagerImpl::GetInterface(const nsIID & uuid, void **result)
 #define PERSISTENT_REGISTRY_VERSION_MAJOR 0
 
 
-AutoRegEntry::AutoRegEntry(const char* name, PRInt64* modDate)
+AutoRegEntry::AutoRegEntry(const nsACString& name, PRInt64* modDate) :
+    mName(ToNewCString(name)),
+    mNameLen(name.Length()),
+    mData(nsnull),
+    mModDate(*modDate)
 {
-    mName = PL_strdup(name);
-    mModDate = *modDate;
-    mData = nsnull;
 }
+
 AutoRegEntry::~AutoRegEntry()
 {
     if (mName) PL_strfree(mName);
@@ -1103,7 +1129,7 @@ nsComponentManagerImpl::ReadPersistentRegistry()
         goto out;
 
     // VersionLiteral
-    if (0 != PL_strcmp(values[0], "Version"))
+    if (!nsDependentCString(values[0], lengths[0]).Equals(NS_LITERAL_CSTRING("Version")))
         goto out;
 
     // major
@@ -1128,8 +1154,9 @@ nsComponentManagerImpl::ReadPersistentRegistry()
             break;
 
         PRInt64 a = nsCRT::atoll(values[1]);
-        AutoRegEntry *entry = new AutoRegEntry(values[0], &a);
-
+        AutoRegEntry *entry =
+            new AutoRegEntry(nsDependentCString(values[0], lengths[0]), &a);
+        
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1166,8 +1193,8 @@ nsComponentManagerImpl::ReadPersistentRegistry()
         if (!mem)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        nsFactoryEntry *entry = new (mem) nsFactoryEntry(aClass, values[4], loadertype);
-
+        nsFactoryEntry *entry = new (mem) nsFactoryEntry(aClass, values[4], lengths[4], loadertype);
+                
         nsFactoryTableEntry* factoryTableEntry =
             NS_STATIC_CAST(nsFactoryTableEntry*,
                            PL_DHashTableOperate(&mFactories, 
@@ -1212,8 +1239,10 @@ nsComponentManagerImpl::ReadPersistentRegistry()
             continue;
         }
 
-        if (!contractIDTableEntry->mContractID)
-            contractIDTableEntry->mContractID = ArenaStrdup(values[0], &mArena);
+        if (!contractIDTableEntry->mContractID) {
+            contractIDTableEntry->mContractID = ArenaStrndup(values[0], lengths[0], &mArena);
+            contractIDTableEntry->mContractIDLen = lengths[0];
+        }
 
         contractIDTableEntry->mFactoryEntry = cidEntry;
     }
@@ -1268,11 +1297,9 @@ ContractIDWriter(PLDHashTable *table,
 
     PRFileDesc* fd = ((PersistentWriterArgs*)arg)->mFD;
 
-    char* cidString = factoryEntry->cid.ToString();
-    if (cidString) {
-        PR_fprintf(fd, "%s,%s\n", contractID, cidString); // what if this fails?
-        PR_Free(cidString);
-    }
+    char cidString[UID_STRING_LENGTH];
+    GetIDString(factoryEntry->cid, cidString);
+    PR_fprintf(fd, "%s,%s\n", contractID, cidString); // what if this fails?
     return PL_DHASH_NEXT;
 }
 
@@ -1289,9 +1316,10 @@ ClassIDWriter(PLDHashTable *table,
     if (factoryEntry->typeIndex < 0)
         return PL_DHASH_NEXT;
 
-    char* cidString = factoryEntry->cid.ToString();
-    NS_ASSERTION(cidString, "null cidString!");
-    if (!cidString) return PL_DHASH_NEXT;
+
+    char cidString[UID_STRING_LENGTH];
+    GetIDString(factoryEntry->cid, cidString);
+
     char *contractID = nsnull, *className = nsnull;
 
     nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(factoryEntry->factory);
@@ -1316,7 +1344,6 @@ ClassIDWriter(PLDHashTable *table,
                (className  ? className  : ""), 
                (location   ? location   : "")); 
 
-    PR_Free(cidString);
     if (contractID)
         PR_Free(contractID);
     if (className)
@@ -1337,7 +1364,7 @@ AutoRegEntryWriter(nsHashKey *aKey, void *aData, void* aClosure)
         fmt = "%s,%lld,%s\n";
     else
         fmt = "%s,%lld\n";
-    PR_fprintf(fd, fmt, entry->GetName(), entry->GetDate(), extraData);
+    PR_fprintf(fd, fmt, entry->GetName().get(), entry->GetDate(), extraData);
     
     return PR_TRUE;
 }
@@ -1500,17 +1527,23 @@ out:
 // Hash Functions
 ////////////////////////////////////////////////////////////////////////////////
 nsresult 
-nsComponentManagerImpl::HashContractID(const char *aContractID, const nsCID &aClass, nsFactoryEntry **pfe)
+nsComponentManagerImpl::HashContractID(const char *aContractID,
+                                       PRUint32 aContractIDLen,
+                                       const nsCID &aClass,
+                                       nsFactoryEntry **pfe)
 {
     nsIDKey cidKey(aClass);
-    return HashContractID(aContractID, aClass, cidKey, pfe);
+    return HashContractID(aContractID, aContractIDLen, aClass, cidKey, pfe);
 }
 
 
 nsresult 
-nsComponentManagerImpl::HashContractID(const char *aContractID, const nsCID &aClass, nsIDKey &cidKey, nsFactoryEntry **pfe)
+nsComponentManagerImpl::HashContractID(const char *aContractID,
+                                       PRUint32 aContractIDLen,
+                                       const nsCID &aClass,
+                                       nsIDKey &cidKey, nsFactoryEntry **pfe)
 {
-    if (!aContractID)
+    if(!aContractID || !aContractIDLen)
     {
         return NS_ERROR_NULL_POINTER;
     }
@@ -1523,7 +1556,7 @@ nsComponentManagerImpl::HashContractID(const char *aContractID, const nsCID &aCl
         entry = kNonExistentContractID;
     }
 
-    nsresult rv = HashContractID(aContractID, entry);
+    nsresult rv = HashContractID(aContractID, aContractIDLen, entry);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1533,9 +1566,11 @@ nsComponentManagerImpl::HashContractID(const char *aContractID, const nsCID &aCl
 }
 
 nsresult 
-nsComponentManagerImpl::HashContractID(const char *aContractID, nsFactoryEntry *fe)
+nsComponentManagerImpl::HashContractID(const char *aContractID,
+                                       PRUint32 aContractIDLen,
+                                       nsFactoryEntry *fe)
 {
-    if (!aContractID)
+    if(!aContractID || !aContractIDLen)
         return NS_ERROR_NULL_POINTER;
 
     nsAutoMonitor mon(mMon);
@@ -1549,8 +1584,10 @@ nsComponentManagerImpl::HashContractID(const char *aContractID, nsFactoryEntry *
 
     NS_ASSERTION(!contractIDTableEntry->mContractID || !strcmp(contractIDTableEntry->mContractID, aContractID), "contractid conflict");
 
-    if (!contractIDTableEntry->mContractID)
-        contractIDTableEntry->mContractID = ArenaStrdup(aContractID, &mArena);
+    if (!contractIDTableEntry->mContractID) {
+        contractIDTableEntry->mContractID = ArenaStrndup(aContractID, aContractIDLen, &mArena);
+        contractIDTableEntry->mContractIDLen = aContractIDLen;
+    }
 
     contractIDTableEntry->mFactoryEntry = fe;
 
@@ -1588,7 +1625,8 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
 }
 
 nsFactoryEntry *
-nsComponentManagerImpl::GetFactoryEntry(const char *aContractID)
+nsComponentManagerImpl::GetFactoryEntry(const char *aContractID,
+                                        PRUint32 aContractIDLen)
 {
     nsFactoryEntry *fe = nsnull;
     {
@@ -1610,7 +1648,7 @@ nsComponentManagerImpl::GetFactoryEntry(const char *aContractID)
     // same mapping over and over again
     if (!fe) {
         fe = kNonExistentContractID;
-        HashContractID(aContractID, fe);
+        HashContractID(aContractID, aContractIDLen, fe);
     }
 
     return fe;
@@ -1672,11 +1710,12 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
 
 nsresult
 nsComponentManagerImpl::FindFactory(const char *contractID,
+                                    PRUint32 aContractIDLen,
                                     nsIFactory **aFactory) 
 {
     PR_ASSERT(aFactory != nsnull);
 
-    nsFactoryEntry *entry = GetFactoryEntry(contractID);
+    nsFactoryEntry *entry = GetFactoryEntry(contractID, aContractIDLen);
 
     if (!entry || entry == kNonExistentContractID)
         return NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -1735,8 +1774,8 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char *contractID,
     }
 
     PR_ASSERT(aResult != nsnull);
-
-    rv = FindFactory(contractID, getter_AddRefs(factory));
+    
+    rv = FindFactory(contractID, strlen(contractID), getter_AddRefs(factory));
     if (NS_FAILED(rv)) return rv;
 
     rv = factory->QueryInterface(aIID, aResult);
@@ -1766,7 +1805,7 @@ nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aCla
 
     nsresult rv = NS_ERROR_FACTORY_NOT_REGISTERED;
 
-    nsFactoryEntry *fe = GetFactoryEntry(aContractID);
+    nsFactoryEntry *fe = GetFactoryEntry(aContractID, strlen(aContractID));
     if (fe && fe != kNonExistentContractID) {
         *aClass = fe->cid;
         rv = NS_OK;
@@ -1882,8 +1921,8 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
         return NS_ERROR_FACTORY_NOT_REGISTERED;
 
 #ifdef SHOW_CI_ON_EXISTING_SERVICE
-    NS_ASSERTION(!entry->mServiceObject, 
-                 "You are calling CreateInstance when a service for this CID already exists!");
+    NS_WARN_IF_FALSE(!entry->mServiceObject, 
+                     "You are calling CreateInstance when a service for this CID already exists!");
 #endif
 
     nsIFactory *factory = nsnull;
@@ -1958,14 +1997,14 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
     }
     *aResult = nsnull;
 
-    nsFactoryEntry *entry = GetFactoryEntry(aContractID);
+    nsFactoryEntry *entry = GetFactoryEntry(aContractID, strlen(aContractID));
 
     if (!entry || entry == kNonExistentContractID)
         return NS_ERROR_FACTORY_NOT_REGISTERED;
 
 #ifdef SHOW_CI_ON_EXISTING_SERVICE
-    NS_ASSERTION(!entry->mServiceObject, 
-                 "You are calling CreateInstance when a service for this CID already exist!");
+    NS_WARN_IF_FALSE(!entry->mServiceObject,
+                     "You are calling CreateInstance when a service for this CID already exist!");
 #endif
 
     nsIFactory *factory = nsnull;
@@ -2189,7 +2228,8 @@ nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aS
     nsAutoMonitor mon(mMon);
 
     // check to see if we have a factory entry for the service
-    nsFactoryEntry *entry = GetFactoryEntry(aContractID);
+    PRUint32 contractIDLen = strlen(aContractID);
+    nsFactoryEntry *entry = GetFactoryEntry(aContractID, contractIDLen);
 
     if (entry == kNonExistentContractID)
         entry = nsnull;
@@ -2212,8 +2252,12 @@ nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aS
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        if (!contractIDTableEntry->mContractID)
-            contractIDTableEntry->mContractID = ArenaStrdup(aContractID, &mArena);
+        if (!contractIDTableEntry->mContractID) {
+            contractIDTableEntry->mContractID =
+                ArenaStrndup(aContractID, contractIDLen, &mArena);
+            
+            contractIDTableEntry->mContractIDLen = contractIDLen;
+        }
 
         contractIDTableEntry->mFactoryEntry = entry;
     }
@@ -2655,7 +2699,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
 
     // Update the ContractID->CLSID Map
     if (aContractID) {
-        nsresult rv = HashContractID(aContractID, entry);
+        nsresult rv = HashContractID(aContractID, strlen(aContractID), entry);
         if (NS_FAILED(rv)) {
             PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
                    ("\t\tFactory register succeeded. "
@@ -2679,8 +2723,13 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
                                           PRBool aReplace,
                                           PRBool aPersist)
 {
-    return RegisterComponentCommon(aClass, aClassName, aContractID,
-                                   aPersistentDescriptor, aReplace, aPersist,
+    return RegisterComponentCommon(aClass, aClassName,
+                                   aContractID,
+                                   aContractID ? strlen(aContractID) : 0,
+                                   aPersistentDescriptor,
+                                   aPersistentDescriptor ?
+                                   strlen(aPersistentDescriptor) : 0,
+                                   aReplace, aPersist,
                                    nativeComponentType);
 }
 
@@ -2694,8 +2743,11 @@ nsComponentManagerImpl::RegisterComponentWithType(const nsCID &aClass,
                                                   PRBool aPersist,
                                                   const char *aType)
 {
-    return RegisterComponentCommon(aClass, aClassName, aContractID, 
+    return RegisterComponentCommon(aClass, aClassName,
+                                   aContractID,
+                                   aContractID ? strlen(aContractID) : 0,
                                    aLocation,
+                                   aLocation ? strlen(aLocation) : 0,
                                    aReplace, aPersist,
                                    aType);
 }
@@ -2716,7 +2768,9 @@ nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
     if (NS_FAILED(rv))
         return rv;
 
-    rv = RegisterComponentWithType(aClass, aClassName, aContractID, aLibrarySpec,
+    rv = RegisterComponentWithType(aClass, aClassName,
+                                   aContractID,
+                                   aLibrarySpec,
                                    registryName,
                                    aReplace, aPersist,
                                    nativeComponentType);
@@ -2747,7 +2801,9 @@ nsresult
 nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
                                                 const char *aClassName,
                                                 const char *aContractID,
+                                                PRUint32 aContractIDLen,
                                                 const char *aRegistryName,
+                                                PRUint32 aRegistryNameLen,
                                                 PRBool aReplace,
                                                 PRBool aPersist,
                                                 const char *aType)
@@ -2801,7 +2857,9 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
             return NS_ERROR_OUT_OF_MEMORY;
 
         mRegistryDirty = PR_TRUE;
-        entry = new (mem) nsFactoryEntry(aClass, aRegistryName, typeIndex);
+        entry = new (mem) nsFactoryEntry(aClass,
+                                         aRegistryName, aRegistryNameLen,
+                                         typeIndex);
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2818,7 +2876,7 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
 
     // Update the ContractID->CLSID Map
     if (contractID) {
-        rv = HashContractID(contractID, entry);
+        rv = HashContractID(contractID, aContractIDLen, entry);
         if (NS_FAILED(rv)) {
             PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
                    ("\t\tHashContractID(%s) FAILED\n", contractID));
@@ -3436,7 +3494,7 @@ NS_IMETHODIMP
 nsComponentManagerImpl::IsContractIDRegistered(const char *aClass, 
                                                PRBool *_retval)
 {
-    nsFactoryEntry *entry = GetFactoryEntry(aClass);
+    nsFactoryEntry *entry = GetFactoryEntry(aClass, strlen(aClass));
 
     if (!entry || entry == kNonExistentContractID)
         *_retval = PR_FALSE;

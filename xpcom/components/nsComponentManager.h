@@ -158,24 +158,30 @@ protected:
     nsresult RegisterComponentCommon(const nsCID &aClass,
                                      const char *aClassName,
                                      const char *aContractID,
+                                     PRUint32 aContractIDLen,
                                      const char *aRegistryName,
+                                     PRUint32 aRegistryNameLen,
                                      PRBool aReplace, PRBool aPersist,
                                      const char *aType);
     nsresult GetLoaderForType(int aType, 
                               nsIComponentLoader **aLoader);
-    nsresult FindFactory(const char *contractID, nsIFactory **aFactory) ;
+    nsresult FindFactory(const char *contractID, PRUint32 aContractIDLen, nsIFactory **aFactory) ;
     nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
 
-    nsFactoryEntry *GetFactoryEntry(const char *aContractID);
+    nsFactoryEntry *GetFactoryEntry(const char *aContractID,
+                                    PRUint32 aContractIDLen);
     nsFactoryEntry *GetFactoryEntry(const nsCID &aClass);
     nsFactoryEntry *GetFactoryEntry(const nsCID &aClass, nsIDKey &cidKey);
 
     nsresult SyncComponentsInDir(PRInt32 when, nsIFile *dirSpec);
     nsresult SelfRegisterDll(nsDll *dll);
     nsresult SelfUnregisterDll(nsDll *dll);
-    nsresult HashContractID(const char *acontractID, nsFactoryEntry *fe_ptr);
-    nsresult HashContractID(const char *acontractID, const nsCID &aClass, nsFactoryEntry **fe_ptr = NULL);
-    nsresult HashContractID(const char *acontractID, const nsCID &aClass, nsIDKey &cidKey, nsFactoryEntry **fe_ptr = NULL);
+    nsresult HashContractID(const char *acontractID, PRUint32 aContractIDLen,
+                            nsFactoryEntry *fe_ptr);
+    nsresult HashContractID(const char *acontractID, PRUint32 aContractIDLen,
+                            const nsCID &aClass, nsFactoryEntry **fe_ptr = NULL);
+    nsresult HashContractID(const char *acontractID, PRUint32 aContractIDLen,
+                            const nsCID &aClass, nsIDKey &cidKey, nsFactoryEntry **fe_ptr = NULL);
 
     void DeleteContractIDEntriesByCID(const nsCID* aClass, const char*registryName);
     void DeleteContractIDEntriesByCID(const nsCID* aClass, nsIFactory* factory);
@@ -293,7 +299,8 @@ protected:
 
 class nsFactoryEntry {
 public:
-    nsFactoryEntry(const nsCID &aClass, const char *location, int aType);
+    nsFactoryEntry(const nsCID &aClass,
+                   const char *location, PRUint32 locationlen, int aType);
     nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory);
     ~nsFactoryEntry();
 
@@ -324,11 +331,12 @@ public:
     }
 
     nsCID cid;
-    char *location;
     nsCOMPtr<nsIFactory> factory;
     // This is an index into the mLoaderData array that holds the type string and the loader 
     int typeIndex;
     nsCOMPtr<nsISupports> mServiceObject;
+
+    char* location;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,6 +347,7 @@ struct nsFactoryTableEntry : public PLDHashEntryHdr {
 
 struct nsContractIDTableEntry : public PLDHashEntryHdr {
     char           *mContractID;
+    PRUint32        mContractIDLen;
     nsFactoryEntry *mFactoryEntry;    
 };
 
@@ -346,10 +355,11 @@ struct nsContractIDTableEntry : public PLDHashEntryHdr {
 class AutoRegEntry
 {
 public:
-    AutoRegEntry(const char* name, PRInt64* modDate);
+    AutoRegEntry(const nsACString& name, PRInt64* modDate);
     virtual ~AutoRegEntry();
 
-    char*   GetName() {return mName;}
+    const nsDependentCString GetName()
+      { return nsDependentCString(mName, mNameLen); }
     PRInt64 GetDate() {return mModDate;}
     void    SetDate(PRInt64 *date) { mModDate = *date;}
     PRBool  Modified(PRInt64 *date);
@@ -361,6 +371,7 @@ public:
 
 private:
     char*   mName;
+    PRUint32 mNameLen;
     char*   mData;
     PRInt64 mModDate;
 };
