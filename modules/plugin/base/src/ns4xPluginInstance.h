@@ -163,6 +163,12 @@ public:
     nsresult SetCached(PRBool aCache) { mCached = aCache; return NS_OK; };
 
     virtual JSObject *GetJSObject(JSContext *cx);
+
+    // Non-refcounting accessor for faster access to the peer.
+    nsIPluginInstancePeer *Peer()
+    {
+        return mPeer;
+    }
     
 protected:
 

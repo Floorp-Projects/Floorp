@@ -1438,18 +1438,26 @@ _identifierisstring(NPIdentifier identifier)
 }
 
 NPObject* NP_EXPORT
-_createobject(NPClass* aClass)
+_createobject(NPP npp, NPClass* aClass)
 {
+  if (!npp) {
+    NS_ERROR("Null npp passed to _createobject()!");
+
+    return nsnull;
+  }
+
   if (!aClass) {
     NS_ERROR("Null class passed to _createobject()!");
 
-    return 0;
+    return nsnull;
   }
+
+  NPPAutoPusher nppPusher(npp);
 
   NPObject *npobj;
 
   if (aClass->allocate) {
-    npobj = aClass->allocate();
+    npobj = aClass->allocate(npp);
   } else {
     npobj = (NPObject *)PR_Malloc(sizeof(NPObject));
   }
@@ -1490,11 +1498,14 @@ _releaseobject(NPObject* npobj)
 }
 
 bool NP_EXPORT
-_call(NPObject* npobj, NPIdentifier method, const NPVariant *args,
+_call(NPP npp, NPObject* npobj, NPIdentifier method, const NPVariant *args,
       uint32_t argCount, NPVariant *result)
 {
-  if (!npobj || !npobj->_class || !npobj->_class->invoke)
-    return PR_FALSE;
+  if (!npp || !npobj || !npobj->_class || !npobj->_class->invoke)
+    return false;
+
+  NPPExceptionAutoHolder nppExceptionHolder;
+  NPPAutoPusher nppPusher(npp);
 
   return npobj->_class->invoke(npobj, method, args, argCount, result);
 }
@@ -1502,6 +1513,11 @@ _call(NPObject* npobj, NPIdentifier method, const NPVariant *args,
 bool NP_EXPORT
 _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 {
+  if (!npp)
+    return false;
+
+  NPPAutoPusher nppPusher(npp);
+
   JSContext *cx = GetJSContextFromNPP(npp);
   NS_ENSURE_TRUE(cx, false);
 
@@ -1534,8 +1550,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 
   jsval rval;
   nsresult rv = scx->EvaluateStringWithValue(utf16script, obj, principal,
-                                             nsnull, 0, nsnull, &rval,
-                                             nsnull);
+                                             nsnull, 0, nsnull, &rval, nsnull);
   NS_ENSURE_SUCCESS(rv, false);
 
   if (result) {
@@ -1546,47 +1561,63 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 }
 
 bool NP_EXPORT
-_getproperty(NPObject* npobj, NPIdentifier property, NPVariant *result)
+_getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
+             NPVariant *result)
 {
-  if (!npobj || !npobj->_class || !npobj->_class->getProperty)
-    return PR_FALSE;
+  if (!npp || !npobj || !npobj->_class || !npobj->_class->getProperty)
+    return false;
+
+  NPPExceptionAutoHolder nppExceptionHolder;
+  NPPAutoPusher nppPusher(npp);
 
   return npobj->_class->getProperty(npobj, property, result);
 }
 
 bool NP_EXPORT
-_setproperty(NPObject* npobj, NPIdentifier property,
+_setproperty(NPP npp, NPObject* npobj, NPIdentifier property,
              const NPVariant *value)
 {
-  if (!npobj || !npobj->_class || !npobj->_class->setProperty)
-    return PR_FALSE;
+  if (!npp || !npobj || !npobj->_class || !npobj->_class->setProperty)
+    return false;
+
+  NPPExceptionAutoHolder nppExceptionHolder;
+  NPPAutoPusher nppPusher(npp);
 
   return npobj->_class->setProperty(npobj, property, value);
 }
 
 bool NP_EXPORT
-_removeproperty(NPObject* npobj, NPIdentifier property)
+_removeproperty(NPP npp, NPObject* npobj, NPIdentifier property)
 {
-  if (!npobj || !npobj->_class || !npobj->_class->removeProperty)
-    return PR_FALSE;
+  if (!npp || !npobj || !npobj->_class || !npobj->_class->removeProperty)
+    return false;
+
+  NPPExceptionAutoHolder nppExceptionHolder;
+  NPPAutoPusher nppPusher(npp);
 
   return npobj->_class->removeProperty(npobj, property);
 }
 
 bool NP_EXPORT
-_hasproperty(NPObject* npobj, NPIdentifier propertyName)
+_hasproperty(NPP npp, NPObject* npobj, NPIdentifier propertyName)
 {
-  if (!npobj || !npobj->_class || !npobj->_class->hasProperty)
-    return PR_FALSE;
+  if (!npp || !npobj || !npobj->_class || !npobj->_class->hasProperty)
+    return false;
+
+  NPPExceptionAutoHolder nppExceptionHolder;
+  NPPAutoPusher nppPusher(npp);
 
   return npobj->_class->hasProperty(npobj, propertyName);
 }
 
 bool NP_EXPORT
-_hasmethod(NPObject* npobj, NPIdentifier methodName)
+_hasmethod(NPP npp, NPObject* npobj, NPIdentifier methodName)
 {
-  if (!npobj || !npobj->_class || !npobj->_class->hasMethod)
-    return PR_FALSE;
+  if (!npp || !npobj || !npobj->_class || !npobj->_class->hasMethod)
+    return false;
+
+  NPPExceptionAutoHolder nppExceptionHolder;
+  NPPAutoPusher nppPusher(npp);
 
   return npobj->_class->hasProperty(npobj, methodName);
 }
@@ -1634,12 +1665,50 @@ _tostring(NPObject* npobj, NPVariant *result)
   return PR_FALSE;
 }
 
+static char *gNPPException;
+
 void NP_EXPORT
 _setexception(NPObject* npobj, const NPUTF8 *message)
 {
-  // XXX: Write me!
+  if (gNPPException) {
+    // If a plugin throws multiple exceptions, we'll only report the
+    // last one for now.
+    free(gNPPException);
+  }
+
+  gNPPException = strdup(message);
 }
 
+const char *
+PeekException()
+{
+  return gNPPException;
+}
+
+void
+PopException()
+{
+  NS_ASSERTION(!gNPPException, "Uh, no NPP exception to pop!");
+
+  if (gNPPException) {
+    free(gNPPException);
+
+    gNPPException = nsnull;
+  }
+}
+
+NPPExceptionAutoHolder::NPPExceptionAutoHolder()
+  : mOldException(gNPPException)
+{
+  gNPPException = nsnull;
+}
+
+NPPExceptionAutoHolder::~NPPExceptionAutoHolder()
+{
+  NS_ASSERTION(!gNPPException, "NPP exception not properly cleared!");
+
+  gNPPException = mOldException;
+}
 
 ////////////////////////////////////////////////////////////////////////
 NPError NP_EXPORT
@@ -1973,3 +2042,6 @@ _getJavaPeer(NPP npp)
 }
 
 #endif /* OJI */
+
+
+NPP NPPStack::sCurrentNPP = nsnull;

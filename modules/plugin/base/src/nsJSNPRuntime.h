@@ -50,16 +50,30 @@ public:
   static void OnPluginDestroy(NPP npp);
 };
 
-class nsJSObjWrapper : public NPObject
+class nsJSObjWrapperKey
+{
+public:
+  nsJSObjWrapperKey(JSObject *obj, NPP npp)
+    : mJSObj(obj), mNpp(npp)
+  {
+  }
+
+  JSObject *mJSObj;
+
+  const NPP mNpp;
+};
+
+class nsJSObjWrapper : public NPObject,
+                       public nsJSObjWrapperKey
 {
 public:
   static NPObject *GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj);
 
 protected:
-  nsJSObjWrapper();
+  nsJSObjWrapper(NPP npp);
   ~nsJSObjWrapper();
 
-  static NPObject * NP_Allocate();
+  static NPObject * NP_Allocate(NPP npp);
   static void NP_Deallocate(NPObject *obj);
   static void NP_Invalidate(NPObject *obj);
   static bool NP_HasMethod(NPObject *, NPIdentifier identifier);
@@ -74,10 +88,6 @@ protected:
   static bool NP_RemoveProperty(NPObject *obj, NPIdentifier property);
 
 public:
-  JSObject *mJSObj;
-  JSContext *mCx;
-  NPP mNpp;
-
   static NPClass sJSObjWrapperNPClass;
 };
 

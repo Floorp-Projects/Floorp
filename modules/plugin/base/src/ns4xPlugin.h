@@ -207,7 +207,7 @@ int32_t NP_EXPORT
 _intfromidentifier(NPIdentifier identifier);
 
 NPObject* NP_EXPORT
-_createobject(NPClass* aClass);
+_createobject(NPP npp, NPClass* aClass);
 
 NPObject* NP_EXPORT
 _retainobject(NPObject* npobj);
@@ -216,26 +216,28 @@ void NP_EXPORT
 _releaseobject(NPObject* npobj);
 
 bool NP_EXPORT
-_call(NPObject* npobj, NPIdentifier method, const NPVariant *args,
+_call(NPP npp, NPObject* npobj, NPIdentifier method, const NPVariant *args,
       uint32_t argCount, NPVariant *result);
 
 bool NP_EXPORT
 _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result);
 
 bool NP_EXPORT
-_getproperty(NPObject* npobj, NPIdentifier property, NPVariant *result);
+_getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
+             NPVariant *result);
 
 bool NP_EXPORT
-_setproperty(NPObject* npobj, NPIdentifier property, const NPVariant *value);
+_setproperty(NPP npp, NPObject* npobj, NPIdentifier property,
+             const NPVariant *value);
 
 bool NP_EXPORT
-_removeproperty(NPObject* npobj, NPIdentifier property);
+_removeproperty(NPP npp, NPObject* npobj, NPIdentifier property);
 
 bool NP_EXPORT
-_hasproperty(NPObject* npobj, NPIdentifier propertyName);
+_hasproperty(NPP npp, NPObject* npobj, NPIdentifier propertyName);
 
 bool NP_EXPORT
-_hasmethod(NPObject* npobj, NPIdentifier methodName);
+_hasmethod(NPP npp, NPObject* npobj, NPIdentifier methodName);
 
 void NP_EXPORT
 _releasevariantvalue(NPVariant *variant);
@@ -244,5 +246,53 @@ void NP_EXPORT
 _setexception(NPObject* npobj, const NPUTF8 *message);
 
 PR_END_EXTERN_C
+
+const char *
+PeekException();
+
+void
+PopException();
+
+class NPPStack
+{
+public:
+  static NPP Peek()
+  {
+    return sCurrentNPP;
+  }
+
+protected:
+  static NPP sCurrentNPP;
+};
+
+class NPPAutoPusher : public NPPStack
+{
+public:
+  NPPAutoPusher(NPP npp)
+    : mOldNPP(sCurrentNPP)
+  {
+    NS_ASSERTION(npp, "Uh, null npp passed to NPPAutoPusher!");
+
+    sCurrentNPP = npp;
+  }
+
+  ~NPPAutoPusher()
+  {
+    sCurrentNPP = mOldNPP;
+  }
+
+private:
+  NPP mOldNPP;
+};
+
+class NPPExceptionAutoHolder
+{
+public:
+  NPPExceptionAutoHolder();
+  ~NPPExceptionAutoHolder();
+
+protected:
+  char *mOldException;
+};
 
 #endif // ns4xPlugin_h__
