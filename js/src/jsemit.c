@@ -3027,11 +3027,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (pn3->pn_slot >= 0) {
                     op = pn3->pn_op;
                     switch (op) {
-                      case JSOP_GETARG: /* FALL THROUGH */
-                      case JSOP_SETARG: op = JSOP_FORARG; break;
-                      case JSOP_GETVAR: /* FALL THROUGH */
-                      case JSOP_SETVAR: op = JSOP_FORVAR; break;
-                      default:          JS_ASSERT(0);
+                      case JSOP_GETARG:  /* FALL THROUGH */
+                      case JSOP_SETARG:  op = JSOP_FORARG; break;
+                      case JSOP_GETVAR:  /* FALL THROUGH */
+                      case JSOP_SETVAR:  op = JSOP_FORVAR; break;
+                      case JSOP_GETGVAR:
+                      case JSOP_SETGVAR: op = JSOP_FORNAME; break;
+                      default:           JS_ASSERT(0);
                     }
                 } else {
                     pn3->pn_op = JSOP_FORNAME;
