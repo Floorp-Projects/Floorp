@@ -249,8 +249,6 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
     // Add miscellaneous attributes by iterating _all_ of the
     // properties out of the resource.
-
-    // XXX Per Bug 3367, this'll have to be fixed.
     nsCOMPtr<nsISimpleEnumerator> arcs;
     rv = mDB->ArcLabelsOut(aValue, getter_AddRefs(arcs));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get arcs out");
@@ -275,6 +273,11 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
         if (IsContainmentProperty(aElement, property))
             continue;
 
+        // Ignore properties that we have been explicitly _asked_ to
+        // ignore.
+        if (IsIgnoredProperty(aElement, property))
+            continue;
+
         PRInt32 nameSpaceID;
         nsCOMPtr<nsIAtom> tag;
         if (NS_FAILED(rv = mDocument->SplitProperty(property, &nameSpaceID, getter_AddRefs(tag)))) {
@@ -288,7 +291,8 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
             return rv;
         }
 
-        NS_ASSERTION(rv != NS_RDF_NO_VALUE, "arc-out with no target: fix your arcs-out cursor!");
+        // ArcsLabelsOut is allowed to be promiscuous, giving back
+        // potential arc labels that may not currently have a value.
         if (rv == NS_RDF_NO_VALUE)
             continue;
 

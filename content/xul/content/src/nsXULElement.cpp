@@ -30,11 +30,6 @@
  */
 
 
-// #define the following if you want properties to show up as
-// attributes on an element. I know, this sucks, but I'm just not
-// really sure if this is necessary...
-//#define CREATE_PROPERTIES_AS_ATTRIBUTES
-
 #include "nsCOMPtr.h"
 #include "nsDOMCID.h"
 #include "nsDOMEvent.h"
@@ -1960,35 +1955,6 @@ RDFElementImpl::GetAttribute(PRInt32 aNameSpaceID,
 
     nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
 
-#if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
-    // XXX I'm not sure if we should support properties as attributes
-    // or not...
-    nsIRDFCompositeDataSource* db = nsnull;
-    nsIRDFNode* property = nsnull;
-    nsIRDFNode* value    = nsnull;
-
-    if (NS_FAILED(rv = mDocument->GetDataBase(db)))
-        goto done;
-
-    if (NS_FAILED(rv = mgr->GetNode(aName, property)))
-        goto done;
-
-    // XXX Only returns the first value. yer screwed for
-    // multi-attributes, I guess.
-
-    if (NS_FAILED(rv = db->GetTarget(mResource, property, PR_TRUE, value)))
-        goto done;
-
-    rv = value->GetStringValue(aResult);
-
-done:
-    NS_IF_RELEASE(property);
-    NS_IF_RELEASE(value);
-    NS_IF_RELEASE(db);
-    nsServiceManager::ReleaseService(kRDFServiceCID, mgr);
-
-#endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
-
     if (nsnull != mAttributes) {
         PRInt32 count = mAttributes->Count();
         PRInt32 i;
@@ -2109,56 +2075,6 @@ RDFElementImpl::GetAttributeNameAt(PRInt32 aIndex,
                                    PRInt32& aNameSpaceID,
                                    nsIAtom*& aName) const
 {
-#if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
-    // XXX I'm not sure if we should support attributes or not...
-
-    nsIRDFService* mgr = nsnull;
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                    kIRDFServiceIID,
-                                                    (nsISupports**) &mgr)))
-        return rv;
-    
-    nsIRDFCompositeDataSource* db = nsnull;
-    nsIRDFCursor* properties = nsnull;
-    PRBool moreProperties;
-
-    if (NS_FAILED(rv = mDocument->GetDataBase(db)))
-        goto done;
-
-    if (NS_FAILED(rv = db->ArcLabelsOut(mResource, properties)))
-        goto done;
-
-    while (NS_SUCCEEDED(rv = properties->HasMoreElements(moreProperties)) && moreProperties) {
-        nsIRDFNode* property = nsnull;
-        PRBool tv;
-
-        if (NS_FAILED(rv = properties->GetNext(property, tv /* ignored */)))
-            break;
-
-        nsAutoString uri;
-        if (NS_SUCCEEDED(rv = property->GetStringValue(uri))) {
-            nsIAtom* atom = NS_NewAtom(uri);
-            if (atom) {
-                aArray->AppendElement(atom);
-                ++aResult;
-            } else {
-                rv = NS_ERROR_OUT_OF_MEMORY;
-            }
-        }
-
-        NS_RELEASE(property);
-
-        if (NS_FAILED(rv))
-            break;
-    }
-
-done:
-    NS_IF_RELEASE(properties);
-    NS_IF_RELEASE(db);
-    nsServiceManager::ReleaseService(kRDFServiceCID, mgr);
-    return rv;
-#endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
-
     if (nsnull != mAttributes) {
         nsXULAttribute* attr = (nsXULAttribute*)mAttributes->ElementAt(aIndex);
         if (nsnull != attr) {
@@ -2176,10 +2092,6 @@ done:
 NS_IMETHODIMP
 RDFElementImpl::GetAttributeCount(PRInt32& aResult) const
 {
-#if defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
-    NS_NOTYETIMPLEMENTED("write me!");     // XXX need to write this...
-#endif // defined(CREATE_PROPERTIES_AS_ATTRIBUTES)
-
     nsresult rv = NS_OK;
     if (nsnull != mAttributes) {
         aResult = mAttributes->Count();

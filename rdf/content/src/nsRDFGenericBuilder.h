@@ -116,6 +116,9 @@ public:
     virtual PRBool
     IsContainmentProperty(nsIContent* aElement, nsIRDFResource* aProperty);
 
+    virtual PRBool
+    IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* aProperty);
+
     PRBool
     IsContainer(nsIContent* aParentElement, nsIRDFResource* aTargetResource);
 
@@ -190,6 +193,7 @@ protected:
     static nsIAtom* kOpenAtom;
     static nsIAtom* kResourceAtom;
     static nsIAtom* kContainmentAtom;
+    static nsIAtom* kIgnoreAtom;
 
     static nsIAtom* kSubcontainmentAtom;
     static nsIAtom* kTreeTemplateAtom;

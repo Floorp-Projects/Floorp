@@ -101,6 +101,7 @@ nsIAtom* RDFGenericBuilderImpl::kOpenAtom;
 nsIAtom* RDFGenericBuilderImpl::kResourceAtom;
 nsIAtom* RDFGenericBuilderImpl::kContainmentAtom;
 nsIAtom* RDFGenericBuilderImpl::kNaturalOrderPosAtom;
+nsIAtom* RDFGenericBuilderImpl::kIgnoreAtom;
 
 nsIAtom* RDFGenericBuilderImpl::kSubcontainmentAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeTemplateAtom;
@@ -144,8 +145,9 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
         kIdAtom              = NS_NewAtom("id");
         kOpenAtom            = NS_NewAtom("open");
         kResourceAtom        = NS_NewAtom("resource");
-        kNaturalOrderPosAtom = NS_NewAtom("pos");
         kContainmentAtom     = NS_NewAtom("containment");
+        kIgnoreAtom          = NS_NewAtom("ignore");
+        kNaturalOrderPosAtom = NS_NewAtom("pos");
 
         kSubcontainmentAtom  = NS_NewAtom("subcontainment");
         kTreeTemplateAtom    = NS_NewAtom("template");
@@ -227,6 +229,7 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_RELEASE(kOpenAtom);
         NS_RELEASE(kResourceAtom);
         NS_RELEASE(kContainmentAtom);
+        NS_RELEASE(kIgnoreAtom);
         NS_RELEASE(kNaturalOrderPosAtom);
 
         NS_RELEASE(kSubcontainmentAtom);
@@ -576,10 +579,12 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
 
             for (loop=0; loop<numElements; loop+=2)
             {
-				if (NS_FAILED(rv = CreateWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1)))
-				{
-					NS_ERROR("unable to create widget item");
-				}
+#ifdef XUL_TEMPLATES
+				rv = CreateWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1);
+#else
+                rv = AddWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1);
+#endif
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
             }
 
             for (int i = numElements - 1; i >=0; i--)
@@ -625,6 +630,10 @@ RDFGenericBuilderImpl::SetAllAttributesOnElement(nsIContent *aNode, nsIRDFResour
 				markAsContainer = PR_TRUE;
 				continue;
 			}
+
+            if (IsIgnoredProperty(aNode, property))
+                continue;
+
 			PRInt32			nameSpaceID;
 			nsCOMPtr<nsIAtom>	tag;
 			if (NS_FAILED(rv = mDocument->SplitProperty(property, &nameSpaceID, getter_AddRefs(tag))))
@@ -1120,10 +1129,13 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSubject,
                 contentsGenerated.EqualsIgnoreCase("true")) {
                 // Okay, it's a "live" element, so go ahead and append the new
                 // child to this node.
-                if (NS_FAILED(rv = CreateWidgetItem(element, aPredicate, resource, 0))) {
-                    NS_ERROR("unable to create new widget item");
-                    return rv;
-                }
+#ifdef XUL_TEMPLATES
+                rv = CreateWidgetItem(element, aPredicate, resource, 0);
+#else
+                rv = AddWidgetItem(element, aPredicate, resource, 0);
+#endif
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
+                if (NS_FAILED(rv)) return rv;
             }
         }
         else {
@@ -1753,7 +1765,10 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
 
     nsAutoString uri;
 
-    nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
+    // Walk up the content tree looking for the "rdf:containment"
+    // attribute, so we can determine if the specified property
+    // actually defines containment.
+    nsCOMPtr<nsIContent> element( dont_QueryInterface(aElement) );
     while (element) {
         // Never ever ask an HTML element about non-HTML attributes.
         PRInt32 nameSpaceID;
@@ -1763,14 +1778,14 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
         }
 
         if (nameSpaceID != kNameSpaceID_HTML) {
-            // Is this the "rdf:containment? property?
+            // Is this the "containment" property?
             if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None, kContainmentAtom, uri))) {
                 NS_ERROR("unable to get attribute value");
                 return PR_FALSE;
             }
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                // Okay we've found the locally specified tree properties,
+                // Okay we've found the locally-scoped tree properties,
                 // a whitespace-separated list of property URIs. So we
                 // definitively know whether this is a tree property or
                 // not.
@@ -1802,6 +1817,54 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
         return PR_FALSE;
 }
 
+
+PRBool
+RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* aProperty)
+{
+    nsresult rv;
+
+    nsXPIDLCString propertyURI;
+    rv = aProperty->GetValue( getter_Copies(propertyURI) );
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString uri;
+
+    // Walk up the content tree looking for the "rdf:ignore"
+    // attribute, so we can determine if the specified property should
+    // be ignored.
+    nsCOMPtr<nsIContent> element( dont_QueryInterface(aElement) );
+    while (element) {
+        PRInt32 nameSpaceID;
+        rv = element->GetNameSpaceID(nameSpaceID);
+        if (NS_FAILED(rv)) return rv;
+
+        // Never ever ask an HTML element about non-HTML attributes
+        if (nameSpaceID != kNameSpaceID_HTML) {
+            rv = element->GetAttribute(kNameSpaceID_None, kIgnoreAtom, uri);
+            if (NS_FAILED(rv)) return rv;
+
+            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+                // Okay, we've found the locally-scoped ignore
+                // properties, which is a whitespace-separated list of
+                // property URIs. So we definitively know whether this
+                // property should be ignored or not.
+                if (uri.Find(propertyURI) >= 0)
+                    return PR_TRUE;
+                else
+                    return PR_FALSE;
+            }
+        }
+
+        nsCOMPtr<nsIContent> parent;
+        element->GetParent(*getter_AddRefs(parent));
+        element = parent;
+    }
+
+    // Walked _all_ the way to the top and couldn't find anything to
+    // ignore.
+    return PR_FALSE;
+}
+
 PRBool
 RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResource)
 {
@@ -1809,7 +1872,6 @@ RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResour
     // of them are that "containment" property, then we know we'll
     // have children.
 
-    // XXX Per Bug 3367, this'll have to be fixed.
     nsCOMPtr<nsISimpleEnumerator> arcs;
     nsresult rv;
 
@@ -1835,8 +1897,16 @@ RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResour
 
         nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
 
-        // Ignore properties that are used to indicate "tree-ness"
-        if (IsContainmentProperty(aElement, property))
+        if (! IsContainmentProperty(aElement, property))
+            continue;
+
+        // see if it has a value
+        nsCOMPtr<nsIRDFNode> value;
+        rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(value));
+        if (NS_FAILED(rv))
+            return PR_FALSE;
+
+        if (value)
             return PR_TRUE;
     }
 
