@@ -961,9 +961,18 @@ nsComputedDOMStyle::GetBackgroundColor(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Background, (const nsStyleStruct*&)color, aFrame);
 
   if(color) {
-    nsAutoString hex;
-    ColorToHex(color->mBackgroundColor, hex);
-    val->SetString(hex);
+    if ((color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
+        !(color->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_TO_PARENT)) {
+      const nsCString& backgroundColor =
+        nsCSSProps::SearchKeywordTable(NS_STYLE_BG_COLOR_TRANSPARENT,
+                                       nsCSSProps::kBackgroundColorKTable);
+      val->SetString(backgroundColor);
+    }
+    else {
+      nsAutoString hex;
+      ColorToHex(color->mBackgroundColor, hex);
+      val->SetString(hex);
+    }
   }
   else {
     val->SetString("");
