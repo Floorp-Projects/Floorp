@@ -555,6 +555,12 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
   NS_ENSURE_ARG_POINTER(aRect);
   NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED);  // why are we bothering?
 
+
+  if (!(mState & IMAGE_GOTINITIALREFLOW)) {
+    // Don't bother to do anything; we have a reflow coming up!
+    return NS_OK;
+  }
+  
   // handle iconLoads first...
   if (HandleIconLoads(aRequest, PR_FALSE)) {
     if (!aRect->IsEmpty()) {
@@ -627,18 +633,20 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
       intrinsicSizeChanged = RecalculateTransform(imageContainer);
     }
 
-    if (!(mState & IMAGE_SIZECONSTRAINED) && intrinsicSizeChanged) {
-      NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
-      if (mParent && presShell && (mState & IMAGE_GOTINITIALREFLOW)) { // don't reflow if we havn't gotten the inital reflow yet
-        mState |= NS_FRAME_IS_DIRTY;
-        mParent->ReflowDirtyChild(presShell, NS_STATIC_CAST(nsIFrame*, this));
-      }
-    } else {
-      nsSize s;
-      GetSize(s);
-      nsRect r(0, 0, s.width, s.height);
-      if (!r.IsEmpty()) {
-        Invalidate(mPresContext, r, PR_FALSE);
+    if (mState & IMAGE_GOTINITIALREFLOW) { // do nothing if we havn't gotten the inital reflow yet
+      if (!(mState & IMAGE_SIZECONSTRAINED) && intrinsicSizeChanged) {
+        NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
+        if (mParent && presShell) { 
+          mState |= NS_FRAME_IS_DIRTY;
+          mParent->ReflowDirtyChild(presShell, NS_STATIC_CAST(nsIFrame*, this));
+        }
+      } else {
+        nsSize s;
+        GetSize(s);
+        nsRect r(0, 0, s.width, s.height);
+        if (!r.IsEmpty()) {
+          Invalidate(mPresContext, r, PR_FALSE);
+        }
       }
     }
   }
