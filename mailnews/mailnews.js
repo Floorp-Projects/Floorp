@@ -287,8 +287,7 @@ pref("mail.identity.default.directoryServer","");
 pref("mail.identity.default.overrideGlobal_Pref", false);
 
 
-// by default
-// only collect addresses the user sends too
+// by default, only collect addresses the user sends to (outgoing)
 // incoming is all spam anyways
 pref("mail.collect_email_address_incoming", false);
 pref("mail.collect_email_address_outgoing", true);
