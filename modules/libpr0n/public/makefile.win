@@ -29,6 +29,7 @@ XPIDL_MODULE	= imglib2
 
 XPIDLSRCS	= \
 		.\nsIImageDecoder.idl \
+		.\nsIImageDecoderObserver.idl \
 		.\nsIImageLoader.idl \
 		.\nsIImageRequest.idl \
 		$(NULL)
