@@ -234,10 +234,12 @@ ECL_HDRS += ecp_fp.h
 endif # NSS_ENABLE_ECC
 else
 # Solaris x86
+ifneq ($(USE_64),1)
     DEFINES += -D_X86_
     DEFINES += -DMP_USE_UINT_DIGIT
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
     ASFILES  = mpi_i86pc.s
+endif
 ifdef NS_USE_GCC
     LD = gcc
     AS = gcc
