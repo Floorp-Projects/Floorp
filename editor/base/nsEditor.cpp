@@ -469,6 +469,9 @@ nsEditor::PostCreate()
   NotifyDocumentListeners(eDocumentCreated);
   NotifyDocumentListeners(eDocumentStateChanged);
   
+  // Call ResetInputState() for initialization
+  ForceCompositionEnd();
+
   return NS_OK;
 }
 

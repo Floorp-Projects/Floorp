@@ -364,6 +364,7 @@ public:
   void 		    IMEDeactivateWidget();
   void 		    IMEActivateWidget();
   void 		    IMEDestroyIC();
+  nsWidget*         mIMEChildWidget;
 #endif // USE_XIM 
 protected:
   void              IMEComposeStart(guint aTime);
