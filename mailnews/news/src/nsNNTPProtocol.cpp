@@ -5296,7 +5296,6 @@ NS_IMETHODIMP nsNNTPProtocol::CloseConnection()
 {
   PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) ClosingConnection",this));
   SendData(nsnull, NNTP_CMD_QUIT); // this will cause OnStopRequest get called, which will call CloseSocket()
-  
   // break some cycles
   CleanupNewsgroupList();
 
@@ -5304,6 +5303,7 @@ NS_IMETHODIMP nsNNTPProtocol::CloseConnection()
     m_nntpServer->RemoveConnection(this);
     m_nntpServer = nsnull;
   }
+  CloseSocket();
   m_newsFolder = nsnull;
   
   if (m_articleList) {
