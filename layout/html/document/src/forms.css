@@ -75,6 +75,7 @@ input {
   color: -moz-FieldText;
   font: -moz-field;
   text-align: start;
+  text-transform: none;
   vertical-align: text-bottom;
   cursor: text;
   -moz-box-sizing: border-box;
@@ -89,6 +90,7 @@ textarea {
   color: -moz-FieldText;
   font: medium -moz-fixed;
   text-align: start;
+  text-transform: none;
   vertical-align: text-bottom;
   cursor: text;
   -moz-box-sizing: border-box;
