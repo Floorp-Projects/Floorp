@@ -1,0 +1,108 @@
+<style>
+
+body  {
+  background-color:#CCCCCC
+
+}
+   
+#lefttext {
+  text-align: left;
+  font-style: bold;
+  
+}
+
+
+#righttext {
+  text-align: right;
+}
+
+#top  {
+background-color: grey
+}
+
+#tableb {
+    display:block;
+    border: groove white 2px;
+    font-size: 7pt;
+    min-height: 16px;
+    color: white;
+}
+
+
+</style>
+
+<head>
+<script language="JavaScript" src="resource:/res/samples/PrefsWindow.js">
+</script>
+
+
+<script>
+    function GetToolkitCore() {
+      var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+      if (!toolkitCore) {
+        toolkitCore = new ToolkitCore();
+        if (toolkitCore)
+          toolkitCore.Init("ToolkitCore");
+      }
+      return toolkitCore;
+    }
+
+    function DoCustomize() {
+      var toolkitCore = GetToolkitCore();
+      if (toolkitCore)
+        toolkitCore.ShowModalDialog("custreceipt.html",
+            window);
+    }
+</script>
+
+</head>
+
+<body ID=here onload="return StartUp('Mailnews-Return Receipts')">
+<DIV ID=top>
+<SPAN ID=lefttext>Return Receipts</SPAN>
+</DIV>
+
+<br>
+ If I request a receipt when sending a message, I want
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			<input name=msgreceipt type="radio" id="pref:1:int:mail.request.return_receipt">A delivery receipt from the receiving server (DSN) 
+		</td></tr>
+		<tr><td>
+			<input name=msgreceipt type="radio" id="pref:2:int:mail.request.return_receipt" checked>A read receipt, notifying me when recipients display the message (MDN)
+		</td></tr>
+		<tr><td>
+			<input name=msgreceipt type="radio" id="pref:3:int:mail.request.return_receipt">Both types of receipt
+		</td></tr>
+	</FORM>
+</table>
+ 
+<br>
+ When a receipt arrives
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			<input name=getreceipt type="radio" id="pref:0:int:mail.incorporate.return_receipt" checked>Leave it in my Inbox
+		</td></tr>
+		<tr><td>
+			<input name=getreceipt type="radio" id="pref:1:int:mail.incorporate.return_receipt">Move it to my Sent Mail folder
+		</td></tr>
+	</FORM>
+</table>
+
+<br>
+ When I receive a message and the sender requested a receipt (MDN)
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			<input name=returnreceipt type="radio" id="pref:0:int:mail.mdn.report.enabled">Never return a receipt
+		</td></tr>
+		<tr><td>
+			<input name=returnreceipt type="radio" id="pref:1:int:mail.mdn.report.enabled" checked>Return receipts for some messages
+			<input name=returnreceipt type="button" value="Customize...">
+		</td></tr>
+	</FORM>
+</table>
+
+</body>

@@ -1,0 +1,105 @@
+<style>
+
+body  {
+  background-color:#CCCCCC
+
+}
+   
+#lefttext {
+  text-align: left;
+  font-style: bold;
+  
+}
+
+
+#righttext {
+  text-align: right;
+}
+
+#top  {
+background-color: grey
+}
+
+#tableb {
+    display:block;
+    border: groove white 2px;
+    font-size: 7pt;
+    min-height: 16px;
+    color: white;
+}
+
+
+</style>
+
+<head>
+<script language="JavaScript" src="resource:/res/samples/PrefsWindow.js">
+</script>
+</head>
+
+<body ID=here onload="return StartUp('Mailnews-Messages')">
+<DIV ID=top>
+<SPAN ID=lefttext>Messages</SPAN>
+</DIV>
+
+<br>
+Forwarding and Replying to Messages
+<table ID="tableb">
+	<FORM>
+		<tr><td>By default, forward messages:
+			<select name="textstyle" size=1>
+			<option value="2">Inline
+			<option selected value="1">Quoted
+			<option value="0">As Attachment
+			</select>
+		</td></tr>
+		<tr><td> </td></tr>
+		<tr><td>
+			<input type="checkbox" id="pref:0:bool:mail.auto_quote" checked>Automatically quote the original message when replying
+		</td></tr>
+		<tr><td>Then,
+			<select name="textstyle" size=1>
+			<option value="1">start my reply above the quoted text
+			<option selected value="0">start my reply below the quoted text
+			<option value="2">select the quoted text
+			</select>
+		</td></tr>
+	</FORM>
+</table>
+ 
+<br>
+<table ID="tableb">
+		<tr><td>
+			<input type="checkbox" id="pref:0:bool:mail.SpellCheckBeforeSend">Spell check messages before sending
+		</td></tr>
+	</FORM>
+</table>
+
+<br>
+Message Wrapping
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			<input type="checkbox" id="pref:0:bool:mail.wrap_long_lines">Wrap incoming, plain text messages to window width
+		</td></tr>
+		<tr><td>Wrap outgoing, plain text messages at
+			<input name="wraplength" type="text" value=""
+			 id="pref:string:mailnews.wraplength" size="10">characters
+		</td></tr>
+	</FORM>
+</table>
+ 
+<br>
+Send messages that use 8-bit characters
+<table ID="tableb">
+	<tr><td>When it's time to clean up messages:</td></tr>
+	<FORM>
+		<tr><td>
+			<input name=msgcleanup type="radio" id="pref:0:int:mail.strictly_mime" checked>As is (does not work well with some mail servers)
+		</td></tr>
+		<tr><td>
+			<input name=msgcleanup type="radio" id="pref:1:int:mail.strictly_mime">Using the "quoted printable" MIME encoding (does not work well with some mail or newsgroups readers)
+		</td></tr>
+	</FORM>
+</table>
+
+</body>

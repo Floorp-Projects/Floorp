@@ -1,0 +1,95 @@
+<style>
+
+body  {
+  background-color:#CCCCCC
+
+}
+   
+#lefttext {
+  text-align: left;
+  font-style: bold;
+  
+}
+
+
+#righttext {
+  text-align: right;
+}
+
+#top  {
+background-color: grey
+}
+
+#tableb {
+    display:block;
+    border: groove white 2px;
+    font-size: 7pt;
+    min-height: 16px;
+    color: white;
+}
+
+
+</style>
+
+<head>
+<script language="JavaScript" src="resource:/res/samples/PrefsWindow.js">
+</script>
+</head>
+
+<body ID=here onload="return StartUp('Mailnews-Customize Receipts')">
+<DIV ID=top>
+<SPAN ID=lefttext>Customize Return Receipts</SPAN>
+</DIV>
+
+<br>
+When I receive a message and its sender requested a receipt(MDN), send one in the following cases:
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			If I'm not in the To or CC list of the message (as for a message to a mailing list):
+		</td></tr>
+		<tr><td>
+			<select name="select1" size=1>
+			<option value="0">Never Send
+			<option value="1">Automatically
+			<option selected value="2">Ask me
+			</select>
+		</td></tr>
+		<tr><td>
+			If the message comes from outside the domain:
+		</td></tr>
+		<tr><td>
+			<select name="select2" size=1>
+			<option value="0">Never Send
+			<option value="1">Automatically
+			<option selected value="2">Ask me
+			</select>
+		</td></tr>
+		<tr><td>
+			In all other cases:
+		</td></tr>
+		<tr><td>
+			<select name="select3" size=1>
+			<option value="0">Never Send
+			<option value="1">Automatically
+			<option selected value="2">Ask me
+			</select>
+		</td></tr>
+	</FORM>
+</table>
+
+<br>
+<br>
+<br>
+<table>
+	<FORM>
+    <tr>
+		<input name=ok type="button" value="OK">
+		<input name=cancel type="button" value="Cancel">
+    </tr>
+	</FORM>
+</table>
+
+
+
+</body>

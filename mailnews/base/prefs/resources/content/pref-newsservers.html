@@ -1,0 +1,86 @@
+<style>
+
+body  {
+  background-color:#CCCCCC
+
+}
+   
+#lefttext {
+  text-align: left;
+  font-style: bold;
+  
+}
+
+
+#righttext {
+  text-align: right;
+}
+
+#top  {
+background-color: grey
+}
+
+#tableb {
+    display:block;
+    border: groove white 2px;
+    font-size: 7pt;
+    min-height: 16px;
+    color: white;
+}
+
+
+</style>
+
+<head>
+<script language="JavaScript" src="resource:/res/samples/PrefsWindow.js">
+</script>
+</head>
+
+<body ID=here onload="return StartUp('Mailnews-Newsservers')">
+<DIV ID=top>
+<SPAN ID=lefttext>Newsgroup Servers</SPAN>
+</DIV>
+
+<br>
+<table ID="tableb">
+	<FORM>
+		<tr><td> 
+			<select name="textstyle" size=5>
+			<option value="0">news.mozilla.org
+			</select>
+		</td></tr>
+		<tr><td> 
+			<input name=choose type="button" value="Add...">
+			<input name=choose type="button" value="Edit...">
+			<input name=choose type="button" value="Delete">
+			<input name=choose type="button" value="Set as Default">
+		</td></tr>
+	</FORM>
+	</td></tr>
+</table>
+ 
+<br>
+<table ID="tableb">
+		<tr><td> 
+			<input type="checkbox" id="pref:0:bool:news.notify.on">Ask me before downloading more than
+			<input name="prompt" type="text" value=""
+			 id="pref:string:news.max_articles" size="5">messages
+		</td></tr>
+	</FORM>
+</table>
+
+<br>
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			Newsgroup directory
+		</td></tr>
+		<tr><td>
+			<input name="newsdir" type="text" value=""
+			 id="pref:string:news.directory" size="40"> 
+			 <input name=choose type="button" value="Choose...">
+		</td></tr>
+	</FORM>
+</table>
+ 
+</body>

@@ -1,0 +1,38 @@
+tree {
+  display: table;
+  background-color: white;
+  border: none;
+  border-spacing: 0px;
+  width: 100%;
+}
+
+treeitem {
+  display: table-row;
+}
+
+treehead {
+/*  display: table-header-group; */
+}
+
+treebody {
+  display: table-row-group;
+}
+
+treecell {
+  display: table-cell;
+  color: black;
+  font-family: Veranda;
+  font-size: 12pt;
+}
+
+treecell[selectedcell] { 
+ background-color: #666699; 
+ color: white;
+} 
+
+treehead treeitem treecell { 
+ font-size: 9pt;
+ background-color: #666699; 
+ border: thin darkgray solid; 
+ color: white;
+} 

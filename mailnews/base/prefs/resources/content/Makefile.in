@@ -1,0 +1,61 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH = ../../../../..
+topsrcdir	= @top_srcdir@
+VPATH		= @srcdir@
+srcdir		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+include $(topsrcdir)/config/rules.mk
+
+SAMPLES_DIR = $(DIST)/bin/chrome/messenger/content/default
+
+EXPORT_RESOURCE_SAMPLES = \
+	$(srcdir)/AccountManager.xul	\
+	$(srcdir)/AccountManager.js		\
+	$(srcdir)/accounttree.xul	\
+	$(srcdir)/am-main.xul		\
+	$(srcdir)/am-test.xul		\
+	$(srcdir)/am-server.xul		\
+	$(srcdir)/am-server-top.xul	\
+	$(srcdir)/am-server-pop3.xul	\
+	$(srcdir)/am-server-imap.xul	\
+	$(srcdir)/am-server-news.xul	\
+	$(srcdir)/am-server-webmail.xul	\
+	$(srcdir)/am-copies.xul		\
+	$(srcdir)/am-advanced.xul	\
+	$(srcdir)/pref-mailnews.html \
+	$(srcdir)/pref-identity.html \
+	$(srcdir)/pref-mailservers.html \
+	$(srcdir)/pref-newsservers.html \
+	$(srcdir)/pref-winsetting.html \
+	$(srcdir)/pref-receipts.html \
+	$(srcdir)/custreceipt.html \
+	$(srcdir)/pref-diskspace.html \
+	$(NULL)
+
+EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
+
+install::
+	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(SAMPLES_DIR)
+
+clobber::
+	$(RM) $(EXPORT_RESOURCE_SAMPLES_TO_REMOVE)

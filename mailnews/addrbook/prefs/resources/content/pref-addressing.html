@@ -1,0 +1,88 @@
+<style>
+
+body  {
+  background-color:#CCCCCC
+
+}
+   
+#lefttext {
+  text-align: left;
+  font-style: bold;
+  
+}
+
+
+#righttext {
+  text-align: right;
+}
+
+#top  {
+background-color: grey
+}
+
+#tableb {
+    display:block;
+    border: groove white 2px;
+    font-size: 7pt;
+    min-height: 16px;
+    color: white;
+}
+
+
+</style>
+
+<head>
+<script language="JavaScript" src="resource:/res/samples/PrefsWindow.js">
+</script>
+</head>
+
+<body ID=here onload="return StartUp('Mailnews-Addressing')">
+<DIV ID=top>
+<SPAN ID=lefttext>Addressing</SPAN>
+</DIV>
+
+<br>
+Pinpoint Addressing
+<table ID="tableb">
+	<tr><td>Look for addresses in the following</td></tr>
+	<FORM>
+		<tr><td>
+			<input type="checkbox">Address Books
+		</td></tr>
+		<tr><td>
+			<input type="checkbox">Directory Server
+		</td></tr>
+		<tr><td>
+			<select name="textstyle" size=1>
+			</select>
+	</FORM>
+	<br>
+	<tr><td>When there are multiple addresses found:</td></tr>
+	<FORM>
+		<tr><td>
+			<input name=multilist type="radio">Show me a list of choices
+		</td></tr>
+		<tr><td>
+			<input name=multilist type="radio">Accept what I have typed
+		</td></tr>
+		<tr><td>If there is one match in your personal address books:</td></tr>
+		<tr><td>
+			<input type="checkbox">Use the address and do not search in the directory
+		</td></tr>
+	</FORM>
+</table>
+
+<br>
+When displaying full names:
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			<input name=displayname type="radio" id="pref:0:int:mail.addr_book.lastnamefirst" checked>Show names using display name (from address book card)
+		</td></tr>
+		<tr><td>
+			<input name=displayname type="radio" id="pref:1:int:mail.addr_book.lastnamefirst">Show names using last name, first name
+		</td></tr>
+	</FORM>
+</table>
+ 
+</body>

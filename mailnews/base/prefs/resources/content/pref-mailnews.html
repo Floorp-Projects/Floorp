@@ -1,0 +1,96 @@
+<style>
+
+body  {
+  background-color:#CCCCCC
+
+}
+   
+#lefttext {
+  text-align: left;
+  font-style: bold;
+  
+}
+
+
+#righttext {
+  text-align: right;
+}
+
+#top  {
+background-color: grey
+}
+
+#tableb {
+    display:block;
+    border: groove white 2px;
+    font-size: 7pt;
+    min-height: 16px;
+    color: white;
+}
+
+
+</style>
+
+<head>
+<script language="JavaScript" src="resource:/res/samples/PrefsWindow.js">
+</script>
+</head>
+
+<body ID=here onload="return StartUp('Mailnews-Main')">
+<DIV ID=top>
+<SPAN ID=lefttext>Mail &amp; Newsgroups</SPAN>
+</DIV>
+
+<br>
+Plain quoted text beginning with ">" is displayed with
+<table ID="tableb">
+	<FORM>
+		<tr><td>Style:
+			<select name="textstyle" size=1>
+			<option value="0">Regular
+			<option value="1">Bold
+			<option selected value="2">Italic
+			<option value="3">Bold Italic
+			</select>
+		</td></tr>
+		<tr><td>Size:
+			<select name="textsize" size=1>
+			<option selected value="0">Regular
+			<option value="1">Bigger
+			<option value="2">Smaller
+			</select>
+		</td></tr>
+		<tr><td>Color:
+			<select name="textcolor" size=1>
+			<option selected value="0">
+			</select>
+		</td></tr>
+	</FORM>
+</table>
+
+<br>
+Display plain text messages and articles with
+<table ID="tableb">
+	<FORM>
+		<tr><td><input name=fontwidth type="radio"
+			id="pref:1:int:mail.fixed_width_messages" checked>Fixed width font</td>
+		</tr>
+		<tr><td><input name=fontwidth type="radio"
+			id="pref:0:int:mail.fixed_width_messages">Variable width font</td>
+		</tr>
+	</FORM>
+</table>
+ 
+<br>
+<table ID="tableb">
+	<FORM>
+		<tr><td><input type="checkbox" id="pref:1:bool:mail.play_sound">Play sound when messages arrive</td></tr>
+		<tr><td><input type="checkbox" id="pref:1:bool:mailnews.remember_selected_message">Remember the last selected message</td></tr>
+		<tr><td><input type="checkbox" id="pref:1:bool:mailnews.confirm.moveFoldersToTrash">Confirm when moving folders to the trash</td></tr>
+		<tr><td><input type="checkbox" id="pref:0:bool:mail.use_mapi_server">Use Netscape Messenger from MAPI-based applications</td></tr>
+	</FORM>
+</table>
+
+
+
+</body>

@@ -1,0 +1,81 @@
+<style>
+
+body  {
+  background-color:#CCCCCC
+
+}
+   
+#lefttext {
+  text-align: left;
+  font-style: bold;
+  
+}
+
+
+#righttext {
+  text-align: right;
+}
+
+#top  {
+background-color: grey
+}
+
+#tableb {
+    display:block;
+    border: groove white 2px;
+    font-size: 7pt;
+    min-height: 16px;
+    color: white;
+}
+
+
+</style>
+
+<head>
+<script language="JavaScript" src="resource:/res/samples/PrefsWindow.js">
+</script>
+</head>
+
+<body ID=here onload="return StartUp('Mailnews-Formatting')">
+<DIV ID=top>
+<SPAN ID=lefttext>Formatting</SPAN>
+</DIV>
+ 
+<br>
+Message formatting
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			<input name=msgformat type="radio" id="pref:1:int:mail.html_compose" checked>Use the HTML editor to compose messages
+		</td></tr>
+		<tr><td>
+			<input name=msgformat type="radio" id="pref:0:int:mail.html_compose">Use the plain text editor to compose messages
+		</td></tr>
+	</FORM>
+</table>
+
+<br>
+When sending HTML mail messages to recipients who are not listed as being able to receive them: 
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			<input name=receipt type="radio" id="pref:0:int:mail.default_html_action" checked>Ask me what to do if the message has HTML formatting, otherwise send plain text
+		</td></tr>
+		<tr><td>
+			<input name=receipt type="radio" id="pref:1:int:mail.default_html_action">Convert the message into plain text(may lose some formatting)
+		</td></tr>
+		<tr><td>
+			<input name=receipt type="radio" id="pref:2:int:mail.default_html_action">Send the message in HTML anyway(some recipients may not be able to read it)
+		</td></tr>
+		<tr><td>
+			<input name=receipt type="radio" id="pref:3:int:mail.default_html_action">Send the message in plain text and HTML(uses more disk space)
+		</td></tr>
+	</FORM>
+		<tr><td> </td></tr>
+		<tr><td>
+			You can override these settings in any message through the options panel of the message composition window
+		</td></tr>
+
+</table>
+
+</body>

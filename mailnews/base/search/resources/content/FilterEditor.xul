@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+
+<!DOCTYPE window>
+
+<window
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<html:script language="JavaScript" src="FilterEditor.js"/>
+
+<!--
+
+<box id="subject-template" align="horizontal" style="display: none;">
+<html:select name="criteria">
+  <html:option>contains</html:option>
+  <html:option>doesn't contain</html:option>
+</html:select>
+</box>
+
+<box id="sender-template" align="horizontal" style="display: none;">
+<html:select name="criteria">
+  <html:option>contains</html:option>
+  <html:option>doesn't contain</html:option>
+</html:select>
+</box>
+
+<box id="date-template" align="horizontal" style="display: none;">
+<html:select name="criteria">
+  <html:option>contains</html:option>
+  <html:option>doesn't contain</html:option>
+</html:select>
+</box>
+-->
+<box align="vertical" style="width: 100%;" flex="100%">
+  <box align="horizontal" class="padded">
+    <html:div>Filter Name:</html:div>
+    <html:input type="text" flex="100%"/>
+  </box>
+  <box align="vertical" class="cleanborder" flex="100%">
+    <html:div>
+      <html:input type="radio" name="andor" value="and"/>
+      Match all of the following
+    </html:div>
+    <html:div>
+      <html:input type="radio" name="andor" value="or"/>
+      Match any of the following
+    </html:div>
+    <spring class="spacer"/>
+    <box id="rulebox" alignment="vertical" flex="100%">
+      <box id="rule1" alignment="horizontal" flex="100%">
+        <html:select id="rule1-attribute"
+                     onchange="updateRule(this.parentNode);">
+          <html:option value="subject">subject</html:option>
+          <html:option value="sender">sender</html:option>
+          <html:option value="date">date</html:option>
+          <html:option value="any">any text</html:option>
+          <html:option value="keyword">keyword</html:option>
+          <html:option value="age">age in days</html:option>
+        </html:select>
+        <box align="horizontal" id="rule1-verb">
+        <spring name="preverb" class="spacer"/>
+        <html:select>
+          <html:option>contains</html:option>
+          <html:option>doesn't contain</html:option>
+        </html:select>
+        <spring class="spacer"/>
+        <html:input type="text" flex="100%"/>
+        </box>
+      </box>
+    </box>
+    <spring class="spacer"/>
+    <box alignment="horizontal">
+      <titledbutton class="push" value="More"/>
+      <titledbutton class="push" value="Less"/>
+    </box>
+  </box>
+  <html:div>Filter Action:</html:div>
+  <box alignment="horizontal" class="cleanborder">
+    <html:select>
+      <html:option>Move to folder</html:option>
+      <html:option>Change Priority</html:option>
+      <html:option>Delete</html:option>
+      <html:option>Mark read</html:option>
+      <html:option>Ignore thread</html:option>
+      <html:option>Watch thread</html:option>
+    </html:select>
+    <spring class="spacer"/>
+    <html:select flex="100%">
+      <html:option>Server1</html:option>
+      <html:option>  Folder 1</html:option>
+    </html:select>
+    <spring class="spacer"/>
+    <titledbutton class="push" value="New Folder..."/>
+  </box>
+  <box alignment="vertical" class="cleanborder">
+    <html:div>Description:</html:div>
+    <html:textarea flex="100%"/>
+  </box>
+</box>
+</window>

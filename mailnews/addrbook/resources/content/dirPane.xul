@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://addressbook/skin/dirPane.css" type="text/css"?>
+
+<!DOCTYPE window
+[
+	<!ENTITY directoryColumn.label   "Directory"> 
+]>
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+<tree rdf:datasources="rdf:addressdirectory" id="dirTree" onclick="return parent.parent.ChangeDirectoryByDOMNode(event.target.parentNode)">
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#DirName"/>
+  <treehead>
+    <treeitem>
+      <treecell>&directoryColumn.label;</treecell>
+    </treeitem>
+  </treehead>
+
+  <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
+    <treeitem id="abdirectory:/" open="true">
+      <treecell/>
+      </treeitem>
+  </treebody>
+</tree>
+</window>

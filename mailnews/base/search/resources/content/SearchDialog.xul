@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+
+
+<xul:window id="account-manager" xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    title="Account Manager">
+<box align="horizontal" style="width: 100%; height: 100%">
+  <box flex="100%" align="vertical" class="padded">
+    <box align="horizontal">
+      <html:div>
+        Search for messages in:
+      </html:div>
+      <html:select flex="100%">
+         <html:option>sample server 1</html:option>
+         <html:option>sample server 2</html:option>
+      </html:select>
+    </box>
+
+    <box align="vertical" class="cleanborder">
+    <box align="vertical">
+       <html:div>
+         <html:input type="radio" name="andor" value="and"/>
+         Match all of the following
+       </html:div>
+       <html:div>
+         <html:input type="radio" name="andor" value="or"/>
+         Match any of the following
+       </html:div>
+    </box>
+
+    <box align="horizontal" class="padded">
+    <html:select>
+      <html:option>subject</html:option>
+      <html:option>sender</html:option>
+      <html:option>date</html:option>
+      <html:option>any text</html:option>
+      <html:option>keyword</html:option>
+      <html:option>age in days</html:option>
+    </html:select>
+    <html:select>
+      <html:option>contains</html:option>
+      <html:option>doesn't contain</html:option>
+    </html:select>
+    <html:input type="text" flex="100%"/>
+    </box>
+    <spring class="spacer"/>
+    <box align="horizontal">
+      <titledbutton class="push" value="More"/>
+      <titledbutton class="push" value="Fewer"/>
+      <spring flex="100%"/>
+      <titledbutton class="push" value="Clear"/>
+    </box>
+  </box>
+  </box>
+  <box align="vertical" class="padded">
+    <titledbutton class="push" value="Search"/>
+    <titledbutton class="push" value="Options"/>
+    <titledbutton class="push" value="Cancel"/>
+  </box>
+</box>
+</xul:window>

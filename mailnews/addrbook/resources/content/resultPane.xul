@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://addressbook/skin/resultPane.css" type="text/css"?>
+
+<!DOCTYPE window
+[
+	<!ENTITY nameColumn.label "Name">
+	<!ENTITY emailColumn.label "Email">
+	<!ENTITY phoneColumn.label "Phone Number">
+	<!ENTITY orgColumn.label "Organization">
+	<!ENTITY nicknameColumn.label "Nickname">
+	<!ENTITY cityColumn.label "City">
+]>   
+
+<window
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+<tree rdf:datasources="rdf:addressdirectory rdf:addresscard" id="resultTree">
+  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#PersonName"/>
+  <treecol id="EmailColumn" rdf:resource="http://home.netscape.com/NC-rdf#Email"/>
+  <treecol id="WorkPhoneColumn" rdf:resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
+  <treecol id="OrganizationColumn" rdf:resource="http://home.netscape.com/NC-rdf#Organization"/>
+  <treecol id="NicknameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Nickname"/>
+  <treecol id="CityColumn" rdf:resource="http://home.netscape.com/NC-rdf#City"/>
+  <treehead>
+    <treeitem>
+		<treecell>&nameColumn.label;</treecell>
+		<treecell>&emailColumn.label;</treecell>
+		<treecell>&phoneColumn.label;</treecell>
+		<treecell>&orgColumn.label;</treecell>
+		<treecell>&nicknameColumn.label;</treecell>
+		<treecell>&cityColumn.label;</treecell>
+    </treeitem>
+  </treehead>
+  
+
+  <treebody id="" name="cardTreeBody">
+    <treeitem open="false">
+      <treecell/>
+      <treecell/>
+      <treecell/>
+      <treecell/>
+      <treecell/>
+      <treecell/>
+    </treeitem>
+  </treebody>
+</tree>
+
+</window>

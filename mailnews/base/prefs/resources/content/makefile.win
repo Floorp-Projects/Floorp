@@ -1,0 +1,64 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=..\..\..\..\..
+IGNORE_MANIFEST=1
+
+DEFINES=-DWIN32_LEAN_AND_MEAN
+MODULE=mailnews
+
+include <$(DEPTH)\config\rules.mak>
+
+install:: 
+	$(MAKE_INSTALL) AccountManager.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) AccountManager.js	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) accounttree.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-main.xul			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-test.xul			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-server.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-server-top.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-server-pop3.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-copies.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-advanced.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) pref-mailnews.html	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) pref-identity.html	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) pref-mailservers.html $(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) pref-newsservers.html $(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) pref-winsetting.html $(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) pref-receipts.html	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) custreceipt.html	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) pref-diskspace.html	$(DIST)\bin\chrome\messenger\content\default
+
+clobber::
+	rm -f $(DIST)\chrome\messenger\content\default\AccountManager.xul
+	rm -f $(DIST)\chrome\messenger\content\default\AccountManager.js
+	rm -f $(DIST)\chrome\messenger\content\default\accounttree.xul
+	rm -f $(DIST)\chrome\messenger\content\default\am-main.xul
+	rm -f $(DIST)\chrome\messenger\content\default\am-test.xul
+	rm -f $(DIST)\chrome\messenger\content\default\am-server.xul
+	rm -f $(DIST)\chrome\messenger\content\default\am-server-top.xul
+	rm -f $(DIST)\chrome\messenger\content\default\am-server-pop3.xul
+	rm -f $(DIST)\chrome\messenger\content\default\am-copies.xul
+	rm -f $(DIST)\chrome\messenger\content\default\am-advanced.xul
+	rm -f $(DIST)\chrome\messenger\content\default\pref-mailnews.html
+	rm -f $(DIST)\chrome\messenger\content\default\pref-identity.html
+	rm -f $(DIST)\chrome\messenger\content\default\pref-mailservers.html
+	rm -f $(DIST)\chrome\messenger\content\default\pref-newsservers.html
+	rm -f $(DIST)\chrome\messenger\content\default\pref-winsetting.html
+	rm -f $(DIST)\chrome\messenger\content\default\pref-receipts.html
+	rm -f $(DIST)\chrome\messenger\content\default\custreceipt.html
+	rm -f $(DIST)\chrome\messenger\content\default\pref-diskspace.html

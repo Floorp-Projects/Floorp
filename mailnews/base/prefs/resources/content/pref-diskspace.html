@@ -1,0 +1,94 @@
+<style>
+
+body  {
+  background-color:#CCCCCC
+
+}
+   
+#lefttext {
+  text-align: left;
+  font-style: bold;
+  
+}
+
+
+#righttext {
+  text-align: right;
+}
+
+#top  {
+background-color: grey
+}
+
+#tableb {
+    display:block;
+    border: groove white 2px;
+    font-size: 7pt;
+    min-height: 16px;
+    color: white;
+}
+
+
+</style>
+
+<head>
+<script language="JavaScript" src="resource:/res/samples/PrefsWindow.js">
+</script>
+</head>
+
+<body ID=here onload="return StartUp('Mailnews-Disk Space')">
+<DIV ID=top>
+<SPAN ID=lefttext>Disk Space</SPAN>
+</DIV>
+
+<br>
+ All Messages
+<table ID="tableb">
+	<FORM>
+		<tr><td>
+			<input type="checkbox" id="pref:0:bool:mail.limit_message_size">Do not store messages locally that are larger than
+			<input name="maxsize" type="text" value=""
+			 id="pref:string:mail.max_size" size="4"> kB
+		</td></tr>
+		<tr><td>
+			<input type="checkbox" id="pref:0:bool:mail.prompt_purge_threshhold">Automatically compact folders when it will save over
+			<input name="purgesize" type="text" value=""
+			 id="pref:string:mail.purge_threshhold" size="4"> kB
+		</td></tr>
+	</FORM>
+</table>
+ 
+<br>
+ Newsgroup Messages Only
+<table ID="tableb">
+	<tr><td>When it's time to clean up messages:</td></tr>
+	<FORM>
+		<tr><td>
+			<input name=keepmsg type="radio" id="pref:1:int:news.keep.method">Keep messages which have arrived within the past
+			<input name="keepdays" type="text" value=""
+			 id="pref:string:news.keep.days" size="4">days
+		</td></tr>
+		<tr><td>
+			<input name=keepmsg type="radio" id="pref:0:int:news.keep.method" checked>Keep all messages
+		</td></tr>
+		<tr><td>
+			<input name=keepmsg type="radio" id="pref:2:int:news.keep.method">Keep the newest
+			<input name="keepmsgcount" type="text" value=""
+			 id="pref:string:news.keep.count" size="4">messages
+		</td></tr>
+		<tr><td> </td></tr>
+		<tr><td> </td></tr>
+		<tr><td>
+			<input type="checkbox" id="pref:0:bool:news.keep.only_unread">Keep only unread messages
+		</td></tr>
+		<tr><td>
+			<input type="checkbox" id="pref:0:bool:news.remove_bodies.by_age">Remove message bodies only older than
+			<input name="removedays" type="text" value=""
+			 id="pref:string:news.remove_bodies.days" size="4">days
+		</td></tr>
+	</FORM>
+</table>
+
+
+
+</body>
