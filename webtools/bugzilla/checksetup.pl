@@ -448,7 +448,7 @@ unless (-d 'data') {
     print "Creating data directory ...\n";
     mkdir 'data', 0770;
     if ($my_webservergroup eq "") {
-        chmod 1777, 'data';
+        chmod 01777, 'data';
     }
     open FILE, '>>data/comments'; close FILE;
     open FILE, '>>data/nomail'; close FILE;
@@ -542,7 +542,7 @@ if ($my_webservergroup) {
     # make sure that contrib keeps the permissions it had (don't touch it)
     chmod 0770, 'data', 'shadow', 'graphs';
     chmod 0666, glob('data/*');
-    chmod 1777, glob('data/*/'); # directories stay executable
+    chmod 01777, glob('data/*/'); # directories stay executable
 }
 
 
@@ -2057,7 +2057,7 @@ unless (-d 'graphs') {
     print "Creating graphs directory...\n";
     mkdir 'graphs', 1770; 
     if ($my_webservergroup eq "") {
-        chmod 1777, 'graphs';
+        chmod 01777, 'graphs';
     } 
     
     # Upgrade data format
@@ -2158,7 +2158,7 @@ unless (-d 'data/duplicates') {
     print "Creating duplicates directory...\n";
     mkdir 'data/duplicates', 0770; 
     if ($my_webservergroup eq "") {
-        chmod 1777, 'data/duplicates';
+        chmod 01777, 'data/duplicates';
     } 
 }
 
