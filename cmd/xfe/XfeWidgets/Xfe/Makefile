@@ -102,6 +102,7 @@ CSRCS			= \
 				ProgressBar.c \
 				RepType.c \
 				Resources.c \
+				SetValues.c \
 				ShellUtil.c \
 				StringUtil.c \
 				Tab.c \

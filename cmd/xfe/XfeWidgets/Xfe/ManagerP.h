@@ -306,18 +306,18 @@ _XfeManagerChildIsLayable		(Widget			child);
 /*																		*/
 /*----------------------------------------------------------------------*/
 extern void
-_XfeManagerChildrenInfo			(Widget			w,
-								 Dimension *	max_width_out,
-								 Dimension *	max_height_out,
-								 Dimension *	total_width_out,
-								 Dimension *	total_height_out,
-								 Cardinal *		num_managed_out,
-								 Cardinal *		num_components_out);
+_XfeManagerChildrenInfo				(Widget			w,
+									 Dimension *	max_width_out,
+									 Dimension *	max_height_out,
+									 Dimension *	total_width_out,
+									 Dimension *	total_height_out,
+									 Cardinal *		num_managed_out,
+									 Cardinal *		num_components_out);
 /*----------------------------------------------------------------------*/
 extern void
-_XfeManagerComponentInfo		(Widget			w,
-								 Dimension *	max_width_out,
-								 Dimension *	max_height_out);
+_XfeManagerComponentInfo			(Widget			w,
+									 Dimension *	max_width_out,
+									 Dimension *	max_height_out);
 /*----------------------------------------------------------------------*/
 extern void
 _XfeManagerGetLayableChildrenInfo	(Widget			w,
@@ -326,6 +326,11 @@ _XfeManagerGetLayableChildrenInfo	(Widget			w,
 									 Dimension *	max_width_out,
 									 Dimension *	max_height_out);
 /*----------------------------------------------------------------------*/
+extern void
+_XfeManagerPropagateSetValues		(Widget			ow,
+									 Widget			nw,
+									 Boolean		propagate_sensitive);
+
 
 /*----------------------------------------------------------------------*/
 /*																		*/
