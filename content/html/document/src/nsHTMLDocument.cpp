@@ -908,7 +908,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetTitle(nsString& aTitle)
 {
   if (nsnull != mDocumentTitle) {
-    aTitle.SetString(*mDocumentTitle);
+    aTitle=*mDocumentTitle;
   }
   return NS_OK;
 }

@@ -1203,8 +1203,8 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
         if (nsnull == d) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
-        d->mTitle.SetString(title);
-        d->mMedia.SetString(media);
+        d->mTitle=title;
+        d->mMedia=media;
         d->mIsActive = PR_TRUE;
         d->mURL = url;
         NS_ADDREF(url);
