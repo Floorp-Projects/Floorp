@@ -982,20 +982,13 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)loadingStarted
 {
-  [self updateToolbarItems];
   [self startThrobber];
 }
 
 - (void)loadingDone
 {
-  [self updateToolbarItems];
   [self stopThrobber];
   [mHistoryDataSource refresh];
-}
-   
-- (void)updateToolbarItems
-{
-  [[[self window] toolbar] validateVisibleItems];
 }
 
 - (void)performAppropriateLocationAction

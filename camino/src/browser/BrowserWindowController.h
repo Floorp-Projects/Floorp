@@ -199,7 +199,6 @@ typedef enum
 - (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate;
 - (void)updateLocationFields:(NSString *)locationString;
 - (void)updateSiteIcons:(NSImage *)siteIconImage;
-- (void)updateToolbarItems;
 - (void)loadingStarted;
 - (void)loadingDone;
 - (void)focusURLBar;
