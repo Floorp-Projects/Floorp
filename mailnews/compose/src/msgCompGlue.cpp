@@ -321,12 +321,3 @@ extern "C" {
 void FE_MsgShowHeaders(MSG_Pane *, MSG_HEADER_SET) {return;}
 HJ98703
 }
-
-#include "allxpstr.h"
-extern "C" {
-        int MK_MSG_SAVE_TEMPLATE = XP_MSG_BASE + 1389;
-        int MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS = XP_MSG_BASE + 1455;
-        int MK_MSG_FAILED_COPY_OPERATION = XP_MSG_BASE + 0;
-        int MK_MSG_INVALID_FOLLOWUP_TO_HEADER = XP_MSG_BASE + 0;
-        int MK_MSG_INVALID_NEWS_HEADER = XP_MSG_BASE + 0;
-}
