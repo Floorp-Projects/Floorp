@@ -20,9 +20,7 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
 
-# To recreate the shadow database, nuke all the entires and then run
-# processmail regenerate <last>, where <last> is the biggest bug number
-# currently used.
+# To recreate the shadow database,  run "processmail regenerate" .
 
 
 source "globals.tcl"
@@ -140,9 +138,6 @@ proc Log {str} {
 }
     
 
-set COOKIE(Bugzilla_login) terry
-set COOKIE(Bugzilla_password) terry
-
 ConnectToDatabase
 
 
@@ -152,7 +147,7 @@ To: %s
 Cc: %s
 Subject: \[Bug %s\] %s - %s
 
-http://cvs-mirror.mozilla.org/webtools/bugzilla/show_bug.cgi?id=%s
+[Param urlbase]show_bug.cgi?id=%s
 
 %s"
 
@@ -178,10 +173,10 @@ close $lockfid
 set regenerate 0
 if {[cequal [lindex $argv 0] "regenerate"]} {
     set regenerate 1
-    set last [lindex $argv 1]
     set argv ""
-    loop i 1 [expr $last + 1] {
-        lappend argv $i
+    SendSQL "select bug_id from bugs order by bug_id"
+    while {[MoreSQLData]} {
+        lappend argv [lindex [FetchSQLData] 0]
     }
 }
 
@@ -197,9 +192,6 @@ foreach i $argv {
     }
     set text [GetBugText $i]
     if {$text == ""} {
-        if {$regenerate} {
-            continue
-        }
         error "Couldn't find bug $i."
     }
     set fid [open $new "w"]
