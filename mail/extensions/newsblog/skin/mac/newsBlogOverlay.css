@@ -38,15 +38,18 @@
 
 /* ::::: Folder Pane icons :::::: */
 
-treechildren::-moz-tree-image(folderNameCol, serverType-rss) {
+treechildren::-moz-tree-image(folderNameCol, serverType-rss),
+.folderMenuItem[ServerType="rss"] {
   list-style-image: url("chrome://messenger/skin/icons/message-news.png");
 }
 
-treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-rss) {
+treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-rss),
+.folderMenuItem[IsServer="true"][ServerType="rss"] {
   list-style-image: url("chrome://messenger/skin/icons/server-newsblog.png");
 }
 
-treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash) {
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash),
+.folderMenuItem[SpecialFolder="Trash"] {
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.png");
 }
 
