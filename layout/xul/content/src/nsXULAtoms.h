@@ -47,6 +47,7 @@ public:
 
   static nsIAtom* text;
   static nsIAtom* toolbar;
+  static nsIAtom* toolbox;
   static nsIAtom* tree;
 
   static nsIAtom* widget;
