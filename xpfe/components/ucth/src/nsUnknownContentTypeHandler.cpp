@@ -285,12 +285,11 @@ nsUnknownContentTypeHandler::PromptForSaveToFile(nsISupports * aWindowContext, c
     filePicker->Init(parent, windowTitle, nsIFilePicker::modeSave);
     filePicker->SetDefaultString(aDefaultFile);
     nsAutoString wildCardExtension (NS_LITERAL_STRING("*").get());
-    if (aSuggestedFileExtension)
+    if (aSuggestedFileExtension) {
       wildCardExtension.Append(aSuggestedFileExtension);
-    else
-      wildCardExtension.Append(NS_LITERAL_STRING(".*").get());
+      filePicker->AppendFilter(wildCardExtension.GetUnicode(), wildCardExtension.GetUnicode());
+    }
 
-    filePicker->AppendFilter(wildCardExtension.GetUnicode(), wildCardExtension.GetUnicode());
     filePicker->AppendFilters(nsIFilePicker::filterAll);
 
     PRInt16 dialogResult;
