@@ -1,6 +1,17 @@
 TransforMiiX (TM) 
 (C) Copyright 1999, 2000, The MITRE Corporation, Keith Visco, et al. All rights reserved.
 
+Build 20000331
+
+-- Fixed a memory leak with translate() function (kvisco)
+   -- StringFunctionCall.cpp
+-- Updated the necessary source files to support the changes to
+   the String class (kvisco)
+-- Overloaded String::toCharArray to automatically create the
+   character array (tomk)
+-- Changed String::toChar to String::toCharArray (tomk)
+
+
 Build 20000327
 -- Fixed "dot" bug in CNAME parsing (ExprLexer.cpp) reported by Nathan Pride
 
