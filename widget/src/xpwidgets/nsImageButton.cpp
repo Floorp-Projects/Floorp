@@ -55,7 +55,6 @@ const PRInt32 kAlignBoth      = 2;
 static nsEventStatus PR_CALLBACK
 HandleImageButtonEvent(nsGUIEvent *aEvent)
 {
-printf("HandleImageButtonEvent\n");
   nsEventStatus    result = nsEventStatus_eIgnore;
   nsIImageButton * button;
 	if (NS_OK == aEvent->widget->QueryInterface(kCIImageButtonIID,(void**)&button)) {
@@ -141,7 +140,6 @@ NS_METHOD nsImageButton::Create(nsIWidget *aParent,
                                 nsIToolkit *aToolkit,
                                 nsWidgetInitData *aInitData)
 {
-  printf("nsImageButton::Create 0x%x 0x%x\n", aHandleEventFunction, HandleImageButtonEvent);
   return ChildWindow::Create(aParent, aRect,
      nsnull != aHandleEventFunction ? aHandleEventFunction: HandleImageButtonEvent,
      aContext, aAppShell, aToolkit, aInitData);
@@ -561,18 +559,13 @@ nsEventStatus nsImageButton::HandleEvent(nsGUIEvent *aEvent)
           rect.y = ((nsPaintEvent *)aEvent)->rect->y;
           rect.width = ((nsPaintEvent *)aEvent)->rect->width;
           rect.height = ((nsPaintEvent *)aEvent)->rect->height;
-printf("---> 1\n");
           aEvent->widget->GetBounds(rect);
           rect.x = 0;
           rect.y = 0;
-printf("---> 1 %x\n", ctx);
           ds = ctx->CreateDrawingSurface(&rect);
-printf("---> 1\n");
           if (ds == nsnull) {
-printf("---> 1\n");
             return nsEventStatus_eConsumeNoDefault;
           }
-printf("---> 1\n");
           ctx->SelectOffScreenDrawingSurface(ds);
 
           es = OnPaint((*((nsPaintEvent*)aEvent)->renderingContext),(*((nsPaintEvent*)aEvent)->rect));
