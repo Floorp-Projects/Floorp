@@ -39,7 +39,7 @@
     <html:div>&pnl2.pname.label;</html:div> 
     <spring flex="15%"/>
     <box align="horizontal">
-      <html:input type="text" id="ProfileName" value="mozProfile" flex="100%"/>
+      <html:input type="text" id="ProfileName" value="mozProfile" flex="100%" onblur="updateProfileName( this );"/>
     </box>
     <spring flex="15%"/>
     <html:div id="folderintro" style="padding-bottom: 0px;">

@@ -32,23 +32,27 @@ function GetFields()
   var profName = document.getElementById("ProfileName").value;
   var profDir  = document.getElementById("ProfileDir");
   var profDirContent = profDir.getAttribute("value");
+  var profDirRootFolder = profDir.getAttribute("rootFolder");
   var rv = { 
     ProfileName: { id: "ProfileName",      value: profName       },
-    ProfileDir:  { id: "ProfileDir",       value: profDirContent }
+    ProfileDir:  { id: "ProfileDir",       value: profDirContent, rootFolder: profDirRootFolder }
   }
   return rv; 
 }
 
 // the setting procedure is unique to each page, and as such each page
 // must provide its own SetFields function
-function SetFields(element,set)
+function SetFields( aElement, aValue, aDataObject )
 {
-  element = document.getElementById(element);
+  dump("*** element = " + aElement + "; set = " + aValue + "\n");
+  element = document.getElementById( aElement );
   //dump("In SetFields(" + element + "," + set + ");\n");
-  if(element.id == "ProfileDir" && set != "")
-    getProfileDir(set,false);
+  if(element.id == "ProfileDir" && aValue != "") {
+    element.setAttribute( "rootFolder", aDataObject.rootFolder );
+    getProfileDir( aValue, false );
+  }
   else if(element.id == "ProfileName")
-    element.value = set;
+    element.value = aValue;
 }  
 
 // function createProfileWizard.js::chooseFolder();
@@ -83,8 +87,7 @@ function getProfileDir(folder, showPopup)
 {
   if(showPopup)
     folder = chooseFolder("Choose Profile Directory");
-  //dump("folder = " + folder + "\n");
-  if(folder != undefined && folder ) {
+  if( folder != undefined && folder ) {
     var folderText = document.getElementById("ProfileDir");
     oldText = document.getElementById("deffoldername");
     removeChildren(oldText);
@@ -104,7 +107,9 @@ function getProfileDir(folder, showPopup)
     		dump("failed to convert URL to native path\n");
 	    }
     }
-    folderText.setAttribute("value",folder);
+    folderText.setAttribute( "value",folder );
+    if( showPopup )
+      folderText.setAttribute( "rootFolder", folder );
     if(!detect) {
       var useDefault = document.createElement("titledbutton");
       useDefault.setAttribute("value",bundle.GetStringFromName("useDefaultFolder"));
@@ -113,7 +118,8 @@ function getProfileDir(folder, showPopup)
       useDefault.setAttribute("onclick","UseDefaultFolder();");
       document.getElementById("folderbuttons").appendChild(useDefault);
       detect = true;
-    }
+      updateProfileName( document.getElementById("ProfileName") );
+     }
   }
 
   //resize the parent window, because the native file path
@@ -153,4 +159,15 @@ function ProfileNameExists()
   else
     parent.wizardManager.DoButtonEnabling( false, isNextAvailable, isFinishAvailable );
  */
+}
+
+function updateProfileName( aTextFieldElement )
+{
+  if( detect ) {
+    var folderDisplayElement = document.getElementById( "ProfileDir" );
+    var rootFolder = folderDisplayElement.getAttribute( "rootFolder" );
+    dump("*** rootFolder = " + rootFolder + "\n");
+    var stringValue = rootFolder + aTextFieldElement.value;
+    folderDisplayElement.setAttribute( "value", stringValue );
+  }
 }
