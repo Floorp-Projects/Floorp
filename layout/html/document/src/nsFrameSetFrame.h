@@ -208,7 +208,8 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics&     aDesiredSize);
 
-  PRInt32 GetBorderWidth(nsIPresContext* aPresContext);
+  PRInt32 GetBorderWidth(nsIPresContext* aPresContext,
+                         PRBool aTakeForcingIntoAccount);
 
   PRInt32 GetParentBorderWidth() { return mParentBorderWidth; }
 
