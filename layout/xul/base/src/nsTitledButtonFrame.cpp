@@ -1252,10 +1252,10 @@ nsTitledButtonFrame::MouseClicked (nsIPresContext* aPresContext)
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_ACTION;
-  event.isShift = false;
-  event.isControl = false;
-  event.isAlt = false;
-  event.isMeta = false;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
   event.clickCount = 0;
   event.widget = nsnull;
   mContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);

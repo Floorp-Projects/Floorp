@@ -503,10 +503,10 @@ nsPopupSetFrame::OnCreate(nsIContent* aPopupContent)
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_CREATE;
-  event.isShift = false;
-  event.isControl = false;
-  event.isAlt = false;
-  event.isMeta = false;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
   event.clickCount = 0;
   event.widget = nsnull;
 
@@ -526,10 +526,10 @@ nsPopupSetFrame::OnDestroy()
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_DESTROY;
-  event.isShift = false;
-  event.isControl = false;
-  event.isAlt = false;
-  event.isMeta = false;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
   event.clickCount = 0;
   event.widget = nsnull;
 
