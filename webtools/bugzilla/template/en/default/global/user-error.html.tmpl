@@ -186,6 +186,11 @@
     Sorry, you aren't a member of the 'editcomponents' group, and so
     you aren't allowed to add, modify or delete milestones.
 
+  [% ELSIF error == "auth_cant_edit_versions" %]
+    [% title = "Access Denied" %]
+    Sorry, you aren't a member of the 'editcomponents' group, and so
+    you aren't allowed to add, modify or delete versions.
+
   [% ELSIF error == "component_already_exists" %]
     [% title = "Component Already Exists" %]
     A component with the name '[% name FILTER html %]' already exists.
@@ -232,7 +237,8 @@
 
   [% ELSIF error == "product_not_specified" %]
     [% title = "No Product Specified" %]
-    No product specified when trying to edit components.
+    No product specified when trying to edit components, milestones or
+    versions.
 
   [% ELSIF error == "component_not_specified" %]
     [% title = "No Component Specified" %]
@@ -924,6 +930,33 @@
   [% ELSIF error == "unknown_tab" %]
     [% title = "Unknown Tab" %]
     <code>[% current_tab_name FILTER html %]</code> is not a legal tab name.
+
+  [% ELSIF error == "version_already_exists" %]
+    [% title = "Version Already Exists" %]
+    The version '[% name FILTER html %]' already exists for product '
+    [%- product FILTER html %]'.
+
+  [% ELSIF error == "version_blank_name" %]
+    [% title = "Blank Version Name Not Allowed" %]
+    You must enter a name for this version.
+
+  [% ELSIF error == "version_name_too_long" %]
+    [% title = "Version Name Is Too Long" %]
+    The name of a version is limited to 20 characters. 
+    '[% name FILTER html %]' is too long ([% name.length %] characters).
+
+  [% ELSIF error == "version_no_action" %]
+    [% title = "No valid action specified" %]
+    No valid action was specified when trying to edit versions.
+
+  [% ELSIF error == "version_not_specified" %]
+    [% title = "No Version Specified" %]
+    No version specified when trying to edit versions.
+
+  [% ELSIF error == "version_not_valid" %]
+    [% title = "Specified Version Does Not Exist" %]
+    The version '[% version FILTER html %]' for product 
+    '[% product FILTER html %]' does not exist.
 
   [% ELSIF error == "votes_must_be_nonnegative" %]
     [% title = "Votes Must Be Non-negative" %]

@@ -19,7 +19,8 @@
 # Rights Reserved.
 #
 # Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
-#               Terry Weissman <terry@mozilla.org>
+#                 Terry Weissman <terry@mozilla.org>
+#                 Gavin Shelley <bugzilla@chimpychompy.org>
 #
 #
 # Direct any questions on this source code to
@@ -35,6 +36,10 @@ require "globals.pl";
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 
+use vars qw($template $vars);
+
+my $cgi = Bugzilla->cgi;
+
 # TestProduct:  just returns if the specified product does exists
 # CheckProduct: same check, optionally  emit an error text
 # TestVersion:  just returns if the specified product/version combination exists
@@ -47,7 +52,7 @@ sub TestProduct ($)
     # does the product exist?
     SendSQL("SELECT name
              FROM products
-             WHERE name=" . SqlQuote($prod));
+             WHERE name = " . SqlQuote($prod));
     return FetchOneColumn();
 }
 
@@ -57,14 +62,13 @@ sub CheckProduct ($)
 
     # do we have a product?
     unless ($prod) {
-        print "Sorry, you haven't specified a product.";
-        PutTrailer();
+        ThrowUserError('product_not_specified');    
         exit;
     }
 
     unless (TestProduct $prod) {
-        print "Sorry, product '$prod' does not exist.";
-        PutTrailer();
+        ThrowUserError('product_doesnt_exist',
+                       {'product' => $prod});
         exit;
     }
 }
@@ -74,81 +78,33 @@ sub TestVersion ($$)
     my ($prod,$ver) = @_;
 
     # does the product exist?
-    SendSQL("SELECT products.name,value
+    SendSQL("SELECT products.name, value
              FROM versions, products
-             WHERE versions.product_id=products.id AND products.name=" . SqlQuote($prod) . " and value=" . SqlQuote($ver));
+             WHERE versions.product_id = products.id
+               AND products.name = " . SqlQuote($prod) . "
+               AND value = " . SqlQuote($ver));
     return FetchOneColumn();
 }
 
 sub CheckVersion ($$)
 {
-    my ($prod,$ver) = @_;
+    my ($prod, $ver) = @_;
 
     # do we have the version?
     unless ($ver) {
-        print "Sorry, you haven't specified a version.";
-        PutTrailer();
+        ThrowUserError('version_not_specified');
         exit;
     }
 
     CheckProduct($prod);
 
-    unless (TestVersion $prod,$ver) {
-        print "Sorry, version '$ver' for product '$prod' does not exist.";
-        PutTrailer();
+    unless (TestVersion $prod, $ver) {
+        ThrowUserError('version_not_valid',
+                       {'product' => $prod,
+                        'version' => $ver});
         exit;
     }
 }
-
-
-#
-# Displays the form to edit a version
-#
-
-sub EmitFormElements ($$)
-{
-    my ($product, $version) = @_;
-
-    print "  <TH ALIGN=\"right\">Version:</TH>\n";
-    print "  <TD><INPUT SIZE=64 MAXLENGTH=64 NAME=\"version\" VALUE=\"" .
-        value_quote($version) . "\">\n";
-    print "      <INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
-        value_quote($product) . "\"></TD>\n";
-}
-
-
-#
-# Displays a text like "a.", "a or b.", "a, b or c.", "a, b, c or d."
-#
-
-sub PutTrailer (@)
-{
-    my (@links) = ("Back to the <A HREF=\"query.cgi\">query page</A>", @_);
-    SendSQL("UNLOCK TABLES");
-
-    my $count = $#links;
-    my $num = 0;
-    print "<P>\n";
-    foreach (@links) {
-        print $_;
-        if ($num == $count) {
-            print ".\n";
-        }
-        elsif ($num == $count-1) {
-            print " or ";
-        }
-        else {
-            print ", ";
-        }
-        $num++;
-    }
-    PutFooter();
-}
-
-
-
-
-
 
 
 #
@@ -160,10 +116,7 @@ Bugzilla->login(LOGIN_REQUIRED);
 print Bugzilla->cgi->header();
 
 unless (UserInGroup("editcomponents")) {
-    PutHeader("Not allowed");
-    print "Sorry, you aren't a member of the 'editcomponents' group.\n";
-    print "And so, you aren't allowed to add, modify or delete versions.\n";
-    PutTrailer();
+    ThrowUserError('auth_cant_edit_versions');    
     exit;
 }
 
@@ -171,17 +124,9 @@ unless (UserInGroup("editcomponents")) {
 #
 # often used variables
 #
-my $cgi = Bugzilla->cgi;
 my $product = trim($cgi->param('product') || '');
 my $version = trim($cgi->param('version') || '');
 my $action  = trim($cgi->param('action')  || '');
-my $localtrailer;
-if ($version) {
-    $localtrailer = "<A HREF=\"editversions.cgi?product=" . url_quote($product) . "\">edit</A> more versions";
-} else {
-    $localtrailer = "<A HREF=\"editversions.cgi\">edit</A> more versions";
-}
-
 
 
 #
@@ -189,31 +134,29 @@ if ($version) {
 #
 
 unless ($product) {
-    PutHeader("Select product");
 
-    SendSQL("SELECT products.name,products.description,'xyzzy'
+    my @products = ();
+
+    SendSQL("SELECT products.name, products.description
              FROM products 
-             GROUP BY products.name
              ORDER BY products.name");
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
-    print "  <TH ALIGN=\"left\">Edit versions of ...</TH>\n";
-    print "  <TH ALIGN=\"left\">Description</TH>\n";
-    print "  <TH ALIGN=\"left\">Bugs</TH>\n";
-    #print "  <TH ALIGN=\"left\">Edit</TH>\n";
-    print "</TR>";
-    while ( MoreSQLData() ) {
-        my ($product, $description, $bugs) = FetchSQLData();
-        $description ||= "<FONT COLOR=\"red\">missing</FONT>";
-        $bugs ||= "none";
-        print "<TR>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editversions.cgi?product=", url_quote($product), "\"><B>$product</B></A></TD>\n";
-        print "  <TD VALIGN=\"top\">$description</TD>\n";
-        print "  <TD VALIGN=\"top\">$bugs</TD>\n";
-        #print "  <TD VALIGN=\"top\"><A HREF=\"editversions.cgi?action=edit&product=", url_quote($product), "\">Edit</A></TD>\n";
-    }
-    print "</TR></TABLE>\n";
 
-    PutTrailer();
+    while ( MoreSQLData() ) {
+        my ($product, $description) = FetchSQLData();
+
+        my $prod = {};
+
+        $prod->{'name'} = $product;
+        $prod->{'description'} = $description;
+
+        push(@products, $prod);
+    }
+
+    $vars->{'products'} = \@products;
+    $template->process("admin/versions/select-product.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 
@@ -222,34 +165,33 @@ unless ($product) {
 #
 
 unless ($action) {
-    PutHeader("Select version of $product");
+
     CheckProduct($product);
     my $product_id = get_product_id($product);
+    my @versions = ();
 
     SendSQL("SELECT value
              FROM versions
-             WHERE product_id=$product_id
+             WHERE product_id = $product_id
              ORDER BY value");
 
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
-    print "  <TH ALIGN=\"left\">Edit version ...</TH>\n";
-    #print "  <TH ALIGN=\"left\">Bugs</TH>\n";
-    print "  <TH ALIGN=\"left\">Action</TH>\n";
-    print "</TR>";
     while ( MoreSQLData() ) {
-        my $version = FetchOneColumn();
-        print "<TR>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editversions.cgi?product=", url_quote($product), "&version=", url_quote($version), "&action=edit\"><B>$version</B></A></TD>\n";
-        #print "  <TD VALIGN=\"top\">$bugs</TD>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editversions.cgi?product=", url_quote($product), "&version=", url_quote($version), "&action=del\"><B>Delete</B></A></TD>\n";
-        print "</TR>";
-    }
-    print "<TR>\n";
-    print "  <TD VALIGN=\"top\">Add a new version</TD>\n";
-    print "  <TD VALIGN=\"top\" ALIGN=\"middle\"><A HREF=\"editversions.cgi?product=", url_quote($product) . "&action=add\">Add</A></TD>\n";
-    print "</TR></TABLE>\n";
+        my $name = FetchOneColumn();
 
-    PutTrailer();
+        my $version = {};
+
+        $version->{'name'} = $name;
+
+        push(@versions, $version);
+
+    }
+
+    $vars->{'product'} = $product;
+    $vars->{'versions'} = \@versions;
+    $template->process("admin/versions/list.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 
@@ -263,25 +205,15 @@ unless ($action) {
 #
 
 if ($action eq 'add') {
-    PutHeader("Add version of $product");
+
     CheckProduct($product);
     my $product_id = get_product_id($product);
 
-    #print "This page lets you add a new version to a bugzilla-tracked product.\n";
+    $vars->{'product'} = $product;
+    $template->process("admin/versions/create.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
 
-    print "<FORM METHOD=POST ACTION=editversions.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
-
-    EmitFormElements($product, $version);
-
-    print "</TABLE>\n<HR>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
-    print "</FORM>";
-
-    my $other = $localtrailer;
-    $other =~ s/more/other/;
-    PutTrailer($other);
     exit;
 }
 
@@ -292,36 +224,40 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-    PutHeader("Adding new version");
+
     CheckProduct($product);
     my $product_id = get_product_id($product);
 
     # Cleanups and valididy checks
 
     unless ($version) {
-        print "You must enter a text for the new version. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
+        ThrowUserError('version_blank_name',
+                       {'name' => $version});
         exit;
     }
+
     if (TestVersion($product,$version)) {
-        print "The version '$version' already exists. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
+        ThrowUserError('version_already_exists',
+                       {'name' => $version,
+                        'product' => $product});
         exit;
     }
 
     # Add the new version
     SendSQL("INSERT INTO versions ( " .
-          "value, product_id" .
-          " ) VALUES ( " .
-          SqlQuote($version) . ", $product_id)");
+            "value, product_id" .
+            " ) VALUES ( " .
+            SqlQuote($version) . ", $product_id)");
 
     # Make versioncache flush
     unlink "$datadir/versioncache";
 
-    print "OK, done.<p>\n";
-    PutTrailer("<A HREF=\"editversions.cgi?product=$product&amp;action=add\">add</a> another version or $localtrailer");
+    $vars->{'name'} = $version;
+    $vars->{'product'} = $product;
+    $template->process("admin/versions/created.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 
@@ -335,7 +271,7 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-    PutHeader("Delete version of $product");
+
     CheckVersion($product, $version);
     my $product_id = get_product_id($product);
 
@@ -343,52 +279,15 @@ if ($action eq 'del') {
              FROM bugs
              WHERE product_id = $product_id
                AND version = " . SqlQuote($version));
-    my $bugs = FetchOneColumn();
+    my $bugs = FetchOneColumn() || 0;
 
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
-    print "<TR BGCOLOR=\"#6666FF\">\n";
-    print "  <TH VALIGN=\"top\" ALIGN=\"left\">Part</TH>\n";
-    print "  <TH VALIGN=\"top\" ALIGN=\"left\">Value</TH>\n";
+    $vars->{'bug_count'} = $bugs;
+    $vars->{'name'} = $version;
+    $vars->{'product'} = $product;
+    $template->process("admin/versions/confirm-delete.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
 
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"left\" VALIGN=\"top\">Product:</TH>\n";
-    print "  <TD VALIGN=\"top\">$product</TD>\n";
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"left\" VALIGN=\"top\">Version:</TH>\n";
-    print "  <TD VALIGN=\"top\">$version</TD>\n";
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"left\" VALIGN=\"top\">Bugs:</TH>\n";
-    print "  <TD VALIGN=\"top\">", $bugs || 'none' , "</TD>\n";
-    print "</TR></TABLE>\n";
-
-    print "<H2>Confirmation</H2>\n";
-
-    if ($bugs) {
-        if (!Param("allowbugdeletion")) {
-            print "Sorry, there are $bugs bugs outstanding for this version.
-You must reassign those bugs to another version before you can delete this
-one.";
-            PutTrailer($localtrailer);
-            exit;
-        }
-        print "<TABLE BORDER=0 CELLPADDING=20 WIDTH=\"70%\" BGCOLOR=\"red\"><TR><TD>\n",
-              "There are bugs entered for this version!  When you delete this ",
-              "version, <B><BLINK>all</BLINK></B> stored bugs will be deleted, too. ",
-              "You could not even see the bug history for this version anymore!\n",
-              "</TD></TR></TABLE>\n";
-    }
-
-    print "<P>Do you really want to delete this version?<P>\n";
-    print "<FORM METHOD=POST ACTION=editversions.cgi>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Yes, delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
-        value_quote($product) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"version\" VALUE=\"" .
-        value_quote($version) . "\">\n";
-    print "</FORM>";
-
-    PutTrailer($localtrailer);
     exit;
 }
 
@@ -399,7 +298,7 @@ one.";
 #
 
 if ($action eq 'delete') {
-    PutHeader("Deleting version of $product");
+
     CheckVersion($product,$version);
     my $product_id = get_product_id($product);
 
@@ -417,37 +316,48 @@ if ($action eq 'delete') {
 
     if (Param("allowbugdeletion")) {
 
+        my $deleted_bug_count = 0;
+
         SendSQL("SELECT bug_id
-             FROM bugs
-             WHERE product_id=$product_id
-               AND version=" . SqlQuote($version));
+                 FROM bugs
+                 WHERE product_id = $product_id
+                   AND version = " . SqlQuote($version));
         while (MoreSQLData()) {
             my $bugid = FetchOneColumn();
 
             PushGlobalSQLState();
-            SendSQL("DELETE FROM attachments WHERE bug_id=$bugid");
-            SendSQL("DELETE FROM bugs_activity WHERE bug_id=$bugid");
-            SendSQL("DELETE FROM dependencies WHERE blocked=$bugid");
+            SendSQL("DELETE FROM attachments WHERE bug_id = $bugid");
+            SendSQL("DELETE FROM bugs_activity WHERE bug_id = $bugid");
+            SendSQL("DELETE FROM dependencies WHERE blocked = $bugid");
             PopGlobalSQLState();
-        }
-        print "Attachments, bug activity and dependencies deleted.<BR>\n";
 
+            $deleted_bug_count++;
+        }
+
+        $vars->{'deleted_bug_count'} = $deleted_bug_count;
 
         # Deleting the rest is easier:
 
         SendSQL("DELETE FROM bugs
-             WHERE product_id = $product_id
-               AND version=" . SqlQuote($version));
-        print "Bugs deleted.<BR>\n";
+                 WHERE product_id = $product_id
+                   AND version = " . SqlQuote($version));
+
     }
 
     SendSQL("DELETE FROM versions
              WHERE product_id = $product_id
-               AND value=" . SqlQuote($version));
-    print "Version deleted.<P>\n";
+               AND value = " . SqlQuote($version));
+
+    SendSQL("UNLOCK TABLES;");
 
     unlink "$datadir/versioncache";
-    PutTrailer($localtrailer);
+
+    $vars->{'name'} = $version;
+    $vars->{'product'} = $product;
+    $template->process("admin/versions/deleted.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 
@@ -460,27 +370,17 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit') {
-    PutHeader("Edit version of $product");
+
     CheckVersion($product,$version);
     my $product_id = get_product_id($product);
 
-    print "<FORM METHOD=POST ACTION=editversions.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
+    $vars->{'name'} = $version;
+    $vars->{'product'} = $product;
 
-    EmitFormElements($product, $version);
+    $template->process("admin/versions/edit.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
 
-    print "</TR></TABLE>\n";
-
-    print "<INPUT TYPE=HIDDEN NAME=\"versionold\" VALUE=\"" .
-        value_quote($version) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
-
-    print "</FORM>";
-
-    my $other = $localtrailer;
-    $other =~ s/more/other/;
-    PutTrailer($other);
     exit;
 }
 
@@ -491,7 +391,6 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-    PutHeader("Update version of $product");
 
     my $versionold = trim($cgi->param('versionold') || '');
 
@@ -507,13 +406,16 @@ if ($action eq 'update') {
 
     if ($version ne $versionold) {
         unless ($version) {
-            print "Sorry, I can't delete the version text.";
-            PutTrailer($localtrailer);
+            SendSQL('UNLOCK TABLES'); 
+            ThrowUserError('version_blank_name');
             exit;
         }
         if (TestVersion($product,$version)) {
-            print "Sorry, version '$version' is already in use.";
-            PutTrailer($localtrailer);
+            SendSQL('UNLOCK TABLES'); 
+            ThrowUserError('version_already_exists',
+                           {'name' => $version,
+                            'product' => $product});
+
             exit;
         }
         SendSQL("UPDATE bugs
@@ -522,14 +424,22 @@ if ($action eq 'update') {
                  WHERE version=" . SqlQuote($versionold) . "
                    AND product_id = $product_id");
         SendSQL("UPDATE versions
-                 SET value=" . SqlQuote($version) . "
+                 SET value = " . SqlQuote($version) . "
                  WHERE product_id = $product_id
-                   AND value=" . SqlQuote($versionold));
+                   AND value = " . SqlQuote($versionold));
         unlink "$datadir/versioncache";
-        print "Updated version.<BR>\n";
+
+        $vars->{'updated_name'} = 1;
     }
 
-    PutTrailer($localtrailer);
+    SendSQL('UNLOCK TABLES'); 
+
+    $vars->{'name'} = $version;
+    $vars->{'product'} = $product;
+    $template->process("admin/versions/updated.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 
@@ -538,6 +448,4 @@ if ($action eq 'update') {
 #
 # No valid action found
 #
-
-PutHeader("Error");
-print "I don't have a clue what you want.<BR>\n";
+ThrowUserError('version_no_action');

@@ -589,6 +589,14 @@
   'deleted_bug_count'
 ],
 
+'admin/versions/confirm-delete.html.tmpl' => [
+  'bug_count'
+],
+
+'admin/versions/deleted.html.tmpl' => [
+  'deleted_bug_count'
+],
+
 'account/login.html.tmpl' => [
   'target', 
 ],
