@@ -235,14 +235,6 @@
        I could not figure out what you wanted to do.
     [% END %]
 
-  [% ELSIF error == "unknown_component" %]
-    [% title = "Unknown Component" %]
-    There is no component named <em>[% component FILTER html %]</em>.
-
-  [% ELSIF error == "unknown_product" %]
-    [% title = "Unknown Product" %]
-    There is no product named <em>[% product FILTER html %]</em>.
-
   [% ELSE %]
     [% title = "Internal error" %]
     An internal error has occured, but [% terms.Bugzilla %] doesn't know

@@ -170,10 +170,11 @@ sub queue {
                     push(@criteria, "bugs.component_id = $component_id");
                     push(@excluded_columns, 'component') unless $cgi->param('do_union');
                 }
-                else { ThrowCodeError("unknown_component", { component => $cgi->param('component') }) }
+                else { ThrowUserError("component_not_valid", { 'product' => $cgi->param('product'),
+                                                               'name' => $cgi->param('component') }) }
             }
         }
-        else { ThrowCodeError("unknown_product", { product => $cgi->param('product') }) }
+        else { ThrowUserError("product_doesnt_exist", { 'product' => $cgi->param('product') }) }
     }
     
     # Filter results by flag types.
