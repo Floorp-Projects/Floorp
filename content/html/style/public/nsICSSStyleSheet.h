@@ -29,6 +29,7 @@ class nsICSSRule;
 class nsIDOMNode;
 class nsINameSpace;
 class nsICSSStyleRuleProcessor;
+class nsIMediaList;
 
 // IID for the nsICSSStyleSheet interface {8f83b0f0-b21a-11d1-8031-006008159b5a}
 #define NS_ICSS_STYLE_SHEET_IID     \

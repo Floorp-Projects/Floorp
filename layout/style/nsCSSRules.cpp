@@ -38,6 +38,10 @@
 #include "nsISizeOfHandler.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSRule.h"
+#include "nsIDOMCSSImportRule.h"
+#include "nsIMediaList.h"
+#include "nsIDOMMediaList.h"
+#include "nsIDOMStyleSheet.h"
 
 #include "nsContentUtils.h"
 
@@ -253,6 +257,8 @@ CSSCharsetRuleImpl::SetCssText(const nsAReadableString& aCssText)
 NS_IMETHODIMP
 CSSCharsetRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
+  NS_ENSURE_ARG_POINTER(aSheet);
+
   if (mSheet) {
     return CallQueryInterface(mSheet, aSheet);
   }
@@ -273,7 +279,7 @@ CSSCharsetRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 //
 class CSSImportRuleImpl : public nsCSSRule,
                           public nsICSSImportRule,
-                          public nsIDOMCSSRule
+                          public nsIDOMCSSImportRule
 {
 public:
   CSSImportRuleImpl(void);
@@ -299,27 +305,42 @@ public:
 
   NS_IMETHOD SetMedia(const nsString& aMedia);
   NS_IMETHOD GetMedia(nsString& aMedia) const;
+
+  NS_IMETHOD SetSheet(nsICSSStyleSheet*);
   
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
 
+  // nsIDOMCSSImportRule interface
+  NS_DECL_NSIDOMCSSIMPORTRULE
+
 protected:
   nsString  mURLSpec;
-  nsString  mMedia;
+  nsCOMPtr<nsIMediaList> mMedia;
+  nsCOMPtr<nsICSSStyleSheet> mChildSheet;
 };
 
 CSSImportRuleImpl::CSSImportRuleImpl(void)
   : nsCSSRule(),
-    mURLSpec(),
-    mMedia()
+    mURLSpec()
 {
+  NS_NewMediaList(getter_AddRefs(mMedia));
 }
 
 CSSImportRuleImpl::CSSImportRuleImpl(const CSSImportRuleImpl& aCopy)
   : nsCSSRule(aCopy),
-    mURLSpec(aCopy.mURLSpec),
-    mMedia(aCopy.mMedia)
+    mURLSpec(aCopy.mURLSpec)
 {
+  
+  if (aCopy.mChildSheet) {
+    aCopy.mChildSheet->Clone(*getter_AddRefs(mChildSheet));
+  }
+
+  NS_NewMediaList(getter_AddRefs(mMedia));
+  
+  if (aCopy.mMedia && mMedia) {
+      mMedia->AppendElement(aCopy.mMedia);
+  }
 }
 
 CSSImportRuleImpl::~CSSImportRuleImpl(void)
@@ -335,6 +356,7 @@ NS_INTERFACE_MAP_BEGIN(CSSImportRuleImpl)
   NS_INTERFACE_MAP_ENTRY(nsICSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSImportRule)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSImportRule)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(CSSImportRule)
 NS_INTERFACE_MAP_END
@@ -351,7 +373,9 @@ CSSImportRuleImpl::List(FILE* out, PRInt32 aIndent) const
   fputs(mURLSpec, out);
   fputs("\" ", out);
 
-  fputs(mMedia, out);
+  nsAutoString mediaText;
+  mMedia->GetMediaText(mediaText);
+  fputs(mediaText, out);
   fputs("\n", out);
 
   return NS_OK;
@@ -361,8 +385,7 @@ CSSImportRuleImpl::List(FILE* out, PRInt32 aIndent) const
 * SizeOf method:
 *
 *  Self (reported as CSSImportRuleImpl's size): 
-*    1) sizeof(*this) + the size of the mURLSpec string + 
-*       the size of the mMedia string
+*    1) sizeof(*this) + the size of the mURLSpec string
 *
 *  Contained / Aggregated data (not reported as CSSImportRuleImpl's size):
 *    none
@@ -393,9 +416,6 @@ void CSSImportRuleImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize
   mURLSpec.SizeOf(aSizeOfHandler, &localSize);
   aSize += localSize;
   aSize -= sizeof(mURLSpec); // counted in sizeof(*this) and nsString->SizeOf()
-  mMedia.SizeOf(aSizeOfHandler, &localSize);
-  aSize += localSize;
-  aSize -= sizeof(mMedia); // counted in sizeof(*this) and nsString->SizeOf()
   aSizeOfHandler->AddSize(tag,aSize);
 
 }
@@ -435,14 +455,41 @@ CSSImportRuleImpl::GetURLSpec(nsString& aURLSpec) const
 NS_IMETHODIMP
 CSSImportRuleImpl::SetMedia(const nsString& aMedia)
 {
-  mMedia = aMedia;
-  return NS_OK;
+  if (mMedia) {
+    return mMedia->SetMediaText(aMedia);
+  } else {
+    return NS_OK;
+  }
 }
 
 NS_IMETHODIMP
 CSSImportRuleImpl::GetMedia(nsString& aMedia) const
 {
-  aMedia = mMedia;
+  if (mMedia) {
+    return mMedia->GetMediaText(aMedia);
+  } else {
+    aMedia.Truncate();
+    return NS_OK;
+  }
+}
+
+NS_IMETHODIMP
+CSSImportRuleImpl::SetSheet(nsICSSStyleSheet* aSheet)
+{
+  nsresult rv;
+  NS_ENSURE_ARG_POINTER(aSheet);
+  
+  // set the new sheet
+  mChildSheet = aSheet;
+
+  // set our medialist to be the same as the sheet's medialist
+  nsCOMPtr<nsIDOMStyleSheet> sheet(do_QueryInterface(mChildSheet, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMMediaList> mediaList;
+  rv = sheet->GetMedia(getter_AddRefs(mediaList));
+  NS_ENSURE_SUCCESS(rv, rv);
+  mMedia = do_QueryInterface(mediaList);
+  
   return NS_OK;
 }
 
@@ -451,9 +498,7 @@ NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult,
                     const nsString& aURLSpec,
                     const nsString& aMedia)
 {
-  if (! aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
   CSSImportRuleImpl* it = new CSSImportRuleImpl();
 
@@ -469,6 +514,7 @@ NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult,
 NS_IMETHODIMP
 CSSImportRuleImpl::GetType(PRUint16* aType)
 {
+  NS_ENSURE_ARG_POINTER(aType);
   *aType = nsIDOMCSSRule::IMPORT_RULE;
   return NS_OK;
 }
@@ -478,8 +524,15 @@ CSSImportRuleImpl::GetCssText(nsAWritableString& aCssText)
 {
   aCssText.Assign(NS_LITERAL_STRING("@import url("));
   aCssText.Append(mURLSpec);
-  aCssText.Append(NS_LITERAL_STRING(") "));
-  aCssText.Append(mMedia);
+  aCssText.Append(NS_LITERAL_STRING(")"));
+  if (mMedia) {
+    nsAutoString mediaText;
+    mMedia->GetMediaText(mediaText);
+    if (!mediaText.IsEmpty()) {
+      aCssText.Append(NS_LITERAL_STRING(" "));
+      aCssText.Append(mediaText);
+    }
+  }
   aCssText.Append(NS_LITERAL_STRING(";"));
   return NS_OK;
 }
@@ -493,6 +546,7 @@ CSSImportRuleImpl::SetCssText(const nsAReadableString& aCssText)
 NS_IMETHODIMP
 CSSImportRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
+  NS_ENSURE_ARG_POINTER(aSheet);
   if (mSheet) {
     return CallQueryInterface(mSheet, aSheet);
   }
@@ -506,6 +560,36 @@ CSSImportRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+CSSImportRuleImpl::GetHref(nsAWritableString & aHref)
+{
+  aHref = mURLSpec;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSImportRuleImpl::GetMedia(nsIDOMMediaList * *aMedia)
+{
+  NS_ENSURE_ARG_POINTER(aMedia);
+  if (!mMedia) {
+    *aMedia = nsnull;
+    return NS_OK;
+  }
+
+  return CallQueryInterface(mMedia, aMedia);
+}
+
+NS_IMETHODIMP
+CSSImportRuleImpl::GetStyleSheet(nsIDOMCSSStyleSheet * *aStyleSheet)
+{
+  NS_ENSURE_ARG_POINTER(aStyleSheet);
+  if (!mChildSheet) {
+    *aStyleSheet = nsnull;
+    return NS_OK;
+  }
+
+  return CallQueryInterface(mChildSheet, aStyleSheet);
+}
 
 // -------------------------------------------
 // nsICSSMediaRule
