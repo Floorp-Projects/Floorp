@@ -159,24 +159,19 @@ char *strtoken_r(char ** stringp, const char *delim, PRInt32 skip)
 
 	/*
 	 * Scan token (scan for delimiters: s += strcspn(s, delim), sort of).
-	 * Note that delim must have one NUL; we stop if we see that, too.
 	 */
-	for (tok = s;;) {
-		c = *s++;
-		spanp = delim;
-		do {
-			if ((sc = *spanp++) == c) {
-				if (c == 0)
-					s = NULL;
-				else
-					s[-1] = 0;
+       tok = s;
+       while ((c = *s++)) {
+           for (spanp = delim; (sc = *spanp++);) {
+               if (sc == c) {
+                                       s[-1] = 0;
 				*stringp = s;
 				return( (char *) tok );
 			}
-		} while (sc != 0);
-	}
-	/* NOTREACHED */
-	return (NULL);
+            }
+       }
+       *stringp = NULL;
+       return( (char *) tok );
 }
 
 
