@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <assert.h>
+#include <stdio.h>
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 
