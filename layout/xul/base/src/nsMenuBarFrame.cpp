@@ -122,10 +122,6 @@ nsMenuBarFrame::Init(nsIPresContext*  aPresContext,
   // Also hook up the listener to the window listening for focus events. This is so we can keep proper
   // state as the user alt-tabs through processes.
   
-  target->AddEventListener("blur", (nsIDOMFocusListener*)mMenuBarListener, PR_FALSE);
-  
-  target->AddEventListener("mousedown", (nsIDOMMouseListener*)mMenuBarListener, PR_FALSE);
-
   target->AddEventListener("keypress", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE); 
   target->AddEventListener("keydown", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
   target->AddEventListener("keyup", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);   
@@ -608,10 +604,6 @@ nsMenuBarFrame::IsDisabled(nsIContent* aContent)
 NS_IMETHODIMP
 nsMenuBarFrame::Destroy(nsIPresContext* aPresContext)
 {
-  mTarget->RemoveEventListener("blur", (nsIDOMFocusListener*)mMenuBarListener, PR_FALSE); 
-  
-  mTarget->RemoveEventListener("mousedown", (nsIDOMMouseListener*)mMenuBarListener, PR_FALSE); 
-
   mTarget->RemoveEventListener("keypress", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE); 
   mTarget->RemoveEventListener("keydown", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
   mTarget->RemoveEventListener("keyup", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);
