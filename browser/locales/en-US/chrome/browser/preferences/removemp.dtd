@@ -1,0 +1,6 @@
+<!ENTITY removePassword.title              "Remove Master Password">
+<!ENTITY removeInfo.label                  "You must enter your current password to proceed:">
+<!ENTITY removeWarning1.label              "Your Master Password is used to protect sensitive information like site passwords.">
+<!ENTITY removeWarning2.label              "If you remove your Master Password your information will not be protected if your computer is compromised.">
+<!ENTITY setPassword.oldPassword.label     "Current password:">
+

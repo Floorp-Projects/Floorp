@@ -26,6 +26,8 @@
 <!ENTITY  masterPassword.intro        "When set, the Master Password protects all your passwords - but you must enter it once per session.">
 <!ENTITY  setMasterPassword.label     "Master Password">
 <!ENTITY  setMasterPassword.accesskey "M">
+<!ENTITY  removeMasterPassword.label  "Remove Master Password...">
+<!ENTITY  removeMasterPassword.accesskey "R">
 <!ENTITY  viewPasswords.label         "View Saved Passwords">
 <!ENTITY  viewPasswords.accesskey     "V">
 
