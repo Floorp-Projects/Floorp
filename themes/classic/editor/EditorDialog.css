@@ -25,7 +25,6 @@
    THIS FILE IS LOCKED DOWN.  YOU ARE NOT ALLOWED TO MODIFY IT WITHOUT FIRST HAVING YOUR
    CHANGES REVIEWED BY cmanske@netscape.com.
 */
-/* Most should be moved to global files */
 
 /* The defaults are WAY to big! */
 titledbox {
@@ -78,7 +77,6 @@ titledbox {
 .wrap {
  width: 1em;
 }
-/* end of "should be in global.css" */
 
 .color-well {
   width:20px;
@@ -222,21 +220,22 @@ tree.list {
   min-height: 10px;
 }
 
-#img-align-top {
+.img-align-top {
 	list-style-image:url("chrome://editor/skin/images/img-align-top.gif");
 }
-#img-align-middle {
+.img-align-middle {
 	list-style-image:url("chrome://editor/skin/images/img-align-middle.gif");
 }
-#img-align-bottom {
+.img-align-bottom {
 	list-style-image:url("chrome://editor/skin/images/img-align-bottom.gif");
 }
-#img-align-right {
+.img-align-right {
 	list-style-image:url("chrome://editor/skin/images/img-align-right.gif");
 }
-#img-align-left {
+.img-align-left {
 	list-style-image:url("chrome://editor/skin/images/img-align-left.gif");
 }
+
 
 /* Rest are from Ben Goodger for Advanced Edit dialog 
    These need reviewing and eliminate all but essential attributes */
