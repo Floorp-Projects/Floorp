@@ -485,10 +485,7 @@ const int kReuseWindowOnAE = 2;
         if ([urlArray count] == 0)
             return;
         NSURL* url = [urlArray objectAtIndex: 0];
-        // ----------------------
         [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
-        // ----------------------
-
         BrowserWindowController* browserController = [self getMainWindowBrowserController];
         if (browserController)
           [browserController loadURL:[url absoluteString] referrer:nil activate:YES];
@@ -660,10 +657,11 @@ const int kReuseWindowOnAE = 2;
     if (![browserWindow isMainWindow])
       [browserWindow makeKeyAndOrderFront:self];
     
-    [[browserWindow windowController] home: aSender];
+    [[browserWindow windowController] home:aSender];
   }
   else {
-      [self newWindow:self];  
+    // explicity open the home page to work around "load home page in new window" pref
+    [self openBrowserWindowWithURL:(mStartURL ? mStartURL : [[PreferenceManager sharedInstance] homePage:NO]) andReferrer:nil behind:nil];
   }
 }
 
