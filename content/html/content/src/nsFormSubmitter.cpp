@@ -428,7 +428,8 @@ nsFormSubmitter::OnSubmit(nsIForm* form,
           NS_NewLocalFileInputStream(getter_AddRefs(rawStream),
                                      multipartDataFile,
                                      PR_RDONLY,
-                                     0600);
+                                     0600,
+                                     PR_TRUE);
           if (rawStream) {
               NS_NewBufferedInputStream(getter_AddRefs(postDataStream),
                                         rawStream, 8192);

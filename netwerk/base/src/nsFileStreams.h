@@ -110,6 +110,9 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 protected:
     nsLineBuffer * mLineBuffer;
+#if !defined(XP_UNIX) && !defined(XP_WIN)
+    nsCOMPtr<nsIFile> mFileToDelete;
+#endif
 };
 
 ////////////////////////////////////////////////////////////////////////////////

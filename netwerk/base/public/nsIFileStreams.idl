@@ -44,18 +44,34 @@ interface nsIFile;
 [scriptable, uuid(e3d56a20-c7ec-11d3-8cda-0060b0fc14a3)]
 interface nsIFileInputStream : nsIInputStream
 {
-    void init(in nsIFile file, in long ioFlags, in long perm);
+    /**
+     * @param file          - file to read from (must QI to nsILocalFile)
+     * @param ioFlags       - file open flags listed in prio.h
+     * @param perm          - file mode bits listed in prio.h
+     * @param deleteOnClose - if true, the file is deleted from the filesystem
+     *                        after the file stream is closed.
+     */
+    void init(in nsIFile file, in long ioFlags, in long perm, in boolean deleteOnClose);
 };
 
 [scriptable, uuid(e6f68040-c7ec-11d3-8cda-0060b0fc14a3)]
 interface nsIFileOutputStream : nsIOutputStream
 {
+    /**
+     * @param file          - file to write to (must QI to nsILocalFile)
+     * @param ioFlags       - file open flags listed in prio.h
+     * @param perm          - file mode bits listed in prio.h
+     */
     void init(in nsIFile file, in long ioFlags, in long perm);
 };
 
 [scriptable, uuid(616f5b48-da09-11d3-8cda-0060b0fc14a3)]
 interface nsIBufferedInputStream : nsIInputStream
 {
+    /**
+     * @param fillFromStream - add buffering to this stream
+     * @param bufferSize     - specifies the maximum buffer size
+     */
     void init(in nsIInputStream fillFromStream,
               in unsigned long bufferSize);
 };
@@ -63,6 +79,10 @@ interface nsIBufferedInputStream : nsIInputStream
 [scriptable, uuid(6476378a-da09-11d3-8cda-0060b0fc14a3)]
 interface nsIBufferedOutputStream : nsIOutputStream
 {
+    /**
+     * @param sinkToStream - add buffering to this stream
+     * @param bufferSize   - specifies the maximum buffer size
+     */
     void init(in nsIOutputStream sinkToStream,
               in unsigned long bufferSize);
 };
@@ -155,7 +175,8 @@ inline nsresult
 NS_NewLocalFileInputStream(nsIInputStream* *result,
                            nsIFile* file, 
                            PRInt32 ioFlags = -1,
-                           PRInt32 perm = -1)
+                           PRInt32 perm = -1,
+                           PRBool deleteOnClose = PR_FALSE)
 {
     nsresult rv;
     nsCOMPtr<nsIFileInputStream> in;
@@ -165,7 +186,7 @@ NS_NewLocalFileInputStream(nsIInputStream* *result,
                                             NS_GET_IID(nsIFileInputStream),
                                             getter_AddRefs(in));
     if (NS_FAILED(rv)) return rv;
-    rv = in->Init(file, ioFlags, perm);
+    rv = in->Init(file, ioFlags, perm, deleteOnClose);
     if (NS_FAILED(rv)) return rv;
 
     *result = in;

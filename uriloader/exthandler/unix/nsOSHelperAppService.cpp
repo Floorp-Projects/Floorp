@@ -334,7 +334,7 @@ CreateInputStream(const nsAString& aFilename,
   nsCOMPtr<nsIFileInputStream> fileStream(do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
-  rv = fileStream->Init(file, -1, -1);
+  rv = fileStream->Init(file, -1, -1, PR_FALSE);
   if (NS_FAILED(rv))
     return rv;
 
@@ -903,7 +903,7 @@ GetHandlerAndDescriptionFromMailcapFile(const nsAString& aFilename,
   nsCOMPtr<nsIFileInputStream> mailcapFile(do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
-  rv = mailcapFile->Init(file, -1, -1);
+  rv = mailcapFile->Init(file, -1, -1, PR_FALSE);
   if (NS_FAILED(rv))
     return rv;
 
