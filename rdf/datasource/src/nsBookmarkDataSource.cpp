@@ -31,6 +31,9 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
+#include "nsFileSpec.h"
+#include "nsFileStream.h"
+#include "nsSpecialSystemDirectory.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -125,7 +128,7 @@ public:
     BookmarkParser(void);
     ~BookmarkParser();
 
-    nsresult Parse(PRFileDesc* file, nsIRDFDataSource* dataSource);
+    nsresult Parse(nsInputFileStream& aInputStream, nsIRDFDataSource* dataSource);
 };
 
 
@@ -191,14 +194,10 @@ BookmarkParser::~BookmarkParser(void)
 
 
 nsresult
-BookmarkParser::Parse(PRFileDesc* file, nsIRDFDataSource* dataSource)
+BookmarkParser::Parse(nsInputFileStream& aStream, nsIRDFDataSource* aDataSource)
 {
-    NS_PRECONDITION(file != nsnull, "null ptr");
-    if (! file)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(dataSource != nsnull, "null ptr");
-    if (! dataSource)
+    NS_PRECONDITION(aDataSource != nsnull, "null ptr");
+    if (! aDataSource)
         return NS_ERROR_NULL_POINTER;
 
     NS_PRECONDITION(gRDFService != nsnull, "not initialized");
@@ -206,34 +205,17 @@ BookmarkParser::Parse(PRFileDesc* file, nsIRDFDataSource* dataSource)
         return NS_ERROR_NOT_INITIALIZED;
 
     // Initialize the parser for a run...
-    mDataSource = dataSource;
+    mDataSource = aDataSource;
     mState = eBookmarkParserState_Initial;
     mCounter = 0;
     mLastItem = nsnull;
     mLine.Truncate();
 
-    char buf[1024];
-    PRInt32 len;
-
-    nsresult rv;
-    while ((len = PR_Read(file, buf, sizeof(buf))) > 0) {
-        if (NS_FAILED(rv = Tokenize(buf, len))) {
-            NS_ERROR("error tokenizing");
-            break;
-        }
-    }
-
-    NS_IF_RELEASE(mLastItem);
-    return rv;
-}
-
-
-nsresult
-BookmarkParser::Tokenize(const char* buf, PRInt32 size)
-{
-    nsresult rv;
-    for (PRInt32 i = 0; i < size; ++i) {
-        char c = buf[i];
+	// tokenize the input stream.
+	// XXX this needs to handle quotes, etc. it'd be nice to use the real parser for this...
+	while (! aStream.eof() && ! aStream.failed()) {
+		nsresult rv = NS_OK;
+        char c = aStream.get();
         if (c == '<') {
             if (mLine.Length() > 0) {
                 rv = NextToken();
@@ -247,9 +229,16 @@ BookmarkParser::Tokenize(const char* buf, PRInt32 size)
                 mLine.Truncate();
             }
         }
-    }
-    return rv;
+        if (NS_FAILED(rv)) {
+        	NS_ERROR("error parsing bookmarks file");
+        	return rv;
+        }
+	}
+
+    NS_IF_RELEASE(mLastItem);
+    return NS_OK;
 }
+
 
 
 nsresult
@@ -605,15 +594,6 @@ public:
 
 ////////////////////////////////////////////////////////////////////////
 
-// XXX we should get this from prefs.
-#if defined(XP_MAC)
-const char* BookmarkDataSourceImpl::kBookmarksFilename = "/usr/local/netscape/bin/res/rdf/bookmarks.html";
-#elif defined(XP_PC)
-const char* BookmarkDataSourceImpl::kBookmarksFilename = "res\\rdf\\bookmarks.html";
-#elif defined(XP_UNIX)
-const char* BookmarkDataSourceImpl::kBookmarksFilename = "res/rdf/bookmarks.html";
-#endif
-
 BookmarkDataSourceImpl::BookmarkDataSourceImpl(void)
 {
     // XXX rvg there should be only one instance of this class. 
@@ -697,14 +677,24 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 {
     nsresult rv = NS_ERROR_FAILURE;
 
-    PRFileDesc* f;
-    if ((f = PR_Open(kBookmarksFilename, PR_RDONLY, 0644)) != nsnull) {
-        BookmarkParser parser;
-        rv = parser.Parse(f, this);
-        PR_Close(f);
-    }
 
-    return rv;
+	nsSpecialSystemDirectory bookmarksFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+
+	// XXX we should get this from prefs.
+    bookmarksFile += "res";
+    bookmarksFile += "rdf";
+    bookmarksFile += "bookmarks.html";
+
+	nsInputFileStream strm(bookmarksFile);
+
+	if (! strm.is_open()) {
+		NS_ERROR("unable to open file");
+		return NS_ERROR_FAILURE;
+	}
+
+	BookmarkParser parser;
+	parser.Parse(strm, this);
+	return NS_OK;	
 }
 
 
