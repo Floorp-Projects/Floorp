@@ -895,6 +895,8 @@ toolkit/components/passwordmgr/Makefile
 toolkit/components/passwordmgr/base/Makefile
 toolkit/components/passwordmgr/resources/Makefile
 toolkit/components/printing/Makefile
+toolkit/components/profile/Makefile
+toolkit/components/profile/public/Makefile
 toolkit/components/satchel/Makefile
 toolkit/components/satchel/public/Makefile
 toolkit/components/satchel/src/Makefile

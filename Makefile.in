@@ -198,6 +198,10 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 tier_9_dirs	+= xpfe/bootstrap/appleevents
 endif
 
+ifdef MOZ_PHOENIX
+tier_9_dirs	+= toolkit/components/profile/public
+endif
+
 tier_9_dirs	+= \
 		xpfe/appshell \
 		xpfe/browser/public \
