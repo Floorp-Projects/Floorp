@@ -256,9 +256,9 @@ protected:
                          nsIAtom** aAttribute);
 
     // RDF-specific parsing
-    nsresult GetIdAboutAttribute(const nsIParserNode& aNode, nsIRDFResource** aResource);
+    nsresult GetIdAboutAttribute(const nsIParserNode& aNode, nsIRDFResource** aResource, PRBool* aIsAnonymous = nsnull);
     nsresult GetResourceAttribute(const nsIParserNode& aNode, nsIRDFResource** aResource);
-    nsresult AddProperties(const nsIParserNode& aNode, nsIRDFResource* aSubject);
+    nsresult AddProperties(const nsIParserNode& aNode, nsIRDFResource* aSubject, PRInt32* aCount = nsnull);
 
     enum eContainerType { eBag, eSeq, eAlt };
     nsresult InitContainer(nsIRDFResource* aContainerType, nsIRDFResource* aContainer);
@@ -979,7 +979,8 @@ RDFContentSinkImpl::ParseAttributeString(const nsString& aAttributeName,
 
 nsresult
 RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
-                                        nsIRDFResource** aResource)
+                                        nsIRDFResource** aResource,
+                                        PRBool* aIsAnonymous)
 {
     // This corresponds to the dirty work of production [6.5]
     nsAutoString k;
@@ -1009,6 +1010,9 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
         // first thing that was specified and ignore the other.
         
         if (attr.get() == kAboutAtom) {
+            if (aIsAnonymous)
+                *aIsAnonymous = PR_FALSE;
+
             nsAutoString uri(aNode.GetValueAt(i));
             nsRDFParserUtils::StripAndConvert(uri);
 
@@ -1017,6 +1021,9 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }
         else if (attr.get() == kIdAtom) {
+            if (aIsAnonymous)
+                *aIsAnonymous = PR_FALSE;
+
             nsAutoString name(aNode.GetValueAt(i));
             nsRDFParserUtils::StripAndConvert(name);
 
@@ -1055,6 +1062,9 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
     }
 
     // Otherwise, we couldn't find anything, so just gensym one...
+    if (aIsAnonymous)
+        *aIsAnonymous = PR_TRUE;
+
     rv = gRDFService->GetAnonymousResource(aResource);
     return rv;
 }
@@ -1106,8 +1116,14 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
 
 nsresult
 RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
-                                  nsIRDFResource* aSubject)
+                                  nsIRDFResource* aSubject,
+                                  PRInt32* aCount)
 {
+    // Initialize the out parameter to zero, if they've asked for us
+    // to count properties we've added...
+    if (aCount)
+        *aCount = 0;
+
     // Add tag attributes to the content attributes
     PRInt32 count = aNode.GetAttributeCount();
 
@@ -1150,6 +1166,11 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
         gRDFService->GetLiteral(v.GetUnicode(), getter_AddRefs(target));
 
         mDataSource->Assert(aSubject, property, target, PR_TRUE);
+
+        // If the caller cares, let 'em know that we've added another
+        // property.
+        if (aCount)
+            ++(*aCount);
     }
     return NS_OK;
 }
@@ -1379,19 +1400,45 @@ RDFContentSinkImpl::OpenProperty(const nsIParserNode& aNode)
     rv = gRDFService->GetResource(propertyStr, getter_AddRefs(property));
     if (NS_FAILED(rv)) return rv;
 
+    // See if they've specified a 'resource' attribute, in which case
+    // they mean *that* to be the object of this property.
     nsCOMPtr<nsIRDFResource> target;
-    rv = GetResourceAttribute(aNode, getter_AddRefs(target));
-    if (NS_SUCCEEDED(rv)) {
+    GetResourceAttribute(aNode, getter_AddRefs(target));
+
+    PRBool isAnonymous = PR_FALSE;
+
+    if (! target) {
+        // See if an 'ID' attribute has been specified, in which case
+        // this corresponds to the fourth form of [6.12].
+
+        // XXX strictly speaking, we should reject the RDF/XML as
+        // invalid if they've specified both an 'ID' and a 'resource'
+        // attribute. Bah.
+
+        // XXX strictly speaking, 'about=' isn't allowed here, but
+        // what the hell.
+        GetIdAboutAttribute(aNode, getter_AddRefs(target), &isAnonymous);
+    }
+
+    if (target) {
         // They specified an inline resource for the value of this
         // property. Create an RDF resource for the inline resource
         // URI, add the properties to it, and attach the inline
         // resource to its parent.
-        rv = AddProperties(aNode, target);
+        PRInt32 count;
+        rv = AddProperties(aNode, target, &count);
         NS_ASSERTION(NS_SUCCEEDED(rv), "problem adding properties");
         if (NS_FAILED(rv)) return rv;
 
-        rv = mDataSource->Assert(GetContextElement(0), property, target, PR_TRUE);
-        if (NS_FAILED(rv)) return rv;
+        if (count || !isAnonymous) {
+            // If the resource was "anonymous" (i.e., they hadn't
+            // explicitly set an ID or resource attribute), then we'll
+            // only assert this property from the context element *if*
+            // there were properties specified on the anonymous
+            // resource.
+            rv = mDataSource->Assert(GetContextElement(0), property, target, PR_TRUE);
+            if (NS_FAILED(rv)) return rv;
+        }
 
         // XXX Technically, we should _not_ fall through here and push
         // the element onto the stack: this is supposed to be a closed
