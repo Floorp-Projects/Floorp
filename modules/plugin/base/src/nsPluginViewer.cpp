@@ -169,9 +169,10 @@ private:
   nsCOMPtr<nsITimer> mPluginTimer;
 };
 
-  static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY,
-                                nsRect& aClipRect);
-
+#ifdef XP_MAC
+  static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY, 
+                                  nsRect& aClipRect);
+#endif
 
 class PluginViewerImpl : public nsIPluginViewer,
                          public nsIContentViewer,
@@ -621,7 +622,10 @@ PluginViewerImpl::SetBounds(const nsRect& aBounds)
         win->clipRect.left = aBounds.x;
         win->clipRect.bottom = aBounds.YMost();
         win->clipRect.right = aBounds.XMost();
-
+        
+#ifdef XP_MAC   // On Mac we also need to add in the widget offset to the plugin window
+        mOwner->FixUpPluginWindow();
+#endif        
         inst->SetWindow(win);
       }
       NS_RELEASE(inst);
@@ -647,6 +651,9 @@ PluginViewerImpl::Move(PRInt32 aX, PRInt32 aY)
         win->clipRect.top = aY;
         win->clipRect.left = aX;
 
+#ifdef XP_MAC   // On Mac we also need to add in the widget offset to the plugin window
+        mOwner->FixUpPluginWindow();
+#endif
         inst->SetWindow(win);
       }
       NS_RELEASE(inst);
@@ -1306,25 +1313,8 @@ nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
                 nsPluginPort* pluginPort = GetPluginPort();
                 // Add in child windows absolute position to get make the dirty rect
                 // relative to the top-level window.
-                nscoord absWidgetX = 0;
-                nscoord absWidgetY = 0;
-                nsRect widgetClip(0,0,0,0);
-                GetWidgetPosAndClip(mWindow,absWidgetX,absWidgetY,widgetClip);
-                //mViewer->GetBounds(widgetClip);
-                //absWidgetX = widgetClip.x;
-                //absWidgetY = widgetClip.y;
-
-                // set the port
-                mPluginWindow.x = absWidgetX;
-                mPluginWindow.y = absWidgetY;
-
-
-                // fix up the clipping region
-                mPluginWindow.clipRect.top = widgetClip.y;
-                mPluginWindow.clipRect.left = widgetClip.x;
-                mPluginWindow.clipRect.bottom =  mPluginWindow.clipRect.top + widgetClip.height;
-                mPluginWindow.clipRect.right =  mPluginWindow.clipRect.left + widgetClip.width;  
-
+                FixUpPluginWindow();
+                
                 EventRecord updateEvent;
                 InitializeEventRecord(&updateEvent);
                 updateEvent.what = updateEvt;
@@ -1337,7 +1327,6 @@ nsEventStatus pluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
             return nsEventStatus_eConsumeNoDefault;
             
         }
-        //nsPluginPort* port = (nsPluginPort*)mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
         nsPluginPort* port = (nsPluginPort*)mWindow->GetNativeData(NS_NATIVE_PLUGIN_PORT);
         nsPluginEvent pluginEvent = { event, nsPluginPlatformWindowRef(port->port) };
         PRBool eventHandled = PR_FALSE;
