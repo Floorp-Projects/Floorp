@@ -30,7 +30,7 @@
 using std::map;
 
 #include <Events.h>
-#include <Windows.h>
+#include <MacWindows.h>
 
 class nsMacWindow;
 
