@@ -685,6 +685,12 @@ nsFileChannel::OnFull(nsIBuffer* buffer)
 }
 
 NS_IMETHODIMP
+nsFileChannel::OnWrite(nsIBuffer* aBuffer, PRUint32 aCount)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFileChannel::OnEmpty(nsIBuffer* buffer)
 {
     return Resume();
