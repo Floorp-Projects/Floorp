@@ -391,6 +391,8 @@ nsXULTooltipListener::ShowTooltip()
       // the tooltip. If there is an attribute on the popup telling us
       // not to create the auto-hide timer, don't.
       nsCOMPtr<nsIDOMElement> tooltipEl(do_QueryInterface(mCurrentTooltip));
+      if (!tooltipEl)
+        return NS_ERROR_FAILURE;
       nsAutoString noAutoHide;
       tooltipEl->GetAttribute(NS_LITERAL_STRING("noautohide"), noAutoHide);
       if (noAutoHide != NS_LITERAL_STRING("true"))
