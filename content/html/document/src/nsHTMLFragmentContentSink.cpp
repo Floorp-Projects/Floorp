@@ -170,7 +170,7 @@ public:
   nsHTMLFragmentContentSink2() { mHitSentinel = PR_TRUE; mSeenBody = PR_FALSE;}
   virtual ~nsHTMLFragmentContentSink2() {}
   NS_IMETHODIMP OpenHead(const nsIParserNode& aNode) { return OpenContainer(aNode); }
-  NS_IMETHODIMP CloseHead() { return CloseContainer(eHTMLTag_body); }
+  NS_IMETHODIMP CloseHead() { return CloseContainer(eHTMLTag_head); }
 };
 
 nsresult
