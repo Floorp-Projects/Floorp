@@ -32,6 +32,8 @@ static const std::string c_szPrefsFile     = "prefs.js";
 static const std::string c_szPrefsHomePage = "browser.startup.homepage";
 static const std::string c_szDefaultPage   = "resource://res/MozillaControl.html";
 
+BOOL CMozillaBrowser::m_bRegistryInitialized = FALSE;
+
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
 
@@ -59,7 +61,11 @@ CMozillaBrowser::CMozillaBrowser()
 	m_bBusy = FALSE;
 
 	// Register components
-	NS_SetupRegistry();
+	if (!m_bRegistryInitialized)
+	{
+		NS_SetupRegistry();
+		m_bRegistryInitialized = TRUE;
+	}
 
 	// Create the Event Queue for the UI thread...
 	//
@@ -286,6 +292,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 
 	m_pIWebShell->SetContainer((nsIWebShellContainer*) m_pWebShellContainer);
 	m_pIWebShell->SetObserver((nsIStreamObserver*) m_pWebShellContainer);
+	m_pIWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) m_pWebShellContainer);
 #ifdef USE_NGPREF
 	m_pIWebShell->SetPrefs(m_pIPref);
 #endif
@@ -724,7 +731,10 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
 	// Extract the launch flags parameter
 	LONG lFlags = 0;
-	if (Flags && Flags->vt != VT_EMPTY && Flags->vt != VT_NULL)
+	if (Flags &&
+		Flags->vt != VT_ERROR &&
+		Flags->vt != VT_EMPTY &&
+		Flags->vt != VT_NULL)
 	{
 		CComVariant vFlags;
 		if (vFlags.ChangeType(VT_I4, Flags) != S_OK)
@@ -738,7 +748,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
 	// Extract the target frame parameter
 	nsString sTargetFrame;
-	if (TargetFrameName && TargetFrameName->vt == VT_BSTR)
+	if (TargetFrameName &&
+		TargetFrameName->vt == VT_BSTR)
 	{
 		USES_CONVERSION;
 		sTargetFrame = nsString(OLE2A(TargetFrameName->bstrVal));
@@ -746,7 +757,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
 	// Extract the post data parameter
 	nsIPostData *pIPostData = nsnull;
-	if (PostData && PostData->vt == VT_BSTR)
+	if (PostData &&
+		PostData->vt == VT_BSTR)
 	{
 		USES_CONVERSION;
 		char *szPostData = OLE2A(PostData->bstrVal);
@@ -1064,7 +1076,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Top(long __RPC_FAR *pl)
 		return E_INVALIDARG;
 	}
 	*pl = 0;
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
@@ -1712,7 +1724,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::ShowBrowserBar(VARIANT __RPC_FAR *pva
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
@@ -1742,7 +1754,14 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Offline(VARIANT_BOOL __RPC_FAR *p
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	if (pbOffline == NULL)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	*pbOffline = VARIANT_FALSE;
+	return S_OK;
 }
 
 
@@ -1756,7 +1775,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Offline(VARIANT_BOOL bOffline)
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
@@ -1770,7 +1789,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Silent(VARIANT_BOOL __RPC_FAR *pb
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	if (pbSilent == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	*pbSilent = VARIANT_FALSE;
+	return S_OK;
 }
 
 
@@ -1784,7 +1809,8 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Silent(VARIANT_BOOL bSilent)
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	// IGNORE
+	return S_OK;
 }
 
 
@@ -1798,7 +1824,14 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_RegisterAsBrowser(VARIANT_BOOL __
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	if (pbRegister == NULL)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	*pbRegister = VARIANT_FALSE;
+	return S_OK;
 }
 
 
@@ -1812,7 +1845,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsBrowser(VARIANT_BOOL bR
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
@@ -1826,7 +1859,14 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_RegisterAsDropTarget(VARIANT_BOOL
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	if (pbRegister == NULL)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	*pbRegister = VARIANT_FALSE; // TODO check if registered
+	return S_OK;
 }
 
 
@@ -1840,7 +1880,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	// TODO register the window as a drop target
+
+	return S_OK;
 }
 
 
@@ -1891,7 +1933,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_AddressBar(VARIANT_BOOL __RPC_FAR
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	if (Value == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	*Value = VARIANT_FALSE;
+	return S_OK;
 }
 
 
@@ -1905,7 +1953,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_AddressBar(VARIANT_BOOL Value)
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 
@@ -1919,7 +1967,14 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Resizable(VARIANT_BOOL __RPC_FAR 
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	if (Value == NULL)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	*Value = VARIANT_FALSE;
+	return S_OK;
 }
 
 
@@ -1933,7 +1988,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Resizable(VARIANT_BOOL Value)
 		return E_UNEXPECTED;
 	}
 
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
