@@ -588,50 +588,63 @@ nsGenericElement::Normalize()
 
   mContent->ChildCount(count);
   for (index = 0; (index < count) && (NS_OK == result); index++) {
-    nsIContent* child;
-    nsIAtom* name;
+    nsCOMPtr<nsIContent> child;
 
-    result = mContent->ChildAt(index, child);
-    if (NS_OK == result) {
-      child->GetTag(name);
+    result = mContent->ChildAt(index, *getter_AddRefs(child));
+    if (NS_FAILED(result)) {
+      return result;
+    }
 
-      // If this is a text node and there's a sibling following it
-      if ((name == nsLayoutAtoms::textTagName) && (index < count-1)) {
-        nsIContent* sibling;
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(child);
+    if (node) {
+      PRUint16 nodeType;
+      node->GetNodeType(&nodeType);
+      
+      switch (nodeType) {
+        case nsIDOMNode::TEXT_NODE:
         
-        // Get the sibling. If it's also a text node, then
-        // remove it from the tree and join the two text
-        // nodes.
-        result = mContent->ChildAt(index+1, sibling);
-        if (NS_OK == result) {
-          nsIAtom* siblingName;
-          
-          sibling->GetTag(siblingName);
-          if (siblingName == nsLayoutAtoms::textTagName) {
-            result = mContent->RemoveChildAt(index+1, PR_TRUE);
-            if (NS_OK == result) {
-              result = JoinTextNodes(child, sibling);
-              count--;
+          if (index+1 < count) {
+            nsCOMPtr<nsIContent> sibling;
+            
+            // Get the sibling. If it's also a text node, then
+            // remove it from the tree and join the two text
+            // nodes.
+            result = mContent->ChildAt(index+1, *getter_AddRefs(sibling));
+            if (NS_FAILED(result)) {
+              return result;
+            }
+            
+            nsCOMPtr<nsIDOMNode> siblingNode = do_QueryInterface(sibling);
+              
+            if (sibling) {
+              PRUint16 siblingNodeType;
+              siblingNode->GetNodeType(&siblingNodeType);
+              
+              if (siblingNodeType == nsIDOMNode::TEXT_NODE) {
+                result = mContent->RemoveChildAt(index+1, PR_TRUE);
+                if (NS_FAILED(result)) {
+                  return result;
+                }
+
+                result = JoinTextNodes(child, sibling);
+                if (NS_FAILED(result)) {
+                  return result;
+                }
+                count--;
+                index--;
+              }
             }
           }
-          
-          NS_IF_RELEASE(siblingName);
-          NS_RELEASE(sibling);
-        }
-      }
-      else {
-        nsIDOMElement* element;
-        nsresult qiresult;
+          break;
+      
+        case nsIDOMNode::ELEMENT_NODE:
+          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(child);
 
-        qiresult = child->QueryInterface(kIDOMElementIID, (void**)&element);
-        if (NS_OK == qiresult) {
-          result = element->Normalize();
-          NS_RELEASE(element);
-        }
+          if (element) {
+            result = element->Normalize();
+          }
+          break;
       }
-
-      NS_IF_RELEASE(name);
-      NS_RELEASE(child);
     }
   }
 
@@ -667,43 +680,45 @@ nsGenericElement::SetDocumentInChildrenOf(nsIContent* aContent,
 nsresult
 nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
-  // If we were part of a document, make sure we get rid of the
-  // script context reference to our script object so that our
-  // script object can be freed (or collected).
-  if ((nsnull != mDocument) && (nsnull != mDOMSlots) &&
-      (nsnull != mDOMSlots->mScriptObject)) {
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-    if (globalObject) {
-      nsCOMPtr<nsIScriptContext> context;
-      if (NS_OK == globalObject->GetContext(getter_AddRefs(context)) && context) {
-        context->RemoveReference((void *)&mDOMSlots->mScriptObject,
-                                mDOMSlots->mScriptObject);
+  if (aDocument != mDocument) {
+    // If we were part of a document, make sure we get rid of the
+    // script context reference to our script object so that our
+    // script object can be freed (or collected).
+    if ((nsnull != mDocument) && (nsnull != mDOMSlots) &&
+        (nsnull != mDOMSlots->mScriptObject)) {
+      nsCOMPtr<nsIScriptGlobalObject> globalObject;
+      mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+      if (globalObject) {
+        nsCOMPtr<nsIScriptContext> context;
+        if (NS_OK == globalObject->GetContext(getter_AddRefs(context)) && context) {
+          context->RemoveReference((void *)&mDOMSlots->mScriptObject,
+                                   mDOMSlots->mScriptObject);
+        }
       }
     }
-  }
-
-  mDocument = aDocument;
-
-  // If we already have a script object and now we're being added
-  // to a document, make sure that the script context adds a 
-  // reference to our script object. This will ensure that it
-  // won't be freed (or collected) out from under us.
-  if ((nsnull != mDocument) && (nsnull != mDOMSlots) &&
-      (nsnull != mDOMSlots->mScriptObject)) {
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-    if (globalObject) {
-      nsCOMPtr<nsIScriptContext> context;
-      if (NS_OK == globalObject->GetContext(getter_AddRefs(context)) && context) {
-        nsAutoString tag;
-        char tagBuf[50];
-        
-        mTag->ToString(tag);
-        tag.ToCString(tagBuf, sizeof(tagBuf));
-        context->AddNamedReference((void *)&mDOMSlots->mScriptObject,
-                                   mDOMSlots->mScriptObject,
-                                   tagBuf);
+    
+    mDocument = aDocument;
+    
+    // If we already have a script object and now we're being added
+    // to a document, make sure that the script context adds a 
+    // reference to our script object. This will ensure that it
+    // won't be freed (or collected) out from under us.
+    if ((nsnull != mDocument) && (nsnull != mDOMSlots) &&
+        (nsnull != mDOMSlots->mScriptObject)) {
+      nsCOMPtr<nsIScriptGlobalObject> globalObject;
+      mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+      if (globalObject) {
+        nsCOMPtr<nsIScriptContext> context;
+        if (NS_OK == globalObject->GetContext(getter_AddRefs(context)) && context) {
+          nsAutoString tag;
+          char tagBuf[50];
+          
+          mTag->ToString(tag);
+          tag.ToCString(tagBuf, sizeof(tagBuf));
+          context->AddNamedReference((void *)&mDOMSlots->mScriptObject,
+                                     mDOMSlots->mScriptObject,
+                                     tagBuf);
+        }
       }
     }
   }
