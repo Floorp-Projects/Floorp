@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -19,7 +20,10 @@
  *
  * Contributor(s): 
  * Ilya Konstantinov <future@galanet.net>
+ * tim copperfield <timecop@network.email.ne.jp>
  */
+
+#undef DEBUG_CURSORCACHE
 
 #include <stdio.h>
 
@@ -63,6 +67,8 @@
 #include "nsGtkIMEHelper.h"
 #include "nsKeyboardUtils.h"
 
+#include "nsGtkCursors.h" // for custom cursors
+
 #include <unistd.h>
 
 #ifdef NEED_USLEEP_PROTOTYPE
@@ -90,6 +96,8 @@ static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
 static PRBool gGlobalsInitialized   = PR_FALSE;
 static PRBool gRaiseWindows         = PR_TRUE;
+/* cursors cache */
+GdkCursor *nsWindow::gsGtkCursorCache[eCursor_count_up_down + 1];
 
 gint handle_mozarea_focus_in (
     GtkWidget *      aWidget, 
@@ -139,6 +147,7 @@ GdkFont *nsWindow::gPreeditFontset = nsnull;
 GdkFont *nsWindow::gStatusFontset = nsnull;
 #endif // USE_XIM
 
+#ifdef DEBUG_DND_XLATE
 static void printDepth(int depth) {
   int i;
   for (i=0; i < depth; i++)
@@ -146,6 +155,7 @@ static void printDepth(int depth) {
     g_print(" ");
   }
 }
+#endif
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsWidget)
 
@@ -1031,120 +1041,149 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
   if (aCursor != mCursor) {
     GdkCursor *newCursor = 0;
 
-    switch(aCursor) {
-      case eCursor_standard:
-        newCursor = gdk_cursor_new(GDK_LEFT_PTR);
-        break;
-
-      case eCursor_wait:
-        newCursor = gdk_cursor_new(GDK_WATCH);
-        break;
-
-      case eCursor_select:
-        newCursor = gdk_cursor_new(GDK_XTERM);
-        break;
-
-      case eCursor_hyperlink:
-        newCursor = gdk_cursor_new(GDK_HAND2);
-        break;
-
-      case eCursor_sizeWE:
-        /* GDK_SB_H_DOUBLE_ARROW <==>.  The ideal choice is: =>||<= */
-        newCursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
-        break;
-
-      case eCursor_sizeNS:
-        /* Again, should be =>||<= rotated 90 degrees. */
-        newCursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
-        break;
-      
-      case eCursor_sizeNW:
-        newCursor = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
-        break;
-
-      case eCursor_sizeSE:
-        newCursor = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
-        break;
-
-      case eCursor_sizeNE:
-        newCursor = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
-        break;
-
-      case eCursor_sizeSW:
-        newCursor = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
-        break;
-
-      case eCursor_arrow_north:
-      case eCursor_arrow_north_plus:
-        newCursor = gdk_cursor_new(GDK_TOP_SIDE);
-        break;
-
-      case eCursor_arrow_south:
-      case eCursor_arrow_south_plus:
-        newCursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
-        break;
-
-      case eCursor_arrow_west:
-      case eCursor_arrow_west_plus:
-        newCursor = gdk_cursor_new(GDK_LEFT_SIDE);
-        break;
-
-       case eCursor_arrow_east:
-       case eCursor_arrow_east_plus:
-         newCursor = gdk_cursor_new(GDK_RIGHT_SIDE);
-         break;
- 
-       case eCursor_crosshair:
-         newCursor = gdk_cursor_new(GDK_CROSSHAIR);
-         break;
- 
-       case eCursor_move:
-         newCursor = gdk_cursor_new(GDK_FLEUR);
-         break;
- 
-       case eCursor_help:
-         newCursor = gdk_cursor_new(GDK_QUESTION_ARROW);
-         break;
- 
-       case eCursor_copy: // CSS3
-       case eCursor_alias:
-       case eCursor_context_menu:
-         // XXX: these CSS3 cursors need to be implemented
-         // For CSS3 Cursor Definitions, See:
-         // www.w3.org/TR/css3-userint
-         break;
- 
-       case eCursor_cell:
-         newCursor = gdk_cursor_new(GDK_PLUS);
-         break;
- 
-       case eCursor_grab:
-       case eCursor_grabbing:
-         newCursor = gdk_cursor_new(GDK_HAND1);
-         break;
- 
-       case eCursor_spinning:
-         newCursor = gdk_cursor_new(GDK_WATCH);
-         break;
- 
-       case eCursor_count_up:
-       case eCursor_count_down:
-       case eCursor_count_up_down:
-         // XXX: these CSS3 cursors need to be implemented
-         break;
-
-      default:
-        NS_ASSERTION(aCursor, "Invalid cursor type");
-        break;
-    }
+    newCursor = GtkCreateCursor(aCursor);
 
     if (nsnull != newCursor) {
       mCursor = aCursor;
       ::gdk_window_set_cursor(mSuperWin->shell_window, newCursor);
-      ::gdk_cursor_destroy(newCursor);
     }
   }
   return NS_OK;
+}
+
+GdkCursor *nsWindow::GtkCreateCursor(nsCursor aCursorType)
+{
+  GdkPixmap *cursor;
+  GdkPixmap *mask;
+  GdkColor fg, bg;
+  GdkCursor *gdkcursor = nsnull;
+  PRUint8 newType = 0xff;
+
+  if ((gdkcursor = gsGtkCursorCache[aCursorType])) {
+#ifdef DEBUG_CURSORCACHE
+    printf("cached cursor found: %p\n", gdkcursor);
+#endif
+    return gdkcursor;
+  }
+
+  switch (aCursorType) {
+    case eCursor_standard:
+      gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
+      break;
+    case eCursor_wait:
+      gdkcursor = gdk_cursor_new(GDK_WATCH);
+      break;
+    case eCursor_select:
+      gdkcursor = gdk_cursor_new(GDK_XTERM);
+      break;
+    case eCursor_hyperlink:
+      gdkcursor = gdk_cursor_new(GDK_HAND2);
+      break;
+    case eCursor_sizeWE:
+      /* GDK_SB_H_DOUBLE_ARROW <==>.  The ideal choice is: =>||<= */
+      gdkcursor = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
+      break;
+    case eCursor_sizeNS:
+      /* Again, should be =>||<= rotated 90 degrees. */
+      gdkcursor = gdk_cursor_new(GDK_SB_V_DOUBLE_ARROW);
+      break;
+    case eCursor_sizeNW:
+      gdkcursor = gdk_cursor_new(GDK_TOP_LEFT_CORNER);
+      break;
+    case eCursor_sizeSE:
+      gdkcursor = gdk_cursor_new(GDK_BOTTOM_RIGHT_CORNER);
+      break;
+    case eCursor_sizeNE:
+      gdkcursor = gdk_cursor_new(GDK_TOP_RIGHT_CORNER);
+      break;
+    case eCursor_sizeSW:
+      gdkcursor = gdk_cursor_new(GDK_BOTTOM_LEFT_CORNER);
+      break;
+    case eCursor_arrow_north:
+    case eCursor_arrow_north_plus:
+      gdkcursor = gdk_cursor_new(GDK_TOP_SIDE);
+      break;
+    case eCursor_arrow_south:
+    case eCursor_arrow_south_plus:
+      gdkcursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
+      break;
+    case eCursor_arrow_west:
+    case eCursor_arrow_west_plus:
+      gdkcursor = gdk_cursor_new(GDK_LEFT_SIDE);
+      break;
+     case eCursor_arrow_east:
+     case eCursor_arrow_east_plus:
+       gdkcursor = gdk_cursor_new(GDK_RIGHT_SIDE);
+       break;
+     case eCursor_crosshair:
+       gdkcursor = gdk_cursor_new(GDK_CROSSHAIR);
+       break;
+     case eCursor_move:
+       gdkcursor = gdk_cursor_new(GDK_FLEUR);
+       break;
+     case eCursor_help:
+       newType = MOZ_CURSOR_QUESTION_ARROW;
+       break;
+     case eCursor_copy: // CSS3
+       newType = MOZ_CURSOR_COPY;
+       break;
+     case eCursor_alias:
+       newType = MOZ_CURSOR_ALIAS;
+       break;
+     case eCursor_context_menu:
+       newType = MOZ_CURSOR_CONTEXT_MENU;
+       break;
+     case eCursor_cell:
+       gdkcursor = gdk_cursor_new(GDK_PLUS);
+       break;
+     case eCursor_grab:
+       newType = MOZ_CURSOR_HAND_GRAB;
+       break;
+     case eCursor_grabbing:
+       newType = MOZ_CURSOR_HAND_GRABBING;
+       break;
+     case eCursor_spinning:
+       newType = MOZ_CURSOR_SPINNING;
+       break;
+     case eCursor_count_up:
+     case eCursor_count_down:
+     case eCursor_count_up_down:
+       // XXX: these CSS3 cursors need to be implemented
+       gdkcursor = gdk_cursor_new(GDK_LEFT_PTR);
+       break;
+    default:
+      NS_ASSERTION(aCursor, "Invalid cursor type");
+      break;
+  }
+
+  /* if by now we dont have a xcursor, this means we have to make a custom one */
+  if (!gdkcursor) {
+    NS_ASSERTION(newType != 0xff, "Unknown cursor type and no standard cursor");
+
+    gdk_color_parse("#000000", &fg);
+    gdk_color_parse("#ffffff", &bg);
+
+    cursor = gdk_bitmap_create_from_data(NULL,
+                                         (char *)GtkCursors[newType].bits,
+                                         32, 32);
+    mask   = gdk_bitmap_create_from_data(NULL,
+                                         (char *)GtkCursors[newType].mask_bits,
+                                         32, 32);
+
+    gdkcursor = gdk_cursor_new_from_pixmap(cursor, mask, &fg, &bg,
+                                           GtkCursors[newType].hot_x,
+                                           GtkCursors[newType].hot_y);
+
+    gdk_bitmap_unref(mask);
+    gdk_bitmap_unref(cursor);
+  }
+
+#ifdef DEBUG_CURSORCACHE
+  printf("inserting cursor into the cache: %p\n", gdkcursor);
+#endif
+  gsGtkCursorCache[aCursorType] = gdkcursor;
+
+  return gdkcursor;
 }
 
 NS_IMETHODIMP

@@ -95,6 +95,7 @@ public:
   NS_IMETHOD           GetAttention(void);
   NS_IMETHOD           Destroy();
 
+  GdkCursor           *GtkCreateCursor(nsCursor aCursorType);
   virtual void         LoseFocus(void);
 
   // nsIKBStateControl
@@ -232,6 +233,7 @@ protected:
   // this is the last window that had a drag event happen on it.
   static nsWindow  *mLastDragMotionWindow;
   static nsWindow  *mLastLeaveWindow;
+  static GdkCursor *gsGtkCursorCache[eCursor_count_up_down + 1];
 
   void   InitDragEvent(nsMouseEvent &aEvent);
   void   UpdateDragStatus(nsMouseEvent &aEvent,
