@@ -38,6 +38,7 @@ public:
 
   NS_IMETHOD ProcessLink(const nsString& aURLSpec);
   NS_IMETHOD VerifyDirectory (const char * verify_dir);
+  NS_IMETHOD ReadyForNextUrl(void);
     
 };
 
@@ -46,11 +47,18 @@ static nsVoidArray * g_duplicateList;
 static int g_iProcessed;
 static int g_iMaxProcess = 5000;
 static PRBool g_bHitTop;
+static PRBool g_bReadyForNextUrl;
 
 NS_IMPL_ISUPPORTS(RobotSinkObserver, kIRobotSinkObserverIID);
 
 NS_IMETHODIMP RobotSinkObserver::VerifyDirectory(const char * verify_dir)
 {
+   return NS_OK;
+}
+
+NS_IMETHODIMP RobotSinkObserver::ReadyForNextUrl(void)
+{
+   g_bReadyForNextUrl = PR_TRUE;
    return NS_OK;
 }
 
@@ -156,11 +164,15 @@ extern "C" NS_EXPORT int DebugRobot(
     sink->AddObserver(myObserver);
 
     parser->SetContentSink(sink);
+    g_bReadyForNextUrl = PR_FALSE;
     parser->Parse(url);
-    if (yieldProc != NULL)
-       (*yieldProc)(url->GetSpec());
+    while (!g_bReadyForNextUrl) {
+       if (yieldProc != NULL)
+          (*yieldProc)(url->GetSpec());
+    }
     if (ww)
-       ww->LoadURL(url->GetSpec());
+      ww->LoadURL(url->GetSpec());
+
     NS_RELEASE(sink);
     NS_RELEASE(parser);
     NS_RELEASE(url);

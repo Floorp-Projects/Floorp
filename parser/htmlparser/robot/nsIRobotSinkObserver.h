@@ -30,6 +30,7 @@ class nsIRobotSinkObserver : public nsISupports {
 public:
   NS_IMETHOD ProcessLink(const nsString& aURLSpec) = 0;
   NS_IMETHOD VerifyDirectory(const char * verify_dir) = 0;
+  NS_IMETHOD ReadyForNextUrl(void) = 0;
 };
 
 #endif /* nsIRobotSinkObserver_h___ */
