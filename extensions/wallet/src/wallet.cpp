@@ -3872,6 +3872,21 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
 
                   PRBool isText = (type.IsEmpty() || (type.CompareWithConversion("text", PR_TRUE)==0));
                   PRBool isPassword = (type.CompareWithConversion("password", PR_TRUE)==0);
+#define WALLET_DONT_CACHE_ALL_PASSWORDS
+#ifdef WALLET_DONT_CACHE_ALL_PASSWORDS
+                  if (isPassword) {
+                    nsAutoString val;
+                    (void) inputElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), val);
+                    if (val.EqualsIgnoreCase("off")) {
+                      isPassword = PR_FALSE;
+                    } else {
+                      (void) formElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), val);
+                      if (val.EqualsIgnoreCase("off")) {
+                        isPassword = PR_FALSE;
+                      }
+                    }
+                  }
+#endif
 #ifdef AutoCapture
                   if (isPassword) {
                     passwordcount++;
