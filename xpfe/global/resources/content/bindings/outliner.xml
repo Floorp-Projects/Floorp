@@ -47,8 +47,12 @@
         <getter><![CDATA[
           var xulns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           var cols = this.getElementsByTagNameNS(xulns, "outlinercol");
-          var parent = cols[0].boxObject.parentBox;
-          return parent.boxObject.firstChild;
+          for (var i = 0; i < cols.length; ++i) {
+            var parent = cols[i].boxObject.parentBox;
+            if (parent)
+              return parent.boxObject.firstChild;
+          }
+          return null;
         ]]></getter>
       </property>
       
