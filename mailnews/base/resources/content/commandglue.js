@@ -869,7 +869,7 @@ function FolderPaneSelectionChange()
 //                      dump("search term string = " + searchTermString + "\n");
                     
                       gVirtualFolderTerms = CreateGroupedSearchTerms(tempFilter.searchTerms);
-                      gSearchInput.showingSearchCriteria = false;
+//                      gSearchInput.showingSearchCriteria = false;
                     }
                   }
                   else
