@@ -40,7 +40,9 @@ CPPSRCS =				\
 	nsCSSProps2.cpp			\
 	nsCSSRendering.cpp		\
 	nsCSSScanner.cpp		\
+	nsCSSRule.cpp		\
 	nsCSSStyleRule.cpp		\
+	nsCSSRules.cpp		\
 	nsCSSStyleSheet.cpp		\
 	nsCSSValue.cpp			\
 	nsDOMCSSDeclaration.cpp         \
@@ -56,7 +58,13 @@ EXPORTS =				\
   nsCSSProps.h  \
   nsCSSPropIDs.h \
   nsCSSValue.h \
+  nsICSSRule.h \
+  nsICSSGroupRule.h \
   nsICSSStyleRule.h \
+  nsICSSCharsetRule.h \
+  nsICSSImportRule.h \
+  nsICSSMediaRule.h \
+  nsICSSNameSpaceRule.h \
   nsICSSDeclaration.h \
   nsHTMLValue.h \
   nsIHTMLCSSStyleSheet.h \
