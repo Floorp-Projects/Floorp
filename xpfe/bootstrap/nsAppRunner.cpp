@@ -881,25 +881,26 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
 {
     nsresult rv = NS_OK;
-    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-        nsXPIDLCString cmdUI;
-        rv = cmdLineArgs->GetCmdLineValue(UILOCALE_CMD_LINE_ARG, getter_Copies(cmdUI));
-        if (NS_SUCCEEDED(rv)){
-            if (cmdUI) {
-                nsAutoString UILocaleName;
-                UILocaleName.AssignWithConversion(cmdUI);
+    nsXPIDLCString cmdUI;
+    rv = cmdLineArgs->GetCmdLineValue(UILOCALE_CMD_LINE_ARG, getter_Copies(cmdUI));
+    if (NS_SUCCEEDED(rv)){
+        if (cmdUI) {
+            nsAutoString UILocaleName;
+            UILocaleName.AssignWithConversion(cmdUI);
+            nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+            if (chromeRegistry)
                 rv = chromeRegistry->SelectLocale(UILocaleName.get(), PR_FALSE);
-            }
         }
-        nsXPIDLCString cmdContent;
-        rv = cmdLineArgs->GetCmdLineValue(CONTENTLOCALE_CMD_LINE_ARG, getter_Copies(cmdContent));
-        if (NS_SUCCEEDED(rv)){
-            if (cmdContent) {
-                nsAutoString ContentLocaleName;
-                ContentLocaleName.AssignWithConversion(cmdContent);
+    }
+    nsXPIDLCString cmdContent;
+    rv = cmdLineArgs->GetCmdLineValue(CONTENTLOCALE_CMD_LINE_ARG, getter_Copies(cmdContent));
+    if (NS_SUCCEEDED(rv)){
+        if (cmdContent) {
+            nsAutoString ContentLocaleName;
+            ContentLocaleName.AssignWithConversion(cmdContent);
+            nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+            if(chromeRegistry)
                 rv = chromeRegistry->SelectLocale(ContentLocaleName.get(), PR_FALSE);
-            }
         }
     }
     return NS_OK;
