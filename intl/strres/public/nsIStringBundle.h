@@ -44,6 +44,8 @@
 class nsIStringBundle : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTRINGBUNDLE_IID)
+
   NS_IMETHOD GetStringFromID(PRInt32 aID, nsString& aResult) = 0;
   NS_IMETHOD GetStringFromName(const nsString& aName, nsString& aResult) = 0;
   NS_IMETHOD GetEnumeration(nsIBidirectionalEnumerator** elements) = 0;
@@ -52,6 +54,8 @@ public:
 class nsIStringBundleService : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTRINGBUNDLESERVICE_IID)
+
   NS_IMETHOD CreateBundle(nsIURL* aURL, nsILocale* aLocale,
                           nsIStringBundle** aResult) = 0; /* deprecated */
   NS_IMETHOD CreateBundle(const char* aURLSpec, nsILocale* aLocale,
