@@ -38,28 +38,28 @@
     
     
     (%subsection :semantics "Namespaces")
-    (defrecord namespace)
+    (defrecord namespace (name string))
     (deftype namespace (tag namespace))
     
-    (define public-namespace namespace (tag namespace))
+    (define public-namespace namespace (tag namespace "public"))
     
     
     (%subsection :semantics "Attributes")
-    (deftag dynamic-modifier)
-    (deftag fixed-modifier)
-    (deftype class-modifier (tag null dynamic-modifier fixed-modifier))
+    (deftag dynamic)
+    (deftag fixed)
+    (deftype class-modifier (tag null dynamic fixed))
     
-    (deftag static-modifier)
-    (deftag constructor-modifier)
-    (deftag operator-modifier)
-    (deftag abstract-modifier)
-    (deftag virtual-modifier)
-    (deftag final-modifier)
-    (deftype member-modifier (tag null static-modifier constructor-modifier operator-modifier abstract-modifier virtual-modifier final-modifier))
+    (deftag static)
+    (deftag constructor)
+    (deftag operator)
+    (deftag abstract)
+    (deftag virtual)
+    (deftag final)
+    (deftype member-modifier (tag null static constructor operator abstract virtual final))
     
     (deftag may-override)
-    (deftag must-override)
-    (deftype override-modifier (tag null may-override must-override))
+    (deftag override)
+    (deftype override-modifier (tag null may-override override))
     
     (deftag attribute
       (namespaces (vector namespace)) ;***** Should be a set of namespaces
@@ -92,7 +92,7 @@
     (deftype class-opt (union null class))
     
     (define (make-built-in-class (superclass class-opt) (primitive boolean)) class
-      (const private-namespace namespace (tag namespace))
+      (const private-namespace namespace (tag namespace "private"))
       (function (call (this object :unused) (positional-args (vector object) :unused) (named-args (vector named-argument) :unused)) object
         (todo))
       (function (construct (this object :unused) (positional-args (vector object) :unused) (named-args (vector named-argument) :unused)) object
@@ -126,15 +126,15 @@
       (return (is-subclass b d)))
     
     
-    (%subsection :semantics "Structures")
-    (defrecord structure
+    (%subsection :semantics "Instances")
+    (defrecord instance
       (type class)
       (call invoker)
       (construct invoker)
       (typeof-string string)
       (slots (vector slot) :var)
       (dynamic-properties (vector dynamic-property) :var))
-    (deftype structure (tag structure))
+    (deftype instance (tag instance))
     
     (defrecord dynamic-property 
       (name string)
@@ -144,7 +144,7 @@
     
     (%subsection :semantics "Objects")
     
-    (deftype object (union undefined null boolean float64 string namespace attribute class structure))
+    (deftype object (union undefined null boolean float64 string namespace attribute class instance))
     
     
     (%text :comment "Return " (:local o) :apostrophe "s most specific type.")
@@ -158,7 +158,7 @@
         (:select namespace (return namespace-class))
         (:select attribute (return attribute-class))
         (:select class (return class-class))
-        (:narrow structure (return (& type o)))))
+        (:narrow instance (return (& type o)))))
     
     (%text :comment "Return " (:tag true) " if " (:local o) " is an instance of class " (:local c) ". Consider "
            (:tag null) " to be an instance of the classes " (:character-literal "Null") " and "
@@ -181,7 +181,7 @@
         (:narrow float64 (return (not-in (tag +zero -zero nan) o)))
         (:narrow string (return (/= o "" string)))
         (:select (union namespace attribute class) (return true))
-        (:select structure (todo))))
+        (:select instance (todo))))
     
     (define (to-number (o object)) float64
       (case o
@@ -191,7 +191,7 @@
         (:narrow float64 (return o))
         (:select string (todo))
         (:select (union namespace attribute class) (throw type-error))
-        (:select structure (todo))))
+        (:select instance (todo))))
     
     (define (to-string (o object)) string
       (case o
@@ -204,12 +204,12 @@
         (:select namespace (todo))
         (:select attribute (todo))
         (:select class (todo))
-        (:select structure (todo))))
+        (:select instance (todo))))
     
     (define (to-primitive (o object) (hint object :unused)) object
       (case o
         (:select (union undefined null boolean float64 string) (return o))
-        (:select (union namespace attribute class structure) (return (to-string o)))))
+        (:select (union namespace attribute class instance) (return (to-string o)))))
     
     (define (u-int32-to-int32 (i integer)) integer
       (if (< i (expt 2 31))
@@ -261,12 +261,21 @@
     
     (%subsection :semantics "Signatures")
     
-    (deftag signature)
+    (deftag optional-parameter
+      (name string)
+      (type class))
+    (deftype optional-parameter (tag optional-parameter))
+    
+    (deftag signature
+      (positional-parameters (vector class))
+      (optional-parameters (vector optional-parameter))
+      (rest-parameter class-opt)
+      (return-type class))
     (deftype signature (tag signature))
     
     
     (%subsection :semantics "Properties")
-    (deftype member-category (tag static-modifier constructor-modifier abstract-modifier virtual-modifier final-modifier))
+    (deftype member-category (tag static constructor abstract virtual final))
     
     (deftag member 
       (name qualified-name)
@@ -418,13 +427,13 @@
       (case a
         (:select (union undefined null boolean float64 string namespace attribute) (throw type-error))
         (:narrow class (return ((& call a) this positional-args named-args)))
-        (:narrow structure (return ((& call a) this positional-args named-args)))))
+        (:narrow instance (return ((& call a) this positional-args named-args)))))
     
     (define (construct-object (this object) (a object) (positional-args (vector object)) (named-args (vector named-argument))) object
       (case a
         (:select (union undefined null boolean float64 string namespace attribute) (throw type-error))
         (:narrow class (return ((& construct a) this positional-args named-args)))
-        (:narrow structure (return ((& construct a) this positional-args named-args)))))
+        (:narrow instance (return ((& construct a) this positional-args named-args)))))
     
     (define (bracket-read-object (this object :unused) (a object) (positional-args (vector object)) (named-args (vector named-argument))) object
       (rwhen (or (/= (length positional-args) 1) (not (empty named-args)))
@@ -551,22 +560,22 @@
         (:narrow float64
           (const bp object (to-primitive b null))
           (case bp
-            (:select (union undefined null namespace attribute class structure) (return false))
+            (:select (union undefined null namespace attribute class instance) (return false))
             (:select (union boolean string float64) (return (= (float64-compare a (to-number bp)) equal order)))))
         (:narrow string
           (const bp object (to-primitive b null))
           (case bp
-            (:select (union undefined null namespace attribute class structure) (return false))
+            (:select (union undefined null namespace attribute class instance) (return false))
             (:select (union boolean float64) (return (= (float64-compare (to-number a) (to-number bp)) equal order)))
             (:narrow string (return (= a bp string)))))
-        (:select (union namespace attribute class structure)
+        (:select (union namespace attribute class instance)
           (case b
             (:select (union undefined null) (return false))
-            (:select (union namespace attribute class structure) (return (strict-equal-objects a b)))
+            (:select (union namespace attribute class instance) (return (strict-equal-objects a b)))
             (:select (union boolean float64 string)
               (const ap object (to-primitive a null))
               (case ap
-                (:select (union undefined null namespace attribute class structure) (return false))
+                (:select (union undefined null namespace attribute class instance) (return false))
                 (:select (union boolean float64 string) (return (equal-objects ap b)))))))))
     
     (define (strict-equal-objects (a object) (b object)) object
@@ -644,7 +653,8 @@
       (production :identifier (get) identifier-get (name "get"))
       (production :identifier (set) identifier-set (name "set"))
       (production :identifier (exclude) identifier-exclude (name "exclude"))
-      (production :identifier (include) identifier-include (name "include")))
+      (production :identifier (include) identifier-include (name "include"))
+      (production :identifier (named) identifier-named (name "named")))
     (%print-actions)
     
     (rule :qualifier ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) namespace)))
@@ -937,7 +947,7 @@
            (:select namespace (return "namespace"))
            (:select attribute (return "attribute"))
            (:select class (return "function"))
-           (:narrow structure (return (& typeof-string a))))))
+           (:narrow instance (return (& typeof-string a))))))
       (production :unary-expression (++ :postfix-expression-or-super) unary-expression-increment
         (verify (verify :postfix-expression-or-super))
         ((eval e)
@@ -1963,10 +1973,11 @@
     (production :rest-parameter (\.\.\.) rest-parameter-none)
     (production :rest-parameter (\.\.\. :parameter) rest-parameter-parameter)
     
-    (production :parameter (:parameter-attributes (:typed-identifier allow-in)) parameter-typed-identifier)
-    
-    (production :parameter-attributes () parameter-attributes-none)
-    (production :parameter-attributes (const) parameter-attributes-const)
+    (production :parameter ((:typed-identifier allow-in)) parameter-typed-identifier)
+    (production :parameter (const (:typed-identifier allow-in)) parameter-const-typed-identifier)
+    (production :parameter (named (:typed-identifier allow-in)) parameter-named-typed-identifier)
+    (production :parameter (const named (:typed-identifier allow-in)) parameter-const-named-typed-identifier)
+    (production :parameter (named const (:typed-identifier allow-in)) parameter-named-const-typed-identifier)
     
     (production :optional-parameter (:parameter = (:assignment-expression allow-in)) optional-parameter-assignment-expression)
     
@@ -2196,6 +2207,13 @@
       (depict-world-commands markup-stream *ew*))
   :external-link-base "notation.html"))
 
+
+(depict-rtf-to-local-file
+ "JS20/ParserSemanticsJS2.rtf"
+ "JavaScript 2.0 Syntactic Semantics"
+ #'(lambda (markup-stream)
+     (depict-js-terminals markup-stream *jg*)
+     (depict-world-commands markup-stream *jw*)))
 
 (depict-html-to-local-file
  "JS20/ParserSemanticsJS2.html"
