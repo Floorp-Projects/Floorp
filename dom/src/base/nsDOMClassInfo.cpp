@@ -2789,7 +2789,8 @@ nsWindowSH::GlobalResolve(nsISupports *native, JSContext *cx, JSObject *obj,
 
       const nsDOMClassInfoData *ci_data = nsnull;
 
-      if (name_struct->mDOMClassInfoID >= 0) {
+      if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor &&
+          name_struct->mDOMClassInfoID >= 0) {
         ci_data = &sClassInfoData[name_struct->mDOMClassInfoID];
       }
 
