@@ -63,6 +63,16 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, PRUint3
 
     size_type curCapacity = Capacity();
 
+    // If |capacity > size_type(-1)/2|, then our doubling algorithm may not be
+    // able to allocate it.  Just bail out in cases like that.  We don't want
+    // to be allocating 2GB+ strings anyway.
+    if (capacity > size_type(-1)/2) {
+      // Also assert for |capacity| equal to |size_type(-1)|, since we use that value to
+      // flag immutability.
+      NS_ASSERTION(capacity != size_type(-1), "Bogus capacity");
+      return PR_FALSE;
+    }
+
     // |curCapacity == size_type(-1)| means that the buffer is immutable, so we
     // need to allocate a new buffer.  we cannot use the existing buffer even
     // though it might be large enough.
@@ -74,8 +84,8 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, PRUint3
 
         if (curCapacity > 0)
           {
-            // use doubling algorithm when forced to increase available capacity,
-            // but always start out with exactly the requested amount.
+            // use doubling algorithm when forced to increase available
+            // capacity.
             PRUint32 temp = curCapacity;
             while (temp < capacity)
               temp <<= 1;

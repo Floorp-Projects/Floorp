@@ -297,7 +297,7 @@ SubstValueForCode(nsString& aStr, const PRUnichar * aUKey, const PRUnichar * aUS
 
     // Check to see if we can do the substitution
     if (codeInx == codeLen) {
-      aStr.SetLength(0);
+      aStr.Truncate();
       return; // bail we just can't do it
     }
 
@@ -308,7 +308,7 @@ SubstValueForCode(nsString& aStr, const PRUnichar * aUKey, const PRUnichar * aUS
   }
 
   if (!aUStr || !*aUStr) {
-    aStr.SetLength(0);
+    aStr.Truncate();
   } else {
     aStr.ReplaceSubstring(uKeyStr, aUStr);
   }
@@ -320,7 +320,7 @@ SubstValueForCode(nsString& aStr, const PRUnichar * aUKey, const PRUnichar * aUS
 #else
 
   if (!aUStr || !*aUStr) {
-    aStr.SetLength(0);
+    aStr.Truncate();
   } else {
     aStr.ReplaceSubstring(aUKey, aUStr);
   }
@@ -499,9 +499,21 @@ nsPageFrame::DrawHeaderFooter(nsPresContext*      aPresContext,
     // find how much text fits, the "position" is the size of the available area
     if (BinarySearchForPosition(&aRenderingContext, text, 0, 0, 0, len,
                                 PRInt32(contentWidth), indx, textWidth)) {
-      if (indx < len-1 && len > 3) {
-        str.SetLength(indx-3);
-        str.AppendLiteral("...");
+      if (indx < len-1 ) {
+        // we can't fit in all the text
+        if (indx > 3) {
+          // But we can fit in at least 4 chars.  Show all but 3 of them, then
+          // an ellipsis.
+          // XXXbz for non-plane0 text, this may be cutting things in the
+          // middle of a codepoint!  Also, we have no guarantees that the three
+          // dots will fit in the space the three chars we removed took up with
+          // these font metrics!
+          str.Truncate(indx-3);
+          str.AppendLiteral("...");
+        } else {
+          // We can only fit 3 or fewer chars.  Just show nothing
+          str.Truncate();
+        }
       }
     } else { 
       return; // bail if couldn't find the correct length
