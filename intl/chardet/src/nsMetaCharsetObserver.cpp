@@ -276,12 +276,12 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
              if(! newCharset.EqualsIgnoreCase(charsetString)) 
              {
                  PRBool same = PR_FALSE;
-                 res = mAlias->Equals( newCharset, charsetString , &same);
-                 if(NS_SUCCEEDED(res) && (! same))
+                 nsresult res2 = mAlias->Equals( newCharset, charsetString , &same);
+                 if(NS_SUCCEEDED(res2) && (! same))
                  {
                      nsAutoString preferred;
-                     res = mAlias->GetPreferred(newCharset, preferred);
-                     if(NS_SUCCEEDED(res))
+                     res2 = mAlias->GetPreferred(newCharset, preferred);
+                     if(NS_SUCCEEDED(res2))
                      {
                         // following charset should have been detected by parser
                         if (!preferred.Equals(NS_LITERAL_STRING("UTF-16")) &&
