@@ -51,7 +51,7 @@ private:
 	Point					mMousePoint;	// keep track of where the mouse is at all times
 	PRBool					mInBackground;
 	nsToolkit*				mToolkit;
-	nsMacMessageSink*       mMessageSink;         //еее should be COM_auto_ptr
+	nsMacMessageSink*       mMessageSink;
 
 	// CLASS METHODS
 		    	    

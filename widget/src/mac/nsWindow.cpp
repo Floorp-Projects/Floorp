@@ -73,9 +73,6 @@ nsWindow::~nsWindow()
 {
 	mDestructorCalled = PR_TRUE;
 
-//еее	if (mToolkit && ((nsToolkit*)mToolkit)->GetFocus() == this )
-//еее		((nsToolkit*)mToolkit)->SetFocus(nsnull);
-
 	//Destroy();
 
 	if (mWindowRegion != nsnull)
@@ -180,12 +177,6 @@ NS_IMETHODIMP nsWindow::Destroy()
 		return NS_OK;
 	mDestroyCalled = PR_TRUE;
 
-//еее	// if the window being destroyed has the focus, lose it so that there isn't a dangling reference
-//еее	if (mToolkit && ((nsToolkit*)mToolkit)->GetFocus() == this )
-//еее	{
-//еее		((nsToolkit*)mToolkit)->SetFocus(nsnull);
-//еее	}
-	
 	nsBaseWidget::OnDestroy();
 	nsBaseWidget::Destroy();
 
