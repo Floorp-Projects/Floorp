@@ -1,0 +1,39 @@
+
+@namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
+
+input[type="checkbox"] {
+  -moz-box-align: center;
+  margin: 0px 2px;
+  border: 2px solid transparent;
+  padding: 1px 2px 1px 4px;
+
+  width: 13px;
+  height: 13px;
+  list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
+}
+
+input[type="checkbox"]:focus {
+  border-color: #98A5B2;
+  -moz-border-radius: 4px 5px;
+}
+
+input[type="checkbox"]:hover:active {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-act.gif");  
+}
+
+input[type="checkbox"][disabled] {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-dis.gif") !important;
+}
+
+input[type="checkbox"][_moz-input-checked] {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+    
+input[type="checkbox"][_moz-input-checked]:hover:active {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-act-check.gif");
+}
+
+input[type="checkbox"][_moz-input-checked][disabled] {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-dis-check.gif") !important;
+}
+

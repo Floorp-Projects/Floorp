@@ -2,3 +2,4 @@ forms.jar:
     content/forms/contents.rdf                (content/contents.rdf)
     content/forms/xbl-forms.css               (content/xbl-forms.css)
     content/forms/select.xml                  (content/select.xml)
+    content/forms/checkbox.xml                (content/checkbox.xml)

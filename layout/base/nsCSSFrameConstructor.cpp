@@ -1445,6 +1445,8 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
       return ConstructButtonControlFrame(aPresShell, aPresContext, aFrame);
     }
     else if (val.EqualsIgnoreCase("checkbox")) {
+      if (UseXBLForms())
+        return NS_OK;
       return ConstructCheckboxControlFrame(aPresShell, aPresContext, aFrame, aContent, aStyleContext);
     }
     else if (val.EqualsIgnoreCase("file")) {
