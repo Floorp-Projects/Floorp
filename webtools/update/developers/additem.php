@@ -479,13 +479,39 @@ $description = $_POST["description"];
 $item_id = $_POST["item_id"];
 $guid = $_POST["guid"];
 $type = $_POST["type"];
+
+//Check to ensure tha the name isn't already taken, if it is, throw an error and halt.
+$sql = "SELECT `Name` from `t_main` WHERE `Name`='$name'";
+ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+   if (mysql_num_rows($sql_result)=="0") {
+
 if ($_POST["mode"]=="update") { 
 $sql = "UPDATE `t_main` SET `Name`='$name', `Homepage`='$homepage', `Description`='$description', `DateUpdated`=NOW(NULL) WHERE `ID`='$item_id' LIMIT 1";
 } else {
 $sql = "INSERT INTO `t_main` (`GUID`, `Name`, `Type`, `Homepage`,`Description`,`DateAdded`,`DateUpdated`) VALUES ('$guid', '$name', '$type', '$homepage', '$description', NOW(NULL), NOW(NULL));";
 }
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-if ($sql_result) {echo"Updating/Adding record for $name...<br>\n";}
+if ($sql_result) {echo"Updating/Adding record for $name...<br>\n";
+    } else {
+    //Handle Error Case and Abort
+    $failure = "true";
+    echo"Failure to successfully add/update main record. Unrecoverable Error, aborting.<br>\n";
+    include"$page_footer";
+    echo"</body>\n</html>\n";
+    exit;
+    }
+
+} else {
+//Name wasn't unique, error time. :-)
+    //Handle Error Case and Abort
+    $failure = "true";
+    echo"<strong>Error!</strong>The Name for your extension or theme already exists in the Update database.<br>\nCannot Continue, aborting.<br>\n";
+    include"$page_footer";
+    echo"</body>\n</html>\n";
+    exit;
+}
+
+
 
 
 //Get ID for inserted row... if we don't know it already
@@ -643,24 +669,16 @@ foreach ($vid_array as $vid) {
 }
 
 //Approval Queue
-$_SESSION["trusted"]=="FALSE";
- //Trusted User Code Not Yet Implemented, needs a shared function w/ the approval queue
- // for file moving, creation. (and sql updating?)
   //Check if the item belongs to the user, (special case for where admins are trusted, the trust only applies to their own work.)
   $sql = "SELECT `UserID` from `t_authorxref` WHERE `ID`='$id' AND `UserID` = '$_SESSION[uid]' LIMIT 1";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     if (mysql_num_rows($sql_result)=="1" AND $_SESSION["trusted"]=="TRUE") {
     //User is trusted and the item they're modifying inheirits that trust.
+    include"inc_approval.php"; //Get the resuable process_approval() function.
     $action = "Approval+";
+    $file = $uri;
     $comments = "Auto-Approval for Trusted User";
-    //$typenames = array("E"=>"extensions","T"=>"themes");
-    //$typename = $typenames[$type];
-
-    //$uri = strtolower(str_replace("http://$sitehostname/developers/approvalfile.php/","http://ftp.mozilla.org/pub/mozilla.org/$typename/$itemname/",$newpath));
-    //foreach ($vid_array as $vid) {
-    //   $sql = "UPDATE `t_version` SET `URI`='$uri' WHERE `vID`='$vid'";
-    //   $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-    //}
+       $approval_result = process_approval($type, $file, "approve");
 
     } else {
     $action="Approval?";
@@ -679,7 +697,12 @@ $sql = "INSERT INTO `t_approvallog` (`ID`, `vID`, `UserID`, `action`, `date`, `c
 
 
 echo"Process Complete...<br><br>\n";
-echo"$name version $version has been added to the Mozilla Update database and is awaiting review by an editor, you will be notified when an editor reviews it.<br>\n";
+echo"$name version $version has been added to the Mozilla Update database";
+if ($_SESSION["trusted"]=="FALSE") { echo"and is awaiting review by an editor, you will be notified when an editor reviews it.";
+} else if ($_SESSION["trusted"]=="TRUE") {
+echo" and has been auto-approved. It should be up on the website within the next half-hour.";
+}
+echo"<br>\n";
 echo"To review or make changes to your submission, visit the <A HREF=\"itemoverview.php?id=$id\">Item Details page</A>...<br>\n";
 
 echo"<br><br>\n";
