@@ -90,14 +90,14 @@ public:
   // nsIContentSink overrides
   NS_IMETHOD HandleStartElement(const PRUnichar *aName, 
                                 const PRUnichar **aAtts, 
-                                const PRUint32 aAttsCount, 
-                                const PRUint32 aIndex, 
-                                const PRUint32 aLineNumber);
+                                PRUint32 aAttsCount, 
+                                PRUint32 aIndex, 
+                                PRUint32 aLineNumber);
 
   NS_IMETHOD HandleEndElement(const PRUnichar *aName);
   
   NS_IMETHOD HandleCDataSection(const PRUnichar *aData, 
-                                const PRUint32 aLength);
+                                PRUint32 aLength);
 
 protected:
     // nsXMLContentSink overrides
