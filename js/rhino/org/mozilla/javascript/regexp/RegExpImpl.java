@@ -154,21 +154,24 @@ public class RegExpImpl implements RegExpProxy {
         String str = ScriptRuntime.toString(thisObj);
         data.str = str;
         RegExpImpl reImpl = RegExpImpl.getRegExpImpl(cx);
-
-        if (args[0] instanceof NativeRegExp) {
-            re = (NativeRegExp) args[0];
-        } else {
-            String src = ScriptRuntime.toString(args[0]);
-            String opt;
-            if (data.optarg < args.length) {
-                args[0] = src;
-                opt = ScriptRuntime.toString(args[data.optarg]);
+        Scriptable scope = ScriptableObject.getTopLevelScope(funObj);
+        
+        if (args.length == 0)
+            re = new NativeRegExp(cx, scope, "", "");
+        else
+            if (args[0] instanceof NativeRegExp) {
+                re = (NativeRegExp) args[0];
             } else {
-                opt = null;
+                String src = ScriptRuntime.toString(args[0]);
+                String opt;
+                if (data.optarg < args.length) {
+                    args[0] = src;
+                    opt = ScriptRuntime.toString(args[data.optarg]);
+                } else {
+                    opt = null;
+                }                
+                re = new NativeRegExp(cx, scope, src, opt);
             }
-            Scriptable scope = ScriptableObject.getTopLevelScope(funObj);
-            re = new NativeRegExp(cx, scope, src, opt);
-        }
         data.regexp = re;
 
         data.global = (re.getFlags() & NativeRegExp.GLOB) != 0;
