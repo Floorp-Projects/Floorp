@@ -1648,6 +1648,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
     if (NS_OK == rv) {
       rv = AddAttributes(aNode, it);
       mHead->AppendChild(it, PR_FALSE);
+      NS_RELEASE(it);
     }
     NS_RELEASE(atom);
   }
