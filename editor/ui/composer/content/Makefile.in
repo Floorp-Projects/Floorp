@@ -49,6 +49,8 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/sb-FileWidgetFileHandler.js \
   $(srcdir)/viewsource.xul \
   $(srcdir)/viewsource.js \
+  $(srcdir)/editorOverlay.xul \
+  $(srcdir)/editorOverlay.js \
 	$(NULL)
 
 install:: 
