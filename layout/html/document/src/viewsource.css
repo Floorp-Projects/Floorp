@@ -109,3 +109,10 @@ pre {
  color: steelblue;
  font-style: italic;
 }
+.error, .error > .start-tag, .error > .end-tag,
+.error > .comment, .error > .cdata, .error > .doctype,
+.error > .pi, .error > .entity, .error > .attribute-name,
+.error > .attribute-value {
+  color: red;
+  font-weight: bold;
+}
