@@ -2,7 +2,7 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile,v 1.3 2004/06/24 01:18:12 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.4 2004/07/20 20:39:25 glen.beasley%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
@@ -28,10 +28,10 @@ publish:
 	mkdir -p opt/sun/private/share/lib 
 ifeq ($(BUILD_OPT), 1)
 	cp $(CORE_DEPTH)/../dist/release/no-policy/classes/xpclass.jar \
-		opt/sun/private/share/lib/jss3.jar
+		opt/sun/private/share/lib/jss4.jar
 else
 	cp $(CORE_DEPTH)/../dist/release/no-policy/classes_DBG/xpclass_dbg.jar \
-		opt/sun/private/share/lib/jss3.jar
+		opt/sun/private/share/lib/jss4.jar
 endif
 	tar czvf $(NAME)-$(VERSION).tar.gz opt 
 	echo "AutoReq: 0" > temp.spec

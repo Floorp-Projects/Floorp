@@ -2,7 +2,7 @@
 # Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile,v 1.7 2004/06/15 16:47:00 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.8 2004/07/20 20:39:25 glen.beasley%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
@@ -50,12 +50,12 @@ $(ROOT)/usr/lib/mps/sparcv9:
 $(ROOT)/usr/share/lib/mps/sparcv9:
 	echo "target=$(SOURCE_RELEASE_XP_DIR)/$(SOURCE_RELEASE_XP_CLASSES_DIR)/$(IMPORT_XPCLASS_JAR)"
 	mkdir -p $@
-	$(CP) $(SOURCE_RELEASE_XP_DIR)/$(SOURCE_RELEASE_XP_CLASSES_DIR)/$(IMPORT_XPCLASS_JAR) $@/jss3.jar
+	$(CP) $(SOURCE_RELEASE_XP_DIR)/$(SOURCE_RELEASE_XP_CLASSES_DIR)/$(IMPORT_XPCLASS_JAR) $@/jss4.jar
 $(ROOT)/usr/lib/mps:
 	mkdir -p $@
 	$(CP) -r $(DIST)/lib/*.so $@
 $(ROOT)/usr/share/lib/mps:
 	echo "target=$(SOURCE_RELEASE_XP_DIR)/$(SOURCE_RELEASE_XP_CLASSES_DIR)/$(IMPORT_XPCLASS_JAR)"
 	mkdir -p $@
-	$(CP) $(SOURCE_RELEASE_XP_DIR)/$(SOURCE_RELEASE_XP_CLASSES_DIR)/$(IMPORT_XPCLASS_JAR) $@/jss3.jar
+	$(CP) $(SOURCE_RELEASE_XP_DIR)/$(SOURCE_RELEASE_XP_CLASSES_DIR)/$(IMPORT_XPCLASS_JAR) $@/jss4.jar
 

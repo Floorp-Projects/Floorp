@@ -56,7 +56,7 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.26 $ $Date: 2004/04/25 15:02:20 $
+ * @version $Revision: 1.27 $ $Date: 2004/07/20 20:39:24 $
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -1312,7 +1312,7 @@ public final class CryptoManager implements TokenSupplier
     /********************************************************************/
 
     public static final String
-    JAR_JSS_VERSION     = "JSS_VERSION = JSS_3_5_RTM";
+    JAR_JSS_VERSION     = "JSS_VERSION = JSS_4_0_BETA";
     public static final String
     JAR_JDK_VERSION     = "JDK_VERSION = N/A";
     public static final String
@@ -1320,7 +1320,7 @@ public final class CryptoManager implements TokenSupplier
     public static final String
     JAR_DBM_VERSION     = "DBM_VERSION = N/A";
     public static final String
-    JAR_NSPR_VERSION    = "NSPR_VERSION = NSPR_4_4_1_RTM";
+    JAR_NSPR_VERSION    = "NSPR_VERSION = NSPR_4_5_RTM";
 
     /**
      * Loads the JSS dynamic library if necessary.
