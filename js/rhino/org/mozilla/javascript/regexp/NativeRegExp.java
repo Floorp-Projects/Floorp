@@ -1142,6 +1142,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                             num = 10 * num + unDigit(c);
                             len++;
                         }
+                        index--;
                         ren = new RENode(state, REOP_BACKREF, null);
                         ren.num = num - 1;       /* \1 is numbered 0, etc. */
                         /* Avoid common chr- and flags-setting 
