@@ -268,26 +268,27 @@ stub_op_dcl(TreeState *state)
 
     /* we need to get the return type right on [nonxpcom] objects */
     fprintf(state->file,
-            "  %s rv = ", "nsresult");
+            "  %s rv = ",
+            "nsresult");
     fprintf(state->file,
             "priv->%s(",
             IDL_IDENT(op->ident).str);
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
-            param = IDL_LIST(iter).data;
-            fprintf(state->file,
-                    "%s",
-                    IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
-            if (IDL_LIST(iter).next)
-                fputs(", ",state->file);
+        param = IDL_LIST(iter).data;
+        fprintf(state->file,
+                "%s",
+                IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
+        if (IDL_LIST(iter).next)
+            fputs(", ",state->file);
     }
 
     /* the retval is the last parameter */
     if (has_retval) {
-        if (has_parameters) fputs(", ", state->file);
-        fputs("&retval);\n", state->file);
-    } else {
-        fputs(");\n", state->file);
+        if (has_parameters)
+            fputs(", ", state->file);
+        fputs("&retval", state->file);
     }
+    fputs(");\n", state->file);
 
     fputs("  if (NS_FAILED(rv)) {\n"
           "    JS_ReportError(cx, XXXnsresult2string(rv));\n"
