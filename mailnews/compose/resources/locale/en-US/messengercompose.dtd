@@ -116,7 +116,7 @@
 <!ENTITY returnReceiptCmd.label "Return receipt">
 
 <!ENTITY outputFormatMenu.label "Format">
-<!ENTITY askmeFormatCmd.label ".Ask me">
+<!ENTITY askmeFormatCmd.label "Ask me">
 <!ENTITY plainTextFormatCmd.label "Plain Text only">
 <!ENTITY htmlFormatCmd.label "HTML only">
 <!ENTITY bothFormatCmd.label "Plain Text and HTML">

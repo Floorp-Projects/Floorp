@@ -54,11 +54,20 @@
 #include "nsEscape.h"
 #include "plstr.h"
 #include "nsIDocShell.h"
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
+#include "nsAbBaseCID.h"
+#include "nsIAddrDatabase.h"
+#include "nsIAddrBookSession.h"
 
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
+static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
+static NS_DEFINE_CID(kMsgRecipientArrayCID, NS_MSGRECIPIENTARRAY_CID);
 
 static PRInt32 GetReplyOnTop()
 {
@@ -1993,3 +2002,146 @@ nsresult nsMsgCompose::AttachmentPrettyName(const PRUnichar* url, PRUnichar** _r
 	return NS_OK;
 }
 
+static nsresult OpenAddressBook(const char * dbName, nsIAddrDatabase** aDatabase, nsIAbDirectory** aDirectory)
+{
+	if (!aDatabase || !aDirectory)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = NS_OK;
+	nsFileSpec* dbPath = nsnull;
+
+	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+		abSession->GetUserProfileDirectory(&dbPath);
+	
+	if (dbPath)
+	{
+		(*dbPath) += dbName;
+
+		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+
+		if (NS_SUCCEEDED(rv) && addrDBFactory)
+			rv = addrDBFactory->Open(dbPath, PR_TRUE, aDatabase, PR_TRUE);
+	}
+	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+	if (NS_FAILED(rv)) 
+		return rv;
+
+	nsCOMPtr <nsIRDFResource> resource;
+	nsCAutoString path("abdirectory://");
+	path += dbName;
+	rv = rdfService->GetResource(path, getter_AddRefs(resource));
+	if (NS_FAILED(rv)) 
+		return rv;
+
+	// query interface 
+	rv = resource->QueryInterface(nsIAbDirectory::GetIID(), aDirectory);
+	return rv;
+}
+
+nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnichar **_retval)
+{
+    nsresult rv = NS_OK;
+    *_retval = nsnull;
+    PRInt32 j;
+    PRInt32 i;
+    PRInt32 nbrRecipients;
+    nsXPIDLString emailAddr;
+    
+    nsAutoString recipientStr;
+    if (recipients != nsnull)
+        recipientStr = recipients;
+    else
+    {
+        recipientStr += m_compFields->GetTo();
+        recipientStr += ',';
+        recipientStr += m_compFields->GetCc();
+        recipientStr += ',';
+        recipientStr += m_compFields->GetBcc();
+    }
+    
+    /*ducarroz: for now, I've hardcoded the addressbook DBs we are looking in it, will do much better later! */
+    PRInt32 nbrOfAddrbook = 2;
+    const char addrbookName[2][20] = {"abook.mab", "history.mab"};
+ 
+    nsCOMPtr<nsIMsgRecipientArray> array;
+    nsCOMPtr<nsIMsgRecipientArray> noHTMLArray;
+    rv = nsComponentManager::CreateInstance(kMsgRecipientArrayCID, 
+                                          NULL, NS_GET_IID(nsIMsgRecipientArray), 
+                                          (void **) getter_AddRefs(noHTMLArray));
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = m_compFields->SplitRecipients(recipientStr.GetUnicode(), true, getter_AddRefs(array));
+    if (NS_SUCCEEDED(rv))
+    {
+    	nsCOMPtr<nsIAddrDatabase> abDataBase;
+        nsCOMPtr<nsIAbDirectory> abDirectory;   
+    	nsCOMPtr <nsIAbCard> existingCard;
+
+        for (j = 0; j < nbrOfAddrbook; j++)
+        {
+            array->GetCount(&nbrRecipients);
+            if (nbrRecipients == 0)
+                break;
+            
+            rv = OpenAddressBook(addrbookName[j], getter_AddRefs(abDataBase), getter_AddRefs(abDirectory));
+            if (NS_FAILED(rv))
+                continue;
+            
+            for (i = 0; i < nbrRecipients; i ++)
+            {
+                rv = array->StringAt(i, getter_Copies(emailAddr));
+                if (NS_FAILED(rv))
+                    continue;
+                nsCAutoString emailStr(emailAddr);
+
+    			rv = abDataBase->GetCardForEmailAddress(abDirectory, emailStr, getter_AddRefs(existingCard));
+    			if (NS_SUCCEEDED(rv) && existingCard)
+    			{
+    			    PRBool bPlainText;
+    			    rv = existingCard->GetSendPlainText(&bPlainText);
+    			    if (NS_SUCCEEDED(rv))
+    			    {
+                        PRBool aBool;
+    			        if (bPlainText)
+    			        {
+    			            //this guy doesn't want/support HTML message, move it in the noHTML array.
+    			            noHTMLArray->AppendString(emailAddr, &aBool);
+    			        }
+    			        array->RemoveStringAt(i, &aBool);
+            			if (aBool)
+            			{
+            			    nbrRecipients --;
+            			    i --;
+            			}
+    			    }
+    			}
+            }
+            if (abDataBase)
+                abDataBase->Close(PR_FALSE);            
+        }
+    }
+
+    //now, build the result
+    noHTMLArray->GetCount(&nbrRecipients);
+    recipientStr = "";
+    for (i = 0; i < nbrRecipients; i ++)
+    {
+        if (i > 0)
+            recipientStr += ',';
+        noHTMLArray->StringAt(i, getter_Copies(emailAddr));
+        recipientStr += emailAddr;
+    }     
+    *_retval = recipientStr.ToNewUnicode();
+    
+    return NS_OK;
+}
+
+nsresult nsMsgCompose::GetNoHtmlNewsgroups(const PRUnichar *newsgroups, PRUnichar **_retval)
+{
+    //FIX ME: write me
+    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
+    *_retval = nsnull;
+    return rv;
+}

@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messengercompose/skin/" type="text/css"?>  
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
@@ -11,16 +10,22 @@
     xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
-    align="vertical"> 
+    align="vertical"
+    class="dialog"> 
 
 <html:script language="JavaScript" src="chrome://messengercompose/content/MsgAttachPage.js"/> 
 
 	<keyset id="keyset"/>
 
+    <spring style="height:0.5em" />
 	<box align="horizontal">
+        <spring style="width:10px" />
 		<html:div>Web Page (URL):</html:div>
 		<html:input type="text" id="attachurl" align="bottom" style="min-width:200px; padding-bottom:0px" />
+        <spring style="width:10px" />
 	</box>
 	
+    <spring style="height:1em"/>
 	<box id="okCancelButtons"/> 
+    <spring style="height:0.5em" />
 </window>

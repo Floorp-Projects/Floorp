@@ -60,6 +60,16 @@ nsresult nsMsgRecipientArray::AppendString(const PRUnichar *aString, PRBool *_re
 	return NS_OK;
 }
 
+nsresult nsMsgRecipientArray::RemoveStringAt(PRInt32 idx, PRBool *_retval)
+{
+	if (!_retval || !m_array)
+		return NS_ERROR_NULL_POINTER;
+		
+	*_retval = m_array->RemoveStringAt(idx);
+
+	return NS_OK;
+}
+
 nsresult nsMsgRecipientArray::Clear()
 {
 	if (!m_array)

@@ -127,7 +127,7 @@ interface nsIMsgCompFields : nsISupports {
 	boolean GetTheForcePlainText();
 	
 	/* some utility functions */
-    nsIMsgRecipientArray SplitRecipients(in wstring recipients);
+    nsIMsgRecipientArray SplitRecipients(in wstring recipients, in boolean emailAddressOnly);    
     void ConvertBodyToPlainText();
 };
 

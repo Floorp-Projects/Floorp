@@ -18,6 +18,9 @@
  * Rights Reserved.
  */
 
+var msgCompDeliverMode = Components.interfaces.nsIMsgCompDeliverMode;
+var msgCompSendFormat = Components.interfaces.nsIMsgCompSendFormat;
+
 var accountManagerProgID   = "component://netscape/messenger/account-manager";
 var accountManager = Components.classes[accountManagerProgID].getService(Components.interfaces.nsIMsgAccountManager);
 
@@ -34,6 +37,7 @@ var Bundle = srGetStrBundle("chrome://messengercompose/locale/composeMsgs.proper
 
 var other_header = "";
 var update_compose_title_as_you_type = true;
+var sendFormat = msgCompSendFormat.AskUser;
 var prefs = Components.classes["component://netscape/preferences"].getService();
 if (prefs) {
 	prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
@@ -363,6 +367,34 @@ function GenericSendMessage( msgType )
 				dump("failed to SetAttachments\n");
 			}
 		
+		    // Before sending the message, check what to do with HTML message, eventually abort.
+            action = DetermineHTMLAction();
+            if (action == msgCompSendFormat.AskUser)
+            {
+                var result = {action:msgCompSendFormat.PlainText, abort:false};
+	            window.openDialog("chrome://messengercompose/content/askSendFormat.xul",
+	                                "askSendFormatDialog", "chrome,modal",
+	                                result);
+	            if (result.abort)
+	                return;
+	             action = result.action;
+            }
+            switch (action)
+            {
+                case msgCompSendFormat.PlainText:
+                    msgCompFields.SetTheForcePlainText(true);
+                    msgCompFields.SetUseMultipartAlternativeFlag(false);
+                    break;
+                case msgCompSendFormat.HTML:
+                    msgCompFields.SetTheForcePlainText(false);
+                    msgCompFields.SetUseMultipartAlternativeFlag(false);
+                    break;
+                case msgCompSendFormat.Both:
+                    msgCompFields.SetTheForcePlainText(false);
+                    msgCompFields.SetUseMultipartAlternativeFlag(true);
+			        break;	    
+               default: dump("\###SendMessage Error: invalid action value\n"); return;
+            }
 			try {
 				msgCompose.SendMsg(msgType, getCurrentIdentity(), null);
 			}
@@ -381,7 +413,7 @@ function SendMessage()
   // 0 = nsMsgDeliverNow
   // RICHIE: We should really have a way of using constants and not
   // hardcoded numbers for the first argument
-	GenericSendMessage(0);
+	GenericSendMessage(msgCompDeliverMode.Now);
 }
 
 function SendMessageLater()
@@ -390,7 +422,7 @@ function SendMessageLater()
   // 1 = nsMsgQueueForLater
   // RICHIE: We should really have a way of using constants and not
   // hardcoded numbers for the first argument
-	GenericSendMessage(1);
+	GenericSendMessage(msgCompDeliverMode.Later);
 }
 
 function SaveAsDraft()
@@ -400,7 +432,7 @@ function SaveAsDraft()
   // 4 = nsMsgSaveAsDraft
   // RICHIE: We should really have a way of using constants and not
   // hardcoded numbers for the first argument
-  GenericSendMessage(4);
+  GenericSendMessage(msgCompDeliverMode.SaveAsDraft);
 }
 
 function SaveAsTemplate()
@@ -410,7 +442,7 @@ function SaveAsTemplate()
   // 5 = nsMsgSaveAsTemplate
   // RICHIE: We should really have a way of using constants and not
   // hardcoded numbers for the first argument
-  GenericSendMessage(5);
+  GenericSendMessage(msgCompDeliverMode.SaveAsTemplate);
 }
 
 
@@ -499,28 +531,17 @@ function OutputFormatMenuSelect(target)
 	{
 		var msgCompFields = msgCompose.compFields;
    
-    if (msgCompFields)
-    {
-      switch (target.getAttribute('id'))
-	    {
-		    case "1":        
-			    break;	    
-		    case "2":
-          msgCompFields.SetTheForcePlainText(true);
-          msgCompFields.SetUseMultipartAlternativeFlag(false);
-			    break;	    
-		    case "3":
-          msgCompFields.SetTheForcePlainText(false);
-          msgCompFields.SetUseMultipartAlternativeFlag(false);
-			    break;
-        case "4":
-          msgCompFields.SetTheForcePlainText(false);
-          msgCompFields.SetUseMultipartAlternativeFlag(true);
-          break;
-		    default:
-			    break;		
-	    }
-    }
+        if (msgCompFields)
+        {
+            switch (target.getAttribute('id'))
+    	    {
+    		    case "1": sendFormat = msgCompSendFormat.AskUser;     break;
+    		    case "2": sendFormat = msgCompSendFormat.PlainText;   break;
+    		    case "3": sendFormat = msgCompSendFormat.HTML;        break;
+                case "4": sendFormat = msgCompSendFormat.Both;        break;
+    		    default: break;		
+    	    }
+        }
 	}
 }
 
@@ -599,16 +620,26 @@ function getIdentityForKey(key)
 
 function AdjustFocus()
 {
-	if (document.getElementById("msgRecipient#1").value == "")
+    var element = document.getElementById("msgRecipient#1");
+	if (element.value == "")
 	{
 		dump("set focus on the recipient\n");
-		document.getElementById("msgRecipient#1").focus();
+		element.focus();
 	}
 	else
 	{
-		dump("set focus on the body\n");
-		contentWindow.focus();
-	}
+	    element = document.getElementById("msgSubject");
+	    if (element.value == "")
+	    {
+    		dump("set focus on the subject\n");
+    		element.focus();
+	    }
+	    else
+    	{
+    		dump("set focus on the body\n");
+    		contentWindow.focus();
+    	}
+    }
 }
 
 function SetComposeWindowTitle(event) 
@@ -679,7 +710,10 @@ function AddAttachment(attachment)
 
 function AttachPage()
 {
-	window.openDialog("chrome://messengercompose/content/MsgAttachPage.xul", "attachPageDialog", "chrome", {addattachmentfunction:AddAttachment});
+    var result = {url: ""};
+	window.openDialog("chrome://messengercompose/content/MsgAttachPage.xul", "attachPageDialog", "chrome,modal", result);
+	if (result.url != "")
+	    AddAttachment(result.url);
 }
 
 function GenerateAttachmentsString()
@@ -734,4 +768,60 @@ function RemoveSelectedAttachment()
 function AttachVCard()
 {
 	dump("AttachVCard()\n");
+}
+
+function DetermineHTMLAction()
+{
+    if (! msgCompose.composeHTML)
+        return msgCompSendFormat.PlainText;
+
+    if (sendFormat == msgCompSendFormat.AskUser)
+    {
+        //Well, before we ask, see if we can figure out what to do for ourselves
+        
+        var noHtmlRecipients;
+        var newsgroups;
+
+        //Check the address book for the HTML property for each recipient
+        try {
+            noHtmlRecipients = msgCompose.GetNoHtmlRecipients(null);
+        } catch(ex)
+        {
+            noHtmlRecipients = "";
+        }
+        
+        //Check newsgroups now...
+        try {
+            newsgroups = msgCompose.GetNoHtmlNewsgroups(null);
+        } catch(ex)
+        {
+           newsgroups = msgCompose.compFields.GetNewsgroups();
+        }
+        
+        if (noHtmlRecipients != "" || newsgroups != "")
+        {
+            
+            //Do we really need to send in HTML?
+            //FIX ME: need to ask editor is the body containg any formatting or non plaint text elements.
+            
+            if (newsgroups == "")
+            {
+                //See if a preference has been set to tell us what to do. Note that we do not honor that
+                //preference for newsgroups. Only for e-mail addresses.
+                action = prefs.GetIntPref("mail.default_html_action");
+                switch (action)
+                {
+                    case msgCompSendFormat.PlainText    :
+                    case msgCompSendFormat.HTML         :
+                    case msgCompSendFormat.Both         :
+                        return action;
+                }
+            }
+            return msgCompSendFormat.AskUser;
+        }
+        else
+            return msgCompSendFormat.HTML;
+    }
+
+    return sendFormat;
 }

@@ -279,7 +279,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 	    
 	   	<menu value="&outputFormatMenu.label;" oncommand="OutputFormatMenuSelect(event.target);">
     		<menupopup>
-			<menuitem value="&askmeFormatCmd.label;" disabled="true" id="1"/>
+			<menuitem value="&askmeFormatCmd.label;" id="1"/>
     		<menuitem value="&plainTextFormatCmd.label;" id="2"/>
     		<menuitem value="&htmlFormatCmd.label;" id="3"/>
     		<menuitem value="&bothFormatCmd.label;" id="4"/>

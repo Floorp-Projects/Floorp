@@ -78,6 +78,14 @@ interface nsIMsgCompDeliverMode {
     const long SaveAsTemplate = 5;
 };
 
+[scriptable, uuid(f38ea280-e090-11d3-a449-e3153319347c)]
+interface nsIMsgCompSendFormat {
+    const long AskUser = 0;
+    const long PlainText = 1;
+    const long HTML = 2;
+    const long Both = 3;
+};
+
 [scriptable, uuid(e72c6981-992a-11d3-a449-eb15bb19bc7c)]
 interface nsIMsgComposeStateListener : nsISupports
 {
@@ -126,6 +134,16 @@ interface nsIMsgCompose : nsISupports {
     */
     wstring AttachmentPrettyName(in wstring url);
     
+    /* GetNoHtmlRecipients: if null is passed as recipient, the function will automatically
+        looks for all the recipients (to, cc, bcc) stored in the compose fields
+    */
+    wstring GetNoHtmlRecipients(in wstring recipients);
+    
+    /* GetNoHtmlNewsgroups: if null is passed as recipient, the function will automatically
+        looks for newsgroups stored in compose fields 
+    */
+    wstring GetNoHtmlNewsgroups(in wstring newsgroups);
+
 	/* ... */
 	attribute nsIEditorShell editor;
 

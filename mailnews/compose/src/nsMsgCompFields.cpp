@@ -681,7 +681,7 @@ const char* nsMsgCompFields::GetForwardURL(PRInt32 which)
 	return NULL;
 }
 
-nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, nsIMsgRecipientArray **_retval)
+nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, PRBool emailAddressOnly, nsIMsgRecipientArray **_retval)
 {
 	nsresult rv = NS_OK;
 
@@ -722,8 +722,9 @@ nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, nsIMsgRec
 				
 				for (i = 0; i < numAddresses; i ++)
 				{
-					rv = parser->MakeFullAddress(msgCompHeaderInternalCharset(), pNames, pAddresses, &fullAddress);
-					if (NS_SUCCEEDED(rv))
+				    if (!emailAddressOnly)
+					    rv = parser->MakeFullAddress(msgCompHeaderInternalCharset(), pNames, pAddresses, &fullAddress);
+					if (NS_SUCCEEDED(rv) && !emailAddressOnly)
 					{
 						rv = ConvertToUnicode(msgCompHeaderInternalCharset(), fullAddress, aRecipient);
 						PR_FREEIF(fullAddress);
