@@ -233,61 +233,6 @@ public:
                               nsChangeHint aHint) = 0;
 
 
-  /////////////// Style change notifications ////////////////// 
-
-  /**
-   * A StyleRule has just been modified within a style sheet.
-   *
-   * @param aDocument The document being observed
-   * @param aStyleSheet the StyleSheet that contians the rule
-   * @param aStyleRule  the rule that was modified
-   * @param aHint       some possible info about the nature of the change.
-   *                    see nsStyleConsts for hint values
-   *
-   * @return  NS_OK
-   * @see     nsIDocumentObserver
-   */
-  NS_IMETHOD StyleRuleChanged(nsIPresContext* aPresContext,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule,
-                              nsChangeHint aHint) = 0; // See nsStyleConsts fot hint values
-
-  /**
-   * A StyleRule has just been added to a style sheet.
-   * This method is called automatically when the rule gets
-   * added to the sheet. The style sheet passes this
-   * notification to the document. The notification is passed on 
-   * to all of the document observers.
-   *
-   * @param aDocument The document being observed
-   * @param aStyleSheet the StyleSheet that has been modified
-   * @param aStyleRule the rule that was added
-   *
-   * @return  NS_OK
-   * @see     nsIDocumentObserver
-   */
-  NS_IMETHOD StyleRuleAdded(nsIPresContext* aPresContext,
-                            nsIStyleSheet* aStyleSheet,
-                            nsIStyleRule* aStyleRule) = 0;
-
-  /**
-   * A StyleRule has just been removed from a style sheet.
-   * This method is called automatically when the rule gets
-   * removed from the sheet. The style sheet passes this
-   * notification to the document. The notification is passed on 
-   * to all of the document observers.
-   *
-   * @param aDocument The document being observed
-   * @param aStyleSheet the StyleSheet that has been modified
-   * @param aStyleRule the rule that was removed
-   *
-   * @return  NS_OK
-   * @see     nsIDocumentObserver
-   */
-  NS_IMETHOD StyleRuleRemoved(nsIPresContext* aPresContext,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule) = 0;
-
   /**
    * Method that actually handles style changes for effected frames.
    * Note:  this may not need to be a public method.  Use with extreme caution.

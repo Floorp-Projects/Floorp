@@ -201,7 +201,18 @@ public:
   virtual void SetLineNumber(PRUint32 aLineNumber) = 0;
 
   virtual nsCSSDeclaration* GetDeclaration(void) const = 0;
-  virtual void SetDeclaration(nsCSSDeclaration* aDeclaration) = 0;
+
+  /**
+   * Return a new |nsIStyleRule| instance that replaces the current one,
+   * due to a change in the |nsCSSDeclaration|.  Due to the
+   * |nsIStyleRule| contract of immutability, this must be called if the
+   * declaration is modified.
+   *
+   * |DeclarationChanged| handles replacing the object in the container
+   * sheet or group rule if |aHandleContainer| is true.
+   */
+  virtual already_AddRefed<nsICSSStyleRule>
+    DeclarationChanged(PRBool aHandleContainer) = 0;
 
   virtual already_AddRefed<nsIStyleRule> GetImportantRule(void) = 0;
 
@@ -211,6 +222,7 @@ public:
 
 nsresult
 NS_NewCSSStyleRule(nsICSSStyleRule** aInstancePtrResult,
-                   nsCSSSelectorList* aSelector);
+                   nsCSSSelectorList* aSelector,
+                   nsCSSDeclaration* aDeclaration);
 
 #endif /* nsICSSStyleRule_h___ */

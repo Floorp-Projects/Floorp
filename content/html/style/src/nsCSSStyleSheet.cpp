@@ -819,6 +819,7 @@ public:
   NS_IMETHOD ClearMedia(void);
   NS_IMETHOD DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex);
   NS_IMETHOD InsertRuleIntoGroup(const nsAString& aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
+  NS_IMETHOD ReplaceRuleInGroup(nsICSSGroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew);
   
   NS_IMETHOD GetApplicable(PRBool& aApplicable) const;
   
@@ -847,6 +848,7 @@ public:
   // XXX do these belong here or are they generic?
   NS_IMETHOD PrependStyleRule(nsICSSRule* aRule);
   NS_IMETHOD AppendStyleRule(nsICSSRule* aRule);
+  NS_IMETHOD ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew);
 
   NS_IMETHOD  StyleRuleCount(PRInt32& aCount) const;
   NS_IMETHOD  GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
@@ -1354,7 +1356,8 @@ DOMMediaListImpl::EndMediaChange(void)
     mStyleSheet->DidDirty();
     rv = mStyleSheet->GetOwningDocument(*getter_AddRefs(doc));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = doc->StyleRuleChanged(mStyleSheet, nsnull, NS_STYLE_HINT_RECONSTRUCT_ALL);
+    // XXXldb Pass something meaningful?
+    rv = doc->StyleRuleChanged(mStyleSheet, nsnull, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = doc->EndUpdate();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2155,6 +2158,32 @@ CSSStyleSheetImpl::AppendStyleRule(nsICSSRule* aRule)
       }
         
     }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSStyleSheetImpl::ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew)
+{
+  NS_PRECONDITION(mInner->mOrderedRules, "can't have old rule");
+  NS_PRECONDITION(mInner && mInner->mComplete,
+                  "No replacing in an incomplete sheet!");
+
+  if (NS_SUCCEEDED(WillDirty())) {
+    PRInt32 index = mInner->mOrderedRules->IndexOf(aOld);
+    NS_ENSURE_TRUE(index != -1, NS_ERROR_UNEXPECTED);
+    mInner->mOrderedRules->ReplaceElementAt(aNew, index);
+
+    aNew->SetStyleSheet(this);
+    aOld->SetStyleSheet(nsnull);
+    DidDirty();
+#ifdef DEBUG
+    PRInt32 type = nsICSSRule::UNKNOWN_RULE;
+    aNew->GetType(type);
+    NS_ASSERTION(nsICSSRule::NAMESPACE_RULE != type, "not yet implemented");
+    aOld->GetType(type);
+    NS_ASSERTION(nsICSSRule::NAMESPACE_RULE != type, "not yet implemented");
+#endif
   }
   return NS_OK;
 }
@@ -2979,6 +3008,29 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule*
 
   *_retval = aIndex;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSStyleSheetImpl::ReplaceRuleInGroup(nsICSSGroupRule* aGroup,
+                                      nsICSSRule* aOld, nsICSSRule* aNew)
+{
+  nsresult result;
+  NS_PRECONDITION(mInner && mInner->mComplete,
+                  "No replacing in an incomplete sheet!");
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIDOMCSSRule> domGroup(do_QueryInterface(aGroup));
+    nsCOMPtr<nsIDOMCSSStyleSheet> groupSheet;
+    domGroup->GetParentStyleSheet(getter_AddRefs(groupSheet));
+    NS_ASSERTION(this == groupSheet, "group doesn't belong to this sheet");
+  }
+#endif
+  result = WillDirty();
+  NS_ENSURE_SUCCESS(result, result);
+
+  result = aGroup->ReplaceStyleRule(aOld, aNew);
+  DidDirty();
+  return result;
 }
 
 // nsICSSLoaderObserver implementation

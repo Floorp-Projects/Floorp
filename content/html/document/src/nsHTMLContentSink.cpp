@@ -5448,7 +5448,8 @@ HTMLContentSink::StyleSheetApplicableStateChanged(nsIDocument *aDocument,
 NS_IMETHODIMP
 HTMLContentSink::StyleRuleChanged(nsIDocument *aDocument,
                                   nsIStyleSheet* aStyleSheet,
-                                  nsIStyleRule* aStyleRule, nsChangeHint aHint)
+                                  nsIStyleRule* aOldStyleRule,
+                                  nsIStyleRule* aNewStyleRule)
 {
   return NS_OK;
 }

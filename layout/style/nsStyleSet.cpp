@@ -195,7 +195,7 @@ public:
 
   virtual nsresult GetRuleTree(nsRuleNode** aResult);
   
-  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule);
+  virtual nsresult ClearStyleData(nsIPresContext* aPresContext);
 
   virtual nsresult GetStyleFrameConstruction(nsIStyleFrameConstruction** aResult) {
     *aResult = mFrameConstructor;
@@ -253,20 +253,6 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aModType, 
                               nsChangeHint aHint); // See nsStyleConsts fot hint values
-
-  // xxx style rules enumeration
-
-  // Style change notifications
-  NS_IMETHOD StyleRuleChanged(nsIPresContext* aPresContext,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule,
-                              nsChangeHint aHint); // See nsStyleConsts fot hint values
-  NS_IMETHOD StyleRuleAdded(nsIPresContext* aPresContext,
-                            nsIStyleSheet* aStyleSheet,
-                            nsIStyleRule* aStyleRule);
-  NS_IMETHOD StyleRuleRemoved(nsIPresContext* aPresContext,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule);
 
   // Notification that we were unable to render a replaced element.
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
@@ -1504,30 +1490,13 @@ StyleSetImpl::GetDefaultStyleData()
 }
 
 nsresult
-StyleSetImpl::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule)
+StyleSetImpl::ClearStyleData(nsIPresContext* aPresContext)
 {
-  // XXXdwh This is not terribly fast, but fortunately this case is rare (and often a full tree
-  // invalidation anyway).  Improving performance here would involve a footprint
-  // increase.  Mappings from rule nodes to their associated style contexts as well as
-  // mappings from rules to their associated rule nodes would enable us to avoid the two
-  // tree walks that occur here.
-  
-  // Crawl the entire rule tree and blow away all data for rule nodes (and their descendants)
-  // that have the given rule.
   if (mRuleTree)
-    mRuleTree->ClearCachedDataInSubtree(aRule);
-  
-  // We need to crawl the entire style context tree, and for each style context we need 
-  // to see if the specified rule is matched.  If so, that context and all its descendant
-  // contexts must have their data wiped.
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  nsIFrame* rootFrame;
-  shell->GetRootFrame(&rootFrame);
-  if (rootFrame) {
-    nsStyleContext* rootContext = rootFrame->GetStyleContext();
-    if (rootContext)
-      rootContext->ClearStyleData(aPresContext, aRule);
+    mRuleTree->ClearStyleData();
+
+  for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i) {
+    NS_STATIC_CAST(nsStyleContext*,mRoots[i])->ClearStyleData(aPresContext);
   }
 
   return NS_OK;
@@ -1759,33 +1728,6 @@ StyleSetImpl::AttributeChanged(nsIPresContext* aPresContext,
 {
   return mFrameConstructor->AttributeChanged(aPresContext, aContent, 
                                              aNameSpaceID, aAttribute, aModType, aHint);
-}
-
-
-// Style change notifications
-NS_IMETHODIMP
-StyleSetImpl::StyleRuleChanged(nsIPresContext* aPresContext,
-                               nsIStyleSheet* aStyleSheet,
-                               nsIStyleRule* aStyleRule,
-                               nsChangeHint aHint)
-{
-  return mFrameConstructor->StyleRuleChanged(aPresContext, aStyleSheet, aStyleRule, aHint);
-}
-
-NS_IMETHODIMP
-StyleSetImpl::StyleRuleAdded(nsIPresContext* aPresContext,
-                             nsIStyleSheet* aStyleSheet,
-                             nsIStyleRule* aStyleRule)
-{
-  return mFrameConstructor->StyleRuleAdded(aPresContext, aStyleSheet, aStyleRule);
-}
-
-NS_IMETHODIMP
-StyleSetImpl::StyleRuleRemoved(nsIPresContext* aPresContext,
-                               nsIStyleSheet* aStyleSheet,
-                               nsIStyleRule* aStyleRule)
-{
-  return mFrameConstructor->StyleRuleRemoved(aPresContext, aStyleSheet, aStyleRule);
 }
 
 NS_IMETHODIMP

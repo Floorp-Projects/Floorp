@@ -640,12 +640,11 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
   if (declaration) {
     // Create a style rule for the delcaration
     nsICSSStyleRule* rule = nsnull;
-    rv = NS_NewCSSStyleRule(&rule, nsnull);
+    rv = NS_NewCSSStyleRule(&rule, nsnull, declaration);
     if (NS_FAILED(rv)) {
       declaration->RuleAbort();
       return rv;
     }
-    rule->SetDeclaration(declaration);
     *aResult = rule;
   }
   else {
@@ -1473,14 +1472,13 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode, RuleAppendFunc aAppendFu
   // Translate the selector list and declaration block into style data
 
   nsCOMPtr<nsICSSStyleRule> rule;
-  NS_NewCSSStyleRule(getter_AddRefs(rule), slist);
+  NS_NewCSSStyleRule(getter_AddRefs(rule), slist, declaration);
   if (!rule) {
     aErrorCode = NS_ERROR_OUT_OF_MEMORY;
     delete slist;
     return PR_FALSE;
   }
   rule->SetLineNumber(linenum);
-  rule->SetDeclaration(declaration);
   (*aAppendFunc)(rule, aData);
 
   return PR_TRUE;

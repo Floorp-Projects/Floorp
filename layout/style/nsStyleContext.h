@@ -139,7 +139,7 @@ public:
 
   nsStyleStruct* GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleStructID& aSID);
 
-  void ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule);
+  void ClearStyleData(nsIPresContext* aPresContext);
 
   nsChangeHint CalcStyleDifference(nsStyleContext* aOther);
 
