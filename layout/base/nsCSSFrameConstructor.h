@@ -68,7 +68,7 @@ public:
   virtual ~nsCSSFrameConstructor(void);
 
   // Maintain global objects - gXBLService
-  static nsresult InitGlobals() { return CallGetService("@mozilla.org/xbl;1", &gXBLService); }
+  static nsIXBLService * GetXBLService();
   static void ReleaseGlobals() { NS_IF_RELEASE(gXBLService); }
 
   // get the alternate text for a content node
