@@ -236,7 +236,7 @@ OBJS	= $(strip $(_OBJS))
 endif
 
 ifndef HOST_OBJS
-HOST_OBJS		= $(HOST_CSRCS:.c=.ho)
+HOST_OBJS		= $(addprefix host_,$(HOST_CSRCS:.c=.o))
 endif
 
 ifeq ($(OS_ARCH),OS2)
@@ -274,7 +274,7 @@ GARBAGE			+= $(SIMPLE_PROGRAMS:%=%.$(OBJ_SUFFIX))
 endif
 
 ifdef HOST_SIMPLE_PROGRAMS
-GARBAGE			+= $(HOST_SIMPLE_PROGRAMS:%=%.ho)
+GARBAGE			+= $(addprefix host_,$(HOST_SIMPLE_PROGRAMS:%=%.o))
 endif
 
 #
@@ -700,7 +700,7 @@ distclean:: $(SUBMAKEFILES)
 	-rm -rf $(ALL_TRASH_DIRS) 
 	-rm -f $(ALL_TRASH)  \
 	Makefile .HSancillary \
-	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) \
+	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) $(wildcard host_*.o) \
 	$(wildcard *.$(LIB_SUFFIX)) $(wildcard *$(DLL_SUFFIX))
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	-rm -f $(PROGRAM:.exe=.map)
@@ -782,7 +782,7 @@ ifdef MOZ_POST_PROGRAM_COMMAND
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 endif
 
-$(HOST_SIMPLE_PROGRAMS): host_%$(BIN_SUFFIX): %.ho $(HOST_EXTRA_DEPS) Makefile Makefile.in
+$(HOST_SIMPLE_PROGRAMS): host_%$(BIN_SUFFIX): host_%.o $(HOST_EXTRA_DEPS) Makefile Makefile.in
 	$(HOST_CC) $(OUTOPTION)$@ $(HOST_CFLAGS) $(INCLUDES) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 
 #
@@ -974,6 +974,15 @@ endif # !COMPILER_DEPEND
 
 endif # MOZ_AUTO_DEPS
 
+# Rules for building native targets must come first because of the host_ prefix
+host_%.o: %.c Makefile.in
+	$(REPORT_BUILD)
+ifdef _NO_AUTO_VARS
+	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(srcdir)/$*.c
+else
+	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $<
+endif
+
 %: %.c Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
@@ -990,14 +999,6 @@ ifdef _NO_AUTO_VARS
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(srcdir)/$*.c
 else
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $<
-endif
-
-%.ho: %.c Makefile.in
-	$(REPORT_BUILD)
-ifdef _NO_AUTO_VARS
-	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(srcdir)/$*.c
-else
-	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $<
 endif
 
 moc_%.cpp: %.h Makefile.in
@@ -1527,7 +1528,7 @@ endif
 # hundreds of built-in suffix rules for stuff we don't need.
 #
 .SUFFIXES:
-.SUFFIXES: .out .a .ln .o .ho .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in .$(OBJ_SUFFIX) .mm .idl $(BIN_SUFFIX)
+.SUFFIXES: .out .a .ln .o .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in .$(OBJ_SUFFIX) .mm .idl $(BIN_SUFFIX)
 
 #
 # Fake targets.  Always run these rules, even if a file/directory with that
