@@ -969,6 +969,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
    background-color     : #E7EEEC;
 }
 
+.month-day-box-class[weekend="true"] {
+  background-color: #FFF9E7; /* #FFF9EF; */
+}
+
 /*today's day box*/
 .month-day-box-class[today="true"]{
     font-weight:bold;
@@ -1616,11 +1620,6 @@ then observed (ERic 20/06/03)
 
 .week-view-hour-box-class-last-day
 {
-}
-
-.month-day-box-class[weekend="true"],
-.week-view-hour-box-class[weekend="true"]{
-   background-color         : #FFF9EF;
 }
 
 .week-view-hour-box-class[today="true"]

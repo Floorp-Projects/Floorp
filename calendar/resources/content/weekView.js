@@ -487,7 +487,7 @@ WeekView.prototype.refreshDisplay = function( )
 {
   var Offset = this.preferredWeekStart();
   var isOnlyWorkDays = (gOnlyWorkdayChecked == "true");
-  var isDayOff = (isOnlyWorkDays? this.preferredDaysOff() : null);
+  var isDayOff = this.preferredDaysOff();
    
    // Define a reference column (which will not be collapsed latter) to use to get its width. 
    // This is used to place the event Box
@@ -562,14 +562,23 @@ WeekView.prototype.refreshDisplay = function( )
 
       document.getElementById( "week-header-date-text-"+dayIndex ).setAttribute( "value", NewArrayOfDayNames[col] );
          
-      if( isOnlyWorkDays && isDayOff[(Offset + col) % 7]) {
-         document.getElementById( "weekview-column-day-"+dayIndex ).setAttribute( "hidden", "true" );
-         document.getElementById( "weekview-header-column-day-"+dayIndex ).setAttribute( "hidden", "true" );
+      var headColumn = document.getElementById( "weekview-header-column-day-"+dayIndex );
+      var bodyColumn = document.getElementById( "weekview-column-day-"+dayIndex );
+      var dayOfWeek = (Offset + col) % 7;
+      if( isOnlyWorkDays && isDayOff[ dayOfWeek ]) {
+        headColumn.setAttribute( "hidden", "true" );
+        bodyColumn.setAttribute( "hidden", "true" );
       } else {
-         document.getElementById( "weekview-column-day-"+dayIndex ).removeAttribute( "hidden" );
-         document.getElementById( "weekview-header-column-day-"+dayIndex ).removeAttribute( "hidden" );
+        headColumn.removeAttribute( "hidden" );
+        bodyColumn.removeAttribute( "hidden" );
+        if ( isDayOff[ dayOfWeek ] ) {
+          headColumn.setAttribute("weekend", "true");
+          bodyColumn.setAttribute("weekend", "true");
+        } else {
+          headColumn.removeAttribute("weekend");
+          bodyColumn.removeAttribute("weekend");
+        }
       }
-         
       // advance to next day 
       firstDayOfWeek.setDate( dateOfDay + 1 );
    }

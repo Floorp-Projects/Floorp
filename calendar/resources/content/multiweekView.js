@@ -498,7 +498,7 @@ MultiweekView.prototype.refreshDisplayFromDate = function multiweekView_refreshD
 
   var weekDayOffset = this.preferredWeekStart();
   var isOnlyWorkDays = (gOnlyWorkdayChecked == "true");
-  var isDayOff = (isOnlyWorkDays? this.preferredDaysOff() : null);
+  var isDayOff = this.preferredDaysOff();
    
   // hide or unhide columns for days off
   for(var day = 0; day < 7; day++) {
@@ -554,9 +554,9 @@ MultiweekView.prototype.refreshDisplayFromDate = function multiweekView_refreshD
    for( var dayIndex = 0; dayIndex < this.dayNumberItemArray.length; ++dayIndex )
    {
      
-     dayNumberItem = this.dayNumberItemArray[ dayIndex ];
-     dayBoxItem = this.dayBoxItemArray[ dayIndex ];
-     thisDate = new Date( startYear, startMonth, startDayOfMonth + dayIndex );
+      dayNumberItem = this.dayNumberItemArray[ dayIndex ];
+      dayBoxItem = this.dayBoxItemArray[ dayIndex ];
+      thisDate = new Date( startYear, startMonth, startDayOfMonth + dayIndex );
 
       dayBoxItem.removeAttribute( "empty" ); 
       dayNumberItem.removeAttribute( "withmonth" );
@@ -567,31 +567,27 @@ MultiweekView.prototype.refreshDisplayFromDate = function multiweekView_refreshD
 
       if( dayIndex < firstDayOfMonthIndex || dayIndex > lastDayOfMonthIndex )
       {
-         // this day box is NOT in the month, 
-         dayBoxItem.setAttribute( "empty" , "true" );  
-         dayBoxItem.removeAttribute( "weekend" );
-	 if(dayIndex == lastDayOfMonthIndex + 1) 
-	   {
-	     titleMonth = this.calendarWindow.dateFormater.getShortMonthName(thisDate.getMonth());
-	     this.dayNumberItemArray[ dayIndex ].setAttribute( "value" , thisDate.getDate()+" "+titleMonth );
-	     this.dayNumberItemArray[ dayIndex ].setAttribute( "withmonth","true" );
-	   }
+        // this day box is NOT in the month, 
+        dayBoxItem.setAttribute( "empty" , "true" );  
+        dayBoxItem.removeAttribute( "weekend" );
+        if(dayIndex == lastDayOfMonthIndex + 1) {
+          titleMonth = this.calendarWindow.dateFormater.getShortMonthName(thisDate.getMonth());
+          this.dayNumberItemArray[ dayIndex ].setAttribute( "value" , thisDate.getDate()+" "+titleMonth );
+          this.dayNumberItemArray[ dayIndex ].setAttribute( "withmonth","true" );
+        }
+
+      } else {
+         if(dayIndex == firstDayOfMonthIndex) {
+            titleMonth = this.calendarWindow.dateFormater.getShortMonthName(selectedDateMonth);
+            this.dayNumberItemArray[ dayIndex ].setAttribute( "value" , thisDate.getDate()+" "+titleMonth );
+            this.dayNumberItemArray[ dayIndex ].setAttribute( "withmonth","true" );
+         }
+
+          if( isDayOff[ thisDate.getDay() ] )
+            dayBoxItem.setAttribute( "weekend", "true" );
+          else
+            dayBoxItem.removeAttribute( "weekend" );
       }
-      else 
-	{
-	  if(dayIndex == firstDayOfMonthIndex) 
-	    {
-	      titleMonth = this.calendarWindow.dateFormater.getShortMonthName(selectedDateMonth);
-	      this.dayNumberItemArray[ dayIndex ].setAttribute( "value" , thisDate.getDate()+" "+titleMonth );
-	      this.dayNumberItemArray[ dayIndex ].setAttribute( "withmonth","true" );
-	    }
-	  
-	  if( thisDate.getDay() == 0 | thisDate.getDay() == 6 )
-	    { dayBoxItem.setAttribute( "weekend", "true" ); }
-	  else
-	    { dayBoxItem.removeAttribute( "weekend" ); }
-	}
-  
    }
 
    //Modification for the first day of view

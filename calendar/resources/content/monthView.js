@@ -540,7 +540,7 @@ MonthView.prototype.refreshDisplay = function()
    
   var Offset = this.preferredWeekStart();
   var isOnlyWorkDays = (gOnlyWorkdayChecked == "true");
-  var isDayOff = (isOnlyWorkDays? this.preferredDaysOff() : null);
+  var isDayOff = this.preferredDaysOff();
 
    var NewArrayOfDayNames = new Array();
    
@@ -684,10 +684,8 @@ MonthView.prototype.refreshDisplay = function()
       {
          dayBoxItem.removeAttribute( "empty" ); 
 
-         if( thisDate.getDay() == 0 | thisDate.getDay() == 6 )
-         {
+         if ( isDayOff[ thisDate.getDay() ] )
             dayBoxItem.setAttribute( "weekend", "true" );
-         }
          else
             dayBoxItem.removeAttribute( "weekend" ); 
 

@@ -654,6 +654,10 @@
    background-color     : #E7EEEC;
 }
 
+.month-day-box-class[weekend="true"] {
+  background-color: #FFF9E7;
+}
+
 /*today's day box*/
 .month-day-box-class[today="true"]{
     font-weight:bold;
@@ -1293,6 +1297,16 @@ then observed (ERic 20/06/03)
 .week-view-day-container-box {
    border-bottom        : 1px solid #2085c4;
 }
+
+.week-view-header-column,
+.week-view-day-container-box {
+   background-color     : white;
+}
+
+.week-view-day-container-box[weekend="true"] {
+   background-color     : #FFF9E7;
+}
+
 /* Use border-top/left rather than bottom/right to avoid
    disappearing borders (in grid, roundoff errors may cause 
    later filled boxes to overwrite last pixel of previous boxes.) */
@@ -1301,7 +1315,6 @@ then observed (ERic 20/06/03)
    border-top           : 1px solid #2085c4;
    border-left          : 1px solid #2085c4;
    width                : 58px;
-   background-color     : white;
    -moz-user-focus      : normal;
 }
 
@@ -1312,11 +1325,6 @@ then observed (ERic 20/06/03)
 
 .week-view-hour-box-class-last-day
 {
-}
-
-.month-day-box-class[weekend="true"],
-.week-view-hour-box-class[weekend="true"]{
-   background-color 		: #FFF9EF;
 }
 
 .week-view-hour-box-class[today="true"]
