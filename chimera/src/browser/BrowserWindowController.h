@@ -138,6 +138,7 @@ class nsIDOMNode;
 
 - (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder;
 - (IBAction)manageBookmarks: (id)aSender;
+- (void)importBookmarks: (NSURL*)aURL;
 - (IBAction)toggleSidebar:(id)aSender;
 
 - (void)newTab;
