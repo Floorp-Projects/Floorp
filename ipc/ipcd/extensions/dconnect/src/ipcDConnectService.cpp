@@ -1164,12 +1164,16 @@ DConnectStub::CallMethod(PRUint16 aMethodIndex,
                 *((nsISupports **) aParams[i].val.p) = stub;
             }
           }
-          else
+          else if (bits)
           {
             // pointer is to one of our instance wrappers.
 
             DConnectInstance *wrapper = (DConnectInstance *) aParams[i].val.p;
             *((void **) aParams[i].val.p) = wrapper->RealInstance();
+          }
+          else
+          {
+            *((void **) aParams[i].val.p) = nsnull;
           }
         }
       }
@@ -1689,12 +1693,17 @@ ipcDConnectService::OnInvoke(PRUint32 peer, const DConnectInvoke *invoke, PRUint
           }
         }
       }
-      else
+      else if (bits)
       {
         // pointer is to one of our instance wrappers.
 
         DConnectInstance *wrapper = (DConnectInstance *) params[i].ptr;
         params[i].val.p = params[i].ptr = wrapper->RealInstance();
+        params[i].SetValIsInterface();
+      }
+      else
+      {
+        params[i].val.p = params[i].ptr = nsnull;
         params[i].SetValIsInterface();
       }
     }
