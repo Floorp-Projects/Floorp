@@ -680,7 +680,8 @@ nsresult nsAbLDAPDirectoryQuery::getLdapReturnAttributes (
             // Meta property
             // require all attributes
             //
-            returnAttributes = "";
+            rv = MozillaLdapPropertyRelator::GetAllSupportedLDAPAttributes(returnAttributes);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "GetAllSupportedLDAPAttributes failed");
             break;
         }
 

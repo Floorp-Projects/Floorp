@@ -198,6 +198,18 @@ void MozillaLdapPropertyRelator::Initialize(void)
     IsInitialized = PR_TRUE;
 }
 
+nsresult MozillaLdapPropertyRelator::GetAllSupportedLDAPAttributes(nsCString &aResult)
+{
+  if (tableSize < 1)
+    return NS_ERROR_UNEXPECTED;
+
+  for (int i = tableSize - 1 ; i != 0 ; i--)
+    aResult += nsDependentCString(table[i].ldapProperty) + NS_LITERAL_CSTRING(",");
+  
+  aResult += table[0].ldapProperty;
+  return NS_OK;
+}
+
 const MozillaLdapPropertyRelation* MozillaLdapPropertyRelator::findMozillaPropertyFromLdap (const char* ldapProperty)
 {
     Initialize();

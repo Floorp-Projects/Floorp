@@ -75,7 +75,7 @@ public:
     static const MozillaLdapPropertyRelation* findMozillaPropertyFromLdap (const char* ldapProperty);
     static const MozillaLdapPropertyRelation* findLdapPropertyFromMozilla (const char* mozillaProperty);
     static void Initialize(void);
-
+    static nsresult GetAllSupportedLDAPAttributes(nsCString &aResult);
     static nsresult createCardPropertyFromLDAPMessage (nsILDAPMessage* message,
             nsIAbCard* card,
             PRBool* hasSetCardProperty);
