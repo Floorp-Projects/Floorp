@@ -64,7 +64,9 @@ sub expand {
         # what we have here is a potential Template::Document
         # let's try to evaluate it
         $document = eval $string;
-        $self->assert((not defined($@)), 1, "Error loading compiled template: $@");
+        if ($@) {
+            $self->error(1, "Error loading compiled template: $@");
+        }
     } else { # $type eq 'TemplateToolkit'
         # what we have is a raw string
         $document = \$string;
