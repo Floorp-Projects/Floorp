@@ -5396,7 +5396,7 @@ void nsTableFrame::DebugReflow(char*                      aMessage,
     }
     PrettyUC(aMetrics->width, width);
     PrettyUC(aMetrics->height, height);
-    printf("des=(%d,%d) ", width, height);
+    printf("des=(%s,%s) ", width, height);
     if (aMetrics->maxElementSize) {
       PrettyUC(aMetrics->maxElementSize->width, width);
       PrettyUC(aMetrics->maxElementSize->height, height);
