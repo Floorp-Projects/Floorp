@@ -10,6 +10,8 @@
 <!ENTITY copyCmd.label              "Copy">
 <!ENTITY pasteCmd.label             "Paste">
 <!ENTITY deleteCmd.label            "Delete">
+<!ENTITY deleteHostnameCmd.accesskey "l">
+<!ENTITY deleteDomainCmd.accesskey "o">
 <!ENTITY selAllCmd.label            "Select All">
 <!ENTITY findHisCmd.label           "Search History...">
 <!ENTITY findHisCmd.commandkey      "f">
