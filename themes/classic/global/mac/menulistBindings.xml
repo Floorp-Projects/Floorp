@@ -32,7 +32,7 @@
 
         <xul:box class="menulist-text-box" autostretch="never">
          <xul:image class="menulist-icon-mid" inherits="src"/>
-         <xul:text class="menulist-text-mid" inherits="disabled,value,crop,accesskey" flex="1"/>
+         <xul:text class="menulist-text-mid" inherits="disabled,value=label,crop,accesskey" flex="1"/>
        </xul:box>
      </xul:stack>
       
@@ -53,7 +53,7 @@
       <xul:box class="menulist-compact-internal-box" flex="1" autostretch="never">
         <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
         <xul:spring flex="1"/>
-        <xul:text class="menulist-compact-text" inherits="value,accesskey,crop,disabled" crop="right"/>
+        <xul:text class="menulist-compact-text" inherits="value=label,accesskey,crop,disabled" crop="right"/>
       </xul:box>
 	  <children includes="menupopup"/>
     </content>
@@ -66,7 +66,7 @@
       <xul:box class="menulist-internal-box" flex="1">
         <xul:box class="menulist-display-box" flex="1" valign="middle" autostretch="never">
           <xul:image class="menulist-icon" inherits="src"/>
-          <html:input type="text" class="menulist-editable-text" inherits="value,accesskey" flex="1"/>
+          <html:input type="text" class="menulist-editable-text" inherits="value=label,accesskey" flex="1"/>
         </xul:box>
         <xul:box class="menulist-dropmarker-box-1" valign="middle" inherits="open">
           <xul:box class="menulist-dropmarker-box-2" flex="1" autostretch="never" valign="middle" inherits="open">
