@@ -26,7 +26,7 @@
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
-
+#include "nsLayoutAtoms.h"
 
 //
 // NS_NewMenuFrame
@@ -55,4 +55,16 @@ nsMenuFrame::nsMenuFrame()
 {
 
 } // cntr
+
+NS_IMETHODIMP
+nsMenuFrame::FirstChild(nsIAtom*   aListName,
+                        nsIFrame** aFirstChild) const
+{
+  if (nsLayoutAtoms::popupList == aListName) {
+    *aFirstChild = mPopupFrames.FirstChild();
+  } else {
+    nsBoxFrame::FirstChild(aListName, aFirstChild);
+  }
+  return NS_OK;
+}
 
