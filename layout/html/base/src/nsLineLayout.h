@@ -187,9 +187,9 @@ protected:
 
   nsresult ReflowMappedChild();
 
-  nsresult ReflowChild(nsReflowCommand* aReflowCommand);
+  nsresult ReflowChild(nsReflowCommand* aReflowCommand, PRBool aNewChild);
 
-  nsresult PlaceChild(const nsRect& kidRect,
+  nsresult PlaceChild(nsRect& kidRect,
                       const nsReflowMetrics& kidMetrics,
                       const nsSize* kidMaxElementSize,
                       const nsMargin& kidMargin,
