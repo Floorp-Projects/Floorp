@@ -38,6 +38,7 @@
     {0x96, 0x9d, 0x00, 0x60, 0x08, 0x94, 0x80, 0x10}}
 
 class nsMsgAccountManagerDataSource : public nsMsgRDFDataSource,
+                                      public nsIFolderListener,
                                       public nsIIncomingServerListener
 {
 
@@ -51,6 +52,7 @@ public:
   // service manager shutdown method
 
     NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIFOLDERLISTENER
     NS_DECL_NSIINCOMINGSERVERLISTENER
   // RDF datasource methods
   
@@ -82,10 +84,14 @@ protected:
   nsresult HasAssertionAccountRoot(nsIRDFResource *aProperty,
                                    nsIRDFNode *aTarget,
                                    PRBool aTruthValue, PRBool *_retval);
-
+  
+  PRBool isDefaultServer(nsIMsgIncomingServer *aServer);
+  
   static PRBool isContainment(nsIRDFResource *aProperty);
   nsresult getServerForFolderNode(nsIRDFNode *aResource,
                                   nsIMsgIncomingServer **aResult);
+  nsresult getServerForObject(nsISupports *aObject,
+                              nsIMsgIncomingServer **aResult);
   
   nsresult createRootResources(nsIRDFResource *aProperty,
                                nsISupportsArray* aNodeArray);
@@ -97,6 +103,8 @@ protected:
   static nsIRDFResource* kNC_NameSort;
   static nsIRDFResource* kNC_FolderTreeNameSort;
   static nsIRDFResource* kNC_PageTag;
+  static nsIRDFResource* kNC_IsDefaultServer;
+  
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_AccountRoot;
   
@@ -111,8 +119,15 @@ protected:
   static nsIRDFResource* kNC_PageTitleAdvanced;
   static nsIRDFResource* kNC_PageTitleSMTP;
 
+  static nsIRDFLiteral* kTrueLiteral;
+
+  static nsCOMPtr<nsIAtom> kDefaultServerAtom;
+
   static nsrefcnt gAccountManagerResourceRefCnt;
 
+  static nsresult getAccountArcs(nsISupportsArray **aResult);
+  static nsresult getAccountRootArcs(nsISupportsArray **aResult);
+  
 private:
   // enumeration function to convert each server (element)
   // to an nsIRDFResource and append it to the array (in data)
@@ -123,7 +138,8 @@ private:
 
   nsresult serverHasIdentities(nsIMsgIncomingServer *aServer, PRBool *aResult);
 
-
+  static nsCOMPtr<nsISupportsArray> mAccountArcsOut;
+  static nsCOMPtr<nsISupportsArray> mAccountRootArcsOut;
   nsWeakPtr mAccountManager;
 
 };

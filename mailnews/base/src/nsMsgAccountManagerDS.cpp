@@ -66,15 +66,21 @@ typedef struct {
     PRBool found;
 } findServerByKeyEntry;
 
-// static members
-nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Child=nsnull;
+// the root resource (msgaccounts:/)
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_AccountRoot=nsnull;
+
+// attributes of accounts
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Name=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_FolderTreeName=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_NameSort=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_FolderTreeNameSort=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTag=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_IsDefaultServer=nsnull;
+
+// containment
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Child=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Settings=nsnull;
-nsIRDFResource* nsMsgAccountManagerDataSource::kNC_AccountRoot=nsnull;
+
 
 // properties corresponding to interfaces
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Account=nsnull;
@@ -88,13 +94,24 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleCopies=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleAdvanced=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleSMTP=nsnull;
 
+// common literals
+nsIRDFLiteral* nsMsgAccountManagerDataSource::kTrueLiteral = nsnull;
+
+nsCOMPtr<nsIAtom> nsMsgAccountManagerDataSource::kDefaultServerAtom;
+
 nsrefcnt nsMsgAccountManagerDataSource::gAccountManagerResourceRefCnt = 0;
+
+// shared arc lists
+nsCOMPtr<nsISupportsArray> nsMsgAccountManagerDataSource::mAccountArcsOut;
+nsCOMPtr<nsISupportsArray> nsMsgAccountManagerDataSource::mAccountRootArcsOut;
+
 
 // RDF to match
 #define NC_RDF_ACCOUNT NC_NAMESPACE_URI "Account"
 #define NC_RDF_SERVER  NC_NAMESPACE_URI "Server"
 #define NC_RDF_IDENTITY NC_NAMESPACE_URI "Identity"
 #define NC_RDF_SETTINGS NC_NAMESPACE_URI "Settings"
+#define NC_RDF_ISDEFAULTSERVER NC_NAMESPACE_URI "IsDefaultServer"
 
 
 nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
@@ -129,6 +146,7 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
       NS_IF_RELEASE(kNC_NameSort);
       NS_IF_RELEASE(kNC_FolderTreeNameSort);
       NS_IF_RELEASE(kNC_PageTag);
+      NS_IF_RELEASE(kNC_IsDefaultServer);
       NS_IF_RELEASE(kNC_Account);
       NS_IF_RELEASE(kNC_Server);
       NS_IF_RELEASE(kNC_Identity);
@@ -137,19 +155,28 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
       NS_IF_RELEASE(kNC_PageTitleCopies);
       NS_IF_RELEASE(kNC_PageTitleAdvanced);
       NS_IF_RELEASE(kNC_PageTitleSMTP);
+      NS_IF_RELEASE(kTrueLiteral);
       
       NS_IF_RELEASE(kNC_AccountRoot);
       
       // eventually these need to exist in some kind of array
       // that's easily extensible
       NS_IF_RELEASE(kNC_Settings);
+
+
+      kDefaultServerAtom=nsnull;
+      mAccountArcsOut = nsnull;
+      mAccountRootArcsOut = nsnull;
 	}
 
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsMsgAccountManagerDataSource,
-                            nsMsgRDFDataSource,
-                            nsIIncomingServerListener)
+NS_IMPL_ADDREF_INHERITED(nsMsgAccountManagerDataSource, nsMsgRDFDataSource)
+NS_IMPL_RELEASE_INHERITED(nsMsgAccountManagerDataSource, nsMsgRDFDataSource)
+NS_INTERFACE_MAP_BEGIN(nsMsgAccountManagerDataSource)
+    NS_INTERFACE_MAP_ENTRY(nsIIncomingServerListener)
+    NS_INTERFACE_MAP_ENTRY(nsIFolderListener)
+NS_INTERFACE_MAP_END_INHERITING(nsMsgRDFDataSource)
 
 nsresult
 nsMsgAccountManagerDataSource::Init()
@@ -164,6 +191,7 @@ nsMsgAccountManagerDataSource::Init()
         if (NS_FAILED(rv)) return rv;
     
         am->AddIncomingServerListener(this);
+        am->AddRootFolderListener(this);
     }
     
 	if (gAccountManagerResourceRefCnt++ == 0) {
@@ -173,6 +201,7 @@ nsMsgAccountManagerDataSource::Init()
       getRDFService()->GetResource(NC_RDF_NAME_SORT, &kNC_NameSort);
       getRDFService()->GetResource(NC_RDF_FOLDERTREENAME_SORT, &kNC_FolderTreeNameSort);
       getRDFService()->GetResource(NC_RDF_PAGETAG, &kNC_PageTag);
+      getRDFService()->GetResource(NC_RDF_ISDEFAULTSERVER, &kNC_IsDefaultServer);
       getRDFService()->GetResource(NC_RDF_ACCOUNT, &kNC_Account);
       getRDFService()->GetResource(NC_RDF_SERVER, &kNC_Server);
       getRDFService()->GetResource(NC_RDF_IDENTITY, &kNC_Identity);
@@ -183,10 +212,16 @@ nsMsgAccountManagerDataSource::Init()
       getRDFService()->GetResource(NC_RDF_PAGETITLE_SMTP, &kNC_PageTitleSMTP);
       
       getRDFService()->GetResource(NC_RDF_ACCOUNTROOT, &kNC_AccountRoot);
+
+      getRDFService()->GetLiteral(nsAutoString("true").GetUnicode(),
+                                  &kTrueLiteral);
       
       // eventually these need to exist in some kind of array
       // that's easily extensible
       getRDFService()->GetResource(NC_RDF_SETTINGS, &kNC_Settings);
+
+
+      kDefaultServerAtom = NS_NewAtom("DefaultServer");
     }
 
     return NS_OK;
@@ -197,8 +232,10 @@ void nsMsgAccountManagerDataSource::Close()
     nsCOMPtr<nsIMsgAccountManager> am =
         do_QueryReferent(mAccountManager);
 
-    if (am)
+    if (am) {
         am->RemoveIncomingServerListener(this);
+        am->RemoveRootFolderListener(this);
+    }
 
 	nsMsgRDFDataSource::Close();
 }
@@ -309,6 +346,32 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     // no need to localize this!
     if (isServer)
       str = "ServerSettings";
+  }
+
+  else if (property == kNC_IsDefaultServer) {
+      nsCOMPtr<nsIMsgIncomingServer> thisServer;
+      rv = getServerForFolderNode(source, getter_AddRefs(thisServer));
+      if (NS_FAILED(rv) || !thisServer) return NS_RDF_NO_VALUE;
+      
+      nsCOMPtr<nsIMsgAccountManager> am =
+          do_QueryReferent(mAccountManager);
+      
+      nsCOMPtr<nsIMsgAccount> defaultAccount;
+      rv = am->GetDefaultAccount(getter_AddRefs(defaultAccount));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!defaultAccount) return NS_RDF_NO_VALUE;
+
+      nsCOMPtr<nsIMsgIncomingServer> defaultServer;
+      rv = defaultAccount->GetIncomingServer(getter_AddRefs(defaultServer));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!defaultServer) return NS_RDF_NO_VALUE;
+
+      PRBool isEqual;
+      rv = defaultServer->Equals(thisServer, &isEqual);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (isEqual)
+          str="true";
   }
   
   if (!str.IsEmpty())
@@ -499,39 +562,76 @@ nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
   return PR_TRUE;
 }
 
+nsresult
+nsMsgAccountManagerDataSource::getAccountArcs(nsISupportsArray **aResult)
+{
+    nsresult rv;
+    if (!mAccountArcsOut) {
+
+        rv = NS_NewISupportsArray(getter_AddRefs(mAccountArcsOut));
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        mAccountArcsOut->AppendElement(kNC_Settings);
+        mAccountArcsOut->AppendElement(kNC_Name);
+        mAccountArcsOut->AppendElement(kNC_FolderTreeName);
+        mAccountArcsOut->AppendElement(kNC_NameSort);
+        mAccountArcsOut->AppendElement(kNC_FolderTreeNameSort);
+        mAccountArcsOut->AppendElement(kNC_PageTag);
+    }
+
+    *aResult = mAccountArcsOut;
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
+}
+
+nsresult
+nsMsgAccountManagerDataSource::getAccountRootArcs(nsISupportsArray **aResult)
+{
+    nsresult rv;
+    if (!mAccountRootArcsOut) {
+
+        rv = NS_NewISupportsArray(getter_AddRefs(mAccountRootArcsOut));
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        mAccountRootArcsOut->AppendElement(kNC_Server);
+        mAccountRootArcsOut->AppendElement(kNC_Child);
+        
+        mAccountRootArcsOut->AppendElement(kNC_Settings);
+        mAccountRootArcsOut->AppendElement(kNC_Name);
+        mAccountRootArcsOut->AppendElement(kNC_FolderTreeName);
+        mAccountRootArcsOut->AppendElement(kNC_NameSort);
+        mAccountRootArcsOut->AppendElement(kNC_FolderTreeNameSort);
+        mAccountRootArcsOut->AppendElement(kNC_PageTag);
+    }
+
+    *aResult = mAccountRootArcsOut;
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
+}
+
 /* nsISimpleEnumerator ArcLabelsOut (in nsIRDFResource aSource); */
 NS_IMETHODIMP
 nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
                                             nsISimpleEnumerator **_retval)
 {
   nsresult rv;
-  
+
   // we have to return something, so always create the array/enumerators
   nsCOMPtr<nsISupportsArray> arcs;
-  rv = NS_NewISupportsArray(getter_AddRefs(arcs));
-
-  if (NS_FAILED(rv)) return rv;
+  if (source == kNC_AccountRoot)
+      rv = getAccountRootArcs(getter_AddRefs(arcs));
+  else
+      rv = getAccountArcs(getter_AddRefs(arcs));
+  NS_ENSURE_SUCCESS(rv, rv);
   
   nsArrayEnumerator* enumerator =
     new nsArrayEnumerator(arcs);
 
-  if (!enumerator) return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(enumerator, NS_ERROR_OUT_OF_MEMORY);
   
   *_retval = enumerator;
   NS_ADDREF(*_retval);
   
-  if (source == kNC_AccountRoot) {
-    arcs->AppendElement(kNC_Server);
-	arcs->AppendElement(kNC_Child);
-  }
-
-  arcs->AppendElement(kNC_Settings);
-  arcs->AppendElement(kNC_Name);
-  arcs->AppendElement(kNC_FolderTreeName);
-  arcs->AppendElement(kNC_NameSort);
-  arcs->AppendElement(kNC_FolderTreeNameSort);
-  arcs->AppendElement(kNC_PageTag);
-
 #ifdef DEBUG_amds_
   printf("GetArcLabelsOut(%s): Adding child, settings, and name arclabels\n", value);
 #endif
@@ -584,10 +684,47 @@ nsMsgAccountManagerDataSource::HasAssertionServer(nsIMsgIncomingServer *aServer,
                                                   PRBool *_retval)
 {
 
-  *_retval = PR_FALSE;
-  return NS_OK;
+    if (aProperty == kNC_IsDefaultServer) {
+        if (aTarget == kTrueLiteral)
+            *_retval = isDefaultServer(aServer);
+        else
+            *_retval = !isDefaultServer(aServer);
+        
+    } else {
+        *_retval = PR_FALSE;
+    }
+    return NS_OK;
 }
 
+PRBool
+nsMsgAccountManagerDataSource::isDefaultServer(nsIMsgIncomingServer *aServer)
+{
+    nsresult rv;
+    if (!aServer) return PR_FALSE;
+    
+    nsCOMPtr<nsIMsgAccountManager> am =
+        do_QueryReferent(mAccountManager, &rv);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    
+    nsCOMPtr<nsIMsgAccount> defaultAccount;
+    rv = am->GetDefaultAccount(getter_AddRefs(defaultAccount));
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    if (!defaultAccount) return PR_FALSE;
+
+    // in some wierd case that there is no default and they asked
+    // for the default
+    nsCOMPtr<nsIMsgIncomingServer> defaultServer;
+    rv = defaultAccount->GetIncomingServer(getter_AddRefs(defaultServer));
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    if (!defaultServer) return PR_FALSE;
+
+    PRBool isEqual;
+    rv = defaultServer->Equals(aServer, &isEqual);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+    return isEqual;
+}
+        
 nsresult
 nsMsgAccountManagerDataSource::HasAssertionAccountRoot(nsIRDFResource *aProperty,
                                                        nsIRDFNode *aTarget,
@@ -639,14 +776,21 @@ nsMsgAccountManagerDataSource::isContainment(nsIRDFResource *aProperty) {
   return PR_FALSE;
 }
 
-// returns failure if the resource is not a root server
+// returns failure if the object is not a root server
 nsresult
 nsMsgAccountManagerDataSource::getServerForFolderNode(nsIRDFNode *aResource,
                                                       nsIMsgIncomingServer **aResult)
 {
+    return getServerForObject(aResource, aResult);
+}
+
+nsresult
+nsMsgAccountManagerDataSource::getServerForObject(nsISupports *aObject,
+                                                  nsIMsgIncomingServer **aResult)
+{
   nsresult rv;
   nsCOMPtr<nsIMsgFolder> folder =
-    do_QueryInterface(aResource, &rv);
+    do_QueryInterface(aObject, &rv);
   if (NS_SUCCEEDED(rv)) {
     PRBool isServer;
     rv = folder->GetIsServer(&isServer);
@@ -720,3 +864,88 @@ nsMsgAccountManagerDataSource::OnServerUnloaded(nsIMsgIncomingServer* aServer)
   NotifyObservers(kNC_AccountRoot, kNC_Settings, serverResource, PR_FALSE, PR_FALSE);
   return NS_OK;
 }
+
+nsresult
+nsMsgAccountManagerDataSource::OnItemPropertyChanged(nsISupports *, nsIAtom *, char const *, char const *)
+{
+    return NS_OK;
+}
+
+nsresult
+nsMsgAccountManagerDataSource::OnItemUnicharPropertyChanged(nsISupports *, nsIAtom *, const PRUnichar *, const PRUnichar *)
+{
+    return NS_OK;
+}
+
+nsresult
+nsMsgAccountManagerDataSource::OnItemRemoved(nsISupports *, nsISupports *, const char *)
+{
+    return NS_OK;
+}
+
+nsresult
+nsMsgAccountManagerDataSource::OnItemPropertyFlagChanged(nsISupports *, nsIAtom *, PRUint32, PRUint32)
+{
+    return NS_OK;
+}
+
+nsresult
+nsMsgAccountManagerDataSource::OnItemAdded(nsISupports *, nsISupports *, const char *)
+{
+    return NS_OK;
+}
+
+nsresult
+nsMsgAccountManagerDataSource::OnDeleteOrMoveMessagesCompleted(nsIFolder *)
+{
+    return NS_OK;
+}
+
+nsresult
+nsMsgAccountManagerDataSource::OnFolderLoaded(nsIFolder *)
+{
+    return NS_OK;
+}
+
+nsresult
+nsMsgAccountManagerDataSource::OnItemBoolPropertyChanged(nsISupports *aItem,
+                                                         nsIAtom *aProperty,
+                                                         PRBool aOldValue,
+                                                         PRBool aNewValue)
+{
+    nsresult rv;
+
+    // server properties
+    // check property first because that's fast
+    if (aProperty == kDefaultServerAtom.get()) {
+
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        rv = getServerForObject(aItem, getter_AddRefs(server));
+        if (NS_FAILED(rv))
+            return NS_OK;
+
+        // tricky - turn aItem into a resource -
+        // aItem should be an nsIMsgFolder
+        nsCOMPtr<nsIRDFResource> serverResource =
+            do_QueryInterface(aItem, &rv);
+        if (NS_FAILED(rv)) return NS_OK;
+
+        NotifyObservers(serverResource, kNC_IsDefaultServer, kTrueLiteral,
+                        aNewValue, PR_FALSE);
+        
+    }    
+    return NS_OK;
+}
+
+nsresult
+nsMsgAccountManagerDataSource::OnItemEvent(nsIFolder *, nsIAtom *)
+{
+    return NS_OK;
+}
+
+nsresult
+nsMsgAccountManagerDataSource::OnItemIntPropertyChanged(nsISupports *, nsIAtom *, PRInt32, PRInt32)
+{
+    return NS_OK;
+}
+
