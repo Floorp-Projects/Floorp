@@ -155,7 +155,7 @@ protected:
   PRPackedBool   mSuppressCommandUpdating;
   PRPackedBool   mRemovingRow; // set when we're telling the outline a row is being removed. used to suppress msg loading.
                         // during delete/move operations.
-  PRPackedBool  mCommandsNeedDisablingBecauseOffline;
+  PRPackedBool  mCommandsNeedDisablingBecauseOfSelection;
   PRPackedBool  mSuppressChangeNotification;
   virtual const char * GetViewName(void) {return "MsgDBView"; }
   nsresult FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aAuthorString);
@@ -297,6 +297,7 @@ protected:
   PRBool IsValidIndex(nsMsgViewIndex index);
   nsresult ToggleIgnored(nsMsgViewIndex * indices, PRInt32 numIndices, nsMsgViewIndex *resultIndex, PRBool *resultToggleState);
   PRBool OfflineMsgSelected(nsMsgViewIndex * indices, PRInt32 numIndices);
+  PRBool NonDummyMsgSelected(nsMsgViewIndex * indices, PRInt32 numIndices);
   PRUnichar * GetString(const PRUnichar *aStringName);
   nsresult AddLabelPrefObservers();
   nsresult RemoveLabelPrefObservers();
