@@ -1438,29 +1438,27 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   // XXX take into account the overflow->clip property!
 // XXX_perf: This can be done incrementally
   nscoord x0 = 0, y0 = 0, x1 = aMetrics.width, y1 = aMetrics.height;
-  if ((0 != aMetrics.height) || mFloaters.NotEmpty()) {
-    nsLineBox* line = mLines;
-    while (nsnull != line) {
-      // Compute min and max x/y values for the reflowed frame's
-      // combined areas
-      nscoord x = line->mCombinedArea.x;
-      nscoord y = line->mCombinedArea.y;
-      nscoord xmost = x + line->mCombinedArea.width;
-      nscoord ymost = y + line->mCombinedArea.height;
-      if (x < x0) {
-        x0 = x;
-      }
-      if (xmost > x1) {
-        x1 = xmost;
-      }
-      if (y < y0) {
-        y0 = y;
-      }
-      if (ymost > y1) {
-        y1 = ymost;
-      }
-      line = line->mNext;
+  nsLineBox* line = mLines;
+  while (nsnull != line) {
+    // Compute min and max x/y values for the reflowed frame's
+    // combined areas
+    nscoord x = line->mCombinedArea.x;
+    nscoord y = line->mCombinedArea.y;
+    nscoord xmost = x + line->mCombinedArea.width;
+    nscoord ymost = y + line->mCombinedArea.height;
+    if (x < x0) {
+      x0 = x;
     }
+    if (xmost > x1) {
+      x1 = xmost;
+    }
+    if (y < y0) {
+      y0 = y;
+    }
+    if (ymost > y1) {
+      y1 = ymost;
+    }
+    line = line->mNext;
   }
 #ifdef NOISY_COMBINED_AREA
   IndentBy(stdout, GetDepth());
