@@ -45,7 +45,7 @@ function goQuitApplication()
 	// call appshell exit
 	var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
 	appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService );
-	appShell.Shutdown();
+	appShell.Quit();
 }
 
 

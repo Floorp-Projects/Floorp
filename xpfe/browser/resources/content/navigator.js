@@ -224,6 +224,7 @@ function UpdateHistory(event)
 
 function UpdateBookmarksLastVisitedDate(event)
 {
+
 	if (window.content.location.href && window.content.location.href != "")
 	{
 		// if the URL is bookmarked, update its "Last Visited" date
@@ -292,7 +293,7 @@ function UpdateBookmarksLastVisitedDate(event)
 
     // Initialize browser instance..
     appCore.setWebShellWindow(window);
-    appCore.setToolbarWindow(window);
+   
     tryToSetContentWindow();
 
     // Add a capturing event listener to the content window so we'll
@@ -779,12 +780,7 @@ function OpenSearch(tabName, searchStr)
 
   function BrowserNewWindow()
   {
-    if (appCore != null) {
-	    dump("Opening New Window\n");
-      appCore.newWindow();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
+    window.open();
   }
 
   function BrowserEditPage(url)
@@ -911,15 +907,7 @@ function OpenSearch(tabName, searchStr)
   	 window.close();
   }
 
-  function BrowserExit()
-  {
-    if (appCore != null) {
-	    dump("Exiting\n");
-      appCore.exit();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
-  }
+
 
   function BrowserSelectAll() {
     if (appCore != null) {
@@ -976,12 +964,8 @@ function OpenSearch(tabName, searchStr)
 
   function WalletEditor()
   {
-    if (appCore != null) {
-      dump("Wallet Editor\n");
-      appCore.walletEditor(window);
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
+  	window.open("chrome://wallet/content/WalletEditor.xul","walletEditor","modal,chrome,height=504,width=436"); 
+    
   }
 
   function WalletSafeFillin()
@@ -1027,32 +1011,17 @@ function OpenSearch(tabName, searchStr)
 
   function WalletSamples()
   {
-    if (appCore != null) {
-      dump("Wallet Samples\n");
-      appCore.walletSamples();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
+    window.content.location.href= 'http://people.netscape.com/morse/wallet/samples/';
   }
 
   function SignonViewer()
   {
-    if (appCore != null) {
-      dump("Signon Viewer\n");
-      appCore.signonViewer(window);
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
+      window.open("chrome://wallet/content/SignonViewer.xul","SSViewer","modal,chrome,height=504,width=436"); 
   }
 
   function CookieViewer()
   {
-    if (appCore != null) {
-      dump("Cookie Viewer\n");
-      appCore.cookieViewer(window);
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
+   window.open("chrome://wallet/content/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
   }
 
   function OpenMessenger()
@@ -1073,7 +1042,11 @@ function OpenSearch(tabName, searchStr)
   
   function BrowserViewSource()
   {
+<<<<<<< navigator.js
+  	 window.openDialog( "chrome://navigator/content/viewSource.xul", "_new", "chrome,all,dialog=no", window.content.location );
+=======
     window.openDialog( "chrome://navigator/content/viewSource.xul", "_blank", "chrome,all,dialog=no", window.content.location );
+>>>>>>> 1.42
   }
 
 

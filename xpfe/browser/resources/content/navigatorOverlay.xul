@@ -75,7 +75,7 @@ Contributor(s): ______________________________________. -->
   <broadcaster id="Browser:Print"  value="&printCmd.label;"        										 oncommand="BrowserPrint();"/>
   
  
-  <broadcaster id="Browser:Quit"  value="&quitCmd.label;"      oncommand="BrowserExit();"/>
+  <broadcaster id="Browser:Quit"  value="&quitCmd.label;"      oncommand="goQuitApplication();"/>
   
   <broadcaster id="canGoBack" 	 value="&goBackCmd.label;" 		disabled="true" 		oncommand="BrowserBack();"/>
   <broadcaster id="canGoForward" value="&goForwardCmd.label;" disabled="true"	oncommand="BrowserForward();"/>
