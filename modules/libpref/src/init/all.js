@@ -102,6 +102,7 @@ pref("browser.wfe.ignore_def_check",false);
 pref("browser.wfe.use_windows_colors",true);
 pref("browser.startup_mode",1);
 
+
 // various default search settings
 pref("browser.search.defaulturl", "http://search.netscape.com/cgi-bin/search?search=");
 pref("browser.search.opensidebarsearchpanel", true);
@@ -183,10 +184,16 @@ pref("javascript.allow.mailnews",           true);
 pref("javascript.allow.signing",            true);
 pref("javascript.reflect_preferences",      false);     // for PE
 
+// advanced prefs
+pref("advanced.always_load_images",         true);
+pref("advanced.java.allow",                 true);
+pref("css.allow",                           true);
+pref("advanced.mailftp",                    true);
+
 pref("offline.startup_state",            0);
 pref("offline.send.unsent_messages",            0);
 pref("offline.prompt_synch_on_exit",            true);
-
+pref("offline.news.download.use_days",          0);
 
 pref("network.dnsAttempt",              0);
 pref("network.tcptimeout",                  0);         // use default
