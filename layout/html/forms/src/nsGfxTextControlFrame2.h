@@ -66,6 +66,11 @@ public:
   // from nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                     nsISupportsArray& aChildList);
+
+  // Utility methods to get and set current widget state
+  void GetTextControlFrameState(nsString& aValue);
+  void SetTextControlFrameState(const nsString& aValue);
+
   NS_DECL_ISUPPORTS_INHERITED
 protected:
   virtual PRIntn GetSkipSides() const;
@@ -78,9 +83,13 @@ protected:
   NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
                                nsIContent *      aContent,
                                nsIFrame**        aFrame);
+
+  NS_IMETHOD GetType(PRInt32* aType) const;
+
 private:
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<nsISelectionController> mSelCon;
+  nsString mCachedState;
 };
 
 #endif
