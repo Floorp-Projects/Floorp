@@ -5,6 +5,7 @@
 nsIDOMRenderingContext.h
 nsColor.h
 nsColorNames.h
+nsColorNameList.h
 nsCoord.h
 nsFont.h
 nsRect.h
@@ -26,7 +27,6 @@ nsIRegion.h
 nsDeviceContext.h
 nsIDeviceContextSpec.h
 nsIDeviceContextSpecFactory.h
-nsColorNameIDs.h
 nsIDrawingSurface.h
 nsITimer.h
 nsITimerCallback.h

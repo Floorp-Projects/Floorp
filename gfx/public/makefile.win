@@ -22,6 +22,7 @@ EXPORTS =				\
 	nsIDOMRenderingContext.h	\
   nsColor.h \
   nsColorNames.h \
+  nsColorNameList.h \
   nsCoord.h \
   nsFont.h \
   nsRect.h \
@@ -44,7 +45,6 @@ EXPORTS =				\
   nsIDeviceContextSpec.h \
   nsIDeviceContextSpecFactory.h \
   nsIDrawingSurface.h \
-  nsColorNameIDs.h \
 	$(NULL)
 
 MODULE=raptor 
