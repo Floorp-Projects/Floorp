@@ -59,11 +59,12 @@ sub print_testnames {
   print "<tr><td align=center>\n";
   print " <table><tr><td><ul>\n";
 
-  my @machines = make_filenames_list("db");
-  my $machines_string = join(" ", @machines);
+  my @tests = make_filenames_list("db");
+  my $tests_string = join(" ", @tests);
 
-  foreach (@machines) {
-	print "<li><a href=query.cgi?&testname=$_$testname&tbox=$tbox&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points&showpoint=$showpoint&avg=$avg>$_</a>\n";
+  foreach (@tests) {
+        # 10/13/04 cmc: set defaults to showing points and showing averages
+	print "<li><a href=query.cgi?&testname=$_$testname&tbox=$tbox&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points&showpoint=&avg=$avg>$_</a>\n";
   }
   print "</ul></td></tr></table></td></tr></table>";
 
@@ -87,7 +88,7 @@ sub print_machines {
   my $machines_string = join(" ", @machines);
 
   foreach (@machines) {
-	print "<li><a href=query.cgi?tbox=$_&testname=$testname&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points&avg=$avg&showpoint=$showpoint>$_</a>\n";
+	print "<li><a href=query.cgi?tbox=$_&testname=$testname&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points&avg=$avg&showpoint=>$_</a>\n";
   }
   print "</ul></td></tr></table></td></tr></table>";
 
@@ -97,14 +98,21 @@ sub show_graph {
   # HTTP header
   print "Content-type: text/html\n\n<HTML>\n";
   
-  print "<title>$TBOX $TESTNAME</title><br>\n";
+  print "<title>$TESTNAME $TBOX</title><br>\n";
 
   print "<body>\n";
 
   # JS refresh every 30min
   print "<script>setTimeout('location.reload()',1800000);</script>\n";
 
+
+  print "<center>\n";
   print "<table cellspacing=8>\n";
+
+  print "<tr>\n";
+  print "<b>$TESTNAME</b><br>($TBOX)\n";
+  print "</tr>\n";
+
   print "<tr>\n";
 
   # Scale Y-axis
@@ -293,6 +301,7 @@ sub show_graph {
 
   print "</tr>\n";
   print "</table>\n";
+  print "</center>\n";
 
   print "</body>\n";
 }
