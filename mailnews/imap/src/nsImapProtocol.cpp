@@ -476,15 +476,11 @@ nsImapProtocol::SetupSinkProxy()
 void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 {
 	NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
-
-	// query the URL for a nsIImapUrl
-	m_runningUrl = nsnull; // initialize to NULL
-	m_transport = nsnull;
-
+	NS_IF_RELEASE(m_runningUrl);
 	if (aURL)
 	{
 		nsresult rv = aURL->QueryInterface(nsIImapUrl::GetIID(), (void **)&m_runningUrl);
-		if (NS_SUCCEEDED(rv) && m_runningUrl)
+		if (NS_SUCCEEDED(rv) && m_runningUrl && !m_transport /* and we don't have a transport yet */)
 		{
 			// extract the file name and create a file transport...
 			const char * hostName = nsnull;
@@ -495,20 +491,17 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 
 			if (NS_SUCCEEDED(rv) && pNetService)
  				rv = pNetService->CreateSocketTransport(&m_transport, port, GetImapHostName());
-		}
-	}
-	
-	m_outputStream = NULL;
-	m_outputConsumer = NULL;
 
-	nsresult rv = m_transport->GetOutputStream(&m_outputStream);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to create an output stream");
-	rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to provide us with an output consumer!");
+			nsresult rv = m_transport->GetOutputStream(&m_outputStream);
+			NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to create an output stream");
+			rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
+			NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to provide us with an output consumer!");
 
-	// register self as the consumer for the socket...
-	rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register Imap instance as a consumer on the socket");
+			// register self as the consumer for the socket...
+			rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
+			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register Imap instance as a consumer on the socket");
+		} // if m_runningUrl
+	} // if aUR
 }
 
 
@@ -806,7 +799,6 @@ void nsImapProtocol::ProcessCurrentURL()
 		if (GetServerStateParser().LastCommandSuccessful())
 			SetCurrentEntryStatus(0);
 #endif
-	    SetConnectionStatus(-1);        // stop netlib
         if (DeathSignalReceived())
            	HandleCurrentUrlError();
 	}
@@ -950,10 +942,8 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 		if (aConsumer)
 			rv = aConsumer->QueryInterface(kIWebShell, (void **) &m_displayConsumer);
 
-		if (m_transport == nsnull) // i.e. we haven't been initialized yet....
-			SetupWithUrl(aURL); 
-
-		 SetupSinkProxy(); // generate proxies for all of the event sinks in the url
+		SetupWithUrl(aURL); 
+    	SetupSinkProxy(); // generate proxies for all of the event sinks in the url
 		
 		if (m_transport && m_runningUrl)
 		{
@@ -964,29 +954,6 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
                 // m_urlInProgress = PR_TRUE;
 				rv = m_transport->Open(m_runningUrl);  // opening the url will cause to get notified when the connection is established
 			}
-			else  // the connection is already open so we should signal the monitor that a new url is ready to be processed.
-			{
-				// mscott: the following code segment is just a hack to test imap commands from the test
-				// harnesss. It should eventually be replaced by the code in the else clause which just signals
-				// the monitor for processing the url 
-                // ********** jefft ********* okay let's use ? search string
-                // for passing the raw command now.
-                m_urlInProgress = PR_TRUE;
-                const char *search = nsnull;
-                aURL->GetSearch(&search);
-                char *tmpBuffer = nsnull;
-                if (search && PL_strlen(search))
-                {
-				    IncrementCommandTagNumber();
-                    tmpBuffer = PR_smprintf("%s %s\r\n", GetServerCommandTag(), search);
-                    if (tmpBuffer)
-                    {
-                        SendData(tmpBuffer);
-                        PR_Free(tmpBuffer);
-                    }
-                }
-					 
-			} // if the connection was already open
 
 			// We now have a url to run so signal the monitor for url ready to be processed...
 			PR_EnterMonitor(m_urlReadyToRunMonitor);
