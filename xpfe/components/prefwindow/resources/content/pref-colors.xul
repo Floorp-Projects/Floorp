@@ -33,7 +33,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors", "syntaxHighlight"];
+    var _elementIDs = ["foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
   ]]>
   </script>
   
@@ -92,13 +92,5 @@
       <radio value="false" label="&useMyColors.label;" accesskey="&useMyColors.accesskey;"/>        
     </radiogroup>
     
-  </groupbox>
-
-  <groupbox>
-      <caption label="&viewsource;"/>
-      <hbox align="center">
-        <checkbox id="syntaxHighlight" label="&syntaxHighlight.label;" accesskey="&syntaxHighlight.accesskey;"
-                  prefstring="view_source.syntax_highlight"/>
-      </hbox>
   </groupbox>
 </page>
