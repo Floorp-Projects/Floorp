@@ -46,4 +46,11 @@
     <NC:content>http://www.mozilla.org/projects/intl/xul-how2l10n.html#mlp</NC:content>
   </RDF:Description>
 
+  <!-- Search Menu -->
+
+  <RDF:Description about='urn:clienturl:srchmenu:srchinternet'>
+    <NC:title>Search Internet</NC:title>
+    <NC:content>http://search.netscape.com/</NC:content>
+  </RDF:Description>
+
 </RDF:RDF>
