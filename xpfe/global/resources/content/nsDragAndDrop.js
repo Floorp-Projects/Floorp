@@ -130,7 +130,7 @@ var nsDragAndDrop = {
             {
               if (this.mDragSession.isDataFlavorSupported(flavour))
                 {
-                  this.mDragSession.canDrop = true;
+                  this.mDragSession.canDrop = (this.mDragSession.sourceNode != aEvent.target);
                   aDragDropObserver.onDragOver(aEvent, 
                                                flavourSet.flavourTable[flavour], 
                                                this.mDragSession);
