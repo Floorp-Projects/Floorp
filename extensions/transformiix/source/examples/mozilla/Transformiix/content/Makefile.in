@@ -26,14 +26,4 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR=packages/transformiix
-CHROME_CONTENT_DIR=transformiix/content
-
-CHROME_CONTENT = \
-                transformiix.xul \
-                transformiix.js \
-		simple.xml \
-		simplexsl.xml \
-                $(NULL)
-
 include $(topsrcdir)/config/rules.mk
