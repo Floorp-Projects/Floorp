@@ -1263,15 +1263,20 @@ function BrowserEditBookmarks()
 	return url;
   }
 
-  function browserLoadClipboardURL()
+  function browserLoadClipboardURL(target)
   {
-    var url = readFromClipboard();
-    dump ("URL on clipboard: '" + url + "'; length = " + url.length + "\n");
-    if (url.length > 0)
+    if (!((target.tagName.toUpperCase() == "INPUT"
+           && (target.type == "" || target.type.toUpperCase() == "TEXT"))
+          || target.tagName.toUpperCase() == "TEXTAREA"))
     {
-      var urlBar = document.getElementById("urlbar");
-      urlBar.value = url;
-      BrowserLoadURL();
+      var url = readFromClipboard();
+      dump ("URL on clipboard: '" + url + "'; length = " + url.length + "\n");
+      if (url.length > 0)
+      {
+        var urlBar = document.getElementById("urlbar");
+        urlBar.value = url;
+        BrowserLoadURL();
+      }
     }
   }
 
