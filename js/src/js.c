@@ -1126,7 +1126,7 @@ DumpScope(JSContext *cx, JSObject *obj, JSHashEnumerator dump, FILE *fp)
     JSSymbol *sym;
     int i;
 
-    fprintf(fp, "\n%s scope contents:\n", OBJ_GET_CLASS(cx, obj)->name);
+    fprintf(fp, "\n%s scope contents:\n", JS_GetClass(cx, obj)->name);
     scope = OBJ_SCOPE(obj);
     if (!MAP_IS_NATIVE(&scope->map))
 	return;
