@@ -73,6 +73,8 @@ static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 const int kMsgDBVersion = 1;
 const PRInt32 kMaxHdrsInCache = 512;
 
+// we never need to call this because we check the use cache first,
+// and any hdr in this cache will be in the use cache.
 nsresult nsMsgDatabase::GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result)
 {
 	if (!result)
@@ -86,7 +88,7 @@ nsresult nsMsgDatabase::GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result)
 #ifdef USE_JSD_HASHTABLE
     JSDHashEntryHdr *entry;
     entry = JS_DHashTableOperate(m_cachedHeaders, (const void *) key, JS_DHASH_LOOKUP);
-    if (entry && JS_DHASH_ENTRY_IS_BUSY(entry))
+    if (JS_DHASH_ENTRY_IS_BUSY(entry))
     {
       MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, entry);
       *result = element->mHdr;
@@ -208,7 +210,7 @@ nsresult nsMsgDatabase::GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result)
 #ifdef USE_JSD_HASHTABLE
     JSDHashEntryHdr *entry;
     entry = JS_DHashTableOperate(m_headersInUse, (const void *) key, JS_DHASH_LOOKUP);
-    if (entry && JS_DHASH_ENTRY_IS_BUSY(entry))
+    if (JS_DHASH_ENTRY_IS_BUSY(entry))
     {
       MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, entry);
       *result = element->mHdr;
@@ -384,7 +386,7 @@ nsMsgDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr* *resul
 	if(!msgHdr)
 		return NS_ERROR_OUT_OF_MEMORY;
     msgHdr->SetMessageKey(key);
-	msgHdr->AddRef();
+  // don't need to addref here; GetHdrFromUseCache addrefs.
     *result = msgHdr;
 
 	AddHdrToCache(msgHdr, key);  
@@ -555,7 +557,10 @@ nsMsgDatabase::CleanupCache()
 			if (pMessageDB)
 			{
 				pMessageDB->ForceClosed();
-				delete pMessageDB;	// try this...shake out people holding onto db.
+        // look for db in cache before deleting, 
+        // in case ForceClosed caused the db to go away
+        if (FindInCache(pMessageDB) != -1)
+				  delete pMessageDB;	// try this...shake out people holding onto db.
 				i--;	// back up array index, since closing removes db from cache.
 			}
 		}
@@ -672,6 +677,9 @@ nsMsgDatabase::~nsMsgDatabase()
 	MOZ_COUNT_DTOR(nsMsgDatabase);
 //	Close(FALSE);	// better have already been closed.
 	ClearHdrCache();
+#ifdef DEBUG_bienvenu
+  NS_ASSERTION(!m_headersInUse || m_headersInUse->Count() == 0, "leaking headers");
+#endif
 	ClearUseHdrCache();
 	delete m_cachedHeaders;
 	delete m_headersInUse;
@@ -986,6 +994,15 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 	m_dbFolderInfo = nsnull;
 
 	err = CloseMDB(PR_FALSE);	// since we're about to delete it, no need to commit.
+	ClearHdrCache();
+#ifdef DEBUG_bienvenu
+  if (m_headersInUse && m_headersInUse->Count() > 0)
+  {
+    NS_ASSERTION(PR_FALSE, "leaking headers");
+    printf("leaking %d headers in %s\n", m_headersInUse->Count(), (const char *) m_dbName);
+  }
+#endif
+	ClearUseHdrCache();
 	if (m_mdbStore)
 	{
 		m_mdbStore->CloseMdbObject(m_mdbEnv);
