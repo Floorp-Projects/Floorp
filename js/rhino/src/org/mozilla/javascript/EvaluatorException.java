@@ -39,7 +39,7 @@ package org.mozilla.javascript;
 /**
  * The class of exceptions thrown by the JavaScript engine.
  */
-public class EvaluatorException extends RuntimeException 
+public class EvaluatorException extends RuntimeException
 {
 
     /**
@@ -50,7 +50,7 @@ public class EvaluatorException extends RuntimeException
      *
      * @param detail a message with detail about the exception
      */
-    public EvaluatorException(String detail) 
+    public EvaluatorException(String detail)
     {
         super(detail);
     }
@@ -116,7 +116,7 @@ public class EvaluatorException extends RuntimeException
 
     private static String generateErrorMessage(String message,
                                                String sourceName,
-                                               int line) 
+                                               int line)
     {
         if (sourceName == null || line <= 0) {
             return message;
