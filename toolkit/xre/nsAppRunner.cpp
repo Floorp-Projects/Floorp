@@ -1620,11 +1620,25 @@ int main(int argc, char* argv[])
   }
 
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
+  // setup for private colormap.  Ideally we'd like to do this
+  // in nsAppShell::Create, but we need to get in before gtk
+  // has been initialized to make sure everything is running
+  // consistently.
+  for (int i=1; i<argc; i++)
+    if ((PL_strcasecmp(argv[i], "-install") == 0)
+        || (PL_strcasecmp(argv[i], "--install") == 0)) {
+      gdk_rgb_set_install(TRUE);
+      break;
+    }
+
   // Initialize GTK+1/2 here for splash
 #if defined(MOZ_WIDGET_GTK)
   gtk_set_locale();
 #endif
   gtk_init(&argc, &argv);
+
+  gtk_widget_set_default_visual(gdk_rgb_get_visual());
+  gtk_widget_set_default_colormap(gdk_rgb_get_cmap());
 #endif /* MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2 */
     
   // Call the code to install our handler
