@@ -42,12 +42,10 @@ CString nscpxpiPath;
 CString cdshellPath;
 CString outputPath; 
 CString xpiDstPath;
+
 // variables for CCK Linux build
 CString linuxOption;
-CString linuxblobPath;
 CString templinuxPath;
-CString linuxDir;
-CString nscpxpilinuxPath;
 CString nsinstPath;
 CString nsinstallerDir;
 CString xpiDir;
@@ -1644,37 +1642,6 @@ CString GetBrowser(void)
 	return retflag;
 }
 
-void CopyDirectory(CString source, CString dest, BOOL subdir)
-// Copy files in subdirectories if the subdir flag is set (equal to 1).
-{
-	CFileFind finder;
-	CString sFileToFind = source + "\\*.*";
-	BOOL bWorking = finder.FindFile(sFileToFind);
-	while (bWorking) 
-	{
-		bWorking = finder.FindNextFile();
-		CString newPath=dest + "\\";
-
-		if (finder.IsDots()) continue;
-		if (finder.IsDirectory()) 
-		{
-			CString dirPath = finder.GetFilePath();
-			newPath += finder.GetFileName();
-			_mkdir(newPath);
-			if (subdir == TRUE)
-				CopyDirectory(dirPath, newPath, TRUE);
-			if (!CopyFile(dirPath,newPath,0))
-				DWORD e = GetLastError();
-			continue; 
-		}
-
-		newPath += finder.GetFileName();
-		CString source = finder.GetFilePath();
-		if (!CopyFile(source,newPath,0))
-			DWORD e = GetLastError();
-	}
-}
-
 void CreateLinuxInstaller()
 {
 	char currentdir[_MAX_PATH];
@@ -1827,46 +1794,46 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	SetGlobal("Root", rootPath);
 	configName	= GetGlobal("_NewConfigName");
 	SetGlobal("CustomizationList", configName); 
-	configPath  = rootPath + "Configs\\" + configName;
-	outputPath	= configPath + "\\Output";
-	cdPath 		= configPath + "\\Output\\Core";
-	cdshellPath	= configPath + "\\Output\\Shell";
-	networkPath = configPath + "\\Network";
-	tempPath 	= configPath + "\\Temp";
-	iniDstPath	= cdPath + "\\config.ini";
-	scriptPath	= rootPath + "script.ib";
+	CString curVersion  = GetGlobal("Version");
+	CString curPlatform = GetGlobal("lPlatform");
+	CString curLanguage = GetGlobal("Language");
+	CString localePath  = rootPath+"Version\\"+curVersion+"\\"+curPlatform+"\\"+curLanguage;
+	configPath    = rootPath + "Configs\\" + configName;
+	outputPath    = configPath + "\\Output";
+	cdPath        = configPath + "\\Output\\Core";
+	cdshellPath   = configPath + "\\Output\\Shell";
+	networkPath   = configPath + "\\Network";
+	tempPath      = configPath + "\\Temp";
+	iniDstPath    = cdPath + "\\config.ini";
+	scriptPath    = localePath + "\\script.ib";
 	workspacePath = configPath + "\\Workspace";
-	xpiDstPath	= cdPath;
+	xpiDstPath    = cdPath;
+
 	// initializing variables for CCK linux build
 	linuxOption = GetGlobal("lPlatform");
-	linuxblobPath = GetGlobal("LinuxPath");
 	templinuxPath = tempPath + "\\templinux\\netscape-installer";
-	linuxDir = "nscpxpiLinux";
-	nscpxpilinuxPath = rootPath + linuxDir;
 	nsinstPath = "\\netscape-installer\\xpi";
 	nsinstallerDir = "netscape-installer";
 	xpiDir = "\\xpi";
 	templinuxDir = "tempLinux";
-	tarfile = "netscape-i686-pc-linux-gnu-sea.tar.gz";
+	tarfile = GetGlobal("InstallerFilename");
 
 //  AfxMessageBox("set breakpoint",MB_OK);
 
 	if (SearchPath(workspacePath, "NSCPXPI", NULL, 0, NULL, NULL))
 		nscpxpiPath = workspacePath + "\\NSCPXPI";
 	else
-		nscpxpiPath = rootPath + "NSCPXPI";
+		nscpxpiPath = localePath + "\\Nscpxpi";
+
 	if (linuxOption == "Linux")
 	{
-		nscpxpiPath = nscpxpilinuxPath + nsinstPath;
 		_mkdir(tempPath);
 		_chdir(tempPath);
 		_mkdir(templinuxDir);
 		_chdir(templinuxDir);
 		_mkdir(nsinstallerDir);
 
-		CString tPath = nscpxpiPath;
-		tPath.Replace(xpiDir,"");
-		CopyDirectory(tPath, templinuxPath, FALSE);
+		CopyDirectory(nscpxpiPath+"\\"+nsinstallerDir, templinuxPath, TRUE);
 	
 		// get rid of this ugly code when bugzilla bug 105351 is fixed
 		CopyFile(nscpxpiPath+"\\full.start", 
@@ -1878,8 +1845,6 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 		CopyFile(nscpxpiPath+"\\recommended.end",
 			templinuxPath+"\\xpi\\recommended.end", FALSE);
 	}
-
-
 
 	iniSrcPath	= nscpxpiPath + "\\config.ini";
 
@@ -2007,6 +1972,9 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 /////////////////////////////
 	_mkdir((char *)(LPCTSTR) tempPath);
 	_mkdir((char *)(LPCTSTR) workspacePath);
+	// Copying config.ini file to the output directory
+	if (!CopyFile(iniSrcPath, iniDstPath, TRUE))
+		DWORD e = GetLastError();
 //	_mkdir((char *)(LPCTSTR) cdshellPath);
 	GetCurrentDirectory(sizeof(olddir), olddir);
 
