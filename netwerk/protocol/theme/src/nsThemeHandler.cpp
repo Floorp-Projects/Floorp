@@ -37,6 +37,12 @@
  */
 typedef map<string, string> Arguments;
 
+/**
+ *	Extra space to use to draw borders on menus correctly
+ */
+static const PRInt8 mMenuDrawingBufferExtension = 6; 
+
+
 static nsresult parseArguments(const string& path, Arguments& args)
 {
     // str should be of the form:  widget?name1=value1&...&nameN=valueN
@@ -362,6 +368,7 @@ static nsresult drawThemeMenuItem(Arguments& args, nsIInputStream **result, PRIn
 		
 	nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     OSStatus status;
+    PRInt8 yOffset;
 
 	ThemeMenuState state = (isActive ? (isSelected? kThemeMenuSelected : kThemeMenuActive) : kThemeMenuDisabled);
 	ThemeMenuItemType type = (hasSubMenu ? kThemeMenuItemHierarchical : kThemeMenuItemPlain);
@@ -370,8 +377,12 @@ static nsresult drawThemeMenuItem(Arguments& args, nsIInputStream **result, PRIn
 	
 	if (isAtTop) {
 		type += kThemeMenuItemAtTop;
+		yOffset=0;
 	} else if (isAtBottom) {
 		type += kThemeMenuItemAtBottom;
+		yOffset = mMenuDrawingBufferExtension;
+	} else {
+		yOffset = mMenuDrawingBufferExtension/2;
 	}
 	
 	if (isInSubMenu) {
@@ -394,15 +405,18 @@ static nsresult drawThemeMenuItem(Arguments& args, nsIInputStream **result, PRIn
 		width += extraWidth;
 		height += extraHeight;
 	}
-	Rect itemBounds = { height / 2, 0, 3 * height / 2 , width };
-	Rect menuBounds = { 0, 0, 2*height, width };
-	TempGWorld world(menuBounds);
+	
+	//make an imaginary menu a little bigger than the item, then position the item within this
+	//menu so that the right edge effects are included when attop or atbottom is true (see above)	
+	Rect itemBounds = { yOffset, 0, height + yOffset, width };
+	Rect menuBounds = { 0, 0, height + mMenuDrawingBufferExtension, width };
+	TempGWorld world(itemBounds);
     if (world.valid()) {
         // initialize the GWorld with all black, alpha=0xFF.
         world.fill(0xFF000000);
         
-        status = ::DrawThemeMenuItem(&menuBounds, &itemBounds, 0, 2*height, state, type,
-                                   NULL, NULL);
+        status = ::DrawThemeMenuItem(&menuBounds, &itemBounds, 0, 
+        							height+mMenuDrawingBufferExtension, state, type, NULL, NULL);
 
         // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
         // otherwise turn it off on the pixels that weren't touched.
