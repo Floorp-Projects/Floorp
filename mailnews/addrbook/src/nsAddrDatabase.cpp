@@ -708,6 +708,9 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
 			}
 		}
 	}
+	//Convert the DB error to a valid nsresult error.
+	if (ret == 1)
+	  ret = NS_ERROR_FAILURE;
 	return ret;
 }
 
