@@ -86,7 +86,7 @@ public:
   NS_IMETHOD GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding)=0;
 
   // compute the effective difference between two contexts
-  NS_IMETHOD CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint, PRBool aStopAtFirst = PR_FALSE) = 0;
+  NS_IMETHOD CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint) = 0;
 
   NS_IMETHOD GetRuleNode(nsRuleNode** aResult)=0;
   NS_IMETHOD AddStyleBit(const PRUint32& aBit)=0;

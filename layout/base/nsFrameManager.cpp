@@ -1546,7 +1546,7 @@ CaptureChange(nsIStyleContext* aOldContext, nsIStyleContext* aNewContext,
               nsStyleChangeList& aChangeList, PRInt32 aMinChange)
 {
   PRInt32 ourChange = NS_STYLE_HINT_NONE;
-  aNewContext->CalcStyleDifference(aOldContext, ourChange);
+  aOldContext->CalcStyleDifference(aNewContext, ourChange);
   if (aMinChange < ourChange) {
     aChangeList.AppendChange(aFrame, aContent, ourChange);
     aMinChange = ourChange;
