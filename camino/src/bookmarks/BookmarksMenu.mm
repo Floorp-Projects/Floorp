@@ -52,6 +52,7 @@
 
 @end
 
+#define MENU_TRUNCATION_CHARS 60
 
 @implementation BookmarksMenu
 
@@ -105,13 +106,15 @@
 
   BookmarkItem* bmItem 		= [bmManager getWrapperForContent:child];
   NSImage* menuItemImage 	= [bmManager createIconForBookmarkItem:bmItem useSiteIcon:NO];
-  NSString* title 				= [[bmItem name] stringByTruncatingTo:80 at:kTruncateAtMiddle];
+
+  NSString* titleString   = [[bmItem name] length] > 0 ? [bmItem name] : [bmItem url];
+  NSString* bookmarkTitle = [titleString stringByTruncatingTo:MENU_TRUNCATION_CHARS at:kTruncateAtMiddle];
 
   BOOL isFolder = [bmItem isFolder];
   BOOL isGroup  = [bmItem isGroup];
 
   // Create a menu or menu item for the child.
-  NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle:title action: NULL keyEquivalent: @""] autorelease];
+  NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle:bookmarkTitle action: NULL keyEquivalent: @""] autorelease];
   if (index == -1)
     [menu addItem: menuItem];
   else
@@ -127,7 +130,7 @@
   
   if (isFolder && !isGroup) // folder
   {
-    NSMenu* subMenu = [[[NSMenu alloc] initWithTitle: title] autorelease];
+    NSMenu* subMenu = [[[NSMenu alloc] initWithTitle: bookmarkTitle] autorelease];
     [menu setSubmenu: subMenu forItem: menuItem];
     [subMenu setAutoenablesItems: NO];
     [menuItem setImage: menuItemImage];
@@ -219,8 +222,9 @@
   if (!menu) return;
   
   NSMenuItem* menuItem = [menu itemWithTag: [bmItem intContentID]];
+  NSString* titleString = [[bmItem name] length] > 0 ? [bmItem name] : [bmItem url];
+  NSString* bookmarkTitle = [titleString stringByTruncatingTo:MENU_TRUNCATION_CHARS at:kTruncateAtMiddle];
 
-  NSString* bookmarkTitle = [[bmItem name] stringByTruncatingTo:80 at:kTruncateAtMiddle];
   [menuItem setTitle: bookmarkTitle];
   
   // and reset the image
