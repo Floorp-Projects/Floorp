@@ -420,11 +420,13 @@ CWebBrowserContainer::FindItemWithName(const PRUnichar* aName,
 	*/
 }
 
-
+static nsIDocShellTreeItem* contentShell = nsnull; 
 NS_IMETHODIMP
 CWebBrowserContainer::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
    PRBool aPrimary, const PRUnichar* aID)
 {
+    if (aPrimary)
+        contentShell = aContentShell;
 	return NS_OK;
 }
 
@@ -432,9 +434,10 @@ CWebBrowserContainer::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
 NS_IMETHODIMP
 CWebBrowserContainer::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
 {
-	NS_ERROR("Haven't Implemented this yet");
-	*aShell = nsnull;
-	return NS_ERROR_FAILURE;
+	// NS_ERROR("Haven't Implemented this yet");
+    NS_IF_ADDREF(contentShell);
+	*aShell = contentShell;
+	return NS_OK;
 }
 
 
