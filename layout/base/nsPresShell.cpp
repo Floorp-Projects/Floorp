@@ -2961,7 +2961,8 @@ PresShell::FireResizeEvent()
 }
 
 NS_IMETHODIMP
-PresShell::ScrollFrameIntoView(nsIFrame *aFrame){
+PresShell::ScrollFrameIntoView(nsIFrame *aFrame)
+{
   if (!aFrame)
     return NS_ERROR_NULL_POINTER;
   
@@ -4046,14 +4047,39 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
 
   if (mViewManager) {
     // Get the viewport scroller
-    nsIScrollableView* scrollingView;
-    mViewManager->GetRootScrollableView(&scrollingView);
+    nsIScrollableView* scrollingView = nsnull;
+
+    nsIFrame *scrolled_frame = aFrame;
+
+    // Get the closest scrollable view.
+    while (1) {
+      scrolled_frame->GetParentWithView(mPresContext, &scrolled_frame);
+
+      if (!scrolled_frame) {
+        break;
+      }
+
+      nsIView *view = nsnull;
+
+      scrolled_frame->GetView(mPresContext, &view);
+      NS_ASSERTION(scrolled_frame == aFrame || view,
+                   "No view in frame that came from GetView()!");
+
+      if (view) {
+        view->QueryInterface(NS_GET_IID(nsIScrollableView),
+                             (void **)&scrollingView);
+
+        if (scrollingView) {
+          break;
+        }
+      }
+    }
 
     if (scrollingView) {
       nsIView*  scrolledView;
       nsPoint   offset;
       nsIView*  closestView;
-          
+
       // Determine the offset from aFrame to the scrolled view. We do that by
       // getting the offset from its closest view and then walking up
       scrollingView->GetScrolledView(scrolledView);
@@ -4064,16 +4090,19 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
       nsCOMPtr<nsIAtom> frameType;
       nsIFrame *prevFrame = aFrame;
       nsIFrame *frame = aFrame;
+
       while (frame && (frame->GetFrameType(getter_AddRefs(frameType)),
                        frameType.get() == nsLayoutAtoms::inlineFrame)) {
         prevFrame = frame;
         prevFrame->GetParent(&frame);
       }
+
       if (frame != aFrame &&
           frame &&
           frameType.get() == nsLayoutAtoms::blockFrame) {
         // find the line containing aFrame and increase the top of |offset|.
         nsCOMPtr<nsILineIterator> lines( do_QueryInterface(frame) );
+
         if (lines) {
           PRInt32 index = -1;
           lines->FindLineContaining(prevFrame, &index);
@@ -4082,32 +4111,23 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
             PRInt32 trash2;
             nsRect lineBounds;
             PRUint32 trash3;
+
             if (NS_SUCCEEDED(lines->GetLine(index, &trash1, &trash2,
                                             lineBounds, &trash3))) {
               nsPoint blockOffset;
               nsIView* blockView;
               frame->GetOffsetFromView(mPresContext, blockOffset, &blockView);
+
               if (blockView == closestView) {
                 // XXX If views not equal, this is hard.  Do we want to bother?
                 nscoord newoffset = lineBounds.y + blockOffset.y;
-                if (newoffset < offset.y) offset.y = newoffset;
+
+                if (newoffset < offset.y)
+                  offset.y = newoffset;
               }
             }
           }
         }
-      }
-
-      // XXX Deal with the case where there is a scrolled element, e.g., a
-      // DIV in the middle...
-      while ((closestView != nsnull) && (closestView != scrolledView)) {
-        nscoord x, y;
-
-        // Update the offset
-        closestView->GetPosition(&x, &y);
-        offset.MoveBy(x, y);
-
-        // Get its parent view
-        closestView->GetParent(closestView);
       }
 
       // Determine the visible rect in the scrolled view's coordinate space.
@@ -4156,7 +4176,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
           if (scrollOffsetY > frameBounds.y) {
             scrollOffsetY = frameBounds.y;
           }
-         }      
+         }
       } else {
         // Align the frame edge according to the specified percentage
         nscoord frameAlignY = frameBounds.y + (frameBounds.height * aVPercent) / 100;
@@ -4190,15 +4210,24 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
           if (scrollOffsetX > frameBounds.x) {
             scrollOffsetX = frameBounds.x;
           }
-        }           
+        }
       } else {
         // Align the frame edge according to the specified percentage
         nscoord frameAlignX = frameBounds.x + (frameBounds.width * aHPercent) / 100;
         scrollOffsetX = frameAlignX - (visibleRect.width * aHPercent) / 100;
       }
-      scrollingView->ScrollTo(scrollOffsetX, scrollOffsetY, NS_VMREFRESH_IMMEDIATE);
+
+      scrollingView->ScrollTo(scrollOffsetX, scrollOffsetY,
+                              NS_VMREFRESH_IMMEDIATE);
+
+      if (scrolled_frame) {
+        // Recurse in case aFrame is in a nested scrollable view.
+
+        rv = ScrollFrameIntoView(scrolled_frame, aVPercent, aHPercent);
+      }
     }
   }
+
   return rv;
 }
 
@@ -4256,7 +4285,7 @@ NS_IMETHODIMP PresShell::DoCopyLinkLocation(nsIDOMNode* aNode)
               nsCOMPtr<nsIURI> baseURI;
               rv = ios->NewURI(NS_ConvertUCS2toUTF8(base).get(),nsnull,getter_AddRefs(baseURI));
               NS_ENSURE_SUCCESS(rv, rv);
-      
+
               nsXPIDLCString spec;
               rv = baseURI->Resolve(NS_ConvertUCS2toUTF8(anchorText).get(),getter_Copies(spec));
               NS_ENSURE_SUCCESS(rv, rv);
@@ -4331,7 +4360,7 @@ PresShell::DoCopy()
   nsCOMPtr<nsIDocument> doc;
   GetDocument(getter_AddRefs(doc));
   if (!doc) return NS_ERROR_FAILURE;
-  
+
   nsresult rv;
   nsCOMPtr<nsISelection> sel;
   nsCOMPtr<nsIEventStateManager> manager;
