@@ -400,6 +400,7 @@ protected:
   nsresult CheckForTrailingSlash(nsIURI* aURL);
   nsresult StopBeforeRequestingURL(void);
   nsresult StopAfterURLAvailable(void);
+  nsresult GetViewManager(nsIViewManager* *viewManager);
 
   nsIEventQueue* mThreadEventQueue;
   nsIScriptGlobalObject *mScriptGlobal;
@@ -1378,11 +1379,20 @@ nsWebShell::Repaint(PRBool aForce)
   NS_PRECONDITION(nsnull != mWindow, "null window");
   */
 
-  if (nsnull != mWindow) {
-    mWindow->Invalidate(aForce);
-  }
-
-  return NS_OK;
+#if 0
+	if (nsnull != mWindow) {
+		mWindow->Invalidate(aForce);
+	}
+	return NS_OK;
+#else
+	nsresult rv;
+	nsCOMPtr<nsIViewManager> viewManager;
+	rv = GetViewManager(getter_AddRefs(viewManager));
+	if (NS_SUCCEEDED(rv) && viewManager) {
+		rv = viewManager->UpdateAllViews(0);
+	}
+	return rv;
+#endif
 }
 
 NS_IMETHODIMP
@@ -2390,8 +2400,6 @@ nsWebShell::StopAfterURLAvailable()
 
   return NS_OK;
 }
-
-
 
 /* The generic session History code here is now obsolete.
  * Use nsISessionHistory instead
@@ -4100,6 +4108,31 @@ nsWebShell::FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSe
   return NS_ERROR_FAILURE;
 }
 
+
+nsresult nsWebShell::GetViewManager(nsIViewManager* *viewManager)
+{
+	nsresult rv = NS_ERROR_FAILURE;
+	*viewManager = nsnull;
+	do {
+		if (nsnull == mContentViewer) break;
+	
+		nsCOMPtr<nsIDocumentViewer> docViewer;
+		rv = mContentViewer->QueryInterface(kIDocumentViewerIID,
+											getter_AddRefs(docViewer));
+		if (NS_FAILED(rv)) break;
+		
+		nsCOMPtr<nsIPresContext> context;
+		rv = docViewer->GetPresContext(*getter_AddRefs(context));
+		if (NS_FAILED(rv)) break;
+		
+		nsCOMPtr<nsIPresShell> shell;
+		rv = context->GetShell(getter_AddRefs(shell));
+		if (NS_FAILED(rv)) break;
+		
+		rv = shell->GetViewManager(viewManager);
+	} while (0);
+	return rv;
+}
 
 //----------------------------------------------------------------------
 
