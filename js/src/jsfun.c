@@ -1305,10 +1305,13 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     const char *filename;
     JSObject *obj2;
     JSScopeProperty *sprop;
-    JSString *str;
+    JSString *str, *arg;
     JSStackFrame *fp;
     JSTokenStream *ts;
     JSPrincipals *principals;
+    jschar *collected_args, *cp;
+    size_t args_length;
+    JSTokenType tt;
 
     if (cx->fp && !cx->fp->constructing) {
 	obj = js_NewObject(cx, &js_FunctionClass, NULL, NULL);
@@ -1345,43 +1348,115 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!fun)
 	return JS_FALSE;
 
+    if ((fp = cx->fp) != NULL && (fp = fp->down) != NULL && fp->script) {
+	filename = fp->script->filename;
+	lineno = js_PCToLineNumber(fp->script, fp->pc);
+        principals = fp->script->principals;
+    } else {
+	filename = NULL;
+	lineno = 0;
+        principals = NULL;
+    }
+
     n = argc ? argc - 1 : 0;
+    if (n > 0) {
+        /* Collect the function-argument arguments into one string, separated
+         * by commas, then make a tokenstream from that string, and scan it to
+         * get the arguments.  We need to throw the full scanner at the
+         * problem, because the argument string can legitimately contain
+         * comments and linefeeds.  XXX It might be better to concatenate
+         * everything up into a function definition and pass it to the
+         * compiler, but doing it this way is less of a delta from the old
+         * code.  See ECMA 15.3.2.1.
+         */
+        args_length = 0;
+        for (i = 0; i < n; i++) {
+            /* Collect the lengths for all the function-argument arguments. */
+            arg = JSVAL_TO_STRING(argv[i]);
+            args_length += arg->length;
+        }
+        /* Add 1 for each joining comma. */
+        args_length += n - 1;
 
-    for (i = 0; i < n; i++) {
-	atom = js_ValueToStringAtom(cx, argv[i]);
-	if (!atom)
-	    return JS_FALSE;
-	str = ATOM_TO_STRING(atom);
-	if (!js_IsIdentifier(str)) {
-	    JS_ReportError(cx, "illegal formal argument name %s",
-			   JS_GetStringBytes(str));
-	    return JS_FALSE;
-	}
+        /* Allocate a string to hold the concatenated arguments, including room
+         * for a terminating 0.
+         */
+        cp = collected_args = (jschar *) JS_malloc(cx, (args_length + 1) *
+                                                   sizeof(jschar));
+        /* Concatenate the arguments into the new string, separated by commas. */
+        for (i = 0; i < n; i++) {
+            arg = JSVAL_TO_STRING(argv[i]);
+            (void)js_strncpy(cp, arg->chars, arg->length);
+            cp += arg->length;
+            /* Add separating comma or terminating 0. */
+            *(cp++) = (i + 1 < n) ? ',' : 0;
+        }
 
-	if (!js_LookupProperty(cx, obj, (jsid)atom, &obj2,
-			       (JSProperty **)&sprop)) {
-	    return JS_FALSE;
-	}
+        /* Make a tokenstream that reads from the given string. */
+        ts = js_NewTokenStream(cx, collected_args, args_length, filename, lineno,
+                               principals);
+        if (!ts) {
+            JS_free(cx, collected_args);
+            return JS_FALSE;
+        }
+        
+        tt = js_GetToken(cx, ts);
+        /* The argument string may be empty or contain no tokens. */
+        if (tt != TOK_EOF) {
+            while (1) {
+                /* Check that it's a name.  This also implicitly guards against
+                 * TOK_ERROR.
+                 */
+                if (tt != TOK_NAME) {
+                    JS_ReportError(cx, "missing formal parameter");
+                    goto badargs;
+                }
+                /* Get the atom corresponding to the name from the tokenstream;
+                 * we're assured at this point that it's a valid identifier.
+                 */
+                atom = ts->token.t_atom;
+                if (!js_LookupProperty(cx, obj, (jsid)atom, &obj2,
+                                       (JSProperty **)&sprop)) {
+                    goto badargs;
+                }
 #ifdef CHECK_ARGUMENT_HIDING
-	if (sprop && obj2 == obj) {
-	    PR_ASSERT(sprop->getter == js_GetArgument);
-	    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-	    JS_ReportError(cx, "duplicate formal argument %s",
-			   ATOM_BYTES(atom));
-	    return JS_FALSE;
-	}
+                if (sprop && obj2 == obj) {
+                    PR_ASSERT(sprop->getter == js_GetArgument);
+                    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
+                    JS_ReportError(cx, "duplicate formal argument %s",
+                                   ATOM_BYTES(atom));
+                    goto badargs;
+                }
 #endif
-	if (sprop)
-	    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-	if (!js_DefineProperty(cx, obj, (jsid)atom, JSVAL_VOID,
-			       js_GetArgument, js_SetArgument,
-			       JSPROP_ENUMERATE | JSPROP_PERMANENT,
-			       (JSProperty **)&sprop)) {
-	    return JS_FALSE;
-	}
-	PR_ASSERT(sprop);
-	sprop->id = INT_TO_JSVAL(fun->nargs++);
-	OBJ_DROP_PROPERTY(cx, obj, (JSProperty *)sprop);
+                if (sprop)
+                    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
+                if (!js_DefineProperty(cx, obj, (jsid)atom, JSVAL_VOID,
+                                       js_GetArgument, js_SetArgument,
+                                       JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                       (JSProperty **)&sprop)) {
+                    goto badargs;
+                }
+                PR_ASSERT(sprop);
+                sprop->id = INT_TO_JSVAL(fun->nargs++);
+                OBJ_DROP_PROPERTY(cx, obj, (JSProperty *)sprop);
+        
+                /* Done with the NAME; get the next token. */
+                tt = js_GetToken(cx, ts);
+                /* Stop if we've reached the end of the string. */
+                if (tt == TOK_EOF)
+                    break;
+
+                /* If a comma is seen, get the next token.  Otherwise, let the
+                 * loop catch the error.
+                 */
+                if (tt == TOK_COMMA)
+                    tt = js_GetToken(cx, ts);
+            }
+        }        
+        /* Clean up. */
+        JS_free(cx, collected_args);
+        if (!js_CloseTokenStream(cx, ts))
+            return JS_FALSE;
     }
 
     if (argc) {
@@ -1412,6 +1487,14 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	return JS_FALSE;
     return js_ParseFunctionBody(cx, ts, fun) &&
 	   js_CloseTokenStream(cx, ts);
+
+badargs:
+    /* Clean up the arguments string and tokenstream if we failed to parse
+     * the arguments.
+     */
+    JS_free(cx, collected_args);
+    (void)js_CloseTokenStream(cx, ts);
+    return JS_FALSE;
 }
 
 JSObject *
