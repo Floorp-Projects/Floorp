@@ -32,8 +32,8 @@
 #include "nsLocalString.h"
 #endif
 
-typedef const nsLocalString       nsLiteralString;
-typedef const nsLocalCString      nsLiteralCString;
+typedef nsLocalString       nsLiteralString;
+typedef nsLocalCString      nsLiteralCString;
 
 #if 0
 inline
