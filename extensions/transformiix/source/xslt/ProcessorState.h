@@ -238,6 +238,10 @@ public:
     **/
     Node* popCurrentNode();
 
+    void processAttrValueTemplate(const String& aAttValue,
+                                  Node* aContext,
+                                  String& aResult);
+
     /**
      * Adds the given XSLT action to the top of the action stack
     **/

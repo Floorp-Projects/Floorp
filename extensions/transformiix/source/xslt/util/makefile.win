@@ -27,6 +27,7 @@ REQUIRES	= string \
 		  layout \
 		  widget \
 		  content \
+		  locale \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
@@ -36,12 +37,14 @@ DEFINES=$(DEFINES) -DTX_EXE
 
 CPPSRCS=			\
 	NodeStack.cpp		\
-	NodeSorter.cpp		\
+	txNodeSorter.cpp	\
+	txXPathResultComparator.cpp \
 	$(NULL)
 
 CPP_OBJS=				\
 	.\$(OBJDIR)\NodeStack.obj	\
-	.\$(OBJDIR)\NodeSorter.obj	\
+	.\$(OBJDIR)\txNodeSorter.obj	\
+	.\$(OBJDIR)\txXPathResultComparator.obj \
 	$(NULL)
 
 EXPORTS =	\

@@ -32,7 +32,6 @@ DEFINES= $(DEFINES) -DTX_EXE
 
 CPPSRCS=				\
 	ArrayList.cpp 			\
-	DefaultStringComparator.cpp	\
 	Double.cpp			\
 	Integer.cpp			\
 	List.cpp			\
@@ -41,7 +40,6 @@ CPPSRCS=				\
 	SimpleErrorObserver.cpp		\
 	Stack.cpp			\
 	Map.cpp				\
-	StringComparator.cpp		\
 	StringList.cpp			\
 	Tokenizer.cpp			
 
@@ -58,7 +56,6 @@ CPPSRCS = $(CPPSRCS)		\
 
 CPP_OBJS=                                       \
 	.\$(OBJDIR)\ArrayList.obj 		\
-	.\$(OBJDIR)\DefaultStringComparator.obj	\
 	.\$(OBJDIR)\Double.obj			\
 	.\$(OBJDIR)\Integer.obj			\
 	.\$(OBJDIR)\List.obj			\
@@ -67,7 +64,6 @@ CPP_OBJS=                                       \
 	.\$(OBJDIR)\SimpleErrorObserver.obj	\
 	.\$(OBJDIR)\Stack.obj			\
 	.\$(OBJDIR)\Map.obj			\
-	.\$(OBJDIR)\StringComparator.obj	\
 	.\$(OBJDIR)\StringList.obj		\
 	.\$(OBJDIR)\Tokenizer.obj		
 

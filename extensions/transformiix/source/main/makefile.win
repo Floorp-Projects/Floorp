@@ -28,7 +28,6 @@ PROGRAM = ..\..\transformiix.exe
 CPP_OBJS=                                       \
   ../base/$(OBJDIR)/ArrayList.obj \
   ../base/$(OBJDIR)/CommandLineUtils.obj \
-  ../base/$(OBJDIR)/DefaultStringComparator.obj \
   ../base/$(OBJDIR)/Double.obj \
   ../base/$(OBJDIR)/Integer.obj \
   ../base/$(OBJDIR)/List.obj \
@@ -37,7 +36,6 @@ CPP_OBJS=                                       \
   ../base/$(OBJDIR)/NamedMap.obj \
   ../base/$(OBJDIR)/SimpleErrorObserver.obj \
   ../base/$(OBJDIR)/Stack.obj \
-  ../base/$(OBJDIR)/StringComparator.obj \
   ../base/$(OBJDIR)/StringList.obj \
   ../base/$(OBJDIR)/Tokenizer.obj \
   ../base/$(OBJDIR)/TxString.obj \
@@ -114,8 +112,9 @@ CPP_OBJS=                                       \
   ../xslt/functions/$(OBJDIR)/GenerateIdFunctionCall.obj \
   ../xslt/functions/$(OBJDIR)/txKeyFunctionCall.obj \
   ../xslt/functions/$(OBJDIR)/SystemPropertyFunctionCall.obj \
-  ../xslt/util/$(OBJDIR)/NodeSorter.obj \
   ../xslt/util/$(OBJDIR)/NodeStack.obj \
+  ../xslt/util/$(OBJDIR)/txNodeSorter.obj \
+  ../xslt/util/$(OBJDIR)/txXPathResultComparator.obj \
   ./$(OBJDIR)/transformiix.obj \
 	$(NULL)
 

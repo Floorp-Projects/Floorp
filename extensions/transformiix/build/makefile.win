@@ -41,7 +41,6 @@ CPPSRCS=						\
 
 CPP_OBJS=							\
 	..\source\base\$(OBJDIR)\ArrayList.obj \
-	..\source\base\$(OBJDIR)\DefaultStringComparator.obj \
 	..\source\base\$(OBJDIR)\Double.obj \
 	..\source\base\$(OBJDIR)\Integer.obj \
 	..\source\base\$(OBJDIR)\List.obj \
@@ -50,7 +49,6 @@ CPP_OBJS=							\
 	..\source\base\$(OBJDIR)\NamedMap.obj \
 	..\source\base\$(OBJDIR)\SimpleErrorObserver.obj \
 	..\source\base\$(OBJDIR)\Stack.obj \
-	..\source\base\$(OBJDIR)\StringComparator.obj \
 	..\source\base\$(OBJDIR)\StringList.obj \
 	..\source\base\$(OBJDIR)\Tokenizer.obj \
 	..\source\base\$(OBJDIR)\MozillaString.obj \
@@ -128,8 +126,9 @@ CPP_OBJS=							\
 	..\source\xslt\functions\$(OBJDIR)\GenerateIdFunctionCall.obj \
 	..\source\xslt\functions\$(OBJDIR)\txKeyFunctionCall.obj \
 	..\source\xslt\functions\$(OBJDIR)\SystemPropertyFunctionCall.obj \
-	..\source\xslt\util\$(OBJDIR)\NodeSorter.obj \
 	..\source\xslt\util\$(OBJDIR)\NodeStack.obj \
+	..\source\xslt\util\$(OBJDIR)\txNodeSorter.obj \
+	..\source\xslt\util\$(OBJDIR)\txXPathResultComparator.obj \
 	.\$(OBJDIR)\XSLTProcessorModule.obj \
 	$(NULL)
 

@@ -45,7 +45,6 @@ MODULE_NAME	= TransformiixModule
 
 CPPSRCS = XSLTProcessorModule.cpp
 LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
-  ../source/base/DefaultStringComparator.$(OBJ_SUFFIX) \
   ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/base/Integer.$(OBJ_SUFFIX) \
   ../source/base/List.$(OBJ_SUFFIX) \
@@ -54,7 +53,6 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/base/NamedMap.$(OBJ_SUFFIX) \
   ../source/base/SimpleErrorObserver.$(OBJ_SUFFIX) \
   ../source/base/Stack.$(OBJ_SUFFIX) \
-  ../source/base/StringComparator.$(OBJ_SUFFIX) \
   ../source/base/StringList.$(OBJ_SUFFIX) \
   ../source/base/Tokenizer.$(OBJ_SUFFIX) \
   ../source/base/MozillaString.$(OBJ_SUFFIX) \
@@ -132,8 +130,9 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xslt/functions/GenerateIdFunctionCall.$(OBJ_SUFFIX) \
   ../source/xslt/functions/txKeyFunctionCall.$(OBJ_SUFFIX) \
   ../source/xslt/functions/SystemPropertyFunctionCall.$(OBJ_SUFFIX) \
-  ../source/xslt/util/NodeSorter.$(OBJ_SUFFIX) \
   ../source/xslt/util/NodeStack.$(OBJ_SUFFIX) \
+  ../source/xslt/util/txNodeSorter.$(OBJ_SUFFIX) \
+  ../source/xslt/util/txXPathResultComparator.$(OBJ_SUFFIX) \
   $(NULL)
 
 EXTRA_DSO_LDOPTS += \

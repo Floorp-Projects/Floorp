@@ -78,8 +78,10 @@ const String WHEN               = "when";
 const String WITH_PARAM         = "with-param";
 
 //-- Attributes
+const String CASE_ORDER_ATTR         = "case-order";
 const String CDATA_ELEMENTS_ATTR     = "cdata-section-elements";
 const String COUNT_ATTR              = "count";
+const String DATA_TYPE_ATTR          = "data-type";
 const String DEFAULT_SPACE_ATTR      = "default-space";
 const String DOCTYPE_PUBLIC_ATTR     = "doctype-public";
 const String DOCTYPE_SYSTEM_ATTR     = "doctype-system";
@@ -90,7 +92,7 @@ const String FORMAT_ATTR             = "format";
 const String FROM_ATTR               = "from";
 const String HREF_ATTR               = "href";
 const String INDENT_ATTR             = "indent";
-const String LANG_ATTR               = "xml:lang";
+const String LANG_ATTR               = "lang";
 const String LEVEL_ATTR              = "level";
 const String MATCH_ATTR              = "match";
 const String METHOD_ATTR             = "method";
@@ -108,14 +110,21 @@ const String USE_ATTR                = "use";
 const String USE_ATTRIBUTE_SETS_ATTR = "use-attribute-sets";
 const String VALUE_ATTR              = "value";
 const String VERSION_ATTR            = "version";
+const String XML_LANG_ATTR           = "xml:lang";
 
 //-- Attribute Values
 const String ANY_VALUE            = "any";
+const String ASCENDING_VALUE      = "ascending";
+const String DESCENDING_VALUE     = "descending";
+const String LOWER_FIRST_VALUE    = "lower-first";
 const String MULTIPLE_VALUE       = "multiple";
 const String NO_VALUE             = "no";
+const String NUMBER_VALUE         = "number";
 const String PRESERVE_VALUE       = "preserve";
 const String SINGLE_VALUE         = "single";
 const String STRIP_VALUE          = "strip";
+const String TEXT_VALUE           = "text";
+const String UPPER_FIRST_VALUE    = "upper-first";
 const String YES_VALUE            = "yes";
 
 //-- Stylesheet attributes
