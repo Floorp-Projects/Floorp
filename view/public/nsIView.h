@@ -510,8 +510,8 @@ private:
 #define NS_VIEW_PUBLIC_FLAG_TRANSPARENT          0x0004
 //indicates that a view should not zoom values to/from widgets
 #define NS_VIEW_PUBLIC_FLAG_DONT_ZOOM            0x0008
-//indicates that the view should not be bitblt'd when scrolled
-//and must be repainted
+//indicates that the view should not be bitblt'd when moved
+//or scrolled and instead must be repainted
 #define NS_VIEW_PUBLIC_FLAG_DONT_BITBLT          0x0010
 
 #define ALL_VIEW_FLAGS        (NS_VIEW_FLAG_DONT_CHECK_CHILDREN | \
