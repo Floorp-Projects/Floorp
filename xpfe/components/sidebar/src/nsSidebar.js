@@ -125,13 +125,13 @@ function (aTitle, aContentURL, aCustomizeURL)
     var panel_resource = 
         this.rdf.GetResource("urn:sidebar:3rdparty-panel:" + aContentURL);
     var panel_index = container.IndexOf(panel_resource);
+    var stringBundle, brandStringBundle, titleMessage, dialogMessage, promptService ;
     if (panel_index != -1)
     {
-        var titleMessage, dialogMessage;
         try {
-			var stringBundle = srGetStrBundle("chrome://communicator/locale/sidebar/sidebar.properties");
-            var brandStringBundle = srGetStrBundle("chrome://global/locale/brand.properties");
-			if (stringBundle) {
+            stringBundle = srGetStrBundle("chrome://communicator/locale/sidebar/sidebar.properties");
+            brandStringBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+            if (stringBundle) {
                 sidebarName = brandStringBundle.GetStringFromName("sidebarName");
                 titleMessage = stringBundle.GetStringFromName("dupePanelAlertTitle");
                 dialogMessage = stringBundle.GetStringFromName("dupePanelAlertMessage");
@@ -144,7 +144,7 @@ function (aTitle, aContentURL, aCustomizeURL)
             dialogMessage = aContentURL + " already exists in Sidebar.  No string bundle";
         }
           
-        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+        promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
         if (promptService) {
           promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
           promptService.alert(this.window, titleMessage, dialogMessage);
@@ -152,13 +152,12 @@ function (aTitle, aContentURL, aCustomizeURL)
 
         return;
     }
-    
-    var titleMessage, dialogMessage;
+
     try {
-		var stringBundle = srGetStrBundle("chrome://communicator/locale/sidebar/sidebar.properties");
-        var brandStringBundle = srGetStrBundle("chrome://global/locale/brand.properties");
-		if (stringBundle) {
-			sidebarName = brandStringBundle.GetStringFromName("sidebarName");
+        stringBundle = srGetStrBundle("chrome://communicator/locale/sidebar/sidebar.properties");
+        brandStringBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+        if (stringBundle) {
+            sidebarName = brandStringBundle.GetStringFromName("sidebarName");
             titleMessage = stringBundle.GetStringFromName("addPanelConfirmTitle");
             dialogMessage = stringBundle.GetStringFromName("addPanelConfirmMessage");
             dialogMessage = dialogMessage.replace(/%title%/, aTitle);
@@ -172,7 +171,7 @@ function (aTitle, aContentURL, aCustomizeURL)
         dialogMessage = "No string bundle.  Add the Tab '" + aTitle + "' to Sidebar?\n\n" + "Source: " + aContentURL;
     }
           
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
     promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
     var rv = promptService.confirm(this.window, titleMessage, dialogMessage);
       
@@ -226,33 +225,33 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
 
     try
     {
-	    // make sure using HTTP (for both engine as well as icon URLs)
+        // make sure using HTTP (for both engine as well as icon URLs)
 
-	    if (engineURL.search(/^http:\/\//i) == -1)
-	    {
-	        debug ("must use HTTP to fetch search engine file");
-	        throw Components.results.NS_ERROR_INVALID_ARG;
-	    }
+        if (engineURL.search(/^http:\/\//i) == -1)
+        {
+            debug ("must use HTTP to fetch search engine file");
+            throw Components.results.NS_ERROR_INVALID_ARG;
+        }
 
-	    if (iconURL.search(/^http:\/\//i) == -1)
-	    {
-	        debug ("must use HTTP to fetch search icon file");
-	        throw Components.results.NS_ERROR_INVALID_ARG;
-	    }
+        if (iconURL.search(/^http:\/\//i) == -1)
+        {
+            debug ("must use HTTP to fetch search icon file");
+            throw Components.results.NS_ERROR_INVALID_ARG;
+        }
 
-	    // make sure engineURL refers to a .src file
-	    if (engineURL.search(/\.src$/i) == -1)
-	    {
-	        debug ("engineURL doesn't reference a .src file");
-	        throw Components.results.NS_ERROR_INVALID_ARG;
-	    }
+        // make sure engineURL refers to a .src file
+        if (engineURL.search(/\.src$/i) == -1)
+        {
+            debug ("engineURL doesn't reference a .src file");
+            throw Components.results.NS_ERROR_INVALID_ARG;
+        }
 
-	    // make sure iconURL refers to a .gif/.jpg/.jpeg/.png file
-	    if (iconURL.search(/\.(gif|jpg|jpeg|png)$/i) == -1)
-	    {
-	        debug ("iconURL doesn't reference a supported image file");
-	        throw Components.results.NS_ERROR_INVALID_ARG;
-	    }
+        // make sure iconURL refers to a .gif/.jpg/.jpeg/.png file
+        if (iconURL.search(/\.(gif|jpg|jpeg|png)$/i) == -1)
+        {
+            debug ("iconURL doesn't reference a supported image file");
+            throw Components.results.NS_ERROR_INVALID_ARG;
+        }
 
     }
     catch(ex)
@@ -267,7 +266,7 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
         var brandStringBundle = srGetStrBundle("chrome://global/locale/brand.properties");
         if (stringBundle) {
             sidebarName = brandStringBundle.GetStringFromName("sidebarName");            
-			titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
+            titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");
             dialogMessage = stringBundle.GetStringFromName("addEngineConfirmMessage");
             dialogMessage = dialogMessage.replace(/%title%/, suggestedTitle);
             dialogMessage = dialogMessage.replace(/%category%/, suggestedCategory);
@@ -291,11 +290,11 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
         return;
 
     var internetSearch = Components.classes[NETSEARCH_CONTRACTID].getService();
-    if (internetSearch)	
+    if (internetSearch)    
         internetSearch = internetSearch.QueryInterface(nsIInternetSearchService);
     if (internetSearch)
     {
-    	internetSearch.AddSearchEngine(engineURL, iconURL, suggestedTitle,
+        internetSearch.AddSearchEngine(engineURL, iconURL, suggestedTitle,
                                        suggestedCategory);
     }
 }
@@ -345,7 +344,7 @@ function(compMgr)
 }
     
 /* factory object */
-sidebarFactory = new Object();
+var sidebarFactory = new Object();
 
 sidebarFactory.createInstance =
 function (outer, iid) {
