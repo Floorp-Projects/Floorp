@@ -3270,7 +3270,8 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
     NS_ENSURE_TRUE(converter,NS_ERROR_FAILURE);
     converter->Init(aBuffer);
 
-    converter->SetSelection(aSelection);
+    if (aSelection)
+      converter->SetSelection(aSelection);
 
     converter->AddStartTag( NS_ConvertToString("section") , PR_TRUE); 
     converter->AddStartTag( NS_ConvertToString("section_head") , PR_TRUE);
