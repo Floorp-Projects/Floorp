@@ -687,7 +687,9 @@ mime_file_type (const char *filename, void *stream_closure)
   return retType;
 }
 
-int ConvertUsingEncoderAndDecoder(const char *stringToUse, PRInt32 inLength, nsIUnicodeEncoder *encoder, nsIUnicodeDecoder *decoder, char **pConvertedString)
+int ConvertUsingEncoderAndDecoder(const char *stringToUse, PRInt32 inLength, 
+                                  nsIUnicodeEncoder *encoder, nsIUnicodeDecoder *decoder, 
+                                  char **pConvertedString, PRInt32 *outLength)
 {
   // buffer size 144 =
   // 72 (default line len for compose) 
@@ -739,7 +741,7 @@ int ConvertUsingEncoderAndDecoder(const char *stringToUse, PRInt32 inLength, nsI
             }
             dstPtr[dstLength] = '\0';
             *pConvertedString = dstPtr;       // set the result string
-//                *outLength = dstLength;
+            *outLength = dstLength;
           }
         }
       }
@@ -760,11 +762,10 @@ mime_convert_charset (const char *input_line, PRInt32 input_length,
 {
   PRInt32 res;
   char  *convertedString = NULL;
-  PRInt32 convertedStringLen;
+  PRInt32 convertedStringLen = 0;
   if (encoder && decoder)
   {
-    res = ConvertUsingEncoderAndDecoder(input_line, input_length, encoder, decoder, &convertedString);
-    convertedStringLen = (convertedString) ? nsCRT::strlen(convertedString) : 0;
+    res = ConvertUsingEncoderAndDecoder(input_line, input_length, encoder, decoder, &convertedString, &convertedStringLen);
   }
   if (res != 0)
   {
