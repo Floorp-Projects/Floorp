@@ -1166,7 +1166,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
 {
   PRBool result = PR_FALSE;
-  event->widgetSupports = this;
+  event->widgetSupports = (nsISupports*)((nsObject*)this);
 
   if (nsnull != mEventCallback) {
     result = ConvertStatus((*mEventCallback)(event));

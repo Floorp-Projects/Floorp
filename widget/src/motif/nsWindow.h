@@ -136,6 +136,9 @@ public:
     void SetIgnoreResize(PRBool aIgnore);
     PRBool IgnoreResize();
     PRUint32 GetYCoord(PRUint32 aNewY);
+    PRBool DispatchMouseEvent(nsMouseEvent& aEvent);
+    PRBool OnResize(nsSizeEvent &aEvent);
+
    
      // Resize event management
     void SetResizeRect(nsRect& aRect);
