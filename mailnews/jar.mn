@@ -124,8 +124,6 @@ messenger.jar:
     content/messenger/mailContextMenus.js                                      (base/resources/content/mailContextMenus.js)
     content/messenger/msgPrintEngine.js                                        (base/resources/content/msgPrintEngine.js)
     content/messenger/msgPrintEngine.xul                                       (base/resources/content/msgPrintEngine.xul)
-    content/messenger/openSaveAttachment.xul                                   (base/resources/content/openSaveAttachment.xul)
-    content/messenger/openSaveAttachment.js                                    (base/resources/content/openSaveAttachment.js)
     content/messenger/mailTasksOverlay.xul                                     (base/resources/content/mailTasksOverlay.xul)
     content/messenger/mailNavigatorOverlay.xul                                 (base/resources/content/mailNavigatorOverlay.xul)
     content/messenger/mailEditorOverlay.xul                                    (base/resources/content/mailEditorOverlay.xul)
