@@ -92,6 +92,10 @@
 
       <field name="mLongViewCreated"/>
       <field name="mAddresses"/>
+      <!-- as a perf optimization we are going to keep a cache of email address nodes which we've
+           created around for the lifetime of the widget. mSizeOfAddressCache controls how many of these
+           elements we keep around -->
+      <field name="mSizeOfAddressCache">3</field>
       
       <!-- addAddressView: a public method used to add an address to this widget. 
            aAddresses is an object with 3 properties: displayName, emailAddress and fullAddress
@@ -119,6 +123,54 @@
         </body>
       </method>
 
+      <!-- fillCachedAddresses: private method used to fill up any cached pre-existing
+           emailAddress fields without creating new email address fields. Returns a remainder
+           for the # of addresses which require new addresses being created.
+           Invariants: 1) aNumAddressesToShow >= 0 && it is <= mAddresses.length -->
+      <method name="fillCachedAddresses">
+        <parameter name="aAddressesNode"/>
+        <parameter name="aNumAddressesToShow"/>
+        <body>
+          <![CDATA[
+            var numExistingCachedAddresses = aAddressesNode.childNodes.length;
+            if (!numExistingCachedAddresses) 
+              return this.mAddresses.length; // we couldn't pre fill anything
+            else if (numExistingCachedAddresses > 1)
+              numExistingCachedAddresses = (numExistingCachedAddresses + 1)/ 2;
+            
+            var index = 0; 
+            var numAddressesAdded = 0;
+            var emailAddressNode;
+            var commaNode;
+            while (numAddressesAdded < numExistingCachedAddresses && numAddressesAdded < aNumAddressesToShow)
+            {
+              if (index && numExistingCachedAddresses > 1)
+              {
+                commaNode = aAddressesNode.childNodes[index++];
+                if (commaNode)
+                  commaNode.removeAttribute('collapsed');
+              }
+
+              // get the node pointed to by index
+              emailAddressNode = aAddressesNode.childNodes[index++];
+              this.updateEmailAddressNode(emailAddressNode, this.mAddresses[numAddressesAdded]);
+              emailAddressNode.removeAttribute('collapsed');
+              numAddressesAdded++;
+            }
+
+            // if we have added all of our elements but we still have more cached items in this address node
+            // then make sure the extra cached copies are collapsed...
+            numExistingCachedAddresses = aAddressesNode.childNodes.length;  // reset
+            while (index < numExistingCachedAddresses)
+            {
+              aAddressesNode.childNodes[index++].setAttribute('collapsed', true);
+            }
+
+            return this.mAddresses.length - numAddressesAdded;
+          ]]>
+        </body>
+      </method>
+
       <!-- fillAddressesNode: private method used to create email address nodes for either our short
            or long view. aAddressesNode: the div we want to add addresses too. 
           aNumAddressesToShow: number of addresses to put into the list -->
@@ -128,20 +180,22 @@
         <body>
           <![CDATA[
             var numAddresses = this.mAddresses.length;
-            if (aNumAddressesToShow <= 0)  // then show all
+            if (aNumAddressesToShow <= 0 || aNumAddressesToShow > numAddresses)  // then show all
               aNumAddressesToShow = numAddresses;
 
-            var index = 0; 
+            // before we try to create email address nodes, try to leverage any cached nodes...
+            var remainder = this.fillCachedAddresses(aAddressesNode, aNumAddressesToShow);
+            var index = numAddresses - remainder; 
             while (index < numAddresses && index < aNumAddressesToShow)
             {
-              var newAddressNode= document.createElement("mail-emailaddress");
+              var newAddressNode = document.createElement("mail-emailaddress");
               if (index)
               {
                 var textNode = document.createElement("text");
                 textNode.setAttribute("value", ", ");
                 textNode.setAttribute("class", "emailSeparator");
                 aAddressesNode.appendChild(textNode);
-              }
+              }              
               
               var itemInDocument = aAddressesNode.appendChild(newAddressNode);
               this.updateEmailAddressNode(itemInDocument, this.mAddresses[index]);
@@ -221,8 +275,17 @@
         <parameter name="aParentNode"/>
         <body>
           <![CDATA[
-            while (aParentNode.childNodes.length > 0)
-              aParentNode.removeChild(aParentNode.childNodes[0]);
+            // we want to keep around the first mSizeOfAddressCache email address nodes
+            // don't forget that we have comma text nodes in there too so really we want to keep
+            // around cache size * 2 - 1.
+            var numItemsToPreserve = this.mSizeOfAddressCache * 2 - 1;
+            var numItemsInNode = aParentNode.childNodes.length;
+
+            while (numItemsInNode && (numItemsInNode > numItemsToPreserve))
+            { 
+              aParentNode.removeChild(aParentNode.childNodes[numItemsInNode-1]);
+              numItemsInNode = numItemsInNode - 1;
+            }
           ]]>       
         </body>
       </method>
