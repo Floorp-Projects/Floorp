@@ -897,7 +897,7 @@ NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRInt32 *numUnread)
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv;
-	PRUint32 total = mNumUnreadMessages;
+	PRUint32 total = mNumUnreadMessages + mNumPendingUnreadMessages;
 	if (deep)
 	{
 		nsCOMPtr<nsIMsgFolder> folder;
@@ -930,7 +930,7 @@ NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRInt32 *totalMessages)
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult rv;
-	PRInt32 total = mNumTotalMessages;
+	PRInt32 total = mNumTotalMessages + mNumPendingTotalMessages;
 	if (deep)
 	{
 		nsCOMPtr<nsIMsgFolder> folder;
@@ -960,18 +960,33 @@ NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRInt32 *totalMessages)
 NS_IMETHOD GetTotalMessagesInDB(PRUint32 *totalMessages) const;					// How many messages in database.
 #endif
 	
+PRInt32 nsMsgFolder::GetNumPendingUnread() 
+{
+	return mNumPendingUnreadMessages;
+}
+
+PRInt32 nsMsgFolder::GetNumPendingTotalMessages() 
+{
+	return mNumPendingTotalMessages;
+}
+
+	
+void nsMsgFolder::ChangeNumPendingUnread(PRInt32 delta)
+{
+	mNumPendingTotalMessages += delta;
+}
+
+void nsMsgFolder::ChangeNumPendingTotalMessages(PRInt32 delta)
+{
+	mNumPendingTotalMessages += delta;
+}
+
 #ifdef HAVE_DB	
 // These functions are used for tricking the front end into thinking that we have more 
 // messages than are really in the DB.  This is usually after and IMAP message copy where
 // we don't want to do an expensive select until the user actually opens that folder
 // These functions are called when MSG_Master::GetFolderLineById is populating a MSG_FolderLine
 // struct used by the FE
-int32			GetNumPendingUnread(PRBool deep = PR_FALSE) const;
-int32			GetNumPendingTotalMessages(PRBool deep = PR_FALSE) const;
-	
-void			ChangeNumPendingUnread(int32 delta);
-void			ChangeNumPendingTotalMessages(int32 delta);
-
 
 NS_IMETHODIMP nsMsgFolder::SetFolderPrefFlags(PRUint32 flags)
 {

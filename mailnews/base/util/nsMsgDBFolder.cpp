@@ -83,6 +83,7 @@ NS_IMETHODIMP nsMsgDBFolder::EndFolderLoading(void)
 	if(mDatabase)
 		mDatabase->AddListener(this);
 	mAddListener = PR_TRUE;
+	UpdateSummaryTotals(PR_FALSE);
 	return NS_OK;
 }
 

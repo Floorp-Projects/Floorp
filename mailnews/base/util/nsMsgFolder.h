@@ -150,24 +150,24 @@ public:
   // created string that must be free'd using XP_FREE().
   // If the db is NULL, then returns a URL that represents the entire
   // folder as a whole.
+	// These functions are used for tricking the front end into thinking that we have more 
+	// messages than are really in the DB.  This is usually after and IMAP message copy where
+	// we don't want to do an expensive select until the user actually opens that folder
+	// These functions are called when MSG_Master::GetFolderLineById is populating a MSG_FolderLine
+	// struct used by the FE
+  PRInt32 GetNumPendingUnread();
+  PRInt32 GetNumPendingTotalMessages();
+	
+  void			ChangeNumPendingUnread(PRInt32 delta);
+  void			ChangeNumPendingTotalMessages(PRInt32 delta);
+
+
 #ifdef HAVE_DB
   NS_IMETHOD BuildUrl(nsMsgDatabase *db, nsMsgKey key, char ** url);
   
   // updates num messages and num unread - should be pure virtual
   // when I get around to implementing in all subclasses?
   NS_IMETHOD GetTotalMessagesInDB(PRUint32 *totalMessages) const;					// How many messages in database.
-	// These functions are used for tricking the front end into thinking that we have more 
-	// messages than are really in the DB.  This is usually after and IMAP message copy where
-	// we don't want to do an expensive select until the user actually opens that folder
-	// These functions are called when MSG_Master::GetFolderLineById is populating a MSG_FolderLine
-	// struct used by the FE
-	int32			GetNumPendingUnread(PRBool deep = PR_FALSE);
-	int32			GetNumPendingTotalMessages(PRBool deep = PR_FALSE);
-	
-  void			ChangeNumPendingUnread(int32 delta);
-  void			ChangeNumPendingTotalMessages(int32 delta);
-
-
   NS_IMETHOD SetFolderPrefFlags(PRUint32 flags);
   NS_IMETHOD GetFolderPrefFlags(PRUint32 *flags);
 

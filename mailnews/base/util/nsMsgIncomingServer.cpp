@@ -381,7 +381,7 @@ nsMsgIncomingServer::SetCharValue(const char *prefname,
     rv = m_prefs->SetCharPref(fullPrefName, val);
   
   PR_FREEIF(defaultVal);
-  PR_Free(fullPrefName);
+  PR_smprintf_free(fullPrefName);
   
   return rv;
 }
