@@ -232,7 +232,7 @@ dnl ========================================================
 OBJ_SUFFIX=o
 LIB_SUFFIX=a
 DLL_SUFFIX=so
-MKSHLIB='$(CCC) -shared -o $@'
+MKSHLIB='$(LD) $(DSO_LDOPTS)'
 PR_MD_ASFILES=
 PR_MD_CSRCS=
 PR_MD_ARCH_DIR=unix
@@ -267,6 +267,7 @@ case "$target" in
         AC_DEFINE(AIX_RENAME_SELECT)
         AC_DEFINE(_PR_NO_LARGE_FILES)
         AIX_LINK_OPTS='-bnso -berok'
+        PR_MD_ASFILES=os_AIX.s
         ;;
     aix4.1*)
         AC_DEFINE(AIX_RENAME_SELECT)
@@ -300,12 +301,23 @@ case "$target" in
     fi
     AIX_WRAP='$(DIST)/lib/aixwrap.o'
     AIX_TMP='./_aix_tmp.o'
+    if test -n "$USE_64"; then
+        MDCPUCFG_H=_aix64.cfg
+    else
+        if test -n "$USE_IPV6"; then
+            MDCPUCFG_H=_aix32in6.cfg
+        else
+            MDCPUCFG_H=_aix32.cfg
+        fi
+    fi
+    PR_MD_CSRCS=aix.c
     ;;
         
 *-beos*)
     AC_DEFINE(XP_BEOS)
     AC_DEFINE(BeOS)
     AC_DEFINE(BEOS)
+    MKSHLIB='$(CCC) -shared -o $@'
     ;;
 
 *-dgux*)
@@ -321,6 +333,8 @@ case "$target" in
     NOSUCHFILE=/no-such-file
     _OPTIMIZE_FLAGS=-O2
     _DEBUG_FLAGS=
+    MDCPUCFG_H=_dgux.cfg
+    PR_MD_CSRCS=dgux.c
     ;;
 
 *-freebsd*)
@@ -338,8 +352,9 @@ case "$target" in
     fi
     DSO_CFLAGS=-fPIC
     DSO_LDOPTS=-Bshareable
-    DSO_LDFLAGS=
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
+    MDCPUCFG_H=_freebsd.cfg
+    PR_MD_CSRCS=freebsd.c
     ;;
 
 *-hpux*)
@@ -349,7 +364,12 @@ case "$target" in
     DLL_SUFFIX=sl
     MKSHLIB='$(LD) $(DSO_LDOPTS)'
     DSO_LDOPTS='-b +h $(notdir $@)'
-    DSO_LDFLAGS=
+    PR_MD_CSRCS=hpux.c
+    if test -n "$USE_64"; then
+        MDCPUCFG_H=_hpux64.cfg
+    else
+        MDCPUCFG_H=_hpux32.cfg
+    fi
     if test -z "$GNU_CC"; then
         CC="$CC -Ae"
         CXX="$CXX -ext"
@@ -432,12 +452,15 @@ case "$target" in
     AC_DEFINE(IRIX)
     AC_DEFINE(SVR4)
     AC_DEFINE(_SGI_MP_SOURCE)
-    MDCPUCFG_H=_irix32.cfg
     PR_MD_CSRCS=irix.c
     PR_MD_ASFILES=os_Irix.s
-    PR_MD_ARCH_DIR=unix
     MKSHLIB='$(LD) $(SHLIB_LD_OPTS) -rdata_shared -shared -soname $(notdir $@)'
     DSO_LDOPTS='-elf -shared -all'
+    if test -n "$USE_64"; then
+        MDCPUCFG_H=_irix64.cfg
+    else
+        MDCPUCFG_H=_irix32.cfg
+    fi
     case "${target_os}" in
     irix5*)
 	   USE_NSPR_THREADS=1
@@ -522,7 +545,26 @@ case "$target" in
     CXXFLAGS="$CXXFLAGS -pipe"
     MDCPUCFG_H=_linux.cfg
     PR_MD_CSRCS=linux.c
-    PR_MD_ARCH_DIR=unix
+    MKSHLIB='$(LD) $(DSO_LDOPTS) -soname $(notdir $@)'
+    DSO_CFLAGS=-fPIC
+    DSO_LDOPTS=-shared
+    case "${target_cpu}" in
+    alpha)
+        AC_DEFINE(_ALPHA_)
+        AC_DEFINE(__alpha)
+        CFLAGS="$CFLAGS -mieee"
+        CXXFLAGS="$CXXFLAGS -mieee"
+        _OPTIMIZE_FLAGS=-O2
+        ;;
+    m68k)
+        _OPTIMIZE_FLAGS=-O
+        CFLAGS="$CFLAGS -m68020-40"
+        CXXFLAGS="$CXXFLAGS -m68020-40"
+        ;;
+    *)
+        _OPTIMIZE_FLAGS=-O2
+        ;;
+    esac    
     ;;
 
 *-mingw*)
@@ -586,6 +628,75 @@ case "$target" in
     AR="qcc -Vgcc_ntox86 -M -a "
     AR_FLAGS="$@"
 	;;
+
+*-solaris*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(SVR4)
+    AC_DEFINE(SYSV)
+    AC_DEFINE(__svr4)
+    AC_DEFINE(__svr4__)
+    AC_DEFINE(SOLARIS)
+    if test -n "$USE_64"; then
+        MDCPUCFG=_solaris64.cfg
+    else
+        MDCPUCFG=_solaris32.cfg
+    fi
+    PR_MD_CSRCS=solaris.c
+    MKSHLIB='$(LD) $(DSO_LDOPTS)'
+    DSO_LDOPTS='-G -h $(notdir $@)'
+    if test -n "$GNU_CC"; then
+        DSO_CFLAGS=-fPIC
+    else
+        DSO_CFLAGS=-KPIC
+    fi
+    ASFLAGS="$ASFLAGS -Wa,-P"
+    NOSUCHFILE=/no-such-file
+    if test -n "$GNU_CC"; then
+        if test -n "$USE_MDUPDATE"; then
+            CFLAGS="$CFLAGS -MDupdate"
+            CXXFLAGS="$CXXFLAGS -MDupdate"
+        fi
+    else
+        CC="$CC -xstrconst"
+        CXX="$CXX -Qoption cg -xstrconst"
+    fi
+    if test -n "$BUILD_NUMBER" && test -z "$MOZ_OPTIMIZE"; then
+        CFLAGS="$CFLAGS -xs"
+        CXXFLAGS="$CXXFLAGS -xs"
+    fi
+    if test -n "$USE_64" && test -z "$GNU_CC"; then
+        CC="$CC -xarch=v9"
+        CXX="$CXX -xarch=v9"
+    fi
+    if test "${target_cpu}" = "i386"; then
+        AC_DEFINE(i386)
+        if test -n "$MOZ_DEBUG" && test -n "$GNU_CC"; then
+            _DEBUG_FLAGS="$_DEBUG_FLAGS -Wa,-s -gstabs"
+        fi
+    fi
+    case "${target_os}" in
+    solaris2.3*)
+        AC_DEFINE(_PR_NO_LARGE_FILES)
+        ;;
+    solaris2.4*)
+        AC_DEFINE(_PR_NO_LARGE_FILES)
+        ;;
+    solaris2.5*)
+        AC_DEFINE(SOLARIS2_5)    
+        ;;
+    *)
+        AC_DEFINE(_PR_HAVE_OFF64_T)
+        if test -n "$GNU_CC"; then
+            AC_DEFINE(_LARGEFILE64_SOURCE)
+        fi
+        ;;
+    esac
+    if test "${target_cpu}" = "sun4u"; then
+        ULTRASPARC_LIBRARY=ultrasparc
+        ULTRASPARC_FILTER_LIBRARY=libatomic.so
+        DSO_LDOPTS="$DSO_LDOPTS -f "'$(ULTRASPARC_FILTER_LIBRARY)'
+    fi
+    ;;
 
 *)
     AC_DEFINE(XP_UNIX)
@@ -811,11 +922,6 @@ else
     if test -n "$USE_USER_PTHREADS"; then
 	    USE_PTHREADS=
 	    USE_NSPR_THREADS=
-        case "${target}" in
-        *-hpux*)
-            AC_DEFINE(_POSIX_C_SOURCE=199506L)
-            ;;
-        esac
     else
 	    USE_NSPR_THREADS=1
 	    dnl AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
@@ -834,6 +940,11 @@ case "$target" in
         AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
     fi
     ;;
+*-hpux*)
+    if test -n "$USE_USER_PTHREADS"; then
+        AC_DEFINE(_POSIX_C_SOURCE=199506L)
+    fi
+    ;;
 *-mingw*|*-cygwin*|*-uwin*)
     dnl win32 does not use pthreads
     USE_PTHREADS=
@@ -844,7 +955,21 @@ case "$target" in
     if test -n "$USE_NATIVE_THREADS"; then
         AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
     else
-        AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
+        if test -n "$USE_USER_PTHREADS"; then
+            AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
+        fi
+    fi
+    if test -z "$USE_USER_PTHREADS"; then
+        AC_DEFINE(_REENTRANT)
+        AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
+        if test "${target_cpu}" = "i386"; then
+            PR_MD_ASFILES=os_SunOS_x86.s
+        else
+            PR_MD_ASFILES=os_SunOS.s
+            if test -z "$USE_64"; then
+                PR_MD_ASFILES="$PR_MD_ASFILES os_SunOS_32.s"
+            fi
+        fi
     fi
     ;;
 esac
@@ -905,12 +1030,13 @@ AC_SUBST(DLL_SUFFIX)
 AC_SUBST(MKSHLIB)
 AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
-AC_SUBST(DSO_LDFLAGS)
 
 AC_SUBST(DEFINES)
 AC_SUBST(DEFS)
 AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)
+AC_SUBST(AS)
+AC_SUBST(ASFLAGS)
 AC_SUBST(DLLTOOL)
 AC_SUBST(WINDRES)
 AC_SUBST(RANLIB)
@@ -921,6 +1047,8 @@ AC_SUBST(EXTRA_LIBS)
 AC_SUBST(AIX_LINK_OPTS)
 AC_SUBST(NOSUCHFILE)
 AC_SUBST(MOZ_OBJFORMAT)
+AC_SUBST(ULTRASPARC_LIBRARY)
+AC_SUBST(ULTRASPARC_FILTER_LIBRARY)
 
 dnl ========================================================
 dnl Generate output files.
