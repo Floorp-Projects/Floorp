@@ -135,14 +135,16 @@ nsTransactionManager::Do(nsITransaction *aTransaction)
 
   LOCK_TX_MANAGER(this);
 
-  result = WillDoNotify(aTransaction);
+  PRBool doInterrupt = PR_FALSE;
+
+  result = WillDoNotify(aTransaction, &doInterrupt);
 
   if (NS_FAILED(result)) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
 
-  if (result == NS_COMFALSE) {
+  if (doInterrupt) {
     UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
@@ -215,14 +217,16 @@ nsTransactionManager::Undo()
     return result;
   }
 
-  result = WillUndoNotify(t);
+  PRBool doInterrupt = PR_FALSE;
+
+  result = WillUndoNotify(t, &doInterrupt);
 
   if (NS_FAILED(result)) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
 
-  if (result == NS_COMFALSE) {
+  if (doInterrupt) {
     UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
@@ -294,14 +298,16 @@ nsTransactionManager::Redo()
     return result;
   }
 
-  result = WillRedoNotify(t);
+  PRBool doInterrupt = PR_FALSE;
+
+  result = WillRedoNotify(t, &doInterrupt);
 
   if (NS_FAILED(result)) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
 
-  if (result == NS_COMFALSE) {
+  if (doInterrupt) {
     UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
@@ -358,14 +364,16 @@ nsTransactionManager::BeginBatch()
 
   LOCK_TX_MANAGER(this);
 
-  result = WillBeginBatchNotify();
+  PRBool doInterrupt = PR_FALSE;
+
+  result = WillBeginBatchNotify(&doInterrupt);
 
   if (NS_FAILED(result)) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
 
-  if (result == NS_COMFALSE) {
+  if (doInterrupt) {
     UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
@@ -417,14 +425,16 @@ nsTransactionManager::EndBatch()
     return NS_ERROR_FAILURE;
   }
 
-  result = WillEndBatchNotify();
+  PRBool doInterrupt = PR_FALSE;
+
+  result = WillEndBatchNotify(&doInterrupt);
 
   if (NS_FAILED(result)) {
     UNLOCK_TX_MANAGER(this);
     return result;
   }
 
-  if (result == NS_COMFALSE) {
+  if (doInterrupt) {
     UNLOCK_TX_MANAGER(this);
     return NS_OK;
   }
@@ -722,7 +732,7 @@ nsTransactionManager::ClearRedoStack()
 }
 
 nsresult
-nsTransactionManager::WillDoNotify(nsITransaction *aTransaction)
+nsTransactionManager::WillDoNotify(nsITransaction *aTransaction, PRBool *aInterrupt)
 {
   if (!mListeners)
     return NS_OK;
@@ -737,9 +747,9 @@ nsTransactionManager::WillDoNotify(nsITransaction *aTransaction)
     if (!listener)
       return NS_ERROR_FAILURE;
 
-    result = listener->WillDo(this, aTransaction);
+    result = listener->WillDo(this, aTransaction, aInterrupt);
     
-    if (NS_FAILED(result) || result == NS_COMFALSE)
+    if (NS_FAILED(result) || *aInterrupt)
       break;
   }
 
@@ -772,7 +782,7 @@ nsTransactionManager::DidDoNotify(nsITransaction *aTransaction, nsresult aDoResu
 }
 
 nsresult
-nsTransactionManager::WillUndoNotify(nsITransaction *aTransaction)
+nsTransactionManager::WillUndoNotify(nsITransaction *aTransaction, PRBool *aInterrupt)
 {
   if (!mListeners)
     return NS_OK;
@@ -787,9 +797,9 @@ nsTransactionManager::WillUndoNotify(nsITransaction *aTransaction)
     if (!listener)
       return NS_ERROR_FAILURE;
 
-    result = listener->WillUndo(this, aTransaction);
+    result = listener->WillUndo(this, aTransaction, aInterrupt);
     
-    if (NS_FAILED(result) || result == NS_COMFALSE)
+    if (NS_FAILED(result) || *aInterrupt)
       break;
   }
 
@@ -822,7 +832,7 @@ nsTransactionManager::DidUndoNotify(nsITransaction *aTransaction, nsresult aUndo
 }
 
 nsresult
-nsTransactionManager::WillRedoNotify(nsITransaction *aTransaction)
+nsTransactionManager::WillRedoNotify(nsITransaction *aTransaction, PRBool *aInterrupt)
 {
   if (!mListeners)
     return NS_OK;
@@ -837,9 +847,9 @@ nsTransactionManager::WillRedoNotify(nsITransaction *aTransaction)
     if (!listener)
       return NS_ERROR_FAILURE;
 
-    result = listener->WillRedo(this, aTransaction);
+    result = listener->WillRedo(this, aTransaction, aInterrupt);
     
-    if (NS_FAILED(result) || result == NS_COMFALSE)
+    if (NS_FAILED(result) || *aInterrupt)
       break;
   }
 
@@ -872,7 +882,7 @@ nsTransactionManager::DidRedoNotify(nsITransaction *aTransaction, nsresult aRedo
 }
 
 nsresult
-nsTransactionManager::WillBeginBatchNotify()
+nsTransactionManager::WillBeginBatchNotify(PRBool *aInterrupt)
 {
   if (!mListeners)
     return NS_OK;
@@ -887,9 +897,9 @@ nsTransactionManager::WillBeginBatchNotify()
     if (!listener)
       return NS_ERROR_FAILURE;
 
-    result = listener->WillBeginBatch(this);
+    result = listener->WillBeginBatch(this, aInterrupt);
     
-    if (NS_FAILED(result) || result == NS_COMFALSE)
+    if (NS_FAILED(result) || *aInterrupt)
       break;
   }
 
@@ -922,7 +932,7 @@ nsTransactionManager::DidBeginBatchNotify(nsresult aResult)
 }
 
 nsresult
-nsTransactionManager::WillEndBatchNotify()
+nsTransactionManager::WillEndBatchNotify(PRBool *aInterrupt)
 {
   if (!mListeners)
     return NS_OK;
@@ -937,9 +947,9 @@ nsTransactionManager::WillEndBatchNotify()
     if (!listener)
       return NS_ERROR_FAILURE;
 
-    result = listener->WillEndBatch(this);
+    result = listener->WillEndBatch(this, aInterrupt);
     
-    if (NS_FAILED(result) || result == NS_COMFALSE)
+    if (NS_FAILED(result) || *aInterrupt)
       break;
   }
 
@@ -972,7 +982,7 @@ nsTransactionManager::DidEndBatchNotify(nsresult aResult)
 }
 
 nsresult
-nsTransactionManager::WillMergeNotify(nsITransaction *aTop, nsITransaction *aTransaction)
+nsTransactionManager::WillMergeNotify(nsITransaction *aTop, nsITransaction *aTransaction, PRBool *aInterrupt)
 {
   if (!mListeners)
     return NS_OK;
@@ -987,9 +997,9 @@ nsTransactionManager::WillMergeNotify(nsITransaction *aTop, nsITransaction *aTra
     if (!listener)
       return NS_ERROR_FAILURE;
 
-    result = listener->WillMerge(this, aTop, aTransaction);
+    result = listener->WillMerge(this, aTop, aTransaction, aInterrupt);
     
-    if (NS_FAILED(result) || result == NS_COMFALSE)
+    if (NS_FAILED(result) || *aInterrupt)
       break;
   }
 
@@ -1150,12 +1160,14 @@ nsTransactionManager::EndTransaction()
 
     if (topTransaction) {
 
-      result = WillMergeNotify(topTransaction, tint);
+      PRBool doInterrupt = PR_FALSE;
+
+      result = WillMergeNotify(topTransaction, tint, &doInterrupt);
 
       if (NS_FAILED(result))
         return result;
 
-      if (result != NS_COMFALSE) {
+      if (!doInterrupt) {
         result = topTransaction->Merge(&didMerge, tint);
 
         nsresult result2 = DidMergeNotify(topTransaction, tint, didMerge, result);
