@@ -24,7 +24,6 @@ Contributor(s):
 
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://communicator/skin/securityOverlay.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://communicator/content/bookmarks/bookmarksOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/viewZoomOverlay.xul"?>
@@ -40,7 +39,7 @@ Contributor(s):
 %browserDTD;
 <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
 %globalRegionDTD;
-<!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charsetOverlay.dtd" >
+<!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charset.dtd" >
 %charsetDTD;
 ]>
 
@@ -70,7 +69,7 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
-
+  <script type="application/x-javascript" src="chrome://global/content/charset.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/securityUI.js" />
 
