@@ -1095,8 +1095,11 @@ nsWindow::HandleGDKEvent(GdkEvent *event)
     OnButtonReleaseSignal (&event->button);
     break;
   case GDK_LEAVE_NOTIFY:
-	OnLeaveNotifySignal (&event->crossing);
-	break;
+    OnLeaveNotifySignal (&event->crossing);
+    break;
+  case GDK_ENTER_NOTIFY:
+    OnEnterNotifySignal ( &event->crossing );
+    break;
   default:
     break;
   }
