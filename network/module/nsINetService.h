@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
+#include "nsITransport.h"
 #ifdef SingleSignon
 #include "lo_ele.h"
 #endif
@@ -243,13 +244,15 @@ struct nsINetService : public nsISupports
                          nsISupports* aContainer = nsnull,
                          nsIURLGroup* aGroup = nsnull) = 0;
 
+	/**
+	 * Protocol connection pools should use this call into the service manager to 
+	 * produce a transport interface on a socket. You need to pass in a port and a host
+	 * name to associate with the socket.
+	*/
+     
+	NS_IMETHOD CreateSocketTransport(nsITransport **aTransport, PRUint32 aPortToUse, const char * aHostName) = 0;
     
     NS_IMETHOD AreThereActiveConnections(void) = 0;
-
-
-
-
-
 };
 
 
