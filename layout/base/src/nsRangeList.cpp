@@ -190,7 +190,7 @@ public:
   NS_IMETHOD ShutDown();
   NS_IMETHOD HandleTextEvent(nsGUIEvent *aGUIEvent);
   NS_IMETHOD HandleKeyEvent(nsGUIEvent *aGuiEvent);
-  NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
+  NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
                        PRBool aContinueSelection, PRBool aMultipleSelection);
   NS_IMETHOD EnableFrameNotification(PRBool aEnable){mNotifyFrames = aEnable; return NS_OK;}
   NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
@@ -215,6 +215,8 @@ public:
   NS_IMETHOD    DeleteFromDocument();
   nsIFocusTracker *GetTracker(){return mTracker;}
 private:
+  NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
+                       PRBool aContinueSelection, PRBool aMultipleSelection);
 
   friend class nsDOMSelection;
 #ifdef DEBUG
@@ -260,11 +262,7 @@ public:
 /*BEGIN nsIEnumerator interfaces
 see the nsIEnumerator for more details*/
 
-  NS_IMETHOD_(nsrefcnt) AddRef();
-
-  NS_IMETHOD_(nsrefcnt) Release();
-
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_DECL_ISUPPORTS
 
   NS_DECL_NSIENUMERATOR
 
@@ -318,6 +316,7 @@ PRInt32 nsRangeList::sInstanceCount = 0;
 nsRangeListIterator::nsRangeListIterator(nsDOMSelection *aList)
 :mIndex(0)
 {
+  NS_INIT_REFCNT();
   if (!aList)
   {
     NS_NOTREACHED("nsRangeList");
@@ -405,6 +404,9 @@ nsRangeListIterator::CurrentItem(nsISupports **aItem)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMPL_ADDREF(nsRangeListIterator)
+
+NS_IMPL_RELEASE(nsRangeListIterator)
 
 
 NS_IMETHODIMP 
@@ -446,19 +448,6 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 
-NS_IMETHODIMP_(nsrefcnt)
-nsRangeListIterator::AddRef()
-{
-  return mDomSelection->AddRef();
-}
-
-
-
-NS_IMETHODIMP_(nsrefcnt)
-nsRangeListIterator::Release()
-{
-  return mDomSelection->Release();
-}
 
 
 
@@ -749,7 +738,10 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     if (NS_FAILED(result))
       return result;
     if (keyEvent->keyCode == nsIDOMUIEvent::VK_UP || keyEvent->keyCode == nsIDOMUIEvent::VK_DOWN)
+    {
       desiredX= FetchDesiredX();
+      SetDesiredX(desiredX);
+    }
 
     if (!isCollapsed && !keyEvent->isShift) {
       switch (keyEvent->keyCode){
@@ -765,7 +757,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
             }
             result = mDomSelections[SELECTION_NORMAL]->Collapse(weakNodeUsed,offsetused);
 
-                                       } break;
+           } break;
         case nsIDOMUIEvent::VK_RIGHT : 
         case nsIDOMUIEvent::VK_DOWN  : {
             if ((mDomSelections[SELECTION_NORMAL]->GetDirection() == eDirPrevious)) { //f,a
@@ -777,7 +769,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
               weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
             }
             result = mDomSelections[SELECTION_NORMAL]->Collapse(weakNodeUsed,offsetused);
-                                       } break;
+           } break;
         
       }
       if (keyEvent->keyCode == nsIDOMUIEvent::VK_UP || keyEvent->keyCode == nsIDOMUIEvent::VK_DOWN)
@@ -788,67 +780,37 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     offsetused = mDomSelections[SELECTION_NORMAL]->FetchFocusOffset();
     weakNodeUsed = mDomSelections[SELECTION_NORMAL]->FetchFocusNode();
     nsIFrame *frame;
-    nsIFrame *resultFrame;
-    nsCOMPtr<nsIContent> content;
     result = mDomSelections[SELECTION_NORMAL]->GetPrimaryFrameForFocusNode(&frame);
     if (NS_FAILED(result))
       return result;
+    nsPeekOffsetStruct pos;
+    pos.SetData(mTracker, desiredX, amount, eDirPrevious, offsetused, PR_FALSE,PR_TRUE);
     switch (keyEvent->keyCode){
-      case nsIDOMUIEvent::VK_LEFT  : 
-        {
-        //we need to look for the previous PAINTED location to move the cursor to.
-          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, &resultFrame, PR_FALSE)) && content){
-            result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift, PR_FALSE);
-          }
-          result = mDomSelections[SELECTION_NORMAL]->ScrollIntoView();
-        }
-        break;
       case nsIDOMUIEvent::VK_RIGHT : 
-        {
-        //we need to look for the previous PAINTED location to move the cursor to.
-          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, &resultFrame, PR_FALSE)) && content){
-            result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift, PR_FALSE);
-          }
-          result = mDomSelections[SELECTION_NORMAL]->ScrollIntoView();
-        }
-       break;
-      case nsIDOMUIEvent::VK_UP : 
+          pos.mDirection = eDirNext;
+      case nsIDOMUIEvent::VK_LEFT  : //no break
+          InvalidateDesiredX();
+        break;
       case nsIDOMUIEvent::VK_DOWN : 
-        {
-  //we need to look for the previous PAINTED location to move the cursor to.
-          amount = eSelectLine;
-          if (nsIDOMUIEvent::VK_UP == keyEvent->keyCode)
-          {
-            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, &resultFrame, PR_FALSE)) && content){
-              result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift, PR_FALSE);
-            }
-          }
-          else
-            if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, &resultFrame, PR_FALSE)) && content){
-              result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift, PR_FALSE);
-            }
-          result = mDomSelections[SELECTION_NORMAL]->ScrollIntoView();
-          SetDesiredX(desiredX);
-        }
+         pos.mDirection = eDirNext;//no break here
+      case nsIDOMUIEvent::VK_UP : 
+          pos.mAmount = eSelectLine;
         break;
       case nsIDOMUIEvent::VK_HOME :
-        {
-          amount = eSelectBeginLine;
-          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, &resultFrame, PR_FALSE)) && content){
-            result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift, PR_FALSE);
-          }
-        }
+          pos.mAmount = eSelectBeginLine;
+          InvalidateDesiredX();
         break;
       case nsIDOMUIEvent::VK_END :
-        {
-          amount = eSelectEndLine;
-          if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(mTracker, desiredX, amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, &resultFrame, PR_FALSE)) && content){
-            result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift, PR_FALSE);
-          }
-        }
+          pos.mAmount = eSelectEndLine;
+          InvalidateDesiredX();
         break;
-    default :break;
+    default :return result;
     }
+    if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(&pos)) && pos.mResultContent)
+      result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, keyEvent->isShift, PR_FALSE);
+    if (NS_SUCCEEDED(result))
+      result = mDomSelections[SELECTION_NORMAL]->ScrollIntoView();
+
   }
   return result;
 }
@@ -895,7 +857,13 @@ void nsRangeList::printSelection()
 
 
 
-
+NS_IMETHODIMP
+nsRangeList::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, 
+                       PRUint32 aContentEndOffset, PRBool aContinueSelection, PRBool aMultipleSelection)
+{
+  InvalidateDesiredX();
+  return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
+}
 
 /**
 hard to go from nodes to frames, easy the other way!
@@ -1930,7 +1898,6 @@ nsDOMSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
     return NS_ERROR_INVALID_ARG;
 
   nsresult result;
-  mRangeList->InvalidateDesiredX();
   // Delete all of the current ranges
   if (NS_FAILED(SetOriginalAnchorPoint(aParentNode,aOffset)))
     return NS_ERROR_FAILURE; //???

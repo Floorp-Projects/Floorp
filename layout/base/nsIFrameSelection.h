@@ -31,7 +31,8 @@
 #include "nsIFocusTracker.h"   
 #include "nsIDOMSelection.h"
 #include "nsIPresShell.h"
-
+#include "nsIContent.h"
+#include "nsCOMPtr.h"
 // IID for the nsIFrameSelection interface
 #define NS_IFRAMESELECTION_IID      \
 { 0xf46e4171, 0xdeaa, 0x11d1, \
@@ -49,6 +50,45 @@ struct SelectionDetails
   SelectionType mType;
   SelectionDetails *mNext;
 };
+
+/*PeekOffsetStruct
+   *  @param mTracker is used to get the PresContext usefull for measuring text ect.
+   *  @param mDesiredX is the "desired" location of the new caret
+   *  @param mAmount eWord, eCharacter, eLine
+   *  @param mDirection enum defined in this file to be eForward or eBackward
+   *  @param mStartOffset start offset to start the peek. 0 == beginning -1 = end
+   *  @param mResultContent content that actually is the next/previous
+   *  @param mResultOffset offset for result content
+   *  @param mResultFrame resulting frame for peeking
+   *  @param mEatingWS boolean to tell us the state of our search for Next/Prev
+   *  @param mPreferLeft true = prev line end, false = next line begin
+*/
+struct nsPeekOffsetStruct
+{
+  void SetData(nsIFocusTracker *aTracker, 
+               nscoord aDesiredX, 
+               nsSelectionAmount aAmount,
+               nsDirection aDirection,
+               PRInt32 aStartOffset, 
+               PRBool aEatingWS,
+               PRBool aPreferLeft)
+      {
+       mTracker=aTracker;mDesiredX=aDesiredX;mAmount=aAmount;
+       mDirection=aDirection;mStartOffset=aStartOffset;mEatingWS=aEatingWS;
+       mPreferLeft=aPreferLeft;
+      }
+  nsIFocusTracker *mTracker;
+  nscoord mDesiredX;
+  nsSelectionAmount mAmount;
+  nsDirection mDirection;
+  PRInt32 mStartOffset;
+  nsCOMPtr<nsIContent> mResultContent;
+  PRInt32 mContentOffset;
+  nsIFrame *mResultFrame;
+  PRBool mEatingWS;
+  PRBool mPreferLeft;
+};
+
 
 class nsIFrameSelection : public nsISupports {
 public:
@@ -82,7 +122,7 @@ public:
    */
   NS_IMETHOD HandleKeyEvent(nsGUIEvent *aGuiEvent) = 0;
 
-  /** TakeFocus will take the focus to the new frame at the new offset and 
+  /** HandleClick will take the focus to the new frame at the new offset and 
    *  will either extend the selection from the old anchor, or replace the old anchor.
    *  the old anchor and focus position may also be used to deselect things
    *  @param aNewfocus is the content that wants the focus
@@ -93,7 +133,7 @@ public:
    *  @param aMultipleSelection will tell the frame selector to replace /or not the old selection. 
    *         cannot coexist with aContinueSelection
    */
-  NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
+  NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
                        PRBool aContinueSelection, PRBool aMultipleSelection) = 0;
 
   /** EnableFrameNotification

@@ -14,7 +14,7 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
- */
+ */ 
 #include "nsIPresShell.h"
 #include "nsIPresContext.h" 
 #include "nsIContent.h"
