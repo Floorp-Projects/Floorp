@@ -213,5 +213,9 @@ outlinerchildren:-moz-outliner-image(remote-err) {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/remote-addrbook-error.gif");
 }
 
+.identity-popup-item                                                            
+{                                                                               
+  -moz-binding: url(chrome://messenger/content/messengercompose/mailComposeBindings.xml#fromMenuitem);
+}     
 
 
