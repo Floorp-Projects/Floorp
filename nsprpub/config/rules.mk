@@ -152,10 +152,6 @@ OBJS		= $(addprefix $(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX))) \
 		  $(addprefix $(OBJDIR)/,$(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX)))
 endif
 
-ifeq ($(OS_ARCH), WINNT)
-OBJS += $(RES)
-endif
-
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 EXTRA_LIBS := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(EXTRA_LIBS))
 endif
@@ -320,7 +316,7 @@ $(IMPORT_LIBRARY): $(MAPFILE)
 	$(IMPLIB) $@ $(MAPFILE)
 endif
 
-$(SHARED_LIBRARY): $(OBJS) $(MAPFILE)
+$(SHARED_LIBRARY): $(OBJS) $(RES) $(MAPFILE)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
@@ -333,7 +329,7 @@ ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 		-bM:SRE -bnoentry $(OS_LIBS) $(EXTRA_LIBS)
 else	# AIX 4.1
 ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
-	$(LINK_DLL) -MAP $(DLLBASE) $(DLL_LIBS) $(EXTRA_LIBS) $(OBJS)
+	$(LINK_DLL) -MAP $(DLLBASE) $(DLL_LIBS) $(EXTRA_LIBS) $(OBJS) $(RES)
 else
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LINK_DLL) $(DLLBASE) $(OBJS) $(OS_LIBS) $(EXTRA_LIBS) $(MAPFILE)
@@ -346,7 +342,7 @@ ifeq ($(OS_TARGET), OpenVMS)
 	  fi; \
 	fi
 endif	# OpenVMS
-	$(MKSHLIB) $(OBJS) $(EXTRA_LIBS)
+	$(MKSHLIB) $(OBJS) $(RES) $(EXTRA_LIBS)
 endif   # OS2 vacpp
 endif	# WINNT
 endif	# AIX 4.1
@@ -354,19 +350,15 @@ ifdef ENABLE_STRIP
 	$(STRIP) $@
 endif
 
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 $(RES): $(RESNAME)
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_TARGET),OS2)
-	$(RC) -DOS2 -r $< $@
-else
 # The resource compiler does not understand the -U option.
 ifdef NS_USE_GCC
 	$(RC) $(RCFLAGS) $(filter-out -U%,$(DEFINES)) $(INCLUDES:-I%=--include-dir %) -o $@ $<
 else
 	$(RC) $(RCFLAGS) $(filter-out -U%,$(DEFINES)) $(INCLUDES) -Fo$@ $<
 endif # GCC
-endif
 	@echo $(RES) finished
 endif
 
