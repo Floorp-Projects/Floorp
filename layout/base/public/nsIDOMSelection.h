@@ -85,12 +85,18 @@ public:
   NS_IMETHOD RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove) = 0;
 
   /** StartBatchChanges
+   *  this will allow changes to selection, but will not notify any of the listeners.  
+   *  this allows complex manipulations of content with the selection without worrying about
+   *  needless updates to the listeners.  you must call EndBatchChanges to stop the prevention
+   *  of updates.
    *  will return NS_OK if there is no previous unmatched StartBatchChanges Called
    *  calling this multiple times should have no effect.
    */
   NS_IMETHOD StartBatchChanges() = 0;
 
   /** EndBatchChanges
+   *  will kick off notifications to the listeners if any changes took place wile start 
+   *  batch changes took place.  if there were no changes, no notifications will fire.
    *  will return NS_OK if there was a StartBatch Changes Called
    *  calling this multiple times should have no effect.  will return NS_ERROR_FAILURE
    *  after the first call.  if any changes took place, it will then immediately notify all
