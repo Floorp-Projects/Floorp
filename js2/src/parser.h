@@ -62,6 +62,7 @@ namespace JavaScript {
         class JS2Object;
         class JS2Class;
         class Member;
+        class InstanceMember;
         class Multiname;
         class FunctionWrapper;
         class BlockFrame;
@@ -150,7 +151,7 @@ namespace JavaScript {
 #endif
 #ifdef EPIMETHEUS
         MetaData::Member *member;           // the associated definition,
-        MetaData::Member *overridden;       // overridden member...
+        MetaData::InstanceMember *overridden;       // overridden member...
         MetaData::Multiname *mn;            // ...and name constructed by the semantics phase
 #endif
 

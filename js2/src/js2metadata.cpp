@@ -1189,17 +1189,25 @@ namespace MetaData {
                             if (vb->type)
                                 t = EvalTypeExpression(env, CompilePhase, vb->type);
                             else {
-                                ASSERT(false);
-                                // XXX get type from overriden member?
-/*
-                                if (vb->osp->first->overriddenMember && (vb->osp->first->overriddenMember != POTENTIAL_CONFLICT))
-                                    t = vb->osp->first->overriddenMember->type;
-                                else
-                                    if (vb->osp->second->overriddenMember && (vb->osp->second->overriddenMember != POTENTIAL_CONFLICT))
-                                        t = vb->osp->second->overriddenMember->type;
-                                    else
-*/
+                                if (vb->overridden) {
+                                    switch (vb->overridden->memberKind) {
+                                    case Member::InstanceVariableMember:
+                                        t = checked_cast<InstanceVariable *>(vb->overridden)->type;
+                                        break;
+                                    case Member::InstanceGetterMember:
+                                        t = checked_cast<InstanceGetter *>(vb->overridden)->type;
+                                        break;
+                                    case Member::InstanceSetterMember:
+                                        t = checked_cast<InstanceSetter *>(vb->overridden)->type;
+                                        break;
+                                    case Member::InstanceMethodMember:
+                                        //t = checked_cast<InstanceMethod *>(vb->overridden)->type;
                                         t = objectClass;
+                                        break;
+                                    }
+                                }
+                                else
+                                    t = objectClass;
                             }
                             v->type = t;
                         }

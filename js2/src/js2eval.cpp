@@ -178,6 +178,8 @@ namespace MetaData {
         uint8 *savePC = NULL;
         JS2Class *exprType;
 
+        Arena *oldArena = referenceArena;
+        referenceArena = new Arena;
         CompilationData *oldData = startCompilationUnit(NULL, bCon->mSource, bCon->mSourceLocation);
         try {
             Reference *r = SetupExprNode(env, phase, p, &exprType);
@@ -188,10 +190,16 @@ namespace MetaData {
             retval = engine->interpret(phase, bCon, env);
         }
         catch (Exception &x) {
+            referenceArena->clear();
+            delete referenceArena;
+            referenceArena = oldArena;
             engine->pc = savePC;
             restoreCompilationUnit(oldData);
             throw x;
         }
+        referenceArena->clear();
+        delete referenceArena;
+        referenceArena = oldArena;
         engine->pc = savePC;
         restoreCompilationUnit(oldData);
         return retval;

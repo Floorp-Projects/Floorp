@@ -261,6 +261,9 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
         if (JS2VAL_IS_UNDEFINED(argv[0]))
             stdOut << "Undefined\n";
         else
+        if (JS2VAL_IS_NULL(argv[0]))
+            stdOut << "Null\n";
+        else
         if (JS2VAL_IS_OBJECT(argv[0])) {
             JS2Object *fObj = JS2VAL_TO_OBJECT(argv[0]);
             switch (fObj->kind) {
