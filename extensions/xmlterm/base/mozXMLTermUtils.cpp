@@ -124,7 +124,7 @@ mozXMLTermUtils::GetInnerDOMWindow(nsIDOMWindowInternal* outerDOMWindow,
   XMLT_LOG(mozXMLTermUtils::GetInnerDOMWindow,31,("frameCount=%d\n",
                                                    frameCount));
 
-  result = innerDOMWindowList->NamedItem(innerFrameName, innerDOMWindow);
+  result = innerDOMWindowList->NamedItem(innerFrameName, (nsIDOMWindow **)innerDOMWindow);
   if (NS_FAILED(result) || !*innerDOMWindow)
     return NS_ERROR_FAILURE;
 
