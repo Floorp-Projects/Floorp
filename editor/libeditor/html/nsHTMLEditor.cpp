@@ -48,6 +48,13 @@
 #include "nsIPref.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
+#include "nsIImage.h"
+
+// Drag & Drop, Clipboard
+#include "nsWidgetsCID.h"
+#include "nsIClipboard.h"
+#include "nsITransferable.h"
+
 #include "prprf.h"
 
 const unsigned char nbsp = 160;
@@ -62,6 +69,10 @@ static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
 static NS_DEFINE_IID(kFileWidgetCID,  NS_FILEWIDGET_CID);
+
+// Drag & Drop, Clipboard Support
+static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
+static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -445,7 +456,91 @@ NS_IMETHODIMP nsHTMLEditor::Copy()
 
 NS_IMETHODIMP nsHTMLEditor::Paste()
 {
-  return nsTextEditor::Paste();
+#ifdef DEBUG_akkana
+  printf("nsHTMLEditor::Paste()\n");
+#endif
+
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->Paste();
+#endif // ENABLE_JS_EDITOR_LOG
+
+  nsIImage * image = nsnull;
+
+  nsString stuffToPaste;
+
+  // Get Clipboard Service
+  nsIClipboard* clipboard;
+  nsresult rv = nsServiceManager::GetService(kCClipboardCID,
+                                             nsIClipboard::GetIID(),
+                                             (nsISupports **)&clipboard);
+
+  // Create generic Transferable for getting the data
+  nsCOMPtr<nsITransferable> trans;
+  rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
+                                          nsITransferable::GetIID(), 
+                                          (void**) getter_AddRefs(trans));
+  if (NS_SUCCEEDED(rv))
+  {
+    // Get the nsITransferable interface for getting the data from the clipboard
+    if (trans)
+    {
+      // Create the desired DataFlavor for the type of data we want to get out of the transferable
+      nsAutoString htmlFlavor(kHTMLMime);
+      nsAutoString textFlavor(kTextMime);
+      nsAutoString imageFlavor(kJPEGImageMime);
+
+      trans->AddDataFlavor(&htmlFlavor);
+      trans->AddDataFlavor(&textFlavor);
+      trans->AddDataFlavor(&imageFlavor);
+
+      // Get the Data from the clipboard
+      if (NS_SUCCEEDED(clipboard->GetData(trans)))
+      {
+        nsAutoString flavor;
+        char *       data;
+        PRUint32     len;
+        if (NS_SUCCEEDED(trans->GetAnyTransferData(&flavor, (void **)&data, &len)))
+        {
+#ifdef DEBUG_akkana
+          printf("Got flavor [%s]\n", flavor.ToNewCString());
+#endif
+          if (flavor.Equals(htmlFlavor))
+          {
+            if (data && len > 0) // stuffToPaste is ready for insertion into the content
+            {
+              stuffToPaste.SetString(data, len);
+              rv = InsertHTML(stuffToPaste);
+            }
+          }
+          else if (flavor.Equals(textFlavor))
+          {
+            if (data && len > 0) // stuffToPaste is ready for insertion into the content
+            {
+              stuffToPaste.SetString(data, len);
+              rv = InsertText(stuffToPaste);
+            }
+          }
+          else if (flavor.Equals(imageFlavor))
+          {
+            image = (nsIImage *)data;
+            // Insert Image code here
+            NS_RELEASE(image);
+            rv = NS_ERROR_FAILURE; // for now give error code
+          }
+        }
+
+      }
+    }
+  }
+  nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
+
+  //printf("Trying to insert '%s'\n", stuffToPaste.ToNewCString());
+
+  // Now let InsertText handle the hard stuff:
+  return rv;
 }
 
 // 
