@@ -5,7 +5,7 @@
 //--- Send via E-Mail Message ---
 
 $from_name = "Mozilla Update";
-$from_address = "update-daemon@update.mozilla.org";
+$from_address = "update-daemon@mozilla.org";
 
 
 //Send To Address
