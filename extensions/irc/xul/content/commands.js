@@ -2375,14 +2375,39 @@ function cmdStalk(e)
         if (list.length == 0)
             display(MSG_NO_STALK_LIST);
         else
+        {
+            function alphabetize(a, b)
+            {
+                var A = a.toLowerCase();
+                var B = b.toLowerCase();
+                if (A < B) return -1;
+                if (B < A) return 1;
+                return 0;
+            }
+
+            list.sort(alphabetize);
             display(getMsg(MSG_STALK_LIST, list.join(MSG_COMMASP)));
+        }
         return;
     }
 
-    list.push(e.text);
-    list.update();
+    var notStalkingWord = true;
+    var loweredText = e.text.toLowerCase();
 
-    display(getMsg(MSG_STALK_ADD, e.text));
+    for (var i = 0; i < list.length; ++i)
+        if (list[i].toLowerCase() == loweredText)
+            notStalkingWord = false;
+
+    if (notStalkingWord)
+    {
+        list.push(e.text);
+        list.update();
+        display(getMsg(MSG_STALK_ADD, e.text));
+    }
+    else
+    {
+        display(getMsg(MSG_STALKING_ALREADY, e.text));
+    }
 }
 
 function cmdUnstalk(e)
