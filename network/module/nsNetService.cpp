@@ -159,7 +159,7 @@ nsNetlibService::nsNetlibService()
         XP_AppLanguage, 
         XP_AppPlatform);
     if (XP_AppVersion)
-        PR_Free(XP_AppVersion);
+        PR_Free((char *)XP_AppVersion);
     XP_AppVersion = PL_strdup(buf);
 }
 
@@ -661,7 +661,7 @@ nsNetlibService::SetCustomUserAgent(nsString aCustom)
         newAppVersion.Insert(aCustom, inIdx + 1);
     }
 
-    PR_Free(XP_AppVersion);
+    PR_Free((char *)XP_AppVersion);
     XP_AppVersion = newAppVersion.ToNewCString();
     return NS_OK;
 
