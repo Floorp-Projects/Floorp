@@ -45,7 +45,6 @@
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"
 #include "nsCRT.h"
-#include "nsIRegistry.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsICategoryManager.h"
 #include "nsIServiceManager.h"
