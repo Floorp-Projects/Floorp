@@ -32,6 +32,7 @@ class nsIScriptContext;
 class nsISupportsArray;
 class nsSupportsHashtable;
 class nsIXBLService;
+class nsFixedSizeAllocator;
 
 // *********************************************************************/
 // The XBLBinding class
@@ -143,6 +144,8 @@ public:
   static PRBool IsFocusHandler(const nsString& aName);
   static PRBool IsXULHandler(const nsString& aName);
   static PRBool IsScrollHandler(const nsString& aName);
+
+  static nsFixedSizeAllocator kPool;
 
 // Internal member functions
 protected:
