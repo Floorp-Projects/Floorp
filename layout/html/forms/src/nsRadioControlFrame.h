@@ -29,6 +29,10 @@ class nsIAtom;
 class nsRadioControlFrame : public nsFormControlFrame 
 {
 public:
+  nsRadioControlFrame();
+    // nsFormControlFrame overrides
+  nsresult RequiresWidget(PRBool &aHasWidget);
+
        // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
@@ -86,6 +90,8 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
+    //GFX-rendered state variables
+  PRBool mChecked;
 };
 
 // nsRadioControlGroup

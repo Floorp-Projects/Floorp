@@ -36,7 +36,7 @@
 #include "nsIDOMHTMLInputElement.h"
 
 
-#define NS_DESIRED_CHECKBOX_SIZE 20
+#define NS_DESIRED_CHECKBOX_SIZE 12
 #define NS_ABSOLUTE_CHECKBOX_SIZE 12
 
 
@@ -72,7 +72,7 @@ public:
 
   virtual void Reset();
 
-    // nsIFormControLFrame
+    // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
@@ -80,9 +80,14 @@ public:
   void SetCheckboxControlFrameState(const nsString& aValue);
   void GetCheckboxControlFrameState(nsString& aValue);  
 
+   // nsFormControlFrame overrides
+  nsresult RequiresWidget(PRBool &aHasWidget);
+
   //
   // Methods used to GFX-render the checkbox
   // 
+
+  void ForceRepaint();
 
   virtual void PaintCheckBox(nsIPresContext& aPresContext,
                              nsIRenderingContext& aRenderingContext,
@@ -104,7 +109,10 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
+
+    //GFX-rendered state variables
   PRBool mMouseDownOnCheckbox;
+  PRBool mChecked;
 };
 
 nsresult NS_NewCheckboxControlFrame(nsIFrame*& aResult);
@@ -120,7 +128,9 @@ NS_NewCheckboxControlFrame(nsIFrame*& aResult)
 
 nsCheckboxControlFrame::nsCheckboxControlFrame()
 {
+   // Initialize GFX-rendered state
   mMouseDownOnCheckbox = PR_FALSE;
+  mChecked = PR_FALSE;
 }
 
 const nsIID&
@@ -153,6 +163,18 @@ nsCheckboxControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
+}
+
+void
+nsCheckboxControlFrame::ForceRepaint() 
+{
+   //XXX: Hack. This hack is used to reforce a repaint
+   //by changing an attribute on the check box.
+   //We need a clean, legal way to force repaint's for
+   //GFX rendered controls.
+  PRBool state = PR_FALSE;
+  GetDefaultCheckState(&state);
+  SetDefaultCheckState(state);
 }
 
 
@@ -214,6 +236,7 @@ nsCheckboxControlFrame::MouseClicked(nsIPresContext* aPresContext)
   GetCurrentCheckState(&oldState);
   PRBool newState = oldState ? PR_FALSE : PR_TRUE;
   SetCurrentCheckState(newState); 
+  ForceRepaint();
 }
 
 PRInt32 
@@ -345,22 +368,17 @@ NS_METHOD nsCheckboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
   if (nsnull == mWidget) {
       // Handle GFX rendered widget Mouse Down event
     PRInt32 type;
-    PRBool checked;
     GetType(&type);
     switch (aEvent->message) {
       case NS_MOUSE_LEFT_BUTTON_DOWN:
-         mMouseDownOnCheckbox = PR_TRUE;
-        // XXX: Hack, force refresh by changing attribute to current
-        GetCurrentCheckState(&checked);
-        SetCurrentCheckState(checked);
+        mMouseDownOnCheckbox = PR_TRUE;
+    //XXX: TODO render gray rectangle on mouse down    ForceRepaint();
      
       break;
 
       case NS_MOUSE_EXIT:
         mMouseDownOnCheckbox = PR_FALSE;
-        // XXX: Hack, force refresh by changing attribute to current
-        GetCurrentCheckState(&checked);
-        SetCurrentCheckState(checked);
+    //XXX: TO DO clear gray rectangle on mouse up   ForceRepaint();
       break;
 
     }
@@ -383,10 +401,13 @@ void nsCheckboxControlFrame::GetCheckboxControlFrameState(nsString& aValue)
         aValue = "0";
       NS_RELEASE(checkBox);
     }
-    else {
-    //XXX: This should return the local field for GFX-rendered widgets         
+  }
+  else {   
+      // Get the state for GFX-rendered widgets
+    if (PR_TRUE == mChecked)
+      aValue = "1";
+    else
       aValue = "0";
-    }
   }
 }       
 
@@ -404,9 +425,13 @@ void nsCheckboxControlFrame::SetCheckboxControlFrameState(const nsString& aValue
 
       NS_RELEASE(checkBox);
     }
-    else {
-    //XXX: This should set he local field for GFX-rendered widgets
-    }
+  }
+  else {
+      // Set the state for GFX-rendered widgets
+    if (aValue == "1")
+      mChecked = PR_TRUE;
+    else
+      mChecked = PR_FALSE;
   }
 }         
 
@@ -438,6 +463,9 @@ NS_IMETHODIMP nsCheckboxControlFrame::GetProperty(nsIAtom* aName, nsString& aVal
   return NS_OK;     
 }
 
-
-
+nsresult nsCheckboxControlFrame::RequiresWidget(PRBool& aRequiresWidget)
+{
+  aRequiresWidget = PR_FALSE;
+  return NS_OK;
+}
 

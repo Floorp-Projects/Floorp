@@ -36,6 +36,12 @@ class nsFormFrame;
 #define CSS_NOTSET -1
 #define ATTR_NOTSET -1
 
+ // Defining this causes some of the form elements to be rendered
+ // using GFX calls, rather than creating a widget. Undefining it 
+ // causes widgets to be used for form elements. @see RequiresWidget method
+ // to see which widgets will obey this directive.
+#undef NS_GFX_RENDER_FORM_ELEMENTS
+
 /** 
   * nsFormControlFrame is the base class for frames of form controls. It
   * provides a uniform way of creating widgets, resizing, and painting.
@@ -193,10 +199,18 @@ protected:
 
   virtual ~nsFormControlFrame();
 
-   // nsIFormControLFrame
+   // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
+  /**
+   * Determine if the control uses a native widget for rendering
+   * @param aRequiresWidget is set to PR_TRUE if it has a native widget, PR_FALSE otherwise.
+   * @returns NS_OK 
+   */
+
+  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
+ 
 
   /**
     * Get the size that this frame would occupy without any constraints
@@ -239,11 +253,20 @@ protected:
    /**
     * Get the state of the defaultchecked attribute.
     * @param aState set to PR_TRUE if the defaultchecked attribute is set,
-    * PR_FALSE if the defaultchecked attribute has been removed
+    * PR_FALSE if the checked attribute has been removed
     * @returns NS_OK or NS_CONTENT_ATTR_HAS_VALUE
     */
  
   nsresult GetDefaultCheckState(PRBool* aState);
+
+   /**
+    * Set the state of the checked attribute.
+    * @param aState set to PR_TRUE to set the checked attribute 
+    * PR_FALSE to unset it
+    * @returns NS_OK 
+    */
+
+  nsresult SetDefaultCheckState(PRBool aState);
 
 
   //nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
