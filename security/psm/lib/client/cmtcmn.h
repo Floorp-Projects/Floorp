@@ -55,10 +55,12 @@
 #else
 #ifndef macintosh
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#ifndef XP_OS2_VACPP
+#include <unistd.h>
+#endif /* vacpp */
 #endif
 #endif
 #include "cmtclist.h"
