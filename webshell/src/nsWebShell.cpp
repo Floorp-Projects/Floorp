@@ -285,8 +285,7 @@ public:
                           const char* aCharset= nsnull ,
                           nsCharsetSource aSource = kCharsetUninitialized);
   NS_IMETHOD ReloadDocument(const char* aCharset= nsnull ,
-                            nsCharsetSource aSource = kCharsetUninitialized,
-                            const char* aCmd=nsnull);
+                            nsCharsetSource aSource = kCharsetUninitialized);
   NS_IMETHOD StopDocumentLoad(void);
   NS_IMETHOD SetRendering(PRBool aRender);
 
@@ -1304,10 +1303,28 @@ NS_IMETHODIMP nsWebShell::LoadURI(const PRUnichar* aURI)
 #endif /*!DOCSHELL_LOAD*/
 }
 
-
 NS_IMETHODIMP nsWebShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    nsIInputStream* aPostData, loadType aLoadType)
 {
+   switch(aLoadType)
+      {
+      case loadHistory:
+      case loadReloadNormal:
+      case loadReloadBypassCache:
+      case loadReloadBypassProxy:
+      case loadRelaodBypassProxyAndCache:
+         mUpdateHistoryOnLoad = PR_FALSE;
+         break;
+
+      default:
+         NS_ERROR("Need to update case");
+         // Fall through to a normal type of load.
+      case loadNormal:
+      case loadLink:
+         mUpdateHistoryOnLoad = PR_TRUE;
+         break;
+      } 
+
    nsXPIDLCString url;
    aURI->GetSpec(getter_Copies(url));
 
@@ -1316,14 +1333,13 @@ NS_IMETHODIMP nsWebShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
       aReferrer->GetSpec(getter_Copies(referrer));
 
 
-   return LoadURL(nsAutoString(url).GetUnicode(), nsnull, PR_FALSE, 0, 0,
-      nsnull, nsAutoString(referrer).GetUnicode());
-
+   return LoadURL(nsAutoString(url).GetUnicode(), nsnull, mUpdateHistoryOnLoad,
+      0, 0, nsnull, nsAutoString(referrer).GetUnicode());
 }
 
 // nsIURIContentListener support
-NS_IMETHODIMP nsWebShell::OnStartURIOpen(nsIURI* aURI, const char* aWindowTarget,
-   PRBool* aAbortOpen)
+NS_IMETHODIMP nsWebShell::OnStartURIOpen(nsIURI* aURI, 
+   const char* aWindowTarget, PRBool* aAbortOpen)
 {
    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
    return mContentListener->OnStartURIOpen(aURI, aWindowTarget, aAbortOpen);
@@ -2022,7 +2038,7 @@ nsWebShell::LoadDocument(const char* aURL,
         {
           mCharsetReloadState = eCharsetReloadRequested;
           nsAutoString url(aURL);
-          LoadURL(url.GetUnicode());
+          LoadURI(url.GetUnicode());
         }
       }
     }
@@ -2032,8 +2048,7 @@ nsWebShell::LoadDocument(const char* aURL,
 
 NS_IMETHODIMP
 nsWebShell::ReloadDocument(const char* aCharset,
-                           nsCharsetSource aSource,
-                           const char* aCmd)
+                           nsCharsetSource aSource)
 {
 
   // XXX hack. kee the aCharset and aSource wait to pick it up
@@ -2054,7 +2069,7 @@ nsWebShell::ReloadDocument(const char* aCharset,
          if(eCharsetReloadRequested != mCharsetReloadState) 
          {
             mCharsetReloadState = eCharsetReloadRequested;
-            return Reload(nsIChannel::LOAD_NORMAL);
+            return Reload(reloadNormal);
          }
       }
     }
