@@ -314,15 +314,15 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       if (NS_STYLE_FRAME_0 == frameborder ||
           NS_STYLE_FRAME_NO == frameborder ||
           NS_STYLE_FRAME_OFF == frameborder) {
-        nsStyleSpacing* spacing = (nsStyleSpacing*)
-          aContext->GetMutableStyleData(eStyleStruct_Spacing);
-        if (spacing) {
+        nsStyleBorder* border = (nsStyleBorder*)
+          aContext->GetMutableStyleData(eStyleStruct_Border);
+        if (border) {
           nsStyleCoord coord;
           coord.SetCoordValue(0);
-          spacing->mBorder.SetTop(coord);
-          spacing->mBorder.SetRight(coord);
-          spacing->mBorder.SetBottom(coord);
-          spacing->mBorder.SetLeft(coord);
+          border->mBorder.SetTop(coord);
+          border->mBorder.SetRight(coord);
+          border->mBorder.SetBottom(coord);
+          border->mBorder.SetLeft(coord);
         }
       }
     }

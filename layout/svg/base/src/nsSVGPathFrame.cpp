@@ -245,9 +245,9 @@ nsSVGPathFrame::Paint(nsIPresContext* aPresContext,
                      aWhichLayer);
 
   // get our border
-	const nsStyleSpacing* spacing = (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+	const nsStyleBorder* borderStyle = (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
 	nsMargin border(0,0,0,0);
-	spacing->CalcBorderFor(this, border);
+	borderStyle->CalcBorderFor(this, border);
 
   
   // XXX - Color needs to comes from new style property fill

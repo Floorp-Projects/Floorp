@@ -282,8 +282,8 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
    if (nsnull != mRadioButtonFaceStyle) {
      const nsStyleColor* myColor = (const nsStyleColor*)
           mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Color);
-     const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
-          mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Spacing);
+     const nsStyleBorder* myBorder = (const nsStyleBorder*)
+          mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Border);
      const nsStylePosition* myPosition = (const nsStylePosition*)
           mRadioButtonFaceStyle->GetStyleData(eStyleStruct_Position);
 
@@ -300,9 +300,9 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
      nsStyleColor tmpColor     = *myColor;
      tmpColor.mBackgroundColor = myColor->mColor;
      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, tmpColor, *mySpacing, 0, 0);
+                                        aDirtyRect, rect, tmpColor, *myBorder, 0, 0);
      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *mySpacing, mRadioButtonFaceStyle, 0);
+                                  aDirtyRect, rect, *myBorder, mRadioButtonFaceStyle, 0);
    }
   }
 }

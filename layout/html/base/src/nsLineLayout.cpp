@@ -1570,15 +1570,31 @@ nsLineLayout::IsPercentageAwareReplacedElement(nsIPresContext *aPresContext,
     if (nsLayoutAtoms::brFrame != frameType.get() && 
         nsLayoutAtoms::textFrame != frameType.get())
     {
-      const nsStyleSpacing* space;
-      nsresult rv = aFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct*&) space);
+      nsresult rv;
+      const nsStyleMargin* margin;
+      rv = aFrame->GetStyleData(eStyleStruct_Margin,(const nsStyleStruct*&) margin);
       if (NS_FAILED(rv)) {
         return PR_TRUE; // just to be on the safe side
       }
+      if (IsPercentageUnitSides(&margin->mMargin)) {
+        return PR_TRUE;
+      }
 
-      if (IsPercentageUnitSides(&space->mMargin)
-        || IsPercentageUnitSides(&space->mPadding)
-        || IsPercentageUnitSides(&space->mBorderRadius)) {
+      const nsStylePadding* padding;
+      rv = aFrame->GetStyleData(eStyleStruct_Padding,(const nsStyleStruct*&) padding);
+      if (NS_FAILED(rv)) {
+        return PR_TRUE; // just to be on the safe side
+      }
+      if (IsPercentageUnitSides(&padding->mPadding)) {
+        return PR_TRUE;
+      }
+
+      const nsStyleBorder* border;
+      rv = aFrame->GetStyleData(eStyleStruct_Border,(const nsStyleStruct*&) border);
+      if (NS_FAILED(rv)) {
+        return PR_TRUE; // just to be on the safe side
+      }
+      if (IsPercentageUnitSides(&border->mBorder)) {
         return PR_TRUE;
       }
 
@@ -2705,19 +2721,19 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
         if (nsLayoutAtoms::hrFrame == frameType.get()) {
           // get the alignment from the HR frame
           {
-            const nsStyleSpacing* spacing;
-            psd->mFirstFrame->mFrame->GetStyleData(eStyleStruct_Spacing,
-                                                   (const nsStyleStruct*&)spacing);
+            const nsStyleMargin* margin;
+            psd->mFirstFrame->mFrame->GetStyleData(eStyleStruct_Margin,
+                                                   (const nsStyleStruct*&)margin);
             textAlign = NS_STYLE_TEXT_ALIGN_CENTER;
             nsStyleCoord zero(nscoord(0));
             nsStyleCoord temp;
-            if ((eStyleUnit_Coord==spacing->mMargin.GetLeftUnit()) &&
-                 (zero==spacing->mMargin.GetLeft(temp)))
+            if ((eStyleUnit_Coord==margin->mMargin.GetLeftUnit()) &&
+                 (zero==margin->mMargin.GetLeft(temp)))
             {
               textAlign = NS_STYLE_TEXT_ALIGN_LEFT;
             }
-            else if ((eStyleUnit_Coord==spacing->mMargin.GetRightUnit()) &&
-                     (zero==spacing->mMargin.GetRight(temp))) {
+            else if ((eStyleUnit_Coord==margin->mMargin.GetRightUnit()) &&
+                     (zero==margin->mMargin.GetRight(temp))) {
               textAlign = NS_STYLE_TEXT_ALIGN_RIGHT;
             }
           }

@@ -598,20 +598,16 @@ nsBox::GetLayoutFlags(PRUint32& aFlags)
 NS_IMETHODIMP
 nsBox::GetBorderAndPadding(nsMargin& aBorderAndPadding)
 {
-  nsIFrame* frame = nsnull;
-  GetFrame(&frame);
-
-  const nsStyleSpacing* spacing;
-  nsresult rv = frame->GetStyleData(eStyleStruct_Spacing,
-    (const nsStyleStruct*&) spacing);
-  
+  nsMargin border;
+  nsresult rv = GetBorder(border);
   if (NS_FAILED(rv))
     return rv;
 
-  nsMargin border;
   nsMargin padding;
-  GetBorder(border);
-  GetPadding(padding);
+  rv = GetPadding(padding);
+  if (NS_FAILED(rv))
+    return rv;
+
   aBorderAndPadding.SizeTo(0,0,0,0);
   aBorderAndPadding += border;
   aBorderAndPadding += padding;
@@ -625,15 +621,15 @@ nsBox::GetBorder(nsMargin& aMargin)
   nsIFrame* frame = nsnull;
   GetFrame(&frame);
 
-  const nsStyleSpacing* spacing;
-  nsresult rv = frame->GetStyleData(eStyleStruct_Spacing,
-        (const nsStyleStruct*&) spacing);
+  const nsStyleBorder* border;
+  nsresult rv = frame->GetStyleData(eStyleStruct_Border,
+        (const nsStyleStruct*&) border);
 
   if (NS_FAILED(rv))
     return rv;
 
   aMargin.SizeTo(0,0,0,0);
-  spacing->GetBorder(aMargin);
+  border->GetBorder(aMargin);
 
   return rv;
 }
@@ -644,15 +640,15 @@ nsBox::GetPadding(nsMargin& aMargin)
   nsIFrame* frame = nsnull;
   GetFrame(&frame);
 
-  const nsStyleSpacing* spacing;
-  nsresult rv = frame->GetStyleData(eStyleStruct_Spacing,
-        (const nsStyleStruct*&) spacing);
+  const nsStylePadding* padding;
+  nsresult rv = frame->GetStyleData(eStyleStruct_Padding,
+        (const nsStyleStruct*&) padding);
 
  if (NS_FAILED(rv))
     return rv;
 
   aMargin.SizeTo(0,0,0,0);
-  spacing->GetPadding(aMargin);
+  padding->GetPadding(aMargin);
 
   return rv;
 }
@@ -663,15 +659,15 @@ nsBox::GetMargin(nsMargin& aMargin)
   nsIFrame* frame = nsnull;
   GetFrame(&frame);
 
-  const nsStyleSpacing* spacing;
-        nsresult rv = frame->GetStyleData(eStyleStruct_Spacing,
-        (const nsStyleStruct*&) spacing);
+  const nsStyleMargin* margin;
+        nsresult rv = frame->GetStyleData(eStyleStruct_Margin,
+        (const nsStyleStruct*&) margin);
 
   if (NS_FAILED(rv))
      return rv;
 
   aMargin.SizeTo(0,0,0,0);
-  spacing->GetMargin(aMargin);
+  margin->GetMargin(aMargin);
 
   return rv;
 }
@@ -1102,10 +1098,10 @@ nsBox::Redraw(nsBoxLayoutState& aState,
 
   // Checks to see if the damaged rect should be infalted 
   // to include the outline
-  const nsStyleSpacing* spacing;
-  frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+  const nsStyleOutline* outline;
+  frame->GetStyleData(eStyleStruct_Outline, (const nsStyleStruct*&)outline);
   nscoord width;
-  spacing->GetOutlineWidth(width);
+  outline->GetOutlineWidth(width);
   if (width > 0) {
     damageRect.Inflate(width, width);
   }

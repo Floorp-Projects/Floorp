@@ -1756,13 +1756,16 @@ nsXULTreeOuterGroupFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutStat
     aBoxLayoutState.GetPresContext()->ResolveStyleContextFor(firstRowContent, nsnull,
                                                              PR_FALSE, 
                                                              getter_AddRefs(styleContext));
-    const nsStyleSpacing* spacing = (const nsStyleSpacing*)styleContext->GetStyleData(eStyleStruct_Spacing);
 
     nscoord width = 0;
     nsMargin margin;
-    spacing->GetBorderPadding(margin);
+    nsStyleBorderPadding  bPad;
+    styleContext->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
+    bPad.GetBorderPadding(margin);
     width += (margin.left + margin.right);
-    spacing->GetMargin(margin);
+
+    const nsStyleMargin* styleMargin = (const nsStyleMargin*)styleContext->GetStyleData(eStyleStruct_Margin);
+    styleMargin->GetMargin(margin);
     width += (margin.left + margin.right);
 
     nsCOMPtr<nsIContent> content;
