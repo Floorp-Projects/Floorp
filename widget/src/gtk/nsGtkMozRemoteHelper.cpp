@@ -631,20 +631,20 @@ nsGtkMozRemoteHelper::OpenURLDialog  (void)
 {
   nsresult rv;
   nsCOMPtr<nsIDOMWindowInternal> lastWindow;
-  nsString name;
-  nsString url;
   
-  name.AssignWithConversion("_blank");
   // get the last used browser window
   rv = GetLastBrowserWindow(getter_AddRefs(lastWindow));
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
+
+  // get the last used browser window
+
   // use it to open the open location dialog
-  rv = OpenXULWindow ("chrome://navigator/content/openLocation.xul",
+  rv = OpenXULWindow ("chrome://communicator/content/openLocation.xul",
 		      lastWindow,
 		      "chrome,modal",
-		      name.GetUnicode(),
-		      url.GetUnicode());
+		      NS_LITERAL_STRING("_blank").get(),
+		      nsnull);
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
   return NS_OK;
