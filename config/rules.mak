@@ -618,14 +618,14 @@ _NO_FLOCK=-l
 _NO_FLOCK=
 !endif
 
-REGCHROME = @perl $(DEPTH)\config\add-chrome.pl $(_NO_FLOCK) $(DIST)\bin\chrome\installed-chrome.txt $(_JAR_REGCHROME_DISABLE_JAR)
+REGCHROME = @perl -I$(DEPTH)\config $(DEPTH)\config\add-chrome.pl $(_NO_FLOCK) $(DIST)\bin\chrome\installed-chrome.txt $(_JAR_REGCHROME_DISABLE_JAR)
 
 !ifndef MOZ_OLD_JAR_PACKAGING
 
 !if exist($(JAR_MANIFEST))
 
 chrome:: $(CHROME_DEPS)
-        $(PERL) $(DEPTH)\config\make-jars.pl -f $(_CHROME_FILE_FORMAT) $(_NO_FLOCK) -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
+        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\make-jars.pl -f $(_CHROME_FILE_FORMAT) $(_NO_FLOCK) -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
 !endif
 
 regchrome:
