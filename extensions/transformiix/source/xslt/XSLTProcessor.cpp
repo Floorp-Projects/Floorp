@@ -1304,8 +1304,10 @@ void XSLTProcessor::processAction(Node* aNode,
         PRUint32 length = value.length();
         while ((pos = value.indexOf('-', pos)) != kNotFound) {
             ++pos;
-            if (((PRUint32)pos == length) || (value.charAt(pos) == '-'))
+            if (((PRUint32)pos == length) || (value.charAt(pos) == '-')) {
                 value.insert(pos++, ' ');
+                ++length;
+            }
         }
         NS_ASSERTION(mResultHandler, "mResultHandler must not be NULL!");
         mResultHandler->comment(value);
