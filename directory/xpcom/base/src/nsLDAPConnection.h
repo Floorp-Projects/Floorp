@@ -43,7 +43,6 @@
 #include "nsILDAPMessageListener.h"
 #include "nsHashtable.h"
 #include "nspr.h"
-#include "nsIEventQueueService.h"
 
 // 0d871e30-1dd2-11b2-8ea9-831778c78e93
 //
@@ -78,11 +77,8 @@ class nsLDAPConnection : public nsILDAPConnection, nsIRunnable
     LDAP *mConnectionHandle;		// the LDAP C SDK's connection object
     nsCString *mBindName; 		// who to bind as
     nsCOMPtr<nsIThread> mThread;       	// thread which marshals results
-    nsCOMPtr<nsIEventQueue> mEventQ;	// some events come to mThread this way
 
     nsSupportsHashtable *mPendingOperations; // keep these around for callbacks
-    PRBool mThreadInitCompleted;	// has initialization of the 
-                                        // connection thread completed?
 };
 
 #endif /* _nsLDAPConnection_h_ */
