@@ -2771,16 +2771,6 @@ MOZ_ARG_DISABLE_BOOL(mailnews,
   MOZ_MAIL_NEWS= )
 AC_SUBST(MOZ_MAIL_NEWS)
 
-dnl Turn on the new lightweight gfx text control frames
-MOZ_ENDER_LITE=1
-MOZ_ARG_DISABLE_BOOL(ender-lite,
-[  --disable-ender-lite    Disable new lightweight text control frames],
-  MOZ_ENDER_LITE= )
-if test "$MOZ_ENDER_LITE"; then
-  AC_DEFINE(MOZ_ENDER_LITE)
-fi
-AC_SUBST(MOZ_ENDER_LITE)
-
 dnl Turn on reflow counting
 MOZ_REFLOW_PERF=
 MOZ_ARG_ENABLE_BOOL(reflow-perf,
