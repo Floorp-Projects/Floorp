@@ -100,7 +100,7 @@ function changePasswordSettings()
 
 function ChangePW()
 {
-  var params = Components.classes[nsDialogParamBlock].getService(nsIDialogParamBlock);
+  var params = Components.classes[nsDialogParamBlock].createInstance(nsIDialogParamBlock);
   params.SetString(1,"_blank");
   window.openDialog("chrome://pippki/content/changepassword.xul","",
               "chrome,resizable=1,modal=1,dialog=1",params);
