@@ -92,8 +92,8 @@ public:
     */ 
   NS_IMETHOD GetRowGroupType(nsIAtom *& aType);
 
-  /** return the number of contained rows */
-  PRInt32 GetRowCount ();
+  /** set aCount to the number of child rows (not necessarily == number of child frames) */
+  NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount);
 
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
 
@@ -168,13 +168,5 @@ private:
 
 };
 
-//XXX: change this if row groups can contain non-row types
-// in this case, iterate through kids and add 1 if the kid's display type is "row"
-inline PRInt32 nsTableRowGroupFrame::GetRowCount ()
-{
-  PRInt32 result = 0;
-  ChildCount(result);
-  return result;
-}
 
 #endif

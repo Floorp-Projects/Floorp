@@ -359,7 +359,11 @@ PRInt32 nsTableFrame::GetRowCount ()
     if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
         NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
         NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
-      rowCount += ((nsTableRowGroupFrame *)child)->GetRowCount ();
+    {
+      PRInt32 thisRowCount=0;
+      ((nsTableRowGroupFrame *)child)->GetRowCount(thisRowCount);
+      rowCount += thisRowCount;
+    }
     child->GetNextSibling(child);
   }
   return rowCount;
@@ -448,6 +452,9 @@ PRInt32 nsTableFrame::GetEffectiveRowSpan (PRInt32 aRowIndex, nsTableCellFrame *
 {
   NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
   NS_PRECONDITION (0<=aRowIndex && aRowIndex<GetRowCount(), "bad row index arg");
+
+  if (!(0<=aRowIndex && aRowIndex<GetRowCount()))
+    return 1;
 
   PRInt32 rowSpan = aCell->GetRowSpan();
   PRInt32 rowCount = GetRowCount();
