@@ -51,6 +51,7 @@
 #include "prmem.h"
 #include "plstr.h"
 
+#include "xp_error.h"
 
 /* for XP_GetString() */
 #include "xpgetstr.h"
