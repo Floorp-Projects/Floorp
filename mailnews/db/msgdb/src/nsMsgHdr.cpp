@@ -57,64 +57,64 @@ static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 {
   NS_INIT_REFCNT();
-	m_mdb = db;
-	Init();
-	m_mdbRow = dbRow;
-	if(m_mdb)
-	{
-		m_mdb->AddRef();
-		mdbOid outOid;
-		if (dbRow && dbRow->GetOid(m_mdb->GetEnv(), &outOid) == NS_OK)
-		{
-			m_messageKey = outOid.mOid_Id;
-			m_mdb->AddHdrToUseCache((nsIMsgDBHdr *) this, m_messageKey);
-		}
-	}
+  m_mdb = db;
+  Init();
+  m_mdbRow = dbRow;
+  if(m_mdb)
+  {
+    m_mdb->AddRef();
+    mdbOid outOid;
+    if (dbRow && dbRow->GetOid(m_mdb->GetEnv(), &outOid) == NS_OK)
+    {
+      m_messageKey = outOid.mOid_Id;
+      m_mdb->AddHdrToUseCache((nsIMsgDBHdr *) this, m_messageKey);
+    }
+  }
 }
 
 
 void nsMsgHdr::Init()
 {
-	m_initedValues = 0;
-	m_statusOffset = 0xffffffff;
-	m_messageKey = nsMsgKey_None;
-	m_messageSize = 0;
-	m_date = LL_ZERO;
-	m_flags = 0;
-	m_mdbRow = NULL;
-	m_numReferences = 0;
-	m_threadId = nsMsgKey_None;
-	m_threadParent = nsMsgKey_None;
+  m_initedValues = 0;
+  m_statusOffset = 0xffffffff;
+  m_messageKey = nsMsgKey_None;
+  m_messageSize = 0;
+  m_date = LL_ZERO;
+  m_flags = 0;
+  m_mdbRow = NULL;
+  m_numReferences = 0;
+  m_threadId = nsMsgKey_None;
+  m_threadParent = nsMsgKey_None;
 }
 
 nsresult nsMsgHdr::InitCachedValues()
 {
-	nsresult err = NS_OK;
-
-	if (!m_mdb || !m_mdbRow)
-	    return NS_ERROR_NULL_POINTER;
-
-	if (!(m_initedValues & CACHED_VALUES_INITED))
-	{
-		PRUint32 uint32Value;
-		mdbOid outOid;
-		if (m_mdbRow->GetOid(m_mdb->GetEnv(), &outOid) == NS_OK)
-			m_messageKey = outOid.mOid_Id;
-
-		err = GetUInt32Column(m_mdb->m_messageSizeColumnToken, &m_messageSize);
-
-	    err = GetUInt32Column(m_mdb->m_dateColumnToken, &uint32Value);
-	    nsMsgDatabase::Seconds2PRTime(uint32Value, &m_date);
-
-		err = GetUInt32Column(m_mdb->m_messageThreadIdColumnToken, &m_threadId);
-		err = GetUInt32Column(m_mdb->m_numReferencesColumnToken, &uint32Value);
-		if (NS_SUCCEEDED(err))
-			m_numReferences = (PRUint16) uint32Value;
-
-		if (NS_SUCCEEDED(err))
-			m_initedValues |= CACHED_VALUES_INITED;
-	}
-	return err;
+  nsresult err = NS_OK;
+  
+  if (!m_mdb || !m_mdbRow)
+    return NS_ERROR_NULL_POINTER;
+  
+  if (!(m_initedValues & CACHED_VALUES_INITED))
+  {
+    PRUint32 uint32Value;
+    mdbOid outOid;
+    if (m_mdbRow->GetOid(m_mdb->GetEnv(), &outOid) == NS_OK)
+      m_messageKey = outOid.mOid_Id;
+    
+    err = GetUInt32Column(m_mdb->m_messageSizeColumnToken, &m_messageSize);
+    
+    err = GetUInt32Column(m_mdb->m_dateColumnToken, &uint32Value);
+    nsMsgDatabase::Seconds2PRTime(uint32Value, &m_date);
+    
+    err = GetUInt32Column(m_mdb->m_messageThreadIdColumnToken, &m_threadId);
+    err = GetUInt32Column(m_mdb->m_numReferencesColumnToken, &uint32Value);
+    if (NS_SUCCEEDED(err))
+      m_numReferences = (PRUint16) uint32Value;
+    
+    if (NS_SUCCEEDED(err))
+      m_initedValues |= CACHED_VALUES_INITED;
+  }
+  return err;
 }
 
 nsresult nsMsgHdr::InitFlags()
