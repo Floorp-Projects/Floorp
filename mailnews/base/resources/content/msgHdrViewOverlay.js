@@ -87,7 +87,7 @@ function OnLoadMsgHeaderPane()
     msgPaneData.NewsgroupBox = document.getElementById("NewsgroupBox");
     msgPaneData.NewsgroupValue = document.getElementById("NewsgroupValue");
 
-    msgPaneData.UserAgentBox = document.getElementById("headerPart3");
+    msgPaneData.UserAgentBox = document.getElementById("UserAgentBox");
     msgPaneData.UserAgentValue = document.getElementById("UserAgentValue");
 
   }
