@@ -534,7 +534,6 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
       value->Count(&count);
 
       nsCOMPtr<nsISupportsPRInt32> thisVal;
-      PRInt32 j=0;
       for (PRUint32 i=0; i<count; i++) {
         nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
         thisVal = do_QueryInterface(suppval);
@@ -642,22 +641,24 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
 
       // if not multiple then only one item can be selected
       // so we clear the list of selcted items
-      if (!isMultiple) {
+      if (!isMultiple || (-1 == aIndex)) { // -1 -> deselect all (bug 28143)
         value->Clear();
         count = 0;
       }
 
       // Set the index as selected and add it to the array
-      nsCOMPtr<nsISupportsPRInt32> thisVal;
-      res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
+      if (-1 != aIndex) {
+        nsCOMPtr<nsISupportsPRInt32> thisVal;
+        res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
 	                     nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(thisVal));
-      if (NS_SUCCEEDED(res) && thisVal) {
-        res = thisVal->SetData(aIndex);
-	      if (NS_SUCCEEDED(res)) {
-          PRBool okay = value->InsertElementAt((nsISupports *)thisVal, count);
-	        if (!okay) res = NS_ERROR_OUT_OF_MEMORY; // Most likely cause;
+        if (NS_SUCCEEDED(res) && thisVal) {
+          res = thisVal->SetData(aIndex);
+          if (NS_SUCCEEDED(res)) {
+            PRBool okay = value->InsertElementAt((nsISupports *)thisVal, count);
+            if (!okay) res = NS_ERROR_OUT_OF_MEMORY; // Most likely cause;
+          }
         }
-	    }
+      }
 
       // If it is a new nsISupportsArray then 
       // set it into the PresState
