@@ -471,6 +471,7 @@ NS_IMETHODIMP nsParseMailMessageState::Clear()
 	m_mdn_dnt.length = 0;
 	m_return_path.length = 0;
   m_in_reply_to.length = 0;
+	m_content_type.length = 0;
 	m_mdn_original_recipient.length = 0;
 	m_body_lines = 0;
 	m_newMsgHdr = null_nsCOMPtr();
@@ -794,6 +795,8 @@ int nsParseMailMessageState::ParseHeaders ()
 		case 'C': case 'c':
 		  if (!nsCRT::strncasecmp ("CC", buf, end - buf))
 			header = GetNextHeaderInAggregate(m_ccList);
+		  else if (!nsCRT::strncasecmp ("Content-Type", buf, end - buf))
+		  header = &m_content_type;
 		  break;
 		case 'D': case 'd':
 		  if (!nsCRT::strncasecmp ("Date", buf, end - buf))
@@ -1095,6 +1098,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 	struct message_header *ccList;
 	struct message_header *mdn_dnt;
 	struct message_header md5_header;
+	struct message_header *content_type;
 	unsigned char md5_bin [16];
 	char md5_data [50];
 
@@ -1132,6 +1136,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 	priority   = (m_priority.length   ? &m_priority   : 0);
 	mdn_dnt	   = (m_mdn_dnt.length	  ? &m_mdn_dnt	  : 0);
   inReplyTo = (m_in_reply_to.length ? &m_in_reply_to : 0);
+	content_type = (m_content_type.length ? &m_content_type : 0);
 
 	if (mozstatus) 
 	{
@@ -1325,6 +1330,30 @@ int nsParseMailMessageState::FinalizeHeaders()
 					m_newMsgHdr->SetPriorityString(priority->value);
 				else if (priorityFlags == nsMsgPriority::notSet)
 					m_newMsgHdr->SetPriority(nsMsgPriority::none);
+        if (content_type)
+        {
+          char *substring = PL_strstr(content_type->value, "charset");
+          if (substring)
+          {
+            char *charset = PL_strchr (substring, '=');
+            if (charset)
+            {
+              charset++;
+              /* strip leading whitespace and double-quote */
+              while (*charset && (XP_IS_SPACE (*charset) || '\"' == *charset))
+                charset++;
+              /* strip trailing whitespace and double-quote */
+              char *end = charset;
+              while (*end && !XP_IS_SPACE (*end) && '\"' != *end && ';' != *end)
+                end++;
+              if (*charset)
+              {
+                *end = '\0';
+                m_newMsgHdr->SetCharset(charset);
+              }
+            }
+          }
+        }
 			}
 		} 
 		else
