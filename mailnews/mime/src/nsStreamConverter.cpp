@@ -424,8 +424,17 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       {
         // store the real content type...mOutputFormat gets deleted later on...
         mRealContentType = typeField + nsCRT::strlen("&type=");
-        mOutputFormat = nsCRT::strdup("raw");
-        *aNewType = nsMimeOutput::nsMimeMessageRaw;
+        if (mRealContentType.Equals("message/rfc822"))
+        {
+          mRealContentType = "text/plain";
+          mOutputFormat = nsCRT::strdup("raw");
+          *aNewType = nsMimeOutput::nsMimeMessageRaw;
+        }
+        else
+        {
+          mOutputFormat = nsCRT::strdup("raw");
+          *aNewType = nsMimeOutput::nsMimeMessageRaw;
+        }
         return NS_OK;
       }
     }
