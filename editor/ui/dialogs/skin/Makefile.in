@@ -31,4 +31,4 @@ EXPORT_RESOURCE_SKIN = \
 	$(NULL)
 
 install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_SKIN) $(DIST)/bin/chrome/editor/dialogs/skin
+	$(INSTALL) $(EXPORT_RESOURCE_SKIN) $(DIST)/bin/chrome/editor/dialogs/skin/default

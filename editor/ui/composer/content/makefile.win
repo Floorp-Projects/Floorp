@@ -20,13 +20,13 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install::
-	$(MAKE_INSTALL) EditorAppShell.xul         $(DIST)\bin\chrome\editor\composer\content
-	$(MAKE_INSTALL) EditorCommands.js          $(DIST)\bin\chrome\editor\composer\content
-	$(MAKE_INSTALL) EditorInitPage.html        $(DIST)\bin\chrome\editor\composer\content
-	$(MAKE_INSTALL) EditorInitPagePlain.html   $(DIST)\bin\chrome\editor\composer\content
+	$(MAKE_INSTALL) EditorAppShell.xul         $(DIST)\bin\chrome\editor\composer\content\default
+	$(MAKE_INSTALL) EditorCommands.js          $(DIST)\bin\chrome\editor\composer\content\default
+	$(MAKE_INSTALL) EditorInitPage.html        $(DIST)\bin\chrome\editor\composer\content\default
+	$(MAKE_INSTALL) EditorInitPagePlain.html   $(DIST)\bin\chrome\editor\composer\content\default
 
 clobber::
-  rm -f $(DIST)\bin\chrome\editor\composer\content\EditorAppShell.xul
-  rm -f $(DIST)\bin\chrome\editor\composer\content\EditorCommands.js	
-  rm -f $(DIST)\bin\chrome\editor\composer\content\EditorInitPage.html 
-  rm -f $(DIST)\bin\chrome\editor\composer\content\EditorInitPagePlain.html	
+  rm -f $(DIST)\bin\chrome\editor\composer\content\default\EditorAppShell.xul
+  rm -f $(DIST)\bin\chrome\editor\composer\content\default\EditorCommands.js	
+  rm -f $(DIST)\bin\chrome\editor\composer\content\default\EditorInitPage.html 
+  rm -f $(DIST)\bin\chrome\editor\composer\content\default\EditorInitPagePlain.html	

@@ -21,7 +21,7 @@ IGNORE_MANIFEST=1
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) EditorDialog.css  $(DIST)\bin\chrome\editor\dialogs\skin	
+	$(MAKE_INSTALL) EditorDialog.css  $(DIST)\bin\chrome\editor\dialogs\skin\default
 
 clobber::
-  rm -f $(DIST)\bin\chrome\editor\dialogs\skin\EditorDialog.css
+  rm -f $(DIST)\bin\chrome\editor\dialogs\skin\default\EditorDialog.css
