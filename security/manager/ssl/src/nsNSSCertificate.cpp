@@ -969,7 +969,7 @@ nsNSSCertificate::GetNickname(PRUnichar **_nickname)
 {
   NS_ENSURE_ARG(_nickname);
   const char *nickname = (mCert->nickname) ? mCert->nickname : "(no nickname)";
-  *_nickname = ToNewUnicode(nsDependentCString(nickname));
+  *_nickname = ToNewUnicode(NS_ConvertUTF8toUCS2(nickname));
   return NS_OK;
 }
 
@@ -979,7 +979,7 @@ nsNSSCertificate::GetEmailAddress(PRUnichar **_emailAddress)
 {
   NS_ENSURE_ARG(_emailAddress);
   const char *email = (mCert->emailAddr) ? mCert->emailAddr : "(no email address)";
-  *_emailAddress = ToNewUnicode(nsDependentCString(email));
+  *_emailAddress = ToNewUnicode(NS_ConvertUTF8toUCS2(email));
   return NS_OK;
 }
 
@@ -991,7 +991,7 @@ nsNSSCertificate::GetCommonName(PRUnichar **aCommonName)
   if (mCert) {
     char *commonName = CERT_GetCommonName(&mCert->subject);
     if (commonName) {
-      *aCommonName = ToNewUnicode(nsDependentCString(commonName));
+      *aCommonName = ToNewUnicode(NS_ConvertUTF8toUCS2(commonName));
     } /*else {
       *aCommonName = ToNewUnicode(NS_LITERAL_STRING("<not set>")), 
     }*/
@@ -1007,7 +1007,7 @@ nsNSSCertificate::GetOrganization(PRUnichar **aOrganization)
   if (mCert) {
     char *organization = CERT_GetOrgName(&mCert->subject);
     if (organization) {
-      *aOrganization = ToNewUnicode(nsDependentCString(organization));
+      *aOrganization = ToNewUnicode(NS_ConvertUTF8toUCS2(organization));
     } /*else {
       *aOrganization = ToNewUnicode(NS_LITERAL_STRING("<not set>")), 
     }*/
@@ -1023,7 +1023,7 @@ nsNSSCertificate::GetIssuerCommonName(PRUnichar **aCommonName)
   if (mCert) {
     char *commonName = CERT_GetCommonName(&mCert->issuer);
     if (commonName) {
-      *aCommonName = ToNewUnicode(nsDependentCString(commonName));
+      *aCommonName = ToNewUnicode(NS_ConvertUTF8toUCS2(commonName));
     }
   }
   return NS_OK;
@@ -1037,7 +1037,7 @@ nsNSSCertificate::GetIssuerOrganization(PRUnichar **aOrganization)
   if (mCert) {
     char *organization = CERT_GetOrgName(&mCert->issuer);
     if (organization) {
-      *aOrganization = ToNewUnicode(nsDependentCString(organization));
+      *aOrganization = ToNewUnicode(NS_ConvertUTF8toUCS2(organization));
     }
   }
   return NS_OK;
@@ -1051,7 +1051,7 @@ nsNSSCertificate::GetIssuerOrganizationUnit(PRUnichar **aOrganizationUnit)
   if (mCert) {
     char *organizationUnit = CERT_GetOrgUnitName(&mCert->issuer);
     if (organizationUnit) {
-      *aOrganizationUnit = ToNewUnicode(nsDependentCString(organizationUnit));
+      *aOrganizationUnit = ToNewUnicode(NS_ConvertUTF8toUCS2(organizationUnit));
     }
   }
   return NS_OK;
@@ -1082,7 +1082,7 @@ nsNSSCertificate::GetOrganizationalUnit(PRUnichar **aOrganizationalUnit)
   if (mCert) {
     char *orgunit = CERT_GetOrgUnitName(&mCert->subject);
     if (orgunit) {
-      *aOrganizationalUnit = ToNewUnicode(nsDependentCString(orgunit));
+      *aOrganizationalUnit = ToNewUnicode(NS_ConvertUTF8toUCS2(orgunit));
     } /*else {
       *aOrganizationalUnit = ToNewUnicode(NS_LITERAL_STRING("<not set>")), 
     }*/
@@ -1165,7 +1165,7 @@ nsNSSCertificate::GetSubjectName(PRUnichar **_subjectName)
   NS_ENSURE_ARG(_subjectName);
   *_subjectName = nsnull;
   if (mCert->subjectName) {
-    *_subjectName = ToNewUnicode(nsDependentCString(mCert->subjectName));
+    *_subjectName = ToNewUnicode(NS_ConvertUTF8toUCS2(mCert->subjectName));
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -1178,7 +1178,7 @@ nsNSSCertificate::GetIssuerName(PRUnichar **_issuerName)
   NS_ENSURE_ARG(_issuerName);
   *_issuerName = nsnull;
   if (mCert->issuerName) {
-    *_issuerName = ToNewUnicode(nsDependentCString(mCert->issuerName));
+    *_issuerName = ToNewUnicode(NS_ConvertUTF8toUCS2(mCert->issuerName));
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -3784,11 +3784,11 @@ GetOCSPResponders (CERTCertificate *aCert,
   // Get the AIA and nickname //
   serviceURL = CERT_GetOCSPAuthorityInfoAccessLocation(aCert);
   if (serviceURL) {
-	url = ToNewUnicode(nsDependentCString(serviceURL));
+	url = ToNewUnicode(NS_ConvertUTF8toUCS2(serviceURL));
   }
 
   nickname = aCert->nickname;
-  nn = ToNewUnicode(nsDependentCString(nickname));
+  nn = ToNewUnicode(NS_ConvertUTF8toUCS2(nickname));
 
   nsCOMPtr<nsIOCSPResponder> new_entry = new nsOCSPResponder(nn, url);
 

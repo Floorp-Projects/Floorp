@@ -233,7 +233,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
       }
 
       nsXPIDLString shortDesc;
-      const PRUnichar* formatStrings[1] = { ToNewUnicode(nsDependentCString(caName)) };
+      const PRUnichar* formatStrings[1] = { ToNewUnicode(NS_ConvertUTF8toUCS2(caName)) };
       nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
       if (NS_FAILED(rv))
         return; 
