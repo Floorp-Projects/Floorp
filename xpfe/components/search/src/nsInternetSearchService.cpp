@@ -80,6 +80,7 @@
 #include "nsILocalFile.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
+#include "nsIPrefLocalizedString.h"
 
 #ifdef	XP_MAC
 #include <Files.h>
@@ -102,8 +103,12 @@
 #define POSTHEADER_PREFIX "Content-type: application/x-www-form-urlencoded\r\nContent-Length: "
 #define POSTHEADER_SUFFIX "\r\n\r\n"
 #define SEARCH_PROPERTIES "chrome://communicator/locale/search/search-panel.properties"
-
-
+#ifdef MOZ_PHOENIX
+#define SEARCHCONFIG_PROPERTIES "chrome://browser/content/searchconfig.properties"
+#else
+#define SEARCHCONFIG_PROPERTIES "chrome://navigator/content/searchconfig.properties"
+#endif
+#define INTL_PROPERTIES "chrome://global/locale/intl.properties"
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerCID,             NS_RDFCONTAINER_CID);
@@ -2616,12 +2621,14 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 		}
 	}
 	
-	nsAutoString	action, input, method, userVar;
+	nsAutoString	action, input, method, userVar, name;
 	if (NS_FAILED(rv = GetData(dataUni, "search", 0, "action", action)))
 	    return(rv);
 	if (NS_FAILED(rv = GetData(dataUni, "search", 0, "method", method)))
 	    return(rv);
-	if (NS_FAILED(rv = GetInputs(dataUni, userVar, text, input, direction, pageNumber, whichButtons)))
+	if (NS_FAILED(rv = GetData(dataUni, "search", 0, "name", name)))
+	    return(rv);
+	if (NS_FAILED(rv = GetInputs(dataUni, name, userVar, text, input, direction, pageNumber, whichButtons)))
 	    return(rv);
 	if (input.IsEmpty())				return(NS_ERROR_UNEXPECTED);
 
@@ -2753,8 +2760,10 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 		searchURL.AssignWithConversion(url);
 
 		// look for query option which is the string the user is searching for
-		nsAutoString	userVar, inputUnused;
-    if (NS_FAILED(rv = GetInputs(dataUni, userVar, EmptyString(), inputUnused, 0, 0, 0)))  return(rv);
+ 		nsAutoString	userVar, inputUnused, engineNameStr;
+  	GetData(dataUni, "search", 0, "name", engineNameStr);
+
+    if (NS_FAILED(rv = GetInputs(dataUni, engineNameStr, userVar, nsAutoString(), inputUnused, 0, 0, 0)))  return(rv);
 		if (userVar.IsEmpty())	return(NS_RDF_NO_VALUE);
 
 		nsAutoString	queryStr;
@@ -3894,7 +3903,10 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 
 	if (fullURL.IsEmpty() && methodStr.LowerCaseEqualsLiteral("get"))
 	{
-    if (NS_FAILED(rv = GetInputs(dataUni, userVar, textTemp, input, 0, 0, 0)))  return(rv);
+    nsAutoString engineNameStr;
+  	GetData(dataUni, "search", 0, "name", engineNameStr);
+
+    if (NS_FAILED(rv = GetInputs(dataUni, engineNameStr, userVar, textTemp, input, 0, 0, 0)))  return(rv);
 		if (input.IsEmpty())				return(NS_ERROR_UNEXPECTED);
 
 		// HTTP Get method support
@@ -4520,7 +4532,7 @@ InternetSearchDataSource::GetData(const PRUnichar *dataUni, const char *sectionT
 
 
 nsresult
-InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
+InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineName, nsString &userVar,
   const nsString &text, nsString &input, PRInt16 direction, PRUint16 pageNumber,  PRUint16 *whichButtons)
 {
 	nsString	buffer(dataUni);
@@ -4688,6 +4700,126 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 			}
 		}
 	}
+
+  // Now add the default vs. non-default parameters, which come from 
+  // preferences and are part of the pre-configuration.
+  nsCOMPtr<nsIPrefService> pserv(do_QueryInterface(prefs));
+  if (pserv) 
+  {
+    // If the pref "browser.search.defaultenginename" has a user value, that
+    // means the user has changed the engine in the list. This implies that
+    // the selected engine was _not_ configured as the default by the 
+    // distributor, because if the value of the pref matched, prefHasUserValue
+    // would return false. 
+    PRBool engineIsNotDefault = PR_FALSE;
+    nsCOMPtr<nsIPrefBranch> rootBranch(do_QueryInterface(pserv));
+    nsCOMPtr<nsIPrefBranch> defaultBranch;
+    pserv->GetDefaultBranch("", getter_AddRefs(defaultBranch));
+
+    if (defaultBranch) 
+    {
+      nsXPIDLString defaultEngineNameStr;
+      nsCOMPtr<nsIPrefLocalizedString> defaultEngineName;
+      rv = defaultBranch->GetComplexValue("browser.search.defaultenginename", 
+                                          NS_GET_IID(nsIPrefLocalizedString),
+                                          getter_AddRefs(defaultEngineName));
+      defaultEngineName->GetData(getter_Copies(defaultEngineNameStr));
+
+      nsXPIDLString selectedEngineNameStr;
+      nsCOMPtr<nsIPrefLocalizedString> selectedEngineName;
+      rv = rootBranch->GetComplexValue("browser.search.selectedEngine", 
+                                       NS_GET_IID(nsIPrefLocalizedString),
+                                       getter_AddRefs(selectedEngineName));
+      selectedEngineName->GetData(getter_Copies(selectedEngineNameStr));
+
+      engineIsNotDefault = !defaultEngineNameStr.Equals(selectedEngineNameStr);
+    }
+
+    PRInt32 i = 0;
+    char prefNameBuf[1096];
+    do
+    {
+      ++i;
+      sprintf(prefNameBuf, "browser.search.param.%s.%d.", 
+              NS_ConvertUCS2toUTF8(engineName).get(), i);
+
+      nsCOMPtr<nsIPrefBranch> pb;
+      rv = pserv->GetBranch(prefNameBuf, getter_AddRefs(pb));
+      if (NS_FAILED(rv)) 
+        break;
+
+      nsCOMPtr<nsIPrefLocalizedString> parameterName;
+      rv = pb->GetComplexValue("name", 
+                               NS_GET_IID(nsIPrefLocalizedString),
+                               getter_AddRefs(parameterName));
+      if (NS_FAILED(rv)) 
+        break;
+
+      nsXPIDLString parameterNameStr;
+      parameterName->GetData(getter_Copies(parameterNameStr));
+
+      if (!parameterNameStr.IsEmpty()) 
+      {
+        if (!input.IsEmpty())
+          input.Append(NS_LITERAL_STRING("&"));
+
+        input += parameterNameStr;
+
+        nsCOMPtr<nsIPrefLocalizedString> parameterValue;
+        nsXPIDLString parameterValueStr;
+        rv = pb->GetComplexValue(engineIsNotDefault ? "custom" : "default", 
+                                NS_GET_IID(nsIPrefLocalizedString), 
+                                getter_AddRefs(parameterValue));
+        if (NS_SUCCEEDED(rv))
+          parameterValue->GetData(getter_Copies(parameterValueStr));
+        
+        if (!parameterValueStr.IsEmpty()) 
+        {
+          input.Append(NS_LITERAL_STRING("="));
+          input += parameterValueStr;
+        }
+      }
+    }
+    while (1);
+
+    // Now add the release identifier
+    nsCOMPtr<nsIStringBundleService> stringService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = stringService->CreateBundle(SEARCHCONFIG_PROPERTIES, getter_AddRefs(bundle));
+    nsCOMPtr<nsIStringBundle> intlBundle;
+    rv = stringService->CreateBundle(INTL_PROPERTIES, getter_AddRefs(intlBundle));
+
+    nsXPIDLString langName;
+    intlBundle->GetStringFromName(NS_LITERAL_STRING("general.useragent.locale").get(), 
+                                  getter_Copies(langName));
+
+    nsAutoString keyTemplate(NS_LITERAL_STRING("browser.search.param."));
+    keyTemplate += engineName;
+    keyTemplate.Append(NS_LITERAL_STRING(".release."));
+
+    nsAutoString releaseNameKey = keyTemplate + NS_LITERAL_STRING("name");
+    nsAutoString releaseValueKey = keyTemplate + NS_LITERAL_STRING("value");
+
+    nsXPIDLString releaseName, releaseValue;
+    bundle->GetStringFromName(releaseNameKey.get(), getter_Copies(releaseName));
+    const PRUnichar* strings[] = { langName.get() };
+    bundle->FormatStringFromName(releaseValueKey.get(), strings, 1, getter_Copies(releaseValue));
+
+    if (!releaseName.IsEmpty()) 
+    {
+      if (!input.IsEmpty())
+        input.Append(NS_LITERAL_STRING("&"));
+      input += releaseName;
+
+      if (!releaseValue.IsEmpty())
+      {
+        input.Append(NS_LITERAL_STRING("="));
+        input += releaseValue;
+      }
+    }
+    rv = NS_OK;
+  }
+
 	return(rv);
 }
 

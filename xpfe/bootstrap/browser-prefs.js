@@ -106,6 +106,9 @@ pref("browser.urlbar.clickSelectsAll", true);
 // when clickSelectsAll=true, does it also apply when the click is past end of text?
 pref("browser.urlbar.clickAtEndSelects", true);
 
+pref("browser.search.param.Google.1.name", "chrome://navigator/content/searchconfig.properties");
+pref("browser.search.param.Google.1.custom", "chrome://navigator/content/searchconfig.properties");
+pref("browser.search.param.Google.1.default", "chrome://navigator/content/searchconfig.properties");
 
 pref("browser.history.grouping", "day");
 pref("browser.sessionhistory.max_entries", 50);

@@ -1,7 +1,10 @@
+# XXXben todo: AB-CD substitution for language pack jar file!
+
 browser.jar:
 + content/browser/about.png                     (about.png)
 + content/browser/aboutCredits.png              (aboutCredits.png)
 + content/browser/aboutFooter.png               (aboutFooter.png)
++ content/browser/searchconfig.properties       (searchconfig.properties)
   
 classic.jar:  
 + skin/classic/global/icons/alert-exclam.png    (alert-exclam.png)

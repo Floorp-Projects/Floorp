@@ -28,6 +28,8 @@ comm.jar:
         content/navigator/viewPartialSource.js         (resources/content/viewPartialSource.js)
         content/navigator/viewPartialSource.xul        (resources/content/viewPartialSource.xul)
         content/navigator/mailNavigatorOverlay.xul     (resources/content/mailNavigatorOverlay.xul)
+        content/navigator/searchconfig.properties      (resources/content/searchconfig.properties)
+
 en-US.jar:
 *       locale/en-US/navigator/contents.rdf                 (resources/locale/en-US/contents.rdf)
         locale/en-US/navigator/viewSource.dtd               (resources/locale/en-US/viewSource.dtd)

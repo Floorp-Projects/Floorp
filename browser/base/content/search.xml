@@ -93,6 +93,17 @@
           var rEngine = this.RDF.GetResource(val);
           this.firstChild.setAttribute("src", this.readRDFString(rEngine, kNC_Icon));
           
+          const kNC_Name = this.RDF.GetResource("http://home.netscape.com/NC-rdf#Name");
+          var pls = Components.classes["@mozilla.org/pref-localizedstring;1"]
+                              .createInstance(Components.interfaces.nsIPrefLocalizedString);
+          pls.data = this.readRDFString(rEngine, kNC_Name);
+          var PREF = Components.classes["@mozilla.org/preferences-service;1"]
+                               .getService(Components.interfaces.nsIPrefService)
+                               .getBranch(null);
+          PREF.setComplexValue("browser.search.selectedEngine", 
+                               Components.interfaces.nsIPrefLocalizedString,
+                               pls);
+
         ]]></setter>
       </property>
 

@@ -24,6 +24,7 @@ browser.jar:
 *       content/browser/pageReport.xul                (content/pageReport.xul)
 *       content/browser/pageReportFirstTime.xul       (content/pageReportFirstTime.xul)   
 *       content/browser/search.xml                    (content/search.xml)
+*       content/browser/searchconfig.properties       (content/searchconfig.properties)
 *       content/browser/setWallpaper.xul              (content/setWallpaper.xul)
 *       content/browser/utilityOverlay.js             (content/utilityOverlay.js)
 *       content/browser/web-panels.js                 (content/web-panels.js)
