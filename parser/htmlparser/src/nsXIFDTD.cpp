@@ -227,90 +227,6 @@ NS_IMPL_RELEASE(nsXIFDTD)
 
 
 /**
- *  
- *  
- *  @update  gpk 06/18/98
- *  @param   
- *  @return  
- */
-static
-PRInt32 XIFDispatchTokenHandler(CToken* aToken,nsIDTD* aDTD)
-{
-  eHTMLTokenTypes theType = (eHTMLTokenTypes)aToken->GetTokenType();
-  nsXIFDTD*       theDTD=(nsXIFDTD*)aDTD;
-
-  nsString& name = aToken->GetStringValueXXX();
-  eXIFTags type = eXIFTag_userdefined;
-
-  if((eToken_start==theType) || (eToken_end==theType)) {
-    type=DetermineXIFTagType(name);
-    if (type != eXIFTag_userdefined)
-      aToken->SetTypeID(type);
-  }
-
-  PRInt32 result=0;
-
-  if(aDTD) {
-    switch(theType) {
-      case eToken_start:
-        result=theDTD->HandleStartToken(aToken); break;
-      case eToken_end:
-        result=theDTD->HandleEndToken(aToken); break;
-      case eToken_comment:
-        result=theDTD->HandleCommentToken(aToken); break;
-      case eToken_entity:
-        result=theDTD->HandleEntityToken(aToken); break;
-      case eToken_whitespace:
-        result=theDTD->HandleWhiteSpaceToken(aToken); break;
-      case eToken_newline:
-        result=theDTD->HandleWhiteSpaceToken(aToken); break;
-      case eToken_text:
-        result=theDTD->HandleTextToken(aToken); break;
-      case eToken_attribute:
-        result=theDTD->HandleAttributeToken(aToken); break;
-      default:
-        result=0;
-    }//switch
-  }//if
-  return result;
-}
-
-/**
- *  init the set of default token handlers...
- *  
- *  @update  gpk 06/18/98
- *  @param   
- *  @return  
- */
-void nsXIFDTD::InitializeDefaultTokenHandlers() {
-  AddTokenHandler(new CTokenHandler(XIFDispatchTokenHandler,eToken_start));
-
-  AddTokenHandler(new CTokenHandler(XIFDispatchTokenHandler,eToken_end));
-  AddTokenHandler(new CTokenHandler(XIFDispatchTokenHandler,eToken_comment));
-  AddTokenHandler(new CTokenHandler(XIFDispatchTokenHandler,eToken_entity));
-
-  AddTokenHandler(new CTokenHandler(XIFDispatchTokenHandler,eToken_whitespace));
-  AddTokenHandler(new CTokenHandler(XIFDispatchTokenHandler,eToken_newline));
-  AddTokenHandler(new CTokenHandler(XIFDispatchTokenHandler,eToken_text));
-  
-  AddTokenHandler(new CTokenHandler(XIFDispatchTokenHandler,eToken_attribute));
-//  AddTokenHandler(new CTokenHandler(XIFDispatchTokenHandler,eToken_script));
-  AddTokenHandler(new CTokenHandler(XIFDispatchTokenHandler,eToken_style));
-  AddTokenHandler(new CTokenHandler(XIFDispatchTokenHandler,eToken_skippedcontent));
-}
-
-class nsXIfTokenDeallocator: public nsDequeFunctor{
-public:
-  virtual void* operator()(void* anObject) {
-    CToken* aToken = (CToken*)anObject;
-    delete aToken;
-    return 0;
-  }
-};
-
-
-
-/**
  *  Default constructor
  *  
  *  @update  gpk 06/18/98
@@ -322,7 +238,6 @@ nsXIFDTD::nsXIFDTD() : nsIDTD(){
   mParser=0;
   mTokenizer=0;
   nsCRT::zero(mContextStack,sizeof(mContextStack));
-  nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   
   mHTMLStackPos = 0;
   memset(mHTMLTagStack,0,sizeof(mHTMLTagStack));
@@ -330,7 +245,6 @@ nsXIFDTD::nsXIFDTD() : nsIDTD(){
 
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
-  InitializeDefaultTokenHandlers();
   mContextStackPos=0;
   mContextStack[mContextStackPos++]=eXIFTag_unknown;
   mDTDDebug=nsnull;
@@ -349,7 +263,6 @@ nsXIFDTD::nsXIFDTD() : nsIDTD(){
  *  @return  
  */
 nsXIFDTD::~nsXIFDTD(){
-  DeleteTokenHandlers();
   NS_IF_RELEASE(mSink);
 }
 
@@ -525,11 +438,34 @@ nsresult nsXIFDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
   if(aToken) {
     CHTMLToken*     theToken= (CHTMLToken*)(aToken);
     eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
-    CTokenHandler*  aHandler=GetTokenHandler(theType);
+ 
+    eXIFTags type = eXIFTag_userdefined;
 
-    if(aHandler) {
-      result=(*aHandler)(theToken,this);
+    if((eToken_start==theType) || (eToken_end==theType)) {
+      nsString& name = aToken->GetStringValueXXX();
+      type=DetermineXIFTagType(name);
+      if (type != eXIFTag_userdefined)
+        aToken->SetTypeID(type);
     }
+
+    switch(theType) {
+      case eToken_start:
+        result=HandleStartToken(aToken); break;
+      case eToken_end:
+        result=HandleEndToken(aToken); break;
+      case eToken_comment:
+        result=HandleCommentToken(aToken); break;
+      case eToken_whitespace:
+        result=HandleWhiteSpaceToken(aToken); break;
+      case eToken_newline:
+        result=HandleWhiteSpaceToken(aToken); break;
+      case eToken_text:
+        result=HandleTextToken(aToken); break;
+      case eToken_attribute:
+        result=HandleAttributeToken(aToken); break;
+      default:
+        result=NS_OK;
+    }//switch
 
   }//if
   return result;
@@ -782,28 +718,6 @@ nsresult nsXIFDTD::HandleEndToken(CToken* aToken) {
 }
 
 /**
- *  This method gets called when an entity token has been 
- *  encountered in the parse process. 
- *  
- *  @update  gpk 06/18/98
- *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
- */
-nsresult nsXIFDTD::HandleEntityToken(CToken* aToken) {
-  NS_PRECONDITION(0!=aToken,kNullToken);
-
-  CEntityToken* et = (CEntityToken*)(aToken);
-  nsresult      result=NS_OK;
-  eXIFTags      tokenTagType=(eXIFTags)et->GetTypeID();
-
-  if(PR_FALSE==CanOmit(GetTopNode(),tokenTagType)) {
-    nsCParserNode aNode((CHTMLToken*)aToken);
-    result=AddLeaf(aNode);
-  }
-  return result;
-}
-
-/**
  *  This method gets called when a comment token has been 
  *  encountered in the parse process. After making sure
  *  we're somewhere in the body, we handle the comment
@@ -839,63 +753,6 @@ nsresult nsXIFDTD::HandleAttributeToken(CToken* aToken) {
 
 
 
-/**
- *  Finds a tag handler for the given tag type, given in string.
- *  
- *  @update  gpk 06/18/98
- *  @param   aString contains name of tag to be handled
- *  @return  valid tag handler (if found) or null
- */
-void nsXIFDTD::DeleteTokenHandlers(void) {
-  int i=0;
-  for(i=eToken_unknown;i<eToken_last;i++){
-    delete mTokenHandlers[i];
-    mTokenHandlers[i]=0;
-  }
-  return;
-}
-
-
-/**
- *  Finds a tag handler for the given tag type.
- *  
- *  @update  gpk 06/18/98
- *  @param   aTagType type of tag to be handled
- *  @return  valid tag handler (if found) or null
- */
-CTokenHandler* nsXIFDTD::GetTokenHandler(eHTMLTokenTypes aType) const {
-  CTokenHandler* result=0;
-  if((aType>0) && (aType<eToken_last)) {
-    result=mTokenHandlers[aType];
-  } 
-  else {
-  }
-  return result;
-}
-
-
-/**
- *  Register a handler.
- *  
- *  @update  gpk 06/18/98
- *  @param   
- *  @return  
- */
-CTokenHandler* nsXIFDTD::AddTokenHandler(CTokenHandler* aHandler) {
-  NS_ASSERTION(0!=aHandler,"Error: Null handler");
-  
-  if(aHandler)  {
-    eHTMLTokenTypes type=(eHTMLTokenTypes)aHandler->GetTokenType();
-    if(type<eToken_last) {
-      //CTokenHandler* old=mTokenHandlers[type];
-      mTokenHandlers[type]=aHandler;
-    }
-    else {
-      //add code here to handle dynamic tokens...
-    }
-  }
-  return 0;
-}
 
 
 /**
@@ -950,67 +807,6 @@ NS_IMETHODIMP nsXIFDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32*
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/**
- *  This method gets called to determine whether a given 
- *  tag can contain newlines. Most do not.
- *  
- *  @update  gpk 06/18/98
- *  @param   aTag -- tag to test for containership
- *  @return  PR_TRUE if given tag can contain other tags
- */
-PRBool nsXIFDTD::CanOmit(eXIFTags aParent,eXIFTags aChild) const {
-  PRBool result=PR_FALSE;
-  return result;
-}
-
-
-/**
- *  This method gets called to determine whether a given
- *  ENDtag can be omitted. Admittedly,this is a gross simplification.
- *  
- *  @update  gpk 06/18/98
- *  @param   aTag -- tag to test for containership
- *  @return  PR_TRUE if given tag can contain other tags
- */
-PRBool nsXIFDTD::CanOmitEndTag(eXIFTags aParent,eXIFTags aChild) const {
-  PRBool result=PR_FALSE;
-      
-  switch(aChild) 
-  {
-    case eXIFTag_attr:
-      result=PR_TRUE; 
-
-    default:
-      result=PR_FALSE;
-  } 
-  return result;
-}
-
-/**
- *  This method gets called to determine whether a given 
- *  tag is itself a container
- *  
- *  @update  gpk 06/18/98
- *  @param   aTag -- tag to test for containership
- *  @return  PR_TRUE if given tag can contain other tags
- */
-PRBool nsXIFDTD::IsXIFContainer(eXIFTags aTag) const {
-  PRBool result=PR_FALSE;
-
-  switch(aTag){
-    case eXIFTag_attr:
-    case eXIFTag_text:
-    case eXIFTag_whitespace:
-    case eXIFTag_newline:
-      result=PR_FALSE;
-    break;
-
-    default:
-      result=PR_TRUE;
-  }
-  return result;
-}
-
 
 /**
  *  This method gets called to determine whether a given 
@@ -1035,109 +831,6 @@ PRBool nsXIFDTD::IsHTMLContainer(eHTMLTags aTag) const {
   }
   return result;
 }
-
-
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gpk 06/18/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
- */
-eXIFTags nsXIFDTD::GetDefaultParentTagFor(eXIFTags aTag) const{
-  
-  eXIFTags result=eXIFTag_unknown;
-  
-  switch(aTag) 
-  {
-    case eXIFTag_section:
-      result=eXIFTag_unknown; break;
-
-    case eXIFTag_section_body:
-    case eXIFTag_section_head:
-      result=eXIFTag_section; break;
-
-    default:
-      break;
-
-   }
-  return result;
-}
-
-
-
-/**
- * 
- * @update	gpk 06/18/98
- * @param   aTag is the id of the html container being opened
- * @return  0 if all is well.
- */
-nsresult nsXIFDTD::DidOpenContainer(eXIFTags aTag,PRBool /*anExplicitOpen*/){
-  nsresult   result=NS_OK;
-  return result;
-}
-
-/**
- * 
- * @update	gpk 06/18/98
- * @param 
- * @return
- */
-nsresult nsXIFDTD::DidCloseContainer(eXIFTags aTag,PRBool/*anExplicitClosure*/){
-  nsresult result=NS_OK;
-  return result;
-}
-
-
-/**
- *  This method allows the caller to determine if a form
- *  element is currently open.
- *  
- *  @update  gpk 06/18/98
- *  @param   
- *  @return  
- */
-PRBool nsXIFDTD::HasOpenContainer(eXIFTags aContainer) const {
-  PRBool result=PR_FALSE;
-
-  result=(kNotFound!=GetTopmostIndexOf(aContainer));
-
-  return result;
-}
-
-/**
- *  This method retrieves the HTMLTag type of the topmost
- *  container on the stack.
- *  
- *  @update  gpk 06/18/98
- *  @return  tag id of topmost node in contextstack
- */
-eXIFTags nsXIFDTD::GetTopNode() const {
-  if(mContextStackPos) 
-    return mContextStack[mContextStackPos-1];
-  return eXIFTag_unknown;
-}
-
-
-/**
- *  Determine whether the given tag is open anywhere
- *  in our context stack.
- *  
- *  @update  gpk 06/18/98
- *  @param   eXIFTags tag to be searched for in stack
- *  @return  topmost index of tag on stack
- */
-PRInt32 nsXIFDTD::GetTopmostIndexOf(eXIFTags aTag) const {
-  int i=0;
-  for(i=mContextStackPos-1;i>=0;i--){
-    if(mContextStack[i]==aTag)
-      return i;
-  }
-  return kNotFound;
-}
-
 
 
 /**
@@ -1524,24 +1217,6 @@ nsresult nsXIFDTD::AddLeaf(const nsIParserNode& aNode)
 }
 
 /**
- *  This method gets called to create a valid context stack
- *  for the given child. We compare the current stack to the
- *  default needs of the child, and push new guys onto the
- *  stack until the child can be properly placed.
- *
- *  @update  gpk 06/18/98
- *  @param   aChildTag is the child for whom we need to 
- *           create a new context vector
- *  @return  true if we succeeded, otherwise false
- */
-nsresult nsXIFDTD::CreateContextStackFor(eXIFTags aChildTag)
-{
-  mContextStack[++mContextStackPos] = aChildTag;
-  return NS_OK;
-}
-
-
-/**
  * 
  * @update	gess12/28/98
  * @param 
@@ -1772,10 +1447,10 @@ void nsXIFDTD::ProcessEncodeTag(const nsIParserNode& aNode)
 
 void nsXIFDTD::ProcessEntityTag(const nsIParserNode& aNode)
 {
-  nsString value;
+  nsAutoString value;
 
-  if (GetAttribute(aNode,nsString("value"),value))
-  {
+  if (GetAttribute(aNode,nsString("value"),value)) {
+    value+=';';
     CEntityToken* entity = new CEntityToken(value);
     nsCParserNode node((CToken*)entity);
     mSink->AddLeaf(node);

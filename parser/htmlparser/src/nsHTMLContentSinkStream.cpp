@@ -590,15 +590,14 @@ nsHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode)
 {
   eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
   if (tag == eHTMLTag_html)
-#ifdef BUG_20246_IS_FIXED
-    AddStartTag(aNode);
-#else /* BUG_20246_IS_FIXED */
   {
+    // See bug 20246: the html tag doesn't have "html" in its text,
+    // so AddStartTag will do the wrong thing
     Write(kLessThan);
-    Write("html");
+    nsAutoCString tagname (nsHTMLTags::GetStringValue(tag));
+    Write(tagname);
     Write(kGreaterThan);
   }
-#endif /* BUG_20246_IS_FIXED */
   return NS_OK;
 }
 
@@ -997,7 +996,8 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
     EncodeToBuffer(entity);
     Write('&');
     Write(mBuffer);
-    Write(';');
+    // Don't write the semicolon;
+    // rely on the DTD to include it if one is wanted.
     mColPos += entity.Length() + 2;
   }
   else if (type == eHTMLTag_text)
