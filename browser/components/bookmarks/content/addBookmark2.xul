@@ -49,7 +49,7 @@
 
   <separator id="nameseparator" class="thin"/>
   
-  <grid flex="1">
+  <grid>
     <columns>
       <column/>
       <column flex="1"/>
