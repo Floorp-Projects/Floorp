@@ -345,17 +345,6 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible, nsID
     return;
   }
 
-  NS_IF_RELEASE(gLastFocusedNode);
-  gLastFocusedNode = aNode;
-  NS_IF_ADDREF(gLastFocusedNode);
-
-  nsCOMPtr<nsPIAccessible> privateAccessible =
-    do_QueryInterface(aAccessible);
-  privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS,
-                                      aAccessible, nsnull);
-  if (mCaretAccessible)
-    mCaretAccessible->AttachNewSelectionListener(aNode);
-
   // Special DHTML handling
   PRBool isHTML;  // If it is HTML we will check extra DHTML accesibility logic
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
@@ -369,7 +358,39 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible, nsID
   if (isHTML) {
     FireDHTMLFocusRelatedEvents(aAccessible, role);
   }
+
+  NS_IF_RELEASE(gLastFocusedNode);
+  gLastFocusedNode = aNode;
+  NS_IF_ADDREF(gLastFocusedNode);
+
+  nsCOMPtr<nsPIAccessible> privateAccessible =
+    do_QueryInterface(aAccessible);
+  privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS,
+                                      aAccessible, nsnull);
+  if (mCaretAccessible)
+    mCaretAccessible->AttachNewSelectionListener(aNode);
 }
+
+void nsRootAccessible::FireDHTMLMenuBarEvents(nsIAccessible *aAccessible, PRUint32 aEvent)
+{
+  // Will fire EVENT_MENUSTART or EVENT_MENUEND if we're in a menubar
+  PRUint32 containerRole;
+  while (aAccessible) {
+    aAccessible->GetFinalRole(&containerRole);
+    if (containerRole == ROLE_MENUBAR) {
+      nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(aAccessible);
+      privateAccessible->FireToolkitEvent(aEvent, aAccessible, nsnull);
+      return;
+    }
+    else if (containerRole != ROLE_MENUPOPUP) {
+      break;
+    }
+    nsCOMPtr<nsIAccessible> nextParent;
+    aAccessible->GetParent(getter_AddRefs(nextParent));
+    aAccessible = nextParent;
+  }
+}
+
 
 void nsRootAccessible::FireDHTMLFocusRelatedEvents(nsIAccessible *aAccessible, PRUint32 aRole)
 {
@@ -391,57 +412,45 @@ void nsRootAccessible::FireDHTMLFocusRelatedEvents(nsIAccessible *aAccessible, P
   // a menustart or menuend event, depending on whether we're now focusing a menuitem
   // or something else.
 
-  PRUint32 containerRole;
-  nsCOMPtr<nsPIAccessible> privateAccessible;
-
+  nsCOMPtr<nsIAccessible> newMenuAccessible;
+  PRUint32 newMenuRole;
   if (aRole == ROLE_MENUITEM) {
-    nsCOMPtr<nsIAccessible> parent;
-    aAccessible->GetParent(getter_AddRefs(parent));
-    parent->GetFinalRole(&containerRole);
-    // We must synthesize a menupopupstart event for DHTML when a menu item gets focused
-    // This could be a DHTML menu in which case there will be no DOMMenuActive event to help do this
-    PRUint32 event = 0;
-    if (containerRole == ROLE_MENUPOPUP) {
-      event = nsIAccessibleEvent::EVENT_MENUPOPUPSTART;
-    }
-    else if (containerRole == ROLE_MENUBAR) {
-      event = nsIAccessibleEvent::EVENT_MENUSTART;
-    }
-    if (event && mMenuAccessible != parent) {
-      mMenuAccessible = parent;
-      privateAccessible = do_QueryInterface(mMenuAccessible);
-      privateAccessible->FireToolkitEvent(event, mMenuAccessible, nsnull);
+    aAccessible->GetParent(getter_AddRefs(newMenuAccessible));
+    if (newMenuAccessible) {
+      newMenuAccessible->GetFinalRole(&newMenuRole);
+      if (newMenuRole != ROLE_MENUPOPUP && newMenuRole != ROLE_MENUBAR) {
+        newMenuAccessible = nsnull;  // Menuitem not in a menu
+      }
     }
   }
-  else if (mMenuAccessible) {
-    // We must synthesize a menupopupend event when a menu was focused and
-    // apparently loses focus (something else gets focus)      
-    privateAccessible = do_QueryInterface(mMenuAccessible);
-    mMenuAccessible->GetFinalRole(&containerRole);
-    if (containerRole == ROLE_MENUPOPUP) {
-      privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUPEND,
-                                          mMenuAccessible, nsnull);
-      while (containerRole == ROLE_MENUPOPUP) {
-        nsIAccessible *current = mMenuAccessible;
-        current->GetParent(getter_AddRefs(mMenuAccessible));
-        if (!mMenuAccessible) {
-          break;
-        }
-        mMenuAccessible->GetRole(&containerRole);        
-      }
-      // Will fire EVENT_MENUEND as well if parent of menu is menubar
-      if (containerRole != ROLE_MENUBAR) {
-        mMenuAccessible = nsnull;
-      }
-      privateAccessible = do_QueryInterface(mMenuAccessible);
-    }
+  if (newMenuAccessible != mMenuAccessible) {
     if (mMenuAccessible) {
-      NS_ASSERTION(SameCOMIdentity(privateAccessible, mMenuAccessible),
-                   "privateAccessible should be from same accessible instance as mMenuAccessible");
-      privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUEND,
-                                          mMenuAccessible, nsnull);
-      mMenuAccessible = nsnull;
+      // We must synthesize a menupopupend event when a menu was focused and
+      // apparently loses focus (something else gets focus)
+      PRUint32 currentMenuRole;
+      mMenuAccessible->GetFinalRole(&currentMenuRole);
+      if (currentMenuRole == ROLE_MENUPOPUP) {
+        nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(mMenuAccessible);
+        privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUPEND,
+                                            mMenuAccessible, nsnull);
+      }
+      if (!newMenuAccessible) {  // No longer in a menu
+        FireDHTMLMenuBarEvents(mMenuAccessible, nsIAccessibleEvent::EVENT_MENUEND);
+      }
     }
+    if (newMenuAccessible) {
+      // We must synthesize a menupopupstart event for DHTML when a menu item gets focused
+      // This could be a DHTML menu in which case there will be no DOMMenuActive event to help do this
+      if (!mMenuAccessible) {  // Was not in menu
+        FireDHTMLMenuBarEvents(newMenuAccessible, nsIAccessibleEvent::EVENT_MENUSTART);
+      }
+      if (newMenuRole == ROLE_MENUPOPUP) {
+        nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(newMenuAccessible);
+        privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUPSTART,
+                                            newMenuAccessible, nsnull);
+      }
+    }
+    mMenuAccessible = newMenuAccessible;
   }
 
   // Rule set 2: selection events that mirror focus events
@@ -452,6 +461,7 @@ void nsRootAccessible::FireDHTMLFocusRelatedEvents(nsIAccessible *aAccessible, P
   PRBool isMultiSelectOn = PR_TRUE;
   if (state & STATE_SELECTABLE) {
     nsCOMPtr<nsIAccessible> container = aAccessible;
+    PRUint32 containerRole;
     while (0 == (state & STATE_MULTISELECTABLE)) {
       nsIAccessible *current = container;
       current->GetParent(getter_AddRefs(container));      
@@ -464,7 +474,7 @@ void nsRootAccessible::FireDHTMLFocusRelatedEvents(nsIAccessible *aAccessible, P
     }
 
     if (!isMultiSelectOn) {
-      privateAccessible = do_QueryInterface(aAccessible);
+      nsCOMPtr<nsPIAccessible> privateAccessible = do_QueryInterface(aAccessible);
       privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION,
                                           aAccessible, nsnull);
     }

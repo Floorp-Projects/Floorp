@@ -107,6 +107,7 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     nsresult RemoveEventListeners();
     static void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
     void FireAccessibleFocusEvent(nsIAccessible *focusAccessible, nsIDOMNode *focusNode);
+    void FireDHTMLMenuBarEvents(nsIAccessible *aAccessible, PRUint32 aEvent);
     void FireDHTMLFocusRelatedEvents(nsIAccessible *aFocusAccessible, PRUint32 aRole);
     void FireCurrentFocusEvent();
     void GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget);
