@@ -3662,9 +3662,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       // Break-after cases
       if (breakType == NS_STYLE_CLEAR_LINE) {
         if (!aLineLayout.GetLineEndsInBR()) {
-#ifdef DEBUG_roc
-          // breakType = NS_STYLE_CLEAR_NONE;
-#endif
+          breakType = NS_STYLE_CLEAR_NONE;
         }
       }
       aLine->SetBreakType(breakType);
