@@ -18,6 +18,7 @@
  * Contributor(s):
  */
 
+
 #ifndef nsRegion_h__
 #define nsRegion_h__
 
@@ -43,6 +44,63 @@ class nsRegion
     RgnRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) : nsRect (aX, aY, aWidth, aHeight) {}
     RgnRect (const nsRect& aRect) : nsRect (aRect) {}
 
+#if 1   // Override nsRect methods to make them inline. These are very important to nsRegion
+    #ifdef MIN
+    #undef MIN
+    #endif
+
+    #ifdef MAX
+    #undef MAX
+    #endif
+
+    #define MIN(a,b)\
+      ((a) < (b) ? (a) : (b))
+    #define MAX(a,b)\
+      ((a) > (b) ? (a) : (b))
+
+    PRBool Contains (const nsRect &aRect) const
+    {
+      return (PRBool) ((aRect.x >= x) && (aRect.y >= y) &&
+                       (aRect.XMost() <= XMost()) && (aRect.YMost() <= YMost()));
+    }
+
+    PRBool Intersects (const nsRect &aRect) const
+    {
+      return (PRBool) ((x < aRect.XMost()) && (y < aRect.YMost()) &&
+                       (aRect.x < XMost()) && (aRect.y < YMost()));
+    }
+
+    PRBool IntersectRect (const nsRect &aRect1, const nsRect &aRect2)
+    {
+      x = MAX (aRect1.x, aRect2.x);
+
+      // Compute the destination width
+      const nscoord tmpX = MIN (aRect1.XMost(), aRect2.XMost());
+      if (tmpX <= x)
+        return PR_FALSE;
+
+      y = MAX (aRect1.y, aRect2.y);
+
+      // Compute the destination height
+      const nscoord tmpY = MIN (aRect1.YMost(), aRect2.YMost());
+      if (tmpY <= y)
+        return PR_FALSE;
+
+      width  = tmpX - x;
+      height = tmpY - y;
+
+      return PR_TRUE;
+    }
+
+    void UnionRect (const nsRect &aRect1, const nsRect &aRect2)
+    {
+      x = MIN (aRect1.x, aRect2.x);
+      y = MIN (aRect1.y, aRect2.y);
+      width  = MAX (aRect1.XMost(), aRect2.XMost()) - x;
+      height = MAX (aRect1.YMost(), aRect2.YMost()) - y;
+    }
+#endif
+
     void* operator new (size_t);
     void  operator delete (void* aRect, size_t);
     operator = (const RgnRect& aRect)       // Do not overwrite prev/next pointers
@@ -57,7 +115,7 @@ class nsRegion
 
 public:
   nsRegion ();
-  ~nsRegion () { Empty (); }
+  ~nsRegion () { SetToElements (0); }
 
   nsRegion& Copy (const nsRegion& aRegion);
   nsRegion& Copy (const nsRect& aRect);
@@ -124,7 +182,11 @@ public:
   }
 
   void Offset (PRInt32 aXOffset, PRInt32 aYOffset);
-  void Empty ();
+  void Empty () 
+  { 
+    SetToElements (0);
+    mBoundRect.SetRect (0, 0, 0, 0);
+  }
   PRBool IsEmpty () const { return mRectCount == 0; }
   PRBool IsComplex () const { return mRectCount > 1; }
   PRBool IsEqual (const nsRegion& aRegion) const;
@@ -157,10 +219,12 @@ private:
     mRectCount++;
   }
 
+  void SetToElements (PRUint32 aCount);
   RgnRect* Remove (RgnRect* aRect);
   void InsertInPlace (RgnRect* aRect, PRBool aOptimizeOnFly = PR_FALSE);
   void Optimize ();
   void SubRectFromRegion (const nsRegion& aRegion, const nsRect& aRect);
+  void SubRegionFromRegion (const nsRegion& aRgn1, const nsRegion& aRgn2);
   void Merge (const nsRegion& aRgn1, const nsRegion& aRgn2);
   
   nsRegion (const nsRegion& aRegion);       // Prevent copying of regions
