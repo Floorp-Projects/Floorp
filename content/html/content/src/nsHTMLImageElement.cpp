@@ -546,7 +546,9 @@ nsHTMLImageElement::IsFocusable(PRInt32 *aTabIndex)
         // Use tab index on individual map areas
         *aTabIndex = (sTabFocusModel & eTabFocus_linksMask)? 0 : -1;
       }
-      return PR_TRUE;    
+      // Image map is not focusable itself, but flag as tabbable
+      // so that image map areas get walked into.
+      return PR_FALSE;
     }
   }
 
