@@ -183,7 +183,7 @@ nsScriptLoader::RemoveObserver(nsIScriptLoaderObserver *aObserver)
 {
   NS_ENSURE_ARG(aObserver);
   
-  mObservers.RemoveElement(aObserver);
+  mObservers.RemoveElement(aObserver, 0);
 
   return NS_OK;
 }
@@ -394,7 +394,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
                             reqsup, loadGroup, prompter,
                             nsIChannel::LOAD_NORMAL);
     if (NS_FAILED(rv)) {
-      mPendingRequests.RemoveElement(reqsup);
+      mPendingRequests.RemoveElement(reqsup, 0);
       return FireErrorNotification(rv, aElement, aObserver);
     }
   }
@@ -578,7 +578,7 @@ nsScriptLoader::ProcessPendingReqests()
   nsScriptLoadRequest* request = NS_REINTERPRET_CAST(nsScriptLoadRequest*, 
                                                      reqsup.get());
   while (request && !request->mLoading) {
-    mPendingRequests.RemoveElement(reqsup);
+    mPendingRequests.RemoveElement(reqsup, 0);
     ProcessRequest(request);
     reqsup = dont_AddRef(mPendingRequests.ElementAt(0));
     request = NS_REINTERPRET_CAST(nsScriptLoadRequest*, reqsup.get());
@@ -600,7 +600,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   }
 
   if (NS_FAILED(aStatus)) {
-    mPendingRequests.RemoveElement(aContext);
+    mPendingRequests.RemoveElement(aContext, 0);
     FireScriptAvailable(aStatus, request, NS_LITERAL_STRING(""));
     ProcessPendingReqests();
     return NS_OK;
@@ -609,7 +609,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   // If we don't have a document, then we need to abort further
   // evaluation.
   if (!mDocument) {
-    mPendingRequests.RemoveElement(aContext);
+    mPendingRequests.RemoveElement(aContext, 0);
     FireScriptAvailable(NS_ERROR_NOT_AVAILABLE, request, 
                         NS_LITERAL_STRING(""));
     ProcessPendingReqests();
@@ -718,7 +718,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     NS_ASSERTION(NS_SUCCEEDED(rv),
                  "Could not convert external JavaScript to Unicode!");
     if (NS_FAILED(rv)) {
-      mPendingRequests.RemoveElement(aContext);
+      mPendingRequests.RemoveElement(aContext, 0);
       FireScriptAvailable(rv, request, NS_LITERAL_STRING(""));
       ProcessPendingReqests();
       return NS_OK;
@@ -736,7 +736,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
       
       rv = mDocument->AddPrincipal(prin);
       if (NS_FAILED(rv)) {
-        mPendingRequests.RemoveElement(aContext);
+        mPendingRequests.RemoveElement(aContext, 0);
         FireScriptAvailable(rv, request, NS_LITERAL_STRING(""));
         ProcessPendingReqests();
         return NS_OK;
@@ -753,7 +753,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     return NS_OK;
   }
 
-  mPendingRequests.RemoveElement(aContext);
+  mPendingRequests.RemoveElement(aContext, 0);
   ProcessRequest(request);
 
   // Process any pending requests
