@@ -103,15 +103,23 @@ DateFormater.prototype.getFormatedDate = function( date )
    // that displays the date uses this function we will be able to 
    // make a user settable date format and use it here.
 
-   //return( dateService.FormatDate( "", dateService.dateFormatLong, date.getFullYear(), date.getMonth()+1, date.getDate() ) );
+   if( gCalendarWindow.calendarPreferences.getPref( "dateformat" ) == 0 )
+   {
+      var oneBasedMonthNum = date.getMonth() + 1;
    
-   var oneBasedMonthNum = date.getMonth() + 1;
+      var monthString = this.dateStringBundle.GetStringFromName("month." + oneBasedMonthNum + ".Mmm" );
+      
+      var dateString =  monthString + " " + date.getDate()+", "+date.getFullYear();
+      
+      return dateString;
+   }
+   else
+   {
+      return( dateService.FormatDate( "", dateService.dateFormatShort, date.getFullYear(), date.getMonth()+1, date.getDate() ) );
+   }
    
-   var monthString = this.dateStringBundle.GetStringFromName("month." + oneBasedMonthNum + ".Mmm" );
    
-   var dateString =  monthString + " " + date.getDate()+", "+date.getFullYear();
    
-   return dateString;
 }
 
 

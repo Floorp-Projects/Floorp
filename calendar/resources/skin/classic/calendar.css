@@ -376,9 +376,11 @@
     border-left: 1px solid #3f7d91;
     border-top: 1px solid #3f7d91;
 }
-.weekend{
-    background-color: #FFF9EF;
+
+.month-day-box-class[weekend="true"]{
+   background-color 		: #FFF9EF;
 }
+
 /*Day boxes that aren't in this month*/
 .month-day-box-class[empty="true"]{
    background-color: #E7EEEC;
@@ -1004,11 +1006,6 @@
 {
   	width			: 8px;
 }	
-
-.weekend
-{
-  	background-color 		: #FFF9EF;
-}
 
 .calendar-unifinder-event-text
 {

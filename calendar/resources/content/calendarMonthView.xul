@@ -54,6 +54,19 @@
     >
     <script type="application/x-javascript" src="chrome://calendar/content/calendarMonthView.js"/>
 
+    <script type="application/x-javascript">
+      var ArrayOfDayNames = new Array();
+   
+      ArrayOfDayNames[0] = "&calendar.monthview.column.1.name;";
+      ArrayOfDayNames[1] = "&calendar.monthview.column.2.name;";
+      ArrayOfDayNames[2] = "&calendar.monthview.column.3.name;";
+      ArrayOfDayNames[3] = "&calendar.monthview.column.4.name;";
+      ArrayOfDayNames[4] = "&calendar.monthview.column.5.name;";
+      ArrayOfDayNames[5] = "&calendar.monthview.column.6.name;";
+      ArrayOfDayNames[6] = "&calendar.monthview.column.7.name;";
+      
+    </script>
+
     <vbox id="month-view-box" flex="1">
 
 	<!-- Month View: Controls-->
@@ -115,30 +128,30 @@
 		    <rows >
 			<row flex="1">
 			    <vbox class="month-column-center-day-class">
-				<label class="month-view-header-days" value="&calendar.monthview.column.1.name;"/>
+				   <label class="month-view-header-days" id="month-view-header-day-1"/>
 			    </vbox>
 			    <vbox class="month-column-center-day-class">
-				<label class="month-view-header-days" value="&calendar.monthview.column.2.name;"/>
+				   <label class="month-view-header-days" id="month-view-header-day-2"/>
 			    </vbox>
 			    <vbox class="month-column-center-day-class">
-				<label class="month-view-header-days" value="&calendar.monthview.column.3.name;"/>
+				   <label class="month-view-header-days" id="month-view-header-day-3"/>
 			    </vbox>
 			    <vbox class="month-column-center-day-class">
-				<label class="month-view-header-days" value="&calendar.monthview.column.4.name;"/>
+				   <label class="month-view-header-days" id="month-view-header-day-4"/>
 			    </vbox>
 			    <vbox class="month-column-center-day-class">
-				<label class="month-view-header-days" value="&calendar.monthview.column.5.name;"/>
+				   <label class="month-view-header-days" id="month-view-header-day-5"/>
 			    </vbox>
 			    <vbox class="month-column-center-day-class">
-				<label class="month-view-header-days" value="&calendar.monthview.column.6.name;"/>
+				   <label class="month-view-header-days" id="month-view-header-day-6"/>
 			    </vbox>
 			    <vbox class="month-column-center-day-class">
-				<label class="month-view-header-days" value="&calendar.monthview.column.7.name;"/>
+				   <label class="month-view-header-days" id="month-view-header-day-7"/>
 			    </vbox>
 			</row>
 
 			<row flex="1"  >
-			    <vbox class="month-day-box-class weekend" flex="1" id="month-week-1-day-1-box" weekend="true">
+			    <vbox class="month-day-box-class" flex="1" id="month-week-1-day-1-box">
 				<hbox>
 				    <label class="month-day-number-class" id="month-week-1-day-1" value="" />
 				</hbox>
@@ -174,7 +187,7 @@
 				</hbox>                    
 			    </vbox>    
 
-			    <vbox class="month-day-box-class weekend saturday" flex="1"  id="month-week-1-day-7-box"  weekend="true" >
+			    <vbox class="month-day-box-class" flex="1"  id="month-week-1-day-7-box">
 				<hbox>
 				    <label class="month-day-number-class" id="month-week-1-day-7" value="" />
 				</hbox>                    
@@ -182,7 +195,7 @@
 			</row>
 
 			<row flex="1"  >
-			    <vbox class="month-day-box-class weekend" flex="1"  id="month-week-2-day-1-box"  weekend="true">
+			    <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-1-box">
 				<hbox>
 				    <label class="month-day-number-class" id="month-week-2-day-1" value="" />
 				</hbox>                    
@@ -218,7 +231,7 @@
 				</hbox>                    
 			    </vbox>    
 
-			    <vbox class="month-day-box-class weekend saturday" flex="1" id="month-week-2-day-7-box" weekend="true" >
+			    <vbox class="month-day-box-class" flex="1" id="month-week-2-day-7-box">
 				<hbox>
 				    <label class="month-day-number-class" id="month-week-2-day-7" value="" />
 				</hbox>                    
@@ -226,7 +239,7 @@
 			</row>
 
 			<row flex="1"  >
-			    <vbox class="month-day-box-class weekend" flex="1" id="month-week-3-day-1-box" weekend="true" >
+			    <vbox class="month-day-box-class" flex="1" id="month-week-3-day-1-box">
 				<hbox>
 				    <label class="month-day-number-class" id="month-week-3-day-1" value="" />
 				</hbox>                    
@@ -262,7 +275,7 @@
 				</hbox>                    
 			    </vbox>    
 
-			    <vbox class="month-day-box-class weekend saturday" flex="1"  id="month-week-3-day-7-box" weekend="true" >
+			    <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-7-box">
 				<hbox>
 				    <label class="month-day-number-class" id="month-week-3-day-7" value="" />
 				</hbox>                    
@@ -270,7 +283,7 @@
 			</row>
 
 			<row flex="1"  >
-			    <vbox class="month-day-box-class weekend" flex="1"  id="month-week-4-day-1-box" weekend="true" >
+			    <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-1-box">
 				<hbox>
 				    <label class="month-day-number-class" id="month-week-4-day-1" value="" />
 				</hbox>                    
@@ -306,7 +319,7 @@
 				</hbox>
 			    </vbox>    
 
-			    <vbox class="month-day-box-class weekend saturday" flex="1"  id="month-week-4-day-7-box" weekend="true" >
+			    <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-7-box">
 				<hbox>
 				    <label class="month-day-number-class" id="month-week-4-day-7" value="" />
 				</hbox>
@@ -314,7 +327,7 @@
 			</row>
 
 			<row flex="1"  >
-			    <vbox class="month-day-box-class weekend" flex="1" id="month-week-5-day-1-box" weekend="true" >
+			    <vbox class="month-day-box-class" flex="1" id="month-week-5-day-1-box">
 				<hbox>
 				    <label class="month-day-number-class" id="month-week-5-day-1" value="" />
 				</hbox>                    
@@ -350,7 +363,7 @@
 				</hbox>
 			    </vbox>    
 
-			    <vbox class="month-day-box-class weekend saturday" flex="1"  id="month-week-5-day-7-box" weekend="true" >
+			    <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-7-box">
 				<hbox>
 				    <label class="month-day-number-class" id="month-week-5-day-7" value="" />
 				</hbox>
@@ -358,7 +371,7 @@
 			</row>
 
 			<row flex="1"  >
-			    <vbox class="month-day-box-class weekend" flex="1"  id="month-week-6-day-1-box" weekend="true" >
+			    <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-1-box">
 				<hbox>
 				    <label class="month-day-number-class" id="month-week-6-day-1" value="" />
 				</hbox>                    
@@ -388,7 +401,7 @@
 				<label  class="month-day-number-class" id="month-week-6-day-6" value="" />
 			    </vbox>    
 
-			    <vbox class="month-day-box-class weekend saturday" flex="1"  id="month-week-6-day-7-box" weekend="true" >
+			    <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-7-box">
 				<label  class="month-day-number-class" id="month-week-6-day-7" value="" />
 			    </vbox>    
 			</row>

@@ -17,7 +17,21 @@ calendarPrefObserver.prototype =
   {
      // when calendar pref was changed, we reinitialize 
      this.CalendarPreferences.loadPreferences();
+     
+     switch( prefName )
+     {
+        case "calendar.week.start":
+         this.CalendarPreferences.calendarWindow.currentView.refreshDisplay();
+        break
 
+        case "calendar.date.format":
+         this.CalendarPreferences.calendarWindow.currentView.refreshDisplay();
+         unifinderRefesh();
+        default:
+        break;
+
+     }
+     
      //this causes Mozilla to freeze
      //firePendingEvents(); 
   }
@@ -35,8 +49,6 @@ function removePrefObserver( e ){ // this one is called on window destruction (b
 
 window.addEventListener("unload", removePrefObserver, true); 
 
-
-
 function calendarPreferences( CalendarWindow )
 {
    window.calendarPrefObserver = new calendarPrefObserver( this );
@@ -53,9 +65,10 @@ function calendarPreferences( CalendarWindow )
     this.loadPreferences();  
   }
   catch(e) {
-     this.calendarPref.setBoolPref("alarms.show", true);
-     this.calendarPref.setBoolPref("alarms.playsound", false);
-    
+     this.calendarPref.setBoolPref( "alarms.show", true );
+     this.calendarPref.setBoolPref( "alarms.playsound", false );
+     this.calendarPref.setIntPref( "date.format", 0 );
+     this.calendarPref.setIntPref( "week.start", 0 );
      this.loadPreferences();
   }
   
@@ -67,6 +80,10 @@ calendarPreferences.prototype.loadPreferences = function()
    this.arrayOfPrefs.showalarms = this.calendarPref.getBoolPref( "alarms.show" );
 
    this.arrayOfPrefs.alarmsplaysound = this.calendarPref.getBoolPref( "alarms.playsound" );
+
+   this.arrayOfPrefs.dateformat = this.calendarPref.getIntPref( "date.format" );
+   
+   this.arrayOfPrefs.weekstart = this.calendarPref.getIntPref( "week.start" );
 }
 
 calendarPreferences.prototype.getPref = function( Preference )

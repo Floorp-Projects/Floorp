@@ -52,22 +52,44 @@
 
    <script type="application/x-javascript">
      <![CDATA[
-       var panel = "chrome://calendar/content/pref/calendarPref.xul";
        var _elementIDs = [
-         "alarmshow", "alarmplaysound"
+         "alarmshow", "alarmplaysound", "dateformat", "weekstarts"
        ];
      ]]>
    </script>
 
-   <groupbox orient="vertical">
+   <groupbox align="start" orient="vertical">
       <caption label="&pref.mainbox.caption;"/>
       <description>&pref.alarmgoesoff.label;</description>
-      <checkbox id="alarmplaysound" type="checkbox" pref="true" preftype="bool"
-          prefattribute="checked" prefstring="calendar.alarms.playsound"
+      <checkbox id="alarmplaysound" prefstring="calendar.alarms.playsound"
           label="&pref.playasound;" />
           
-      <checkbox id="alarmshow" type="checkbox" pref="true" preftype="bool"
-          prefattribute="checked" prefstring="calendar.alarms.show"
+      <checkbox id="alarmshow" prefstring="calendar.alarms.show"
           label="&pref.showalarmbox;" />
+          
+      <vbox>
+         <description>Date Text Format: </description>
+         <menulist id="dateformat" crop="none" prefstring="calendar.date.format">
+             <menupopup id="dateformat">
+               <menuitem label="Long (ie. Apr 1, 2002)"    value="0"/>
+               <menuitem label="Short Format (ie. 04/01/02)"    value="1"/>
+             </menupopup>
+           </menulist>
+      </vbox>
+      
+      <vbox>
+         <description>First Day Of The Week: </description>
+         <menulist id="weekstarts" prefstring="calendar.week.start">
+          <menupopup id="weekstarts">
+            <menuitem label="Sunday"    value="0"/>
+            <menuitem label="Monday"    value="1"/>
+            <menuitem label="Tuesday"   value="2"/>
+            <menuitem label="Wednesday" value="3"/>
+            <menuitem label="Thursday"  value="4"/>
+            <menuitem label="Friday"    value="5"/>
+            <menuitem label="Saturday"  value="6"/>
+          </menupopup>
+        </menulist>   
+      </vbox>
    </groupbox>
 </page>

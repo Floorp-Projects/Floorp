@@ -122,6 +122,7 @@ function MonthView( calendarWindow )
    {
       onSelectionChanged : function( EventSelectionArray )
       {
+         dump( "\nIn Month view, on selection changed");
          if( EventSelectionArray.length > 0 )
          {
             //if there are selected events.
@@ -130,16 +131,19 @@ function MonthView( calendarWindow )
 
             gCalendarWindow.monthView.clearSelectedBoxes();
             
+            dump( "\nIn Month view, eventSelectionArray.length is "+EventSelectionArray.length );
+            var i = 0;
             for( i = 0; i < EventSelectionArray.length; i++ )
             {
+               dump( "\nin Month view, going to try and get the event boxes with name 'month-view-event-box-"+EventSelectionArray[i].id+"'" );
                var EventBoxes = document.getElementsByAttribute( "name", "month-view-event-box-"+EventSelectionArray[i].id );
-               
+               dump( "\nIn Month view, found "+EventBoxes.length+" matches for the selected event." );
                for ( j = 0; j < EventBoxes.length; j++ ) 
                {
                   EventBoxes[j].setAttribute( "eventselected", "true" );
                }
             }
-            
+            dump( "\nAll Done in Selection for Month View" );
          }
          else
          {
@@ -416,13 +420,38 @@ MonthView.prototype.refreshDisplay = function( )
    }
 	document.getElementById( "0-year-title" ).setAttribute( "value" , newYear );
    
+   var Offset = this.calendarWindow.calendarPreferences.getPref( "weekstart" );
+   
+   NewArrayOfDayNames = new Array();
+   
+   for( i = 0; i < ArrayOfDayNames.length; i++ )
+   {
+      NewArrayOfDayNames[i] = ArrayOfDayNames[i];
+   }
+
+   for( i = 0; i < Offset; i++ )
+   {
+      var FirstElement = NewArrayOfDayNames.shift();
+
+      NewArrayOfDayNames.push( FirstElement );
+   }
+
+   //set the day names (Some people start on Sunday, others start on Monday 
+   for( i = 1; i <= 7; i++ )
+   {
+      document.getElementById( "month-view-header-day-"+i ).value = NewArrayOfDayNames[ (i-1) ];
+   }
+   
+
    // Write in all the day numbers and create the dayBoxItemByDateArray, see notes above
    
    // figure out first and last days of the month
    
    var firstDate = new Date( newYear, newMonth, 1 );
-   var firstDayOfWeek = firstDate.getDay();
-   
+   var firstDayOfWeek = firstDate.getDay() - Offset;
+   if( firstDayOfWeek < 0 )
+      firstDayOfWeek+=7;
+
    var lastDayOfMonth = DateUtils.getLastDayOfMonth( newYear, newMonth );
    
    // prepare the dayBoxItemByDateArray, we will be filling this in
@@ -444,13 +473,22 @@ MonthView.prototype.refreshDisplay = function( )
          
          dayNumberItem.setAttribute( "value" , "" );  
          dayBoxItem.setAttribute( "empty" , "true" );  
+         dayBoxItem.setAttribute( "weekend", "false" );
          dayBoxItem.dayNumber = null;
       }  
       else
       {
          dayNumberItem.setAttribute( "value" , dayNumber );
          
-         dayBoxItem.setAttribute( "empty" , "false" );  
+         dayBoxItem.setAttribute( "empty" , "false" ); 
+         var thisDate = new Date( newYear, newMonth, dayNumber );
+         if( thisDate.getDay() == 0 | thisDate.getDay() == 6 )
+         {
+            dayBoxItem.setAttribute( "weekend", "true" );
+         }
+         else
+            dayBoxItem.setAttribute( "weekend", "false" ); 
+
          dayBoxItem.dayNumber = dayNumber;
          
          this.dayBoxItemByDateArray[ dayNumber ] = dayBoxItem; 
@@ -542,7 +580,6 @@ MonthView.prototype.hiliteTodaysDate = function( )
 
    //highlight today.
    var Today = new Date( );
-   
    if ( Year == Today.getFullYear() && Month == Today.getMonth() ) 
    {
       var ThisBox = this.dayBoxItemByDateArray[ Today.getDate() ];
