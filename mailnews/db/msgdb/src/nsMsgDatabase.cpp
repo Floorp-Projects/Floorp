@@ -549,6 +549,8 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 			nsIMdbThumb *thumb = nsnull;
 			struct stat st;
 			char	*nativeFileName = nsCRT::strdup(dbName);
+			nsIMdbHeap* dbHeap = 0;
+			mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
 
 			if (!nativeFileName)
 				return NS_ERROR_OUT_OF_MEMORY;
@@ -566,40 +568,30 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 				mdbOpenPolicy inOpenPolicy;
 				mdb_bool	canOpen;
 				mdbYarn		outFormatVersion;
-				char		bufFirst512Bytes[512];
-				mdbYarn		first512Bytes;
-
-				first512Bytes.mYarn_Buf = bufFirst512Bytes;
-				first512Bytes.mYarn_Size = 512;
-				first512Bytes.mYarn_Fill = 512;
-				first512Bytes.mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
-
+				
+				nsIMdbFile* oldFile = 0;
+				ret = myMDBFactory->OpenOldFile(m_mdbEnv, dbHeap, nativeFileName,
+					 dbFrozen, &oldFile);
+				if ( oldFile )
 				{
-					nsIOFileStream *dbStream = new nsIOFileStream(nsFileSpec(dbName));
-					if (dbStream)
+					if ( ret == NS_OK )
 					{
-						PRInt32 bytesRead = dbStream->read(bufFirst512Bytes, sizeof(bufFirst512Bytes));
-						first512Bytes.mYarn_Fill = bytesRead;
-						dbStream->close();
-						delete dbStream;
+						ret = myMDBFactory->CanOpenFilePort(m_mdbEnv, oldFile, // the file to investigate
+							&canOpen, &outFormatVersion);
+						if (ret == 0 && canOpen)
+						{
+							inOpenPolicy.mOpenPolicy_ScopePlan.mScopeStringSet_Count = 0;
+							inOpenPolicy.mOpenPolicy_MinMemory = 0;
+							inOpenPolicy.mOpenPolicy_MaxLazy = 0;
+
+							ret = myMDBFactory->OpenFileStore(m_mdbEnv, dbHeap,
+								oldFile, &inOpenPolicy, &thumb); 
+						}
+						else
+							ret = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 					}
-					else
-						return NS_ERROR_OUT_OF_MEMORY;
+					oldFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
 				}
-				ret = myMDBFactory->CanOpenFilePort(m_mdbEnv, nativeFileName, // the file to investigate
-					&first512Bytes,	&canOpen, &outFormatVersion);
-				if (ret == 0 && canOpen)
-				{
-
-					inOpenPolicy.mOpenPolicy_ScopePlan.mScopeStringSet_Count = 0;
-					inOpenPolicy.mOpenPolicy_MinMemory = 0;
-					inOpenPolicy.mOpenPolicy_MaxLazy = 0;
-
-					ret = myMDBFactory->OpenFileStore(m_mdbEnv, NULL, nativeFileName, &inOpenPolicy, 
-									&thumb); 
-				}
-				else
-					ret = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 			}
 			if (NS_SUCCEEDED(ret) && thumb)
 			{
@@ -630,15 +622,25 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 			}
 			else if (create)	// ### need error code saying why open file store failed
 			{
-				mdbOpenPolicy inOpenPolicy;
+				nsIMdbFile* newFile = 0;
+				ret = myMDBFactory->CreateNewFile(m_mdbEnv, dbHeap, dbName, &newFile);
+				if ( newFile )
+				{
+					if (ret == NS_OK)
+					{
+						mdbOpenPolicy inOpenPolicy;
 
-				inOpenPolicy.mOpenPolicy_ScopePlan.mScopeStringSet_Count = 0;
-				inOpenPolicy.mOpenPolicy_MinMemory = 0;
-				inOpenPolicy.mOpenPolicy_MaxLazy = 0;
+						inOpenPolicy.mOpenPolicy_ScopePlan.mScopeStringSet_Count = 0;
+						inOpenPolicy.mOpenPolicy_MinMemory = 0;
+						inOpenPolicy.mOpenPolicy_MaxLazy = 0;
 
-				ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, NULL, dbName, &inOpenPolicy, &m_mdbStore);
-				if (ret == NS_OK)
-					ret = InitNewDB();
+						ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, dbHeap,
+							newFile, &inOpenPolicy, &m_mdbStore);
+						if (ret == NS_OK)
+							ret = InitNewDB();
+					}
+					newFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
+				}
 			}
 			if(thumb)
 			{
