@@ -51,8 +51,9 @@ public:
 	///////////////////////////////////////////////////////////////////////////////
   NS_DECL_NSIIMAPURL
 
-  // nsIMsgMailNewsUrl override
+  // nsIMsgMailNewsUrl overrides
 	NS_IMETHOD IsUrlType(PRUint32 type, PRBool *isType);
+  NS_IMETHOD SetMsgWindow(nsIMsgWindow *aMsgWindow);
 
   // nsIMsgMessageUrl
   NS_DECL_NSIMSGMESSAGEURL

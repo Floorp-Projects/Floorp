@@ -92,6 +92,18 @@ nsresult nsImapUrl::Initialize()
 	return rv;
 }
  
+NS_IMETHODIMP nsImapUrl::SetMsgWindow(nsIMsgWindow *aMsgWindow)
+{
+  if (aMsgWindow)
+  {
+    m_msgWindow = do_QueryInterface(aMsgWindow);
+    if (m_mockChannel)
+      m_mockChannel->SetURI(this);
+  }
+  return NS_OK;
+}
+
+
 nsImapUrl::~nsImapUrl()
 {
 	PR_FREEIF(m_listOfMessageIds);
