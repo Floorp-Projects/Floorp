@@ -258,8 +258,7 @@ nsView::~nsView()
     mWindow->Destroy();
     NS_RELEASE(mWindow);
   }
-  NS_IF_RELEASE(mDirtyRegion);
-
+  delete mDirtyRegion;
   delete mClipRect;
 }
 
@@ -785,19 +784,6 @@ nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset)
     *aOffset = pt + v->GetPosition() -  nsPoint(vBounds.x, vBounds.y);
   }
   return v->GetWidget();
-}
-
-nsresult nsView::GetDirtyRegion(nsIRegion*& aRegion)
-{
-  if (nsnull == mDirtyRegion) {
-    nsresult rv = GetViewManager()->CreateRegion(&mDirtyRegion);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  aRegion = mDirtyRegion;
-  NS_ADDREF(aRegion);
-  return NS_OK;
 }
 
 PRBool nsIView::IsRoot() const

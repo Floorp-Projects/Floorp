@@ -267,9 +267,8 @@ private:
   void ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget);
   void ReparentWidgets(nsIView* aView, nsIView *aParent);
   already_AddRefed<nsIRenderingContext> CreateRenderingContext(nsView &aView);
-  void AddRectToDirtyRegion(nsView* aView, const nsRect &aRect) const;
-
-  PRBool UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamagedRect, nsView* aIgnoreWidgetView);
+  void UpdateWidgetArea(nsView *aWidgetView, const nsRegion &aDamagedRegion,
+                        nsView* aIgnoreWidgetView, PRBool* aCoveredRegion = nsnull);
 
   void UpdateViews(nsView *aView, PRUint32 aUpdateFlags);
 

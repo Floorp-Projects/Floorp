@@ -40,6 +40,7 @@
 
 #include "nsIView.h"
 #include "nsIWidget.h"
+#include "nsRegion.h"
 #include "nsRect.h"
 #include "nsCRT.h"
 #include "nsIFactory.h"
@@ -211,11 +212,6 @@ public:
    */
   NS_IMETHOD  SetContentTransparency(PRBool aTransparent);
   /**
-   * Gets the dirty region associated with this view. Used by the view
-   * manager.
-   */
-  nsresult GetDirtyRegion(nsIRegion*& aRegion);
-  /**
    * Set the widget associated with this view.
    * @param aWidget widget to associate with view. It is an error
    *        to associate a widget with more than one view. To disassociate
@@ -256,6 +252,17 @@ public:
   // These are defined exactly the same in nsIView, but for now they have to be redeclared
   // here because of stupid C++ method hiding rules
 
+  PRBool HasNonEmptyDirtyRegion() {
+    return mDirtyRegion && !mDirtyRegion->IsEmpty();
+  }
+  nsRegion* GetDirtyRegion() {
+    if (!mDirtyRegion) {
+      mDirtyRegion = new nsRegion();
+      NS_ASSERTION(mDirtyRegion, "Out of memory!");
+    }
+    return mDirtyRegion;
+  }
+
   void InsertChild(nsView *aChild, nsView *aSibling);
   void RemoveChild(nsView *aChild);
 
@@ -284,13 +291,12 @@ public:
   virtual ~nsView();
 
 protected:
-  nsZPlaceholderView*mZParent;
+  nsZPlaceholderView* mZParent;
 
   // mClipRect is relative to the view's origin.
-  nsRect*         mClipRect;
-  nsIRegion*      mDirtyRegion;
-  PRPackedBool    mChildRemoved;
-
+  nsRect*      mClipRect;
+  nsRegion*    mDirtyRegion;
+  PRPackedBool mChildRemoved;
 };
 
 #endif

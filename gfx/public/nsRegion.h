@@ -44,7 +44,7 @@
 // Rectangles in this list do not overlap and are sorted by (y, x) coordinates.
 
 #include "nsRect.h"
-
+#include "nsPoint.h"
 
 class NS_GFX nsRegion
 {
@@ -155,7 +155,11 @@ public:
   }
 
 
-  void MoveBy (PRInt32 aXOffset, PRInt32 aYOffset);
+  void MoveBy (PRInt32 aXOffset, PRInt32 aYOffset)
+  {
+    MoveBy (nsPoint (aXOffset, aYOffset));
+  }
+  void MoveBy (nsPoint aPt);
   void SetEmpty ()
   {
     SetToElements (0);
@@ -168,6 +172,19 @@ public:
   PRUint32 GetNumRects () const { return mRectCount; }
   const nsRect& GetBounds () const { return mBoundRect; }
 
+  /**
+   * Make sure the region has at most aMaxRects by adding area to it
+   * if necessary. The simplified region will be a superset of the
+   * original region. The simplified region's bounding box will be
+   * the same as for the current region.
+   */
+  void SimplifyOutward (PRUint32 aMaxRects);
+  /**
+   * Make sure the region has at most aMaxRects by removing area from
+   * it if necessary. The simplified region will be a subset of the
+   * original region.
+   */
+  void SimplifyInward (PRUint32 aMaxRects);
 
 private:
   PRUint32    mRectCount;
