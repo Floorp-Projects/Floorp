@@ -17,6 +17,7 @@
 
 DEPTH=..\..\..
 
-DIRS=pop3
+#commented out because it won't build
+#DIRS=pop3
 
 include <$(DEPTH)\config\rules.mak>
