@@ -38,6 +38,7 @@ DIRS		= xpwidgets support
 ifndef MOZ_MONOLITHIC_TOOLKIT
 
 ifdef MOZ_ENABLE_GTK
+DIRS		+= gtksuperwin
 DIRS		+= gtk
 endif
 
