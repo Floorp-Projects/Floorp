@@ -40,6 +40,7 @@
 #include "nsIMsgFilterHitNotify.h"
 #include "nsIMsgFilterList.h"
 #include "prmon.h"
+#include "nsIEventQueue.h"
 class nsImapMoveCoalescer;
 
 
