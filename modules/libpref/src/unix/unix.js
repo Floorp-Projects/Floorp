@@ -82,6 +82,10 @@ pref("browser.fancy_ftp", true);
 pref("fortezza.toggle", 1);
 pref("fortezza.timeout", 30);
 
+pref("font.name.serif.x-western", "times");
+pref("font.name.sans-serif.x-western", "helvetica");
+pref("font.name.monospace.x-western", "courier");
+
 pref("intl.font_charset", "");
 pref("intl.font_spec_list", "");
 pref("mail.signature_date", 0);
