@@ -89,6 +89,8 @@ public:
     nsHttpVersion DefaultVersion()  { return (nsHttpVersion) mHttpVersion; }
     PRUint32      ReferrerLevel()   { return mReferrerLevel; }
 
+    PRUint32      IdleTimeout() { return mIdleTimeout; }
+
     nsHttpAuthCache *AuthCache() { return mAuthCache; }
 
     // cache support
