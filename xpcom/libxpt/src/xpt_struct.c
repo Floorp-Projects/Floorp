@@ -23,32 +23,68 @@
 
 /* InterfaceDirectoryEntry records go in the header */
 PRBool
-XPT_XDRInterfaceDirectoryEntry(XPTXDRState *state,
-			       XPTInterfaceDirectoryEntry **idep)
+XPT_XDRInterfaceDirectoryEntry(XPTCursor *cursor,
+                               XPTInterfaceDirectoryEntry **idep)
 {
     
-    XPT_Cursor cursor;
+    XPTCursor my_cursor;
     XPTInterfaceDirectoryEntry *ide;
+    XPTMode mode = cursor->state->mode;
 
-    if (state->mode == XDRXPT_DECODE) {
-	if !((*idep = ide = PR_NEW(XPTInterfaceDirectoryEntry)))
+    /*
+     * if we were a ``normal'' function, we'd have to get our offset
+     * with something like
+     *    offset = XPT_GetOffset(cursor->state, XPT_DATA);
+     * and then write/read it into/from our _caller_'s cursor:
+     *    XPT_Do32(cursor, &offset).
+     * In the decode case below, we would want to check for already-restored
+     * data at this offset, and create+register if none was found:
+     *    ide = XPT_GetAddrForOffset(cursor->state, offset);
+     *    if (!ide) {
+     *      -- none registered! --
+     *        ide = PR_NEW(XPTInterfaceDirectoryEntry);
+     *        if (!ide) return PR_FALSE;
+     *        XPT_SetAddrForOffset(cursor->state, offset, (void *)ide);
+     *        *idep = ide;
+     *    } else {
+     *        -- found it! --
+     *        *idep = ide;
+     *        return PR_TRUE;
+     *    }
+     * I think I'll write a macro that does the right thing here, because
+     * it'll appear at the beginning of just about every such function.
+     *
+     */
+
+    if (mode == XPT_DECODE) {
+        if !((*idep = ide = PR_NEW(XPTInterfaceDirectoryEntry)))
 	    return PR_FALSE;
     } else {
-	ide = *idep;
+        ide = *idep;
     }
     
-    if (!XPT_CreateCursor(state, XPT_HEADER, XPT_IDE_SIZE, &cursor) ||
-	!XPT_DoIID(state, &ide->iid, &cursor) ||
-	!XPT_DoIdentifier(state, &ide->name, &cursor) ||
-	!XPT_DoInterfaceDescriptor(state, &ide->interface_descriptor,
-				   &cursor)) {
-	if (state->mode == XPTXDR_DECODE) {
-	    PR_FREE(ide);
-	    *idep = 0;
-	}
-	return PR_FALSE;
-    }
 
+    /* create a cursor, reserving XPT_IDE_SIZE bytes in the encode case */
+    if (!XPT_CreateCursor(cursor->state, XPT_HEADER, XPT_IDE_SIZE,
+                          &my_cursor) ||
+
+        /* write the IID in our cursor space */
+        !XPT_DoIID(&my_cursor, &ide->iid) ||
+
+        /* write the string in the data pool, and the offset in our
+           cursor space */
+        !XPT_DoCString(&my_cursor, &ide->name) ||
+
+        /* write the InterfaceDescriptor in the data pool, and the offset
+           in our cursor space */
+        !XPT_DoInterfaceDescriptor(&my_cursor, &ide->interface_descriptor)) {
+        if (mode == XPT_DECODE) {
+            PR_FREE(ide);
+            *idep = 0;
+        }
+        return PR_FALSE;
+    }
+    
     return PR_TRUE;
 }
 
