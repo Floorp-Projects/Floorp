@@ -297,18 +297,17 @@ nsHTTPChannel::GetResponseHeader(const char* i_Header, char* *o_Value)
     if (m_pResponse)
         return m_pResponse->GetHeader(i_Header, o_Value);
     else
-        return NS_ERROR_NOT_IMPLEMENTED; // NS_ERROR_NO_RESPONSE_YET ? 
+        return NS_ERROR_FAILURE ; // NS_ERROR_NO_RESPONSE_YET ? 
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::GetResponseStatus(nsresult *o_Status)
+nsHTTPChannel::GetResponseStatus(PRUint32  *o_Status)
 {
-    PRInt32 status = -1;
     if (!m_bConnected) 
         Open();
-    *o_Status = status;
-
-    return NS_ERROR_NOT_IMPLEMENTED;
+	if (m_pResponse)
+		return m_pResponse->GetStatus(o_Status);
+    return NS_ERROR_FAILURE; // NS_ERROR_NO_RESPONSE_YET ? 
 }
 
 NS_IMETHODIMP
@@ -316,7 +315,9 @@ nsHTTPChannel::GetResponseString(char* *o_String)
 {
     if (!m_bConnected) 
         Open();
-    return NS_ERROR_NOT_IMPLEMENTED;
+	if (m_pResponse)
+		return m_pResponse->GetStatusString(o_String);
+    return NS_ERROR_FAILURE; // NS_ERROR_NO_RESPONSE_YET ? 
 }
 
 NS_IMETHODIMP

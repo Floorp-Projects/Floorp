@@ -421,15 +421,17 @@ nsHTTPResponse::GetContentLength(PRInt32* o_Value) const
 }
 
 NS_METHOD
-nsHTTPResponse::GetStatus(PRInt32* o_Value) const
+nsHTTPResponse::GetStatus(PRUint32* o_Value) const
 {
     if (o_Value)
-        *o_Value = -1;
+        *o_Value = m_Status;
+    else 
+        return NS_ERROR_NULL_POINTER;
     return NS_OK;
 }
 
 NS_METHOD
-nsHTTPResponse::GetStatusString(const char* *o_String) const
+nsHTTPResponse::GetStatusString(char* *o_String) const
 {
     if (o_String)
         *o_String = m_pStatusString;
@@ -437,7 +439,7 @@ nsHTTPResponse::GetStatusString(const char* *o_String) const
 }
 
 NS_METHOD
-nsHTTPResponse::GetServer(const char* *o_String) const
+nsHTTPResponse::GetServer(char* *o_String) const
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

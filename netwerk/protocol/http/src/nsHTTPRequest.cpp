@@ -31,6 +31,7 @@
 #include "nsHTTPChannel.h"
 #include "nsHTTPResponseListener.h"
 #include "nsCRT.h"
+#include "nsXPIDLString.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
@@ -44,7 +45,7 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method, nsIChannel* i_
 {
     NS_INIT_REFCNT();
 
-    m_pURL = do_QueryInterface(i_pURL);
+    m_pURI = do_QueryInterface(i_pURL);
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("Creating nsHTTPRequest [this=%x].\n", this));
@@ -52,7 +53,14 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method, nsIChannel* i_
     m_pTransport = i_pTransport;
     NS_IF_ADDREF(m_pTransport);
 
-    //Build();
+	// Send Host header by default
+	if (HTTP_ZERO_NINE != m_Version)
+	{
+		nsXPIDLCString host;
+		NS_ASSERTION(m_pURI, "No URI for the request!!");
+		m_pURI->GetHost(getter_Copies(host));
+		SetHost(host);
+	}
 }
 
 nsHTTPRequest::~nsHTTPRequest()
@@ -93,7 +101,7 @@ nsHTTPRequest::Build()
         return NS_ERROR_FAILURE;
     }
 
-    if (!m_pURL) {
+    if (!m_pURI) {
         NS_ERROR("No URL to build request for!");
         return NS_ERROR_NULL_POINTER;
     }
@@ -121,13 +129,13 @@ nsHTTPRequest::Build()
     char* name;
     lineBuffer.Append(MethodToString(m_Method));
 
-    rv = m_pURL->GetPath(&name);
+    rv = m_pURI->GetPath(&name);
     lineBuffer.Append(name);
     nsCRT::free(name);
 
     // Append the Query string if any...
     name = nsnull;
-    rv = m_pURL->GetQuery(&name);
+    rv = m_pURI->GetQuery(&name);
     if (name && *name) {
       lineBuffer.Append("?");
       lineBuffer.Append(name);

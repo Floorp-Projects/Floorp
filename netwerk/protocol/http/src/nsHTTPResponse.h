@@ -153,9 +153,9 @@ public:
 
     // Stuff from nsIHTTPResponse
     NS_IMETHOD          GetContentLength(PRInt32* o_Value) const;
-    NS_IMETHOD          GetStatus(PRInt32* o_Value) const;
-    NS_IMETHOD          GetStatusString(const char* *o_String) const;
-    NS_IMETHOD          GetServer(const char* *o_String) const;
+    NS_IMETHOD          GetStatus(PRUint32* o_Value) const;
+    NS_IMETHOD          GetStatusString(char* *o_String) const;
+    NS_IMETHOD          GetServer(char* *o_String) const;
 
     // Finally our own methods...
 

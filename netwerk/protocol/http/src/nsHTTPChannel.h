@@ -49,7 +49,7 @@ public:
                   nsIHTTPEventSink* i_HTTPEventSink,
                   nsIHTTPHandler* i_Handler);
 
-    ~nsHTTPChannel();
+    virtual ~nsHTTPChannel();
 
     // Functions from nsISupports
     NS_DECL_ISUPPORTS
@@ -81,7 +81,7 @@ public:
     NS_IMETHOD SetRequestHeader(const char *headerName, const char *value);
     NS_IMETHOD SetRequestMethod(PRUint32 method);
     NS_IMETHOD GetResponseHeader(const char *headerName, char **_retval);
-    NS_IMETHOD GetResponseStatus(nsresult *aResponseStatus);
+    NS_IMETHOD GetResponseStatus(PRUint32 *aResponseStatus);
     NS_IMETHOD GetResponseString(char * *aResponseString);
     NS_IMETHOD GetEventSink(nsIHTTPEventSink* *eventSink);
     NS_IMETHOD GetResponseDataListener(nsIStreamListener* *aListener);

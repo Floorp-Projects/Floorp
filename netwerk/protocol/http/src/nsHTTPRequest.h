@@ -294,12 +294,12 @@ protected:
         return methods[i_Method];
     }
 
-    nsCOMPtr<nsIURL>            m_pURL;
-    HTTPVersion                 m_Version;
     HTTPMethod                  m_Method;
+    nsCOMPtr<nsIURL>            m_pURI;
+    HTTPVersion                 m_Version;
+    nsVoidArray*                m_pArray;
     // The actual request stream! 
     nsIBufferInputStream*       m_Request; 
-    nsVoidArray*                m_pArray;
     nsIChannel*                 m_pTransport;
     nsHTTPChannel*              m_pConnection;
 };

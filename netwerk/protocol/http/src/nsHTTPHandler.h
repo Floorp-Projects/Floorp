@@ -131,9 +131,9 @@ public:
 
 protected:
     // None
-private:
     nsHTTPHandler(void);
     virtual ~nsHTTPHandler();
+private:
 
 	// This is the array of connections that the handler thread maintains to 
     // verify unique requests. 
