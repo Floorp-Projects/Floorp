@@ -61,6 +61,7 @@
 #include "nsIInterfaceRequestor.h"
 #ifdef DEBUG
 #include "pure.h"
+extern "C" NS_EXPORT void* NS_CurrentThread(void);
 #endif
 
 class dummyComparitor: public nsAVLNodeComparitor {
@@ -79,8 +80,8 @@ TestSegmentedBuffer();
 void XXXNeverCalled()
 {
     nsTextFormatter::snprintf(nsnull,0,nsnull);
-	nsTextFormatter::smprintf(nsnull, nsnull);
-	nsTextFormatter::smprintf_free(nsnull);
+    nsTextFormatter::smprintf(nsnull, nsnull);
+    nsTextFormatter::smprintf_free(nsnull);
     dummyComparitor dummy;
     nsVoidArray();
     nsAVLTree(dummy, nsnull);
@@ -126,6 +127,7 @@ void XXXNeverCalled()
     nsCOMPtr<nsISupports> dummyFoo(do_GetInterface(nsnull));
 #ifdef DEBUG
     TestSegmentedBuffer();
+    NS_CurrentThread();
 #endif
     NS_NewSizeOfHandler(0);
     nsStorageStream();
@@ -133,5 +135,5 @@ void XXXNeverCalled()
     nsString foo;
     nsLinebreakConverter::ConvertStringLineBreaks(foo, 
     nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
-	NS_NewLocalFile(NULL, NULL);
+    NS_NewLocalFile(NULL, NULL);
 }
