@@ -64,7 +64,6 @@ content/communicator/profile,                         comm/content/communicator/
 
 # from layout
 content/xbl-marquee,                                  comm/content/xbl-marquee
-content/necko,                                        comm/content/necko
 content/mozldap,                                      comm/content/mozldap
 
 # from navigator
