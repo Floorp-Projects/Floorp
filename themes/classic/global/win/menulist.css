@@ -32,6 +32,8 @@
     {
       border              : 1px solid transparent;
       margin              : 1px;
+      background-color    : -moz-field;
+      color               : WindowText;
     }     
     
   menulist:focus > .menulist-internal-box > .menulist-display-box
