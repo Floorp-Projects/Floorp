@@ -1445,6 +1445,8 @@ NS_IMETHODIMP nsMsgFolder::OnFlagChange(PRUint32 flag)
   if (NS_SUCCEEDED(rv) && folderInfo)
   {
       folderInfo->SetFlags((PRInt32) mFlags);
+      if (db)
+        db->Commit(nsMsgDBCommitType::kLargeCommit);
   }
   folderInfo = null_nsCOMPtr();
 	return rv;
