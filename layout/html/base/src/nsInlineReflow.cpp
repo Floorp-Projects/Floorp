@@ -90,6 +90,7 @@ nsInlineReflow::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
   mMaxElementSize.height = 0;
   mUpdatedBand = PR_FALSE;
   mPlacedLeftFloater = PR_FALSE;
+  mTreatFrameAsBlock = PR_FALSE;
 }
 
 void
