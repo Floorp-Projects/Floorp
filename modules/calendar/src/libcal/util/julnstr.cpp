@@ -826,7 +826,7 @@ void JulianString::URLEncode()
   if (m_iStrlen <= 0)
         return;
 
-  PRInt32 iNewLen=0;
+  int32 iNewLen=0;
   char* pSave = m_pBuf;
   char* p = PRIVATE_NET_EscapeBytes(m_pBuf, m_iStrlen, URL_XPALPHAS, &iNewLen);
   if (iNewLen > 0)
