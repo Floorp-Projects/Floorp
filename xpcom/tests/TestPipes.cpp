@@ -29,6 +29,9 @@
 #include "plstr.h"
 #include "nsCRT.h"
 #include <stdio.h>
+#include "nsPipe2.h"    // new implementation
+#include "nsAutoLock.h"
+#include <stdlib.h>     // for rand
 
 #define KEY             0xa7
 #define ITERATIONS      33333
@@ -135,12 +138,168 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
     return NS_OK;
 }
 
-int
-main(int argc, char* argv[])
+////////////////////////////////////////////////////////////////////////////////
+
+class nsShortReader : public nsIRunnable {
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD Run() {
+        nsresult rv;
+        char buf[101];
+        PRUint32 count;
+        while (PR_TRUE) {
+            rv = mIn->Read(buf, 100, &count);
+            if (rv == NS_BASE_STREAM_EOF) {
+                rv = NS_OK;
+                break;
+            }
+            if (NS_FAILED(rv)) {
+                printf("read failed\n");
+                break;
+            }
+            buf[count] = '\0';
+            if (gTrace)
+                printf("read %d bytes: %s\n", count, buf);
+            Received(count);
+        }
+        return rv;
+    }
+
+    nsShortReader(nsIInputStream* in) : mIn(in), mReceived(0) {
+        NS_INIT_REFCNT();
+        NS_ADDREF(in);
+    }
+
+    virtual ~nsShortReader() {
+        NS_RELEASE(mIn);
+    }
+
+    void Received(PRUint32 count) {
+        nsAutoCMonitor mon(this);
+        mReceived += count;
+        mon.Notify();
+    }
+
+    PRUint32 WaitForReceipt() {
+        PRUint32 result = mReceived;
+        nsAutoCMonitor mon(this);
+        if (mReceived == 0) {
+            mon.Wait();
+            NS_ASSERTION(mReceived >= 0, "failed to receive");
+            result = mReceived;
+        }
+        mReceived = 0;
+        return result;
+    }
+
+protected:
+    nsIInputStream*     mIn;
+    PRUint32            mReceived;
+};
+
+NS_IMPL_ISUPPORTS(nsShortReader, nsIRunnable::GetIID());
+
+nsresult
+TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
+{
+    nsresult rv;
+    nsIThread* thread;
+    nsShortReader* receiver = new nsShortReader(in);
+    if (receiver == nsnull) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(receiver);
+
+    rv = NS_NewThread(&thread, receiver);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRUint32 i = 0; i < ITERATIONS/100; i++) {
+        PRUint32 writeCount;
+        char* buf = PR_smprintf("%d %s", i, kTestPattern);
+        PRUint32 len = nsCRT::strlen(buf);
+        len = len * rand() / RAND_MAX;
+        len = PR_MAX(1, len);
+        rv = out->Write(buf, len, &writeCount);
+        if (NS_FAILED(rv)) return rv;
+        NS_ASSERTION(writeCount == len, "didn't write enough");
+
+        if (gTrace)
+            printf("wrote %d bytes: %s\n", writeCount, buf);
+        PR_smprintf_free(buf);
+        out->Flush();
+        PRUint32 received = receiver->WaitForReceipt();
+        NS_ASSERTION(received == writeCount, "received wrong amount");
+    }
+    rv = out->Close();
+    if (NS_FAILED(rv)) return rv;
+
+    thread->Join();
+
+    NS_RELEASE(thread);
+    NS_RELEASE(receiver);
+
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void
+RunTests(PRUint32 segSize, PRUint32 segCount)
 {
     nsresult rv;
     nsIBufferInputStream* in;
     nsIBufferOutputStream* out;
+    PRUint32 bufSize;
+#if 1
+    bufSize = (segSize + nsIBuffer::SEGMENT_OVERHEAD) * segCount;
+    printf("Testing Old Pipes: segment size %d buffer size %d\n", segSize, segSize * segCount);
+
+    printf("Testing long writes...\n");
+    rv = NS_NewPipe(&in, &out, segSize + nsIBuffer::SEGMENT_OVERHEAD, bufSize, PR_TRUE, nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed");
+    rv = TestPipe(in, out);
+    NS_RELEASE(in);
+    NS_RELEASE(out);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestPipe failed");
+
+    printf("Testing short writes...\n");
+    rv = NS_NewPipe(&in, &out, segSize + nsIBuffer::SEGMENT_OVERHEAD, bufSize, PR_TRUE, nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed");
+    rv = TestShortWrites(in, out);
+    NS_RELEASE(in);
+    NS_RELEASE(out);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestPipe failed");
+#endif
+    bufSize = segSize * segCount;
+    printf("Testing New Pipes: segment size %d buffer size %d\n", segSize, bufSize);
+
+    printf("Testing long writes...\n");
+    rv = NS_NewPipe(&in, &out, nsnull, segSize, bufSize);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed");
+    rv = TestPipe(in, out);
+    NS_RELEASE(in);
+    NS_RELEASE(out);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestPipe failed");
+
+    printf("Testing short writes...\n");
+    rv = NS_NewPipe(&in, &out, nsnull, segSize, bufSize);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewPipe failed");
+    rv = TestShortWrites(in, out);
+    NS_RELEASE(in);
+    NS_RELEASE(out);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "TestPipe failed");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef DEBUG
+extern NS_COM void
+TestSegmentedBuffer();
+#endif
+
+int
+main(int argc, char* argv[])
+{
+    nsresult rv;
     nsIServiceManager* servMgr;
 
     rv = NS_InitXPCOM(&servMgr);
@@ -148,6 +307,11 @@ main(int argc, char* argv[])
 
     if (argc > 1 && nsCRT::strcmp(argv[1], "-trace") == 0)
         gTrace = PR_TRUE;
+
+#ifdef DEBUG
+    TestSegmentedBuffer();
+#endif
+
 #if 0   // obsolete old implementation
     rv = NS_NewPipe(&in, &out, PR_TRUE, 4096 * 4);
     if (NS_FAILED(rv)) {
@@ -163,35 +327,9 @@ main(int argc, char* argv[])
         return -1;
     }
 #endif
-    // test for small buffers
-    rv = NS_NewPipe(&in, &out, 4096, 4096*16, PR_TRUE, nsnull);
-    if (NS_FAILED(rv)) {
-        printf("NewPipe failed\n");
-        return -1;
-    }
-
-    rv = TestPipe(in, out);
-    NS_RELEASE(in);
-    NS_RELEASE(out);
-    if (NS_FAILED(rv)) {
-        printf("TestPipe failed\n");
-        return -1;
-    }
-
-    // test for large buffers
-    rv = NS_NewPipe(&in, &out, 4096, 4096*16, PR_TRUE, nsnull);
-    if (NS_FAILED(rv)) {
-        printf("NewPipe failed\n");
-        return -1;
-    }
-
-    rv = TestPipe(in, out);
-    NS_RELEASE(in);
-    NS_RELEASE(out);
-    if (NS_FAILED(rv)) {
-        printf("TestPipe failed\n");
-        return -1;
-    }
-
+    RunTests(16, 1);
+    RunTests(4096, 16);
     return 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
