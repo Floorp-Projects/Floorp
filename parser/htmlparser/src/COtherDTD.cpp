@@ -679,3 +679,16 @@ nsresult COtherDTD::WillInterruptParse(void){
   return CNavDTD::WillInterruptParse();
 }
 
+
+/**
+ * 
+ * @update	gpk03/14/99
+ * @param 
+ * @return
+ */
+nsresult COtherDTD::DoFragment(PRBool aFlag) 
+{
+  return CNavDTD::DoFragment(aFlag);
+}
+
+

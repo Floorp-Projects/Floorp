@@ -71,6 +71,7 @@ enum eXIFTags
   eXIFTag_css_stylesheet,
 
   eXIFTag_doctype,
+  eXIFTag_encode,    
   eXIFTag_import,
   eXIFTag_leaf,
   eXIFTag_link,
@@ -80,7 +81,7 @@ enum eXIFTags
   eXIFTag_stylelist,
   eXIFTag_url,    
   eXIFTag_xml,    
- 
+  
   eXIFTag_newline = eHTMLTag_newline,
   eXIFTag_text = eHTMLTag_text,
   eXIFTag_whitespace = eHTMLTag_whitespace,
@@ -485,6 +486,9 @@ private:
     virtual nsITokenRecycler* GetTokenRecycler(void);
 
 private:
+
+    void ProcessEncodeTag(const nsIParserNode& aNode);
+
     void BeginCSSStyleSheet(const nsIParserNode& aNode);
     void EndCSSStyleSheet(const nsIParserNode& aNode);
 

@@ -105,19 +105,24 @@ class nsHTMLToTXTSinkStream : public nsIHTMLContentSink {
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
-
+  NS_IMETHOD DoFragment(PRBool aFlag);
 
 protected:
 
     nsresult AddLeaf(const nsIParserNode& aNode, ostream& aStream);
     void WriteAttributes(const nsIParserNode& aNode,ostream& aStream);
+    
+    void EnsureBufferSize(PRInt32 aNewSize);
+    void UnicodeToTXTString(const nsString& aSrc);
 
 
 protected:
-    ostream*  mOutput;
-    PRInt32   mIndent;
-    PRInt32   mColPos;
-    PRBool    mDoOutput;
+    ostream*        mOutput;
+    PRInt32         mIndent;
+    PRInt32         mColPos;
+    PRBool          mDoOutput;
+    char*           mBuffer;
+    PRInt32         mBufferSize;
 
 };
 

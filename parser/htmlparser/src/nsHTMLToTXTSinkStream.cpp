@@ -32,13 +32,13 @@
 #include <iostream.h>
 #include "nsString.h"
 #include "nsIParser.h"
+#include "nsHTMLEntities.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 
-const  int      gTabSize=2;
-static char     gBuffer[1024];
+const  int               gTabSize=2;
 
 static PRBool IsInline(eHTMLTags aTag);
 static PRBool IsBlockLevel(eHTMLTags aTag);
@@ -115,6 +115,8 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()  {
   mColPos = 0;
   mIndent = 0;
   mDoOutput = PR_FALSE;
+  mBufferSize = 0;
+  mBuffer = nsnull;
 }
 
 /**
@@ -129,6 +131,8 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(ostream& aStream)  {
   mColPos = 0;
   mIndent = 0;
   mDoOutput = PR_FALSE;
+  mBufferSize = 0;
+  mBuffer = nsnull;
 }
 
 
@@ -140,6 +144,7 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream(ostream& aStream)  {
  */
 nsHTMLToTXTSinkStream::~nsHTMLToTXTSinkStream() {
   mOutput=0;  //we don't own the stream we're given; just forget it.
+  delete [] mBuffer;
 }
 
 
@@ -188,21 +193,6 @@ static
 void CloseTag(const char* theTag,int tab,ostream& aStream) {
 }
 
-
-/**
- * 
- * @update	gpk02/03/99
- * @param 
- * @return
- */
-static
-void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStream) {
-  const char* titleStr = GetTagName(aTag);
-  OpenTag(titleStr,tab,aStream,PR_FALSE);
-  theContent.ToCString(gBuffer,sizeof(gBuffer)-1);
-  aStream << gBuffer;
-  CloseTag(titleStr,0,aStream);
-}
 
 /**
   * This method gets called by the parser when it encounters
@@ -373,6 +363,64 @@ nsHTMLToTXTSinkStream::CloseFrameset(const nsIParserNode& aNode){
 }
 
 
+NS_IMETHODIMP
+nsHTMLToTXTSinkStream::DoFragment(PRBool aFlag) 
+{
+  if (aFlag)
+    mDoOutput = PR_TRUE;
+  return NS_OK; 
+}
+
+
+void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
+{
+  if (mBufferSize < aNewSize)
+  {
+    delete [] mBuffer;
+    mBufferSize = 2*aNewSize+1; // make the twice as large
+    mBuffer = new char[mBufferSize];
+    mBuffer[0] = 0;
+  }
+}
+
+
+void nsHTMLToTXTSinkStream::UnicodeToTXTString(const nsString& aSrc)
+{
+#define CH_NBSP 160
+#define CH_QUOT 34
+#define CH_AMP  38
+#define CH_LT   60
+#define CH_GT   62
+
+  PRInt32       length = aSrc.Length();
+  PRUnichar     ch; 
+  const char*   entity = nsnull;
+  PRUint32      offset = 0;
+  PRUint32      addedLength = 0;
+
+  if (length > 0)
+  {
+    EnsureBufferSize(length);
+    for (PRInt32 i = 0; i < length; i++)
+    {
+      ch = aSrc[i];
+      switch (ch)
+      {  
+        case CH_QUOT: ch = '"'; break;
+        case CH_AMP:  ch = '&'; break;
+        case CH_GT:   ch = '>'; break;
+        case CH_LT:   ch = '<'; break;
+        case CH_NBSP: ch = ' '; break;
+      }
+
+      if (ch < 128)
+      {
+        mBuffer[offset++] = (unsigned char)ch;
+        mBuffer[offset] = 0;
+      }
+    }
+  }
+}
 
 
 
@@ -391,15 +439,16 @@ nsresult
 nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream)
 {
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
+  
+  const nsString& text = aNode.GetText();
 
   if (mDoOutput == PR_FALSE)
     return NS_OK;
 
   if (type == eHTMLTag_text) {
-    const nsString& text = aNode.GetText();
 
-    text.ToCString(gBuffer,sizeof(gBuffer)-1);
-    aStream << gBuffer;
+    UnicodeToTXTString(text);
+    aStream << mBuffer;
     mColPos += text.Length();
   } 
   else if (type == eHTMLTag_whitespace)
@@ -407,8 +456,8 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode, ostream& aStream)
     if (PR_TRUE)
     {
       const nsString& text = aNode.GetText();
-      text.ToCString(gBuffer,sizeof(gBuffer)-1);
-      aStream << gBuffer;
+      UnicodeToTXTString(text);
+      aStream << mBuffer;
       mColPos += text.Length();
     }
   }

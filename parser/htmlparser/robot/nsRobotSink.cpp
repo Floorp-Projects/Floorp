@@ -74,6 +74,8 @@ public:
   NS_IMETHOD WillResume(void) { return NS_OK; }
   NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
 
+  NS_IMETHOD DoFragment(PRBool aFlag);
+
   // nsIRobotSink
   NS_IMETHOD Init(nsIURL* aDocumentURL);
   NS_IMETHOD AddObserver(nsIRobotSinkObserver* aObserver);
@@ -329,5 +331,12 @@ void RobotSink::ProcessLink(const nsString& aLink)
     nsIRobotSinkObserver* cop = (nsIRobotSinkObserver*)mObservers.ElementAt(i);
     cop->ProcessLink(absURLSpec);
   }
+}
+
+
+NS_IMETHODIMP
+RobotSink::DoFragment(PRBool aFlag) 
+{
+  return NS_OK; 
 }
 

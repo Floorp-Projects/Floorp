@@ -58,7 +58,7 @@ public:
   NS_IMETHOD CloseHTML(const nsIParserNode& aNode);
   NS_IMETHOD OpenHead(const nsIParserNode& aNode);
   NS_IMETHOD CloseHead(const nsIParserNode& aNode);
-  NS_IMETHOD OpenBody(const nsIParserNode& aNode);
+  NS_IMETHOD OpenBody(const nsIParserNode& aNode); 
   NS_IMETHOD CloseBody(const nsIParserNode& aNode);
   NS_IMETHOD OpenForm(const nsIParserNode& aNode);
   NS_IMETHOD CloseForm(const nsIParserNode& aNode);
@@ -66,6 +66,8 @@ public:
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
+
+  NS_IMETHOD DoFragment(PRBool aFlag);
 
 protected:
   PRInt32     mNodeStack[100];
@@ -582,4 +584,16 @@ nsHTMLNullSink::NotifyError(const nsParserError* aError)
 {
   return NS_OK;
 }
+
+/**
+ * 
+ * @update	gpk03/14/99
+ * @param 
+ * @return
+ */
+nsresult nsHTMLNullSink::DoFragment(PRBool aFlag) 
+{
+  return NS_OK;
+}
+
 

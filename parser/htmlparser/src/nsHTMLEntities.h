@@ -28,4 +28,13 @@
  */
 extern NS_HTMLPARS PRInt32 NS_EntityToUnicode(const char* aEntity);
 
+/**
+ * Translate an entity string into it's unicode value. This call
+ * returns nsnull if the entity cannot be mapped. Note that the string
+ * returned DOES NOT have the leading "&" nor the trailing ";"
+ * in it.
+ */
+extern NS_HTMLPARS const char* NS_UnicodeToEntity(PRInt32 aCode);
+
+
 #endif /* nsHTMLTags_h___ */

@@ -399,6 +399,7 @@ private:
     nsresult UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags aActualTag);
     nsresult UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags aActualTag);
 
+    nsresult DoFragment(PRBool aFlag);
 
 protected:
 

@@ -98,6 +98,7 @@ public:
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD DoFragment(PRBool aFlag);
 
   // nsILoggingSink
   NS_IMETHOD SetOutputStream(ostream& aStream);
@@ -558,3 +559,10 @@ nsLoggingSink::QuoteText(const nsString& aValue, nsString& aResult)
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsLoggingSink::DoFragment(PRBool aFlag) 
+{
+  return NS_OK; 
+}
+
