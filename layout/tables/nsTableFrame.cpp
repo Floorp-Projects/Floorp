@@ -76,8 +76,6 @@
 #include "nsHTMLReflowCommand.h"
 #include "nsIFrameManager.h"
 
-static NS_DEFINE_IID(kITableRowGroupFrameIID, NS_ITABLEROWGROUPFRAME_IID);
-
 // helper function for dealing with placeholder for positioned/floated table
 static void GetPlaceholderFor(nsIPresContext& aPresContext, nsIFrame& aFrame, nsIFrame** aPlaceholder);
 
