@@ -291,7 +291,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
             curVertexAtom->ToString(curVertexStr);
             char * curVertexCString = curVertexStr.ToNewCString();
             nsStringKey *curVertex = new nsStringKey(curVertexCString);
-            delete [] curVertexCString;
+            nsAllocator::Free(curVertexCString);
 
             SCTableData *data = (SCTableData*)lBFSTable.Get(curVertex);
             BFSState *curVertexState = (BFSState*)data->data;
@@ -343,12 +343,12 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
 
         char *from = predecessorData->keyString->ToNewCString();
         newProgID->Append(from);
-        delete [] from;
+        nsAllocator::Free(from);
 
         newProgID->Append("?to=");
         char *to = data->keyString->ToNewCString();
         newProgID->Append(to);
-        delete [] to;
+        nsAllocator::Free(to);
     
         // Add this PROGID to the chain.
         shortestPath->AppendElement(newProgID);
@@ -389,14 +389,14 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
         // couldn't go direct, let's try walking the graph of converters.
         rv = BuildGraph();
         if (NS_FAILED(rv)) {
-            delete [] cProgID;
+            nsAllocator::Free(cProgID);
             return rv;
         }
 
         nsVoidArray *converterChain = nsnull;
 
         rv = FindConverter(cProgID, &converterChain);
-        delete [] cProgID;
+        nsAllocator::Free(cProgID);
         cProgID = nsnull;
         if (NS_FAILED(rv)) {
             // can't make this conversion.
@@ -423,7 +423,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
 
             nsString2 fromStr(eOneByte), toStr(eOneByte);
             rv = ParseFromTo(lProgID, fromStr, toStr);
-            delete [] lProgID;
+            nsAllocator::Free(lProgID);
             if (NS_FAILED(rv)) return rv;
 
             nsIStreamConverter *conv = nsnull;
@@ -477,14 +477,14 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
         // couldn't go direct, let's try walking the graph of converters.
         rv = BuildGraph();
         if (NS_FAILED(rv)) {
-            delete [] cProgID;
+            nsAllocator::Free(cProgID);
             return rv;
         }
 
         nsVoidArray *converterChain = nsnull;
 
         rv = FindConverter(cProgID, &converterChain);
-        delete [] cProgID;
+        nsAllocator::Free(cProgID);
         cProgID = nsnull;
         if (NS_FAILED(rv)) {
             // can't make this conversion.
@@ -511,7 +511,7 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
 
             nsString2 fromStr(eOneByte), toStr(eOneByte);
             rv = ParseFromTo(lProgID, fromStr, toStr);
-            delete [] lProgID;
+            nsAllocator::Free(lProgID);
             if (NS_FAILED(rv)) return rv;
 
             nsIStreamConverter *conv = nsnull;

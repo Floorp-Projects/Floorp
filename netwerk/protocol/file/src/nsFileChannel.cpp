@@ -121,7 +121,7 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
 		rv = mURI->GetSpec(&url);
 		if (NS_FAILED(rv)) return rv;
 		nsFileURL fileURL(url);
-		delete [] url;
+		nsCRT::free(url);
 		mSpec = fileURL;
 	}
 
@@ -622,7 +622,7 @@ nsFileChannel::GetContentType(char * *aContentType)
 
         nsIMIMEInfo *MIMEInfo = nsnull;
         rv = MIMEService->GetFromExtension(ext, &MIMEInfo);
-        delete [] ext;
+        nsAllocator::Free(ext);
         if (NS_FAILED(rv)) return rv;
 
         rv = MIMEInfo->GetMIMEType(aContentType);

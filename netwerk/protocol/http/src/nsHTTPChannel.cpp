@@ -241,7 +241,7 @@ nsHTTPChannel::GetContentType(char * *aContentType)
 
             nsIMIMEInfo *MIMEInfo = nsnull;
             rv = MIMEService->GetFromExtension(ext, &MIMEInfo);
-            delete [] ext;
+            nsAllocator::Free(ext);
             if (NS_FAILED(rv)) {
                 // default to text/html
                 *aContentType = nsCRT::strdup(DUMMY_TYPE);

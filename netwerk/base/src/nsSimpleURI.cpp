@@ -41,8 +41,8 @@ nsSimpleURI::nsSimpleURI(nsISupports* outer)
 
 nsSimpleURI::~nsSimpleURI()
 {
-    if (mScheme) delete[] mScheme;
-    if (mPath)   delete[] mPath;
+    if (mScheme) nsCRT::free(mScheme);
+    if (mPath)   nsCRT::free(mPath);
 }
 
 NS_IMPL_AGGREGATED(nsSimpleURI);
