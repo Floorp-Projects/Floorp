@@ -453,13 +453,12 @@ NS_IMETHODIMP nsXULListitemAccessible::GetRole(PRUint32 *_retval)
   */
 NS_IMETHODIMP nsXULListitemAccessible::GetState(PRUint32 *_retval)
 {
-//  nsAccessible::GetState(_retval); // get focused state
-
   if (mIsCheckbox) {
     nsXULMenuitemAccessible::GetState(_retval);
     return NS_OK;
   }
-  
+
+  *_retval = STATE_FOCUSABLE | STATE_SELECTABLE;
   nsCOMPtr<nsIDOMXULSelectControlItemElement> listItem (do_QueryInterface(mDOMNode));
   if (listItem) {
     PRBool isSelected;
@@ -467,20 +466,10 @@ NS_IMETHODIMP nsXULListitemAccessible::GetState(PRUint32 *_retval)
     if (isSelected)
       *_retval |= STATE_SELECTED;
 
-    nsCOMPtr<nsIDOMNode> domParent;
-    mDOMNode->GetParentNode(getter_AddRefs(domParent));
-    nsCOMPtr<nsIDOMXULMultiSelectControlElement> parent(do_QueryInterface(domParent));
-    if (parent) {
-      nsCOMPtr<nsIDOMXULSelectControlItemElement> current;
-      parent->GetCurrentItem(getter_AddRefs(current));
-      if (listItem == current)
-        *_retval |= STATE_FOCUSED;
+    if (gLastFocusedNode == mDOMNode) {
+      *_retval |= STATE_FOCUSED;
     }
-
-  *_retval |= STATE_FOCUSABLE | STATE_SELECTABLE;
-
   }
-
 
   return NS_OK;
 }

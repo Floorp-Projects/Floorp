@@ -289,7 +289,7 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *focusAccessible, 
     gLastFocusedNode = nsnull;
     PRUint32 role = ROLE_NOTHING;
     focusAccessible->GetRole(&role);
-    if (role != ROLE_MENUITEM && role != ROLE_LISTITEM) {
+    if (role != ROLE_MENUITEM) {
       // It must report all focus events on menu and list items
       gLastFocusedNode = focusNode;
       NS_ADDREF(gLastFocusedNode);
