@@ -395,6 +395,7 @@ public:
   PRInt32                     mNumPagesPrinted;
 
   nsCOMPtr<nsIPrintSettings>  mPrintSettings;
+  nsCOMPtr<nsIPrintOptions>   mPrintOptions;
 
 #ifdef DEBUG_PRINTING
   FILE *           mDebugFD;
@@ -497,14 +498,14 @@ private:
                    PRBool        aDoingSetClip);
 
   nsresult ReflowPrintObject(PrintObject * aPO);
-  void CalcPageFrameLocation(nsIPresShell * aPresShell,
+  nsresult CalcPageFrameLocation(nsIPresShell * aPresShell,
                                   PrintObject*   aPO);
   PrintObject * FindPrintObjectByWS(PrintObject* aPO, nsIWebShell * aWebShell);
   void MapContentForPO(PrintObject*   aRootObject,
                        nsIPresShell*  aPresShell,
                        nsIContent*    aContent);
   void MapContentToWebShells(PrintObject* aRootPO, PrintObject* aPO);
-  void MapSubDocFrameLocations(PrintObject* aPO);
+  nsresult MapSubDocFrameLocations(PrintObject* aPO);
   PrintObject* FindPrintObjectByDOMWin(PrintObject* aParentObject, nsIDOMWindowInternal * aDOMWin);
   void GetPresShellAndRootContent(nsIWebShell * aWebShell, nsIPresShell** aPresShell, nsIContent** aContent);
 
@@ -2643,8 +2644,9 @@ DocumentViewerImpl::SetPrintPO(PrintObject* aPO, PRBool aPrint)
 // NOTE: This MUST be done after the sub-doc has been laid out
 // This is called by "MapSubDocFrameLocations"
 //
-void DocumentViewerImpl::CalcPageFrameLocation(nsIPresShell * aPresShell,
-                                               PrintObject*   aPO)
+nsresult 
+DocumentViewerImpl::CalcPageFrameLocation(nsIPresShell * aPresShell,
+                                          PrintObject*   aPO)
 {
   NS_ASSERTION(aPresShell, "Pointer is null!");
   NS_ASSERTION(aPO, "Pointer is null!");
@@ -2653,9 +2655,15 @@ void DocumentViewerImpl::CalcPageFrameLocation(nsIPresShell * aPresShell,
 
     // Find that frame for the sub-doc's content element
     // in the parent document
+    // if it comes back null it probably has the style 
+    // set to "display:none"
     nsIFrame * frame;
     aPresShell->GetPrimaryFrameFor(aPO->mContent, &frame);
-    NS_ASSERTION(frame, "Frame shouldn't be null!");
+    if (frame == nsnull) {
+      aPO->mDontPrint = PR_TRUE;
+      return NS_OK;
+    }
+
     nsMargin borderPadding(0, 0, 0, 0);
     frame->CalcBorderPadding(borderPadding);
 
@@ -2687,6 +2695,7 @@ void DocumentViewerImpl::CalcPageFrameLocation(nsIPresShell * aPresShell,
     }
     NS_ASSERTION(seqFrame, "The sequencer frame can't be null!");
     NS_ASSERTION(pageFrame, "The page frame can't be null!");
+    if (seqFrame == nsnull || pageFrame == nsnull) return NS_ERROR_FAILURE;
 
     // Remember the Frame location information for later
     aPO->mRect      = rect;
@@ -2706,6 +2715,7 @@ void DocumentViewerImpl::CalcPageFrameLocation(nsIPresShell * aPresShell,
       child->GetNextSibling(&child);
     } // while
   }
+  return NS_OK;
 }
 
 //-------------------------------------------------------
@@ -2716,20 +2726,23 @@ void DocumentViewerImpl::CalcPageFrameLocation(nsIPresShell * aPresShell,
 // NOTE: This MUST be done after the sub-doc has been laid out
 // This is called by "ReflowDocList"
 //
-void
+nsresult
 DocumentViewerImpl::MapSubDocFrameLocations(PrintObject* aPO)
 {
   NS_ASSERTION(aPO, "Pointer is null!");
 
   if (aPO->mParent != nsnull && aPO->mParent->mPresShell) {
-    CalcPageFrameLocation(aPO->mParent->mPresShell, aPO);
+    nsresult rv = CalcPageFrameLocation(aPO->mParent->mPresShell, aPO);
+    if (NS_FAILED(rv)) return rv;
   }
 
   if (aPO->mPresShell) {
     for (PRInt32 i=0;i<aPO->mKids.Count();i++) {
-      MapSubDocFrameLocations((PrintObject*)aPO->mKids[i]);
+      nsresult rv = MapSubDocFrameLocations((PrintObject*)aPO->mKids[i]);
+      if (NS_FAILED(rv)) return rv;
     }
   }
+  return NS_OK;
 }
 
 
@@ -2940,7 +2953,9 @@ DocumentViewerImpl::ReflowDocList(PrintObject* aPO)
   }
 
   // Calc the absolute poistion of the frames
-  MapSubDocFrameLocations(aPO);
+  if (NS_FAILED(MapSubDocFrameLocations(aPO))) {
+    return NS_ERROR_FAILURE;
+  }
 
   PRInt32 cnt = aPO->mKids.Count();
   for (PRInt32 i=0;i<cnt;i++) {
@@ -3772,12 +3787,12 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
           }
 
           if (docTitleStr) {
-            mPrt->mPrintSettings->SetTitle(docTitleStr);
+            mPrt->mPrintOptions->SetTitle(docTitleStr);
             nsMemory::Free(docTitleStr);
           }
 
           if (docURLStr) {
-            mPrt->mPrintSettings->SetDocURL(docURLStr);
+            mPrt->mPrintOptions->SetDocURL(docURLStr);
             nsMemory::Free(docURLStr);
           }
         }
@@ -4856,16 +4871,16 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
   }
 
   mPrt->mPrintSettings = aPrintSettings;
-  nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
-  if (NS_SUCCEEDED(rv) && printService) {
+  mPrt->mPrintOptions  = do_GetService(kPrintOptionsCID, &rv);
+  if (NS_SUCCEEDED(rv) && mPrt->mPrintOptions) {
     // if they don't pass in a PrintSettings, then make one
     if (mPrt->mPrintSettings == nsnull) {
-      printService->CreatePrintSettings(getter_AddRefs(mPrt->mPrintSettings));
+      mPrt->mPrintOptions->CreatePrintSettings(getter_AddRefs(mPrt->mPrintSettings));
     }
     NS_ASSERTION(mPrt->mPrintSettings, "You can't PrintPreview without a PrintSettings!");
 
     // Get the default printer name and set it into the PrintSettings
-    if (NS_FAILED(CheckForPrinters(printService, mPrt->mPrintSettings, NS_ERROR_GFX_PRINTER_PRINTPREVIEW, PR_FALSE))) {
+    if (NS_FAILED(CheckForPrinters(mPrt->mPrintOptions, mPrt->mPrintSettings, NS_ERROR_GFX_PRINTER_PRINTPREVIEW, PR_FALSE))) {
       delete mPrt;
       mPrt = nsnull;
       return NS_ERROR_FAILURE;
@@ -5164,16 +5179,16 @@ DocumentViewerImpl::Print(PRBool            aSilent,
   // if they don't pass in a PrintSettings, then make one
   // it will have all the default values
   mPrt->mPrintSettings = aPrintSettings;
-  nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
-  if (NS_SUCCEEDED(rv) && printService) {
+  mPrt->mPrintOptions  = do_GetService(kPrintOptionsCID, &rv);
+  if (NS_SUCCEEDED(rv) && mPrt->mPrintOptions) {
     // if they don't pass in a PrintSettings, then make one
     if (mPrt->mPrintSettings == nsnull) {
-      printService->CreatePrintSettings(getter_AddRefs(mPrt->mPrintSettings));
+      mPrt->mPrintOptions->CreatePrintSettings(getter_AddRefs(mPrt->mPrintSettings));
     }
     NS_ASSERTION(mPrt->mPrintSettings, "You can't PrintPreview without a PrintSettings!");
 
     // Get the default printer name and set it into the PrintSettings
-    if (NS_FAILED(CheckForPrinters(printService, mPrt->mPrintSettings, NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE, PR_TRUE))) {
+    if (NS_FAILED(CheckForPrinters(mPrt->mPrintOptions, mPrt->mPrintSettings, NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE, PR_TRUE))) {
       delete mPrt;
       mPrt = nsnull;
       return NS_ERROR_FAILURE;
@@ -5396,7 +5411,7 @@ DocumentViewerImpl::Print(PRBool            aSilent,
             }
           }
 
-          if (printService) {
+          if (mPrt->mPrintOptions) {
             // check to see if we are printing to a file
             PRBool isPrintToFile = PR_FALSE;
             mPrt->mPrintSettings->GetPrintToFile(&isPrintToFile);
@@ -5406,13 +5421,13 @@ DocumentViewerImpl::Print(PRBool            aSilent,
               PRUnichar* fileName;
               mPrt->mPrintSettings->GetToFileName(&fileName);
               if (fileName != nsnull) {
-                printService->SetPrintToFile(PR_TRUE);
-                printService->SetToFileName(fileName);
+                mPrt->mPrintOptions->SetPrintToFile(PR_TRUE);
+                mPrt->mPrintOptions->SetToFileName(fileName);
                 nsMemory::Free(fileName);
               }
             } else {
-              printService->SetPrintToFile(PR_FALSE);
-              printService->SetToFileName(nsnull);
+              mPrt->mPrintOptions->SetPrintToFile(PR_FALSE);
+              mPrt->mPrintOptions->SetToFileName(nsnull);
             }
           }
 
@@ -5441,7 +5456,10 @@ DocumentViewerImpl::Print(PRBool            aSilent,
           }
         }
       }      
-    } 
+    } else {
+      mPrt->mPrintSettings->SetIsCancelled(PR_TRUE);
+      mPrt->mPrintOptions->SetIsCancelled(PR_TRUE);
+    }
   }
   
   /* cleaup on failure + notify user */
