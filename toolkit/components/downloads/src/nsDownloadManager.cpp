@@ -507,13 +507,15 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   //          because the EHAS isn't smart enough to know that we're fooling with
   //          it... 
   nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
-  aMIMEInfo->GetPreferredAction(&action);
-  if (action == nsIMIMEInfo::useHelperApp || 
-    action == nsIMIMEInfo::useSystemDefault) {
-    PRBool fileExists;
-    aTarget->Exists(&fileExists);
-    if (fileExists)
-      aTarget->Remove(PR_TRUE);
+  if (aMIMEInfo) {
+    aMIMEInfo->GetPreferredAction(&action);
+    if (action == nsIMIMEInfo::useHelperApp || 
+      action == nsIMIMEInfo::useSystemDefault) {
+      PRBool fileExists;
+      aTarget->Exists(&fileExists);
+      if (fileExists)
+        aTarget->Remove(PR_TRUE);
+    }
   }
 
   nsAutoString path;
