@@ -119,11 +119,22 @@ sub InstallDefaultsFiles()
 
     InstallResources(":mozilla:profile:defaults:MANIFEST",                             "$default_profile_dir", 1);
 
+    my($default_profile_chrome_dir) = "$default_profile_dir"."chrome:";
+    mkdir($default_profile_chrome_dir, 0);
+
+    InstallResources(":mozilla:profile:defaults:chrome:MANIFEST",                             "$default_profile_chrome_dir", 1);
+
     # make a dup in en-US
     my($default_profile_dir_US) = "$default_profile_dir"."US:";
     mkdir($default_profile_dir_US, 0);
 
     InstallResources(":mozilla:profile:defaults:MANIFEST",                             "$default_profile_dir_US", 1);
+
+    my($default_profile_chrome_dir_US) = "$default_profile_dir_US"."chrome:";
+    mkdir($default_profile_chrome_dir_US, 0);
+
+    InstallResources(":mozilla:profile:defaults:chrome:MANIFEST",                             "$default_profile_chrome_dir_US", 1);
+
     }
     
     # Default _pref_ directory stuff

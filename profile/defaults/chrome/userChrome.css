@@ -1,0 +1,26 @@
+/*
+ * This file can be used to customize the look of Mozilla's user interface
+ * You should consider using !important on rules which you want to
+ * override default settings.
+ */
+
+/*
+ * example: make the UI look a little more like Irix (nice readable
+ *          slanted-helvetical menus, funny pink color on text fields)
+ *
+ * input {
+ *   color: black !important;
+ *   background-color: rgb(255, 225, 175) !important;
+ * }
+ *
+ * menubar {
+ *   font-family: helvetica !important;
+ *   font-style: italic !important;
+ *   font-weight: bold !important;
+ *   font-size: 4mm !important;
+ * }
+ */
+/*
+ * For more examples see http://www.mozilla.org/unix/customizing.html
+ */
+ 

@@ -2444,8 +2444,39 @@ nsChromeRegistry::GetProfileRoot(nsCString& aFileURL)
    
    PRBool exists;  
    rv = userChromeDir->Exists(&exists);
-   if (NS_SUCCEEDED(rv) && !exists)
-     rv = userChromeDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+   if (NS_SUCCEEDED(rv) && !exists) {
+     rv = userChromeDir->Create(nsIFile::DIRECTORY_TYPE, 0755);
+     if (NS_SUCCEEDED(rv)) {
+       // now we need to put the userContent.css and userChrome.css
+       // stubs into place
+
+       // first get the locations of the defaults
+       nsCOMPtr<nsIFile> defaultUserContentFile;
+       nsCOMPtr<nsIFile> defaultUserChromeFile;
+       rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(defaultUserContentFile));
+       if (NS_FAILED(rv))
+         rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, getter_AddRefs(defaultUserContentFile));
+       if (NS_FAILED(rv))
+         return(rv);
+       rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(defaultUserChromeFile));
+       if (NS_FAILED(rv))
+         rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, getter_AddRefs(defaultUserChromeFile));
+       if (NS_FAILED(rv))
+         return(rv);
+       defaultUserContentFile->Append("chrome");
+       defaultUserContentFile->Append("userContent.css");
+       defaultUserChromeFile->Append("chrome");
+       defaultUserChromeFile->Append("userChrome.css");
+
+       // copy along
+       rv = defaultUserContentFile->CopyTo(userChromeDir, nsnull);
+       if (NS_FAILED(rv))
+         return rv;
+       rv = defaultUserChromeFile->CopyTo(userChromeDir, nsnull);
+       if (NS_FAILED(rv))
+         return rv;
+     }
+   }
    if (NS_FAILED(rv))
      return rv;
    
