@@ -263,6 +263,9 @@ protected:
   nsresult VerifyLines(PRBool aFinalCheck) const;
 #endif
 
+  void ClearFloaters(nsBlockReflowState& aState,
+                     PRUint8 aBreakType);
+
   nsresult PlaceLine(nsBlockReflowState& aState,
                      nsLineLayout&       aLineLayout,
                      nsLineData*         aLine);
