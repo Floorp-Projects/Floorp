@@ -17,7 +17,21 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Rick Potts <rpotts@netscape.com>
+ *                 Ramiro Estrugo <ramiro@netscape.com>
+ *                 Warren Harris <warren@netscape.com>
+ *                 Leaf Nunes <leaf@mozilla.org>
+ *                 David Matiskella <davidm@netscape.com>
+ *                 David Hyatt <hyatt@netscape.com>
+ *                 Seth Spitzer <sspitzer@netscape.com>
+ *                 Suresh Duddi <dp@netscape.com>
+ *                 Bruce Mitchener <bruce@cybersight.com>
+ *                 Scott Collins <scc@netscape.com>
+ *                 Dan Matejka <danm@netscape.com>
+ *                 Doug Turner <dougt@netscape.com>
+ *                 Stuart Parmenter <pavlov@netscape.com>
+ *                 Mike Kaply <mkaply@us.ibm.com>
+ *                 Dan Mosedale <dmose@mozilla.org>
  */
 
 #include "nsEventQueueService.h"
@@ -380,3 +394,43 @@ nsEventQueueServiceImpl::ResolveEventQueue(nsIEventQueue* queueOrConstant, nsIEv
   NS_ADDREF(*resultQueue);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsEventQueueServiceImpl::GetSpecialEventQueue(PRInt32 aQueue, 
+                                              nsIEventQueue* *_retval)
+{
+  nsresult rv;
+
+  // barf if someone gave us a zero pointer
+  //
+  if (!_retval) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  // try and get the requested event queue, returning NS_ERROR_FAILURE if there
+  // is a problem.  GetThreadEventQueue() does the AddRef() for us.
+  //
+  switch (aQueue) {
+  case CURRENT_THREAD_EVENT_QUEUE:
+    rv = GetThreadEventQueue(NS_CURRENT_THREAD, _retval);
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
+    }
+    break;
+
+  case UI_THREAD_EVENT_QUEUE:
+    rv = GetThreadEventQueue(NS_UI_THREAD, _retval);
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
+    }
+    break;
+
+    // somebody handed us a bogus constant
+    //
+  default:
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  return NS_OK;
+}
+

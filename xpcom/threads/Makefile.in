@@ -44,8 +44,6 @@ CPPSRCS		= \
 
 EXPORTS		= \
 		nsAutoLock.h \
-		nsIEventQueue.h \
-		nsIEventQueueService.h \
 		plevent.h \
 		$(NULL)			
 
@@ -53,6 +51,8 @@ XPIDLSRCS	= \
 		nsIThread.idl \
 		nsIThreadPool.idl \
 		nsIRunnable.idl \
+		nsIEventQueue.idl \
+		nsIEventQueueService.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
