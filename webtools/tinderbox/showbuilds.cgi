@@ -1029,7 +1029,7 @@ sub do_vxml {
 
   print '<pause>500</pause>';
 
-  if ($testFailed == 1 || flames == 1) {
+  if ($testFailed == 1 || $flames == 1) {
       if ($testFailed == 1) {
         print '<audio src="http://www.boulderdesign.com/sounds/hansolo_badfeeling.wav">a test failed</audio>';
       } elsif ($flames == 1) {
