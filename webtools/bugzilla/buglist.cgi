@@ -25,23 +25,6 @@ use strict;
 require "CGI.pl";
 use Date::Parse;
 
-my $serverpush = 0;
-
-if ($ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/ ) {
-   # Search for real Netscape 3 and up.  http://www.browsercaps.org used as source of
-   # browsers compatbile with server-push.  It's a Netscape hack, incompatbile
-   # with MSIE and Lynx (at least).
-   $serverpush = 1;
-}
-
-if ($serverpush) {
-    print "Content-type: multipart/x-mixed-replace;boundary=thisrandomstring\n";
-    print "\n";
-    print "--thisrandomstring\n";
-}
-
-# Shut up misguided -w warnings about "used only once":
-
 use vars @::legal_platform,
     @::versions,
     @::legal_product,
@@ -57,11 +40,11 @@ use vars @::legal_platform,
 
 ConnectToDatabase();
 
+
 if (!defined $::FORM{'cmdtype'}) {
     # This can happen if there's an old bookmark to a query...
     $::FORM{'cmdtype'} = 'doit';
 }
-
 
 CMD: for ($::FORM{'cmdtype'}) {
     /^runnamed$/ && do {
@@ -133,6 +116,24 @@ individual query.
 }
 
 
+my $serverpush = 0;
+if ($ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/ && $ENV{'HTTP_USER_AGENT'} !~ /[Cc]ompatible/ ) {
+    # Search for real Netscape 3 and up.  http://www.browsercaps.org used as source of
+    # browsers compatbile with server-push.  It's a Netscape hack, incompatbile
+    # with MSIE and Lynx (at least).  Even Communicator 4.51 has bugs with it,
+    # especially during page reload.
+    $serverpush = 1;
+
+    print "Content-type: multipart/x-mixed-replace;boundary=thisrandomstring\n\n";
+    print "--thisrandomstring\n";
+    print "Content-type: text/html\n\n";
+    print "<p>Please stand by ... <p>\n";
+    # Note! HTML header is complete!
+} else {
+    print "Content-type: text/html\n";
+    # Note! Don't finish HTML header yet!  Only one newline so far!
+}
+
 sub DefCol {
     my ($name, $k, $t, $s, $q) = (@_);
     
@@ -189,10 +190,7 @@ if ($dotweak) {
 }
 
 
-print "Content-type: text/html\n\n";
-
 my $query = "select bugs.bug_id, bugs.groupset";
-
 
 foreach my $c (@collist) {
     if (exists $::needquote{$c}) {
@@ -320,7 +318,8 @@ foreach my $id ("1", "2") {
         $lead = " or ";
     }
     if (!$foundone) {
-        print "You must specify one or more fields in which to search for <tt>$email</tt>.\n";
+        print "\n\n<P>You must specify one or more fields in which to search for <tt>$email</tt>.\n";
+        print "<P>Please click the <B>Back</B> button and try again.\n";
         exit;
     }
     if ($lead eq " or ") {
@@ -336,12 +335,10 @@ if (defined $::FORM{'changedin'}) {
     my $c = trim($::FORM{'changedin'});
     if ($c ne "") {
         if ($c !~ /^[0-9]*$/) {
-            print "
-The 'changed in last ___ days' field must be a simple number.  You entered 
-\"$c\", which doesn't cut it.
-<P>
-Click the <B>Back</B> button and try again.";
-              exit;
+            print "\n\n<P>The 'changed in last ___ days' field must be a simple ";
+            print "number. You entered \"$c\", which doesn't cut it.";
+            print "<P>Please click the <B>Back</B> button and try again.\n";
+            exit;
         }
         $query .= "and to_days(now()) - to_days(bugs.delta_ts) <= $c ";
     }
@@ -357,7 +354,7 @@ sub SqlifyDate {
     }
     my $date = str2time($str);
     if (!defined $date) {
-        print "The string '<tt>$str</tt>' is not a legal date.\n";
+        print "\n\n<P>The string '<tt>$str</tt>' is not a legal date.\n";
         print "<P>Please click the <B>Back</B> button and try again.\n";
         exit;
     }
@@ -459,12 +456,6 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
     $query .= $::FORM{'order'};
 }
 
-if ($serverpush) {
-    print "Please stand by ... <p>\n";
-    if (defined $::FORM{'debug'}) {
-        print "<pre>$query</pre>\n";
-    }
-}
 
 if (Param('expectbigqueries')) {
     SendSQL("set option SQL_BIG_TABLES=1");
@@ -573,29 +564,41 @@ while (@row = FetchSQLData()) {
         pnl "\n";
     }
 }
-
-
 my $buglist = join(":", @bugarray);
 
 
+# This is stupid.  We really really need to move the quip list into the DB!
+my $quip;
+if (open (COMMENTS, "<data/comments")) {
+    my @cdata;
+    while (<COMMENTS>) {
+        push @cdata, $_;
+    }
+    close COMMENTS;
+    $quip = $cdata[int(rand($#cdata + 1))];
+}
+if (!defined $quip) {
+    $quip = "Bugzilla would like to put a random quip here, but nobody has entered any.";
+}
+
+ 
+# We've done all we can without any output.  If we can server push it is time
+# take down the waiting page and put up the real one.       
 if ($serverpush) {
     print "\n";
     print "--thisrandomstring\n";
+    print "Content-type: text/html\n";
+    # Note! HTML header not yet closed
 }
-
-
 my $toolong = 0;
-print "Content-type: text/html\n";
 if (length($buglist) < 4000) {
-    print "Set-Cookie: BUGLIST=$buglist\n";
+    print "Set-Cookie: BUGLIST=$buglist\n\n";
 } else {
-    print "Set-Cookie: BUGLIST=\n";
+    print "Set-Cookie: BUGLIST=\n\n";
     $toolong = 1;
 }
-
-print "\n";
-
 PutHeader("Bug List");
+
 
 print "
 <CENTER>
@@ -609,22 +612,6 @@ if ($toolong) {
     print "<h2>This list is too long for bugzilla's little mind; the\n";
     print "Next/Prev/First/Last buttons won't appear.</h2>\n";
 }
-
-# This is stupid.  We really really need to move the quip list into the DB!
-
-my $quip;
-if (open (COMMENTS, "<data/comments")) {
-    my @cdata;
-    while (<COMMENTS>) {
-        push @cdata, $_;
-    }
-    close COMMENTS;
-    $quip = $cdata[int(rand($#cdata + 1))];
-}
-if (!defined $quip) {
-    $quip = "Bugzilla would like to put a random quip here, but nobody has entered any.";
-}
-        
 
 print "<HR><I><A HREF=newquip.html>$quip\n";
 print "</I></A></CENTER>\n";
@@ -830,12 +817,13 @@ if ($count > 0) {
 <INPUT TYPE=HIDDEN NAME=buglist VALUE=$buglist>
 <INPUT TYPE=SUBMIT VALUE=\"Long Format\">
 <A HREF=\"query.cgi\">Query Page</A>
-&nbsp;&nbsp;&nbsp;<A HREF=\"enter_bug.cgi\">Enter New Bug</A>
-&nbsp;&nbsp;&nbsp;<A HREF=\"colchange.cgi?$::buffer\">Change columns</A>
-</FORM>";
+&nbsp;&nbsp;<A HREF=\"enter_bug.cgi\">Enter New Bug</A>
+&nbsp;&nbsp;<A HREF=\"colchange.cgi?$::buffer\">Change columns</A>";
     if (!$dotweak && $count > 1) {
-        print "<A HREF=\"buglist.cgi?$fields&tweak=1\">Change several bugs at once</A>\n";
+        print "&nbsp;&nbsp;<A HREF=\"buglist.cgi?$fields&tweak=1\">";
+        print "Change several bugs at once</A>\n";
     }
+    print "</FORM>\n";
 }
 if ($serverpush) {
     print "\n--thisrandomstring--\n";
