@@ -346,8 +346,8 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
 
   if (pageSize != adjSize &&
       (adjSize.x != 0 || adjSize.y != 0 || adjSize.width != 0 || adjSize.height != 0)) {
-    suppressLeftMargin   = pageSize.x != adjSize.x;
-    suppressTopMargin    = pageSize.y != adjSize.y;
+    suppressLeftMargin   = pageSize.x != adjSize.x || (pageSize.x == adjSize.x && !adjSize.x);
+    suppressTopMargin    = pageSize.y != adjSize.y || (pageSize.y == adjSize.y && !adjSize.y);
     if (pageSize.width  != adjSize.width) {
       suppressRightMargin = PR_TRUE;
       pageSize.width = adjSize.width;

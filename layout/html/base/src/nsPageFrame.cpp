@@ -199,6 +199,19 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       }
       nsSize  maxSize(mPD->mReflowRect.width - mPD->mReflowMargin.right - mPD->mReflowMargin.left, 
                       avHeight);
+      // Get the number of Twips per pixel from the PresContext
+      float p2t;
+      aPresContext->GetScaledPixelsToTwips(&p2t);
+      nscoord onePixelInTwips = NSToCoordRound(p2t);
+      NS_ASSERTION(maxSize.width >= onePixelInTwips, "maxSize.width must be >= 1 pixel");
+      NS_ASSERTION(maxSize.height >= onePixelInTwips, "maxSize.height must be >= 1 pixel");
+      // insurance against infinite reflow, when reflowing less than a pixel
+      if (maxSize.width < onePixelInTwips || maxSize.height < onePixelInTwips) {
+        aDesiredSize.width  = 0;
+        aDesiredSize.height = 0;
+        return NS_OK;
+      }
+
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState, frame, maxSize);
       kidReflowState.mFlags.mIsTopOfPage = PR_TRUE;
 
