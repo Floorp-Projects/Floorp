@@ -90,6 +90,7 @@ LLIBS=										\
 			$(DIST)\lib\secfreenav32.lib	\
 			$(DIST)\lib\appcores.lib		\
 			$(DIST)\lib\netlib.lib			\
+			$(DIST)\lib\mime.lib			\
 			$(LIBNSPR)						\
 			$(NULL)
 
@@ -105,6 +106,7 @@ LINCS=$(LINCS) -I,							\
 				-I$(PUBLIC)\rdf				\
 			   -I$(PUBLIC)\dom				\
 			   -I$(PUBLIC)\appcores			\
+			   -I$(PUBLIC)\mime                     \
  			     $(NULL)
 
 #//------------------------------------------------------------------------

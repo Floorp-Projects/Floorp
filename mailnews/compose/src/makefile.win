@@ -76,6 +76,7 @@ LINCS=								\
 			-I$(PUBLIC)\js			\
 			-I$(PUBLIC)\dom			\
 			-I$(PUBLIC)\appcores	\
+			-I$(PUBLIC)\mime                \
             $(NULL)
 
 LCFLAGS = \

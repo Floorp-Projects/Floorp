@@ -52,6 +52,7 @@ EXTRA_DSO_LDOPTS = \
 		-lxp					\
 		-lappcores				\
 		-lsecfree				\
+		-lmime   				\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
