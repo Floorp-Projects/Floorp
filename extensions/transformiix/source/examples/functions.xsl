@@ -1,30 +1,37 @@
 <?xml version="1.0"?>
 <!--
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
+ * The Original Code is TransforMiiX XSLT processor.
  *
- * Please see release.txt distributed with this file for more information.
+ * The Initial Developer of the Original Code is The MITRE Corporation.
+ * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
+ * Portions created by Keith Visco as a Non MITRE employee,
+ * (C) 1999, 2000 Keith Visco. All Rights Reserved.
+ *
+ * Contributor(s):
+ * Keith Visco, kvisco@ziplink.net
+ *    - original author.
+ * Olivier Gerardin, ogerardin@vo.lu
+ *    - added Number Function tests.
  */
 
-/**
- * This is a test stylesheet used for testing MITRE's XSL processor
-**/
+/*
+  This is a test stylesheet used for testing the TransforMiiX XSLT processor
+
+ */
 -->
+
 <xsl:stylesheet
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
         result-ns="http://www.w3.org/TR/REC-html40"
@@ -47,15 +54,15 @@
 <xsl:template match="document">
 <HTML>
   <HEAD>
-    <TITLE>MII TransforMiiX Test Cases</TITLE>
+    <TITLE>TransforMiiX Test Cases</TITLE>
   </HEAD>
-  <BODY>
+  <BODY BGCOLOR="#FFFFFF" Text="#000000">
   <CENTER>
       <FONT COLOR="BLUE" FACE="Arial"><B>MITRE</B></FONT><BR/>
-      <B>MII Transfor<FONT COLOR="blue">Mii</FONT>X Test Cases</B>
+      <B>Transfor<FONT COLOR="blue">Mii</FONT>X Test Cases</B>
  </CENTER>
-   <P>
-      This document serves to test XPath and XSL functions.
+   <P ALIGN="CENTER">
+       This document serves to test XPath and XSLT functions.
    </P>
    <TABLE>
    <TR BGColor="#E0E0FF">
@@ -426,6 +433,7 @@
       <TD>
          <FONT COLOR="blue">
             <xsl:value-of select="string()"/>
+
          </FONT>
       </TD>
    </TR>
@@ -553,6 +561,7 @@
          </FONT>
       </TD>
    </TR>
+
    <!-- new test -->
    <TR>
       <TD VALIGN="TOP"><B>Test:</B></TD>
@@ -859,7 +868,244 @@
          </FONT>
       </TD>
    </TR>
-
+   </TABLE>
+   <!-- ******************** -->
+   <!-- * Number Functions * -->
+   <!-- ******************** -->
+   <TABLE>
+   <TR BGColor="#E0E0FF">
+      <TD Colspan="2" ALIGN="CENTER">
+         <B>Number Functions</B>
+      </TD>
+   </TR>
+   <!-- new test -->
+   <TR>
+      <TD BGColor="#EEEEEE"><B>Function:</B></TD>
+      <TD BGColor="#EEEEEE">
+         <I>number</I><B> number(</B><I>object?</I><B>)</B>
+      </TD>
+   </TR>
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="number()"/&gt;<BR />
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">NaN</FONT><BR/>
+      </TD>
+    </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">
+            <xsl:value-of select="number()"/>
+         </FONT>
+      </TD>
+   </TR>
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="number('654.97')"/&gt;<BR />
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">654.97</FONT><BR/>
+      </TD>
+    </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">
+            <xsl:value-of select="number('654.97')"/>
+         </FONT>
+      </TD>
+   </TR>
+   <!-- new test -->
+   <TR>
+      <TD BGColor="#EEEEEE"><B>Function:</B></TD>
+      <TD BGColor="#EEEEEE">
+         <I>number</I><B> round(</B><I>number</I><B>)</B>
+      </TD>
+   </TR>
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="round(1.75)"/&gt;<BR />
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">2</FONT><BR/>
+      </TD>
+    </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">
+            <xsl:value-of select="round(1.75)"/>
+         </FONT>
+      </TD>
+   </TR>
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="round(1.25)"/&gt;<BR />
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">1</FONT><BR/>
+      </TD>
+    </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">
+            <xsl:value-of select="round(1.25)"/>
+         </FONT>
+      </TD>
+   </TR>
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="round(-0.5)"/&gt;<BR />
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">0</FONT><BR/>
+      </TD>
+    </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">
+            <xsl:value-of select="round(-0.5)"/>
+         </FONT>
+      </TD>
+   </TR>
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="round(0.5)"/&gt;<BR />
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">1</FONT><BR/>
+      </TD>
+    </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">
+            <xsl:value-of select="round(0.5)"/>
+         </FONT>
+      </TD>
+   </TR>
+   <!-- new test -->
+   <TR>
+      <TD BGColor="#EEEEEE"><B>Function:</B></TD>
+      <TD BGColor="#EEEEEE">
+         <I>number</I><B> floor(</B><I>number</I><B>)</B>
+      </TD>
+   </TR>
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="floor(2.2)"/&gt;<BR />
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">2</FONT><BR/>
+      </TD>
+    </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">
+            <xsl:value-of select="floor(2.2)"/>
+         </FONT>
+      </TD>
+   </TR>
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="floor(-2.2)"/&gt;<BR />
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">-3</FONT><BR/>
+      </TD>
+    </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">
+            <xsl:value-of select="floor(-2.2)"/>
+         </FONT>
+      </TD>
+   </TR>
+   <!-- new test -->
+   <TR>
+      <TD BGColor="#EEEEEE"><B>Function:</B></TD>
+      <TD BGColor="#EEEEEE">
+         <I>number</I><B> ceiling(</B><I>number</I><B>)</B>
+      </TD>
+   </TR>
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="ceiling(2.2)"/&gt;<BR />
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">3</FONT><BR/>
+      </TD>
+    </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">
+            <xsl:value-of select="ceiling(2.2)"/>
+         </FONT>
+      </TD>
+   </TR>
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="ceiling(-2.2)"/&gt;<BR />
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">-2</FONT><BR/>
+      </TD>
+    </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">
+            <xsl:value-of select="ceiling(-2.2)"/>
+         </FONT>
+      </TD>
+   </TR>
    </TABLE>
   </BODY>
 </HTML>
