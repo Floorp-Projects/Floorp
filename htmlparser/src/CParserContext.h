@@ -51,29 +51,32 @@ public:
 
     CParserContext( nsScanner* aScanner,
                     void* aKey=0,
-                    nsIStreamObserver* aListener=0);
+                    nsIStreamObserver* aListener=0,
+                    PRBool aCopyUnused=PR_FALSE);
 
 
     ~CParserContext();
                           
 
-    nsString            mSourceType;
+    CParserContext*     mPrevContext;
+    eParseMode          mParseMode;
+    eStreamState        mStreamListenerState; //this is really only here for debug purposes.
+    PRBool              mMultipart;
+    eContextType        mContextType;
     eAutoDetectResult   mAutoDetectStatus;
+
+    nsString            mSourceType;
 
     nsScanner*          mScanner;
     nsIDTD*             mDTD;
 
-    eParseMode          mParseMode;
     char*               mTransferBuffer;
     nsIStreamObserver*  mListener;
 
-    CParserContext*     mPrevContext;
     void*               mKey;
     PRUint32            mTransferBufferSize;
     PRBool              mParserEnabled;
-    eStreamState        mStreamListenerState; //this is really only here for debug purposes.
-    PRBool              mMultipart;
-    eContextType        mContextType;
+    PRBool              mCopyUnused;
 };
 
 

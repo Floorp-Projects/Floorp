@@ -239,7 +239,7 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
      * @update	gess5/11/98
      * @return  TRUE if all went well, otherwise FALSE
      */
-    virtual nsresult ResumeParse(nsIDTD* mDefaultDTD=0, PRBool aIsFinalChunk=PR_FALSE);
+    virtual nsresult ResumeParse(PRBool allowIteration=PR_TRUE, PRBool aIsFinalChunk=PR_FALSE);
 
     void  DebugDumpSource(nsOutputStream& anOutput);
 
@@ -301,7 +301,7 @@ protected:
      * @param 
      * @return
      */
-    nsresult WillBuildModel(nsString& aFilename,nsIDTD* mDefaultDTD=0);
+    nsresult WillBuildModel(nsString& aFilename);
 
     /**
      * 
