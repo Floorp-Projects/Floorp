@@ -1,0 +1,83 @@
+<!--
+  The contents of this file are subject to the Mozilla Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/MPL/
+
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+
+  The Original Code is TransforMiiX XSLT processor.
+
+  The Initial Developer of the Original Code is The MITRE Corporation.
+  Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
+
+  Portions created by Peter Van der Beken are Copyright (C) 2000
+  Peter Van der Beken. All Rights Reserved.
+
+  Contributor(s):
+  Peter Van der Beken, peter.vanderbeken@pandora.be
+     -- original author.
+
+-->
+
+var xmlLoaded, xslLoaded;
+var xmlDocument, xslDocument, resultDocument;
+
+function onLoadTransformiix() 
+{
+	var theXMLURL = "chrome://Transformiix/content/simple.xml";
+	var theXSLURL = "chrome://Transformiix/content/simplexsl.xml";
+
+    var docShellElement = document.getElementById("xml-source");
+	var docShell = docShellElement.docShell;
+	docShell.viewMode = Components.interfaces.nsIDocShell.viewSource;
+	var webNav = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+	webNav.loadURI(theXMLURL);
+
+    docShellElement = document.getElementById("xsl-source");
+	docShell = docShellElement.docShell;
+	docShell.viewMode = Components.interfaces.nsIDocShell.viewSource;
+	webNav = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+	webNav.loadURI(theXSLURL);
+
+    docShellElement = document.getElementById("result-doc");
+    resultDocument = docShellElement.contentDocument;
+	xmlDocument = resultDocument.implementation.createDocument("", "", null);
+	xmlDocument.addEventListener("load", xmlDocumentLoaded, false);
+	xmlDocument.load(theXMLURL, "text/xml");
+	xslDocument = resultDocument.implementation.createDocument("", "", null);
+	xslDocument.addEventListener("load", xslDocumentLoaded, false);
+	xslDocument.load(theXSLURL, "text/xml");
+}
+
+function xmlDocumentLoaded(e) {
+	xmlLoaded = true;
+	tryToTransform();
+}
+
+function xslDocumentLoaded(e) {
+	xslLoaded = true;
+	tryToTransform();
+}
+
+function tryToTransform() {
+	if (xmlLoaded && xslLoaded) {
+		try {
+			var xsltProcessor = null;
+			var xmlDocumentNode = xmlDocument.documentElement;
+			var xslDocumentNode = xslDocument.documentElement;
+
+			xsltProcessor = Components.classes["component://netscape/document-transformer?type=text/xsl"].getService();
+			if (xsltProcessor)	xsltProcessor = xsltProcessor.QueryInterface(Components.interfaces.nsIDocumentTransformer);
+		}
+		catch (ex) {
+			dump("failed to get transformiix service!\n");
+			xsltProcessor = null;
+		}
+		var newDocument = resultDocument.implementation.createDocument("", "", null);
+	   	xsltProcessor.transformDocument(xmlDocumentNode, xslDocumentNode, newDocument, null);
+	}
+}
