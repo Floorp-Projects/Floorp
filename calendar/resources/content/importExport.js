@@ -133,6 +133,9 @@ function addEventsToCalendar( calendarEventArray, silent )
          calendarEvent.id = createUniqueID( );
       }
 
+      // the start time is in zulu time, need to convert to current time
+      convertZuluToLocal( calendarEvent );
+
       // open the event dialog with the event to add
       if( silent )
          gICalLib.addEvent( calendarEvent );
@@ -141,6 +144,23 @@ function addEventsToCalendar( calendarEventArray, silent )
    }
 }
 
+const ZULU_OFFSET_MILLIS = new Date().getTimezoneOffset() * 60 * 1000;
+
+function convertZuluToLocal( calendarEvent )
+{
+   var zuluStartTime = calendarEvent.start.getTime();
+   var zuluEndTime = calendarEvent.end.getTime();
+   calendarEvent.start.setTime( zuluStartTime  - ZULU_OFFSET_MILLIS );
+   calendarEvent.end.setTime( zuluEndTime  - ZULU_OFFSET_MILLIS );
+}
+
+function convertLocalToZulu( calendarEvent )
+{
+   var zuluStartTime = calendarEvent.start.getTime();
+   var zuluEndTime = calendarEvent.end.getTime();
+   calendarEvent.start.setTime( zuluStartTime  + ZULU_OFFSET_MILLIS );
+   calendarEvent.end.setTime( zuluEndTime  + ZULU_OFFSET_MILLIS );
+}
 
 // Can something from dateUtils be used here?
 function formatDateTime( oeDateTime )
@@ -341,6 +361,9 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
    for( var eventArrayIndex = 0;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
    {
       var calendarEvent = calendarEventArray[ eventArrayIndex ];
+
+      // convert time to represent local to produce correct DTSTART and DTEND
+      convertLocalToZulu( calendarEvent );
      
       if ( doPatchForExport )
         sTextiCalendar += patchICalStringForExport( calendarEvent.getIcalString() );
