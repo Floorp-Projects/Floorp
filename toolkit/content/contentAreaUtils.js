@@ -282,6 +282,9 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
       encodingFlags |= nsIWBP.ENCODE_FLAGS_ABSOLUTE_LINKS;
       encodingFlags |= nsIWBP.ENCODE_FLAGS_NOFRAMES_CONTENT;        
     }
+    else {
+      encodingFlags |= nsIWBP.ENCODE_FLAGS_ENCODE_BASIC_ENTITIES;
+    }
     
     const kWrapColumn = 80;
     dl.init(aSniffer.uri, persistArgs.target, null, null, null, persist);
