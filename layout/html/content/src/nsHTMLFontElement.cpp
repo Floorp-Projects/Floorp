@@ -292,21 +292,24 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     }
 
     // color: color
-    aAttributes->GetAttribute(nsHTMLAtoms::color, value);
-    if (value.GetUnit() == eHTMLUnit_Color) {
+    if (NS_CONTENT_ATTR_NOT_THERE != aAttributes->GetAttribute(nsHTMLAtoms::color, value)) {
       nsStyleColor* color = (nsStyleColor*)
         aContext->GetMutableStyleData(eStyleStruct_Color);
-      color->mColor = value.GetColorValue();
-    }
-    else if (value.GetUnit() == eHTMLUnit_String) {
-      nsAutoString buffer;
-      value.GetStringValue(buffer);
-      char cbuf[40];
-      buffer.ToCString(cbuf, sizeof(cbuf));
+      nsStyleText* text = (nsStyleText*)
+        aContext->GetMutableStyleData(eStyleStruct_Text);
+      if (value.GetUnit() == eHTMLUnit_Color) {
+        color->mColor = value.GetColorValue();
+        text->mTextDecoration = font->mFont.decorations;  // re-apply inherited text decoration, so colors sync
+      }
+      else if (value.GetUnit() == eHTMLUnit_String) {
+        nsAutoString buffer;
+        value.GetStringValue(buffer);
+        char cbuf[40];
+        buffer.ToCString(cbuf, sizeof(cbuf));
 
-      nsStyleColor* color = (nsStyleColor*)
-        aContext->GetMutableStyleData(eStyleStruct_Color);
-      NS_ColorNameToRGB(cbuf, &(color->mColor));
+        NS_ColorNameToRGB(cbuf, &(color->mColor));
+        text->mTextDecoration = font->mFont.decorations;  // re-apply inherited text decoration, so colors sync
+      }
     }
 
     NS_IF_RELEASE(parentContext);
