@@ -193,7 +193,7 @@ NS_IMETHODIMP nsUnicodeDecodeUtil::Init1ByteFastTable(
    if(! init)
    {
       for(int i= 0;i < 256; i++)
-         dmy[i] = (char) dmy;
+         dmy[i] = (char) i;
       init = PR_TRUE;
    }
    PRInt32 dm1 = 256;
