@@ -549,6 +549,7 @@ NS_IMETHODIMP	nsWindow::Update()
 		if (renderingContext)
 		{
 			// initialize the paint event for that widget
+      PRBool bClipEmpty;
 			nsRect rect;
 			Rect macRect;
 			GetBounds(rect);					//¥TODO¥: for complex objects, maybe we should clip to the widgetRgn
@@ -578,7 +579,7 @@ NS_IMETHODIMP	nsWindow::Update()
 			PrepareToDraw();
 			OnPaint(paintEvent);
 			DispatchWindowEvent(paintEvent);
-			renderingContext->PopState();
+			renderingContext->PopState(bClipEmpty);
 
 			// recursively scan through its children to draw them too
 			nsIEnumerator* children = GetChildren();
