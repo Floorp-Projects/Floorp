@@ -2312,7 +2312,7 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIFrame* aTargetFrame,
                                   nsEventStatus* aStatus)
 {
-  PRInt32 cursor;
+  PRInt32 cursor = NS_STYLE_CURSOR_DEFAULT;
   imgIContainer* container = nsnull;
 
   //If cursor is locked just use the locked one
@@ -2326,12 +2326,8 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
       targetContent = mCurrentTarget->GetContent();
     }
 
-    //Check if the current target is disabled.  If so use the default pointer.
-    if (targetContent && CheckDisabled(targetContent)) {
-      cursor = NS_STYLE_CURSOR_DEFAULT;
-    }
     //If not disabled, check for the right cursor.
-    else {
+    if (!targetContent || !CheckDisabled(targetContent)) {
       if (aTargetFrame) {
         nsIFrame::Cursor framecursor;
         if (NS_FAILED(aTargetFrame->GetCursor(aEvent->point, framecursor)))
