@@ -93,18 +93,33 @@ find_plugin_directory(char *path, PRInt32 size)
   char  *ptr;
 
   if (!GetModuleFileName(NULL, path, size))
-    return FALSE;
+    return PR_FALSE;
   ptr = PL_strrchr(path, '\\');
   if (ptr)
     *ptr = '\0';
   PL_strcat(path, "\\");
   PL_strcat(path, MIME_PLUGIN_DIR);
+  return PR_TRUE;
 #else
   printf("Don't know how to locate plugins directory on Unix/Mac yet...\n");
-  return FALSE;
+  return PR_FALSE;
 #endif
+}
 
-  return TRUE;
+PRBool
+create_file_name(const char *path, const char *name, char *fullName)
+{
+  if ((!path) || (!name))
+    return PR_FALSE;
+
+#ifdef XP_PC
+  PL_strcpy(fullName, path);
+  PL_strcat(fullName, "\\");
+  PL_strcat(fullName, name);
+  return PR_TRUE;
+#else
+  return PR_FALSE;
+#endif
 }
 
 /* 
@@ -158,17 +173,23 @@ get_content_type(cthandler_struct *ct)
 MimeObjectClass * 
 create_content_type_handler_class(cthandler_struct *ct)
 {
-  typedef MimeObjectClass * (*mime_create_class_fn_type)(const char *, PRBool *);
-  mime_create_class_fn_type   class_fn;
+  typedef MimeObjectClass * (*mime_create_class_fn_type)
+                              (const char *, contentTypeHandlerInitStruct *);
+  contentTypeHandlerInitStruct    ctHandlerInfo;
+  mime_create_class_fn_type       class_fn;
+  MimeObjectClass                 *retClass = NULL;
 
   if (!ct)
     return NULL;
 
   class_fn = (mime_create_class_fn_type) PR_FindSymbol(ct->ct_handler, "MIME_CreateContentTypeHandlerClass"); 
   if (class_fn)
-    return (class_fn)(ct->content_type, &(ct->force_inline_display));
-  else
-    return NULL;
+  {
+    retClass = (class_fn)(ct->content_type, &ctHandlerInfo);
+    ct->force_inline_display = ctHandlerInfo.force_inline_display;
+  }
+
+  return retClass;
 }
 
 /*
@@ -217,9 +238,9 @@ do_plugin_discovery(void)
 
     if (PL_strncasecmp(MIME_PLUGIN_PREFIX, dirEntry->name, PL_strlen(MIME_PLUGIN_PREFIX)) == 0)
     {
-      PL_strcpy(full_name, path);
-      PL_strcat(full_name, "\\");
-      PL_strcat(full_name, dirEntry->name);
+      if (!create_file_name(path, dirEntry->name, full_name))
+        continue;
+      
       cthandler_list[count].ct_handler = PR_LoadLibrary(full_name);
       if (!cthandler_list[count].ct_handler)
         continue;
@@ -283,7 +304,7 @@ force_inline_display(const char *content_type)
       return( cthandler_list[i].force_inline_display );
   }
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 

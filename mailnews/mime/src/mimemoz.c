@@ -300,7 +300,7 @@ mime_set_html_state_fn (void *stream_closure,
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
 
 #if 1
-  char random_close_tags[] = "</SCRIPT><NSCP_CLOSE>";
+//RICHIE_CSS  char random_close_tags[] = "</SCRIPT><NSCP_CLOSE>";
 #else /* 0 */
   char random_close_tags[] =
         "</TABLE></TABLE></TABLE></TABLE></TABLE></TABLE>"
@@ -310,6 +310,7 @@ mime_set_html_state_fn (void *stream_closure,
         "</PRE></PRE></PRE></PRE></PRE></PRE></PRE></PRE>"
         "<BASEFONT SIZE=3></SCRIPT>";
 #endif /* 0 */
+
   if (start_p) {
 #ifndef MOZILLA_30
     if (layer_encapsulate_p && msd->options && !msd->options->nice_html_only_p){
@@ -318,7 +319,7 @@ mime_set_html_state_fn (void *stream_closure,
 
 //RICHIECSS      buf = PR_smprintf("<ILAYER LOCKED CLIP=0,0,AUTO,AUTO "
 //RICHIECSS      ILAYER LOCKED CLIP=0,0,AUTO,AUTO "
-      buf = PR_smprintf("<DIV MATCH=%02x%02x%02x%02x%02x%02x style=\"position: 'relative';\">",
+      buf = PR_smprintf("<DIV style=\"position: 'relative';\">",
                         rand_buf[0], rand_buf[1], rand_buf[2],
                         rand_buf[3], rand_buf[4], rand_buf[5]);
       if (!buf)
@@ -328,18 +329,19 @@ mime_set_html_state_fn (void *stream_closure,
     }
 #endif /* MOZILLA_30 */
   } else {
+/* RICHIE_CSS - this doesn't work anymore...
     status = MimeOptions_write(msd->options, random_close_tags,
                                PL_strlen(random_close_tags), PR_FALSE);
     if (status < 0)
       return status;
+*/
 
 #ifndef MOZILLA_30
     if (layer_encapsulate_p && msd->options && !msd->options->nice_html_only_p){
       uint8 *rand_buf = msd->rand_buf;
 //RICHIECSS      buf = PR_smprintf("</ILAYER MATCH=%02x%02x%02x%02x%02x%02x><BR>",
-      buf = PR_smprintf("</DIV MATCH=%02x%02x%02x%02x%02x%02x><BR>",
-                        rand_buf[0], rand_buf[1], rand_buf[2],
-                        rand_buf[3], rand_buf[4], rand_buf[5]);
+//      buf = PR_smprintf("</DIV><BR>");
+      buf = PR_smprintf("</DIV><BR></HTML>");
       if (!buf)
         return MK_OUT_OF_MEMORY;
       status = MimeOptions_write(msd->options, buf, PL_strlen(buf), PR_TRUE);

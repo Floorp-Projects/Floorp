@@ -27,8 +27,10 @@
  * HTML in mimehdrs.c 
  */
 #define MHTML_BLOCKQUOTE_BEGIN   "<BLOCKQUOTE TYPE=CITE>"
-#define MHTML_STYLE_IMPORT       "<HTML><HEAD><LINK REL=\"stylesheet\" HREF=\"resource:/res/mail.css\">"
-#define MHTML_JS_IMPORT          "<SCRIPT LANGUAGE=\"JavaScript1.2\" SRC=\"resource:/res/mail.js\"></SCRIPT></HEAD>"
+#define RICHIE_BROKE_NOW_MHTML_STYLE_IMPORT       "<HTML><HEAD><LINK REL=\"stylesheet\" HREF=\"resource:/res/mail.css\">"
+#define RICHIE_BROKE_NOW_MHTML_JS_IMPORT          "<SCRIPT LANGUAGE=\"JavaScript1.2\" SRC=\"resource:/res/mail.js\"></SCRIPT></HEAD>"
+#define MHTML_STYLE_IMPORT       "<HTML><LINK REL=\"stylesheet\" HREF=\"resource:/res/mail.css\">"
+#define MHTML_JS_IMPORT          "<SCRIPT LANGUAGE=\"JavaScript1.2\" SRC=\"resource:/res/mail.js\"></SCRIPT>"
 #define MHTML_HEADER_TABLE       "<TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>"
 #define MHTML_TABLE_BEGIN        "<TABLE><TR><TD>"
 #define MHTML_TABLE_COLUMN_BEGIN "<TR><TD><B><I>"

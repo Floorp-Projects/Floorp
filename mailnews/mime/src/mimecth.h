@@ -89,6 +89,10 @@
 #define   MIME_PLUGIN_PREFIX      "mimect-"
 #define   MIME_PLUGIN_DIR         "mimeplugins"
 
+typedef struct {
+  PRBool      force_inline_display;
+} contentTypeHandlerInitStruct;
+
 extern int                        MIME_MimeObject_write(MimeObject *, char *data, 
                                                         PRInt32 length, 
                                                         PRBool user_visible_p);
