@@ -1954,28 +1954,12 @@ NS_IMETHODIMP
 nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
                              nsLoadType aReason)
 {
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  if (aShell == webShell.get()) {
-    if (mStatus) {
-      nsAutoString url("Connecting to ");
-      url.Append(aURL);
-      PRUint32 size;
-      mStatus->SetText(url,size);
-      mLoadStartTime = PR_Now();
-    }
-  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBrowserWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  if (aShell == webShell.get()) {
-    if (mThrobber) {
-      mThrobber->Start();
-    }
-  }
   return NS_OK;
 }
 
@@ -1992,33 +1976,8 @@ NS_IMETHODIMP
 nsBrowserWindow::EndLoadURL(nsIWebShell* aShell,
                             const PRUnichar* aURL,
                             nsresult aStatus)
-{
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  if (aShell == webShell.get()) {
-    PRTime endLoadTime = PR_Now();
-    if (mShowLoadTimes) {
-      nsAutoString msg(aURL);
-      printf("Loading ");
-      fputs(msg, stdout);
-      PRTime delta;
-      LL_SUB(delta, endLoadTime, mLoadStartTime);
-      double usecs;
-      LL_L2D(usecs, delta);
-      printf(" took %g milliseconds\n", usecs / 1000.0);
-    }
-    if (mThrobber) {
-      mThrobber->Stop();
-    }
-    if (nsnull != mStatus) {
-      nsAutoString msg(aURL);
-      PRUint32 size;
-
-      msg.Append(" done.");
-
-      mStatus->SetText(msg, size);
-    }
-  }
-  return NS_OK;
+{  
+   return NS_OK;
 }
 
 
@@ -2147,25 +2106,7 @@ NS_IMETHODIMP
 nsBrowserWindow::OnStartURLLoad(nsIDocumentLoader* loader,
                                 nsIChannel* channel)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIURI> aURL;
-  rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) return rv;
-  
-  if (mStatus) {
-    nsAutoString url;
-    if (nsnull != aURL) {
-      char* str;
-      aURL->GetSpec(&str);
-      url = str;
-      nsCRT::free(str);
-    }
-    url.Append(": start");
-    PRUint32 size;
-    mStatus->SetText(url,size);
-  }
-  return NS_OK;
+   return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2190,24 +2131,6 @@ nsBrowserWindow::OnEndURLLoad(nsIDocumentLoader* loader,
                               nsIChannel* channel,
                               nsresult aStatus)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIURI> aURL;
-  rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) return rv;
-  
-  if (mStatus) {
-    nsAutoString url;
-    if (nsnull != aURL) {
-      char* str;
-      aURL->GetSpec(&str);
-      url = str;
-      nsCRT::free(str);
-    }
-    url.Append(": stop");
-    PRUint32 size;
-    mStatus->SetText(url,size);
-  }
   return NS_OK;
 }
 

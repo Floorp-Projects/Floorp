@@ -33,6 +33,7 @@
 
 // Interfaces needed to be included
 #include "nsIDocShellTreeItem.h"
+#include "nsIWebProgress.h"
 
 // CIDs
 
@@ -40,8 +41,7 @@
 //***    nsWebBrowserChrome: Object Management
 //*****************************************************************************
 
-nsWebBrowserChrome::nsWebBrowserChrome() : mBrowserWindow(nsnull),
-   mProgressStatusFlags(0)
+nsWebBrowserChrome::nsWebBrowserChrome() : mBrowserWindow(nsnull)
 {
 	NS_INIT_REFCNT();
 }
@@ -360,20 +360,26 @@ NS_IMETHODIMP nsWebBrowserChrome::OnChildProgressChange(nsIChannel* aChannel,
 NS_IMETHODIMP nsWebBrowserChrome::OnStatusChange(nsIChannel* aChannel,
    PRInt32 aProgressStatusFlags)
 {
-/*   if(aProgressStatusFlags & nsIWebProgress::flag_networkActivity)
-      { // There is network activity now
-      
-      }
-   else 
-      { // There is no network Activity
-      if(mProgressStatusFlags & nsIWebProgress::flag_networkActivity)
-         { // If there was netwoerk activity before
-         OnLoadFinished(nsIChannel);
-         }
-      }
-   
-   //XXXTAB Implement
-   NS_ERROR("NotYetImplemented");*/
+   if(aProgressStatusFlags & nsIWebProgress::flag_net_start)
+      OnLoadStart(aChannel);
+   else if(aProgressStatusFlags & nsIWebProgress::flag_net_stop)
+      OnLoadFinished(aChannel, aProgressStatusFlags);
+   else if(aProgressStatusFlags & nsIWebProgress::flag_net_dns)
+      OnStatusDNS(aChannel);
+   else if(aProgressStatusFlags & nsIWebProgress::flag_net_connecting)
+      OnStatusConnecting(aChannel);
+   else if(aProgressStatusFlags & nsIWebProgress::flag_net_redirecting)
+      OnStatusRedirecting(aChannel);
+   else if(aProgressStatusFlags & nsIWebProgress::flag_net_negotiating)
+      OnStatusNegotiating(aChannel);
+   else if(aProgressStatusFlags & nsIWebProgress::flag_net_transferring)
+      OnStatusTransferring(aChannel);
+
+   if(aProgressStatusFlags & nsIWebProgress::flag_win_start)
+      OnWindowActivityStart();
+   else if(aProgressStatusFlags & nsIWebProgress::flag_win_stop)
+      OnWindowActivityFinished();
+
    return NS_OK;
 }
 
@@ -417,3 +423,108 @@ nsBrowserWindow* nsWebBrowserChrome::BrowserWindow()
    return mBrowserWindow;
 }
 
+//*****************************************************************************
+// nsWebBrowserChrome: Status Change Handling
+//*****************************************************************************   
+
+void nsWebBrowserChrome::OnLoadStart(nsIChannel* aChannel)
+{
+   mBrowserWindow->mLoadStartTime = PR_Now();
+
+   if(mBrowserWindow->mThrobber)
+      mBrowserWindow->mThrobber->Start();
+
+   nsCOMPtr<nsIURI> uri;
+   aChannel->GetURI(getter_AddRefs(uri));
+  
+   if(mBrowserWindow->mStatus)
+      {
+      nsXPIDLCString uriString;
+
+      uri->GetSpec(getter_Copies(uriString));
+
+      nsAutoString url(uriString);
+      url.Append(": start");
+      PRUint32 size;
+      mBrowserWindow->mStatus->SetText(url,size);
+      }
+}
+
+void nsWebBrowserChrome::OnLoadFinished(nsIChannel* aChannel, 
+   PRInt32 aProgressStatusFlags)
+{
+   nsXPIDLCString uriString;
+   if(aChannel)
+      {
+      nsCOMPtr<nsIURI> uri;
+      aChannel->GetURI(getter_AddRefs(uri));
+
+      uri->GetSpec(getter_Copies(uriString));
+      }
+   
+   nsAutoString msg(uriString);
+
+   PRTime endLoadTime = PR_Now();
+   if(mBrowserWindow->mShowLoadTimes)
+      {
+      printf("Loading ");
+      fputs(msg, stdout);
+      PRTime delta;
+      LL_SUB(delta, endLoadTime, mBrowserWindow->mLoadStartTime);
+      double usecs;
+      LL_L2D(usecs, delta);
+      printf(" took %g milliseconds\n", usecs / 1000.0);
+      }
+   if(mBrowserWindow->mThrobber)
+      mBrowserWindow->mThrobber->Stop();
+   if(mBrowserWindow->mStatus)
+      {
+      PRUint32 size;
+
+      msg.Append(" done.");
+
+      mBrowserWindow->mStatus->SetText(msg, size);
+      }
+}
+
+void nsWebBrowserChrome::OnStatusDNS(nsIChannel* aChannel)
+{
+}
+
+void nsWebBrowserChrome::OnStatusConnecting(nsIChannel* aChannel)
+{
+   nsXPIDLCString uriString;
+   if(aChannel)
+      {
+      nsCOMPtr<nsIURI> uri;
+      aChannel->GetURI(getter_AddRefs(uri));
+
+      uri->GetSpec(getter_Copies(uriString));
+      }
+   
+   nsAutoString msg("Connecting to ");
+   msg.Append(uriString);
+      
+   PRUint32 size;
+   mBrowserWindow->mStatus->SetText(msg,size);
+}
+
+void nsWebBrowserChrome::OnStatusRedirecting(nsIChannel* aChannel)
+{
+}
+
+void nsWebBrowserChrome::OnStatusNegotiating(nsIChannel* aChannel)
+{
+}
+
+void nsWebBrowserChrome::OnStatusTransferring(nsIChannel* aChannel)
+{
+}
+
+void nsWebBrowserChrome::OnWindowActivityStart()
+{
+}
+
+void nsWebBrowserChrome::OnWindowActivityFinished()
+{
+}
