@@ -33,8 +33,6 @@
  *    that irc:// links have the content type x-application-irc (BogusChannel)
  */
 
-dump (">>>>>>>>>>>> chatzilla-service loaded");
-
 /* components defined in this file */
 const CLINE_SERVICE_CONTRACTID =
     "@mozilla.org/commandlinehandler/general-startup;1?type=chat";
@@ -134,9 +132,12 @@ function (aContentType, aCommand, aWindowTarget, aRequest)
         var ass =
             Components.classes[ASS_CONTRACTID].getService(nsIAppShellService);
         w = ass.getHiddenDOMWindow();
-        w.openDialog("chrome://chatzilla/content/chatzilla.xul?" + 
-                     channel.URI.spec, "_blank",
-                     "chrome,menubar,toolbar,resizable");
+
+        var args = new Object ();
+        args.url = channel.URI.spec;
+
+        w.openDialog("chrome://chatzilla/content/chatzilla.xul", "_blank",
+                     "chrome,menubar,toolbar,resizable,dialog=no", args);
     }
     
 }
