@@ -72,4 +72,4 @@ static const nsModuleComponentInfo components[] =
     nsULEConstructor, NULL, NULL }
 };
 
-NS_IMPL_NSGETMODULE("nsCtlLEModule", components)
+NS_IMPL_NSGETMODULE(nsCtlLEModule, components)
