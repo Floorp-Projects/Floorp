@@ -104,6 +104,10 @@ class EmbedPrivate {
   void        ChildFocusIn (void);
   void        ChildFocusOut(void);
 
+#ifdef MOZ_ACCESSIBILITY_ATK
+  void *GetAtkObjectForCurrentDocument();
+#endif
+
   GtkMozEmbed                   *mOwningWidget;
 
   // all of the objects that we own

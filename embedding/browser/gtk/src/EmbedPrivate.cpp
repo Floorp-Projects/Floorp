@@ -67,6 +67,11 @@
 #include "GtkPromptService.h"
 #endif
 
+#ifdef MOZ_ACCESSIBILITY_ATK
+#include "nsIAccessibilityService.h"
+#include "nsIDOMDocument.h"
+#endif
+
 #ifdef _BUILD_STATIC_BIN
 #include "nsStaticComponent.h"
 nsresult PR_CALLBACK
@@ -827,6 +832,36 @@ EmbedPrivate::GetPIDOMWindow(nsPIDOMWindow **aPIWin)
   return NS_ERROR_FAILURE;
 
 }
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+void *
+EmbedPrivate::GetAtkObjectForCurrentDocument()
+{
+  if (!mNavigation)
+    return nsnull;
+
+  nsCOMPtr<nsIAccessibilityService> accService =
+    do_GetService("@mozilla.org/accessibilityService;1");
+  if (accService) {
+    //get current document
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    mNavigation->GetDocument(getter_AddRefs(domDoc));
+    NS_ENSURE_TRUE(domDoc, nsnull);
+
+    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(domDoc));
+    NS_ENSURE_TRUE(domNode, nsnull);
+
+    nsCOMPtr<nsIAccessible> acc;
+    accService->GetAccessibleFor(domNode, getter_AddRefs(acc));
+    NS_ENSURE_TRUE(acc, nsnull);
+
+    void *atkObj = nsnull;
+    if (NS_SUCCEEDED(acc->GetNativeInterface(&atkObj)))
+      return atkObj;
+  }
+  return nsnull;
+}
+#endif /* MOZ_ACCESSIBILITY_ATK */
 
 /* static */
 nsresult
