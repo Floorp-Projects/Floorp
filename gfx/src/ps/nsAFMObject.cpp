@@ -260,8 +260,8 @@ nsAutoString    psfontname;
     // if a font was found matching this criteria
     if((gSubstituteFonts[i].mIndex==0) || (!aPrimaryOnly && gSubstituteFonts[i].mIndex>=0)){
       // give it a score
-      score = abs(aFont.weight-gSubstituteFonts[i].mWeight);
-      score+= abs(aFont.style-gSubstituteFonts[i].mStyle);
+      score = abs(PRInt32(aFont.weight)-PRInt32(gSubstituteFonts[i].mWeight));
+      score+= abs(PRInt32(aFont.style)-PRInt32(gSubstituteFonts[i].mStyle));
       if(score == 0){
         curIndex = i;
         break;
