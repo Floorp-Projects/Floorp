@@ -35,7 +35,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIWebDAVResource.idl"
+
+interface nsIURL;
+interface nsIWebDAVResource;
 
 [scriptable,uuid(e198a0fd-9e62-4299-84e3-d93c0cd68881)]
 interface nsIWebDAVOperationListener : nsISupports
@@ -66,6 +68,6 @@ interface nsIWebDAVOperationListener : nsISupports
                              in unsigned long operation);
 
     void onOperationDetail(in unsigned long statusCode,
-                           in AUTF8String resource, in unsigned long operation,
+                           in nsIURL resource, in unsigned long operation,
                            in nsISupports detail);
 };

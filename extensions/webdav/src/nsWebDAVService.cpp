@@ -50,6 +50,7 @@
 #include "nsNetUtil.h"
 #include "nsIStorageStream.h"
 #include "nsIUploadChannel.h"
+#include "nsIURL.h"
 
 #include "nsContentCID.h"
 
@@ -128,8 +129,8 @@ nsWebDAVService::SendPropfindDocumentToChannel(nsIDocument *doc,
     nsCOMPtr<nsIStorageStream> storageStream;
     // Why do I have to pick values for these?  I just want to store some data
     // for stream access!  (And how would script set these?)
-    nsresult rv = NS_NewStorageStream(4 * 1024, 256 * 1024,
-                             getter_AddRefs(storageStream));
+    nsresult rv = NS_NewStorageStream(4096, PR_UINT32_MAX,
+                                      getter_AddRefs(storageStream));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIOutputStream> storageOutputStream;
@@ -243,35 +244,29 @@ nsWebDAVService::CreatePropfindDocument(nsIURI *resourceURI,
 }
 
 nsresult
-nsWebDAVService::ChannelFromResource(nsIWebDAVResource *resource,
-                                     nsIHttpChannel **channel,
-                                     nsIURI **resourceURI)
+nsWebDAVService::ChannelFromResource(nsIWebDAVResource *aResource,
+                                     nsIHttpChannel **aChannel,
+                                     nsIURI **aResourceURI)
 {
     ENSURE_IO_SERVICE();
 
-    nsCAutoString spec;
+    nsCOMPtr<nsIURL> resourceURL;
 
-    nsresult rv = resource->GetUrlSpec(spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (spec.IsEmpty()) {
-        NS_ASSERTION(0, "non-empty spec!");
-        return NS_ERROR_INVALID_ARG;
-    }
-
-    nsCOMPtr<nsIURI> uri;
-    rv = mIOService->NewURI(spec, nsnull, nsnull, getter_AddRefs(uri));
+    nsresult rv = aResource->GetResourceURL(getter_AddRefs(resourceURL));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIChannel> baseChannel;
-    rv = mIOService->NewChannelFromURI(uri, getter_AddRefs(baseChannel));
+    rv = mIOService->NewChannelFromURI(resourceURL, getter_AddRefs(baseChannel));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (resourceURI) {
-        *resourceURI = uri.get();
-        NS_ADDREF(*resourceURI);
+    rv = CallQueryInterface(baseChannel, aChannel);
+
+    if (NS_SUCCEEDED(rv) && aResourceURI) {
+        *aResourceURI = resourceURL.get();
+        NS_ADDREF(*aResourceURI);
     }
 
-    return CallQueryInterface(baseChannel, channel);
+    return rv;
 }
 
 nsWebDAVService::nsWebDAVService() :

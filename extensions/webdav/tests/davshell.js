@@ -26,9 +26,17 @@ function createInstance(contract, iface)
 const davSvc = getService("@mozilla.org/webdav/service;1",
 			  "nsIWebDAVService");
 
+const ioSvc = getService("@mozilla.org/network/io-service;1",
+                         "nsIIOService");
+ 
+function URLFromSpec(spec)
+{
+  return ioSvc.newURI(spec, null, null);
+}
+
 function Resource(url)
 {
-  this.urlSpec = url;
+  this.resourceURL = URLFromSpec(url);
 }
 
 Resource.prototype = {
@@ -94,14 +102,14 @@ OperationListener.prototype =
 {
     onOperationComplete: function (status, resource, op)
     {
-        dump(OperationListener.opToName[op] + " " + resource.urlSpec +
+        dump(OperationListener.opToName[op] + " " + resource.resourceURL.spec +
              " complete: " + status + "\n");
         stopEventPump();
     },
 
     onOperationDetail: function (status, resource, op, detail)
     {
-        dump(resource + " " + OperationListener.opToName[op] + " (" +
+        dump(resource.spec + " " + OperationListener.opToName[op] + " (" +
              status + "):\n");
         switch(op) {
           case CI.nsIWebDAVOperationListener.GET_PROPERTY_NAMES:
@@ -125,9 +133,6 @@ OperationListener.prototype =
     
 const evQSvc = getService("@mozilla.org/event-queue-service;1",
                           "nsIEventQueueService");
-const ioSvc = getService("@mozilla.org/network/io-service;1",
-                         "nsIIOService");
- 
 const evQ = evQSvc.getSpecialEventQueue(CI.nsIEventQueueService.CURRENT_THREAD_EVENT_QUEUE);
 
 function runEventPump()

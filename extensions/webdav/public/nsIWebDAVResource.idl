@@ -36,10 +36,12 @@
 
 #include "nsISupports.idl"
 
+interface nsIURL;
+
 [scriptable,uuid(9ec5321f-e3ea-4812-a4c7-5366a01b609e)]
 interface nsIWebDAVResource : nsISupports
 {
-    readonly attribute AUTF8String urlSpec;
+    readonly attribute nsIURL resourceURL;
 };
 
 [scriptable,uuid(8956be34-abad-4c1a-88eb-cbc1851547ea)]

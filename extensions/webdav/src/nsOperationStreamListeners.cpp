@@ -37,6 +37,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
+#include "nsIURL.h"
 
 #include "nsIDOM3Node.h"
 #include "nsIDOMDocument.h"
@@ -206,7 +207,14 @@ OperationStreamListener::SignalDetail(PRUint32 statusCode,
                                       nsACString &resource,
                                       nsISupports *detail)
 {
-    mListener->OnOperationDetail(statusCode, resource, mOperation, detail);
+    nsCOMPtr<nsIURL> resourceURL, detailURL;
+    nsCOMPtr<nsIURI> detailURI;
+    if (NS_SUCCEEDED(mResource->GetResourceURL(getter_AddRefs(resourceURL))) &&
+        NS_SUCCEEDED(resourceURL->Clone(getter_AddRefs(detailURI))) &&
+        (detailURL = do_QueryInterface(detailURI)) &&
+        NS_SUCCEEDED(detailURI->SetSpec(resource))) {
+        mListener->OnOperationDetail(statusCode, detailURL, mOperation, detail);
+    }
 }
 
 nsresult
