@@ -568,6 +568,7 @@ ENDJS
 sub query_to_english {
     my $english = 'Checkins ';
 
+    $::query_module = 'all' unless defined $::query_module;
     if( $::query_module eq 'allrepositories' ){
         $english .= "to <i>All Repositories</i> ";
     }
