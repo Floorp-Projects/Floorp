@@ -873,13 +873,22 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 #endif
 		break;
 	case nsMsgSearchOp::EndsWith: 
+    {
+      PRUint32 searchStrLen = (PRUint32) PL_strlen(stringToMatch);
+      if (n_str.Length() <= searchStrLen)
+      {
+        PRInt32 sourceStrOffset = searchStrLen - n_str.Length();
+        if (PL_strcmp(stringToMatch + sourceStrOffset, n_str) == 0)
+          result = PR_TRUE;
+      }
+    }
 #ifdef DO_I18N_YET
 		{
 		if((nsnull != n_str) && (nsnull != n_header) && INTL_StrEndWith(csid, n_header, n_str))
 			result = PR_TRUE;
 		}
 #else
-		NS_ASSERTION(PR_FALSE, "not implemented yet");
+
 #endif
 		break;
 	default:
