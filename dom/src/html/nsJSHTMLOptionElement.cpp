@@ -327,6 +327,22 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
+      case HTMLOPTIONELEMENT_SELECTED:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptionelement.selected", PR_TRUE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        PRBool prop;
+        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_BOOLEAN_ERR);
+        }
+      
+        a->SetSelected(prop);
+        
+        break;
+      }
       case HTMLOPTIONELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
@@ -412,7 +428,7 @@ static JSPropertySpec HTMLOptionElementProperties[] =
   {"index",    HTMLOPTIONELEMENT_INDEX,    JSPROP_ENUMERATE},
   {"disabled",    HTMLOPTIONELEMENT_DISABLED,    JSPROP_ENUMERATE},
   {"label",    HTMLOPTIONELEMENT_LABEL,    JSPROP_ENUMERATE},
-  {"selected",    HTMLOPTIONELEMENT_SELECTED,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"selected",    HTMLOPTIONELEMENT_SELECTED,    JSPROP_ENUMERATE},
   {"value",    HTMLOPTIONELEMENT_VALUE,    JSPROP_ENUMERATE},
   {0}
 };

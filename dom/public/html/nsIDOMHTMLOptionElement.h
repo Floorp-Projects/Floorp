@@ -52,6 +52,7 @@ public:
   NS_IMETHOD    SetLabel(const nsString& aLabel)=0;
 
   NS_IMETHOD    GetSelected(PRBool* aSelected)=0;
+  NS_IMETHOD    SetSelected(PRBool aSelected)=0;
 
   NS_IMETHOD    GetValue(nsString& aValue)=0;
   NS_IMETHOD    SetValue(const nsString& aValue)=0;
@@ -70,6 +71,7 @@ public:
   NS_IMETHOD    GetLabel(nsString& aLabel);  \
   NS_IMETHOD    SetLabel(const nsString& aLabel);  \
   NS_IMETHOD    GetSelected(PRBool* aSelected);  \
+  NS_IMETHOD    SetSelected(PRBool aSelected);  \
   NS_IMETHOD    GetValue(nsString& aValue);  \
   NS_IMETHOD    SetValue(const nsString& aValue);  \
 
@@ -87,6 +89,7 @@ public:
   NS_IMETHOD    GetLabel(nsString& aLabel) { return _to GetLabel(aLabel); } \
   NS_IMETHOD    SetLabel(const nsString& aLabel) { return _to SetLabel(aLabel); } \
   NS_IMETHOD    GetSelected(PRBool* aSelected) { return _to GetSelected(aSelected); } \
+  NS_IMETHOD    SetSelected(PRBool aSelected) { return _to SetSelected(aSelected); } \
   NS_IMETHOD    GetValue(nsString& aValue) { return _to GetValue(aValue); } \
   NS_IMETHOD    SetValue(const nsString& aValue) { return _to SetValue(aValue); } \
 

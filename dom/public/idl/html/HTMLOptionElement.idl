@@ -10,7 +10,7 @@
             attribute  long                 index;
             attribute  boolean              disabled;
             attribute  DOMString            label;
-   readonly attribute  boolean              selected;
+            attribute  boolean              selected;
             attribute  DOMString            value;
  };
 
