@@ -39,8 +39,9 @@
                        "networkProxyFTP", "networkProxyFTP_Port",
                        "networkProxyGopher", "networkProxyGopher_Port",
                        "networkProxyHTTP", "networkProxyHTTP_Port", 
-                       "networkProxySSL", "networkProxySSL_Port", 
                        "networkProxySOCKS", "networkProxySOCKS_Port",
+                       "networkProxySOCKSVersion",
+                       "networkProxySSL", "networkProxySSL_Port", 
                        "networkProxyNone", "networkProxyAutoconfigURL"];
   ]]>
   </script>
@@ -53,7 +54,6 @@
 
   <groupbox orient="vertical">
     <label value="&proxyTitle.label;"/>
-    <html>&networkHeader.label;</html>
 
     <radiogroup id="networkProxyType" orient="vertical"
                 pref="true" preftype="int" prefstring="network.proxy.type"
@@ -70,7 +70,9 @@
         
         <rows>
           <row align="center">
+            <hbox autostretch="never" align="right">
               <text class="label" value="&ftp.label;" accesskey="&ftp.accesskey;" for="networkProxyFTP"/>
+            </hbox>
             <hbox align="center">
               <textbox id="networkProxyFTP" pref="true" preftype="string" prefstring="network.proxy.ftp"
                          prefattribute="value" flex="1"/>
@@ -80,7 +82,9 @@
             </hbox>
           </row>
           <row align="center">
-            <text class="label" value="&gopher.label;" accesskey="&gopher.accesskey;" for="networkProxyGopher"/>
+            <hbox autostretch="never" align="right">
+              <text class="label" value="&gopher.label;" accesskey="&gopher.accesskey;" for="networkProxyGopher"/>
+            </hbox>
             <hbox align="center">
               <textbox id="networkProxyGopher" pref="true" preftype="string" prefstring="network.proxy.gopher"
                          prefattribute="value" flex="1"/>
@@ -91,7 +95,9 @@
             </hbox>
           </row>
           <row align="center">
-            <text class="label" value="&http.label;" accesskey="&http.accesskey;" for="networkProxyHTTP"/>
+            <hbox autostretch="never" align="right">
+              <text class="label" value="&http.label;" accesskey="&http.accesskey;" for="networkProxyHTTP"/>
+            </hbox>
             <hbox align="center">
               <textbox id="networkProxyHTTP" pref="true" preftype="string" prefstring="network.proxy.http"
                          prefattribute="value" flex="1"/>
@@ -101,7 +107,9 @@
             </hbox>
           </row>
           <row align="center">
-            <text class="label" value="&ssl.label;" accesskey="&ssl.accesskey;" for="networkProxySSL"/>
+            <hbox autostretch="never" align="right">
+              <text class="label" value="&ssl.label;" accesskey="&ssl.accesskey;" for="networkProxySSL"/>
+            </hbox>
             <hbox align="center">
               <textbox id="networkProxySSL" pref="true" preftype="string" prefstring="network.proxy.ssl"
                          prefattribute="value" flex="1"/>
@@ -111,7 +119,9 @@
             </hbox>
           </row>
           <row align="center">
-            <text class="label" value="&socks.label;" accesskey="&socks.accesskey;" for="networkProxySOCKS"/>
+            <hbox autostretch="never" align="right">
+              <text class="label" value="&socks.label;" accesskey="&socks.accesskey;" for="networkProxySOCKS"/>
+            </hbox>
             <hbox align="center">
               <textbox id="networkProxySOCKS" pref="true" preftype="string" prefstring="network.proxy.socks"
                        prefattribute="value" flex="1"/>
@@ -120,18 +130,30 @@
                        prefattribute="value" size="5"/>
             </hbox>
           </row>
+          <row>
+            <spacer/>
+            <radiogroup id="networkProxySOCKSVersion" orient="horizontal"
+              pref="true" preftype="int" prefstring="network.proxy.socks_version"
+              prefattribute="value">
+                <radio group="networkProxySOCKSVersion" id="networkProxySOCKSVersion4" value="4" label="&socks4.label;" accesskey="&socks4.accesskey;" />
+                <radio group="networkProxySOCKSVersion" id="networkProxySOCKSVersion5" value="5" label="&socks5.label;" accesskey="&socks5.accesskey;" />
+            </radiogroup>
+          </row>
+
           <row align="center"> 
-            <text class="label" value="&noproxy.label;" accesskey="&noproxy.accesskey;" for="networkProxyNone"/>
+            <hbox autostretch="never" align="right">
+              <text class="label" value="&noproxy.label;" accesskey="&noproxy.accesskey;" for="networkProxyNone"/>
+            </hbox>
             <textbox id="networkProxyNone" pref="true" preftype="string" prefstring="network.proxy.no_proxies_on"
                        prefattribute="value"/>
           </row>
           <row>
-            <spring/>
+            <spacer/>
             <text class="label" value="&noproxyExplain.label;" for="networkProxyNone"/>
           </row>
         </rows>
       </grid>
-      <hbox align="center">
+      <hbox align="left">
         <radio group="networkProxyType" value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;"                        oncommand="DoEnabling();"/>
       </hbox>
       <hbox class="indent" flex="1">
