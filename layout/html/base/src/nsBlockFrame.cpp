@@ -1078,7 +1078,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   // What are those cases, and do we get the wrong behavior?
 
   // Compute final width
-  nscoord maxWidth = 0;
+  nscoord maxElementWidth = 0;
 #ifdef NOISY_KIDXMOST
   printf("%p aState.mKidXMost=%d\n", this, aState.mKidXMost); 
 #endif
@@ -1094,12 +1094,12 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
         // we want the max-element-width to be the same either way
         // (i.e., whether it's an uncontsrained reflow or a fixed-width
         // reflow).  Thus, do the same thing we do below.
-        maxWidth = aState.mMaxElementWidth +
+        maxElementWidth = aState.mMaxElementWidth +
           borderPadding.left + borderPadding.right;
       } else {
         // When style defines the width use it for the max-element-width
         // because we can't shrink any smaller.
-        maxWidth = aMetrics.width;
+        maxElementWidth = aMetrics.width;
       }
     }
   }
@@ -1136,12 +1136,12 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     if (aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH)) {
       // Add in border and padding dimensions to already computed
       // max-element-width values.
-      maxWidth = aState.mMaxElementWidth +
+      maxElementWidth = aState.mMaxElementWidth +
         borderPadding.left + borderPadding.right;
-      if (computedWidth < maxWidth) {
+      if (computedWidth < maxElementWidth) {
         // XXXldb It's *compute* max-element-width, not *change size
         // based on* max-element-width...
-        computedWidth = maxWidth;
+        computedWidth = maxElementWidth;
       }
     }
 
@@ -1278,7 +1278,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 
   if (aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH)) {
     // Store away the final value
-    aMetrics.mMaxElementWidth = maxWidth;
+    aMetrics.mMaxElementWidth = maxElementWidth;
 #ifdef DEBUG
     if (gNoisyMaxElementWidth) {
       IndentBy(stdout, gNoiseIndent);
@@ -1304,10 +1304,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     printf(": WARNING: desired:%d,%d\n", aMetrics.width, aMetrics.height);
   }
   if (aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH) &&
-      (maxWidth > aMetrics.width))) {
+      (maxElementWidth > aMetrics.width))) {
     ListTag(stdout);
     printf(": WARNING: max-element-width:%d desired:%d,%d maxSize:%d,%d\n",
-           maxWidth, aMetrics.width, aMetrics.height,
+           maxElementWidth, aMetrics.width, aMetrics.height,
            aState.mReflowState.availableWidth,
            aState.mReflowState.availableHeight);
   }
@@ -1321,7 +1321,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       }
       ListTag(stdout);
       printf(": max-element-width:%d desired:%d,%d maxSize:%d,%d\n",
-             maxWidth, aMetrics.width, aMetrics.height,
+             maxElementWidth, aMetrics.width, aMetrics.height,
              aState.mReflowState.availableWidth,
              aState.mReflowState.availableHeight);
     }
