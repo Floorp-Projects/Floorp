@@ -612,7 +612,7 @@ _JAR_REGCHROME_DISABLE_JAR=0
 
 !endif
 
-!if "$(OS_TARGET)" == "WIN95"
+!if "$(WINOS)" == "WIN95"
 _NO_FLOCK=-l
 !else
 _NO_FLOCK=
