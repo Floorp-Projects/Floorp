@@ -31,7 +31,7 @@
 #include "nsStringValue.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsBufferManagerLog, 0)
+NS_IMPL_LOG(nsBufferManagerLog)
 #define PRINTF NS_LOG_PRINTF(nsBufferManagerLog)
 #define FLUSH  NS_LOG_FLUSH(nsBufferManagerLog)
 

@@ -25,7 +25,7 @@
 #include "MainWidget.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsEmbedXlibIntoQtLog, 0)
+NS_IMPL_LOG(nsEmbedXlibIntoQtLog)
 #define PRINTF NS_LOG_PRINTF(nsEmbedXlibIntoQtLog)
 #define FLUSH  NS_LOG_FLUSH(nsEmbedXlibIntoQtLog)
 

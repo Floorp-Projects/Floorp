@@ -61,7 +61,7 @@
 #include "nsAEDefs.h"       // for AE_ASSERT
 #include "nslog.h"
 
-NS_IMPL_LOG(patriciaLog, 0)
+NS_IMPL_LOG(patriciaLog)
 #define PRINTF NS_LOG_PRINTF(patriciaLog)
 #define FLUSH  NS_LOG_FLUSH(patriciaLog)
 

@@ -25,7 +25,7 @@
 #include "nsQtEventProcessor.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsQtEventProcessorLog, 0)
+NS_IMPL_LOG(nsQtEventProcessorLog)
 #define PRINTF NS_LOG_PRINTF(nsQtEventProcessorLog)
 #define FLUSH  NS_LOG_FLUSH(nsQtEventProcessorLog)
 
