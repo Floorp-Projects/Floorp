@@ -252,6 +252,7 @@ class nsInstall
         PRInt32    FileOpFileGetModDate(nsInstallFolder& aTarget, double* aReturn);
         PRInt32    FileOpFileGetSize(nsInstallFolder& aTarget, PRInt64* aReturn);
         PRInt32    FileOpFileIsDirectory(nsInstallFolder& aTarget, PRBool* aReturn);
+        PRInt32    FileOpFileIsWritable(nsInstallFolder& aTarget, PRBool* aReturn);
         PRInt32    FileOpFileIsFile(nsInstallFolder& aTarget, PRBool* aReturn);
         PRInt32    FileOpFileModDateChanged(nsInstallFolder& aTarget, double aOldStamp, PRBool* aReturn);
         PRInt32    FileOpFileMove(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt32* aReturn);

@@ -773,6 +773,52 @@ InstallFileOpFileIsDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 }
 
 //
+// Native method FileIsWritable
+//
+JSBool PR_CALLBACK
+InstallFileOpFileIsWritable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  PRInt32 nativeRet;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
+
+  *rval = BOOLEAN_TO_JSVAL(PR_FALSE);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if(nsnull == nativeThis)
+  {
+    return JS_TRUE;
+  }
+
+  if (argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
+  {
+    *rval = BOOLEAN_TO_JSVAL(PR_FALSE);
+    return JS_TRUE;
+  }
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+  {
+    *rval = BOOLEAN_TO_JSVAL(PR_FALSE);
+    return JS_TRUE;
+  }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+  if(!folder || NS_OK != nativeThis->FileOpFileIsWritable(*folder, &nativeRet))
+  {
+    return JS_TRUE;
+  }
+
+  *rval = BOOLEAN_TO_JSVAL(nativeRet);
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method FileIsFile
 //
 JSBool PR_CALLBACK
@@ -1424,6 +1470,7 @@ static JSFunctionSpec FileOpMethods[] =
   {"modDate",                   InstallFileOpFileGetModDate,           1},
   {"size",                      InstallFileOpFileGetSize,              1},
   {"isDirectory",               InstallFileOpFileIsDirectory,          1},
+  {"isWritable",                InstallFileOpFileIsWritable,           1},
   {"isFile",                    InstallFileOpFileIsFile,               1},
   {"modDateChanged",            InstallFileOpFileModDateChanged,       2},
   {"move",                      InstallFileOpFileMove,                 2},

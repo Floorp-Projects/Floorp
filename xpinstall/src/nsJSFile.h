@@ -67,6 +67,9 @@ JSBool PR_CALLBACK
 InstallFileOpFileIsDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 JSBool PR_CALLBACK
+InstallFileOpFileIsWritable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+
+JSBool PR_CALLBACK
 InstallFileOpFileIsFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 JSBool PR_CALLBACK

@@ -1838,6 +1838,7 @@ static JSFunctionSpec InstallMethods[] =
   {"fileGetModDate",            InstallFileOpFileGetModDate,           1},
   {"fileGetSize",               InstallFileOpFileGetSize,              1},
   {"fileIsDirectory",           InstallFileOpFileIsDirectory,          1},
+  {"fileIsWritable",            InstallFileOpFileIsWritable,           1},
   {"fileIsFile",                InstallFileOpFileIsFile,               1},
   {"fileModDateChanged",        InstallFileOpFileModDateChanged,       2},
   {"fileMove",                  InstallFileOpFileMove,                 2},
