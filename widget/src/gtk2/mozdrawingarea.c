@@ -44,6 +44,8 @@ static void moz_drawingarea_create_windows      (MozDrawingarea *drawingarea,
 						 GdkWindow *parent,
 						 GtkWidget *widget);
 
+static void moz_drawingarea_finalize            (GObject *object);
+
 static GObjectClass *parent_class = NULL;
 
 GtkType
@@ -98,6 +100,10 @@ moz_drawingarea_new (MozDrawingarea *parent, MozContainer *widget_parent)
 void
 moz_drawingarea_class_init (MozDrawingareaClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->finalize = moz_drawingarea_finalize;
+
   parent_class = g_type_class_peek_parent(klass);
 }
 
@@ -148,6 +154,21 @@ moz_drawingarea_create_windows (MozDrawingarea *drawingarea, GdkWindow *parent,
   /* set the default pixmap to None so that you don't end up with the
      gtk default which is BlackPixel. */
   gdk_window_set_back_pixmap(drawingarea->inner_window, NULL, FALSE);
+}
+
+void
+moz_drawingarea_finalize (GObject *object)
+{
+  MozDrawingarea *drawingarea;
+  
+  g_return_if_fail(IS_MOZ_DRAWINGAREA(object));
+
+  drawingarea = MOZ_DRAWINGAREA(object);
+
+  gdk_window_destroy(drawingarea->inner_window);
+  gdk_window_destroy(drawingarea->clip_window);
+
+  (* parent_class->finalize) (object);
 }
 
 void

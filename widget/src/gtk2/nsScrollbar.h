@@ -63,6 +63,7 @@ class nsScrollbar : public nsCommonWidget,
                     nsIAppShell      *aAppShell = nsnull,
                     nsIToolkit       *aToolkit = nsnull,
                     nsWidgetInitData *aInitData = nsnull);
+  NS_IMETHOD Destroy(void);
   NS_IMETHOD IsVisible(PRBool & aState);
   NS_IMETHOD ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
@@ -83,8 +84,6 @@ class nsScrollbar : public nsCommonWidget,
   NS_IMETHOD ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
   NS_IMETHOD BeginResizingChildren(void);
   NS_IMETHOD EndResizingChildren(void);
-  NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
-  NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener,
                                  PRBool aDoCapture,
                                  PRBool aConsumeRollupEvent);
@@ -101,7 +100,19 @@ class nsScrollbar : public nsCommonWidget,
   NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
 			   PRUint32 aPosition, PRUint32 aLineIncrement);
 
-  // stuff from common widget
+  // from nsBaseWidget
+  NS_IMETHOD         SetBounds        (const nsRect &aRect);
+
+  nsresult NativeCreate(nsIWidget        *aParent,
+		        nsNativeWidget    aNativeParent,
+		        const nsRect     &aRect,
+		        EVENT_CALLBACK    aHandleEventFunction,
+		        nsIDeviceContext *aContext,
+		        nsIAppShell      *aAppShell,
+		        nsIToolkit       *aToolkit,
+		        nsWidgetInitData *aInitData);
+  
+  // common widget
   void NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint);
   
   void NativeResize(PRInt32 aX, PRInt32 aY,
@@ -109,7 +120,12 @@ class nsScrollbar : public nsCommonWidget,
 		    PRBool  aRepaint);
   
   void NativeShow  (PRBool  aAction);
-  
+
+  // Callbacks
+  void OnValueChanged(void);
+
  private:
-  GtkWidget *mScrollbar;
+  GtkWidget      *mWidget;
+  GtkOrientation  mOrientation;
+  GtkAdjustment  *mAdjustment;
 };

@@ -103,12 +103,6 @@ class nsWindow : public nsCommonWidget {
   NS_IMETHOD         ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
   NS_IMETHOD         BeginResizingChildren(void);
   NS_IMETHOD         EndResizingChildren(void);
-  NS_IMETHOD         GetPreferredSize(PRInt32 &aWidth,
-				      PRInt32 &aHeight);
-  NS_IMETHOD         SetPreferredSize(PRInt32 aWidth,
-				      PRInt32 aHeight);
-  NS_IMETHOD         Paint(nsIRenderingContext &aRenderingContext,
-			   const nsRect        &aDirtyRect);
   NS_IMETHOD         EnableDragDrop(PRBool aEnable);
   virtual void       ConvertToDeviceCoordinates(nscoord &aX,
 						nscoord &aY);
@@ -182,17 +176,12 @@ class nsWindow : public nsCommonWidget {
   MozContainer       *mContainer;
   MozDrawingarea     *mDrawingarea;
 
-  PRPackedBool        mIsDestroyed;
-
   PRPackedBool        mContainerGotFocus;
   PRPackedBool        mContainerLostFocus;
   PRPackedBool        mContainerBlockFocus;
   PRPackedBool        mHasFocus;
 
   PRPackedBool        mInKeyRepeat;
-
-  PRUint32            mPreferredWidth;
-  PRUint32            mPreferredHeight;
 
  public:
   nsWindow           *mFocusChild;

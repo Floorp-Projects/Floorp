@@ -39,11 +39,14 @@
 nsCommonWidget::nsCommonWidget()
 {
   mIsTopLevel       = PR_FALSE;
-  mOnDestroyCalled  = PR_FALSE;
+  mIsDestroyed      = PR_FALSE;
   mNeedsResize      = PR_FALSE;
   mListenForResizes = PR_FALSE;
   mIsShown          = PR_FALSE;
   mNeedsShow        = PR_FALSE;
+
+  mPreferredWidth   = 0;
+  mPreferredHeight  = 0;
 }
 
 nsCommonWidget::~nsCommonWidget()
@@ -192,6 +195,18 @@ nsCommonWidget::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent,
   aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK)
     ? PR_TRUE : PR_FALSE;
   aEvent.isMeta    = PR_FALSE; // Gtk+ doesn't have meta
+}
+
+void
+nsCommonWidget::InitScrollbarEvent(nsScrollbarEvent &aEvent, PRUint32 aMsg)
+{
+  memset(&aEvent, 0, sizeof(nsScrollbarEvent));
+  aEvent.eventStructType = NS_SCROLLBAR_EVENT;
+  aEvent.message = NS_SCROLLBAR_POS;
+  aEvent.widget  = NS_STATIC_CAST(nsIWidget *, this);
+  // XXX do we need to get the pointer position relative to the widget
+  // or not?
+
 }
 
 void
@@ -414,6 +429,25 @@ nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCommonWidget::GetPreferredSize(PRInt32 &aWidth,
+			   PRInt32 &aHeight)
+{
+  aWidth  = mPreferredWidth;
+  aHeight = mPreferredHeight;
+  return (mPreferredWidth != 0 && mPreferredHeight != 0) ? 
+    NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsCommonWidget::SetPreferredSize(PRInt32 aWidth,
+			   PRInt32 aHeight)
+{
+  mPreferredWidth  = aWidth;
+  mPreferredHeight = aHeight;
+  return NS_OK;
+}
+
 void
 nsCommonWidget::OnDestroy(void)
 {
@@ -424,6 +458,9 @@ nsCommonWidget::OnDestroy(void)
 
   // release references to children, device context, toolkit + app shell
   nsBaseWidget::OnDestroy();
+
+  // let go of our parent
+  mParent = nsnull;
 
   nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
 

@@ -47,6 +47,7 @@
 /* utility functions */
 static nsWindow *get_window_for_gtk_widget(GtkWidget *widget);
 static nsWindow *get_window_for_gdk_window(GdkWindow *window);
+static nsWindow *get_owning_window_for_gdk_window(GdkWindow *window);
 
 /* callbacks from widgets */
 static gboolean expose_event_cb           (GtkWidget *widget,
@@ -83,10 +84,7 @@ nsWindow::nsWindow()
   mContainer           = nsnull;
   mDrawingarea         = nsnull;
   mShell               = nsnull;
-  mIsDestroyed         = PR_FALSE;
   mWindowType          = eWindowType_child;
-  mPreferredWidth      = 0;
-  mPreferredHeight     = 0;
   mContainerGotFocus   = PR_FALSE;
   mContainerLostFocus  = PR_FALSE;
   mContainerBlockFocus = PR_FALSE;
@@ -138,11 +136,31 @@ nsWindow::Destroy(void)
 
   NativeShow(PR_FALSE);
 
+  // walk the list of children and call destroy on them.
+  nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
+  if (children) {
+    nsCOMPtr<nsISupports> isupp;
+    nsCOMPtr<nsIWidget> child;
+    while (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(isupp))
+			&& isupp)) {
+      child = do_QueryInterface(isupp);
+      if (child) {
+	child->Destroy();
+      }
+
+      if (NS_FAILED(children->Next()))
+        break;
+    }
+  }
+
   // make sure that we remove ourself as the focus window
   if (mHasFocus) {
+    printf("automatically losing focus...\n");
     mHasFocus = PR_FALSE;
+    // get the owning gtk widget and the nsWindow for that widget and
+    // remove ourselves as the focus widget tracked in that window
     nsWindow *owningWindow =
-      get_window_for_gdk_window(mDrawingarea->inner_window);
+      get_owning_window_for_gdk_window(mDrawingarea->inner_window);
     owningWindow->mFocusChild = nsnull;
   }
 
@@ -184,7 +202,7 @@ nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 NS_IMETHODIMP
 nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
-  if ((aX == mBounds.x) && (aY == mBounds.y))
+  if (aX == mBounds.x && aY == mBounds.y)
     return NS_OK;
 
   printf("nsWindow::Move [%p] %d %d\n", (void *)this,
@@ -264,7 +282,6 @@ nsWindow::SetFocus(PRBool aRaise)
   if (owningWindow->mFocusChild) {
     printf("removing focus child %p\n", (void *)owningWindow->mFocusChild);
     owningWindow->mFocusChild->LoseFocus();
-    owningWindow->mFocusChild->DispatchLostFocusEvent();
   }
 
   // Set this window to be the focused child window, update our has
@@ -321,7 +338,14 @@ nsWindow::SetCursor(nsCursor aCursor)
 NS_IMETHODIMP
 nsWindow::Validate()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Get the update for this window and, well, just drop it on the
+  // floor.
+  GdkRegion *region = gdk_window_get_update_area(mDrawingarea->inner_window);
+
+  if (region)
+    gdk_region_destroy(region);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -368,8 +392,9 @@ nsWindow::InvalidateRegion(const nsIRegion* aRegion,
   GdkRegion *region = nsnull;
   aRegion->GetNativeRegion((void *)region);
 
-  gdk_window_invalidate_region(mDrawingarea->inner_window,
-			       region, TRUE);
+  if (region)
+    gdk_window_invalidate_region(mDrawingarea->inner_window,
+				 region, TRUE);
   
   return NS_OK;
 }
@@ -377,7 +402,8 @@ nsWindow::InvalidateRegion(const nsIRegion* aRegion,
 NS_IMETHODIMP
 nsWindow::Update()
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  gdk_window_process_updates(mDrawingarea->inner_window, TRUE);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -391,8 +417,30 @@ nsWindow::Scroll(PRInt32  aDx,
 		 PRInt32  aDy,
 		 nsRect  *aClipRect)
 {
-  // XXX fix this so that it doesn't expose twice!
   moz_drawingarea_scroll(mDrawingarea, aDx, aDy);
+
+  // Update bounds on our child windows
+  nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
+  if (children) {
+    nsCOMPtr<nsISupports> isupp;
+    nsCOMPtr<nsIWidget> child;
+    while (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(isupp))
+			&& isupp)) {
+      child = do_QueryInterface(isupp);
+      if (child) {
+        nsRect bounds;
+        child->GetBounds(bounds);
+        bounds.x += aDx;
+        bounds.y += aDy;
+        NS_STATIC_CAST(nsBaseWidget*, (nsIWidget*)child)->SetBounds(bounds);
+      }
+
+      if (NS_FAILED(children->Next()))
+        break;
+    }
+  }
+
+  // Process all updates so that everything is drawn.
   gdk_window_process_all_updates();
   return NS_OK;
 }
@@ -521,32 +569,6 @@ nsWindow::EndResizingChildren(void)
 }
 
 NS_IMETHODIMP
-nsWindow::GetPreferredSize(PRInt32 &aWidth,
-			   PRInt32 &aHeight)
-{
-  aWidth  = mPreferredWidth;
-  aHeight = mPreferredHeight;
-  return (mPreferredWidth != 0 && mPreferredHeight != 0) ? 
-    NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsWindow::SetPreferredSize(PRInt32 aWidth,
-			   PRInt32 aHeight)
-{
-  mPreferredWidth  = aWidth;
-  mPreferredHeight = aHeight;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindow::Paint(nsIRenderingContext &aRenderingContext,
-		const nsRect        &aDirtyRect)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsWindow::EnableDragDrop(PRBool aEnable)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -606,13 +628,17 @@ nsWindow::LoseFocus(void)
   // make sure that we reset our repeat counter so the next keypress
   // for this widget will get the down event
   mInKeyRepeat = PR_FALSE;
+
+  // Dispatch a lostfocus event
+  DispatchLostFocusEvent();
 }
 
 gboolean
 nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 {
   if (mIsDestroyed) {
-    printf("Expose event on destroyed window [%p]!\n", (void *)this);
+    printf("Expose event on destroyed window [%p] window %p\n",
+	   (void *)this, (void *)aEvent->window);
     return NS_OK;
   }
 
@@ -620,8 +646,10 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
   if (aEvent->window != mDrawingarea->inner_window)
     return FALSE;
 
-  printf("sending expose event [%p] %d %d %d %d\n",
+  printf("sending expose event [%p] %p 0x%lx\n\t%d %d %d %d\n",
 	 (void *)this,
+	 (void *)aEvent->window,
+	 GDK_WINDOW_XWINDOW(aEvent->window),
 	 aEvent->area.x, aEvent->area.y,
 	 aEvent->area.width, aEvent->area.height);
 
@@ -859,7 +887,6 @@ nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
   // send a lost focus event for the child window
   if (mFocusChild) {
     mFocusChild->LoseFocus();
-    mFocusChild->DispatchLostFocusEvent();
     mFocusChild->DispatchDeactivateEvent();
     mFocusChild = nsnull;
   }
@@ -986,7 +1013,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
     GdkWindow *parentWindow;
     // get the drawing area and the container from the parent
     if (aParent)
-      parentWindow = (GdkWindow *)aParent->GetNativeData(NS_NATIVE_WINDOW);
+      parentWindow = GDK_WINDOW(aParent->GetNativeData(NS_NATIVE_WINDOW));
     else
       parentWindow = GDK_WINDOW(aNativeParent);
 
@@ -1231,6 +1258,30 @@ get_window_for_gdk_window(GdkWindow *window)
   return NS_STATIC_CAST(nsWindow *, user_data);
 }
 
+/* static */
+nsWindow *
+get_owning_window_for_gdk_window(GdkWindow *window)
+{
+  gpointer user_data;
+  gdk_window_get_user_data(window, &user_data);
+
+  if (!user_data)
+    return nsnull;
+
+  GtkWidget *owningWidget = GTK_WIDGET(user_data);
+  
+  if (!owningWidget)
+    return nsnull;
+
+  user_data = NULL;
+  user_data = g_object_get_data(G_OBJECT(owningWidget), "nsWindow");
+  
+  if (!user_data)
+    return nsnull;
+
+  return (nsWindow *)user_data;
+}
+
 // gtk callbacks
 
 /* static */
@@ -1241,7 +1292,16 @@ expose_event_cb(GtkWidget *widget, GdkEventExpose *event)
   if (!window)
     return FALSE;
 
-  return window->OnExposeEvent(widget, event);
+  // XXX We are so getting lucky here.  We are doing all of
+  // mozilla's painting and then allowing default processing to occur.
+  // This means that Mozilla paints in all of it's stuff and then
+  // NO_WINDOW widgets (like scrollbars, for example) are painted by
+  // Gtk on top of what we painted.
+
+  // This return window->OnExposeEvent(widget, event); */
+
+  window->OnExposeEvent(widget, event);
+  return FALSE;
 }
 
 /* static */
@@ -1297,7 +1357,7 @@ enter_notify_event_cb (GtkWidget *widget,
 /* static */
 gboolean
 leave_notify_event_cb (GtkWidget *widget,
-				GdkEventCrossing *event)
+		       GdkEventCrossing *event)
 {
   nsWindow *window = get_window_for_gdk_window(event->window);
   if (!window)
@@ -1325,6 +1385,7 @@ motion_notify_event_cb (GtkWidget *widget, GdkEventMotion *event)
 gboolean
 button_press_event_cb   (GtkWidget *widget, GdkEventButton *event)
 {
+  printf("button_press_event_cb\n");
   nsWindow *window = get_window_for_gdk_window(event->window);
   if (!window)
     return TRUE;

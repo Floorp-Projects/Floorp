@@ -49,16 +49,29 @@ static void moz_container_size_allocate       (GtkWidget         *widget,
 					       GtkAllocation     *allocation);
 
 /* container class methods */
-static void moz_container_add         (GtkContainer      *container,
-				       GtkWidget         *widget);
 static void moz_container_remove      (GtkContainer      *container,
-				       GtkWidget         *widget);
+				       GtkWidget         *child_widget);
 static void moz_container_forall      (GtkContainer      *container,
 				       gboolean           include_internals,
 				       GtkCallback        callback,
 				       gpointer           callback_data);
 
+typedef struct _MozContainerChild MozContainerChild;
+
+struct _MozContainerChild {
+  GtkWidget *widget;
+  gint x;
+  gint y;
+};
+
+static void moz_container_allocate_child (MozContainer      *container,
+					  MozContainerChild *child);
+static MozContainerChild *
+moz_container_get_child (MozContainer *container, GtkWidget *child);
+
 static GtkContainerClass *parent_class = NULL;
+
+/* public methods */
 
 GtkType
 moz_container_get_type(void)
@@ -99,6 +112,85 @@ moz_container_new (void)
 }
 
 void
+moz_container_put (MozContainer *container, GtkWidget *child_widget,
+		   gint x, gint y)
+{
+  MozContainerChild *child;
+
+  child = g_new (MozContainerChild, 1);
+
+  child->widget = child_widget;
+  child->x = x;
+  child->y = y;
+
+  printf("moz_container_put %p %p %d %d\n", (void *)container,
+	 (void *)child_widget, x, y);
+
+  container->children = g_list_append (container->children, child);
+
+  /* we assume that the caller of this function will have already set
+     the parent GdkWindow because we can have many anonymous children. */
+  gtk_widget_set_parent(child_widget, GTK_WIDGET(container));
+}
+
+void
+moz_container_move (MozContainer *container, GtkWidget *child_widget,
+		    gint x, gint y, gint width, gint height)
+{
+  MozContainerChild *child;
+  GtkAllocation new_allocation;
+
+  child = moz_container_get_child (container, child_widget);
+
+  child->x = x;
+  child->y = y;
+
+  new_allocation.x = x;
+  new_allocation.y = y;
+  new_allocation.width = width;
+  new_allocation.height = height;
+
+  printf("moz_container_move %p %p will allocate to %d %d %d %d\n",
+	 (void *)container, (void *)child_widget,
+	 new_allocation.x, new_allocation.y,
+	 new_allocation.width, new_allocation.height);
+  
+  gtk_widget_size_allocate(child_widget, &new_allocation);
+}
+
+/* This function updates the allocation on a child widget without
+causing a size_allocate event to be generated on that widget.  This
+should only be used for scrolling since it's assumed that the expose
+event created by the scroll will update any widgets that come into view. */
+
+void
+moz_container_scroll_update (MozContainer *container, GtkWidget *child_widget,
+			     gint x, gint y)
+{
+  MozContainerChild *child;
+  GtkAllocation new_allocation;
+
+  child = moz_container_get_child (container, child_widget);
+
+  child->x = x;
+  child->y = y;
+
+  new_allocation.x = x;
+  new_allocation.y = y;
+  new_allocation.width = child_widget->allocation.width;
+  new_allocation.height = child_widget->allocation.height;
+
+  printf("moz_container_update %p %p will allocate to %d %d %d %d\n",
+	 (void *)container, (void *)child_widget,
+	 new_allocation.x, new_allocation.y,
+	 new_allocation.width, new_allocation.height);
+
+  gtk_widget_size_allocate(child_widget, &new_allocation);
+}
+
+/* static methods */
+
+void
 moz_container_class_init (MozContainerClass *klass)
 {
   /*GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -113,7 +205,6 @@ moz_container_class_init (MozContainerClass *klass)
   widget_class->realize = moz_container_realize;
   widget_class->size_allocate = moz_container_size_allocate;
 
-  container_class->add = moz_container_add;
   container_class->remove = moz_container_remove;
   container_class->forall = moz_container_forall;
 }
@@ -140,17 +231,15 @@ moz_container_map (GtkWidget *widget)
   GTK_WIDGET_SET_FLAGS (widget, GTK_MAPPED);
 
   tmp_list = container->children;
-  while (tmp_list)
-    {
-      tmp_child = GTK_WIDGET(tmp_list->data);
-
-      if (GTK_WIDGET_VISIBLE(tmp_child))
-	{
-	  if (!GTK_WIDGET_MAPPED(tmp_child))
-	    gtk_widget_map(tmp_child);
-	}
-      tmp_list = tmp_list->next;
-    }
+  while (tmp_list) {
+    tmp_child = ((MozContainerChild *)tmp_list->data)->widget;
+    
+    if (GTK_WIDGET_VISIBLE(tmp_child)) {
+      if (!GTK_WIDGET_MAPPED(tmp_child))
+	gtk_widget_map(tmp_child);
+      }
+    tmp_list = tmp_list->next;
+  }
 
   gdk_window_show (widget->window);
 }
@@ -199,7 +288,7 @@ moz_container_realize (GtkWidget *widget)
 
   widget->window = gdk_window_new (gtk_widget_get_parent_window (widget),
 				   &attributes, attributes_mask);
-  printf("widget->window is %p\n", widget->window);
+  printf("widget->window is %p\n", (void *)widget->window);
   gdk_window_set_user_data (widget->window, container);
 
   widget->style = gtk_style_attach (widget->style, widget->window);
@@ -214,15 +303,16 @@ void
 moz_container_size_allocate (GtkWidget     *widget,
 			     GtkAllocation *allocation)
 {
-  MozContainer *container;
-  GList        *tmp_list;
-  GtkAllocation  tmp_allocation;
-  GtkRequisition tmp_requisition;
+  MozContainer   *container;
+  GList          *tmp_list;
+  GtkAllocation   tmp_allocation;
+  GtkRequisition  tmp_requisition;
+  GtkWidget      *tmp_child;
 
   g_return_if_fail (IS_MOZ_CONTAINER (widget));
 
   printf("moz_container_size_allocate %p %d %d %d %d\n",
-	 widget,
+	 (void *)widget,
 	 allocation->x,
 	 allocation->y,
 	 allocation->width,
@@ -241,63 +331,44 @@ moz_container_size_allocate (GtkWidget     *widget,
   widget->allocation = *allocation;
 
   tmp_list = container->children;
-  while (tmp_list)
-    {
-      gtk_widget_size_request (GTK_WIDGET(tmp_list->data), &tmp_requisition);
-      tmp_allocation.x = 0;
-      tmp_allocation.y = 0;
-      tmp_allocation.width = tmp_requisition.width;
-      tmp_allocation.height = tmp_requisition.height;
-      gtk_widget_size_allocate (GTK_WIDGET(tmp_list->data), &tmp_allocation);
-      tmp_list = tmp_list->next;
-    }
 
-  if (GTK_WIDGET_REALIZED (widget))
-    {
-      gdk_window_move_resize(widget->window,
-			     widget->allocation.x,
-			     widget->allocation.y,
-			     widget->allocation.width,
-			     widget->allocation.height);
-    }
+  while (tmp_list) {
+    MozContainerChild *child = tmp_list->data;
+
+    moz_container_allocate_child (container, child);
+
+    tmp_list = tmp_list->next;
+  }
+
+  if (GTK_WIDGET_REALIZED (widget)) {
+    gdk_window_move_resize(widget->window,
+			   widget->allocation.x,
+			   widget->allocation.y,
+			   widget->allocation.width,
+			   widget->allocation.height);
+  }
 }
 
 void
-moz_container_add (GtkContainer *container, GtkWidget *widget)
+moz_container_remove (GtkContainer *container, GtkWidget *child_widget)
 {
+  MozContainerChild *child;
   MozContainer *moz_container;
-
-  g_return_if_fail(IS_MOZ_CONTAINER(container));
-
-  moz_container = MOZ_CONTAINER(container);
-
-  moz_container->children = g_list_append(moz_container->children, widget);
-
-  gtk_widget_set_parent (widget, GTK_WIDGET(moz_container));
-}
-
-void
-moz_container_remove (GtkContainer *container, GtkWidget *widget)
-{
   GList *tmp_list;
 
-  MozContainer *moz_container;
-
-  g_return_if_fail(IS_MOZ_CONTAINER(container));
+  g_return_if_fail (IS_MOZ_CONTAINER(container));
+  g_return_if_fail (GTK_IS_WIDGET(child_widget));
 
   moz_container = MOZ_CONTAINER(container);
 
-  tmp_list = g_list_find(moz_container->children, widget);
-  if (tmp_list)
-    {
-      gtk_widget_unparent (widget);
-      moz_container->children = g_list_remove_link (moz_container->children,
-						    tmp_list);
-      g_list_free_1 (tmp_list);
-    }
+  child = moz_container_get_child (moz_container, child_widget);
+  g_return_if_fail (child);
+
+  moz_container->children = g_list_remove(moz_container->children, child);
+  g_free(child);
 }
 
-static void
+void
 moz_container_forall (GtkContainer *container, gboolean include_internals,
 		      GtkCallback  callback, gpointer callback_data)
 {
@@ -310,9 +381,46 @@ moz_container_forall (GtkContainer *container, gboolean include_internals,
   moz_container = MOZ_CONTAINER(container);
 
   tmp_list = moz_container->children;
-  while (tmp_list)
-    {
-      (* callback) (GTK_WIDGET(tmp_list->data), callback_data);
-      tmp_list = tmp_list->next;
-    }
+  while (tmp_list) {
+    MozContainerChild *child;
+    child = tmp_list->data;
+    (* callback) (child->widget, callback_data);
+    tmp_list = tmp_list->next;
+  }
+}
+
+static void
+moz_container_allocate_child (MozContainer *container,
+			      MozContainerChild *child)
+{
+  GtkAllocation  allocation;
+  GtkRequisition requisition;
+
+  allocation.x = child->x;
+  allocation.y = child->y;
+  /* gtk_widget_get_child_requisition (child->widget, &requisition); */
+  /* gtk_widget_size_request (child->widget, &requisition); */
+  allocation.width = child->widget->allocation.width;
+  allocation.height = child->widget->allocation.height;
+
+  gtk_widget_size_allocate (child->widget, &allocation);
+}
+
+MozContainerChild *
+moz_container_get_child (MozContainer *container, GtkWidget *child_widget)
+{
+  GList *tmp_list;
+
+  tmp_list = container->children;
+  while (tmp_list) {
+    MozContainerChild *child;
+    
+    child = tmp_list->data;
+    tmp_list = tmp_list->next;
+
+    if (child->widget == child_widget)
+      return child;
+  }
+
+  return NULL;
 }
