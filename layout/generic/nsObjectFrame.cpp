@@ -946,6 +946,19 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
     nsAutoString classid;
     PRInt32 nameSpaceID;
 
+    if (NS_SUCCEEDED(rv = GetBaseURL(*getter_AddRefs(baseURL)))) {
+      nsAutoString codeBase;
+      if ((NS_CONTENT_ATTR_HAS_VALUE ==
+            mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) &&
+          !codeBase.IsEmpty()) {
+        nsCOMPtr<nsIURI> codeBaseURL;
+        rv = MakeAbsoluteURL(getter_AddRefs(codeBaseURL), codeBase, baseURL);
+        if (NS_SUCCEEDED(rv)) {
+          baseURL = codeBaseURL;
+        }
+      }
+    }
+
     // if we have a clsid, we're either an internal widget, an ActiveX control, or an applet
     mContent->GetNameSpaceID(nameSpaceID);
     if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(nameSpaceID, nsHTMLAtoms::classid, classid)) {
@@ -955,17 +968,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
       // if we find "java:" in the class id, we have a java applet
       if(bJavaObject) {
-        if (NS_FAILED(rv = GetBaseURL(*getter_AddRefs(baseURL)))) return rv;
-
-        nsAutoString codeBase;
-        if ((NS_CONTENT_ATTR_HAS_VALUE == 
-          mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase))) {          
-          nsCOMPtr<nsIURI> codeBaseURL;
-          rv = MakeAbsoluteURL(getter_AddRefs(codeBaseURL), codeBase, baseURL);
-          if (NS_SUCCEEDED(rv)) {
-            baseURL = codeBaseURL;
-          }
-        }
+        if (!baseURL) return NS_ERROR_FAILURE;
 
         fullURL = baseURL;
 
@@ -988,18 +991,9 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
           // if we haven't matched to an internal type, check to see if
           // we have an ActiveX handler
           // if not, create the default plugin
-          if (NS_FAILED(rv = GetBaseURL(*getter_AddRefs(baseURL)))) return rv;
+          if (!baseURL) return NS_ERROR_FAILURE;
 
-          // if we have a codebase, add it to the fullURL
-          nsAutoString codeBase;
-          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) {
-            nsCOMPtr<nsIURI> codeBaseURL;
-            rv = MakeAbsoluteURL(getter_AddRefs(fullURL), codeBase, baseURL);
-            if (NS_SUCCEEDED(rv)) {
-              baseURL = codeBaseURL;
-            }
-          } 
-          else fullURL = baseURL;
+          fullURL = baseURL;
 
           // get the nsIPluginHost interface
           pluginHost = do_GetService(kCPluginManagerCID);
@@ -1026,7 +1020,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
     }
     else { // the object is either an applet or a plugin
       nsAutoString    src;
-      if (NS_FAILED(rv = GetBaseURL(*getter_AddRefs(baseURL)))) return rv;
+      if (!baseURL) return NS_ERROR_FAILURE;
 
       // get the nsIPluginHost interface
       pluginHost = do_GetService(kCPluginManagerCID);
@@ -1036,16 +1030,8 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
       nsCOMPtr<nsIAtom> tag;
       mContent->GetTag(*getter_AddRefs(tag));
-      if (tag.get() == nsHTMLAtoms::applet) { 
+      if (tag.get() == nsHTMLAtoms::applet) {
         if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::code, src)) {
-          nsAutoString codeBase;
-          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) {
-            nsCOMPtr<nsIURI> codeBaseURL;
-            rv = MakeAbsoluteURL(getter_AddRefs(codeBaseURL), codeBase, baseURL);
-            if(rv == NS_OK) {
-              baseURL = codeBaseURL;
-            }
-          }
           // Create an absolute URL
           rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURL);
         }
@@ -1064,28 +1050,18 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
         }
         //stream in the object source if there is one...
         if (NS_CONTENT_ATTR_HAS_VALUE ==
-            mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) {
+              mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, src) ||
+            NS_CONTENT_ATTR_HAS_VALUE ==
+              mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) {
           // Create an absolute URL
           rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURL);
           if (NS_FAILED(rv)) {
             // Failed to create URI, maybe because we didn't
             // reconize the protocol handler ==> treat like
-            // no 'src' was specified in the embed tag
+            // no 'src'/'data' was specified in the embed/object tag
             fullURL = baseURL;
           }
         }
-        else if (NS_CONTENT_ATTR_HAS_VALUE ==
-                 mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) {
-          // Create an absolute URL
-          rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURL);
-          if (NS_FAILED(rv)) {
-            // Failed to create URI, maybe because we didn't
-            // reconize the protocol handler ==> treat like
-            // no 'data' was specified in the object tag
-            fullURL = baseURL;
-          }
-
-        } 
         else {
           // we didn't find a src or data param, so just set the url to the base
           fullURL = baseURL;
