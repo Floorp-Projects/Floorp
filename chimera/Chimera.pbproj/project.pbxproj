@@ -21,6 +21,7 @@
 				F57074BA026BFD0101A80166,
 				F57074BE026D80DF01A80166,
 				F59E9F3F0237E43401A967DF,
+				F52D5CCC027A867601A80166,
 			);
 			isa = PBXGroup;
 			name = Classes;
@@ -320,7 +321,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Navigator</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Navigator 0.2.5, © 2002 Mozilla</string>
+	<string>Navigator 0.2.6, © 2002 Mozilla</string>
 	<key>CFBundleIconFile</key>
 	<string>appicon.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -332,7 +333,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>Navigator 0.2.5</string>
+	<string>Navigator 0.2.6</string>
 	<key>CFBundleSignature</key>
 	<string>CHIM</string>
 	<key>CFBundleURLTypes</key>
@@ -350,7 +351,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>0.2.5</string>
+	<string>0.2.6</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSMainNibFile</key>
@@ -391,6 +392,7 @@
 				F5C3AB830270072A01A80166,
 				F541495C02711A8301A80166,
 				F541496002711B0101A80166,
+				F52D5CCD027A867601A80166,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -480,6 +482,7 @@
 				F5C3AB840270072A01A80166,
 				F541495D02711A8301A80166,
 				F541496102711B0101A80166,
+				F52D5CCE027A867601A80166,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -878,6 +881,7 @@
 				F5607CB5023944AD01A967DF,
 				F59E9F3D0237E28401A967DF,
 				F5137A1102676B9101026D05,
+				F52D5CCB027A867601A80166,
 			);
 			isa = PBXGroup;
 			name = Headers;
@@ -1358,6 +1362,28 @@
 		};
 		F528E21B020FD9620168DE43 = {
 			fileRef = F528E21A020FD9620168DE43;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52D5CCB027A867601A80166 = {
+			isa = PBXFileReference;
+			path = CHAutoCompleteTextField.h;
+			refType = 4;
+		};
+		F52D5CCC027A867601A80166 = {
+			isa = PBXFileReference;
+			path = CHAutoCompleteTextField.mm;
+			refType = 4;
+		};
+		F52D5CCD027A867601A80166 = {
+			fileRef = F52D5CCB027A867601A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52D5CCE027A867601A80166 = {
+			fileRef = F52D5CCC027A867601A80166;
 			isa = PBXBuildFile;
 			settings = {
 			};
