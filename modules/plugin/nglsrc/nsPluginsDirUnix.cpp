@@ -49,14 +49,24 @@
 
 /* Local helper functions */
  
-static PRUint32 CalculateVariantCount(const char* mimeTypes)
+static PRUint32 CalculateVariantCount(char* mimeTypes)
 {
     PRUint32 variants = 0;
-    const char* ptr = mimeTypes;
+    char* ptr = mimeTypes;
 
     while (*ptr) {
-        if (*ptr == MTYPE_END) 
-	    variants++;
+        if (*ptr == MTYPE_END) {
+            if (!ptr[1]) {
+                /*
+                 * This is a trailing separator, with nothing after it. We
+                 * normalize these away here by slamming a NUL in and
+                 * stopping.
+                 */
+                *ptr = 0;
+                break;
+            }
+            variants++;
+        }
         ++ptr; 
     }
 
@@ -256,8 +266,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 #endif
 
     // Copy MIME type input.
-    mdesc = (char *)PR_Malloc(strlen(mimedescr)+1);
-    strcpy(mdesc,mimedescr);
+    mdesc = PL_strdup(mimedescr);
 
     // Currently in MIME type input, a ';' is used as MIME type separator
     // and a MIME type's version separator, which makes parsing difficult.
