@@ -41,6 +41,15 @@
 #import "BrowserWindowController.h"
 #import "MainController.h"
 
+
+@interface BookmarksButton(Private)
+
+- (void)showFolderPopupAction:(id)aSender;
+- (void)showFolderPopup:(NSEvent*)event;
+
+@end
+
+
 @implementation BookmarksButton
 
 - (id)initWithFrame:(NSRect)frame
@@ -69,6 +78,12 @@
   }
   return self;
 }
+
+- (void)dealloc
+{
+  [super dealloc];
+}
+
 
 -(IBAction)openBookmark:(id)aSender
 {
@@ -180,34 +195,36 @@
   return YES;
 }
 
+- (void)showFolderPopupAction:(id)aSender
+{
+  [self showFolderPopup:[NSApp currentEvent]];
+}
+
+- (void)showFolderPopup:(NSEvent*)event
+{
+  NSMenu* popupMenu = [[NSMenu alloc] init];
+  // dummy first item
+  [popupMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];
+  // make a temporary BookmarksMenu to build the menu
+  BookmarksMenu* bmMenu = [[BookmarksMenu alloc] initWithMenu:popupMenu firstItem:1 rootContent:[mBookmarkItem contentNode] watchedFolder:eBookmarksFolderNormal];
+
+  // use a temporary NSPopUpButtonCell to display the menu.
+  NSPopUpButtonCell	*popupCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES];
+  [popupCell setMenu: popupMenu];
+  [popupCell setFont:[NSFont labelFontOfSize: 11.0]];
+  [popupCell trackMouse:event inRect:[self bounds] ofView:self untilMouseUp:YES];
+  [popupCell release];
+    
+  [bmMenu release];
+  [popupMenu release];
+}
+
 -(void)mouseDown:(NSEvent*)aEvent
 {
-  // XXX we should decide whether to click or drag here based on timing, not
-  // whether the command key is down. We'll probably need to provide a custom
-  // Button Cell, and override trackMouse:inRect...
-  if (mBookmarkItem && mIsFolder && ([aEvent modifierFlags] & NSCommandKeyMask) == 0)
-  {
-    [self highlight:YES];
-    NSMenu* popupMenu = [[NSMenu alloc] init];
-    // dummy first item
-    [popupMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];
-    // make a temporary BookmarksMenu to build the menu
-    BookmarksMenu* bmMenu = [[BookmarksMenu alloc] initWithMenu:popupMenu firstItem:1 rootContent:[mBookmarkItem contentNode] watchedFolder:eBookmarksFolderNormal];
-
-    // use a temporary NSPopUpButtonCell to display the menu.
-    NSPopUpButtonCell	*popupCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES];
-    [popupCell setMenu: popupMenu];
-    [popupCell setFont:[NSFont labelFontOfSize: 11.0]];
-    [popupCell trackMouse:aEvent inRect:[self bounds] ofView:self untilMouseUp:YES];
-    [popupCell release];
-      
-    [bmMenu release];
-    [popupMenu release];
-    [self highlight:NO];
-    return;
-  }
-
   [super mouseDown:aEvent];
+  
+  if ([[self cell] lastClickHoldTimedOut])
+    [self showFolderPopup:aEvent];
 }
 
 - (void)setItem:(BookmarkItem*)inItem
@@ -220,14 +237,18 @@
   if ([mBookmarkItem isGroup])
   {
     mIsFolder = NO;
+    [[self cell] setClickHoldTimeout:0.5];
     [self setImage: bookmarkImage];
     [self setAction: @selector(openBookmark:)];
     [self setTarget: self];
   }
   else if ([mBookmarkItem isFolder])
   {
-    [self setImage: bookmarkImage];
     mIsFolder = YES;
+    [[self cell] setClickHoldTimeout:0.5];
+    [self setImage: bookmarkImage];
+    [self setAction: @selector(showFolderPopupAction:)];
+    [self setTarget: self];
   }
   else
   {
