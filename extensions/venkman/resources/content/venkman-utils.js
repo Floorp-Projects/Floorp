@@ -1000,3 +1000,25 @@ function getInterfaces (cls)
     return rv;
     
 }
+
+function makeExpression (items)
+{
+    function escapeItem (item, first)
+    {
+        // Numbers.
+        if (item.match(/^[0-9]+$/i))
+            return "[" + item + "]";
+        // Words/other items that don't need quoting.
+        if (item.match(/^[a-z_][a-z0-9_]+$/i))
+            return (!first ? "." : "") + item;
+        // Quote everything else.
+        return "[" + item.quote() + "]";
+    };
+    
+    var expression = escapeItem(items[0], true);
+    
+    for (var i = 1; i < items.length; i++)
+        expression += escapeItem(items[i], false);
+    
+    return expression;
+}
