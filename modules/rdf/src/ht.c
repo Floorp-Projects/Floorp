@@ -9077,6 +9077,7 @@ RDFT
 HTADD(HT_Pane pane, RDF_Resource u, RDF_Resource s, void *v)
 {
    RDF_ValueType type = ((s == gCoreVocab->RDF_parent) ? RDF_RESOURCE_TYPE : RDF_STRING_TYPE);
+   if (!pane->htdb) return NULL;
 	remoteStoreAdd(pane->htdb, u, s, v, type, 1);
 	if ((s == gCoreVocab->RDF_parent) && (containerp(u)))
 	{
@@ -9395,6 +9396,7 @@ HT_AddRelatedLinksFor(HT_Pane htPane, char *pUrl)
 
 
 	sp = htPane->htdb;
+	if (!sp) return;
 	if (!htPane->smartBrowsingProviders) populateSBProviders(htPane);
 	if (!relatedLinksEnabledURL(pUrl)) return;
 	prov = htPane->smartBrowsingProviders;
