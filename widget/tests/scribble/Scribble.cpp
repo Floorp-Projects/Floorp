@@ -53,21 +53,19 @@ static nsIImageRequest  *gImageReq = nsnull;
 
 #ifdef XP_PC
 #define WIDGET_DLL "raptorwidget.dll"
-#define GFX_DLL "raptorgfxwin.dll"
+#define GFXWIN_DLL "raptorgfxwin.dll"
 #define TEXT_HEIGHT 25
 #define FILE_URL_PREFIX "file://"
 #endif
 
 #ifdef XP_UNIX
-#define WIDGET_DLL "libwidgetunix.so"
-#define GFX_DLL "libgfxunix.so"
 #define TEXT_HEIGHT 30
 #define FILE_URL_PREFIX "file://"
 #endif
 
 #ifdef XP_MAC
 #define WIDGET_DLL "WIDGET_DLL"
-#define GFX_DLL "GFXWIN_DLL"
+#define GFXWIN_DLL "GFXWIN_DLL"
 #define TEXT_HEIGHT 30
 #define FILE_URL_PREFIX "file:///"
 #endif
@@ -460,10 +458,10 @@ nsresult CreateApplication(int * argc, char ** argv)
     static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
     static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
 
-    nsRepository::RegisterFactory(kCRenderingContextIID, GFX_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCDeviceContextIID, GFX_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCFontMetricsIID, GFX_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCImageIID, GFX_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
 
     // register widget classes
     static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
@@ -503,18 +501,17 @@ nsresult CreateApplication(int * argc, char ** argv)
     static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
     static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-    res = nsRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&scribbleData.mContext);
-
-    if (NS_OK == res)
-      scribbleData.mContext->Init(nsnull);
-
-
      // Create an application shell
     nsIAppShell *appShell = nsnull;
     nsRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID,
                                  (void**)&appShell);
     appShell->Create(argc, argv);
    
+
+    res = nsRepository::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&scribbleData.mContext);
+
+    if (NS_OK == res)
+      scribbleData.mContext->Init(nsnull);
 
 
     //nsILookAndFeel *laf;
