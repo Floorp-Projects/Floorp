@@ -1,0 +1,62 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?>
+<?xml-stylesheet href="dialog.css" type="text/css"?>
+<?xml-stylesheet href="pref.css" type="text/css"?>
+
+<!DOCTYPE window
+[
+<!ENTITY window.title "Advanced">
+<!ENTITY appsHeader "Applications">
+<!ENTITY descript "Description">
+<!ENTITY aimLaunchSelect.label "AOL Instant Messenger Launch">
+<!ENTITY newTypeButton.label "New Type">
+<!ENTITY editButton.label "Edit...">
+<!ENTITY removeButton.label "Remove">
+<!ENTITY file "File type details">
+<!ENTITY exten "Extention:">
+<!ENTITY mimeType "Mime Type">
+<!ENTITY handle "Handled By:">
+]>
+
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="return StartUp('Applications');"  title="&window.title;">
+
+<html:script language="JavaScript" src="PrefsWindow.js">
+</html:script>
+
+
+<html:DIV ID="top">
+		<html:SPAN ID="lefttext">&appsHeader;</html:SPAN>
+</html:DIV>
+
+<html:form>
+	<html:table>  
+			<html:tr><html:td>&descript;</html:td></html:tr>
+			<html:tr><html:td>
+			   <html:select name="textstyle" size="5" >
+				 <html:optgroup>
+			    <html:option value="0" />
+				&aimLaunchSelect.label;
+				</html:optgroup>
+				</html:select> 
+			</html:td>
+			<html:td>
+			   <html:input name="choose" type="button" value="&newTypeButton.label;" />
+				 <html:br /><html:input name="choose" type="button" value="&editButton.label;" />
+         <html:br /><html:input name="choose" type="button" value="&removeButton.label;" />
+         </html:td></html:tr>
+	</html:table>
+</html:form>
+<html:br />
+<html:form>
+<html:table>
+			<html:tr><html:td>&file;</html:td></html:tr>
+			<html:tr><html:td>&exten;</html:td></html:tr>
+			<html:tr><html:td>&mimeType;</html:td></html:tr>
+			<html:tr><html:td>&handle;</html:td></html:tr>
+</html:table>
+</html:form>
+
+</html:window>

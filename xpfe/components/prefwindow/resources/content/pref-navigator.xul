@@ -1,0 +1,88 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?>
+<?xml-stylesheet href="dialog.css" type="text/css"?>
+<?xml-stylesheet href="pref.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY  title.label "Navigator">
+<!ENTITY  header1.label "Navigator">
+<!ENTITY  navRadio "Navigator starts with">
+<!ENTITY  blankRadio "Blank Page">
+<!ENTITY  header2.label "Home Page">
+<!ENTITY  lastPageRadio "Last Page visited">
+<!ENTITY  homepageRadio "Homepage">
+<!ENTITY  clickRadio "Clicking the Home button will take you to this page.">
+<!ENTITY  location "Location:">
+<!ENTITY  useCurrent "Use Current Page">
+<!ENTITY  browseFile "browse">
+
+<!ENTITY  header3.label "History">
+<!ENTITY  historyPages "History is a list of the pages you have previously visited.">
+<!ENTITY  histDay "9">
+<!ENTITY  daysRadio "days">
+<!ENTITY  homepageRadio "Homepage">
+<!ENTITY  pagesHis "Pages in history expire after:">
+<!ENTITY  clearRadio "Clear the list of sites on the location bar: ">
+<!ENTITY  clearHis "clear history">
+<!ENTITY  header4.label "Homepages">
+<!ENTITY  clearBar "Clear the list of sites on the location bar:">
+<!ENTITY  clearLoc "Clear Location Bar">
+
+
+]>
+
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="return StartUp('Navigator');"  title="&title.label;">
+
+
+
+
+<html:script language="JavaScript" src="PrefsWindow.js">
+</html:script>
+
+<html:DIV ID="top">
+<html:SPAN ID="lefttext">Navigator</html:SPAN>
+</html:DIV>
+
+&navRadio;
+<html:table ID="tableb">
+		<html:tr><html:td><html:label><html:input name="starts" type="radio" id="pref:0:int:browser.startup.page" />&blankRadio;</html:label></html:td>
+		</html:tr>
+		<html:tr><html:td><html:label><html:input name="starts" type="radio" id="pref:1:int:browser.startup.page" val="checked" />&header2.label;</html:label></html:td>
+		</html:tr>
+		<html:tr><html:td><html:label><html:input name="starts" type="radio" id="pref:2:int:browser.startup.page" />&lastPageRadio;</html:label></html:td>
+		</html:tr>
+</html:table>
+
+&header2.label;
+<html:table ID="tableb">
+	<html:tr><html:td>&clickRadio;</html:td></html:tr>
+		<html:tr><html:td>&location;<html:input name="homepage" type="text" value="http://my.netscape.com"	id="pref:string:browser.startup.homepage" size="30" />
+		</html:td></html:tr>
+		<html:tr><html:td><html:input name="starts" type="button" value="&useCurrent;" />
+			<html:input name="browse" type="button" value="&browseFile;" />
+		</html:td></html:tr>
+</html:table>
+
+&header3.label;
+<html:table ID="tableb">
+		<html:tr><html:td>
+			&historyPages;
+		</html:td></html:tr>
+		<html:tr><html:td>
+			&pagesHis;<html:input type="text" value="&histDay;" size="3" />&daysRadio;
+			<html:input name="Clearit" type="button" value="&clearHis;" />
+		</html:td></html:tr>
+</html:table>
+
+
+&header4.label;
+<html:table ID="tableb">
+		<html:tr><html:td>&clearBar;   
+			<html:input name="starts" type="button" value="&clearLoc;" />
+		</html:td></html:tr>
+</html:table>
+
+</window>

@@ -1,0 +1,46 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=..\..\..\..\..
+
+include <$(DEPTH)\config\rules.mak>
+
+install::
+	$(MAKE_INSTALL) pref-advanced.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-appearance.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-applications.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-cache.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-colors.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-composer.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-download.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-fonts.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-languages.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-navigator.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-offline.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-proxies.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-publish.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-select.html  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-smart_browsing.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-smartupdate.html  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) prefbottom.html  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) PrefsWindow.html  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) PrefsWindow.js  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) PrefsWindow.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) preftree.xul  $(DIST)\bin\chrome\pref\content\default
+
+clobber::
+  rm -f $(DIST)\bin\chrome\pref\content\default\*.*

@@ -1,0 +1,67 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?>
+<?xml-stylesheet href="pref.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY  title.label "Samrt Browsing">
+<!ENTITY  smartHeader.label "Smart Browsing">
+<!ENTITY  enableRelatedRadio.label "Enable Internet Keywords">
+<!ENTITY  autoDecp.label "Automatically load Whats Related information">
+<!ENTITY  neverRadio "Never">
+<!ENTITY  afterAutoloadFirstRadio "After first use">
+<!ENTITY  afterAutoloadAlwaysRadio "Always">
+<!ENTITY  doNotDecp.label "Do not request Whats Related information for the following domains (a comma-seperated list)">
+<!ENTITY  internetKeywordsHeader.label "Internet Keywords">
+<!ENTITY  enableKeyCheck.label "Enable Internet Keywords">
+
+]>
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="return StartUp('smart_browsing');"  title="title.label">
+
+
+<html:script language="JavaScript" src="PrefsWindow.js">
+</html:script>
+
+
+
+<html:DIV ID="top">
+		<html:SPAN ID="lefttext">&smartHeader.label;</html:SPAN>
+</html:DIV>
+
+
+<html:table>
+    <html:tr><html:td>
+			<html:input name="related" type="checkbox" id="pref:0:bool:browser.related.enabled" checked="true" />&enableRelatedRadio.label;
+		</html:td></html:tr>
+    <html:tr><html:td>
+			&autoDecp.label;
+		</html:td></html:tr>
+	  <html:tr><html:td><html:input name="autorelated" type="radio" id="pref:0:int:browser.related.autoload" />
+			&neverRadio;
+		</html:td></html:tr>
+		<html:tr><html:td><html:input name="autorelated" type="radio" id="pref:1:int:browser.related.autoload" checked="true" />
+			&afterAutoloadFirstRadio;
+		</html:td></html:tr>
+		<html:tr><html:td>
+		<html:input name="autorelated" type="radio" id="pref:2:int:browser.related.autoload" />
+			&afterAutoloadAlwaysRadio;
+		</html:td></html:tr>
+			
+		<html:tr><html:td>&doNotDecp.label;
+		</html:td></html:tr>
+		<html:tr><html:td>
+			 <html:textarea name="textstyle" ROWS="2" COLS="30" id="pref:string:browser.related.disabledForDomains">
+	     </html:textarea>
+		</html:td></html:tr>
+</html:table>
+
+
+<html:table>
+   <html:tr><html:td>&internetKeywordsHeader.label;</html:td></html:tr>
+		<html:tr><html:td><html:input name="keyword" type="checkbox" id="pref:0:bool:browser.goBrowsing.enabled" checked="true" />
+			&enableKeyCheck.label;</html:td></html:tr>
+	
+</html:table>
+</window>
