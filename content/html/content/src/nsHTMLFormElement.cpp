@@ -297,7 +297,7 @@ protected:
   PRPackedBool mGeneratingReset;
   /** Whether we are submitting currently */
   PRPackedBool mIsSubmitting;
-  /** Whether the submission was triggered by an Image or Submit*/
+  /** Whether the submission is to be deferred in case a script triggers it*/
   PRPackedBool mDeferSubmission;
 
   /** The pending submission object */
@@ -760,7 +760,7 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                                               aDOMEvent,
                                                               aFlags,
                                                               aEventStatus); 
-  if (mDeferSubmission) {
+  if (mDeferSubmission && aEvent->message == NS_FORM_SUBMIT) {
     // let the form know not to defer subsequent submissions
     mDeferSubmission = PR_FALSE;
   }
