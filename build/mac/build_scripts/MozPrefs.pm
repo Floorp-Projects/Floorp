@@ -10,13 +10,14 @@ require Exporter;
 use strict;
 
 use Exporter;
+use File::Path;
+
 use Mac::Files;
 
 use vars qw(@ISA @EXPORT);
 
 @ISA		  = qw(Exporter);
 @EXPORT 	= qw(ReadMozUserPrefs);
-
 
 
 #-------------------------------------------------------------------------------
@@ -28,7 +29,7 @@ use vars qw(@ISA @EXPORT);
 sub GetPrefsFolder()
 {
   my($prefs_folder) = FindFolder(kOnSystemDisk, kPreferencesFolderType, 1);
-  return $prefs_folder;
+  return $prefs_folder.":Mozilla build prefs";
 }
 
 
@@ -70,11 +71,13 @@ sub WriteDefaultPrefsFile($)
 % You can use this file to customize the Mozilla build system.
 % The following kinds of lines are allowable:
 %   Comment lines, which start with a '%' in the first column
-%   Lines with modify the default build settings. Examples are:
+%   Lines which modify the default build settings. Examples are:
 %
 %    pull        runtime         1       % just pull runtime
 %    options     mng             1       % turn mng on
 %    build       jars            0       % don't build jar files
+%
+%    buildfrom   nglayout                % where to start the build
 %
 EOS
 
@@ -196,6 +199,10 @@ sub ReadPrefsFile($$$$)
   else
   {
     print "No prefs file found at $file_path; using defaults\n";
+    
+    my($folder_path) = $file_path;
+    $folder_path =~ s/[^:]+$//;
+    mkpath($folder_path);
     WriteDefaultPrefsFile($file_path);
   }
 }

@@ -29,27 +29,41 @@ use MozillaBuildList;
 use Cwd;
 use Moz;
 
-#-----------------------------------------------
+#-------------------------------------------------------------
+# Where have the build options gone?
+# 
+# The various build flags have been centralized into one place. 
+# The master list of options is in MozBuildFlags.pm. However, 
+# you should never need to edit that file, or this one.
+# 
+# To customize what gets built, or where to start the build, 
+# edit the 'Mozilla debug build prefs' file in
+# System Folder:Preferences:Mozilla build prefs.
+# Documentation is provided in that file.
+#-------------------------------------------------------------
+
+
+#-------------------------------------------------------------
 # hashes to hold build options
-#-----------------------------------------------
+#-------------------------------------------------------------
 my(%pull);
 my(%build);
 my(%options);
 my(%optiondefines);
 
-#-----------------------------------------------
+#-------------------------------------------------------------
 # configuration variables that globally affect what is built
-#-----------------------------------------------
+#-------------------------------------------------------------
 $DEBUG                  = 0;
 $CARBON                 = 0;    # turn on to build with TARGET_CARBON
 $PROFILE                = 0;
+$RUNTIME                = 0;    # turn on to just build runtime support and NSPR projects
 $GC_LEAK_DETECTOR       = 0;    # turn on to use GC leak detection
 
-#-----------------------------------------------
-# configuration variables that affect the manner
-# of building, but possibly affecting
-# the outcome.
-#-----------------------------------------------
+#-------------------------------------------------------------
+# configuration variables that affect the manner of building, 
+# but possibly affecting the outcome.
+#-------------------------------------------------------------
 $BIN_DIRECTORY          = ":mozilla:dist:viewer:";
 
 $ALIAS_SYM_FILES        = $DEBUG;
@@ -61,18 +75,18 @@ $CLOBBER_DIST_ALL       = 1;    # turn on to clobber all aliases/files inside di
 $CLOBBER_DIST_LIBS      = 0;    # turn on to clobber only aliases/files for libraries/sym files in dist
 $CLOBBER_IDL_PROJECTS   = 0;    # turn on to clobber all IDL projects.
 
-#-----------------------------------------------
-# configuration variables that are preferences for the build style,
-# and do not affect what is built.
-#-----------------------------------------------
+#-------------------------------------------------------------
+# configuration variables that are preferences for the build,
+# style and do not affect what is built.
+#-------------------------------------------------------------
 $CodeWarriorLib::CLOSE_PROJECTS_FIRST
-                        = 0;
+                        = 1;
                                 # 1 = close then make (for development),
                                 # 0 = make then close (for tinderbox).
 $USE_TIMESTAMPED_LOGS   = 0;
-#-----------------------------------------------
+#-------------------------------------------------------------
 # END OF CONFIG SWITCHES
-#-----------------------------------------------
+#-------------------------------------------------------------
 
 my($cur_dir) = cwd();
 $cur_dir =~ s/:mozilla:build:mac:build_scripts$//;

@@ -26,25 +26,45 @@ B<Moz> comprises the routines needed to slap CodeWarrior around, force it to bui
 =cut
 
 
-
-
 package			Moz;
 require			Exporter;
+
+use Cwd;
+
+use File::Copy;
+use File::Path;
 
 use Mac::Types;
 use Mac::Events;
 use Mac::Processes;
-use File::Copy;
+
+use ExtUtils::Manifest 'maniread';
+
+use CodeWarriorLib;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(LaunchCodeWarrior current_directory full_path_to BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest InstallResources SetBuildNumber SetAgentString SetTimeBomb Delay ActivateApplication IsProcessRunning);
+
+@EXPORT			= qw( LaunchCodeWarrior
+                  current_directory
+                  full_path_to
+                  BuildProject
+                  BuildProjectClean
+                  OpenErrorLog
+                  MakeAlias
+                  GetFileModDate
+                  StopForErrors
+                  DontStopForErrors
+                  InstallFromManifest
+                  InstallResources
+                  SetBuildNumber
+                  SetAgentString
+                  SetTimeBomb
+                  Delay
+                  ActivateApplication
+                  IsProcessRunning);
+
 @EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib QUIET);
 
-	use Cwd;
-	use File::Path;
-	use ExtUtils::Manifest 'maniread';
-
-	use CodeWarriorLib;
 
 sub current_directory()
 	{
