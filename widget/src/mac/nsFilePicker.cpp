@@ -601,6 +601,9 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
 
             // Until we switch to the HFS+ APIs for Mac file system calls
             // reduce the name to a max of 31 characters
+            // Conditionalize for non mach-o builds since XP_MACOSX target
+            // doesn't currently link against nsLocalFileMac for NS_TruncNodeName
+#ifndef XP_MACOSX
             char  origName[256];
             char  truncBuf[32];
             ::CFStringGetCString(reply.saveFileName, origName, 256, theEncoding);
@@ -609,7 +612,7 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
             if (truncNameLen)
               BlockMoveData(truncName, &theFSSpec.name[1], truncNameLen);
             theFSSpec.name[0] = truncNameLen;
-            
+#endif            
             *outFileSpec = theFSSpec;	// Return the FSSpec
 
             if (reply.replacing)
