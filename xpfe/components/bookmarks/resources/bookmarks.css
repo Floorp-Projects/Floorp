@@ -59,7 +59,7 @@ treeitem[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"] > treerow > t
 
 treeitem[type="http://home.netscape.com/NC-rdf#IEFavorite"] > treerow > treecell > titledbutton
 {
- list-style-image: url("resource:/res/samples/IEFavorite.gif");
+ list-style-image: url("resource:/res/samples/iefavorite.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treerow > treecell > titledbutton
