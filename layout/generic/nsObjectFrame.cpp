@@ -499,19 +499,19 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // the first time, mInstanceOwner will be null, so we a temporary default
   if(mInstanceOwner != nsnull)
   {
-    // if no width and height attributes specified try to use whatever we already have.
+    // if no width and height attributes specified use embed_def_dim.
     if(NS_OK != mInstanceOwner->GetWidth(&width))
     {
-      width = aMetrics.width;
-  	  haveWidth = PR_TRUE;
+      width = EMBED_DEF_DIM;
+  	  haveWidth = PR_FALSE;
     }
     else
 	    haveWidth = PR_FALSE;
 
     if(NS_OK != mInstanceOwner->GetHeight(&height))
     {
-      height = aMetrics.height;
-  	  haveHeight = PR_TRUE;
+      height = EMBED_DEF_DIM;
+  	  haveHeight = PR_FALSE;
     }
     else
 	    haveHeight = PR_FALSE;
