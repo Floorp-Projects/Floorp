@@ -38,18 +38,18 @@
 #define nsStaticNameTable_h___
 
 #include "pldhash.h"
-/* This class supports case insensitve lookup. 
+/* This class supports case insensitive lookup.
  *
- * It differs from atom tables: 
+ * It differs from atom tables:
  * - It supports case insensitive lookup.
  * - It has minimal footprint by not copying the string table.
  * - It does no locking.
- * - It returns zero based indexes and const nsCSring& as required by its 
+ * - It returns zero based indexes and const nsCString& as required by its
  *   callers in the parser.
  * - It is not an xpcom interface - meant for fast lookup in static tables.
  *
  * ***REQUIREMENTS***
- * - It *requires* that all entries in the table be lowewcase only.  
+ * - It *requires* that all entries in the table be lowercase only.
  * - It *requires* that the table of strings be in memory that lives at least
  *    as long as this table object - typically a static string array.
  */
