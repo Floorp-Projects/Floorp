@@ -3013,6 +3013,12 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
+  
+  // clean up reload state for meta charset
+  if(eCharsetReloadRequested == mCharsetReloadState)
+      mCharsetReloadState = eCharsetReloadStopOrigional;
+  else 
+      mCharsetReloadState = eCharsetReloadInit;
 
   /* one of many safeguards that prevent death and destruction if
      someone is so very very rude as to bring this window down
@@ -3212,7 +3218,7 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
                          nsresult aStatus)
 {
 #if 0
-  const char* spec;
+  const char* spec; 
   aURL->GetSpec(&spec);
   printf("nsWebShell::OnEndURLLoad:%p: loader=%p url=%s status=%d\n", this, loader, spec, aStatus);
 #endif
@@ -3223,11 +3229,6 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
   {
       mDocLoaderObserver->OnEndURLLoad(mDocLoader, channel, aStatus);
   }
-  if(eCharsetReloadRequested == mCharsetReloadState)
-      mCharsetReloadState = eCharsetReloadStopOrigional;
-  else 
-      mCharsetReloadState = eCharsetReloadInit;
-
   return NS_OK;
 }
 
