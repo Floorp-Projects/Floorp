@@ -23,7 +23,7 @@
 function debugDump(msg)
 {
   // uncomment for noise
-   dump(msg+"\n");
+  // dump(msg+"\n");
 }
 
 function GetDragService()
@@ -33,15 +33,6 @@ function GetDragService()
 		dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
 
 	return dragService;
-}
-
-function GetRDFService()
-{
-	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-	if (rdf)   
-		rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-
-	return rdf;
 }
 
 function DragOverTree(event)
@@ -88,15 +79,7 @@ function BeginDragResultTree(event)
 	var tree = resultsTree;
 	if ( event.target == tree )
 		return(true);					// continue propagating the event
-    
-	var childWithDatabase = tree;
-	if ( ! childWithDatabase )
-		return(false);
 
-	var database = childWithDatabase.database;
-	var rdf = GetRDFService();
-	if ((!rdf) || (!database))	{ debugDump("CAN'T GET DATABASE\n"); return(false); }
-		        
 	var dragStarted = false;
 
 	var dragService = GetDragService();
@@ -146,7 +129,7 @@ function DropOnDirectoryTree(event)
         event.target.localName != "treeitem")
         return false;
 
-	var RDF = GetRDFService();
+  var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService().QueryInterface(Components.interfaces.nsIRDFService);
 	if (!RDF) return(false);
 
 	var treeRoot = dirTree;
