@@ -153,7 +153,7 @@
 <!ENTITY newtodo.duedate.warning    "Datum pričetka je po roku opravka.">
 <!ENTITY newtodo.repeatstart.warning "Za ponavljanje je potreben datum pričetka.">
 
-<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
+<!ENTITY calendar.confirm.deleteallevents "Želite res zbrisati vse izbrane dogodke?">
 <!ENTITY calendar.confirm.deleteevent "Želite res zbrisati dogodek: ">
 <!ENTITY calendar.confirm.deleteuntitledevent "Želite res zbrisati ta neimenovani dogodek?">
 
@@ -221,10 +221,10 @@
 <!ENTITY calendar.events.filter.month.label "Dogodki prihodnjega meseca">
 <!ENTITY calendar.events.filter.future.label "Vsi prihodnji dogodki">
 <!ENTITY calendar.events.filter.current.label "Trenutno izbrani dan">
-<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
-<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
-<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
-<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
+<!ENTITY calendar.events.filter.next7Days.label "Dogodki prihodnjih 7 dni">
+<!ENTITY calendar.events.filter.next14Days.label "Dogodki prihodnjih 14 dni">
+<!ENTITY calendar.events.filter.next31Days.label "Dogodki prihodnjih 31 dni">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Dogodki v tem koledarskem mesecu">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Opravljeno">
 <!ENTITY calendar.unifinder.tree.priority.label      "Prioriteta">
@@ -281,10 +281,10 @@
 <!ENTITY calendar.subscribe.button.label           "Naroči" >
 <!ENTITY calendar.publish.button.label             "Objavi" >
 
-<!ENTITY calendar.localreload.button.label   "Local Reload" >
-<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
-<!ENTITY calendar.remotereload.button.label   "Reload" >
-<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
+<!ENTITY calendar.localreload.button.label   "Ponovno naloži lokalno">
+<!ENTITY calendar.localreload.button.tooltip  "Ponovno naloži vse lokalne koledarje">
+<!ENTITY calendar.remotereload.button.label   "Ponovno naloži">
+<!ENTITY calendar.remotereload.button.tooltip   "Ponovno naloži vse oddaljene koledarje">
 
 <!ENTITY calendar.dayview.button.label          "Dnevni pogled">
 <!ENTITY calendar.weekview.button.label         "Tedenski pogled">
@@ -298,7 +298,7 @@
 <!ENTITY calendar.menu.options.modify           "Spremeni">
 <!ENTITY calendar.menu.options.remove           "Izbriši">
 <!ENTITY calendar.menu.options.close            "Zapri okno">
-<!ENTITY calendar.menu.options.close.key        "W">
+<!ENTITY calendar.menu.options.close.key        "O">
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Dogodki">
@@ -424,7 +424,7 @@
 
 
 <!-- Dialog strežnikov koledarja-->
-<!ENTITY calendar.server.dialog.title.new           "Novega Datoteka Koledarja">
+<!ENTITY calendar.server.dialog.title.new           "Vnos novega koledarja">
 <!ENTITY calendar.server.dialog.title.open          "Odpri Datoteka Koledarja">
 <!ENTITY calendar.server.dialog.title.edit          "Uredi koledar">
 <!ENTITY calendar.server.dialog.name.label          "Ime">

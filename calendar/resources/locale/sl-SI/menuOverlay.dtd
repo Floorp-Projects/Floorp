@@ -46,14 +46,14 @@
 <!ENTITY event.new.event.accesskey              "g">
 
 <!ENTITY event.new.todo                         "Nov opravek…">
-<!ENTITY event.new.todo.key                     "T">
+<!ENTITY event.new.todo.key                     "O">
 <!ENTITY event.new.todo.accesskey               "o">
 
-<!ENTITY calendar.new.server.label              "Nov Datoteka Koledar…">
+<!ENTITY calendar.new.server.label              "Nova datoteka koledarj…">
 <!ENTITY calendar.new.server.key                "L">
 <!ENTITY calendar.new.server.accesskey          "l">
 
-<!ENTITY calendar.open.file.label               "Odpri Datoteka Koledar…">
+<!ENTITY calendar.open.file.label               "Odpri datoteko koledarj…">
 <!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey           "O">
 
@@ -68,11 +68,11 @@
 <!ENTITY event.delete.tasks.accesskey           "v">
 
 <!ENTITY event.mail.event                       "Pošlji izbrane dogodke po e-pošti…">
-<!ENTITY event.mail.event.key                   "M">
+<!ENTITY event.mail.event.key                   "P">
 <!ENTITY event.mail.event.accesskey             "t">
 
 <!ENTITY calendar.print.label                   "Natisni aktivne koledarje ...">
-<!ENTITY calendar.print.key                     "P">
+<!ENTITY calendar.print.key                     "N">
 <!ENTITY calendar.print.accesskey               "N">
 
 <!ENTITY calendar.printpreview.label            "Predogled tiskanja ...">
@@ -82,11 +82,11 @@
 <!ENTITY calendar.pagesetup.accesskey           "r">
 
 <!ENTITY calendar.import.label                  "Uvozi iz datoteke ...">
-<!ENTITY calendar.import.key                    "I">
+<!ENTITY calendar.import.key                    "U">
 <!ENTITY calendar.import.accesskey              "U">
 
-<!ENTITY calendar.wizard.label                  "Poženi čarovnika">
-<!ENTITY calendar.wizard.accesskey              "Č">
+<!ENTITY calendar.wizard.label                  "Poženi ?arovnika">
+<!ENTITY calendar.wizard.accesskey              "?">
 
 <!ENTITY calendar.export.label                  "Izvozi izbrane dogodke ...">
 <!ENTITY calendar.export.accesskey              "I">
@@ -94,7 +94,7 @@
 <!ENTITY calendar.subscribe.label               "Prijava na oddaljeni koledar ...">
 <!ENTITY calendar.subscribe.accesskey           "l">
 
-<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.label            "Ponovno naloži oddaljene koledarje">
 <!ENTITY calendar.reloadserver.key              "R">
 <!ENTITY calendar.reloadserver.accesskey        "R">
 
@@ -106,19 +106,19 @@
 
 <!ENTITY calendar.cut.label                     "Izreži">
 <!ENTITY calendar.cut.key                       "X">
-<!ENTITY calendar.cut.accesskey                 "I">
+<!ENTITY calendar.cut.accesskey                 "X">
 
 <!ENTITY calendar.copy.label                    "Kopiraj">
 <!ENTITY calendar.copy.key                      "C">
-<!ENTITY calendar.copy.accesskey                "K">
+<!ENTITY calendar.copy.accesskey                "C">
 
 <!ENTITY calendar.paste.label                   "Prilepi">
 <!ENTITY calendar.paste.key                     "V">
-<!ENTITY calendar.paste.accesskey               "P">
+<!ENTITY calendar.paste.accesskey               "V">
 
 <!ENTITY calendar.selectall.label               "Izberi vse">
 <!ENTITY calendar.selectall.key                 "A">
-<!ENTITY calendar.selectall.accesskey           "v">
+<!ENTITY calendar.selectall.accesskey           "A">
 
 <!ENTITY calendar.preferences.label             "Osebne nastavitve ...">
 <!ENTITY calendar.preferences.accesskey         "e">
@@ -156,32 +156,32 @@
 <!ENTITY addressBookCmd.label                   "Adresar">
 <!ENTITY addressBookCmd.accesskey               "A">
 
-<!ENTITY helpMenu.label                         "Help">
+<!ENTITY helpMenu.label                         "Pomo?">
 <!ENTITY helpMenu.accesskey                     "P">
 
 <!ENTITY walletPasswordManager.label            "Upravljalec gesel">
 <!ENTITY walletPasswordManager.accesskey        "g">
 
 <!-- Toolbar items -->
-<!ENTITY fileMenu.label                         "File">
-<!ENTITY fileMenu.accesskey                     "F">
+<!ENTITY fileMenu.label                         "Datoteka">
+<!ENTITY fileMenu.accesskey                     "D">
 
-<!ENTITY editMenu.label                         "Edit">
-<!ENTITY editMenu.accesskey                     "E">
-<!ENTITY preferencesCmd.label                   "Options...">
-<!ENTITY preferencesCmd.accesskey               "O">
+<!ENTITY editMenu.label                         "Urejanje">
+<!ENTITY editMenu.accesskey                     "e">
+<!ENTITY preferencesCmd.label                   "Možnosti ...">
+<!ENTITY preferencesCmd.accesskey               "M">
 
-<!ENTITY viewMenu.label                         "View">
-<!ENTITY viewMenu.accesskey                     "V">
+<!ENTITY viewMenu.label                         "Pogled">
+<!ENTITY viewMenu.accesskey                     "P">
 
-<!ENTITY releaseCmd.label                       "Release Notes">
-<!ENTITY releaseCmd.accesskey                   "R">
-<!ENTITY aboutCmd.label                         "About &brandFullName;">
+<!ENTITY releaseCmd.label                       "Opombe ob izdaji">
+<!ENTITY releaseCmd.accesskey                   "i">
+<!ENTITY aboutCmd.label                         "O programu &brandFullName;">
 <!ENTITY aboutCmd.accesskey                     "A">
 
 <!-- Mac OS X "Window" menu items -->
-<!ENTITY windowMenu.label                       "Window">
-<!ENTITY minimizeWindow.label                   "Minimize">
+<!ENTITY windowMenu.label                       "Okno">
+<!ENTITY minimizeWindow.label                   "Pomanjšaj">
 <!ENTITY zoomWindow.label                       "Zoom">
 <!ENTITY minimizeWindow.key                     "M">
-<!ENTITY bringAllToFront.label                  "Bring All to Front">
+<!ENTITY bringAllToFront.label                  "Vse v ospredje">

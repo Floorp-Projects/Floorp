@@ -46,7 +46,7 @@
 
   <!-- locale information -->
   <RDF:Description about="urn:mozilla:sl-SI"
-                   chrome:displayName="Slovanian"
+                   chrome:displayName="Slovenian"
                    chrome:name="sl-SI">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:locale:sl-SI:packages">
