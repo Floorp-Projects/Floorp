@@ -21,6 +21,8 @@ IGNORE_MANIFEST=1
 EXPORTS = \
 	nsICaseConversion.h \
 	nsUnicharUtilCIID.h \
+	nsIUGenCategory.h \
+	nsIUGenDetailCategory.h \
 	$(NULL)
 
 MODULE=unicharutil

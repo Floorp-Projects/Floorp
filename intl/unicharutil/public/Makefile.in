@@ -25,6 +25,8 @@ MODULE		= unicharutil
 
 EXPORTS		= nsICaseConversion.h	\
 		  nsUnicharUtilCIID.h	\
+		  nsIUGenCategory.h \
+		  nsIUGenDetailCategory.h \
 		  $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
