@@ -35,15 +35,13 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/widgetglue.js \
 	$(srcdir)/commandglue.js \
 	$(srcdir)/shareglue.js \
-	$(srcdir)/3panemail.xul \
-	$(srcdir)/messagePane.xul \
 	$(srcdir)/subscribe.xul			\
-	$(srcdir)/contentframe.xul			\
 	$(srcdir)/sidebar-messenger.xul			\
 	$(srcdir)/sidebar-messenger.rdf			\
 	$(srcdir)/newFolderNameDialog.xul	\
 	$(srcdir)/newFolderNameDialog.js	\
 	$(srcdir)/msgViewNavigation.js	\
+	$(srcdir)/msgMail3PaneWindow.js	\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

@@ -22,13 +22,12 @@ threadPane.xul
 widgetglue.js
 commandglue.js
 shareglue.js
-3panemail.xul
-messagePane.xul
 subscribe.xul
-contentframe.xul
 sidebar-messenger.xul
 sidebar-messenger.rdf
 newFolderNameDialog.xul
 newFolderNameDialog.js
 msgViewNavigation.js
+msgMail3PaneWindow.js
+
 

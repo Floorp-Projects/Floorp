@@ -26,15 +26,13 @@ install::
 	$(MAKE_INSTALL) widgetglue.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) commandglue.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) shareglue.js			$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) 3panemail.xul 			$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) messagePane.xul			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) subscribe.xul			$(DIST)\bin\chrome\messenger\content\default
-	$(MAKE_INSTALL) contentframe.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) sidebar-messenger.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) sidebar-messenger.rdf	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) newFolderNameDialog.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) newFolderNameDialog.js	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) msgViewNavigation.js	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) msgMail3PaneWindow.js	$(DIST)\bin\chrome\messenger\content\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\messenger.xul
@@ -43,13 +41,11 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\widgetglue.js
 	rm -f $(DIST)\chrome\messenger\content\default\commandglue.js
 	rm -f $(DIST)\chrome\messenger\content\default\shareglue.js
-	rm -f $(DIST)\chrome\messenger\content\default\3panemail.xul
-	rm -f $(DIST)\chrome\messenger\content\default\messagePane.xul
 	rm -f $(DIST)\chrome\messenger\content\default\subscribe.xul
-	rm -f $(DIST)\chrome\messenger\content\default\contentframe.xul
 	rm -f $(DIST)\chrome\messenger\content\default\sidebar-messenger.xul
 	rm -f $(DIST)\chrome\messenger\content\default\sidebar-messenger.rdf
 	rm -f $(DIST)\chrome\messenger\content\default\newFolderNameDialog.xul
 	rm -f $(DIST)\chrome\messenger\content\default\newFolderNameDialog.js
 	rm -f $(DIST)\chrome\messenger\content\default\msgViewNavigation.js
+	rm -f $(DIST)\chrome\messenger\content\default\msgMail3PaneWindow.js
 
