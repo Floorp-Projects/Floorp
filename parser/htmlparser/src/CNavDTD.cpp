@@ -1183,7 +1183,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
             if(theParentTag!=aChildTag) {             
               // Double check the power structure a
               // Note: The bit is currently set on <A> and <LI>.
-              if(gHTMLElements[theParentTag].ShouldVerifyHierarchy(aChildTag)){
+              if(gHTMLElements[aChildTag].ShouldVerifyHierarchy()){
                 PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
             
                 if((kNotFound<theChildIndex) && (theChildIndex<theIndex)) {

@@ -1433,7 +1433,7 @@ nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
 void nsParser::PushContext(CParserContext& aContext) {
   aContext.mPrevContext=mParserContext;  
   if (mParserContext) { 
-     aContext.mParserEnabled = mParserContext->mParserEnabled; 
+     aContext.mParserEnabled = mParserContext->mParserEnabled;
   } 
   mParserContext=&aContext;
 }
@@ -1450,9 +1450,13 @@ CParserContext* nsParser::PopContext() {
   if(oldContext) {
     mParserContext=oldContext->mPrevContext;
     // If the old context was blocked, propogate the blocked state
-    // back to the newe one.
+    // back to the new one. Also, propagate the stream listener state
+    // but don't override onStop state to guarantee the call to DidBuildModel().
     if (mParserContext) {
       mParserContext->mParserEnabled = oldContext->mParserEnabled;
+      if(mParserContext->mStreamListenerState!=eOnStop) {
+        mParserContext->mStreamListenerState = oldContext->mStreamListenerState;
+      }
     }
   }
   return oldContext;
@@ -1520,8 +1524,10 @@ nsresult nsParser::EnableParser(PRBool aState){
     if(aState) {
 
       //printf("  Re-enable parser\n");
-
-      result=ResumeParse();
+      PRBool isFinalChunk=(mParserContext->mStreamListenerState==eOnStop)? PR_TRUE:PR_FALSE;
+      
+      result=ResumeParse(PR_TRUE,isFinalChunk); // Ref. bug 57999
+      
       if(result!=NS_OK) 
         result=mInternalState;
     }
