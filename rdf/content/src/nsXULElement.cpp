@@ -2511,12 +2511,20 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         }
 
         if (newSelectIndex != -1) {
-            nsCOMPtr<nsIDOMElement> newSelectItem;
-            treeBox->GetItemAtIndex(newSelectIndex, getter_AddRefs(newSelectItem));
-            if (newSelectItem) {
-                nsCOMPtr<nsIDOMXULElement> xulSelItem = do_QueryInterface(newSelectItem);
-                if (xulSelItem)
-                    treeElement->SetCurrentItem(xulSelItem);
+            // Make sure the index is still valid
+            PRInt32 treeRows;
+            treeBox->GetRowCount(&treeRows);
+            if (treeRows > 0) {
+                newSelectIndex = PR_MIN((treeRows - 1), newSelectIndex);
+                nsCOMPtr<nsIDOMElement> newSelectItem;
+                treeBox->GetItemAtIndex(newSelectIndex, getter_AddRefs(newSelectItem));
+                if (newSelectItem) {
+                    nsCOMPtr<nsIDOMXULElement> xulSelItem = do_QueryInterface(newSelectItem);
+                    if (xulSelItem)
+                        treeElement->SetCurrentItem(xulSelItem);
+                }
+            } else {
+                treeElement->SetCurrentItem(nsnull);
             }
         }
 
