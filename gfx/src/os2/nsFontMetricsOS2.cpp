@@ -512,80 +512,95 @@ static FONTMETRICS* getMetrics( long &lFonts, PCSZ facename, HPS hps)
 void
 nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
 {
-  int points = NSTwipsToIntPoints( mFont.size );
+  float app2dev, reqEmHeight;
+  mDeviceContext->GetAppUnitsToDevUnits( app2dev );
+  reqEmHeight = mFont.size * app2dev;
 
   FATTRS* fattrs = &(aFont->mFattrs);
   if( fattrs->fsFontUse == 0 )  // if image font
   {
-    char alias[FACESIZE];
+    long lFonts = 0;
+    FONTMETRICS* pMetrics = getMetrics( lFonts, fattrs->szFacename, aPS);
 
-     // If the font.substitute_vector_fonts pref is set, then we exchange
-     // Times New Roman for Tms Rmn and Helvetica for Helv if the requested
-     // points size is less than the minimum or more than the maximum point
-     // size available for Tms Rmn and Helv.
-    if( gSubstituteVectorFonts &&
-        (points > 18 || points < 8) &&
-        GetVectorSubstitute( aPS, fattrs->szFacename, alias ))
+    int reqPointSize = NSTwipsToIntPoints(mFont.size);
+    int browserRes = mDeviceContext->GetDPI();
+
+    int minSize = 99, maxSize = 0, curEmHeight = 0;
+    for (int i = 0; i < lFonts; i++)
     {
-      PL_strcpy( fattrs->szFacename, alias );
-      fattrs->fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
-      fattrs->fsSelection &= ~(FM_SEL_BOLD | FM_SEL_ITALIC);
-    }
-
-    if( fattrs->fsFontUse == 0 )    // if still image font
-    {
-      long lFonts = 0;
-      FONTMETRICS* pMetrics = getMetrics( lFonts, fattrs->szFacename, aPS);
-      int browserRes = mDeviceContext->GetDPI();
-
-      int curPoints = 0;
-      for( int i = 0; i < lFonts; i++)
+      // If we are asked for a specific point size for which we have an
+      // appropriate font, use it.  This avoids us choosing an incorrect
+      // size due to rounding issues
+      if (pMetrics[i].sYDeviceRes == browserRes &&
+          pMetrics[i].sNominalPointSize / 10 == reqPointSize)
       {
-        if( pMetrics[i].sYDeviceRes == browserRes )
+        // image face found fine, set required size in fattrs.
+        curEmHeight = pMetrics[i].lEmHeight;
+        fattrs->lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
+        fattrs->lAveCharWidth = pMetrics[i].lAveCharWidth;
+        minSize = maxSize = pMetrics[i].lEmHeight;
+        break;
+      }
+      else
+      {
+        if (abs(pMetrics[i].lEmHeight - reqEmHeight) < abs(curEmHeight - reqEmHeight))
         {
-          if (pMetrics[i].sNominalPointSize / 10 == points)
+          curEmHeight = pMetrics[i].lEmHeight;
+          fattrs->lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
+          fattrs->lAveCharWidth = pMetrics[i].lAveCharWidth;
+        }
+        else if (abs(pMetrics[i].lEmHeight - reqEmHeight) == abs(curEmHeight - reqEmHeight))
+        {
+          if ((pMetrics[i].lEmHeight) > curEmHeight)
           {
-            // image face found fine, set required size in fattrs.
-            curPoints = pMetrics[i].sNominalPointSize / 10;
+            curEmHeight = pMetrics[i].lEmHeight;
             fattrs->lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
             fattrs->lAveCharWidth = pMetrics[i].lAveCharWidth;
-            break;
-          }
-          else
-          {
-            if (abs(pMetrics[i].sNominalPointSize / 10 - points) < abs(curPoints - points))
-            {
-              curPoints = pMetrics[i].sNominalPointSize / 10;
-              fattrs->lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
-              fattrs->lAveCharWidth = pMetrics[i].lAveCharWidth;
-            }
-            else if (abs(pMetrics[i].sNominalPointSize / 10 - points) == abs(curPoints - points))
-            {
-              if ((pMetrics[i].sNominalPointSize / 10) > curPoints)
-              {
-                curPoints = pMetrics[i].sNominalPointSize / 10;
-                fattrs->lMaxBaselineExt = pMetrics[i].lMaxBaselineExt;
-                fattrs->lAveCharWidth = pMetrics[i].lAveCharWidth;
-              }
-            }
           }
         }
       }
-
-      points = curPoints;
-      nsMemory::Free(pMetrics);
+      
+      // record the min/max point size available for given font
+      if (pMetrics[i].lEmHeight > maxSize)
+        maxSize = pMetrics[i].lEmHeight;
+      else if (pMetrics[i].lEmHeight < minSize)
+        minSize = pMetrics[i].lEmHeight;
     }
+
+    nsMemory::Free(pMetrics);
+    
+    // Enable font substitution if the requested size is outside of the range
+    //  of available sizes by more than 3
+    if (reqEmHeight < minSize - 3 ||
+        reqEmHeight > maxSize + 3)
+    {
+      // If the font.substitute_vector_fonts pref is set, then we exchange
+      //  Times New Roman for Tms Rmn and Helvetica for Helv if the requested
+      //  points size is less than the minimum or more than the maximum point
+      //  size available for Tms Rmn and Helv.
+      char alias[FACESIZE];
+      if( gSubstituteVectorFonts &&
+          GetVectorSubstitute( aPS, fattrs->szFacename, alias ))
+      {
+        strcpy( fattrs->szFacename, alias );
+        fattrs->fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
+        fattrs->fsSelection &= ~(FM_SEL_BOLD | FM_SEL_ITALIC);
+      }
+    }
+    
+    if( fattrs->fsFontUse == 0 )    // if still image font
+      reqEmHeight = curEmHeight;
   }
 
-   // 5) Add effects
+   // Add effects
   if( mFont.decorations & NS_FONT_DECORATION_UNDERLINE)
     fattrs->fsSelection |= FATTR_SEL_UNDERSCORE;
   if( mFont.decorations & NS_FONT_DECORATION_LINE_THROUGH)
     fattrs->fsSelection |= FATTR_SEL_STRIKEOUT;
 
-   // 6) Encoding
-   // There doesn't seem to be any encoding stuff yet, so guess.
-   // (XXX unicode hack; use same codepage as converter!)
+   // Encoding:
+   //  There doesn't seem to be any encoding stuff yet, so guess.
+   //  (XXX unicode hack; use same codepage as converter!)
   const PRUnichar* langGroup = nsnull;
   mLangGroup->GetUnicode(&langGroup);
   nsCAutoString name(NS_LossyConvertUCS2toASCII(langGroup).get());
@@ -613,17 +628,8 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
 
   // set up the charbox;  set for image fonts also, in case we need to
   //  substitute a vector font later on (for UTF-8, etc)
-  float app2dev, fHeight;
-  mDeviceContext->GetAppUnitsToDevUnits( app2dev );
-
-  /* if image font and not printing */
-  if ((fattrs->fsFontUse == 0) && (!mDeviceContext->mPrintDC))
-    fHeight = NSIntPointsToTwips(points) * app2dev;
-  else
-    fHeight = mFont.size * app2dev;
-
-  long lFloor = NSToIntFloor( fHeight ); 
-  aFont->mCharbox.cx = MAKEFIXED( lFloor, (fHeight - (float)lFloor) * 65536.0f );
+  long lFloor = NSToIntFloor( reqEmHeight ); 
+  aFont->mCharbox.cx = MAKEFIXED( lFloor, (reqEmHeight - (float)lFloor) * 65536.0f );
   aFont->mCharbox.cy = aFont->mCharbox.cx;
 }
 
@@ -647,7 +653,7 @@ nsFontMetricsOS2::LoadFont( HPS aPS, nsString* aFontname )
       GetVectorSubstitute( aPS, aFontname, alias ))
   {
     fh = new nsFontOS2();
-    PL_strcpy( fh->mFattrs.szFacename, alias );
+    strcpy( fh->mFattrs.szFacename, alias );
     fh->mFattrs.fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
     SetFontHandle( aPS, fh );
     return fh;
@@ -701,7 +707,7 @@ nsFontMetricsOS2::LoadFont( HPS aPS, nsString* aFontname )
           fh = new nsFontOS2();
           FATTRS* fattrs = &(fh->mFattrs);
      
-          PL_strcpy( fattrs->szFacename, fm->szFacename );
+          strcpy( fattrs->szFacename, fm->szFacename );
           if( fm->fsDefn & FM_DEFN_OUTLINE ||
               !mDeviceContext->SupportsRasterFonts() )
             fh->mFattrs.fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
@@ -731,7 +737,7 @@ nsFontMetricsOS2::LoadFont( HPS aPS, nsString* aFontname )
         fh = new nsFontOS2();
         FATTRS* fattrs = &(fh->mFattrs);
    
-        PL_strcpy( fattrs->szFacename, fm->szFacename );
+        strcpy( fattrs->szFacename, fm->szFacename );
         if( fm->fsDefn & FM_DEFN_OUTLINE ||
             !mDeviceContext->SupportsRasterFonts() )
           fattrs->fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
@@ -777,7 +783,7 @@ nsFontMetricsOS2::LoadFont( HPS aPS, nsString* aFontname )
   if( lFonts > 0 )
   {
     fh = new nsFontOS2();
-    PL_strcpy( fh->mFattrs.szFacename, fontname );
+    strcpy( fh->mFattrs.szFacename, fontname );
     fh->mFattrs.fsFontUse = FATTR_FONTUSE_OUTLINE | FATTR_FONTUSE_TRANSFORMABLE;
 
     if( bBold )
@@ -1153,32 +1159,32 @@ nsFontMetricsOS2::GetVectorSubstitute( HPS aPS, const char* aFamilyname,
   PRBool isBold = mFont.weight > NS_FONT_WEIGHT_NORMAL;
   PRBool isItalic = (mFont.style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE));
 
-  if( PL_strcasecmp( aFamilyname, "Tms Rmn" ) == 0 )
+  if( strcmpi( aFamilyname, "Tms Rmn" ) == 0 )
   {
     if( !isBold && !isItalic )
-      PL_strcpy( alias, "Times New Roman" );
+      strcpy( alias, "Times New Roman" );
     else if( isBold )
       if( !isItalic )
-        PL_strcpy( alias, "Times New Roman Bold" );
+        strcpy( alias, "Times New Roman Bold" );
       else
-        PL_strcpy( alias, "Times New Roman Bold Italic" );
+        strcpy( alias, "Times New Roman Bold Italic" );
     else
-      PL_strcpy( alias, "Times New Roman Italic" );
+      strcpy( alias, "Times New Roman Italic" );
 
     return PR_TRUE;
   }
 
-  if( PL_strcasecmp( aFamilyname, "Helv" ) == 0 )
+  if( strcmpi( aFamilyname, "Helv" ) == 0 )
   {
     if( !isBold && !isItalic )
-      PL_strcpy( alias, "Helvetica" );
+      strcpy( alias, "Helvetica" );
     else if( isBold )
       if( !isItalic )
-        PL_strcpy( alias, "Helvetica Bold" );
+        strcpy( alias, "Helvetica Bold" );
       else
-        PL_strcpy( alias, "Helvetica Bold Italic" );
+        strcpy( alias, "Helvetica Bold Italic" );
     else
-      PL_strcpy( alias, "Helvetica Italic" );
+      strcpy( alias, "Helvetica Italic" );
 
     return PR_TRUE;
   }
@@ -1186,33 +1192,33 @@ nsFontMetricsOS2::GetVectorSubstitute( HPS aPS, const char* aFamilyname,
    // When printing, substitute vector fonts for these common bitmap fonts
   if( !mDeviceContext->SupportsRasterFonts() )
   {
-    if( PL_strcasecmp( aFamilyname, "System Proportional" ) == 0 )
+    if( strcmpi( aFamilyname, "System Proportional" ) == 0 )
     {
       if( !isBold && !isItalic )
-        PL_strcpy( alias, "Helvetica" );
+        strcpy( alias, "Helvetica" );
       else if( isBold )
         if( !isItalic )
-          PL_strcpy( alias, "Helvetica Bold" );
+          strcpy( alias, "Helvetica Bold" );
         else
-          PL_strcpy( alias, "Helvetica Bold Italic" );
+          strcpy( alias, "Helvetica Bold Italic" );
       else
-        PL_strcpy( alias, "Helvetica Italic" );
+        strcpy( alias, "Helvetica Italic" );
 
       return PR_TRUE;
     }
 
-    if( PL_strcasecmp( aFamilyname, "System Monospaced" ) == 0 ||
-        PL_strcasecmp( aFamilyname, "System VIO" ) == 0 )
+    if( strcmpi( aFamilyname, "System Monospaced" ) == 0 ||
+        strcmpi( aFamilyname, "System VIO" ) == 0 )
     {
       if( !isBold && !isItalic )
-        PL_strcpy( alias, "Courier" );
+        strcpy( alias, "Courier" );
       else if( isBold )
         if( !isItalic )
-          PL_strcpy( alias, "Courier Bold" );
+          strcpy( alias, "Courier Bold" );
         else
-          PL_strcpy( alias, "Courier Bold Italic" );
+          strcpy( alias, "Courier Bold Italic" );
       else
-        PL_strcpy( alias, "Courier Italic" );
+        strcpy( alias, "Courier Italic" );
 
       return PR_TRUE;
     }
@@ -1841,13 +1847,17 @@ nsFontMetricsOS2::InitializeGlobalFonts()
   {
      // The discrepencies between the Courier bitmap and outline fonts are
      // too much to deal with, so we only use the outline font
-    if( PL_strcasecmp(pFontMetrics[i].szFamilyname, "Courier") == 0 &&
+    if( strcmpi(pFontMetrics[i].szFamilyname, "Courier") == 0 &&
         !(pFontMetrics[i].fsDefn & FM_DEFN_OUTLINE))
       continue;
 
+    if (strcmpi(pFontMetrics[i].szFamilyname, "Roman") == 0 ||
+        strcmpi(pFontMetrics[i].szFamilyname, "Swiss") == 0)
+      continue;
+
     nsGlobalFont* font = new nsGlobalFont;
-    PL_strcpy(font->metrics.szFamilyname, pFontMetrics[i].szFamilyname);
-    PL_strcpy(font->metrics.szFacename, pFontMetrics[i].szFacename);
+    strcpy(font->metrics.szFamilyname, pFontMetrics[i].szFamilyname);
+    strcpy(font->metrics.szFacename, pFontMetrics[i].szFacename);
     font->metrics.fsType = pFontMetrics[i].fsType;
     font->metrics.fsDefn = pFontMetrics[i].fsDefn;
     font->metrics.fsSelection = pFontMetrics[i].fsSelection;
