@@ -82,6 +82,8 @@ public:
     NS_IMETHOD              ConstrainPosition(PRInt32 *aX, PRInt32 *aY);
     NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
     NS_IMETHOD              PlaceBehind(nsIWidget *aWidget, PRBool aActivate);
+    NS_IMETHOD              SetSizeMode(PRInt32 aMode);
+
     NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
     NS_IMETHOD            	GetScreenBounds(nsRect &aRect);
     virtual PRBool          OnPaint(nsPaintEvent &event);
@@ -123,6 +125,7 @@ protected:
 	nsIWidget                      *mOffsetParent;
 	PRBool                          mAcceptsActivation;
 	PRBool                          mIsActive;
+	PRBool                          mZoomOnShow;
 	
 	ControlHandle      mPhantomScrollbar;  // a native scrollbar for the scrollwheel
 };

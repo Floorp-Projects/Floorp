@@ -271,6 +271,7 @@ nsMacWindow::nsMacWindow() : Inherited()
 	, mMacEventHandler(nsnull)
 	, mAcceptsActivation(PR_TRUE)
 	, mIsActive(PR_FALSE)
+	, mZoomOnShow(PR_FALSE)
 	, mPhantomScrollbar(nil)
 {
   //mMacEventHandler.reset(new nsMacEventHandler(this));
@@ -558,14 +559,19 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
   // we need to make sure we call ::Show/HideWindow() to generate the 
   // necessary activate/deactivate events. Calling ::ShowHide() is
   // not adequate, unless we don't want activation (popups). (pinkerton).
-  if ( bState )
-  {
+  if ( bState ) {
     if ( mAcceptsActivation )
       ::ShowWindow(mWindowPtr);
     else {
       ::ShowHide(mWindowPtr, true);
       ::BringToFront(mWindowPtr); // competes with ComeToFront, but makes popups work
       //::SendBehind(::FrontWindow(), mWindowPtr);
+    }
+    if (mZoomOnShow) {
+      PRInt32 sizemode;
+      GetSizeMode(&sizemode); // value was earlier saved but not acted on
+      SetSizeMode(sizemode);
+      mZoomOnShow = PR_FALSE;
     }
     ComeToFront();
   }
@@ -713,6 +719,39 @@ NS_METHOD nsMacWindow::PlaceBehind(nsIWidget *aWidget, PRBool aActivate)
       ::SelectWindow(mWindowPtr);
   }
   return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// zoom/restore
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
+{
+	nsresult rv;
+
+	if (aMode == nsSizeMode_Minimized) // unlikely on the Mac
+		return NS_ERROR_UNEXPECTED;
+
+	rv = nsBaseWidget::SetSizeMode(aMode);
+	if (NS_FAILED(rv))
+		return rv;
+
+	/* zooming on the Mac doesn't seem to work until the window is visible.
+	   the rest of the app is structured to zoom before the window is visible
+	   to avoid flashing. here's where we defeat that. */
+	if (!mVisible) {
+		if (aMode == nsSizeMode_Maximized)
+			mZoomOnShow = PR_TRUE;
+	} else {
+		Rect macRect;
+		WindowPtr w = ::FrontWindow();
+		::ZoomWindow(mWindowPtr, aMode == nsSizeMode_Normal ? inZoomIn : inZoomOut , ::FrontWindow() == mWindowPtr);
+		::GetWindowPortBounds(mWindowPtr, &macRect);
+		Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
+	}
+
+	return rv;
 }
 
 //-------------------------------------------------------------------------
