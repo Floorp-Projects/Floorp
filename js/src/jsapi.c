@@ -2166,7 +2166,9 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop)
     if (OBJ_IS_NATIVE(obj2)) {
 	/* Peek at the native property's slot value, without doing a Get. */
 	sprop = (JSScopeProperty *)prop;
-	rval = LOCKED_OBJ_GET_SLOT(obj2, sprop->slot);
+        rval = (SPROP_HAS_VALID_SLOT(sprop))
+               ? LOCKED_OBJ_GET_SLOT(obj2, sprop->slot)
+               : JSVAL_TRUE;
     } else {
 	/* XXX bad API: no way to return "defined but value unknown" */
 	rval = JSVAL_TRUE;
@@ -3698,8 +3700,7 @@ JS_SaveExceptionState(JSContext *cx)
     if (state) {
         state->throwing = JS_GetPendingException(cx, &state->exception);
         if (state->throwing && JSVAL_IS_GCTHING(state->exception))
-            js_AddRoot(cx, &state->exception,
-                       "JSExceptionState.exception");
+            js_AddRoot(cx, &state->exception, "JSExceptionState.exception");
     }
     return state;
 #else

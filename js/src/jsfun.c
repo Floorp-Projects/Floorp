@@ -589,12 +589,15 @@ JSClass js_CallClass = {
 
 #endif /* JS_HAS_CALL_OBJECT */
 
+/* SHARED because fun_getProperty always computes a new value. */
+#define FUNCTION_PROP_ATTRS (JSPROP_READONLY|JSPROP_PERMANENT|JSPROP_SHARED)
+
 static JSPropertySpec function_props[] = {
-    {js_arguments_str, CALL_ARGUMENTS, JSPROP_READONLY | JSPROP_PERMANENT,0,0},
-    {js_arity_str,     FUN_ARITY,      JSPROP_READONLY | JSPROP_PERMANENT,0,0},
-    {js_length_str,    ARGS_LENGTH,    JSPROP_READONLY | JSPROP_PERMANENT,0,0},
-    {js_name_str,      FUN_NAME,       JSPROP_READONLY | JSPROP_PERMANENT,0,0},
-    {"__call__",       FUN_CALL,       JSPROP_READONLY | JSPROP_PERMANENT,0,0},
+    {js_arguments_str, CALL_ARGUMENTS, FUNCTION_PROP_ATTRS,0,0},
+    {js_arity_str,     FUN_ARITY,      FUNCTION_PROP_ATTRS,0,0},
+    {js_length_str,    ARGS_LENGTH,    FUNCTION_PROP_ATTRS,0,0},
+    {js_name_str,      FUN_NAME,       FUNCTION_PROP_ATTRS,0,0},
+    {"__call__",       FUN_CALL,       FUNCTION_PROP_ATTRS,0,0},
     {0,0,0,0,0}
 };
 
@@ -729,10 +732,10 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     str = JSVAL_TO_STRING(id);
     prototypeAtom = cx->runtime->atomState.classPrototypeAtom;
     if (str == ATOM_TO_STRING(prototypeAtom)) {
-        JSObject *proto;
+        JSObject *parentProto, *proto;
         jsval pval;
 
-        proto = NULL;
+        parentProto = NULL;
         if (fun->object != obj && fun->object) {
             /*
              * Clone of a function: make its prototype property value have the
@@ -741,22 +744,24 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             if (!OBJ_GET_PROPERTY(cx, fun->object, (jsid)prototypeAtom, &pval))
                 return JS_FALSE;
             if (JSVAL_IS_OBJECT(pval))
-                proto = JSVAL_TO_OBJECT(pval);
+                parentProto = JSVAL_TO_OBJECT(pval);
         }
 
-        /* If resolving "prototype" in a clone, clone the parent's prototype. */
-        if (proto) {
-            proto = js_NewObject(cx, OBJ_GET_CLASS(cx, proto), proto, NULL);
-        } else {
+        /*
+         * If resolving "prototype" in a clone, clone the parent's prototype.
+         * Beware of the wacky case of a user function Object() -- trying to
+         * build a prototype for that will recur back here ad perniciem.
+         */
+        if (fun->atom != cx->runtime->atomState.ObjectAtom) {
             /*
-             * Handle the wacky case of a user function Object() -- trying to
-             * build a prototype for that will recur back here ad perniciem.
+             * Pass the constructor's (obj's) parent as the prototype parent,
+             * to avoid defaulting to parentProto.constructor.__parent__.
              */
-            if (fun->atom != cx->runtime->atomState.ObjectAtom)
-                proto = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+            proto = js_NewObject(cx, &js_ObjectClass, parentProto,
+                                 OBJ_GET_PARENT(cx, obj));
+            if (!proto)
+                return JS_FALSE;
         }
-        if (!proto)
-            return JS_FALSE;
 
         /*
          * ECMA says that constructor.prototype is DontEnum | DontDelete for

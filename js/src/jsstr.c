@@ -315,7 +315,8 @@ enum string_tinyid {
 };
 
 static JSPropertySpec string_props[] = {
-    {js_length_str,     STRING_LENGTH,  JSPROP_READONLY|JSPROP_PERMANENT,0,0},
+    {js_length_str,     STRING_LENGTH,
+                        JSPROP_READONLY|JSPROP_PERMANENT|JSPROP_SHARED, 0,0},
     {0,0,0,0,0}
 };
 
@@ -354,6 +355,7 @@ str_resolve1(JSContext *cx, JSObject *obj, JSString *str, jsint slot)
     str1 = js_NewStringCopyN(cx, buf, 1, 0);
     if (!str1)
         return JS_FALSE;
+    /* XXX avoid one-char strings -- use a substring weak ref on str? */
     return JS_DefineElement(cx, obj, slot, STRING_TO_JSVAL(str1),
                             JS_PropertyStub, JS_PropertyStub,
                             JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_PERMANENT);
@@ -1042,7 +1044,8 @@ str_match(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     mdata.arrayobj = NULL;
     if (!js_AddRoot(cx, &mdata.arrayobj, "mdata.arrayobj"))
         return JS_FALSE;
-    ok = match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval, JS_FALSE);
+    ok = match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval,
+                          JS_FALSE);
     if (ok && mdata.arrayobj)
         *rval = OBJECT_TO_JSVAL(mdata.arrayobj);
     js_RemoveRoot(cx->runtime, &mdata.arrayobj);
@@ -1060,7 +1063,8 @@ str_search(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     mdata.base.optarg = 1;
     mdata.base.mode = GLOB_SEARCH;
-    return match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval, JS_FALSE);
+    return match_or_replace(cx, obj, argc, argv, match_glob, &mdata.base, rval,
+                            JS_FALSE);
 #else
     return str_nyi(cx, "search");
 #endif

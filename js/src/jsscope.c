@@ -500,11 +500,16 @@ js_NewScopeProperty(JSContext *cx, JSScope *scope, jsid id,
     JSScopeProperty *sprop;
 
     JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
-    if (!js_AllocSlot(cx, scope->object, &slot))
-	return NULL;
+    if (attrs & JSPROP_SHARED) {
+        slot = SPROP_INVALID_SLOT;
+    } else {
+        if (!js_AllocSlot(cx, scope->object, &slot))
+            return NULL;
+    }
     sprop = (JSScopeProperty *) JS_malloc(cx, sizeof(JSScopeProperty));
     if (!sprop) {
-	js_FreeSlot(cx, scope->object, slot);
+        if (slot != SPROP_INVALID_SLOT)
+            js_FreeSlot(cx, scope->object, slot);
 	return NULL;
     }
     sprop->nrefs = 0;
@@ -512,7 +517,7 @@ js_NewScopeProperty(JSContext *cx, JSScope *scope, jsid id,
     sprop->getter = getter;
     sprop->setter = setter;
     sprop->slot = slot;
-    sprop->attrs = attrs;
+    sprop->attrs = (uint8) attrs;
     sprop->spare = 0;
     sprop->symbols = NULL;
     sprop->next = NULL;

@@ -336,9 +336,11 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	    }
 	    JS_UNLOCK_OBJ(cx, obj);
 	    HoldWatchPoint(wp);
-	    ok = wp->handler(cx, obj, js_IdToValue(sym_id(sym)),
-			     OBJ_GET_SLOT(cx, obj, wp->sprop->slot), vp,
-			     wp->closure);
+            ok = wp->handler(cx, obj, js_IdToValue(sym_id(sym)),
+                             (SPROP_HAS_VALID_SLOT(sprop))
+                             ? OBJ_GET_SLOT(cx, obj, wp->sprop->slot)
+                             : JSVAL_VOID,
+                             vp, wp->closure);
             if (ok) {
                 /*
                  * Create pseudo-frame for call to setter so that any 
@@ -417,7 +419,9 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 	uintN attrs;
 
 	if (OBJ_IS_NATIVE(pobj)) {
-	    value = LOCKED_OBJ_GET_SLOT(pobj, sprop->slot);
+            value = (SPROP_HAS_VALID_SLOT(sprop))
+                    ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
+                    : JSVAL_VOID;
 	} else {
 	    if (!OBJ_GET_PROPERTY(cx, pobj, id, &value)) {
 		OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
@@ -775,8 +779,11 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 
     sym = sprop->symbols;
     pd->id = sym ? js_IdToValue(sym_id(sym)) : JSVAL_VOID;
-    if (!sym || !js_GetProperty(cx, obj, sym_id(sym), &pd->value))
-	pd->value = OBJ_GET_SLOT(cx, obj, sprop->slot);
+    if (!sym || !js_GetProperty(cx, obj, sym_id(sym), &pd->value)) {
+        pd->value = (SPROP_HAS_VALID_SLOT(sprop))
+                    ? OBJ_GET_SLOT(cx, obj, sprop->slot)
+                    : JSVAL_VOID;
+    }
     getter = SPROP_GETTER(sprop, obj);
     pd->flags = ((sprop->attrs & JSPROP_ENUMERATE)      ? JSPD_ENUMERATE : 0)
 	      | ((sprop->attrs & JSPROP_READONLY)       ? JSPD_READONLY  : 0)

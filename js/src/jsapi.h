@@ -113,7 +113,11 @@ JS_BEGIN_EXTERN_C
 #define JSPROP_EXPORTED         0x08    /* property is exported from object */
 #define JSPROP_GETTER           0x10    /* property holds getter function */
 #define JSPROP_SETTER           0x20    /* property holds setter function */
-#define JSPROP_SHARED           0x40    /* don't copy proto-property on set */
+#define JSPROP_SHARED           0x40    /* don't allocate a value slot for this
+                                           property; don't copy the property on
+                                           set of the same-named property in an
+                                           object that delegates to a prototype
+                                           containing this property */
 #define JSPROP_INDEX            0x80    /* name is actually (jsint) index */
 
 /* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
@@ -620,10 +624,11 @@ struct JSClass {
     jsword              spare;
 };
 
-#define JSCLASS_HAS_PRIVATE     0x01    /* class instances have private slot */
-#define JSCLASS_NEW_ENUMERATE   0x02    /* class has JSNewEnumerateOp method */
-#define JSCLASS_NEW_RESOLVE     0x04    /* class has JSNewResolveOp method */
-#define JSCLASS_PRIVATE_IS_NSISUPPORTS  0x08  /* private is (nsISupports *) */
+#define JSCLASS_HAS_PRIVATE             0x01    /* objects have private slot */
+#define JSCLASS_NEW_ENUMERATE           0x02    /* has JSNewEnumerateOp hook */
+#define JSCLASS_NEW_RESOLVE             0x04    /* has JSNewResolveOp hook */
+#define JSCLASS_PRIVATE_IS_NSISUPPORTS  0x08    /* private is (nsISupports *) */
+#define JSCLASS_SHARE_ALL_PROPERTIES    0x10    /* all properties are SHARED */
 
 /* Initializer for unused members of statically initialized JSClass structs. */
 #define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,0,0,0
