@@ -1084,31 +1084,31 @@ gdk_fontset_load("-misc-fixed-medium-r-normal--*-130-*-*-*-*-*-0");
       PRInt32 ivalue = 0;
       nsresult rv;
 
-      GdkIMStyle supported_style = SUPPORTED_PREEDIT | SUPPORTED_STATUS;
+      GdkIMStyle supported_style = (GdkIMStyle) (SUPPORTED_PREEDIT | SUPPORTED_STATUS);
       style = gdk_im_decide_style(supported_style);
 
       NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
       if (!NS_FAILED(rv) && (prefs)) {
         rv = prefs->GetIntPref(PREF_XIM_PREEDIT, &ivalue);
         if (SUPPORTED_PREEDIT & ivalue) {
-            style = (style & GDK_IM_STATUS_MASK) | ivalue;
+            style = (GdkIMStyle) ((style & GDK_IM_STATUS_MASK) | ivalue);
         }
         rv = prefs->GetIntPref(PREF_XIM_STATUS, &ivalue);
         if (SUPPORTED_STATUS & ivalue) {
-            style = (style & GDK_IM_PREEDIT_MASK) | ivalue;
+            style = (GdkIMStyle) ((style & GDK_IM_PREEDIT_MASK) | ivalue);
         }
       }
 
       attr->style = style;
       attr->client_window = gdkWindow;
 
-      attrmask |= GDK_IC_PREEDIT_COLORMAP;
+      attrmask = (GdkICAttributesType) (attrmask | GDK_IC_PREEDIT_COLORMAP);
       attr->preedit_colormap = gdkWindow_private->colormap;
 
       switch (style & GDK_IM_PREEDIT_MASK) {
       case GDK_IM_PREEDIT_POSITION:
       default:
-        attrmask |= GDK_IC_PREEDIT_POSITION_REQ;
+        attrmask = (GdkICAttributesType) (attrmask | GDK_IC_PREEDIT_POSITION_REQ);
         gdk_window_get_size (gdkWindow, &width, &height);
 
         /* need to know how to get spot location */
@@ -1119,10 +1119,10 @@ gdk_fontset_load("-misc-fixed-medium-r-normal--*-130-*-*-*-*-*-0");
         attr->preedit_area.y = 0;
         attr->preedit_area.width = width;
         attr->preedit_area.height = height;
-        attrmask |= GDK_IC_PREEDIT_AREA;
+        attrmask = (GdkICAttributesType) (attrmask | GDK_IC_PREEDIT_AREA);
 
         attr->preedit_fontset = gfontset;
-        attrmask |= GDK_IC_PREEDIT_FONTSET;
+        attrmask = (GdkICAttributesType) (attrmask | GDK_IC_PREEDIT_FONTSET);
         break;
       }
       GdkICPrivate *IC = (GdkICPrivate*) gdk_ic_new (attr, attrmask);
