@@ -206,19 +206,17 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 {
   nsresult rv = NS_RDF_NO_VALUE;
 
-  nsIMsgFolder* folder;
-  if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
+  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
+  if (NS_SUCCEEDED(rv))
   {
     if (peq(kNC_Child, property))
     {
-      nsIEnumerator *subFolders;
+      nsCOMPtr<nsIEnumerator> subFolders;
 
-      rv = folder->GetSubFolders(&subFolders);
+      rv = folder->GetSubFolders(getter_AddRefs(subFolders));
       if (NS_FAILED(rv)) return rv;
-      //folder->GetMessages(&subFolders);
       nsAdapterEnumerator* cursor =
         new nsAdapterEnumerator(subFolders);
-      NS_IF_RELEASE(subFolders);
       if (cursor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(cursor);
@@ -227,13 +225,12 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
     }
     else if (peq(kNC_MessageChild, property))
     {
-      nsIEnumerator *messages;
+      nsCOMPtr<nsIEnumerator> messages;
 
-      rv = folder->GetMessages(&messages);
+      rv = folder->GetMessages(getter_AddRefs(messages));
       if (NS_FAILED(rv)) return rv;
       nsAdapterEnumerator* cursor =
         new nsAdapterEnumerator(messages);
-      NS_IF_RELEASE(messages);
       if (cursor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(cursor);
@@ -250,12 +247,11 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
       *targets = cursor;
       rv = NS_OK;
     }
-    NS_IF_RELEASE(folder);
   }
   else {
 	  //create empty cursor
-	  nsISupportsArray *assertions;
-      NS_NewISupportsArray(&assertions);
+	  nsCOMPtr<nsISupportsArray> assertions;
+      NS_NewISupportsArray(getter_AddRefs(assertions));
 	  nsArrayEnumerator* cursor = 
 		  new nsArrayEnumerator(assertions);
 	  if(cursor == nsnull)
@@ -362,28 +358,22 @@ NS_IMETHODIMP nsMsgFolderDataSource::ArcLabelsIn(nsIRDFNode* node,
 NS_IMETHODIMP nsMsgFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
                                                   nsISimpleEnumerator** labels)
 {
-  nsISupportsArray *arcs=nsnull;
+  nsCOMPtr<nsISupportsArray> arcs;
   nsresult rv = NS_RDF_NO_VALUE;
   
-  //  if (arcs == nsnull)
-  //    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsIMsgFolder* folder;
-  if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(),
-                                          (void**)&folder))) {
+  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
+  if (NS_SUCCEEDED(rv)) {
     fflush(stdout);
-    rv = getFolderArcLabelsOut(folder, &arcs);
-    NS_RELEASE(folder);
+    rv = getFolderArcLabelsOut(folder, getter_AddRefs(arcs));
   }
   else {
     // how to return an empty cursor?
     // for now return a 0-length nsISupportsArray
-    NS_NewISupportsArray(&arcs);
+    NS_NewISupportsArray(getter_AddRefs(arcs));
   }
 
   nsArrayEnumerator* cursor =
     new nsArrayEnumerator(arcs);
-  NS_RELEASE(arcs);
   
   if (cursor == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -395,31 +385,41 @@ NS_IMETHODIMP nsMsgFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
 
 nsresult
 nsMsgFolderDataSource::getFolderArcLabelsOut(nsIMsgFolder *folder,
-                                             nsISupportsArray **aArcs)
+                                             nsISupportsArray **arcs)
 {
-  nsISupportsArray* arcs;
-  NS_NewISupportsArray(&arcs);
+	nsresult rv;
+  rv = NS_NewISupportsArray(arcs);
+	if(NS_FAILED(rv))
+		return rv;
   
-  arcs->AppendElement(kNC_Name);
-  arcs->AppendElement(kNC_SpecialFolder);
-  arcs->AppendElement(kNC_TotalMessages);
-  arcs->AppendElement(kNC_TotalUnreadMessages);
-  nsIEnumerator* subFolders;
-  if (NS_SUCCEEDED(folder->GetSubFolders(&subFolders)))
+  (*arcs)->AppendElement(kNC_Name);
+  (*arcs)->AppendElement(kNC_SpecialFolder);
+  (*arcs)->AppendElement(kNC_TotalMessages);
+  (*arcs)->AppendElement(kNC_TotalUnreadMessages);
+  
+	nsCOMPtr<nsIEnumerator>  subFolders;
+  if (NS_SUCCEEDED(folder->GetSubFolders(getter_AddRefs(subFolders))))
     {
-	    if(NS_OK == subFolders->First())
-        arcs->AppendElement(kNC_Child);
-      NS_RELEASE(subFolders);
+	    if(NS_SUCCEEDED(subFolders->First()))
+		{
+			nsCOMPtr<nsISupports> firstFolder;
+			rv = subFolders->CurrentItem(getter_AddRefs(firstFolder));
+			if (NS_SUCCEEDED(rv))
+				(*arcs)->AppendElement(kNC_Child);
+		}
     }
   
-  nsIEnumerator* messages;
-  if(NS_SUCCEEDED(folder->GetMessages(&messages))) {
-    if(NS_OK == messages->First())
-      arcs->AppendElement(kNC_MessageChild);
-    NS_RELEASE(messages);
+  nsCOMPtr<nsIEnumerator> messages;
+  if(NS_SUCCEEDED(folder->GetMessages(getter_AddRefs(messages)))) {
+    if(NS_SUCCEEDED(messages->First()))
+	{
+		nsCOMPtr<nsISupports> firstMessage;
+		rv = messages->CurrentItem(getter_AddRefs(firstMessage));
+		if(NS_SUCCEEDED(rv))
+	      (*arcs)->AppendElement(kNC_MessageChild);
+	}
   }
   
-  *aArcs = arcs;
   return NS_OK;
 }
 
@@ -442,12 +442,11 @@ nsMsgFolderDataSource::GetAllCommands(nsIRDFResource* source,
 {
   nsresult rv;
 
-  nsIMsgFolder* folder;
-  nsISupportsArray* cmds = nsnull;
+  nsCOMPtr<nsISupportsArray> cmds;
 
-  if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder))) {
-    NS_RELEASE(folder);       // release now that we know it's a folder
-    rv = NS_NewISupportsArray(&cmds);
+  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    rv = NS_NewISupportsArray(getter_AddRefs(cmds));
     if (NS_FAILED(rv)) return rv;
     cmds->AppendElement(kNC_Delete);
     cmds->AppendElement(kNC_NewFolder);
@@ -464,14 +463,14 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
                                         nsISupportsArray/*<nsIRDFResource>*/* aArguments,
                                         PRBool* aResult)
 {
-  nsIMsgFolder* folder;
+	nsresult rv;
+  nsCOMPtr<nsIMsgFolder> folder;
 
   PRUint32 cnt = aSources->Count();
   for (PRUint32 i = 0; i < cnt; i++) {
-    nsCOMPtr<nsISupports> source = dont_QueryInterface((*aSources)[i]);
-    if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder))) {
-      NS_RELEASE(folder);       // release now that we know it's a folder
-
+    nsCOMPtr<nsISupports> source = getter_AddRefs((*aSources)[i]);
+		folder = do_QueryInterface(source, &rv);
+    if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- folder commands are always enabled
       if (!(peq(aCommand, kNC_Delete) ||
 		    peq(aCommand, kNC_NewFolder))) {
@@ -495,9 +494,9 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 
   PRUint32 cnt = aSources->Count();
   for (PRUint32 i = 0; i < cnt; i++) {
-    nsISupports* source = (*aSources)[i];
-    nsIMsgFolder* folder;
-    if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder))) {
+		nsCOMPtr<nsISupports> supports = getter_AddRefs((*aSources)[i]);
+    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+    if (NS_SUCCEEDED(rv)) {
       if (peq(aCommand, kNC_Delete)) {
 		rv = DoDeleteFromFolder(folder, aArguments);
       }
@@ -505,7 +504,6 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 		rv = DoNewFolder(folder, aArguments);
 	  }
 
-      NS_RELEASE(folder);
     }
   }
   return rv;
@@ -513,61 +511,55 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 
 NS_IMETHODIMP nsMsgFolderDataSource::OnItemAdded(nsIFolder *parentFolder, nsISupports *item)
 {
-	nsIMessage *message;
-	nsIMsgFolder *folder;
-	nsIRDFResource *parentResource;
+	nsresult rv;
+	nsCOMPtr<nsIMessage> message;
+	nsCOMPtr<nsIMsgFolder> folder;
+	nsCOMPtr<nsIRDFResource> parentResource;
 
-	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsIRDFResource::GetIID(), (void**)&parentResource)))
+	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsIRDFResource::GetIID(), getter_AddRefs(parentResource))))
 	{
 		//If we are adding a message
-		if(NS_SUCCEEDED(item->QueryInterface(nsIMessage::GetIID(), (void**)&message)))
+		if(NS_SUCCEEDED(item->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message))))
 		{
-			nsIRDFNode *itemNode;
-			if(NS_SUCCEEDED(item->QueryInterface(nsIRDFNode::GetIID(), (void**)&itemNode)))
+			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
+			if(NS_SUCCEEDED(rv))
 			{
 				//Notify folders that a message was added.
 				NotifyObservers(parentResource, kNC_MessageChild, itemNode, PR_TRUE);
-				NS_RELEASE(itemNode);
 			}
-			NS_RELEASE(message);
 		}
 		//If we are adding a folder
-		else if(NS_SUCCEEDED(item->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
+		else if(NS_SUCCEEDED(item->QueryInterface(nsIMsgFolder::GetIID(), getter_AddRefs(folder))))
 		{
-			nsIRDFNode *itemNode;
-			if(NS_SUCCEEDED(item->QueryInterface(nsIRDFNode::GetIID(), (void**)&itemNode)))
+			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
+			if(NS_SUCCEEDED(rv))
 			{
 				//Notify folders that a message was added.
 				NotifyObservers(parentResource, kNC_Child, itemNode, PR_TRUE);
-				NS_RELEASE(itemNode);
 			}
-			NS_RELEASE(folder);
 		}
-		NS_RELEASE(parentResource);
 	}
   return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolderDataSource::OnItemRemoved(nsIFolder *parentFolder, nsISupports *item)
 {
-	nsIMessage *message;
-	nsIRDFResource *parentResource;
+	nsresult rv;
+	nsCOMPtr<nsIMessage> message;
+	nsCOMPtr<nsIRDFResource> parentResource;
 
-	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsIRDFResource::GetIID(), (void**)&parentResource)))
+	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsIRDFResource::GetIID(), getter_AddRefs(parentResource))))
 	{
 		//If we are adding a message
-		if(NS_SUCCEEDED(item->QueryInterface(nsIMessage::GetIID(), (void**)&message)))
+		if(NS_SUCCEEDED(item->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message))))
 		{
-			nsIRDFNode *itemNode;
-			if(NS_SUCCEEDED(item->QueryInterface(nsIRDFNode::GetIID(), (void**)&itemNode)))
+			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
+			if(NS_SUCCEEDED(rv))
 			{
 				//Notify folders that a message was deleted.
 				NotifyObservers(parentResource, kNC_MessageChild, itemNode, PR_FALSE);
-				NS_RELEASE(itemNode);
 			}
-			NS_RELEASE(message);
 		}
-		NS_RELEASE(parentResource);
 	}
   return NS_OK;
 }
@@ -576,9 +568,10 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyChanged(nsISupports *item, co
 														   const char *oldValue, const char *newValue)
 
 {
-	nsIRDFResource *resource;
+	nsresult rv;
+	nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(item, &rv));
 
-	if(NS_SUCCEEDED(item->QueryInterface(nsIRDFResource::GetIID(), (void**)&resource)))
+	if(NS_SUCCEEDED(rv))
 	{
 		if(PL_strcmp("TotalMessages", property) == 0)
 		{
@@ -588,7 +581,6 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyChanged(nsISupports *item, co
 		{
 			NotifyPropertyChanged(resource, kNC_TotalUnreadMessages, oldValue, newValue);
 		}
-		NS_IF_RELEASE(resource);
 	}
 
 	return NS_OK;
@@ -670,19 +662,23 @@ nsresult
 nsMsgFolderDataSource::createTotalMessagesNode(nsIMsgFolder *folder,
 											   nsIRDFNode **target)
 {
+	nsresult rv;
 	PRUint32 totalMessages;
-	folder->GetTotalMessages(PR_FALSE, &totalMessages);
-	createNode(totalMessages, target);
-	return NS_OK;
+	rv = folder->GetTotalMessages(PR_FALSE, &totalMessages);
+	if(NS_SUCCEEDED(rv))
+		rv = createNode(totalMessages, target);
+	return rv;
 }
 
 nsresult 
 nsMsgFolderDataSource::createUnreadMessagesNode(nsIMsgFolder *folder,
 												nsIRDFNode **target)
 {
+	nsresult rv;
 	PRUint32 totalUnreadMessages;
-	folder->GetNumUnread(PR_FALSE, &totalUnreadMessages);
-	createNode(totalUnreadMessages, target);
+	rv = folder->GetNumUnread(PR_FALSE, &totalUnreadMessages);
+	if(NS_SUCCEEDED(rv))
+		rv = createNode(totalUnreadMessages, target);
 	return NS_OK;
 }
 
@@ -690,21 +686,19 @@ nsresult
 nsMsgFolderDataSource::createFolderChildNode(nsIMsgFolder *folder,
                                              nsIRDFNode **target)
 {
-  nsIEnumerator* subFolders;
-  nsresult rv = folder->GetSubFolders(&subFolders);
+  nsCOMPtr<nsIEnumerator> subFolders;
+  nsresult rv = folder->GetSubFolders(getter_AddRefs(subFolders));
   if (NS_FAILED(rv))
     return NS_RDF_NO_VALUE;
   
   rv = subFolders->First();
   if (NS_SUCCEEDED(rv)) {
-    nsISupports *firstFolder;
-    rv = subFolders->CurrentItem(&firstFolder);
+    nsCOMPtr<nsISupports> firstFolder;
+    rv = subFolders->CurrentItem(getter_AddRefs(firstFolder));
     if (NS_SUCCEEDED(rv)) {
       firstFolder->QueryInterface(nsIRDFResource::GetIID(), (void**)target);
     }
-    NS_RELEASE(firstFolder);
   }
-  NS_RELEASE(subFolders);
   return NS_FAILED(rv) ? NS_RDF_NO_VALUE : rv;
 }
 
@@ -713,17 +707,16 @@ nsresult
 nsMsgFolderDataSource::createFolderMessageNode(nsIMsgFolder *folder,
                                                nsIRDFNode **target)
 {
-  nsIEnumerator* messages;
-  nsresult rv = folder->GetMessages(&messages);
+  nsCOMPtr<nsIEnumerator> messages;
+  nsresult rv = folder->GetMessages(getter_AddRefs(messages));
   if (NS_SUCCEEDED(rv) && rv != NS_RDF_CURSOR_EMPTY) {
     if (NS_SUCCEEDED(messages->First())) {
-      nsISupports *firstMessage;
-      rv = messages->CurrentItem(&firstMessage);
+      nsCOMPtr<nsISupports> firstMessage;
+      rv = messages->CurrentItem(getter_AddRefs(firstMessage));
       if (NS_SUCCEEDED(rv)) {
-        *target = NS_STATIC_CAST(nsIRDFResource*, firstMessage);
+		rv = firstMessage->QueryInterface(nsIRDFNode::GetIID(), (void**)target);
       }
     }
-    NS_RELEASE(messages);
   }
   return rv == NS_OK ? NS_OK : NS_RDF_NO_VALUE;
 }
@@ -735,27 +728,20 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(nsIMsgFolder *folder, nsISupp
 	PRUint32 itemCount = arguments->Count();
 	for(PRUint32 item = 0; item < itemCount; item++)
 	{
-		nsIMessage* deletedMessage;
-		nsISupports* argument = (*arguments)[item];
-		rv = argument->QueryInterface(nsIMessage::GetIID(),
-                                   (void**)&deletedMessage);
+		nsCOMPtr<nsISupports> supports = getter_AddRefs((*arguments)[item]);
+		nsCOMPtr<nsIMessage> deletedMessage(do_QueryInterface(supports, &rv));
 		if (NS_SUCCEEDED(rv))
 		{
 			rv = folder->DeleteMessage(deletedMessage);
-			NS_RELEASE(deletedMessage);
 		}
-		NS_RELEASE(argument);
 	}
-
 	return rv;
 }
 
 nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArray *arguments)
 {
 	nsresult rv = NS_OK;
-	nsISupports *argument =(*arguments)[0];
-	nsIRDFLiteral *literal;
-	rv = argument->QueryInterface(nsIRDFLiteral::GetIID(), (void**)&literal);
+	nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface((*arguments)[0], &rv));
 	if(NS_SUCCEEDED(rv))
 	{
 		PRUnichar *name;

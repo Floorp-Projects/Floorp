@@ -59,8 +59,8 @@ PRBool
 peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort);
 
 //Given an nsString, create an nsIRDFNode
-void createNode(nsString& str, nsIRDFNode **node);
+nsresult createNode(nsString& str, nsIRDFNode **node);
 
 //Given a PRUint32, create an nsiIRDFNode.
-void createNode(PRUint32 value, nsIRDFNode **node);
+nsresult createNode(PRUint32 value, nsIRDFNode **node);
 

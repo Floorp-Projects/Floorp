@@ -20,6 +20,7 @@
 #include "nsRDFCID.h"
 #include "nsIServiceManager.h"
 #include "prprf.h"
+#include "nsCOMPtr.h"
 
  
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
@@ -76,22 +77,27 @@ peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
 	}
 }
 
-void createNode(nsString& str, nsIRDFNode **node)
+nsresult createNode(nsString& str, nsIRDFNode **node)
 {
 	*node = nsnull;
-    nsresult rv; 
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
-    if (NS_FAILED(rv)) return;   // always check this before proceeding 
-	nsIRDFLiteral * value;
-	if(NS_SUCCEEDED(rdf->GetLiteral(str.GetUnicode(), &value))) {
+	nsresult rv; 
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
+	if (NS_FAILED(rv)) return rv;  
+	nsCOMPtr<nsIRDFLiteral> value;
+	rv = rdf->GetLiteral(str.GetUnicode(), getter_AddRefs(value));
+	if(NS_SUCCEEDED(rv)) {
 		*node = value;
+		NS_IF_ADDREF(*node);
 	}
+	return rv;
 }
 
-void createNode(PRUint32 value, nsIRDFNode **node)
+nsresult createNode(PRUint32 value, nsIRDFNode **node)
 {
+	nsresult rv;
 	char *valueStr = PR_smprintf("%d", value);
 	nsString str(valueStr);
-	createNode(str, node);
 	PR_smprintf_free(valueStr);
+	rv = createNode(str, node);
+	return rv;
 }

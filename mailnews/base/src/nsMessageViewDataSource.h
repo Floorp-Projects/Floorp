@@ -28,6 +28,7 @@
 #include "nsIEnumerator.h"
 #include "nsIMessage.h"
 #include "nsIMsgThread.h"
+#include "nsCOMPtr.h"
 
 /**
  * The mail data source.
@@ -142,7 +143,7 @@ public:
 	// caching frequently used resources
 protected:
 
-	nsIRDFDataSource *mDataSource;
+	nsCOMPtr<nsIRDFDataSource> mDataSource;
 	PRUint32 mShowStatus;
 	PRBool mShowThreads;
 
@@ -190,7 +191,7 @@ protected:
 
 protected:
 
-	nsIEnumerator *mSrcEnumerator;
+	nsCOMPtr<nsIEnumerator> mSrcEnumerator;
 	PRUint32 mShowStatus;
 
 };
@@ -229,9 +230,9 @@ protected:
 	nsresult GetMessagesForCurrentThread();
 protected:
 
-	nsIEnumerator *mThreads;
-	nsIEnumerator *mMessages;
-	nsIMsgFolder *mFolder;
+	nsCOMPtr<nsIEnumerator> mThreads;
+	nsCOMPtr<nsIEnumerator> mMessages;
+	nsCOMPtr<nsIMsgFolder> mFolder;
 
 };
 #endif

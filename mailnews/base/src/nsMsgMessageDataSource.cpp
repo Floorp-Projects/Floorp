@@ -160,12 +160,9 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTarget(nsIRDFResource* source,
 	if (! tv)
 		return NS_RDF_NO_VALUE;
 
-	nsIMessage *message;
-	rv = source->QueryInterface(nsIMessage::GetIID(),
-								(void **)&message);
+	nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
 	if (NS_SUCCEEDED(rv)) {
 		rv = createMessageNode(message, property,target);
-		NS_RELEASE(message);
 	}
 	else
 		return NS_RDF_NO_VALUE;
@@ -210,8 +207,12 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 {
 	nsresult rv = NS_RDF_NO_VALUE;
 
-	nsIMessage* message;
-	if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
+	if(!targets)
+		return NS_ERROR_NULL_POINTER;
+
+	*targets = nsnull;
+	nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
+	if (NS_SUCCEEDED(rv)) {
 		if(peq(kNC_Subject, property) || peq(kNC_Date, property) ||
 			peq(kNC_Status, property))
 		{
@@ -223,12 +224,14 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 			*targets = cursor;
 			rv = NS_OK;
 		}
-		NS_IF_RELEASE(message);
 	}
-	if(rv != NS_OK) {
+	if(!*targets) {
 	  //create empty cursor
-	  nsISupportsArray *assertions;
-	  NS_NewISupportsArray(&assertions);
+	  nsCOMPtr<nsISupportsArray> assertions;
+	  rv = NS_NewISupportsArray(getter_AddRefs(assertions));
+		if(NS_FAILED(rv))
+			return rv;
+
 	  nsArrayEnumerator* cursor = 
 		  new nsArrayEnumerator(assertions);
 	  if(cursor == nsnull)
@@ -295,27 +298,24 @@ NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsIn(nsIRDFNode* node,
 NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsOut(nsIRDFResource* source,
                                                   nsISimpleEnumerator** labels)
 {
-  nsISupportsArray *arcs=nsnull;
+  nsCOMPtr<nsISupportsArray> arcs;
   nsresult rv = NS_RDF_NO_VALUE;
   
-  //  if (arcs == nsnull)
-  //    return NS_ERROR_OUT_OF_MEMORY;
 
-  nsIMessage* message;
-  if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(),
-                                               (void**)&message))) {
+  nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
+  if (NS_SUCCEEDED(rv)) {
     fflush(stdout);
-    rv = getMessageArcLabelsOut(message, &arcs);
-    NS_RELEASE(message);
+    rv = getMessageArcLabelsOut(message, getter_AddRefs(arcs));
   } else {
     // how to return an empty cursor?
     // for now return a 0-length nsISupportsArray
-    NS_NewISupportsArray(&arcs);
+    rv = NS_NewISupportsArray(getter_AddRefs(arcs));
+		if(NS_FAILED(rv))
+			return rv;
   }
 
   nsArrayEnumerator* cursor =
     new nsArrayEnumerator(arcs);
-  NS_RELEASE(arcs);
   
   if (cursor == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -327,15 +327,17 @@ NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsOut(nsIRDFResource* source,
 
 nsresult
 nsMsgMessageDataSource::getMessageArcLabelsOut(nsIMessage *folder,
-                                              nsISupportsArray **aArcs)
+                                              nsISupportsArray **arcs)
 {
-  nsISupportsArray *arcs;
-  NS_NewISupportsArray(&arcs);
-  arcs->AppendElement(kNC_Subject);
-  arcs->AppendElement(kNC_Sender);
-  arcs->AppendElement(kNC_Date);
-	arcs->AppendElement(kNC_Status);
-  *aArcs = arcs;
+	nsresult rv;
+  rv = NS_NewISupportsArray(arcs);
+	if(NS_FAILED(rv))
+		return rv;
+
+  (*arcs)->AppendElement(kNC_Subject);
+  (*arcs)->AppendElement(kNC_Sender);
+  (*arcs)->AppendElement(kNC_Date);
+	(*arcs)->AppendElement(kNC_Status);
   return NS_OK;
 }
 
@@ -359,12 +361,11 @@ nsMsgMessageDataSource::GetAllCommands(nsIRDFResource* source,
 {
   nsresult rv;
 
-  nsIMessage* message;
-  nsISupportsArray* cmds = nsnull;
+  nsCOMPtr<nsISupportsArray> cmds;
 
-  if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
-    NS_RELEASE(message);       // release now that we know it's a message
-    rv = NS_NewISupportsArray(&cmds);
+  nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    rv = NS_NewISupportsArray(getter_AddRefs(cmds));
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -379,13 +380,14 @@ nsMsgMessageDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* a
                                         nsISupportsArray/*<nsIRDFResource>*/* aArguments,
                                         PRBool* aResult)
 {
-  nsIMessage* message;
+  nsCOMPtr<nsIMessage> message;
+	nsresult rv;
 
   PRUint32 cnt = aSources->Count();
   for (PRUint32 i = 0; i < cnt; i++) {
-    nsCOMPtr<nsISupports> source = dont_QueryInterface((*aSources)[i]);
-	if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
-      NS_RELEASE(message);       // release now that we know it's a message
+    nsCOMPtr<nsISupports> source = getter_AddRefs((*aSources)[i]);
+		message = do_QueryInterface(source, &rv);
+		if (NS_SUCCEEDED(rv)) {
 
       // we don't care about the arguments -- message commands are always enabled
         *aResult = PR_FALSE;
@@ -408,11 +410,9 @@ nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources
   PRUint32 cnt = aSources->Count();
   for (PRUint32 i = 0; i < cnt; i++) {
     nsISupports* source = (*aSources)[i];
-    nsIMessage* message;
-	if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message))) {
+    nsCOMPtr<nsIMessage> message = do_QueryInterface(source, &rv);
+		if (NS_SUCCEEDED(rv)) {
 
-
-      NS_RELEASE(message);
     }
   }
   return rv;
@@ -445,22 +445,25 @@ nsMsgMessageDataSource::createMessageNameNode(nsIMessage *message,
   nsresult rv = NS_OK;
   nsAutoString subject;
   if(sort)
-    {
-      message->GetSubjectCollationKey(subject);
-    }
+	{
+      rv = message->GetSubjectCollationKey(subject);
+	}
   else
-    {
+	{
       rv = message->GetMime2EncodedSubject(subject);
+			if(NS_FAILED(rv))
+				return rv;
       PRUint32 flags;
-      message->GetFlags(&flags);
-      if(flags & MSG_FLAG_HAS_RE)
-				{
+      rv = message->GetFlags(&flags);
+      if(NS_SUCCEEDED(rv) && (flags & MSG_FLAG_HAS_RE))
+			{
 					nsAutoString reStr="Re: ";
 					reStr +=subject;
 					subject = reStr;
-				}
-    }
-  createNode(subject, target);
+			}
+	}
+	if(NS_SUCCEEDED(rv))
+	 rv = createNode(subject, target);
   return rv;
 }
 
@@ -473,16 +476,19 @@ nsMsgMessageDataSource::createMessageSenderNode(nsIMessage *message,
   nsresult rv = NS_OK;
   nsAutoString sender, senderUserName;
   if(sort)
-    {
-      message->GetAuthorCollationKey(sender);
-      createNode(sender, target);
-    }
+	{
+      rv = message->GetAuthorCollationKey(sender);
+			if(NS_SUCCEEDED(rv))
+	      rv = createNode(sender, target);
+	}
   else
-    {
+	{
       rv = message->GetMime2EncodedAuthor(sender);
-      if(NS_SUCCEEDED(rv = GetSenderName(sender, &senderUserName)))
-        createNode(senderUserName, target);
-    }
+      if(NS_SUCCEEDED(rv))
+				 rv = GetSenderName(sender, &senderUserName);
+			if(NS_SUCCEEDED(rv))
+	       rv = createNode(senderUserName, target);
+	}
   return rv;
 }
 
@@ -492,13 +498,15 @@ nsMsgMessageDataSource::createMessageDateNode(nsIMessage *message,
 {
   nsAutoString date;
   nsresult rv = message->GetProperty("date", date);
+	if(NS_FAILED(rv))
+		return rv;
   PRInt32 error;
   time_t time = date.ToInteger(&error, 16);
   struct tm* tmTime = localtime(&time);
   char dateBuf[100];
   strftime(dateBuf, 100, "%m/%d/%Y %I:%M %p", tmTime);
   date = dateBuf;
-  createNode(date, target);
+  rv = createNode(date, target);
   return rv;
 }
 
@@ -506,8 +514,11 @@ nsresult
 nsMsgMessageDataSource::createMessageStatusNode(nsIMessage *message,
                                                nsIRDFNode **target)
 {
+	nsresult rv;
   PRUint32 flags;
-  message->GetFlags(&flags);
+  rv = message->GetFlags(&flags);
+	if(NS_FAILED(rv))
+		return rv;
   nsAutoString flagStr = "";
   if(flags & MSG_FLAG_REPLIED)
     flagStr = "replied";
@@ -517,7 +528,7 @@ nsMsgMessageDataSource::createMessageStatusNode(nsIMessage *message,
     flagStr = "new";
   else if(flags & MSG_FLAG_READ)
     flagStr = "read";
-  createNode(flagStr, target);
-  return NS_OK;
+  rv = createNode(flagStr, target);
+  return rv;
 }
   
