@@ -839,6 +839,7 @@ sub BuildIDLProjects()
 	}
 
 	BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref");
+	BuildIDLProject(":mozilla:modules:libutil:macbuild:libutilIDL.mcp",				"libutil");
 	BuildIDLProject(":mozilla:modules:libjar:macbuild:libjarIDL.mcp",				"libjar");
 	BuildIDLProject(":mozilla:modules:oji:macbuild:ojiIDL.mcp",						"oji");
 	BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp", 						"xpconnect");

@@ -130,7 +130,8 @@ double Stopwatch::CpuTime() {
 
 double Stopwatch::GetRealTime(){ 
 #if defined(R__MAC)
-   return(double)clock() / gTicks;
+// return(double)clock() / gTicks;
+   return(double)clock() / 1000000L;
 #elif defined(R__UNIX)
    struct tms cpt;
    return (double)times(&cpt) / gTicks;
@@ -150,7 +151,8 @@ double Stopwatch::GetRealTime(){
 
 double Stopwatch::GetCPUTime(){ 
 #if defined(R__MAC)
-   return(double)clock() / gTicks;
+// return(double)clock() / gTicks;
+   return(double)clock();
 #elif defined(R__UNIX)
    struct tms cpt;
    times(&cpt);
