@@ -201,7 +201,7 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
   // redraw
   mRenderer->Redraw();
 
-  #if !ONLOAD_CALLED_TOO_EARLY
+#if !ONLOAD_CALLED_TOO_EARLY
   // onload handlers are called to early, so we have to do this code
   // elsewhere. It really belongs HERE.
     if ( aAttribute == nsHTMLAtoms::value ) {
@@ -210,7 +210,6 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
         mHasOnceBeenInMixedState = PR_TRUE;
       }
   }
-
 #endif
 
 
@@ -1366,7 +1365,8 @@ nsTitledButtonFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflow
 
   // depending on the type of alignment add in the space for the text
   nsSize size;
-  GetTextSize(aPresContext, *aReflowState.rendContext, mTitle, size);
+  GetTextSize(aPresContext, *aReflowState.rendContext,
+               mCroppedTitle.Length() ? mCroppedTitle : mTitle, size);
  
    switch (mAlign) {
       case NS_SIDE_TOP:
