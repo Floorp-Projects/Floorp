@@ -50,7 +50,7 @@
 #ifdef MOZ_ENABLE_FREETYPE2
 #include "nsType8.h"
 #endif
-#include "nsFontPSDebug.h"
+#include "prlog.h"
 
 #include "nsArray.h"
 
@@ -62,6 +62,10 @@ static nsFontPS* CreateFontPS(nsITrueTypeFontCatalogEntry*, const nsFont&,
                               nsFontMetricsPS*);
 
 static NS_DEFINE_CID(kFCSCID, NS_FONTCATALOGSERVICE_CID);
+#endif
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo *gFontMetricsPSM = PR_NewLogModule("FontMetricsPS");
 #endif
 
 /** ---------------------------------------------------
@@ -726,8 +730,8 @@ nsFontPSFreeType::CSSFontEnumCallback(const nsString& aFamily, PRBool aGeneric,
       else  // FFRE 
         familyname.Append(Substring(value, startFamily, endFamily - startFamily));
     }
-    FIND_FONTPS_PRINTF(("generic font \"%s\" -> \"%s\"", name.get(),
-                        familyname.get()));
+    PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG,
+        ("generic font \"%s\" -> \"%s\"\n", name.get(), familyname.get()));
   }
   else
     familyname.AppendWithConversion(aFamily);
@@ -848,7 +852,6 @@ nsFontPSFreeType::FindFont(PRUnichar aChar, const nsFont& aFont,
   fpi.fontps = aFontMetrics->GetFontsPS();
 
   int i = 0;
-  nsCAutoString familyName, stylename;
   while (1) {
     //
     // see if it is already in the list of fonts
@@ -862,12 +865,15 @@ nsFontPSFreeType::FindFont(PRUnichar aChar, const nsFont& aFont,
       }
       if (CCMAP_HAS_CHAR(fi->ccmap, aChar)) {
         if (!fi->fontps) {
-          if (gFontPSDebug & NS_FONTPS_DEBUG_FIND_FONT) {
+#ifdef PR_LOGGING
+          if (PR_LOG_TEST(gFontMetricsPSM, PR_LOG_DEBUG)) {
+            nsCAutoString familyName, styleName;
             fi->entry->GetFamilyName(familyName);
-            fi->entry->GetStyleName(stylename);
-            FIND_FONTPS_PRINTF(("CreateFontPS %s/%s", familyName.get(),
-                                stylename.get()));
+            fi->entry->GetStyleName(styleName);
+            PR_LogPrint("CreateFontPS %s/%s\n",
+                familyName.get(), styleName.get());
           }
+#endif
           fi->fontps = CreateFontPS(fi->entry, aFont, aFontMetrics);
         }
         if (fi->fontps)
@@ -913,53 +919,59 @@ nsFontPSFreeType::FindFont(PRUnichar aChar, const nsFont& aFont,
 
     switch (state) {
       case 0:
-        FIND_FONTPS_PRINTF(("get the CSS specified entries for the element's "
-                            "language"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n",
+            "get the CSS specified entries for the element's language"));
         aFont.EnumerateFamilies(nsFontPSFreeType::CSSFontEnumCallback, &fpi);
         break;
 
       case 1:
-        FIND_FONTPS_PRINTF(("get the CSS specified entries for the user's "
-                            "locale"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n",
+            "get the CSS specified entries for the user's locale"));
         fpi2 = fpi;
         fpi2.lang = locale;
         aFont.EnumerateFamilies(nsFontPSFreeType::CSSFontEnumCallback, &fpi2);
         break;
 
       case 2:
-        FIND_FONTPS_PRINTF(("get the CSS specified entries for any language"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n",
+            "get the CSS specified entries for any language"));
         fpi2 = fpi;
         fpi2.lang = emptyStr;
         aFont.EnumerateFamilies(nsFontPSFreeType::CSSFontEnumCallback, &fpi2);
         break;
 
       case 3:
-        FIND_FONTPS_PRINTF(("get the user pref for the element's language"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n",
+            "get the user pref for the element's language"));
         AddUserPref(lang, aFont, &fpi);
         break;
 
       case 4:
-        FIND_FONTPS_PRINTF(("get the user pref for the user's locale"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n",
+            "get the user pref for the user's locale"));
         fpi2 = fpi;
         fpi2.lang = locale;
         aFont.EnumerateFamilies(nsFontPSFreeType::CSSFontEnumCallback, &fpi2);
         break;
 
       case 5:
-        FIND_FONTPS_PRINTF(("get all the entries for this language/style"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n",
+            "get all the entries for this language/style"));
         AddFontEntries(emptyStr, fpi.lang, fpi.weight, anyWidth, fpi.slant,
                        anySpacing, &fpi);
         break;
 
       case 6:
-        FIND_FONTPS_PRINTF(("get all the entries for the locale/style"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n",
+            "get all the entries for the locale/style"));
         AddFontEntries(emptyStr, locale, fpi.weight, anyWidth, fpi.slant,
                        anySpacing, &fpi);
         break;
 
       case 7:
-        FIND_FONTPS_PRINTF(("wildcard the slant/weight variations of CSS"
-                            "specified entries for the element's language"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n",
+            "wildcard the slant/weight variations of CSS "
+            "specified entries for the element's language"));
         fpi2 = fpi;
         fpi2.weight = anyWeight;
         fpi2.slant = 0;
@@ -967,8 +979,9 @@ nsFontPSFreeType::FindFont(PRUnichar aChar, const nsFont& aFont,
         break;
 
       case 8:
-        FIND_FONTPS_PRINTF(("wildcard the slant/weight variations of CSS "
-                            "specified entries for the user's locale"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n",
+            "wildcard the slant/weight variations of CSS "
+            "specified entries for the user's locale"));
         fpi2 = fpi;
         fpi2.lang = locale;
         fpi2.weight = anyWeight;
@@ -977,8 +990,9 @@ nsFontPSFreeType::FindFont(PRUnichar aChar, const nsFont& aFont,
         break;
 
       case 9:
-        FIND_FONTPS_PRINTF(("wildcard the slant/weight variations of CSS "
-                            "specified entries for any language"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n",
+            "wildcard the slant/weight variations of CSS "
+            "specified entries for any language"));
         fpi2 = fpi;
         fpi2.lang = emptyStr;
         fpi2.weight = anyWeight;
@@ -987,8 +1001,8 @@ nsFontPSFreeType::FindFont(PRUnichar aChar, const nsFont& aFont,
         break;
 
       case 10:
-        FIND_FONTPS_PRINTF(("wildcard the slant/weight variations of the user "
-                            "pref"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n",
+            "wildcard the slant/weight variations of the user pref"));
         fpi2 = fpi;
         fpi2.lang   = emptyStr;
         fpi2.weight = anyWeight;
@@ -997,21 +1011,21 @@ nsFontPSFreeType::FindFont(PRUnichar aChar, const nsFont& aFont,
         break;
 
       case 11:
-        FIND_FONTPS_PRINTF(("wildcard the slant/weight variations for this "
-                            "language"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n",
+            "wildcard the slant/weight variations for this language"));
         AddFontEntries(emptyStr, fpi.lang, anyWeight, anyWidth, anySlant,
                        anySpacing, &fpi);
         break;
 
       case 12:
-        FIND_FONTPS_PRINTF(("wildcard the slant/weight variations of the "
-                            "locale"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n",
+            "wildcard the slant/weight variations of the locale"));
         AddFontEntries(emptyStr, locale, anyWeight, anyWidth, anySlant,
                        anySpacing, &fpi);
         break;
 
       case 13:
-        FIND_FONTPS_PRINTF(("get ALL font entries"));
+        PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("%s\n", "get ALL font entries"));
         AddFontEntries(emptyStr, emptyStr, anyWeight, anyWidth, anySlant,
                        anySpacing, &fpi);
         break;
@@ -1019,14 +1033,16 @@ nsFontPSFreeType::FindFont(PRUnichar aChar, const nsFont& aFont,
       default:
         // try to always return a font even if no font supports this char
         if (fpi.fontps->Count()) {
-          FIND_FONTPS_PRINTF(("failed to find a font supporting 0x%04x so "
-                              "returning 1st font in list", aChar));
+          PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG,
+              ("failed to find a font supporting 0x%04x so "
+              "returning 1st font in list\n", aChar));
           fontps *fi = (fontps *)fpi.fontps->ElementAt(0);
           if (!fi->fontps)
             fi->fontps = CreateFontPS(fi->entry, aFont, aFontMetrics);
           return fi->fontps;
         }
-        FIND_FONTPS_PRINTF(("failed to find a font supporting 0x%04x", aChar));
+        PR_LOG(gFontMetricsPSM, PR_LOG_WARNING,
+            ("failed to find a font supporting 0x%04x\n", aChar));
         return (nsnull);
     }
   }
@@ -1043,12 +1059,12 @@ nsFontPSFreeType::AddFontEntries(nsACString& aFamilyName, nsACString& aLanguage,
   nsresult rv = NS_OK;
   nsCAutoString name(aFamilyName);
   nsCAutoString lang(aLanguage);
-  ADD_ENTRY_FONTPS_PRINTF(("    family   = '%s'", name.get()));
-  ADD_ENTRY_FONTPS_PRINTF(("    lang     = '%s'", lang.get()));
-  ADD_ENTRY_FONTPS_PRINTF(("    aWeight  = %d", aWeight));
-  ADD_ENTRY_FONTPS_PRINTF(("    aWidth   = %d", aWidth));
-  ADD_ENTRY_FONTPS_PRINTF(("    aSlant   = %d", aSlant));
-  ADD_ENTRY_FONTPS_PRINTF(("    aSpacing = %d", aSpacing));
+  PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("    family   = '%s'", name.get()));
+  PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("    lang     = '%s'", lang.get()));
+  PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("    aWeight  = %d", aWeight));
+  PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("    aWidth   = %d", aWidth));
+  PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("    aSlant   = %d", aSlant));
+  PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("    aSpacing = %d", aSpacing));
 
   nsCOMPtr<nsIFontCatalogService> fcs(do_GetService(kFCSCID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1064,28 +1080,27 @@ nsFontPSFreeType::AddFontEntries(nsACString& aFamilyName, nsACString& aLanguage,
 
   rv = entryList->GetLength(&count);
   NS_ENSURE_SUCCESS(rv, rv);
-  ADD_ENTRY_FONTPS_PRINTF(("    count    = %d", count));
+  PR_LOG(gFontMetricsPSM, PR_LOG_DEBUG, ("    count    = %d", count));
 
   for (i=0; i<count; i++) {
     nsCOMPtr<nsITrueTypeFontCatalogEntry> entry = do_QueryElementAt(entryList,
                                                                     i, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString fontname, stylename;
-    if (gFontPSDebug & NS_FONTPS_DEBUG_ADD_ENTRY) {
-      entry->GetFamilyName(fontname);
-      entry->GetStyleName(stylename);
-    }
-
     // check if already in list
     nsVoidKey key((void*)entry);
-    if (aFpi->alreadyLoaded->Get(&key)) {
-      ADD_ENTRY_FONTPS_PRINTF(("    -- '%s/%s' already loaded",
-                               fontname.get(), stylename.get()));
-      continue;
+    PRBool loaded = aFpi->alreadyLoaded->Exists(&key);
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gFontMetricsPSM, PR_LOG_DEBUG)) {
+      nsCAutoString fontname, stylename;
+      entry->GetFamilyName(fontname);
+      entry->GetStyleName(stylename);
+      PR_LogPrint("    -- %s '%s/%s'\n", (loaded ? "already loaded" : "load"),
+          fontname.get(), stylename.get());
     }
-    ADD_ENTRY_FONTPS_PRINTF(("    load '%s/%s'", fontname.get(),
-                             stylename.get()));
+#endif
+    if (loaded)
+      continue;
 
     PRUint16 *ccmap;
     PRUint32 size;

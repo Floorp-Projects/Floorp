@@ -58,7 +58,6 @@
 #include "nsString.h"
 #include "nsFontMetricsPS.h"
 #include "nsPostScriptObj.h"
-#include "nsFontPSDebug.h"
 #include "nspr.h"
 #include "nsILanguageAtomService.h"
 
@@ -66,7 +65,6 @@
 static PRLogModuleInfo *nsDeviceContextPSLM = PR_NewLogModule("nsDeviceContextPS");
 #endif /* PR_LOGGING */
 
-PRUint32 gFontPSDebug = 0;
 nsIAtom* gUsersLocale = nsnull;
 
 #ifdef WE_DO_NOT_SUPPORT_MULTIPLE_PRINT_DEVICECONTEXTS
@@ -226,13 +224,6 @@ nsDeviceContextPS::InitDeviceContextPS(nsIDeviceContext *aCreatingDeviceContext,
     }
   }
   
-#ifdef NS_FONTPS_DEBUG
-  char* debug = PR_GetEnv("NS_FONTPS_DEBUG");
-  if (debug) {
-    PR_sscanf(debug, "%lX", &gFontPSDebug);
-  }
-#endif
-
   // the user's locale
   nsCOMPtr<nsILanguageAtomService> langService;
   langService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
