@@ -56,11 +56,11 @@ input[type="checkbox"][disabled="true"] {
 
 /* ..... checked state ..... */
 
-input[type="checkbox"][_moz-input-checked] {
+input[type="checkbox"]:checked {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
 
-input[type="checkbox"][_moz-input-checked][disabled="true"] {
+input[type="checkbox"][disabled="true"]:checked {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check-dis.gif") !important
 }
 
