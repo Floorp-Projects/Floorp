@@ -215,20 +215,23 @@ nsresult ConvertAndSanitizeFileName(const char * displayName, PRUnichar ** unico
   nsAutoString ucs2Str = NS_ConvertUTF8toUCS2(unescapedName);
   PR_FREEIF(unescapedName);
 
+  nsresult rv = NS_OK;
 #if defined(XP_MAC)
   /* We need to truncate the name to 31 characters, this even on MacOS X until the file API
      correctly support long file name. Using a nsILocalFIle will do the trick...
   */
-  nsresult rv;
   nsCOMPtr<nsILocalFile> aLocalFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(aLocalFile->SetUnicodeLeafName(ucs2Str.get())))
-    aLocalFile->GetUnicodeLeafName(getter_Copies(ucs2Str));
+  {
+    PRUnichar * tempStr;
+    aLocalFile->GetUnicodeLeafName(&tempStr);
+    ucs2Str.Adopt(tempStr);
+  }
 #endif
 
   // replace platform specific path separator and illegale characters to avoid any confusion
   ucs2Str.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
 
-  nsresult rv = NS_OK;
   if (result)
     rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), ucs2Str, result);
 
