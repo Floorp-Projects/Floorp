@@ -21,19 +21,15 @@
 #define CIPtr(iface) \
 	CComQIPtr< iface, &IID_ ## iface >
 
-enum TestResult
-{
-	trNotRun,
-	trFailed,
-	trPassed,
-	trPartial
-};
 
 class CBrowseDlg;
+struct Test;
 
 class BrowserInfo
 {
 public:
+	Test *pTest;
+	TestResult nResult;
 	CControlSiteInstance *pControlSite;
 	IUnknown *pIUnknown;
 	CLSID clsid;
@@ -50,8 +46,8 @@ typedef TestResult (__cdecl *TestProc)(BrowserInfo &cInfo);
 
 struct Test
 {
-	TCHAR *szName;
-	TCHAR *szDesc;
+	TCHAR szName[256];
+	TCHAR szDesc[256];
 	TestProc pfn;
 	TestResult nLastResult;
 };

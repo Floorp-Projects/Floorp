@@ -44,3 +44,17 @@ STDMETHODIMP CTestScriptHelper::get_WebBrowser(LPDISPATCH *pVal)
 	m_pBrowserInfo->GetWebBrowser(&spWebBrowserApp);
 	return spWebBrowserApp->QueryInterface(IID_IDispatch, (void **) pVal);
 }
+
+STDMETHODIMP CTestScriptHelper::put_Result(TestResult newVal)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState())
+
+	if (m_pBrowserInfo == NULL)
+	{
+		return E_UNEXPECTED;
+	}
+
+	m_pBrowserInfo->nResult = newVal;
+
+	return S_OK;
+}

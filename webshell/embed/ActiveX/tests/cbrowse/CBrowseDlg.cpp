@@ -303,6 +303,7 @@ TestResult CBrowseDlg::RunTest(Test *pTest)
 	{
 		BrowserInfo cInfo;
 
+		cInfo.pTest = pTest;
 		cInfo.clsid = m_clsid;
 		cInfo.pControlSite = m_pControlSite;
 		cInfo.pIUnknown = NULL;

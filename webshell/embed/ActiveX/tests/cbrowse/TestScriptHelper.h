@@ -31,6 +31,7 @@ END_COM_MAP()
 
 // DITestScriptHelper
 public:
+	STDMETHOD(put_Result)(/*[in]*/ TestResult newVal);
 	STDMETHOD(get_WebBrowser)(/*[out, retval]*/ LPDISPATCH *pVal);
 	STDMETHOD(OutputString)(BSTR bstrMessage);
 };

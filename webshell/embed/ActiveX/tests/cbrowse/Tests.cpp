@@ -323,27 +323,32 @@ TestResult __cdecl tstNavigate2(BrowserInfo &cInfo)
 
 TestResult __cdecl tstScriptTest(BrowserInfo &cInfo)
 {
+	cInfo.nResult = trFailed;
+
 	CTestScriptHelperInstance *pHelper = NULL;
 	CTestScriptHelperInstance::CreateInstance(&pHelper);
+	if (pHelper)
+	{
+		pHelper->m_pBrowserInfo = &cInfo;
 
+		CActiveScriptSiteInstance *pSite = NULL;
+		CActiveScriptSiteInstance::CreateInstance(&pSite);
+		if (pSite)
+		{
+			// TODO read from registry
+			CString szScript;
+			szScript.Format(_T("Scripts\\%s"), cInfo.pTest->szName);
 
-	pHelper->m_pBrowserInfo = &cInfo;
+			pSite->AddRef();
+			pSite->AttachVBScript();
+			pSite->AddNamedObject(_T("BrowserInfo"), pHelper, TRUE);
+			pSite->ParseScriptFile(szScript);
+			pSite->PlayScript();
+			pSite->Release();
+		}
+	}
 
-	CActiveScriptSiteInstance *pSite = NULL;
-	CActiveScriptSiteInstance::CreateInstance(&pSite);
-
-	TCHAR *szTestScript = _T("OutputString \"Navigation test\"\n"
-		                     "WebBrowser.Navigate \"http://www.yahoo.com\"\n");
-
-
-	pSite->AddRef();
-	pSite->AttachVBScript();
-	pSite->AddNamedObject(_T("BrowserInfo"), pHelper, TRUE);
-	pSite->ParseScriptText(szTestScript);
-	pSite->PlayScript();
-	pSite->Release();
-
-	return trPassed;
+	return cInfo.nResult;
 }
 
 Test aScripts[] =
@@ -354,8 +359,42 @@ Test aScripts[] =
 
 void __cdecl ScriptSetPopulator(TestSet *pTestSet)
 {
-	pTestSet->nTests = 1;
-	pTestSet->aTests = aScripts;
+	// TODO read from registry
+	CString szTestDir(_T("Scripts"));
+
+	CStringList cStringList;
+	CFileFind cFinder;
+	CString szPattern;
+
+
+	szPattern.Format(_T("%s\\*.vbs"), szTestDir);
+	BOOL bWorking = cFinder.FindFile(szPattern);
+	while (bWorking)
+	{
+		bWorking = cFinder.FindNextFile();
+		cStringList.AddTail(cFinder.GetFileName());
+	}
+	
+	szPattern.Format(_T("%s\\*.js"), szTestDir);
+	bWorking = cFinder.FindFile(szPattern);
+	while (bWorking)
+	{
+		bWorking = cFinder.FindNextFile();
+		cStringList.AddTail(cFinder.GetFileName());
+	}
+
+	// Create a set of tests from the scripts found
+	Test *pTests = (Test *) malloc(sizeof(Test) * cStringList.GetCount());
+	for (int i = 0; i < cStringList.GetCount(); i++)
+	{
+		CString szScript = cStringList.GetAt(cStringList.FindIndex(i));
+		_tcscpy(pTests[i].szName, szScript);
+		_tcscpy(pTests[i].szDesc, _T("Run the specified script"));
+		pTests[i].pfn = tstScriptTest;
+	}
+
+	pTestSet->nTests = cStringList.GetCount();
+	pTestSet->aTests = pTests;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -5,18 +5,30 @@
 // produce the type library (Cbrowse.tlb) and marshalling code.
 import "oaidl.idl";
 import "ocidl.idl";
-	[
-		object,
-		uuid(95AF1AB1-FA66-11D2-A284-000000000000),
-		dual,
-		helpstring("DITestScriptHelper Interface"),
-		pointer_default(unique)
-	]
-	interface DITestScriptHelper : IDispatch
-	{
-		[id(1), helpstring("method OutputString")] HRESULT OutputString(BSTR bstrMessage);
-		[propget, id(2), helpstring("property WebBrowser")] HRESULT WebBrowser([out, retval] LPDISPATCH *pVal);
-	};
+
+typedef enum 
+{
+	trNotRun,
+	trFailed,
+	trPassed,
+	trPartial
+} TestResult;
+
+[
+	object,
+	uuid(95AF1AB1-FA66-11D2-A284-000000000000),
+	dual,
+	helpstring("DITestScriptHelper Interface"),
+	pointer_default(unique)
+]
+interface DITestScriptHelper : IDispatch
+{
+	[id(1), helpstring("method OutputString")] HRESULT OutputString(BSTR bstrMessage);
+	[propget, id(2), helpstring("property WebBrowser")] HRESULT WebBrowser([out, retval] LPDISPATCH *pVal);
+	[propput, id(3), helpstring("property Result")] HRESULT Result([in] TestResult newVal);
+};
+
+
 [
 	uuid(5B209213-F756-11D2-A27F-000000000000),
 	version(1.0),
