@@ -251,6 +251,7 @@ sub BuildDist()
     InstallFromManifest(":mozilla:network:protocol:pop3:MANIFEST",					"$distdirectory:network:");
     InstallFromManifest(":mozilla:network:protocol:remote:MANIFEST",				"$distdirectory:network:");
     InstallFromManifest(":mozilla:network:protocol:smtp:MANIFEST",					"$distdirectory:network:");
+    InstallFromManifest(":mozilla:network:protocol:sockstub:MANIFEST",				"$distdirectory:network:");
     InstallFromManifest(":mozilla:network:module:MANIFEST",							"$distdirectory:network:module");
 
 	#BASE
