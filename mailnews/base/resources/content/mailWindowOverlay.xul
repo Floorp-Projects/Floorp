@@ -1063,7 +1063,7 @@ Rights Reserved.
 	<toolbar class="toolbar-primary chromeclass-toolbar" id="msgToolbar" persist="collapsed">
 		<box id="toolbar_button_box">
                         <menubutton class="menubutton-dual toolbar top" id="button-getmsg" 
-                                    value="&getMsgButton.label;" crop="right" tooltip="aTooltip" 
+                                    value="&getMsgButton.label;" crop="right" buttontooltip="aTooltip" 
                                     tooltiptext="&getMsgButton.tooltip;" 
                                     observes="cmd_getNewMessages" datasources="rdf:msgaccountmanager" 
                                     containment="http://home.netscape.com/NC-rdf#child" 
@@ -1167,7 +1167,7 @@ Rights Reserved.
             </menupopup>
   	  </menubutton>
       <menubutton class="menubutton-dual toolbar top" id="button-print" value="&printButton.label;" 
-                  crop="right" observes="cmd_print" tooltip="aTooltip" tooltiptext="&printButton.tooltip;">  
+                  crop="right" observes="cmd_print" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
      	  <menupopup id="printMenu">
     			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" default="true"/>
         </menupopup>
