@@ -168,7 +168,17 @@ function Init()
     }
   
   // if its a container, disable some things
-  if (RDFC.IsContainer(Bookmarks, RDF.GetResource(BookmarkURL))) {
+  var isContainerFlag = RDFC.IsContainer(Bookmarks, RDF.GetResource(BookmarkURL));
+  if (!isContainerFlag)
+  {
+  	// XXX To do: the "RDFC.IsContainer" call above only works for RDF sequences;
+  	//            if its not a RDF sequence, we should to more checking to see if
+  	//            the item in question is really a container of not.  A good example
+  	//            of this is the "File System" container.
+  }
+
+  if (isContainerFlag)
+  {
     // If it is a folder, it has no URL.
     dump("disabling url field for folder\n");
     document.getElementById("url").disabled = true;
@@ -190,6 +200,7 @@ function Init()
 		parentNode.removeChild(scheduleNode);
 	}
   }
+  window.sizeToContent();
 }
 
 
