@@ -2638,7 +2638,7 @@ var attachmentBucketObserver = {
         var rawData = item.data;
         
         if (item.flavour.contentType == "text/x-moz-url" ||
-            item.flavour.contentType == "text/x-moz-message-or-folder" ||
+            item.flavour.contentType == "text/x-moz-message" ||
             item.flavour.contentType == "application/x-moz-file")
         {
           if (item.flavour.contentType == "application/x-moz-file")
@@ -2689,7 +2689,7 @@ var attachmentBucketObserver = {
     {
       var flavourSet = new FlavourSet();
       flavourSet.appendFlavour("text/x-moz-url");
-      flavourSet.appendFlavour("text/x-moz-message-or-folder");
+      flavourSet.appendFlavour("text/x-moz-message");
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
       return flavourSet;
     }

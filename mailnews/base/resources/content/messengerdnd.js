@@ -53,18 +53,19 @@ function CanDropOnFolderTree(index)
 {
     var dragSession = null;
     var dragFolder = false;
-    var flavor = false;
 
     dragSession = dragService.getCurrentSession();
     if (! dragSession)
         return false;
 
-    if (dragSession.isDataFlavorSupported("text/x-moz-message-or-folder"))
-        flavor = true;
+    var flavorSupported = dragSession.isDataFlavorSupported("text/x-moz-message") || dragSession.isDataFlavorSupported("text/x-moz-folder");
 
     var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
     if (! trans)
         return false;
+
+    trans.addDataFlavor("text/x-moz-message");
+    trans.addDataFlavor("text/x-moz-folder");
  
     var folderTree = GetFolderTree();
     var targetResource = GetFolderResource(folderTree, index);
@@ -73,18 +74,16 @@ function CanDropOnFolderTree(index)
     var targetServer = targetFolder.server;
     var sourceServer;
     var sourceResource;
-
-    trans.addDataFlavor("text/x-moz-message-or-folder");
    
     for (var i = 0; i < dragSession.numDropItems; i++)
     {
         dragSession.getData (trans, i);
         var dataObj = new Object();
-        var bestFlavor = new Object();
+        var dataFlavor = new Object();
         var len = new Object();
         try
         {
-            trans.getAnyTransferData ( bestFlavor, dataObj, len );
+            trans.getAnyTransferData (dataFlavor, dataObj, len );
         }
         catch (ex)
         {
@@ -99,15 +98,7 @@ function CanDropOnFolderTree(index)
         var sourceUri = dataObj.data.substring(0, len.value);
         if (! sourceUri)
             continue;
-
-        try
-        {
-            sourceResource = RDF.GetResource(sourceUri, true);
-            var folder = sourceResource.QueryInterface(Components.interfaces.nsIFolder);
-            if (folder)
-                dragFolder = true;
-        }
-        catch(ex)
+        if (dataFlavor.value == "text/x-moz-message")
         {
             sourceResource = null;
             var isServer = GetFolderAttribute(folderTree, targetResource, "IsServer");
@@ -130,7 +121,8 @@ function CanDropOnFolderTree(index)
         }
 
         // we should only get here if we are dragging and dropping folders
-        sourceResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+        dragFolder = true;
+        sourceResource = RDF.GetResource(sourceUri);
         var sourceFolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
         sourceServer = sourceFolder.server;
 
@@ -187,7 +179,7 @@ function CanDropOnFolderTree(index)
     }
 
     //message or folder
-    if (flavor)
+    if (flavorSupported)
     {
         dragSession.canDrop = true;
         return true;
@@ -217,11 +209,12 @@ function DropOnFolderTree(row, orientation)
         return false;
 
     var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-    trans.addDataFlavor("text/x-moz-message-or-folder");
+    trans.addDataFlavor("text/x-moz-message");
+    trans.addDataFlavor("text/x-moz-folder");
 
     var list = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
 
-    var dropMessage = true;   	
+    var dropMessage;
     var sourceUri;
     var sourceResource;
     var sourceFolder;
@@ -231,9 +224,9 @@ function DropOnFolderTree(row, orientation)
     {
         dragSession.getData (trans, i);
         var dataObj = new Object();
-        var bestFlavor = new Object();
+        var flavor = new Object();
         var len = new Object();
-        trans.getAnyTransferData(bestFlavor, dataObj, len);
+        trans.getAnyTransferData(flavor, dataObj, len);
         if (dataObj)
             dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
         if (! dataObj)
@@ -245,27 +238,22 @@ function DropOnFolderTree(row, orientation)
             continue;
 
         debugDump("    Node #" + i + ": drop " + sourceUri + " to " + targetUri + "\n");
-
-        sourceResource = RDF.GetResource(sourceUri, true);
+        
         // only do this for the first object, either they are all messages or they are all folders
-        if (i == 0) {
-            try {
-                sourceFolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-                if (sourceFolder) {
-                    // we are dropping a folder
-                    dropMessage = false;
-                }
-                else {
-                    dropMessage = true;
-                }
-            }
-            catch (ex) {
-                dropMessage = true;
-            }
+        if (i == 0) 
+        {
+          if (flavor.value == "text/x-moz-folder") 
+          {
+            sourceResource = RDF.GetResource(sourceUri);
+            sourceFolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+            dropMessage = false;  // we are dropping a folder
+          }
+          else if (flavor.value == "text/x-moz-message")
+            dropMessage = true;
         }
         else {
-            if (! dropMessage)
-                dump("drag and drop of multiple folders isn't supported\n");
+           if (!dropMessage)
+             dump("drag and drop of multiple folders isn't supported\n");
         }
 
         if (dropMessage) {
@@ -358,7 +346,7 @@ function BeginDragFolderTree(event)
     }
 
     var selectedFolders = GetSelectedFolders();
-    return BeginDragTree(event, folderTree, selectedFolders, "text/x-moz-message-or-folder");
+    return BeginDragTree(event, folderTree, selectedFolders, "text/x-moz-folder");
 }
 
 function BeginDragThreadPane(event)
@@ -373,7 +361,7 @@ function BeginDragThreadPane(event)
     //no major disadvantage even if it is a copy operation
 
     SetNextMessageAfterDelete();
-    return BeginDragTree(event, threadTree, selectedMessages, "text/x-moz-message-or-folder");
+    return BeginDragTree(event, threadTree, selectedMessages, "text/x-moz-message");
 }
 
 function BeginDragTree(event, tree, selArray, flavor)
