@@ -99,6 +99,7 @@
     (%subsection :semantics "Slots")
     (deftype slot (tuple
                     (id id)
+                    (type class)
                     (v (address value))))
     
     (define (find-slot (id id) (slots (vector slot))) slot
@@ -112,7 +113,7 @@
     
     (%subsection :semantics "Properties")
     (deftype property (tuple
-                        (name property-name)
+                        (name qualified-name)
                         (getter accessor)
                         (setter accessor)
                         (fixed boolean)
@@ -120,27 +121,19 @@
                         (deletable boolean)))
     (deftype property-opt (oneof no-prop (prop property)))
     
-    (deftype property-name (tuple (namespace namespace) (name string)))
+    (deftype qualified-name (tuple (namespace namespace) (name string)))
     
-    (define (same-property-name (m property-name) (n property-name)) boolean
+    (define (same-qualified-name (m qualified-name) (n qualified-name)) boolean
       (and (id= (& id (& namespace m)) (& id (& namespace n)))
            (string-equal (& name m) (& name n))))
     
-    (define (find-property (n property-name) (properties (vector property))) (vector property)
-      (map properties p p (same-property-name n (& name p))))
-    #|
-      (if (empty properties)
-        (oneof no-prop)
-        (let ((p property (nth properties 0)))
-          (if (same-property-name n (& name p))
-            (oneof prop p)
-            (find-property n (subseq properties 1))))))|#
+    (define (find-property (n qualified-name) (properties (vector property))) (vector property)
+      (map properties p p (same-qualified-name n (& name p))))
     
     
     (%subsection :semantics "Accessors")
     (deftype accessor (tuple
                         (self-type class)
-                        (slot-type class)
                         (final boolean)
                         (data accessor-data)))
     
@@ -150,7 +143,7 @@
                             (constant value)
                             (slot-id id)
                             (indirect value)
-                            (alias property-name)))
+                            (alias qualified-name)))
     
     
     (%subsection :semantics "Operators")
@@ -204,7 +197,21 @@
                                   (user value)))
     
     
+    (%subsection :semantics "Environments")
+    (deftype static-env (tuple
+                          (labels (vector string))
+                          (can-return boolean)
+                          (constants (vector definition))))
     
+    (deftype dynamic-env (tuple
+                           (parent dynamic-env-opt)
+                           (definitions (vector definition))))
+    (deftype dynamic-env-opt (oneof no-frame (frame dynamic-env)))
+    
+    (deftype definition (tuple
+                          (name qualified-name)
+                          (getter accessor)
+                          (setter accessor)))
     
     (%section "Expressions")
     (grammar-argument :beta allow-in no-in)
