@@ -116,17 +116,17 @@ mozTXTToHTMLConv::UnescapeStr(const PRUnichar * aInString, PRInt32 aStartPos, PR
     if (aInString[i] == '&')
     {
       subString = &aInString[i];
-      if (!nsCRT::strncmp(subString, "&lt;", MinInt(4, aLength - remainingChars)))
+      if (!nsCRT::strncmp(subString, NS_LITERAL_STRING("&lt;").get(), MinInt(4, aLength - remainingChars)))
       {
         aOutString.AppendWithConversion('<');
         i += 4;
       }
-      else if (!nsCRT::strncmp(subString, "&gt;", MinInt(4, aLength - remainingChars)))
+      else if (!nsCRT::strncmp(subString, NS_LITERAL_STRING("&gt;").get(), MinInt(4, aLength - remainingChars)))
       {
         aOutString.AppendWithConversion('>');
         i += 4;
       }
-      else if (!nsCRT::strncmp(subString, "&amp;", MinInt(5, aLength - remainingChars)))
+      else if (!nsCRT::strncmp(subString, NS_LITERAL_STRING("&amp;").get(), MinInt(5, aLength - remainingChars)))
       {
         aOutString.AppendWithConversion('&');
         i += 5;
@@ -162,12 +162,13 @@ mozTXTToHTMLConv::CompleteAbbreviatedURL(const PRUnichar * aInString, PRInt32 aI
   }
   else if (aInString[pos] == '.')
   {
-    if (ItMatchesDelimited(aInString, aInLength, "www.", 4, LT_IGNORE, LT_IGNORE))
+    if (ItMatchesDelimited(aInString, aInLength,
+                           NS_LITERAL_STRING("www.").get(), 4, LT_IGNORE, LT_IGNORE))
     {
       aOutString.AssignWithConversion("http://");
       aOutString += aInString;
     }
-    else if (ItMatchesDelimited(aInString,aInLength, "ftp.", 4, LT_IGNORE, LT_IGNORE))
+    else if (ItMatchesDelimited(aInString,aInLength, NS_LITERAL_STRING("ftp.").get(), 4, LT_IGNORE, LT_IGNORE))
     { 
       aOutString.AssignWithConversion("ftp://");
       aOutString += aInString;
@@ -184,7 +185,7 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength,
   { // no breaks, because end of blocks is never reached
   case RFC1738:
   {
-    if (!nsCRT::strncmp(&aInString[MaxInt(pos - 4, 0)], "<URL:", 5))
+    if (!nsCRT::strncmp(&aInString[MaxInt(pos - 4, 0)], NS_LITERAL_STRING("<URL:").get(), 5))
     {
       start = pos + 1;
       return PR_TRUE;
@@ -490,13 +491,15 @@ mozTXTToHTMLConv::FindURL(const PRUnichar * aInString, PRInt32 aInLength, const 
 }
 
 PRBool
-mozTXTToHTMLConv::ItMatchesDelimited(const PRUnichar * aInString, PRInt32 aInLength,
-    const char* rep, PRInt32 aRepLen, LIMTYPE before, LIMTYPE after)
+mozTXTToHTMLConv::ItMatchesDelimited(const PRUnichar * aInString,
+    PRInt32 aInLength, const PRUnichar* rep, PRInt32 aRepLen,
+    LIMTYPE before, LIMTYPE after)
 {
 
-  // this little method gets called a LOT. I found we were spending a lot of time
-  // just calculating the length of the variable "rep" over and over again every time
-  // we called it. So we're now passing an integer in here.
+  // this little method gets called a LOT. I found we were spending a
+  // lot of time just calculating the length of the variable "rep"
+  // over and over again every time we called it. So we're now passing
+  // an integer in here.
   PRInt32 textLen = aInLength;
 
   if
@@ -547,7 +550,7 @@ mozTXTToHTMLConv::ItMatchesDelimited(const PRUnichar * aInString, PRInt32 aInLen
 
 PRUint32
 mozTXTToHTMLConv::NumberOfMatches(const PRUnichar * aInString, PRInt32 aInStringLength, 
-     const char* rep, PRInt32 aRepLen, LIMTYPE before, LIMTYPE after)
+     const PRUnichar* rep, PRInt32 aRepLen, LIMTYPE before, LIMTYPE after)
 {
   PRUint32 result = 0;
 
@@ -564,7 +567,7 @@ mozTXTToHTMLConv::NumberOfMatches(const PRUnichar * aInString, PRInt32 aInString
 // NOTE: the converted html for the phrase is appended to aOutString
 PRBool
 mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInStringLength, PRBool col0,
-     const char* tagTXT, PRInt32 aTagTXTLen, 
+     const PRUnichar* tagTXT, PRInt32 aTagTXTLen, 
      const char* tagHTML, const char* attributeHTML,
      nsString& aOutString, PRUint32& openTags)
 {
@@ -593,13 +596,13 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
     )
   {
     openTags++;
-    aOutString.AppendWithConversion("<");
+    aOutString.Append(NS_LITERAL_STRING("<"));
     aOutString.AppendWithConversion(tagHTML);
-    aOutString.AppendWithConversion(' ');
+    aOutString.Append(PRUnichar(' '));
     aOutString.AppendWithConversion(attributeHTML);
-    aOutString.AppendWithConversion("><span class=\"moz-txt-tag\">");
-    aOutString.AppendWithConversion(tagTXT);
-    aOutString.AppendWithConversion("</span>");
+    aOutString.Append(NS_LITERAL_STRING("><span class=\"moz-txt-tag\">"));
+    aOutString.Append(tagTXT);
+    aOutString.Append(NS_LITERAL_STRING("</span>"));
     return PR_TRUE;
   }
 
@@ -608,11 +611,11 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
        && ItMatchesDelimited(aInString, aInStringLength, tagTXT, aTagTXTLen, LT_ALPHA, LT_DELIMITER))
   {
     openTags--;
-    aOutString.AppendWithConversion("<span class=\"moz-txt-tag\">");
-    aOutString.AppendWithConversion(tagTXT);
-    aOutString.AppendWithConversion("</span></");
+    aOutString.Append(NS_LITERAL_STRING("<span class=\"moz-txt-tag\">"));
+    aOutString.Append(tagTXT);
+    aOutString.Append(NS_LITERAL_STRING("</span></"));
     aOutString.AppendWithConversion(tagHTML);
-    aOutString.AppendWithConversion('>');
+    aOutString.Append(PRUnichar('>'));
     return PR_TRUE;
   }
 
@@ -621,7 +624,7 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
 
 PRBool
 mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool col0,
-         const char* tagTXT, PRInt32 aTagTxtLength, const char* tagHTML,
+         const PRUnichar* tagTXT, PRInt32 aTagTxtLength, const char* tagHTML,
          nsString& outputHTML, PRInt32& glyphTextLen)
 {
   PRInt32  tagLen = nsCRT::strlen(tagTXT);
@@ -688,16 +691,55 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
       )
       &&
         (
-          SmilyHit(aInString, aInLength, col0, ":-)",  3, "<img src=\"chrome://editor/content/images/smile_n.gif\" alt=\":-)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)       ||
-          SmilyHit(aInString, aInLength, col0, ":)",   2, "<img src=\"chrome://editor/content/images/smile_n.gif\" alt=\":)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)        ||
-          SmilyHit(aInString, aInLength, col0, ":-D",  3, "<img src=\"chrome://editor/content/images/laughing_n.gif\" alt=\":-D\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)    ||
-          SmilyHit(aInString, aInLength, col0, ":-(",  3, "<img src=\"chrome://editor/content/images/frown_n.gif\" alt=\":-(\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)       ||
-          SmilyHit(aInString, aInLength, col0, ":(",   2, "<img src=\"chrome://editor/content/images/frown_n.gif\" alt=\":(\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)        ||
-          SmilyHit(aInString, aInLength, col0, ":-[",  3, "<img src=\"chrome://editor/content/images/embarrassed_n.gif\" alt=\":-[\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ";-)",  3, "<img src=\"chrome://editor/content/images/wink_n.gif\" alt=\";-)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)        ||
-          SmilyHit(aInString, aInLength, col0, ";)",   2, "<img src=\"chrome://editor/content/images/wink_n.gif\" alt=\";)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)         ||
-          SmilyHit(aInString, aInLength, col0, ":-\\", 3, "<img src=\"chrome://editor/content/images/undecided_n.gif\" alt=\":-\\\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)  ||
-          SmilyHit(aInString, aInLength, col0, ":-P",  3, "<img src=\"chrome://editor/content/images/tongue_n.gif\" alt=\":-P\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)
+          SmilyHit(aInString, aInLength, col0,
+                   NS_LITERAL_STRING(":-)").get(),  3,
+                   "<img src=\"chrome://editor/content/images/smile_n.gif\" alt=\":-)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)       ||
+          
+          SmilyHit(aInString, aInLength, col0,
+                   NS_LITERAL_STRING(":)").get(),   2,
+                   "<img src=\"chrome://editor/content/images/smile_n.gif\" alt=\":)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)        ||
+          
+          SmilyHit(aInString, aInLength, col0,
+                   NS_LITERAL_STRING(":-D").get(),  3,
+                   "<img src=\"chrome://editor/content/images/laughing_n.gif\" alt=\":-D\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)    ||
+          
+          SmilyHit(aInString, aInLength, col0,
+                   NS_LITERAL_STRING(":-(").get(),  3,
+                   "<img src=\"chrome://editor/content/images/frown_n.gif\" alt=\":-(\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)       ||
+          
+          SmilyHit(aInString, aInLength, col0,
+                   NS_LITERAL_STRING(":(").get(),   2,
+                   "<img src=\"chrome://editor/content/images/frown_n.gif\" alt=\":(\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)        ||
+          
+          SmilyHit(aInString, aInLength, col0,
+                   NS_LITERAL_STRING(":-[").get(),  3,
+                   "<img src=\"chrome://editor/content/images/embarrassed_n.gif\" alt=\":-[\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen) ||
+          
+          SmilyHit(aInString, aInLength, col0,
+                   NS_LITERAL_STRING(";-)").get(),  3,
+                   "<img src=\"chrome://editor/content/images/wink_n.gif\" alt=\";-)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)        ||
+          SmilyHit(aInString, aInLength, col0,
+                   NS_LITERAL_STRING(";)").get(),   2,
+                   "<img src=\"chrome://editor/content/images/wink_n.gif\" alt=\";)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)         ||
+          
+          SmilyHit(aInString, aInLength, col0,
+                   NS_LITERAL_STRING(":-\\").get(), 3,
+                   "<img src=\"chrome://editor/content/images/undecided_n.gif\" alt=\":-\\\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)  ||
+          
+          SmilyHit(aInString, aInLength, col0,
+                   NS_LITERAL_STRING(":-P").get(),  3,
+                   "<img src=\"chrome://editor/content/images/tongue_n.gif\" alt=\":-P\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)
+          
 
         )
     )
@@ -718,16 +760,56 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
       )
       &&
         (
-          SmilyHit(aInString, aInLength, PR_FALSE, ":-)",  3, "<img src=\"chrome://editor/content/images/smile_n.gif\" alt=\":-)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)       ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":)",   2, "<img src=\"chrome://editor/content/images/smile_n.gif\" alt=\":)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)        ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":-D",  3, "<img src=\"chrome://editor/content/images/laughing_n.gif\" alt=\":-D\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)    ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":-(",  3, "<img src=\"chrome://editor/content/images/frown_n.gif\" alt=\":-(\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)       ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":(",   2, "<img src=\"chrome://editor/content/images/frown_n.gif\" alt=\":(\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)        ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":-[",  3, "<img src=\"chrome://editor/content/images/embarrassed_n.gif\" alt=\":-[\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ";-)",  3, "<img src=\"chrome://editor/content/images/wink_n.gif\" alt=\";-)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)        ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ";)",   2, "<img src=\"chrome://editor/content/images/wink_n.gif\" alt=\";)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)         ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":-\\", 3, "<img src=\"chrome://editor/content/images/undecided_n.gif\" alt=\":-\\\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)  ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":-P",  3, "<img src=\"chrome://editor/content/images/tongue_n.gif\" alt=\":-P\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>", outputHTML, glyphTextLen)
+          SmilyHit(aInString, aInLength, PR_FALSE,
+                   NS_LITERAL_STRING(":-)").get(),  3,
+                   "<img src=\"chrome://editor/content/images/smile_n.gif\" alt=\":-)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)       ||
+          
+          SmilyHit(aInString, aInLength, PR_FALSE,
+                   NS_LITERAL_STRING(":)").get(),   2,
+                   "<img src=\"chrome://editor/content/images/smile_n.gif\" alt=\":)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)        ||
+          
+          SmilyHit(aInString, aInLength, PR_FALSE,
+                   NS_LITERAL_STRING(":-D").get(),  3,
+                   "<img src=\"chrome://editor/content/images/laughing_n.gif\" alt=\":-D\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)    ||
+          
+          SmilyHit(aInString, aInLength, PR_FALSE,
+                   NS_LITERAL_STRING(":-(").get(),  3,
+                   "<img src=\"chrome://editor/content/images/frown_n.gif\" alt=\":-(\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)       ||
+          
+          SmilyHit(aInString, aInLength, PR_FALSE,
+                   NS_LITERAL_STRING(":(").get(),   2,
+                   "<img src=\"chrome://editor/content/images/frown_n.gif\" alt=\":(\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)        ||
+          
+          SmilyHit(aInString, aInLength, PR_FALSE,
+                   NS_LITERAL_STRING(":-[").get(),  3,
+                   "<img src=\"chrome://editor/content/images/embarrassed_n.gif\" alt=\":-[\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen) ||
+          
+          SmilyHit(aInString, aInLength, PR_FALSE,
+                   NS_LITERAL_STRING(";-)").get(),  3,
+                   "<img src=\"chrome://editor/content/images/wink_n.gif\" alt=\";-)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)        ||
+          
+          SmilyHit(aInString, aInLength, PR_FALSE,
+                   NS_LITERAL_STRING(";)").get(),   2,
+                   "<img src=\"chrome://editor/content/images/wink_n.gif\" alt=\";)\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)         ||
+          
+          SmilyHit(aInString, aInLength, PR_FALSE,
+                   NS_LITERAL_STRING(":-\\").get(), 3,
+                   "<img src=\"chrome://editor/content/images/undecided_n.gif\" alt=\":-\\\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)  ||
+          
+          SmilyHit(aInString, aInLength, PR_FALSE,
+                   NS_LITERAL_STRING(":-P").get(),  3,
+                   "<img src=\"chrome://editor/content/images/tongue_n.gif\" alt=\":-P\" class=\"moz-txt-smily\" height=19 width=19 align=ABSCENTER>",
+                   outputHTML, glyphTextLen)
+          
 
         )
     )
@@ -738,14 +820,18 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
   }
   if (text0 == '+' || text1 == '+')
   {
-    if (ItMatchesDelimited(aInString, aInLength, " +/-", 4, LT_IGNORE, LT_IGNORE))
+    if (ItMatchesDelimited(aInString, aInLength,
+                           NS_LITERAL_STRING(" +/-").get(), 4,
+                           LT_IGNORE, LT_IGNORE))
     {
       aOutputString.AppendWithConversion(" &plusmn;");
       glyphTextLen = 4;
       MOZ_TIMER_STOP(mGlyphHitTimer);
       return PR_TRUE;
     }
-    if (col0 && ItMatchesDelimited(aInString, aInLength, "+/-", 3, LT_IGNORE, LT_IGNORE))
+    if (col0 && ItMatchesDelimited(aInString, aInLength,
+                                   NS_LITERAL_STRING("+/-").get(), 3,
+                                   LT_IGNORE, LT_IGNORE))
     {
       aOutputString.AppendWithConversion("&plusmn;");
       glyphTextLen = 3;
@@ -759,9 +845,15 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
       text1 == '^' // Performance increase
         &&
         (
-          ItMatchesDelimited(aInString, aInLength, "^", 1, LT_DIGIT, LT_DIGIT) ||
-          ItMatchesDelimited(aInString, aInLength, "^", 1, LT_ALPHA, LT_DIGIT) ||
-          ItMatchesDelimited(&aInString[1], aInLength - 1, "^", 1, LT_IGNORE, LT_DIGIT)
+          ItMatchesDelimited(aInString, aInLength,
+                             NS_LITERAL_STRING("^").get(), 1,
+                             LT_DIGIT, LT_DIGIT) ||
+          ItMatchesDelimited(aInString, aInLength,
+                             NS_LITERAL_STRING("^").get(), 1,
+                             LT_ALPHA, LT_DIGIT) ||
+          ItMatchesDelimited(&aInString[1], aInLength - 1,
+                             NS_LITERAL_STRING("^").get(), 1,
+                             LT_IGNORE, LT_DIGIT)
             && text0 == ')'
         )
     )
@@ -880,7 +972,7 @@ mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
       // Placed here for performance increase
       const PRUnichar * indexString = &line[logLineStart];
            // here, |logLineStart < lineLength| is always true
-      if (!nsCRT::strncasecmp(indexString, ">From ",
+      if (!nsCRT::strncasecmp(indexString, NS_LITERAL_STRING(">From ").get(),
                               MinInt(6, nsCRT::strlen(indexString))))
                               //XXX RFC2646
         moreCites = PR_FALSE;
@@ -939,8 +1031,9 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
       {
       case '*':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                 "*", 1, "b", "class=\"moz-txt-star\"",
-                 aOutString, structPhrase_strong))
+                            NS_LITERAL_STRING("*").get(), 1,
+                            "b", "class=\"moz-txt-star\"",
+                            aOutString, structPhrase_strong))
         {
           i++;
           continue;
@@ -948,8 +1041,9 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
         break;
       case '/':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                 "/", 1, "i", "class=\"moz-txt-slash\"",
-                 aOutString, structPhrase_italic))
+                            NS_LITERAL_STRING("/").get(), 1,
+                            "i", "class=\"moz-txt-slash\"",
+                            aOutString, structPhrase_italic))
         {
           i++;
           continue;
@@ -957,9 +1051,10 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
         break;
       case '_':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                 "_", 1, "span" /* <u> is deprecated */,
-                 "class=\"moz-txt-underscore\"",
-                 aOutString, structPhrase_underline))
+                            NS_LITERAL_STRING("_").get(), 1,
+                            "span" /* <u> is deprecated */,
+                            "class=\"moz-txt-underscore\"",
+                            aOutString, structPhrase_underline))
         {
           i++;
           continue;
@@ -967,8 +1062,9 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
         break;
       case '|':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                 "|", 1, "code", "class=\"moz-txt-verticalline\"",
-                 aOutString, structPhrase_code))
+                            NS_LITERAL_STRING("|").get(), 1,
+                            "code", "class=\"moz-txt-verticalline\"",
+                            aOutString, structPhrase_code))
         {
           i++;
           continue;
@@ -1044,7 +1140,7 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
     if (aInString[i] == '<')  // html tag
     {
       PRUint32 start = PRUint32(i);
-      if (nsCRT::ToLower(aInString[PRUint32(i) + 1]) == 'a')
+      if (nsCRT::ToLower((char)aInString[PRUint32(i) + 1]) == 'a')
            // if a tag, skip until </a>
       {
         i = aInString.Find("</a>", PR_TRUE, i);
