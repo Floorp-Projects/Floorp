@@ -864,6 +864,9 @@ nscoord nsTableOuterFrame::GetTableWidth(const nsHTMLReflowState& aReflowState)
     switch (position->mWidth.GetUnit()) {
     case eStyleUnit_Coord:
       maxWidth = position->mWidth.GetCoordValue();
+      // NAV4 compatibility:  0-coord-width == auto-width
+      if (0==maxWidth)
+        maxWidth = aReflowState.maxSize.width;
       break;
   
     case eStyleUnit_Auto:
@@ -873,6 +876,9 @@ nscoord nsTableOuterFrame::GetTableWidth(const nsHTMLReflowState& aReflowState)
     case eStyleUnit_Percent:
       maxWidth = (nscoord)((float)aReflowState.maxSize.width *
                            position->mWidth.GetPercentValue());
+      // NAV4 compatibility:  0-percent-width == auto-width
+      if (0==maxWidth)
+        maxWidth = aReflowState.maxSize.width;
       break;
 
     case eStyleUnit_Proportional:
