@@ -633,7 +633,7 @@ void HACK(nsSelect* aSel, PRInt32 aIndex)
     sprintf(&buf[0], "option %d", i);
     nsString label(&buf[0]);
     option->SetContent(label);
-    aSel->AppendChild(option);
+    aSel->AppendChild(option, PR_FALSE);
   }
 }
 
