@@ -221,6 +221,7 @@ nsWindow::nsWindow()
   mIMECallComposeEnd = PR_TRUE;
   mIMEIsBeingActivate = PR_FALSE;
   mICSpotTimer = nsnull;
+  mXICFontSize = 16;
   if (gXICLookupTable.ops == NULL) {
     PL_DHashTableInit(&gXICLookupTable, PL_DHashGetStubOps(), nsnull,
                       sizeof(nsXICLookupEntry), PL_DHASH_MIN_SIZE);
@@ -3845,29 +3846,13 @@ nsresult nsWindow::UpdateICSpot(nsIMEGtkIC *aXIC)
 }
 
 void
-nsWindow::GetXYFromPosition(nsIMEGtkIC* aXIC,
-                            unsigned long *aX,
-                            unsigned long *aY)
-{
-  GdkFont *gfontset = aXIC->GetPreeditFont();
-  if (gfontset) {
-    // this is currently not working well
-    // We change from += ascent to -= descent because we change the nsCaret
-    // code to return the nsPoint from the top of the cursor to the bottom
-    // of the cursor
-    *aY -= gfontset->descent;
-  }
-  return;
-}
-
-void
 nsWindow::SetXICBaseFontSize(nsIMEGtkIC* aXIC, int height)
 {
-  if (height == mXICFontSize) return;
   if (height%2) {
     height-=1;
   }
   if (height<2) return;
+  if (height == mXICFontSize) return;
   if (gPreeditFontset) {
     gdk_font_unref(gPreeditFontset);
   }
@@ -3883,10 +3868,12 @@ nsWindow::SetXICBaseFontSize(nsIMEGtkIC* aXIC, int height)
 void
 nsWindow::SetXICSpotLocation(nsIMEGtkIC* aXIC, nsPoint aPoint)
 {
-  unsigned long x, y;
-  x = aPoint.x, y = aPoint.y;
-  GetXYFromPosition(aXIC, &x, &y);
-  aXIC->SetPreeditSpotLocation(x, y);
+  if (gPreeditFontset) {
+    unsigned long x, y;
+    x = aPoint.x, y = aPoint.y;
+    y -= gPreeditFontset->descent;
+    aXIC->SetPreeditSpotLocation(x, y);
+  }
 }
 
 void
@@ -3987,7 +3974,6 @@ nsWindow::IMEGetInputContext(PRBool aCreate)
   if (aCreate) {
     if (gPreeditFontset == nsnull) {
       gPreeditFontset = gdk_fontset_load("-*-*-medium-r-*-*-16-*-*-*-*-*-*-*");
-      mXICFontSize = 16;          // default
     }
     if (gStatusFontset == nsnull) {
       gStatusFontset = gdk_fontset_load("-*-*-medium-r-*-*-16-*-*-*-*-*-*-*");

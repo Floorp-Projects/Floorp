@@ -354,7 +354,6 @@ protected:
   nsWindow*           mIMEShellWindow;
   void                SetXICSpotLocation(nsIMEGtkIC* aXIC, nsPoint aPoint);
   void                SetXICBaseFontSize(nsIMEGtkIC* aXIC, int height);
-  void                GetXYFromPosition(nsIMEGtkIC* aXIC, unsigned long *aX, unsigned long *aY);
   nsCOMPtr<nsITimer>  mICSpotTimer;
   static void         ICSpotCallback(nsITimer* aTimer, void* aClosure);
   nsresult            KillICSpotTimer();
