@@ -28,8 +28,6 @@
  */ 
 
 #include "nsElementTable.h"
-#include <fstream.h> 
-
 
 /***************************************************************************** 
   Now it's time to list all the html elements all with their capabilities...

@@ -502,7 +502,8 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
   
   if(aToken) {
     ((CStartToken*)aToken)->mOrigin=aScanner.GetOffset()-1; // Save the position after '<' for use in recording traling contents. Ref: Bug. 15204.
-    result= aToken->Consume(aChar,aScanner,eHTMLText==mDocType);     //tell new token to finish consuming text...    
+    PRBool isHTML=((eHTML3Text==mDocType) || (eHTML4Text==mDocType));
+    result= aToken->Consume(aChar,aScanner,isHTML);     //tell new token to finish consuming text...    
 
     if(NS_SUCCEEDED(result)) {
      

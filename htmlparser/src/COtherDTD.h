@@ -49,7 +49,7 @@
  *		1) explicit style tags (<B>, <I> etc)
  *		2) implicit styles (like those implicit in <Hn>)
  *		3) CSS based styles
- *
+ * 
  *	 Residual style handling results from explicit style tags that are
  *	 not closed. Consider this example: <p>text <b>bold </p>
  *	 When the <p> tag closes, the <b> tag is NOT automatically closed.
@@ -79,8 +79,8 @@
  * 
  *         
  */
-#ifndef NS_NAVHTMLDTD__
-#define NS_NAVHTMLDTD__
+#ifndef NS_OTHERDTD__
+#define NS_OTHERDTD__
 
 #include "nsIDTD.h"
 #include "nsISupports.h"
@@ -260,29 +260,6 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
     virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild) const;
 
     /**
-     *  This method is called to determine whether or not a tag
-     *  of one type can contain a tag of another type.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- int tag of parent container
-     *  @param   aChild -- int tag of child container
-     *  @return  PR_TRUE if parent can contain child
-     */
-    virtual PRBool CanPropagate(eHTMLTags aParent,eHTMLTags aChild,PRBool aParentContains) ;
-
-    /**
-     *  This method gets called to determine whether a given 
-     *  child tag can be omitted by the given parent.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- parent tag being asked about omitting given child
-     *  @param   aChild -- child tag being tested for omittability by parent
-     *  @param   aParentContains -- can be 0,1,-1 (false,true, unknown)
-     *  @return  PR_TRUE if given tag can be omitted
-     */
-    virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRBool& aParentContains) ;
-
-    /**
      *  This method gets called to determine whether a given 
      *  tag is itself a container
      *  
@@ -291,38 +268,6 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
      *  @return  PR_TRUE if given tag can contain other tags
      */
     virtual PRBool IsContainer(PRInt32 aTag) const;
-
-    /**
-     * This method tries to design a context map (without actually
-     * changing our parser state) from the parent down to the
-     * child. 
-     *
-     * @update  gess4/6/98
-     * @param   aParent -- tag type of parent
-     * @param   aChild -- tag type of child
-     * @return  True if closure was achieved -- other false
-     */
-    virtual PRBool ForwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTMLTags aChildTag);
-
-    /**
-     * This method tries to design a context map (without actually
-     * changing our parser state) from the child up to the parent.
-     *
-     * @update  gess4/6/98
-     * @param   aParent -- tag type of parent
-     * @param   aChild -- tag type of child
-     * @return  True if closure was achieved -- other false
-     */
-    virtual PRBool BackwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
-
-    /**
-     * Attempt forward and/or backward propagation for the given
-     * child within the current context vector stack.
-     * @update	gess5/11/98
-     * @param   type of child to be propagated.
-     * @return  TRUE if succeeds, otherwise FALSE
-     */
-    nsresult CreateContextStackFor(eHTMLTags aChildTag);
 
     /**
      * Ask parser if a given container is open ANYWHERE on stack
@@ -340,30 +285,6 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
      */
     virtual PRBool HasOpenContainer(const eHTMLTags aTagSet[],PRInt32 aCount) const;
 
-    /**
-     * Accessor that retrieves the tag type of the topmost item on context 
-	   * vector stack.
-	   *
-     * @update	gess5/11/98
-     * @return  tag type (may be unknown)
-     */
-    virtual eHTMLTags GetTopNode() const;
-
-    /**
-     * Finds the topmost occurance of given tag within context vector stack.
-     * @update	gess5/11/98
-     * @param   tag to be found
-     * @return  index of topmost tag occurance -- may be -1 (kNotFound).
-     */
-    // virtual PRInt32 GetTopmostIndexOf(eHTMLTags aTag) const;
-
-    /**
-     * Finds the topmost occurance of given tag within context vector stack.
-     * @update	gess5/11/98
-     * @param   tag to be found
-     * @return  index of topmost tag occurance -- may be -1 (kNotFound).
-     */
-    virtual PRInt32 LastOf(eHTMLTags aTagSet[],PRInt32 aCount) const;
 
     /**
      * Use this id you want to stop the building content model
@@ -371,7 +292,7 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
      * It's recommended to use this method in accordance with
      * the parser's terminate() method.
      *
-     * @update	harishd 07/22/99
+     * @update	harishd 07/22/99 
      * @param 
      * @return
      */
@@ -395,13 +316,11 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
      * @return  error code representing construction state; usually 0.
      */
     nsresult    HandleStartToken(CToken* aToken);
-    nsresult    HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsIParserNode *aNode);
     nsresult    HandleEndToken(CToken* aToken);
     nsresult    HandleEntityToken(CToken* aToken);
     nsresult    HandleCommentToken(CToken* aToken);
     nsresult    HandleAttributeToken(CToken* aToken);
     nsresult    HandleScriptToken(const nsIParserNode *aNode);
-    nsresult    HandleStyleToken(CToken* aToken);
     nsresult    HandleProcessingInstructionToken(CToken* aToken);
     nsresult    HandleDocTypeDeclToken(CToken* aToken);
 
@@ -460,20 +379,6 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
     nsresult AddLeaf(const nsIParserNode *aNode);
     nsresult AddHeadLeaf(nsIParserNode *aNode);
 
-    /**
-     * This set of methods is used to create and manage the set of
-	   * transient styles that occur as a result of poorly formed HTML
-   	 * or bugs in the original navigator.
-	   *
-     * @update	gess5/11/98
-     * @param   aTag -- represents the transient style tag to be handled.
-     * @return  error code -- usually 0
-     */
-    nsresult  OpenTransientStyles(eHTMLTags aChildTag);
-    nsresult  CloseTransientStyles(eHTMLTags aChildTag);
-    nsresult  PopStyle(eHTMLTags aTag);
-
-    nsresult  DoFragment(PRBool aFlag);
 
 protected:
 
@@ -481,8 +386,6 @@ protected:
 		nsresult        CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
     nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
     nsresult        DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag);
-    nsresult        HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode *aNode);
-    nsresult        HandleSavedTokens(PRInt32 anIndex);
     nsCParserNode*  CreateNode(void);
     void            RecycleNode(nsCParserNode* aNode);
     void            RecycleNodes(nsEntryStack *aNodeStack);
@@ -492,8 +395,6 @@ protected:
     nsDTDContext*       mHeadContext;
     nsDTDContext*       mBodyContext;
     nsDTDContext*       mFormContext;
-    nsDTDContext*       mMapContext;
-    nsDTDContext*       mTempContext;
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;
     PRInt32             mHasOpenHead;
@@ -520,6 +421,7 @@ protected:
     PRUint32            mExpectedCRC32;
     nsAutoString        mScratch;  //used for various purposes; non-persistent
     PRBool              mStyleHandlingEnabled;
+    PRBool              mEnableStrict;
     eParserDocType      mDocType;
 
 #ifdef NS_DEBUG
@@ -529,6 +431,7 @@ protected:
 };
 
 extern NS_HTMLPARS nsresult NS_NewOtherHTMLDTD(nsIDTD** aInstancePtrResult);
+
 
 
 #endif 

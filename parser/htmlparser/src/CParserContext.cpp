@@ -23,6 +23,7 @@
 
 #include "CParserContext.h"
 #include "nsToken.h"
+#include "prenv.h"  
 
 MOZ_DECL_CTOR_COUNTER(CParserContext);
 
@@ -130,7 +131,7 @@ void CParserContext::SetMimeType(const nsString& aMimeType){
   mDocType=ePlainText;
 
   if(mMimeType.EqualsWithConversion(kHTMLTextContentType))
-    mDocType=eHTMLText;
+    mDocType=eHTML4Text;
   else if(mMimeType.EqualsWithConversion(kXMLTextContentType))
     mDocType=eXMLText;
   else if(mMimeType.EqualsWithConversion(kXULTextContentType))
@@ -139,7 +140,148 @@ void CParserContext::SetMimeType(const nsString& aMimeType){
     mDocType=eXMLText;
   else if(mMimeType.EqualsWithConversion(kXIFTextContentType))
     mDocType=eXMLText;
-  else {
-    NS_NOTREACHED("no mime type set");
+}
+ 
+/**
+ *  This is called when it's time to find out 
+ *  what mode the parser/DTD should run for this document.
+ *  (Each parsercontext can have it's own mode).
+ *  
+ *  @update  gess 02/17/00
+ *  @return  parsermode (define in nsIParser.h)
+ */
+eParseMode CParserContext::DetermineParseMode(const nsString& theBuffer) {
+  const char* theModeStr= PR_GetEnv("PARSE_MODE");
+
+  mParseMode = eParseMode_unknown;
+    
+  PRInt32 theIndex=theBuffer.Find("<!",PR_FALSE,-1);
+  if(kNotFound<theIndex)
+    theIndex=theBuffer.Find("DOCTYPE",PR_TRUE,theIndex+1,10);
+
+  if(kNotFound<theIndex) {
+  
+    //good, we found "DOCTYPE" -- now go find it's end delimiter '>'
+    PRInt32 theGTPos=theBuffer.FindChar(kGreaterThan,theIndex+1);
+    PRInt32 theEnd=(kNotFound==theGTPos) ? 512 : MinInt(512,theGTPos);
+    PRInt32 theSubIndex=theBuffer.Find("//DTD",PR_TRUE,theIndex+8,theEnd-(theIndex+8));
+    PRInt32 theErr=0;
+    PRInt32 theMajorVersion=3;
+
+
+    //note that if we don't find '>', then we just scan the first 512 bytes.
+
+    if(0<=theSubIndex) {
+      PRInt32 theStartPos=theSubIndex+5;
+      PRInt32 theCount=theEnd-theStartPos;
+
+      if(kNotFound<theSubIndex) {
+
+        theSubIndex=theBuffer.Find("XHTML",PR_TRUE,theStartPos,theCount);
+        if(0<=theSubIndex) {
+          mDocType=eXHTMLText;
+          mParseMode=eParseMode_strict;
+          theMajorVersion=1;
+        }
+        else {
+          theSubIndex=theBuffer.Find("ISO/IEC 15445:",PR_TRUE,theIndex+8,theEnd-(theIndex+8));
+          if(0<=theSubIndex) {
+            mDocType=eHTML4Text;
+            mParseMode=eParseMode_strict;
+            theMajorVersion=4;
+            theSubIndex+=15;
+          }
+          else {
+            theSubIndex=theBuffer.Find("HTML",PR_TRUE,theStartPos,theCount);
+            if(0<=theSubIndex) {
+              mDocType=eHTML4Text;
+              mParseMode=eParseMode_strict;
+              theMajorVersion=3;
+            }
+            else {
+              theSubIndex=theBuffer.Find("HYPERTEXT MARKUP LANGUAGE",PR_TRUE,theStartPos,theCount);
+              if(0<=theSubIndex) {
+                mDocType=eHTML3Text;
+                mParseMode=eParseMode_quirks;
+                theSubIndex+=20;
+              }
+            } 
+          }
+        }
+      }
+
+      theStartPos=theSubIndex+5;
+      theCount=theEnd-theStartPos;
+      nsAutoString theNum;
+
+      theStartPos=theBuffer.FindCharInSet("123456789",theStartPos);
+      if(0<=theStartPos) {
+        theBuffer.Mid(theNum,theStartPos-1,3);
+        theMajorVersion=theNum.ToInteger(&theErr);
+      }
+      
+        //get the next substring from the buffer, which should be a number.
+        //now see what the version number is...
+
+      theStartPos+=3;
+      theCount=theEnd-theStartPos;
+      if((theBuffer.Find("TRANSITIONAL",PR_TRUE,theStartPos,theCount)>kNotFound)||
+         (theBuffer.Find("LOOSE",PR_TRUE,theStartPos,theCount)>kNotFound)       ||
+         (theBuffer.Find("FRAMESET",PR_TRUE,theStartPos,theCount)>kNotFound)    ||
+         (theBuffer.Find("LATIN1", PR_TRUE,theStartPos,theCount) >kNotFound)    ||
+         (theBuffer.Find("SYMBOLS",PR_TRUE,theStartPos,theCount) >kNotFound)    ||
+         (theBuffer.Find("SPECIAL",PR_TRUE,theStartPos,theCount) >kNotFound)) {
+        mParseMode=eParseMode_noquirks;
+      }
+
+      if(eXHTMLText!=mDocType) {
+        if (0==theErr){
+          switch(theMajorVersion) {
+            case 0: case 1: case 2: case 3:
+              if(mDocType!=eXHTMLText){
+                mParseMode=eParseMode_quirks; //be as backward compatible as possible
+                mDocType=eHTML3Text;
+              }
+              break;
+    
+            default:
+              if(5<theMajorVersion) {
+                mParseMode=eParseMode_noquirks;
+              }
+              break;
+          } //switch
+        }
+      }
+
+    } //if
+    else {
+      PRInt32 thePos=theBuffer.Find("HTML",PR_TRUE,1,50);
+      if(kNotFound!=thePos) {
+        mDocType=eHTML4Text;
+        PRInt32 theIDPos=theBuffer.Find("PublicID",thePos);
+        if(kNotFound==theIDPos)
+          theIDPos=theBuffer.Find("SystemID",thePos);
+        mParseMode=(kNotFound==theIDPos) ? eParseMode_quirks : eParseMode_strict;
+      }
+    }
   }
+  else if(kNotFound<(theIndex=theBuffer.Find("?XML",PR_TRUE,0,128))) {
+      mParseMode=eParseMode_noquirks;
+  }
+  else {
+      //this is debug only, and will go away by the time we ship...
+    theIndex=theBuffer.Find("NOQUIRKS",PR_TRUE,0,128);
+    mDocType=eHTML4Text;
+    if(kNotFound<theIndex) {
+      mParseMode=eParseMode_noquirks;
+    }
+  }
+
+  if(theModeStr) {
+    if(0==nsCRT::strcasecmp(theModeStr,"strict"))
+      mParseMode=eParseMode_strict;    
+  }
+  else mParseMode = (eParseMode_unknown==mParseMode)? eParseMode_quirks : mParseMode;
+
+  return mParseMode;
 }

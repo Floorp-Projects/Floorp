@@ -68,8 +68,10 @@ enum eCRCQuality {
 
 enum eParserDocType {
   ePlainText = 0,
-  eHTMLText,
-  eXMLText
+  eXMLText,
+  eXHTMLText,
+  eHTML3Text,
+  eHTML4Text
 };
 
 

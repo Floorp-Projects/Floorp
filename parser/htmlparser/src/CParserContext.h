@@ -58,6 +58,7 @@ public:
                     PRBool aCopyUnused=PR_FALSE); 
     
     CParserContext( const CParserContext& aContext);
+    eParseMode      DetermineParseMode(const nsString& theBuffer);
 
 
     ~CParserContext();

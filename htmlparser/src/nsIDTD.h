@@ -55,7 +55,7 @@ enum  eParseMode {
   eParseMode_unknown=0,
   eParseMode_quirks,    //pre 5.0 versions
   eParseMode_noquirks,  //raptor versions...)
-  eParseMode_other,
+  eParseMode_strict,
   eParseMode_autodetect
 };
 
