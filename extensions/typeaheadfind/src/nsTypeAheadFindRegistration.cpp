@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  * Original Author: Aaron Leventhal (aaronl@netscape.com)
- * Contributors:    
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -56,9 +55,11 @@
 
 
 // This function is called at component registration time
-static NS_METHOD nsTypeAheadFindRegistrationProc(nsIComponentManager *aCompMgr,
-  nsIFile *aPath, const char *registryLocation, const char *componentType,
-  const nsModuleComponentInfo *info)
+static NS_METHOD
+nsTypeAheadFindRegistrationProc(nsIComponentManager *aCompMgr, nsIFile *aPath,
+                                const char *registryLocation,
+                                const char *componentType,
+                                const nsModuleComponentInfo *info)
 {
   // This function performs the extra step of installing us as
   // an application component. This makes sure that we're
@@ -67,27 +68,37 @@ static NS_METHOD nsTypeAheadFindRegistrationProc(nsIComponentManager *aCompMgr,
   // Register nsTypeAheadFind to be instantiated on startup.
   // XXX This is needed on linux, but for some reason not needed on win32.
   nsresult rv;
-  nsCOMPtr<nsICategoryManager> categoryManager(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv)) 
-    rv = categoryManager->AddCategoryEntry(APPSTARTUP_CATEGORY, "Type Ahead Find", 
-      "service," NS_TYPEAHEADFIND_CONTRACTID, PR_TRUE, PR_TRUE, nsnull);
+  nsCOMPtr<nsICategoryManager> categoryManager =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+
+  if (NS_SUCCEEDED(rv)) {
+    rv = categoryManager->AddCategoryEntry(APPSTARTUP_CATEGORY,
+                                           "Type Ahead Find", 
+                                           "service,"
+                                           NS_TYPEAHEADFIND_CONTRACTID,
+                                           PR_TRUE, PR_TRUE, nsnull);
+  }
+
   return rv;
 }
 
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsTypeAheadFind,nsTypeAheadFind::GetInstance);
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsTypeAheadFind,
+                                         nsTypeAheadFind::GetInstance);
 
-static void PR_CALLBACK TypeAheadFindModuleDtor(nsIModule* self)
+static void PR_CALLBACK
+TypeAheadFindModuleDtor(nsIModule* self)
 {
-    nsTypeAheadFind::ReleaseInstance();
+  nsTypeAheadFind::ReleaseInstance();
 }
 
 static const nsModuleComponentInfo components[] =
 {
-  { "TypeAheadFind Component", NS_TYPEAHEADFIND_CID, NS_TYPEAHEADFIND_CONTRACTID,
-    nsTypeAheadFindConstructor, nsTypeAheadFindRegistrationProc,
-    nsnull  // Unregistration proc
+  { "TypeAheadFind Component", NS_TYPEAHEADFIND_CID,
+    NS_TYPEAHEADFIND_CONTRACTID, nsTypeAheadFindConstructor,
+    nsTypeAheadFindRegistrationProc, nsnull  // Unregistration proc
   }
 };
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsTypeAheadFind, components, TypeAheadFindModuleDtor)
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsTypeAheadFind, components,
+                              TypeAheadFindModuleDtor)
