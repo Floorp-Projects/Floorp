@@ -94,7 +94,7 @@ private:
   void BuildPathFromNode(SubscribeTreeNode *node, nsCAutoString &uri);
   nsresult EnsureSubscribeDS();
   nsresult EnsureRDFService();
-  nsresult DumpSubtree(struct SubscribeTreeNode *);
+  nsresult DumpSubtree(SubscribeTreeNode *node);
 };
 
 #endif // nsSubscribableServer_h__
