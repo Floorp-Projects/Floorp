@@ -42,7 +42,7 @@
 
 static unsigned char* PR_CALLBACK
 _mbschr( const unsigned char* stringToSearch, int charToSearchFor);
-static unsigned char* PR_CALLBACK
+extern unsigned char*
 _mbsrchr( const unsigned char* stringToSearch, int charToSearchFor);
 static nsresult PR_CALLBACK
 CreateDirectoryA( PSZ resolvedPath, PEAOP2 ppEABuf);
@@ -2242,7 +2242,7 @@ _mbschr( const unsigned char* stringToSearch, int charToSearchFor)
 }
 
 // Locates last occurence of charToSearchFor in the stringToSearch
-static unsigned char* PR_CALLBACK
+extern unsigned char*
 _mbsrchr( const unsigned char* stringToSearch, int charToSearchFor)
 {
    int length = strlen((const char*)stringToSearch);
