@@ -1,4 +1,4 @@
-nsIDOMXULFocusTracker.h
+nsIDOMXULCommandDispatcher.h
 nsIDOMElementObserver.h
 nsIDOMNodeObserver.h
 nsIDOMXULDocument.h
@@ -11,6 +11,6 @@ nsIXULParentDocument.h
 nsIXULChildDocument.h
 nsIXULDocumentInfo.h
 nsIXULPopupListener.h
-nsIXULFocusTracker.h
+nsIXULCommandDispatcher.h
 nsIXULKeyListener.h
 nsIStreamLoadableDocument.h

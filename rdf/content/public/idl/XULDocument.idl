@@ -6,7 +6,7 @@ interface XULDocument : Document {
 	attribute Element popupElement;
 	attribute Element tooltipElement;
 
-	readonly attribute XULFocusTracker focus;
+	readonly attribute XULCommandDispatcher commandDispatcher;
 
     Element getElementById(in DOMString id);
 	NodeList getElementsByAttribute(in DOMString name, in DOMString value);

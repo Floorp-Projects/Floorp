@@ -25,7 +25,7 @@ IDLSRCS =  \
         NodeObserver.idl        \
         XULDocument.idl         \
         XULElement.idl          \
-        XULFocusTracker.idl     \
+        XULCommandDispatcher.idl   \
         XULTreeElement.idl      \
         $(NULL)
 

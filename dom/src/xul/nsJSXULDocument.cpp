@@ -28,7 +28,7 @@
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMXULFocusTracker.h"
+#include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMNodeList.h"
 
@@ -37,12 +37,12 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIXULFocusTrackerIID, NS_IDOMXULFOCUSTRACKER_IID);
+static NS_DEFINE_IID(kIXULCommandDispatcherIID, NS_IDOMXULCOMMANDDISPATCHER_IID);
 static NS_DEFINE_IID(kIXULDocumentIID, NS_IDOMXULDOCUMENT_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 NS_DEF_PTR(nsIDOMElement);
-NS_DEF_PTR(nsIDOMXULFocusTracker);
+NS_DEF_PTR(nsIDOMXULCommandDispatcher);
 NS_DEF_PTR(nsIDOMXULDocument);
 NS_DEF_PTR(nsIDOMNodeList);
 
@@ -52,7 +52,7 @@ NS_DEF_PTR(nsIDOMNodeList);
 enum XULDocument_slots {
   XULDOCUMENT_POPUPELEMENT = -1,
   XULDOCUMENT_TOOLTIPELEMENT = -2,
-  XULDOCUMENT_FOCUS = -3
+  XULDOCUMENT_COMMANDDISPATCHER = -3
 };
 
 /***********************************************************************/
@@ -111,15 +111,15 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case XULDOCUMENT_FOCUS:
+      case XULDOCUMENT_COMMANDDISPATCHER:
       {
-        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.focus", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.commanddispatcher", &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
         }
-        nsIDOMXULFocusTracker* prop;
-        if (NS_SUCCEEDED(a->GetFocus(&prop))) {
+        nsIDOMXULCommandDispatcher* prop;
+        if (NS_SUCCEEDED(a->GetCommandDispatcher(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -370,7 +370,7 @@ static JSPropertySpec XULDocumentProperties[] =
 {
   {"popupElement",    XULDOCUMENT_POPUPELEMENT,    JSPROP_ENUMERATE},
   {"tooltipElement",    XULDOCUMENT_TOOLTIPELEMENT,    JSPROP_ENUMERATE},
-  {"focus",    XULDOCUMENT_FOCUS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"commandDispatcher",    XULDOCUMENT_COMMANDDISPATCHER,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

@@ -25,8 +25,8 @@
 #include "nsVoidArray.h"
 
 #include "nsIDOMElement.h"
-#include "nsIDOMXULFocusTracker.h"
-#include "nsIXULFocusTracker.h"
+#include "nsIDOMXULCommandDispatcher.h"
+#include "nsIXULCommandDispatcher.h"
 #include "nsIDOMFocusListener.h"
 #include "nsRDFCID.h"
 
@@ -41,6 +41,9 @@
 #include "nsIDOMXULElement.h"
 #include "nsIController.h"
 
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
@@ -50,24 +53,24 @@ static NS_DEFINE_IID(kIDomElementIID,         NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDomEventListenerIID,   NS_IDOMEVENTLISTENER_IID);
 
 ////////////////////////////////////////////////////////////////////////
-// XULFocusTrackerImpl
+// XULCommandDispatcherImpl
 //
 //   This is the focus manager for XUL documents.
 //
-class XULFocusTrackerImpl : public nsIDOMXULFocusTracker,
-                            public nsIXULFocusTracker,
-                            public nsIDOMFocusListener
+class XULCommandDispatcherImpl : public nsIDOMXULCommandDispatcher,
+                                 public nsIXULCommandDispatcher,
+                                 public nsIDOMFocusListener
 {
 public:
-    XULFocusTrackerImpl(void);
-    virtual ~XULFocusTrackerImpl(void);
+    XULCommandDispatcherImpl(void);
+    virtual ~XULCommandDispatcherImpl(void);
 
 public:
     // nsISupports
     NS_DECL_ISUPPORTS
 
-    // nsIDOMXULFocusTracker interface
-    NS_DECL_IDOMXULFOCUSTRACKER
+    // nsIDOMXULCommandDispatcher interface
+    NS_DECL_IDOMXULCOMMANDDISPATCHER
    
     // nsIDOMFocusListener
     virtual nsresult Focus(nsIDOMEvent* aEvent);
@@ -83,36 +86,36 @@ private:
 
 ////////////////////////////////////////////////////////////////////////
 
-XULFocusTrackerImpl::XULFocusTrackerImpl(void)
+XULCommandDispatcherImpl::XULCommandDispatcherImpl(void)
 {
 	NS_INIT_REFCNT();
   mCurrentElement = nsnull;
   mFocusListeners = nsnull;
 }
 
-XULFocusTrackerImpl::~XULFocusTrackerImpl(void)
+XULCommandDispatcherImpl::~XULCommandDispatcherImpl(void)
 {
   delete mFocusListeners;
 }
 
-NS_IMPL_ADDREF(XULFocusTrackerImpl)
-NS_IMPL_RELEASE(XULFocusTrackerImpl)
+NS_IMPL_ADDREF(XULCommandDispatcherImpl)
+NS_IMPL_RELEASE(XULCommandDispatcherImpl)
 
 NS_IMETHODIMP
-XULFocusTrackerImpl::QueryInterface(REFNSIID iid, void** result)
+XULCommandDispatcherImpl::QueryInterface(REFNSIID iid, void** result)
 {
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
     *result = nsnull;
-    if (iid.Equals(nsIXULFocusTracker::GetIID()) ||
+    if (iid.Equals(nsIXULCommandDispatcher::GetIID()) ||
         iid.Equals(kISupportsIID)) {
-        *result = NS_STATIC_CAST(nsIXULFocusTracker*, this);
+        *result = NS_STATIC_CAST(nsIXULCommandDispatcher*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     } 
-    else if (iid.Equals(nsIDOMXULFocusTracker::GetIID())) {
-        *result = NS_STATIC_CAST(nsIDOMXULFocusTracker*, this);
+    else if (iid.Equals(nsIDOMXULCommandDispatcher::GetIID())) {
+        *result = NS_STATIC_CAST(nsIDOMXULCommandDispatcher*, this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -135,7 +138,7 @@ XULFocusTrackerImpl::QueryInterface(REFNSIID iid, void** result)
 // nsIDOMXULTracker Interface
 
 NS_IMETHODIMP
-XULFocusTrackerImpl::GetCurrent(nsIDOMElement** aElement)
+XULCommandDispatcherImpl::GetFocusedElement(nsIDOMElement** aElement)
 {
   NS_IF_ADDREF(mCurrentElement);
   *aElement = mCurrentElement;
@@ -143,15 +146,29 @@ XULFocusTrackerImpl::GetCurrent(nsIDOMElement** aElement)
 }
 
 NS_IMETHODIMP
-XULFocusTrackerImpl::SetCurrent(nsIDOMElement* aElement)
+XULCommandDispatcherImpl::SetFocusedElement(nsIDOMElement* aElement)
 {
   mCurrentElement = aElement;
-  FocusChanged();
+  UpdateCommands();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-XULFocusTrackerImpl::AddFocusListener(nsIDOMElement* aElement)
+XULCommandDispatcherImpl::GetFocusedWindow(nsIDOMWindow** aElement)
+{
+  // XXX Implement 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+XULCommandDispatcherImpl::SetFocusedWindow(nsIDOMWindow* aElement)
+{
+  // XXX Implement
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+XULCommandDispatcherImpl::AddCommand(nsIDOMElement* aElement)
 {
   if (!mFocusListeners) {
     mFocusListeners = new nsVoidArray();
@@ -161,7 +178,7 @@ XULFocusTrackerImpl::AddFocusListener(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
-XULFocusTrackerImpl::RemoveFocusListener(nsIDOMElement* aElement)
+XULCommandDispatcherImpl::RemoveCommand(nsIDOMElement* aElement)
 {
   if (mFocusListeners) {
     mFocusListeners->RemoveElement((void*)aElement); // Weak ref to element
@@ -171,19 +188,45 @@ XULFocusTrackerImpl::RemoveFocusListener(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP
-XULFocusTrackerImpl::FocusChanged()
+XULCommandDispatcherImpl::UpdateCommands()
 {
   if (mFocusListeners) {
     PRInt32 count = mFocusListeners->Count();
     for (PRInt32 i = 0; i < count; i++) {
-      printf("Notifying an element of a focus change!\n");
+      nsIDOMElement* domElement = (nsIDOMElement*)mFocusListeners->ElementAt(i);
+
+      nsCOMPtr<nsIContent> content;
+      content = do_QueryInterface(domElement);
+    
+      nsCOMPtr<nsIDocument> document;
+      content->GetDocument(*getter_AddRefs(document));
+
+      PRInt32 count = document->GetNumberOfShells();
+      for (PRInt32 i = 0; i < count; i++) {
+        nsIPresShell* shell = document->GetShellAt(i);
+        if (nsnull == shell)
+            continue;
+
+        // Retrieve the context in which our DOM event will fire.
+        nsCOMPtr<nsIPresContext> aPresContext;
+        shell->GetPresContext(getter_AddRefs(aPresContext));
+  
+        NS_RELEASE(shell);
+
+        // Handle the DOM event
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsEvent event;
+        event.eventStructType = NS_EVENT;
+        event.message = NS_FORM_CHANGE; // XXX: I feel dirty and evil for subverting this.
+        content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+      }
     }
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-XULFocusTrackerImpl::GetController(nsIController** aResult)
+XULCommandDispatcherImpl::GetController(nsIController** aResult)
 {
   if (mCurrentElement) {
     nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(mCurrentElement);
@@ -196,7 +239,7 @@ XULFocusTrackerImpl::GetController(nsIController** aResult)
 }
 
 NS_IMETHODIMP
-XULFocusTrackerImpl::SetController(nsIController* aController)
+XULCommandDispatcherImpl::SetController(nsIController* aController)
 {
   if (mCurrentElement) {
     nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(mCurrentElement);
@@ -212,30 +255,30 @@ XULFocusTrackerImpl::SetController(nsIController* aController)
 /////
 
 nsresult 
-XULFocusTrackerImpl::Focus(nsIDOMEvent* aEvent)
+XULCommandDispatcherImpl::Focus(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMNode> t;
   aEvent->GetTarget(getter_AddRefs(t));
   nsCOMPtr<nsIDOMElement> target = do_QueryInterface(t);
   
   if (target) {
-    SetCurrent(target);
-    FocusChanged();
+    SetFocusedElement(target);
+    UpdateCommands();
   }
 
   return NS_OK;
 }
 
 nsresult 
-XULFocusTrackerImpl::Blur(nsIDOMEvent* aEvent)
+XULCommandDispatcherImpl::Blur(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMNode> t;
   aEvent->GetTarget(getter_AddRefs(t));
   nsCOMPtr<nsIDOMElement> target = do_QueryInterface(t);
   
   if (target.get() == mCurrentElement) {
-    SetCurrent(nsnull);
-    FocusChanged();
+    SetFocusedElement(nsnull);
+    UpdateCommands();
   }
 
   return NS_OK;
@@ -243,13 +286,13 @@ XULFocusTrackerImpl::Blur(nsIDOMEvent* aEvent)
 
 ////////////////////////////////////////////////////////////////
 nsresult
-NS_NewXULFocusTracker(nsIXULFocusTracker** focusTracker)
+NS_NewXULCommandDispatcher(nsIXULCommandDispatcher** CommandDispatcher)
 {
-    XULFocusTrackerImpl* focus = new XULFocusTrackerImpl();
+    XULCommandDispatcherImpl* focus = new XULCommandDispatcherImpl();
     if (!focus)
       return NS_ERROR_OUT_OF_MEMORY;
     
     NS_ADDREF(focus);
-    *focusTracker = focus;
+    *CommandDispatcher = focus;
     return NS_OK;
 }

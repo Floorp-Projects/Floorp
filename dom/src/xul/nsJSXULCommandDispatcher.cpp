@@ -29,7 +29,8 @@
 #include "nsString.h"
 #include "nsIController.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMXULFocusTracker.h"
+#include "nsIDOMXULCommandDispatcher.h"
+#include "nsIDOMWindow.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -37,27 +38,30 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIControllerIID, NS_ICONTROLLER_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIXULFocusTrackerIID, NS_IDOMXULFOCUSTRACKER_IID);
+static NS_DEFINE_IID(kIXULCommandDispatcherIID, NS_IDOMXULCOMMANDDISPATCHER_IID);
+static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 
 NS_DEF_PTR(nsIController);
 NS_DEF_PTR(nsIDOMElement);
-NS_DEF_PTR(nsIDOMXULFocusTracker);
+NS_DEF_PTR(nsIDOMXULCommandDispatcher);
+NS_DEF_PTR(nsIDOMWindow);
 
 //
-// XULFocusTracker property ids
+// XULCommandDispatcher property ids
 //
-enum XULFocusTracker_slots {
-  XULFOCUSTRACKER_CURRENT = -1
+enum XULCommandDispatcher_slots {
+  XULCOMMANDDISPATCHER_FOCUSEDELEMENT = -1,
+  XULCOMMANDDISPATCHER_FOCUSEDWINDOW = -2
 };
 
 /***********************************************************************/
 //
-// XULFocusTracker Properties Getter
+// XULCommandDispatcher Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-GetXULFocusTrackerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+GetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMXULFocusTracker *a = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMXULCommandDispatcher *a = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -72,15 +76,32 @@ GetXULFocusTrackerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
-      case XULFOCUSTRACKER_CURRENT:
+      case XULCOMMANDDISPATCHER_FOCUSEDELEMENT:
       {
-        secMan->CheckScriptAccess(scriptCX, obj, "xulfocustracker.current", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedelement", &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
         }
         nsIDOMElement* prop;
-        if (NS_SUCCEEDED(a->GetCurrent(&prop))) {
+        if (NS_SUCCEEDED(a->GetFocusedElement(&prop))) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case XULCOMMANDDISPATCHER_FOCUSEDWINDOW:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedwindow", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMWindow* prop;
+        if (NS_SUCCEEDED(a->GetFocusedWindow(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -103,12 +124,12 @@ GetXULFocusTrackerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// XULFocusTracker Properties Setter
+// XULCommandDispatcher Properties Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-SetXULFocusTrackerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMXULFocusTracker *a = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMXULCommandDispatcher *a = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -123,9 +144,9 @@ SetXULFocusTrackerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
-      case XULFOCUSTRACKER_CURRENT:
+      case XULCOMMANDDISPATCHER_FOCUSEDELEMENT:
       {
-        secMan->CheckScriptAccess(scriptCX, obj, "xulfocustracker.current", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedelement", &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -137,7 +158,25 @@ SetXULFocusTrackerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
       
-        a->SetCurrent(prop);
+        a->SetFocusedElement(prop);
+        NS_IF_RELEASE(prop);
+        break;
+      }
+      case XULCOMMANDDISPATCHER_FOCUSEDWINDOW:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.focusedwindow", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsIDOMWindow* prop;
+        if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
+                                                kIWindowIID, "Window",
+                                                cx, *vp)) {
+          return JS_FALSE;
+        }
+      
+        a->SetFocusedWindow(prop);
         NS_IF_RELEASE(prop);
         break;
       }
@@ -155,42 +194,42 @@ SetXULFocusTrackerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// XULFocusTracker finalizer
+// XULCommandDispatcher finalizer
 //
 PR_STATIC_CALLBACK(void)
-FinalizeXULFocusTracker(JSContext *cx, JSObject *obj)
+FinalizeXULCommandDispatcher(JSContext *cx, JSObject *obj)
 {
   nsJSUtils::nsGenericFinalize(cx, obj);
 }
 
 
 //
-// XULFocusTracker enumerate
+// XULCommandDispatcher enumerate
 //
 PR_STATIC_CALLBACK(JSBool)
-EnumerateXULFocusTracker(JSContext *cx, JSObject *obj)
+EnumerateXULCommandDispatcher(JSContext *cx, JSObject *obj)
 {
   return nsJSUtils::nsGenericEnumerate(cx, obj);
 }
 
 
 //
-// XULFocusTracker resolve
+// XULCommandDispatcher resolve
 //
 PR_STATIC_CALLBACK(JSBool)
-ResolveXULFocusTracker(JSContext *cx, JSObject *obj, jsval id)
+ResolveXULCommandDispatcher(JSContext *cx, JSObject *obj, jsval id)
 {
   return nsJSUtils::nsGenericResolve(cx, obj, id);
 }
 
 
 //
-// Native method AddFocusListener
+// Native method AddCommand
 //
 PR_STATIC_CALLBACK(JSBool)
-XULFocusTrackerAddFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+XULCommandDispatcherAddCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMXULCommandDispatcher *nativeThis = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -202,7 +241,7 @@ XULFocusTrackerAddFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulfocustracker.addfocuslistener", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.addcommand", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -217,7 +256,7 @@ XULFocusTrackerAddFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function addFocusListener requires 1 parameter");
+      JS_ReportError(cx, "Function addCommand requires 1 parameter");
       return JS_FALSE;
     }
 
@@ -229,7 +268,7 @@ XULFocusTrackerAddFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval 
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->AddFocusListener(b0)) {
+    if (NS_OK != nativeThis->AddCommand(b0)) {
       return JS_FALSE;
     }
 
@@ -241,12 +280,12 @@ XULFocusTrackerAddFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
 
 //
-// Native method RemoveFocusListener
+// Native method RemoveCommand
 //
 PR_STATIC_CALLBACK(JSBool)
-XULFocusTrackerRemoveFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+XULCommandDispatcherRemoveCommand(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMXULCommandDispatcher *nativeThis = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -258,7 +297,7 @@ XULFocusTrackerRemoveFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulfocustracker.removefocuslistener", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.removecommand", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -273,7 +312,7 @@ XULFocusTrackerRemoveFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsv
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function removeFocusListener requires 1 parameter");
+      JS_ReportError(cx, "Function removeCommand requires 1 parameter");
       return JS_FALSE;
     }
 
@@ -285,7 +324,7 @@ XULFocusTrackerRemoveFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsv
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->RemoveFocusListener(b0)) {
+    if (NS_OK != nativeThis->RemoveCommand(b0)) {
       return JS_FALSE;
     }
 
@@ -297,12 +336,12 @@ XULFocusTrackerRemoveFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsv
 
 
 //
-// Native method FocusChanged
+// Native method UpdateCommands
 //
 PR_STATIC_CALLBACK(JSBool)
-XULFocusTrackerFocusChanged(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+XULCommandDispatcherUpdateCommands(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMXULCommandDispatcher *nativeThis = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   *rval = JSVAL_NULL;
 
@@ -313,7 +352,7 @@ XULFocusTrackerFocusChanged(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulfocustracker.focuschanged", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.updatecommands", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -328,7 +367,7 @@ XULFocusTrackerFocusChanged(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 
   {
 
-    if (NS_OK != nativeThis->FocusChanged()) {
+    if (NS_OK != nativeThis->UpdateCommands()) {
       return JS_FALSE;
     }
 
@@ -343,9 +382,9 @@ XULFocusTrackerFocusChanged(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 // Native method GetController
 //
 PR_STATIC_CALLBACK(JSBool)
-XULFocusTrackerGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+XULCommandDispatcherGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMXULCommandDispatcher *nativeThis = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIController* nativeRet;
 
   *rval = JSVAL_NULL;
@@ -357,7 +396,7 @@ XULFocusTrackerGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulfocustracker.getcontroller", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.getcontroller", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -388,9 +427,9 @@ XULFocusTrackerGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 // Native method SetController
 //
 PR_STATIC_CALLBACK(JSBool)
-XULFocusTrackerSetController(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+XULCommandDispatcherSetController(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMXULCommandDispatcher *nativeThis = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIControllerPtr b0;
 
   *rval = JSVAL_NULL;
@@ -402,7 +441,7 @@ XULFocusTrackerSetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xulfocustracker.setcontroller", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xulcommanddispatcher.setcontroller", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -439,60 +478,61 @@ XULFocusTrackerSetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
 /***********************************************************************/
 //
-// class for XULFocusTracker
+// class for XULCommandDispatcher
 //
-JSClass XULFocusTrackerClass = {
-  "XULFocusTracker", 
+JSClass XULCommandDispatcherClass = {
+  "XULCommandDispatcher", 
   JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
-  GetXULFocusTrackerProperty,
-  SetXULFocusTrackerProperty,
-  EnumerateXULFocusTracker,
-  ResolveXULFocusTracker,
+  GetXULCommandDispatcherProperty,
+  SetXULCommandDispatcherProperty,
+  EnumerateXULCommandDispatcher,
+  ResolveXULCommandDispatcher,
   JS_ConvertStub,
-  FinalizeXULFocusTracker
+  FinalizeXULCommandDispatcher
 };
 
 
 //
-// XULFocusTracker class properties
+// XULCommandDispatcher class properties
 //
-static JSPropertySpec XULFocusTrackerProperties[] =
+static JSPropertySpec XULCommandDispatcherProperties[] =
 {
-  {"current",    XULFOCUSTRACKER_CURRENT,    JSPROP_ENUMERATE},
+  {"focusedElement",    XULCOMMANDDISPATCHER_FOCUSEDELEMENT,    JSPROP_ENUMERATE},
+  {"focusedWindow",    XULCOMMANDDISPATCHER_FOCUSEDWINDOW,    JSPROP_ENUMERATE},
   {0}
 };
 
 
 //
-// XULFocusTracker class methods
+// XULCommandDispatcher class methods
 //
-static JSFunctionSpec XULFocusTrackerMethods[] = 
+static JSFunctionSpec XULCommandDispatcherMethods[] = 
 {
-  {"addFocusListener",          XULFocusTrackerAddFocusListener,     1},
-  {"removeFocusListener",          XULFocusTrackerRemoveFocusListener,     1},
-  {"focusChanged",          XULFocusTrackerFocusChanged,     0},
-  {"getController",          XULFocusTrackerGetController,     0},
-  {"setController",          XULFocusTrackerSetController,     1},
+  {"addCommand",          XULCommandDispatcherAddCommand,     1},
+  {"removeCommand",          XULCommandDispatcherRemoveCommand,     1},
+  {"updateCommands",          XULCommandDispatcherUpdateCommands,     0},
+  {"getController",          XULCommandDispatcherGetController,     0},
+  {"setController",          XULCommandDispatcherSetController,     1},
   {0}
 };
 
 
 //
-// XULFocusTracker constructor
+// XULCommandDispatcher constructor
 //
 PR_STATIC_CALLBACK(JSBool)
-XULFocusTracker(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+XULCommandDispatcher(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   return JS_FALSE;
 }
 
 
 //
-// XULFocusTracker class initialization
+// XULCommandDispatcher class initialization
 //
-extern "C" NS_DOM nsresult NS_InitXULFocusTrackerClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitXULCommandDispatcherClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
@@ -501,7 +541,7 @@ extern "C" NS_DOM nsresult NS_InitXULFocusTrackerClass(nsIScriptContext *aContex
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 
-  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "XULFocusTracker", &vp)) ||
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "XULCommandDispatcher", &vp)) ||
       !JSVAL_IS_OBJECT(vp) ||
       ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
@@ -510,11 +550,11 @@ extern "C" NS_DOM nsresult NS_InitXULFocusTrackerClass(nsIScriptContext *aContex
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 
-                         &XULFocusTrackerClass,      // JSClass
-                         XULFocusTracker,            // JSNative ctor
+                         &XULCommandDispatcherClass,      // JSClass
+                         XULCommandDispatcher,            // JSNative ctor
                          0,             // ctor args
-                         XULFocusTrackerProperties,  // proto props
-                         XULFocusTrackerMethods,     // proto funcs
+                         XULCommandDispatcherProperties,  // proto props
+                         XULCommandDispatcherMethods,     // proto funcs
                          nsnull,        // ctor props (static)
                          nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
@@ -537,17 +577,17 @@ extern "C" NS_DOM nsresult NS_InitXULFocusTrackerClass(nsIScriptContext *aContex
 
 
 //
-// Method for creating a new XULFocusTracker JavaScript object
+// Method for creating a new XULCommandDispatcher JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptXULFocusTracker(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptXULCommandDispatcher(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptXULFocusTracker");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptXULCommandDispatcher");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   nsresult result = NS_OK;
-  nsIDOMXULFocusTracker *aXULFocusTracker;
+  nsIDOMXULCommandDispatcher *aXULCommandDispatcher;
 
   if (nsnull == aParent) {
     parent = nsnull;
@@ -563,23 +603,23 @@ extern "C" NS_DOM nsresult NS_NewScriptXULFocusTracker(nsIScriptContext *aContex
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_OK != NS_InitXULFocusTrackerClass(aContext, (void **)&proto)) {
+  if (NS_OK != NS_InitXULCommandDispatcherClass(aContext, (void **)&proto)) {
     return NS_ERROR_FAILURE;
   }
 
-  result = aSupports->QueryInterface(kIXULFocusTrackerIID, (void **)&aXULFocusTracker);
+  result = aSupports->QueryInterface(kIXULCommandDispatcherIID, (void **)&aXULCommandDispatcher);
   if (NS_OK != result) {
     return result;
   }
 
   // create a js object for this class
-  *aReturn = JS_NewObject(jscontext, &XULFocusTrackerClass, proto, parent);
+  *aReturn = JS_NewObject(jscontext, &XULCommandDispatcherClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aXULFocusTracker);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aXULCommandDispatcher);
   }
   else {
-    NS_RELEASE(aXULFocusTracker);
+    NS_RELEASE(aXULCommandDispatcher);
     return NS_ERROR_FAILURE; 
   }
 

@@ -27,10 +27,10 @@ LCFLAGS = \
         $(NULL)
 
 CPP_OBJS=\
-	.\$(OBJDIR)\nsJSXULFocusTracker.obj       \
+	.\$(OBJDIR)\nsJSXULCommandDispatcher.obj       \
 	.\$(OBJDIR)\nsRDFGenericBuilder.obj       \
 	.\$(OBJDIR)\nsXULAttributes.obj		  \
-	.\$(OBJDIR)\nsXULFocusTracker.obj         \
+	.\$(OBJDIR)\nsXULCommandDispatcher.obj         \
 	.\$(OBJDIR)\nsXULPopupListener.obj        \
         .\$(OBJDIR)\nsJSElementObserver.obj       \
         .\$(OBJDIR)\nsJSNodeObserver.obj          \
