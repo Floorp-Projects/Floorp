@@ -729,7 +729,7 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetAtom(
   str.ToLowerCase();
 
   nsCOMPtr<nsIAtom> atom =  getter_AddRefs(NS_NewAtom(str));
-  if (atom == NULL) {
+  if (atom.get() == NULL) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
