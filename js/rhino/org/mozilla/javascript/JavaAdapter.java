@@ -694,6 +694,8 @@ public class JavaAdapter extends ScriptableObject {
         Class retType = returnType;
         if (!retType.equals(Void.TYPE)) {
             generatePopResult(cfw, retType);
+        } else {
+        	cfw.add(ByteCode.RETURN);
         }
         cfw.stopMethod((short)(paramOffset + 1), null);
     }
