@@ -441,6 +441,12 @@ static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal,
     return rv;        
   LL_L2UI(fileSize, llFileSize); // Converting 64 bit structure to unsigned int
 
+  // Now that we know the file exists, set this flag until we have
+  // successfully read and evaluated the prefs file. This will
+  // prevent us from writing an empty or partial prefs.js.
+  
+  gErrorOpeningUserPrefs = aIsErrorFatal;
+
   rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), aFile);
   if (NS_FAILED(rv)) 
     return rv;        
@@ -454,22 +460,21 @@ static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal,
   PRUint32 amtRead = 0;
   rv = inStr->Read(readBuf, fileSize, &amtRead);
   NS_ASSERTION((amtRead == fileSize), "failed to read the entire prefs file!!");
+  if (amtRead != fileSize)
+    return NS_ERROR_FAILURE;
  #ifdef XP_OS2 /* OS/2 workaround - our system editor adds an EOF character */
      if (readBuf[amtRead - 1] == 0x1A) {
         amtRead--;
      }
  #endif
   if (NS_SUCCEEDED(rv)) {
-    if (!PREF_EvaluateConfigScript(readBuf, amtRead, nsnull, aIsGlobalContext, PR_TRUE,
+    if (PREF_EvaluateConfigScript(readBuf, amtRead, nsnull, aIsGlobalContext, PR_TRUE,
                                    aSkipFirstLine))
-    {
+      gErrorOpeningUserPrefs = PR_FALSE;
+    else
       rv = NS_ERROR_FAILURE;
-      if (aIsErrorFatal)
-        // If the user prefs file exists but generates an error,
-        // don't clobber the file when we try to save it
-        gErrorOpeningUserPrefs = PR_TRUE;
-    }
   }
+
   PR_Free(readBuf);
   JS_EndRequest(gMochaContext);
 
