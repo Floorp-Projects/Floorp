@@ -48,7 +48,7 @@
    */
   typedef int int32_t;
   typedef unsigned int uint32_t;
-#elif defined(_AIX) || defined(__sun) || defined(__osf__) || defined(IRIX)
+#elif defined(_AIX) || defined(__sun) || defined(__osf__) || defined(IRIX) || defined(HPUX)
   /*
    * AIX and SunOS ship a inttypes.h header that defines [u]int32_t,
    * but not bool for C.
