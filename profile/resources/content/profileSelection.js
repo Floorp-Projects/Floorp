@@ -40,10 +40,18 @@ function StartUp()
   if(window.location && window.location.search && window.location.search == "?manage=true" )
     SwitchProfileManagerMode();
 
+  var dirServ = Components.classes['component://netscape/file/directory_service'].createInstance();
+  dirServ = dirServ.QueryInterface(Components.interfaces.nsIProperties);
+  
+  // "AggRegF" stands for Application Registry File.
+  // Forgive the weird name directory service has adapted for 
+  // application registry file....
+  var regFile = dirServ.get("AppRegF", Components.interfaces.nsIFile);
+
   Registry = Components.classes['component://netscape/registry'].createInstance();
   Registry = Registry.QueryInterface(Components.interfaces.nsIRegistry);
-  Registry.openWellKnownRegistry(Registry.ApplicationRegistry);
-
+  Registry.open(regFile.path);
+ 
   loadElements();
   highlightCurrentProfile();
 

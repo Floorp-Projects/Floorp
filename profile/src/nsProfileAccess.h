@@ -25,6 +25,8 @@
 #include "nsIRegistry.h"
 #include "nsXPIDLString.h"
 #include "nsVoidArray.h"
+#include "nsIFileSpec.h"
+#include "nsIFile.h"
 
 class ProfileStruct
 {
@@ -49,6 +51,7 @@ class nsProfileAccess
 
 private:
     nsCOMPtr <nsIRegistry> m_registry;
+    nsCOMPtr <nsIFile> mNewRegFile;
 
     // This is an array that holds all the profile information--migrated/unmigrated
     // unmigrated: if the profileinfo is migrated--i.e. -installer option is used
@@ -69,7 +72,7 @@ private:
     PRInt32       m4xCount;
 
 
-    nsresult OpenRegistry();
+    nsresult OpenRegistry(const char* regName);
     nsresult CloseRegistry();
 
     // It looks like mCount and m4xCount are not required.
@@ -92,7 +95,7 @@ public:
     virtual ~nsProfileAccess();
 
     nsresult SetValue(ProfileStruct* aProfile);
-    nsresult FillProfileInfo();
+    nsresult FillProfileInfo(nsIFile* regName);
 
     void GetNumProfiles(PRInt32 *numProfiles);
     void GetNum4xProfiles(PRInt32 *numProfiles);
@@ -108,7 +111,7 @@ public:
     nsresult GetValue(const PRUnichar* profileName, ProfileStruct** aProfile);
     PRInt32	 FindProfileIndex(const PRUnichar* profileName);
 
-    nsresult UpdateRegistry();
+    nsresult UpdateRegistry(nsIFile* regName);
     void GetProfileList(PRUnichar **profileListStr);
     PRBool ProfileExists(const PRUnichar *profileName);
     nsresult Get4xProfileInfo(const char *registryName);
@@ -116,6 +119,9 @@ public:
     void SetPREGInfo(const char* pregInfo);
     void CheckRegString(const PRUnichar *profileName, char** regString);
     void FreeProfileMembers(nsVoidArray *aProfile, PRInt32 numElems);
+    nsresult GetMozRegDataMovedFlag(PRBool *regDataMoved);
+    nsresult SetMozRegDataMovedFlag(nsIFile* regName);
+    nsresult ResetProfileMembers();
 };
 
 #endif // __nsProfileAccess_h___

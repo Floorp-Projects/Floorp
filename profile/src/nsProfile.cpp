@@ -239,7 +239,7 @@ nsProfile::~nsProfile()
 #endif
 
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
-    gProfileDataAccess->UpdateRegistry();
+    gProfileDataAccess->UpdateRegistry(nsnull);
     
    if (--gInstanceCount == 0) {
         
@@ -496,7 +496,7 @@ nsProfile::AutoMigrate()
     }   
 
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
-    gProfileDataAccess->UpdateRegistry();
+    gProfileDataAccess->UpdateRegistry(nsnull);
 
     return rv;
 }
@@ -619,7 +619,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 // Need to load new profile prefs.
                 rv = LoadNewProfilePrefs();
                 gProfileDataAccess->mProfileDataChanged = PR_TRUE;
-                gProfileDataAccess->UpdateRegistry();
+                gProfileDataAccess->UpdateRegistry(nsnull);
             }
             rv = ForgetCurrentProfile();
             if (NS_FAILED(rv)) return rv;
@@ -1100,7 +1100,7 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
 
     gProfileDataAccess->mNumProfiles++;
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
-    gProfileDataAccess->UpdateRegistry();
+    gProfileDataAccess->UpdateRegistry(nsnull);
     return NS_OK;
 }
 
@@ -1209,7 +1209,7 @@ nsProfile::RenameProfile(const PRUnichar* oldName, const PRUnichar* newName)
     if (NS_FAILED(rv)) return rv;
 
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
-    gProfileDataAccess->UpdateRegistry();
+    gProfileDataAccess->UpdateRegistry(nsnull);
 
     return NS_OK;
 }
@@ -1288,7 +1288,7 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const PRUnichar* profileName, PRBool canD
     if (NS_FAILED(rv)) return rv;
 
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
-    gProfileDataAccess->UpdateRegistry();
+    gProfileDataAccess->UpdateRegistry(nsnull);
 
     return rv;
 }
@@ -1402,7 +1402,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 #endif /* XP_PC || XP_MAC */
 
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
-    gProfileDataAccess->UpdateRegistry();
+    gProfileDataAccess->UpdateRegistry(nsnull);
 
 	return rv;
 }
@@ -1578,7 +1578,7 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     gProfileDataAccess->mNumOldProfiles--;
 
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
-    gProfileDataAccess->UpdateRegistry();
+    gProfileDataAccess->UpdateRegistry(nsnull);
 
     return rv;
 }
@@ -1882,12 +1882,12 @@ nsProfile::CreateDefaultProfile(void)
 }
 
 NS_IMETHODIMP 
-nsProfile::UpdateRegistry(void)
+nsProfile::UpdateRegistry(nsIFile* regName)
 {
    nsresult rv = NS_OK;
 
    gProfileDataAccess->mProfileDataChanged = PR_TRUE;
-   rv= gProfileDataAccess->UpdateRegistry();
+   rv= gProfileDataAccess->UpdateRegistry(regName);
 
    return rv;
 }
@@ -2094,3 +2094,4 @@ nsresult nsProfile::CloneProfileDirectorySpec(nsILocalFile **aLocalFile)
     
     return rv;
 }
+
