@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.2 1998/06/16 00:51:27 jwz Exp $
+# $Id: Config.pm,v 1.3 1998/07/28 19:17:42 jwz%netscape.com Exp $
 
 package LXR::Config;
 
@@ -81,7 +81,6 @@ sub _initialize {
     while (<CONFIG>) {
 	s/\#.*//;
 	next if /^\s*$/;
-    
 	if (($dir, $arg) = /^\s*(\S+):\s*(.*)/) {
 	    if ($dir eq 'variable') {
 		@args = &parseconf($arg);
@@ -101,6 +100,7 @@ sub _initialize {
 		     $dir eq 'baseurl' ||
 		     $dir eq 'incprefix' ||
 		     $dir eq 'dbdir' ||
+		     $dir eq 'bonsaihome' ||
 		     $dir eq 'glimpsebin' ||
 		     $dir eq 'htmlhead' ||
 		     $dir eq 'htmltail' ||
@@ -197,6 +197,12 @@ sub virtroot{
 sub incprefix {
     my $self = shift;
     return($self->varexpand($self->{'incprefix'}));
+}
+
+
+sub bonsaihome {
+    my $self = shift;
+    return($self->varexpand($self->{'bonsaihome'}));
 }
 
 
