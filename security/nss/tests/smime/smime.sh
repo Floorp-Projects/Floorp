@@ -41,6 +41,7 @@ mkdir -p ${SMIMEDIR}
 mkdir -p ${CADIR}
 mkdir -p ${ALICEDIR}
 mkdir -p ${BOBDIR}
+cd ${CADIR}
 #
 # build the TEMP CA used for testing purposes
 # 
@@ -71,7 +72,6 @@ if [ $? -ne 0 ]; then
 else
     echo "<TR><TD>Creating CA Cert</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 fi
-cd ${CADIR}
 echo "   certutil -L -n \"TestCA\" -r -d ${CADIR} > root.cert"
 certutil -L -n "TestCA" -r -d ${CADIR} > root.cert
 if [ $? -ne 0 ]; then
