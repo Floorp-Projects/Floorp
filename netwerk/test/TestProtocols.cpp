@@ -17,11 +17,11 @@
  */
 
 /* 
-	The TestProtocols tests the basic protocols architecture and can 
- 	be used to test individual protocols as well. If this grows too
-	big then we should split it to individual protocols. 
-	
-	-Gagan Saksena 04/29/99
+    The TestProtocols tests the basic protocols architecture and can 
+    be used to test individual protocols as well. If this grows too
+    big then we should split it to individual protocols. 
+    
+    -Gagan Saksena 04/29/99
 */
 
 #include <stdio.h>
@@ -44,6 +44,12 @@
 #include "nsIHTTPChannel.h"
 #include "nsIHttpEventSink.h" 
 #include "nsIEventSinkGetter.h" 
+
+#if 0
+// this test app handles cookies.
+#include "nsICookieService.h"
+static NS_DEFINE_CID(nsCookieServiceCID, NS_COOKIESERVICE_CID);
+#endif // 0
 
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
@@ -213,8 +219,8 @@ InputTestConsumer::OnDataAvailable(nsISupports* context,
   PRUint32 amt;
   while (PR_TRUE) {
     nsresult rv = aIStream->Read(buf, 1024, &amt);
-	if (rv == NS_BASE_STREAM_EOF) break;
-	if (NS_FAILED(rv)) return rv;
+    if (rv == NS_BASE_STREAM_EOF) break;
+    if (NS_FAILED(rv)) return rv;
     buf[amt] = '\0';
     puts(buf);
   };
@@ -367,6 +373,15 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
 
     eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
+
+#if 0
+    // fire up an instance of the cookie manager.
+    // I'm doing this using the serviceManager for convenience's sake.
+    // Presumably an application will init it's own cookie service a 
+    // different way (this way works too though).
+    NS_WITH_SERVICE(nsICookieService, cookieService, nsCookieServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+#endif // 0
 
     int i;
     for (i=1; i<argc; i++) {
