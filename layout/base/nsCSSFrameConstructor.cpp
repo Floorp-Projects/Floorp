@@ -1931,14 +1931,6 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       else if (nsHTMLAtoms::object == aTag) {
         isReplaced = PR_TRUE;
         rv = NS_NewObjectFrame(newFrame);
-/*
-        nsIFrame *blockFrame;
-        NS_NewBlockFrame(blockFrame, 0);
-        blockFrame->Init(*aPresContext, aContent, newFrame, aStyleContext, nsnull);
-        newFrame = blockFrame;
-        newFrameIsFloaterContainer = PR_TRUE;
-        processChildren = PR_TRUE;
-*/
       }
       else if (nsHTMLAtoms::form == aTag) {
         rv = NS_NewFormFrame(newFrame);

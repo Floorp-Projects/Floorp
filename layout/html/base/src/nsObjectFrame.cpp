@@ -570,7 +570,6 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     nsISupports               *container;
     nsIPluginHost             *pm;
     nsIContentViewerContainer *cv;
-    nsresult                  rv;
 
     mInstanceOwner = new nsPluginInstanceOwner();
 
@@ -754,8 +753,16 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     aMetrics.height = kidDesiredSize.height;
     aMetrics.ascent = kidDesiredSize.height;
     aMetrics.descent = 0;
+
+    aStatus = NS_FRAME_COMPLETE;
+    return NS_OK;
   }
 
+  //~~~
+  nsIPresShell* presShell;
+  aPresContext.GetShell(&presShell);
+  presShell->CantRenderReplacedElement(&aPresContext, this);
+  NS_RELEASE(presShell);
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
