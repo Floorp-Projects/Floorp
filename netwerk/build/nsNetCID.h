@@ -214,6 +214,18 @@
     {0xbb, 0x4f, 0x96, 0x5c, 0xff, 0xd2, 0x3e, 0xce} \
 }
 
+#define NS_URICHECKER_CLASSNAME \
+    "URI Checker"
+#define NS_URICHECKER_CONTRACT_ID \
+    "@mozilla.org/network/urichecker;1"
+#define NS_URICHECKER_CID \
+{ /* cf3a0e06-1dd1-11b2-a904-ac1d6da77a02 */         \
+    0xcf3a0e06,                                      \
+    0x1dd1,                                          \
+    0x11b2,                                          \
+    {0xa9, 0x04, 0xac, 0x1d, 0x6d, 0xa7, 0x7a, 0x02} \
+}
+
 
 /******************************************************************************
  * netwerk/cache/ classes

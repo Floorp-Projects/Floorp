@@ -66,6 +66,7 @@ CPPSRCS		= \
 		nsStreamListenerTee.cpp \
 		nsStreamLoader.cpp \
 		nsStreamProviderProxy.cpp \
+		nsURIChecker.cpp \
 		nsURLHelper.cpp \
 		$(NULL)
 
