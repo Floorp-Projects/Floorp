@@ -62,8 +62,8 @@
               </hbox>
               <menulist oncommand="onServerClick(event);" id="serverMenu"
                         datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-                        containment="http://home.netscape.com/NC-rdf#child"
-                        ref="msgaccounts:/" flex="1">
+                        sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+                        sortDirection="ascending" ref="msgaccounts:/" flex="1">
                 <template>
                   <rule NC:CanSubscribe="true">
                     <menupopup>
@@ -76,7 +76,7 @@
             <row align="center">
               <label value="&namefield.label;" accesskey="&namefield.accesskey;" 
                      id="namefieldlabel" control="namefield"/>
-              <textbox id="namefield" flex="1" oninput="Search();"/>
+              <textbox id="namefield" flex="1" type="timed" timeout="300" oncommand="Search();"/>
             </row>
           </rows>
         </grid>
