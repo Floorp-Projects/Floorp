@@ -82,27 +82,29 @@ static void compute_callsite_totals(tmcallsite *site)
 static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp)
 {
     tmcallsite *parent;
-    tmgraphnode *meth, *pmeth, *comp, *pcomp, *lib, *plib;
+    tmgraphnode *comp, *pcomp, *lib, *plib;
+    tmmethodnode *meth, *pmeth;
     int old_meth_low, old_comp_low, old_lib_low, nkids;
     tmcallsite *kid;
 
     parent = site->parent;
-    meth = comp = lib = NULL;
+    comp = lib = NULL;
+    meth = NULL;
     if (parent) {
         meth = site->method;
         if (meth) {
             pmeth = parent->method;
             if (pmeth && pmeth != meth) {
-                if (!meth->low) {
-                    meth->allocs.bytes.total += site->allocs.bytes.total;
-                    meth->allocs.calls.total += site->allocs.calls.total;
+                if (!meth->graphnode.low) {
+                    meth->graphnode.allocs.bytes.total += site->allocs.bytes.total;
+                    meth->graphnode.allocs.calls.total += site->allocs.calls.total;
                 }
-                if (!tmgraphnode_connect(pmeth, meth, site))
+                if (!tmgraphnode_connect(&(pmeth->graphnode), &(meth->graphnode), site))
                     goto bad;
 
-                comp = meth->up;
+                comp = meth->graphnode.up;
                 if (comp) {
-                    pcomp = pmeth->up;
+                    pcomp = pmeth->graphnode.up;
                     if (pcomp && pcomp != comp) {
                         if (!comp->low) {
                             comp->allocs.bytes.total
@@ -136,16 +138,16 @@ static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp
                         comp->low = level;
                 }
             }
-            old_meth_low = meth->low;
+            old_meth_low = meth->graphnode.low;
             if (!old_meth_low)
-                meth->low = level;
+                meth->graphnode.low = level;
         }
     }
 
     if (do_tree_dump) {
         fprintf(fp, "%c%*s%3d %3d %s %lu %ld\n",
                 site->kids ? '+' : '-', level, "", level, kidnum,
-                meth ? tmgraphnode_name(meth) : "???",
+                meth ? tmmethodnode_name(meth) : "???",
                 (unsigned long)site->allocs.bytes.direct,
                 (long)site->allocs.bytes.total);
     }
@@ -158,7 +160,7 @@ static void walk_callsite_tree(tmcallsite *site, int level, int kidnum, FILE *fp
 
     if (meth) {
         if (!old_meth_low)
-            meth->low = 0;
+            meth->graphnode.low = 0;
         if (comp) {
             if (!old_comp_low)
                 comp->low = 0;
@@ -255,7 +257,7 @@ static int mean_size_compare(const void *p1, const void *p2)
     div1 = (double)node1->allocs.calls.direct;
     div2 = (double)node2->allocs.calls.direct;
     if (div1 == 0 || div2 == 0)
-        return div2 - div1;
+        return (int)(div2 - div1);
     key1 = (double)node1->allocs.bytes.direct / div1;
     key2 = (double)node2->allocs.bytes.direct / div2;
     if (key1 < key2)
@@ -554,7 +556,7 @@ static void my_tmevent_handler(tmreader *tmr, tmevent *event)
                 tmreader_callsite(tmr, event->u.stats.calltree_maxkids_parent);
             if (site && site->method) {
                 fprintf(stdout, "<p>callsite with the most kids: %s</p>",
-                        tmgraphnode_name(site->method));
+                        tmmethodnode_name(site->method));
             }
         }
 
@@ -568,7 +570,7 @@ static void my_tmevent_handler(tmreader *tmr, tmevent *event)
             while (site) {
                 fprintf(stdout,
                     "<tr><td>%s</td><td>0x%08lX</td></tr>\n",
-                        site->method ? tmgraphnode_name(site->method) : "???",
+                        site->method ? tmmethodnode_name(site->method) : "???",
                         (unsigned long) site->offset);
                 site = site->parent;
             }

@@ -392,6 +392,36 @@ static void log_string(logfile *fp, const char *str)
     log_byte(fp, '\0');
 }
 
+static void log_filename(logfile* aFP, const char* aFilename)
+{
+    int nameLen = strlen(aFilename);
+
+    if (512 > nameLen) {
+        const char* skipTry1 = "mozilla";
+        char* found = nsnull;
+        char* convert = nsnull;
+        char dup[512];
+
+        strcpy(dup, aFilename);
+
+        found = strstr(dup, skipTry1);
+        if (nsnull == found) {
+            found = dup;
+        }
+
+        for (convert = found; '\0' != *convert; convert++) {
+            if ('\\' == *convert) {
+                *convert = '/';
+            }
+        }
+
+        log_string(aFP, found);
+    }
+    else {
+        log_string(aFP, aFilename);
+    }
+}
+
 static void log_uint32(logfile *fp, uint32 ival)
 {
     if (ival < 0x80) {
@@ -497,6 +527,7 @@ static uint32 library_serial_generator = 0;
 static uint32 method_serial_generator = 0;
 static uint32 callsite_serial_generator = 0;
 static uint32 tmstats_serial_generator = 0;
+static uint32 filename_serial_generator = 0;
 
 /* Root of the tree of callsites, the sum of all (cycle-compressed) stacks. */
 static callsite calltree_root = {0, 0, LFD_SET_STATIC_INITIALIZER, NULL, NULL, 0, NULL, NULL, NULL};
@@ -581,6 +612,9 @@ static PLHashAllocOps lfdset_hashallocops = {
 /* Table of library pathnames mapped to to logged 'L' record serial numbers. */
 static PLHashTable *libraries = NULL;
 
+/* Table of filename pathnames mapped to logged 'G' record serial numbers. */
+static PLHashTable *filenames = nsnull;
+
 /* Table mapping method names to logged 'N' record serial numbers. */
 static PLHashTable *methods = NULL;
 
@@ -617,6 +651,10 @@ static callsite *calltree(int skip)
     PLHashEntry **hep, *he;
     lfdset_entry *le;
     char* noname = "noname";
+    IMAGEHLP_LINE imagehelpLine;
+    const char* filename = nsnull;
+    uint32 linenumber = 0;
+    uint32 filename_serial = 0;
 
     imagehelp.SizeOfStruct = sizeof(imagehelp);
     framenum = 0;
@@ -736,12 +774,22 @@ static callsite *calltree(int skip)
          * callsite info.  XXX static syms are masked by nearest lower global
          * Load up the info for the dll.
          */
+        memset(&imagehelpLine, 0, sizeof(imagehelpLine));
         if (!SymGetModuleInfoEspecial(myProcess,
                                frame[framenum].AddrPC.Offset,
-                               &imagehelp)) {
+                               &imagehelp, &imagehelpLine)) {
             library = noname;
+            filename = noname;
+            linenumber = 0;
         } else {
             library = imagehelp.ModuleName;
+            filename = imagehelpLine.FileName;
+            linenumber = imagehelpLine.LineNumber;
+
+            if ('\0' == filename) {
+                filename = noname;
+                linenumber = 0;
+            }
         }
 
         /* Check whether we need to emit a library trace record. */
@@ -787,6 +835,49 @@ static callsite *calltree(int skip)
                     library = slash + 1;
                 log_event1(fp, TM_EVENT_LIBRARY, library_serial);
                 log_string(fp, library);
+                LFD_SET(fp->lfd, &le->lfdset);
+            }
+        }
+
+        /* Check whether we need to emit a filename trace record. */
+        filename_serial = 0;
+        if (filename) {
+            if (!filenames) {
+                filenames = PL_NewHashTable(100, PL_HashString,
+                                            PL_CompareStrings, PL_CompareValues,
+                                            &lfdset_hashallocops, NULL);
+                if (nsnull == filenames) {
+                    tmstats.btmalloc_failures++;
+                    return nsnull;
+                }
+            }
+            hash = PL_HashString(filename);
+            hep = PL_HashTableRawLookup(filenames, hash, filename);
+            he = *hep;
+            if (he) {
+                filename_serial = (uint32) he->value;
+                le = (lfdset_entry *) he;
+                if (LFD_TEST(fp->lfd, &le->lfdset)) {
+                    /* We already logged an event on fp for this filename. */
+                    le = NULL;
+                }
+            } else {
+                filename = strdup(filename);
+                if (filename) {
+                    filename_serial = ++filename_serial_generator;
+                    he = PL_HashTableRawAdd(filenames, hep, hash, filename,
+                                            (void*) filename_serial);
+                }
+                if (!he) {
+                    tmstats.btmalloc_failures++;
+                    return NULL;
+                }
+                le = (lfdset_entry *) he;
+            }
+            if (le) {
+                /* Need to log an event to fp for this filename. */
+                log_event1(fp, TM_EVENT_FILENAME, filename_serial);
+                log_filename(fp, filename);
                 LFD_SET(fp->lfd, &le->lfdset);
             }
         }
@@ -858,7 +949,7 @@ static callsite *calltree(int skip)
             le = (lfdset_entry *) he;
         }
         if (le) {
-            log_event2(fp, TM_EVENT_METHOD, method_serial, library_serial);
+            log_event4(fp, TM_EVENT_METHOD, method_serial, library_serial, filename_serial, linenumber);
             log_string(fp, method);
             LFD_SET(fp->lfd, &le->lfdset);
         }
@@ -930,6 +1021,9 @@ static callsite *calltree(uint32 *bp)
     PLHashNumber hash;
     PLHashEntry **hep, *he;
     lfdset_entry *le;
+    uint32 filename_serial;
+    uint32 linenumber;
+    const char* filename;
 
     /* Reverse the stack frame list to avoid recursion. */
     bpup = NULL;
@@ -1005,6 +1099,13 @@ static callsite *calltree(uint32 *bp)
             return NULL;
         }
 
+        /*
+         * One day, if someone figures out how to get filename and line
+         *   number info, this is the place to fill it all in.
+         */
+        filename = "noname";
+        linenumber = 0;
+
         /* Check whether we need to emit a library trace record. */
         library_serial = 0;
         library = info.dli_fname;
@@ -1048,6 +1149,48 @@ static callsite *calltree(uint32 *bp)
                     library = slash + 1;
                 log_event1(fp, TM_EVENT_LIBRARY, library_serial);
                 log_string(fp, library);
+                LFD_SET(fp->lfd, &le->lfdset);
+            }
+        }
+
+        /* Check whether we need to emit a filename trace record. */
+        filename_serial = 0;
+        if (filename) {
+            if (!filenames) {
+                filenames = PL_NewHashTable(100, PL_HashString,
+                                            PL_CompareStrings, PL_CompareValues,
+                                            &lfdset_hashallocops, NULL);
+                if (nsnull == filenames) {
+                    tmstats.btmalloc_failures++;
+                    return nsnull;
+                }
+            }
+            hash = PL_HashString(filename);
+            hep = PL_HashTableRawLookup(filenames, hash, filename);
+            he = *hep;
+            if (he) {
+                filename_serial = (uint32) he->value;
+                le = (lfdset_entry *) he;
+                if (LFD_TEST(fp->lfd, &le->lfdset)) {
+                    /* We already logged an event on fp for this filename. */
+                    le = NULL;
+                }
+            } else {
+                if (filename) {
+                    filename_serial = ++filename_serial_generator;
+                    he = PL_HashTableRawAdd(filenames, hep, hash, filename,
+                                            (void*) filename_serial);
+                }
+                if (!he) {
+                    tmstats.btmalloc_failures++;
+                    return NULL;
+                }
+                le = (lfdset_entry *) he;
+            }
+            if (le) {
+                /* Need to log an event to fp for this filename. */
+                log_event1(fp, TM_EVENT_FILENAME, filename_serial);
+                log_filename(fp, filename);
                 LFD_SET(fp->lfd, &le->lfdset);
             }
         }
@@ -1110,7 +1253,7 @@ static callsite *calltree(uint32 *bp)
             le = (lfdset_entry *) he;
         }
         if (le) {
-            log_event2(fp, TM_EVENT_METHOD, method_serial, library_serial);
+            log_event4(fp, TM_EVENT_METHOD, method_serial, library_serial, filename_serial, linenumber);
             log_string(fp, method);
             LFD_SET(fp->lfd, &le->lfdset);
         }

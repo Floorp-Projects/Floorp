@@ -116,8 +116,12 @@ dhwEnsureSymInitialized()
   if (! gInitialized) {
     if (! dhwEnsureImageHlpInitialized())
       return PR_FALSE;
-    // dhwSymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
-    dhwSymSetOptions(SYMOPT_UNDNAME);
+    dhwSymSetOptions(
+#if defined(NS_TRACE_MALLOC)
+        SYMOPT_LOAD_LINES |
+#endif
+        SYMOPT_UNDNAME);
+    // dhwSymSetOptions(SYMOPT_UNDNAME);
     if (! dhwSymInitialize(::GetCurrentProcess(), NULL, TRUE))
         return PR_FALSE;
     gInitialized = PR_TRUE;

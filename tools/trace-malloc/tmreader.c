@@ -147,8 +147,19 @@ static int get_tmevent(FILE *fp, tmevent *event)
         event->u.libname = s;
         break;
 
+      case TM_EVENT_FILENAME:
+        s = get_string(fp);
+        if (!s)
+            return 0;
+        event->u.srcname = s;
+        break;
+
       case TM_EVENT_METHOD:
         if (!get_uint32(fp, &event->u.method.library))
+            return 0;
+        if (!get_uint32(fp, &event->u.method.filename))
+            return 0;
+        if (!get_uint32(fp, &event->u.method.linenumber))
             return 0;
         s = get_string(fp);
         if (!s)
@@ -273,6 +284,11 @@ static void generic_freetable(void *pool, void *item)
     free(item);
 }
 
+static PLHashEntry *filename_allocentry(void *pool, const void *key)
+{
+    return calloc(1, sizeof(PLHashEntry));
+}
+
 static PLHashEntry *callsite_allocentry(void *pool, const void *key)
 {
     return calloc(1, sizeof(tmcallsite));
@@ -293,6 +309,25 @@ static PLHashEntry *graphnode_allocentry(void *pool, const void *key)
     node->sqsum = 0;
     node->sort = -1;
     return &node->entry;
+}
+
+static PLHashEntry *method_allocentry(void *pool, const void *key)
+{
+    tmmethodnode *node = (tmmethodnode*) malloc(sizeof(tmmethodnode));
+    if (!node)
+        return NULL;
+    node->graphnode.in = node->graphnode.out = NULL;
+    node->graphnode.up = node->graphnode.down = node->graphnode.next = NULL;
+    node->graphnode.low = 0;
+    node->graphnode.allocs.bytes.direct = node->graphnode.allocs.bytes.total = 0;
+    node->graphnode.allocs.calls.direct = node->graphnode.allocs.calls.total = 0;
+    node->graphnode.frees.bytes.direct = node->graphnode.frees.bytes.total = 0;
+    node->graphnode.frees.calls.direct = node->graphnode.frees.calls.total = 0;
+    node->graphnode.sqsum = 0;
+    node->graphnode.sort = -1;
+    node->sourcefile = NULL;
+    node->linenumber = 0;
+    return &node->graphnode.entry;
 }
 
 static void graphnode_freeentry(void *pool, PLHashEntry *he, PRUintn flag)
@@ -316,6 +351,11 @@ static void component_freeentry(void *pool, PLHashEntry *he, PRUintn flag)
     }
 }
 
+static PLHashAllocOps filename_hashallocops = {
+    generic_alloctable,     generic_freetable,
+    filename_allocentry,    graphnode_freeentry
+};
+
 static PLHashAllocOps callsite_hashallocops = {
     generic_alloctable,     generic_freetable,
     callsite_allocentry,    graphnode_freeentry
@@ -324,6 +364,11 @@ static PLHashAllocOps callsite_hashallocops = {
 static PLHashAllocOps graphnode_hashallocops = {
     generic_alloctable,     generic_freetable,
     graphnode_allocentry,   graphnode_freeentry
+};
+
+static PLHashAllocOps method_hashallocops = {
+    generic_alloctable,     generic_freetable,
+    method_allocentry,      graphnode_freeentry
 };
 
 static PLHashAllocOps component_hashallocops = {
@@ -349,11 +394,14 @@ tmreader *tmreader_new(const char *program, void *data)
     tmr->libraries = PL_NewHashTable(100, hash_serial, PL_CompareValues,
                                      PL_CompareStrings, &graphnode_hashallocops,
                                      NULL);
+    tmr->filenames = PL_NewHashTable(100, hash_serial, PL_CompareValues,
+                                     PL_CompareStrings, &filename_hashallocops,
+                                     NULL);
     tmr->components = PL_NewHashTable(10000, PL_HashString, PL_CompareStrings,
                                       PL_CompareValues, &component_hashallocops,
                                       NULL);
     tmr->methods = PL_NewHashTable(10000, hash_serial, PL_CompareValues,
-                                   PL_CompareStrings, &graphnode_hashallocops,
+                                   PL_CompareStrings, &method_hashallocops,
                                    NULL);
     tmr->callsites = PL_NewHashTable(200000, hash_serial, PL_CompareValues,
                                      PL_CompareValues, &callsite_hashallocops,
@@ -361,7 +409,8 @@ tmreader *tmreader_new(const char *program, void *data)
     tmr->calltree_root.entry.value = (void*) strdup("root");
 
     if (!tmr->libraries || !tmr->components || !tmr->methods ||
-        !tmr->callsites || !tmr->calltree_root.entry.value) {
+        !tmr->callsites || !tmr->calltree_root.entry.value ||
+        !tmr->filenames) {
         tmreader_destroy(tmr);
         return NULL;
     }
@@ -372,6 +421,8 @@ void tmreader_destroy(tmreader *tmr)
 {
     if (tmr->libraries)
         PL_HashTableDestroy(tmr->libraries);
+    if (tmr->filenames)
+        PL_HashTableDestroy(tmr->filenames);
     if (tmr->components)
         PL_HashTableDestroy(tmr->components);
     if (tmr->methods)
@@ -408,6 +459,7 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
         strncmp(buf, magic, sizeof buf) != 0) {
         fprintf(stderr, "%s: bad magic string %s at start of %s.\n",
                 tmr->program, buf, filename);
+        fprintf(stderr, "either the data file is out of date,\nor your tools are out of date.\n");
         return 0;
     }
 
@@ -444,12 +496,34 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
             break;
           }
 
-          case TM_EVENT_METHOD: {
+          case TM_EVENT_FILENAME: {
             const void *key;
             PLHashNumber hash;
             PLHashEntry **hep, *he;
+
+            key = (const void*) event.serial;
+            hash = hash_serial(key);
+            hep = PL_HashTableRawLookup(tmr->filenames, hash, key);
+            he = *hep;
+            PR_ASSERT(!he);
+            if (he) exit(2);
+
+            he = PL_HashTableRawAdd(tmr->filenames, hep, hash, key,
+                                    event.u.srcname);
+            if (!he) {
+                perror(tmr->program);
+                return -1;
+            }
+            break;
+          }
+
+          case TM_EVENT_METHOD: {
+            const void *key, *sourcekey;
+            PLHashNumber hash, sourcehash;
+            PLHashEntry **hep, *he, **sourcehep, *sourcehe;
             char *name, *head, *mark, save;
-            tmgraphnode *meth, *comp, *lib;
+            tmgraphnode *comp, *lib;
+            tmmethodnode *meth;
 
             key = (const void*) event.serial;
             hash = hash_serial(key);
@@ -464,7 +538,14 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
                 perror(tmr->program);
                 return -1;
             }
-            meth = (tmgraphnode*) he;
+            meth = (tmmethodnode*) he;
+
+            meth->linenumber = event.u.method.linenumber;
+            sourcekey = (const void*)event.u.method.filename;
+            sourcehash = hash_serial(sourcekey);
+            sourcehep = PL_HashTableRawLookup(tmr->filenames, sourcehash, sourcekey);
+            sourcehe = *sourcehep;
+            meth->sourcefile = filename_name(sourcehe);
 
             head = name;
             mark = strchr(name, ':');
@@ -512,9 +593,9 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
             }
             *mark = save;
 
-            meth->up = comp;
-            meth->next = comp->down;
-            comp->down = meth;
+            meth->graphnode.up = comp;
+            meth->graphnode.next = comp->down;
+            comp->down = &(meth->graphnode);
             break;
           }
 
@@ -523,7 +604,7 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
             PLHashNumber hash, mhash;
             PLHashEntry **hep, *he;
             tmcallsite *site, *parent;
-            tmgraphnode *meth;
+            tmmethodnode *meth;
 
             key = (const void*) event.serial;
             hash = hash_serial(key);
@@ -558,7 +639,7 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
 
             mkey = (const void*) event.u.site.method;
             mhash = hash_serial(mkey);
-            meth = (tmgraphnode*)
+            meth = (tmmethodnode*)
                    *PL_HashTableRawLookup(tmr->methods, mhash, mkey);
             site->method = meth;
             site->offset = event.u.site.offset;
@@ -575,7 +656,8 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
             tmcallsite *site;
             uint32 size, oldsize;
             double delta, sqdelta, sqszdelta;
-            tmgraphnode *meth, *comp, *lib;
+            tmgraphnode *comp, *lib;
+            tmmethodnode *meth;
 
             site = tmreader_callsite(tmr, event.serial);
             if (!site) {
@@ -592,17 +674,17 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
                 site->allocs.calls.direct++;
             meth = site->method;
             if (meth) {
-                meth->allocs.bytes.direct += delta;
+                meth->graphnode.allocs.bytes.direct += delta;
                 sqdelta = delta * delta;
                 if (event.type == TM_EVENT_REALLOC) {
                     sqszdelta = ((double)size * size)
                               - ((double)oldsize * oldsize);
-                    meth->sqsum += sqszdelta;
+                    meth->graphnode.sqsum += sqszdelta;
                 } else {
-                    meth->sqsum += sqdelta;
-                    meth->allocs.calls.direct++;
+                    meth->graphnode.sqsum += sqdelta;
+                    meth->graphnode.allocs.calls.direct++;
                 }
-                comp = meth->up;
+                comp = meth->graphnode.up;
                 if (comp) {
                     comp->allocs.bytes.direct += delta;
                     if (event.type == TM_EVENT_REALLOC) {
@@ -629,7 +711,8 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
           case TM_EVENT_FREE: {
             tmcallsite *site;
             uint32 size;
-            tmgraphnode *meth, *comp, *lib;
+            tmgraphnode *comp, *lib;
+            tmmethodnode *meth;
 
             site = tmreader_callsite(tmr, event.serial);
             if (!site) {
@@ -642,9 +725,9 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
             site->frees.calls.direct++;
             meth = site->method;
             if (meth) {
-                meth->frees.bytes.direct += size;
-                meth->frees.calls.direct++;
-                comp = meth->up;
+                meth->graphnode.frees.bytes.direct += size;
+                meth->graphnode.frees.calls.direct++;
+                comp = meth->graphnode.up;
                 if (comp) {
                     comp->frees.bytes.direct += size;
                     comp->frees.calls.direct++;
@@ -678,6 +761,16 @@ tmgraphnode *tmreader_library(tmreader *tmr, uint32 serial)
     return (tmgraphnode*) *PL_HashTableRawLookup(tmr->libraries, hash, key);
 }
 
+tmgraphnode *tmreader_filename(tmreader *tmr, uint32 serial)
+{
+    const void *key;
+    PLHashNumber hash;
+
+    key = (const void*) serial;
+    hash = hash_serial(key);
+    return (tmgraphnode*) *PL_HashTableRawLookup(tmr->filenames, hash, key);
+}
+
 tmgraphnode *tmreader_component(tmreader *tmr, const char *name)
 {
     PLHashNumber hash;
@@ -686,14 +779,14 @@ tmgraphnode *tmreader_component(tmreader *tmr, const char *name)
     return (tmgraphnode*) *PL_HashTableRawLookup(tmr->components, hash, name);
 }
 
-tmgraphnode *tmreader_method(tmreader *tmr, uint32 serial)
+tmmethodnode *tmreader_method(tmreader *tmr, uint32 serial)
 {
     const void *key;
     PLHashNumber hash;
 
     key = (const void*) serial;
     hash = hash_serial(key);
-    return (tmgraphnode*) *PL_HashTableRawLookup(tmr->methods, hash, key);
+    return (tmmethodnode*) *PL_HashTableRawLookup(tmr->methods, hash, key);
 }
 
 tmcallsite *tmreader_callsite(tmreader *tmr, uint32 serial)

@@ -48,6 +48,9 @@
 //
 PR_BEGIN_EXTERN_C
 
+typedef DWORD (__stdcall *SYMSETOPTIONSPROC)(DWORD);
+extern SYMSETOPTIONSPROC _SymSetOptions;
+
 typedef BOOL (__stdcall *SYMINITIALIZEPROC)(HANDLE, LPSTR, BOOL);
 extern SYMINITIALIZEPROC _SymInitialize;
 
@@ -86,6 +89,9 @@ extern  SYMGETMODULEINFO _SymGetModuleInfo;
 typedef BOOL ( __stdcall *ENUMLOADEDMODULES)( HANDLE, PENUMLOADED_MODULES_CALLBACK, PVOID);
 extern  ENUMLOADEDMODULES _EnumerateLoadedModules;
 
+typedef BOOL (__stdcall *SYMGETLINEFROMADDRPROC)(HANDLE, DWORD, PDWORD, PIMAGEHLP_LINE);
+extern  SYMGETLINEFROMADDRPROC _SymGetLineFromAddr;
+
 PRBool EnsureSymInitialized();
 
 /*
@@ -96,8 +102,9 @@ PRBool EnsureSymInitialized();
  *  SymInitialize was called, and thus the module information
  *  and symbol information is not available.
  * This code rectifies that problem.
+ * Line information is optional.
  */
-BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aModuleInfo);
+BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aModuleInfo, PIMAGEHLP_LINE aLineInfo);
 
 PR_END_EXTERN_C
 
