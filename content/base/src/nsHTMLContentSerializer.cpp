@@ -572,7 +572,11 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 
   NS_NAMED_LITERAL_STRING(_mozStr, "_moz");
 
-  for (index = 0; index < count; index++) {
+  // Loop backward over the attributes, since the order they are stored in is
+  // the opposite of the order they were parsed in (see bug 213347 for reason).
+  // index is unsigned, hence index >= 0 is always true.
+  for (index = count; index > 0; ) {
+    --index;
     aContent->GetAttrNameAt(index, 
                             &namespaceID,
                             getter_AddRefs(attrName),
