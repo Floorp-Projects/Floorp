@@ -82,22 +82,9 @@ class UintMap implements Serializable {
         return 0 <= findIndex(key);
     }
 
-    public boolean isObjectType(int key) {
-        if (key < 0) Context.codeBug();
-        int index = findIndex(key);
-        return index >= 0 && isObjectTypeValue(index);
-    }
-
-    public boolean isIntType(int key) {
-        if (key < 0) Context.codeBug();
-        int index = findIndex(key);
-        return index >= 0 && !isObjectTypeValue(index);
-    }
-
     /**
      * Get object value assigned with key.
-     * @return key object value or null if key is absent or does
-     * not have object value
+     * @return key object value or null if key is absent
      */
     public Object getObject(int key) {
         if (key < 0) Context.codeBug();
@@ -112,18 +99,16 @@ class UintMap implements Serializable {
 
     /**
      * Get integer value assigned with key.
-     * @return key integer value or defaultValue if key is absent or does
-     * not have int value
+     * @return key integer value or defaultValue if key is absent
      */
     public int getInt(int key, int defaultValue) {
         if (key < 0) Context.codeBug();
-        if (ivaluesShift != 0) {
-            int index = findIndex(key);
-            if (0 <= index) {
-                if (!isObjectTypeValue(index)) {
-                    return keys[ivaluesShift + index];
-                }
+        int index = findIndex(key);
+        if (0 <= index) {
+            if (ivaluesShift != 0) {
+                return keys[ivaluesShift + index];
             }
+            return 0;
         }
         return defaultValue;
     }
@@ -132,26 +117,28 @@ class UintMap implements Serializable {
      * Get integer value assigned with key.
      * @return key integer value or defaultValue if key does not exist or does
      * not have int value
-     * @throws RuntimeException if key does not exist or does
-     * not have int value
+     * @throws RuntimeException if key does not exist
      */
     public int getExistingInt(int key) {
         if (key < 0) Context.codeBug();
-        if (ivaluesShift != 0) {
-            int index = findIndex(key);
-            if (0 <= index) {
-                if (!isObjectTypeValue(index)) {
-                    return keys[ivaluesShift + index];
-                }
+        int index = findIndex(key);
+        if (0 <= index) {
+            if (ivaluesShift != 0) {
+                return keys[ivaluesShift + index];
             }
+            return 0;
         }
         // Key must exist
         Context.codeBug();
         return 0;
     }
 
+    /**
+     * Set object value of the key.
+     * If key does not exist, also set its int value to 0.
+     */
     public void put(int key, Object value) {
-        if (!(key >= 0 && value != null)) Context.codeBug();
+        if (key < 0) Context.codeBug();
         int index = ensureIndex(key, false);
         if (values == null) {
             values = new Object[1 << power];
@@ -159,12 +146,16 @@ class UintMap implements Serializable {
         values[index] = value;
     }
 
+    /**
+     * Set int value of the key.
+     * If key does not exist, also set its object value to null.
+     */
     public void put(int key, int value) {
         if (key < 0) Context.codeBug();
         int index = ensureIndex(key, true);
         if (ivaluesShift == 0) {
             int N = 1 << power;
-            // keys.length cam be N * 2 after clear which set ivaluesShift to 0
+            // keys.length can be N * 2 after clear which set ivaluesShift to 0
             if (keys.length != N * 2) {
                 int[] tmp = new int[N * 2];
                 System.arraycopy(keys, 0, tmp, 0, N);
@@ -173,7 +164,6 @@ class UintMap implements Serializable {
             ivaluesShift = N;
         }
         keys[ivaluesShift + index] = value;
-        if (values != null) { values[index] = null; }
     }
 
     public void remove(int key) {
@@ -368,12 +358,6 @@ class UintMap implements Serializable {
         keys[index] = key;
         ++keyCount;
         return index;
-    }
-
-    private boolean isObjectTypeValue(int index) {
-        if (check && !(index >= 0 && index < (1 << power)))
-            Context.codeBug();
-        return values != null && values[index] != null;
     }
 
     private void writeObject(ObjectOutputStream out)

@@ -316,47 +316,49 @@ public class Node implements Cloneable {
         LEFT = 1,
         RIGHT = 2;
 
-    private static String propNames[];
-
     private static final String propToString(int propType) {
-        if (Context.printTrees && propNames == null) {
+        if (Context.printTrees) {
             // If Context.printTrees is false, the compiler
             // can remove all these strings.
-            String[] a = {
-                "target",
-                "break",
-                "continue",
-                "enum",
-                "function",
-                "temp",
-                "local",
-                "codeoffset",
-                "fixups",
-                "vars",
-                "uses",
-                "regexp",
-                "cases",
-                "default",
-                "casearray",
-                "sourcename",
-                "source",
-                "type",
-                "special_prop",
-                "label",
-                "finally",
-                "localcount",
-                "targetblock",
-                "variable",
-                "lastuse",
-                "isnumber",
-                "directcall",
-                "base_lineno",
-                "end_lineno",
-                "specialcall"
-            };
-            propNames = a;
+            switch (propType) {
+                case TARGET_PROP:        return "target";
+                case BREAK_PROP:         return "break";
+                case CONTINUE_PROP:      return "continue";
+                case ENUM_PROP:          return "enum";
+                case FUNCTION_PROP:      return "function";
+                case TEMP_PROP:          return "temp";
+                case LOCAL_PROP:         return "local";
+                case CODEOFFSET_PROP:    return "codeoffset";
+                case FIXUPS_PROP:        return "fixups";
+                case VARS_PROP:          return "vars";
+                case USES_PROP:          return "uses";
+                case REGEXP_PROP:        return "regexp";
+                case CASES_PROP:         return "cases";
+                case DEFAULT_PROP:       return "default";
+                case CASEARRAY_PROP:     return "casearray";
+                case SOURCENAME_PROP:    return "sourcename";
+                case SOURCE_PROP:        return "source";
+                case TYPE_PROP:          return "type";
+                case SPECIAL_PROP_PROP:  return "special_prop";
+                case LABEL_PROP:         return "label";
+                case FINALLY_PROP:       return "finally";
+                case LOCALCOUNT_PROP:    return "localcount";
+
+                case TARGETBLOCK_PROP:   return "targetblock";
+                case VARIABLE_PROP:      return "variable";
+                case LASTUSE_PROP:       return "lastuse";
+                case ISNUMBER_PROP:      return "isnumber";
+                case DIRECTCALL_PROP:    return "directcall";
+
+                case BASE_LINENO_PROP:   return "base_lineno";
+                case END_LINENO_PROP:    return "end_lineno";
+                case SPECIALCALL_PROP:   return "specialcall";
+                case DEBUGSOURCE_PROP:   return "debugsource";
+
+                default: Context.codeBug();
+            }
         }
-        return propNames[propType-1];
+        return null;
     }
 
     public Object getProp(int propType) {
@@ -475,10 +477,10 @@ public class Node implements Cloneable {
                         sb.append("last use property");
                         break;
                     default :
-                        if (props.isObjectType(key)) {
-                            sb.append(props.getObject(key).toString());
-                        }
-                        else {
+                        Object obj = props.getObject(key);
+                        if (obj != null) {
+                            sb.append(obj.toString());
+                        }else {
                             sb.append(props.getExistingInt(key));
                         }
                         break;
@@ -522,11 +524,11 @@ public class Node implements Cloneable {
     public Node getFirst()  { return first; }
     public Node getNext()   { return next; }
 
-    protected int type;         // type of the node; TokenStream.NAME for example
-    protected Node next;        // next sibling
-    protected Node first;       // first element of a linked list of children
-    protected Node last;        // last element of a linked list of children
-    protected UintMap props;
-    protected Object datum;     // encapsulated data; depends on type
+    protected int type;      // type of the node; TokenStream.NAME for example
+    protected Node next;     // next sibling
+    protected Node first;    // first element of a linked list of children
+    protected Node last;     // last element of a linked list of children
+    private Object datum;    // encapsulated data; depends on type
+    private UintMap props;
 }
 
