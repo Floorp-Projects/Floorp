@@ -3,6 +3,7 @@
 <!DOCTYPE overlay [
   <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://communicator-platform/locale/platformCommunicatorOverlay.dtd"> %dtd3;
 ]>
 
 <?xul-overlay href="chrome://inspector/content/inspectorOverlay.xul"?>
@@ -36,7 +37,8 @@
   </commandset>
   
   <keyset id="tasksKeys">
-    <key id="key_close"/>
+    <key id="key_closeInspector" key="&closeCmd.key;" command="cmdClose"
+         modifiers="accel"/>
     <key id="key_quit"/>
   </keyset>
 
