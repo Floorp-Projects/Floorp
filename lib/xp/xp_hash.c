@@ -112,7 +112,7 @@ toprime (uint32 size)
   return primes[s-1];
 }
 
-
+#if 0
 /* Create a new, empty hash table object.
  */
 PUBLIC XP_HashTable
@@ -340,6 +340,8 @@ XP_MapRemhash (XP_HashTable table, XP_HashTableMapper mapper, void *closure)
 {
   xp_maphash (table, mapper, closure, TRUE);
 }
+
+#endif /* if 0 */
 
 
 
