@@ -745,26 +745,24 @@ FactoryData g_FactoryData[] =
   },
   {
     &kUnicodeToUTF16BECID,
-    nsUnicodeToUCS2BE::CreateInstance,
-    //NEW_UnicodeToUTF16BE,
+    // nsUnicodeToUCS2BE::CreateInstance,
+    NEW_UnicodeToUTF16BE,
     "Unicode",
     "UTF-16BE"
   },
   {
     &kUnicodeToUTF16LECID,
-    nsUnicodeToUCS2LE::CreateInstance,
-    //NEW_UnicodeToUTF16LE,
+    // nsUnicodeToUCS2LE::CreateInstance,
+    NEW_UnicodeToUTF16LE,
     "Unicode",
     "UTF-16LE"
   },
-#if 0
   {
     &kUnicodeToUTF16CID,
     NEW_UnicodeToUTF16,
     "Unicode",
     "UTF-16"
   },
-#endif 
   {
     &kUnicodeToUTF32BECID,
     nsUnicodeToUCS4BE::CreateInstance,
