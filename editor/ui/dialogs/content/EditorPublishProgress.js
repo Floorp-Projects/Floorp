@@ -30,6 +30,7 @@ var gFinishedCount = 0;
 var gFinished = false;
 var gFinalMessage="";
 var gTimerID;
+var gAllowEnterKey = false;
 
 function Startup()
 {
@@ -161,7 +162,7 @@ function SetProgressFinished(filename, networkStatus)
   {
     // XXX Interpret networkStatus and call SetStatusMessage() with 
     //  appropriate error description.
-    if (filename == gPublishData.filename)
+    if (!gPublishData.publishOtherFiles || filename == gPublishData.filename)
       gFinalMessage = GetString("PublishFailed");
     else
       gFinalMessage = GetString("PublishSomeFileFailed");
@@ -171,6 +172,9 @@ function SetProgressFinished(filename, networkStatus)
     gFinished = true;
     gDialog.Close.setAttribute("label", GetString("Close"));
     gFinalMessage = GetString("PublishCompleted");
+
+    // Now allow "Enter/Return" key to close the dialog
+    AllowDefaultButton();
   }
   if (gFinalMessage)
     SetStatusMessage(gFinalMessage);
@@ -212,6 +216,20 @@ function onClose()
   return true;
 }
 
+function AllowDefaultButton()
+{
+  gDialog.Close.setAttribute("default","true");
+  gAllowEnterKey = true;
+}
+
+function onEnterKey()
+{
+  if (gAllowEnterKey)
+    return CloseDialog();
+
+  return false;
+}
+
 function RequestCloseDialog()
 {
   if (gFinished && !gDialog.KeepOpen.checked)
@@ -219,6 +237,10 @@ function RequestCloseDialog()
     // Leave window open a minimum amount of time 
     gTimerID = setTimeout("CloseDialog();", 3000);
   }
+
+  // Now allow "Enter/Return" key to close the dialog
+  AllowDefaultButton();
+
   // If window remains open, be sure final message is set
   SetStatusMessage(gFinalMessage);
 }
@@ -231,3 +253,4 @@ function CloseDialog()
     window.close();
   } catch (e) {}
 }
+

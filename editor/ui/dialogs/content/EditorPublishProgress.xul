@@ -34,6 +34,7 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     buttons="cancel"
     onload="Startup()"
+    ondialogaccept="return onEnterKey();"
     ondialogcancel="return onClose();">
 
   <!-- Methods common to all editor dialogs -->
