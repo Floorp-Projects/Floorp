@@ -34,7 +34,9 @@
       <domi-panel id="bxDocPanel" title="&bxDocPanel.title;" 
                   flex="1" persist="width"/>
 
-      <splitter id="splPanels"/>
+      <splitter id="splPanels" collapse="after">
+        <grippy/>
+      </splitter>
       
       <domi-panel id="bxObjectPanel" title="&bxObjectPanel.title;" linkedpanel="bxDocPanel"
                   flex="1" persist="width"/>
