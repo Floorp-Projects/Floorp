@@ -72,7 +72,7 @@ protected:
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     *
     */
-  virtual PRBool AssignPreliminaryColumnWidths();
+  virtual PRBool AssignPreliminaryColumnWidths(nscoord aComputedWidth);
 
 
 };
