@@ -243,6 +243,13 @@ nsJAR::Close()
 }
 
 NS_IMETHODIMP
+nsJAR::Test(const char *aEntryName)
+{
+  PRInt32 err = mZip.Test(aEntryName);
+  return ziperr2nsresult(err);
+}
+
+NS_IMETHODIMP
 nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
 {
   // nsZipArchive and zlib are not thread safe
