@@ -107,6 +107,8 @@
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 
+#include "nsIDocShellHistory.h"
+
 // Interface for "unknown content type handler" component/service.
 #include "nsIUnkContentTypeHandler.h"
 
@@ -983,17 +985,22 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindow* aWin)
   nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
   webProgress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
   nsCOMPtr<nsISHistory> sessionHistory(do_CreateInstance(NS_SHISTORY_PROGID));
-#ifdef SH_IN_FRAMES
+
   mSessionHistory = sessionHistory;
   if (!mSessionHistory) {
 	  printf("#### Error initialising Session History ####\n");
 	  return NS_ERROR_FAILURE;
   }
   mSessionHistory->SetRootDocShell(docShell);
-#endif
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
-  webNav->SetSessionHistory(sessionHistory);
 
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
+  if (webNav)
+     webNav->SetSessionHistory(sessionHistory);
+
+  nsCOMPtr<nsIDocShellHistory> dsHistory(do_QueryInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIGlobalHistory> history(do_GetService(kCGlobalHistoryCID));
+  if (dsHistory)
+ 	  dsHistory->SetGlobalHistory(history);
 
     // Cache the Document Loader for the content area webshell.  This is a 
     // weak reference that is *not* reference counted...
