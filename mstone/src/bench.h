@@ -192,6 +192,8 @@ typedef struct stats {			/* used for throttling ??? */
 } stats_t;
 
 typedef struct resolved_addr {
+    char  *	hostName;		/* name of server */
+    NETPORT  	portNum;		/* port ot use */
     int resolved;
     struct hostent host_phe;
     struct protoent host_ppe;
@@ -465,8 +467,7 @@ extern double	compdifftime_double(struct timeval *End, struct timeval *Strt);
 /* routines in main.c */
 extern char *safe_inet_ntoa(struct in_addr ina, char *psz);
 
-extern SOCKET connectsock(ptcx_t ptcx, char *host, resolved_addr_t *, NETPORT portnum, 
-			char *protocol);
+extern SOCKET connectSocket(ptcx_t ptcx, resolved_addr_t *, char *protocol);
 extern int set_abortive_close(SOCKET sock);
 
 extern void throttle(ptcx_t ptcx, mail_command_t *comm, cmd_stats_t *timer);

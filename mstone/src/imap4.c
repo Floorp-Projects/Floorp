@@ -119,7 +119,7 @@ Imap4ParseStart (pmail_command_t cmd,
     cmd->data = pish;
 
     cmd->loopDelay = 10*60;		/* default 10 min */
-    pish->portNum = IMAP4_PORT;		/* get default port */
+    pish->hostInfo.portNum = IMAP4_PORT; /* get default port */
 
     D_PRINTF(stderr, "Imap4 Assign defaults\n");
     /* Fill in defaults first, ignore defaults we dont use */
@@ -161,7 +161,7 @@ Imap4ParseEnd (pmail_command_t cmd,
     }
 
     /* check for some of the required command attrs */
-    if (!pish->mailServer) {
+    if (!pish->hostInfo.hostName) {
 	D_PRINTF(stderr,"missing server for command");
 	return returnerr(stderr,"missing server for command\n");
     }
@@ -177,13 +177,13 @@ Imap4ParseEnd (pmail_command_t cmd,
     }
 
     /* see if we can resolve the mailserver addr */
-    if (resolve_addrs(pish->mailServer, "tcp",
+    if (resolve_addrs(pish->hostInfo.hostName, "tcp",
 		      &(pish->hostInfo.host_phe),
 		      &(pish->hostInfo.host_ppe),
 		      &(pish->hostInfo.host_addr),
 		      &(pish->hostInfo.host_type))) {
 	return returnerr (stderr, "Error resolving hostname '%s'\n",
-			  pish->mailServer);
+			  pish->hostInfo.hostName);
     } else {
 	pish->hostInfo.resolved = 1;	/* mark the hostInfo resolved */
     }
@@ -204,7 +204,6 @@ doImap4Start(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer)
 {
     doIMAP4_state_t	*me = (doIMAP4_state_t *)mycalloc (sizeof (doIMAP4_state_t));
     pish_command_t	*pish = (pish_command_t *)cmd->data;
-    NETPORT		port = pish->portNum;
     pish_stats_t	*stats = (pish_stats_t *)ptimer->data;
     int	rc;
 
@@ -219,13 +218,13 @@ doImap4Start(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer)
     me->pIMAP->seq_num = 1;
 
     event_start(ptcx, &stats->connect);
-    ptcx->sock = connectsock(ptcx, pish->mailServer, &pish->hostInfo, port, "tcp");
+    ptcx->sock = connectSocket(ptcx, &pish->hostInfo, "tcp");
     event_stop(ptcx, &stats->connect);
     if (BADSOCKET(ptcx->sock)) {
 	if (gf_timeexpired < EXIT_FAST) {
 	    stats->connect.errs++;
 	    returnerr(debugfile, "IMAP4 Couldn't connect to %s: %s\n",
-		      pish->mailServer, neterrstr());
+		      pish->hostInfo.hostName, neterrstr());
 	}
 	myfree (me);
 	return NULL;

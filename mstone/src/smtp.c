@@ -60,7 +60,7 @@ SmtpParseStart (pmail_command_t cmd,
     cmd->data = pish;
 
     cmd->numLoops = 1;		/* default 1 message */
-    pish->portNum = SMTP_PORT;	/* get default port */
+    pish->hostInfo.portNum = SMTP_PORT;	/* get default port */
 
     D_PRINTF(stderr, "Smtp Assign defaults\n");
     /* Fill in defaults first, ignore defaults we dont use */
@@ -105,7 +105,7 @@ SmtpParseEnd (pmail_command_t cmd,
     }
 
     /* check for some of the required command attrs */
-    if (!pish->mailServer) {
+    if (!pish->hostInfo.hostName) {
 	D_PRINTF(stderr,"missing server for command");
 	return returnerr(stderr,"missing server for command\n");
     }
@@ -170,13 +170,13 @@ SmtpParseEnd (pmail_command_t cmd,
     close(fd);
 
     /* see if we can resolve the mailserver addr */
-    if (resolve_addrs(pish->mailServer, "tcp",
+    if (resolve_addrs(pish->hostInfo.hostName, "tcp",
 		      &(pish->hostInfo.host_phe),
 		      &(pish->hostInfo.host_ppe),
 		      &(pish->hostInfo.host_addr),
 		      &(pish->hostInfo.host_type))) {
 	return returnerr (stderr, "Error resolving hostname '%s'\n",
-			  pish->mailServer);
+			  pish->hostInfo.hostName);
     } else {
 	pish->hostInfo.resolved = 1;	/* mark the hostInfo resolved */
     }
@@ -211,7 +211,7 @@ pishParseNameValue (pmail_command_t cmd,
     if (cmdParseNameValue(cmd, name, tok))
 	;				/* done */
     else if (strcmp(name, "server") == 0)
-	pish->mailServer = mystrdup (tok);
+	pish->hostInfo.hostName = mystrdup (tok);
     else if (strcmp(name, "smtpmailfrom") == 0)
 	pish->smtpMailFrom = mystrdup (tok);
     else if (strcmp(name, "loginformat") == 0)
@@ -237,17 +237,13 @@ pishParseNameValue (pmail_command_t cmd,
     else if (strcmp(name, "sequentialaddresses") == 0)
 	pish->addressRange.sequential = atoi(tok);
     else if (strcmp(name, "portnum") == 0)
-	pish->portNum = atoi(tok);
+	pish->hostInfo.portNum = atoi(tok);
     else if (strcmp(name, "numrecips") == 0)
 	pish->numRecipients = atoi(tok);
     else if (strcmp(name, "numrecipients") == 0)
 	pish->numRecipients = atoi(tok);
     else if (strcmp(name, "file") == 0)
 	pish->filename= mystrdup (tok);
-    else if (strcmp(name, "httpcommand") == 0)
-	pish->httpCommand = mystrdup (tok);
-    else if (strcmp(name, "wmapcommand") == 0)
-	pish->wmapCommand = mystrdup (tok);
     else if (strcmp(name, "passwdformat") == 0)
 	pish->passwdFormat = mystrdup (tok);
     else if (strcmp(name, "searchfolder") == 0)
@@ -689,20 +685,19 @@ sendSMTPStart(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer)
     int		numBytes;
     int		rc;
     pish_command_t	*pish = (pish_command_t *)cmd->data;
-    NETPORT		port = pish->portNum;
     pish_stats_t	*stats = (pish_stats_t *)ptimer->data;
 
     if (!me) return NULL;
 
 
     event_start(ptcx, &stats->connect);
-    ptcx->sock = connectsock(ptcx, pish->mailServer, &pish->hostInfo, port, "tcp");
+    ptcx->sock = connectSocket(ptcx, &pish->hostInfo, "tcp");
     event_stop(ptcx, &stats->connect);
     if (BADSOCKET(ptcx->sock)) {
 	if (gf_timeexpired < EXIT_FAST) {
 	    stats->connect.errs++;
 	    returnerr(debugfile, "%s SMTP Couldn't connect to %s: %s\n",
-		      ptcx->errMsg, pish->mailServer, neterrstr());
+		      ptcx->errMsg, pish->hostInfo.hostName, neterrstr());
 	}
 	myfree (me);
 	return NULL;

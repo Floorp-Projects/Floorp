@@ -55,9 +55,7 @@ typedef struct pish_stats {
 
 /* These are common to POP, IMAP, SMTP, HTTP */
 typedef struct pish_command {
-    char  *	mailServer;
     resolved_addr_t 	hostInfo;	/* should be a read only cache */
-    NETPORT  	portNum;
 
     /* These are common to SMTP, POP, IMAP */
     char *	loginFormat;
@@ -87,12 +85,6 @@ typedef struct pish_command {
     char *	imapSearchFolder;
     char *	imapSearchPattern;
     int 	imapSearchRate;
-
-    /* HTTP command */
-    char *	httpCommand;
-
-    /* WMAP command */
-    char *	wmapCommand;
 } pish_command_t;
 
 					/* TRANSITION functions */

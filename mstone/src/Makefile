@@ -47,7 +47,7 @@ STONE		= $(OBJDIR)/mailclient$(EXE_SUFFIX)
 
 STONESRCS	= bench.c client.c errexit.c main.c \
 		parse.c sysdep.c timefunc.c \
-		http.c imap4.c pop3.c smtp.c wmap.c 
+		http-util.c http.c imap4.c pop3.c smtp.c wmap.c 
 
 STONEOBJS	= $(addprefix $(OBJDIR)/, $(STONESRCS:.c=.$(OBJ_SUFFIX)) )
 
@@ -67,7 +67,7 @@ $(OBJDIR)/client.$(OBJ_SUFFIX): client.c bench.h sysdep.h Makefile
 
 $(OBJDIR)/errexit.$(OBJ_SUFFIX): errexit.c bench.h sysdep.h Makefile
 
-$(OBJDIR)/http.$(OBJ_SUFFIX): http.c bench.h pish.h sysdep.h Makefile
+$(OBJDIR)/http.$(OBJ_SUFFIX): http.c bench.h sysdep.h http-util.h Makefile
 
 $(OBJDIR)/imap4.$(OBJ_SUFFIX): imap4.c bench.h pish.h sysdep.h Makefile
 
@@ -85,7 +85,9 @@ $(OBJDIR)/sysdep.$(OBJ_SUFFIX): sysdep.c bench.h sysdep.h Makefile
 
 $(OBJDIR)/timefunc.$(OBJ_SUFFIX): timefunc.c bench.h sysdep.h Makefile
 
-$(OBJDIR)/wmap.$(OBJ_SUFFIX): wmap.c bench.h sysdep.h Makefile
+$(OBJDIR)/wmap.$(OBJ_SUFFIX): wmap.c bench.h sysdep.h Makefile http-util.h
+
+$(OBJDIR)/http-util.$(OBJ_SUFFIX): http-util.c bench.h sysdep.h Makefile http-util.h
 
 # currently broken.  See ../Makefile for packaging
 install: all
