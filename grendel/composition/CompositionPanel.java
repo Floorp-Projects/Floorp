@@ -24,6 +24,8 @@ package grendel.composition;
 
 import calypso.util.ByteBuf;
 import calypso.util.ByteLineBuffer;
+import calypso.util.Preferences;
+import calypso.util.PreferencesFactory;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -331,7 +333,7 @@ public class CompositionPanel extends GeneralPanel {
   class SaveDraft extends UIAction {
     SaveDraft() {
       super(saveDraftTag);
-      setEnabled(true);
+      this.setEnabled(true);
     }
     public void actionPerformed(ActionEvent e) {}
   }
@@ -343,7 +345,7 @@ public class CompositionPanel extends GeneralPanel {
   class SaveAs extends UIAction {
     SaveAs() {
       super(saveAsTag);
-      setEnabled(true);
+      this.setEnabled(true);
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -381,7 +383,7 @@ public class CompositionPanel extends GeneralPanel {
   class SendNow extends UIAction {
     SendNow() {
       super(sendNowTag);
-      setEnabled(true);
+      this.setEnabled(true);
     }
 
     public void actionPerformed(ActionEvent ae) {
@@ -401,10 +403,11 @@ public class CompositionPanel extends GeneralPanel {
 
       //Check that is at least one recipient.
       if (0 < recipients.length) {
-        //get the users name who's sending this message.
-        Properties props = mSession.getProperties();
-        String userName =
-          props.getProperty("user.email_address");
+        //get the sending identity
+        Preferences prefs = PreferencesFactory.Get();
+        int ident = mAddressBar.getOptionsPanel().getSelectedIdentity();
+	String userName = prefs.getString("mail.identity-" + ident + ".username", "Nobody") + " <" 
+	                + prefs.getString("mail.identity-" + ident + ".email", "nobody@localhost") + ">";
 
         if (userName != null) {
           //create a mime message
@@ -442,7 +445,7 @@ public class CompositionPanel extends GeneralPanel {
             msg.setSentDate(new java.util.Date());     //set date to now.
             msg.setContent(messageText, "text/plain"); //contents.
             try {
-              mSession.getTransport().send(msg);       // send the message.
+              mSession.getTransport("smtp").send(msg);       // send the message.
             } catch (MessagingException exc) {
               exc.printStackTrace();
             }
@@ -481,7 +484,7 @@ public class CompositionPanel extends GeneralPanel {
   class QuoteOriginalText extends UIAction {
     QuoteOriginalText() {
       super(quoteOriginalTextTag);
-      setEnabled(true);
+      this.setEnabled(true);
     }
     public void actionPerformed(ActionEvent event) {
       if (referredMsg == null) return; // Or beep or whine??? ###
@@ -560,7 +563,7 @@ public class CompositionPanel extends GeneralPanel {
   class SelectAddresses extends UIAction {
     SelectAddresses() {
       super(selectAddressesTag);
-      setEnabled(true);
+      this.setEnabled(true);
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -596,7 +599,7 @@ public class CompositionPanel extends GeneralPanel {
   class AttachFile extends UIAction {
     AttachFile() {
       super(fileTag);
-      setEnabled(true);
+      this.setEnabled(true);
     }
 
     //display the AttachmentsList and have the file dialog "popup" on them.
@@ -617,7 +620,7 @@ public class CompositionPanel extends GeneralPanel {
   class PasteAsQuotation extends UIAction {
     PasteAsQuotation() {
       super(pasteAsQuotationTag);
-      setEnabled(true);
+      this.setEnabled(true);
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -672,7 +675,7 @@ public class CompositionPanel extends GeneralPanel {
   class ViewAddress extends UIAction {
     ViewAddress() {
       super(viewAddressTag);
-      setEnabled(true);
+      this.setEnabled(true);
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -683,7 +686,7 @@ public class CompositionPanel extends GeneralPanel {
   class ViewAttachments extends UIAction {
     ViewAttachments() {
       super(viewAttachmentsTag);
-      setEnabled(true);
+      this.setEnabled(true);
     }
 
     public void actionPerformed(ActionEvent e) {
@@ -694,7 +697,7 @@ public class CompositionPanel extends GeneralPanel {
   class ViewOptions extends UIAction {
     ViewOptions() {
       super(viewOptionsTag);
-      setEnabled(true);
+      this.setEnabled(true);
     }
 
     public void actionPerformed(ActionEvent e) {

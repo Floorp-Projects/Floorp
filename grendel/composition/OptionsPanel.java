@@ -26,21 +26,34 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
+import calypso.util.Preferences;
+import calypso.util.PreferencesFactory;
+
 public class OptionsPanel extends JPanel implements Serializable  {
   // private final int BOX_WIDTH = 300;
     private final int BOX_WIDTH = 160;
     private final int BOX_HEIGHT = 30;
 
+    private GridBagConstraints c;
+    private GridBagLayout gridbag;
+
+    private LabeledCombo ident;
+
     public OptionsPanel () {
         super ();
+        
+        c = new GridBagConstraints();
+        gridbag = new GridBagLayout();
+        
+        setLayout(gridbag);
 
-        setLayout(new GridLayout(3, 2, 5, 5));
-
-        addCheck ("Encrypted", "Encrypted", 'e', false);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+        c.gridheight = 1;
 
         addCheck ("Return Receipt", "Return Receipt", 'r', false);
 
-        addCheck ("Signed", "Signed", 'd', false);
+        c.gridwidth = GridBagConstraints.REMAINDER; //end row
 
         LabeledCombo priority = new LabeledCombo("Priority");
         priority.addPossibleValue("Lowest");
@@ -48,16 +61,53 @@ public class OptionsPanel extends JPanel implements Serializable  {
         priority.addPossibleValue("Normal");
         priority.addPossibleValue("High");
         priority.addPossibleValue("Highest");
-        add(new FixedSizedPanel (BOX_WIDTH, BOX_HEIGHT, priority));
+        addToGridBag(new FixedSizedPanel (BOX_WIDTH, BOX_HEIGHT, priority), gridbag, c);
 
-        addCheck ("Uuencoded instead of MIME for attachments", "", 'u', false);
+        c.gridwidth = 1;
+
+        addCheck ("Uuencoded instead of MIME for attachments", "UUEncode", 'u', false);
+
+        c.gridwidth = GridBagConstraints.REMAINDER; //end row
 
         LabeledCombo format = new LabeledCombo("Format");
         format.addPossibleValue("Ask me");
         format.addPossibleValue("Plain Text only");
         format.addPossibleValue("HTML Text only");
         format.addPossibleValue("Plain Text and HTML");
-        add(new FixedSizedPanel (BOX_WIDTH, BOX_HEIGHT, format));
+        addToGridBag(new FixedSizedPanel (BOX_WIDTH, BOX_HEIGHT, format), gridbag, c);
+
+        c.gridwidth = 1;
+
+        addCheck ("Encrypted", "Encrypted", 'e', false);
+
+        c.gridwidth = GridBagConstraints.REMAINDER; //end row
+
+        ident = new LabeledCombo("Identity");
+
+	// Read all the different identities from the preferences file
+        Preferences prefs = PreferencesFactory.Get();
+        int numIdentities = prefs.getInt("mail.identities", 1);
+        for (int i=0; i<numIdentities; i++) {
+            ident.addPossibleValue(prefs.getString("mail.identity-" + i + ".description", "(nobody)"));
+        }
+        // Select the first (default) identity (number 0)
+        ident.setSelectedIndex(0);
+        
+        addToGridBag(new FixedSizedPanel (BOX_WIDTH, BOX_HEIGHT, ident), gridbag, c);
+
+        c.gridwidth = GridBagConstraints.REMAINDER; //end row
+
+        addCheck ("Signed", "Signed", 'd', false);
+
+    }
+
+    public int getSelectedIdentity() {
+    	return ident.getSelectedIndex();
+    }
+    
+    private void addToGridBag (Component aComponent, GridBagLayout gridbag, GridBagConstraints c) {
+    	gridbag.setConstraints(aComponent, c);
+    	add(aComponent);
     }
 
     private void addCheck (String aLabel, String aToolTip) {
@@ -75,7 +125,7 @@ public class OptionsPanel extends JPanel implements Serializable  {
         if (' ' != aAccelerator) checkButton.setMnemonic(aAccelerator);
 
         //create a fixed sized panel.
-        add(new FixedSizedPanel (BOX_WIDTH, BOX_HEIGHT, checkButton));
+        addToGridBag(new FixedSizedPanel (BOX_WIDTH, BOX_HEIGHT, checkButton), gridbag, c);
     }
 
     class FixedSizedPanel extends JPanel {
@@ -110,6 +160,14 @@ public class OptionsPanel extends JPanel implements Serializable  {
 
         public void addPossibleValue(String aValue) {
             mComboBox.insertItemAt (aValue, mComboBox.getItemCount());
+        }
+        
+        public void setSelectedIndex(int anIndex) {
+            mComboBox.setSelectedIndex(anIndex);
+        }
+
+        public int getSelectedIndex() {
+            return mComboBox.getSelectedIndex();
         }
     }
 }
