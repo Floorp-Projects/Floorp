@@ -36,6 +36,7 @@ install::
 	$(MAKE_INSTALL) sidebar-messenger.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) sidebar-messenger-rdf.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) msgFolderPickerOverlay.dtd $(LOCALEDIR)
+	$(MAKE_INSTALL) msgHdrViewOverlay.dtd $(LOCALEDIR)
 
 clobber::
   rm -f $(DIST)\bin\chrome\messenger\locale\en-US\*.*
