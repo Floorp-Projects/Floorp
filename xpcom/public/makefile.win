@@ -29,7 +29,9 @@ EXPORTS = \
 	nsICollection.h		\
 	nsID.h			\
 	nsIFactory.h		\
+	nsIID.h			\
 	nsISupports.h		\
+	nsISupportsUtils.h	\
 	nsIPtr.h		\
 	nsIServiceManager.h	\
 	nsISupportsArray.h	\
