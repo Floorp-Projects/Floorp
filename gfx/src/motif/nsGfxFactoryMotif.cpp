@@ -95,19 +95,8 @@ nsresult nsGfxFactoryMotif::QueryInterface(const nsIID &aIID,
   return NS_OK;   
 }   
 
-nsrefcnt nsGfxFactoryMotif::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt nsGfxFactoryMotif::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsGfxFactoryMotif);
+NS_IMPL_RELEASE(nsGfxFactoryMotif);
 
 nsresult nsGfxFactoryMotif::CreateInstance(nsISupports *aOuter,  
                                           const nsIID &aIID,  

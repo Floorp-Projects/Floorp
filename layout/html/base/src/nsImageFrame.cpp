@@ -575,6 +575,7 @@ nsImageFrame::GetImageMap()
       if (NS_SUCCEEDED(rv)) {
         mImageMap = new nsImageMap();
         if (nsnull != mImageMap) {
+          NS_ADDREF(mImageMap);
           mImageMap->Init(map);
         }
         NS_IF_RELEASE(map);

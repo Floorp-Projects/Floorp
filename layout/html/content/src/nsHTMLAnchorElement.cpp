@@ -151,7 +151,7 @@ nsHTMLAnchorElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLAnchorElementIID)) {
     nsIDOMHTMLAnchorElement* tmp = this;
     *aInstancePtr = (void*) tmp;
-    mRefCnt++;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   else if (aIID.Equals(kIFocusableContentIID)) {

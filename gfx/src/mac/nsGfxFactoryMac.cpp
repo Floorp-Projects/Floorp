@@ -98,19 +98,8 @@ nsresult nsGfxFactoryMac::QueryInterface(const nsIID &aIID,
   return NS_OK;   
 }   
 
-nsrefcnt nsGfxFactoryMac::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt nsGfxFactoryMac::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsGfxFactoryMac);
+NS_IMPL_RELEASE(nsGfxFactoryMac);
 
 nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,  
                                           const nsIID &aIID,  

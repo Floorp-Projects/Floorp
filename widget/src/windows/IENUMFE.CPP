@@ -18,7 +18,7 @@
 
 #include "ienumfe.h"
 #include <stdio.h>
-
+#include "nsISupports.h"
 
 /*
  * CEnumFormatEtc::CEnumFormatEtc
@@ -125,6 +125,7 @@ STDMETHODIMP CEnumFormatEtc::QueryInterface(REFIID riid, LPVOID *ppv)
 STDMETHODIMP_(ULONG) CEnumFormatEtc::AddRef(void)
 {
   ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "CEnumFormatEtc");
   //printf("CEnumFormatEtc::AddRef >>>>>>>>>>>>>>>>>> %d on %p\n", mRefCnt, this);
   return mRefCnt;
 }
@@ -134,6 +135,7 @@ STDMETHODIMP_(ULONG) CEnumFormatEtc::Release(void)
   ULONG cRefT;
 
   cRefT = --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "CEnumFormatEtc");
 
   if (0L == mRefCnt)
       delete this;

@@ -105,19 +105,5 @@ nsMacLocaleFactory::LockFactory(PRBool	aBool)
 	return NS_OK;
 }
 
-
-nsrefcnt
-nsMacLocaleFactory::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt
-nsMacLocaleFactory::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsMacLocaleFactory);
+NS_IMPL_RELEASE(nsMacLocaleFactory);

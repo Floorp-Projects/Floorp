@@ -45,8 +45,9 @@ nsXPCWrappedNative::AddRef(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
     XPCContext* xpcc;
-
-    if(1 == ++mRefCnt && mRoot != this)
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedNative");
+    if(1 == mRefCnt && mRoot != this)
         NS_ADDREF(mRoot);
     else if(2 == mRefCnt && nsnull != (xpcc = mClass->GetXPCContext()))
         JS_AddNamedRoot(xpcc->GetJSContext(), &mJSObj,
@@ -59,8 +60,9 @@ nsXPCWrappedNative::Release(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
     NS_PRECONDITION(0 != mRefCnt, "dup release");
-
-    if(0 == --mRefCnt)
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsXPCWrappedNative");
+    if(0 == mRefCnt)
     {
         NS_DELETEXPCOM(this);   // also unlinks us from chain
         return 0;

@@ -71,8 +71,9 @@ nsrefcnt
 nsXPCWrappedJS::AddRef(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
-
-    if(1 == ++mRefCnt && mRoot && mRoot != this)
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedJS");
+    if(1 == mRefCnt && mRoot && mRoot != this)
         NS_ADDREF(mRoot);
 
     return mRefCnt;
@@ -83,8 +84,9 @@ nsXPCWrappedJS::Release(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
     NS_PRECONDITION(0 != mRefCnt, "dup release");
-
-    if(0 == --mRefCnt)
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsXPCWrappedJS");
+    if(0 == mRefCnt)
     {
         if(mRoot == this)
         {
@@ -308,7 +310,9 @@ nsrefcnt
 nsXPCWrappedJSMethods::AddRef(void)
 {
     NS_PRECONDITION(mWrapper, "bad state");
-    if(2 == ++mRefCnt)
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedJSMethods");
+    if(2 == mRefCnt)
         NS_ADDREF(mWrapper);
     return mRefCnt;
 }
@@ -317,7 +321,9 @@ nsrefcnt
 nsXPCWrappedJSMethods::Release(void)
 {
     NS_PRECONDITION(mWrapper, "bad state");
-    if(0 == --mRefCnt)
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsXPCWrappedJSMethods");
+    if(0 == mRefCnt)
     {
         NS_DELETEXPCOM(this);
         return 0;

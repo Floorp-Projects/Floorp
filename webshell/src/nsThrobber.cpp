@@ -110,12 +110,16 @@ public:
 
 //-----------------------------------------------
   nsrefcnt AddRefObject() {
-    return ++mRefCnt;
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsThrobber");
+    return mRefCnt;
   }
 
   nsrefcnt ReleaseObject() {
     NS_PRECONDITION(0 != mRefCnt, "dup release");
-    if (--mRefCnt == 0) {
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsThrobber");
+    if (mRefCnt == 0) {
       NS_DELETEXPCOM(this);
       return 0;
     }
@@ -567,21 +571,8 @@ nsThrobberFactory::QueryInterface(const nsIID &aIID, void **aResult)
   return NS_OK;
 }
 
-nsrefcnt
-nsThrobberFactory::AddRef()
-{
-  return ++mRefCnt;
-}
-
-nsrefcnt
-nsThrobberFactory::Release()
-{
-  if (--mRefCnt == 0) {
-    delete this;
-    return 0; // Don't access mRefCnt after deleting!
-  }
-  return mRefCnt;
-}
+NS_IMPL_ADDREF(nsThrobberFactory);
+NS_IMPL_RELEASE(nsThrobberFactory);
 
 nsresult
 nsThrobberFactory::CreateInstance(nsISupports *aOuter,

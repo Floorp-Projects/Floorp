@@ -112,7 +112,7 @@ nsHTMLLIElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLLIElementIID)) {
     nsIDOMHTMLLIElement* tmp = this;
     *aInstancePtr = (void*) tmp;
-    mRefCnt++;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;

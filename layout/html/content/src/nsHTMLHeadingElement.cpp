@@ -110,7 +110,7 @@ nsHTMLHeadingElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLHeadingElementIID)) {
     nsIDOMHTMLHeadingElement* tmp = this;
     *aInstancePtr = (void*) tmp;
-    mRefCnt++;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;

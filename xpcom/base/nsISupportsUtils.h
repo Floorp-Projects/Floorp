@@ -82,7 +82,7 @@ typedef PRUint32 nsrefcnt;
  * rebuild the world. (That seems easier than hacking makefiles to ensure
  * that environment variables get checked everywhere.)
  */
-#ifdef DEBUG_warrenx
+#ifdef DEBUG_warren
 #define BLOATY  1
 #endif
 

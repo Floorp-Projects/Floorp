@@ -69,19 +69,8 @@ nsresult nsLocaleMacFactory::QueryInterface(const nsIID &aIID,
   return NS_OK;   
 }   
 
-nsrefcnt nsLocaleMacFactory::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt nsLocaleMacFactory::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsLocaleMacFactory);
+NS_IMPL_RELEASE(nsLocaleMacFactory);
 
 nsresult nsLocaleMacFactory::CreateInstance(nsISupports *aOuter,  
                                          const nsIID &aIID,  

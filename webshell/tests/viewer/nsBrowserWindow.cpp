@@ -3451,21 +3451,8 @@ nsBrowserWindowFactory::QueryInterface(const nsIID &aIID, void **aResult)
   return NS_OK;
 }
 
-nsrefcnt
-nsBrowserWindowFactory::AddRef()
-{
-  return ++mRefCnt;
-}
-
-nsrefcnt
-nsBrowserWindowFactory::Release()
-{
-  if (--mRefCnt == 0) {
-    delete this;
-    return 0; // Don't access mRefCnt after deleting!
-  }
-  return mRefCnt;
-}
+NS_IMPL_ADDREF(nsBrowserWindowFactory);
+NS_IMPL_RELEASE(nsBrowserWindowFactory);
 
 nsresult
 nsBrowserWindowFactory::CreateInstance(nsISupports *aOuter,

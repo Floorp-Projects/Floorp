@@ -109,22 +109,8 @@ nsresult nsGfxFactoryQT::QueryInterface(const nsIID &aIID,
     return NS_OK;   
 }   
 
-nsrefcnt nsGfxFactoryQT::AddRef()   
-{   
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsGfxFactoryQT::AddRef()\n"));
-    return ++mRefCnt;   
-}   
-
-nsrefcnt nsGfxFactoryQT::Release()   
-{   
-    PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsGfxFactoryQT::Release()\n"));
-    if (--mRefCnt == 0) 
-    {   
-        delete this;   
-        return 0; // Don't access mRefCnt after deleting!   
-    }   
-    return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsGfxFactoryQT);
+NS_IMPL_RELEASE(nsGfxFactoryQT);
 
 nsresult nsGfxFactoryQT::CreateInstance(nsISupports *aOuter,  
                                         const nsIID &aIID,  

@@ -145,12 +145,12 @@ nsHTMLFieldSetElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIDOMHTMLFieldSetElementIID)) {
     *aInstancePtr = (void*)(nsIDOMHTMLFieldSetElement*)this;
-    mRefCnt++;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   else if (aIID.Equals(kIFormControlIID)) {
     *aInstancePtr = (void*)(nsIFormControl*)this;
-    mRefCnt++;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;

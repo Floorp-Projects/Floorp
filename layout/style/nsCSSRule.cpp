@@ -103,7 +103,9 @@ nsCSSRule::AddRef(void)
   if (mInstance == kInstrument) {
     fprintf(stdout, "%d AddRef CSSRule\n", mRefCnt + 1);
   }
-  return ++mRefCnt;                                          
+  ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "nsCSSRule");
+  return mRefCnt;
 }
 
 nsrefcnt 
@@ -112,7 +114,9 @@ nsCSSRule::Release(void)
   if (mInstance == kInstrument) {
     fprintf(stdout, "%d Release CSSRule\n", mRefCnt - 1);
   }
-  if (--mRefCnt == 0) {                                
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "nsCSSRule");
+  if (mRefCnt == 0) {
     NS_DELETEXPCOM(this);
     return 0;                                          
   }                                                    

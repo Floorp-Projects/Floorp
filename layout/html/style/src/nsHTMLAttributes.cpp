@@ -952,7 +952,9 @@ nsrefcnt HTMLAttributesImpl::AddRef(void)
   if ((gInstrument == -1) || (mInstance == gInstrument)) {
     fprintf(stdout, "%d AddRef HTMLAttributes %d\n", mRefCnt + 1, mInstance);
   }
-  return ++mRefCnt;                                          
+  ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "HTMLAttributesImpl");
+  return mRefCnt;
 }
 
 nsrefcnt HTMLAttributesImpl::Release(void)                         
@@ -960,7 +962,9 @@ nsrefcnt HTMLAttributesImpl::Release(void)
   if ((gInstrument == -1) || (mInstance == gInstrument)) {
     fprintf(stdout, "%d Release HTMLAttributes %d\n", mRefCnt - 1, mInstance);
   }
-  if (--mRefCnt == 0) {                                
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "HTMLAttributesImpl");
+  if (mRefCnt == 0) {
     delete this;                                       
     return 0;                                          
   }                                                    

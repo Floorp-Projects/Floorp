@@ -126,13 +126,13 @@ nsHTMLTableColElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIDOMHTMLTableColElementIID)) {
     nsIDOMHTMLTableColElement* tmp = this;
     *aInstancePtr = (void*) tmp;
-    mRefCnt++;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIHTMLTableColElementIID)) {
     nsIHTMLTableColElement* tmp = this;
     *aInstancePtr = (void*) tmp;
-    mRefCnt++;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;

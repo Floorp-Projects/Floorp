@@ -70,19 +70,8 @@ nsresult nsLocaleUnixFactory::QueryInterface(const nsIID &aIID,
   return NS_OK;   
 }   
 
-nsrefcnt nsLocaleUnixFactory::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt nsLocaleUnixFactory::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsLocaleUnixFactory);
+NS_IMPL_RELEASE(nsLocaleUnixFactory);
 
 nsresult nsLocaleUnixFactory::CreateInstance(nsISupports *aOuter,  
                                          const nsIID &aIID,  

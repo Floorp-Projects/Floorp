@@ -48,7 +48,7 @@ nsThrobber* nsThrobber::NewThrobber()
 {
   nsThrobber* t = new nsThrobber();
   if (t) {
-    t->mRefCnt++;
+    NS_ADDREF(t);
   }
   return t;
 }
@@ -223,14 +223,18 @@ nsrefcnt nsThrobber::AddRef(void)
 {
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
   __log_addref((void*) this, mRefCnt, mRefCnt + 1);
-  return ++mRefCnt;
+  ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "nsThrobber");
+  return mRefCnt;
 }
 
 nsrefcnt nsThrobber::Release(void)
 {
   __log_release((void*) this, mRefCnt, mRefCnt - 1);
   NS_PRECONDITION(0 != mRefCnt, "dup release");
-  if (--mRefCnt == 0) {
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "nsThrobber");
+  if (mRefCnt == 0) {
     NS_DELETEXPCOM(this);
     return 0;
   }

@@ -203,7 +203,9 @@ NS_IMPL_QUERY_INTERFACE(nsViewManager, knsViewManagerIID)
 
 nsrefcnt nsViewManager::AddRef(void)
 {
-  return ++mRefCnt;
+  ++mRefCnt;
+  NS_LOG_ADDREF(this, mRefCnt, "nsViewManager");
+  return mRefCnt;
 }
 
 nsrefcnt nsViewManager::Release(void)
@@ -226,6 +228,7 @@ nsrefcnt nsViewManager::Release(void)
     return 0;
   }
   mRefCnt--;
+  NS_LOG_RELEASE(this, mRefCnt, "nsViewManager");
   return mRefCnt;
 }
 

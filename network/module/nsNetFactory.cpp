@@ -100,19 +100,8 @@ nsresult nsNetFactory::QueryInterface(const nsIID &aIID,
   return NS_OK;   
 }   
 
-nsrefcnt nsNetFactory::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt nsNetFactory::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsNetFactory);
+NS_IMPL_RELEASE(nsNetFactory);
 
 nsresult nsNetFactory::CreateInstance(nsISupports *aOuter,  
                                       const nsIID &aIID,  

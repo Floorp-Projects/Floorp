@@ -102,19 +102,8 @@ nsresult nsParserFactory::QueryInterface(const nsIID &aIID,
   return NS_OK;   
 }   
 
-nsrefcnt nsParserFactory::AddRef()   
-{   
-  return ++mRefCnt;   
-}   
-
-nsrefcnt nsParserFactory::Release()   
-{   
-  if (--mRefCnt == 0) {   
-    delete this;   
-    return 0; // Don't access mRefCnt after deleting!   
-  }   
-  return mRefCnt;   
-}  
+NS_IMPL_ADDREF(nsParserFactory);
+NS_IMPL_RELEASE(nsParserFactory);
 
 nsresult nsParserFactory::CreateInstance(nsISupports *aOuter,  
                                          const nsIID &aIID,  
