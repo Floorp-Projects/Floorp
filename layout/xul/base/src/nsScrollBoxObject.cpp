@@ -143,12 +143,12 @@ NS_IMETHODIMP nsScrollBoxObject::ScrollByIndex(PRInt32 dindexes)
     while(child) {
       child->GetBounds(rect);
       if (horiz) {
-        diff = rect.x + rect.width;
+        diff = rect.x + rect.width/2; // use the center, to avoid rounding errors
         if (diff > cp.x) {
           break;
         }
       } else {
-        diff = rect.y + rect.height;
+        diff = rect.y + rect.height/2;// use the center, to avoid rounding errors
         if (diff > cp.y) {
           break;
         }
