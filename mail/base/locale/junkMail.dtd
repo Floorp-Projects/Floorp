@@ -38,7 +38,7 @@
 <!ENTITY level.label "Enable adaptive junk mail detection">
 <!ENTITY level.accesskey "E">
 
-<!ENTITY resetTrainingDescription.label "Resetting the training data used by the adaptive filter requires you to retrain the filter">
+<!ENTITY resetTrainingDescription.label "Resetting the training data used by the adaptive filter requires you to retrain the filter:">
 <!ENTITY resetTrainingData.label "Reset Training Data">
 <!ENTITY resetTrainingData.accesskey "R">
 
