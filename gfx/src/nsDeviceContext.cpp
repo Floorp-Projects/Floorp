@@ -179,7 +179,7 @@ NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIView *aView, nsIRende
   nsCOMPtr<nsIRenderingContext> pContext;
   rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
   if (NS_SUCCEEDED(rv)) {
-    rv = InitRenderingContext(pContext, win);
+    rv = InitRenderingContext(pContext, NS_STATIC_CAST(nsIWidget *, win));
     if (NS_SUCCEEDED(rv)) {
       aContext = pContext;
       NS_ADDREF(aContext);
