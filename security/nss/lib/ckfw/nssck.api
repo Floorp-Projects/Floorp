@@ -33,7 +33,7 @@
  */
 
 #ifdef DEBUG
-static const char NSSCKAPI_CVS_ID[] = "@(#) $RCSfile: nssck.api,v $ $Revision: 1.2 $ $Date: 2000/10/14 01:29:11 $ $Name:  $ ; @(#) $RCSfile: nssck.api,v $ $Revision: 1.2 $ $Date: 2000/10/14 01:29:11 $ $Name:  $";
+static const char NSSCKAPI_CVS_ID[] = "@(#) $RCSfile: nssck.api,v $ $Revision: 1.3 $ $Date: 2002/05/17 18:57:34 $ $Name:  $ ; @(#) $RCSfile: nssck.api,v $ $Revision: 1.3 $ $Date: 2002/05/17 18:57:34 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -93,7 +93,9 @@ static const char NSSCKAPI_CVS_ID[] = "@(#) $RCSfile: nssck.api,v $ $Revision: 1
 #include "nssckepv.h"
 #endif /* NSSCKEPV_H */
 
-#define __ADJOIN(x,y) x##y
+#define ADJOIN(x,y) x##y
+
+#define __ADJOIN(x,y) ADJOIN(x,y)
 
 /*
  * The anchor.  This object is used to store an "anchor" pointer in
@@ -103,7 +105,7 @@ static const char NSSCKAPI_CVS_ID[] = "@(#) $RCSfile: nssck.api,v $ $Revision: 1
 
 static NSSCKFWInstance *fwInstance = (NSSCKFWInstance *)0;
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_Initialize)
 (
   CK_VOID_PTR pInitArgs
@@ -123,7 +125,7 @@ C_Initialize
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_Finalize)
 (
   CK_VOID_PTR pReserved
@@ -143,7 +145,7 @@ C_Finalize
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetInfo)
 (
   CK_INFO_PTR pInfo
@@ -167,7 +169,7 @@ C_GetInfo
  * C_GetFunctionList is defined at the end.
  */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetSlotList)
 (
   CK_BBOOL tokenPresent,
@@ -191,7 +193,7 @@ C_GetSlotList
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetSlotInfo)
 (
   CK_SLOT_ID slotID,
@@ -213,7 +215,7 @@ C_GetSlotInfo
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetTokenInfo)
 (
   CK_SLOT_ID slotID,
@@ -235,7 +237,7 @@ C_GetTokenInfo
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetMechanismList)
 (
   CK_SLOT_ID slotID,
@@ -259,7 +261,7 @@ C_GetMechanismList
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetMechanismInfo)
 (
   CK_SLOT_ID slotID,
@@ -283,7 +285,7 @@ C_GetMechanismInfo
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_InitToken)
 (
   CK_SLOT_ID slotID,
@@ -309,7 +311,7 @@ C_InitToken
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_InitPIN)
 (
   CK_SESSION_HANDLE hSession,
@@ -333,7 +335,7 @@ C_InitPIN
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_SetPIN)
 (
   CK_SESSION_HANDLE hSession,
@@ -361,7 +363,7 @@ C_SetPIN
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_OpenSession)
 (
   CK_SLOT_ID slotID,
@@ -389,7 +391,7 @@ C_OpenSession
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_CloseSession)
 (
   CK_SESSION_HANDLE hSession
@@ -409,7 +411,7 @@ C_CloseSession
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_CloseAllSessions)
 (
   CK_SLOT_ID slotID
@@ -429,7 +431,7 @@ C_CloseAllSessions
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetSessionInfo)
 (
   CK_SESSION_HANDLE hSession,
@@ -451,7 +453,7 @@ C_GetSessionInfo
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetOperationState)
 (
   CK_SESSION_HANDLE hSession,
@@ -475,7 +477,7 @@ C_GetOperationState
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_SetOperationState)
 (
   CK_SESSION_HANDLE hSession,
@@ -503,7 +505,7 @@ C_SetOperationState
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_Login)
 (
   CK_SESSION_HANDLE hSession,
@@ -529,7 +531,7 @@ C_Login
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_Logout)
 (
   CK_SESSION_HANDLE hSession
@@ -549,7 +551,7 @@ C_Logout
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_CreateObject)
 (
   CK_SESSION_HANDLE hSession,
@@ -575,7 +577,7 @@ C_CreateObject
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_CopyObject)
 (
   CK_SESSION_HANDLE hSession,
@@ -603,7 +605,7 @@ C_CopyObject
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_DestroyObject)
 (
   CK_SESSION_HANDLE hSession,
@@ -625,7 +627,7 @@ C_DestroyObject
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetObjectSize)
 (
   CK_SESSION_HANDLE hSession,
@@ -649,7 +651,7 @@ C_GetObjectSize
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetAttributeValue)
 (
   CK_SESSION_HANDLE hSession,
@@ -675,7 +677,7 @@ C_GetAttributeValue
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_SetAttributeValue)
 (
   CK_SESSION_HANDLE hSession,
@@ -701,7 +703,7 @@ C_SetAttributeValue
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_FindObjectsInit)
 (
   CK_SESSION_HANDLE hSession,
@@ -725,7 +727,7 @@ C_FindObjectsInit
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_FindObjects)
 (
   CK_SESSION_HANDLE hSession,
@@ -751,7 +753,7 @@ C_FindObjects
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_FindObjectsFinal)
 (
   CK_SESSION_HANDLE hSession
@@ -771,7 +773,7 @@ C_FindObjectsFinal
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_EncryptInit)
 (
   CK_SESSION_HANDLE hSession,
@@ -795,7 +797,7 @@ C_EncryptInit
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_Encrypt)
 (
   CK_SESSION_HANDLE hSession,
@@ -823,7 +825,7 @@ C_Encrypt
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_EncryptUpdate)
 (
   CK_SESSION_HANDLE hSession,
@@ -851,7 +853,7 @@ C_EncryptUpdate
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_EncryptFinal)
 (
   CK_SESSION_HANDLE hSession,
@@ -875,7 +877,7 @@ C_EncryptFinal
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_DecryptInit)
 (
   CK_SESSION_HANDLE hSession,
@@ -899,7 +901,7 @@ C_DecryptInit
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_Decrypt)
 (
   CK_SESSION_HANDLE hSession,
@@ -927,7 +929,7 @@ C_Decrypt
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_DecryptUpdate)
 (
   CK_SESSION_HANDLE hSession,
@@ -955,7 +957,7 @@ C_DecryptUpdate
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_DecryptFinal)
 (
   CK_SESSION_HANDLE hSession,
@@ -979,7 +981,7 @@ C_DecryptFinal
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_DigestInit)
 (
   CK_SESSION_HANDLE hSession,
@@ -1001,7 +1003,7 @@ C_DigestInit
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_Digest)
 (
   CK_SESSION_HANDLE hSession,
@@ -1029,7 +1031,7 @@ C_Digest
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_DigestUpdate)
 (
   CK_SESSION_HANDLE hSession,
@@ -1053,7 +1055,7 @@ C_DigestUpdate
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_DigestKey)
 (
   CK_SESSION_HANDLE hSession,
@@ -1075,7 +1077,7 @@ C_DigestKey
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_DigestFinal)
 (
   CK_SESSION_HANDLE hSession,
@@ -1099,7 +1101,7 @@ C_DigestFinal
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_SignInit)
 (
   CK_SESSION_HANDLE hSession,
@@ -1123,7 +1125,7 @@ C_SignInit
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_Sign)
 (
   CK_SESSION_HANDLE hSession,
@@ -1151,7 +1153,7 @@ C_Sign
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_SignUpdate)
 (
   CK_SESSION_HANDLE hSession,
@@ -1175,7 +1177,7 @@ C_SignUpdate
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_SignFinal)
 (
   CK_SESSION_HANDLE hSession,
@@ -1199,7 +1201,7 @@ C_SignFinal
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_SignRecoverInit)
 (
   CK_SESSION_HANDLE hSession,
@@ -1223,7 +1225,7 @@ C_SignRecoverInit
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_SignRecover)
 (
   CK_SESSION_HANDLE hSession,
@@ -1251,7 +1253,7 @@ C_SignRecover
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_VerifyInit)
 (
   CK_SESSION_HANDLE hSession,
@@ -1275,7 +1277,7 @@ C_VerifyInit
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_Verify)
 (
   CK_SESSION_HANDLE hSession,
@@ -1303,7 +1305,7 @@ C_Verify
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_VerifyUpdate)
 (
   CK_SESSION_HANDLE hSession,
@@ -1327,7 +1329,7 @@ C_VerifyUpdate
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_VerifyFinal)
 (
   CK_SESSION_HANDLE hSession,
@@ -1351,7 +1353,7 @@ C_VerifyFinal
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_VerifyRecoverInit)
 (
   CK_SESSION_HANDLE hSession,
@@ -1375,7 +1377,7 @@ C_VerifyRecoverInit
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_VerifyRecover)
 (
   CK_SESSION_HANDLE hSession,
@@ -1403,7 +1405,7 @@ C_VerifyRecover
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_DigestEncryptUpdate)
 (
   CK_SESSION_HANDLE hSession,
@@ -1431,7 +1433,7 @@ C_DigestEncryptUpdate
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_DecryptDigestUpdate)
 (
   CK_SESSION_HANDLE hSession,
@@ -1459,7 +1461,7 @@ C_DecryptDigestUpdate
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_SignEncryptUpdate)
 (
   CK_SESSION_HANDLE hSession,
@@ -1487,7 +1489,7 @@ C_SignEncryptUpdate
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_DecryptVerifyUpdate)
 (
   CK_SESSION_HANDLE hSession,
@@ -1515,7 +1517,7 @@ C_DecryptVerifyUpdate
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GenerateKey)
 (
   CK_SESSION_HANDLE hSession,
@@ -1543,7 +1545,7 @@ C_GenerateKey
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GenerateKeyPair)
 (
   CK_SESSION_HANDLE hSession,
@@ -1577,7 +1579,7 @@ C_GenerateKeyPair
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_WrapKey)
 (
   CK_SESSION_HANDLE hSession,
@@ -1607,7 +1609,7 @@ C_WrapKey
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_UnwrapKey)
 (
   CK_SESSION_HANDLE hSession,
@@ -1641,7 +1643,7 @@ C_UnwrapKey
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_DeriveKey)
 (
   CK_SESSION_HANDLE hSession,
@@ -1671,7 +1673,7 @@ C_DeriveKey
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_SeedRandom)
 (
   CK_SESSION_HANDLE hSession,
@@ -1695,7 +1697,7 @@ C_SeedRandom
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GenerateRandom)
 (
   CK_SESSION_HANDLE hSession,
@@ -1719,7 +1721,7 @@ C_GenerateRandom
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetFunctionStatus)
 (
   CK_SESSION_HANDLE hSession
@@ -1739,7 +1741,7 @@ C_GetFunctionStatus
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_CancelFunction)
 (
   CK_SESSION_HANDLE hSession
@@ -1759,7 +1761,7 @@ C_CancelFunction
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_WaitForSlotEvent)
 (
   CK_FLAGS flags,
@@ -1783,7 +1785,7 @@ C_WaitForSlotEvent
 }
 #endif /* DECLARE_STRICT_CRYPTOKI_NAMES */
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetFunctionList)
 (
   CK_FUNCTION_LIST_PTR_PTR ppFunctionList
@@ -1861,7 +1863,7 @@ __ADJOIN(MODULE_NAME,C_CancelFunction),
 __ADJOIN(MODULE_NAME,C_WaitForSlotEvent)
 };
 
-CK_RV CK_ENTRY
+static CK_RV CK_ENTRY
 __ADJOIN(MODULE_NAME,C_GetFunctionList)
 (
   CK_FUNCTION_LIST_PTR_PTR ppFunctionList
