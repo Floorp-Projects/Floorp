@@ -71,6 +71,13 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    SetDisableCallback(const nsString& aScript);
     NS_IMETHOD    SetEnableCallback(const nsString& aScript);
    // NS_IMETHOD		OutputText(nsString);
+
+    NS_IMETHOD    Cut();
+    NS_IMETHOD    Copy();
+    NS_IMETHOD    Paste();
+
+    NS_IMETHOD		InsertText(const nsString& textToInsert);
+    
     NS_IMETHOD    NewWindow();
     NS_IMETHOD    PrintPreview();
     NS_IMETHOD    Close();

@@ -11,6 +11,13 @@ interface EditorAppCore : BaseAppCore
 	void setAttribute(in wstring attr, in wstring value);
 	void undo();
 	void redo();
+	
+	void cut();
+	void copy();
+	void paste();
+	
+	void insertText(in wstring textToInsert);
+	
 	void exit();
 
 	void setToolbarWindow(in Window win);

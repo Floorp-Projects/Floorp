@@ -29,7 +29,7 @@
 #include "nsIDOMEditorAppCore.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptNameSpaceManager.h"
-#include "nsIComponentManager.h"
+#include "nsRepository.h"
 #include "nsDOMCID.h"
 
 
@@ -264,6 +264,141 @@ EditorAppCoreRedo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
 
 //
+// Native method Cut
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreCut(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Cut()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function cut requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Copy
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreCopy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Copy()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function copy requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Paste
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCorePaste(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Paste()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function paste requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method InsertText
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreInsertText(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->InsertText(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function insertText requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Exit
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -459,6 +594,10 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"setAttribute",          EditorAppCoreSetAttribute,     2},
   {"undo",          EditorAppCoreUndo,     0},
   {"redo",          EditorAppCoreRedo,     0},
+  {"cut",          EditorAppCoreCut,     0},
+  {"copy",          EditorAppCoreCopy,     0},
+  {"paste",          EditorAppCorePaste,     0},
+  {"insertText",          EditorAppCoreInsertText,     1},
   {"exit",          EditorAppCoreExit,     0},
   {"setToolbarWindow",          EditorAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          EditorAppCoreSetContentWindow,     1},
@@ -493,7 +632,7 @@ EditorAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     return JS_FALSE;
   }
 
-  result = nsComponentManager::CreateInstance(classID,
+  result = nsRepository::CreateInstance(classID,
                                         nsnull,
                                         kIDOMEditorAppCoreIID,
                                         (void **)&nativeThis);
