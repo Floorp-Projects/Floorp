@@ -41,6 +41,9 @@ nsCOMPtr<nsIRDFResource> nsSmtpDataSource::kNC_Name;
 nsCOMPtr<nsIRDFResource> nsSmtpDataSource::kNC_Key;
 nsCOMPtr<nsIRDFResource> nsSmtpDataSource::kNC_SmtpServers;
 
+nsCOMPtr<nsISupportsArray> nsSmtpDataSource::mServerArcsOut;
+nsCOMPtr<nsISupportsArray> nsSmtpDataSource::mServerRootArcsOut;
+
 NS_IMPL_ISUPPORTS1(nsSmtpDataSource, nsIRDFDataSource)
 
 nsSmtpDataSource::nsSmtpDataSource()
