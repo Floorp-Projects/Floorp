@@ -51,6 +51,7 @@ REQUIRES = \
     webshell \
     necko \
     windowwatcher \
+    ax_common \
     $(NULL)
 
 ifdef XPC_IDISPATCH_SUPPORT
@@ -65,8 +66,8 @@ FORCE_SHARED_LIB = 1
 NO_DIST_INSTALL	= 1
 NO_INSTALL = 1
 
-# Path to the Mozilla ActiveX control (some files are copied from there)
-MOZCTLSRC=$(srcdir)/../control
+# Path to the Mozilla ActiveX common dir (some files are copied from there)
+AXCOMMONSRC=$(srcdir)/../common
 
 ############
 # LiveConnect settings
@@ -104,6 +105,12 @@ MOZ_ACTIVEX_PLUGIN_XPCONNECT = 1
 
 # XPConnect support in (Netscape 6.1+/Mozilla)
 
+# Uncomment this line to install the plugin & policy
+# MOZ_USE_ACTIVEX_PLUGIN = 1
+
+# Settings will also be read from this supplemental file if it exists
+-include $(srcdir)/plugin.mk
+
 
 ###############################################################################
 
@@ -113,23 +120,13 @@ XPIDLSRCS = \
     $(NULL)
 endif
 
-_CONTROL_CPPSRCS = \
-    ActiveScriptSite.cpp \
-    ControlEventSink.cpp \
-    ControlSite.cpp \
-    ControlSiteIPFrame.cpp \
-    ItemContainer.cpp \
-    PropertyBag.cpp \
-    $(NULL)
-
-GARBAGE	+= $(addprefix $(srcdir)/,$(_CONTROL_CPPSRCS)) $(DEFFILE)
+GARBAGE	+= $(DEFFILE)
 
 CPPSRCS = \
     StdAfx.cpp             \
     LegacyPlugin.cpp       \
     MozActiveX.cpp         \
     npwin.cpp              \
-    $(_CONTROL_CPPSRCS)    \
     $(NULL)
 
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
@@ -137,7 +134,15 @@ CPPSRCS += XPConnect.cpp XPCDocument.cpp XPCBrowser.cpp
 endif
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-CPPSRCS += LiveConnect.cpp
+_AXCOMMON_CPPSRCS = \
+    ActiveScriptSite.cpp \
+    ControlEventSink.cpp \
+    ControlSite.cpp \
+    ControlSiteIPFrame.cpp \
+    ItemContainer.cpp \
+    PropertyBag.cpp \
+    $(NULL)
+CPPSRCS += LiveConnect.cpp $(_AXCOMMON_CPPSRCS)
 CSRCS += javastubs.c
 endif
 
@@ -145,7 +150,7 @@ ifdef XPC_IDISPATCH_SUPPORT
 CPPSRCS += PrefObserver.cpp
 endif
 
-LOCAL_INCLUDES = -I$(srcdir) -I$(MOZCTLSRC)
+LOCAL_INCLUDES = -I$(srcdir) -I$(AXCOMMONSRC)
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 LOCAL_INCLUDES += -I./_java
@@ -164,39 +169,50 @@ OS_LIBS += \
     $(NULL)
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-DEFINES += -DMOZ_ACTIVEX_PLUGIN_LIVECONNECT
+DEFINES += -DMOZ_ACTIVEX_PLUGIN_LIVECONNECT -DXPCOM_GLUE
 endif
 
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
-DEFINES += -DMOZ_ACTIVEX_PLUGIN_XPCONNECT -DXPCOM_GLUE
+DEFINES += -DMOZ_ACTIVEX_PLUGIN_XPCONNECT
+endif
 
 ifdef XPC_IDISPATCH_SUPPORT
 DEFINES += -DXPC_IDISPATCH_SUPPORT
 endif
 
 EXTRA_DSO_LDOPTS = \
-    $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/$(LIB_PREFIX)embedstring_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
     $(MOZ_COMPONENT_LIBS) \
     $(NSPR_LIBS) \
     $(NULL)
 
-ifdef XPC_IDISPATCH_SUPPORT
-EXTRA_DSO_LDOPTS += \
-	$(MOZ_JS_LIBS) \
-	$(NULL)
-endif
-
 LIBS = \
-    $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/$(LIB_PREFIX)embedstring_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
     $(NSPR_LIBS) \
     $(NULL)
+
+# LiveConnect links to XPCOM glue
+ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+EXTRA_DSO_LDOPTS += \
+    $(DIST)/lib/$(LIB_PREFIX)embedstring_s.$(LIB_SUFFIX) \
+    $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
+    $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) \
+    $(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX)
+LIBS += \
+    $(DIST)/lib/$(LIB_PREFIX)embedstring_s.$(LIB_SUFFIX) \
+    $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
+    $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) \
+    $(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX)
 endif
+
+# XPConnect links to XPCOM and the shared activex lib
+ifdef XPC_IDISPATCH_SUPPORT
+EXTRA_DSO_LDOPTS += \
+    $(DIST)/lib/$(LIB_PREFIX)ax_common_s.$(LIB_SUFFIX) \
+    $(MOZ_JS_LIBS) \
+    $(XPCOM_LIBS) \
+    $(NULL)
+endif
+
+
 
 SRCS_IN_OBJDIR	= 1
 
@@ -204,10 +220,12 @@ include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += -GX
 
+ifdef MOZ_ACTIVEX_PLUGIN_LIVCONNECT
 copy-sources: $(addprefix $(MOZCTLSRC)/,$(_CONTROL_CPPSRCS))
 	$(INSTALL) $^ .
 
 export:: copy-sources
+endif
 
 install-plugin: $(SHARED_LIBRARY)
 ifdef SHARED_LIBRARY

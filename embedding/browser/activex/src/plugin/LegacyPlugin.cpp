@@ -233,7 +233,7 @@ END_COM_MAP()
 //
 NPError NPP_Initialize(void)
 {
-    NG_TRACE_METHOD(NPP_Initialize);
+    ATLTRACE(_T("NPP_Initialize()\n"));
     _Module.Lock();
     return NPERR_NO_ERROR;
 }
@@ -245,7 +245,7 @@ NPError NPP_Initialize(void)
 //
 void NPP_Shutdown(void)
 {
-    NG_TRACE_METHOD(NPP_Shutdown);
+    ATLTRACE(_T("NPP_Shutdown()\n"));
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
     liveconnect_Shutdown();
 #endif
@@ -259,7 +259,7 @@ void NPP_Shutdown(void)
 //
 jref NPP_GetJavaClass(void)
 {
-    NG_TRACE_METHOD(NPP_GetJavaClass);
+    ATLTRACE(_T("NPP_GetJavaClass()\n"));
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
     return liveconnect_GetJavaClass();
 #endif
@@ -939,7 +939,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
                 char* argv[],
                 NPSavedData* saved)
 {
-    NG_TRACE_METHOD(NPP_New);
+    ATLTRACE(_T("NPP_New()\n"));
 
     // trap duff args
     if (instance == NULL)
@@ -998,7 +998,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
 NPError NP_LOADDS
 NPP_Destroy(NPP instance, NPSavedData** save)
 {
-    NG_TRACE_METHOD(NPP_Destroy);
+    ATLTRACE(_T("NPP_Destroy()\n"));
 
     PluginInstanceData *pData = (PluginInstanceData *) instance->pdata;
     if (pData == NULL)
@@ -1069,7 +1069,7 @@ NPP_Destroy(NPP instance, NPSavedData** save)
 NPError NP_LOADDS
 NPP_SetWindow(NPP instance, NPWindow* window)
 {
-    NG_TRACE_METHOD(NPP_SetWindow);
+    ATLTRACE(_T("NPP_SetWindow()\n"));
 
     // Reject silly parameters
     if (!window)
@@ -1140,7 +1140,7 @@ NPP_NewStream(NPP instance,
               NPBool seekable,
               uint16 *stype)
 {
-    NG_TRACE_METHOD(NPP_NewStream);
+    ATLTRACE(_T("NPP_NewStream()\n"));
 
     if(!instance)
     {
@@ -1162,7 +1162,7 @@ NPP_NewStream(NPP instance,
 void NP_LOADDS
 NPP_StreamAsFile(NPP instance, NPStream *stream, const char* fname)
 {
-    NG_TRACE_METHOD(NPP_StreamAsFile);
+    ATLTRACE(_T("NPP_StreamAsFile()\n"));
 
     if(fname == NULL || fname[0] == NULL)
     {

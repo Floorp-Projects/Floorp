@@ -58,16 +58,10 @@ enum PluginInstanceType
 struct PluginInstanceData {
     NPP pPluginInstance;
     PluginInstanceType nType;
-    union
-    {
-        CActiveScriptSiteInstance *pScriptSite;
-        struct {
-            CControlSiteInstance *pControlSite;
+    CControlSiteInstance *pControlSite;
 #ifdef XPC_IDISPATCH_SUPPORT
-            nsEventSinkInstance  *pControlEventSink;
+    nsEventSinkInstance  *pControlEventSink;
 #endif
-        };
-    };
     char *szUrl;
     char *szContentType;
     CLSID clsid;
