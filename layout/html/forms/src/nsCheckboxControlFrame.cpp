@@ -76,6 +76,10 @@ public:
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
+   // Utility methods for implementing SetProperty/GetProperty
+  void SetCheckboxControlFrameState(const nsString& aValue);
+  void GetCheckboxControlFrameState(nsString& aValue);  
+
   //
   // Methods used to GFX-render the checkbox
   // 
@@ -155,23 +159,20 @@ nsCheckboxControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 void 
 nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWidth, nscoord& aHeight)
 {
-  if (!mWidget) {
-    return;
+   // set the widget to the initial state
+  PRBool checked = PR_FALSE;
+  nsresult result = GetDefaultCheckState(&checked);
+  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+    if (PR_TRUE == checked)
+      SetProperty(nsHTMLAtoms::checked, "1");
+    else
+      SetProperty(nsHTMLAtoms::checked, "0");
   }
 
-  SetColors(*aPresContext);
-  mWidget->Enable(!nsFormFrame::GetDisabled(this));
-
-  // set the widget to the initial state
-  nsICheckButton* checkbox = nsnull;
-  if (NS_OK == mWidget->QueryInterface(GetIID(),(void**)&checkbox)) {
-    PRBool checked;
-    nsresult result = GetCurrentCheckState(&checked);
-    if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-      checkbox->SetState(checked);
-    }
-    NS_RELEASE(checkbox);
-  }
+  if (mWidget != nsnull) {
+    SetColors(*aPresContext);
+    mWidget->Enable(!nsFormFrame::GetDisabled(this));
+  }              
 }
 
 NS_IMETHODIMP
@@ -368,14 +369,73 @@ NS_METHOD nsCheckboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
   return(nsFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus));
 }
 
+
+void nsCheckboxControlFrame::GetCheckboxControlFrameState(nsString& aValue)
+{
+  if (nsnull != mWidget) {
+    nsICheckButton* checkBox = nsnull;
+    if (NS_OK == mWidget->QueryInterface(kICheckButtonIID,(void**)&checkBox)) {
+      PRBool state = PR_FALSE;
+      checkBox->GetState(state);
+      if (PR_TRUE == state)
+        aValue = "1";
+      else
+        aValue = "0";
+      NS_RELEASE(checkBox);
+    }
+    else {
+    //XXX: This should return the local field for GFX-rendered widgets         
+      aValue = "0";
+    }
+  }
+}       
+
+
+void nsCheckboxControlFrame::SetCheckboxControlFrameState(const nsString& aValue)
+{
+  if (nsnull != mWidget) {
+    nsICheckButton* checkBox = nsnull;
+    if (NS_OK == mWidget->QueryInterface(kICheckButtonIID,(void**)&checkBox)) {
+      PRBool state = PR_FALSE;
+      if (aValue == "1")
+        checkBox->SetState(PR_TRUE);
+      else
+        checkBox->SetState(PR_FALSE);
+
+      NS_RELEASE(checkBox);
+    }
+    else {
+    //XXX: This should set he local field for GFX-rendered widgets
+    }
+  }
+}         
+
 NS_IMETHODIMP nsCheckboxControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
-  return NS_OK;
+  if (nsHTMLAtoms::checked == aName) {
+    SetCheckboxControlFrameState(aValue);
+  }
+  else {
+    return nsFormControlFrame::SetProperty(aName, aValue);
+  }
+
+  return NS_OK;     
 }
+
 
 NS_IMETHODIMP nsCheckboxControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 {
-  return NS_OK;
+  // Return the value of the property from the widget it is not null.
+  // If is null, assume the widget is GFX-rendered and return a member variable instead.
+
+  if (nsHTMLAtoms::checked == aName) {
+    GetCheckboxControlFrameState(aValue);
+  }
+  else {
+    return nsFormControlFrame::GetProperty(aName, aValue);
+  }
+
+  return NS_OK;     
 }
 
 

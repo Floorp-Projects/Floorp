@@ -78,6 +78,10 @@ public:
 
 protected:
 
+   // Utility methods for implementing SetProperty/GetProperty
+  void SetRadioControlFrameState(const nsString& aValue);
+  void GetRadioControlFrameState(nsString& aValue);             
+
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,

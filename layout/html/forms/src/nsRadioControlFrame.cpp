@@ -89,23 +89,28 @@ nsRadioControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 void 
 nsRadioControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWidth, nscoord& aHeight)
 {
-  nsIRadioButton* radio = nsnull;
-  if (mWidget && (NS_OK == mWidget->QueryInterface(GetIID(),(void**)&radio))) {
-		PRBool checked = PR_TRUE;
-    GetCurrentCheckState(&checked);
-    radio->SetState(checked);
-
-	  const nsStyleColor* color = 
-	    nsStyleUtil::FindNonTransparentBackground(mStyleContext);
-
-	  if (nsnull != color) {
-	    mWidget->SetBackgroundColor(color->mBackgroundColor);
-	  } else {
-	    mWidget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
-	  }
-	  NS_RELEASE(radio);
-    mWidget->Enable(!nsFormFrame::GetDisabled(this));
+   // set the widget to the initial state
+  PRBool checked = PR_FALSE;
+  nsresult result = GetDefaultCheckState(&checked);
+  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+    if (PR_TRUE == checked)
+      SetProperty(nsHTMLAtoms::checked, "1");
+    else
+      SetProperty(nsHTMLAtoms::checked, "0");
   }
+
+  if (mWidget != nsnull) {
+    const nsStyleColor* color =
+    nsStyleUtil::FindNonTransparentBackground(mStyleContext);
+
+    if (nsnull != color) {
+      mWidget->SetBackgroundColor(color->mBackgroundColor);
+    } else {
+      mWidget->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
+    }
+    mWidget->Enable(!nsFormFrame::GetDisabled(this));
+  }           
+
 }
 
 
@@ -144,20 +149,14 @@ nsRadioControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 void 
 nsRadioControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  nsIRadioButton* radioWidget;
-  if (mWidget && (NS_OK == mWidget->QueryInterface(kIRadioIID, (void**)&radioWidget))) {
-	  radioWidget->SetState(PR_TRUE);
-    NS_RELEASE(radioWidget);
-  }
+  SetProperty(nsHTMLAtoms::checked, "1");
 
-  SetCurrentCheckState(PR_TRUE); // Update content model.
-    
   if (mFormFrame) {
      // The form frame will determine which radio button needs
-     // to be turned off and will call SetChecked on the 
+     // to be turned off and will call SetChecked on the
      // nsRadioControlFrame to unset the checked state
     mFormFrame->OnRadioChecked(*this);
-  } 
+  }         
 }
 
 PRBool
@@ -178,11 +177,11 @@ nsRadioControlFrame::SetChecked(PRBool aValue, PRBool aSetInitialValue)
       mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, nsAutoString("0"), PR_FALSE);
     }
   }
-  nsIRadioButton* radio = nsnull;
-  if (mWidget && (NS_OK ==  mWidget->QueryInterface(kIRadioIID,(void**)&radio))) {
-    radio->SetState(aValue);
-    NS_RELEASE(radio);
-  }
+
+ if (PR_TRUE == aValue)
+    SetProperty(nsHTMLAtoms::checked, "1");
+  else
+    SetProperty(nsHTMLAtoms::checked, "0");   
 }
 
 
@@ -344,13 +343,69 @@ nsRadioControlFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+void nsRadioControlFrame::GetRadioControlFrameState(nsString& aValue)
+{
+  if (nsnull != mWidget) {
+    nsIRadioButton* radio = nsnull;
+    if (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio)) {
+      PRBool state = PR_FALSE;
+      radio->GetState(state);
+      if (PR_TRUE == state)
+        aValue = "1";
+      else
+        aValue = "0";
+      NS_RELEASE(radio);
+    }
+    else {
+    //XXX: This should return the local field for GFX-rendered widgets
+      aValue = "0";
+    }
+  }
+}         
+
+void nsRadioControlFrame::SetRadioControlFrameState(const nsString& aValue)
+{
+  if (nsnull != mWidget) {
+    nsIRadioButton* radio = nsnull;
+    if (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio)) {
+      PRBool state = PR_FALSE;
+      if (aValue == "1")
+        radio->SetState(PR_TRUE);
+      else
+        radio->SetState(PR_FALSE);
+
+      NS_RELEASE(radio);
+    }
+    else {
+    //XXX: This should set he local field for GFX-rendered widgets
+    }
+  }
+}         
+
 NS_IMETHODIMP nsRadioControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
-  return NS_OK;
+  if (nsHTMLAtoms::checked == aName) {
+    SetRadioControlFrameState(aValue);
+  }
+  else {
+    return nsFormControlFrame::SetProperty(aName, aValue);
+  }
+
+  return NS_OK;    
 }
 
 NS_IMETHODIMP nsRadioControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 {
-  return NS_OK;
+  // Return the value of the property from the widget it is not null.
+  // If is null, assume the widget is GFX-rendered and return a member variable instead.
+
+  if (nsHTMLAtoms::checked == aName) {
+    GetRadioControlFrameState(aValue);
+  }
+  else {
+    return nsFormControlFrame::GetProperty(aName, aValue);
+  }
+
+  return NS_OK;    
 }
 
