@@ -37,25 +37,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBoxFrame.h"
-#include "nsITreeBoxObject.h"
-
-class nsSupportsHashtable;
+#include "nsITreeColumns.h"
 
 nsresult NS_NewTreeColFrame(nsIPresShell* aPresShell, 
                             nsIFrame** aNewFrame, 
                             PRBool aIsRoot = PR_FALSE,
                             nsIBoxLayout* aLayoutManager = nsnull);
 
-// The actual frame that paints the cells and rows.
 class nsTreeColFrame : public nsBoxFrame
 {
 public:
   NS_DECL_ISUPPORTS
-
-  friend nsresult NS_NewTreeColFrame(nsIPresShell* aPresShell, 
-                                         nsIFrame** aNewFrame, 
-                                         PRBool aIsRoot,
-                                         nsIBoxLayout* aLayoutManager);
 
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
@@ -64,9 +56,10 @@ public:
                   nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
- 
+
+  // Overridden to capture events.
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
-                              const nsPoint& aPoint, // Overridden to capture events
+                              const nsPoint& aPoint,
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
@@ -76,15 +69,16 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
+  friend nsresult NS_NewTreeColFrame(nsIPresShell* aPresShell, 
+                                     nsIFrame** aNewFrame, 
+                                     PRBool aIsRoot,
+                                     nsIBoxLayout* aLayoutManager);
 
 protected:
   nsTreeColFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
   virtual ~nsTreeColFrame();
 
-protected:
-  // Members.
+  void EnsureColumns();
   
-  void EnsureTree();
-  
-  nsCOMPtr<nsITreeBoxObject> mTree;
-}; // class nsTreeColFrame
+  nsCOMPtr<nsITreeColumns>      mColumns;
+};
