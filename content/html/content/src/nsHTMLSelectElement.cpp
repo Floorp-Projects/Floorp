@@ -81,6 +81,7 @@
 #include "nsIFormControlFrame.h"
 #include "nsIFrame.h"
 
+#include "nsDOMError.h"
 #include "nsRuleNode.h"
 
 
@@ -1033,30 +1034,39 @@ NS_IMETHODIMP
 nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement,
                          nsIDOMHTMLElement* aBefore)
 {
-  nsresult rv;
-  nsCOMPtr<nsIDOMNode> ret;
-
-  if (nsnull == aBefore) {
-    rv = AppendChild(aElement, getter_AddRefs(ret));
+  nsCOMPtr<nsIDOMNode> added;
+  if (!aBefore) {
+    return AppendChild(aElement, getter_AddRefs(added));
   }
-  else {
-    // Just in case we're not the parent, get the parent of the reference
-    // element
-    nsCOMPtr<nsIDOMNode> parent;
-    
-    rv = aBefore->GetParentNode(getter_AddRefs(parent));
-    if (parent) {
-      rv = parent->InsertBefore(aElement, aBefore, getter_AddRefs(ret));
+
+  // Just in case we're not the parent, get the parent of the reference
+  // element
+  nsCOMPtr<nsIDOMNode> parent;    
+  aBefore->GetParentNode(getter_AddRefs(parent));
+  if (!parent) {
+    // NOT_FOUND_ERR: Raised if before is not a descendant of the SELECT
+    // element.
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
+
+  nsCOMPtr<nsIDOMNode> ancestor(parent);
+  while (ancestor != NS_STATIC_CAST(nsIDOMNode*, this)) {
+    ancestor->GetParentNode(getter_AddRefs(ancestor));
+    if (!ancestor) {
+      // NOT_FOUND_ERR: Raised if before is not a descendant of the SELECT
+      // element.
+      return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
   }
 
-  return rv;
+  // If the before parameter is not null, we are equivalent to the
+  // insertBefore method on the parent of before.
+  return parent->InsertBefore(aElement, aBefore, getter_AddRefs(added));
 }
 
 NS_IMETHODIMP 
 nsHTMLSelectElement::Remove(PRInt32 aIndex) 
 {
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIDOMNode> option;
   Item(aIndex, getter_AddRefs(option));
 
@@ -1070,7 +1080,7 @@ nsHTMLSelectElement::Remove(PRInt32 aIndex)
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1086,18 +1096,14 @@ NS_IMETHODIMP
 nsHTMLSelectElement::GetType(nsAString& aType)
 {
   PRBool isMultiple;
-  nsresult rv = NS_OK;
-
-  rv = GetMultiple(&isMultiple);
-  if (NS_OK == rv) {
-    if (isMultiple) {
-      aType.Assign(NS_LITERAL_STRING("select-multiple"));
-    }
-    else {
-      aType.Assign(NS_LITERAL_STRING("select-one"));
-    }
+  GetMultiple(&isMultiple);
+  if (isMultiple) {
+    aType.Assign(NS_LITERAL_STRING("select-multiple"));
   }
-  
+  else {
+    aType.Assign(NS_LITERAL_STRING("select-one"));
+  }
+
   return NS_OK;
 }
 
