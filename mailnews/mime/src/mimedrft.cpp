@@ -1322,7 +1322,10 @@ mime_parse_stream_complete (nsMIMESession *stream)
       //
       if (mdd->format_out == nsMimeOutput::nsMimeMessageEditorTemplate)
       {
-        printf("RICHIE: Time to create the EDITOR with this template - HAS a body!!!!\n");
+#ifdef NS_DEBUG
+       printf("RICHIE: Time to create the EDITOR with this template - HAS a body!!!!\n");
+#endif
+        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, composeFormat, mdd->identity);
       }
       else
       {
@@ -1346,7 +1349,9 @@ mime_parse_stream_complete (nsMIMESession *stream)
       //
       if (mdd->format_out == nsMimeOutput::nsMimeMessageEditorTemplate)
       {
+#ifdef NS_DEBUG
         printf("RICHIE: Time to create the EDITOR with this template - NO body!!!!\n");
+#endif
         CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, nsIMsgCompFormat::Default, mdd->identity);
       }
       else
