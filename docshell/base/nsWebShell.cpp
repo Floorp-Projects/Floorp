@@ -185,7 +185,7 @@ public:
   NS_IMETHOD GetMarginHeight(PRInt32& aWidth);
   NS_IMETHOD SetMarginHeight(PRInt32  aHeight);
   NS_IMETHOD GetScrolling(PRInt32& aScrolling);
-  NS_IMETHOD SetScrolling(PRInt32 aScrolling);
+  NS_IMETHOD SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial = PR_TRUE);
   NS_IMETHOD GetIsFrame(PRBool& aIsFrame);
   NS_IMETHOD SetIsFrame(PRBool aIsFrame);
   
@@ -322,7 +322,7 @@ public:
   NS_IMETHOD SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet);
 
 protected:
-  void InitFrameData();
+  void InitFrameData(PRBool aCompleteInitScrolling);
   nsresult CheckForTrailingSlash(nsIURL* aURL);
 
   PLEventQueue* mThreadEventQueue;
@@ -355,7 +355,7 @@ protected:
   nsScrollPreference mScrollPref;
   PRInt32 mMarginWidth;
   PRInt32 mMarginHeight;
-  PRInt32 mScrolling;
+  PRInt32 mScrolling[2];
   PRBool  mIsFrame;
   nsVoidArray mRefreshments;
 
@@ -478,7 +478,7 @@ nsWebShell::nsWebShell()
   mScriptGlobal = nsnull;
   mScriptContext = nsnull;
 //  mURLListener = nsnull;
-  InitFrameData();
+  InitFrameData(PR_TRUE);
   mIsFrame = PR_FALSE;
 }
 
@@ -510,7 +510,7 @@ nsWebShell::~nsWebShell()
   }
   NS_IF_RELEASE(mScriptContext);
 
-  InitFrameData();
+  InitFrameData(PR_TRUE);
   mIsFrame = PR_FALSE;
 
   // XXX Because we hold references to the children and they hold references
@@ -530,11 +530,17 @@ nsWebShell::~nsWebShell()
   DestroyPluginHost();
 }
 
-void nsWebShell::InitFrameData()
+void nsWebShell::InitFrameData(PRBool aCompleteInitScrolling)
 {
   mMarginWidth  = -1;  
   mMarginHeight = -1;
-  mScrolling    = -1;
+  if (aCompleteInitScrolling) {
+    mScrolling[0] = -1;
+    mScrolling[1] = -1;
+  }
+  else {
+    mScrolling[1] = mScrolling[0];
+  }
 }
 
 void
@@ -1248,14 +1254,17 @@ nsWebShell::SetMarginHeight(PRInt32 aHeight)
 NS_IMETHODIMP
 nsWebShell::GetScrolling(PRInt32& aScrolling)
 {
-  aScrolling = mScrolling;
+  aScrolling = mScrolling[1];
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShell::SetScrolling(PRInt32 aScrolling)
+nsWebShell::SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial)
 {
-  mScrolling = aScrolling;
+  mScrolling[1] = aScrolling;
+  if (aSetCurrentAndInitial) {
+    mScrolling[0] = aScrolling;
+  }
   return NS_OK;
 }
 
@@ -1326,11 +1335,9 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsURLReloadType aType,
                     const PRUint32 aLocalIP)
 {
-  // if this is the top level web shell, initialize some things, in case the 
-  // web shell is being recycled
-  if (!mIsFrame) {
-    InitFrameData();
-  }
+  // Initialize margnwidth, marginheight. Put scrolling back the way it was
+  // before the last document was loaded.
+  InitFrameData(PR_FALSE);
 
   return LoadURL(aURLSpec,"view",aPostData,aModifyHistory,aType, aLocalIP);
 }
