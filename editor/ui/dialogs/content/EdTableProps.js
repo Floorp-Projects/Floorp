@@ -76,7 +76,6 @@ From C++:
 */
 
 var gSelectedCellCount = 0;
-var error = 0;
 var ApplyUsed = false;
 // What should these be?
 var maxRows    = 1000; // This is the value gecko code uses for maximum rowspan, colspan
@@ -768,13 +767,13 @@ function SetSpanEnable()
     dialog.ColSpanInput.removeAttribute("disabled");
 }
 
-function SwitchPanel(newPanel)
+function SwitchToValidatePanel()
 {
-  if (currentPanel != newPanel)
+  if (currentPanel != validatePanel)
   {
     //Set index for starting panel on the <tabpanel> element
-    TabPanel.setAttribute("index", newPanel);
-    if (newPanel == CellPanel)
+    TabPanel.setAttribute("index", validatePanel);
+    if (validatePanel == CellPanel)
     {
       // Trigger setting of style for the tab widgets
       CellTab.setAttribute("selected", "true");
@@ -783,51 +782,8 @@ function SwitchPanel(newPanel)
       TableTab.setAttribute("selected", "true");
       CellTab.removeAttribute("selected");
     }
-    currentPanel = newPanel;
+    currentPanel = validatePanel;
   }
-}
-
-// More weirdness: Can't pass in "inputWidget" -- becomes undefined?!
-// Must pass in just ID and use getElementById
-function ValidateNumber(inputWidgetID, listWidget, minVal, maxVal, element, attName)
-{
-  var inputWidget = document.getElementById(inputWidgetID);
-  // Global error return value
-  error = false;
-  var maxLimit = maxVal;
-  var isPercent = false;
-
-  var numString = inputWidget.value.trimString();
-  if (numString)
-  {
-    if (listWidget)
-      isPercent = (listWidget.selectedIndex == 1);
-    if (isPercent)
-      maxLimit = 100;
-
-    numString = ValidateNumberString(numString, minVal, maxLimit);
-    if(!numString)
-    {
-      dump("Error returned from ValidateNumberString\n");
-
-      // Switch to appropriate panel for error reporting
-      SwitchPanel(validatePanel);
-
-      // Error - shift to offending input widget
-      SetTextboxFocus(inputWidget);
-      error = true;
-    }
-    else
-    {
-      if (isPercent)
-        numString += "%";
-      if (element)
-        element.setAttribute(attName, numString);
-    }
-  } else if (element) {
-    element.removeAttribute(attName);
-  }
-  return numString;
 }
 
 function SetAlign(listID, defaultValue, element, attName)
@@ -842,26 +798,26 @@ function SetAlign(listID, defaultValue, element, attName)
 function ValidateTableData()
 {
   validatePanel = TablePanel;
-  newRowCount = Number(ValidateNumber("TableRowsInput", null, 1, maxRows, null, null));
-  if (error) return false;
+  newRowCount = Number(ValidateNumber(dialog.TableRowsInput, null, 1, maxRows, null, null, true));
+  if (gValidationError) return false;
 
-  newColCount = Number(ValidateNumber("TableColumnsInput", null, 1, maxColumns, null, null));
-  if (error) return false;
+  newColCount = Number(ValidateNumber(dialog.TableColumnsInput, null, 1, maxColumns, null, null, true));
+  if (gValidationError) return false;
 
 
-  ValidateNumber("TableWidthInput", dialog.TableWidthUnits,
+  ValidateNumber(dialog.TableWidthInput, dialog.TableWidthUnits,
                  1, maxPixels, globalTableElement, "width");
-  if (error) return false;
+  if (gValidationError) return false;
 
-  var border = ValidateNumber("BorderWidthInput", null, 0, maxPixels, globalTableElement, "border");
+  var border = ValidateNumber(dialog.BorderWidthInput, null, 0, maxPixels, globalTableElement, "border");
   // TODO: Deal with "BORDER" without value issue
-  if (error) return false;
+  if (gValidationError) return false;
 
-  ValidateNumber("SpacingInput", null, 0, maxPixels, globalTableElement, "cellspacing");
-  if (error) return false;
+  ValidateNumber(dialog.SpacingInput, null, 0, maxPixels, globalTableElement, "cellspacing");
+  if (gValidationError) return false;
 
-  ValidateNumber("PaddingInput", null, 0, maxPixels, globalTableElement, "cellpadding");
-  if (error) return false;
+  ValidateNumber(dialog.PaddingInput, null, 0, maxPixels, globalTableElement, "cellpadding");
+  if (gValidationError) return false;
 
   SetAlign("TableAlignList", defHAlign, globalTableElement, "align");
 
@@ -876,30 +832,30 @@ function ValidateCellData()
 
   if (dialog.CellHeightCheckbox.checked)
   {
-    ValidateNumber("CellHeightInput", dialog.CellHeightUnits,
+    ValidateNumber(dialog.CellHeightInput, dialog.CellHeightUnits,
                     1, maxPixels, globalCellElement, "height");
-    if (error) return false;
+    if (gValidationError) return false;
   }
 
   if (dialog.CellWidthCheckbox.checked)
   {
-    ValidateNumber("CellWidthInput", dialog.CellWidthUnits,
+    ValidateNumber(dialog.CellWidthInput, dialog.CellWidthUnits,
                    1, maxPixels, globalCellElement, "width");
-    if (error) return false;
+    if (gValidationError) return false;
   }
 
   if (dialog.RowSpanCheckbox.checked && dialog.RowSpanCheckbox.disabled != "true")
   {
     // Note that span = 0 is allowed and means "span entire row/col"
-    ValidateNumber("RowSpanInput", null,
+    ValidateNumber(dialog.RowSpanInput, null,
                    0, rowCount, globalCellElement, "rowspan");
-    if (error) return false;
+    if (gValidationError) return false;
   }
   if (dialog.ColSpanCheckbox.checked && dialog.ColSpanCheckbox.getAttribute("disabled") != "true")
   {
-    ValidateNumber("ColSpanInput", null,
+    ValidateNumber(dialog.ColSpanInput, null,
                    0, colCount, globalCellElement, "colspan");
-    if (error) return false;
+    if (gValidationError) return false;
   }
 
   if (dialog.CellHAlignCheckbox.checked)
