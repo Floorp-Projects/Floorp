@@ -1,0 +1,32 @@
+#//------------------------------------------------------------------------
+#//
+#// Makefile to build the Julian tree
+#//
+#//------------------------------------------------------------------------
+
+#//------------------------------------------------------------------------
+#//
+#// Specify the NS_DEPTH of the current directory relative to the
+#// root of NS
+#//
+#//------------------------------------------------------------------------
+NS_DEPTH=..\..\..\..\..\
+
+DEPTH = $(NS_DEPTH)
+
+MODULE = nls
+
+LCFLAGS= -DMOZ_TREX -DLIBJULIAN $(LCFLAGS)
+CFLAGS= -DMOZ_TREX $(CFLAGS)
+
+EXPORTS = unistring.h calendar.h ptypes.h locid.h hashtab.h timezone.h smpdtfmt.h gregocal.h datefmt.h simpletz.h parsepos.h unicode.h
+
+#//------------------------------------------------------------------------
+#//
+#// Include the common makefile rules
+#//
+#//------------------------------------------------------------------------
+
+include <$(NS_DEPTH)/config/config.mak>
+include <$(NS_DEPTH)/config/rules.mak>
+

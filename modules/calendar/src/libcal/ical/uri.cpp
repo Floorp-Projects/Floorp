@@ -24,6 +24,7 @@
 
 #include "stdafx.h"
 #include "uri.h"
+#include "nspr.h"
 
 //---------------------------------------------------------------------
 
@@ -70,9 +71,9 @@ UnicodeString URI::getName()
 t_bool URI::IsValidURI(UnicodeString & s)
 {
     if (s.indexOf(':') > 0)
-        return TRUE;
+        return PR_TRUE;
     else
-        return FALSE;
+        return PR_FALSE;
 }
 
 //---------------------------------------------------------------------
