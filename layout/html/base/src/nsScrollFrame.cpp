@@ -204,7 +204,8 @@ nsScrollFrame::GetScrollPosition(nsIPresContext* aPresContext, nscoord &aX, nsco
     nsIScrollableView* scrollingView;
     nsIView*           view;
     GetView(aPresContext, &view);
-    NS_ASSERTION(NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView)), "No scrolling view");
+    nsresult rv = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "No scrolling view");
     return scrollingView->GetScrollPosition(aX, aY); 
 }
 
@@ -215,7 +216,8 @@ nsScrollFrame::ScrollTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY, PR
     nsIView*           view;
     GetView(aPresContext, &view);
 
-    NS_ASSERTION(NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView)), "No scrolling view");
+    nsresult rv = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "No scrolling view");
     return scrollingView->ScrollTo(aX, aY, aFlags); 
 
 }

@@ -56,6 +56,7 @@ public:
   virtual ~nsBoxToBlockAdaptor();
 
 protected:
+  virtual void GetBoxName(nsAutoString& aName);
   virtual PRBool HasStyleChange();
   virtual void SetStyleChangeFlag(PRBool aDirty);
 

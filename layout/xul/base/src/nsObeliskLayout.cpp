@@ -31,6 +31,7 @@
 #include "nsTempleLayout.h"
 #include "nsBoxLayoutState.h"
 #include "nsBox.h"
+#include "nsIScrollableFrame.h"
 
 nsresult
 NS_NewObeliskLayout( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout)
@@ -90,20 +91,27 @@ nsObeliskLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
 
   PRBool isHorizontal = PR_FALSE;
   aBox->GetOrientation(isHorizontal);
-  //nscoord totalWidth = 0;
 
   if (node) {
-   // if the infos pref width is greater than aSize's use it.
+    // if the infos pref width is greater than aSize's use it.
     // if the infos min width is greater than aSize's use it.
     // if the infos max width is smaller than aSizes then set it.
-    nsBoxSize size = node->GetBoxSize(aState);
+    nsBoxSize size = node->GetBoxSize(aState, isHorizontal);
 
     nscoord s = size.pref;
+
+    nsMargin bp(0,0,0,0);
+    aBox->GetBorderAndPadding(bp);
+    if (isHorizontal) {
+      s += bp.top + bp.bottom;
+    } else {
+      s += bp.left + bp.right;
+    }
+ 
     nscoord& s2 = GET_HEIGHT(aSize, isHorizontal);
 
     if (s > s2)
       s2 = s;
-
   }
 
   return rv;
@@ -125,9 +133,18 @@ nsObeliskLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
     // if the infos pref width is greater than aSize's use it.
     // if the infos min width is greater than aSize's use it.
     // if the infos max width is smaller than aSizes then set it.
-    nsBoxSize size = node->GetBoxSize(aState);
+    nsBoxSize size = node->GetBoxSize(aState, isHorizontal);
 
     nscoord s = size.min;
+
+    nsMargin bp(0,0,0,0);
+    aBox->GetBorderAndPadding(bp);
+    if (isHorizontal) {
+      s += bp.top + bp.bottom;
+    } else {
+      s += bp.left + bp.right;
+    }
+
     nscoord& s2 = GET_HEIGHT(aSize, isHorizontal);
 
     if (s > s2)
@@ -153,7 +170,7 @@ nsObeliskLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
    // if the infos pref width is greater than aSize's use it.
     // if the infos min width is greater than aSize's use it.
     // if the infos max width is smaller than aSizes then set it.
-    nsBoxSize size = node->GetBoxSize(aState);
+    nsBoxSize size = node->GetBoxSize(aState, isHorizontal);
 
     nscoord s = size.max;
     nscoord& s2 = GET_HEIGHT(aSize, isHorizontal);
@@ -217,13 +234,82 @@ nsObeliskLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxS
   GetOtherTemple(aBox, &temple, &aTempleBox);
   if (temple) {
      // substitute our sizes for the other temples obelisk sizes.
+     PRBool isHorizontal = PR_FALSE;
+     aTempleBox->GetOrientation(isHorizontal);
      nsBoxSize* first = nsnull;
      nsBoxSize* last = nsnull;
-     temple->BuildBoxSizeList(aTempleBox, aState, first, last);
+     temple->BuildBoxSizeList(aTempleBox, aState, first, last, isHorizontal);
      aBoxSizes = first;
   }
 
   nsSprocketLayout::PopulateBoxSizes(aBox, aState, aBoxSizes, aComputedBoxSizes, aMinSize, aMaxSize, aFlexes);
+}
+
+void
+nsObeliskLayout::ComputeChildSizes(nsIBox* aBox,
+                           nsBoxLayoutState& aState, 
+                           nscoord& aGivenSize, 
+                           nsBoxSize* aBoxSizes, 
+                           nsComputedBoxSize*& aComputedBoxSizes)
+{  
+  nsCOMPtr<nsIBoxLayout> layout;
+  nsCOMPtr<nsIMonument> parentMonument;
+  nsCOMPtr<nsIScrollableFrame> scrollable;
+
+  nsresult rv = NS_OK;
+  aBox->GetParentBox(&aBox);
+  nscoord size = aGivenSize;
+  
+  while (aBox) {
+    aBox->GetLayoutManager(getter_AddRefs(layout));
+    parentMonument = do_QueryInterface(layout, &rv);
+    if (NS_SUCCEEDED(rv) && parentMonument) {
+      // we have a parent monument good. Go up until we hit the grid.
+      nsGridLayout* grid;
+      parentMonument->CastToGrid(&grid);
+      if (grid) {
+       if (size > aGivenSize) {
+          nscoord diff = size - aGivenSize;
+          aGivenSize += diff;
+          nsSprocketLayout::ComputeChildSizes(aBox, aState, aGivenSize, aBoxSizes, aComputedBoxSizes);
+          nsComputedBoxSize* s = aComputedBoxSizes;
+          nsComputedBoxSize* last = aComputedBoxSizes;
+          while(s)
+          {
+            last = s;
+            s = s->next;
+          }
+    
+          last->size -= diff;
+          aGivenSize -= diff;
+       } else {
+          nsSprocketLayout::ComputeChildSizes(aBox, aState, aGivenSize, aBoxSizes, aComputedBoxSizes);
+       }
+       return;
+      }
+    } else {
+       scrollable = do_QueryInterface(aBox, &rv);
+       if (NS_SUCCEEDED(rv)) {
+         // oops we are in a scrollable. Did it change our size?
+         // if so remove the excess space.
+         nsRect r;
+         aBox->GetBounds(r);
+         PRBool isHorizontal = PR_FALSE;
+         aBox->GetOrientation(isHorizontal);
+
+         if (size < GET_WIDTH(r, isHorizontal)) {
+            if (isHorizontal) {
+               size = r.width;
+            } else {
+               size = r.height;
+            }
+         }
+       }
+    }
+    aBox->GetParentBox(&aBox);
+  }
+
+  NS_ERROR("Not in GRID!!!");
 }
 
 void 

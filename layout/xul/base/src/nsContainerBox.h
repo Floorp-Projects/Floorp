@@ -30,6 +30,8 @@
 #include "nsCOMPtr.h" 
 #include "nsIBoxLayout.h"
 
+class nsFrameList;
+
 class nsContainerBox : public nsBox {
 
 public:

@@ -79,6 +79,7 @@ public:
 
   NS_IMETHOD MarkChildrenStyleChange();
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState);
+  NS_IMETHOD DumpBox(FILE* out);
 
   nsBox(nsIPresShell* aShell);
 
@@ -104,6 +105,11 @@ public:
   static void BoundsCheck(nsSize& aMinSize, nsSize& aPrefSize, nsSize& aMaxSize);
 
 protected:
+
+  virtual void AppendAttribute(const nsAutoString& aAttribute, const nsAutoString& aValue, nsAutoString& aResult);
+
+  virtual void ListBox(nsAutoString& aResult);
+
   virtual PRBool HasStyleChange();
   virtual void SetStyleChangeFlag(PRBool aDirty);
 
@@ -115,7 +121,6 @@ protected:
   void EnterLayout(nsBoxLayoutState& aState);
   void ExitLayout(nsBoxLayoutState& aState);
   virtual void GetBoxName(nsAutoString& aName);
-  virtual void ListBox(nsAutoString& aResult);
 
   enum eMouseThrough {
     unset,
@@ -131,6 +136,13 @@ private:
   //nscoord mX;
   //nscoord mY;
 };
+
+#define NS_BOX_ASSERTION(box,expr,str) \
+  if (!(expr)) { \
+       box->DumpBox(stdout); \
+       nsDebug::Assertion(str, #expr, __FILE__, __LINE__); \
+  } \
+
 
 #endif
 
