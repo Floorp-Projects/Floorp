@@ -543,7 +543,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
     nsCOMPtr<nsIWebBrowserChrome> parentChrome(do_GetInterface(parentTreeOwner));
 
     // is the parent (if any) modal? if so, we must be, too.
-    PRBool weAreModal = chromeFlags & nsIWebBrowserChrome::CHROME_MODAL;
+    PRBool weAreModal = (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL) != 0;
     if (!weAreModal && parentChrome)
       parentChrome->IsWindowModal(&weAreModal);
 
