@@ -42,8 +42,6 @@ typedef struct _GtkXtBinClass GtkXtBinClass;
                                          GTK_TYPE_XTBIN))
 #define GTK_IS_XTBIN_CLASS(klass)       (GTK_CHECK_CLASS_TYPE ((klass), \
                                          GTK_TYPE_XTBIN))
-#define GTK_SOCKET_GET_CLASS(obj)  	(GTK_CHECK_GET_CLASS ((obj), \
-					GTK_TYPE_SOCKET, GtkSocketClass))
 typedef struct _XtClient XtClient;
 
 struct _XtClient {
