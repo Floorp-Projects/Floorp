@@ -449,13 +449,16 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
        aAppShell, aToolkit, aInitData);
 
-      // See if the caller wants to explictly set clip children
+      // See if the caller wants to explictly set clip children and clip siblings
     DWORD style = WindowStyle();
     if (nsnull != aInitData) {
       if (aInitData->clipChildren) {
         style |= WS_CLIPCHILDREN;
       } else {
         style &= ~WS_CLIPCHILDREN;
+      }
+      if (aInitData->clipSiblings) {
+        style |= WS_CLIPSIBLINGS;
       }
     }
 

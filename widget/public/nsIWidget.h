@@ -137,13 +137,13 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
 
 struct nsWidgetInitData {
   nsWidgetInitData()
-    : clipChildren(PR_FALSE),
+    : clipChildren(PR_FALSE), clipSiblings(PR_FALSE),
       mBorderStyle(eBorderStyle_window)
   {
   }
 
-  // when painting exclude area occupied by child windows
-  PRPackedBool  clipChildren;
+  // when painting exclude area occupied by child windows and sibling windows
+  PRPackedBool  clipChildren, clipSiblings;
   nsBorderStyle mBorderStyle;
 };
 
