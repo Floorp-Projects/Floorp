@@ -31,6 +31,11 @@
 #include "nsIMsgRFC822Parser.h"
 #include "nsMsgRFC822Parser.h"
 
+#include "nsIUrlListenerManager.h"
+#include "nsUrlListenerManager.h"
+
+static NS_DEFINE_CID(kCUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
+
 static NS_DEFINE_CID(kCMessengerCID, NS_MESSENGER_CID);
 static NS_DEFINE_CID(kCMessengerBootstrapCID, NS_MESSENGER_CID);
 
@@ -134,27 +139,39 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 	// Whenever you add a new class that supports an interface, plug it in here!!!
 	
 	// do they want an RFC822 Parser interface ?
-	if (mClassID.Equals(kCMsgRFC822ParserCID)) {
+	if (mClassID.Equals(kCMsgRFC822ParserCID)) 
+	{
 		res = NS_NewRFC822Parser((nsIMsgRFC822Parser **) &inst);
 		if (NS_FAILED(res))  // was there a problem creating the object ?
 		  return res;   
 	}
-	else if (mClassID.Equals(kCMsgFolderEventCID)) {
-    NS_NOTREACHED("hello? what happens here?");
+	else if (mClassID.Equals(kCMsgFolderEventCID)) 
+	{
+		NS_NOTREACHED("hello? what happens here?");
 		return NS_OK;
 	}
-  else if (mClassID.Equals(kCMessengerBootstrapCID)) {
-    res = NS_NewMessengerBootstrap((nsIAppShellService**)&inst,
+	else if (mClassID.Equals(kCMessengerBootstrapCID)) 
+	{
+		res = NS_NewMessengerBootstrap((nsIAppShellService**)&inst,
                                    mServiceManager);
-    if (NS_FAILED(res)) return res;
-  }
-  else if (mClassID.Equals(kCMessengerCID)) {
-    res = NS_NewMessenger((nsIMessenger**)&inst);
-    if (NS_FAILED(res)) return res;
-  }
+		if (NS_FAILED(res)) return res;
+	}
+	else if (mClassID.Equals(kCMessengerCID)) 
+	{
+		res = NS_NewMessenger((nsIMessenger**)&inst);
+		if (NS_FAILED(res)) return res;
+	}
+	else if (mClassID.Equals(kCUrlListenerManagerCID))
+	{
+		nsUrlListenerManager * listener = nsnull;
+		listener = new nsUrlListenerManager();
+		if (listener) // we need to pick up a ref cnt...
+			listener->QueryInterface(nsIUrlListenerManager::IID(), (void **) &inst);
+	}
 
 	// End of checking the interface ID code....
-	if (inst) {
+	if (inst) 
+	{
 		// so we now have the class that supports the desired interface...we need to turn around and
 		// query for our desired interface.....
 		res = inst->QueryInterface(aIID, aResult);
@@ -171,13 +188,12 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 nsresult
 nsMsgFactory::LockFactory(PRBool aLock)  
 {  
-	if (aLock) { 
+	if (aLock)
 		PR_AtomicIncrement(&g_LockCount); 
-	} else { 
-		PR_AtomicDecrement(&g_LockCount); 
-	} 
+	else
+		PR_AtomicDecrement(&g_LockCount);
 
-  return NS_OK;
+	return NS_OK;
 }  
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +218,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 
 extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr) 
 {
-  return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
+	return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -216,13 +232,18 @@ NSRegisterSelf(nsISupports* serviceMgr, const char* path)
   rv = nsRepository::RegisterComponent(kCMsgFolderEventCID, 
                                        nsnull, nsnull,
                                        path, PR_TRUE, PR_TRUE);
+
+  rv = nsRepository::RegisterComponent(kCUrlListenerManagerCID, nsnull, nsnull,
+									   path, PR_TRUE, PR_TRUE);
+
+  rv = nsRepository::RegisterComponent(kCMsgRFC822ParserCID, nsnull, nsnull,
+									   path, PR_TRUE, PR_TRUE);
   
   rv = nsRepository::RegisterComponent(kCMessengerCID,
                                        "Netscape Messenger",
                                        "component://netscape/messenger",
                                        path,
                                        PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
 
   return rv;
 }
@@ -232,9 +253,10 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char* path)
 {
   nsresult rv;
 
+  rv = nsRepository::UnregisterComponent(kCUrlListenerManagerCID, path);
+  rv = nsRepository::UnregisterComponent(kCMsgRFC822ParserCID, path);
+  rv = nsRepository::UnregisterComponent(kCMessengerCID, path);
   rv = nsRepository::UnregisterComponent(kCMsgFolderEventCID, path);
-  if (NS_FAILED(rv)) return rv;
-
   return rv;
 }
 
