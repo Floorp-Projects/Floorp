@@ -101,7 +101,7 @@ var personalToolbarObserver = {
 
       var flavourList = { };
       flavourList["moz/toolbaritem"] = { width: 2, data: uri };
-      flavourList["text/x-moz-url"] = { width: 2, data: uri + " " + "[ TEMP TITLE ]" };
+      flavourList["text/x-moz-url"] = { width: 2, data: uri + "\n" + "[ TEMP TITLE ]" };
       flavourList["text/html"] = { width: 2, data: htmlString };
       flavourList["text/unicode"] = { width: 2, data: uri };
       return flavourList;
@@ -282,7 +282,7 @@ var proxyIconDNDObserver = {
       var urlBar = document.getElementById("urlbar");
       var flavourList = { };
       flavourList["text/unicode"] = { width: 2, data: urlBar.value };
-      flavourList["text/x-moz-url"] = { width: 2, data: urlBar.value + " " + window._content.document.title };
+      flavourList["text/x-moz-url"] = { width: 2, data: urlBar.value + "\n" + window._content.document.title };
       var htmlString = "<a href=\"" + urlBar.value + "\">" + urlBar.value + "</a>";
       flavourList["text/html"] = { width: 2, data: htmlString };
       return flavourList;

@@ -93,7 +93,7 @@ function loadDS()
 	
 	if (url_ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).loaded)
 	{
-        var ds_uri = "chrome://global/locale/builtinURLs.rdf";
+        ds_uri = "chrome://global/locale/builtinURLs.rdf";
         gBuiltinUrlsDataSource = gRDFService.GetDataSource(ds_uri); // return nsIRDFDataSource
 	    gDataSourceLoaded = (gBuiltinUrlsDataSource != null);
 	}

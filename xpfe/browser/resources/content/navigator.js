@@ -429,9 +429,9 @@ function Startup()
     }
 
     dump("*** Pulling out the charset\n");
-    if ( window.arguments && window.arguments[1] ) {
+    if ( window.arguments && window.arguments.length > 1 ) {
         if (window.arguments[1].indexOf('charset=') != -1) {
-              arrayArgComponents = window.arguments[1].split('=');
+            var arrayArgComponents = window.arguments[1].split('=');
             if (arrayArgComponents) {
                 if (appCore != null) {
                  //we should "inherit" the charset menu setting in a new window
@@ -1857,7 +1857,7 @@ function postURLToNativeWidget() {
 }
 
 function checkForDirectoryListing() {
-    if ( window._content.HTTPIndex == "[xpconnect wrapped nsIHTTPIndex]"
+    if ( 'HTTPIndex' in window._content
          &&
          typeof window._content.HTTPIndex == "object"
          &&
