@@ -90,13 +90,15 @@ public:
   virtual void* GetClosure()=0;
 };
 
-/** Factory method for creating an nsITimer */
+//
+// Factory method for creating an nsITimer
+//
+// Warning: This function should NOT be defined with NS_TIMER because
+// the intention is that it be linked statically with the library/DLL
+// or app that uses it.
+
 extern
-#ifdef XP_MAC // On the macintosh, this is built into the network library.
-NS_NET
-#else
-NS_TIMER
-#endif
 nsresult NS_NewTimer(nsITimer** aInstancePtrResult);
 
-#endif
+#endif // nsITimer_h___
+

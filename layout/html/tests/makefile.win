@@ -66,6 +66,7 @@ LLIBS=				\
 !else
  $(DIST)\lib\netlib.lib		        \
 !endif
+ $(DIST)\lib\timer_s.lib \
  $(LIBNSPR)			\
  $(DIST)\lib\js32$(VERSION_NUMBER).lib	
 

@@ -576,7 +576,7 @@ class nsTimerManagers
 // Entry into the DLL.  No, I dunno why there's not a normal factory
 // for this either.  Ease of use?
 
-NS_TIMER nsresult NS_NewTimer( nsITimer **aInstance)
+nsresult NS_NewTimer( nsITimer **aInstance)
 {
    if( !aInstance)
       return NS_ERROR_NULL_POINTER;

@@ -71,6 +71,7 @@ LLIBS=					\
  $(DIST)\lib\raptorevents_s.lib		\
  $(DIST)\lib\xpcom.lib		\
  $(DIST)\lib\raptorgfxwin.lib		\
+ $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\jsdom.lib		        \
 !ifdef NECKO

@@ -23,9 +23,9 @@ DIRS = windows
 LIBRARY_NAME=raptorgfx_s
 MODULE=raptor 
 !ifdef NECKO
-REQUIRES=util img xpcom raptor necko
+REQUIRES=util img xpcom raptor necko timer
 !else
-REQUIRES=util img xpcom raptor netlib
+REQUIRES=util img xpcom raptor netlib timer
 !endif
 
 DEFINES=-D_IMPL_NS_GFX -DWIN32_LEAN_AND_MEAN
@@ -72,7 +72,7 @@ libs:: $(LIBRARY)
 install::
 	$(MAKE_INSTALL) icon_0.gif $(DIST)\bin\res\gfx
 	$(MAKE_INSTALL) icon_1.gif $(DIST)\bin\res\gfx
-	
+
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 	rm -f $(PDBFILE).pdb

@@ -47,6 +47,7 @@ LCFLAGS = \
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
  $(DIST)\lib\raptorgfxwin.lib	\
+ $(DIST)\lib\timer_s.lib \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>

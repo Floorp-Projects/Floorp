@@ -73,6 +73,7 @@ LCFLAGS = \
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
  $(DIST)\lib\raptorgfxwin.lib	\
+ $(DIST)\lib\timer_s.lib \
  $(DIST)\lib\img32$(VERSION_NUMBER).lib     \
  $(DIST)\lib\util.lib        \
  $(DIST)\lib\jsdom.lib       \

@@ -134,12 +134,6 @@ typedef PRUint16 PRUnichar;
 #define NS_GFX_(type) NS_IMPORT_(type)
 #endif
 
-#ifdef _IMPL_NS_TIMER
-#define NS_TIMER NS_EXPORT
-#else
-#define NS_TIMER NS_IMPORT
-#endif
-
 #ifdef _IMPL_NS_PLUGIN
 #define NS_PLUGIN NS_EXPORT
 #else
