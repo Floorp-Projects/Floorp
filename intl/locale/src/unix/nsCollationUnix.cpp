@@ -21,12 +21,16 @@
 #include "nsCollationUnix.h"
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
+#include "nsILocaleService.h"
+#include "nsIPlatformCharset.h"
 #include "nsIPosixLocale.h"
+#include "nsCOMPtr.h"
 
 
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
-static NS_DEFINE_IID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
+static NS_DEFINE_CID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
 static NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
+static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 
 NS_IMPL_ISUPPORTS(nsCollationUnix, kICollationIID);
 
@@ -45,7 +49,10 @@ nsCollationUnix::~nsCollationUnix()
 
 nsresult nsCollationUnix::Initialize(nsILocale* locale) 
 {
+#define kPlatformLocaleLength 64
   NS_ASSERTION(mCollation == NULL, "Should only be initialized once");
+
+  nsresult res;
 
   mCollation = new nsCollation;
   if (mCollation == NULL) {
@@ -53,33 +60,69 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // store local charset name
-  mCharset.SetString("ISO-8859-1"); //TODO: need to get this from locale
+  // default local charset name
+  mCharset.SetString("ISO-8859-1");
 
-  // store platform locale
+  // default platform locale
   mLocale.SetString("C");
 
-  if (locale != nsnull) {
-    PRUnichar *aLocaleUnichar;
-    nsString aLocale;
-    nsString aCategory("NSILOCALE_COLLATE");
-    nsresult res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
-    if (NS_FAILED(res)) {
-      return res;
-    }
-    aLocale.SetString(aLocaleUnichar);
+  PRUnichar *aLocaleUnichar = NULL;
+  nsString aCategory("NSILOCALE_COLLATE");
 
-    nsIPosixLocale* posixLocale;
-    char locale[32];
-    size_t length = 32;
-    res = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID, NULL, kIPosixLocaleIID, (void**)&posixLocale);
-    if (NS_FAILED(res)) {
-      return res;
+  // get locale string, use app default if no locale specified
+  if (locale == nsnull) {
+    nsILocaleService *localeService;
+
+    res = nsComponentManager::CreateInstance(kLocaleServiceCID, NULL, 
+                                             nsILocaleService::GetIID(), (void**)&localeService);
+    if (NS_SUCCEEDED(res)) {
+      nsILocale *appLocale;
+      res = localeService->GetApplicationLocale(&appLocale);
+      localeService->Release();
+      if (NS_SUCCEEDED(res)) {
+        res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+        appLocale->Release();
+      }
     }
-    if (NS_SUCCEEDED(res = posixLocale->GetPlatformLocale(&aLocale, locale, length))) {
-      mLocale.SetString(locale);
+  }
+  else {
+    res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
+  }
+
+  // Get platform locale and charset name from locale, if available
+  if (NS_SUCCEEDED(res)) {
+    nsString aLocale;
+    aLocale.SetString(aLocaleUnichar);
+    if (NULL != aLocaleUnichar) {
+      nsAllocator::Free(aLocaleUnichar);
     }
-    posixLocale->Release();
+
+    // keep the same behavior as 4.x as well as avoiding Linux collation key problem
+    if (aLocale.EqualsIgnoreCase("en-US")) {
+      aLocale.SetString("C");
+    }
+
+    nsCOMPtr <nsIPosixLocale> posixLocale;
+    res = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID, NULL, kIPosixLocaleIID, getter_AddRefs(posixLocale));
+    if (NS_SUCCEEDED(res)) {
+      char platformLocale[kPlatformLocaleLength+1];
+      res = posixLocale->GetPlatformLocale(&aLocale, platformLocale, kPlatformLocaleLength+1);
+      if (NS_SUCCEEDED(res)) {
+        mLocale.SetString(platformLocale);
+      }
+    }
+
+    nsCOMPtr <nsIPlatformCharset> platformCharset;
+    res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
+                                             nsIPlatformCharset::GetIID(), getter_AddRefs(platformCharset));
+    if (NS_SUCCEEDED(res)) {
+      PRUnichar* mappedCharset = NULL;
+      res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
+      if (NS_SUCCEEDED(res) && mappedCharset) {
+        mCharset.SetString(mappedCharset);
+        nsAllocator::Free(mappedCharset);
+      }
+    }
   }
 
   return NS_OK;
