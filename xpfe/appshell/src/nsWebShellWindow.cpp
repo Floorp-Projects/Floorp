@@ -385,6 +385,10 @@ nsWebShellWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
 NS_IMETHODIMP 
 nsWebShellWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
+  // If loading a new root .xul document, then redo chrome.
+  if ( aShell == mWebShell ) {
+      mChromeInitialized = PR_FALSE;
+  }
   return NS_OK;
 }
 
@@ -685,8 +689,22 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
                                                      nsIWebShell*& aResult)
 {
+  nsresult rv = NS_OK;
+
+  // Zero result (in case we fail).
   aResult = nsnull;
-  return NS_OK;
+
+  // Search for named frame within our root webshell.  This will
+  // bypass the .xul document (and rightfully so).  We need to be
+  // careful not to give that documents child frames names!
+  //
+  // This will need to be enhanced to search for (owned?) named
+  // windows at some point.
+  if ( mWebShell ) {
+      //rv = mWebShell->FindChildWithName( aName, aResult );
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -835,11 +853,8 @@ nsWebShellWindow::OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus)
    * Load the menus, run the startup script etc.. only once. So, Use
    * the mChrome Initialized  member to check whether chrome should be 
    * initialized or not - Radha
-   *
-   * This breaks file download (where I'm using a single window with
-   * two separate xul files).  I'm turning this off for now... - Law
    */
-  if (0 && mChromeInitialized)
+  if (mChromeInitialized)
     return NS_OK;
 
   mChromeInitialized = PR_TRUE;
