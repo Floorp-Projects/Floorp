@@ -6323,6 +6323,10 @@
         </GROUP>
         <GROUP><NAME>Static Libs</NAME>
             <FILEREF>
+                <TARGETNAME>widget.shlb</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>UnicharUtilsStatic.o</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
                 <TARGETNAME>widgetDebug.shlb</TARGETNAME>
