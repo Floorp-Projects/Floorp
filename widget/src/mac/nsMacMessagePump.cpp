@@ -736,8 +736,10 @@ nsRefData		*theRefData;
 #if 1
 	whichwindow = FrontWindow();
 	if (whichwindow)
-			theRefData = (nsRefData*)GetWRefCon (whichwindow);
-			raptorWindow = (nsWindow*)theRefData->GetTopWidget();
+	{
+		theRefData = (nsRefData*)GetWRefCon (whichwindow);
+		raptorWindow = (nsWindow*)theRefData->GetTopWidget();
+	}
 #else
 	// XXX For some reason this returns null... which is bad...
 	raptorWindow = mToolkit->GetFocus();
