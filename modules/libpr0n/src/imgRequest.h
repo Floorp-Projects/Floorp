@@ -51,7 +51,8 @@ enum {
   onStartDecode = 0x1,
   onStartContainer = 0x2,
   onStopContainer = 0x4,
-  onStopDecode = 0x8
+  onStopDecode = 0x8,
+  onStopRequest = 0x16
 };
 
 class imgRequest : public imgIRequest,

@@ -110,6 +110,12 @@ nsresult imgRequest::AddObserver(imgIDecoderObserver *observer)
     }
   }
 
+  if (mState & onStopRequest) {
+    nsCOMPtr<nsIStreamObserver> ob(do_QueryInterface(observer));
+    PR_ASSERT(observer);
+    ob->OnStopRequest(nsnull, nsnull, NS_OK, nsnull);
+  } 
+
   return NS_OK;
 }
 
@@ -509,6 +515,8 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
          ("[this=%p] imgRequest::OnStopRequest\n", this));
 
   NS_ASSERTION(mChannel && mProcessing, "imgRequest::OnStopRequest -- received multiple OnStopRequest");
+
+  mState |= onStopRequest;
 
   mProcessing = PR_FALSE;
 
