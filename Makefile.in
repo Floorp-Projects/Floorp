@@ -28,7 +28,7 @@ DIRS =				\
   config			\
   $(NULL)
 
-ifndef MOZ_NATIVE_NSPR
+ifdef MOZ_BUILD_NSPR
 DIRS +=				\
   nsprpub			\
   $(NULL)
@@ -79,8 +79,9 @@ DIRS +=				\
   sun-java			\
   $(NULL)
 
-
+ifdef MOZ_BUILD_XPFE
 DIRS += xpfe
+endif
 
 ifdef MOZ_MAIL_NEWS
 DIRS += mailnews
@@ -101,4 +102,3 @@ real_install: install
 real_clobber: clobber
 
 real_depend: depend
-

@@ -596,6 +596,28 @@ MOZ_ARG_ENABLE_BOOL(tests,
 [  --enable-tests          enable test stubs],
   ENABLE_TESTS=1)
 
+dnl build mozilla/xpfe by default
+MOZ_BUILD_XPFE=1
+
+MOZ_ARG_ENABLE_BOOL(build-xpfe,
+[  --enable-build-xpfe     build mozilla/xpfe],
+  MOZ_BUILD_XPFE=1)
+
+MOZ_ARG_DISABLE_BOOL(build-xpfe,
+[  --disable-build-xpfe          dont build mozilla/xpfe],
+  MOZ_BUILD_XPFE= )
+
+dnl build mozilla/nsprpub by default
+MOZ_BUILD_NSPR=1
+
+MOZ_ARG_ENABLE_BOOL(build-nspr,
+[  --enable-build-nspr           build mozilla/nsprpub],
+  MOZ_BUILD_NSPR=1)
+
+MOZ_ARG_DISABLE_BOOL(build-nspr,
+[  --disable-build-nspr          dont build mozilla/nsprpub],
+  MOZ_BUILD_NSPR= )
+
 MOZ_ARG_ENABLE_STRING(homedir,
 [  --enable-homedir=\$val   set the homedir to \$val],
 dnl [ Location of the mozilla user directory (default is ~/.mozilla).],
@@ -653,6 +675,8 @@ AC_SUBST(MOZ_INSURE_DIRS)
 AC_SUBST(MOZ_INSURE_EXCLUDE_DIRS)
 AC_SUBST(MOZ_INSURIFYING)
 AC_SUBST(MOZ_MAIL_NEWS)
+AC_SUBST(MOZ_BUILD_XPFE)
+AC_SUBST(MOZ_BUILD_NSPR)
 AC_SUBST(MOZ_LDAP)
 AC_SUBST(MOZ_EDITOR)
 AC_SUBST(UNIX_SKIP_ASSERTS)
