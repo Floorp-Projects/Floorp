@@ -30,7 +30,7 @@
 static PRLogModuleInfo* gDNSLogModuleInfo;
 
 #define DNS_TRACE_LOOKUPS 0x1
-#define DNS_TRACE_SLOW    0x2
+#define DNS_TRACE_SLOW    0x2   // XXX not yet implemented
 
 #define DNS_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
 
