@@ -108,6 +108,7 @@ EX_LIBS = \
 	$(PNG_LIBS) \
 	-ljs \
 	-ljsdom \
+	-ljsurl \
 	$(DIST)/lib/libjsdomcore_s.a \
 	$(JSJ_LIB) \
 	-lmimetype \
