@@ -399,6 +399,36 @@ NS_IMETHODIMP nsMessageViewDataSource::DoCommand(nsISupportsArray/*<nsIRDFResour
 		return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMessageViewDataSource::GetAllowNegativeAssertions(PRBool *aAllowNegativeAssertions)
+{
+//	*aAllowNegativeAssertions = mAllowNegativeAssertions;
+	*aAllowNegativeAssertions = PR_TRUE;	// XXX fix build bustage
+	return(NS_OK);
+}
+
+NS_IMETHODIMP
+nsMessageViewDataSource::SetAllowNegativeAssertions(PRBool aAllowNegativeAssertions)
+{
+//	mAllowNegativeAssertions = aAllowNegativeAssertions;
+	return(NS_OK);
+}
+
+NS_IMETHODIMP
+nsMessageViewDataSource::GetCoalesceDuplicateArcs(PRBool *aCoalesceDuplicateArcs)
+{
+//	*aCoalesceDuplicateArcs = mCoalesceDuplicateArcs;
+	*aCoalesceDuplicateArcs = PR_TRUE;	// XXX fix build bustage
+	return(NS_OK);
+}
+
+NS_IMETHODIMP
+nsMessageViewDataSource::SetCoalesceDuplicateArcs(PRBool aCoalesceDuplicateArcs)
+{
+//	mCoalesceDuplicateArcs = aCoalesceDuplicateArcs;
+	return(NS_OK);
+}
+
 //We're only going to allow one datasource at a time.
 NS_IMETHODIMP nsMessageViewDataSource::AddDataSource(nsIRDFDataSource* source)
 {
