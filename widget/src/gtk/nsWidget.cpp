@@ -209,7 +209,7 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 }
 
 NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
-			   PRUint32 aHeight, PRBool aRepaint)
+                           PRUint32 aHeight, PRBool aRepaint)
 {
   Resize(aWidth,aHeight,aRepaint);
   Move(aX,aY);
@@ -320,8 +320,8 @@ nsIFontMetrics *nsWidget::GetFont(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetFont(const nsFont &aFont)
 {
-    NS_NOTYETIMPLEMENTED("nsWidget::SetFont");
-    return NS_OK;
+  // NS_NOTYETIMPLEMENTED("nsWidget::SetFont");
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -339,50 +339,50 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
     GdkCursor *newCursor = 0;
 
     switch(aCursor) {
-	  case eCursor_select:
-	    newCursor = gdk_cursor_new(GDK_XTERM);
-	    break;
+      case eCursor_select:
+        newCursor = gdk_cursor_new(GDK_XTERM);
+        break;
 
-	  case eCursor_wait:
-	    newCursor = gdk_cursor_new(GDK_WATCH);
-	    break;
+      case eCursor_wait:
+        newCursor = gdk_cursor_new(GDK_WATCH);
+        break;
 
-	  case eCursor_hyperlink:
-	    newCursor = gdk_cursor_new(GDK_HAND2);
-	    break;
+      case eCursor_hyperlink:
+        newCursor = gdk_cursor_new(GDK_HAND2);
+        break;
 
-	  case eCursor_standard:
-	    newCursor = gdk_cursor_new(GDK_LEFT_PTR);
-	    break;
+      case eCursor_standard:
+        newCursor = gdk_cursor_new(GDK_LEFT_PTR);
+        break;
 
-	  case eCursor_arrow_south:
-	  case eCursor_arrow_south_plus:
-	    newCursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
-	    break;
+      case eCursor_arrow_south:
+      case eCursor_arrow_south_plus:
+        newCursor = gdk_cursor_new(GDK_BOTTOM_SIDE);
+        break;
 
-	  case eCursor_arrow_north:
-	  case eCursor_arrow_north_plus:
-	    newCursor = gdk_cursor_new(GDK_TOP_SIDE);
-	    break;
+      case eCursor_arrow_north:
+      case eCursor_arrow_north_plus:
+        newCursor = gdk_cursor_new(GDK_TOP_SIDE);
+        break;
 
-	  case eCursor_arrow_east:
-	  case eCursor_arrow_east_plus:
-	    newCursor = gdk_cursor_new(GDK_RIGHT_SIDE);
-	    break;
+      case eCursor_arrow_east:
+      case eCursor_arrow_east_plus:
+        newCursor = gdk_cursor_new(GDK_RIGHT_SIDE);
+        break;
 
-	  case eCursor_arrow_west:
-	  case eCursor_arrow_west_plus:
-	    newCursor = gdk_cursor_new(GDK_LEFT_SIDE);
-	    break;
+      case eCursor_arrow_west:
+      case eCursor_arrow_west_plus:
+        newCursor = gdk_cursor_new(GDK_LEFT_SIDE);
+        break;
 
-	  default:
-	    NS_ASSERTION(PR_FALSE, "Invalid cursor type");
-	    break;
-	}
+      default:
+        NS_ASSERTION(PR_FALSE, "Invalid cursor type");
+        break;
+    }
 
     if (nsnull != newCursor) {
-	    mCursor = aCursor;
-	    ::gdk_window_set_cursor(mWidget->window, newCursor);
+      mCursor = aCursor;
+      ::gdk_window_set_cursor(mWidget->window, newCursor);
     }
   }
   return NS_OK;
@@ -467,20 +467,20 @@ NS_METHOD nsWidget::Update(void)
 //-------------------------------------------------------------------------
 void *nsWidget::GetNativeData(PRUint32 aDataType)
 {
-    switch(aDataType) {
-      case NS_NATIVE_WINDOW:
-        return (void *)mWidget->window;
-      case NS_NATIVE_DISPLAY:
-	return (void *)GDK_DISPLAY();
-      case NS_NATIVE_WIDGET:
-	return (void *)mWidget;
-      case NS_NATIVE_GRAPHIC:
-	return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
-      default:
-        g_print("nsWidget::GetNativeData(%i) - weird value\n", aDataType);
-	break;
-    }
-    return nsnull;
+  switch(aDataType) {
+    case NS_NATIVE_WINDOW:
+      return (void *)mWidget->window;
+    case NS_NATIVE_DISPLAY:
+      return (void *)GDK_DISPLAY();
+    case NS_NATIVE_WIDGET:
+      return (void *)mWidget;
+    case NS_NATIVE_GRAPHIC:
+      return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
+    default:
+      g_print("nsWidget::GetNativeData(%i) - weird value\n", aDataType);
+      break;
+  }
+  return nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -530,13 +530,13 @@ NS_METHOD nsWidget::SetMenuBar(nsIMenuBar * aMenuBar)
 }
 
 nsresult nsWidget::CreateWidget(nsIWidget *aParent,
-		      const nsRect &aRect,
-		      EVENT_CALLBACK aHandleEventFunction,
-		      nsIDeviceContext *aContext,
-		      nsIAppShell *aAppShell,
-		      nsIToolkit *aToolkit,
-		      nsWidgetInitData *aInitData,
-		      nsNativeWidget aNativeParent)
+                                const nsRect &aRect,
+                                EVENT_CALLBACK aHandleEventFunction,
+                                nsIDeviceContext *aContext,
+                                nsIAppShell *aAppShell,
+                                nsIToolkit *aToolkit,
+                                nsWidgetInitData *aInitData,
+                                nsNativeWidget aNativeParent)
 {
   GtkWidget *parentWidget = nsnull;
 
@@ -594,8 +594,8 @@ NS_METHOD nsWidget::Create(nsIWidget *aParent,
                       nsWidgetInitData *aInitData)
 {
     return(CreateWidget(aParent, aRect, aHandleEventFunction,
-			aContext, aAppShell, aToolkit, aInitData,
-			nsnull));
+                        aContext, aAppShell, aToolkit, aInitData,
+                        nsnull));
 }
 
 //-------------------------------------------------------------------------
@@ -612,8 +612,8 @@ NS_METHOD nsWidget::Create(nsNativeWidget aParent,
                       nsWidgetInitData *aInitData)
 {
     return(CreateWidget(nsnull, aRect, aHandleEventFunction,
-			aContext, aAppShell, aToolkit, aInitData,
-			aParent));
+                        aContext, aAppShell, aToolkit, aInitData,
+                        aParent));
 }
 
 //-------------------------------------------------------------------------
@@ -626,52 +626,52 @@ void nsWidget::InitCallbacks(char *aName)
 /* basically we are keeping the parent from getting the childs signals by
  * doing this. */
   gtk_signal_connect_after(GTK_OBJECT(mWidget),
-                     "button_press_event",
-		     GTK_SIGNAL_FUNC(gtk_true),
-		     NULL);
+                           "button_press_event",
+                           GTK_SIGNAL_FUNC(gtk_true),
+                           NULL);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "button_release_event",
-		     GTK_SIGNAL_FUNC(gtk_true),
-		     NULL);
+                     GTK_SIGNAL_FUNC(gtk_true),
+                     NULL);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "motion_notify_event",
-		     GTK_SIGNAL_FUNC(gtk_true),
-		     NULL);
-		     /*
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "enter_notify_event",
-		     GTK_SIGNAL_FUNC(gtk_true),
-		     NULL);
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "leave_notify_event",
-		     GTK_SIGNAL_FUNC(gtk_true),
-		     NULL);
-		     
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "draw",
-		     GTK_SIGNAL_FUNC(gtk_false),
-		     NULL);
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "expose_event",
-		     GTK_SIGNAL_FUNC(gtk_true),
-		     NULL);
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "key_press_event",
-		     GTK_SIGNAL_FUNC(gtk_true),
-		     NULL);
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "key_release_event",
-		     GTK_SIGNAL_FUNC(gtk_true),
-		     NULL);
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "focus_in_event",
-		     GTK_SIGNAL_FUNC(gtk_true),
-		     NULL);
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "focus_out_event",
-		     GTK_SIGNAL_FUNC(gtk_true),
-		     NULL);
-		     */
+                     GTK_SIGNAL_FUNC(gtk_true),
+                     NULL);
+  /*
+    gtk_signal_connect(GTK_OBJECT(mWidget),
+    "enter_notify_event",
+    GTK_SIGNAL_FUNC(gtk_true),
+    NULL);
+    gtk_signal_connect(GTK_OBJECT(mWidget),
+    "leave_notify_event",
+    GTK_SIGNAL_FUNC(gtk_true),
+    NULL);
+    
+    gtk_signal_connect(GTK_OBJECT(mWidget),
+    "draw",
+    GTK_SIGNAL_FUNC(gtk_false),
+    NULL);
+    gtk_signal_connect(GTK_OBJECT(mWidget),
+    "expose_event",
+    GTK_SIGNAL_FUNC(gtk_true),
+    NULL);
+    gtk_signal_connect(GTK_OBJECT(mWidget),
+    "key_press_event",
+    GTK_SIGNAL_FUNC(gtk_true),
+    NULL);
+    gtk_signal_connect(GTK_OBJECT(mWidget),
+    "key_release_event",
+    GTK_SIGNAL_FUNC(gtk_true),
+    NULL);
+    gtk_signal_connect(GTK_OBJECT(mWidget),
+    "focus_in_event",
+    GTK_SIGNAL_FUNC(gtk_true),
+    NULL);
+    gtk_signal_connect(GTK_OBJECT(mWidget),
+    "focus_out_event",
+    GTK_SIGNAL_FUNC(gtk_true),
+    NULL);
+  */
 }
 
 void nsWidget::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
@@ -759,7 +759,7 @@ PRBool nsWidget::DispatchStandardEvent(PRUint32 aMsg)
 //-------------------------------------------------------------------------
 
 NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
-				      nsEventStatus &aStatus)
+                                      nsEventStatus &aStatus)
 {
   NS_ADDREF(event->widget);
 
