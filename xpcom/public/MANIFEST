@@ -28,6 +28,5 @@ nsXPComCIID.h
 nsXPIDLString.h
 nsIEventQueue.h
 nsIEventQueueService.h
-nsICollection.h
 nsIAllocator.h
 nsIGenericFactory.h
