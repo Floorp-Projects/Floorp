@@ -539,6 +539,15 @@ static nsresult main1(int argc, char* argv[])
 	return rv;
   }
 
+  // if we get here, and we don't have a current profile, return a failure so we will exit
+  // this can happen, if the user hits cancel or close in the profile manager dialogs
+  char *currentProfileStr = nsnull;
+  rv = profileMgr->GetCurrentProfile(&currentProfileStr);
+  if (NS_FAILED(rv) || !currentProfileStr) {
+  	return NS_ERROR_FAILURE;
+  }
+  PR_FREEIF(currentProfileStr);   
+
   if ( CheckAndRunPrefs(cmdLineArgs) )
   	return NS_OK;
 
