@@ -96,6 +96,9 @@ $(DEPTH)/build/build_number: FORCE
 	$(PERL) $(srcdir)/bdate.pl > $@
 	$(PERL) $(srcdir)/aboutime.pl $(DEPTH)/l10n/us/xp/about-all.html $@
 
+$(topsrcdir)/modules/libpref/src/init/all.js: FORCE
+	$(PERL) set-timebomb.pl
+
 $(OBJDIR)/bdate$(BIN_SUFFIX): $(OBJDIR)/bdate.o
 	@$(MAKE_OBJDIR)
 	$(CCF) $(LDFLAGS) -o $@ $<
