@@ -20,7 +20,7 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
-#include "nsDocShellBase.h"
+#include "nsDocShell.h"
 #include "nsIComponentManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -32,6 +32,8 @@
 #include "nsLayoutCID.h"
 #include "nsNeckoUtil.h"
 #include "nsRect.h"
+#include "nsIFrame.h"
+#include "nsIContent.h"
 
 #ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
 #define WEB_TRACE(_bit,_args)            \
@@ -48,16 +50,20 @@
 
 
 //*****************************************************************************
-//***    nsDocShellBase: Object Management
+//***    nsDocShell: Object Management
 //*****************************************************************************
 
-nsDocShellBase::nsDocShellBase() : mCreated(PR_FALSE), mContentListener(nsnull)
+nsDocShell::nsDocShell() : mCreated(PR_FALSE), mContentListener(nsnull),
+   //XXX Remove HTML Specific ones
+   mAllowPlugins(PR_TRUE), mMarginWidth(0), mMarginHeight(0), 
+   mIsFrame(PR_FALSE)
+
 {
 	NS_INIT_REFCNT();
    mBaseInitInfo = new nsDocShellInitInfo();
 }
 
-nsDocShellBase::~nsDocShellBase()
+nsDocShell::~nsDocShell()
 {
    if(mBaseInitInfo)
       {
@@ -67,23 +73,40 @@ nsDocShellBase::~nsDocShellBase()
 
    if(mContentListener)
       {
+      mContentListener->DocShell(nsnull);
       mContentListener->Release();
       mContentListener = nsnull;
       }
 }
 
+NS_IMETHODIMP nsDocShell::Create(nsISupports* aOuter, const nsIID& aIID, 
+	void** ppv)
+{
+	NS_ENSURE_ARG_POINTER(ppv);
+	NS_ENSURE_NO_AGGREGATION(aOuter);
+
+	nsDocShell* docShell = new  nsDocShell();
+	NS_ENSURE_TRUE(docShell, NS_ERROR_OUT_OF_MEMORY);
+
+	NS_ADDREF(docShell);
+	nsresult rv = docShell->QueryInterface(aIID, ppv);
+	NS_RELEASE(docShell);  
+	return rv;
+}
+
 //*****************************************************************************
-// nsDocShellBase::nsISupports
+// nsDocShell::nsISupports
 //*****************************************************************************   
 
-NS_IMPL_ISUPPORTS6(nsDocShellBase, nsIDocShell, nsIDocShellEdit, 
-   nsIDocShellFile, nsIGenericWindow, nsIScrollable, nsITextScroll)
+NS_IMPL_ISUPPORTS7(nsDocShell, nsIDocShell, nsIDocShellEdit, 
+   nsIDocShellFile, nsIGenericWindow, nsIScrollable, nsITextScroll, 
+   nsIHTMLDocShell)
 
 //*****************************************************************************
-// nsDocShellBase::nsIDocShell
+// nsDocShell::nsIDocShell
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShellBase::LoadURI(nsIURI* aUri, 
+NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aUri, 
    nsIPresContext* presContext)
 {
    //NS_ENSURE_ARG(aUri);  // Done in LoadURIVia for us.
@@ -91,7 +114,7 @@ NS_IMETHODIMP nsDocShellBase::LoadURI(nsIURI* aUri,
    return LoadURIVia(aUri, presContext, 0);
 }
 
-NS_IMETHODIMP nsDocShellBase::LoadURIVia(nsIURI* aUri, 
+NS_IMETHODIMP nsDocShell::LoadURIVia(nsIURI* aUri, 
    nsIPresContext* aPresContext, PRUint32 aAdapterBinding)
 {
    NS_ENSURE_ARG(aUri);
@@ -108,7 +131,7 @@ NS_IMETHODIMP nsDocShellBase::LoadURIVia(nsIURI* aUri,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** aDocument)
+NS_IMETHODIMP nsDocShell::GetDocument(nsIDOMDocument** aDocument)
 {
   NS_ENSURE_ARG_POINTER(aDocument);
   NS_ENSURE_STATE(mContentViewer);
@@ -126,7 +149,7 @@ NS_IMETHODIMP nsDocShellBase::GetDocument(nsIDOMDocument** aDocument)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetCurrentURI(nsIURI** aURI)
+NS_IMETHODIMP nsDocShell::GetCurrentURI(nsIURI** aURI)
 {
    NS_ENSURE_ARG_POINTER(aURI);
    
@@ -138,7 +161,7 @@ NS_IMETHODIMP nsDocShellBase::GetCurrentURI(nsIURI** aURI)
 
 // SetDocument is only meaningful for doc shells that support DOM documents.  Not all do.
 NS_IMETHODIMP
-nsDocShellBase::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
+nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
 {
 
   // The tricky part is bypassing the normal load process and just putting a document into
@@ -155,7 +178,7 @@ nsDocShellBase::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
                     NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
-  if (!doc) { return NS_ERROR_NULL_POINTER; }
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(docFactory->CreateInstanceForDocument(this,
                                                           doc,
                                                           "view",
@@ -173,7 +196,7 @@ nsDocShellBase::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
   const nsAutoString uriString = "about:blank";
   nsCOMPtr<nsIURI> uri;
   NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), uriString), NS_ERROR_FAILURE);
-  if (!uri) { return NS_ERROR_OUT_OF_MEMORY; }
+  NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIChannel> dummyChannel;
   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(dummyChannel), uri, nsnull), NS_ERROR_FAILURE);
@@ -187,7 +210,7 @@ nsDocShellBase::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
 
   // (5) hook up the document and its content
   nsCOMPtr<nsIContent> rootContent = do_QueryInterface(aRootNode);
-  if (!doc) { return NS_ERROR_OUT_OF_MEMORY; }
+  NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
   NS_ENSURE_SUCCESS(rootContent->SetDocument(doc, PR_FALSE), NS_ERROR_FAILURE);
   doc->SetRootContent(rootContent);
 
@@ -206,10 +229,10 @@ nsDocShellBase::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
 
       // Resize-reflow this time
       nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(documentViewer);
-      if (!docViewer) { return NS_ERROR_OUT_OF_MEMORY; }
+      NS_ENSURE_TRUE(docViewer, NS_ERROR_OUT_OF_MEMORY);
       nsCOMPtr<nsIPresContext> presContext;
       NS_ENSURE_SUCCESS(docViewer->GetPresContext(*(getter_AddRefs(presContext))), NS_ERROR_FAILURE);
-      if (!presContext) { return NS_ERROR_OUT_OF_MEMORY; }
+      NS_ENSURE_TRUE(presContext, NS_ERROR_OUT_OF_MEMORY);
       float p2t;
       presContext->GetScaledPixelsToTwips(&p2t);
 
@@ -250,7 +273,7 @@ nsDocShellBase::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
 
 
 // caller is responsible for calling nsString::Recycle(*aName);
-NS_IMETHODIMP nsDocShellBase::GetName(PRUnichar** aName)
+NS_IMETHODIMP nsDocShell::GetName(PRUnichar** aName)
 {
    NS_ENSURE_ARG_POINTER(aName);
    *aName = nsnull;
@@ -259,7 +282,7 @@ NS_IMETHODIMP nsDocShellBase::GetName(PRUnichar** aName)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetName(const PRUnichar* aName)
+NS_IMETHODIMP nsDocShell::SetName(const PRUnichar* aName)
 {
   if (aName) {
     mName = aName;  // this does a copy of aName
@@ -270,7 +293,7 @@ NS_IMETHODIMP nsDocShellBase::SetName(const PRUnichar* aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetPresContext(nsIPresContext** aPresContext)
+NS_IMETHODIMP nsDocShell::GetPresContext(nsIPresContext** aPresContext)
 {
    NS_ENSURE_ARG_POINTER(aPresContext);
 
@@ -288,7 +311,7 @@ NS_IMETHODIMP nsDocShellBase::GetPresContext(nsIPresContext** aPresContext)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetParent(nsIDocShell** parent)
+NS_IMETHODIMP nsDocShell::GetParent(nsIDocShell** parent)
 {
    NS_ENSURE_ARG_POINTER(parent);
 
@@ -298,7 +321,7 @@ NS_IMETHODIMP nsDocShellBase::GetParent(nsIDocShell** parent)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetParent(nsIDocShell* aParent)
+NS_IMETHODIMP nsDocShell::SetParent(nsIDocShell* aParent)
 {
   // null aParent is ok
    /*
@@ -310,7 +333,7 @@ NS_IMETHODIMP nsDocShellBase::SetParent(nsIDocShell* aParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetParentURIContentListener(nsIURIContentListener**
+NS_IMETHODIMP nsDocShell::GetParentURIContentListener(nsIURIContentListener**
    aParent)
 {
    NS_ENSURE_ARG_POINTER(aParent);
@@ -320,7 +343,7 @@ NS_IMETHODIMP nsDocShellBase::GetParentURIContentListener(nsIURIContentListener*
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetParentURIContentListener(nsIURIContentListener*
+NS_IMETHODIMP nsDocShell::SetParentURIContentListener(nsIURIContentListener*
    aParent)
 {
    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
@@ -329,18 +352,7 @@ NS_IMETHODIMP nsDocShellBase::SetParentURIContentListener(nsIURIContentListener*
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::CanHandleContentType(const PRUnichar* contentType, 
-   PRBool* canHandle)
-{
-   NS_ENSURE_ARG_POINTER(canHandle);
-   
-   NS_WARN_IF_FALSE(PR_FALSE, "Subclasses should override this method!!!!");
-
-   *canHandle = PR_FALSE;
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShellBase::GetPrefs(nsIPref** aPrefs)
+NS_IMETHODIMP nsDocShell::GetPrefs(nsIPref** aPrefs)
 {
    NS_ENSURE_ARG_POINTER(aPrefs);
 
@@ -350,14 +362,14 @@ NS_IMETHODIMP nsDocShellBase::GetPrefs(nsIPref** aPrefs)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetPrefs(nsIPref* aPrefs)
+NS_IMETHODIMP nsDocShell::SetPrefs(nsIPref* aPrefs)
 {
   // null aPrefs is ok
   mPrefs = aPrefs;    // this assignment does an addref
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetRootDocShell(nsIDocShell** aRootDocShell)
+NS_IMETHODIMP nsDocShell::GetRootDocShell(nsIDocShell** aRootDocShell)
 {
   NS_ENSURE_ARG_POINTER(aRootDocShell);
   *aRootDocShell = this;
@@ -373,7 +385,7 @@ NS_IMETHODIMP nsDocShellBase::GetRootDocShell(nsIDocShell** aRootDocShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetZoom(float* zoom)
+NS_IMETHODIMP nsDocShell::GetZoom(float* zoom)
 {
    NS_ENSURE_ARG_POINTER(zoom);
    NS_ENSURE_STATE(mContentViewer);
@@ -391,7 +403,7 @@ NS_IMETHODIMP nsDocShellBase::GetZoom(float* zoom)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetZoom(float zoom)
+NS_IMETHODIMP nsDocShell::SetZoom(float zoom)
 {
    NS_ENSURE_STATE(mContentViewer);
 
@@ -409,7 +421,7 @@ NS_IMETHODIMP nsDocShellBase::SetZoom(float zoom)
 }
 
 NS_IMETHODIMP 
-nsDocShellBase::GetDocLoaderObserver(nsIDocumentLoaderObserver * *aDocLoaderObserver)
+nsDocShell::GetDocLoaderObserver(nsIDocumentLoaderObserver * *aDocLoaderObserver)
 {
   NS_ENSURE_ARG_POINTER(aDocLoaderObserver);
 
@@ -419,7 +431,7 @@ nsDocShellBase::GetDocLoaderObserver(nsIDocumentLoaderObserver * *aDocLoaderObse
 }
 
 NS_IMETHODIMP 
-nsDocShellBase::SetDocLoaderObserver(nsIDocumentLoaderObserver * aDocLoaderObserver)
+nsDocShell::SetDocLoaderObserver(nsIDocumentLoaderObserver * aDocLoaderObserver)
 {
   // it's legal for aDocLoaderObserver to be null.  
   mDocLoaderObserver = aDocLoaderObserver;
@@ -427,23 +439,23 @@ nsDocShellBase::SetDocLoaderObserver(nsIDocumentLoaderObserver * aDocLoaderObser
 }
 
 //*****************************************************************************
-// nsDocShellBase::nsIDocShellEdit
+// nsDocShell::nsIDocShellEdit
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShellBase::Search()
+NS_IMETHODIMP nsDocShell::Search()
 {
   NS_WARN_IF_FALSE(PR_FALSE, "Subclasses should override this method!!!!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetSearchable(PRBool* aSearchable)
+NS_IMETHODIMP nsDocShell::GetSearchable(PRBool* aSearchable)
 {
    NS_ENSURE_ARG_POINTER(aSearchable);
    *aSearchable = PR_FALSE;
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::ClearSelection()
+NS_IMETHODIMP nsDocShell::ClearSelection()
 {
    NS_ENSURE_STATE(mContentViewer);
    nsCOMPtr<nsIPresShell> presShell;
@@ -458,13 +470,61 @@ NS_IMETHODIMP nsDocShellBase::ClearSelection()
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SelectAll()
+/* the basic idea here is to grab the topmost content object
+ * (for HTML documents, that's the BODY)
+ * and select all it's children
+ */
+NS_IMETHODIMP nsDocShell::SelectAll()
 {
-  NS_WARN_IF_FALSE(PR_FALSE, "Subclasses should override this method!!!!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_STATE(mContentViewer);
+  nsCOMPtr<nsIPresShell> presShell;
+  NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+  // get the selection object
+  nsCOMPtr<nsIDOMSelection> selection;
+  NS_ENSURE_SUCCESS(presShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection)), 
+                    NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
+
+  // get the document
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  nsAutoString bodyTag = "body";
+  nsCOMPtr<nsIDOMDocument> document;
+  NS_ENSURE_SUCCESS(GetDocument(getter_AddRefs(document)), NS_ERROR_FAILURE);
+
+  // get the body tag(s) in the document
+  NS_ENSURE_SUCCESS(document->GetElementsByTagName(bodyTag, 
+                                                   getter_AddRefs(nodeList)), 
+                    NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(nodeList, NS_OK); // this means the document has no body, so nothing to select
+
+  // verify this document has exactly one body node
+  PRUint32 count; 
+  NS_ENSURE_SUCCESS(nodeList->GetLength(&count), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(count != 1, NS_OK); // could be true for a frameset doc
+
+  // select all children of the body
+  nsCOMPtr<nsIDOMNode> bodyNode;
+  NS_ENSURE_SUCCESS(nodeList->Item(0, getter_AddRefs(bodyNode)), NS_ERROR_FAILURE); 
+  NS_ENSURE_TRUE(bodyNode, NS_ERROR_FAILURE);
+    // start the selection in front of the first child
+  NS_ENSURE_SUCCESS(selection->Collapse(bodyNode, 0), NS_ERROR_FAILURE);
+    // end the selection after the last child
+  PRInt32 numBodyChildren=0;
+  nsCOMPtr<nsIDOMNode>lastChild;
+  NS_ENSURE_SUCCESS(bodyNode->GetLastChild(getter_AddRefs(lastChild)), 
+                    NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(lastChild, NS_OK); // body isn't required to have any children, so it's ok if lastChild is null.
+                                    // in this case, we just have a collapsed selection at (body, 0)
+  NS_ENSURE_SUCCESS(GetChildOffset(lastChild, bodyNode, &numBodyChildren), 
+                    NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(selection->Extend(bodyNode, numBodyChildren+1), NS_ERROR_FAILURE);
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::CopySelection()
+NS_IMETHODIMP nsDocShell::CopySelection()
 {
    NS_ENSURE_STATE(mContentViewer);
    PRBool copyable;
@@ -482,7 +542,7 @@ NS_IMETHODIMP nsDocShellBase::CopySelection()
 /* the docShell is "copyable" if it has a selection and the selection is not
  * collapsed (that is, at least one token is selected, a character or a node
  */
-NS_IMETHODIMP nsDocShellBase::GetCopyable(PRBool *aCopyable)
+NS_IMETHODIMP nsDocShell::GetCopyable(PRBool *aCopyable)
 {
    NS_ENSURE_ARG_POINTER(aCopyable);
    NS_ENSURE_STATE(mContentViewer);
@@ -507,7 +567,7 @@ NS_IMETHODIMP nsDocShellBase::GetCopyable(PRBool *aCopyable)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::CutSelection()
+NS_IMETHODIMP nsDocShell::CutSelection()
 {
    NS_ENSURE_STATE(mContentViewer);
    PRBool cutable;
@@ -521,7 +581,7 @@ NS_IMETHODIMP nsDocShellBase::CutSelection()
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetCutable(PRBool* aCutable)
+NS_IMETHODIMP nsDocShell::GetCutable(PRBool* aCutable)
 {
    NS_ENSURE_ARG_POINTER(aCutable);
    //XXX Implement
@@ -532,7 +592,7 @@ NS_IMETHODIMP nsDocShellBase::GetCutable(PRBool* aCutable)
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::Paste()
+NS_IMETHODIMP nsDocShell::Paste()
 {
    NS_ENSURE_STATE(mContentViewer);
    PRBool pasteable;
@@ -543,7 +603,7 @@ NS_IMETHODIMP nsDocShellBase::Paste()
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetPasteable(PRBool* aPasteable)
+NS_IMETHODIMP nsDocShell::GetPasteable(PRBool* aPasteable)
 {
    NS_ENSURE_ARG_POINTER(aPasteable);
 
@@ -556,10 +616,10 @@ NS_IMETHODIMP nsDocShellBase::GetPasteable(PRBool* aPasteable)
 }
 
 //*****************************************************************************
-// nsDocShellBase::nsIDocShellFile
+// nsDocShell::nsIDocShellFile
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShellBase::Save()
+NS_IMETHODIMP nsDocShell::Save()
 {
    NS_ENSURE_STATE(mContentViewer);
    PRBool saveable;
@@ -570,7 +630,7 @@ NS_IMETHODIMP nsDocShellBase::Save()
    return NS_ERROR_FAILURE;
 } 
 
-NS_IMETHODIMP nsDocShellBase::GetSaveable(PRBool* saveable)
+NS_IMETHODIMP nsDocShell::GetSaveable(PRBool* saveable)
 {
    NS_ENSURE_ARG_POINTER(saveable);
    //XXX First Check
@@ -583,7 +643,7 @@ NS_IMETHODIMP nsDocShellBase::GetSaveable(PRBool* saveable)
    return NS_OK;
 } 
 
-NS_IMETHODIMP nsDocShellBase::Print()
+NS_IMETHODIMP nsDocShell::Print()
 {
    NS_ENSURE_STATE(mContentViewer);
    PRBool printable;
@@ -594,7 +654,7 @@ NS_IMETHODIMP nsDocShellBase::Print()
    return NS_ERROR_FAILURE;
 } 
 
-NS_IMETHODIMP nsDocShellBase::GetPrintable(PRBool* printable)
+NS_IMETHODIMP nsDocShell::GetPrintable(PRBool* printable)
 {
    NS_ENSURE_ARG_POINTER(printable);
    // XXX Implement
@@ -609,28 +669,39 @@ NS_IMETHODIMP nsDocShellBase::GetPrintable(PRBool* printable)
 
 
 //*****************************************************************************
-// nsDocShellBase::nsIDocShellContainer
+// nsDocShell::nsIDocShellContainer
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShellBase::GetChildCount(PRInt32 *aChildCount)
+NS_IMETHODIMP nsDocShell::GetChildCount(PRInt32 *aChildCount)
 {
   NS_ENSURE_ARG_POINTER(aChildCount);
   *aChildCount = mChildren.Count();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::AddChild(nsIDocShell *aChild)
+NS_IMETHODIMP nsDocShell::AddChild(nsIDocShell *aChild)
 {
   NS_ENSURE_ARG_POINTER(aChild);
 
   NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
   mChildren.AppendElement(aChild);
   NS_ADDREF(aChild);
+
+  //XXX HTML Specifics need to be moved out.
+  nsCOMPtr<nsIHTMLDocShell> childAsHTMLDocShell = do_QueryInterface(aChild);
+  if (childAsHTMLDocShell)
+  {
+    PRUnichar *defaultCharset=nsnull;
+    NS_ENSURE_SUCCESS(GetDefaultCharacterSet(&defaultCharset), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(childAsHTMLDocShell->SetDefaultCharacterSet(defaultCharset), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(childAsHTMLDocShell->SetForceCharacterSet(mForceCharacterSet.GetUnicode()), NS_ERROR_FAILURE);
+  }
+
   return NS_OK;
 }
 
 // XXX: tiny semantic change from webshell.  aChild is only effected if it was actually a child of this docshell
-NS_IMETHODIMP nsDocShellBase::RemoveChild(nsIDocShell *aChild)
+NS_IMETHODIMP nsDocShell::RemoveChild(nsIDocShell *aChild)
 {
   NS_ENSURE_ARG_POINTER(aChild);
 
@@ -644,7 +715,7 @@ NS_IMETHODIMP nsDocShellBase::RemoveChild(nsIDocShell *aChild)
 }
 
 /* readonly attribute nsIEnumerator childEnumerator; */
-NS_IMETHODIMP nsDocShellBase::GetChildEnumerator(nsIEnumerator * *aChildEnumerator)
+NS_IMETHODIMP nsDocShell::GetChildEnumerator(nsIEnumerator * *aChildEnumerator)
 {
   NS_ENSURE_ARG_POINTER(aChildEnumerator);
 
@@ -652,7 +723,7 @@ NS_IMETHODIMP nsDocShellBase::GetChildEnumerator(nsIEnumerator * *aChildEnumerat
 }
 
 /* depth-first search for a child shell with aName */
-NS_IMETHODIMP nsDocShellBase::FindChildWithName(const PRUnichar *aName, nsIDocShell **_retval)
+NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName, nsIDocShell **_retval)
 {
   NS_ENSURE_ARG_POINTER(aName);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -688,10 +759,10 @@ NS_IMETHODIMP nsDocShellBase::FindChildWithName(const PRUnichar *aName, nsIDocSh
 
 
 //*****************************************************************************
-// nsDocShellBase::nsIGenericWindow
+// nsDocShell::nsIGenericWindow
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShellBase::InitWindow(nativeWindow parentNativeWindow,
+NS_IMETHODIMP nsDocShell::InitWindow(nativeWindow parentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
    NS_ENSURE_ARG(parentWidget);  // DocShells must get a widget for a parent
@@ -706,7 +777,7 @@ NS_IMETHODIMP nsDocShellBase::InitWindow(nativeWindow parentNativeWindow,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::Create()
+NS_IMETHODIMP nsDocShell::Create()
 {
    NS_ENSURE_STATE(!mCreated);
 
@@ -721,14 +792,14 @@ NS_IMETHODIMP nsDocShellBase::Create()
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::Destroy()
+NS_IMETHODIMP nsDocShell::Destroy()
 {
    // We don't support the dynamic destroy and recreate on the object.  Just
    // create a new object!
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetPosition(PRInt32 x, PRInt32 y)
+NS_IMETHODIMP nsDocShell::SetPosition(PRInt32 x, PRInt32 y)
 {
    if(!mCreated)
       {
@@ -765,7 +836,7 @@ NS_IMETHODIMP nsDocShellBase::SetPosition(PRInt32 x, PRInt32 y)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetPosition(PRInt32* x, PRInt32* y)
+NS_IMETHODIMP nsDocShell::GetPosition(PRInt32* x, PRInt32* y)
 {
    NS_ENSURE_ARG_POINTER(x && y);
 
@@ -798,7 +869,7 @@ NS_IMETHODIMP nsDocShellBase::GetPosition(PRInt32* x, PRInt32* y)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
+NS_IMETHODIMP nsDocShell::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
 {
    if(!mCreated)
       {
@@ -842,7 +913,7 @@ NS_IMETHODIMP nsDocShellBase::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetSize(PRInt32* cx, PRInt32* cy)
+NS_IMETHODIMP nsDocShell::GetSize(PRInt32* cx, PRInt32* cy)
 {
    NS_ENSURE_ARG_POINTER(cx && cy);
 
@@ -875,7 +946,7 @@ NS_IMETHODIMP nsDocShellBase::GetSize(PRInt32* cx, PRInt32* cy)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
+NS_IMETHODIMP nsDocShell::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
    PRInt32 cy, PRBool fRepaint)
 {
    if(!mCreated)
@@ -921,7 +992,7 @@ NS_IMETHODIMP nsDocShellBase::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 c
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::Repaint(PRBool fForce)
+NS_IMETHODIMP nsDocShell::Repaint(PRBool fForce)
 {
    //XXX First Check
 	/** 
@@ -950,7 +1021,7 @@ NS_IMETHODIMP nsDocShellBase::Repaint(PRBool fForce)
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetParentWidget(nsIWidget** parentWidget)
+NS_IMETHODIMP nsDocShell::GetParentWidget(nsIWidget** parentWidget)
 {
    NS_ENSURE_ARG_POINTER(parentWidget);
 
@@ -959,7 +1030,7 @@ NS_IMETHODIMP nsDocShellBase::GetParentWidget(nsIWidget** parentWidget)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetParentWidget(nsIWidget* parentWidget)
+NS_IMETHODIMP nsDocShell::SetParentWidget(nsIWidget* parentWidget)
 {
    NS_ENSURE_STATE(!mCreated);
 
@@ -968,7 +1039,7 @@ NS_IMETHODIMP nsDocShellBase::SetParentWidget(nsIWidget* parentWidget)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetParentNativeWindow(nativeWindow* parentNativeWindow)
+NS_IMETHODIMP nsDocShell::GetParentNativeWindow(nativeWindow* parentNativeWindow)
 {
    NS_ENSURE_ARG_POINTER(parentNativeWindow);
 
@@ -980,12 +1051,12 @@ NS_IMETHODIMP nsDocShellBase::GetParentNativeWindow(nativeWindow* parentNativeWi
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetParentNativeWindow(nativeWindow parentNativeWindow)
+NS_IMETHODIMP nsDocShell::SetParentNativeWindow(nativeWindow parentNativeWindow)
 {
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetVisibility(PRBool* aVisibility)
+NS_IMETHODIMP nsDocShell::GetVisibility(PRBool* aVisibility)
 {
   NS_ENSURE_ARG_POINTER(aVisibility);
 
@@ -1023,7 +1094,7 @@ NS_IMETHODIMP nsDocShellBase::GetVisibility(PRBool* aVisibility)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetVisibility(PRBool visibility)
+NS_IMETHODIMP nsDocShell::SetVisibility(PRBool visibility)
 {
    if(!mCreated)
       mBaseInitInfo->visible = visibility;
@@ -1035,7 +1106,7 @@ NS_IMETHODIMP nsDocShellBase::SetVisibility(PRBool visibility)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetMainWidget(nsIWidget** mainWidget)
+NS_IMETHODIMP nsDocShell::GetMainWidget(nsIWidget** mainWidget)
 {
    NS_ENSURE_ARG_POINTER(mainWidget);
 
@@ -1046,7 +1117,7 @@ NS_IMETHODIMP nsDocShellBase::GetMainWidget(nsIWidget** mainWidget)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetFocus()
+NS_IMETHODIMP nsDocShell::SetFocus()
 {
    //XXX First Check
 	/**
@@ -1065,7 +1136,7 @@ NS_IMETHODIMP nsDocShellBase::SetFocus()
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetTitle(PRUnichar** title)
+NS_IMETHODIMP nsDocShell::GetTitle(PRUnichar** title)
 {
    NS_ENSURE_ARG_POINTER(title);
 
@@ -1073,17 +1144,17 @@ NS_IMETHODIMP nsDocShellBase::GetTitle(PRUnichar** title)
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetTitle(const PRUnichar* title)
+NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* title)
 {
    //XXX First Check
    return NS_ERROR_FAILURE;
 }
 
 //*****************************************************************************
-// nsDocShellBase::nsIScrollable
+// nsDocShell::nsIScrollable
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShellBase::GetCurScrollPos(PRInt32 scrollOrientation, 
+NS_IMETHODIMP nsDocShell::GetCurScrollPos(PRInt32 scrollOrientation, 
    PRInt32* curPos)
 {
    NS_ENSURE_ARG_POINTER(curPos);
@@ -1111,7 +1182,7 @@ NS_IMETHODIMP nsDocShellBase::GetCurScrollPos(PRInt32 scrollOrientation,
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetCurScrollPos(PRInt32 scrollOrientation, 
+NS_IMETHODIMP nsDocShell::SetCurScrollPos(PRInt32 scrollOrientation, 
    PRInt32 curPos)
 {
    nsCOMPtr<nsIScrollableView> scrollView;
@@ -1145,7 +1216,7 @@ NS_IMETHODIMP nsDocShellBase::SetCurScrollPos(PRInt32 scrollOrientation,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetCurScrollPosEx(PRInt32 curHorizontalPos, 
+NS_IMETHODIMP nsDocShell::SetCurScrollPosEx(PRInt32 curHorizontalPos, 
    PRInt32 curVerticalPos)
 {
    nsCOMPtr<nsIScrollableView> scrollView;
@@ -1158,7 +1229,7 @@ NS_IMETHODIMP nsDocShellBase::SetCurScrollPosEx(PRInt32 curHorizontalPos,
 }
 
 // XXX This is wrong
-NS_IMETHODIMP nsDocShellBase::GetScrollRange(PRInt32 scrollOrientation,
+NS_IMETHODIMP nsDocShell::GetScrollRange(PRInt32 scrollOrientation,
    PRInt32* minPos, PRInt32* maxPos)
 {
    NS_ENSURE_ARG_POINTER(minPos && maxPos);
@@ -1190,7 +1261,7 @@ NS_IMETHODIMP nsDocShellBase::GetScrollRange(PRInt32 scrollOrientation,
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetScrollRange(PRInt32 scrollOrientation,
+NS_IMETHODIMP nsDocShell::SetScrollRange(PRInt32 scrollOrientation,
    PRInt32 minPos, PRInt32 maxPos)
 {
    //XXX First Check
@@ -1205,7 +1276,7 @@ NS_IMETHODIMP nsDocShellBase::SetScrollRange(PRInt32 scrollOrientation,
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetScrollRangeEx(PRInt32 minHorizontalPos,
+NS_IMETHODIMP nsDocShell::SetScrollRangeEx(PRInt32 minHorizontalPos,
    PRInt32 maxHorizontalPos, PRInt32 minVerticalPos, PRInt32 maxVerticalPos)
 {
    //XXX First Check
@@ -1220,7 +1291,7 @@ NS_IMETHODIMP nsDocShellBase::SetScrollRangeEx(PRInt32 minHorizontalPos,
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetScrollbarPreferences(PRInt32 scrollOrientation,
+NS_IMETHODIMP nsDocShell::GetScrollbarPreferences(PRInt32 scrollOrientation,
    PRInt32* scrollbarPref)
 {
    NS_ENSURE_ARG_POINTER(scrollbarPref);
@@ -1241,7 +1312,7 @@ NS_IMETHODIMP nsDocShellBase::GetScrollbarPreferences(PRInt32 scrollOrientation,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::SetScrollbarPreferences(PRInt32 scrollOrientation,
+NS_IMETHODIMP nsDocShell::SetScrollbarPreferences(PRInt32 scrollOrientation,
    PRInt32 scrollbarPref)
 {
    nsCOMPtr<nsIScrollableView> scrollView;
@@ -1257,7 +1328,7 @@ NS_IMETHODIMP nsDocShellBase::SetScrollbarPreferences(PRInt32 scrollOrientation,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetScrollbarVisibility(PRBool* verticalVisible,
+NS_IMETHODIMP nsDocShell::GetScrollbarVisibility(PRBool* verticalVisible,
    PRBool* horizontalVisible)
 {
    nsCOMPtr<nsIScrollableView> scrollView;
@@ -1279,10 +1350,10 @@ NS_IMETHODIMP nsDocShellBase::GetScrollbarVisibility(PRBool* verticalVisible,
 }
 
 //*****************************************************************************
-// nsDocShellBase::nsITextScroll
+// nsDocShell::nsITextScroll
 //*****************************************************************************   
 
-NS_IMETHODIMP nsDocShellBase::ScrollByLines(PRInt32 numLines)
+NS_IMETHODIMP nsDocShell::ScrollByLines(PRInt32 numLines)
 {
    nsCOMPtr<nsIScrollableView> scrollView;
 
@@ -1294,7 +1365,7 @@ NS_IMETHODIMP nsDocShellBase::ScrollByLines(PRInt32 numLines)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::ScrollByPages(PRInt32 numPages)
+NS_IMETHODIMP nsDocShell::ScrollByPages(PRInt32 numPages)
 {
    nsCOMPtr<nsIScrollableView> scrollView;
 
@@ -1307,15 +1378,255 @@ NS_IMETHODIMP nsDocShellBase::ScrollByPages(PRInt32 numPages)
 }
 
 //*****************************************************************************
-// nsDocShellBase::nsIContentViewerContainer
+// nsDocShell::nsIHTMLDocShell
 //*****************************************************************************   
-NS_IMETHODIMP nsDocShellBase::QueryCapability(const nsIID &aIID, void** aResult)
+
+NS_IMETHODIMP nsDocShell::ScrollToNode(nsIDOMNode* aNode)
+{
+   NS_ENSURE_ARG(aNode);
+   NS_ENSURE_STATE(mContentViewer);
+   nsCOMPtr<nsIPresShell> presShell;
+   NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
+
+   // Get the nsIContent interface, because that's what we need to 
+   // get the primary frame
+   
+   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+
+   // Get the primary frame
+   nsIFrame* frame;  // Remember Frames aren't ref-counted.  They are in their 
+                     // own special little world.
+
+   NS_ENSURE_SUCCESS(GetPrimaryFrameFor(content, &frame),
+      NS_ERROR_FAILURE);
+
+   // tell the pres shell to scroll to the frame
+   NS_ENSURE_SUCCESS(presShell->ScrollFrameIntoView(frame, 
+      NS_PRESSHELL_SCROLL_TOP, NS_PRESSHELL_SCROLL_ANYWHERE), NS_ERROR_FAILURE); 
+   return NS_OK; 
+}
+
+NS_IMETHODIMP nsDocShell::GetAllowPlugins(PRBool* aAllowPlugins)
+{
+   NS_ENSURE_ARG_POINTER(aAllowPlugins);
+
+   *aAllowPlugins = mAllowPlugins;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetAllowPlugins(PRBool aAllowPlugins)
+{
+   mAllowPlugins = aAllowPlugins;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetMarginWidth(PRInt32* aMarginWidth)
+{
+   NS_ENSURE_ARG_POINTER(aMarginWidth);
+
+   *aMarginWidth = mMarginWidth;
+   return NS_OK;  
+}
+
+NS_IMETHODIMP nsDocShell::SetMarginWidth(PRInt32 aMarginWidth)
+{
+   mMarginWidth = aMarginWidth;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetMarginHeight(PRInt32* aMarginHeight)
+{
+   NS_ENSURE_ARG_POINTER(aMarginHeight);
+
+   *aMarginHeight = mMarginHeight;
+   return NS_OK; 
+}
+
+NS_IMETHODIMP nsDocShell::SetMarginHeight(PRInt32 aMarginHeight)
+{
+   mMarginHeight = aMarginHeight;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetIsFrame(PRBool* aIsFrame)
+{
+  NS_ENSURE_ARG_POINTER(aIsFrame);
+
+  *aIsFrame = mIsFrame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetIsFrame(PRBool aIsFrame)
+{
+  mIsFrame = aIsFrame;
+  return NS_OK;
+}
+
+// XXX: SEMANTIC CHANGE! 
+//      returns a copy of the string.  Caller is responsible for freeing result
+//      using Recycle(aDefaultCharacterSet)
+NS_IMETHODIMP nsDocShell::GetDefaultCharacterSet(PRUnichar** aDefaultCharacterSet)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultCharacterSet);
+
+  static char *gDefCharset = nsnull;    // XXX: memory leak!
+
+  if (0 == mDefaultCharacterSet.Length()) 
+  {
+    if ((nsnull == gDefCharset) || (nsnull == *gDefCharset)) 
+    {
+      if(mPrefs)
+        mPrefs->CopyCharPref("intl.charset.default", &gDefCharset);
+    }
+    if ((nsnull == gDefCharset) || (nsnull == *gDefCharset))
+      mDefaultCharacterSet = "ISO-8859-1";
+    else
+      mDefaultCharacterSet = gDefCharset;
+  }
+  *aDefaultCharacterSet = mDefaultCharacterSet.ToNewUnicode();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetDefaultCharacterSet(const PRUnichar* aDefaultCharacterSet)
+{
+  mDefaultCharacterSet = aDefaultCharacterSet;  // this does a copy of aDefaultCharacterSet
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) 
+  {
+    nsIDocShell* child = (nsIDocShell*) mChildren.ElementAt(i);
+    NS_WARN_IF_FALSE(child, "null child in docshell");
+    if (child) 
+    {
+      nsCOMPtr<nsIHTMLDocShell> childAsHTMLDocShell = do_QueryInterface(child);
+      if (childAsHTMLDocShell) {
+        childAsHTMLDocShell->SetDefaultCharacterSet(aDefaultCharacterSet);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+// XXX: SEMANTIC CHANGE! 
+//      returns a copy of the string.  Caller is responsible for freeing result
+//      using Recycle(aForceCharacterSet)
+NS_IMETHODIMP nsDocShell::GetForceCharacterSet(PRUnichar** aForceCharacterSet)
+{
+  NS_ENSURE_ARG_POINTER(aForceCharacterSet);
+
+  nsAutoString emptyStr;
+  if (mForceCharacterSet.Equals(emptyStr)) {
+    *aForceCharacterSet = nsnull;
+  }
+  else {
+    *aForceCharacterSet = mForceCharacterSet.ToNewUnicode();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::SetForceCharacterSet(const PRUnichar* aForceCharacterSet)
+{
+  mForceCharacterSet = aForceCharacterSet;
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) {
+    nsIDocShell* child = (nsIDocShell*) mChildren.ElementAt(i);
+    NS_WARN_IF_FALSE(child, "null child in docshell");
+    if (child) 
+    {
+      nsCOMPtr<nsIHTMLDocShell> childAsHTMLDocShell = do_QueryInterface(child);
+      if (childAsHTMLDocShell) {
+        childAsHTMLDocShell->SetForceCharacterSet(aForceCharacterSet);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+// XXX: SEMANTIC CHANGE! 
+//      returns a copy of the string.  Caller is responsible for freeing result
+//      using Recycle(aHintCharacterSet)
+NS_IMETHODIMP nsDocShell::GetHintCharacterSet(PRUnichar * *aHintCharacterSet)
+{
+  NS_ENSURE_ARG_POINTER(aHintCharacterSet);
+
+  if(kCharsetUninitialized == mHintCharsetSource) {
+    *aHintCharacterSet = nsnull;
+  } else {
+    *aHintCharacterSet = mHintCharset.ToNewUnicode();
+     mHintCharsetSource = kCharsetUninitialized;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetHintCharacterSetSource(PRInt32 *aHintCharacterSetSource)
+{
+  NS_ENSURE_ARG_POINTER(aHintCharacterSetSource);
+
+  *aHintCharacterSetSource = mHintCharsetSource;
+  return NS_OK;
+}
+
+// XXX: poor error checking
+NS_IMETHODIMP nsDocShell::SizeToContent()
+{
+
+  // get the presentation shell
+  nsCOMPtr<nsIPresShell> presShell;
+  NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+  nsRect  shellArea;
+  PRInt32 width, height;
+  float   pixelScale;
+  NS_ENSURE_SUCCESS(presShell->ResizeReflow(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE), 
+                    NS_ERROR_FAILURE);
+
+  // so how big is it?
+  nsCOMPtr<nsIPresContext> presContext;
+  NS_ENSURE_SUCCESS(GetPresContext(getter_AddRefs(presContext)), 
+                    NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+  presContext->GetVisibleArea(shellArea);
+  presContext->GetTwipsToPixels(&pixelScale);
+  width = PRInt32((float)shellArea.width*pixelScale);
+  height = PRInt32((float)shellArea.height*pixelScale);
+
+  // if we're the outermost webshell for this window, size the window
+  /* XXX: how do we do this now?
+  if (mContainer) 
+  {
+    nsCOMPtr<nsIBrowserWindow> browser = do_QueryInterface(mContainer);
+    if (browser) 
+    {
+      nsCOMPtr<nsIDocShell> browserWebShell;
+      PRInt32 oldX, oldY, oldWidth, oldHeight,
+              widthDelta, heightDelta;
+      nsRect  windowBounds;
+
+      GetBounds(oldX, oldY, oldWidth, oldHeight);
+      widthDelta = width - oldWidth;
+      heightDelta = height - oldHeight;
+      browser->GetWindowBounds(windowBounds);
+      browser->SizeWindowTo(windowBounds.width + widthDelta,
+                            windowBounds.height + heightDelta);
+    }
+  }
+  */
+  NS_ASSERTION(PR_FALSE, "NOT YET IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+  //return NS_OK;
+}
+
+//*****************************************************************************
+// nsDocShell::nsIContentViewerContainer
+//*****************************************************************************   
+NS_IMETHODIMP nsDocShell::QueryCapability(const nsIID &aIID, void** aResult)
 {
   NS_ENSURE_SUCCESS(PR_FALSE, NS_ERROR_NOT_IMPLEMENTED);
   return NS_OK;
 };
 
-NS_IMETHODIMP nsDocShellBase::Embed(nsIContentViewer* aContentViewer, 
+NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer, 
                                     const char      * aCommand,
                                     nsISupports     * aExtraInfo)
 {
@@ -1387,7 +1698,7 @@ NS_IMETHODIMP nsDocShellBase::Embed(nsIContentViewer* aContentViewer,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetContentViewer(nsIContentViewer** aContentViewer)
+NS_IMETHODIMP nsDocShell::GetContentViewer(nsIContentViewer** aContentViewer)
 {
   NS_ENSURE_ARG_POINTER(aContentViewer);
 
@@ -1396,7 +1707,7 @@ NS_IMETHODIMP nsDocShellBase::GetContentViewer(nsIContentViewer** aContentViewer
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::HandleUnknownContentType(nsIDocumentLoader* aLoader,
+NS_IMETHODIMP nsDocShell::HandleUnknownContentType(nsIDocumentLoader* aLoader,
                                       nsIChannel* channel,
                                       const char *aContentType,
                                       const char *aCommand)
@@ -1404,16 +1715,12 @@ NS_IMETHODIMP nsDocShellBase::HandleUnknownContentType(nsIDocumentLoader* aLoade
   NS_ENSURE_SUCCESS(PR_FALSE, NS_ERROR_NOT_IMPLEMENTED);
   return NS_OK;
 }
-
-
-  
-  
   
 //*****************************************************************************
-// nsDocShellBase: Helper Routines
+// nsDocShell: Helper Routines
 //*****************************************************************************   
 
-nsresult nsDocShellBase::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode* aParent,
+nsresult nsDocShell::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode* aParent,
    PRInt32* aOffset)
 {
    NS_ENSURE_ARG_POINTER(aChild || aParent);
@@ -1442,13 +1749,16 @@ nsresult nsDocShellBase::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode* aParent,
    return NS_ERROR_FAILURE;
 }
 
-nsresult nsDocShellBase::GetRootScrollableView(nsIScrollableView** aOutScrollView)
+nsresult nsDocShell::GetRootScrollableView(nsIScrollableView** aOutScrollView)
 {
    NS_ENSURE_ARG_POINTER(aOutScrollView);
    
-   nsCOMPtr<nsIViewManager> viewManager;
+   nsCOMPtr<nsIPresShell> shell;
+   NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(shell)), NS_ERROR_FAILURE);
 
-   //XXX Get ViewManager Somewhere.
+   nsCOMPtr<nsIViewManager> viewManager;
+   NS_ENSURE_SUCCESS(shell->GetViewManager(getter_AddRefs(viewManager)),
+      NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(viewManager->GetRootScrollableView(aOutScrollView),
       NS_ERROR_FAILURE);
@@ -1456,7 +1766,7 @@ nsresult nsDocShellBase::GetRootScrollableView(nsIScrollableView** aOutScrollVie
    return NS_OK;
 } 
 
-nsresult nsDocShellBase::GetPresShell(nsIPresShell** aPresShell)
+nsresult nsDocShell::GetPresShell(nsIPresShell** aPresShell)
 {
    NS_ENSURE_ARG_POINTER(aPresShell);
    
@@ -1469,7 +1779,7 @@ nsresult nsDocShellBase::GetPresShell(nsIPresShell** aPresShell)
    return NS_OK;
 }
 
-nsresult nsDocShellBase::EnsureContentListener()
+nsresult nsDocShell::EnsureContentListener()
 {
    if(mContentListener)
       return NS_OK;
@@ -1478,18 +1788,18 @@ nsresult nsDocShellBase::EnsureContentListener()
    NS_ENSURE_TRUE(mContentListener, NS_ERROR_OUT_OF_MEMORY);
 
    mContentListener->AddRef();
-   mContentListener->DocShellBase(this);
+   mContentListener->DocShell(this);
 
    return NS_OK;
 }
 
-void nsDocShellBase::SetCurrentURI(nsIURI* aUri)
+void nsDocShell::SetCurrentURI(nsIURI* aUri)
 {
    mCurrentURI = aUri; //This assignment addrefs
 }
 
 NS_IMETHODIMP
-nsDocShellBase::FireStartDocumentLoad(nsIDocumentLoader* aLoader,
+nsDocShell::FireStartDocumentLoad(nsIDocumentLoader* aLoader,
                                       nsIURI           * aURL,  //XXX: should be the channel?
                                       const char       * aCommand)
 {
@@ -1559,7 +1869,7 @@ nsDocShellBase::FireStartDocumentLoad(nsIDocumentLoader* aLoader,
 
 
 NS_IMETHODIMP
-nsDocShellBase::FireEndDocumentLoad(nsIDocumentLoader* aLoader,
+nsDocShell::FireEndDocumentLoad(nsIDocumentLoader* aLoader,
                                     nsIChannel       * aChannel,
                                     nsresult           aStatus,
                                     nsIDocumentLoaderObserver * aDocLoadObserver)
@@ -1659,7 +1969,7 @@ nsDocShellBase::FireEndDocumentLoad(nsIDocumentLoader* aLoader,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::InsertDocumentInDocTree()
+NS_IMETHODIMP nsDocShell::InsertDocumentInDocTree()
 {
   nsCOMPtr<nsIDocShell> parent;
   NS_ENSURE_SUCCESS(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
@@ -1697,7 +2007,7 @@ NS_IMETHODIMP nsDocShellBase::InsertDocumentInDocTree()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::DestroyChildren()
+NS_IMETHODIMP nsDocShell::DestroyChildren()
 {
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) 
@@ -1715,4 +2025,11 @@ NS_IMETHODIMP nsDocShellBase::DestroyChildren()
   mChildren.Clear();
   return NS_OK;
 }
+
+nsresult nsDocShell::GetPrimaryFrameFor(nsIContent* content, nsIFrame** frame)
+{
+   //XXX Implement
+   return NS_ERROR_FAILURE;
+}
+
 

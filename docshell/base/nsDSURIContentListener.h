@@ -27,11 +27,11 @@
 #include "nsString.h"
 #include "nsIURIContentListener.h"
 
-class nsDocShellBase;
+class nsDocShell;
 
 class nsDSURIContentListener : public nsIURIContentListener
 {
-friend class nsDocShellBase;
+friend class nsDocShell;
 public:
    NS_DECL_ISUPPORTS
 
@@ -41,8 +41,8 @@ protected:
    nsDSURIContentListener();
    virtual ~nsDSURIContentListener();
 
-   void DocShellBase(nsDocShellBase* aDocShellBase);
-   nsDocShellBase* DocShellBase();
+   void DocShell(nsDocShell* aDocShell);
+   nsDocShell* DocShell();
    void GetParentContentListener(nsIURIContentListener** aParentListener);
    void SetParentContentListener(nsIURIContentListener* aParentListener);
    void GetPresContext(nsIPresContext** aPresContext);
@@ -51,7 +51,7 @@ protected:
       const char* aCommand, const char* aWindowTarget);
 
 protected:
-   nsDocShellBase*                  mDocShell;
+   nsDocShell*                  mDocShell;
    nsCOMPtr<nsIURIContentListener>  mParentContentListener;
    nsCOMPtr<nsIPresContext>         mPresContext;
 };

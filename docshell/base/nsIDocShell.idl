@@ -133,11 +133,6 @@ interface nsIDocShell : nsISupports
 	attribute nsIURIContentListener parentURIContentListener;
 
 	/*
-	Returns true if the given docshell can handle the requested content type.
-	*/
-	boolean canHandleContentType(in wstring contentType);
-
-	/*
 	Prefs to use for the DocShell.
 	*/
 	attribute nsIPref prefs;
@@ -158,4 +153,65 @@ interface nsIDocShell : nsISupports
 	* no zoom. 
 	*/
 	attribute float zoom;
+};
+
+/**
+ * The nsIHTMLDocShell - XXX This is going away.
+ */
+
+[scriptable, uuid(69E5DE03-7B8B-11d3-AF61-00A024FFC08C)]
+interface nsIHTMLDocShell : nsISupports
+{
+	/*
+	Scrolls to a given DOM content node. 
+	*/
+	void scrollToNode(in nsIDOMNode node);
+
+	/** if true, plugins are allowed within the doc shell.  default = true */
+	attribute boolean allowPlugins;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute long marginWidth;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute long marginHeight;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute boolean isFrame;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute wstring defaultCharacterSet;
+
+	/*
+	XXX Comment here!
+	*/
+	attribute wstring forceCharacterSet;
+
+	/*
+	XXX Comment here!
+	*/
+	readonly attribute wstring hintCharacterSet;
+
+	/*
+	XXX Comment here!
+	*/
+	readonly attribute PRInt32 hintCharacterSetSource;
+
+	/* the following is the hacky access method 
+	Commented out as nsCharsetSource should be something IDL like
+	void GetCharacterSetHint(in wstring hintCharset, in nsCharsetSource charsetSource);
+	*/
+
+	/**
+	* Tell the window to shrink-to-fit or grow-to-fit its contents
+	*/
+	void sizeToContent();
 };

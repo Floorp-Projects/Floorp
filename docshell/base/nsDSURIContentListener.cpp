@@ -20,7 +20,7 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
-#include "nsDocShellBase.h"
+#include "nsDocShell.h"
 #include "nsDSURIContentListener.h"
 
 //*****************************************************************************
@@ -111,9 +111,10 @@ PRBool nsDSURIContentListener::HandleInCurrentDocShell(const char* aContentType,
    const char* aCommand, const char* aWindowTarget)
 {
    nsAutoString contentType(aContentType);
-   PRBool fCanHandle;
+   PRBool fCanHandle = PR_FALSE;
+   /* XXX Remove this
    NS_ENSURE_SUCCESS(mDocShell->CanHandleContentType(contentType.GetUnicode(),
-      &fCanHandle), PR_FALSE);
+      &fCanHandle), PR_FALSE);*/
 
    NS_ENSURE_TRUE(fCanHandle, PR_FALSE);
 
@@ -130,12 +131,12 @@ PRBool nsDSURIContentListener::HandleInCurrentDocShell(const char* aContentType,
 // nsDSURIContentListener: Accessors
 //*****************************************************************************   
 
-void nsDSURIContentListener::DocShellBase(nsDocShellBase* aDocShellBase)
+void nsDSURIContentListener::DocShell(nsDocShell* aDocShell)
 {
-   mDocShell = aDocShellBase;
+   mDocShell = aDocShell;
 }
 
-nsDocShellBase* nsDSURIContentListener::DocShellBase()
+nsDocShell* nsDSURIContentListener::DocShell()
 {
    return mDocShell;
 }

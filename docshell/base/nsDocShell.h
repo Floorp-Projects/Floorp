@@ -20,10 +20,12 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
-#ifndef nsDocShellBase_h__
-#define nsDocShellBase_h__
+#ifndef nsDocShell_h__
+#define nsDocShell_h__
 
 #include "nsCOMPtr.h"
+#include "nsString.h"
+#include "nsIParser.h"  // for nsCharSetSource
 #include "nsIPresShell.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
@@ -32,13 +34,7 @@
 #include "nsIContentViewer.h"
 #include "nsIPref.h"
 
-#include "nsIDocShell.h"
-#include "nsIDocShellEdit.h"
-#include "nsIDocShellFile.h"
-#include "nsIDocShellContainer.h"
-#include "nsIGenericWindow.h"
-#include "nsIScrollable.h"
-#include "nsITextScroll.h"
+#include "nsCDocShell.h"
 #include "nsIContentViewerContainer.h"
 
 #include "nsIDocumentLoader.h"
@@ -62,14 +58,15 @@ public:
    PRBool         visible;
 };
 
-class nsDocShellBase : public nsIDocShell, 
+class nsDocShell : public nsIDocShell, 
                        public nsIDocShellEdit, 
                        public nsIDocShellFile, 
                        public nsIDocShellContainer,
                        public nsIGenericWindow, 
                        public nsIScrollable, 
                        public nsITextScroll, 
-                       public nsIContentViewerContainer
+                       public nsIContentViewerContainer,
+                       public nsIHTMLDocShell
 {
 friend class nsDSURIContentListener;
 
@@ -83,26 +80,31 @@ public:
    NS_DECL_NSIGENERICWINDOW
    NS_DECL_NSISCROLLABLE
    NS_DECL_NSITEXTSCROLL
+   NS_DECL_NSIHTMLDOCSHELL
 
    // XXX: move to a macro
    // nsIContentViewerContainer
-  NS_IMETHOD QueryCapability(const nsIID &aIID, void** aResult);
+   NS_IMETHOD QueryCapability(const nsIID &aIID, void** aResult);
 
-  NS_IMETHOD Embed(nsIContentViewer* aDocViewer, 
+   NS_IMETHOD Embed(nsIContentViewer* aDocViewer, 
                    const char* aCommand,
                    nsISupports* aExtraInfo);
 
-  NS_IMETHOD GetContentViewer(nsIContentViewer** aResult);
+   NS_IMETHOD GetContentViewer(nsIContentViewer** aResult);
 
-  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* aLoader,
+   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* aLoader,
                                       nsIChannel* channel,
                                       const char *aContentType,
                                       const char *aCommand);
 
 
+   static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
+
+
+
 protected:
-   nsDocShellBase();
-   virtual ~nsDocShellBase();
+   nsDocShell();
+   virtual ~nsDocShell();
 
    nsresult GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent, 
       PRInt32* aOffset);
@@ -122,8 +124,9 @@ protected:
                                   nsIDocumentLoaderObserver * aObserver);
 
    NS_IMETHOD InsertDocumentInDocTree();
-
    NS_IMETHOD DestroyChildren();
+
+   nsresult GetPrimaryFrameFor(nsIContent* content, nsIFrame** frame);
 
 protected:
    PRBool                     mCreated;
@@ -145,8 +148,20 @@ protected:
    parent thus a cycle.  A weak reference would work, but not required as the
    interface states a requirement to zero out the parent when the parent is
    releasing the interface.*/
-   nsIDocShell*               mParent; 
-                                       
+   nsIDocShell*               mParent;
+   
+   /*
+   XXX HTML Specific stuff
+   */ 
+   PRBool   mAllowPlugins;
+   PRInt32  mMarginWidth;
+   PRInt32  mMarginHeight;
+   PRBool   mIsFrame;
+   /* character set member data */
+   nsString mDefaultCharacterSet;
+   nsString mHintCharset;
+   nsCharsetSource mHintCharsetSource;
+   nsString mForceCharacterSet;
 };
 
-#endif /* nsDocShellBase_h__ */
+#endif /* nsDocShell_h__ */

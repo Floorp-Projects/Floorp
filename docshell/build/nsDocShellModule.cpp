@@ -24,10 +24,10 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
-#include "nsHTMLDocShell.h"
+#include "nsDocShell.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kHTMLDocShellCID, NS_HTML_DOCSHELL_CID);
+static NS_DEFINE_CID(kDocShellCID, NS_DOCSHELL_CID);
 
 //*****************************************************************************
 //*** Library Exports
@@ -45,8 +45,8 @@ NSGetFactory(nsISupports* aServMgr,
 
    nsIGenericFactory* fact;
 
-	if(aClass.Equals(kHTMLDocShellCID))
-		rv = NS_NewGenericFactory(&fact, nsHTMLDocShell::Create);
+	if(aClass.Equals(kDocShellCID))
+		rv = NS_NewGenericFactory(&fact, nsDocShell::Create);
    else 
 		rv = NS_NOINTERFACE;
 
@@ -62,9 +62,9 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
 	NS_ENSURE_SUCCESS(rv, rv);
 
-	rv = compMgr->RegisterComponent(kHTMLDocShellCID,  
-											"nsHTMLDocShell",
-											NS_HTML_DOCSHELL_PROGID,
+	rv = compMgr->RegisterComponent(kDocShellCID,  
+											"nsDocShell",
+											NS_DOCSHELL_PROGID,
 											aPath, PR_TRUE, PR_TRUE);
 	NS_ENSURE_SUCCESS(rv, rv);
 
@@ -78,7 +78,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
 
 	NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
 	NS_ENSURE_SUCCESS(rv, rv);
-	rv = compMgr->UnregisterComponent(kHTMLDocShellCID, aPath);
+	rv = compMgr->UnregisterComponent(kDocShellCID, aPath);
 	NS_ENSURE_SUCCESS(rv, rv);
 
 	return rv;
