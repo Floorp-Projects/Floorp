@@ -162,7 +162,7 @@ nsNNTPArticleList::FinishAddingArticleKeys()
 	return 0;
 }
 
-extern "C" {
+NS_BEGIN_EXTERN_C
 
 nsresult
 NS_NewArticleList(nsINNTPArticleList **articleList,
@@ -175,4 +175,4 @@ NS_NewArticleList(nsINNTPArticleList **articleList,
                                         (void **)articleList);
 }
 
-}
+NS_END_EXTERN_C
