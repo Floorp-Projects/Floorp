@@ -1123,14 +1123,14 @@ CBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIRequest* request, 
 
 #endif
 
-nsresult
+NS_IMETHODIMP
 CBrowserContainer::HandleEvent(nsIDOMEvent* aEvent)
 {
 	return NS_OK; 
 }
 
 
-nsresult
+NS_IMETHODIMP
 CBrowserContainer::MouseDown(nsIDOMEvent* aMouseEvent)
 {
     if (!mMouseTarget) {
@@ -1149,7 +1149,7 @@ CBrowserContainer::MouseDown(nsIDOMEvent* aMouseEvent)
 }
 
 
-nsresult
+NS_IMETHODIMP
 CBrowserContainer::MouseUp(nsIDOMEvent* aMouseEvent)
 {
     if (!mMouseTarget) {
@@ -1167,7 +1167,7 @@ CBrowserContainer::MouseUp(nsIDOMEvent* aMouseEvent)
 	return NS_OK; 
 }
 
-nsresult
+NS_IMETHODIMP
 CBrowserContainer::MouseClick(nsIDOMEvent* aMouseEvent)
 {
     if (!mMouseTarget) {
@@ -1191,8 +1191,7 @@ CBrowserContainer::MouseClick(nsIDOMEvent* aMouseEvent)
 	return NS_OK; 
 }
 
-
-nsresult
+NS_IMETHODIMP
 CBrowserContainer::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
     if (!mMouseTarget) {
@@ -1216,8 +1215,7 @@ CBrowserContainer::MouseDblClick(nsIDOMEvent* aMouseEvent)
 	return NS_OK; 
 }
 
-
-nsresult
+NS_IMETHODIMP
 CBrowserContainer::MouseOver(nsIDOMEvent* aMouseEvent)
 {
     if (!mMouseTarget) {
@@ -1235,8 +1233,7 @@ CBrowserContainer::MouseOver(nsIDOMEvent* aMouseEvent)
 	return NS_OK; 
 }
 
-
-nsresult
+NS_IMETHODIMP
 CBrowserContainer::MouseOut(nsIDOMEvent* aMouseEvent)
 {
     if (!mMouseTarget) {
