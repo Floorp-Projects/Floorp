@@ -106,6 +106,7 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTag=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_IsDefaultServer=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_SupportsFilters=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_CanGetMessages=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_CanGetIncomingMessages=nsnull;
 
 // containment
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Child=nsnull;
@@ -148,6 +149,7 @@ nsCOMPtr<nsISupportsArray> nsMsgAccountManagerDataSource::mAccountRootArcsOut;
 #define NC_RDF_ISDEFAULTSERVER NC_NAMESPACE_URI "IsDefaultServer"
 #define NC_RDF_SUPPORTSFILTERS NC_NAMESPACE_URI "SupportsFilters"
 #define NC_RDF_CANGETMESSAGES NC_NAMESPACE_URI "CanGetMessages"
+#define NC_RDF_CANGETINCOMINGMESSAGES NC_NAMESPACE_URI "CanGetIncomingMessages"
 
 nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
 {
@@ -167,6 +169,7 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
       getRDFService()->GetResource(NC_RDF_ISDEFAULTSERVER, &kNC_IsDefaultServer);
       getRDFService()->GetResource(NC_RDF_SUPPORTSFILTERS, &kNC_SupportsFilters);
       getRDFService()->GetResource(NC_RDF_CANGETMESSAGES, &kNC_CanGetMessages);
+      getRDFService()->GetResource(NC_RDF_CANGETINCOMINGMESSAGES, &kNC_CanGetIncomingMessages);
       getRDFService()->GetResource(NC_RDF_ACCOUNT, &kNC_Account);
       getRDFService()->GetResource(NC_RDF_SERVER, &kNC_Server);
       getRDFService()->GetResource(NC_RDF_IDENTITY, &kNC_Identity);
@@ -222,6 +225,7 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
       NS_IF_RELEASE(kNC_IsDefaultServer);
       NS_IF_RELEASE(kNC_SupportsFilters);
       NS_IF_RELEASE(kNC_CanGetMessages);
+      NS_IF_RELEASE(kNC_CanGetIncomingMessages);
       NS_IF_RELEASE(kNC_Account);
       NS_IF_RELEASE(kNC_Server);
       NS_IF_RELEASE(kNC_Identity);
@@ -538,6 +542,14 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       if (NS_FAILED(rv) || !server) return NS_RDF_NO_VALUE;
 
       if (canGetMessages(server))
+          str = NS_LITERAL_STRING("true");
+  }
+  else if (property == kNC_CanGetIncomingMessages) {
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      rv = getServerForFolderNode(source, getter_AddRefs(server));
+      if (NS_FAILED(rv) || !server) return NS_RDF_NO_VALUE;
+
+      if (canGetIncomingMessages(server))
           str = NS_LITERAL_STRING("true");
   }
   else if (property == kNC_PageTitleFakeAccount) {
@@ -948,7 +960,7 @@ nsMsgAccountManagerDataSource::HasAssertion(nsIRDFResource *aSource,
   //
   // short-circuit on property, so objects like filters, etc, don't get queried
   else if (aProperty == kNC_IsDefaultServer || aProperty == kNC_CanGetMessages || 
-           aProperty == kNC_SupportsFilters) {
+           aProperty == kNC_CanGetIncomingMessages || aProperty == kNC_SupportsFilters) {
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = getServerForFolderNode(aSource, getter_AddRefs(server));
     if (NS_SUCCEEDED(rv) && server)
@@ -972,27 +984,17 @@ nsMsgAccountManagerDataSource::HasAssertionServer(nsIMsgIncomingServer *aServer,
                                                   PRBool aTruthValue,
                                                   PRBool *_retval)
 {
-
-    if (aProperty == kNC_IsDefaultServer) {
-        if (aTarget == kTrueLiteral)
-            *_retval = isDefaultServer(aServer);
-        else
-            *_retval = !isDefaultServer(aServer);
-
-    } else if (aProperty == kNC_SupportsFilters) {
-        if (aTarget == kTrueLiteral) {
-            *_retval = supportsFilters(aServer);
-        } else
-            *_retval = !supportsFilters(aServer);
-    } else if (aProperty == kNC_CanGetMessages) {
-        if (aTarget == kTrueLiteral) {
-            *_retval = canGetMessages(aServer);
-        } else
-            *_retval = !canGetMessages(aServer);
-    } else {
-        *_retval = PR_FALSE;
-    }
-    return NS_OK;
+  if (aProperty == kNC_IsDefaultServer)
+    *_retval = (aTarget == kTrueLiteral) ? isDefaultServer(aServer) : !isDefaultServer(aServer);
+  else if (aProperty == kNC_SupportsFilters)
+    *_retval = (aTarget == kTrueLiteral) ? supportsFilters(aServer) : !supportsFilters(aServer);
+  else if (aProperty == kNC_CanGetMessages) 
+   *_retval = (aTarget == kTrueLiteral) ? canGetMessages(aServer) : !canGetMessages(aServer); 
+  else if (aProperty == kNC_CanGetIncomingMessages) 
+    *_retval = (aTarget == kTrueLiteral) ? canGetIncomingMessages(aServer) : !canGetIncomingMessages(aServer);
+  else
+    *_retval = PR_FALSE;
+  return NS_OK;
 }
 
 PRBool
@@ -1038,23 +1040,41 @@ nsMsgAccountManagerDataSource::supportsFilters(nsIMsgIncomingServer *aServer)
 PRBool
 nsMsgAccountManagerDataSource::canGetMessages(nsIMsgIncomingServer *aServer)
 {
-      nsresult rv; 
+  nsXPIDLCString type;
+  nsresult rv = aServer->GetType(getter_Copies(type));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  
+  nsCAutoString contractid(NS_MSGPROTOCOLINFO_CONTRACTID_PREFIX);
+  contractid.Append(type);
+  
+  nsCOMPtr<nsIMsgProtocolInfo> protocolInfo =
+    do_GetService(contractid.get(), &rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  
+  PRBool canGetMessages = PR_FALSE;
+  protocolInfo->GetCanGetMessages(&canGetMessages);
+  
+  return canGetMessages;
+}
 
-      nsXPIDLCString type;
-      rv = aServer->GetType(getter_Copies(type));
-      NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-      nsCAutoString contractid(NS_MSGPROTOCOLINFO_CONTRACTID_PREFIX);
-      contractid.Append(type);
-
-      nsCOMPtr<nsIMsgProtocolInfo> protocolInfo =
-           do_GetService(contractid.get(), &rv);
-      NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-      PRBool canGetMessages = PR_FALSE;
-      protocolInfo->GetCanGetMessages(&canGetMessages);
-
-      return canGetMessages;
+PRBool
+nsMsgAccountManagerDataSource::canGetIncomingMessages(nsIMsgIncomingServer *aServer)
+{
+  nsXPIDLCString type;
+  nsresult rv = aServer->GetType(getter_Copies(type));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  
+  nsCAutoString contractid(NS_MSGPROTOCOLINFO_CONTRACTID_PREFIX);
+  contractid.Append(type);
+  
+  nsCOMPtr<nsIMsgProtocolInfo> protocolInfo =
+    do_GetService(contractid.get(), &rv);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  
+  PRBool canGetIncomingMessages = PR_FALSE;
+  protocolInfo->GetCanGetIncomingMessages(&canGetIncomingMessages);
+  
+  return canGetIncomingMessages;
 }
 
 nsresult

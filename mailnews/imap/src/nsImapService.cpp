@@ -3503,6 +3503,14 @@ nsImapService::GetCanGetMessages(PRBool *aCanGetMessages)
 }        
 
 NS_IMETHODIMP
+nsImapService::GetCanGetIncomingMessages(PRBool *aCanGetIncomingMessages)
+{
+    NS_ENSURE_ARG_POINTER(aCanGetIncomingMessages);
+    *aCanGetIncomingMessages = PR_TRUE;
+    return NS_OK;
+}    
+
+NS_IMETHODIMP
 nsImapService::GetShowComposeMsgLink(PRBool *showComposeMsgLink)
 {
     NS_ENSURE_ARG_POINTER(showComposeMsgLink);

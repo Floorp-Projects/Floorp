@@ -109,6 +109,7 @@ protected:
   PRBool isDefaultServer(nsIMsgIncomingServer *aServer);
   PRBool supportsFilters(nsIMsgIncomingServer *aServer);
   PRBool canGetMessages(nsIMsgIncomingServer *aServer);
+  PRBool canGetIncomingMessages(nsIMsgIncomingServer *aServer);
   
   static PRBool isContainment(nsIRDFResource *aProperty);
   nsresult getServerForFolderNode(nsIRDFNode *aResource,
@@ -136,6 +137,7 @@ protected:
   static nsIRDFResource* kNC_IsDefaultServer;
   static nsIRDFResource* kNC_SupportsFilters;
   static nsIRDFResource* kNC_CanGetMessages;
+  static nsIRDFResource* kNC_CanGetIncomingMessages;
   
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_AccountRoot;

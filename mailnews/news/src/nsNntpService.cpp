@@ -1446,9 +1446,17 @@ NS_IMETHODIMP
 nsNntpService::GetCanGetMessages(PRBool *aCanGetMessages)
 {
     NS_ENSURE_ARG_POINTER(aCanGetMessages);
-    *aCanGetMessages = PR_FALSE;
+    *aCanGetMessages = PR_FALSE;  // poorly named, this just means we don't have an inbox.
     return NS_OK;
 }  
+
+NS_IMETHODIMP
+nsNntpService::GetCanGetIncomingMessages(PRBool *aCanGetIncomingMessages)
+{
+    NS_ENSURE_ARG_POINTER(aCanGetIncomingMessages);
+    *aCanGetIncomingMessages = PR_TRUE;
+    return NS_OK;
+} 
 
 NS_IMETHODIMP
 nsNntpService::GetShowComposeMsgLink(PRBool *showComposeMsgLink)

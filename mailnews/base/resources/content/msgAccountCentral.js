@@ -100,7 +100,11 @@ function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
         var showComposeMsgLink = protocolInfo.showComposeMsgLink;
         SetItemDisplay("ComposeMessage", showComposeMsgLink);
     
-        var displayEmailHeader = canGetMessages || showComposeMsgLink;
+        // Junk mail settings
+        var canControlJunkEmail = protocolInfo.canGetIncomingMessages && protocolInfo.canGetMessages & false;  // && false, until ready for prime time
+        SetItemDisplay("JunkSettingsMail", canControlJunkEmail);
+
+        var displayEmailHeader = canGetMessages || showComposeMsgLink || canControlJunkEmail;
         // Display Email header, only if any of the items are displayed
         SetItemDisplay("EmailHeader", displayEmailHeader);
     
@@ -112,19 +116,24 @@ function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
         var canSubscribe = (msgFolder.canSubscribe) && !(protocolInfo.canGetMessages);
         SetItemDisplay("SubscribeNewsgroups", canSubscribe);
     
+        // Junk news settings
+        var canControlJunkNews = protocolInfo.canGetIncomingMessages && !(protocolInfo.canGetMessages) && false;  // && false, until ready for prime time
+        SetItemDisplay("JunkSettingsNews", canControlJunkNews);
+
+        var displayNewsHeader = canSubscribe || canControlJunkNews;
         // Display News header, only if any of the items are displayed
-        SetItemDisplay("NewsHeader", canSubscribe);
+        SetItemDisplay("NewsHeader", displayNewsHeader);
     
         /***** News header and items : End *****/
    
         // If neither of above sections exist, collapse section separators
-        if (!(canSubscribe || displayEmailHeader)) { 
+        if (!(displayNewsHeader || displayEmailHeader)) { 
             CollapseSectionSeparators("MessagesSection.separator", false);
         } 
 
         /***** Accounts : Begin *****/
 
-        var canShowCreateAccount = ! nsPrefBranch.prefIsLocked("mail.disable_new_account_addition");
+        var canShowCreateAccount = !nsPrefBranch.prefIsLocked("mail.disable_new_account_addition");
         SetItemDisplay("CreateAccount", canShowCreateAccount);
           
         /***** Accounts : End *****/
@@ -142,12 +151,8 @@ function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
         // Offline Settings
         var supportsOffline = (server.offlineSupportLevel != 0);
         SetItemDisplay("OfflineSettings", supportsOffline);
-
-        // Junk mail settings
-        var canControlJunk = protocolInfo.canGetMessages && false;  // && false, since the feature is not on yet.
-        SetItemDisplay("JunkSettings", canControlJunk);
             
-        var displayAdvFeatures = canSearchMessages || canHaveFilters || supportsOffline || canControlJunk;
+        var displayAdvFeatures = canSearchMessages || canHaveFilters || supportsOffline;
         // Display Adv Features header, only if any of the items are displayed
         SetItemDisplay("AdvancedFeaturesHeader", displayAdvFeatures);
     

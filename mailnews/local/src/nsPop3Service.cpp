@@ -551,6 +551,14 @@ nsPop3Service::GetCanGetMessages(PRBool *aCanGetMessages)
 }  
 
 NS_IMETHODIMP
+nsPop3Service::GetCanGetIncomingMessages(PRBool *aCanGetIncomingMessages)
+{
+    NS_ENSURE_ARG_POINTER(aCanGetIncomingMessages);
+    *aCanGetIncomingMessages = PR_TRUE;
+    return NS_OK;
+} 
+
+NS_IMETHODIMP
 nsPop3Service::GetShowComposeMsgLink(PRBool *showComposeMsgLink)
 {
     NS_ENSURE_ARG_POINTER(showComposeMsgLink);

@@ -77,6 +77,12 @@ Rights Reserved.
         </hbox> 
       </row>
       <separator id="ComposeMessage.separator" class="thin"/>
+      <row id="JunkSettingsMail" class="acctCentralRow">
+        <hbox> 
+          <label class="acctCentralText acctCentralLinkText" value="&junkSettings.label;" onclick="JunkSettings();"/> 
+        </hbox> 
+      </row>
+      <separator id="JunkSettingsMail.separator" class="thin"/>
 
       <row id="NewsHeader" class="acctCentralTitleRow">
         <hbox class="acctCentralRowTitleBox">
@@ -90,6 +96,12 @@ Rights Reserved.
         </hbox> 
       </row>
       <separator id="SubscribeNewsgroups.separator" class="thin"/>
+      <row id="JunkSettingsNews" class="acctCentralRow">
+        <hbox> 
+          <label class="acctCentralText acctCentralLinkText" value="&junkSettings.label;" onclick="JunkSettings();"/> 
+        </hbox> 
+      </row>
+      <separator id="JunkSettingsNews.separator" class="thin"/>
 
       <separator id="MessagesSection.separator1"/>
       <separator id="MessagesSection.separator2"/>
@@ -142,12 +154,6 @@ Rights Reserved.
         </hbox> 
       </row>
       <separator id="OfflineSettings.separator" class="thin"/>
-      <row id="JunkSettings" class="acctCentralRow">
-        <hbox> 
-          <label class="acctCentralText acctCentralLinkText" value="&junkSettings.label;" onclick="JunkSettings();"/> 
-        </hbox> 
-      </row>
-      <separator id="JunkSettings.separator" class="thin"/>
     </rows>
   </grid>
 </page>

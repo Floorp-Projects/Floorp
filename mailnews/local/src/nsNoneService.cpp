@@ -182,6 +182,14 @@ nsNoneService::GetCanGetMessages(PRBool *aCanGetMessages)
     return NS_OK;
 }  
 
+NS_IMETHODIMP
+nsNoneService::GetCanGetIncomingMessages(PRBool *aCanGetIncomingMessages)
+{
+    NS_ENSURE_ARG_POINTER(aCanGetIncomingMessages);
+    *aCanGetIncomingMessages = PR_FALSE;
+    return NS_OK;
+} 
+
 NS_IMETHODIMP 
 nsNoneService::GetDefaultDoBiff(PRBool *aDoBiff)
 {

@@ -34,7 +34,7 @@
       <menupopup datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
                    containment="http://home.netscape.com/NC-rdf#child" ref="msgaccounts:/">
         <template>
-          <rule nc:CanGetMessages="true">
+          <rule nc:CanGetIncomingMessages="true">
             <menuitem uri="..." value="..."
                  class="folderMenuItem menuitem-iconic"
                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
