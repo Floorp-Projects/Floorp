@@ -170,7 +170,7 @@ function onOK()
       anchorElement.appendChild(textNode);
     }
     dump("Inserting\n");
-    editorShell.InsertElement(anchorElement, true);
+    editorShell.InsertElement(anchorElement, false);
   } else if (insertLinkAroundSelection) {
     dump("Setting link around selected text\n");
     editorShell.InsertLinkAroundSelection(anchorElement);

@@ -1,7 +1,6 @@
 //Cancel() is in EdDialogCommon.js
 var editorShell;
 var insertNew = true;
-var inserted = false;
 var tagName = "anchor"
 var anchorElement = null;
 
@@ -65,21 +64,10 @@ function onOK()
   } else {
     // Replace spaces with "_" else it causes trouble in URL parsing
     name = ReplaceWhitespace(name, "_");
-    imageElement.setAttribute("name",name);
+    anchorElement.setAttribute("name",name);
     if (insertNew) {
       // Don't delete selected text when inserting
       editorShell.InsertElement(element, false);
-      // Select the newly-inserted image
-      editorShell.SelectElement(element);
-      // Mark that we inserted so we can collapse the selection
-      //  when dialog closes
-      inserted = true;
-    }
-
-    if (inserted) {
-      // We selected the object, undo it by
-      //  setting caret to just after the inserted element
-      editorShell.SetSelectionAfterElement(imageElement);
     }
     window.close();
   }

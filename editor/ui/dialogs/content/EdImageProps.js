@@ -316,15 +316,7 @@ function onOK()
   // handle insertion of new image
   if (insertNew) {
     dump("src="+imageElement.getAttribute("src")+" alt="+imageElement.getAttribute("alt")+"\n");
-    editorShell.InsertElement(imageElement, true);
-    // Select the newly-inserted image
-    editorShell.SelectElement(imageElement);
-    // Mark that we inserted so we can collapse the selection
-    //  when dialog closes
-
-    // We selected the object, undo it by
-    //  setting caret to just after the inserted element
-    editorShell.SetSelectionAfterElement(imageElement);
+    editorShell.InsertElement(imageElement, false);
   }
 
   // dismiss dialog
