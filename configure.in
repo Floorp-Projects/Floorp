@@ -4050,15 +4050,7 @@ case "$target" in
 	;;
 
 *-os2*)
-  if test "${NO_STATIC_LIB}" = "1"; then
-    MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
-    MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
-    XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
-    MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.$(LIB_SUFFIX)'
-    MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.$(LIB_SUFFIX)'
-    MOZ_PNG_LIBS='$(DIST)/lib/mozpng.$(LIB_SUFFIX)'
-    MOZ_MNG_LIBS='$(DIST)/lib/mozmng.$(LIB_SUFFIX)'
-  else
+  if test "${BUILD_STATIC_LIBS}" = "1"; then
     MOZ_JS_LIBS='$(DIST)/lib/libmozjs.lib'
     MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/libxpcom.lib'
     XPCOM_LIBS='$(DIST)/lib/libxpcom.lib'
@@ -4066,6 +4058,14 @@ case "$target" in
     MOZ_ZLIB_LIBS='$(DIST)/lib/libmozz.$(LIB_SUFFIX)'
     MOZ_PNG_LIBS='$(DIST)/lib/libmozpng.$(LIB_SUFFIX)'
     MOZ_MNG_LIBS='$(DIST)/lib/libmozmng.$(LIB_SUFFIX)'
+  else
+    MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
+    MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
+    XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
+    MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.$(LIB_SUFFIX)'
+    MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.$(LIB_SUFFIX)'
+    MOZ_PNG_LIBS='$(DIST)/lib/mozpng.$(LIB_SUFFIX)'
+    MOZ_MNG_LIBS='$(DIST)/lib/mozmng.$(LIB_SUFFIX)'
   fi
 	;;
 
