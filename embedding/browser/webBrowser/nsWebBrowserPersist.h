@@ -23,18 +23,18 @@
 #ifndef nsWebBrowserPersist_h__
 #define nsWebBrowserPersist_h__
 
-#include <nsCOMPtr.h>
+#include "nsCOMPtr.h"
 
-#include <nsIMIMEService.h>
-#include <nsIStreamListener.h>
-#include <nsIOutputStream.h>
-#include <nsIInputStream.h>
-#include <nsIFileStream.h>
-#include <nsIChannel.h>
-#include <nsIStyleSheet.h>
-#include <nsIDocumentEncoder.h>
+#include "nsIMIMEService.h"
+#include "nsIStreamListener.h"
+#include "nsIOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsIFileStream.h"
+#include "nsIChannel.h"
+#include "nsIStyleSheet.h"
+#include "nsIDocumentEncoder.h"
 
-#include <nsHashtable.h>
+#include "nsHashtable.h"
 
 #include "nsIWebBrowserPersist.h"
 #include "nsDOMWalker.h"
@@ -46,7 +46,7 @@ class nsWebBrowserPersist : public nsIWebBrowserPersist,
                             public nsIStreamListener,
                             public nsDOMWalkerCallback
 {
-    friend nsEncoderNodeFixup;
+    friend class nsEncoderNodeFixup;
 
 // Public members
 public:
