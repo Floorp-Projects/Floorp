@@ -195,8 +195,6 @@ public:
   NS_IMETHOD  DeliverMessage();
   NS_IMETHOD  DeliverFileAsMail();
   NS_IMETHOD  DeliverFileAsNews();
-  void        DeliverAsMailExit(nsIURI *aUrl, nsresult aExitCode);
-  void        DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode, PRBool sendMailAlso);
   void        DoDeliveryExitProcessing(nsIURI * aUrl, nsresult aExitCode, PRBool aCheckForMail);
 
   nsresult    DoFcc();
@@ -294,10 +292,6 @@ public:
   nsCOMPtr<nsIMsgComposeProgress> mSendProgress;
   nsCOMPtr<nsIMsgSendListener> mListener;
 
-  // we need two, in the case where we are sending and posting the same message
-  nsCOMPtr<nsIUrlListener>  mNewsPostListener;
-  nsCOMPtr<nsIUrlListener>  mMailSendListener;
-  
   PRBool                    mSendMailAlso;
   nsIFileSpec               *mReturnFileSpec;     // a holder for file spec's to be returned to caller
 

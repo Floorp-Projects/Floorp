@@ -1867,14 +1867,15 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
         // URL that is passed in...
         //
         m_attachments[newLoc].mDeleteFile = PR_FALSE;
-			  m_attachments[newLoc].SetMimeDeliveryState(this);
 
 			  // These attachments are already "snarfed"...
 #ifdef XP_MAC
         //We need to snarf the file to figure out how to send it...
         m_attachments[newLoc].m_done = PR_FALSE;
+			  m_attachments[newLoc].SetMimeDeliveryState(this);
 #else
 			  m_attachments[newLoc].m_done = PR_TRUE;
+			  m_attachments[newLoc].SetMimeDeliveryState(nsnull);
 #endif
 
         if (m_attachments[newLoc].mURL)
@@ -2097,10 +2098,9 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 
 		for (i = mCompFieldLocalAttachments; i < mPreloadedAttachmentCount; i++) 
     {
-      m_attachments[i].mDeleteFile = PR_FALSE;
-			m_attachments[i].SetMimeDeliveryState(this);
-
 			/* These attachments are already "snarfed". */
+      m_attachments[i].mDeleteFile = PR_FALSE;
+			m_attachments[i].SetMimeDeliveryState(nsnull);
 			m_attachments[i].m_done = PR_TRUE;
 			NS_ASSERTION (preloaded_attachments[i].orig_url, "null url");
 
@@ -2286,6 +2286,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       {
         m_attachments[i].m_bogus_attachment = PR_TRUE;
         m_attachments[i].m_done = PR_TRUE;
+			  m_attachments[i].SetMimeDeliveryState(nsnull);
         m_attachment_pending_count--;
         continue;
       }
@@ -2666,50 +2667,38 @@ nsMsgComposeAndSend::Init(
 }
 
 nsresult
-MailDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
+SendDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, nsMsgDeliveryType deliveryType, nsISupports *tagData)
 {
   if (tagData)
   {
-    nsMsgComposeAndSend *ptr = (nsMsgComposeAndSend *) tagData;
+    nsCOMPtr<nsIMsgSend> msgSend = do_QueryInterface(tagData);
+    if (!msgSend)
+      return NS_ERROR_NULL_POINTER;
 
-    if (!ptr) return NS_ERROR_NULL_POINTER;
-
-	if (NS_FAILED(aExitCode))
-		switch (aExitCode)
-		{
-			case NS_ERROR_UNKNOWN_HOST:
-				aExitCode = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
-				break;
-			default:
-				if (! NS_IS_MSG_ERROR(aExitCode))
-					aExitCode = NS_ERROR_SEND_FAILED;
-				break;
-		}
-    ptr->DeliverAsMailExit(aUrl, aExitCode);
-
-    NS_RELEASE(ptr);
-  }
-
-  return aExitCode;
-}
-
-nsresult
-NewsDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
-{
-  if (tagData)
-  {
-    nsMsgComposeAndSend *ptr = (nsMsgComposeAndSend *) tagData;
-    
-    if (!ptr) return NS_ERROR_NULL_POINTER;
-
-	  if (NS_FAILED(aExitCode))
-	  {
-		  if (! NS_IS_MSG_ERROR(aExitCode))
-			  aExitCode = NS_ERROR_SEND_FAILED;
+    if (deliveryType == nsMailDelivery)
+    {
+  	  if (NS_FAILED(aExitCode))
+    		switch (aExitCode)
+    		{
+    			case NS_ERROR_UNKNOWN_HOST:
+    				aExitCode = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
+    				break;
+    			default:
+    				if (! NS_IS_MSG_ERROR(aExitCode))
+    					aExitCode = NS_ERROR_SEND_FAILED;
+    				break;
+    		}
+      msgSend->DeliverAsMailExit(aUrl, aExitCode);
     }
     
-    ptr->DeliverAsNewsExit(aUrl, aExitCode, ptr->mSendMailAlso);
-    NS_RELEASE(ptr);
+    else if (deliveryType == nsNewsDelivery)
+    {
+  	  if (NS_FAILED(aExitCode))
+  		  if (! NS_IS_MSG_ERROR(aExitCode))
+  			  aExitCode = NS_ERROR_SEND_FAILED;
+      
+      msgSend->DeliverAsNewsExit(aUrl, aExitCode);
+    }
   }
 
   return aExitCode;
@@ -2907,10 +2896,9 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && smtpService)
   {
-    nsMsgDeliveryListener * aListener = new nsMsgDeliveryListener(MailDeliveryCallback, nsMailDelivery, this);
-    mMailSendListener = do_QueryInterface(aListener);
-
-    if (!mMailSendListener)
+    nsMsgDeliveryListener * aListener = new nsMsgDeliveryListener(SendDeliveryCallback, nsMailDelivery, this);
+    nsCOMPtr<nsIUrlListener> uriListener = do_QueryInterface(aListener);
+    if (!uriListener)
     {
       if (mGUINotificationEnabled)
         nsMsgDisplayMessageByID(promptObject, NS_ERROR_SENDING_MESSAGE);
@@ -2919,8 +2907,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 
     // Note: Don't do a SetMsgComposeAndSendObject since we are in the same thread, and
     // using callbacks for notification
-    // 
-  	NS_ADDREF_THIS(); // why are we forcing an addref on ourselves? this doesn't look right to me
+
 	  nsCOMPtr<nsIFileSpec> aFileSpec;
 	  NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(aFileSpec));
 
@@ -2940,7 +2927,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     SetStatusMessage( msg );
 
     rv = smtpService->SendMailMessage(aFileSpec, buf, mUserIdentity,
-                                      mMailSendListener, nsnull, 
+                                      uriListener, nsnull, 
                                       callbacks, nsnull);
   }
   
@@ -2961,21 +2948,18 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 
   if (NS_SUCCEEDED(rv) && nntpService) 
   {
-    nsMsgDeliveryListener * aListener = new nsMsgDeliveryListener(NewsDeliveryCallback, nsNewsDelivery, this);
-    mNewsPostListener = do_QueryInterface(aListener);
-
-    if (!mNewsPostListener)
+    nsMsgDeliveryListener * aListener = new nsMsgDeliveryListener(SendDeliveryCallback, nsNewsDelivery, this);
+    nsCOMPtr<nsIUrlListener> uriListener = do_QueryInterface(aListener);
+    if (!uriListener)
     {
       if (mGUINotificationEnabled)
         nsMsgDisplayMessageByID(promptObject, NS_ERROR_SENDING_MESSAGE);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // Note: Don't do a SetMsgComposeAndSendObject since we are in the same thread, and
-    // using callbacks for notification
-    // 
-	NS_ADDREF_THIS();  // two addrefs on ourselves? This looks bogus too....
- 	AddRef();
+  // Note: Don't do a SetMsgComposeAndSendObject since we are in the same thread, and
+  // using callbacks for notification
+
 	nsCOMPtr<nsIFileSpec>fileToPost;
 	
 	rv = NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(fileToPost));
@@ -3000,7 +2984,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 
 	if (!msgWindow) return NS_ERROR_FAILURE;
 
-    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mCompFields->GetNewshost(), mNewsPostListener, msgWindow, nsnull);
+    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mCompFields->GetNewshost(), uriListener, msgWindow, nsnull);
 	if (NS_FAILED(rv)) return rv;
   }
 
@@ -3121,18 +3105,18 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode,
   }
 }
 
-void
+NS_IMETHODIMP
 nsMsgComposeAndSend::DeliverAsMailExit(nsIURI *aUrl, nsresult aExitCode)
 {
   DoDeliveryExitProcessing(aUrl, aExitCode, PR_FALSE);
-  return;
+  return NS_OK;
 }
 
-void
-nsMsgComposeAndSend::DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode, PRBool sendMailAlso)
+NS_IMETHODIMP
+nsMsgComposeAndSend::DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode)
 {
-  DoDeliveryExitProcessing(aUrl, aExitCode, sendMailAlso);
-  return;
+  DoDeliveryExitProcessing(aUrl, aExitCode, mSendMailAlso);
+  return NS_OK;
 }
 
 // 

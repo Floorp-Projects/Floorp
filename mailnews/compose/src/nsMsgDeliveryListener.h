@@ -43,7 +43,7 @@ enum nsMsgDeliveryType
 // This is the generic callback that will be called when the URL processing operation
 // is complete. The tagData is what was passed in by the caller at creation time.
 //
-typedef nsresult (*nsMsgDeliveryCompletionCallback) (nsIURI *aUrl, nsresult aExitCode, void *tagData);
+typedef nsresult (*nsMsgDeliveryCompletionCallback) (nsIURI *aUrl, nsresult aExitCode, nsMsgDeliveryType deliveryType, nsISupports *tagData);
 
 class nsMsgSendLater;
 
@@ -52,7 +52,7 @@ class nsMsgDeliveryListener: public nsIUrlListener
 public:
 	nsMsgDeliveryListener(nsMsgDeliveryCompletionCallback callback,
                         nsMsgDeliveryType               delivType,  
-                        void                            *tagData);
+                        nsISupports                     *tagData);
 	virtual     ~nsMsgDeliveryListener();
 
 	NS_DECL_ISUPPORTS
@@ -65,7 +65,7 @@ public:
 
 private:
   // Private Information
-  void                            *mTagData;
+  nsCOMPtr<nsISupports>           mTagData;
   nsFileSpec                      *mTempFileSpec;
   nsMsgDeliveryType               mDeliveryType;
   nsCOMPtr<nsIMsgSend>            mMsgSendObj;

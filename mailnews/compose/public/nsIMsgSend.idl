@@ -206,6 +206,8 @@ interface nsIMsgSend : nsISupports
     [noscript] void notifyListenerOnProgress(in string aMsgID, in unsigned long aProgress, in unsigned long aProgressMax);
     [noscript] void notifyListenerOnStatus(in string aMsgID, in wstring aMsg);
     [noscript] void notifyListenerOnStopSending(in string aMsgID, in nsresult aStatus, in wstring aMsg, in nsIFileSpec returnFileSpec);
+    [noscript] void deliverAsMailExit(in nsIURI aUrl, in nsresult aExitCode);
+    [noscript] void deliverAsNewsExit(in nsIURI aUrl, in nsresult aExitCode);
 
     /* methods for copy listener ... */
     [noscript] void notifyListenerOnStartCopy(); 
