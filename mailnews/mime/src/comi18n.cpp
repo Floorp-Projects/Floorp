@@ -765,7 +765,10 @@ convert_and_encode:
         // utf-8 to mail charset conversion (or iso-8859-1 in case of us-ascii).
         PRUnichar *u = NULL;
         nsAutoString fmt("%s");
+        char aChar = begin[len];
+        begin[len] = '\0';
         u = nsTextFormater::smprintf(fmt.GetUnicode(), begin);
+        begin[len] = aChar;
         if (NULL == u) {
             PR_FREEIF(srcbuf);
             PR_FREEIF(retbuf);
@@ -991,45 +994,6 @@ char *utf8_EncodeMimePartIIStr(const char *subject, char *charset, int maxLineLe
 
   /* MIME Part2 encode */
   buf = utf8_mime_encode_mail_address(charset, subject, maxLineLen);
-
-#if 0 // fix for 18105, need more testing
-  /* The input buffer may be too large, try to divide it into chunks. */
-  if (NULL == buf) {
-    PRUnichar *ucs2 = NULL;
-    nsAutoString fmt("%s");
-    ucs2 = nsTextFormater::smprintf(fmt.GetUnicode(), subject);  /* convert from UTF-8 so we can chunk up safely */
-    if (NULL == ucs2)
-      return NULL;
-
-    int ucs2Len = nsCRT::strlen(ucs2);
-    int chunkLen = ( maxLineLen - nsCRT::strlen(charset) - 7 ) * 3 / 4; /* how many characters we can convert from the src */
-    nsAutoString chunk;
-
-    for (int index = 0; index < ucs2Len; index += chunkLen) {
-
-      /* set string, chunk length or remaining buffer length */
-      chunk.SetString(&ucs2[index], chunkLen <= (ucs2Len - index) ? chunkLen : (ucs2Len - index));
-      char *utf8 = chunk.ToNewUTF8String();  /* convert to UTF-8, again */
-      if (NULL == utf8) {
-        nsTextFormater::smprintf_free(ucs2);
-        PR_FREEIF(buf);
-        return NULL;
-      }
-
-      char * encoded_chunk = utf8_mime_encode_mail_address(charset, utf8, maxLineLen);
-      nsAllocator::Free(utf8);
-      if (NULL == encoded_chunk) {
-        PR_FREEIF(buf);
-        return NULL;
-      }
-
-      buf = PR_sprintf_append(buf, "%s%s", (0 == index) ? "" : "\r\n\t", encoded_chunk);
-      PR_Free(encoded_chunk);
-    }
-
-    nsTextFormater::smprintf_free(ucs2);
-  }
-#endif //0
 
   return buf;
 }
