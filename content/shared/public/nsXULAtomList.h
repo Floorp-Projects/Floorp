@@ -115,6 +115,11 @@ XUL_ATOM(broadcaster, "broadcaster") // A broadcaster
 XUL_ATOM(observes, "observes") // The observes element
 XUL_ATOM(templateAtom, "template") // A XUL template
 
+// Bogus atoms that people use that are just data containers
+XUL_ATOM(broadcasterset, "broadcasterset")
+XUL_ATOM(commands, "commands")
+XUL_ATOM(commandset, "commandset")
+
 XUL_ATOM(progressbar, "progressbar")
 XUL_ATOM(progresstext, "progresstext")
 XUL_ATOM(crop, "crop")
