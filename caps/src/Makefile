@@ -14,29 +14,34 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+DEPTH	= ../..
+
+include $(DEPTH)/config/config.mk
+
 MODULE		= caps
 
 LIBRARY_NAME	= caps
 
-DEPTH	= ../..
+CPPSRCS		=	        \
+                nsUserDialogHelper.cpp            \
+		nsZig.cpp                         \
+		nsPrincipal.cpp                   \
+		nsPrivilege.cpp                   \
+		nsPrivilegeManager.cpp            \
+		nsPrivilegeTable.cpp              \
+		nsSystemPrivilegeTable.cpp        \
+		nsTarget.cpp                      \
+		nsUserTarget.cpp                  \
+		admin.cpp                         \
+		nsCaps.cpp                        \
+		$(NULL)
 
 REQUIRES	= nspr xpcom security layer js jar zlib pref img util rdf caps 
 
 CSRCS		=	        \
 		nsZip.c                         \
-                nsUserDialogHelper.c            \
-		nsZig.c                         \
 		nsLoadZig.c                     \
-		nsPrincipal.c                   \
-		nsPrivilege.c                   \
-		nsPrivilegeManager.c            \
-		nsPrivilegeTable.c              \
-		nsSystemPrivilegeTable.c        \
-		nsTarget.c                      \
 		jpermission.c                   \
-		nsUserTarget.c                  \
-		admin.c                         \
-		nsCaps.c                        \
 		$(NULL)
 
 include $(DEPTH)/config/rules.mk
