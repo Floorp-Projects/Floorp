@@ -179,8 +179,8 @@ mozSqlConnection::GetPrimaryKeys(const nsAString& aSchema, const nsAString& aTab
 NS_IMETHODIMP
 mozSqlConnection::Run()
 {
+  PR_Lock(mLock);
   while(!mShutdown) {
-    PR_Lock(mLock);
 
     while (mRequests.Count()) {
       mCurrentRequest = mRequests[0];
@@ -189,7 +189,9 @@ mozSqlConnection::Run()
 
       mozSqlRequest* r = (mozSqlRequest*)mCurrentRequest.get();
 
+      PR_Unlock(mLock);
       r->mObserver->OnStartRequest(mCurrentRequest, r->mCtxt);
+      PR_Lock(mLock);
 
       r->mStatus = mozISqlRequest::STATUS_EXECUTED;
 
@@ -206,7 +208,9 @@ mozSqlConnection::Run()
 	GetErrorMessage(r->mErrorMessage);
       }
         
+      PR_Unlock(mLock);
       r->mObserver->OnStopRequest(mCurrentRequest, r->mCtxt);
+      PR_Lock(mLock);
 
       mCurrentRequest = nsnull;
 
@@ -215,8 +219,8 @@ mozSqlConnection::Run()
     mWaiting = PR_TRUE;
     PR_WaitCondVar(mCondVar, PR_INTERVAL_NO_TIMEOUT);
     mWaiting = PR_FALSE;
-    PR_Unlock(mLock);
   }
+  PR_Unlock(mLock);
 
   return NS_OK;
 }
