@@ -1401,6 +1401,18 @@ nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
   //FIX FOR CRASHING WHEN NO INSTANCE OWVER
   if (!mInstanceOwner)
     return NS_ERROR_NULL_POINTER;
+
+  if (anEvent->message == NS_PLUGIN_ACTIVATE)
+  {
+    nsCOMPtr<nsIContent> content;
+    GetContent(getter_AddRefs(content));
+    if (content)
+    {
+      content->SetFocus(aPresContext);
+      return rv;
+    }
+  }
+
 #ifdef XP_WIN
   rv = nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
   return rv;
