@@ -667,6 +667,10 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						_mkdir (tmpPath);
 					}
 				}
+				else if (strcmp(pcmd, "Msg") ==0)
+				{
+					int rv = AfxMessageBox(parms,MB_OK);
+				}
 				else if (strcmp(pcmd, "Message") ==0)
 				{
 					int rv = AfxMessageBox(parms,MB_YESNO);
