@@ -238,20 +238,24 @@ nsEventStatus nsMenuButton::OnPaint(nsIRenderingContext& aRenderingContext,
   // draw the triangle in the top right corner to indicate this is a dropdown,
   // but only if the dirty rect contains that area
   if ( aDirtyRect.YMost() > mBounds.YMost() - 11 ) {
-	  aRenderingContext.PushState();
-	  nscolor triangleColor = 0; 
-	  if ( mState & eButtonState_disabled )
-	    triangleColor = nscolor(NS_RGB(0xaa,0xaa,0xaa));   //*** this should go to l&f object
-	  aRenderingContext.SetColor(triangleColor);
+    aRenderingContext.PushState();
+    nscolor triangleColor = 0; 
+    if ( mState & eButtonState_disabled )
+      triangleColor = nscolor(NS_RGB(0xaa,0xaa,0xaa));   //*** this should go to l&f object
+    aRenderingContext.SetColor(triangleColor);
 
-	  nsPoint trianglePoints[kNumPolyPoints];
-	  trianglePoints[0] = nsPoint(mBounds.width - 16, 5);  // top left
-	  trianglePoints[1] = nsPoint(mBounds.width - 2, 5);   // top right
-	  trianglePoints[2] = nsPoint(mBounds.width - 9, 13);    // bottom point
-	  aRenderingContext.FillPolygon ( trianglePoints, kNumPolyPoints );
-	  
-	  PRBool ignored;
-	  aRenderingContext.PopState(ignored);
+    // it would be great if I could just use a polygon here, but this
+    // way guarantees it will be a nice triangle shape on all gfx platforms
+    int lineWidth = 10;
+    int hStart = mBounds.width - 14;
+    for (int i = 5; lineWidth >= 0; ++i, lineWidth -= 2, hStart += 1)
+    {
+      int hEnd = hStart + lineWidth;
+      aRenderingContext.DrawLine(hStart, i, hEnd, i);
+    }
+   
+    PRBool ignored;
+    aRenderingContext.PopState(ignored);
   }
   return rv;
 }
