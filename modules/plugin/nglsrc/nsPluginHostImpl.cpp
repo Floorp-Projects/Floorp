@@ -529,39 +529,62 @@ nsresult nsPluginHostImpl :: Init(void)
 
 nsresult nsPluginHostImpl :: LoadPlugins(void)
 {
-#ifdef XP_PC
-  long result;
-  HKEY keyloc;
-  DWORD type, pathlen;
-  char path[2000];
+#ifdef XP_PC 
+  long result; 
+  HKEY keyloc; 
+  DWORD type, pathlen; 
+  char path[2000]; 
+  PRDir *dir = nsnull; 
 
-  path[0] = 0;
+  if (::GetModuleFileName(NULL, path, sizeof(path)) > 0) 
+  { 
+    pathlen = PL_strlen(path) - 1; 
 
-  result = ::RegOpenKeyEx(HKEY_CURRENT_USER,
-                          "Software\\Netscape\\Netscape Navigator\\Main",
-                          0, KEY_READ, &keyloc);
+    while (pathlen > 0) 
+    { 
+      if (path[pathlen] == '\\') 
+        break; 
 
-  if (result == ERROR_SUCCESS)
-  {
-    pathlen = sizeof(path);
+      pathlen--; 
+    } 
 
-    result = ::RegQueryValueEx(keyloc, "Install Directory",
-                               NULL, &type, (LPBYTE)&path, &pathlen);
+    if (pathlen > 0) 
+    { 
+      PL_strcpy(&path[pathlen + 1], "plugins"); 
+      dir = PR_OpenDir(path); 
+    } 
+  } 
 
-    if (result == ERROR_SUCCESS)
-    {
-      strcat(path, "\\Program\\Plugins");
-#ifdef NS_DEBUG
-printf("plugins at: %s\n", path);
-#endif
-    }
+  if (nsnull == dir) 
+  { 
+    path[0] = 0; 
 
-    ::RegCloseKey(keyloc);
-  }
+    result = ::RegOpenKeyEx(HKEY_CURRENT_USER, 
+                            "Software\\Netscape\\Netscape Navigator\\Main", 
+                            0, KEY_READ, &keyloc); 
 
-  PRDir *dir;
+    if (result == ERROR_SUCCESS) 
+    { 
+      pathlen = sizeof(path); 
 
-  dir = PR_OpenDir(path);
+      result = ::RegQueryValueEx(keyloc, "Install Directory", 
+                                 NULL, &type, (LPBYTE)&path, &pathlen); 
+
+      if (result == ERROR_SUCCESS) 
+      { 
+        PL_strcat(path, "\\Program\\Plugins"); 
+      } 
+
+      ::RegCloseKey(keyloc); 
+    } 
+
+    dir = PR_OpenDir(path); 
+  } 
+
+#ifdef NS_DEBUG 
+  if (path[0] != 0) 
+    printf("plugins at: %s\n", path); 
+#endif 
 
   if (nsnull != dir)
   {
