@@ -228,31 +228,31 @@ nsNetService::HasActiveConnections()
 
 NS_IMETHODIMP
 nsNetService::GetAppCodeName(nsString2& aAppCodeName) {
-    aAppCodeName.SetString(XP_AppCodeName);
+    aAppCodeName.SetString(mAppCodeName);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNetService::GetAppVersion(nsString2& aAppVersion) {
-    aAppVersion.SetString(XP_AppVersion);
+    aAppVersion.SetString(mAppVersion);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNetService::GetAppName(nsString2& aAppName) {
-    aAppName.SetString(XP_AppName);
+    aAppName.SetString(mAppName);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNetService::GetLanguage(nsString2& aLanguage) {
-    aLanguage.SetString(XP_AppLanguage);
+    aLanguage.SetString(mAppLanguage);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNetService::GetPlatform(nsString2& aPlatform) {
-    aPlatform.SetString(XP_AppPlatform);
+    aPlatform.SetString(mAppPlatform);
     return NS_OK;
 }
 
@@ -260,7 +260,7 @@ NS_IMETHODIMP
 nsNetService::GetUserAgent(nsString2& aUA) {
     // XXX this should load the http module and ask for the user agent string from it.
     char buf[64];
-    PR_snprintf(buf, 64, "%.100s/%.90s", XP_AppCodeName.GetBuffer(), XP_AppVersion.GetBuffer());
+    PR_snprintf(buf, 64, "%.100s/%.90s", mAppCodeName.GetBuffer(), mAppVersion.GetBuffer());
     aUA.SetString(buf);
     return NS_OK;
 }

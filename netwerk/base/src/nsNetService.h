@@ -55,11 +55,11 @@ public:
     nsresult Init();
 
 protected:
-    nsString2   XP_AppName;
-    nsString2   XP_AppCodeName;
-    nsString2   XP_AppVersion;
-    nsString2   XP_AppLanguage;
-    nsString2   XP_AppPlatform;
+    nsString2   mAppName;
+    nsString2   mAppCodeName;
+    nsString2   mAppVersion;
+    nsString2   mAppLanguage;
+    nsString2   mAppPlatform;
 };
 
 #endif // nsNetService_h__
