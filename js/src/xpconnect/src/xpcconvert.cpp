@@ -1211,11 +1211,11 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
            XPCWrappedNative::GetWrappedNativeOfJSObject(cx,obj)))
         {
             nsISupports* supports = wrapper->GetIdentityObject();
-            nsCOMPtr<nsIXPCException> iface = do_QueryInterface(supports);
+            nsCOMPtr<nsIException> iface = do_QueryInterface(supports);
             if(iface)
             {
                 // just pass through the exception (with extra ref and all)
-                nsIXPCException* temp = iface;
+                nsIException* temp = iface;
                 NS_ADDREF(temp);
                 *exceptn = temp;
                 return NS_OK;
@@ -1262,11 +1262,11 @@ XPCConvert::JSValToXPCException(XPCCallContext& ccx,
                     nsXPCWrappedJS* jswrapper;
                     nsresult rv =
                         nsXPCWrappedJS::GetNewOrUsed(ccx, obj,
-                                                NS_GET_IID(nsIXPCException),
+                                                NS_GET_IID(nsIException),
                                                 nsnull, &jswrapper);
                     if(NS_FAILED(rv))
                         return rv;
-                    *exceptn = NS_REINTERPRET_CAST(nsIXPCException*,
+                    *exceptn = NS_REINTERPRET_CAST(nsIException*,
                                                    jswrapper);
                     return NS_OK;
                 }

@@ -1078,7 +1078,7 @@ nsXPCComponents_Exception::HasInstance(nsIXPConnectWrappedNative *wrapper,
                                        PRBool *_retval)
 {
     if(bp)
-        *bp = JSValIsInterfaceOfType(cx, val, NS_GET_IID(nsIXPCException));
+        *bp = JSValIsInterfaceOfType(cx, val, NS_GET_IID(nsIException));
     return NS_OK;
 }
 
