@@ -120,7 +120,7 @@ BRFrame::InlineReflow(nsLineLayout&         aLineLayout,
   // We have no width, but we're the height of the default font
   const nsStyleFont* font = (const nsStyleFont*)
     mStyleContext->GetStyleData(eStyleStruct_Font);
-  nsIFontMetrics* fm = aLineLayout.mPresContext->GetMetricsFor(font->mFont);
+  nsIFontMetrics* fm = aLineLayout.mPresContext.GetMetricsFor(font->mFont);
 
   fm->GetMaxAscent(aMetrics.ascent);
   fm->GetMaxDescent(aMetrics.descent);
