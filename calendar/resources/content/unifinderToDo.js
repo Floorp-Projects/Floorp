@@ -23,6 +23,7 @@
  *                 Chris Charabaruk <coldacid@meldstar.com>
  *						 Colin Phillips <colinp@oeone.com>
  *                 ArentJan Banck <ajbanck@planet.nl>
+ *                 Curtis Jewell <csjewell@mail.freeshell.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -424,7 +425,7 @@ var toDoTreeView =
          case "unifinder-todo-tree-col-completeddate":
             return( formatUnifinderEventDate( new Date( calendarToDo.completed.getTime() ) ) );
          case "unifinder-todo-tree-col-percentcomplete":
-            return( calendarToDo.percentcomplete );
+            return( calendarToDo.percent );
          case "unifinder-todo-tree-col-categories":
             return( calendarToDo.categories );
          default:
@@ -462,7 +463,7 @@ function sortTasks( TaskA, TaskB )
          return( ((TaskA.completed.getTime() > TaskB.completed.getTime()) ? 1 : -1) * modifier );
       
       case "unifinder-todo-tree-col-percentcomplete":
-         return( ((TaskA.percentcomplete > TaskB.percentcomplete) ? 1 : -1) * modifier );
+         return( ((TaskA.percent > TaskB.percent) ? 1 : -1) * modifier );
    
       case "unifinder-todo-tree-col-categories":
          return( ((TaskA.categories > TaskB.categories) ? 1 : -1) * modifier );
