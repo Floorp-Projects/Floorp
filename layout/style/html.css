@@ -552,6 +552,7 @@ input[type=image]:focus {
 input[type=image] {
   box-sizing: border-box;
   border: 2px solid blue;
+  vertial-align:baseline;
 }
 
 input[type=image][disabled] {
