@@ -63,6 +63,8 @@ ACCESSIBILITY_ATOM(textFrame, "TextFrame")
 
   // Alphabetical list of tag names
 ACCESSIBILITY_ATOM(a, "a")
+ACCESSIBILITY_ATOM(abbr, "abbr")
+ACCESSIBILITY_ATOM(acronym, "acronym")
 ACCESSIBILITY_ATOM(area, "area")
 ACCESSIBILITY_ATOM(blockquote, "blockquote")
 ACCESSIBILITY_ATOM(br, "br")
@@ -82,6 +84,9 @@ ACCESSIBILITY_ATOM(optgroup, "optgroup")
 ACCESSIBILITY_ATOM(option, "option")
 ACCESSIBILITY_ATOM(q, "q")
 ACCESSIBILITY_ATOM(select, "select")
+ACCESSIBILITY_ATOM(tbody, "tbody")
+ACCESSIBILITY_ATOM(tfoot, "tfoot")
+ACCESSIBILITY_ATOM(thead, "thead")
 ACCESSIBILITY_ATOM(toolbaritem, "toolbaritem")
 ACCESSIBILITY_ATOM(ul, "ul")
 
