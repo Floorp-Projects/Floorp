@@ -27,26 +27,33 @@
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMNavigator.h"
-
+#include "nsIDOMPluginArray.h"
+#include "nsIDOMMimeTypeArray.h"
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINavigatorIID, NS_IDOMNAVIGATOR_IID);
+static NS_DEFINE_IID(kIPluginArrayIID, NS_IDOMPLUGINARRAY_IID);
+static NS_DEFINE_IID(kIMimeTypeArrayIID, NS_IDOMMIMETYPEARRAY_IID);
 
 NS_DEF_PTR(nsIDOMNavigator);
+NS_DEF_PTR(nsIDOMPluginArray);
+NS_DEF_PTR(nsIDOMMimeTypeArray);
 
 //
 // Navigator property ids
 //
 enum Navigator_slots {
-  NAVIGATOR_USERAGENT = -1,
-  NAVIGATOR_APPCODENAME = -2,
+  NAVIGATOR_APPCODENAME = -1,
+  NAVIGATOR_APPNAME = -2,
   NAVIGATOR_APPVERSION = -3,
-  NAVIGATOR_APPNAME = -4,
-  NAVIGATOR_LANGUAGE = -5,
+  NAVIGATOR_LANGUAGE = -4,
+  NAVIGATOR_MIMETYPES = -5,
   NAVIGATOR_PLATFORM = -6,
-  NAVIGATOR_SECURITYPOLICY = -7
+  NAVIGATOR_PLUGINS = -7,
+  NAVIGATOR_SECURITYPOLICY = -8,
+  NAVIGATOR_USERAGENT = -9
 };
 
 /***********************************************************************/
@@ -65,32 +72,10 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case NAVIGATOR_USERAGENT:
-      {
-        nsAutoString prop;
-        if (NS_OK == a->GetUserAgent(prop)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
       case NAVIGATOR_APPCODENAME:
       {
         nsAutoString prop;
         if (NS_OK == a->GetAppCodeName(prop)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
-      case NAVIGATOR_APPVERSION:
-      {
-        nsAutoString prop;
-        if (NS_OK == a->GetAppVersion(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -109,11 +94,34 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case NAVIGATOR_APPVERSION:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetAppVersion(prop)) {
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       case NAVIGATOR_LANGUAGE:
       {
         nsAutoString prop;
         if (NS_OK == a->GetLanguage(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NAVIGATOR_MIMETYPES:
+      {
+        nsIDOMMimeTypeArray* prop;
+        if (NS_OK == a->GetMimeTypes(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -131,10 +139,33 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case NAVIGATOR_PLUGINS:
+      {
+        nsIDOMPluginArray* prop;
+        if (NS_OK == a->GetPlugins(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       case NAVIGATOR_SECURITYPOLICY:
       {
         nsAutoString prop;
         if (NS_OK == a->GetSecurityPolicy(prop)) {
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NAVIGATOR_USERAGENT:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetUserAgent(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -269,13 +300,15 @@ JSClass NavigatorClass = {
 //
 static JSPropertySpec NavigatorProperties[] =
 {
-  {"userAgent",    NAVIGATOR_USERAGENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"appCodeName",    NAVIGATOR_APPCODENAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"appVersion",    NAVIGATOR_APPVERSION,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"appName",    NAVIGATOR_APPNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"appVersion",    NAVIGATOR_APPVERSION,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"language",    NAVIGATOR_LANGUAGE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"mimeTypes",    NAVIGATOR_MIMETYPES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"platform",    NAVIGATOR_PLATFORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"plugins",    NAVIGATOR_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"securityPolicy",    NAVIGATOR_SECURITYPOLICY,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"userAgent",    NAVIGATOR_USERAGENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
