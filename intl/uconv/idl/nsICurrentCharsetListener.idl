@@ -33,4 +33,5 @@
 interface nsICurrentCharsetListener : nsISupports
 {
 	void SetCurrentCharset(in wstring charset);
+	void SetCurrentMailCharset(in wstring charset);
 };
