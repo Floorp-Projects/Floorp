@@ -55,6 +55,9 @@ export::
 install:: $(LIBRARY)
     $(MAKE_INSTALL) .\$(OBJDIR)\jar_s.lib $(DIST)\lib
 
+depend::
+  $(RM) *.h
+
 clobber::
   $(RM) nsZipArchive.cpp
 
