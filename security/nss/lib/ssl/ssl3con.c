@@ -37,7 +37,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.54 2003/04/17 02:03:38 jpierre%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.55 2003/05/30 23:22:39 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -2016,7 +2016,9 @@ SSL3_SendAlert(sslSocket *ss, SSL3AlertLevel level, SSL3AlertDescription desc)
     rv = ssl3_FlushHandshake(ss, ssl_SEND_FLAG_FORCE_INTO_BUFFER);
     if (rv == SECSuccess) {
 	PRInt32 sent;
-	sent = ssl3_SendRecord(ss, content_alert, bytes, 2, 0);
+	sent = ssl3_SendRecord(ss, content_alert, bytes, 2, 
+			       desc == no_certificate 
+			       ? ssl_SEND_FLAG_FORCE_INTO_BUFFER : 0);
 	rv = (sent >= 0) ? SECSuccess : (SECStatus)sent;
     }
     ssl_ReleaseXmitBufLock(ss);
