@@ -1279,11 +1279,6 @@ public:
   PRBool AreAncestorViewsVisible(nsIPresContext* aPresContext) const {
     return AreAncestorViewsVisible();
   }
-  nsresult GetWindow(nsIPresContext* aPresContext,
-                     nsIWidget**     aWidget) const {
-    *aWidget = GetWindow();
-    return NS_OK;
-  }
 
 protected:
   // Members

@@ -2623,11 +2623,10 @@ nsIFrame::AreAncestorViewsVisible() const
 nsIWidget* nsIFrame::GetWindow() const
 {
   const nsIFrame* frame;
-  nsIWidget* window = nsnull;
   for (frame = this; frame; frame = frame->GetAncestorWithView()) {
     if (frame->HasView()) {
-      frame->GetView()->GetWidget(window);
-      if (nsnull != window) {
+      nsIWidget* window = frame->GetView()->GetWidget();
+      if (window) {
         return window;
       }
     }
@@ -2635,9 +2634,15 @@ nsIWidget* nsIFrame::GetWindow() const
 
   // Ask the view manager for the widget
   NS_NOTREACHED("this shouldn't happen, should it?");
+  nsIWidget* window;
   GetPresContext()->GetViewManager()->GetWidget(&window);
+  // drop refcount that the view manager added, since we are not supposed
+  // to be adding a refcount
+  if (window) {
+    window->Release();
+  }
 
-  NS_POSTCONDITION(nsnull != window, "no window in frame tree");
+  NS_POSTCONDITION(window, "no window in frame tree");
   return window;
 }
 
@@ -4517,8 +4522,7 @@ nsFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
  * This function takes a "special" frame and _if_ that frame is the
  * anonymous block crated by an ib split it returns the split inline
  * as aSpecialSibling.  This is needed because the split inline's
- 5B
- * style context is the parent of the anonymous block's style context.
+ * style context is the parent of the anonymous block's srtyle context.
  *
  * If aFrame is not the anonymous block, aSpecialSibling is not
  * touched.
