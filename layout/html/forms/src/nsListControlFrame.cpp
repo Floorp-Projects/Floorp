@@ -2753,7 +2753,7 @@ nsListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName,
             if (mSelectedIndex != selectedIndex) {
               ToggleSelected(selectedIndex); // sets mSelectedIndex
               if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-                mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
+                mComboboxFrame->UpdateSelection(PR_TRUE, PR_TRUE, selectedIndex); // do dispatch event
               }
             }
           }
