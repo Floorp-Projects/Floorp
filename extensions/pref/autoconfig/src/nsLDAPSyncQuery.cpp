@@ -56,7 +56,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsLDAPSyncQuery, nsILDAPSyncQuery, nsILDAPMessageL
 //
 nsLDAPSyncQuery::nsLDAPSyncQuery() :
     mFinished(PR_FALSE), // This is a control variable for event loop
-    mAttrCount(0), mAttrs(0)
+    mAttrCount(0), mAttrs(0), mProtocolVersion(nsILDAPConnection::VERSION3)
 {
 }
 
@@ -424,7 +424,7 @@ nsresult nsLDAPSyncQuery::InitConnection()
     rv = mConnection->Init(host.get(), port, 
                            (options & nsILDAPURL::OPT_SECURE) 
                            ? PR_TRUE : PR_FALSE, nsCString(), selfProxy,
-                           nsnull);
+                           nsnull, mProtocolVersion);
     if (NS_FAILED(rv)) {
         FinishLDAPQuery();
         return NS_ERROR_UNEXPECTED; // this should never happen
@@ -449,9 +449,10 @@ nsLDAPSyncQuery::FinishLDAPQuery()
  
 }
 
-/* wstring getQueryResults (in nsILDAPURL aServerURL); */
-NS_IMETHODIMP nsLDAPSyncQuery::GetQueryResults(nsILDAPURL *aServerURL, 
-                                          PRUnichar **_retval)
+/* wstring getQueryResults (in nsILDAPURL aServerURL, in unsigned long aVersion); */
+NS_IMETHODIMP nsLDAPSyncQuery::GetQueryResults(nsILDAPURL *aServerURL,
+                                               PRUint32 aProtocolVersion,
+                                               PRUnichar **_retval)
 {
     nsresult rv;
     
@@ -460,7 +461,8 @@ NS_IMETHODIMP nsLDAPSyncQuery::GetQueryResults(nsILDAPURL *aServerURL,
         return NS_ERROR_FAILURE;
     }
     mServerURL = aServerURL;
-    
+    mProtocolVersion = aProtocolVersion;
+
     nsCOMPtr<nsIEventQueue> currentThreadQ;
     nsCOMPtr<nsIEventQueueService> service;
 

@@ -74,7 +74,7 @@ class nsLDAPSyncQuery : public nsILDAPSyncQuery,
     PRUint32 mAttrCount;                     // No. of attrbiutes
     char **mAttrs;                           // Attributes to search
     nsString mResults;                       // values to return
-    
+    PRUint32 mProtocolVersion;               // LDAP version to use
 
     nsresult InitConnection();
     // check that we bound ok and start then call StartLDAPSearch
