@@ -3341,6 +3341,29 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresConte
      
   ProcessChildren(aPresContext, aState, aContent, scrolledFrame, PR_FALSE,
                   childItems);
+
+  // if a select is being created with zero options we need to create
+  // a special pseudo from so it can be sized as best it can
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
+  nsresult result = aContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
+                                               (void**)getter_AddRefs(selectElement));
+  if (NS_SUCCEEDED(result) && selectElement) {
+    PRUint32 numOptions = 0;
+    result = selectElement->GetLength(&numOptions);
+    if (NS_SUCCEEDED(result) && 0 == numOptions) {
+      nsIStyleContext*  styleContext   = nsnull; 
+      nsIFrame*         generatedFrame = nsnull; 
+      scrolledFrame->GetStyleContext(&styleContext); 
+      if (CreateGeneratedContentFrame(aPresContext, aState, scrolledFrame, aContent, 
+                                      styleContext, nsCSSAtoms::mozDummyOptionPseudo, 
+                                      PR_FALSE, PR_FALSE, &generatedFrame)) { 
+        // Add the generated frame to the child list 
+        childItems.AddChild(generatedFrame); 
+      } 
+    }
+  } 
+  //////////////////////////////////////////////////
+  //////////////////////////////////////////////////
     
   // Set the scrolled frame's initial child lists
   scrolledFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
@@ -4194,7 +4217,18 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   }
 #endif // INCLUDE_XUL
 
-  nsIFrame* parentFrame = GetFrameFor(shell, aPresContext, aContainer);
+  nsIFrame*     parentFrame = GetFrameFor(shell, aPresContext, aContainer);
+
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
+  nsresult result = aContainer->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
+                                               (void**)getter_AddRefs(selectElement));
+  if (NS_SUCCEEDED(result) && selectElement) {
+    PRInt32 numOptions = 1;
+    //result = selectElement->GetNumberOfOptions(numOptions);
+    /*if (1 == numOptions) {
+    }*/
+  } 
+
 
   if (nsnull != parentFrame) {
     // Get the parent frame's last-in-flow
@@ -4449,6 +4483,17 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     
   }
   else {
+
+    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
+    nsresult result = aContainer->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
+                                                 (void**)getter_AddRefs(selectElement));
+    if (NS_SUCCEEDED(result) && selectElement) {
+      PRInt32 numOptions = 1;
+      //result = selectElement->GetNumberOfOptions(numOptions);
+      //if (1 == numOptions) {
+      //}
+    } 
+
     // Find the frame that precedes the insertion point.
     nsIFrame* prevSibling = FindPreviousSibling(shell, aContainer, aIndexInContainer);
     nsIFrame* nextSibling = nsnull;
@@ -4693,7 +4738,39 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 
   // Find the child frame that maps the content
   nsIFrame* childFrame;
-  frameManager->GetPrimaryFrameFor(aChild, &childFrame);
+  shell->GetPrimaryFrameFor(aChild, &childFrame);
+
+  // When the last item is removed from a select, 
+  // we need to add a pseudo frame so select gets sized as the best it can
+  // so here we see if it is a select and then we get the number of options
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
+  nsresult result = aContainer->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
+                                               (void**)getter_AddRefs(selectElement));
+  if (NS_SUCCEEDED(result) && selectElement) {
+    PRUint32 numOptions = 0;
+    result = selectElement->GetLength(&numOptions);
+    // For "select" add the pseudo frame after the last item is deleted
+    nsIFrame* parentFrame = nsnull;
+    childFrame->GetParent(&parentFrame);
+    if (NS_SUCCEEDED(result) && shell && parentFrame && 1 == numOptions) {
+  
+      nsCOMPtr<nsIFrameManager> frameManager;
+      nsIStyleContext*          styleContext   = nsnull; 
+      nsIFrame*                 generatedFrame = nsnull; 
+      nsFrameConstructorState   state(aPresContext, nsnull, nsnull, nsnull);
+
+      //shell->GetPrimaryFrameFor(aContainer, &contentFrame);
+      parentFrame->GetStyleContext(&styleContext); 
+      if (CreateGeneratedContentFrame(aPresContext, state, parentFrame, aContainer, 
+                                      styleContext, nsCSSAtoms::mozDummyOptionPseudo, 
+                                      PR_FALSE, PR_FALSE, &generatedFrame)) { 
+        // Add the generated frame to the child list 
+        shell->GetFrameManager(getter_AddRefs(frameManager));
+        frameManager->AppendFrames(*aPresContext, *shell, parentFrame, nsnull, generatedFrame);
+      }
+    } 
+  } 
+
 
 #ifdef INCLUDE_XUL
   if (aContainer) {
@@ -4821,6 +4898,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     if (mInitialContainingBlock == childFrame) {
       mInitialContainingBlock = nsnull;
     }
+
   }
 
   return rv;
