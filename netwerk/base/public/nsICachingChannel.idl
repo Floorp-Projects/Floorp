@@ -1,0 +1,67 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Darin Fisher <darin@netscape.com> (original author)
+ */
+
+#include "nsISupports.idl"
+
+/**
+ * A channel may optionally implement this interface to allow clients
+ * to effect its behavior with respect to how it uses the cache service.
+ *
+ * This interface provides:
+ *   1) Support for "stream as file" semantics (for JAR and plugins).
+ *   2) Support for "pinning" cached data in the cache (for printing and save-as).
+ */
+[scriptable, uuid(b1f95f5e-ee05-4434-9d34-89a935d7feef)]
+interface nsICachingChannel : nsISupports
+{
+    /**
+     * Set/get the cache token... uniquely identifies the data in the cache.
+     * Holding a reference to this cookie prevents the cached data from being
+     * removed.  A cache token retrieved from a particular instance of 
+     * nsICachingChannel could be set on another instance of nsICachingChannel
+     * provided the underlying implementations are compatible.  The implemen-
+     * tation of nsICachingChannel would be expected to only read from the
+     * cache entry identified by the cache token and not try to validate it.
+     *
+     * The cache token can be treated as an opaque object; however, it can be
+     * QI'd to a nsICacheEntryDescriptor if more detailed information about the
+     * cache entry is needed.
+     */
+    attribute nsISupports cacheToken;
+
+    /**
+     * Specifies whether or not the data should be cached to a file.  This
+     * may fail if the disk cache is not present.  The value of this attribute
+     * is usually only settable during the processing of a channel's
+     * OnStartRequest.  The default value of this attribute depends on the
+     * particular implementation of nsICachingChannel.
+     */
+    attribute boolean cacheAsFile;
+
+    /**
+     * Get the "file" where the cached data can be found.  This is valid for
+     * as long as a reference to the cache token is held.  This may return
+     * an error if cacheAsFile is false.
+     */
+    readonly attribute nsIFile cacheFile;
+};
