@@ -24,7 +24,7 @@ CVSCO = cvs -q co -P
 
 # Branch tags we use
 IMGLIB_BRANCH = MODULAR_IMGLIB_BRANCH
-NETLIB_BRANCH = MODULAR_NETLIB_BRANCH
+NETLIB_BRANCH = -A
 XPCOM_BRANCH = XPCOM_BRANCH
 
 # CVS commands to pull the appropriate branch versions
@@ -53,7 +53,7 @@ DIRS =				\
   modules/libimg		\
   base				\
   lib/xp			\
-  lib/libnet			\
+  network			\
   lib/liblayer/include
 else
 DIRS =				\
@@ -161,7 +161,7 @@ pull_imglib:
 pull_netlib:
 	cd $(MOZ_SRC)/.; \
 	$(CVSCO_NETLIB) mozilla/lib/xp; \
-	$(CVSCO_NETLIB) mozilla/lib/libnet; \
+	$(CVSCO_NETLIB) mozilla/network; \
 	$(CVSCO_NETLIB) mozilla/include
 
 pull_nglayout:
