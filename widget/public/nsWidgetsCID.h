@@ -114,6 +114,10 @@
 { 0xf3131891, 0x3dc7, 0x11d2, \
     { 0x8d, 0xb8, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } }
 
+//-----------------------------------------------------------
+// Menus 
+//-----------------------------------------------------------
+
 // {BC658C81-4BEB-11d2-8DBB-00609703C14E}
 #define NS_MENUBAR_CID      \
 { 0xbc658c81, 0x4beb, 0x11d2, \
@@ -128,6 +132,14 @@
 #define NS_MENUITEM_CID      \
 { 0x7f045771, 0x4beb, 0x11d2, \
   { 0x8d, 0xbb, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } }
+
+// {1677DAE1-04E2-11d3-B35C-00A0CC3C1CDE}
+#define NS_CONTEXTMENU_CID      \
+{ 0x1677dae1, 0x4e2, 0x11d3, \
+  { 0xb3, 0x5c, 0x0, 0xa0, 0xcc, 0x3c, 0x1c, 0xde } };
+
+
+
 
 // deb24690-35f8-11d2-9248-00805f8a7ab6
 #define NS_TOOLBAR_CID      \
