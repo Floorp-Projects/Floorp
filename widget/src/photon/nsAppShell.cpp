@@ -36,12 +36,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "prmon.h"
+#include "plhash.h"
 #include "nsCOMPtr.h"
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsICmdLineService.h"
 
 #include <stdlib.h>
 
