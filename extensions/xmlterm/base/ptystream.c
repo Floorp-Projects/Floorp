@@ -42,14 +42,15 @@
 /* system header files */
 
 
+#ifdef LINUX
+#define _BSD_SOURCE  1
+#endif
+
 #include <termios.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/fcntl.h>
 
-#ifdef LINUX
-#define __USE_BSD  1
-#endif
 #if defined(LINUX) || defined(BSDFAMILY)
 #include <sys/ioctl.h>
 #endif
