@@ -36,6 +36,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsProxyObjectManager.h"
 #include "nsIWebShell.h"
+#include "nsDOMError.h"
 
 #include "nsIEvaluateStringProxy.h"
 
@@ -235,12 +236,16 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
         nsCOMPtr<nsIWebShell> webShell;
         webShell = do_QueryInterface(owner);
         if (!webShell)
-            return NS_ERROR_FAILURE;
+          return NS_ERROR_FAILURE;
+        const PRUnichar* url;
+        if (NS_FAILED(webShell->GetURL(&url)))
+          return NS_ERROR_FAILURE;
+        nsCString urlStr(url);
         nsCOMPtr<nsIURI> uri;
-        if (NS_FAILED(webShell->GetReferrer(getter_AddRefs(uri))))
-            return NS_ERROR_FAILURE;
+        if (NS_FAILED(NewURI(urlStr.GetBuffer(), nsnull, getter_AddRefs(uri))))
+          return NS_ERROR_FAILURE;
         if (NS_FAILED(securityManager->CreateCodebasePrincipal(uri, getter_AddRefs(principal))))
-            return NS_ERROR_FAILURE;
+          return NS_ERROR_FAILURE;
     }
 
 
@@ -279,7 +284,7 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                             PROXY_SYNC | PROXY_ALWAYS,
                                             (void**) &evalProxy);
 
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv)) {        
         NS_RELEASE(eval);
         return rv;
     }
@@ -287,6 +292,7 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     char* retString;
     char* tempString = jsExpr.ToNewCString();
     if (!tempString) {
+        NS_RELEASE(evalProxy);
         NS_RELEASE(eval);
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -304,7 +310,10 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     }
 
     if (isUndefined) {
-        strcpy( retString, "" );
+        if (retString) 
+          Recycle(retString);
+        rv = NS_ERROR_DOM_RETVAL_UNDEFINED;
+        return rv;
     }
 #if 0
     else {
