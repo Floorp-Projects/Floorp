@@ -134,14 +134,6 @@ nsHTMLScrollFrame::GetScrollbarStyles() const {
   return mInner.GetScrollbarStylesFromFrame();
 }
 
-nsMargin nsHTMLScrollFrame::GetActualScrollbarSizes() const {
-  nsRect scrollArea(mInner.mScrollAreaBox->GetRect());
-
-  return nsMargin(scrollArea.x, scrollArea.y,
-                  mRect.width - scrollArea.XMost(),
-                  mRect.height - scrollArea.YMost());
-}
-
 nsMargin nsHTMLScrollFrame::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
   nsMargin result(0, 0, 0, 0);
 
@@ -662,14 +654,6 @@ void nsXULScrollFrame::ScrollTo(nsPoint aScrollPosition, PRUint32 aFlags)
 nsGfxScrollFrameInner::ScrollbarStyles
 nsXULScrollFrame::GetScrollbarStyles() const {
   return mInner.GetScrollbarStylesFromFrame();
-}
-
-nsMargin nsXULScrollFrame::GetActualScrollbarSizes() const {
-  nsRect scrollArea(mInner.mScrollAreaBox->GetRect());
-
-  return nsMargin(scrollArea.x, scrollArea.y,
-                  mRect.width - scrollArea.XMost(),
-                  mRect.height - scrollArea.YMost());
 }
 
 nsMargin nsXULScrollFrame::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
@@ -1830,7 +1814,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   // if we have 'auto' scrollbars look at the vertical case
   if (styles.mVertical != NS_STYLE_OVERFLOW_SCROLL) {
       // get the area frame is the scrollarea
-      GetScrolledSize(aState.PresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
+      scrolledContentSize = GetScrolledSize();
 
     // There are two cases to consider
       if (scrolledContentSize.height <= scrollAreaRect.height
@@ -1868,7 +1852,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   if (styles.mHorizontal != NS_STYLE_OVERFLOW_SCROLL)
   {
     // get the area frame is the scrollarea
-      GetScrolledSize(aState.PresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
+    scrolledContentSize = GetScrolledSize();
 
     // if the child is wider that the scroll area
     // and we don't have a scrollbar add one.
@@ -1926,7 +1910,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
 #endif // IBMBIDI
   }
     
-  GetScrolledSize(aState.PresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
+  scrolledContentSize = GetScrolledSize();
 
   nsPresContext* presContext = aState.PresContext();
   mOnePixel = presContext->IntScaledPixelsToTwips(1);
@@ -2129,12 +2113,9 @@ nsGfxScrollFrameInner::SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize,
 /**
  * Gets the size of the area that lies inside the scrollbars but clips the scrolled frame
  */
-NS_IMETHODIMP
-nsGfxScrollFrameInner::GetScrolledSize(nsPresContext* aPresContext, 
-                              nscoord *aWidth, 
-                              nscoord *aHeight) const
+nsSize
+nsGfxScrollFrameInner::GetScrolledSize() const
 {
-
   // our scrolled size is the size of our scrolled view.
   nsIBox* child = nsnull;
   mScrollAreaBox->GetChildBox(&child);
@@ -2148,10 +2129,18 @@ nsGfxScrollFrameInner::GetScrolledSize(nsPresContext* aPresContext,
   nsBox::AddBorderAndPadding(mScrollAreaBox, size);
   nsBox::AddInset(mScrollAreaBox, size);
 
-  *aWidth = size.width;
-  *aHeight = size.height;
+  return size;
+}
 
-  return NS_OK;
+nsMargin
+nsGfxScrollFrameInner::GetActualScrollbarSizes() const {
+  nsRect contentRect;
+  mOuter->GetClientRect(contentRect);
+  nsRect scrollArea = mScrollAreaBox->GetRect();
+
+  return nsMargin(scrollArea.x - contentRect.x, scrollArea.y - contentRect.y,
+                  contentRect.XMost() - scrollArea.XMost(),
+                  contentRect.YMost() - scrollArea.YMost());
 }
 
 void
