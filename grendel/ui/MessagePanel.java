@@ -289,7 +289,7 @@ public class MessagePanel extends GeneralPanel {
             InputStream rawin;
             try {
               rawin = mextra.getInputStreamWithHeaders();
-              if (makeRealHtml) {
+              if (makeRealHTML) {
                 in = (new MakeItHTML(rawin)).getHTMLInputStream();
               } else {
                 in = new StupidHackToMakeHTML(rawin);
