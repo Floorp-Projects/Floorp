@@ -181,6 +181,8 @@ NS_IMETHODIMP nsDSURIContentListener::CanHandleContent(const char* aContentType,
             || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
             || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
         *aCanHandleContent = PR_TRUE;
+        else if (PL_strcasestr(aContentType, "; x-view-type=view-source") != nsnull)
+            *aCanHandleContent = PR_TRUE;
     }
     else
         *aCanHandleContent = PR_FALSE;

@@ -26,6 +26,7 @@
 #include "nsFtpProtocolHandler.h"
 #include "nsFingerHandler.h"
 #include "nsDateTimeHandler.h"
+#include "nsViewSourceHandler.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init);
 
@@ -59,6 +60,13 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_DATETIMEHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "datetime",
       nsDateTimeHandler::Create
+    },
+
+    // from netwerk/protocol/viewsource:
+    { "The ViewSource Protocol Handler", 
+      NS_VIEWSOURCEHANDLER_CID,
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "view-source",
+      nsViewSourceHandler::Create
     }
 };
 

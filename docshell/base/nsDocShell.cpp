@@ -136,10 +136,7 @@ nsDocShell::nsDocShell() :
   mAllowPlugins(PR_TRUE),
   mAllowJavascript(PR_TRUE),
   mAllowMetaRedirects(PR_TRUE),
-  mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
-  mViewMode(viewNormal),
-  mLastViewMode(viewNormal),
-  mRestoreViewMode(PR_FALSE),
+  mAppType(nsIDocShell::APP_TYPE_UNKNOWN), 
   mBusyFlags(BUSY_FLAGS_NONE),
   mEODForCurrentDocument (PR_FALSE),
   mURIResultedInDocument(PR_FALSE),
@@ -459,7 +456,7 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo, PRUint32 aLoad
   }
   if (shEntry) {
       // Load is from SH. SH does normal load only
-      mViewMode = viewNormal;
+      
       rv = LoadHistoryEntry(shEntry, loadType);
   } else {
       rv = InternalLoad(aURI, referrer, owner, inheritOwner, stopActiveDoc, (const char*) target, nsnull, 
@@ -760,33 +757,6 @@ NS_IMETHODIMP nsDocShell::GetAppType(PRUint32* aAppType)
 NS_IMETHODIMP nsDocShell::SetAppType(PRUint32 aAppType)
 {
    mAppType = aAppType;
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::GetViewMode(PRInt32* aViewMode)
-{
-   NS_ENSURE_ARG_POINTER(aViewMode);
-
-   *aViewMode = mViewMode;
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::SetViewMode(PRInt32 aViewMode)
-{
-   NS_ENSURE_ARG((viewNormal == aViewMode) || (viewSource == aViewMode));
-
-   PRBool reload = PR_FALSE;
-
-   if((mViewMode != aViewMode) && mCurrentURI)
-      reload = PR_TRUE;
-
-   mViewMode = aViewMode;
-
-   if(reload)
-   {
-	   Reload(LOAD_FLAGS_NONE);
-   }
-
    return NS_OK;
 }
 
@@ -2870,8 +2840,12 @@ nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
   //XXX This should probably be some category thing....
   char id[256];
   PR_snprintf(id, sizeof(id), NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "%s;1?type=%s",
-             (const char*)((viewSource == mViewMode) ? "view-source" : "view"),
+             (const char*)"view", 
              aContentType);
+
+  // Note that we're always passing in "view" for the component id above
+  // and to the docLoaderFactory->CreateInstance() at the end of this method. 
+  // nsLayoutDLF makes the determination if it should be a "view-source"
 
   // Create an instance of the document-loader-factory
   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory(do_CreateInstance(id));
@@ -2896,7 +2870,7 @@ nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
 
   // Now create an instance of the content viewer
   NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance(
-                    (viewSource == mViewMode) ? "view-source" : "view",
+                    "view",
                     aOpenedChannel, aLoadGroup, aContentType,
                     NS_STATIC_CAST(nsIContentViewerContainer*, this), nsnull, 
                     aContentHandler, aViewer), NS_ERROR_FAILURE);
@@ -3172,29 +3146,6 @@ NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI,
 
    // Eliminate embedded newlines, which single-line text fields now allow:
    uriString.StripChars("\r\n");
-
-   // XXX nasty hack to check for the view-source: prefix
-   //
-   // The long term way and probably CORRECT way to do this is to write a
-   // protocol handler for the view-source: schema and have that feed back a
-   // content type that the docshell recognizes to mean to use viewSource mode.
-   //
-   const char cViewSource[] = "view-source:";
-   if (uriString.EqualsWithConversion(cViewSource, PR_TRUE, sizeof(cViewSource) - 1))
-   {
-      // Strip the view-source: prefix and set the docshell's view mode
-      nsAutoString newUri;
-      uriString.Mid(newUri, sizeof(cViewSource) - 1, -1);
-      uriString = newUri;
-      mLastViewMode = mViewMode;
-      mViewMode = viewSource;
-      mRestoreViewMode = PR_TRUE;
-   }
-   else if (mRestoreViewMode)
-   {
-      mRestoreViewMode = PR_FALSE;
-      mViewMode = mLastViewMode;
-   }
 
    // Create the fixup object if necessary
    if (!mURIFixup)
@@ -3594,10 +3545,6 @@ NS_IMETHODIMP nsDocShell::DoChannelLoad(nsIChannel *aChannel, nsURILoadCommand a
    (void)aChannel->GetLoadFlags(&loadFlags);
    loadFlags |= nsIChannel::LOAD_DOCUMENT_URI;
   
-    // "View source" always wants the currently cached content.
-    if ( mViewMode == viewSource ) {
-        loadFlags |= nsIRequest::LOAD_FROM_CACHE;
-    } else {
         // Load attributes depend on load type...
       	switch ( mLoadType )
       	{
@@ -3637,7 +3584,6 @@ NS_IMETHODIMP nsDocShell::DoChannelLoad(nsIChannel *aChannel, nsURILoadCommand a
                 }
                 break;
        }
-    }
    
    (void) aChannel->SetLoadFlags(loadFlags);
 

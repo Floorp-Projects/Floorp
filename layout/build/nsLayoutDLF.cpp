@@ -63,12 +63,14 @@ static char* gHTMLTypes[] = {
   "text/rtf",
   "text/cpp",
   "text/css",
+  "text/html; x-view-type=view-source",
   0
 };
   
 static char* gXMLTypes[] = {
   "text/xml",
   "application/xml",
+  "text/xml; x-view-type=view-source",
   0
 };
 
@@ -243,8 +245,40 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
     }
   }
 
+  // Check aContentType to see if it's a view-source type
+  //
+  // If it's a "view-source:", aContentType will be of the form
+  //
+  //    <orig_type>; x-view-type=view-source
+  //
+  //  where <orig_type> can be text/html, text/xml etc.
+  //
+
+  nsCAutoString strContentType; strContentType.Append(aContentType);
+  PRInt32 idx = strContentType.Find("; x-view-type=view-source", PR_TRUE, 0, -1);
+  if(idx != -1)
+  { // Found "; x-view-type=view-source" param in content type. 
+
+      // Set aCommand to view-source
+
+      aCommand = "view-source";
+
+     // Null terminate at the ";" in "text/html; x-view-type=view-source"
+     // The idea is to end up with the original content type i.e. without 
+     // the x-view-type param was added to it.
+
+     strContentType.SetCharAt('\0', idx);
+
+     aContentType = strContentType.get(); //This will point to the "original" mime type
+  }
+
   if(0==PL_strcmp(aCommand,"view-source")) {
 #ifdef VIEW_SOURCE_HTML
+    NS_ENSURE_ARG(aChannel);
+    // It's a view-source. Reset channel's content type to the original 
+    // type so as not to choke the parser when it asks the channel 
+    // for the content type during the parse phase
+    aChannel->SetContentType(aContentType);
     aContentType=gHTMLTypes[0];    
 #else
     if(0==PL_strcmp(aContentType,gHTMLTypes[1])) {

@@ -35,6 +35,7 @@ DIRS=            \
         res      \
 	finger   \
         gopher   \
+        viewsource   \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
