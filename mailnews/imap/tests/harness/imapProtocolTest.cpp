@@ -135,6 +135,16 @@ public:
     NS_IMETHOD FolderIsNoSelect(nsIImapProtocol* aProtocol,
                                 FolderQueryInfo* aInfo);
     
+    NS_IMETHOD SetupHeaderParseStream(nsIImapProtocol* aProtocol,
+                                   StreamInfo* aStreamInfo);
+    
+    NS_IMETHOD ParseAdoptedHeaderLine(nsIImapProtocol* aProtocol,
+                                   msg_line_info* aMsgLineInfo);
+    
+    NS_IMETHOD NormalEndHeaderParseStream(nsIImapProtocol* aProtocol);
+    
+    NS_IMETHOD AbortHeaderParseStream(nsIImapProtocol* aProtocol);
+    
     // nsIImapMessage support
     NS_IMETHOD SetupMsgWriteStream(nsIImapProtocol* aProtocol,
                                    StreamInfo* aStreamInfo);
@@ -465,6 +475,8 @@ nsIMAP4TestDriver::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
 	   	if (keysToFetch.GetSize())
     	{			
             PrepareToAddHeadersToMailDB(aProtocol, keysToFetch, aSpec);
+			if (aProtocol)
+				aProtocol->NotifyBodysToDownload(NULL, 0/*keysToFetch.GetSize() */);
     	}
     	else 
     	{
@@ -475,6 +487,8 @@ nsIMAP4TestDriver::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
 //			IMAP_BodyIdMonitor(adoptedBoxSpec->connection, TRUE);
 			// I think the real fix for this is to seperate the header ids from body id's.
 			// this is for fetching bodies for offline use
+			if (aProtocol)
+				aProtocol->NotifyBodysToDownload(NULL, 0/*keysToFetch.GetSize() */);
 //			NotifyFetchAnyNeededBodies(aSpec->connection, mailDB);
 //			IMAP_BodyIdMonitor(adoptedBoxSpec->connection, FALSE);
     	}
@@ -606,11 +620,14 @@ void nsIMAP4TestDriver::PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, 
 	        // the imap libnet module will start downloading message headers imap.h
 			if (aProtocol)
 				aProtocol->NotifyHdrsToDownload(theKeys, total /*keysToFetch.GetSize() */);
+			// now, tell it we don't need any bodies.
+			if (aProtocol)
+				aProtocol->NotifyHdrsToDownload(NULL, 0);
         }
         else
         {
-			if (m_IMAP4Protocol)
-	            m_IMAP4Protocol->NotifyHdrsToDownload(NULL, 0);
+			if (aProtocol)
+				aProtocol->NotifyHdrsToDownload(NULL, 0);
         }
     }
 }
@@ -679,6 +696,34 @@ nsIMAP4TestDriver::FolderIsNoSelect(nsIImapProtocol* aProtocol,
     return NS_OK;
 }
 
+NS_IMETHODIMP nsIMAP4TestDriver::SetupHeaderParseStream(nsIImapProtocol* aProtocol,
+                               StreamInfo* aStreamInfo)
+{
+    printf("**** nsIMAP4TestDriver::SetupHeaderParseStream\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsIMAP4TestDriver::ParseAdoptedHeaderLine(nsIImapProtocol* aProtocol,
+                               msg_line_info* aMsgLineInfo)
+{
+    printf("**** nsIMAP4TestDriver::ParseAdoptedHeaderLine\r\n");
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP nsIMAP4TestDriver::NormalEndHeaderParseStream(nsIImapProtocol* aProtocol)
+{
+    printf("**** nsIMAP4TestDriver::NormalEndHeaderParseStream\r\n");
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsIMAP4TestDriver::AbortHeaderParseStream(nsIImapProtocol* aProtocol)
+{
+    printf("**** nsIMAP4TestDriver::AbortHeaderParseStream\r\n");
+    return NS_OK;
+}
+
+    
     
     // nsIImapMessage support
 NS_IMETHODIMP

@@ -92,7 +92,7 @@ public:
 	// This is evil, I guess, but this is used by libmsg to tell a running imap url
 	// about headers it should download to update a local database.
 	NS_IMETHOD NotifyHdrsToDownload(PRUint32 *keys, PRUint32 keyCount);
-
+	NS_IMETHOD NotifyBodysToDownload(PRUint32 *keys, PRUint32 keyCount);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -282,6 +282,7 @@ private:
     PRMonitor    *m_eventCompletionMonitor;
 	PRMonitor	 *m_waitForBodyIdsMonitor;
 	PRMonitor	 *m_fetchMsgListMonitor;
+	PRMonitor	 *m_fetchBodyListMonitor;
 
     PRBool       m_imapThreadIsRunning;
     static void ImapThreadMain(void *aParm);
@@ -322,6 +323,7 @@ private:
 	void FolderMsgDump(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields);
 	void FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields);
 	void WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
+	void WaitForPotentialListOfBodysToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
 	void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsString2 &returnString);
 	void HeaderFetchCompleted();
 
@@ -332,6 +334,9 @@ private:
 	PRBool		m_fetchMsgListIsNew;
 	PRUint32	m_fetchCount;
 	PRUint32	*m_fetchMsgIdList;
+	PRBool		m_fetchBodyListIsNew;
+	PRUint32	m_fetchBodyCount;
+	PRUint32	*m_fetchBodyIdList;
 
 	// initialization function given a new url and transport layer
 	void SetupWithUrl(nsIURL * aURL);

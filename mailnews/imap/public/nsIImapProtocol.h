@@ -68,6 +68,7 @@ public:
     NS_IMETHOD NotifyFEEventCompletion() = 0;
 
 	NS_IMETHOD NotifyHdrsToDownload(PRUint32 *keys, PRUint32 keyCount) = 0;
+	NS_IMETHOD NotifyBodysToDownload(PRUint32 *keys, PRUint32 keyCount) = 0;
 };
 
 #endif /* nsIImapProtocol_h___ */

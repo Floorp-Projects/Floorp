@@ -174,6 +174,7 @@ nsImapProtocol::nsImapProtocol() :
     m_eventCompletionMonitor = nsnull;
 	m_waitForBodyIdsMonitor = nsnull;
 	m_fetchMsgListMonitor = nsnull;
+	m_fetchBodyListMonitor = nsnull;
     m_imapThreadIsRunning = PR_FALSE;
     m_consumer = nsnull;
 	m_currentServerCommandTagNumber = 0;
@@ -207,6 +208,7 @@ nsImapProtocol::nsImapProtocol() :
 	m_promoteNoopToCheckCount = 0;
 	m_mailToFetch = PR_FALSE;
 	m_fetchMsgListIsNew = PR_FALSE;
+	m_fetchBodyListIsNew = PR_FALSE;
 
 	m_checkForNewMailDownloadsHeaders = PR_TRUE;	// this should be on by default
     m_hierarchyNameState = kNoOperationInProgress;
@@ -250,6 +252,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, P
         m_eventCompletionMonitor = PR_NewMonitor();
 		m_waitForBodyIdsMonitor = PR_NewMonitor();
 		m_fetchMsgListMonitor = PR_NewMonitor();
+		m_fetchBodyListMonitor = PR_NewMonitor();
 
         m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
                                    this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
@@ -326,6 +329,11 @@ nsImapProtocol::~nsImapProtocol()
 	{
 		PR_DestroyMonitor(m_fetchMsgListMonitor);
 		m_fetchMsgListMonitor = nsnull;
+	}
+	if (m_fetchBodyListMonitor)
+	{
+		PR_DestroyMonitor(m_fetchBodyListMonitor);
+		m_fetchBodyListMonitor = nsnull;
 	}
 }
 
@@ -2425,7 +2433,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     // wait for a list of bodies to fetch. 
     if (!DeathSignalReceived() && GetServerStateParser().LastCommandSuccessful())
     {
-        WaitForPotentialListOfMsgsToFetch(&msgIdList, msgCount);
+        WaitForPotentialListOfBodysToFetch(&msgIdList, msgCount);
         if ( msgCount && !DeathSignalReceived() && GetServerStateParser().LastCommandSuccessful())
     	{
     		FolderMsgDump(msgIdList, msgCount, kEveryThingRFC822Peek);
@@ -2488,6 +2496,21 @@ void nsImapProtocol::WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRU
     PR_ExitMonitor(m_fetchMsgListMonitor);
 }
 
+void nsImapProtocol::WaitForPotentialListOfBodysToFetch(PRUint32 **msgIdList, PRUint32 &msgCount)
+{
+	PRIntervalTime sleepTime = kImapSleepTime;
+
+    PR_EnterMonitor(m_fetchBodyListMonitor);
+    while(!m_fetchBodyListIsNew && !DeathSignalReceived())
+        PR_Wait(m_fetchBodyListMonitor, sleepTime);
+    m_fetchBodyListIsNew = FALSE;
+
+    *msgIdList = m_fetchBodyIdList;
+    msgCount   = m_fetchBodyCount;
+    
+    PR_ExitMonitor(m_fetchBodyListMonitor);
+}
+
 #if 0
 
 void nsImapProtocol::NotifyKeyList(PRUint32 *keys, PRUint32 keyCount)
@@ -2506,6 +2529,20 @@ NS_IMETHODIMP nsImapProtocol::NotifyHdrsToDownload(PRUint32 *keys, PRUint32 keyC
     PR_ExitMonitor(m_fetchMsgListMonitor);
 	return NS_OK;
 }
+
+// libmsg uses this to notify a running imap url about message bodies it should download.
+// why not just have libmsg explicitly download the message bodies?
+NS_IMETHODIMP nsImapProtocol::NotifyBodysToDownload(PRUint32 *keys, PRUint32 keyCount)
+{
+    PR_EnterMonitor(m_fetchBodyListMonitor);
+    m_fetchBodyIdList = keys;
+    m_fetchBodyCount  	= keyCount;
+    m_fetchBodyListIsNew = TRUE;
+    PR_Notify(m_fetchBodyListMonitor);
+    PR_ExitMonitor(m_fetchBodyListMonitor);
+	return NS_OK;
+}
+
 
 void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields)
 {

@@ -94,6 +94,16 @@ public:
     NS_IMETHOD FolderIsNoSelect(nsIImapProtocol* aProtocol,
                                 FolderQueryInfo* aInfo);
 
+    NS_IMETHOD SetupHeaderParseStream(nsIImapProtocol* aProtocol,
+                                   StreamInfo* aStreamInfo);
+
+    NS_IMETHOD ParseAdoptedHeaderLine(nsIImapProtocol* aProtocol,
+                                   msg_line_info* aMsgLineInfo);
+    
+    NS_IMETHOD NormalEndHeaderParseStream(nsIImapProtocol* aProtocol);
+    
+    NS_IMETHOD AbortHeaderParseStream(nsIImapProtocol* aProtocol);
+    
     nsIImapMailFolder* m_realImapMailFolder;
 };
 
@@ -353,6 +363,38 @@ struct FolderIsNoSelectProxyEvent : public nsImapMailFolderProxyEvent
     virtual ~FolderIsNoSelectProxyEvent();
     NS_IMETHOD HandleEvent();
     FolderQueryInfo m_folderQueryInfo;
+};
+
+struct SetupHeaderParseStreamProxyEvent : public nsImapMailFolderProxyEvent
+{
+    SetupHeaderParseStreamProxyEvent(nsImapMailFolderProxy* aProxy,
+                               StreamInfo* aStreamInfo);
+    virtual ~SetupHeaderParseStreamProxyEvent();
+    NS_IMETHOD HandleEvent();
+    StreamInfo m_streamInfo;
+};
+
+struct NormalEndHeaderParseStreamProxyEvent : public nsImapMailFolderProxyEvent
+{
+    NormalEndHeaderParseStreamProxyEvent(nsImapMailFolderProxy* aProxyo);
+    virtual ~NormalEndHeaderParseStreamProxyEvent();
+    NS_IMETHOD HandleEvent();
+};
+
+struct ParseAdoptedHeaderLineProxyEvent : public nsImapMailFolderProxyEvent
+{
+    ParseAdoptedHeaderLineProxyEvent(nsImapMailFolderProxy* aProxy,
+                               msg_line_info* aMsgLineInfo);
+    virtual ~ParseAdoptedHeaderLineProxyEvent();
+    NS_IMETHOD HandleEvent();
+    msg_line_info m_msgLineInfo;
+};
+
+struct AbortHeaderParseStreamProxyEvent : public nsImapMailFolderProxyEvent
+{
+    AbortHeaderParseStreamProxyEvent(nsImapMailFolderProxy* aProxy);
+    virtual ~AbortHeaderParseStreamProxyEvent();
+    NS_IMETHOD HandleEvent();
 };
 
 struct nsImapMessageProxyEvent : nsImapEvent

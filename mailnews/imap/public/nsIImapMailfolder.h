@@ -60,6 +60,16 @@ public:
                                                 PRBool* aBool) = 0;
     NS_IMETHOD FolderIsNoSelect(nsIImapProtocol* aProtocol,
                                 FolderQueryInfo* aInfo) = 0;
+    NS_IMETHOD SetupHeaderParseStream(nsIImapProtocol* aProtocol,
+                                   StreamInfo* aStreamInfo) = 0;
+
+    NS_IMETHOD ParseAdoptedHeaderLine(nsIImapProtocol* aProtocol,
+                                   msg_line_info* aMsgLineInfo) = 0;
+    
+    NS_IMETHOD NormalEndHeaderParseStream(nsIImapProtocol* aProtocol) = 0;
+    
+    NS_IMETHOD AbortHeaderParseStream(nsIImapProtocol* aProtocol) = 0;
+    
     
 };
 

@@ -479,6 +479,107 @@ nsImapMailFolderProxy::FolderIsNoSelect(nsIImapProtocol* aProtocol,
     return res;
 }
 
+NS_IMETHODIMP
+nsImapMailFolderProxy::SetupHeaderParseStream(nsIImapProtocol* aProtocol,
+                                        StreamInfo* aStreamInfo)
+{
+    nsresult res = NS_OK;
+    NS_PRECONDITION (aStreamInfo, "Oops... null aStreamInfo");
+    if(!aStreamInfo)
+        return NS_ERROR_NULL_POINTER;
+    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
+
+    if (PR_GetCurrentThread() == m_thread)
+    {
+        SetupHeaderParseStreamProxyEvent *ev =
+            new SetupHeaderParseStreamProxyEvent(this, aStreamInfo);
+        if(nsnull == ev)
+            res = NS_ERROR_OUT_OF_MEMORY;
+        else
+            ev->PostEvent(m_eventQueue);
+    }
+    else
+    {
+        res = m_realImapMailFolder->SetupHeaderParseStream(aProtocol, aStreamInfo);
+        aProtocol->NotifyFEEventCompletion();
+    }
+    return res;
+}
+
+NS_IMETHODIMP
+nsImapMailFolderProxy::ParseAdoptedHeaderLine(nsIImapProtocol* aProtocol,
+                                        msg_line_info* aMsgLineInfo)
+{
+    nsresult res = NS_OK;
+    NS_PRECONDITION (aMsgLineInfo, "Oops... null aMsgLineInfo");
+    if(!aMsgLineInfo)
+        return NS_ERROR_NULL_POINTER;
+    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
+
+    if (PR_GetCurrentThread() == m_thread)
+    {
+        ParseAdoptedHeaderLineProxyEvent *ev =
+            new ParseAdoptedHeaderLineProxyEvent(this, aMsgLineInfo);
+        if(nsnull == ev)
+            res = NS_ERROR_OUT_OF_MEMORY;
+        else
+            ev->PostEvent(m_eventQueue);
+    }
+    else
+    {
+        res = m_realImapMailFolder->ParseAdoptedHeaderLine(aProtocol, aMsgLineInfo);
+        aProtocol->NotifyFEEventCompletion();
+    }
+    return res;
+}
+
+NS_IMETHODIMP
+nsImapMailFolderProxy::NormalEndHeaderParseStream(nsIImapProtocol* aProtocol)
+{
+    nsresult res = NS_OK;
+    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
+
+    if (PR_GetCurrentThread() == m_thread)
+    {
+        NormalEndHeaderParseStreamProxyEvent *ev =
+            new NormalEndHeaderParseStreamProxyEvent(this);
+        if(nsnull == ev)
+            res = NS_ERROR_OUT_OF_MEMORY;
+        else
+            ev->PostEvent(m_eventQueue);
+    }
+    else
+    {
+        res = m_realImapMailFolder->NormalEndHeaderParseStream(aProtocol);
+        aProtocol->NotifyFEEventCompletion();
+    }
+    return res;
+}
+
+NS_IMETHODIMP
+nsImapMailFolderProxy::AbortHeaderParseStream(nsIImapProtocol* aProtocol)
+{
+    nsresult res = NS_OK;
+    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
+
+    if (PR_GetCurrentThread() == m_thread)
+    {
+       AbortHeaderParseStreamProxyEvent *ev =
+            new AbortHeaderParseStreamProxyEvent(this);
+        if(nsnull == ev)
+            res = NS_ERROR_OUT_OF_MEMORY;
+        else
+            ev->PostEvent(m_eventQueue);
+    }
+    else
+    {
+        res = m_realImapMailFolder->AbortHeaderParseStream(aProtocol);
+        aProtocol->NotifyFEEventCompletion();
+    }
+    return res;
+}
+
+
 nsImapMessageProxy::nsImapMessageProxy(nsIImapMessage* aImapMessage,
                                        nsIImapProtocol* aProtocol,
                                        PLEventQueue* aEventQ,
@@ -1920,6 +2021,144 @@ FolderIsNoSelectProxyEvent::HandleEvent()
     return res;
 }
 
+
+///
+
+SetupHeaderParseStreamProxyEvent::SetupHeaderParseStreamProxyEvent(
+    nsImapMailFolderProxy* aImapFolderProxy,
+    StreamInfo* aStreamInfo) :
+    nsImapMailFolderProxyEvent(aImapFolderProxy)
+{
+    NS_ASSERTION (aStreamInfo, "Oops... null stream info");
+    if (aStreamInfo)
+    {
+        m_streamInfo.size = aStreamInfo->size;
+        m_streamInfo.content_type = PL_strdup(aStreamInfo->content_type);
+        if (aStreamInfo->boxSpec)
+        {
+            m_streamInfo.boxSpec = (mailbox_spec*)
+                PR_CALLOC(sizeof(mailbox_spec));
+            *m_streamInfo.boxSpec = *aStreamInfo->boxSpec;
+            if (aStreamInfo->boxSpec->allocatedPathName)
+                m_streamInfo.boxSpec->allocatedPathName =
+                    PL_strdup(aStreamInfo->boxSpec->allocatedPathName); 
+            if (aStreamInfo->boxSpec->namespaceForFolder)
+                m_streamInfo.boxSpec->namespaceForFolder = 
+                    new nsIMAPNamespace(
+                        aStreamInfo->boxSpec->namespaceForFolder->GetType(),
+                        aStreamInfo->boxSpec->namespaceForFolder->GetPrefix(),
+                        aStreamInfo->boxSpec->namespaceForFolder->GetDelimiter(),
+                        aStreamInfo->boxSpec->namespaceForFolder->GetIsNamespaceFromPrefs());
+        }
+        else
+        {
+            m_streamInfo.boxSpec = nsnull;
+        }
+    }
+    else
+    {
+        m_streamInfo.size = 0;
+        m_streamInfo.content_type = nsnull;
+        m_streamInfo.boxSpec = nsnull;
+    }
+}
+
+SetupHeaderParseStreamProxyEvent::~SetupHeaderParseStreamProxyEvent()
+{
+    if (m_streamInfo.content_type)
+        PL_strfree(m_streamInfo.content_type);
+    if (m_streamInfo.boxSpec)
+    {
+        if (m_streamInfo.boxSpec->allocatedPathName)
+            PL_strfree(m_streamInfo.boxSpec->allocatedPathName);
+        if (m_streamInfo.boxSpec->namespaceForFolder)
+            delete m_streamInfo.boxSpec->namespaceForFolder;
+        delete m_streamInfo.boxSpec;
+    }
+}
+
+NS_IMETHODIMP
+SetupHeaderParseStreamProxyEvent::HandleEvent()
+{
+    nsresult res = m_proxy->m_realImapMailFolder->SetupHeaderParseStream(
+        m_proxy->m_protocol, &m_streamInfo);
+    m_proxy->m_protocol->NotifyFEEventCompletion();
+    return res;
+}
+
+ParseAdoptedHeaderLineProxyEvent::ParseAdoptedHeaderLineProxyEvent(
+    nsImapMailFolderProxy* aImapFolderProxy,
+    msg_line_info* aMsgLineInfo) :
+    nsImapMailFolderProxyEvent(aImapFolderProxy)
+{
+    NS_ASSERTION (aMsgLineInfo, "Oops... null msg_line_info");
+    if (aMsgLineInfo)
+    {
+        m_msgLineInfo.adoptedMessageLine =
+            PL_strdup(aMsgLineInfo->adoptedMessageLine);
+        m_msgLineInfo.uidOfMessage = aMsgLineInfo->uidOfMessage;
+    }
+    else
+    {
+        m_msgLineInfo.adoptedMessageLine = nsnull;
+        m_msgLineInfo.uidOfMessage = 0xffffffff;
+    }
+}
+
+ParseAdoptedHeaderLineProxyEvent::~ParseAdoptedHeaderLineProxyEvent()
+{
+    if (m_msgLineInfo.adoptedMessageLine)
+        PL_strfree(m_msgLineInfo.adoptedMessageLine);
+}
+
+NS_IMETHODIMP
+ParseAdoptedHeaderLineProxyEvent::HandleEvent()
+{
+    nsresult res = m_proxy->m_realImapMailFolder->ParseAdoptedHeaderLine(
+        m_proxy->m_protocol, &m_msgLineInfo);
+    m_proxy->m_protocol->NotifyFEEventCompletion();
+    return res;
+}
+    
+NormalEndHeaderParseStreamProxyEvent::NormalEndHeaderParseStreamProxyEvent(
+    nsImapMailFolderProxy* aImapFolderProxy) :
+    nsImapMailFolderProxyEvent(aImapFolderProxy)
+{
+}
+
+NormalEndHeaderParseStreamProxyEvent::~NormalEndHeaderParseStreamProxyEvent()
+{
+}
+
+NS_IMETHODIMP
+NormalEndHeaderParseStreamProxyEvent::HandleEvent()
+{
+    nsresult res = m_proxy->m_realImapMailFolder->NormalEndHeaderParseStream(
+        m_proxy->m_protocol);
+    m_proxy->m_protocol->NotifyFEEventCompletion();
+    return res;
+}
+    
+AbortHeaderParseStreamProxyEvent::AbortHeaderParseStreamProxyEvent(
+    nsImapMailFolderProxy* aImapFolderProxy) :
+    nsImapMailFolderProxyEvent(aImapFolderProxy)
+{
+}
+
+AbortHeaderParseStreamProxyEvent::~AbortHeaderParseStreamProxyEvent()
+{
+}
+
+NS_IMETHODIMP
+AbortHeaderParseStreamProxyEvent::HandleEvent()
+{
+    nsresult res = m_proxy->m_realImapMailFolder->AbortHeaderParseStream(
+        m_proxy->m_protocol);
+    m_proxy->m_protocol->NotifyFEEventCompletion();
+    return res;
+}
+
+////
 nsImapMessageProxyEvent::nsImapMessageProxyEvent(nsImapMessageProxy* aProxy)
 {
     NS_ASSERTION (aProxy, "fatal null proxy object");
