@@ -24,6 +24,10 @@ var gSiteBox;
 var gUnblockButton;
 var gPageReport;
 
+var popupmanager =
+        Components.classes["@mozilla.org/PopupWindowManager;1"]
+          .getService(Components.interfaces.nsIPopupWindowManager);
+
 function onLoad()
 {
   gSiteBox = document.getElementById("siteBox");
@@ -56,5 +60,19 @@ function buildSiteBox()
 function siteSelected()
 {
   gUnblockButton.disabled = (gSiteBox.selectedItems.length == 0);
+}
+
+function whitelistSite()
+{
+  var selectedItem = gSiteBox.selectedItems[0];
+  if (!selectedItem)
+    return;
+
+  // This is perverse and backwards.  We have subverted Mozilla's blacklist implementation
+  // and made it into a whitelist.  So we want to add this to the list of "blocked' popups.
+  var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance(Components.interfaces.nsIURI);
+  uri.spec = selectedItem.label;
+  popupmanager.add(uri, false);
+  gSiteBox.removeChild(selectedItem);
 }
 

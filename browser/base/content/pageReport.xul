@@ -51,7 +51,7 @@
     <listbox style="height:10em" id="siteBox" onselect="siteSelected();" flex="1"/>
     <separator class="thin"/>
     <hbox>
-      <button label="&unblock.label;" id="unblockButton" disabled="true"/>
+      <button label="&unblock.label;" id="unblockButton" oncommand="whitelistSite();" disabled="true"/>
       <spacer flex="1"/>
       <button dlgtype="accept" label="&done.label;" default="true" oncommand="window.close();"/>
     </hbox>
