@@ -82,6 +82,7 @@
               style="width: 100%"
               ref="urn:forumzilla:root"
               onselect="this.treeBoxObject.view.selectionChanged();"
+              ondblclick="doEdit();"
               ondraggesture="//nsDragAndDrop.startDrag(event, subscriptionsDragDropObserver);"
               ondragover="//nsDragAndDrop.dragOver(event, subscriptionsDragDropObserver);"
               ondragdrop="//nsDragAndDrop.drop(event, subscriptionsDragDropObserver);">
