@@ -45,6 +45,7 @@ CPPSRCS		= \
 	xcDllStore.cpp \
 	nsAllocator.cpp \
 	nsGenericFactory.cpp \
+	nsRegistry.cpp \
 	$(NULL)
 
 # XXX temporary, until I fix the RDF cursor/enumerator conspiracy
