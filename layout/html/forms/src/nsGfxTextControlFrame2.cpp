@@ -3311,6 +3311,9 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
       mEditor->SetFlags(savedFlags);
       if (selPriv)
         selPriv->EndBatchChanges();
+
+      // send onchange here to ctach DOM based changes
+      CallOnChange();
     }
 
     if (mScrollableView)
