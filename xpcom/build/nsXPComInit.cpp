@@ -59,6 +59,7 @@
 #include "nsILocalFile.h"
 #include "nsLocalFile.h"
 #include "nsDirectoryService.h"
+#include "nsICategoryManager.h"
 
 #ifdef GC_LEAK_DETECTOR
 #include "nsLeakDetector.h"
@@ -137,19 +138,19 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsVoidImpl)
 // To Control the order of initialization of these key components I am putting
 // this function.
 //
-//	- nsServiceManager
-//		- nsComponentManager
-//			- nsRegistry
+//  - nsServiceManager
+//    - nsComponentManager
+//      - nsRegistry
 //
 // Here are key points to remember:
-//	- A global of all these need to exist. nsServiceManager is an independent object.
-//	  nsComponentManager uses both the globalServiceManager and its own registry.
+//  - A global of all these need to exist. nsServiceManager is an independent object.
+//    nsComponentManager uses both the globalServiceManager and its own registry.
 //
-//	- A static object of both the nsComponentManager and nsServiceManager
-//	  are in use. Hence InitXPCOM() gets triggered from both
-//	  NS_GetGlobale{Service/Component}Manager() calls.
+//  - A static object of both the nsComponentManager and nsServiceManager
+//    are in use. Hence InitXPCOM() gets triggered from both
+//    NS_GetGlobale{Service/Component}Manager() calls.
 //
-//	- There exists no global Registry. Registry can be created from the component manager.
+//  - There exists no global Registry. Registry can be created from the component manager.
 //
 
 static nsresult
@@ -178,9 +179,9 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
 {
     nsresult rv = NS_OK;
 
-	// Establish the main thread here.
+  // Establish the main thread here.
     rv = nsIThread::SetMainThread();
-	if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) return rv;
 
     // 1. Create the Global Service Manager
     nsIServiceManager* servMgr = NULL;
@@ -190,10 +191,10 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
         if (NS_FAILED(rv)) return rv;
         gServiceManager = servMgr;
         if (result)
-		{
-	        NS_ADDREF(servMgr);
-			*result = servMgr;
-		}
+    {
+          NS_ADDREF(servMgr);
+      *result = servMgr;
+    }
     }
 
     // 2. Create the Component Manager and register with global service manager
@@ -251,8 +252,25 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
     NS_RELEASE(registryFactory);
     if (NS_FAILED(rv)) return rv;
 
+    // Category Manager
+    {
+      nsCOMPtr<nsIFactory> categoryManagerFactory;
+      if ( NS_FAILED(rv = NS_CategoryManagerGetFactory(getter_AddRefs(categoryManagerFactory))) )
+        return rv;
+
+      NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
+
+      rv = compMgr->RegisterFactory(kCategoryManagerCID,
+                                    NS_CATEGORYMANAGER_CLASSNAME,
+                                    NS_CATEGORYMANAGER_PROGID,
+                                    categoryManagerFactory,
+                                    PR_TRUE);
+      if ( NS_FAILED(rv) )
+        return rv;
+    }
+
 #ifdef GC_LEAK_DETECTOR
-	rv = NS_InitLeakDetector();
+  rv = NS_InitLeakDetector();
     if (NS_FAILED(rv)) return rv;
 #endif
 
@@ -519,7 +537,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
         NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
         if (NS_SUCCEEDED(rv))
         {
-            nsIServiceManager *mgr;		// NO COMPtr as we dont release the service manager
+            nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
             rv = nsServiceManager::GetGlobalServiceManager(&mgr);
             if (NS_SUCCEEDED(rv))
             {
@@ -577,8 +595,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 #endif
 
 #ifdef GC_LEAK_DETECTOR
-	// Shutdown the Leak detector.
-	NS_ShutdownLeakDetector();
+  // Shutdown the Leak detector.
+  NS_ShutdownLeakDetector();
 #endif
 
     return NS_OK;
