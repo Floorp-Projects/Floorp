@@ -22,7 +22,9 @@ IGNORE_MANIFEST=1
 DEPTH = ..\
 
 DIRS= \
-    public \
-    src
+    public    \
+    src       \
+    resources \
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
