@@ -406,8 +406,6 @@ FixURL(char *url)
   {
     if (*ptr == '\\')
       *ptr = '/';
-    else if (*ptr == ':')
-      *ptr = '|';
 
     ++ptr;
   }
