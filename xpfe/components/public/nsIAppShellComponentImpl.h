@@ -92,6 +92,8 @@ public:
     // should not be registered with the Service Manager
     // when Initialize-d.
     virtual PRBool Is_Service() { return PR_TRUE; }
+    // Override this to perform initialization for your component.
+    NS_IMETHOD DoInitialization() { return NS_OK; }
     static nsresult SetServiceManager( nsISupports *aServiceMgr ) {
         nsresult rv = NS_OK;
         // Remember service manager first time we see it.
@@ -155,6 +157,9 @@ className::Initialize( nsIAppShellService *anAppShell, \
     mCmdLine  = aCmdLineService; \
     if ( mServiceMgr && Is_Service() ) { \
         rv = mServiceMgr->RegisterService( progId, this ); \
+    } \
+    if ( NS_SUCCEEDED( rv ) ) { \
+        rv = DoInitialization(); \
     } \
     return rv; \
 } \

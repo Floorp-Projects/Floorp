@@ -66,6 +66,15 @@ public:
     virtual ~nsSampleAppShellComponent() {
     }
 
+    virtual PRBool IsService() {
+        return PR_FALSE; // Don't register as a service.
+    }
+
+    NS_IMETHOD DoInitialization() {
+        // Add your stuff here.
+        return NS_OK;
+    }
+
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
 
