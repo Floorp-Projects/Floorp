@@ -1683,9 +1683,9 @@ static void PrefEnumCallback(const char *aName, void *aClosure)
 
     XP_FilePrintf(f, "/%s_ls {\n", (const char *) langstrC);
     XP_FilePrintf(f, "  /NativeFont /%s def\n",
-      (psnativefont && linfo->mEncoder) ? psnativefont : "Courier");
+      (psnativefont && linfo->mEncoder) ? psnativefont.get() : "Courier");
     XP_FilePrintf(f, "  /UCS2Font /%s def\n",
-		  psunicodefont ? psunicodefont : "Courier");
+		  psunicodefont ? psunicodefont.get() : "Courier");
     if (psnativefont && linfo->mEncoder) {
       XP_FilePrintf(f, "  /Unicode2NativeDict Unicode2NativeDict%s def\n",
 		    (const char *) langstrC);
