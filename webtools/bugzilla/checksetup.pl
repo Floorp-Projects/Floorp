@@ -4175,8 +4175,8 @@ if (!$dbh->bz_get_field_def('longdescs', 'already_wrapped')) {
     # at display-time.
     print "Fixing old, mis-wrapped comments...\n";
     $dbh->do(q{UPDATE longdescs SET already_wrapped = 0
-                WHERE ( POSITION('\n' IN thetext ) > 80
-                        OR POSITION('\n' IN thetext ) = 0 )
+                WHERE (} . $dbh->sql_position(q{'\n'}, 'thetext') . q{ > 80
+                   OR } . $dbh->sql_position(q{'\n'}, 'thetext') . q{ = 0)
                   AND SUBSTRING(thetext FROM 1 FOR 80) LIKE '% %'});
 }
 
@@ -4547,8 +4547,8 @@ if (!defined $dbh->bz_get_index_def('longdescs', 'thetext')) {
         print "Removing paths from filenames in attachments table...\n";
         
         $sth = $dbh->prepare("SELECT attach_id, filename FROM attachments " . 
-                             "WHERE INSTR(filename, '/') " . 
-                             "OR INSTR(filename, '\\\\')");
+                             "WHERE " . $dbh->sql_position(q{'/'}, 'filename') .
+                             " OR " . $dbh->sql_position(q{'\\\\'}, 'filename'));
         $sth->execute;
         
         while (my ($attach_id, $filename) = $sth->fetchrow_array) {

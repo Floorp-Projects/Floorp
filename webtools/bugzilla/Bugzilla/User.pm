@@ -618,23 +618,25 @@ sub match {
 
         my $sqlstr = &::SqlQuote(uc($str));
 
-        my $query  = "SELECT DISTINCT userid, realname, login_name " .
-                     "FROM  profiles ";
+        my $query   = "SELECT DISTINCT userid, realname, login_name " .
+                      "FROM  profiles";
         if (&::Param('usevisibilitygroups')) {
-            $query .= ", user_group_map ";
+            $query .= ", user_group_map";
         }
-        $query     .= "WHERE  (INSTR(UPPER(login_name), $sqlstr) " .
-                      "OR INSTR(UPPER(realname), $sqlstr)) ";
+        $query     .= " WHERE " . $dbh->sql_position($sqlstr,
+                                                     "UPPER(login_name)") .
+                      " OR " . $dbh->sql_position($sqlstr,
+                                                  "UPPER(realname)");
         if (&::Param('usevisibilitygroups')) {
-            $query .= "AND user_group_map.user_id = userid " .
-                      "AND isbless = 0 " .
-                      "AND group_id IN(" .
-                      join(', ', (-1, @{$user->visible_groups_inherited})) . ") " .
-                      "AND grant_type <> " . GRANT_DERIVED;
+            $query .= " AND user_group_map.user_id = userid" .
+                      " AND isbless = 0" .
+                      " AND group_id IN(" .
+                join(', ', (-1, @{$user->visible_groups_inherited})) . ")" .
+                      " AND grant_type <> " . GRANT_DERIVED;
         }
-        $query    .= " AND disabledtext = '' " if $exclude_disabled;
-        $query    .= "ORDER BY length(login_name) ";
-        $query    .= $dbh->sql_limit($limit) if $limit;
+        $query     .= " AND disabledtext = ''" if $exclude_disabled;
+        $query     .= " ORDER BY length(login_name)";
+        $query     .= " " . $dbh->sql_limit($limit) if $limit;
         &::PushGlobalSQLState();
         &::SendSQL($query);
         push(@users, new Bugzilla::User(&::FetchSQLData())) while &::MoreSQLData();

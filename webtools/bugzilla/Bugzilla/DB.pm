@@ -201,6 +201,12 @@ sub import {
     $Exporter::ExportLevel-- if $is_exporter;
 }
 
+sub sql_position {
+    my ($self, $fragment, $text) = @_;
+
+    return "POSITION($fragment IN $text)";
+}
+
 # XXX - Needs to be documented.
 sub bz_server_version {
     my ($self) = @_;
@@ -673,6 +679,16 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
  Params:      $interval = the time interval requested (e.g. '30 minutes')
               (scalar)
  Returns:     formatted SQL for interval function (scalar)
+
+=item C<sql_position>
+
+ Description: Outputs proper SQL syntax determinig position of a substring
+              (fragment) withing a string (text). Note: if the substring or
+              text are string constants, they must be properly quoted
+              (e.g. "'pattern'").
+ Params:      $fragment = the string fragment we are searching for (scalar)
+              $text = the text to search (scalar)
+ Returns:     formatted SQL for substring search (scalar)
 
 =item C<bz_lock_tables>
 

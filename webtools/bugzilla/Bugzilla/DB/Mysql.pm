@@ -117,6 +117,20 @@ sub sql_interval {
     return "INTERVAL $interval";
 }
 
+sub sql_position {
+    my ($self, $fragment, $text) = @_;
+
+    # mysql 4.0.1 and lower do not support CAST
+    # mysql 3.*.* had a case-sensitive INSTR
+    # (checksetup has a check for unsupported versions)
+    my $server_version = $self->bz_server_version;
+    if ($server_version =~ /^3\./) {
+        return "INSTR($text, $fragment)";
+    } else {
+        return "INSTR(CAST($text AS BINARY), CAST($fragment AS BINARY))";
+    }
+}
+
 sub bz_lock_tables {
     my ($self, @tables) = @_;
 

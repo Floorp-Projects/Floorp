@@ -951,24 +951,16 @@ sub init {
              $term = "$ff != $q";
          },
          ",casesubstring" => sub {
-             # mysql 4.0.1 and lower do not support CAST
-             # mysql 3.*.* had a case-sensitive INSTR
-             # (checksetup has a check for unsupported versions)
-             my $server_version = $dbh->bz_server_version;
-             if ($dbh->isa('Bugzilla::DB::Mysql') && $server_version =~ /^3\./) {
-                 $term = "INSTR($ff ,$q)";
-             } else {
-                 $term = "INSTR(CAST($ff AS BINARY), CAST($q AS BINARY))";
-             }
+             $term = $dbh->sql_position($q, $ff);
          },
          ",substring" => sub {
-             $term = "INSTR(LOWER($ff), " . lc($q) . ")";
+             $term = $dbh->sql_position(lc($q), "LOWER($ff)");
          },
          ",substr" => sub {
              $funcsbykey{",substring"}->();
          },
          ",notsubstring" => sub {
-             $term = "INSTR(LOWER($ff), " . lc($q) . ") = 0";
+             $term = $dbh->sql_position(lc($q), "LOWER($ff)") . " = 0";
          },
          ",regexp" => sub {
              $term = "LOWER($ff) " . $dbh->sql_regexp() . " $q";
@@ -1426,8 +1418,9 @@ sub ListIDsForEmail {
         }
         $list = join(',', @list);
     } elsif ($type eq 'substring') {
-        &::SendSQL("SELECT userid FROM profiles WHERE INSTR(login_name, " .
-            &::SqlQuote($email) . ") " . $dbh->sql_limit(51));
+        &::SendSQL("SELECT userid FROM profiles WHERE " .
+            $dbh->sql_position(lc(::SqlQuote($email)), "LOWER(login_name)") .
+            " " . $dbh->sql_limit(51));
         while (&::MoreSQLData()) {
             my ($id) = &::FetchSQLData();
             push(@list, $id);
@@ -1478,10 +1471,12 @@ sub GetByWordList {
 sub GetByWordListSubstr {
     my ($field, $strs) = (@_);
     my @list;
+    my $dbh = Bugzilla->dbh;
 
     foreach my $word (split(/[\s,]+/, $strs)) {
         if ($word ne "") {
-            push(@list, "INSTR(LOWER($field), " . lc(&::SqlQuote($word)) . ")");
+            push(@list, $dbh->sql_position(lc(::SqlQuote($word)),
+                                           "LOWER($field)"));
         }
     }
 
