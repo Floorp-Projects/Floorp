@@ -181,6 +181,8 @@ printf("\n");
 
   // place and size children
   FinalizeReflow(aPresContext, *aReflowState.rendContext, aDesiredSize);
+
+  aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
