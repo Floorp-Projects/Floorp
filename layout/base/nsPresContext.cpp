@@ -1181,12 +1181,7 @@ nsPresContext::GetLanguageSpecificTransformType(
                 nsLanguageSpecificTransformType* aType)
 {
   NS_ENSURE_ARG_POINTER(aType);
-  NS_ASSERTION(mLanguageSpecificTransformType !=
-               eLanguageSpecificTransformType_Unknown,
-               "language specific transform type not set yet");
-
   *aType = mLanguageSpecificTransformType;
-
   return NS_OK;
 }
 

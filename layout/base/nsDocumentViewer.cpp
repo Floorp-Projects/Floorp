@@ -1192,7 +1192,7 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
       (*aStyleSet)->AppendBackstopStyleSheet(mUAStyleSheet);
     }
   }
-  return rv;
+  return NS_OK;
 }
 
 nsresult
