@@ -24,7 +24,8 @@ const char* XPCContext::mStrings[] = {
     "constructor",    // IDX_CONSTRUCTOR
     "toString",       // IDX_TO_STRING
     "lastResult",     // IDX_LAST_RESULT
-    "returnCode"      // IDX_RETURN_CODE
+    "returnCode",     // IDX_RETURN_CODE
+    XPC_VAL_STR       // IDX_VAL_STRING
 };
 
 // static

@@ -27,6 +27,7 @@ PROGRAMS = $(PROG1)
 TESTCASES = \
 	testxpc.js \
 	simpletest.js \
+	xpctest_array.js \
 	xpctest_echo.js \
 	xpctest_ids.js \
 	xpctest_overloaded.js \

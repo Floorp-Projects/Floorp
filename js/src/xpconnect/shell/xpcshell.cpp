@@ -217,7 +217,7 @@ Quit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
-Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+DumpXPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     int32 depth = 2;
 
@@ -282,7 +282,7 @@ static JSFunctionSpec glob_functions[] = {
     {"quit",            Quit,           0},
     {"version",         Version,        1},
     {"build",           BuildDate,      0},
-    {"dump",            Dump,           1},
+    {"dumpXPC",         DumpXPC,        1},
     {"gc",              GC,             0},
     {0}
 };
