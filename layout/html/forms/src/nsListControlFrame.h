@@ -152,6 +152,8 @@ protected:
 /**
  * Frame-based listbox.
  */
+#define FIX_FOR_BUG_50376
+
 
 class nsListControlFrame : public nsScrollFrame, 
                            public nsIFormControlFrame, 
@@ -293,6 +295,16 @@ protected:
   void       AdjustIndexForDisabledOpt(PRInt32 &anNewIndex, PRInt32 &anOldIndex, 
                                        PRBool &aDoSetNewIndex, PRBool &aWasDisabled,
                                        PRInt32 aNumOptions, PRInt32 aDoAdjustInc, PRInt32 aDoAdjustIncNext);
+#ifdef FIX_FOR_BUG_50376
+  // PresState Helper Methods
+  nsresult   GetPresStateAndValueArray(nsISupportsArray ** aSuppArray);
+  nsresult   SetOptionIntoPresState(nsISupportsArray * aSuppArray, 
+                                    PRInt32            aIndex, 
+                                    PRInt32            anItemNum);
+  nsresult   SetSelectionInPresState(PRInt32 aIndex, PRBool aValue);
+  nsresult   RemoveOptionFromPresState(nsISupportsArray * aSuppArray, 
+                                       PRInt32            aIndex);
+#endif
 
   nsListControlFrame();
   virtual ~nsListControlFrame();
