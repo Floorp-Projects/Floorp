@@ -1,0 +1,5 @@
+gtkembedmoz-wrapper -> gtkembedmoz
+gtkembedmoz-wrapper -> v-imagedecoders
+v-imagedecoders -> jpeg
+v-imagedecoders -> mng
+v-imagedecoders -> png

@@ -177,12 +177,35 @@ sub FindMakefiles {
   #
   print "\n\nPulling modules...\n";
   
+  #
+  # Add in virtual dependencies from extra.dot
+  # meta.dot = all.dot + extra.dot
+  #
+
+  # Create meta.dot
+  if (-e "mozilla/tools/module-deps/meta.dot") {
+    unlink("mozilla/tools/module-deps/meta.dot");
+  }
+
+  my $meta_cmd = "cp mozilla/tools/module-deps/all.dot  mozilla/tools/module-deps/meta.dot";
+  print "$meta_cmd\n";
+  system($meta_cmd);
+
+  open METADOT, ">>mozilla/tools/module-deps/meta.dot";
+  
+  open EXTRADOT, "mozilla/tools/module-deps/extra.dot";
+  while (<EXTRADOT>) {
+    print METADOT $_;
+  }
+  close EXTRADOT;
+
+  close METADOT;
 
   # Figure out the modules list.
   my @modules;
   my $modules_string = "";
   my $num_modules = 0;
-  my $modules_cmd = "mozilla/tools/module-deps/module-graph\.pl --file mozilla/tools/module-deps/all\.dot --start-module $root_modules --list-only";
+  my $modules_cmd = "mozilla/tools/module-deps/module-graph\.pl --file mozilla/tools/module-deps/meta\.dot --start-module $root_modules --list-only";
   $modules_string = run_shell_command($modules_cmd, 0);
 
   # Yank modules we know we don't want.
