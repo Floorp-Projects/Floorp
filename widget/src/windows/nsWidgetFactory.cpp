@@ -57,6 +57,7 @@ static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kCTabWidget,     NS_TABWIDGET_CID);
 static NS_DEFINE_IID(kCTooltipWidget, NS_TOOLTIPWIDGET_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
+static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCDialog,        NS_DIALOG_CID);
 static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
@@ -68,10 +69,7 @@ class nsWidgetFactory : public nsIFactory
 {   
 public:   
     // nsISupports methods   
-    NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                                       void **aResult);   
-    NS_IMETHOD_(nsrefcnt) AddRef(void);   
-    NS_IMETHOD_(nsrefcnt) Release(void);   
+    NS_DECL_ISUPPORTS
 
     // nsIFactory methods   
     NS_IMETHOD CreateInstance(nsISupports *aOuter,   
@@ -84,15 +82,12 @@ public:
     ~nsWidgetFactory();   
 
 private:   
-    nsrefcnt mRefCnt;   
     nsCID mClassID;
 }; 
 
 NS_IMPL_ADDREF(nsWidgetFactory)
 NS_IMPL_RELEASE(nsWidgetFactory)
   
-
-
 
 nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)   
 {   
@@ -147,61 +142,64 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
 
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kCWindow)) {
-        inst = (nsISupports*)(nsObject*)new nsWindow();
+        inst = (nsISupports*)new nsWindow();
     }
     else if (mClassID.Equals(kCChild)) {
-        inst = (nsISupports*)(nsObject*)new ChildWindow();
+        inst = (nsISupports*)new ChildWindow();
     }
     else if (mClassID.Equals(kCButton)) {
-        inst = (nsISupports*)(nsObject*)new nsButton();
+        inst = (nsISupports*)(nsWindow*)new nsButton();
     }
     else if (mClassID.Equals(kCCheckButton)) {
-        inst = (nsISupports*)(nsObject*)new nsCheckButton();
+        inst = (nsISupports*)(nsWindow*)new nsCheckButton();
     }
     else if (mClassID.Equals(kCCombobox)) {
-        inst = (nsISupports*)(nsObject*)new nsComboBox();
+        inst = (nsISupports*)(nsWindow*)new nsComboBox();
     }
     else if (mClassID.Equals(kCRadioButton)) {
-        inst = (nsISupports*)(nsObject*)new nsRadioButton();
+        inst = (nsISupports*)(nsWindow*)new nsRadioButton();
     }
     else if (mClassID.Equals(kCRadioGroup)) {
-        inst = (nsISupports*)(nsObject*)new nsRadioGroup();
+        inst = (nsISupports*)new nsRadioGroup();
     }
     else if (mClassID.Equals(kCFileOpen)) {
-        inst = (nsISupports*)(nsObject*)new nsFileWidget();
+        inst = (nsISupports*)new nsFileWidget();
     }
     else if (mClassID.Equals(kCListbox)) {
-        inst = (nsISupports*)(nsObject*)new nsListBox();
+        inst = (nsISupports*)(nsWindow*)new nsListBox();
     }
     else if (mClassID.Equals(kCHorzScrollbar)) {
-        inst = (nsISupports*)(nsObject*)new nsScrollbar(PR_FALSE);
+        inst = (nsISupports*)(nsWindow*)new nsScrollbar(PR_FALSE);
     }
     else if (mClassID.Equals(kCVertScrollbar)) {
-        inst = (nsISupports*)(nsObject*)new nsScrollbar(PR_TRUE);
+        inst = (nsISupports*)(nsWindow*)new nsScrollbar(PR_TRUE);
     }
     else if (mClassID.Equals(kCTextArea)) {
-        inst = (nsISupports*)(nsObject*)new nsTextAreaWidget();
+        inst = (nsISupports*)(nsWindow*)new nsTextAreaWidget();
     }
     else if (mClassID.Equals(kCTextField)) {
-        inst = (nsISupports*)(nsObject*)new nsTextWidget();
+        inst = (nsISupports*)(nsWindow*)new nsTextWidget();
     }
     else if (mClassID.Equals(kCTabWidget)) {
-        inst = (nsISupports*)(nsObject*)new nsTabWidget();
+        inst = (nsISupports*)(nsWindow*)new nsTabWidget();
     }
     else if (mClassID.Equals(kCTooltipWidget)) {
-        inst = (nsISupports*)(nsObject*)new nsTooltipWidget();
+        inst = (nsISupports*)(nsWindow*)new nsTooltipWidget();
     }
     else if (mClassID.Equals(kCAppShell)) {
-        inst = (nsISupports*)(nsObject*)(nsAppShell*)new nsAppShell();
+        inst = (nsISupports*)new nsAppShell();
+    }
+    else if (mClassID.Equals(kCToolkit)) {
+        inst = (nsISupports*)new nsToolkit();
     }
     else if (mClassID.Equals(kCLookAndFeel)) {
-        inst = (nsISupports*)(nsObject*)new nsLookAndFeel();
+        inst = (nsISupports*)new nsLookAndFeel();
     }
     else if (mClassID.Equals(kCDialog)) {
-        inst = (nsISupports*)(nsObject*)new nsDialog();
+        inst = (nsISupports*)(nsWindow*)new nsDialog();
     }
     else if (mClassID.Equals(kCLabel)) {
-        inst = (nsISupports*)(nsObject*)new nsLabel();
+        inst = (nsISupports*)(nsWindow*)new nsLabel();
     }/* */
   
     if (inst == NULL) {  

@@ -22,6 +22,8 @@
 #include "prtime.h"
 #include "nsGUIEvent.h"
 
+NS_IMPL_ISUPPORTS(nsToolkit, NS_ITOOLKIT_IID)
+
 HINSTANCE nsToolkit::mDllInstance = 0;
 
 nsWindow     *MouseTrailer::mHoldMouse;
@@ -114,11 +116,11 @@ void RunPump(void* arg)
 // constructor
 //
 //-------------------------------------------------------------------------
-nsToolkit::nsToolkit() 
+nsToolkit::nsToolkit()  
 {
+    NS_INIT_REFCNT();
     mGuiThread  = NULL;
     mDispatchWnd = 0;
-    NS_INIT_REFCNT();
 }
 
 
@@ -135,14 +137,6 @@ nsToolkit::~nsToolkit()
     ::DestroyWindow(mDispatchWnd);
     mDispatchWnd = NULL;
 }
-
-
-//-------------------------------------------------------------------------
-//
-// nsISupports implementation macro
-//
-//-------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS(nsToolkit, NS_ITOOLKIT_IID)
 
 
 //-------------------------------------------------------------------------

@@ -21,16 +21,12 @@
 #include "nsObject.h"
 #include "nsILookAndFeel.h"
 
-class nsLookAndFeel: public nsObject, 
-		     public nsILookAndFeel {
+class nsLookAndFeel: public nsILookAndFeel {
 public:
   nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
-  // nsISupports
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor);
   NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);

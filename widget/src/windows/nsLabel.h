@@ -38,9 +38,7 @@ public:
   virtual ~nsLabel();
 
   // nsISupports
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_DECL_ISUPPORTS
 
   // nsILabel part
   NS_IMETHOD SetLabel(const nsString &aText);

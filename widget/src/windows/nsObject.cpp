@@ -20,10 +20,6 @@
 #include "nsObject.h"
 
 
-NS_IMPL_ADDREF(nsObject)
-NS_IMPL_RELEASE(nsObject)
-
-
 CList nsObject::s_liveChain;
 PRMonitor *nsObject::s_liveChainMutex = PR_NewMonitor();
 
@@ -34,10 +30,8 @@ int32 nsObject::s_nObjects = 0;
 /**
  * constructor
  */
-nsObject::nsObject():nsISupports()
+nsObject::nsObject()
 {
-    // ref count init
-    mRefCnt = 1;
     //
     // Add the new object the chain of allocated nsObjects
     //
@@ -65,27 +59,6 @@ nsObject::~nsObject()
     m_link.Remove();
     PR_ExitMonitor(s_liveChainMutex);
 }
-
-
-
-/**
- *
- */
-nsresult nsObject::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-    if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (void*) ((nsISupports*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-
-    return NS_NOINTERFACE;
-}
-
 
 
 /**

@@ -37,18 +37,13 @@ public:
                             nsCheckButton();
     virtual                 ~nsCheckButton();
 
-    // nsISupports
-    NS_IMETHOD_(nsrefcnt) AddRef();
-    NS_IMETHOD_(nsrefcnt) Release();
-    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+    NS_DECL_ISUPPORTS
 
     // nsICheckButton part
     NS_IMETHOD SetLabel(const nsString &aText);
     NS_IMETHOD GetLabel(nsString &aBuffer);
     NS_IMETHOD SetState(const PRBool aState);
     NS_IMETHOD GetState(PRBool& aState);
-
-
 
     virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool          OnPaint();

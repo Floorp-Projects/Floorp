@@ -18,6 +18,7 @@
 #ifndef Window_h__
 #define Window_h__
 
+#include "nsBaseWidget.h"
 #include "nsdefs.h"
 #include "nsObject.h"
 #include "nsSwitchToUIThread.h"
@@ -43,18 +44,12 @@
 
 class nsWindow : public nsObject,
                  public nsSwitchToUIThread,
-                 public nsIWidget
+                 public nsBaseWidget
 {
 
 public:
     nsWindow();
     virtual ~nsWindow();
-
-    // nsISupports
-    NS_IMETHOD_(nsrefcnt) AddRef();
-    NS_IMETHOD_(nsrefcnt) Release();
-    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
 
     virtual void            PreCreateWidget(nsWidgetInitData *aWidgetInitData) {}
     // nsIWidget interface
@@ -72,13 +67,9 @@ public:
                                      nsIAppShell *aAppShell = nsnull,
                                      nsIToolkit *aToolkit = nsnull,
                                      nsWidgetInitData *aInitData = nsnull);
-    NS_IMETHOD              GetClientData(void*& aClientData);
-    NS_IMETHOD              SetClientData(void* aClientData);
+
     virtual void            Destroy();
     virtual nsIWidget*      GetParent(void);
-    virtual nsIEnumerator*  GetChildren();
-    virtual void            AddChild(nsIWidget* aChild);
-    virtual void            RemoveChild(nsIWidget* aChild);
     virtual void            Show(PRBool bState);
     virtual void            Move(PRUint32 aX, PRUint32 aY);
     virtual void            Resize(PRUint32 aWidth,
@@ -92,36 +83,25 @@ public:
     virtual void            Enable(PRBool bState);
     virtual void            SetFocus(void);
     virtual void            GetBounds(nsRect &aRect);
-    virtual nscolor         GetForegroundColor(void);
-    virtual void            SetForegroundColor(const nscolor &aColor);
-    virtual nscolor         GetBackgroundColor(void);
     virtual void            SetBackgroundColor(const nscolor &aColor);
     virtual nsIFontMetrics* GetFont(void);
     virtual void            SetFont(const nsFont &aFont);
-    virtual nsCursor        GetCursor();
     virtual void            SetCursor(nsCursor aCursor);
     virtual void            Invalidate(PRBool aIsSynchronous);
     virtual void*           GetNativeData(PRUint32 aDataType);
-    virtual nsIRenderingContext* GetRenderingContext();
     virtual void            SetColorMap(nsColorMap *aColorMap);
-    virtual nsIDeviceContext* GetDeviceContext();
-    virtual nsIAppShell *   GetAppShell();
     virtual void            Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-    virtual nsIToolkit*     GetToolkit();  
-    virtual void            SetBorderStyle(nsBorderStyle aBorderStyle); 
     virtual void            SetTitle(const nsString& aTitle); 
     virtual void            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   
     virtual void            RemoveTooltips();
     virtual void            UpdateTooltips(nsRect* aNewTips[]);
     virtual void            WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
     virtual void            ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
-    virtual void            AddMouseListener(nsIMouseListener * aListener);
-    virtual void            AddEventListener(nsIEventListener * aListener);
     virtual void            BeginResizingChildren(void);
     virtual void            EndResizingChildren(void);
 
     virtual void            SetUpForPaint(HDC aHDC);
-   	virtual void  ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
+   	virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
 
 
     // nsSwitchToUIThread interface
@@ -180,49 +160,13 @@ protected:
     HWND        mTooltip;
     HPALETTE    mPalette;
     WNDPROC     mPrevWndProc;
-    EVENT_CALLBACK mEventCallback;
-    nsIDeviceContext *mContext;
-    nsIAppShell *mAppShell;
-    nsToolkit   *mToolkit;
-
-    nsIMouseListener * mMouseListener;
-    nsIEventListener * mEventListener;
-
-    nscolor     mBackground;
+  
     HBRUSH      mBrush;
-    nscolor     mForeground;
-    nsCursor    mCursor;
-    nsBorderStyle mBorderStyle;
-
     PRBool      mIsShiftDown;
     PRBool      mIsControlDown;
     PRBool      mIsAltDown;
     PRBool      mIsDestroying;
     PRBool      mOnDestroyCalled;
-
-    PRInt32     mWidth;
-    PRInt32     mHeight;
-
-    void*       mClientData;
-
-    // keep the list of children
-    class Enumerator : public nsIEnumerator {
-    public:
-      NS_DECL_ISUPPORTS
-
-      Enumerator();
-      ~Enumerator();
-
-      NS_IMETHOD_(nsISupports*) Next();
-      NS_IMETHOD_(void) Reset();
-
-      void Append(nsIWidget* aWidget);
-      void Remove(nsIWidget* aWidget);
-
-    private:
-      nsVoidArray   mChildren;
-      PRInt32       mCurrentPosition;
-    } *mChildren;
 
     // Enumeration of the methods which are accessable on the "main GUI thread"
     // via the CallMethod(...) mechanism...
