@@ -151,11 +151,12 @@ nsOS2Locale::GetXPLocale(const char* os2Locale, nsAString& locale)
 
   }
 
-  return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
+
 }
 
-// returns PR_FALSE/PR_TRUE depending on if it was of the form
-// LL-CC.Extra or LL_CC_Extra (depending on requested separator)
+//
+// returns PR_FALSE/PR_TRUE depending on if it was of the form LL-CC.Extra
 PRBool
 nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* country, char* extra, char separator)
 {
@@ -169,6 +170,7 @@ nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* 
     language[0]=locale_string[0];
     language[1]=locale_string[1];
     language[2]='\0';
+    country[0]='\0';
   } 
   else if (5 == len) {
     language[0]=locale_string[0];
@@ -187,9 +189,7 @@ nsOS2Locale::ParseLocaleString(const char* locale_string, char* language, char* 
     country[1]=locale_string[4];
     country[2]='\0';
   }
-  else if (7 <= len &&
-           ('.' == locale_string[5] || separator == locale_string[5]))
-  {
+  else if (7 <= len && '.' == locale_string[5]) {
     strcpy(extra, &locale_string[6]);
     language[0]=locale_string[0];
     language[1]=locale_string[1];
