@@ -211,9 +211,7 @@ PRIVATE XP_Bool intlmime_only_ascii_str(const char *s)
 			return FALSE;
 	return TRUE;
 }
-#endif /* MOZ_MAIL_COMPOSE || MOZ_MAIL_NEWS */
 
-#ifdef MOZ_MAIL_NEWS
 PRIVATE void intlmime_update_csidmap(int16 csid_key, int16 csid_target)
 {
 	cs_csid_map_t * mapp;
@@ -226,9 +224,7 @@ PRIVATE void intlmime_update_csidmap(int16 csid_key, int16 csid_target)
 			mapp->csid_target = csid_target;
 		}
 }
-#endif /* MOZ_MAIL_NEWS */
 
-#if defined(MOZ_MAIL_COMPOSE) || defined(MOZ_MAIL_NEWS)
 PRIVATE void
 intlmime_init_csidmap()
 {
