@@ -1607,6 +1607,8 @@ nsStandardURL::GetCommonBaseSpec(nsIURI *uri2, nsACString &aResult)
     if (NS_SUCCEEDED(Equals(uri2, &isEquals)) && isEquals)
         return GetSpec(aResult);
 
+    aResult.Truncate();
+
     // check pre-path; if they don't match, then return empty string
     nsStandardURL *stdurl2;
     nsresult rv = uri2->QueryInterface(kThisImplCID, (void **) &stdurl2);
@@ -1618,7 +1620,6 @@ nsStandardURL::GetCommonBaseSpec(nsIURI *uri2, nsACString &aResult)
             && (Port() == stdurl2->Port());
     if (!isEquals)
     {
-        aResult = "";
         if (NS_SUCCEEDED(rv))
             NS_RELEASE(stdurl2);
         return NS_OK;
@@ -1653,13 +1654,12 @@ nsStandardURL::GetRelativeSpec(nsIURI *uri2, nsACString &aResult)
 {
     NS_ENSURE_ARG_POINTER(uri2);
 
+    aResult.Truncate();
+
     // if uri's are equal, then return empty string
     PRBool isEquals = PR_FALSE;
     if (NS_SUCCEEDED(Equals(uri2, &isEquals)) && isEquals)
-    {
-        aResult.Truncate();
         return NS_OK;
-    }
 
     nsStandardURL *stdurl2;
     nsresult rv = uri2->QueryInterface(kThisImplCID, (void **) &stdurl2);
@@ -1674,7 +1674,7 @@ nsStandardURL::GetRelativeSpec(nsIURI *uri2, nsACString &aResult)
         if (NS_SUCCEEDED(rv))
             NS_RELEASE(stdurl2);
 
-        return GetSpec(aResult);
+        return uri2->GetSpec(aResult);
     }
 
     // scan for first mismatched character
@@ -1682,6 +1682,35 @@ nsStandardURL::GetRelativeSpec(nsIURI *uri2, nsACString &aResult)
     startCharPos = mSpec.get() + mDirectory.mPos;
     thisIndex = startCharPos;
     thatIndex = stdurl2->mSpec.get() + mDirectory.mPos;
+
+#ifdef XP_WIN
+    PRBool isFileScheme = SegmentIs(mScheme, "file");
+    if (isFileScheme)
+    {
+        // on windows, we need to match the first segment of the path
+        // if these don't match then we need to return an absolute path
+        // skip over any leading '/' in path
+        while ((*thisIndex == *thatIndex) && (*thisIndex == '/'))
+        {
+            thisIndex++;
+            thatIndex++;
+        }
+        // look for end of first segment
+        while ((*thisIndex == *thatIndex) && *thisIndex && (*thisIndex != '/'))
+        {
+            thisIndex++;
+            thatIndex++;
+        }
+
+        // if we didn't match through the first segment, return absolute path
+        if ((*thisIndex != '/') || (*thatIndex != '/'))
+        {
+            NS_RELEASE(stdurl2);
+            return uri2->GetSpec(aResult);
+        }
+    }
+#endif
+
     while ((*thisIndex == *thatIndex) && *thisIndex)
     {
         thisIndex++;
@@ -1691,14 +1720,22 @@ nsStandardURL::GetRelativeSpec(nsIURI *uri2, nsACString &aResult)
     // backup to just after previous slash so we grab an appropriate path
     // segment such as a directory (not partial segments)
     // todo:  also check for file matches with '#', '?' and ';'
-    while ((*(thisIndex-1) != '/') && (thisIndex != startCharPos))
-        thisIndex--;
+    while ((*(thatIndex-1) != '/') && (thatIndex != startCharPos))
+        thatIndex--;
 
-    // need to count slashes here and possibly do some "../" stuff
+    // need to account for slashes and add corresponding "../"
+    while (*thisIndex)
+    {
+        if (*thisIndex == '/')
+            aResult.Append("../");
+
+        thisIndex++;
+    }
 
     // grab spec from thisIndex to end
-    PRUint32 startPos = mScheme.mPos + thisIndex - mSpec.get();
-    aResult = Substring(mSpec, startPos, mSpec.Length() - startPos);
+    PRUint32 startPos = stdurl2->mScheme.mPos + thatIndex - stdurl2->mSpec.get();
+    aResult.Append(Substring(stdurl2->mSpec, startPos, 
+                             stdurl2->mSpec.Length() - startPos));
 
     NS_RELEASE(stdurl2);
     return rv;
