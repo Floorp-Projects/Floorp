@@ -36,6 +36,11 @@ ifdef BUILD_OFFICIAL
 TARGETS		+= $(DEPTH)/build/build_number
 endif
 
+# If this is an "official mozilla build" make them shortlived.
+ifdef MOZILLA_OFFICIAL
+TARGETS		+= $(DEPTH)/modules/libpref/src/init/all.js
+endif 
+
 ifneq ($(subst /,_,$(shell uname -s)),WINNT)
 PROGRAM		= nsinstall$(BIN_SUFFIX)
 TARGETS		+= $(OBJDIR)/bsdecho$(BIN_SUFFIX)
@@ -91,6 +96,9 @@ $(DEPTH)/build/build_number: FORCE
 	$(RM) $@
 	perl5 bdate.pl > $@
 	perl5 aboutime.pl $(DEPTH)/l10n/us/xp/about-all.html $@
+
+$(DEPTH)/modules/libpref/src/init/all.js: FORCE
+	perl5 set-timebomb.pl
 
 $(OBJDIR)/bdate$(BIN_SUFFIX): $(OBJDIR)/bdate.o
 	@$(MAKE_OBJDIR)
