@@ -21,6 +21,9 @@
 #include "nsweb.h"
 #include "nsIDocumentWidget.h"
 #include "nsIScrollableView.h"
+
+// Forward declarations... 
+class nsIDocument;
 class nsIDOMDocument;
 class nsILinkHandler;
 class nsIPresContext;
@@ -43,15 +46,15 @@ class nsIWebWidget : public nsIDocumentWidget {
 public:
 
   // Create a native window for this web widget; may be called once
-  virtual nsresult Init(nsNativeWidget aNativeParent,
-                        const nsRect& aBounds,
-                        nsScrollPreference aScrolling = nsScrollPreference_kAuto) = 0;
+  NS_IMETHOD Init(nsNativeWidget aNativeParent,
+                  const nsRect& aBounds,
+                  nsScrollPreference aScrolling = nsScrollPreference_kAuto) = 0;
 
   // Create a native window for this web widget; may be called once.
   // Use the given presentation context and document for the widget
   // (this widget becomes a second view on the document using the
   // context for presentation).
-  virtual nsresult Init(nsNativeWidget aNativeParent,
+  NS_IMETHOD Init(nsNativeWidget aNativeParent,
                         const nsRect& aBounds,
                         nsIDocument* aDocument,
                         nsIPresContext* aPresContext,
