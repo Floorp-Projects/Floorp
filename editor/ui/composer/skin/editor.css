@@ -42,8 +42,8 @@ box#DisplayModeBar {
   border-bottom: 1px solid darkgray;
   margin-bottom: 0px;
   min-width:1em;
-  color: black;
-	background-color: #CCCCCC;
+  color: white;
+	background-color: #999999;
 }
 
 toolbar#EditToolbar titledbutton#SaveButton {
@@ -133,7 +133,8 @@ box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"] {
   padding: 1px 4px 0px 4px;
   margin: -2px 0px 0px 0px;
   color: black;
-	background-color: #99CCCC;
+  text-decoration: bold;
+	background-color: #CCCCCC;
 }
 
 box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"]:hover {
