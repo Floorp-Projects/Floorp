@@ -337,7 +337,6 @@ public:
 
   // nsIDocShell
   NS_IMETHOD SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode);
-  void SetCurrentURI(nsIURI* aURI);
 
   // nsWebShell
   nsIEventQueue* GetEventQueue(void);
@@ -360,7 +359,6 @@ public:
   NS_IMETHOD GetSessionHistory(nsISessionHistory *& aResult);
   NS_IMETHOD SetIsInSHist(PRBool aIsFrame);
   NS_IMETHOD GetIsInSHist(PRBool& aIsFrame);
-  NS_IMETHOD GetURL(const PRUnichar** aURL);
   NS_IMETHOD SetURL(const PRUnichar* aURL);
 
 protected:
@@ -389,8 +387,6 @@ protected:
   nsISessionHistory * mSHist;
 
   nsRect   mBounds;
-  nsString mURL;
-
   nsString mOverURL;
   nsString mOverTarget;
 
@@ -920,15 +916,6 @@ nsWebShell::SetReferrer(const PRUnichar* aReferrer)
 }
 
 NS_IMETHODIMP
-nsWebShell::GetURL(const PRUnichar** aURL)
-{
- // XXX This is wrong unless the parameter is marked "shared". 
- // It should otherwise be copied and freed by the caller. 
-  *aURL = mURL.GetUnicode();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWebShell::SetURL(const PRUnichar* aURL)
 {
   nsCOMPtr<nsIURI> uri;
@@ -937,17 +924,6 @@ nsWebShell::SetURL(const PRUnichar* aURL)
   SetCurrentURI(uri);
   return NS_OK;
 }
-
-void 
-nsWebShell::SetCurrentURI(nsIURI* aURI)
-{
-   nsXPIDLCString spec;
-   if (NS_SUCCEEDED(aURI->GetSpec(getter_Copies(spec)))) {
-     mURL = spec;
-     nsDocShell::SetCurrentURI(aURI);
-   }
-}
-
 
 NS_IMETHODIMP
 nsWebShell::GetIsInSHist(PRBool& aResult)
@@ -1119,7 +1095,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                if (NS_SUCCEEDED(rv))
                   {
                   SetCurrentURI(aUri);
-                  mURL = urlSpec;
                   SetReferrer(aReferrer);
                   }
                // Pass on status of scrolling/anchor visit to docloaderobserver
@@ -1146,7 +1121,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                   if(NS_SUCCEEDED(rv))
                      {
                      SetCurrentURI(aUri);
-                     mURL = urlSpec;
                      SetReferrer(aReferrer);
                      }
                   mProcessedEndDocumentLoad = PR_FALSE;
@@ -1279,7 +1253,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   // the document load succeeds.
   if (NS_SUCCEEDED(rv)) {
     SetCurrentURI(aUri);
-    mURL = urlSpec;
     SetReferrer(aReferrer);
   }
 
@@ -1732,15 +1705,14 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
   nsCOMPtr<nsIWebShell> parent;
   nsresult res = GetParent(*getter_AddRefs(parent));
-  nsAutoString urlstr;
+  nsCOMPtr<nsIURI> newURI;
 
   if ((isLoadingHistory)) {
   /* if LoadURL() got called from SH, AND If we are going "Back/Forward" 
-   * to a frame page,SH  will change the mURL to the right value
-     * for smoother redraw. So, create a new nsIURI based on mURL,
-     * so that it will work right in such situations.
+   * to a frame page,SH  will change the current uri to the right value
+     * for smoother redraw. 
    */
-     urlstr = mURL;
+     res = GetCurrentURI(getter_AddRefs(newURI));
   }
   else{
   /* If the call is not from SH, use the url passed by the caller
@@ -1748,11 +1720,10 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
    * May regress in other situations.
    * What a hack
    */
-     urlstr=spec;
+     nsAutoString urlstr = spec;
+     res = NS_NewURI(getter_AddRefs(newURI), urlstr, nsnull);
   }
   
-  nsCOMPtr<nsIURI>   newURI;
-  res = NS_NewURI(getter_AddRefs(newURI), urlstr, nsnull);
 
   if (NS_SUCCEEDED(res)) {
     // now that we have a uri, call the REAL LoadURI method which requires a nsIURI.
@@ -2185,9 +2156,12 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         // for now, just hack the verb to be view-link-clicked
         // and down in the load document code we'll detect this and
         // set the correct uri loader command
+        nsXPIDLCString spec;
+        mCurrentURI->GetSpec(getter_Copies(spec));
+        nsAutoString specString(spec);
         LoadURL(aURLSpec, "view-link-click", aPostDataStream,
                             PR_TRUE, nsIChannel::LOAD_NORMAL, 
-                            0, nsnull, mURL.GetUnicode(), nsCAutoString(aTargetSpec));
+                            0, nsnull, specString.GetUnicode(), nsCAutoString(aTargetSpec));
       }
       break;
     case eLinkVerb_Embed:
@@ -2592,9 +2566,8 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
 
   // Stop loading of the earlier document completely when the document url
   // load starts.  Now we know that this url is valid and available.
-  nsXPIDLCString url;
-  aURL->GetSpec(getter_Copies(url));
-  if (0 == PL_strcmp(url, mURL.GetBuffer()))
+  PRBool equals = PR_FALSE;
+  if (NS_SUCCEEDED(aURL->Equals(mCurrentURI, &equals)) && equals)
     Stop();
 
   /*
@@ -3115,6 +3088,7 @@ NS_IMETHODIMP nsWebShell::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
    mBounds.SetRect(x, y, cx, cy);
    return nsDocShell::SetPositionAndSize(x, y, cx, cy, fRepaint);   
 }
+
 NS_IMETHODIMP nsWebShell::GetPositionAndSize(PRInt32* x, PRInt32* y, 
    PRInt32* cx, PRInt32* cy)
 {

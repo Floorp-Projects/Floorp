@@ -25,6 +25,7 @@
 #include "nsAppShellCIDs.h"
 #include "nsVoidArray.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
@@ -34,6 +35,8 @@
 #include "nsCRT.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
+#include "nsNetUtil.h"
 
 // Interface ID for nsIHistoryEntry
 #define NS_IHISTORY_ENTRY_IID \
@@ -451,11 +454,12 @@ GenerateTree(const char * aStickyUrl, nsIWebShell * aStickyContainer, nsIWebShel
    }
    else {
       // Get the  webshell's url.
-      aContainer->GetURL(&url);
-      urlAStr = (url);
-	  aCStr = urlAStr.ToNewCString();      
-	  hEntry->Create(aCStr, aContainer, aReferrer, aParent, aSHist);
-	  Recycle((char *) aCStr);
+      nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aContainer);
+      nsCOMPtr<nsIURI> uri;
+      docShell->GetCurrentURI(getter_AddRefs(uri));
+      nsXPIDLCString spec;
+      uri->GetSpec(getter_Copies(spec));
+	  hEntry->Create(spec, aContainer, aReferrer, aParent, aSHist);
    }
    
   // If the webshell has children, go thro' the child list and create 
@@ -534,9 +538,17 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
    if (!cur || !prev) {
      return NS_ERROR_NULL_POINTER;
    }
-   if (prev) {
-     prev->GetURL(&pURL);
-     pSURL = pURL;
+
+   nsCOMPtr<nsIDocShell> prevShell;
+   if (prev)
+     prevShell = do_QueryInterface(prev);
+   if (prevShell) {
+     nsCOMPtr<nsIURI> pURI;
+     if (NS_SUCCEEDED(prevShell->GetCurrentURI(getter_AddRefs(pURI)))) {
+       nsXPIDLCString spec;
+       if (NS_SUCCEEDED(pURI->GetSpec(getter_Copies(spec))))
+         pSURL = spec;
+     }
    }
 
    if (cur) {
@@ -556,10 +568,12 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
    }  // compareURLs
 
    if (urlChanged || aIsReload) {
-      if (prev) {
+      if (prevShell) {
          PRBool isInSHist=PR_FALSE, isLoadingDoc=PR_FALSE;
          prev->GetIsInSHist(isInSHist);
          mHistoryList->GetLoadingFlag(&isLoadingDoc);
+         nsCOMPtr<nsIURI> newURI;
+         NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(newURI), cSURL), NS_ERROR_FAILURE);
      
          if ((isInSHist && isLoadingDoc) || aIsReload) {
             if (APP_DEBUG) printf("SessionHistory::Load Loading URL %s in webshell %x\n", cSURL.ToNewCString(), (unsigned int) prev);
@@ -578,7 +592,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
 
 
 			PRUnichar * uniURL = cSURL.ToNewUnicode();
-			prev->SetURL(uniURL);
+            prev->SetURL(uniURL);
             nsAutoString referrer(mReferrer);
 	    	prev->LoadURL(uniURL, nsnull, PR_FALSE,  loadType, 0, historyObject, 
                           mReferrer ? referrer.GetUnicode() : nsnull);
@@ -598,8 +612,8 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
 			return PR_TRUE;
          }
          else if (!isInSHist && isLoadingDoc) {
-	       PRUnichar * uniURL = cSURL.ToNewUnicode();
-           prev->SetURL(uniURL);
+		   PRUnichar * uniURL = cSURL.ToNewUnicode();
+		   prev->SetURL(uniURL);
 		   Recycle(uniURL);
 
 
@@ -676,8 +690,13 @@ nsHistoryEntry::Compare(nsIWebShell * aPrevEntry, PRBool aIsReload) {
      return NS_ERROR_NULL_POINTER;
    }
    if (prev) {
-     prev->GetURL(&pURL);
-     pSURL = (pURL);
+     nsCOMPtr<nsIDocShell> prevShell = do_QueryInterface(prev);
+     nsCOMPtr<nsIURI> pURI;
+     if (NS_SUCCEEDED(prevShell->GetCurrentURI(getter_AddRefs(pURI)))) {
+       nsXPIDLCString spec;
+       if (NS_SUCCEEDED(pURI->GetSpec(getter_Copies(spec))))
+         pSURL = spec;
+     }
    }
    if (cur) {
      cur->GetURL(&cURL);

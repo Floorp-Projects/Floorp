@@ -3761,7 +3761,10 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
             // XXX necko isn't going to process headers coming in from the parser
             //NS_WARNING("need to fix how necko adds mime headers (in HTMLContentSink::ProcessMETATag)");
           
-            // see if we have a refresh "header".
+            nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell, &rv);
+            if (NS_FAILED(rv)) return rv;
+
+                // see if we have a refresh "header".
             if (!header.Compare("refresh", PR_TRUE)) {
                 // Refresh headers are parsed with the following format in mind
                 // <META HTTP-EQUIV=REFRESH CONTENT="5; URL=http://uri">
@@ -3796,12 +3799,8 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                 // quotes.
  
                 // first get our baseURI
-                const PRUnichar *loadedURI = nsnull;
-                rv = mWebShell->GetURL(&loadedURI);
-                if (NS_FAILED(rv)) return rv;
-
                 nsCOMPtr<nsIURI> baseURI;
-                rv = NS_NewURI(getter_AddRefs(baseURI), loadedURI, nsnull);
+                rv = docShell->GetCurrentURI(getter_AddRefs(baseURI));
                 if (NS_FAILED(rv)) return rv;
 
                 PRInt32 millis = -1;
@@ -3890,13 +3889,8 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                 nsCOMPtr<nsICookieService> cookieServ = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
                 if (NS_FAILED(rv)) return rv;
 
-                // first get our baseURI
-                const PRUnichar *uriCStr = nsnull;
-                rv = mWebShell->GetURL(&uriCStr);
-                if (NS_FAILED(rv)) return rv;
-
                 nsCOMPtr<nsIURI> baseURI;
-                rv = NS_NewURI(getter_AddRefs(baseURI), uriCStr, nsnull);
+                rv = docShell->GetCurrentURI(getter_AddRefs(baseURI));
                 if (NS_FAILED(rv)) return rv;
 
                 rv = cookieServ->SetCookieString(baseURI, result);

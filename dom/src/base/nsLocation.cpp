@@ -330,14 +330,17 @@ LocationImpl::SetHostname(const nsString& aHostname)
 NS_IMETHODIMP    
 LocationImpl::GetHref(nsString& aHref)
 {
-//  PRInt32 index;
   nsresult result = NS_OK;
 
   if (mDocShell) {
-    const PRUnichar *href;
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-    result = webShell->GetURL (&href);
-    aHref = href;
+    nsCOMPtr<nsIURI> uri;
+    result = mDocShell->GetCurrentURI(getter_AddRefs(uri));
+    if (NS_SUCCEEDED(result)) {
+        nsXPIDLCString uriString;
+        result = uri->GetSpec(getter_Copies(uriString));
+        if (NS_SUCCEEDED(result))
+            aHref = uriString;
+    }
   }
 
   return result;

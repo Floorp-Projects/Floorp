@@ -1170,18 +1170,20 @@ nsBrowserAppCore::LoadInitialPage(void)
     {
       // Examine content URL.
       if ( mContentAreaWebShell ) {
-        const PRUnichar *url = 0;
-        rv = mContentAreaWebShell->GetURL(&url );
-        /* Check whether url is valid. Otherwise we compare 0x00 with 
+        nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mContentAreaWebShell);
+        nsCOMPtr<nsIURI> uri;
+        rv = docShell->GetCurrentURI(getter_AddRefs(uri));
+        nsXPIDLCString spec;
+        if (NS_SUCCEEDED(rv))
+          rv = uri->GetSpec(getter_Copies(spec));
+        /* Check whether url is valid. Otherwise we compare with 
            * "about:blank" and there by return from here with out 
            * loading the command line url or default home page.
            */
-        if ( NS_SUCCEEDED( rv ) && url ) {
-          if ( nsString(url) != "about:blank" ) {
+        if (NS_SUCCEEDED(rv) && nsCRT::strcasecmp(spec, "about:blank") == 0) {
             // Something has already been loaded (probably via window.open),
             // leave it be.
             return NS_OK;
-          }
         }
       }
 
