@@ -2482,7 +2482,17 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         NS_ENSURE_ARG_POINTER(aURI);
         nsCAutoString spec;
         aURI->GetPath(spec);
-        formatStrs[0].AssignWithConversion(spec.get());
+        nsCAutoString charset;
+        // unescape and convert from origin charset
+        aURI->GetOriginCharset(charset);
+        nsCOMPtr<nsITextToSubURI> textToSubURI(
+                do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv));
+        if (NS_SUCCEEDED(rv))
+          rv = textToSubURI->UnEscapeURIForUI(charset, spec, formatStrs[0]);
+        if (NS_FAILED(rv)) {
+          CopyASCIItoUCS2(spec, formatStrs[0]);
+          rv = NS_OK;
+        }
         formatStrCount = 1;
         error.Assign(NS_LITERAL_STRING("fileNotFound"));
     }
@@ -2491,7 +2501,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         // Get the host
         nsCAutoString host;
         aURI->GetHost(host);
-        formatStrs[0].AssignWithConversion(host.get());
+        formatStrs[0].Assign(NS_ConvertUTF8toUCS2(host));
         formatStrCount = 1;
         error.Assign(NS_LITERAL_STRING("dnsNotFound"));
     }
@@ -2509,7 +2519,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         // Get the host
         nsCAutoString host;
         aURI->GetHost(host);
-        formatStrs[0].AssignWithConversion(host.get());
+        formatStrs[0].Assign(NS_ConvertUTF8toUCS2(host));
         formatStrCount = 1;
         error.Assign(NS_LITERAL_STRING("netTimeout"));
     }
