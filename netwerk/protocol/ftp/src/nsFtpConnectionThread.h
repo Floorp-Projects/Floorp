@@ -63,6 +63,7 @@ typedef enum _FTP_STATE {
 //// Internal states
 ///////////////////////
     FTP_READ_BUF,
+    FTP_READ_DATA_BUF,
     FTP_ERROR,
     FTP_COMPLETE,
 
@@ -253,6 +254,9 @@ private:
     nsXPIDLCString      mURLSpec;
     nsCOMPtr<nsIEventSinkGetter>    mEventSinkGetter;
     nsCOMPtr<nsIFTPChannel>            mFTPChannel;
+
+    nsCOMPtr<nsIBufferInputStream>  mBufInStream;
+    nsCOMPtr<nsIBufferOutputStream> mBufOutStream;
 };
 
 #define NS_FTP_BUFFER_READ_SIZE             (8*1024)
