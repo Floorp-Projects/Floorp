@@ -239,7 +239,8 @@
 <!ENTITY decreaseFontSize.keybinding "-">
 <!ENTITY increaseFontSize.label "Larger">
 <!ENTITY increasefontsize.accesskey "g">
-<!ENTITY increaseFontSize.keybinding "=">
+<!ENTITY increaseFontSize.keybinding "+">
+<!ENTITY increaseFontSize.keybinding2 "="> <!-- + is above this key on many keyboards -->
 
 <!ENTITY fontsizeMenu.label "Size">
 <!ENTITY formatsizemenu.accesskey "z">

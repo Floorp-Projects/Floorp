@@ -73,6 +73,8 @@
     <key id="removenamedanchorskb" key="&formatremovenamedanchors.keybinding;"    observes="cmd_removeNamedAnchors"  modifiers="accel, shift"/>
     <key id="decreasefontsizekb"   key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont"  modifiers="accel"/>
     <key id="increasefontsizekb"   key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont"  modifiers="accel"/>
+    <key                           key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont"  modifiers="accel,shift"/>
+    <key                           key="&increaseFontSize.keybinding2;"    observes="cmd_increaseFont"  modifiers="accel"/>
 
     <key id="insertlinkkb"         key="&insertlink.keybinding;"           observes="cmd_link"          modifiers="accel"/>
   </keyset>
