@@ -152,13 +152,10 @@ XfeShellGetDecorationOffset(Widget			shell,
 		if (children)
 		{
 			XFree(children);
+
+			children = NULL;
 		}
 
-		if (children)
-		{
-			XFree(children);
-		}
-		
 		if (parent != None)
 		{
 			int				px;
