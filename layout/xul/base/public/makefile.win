@@ -38,6 +38,7 @@ XPIDLSRCS=      .\nsIBoxObject.idl                  \
                 .\nsIBrowserBoxObject.idl \
                 .\nsIIFrameBoxObject.idl \
                 .\nsIEditorBoxObject.idl \
+                .\nsIListBoxObject.idl \
                 $(NULL)
 
 MODULE=layout_xul

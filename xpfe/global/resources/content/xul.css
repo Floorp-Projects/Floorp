@@ -330,6 +330,95 @@ column {
   -moz-box-orient: vertical;
 }
 
+/******** listbox **********/
+
+listbox {
+  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listbox");
+}
+
+listcols, listcol {
+  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listbox-base");
+}
+
+listhead {
+  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listhead");
+}
+
+listrows {
+  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listrows");
+}
+
+listitem {
+  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listitem");
+}
+
+listheader {
+  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listheader");
+}
+
+listcell {
+  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listcell");
+}
+
+.listitem-iconic {
+  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listitem-iconic");
+}
+
+.listcell-iconic {
+  -moz-binding: url("chrome://global/content/bindings/listbox.xml#listcell-iconic");
+}
+
+listbox {
+  display: -moz-grid;
+}
+
+listbox[rows] {
+  height: auto;
+}
+
+listcols, listhead, listrows, listboxbody {
+  display: -moz-grid-group;
+}
+
+listcol, listitem, listheaditem {
+  display: -moz-grid-line;
+}
+
+listbox {
+  -moz-user-focus: normal;
+  -moz-box-orient: vertical;
+  min-width: 0px;
+  min-height: 0px;
+  width: 200px;
+  height: 200px;
+}
+
+listhead {
+  -moz-box-orient: vertical;
+}
+
+listrows {
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
+}
+
+listboxbody {
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
+  overflow: auto;
+  min-height: 0px;
+}
+
+listcol {
+  -moz-box-orient: vertical;
+  min-width: 16px;
+  width: 16px;
+}
+
+listcell {
+  -moz-box-align: center;
+}
+
 /******** tree **********/
 
 tree {
