@@ -112,7 +112,6 @@ protected:
   virtual ~nsScrollPortView();
 
   //private
-  void AdjustChildWidgets(nsScrollPortView *aScrolling, nsView *aView, nscoord aDx, nscoord aDy, float aScale);
   void Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags);
   PRBool CannotBitBlt(nsView* aScrolledView);
 
