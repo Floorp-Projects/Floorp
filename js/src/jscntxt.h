@@ -209,12 +209,6 @@ struct JSRuntime {
     JSScopeProperty     *propertyFreeList;
     JSArenaPool         propertyArenaPool;
 
-    /* Script filename table. */
-    struct JSHashTable  *scriptFilenameTable;
-#ifdef JS_THREADSAFE
-    PRLock              *scriptFilenameTableLock;
-#endif
-
 #ifdef DEBUG
     /* Function invocation metering. */
     jsrefcount          inlineCalls;

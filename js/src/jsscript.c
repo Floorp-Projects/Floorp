@@ -872,6 +872,11 @@ js_InitScriptClass(JSContext *cx, JSObject *obj)
 /*
  * Shared script filename management.
  */
+static JSHashTable  *script_filename_table;
+#ifdef JS_THREADSAFE
+static JSLock       *script_filename_table_lock;
+#endif
+
 JS_STATIC_DLL_CALLBACK(int)
 js_compare_strings(const void *k1, const void *k2)
 {
@@ -916,47 +921,41 @@ static JSHashAllocOps table_alloc_ops = {
 };
 
 JSBool
-js_InitRuntimeScriptState(JSContext *cx)
+js_InitScriptGlobals()
 {
-    JSRuntime *rt = cx->runtime;
-
 #ifdef JS_THREADSAFE
     /* Must come through here once in primordial thread to init safely! */
-    if (!rt->scriptFilenameTableLock) {
-        rt->scriptFilenameTableLock = JS_NEW_LOCK();
-        if (!rt->scriptFilenameTableLock)
+    if (!script_filename_table_lock) {
+        script_filename_table_lock = JS_NEW_LOCK();
+        if (!script_filename_table_lock)
             return JS_FALSE;
     }
 #endif
-    if (!rt->scriptFilenameTable) {
-        JS_ACQUIRE_LOCK(rt->scriptFilenameTableLock);
-        if (!rt->scriptFilenameTable) {
-            rt->scriptFilenameTable =
+    if (!script_filename_table) {
+        JS_ACQUIRE_LOCK(script_filename_table_lock);
+        if (!script_filename_table) {
+            script_filename_table =
                 JS_NewHashTable(16, JS_HashString, js_compare_strings, NULL,
                                 &table_alloc_ops, NULL);
         }
-        JS_RELEASE_LOCK(rt->scriptFilenameTableLock);
-        if (!rt->scriptFilenameTable) {
-            js_FinishRuntimeScriptState(cx);    /* free lock if threadsafe */
+        JS_RELEASE_LOCK(script_filename_table_lock);
+        if (!script_filename_table)
             return JS_FALSE;
-        }
     }
     return JS_TRUE;
 }
 
 void
-js_FinishRuntimeScriptState(JSContext *cx)
+js_FreeScriptGlobals()
 {
-    JSRuntime *rt = cx->runtime;
-
-    if (rt->scriptFilenameTable) {
-        JS_HashTableDestroy(rt->scriptFilenameTable);
-        rt->scriptFilenameTable = NULL;
+    if (script_filename_table) {
+        JS_HashTableDestroy(script_filename_table);
+        script_filename_table = NULL;
     }
 #ifdef JS_THREADSAFE
-    if (rt->scriptFilenameTableLock) {
-        JS_DESTROY_LOCK(rt->scriptFilenameTableLock);
-        rt->scriptFilenameTableLock = NULL;
+    if (script_filename_table_lock) {
+        JS_DESTROY_LOCK(script_filename_table_lock);
+        script_filename_table_lock = NULL;
     }
 #endif
 }
@@ -968,14 +967,13 @@ size_t sft_savings = 0;
 const char *
 js_SaveScriptFilename(JSContext *cx, const char *filename)
 {
-    JSRuntime *rt = cx->runtime;
     JSHashTable *table;
     JSHashNumber hash;
     JSHashEntry **hep;
     ScriptFilenameEntry *sfe;
 
-    JS_ACQUIRE_LOCK(rt->scriptFilenameTableLock);
-    table = rt->scriptFilenameTable;
+    JS_ACQUIRE_LOCK(script_filename_table_lock);
+    table = script_filename_table;
     hash = JS_HashString(filename);
     hep = JS_HashTableRawLookup(table, hash, filename);
     sfe = (ScriptFilenameEntry *) *hep;
@@ -991,7 +989,7 @@ js_SaveScriptFilename(JSContext *cx, const char *filename)
             JS_ASSERT(!sfe->mark);
         }
     }
-    JS_RELEASE_LOCK(rt->scriptFilenameTableLock);
+    JS_RELEASE_LOCK(script_filename_table_lock);
     if (!sfe) {
         JS_ReportOutOfMemory(cx);
         return NULL;
@@ -1031,7 +1029,7 @@ js_script_filename_sweeper(JSHashEntry *he, intN i, void *arg)
 void
 js_SweepScriptFilenames(JSRuntime *rt)
 {
-    JS_HashTableEnumerateEntries(rt->scriptFilenameTable,
+    JS_HashTableEnumerateEntries(script_filename_table,
                                  js_script_filename_sweeper,
                                  rt);
 #ifdef DEBUG_brendan
