@@ -140,7 +140,7 @@ private:
                                         nsIRDFResource* aSelectionArc, 
                                         PRBool aUseProfile, PRBool aIsAdding);
 
-  NS_IMETHODIMP CheckProviderVersion (const nsCString& aProviderType,
+  NS_IMETHOD CheckProviderVersion (const nsCString& aProviderType,
                                       const PRUnichar* aProviderName,
                                       nsIRDFResource* aSelectionArc,
                                       PRBool *aCompatible);
