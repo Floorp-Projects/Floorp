@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *      Jeff Walden <Jswalden86@netzero.net>
+ *      Steffen Wilberg <steffen.wilberg@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,7 +40,6 @@
 
 body {
 	margin: 2ex;
-	color: black;
 	font-family: sans-serif;
 	font-size: 0.75em;
 	max-width: 120ex;
@@ -47,7 +47,10 @@ body {
 
 :link:hover { color: red; }
 
-a[href^="http://"]:after { content: url('chrome://help/skin/Weblink.png'); }
+a[href^="http://"]:after,
+a[href^="https://"]:after {
+  content: url('chrome://help/skin/Weblink.png');
+}
 
 h1 { font-size: 2em; }
 h2 { border-top: 1px solid black; font-size: 1.75em; }
@@ -73,10 +76,6 @@ li {
 	border: 1px solid black;
 	width: 300px;
 	padding: 1em;
-}
-
-.makeLeftMargin {
-	margin-left: 25px;
 }
 
 .menuPath {
