@@ -38,7 +38,7 @@
   width="426" height="300"
   ondialogaccept="return selectOnOK();"
   ondialogcancel="return onCancel();"
-  persist="screenX screenY">
+  persist="screenX screenY width height">
 
 <stringbundle id="bundle_filepicker" src="chrome://global/locale/filepicker.properties"/>
 <script type="application/x-javascript" src="chrome://global/content/filepicker.js"/>
