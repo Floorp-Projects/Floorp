@@ -84,7 +84,7 @@ PERL			= /usr/bin/perl
 RANLIB			= ranlib
 
 # Comment out MKSHLIB to build only static libraries.
-MKSHLIB                 = $(CC) -arch $(CPU_ARCH) -dynamiclib -compatibility_version 1 -current_version 1 -all_load -undefined suppress
+MKSHLIB                 = $(CC) -arch $(CPU_ARCH) -dynamiclib -nostdlib -lstdc++ -lcc_dynamic -compatibility_version 1 -current_version 1 -all_load -undefined suppress
 DLL_SUFFIX              = dylib
 
 ######################################################################
