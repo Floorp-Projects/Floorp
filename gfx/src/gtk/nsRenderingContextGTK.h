@@ -163,7 +163,7 @@ public:
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
-  GdkGC *GetGC();
+  GdkGC *GetGC() { return mGC; }
 
 #ifdef MOZ_MATHML
   /**
@@ -215,7 +215,23 @@ private:
   void UpdateGC();
   // ConditionRect is used to fix coordinate overflow problems for
   // rectangles after they are transformed to screen coordinates
-  NS_IMETHOD ConditionRect( nscoord &x, nscoord &y, nscoord &w, nscoord &h );
+  void ConditionRect(nscoord &x, nscoord &y, nscoord &w, nscoord &h) {
+    if ( y < -32766 ) {
+      y = -32766;
+    }
+
+    if ( y + h > 32766 ) {
+      h  = 32766 - y;
+    }
+
+    if ( x < -32766 ) {
+      x = -32766;
+    }
+
+    if ( x + w > 32766 ) {
+      w  = 32766 - x;
+    }
+  }
 };
 
 #endif /* nsRenderingContextGTK_h___ */

@@ -24,6 +24,9 @@
 #include <gdk/gdk.h>
 #include <string.h>
 
+#ifndef nsGCCache_h___
+#define nsGCCache_h___
+
 #define countof(x) (sizeof(x) / sizeof (*x))
 
 struct GCData
@@ -40,13 +43,18 @@ class nsGCCache
   nsGCCache();
   virtual ~nsGCCache();
 
-
   void Flush(unsigned long flags);
 
   GdkGC *GetGCFromDW(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags, GdkRegion *clipRegion);
   
-  GdkGC *GetClipGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags, GdkRegion *clipRegion);
+  GdkGC *GetClipGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags, GdkRegion *clipRegion) {
+    return GetGCFromDW(window, gcv, flags, clipRegion);
+  }
   
-  GdkGC *GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags);
+  GdkGC *GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags) {
+    return GetGCFromDW(window, gcv, flags, NULL);
+  }
 
 };
+
+#endif
