@@ -194,7 +194,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsRecyclingAllocatorImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimelineService)
 #endif
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHashPropertyBag)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHashPropertyBag, Init)
 
 static NS_METHOD
 nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
