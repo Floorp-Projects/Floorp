@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-DIRS 		= os2
+DIRS 		= win
 else
 DIRS 		= unix
 endif
