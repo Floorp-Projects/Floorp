@@ -29,11 +29,7 @@
 #include "nsWindow.h"
 #include "nsButton.h"
 #include "nsCheckButton.h"
-#include "nsComboBox.h"
-#include "nsRadioButton.h"
 #include "nsFileWidget.h"
-#include "nsListBox.h"
-#include "nsTextAreaWidget.h"
 #include "nsTextWidget.h"
 #include "nsAppShell.h"
 #include "nsToolkit.h"
@@ -52,11 +48,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsButton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCheckButton)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsComboBox)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsRadioButton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileWidget)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsListBox)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextAreaWidget)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextWidget)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
@@ -146,22 +138,10 @@ static nsModuleComponentInfo components[] =
     NS_CHECKBUTTON_CID,
     "mozilla.widgets.checkbutton.gtk.1",
     nsCheckButtonConstructor },
-  { "Gtk Combobox",
-    NS_COMBOBOX_CID,
-    "mozilla.widgets.combobox.gtk.1",
-    nsComboBoxConstructor },
-  { "Gtk Radio Button",
-    NS_RADIOBUTTON_CID,
-    "mozilla.widgets.radiobutton.gtk.1",
-    nsRadioButtonConstructor },
   { "Gtk File Widget",
     NS_FILEWIDGET_CID,
     "mozilla.widgets.filewidget.gtk.1",
     nsFileWidgetConstructor },
-  { "Gtk List Box",
-    NS_LISTBOX_CID,
-    "mozilla.widgets.listbox.gtk.1",
-    nsListBoxConstructor },
   { "Gtk Horiz Scrollbar",
     NS_HORZSCROLLBAR_CID,
     "mozilla.widgets.horizscroll.gtk.1",
@@ -170,10 +150,6 @@ static nsModuleComponentInfo components[] =
     NS_VERTSCROLLBAR_CID,
     "mozilla.widgets.vertscroll.gtk.1",
     nsVertScrollbarConstructor },
-  { "Gtk Text Area",
-    NS_TEXTAREA_CID,
-    "mozilla.widgets.textarea.gtk.1",
-    nsTextAreaWidgetConstructor },
   { "Gtk Text Widget",
     NS_TEXTFIELD_CID,
     "mozilla.widgets.textwidget.gtk.1",
