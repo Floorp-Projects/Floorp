@@ -379,6 +379,29 @@
 
 
 ;;; ------------------------------------------------------------------------------------------------------
+;;; TIME
+
+
+(defun time-to-string (time)
+  (multiple-value-bind (second minute hour day month year weekday) (decode-universal-time time)
+    (declare (ignore second minute hour))
+    (format nil "~A, ~A ~D, ~D"
+            (nth weekday '("Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday"))
+            (nth (1- month) '("January" "February" "March" "April" "May" "June" "July" "August" "September" "October" "November" "December"))
+            day
+            year)))
+
+
+(defun time-to-short-string (time)
+  (multiple-value-bind (second minute hour day month year weekday) (decode-universal-time time)
+    (declare (ignore second minute hour weekday))
+    (format nil "~D-~A-~D"
+            day
+            (nth (1- month) '("Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"))
+            year)))
+
+
+;;; ------------------------------------------------------------------------------------------------------
 ;;; BITMAPS
 
 ; Treating integer m as a bitmap, call f on the number of each bit set in m.
