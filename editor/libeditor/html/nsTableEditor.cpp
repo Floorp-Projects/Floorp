@@ -395,9 +395,12 @@ nsHTMLEditor::GetNextRow(nsIDOMNode* aCurrentRowNode, nsIDOMNode **aRowNode)
     printf("GetNextRow: firstChild of row's parent's sibling is not a TR!\n");
 #endif
     // We arrive here only if a table section has no children 
-    //  or first child of section is not a row (bad HTML!)
-    res = parentSibling->GetNextSibling(getter_AddRefs(parentSibling));
+    //  or first child of section is not a row (bad HTML or more "_moz_text" nodes!)
+    // So look for another section sibling
+    res = parentSibling->GetNextSibling(getter_AddRefs(nextNode));
     if (NS_FAILED(res)) return res;
+
+    parentSibling = nextNode;
   }
   // If here, row was not found
   return NS_EDITOR_ELEMENT_NOT_FOUND;
