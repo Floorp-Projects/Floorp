@@ -103,7 +103,7 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI)
           PR_FREEIF(msd->url_name);
           msd->url_name = PL_strdup(urlString);
           if (!(msd->url_name))
-            return MIME_OUT_OF_MEMORY;
+            return NS_ERROR_OUT_OF_MEMORY;
 
           PR_FREEIF(urlString);
         }

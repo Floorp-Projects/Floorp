@@ -137,7 +137,7 @@ PRInt32 nsMsgProtocol::SendData(nsIURI * aURL, const char * dataBuffer)
 //	NS_PRECONDITION(m_outputStream, "oops....we don't have an output stream...how did that happen?");
 	if (dataBuffer && m_outputStream)
 	{
-		nsresult rv = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &writeCount);
+		status = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &writeCount);
 	}
 
 	return status;
