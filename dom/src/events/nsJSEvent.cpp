@@ -70,115 +70,83 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case EVENT_TYPE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_TYPE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetType(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetType(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case EVENT_TARGET:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_TARGET, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMNode* prop;
-        nsresult result = NS_OK;
-        result = a->GetTarget(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMNode* prop;
+          rv = a->GetTarget(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case EVENT_CURRENTNODE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_CURRENTNODE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMNode* prop;
-        nsresult result = NS_OK;
-        result = a->GetCurrentNode(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMNode* prop;
+          rv = a->GetCurrentNode(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case EVENT_EVENTPHASE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_EVENTPHASE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRUint16 prop;
-        nsresult result = NS_OK;
-        result = a->GetEventPhase(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRUint16 prop;
+          rv = a->GetEventPhase(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case EVENT_BUBBLES:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_BUBBLES, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetBubbles(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          rv = a->GetBubbles(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case EVENT_CANCELABLE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_CANCELABLE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetCancelable(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          rv = a->GetCancelable(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+          }
         }
         break;
       }
@@ -190,6 +158,8 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -207,13 +177,11 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
@@ -224,6 +192,8 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -272,21 +242,14 @@ EventPreventBubble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_PREVENTBUBBLE, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_PREVENTBUBBLE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->PreventBubble();
     if (NS_FAILED(result)) {
@@ -314,21 +277,14 @@ EventPreventCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_PREVENTCAPTURE, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_PREVENTCAPTURE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->PreventCapture();
     if (NS_FAILED(result)) {
@@ -356,21 +312,14 @@ EventPreventDefault(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_PREVENTDEFAULT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_PREVENTDEFAULT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->PreventDefault();
     if (NS_FAILED(result)) {
@@ -401,21 +350,14 @@ EventInitEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_INITEVENT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENT_INITEVENT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 3) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }

@@ -73,198 +73,141 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLAPPLETELEMENT_ALIGN:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_ALIGN, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetAlign(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetAlign(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLAPPLETELEMENT_ALT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_ALT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetAlt(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetAlt(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLAPPLETELEMENT_ARCHIVE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_ARCHIVE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetArchive(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetArchive(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLAPPLETELEMENT_CODE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_CODE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetCode(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetCode(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLAPPLETELEMENT_CODEBASE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_CODEBASE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetCodeBase(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetCodeBase(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLAPPLETELEMENT_HEIGHT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_HEIGHT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetHeight(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetHeight(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLAPPLETELEMENT_HSPACE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_HSPACE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetHspace(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetHspace(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLAPPLETELEMENT_NAME:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_NAME, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetName(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetName(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLAPPLETELEMENT_OBJECT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_OBJECT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetObject(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetObject(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLAPPLETELEMENT_VSPACE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_VSPACE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetVspace(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetVspace(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLAPPLETELEMENT_WIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_WIDTH, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetWidth(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetWidth(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
@@ -276,6 +219,8 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -293,155 +238,142 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLAPPLETELEMENT_ALIGN:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_ALIGN, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetAlign(prop);
-        
+          rv = a->SetAlign(prop);
+          
+        }
         break;
       }
       case HTMLAPPLETELEMENT_ALT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_ALT, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetAlt(prop);
-        
+          rv = a->SetAlt(prop);
+          
+        }
         break;
       }
       case HTMLAPPLETELEMENT_ARCHIVE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_ARCHIVE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetArchive(prop);
-        
+          rv = a->SetArchive(prop);
+          
+        }
         break;
       }
       case HTMLAPPLETELEMENT_CODE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_CODE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetCode(prop);
-        
+          rv = a->SetCode(prop);
+          
+        }
         break;
       }
       case HTMLAPPLETELEMENT_CODEBASE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_CODEBASE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetCodeBase(prop);
-        
+          rv = a->SetCodeBase(prop);
+          
+        }
         break;
       }
       case HTMLAPPLETELEMENT_HEIGHT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_HEIGHT, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetHeight(prop);
-        
+          rv = a->SetHeight(prop);
+          
+        }
         break;
       }
       case HTMLAPPLETELEMENT_HSPACE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_HSPACE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetHspace(prop);
-        
+          rv = a->SetHspace(prop);
+          
+        }
         break;
       }
       case HTMLAPPLETELEMENT_NAME:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_NAME, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetName(prop);
-        
+          rv = a->SetName(prop);
+          
+        }
         break;
       }
       case HTMLAPPLETELEMENT_OBJECT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_OBJECT, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetObject(prop);
-        
+          rv = a->SetObject(prop);
+          
+        }
         break;
       }
       case HTMLAPPLETELEMENT_VSPACE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_VSPACE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetVspace(prop);
-        
+          rv = a->SetVspace(prop);
+          
+        }
         break;
       }
       case HTMLAPPLETELEMENT_WIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_WIDTH, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetWidth(prop);
-        
+          rv = a->SetWidth(prop);
+          
+        }
         break;
       }
       default:
@@ -452,6 +384,8 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 

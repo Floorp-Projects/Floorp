@@ -485,34 +485,65 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
     nsXPIDLCString scheme;
     if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
         return NS_ERROR_FAILURE;
-    if (nsCRT::strcasecmp(scheme, "http")         == 0 ||
-        nsCRT::strcasecmp(scheme, "https")        == 0 ||
-        nsCRT::strcasecmp(scheme, "javascript")   == 0 ||
-        nsCRT::strcasecmp(scheme, "ftp")          == 0 ||
-        nsCRT::strcasecmp(scheme, "mailto")       == 0 ||
-        nsCRT::strcasecmp(scheme, "finger")       == 0 ||
-        nsCRT::strcasecmp(scheme, "news")         == 0)
-    {
-        // everyone can access these schemes.
-        return NS_OK;
-    }
-
-    nsXPIDLCString scheme2;
     if (nsCRT::strcasecmp(scheme, fromScheme) == 0) {
         // every scheme can access another URI from the same scheme
         return NS_OK;
     }
 
-    if (nsCRT::strcasecmp(scheme, "about") == 0) {
-        nsXPIDLCString spec;
-        if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
-            return NS_ERROR_FAILURE;
-        if (nsCRT::strcasecmp(spec, "about:blank") == 0) {
-            return NS_OK;
+    enum Action { AllowProtocol, DenyProtocol, AboutProtocol };
+    struct { 
+        const char *name;
+        Action action;
+    } protocolList[] = {
+     "about",           AboutProtocol,
+     "data",            AllowProtocol,
+     "file",            DenyProtocol,
+     "ftp",             AllowProtocol,
+     "http",            AllowProtocol,
+     "https",           AllowProtocol,
+     "jar",             AllowProtocol,
+     "keyword",         DenyProtocol,
+     "res",             DenyProtocol,
+     "resource",        DenyProtocol,
+     "datetime",        DenyProtocol,
+     "finger",          AllowProtocol,
+     "chrome",          DenyProtocol,
+     "javascript",      AllowProtocol,
+     "mailto",          AllowProtocol,
+     "imap",            DenyProtocol,
+     "mailbox",         DenyProtocol,
+     "pop3",            DenyProtocol,
+     "news",            AllowProtocol,
+    };
+
+    for (int i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++) {
+        if (nsCRT::strcasecmp(scheme, protocolList[i].name) == 0) {
+            switch (protocolList[i].action) {
+            case AllowProtocol:
+                // everyone can access these schemes.
+                return NS_OK;
+            case DenyProtocol:
+                // Deny access
+                return NS_ERROR_DOM_BAD_URI;
+            case AboutProtocol:
+                // Allow for about:blank, deny for others.
+                nsXPIDLCString spec;
+                if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
+                    return NS_ERROR_FAILURE;
+                if (nsCRT::strcasecmp(spec, "about:blank") == 0) {
+                    return NS_OK;
+                }
+                return NS_ERROR_DOM_BAD_URI;
+            }
         }
     }
 
-    return NS_ERROR_DOM_BAD_URI;
+    // If we reach here, we have an unknown protocol. Warn, but allow.
+    // This is risky from a security standpoint, but allows flexibility
+    // in installing new protocol handlers after initial ship.
+    NS_WARN_IF_FALSE(PR_FALSE, "unknown protocol");
+
+    return NS_OK;
 }
 
 

@@ -69,130 +69,93 @@ GetXULRadioElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case XULRADIOELEMENT_VALUE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_VALUE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetValue(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetValue(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case XULRADIOELEMENT_CROP:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_CROP, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetCrop(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetCrop(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case XULRADIOELEMENT_DISABLED:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_DISABLED, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetDisabled(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          rv = a->GetDisabled(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case XULRADIOELEMENT_SRC:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_SRC, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetSrc(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetSrc(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case XULRADIOELEMENT_IMGALIGN:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_IMGALIGN, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetImgalign(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetImgalign(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case XULRADIOELEMENT_ACCESSKEY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_ACCESSKEY, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetAccesskey(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetAccesskey(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case XULRADIOELEMENT_CHECKED:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_CHECKED, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetChecked(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          rv = a->GetChecked(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+          }
         }
         break;
       }
@@ -204,6 +167,8 @@ GetXULRadioElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -221,107 +186,98 @@ SetXULRadioElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case XULRADIOELEMENT_VALUE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_VALUE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetValue(prop);
-        
+          rv = a->SetValue(prop);
+          
+        }
         break;
       }
       case XULRADIOELEMENT_CROP:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_CROP, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetCrop(prop);
-        
+          rv = a->SetCrop(prop);
+          
+        }
         break;
       }
       case XULRADIOELEMENT_DISABLED:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_DISABLED, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
-          return nsJSUtils::nsReportError(cx, obj,  NS_ERROR_DOM_NOT_BOOLEAN_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
+            rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+          }
       
-        a->SetDisabled(prop);
-        
+          rv = a->SetDisabled(prop);
+          
+        }
         break;
       }
       case XULRADIOELEMENT_SRC:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_SRC, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetSrc(prop);
-        
+          rv = a->SetSrc(prop);
+          
+        }
         break;
       }
       case XULRADIOELEMENT_IMGALIGN:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_IMGALIGN, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetImgalign(prop);
-        
+          rv = a->SetImgalign(prop);
+          
+        }
         break;
       }
       case XULRADIOELEMENT_ACCESSKEY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_ACCESSKEY, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetAccesskey(prop);
-        
+          rv = a->SetAccesskey(prop);
+          
+        }
         break;
       }
       case XULRADIOELEMENT_CHECKED:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULRADIOELEMENT_CHECKED, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
-          return nsJSUtils::nsReportError(cx, obj,  NS_ERROR_DOM_NOT_BOOLEAN_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
+            rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+          }
       
-        a->SetChecked(prop);
-        
+          rv = a->SetChecked(prop);
+          
+        }
         break;
       }
       default:
@@ -332,6 +288,8 @@ SetXULRadioElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 

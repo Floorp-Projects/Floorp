@@ -74,113 +74,81 @@ GetHTMLEmbedElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLEMBEDELEMENT_ALIGN:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLEMBEDELEMENT_ALIGN, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetAlign(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetAlign(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLEMBEDELEMENT_HEIGHT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLEMBEDELEMENT_HEIGHT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetHeight(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetHeight(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLEMBEDELEMENT_NAME:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLEMBEDELEMENT_NAME, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetName(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetName(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLEMBEDELEMENT_SRC:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLEMBEDELEMENT_SRC, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetSrc(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetSrc(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLEMBEDELEMENT_TYPE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLEMBEDELEMENT_TYPE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetType(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetType(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLEMBEDELEMENT_WIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLEMBEDELEMENT_WIDTH, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetWidth(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetWidth(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
@@ -192,6 +160,8 @@ GetHTMLEmbedElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -209,90 +179,82 @@ SetHTMLEmbedElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLEMBEDELEMENT_ALIGN:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLEMBEDELEMENT_ALIGN, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetAlign(prop);
-        
+          rv = a->SetAlign(prop);
+          
+        }
         break;
       }
       case HTMLEMBEDELEMENT_HEIGHT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLEMBEDELEMENT_HEIGHT, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetHeight(prop);
-        
+          rv = a->SetHeight(prop);
+          
+        }
         break;
       }
       case HTMLEMBEDELEMENT_NAME:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLEMBEDELEMENT_NAME, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetName(prop);
-        
+          rv = a->SetName(prop);
+          
+        }
         break;
       }
       case HTMLEMBEDELEMENT_SRC:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLEMBEDELEMENT_SRC, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetSrc(prop);
-        
+          rv = a->SetSrc(prop);
+          
+        }
         break;
       }
       case HTMLEMBEDELEMENT_TYPE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLEMBEDELEMENT_TYPE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetType(prop);
-        
+          rv = a->SetType(prop);
+          
+        }
         break;
       }
       case HTMLEMBEDELEMENT_WIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLEMBEDELEMENT_WIDTH, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetWidth(prop);
-        
+          rv = a->SetWidth(prop);
+          
+        }
         break;
       }
       default:
@@ -303,6 +265,8 @@ SetHTMLEmbedElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 

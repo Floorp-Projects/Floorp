@@ -866,6 +866,7 @@
     "window.screen", \
     "window.screenx", \
     "window.screeny", \
+    "window.scriptglobals", \
     "window.scroll", \
     "window.scrollbars", \
     "window.scrollby", \

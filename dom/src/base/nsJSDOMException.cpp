@@ -66,79 +66,57 @@ GetDOMExceptionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case DOMEXCEPTION_CODE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOMEXCEPTION_CODE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRUint32 prop;
-        nsresult result = NS_OK;
-        result = a->GetCode(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRUint32 prop;
+          rv = a->GetCode(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case DOMEXCEPTION_RESULT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOMEXCEPTION_RESULT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRUint32 prop;
-        nsresult result = NS_OK;
-        result = a->GetResult(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRUint32 prop;
+          rv = a->GetResult(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case DOMEXCEPTION_MESSAGE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOMEXCEPTION_MESSAGE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetMessage(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetMessage(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case DOMEXCEPTION_NAME:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOMEXCEPTION_NAME, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetName(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetName(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
@@ -150,6 +128,8 @@ GetDOMExceptionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -167,13 +147,11 @@ SetDOMExceptionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
@@ -184,6 +162,8 @@ SetDOMExceptionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -233,21 +213,14 @@ DOMExceptionToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOMEXCEPTION_TOSTRING, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_DOMEXCEPTION_TOSTRING, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->ToString(nativeRet);
     if (NS_FAILED(result)) {

@@ -67,63 +67,46 @@ GetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case CSSRULE_TYPE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_TYPE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRUint16 prop;
-        nsresult result = NS_OK;
-        result = a->GetType(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRUint16 prop;
+          rv = a->GetType(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case CSSRULE_CSSTEXT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_CSSTEXT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetCssText(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetCssText(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case CSSRULE_SHEET:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_SHEET, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMCSSStyleSheet* prop;
-        nsresult result = NS_OK;
-        result = a->GetSheet(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMCSSStyleSheet* prop;
+          rv = a->GetSheet(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
@@ -135,6 +118,8 @@ GetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -152,25 +137,22 @@ SetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case CSSRULE_CSSTEXT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSRULE_CSSTEXT, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetCssText(prop);
-        
+          rv = a->SetCssText(prop);
+          
+        }
         break;
       }
       default:
@@ -181,6 +163,8 @@ SetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 

@@ -94,407 +94,302 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   PRBool checkNamedItem = PR_TRUE;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLDOCUMENT_TITLE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_TITLE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetTitle(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetTitle(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLDOCUMENT_REFERRER:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_REFERRER, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetReferrer(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetReferrer(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLDOCUMENT_DOMAIN:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_DOMAIN, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetDomain(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetDomain(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLDOCUMENT_URL:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_URL, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetURL(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetURL(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLDOCUMENT_BODY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_BODY, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMHTMLElement* prop;
-        nsresult result = NS_OK;
-        result = a->GetBody(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMHTMLElement* prop;
+          rv = a->GetBody(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case HTMLDOCUMENT_IMAGES:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_IMAGES, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMHTMLCollection* prop;
-        nsresult result = NS_OK;
-        result = a->GetImages(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMHTMLCollection* prop;
+          rv = a->GetImages(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case HTMLDOCUMENT_APPLETS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_APPLETS, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMHTMLCollection* prop;
-        nsresult result = NS_OK;
-        result = a->GetApplets(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMHTMLCollection* prop;
+          rv = a->GetApplets(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case HTMLDOCUMENT_LINKS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_LINKS, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMHTMLCollection* prop;
-        nsresult result = NS_OK;
-        result = a->GetLinks(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMHTMLCollection* prop;
+          rv = a->GetLinks(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case HTMLDOCUMENT_FORMS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_FORMS, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMHTMLCollection* prop;
-        nsresult result = NS_OK;
-        result = a->GetForms(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMHTMLCollection* prop;
+          rv = a->GetForms(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case HTMLDOCUMENT_ANCHORS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_ANCHORS, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMHTMLCollection* prop;
-        nsresult result = NS_OK;
-        result = a->GetAnchors(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMHTMLCollection* prop;
+          rv = a->GetAnchors(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case HTMLDOCUMENT_COOKIE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_COOKIE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetCookie(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetCookie(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case NSHTMLDOCUMENT_ALINKCOLOR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_ALINKCOLOR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsIDOMNSHTMLDocument* b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetAlinkColor(prop);
-          if(NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLDocument* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            rv = b->GetAlinkColor(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSHTMLDOCUMENT_LINKCOLOR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LINKCOLOR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsIDOMNSHTMLDocument* b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetLinkColor(prop);
-          if(NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLDocument* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            rv = b->GetLinkColor(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSHTMLDOCUMENT_VLINKCOLOR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_VLINKCOLOR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsIDOMNSHTMLDocument* b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetVlinkColor(prop);
-          if(NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLDocument* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            rv = b->GetVlinkColor(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSHTMLDOCUMENT_BGCOLOR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_BGCOLOR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsIDOMNSHTMLDocument* b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetBgColor(prop);
-          if(NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLDocument* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            rv = b->GetBgColor(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSHTMLDOCUMENT_FGCOLOR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_FGCOLOR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsIDOMNSHTMLDocument* b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetFgColor(prop);
-          if(NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLDocument* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            rv = b->GetFgColor(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSHTMLDOCUMENT_LASTMODIFIED:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LASTMODIFIED, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsIDOMNSHTMLDocument* b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetLastModified(prop);
-          if(NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsIDOMNSHTMLDocument* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            rv = b->GetLastModified(prop);
+            if(NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSHTMLDOCUMENT_EMBEDS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_EMBEDS, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMHTMLCollection* prop;
-        nsIDOMNSHTMLDocument* b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetEmbeds(&prop);
-          if(NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMHTMLCollection* prop;
+          nsIDOMNSHTMLDocument* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            rv = b->GetEmbeds(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSHTMLDOCUMENT_PLUGINS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_PLUGINS, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMHTMLCollection* prop;
-        nsIDOMNSHTMLDocument* b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetPlugins(&prop);
-          if(NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMHTMLCollection* prop;
+          nsIDOMNSHTMLDocument* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            rv = b->GetPlugins(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -522,8 +417,8 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       if (NS_SUCCEEDED(result)) {
         NS_RELEASE(b);
         if (NULL != prop) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
         }
         else {
           return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
@@ -542,6 +437,8 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -560,174 +457,163 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   PRBool checkNamedItem = PR_TRUE;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLDOCUMENT_TITLE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_TITLE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetTitle(prop);
-        
+          rv = a->SetTitle(prop);
+          
+        }
         break;
       }
       case HTMLDOCUMENT_DOMAIN:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_DOMAIN, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetDomain(prop);
-        
+          rv = a->SetDomain(prop);
+          
+        }
         break;
       }
       case HTMLDOCUMENT_BODY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_BODY, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMHTMLElement* prop;
-        if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                kIHTMLElementIID, "HTMLElement",
-                                                cx, *vp)) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMHTMLElement* prop;
+          if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
+                                                  kIHTMLElementIID, "HTMLElement",
+                                                  cx, *vp)) {
+            rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+          }
       
-        a->SetBody(prop);
-        NS_IF_RELEASE(prop);
+          rv = a->SetBody(prop);
+          NS_IF_RELEASE(prop);
+        }
         break;
       }
       case HTMLDOCUMENT_COOKIE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_COOKIE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetCookie(prop);
-        
+          rv = a->SetCookie(prop);
+          
+        }
         break;
       }
       case NSHTMLDOCUMENT_ALINKCOLOR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_ALINKCOLOR, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        nsIDOMNSHTMLDocument *b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          b->SetAlinkColor(prop);
-          NS_RELEASE(b);
+          nsIDOMNSHTMLDocument *b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            b->SetAlinkColor(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
         }
-        else {
-           
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
-        }
-        
         break;
       }
       case NSHTMLDOCUMENT_LINKCOLOR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LINKCOLOR, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        nsIDOMNSHTMLDocument *b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          b->SetLinkColor(prop);
-          NS_RELEASE(b);
+          nsIDOMNSHTMLDocument *b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            b->SetLinkColor(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
         }
-        else {
-           
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
-        }
-        
         break;
       }
       case NSHTMLDOCUMENT_VLINKCOLOR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_VLINKCOLOR, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        nsIDOMNSHTMLDocument *b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          b->SetVlinkColor(prop);
-          NS_RELEASE(b);
+          nsIDOMNSHTMLDocument *b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            b->SetVlinkColor(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
         }
-        else {
-           
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
-        }
-        
         break;
       }
       case NSHTMLDOCUMENT_BGCOLOR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_BGCOLOR, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        nsIDOMNSHTMLDocument *b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          b->SetBgColor(prop);
-          NS_RELEASE(b);
+          nsIDOMNSHTMLDocument *b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            b->SetBgColor(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
         }
-        else {
-           
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
-        }
-        
         break;
       }
       case NSHTMLDOCUMENT_FGCOLOR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_FGCOLOR, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        nsIDOMNSHTMLDocument *b;
-        if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          b->SetFgColor(prop);
-          NS_RELEASE(b);
+          nsIDOMNSHTMLDocument *b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            b->SetFgColor(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
         }
-        else {
-           
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
-        }
-        
         break;
       }
       default:
@@ -738,6 +624,8 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -786,21 +674,14 @@ HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_CLOSE, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_CLOSE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Close();
     if (NS_FAILED(result)) {
@@ -830,21 +711,14 @@ HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_GETELEMENTBYID, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_GETELEMENTBYID, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -879,21 +753,14 @@ HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_GETELEMENTSBYNAME, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLDOCUMENT_GETELEMENTSBYNAME, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -932,21 +799,14 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_GETSELECTION, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_GETSELECTION, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->GetSelection(nativeRet);
     if (NS_FAILED(result)) {
@@ -981,21 +841,14 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_NAMEDITEM, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_NAMEDITEM, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -1033,21 +886,14 @@ NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_OPEN, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_OPEN, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Open(cx, argv+0, argc-0);
     if (NS_FAILED(result)) {
@@ -1080,21 +926,14 @@ NSHTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_WRITE, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_WRITE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Write(cx, argv+0, argc-0);
     if (NS_FAILED(result)) {
@@ -1127,21 +966,14 @@ NSHTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_WRITELN, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_WRITELN, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Writeln(cx, argv+0, argc-0);
     if (NS_FAILED(result)) {
@@ -1174,21 +1006,14 @@ NSHTMLDocumentClear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_CLEAR, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_CLEAR, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Clear(cx, argv+0, argc-0);
     if (NS_FAILED(result)) {
@@ -1222,21 +1047,14 @@ NSHTMLDocumentCaptureEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_CAPTUREEVENTS, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_CAPTUREEVENTS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -1277,21 +1095,14 @@ NSHTMLDocumentReleaseEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_RELEASEEVENTS, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_RELEASEEVENTS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -1332,21 +1143,14 @@ NSHTMLDocumentRouteEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_ROUTEEVENT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_ROUTEEVENT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }

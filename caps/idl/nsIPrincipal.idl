@@ -36,10 +36,13 @@ interface nsIPref;
 [uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
 interface nsIPrincipal : nsISupports {
 
-	const short ENABLE_UNKNOWN               = 0;
-	const short ENABLE_GRANTED				 = 1;
-	const short ENABLE_DENIED				 = 2;
+	// Values of capabilities for each principal. Order is
+	// significant: if an operation is performed on a set
+	// of capabilities, the minimum is computed.
+	const short ENABLE_DENIED				 = 1;
+	const short ENABLE_UNKNOWN               = 2;
 	const short ENABLE_WITH_USER_PERMISSION  = 3;
+	const short ENABLE_GRANTED				 = 4;
 
 	string ToString();
 

@@ -70,147 +70,105 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case SCREEN_WIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SCREEN_WIDTH, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetWidth(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetWidth(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case SCREEN_HEIGHT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SCREEN_HEIGHT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetHeight(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetHeight(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case SCREEN_PIXELDEPTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SCREEN_PIXELDEPTH, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetPixelDepth(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetPixelDepth(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case SCREEN_COLORDEPTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SCREEN_COLORDEPTH, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetColorDepth(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetColorDepth(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case SCREEN_AVAILWIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SCREEN_AVAILWIDTH, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetAvailWidth(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetAvailWidth(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case SCREEN_AVAILHEIGHT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SCREEN_AVAILHEIGHT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetAvailHeight(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetAvailHeight(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case SCREEN_AVAILLEFT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SCREEN_AVAILLEFT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetAvailLeft(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetAvailLeft(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case SCREEN_AVAILTOP:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SCREEN_AVAILTOP, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetAvailTop(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetAvailTop(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
@@ -222,6 +180,8 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -239,13 +199,11 @@ SetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
@@ -256,6 +214,8 @@ SetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 

@@ -46,10 +46,10 @@ nsCodebasePrincipal::ToString(char **result)
 {
     nsAutoString buf;
     buf += "[Codebase ";
-    nsXPIDLCString spec;
-    if (NS_FAILED(mURI->GetSpec(getter_Copies(spec))))
+    nsXPIDLCString origin;
+    if (NS_FAILED(GetOrigin(getter_Copies(origin))))
         return NS_ERROR_FAILURE;
-    buf += spec;
+    buf += origin;
     buf += ']';
     *result = buf.ToNewCString();
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -64,10 +64,10 @@ nsCodebasePrincipal::ToUserVisibleString(char **result)
 NS_IMETHODIMP
 nsCodebasePrincipal::HashValue(PRUint32 *result)
 {
-    nsXPIDLCString spec;
-    if (NS_FAILED(mURI->GetSpec(getter_Copies(spec))))
+    nsXPIDLCString origin;
+    if (NS_FAILED(GetOrigin(getter_Copies(origin))))
         return NS_ERROR_FAILURE;
-    *result = nsCRT::HashValue(spec);
+    *result = nsCRT::HashValue(origin);
     return NS_OK;
 }
 
@@ -83,19 +83,7 @@ nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
         *result = PR_FALSE;
         return NS_OK;
     }
-    nsCOMPtr<nsICodebasePrincipal> otherCodebase;
-    if (NS_FAILED(other->QueryInterface(
-            NS_GET_IID(nsICodebasePrincipal),
-            (void **) getter_AddRefs(otherCodebase))))
-    {
-        *result = PR_FALSE;
-        return NS_OK;
-    }
-    nsCOMPtr<nsIURI> otherURI;
-    if (NS_FAILED(otherCodebase->GetURI(getter_AddRefs(otherURI)))) {
-        return NS_ERROR_FAILURE;
-    }
-    if (!mURI || NS_FAILED(otherURI->Equals(mURI, result))) {
+    if (NS_FAILED(SameOrigin(other, result))) {
         return NS_ERROR_FAILURE;
     }
     return NS_OK;

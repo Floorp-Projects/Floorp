@@ -445,6 +445,7 @@ pref("security.policy.default.node.removechild", "sameOrigin");
 pref("security.policy.default.node.replacechild", "sameOrigin");
 
 pref("security.policy.default.window.status", "sameOrigin");
+pref("security.policy.default.window.scriptglobals", "sameOrigin");
 
 /* 0=lines, 1=pages, 2=history */
 pref("mousewheel.withnokey.action",0);

@@ -69,130 +69,93 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLSCRIPTELEMENT_TEXT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_TEXT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetText(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetText(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLSCRIPTELEMENT_HTMLFOR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_HTMLFOR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetHtmlFor(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetHtmlFor(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLSCRIPTELEMENT_EVENT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_EVENT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetEvent(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetEvent(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLSCRIPTELEMENT_CHARSET:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_CHARSET, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetCharset(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetCharset(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLSCRIPTELEMENT_DEFER:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_DEFER, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetDefer(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          rv = a->GetDefer(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case HTMLSCRIPTELEMENT_SRC:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_SRC, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetSrc(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetSrc(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLSCRIPTELEMENT_TYPE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_TYPE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetType(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetType(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
@@ -204,6 +167,8 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -221,105 +186,96 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLSCRIPTELEMENT_TEXT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_TEXT, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetText(prop);
-        
+          rv = a->SetText(prop);
+          
+        }
         break;
       }
       case HTMLSCRIPTELEMENT_HTMLFOR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_HTMLFOR, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetHtmlFor(prop);
-        
+          rv = a->SetHtmlFor(prop);
+          
+        }
         break;
       }
       case HTMLSCRIPTELEMENT_EVENT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_EVENT, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetEvent(prop);
-        
+          rv = a->SetEvent(prop);
+          
+        }
         break;
       }
       case HTMLSCRIPTELEMENT_CHARSET:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_CHARSET, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetCharset(prop);
-        
+          rv = a->SetCharset(prop);
+          
+        }
         break;
       }
       case HTMLSCRIPTELEMENT_DEFER:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_DEFER, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
-          return nsJSUtils::nsReportError(cx, obj,  NS_ERROR_DOM_NOT_BOOLEAN_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
+            rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+          }
       
-        a->SetDefer(prop);
-        
+          rv = a->SetDefer(prop);
+          
+        }
         break;
       }
       case HTMLSCRIPTELEMENT_SRC:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_SRC, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetSrc(prop);
-        
+          rv = a->SetSrc(prop);
+          
+        }
         break;
       }
       case HTMLSCRIPTELEMENT_TYPE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSCRIPTELEMENT_TYPE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetType(prop);
-        
+          rv = a->SetType(prop);
+          
+        }
         break;
       }
       default:
@@ -330,6 +286,8 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 

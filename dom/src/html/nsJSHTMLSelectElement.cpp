@@ -84,201 +84,144 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   PRBool checkNamedItem = PR_TRUE;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLSELECTELEMENT_TYPE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_TYPE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetType(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetType(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLSELECTELEMENT_SELECTEDINDEX:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_SELECTEDINDEX, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetSelectedIndex(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetSelectedIndex(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case HTMLSELECTELEMENT_VALUE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_VALUE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetValue(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetValue(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLSELECTELEMENT_LENGTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_LENGTH, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRUint32 prop;
-        nsresult result = NS_OK;
-        result = a->GetLength(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRUint32 prop;
+          rv = a->GetLength(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case HTMLSELECTELEMENT_FORM:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_FORM, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMHTMLFormElement* prop;
-        nsresult result = NS_OK;
-        result = a->GetForm(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMHTMLFormElement* prop;
+          rv = a->GetForm(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case HTMLSELECTELEMENT_OPTIONS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_OPTIONS, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMNSHTMLOptionCollection* prop;
-        nsresult result = NS_OK;
-        result = a->GetOptions(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMNSHTMLOptionCollection* prop;
+          rv = a->GetOptions(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case HTMLSELECTELEMENT_DISABLED:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_DISABLED, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetDisabled(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          rv = a->GetDisabled(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case HTMLSELECTELEMENT_MULTIPLE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_MULTIPLE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetMultiple(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          rv = a->GetMultiple(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case HTMLSELECTELEMENT_NAME:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_NAME, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetName(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetName(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case HTMLSELECTELEMENT_SIZE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_SIZE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetSize(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetSize(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case HTMLSELECTELEMENT_TABINDEX:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_TABINDEX, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetTabIndex(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetTabIndex(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
@@ -288,19 +231,15 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNSHTMLSelectElement* b;
         if (NS_OK == a->QueryInterface(kINSHTMLSelectElementIID, (void **)&b)) {
           nsresult result = NS_OK;
-          result = b->Item(JSVAL_TO_INT(id), &prop);
-          if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-            NS_RELEASE(b);
+          rv = b->Item(JSVAL_TO_INT(id), &prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
           }
-          else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
-          }
+          NS_RELEASE(b);
         }
         else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+          rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
         }
       }
     }
@@ -325,8 +264,8 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       if (NS_SUCCEEDED(result)) {
         NS_RELEASE(b);
         if (NULL != prop) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
         }
         else {
           return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
@@ -345,6 +284,8 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -363,145 +304,135 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   PRBool checkNamedItem = PR_TRUE;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case HTMLSELECTELEMENT_SELECTEDINDEX:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_SELECTEDINDEX, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetSelectedIndex(prop);
-        
+          rv = a->SetSelectedIndex(prop);
+          
+        }
         break;
       }
       case HTMLSELECTELEMENT_VALUE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_VALUE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetValue(prop);
-        
+          rv = a->SetValue(prop);
+          
+        }
         break;
       }
       case HTMLSELECTELEMENT_LENGTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_LENGTH, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRUint32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRUint32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRUint32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRUint32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetLength(prop);
-        
+          rv = a->SetLength(prop);
+          
+        }
         break;
       }
       case HTMLSELECTELEMENT_DISABLED:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_DISABLED, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
-          return nsJSUtils::nsReportError(cx, obj,  NS_ERROR_DOM_NOT_BOOLEAN_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
+            rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+          }
       
-        a->SetDisabled(prop);
-        
+          rv = a->SetDisabled(prop);
+          
+        }
         break;
       }
       case HTMLSELECTELEMENT_MULTIPLE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_MULTIPLE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
-          return nsJSUtils::nsReportError(cx, obj,  NS_ERROR_DOM_NOT_BOOLEAN_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
+            rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+          }
       
-        a->SetMultiple(prop);
-        
+          rv = a->SetMultiple(prop);
+          
+        }
         break;
       }
       case HTMLSELECTELEMENT_NAME:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_NAME, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetName(prop);
-        
+          rv = a->SetName(prop);
+          
+        }
         break;
       }
       case HTMLSELECTELEMENT_SIZE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_SIZE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetSize(prop);
-        
+          rv = a->SetSize(prop);
+          
+        }
         break;
       }
       case HTMLSELECTELEMENT_TABINDEX:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_TABINDEX, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetTabIndex(prop);
-        
+          rv = a->SetTabIndex(prop);
+          
+        }
         break;
       }
       default:
@@ -512,6 +443,8 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -562,21 +495,14 @@ HTMLSelectElementAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_ADD, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_ADD, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 2) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -623,21 +549,14 @@ HTMLSelectElementRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_REMOVE, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_REMOVE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -672,21 +591,14 @@ HTMLSelectElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_BLUR, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_BLUR, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Blur();
     if (NS_FAILED(result)) {
@@ -714,21 +626,14 @@ HTMLSelectElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_FOCUS, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLSELECTELEMENT_FOCUS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Focus();
     if (NS_FAILED(result)) {
@@ -763,21 +668,14 @@ NSHTMLSelectElementItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLSELECTELEMENT_ITEM, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLSELECTELEMENT_ITEM, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -819,21 +717,14 @@ NSHTMLSelectElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLSELECTELEMENT_NAMEDITEM, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLSELECTELEMENT_NAMEDITEM, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }

@@ -120,555 +120,398 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case WINDOW_WINDOW:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_WINDOW, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMWindow* prop;
-        nsresult result = NS_OK;
-        result = a->GetWindow(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindow* prop;
+          rv = a->GetWindow(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_SELF:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SELF, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMWindow* prop;
-        nsresult result = NS_OK;
-        result = a->GetSelf(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindow* prop;
+          rv = a->GetSelf(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_DOCUMENT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DOCUMENT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMDocument* prop;
-        nsresult result = NS_OK;
-        result = a->GetDocument(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMDocument* prop;
+          rv = a->GetDocument(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_NAVIGATOR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_NAVIGATOR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMNavigator* prop;
-        nsresult result = NS_OK;
-        result = a->GetNavigator(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMNavigator* prop;
+          rv = a->GetNavigator(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_SCREEN:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCREEN, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMScreen* prop;
-        nsresult result = NS_OK;
-        result = a->GetScreen(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMScreen* prop;
+          rv = a->GetScreen(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_HISTORY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_HISTORY, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMHistory* prop;
-        nsresult result = NS_OK;
-        result = a->GetHistory(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMHistory* prop;
+          rv = a->GetHistory(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_PARENT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PARENT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMWindow* prop;
-        nsresult result = NS_OK;
-        result = a->GetParent(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindow* prop;
+          rv = a->GetParent(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_TOP:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TOP, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMWindow* prop;
-        nsresult result = NS_OK;
-        result = a->GetTop(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindow* prop;
+          rv = a->GetTop(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_MENUBAR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_MENUBAR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMBarProp* prop;
-        nsresult result = NS_OK;
-        result = a->GetMenubar(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMBarProp* prop;
+          rv = a->GetMenubar(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_TOOLBAR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TOOLBAR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMBarProp* prop;
-        nsresult result = NS_OK;
-        result = a->GetToolbar(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMBarProp* prop;
+          rv = a->GetToolbar(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_LOCATIONBAR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_LOCATIONBAR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMBarProp* prop;
-        nsresult result = NS_OK;
-        result = a->GetLocationbar(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMBarProp* prop;
+          rv = a->GetLocationbar(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_PERSONALBAR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PERSONALBAR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMBarProp* prop;
-        nsresult result = NS_OK;
-        result = a->GetPersonalbar(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMBarProp* prop;
+          rv = a->GetPersonalbar(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_STATUSBAR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_STATUSBAR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMBarProp* prop;
-        nsresult result = NS_OK;
-        result = a->GetStatusbar(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMBarProp* prop;
+          rv = a->GetStatusbar(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_SCROLLBARS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLLBARS, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMBarProp* prop;
-        nsresult result = NS_OK;
-        result = a->GetScrollbars(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMBarProp* prop;
+          rv = a->GetScrollbars(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_DIRECTORIES:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DIRECTORIES, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMBarProp* prop;
-        nsresult result = NS_OK;
-        result = a->GetDirectories(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMBarProp* prop;
+          rv = a->GetDirectories(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_CLOSED:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CLOSED, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetClosed(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          rv = a->GetClosed(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case WINDOW_FRAMES:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_FRAMES, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMWindowCollection* prop;
-        nsresult result = NS_OK;
-        result = a->GetFrames(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowCollection* prop;
+          rv = a->GetFrames(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_OPENER:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OPENER, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMWindow* prop;
-        nsresult result = NS_OK;
-        result = a->GetOpener(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindow* prop;
+          rv = a->GetOpener(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case WINDOW_STATUS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_STATUS, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetStatus(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetStatus(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case WINDOW_DEFAULTSTATUS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DEFAULTSTATUS, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetDefaultStatus(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetDefaultStatus(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case WINDOW_NAME:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_NAME, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetName(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->GetName(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
         }
         break;
       }
       case WINDOW_INNERWIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_INNERWIDTH, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetInnerWidth(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetInnerWidth(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case WINDOW_INNERHEIGHT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_INNERHEIGHT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetInnerHeight(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetInnerHeight(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case WINDOW_OUTERWIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OUTERWIDTH, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetOuterWidth(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetOuterWidth(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case WINDOW_OUTERHEIGHT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OUTERHEIGHT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetOuterHeight(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetOuterHeight(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case WINDOW_SCREENX:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCREENX, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetScreenX(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetScreenX(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case WINDOW_SCREENY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCREENY, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetScreenY(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetScreenY(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case WINDOW_PAGEXOFFSET:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PAGEXOFFSET, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetPageXOffset(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetPageXOffset(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case WINDOW_PAGEYOFFSET:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PAGEYOFFSET, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetPageYOffset(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetPageYOffset(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case WINDOW_SCROLLX:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLLX, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetScrollX(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetScrollX(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case WINDOW_SCROLLY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLLY, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetScrollY(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetScrollY(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
@@ -680,6 +523,8 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -697,220 +542,206 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case WINDOW_OPENER:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OPENER, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMWindow* prop;
-        if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                kIWindowIID, "Window",
-                                                cx, *vp)) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindow* prop;
+          if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
+                                                  kIWindowIID, "Window",
+                                                  cx, *vp)) {
+            rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
+          }
       
-        a->SetOpener(prop);
-        NS_IF_RELEASE(prop);
+          rv = a->SetOpener(prop);
+          NS_IF_RELEASE(prop);
+        }
         break;
       }
       case WINDOW_STATUS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_STATUS, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetStatus(prop);
-        
+          rv = a->SetStatus(prop);
+          
+        }
         break;
       }
       case WINDOW_DEFAULTSTATUS:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DEFAULTSTATUS, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetDefaultStatus(prop);
-        
+          rv = a->SetDefaultStatus(prop);
+          
+        }
         break;
       }
       case WINDOW_NAME:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_NAME, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
-        a->SetName(prop);
-        
+          rv = a->SetName(prop);
+          
+        }
         break;
       }
       case WINDOW_INNERWIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_INNERWIDTH, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetInnerWidth(prop);
-        
+          rv = a->SetInnerWidth(prop);
+          
+        }
         break;
       }
       case WINDOW_INNERHEIGHT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_INNERHEIGHT, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetInnerHeight(prop);
-        
+          rv = a->SetInnerHeight(prop);
+          
+        }
         break;
       }
       case WINDOW_OUTERWIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OUTERWIDTH, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetOuterWidth(prop);
-        
+          rv = a->SetOuterWidth(prop);
+          
+        }
         break;
       }
       case WINDOW_OUTERHEIGHT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OUTERHEIGHT, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetOuterHeight(prop);
-        
+          rv = a->SetOuterHeight(prop);
+          
+        }
         break;
       }
       case WINDOW_SCREENX:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCREENX, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetScreenX(prop);
-        
+          rv = a->SetScreenX(prop);
+          
+        }
         break;
       }
       case WINDOW_SCREENY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCREENY, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetScreenY(prop);
-        
+          rv = a->SetScreenY(prop);
+          
+        }
         break;
       }
       case WINDOW_PAGEXOFFSET:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PAGEXOFFSET, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetPageXOffset(prop);
-        
+          rv = a->SetPageXOffset(prop);
+          
+        }
         break;
       }
       case WINDOW_PAGEYOFFSET:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PAGEYOFFSET, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetPageYOffset(prop);
-        
+          rv = a->SetPageYOffset(prop);
+          
+        }
         break;
       }
       default:
@@ -921,6 +752,8 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -939,27 +772,20 @@ WindowcontentGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) {
-    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-  }
-
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
   rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTENT, PR_FALSE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
-        nsIDOMWindow* prop;
-        nsresult result = NS_OK;
-        result = a->GetContent(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
-        }
+          nsIDOMWindow* prop;
+          rv = a->GetContent(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
 
   return PR_TRUE;
 }
@@ -979,12 +805,9 @@ WindowcontentSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) {
-    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-  }
-
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
   rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTENT, PR_TRUE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
@@ -1010,27 +833,20 @@ WindowsidebarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) {
-    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-  }
-
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
   rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SIDEBAR, PR_FALSE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
-        nsISidebar* prop;
-        nsresult result = NS_OK;
-        result = a->GetSidebar(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object; n.b., this will do a release on 'prop'
-          nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsISidebar), cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
-        }
+          nsISidebar* prop;
+          rv = a->GetSidebar(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object; n.b., this will do a release on 'prop'
+            nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsISidebar), cx, obj, vp);
+          }
 
   return PR_TRUE;
 }
@@ -1050,12 +866,9 @@ WindowsidebarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) {
-    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-  }
-
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
   rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SIDEBAR, PR_TRUE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
@@ -1081,27 +894,20 @@ WindowcontrollersGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) {
-    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-  }
-
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
   rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTROLLERS, PR_FALSE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
-        nsIControllers* prop;
-        nsresult result = NS_OK;
-        result = a->GetControllers(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object; n.b., this will do a release on 'prop'
-          nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIControllers), cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
-        }
+          nsIControllers* prop;
+          rv = a->GetControllers(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object; n.b., this will do a release on 'prop'
+            nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIControllers), cx, obj, vp);
+          }
 
   return PR_TRUE;
 }
@@ -1121,12 +927,9 @@ WindowcontrollersSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   nsresult rv;
-  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) {
-    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-  }
-
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
   rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTROLLERS, PR_TRUE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
@@ -1183,21 +986,14 @@ WindowDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DUMP, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DUMP, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -1230,21 +1026,14 @@ WindowAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_ALERT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_ALERT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Alert(cx, argv+0, argc-0);
     if (NS_FAILED(result)) {
@@ -1273,21 +1062,14 @@ WindowConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONFIRM, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONFIRM, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Confirm(cx, argv+0, argc-0, &nativeRet);
     if (NS_FAILED(result)) {
@@ -1316,21 +1098,14 @@ WindowPrompt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PROMPT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PROMPT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Prompt(cx, argv+0, argc-0, nativeRet);
     if (NS_FAILED(result)) {
@@ -1358,21 +1133,14 @@ WindowFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_FOCUS, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_FOCUS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Focus();
     if (NS_FAILED(result)) {
@@ -1400,21 +1168,14 @@ WindowBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_BLUR, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_BLUR, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Blur();
     if (NS_FAILED(result)) {
@@ -1442,21 +1203,14 @@ WindowBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_BACK, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_BACK, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Back();
     if (NS_FAILED(result)) {
@@ -1484,21 +1238,14 @@ WindowForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_FORWARD, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_FORWARD, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Forward();
     if (NS_FAILED(result)) {
@@ -1526,21 +1273,14 @@ WindowHome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_HOME, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_HOME, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Home();
     if (NS_FAILED(result)) {
@@ -1568,21 +1308,14 @@ WindowStop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_STOP, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_STOP, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Stop();
     if (NS_FAILED(result)) {
@@ -1610,21 +1343,14 @@ WindowPrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PRINT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_PRINT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Print();
     if (NS_FAILED(result)) {
@@ -1654,21 +1380,14 @@ WindowMoveTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_MOVETO, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_MOVETO, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 2) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -1708,21 +1427,14 @@ WindowMoveBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_MOVEBY, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_MOVEBY, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 2) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -1762,21 +1474,14 @@ WindowResizeTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_RESIZETO, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_RESIZETO, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 2) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -1816,21 +1521,14 @@ WindowResizeBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_RESIZEBY, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_RESIZEBY, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 2) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -1868,21 +1566,14 @@ WindowSizeToContent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SIZETOCONTENT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SIZETOCONTENT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->SizeToContent();
     if (NS_FAILED(result)) {
@@ -1910,21 +1601,14 @@ WindowGetAttention(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_GETATTENTION, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_GETATTENTION, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->GetAttention();
     if (NS_FAILED(result)) {
@@ -1954,21 +1638,14 @@ WindowScroll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLL, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLL, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 2) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -2008,21 +1685,14 @@ WindowScrollTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLLTO, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLLTO, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 2) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -2062,21 +1732,14 @@ WindowScrollBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLLBY, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLLBY, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 2) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -2115,21 +1778,14 @@ WindowClearTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CLEARTIMEOUT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CLEARTIMEOUT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -2165,21 +1821,14 @@ WindowClearInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CLEARINTERVAL, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CLEARINTERVAL, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -2215,21 +1864,14 @@ WindowSetTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SETTIMEOUT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SETTIMEOUT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->SetTimeout(cx, argv+0, argc-0, &nativeRet);
     if (NS_FAILED(result)) {
@@ -2258,21 +1900,14 @@ WindowSetInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SETINTERVAL, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SETINTERVAL, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->SetInterval(cx, argv+0, argc-0, &nativeRet);
     if (NS_FAILED(result)) {
@@ -2301,21 +1936,14 @@ WindowCaptureEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CAPTUREEVENTS, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CAPTUREEVENTS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -2351,21 +1979,14 @@ WindowReleaseEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_RELEASEEVENTS, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_RELEASEEVENTS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -2401,21 +2022,14 @@ WindowRouteEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_ROUTEEVENT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_ROUTEEVENT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -2454,21 +2068,14 @@ WindowEnableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_ENABLEEXTERNALCAPTURE, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_ENABLEEXTERNALCAPTURE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->EnableExternalCapture();
     if (NS_FAILED(result)) {
@@ -2496,21 +2103,14 @@ WindowDisableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DISABLEEXTERNALCAPTURE, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_DISABLEEXTERNALCAPTURE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->DisableExternalCapture();
     if (NS_FAILED(result)) {
@@ -2539,21 +2139,14 @@ WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OPEN, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OPEN, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Open(cx, argv+0, argc-0, &nativeRet);
     if (NS_FAILED(result)) {
@@ -2582,21 +2175,14 @@ WindowOpenDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OPENDIALOG, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_OPENDIALOG, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->OpenDialog(cx, argv+0, argc-0, &nativeRet);
     if (NS_FAILED(result)) {
@@ -2624,21 +2210,14 @@ WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CLOSE, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CLOSE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->Close(cx, argv+0, argc-0);
     if (NS_FAILED(result)) {
@@ -2667,21 +2246,14 @@ WindowUpdateCommands(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_UPDATECOMMANDS, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_UPDATECOMMANDS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -2716,21 +2288,14 @@ WindowEscape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_ESCAPE, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_ESCAPE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -2765,21 +2330,14 @@ WindowUnescape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_UNESCAPE, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_UNESCAPE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -2820,21 +2378,14 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENTTARGET_ADDEVENTLISTENER, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENTTARGET_ADDEVENTLISTENER, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 3) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -2884,21 +2435,14 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENTTARGET_REMOVEEVENTLISTENER, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_EVENTTARGET_REMOVEEVENTLISTENER, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 3) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }

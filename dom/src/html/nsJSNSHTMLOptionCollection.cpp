@@ -67,60 +67,44 @@ GetNSHTMLOptionCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval 
   }
 
   PRBool checkNamedItem = PR_TRUE;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case NSHTMLOPTIONCOLLECTION_LENGTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLOPTIONCOLLECTION_LENGTH, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRUint32 prop;
-        nsresult result = NS_OK;
-        result = a->GetLength(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRUint32 prop;
+          rv = a->GetLength(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case NSHTMLOPTIONCOLLECTION_SELECTEDINDEX:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLOPTIONCOLLECTION_SELECTEDINDEX, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetSelectedIndex(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetSelectedIndex(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       default:
       {
-        nsresult result = NS_OK;
         nsIDOMNode* prop;
-        result = a->Item(JSVAL_TO_INT(id), &prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        rv = a->Item(JSVAL_TO_INT(id), &prop);
+        if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
         }
       }
     }
@@ -142,8 +126,8 @@ GetNSHTMLOptionCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval 
     result = a->NamedItem(name, &prop);
     if (NS_SUCCEEDED(result)) {
       if (NULL != prop) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
       }
       else {
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
@@ -157,6 +141,8 @@ GetNSHTMLOptionCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval 
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -175,51 +161,47 @@ SetNSHTMLOptionCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval 
   }
 
   PRBool checkNamedItem = PR_TRUE;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     checkNamedItem = PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case NSHTMLOPTIONCOLLECTION_LENGTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLOPTIONCOLLECTION_LENGTH, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRUint32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRUint32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRUint32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRUint32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetLength(prop);
-        
+          rv = a->SetLength(prop);
+          
+        }
         break;
       }
       case NSHTMLOPTIONCOLLECTION_SELECTEDINDEX:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLOPTIONCOLLECTION_SELECTEDINDEX, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        int32 temp;
-        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-          prop = (PRInt32)temp;
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
       
-        a->SetSelectedIndex(prop);
-        
+          rv = a->SetSelectedIndex(prop);
+          
+        }
         break;
       }
       default:
@@ -230,6 +212,8 @@ SetNSHTMLOptionCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval 
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -280,21 +264,14 @@ NSHTMLOptionCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLOPTIONCOLLECTION_ITEM, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLOPTIONCOLLECTION_ITEM, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -331,21 +308,14 @@ NSHTMLOptionCollectionNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval 
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLOPTIONCOLLECTION_NAMEDITEM, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLOPTIONCOLLECTION_NAMEDITEM, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }

@@ -79,272 +79,206 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case UIEVENT_VIEW:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_UIEVENT_VIEW, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMAbstractView* prop;
-        nsresult result = NS_OK;
-        result = a->GetView(&prop);
-        if (NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMAbstractView* prop;
+          rv = a->GetView(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
         }
         break;
       }
       case UIEVENT_DETAIL:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_UIEVENT_DETAIL, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetDetail(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, result);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetDetail(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
         }
         break;
       }
       case NSUIEVENT_LAYERX:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSUIEVENT_LAYERX, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsIDOMNSUIEvent* b;
-        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetLayerX(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMNSUIEvent* b;
+          if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
+            rv = b->GetLayerX(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSUIEVENT_LAYERY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSUIEVENT_LAYERY, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsIDOMNSUIEvent* b;
-        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetLayerY(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMNSUIEvent* b;
+          if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
+            rv = b->GetLayerY(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSUIEVENT_PAGEX:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSUIEVENT_PAGEX, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsIDOMNSUIEvent* b;
-        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetPageX(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMNSUIEvent* b;
+          if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
+            rv = b->GetPageX(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSUIEVENT_PAGEY:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSUIEVENT_PAGEY, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsIDOMNSUIEvent* b;
-        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetPageY(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMNSUIEvent* b;
+          if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
+            rv = b->GetPageY(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSUIEVENT_WHICH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSUIEVENT_WHICH, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRUint32 prop;
-        nsIDOMNSUIEvent* b;
-        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetWhich(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRUint32 prop;
+          nsIDOMNSUIEvent* b;
+          if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
+            rv = b->GetWhich(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSUIEVENT_RANGEPARENT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSUIEVENT_RANGEPARENT, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        nsIDOMNode* prop;
-        nsIDOMNSUIEvent* b;
-        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetRangeParent(&prop);
-          if(NS_SUCCEEDED(result)) {
-          // get the js object
-          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMNode* prop;
+          nsIDOMNSUIEvent* b;
+          if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
+            rv = b->GetRangeParent(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSUIEVENT_RANGEOFFSET:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSUIEVENT_RANGEOFFSET, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRInt32 prop;
-        nsIDOMNSUIEvent* b;
-        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetRangeOffset(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMNSUIEvent* b;
+          if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
+            rv = b->GetRangeOffset(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSUIEVENT_CANCELBUBBLE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSUIEVENT_CANCELBUBBLE, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsIDOMNSUIEvent* b;
-        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetCancelBubble(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          nsIDOMNSUIEvent* b;
+          if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
+            rv = b->GetCancelBubble(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
       case NSUIEVENT_ISCHAR:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSUIEVENT_ISCHAR, PR_FALSE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        nsIDOMNSUIEvent* b;
-        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          nsresult result = NS_OK;
-          result = b->GetIsChar(&prop);
-          if(NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          nsIDOMNSUIEvent* b;
+          if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
+            rv = b->GetIsChar(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = BOOLEAN_TO_JSVAL(prop);
+            }
             NS_RELEASE(b);
           }
           else {
-            NS_RELEASE(b);
-            return nsJSUtils::nsReportError(cx, obj, result);
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -356,6 +290,8 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -373,35 +309,32 @@ SetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-    }
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
       case NSUIEVENT_CANCELBUBBLE:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSUIEVENT_CANCELBUBBLE, PR_TRUE);
-        if (NS_FAILED(rv)) {
-          return nsJSUtils::nsReportError(cx, obj, rv);
-        }
-        PRBool prop;
-        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
-          return nsJSUtils::nsReportError(cx, obj,  NS_ERROR_DOM_NOT_BOOLEAN_ERR);
-        }
+        if (NS_SUCCEEDED(rv)) {
+          PRBool prop;
+          if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
+            rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+          }
       
-        nsIDOMNSUIEvent *b;
-        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          b->SetCancelBubble(prop);
-          NS_RELEASE(b);
+          nsIDOMNSUIEvent *b;
+          if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
+            b->SetCancelBubble(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
         }
-        else {
-           
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
-        }
-        
         break;
       }
       default:
@@ -412,6 +345,8 @@ SetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
   }
 
+  if (NS_FAILED(rv))
+      return nsJSUtils::nsReportError(cx, obj, rv);
   return PR_TRUE;
 }
 
@@ -465,21 +400,14 @@ UIEventInitUIEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_UIEVENT_INITUIEVENT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_UIEVENT_INITUIEVENT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
     if (argc < 5) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
@@ -534,21 +462,14 @@ NSUIEventGetPreventDefault(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
 
   {
-
-  *rval = JSVAL_NULL;
-
-  {
-    nsresult rv;
-    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
-                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSUIEVENT_GETPREVENTDEFAULT, PR_FALSE);
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSUIEVENT_GETPREVENTDEFAULT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (NS_FAILED(rv)) {
-      return nsJSUtils::nsReportError(cx, obj, rv);
-    }
-  }
-
 
     result = nativeThis->GetPreventDefault(&nativeRet);
     if (NS_FAILED(result)) {

@@ -67,11 +67,22 @@ nsBasePrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
         *result = nsIPrincipal::ENABLE_UNKNOWN;
         return NS_OK;
     }
-    nsStringKey key(capability);
-    *result = (PRInt16)(PRInt32)mCapabilities->Get(&key);
-    if (!*result)
-        *result = nsIPrincipal::ENABLE_UNKNOWN;
-    return NS_OK;
+    const char *start = capability;
+    *result = nsIPrincipal::ENABLE_GRANTED;
+    for(;;) {
+        const char *space = PL_strchr(start, ' ');
+        int len = space ? space - start : nsCRT::strlen(start);
+        nsCAutoString capString(start, len);
+        nsStringKey key(capString);
+        PRInt16 value = (PRInt16)(PRInt32)mCapabilities->Get(&key);
+        if (value == 0)
+            value = nsIPrincipal::ENABLE_UNKNOWN;
+        if (value < *result)
+            *result = value;
+        if (!space)
+            return NS_OK;
+        start = space + 1;
+    }
 }
 
 NS_IMETHODIMP 
@@ -83,9 +94,17 @@ nsBasePrincipal::SetCanEnableCapability(const char *capability,
         if (!mCapabilities)
             return NS_ERROR_OUT_OF_MEMORY;
     }
-    nsStringKey key(capability);
-    mCapabilities->Put(&key, (void *) canEnable);
-    return NS_OK;
+    const char *start = capability;
+    for(;;) {
+        const char *space = PL_strchr(start, ' ');
+        int len = space ? space - start : nsCRT::strlen(start);
+        nsCAutoString capString(start, len);
+        nsStringKey key(capString);
+        mCapabilities->Put(&key, (void *) canEnable);
+        if (!space)
+            return NS_OK;
+        start = space + 1;
+    }
 }
 
 NS_IMETHODIMP 
@@ -94,10 +113,24 @@ nsBasePrincipal::IsCapabilityEnabled(const char *capability, void *annotation,
 {
     *result = PR_FALSE;
     nsHashtable *ht = (nsHashtable *) annotation;
-    if (ht) {
-        nsStringKey key(capability);
+    if (!ht) {
+        return NS_OK;
+    }
+    const char *start = capability;
+    for(;;) {
+        const char *space = PL_strchr(start, ' ');
+        int len = space ? space - start : nsCRT::strlen(start);
+        nsCAutoString capString(start, len);
+        nsStringKey key(capString);
         *result = (ht->Get(&key) == (void *) AnnotationEnabled);
-    } 
+        if (!*result) {
+            // If any single capability is not enabled, then return false.
+            return NS_OK;
+        }
+        if (!space)
+            return NS_OK;
+        start = space + 1;
+    }
     return NS_OK;
 }
 
@@ -118,8 +151,17 @@ nsBasePrincipal::RevertCapability(const char *capability, void **annotation)
 {
     if (*annotation) {
         nsHashtable *ht = (nsHashtable *) *annotation;
-        nsStringKey key(capability);
-        ht->Remove(&key);
+        const char *start = capability;
+        for(;;) {
+            const char *space = PL_strchr(start, ' ');
+            int len = space ? space - start : nsCRT::strlen(start);
+            nsCAutoString capString(start, len);
+            nsStringKey key(capString);
+            ht->Remove(&key);
+            if (!space)
+                return NS_OK;
+            start = space + 1;
+        }
     }
     return NS_OK;
 }
@@ -136,10 +178,19 @@ nsBasePrincipal::SetCapability(const char *capability, void **annotation,
         // them when we destroy this object.
         mAnnotations.AppendElement(*annotation);
     }
-    nsHashtable *ht = (nsHashtable *) *annotation;
-    nsStringKey key(capability);
-    ht->Put(&key, (void *) value);
-    return NS_OK;
+
+    const char *start = capability;
+    for(;;) {
+        const char *space = PL_strchr(start, ' ');
+        int len = space ? space - start : nsCRT::strlen(start);
+        nsCAutoString capString(start, len);
+        nsStringKey key(capString);
+        nsHashtable *ht = (nsHashtable *) *annotation;
+        ht->Put(&key, (void *) value);
+        if (!space)
+            return NS_OK;
+        start = space + 1;
+    }
 }
 
 int nsBasePrincipal::mCapabilitiesOrdinal = 0;
