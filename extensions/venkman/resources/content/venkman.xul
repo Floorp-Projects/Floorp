@@ -47,7 +47,7 @@
 <window id="main-window" align="vertical"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="console.onLoad();" onunload="console.onUnload();"
+  onload="console.onLoad();" onclose="return console.onClose();"
   width="640" height="480"
   persist="width height screenX screenY" title="&MainWindow.title;"
   windowtype="mozapp:venkman">
@@ -245,3 +245,4 @@
   </vbox>
 
 </window>
+
