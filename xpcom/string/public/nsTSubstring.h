@@ -528,6 +528,9 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * new buffer, then it will return the old buffer and the corresponding
          * flags.  this allows the caller to decide when to free the old data.
          *
+         * this function returns false if is unable to allocate sufficient
+         * memory.
+         *
          * XXX we should expose a way for subclasses to free old_data.
          */
       PRBool NS_FASTCALL MutatePrep( size_type capacity, char_type** old_data, PRUint32* old_flags );
@@ -548,8 +551,11 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * would cause mData to look like "ab____f" where the characters
          * indicated by '_' have an unspecified value and can be freely
          * modified.  this function will null-terminate mData upon return.
+         * 
+         * this function returns false if is unable to allocate sufficient
+         * memory.
          */
-      void NS_FASTCALL ReplacePrep( index_type cutStart, size_type cutLength, size_type newLength );
+      PRBool NS_FASTCALL ReplacePrep( index_type cutStart, size_type cutLength, size_type newLength );
 
         /**
          * returns the number of writable storage units starting at mData.

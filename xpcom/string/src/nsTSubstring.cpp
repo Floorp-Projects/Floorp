@@ -114,18 +114,12 @@ nsTSubstring_CharT::MutatePrep( size_type capacity, char_type** oldData, PRUint3
         if (!hdr->IsReadonly())
           {
             nsStringBuffer *newHdr = nsStringBuffer::Realloc(hdr, storageSize);
-            if (newHdr)
-              {
-                hdr = newHdr;
-                mData = (char_type*) hdr->Data();
-                return PR_TRUE;
-              }
-            hdr->Release();
-            // out of memory!!  put us in a consistent state at least.
-            mData = NS_CONST_CAST(char_type*, char_traits::sEmptyBuffer);
-            mLength = 0;
-            SetDataFlags(F_TERMINATED);
-            return PR_FALSE;
+            if (!newHdr)
+              return PR_FALSE; // out-of-memory (original header left intact)
+
+            hdr = newHdr;
+            mData = (char_type*) hdr->Data();
+            return PR_TRUE;
           }
       }
 
@@ -182,7 +176,7 @@ nsTSubstring_CharT::~nsTSubstring_CharT()
   }
 #endif
 
-void
+PRBool
 nsTSubstring_CharT::ReplacePrep( index_type cutStart, size_type cutLen, size_type fragLen )
   {
     // bound cut length
@@ -193,7 +187,7 @@ nsTSubstring_CharT::ReplacePrep( index_type cutStart, size_type cutLen, size_typ
     char_type* oldData;
     PRUint32 oldFlags;
     if (!MutatePrep(newLen, &oldData, &oldFlags))
-      return; // XXX out-of-memory error occured!
+      return PR_FALSE; // out-of-memory
 
     if (oldData)
       {
@@ -236,6 +230,8 @@ nsTSubstring_CharT::ReplacePrep( index_type cutStart, size_type cutLen, size_typ
     // terminator).
     mData[newLen] = char_type(0);
     mLength = newLen;
+
+    return PR_TRUE;
   }
 
 nsTSubstring_CharT::size_type
@@ -307,8 +303,8 @@ nsTSubstring_CharT::Assign( const char_type* data, size_type length )
         return;
       }
 
-    ReplacePrep(0, mLength, length);
-    char_traits::copy(mData, data, length);
+    if (ReplacePrep(0, mLength, length))
+      char_traits::copy(mData, data, length);
   }
 
 void
@@ -325,8 +321,8 @@ nsTSubstring_CharT::AssignASCII( const char* data, size_type length )
       }
 #endif
 
-    ReplacePrep(0, mLength, length);
-    char_traits::copyASCII(mData, data, length);
+    if (ReplacePrep(0, mLength, length))
+      char_traits::copyASCII(mData, data, length);
   }
 
 void
@@ -384,8 +380,7 @@ nsTSubstring_CharT::Assign( const substring_tuple_type& tuple )
 
     size_type length = tuple.Length();
 
-    ReplacePrep(0, mLength, length);
-    if (length)
+    if (ReplacePrep(0, mLength, length) && length)
       tuple.WriteTo(mData, length);
   }
 
@@ -449,9 +444,7 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const cha
 
     cutStart = PR_MIN(cutStart, Length());
 
-    ReplacePrep(cutStart, cutLength, length);
-
-    if (length > 0)
+    if (ReplacePrep(cutStart, cutLength, length) && length > 0)
       char_traits::copy(mData + cutStart, data, length);
   }
 
@@ -474,9 +467,7 @@ nsTSubstring_CharT::ReplaceASCII( index_type cutStart, size_type cutLength, cons
 
     cutStart = PR_MIN(cutStart, Length());
 
-    ReplacePrep(cutStart, cutLength, length);
-
-    if (length > 0)
+    if (ReplacePrep(cutStart, cutLength, length) && length > 0)
       char_traits::copyASCII(mData + cutStart, data, length);
   }
 
@@ -494,9 +485,7 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const sub
 
     cutStart = PR_MIN(cutStart, Length());
 
-    ReplacePrep(cutStart, cutLength, length);
-
-    if (length > 0)
+    if (ReplacePrep(cutStart, cutLength, length) && length > 0)
       tuple.WriteTo(mData + cutStart, length);
   }
 
@@ -526,7 +515,7 @@ nsTSubstring_CharT::SetCapacity( size_type capacity )
         char_type* oldData;
         PRUint32 oldFlags;
         if (!MutatePrep(capacity, &oldData, &oldFlags))
-          return; // XXX out-of-memory error occured!
+          return; // out-of-memory
 
         // compute new string length
         size_type newLen = NS_MIN(mLength, capacity);
@@ -554,7 +543,13 @@ void
 nsTSubstring_CharT::SetLength( size_type length )
   {
     SetCapacity(length);
-    mLength = length;
+
+    // XXX(darin): SetCapacity may fail, but it doesn't give us a way to find
+    // out.  We should improve that.  For now we just verify that the capacity
+    // changed as expected as a means of error checking.
+ 
+    if (Capacity() >= length)
+      mLength = length;
   }
 
 void
@@ -686,7 +681,7 @@ nsTSubstring_CharT::StripChar( char_type aChar, PRInt32 aOffset )
 
     EnsureMutable(); // XXX do this lazily?
 
-    // XXXdarin this code should defer writing until necessary.
+    // XXX(darin): this code should defer writing until necessary.
 
     char_type* to   = mData + aOffset;
     char_type* from = mData + aOffset;

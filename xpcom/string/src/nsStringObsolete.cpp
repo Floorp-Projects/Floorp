@@ -61,7 +61,7 @@
  *       in this section somewhat inconsistent, don't blame me! ;-)
  */
 
-// XXXdarin what is wrong with STDC's tolower?
+// avoid STDC's tolower since it may do weird things with non-ASCII bytes
 inline char
 ascii_tolower(char aChar)
 {
@@ -515,7 +515,7 @@ CompressChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet){
 static PRInt32
 StripChars1(char* aString,PRUint32 aLength,const char* aSet){ 
 
-  // XXXdarin this code should defer writing until necessary.
+  // XXX(darin): this code should defer writing until necessary.
 
   char*  to   = aString;
   char*  from = aString-1;
@@ -549,7 +549,7 @@ StripChars1(char* aString,PRUint32 aLength,const char* aSet){
 static PRInt32
 StripChars2(PRUnichar* aString,PRUint32 aLength,const char* aSet){ 
 
-  // XXXdarin this code should defer writing until necessary.
+  // XXX(darin): this code should defer writing until necessary.
 
   PRUnichar*  to   = aString;
   PRUnichar*  from = aString-1;
@@ -804,7 +804,7 @@ RFindCharInSet( const CharT* data, PRUint32 dataLen, const SetCharT* set )
  * This is a copy of |PR_cnvtf| with a bug fixed.  (The second argument
  * of PR_dtoa is 2 rather than 1.)
  *
- * XXXdarin if this is the right thing, then why wasn't it fixed in NSPR?!?
+ * XXX(darin): if this is the right thing, then why wasn't it fixed in NSPR?!?
  */
 void 
 Modified_cnvtf(char *buf, int bufsz, int prcsn, double fval)
