@@ -117,8 +117,11 @@
                                   onget="return this.getAttribute('value');"/>
       <property name="crop"       onset="return this.setAttribute('crop',val);"
                                   onget="return this.getAttribute('crop');"/>
-      <property name="disabled"   onset="return this.setAttribute('disabled',val);"
-                                  onget="return this.getAttribute('disabled');"/>
+      <property name="disabled"   onset="if (val) this.setAttribute('disabled', 'true');
+                                         else this.removeAttribute('disabled');
+                                         return val;"
+                                  onget="var v = this.getAttribute('disabled');
+                                         if (v == 'true') return true; return false;"/>                                  
       <property name="src"        onset="return this.setAttribute('src',val);"
                                   onget="return this.getAttribute('src');"/>
       <property name="accesskey"  onset="return this.setAttribute('accesskey',val);"
