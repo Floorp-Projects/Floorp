@@ -221,7 +221,7 @@ nsresult nsMsgAppCore::SetDocumentCharset(class nsString const & aCharset)
 {
   // Set a default charset of the webshell. 
   if (nsnull != mWebShell) {
-    mWebShell->SetDefaultCharacterSet(aCharset);
+    mWebShell->SetDefaultCharacterSet(aCharset.GetUnicode());
   }
 	return NS_OK;
 }
