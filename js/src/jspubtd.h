@@ -41,6 +41,7 @@ typedef enum JSVersion {
     JSVERSION_1_2     = 120,
     JSVERSION_1_3     = 130,
     JSVERSION_1_4     = 140,
+    JSVERSION_1_5     = 150,
     JSVERSION_DEFAULT = 0,
     JSVERSION_UNKNOWN = -1
 } JSVersion;

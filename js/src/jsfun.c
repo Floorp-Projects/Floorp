@@ -1145,11 +1145,11 @@ JSClass js_FunctionClass = {
 };
 
 static JSBool
-fun_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+fun_toString_sub(JSContext *cx, JSObject *obj, uint32 indent,
+                 uintN argc, jsval *argv, jsval *rval)
 {
     jsval fval;
     JSFunction *fun;
-    uint32 indent;
     JSString *str;
 
     fval = argv[-1];
@@ -1178,7 +1178,6 @@ fun_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     fun = JS_GetPrivate(cx, obj);
     if (!fun)
 	return JS_TRUE;
-    indent = 0;
     if (argc && !js_ValueToECMAUint32(cx, argv[0], &indent))
 	return JS_FALSE;
     str = JS_DecompileFunction(cx, fun, (uintN)indent);
@@ -1187,6 +1186,20 @@ fun_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
+
+static JSBool
+fun_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    return fun_toString_sub(cx, obj, 0, argc, argv, rval);
+}
+
+#if JS_HAS_TOSOURCE
+static JSBool
+fun_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    return fun_toString_sub(cx, obj, JS_DONT_PRETTY_PRINT, argc, argv, rval);
+}
+#endif
 
 #if JS_HAS_CALL_FUNCTION
 static JSBool
@@ -1314,7 +1327,7 @@ out:
 
 static JSFunctionSpec function_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   fun_toString,   0},
+    {js_toSource_str,   fun_toSource,   0},
 #endif
     {js_toString_str,	fun_toString,	1},
 #if JS_HAS_APPLY_FUNCTION
@@ -1480,7 +1493,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 		 * Get the atom corresponding to the name from the tokenstream;
 		 * we're assured at this point that it's a valid identifier.
 		 */
-		atom = ts->token.t_atom;
+		atom = CURRENT_TOKEN(ts).t_atom;
 		if (!js_LookupProperty(cx, obj, (jsid)atom, &obj2,
 				       (JSProperty **)&sprop)) {
 		    goto bad_formal;

@@ -36,6 +36,7 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
+#include "jsconfig.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -517,6 +518,38 @@ gc_mark(JSRuntime *rt, void *thing)
 			    continue;
 			GC_MARK_ATOM(rt, sym_atom(sym), prev);
 		    }
+#if JS_HAS_GETTER_SETTER
+                    if (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+#ifdef GC_MARK_DEBUG
+                        char buf[64];
+                        JSAtom *atom = sym_atom(sprop->symbols);
+                        const char *id = (atom && ATOM_IS_STRING(atom))
+                                       ? JS_GetStringBytes(ATOM_TO_STRING(atom))
+                                       : "unknown",
+#endif
+
+                        if (sprop->attrs & JSPROP_GETTER) {
+#ifdef GC_MARK_DEBUG
+                            PR_snprintf(buf, sizeof buf, "%s %s",
+                                        id, js_getter_str);
+#endif
+                            GC_MARK(rt,
+                                    JSVAL_TO_GCTHING((jsval)sprop->getter),
+                                    buf,
+                                    prev);
+                        }
+                        if (sprop->attrs & JSPROP_SETTER) {
+#ifdef GC_MARK_DEBUG
+                            PR_snprintf(buf, sizeof buf, "%s %s",
+                                        id, js_setter_str);
+#endif
+                            GC_MARK(rt,
+                                    JSVAL_TO_GCTHING((jsval)sprop->setter),
+                                    buf,
+                                    prev);
+                        }
+                    }
+#endif /* JS_HAS_GETTER_SETTER */
 		}
 	    }
 	    if (!scope || scope->object == obj)

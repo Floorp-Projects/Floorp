@@ -1735,8 +1735,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	    JS_ASSERT(0);
 	}
 
-	/* If += or similar, dup the left operand and get its value. */
 	op = pn->pn_op;
+#if JS_HAS_GETTER_SETTER
+        if (op == JSOP_GETTER || op == JSOP_SETTER) {
+            /* We'll emit these prefix bytecodes after emitting the r.h.s. */
+        } else
+#endif
+	/* If += or similar, dup the left operand and get its value. */
 	if (op != JSOP_NOP) {
 	    switch (pn2->pn_type) {
 	      case TOK_NAME:
@@ -2131,6 +2136,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	    if (!js_EmitTree(cx, cg, pn2->pn_right))
 		return JS_FALSE;
 
+#if JS_HAS_GETTER_SETTER
+            op = pn2->pn_op;
+            if (op == JSOP_GETTER || op == JSOP_SETTER) {
+                if (js_Emit1(cx, cg, op) < 0)
+                    return JS_FALSE;
+            }
+#endif
 	    /* Annotate JSOP_INITELEM so we decompile 2:c and not just c. */
 	    if (pn3->pn_type == TOK_NUMBER) {
 		if (js_NewSrcNote(cx, cg, SRC_LABEL) < 0)
@@ -2138,7 +2150,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		if (js_Emit1(cx, cg, JSOP_INITELEM) < 0)
 		    return JS_FALSE;
 	    } else {
-		EMIT_ATOM_INDEX_OP(JSOP_INITPROP, ale->index);
+                EMIT_ATOM_INDEX_OP(JSOP_INITPROP, ale->index);
 	    }
 	}
 

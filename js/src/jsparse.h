@@ -86,6 +86,7 @@ JS_BEGIN_EXTERN_C
  * <Expressions>
  * TOK_COMMA    list        pn_head: list of pn_count comma-separated exprs
  * TOK_ASSIGN   binary      pn_left: lvalue, pn_right: rvalue
+ *                          pn_op: JSOP_ADD for +=, etc.
  * TOK_HOOK     ternary     pn_kid1: cond, pn_kid2: then, pn_kid3: else
  * TOK_OR       binary      pn_left: first in || chain, pn_right: rest of chain
  * TOK_AND      binary      pn_left: first in && chain, pn_right: rest of chain

@@ -128,10 +128,13 @@ typedef struct JSTokenBuf {
 
 #define JS_LINE_LIMIT   256             /* logical line buffer size limit --
 					   physical line length is unlimited */
+#define NTOKENS         4               /* 1 current + 2 lookahead, rounded */
+#define NTOKENS_MASK    (NTOKENS-1)     /* to power of 2 to avoid divmod by 3 */
 
 struct JSTokenStream {
-    JSToken             token;          /* last token scanned */
-    JSToken             pushback;       /* pushed-back already-scanned token */
+    JSToken             tokens[NTOKENS];/* circular token buffer */
+    uintN               cursor;         /* index of last parsed token */
+    uintN               lookahead;      /* count of lookahead tokens */
     uintN               lineno;         /* current line number */
     uintN               ungetpos;       /* next free char slot in ungetbuf */
     jschar              ungetbuf[4];    /* at most 4, for \uXXXX lookahead */
@@ -143,11 +146,13 @@ struct JSTokenStream {
     JSTokenBuf          tokenbuf;       /* current token string buffer */
     const char          *filename;      /* input filename or null */
     FILE                *file;          /* stdio stream if reading from file */
-    JSPrincipals        *principals;    /* principals associated with given input */
+    JSPrincipals        *principals;    /* principals associated with source */
     JSSourceHandler     listener;       /* callback for source; eg debugger */
     void                *listenerData;  /* listener 'this' data */
     void                *listenerTSData;/* listener data for this TokenStream */
 };
+
+#define CURRENT_TOKEN(ts) ((ts)->tokens[(ts)->cursor])
 
 /* JSTokenStream flags */
 #define TSF_ERROR       0x01            /* fatal error while scanning */
@@ -156,25 +161,7 @@ struct JSTokenStream {
 #define TSF_REGEXP      0x08            /* looking for a regular expression */
 #define TSF_NLFLAG      0x20            /* last linebuf ended with \n */
 #define TSF_CRFLAG      0x40            /* linebuf would have ended with \r */
-#define TSF_BADCOMPILE  0x80            /* compile failed, stop throwing exns */ 
-
-/*
- * At most one non-EOF token can be pushed back onto a TokenStream between
- * Get or successful Match operations.  These macros manipulate the pushback
- * token to clear it when changing scanning modes (upon initialzation, after
- * errors, or between newline-sensitive and insensitive states).
- */
-#define CLEAR_PUSHBACK(ts)  ((ts)->pushback.type = TOK_EOF)
-#define SCAN_NEWLINES(ts)   ((ts)->flags |= TSF_NEWLINES)
-#define HIDE_NEWLINES(ts)                                                     \
-    JS_BEGIN_MACRO                                                            \
-	(ts)->flags &= ~TSF_NEWLINES;                                         \
-	if ((ts)->pushback.type == TOK_EOL)                                   \
-	    (ts)->pushback.type = TOK_EOF;                                    \
-    JS_END_MACRO
-
-/* Clear ts member that might point above a released cx->tempPool mark. */
-#define RESET_TOKENBUF(ts)  ((ts)->tokenbuf.base = (ts)->tokenbuf.limit = NULL)
+#define TSF_BADCOMPILE  0x80            /* compile failed, stop throwing exns */
 
 /*
  * Create a new token stream, either from an input buffer or from a file.

@@ -95,14 +95,16 @@ JS_BEGIN_EXTERN_C
 #define JSPROP_READONLY         0x02    /* not settable: assignment is no-op */
 #define JSPROP_PERMANENT        0x04    /* property cannot be deleted */
 #define JSPROP_EXPORTED         0x08    /* property is exported from object */
-#define JSPROP_INDEX            0x20    /* name is actually (jsint) index */
-#define JSPROP_ASSIGNHACK       0x40    /* property set by its assign method */
-#define JSPROP_TINYIDHACK       0x80    /* prop->id is tinyid, not index */
+#define JSPROP_GETTER           0x10    /* property holds getter function */
+#define JSPROP_SETTER           0x20    /* property holds setter function */
+#define JSPROP_INDEX            0x80    /* name is actually (jsint) index */
 
 /* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
+#define JSFUN_GETTER            JSPROP_GETTER
+#define JSFUN_SETTER            JSPROP_SETTER
 #define JSFUN_BOUND_METHOD      0x40    /* bind this to fun->object's parent */
 #define JSFUN_GLOBAL_PARENT     0x80    /* reparent calls to cx->globalObject */
-#define JSFUN_FLAGS_MASK        0xc0    /* overlay JSPROP_*HACK attributes */
+#define JSFUN_FLAGS_MASK        0xf0    /* overlay JSFUN_* attributes */
 
 /*
  * Well-known JS values.  The extern'd variables are initialized when the
@@ -913,6 +915,12 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
 extern JS_PUBLIC_API(JSString *)
 JS_DecompileScript(JSContext *cx, JSScript *script, const char *name,
 		   uintN indent);
+
+/*
+ * API extension: OR this into indent to avoid pretty-printing the decompiled
+ * source resulting from JS_DecompileFunction{,Body}.
+ */
+#define JS_DONT_PRETTY_PRINT    ((uintN)0x8000)
 
 extern JS_PUBLIC_API(JSString *)
 JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent);
