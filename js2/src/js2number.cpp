@@ -95,6 +95,54 @@ namespace MetaData {
         return meta->engine->allocNumber(numInst->mValue);
     }
 
+#define MAX_PRECISION 100
+
+	static js2val
+	num_to(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc, DToStrMode zeroArgMode,
+		   DToStrMode oneArgMode, int32 precisionMin, int32 precisionMax, uint32 precisionOffset)
+	{
+		float64 d, precision;
+		char buf[dtosVariableBufferSize(MAX_PRECISION+1)], *numStr; /* Use MAX_PRECISION+1 because precisionOffset can be 1 */
+
+		if (!JS2VAL_IS_OBJECT(thisValue) 
+				|| (JS2VAL_TO_OBJECT(thisValue)->kind != SimpleInstanceKind)
+				|| ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->numberClass))
+			meta->reportError(Exception::typeError, "Number.<<conversion>> called on something other than a number thing", meta->engine->errorPos());
+		NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thisValue));
+		d = numInst->mValue;
+    
+		if (JS2VAL_IS_VOID(argv[0])) {
+			precision = 0.0;
+			oneArgMode = zeroArgMode;
+		} else {
+			precision = meta->convertValueToInteger(argv[0]);
+			if (precision < precisionMin || precision > precisionMax) {
+				numStr = doubleToStr(buf, sizeof buf, precision, dtosStandard, 0);
+				meta->reportError(Exception::typeError, "Precision value out of range {0}", meta->engine->errorPos(), numStr);
+			}
+		}
+
+		numStr = doubleToStr(buf, sizeof buf, d, oneArgMode, (uint32)precision + precisionOffset);
+		return meta->engine->allocString(numStr);
+	}
+
+    static js2val Number_toFixed(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+	{
+		/* We allow a larger range of precision than ECMA requires; this is permitted by ECMA. */
+		return num_to(meta, thisValue, argv, argc, dtosFixed, dtosFixed, -20, MAX_PRECISION, 0);
+	}
+
+    static js2val Number_toExponential(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+	{
+		/* We allow a larger range of precision than ECMA requires; this is permitted by ECMA. */
+		return num_to(meta, thisValue, argv, argc, dtosStandardExponential, dtosExponential, 0, MAX_PRECISION, 1);
+	}
+
+    static js2val Number_toPrecision(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+	{
+		/* We allow a larger range of precision than ECMA requires; this is permitted by ECMA. */
+		return num_to(meta, thisValue, argv, argc, dtosStandard, dtosPrecision, 1, MAX_PRECISION, 0);
+	}
 
     void initNumberObject(JS2Metadata *meta)
     {
@@ -126,7 +174,12 @@ namespace MetaData {
         FunctionData prototypeFunctions[] =
         {
             { "toString",            0, Number_toString },
+            { "toLocaleString",      0, Number_toString },	// [sic]
             { "valueOf",             0, Number_valueOf  },
+			{ "toFixed",			 1, Number_toFixed  },
+			{ "toExponential",   	 1, Number_toExponential  },
+			{ "toPrecision",	     1, Number_toPrecision  },
+
             { NULL }
         };
 

@@ -3538,8 +3538,17 @@ rescan:
                               && (bindingResult->content->memberKind != LocalMember::FrameVariableMember)))
                     reportError(Exception::definitionError, "Illegal redefinition of {0}", pos, id);
                 else {
-                    result = bindingResult->content;
-                    writeLocalMember(result, initVal, true, regionalFrame);
+					// in the case of a duplicate parameter, we construct the additional slot 
+					// so that there's a correspondence with the incoming argument array and
+					// change the original parameter to the later slot.
+					if (regionalFrame->kind == ParameterFrameKind) {
+						result = makeFrameVariable(regionalFrame);
+						bindingResult->content = result;
+					}
+					else {
+						result = bindingResult->content;
+						writeLocalMember(result, initVal, true, regionalFrame);
+					}
                 }
             }
             // At this point a hoisted binding of the same var already exists, so there is no need to create another one
@@ -3551,6 +3560,12 @@ rescan:
     {
         float64 d = meta->toFloat64(argv[0]);
         return BOOLEAN_TO_JS2VAL(JSDOUBLE_IS_NaN(d));
+    }
+
+    static js2val GlobalObject_isFinite(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 /* argc */)
+    {
+        float64 d = meta->toFloat64(argv[0]);
+        return BOOLEAN_TO_JS2VAL(JSDOUBLE_IS_FINITE(d));
     }
 
     static js2val GlobalObject_toString(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 /* argc */)
@@ -4035,6 +4050,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
         // Function properties of the global object 
         addGlobalObjectFunction("isNaN", GlobalObject_isNaN, 1);
+		addGlobalObjectFunction("isFinite", GlobalObject_isFinite, 1);
         addGlobalObjectFunction("eval", GlobalObject_eval, 1);
         addGlobalObjectFunction("toString", GlobalObject_toString, 1);
         addGlobalObjectFunction("valueOf", GlobalObject_toString, 1);
