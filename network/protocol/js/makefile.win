@@ -70,7 +70,7 @@ LINCS= \
     -I$(XPDIST)\public\pref	\
     -I$(XPDIST)\public\js	\
     -I$(XPDIST)\public\security	\
-    -I$(XPDIST)\public\layout	\
+    -I$(XPDIST)\public\lay	\
     -I$(XPDIST)\public\parse	\
     -I$(XPDIST)\public\style	\
     -I$(XPDIST)\public\network 
