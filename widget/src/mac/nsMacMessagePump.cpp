@@ -608,6 +608,10 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         
         nsWatchTask::GetTask().Suspend();
 
+        // roll up popups BEFORE we start the drag
+        if ( gRollupListener && gRollupWidget )
+          gRollupListener->Rollup();
+        
         Rect screenRect;
         ::GetRegionBounds(::GetGrayRgn(), &screenRect);
         ::DragWindow(whichWindow, anEvent.where, &screenRect);

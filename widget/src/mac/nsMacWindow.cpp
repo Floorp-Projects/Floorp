@@ -522,7 +522,6 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
     }
     else if ( mWindowType == eWindowType_toplevel ) {
       // enable toolbar collapse/expand box 
-      WindowAttributes removeAttributes = kWindowNoAttributes;
       ::ChangeWindowAttributes(mWindowPtr, kWindowToolbarButtonAttribute, kWindowNoAttributes );
       
       EventTypeSpec scrollEventList[] = { {kEventClassMouse, kEventMouseWheelMoved} };
@@ -530,18 +529,13 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
         // note, passing NULL as the final param to IWEH() causes the UPP to be disposed automatically
         // when the event target (the window) goes away. See CarbonEvents.h for info.
       
-      NS_ASSERTION(err == noErr, "Couldn't install Carbon Event handlers");
+      NS_ASSERTION(err == noErr, "Couldn't install Carbon Scroll Event handlers");
     }
     else if ( mWindowType == eWindowType_invisible ) {
       // for an invisible window (like the hidden window), remove it from the
       // window menu and make sure the position-constrain handler is in place so
       // the window server doesn't try to move it back on screen.
-      ::ChangeWindowAttributes(mWindowPtr, kWindowNoAttributes, kWindowInWindowMenuAttribute );
-      
-      EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowConstrain} };
-      OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler), 1, windEventList, this, NULL );
-    
-      NS_ASSERTION(err == noErr, "Couldn't install Carbon constrain event handler");    
+      ::ChangeWindowAttributes(mWindowPtr, kWindowNoAttributes, kWindowInWindowMenuAttribute );      
     }
 
     if (mIsSheet)
@@ -554,16 +548,22 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
             NewEventHandlerUPP(WindowEventHandler), 2, windEventList, this, NULL );
     }
     
-
-    
     // Setup the live window resizing if appropriate
-    if ( resizable ) {
+    if ( resizable ) 
       ::ChangeWindowAttributes ( mWindowPtr, kWindowLiveResizeAttribute, kWindowNoAttributes );
+      
+    // Since we can only call IWEH() once for each event class such as kEventClassWindow, we register all the event types that
+    // we are going to handle here
+    const EventTypeSpec windEventList[] = {
+                                            {kEventClassWindow, kEventWindowBoundsChanged}, // to enable live resizing
+                                            {kEventClassWindow, kEventWindowCollapse},      // to roll up popups when we're minimized
+                                            {kEventClassWindow, kEventWindowConstrain}      // to keep invisible windows off the screen
+                                          };
+    OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler),
+                                                 GetEventTypeCount(windEventList), windEventList, this, NULL );
+    NS_ASSERTION(err == noErr, "Couldn't install Carbon window event handler");
     
-      EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowBoundsChanged} };
-      OSStatus err = ::InstallWindowEventHandler ( mWindowPtr, NewEventHandlerUPP(WindowEventHandler), 1, windEventList, this, NULL );    
-      NS_ASSERTION(err == noErr, "Couldn't install Carbon resize event handler");
-    }  
+
 #endif
   
 #if !TARGET_CARBON
@@ -693,7 +693,7 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
         nsMacWindow* self = NS_REINTERPRET_CAST(nsMacWindow*, userData);
         if ( self ) {
           if ( self->mWindowType != eWindowType_invisible )
-            retVal = ::CallNextEventHandler( inHandlerChain, inEvent );
+            retVal = ::CallNextEventHandler(inHandlerChain, inEvent);
           else
             retVal = noErr;  // consume the event for the hidden window
         }
@@ -708,6 +708,15 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
       }
       break;
 
+      // roll up popups when we're minimized
+      case kEventWindowCollapse:
+      {
+        if ( gRollupListener && gRollupWidget )
+          gRollupListener->Rollup();        
+        retVal = ::CallNextEventHandler(inHandlerChain, inEvent);
+      }
+      break;
+        
       default:
         // do nothing...
         break;
