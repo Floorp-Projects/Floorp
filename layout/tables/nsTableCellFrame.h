@@ -141,27 +141,6 @@ private:
 
   PRUint8 GetOpposingEdge(PRUint8 aEdge);
 
-  nsIFrame* CompareCellBorders(nsIFrame* aFrame1,
-                               PRUint8 aEdge1,
-                               nsIFrame* aFrame2,
-                               PRUint8 aEdge2);
-
-  
-  nsIFrame* FindHighestPrecedentBorder(nsVoidArray* aList,
-                                       PRUint8 aEdge);
-          
-  
-
-  nsIFrame* FindInnerBorder( nsVoidArray*  aList,
-                             PRUint8 aEdge);
-
-  nsIFrame* FindOuterBorder( nsTableFrame* aTableFrame,
-                             PRUint8 aEdge);
-  
-  nsIFrame* FindBorderFrame(nsTableFrame*    aTableFrame,
-                            nsVoidArray*     aCellList,
-                            PRUint8          aEdge);
-
   void CalculateBorders(nsTableFrame* aTableFrame,
                         nsVoidArray*  aBoundaryCells[4]);
 
@@ -273,8 +252,7 @@ inline void nsTableCellFrame::SetPass1MaxElementSize(const nsSize & aMaxElementS
 inline void nsTableCellFrame::CalculateBorders(nsTableFrame* aTableFrame,
                                                nsVoidArray*  aBoundaryCells[4])
 { 
-  for (PRInt32 edge = 0; edge < 4; edge++)
-    mBorderFrame[edge] = FindBorderFrame(aTableFrame, aBoundaryCells[edge], edge);
+
 }
 
 inline NS_METHOD nsTableCellFrame::GetMargin(nsMargin& aMargin)
