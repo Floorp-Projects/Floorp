@@ -71,7 +71,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
     nsIContentViewer* contentViewer ;
     nsresult rv = nsnull;
     rv = initContext->docShell->GetContentViewer(&contentViewer);
-    if (NS_FAILED(rv))  {
+    if (NS_FAILED(rv) || contentViewer==nsnull )  {
         initContext->initFailCode = kGetContentViewerError;
         ::util_ThrowExceptionToJava(env, "Exception: cant get ContentViewer from DocShell");
         return;
@@ -336,7 +336,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
         nsIContentViewer* contentViewer ;
         nsresult rv = nsnull;
         rv = initContext->docShell->GetContentViewer(&contentViewer);
-        if (NS_FAILED(rv))  {
+        if (NS_FAILED(rv) || contentViewer==nsnull)  {
             initContext->initFailCode = kGetContentViewerError;
             ::util_ThrowExceptionToJava(env, "Exception: cant get ContentViewer from DocShell");
             return;
