@@ -5,7 +5,6 @@
 nsIDOMAppCoresManager.h
 nsIDOMBaseAppCore.h
 nsIDOMRDFCore.h
-nsIDOMPrefsCore.h
 nsIDOMProfileCore.h
 nsIDOMToolbarCore.h
 nsIDOMBrowserAppCore.h
