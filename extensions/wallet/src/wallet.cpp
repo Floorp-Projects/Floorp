@@ -40,6 +40,9 @@
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 
+#include "nsIStringBundle.h"
+#include "nsILocale.h"
+
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
@@ -47,6 +50,11 @@ static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+
+static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
+static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+//static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+//static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 #include "htmldlgs.h"
 #include "prlong.h"
@@ -337,6 +345,100 @@ wallet_GetUsingDialogsPref(void)
     return wallet_useDialogs;
 }
 
+/*************************************************************************/
+/* The following routines are used for accessing strings to be localized */
+/*************************************************************************/
+
+#define TEST_URL "resource:/res/wallet.properties"
+
+/* temporary until I can get the real routine below to work */
+PUBLIC char*
+Wallet_Localize(char* genericString) {
+  nsAutoString v("***NO LOCALIZED STRING FOUND***");
+  if (!PL_strcmp(genericString,"IncorrectKey_TryAgain?")) {
+    v = nsAutoString("Incorrect key.  Do you want to try again?");
+  } else if (!PL_strcmp(genericString,"KeyFailure")){
+    v = nsAutoString("Key failure!  Wallet file will not be opened.");
+  } else if (!PL_strcmp(genericString,"WantToCaptureForm?")){
+    v = nsAutoString("Do you want to put the values on this form into your wallet?");
+  } else if (!PL_strcmp(genericString,"FollowingItemsCanBePrefilledForYou")){
+    v = nsAutoString("Following items can be pre-filled for you.");
+  } else if (!PL_strcmp(genericString,"password")){
+    v = nsAutoString("password=");
+  } else if (!PL_strcmp(genericString,"SelectUser")){
+    v = nsAutoString("Select a username to be entered on this form");
+  } else if (!PL_strcmp(genericString,"SelectUserWhosePasswordIsBeingChanged")){
+    v = nsAutoString("Select the user whose password is being changed.");
+  } else if (!PL_strcmp(genericString,"PasswordNotification1")){
+    v = nsAutoString
+      ("For your convenience, the browser can remember your user names and passwords so that you won't have to re-type them when you return to a site.  ");
+  } else if (!PL_strcmp(genericString,"PasswordNotification2")){
+    v = nsAutoString
+      ("Your passwords will be obscured before being saved on your hard drive.  Do you want this feature enabled?");
+  } else if (!PL_strcmp(genericString,"WantToSavePassword?")){
+    v = nsAutoString("Do you want to save the user name and password for this form?");
+  } else if (!PL_strcmp(genericString,"ViewSavedSignons")){
+    v = nsAutoString("View saved sign-ons");
+  } else if (!PL_strcmp(genericString,"ViewSavedRejects")){
+    v = nsAutoString("View sign-ons that won't be saved");
+  } else if (!PL_strcmp(genericString,"SavedSignons")){
+    v = nsAutoString("Saved Sign-ons");
+  } else if (!PL_strcmp(genericString,"SavedRejects")){
+    v = nsAutoString("Sign-ons that won't be saved");
+  }
+  return v.ToNewCString();
+}
+
+PUBLIC char*
+Wallet_Localize2(char* genericString) {
+  nsresult ret;
+  nsAutoString v("");
+
+  /* create a URL for the string resource file */
+  nsINetService* pNetService = nsnull;
+  ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
+    (nsISupports**) &pNetService);
+  if (NS_FAILED(ret)) {
+    printf("cannot get net service\n");
+    return v.ToNewCString();
+  }
+  nsIURL *url = nsnull;
+  ret = pNetService->CreateURL(&url, nsString(TEST_URL), nsnull, nsnull,
+    nsnull);
+  if (NS_FAILED(ret)) {
+    printf("cannot create URL\n");
+    nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
+    return v.ToNewCString();
+  }
+  nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
+
+  /* create a bundle for the localization */
+  nsIStringBundleService* pStringService = nsnull;
+  ret = nsServiceManager::GetService(kStringBundleServiceCID,
+    kIStringBundleServiceIID, (nsISupports**) &pStringService);
+  if (NS_FAILED(ret)) {
+    printf("cannot get string service\n");
+    return v.ToNewCString();
+  }
+  nsILocale* locale = nsnull;
+  nsIStringBundle* bundle = nsnull;
+  ret = pStringService->CreateBundle(url, locale, &bundle);
+  if (NS_FAILED(ret)) {
+    printf("cannot create instance\n");
+    nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
+    return v.ToNewCString();
+  }
+  nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
+
+  /* localize the given string */
+  ret = bundle->GetStringFromName(nsString(genericString), v);
+  if (NS_FAILED(ret)) {
+    printf("cannot get string from name\n");
+    return v.ToNewCString();
+  }
+  return v.ToNewCString();
+}
+
 /*********************************************/
 /* Temporary until we have a real dialog box */
 /*********************************************/
@@ -363,6 +465,22 @@ PRBool FE_Confirm(char * szMessage) {
     c = getchar();
   }
   return result;
+}
+
+char * FE_GetString(char * szMessage) {
+  nsAutoString v("");
+  if (wallet_GetUsingDialogsPref()) {
+    fprintf(stdout, "%c%s", '\007', szMessage); // @@@
+    char c;
+    for (;;) {
+      c = getchar();
+      if (c == '\n') {
+        break;
+      }
+      v += c;
+    }
+  }
+  return v.ToNewCString();
 }
 
 /**********************************************************************************/
@@ -607,20 +725,16 @@ Wallet_SetKey() {
   if (!wallet_GetUsingDialogsPref()) {
     key[keyPosition++] = '~';
   } else {
-    fprintf(stdout, "%cpassword=", '\007');
-    char c;
-    for (;;) {
-      c = getchar();
-      if (c == '\n') {
-        key[keyPosition] = '\0';
-        break;
-      }
-      if (keyPosition < maxKeySize) {
-        key[keyPosition++] = c;
-      }
+    char * password = Wallet_Localize("password");
+    char * newkey = FE_GetString(password);
+    PR_FREEIF(password);
+    for (; (keyPosition < PL_strlen(newkey) && keyPosition < maxKeySize); keyPosition++) {
+      key[keyPosition] = newkey[keyPosition];
     }
-    Wallet_RestartKey();
+    key[keyPosition] = '\0';
+    PR_FREEIF(newkey);
   }
+  Wallet_RestartKey();
 
   /* verify this with the saved key */
   nsSpecialSystemDirectory keyFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
@@ -1263,12 +1377,20 @@ wallet_Initialize() {
     wallet_Initialized = TRUE;
 
     Wallet_RestartKey();
+    char * message = Wallet_Localize("IncorrectKey_TryAgain?");
+    char * failed = Wallet_Localize("KeyFailure");
     while (!Wallet_SetKey()) {
-      if (!FE_Confirm("incorrect key -- do you want to try again?")) {
-        FE_Confirm("Key failure -- wallet file will not be opened");
+      if (!FE_Confirm(message)) {
+        FE_Confirm(failed);
+        PR_FREEIF(message);
+        PR_FREEIF(failed);
         return;
       }
     }
+    PR_FREEIF(message);
+    PR_FREEIF(failed);
+
+
     wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, TRUE);
   }
 
@@ -1496,7 +1618,7 @@ wallet_RequestToPrefill(XP_List * list) {
   PRInt32 g = 0;
 
   XPDialogStrings* strings;
-  strings = XP_GetDialogStrings(XP_CERT_PAGE_STRINGS); /* why doesn't this link? */
+  strings = XP_GetDialogStrings(0); /* why doesn't this link? */
   if (!strings) {
     return;
   }
@@ -1518,6 +1640,7 @@ wallet_RequestToPrefill(XP_List * list) {
   FLUSH_BUFFER
 
   /* start generating list of fillins */
+  char * heading = Wallet_Localize("FollowingItemsCanBePrefilledForYou");
 //  StrAllocCopy (heading, XP_GetString(???); !!!HOW DO WE DO I18N IN RAPTOR???
   g += PR_snprintf(buffer+g, BUFLEN-g,
 "    function loadFillins(){\n"
@@ -1534,9 +1657,9 @@ wallet_RequestToPrefill(XP_List * list) {
 "            \"<TR>\" +\n"
 "              \"<TD>\" +\n"
 "                \"<BR>\" +\n",
-    "Following items can be pre-filled for you."); //!!!NEED I18N!!!
+    heading);
   FLUSH_BUFFER
-//  PR_FREEIF(heading); !!! NEED TO I18N THIS !!!
+  PR_FREEIF(heading);
 
   /* generate the html for the list of fillins */
   wallet_PrefillElement * ptr;
@@ -1587,7 +1710,7 @@ wallet_RequestToPrefill(XP_List * list) {
 "\n"
     );
   FLUSH_BUFFER
-//  PR_FREEIF(heading); !!! NEED TO I18N THIS !!!
+  PR_FREEIF(heading);
 
 /* generate rest of html */
   g += PR_snprintf(buffer+g, BUFLEN-g,
@@ -1746,7 +1869,7 @@ wallet_PostEdit() {
       return;
     }
     *separator = '\0';
-    if (strcmp(cookie, "OK")) {
+    if (PL_strcmp(cookie, "OK")) {
       *separator = BREAK;
       delete []cookies;
       return;
@@ -1986,9 +2109,11 @@ wallet_ClearStopwatch();
 
 PUBLIC void
 WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName) {
+  char * message = Wallet_Localize("WantToCaptureForm?");
   *result =
-    (strcmp(URLName, WALLET_EDITOR_URL)) && wallet_GetFormsCapturingPref() &&
-    (count>=3) && FE_Confirm("Do you want to put the values on this form into your wallet?");
+    (PL_strcmp(URLName, WALLET_EDITOR_URL)) && wallet_GetFormsCapturingPref() &&
+    (count>=3) && FE_Confirm(message);
+  PR_FREEIF(message);
 }
 
 /*

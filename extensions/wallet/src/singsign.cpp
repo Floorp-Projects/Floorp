@@ -23,7 +23,6 @@
 #include "singsign.h"
 #include "libi18n.h"            /* For the character code set conversions */
 #ifndef ClientWallet
-#include "allxpstr.h"		/* Already included in wallet.cpp */
 #endif
 
 #ifdef XP_MAC
@@ -281,9 +280,11 @@ MyFE_SelectDialog
         if (c >= '0' && c <= '9') {
             *pCount = c - '0';
             result = PR_TRUE;
+            break;
         }
         if (tolower(c) == 'n') {
             result = PR_FALSE;
+            break;
         }
     }
 
@@ -301,6 +302,7 @@ extern void Wallet_RestartKey();
 extern char Wallet_GetKey();
 extern PRBool Wallet_BadKey();
 extern PRBool Wallet_SetKey();
+extern char * Wallet_Localize(char * genericString);
 
 void
 si_RestartKey() {
@@ -568,13 +570,13 @@ si_StripLF(char* buffer) {
     }
 }
 
-/* If user-entered password is "generate", then generate a random password */
+/* If user-entered password is "********", then generate a random password */
 PRIVATE void
 si_Randomize(char * password) {
     PRIntervalTime random;
     int i;
     const char * hexDigits = "0123456789AbCdEf";
-    if (XP_STRCMP(password, XP_GetString(MK_SIGNON_PASSWORDS_GENERATE)) == 0) {
+    if (XP_STRCMP(password, "********") == 0) {
         random = PR_IntervalNow();
         for (i=0; i<8; i++) {
             password[i] = hexDigits[random%16];
@@ -790,15 +792,21 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
             }
 
             /* have user select a username from the list */
+            char * selectUser = Wallet_Localize("SelectUser");
             if (user_count == 0) {
                 /* not first data node for any saved user, so simply pick first user */
-                user_ptr = url->signonUser_list;
-                user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
+                if (url->chosen_user) {
+                    user_ptr = url->signonUser_list;
+                    user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr);
+                } else {
+                    /* no user selection had been made for first data node */
+                    user = NULL;
+                } 
             } else if (user_count == 1) {
                 /* only one user for this form at this url, so select it */
                 user = users[0];
             } else if ((user_count > 1) && MyFE_SelectDialog(
-                    XP_GetString(MK_SIGNON_SELECTUSER),
+                    selectUser,
                     list, &user_count)) {
                 /* user pressed OK */
                 if (user_count == -1) {
@@ -811,6 +819,7 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
             } else {
                 user = NULL;
             }
+            PR_FREEIF(selectUser);
             url->chosen_user = user;
             XP_FREE(list);
             XP_FREE(users);
@@ -833,56 +842,6 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
 }
 
 /*
- * Get the user for which a change-of-password is to be applied
- *
- * This routine is called only when holding the signon lock!!!
- *
- * This routine is called only if signon pref is enabled!!!
- */
-PRIVATE si_SignonUserStruct*
-si_GetUserForChangeForm(char* URLName, int messageNumber)
-{
-    si_SignonURLStruct* url;
-    si_SignonUserStruct* user;
-    si_SignonDataStruct * data;
-    XP_List * user_ptr = 0;
-    XP_List * data_ptr = 0;
-    char *message = 0;
-
-    /* get to node for this URL */
-    url = si_GetURL(URLName);
-    if (url != NULL) {
-
-        /* node for this URL was found */
-        user_ptr = url->signonUser_list;
-        while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
-            char *strippedURLName = si_StrippedURL(URLName);
-            data_ptr = user->signonData_list;
-            data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
-            message = PR_smprintf(XP_GetString(messageNumber),
-                                  data->value,
-                                  strippedURLName);
-            XP_FREE(strippedURLName);
-            if (MyFE_Confirm(message)) {
-                /*
-                 * since this user node is now the most-recently-used one, move it
-                 * to the head of the user list so that it can be favored for
-                 * re-use the next time this form is encountered
-                 */
-                XP_ListRemoveObject(url->signonUser_list, user);
-                XP_ListAddObject(url->signonUser_list, user);
-                si_signon_list_changed = PR_TRUE;
-                si_SaveSignonDataLocked();
-                XP_FREE(message);
-                return user;
-            }
-        }
-    }
-    XP_FREE(message);
-    return NULL;
-}
-
-/*
  * Get the url and user for which a change-of-password is to be applied
  *
  * This routine is called only when holding the signon lock!!!
@@ -898,7 +857,6 @@ si_GetURLAndUserForChangeForm(char* password)
     XP_List * url_ptr = 0;
     XP_List * user_ptr = 0;
     XP_List * data_ptr = 0;
-    char *message = 0;
     int16 user_count;
 
     char ** list;
@@ -956,10 +914,8 @@ si_GetURLAndUserForChangeForm(char* password)
     }
 
     /* query user */
-    if (user_count && MyFE_SelectDialog
-            (XP_GetString(MK_SIGNON_CHANGE),
-            list,
-            &user_count)) {
+    char * msg = Wallet_Localize("SelectUserWhosePasswordIsBeingChanged");
+    if (user_count && MyFE_SelectDialog(msg, list, &user_count)) {
         user = users[user_count];
         url = urls[user_count];
         /*
@@ -974,6 +930,7 @@ si_GetURLAndUserForChangeForm(char* password)
     } else {
         user = NULL;
     }
+    PR_FREEIF(msg);
 
     /* free allocated strings */
     while (--list2 > list) {
@@ -1116,8 +1073,12 @@ si_OkToSave(char *URLName, char *userName) {
         si_NoticeGiven = PR_TRUE;
         si_signon_list_changed = PR_TRUE;
         si_SaveSignonData();
-        StrAllocCopy(notification, XP_GetString(MK_SIGNON_NOTIFICATION));
-        StrAllocCat(notification, XP_GetString(MK_SIGNON_NOTIFICATION_1));
+        char * message = Wallet_Localize("PasswordNotification1");
+        StrAllocCopy(notification, message);
+        PR_FREEIF(message);
+        message = Wallet_Localize("PasswordNotification2");
+        StrAllocCat(notification, message);
+        PR_FREEIF(message);
         if (!MyFE_Confirm(notification)) {
             XP_FREE (notification);
             PREF_SetBoolPref(pref_rememberSignons, PR_FALSE);
@@ -1132,11 +1093,14 @@ si_OkToSave(char *URLName, char *userName) {
         return PR_FALSE;
     }
 
-    if (!MyFE_Confirm(XP_GetString(MK_SIGNON_NAG))) {
+    char * message = Wallet_Localize("WantToSavePassword?");
+    if (!MyFE_Confirm(message)) {
         si_PutReject(strippedURLName, userName, PR_TRUE);
         XP_FREE(strippedURLName);
+        PR_FREEIF(message);
         return PR_FALSE;
     }
+    PR_FREEIF(message);
     XP_FREE(strippedURLName);
     return PR_TRUE;
 }
@@ -2880,7 +2844,7 @@ SINGSIGN_DisplaySignonInfoAsHTML()
     };
 
     XPDialogStrings* strings;
-    strings = XP_GetDialogStrings(XP_CERT_PAGE_STRINGS);
+    strings = XP_GetDialogStrings(0);
     if (!strings) {
         return;
     }
@@ -2899,8 +2863,12 @@ SINGSIGN_DisplaySignonInfoAsHTML()
 #endif
 
     StrAllocCopy(buffer2, "");
-    StrAllocCopy (view_signons, XP_GetString(MK_SIGNON_VIEW_SIGNONS));
-    StrAllocCopy (view_rejects, XP_GetString(MK_SIGNON_VIEW_REJECTS));
+    char * message = Wallet_Localize("ViewSavedSignons");
+    StrAllocCopy (view_signons, message);
+    PR_FREEIF(message);
+    message = Wallet_Localize("ViewSavedRejects");
+    StrAllocCopy (view_rejects, message);
+    PR_FREEIF(message);
 
     /* generate initial section of html file */
     g += PR_snprintf(buffer+g, BUFLEN-g,
@@ -2962,7 +2930,9 @@ SINGSIGN_DisplaySignonInfoAsHTML()
     }
     FLUSH_BUFFER
 
-    StrAllocCopy (heading, XP_GetString(MK_SIGNON_YOUR_SIGNONS));
+    message = Wallet_Localize("SavedSignons");
+    StrAllocCopy (heading, message);
+    PR_FREEIF(message);
     g += PR_snprintf(buffer+g, BUFLEN-g,
 ");\n"
 "\n"
@@ -3081,7 +3051,9 @@ SINGSIGN_DisplaySignonInfoAsHTML()
     }
 
     /* generate next section of html file */
-    StrAllocCopy (heading, XP_GetString(MK_SIGNON_YOUR_SIGNON_REJECTS));
+    message = Wallet_Localize("SavedRejects");
+    StrAllocCopy (heading, message);
+    PR_FREEIF(message);
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "      top.frames[list_frame].document.write(\n"
 "                  \"</SELECT>\" +\n"

@@ -56,7 +56,10 @@ LINCS= \
     -I$(PUBLIC)\netlib	\
     -I$(PUBLIC)\security\
     -I$(PUBLIC)\pref	\
-    -I$(PUBLIC)\wallet
+    -I$(PUBLIC)\wallet	\
+    -I$(PUBLIC)\intl	\
+    -I$(PUBLIC)\locale	\
+    $(NULL)
 
 LCFLAGS = \
 	$(LCFLAGS) \
