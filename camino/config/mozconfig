@@ -1,0 +1,13 @@
+ac_add_options --enable-default-toolkit=cocoa
+ac_add_options --disable-tests
+ac_add_options --enable-crypto
+ac_add_options --disable-mailnews
+ac_add_options --disable-ldap
+ac_add_options --disable-accessibility
+ac_add_options --disable-jsd
+ac_add_options --enable-plaintext-editor-only
+ac_add_options --disable-mathml
+ac_add_options --enable-extensions=cookie,xmlextras,universalchardet,typeaheadfind,transformiix
+ac_add_options --with-system-zlib
+ac_add_options --enable-single-profile
+ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.2.8.sdk
