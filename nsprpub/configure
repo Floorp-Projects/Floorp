@@ -2869,6 +2869,10 @@ EOF
 
 *-hpux*)
     cat >> confdefs.h <<\EOF
+#define XP_UNIX 1
+EOF
+
+    cat >> confdefs.h <<\EOF
 #define HPUX 1
 EOF
 
@@ -2876,7 +2880,10 @@ EOF
 #define _HPUX_SOURCE 1
 EOF
 
-    DEFINES="$DEFINES -D${target_cpu}"
+    cat >> confdefs.h <<\EOF
+#define hppa 1
+EOF
+
     DLL_SUFFIX=sl
     DSO_LDOPTS='-b +h $(notdir $@)'
     PR_MD_CSRCS=hpux.c
@@ -2894,31 +2901,54 @@ EOF
     else
         DSO_CFLAGS=-fPIC
     fi
-    if test -n "$MOZILLA_CLIENT"; then
-        USE_NSPR_THREADS=1
-    fi
-    case "${target_os}" in
-    hpuxA.09*)
-        cat >> confdefs.h <<\EOF
-#define HPUX9 1
-EOF
 
+    if test -n "$MOZILLA_CLIENT"; then
+        DEFAULT_IMPL_STRATEGY=_EMU
+    fi
+
+    if echo "$OS_RELEASE" | grep ^A.09 >/dev/null; then
         cat >> confdefs.h <<\EOF
 #define _PR_NEED_H_ERRNO 1
 EOF
 
         cat >> confdefs.h <<\EOF
-#define _PR_NO_LARGE_FILES 1
+#define HPUX9 1
 EOF
 
-        ;;
-    hpuxB.10.01*)
+        DEFAULT_IMPL_STRATEGY=_EMU
+    	USE_NSPR_THREADS=1
+    fi
+
+    if echo "$OS_RELEASE" | egrep '^(B.10.10|B.10.20)' >/dev/null; then
+        cat >> confdefs.h <<\EOF
+#define _PR_NEED_H_ERRNO 1
+EOF
+
+    fi
+
+    if echo "$OS_RELEASE" | egrep '^(B.10.10|B.10.20)' >/dev/null; then
+        cat >> confdefs.h <<\EOF
+#define HAVE_INT_LOCALTIME_R 1
+EOF
+
+    fi
+
+    if echo "$OS_RELEASE" | egrep '^(B.10.30|B.11.00)' >/dev/null; then
+        cat >> confdefs.h <<\EOF
+#define HAVE_POINTER_LOCALTIME_R 1
+EOF
+
+    fi
+
+    if test "$OS_RELEASE" = "B.10.01"; then
         cat >> confdefs.h <<\EOF
 #define HPUX10 1
 EOF
 
-        ;;
-    hpuxB.10.10*)
+        DEFAULT_IMPL_STRATEGY=_EMU
+    fi
+
+    if test "$OS_RELEASE" = "B.10.10"; then
         cat >> confdefs.h <<\EOF
 #define HPUX10 1
 EOF
@@ -2927,14 +2957,10 @@ EOF
 #define HPUX10_10 1
 EOF
 
-        cat >> confdefs.h <<\EOF
-#define HAVE_INT_LOCALTIME_R 1
-EOF
+        DEFAULT_IMPL_STRATEGY=_PTH
+    fi
 
-        USE_PTHREADS=1
-        USE_NSPR_THREADS=
-        ;;
-    hpuxB.10.20*)
+    if test "$OS_RELEASE" = "B.10.20"; then
         cat >> confdefs.h <<\EOF
 #define HPUX10 1
 EOF
@@ -2943,30 +2969,31 @@ EOF
 #define HPUX10_20 1
 EOF
 
-        cat >> confdefs.h <<\EOF
-#define HAVE_INT_LOCALTIME_R 1
-EOF
-
-        if test -z "$GNU_CC"; then
+        if test -z "$GNU_CC" && test 0 = 1; then
             CFLAGS="$CFLAGS +DAportable +DS1.1"
             CXXFLAGS="$CXXFLAGS +DAportable +DS1.1"
         fi
-        USE_PTHREADS=1
-        USE_NSPR_THREADS=
-        ;;
-    hpuxB.10.30*)
+        DEFAULT_IMPL_STRATEGY=_EMU
+    fi
+
+    if test "$OS_RELEASE" = "B.10.30"; then
         cat >> confdefs.h <<\EOF
-#define HAVE_POINTER_LOCALTIME_R 1
+#define HPUX10 1
 EOF
 
-        if test -z "$GNU_CC"; then
+        cat >> confdefs.h <<\EOF
+#define HPUX10_30 1
+EOF
+
+        #CXX="/opt/aCC/bin/aCC -ext"
+        if test -z "$GNU_CC" && test 0 = 1; then
             CFLAGS="$CFLAGS +DAportable +DS1.1"
             CXXFLAGS="$CXXFLAGS +DAportable +DS1.1"
         fi
-        USE_PTHREADS=1
-        USE_NSPR_THREADS=
-        ;;
-    hpuxB.11.00*)
+        DEFAULT_IMPL_STRATEGY=_PTH
+    fi
+
+    if test "$OS_RELEASE" = "B.11.00"; then
         cat >> confdefs.h <<\EOF
 #define HPUX10 1
 EOF
@@ -2988,6 +3015,7 @@ EOF
 EOF
 
         if test -z "$GNU_CC"; then
+            if test 0 = 1; then
             if test -z "$USE_64"; then
                 CFLAGS="$CFLAGS +DAportable +DS2.0"
                 CXXFLAGS="$CXXFLAGS +DAportable +DS2.0"
@@ -2995,24 +3023,23 @@ EOF
                 CFLAGS="$CFLAGS +DA2.0W +DS2.0"
                 CXXFLAGS="$CXXFLAGS +DA2.0W +DS2.0"
             fi
+            fi
         fi
+        DEFAULT_IMPL_STRATEGY=_PTH
+    fi
+
+    if test "$DEFAULT_IMPL_STRATEGY" = "_EMU"; then
+        USE_NSPR_THREADS=1
+        USE_PTHREADS=
+        USE_USER_THREADS=
+    elif test "$DEFAULT_IMPL_STRATEGY" = "_PTH"; then
         USE_PTHREADS=1
-        USE_NSPR_THREADS=
-        ;;
-    esac
-    case "${target_os}" in
-    hpuxB.10*)
-        cat >> confdefs.h <<\EOF
-#define _PR_NO_LARGE_FILES 1
-EOF
-
-        ;;
-    esac
-    if test -n "$USE_NSPR_THREADS"; then
-        cat >> confdefs.h <<\EOF
-#define _PR_LOCAL_THREADS_ONLY 1
-EOF
-
+        if test "$MOZILLA_CLIENT"; then
+            USE_PTHREADS=
+        fi
+        if test "$USE_USER_PTHREADS"; then
+            USE_PTHREADS=
+        fi
     fi
     ;;
 
@@ -3507,7 +3534,7 @@ if test -z "$SKIP_LIBRARY_CHECKS"; then
 
 
 echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
-echo "configure:3511: checking how to run the C preprocessor" >&5
+echo "configure:3538: checking how to run the C preprocessor" >&5
 # On Suns, sometimes $CPP names a directory.
 if test -n "$CPP" && test -d "$CPP"; then
   CPP=
@@ -3522,13 +3549,13 @@ else
   # On the NeXT, cc -E runs the code through the compiler's parser,
   # not just through cpp.
   cat > conftest.$ac_ext <<EOF
-#line 3526 "configure"
+#line 3553 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:3532: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:3559: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -3539,13 +3566,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -E -traditional-cpp"
   cat > conftest.$ac_ext <<EOF
-#line 3543 "configure"
+#line 3570 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:3549: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:3576: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -3556,13 +3583,13 @@ else
   rm -rf conftest*
   CPP="${CC-cc} -nologo -E"
   cat > conftest.$ac_ext <<EOF
-#line 3560 "configure"
+#line 3587 "configure"
 #include "confdefs.h"
 #include <assert.h>
 Syntax Error
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:3566: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:3593: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   :
@@ -3588,13 +3615,13 @@ echo "$ac_t""$CPP" 1>&6
 
 if test $ac_cv_prog_gcc = yes; then
     echo $ac_n "checking whether ${CC-cc} needs -traditional""... $ac_c" 1>&6
-echo "configure:3592: checking whether ${CC-cc} needs -traditional" >&5
+echo "configure:3619: checking whether ${CC-cc} needs -traditional" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_gcc_traditional'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
     ac_pattern="Autoconf.*'x'"
   cat > conftest.$ac_ext <<EOF
-#line 3598 "configure"
+#line 3625 "configure"
 #include "confdefs.h"
 #include <sgtty.h>
 Autoconf TIOCGETP
@@ -3612,7 +3639,7 @@ rm -f conftest*
 
   if test $ac_cv_prog_gcc_traditional = no; then
     cat > conftest.$ac_ext <<EOF
-#line 3616 "configure"
+#line 3643 "configure"
 #include "confdefs.h"
 #include <termio.h>
 Autoconf TCGETA
@@ -3636,12 +3663,12 @@ fi
 for ac_func in lchown strerror
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
-echo "configure:3640: checking for $ac_func" >&5
+echo "configure:3667: checking for $ac_func" >&5
 if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 3645 "configure"
+#line 3672 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -3664,7 +3691,7 @@ $ac_func();
 
 ; return 0; }
 EOF
-if { (eval echo configure:3668: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3695: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_$ac_func=yes"
 else
@@ -3692,7 +3719,7 @@ done
 
 
 echo $ac_n "checking for pthread_attr_init in -lpthreads""... $ac_c" 1>&6
-echo "configure:3696: checking for pthread_attr_init in -lpthreads" >&5
+echo "configure:3723: checking for pthread_attr_init in -lpthreads" >&5
 ac_lib_var=`echo pthreads'_'pthread_attr_init | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -3700,7 +3727,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lpthreads  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 3704 "configure"
+#line 3731 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -3711,7 +3738,7 @@ int main() {
 pthread_attr_init()
 ; return 0; }
 EOF
-if { (eval echo configure:3715: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3742: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -3730,7 +3757,7 @@ if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
 else
   echo "$ac_t""no" 1>&6
 echo $ac_n "checking for pthread_attr_init in -lpthread""... $ac_c" 1>&6
-echo "configure:3734: checking for pthread_attr_init in -lpthread" >&5
+echo "configure:3761: checking for pthread_attr_init in -lpthread" >&5
 ac_lib_var=`echo pthread'_'pthread_attr_init | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -3738,7 +3765,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lpthread  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 3742 "configure"
+#line 3769 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -3749,7 +3776,7 @@ int main() {
 pthread_attr_init()
 ; return 0; }
 EOF
-if { (eval echo configure:3753: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3780: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -3768,7 +3795,7 @@ if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
 else
   echo "$ac_t""no" 1>&6
 echo $ac_n "checking for pthread_attr_init in -lc_r""... $ac_c" 1>&6
-echo "configure:3772: checking for pthread_attr_init in -lc_r" >&5
+echo "configure:3799: checking for pthread_attr_init in -lc_r" >&5
 ac_lib_var=`echo c_r'_'pthread_attr_init | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -3776,7 +3803,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lc_r  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 3780 "configure"
+#line 3807 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -3787,7 +3814,7 @@ int main() {
 pthread_attr_init()
 ; return 0; }
 EOF
-if { (eval echo configure:3791: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3818: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -3806,7 +3833,7 @@ if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
 else
   echo "$ac_t""no" 1>&6
 echo $ac_n "checking for pthread_attr_init in -lc""... $ac_c" 1>&6
-echo "configure:3810: checking for pthread_attr_init in -lc" >&5
+echo "configure:3837: checking for pthread_attr_init in -lc" >&5
 ac_lib_var=`echo c'_'pthread_attr_init | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -3814,7 +3841,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lc  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 3818 "configure"
+#line 3845 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -3825,7 +3852,7 @@ int main() {
 pthread_attr_init()
 ; return 0; }
 EOF
-if { (eval echo configure:3829: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3856: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -3972,7 +3999,7 @@ if test -n "$USE_PTHREADS"; then
       rm -f conftest*
    ac_cv_have_dash_pthread=no
    echo $ac_n "checking whether ${CC-cc} accepts -pthread""... $ac_c" 1>&6
-echo "configure:3976: checking whether ${CC-cc} accepts -pthread" >&5
+echo "configure:4003: checking whether ${CC-cc} accepts -pthread" >&5
    echo 'int main() { return 0; }' | cat > conftest.c
    ${CC-cc} -pthread -o conftest conftest.c > conftest.out 2>&1
    if test $? -eq 0; then
@@ -3988,7 +4015,7 @@ echo "configure:3976: checking whether ${CC-cc} accepts -pthread" >&5
 			    ac_cv_have_dash_pthreads=no
     if test "$ac_cv_have_dash_pthread" = "no"; then
 	    echo $ac_n "checking whether ${CC-cc} accepts -pthreads""... $ac_c" 1>&6
-echo "configure:3992: checking whether ${CC-cc} accepts -pthreads" >&5
+echo "configure:4019: checking whether ${CC-cc} accepts -pthreads" >&5
     	echo 'int main() { return 0; }' | cat > conftest.c
 	    ${CC-cc} -pthreads -o conftest conftest.c > conftest.out 2>&1
     	if test $? -eq 0; then
@@ -4027,32 +4054,6 @@ EOF
 	        _PTHREAD_LDFLAGS=
 	    fi
 	    ;;
-    *-hpuxB.10.10*)
-        cat >> confdefs.h <<\EOF
-#define _REENTRANT 1
-EOF
-
-        cat >> confdefs.h <<\EOF
-#define _PR_DCETHREADS 1
-EOF
-
-        ;;
-    *-hpuxB.10.20*)
-        cat >> confdefs.h <<\EOF
-#define _REENTRANT 1
-EOF
-
-        cat >> confdefs.h <<\EOF
-#define _PR_DCETHREADS 1
-EOF
-
-        ;;
-    *-hpux*)
-        cat >> confdefs.h <<\EOF
-#define _POSIX_C_SOURCE=199506L 1
-EOF
-
-        ;;
     *)
 	    cat >> confdefs.h <<\EOF
 #define _REENTRANT 1
@@ -4103,9 +4104,40 @@ EOF
     ;;
 
 *-hpux*)
-    if test -n "$USE_USER_PTHREADS"; then
+    if test "$USE_NSPR_THREADS"; then
         cat >> confdefs.h <<\EOF
-#define _POSIX_C_SOURCE=199506L 1
+#define _PR_LOCAL_THREADS_ONLY 1
+EOF
+
+    fi
+
+    if echo "$OS_RELEASE" | egrep '^(A.09|B.10)' >/dev/null; then
+        cat >> confdefs.h <<\EOF
+#define _PR_NO_LARGE_FILES 1
+EOF
+
+    fi
+
+    if test "$USE_PTHREADS"; then
+        if echo "$OS_RELEASE" | egrep '^(B.10.10|B.10.20)' >/dev/null; then
+            cat >> confdefs.h <<\EOF
+#define REENTRANT 1
+EOF
+
+            cat >> confdefs.h <<\EOF
+#define _PR_DCETHREADS 1
+EOF
+
+        else
+            cat >> confdefs.h <<EOF
+#define _POSIX_C_SOURCE 199506L
+EOF
+
+        fi
+    fi
+    if test "$USE_USER_PTHREADS"; then
+        cat >> confdefs.h <<EOF
+#define _POSIX_C_SOURCE 199506L
 EOF
 
     fi
@@ -4154,12 +4186,12 @@ OS_LIBS="$_PTHREAD_LDFLAGS $OS_LIBS"
 
 if test -z "$SKIP_LIBRARY_CHECKS"; then
 echo $ac_n "checking for dlopen""... $ac_c" 1>&6
-echo "configure:4158: checking for dlopen" >&5
+echo "configure:4190: checking for dlopen" >&5
 if eval "test \"`echo '$''{'ac_cv_func_dlopen'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4163 "configure"
+#line 4195 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char dlopen(); below.  */
@@ -4182,7 +4214,7 @@ dlopen();
 
 ; return 0; }
 EOF
-if { (eval echo configure:4186: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4218: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_dlopen=yes"
 else
@@ -4201,7 +4233,7 @@ else
   echo "$ac_t""no" 1>&6
 
     echo $ac_n "checking for dlopen in -ldl""... $ac_c" 1>&6
-echo "configure:4205: checking for dlopen in -ldl" >&5
+echo "configure:4237: checking for dlopen in -ldl" >&5
 ac_lib_var=`echo dl'_'dlopen | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4209,7 +4241,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ldl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4213 "configure"
+#line 4245 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -4220,7 +4252,7 @@ int main() {
 dlopen()
 ; return 0; }
 EOF
-if { (eval echo configure:4224: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4256: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
