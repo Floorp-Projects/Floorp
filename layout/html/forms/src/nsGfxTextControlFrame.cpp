@@ -1245,7 +1245,6 @@ nsGfxTextControlFrame::CalculateSizeNavQuirks (nsIPresContext*       aPresContex
         NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
         if (NS_INTRINSICSIZE != aCSSSize.width) {
           aDesiredSize.width = aCSSSize.width;
-          AddBoxSizing(aDesiredSize, PR_TRUE, aBorder, aPadding);
           aWidthExplicit = PR_TRUE;
         }
       }
@@ -1256,7 +1255,6 @@ nsGfxTextControlFrame::CalculateSizeNavQuirks (nsIPresContext*       aPresContex
       NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
       if (NS_INTRINSICSIZE != aCSSSize.height) {
         aDesiredSize.height = aCSSSize.height;
-        AddBoxSizing(aDesiredSize, PR_FALSE, aBorder, aPadding);
         aHeightExplicit = PR_TRUE;
       }
     }
@@ -1320,6 +1318,12 @@ nsGfxTextControlFrame::ReflowNavQuirks(nsIPresContext&           aPresContext,
     CalculateSizeNavQuirks(&aPresContext, aReflowState.rendContext, this, styleSize, 
                            areaSpec, desiredSize, minSize, widthExplicit, 
                            heightExplicit, ignore, aBorder, aPadding);
+  }
+  if (widthExplicit) {
+    desiredSize.width  += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+  }
+  if (heightExplicit) {
+    desiredSize.height += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
   }
 
   aDesiredSize.width   = desiredSize.width;
@@ -1443,7 +1447,6 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
     col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
     charWidth = nsFormControlHelper::GetTextSize(*aPresContext, aFrame, col, aDesiredSize, aRendContext);
     aMinSize.width = aDesiredSize.width;
-    AddBoxSizing(aDesiredSize, PR_TRUE, aBorder, aPadding);
   } else {
     charWidth = nsFormControlHelper::GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
     aMinSize.width = aDesiredSize.width;
@@ -1451,17 +1454,13 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
       NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
       if (NS_INTRINSICSIZE != aCSSSize.width) {
         aDesiredSize.width = aCSSSize.width;
-        AddBoxSizing(aDesiredSize, PR_TRUE, aBorder, aPadding);
         aWidthExplicit = PR_TRUE;
       }
-    } else {
-      //AddBoxSizing(aDesiredSize, PR_TRUE, aBorder, aPadding);
-      aDesiredSize.width += aBorder.left + aBorder.right + aPadding.left + aPadding.right;
     }
   }
 
   nscoord fontHeight  = 0;
-  nscoord fontLeading = 0;
+  //nscoord fontLeading = 0;
   // get leading
   nsCOMPtr<nsIFontMetrics> fontMet;
   nsFormControlHelper::GetFrameFontFM(*aPresContext, aFrame, getter_AddRefs(fontMet));
@@ -1481,19 +1480,14 @@ nsGfxTextControlFrame::CalculateSizeStandard (nsIPresContext*       aPresContext
                             ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
     numRows = (rowAttrInt > 0) ? rowAttrInt : 1;
     aDesiredSize.height = aDesiredSize.height * numRows;
-    AddBoxSizing(aDesiredSize, PR_FALSE, aBorder, aPadding);
   } else {
     aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
     if (CSS_NOTSET != aCSSSize.height) {  // css provides height
       NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
       if (NS_INTRINSICSIZE != aCSSSize.height) {
         aDesiredSize.height = aCSSSize.height;
-        AddBoxSizing(aDesiredSize, PR_FALSE, aBorder, aPadding);
         aHeightExplicit = PR_TRUE;
       }
-    } else {
-      //AddBoxSizing(aDesiredSize, PR_FALSE, aBorder, aPadding);
-      aDesiredSize.height += aBorder.top + aBorder.bottom + aPadding.top + aPadding.bottom;
     }
   }
 
@@ -1582,6 +1576,8 @@ nsGfxTextControlFrame::ReflowStandard(nsIPresContext&          aPresContext,
       minSize.width     += scrollbarWidth;
     }
   }
+  desiredSize.width  += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+  desiredSize.height += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
 
   aDesiredSize.width   = desiredSize.width;
   aDesiredSize.height  = desiredSize.height;
