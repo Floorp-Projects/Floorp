@@ -72,7 +72,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_getTarg
   }
 
   nsString ret;
-  nsresult rv = pi->GetData(ret);
+  nsresult rv = pi->GetTarget(ret);
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
       "ProcessingInstruction.getTarget: failed", rv);
@@ -105,13 +105,17 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_setData
     return;
   }
 
+  const char* data = NULL;
   jboolean iscopy = JNI_FALSE;
-  const char* data = env->GetStringUTFChars(jdata, &iscopy);
-  if (!data) {
-    JavaDOMGlobals::ThrowException(env,
-      "ProcessingInstruction.setData: GetStringUTFChars failed");
-    return;
+  if (jdata) {
+    data = env->GetStringUTFChars(jdata, &iscopy);
+    if (!data) {
+      JavaDOMGlobals::ThrowException(env,
+        "ProcessingInstruction.setData: GetStringUTFChars failed");
+      return;
+    }
   }
+
   nsresult rv = pi->SetData(data);
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jdata, data);

@@ -61,13 +61,16 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createAttribute
     return NULL;
   }
 
+  const char* name = NULL;
   nsIDOMAttr* ret = nsnull;
   jboolean iscopy = JNI_FALSE;
-  const char* name = env->GetStringUTFChars(jname, &iscopy);
-  if (!name) {
-    JavaDOMGlobals::ThrowException(env, 
-      "Document.createAttribute: GetStringUTFChars failed");
-    return NULL;
+  if (jname) {
+      name = env->GetStringUTFChars(jname, &iscopy);
+      if (!name) {
+	  JavaDOMGlobals::ThrowException(env, 
+            "Document.createAttribute: GetStringUTFChars failed");
+	  return NULL;
+      }
   }
 
   nsresult rv = doc->CreateAttribute(name, &ret);
@@ -119,13 +122,16 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createCDATASection
     return NULL;
   }
 
+  const char* data = NULL;
   nsIDOMCDATASection* ret = nsnull;
   jboolean iscopy = JNI_FALSE;
-  const char* data = env->GetStringUTFChars(jdata, &iscopy);
-  if (!data) {
-    JavaDOMGlobals::ThrowException(env,
-      "Document.createCDATASection: GetStringUTFChars failed");
-    return NULL;
+  if (jdata) {
+      data = env->GetStringUTFChars(jdata, &iscopy);
+      if (!data) {
+	  JavaDOMGlobals::ThrowException(env,
+            "Document.createCDATASection: GetStringUTFChars failed");
+	  return NULL;
+      }
   }
 
   nsresult rv = doc->CreateCDATASection(data, &ret);
@@ -176,13 +182,16 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createComment
     return NULL;
   }
 
+  const char* data = NULL;
   nsIDOMComment* ret = nsnull;
   jboolean iscopy = JNI_FALSE;
-  const char* data = env->GetStringUTFChars(jdata, &iscopy);
-  if (!data) {
-    JavaDOMGlobals::ThrowException(env,
-      "Document.createComment: GetStringUTFChars failed");
-    return NULL;
+  if (jdata) {
+      data = env->GetStringUTFChars(jdata, &iscopy);
+      if (!data) {
+	  JavaDOMGlobals::ThrowException(env,
+            "Document.createComment: GetStringUTFChars failed");
+	  return NULL;
+      }
   }
 
   nsresult rv = doc->CreateComment(data, &ret);
@@ -270,13 +279,16 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createElement
     return NULL;
   }
 
+  const char* tagName = NULL;
   nsIDOMElement* ret = nsnull;
   jboolean iscopy = JNI_FALSE;
-  const char* tagName = env->GetStringUTFChars(jtagName, &iscopy);
-  if (!tagName) {
-    JavaDOMGlobals::ThrowException(env,
-      "Document.createElement: GetStringUTFChars failed");
-    return NULL;
+  if (jtagName) {
+      tagName = env->GetStringUTFChars(jtagName, &iscopy);
+      if (!tagName) {
+	  JavaDOMGlobals::ThrowException(env,
+            "Document.createElement: GetStringUTFChars failed");
+	  return NULL;
+      }
   }
 
   nsresult rv = doc->CreateElement(tagName, &ret);
@@ -328,13 +340,16 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEntityReferenc
     return NULL;
   }
 
+  const char* name = NULL;
   nsIDOMEntityReference* ret = nsnull;
   jboolean iscopy = JNI_FALSE;
-  const char* name = env->GetStringUTFChars(jname, &iscopy);
-  if (!name) {
-    JavaDOMGlobals::ThrowException(env,
-      "Document.createEntityReference: GetStringUTFChars failed");
-    return NULL;
+  if (jname) {
+      name = env->GetStringUTFChars(jname, &iscopy);
+      if (!name) {
+	  JavaDOMGlobals::ThrowException(env,
+            "Document.createEntityReference: GetStringUTFChars failed");
+	  return NULL;
+      }
   }
 
   nsresult rv = doc->CreateEntityReference(name, &ret);
@@ -386,21 +401,27 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createProcessingInst
     return NULL;
   }
 
+  const char* target = NULL;
+  const char* data = NULL;
   nsIDOMProcessingInstruction* ret = nsnull;
   jboolean iscopy = JNI_FALSE;
   jboolean iscopy2 = JNI_FALSE;
-  const char* target = env->GetStringUTFChars(jtarget, &iscopy);
-  if (!target) {
-    JavaDOMGlobals::ThrowException(env,
-      "Document.createProcessingInstruction: GetStringUTFChars target failed");
-    return NULL;
+  if (jtarget) {
+      target = env->GetStringUTFChars(jtarget, &iscopy);
+      if (!target) {
+	  JavaDOMGlobals::ThrowException(env,
+            "Document.createProcessingInstruction: GetStringUTFChars target failed");
+	  return NULL;
+      }
   }
 
-  const char* data = env->GetStringUTFChars(jdata, &iscopy2);
-  if (!data) {
-    JavaDOMGlobals::ThrowException(env,
-      "Document.createProcessingInstruction: GetStringUTFChars data failed");
-    return NULL;
+  if (jdata) {
+      data = env->GetStringUTFChars(jdata, &iscopy2);
+      if (!data) {
+	  JavaDOMGlobals::ThrowException(env,
+            "Document.createProcessingInstruction: GetStringUTFChars data failed");
+	  return NULL;
+      }
   }
 
   nsresult rv = doc->CreateProcessingInstruction(target, data, &ret);
@@ -454,13 +475,16 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createTextNode
     return NULL;
   }
 
+  const char* data = NULL;
   nsIDOMText* ret = nsnull;
   jboolean iscopy = JNI_FALSE;
-  const char* data = env->GetStringUTFChars(jdata, &iscopy);
-  if (!data) {
-    JavaDOMGlobals::ThrowException(env,
-      "Document.createAttribute: GetStringUTFChars failed");
-    return NULL;
+  if (jdata) {
+      data = env->GetStringUTFChars(jdata, &iscopy);
+      if (!data) {
+	  JavaDOMGlobals::ThrowException(env,
+            "Document.createAttribute: GetStringUTFChars failed");
+	  return NULL;
+      }
   }
 
   nsresult rv = doc->CreateTextNode(data, &ret);
@@ -588,13 +612,16 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getElementsByTagName
     return NULL;
   }
 
+  const char* tagName = NULL;
   nsIDOMNodeList* elements = nsnull;
   jboolean iscopy = JNI_FALSE;
-  const char* tagName = env->GetStringUTFChars(jtagName, &iscopy);
-  if (!tagName) {
-    JavaDOMGlobals::ThrowException(env,
-      "Document.getElementsByTagName: GetStringUTFChars failed");
-    return NULL;
+  if (jtagName) {
+      tagName = env->GetStringUTFChars(jtagName, &iscopy);
+      if (!tagName) {
+	  JavaDOMGlobals::ThrowException(env,
+            "Document.getElementsByTagName: GetStringUTFChars failed");
+	  return NULL;
+      }
   }
 
   nsresult rv = doc->GetElementsByTagName(tagName, &elements);

@@ -36,12 +36,15 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_appendData
     return;
   }
   
+  const char* value = NULL;
   jboolean iscopy = JNI_FALSE;
-  const char* value = env->GetStringUTFChars(jvalue, &iscopy);
-  if (!value) {
-    JavaDOMGlobals::ThrowException(env,  
-      "CharacterData.appendData: GetStringUTFChars failed");
-    return;
+  if (jvalue) {
+      value = env->GetStringUTFChars(jvalue, &iscopy);
+      if (!value) {
+	  JavaDOMGlobals::ThrowException(env,  
+	    "CharacterData.appendData: GetStringUTFChars failed");
+	  return;
+      }
   }
 
   nsresult rv = data->AppendData(value);
@@ -178,12 +181,15 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_insertData
     return;
   }
   
+  const char* value = NULL;
   jboolean iscopy = JNI_FALSE;
-  const char* value = env->GetStringUTFChars(jvalue, &iscopy);
-  if (!value) {
-    JavaDOMGlobals::ThrowException(env,  
-      "CharacterData.insertData: GetStringUTFChars failed");
-    return;
+  if (jvalue) {
+      value = env->GetStringUTFChars(jvalue, &iscopy);
+      if (!value) {
+	  JavaDOMGlobals::ThrowException(env,  
+	    "CharacterData.insertData: GetStringUTFChars failed");
+	  return;
+      }
   }
 
   nsresult rv = data->InsertData((PRUint32) offset, value);
@@ -226,12 +232,15 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_replaceData
     return;
   }
   
+  const char* value = NULL;
   jboolean iscopy = JNI_FALSE;
-  const char* value = env->GetStringUTFChars(jvalue, &iscopy);
-  if (!value) {
-    JavaDOMGlobals::ThrowException(env,  
-      "CharacterData.replaceData: GetStringUTFChars failed");
-    return;
+  if (jvalue) {
+      value = env->GetStringUTFChars(jvalue, &iscopy);
+      if (!value) {
+	  JavaDOMGlobals::ThrowException(env,  
+            "CharacterData.replaceData: GetStringUTFChars failed");
+	  return;
+      }
   }
 
   nsresult rv = data->ReplaceData((PRUint32) offset, (PRUint32) count, value);
@@ -266,12 +275,15 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_setData
     return;
   }
   
+  const char* value = NULL;
   jboolean iscopy = JNI_FALSE;
-  const char* value = env->GetStringUTFChars(jvalue, &iscopy);
-  if (!value) {
-    JavaDOMGlobals::ThrowException(env,  
-      "CharacterData.setData: GetStringUTFChars failed");
-    return;
+  if (jvalue) {
+      value = env->GetStringUTFChars(jvalue, &iscopy);
+      if (!value) {
+	  JavaDOMGlobals::ThrowException(env,  
+            "CharacterData.setData: GetStringUTFChars failed");
+	  return;
+      }
   }
 
   nsresult rv = data->SetData(value);

@@ -39,12 +39,15 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttribute
     return NULL;
   }
 
+  const char* cname = NULL;
   jboolean iscopy = JNI_FALSE;
-  const char* cname = env->GetStringUTFChars(jname, &iscopy);
-  if (!cname) {
-    JavaDOMGlobals::ThrowException(env,
-      "Element.getAttribute: GetStringUTFChars failed");
-    return NULL;
+  if (jname) {
+    cname = env->GetStringUTFChars(jname, &iscopy);
+    if (!cname) {
+      JavaDOMGlobals::ThrowException(env,
+        "Element.getAttribute: GetStringUTFChars failed");
+      return NULL;
+    }
   }
 
   nsString attr;
@@ -83,23 +86,28 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNode
     return NULL;
   }
 
+  const char* cname = NULL;
   jboolean iscopy = JNI_FALSE;
-  const char* cname = env->GetStringUTFChars(jname, &iscopy);
-  if (!cname) {
-    JavaDOMGlobals::ThrowException(env,
-      "Element.getAttributeNode: GetStringUTFChars failed");
-    return NULL;
+  if (jname) {
+    cname = env->GetStringUTFChars(jname, &iscopy);
+    if (!cname) {
+      JavaDOMGlobals::ThrowException(env,
+        "Element.getAttributeNode: GetStringUTFChars failed");
+      return NULL;
+    }
   }
 
   nsIDOMAttr* attr = nsnull;
   nsresult rv = element->GetAttributeNode(cname, &attr);
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, cname);
-  if (NS_FAILED(rv) || !attr) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
       "Element.getAttributeNode: failed", rv);
     return NULL;
   }
+  if (!attr)
+    return NULL;
 
   jobject jattr = env->AllocObject(JavaDOMGlobals::attrClass);
   if (!jattr) {
@@ -135,12 +143,15 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_getElementsByTagName
     return NULL;
   }
 
+  const char* cname = NULL;
   jboolean iscopy = JNI_FALSE;
-  const char* cname = env->GetStringUTFChars(jname, &iscopy);
-  if (!cname) {
-    JavaDOMGlobals::ThrowException(env,
-      "Element.getElementsByTagName: GetStringUTFChars failed");
-    return NULL;
+  if (jname) {
+    cname = env->GetStringUTFChars(jname, &iscopy);
+    if (!cname) {
+      JavaDOMGlobals::ThrowException(env,
+        "Element.getElementsByTagName: GetStringUTFChars failed");
+      return NULL;
+    }
   }
 
   nsIDOMNodeList* nodes = nsnull;
@@ -340,20 +351,26 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttribute
     return;
   }
 
+  const char* name = NULL;
+  const char* value = NULL;
   jboolean iscopy = JNI_FALSE;
-  const char* name = env->GetStringUTFChars(jname, &iscopy);
-  if (!name) {
-    JavaDOMGlobals::ThrowException(env,
-      "Element.setAttribute: GetStringUTFChars name failed");
-    return;
+  if (jname) {
+    name = env->GetStringUTFChars(jname, &iscopy);
+    if (!name) {
+      JavaDOMGlobals::ThrowException(env,
+        "Element.setAttribute: GetStringUTFChars name failed");
+      return;
+    }
   }
 
   jboolean iscopy2 = JNI_FALSE;
-  const char* value = env->GetStringUTFChars(jvalue, &iscopy2);
-  if (!value) {
-    JavaDOMGlobals::ThrowException(env,
-      "Element.setAttribute: GetStringUTFChars name failed");
-    return;
+  if (jvalue) {
+    value = env->GetStringUTFChars(jvalue, &iscopy2);
+    if (!value) {
+      JavaDOMGlobals::ThrowException(env,
+        "Element.setAttribute: GetStringUTFChars name failed");
+      return;
+    }
   }
 
   nsresult rv = element->SetAttribute(name, value);
