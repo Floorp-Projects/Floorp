@@ -30,7 +30,6 @@
 #include "nsIFrameImageLoader.h"
 #include "nsILanguageAtom.h"
 #ifdef IBMBIDI
-class nsAutoString;
 class nsBidiPresUtils;
 #endif // IBMBIDI
 
@@ -471,7 +470,7 @@ public:
   /**
    * Get the document charset
    */
-  NS_IMETHOD GetBidiCharset(nsAutoString &aCharSet) = 0;
+  NS_IMETHOD GetBidiCharset(nsAWritableString &aCharSet) = 0;
 #endif // IBMBIDI
 
   /**
