@@ -42,3 +42,8 @@
   min-height       : 32px;
   list-style-image : url("chrome://messenger/skin/winwide.gif");
 }
+
+.smileface {
+  list-style-image : url("chrome://messenger/skin/smile.gif");
+}
+
