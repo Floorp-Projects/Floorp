@@ -555,6 +555,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   //be associated with the nsIContentViewerContainer interfaces,
   //not the nsIWebShell interfaces. this is a hack. MMP
   nsRect aBounds(x,y,w,h);
+  nsWidgetInitData  widgetInit;
 
   CreatePluginHost(aAllowPlugins);
 
@@ -617,7 +618,6 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     goto done;
   }
 
-  nsWidgetInitData  widgetInit;
   widgetInit.clipChildren = PR_FALSE;
   mWindow->Create(aNativeParent, aBounds, nsWebShell::HandleEvent,
                   mDeviceContext, nsnull, nsnull, &widgetInit);
