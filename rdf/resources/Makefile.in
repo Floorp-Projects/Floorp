@@ -27,17 +27,8 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 FILES = \
-	bookmarks.html			\
 	history.css			\
 	history.xul			\
-	bm-panel.xul			\
-	bm-props.xul			\
-	bookmark-folder-closed.gif	\
-	bookmark-folder-open.gif	\
-	bookmark-item.gif		\
-	bookmarks.css			\
-	bookmarks.js			\
-	bookmarks.xul			\
 	document.gif			\
 	dom-test-1.css			\
 	dom-test-1.xul			\
@@ -53,12 +44,9 @@ FILES = \
 	flames.gif			\
 	folder-closed.gif		\
 	folder-open.gif			\
-	iefavorite.gif			\
 	ignore-test.xul			\
 	loading.gif			\
 	online.gif			\
-	personal-folder-closed.gif	\
-	personal-folder-open.gif	\
 	remote-flash-1.rdf		\
 	remote-flash-2.rdf		\
 	remote-flash-3.rdf		\

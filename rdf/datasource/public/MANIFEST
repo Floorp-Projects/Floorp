@@ -1,4 +1,3 @@
-nsIBookmarkDataSource.h
 nsILocalStore.h
 nsIRDFFileSystem.h
 nsIRDFFind.h
