@@ -273,6 +273,10 @@ SOURCE=.\res\testfailed.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\testpartial.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\testpassed.ico
 # End Source File
 # Begin Source File

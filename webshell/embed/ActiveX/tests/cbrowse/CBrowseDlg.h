@@ -35,6 +35,7 @@ public:
 	void UpdateTest(HTREEITEM hItem, TestResult nResult);
 	void UpdateTestSet(HTREEITEM hItem);
 	void OutputString(const TCHAR *szMessage, ...);
+	void ExecOleCommand(const GUID *pguidGroup, DWORD nCmdId);
 
 // Dialog Data
 	//{{AFX_DATA(CBrowseDlg)
@@ -44,6 +45,7 @@ public:
 	BOOL	m_bNewWindow;
 	//}}AFX_DATA
 
+	CToolBar m_EditBar;
 	CPropertySheet m_dlgPropSheet;
 	CTabMessages m_TabMessages;
 	CTabTests    m_TabTests;
@@ -80,6 +82,10 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnEditMode();
 	//}}AFX_MSG
+	afx_msg void OnEditBold();
+	afx_msg void OnEditItalic();
+	afx_msg void OnEditUnderline();
+
 	DECLARE_MESSAGE_MAP()
 };
 

@@ -32,6 +32,7 @@ IDI_CLOSEDFOLDER        ICON    DISCARDABLE     "res\\closedfolder.ico"
 IDI_OPENFOLDER          ICON    DISCARDABLE     "res\\openfolder.ico"
 IDI_TESTPASSED          ICON    DISCARDABLE     "res\\testpassed.ico"
 IDI_TESTFAILED          ICON    DISCARDABLE     "res\\testfailed.ico"
+IDI_TESTPARTIAL         ICON    DISCARDABLE     "res\\testpartial.ico"
 #endif    // Neutral resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -103,18 +104,18 @@ CAPTION "CBrowse"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "",IDC_TAB_MARKER,"Static",SS_BLACKFRAME,7,223,279,89
-    RTEXT           "&URL:",IDC_STATIC,6,13,18,8
-    DEFPUSHBUTTON   "&Go",IDC_GO,134,11,25,13
-    CONTROL         "",IDC_BROWSER_MARKER,"Static",SS_BLACKFRAME,7,29,279,
-                    187
-    COMBOBOX        IDC_URL,26,11,106,52,CBS_DROPDOWN | CBS_AUTOHSCROLL | 
+    RTEXT           "&URL:",IDC_STATIC,7,26,18,8
+    DEFPUSHBUTTON   "&Go",IDC_GO,135,24,25,13
+    CONTROL         "",IDC_BROWSER_MARKER,"Static",SS_BLACKFRAME,7,42,279,
+                    174
+    COMBOBOX        IDC_URL,27,24,106,52,CBS_DROPDOWN | CBS_AUTOHSCROLL | 
                     WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "<",IDC_BACKWARD,162,11,14,13
-    PUSHBUTTON      ">",IDC_FORWARD,178,11,14,13
+    PUSHBUTTON      "<",IDC_BACKWARD,163,24,14,13
+    PUSHBUTTON      ">",IDC_FORWARD,179,24,14,13
     CONTROL         "&New window",IDC_NEWWINDOW,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,199,7,53,10
+                    WS_TABSTOP,200,20,53,10
     CONTROL         "&Edit mode",IDC_EDITMODE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,199,17,47,10
+                    WS_TABSTOP,200,30,47,10
 END
 
 
@@ -368,6 +369,13 @@ BEGIN
     IDD_TAB_MESSAGES        "Messages"
     IDD_TAB_TESTS           "Tests"
     IDD_TAB_DOM             "DOM"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDB_BOLD                "Bold"
+    IDB_ITALIC              "Italic"
+    IDB_UNDERLINE           "Underline"
 END
 
 #endif    // English (U.K.) resources
