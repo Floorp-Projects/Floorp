@@ -425,6 +425,9 @@ fi
 if test "$GCC" = "yes"; then
     GNU_CC=1
 fi
+if test "$GXX" = "yes"; then
+    GNU_CXX=1
+fi
 if test "`echo | $AS -V 2>&1 | grep -c GNU`" != "0"; then
     GNU_AS=1
 fi
@@ -434,6 +437,42 @@ if test "$cross_compiling"  = "yes"; then
     CROSS_COMPILE=1
 else
     CROSS_COMPILE=
+fi
+
+dnl ========================================================
+dnl Check for gcc -pipe support
+dnl ========================================================
+AC_MSG_CHECKING([for gcc -pipe support])
+if test -n "$GNU_CC" && test -n "$GNU_CXX" && test -n "$GNU_AS"; then
+    echo '#include <stdio.h>' > dummy-hello.c
+    echo 'int main() { printf("Hello World\n"); exit(0); }' >> dummy-hello.c
+    ${CC} -S dummy-hello.c -o dummy-hello.s 2>&5
+    cat dummy-hello.s | ${AS} -o dummy-hello.S - 2>&5
+    if test $? = 0; then
+        _res_as_stdin="yes"
+    else
+        _res_as_stdin="no"
+    fi
+    if test "$_res_as_stdin" = "yes"; then
+        _SAVE_CFLAGS=$CFLAGS
+        CFLAGS="$CFLAGS -pipe"
+        AC_TRY_COMPILE( [ #include <stdio.h> ],
+            [printf("Hello World\n");],
+            [_res_gcc_pipe="yes"],
+            [_res_gcc_pipe="no"] )
+        CFLAGS=$_SAVE_CFLAGS
+    fi
+    if test "$_res_as_stdin" = "yes" && test "$_res_gcc_pipe" = "yes"; then
+        _res="yes";
+        CFLAGS="$CFLAGS -pipe"
+        CXXFLAGS="$CXXFLAGS -pipe"
+    else
+        _res="no"
+    fi
+    rm -f dummy-hello.c dummy-hello.s dummy-hello.S dummy-hello a.out
+    AC_MSG_RESULT([$_res])
+else
+    AC_MSG_RESULT([no])
 fi
 
 fi # SKIP_COMPILER_CHECKS
@@ -788,7 +827,7 @@ case "$target" in
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(DARWIN)
     AC_DEFINE(HAVE_BSD_FLOCK)
-    CFLAGS="$CFLAGS -Wmost -fno-common -pipe"
+    CFLAGS="$CFLAGS -Wmost -fno-common"
     if echo $OS_TEST | grep -c 86 2>/dev/null; then
         CFLAGS="$CFLAGS -mno-486"
         AC_DEFINE(i386)
@@ -830,7 +869,7 @@ case "$target" in
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(FREEBSD)
     AC_DEFINE(HAVE_BSD_FLOCK)
-    CFLAGS="$CFLAGS $(DSO_CFLAGS) -ansi -Wall -pipe"
+    CFLAGS="$CFLAGS $(DSO_CFLAGS) -ansi -Wall"
     MOZ_OBJFORMAT=`test -x /usr/bin/objformat && /usr/bin/objformat || echo aout`
     if test "$MOZ_OBJFORMAT" = "elf"; then
         DLL_SUFFIX=so
@@ -1070,8 +1109,8 @@ case "$target" in
     AC_DEFINE(HAVE_FCNTL_FILE_LOCKING)
     AC_DEFINE(LINUX)
     AC_DEFINE(linux)
-    CFLAGS="$CFLAGS -ansi -Wall -pipe"
-    CXXFLAGS="$CXXFLAGS -ansi -Wall -pipe"
+    CFLAGS="$CFLAGS -ansi -Wall"
+    CXXFLAGS="$CXXFLAGS -ansi -Wall"
     MDCPUCFG_H=_linux.cfg
     PR_MD_CSRCS=linux.c
     MKSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
@@ -1258,8 +1297,8 @@ case "$target" in
         CFLAGS="$CFLAGS -Hnocopyr"
         CXXFLAGS="$CXXFLAGS -Hnocopyr"
     else
-        CFLAGS="$CFLAGS -fPIC -Wall -pipe"
-        CXXFLAGS="$CXXFLAGS -fPIC -Wall -pipe"
+        CFLAGS="$CFLAGS -fPIC -Wall"
+        CXXFLAGS="$CXXFLAGS -fPIC -Wall"
         DSO_LDOPTS=-G
     fi
     MDCPUCFG_H=_ncr.cfg
@@ -1292,8 +1331,8 @@ mips-nec-sysv*)
     PR_MD_CSRCS=netbsd.c
 
     DSO_CFLAGS='-fPIC -DPIC'
-    CFLAGS="$CFLAGS -ansi -Wall -pipe"
-    CXXFLAGS="$CXXFLAGS -ansi -Wall -pipe"
+    CFLAGS="$CFLAGS -ansi -Wall"
+    CXXFLAGS="$CXXFLAGS -ansi -Wall"
     MKSHLIB='$(CC) -o $@ $(DSO_LDOPTS)'
 
     if test -z "$OBJECT_FMT"; then
@@ -1334,8 +1373,8 @@ mips-sony-newsos*)
     AC_DEFINE(NEXTSTEP)
     AC_DEFINE(HAVE_BSD_FLOCK)
     AC_DEFINE(_POSIX_SOURCE)
-    CFLAGS="$CFLAGS -Wall -fno-common -pipe -traditional-cpp -posix"
-    CXXFLAGS="$CXXFLAGS -Wall -fno-common -pipe -traditional-cpp -posix"
+    CFLAGS="$CFLAGS -Wall -fno-common -traditional-cpp -posix"
+    CXXFLAGS="$CXXFLAGS -Wall -fno-common -traditional-cpp -posix"
     USE_NSPR_THREADS=1
     DLL_SUFFIX=dylib
     MDCPUCFG_H=_nextstep.cfg
@@ -1362,8 +1401,8 @@ mips-sony-newsos*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(OPENBSD)
     AC_DEFINE(HAVE_BSD_FLOCK)
-    CFLAGS="$CFLAGS -ansi -Wall -pipe"
-    CXXFLAGS="$CXXFLAGS -ansi -Wall -pipe"
+    CFLAGS="$CFLAGS -ansi -Wall"
+    CXXFLAGS="$CXXFLAGS -ansi -Wall"
     DLL_SUFFIX=so.1.0
     DSO_CFLAGS=-fPIC
     MDCPUCFG_H=_openbsd.cfg
@@ -1475,7 +1514,6 @@ mips-sony-newsos*)
         AS='$(CC) -x assembler-with-cpp'
         if test "$CPU_ARCH" = "mips"; then
             LD=gld
-            CFLAGS="$CFLAGS -pipe"
         fi
         CFLAGS="$CFLAGS -Wall -Wno-format"
     else
