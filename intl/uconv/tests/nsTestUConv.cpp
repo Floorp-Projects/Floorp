@@ -26,6 +26,10 @@
 #include "nsISupports.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
+#include "nsICharRepresentable.h"
+#include "prmem.h"
+
+//#define TEST_IS_REPRESENTABLE
 
 /**
  * Test program for the Unicode Converters.
@@ -249,6 +253,20 @@ nsresult testEncoder(nsIUnicodeEncoder * aEnc,
           aTestName, i, aRes[i], dest[i]);
       return NS_ERROR_UNEXPECTED;
   }
+  
+#ifdef TEST_IS_REPRESENTABLE
+  nsICharRepresentable* rp = nsnull;
+  res = aEnc->QueryInterface(nsICharRepresentable::GetIID(),(void**) &rp);
+  if(NS_SUCCEEDED(res))  {
+    PRUint32 *info= (PRUint32*)PR_Calloc((0x10000 >> 5), 4);
+    rp->FillInfo(info);
+    for(int i=0;i< 0x10000;i++)
+    {
+       if(IS_REPRESENTABLE(info, i)) 
+           printf("%4x\n", i);
+    }
+  }
+#endif
 
   return NS_OK;
 }
