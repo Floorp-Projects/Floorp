@@ -75,15 +75,12 @@ Rights Reserved.
 					<treeitem>
 						<treerow>
 							<treecell allowevents="true">
-								<textbox id="address#1"
-											flex="100%"
-											onkeypress="handleKeyPress(this, event);"
-											onclick="awNotAnEmptyArea(event);"
-											autocomplete="true"
-											timeout="300"
-											searchSessionType="addrbook"
-											/>
-							</treecell>
+                <textbox id="address#1" flex="1"
+                         type="autocomplete" searchSessions="addrbook"
+                         timeout="300" autoFill="true"
+                         onkeypress="handleKeyPress(this, event);"
+                         onclick="awNotAnEmptyArea(event);"/>
+              </treecell>
 						</treerow>
 					</treeitem>
 				</treechildren>

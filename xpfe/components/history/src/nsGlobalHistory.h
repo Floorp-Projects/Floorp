@@ -42,6 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsAWritableString.h"
 #include "nsITimer.h"
+#include "nsIAutoCompleteSession.h"
 
 //----------------------------------------------------------------------
 //
@@ -98,7 +99,8 @@ class nsGlobalHistory : nsSupportsWeakReference,
                         public nsIBrowserHistory,
                         public nsIObserver,
                         public nsIRDFDataSource,
-                        public nsIRDFRemoteDataSource
+                        public nsIRDFRemoteDataSource,
+                        public nsIAutoCompleteSession
 {
 public:
   // nsISupports methods 
@@ -109,6 +111,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIRDFDATASOURCE
   NS_DECL_NSIRDFREMOTEDATASOURCE
+  NS_DECL_NSIAUTOCOMPLETESESSION
 
   NS_METHOD Init();
 
@@ -169,6 +172,17 @@ protected:
   PRBool RowMatches(nsIMdbRow* aRow, searchQuery *aQuery);
   nsresult NotifyFindAssertions(nsIRDFResource *aSource, nsIMdbRow *aRow);
     
+  // 
+  // autocomplete stuff
+  //
+  nsVoidArray* mIgnorePrefixes;
+  
+  nsresult AutoCompleteSearch(const nsAReadableString& aSearchString,
+                              nsIAutoCompleteResults* aPrevResults,
+                              nsIAutoCompleteResults* aResults);
+  void AutoCompleteCutPrefix(nsAWritableString& aURL);
+  nsCommonString AutoCompletePrefilter(const nsAReadableString& aSearchString);
+  PRBool AutoCompleteCompare(nsAString& aHistoryURL, const nsAReadableString& aUserURL);
 
   // caching of PR_Now() so we don't call it every time we do
   // a history query
@@ -332,10 +346,43 @@ protected:
     virtual nsresult ConvertToISupports(nsIMdbRow* aRow,
                                         nsISupports** aResult);
     
+    PRBool RowMatches(nsIMdbRow* aRow, searchQuery *aQuery);
   };
+
+  // AutoCompleteEnumerator - for searching for a partial url match  
+  class AutoCompleteEnumerator : public nsMdbTableEnumerator
+  {
+  protected:
+    mdb_column mURLColumn;
+    mdb_column mCommentColumn;
+    const nsAReadableString& mSelectValue;
+    nsGlobalHistory* mHistory;
+
+    virtual ~AutoCompleteEnumerator();
+  
+  public:
+    AutoCompleteEnumerator(nsGlobalHistory* aHistory,
+                           mdb_column aURLColumn,
+                           mdb_column aCommentColumn,
+                           const nsAReadableString& aSelectValue) :
+      mHistory(aHistory),
+      mURLColumn(aURLColumn),
+      mCommentColumn(aCommentColumn),
+      mSelectValue(aSelectValue)
+    {}
+
+  protected:
+    virtual PRBool   IsResult(nsIMdbRow* aRow);
+    virtual nsresult ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult);
+  };
+
 
   friend class URLEnumerator;
   friend class SearchEnumerator;
+  friend class AutoCompleteEnumerator;
 };
+
+int PR_CALLBACK 
+AutoCompleteSortComparison(const void *v1, const void *v2, void *unused);
 
 #endif // nsglobalhistory__h____

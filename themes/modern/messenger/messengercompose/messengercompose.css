@@ -39,15 +39,15 @@
 #button-send[disabled="true"]:hover,
 #button-send[disabled="true"]:hover:active {
   list-style-image: url("chrome://messenger/skin/messengercompose/btn1/send-dis.gif");
-}
+} 
 
 #button-send:hover {
   list-style-image: url("chrome://messenger/skin/messengercompose/btn1/send-hov.gif");
-}
+} 
 
 #button-send:hover:active {
   list-style-image: url("chrome://messenger/skin/messengercompose/btn1/send-act.gif");
-}
+} 
 
 #button-address {
   list-style-image: url("chrome://messenger/skin/messengercompose/btn1/address.gif");
@@ -57,15 +57,15 @@
 #button-address[disabled="true"]:hover,
 #button-address[disabled="true"]:hover:active {
   list-style-image: url("chrome://messenger/skin/messengercompose/btn1/address-dis.gif");
-}
+} 
 
 #button-address:hover {
   list-style-image: url("chrome://messenger/skin/messengercompose/btn1/address-hov.gif");
-}
+} 
 
 #button-address:hover:active {
   list-style-image: url("chrome://messenger/skin/messengercompose/btn1/address-act.gif");
-}
+} 
 
 #button-attach {
   list-style-image: url("chrome://messenger/skin/messengercompose/btn1/attach.gif");
@@ -75,69 +75,51 @@
 #button-attach[disabled="true"]:hover,
 #button-attach[disabled="true"]:hover:active {
   list-style-image: url("chrome://messenger/skin/messengercompose/btn1/attach-dis.gif");
-}
+} 
 
 #button-attach:hover {
   list-style-image: url("chrome://messenger/skin/messengercompose/btn1/attach-hov.gif");
-}
+} 
 
 #button-attach:hover:active {
   list-style-image: url("chrome://messenger/skin/messengercompose/btn1/attach-act.gif");
+} 
+
+#spellingButton {
+  list-style-image: url("chrome://editor/skin/messengercompose/btn1/spell.gif");
 }
 
-#button-quote {
-  list-style-image: url("chrome://messenger/skin/messengercompose/btn1/quote.gif");
-}
+#spellingButton[disabled="true"],
+#spellingButton[disabled="true"]:hover,
+#spellingButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/messengercompose/btn1/spell-dis.gif");
+} 
 
-#button-quote[disabled="true"],
-#button-quote[disabled="true"]:hover,
-#button-quote[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/messengercompose/btn1/quote-dis.gif");
-}
+#spellingButton:hover {
+  list-style-image: url("chrome://editor/skin/messengercompose/btn1/spell-hov.gif");
+} 
 
-#button-quote:hover {
-  list-style-image: url("chrome://messenger/skin/messengercompose/btn1/quote-hov.gif");
-}
-
-#button-quote:hover:active {
-  list-style-image: url("chrome://messenger/skin/messengercompose/btn1/quote-act.gif");
-}
-
-#button-spelling {
-  list-style-image: url("chrome://messenger/skin/editor/btn1/spell.gif");
-}
-
-#button-spelling[disabled="true"],
-#button-spelling[disabled="true"]:hover,
-#button-spelling[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/editor/btn1/spell-dis.gif");
-}
-
-#button-spelling:hover {
-  list-style-image: url("chrome://messenger/skin/editor/btn1/spell-hov.gif");
-}
-
-#button-spelling:hover:active {
-  list-style-image: url("chrome://messenger/skin/editor/btn1/spell-act.gif");
+#spellingButton:hover:active {
+  list-style-image: url("chrome://editor/skin/messengercompose/btn1/spell-act.gif");
 }
 
 #button-save {
-  list-style-image: url("chrome://messenger/skin/messengercompose/btn1/savedraft.gif");
+  list-style-image: url("chrome://editor/skin/btn1/savefile.gif");
 }
 
 #button-save[disabled="true"],
 #button-save[disabled="true"]:hover,
 #button-save[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/messengercompose/btn1/savedraft-dis.gif");
-}
+  list-style-image: url("chrome://editor/skin/btn1/savefile-dis.gif");
+} 
 
 #button-save:hover {
-  list-style-image: url("chrome://messenger/skin/messengercompose/btn1/savedraft-hov.gif");
-}
+  list-style-image: url("chrome://editor/skin/btn1/savefile-hov.gif");
+} 
 
 #button-save:hover:active {
-  list-style-image: url("chrome://messenger/skin/messengercompose/btn1/savedraft-act.gif");
-}
+  list-style-image: url("chrome://editor/skin/btn1/savefile-act.gif");
+} 
 
 #button-stop {
   list-style-image: url("chrome://communicator/skin/btn1/stop.gif");
@@ -147,11 +129,11 @@
 #button-stop[disabled="true"]:hover,
 #button-stop[disabled="true"]:hover:active {
   list-style-image: url("chrome://communicator/skin/btn1/stop-dis.gif");
-}
+} 
 
 #button-stop:hover {
   list-style-image: url("chrome://communicator/skin/btn1/stop-hov.gif");
-}
+} 
 
 #button-stop:hover:active {
   list-style-image: url("chrome://communicator/skin/btn1/stop-act.gif");
@@ -159,16 +141,8 @@
 
 /* ::::: header toolbar ::::: */
 
-#attachmentBucket,
-#msgSubject,
-#msgIdentity {
+#attachmentBucket {
   -moz-user-focus: normal;
-}
-
-/* ..... border adjustments to match toolbar colors ..... */
-
-#compose-toolbar-sizer {
-  border-top: none;
 }
 
 /* ..... "From:" menulist menuitems ..... */
@@ -189,11 +163,11 @@
   -moz-user-focus: none;
   width: 0px;
   height: 80px;
-}
+}  
 
 #listcol-addressingWidget {
-  border-right: 1px solid #D3D3E5;
   width: 9em;
+  border-right: 1px solid #C4CADC;
 }
 
 #addressingWidgetTree > treechildren > treeitem > treerow,
@@ -204,7 +178,7 @@
 }
 
 .treecell-addressingWidget {
-  border-bottom: 1px solid #D3D3E5;
+  border-bottom: 1px solid #C4CADC;
   padding: 0px;
   vertical-align: middle;
 }
@@ -215,21 +189,42 @@
 
 .dummy-row-cell:first-child {
   border-top: none;
-  border-bottom: 1px solid #D3D3E5;
+  border-bottom: 1px solid #C4CADC;
 }
 
 .aw-menulist {
   margin: 0px;
   border-top: none !important;
   border-left: none !important;
-  border-color: #314152;
+  border-color: #A5AECE;
 }
 
 .person-icon {
   -moz-user-focus: ignore;
+  cursor: default !important;
   margin: 2px 4px 2px 4px;
   border: none;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/person.gif");
+}
+
+/* ::::: status bar border tweaks ::::: */
+
+statusbar, #status-bar {
+  border-left: none;
+}
+
+.statusbar-internal-box-1 {
+  border-left: none;
+  padding: 0px;
+}
+
+.statusbar-internal-box-2 {
+  border-top: 1px solid #A8B1CC !important;
+}
+
+.statusbar-internal-box-3 {
+  border-top: 1px solid #D4DDF8 !important;
+  padding: 1px 2px 1px 2px;
 }
 
 /* ::::: askSendFormat dialog ::::: */
@@ -243,23 +238,27 @@
 }
 
 #convertYes {
-  list-style-image: url("chrome://global/skin/icon/alert-question.gif");
+  list-style-image: url("chrome://global/skin/icons/alert-question.gif");
 }
 
 #convertAltering {
-  list-style-image: url("chrome://global/skin/icon/alert-question.gif");
+  list-style-image: url("chrome://global/skin/icons/alert-question.gif");
 }
 
 #convertNo {
-  list-style-image: url("chrome://global/skin/icon/alert-exclam.gif");
+  list-style-image: url("chrome://global/skin/icons/alert-exclam.gif");
 }
 
 /* Workaround for bug 50217. Please remove this rule, when this bug is fixed. */
 #convertDefault {
-  list-style-image: url("chrome://global/skin/icon/alert-question.gif");
+  list-style-image: url("chrome://global/skin/icons/alert-question.gif");
 }
 
 /* ::::: miscellany :::::: */
+
+#compose-toolbar-sizer {
+  border-top: none;
+}
 
 spring.spacer {
   width: 5px;
@@ -267,10 +266,10 @@ spring.spacer {
 }
 
 .label {
-  color: #FFFFFF;
+  color: #000000;
 }
 
 #navprintplus {
-  display: none !important;
+  display: none !important;                                                    
 }
 

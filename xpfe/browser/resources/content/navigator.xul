@@ -150,21 +150,24 @@ Contributor(s): ______________________________________. -->
                 
       <hbox id="nav-bar-inner" flex="1">
         <hbox id="urlbar-group" class="box-toolbar-group chromeclass-location" flex="1">
-          <hbox autostretch="never" valign="middle" flex="1" id="urlbar-container">
-            <image id="page-proxy-button" ondraggesture="nsDragAndDrop.startDrag(event, proxyIconDNDObserver);"/>
-            <textbox autocomplete="true" timeout="300" class="plain" 
-                     searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
-                     onclick="if (event.button == 0) URLBarLeftClickHandler(event);"
-                     onblur="URLBarBlurHandler(event);"
-                     onkeypress="handleURLBarKeyPress(event);" flex="1"/>  
-                     onkeypress="if (event.keyCode == 13) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>
+          <hbox flex="1" id="urlbar-container">
+            <textbox id="urlbar" class="plain" flex="1"
+                     type="autocomplete" searchSessions="history" 
+                     timeout="50" maxrows="6" alwaysOpenPopup="true"
+                     defaultSearchEngine="true"
+                     tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
+                     ontextcommand="return handleURLBarCommand(userAction);"
+                     ontextrevert="return handleURLBarRevert();"
+                     onmouseup="URLBarMouseupHandler(event);"
+                     onblur="URLBarBlurHandler(event);">
+              <image id="page-proxy-button" allowevents="true"
+                     ondraggesture="PageProxyDragGesture(event);"/>
+              <menupopup id="ubhist-popup" class="autocomplete-history-popup"
+                         popupalign="topleft" popupanchor="bottomleft"
+                         oncreate="createUBHistoryMenu(event.target);" 
+                         oncommand="executeUrlBarHistoryCommand(event.target);"/>
+            </textbox>
           </hbox>
-          <menubutton class="menubutton-icon" id="ubhist">
-            <menupopup id="ubhist-popup" popupalign="topright" popupanchor="bottomright"
-                       oncreate="createUBHistoryMenu(event.target);" oncommand="executeUrlBarHistoryCommand(event.target);"> 
-            </menupopup>                       
-          </menubutton>
-          
         </hbox>
 
         <button class="button-toolbar-3 chromeclass-location" id="go-button" persist="hidden" hidden="true" label="&goButton.label;" oncommand="addToUrlbarHistory(); BrowserLoadURL();" 
@@ -183,7 +186,7 @@ Contributor(s): ______________________________________. -->
         </menupopup>
       </menubutton>
 
-      <hbox autostretch="never">
+      <hbox id="throbber-box" autostretch="never">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
       </hbox>
     </toolbar>

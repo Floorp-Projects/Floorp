@@ -536,8 +536,36 @@ text[editable="true"][mode="edit"] {
   -moz-binding: url(chrome://global/content/xulBindings.xml#text-editable-edit);
 }
 
-textbox[autocomplete="true"] {
-  -moz-binding: url(chrome://global/content/autocomplete.xml#autocomplete);
+textbox[type="autocomplete"] {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete");
+}
+
+.autocomplete-internal-box {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-internal-box");
+}
+
+.autocomplete-result-popup {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-result-popup") !important;
+}
+
+.autocomplete-history-popup {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-history-popup") !important;
+}
+
+.autocomplete-outliner {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outliner") !important;
+}
+
+.autocomplete-outlinerbody {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outlinerbody") !important;
+}
+
+.autocomplete-outlinerrows {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outlinerrows") !important;
+}
+
+.autocomplete-outlinercol {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outlinercol") !important;
 }
 
 colorpicker {

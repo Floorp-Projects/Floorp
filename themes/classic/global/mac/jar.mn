@@ -1,5 +1,6 @@
 classic.jar:
     skin/classic/global/contents.rdf
+    skin/classic/global/autocomplete.css
     skin/classic/global/box.css
     skin/classic/global/button.css
     skin/classic/global/checkbox.css
@@ -30,6 +31,7 @@ classic.jar:
     skin/classic/global/arrow-med-up-hover.gif
     skin/classic/global/arrow-med-down.gif
     skin/classic/global/arrow-med-down-hover.gif
+    skin/classic/global/arrow-dn.gif
     skin/classic/global/button-def-disabled-left.gif
     skin/classic/global/button-def-disabled-middle.gif
     skin/classic/global/button-def-disabled-right.gif

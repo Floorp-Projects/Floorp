@@ -1,0 +1,8 @@
+
+.outliner-scrollbar[hidescrollbar="true"] {
+  visibility: collapse;
+}
+
+.autocomplete-history-box {
+  overflow: auto;
+}

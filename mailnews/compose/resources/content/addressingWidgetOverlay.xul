@@ -58,14 +58,14 @@ Rights Reserved.
             </menulist>
           </treecell>
           <treecell class="treecell-addressingWidget" autostretch="never">
-            <image onclick="awNotAnEmptyArea(event)" class="person-icon"/>
-            <textbox id="msgRecipient#1" flex="1"
-                       class="plain textbox-addressingWidget"
-                       style="width:0px;" allowevents="true"
-                       onkeypress="awRecipientKeyPress(event, this)"
-                       onkeydown="awRecipientKeyDown(event, this)"
-                       autocomplete="true" timeout="300"
-                       searchSessionType="addrbook" displayMenu="true"/>
+            <textbox id="msgRecipient#1" class="plain textbox-addressingWidget"
+                     type="autocomplete" allowevents="true" flex="1" 
+                     searchSessions="addrbook" timeout="300" maxrows="4" autoFill="true"
+                     ontextcommand="awRecipientTextCommand(userAction, this)"
+                     onkeypress="awRecipientKeyPress(event, this)"
+                     onkeydown="awRecipientKeyDown(event, this)">
+              <image onclick="awNotAnEmptyArea(event)" class="person-icon"/>
+            </textbox>
           </treecell>
         </treerow>
       </treeitem>

@@ -22,6 +22,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Joe Hewitt <hewitt@netscape.com>
  */
 
 /*
@@ -52,6 +53,7 @@
 #include "prprf.h"
 #include "prtime.h"
 #include "rdf.h"
+#include "nsQuickSort.h"
 
 #include "nsIURL.h"
 #include "nsNetCID.h"
@@ -79,9 +81,9 @@ nsIRDFResource* nsGlobalHistory::kNC_URL;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryRoot;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 
-
 #define PREF_BROWSER_HISTORY_LAST_PAGE_VISITED "browser.history.last_page_visited"
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS "browser.history_expire_days"
+#define PREF_AUTOCOMPLETE_ENABLED "browser.urlbar.autocomplete.enabled"
 
 #define FIND_BY_AGEINDAYS_PREFIX "find:datasource=history&match=AgeInDays&method="
 
@@ -457,6 +459,15 @@ nsGlobalHistory::nsGlobalHistory()
 {
   NS_INIT_REFCNT();
   LL_I2L(mFileSizeOnDisk, 0);
+  
+  // commonly used prefixes that should be chopped off all 
+  // history and input urls before comparison
+  mIgnorePrefixes = new nsVoidArray(5);
+  mIgnorePrefixes->ReplaceElementAt((void*)new NS_LITERAL_STRING("http://www."), 0);
+  mIgnorePrefixes->ReplaceElementAt((void*)new NS_LITERAL_STRING("http://"), 1);
+  mIgnorePrefixes->ReplaceElementAt((void*)new NS_LITERAL_STRING("www."), 2);
+  mIgnorePrefixes->ReplaceElementAt((void*)new NS_LITERAL_STRING("https://www."), 3);
+  mIgnorePrefixes->ReplaceElementAt((void*)new NS_LITERAL_STRING("https://"), 4);
 }
 
 nsGlobalHistory::~nsGlobalHistory()
@@ -492,6 +503,11 @@ nsGlobalHistory::~nsGlobalHistory()
 
   if (mExpireNowTimer)
     mExpireNowTimer->Cancel();
+
+  for(PRInt32 i = 0; i < mIgnorePrefixes->Count(); ++i) {
+    nsLocalString* entry = (nsLocalString*) mIgnorePrefixes->ElementAt(i);
+    delete entry;
+  }
 }
 
 
@@ -502,13 +518,14 @@ nsGlobalHistory::~nsGlobalHistory()
 //
 //   nsISupports methods
 
-NS_IMPL_ISUPPORTS6(nsGlobalHistory,
+NS_IMPL_ISUPPORTS7(nsGlobalHistory,
                    nsIGlobalHistory,
                    nsIBrowserHistory,
                    nsIObserver,
                    nsISupportsWeakReference,
                    nsIRDFDataSource,
-                   nsIRDFRemoteDataSource)
+                   nsIRDFRemoteDataSource,
+                   nsIAutoCompleteSession)
 
 //----------------------------------------------------------------------
 //
@@ -3388,3 +3405,302 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
   NS_ADDREF(*aResult);
   return NS_OK;
 }
+
+//----------------------------------------------------------------------
+//
+// nsGlobalHistory::AutoCompleteEnumerator
+//
+//   Implementation
+
+nsGlobalHistory::AutoCompleteEnumerator::~AutoCompleteEnumerator()
+{
+}
+
+
+PRBool
+nsGlobalHistory::AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
+{
+  nsCString url;
+  mHistory->GetRowValue(aRow, mURLColumn, url);
+  
+  nsString url2;
+  url2.AssignWithConversion(url);
+  PRBool result = mHistory->AutoCompleteCompare(url2, mSelectValue); 
+  
+  return result;
+}
+
+nsresult
+nsGlobalHistory::AutoCompleteEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult)
+{
+  nsCString url;
+  mHistory->GetRowValue(aRow, mURLColumn, url);
+  nsAutoString comments;
+  mHistory->GetRowValue(aRow, mCommentColumn, comments);
+
+  nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID));
+  NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
+
+  PRUnichar* urlstr = url.ToNewUnicode();
+  newItem->SetValue(urlstr);
+  nsMemory::Free(urlstr);
+  
+  newItem->SetComment(comments.get());
+
+  *aResult = newItem;
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+//
+// nsIAutoCompleteSession implementation
+//
+
+NS_IMETHODIMP 
+nsGlobalHistory::OnStartLookup(const PRUnichar *searchString,
+                               nsIAutoCompleteResults *previousSearchResult,
+                               nsIAutoCompleteListener *listener)
+{
+  NS_ASSERTION(searchString, "searchString can't be null, fix your caller");
+
+  if (!listener)
+    return NS_ERROR_NULL_POINTER;
+      
+  nsresult rv = NS_OK;
+
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool enabled = PR_FALSE;
+  prefs->GetBoolPref(PREF_AUTOCOMPLETE_ENABLED, &enabled);      
+
+  if (!enabled || searchString[0] == 0) {
+    listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIAutoCompleteResults> results;
+  results = do_CreateInstance(NS_AUTOCOMPLETERESULTS_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  AutoCompleteStatus status = nsIAutoCompleteStatus::failed;
+
+  // pass user input through filter before search
+  nsCommonString filtered = AutoCompletePrefilter(nsLocalString (searchString));
+  if (filtered.Length() == 0) {
+    listener->OnAutoComplete(results, status);
+    return NS_OK;
+  }
+  
+  // perform the actual search here
+  rv = AutoCompleteSearch(filtered, previousSearchResult, results);
+
+  // describe the search results
+  if (NS_SUCCEEDED(rv)) {
+    PRBool addedDefaultItem = PR_FALSE;
+  
+    results->SetSearchString(searchString);
+    results->SetDefaultItemIndex(-1);
+  
+    // determine if we have found any matches or not
+    nsCOMPtr<nsISupportsArray> array;
+    rv = results->GetItems(getter_AddRefs(array));
+    if (NS_SUCCEEDED(rv)) {
+      PRUint32 nbrOfItems;
+      rv = array->Count(&nbrOfItems);
+      if (NS_SUCCEEDED(rv)) {
+        if (nbrOfItems >= 1) {
+          status = nsIAutoCompleteStatus::matchFound;
+        } else {
+          status = nsIAutoCompleteStatus::noMatch;
+        }
+      }
+    }
+    
+    // notify the listener
+    listener->OnAutoComplete(results, status);
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsGlobalHistory::OnStopLookup()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::OnAutoComplete(const PRUnichar *searchString,
+                                nsIAutoCompleteResults *previousSearchResult,
+                                nsIAutoCompleteListener *listener)
+{
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+//
+// AutoComplete stuff
+//
+
+nsresult
+nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
+                                    nsIAutoCompleteResults* aPrevResults,
+                                    nsIAutoCompleteResults* aResults)
+{
+  // determine if we can skip searching the whole history and only search
+  // through the previous search results
+  PRBool searchPrevious = PR_FALSE;
+  if (aPrevResults) {
+    nsXPIDLString prevURL;
+    aPrevResults->GetSearchString(getter_Copies(prevURL));
+    nsLocalString prevURLStr(prevURL);
+    // if search string begins with the previous search string, it's a go
+    searchPrevious = Substring(aSearchString, 0, prevURLStr.Length()).Equals(prevURLStr);
+  }
+    
+  nsCOMPtr<nsISupportsArray> resultItems;
+  nsresult rv = aResults->GetItems(getter_AddRefs(resultItems));
+
+  if (searchPrevious) {
+    // searching through the previous results...
+    
+    nsCOMPtr<nsISupportsArray> prevResultItems;
+    aPrevResults->GetItems(getter_AddRefs(prevResultItems));
+    
+    PRUint32 count;
+    prevResultItems->Count(&count);
+    for (PRUint32 i = 0; i < count; ++i) {
+      nsCOMPtr<nsIAutoCompleteItem> item;
+      prevResultItems->GetElementAt(i, getter_AddRefs(item));
+      
+      nsXPIDLString url;
+      item->GetValue(getter_Copies(url));
+      
+      nsLocalString urlstr(url);
+      if (AutoCompleteCompare(urlstr, aSearchString))
+        resultItems->AppendElement(item);
+    }    
+  } else {
+    // searching through the entire history...
+        
+    // prepare the search enumerator
+    AutoCompleteEnumerator* enumerator;
+    enumerator = new AutoCompleteEnumerator(this, kToken_URLColumn, 
+                                            kToken_NameColumn, aSearchString);
+    rv = enumerator->Init(mEnv, mTable);
+    if (NS_FAILED(rv)) return rv;
+  
+    // store hits in an auto array initially
+    nsAutoVoidArray array;
+      
+    nsISupports* entry; // not using nsCOMPtr here to avoid time spent refcounting 
+                       // while passing these around between the 3 arrays
+    // step through the enumerator
+    PRBool hasMore;
+    while (true) {
+      enumerator->HasMoreElements(&hasMore);
+      if (!hasMore) break;
+      enumerator->GetNext(&entry);
+      array.AppendElement(entry);
+    }
+  
+    // turn auto array into flat array for quick sort
+    PRUint32 count = array.Count();
+    nsIAutoCompleteItem** items = new nsIAutoCompleteItem*[count];
+    PRUint32 i;
+    for (i = 0; i < count; ++i)
+      items[i] = (nsIAutoCompleteItem*)array.ElementAt(i);
+    
+    // sort it
+    NS_QuickSort(items, count, sizeof(nsIAutoCompleteItem*), AutoCompleteSortComparison, nsnull);
+  
+    // place the sorted array into the autocomplete results
+    for (i = 0; i < count; ++i) {
+      nsISupports* item = (nsISupports*)items[i];
+      resultItems->AppendElement(item);
+      NS_IF_RELEASE(item); // release manually since we didn't use nsCOMPtr above
+    }
+    
+    delete[] items;
+  }
+    
+  return NS_OK;
+}
+
+void
+nsGlobalHistory::AutoCompleteCutPrefix(nsAWritableString& aURL)
+{
+  // This comparison is case-sensitive.  Therefore, it assumes that aUserURL is a 
+  // potential URL whose host name is in all lower case.
+  PRInt32 idx = 0;
+  for (PRInt32 i = 0; i < mIgnorePrefixes->Count(); ++i) {
+    nsString* string = (nsString*) mIgnorePrefixes->ElementAt(i);    
+    if (Substring(aURL, 0, string->Length()).Equals(*string)) {
+      idx = string->Length();
+      break;
+    }
+  }
+  
+  if (idx)
+    aURL.Cut(0, idx);
+}
+
+nsCommonString
+nsGlobalHistory::AutoCompletePrefilter(const nsAReadableString& aSearchString)
+{
+  // XXX using nsAutoString here only because nsAString's Cut method doesn't work
+  //     and it hasn't implemented ToLowerCase yet
+  nsAutoString url(aSearchString);
+  AutoCompleteCutPrefix(url);
+
+  PRInt32 slash = url.FindChar('/', 0);
+  if (slash >= 0) {
+    // if user is typing a url but has already typed past the host,
+    // then convert the host to lowercase
+    nsAutoString host;
+    url.Left(host, slash);
+    host.ToLowerCase();
+    url.Assign(host + Substring(url, slash, url.Length()-slash));
+  } else {
+    // otherwise, assume the user could still be typing the host, and
+    // convert everything to lowercase
+    url.ToLowerCase();
+  }
+  
+  return url;
+}
+
+PRBool
+nsGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL, const nsAReadableString& aUserURL)
+{
+  AutoCompleteCutPrefix(aHistoryURL);
+  
+  return Substring(aHistoryURL, 0, aUserURL.Length()).Equals(aUserURL);
+}
+
+int PR_CALLBACK 
+AutoCompleteSortComparison(const void *v1, const void *v2, void *unused) 
+{
+  nsIAutoCompleteItem *item1 = *(nsIAutoCompleteItem**) v1;
+  nsIAutoCompleteItem *item2 = *(nsIAutoCompleteItem**) v2;
+  
+  nsXPIDLString s1;
+  item1->GetValue(getter_Copies(s1));
+  nsXPIDLString s2;
+  item2->GetValue(getter_Copies(s2));
+  
+  if (!s1) {
+    if (!s2)
+      return 0;
+    else
+      return -1;
+  } else if (!s2) {
+    return 1;
+  } else {
+    return nsCRT::strcmp(s1, s2);
+  }
+}
+

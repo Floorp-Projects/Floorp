@@ -278,3 +278,12 @@ autorepeatbutton > .autorepeatbutton-down {
 autorepeatbutton:hover > .autorepeatbutton-down {
     list-style-image: url("chrome://global/skin/arrow-med-down-hover.gif")
 }
+
+/* ::::: autocomplete menuitems ::::: */
+
+.autocomplete-history-popup > menuitem
+  {
+    max-width              : none !important;
+    font                   : message-box;
+  }
+

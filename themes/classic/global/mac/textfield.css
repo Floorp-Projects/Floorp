@@ -81,8 +81,3 @@
       border              : none !important;
     }
 
-/* autocomplete text field */
-  .textbox-popup > menuitem
-  {
-      max-width            : none !important;
-  }

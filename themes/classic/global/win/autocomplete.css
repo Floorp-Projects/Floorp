@@ -1,0 +1,94 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
+
+/* ::::: autocomplete ::::: */
+
+textbox[type="autocomplete"]
+  {
+    cursor              : default !important;
+  }
+
+.textbox-input 
+  {
+    cursor              : text;
+  }
+
+.autocomplete-internal-box 
+  {
+    padding             : 0px !important;
+  }
+
+.autocomplete-textbox-container
+  {
+    padding             : 1px 2px 1px 2px;
+  }
+
+/* ::::: history button ::::: */
+
+.autocomplete-history-button
+  {
+    -moz-binding        : url("chrome://global/skin/classicBindings.xml#autocomplete-history-button");
+    border-top          : 1px solid -moz-Dialog;
+    border-right        : 1px solid ThreeDDarkShadow;
+    border-bottom       : 1px solid ThreeDDarkShadow;
+    border-left         : 1px solid ThreeDFace;
+    background-color    : ThreeDFace;
+    list-style-image    : url("chrome://global/skin/scroll-down.gif");
+  }
+
+.autocomplete-history-button > .autocomplete-history-button-internal-box 
+  {
+    border-top          : 1px solid ThreeDHighlight;
+    border-right        : 1px solid ThreeDShadow;
+    border-bottom       : 1px solid ThreeDShadow;
+    border-left         : 1px solid ThreeDHighlight;
+    padding             : 1px;
+  }
+
+.autocomplete-history-button[open="true"]
+  {
+    border              : 1px solid ThreeDDarkShadow;
+  }
+
+.autocomplete-history-button[open="true"] > .autocomplete-history-button-internal-box
+  {
+    border              : 1px solid ThreeDFace;
+    padding             : 2px 0px 0px 2px;
+  }
+
+/* ::::: autocomplete popups ::::: */
+
+.autocomplete-result-popup,
+.autocomplete-history-popup
+  {
+    border                 : 1px solid ThreeDDarkShadow !important;
+    background-color       : -moz-Field !important;
+  }
+
+.autocomplete-history-popup
+  {
+    max-height             : 180px;
+  }
+
+/* ::::: outliner ::::: */
+
+.autocomplete-outliner 
+  {
+    background-color       : transparent !important;
+  }
+
+.autocomplete-outlinercol 
+  {
+    margin                 : 0px !important;
+    border                 : none !important;
+    padding                : 0px !important;
+  }
+
+.autocomplete-outlinerbody:-moz-outliner-row(menuactive) 
+  {
+    background-color       : Highlight;
+  }
+
+.autocomplete-outlinerbody:-moz-outliner-cell-text(menuactive) 
+  {
+    color                  : HighlightText !important;
+  }

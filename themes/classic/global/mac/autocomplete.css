@@ -1,0 +1,77 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
+
+/* ::::: autocomplete ::::: */
+
+textbox[type="autocomplete"]
+  {
+    cursor              : default !important;
+  }
+
+.textbox-input 
+  {
+    cursor              : text;
+  }
+
+.autocomplete-internal-box 
+  {
+    padding             : 0px !important;
+  }
+
+.autocomplete-textbox-container
+  {
+    padding             : 1px 2px 1px 2px;
+  }
+
+/* ::::: history button ::::: */
+
+.autocomplete-history-button
+  {
+    border              : 1px outset #CCCCCC;
+    padding             : 1px 2px;
+    background-color    : #CCCCCC;
+    list-style-image    : url("chrome://global/skin/arrow-dn.gif");
+  }
+
+.autocomplete-history-button[open="true"]
+  {
+    border              : 1px solid #888888;
+    padding             : 2px 1px 0px 3px;
+  }
+
+/* ::::: autocomplete popups ::::: */
+
+.autocomplete-history-popup,
+.autocomplete-result-popup
+  {
+    border                 : 1px solid #333333 !important;
+    background-color       : -moz-field !important;
+  }
+
+.autocomplete-history-popup,
+  {
+    max-height             : 180px;
+  }
+
+/* ::::: outliner ::::: */
+
+.autocomplete-outliner 
+  {
+    background-color       : transparent !important;
+  }
+
+.autocomplete-outlinercol 
+  {
+    margin                 : 0px !important;
+    border                 : none !important;
+    padding                : 0px !important;
+  }
+
+.autocomplete-outlinerbody:-moz-outliner-row(menuactive) 
+  {
+    background-color       : Highlight;
+  }
+
+.autocomplete-outlinerbody:-moz-outliner-cell-text(menuactive) 
+  {
+    color                  : HighlightText !important;
+  }

@@ -35,6 +35,7 @@
 
   <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-navigator.js"/>
+
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["startupPage", "browserStartupHomepage",
@@ -66,7 +67,8 @@
     <html>&homePageIntro.label;</html>
     <box autostretch="never">
       <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="browserStartupHomepage"/>
-      <textbox id="browserStartupHomepage" flex="1" wsm_persist="true"
+      <textbox id="browserStartupHomepage" type="autocomplete" flex="1" wsm_persist="true" 
+                 searchSessions="history" timeout="50" maxrows="6"
                  pref="true" preftype="string" prefstring="browser.startup.homepage"
                  prefattribute="value"/>  <!-- we may wish to change this to data
                                                when we support fancy formatted local filenames -->

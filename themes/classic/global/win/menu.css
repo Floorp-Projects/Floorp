@@ -265,3 +265,10 @@ autorepeatbutton:hover
     padding               : 2px 1px 1px 2px;
   }
 
+/* ::::: autocomplete menuitems ::::: */
+
+.autocomplete-history-popup > menuitem
+  {
+    max-width              : none !important;
+    font-size              : smaller;
+  }

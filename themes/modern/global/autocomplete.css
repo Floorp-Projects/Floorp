@@ -1,0 +1,89 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== autocomplete.css =================================================
+  == Styles used by the autocomplete widget.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: autocomplete ::::: */
+
+textbox[type="autocomplete"] {
+  cursor: default !important;
+}
+
+.textbox-input {
+  cursor: text;
+  margin: 0px;
+  border: none;
+  padding: 0px;
+  background-color: inherit;
+  color: inherit;
+  font: inherit;
+}
+
+/* ::::: history button ::::: */
+
+.autocomplete-history-button {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#autostretch-never");
+  margin: 1px 3px 3px 0px;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  vertical-align: middle;
+}
+
+.autocomplete-history-button[open="true"] {
+  margin: 2px 2px 2px 1px;
+}
+
+/* ::::: popups ::::: */
+
+.autocomplete-history-popup,
+.autocomplete-result-popup {
+  border: 1px solid #6B747E;
+  background-color: #E9F5FF !important;
+}
+
+.autocomplete-history-popup {
+  max-height: 180px;
+}
+
+/* ::::: outliner ::::: */
+
+.autocomplete-outliner {
+  background-color: transparent !important;
+}
+
+.autocomplete-outlinercol {
+  margin: 0px !important;
+  border: none !important;
+  padding: 0px !important;
+}
+
+.autocomplete-outlinerbody:-moz-outliner-row(menuactive) {
+  background-color: #486380;
+}
+
+.autocomplete-outlinerbody:-moz-outliner-cell-text(menuactive) {
+  color: #FFFFFF !important;
+}

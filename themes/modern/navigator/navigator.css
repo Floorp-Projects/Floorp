@@ -1,44 +1,47 @@
-/*
+/* 
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *
+ *  
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
- *
+ *  
+ * The Original Code is mozilla.org code.
+ * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- *
+ * 
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
  */
 
-/* ===== navigator.css ==================================================
-  == Styles shared throughout the Navigator application.
-  ======================================================================= */
-
+@import url("chrome://navigator/content/navigator.css");
 @import url("chrome://communicator/skin/");
-@import url("chrome://communicator/skin/sidebar/sidebar.css");
 @import url("chrome://navigator/skin/personalToolbar.css");
+@import url("chrome://communicator/skin/sidebar/sidebar.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* ::::: primary toolbar buttons ::::: */
 
+.menubutton-dual {
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-1");
+}
+
 #back-button {
-  margin-left: 0px;
+  margin: 3px 6px 0px 0px;
   list-style-image: url("chrome://navigator/skin/btn1/back.gif");
 }
 
 #back-button[disabled="true"],
+#back-button[disabled="true"]:hover,
+#back-button[disabled="true"]:hover:active,
+#back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
 #back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
 #back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
   list-style-image: url("chrome://navigator/skin/btn1/back-dis.gif");
@@ -53,10 +56,14 @@
 }
 
 #forward-button {
+  margin: 3px 6px 0px 0px;
   list-style-image: url("chrome://navigator/skin/btn1/forward.gif");
 }
 
 #forward-button[disabled="true"],
+#forward-button[disabled="true"]:hover,
+#forward-button[disabled="true"]:hover:active,
+#forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
 #forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
 #forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
   list-style-image: url("chrome://navigator/skin/btn1/forward-dis.gif");
@@ -70,28 +77,11 @@
   list-style-image: url("chrome://navigator/skin/btn1/forward-act.gif");
 }
 
-#stop-button {
-  list-style-image: url("chrome://navigator/skin/btn1/stop.gif");
-}
-
-#stop-button[disabled="true"],
-#stop-button[disabled="true"]:hover,
-#stop-button[disabled="true"]:hover:active {
-  list-style-image: url("chrome://navigator/skin/btn1/stop-dis.gif");
-}
-
-#stop-button:hover {
-  list-style-image: url("chrome://navigator/skin/btn1/stop-hov.gif");
-}
-
-#stop-button:hover:active {
-  list-style-image: url("chrome://navigator/skin/btn1/stop-act.gif");
-}
-
 #reload-button {
+  margin: 3px 6px 0px 0px;
   list-style-image: url("chrome://navigator/skin/btn1/reload.gif");
 }
-
+  
 #reload-button[disabled="true"],
 #reload-button[disabled="true"]:hover,
 #reload-button[disabled="true"]:hover:active {
@@ -106,13 +96,33 @@
   list-style-image: url("chrome://navigator/skin/btn1/reload-act.gif");
 }
 
+#stop-button {
+  margin: 3px 6px 0px 0px;
+  list-style-image: url("chrome://navigator/skin/btn1/stop.gif");
+} 
+
+#stop-button[disabled="true"],
+#stop-button[disabled="true"]:hover,
+#stop-button[disabled="true"]:hover:active {
+  list-style-image: url("chrome://navigator/skin/btn1/stop-dis.gif");
+} 
+
+#stop-button:hover {
+  list-style-image: url("chrome://navigator/skin/btn1/stop-hov.gif");
+} 
+
+#stop-button:hover:active {
+  list-style-image: url("chrome://navigator/skin/btn1/stop-act.gif");
+} 
+
 #print-button {
-  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-1");
-  margin: 6px 6px 0px 6px;
   list-style-image: url("chrome://communicator/skin/btn1/print.gif");
 }
 
 #print-button[disabled="true"],
+#print-button[disabled="true"]:hover,
+#print-button[disabled="true"]:hover:active,
+#print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
 #print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
 #print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
   list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif");
@@ -126,72 +136,81 @@
   list-style-image: url("chrome://communicator/skin/btn1/print-act.gif");
 }
 
-#print-button > .menubutton-dual-stack > .menubutton-dual-dropmarker-box {
-  margin-left: 19px;
-  margin-top: 22px;
-}
-
 /* Hides text below the above buttons */
 .button-toolbar-1 > .button-internal-box > .button-text-container {
   display: none;
+}
+
+/* ::::: nav-bar - the navigator primary toolbar ::::: */
+
+.toolbar-primary-mid-fg {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#autostretch-never");
+  vertical-align: top;
+}
+
+.toolbar-primary-mid-top {
+  background-image: url("chrome://navigator/skin/toolbar/navbar-mid-top.gif");
+}
+
+#nav-bar-buttons {
+  margin-left: 15px;
 }
 
 /* ::::: navbar-inner - the grooved area around the urlbar ::::: */
 
 #nav-bar-inner {
   -moz-binding: url("chrome://navigator/skin/navigatorBindings.xml#nav-bar-inner");
-  margin: 6px 0px 0px 6px;
+  margin: 10px 5px 0px 13px;
   min-width: 0px;
 }
 
-.navbar-inner-groove-left {
-  width: 6px;
+.navbar-inner-groove-lft {
+  width: 6px;                                
 }
 
-.navbar-inner-groove-left-top {
-  height: 22px;
+.navbar-inner-groove-lft-top {
+  height: 24px;
   background: url("chrome://navigator/skin/toolbar/nav-groove-lft-top.gif") no-repeat;
 }
 
-.navbar-inner-groove-left-mid {
-  background: url("chrome://navigator/skin/toolbar/nav-groove-lft-mid.gif") repeat-y;
+.navbar-inner-groove-lft-mid {
+  background: url("chrome://navigator/skin/toolbar/nav-groove-lft-mid.gif") repeat-y left;
 }
 
-.navbar-inner-groove-left-btm {
-  height: 6px;
+.navbar-inner-groove-lft-btm {
+  height: 5px; 
   background: url("chrome://navigator/skin/toolbar/nav-groove-lft-btm.gif") no-repeat;
 }
 
 .navbar-inner-border-outer {
-  border-top: 1px solid #A0B3C7;
-  border-bottom: 1px solid #7C92AF;
+  border-top: 1px solid #A2AFBD;
+  border-bottom: 1px solid #CFD7DE;
 }
 
 .navbar-inner-border-middle {
-  border-top: 1px solid #7D91AA;
-  border-bottom: 1px solid #4E6179;
+  border-top: 1px solid #EBF4FF;
+  border-bottom: 1px solid #87929E;
 }
-
+ 
 .navbar-inner-border-inner {
-  border-top: 1px solid #BBCDE3;
-  border-bottom: 1px solid #556D8B;
+  vertical-align: middle;
 }
 
-.navbar-inner-groove-right {
-  width: 6px;
+.navbar-inner-groove-rit {
+  width: 6px;                                
 }
 
-.navbar-inner-groove-right-top {
-  height: 22px;
+.navbar-inner-groove-rit-top {
+  height: 24px;
   background: url("chrome://navigator/skin/toolbar/nav-groove-rit-top.gif") no-repeat;
 }
 
-.navbar-inner-groove-right-mid {
-  background: url("chrome://navigator/skin/toolbar/nav-groove-rit-mid.gif") repeat-y;
+.navbar-inner-groove-rit-mid {
+  background: url("chrome://navigator/skin/toolbar/nav-groove-rit-mid.gif") repeat-y right;
 }
 
-.navbar-inner-groove-right-btm {
-  height: 6px;
+.navbar-inner-groove-rit-btm {
+  height: 5px;
   background: url("chrome://navigator/skin/toolbar/nav-groove-rit-btm.gif") no-repeat;
 }
 
@@ -199,125 +218,129 @@
 
 #urlbar-group {
   -moz-binding: url("chrome://navigator/skin/navigatorBindings.xml#urlbar-group");
-  margin: 3px 8px 4px 2px;
-  -moz-border-radius: 5px;
-  background-color: #ffffff;
+  margin: 2px 6px 2px 3px;
 }
 
-.urlbar-left {
+.urlbar-lft {
   width: 3px;
 }
 
-.urlbar-left-top {
-  height: 4px;
+.urlbar-lft-top {
   background: url("chrome://navigator/skin/toolbar/urlbar-lft-top.gif") no-repeat;
+  height: 4px;
 }
 
-.urlbar-left-mid {
+.urlbar-lft-mid {
   background: url("chrome://navigator/skin/toolbar/urlbar-lft-mid.gif") repeat-y;
 }
 
-.urlbar-left-btm {
-  min-height: 3px;
+.urlbar-lft-btm {
   background: url("chrome://navigator/skin/toolbar/urlbar-lft-btm.gif") no-repeat;
-}
-
-.urlbar-border-outer {
-  border-top: 1px solid #65696D;
-}
-
-.urlbar-border-inner {
-  border-top: 1px solid #A3A3A3;
-}
-
-.urlbar-right {
-  width: 4px;
-}
-
-.urlbar-right-top {
   height: 3px;
-  background: url("chrome://navigator/skin/toolbar/urlbar-rit-top.gif") no-repeat;
 }
 
-.urlbar-right-mid {
+.urlbar-mid-top {
+  background: url("chrome://navigator/skin/toolbar/urlbar-mid-top.gif") repeat-x;
+  height: 4px;
+}
+
+.urlbar-mid-mid {
+  background: url("chrome://navigator/skin/toolbar/urlbar-mid-mid.gif") bottom repeat-x;
+  background-color: #E9F5FF;
+}
+
+.urlbar-mid-btm {
+  background: url("chrome://navigator/skin/toolbar/urlbar-mid-btm.gif") repeat-x;
+  height: 3px;
+}
+
+.urlbar-rit {
+  width: 3px;
+}
+
+.urlbar-rit-top {
+  background: url("chrome://navigator/skin/toolbar/urlbar-rit-top.gif") no-repeat;
+  height: 4px;
+}
+
+.urlbar-rit-mid {
   background: url("chrome://navigator/skin/toolbar/urlbar-rit-mid.gif") repeat-y;
 }
 
-.urlbar-right-btm {
-  min-height: 3px;
+.urlbar-rit-btm {
   background: url("chrome://navigator/skin/toolbar/urlbar-rit-btm.gif") no-repeat;
+  height: 3px;
+}
+
+/* let the textbox background show through to the shiny image */
+#urlbar,
+#urlbar > .textbox-internal-box {
+  background-color: transparent;
 }
 
 /* ::::: more toolbar buttons ::::: */
 
 #page-proxy-button {
   cursor: grab;
-  margin: 0px 2px 0px 0px;
-  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
-}
+  margin-left: 0px 2px 0px 0px;
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
+} 
 
-#ubhist {
-  margin: 1px 1px 3px 0px;
-  border: none;
-  padding: 0px;
-  width: 10px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-}
-
-#ubhist-popup > menuitem {
-  max-width: 550px !important;
+#home-button {
+  list-style-image: url("chrome://communicator/skin/bookmarks/home.gif");
 }
 
 #go-button {
+  margin-right: 6px;
+  margin-left: 0px;
   min-width: 0px;
 }
 
 #search-button {
   margin-right: 4px;
+  margin-left: 0px;
   min-width: 0px;
-  font-size: larger;
 }
 
-/* ::::: move this to content ::::: */
+/* ::::: navigator throbber ::::: */
 
-window[chromehidden~="menubar"] .chromeclass-menubar {
-  display: none;
+#navigator-throbber {
+  margin: 10px 15px 0px 8px;
+  list-style-image: url("chrome://communicator/skin/brand/throbber-single.gif");
 }
 
-window[chromehidden~="toolbar"] .chromeclass-toolbar {
-  display: none;
+#navigator-throbber[busy="true"] {
+  list-style-image: url("chrome://communicator/skin/brand/throbber-anim.gif");
 }
 
-window[chromehidden~="location"] .chromeclass-location {
-  display: none;
+/* ::::: autocomplete ::::: */
+
+.autocomplete-outlinerbody:-moz-outliner-cell-text(value) {
+  padding-left: 15px;
 }
 
-window[chromehidden~="directories"] .chromeclass-directories {
-  display: none;
+.autocomplete-outlinerbody:-moz-outliner-cell-text(comment) {
+  color: #555566;
 }
 
-window[chromehidden~="status"] .chromeclass-status {
-  display: none;
+.autocomplete-search-box {
+  border-top: 2px groove #DDE3EB;
+  background-color: #DDE3EB;
 }
 
-window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
-  display: none;
+.autocomplete-result-popup[nomatch="true"] > .autocomplete-search-box {
+  border-top: 1px solid #E4EAEF;
 }
 
-/* ::::: move this to commercial tree ::::: */
-
-#ubhist-keyword-popup {
-  margin: 3px 4px 8px 3px;
-  border: none;
-  width: 10px;
-  background-color: transparent;
-  list-style-image: url("chrome://navigator/skin/ubhist-keyword-popup.gif");
+.autocomplete-search-engine {
+  padding: 2px;
 }
 
-#ubhist-keyword-popup > .menubutton-icon-internal-box {
-  border: none;
+.autocomplete-search-engine[menuactive="true"] {
+  background-color: #486380;
+  color: #FFFFFF;
 }
 
-#ubhist-keyword-popup:hover:active {
-  list-style-image: url("chrome://navigator/skin/ubhist-keyword-popup-active.gif");
+.autocomplete-search-engine-img {
+  margin-right: 4px;
 }

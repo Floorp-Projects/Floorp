@@ -1,6 +1,7 @@
 /** Contains style definitions for the navigator application 
  **/
 
+@import url(chrome://navigator/content/navigator.css);
 @import url(chrome://communicator/skin/);
 @import url(chrome://navigator/skin/personalToolbar.css);
 @import url(chrome://communicator/skin/sidebar/sidebar.css);
@@ -19,38 +20,6 @@
     border-right          : 1px solid ThreeDHighlight;
   }  
   
-#ubhist 
-  {
-    margin                : 0px;
-    background-color      : -moz-Dialog;
-    list-style-image      : url("chrome://global/skin/scroll-down.gif");
-  }
-
-#ubhist-popup > menuitem
-  {
-    max-width             : 550px !important;
-  }
-
-#ubhist > .menubutton-icon-internal-box
-  {
-    border-left           : 1px solid ThreeDHighlight;
-    border-top            : 1px solid ThreeDHighlight;
-    border-right          : 1px solid ThreeDShadow;
-    border-bottom         : 1px solid ThreeDShadow;
-  }  
-
-#ubhist:hover:active > .menubutton-icon-internal-box,
-#ubhist[open="true"] > .menubutton-icon-internal-box
-  {
-    border                : 1px solid ThreeDShadow;
-  }  
-  
-  
-#urlbar-container
-  {
-    padding               : 3px 2px 2px 3px;
-  }  
-
 #nav-bar-inner
   {
     min-width             : 0px;
@@ -63,34 +32,6 @@
     list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-button.gif");
   }
   
-/*
- * Rules for 'hiding' portions of the chrome for special
- * kinds of browser windows.
- */
-window[chromehidden~="menubar"] .chromeclass-menubar {
-	display: none;
-}
-
-window[chromehidden~="toolbar"] .chromeclass-toolbar {
-        display: none;
-}
-
-window[chromehidden~="location"] .chromeclass-location {
-        display: none;
-}
-
-window[chromehidden~="directories"] .chromeclass-directories {
-        display: none;
-}
-
-window[chromehidden~="status"] .chromeclass-status {
-        display: none;
-}
-
-window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
-        display: none;
-}
-
 /*
  * Images for the main buttons
  */
@@ -194,11 +135,11 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   }
   
 /*all the urlbar stuff*/
-#page-proxy-button 
+#page-proxy-button
   {
 	  list-style-image      : url("chrome://communicator/skin/bookmarks/location.gif"); 
 	  cursor                : grab;
-    margin                : 0px 2px 0px 0px;
+    margin                : 2px 4px 2px 2px;
   } 
 
 #page-proxy-button:hover
@@ -209,6 +150,11 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #page-proxy-button:hover:active
   {
 	  list-style-image      : url("chrome://communicator/skin/bookmarks/location-clicked.gif");
+  }
+
+#page-proxy-button[pageproxystate="invalid"] 
+  {
+    cursor                  : default;
   }
 
 #ubhist-keyword-popup 
@@ -226,10 +172,11 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   
 #nav-bar-inner
   {
-    min-width			  : 0px;
-    margin				  : 8px 0px 8px 6px;
+    -moz-binding          : url("chrome://global/skin/classicBindings.xml#autostretch-never");
+    min-width			        : 0px;
+    margin				        : 8px 0px 8px 6px;
   }
-  
+
 #search-button
   {
     list-style-image      : url("chrome://communicator/skin/search.gif");
@@ -279,3 +226,58 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     list-style-image      : url("chrome://global/skin/print-hover-active.gif");
   }
 
+/* ::::: urlbar autocomplete widget ::::: */
+
+.autocomplete-outlinerbody:-moz-outliner-cell-text(value) 
+  {
+    padding-left        : 15px;
+  }
+
+.autocomplete-outlinerbody:-moz-outliner-cell-text(comment) 
+  {
+    font-style          : italic;
+  }
+
+.autocomplete-history-button 
+  {
+    border              : 1px outset -moz-Dialog;
+  }
+
+.autocomplete-history-button[open="true"] 
+  {
+    border              : 1px solid ThreeDShadow;
+  }
+
+.autocomplete-history-button-internal-box,
+.autocomplete-history-button[open="true"] > .autocomplete-history-button-internal-box 
+  {
+    border              : none;
+  }
+
+.autocomplete-search-box 
+  {
+    border-top            : 2px groove -moz-Dialog;
+    background-color      : -moz-Dialog;
+    color                 : ButtonText;
+  }
+
+.autocomplete-result-popup[nomatch="true"] > .autocomplete-search-box 
+  {
+    border-top            : 1px solid ThreeDHighlight;
+  }
+
+.autocomplete-search-engine 
+  {
+    padding               : 2px;
+  }
+
+.autocomplete-search-engine[menuactive="true"] 
+  {
+    background-color      : Highlight;
+    color                 : HighlightText;
+  }
+
+.autocomplete-search-engine-img 
+  {
+    margin-right          : 4px;
+  }
