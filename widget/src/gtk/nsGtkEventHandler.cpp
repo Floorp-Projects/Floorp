@@ -180,6 +180,19 @@ void InitMouseEvent(GdkEventButton *aGEB,
     anEvent.isControl = (aGEB->state & ControlMask) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt = (aGEB->state & Mod1Mask) ? PR_TRUE : PR_FALSE;
     anEvent.time = aGEB->time;
+
+    switch(aGEB->type)
+    {
+      case GDK_BUTTON_PRESS:
+        anEvent.clickCount = 1;
+	break;
+      case GDK_2BUTTON_PRESS:
+        anEvent.clickCount = 2;
+	break;
+      default:
+        anEvent.clickCount = 0;
+    }
+
   }
 
 }
@@ -265,7 +278,7 @@ void InitKeyEvent(GdkEventKey *aGEK,
 
 /*==============================================================
   ==============================================================
-  ==============================================================
+  =============================================================
   ==============================================================*/
 
 gint handle_configure_event(GtkWidget *w, GdkEventConfigure *event, gpointer p)
@@ -298,20 +311,23 @@ gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)
 gint handle_button_press_event(GtkWidget *w, GdkEventButton * event, gpointer p)
 {
   nsMouseEvent mevent;
-  int b = NS_MOUSE_LEFT_BUTTON_DOWN;
-#if 0
+  int b = 0;
+
   switch (event->button)
   {
-    case GDK_BUTTON_PRESS:
+    case 1:
       b = NS_MOUSE_LEFT_BUTTON_DOWN;
       break;
-    case GDK_2BUTTON_PRESS:
+    case 2:
+      b = NS_MOUSE_MIDDLE_BUTTON_DOWN;
       break;
-    case GDK_3BUTTON_PRESS:
+    case 3:
       b = NS_MOUSE_RIGHT_BUTTON_DOWN;
       break;
+    default:
+      b = NS_MOUSE_LEFT_BUTTON_DOWN;
+      break;
   }
-#endif
   InitMouseEvent(event, p, mevent, b);
 
   nsWindow *win = (nsWindow *)p;
@@ -323,7 +339,24 @@ gint handle_button_press_event(GtkWidget *w, GdkEventButton * event, gpointer p)
 gint handle_button_release_event(GtkWidget *w, GdkEventButton * event, gpointer p)
 {
   nsMouseEvent mevent;
-  InitMouseEvent(event, p, mevent, NS_MOUSE_LEFT_BUTTON_UP);
+  int b = 0;
+
+  switch (event->button)
+  {
+    case 1:
+      b = NS_MOUSE_LEFT_BUTTON_UP;
+      break;
+    case 2:
+      b = NS_MOUSE_MIDDLE_BUTTON_UP;
+      break;
+    case 3:
+      b = NS_MOUSE_RIGHT_BUTTON_UP;
+      break;
+    default:
+      b = NS_MOUSE_LEFT_BUTTON_UP;
+      break;
+  }
+  InitMouseEvent(event, p, mevent, b);
 
   nsWindow *win = (nsWindow *)p;
   win->DispatchMouseEvent(mevent);
@@ -454,7 +487,7 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
   nsScrollbarEvent sevent;
   sevent.message = NS_SCROLLBAR_POS;
   sevent.widget  = (nsWidget *) p;
-  sevent.eventStructType = NS_MOUSE_EVENT;
+  sevent.eventStructType = NS_SCROLLBAR_EVENT;
   widget->OnScroll(sevent, adj->value);
 
 /* FIXME we need to set point.* from the event stuff. */

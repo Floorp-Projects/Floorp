@@ -51,18 +51,6 @@ public:
 
     virtual void*           GetNativeData(PRUint32 aDataType);
 
-    NS_IMETHOD              Show  (PRBool bState);
-
-    NS_IMETHOD              Resize(PRUint32 aWidth,
-                                   PRUint32 aHeight,
-                                   PRBool   aRepaint);
-    NS_IMETHOD              Resize(PRUint32 aX,
-                                   PRUint32 aY,
-                                   PRUint32 aWidth,
-                                   PRUint32 aHeight,
-                                   PRBool   aRepaint);
-
-    NS_IMETHOD              GetBounds(nsRect &aRect);
     NS_IMETHOD              GetClientBounds(nsRect &aRect);
     NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
 
@@ -91,34 +79,18 @@ public:
 
     virtual PRBool IsChild() { return(PR_FALSE); };
 
-     // nsBaseWidget overrides
-    NS_IMETHOD SetBounds(const nsRect &aRect);
-
      // Utility methods
     virtual  PRBool OnPaint(nsPaintEvent &event);
-    virtual  void   OnDestroy();
     PRBool   OnKey(nsKeyEvent &aEvent);
     PRBool   DispatchFocus(nsGUIEvent &aEvent);
     virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
-    void     SetIgnoreResize(PRBool aIgnore);
-    PRBool   IgnoreResize();
-    PRUint32 GetYCoord(PRUint32 aNewY);
     virtual  PRBool OnResize(nsRect &aWindowRect);
-
-     // Resize event management
-    void   SetResizeRect(nsRect& aRect);
-    void   SetResized(PRBool aResized);
-    void   GetResizeRect(nsRect* aRect);
-    PRBool GetResized();
 
     char gInstanceClassName[256];
   
 protected:
   virtual void InitCallbacks(char * aName = nsnull);
   NS_IMETHOD CreateNative(GtkWidget *parentWidget);
-
-  virtual void            UpdateVisibilityFlag();
-  virtual void            UpdateDisplay();
 
 public:
 protected:
