@@ -128,6 +128,8 @@
 #include "nsUnicodeToUCS4LE.h"
 #include "nsUnicodeToT61.h"
 #include "nsUnicodeToUserDefined.h"
+#include "nsUnicodeToSymbol.h"
+#include "nsUnicodeToZapfDingbat.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
 #include "nsIUnicodeDecoder.h"
@@ -760,6 +762,18 @@ FactoryData g_FactoryData[] =
     nsUnicodeToUserDefined::CreateInstance,
     "Unicode",
     "x-user-defined"
+  },
+  {
+    &kUnicodeToSymbolCID,
+    nsUnicodeToSymbol::CreateInstance,
+    "Unicode",
+    "Adobe-Symbol-Encoding"
+  },
+  {
+    &kUnicodeToZapfDingbatsCID,
+    nsUnicodeToZapfDingbat::CreateInstance,
+    "Unicode",
+    "x-zapf-dingbats"
   }
 };
 
