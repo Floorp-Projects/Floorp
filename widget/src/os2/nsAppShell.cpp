@@ -90,10 +90,12 @@ class nsAppshellManager
 
       nsIAppShell *pShell = (nsIAppShell*) mTable->Get( &key);
 
-      if( pShell != aShell)
-         printf( "Appshell object dying in a foreign thread\n");
-      else
+      if( pShell == aShell)
          mTable->Remove( &key);
+#ifdef DEBUG
+      else
+         printf( "Appshell object dying in a foreign thread\n");
+#endif
 
       DosReleaseMutexSem( mLock);
    }

@@ -73,8 +73,10 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
 
    if( rc)
    {
+#ifdef DEBUG
       printf( "Widget failed to load resource DLL. rc = %d, cause = %s\n",
               (int)rc, buffer);
+#endif
       hModResources = 0;
    }
 
@@ -184,7 +186,9 @@ HPOINTER nsWidgetModuleData::GetPointer( nsCursor aCursor)
    if( idPtr == 0)
    {
       idPtr = ID_PTR_SELECTURL; // default to hyperlink cursor?
+#ifdef DEBUG
       printf( "\n*** Need to implement cursor type %d (see widget/src/os2/nsModule.cpp)\n\n", (int) aCursor);
+#endif
    }
 
    // Use an array and indices here since we have all the pointers in place?
@@ -222,10 +226,12 @@ int nsWidgetModuleData::CreateUcsConverter()
       }
 #endif
    }
+#ifdef DEBUG
    if( unirc != ULS_SUCCESS)
    {
       printf( "Couldn't create widget unicode converter.\n");
    }
+#endif
 
    return unirc;
 }
@@ -285,7 +291,9 @@ ULONG nsWidgetModuleData::ConvertToUcs( const char *szText,
    }
    else if( unirc != ULS_SUCCESS)
    {
+#ifdef DEBUG
       printf( "UniUconvToUcs failed, rc %X\n", unirc);
+#endif
       supplantConverter = TRUE;
       ucsLen = ConvertToUcs( szText, pBuffer, ulSize);
       supplantConverter = FALSE;
@@ -354,7 +362,9 @@ char *nsWidgetModuleData::ConvertFromUcs( const PRUnichar *pText,
    }
    else if( unirc != ULS_SUCCESS)
    {
+#ifdef DEBUG
       printf( "UniUconvFromUcs failed, rc %X\n", unirc);
+#endif
       supplantConverter = TRUE;
       szBuffer = ConvertFromUcs( pText, szBuffer, ulSize);
       supplantConverter = FALSE;
@@ -526,10 +536,12 @@ int nsWidgetModuleData::WideCharToMultiByte( int CodePage, const PRUnichar *pTex
     // terminate output string (truncating)
     *(szBuffer + ulSize - 1) = '\0';
   }
+#ifdef DEBUG
   else if( unirc != ULS_SUCCESS)
   {
      printf("very bad");
   }
+#endif
   return ulSize - cplen;
 }
 

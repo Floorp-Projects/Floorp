@@ -263,7 +263,9 @@ HDC PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName)
 if (hdc == 0)
 {
   ULONG ErrorCode = ERRORIDERROR (::WinGetLastError (0));
+#ifdef DEBUG
   printf ("!ERROR! - Can't open DC for printer %04X\a\n", ErrorCode);
+#endif
 }   
    }
 

@@ -398,7 +398,9 @@ nsresult nsOffscreenSurface::GetPixelFormat( nsPixelFormat *aFormat)
          break;
 
       default:
+#ifdef DEBUG
          printf( "Bad bit-depth for GetPixelFormat (%d)\n", bih.cBitCount);
+#endif
          break;
    }
 
@@ -443,7 +445,9 @@ nsresult nsOnscreenSurface::Lock( PRInt32 aX, PRInt32 aY,
 {
    EnsureProxy();
 
+#ifdef DEBUG
    printf( "Locking through a proxy\n");
+#endif
 
    // blit our 'real' bitmap to the proxy surface
    PRUint32 width, height;

@@ -201,9 +201,7 @@ nsresult nsDragService::GetData( nsITransferable *aTransferable,
             {
                nsFileSpec file;
 
-               if( !FindFile( pItem, file))
-                  printf( "Can't find dropped file\n");
-               else
+               if( FindFile( pItem, file))
                {
                   cData = file.GetFileSize();
                   pData = new char [ cData ];
@@ -213,6 +211,10 @@ nsresult nsDragService::GetData( nsITransferable *aTransferable,
 
                   source_dry_p = TRUE;
                }
+#ifdef DEBUG
+               else
+                  printf( "Can't find dropped file\n");
+#endif
             }
             // 2b. DRM_OS2FILE push - faff around endlessly, break out
             //     This is a bit tricky 'cos this method needs to be synchronous.
@@ -222,11 +224,13 @@ nsresult nsDragService::GetData( nsITransferable *aTransferable,
                source_dry_p = TRUE;
             }
          }
+#ifdef DEBUG
          else
          {
             const char *rmf = DecodeStrHandle( pItem->hstrRMF);
             printf( "Incomprehensible DRM (%s)\n", rmf);
          }
+#endif
 
          if( pData && cData)
             aTransferable->SetTransferData( pFlavour, pData, cData);
@@ -239,9 +243,7 @@ nsresult nsDragService::GetData( nsITransferable *aTransferable,
          // Moan if this isn't a filelisttransferable.
          nsCOMPtr<nsIFileListTransferable> pFileList = do_QueryInterface(aTransferable);
 
-         if( !pFileList)
-            printf( "kDropFilesMime requested but no filelisttransferable!\n");
-         else
+         if(pFileList)
          {
             // Need a file.
             nsFileSpec *pFileSpec = 0;
@@ -297,6 +299,10 @@ nsresult nsDragService::GetData( nsITransferable *aTransferable,
                pFileList->SetFileList(&array);
             }
          }
+#ifdef DEBUG
+         else
+            printf( "kDropFilesMime requested but no filelisttransferable!\n");
+#endif
       }
    }
 
@@ -741,10 +747,12 @@ MRESULT nsDragService::HandleMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
                printf( "Target asked for format %s which we can't do.\n", rf);
 #endif
          }
+#ifdef DEBUG
          else
          {
             printf( "Unexpected rendering mechanism\n");
          }
+#endif
 
          // Tell the target we're done.
          DrgPostTransferMsg( pXFer->hwndClient,
@@ -837,9 +845,7 @@ void nsDragService::DoMozillaXfer( PDRAGITEM pItem, char *szFlavour,
    {
       // Yes.
       nsITransferable *pSource = (nsITransferable*) pItem->ulItemID;
-      if( !pSource)
-         printf( "intra-process xfer fails due to null ulItemID\n");
-      else
+      if( pSource)
       {
          nsAutoString flavour(szFlavour);
          if( NS_SUCCEEDED(pSource->GetTransferData( &flavour, ppData, cData)))
@@ -850,6 +856,10 @@ void nsDragService::DoMozillaXfer( PDRAGITEM pItem, char *szFlavour,
             *ppData = tmp;
          }
       }
+#ifdef DEBUG
+      else
+         printf( "intra-process xfer fails due to null ulItemID\n");
+#endif
       return;
    }
 
@@ -909,8 +919,10 @@ void nsDragService::DoPushedOS2FILE( PDRAGITEM pItem, const char *szRf,
    // But it's not all bad: not many people use source rendering; mozilla
    // does, but we can use DRM_MOZILLA to do that.
 
+#ifdef DEBUG
    printf( "\n\nSorry, source-rendering of DRM_OS2FILE not working.\n");
    printf( "(see mozilla/widget/src/os2/nsDragService::DoPushedOS2FILE)\n\n");
+#endif
 }
 
 // Quick utility functions ------------------------------------------------------

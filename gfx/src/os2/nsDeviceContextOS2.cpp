@@ -161,8 +161,10 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   mWidth = hcinfo.xPels;
   mHeight = hcinfo.yPels;
   // XXX hsb says there are margin problems, must be from here...
+#ifdef DEBUG
   printf( "Got surface of size %d x %d pixels (%d Kb)\n", mWidth, mHeight, mWidth * mHeight * mDepth / 8 / 1024);
   printf( "mPixelScale = %f\n", mPixelScale);
+#endif
 
   // We need to begin a document now, because the client is entitled at
   // this point to do stuff like create fonts, which required the PS to
@@ -937,7 +939,9 @@ nsresult nsDeviceContextOS2::BeginDocument(PRUnichar * aTitle)
    if( mPrintState == nsPrintState_ePreBeginDoc)
    {
       PrnStartJob( mPrintDC, "Warpzilla NGLayout job");
+#ifdef DEBUG
       printf( "BeginDoc\n");
+#endif
       mPrintState = nsPrintState_eBegunDoc;
    }
    return NS_OK;
@@ -947,7 +951,9 @@ nsresult nsDeviceContextOS2::EndDocument()
 {
    PrnEndJob( mPrintDC);
    mPrintState = nsPrintState_ePreBeginDoc;
+#ifdef DEBUG
    printf("EndDoc\n");
+#endif
    return NS_OK;
 }
 
@@ -958,7 +964,9 @@ nsresult nsDeviceContextOS2::BeginPage()
    else
    {
       PrnNewPage( mPrintDC);
+#ifdef DEBUG
       printf("NewPage");
+#endif
    }
    return NS_OK;
 }

@@ -1392,8 +1392,10 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 
       BOOL rc = WinSetPresParam( mWnd, PP_FONTNAMESIZE,
                                  strlen( buffer) + 1, buffer);
+#ifdef DEBUG
       if( !rc)
          printf( "WinSetPresParam PP_FONTNAMESIZE %s failed\n", buffer);
+#endif
    
       delete [] buffer;
    }
@@ -1610,8 +1612,10 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
         BOOL rc;
         if( mDragInside) rc = DrgReleasePS( mPS);
         else rc = WinReleasePS( mPS);
+#ifdef DEBUG
         if( !rc)
           printf( "Error from {Win/Drg}ReleasePS()\n");
+#endif
         mPS = 0;
       }
       break;
