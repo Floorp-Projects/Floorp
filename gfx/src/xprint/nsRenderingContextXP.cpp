@@ -40,7 +40,7 @@ static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 static PRLogModuleInfo *RenderingContextXpLM = PR_NewLogModule("nsRenderingContextXp");
 #endif /* PR_LOGGING */ 
 
-static nsGCCache *gcCache = nsnull;
+static nsGCCacheXlib *gcCache = nsnull;
 
 class GraphicsState
 {
@@ -417,7 +417,7 @@ void nsRenderingContextXp::UpdateGC()
    }
  
    if (!gcCache) {
-     gcCache = new nsGCCache();
+     gcCache = new nsGCCacheXlib();
      if (!gcCache) return;
    }
 

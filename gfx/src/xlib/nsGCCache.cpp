@@ -32,14 +32,14 @@
 /* The GC cache is shared among all windows, since it doesn't hog
    any scarce resources (like colormap entries.) */
 
-Region nsGCCache::copyRegion = 0;
+Region nsGCCacheXlib::copyRegion = 0;
 
-nsGCCache::nsGCCache()
+nsGCCacheXlib::nsGCCacheXlib()
 {
   PR_INIT_CLIST(&GCCache);
   PR_INIT_CLIST(&GCFreeList);
   for (int i = 0; i < GC_CACHE_SIZE; i++) {
-    GCCacheEntry *entry = new GCCacheEntry();
+    GCCacheEntryXlib *entry = new GCCacheEntryXlib();
     entry->gc=NULL;
     PR_INSERT_LINK(&entry->clist, &GCFreeList);
   }
@@ -47,7 +47,7 @@ nsGCCache::nsGCCache()
 }
 
 void
-nsGCCache::move_cache_entry(PRCList *clist)
+nsGCCacheXlib::move_cache_entry(PRCList *clist)
 {
   /* thread on the freelist, at the front */
   PR_REMOVE_LINK(clist);
@@ -55,9 +55,9 @@ nsGCCache::move_cache_entry(PRCList *clist)
 }
 
 void
-nsGCCache::free_cache_entry(PRCList *clist)
+nsGCCacheXlib::free_cache_entry(PRCList *clist)
 {
-  GCCacheEntry *entry = (GCCacheEntry *)clist;
+  GCCacheEntryXlib *entry = (GCCacheEntryXlib *)clist;
   entry->gc->Release();
   if (entry->clipRegion)
     ::XDestroyRegion(entry->clipRegion);
@@ -68,7 +68,7 @@ nsGCCache::free_cache_entry(PRCList *clist)
   PR_INSERT_LINK(clist, &GCFreeList);
 }
 
-nsGCCache::~nsGCCache()
+nsGCCacheXlib::~nsGCCacheXlib()
 {
   PRCList *head;
 
@@ -86,12 +86,12 @@ nsGCCache::~nsGCCache()
     if (head == &GCFreeList)
       break;
     PR_REMOVE_LINK(head);
-    delete (GCCacheEntry *)head;
+    delete (GCCacheEntryXlib *)head;
   }
 }
 
 void
-nsGCCache::ReportStats() { 
+nsGCCacheXlib::ReportStats() { 
   DEBUG_METER(
               fprintf(stderr, "GC Cache:\n\thits:");
               int hits = 0;
@@ -109,35 +109,35 @@ nsGCCache::ReportStats() {
 
 
 void
-nsGCCache::XCopyRegion(Region srca, Region dr_return)
+nsGCCacheXlib::XCopyRegion(Region srca, Region dr_return)
 {
   if (!copyRegion) copyRegion = ::XCreateRegion();
   ::XUnionRegion(srca, copyRegion, dr_return);
 }
 
 /* Dispose of entries matching the given flags, compressing the GC cache */
-void nsGCCache::Flush(unsigned long flags)
+void nsGCCacheXlib::Flush(unsigned long flags)
 {
   while (!PR_CLIST_IS_EMPTY(&GCCache)) {
     PRCList *head = PR_LIST_HEAD(&GCCache);
     if (head == &GCCache)
       break;
-    GCCacheEntry *entry = (GCCacheEntry *)head;
+    GCCacheEntryXlib *entry = (GCCacheEntryXlib *)head;
     if (entry->flags & flags)
       free_cache_entry(head);
   }
 }
 
-xGC *nsGCCache::GetGC(Display *display, Drawable drawable, unsigned long flags, XGCValues *gcv, Region clipRegion)
+xGC *nsGCCacheXlib::GetGC(Display *display, Drawable drawable, unsigned long flags, XGCValues *gcv, Region clipRegion)
 {
   PRCList *iter;
-  GCCacheEntry *entry;
+  GCCacheEntryXlib *entry;
   DEBUG_METER(int i = 0;)
   
   for (iter = PR_LIST_HEAD(&GCCache); iter != &GCCache;
        iter = PR_NEXT_LINK(iter)) {
 
-    entry = (GCCacheEntry *)iter;
+    entry = (GCCacheEntryXlib *)iter;
     if (flags == entry->flags && 
         !memcmp (gcv, &entry->gcv, sizeof (*gcv))) {
       /* if there's a clipRegion, we have to match */
@@ -172,7 +172,7 @@ xGC *nsGCCache::GetGC(Display *display, Drawable drawable, unsigned long flags, 
   iter = PR_LIST_HEAD(&GCFreeList);
   PR_REMOVE_LINK(iter);
   PR_INSERT_LINK(iter, &GCCache);
-  entry = (GCCacheEntry *)iter;
+  entry = (GCCacheEntryXlib *)iter;
 
   if (!entry->gc) {
     // No old GC, greate new
@@ -209,7 +209,7 @@ xGC *nsGCCache::GetGC(Display *display, Drawable drawable, unsigned long flags, 
   return entry->gc;
 }
 
-void nsGCCache::ReuseGC(GCCacheEntry *entry, unsigned long flags, XGCValues *gcv)
+void nsGCCacheXlib::ReuseGC(GCCacheEntryXlib *entry, unsigned long flags, XGCValues *gcv)
 {
   // We have old GC, reuse it and check what
   // we have to change

@@ -23,8 +23,8 @@
  */
 
 
-#ifndef nsGCCache_h___
-#define nsGCCache_h___
+#ifndef nsGCCacheXlib_h___
+#define nsGCCacheXlib_h___
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -35,9 +35,7 @@
 #include <stdlib.h>
 
 #define countof(x) ((int)(sizeof(x) / sizeof (*x)))
-#define GC_CACHE_SIZE 10
-
-#define DEBUG 1
+#define GC_CACHE_SIZE 16
 
 #ifdef DEBUG
 #define DEBUG_METER(x) x
@@ -45,15 +43,10 @@
 #define DEBUG_METER(x)
 #endif
 
-#ifdef _IMPL_NS_XPRINT
-#define nsGCCache     nsGCCacheXlib
-#define GCCacheEntry  GCCacheEntryXlib
-#endif
-
-class nsGCCache;
+class nsGCCacheXlib;
 
 class xGC {
-  friend class nsGCCache;
+  friend class nsGCCacheXlib;
 
 public:
   xGC(Display *display, Drawable d, unsigned long valuemask, XGCValues *values)
@@ -94,7 +87,7 @@ private:
 };
 
 
-struct GCCacheEntry
+struct GCCacheEntryXlib
 {
   PRCList clist;
   unsigned long flags;
@@ -103,18 +96,18 @@ struct GCCacheEntry
   xGC *gc;
 };
 
-class nsGCCache
+class nsGCCacheXlib
 {
  public:
-  nsGCCache();
-  virtual ~nsGCCache();
+  nsGCCacheXlib();
+  virtual ~nsGCCacheXlib();
 
   void Flush(unsigned long flags);
 
   xGC *GetGC(Display *display, Window window, unsigned long flags, XGCValues *gcv, Region clipRegion);
   
 private:
-  void ReuseGC(GCCacheEntry *entry, unsigned long flags, XGCValues *gcv);
+  void ReuseGC(GCCacheEntryXlib *entry, unsigned long flags, XGCValues *gcv);
   PRCList GCCache;
   PRCList GCFreeList;
   void free_cache_entry(PRCList *clist);

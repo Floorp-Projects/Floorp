@@ -38,7 +38,6 @@
 #include "nsVoidArray.h"
 #include "nsRegionXlib.h"
 
-#include "nsImageXlib.h" // nsGCCache.h wants this
 #include "nsGCCache.h"
 
 class nsXPrintContext;
