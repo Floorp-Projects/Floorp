@@ -1234,6 +1234,9 @@ nsSocketTransport::OnFull(nsIPipe* aPipe)
   nsresult rv = aPipe->GetInputStream(getter_AddRefs(in));
   if (NS_SUCCEEDED(rv) && in == mReadPipeIn)
   {
+    // Enter the socket transport lock...
+    nsAutoLock aLock(mLock);
+
     NS_ASSERTION(!GetFlag(eSocketRead_Wait), "Already waiting!");
 
     SetFlag(eSocketRead_Wait);
