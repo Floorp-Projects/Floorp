@@ -116,16 +116,18 @@ DIRS    = \
           intl \
           find \
           filepicker \
-          download-manager \
           autocomplete \
           windowds \
-          prefwindow \
           console \
+	  download-manager \
           history/public \
           sidebar/public \
           bookmarks/public \
-          alerts \
           $(NULL)
+
+ifdef MOZ_HAVE_BROWSER
+DIRS  += alerts prefwindow
+endif
 
 ifeq ($(OS_ARCH),WINNT) 
 DIRS    += winhooks

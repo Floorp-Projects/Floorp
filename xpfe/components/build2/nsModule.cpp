@@ -39,7 +39,7 @@
 
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
-
+#include "nsServiceManagerUtils.h"
 #include "rdf.h"
 #include "nsXPIDLString.h"
 #include "nsCharsetMenu.h"
@@ -47,15 +47,12 @@
 #include "nsWindowDataSource.h"
 #include "nsRDFCID.h"
 #include "nsAutoComplete.h"
-#include "nsDownloadManager.h"
-#include "nsDownloadProxy.h"
 
 #if defined(MOZ_LDAP_XPCOM)
 #include "nsLDAPAutoCompleteSession.h"
 #endif
 
 #if defined(XP_WIN)
-#include "nsAlertsService.h" 
 #include "nsWindowsHooks.h"
 #endif // Windows
 
@@ -67,15 +64,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 
 #if defined(MOZ_LDAP_XPCOM)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
 #endif
 
 #if defined(XP_WIN)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif // Windows
 
@@ -93,14 +87,11 @@ RegisterWindowDS(nsIComponentManager *aCompMgr,
     return catman->AddCategoryEntry("app-startup", "Window Data Source",
                                     "service," NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
                                     PR_TRUE, PR_TRUE, nsnull);
+    return NS_OK;
 }
 
 static const nsModuleComponentInfo components[] = {
 
-    { "Download Manager", NS_DOWNLOADMANAGER_CID, NS_DOWNLOADMANAGER_CONTRACTID,
-      nsDownloadManagerConstructor },
-    { "Download", NS_DOWNLOAD_CID, NS_TRANSFER_CONTRACTID,
-      nsDownloadProxyConstructor },
     { "AutoComplete Search Results", NS_AUTOCOMPLETERESULTS_CID, NS_AUTOCOMPLETERESULTS_CONTRACTID,
       nsAutoCompleteResultsConstructor},
     { "AutoComplete Search Item", NS_AUTOCOMPLETEITEM_CID, NS_AUTOCOMPLETEITEM_CONTRACTID,
@@ -111,11 +102,6 @@ static const nsModuleComponentInfo components[] = {
 	  "@mozilla.org/autocompleteSession;1?type=ldap",
 	  nsLDAPAutoCompleteSessionConstructor },
 #endif 
-
-#if defined(XP_WIN)
-    { "nsAlertsService", NS_ALERTSSERVICE_CID, NS_ALERTSERVICE_CONTRACTID, nsAlertsServiceConstructor},
-    { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID, NS_IWINDOWSHOOKS_CONTRACTID, nsWindowsHooksConstructor },
-#endif // Windows
 
     { "nsCharsetMenu", NS_CHARSETMENU_CID,
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID,

@@ -42,26 +42,28 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_THUNDERBIRD
-DIRS = console filepicker printing viewsource
-else
 ifdef MOZ_STANDALONE_COMPOSER
 DIRS = console filepicker printing viewsource
 else
-DIRS = 		\
-	autocomplete \
-	console \
-	cookie \
+DIRS = 	console \
 	filepicker \
+	printing \
+	viewsource \
+	$(NULL)
+
+ifdef MOZ_PHOENIX
+
+DIRS +=	\
+	autocomplete \
+	cookie \
 	help \
 	history \
 	passwordmgr \
-	printing \
 	satchel \
 	typeaheadfind \
 	viewconfig \
-	viewsource \
 	$(NULL)
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 DIRS += alerts
@@ -69,7 +71,6 @@ endif
 
 DIRS += downloads
 
-endif
 endif
 
 DIRS += \

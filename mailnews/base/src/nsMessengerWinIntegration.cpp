@@ -73,6 +73,7 @@
 #include "nsISupportsPrimitives.h"
 
 #ifdef MOZ_THUNDERBIRD
+#include "nsToolkitCompsCID.h" 
 #define PROFILE_COMMANDLINE_ARG " -profile "
 #else
 #include "nsIProfile.h"

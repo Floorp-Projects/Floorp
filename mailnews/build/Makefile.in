@@ -61,6 +61,7 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsMailModule
 
 REQUIRES	= xpcom \
+		  alerts \
 		  xpcom_obsolete \
 		  xpobsolete \
 		  addrbook \

@@ -46,6 +46,7 @@ MODULE		= msgbase
 LIBRARY_NAME	= msgbase_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
+	  	  alerts \
 		  xpcom_obsolete \
 		  string \
 		  necko \
