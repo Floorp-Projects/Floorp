@@ -29,13 +29,18 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+<html:script src="chrome://messenger/content/messengerdnd.js"/>
+
 <html:div id="folder-panel" flex="100%" style="width: 100px; height: 600px">
 	<tree style="height: 100%"
 	      rdf:datasources="rdf:null"
 	      id="folderTree" class="mail-folders"
 	      rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
 		  onselect="top.FolderPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
-		  onblur="goOnEvent(this,'blur')">
+		  onblur="goOnEvent(this,'blur')"
+		ondragover="return DragOverTree(event);"
+		ondraggesture="return BeginDragTree(event);"
+		ondragdrop="return DropOnTree(event);"> 
 
 	  <template>
 	  	<rule>

@@ -32,17 +32,22 @@ Rights Reserved.
 >
 
 <html:script src="chrome://global/content/treePopups.js"/>
+<html:script src="chrome://messenger/content/messengerdnd.js"/>
 
 <tree datasources="rdf:null" id="threadTree" style="width: 100%; height: 100%"
 	  		  onselect="top.ThreadPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
 			  onblur="goOnEvent(this,'blur')"
 			  containment="http://home.netscape.com/NC-rdf#MessageChild">
 			  allownegativeassertions="false"
-              coalesceduplicatearcs="false">
+			coalesceduplicatearcs="false">
 
   <template>
   	<rule>
-          <treechildren onclick="ThreadPaneOnClick(event);">
+          <treechildren onclick="ThreadPaneOnClick(event);"
+			ondragover="return DragOverTree(event);"
+			ondraggesture="return BeginDragTree(event);"
+			ondragdrop="return DropOnTree(event);"> 
+
 		<treeitem uri="..."
 			 Status="rdf:http://home.netscape.com/NC-rdf#Status"
   			 Flagged="rdf:http://home.netscape.com/NC-rdf#Flagged"

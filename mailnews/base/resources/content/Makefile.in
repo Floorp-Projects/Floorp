@@ -45,6 +45,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		msgFolderPickerOverlay.js	\
 		msgFolderPickerOverlay.xul	\
 		renameFolderNameDialog.xul	\
+		messengerdnd.js			\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
