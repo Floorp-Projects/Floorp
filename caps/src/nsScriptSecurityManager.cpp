@@ -31,6 +31,7 @@
 #include "nsCodebasePrincipal.h"
 #include "nsCRT.h"
 #include "nsXPIDLString.h"
+#include "nsIJSContextStack.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kURLCID, NS_STANDARDURL_CID);
@@ -184,6 +185,21 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
     return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetSubjectPrincipal(nsIPrincipal **result)
+{
+    // Get JSContext from stack.
+    nsresult rv;
+    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+                    &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
+    JSContext *cx;
+    if (NS_FAILED(stack->Peek(&cx)))
+        return NS_ERROR_FAILURE;
+    return GetSubjectPrincipal(cx, result);
+}
 
 NS_IMETHODIMP
 nsScriptSecurityManager::GetSystemPrincipal(nsIPrincipal **result)

@@ -23,6 +23,7 @@
 
 class nsIScriptSecurityManager;
 class nsIScriptNameSpaceManager;
+class nsIPrincipal;
 
 class nsJSContext : public nsIScriptContext {
 private:
@@ -40,6 +41,12 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD       EvaluateString(const nsString& aScript, 
+                                  const char *aURL,
+                                  PRUint32 aLineNo,
+                                  nsString& aRetValue,
+                                  PRBool* aIsUndefined);
+  NS_IMETHOD       EvaluateString(const nsString& aScript, 
+                                  nsIPrincipal *principal,
                                   const char *aURL,
                                   PRUint32 aLineNo,
                                   nsString& aRetValue,

@@ -40,6 +40,8 @@ interface nsIScriptSecurityManager : nsISupports
 
     boolean CheckURI(in nsIScriptContext cx, in nsIURI uri);
 
+    nsIPrincipal GetSubjectPrincipal();
+
     nsIPrincipal GetSystemPrincipal();
 
     nsIPrincipal CreateCodebasePrincipal(in nsIURI aURI);

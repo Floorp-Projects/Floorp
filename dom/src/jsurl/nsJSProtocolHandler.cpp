@@ -31,6 +31,11 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
 #include "nsJSProtocolHandler.h"
+#include "nsCOMPtr.h"
+#include "nsIPrincipal.h"
+#include "jsapi.h"
+#include "nsIJSContextStack.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
@@ -70,6 +75,17 @@ public:
         NS_ADDREF(mURI);
         mEventSinkGetter = eventSinkGetter;
         NS_IF_ADDREF(mEventSinkGetter);
+
+        // Get principal of currently executing code, save for execution
+        nsresult result;
+        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                        NS_SCRIPTSECURITYMANAGER_PROGID, &result);
+        if (NS_FAILED(result)) 
+            return NS_ERROR_FAILURE;
+        if (NS_FAILED(securityManager->GetSubjectPrincipal(
+                        getter_AddRefs(mPrincipal))))
+            return NS_ERROR_FAILURE;
+
         return NS_OK;
     }
 
@@ -137,8 +153,8 @@ public:
         // Finally, we have everything needed to evaluate the expression.
         nsAutoString ret;
         PRBool isUndefined;
-        rv = scriptContext->EvaluateString(nsString(jsExpr), nsnull, 0, ret,
-                                           &isUndefined);
+        rv = scriptContext->EvaluateString(nsString(jsExpr), mPrincipal,
+                                           nsnull, 0, ret, &isUndefined);
         nsCRT::free(jsExpr);
         if (NS_FAILED(rv)) {
             rv = NS_ERROR_MALFORMED_URI;
@@ -162,12 +178,13 @@ public:
     }
 
 protected:
-    char*               mVerb;
-    nsIURI*             mURI;
-    nsIEventSinkGetter* mEventSinkGetter;
-    char*               mResult;
-    PRUint32            mLength;
-    PRUint32            mReadCursor;
+    char*                   mVerb;
+    nsIURI*                 mURI;
+    nsIEventSinkGetter*     mEventSinkGetter;
+    char*                   mResult;
+    PRUint32                mLength;
+    PRUint32                mReadCursor;
+    nsCOMPtr<nsIPrincipal>  mPrincipal;
 };
 
 NS_IMPL_ISUPPORTS(nsJSInputStream, NS_GET_IID(nsIInputStream));
