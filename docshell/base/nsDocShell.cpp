@@ -2361,8 +2361,8 @@ NS_IMETHODIMP nsDocShell::ConvertFileToStringURI(nsString& aIn, nsString& aOut)
 {
    aOut = aIn;
 #ifdef XP_PC
-   // Check for \ in the url-string (PC)
-   if(kNotFound != aIn.FindChar(PRUnichar('\\')))
+   // Check for \ in the url-string or just a drive (PC)
+   if(kNotFound != aIn.FindChar(PRUnichar('\\')) || ((aIn.Length() == 2 ) && (aIn.Last() == PRUnichar(':') || aIn.Last() == PRUnichar('|'))))
       {
 #elif XP_UNIX
    // Check if it starts with / or \ (UNIX)
