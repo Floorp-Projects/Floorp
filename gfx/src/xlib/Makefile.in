@@ -91,10 +91,6 @@ GARBAGE         += $(X11SHARED_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef MOZ_ENABLE_XPRINT
-EXTRA_DSO_LDOPTS += -lxprintutil
-endif
-
 EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_XLIB_LDFLAGS)
 CXXFLAGS	+= $(MOZ_XLIB_CFLAGS)
 
@@ -104,6 +100,7 @@ GFX_XIE_LIBS    += $(MOZ_XIE_LIBS)
 endif
 
 EXTRA_DSO_LDOPTS += \
+		$(LIBS_DIR)     \
 		$(NSPR_LIBS)	\
 		-lxpcom		\
 		-lgkgfx		\
@@ -119,7 +116,9 @@ endif
 
 ifdef MOZ_ENABLE_XPRINT
 DEFINES         += -DUSE_XPRINT
-EXTRA_DSO_LDOPTS += $(MOZ_XPRINT_LDFLAGS)
+EXTRA_DSO_LDOPTS += \
+		-lxprintutil \
+		$(MOZ_XPRINT_LDFLAGS)
 endif
 
 LOCAL_INCLUDES	+= \
