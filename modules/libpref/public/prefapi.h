@@ -134,6 +134,9 @@ PREF_GetPrefConfigObject(JSObject **js_object);
 PR_EXTERN(void)
 PREF_Cleanup();
 
+PR_EXTERN(void)
+PREF_CleanupPrefs();
+
 /*
 // <font color=blue>
 // Given a path to a local Lock file, unobscures the file (not implemented yet)
