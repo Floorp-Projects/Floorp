@@ -284,6 +284,8 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
+  NS_IMETHOD GetCharset(nsAWritableString& aCharset);
+  
   void GetStyleSheetInfo(nsAWritableString& aUrl,
                          nsAWritableString& aTitle,
                          nsAWritableString& aType,
@@ -576,6 +578,16 @@ static PRBool InProlog(nsIDOMNode *aThis)
   }
 
   return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsXMLProcessingInstruction::GetCharset(nsAWritableString& aCharset)
+{
+  if (GetAttrValue(NS_LITERAL_STRING("charset"), aCharset)) {
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE;
+  }
 }
 
 void

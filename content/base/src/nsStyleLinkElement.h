@@ -50,6 +50,7 @@ public:
   NS_IMETHOD InitStyleLinkElement(nsIParser *aParser, PRBool aDontLoadStyle);
   NS_IMETHOD UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument = nsnull, PRInt32 aDocIndex = -1);
   NS_IMETHOD SetEnableUpdates(PRBool aEnableUpdates);
+  NS_IMETHOD GetCharset(nsAString& aCharset);
 
   static void ParseLinkTypes(const nsAReadableString& aTypes, nsStringArray& aResult);
   static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aParams);

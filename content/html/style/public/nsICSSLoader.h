@@ -125,11 +125,11 @@ public:
                             nsICSSLoaderObserver* aObserver) = 0;
 
   // sets the out-param to the current charset, as set by SetCharset
-  NS_IMETHOD GetCharset(/*out*/nsString &aCharsetDest) const = 0;
+  NS_IMETHOD GetCharset(/*out*/nsAString &aCharsetDest) const = 0;
 
   // SetCharset will ensure that the charset provided is the preferred charset
   // if an empty string, then it is set to the default charset
-  NS_IMETHOD SetCharset(/*in*/ const nsString &aCharsetSrc) = 0;
+  NS_IMETHOD SetCharset(/*in*/ const nsAString &aCharsetSrc) = 0;
 
   // stop loading all sheets
   NS_IMETHOD Stop(void) = 0;

@@ -378,7 +378,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
                                               aDocListener, aReset);
   if (NS_FAILED(rv)) return rv;
 
-  nsAutoString charset; charset.AssignWithConversion("UTF-8");
+  nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
   PRBool bIsHTML = PR_FALSE; 
   char* aContentType;
   nsCharsetSource charsetSource = kCharsetFromDocTypeDefault;
@@ -596,6 +596,7 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     rv = mParser->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)aDocListener);
 
     if (NS_OK == rv) {
+      SetDocumentCharacterSet(charset);
       mParser->SetDocumentCharset(charset, charsetSource);
       mParser->SetCommand(aCommand);
       mParser->SetContentSink(sink);

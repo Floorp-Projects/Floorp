@@ -105,6 +105,13 @@ public:
    * @param aEnableUpdates update on changes or not.
    */
   NS_IMETHOD SetEnableUpdates(PRBool aEnableUpdates) = 0;
+
+  /**
+   * Gets the charset that the element claims the style sheet is in
+   *
+   * @param aCharset the charset
+   */
+  NS_IMETHOD GetCharset(nsAString& aCharset) = 0;
 };
 
 #endif // nsILinkingElement_h__

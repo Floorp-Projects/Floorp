@@ -95,6 +95,13 @@ nsStyleLinkElement::SetEnableUpdates(PRBool aEnableUpdates)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsStyleLinkElement::GetCharset(nsAString& aCharset)
+{
+  // descendants have to implement this themselves
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void nsStyleLinkElement::ParseLinkTypes(const nsAReadableString& aTypes,
                                         nsStringArray& aResult)
 {
