@@ -865,6 +865,8 @@ nsSpaceManager::RemoveTrailingRegions(nsIFrame* aFrameList) {
                  "Frame region deletion was requested but we couldn't delete it");
   }
 #endif
+
+  return NS_OK;
 }
 
 nsresult
