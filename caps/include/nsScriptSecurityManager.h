@@ -24,12 +24,11 @@
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
-#include "nsIURI.h"
 #include "jsapi.h"
-#include "jsdbgapi.h"
-#include "nsIScriptContext.h"
 #include "nsIXPCSecurityManager.h"
-#include "nsIScriptExternalNameSet.h"
+#include "nsHashtable.h"
+
+enum { DOMPROP_MAX=892 };
 
 #define NS_SCRIPTSECURITYMANAGER_CID \
 { 0x7ee2a4c0, 0x4b93, 0x17d3, \
@@ -51,6 +50,12 @@ public:
     static nsScriptSecurityManager *
     GetScriptSecurityManager();
     
+    enum PolicyType {
+        POLICY_TYPE_NONE = 0,
+        POLICY_TYPE_DEFAULT = 1,
+        POLICY_TYPE_PERDOMAIN = 2
+    };
+
 private:
     NS_IMETHOD
     GetSubjectPrincipal(JSContext *aCx, nsIPrincipal **result);
@@ -62,10 +67,11 @@ private:
     CheckPermissions(JSContext *aCx, JSObject *aObj, const char *aCapability, 
                      PRBool* result);
     PRInt32 
-    GetSecurityLevel(JSContext *cx, char *prop_name, int priv_code);
+    GetSecurityLevel(JSContext *cx, char *prop_name, PolicyType type, 
+                     PRBool isWrite, char **capability);
 
     char *
-    AddSecPolicyPrefix(JSContext *cx, char *pref_str);
+    AddSecPolicyPrefix(JSContext *cx, char *pref_str, PolicyType type);
 
     char *
     GetSitePolicy(const char *org);
@@ -73,19 +79,12 @@ private:
     NS_IMETHOD
     CheckXPCPermissions(JSContext *cx);
 
+    NS_IMETHOD
+    InitFromPrefs();
+
     nsIPrincipal *mSystemPrincipal;
+    nsSupportsHashtable *mPrincipals;
+    PolicyType domPropertyPolicyTypes[DOMPROP_MAX];
 };
-
-class nsSecurityNameSet : public nsIScriptExternalNameSet 
-{
-public:
-    nsSecurityNameSet();
-    virtual ~nsSecurityNameSet();
-    
-    NS_DECL_ISUPPORTS
-    NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext);
-    NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext);
-};
-
 
 #endif /*_NS_SCRIPT_SECURITY_MANAGER_H_*/

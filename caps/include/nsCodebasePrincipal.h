@@ -19,28 +19,37 @@
  *
  * Contributor(s): 
  */
-/* describes principals by their orginating uris*/
+
+/* describes principals by their orginating URIs */
+
 #ifndef _NS_CODEBASE_PRINCIPAL_H_
 #define _NS_CODEBASE_PRINCIPAL_H_
 
 #include "jsapi.h"
+#include "nsBasePrincipal.h"
 #include "nsICodebasePrincipal.h"
 #include "nsIURI.h"
-#include "nsJSPrincipals.h"
 
 #define NS_CODEBASEPRINCIPAL_CID \
 { 0x7ee2a400, 0x0b91, 0xaad3, \
 { 0xba, 0x18, 0xd7, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 
-class nsCodebasePrincipal : public nsICodebasePrincipal {
+class nsCodebasePrincipal : public nsBasePrincipal, nsICodebasePrincipal {
 public:
     
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_CODEBASEPRINCIPAL_CID)
         
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIPRINCIPAL
     NS_DECL_NSICODEBASEPRINCIPAL
     
+    NS_IMETHOD ToString(char **result);
+
+    NS_IMETHOD Equals(nsIPrincipal *other, PRBool *result);
+
+    NS_IMETHOD HashValue(PRUint32 *result);
+
+    NS_IMETHOD CanEnableCapability(const char *capability, PRInt16 *result);
+
     nsCodebasePrincipal();
     
     NS_IMETHOD
@@ -50,7 +59,6 @@ public:
     
 protected:
     nsIURI *mURI;
-    nsJSPrincipals mJSPrincipals;
 };
 
 #endif // _NS_CODEBASE_PRINCIPAL_H_

@@ -33,6 +33,7 @@
 MODULE=caps 
 DEPTH=..\..
 EXPORTS=                           \
+        nsBasePrincipal.h          \
         nsCertificatePrincipal.h   \
         nsCodebasePrincipal.h      \
         nsJSPrincipals.h           \

@@ -31,6 +31,7 @@ LIBRARY_NAME	= caps
 IS_COMPONENT	= 1
 
 CPPSRCS		= \
+		nsBasePrincipal.cpp \
 		nsSystemPrincipal.cpp \
 		nsCertificatePrincipal.cpp \
 		nsCodebasePrincipal.cpp \

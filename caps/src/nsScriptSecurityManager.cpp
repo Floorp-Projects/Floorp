@@ -37,155 +37,19 @@
 #include "xpcexception.h"
 #include "nsDOMCID.h"
 #include "nsIScriptNameSetRegistry.h"
+#include "nsIScriptExternalNameSet.h"
+#include "jsdbgapi.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCScriptNameSetRegistryCID, 
                      NS_SCRIPT_NAMESET_REGISTRY_CID);
 
 enum {
+    SCRIPT_SECURITY_CAPABILITY_ONLY,
     SCRIPT_SECURITY_SAME_DOMAIN_ACCESS,
     SCRIPT_SECURITY_ALL_ACCESS,
     SCRIPT_SECURITY_NO_ACCESS
 };
-
-////////////////////////////////////
-// Methods implementing ISupports //
-////////////////////////////////////
-
-NS_IMETHODIMP
-nsScriptSecurityManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) 
-      return NS_ERROR_NULL_POINTER;
-  if (aIID.Equals(NS_GET_IID(nsIScriptSecurityManager))) {
-      *aInstancePtr = (void*)(nsIScriptSecurityManager *)this;
-      NS_ADDREF_THIS();
-      return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIXPCSecurityManager))) {
-      *aInstancePtr = (void*)(nsIXPCSecurityManager *)this;
-      NS_ADDREF_THIS();
-      return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsScriptSecurityManager);
-NS_IMPL_RELEASE(nsScriptSecurityManager);
-
-
-///////////////////////////////////////////////////
-// Methods implementing nsIScriptSecurityManager //
-///////////////////////////////////////////////////
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CheckScriptAccess(nsIScriptContext *aContext, 
-                                           void *aObj, const char *aProp, 
-                                           PRBool isWrite, PRBool *aResult)
-{
-    *aResult = PR_FALSE;
-    JSContext *cx = (JSContext *)aContext->GetNativeContext();
-    PRInt32 secLevel = GetSecurityLevel(cx, (char *) aProp, nsnull);
-    switch (secLevel) {
-      case SCRIPT_SECURITY_ALL_ACCESS:
-        *aResult = PR_TRUE;
-        return NS_OK;
-      case SCRIPT_SECURITY_SAME_DOMAIN_ACCESS: {
-        const char *cap = isWrite  
-                          ? "UniversalBrowserWrite" 
-                          : "UniversalBrowserRead";
-        return CheckPermissions(cx, (JSObject *) aObj, cap, aResult);
-      }
-      default:
-        // Default is no access
-        *aResult = PR_FALSE;
-        return NS_OK;
-    }
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext, 
-                                  nsIURI *aURI,
-                                  PRBool *aResult)
-{
-    // Temporary: only enforce if security.checkuri pref is enabled
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	if (NS_FAILED(rv))
-		return NS_ERROR_FAILURE;
-	PRBool enabled;
-    if (NS_FAILED(prefs->GetBoolPref("security.checkuri", &enabled)) ||
-        !enabled) 
-    {
-        *aResult = PR_TRUE;
-        return NS_OK;
-    }
-
-    nsXPIDLCString scheme;
-    if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
-        return NS_ERROR_FAILURE;
-    if (nsCRT::strcmp(scheme, "http")         == 0 ||
-        nsCRT::strcmp(scheme, "https")        == 0 ||
-        nsCRT::strcmp(scheme, "javascript")   == 0 ||
-        nsCRT::strcmp(scheme, "ftp")          == 0 ||
-        nsCRT::strcmp(scheme, "mailto")       == 0 ||
-        nsCRT::strcmp(scheme, "news")         == 0)
-    {
-        *aResult = PR_TRUE;
-        return NS_OK;
-    }
-    if (nsCRT::strcmp(scheme, "about") == 0) {
-        nsXPIDLCString spec;
-        if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
-            return NS_ERROR_FAILURE;
-        if (nsCRT::strcmp(spec, "about:blank") == 0) {
-            *aResult = PR_TRUE;
-            return NS_OK;
-        }
-    }
-    JSContext *cx = (JSContext*) aContext->GetNativeContext();
-    nsCOMPtr<nsIPrincipal> principal;
-    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
-        return NS_ERROR_FAILURE;
-    }
-    if (nsCRT::strcmp(scheme, "file") == 0) {
-        nsCOMPtr<nsICodebasePrincipal> codebase;
-        if (NS_SUCCEEDED(principal->QueryInterface(
-                 NS_GET_IID(nsICodebasePrincipal), 
-                 (void **) getter_AddRefs(codebase))))
-        {
-            nsCOMPtr<nsIURI> uri;
-            if (NS_SUCCEEDED(codebase->GetURI(getter_AddRefs(uri)))) {
-                nsXPIDLCString scheme2;
-                if (NS_SUCCEEDED(uri->GetScheme(getter_Copies(scheme2))) &&
-                    nsCRT::strcmp(scheme2, "file") == 0)
-                {
-                    *aResult = PR_TRUE;
-                    return NS_OK;
-                }
-            }
-        }
-        if (NS_FAILED(principal->CanAccess("UniversalFileRead", aResult)))
-            return NS_ERROR_FAILURE;
-
-        if (*aResult)
-            return NS_OK;
-    }
-
-    // Only allowed for the system principal to create other URIs.
-    if (NS_FAILED(principal->Equals(mSystemPrincipal, aResult)))
-        return NS_ERROR_FAILURE;
-
-    if (!*aResult) {
-        // Report error.
-        nsXPIDLCString spec;
-        if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
-            return NS_ERROR_FAILURE;
-	    JS_ReportError(cx, "illegal URL method '%s'", (const char *)spec);
-        return NS_ERROR_DOM_BAD_URI;
-    }
-    return NS_OK;
-}
 
 static JSContext *
 GetCurrentContext() {
@@ -201,471 +65,63 @@ GetCurrentContext() {
     return cx;
 }
 
-NS_IMETHODIMP
-nsScriptSecurityManager::HasSubjectPrincipal(PRBool *result)
-{
-    *result = GetCurrentContext() != nsnull;
-    return NS_OK;
-}
+static PRInt16 
+findDomProp(const char *propName, int n);
 
-NS_IMETHODIMP
-nsScriptSecurityManager::GetSubjectPrincipal(nsIPrincipal **result)
-{
-    JSContext *cx = GetCurrentContext();
-    if (!cx)
-        return NS_ERROR_FAILURE;
-    return GetSubjectPrincipal(cx, result);
-}
+/////////////////////
+// nsIPrincipalKey //
+/////////////////////
 
-NS_IMETHODIMP
-nsScriptSecurityManager::GetSystemPrincipal(nsIPrincipal **result)
-{
-    if (!mSystemPrincipal) {
-        mSystemPrincipal = new nsSystemPrincipal();
-        if (!mSystemPrincipal)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(mSystemPrincipal);
-    }
-    *result = mSystemPrincipal;
-    NS_ADDREF(*result);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI *aURI, 
-                                                 nsIPrincipal **result)
-{
-    nsCOMPtr<nsCodebasePrincipal> codebase = new nsCodebasePrincipal();
-    if (!codebase)
-        return NS_ERROR_OUT_OF_MEMORY;
-    if (NS_FAILED(codebase->Init(aURI)))
-        return NS_ERROR_FAILURE;
-    *result = codebase;
-    NS_ADDREF(*result);
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanExecuteScripts(nsIPrincipal *principal,
-                                           PRBool *result)
-{
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	if (NS_FAILED(rv))
-		return NS_ERROR_FAILURE;
-    if (NS_FAILED(prefs->GetBoolPref("javascript.enabled", result))) {
-        // Default to enabled.
-        *result = PR_TRUE;
-        return NS_OK;
-    }
-    if (!*result) {
-        // JavaScript is disabled, but we must still execute system JavaScript
-        *result = (principal == mSystemPrincipal);
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanExecuteFunction(void *jsFunc,
-                                            PRBool *result)
-{
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	if (NS_FAILED(rv))
-		return NS_ERROR_FAILURE;
-    if (NS_FAILED(prefs->GetBoolPref("javascript.enabled", result))) {
-        // Default to enabled.
-        *result = PR_TRUE;
-        return NS_OK;
-    }
-    if (!*result) {
-        // norris TODO: figure out JSContext strategy, replace nsnulls below
-        // JavaScript is disabled, but we must still execute system JavaScript
-        JSScript *script = JS_GetFunctionScript(nsnull, (JSFunction *) jsFunc);
-        if (!script)
-            return NS_ERROR_FAILURE;
-        JSPrincipals *jsprin = JS_GetScriptPrincipals(nsnull, script);
-        if (!jsprin)
-            return NS_ERROR_FAILURE;
-        nsJSPrincipals *nsJSPrin = (nsJSPrincipals *) jsprin;
-        *result = (nsJSPrin->nsIPrincipalPtr == mSystemPrincipal);
-    }
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanEnableCapability(nsIPrincipal *principal,
-                                             const char *capability, 
-                                             PRBool *result)
-{
-    return NS_ERROR_FAILURE;    // not yet implemented
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::SetCanEnableCapability(nsIPrincipal *principal,
-                                                const char *capability, 
-                                                PRBool canEnable)
-{
-    return NS_ERROR_FAILURE;    // not yet implemented
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
-                                             PRBool *result)
-{
-    return NS_ERROR_FAILURE;    // not yet implemented
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::EnableCapability(const char *capability)
-{
-    return NS_ERROR_FAILURE;    // not yet implemented
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::RevertCapability(const char *capability)
-{
-    return NS_ERROR_FAILURE;    // not yet implemented
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::DisableCapability(const char *capability)
-{
-    return NS_ERROR_FAILURE;    // not yet implemented
-}
-
-
-////////////////////////////////////////////////
-// Methods implementing nsIXPCSecurityManager //
-////////////////////////////////////////////////
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanCreateWrapper(JSContext *aJSContext, 
-                                          const nsIID &aIID, 
-                                          nsISupports *aObj)
-{
-	if (aIID.Equals(NS_GET_IID(nsIXPCException)))
-		return NS_OK;		
-    return CheckXPCPermissions(aJSContext);
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanCreateInstance(JSContext *aJSContext, 
-                                           const nsCID &aCID)
-{
-    return CheckXPCPermissions(aJSContext);
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanGetService(JSContext *aJSContext, 
-                                       const nsCID &aCID)
-{
-    return CheckXPCPermissions(aJSContext);
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanCallMethod(JSContext *aJSContext, 
-                                       const nsIID &aIID, 
-                                       nsISupports *aObj, 
-                                       nsIInterfaceInfo *aInterfaceInfo, 
-                                       PRUint16 aMethodIndex, 
-                                       const jsid aName)
-{
-    return CheckXPCPermissions(aJSContext);
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanGetProperty(JSContext *aJSContext, 
-                                        const nsIID &aIID, 
-                                        nsISupports *aObj, 
-                                        nsIInterfaceInfo *aInterfaceInfo, 
-                                        PRUint16 aMethodIndex, 
-                                        const jsid aName)
-{
-    return CheckXPCPermissions(aJSContext);
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CanSetProperty(JSContext *aJSContext, 
-                                        const nsIID &aIID, 
-                                        nsISupports *aObj, 
-                                        nsIInterfaceInfo *aInterfaceInfo, 
-                                        PRUint16 aMethodIndex, 
-                                        const jsid aName)
-{
-    return CheckXPCPermissions(aJSContext);
-}
-
-///////////////////
-// Other methods //
-///////////////////
-
-nsScriptSecurityManager::nsScriptSecurityManager(void)
-    : mSystemPrincipal(nsnull)
-{
-    NS_INIT_REFCNT();
-}
-
-nsScriptSecurityManager::~nsScriptSecurityManager(void)
-{
-} 
-
-nsScriptSecurityManager *
-nsScriptSecurityManager::GetScriptSecurityManager()
-{
-    static nsScriptSecurityManager *ssecMan = NULL;
-    if (!ssecMan) {
-        ssecMan = new nsScriptSecurityManager();
-	    nsresult rv;
-	    NS_WITH_SERVICE(nsIScriptNameSetRegistry, registry, 
-                        kCScriptNameSetRegistryCID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            nsSecurityNameSet* nameSet = new nsSecurityNameSet();
-            registry->AddExternalNameSet(nameSet);
-        }
-    }
-    return ssecMan;
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::GetSubjectPrincipal(JSContext *aCx, 
-                                             nsIPrincipal **result)
-{
-    // Get principals from innermost frame of JavaScript or Java.
-    JSPrincipals *principals;
-    JSStackFrame *fp;
-    JSScript *script;
-    fp = nsnull; // indicate to JS_FrameIterator to start from innermost frame
-    JSStackFrame *pFrameToStartLooking = JS_FrameIterator(aCx, &fp);
-    JSStackFrame *pFrameToEndLooking   = nsnull;
-    fp = pFrameToStartLooking;
-    while (fp != pFrameToEndLooking) {
-        script = JS_GetFrameScript(aCx, fp);
-        if (script) {
-            principals = JS_GetScriptPrincipals(aCx, script);
-            if (principals) {
-                nsJSPrincipals *nsJSPrin = (nsJSPrincipals *) principals;
-                *result = nsJSPrin->nsIPrincipalPtr;
-                NS_ADDREF(*result);
-                return NS_OK;
-            } else {
-                return NS_ERROR_FAILURE;
-            }
-        }
-        fp = JS_FrameIterator(aCx, &fp);
-    }
-    // Couldn't find principals: no mobile code on stack.
-    // Use system principal.
-    return GetSystemPrincipal(result);
-}
-
-
-NS_IMETHODIMP
-nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj, 
-                                            nsIPrincipal **result)
-{
-    JSObject *parent;
-    while ((parent = JS_GetParent(aCx, aObj)) != nsnull) 
-        aObj = parent;
-    
-    nsISupports *supports = (nsISupports *) JS_GetPrivate(aCx, aObj);
-    nsCOMPtr<nsIScriptGlobalObjectData> globalData;
-    if (!supports || NS_FAILED(supports->QueryInterface(
-                                     NS_GET_IID(nsIScriptGlobalObjectData), 
-                                     (void **) getter_AddRefs(globalData))))
-    {
-        return NS_ERROR_FAILURE;
-    }
-    if (NS_FAILED(globalData->GetPrincipal(result))) {
-        return NS_ERROR_FAILURE;
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj, 
-                                          const char *aCapability,
-                                          PRBool* aResult)
-{
-    // Temporary: only enforce if security.checkdomprops pref is enabled
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	if (NS_FAILED(rv))
-		return NS_ERROR_FAILURE;
-	PRBool enabled;
-    if (NS_FAILED(prefs->GetBoolPref("security.checkdomprops", &enabled)) ||
-        !enabled) 
-    {
-        *aResult = PR_TRUE;
-        return NS_OK;
-    }
-
-    /*
-    ** Get origin of subject and object and compare.
-    */
-    nsCOMPtr<nsIPrincipal> subject;
-    if (NS_FAILED(GetSubjectPrincipal(aCx, getter_AddRefs(subject))))
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIPrincipal> object;
-    if (NS_FAILED(GetObjectPrincipal(aCx, aObj, getter_AddRefs(object))))
-        return NS_ERROR_FAILURE;
-    if (subject == object) {
-        *aResult = PR_TRUE;
-        return NS_OK;
-    }
-    nsCOMPtr<nsICodebasePrincipal> subjectCodebase;
-    if (NS_SUCCEEDED(subject->QueryInterface(
-                        NS_GET_IID(nsICodebasePrincipal),
-	                (void **) getter_AddRefs(subjectCodebase))))
-    {
-        if (NS_FAILED(subjectCodebase->SameOrigin(object, aResult)))
-            return NS_ERROR_FAILURE;
-
-        if (*aResult)
-            return NS_OK;
-    }
-
-    /*
-    ** If we failed the origin tests it still might be the case that we
-    ** are a signed script and have permissions to do this operation.
-    ** Check for that here
-    */
-    if (NS_FAILED(subject->CanAccess(aCapability, aResult)))
-        return NS_ERROR_FAILURE;
-    if (*aResult)
-        return NS_OK;
-    
-    /*
-    ** Access tests failed, so now report error.
-    */
-    nsCOMPtr<nsIURI> uri;
-    if (NS_FAILED(subjectCodebase->GetURI(getter_AddRefs(uri)))) 
-        return NS_ERROR_FAILURE;
-    char *spec;
-    if (NS_FAILED(uri->GetSpec(&spec)))
-        return NS_ERROR_FAILURE;
-    JS_ReportError(aCx, "access disallowed from scripts at %s to documents "
-                        "at another domain", spec);
-    nsCRT::free(spec);
-    *aResult = PR_FALSE;
-    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-}
-
-
-PRInt32 
-nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, char *prop_name, 
-                                          int priv_code)
-{
-    if (prop_name == nsnull) 
-        return SCRIPT_SECURITY_NO_ACCESS;
-    char *tmp_prop_name = AddSecPolicyPrefix(cx, prop_name);
-    if (tmp_prop_name == nsnull) 
-        return SCRIPT_SECURITY_NO_ACCESS;
-    PRInt32 secLevel;
-    char *secLevelString;
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	if (NS_FAILED(rv))
-		return NS_ERROR_FAILURE;
-    if (NS_SUCCEEDED(prefs->CopyCharPref(tmp_prop_name, &secLevelString)) &&
-        secLevelString) 
-    {
-        PR_FREEIF(tmp_prop_name);
-        if (PL_strcmp(secLevelString, "sameOrigin") == 0)
-            secLevel = SCRIPT_SECURITY_SAME_DOMAIN_ACCESS;
-        else if (PL_strcmp(secLevelString, "allAccess") == 0)
-            secLevel = SCRIPT_SECURITY_ALL_ACCESS;
-        else if (PL_strcmp(secLevelString, "noAccess") == 0)
-            secLevel = SCRIPT_SECURITY_NO_ACCESS;
-        else
-            secLevel = SCRIPT_SECURITY_NO_ACCESS;
-        // NB TODO: what about signed scripts?
-        PR_Free(secLevelString);
-        return secLevel;
-    }
-
-    // If no preference is defined for this property, allow access. 
-    // This violates the rule of a safe default, but means we don't have
-    // to specify the large majority of unchecked properties, only the
-    // minority of checked ones.
-    PR_FREEIF(tmp_prop_name);
-    return SCRIPT_SECURITY_ALL_ACCESS;
-}
-
-
-char *
-nsScriptSecurityManager::AddSecPolicyPrefix(JSContext *cx, char *pref_str)
-{
-    const char *subjectOrigin = "";//GetSubjectOriginURL(cx);
-    char *policy_str, *retval = 0;
-    if ((policy_str = GetSitePolicy(subjectOrigin)) == 0) {
-        /* No site-specific policy.  Get global policy name. */
-		nsresult rv;
-		NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-		if (NS_FAILED(rv) ||
-            NS_FAILED(prefs->CopyCharPref("javascript.security_policy", &policy_str)))
-		{
-            policy_str = PL_strdup("default");
-		}
-    }
-    if (policy_str) { //why can't this be default? && PL_strcasecmp(policy_str, "default") != 0) {
-        retval = PR_sprintf_append(NULL, "security.policy.%s.%s", policy_str, pref_str);
-        PR_Free(policy_str);
+class nsIPrincipalKey : public nsHashKey {
+public:
+    nsIPrincipalKey(nsIPrincipal* key) {
+        mKey = key;
+        NS_IF_ADDREF(mKey);
     }
     
-    return retval;
-}
-
-
-char *
-nsScriptSecurityManager::GetSitePolicy(const char *org)
-{
-    return nsnull;
-}
-
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
-{
-    nsCOMPtr<nsIPrincipal> subject;
-    PRBool ok = PR_FALSE;
-    if (NS_SUCCEEDED(GetSubjectPrincipal(aJSContext, getter_AddRefs(subject))))
-        ok = PR_TRUE;
-    if (!ok || NS_FAILED(subject->CanAccess("UniversalXPConnect", &ok)))
-        ok = PR_FALSE;
-    if (!ok) {
-        // Check the pref "security.checkxpconnect". If it exists and is
-        // set to false, don't report an error.
-	    nsresult rv;
-	    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	    if (NS_SUCCEEDED(rv)) {
-		    PRBool enabled;
-		    if (NS_SUCCEEDED(prefs->GetBoolPref("security.checkxpconnect",
-                                                &enabled)) &&
-			    !enabled) 
-		    {
-			    return NS_OK;
-		    }
-	    }
-		static const char msg[] = "Access denied to XPConnect service.";
-		JS_SetPendingException(aJSContext, 
-			                   STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, msg)));
-        return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
+    ~nsIPrincipalKey(void) {
+        NS_IF_RELEASE(mKey);
     }
-    return NS_OK;
-}
+    
+    PRUint32 HashValue(void) const {
+        PRUint32 hash;
+        mKey->HashValue(&hash);
+        return hash;
+    }
+    
+    PRBool Equals(const nsHashKey *aKey) const {
+        PRBool eq;
+        mKey->Equals(((nsIPrincipalKey *) aKey)->mKey, &eq);
+        return eq;
+    }
+    
+    nsHashKey *Clone(void) const {
+        return new nsIPrincipalKey(mKey);
+    }
+
+protected:
+    nsIPrincipal* mKey;
+};
 
 
 ///////////////////////
 // nsSecurityNameSet //
 ///////////////////////
 
+class nsSecurityNameSet : public nsIScriptExternalNameSet 
+{
+public:
+    nsSecurityNameSet();
+    virtual ~nsSecurityNameSet();
+    
+    NS_DECL_ISUPPORTS
+    NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext);
+    NS_IMETHOD AddNameSet(nsIScriptContext* aScriptContext);
+};
+
 nsSecurityNameSet::nsSecurityNameSet()
 {
-  NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
 }
 
 nsSecurityNameSet::~nsSecurityNameSet()
@@ -673,12 +129,6 @@ nsSecurityNameSet::~nsSecurityNameSet()
 }
 
 NS_IMPL_ISUPPORTS(nsSecurityNameSet, NS_GET_IID(nsIScriptExternalNameSet));
-
-NS_IMETHODIMP 
-nsSecurityNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
-{
-  return NS_OK;
-}
 
 static char *
 getStringArgument(JSContext *cx, JSObject *obj, uintN argc, jsval *argv)
@@ -786,8 +236,8 @@ static JSFunctionSpec PrivilegeManager_static_methods[] = {
  * "Steal" calls to netscape.security.PrivilegeManager.enablePrivilege,
  * et. al. so that code that worked with 4.0 can still work.
  */
-NS_IMETHODIMP
-nsSecurityNameSet::AddNameSet(nsIScriptContext* aScriptContext)
+NS_IMETHODIMP 
+nsSecurityNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
 {
     JSContext *cx = (JSContext *) aScriptContext->GetNativeContext();
     JSObject *global = JS_GetGlobalObject(cx);
@@ -798,7 +248,7 @@ nsSecurityNameSet::AddNameSet(nsIScriptContext* aScriptContext)
      */
     JSObject *obj = global;
     JSObject *proto;
-    while (proto = JS_GetPrototype(cx, obj))
+    while ((proto = JS_GetPrototype(cx, obj)) != nsnull)
         obj = proto;
     JSClass *objectClass = JS_GetClass(cx, obj);
 
@@ -837,3 +287,1723 @@ nsSecurityNameSet::AddNameSet(nsIScriptContext* aScriptContext)
            : NS_ERROR_FAILURE;
 }
 
+
+NS_IMETHODIMP
+nsSecurityNameSet::AddNameSet(nsIScriptContext* aScriptContext)
+{
+    return NS_OK;
+}
+
+
+
+/////////////////////////////
+// nsScriptSecurityManager //
+/////////////////////////////
+
+////////////////////////////////////
+// Methods implementing ISupports //
+////////////////////////////////////
+
+NS_IMETHODIMP
+nsScriptSecurityManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (nsnull == aInstancePtr) 
+      return NS_ERROR_NULL_POINTER;
+  if (aIID.Equals(NS_GET_IID(nsIScriptSecurityManager))) {
+      *aInstancePtr = (void*)(nsIScriptSecurityManager *)this;
+      NS_ADDREF_THIS();
+      return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIXPCSecurityManager))) {
+      *aInstancePtr = (void*)(nsIXPCSecurityManager *)this;
+      NS_ADDREF_THIS();
+      return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+NS_IMPL_ADDREF(nsScriptSecurityManager);
+NS_IMPL_RELEASE(nsScriptSecurityManager);
+
+
+///////////////////////////////////////////////////
+// Methods implementing nsIScriptSecurityManager //
+///////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckScriptAccess(nsIScriptContext *aContext, 
+                                           void *aObj, const char *aProp, 
+                                           PRBool isWrite, PRBool *aResult)
+{
+    *aResult = PR_FALSE;
+    PRInt16 domProp = findDomProp(aProp, PL_strlen(aProp));
+    NS_ASSERTION(domProp > 0, "dom prop not found");
+    PolicyType type = domPropertyPolicyTypes[domProp];
+    if (type == POLICY_TYPE_NONE) {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
+    JSContext *cx = (JSContext *)aContext->GetNativeContext();
+    nsXPIDLCString capability;
+    PRInt32 secLevel = GetSecurityLevel(cx, (char *) aProp, type, isWrite,
+                                        getter_Copies(capability));
+    switch (secLevel) {
+      case SCRIPT_SECURITY_ALL_ACCESS:
+        *aResult = PR_TRUE;
+        return NS_OK;
+      case SCRIPT_SECURITY_SAME_DOMAIN_ACCESS: {
+        const char *cap = isWrite  
+                          ? "UniversalBrowserWrite" 
+                          : "UniversalBrowserRead";
+        return CheckPermissions(cx, (JSObject *) aObj, cap, aResult);
+      }
+      case SCRIPT_SECURITY_CAPABILITY_ONLY: 
+        return IsCapabilityEnabled(capability, aResult);
+      default:
+        // Default is no access
+        *aResult = PR_FALSE;
+        return NS_OK;
+    }
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext, 
+                                  nsIURI *aURI,
+                                  PRBool *aResult)
+{
+    // Temporary: only enforce if security.checkuri pref is enabled
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+	PRBool enabled;
+    if (NS_FAILED(prefs->GetBoolPref("security.checkuri", &enabled)) ||
+        !enabled) 
+    {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
+
+    nsXPIDLCString scheme;
+    if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
+        return NS_ERROR_FAILURE;
+    if (nsCRT::strcmp(scheme, "http")         == 0 ||
+        nsCRT::strcmp(scheme, "https")        == 0 ||
+        nsCRT::strcmp(scheme, "javascript")   == 0 ||
+        nsCRT::strcmp(scheme, "ftp")          == 0 ||
+        nsCRT::strcmp(scheme, "mailto")       == 0 ||
+        nsCRT::strcmp(scheme, "news")         == 0)
+    {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
+    if (nsCRT::strcmp(scheme, "about") == 0) {
+        nsXPIDLCString spec;
+        if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
+            return NS_ERROR_FAILURE;
+        if (nsCRT::strcmp(spec, "about:blank") == 0) {
+            *aResult = PR_TRUE;
+            return NS_OK;
+        }
+    }
+    JSContext *cx = (JSContext*) aContext->GetNativeContext();
+    nsCOMPtr<nsIPrincipal> principal;
+    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
+        return NS_ERROR_FAILURE;
+    }
+    if (nsCRT::strcmp(scheme, "file") == 0) {
+        nsCOMPtr<nsICodebasePrincipal> codebase;
+        if (NS_SUCCEEDED(principal->QueryInterface(
+                 NS_GET_IID(nsICodebasePrincipal), 
+                 (void **) getter_AddRefs(codebase))))
+        {
+            nsCOMPtr<nsIURI> uri;
+            if (NS_SUCCEEDED(codebase->GetURI(getter_AddRefs(uri)))) {
+                nsXPIDLCString scheme2;
+                if (NS_SUCCEEDED(uri->GetScheme(getter_Copies(scheme2))) &&
+                    nsCRT::strcmp(scheme2, "file") == 0)
+                {
+                    *aResult = PR_TRUE;
+                    return NS_OK;
+                }
+            }
+        }
+        
+        if (NS_FAILED(IsCapabilityEnabled("UniversalFileRead", aResult)))
+            return NS_ERROR_FAILURE;
+
+        if (*aResult)
+            return NS_OK;
+    }
+
+    // Only allowed for the system principal to create other URIs.
+    if (NS_FAILED(principal->Equals(mSystemPrincipal, aResult)))
+        return NS_ERROR_FAILURE;
+
+    if (!*aResult) {
+        // Report error.
+        nsXPIDLCString spec;
+        if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
+            return NS_ERROR_FAILURE;
+	    JS_ReportError(cx, "illegal URL method '%s'", (const char *)spec);
+        return NS_ERROR_DOM_BAD_URI;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::HasSubjectPrincipal(PRBool *result)
+{
+    *result = GetCurrentContext() != nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetSubjectPrincipal(nsIPrincipal **result)
+{
+    JSContext *cx = GetCurrentContext();
+    if (!cx)
+        return NS_ERROR_FAILURE;
+    return GetSubjectPrincipal(cx, result);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetSystemPrincipal(nsIPrincipal **result)
+{
+    if (!mSystemPrincipal) {
+        mSystemPrincipal = new nsSystemPrincipal();
+        if (!mSystemPrincipal)
+            return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(mSystemPrincipal);
+    }
+    *result = mSystemPrincipal;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI *aURI, 
+                                                 nsIPrincipal **result)
+{
+    nsresult rv;
+    nsCodebasePrincipal *codebase = new nsCodebasePrincipal();
+    NS_ADDREF(codebase);    // XXX should constructor addref?
+    if (!codebase)
+        return NS_ERROR_OUT_OF_MEMORY;
+    if (NS_FAILED(codebase->Init(aURI))) {
+        NS_RELEASE(codebase);
+        return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = codebase->QueryInterface(NS_GET_IID(nsIPrincipal), 
+                                  (void **) getter_AddRefs(principal));
+    NS_RELEASE(codebase);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (mPrincipals) {
+        // Check to see if we already have this principal.
+        nsIPrincipalKey key(principal);
+        nsCOMPtr<nsIPrincipal> p2 = (nsIPrincipal *) mPrincipals->Get(&key);
+        if (p2) 
+            principal = p2;
+    }
+    *result = principal;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanExecuteScripts(nsIPrincipal *principal,
+                                           PRBool *result)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+    if (NS_FAILED(prefs->GetBoolPref("javascript.enabled", result))) {
+        // Default to enabled.
+        *result = PR_TRUE;
+        return NS_OK;
+    }
+    if (!*result) {
+        // JavaScript is disabled, but we must still execute system JavaScript
+        *result = (principal == mSystemPrincipal);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanExecuteFunction(void *jsFunc,
+                                            PRBool *result)
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+    if (NS_FAILED(prefs->GetBoolPref("javascript.enabled", result))) {
+        // Default to enabled.
+        *result = PR_TRUE;
+        return NS_OK;
+    }
+    if (!*result) {
+        // norris TODO: figure out JSContext strategy, replace nsnulls below
+        // JavaScript is disabled, but we must still execute system JavaScript
+        JSScript *script = JS_GetFunctionScript(nsnull, (JSFunction *) jsFunc);
+        if (!script)
+            return NS_ERROR_FAILURE;
+        JSPrincipals *jsprin = JS_GetScriptPrincipals(nsnull, script);
+        if (!jsprin)
+            return NS_ERROR_FAILURE;
+        nsJSPrincipals *nsJSPrin = (nsJSPrincipals *) jsprin;
+        *result = (nsJSPrin->nsIPrincipalPtr == mSystemPrincipal);
+    }
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
+                                             PRBool *result)
+{
+    nsresult rv;
+    JSStackFrame *fp = nsnull;
+    JSContext *cx = GetCurrentContext();
+    fp = cx ? JS_FrameIterator(cx, &fp) : nsnull;
+    if (!fp) {
+        // No script code on stack. Allow execution.
+        *result = PR_TRUE;
+        return NS_OK;
+    }
+    while (fp) {
+        JSScript *script = JS_GetFrameScript(cx, fp);
+        if (script) {
+            JSPrincipals *principals = JS_GetScriptPrincipals(cx, script);
+            if (!principals) {
+                // Script didn't have principals!
+                return NS_ERROR_FAILURE;
+            }
+
+            // First check if the principal is even able to enable the 
+            // given capability. If not, don't look any further.
+            nsJSPrincipals *nsJSPrin = (nsJSPrincipals *) principals;
+            PRInt16 canEnable;
+            rv = nsJSPrin->nsIPrincipalPtr->CanEnableCapability(capability, 
+                                                                &canEnable);
+            if (NS_FAILED(rv))
+                return rv;
+            if (canEnable == nsIPrincipal::ENABLE_DENIED) {
+                *result = PR_FALSE;
+                return NS_OK;
+            }
+
+            // Now see if the capability is enabled.
+            void *annotation = JS_GetFrameAnnotation(cx, fp);
+            rv = nsJSPrin->nsIPrincipalPtr->IsCapabilityEnabled(capability, 
+                                                                annotation, 
+                                                                result);
+            if (NS_FAILED(rv))
+                return rv;
+            if (*result)
+                return NS_OK;
+        }
+        fp = JS_FrameIterator(cx, &fp);
+    }
+    *result = PR_FALSE;
+    return NS_OK;
+}
+
+static nsresult
+GetPrincipalAndFrame(JSContext *cx, nsIPrincipal **result, 
+                     JSStackFrame **frameResult) 
+{
+    // Get principals from innermost frame of JavaScript or Java.
+    JSStackFrame *fp = nsnull; // tell JS_FrameIterator to start at innermost
+    fp = JS_FrameIterator(cx, &fp);
+    while (fp) {
+        JSScript *script = JS_GetFrameScript(cx, fp);
+        if (script) {
+            JSPrincipals *principals = JS_GetScriptPrincipals(cx, script);
+            if (!principals) {
+                // Script didn't have principals!
+                return NS_ERROR_FAILURE;
+            }
+            nsJSPrincipals *nsJSPrin = (nsJSPrincipals *) principals;
+            *result = nsJSPrin->nsIPrincipalPtr;
+            NS_ADDREF(*result);
+            *frameResult = fp;
+            return NS_OK;
+        }
+        fp = JS_FrameIterator(cx, &fp);
+    }
+    *result = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::EnableCapability(const char *capability)
+{
+    JSContext *cx = GetCurrentContext();
+    JSStackFrame *fp;
+    nsCOMPtr<nsIPrincipal> principal;
+    if (NS_FAILED(GetPrincipalAndFrame(cx, getter_AddRefs(principal), 
+                                       &fp)))
+    {
+        return NS_ERROR_FAILURE;
+    }
+    void *annotation = JS_GetFrameAnnotation(cx, fp);
+    PRBool enabled;
+    if (NS_FAILED(principal->IsCapabilityEnabled(capability, annotation, 
+                                                 &enabled)))
+    {
+        return NS_ERROR_FAILURE;
+    }
+    if (enabled)
+        return NS_OK;
+    PRInt16 canEnable;
+    if (NS_FAILED(principal->CanEnableCapability(capability, &canEnable)))
+        return NS_ERROR_FAILURE;
+    if (canEnable == nsIPrincipal::ENABLE_WITH_USER_PERMISSION) {
+        // XXX ask user!
+        canEnable = nsIPrincipal::ENABLE_GRANTED;
+        if (NS_FAILED(principal->SetCanEnableCapability(capability, canEnable)))
+            return NS_ERROR_FAILURE;
+        nsIPrincipalKey key(principal);
+        if (!mPrincipals) {
+            mPrincipals = new nsSupportsHashtable(31);
+            if (!mPrincipals)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+        // This is a little sneaky. "supports" below is a void *, which won't 
+        // be refcounted, but is matched with a key that is the same object,
+        // which will be refcounted.
+        mPrincipals->Put(&key, principal);
+    }
+    if (canEnable != nsIPrincipal::ENABLE_GRANTED) {
+		static const char msg[] = "enablePrivilege not granted";
+		JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, msg)));
+        return NS_ERROR_FAILURE; // XXX better error code?
+    }
+    if (NS_FAILED(principal->EnableCapability(capability, &annotation))) 
+        return NS_ERROR_FAILURE;
+    JS_SetFrameAnnotation(cx, fp, annotation);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::RevertCapability(const char *capability)
+{
+    JSContext *cx = GetCurrentContext();
+    JSStackFrame *fp;
+    nsCOMPtr<nsIPrincipal> principal;
+    if (NS_FAILED(GetPrincipalAndFrame(cx, getter_AddRefs(principal), 
+                                       &fp)))
+    {
+        return NS_ERROR_FAILURE;
+    }
+    void *annotation = JS_GetFrameAnnotation(cx, fp);
+    principal->RevertCapability(capability, &annotation);
+    JS_SetFrameAnnotation(cx, fp, annotation);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::DisableCapability(const char *capability)
+{
+    JSContext *cx = GetCurrentContext();
+    JSStackFrame *fp;
+    nsCOMPtr<nsIPrincipal> principal;
+    if (NS_FAILED(GetPrincipalAndFrame(cx, getter_AddRefs(principal), 
+                                       &fp)))
+    {
+        return NS_ERROR_FAILURE;
+    }
+    void *annotation = JS_GetFrameAnnotation(cx, fp);
+    principal->DisableCapability(capability, &annotation);
+    JS_SetFrameAnnotation(cx, fp, annotation);
+    return NS_OK;
+}
+
+
+////////////////////////////////////////////////
+// Methods implementing nsIXPCSecurityManager //
+////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanCreateWrapper(JSContext *aJSContext, 
+                                          const nsIID &aIID, 
+                                          nsISupports *aObj)
+{
+	if (aIID.Equals(NS_GET_IID(nsIXPCException)))
+		return NS_OK;		
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanCreateInstance(JSContext *aJSContext, 
+                                           const nsCID &aCID)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanGetService(JSContext *aJSContext, 
+                                       const nsCID &aCID)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanCallMethod(JSContext *aJSContext, 
+                                       const nsIID &aIID, 
+                                       nsISupports *aObj, 
+                                       nsIInterfaceInfo *aInterfaceInfo, 
+                                       PRUint16 aMethodIndex, 
+                                       const jsid aName)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanGetProperty(JSContext *aJSContext, 
+                                        const nsIID &aIID, 
+                                        nsISupports *aObj, 
+                                        nsIInterfaceInfo *aInterfaceInfo, 
+                                        PRUint16 aMethodIndex, 
+                                        const jsid aName)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanSetProperty(JSContext *aJSContext, 
+                                        const nsIID &aIID, 
+                                        nsISupports *aObj, 
+                                        nsIInterfaceInfo *aInterfaceInfo, 
+                                        PRUint16 aMethodIndex, 
+                                        const jsid aName)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+///////////////////
+// Other methods //
+///////////////////
+
+nsScriptSecurityManager::nsScriptSecurityManager(void)
+    : mSystemPrincipal(nsnull), mPrincipals(nsnull)
+{
+    NS_INIT_REFCNT();
+    memset(domPropertyPolicyTypes, 0, sizeof(domPropertyPolicyTypes));
+    InitFromPrefs();
+}
+
+nsScriptSecurityManager::~nsScriptSecurityManager(void)
+{
+    NS_IF_RELEASE(mSystemPrincipal);
+    delete mPrincipals;
+} 
+
+nsScriptSecurityManager *
+nsScriptSecurityManager::GetScriptSecurityManager()
+{
+    static nsScriptSecurityManager *ssecMan = NULL;
+    if (!ssecMan) {
+        ssecMan = new nsScriptSecurityManager();
+	    nsresult rv;
+	    NS_WITH_SERVICE(nsIScriptNameSetRegistry, registry, 
+                        kCScriptNameSetRegistryCID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            nsSecurityNameSet* nameSet = new nsSecurityNameSet();
+            registry->AddExternalNameSet(nameSet);
+        }
+    }
+    return ssecMan;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetSubjectPrincipal(JSContext *cx, 
+                                             nsIPrincipal **result)
+{
+    JSStackFrame *fp;
+    if (NS_FAILED(GetPrincipalAndFrame(cx, result, &fp)))
+        return NS_ERROR_FAILURE;
+    if (*result)
+        return NS_OK;
+    // Couldn't find principals: no mobile code on stack.
+    // Use system principal.
+    return GetSystemPrincipal(result);
+}
+
+
+NS_IMETHODIMP
+nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj, 
+                                            nsIPrincipal **result)
+{
+    JSObject *parent;
+    while ((parent = JS_GetParent(aCx, aObj)) != nsnull) 
+        aObj = parent;
+    
+    nsISupports *supports = (nsISupports *) JS_GetPrivate(aCx, aObj);
+    nsCOMPtr<nsIScriptGlobalObjectData> globalData;
+    if (!supports || NS_FAILED(supports->QueryInterface(
+                                     NS_GET_IID(nsIScriptGlobalObjectData), 
+                                     (void **) getter_AddRefs(globalData))))
+    {
+        return NS_ERROR_FAILURE;
+    }
+    if (NS_FAILED(globalData->GetPrincipal(result))) {
+        return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj, 
+                                          const char *aCapability,
+                                          PRBool* aResult)
+{
+    // Temporary: only enforce if security.checkdomprops pref is enabled
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+	PRBool enabled;
+    if (NS_FAILED(prefs->GetBoolPref("security.checkdomprops", &enabled)) ||
+        !enabled) 
+    {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
+
+    /*
+    ** Get origin of subject and object and compare.
+    */
+    nsCOMPtr<nsIPrincipal> subject;
+    if (NS_FAILED(GetSubjectPrincipal(aCx, getter_AddRefs(subject))))
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIPrincipal> object;
+    if (NS_FAILED(GetObjectPrincipal(aCx, aObj, getter_AddRefs(object))))
+        return NS_ERROR_FAILURE;
+    if (subject == object) {
+        *aResult = PR_TRUE;
+        return NS_OK;
+    }
+    nsCOMPtr<nsICodebasePrincipal> subjectCodebase;
+    if (NS_SUCCEEDED(subject->QueryInterface(
+                        NS_GET_IID(nsICodebasePrincipal),
+	                (void **) getter_AddRefs(subjectCodebase))))
+    {
+        if (NS_FAILED(subjectCodebase->SameOrigin(object, aResult)))
+            return NS_ERROR_FAILURE;
+
+        if (*aResult)
+            return NS_OK;
+    }
+
+    /*
+    ** If we failed the origin tests it still might be the case that we
+    ** are a signed script and have permissions to do this operation.
+    ** Check for that here
+    */
+    if (NS_FAILED(IsCapabilityEnabled(aCapability, aResult)))
+        return NS_ERROR_FAILURE;
+    if (*aResult)
+        return NS_OK;
+    
+    /*
+    ** Access tests failed, so now report error.
+    */
+    nsCOMPtr<nsIURI> uri;
+    if (NS_FAILED(subjectCodebase->GetURI(getter_AddRefs(uri)))) 
+        return NS_ERROR_FAILURE;
+    char *spec;
+    if (NS_FAILED(uri->GetSpec(&spec)))
+        return NS_ERROR_FAILURE;
+    JS_ReportError(aCx, "access disallowed from scripts at %s to documents "
+                        "at another domain", spec);
+    nsCRT::free(spec);
+    *aResult = PR_FALSE;
+    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
+}
+
+
+PRInt32 
+nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, char *prop_name, 
+                                          PolicyType type, PRBool isWrite, 
+                                          char **capability)
+{
+    if (prop_name == nsnull) 
+        return SCRIPT_SECURITY_NO_ACCESS;
+    char *tmp_prop_name = AddSecPolicyPrefix(cx, prop_name, type);
+    if (tmp_prop_name == nsnull) 
+        return SCRIPT_SECURITY_NO_ACCESS;
+    PRInt32 secLevel;
+    char *secLevelString;
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+    rv = prefs->CopyCharPref(tmp_prop_name, &secLevelString);
+    if (NS_FAILED(rv)) {
+        nsAutoString s = tmp_prop_name;
+        s += (isWrite ? ".write" : ".read");
+        char *cp = s.ToNewCString();
+        if (!cp)
+            return SCRIPT_SECURITY_NO_ACCESS;
+        rv = prefs->CopyCharPref(cp, &secLevelString);
+        Recycle(cp);
+    }
+    if (NS_SUCCEEDED(rv) && secLevelString) {
+        PR_FREEIF(tmp_prop_name);
+        if (PL_strcmp(secLevelString, "sameOrigin") == 0)
+            secLevel = SCRIPT_SECURITY_SAME_DOMAIN_ACCESS;
+        else if (PL_strcmp(secLevelString, "allAccess") == 0)
+            secLevel = SCRIPT_SECURITY_ALL_ACCESS;
+        else if (PL_strcmp(secLevelString, "noAccess") == 0)
+            secLevel = SCRIPT_SECURITY_NO_ACCESS;
+        else {
+            // string should be the name of a capability
+            *capability = secLevelString;
+            secLevelString = nsnull;
+            secLevel = SCRIPT_SECURITY_CAPABILITY_ONLY;
+        }
+        if (secLevelString)
+            PR_Free(secLevelString);
+        return secLevel;
+    }
+
+    // If no preference is defined for this property, allow access. 
+    // This violates the rule of a safe default, but means we don't have
+    // to specify the large majority of unchecked properties, only the
+    // minority of checked ones.
+    PR_FREEIF(tmp_prop_name);
+    return SCRIPT_SECURITY_ALL_ACCESS;
+}
+
+
+char *
+nsScriptSecurityManager::AddSecPolicyPrefix(JSContext *cx, char *pref_str, 
+                                            PolicyType type)
+{
+    const char *subjectOrigin = "";//GetSubjectOriginURL(cx);
+    char *policy_str, *retval = 0;
+    if ((policy_str = GetSitePolicy(subjectOrigin)) == 0) {
+        /* No site-specific policy.  Get global policy name. */
+		nsresult rv;
+		NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+		if (NS_FAILED(rv) ||
+            NS_FAILED(prefs->CopyCharPref("javascript.security_policy", &policy_str)))
+		{
+            policy_str = PL_strdup("default");
+		}
+    }
+    if (policy_str) { //why can't this be default? && PL_strcasecmp(policy_str, "default") != 0) {
+        retval = PR_sprintf_append(NULL, "security.policy.%s.%s", policy_str, pref_str);
+        PR_Free(policy_str);
+    }
+    
+    return retval;
+}
+
+
+char *
+nsScriptSecurityManager::GetSitePolicy(const char *org)
+{
+    return nsnull;
+}
+
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
+{
+    PRBool ok = PR_FALSE;
+    if (NS_FAILED(IsCapabilityEnabled("UniversalXPConnect", &ok)))
+        ok = PR_FALSE;
+    if (!ok) {
+        // Check the pref "security.checkxpconnect". If it exists and is
+        // set to false, don't report an error.
+	    nsresult rv;
+	    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	    if (NS_SUCCEEDED(rv)) {
+		    PRBool enabled;
+		    if (NS_SUCCEEDED(prefs->GetBoolPref("security.checkxpconnect",
+                                                &enabled)) &&
+			    !enabled) 
+		    {
+			    return NS_OK;
+		    }
+	    }
+		static const char msg[] = "Access denied to XPConnect service.";
+		JS_SetPendingException(aJSContext, 
+			                   STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, msg)));
+        return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
+    }
+    return NS_OK;
+}
+
+static char *domPropNames[DOMPROP_MAX] = {
+    "appcoresmanager.add",
+    "appcoresmanager.find",
+    "appcoresmanager.remove",
+    "appcoresmanager.shutdown",
+    "appcoresmanager.startup",
+    "attr.name", 
+    "attr.specified", 
+    "attr.value", 
+    "barprop.visible", 
+    "baseappcore.id",
+    "baseappcore.init",
+    "baseappcore.setdocumentcharset",
+    "browserappcore.back",
+    "browserappcore.backbuttonpopup",
+    "browserappcore.close",
+    "browserappcore.cookieviewer",
+    "browserappcore.copy",
+    "browserappcore.exit",
+    "browserappcore.find",
+    "browserappcore.findnext",
+    "browserappcore.forward",
+    "browserappcore.forwardbuttonpopup",
+    "browserappcore.gotohistoryindex",
+    "browserappcore.loadinitialpage",
+    "browserappcore.loadurl",
+    "browserappcore.newwindow",
+    "browserappcore.openwindow",
+    "browserappcore.print",
+    "browserappcore.printpreview",
+    "browserappcore.reload",
+    "browserappcore.selectall",
+    "browserappcore.setcontentwindow",
+    "browserappcore.settoolbarwindow",
+    "browserappcore.setwebshellwindow",
+    "browserappcore.signonviewer",
+    "browserappcore.stop",
+    "browserappcore.walletchangepassword",
+    "browserappcore.walleteditor",
+    "browserappcore.walletpreview",
+    "browserappcore.walletquickfillin",
+    "browserappcore.walletrequesttocapture",
+    "browserappcore.walletsamples",
+    "characterdata.appenddata", 
+    "characterdata.data", 
+    "characterdata.deletedata", 
+    "characterdata.insertdata", 
+    "characterdata.length", 
+    "characterdata.replacedata", 
+    "characterdata.substringdata", 
+    "css2properties.azimuth", 
+    "css2properties.background", 
+    "css2properties.backgroundattachment", 
+    "css2properties.backgroundcolor", 
+    "css2properties.backgroundimage", 
+    "css2properties.backgroundposition", 
+    "css2properties.backgroundrepeat", 
+    "css2properties.border", 
+    "css2properties.borderbottom", 
+    "css2properties.borderbottomcolor", 
+    "css2properties.borderbottomstyle", 
+    "css2properties.borderbottomwidth", 
+    "css2properties.bordercollapse", 
+    "css2properties.bordercolor", 
+    "css2properties.borderleft", 
+    "css2properties.borderleftcolor", 
+    "css2properties.borderleftstyle", 
+    "css2properties.borderleftwidth", 
+    "css2properties.borderright", 
+    "css2properties.borderrightcolor", 
+    "css2properties.borderrightstyle", 
+    "css2properties.borderrightwidth", 
+    "css2properties.borderspacing", 
+    "css2properties.borderstyle", 
+    "css2properties.bordertop", 
+    "css2properties.bordertopcolor", 
+    "css2properties.bordertopstyle", 
+    "css2properties.bordertopwidth", 
+    "css2properties.borderwidth", 
+    "css2properties.bottom", 
+    "css2properties.captionside", 
+    "css2properties.clear", 
+    "css2properties.clip", 
+    "css2properties.color", 
+    "css2properties.content", 
+    "css2properties.counterincrement", 
+    "css2properties.counterreset", 
+    "css2properties.cssfloat", 
+    "css2properties.cue", 
+    "css2properties.cueafter", 
+    "css2properties.cuebefore", 
+    "css2properties.cursor", 
+    "css2properties.direction", 
+    "css2properties.display", 
+    "css2properties.elevation", 
+    "css2properties.emptycells", 
+    "css2properties.font", 
+    "css2properties.fontfamily", 
+    "css2properties.fontsize", 
+    "css2properties.fontsizeadjust", 
+    "css2properties.fontstretch", 
+    "css2properties.fontstyle", 
+    "css2properties.fontvariant", 
+    "css2properties.fontweight", 
+    "css2properties.height", 
+    "css2properties.left", 
+    "css2properties.letterspacing", 
+    "css2properties.lineheight", 
+    "css2properties.liststyle", 
+    "css2properties.liststyleimage", 
+    "css2properties.liststyleposition", 
+    "css2properties.liststyletype", 
+    "css2properties.margin", 
+    "css2properties.marginbottom", 
+    "css2properties.marginleft", 
+    "css2properties.marginright", 
+    "css2properties.margintop", 
+    "css2properties.markeroffset", 
+    "css2properties.marks", 
+    "css2properties.maxheight", 
+    "css2properties.maxwidth", 
+    "css2properties.minheight", 
+    "css2properties.minwidth", 
+    "css2properties.opacity", 
+    "css2properties.orphans", 
+    "css2properties.outline", 
+    "css2properties.outlinecolor", 
+    "css2properties.outlinestyle", 
+    "css2properties.outlinewidth", 
+    "css2properties.overflow", 
+    "css2properties.padding", 
+    "css2properties.paddingbottom", 
+    "css2properties.paddingleft", 
+    "css2properties.paddingright", 
+    "css2properties.paddingtop", 
+    "css2properties.page", 
+    "css2properties.pagebreakafter", 
+    "css2properties.pagebreakbefore", 
+    "css2properties.pagebreakinside", 
+    "css2properties.pause", 
+    "css2properties.pauseafter", 
+    "css2properties.pausebefore", 
+    "css2properties.pitch", 
+    "css2properties.pitchrange", 
+    "css2properties.playduring", 
+    "css2properties.position", 
+    "css2properties.quotes", 
+    "css2properties.richness", 
+    "css2properties.right", 
+    "css2properties.size", 
+    "css2properties.speak", 
+    "css2properties.speakheader", 
+    "css2properties.speaknumeral", 
+    "css2properties.speakpunctuation", 
+    "css2properties.speechrate", 
+    "css2properties.stress", 
+    "css2properties.tablelayout", 
+    "css2properties.textalign", 
+    "css2properties.textdecoration", 
+    "css2properties.textindent", 
+    "css2properties.textshadow", 
+    "css2properties.texttransform", 
+    "css2properties.top", 
+    "css2properties.unicodebidi", 
+    "css2properties.verticalalign", 
+    "css2properties.visibility", 
+    "css2properties.voicefamily", 
+    "css2properties.volume", 
+    "css2properties.whitespace", 
+    "css2properties.widows", 
+    "css2properties.width", 
+    "css2properties.wordspacing", 
+    "css2properties.zindex", 
+    "cssfontfacerule.style", 
+    "cssimportrule.href", 
+    "cssimportrule.media", 
+    "cssimportrule.stylesheet", 
+    "cssmediarule.cssrules", 
+    "cssmediarule.deleterule", 
+    "cssmediarule.insertrule", 
+    "cssmediarule.mediatypes", 
+    "csspagerule.name", 
+    "csspagerule.style", 
+    "cssrule.csstext", 
+    "cssrule.sheet", 
+    "cssrule.type", 
+    "cssstyledeclaration.csstext", 
+    "cssstyledeclaration.getpropertypriority", 
+    "cssstyledeclaration.getpropertyvalue", 
+    "cssstyledeclaration.item", 
+    "cssstyledeclaration.length", 
+    "cssstyledeclaration.setproperty", 
+    "cssstylerule.selectortext", 
+    "cssstylerule.style", 
+    "cssstylerulecollection.item", 
+    "cssstylerulecollection.length", 
+    "cssstylesheet.cssrules", 
+    "cssstylesheet.deleterule", 
+    "cssstylesheet.href", 
+    "cssstylesheet.insertrule", 
+    "cssstylesheet.media", 
+    "cssstylesheet.owningnode", 
+    "cssstylesheet.parentstylesheet", 
+    "cssstylesheet.title", 
+    "document.createattribute", 
+    "document.createcdatasection", 
+    "document.createcomment", 
+    "document.createdocumentfragment", 
+    "document.createelement", 
+    "document.createentityreference", 
+    "document.createprocessinginstruction", 
+    "document.createtextnode", 
+    "document.doctype", 
+    "document.documentelement", 
+    "document.getelementsbytagname", 
+    "document.implementation", 
+    "documenttype.entities", 
+    "documenttype.name", 
+    "documenttype.notations", 
+    "domexception.code", 
+    "domexception.message", 
+    "domexception.name", 
+    "domexception.result", 
+    "domexception.tostring", 
+    "domimplementation.hasfeature", 
+    "element.getattribute", 
+    "element.getattributenode", 
+    "element.getelementsbytagname", 
+    "element.normalize", 
+    "element.removeattribute", 
+    "element.removeattributenode", 
+    "element.setattribute", 
+    "element.setattributenode", 
+    "element.tagname", 
+    "entity.notationname", 
+    "entity.publicid", 
+    "entity.systemid", 
+    "event.bubbles", 
+    "event.cancelable", 
+    "event.currentnode", 
+    "event.eventphase", 
+    "event.initevent", 
+    "event.preventbubble", 
+    "event.preventcapture", 
+    "event.preventdefault", 
+    "event.target", 
+    "event.type", 
+    "eventtarget.addeventlistener", 
+    "eventtarget.removeeventlistener", 
+    "history.back", 
+    "history.current", 
+    "history.forward", 
+    "history.go", 
+    "history.length", 
+    "history.next", 
+    "history.previous", 
+    "htmlanchorelement.accesskey", 
+    "htmlanchorelement.blur", 
+    "htmlanchorelement.charset", 
+    "htmlanchorelement.coords", 
+    "htmlanchorelement.focus", 
+    "htmlanchorelement.href", 
+    "htmlanchorelement.hreflang", 
+    "htmlanchorelement.name", 
+    "htmlanchorelement.rel", 
+    "htmlanchorelement.rev", 
+    "htmlanchorelement.shape", 
+    "htmlanchorelement.tabindex", 
+    "htmlanchorelement.target", 
+    "htmlanchorelement.type", 
+    "htmlappletelement.align", 
+    "htmlappletelement.alt", 
+    "htmlappletelement.archive", 
+    "htmlappletelement.code", 
+    "htmlappletelement.codebase", 
+    "htmlappletelement.height", 
+    "htmlappletelement.hspace", 
+    "htmlappletelement.name", 
+    "htmlappletelement.object", 
+    "htmlappletelement.vspace", 
+    "htmlappletelement.width", 
+    "htmlareaelement.accesskey", 
+    "htmlareaelement.alt", 
+    "htmlareaelement.coords", 
+    "htmlareaelement.href", 
+    "htmlareaelement.nohref", 
+    "htmlareaelement.shape", 
+    "htmlareaelement.tabindex", 
+    "htmlareaelement.target", 
+    "htmlbaseelement.href", 
+    "htmlbaseelement.target", 
+    "htmlbasefontelement.color", 
+    "htmlbasefontelement.face", 
+    "htmlbasefontelement.size", 
+    "htmlblockquoteelement.cite", 
+    "htmlbodyelement.alink", 
+    "htmlbodyelement.background", 
+    "htmlbodyelement.bgcolor", 
+    "htmlbodyelement.link", 
+    "htmlbodyelement.text", 
+    "htmlbodyelement.vlink", 
+    "htmlbrelement.clear", 
+    "htmlbuttonelement.accesskey", 
+    "htmlbuttonelement.disabled", 
+    "htmlbuttonelement.form", 
+    "htmlbuttonelement.name", 
+    "htmlbuttonelement.tabindex", 
+    "htmlbuttonelement.type", 
+    "htmlbuttonelement.value", 
+    "htmlcollection.item", 
+    "htmlcollection.length", 
+    "htmlcollection.nameditem", 
+    "htmldirectoryelement.compact", 
+    "htmldivelement.align", 
+    "htmldlistelement.compact", 
+    "htmldocument.anchors", 
+    "htmldocument.applets", 
+    "htmldocument.body", 
+    "htmldocument.close", 
+    "htmldocument.cookie", 
+    "htmldocument.domain", 
+    "htmldocument.forms", 
+    "htmldocument.getelementbyid", 
+    "htmldocument.getelementsbyname", 
+    "htmldocument.images", 
+    "htmldocument.links", 
+    "htmldocument.referrer", 
+    "htmldocument.title", 
+    "htmldocument.url", 
+    "htmlelement.classname", 
+    "htmlelement.dir", 
+    "htmlelement.id", 
+    "htmlelement.lang", 
+    "htmlelement.style", 
+    "htmlelement.title", 
+    "htmlembedelement.align", 
+    "htmlembedelement.height", 
+    "htmlembedelement.name", 
+    "htmlembedelement.src", 
+    "htmlembedelement.type", 
+    "htmlembedelement.width", 
+    "htmlfieldsetelement.form", 
+    "htmlfontelement.color", 
+    "htmlfontelement.face", 
+    "htmlfontelement.size", 
+    "htmlformelement.acceptcharset", 
+    "htmlformelement.action", 
+    "htmlformelement.elements", 
+    "htmlformelement.enctype", 
+    "htmlformelement.length", 
+    "htmlformelement.method", 
+    "htmlformelement.name", 
+    "htmlformelement.reset", 
+    "htmlformelement.submit", 
+    "htmlformelement.target", 
+    "htmlframeelement.frameborder", 
+    "htmlframeelement.longdesc", 
+    "htmlframeelement.marginheight", 
+    "htmlframeelement.marginwidth", 
+    "htmlframeelement.name", 
+    "htmlframeelement.noresize", 
+    "htmlframeelement.scrolling", 
+    "htmlframeelement.src", 
+    "htmlframesetelement.cols", 
+    "htmlframesetelement.rows", 
+    "htmlheadelement.profile", 
+    "htmlheadingelement.align", 
+    "htmlhrelement.align", 
+    "htmlhrelement.noshade", 
+    "htmlhrelement.size", 
+    "htmlhrelement.width", 
+    "htmlhtmlelement.version", 
+    "htmliframeelement.align", 
+    "htmliframeelement.frameborder", 
+    "htmliframeelement.height", 
+    "htmliframeelement.longdesc", 
+    "htmliframeelement.marginheight", 
+    "htmliframeelement.marginwidth", 
+    "htmliframeelement.name", 
+    "htmliframeelement.scrolling", 
+    "htmliframeelement.src", 
+    "htmliframeelement.width", 
+    "htmlimageelement.align", 
+    "htmlimageelement.alt", 
+    "htmlimageelement.border", 
+    "htmlimageelement.height", 
+    "htmlimageelement.hspace", 
+    "htmlimageelement.ismap", 
+    "htmlimageelement.longdesc", 
+    "htmlimageelement.lowsrc", 
+    "htmlimageelement.name", 
+    "htmlimageelement.src", 
+    "htmlimageelement.usemap", 
+    "htmlimageelement.vspace", 
+    "htmlimageelement.width", 
+    "htmlinputelement.accept", 
+    "htmlinputelement.accesskey", 
+    "htmlinputelement.align", 
+    "htmlinputelement.alt", 
+    "htmlinputelement.autocomplete", 
+    "htmlinputelement.blur", 
+    "htmlinputelement.checked", 
+    "htmlinputelement.click", 
+    "htmlinputelement.defaultchecked", 
+    "htmlinputelement.defaultvalue", 
+    "htmlinputelement.disabled", 
+    "htmlinputelement.focus", 
+    "htmlinputelement.form", 
+    "htmlinputelement.maxlength", 
+    "htmlinputelement.name", 
+    "htmlinputelement.readonly", 
+    "htmlinputelement.select", 
+    "htmlinputelement.size", 
+    "htmlinputelement.src", 
+    "htmlinputelement.tabindex", 
+    "htmlinputelement.type", 
+    "htmlinputelement.usemap", 
+    "htmlinputelement.value", 
+    "htmlisindexelement.form", 
+    "htmlisindexelement.prompt", 
+    "htmllabelelement.accesskey", 
+    "htmllabelelement.form", 
+    "htmllabelelement.htmlfor", 
+    "htmllayerelement.background", 
+    "htmllayerelement.bgcolor", 
+    "htmllayerelement.document", 
+    "htmllayerelement.left", 
+    "htmllayerelement.name", 
+    "htmllayerelement.top", 
+    "htmllayerelement.visibility", 
+    "htmllayerelement.zindex", 
+    "htmllegendelement.accesskey", 
+    "htmllegendelement.align", 
+    "htmllegendelement.form", 
+    "htmllielement.type", 
+    "htmllielement.value", 
+    "htmllinkelement.charset", 
+    "htmllinkelement.disabled", 
+    "htmllinkelement.href", 
+    "htmllinkelement.hreflang", 
+    "htmllinkelement.media", 
+    "htmllinkelement.rel", 
+    "htmllinkelement.rev", 
+    "htmllinkelement.target", 
+    "htmllinkelement.type", 
+    "htmlmapelement.areas", 
+    "htmlmapelement.name", 
+    "htmlmenuelement.compact", 
+    "htmlmetaelement.content", 
+    "htmlmetaelement.httpequiv", 
+    "htmlmetaelement.name", 
+    "htmlmetaelement.scheme", 
+    "htmlmodelement.cite", 
+    "htmlmodelement.datetime", 
+    "htmlobjectelement.align", 
+    "htmlobjectelement.archive", 
+    "htmlobjectelement.border", 
+    "htmlobjectelement.code", 
+    "htmlobjectelement.codebase", 
+    "htmlobjectelement.codetype", 
+    "htmlobjectelement.data", 
+    "htmlobjectelement.declare", 
+    "htmlobjectelement.form", 
+    "htmlobjectelement.height", 
+    "htmlobjectelement.hspace", 
+    "htmlobjectelement.name", 
+    "htmlobjectelement.standby", 
+    "htmlobjectelement.tabindex", 
+    "htmlobjectelement.type", 
+    "htmlobjectelement.usemap", 
+    "htmlobjectelement.vspace", 
+    "htmlobjectelement.width", 
+    "htmlolistelement.compact", 
+    "htmlolistelement.start", 
+    "htmlolistelement.type", 
+    "htmloptgroupelement.disabled", 
+    "htmloptgroupelement.label", 
+    "htmloptionelement.defaultselected", 
+    "htmloptionelement.disabled", 
+    "htmloptionelement.form", 
+    "htmloptionelement.index", 
+    "htmloptionelement.label", 
+    "htmloptionelement.selected", 
+    "htmloptionelement.text", 
+    "htmloptionelement.value", 
+    "htmlparagraphelement.align", 
+    "htmlparamelement.name", 
+    "htmlparamelement.type", 
+    "htmlparamelement.value", 
+    "htmlparamelement.valuetype", 
+    "htmlpreelement.width", 
+    "htmlquoteelement.cite", 
+    "htmlscriptelement.charset", 
+    "htmlscriptelement.defer", 
+    "htmlscriptelement.event", 
+    "htmlscriptelement.htmlfor", 
+    "htmlscriptelement.src", 
+    "htmlscriptelement.text", 
+    "htmlscriptelement.type", 
+    "htmlselectelement.add", 
+    "htmlselectelement.blur", 
+    "htmlselectelement.disabled", 
+    "htmlselectelement.focus", 
+    "htmlselectelement.form", 
+    "htmlselectelement.length", 
+    "htmlselectelement.multiple", 
+    "htmlselectelement.name", 
+    "htmlselectelement.options", 
+    "htmlselectelement.remove", 
+    "htmlselectelement.selectedindex", 
+    "htmlselectelement.size", 
+    "htmlselectelement.tabindex", 
+    "htmlselectelement.type", 
+    "htmlselectelement.value", 
+    "htmlstyleelement.disabled", 
+    "htmlstyleelement.media", 
+    "htmlstyleelement.type", 
+    "htmltablecaptionelement.align", 
+    "htmltablecellelement.abbr", 
+    "htmltablecellelement.align", 
+    "htmltablecellelement.axis", 
+    "htmltablecellelement.bgcolor", 
+    "htmltablecellelement.cellindex", 
+    "htmltablecellelement.ch", 
+    "htmltablecellelement.choff", 
+    "htmltablecellelement.colspan", 
+    "htmltablecellelement.headers", 
+    "htmltablecellelement.height", 
+    "htmltablecellelement.nowrap", 
+    "htmltablecellelement.rowspan", 
+    "htmltablecellelement.scope", 
+    "htmltablecellelement.valign", 
+    "htmltablecellelement.width", 
+    "htmltablecolelement.align", 
+    "htmltablecolelement.ch", 
+    "htmltablecolelement.choff", 
+    "htmltablecolelement.span", 
+    "htmltablecolelement.valign", 
+    "htmltablecolelement.width", 
+    "htmltableelement.align", 
+    "htmltableelement.bgcolor", 
+    "htmltableelement.border", 
+    "htmltableelement.caption", 
+    "htmltableelement.cellpadding", 
+    "htmltableelement.cellspacing", 
+    "htmltableelement.createcaption", 
+    "htmltableelement.createtfoot", 
+    "htmltableelement.createthead", 
+    "htmltableelement.deletecaption", 
+    "htmltableelement.deleterow", 
+    "htmltableelement.deletetfoot", 
+    "htmltableelement.deletethead", 
+    "htmltableelement.frame", 
+    "htmltableelement.insertrow", 
+    "htmltableelement.rows", 
+    "htmltableelement.rules", 
+    "htmltableelement.summary", 
+    "htmltableelement.tbodies", 
+    "htmltableelement.tfoot", 
+    "htmltableelement.thead", 
+    "htmltableelement.width", 
+    "htmltablerowelement.align", 
+    "htmltablerowelement.bgcolor", 
+    "htmltablerowelement.cells", 
+    "htmltablerowelement.ch", 
+    "htmltablerowelement.choff", 
+    "htmltablerowelement.deletecell", 
+    "htmltablerowelement.insertcell", 
+    "htmltablerowelement.rowindex", 
+    "htmltablerowelement.sectionrowindex", 
+    "htmltablerowelement.valign", 
+    "htmltablesectionelement.align", 
+    "htmltablesectionelement.ch", 
+    "htmltablesectionelement.choff", 
+    "htmltablesectionelement.deleterow", 
+    "htmltablesectionelement.insertrow", 
+    "htmltablesectionelement.rows", 
+    "htmltablesectionelement.valign", 
+    "htmltextareaelement.accesskey", 
+    "htmltextareaelement.blur", 
+    "htmltextareaelement.cols", 
+    "htmltextareaelement.defaultvalue", 
+    "htmltextareaelement.disabled", 
+    "htmltextareaelement.focus", 
+    "htmltextareaelement.form", 
+    "htmltextareaelement.name", 
+    "htmltextareaelement.readonly", 
+    "htmltextareaelement.rows", 
+    "htmltextareaelement.select", 
+    "htmltextareaelement.tabindex", 
+    "htmltextareaelement.type", 
+    "htmltextareaelement.value", 
+    "htmltitleelement.text", 
+    "htmlulistelement.compact", 
+    "htmlulistelement.type", 
+    "keyevent.altkey", 
+    "keyevent.charcode", 
+    "keyevent.ctrlkey", 
+    "keyevent.initkeyevent", 
+    "keyevent.keycode", 
+    "keyevent.metakey", 
+    "keyevent.shiftkey", 
+    "location.hash", 
+    "location.host", 
+    "location.hostname", 
+    "location.pathname", 
+    "location.port", 
+    "location.protocol", 
+    "location.search", 
+    "location.tostring", 
+    "mimetype.description", 
+    "mimetype.enabledplugin", 
+    "mimetype.suffixes", 
+    "mimetype.type", 
+    "mimetypearray.item", 
+    "mimetypearray.length", 
+    "mimetypearray.nameditem", 
+    "mouseevent.button", 
+    "mouseevent.clickcount", 
+    "mouseevent.clientx", 
+    "mouseevent.clienty", 
+    "mouseevent.initmouseevent", 
+    "mouseevent.relatednode", 
+    "mouseevent.screenx", 
+    "mouseevent.screeny", 
+    "namednodemap.getnameditem", 
+    "namednodemap.item", 
+    "namednodemap.length", 
+    "namednodemap.removenameditem", 
+    "namednodemap.setnameditem", 
+    "navigator.appcodename", 
+    "navigator.appname", 
+    "navigator.appversion", 
+    "navigator.javaenabled", 
+    "navigator.language", 
+    "navigator.mimetypes", 
+    "navigator.platform", 
+    "navigator.plugins", 
+    "navigator.preference", 
+    "navigator.securitypolicy", 
+    "navigator.taintenabled", 
+    "navigator.useragent", 
+    "node.appendchild", 
+    "node.attributes", 
+    "node.childnodes", 
+    "node.clonenode", 
+    "node.firstchild", 
+    "node.haschildnodes", 
+    "node.insertbefore", 
+    "node.lastchild", 
+    "node.nextsibling", 
+    "node.nodename", 
+    "node.nodetype", 
+    "node.nodevalue", 
+    "node.ownerdocument", 
+    "node.parentnode", 
+    "node.previoussibling", 
+    "node.removechild", 
+    "node.replacechild", 
+    "nodelist.item", 
+    "nodelist.length", 
+    "notation.publicid", 
+    "notation.systemid", 
+    "nsdocument.createelementwithnamespace", 
+    "nsdocument.createrange", 
+    "nsdocument.height", 
+    "nsdocument.stylesheets", 
+    "nsdocument.width", 
+    "nshtmlbuttonelement.blur", 
+    "nshtmlbuttonelement.focus", 
+    "nshtmldocument.alinkcolor", 
+    "nshtmldocument.bgcolor", 
+    "nshtmldocument.captureevents", 
+    "nshtmldocument.embeds", 
+    "nshtmldocument.fgcolor", 
+    "nshtmldocument.getselection", 
+    "nshtmldocument.lastmodified", 
+    "nshtmldocument.layers", 
+    "nshtmldocument.linkcolor", 
+    "nshtmldocument.nameditem", 
+    "nshtmldocument.open", 
+    "nshtmldocument.plugins", 
+    "nshtmldocument.releaseevents", 
+    "nshtmldocument.routeevent", 
+    "nshtmldocument.vlinkcolor", 
+    "nshtmldocument.write", 
+    "nshtmldocument.writeln", 
+    "nshtmlformelement.encoding", 
+    "nshtmlformelement.item", 
+    "nshtmlformelement.nameditem", 
+    "nshtmlselectelement.item", 
+    "nslocation.reload", 
+    "nslocation.replace", 
+    "nsrange.createcontextualfragment", 
+    "nsrange.isvalidfragment", 
+    "nsuievent.cancelbubble", 
+    "nsuievent.ischar", 
+    "nsuievent.layerx", 
+    "nsuievent.layery", 
+    "nsuievent.pagex", 
+    "nsuievent.pagey", 
+    "nsuievent.rangeoffset", 
+    "nsuievent.rangeparent", 
+    "nsuievent.which", 
+    "plugin.description", 
+    "plugin.filename", 
+    "plugin.item", 
+    "plugin.length", 
+    "plugin.name", 
+    "plugin.nameditem", 
+    "pluginarray.item", 
+    "pluginarray.length", 
+    "pluginarray.nameditem", 
+    "pluginarray.refresh", 
+    "processinginstruction.data", 
+    "processinginstruction.target", 
+    "range.clone", 
+    "range.clonecontents", 
+    "range.collapse", 
+    "range.commonparent", 
+    "range.compareendpoints", 
+    "range.deletecontents", 
+    "range.endoffset", 
+    "range.endparent", 
+    "range.extractcontents", 
+    "range.insertnode", 
+    "range.iscollapsed", 
+    "range.selectnode", 
+    "range.selectnodecontents", 
+    "range.setend", 
+    "range.setendafter", 
+    "range.setendbefore", 
+    "range.setstart", 
+    "range.setstartafter", 
+    "range.setstartbefore", 
+    "range.startoffset", 
+    "range.startparent", 
+    "range.surroundcontents", 
+    "range.tostring", 
+    "screen.availheight", 
+    "screen.availleft", 
+    "screen.availtop", 
+    "screen.availwidth", 
+    "screen.colordepth", 
+    "screen.height", 
+    "screen.pixeldepth", 
+    "screen.width", 
+    "selection.addrange", 
+    "selection.addselectionlistener", 
+    "selection.anchornode", 
+    "selection.anchoroffset", 
+    "selection.clearselection", 
+    "selection.collapse", 
+    "selection.collapsetoend", 
+    "selection.collapsetostart", 
+    "selection.containsnode", 
+    "selection.deletefromdocument", 
+    "selection.endbatchchanges", 
+    "selection.extend", 
+    "selection.focusnode", 
+    "selection.focusoffset", 
+    "selection.getrangeat", 
+    "selection.iscollapsed", 
+    "selection.rangecount", 
+    "selection.removeselectionlistener", 
+    "selection.startbatchchanges", 
+    "selection.tostring", 
+    "selectionlistener.notifyselectionchanged", 
+    "stylesheet.disabled", 
+    "stylesheet.readonly", 
+    "stylesheet.type", 
+    "stylesheetcollection.item", 
+    "stylesheetcollection.length", 
+    "text.splittext", 
+    "textrange.rangeend", 
+    "textrange.rangestart", 
+    "textrange.rangetype", 
+    "textrangelist.item", 
+    "textrangelist.length", 
+    "toolkitcore.closewindow",
+    "toolkitcore.showdialog",
+    "toolkitcore.showmodaldialog",
+    "toolkitcore.showwindow",
+    "toolkitcore.showwindowwithargs",
+    "uievent.detail", 
+    "uievent.inituievent", 
+    "uievent.view", 
+    "window.alert", 
+    "window.back", 
+    "window.blur", 
+    "window.captureevents", 
+    "window.clearinterval", 
+    "window.cleartimeout", 
+    "window.close", 
+    "window.closed", 
+    "window.confirm", 
+    "window.content", 
+    "window.controllers", 
+    "window.createpopup", 
+    "window.defaultstatus", 
+    "window.directories", 
+    "window.disableexternalcapture", 
+    "window.document", 
+    "window.dump", 
+    "window.enableexternalcapture", 
+    "window.focus", 
+    "window.forward", 
+    "window.frames", 
+    "window.history", 
+    "window.home", 
+    "window.innerheight", 
+    "window.innerwidth", 
+    "window.locationbar", 
+    "window.menubar", 
+    "window.moveby", 
+    "window.moveto", 
+    "window.name", 
+    "window.navigator", 
+    "window.open", 
+    "window.opendialog", 
+    "window.opener", 
+    "window.outerheight", 
+    "window.outerwidth", 
+    "window.pagexoffset", 
+    "window.pageyoffset", 
+    "window.parent", 
+    "window.personalbar", 
+    "window.print", 
+    "window.prompt", 
+    "window.releaseevents", 
+    "window.resizeby", 
+    "window.resizeto", 
+    "window.routeevent", 
+    "window.screen", 
+    "window.screenx", 
+    "window.screeny", 
+    "window.scrollbars", 
+    "window.scrollby", 
+    "window.scrollto", 
+    "window.scrollx", 
+    "window.scrolly", 
+    "window.self", 
+    "window.setinterval", 
+    "window.settimeout", 
+    "window.sizetocontent", 
+    "window.status", 
+    "window.statusbar", 
+    "window.stop", 
+    "window.toolbar", 
+    "window.top", 
+    "window.window", 
+    "windowcollection.item", 
+    "windowcollection.length", 
+    "windowcollection.nameditem", 
+    "xulcommanddispatcher.addcommandupdater",
+    "xulcommanddispatcher.focusednode",
+    "xulcommanddispatcher.getcontrollerforcommand",
+    "xulcommanddispatcher.getcontrollers",
+    "xulcommanddispatcher.removecommandupdater",
+    "xulcommanddispatcher.updatecommands",
+    "xuldocument.commanddispatcher",
+    "xuldocument.getelementbyid",
+    "xuldocument.getelementsbyattribute",
+    "xuldocument.persist",
+    "xuldocument.popupnode",
+    "xuldocument.tooltipnode",
+    "xuleditorelement.editorshell",
+    "xulelement.addbroadcastlistener",
+    "xulelement.classname",
+    "xulelement.controllers",
+    "xulelement.database",
+    "xulelement.docommand",
+    "xulelement.getelementsbyattribute",
+    "xulelement.id",
+    "xulelement.removebroadcastlistener",
+    "xulelement.resource",
+    "xulelement.style",
+    "xultreeelement.addcelltoselection",
+    "xultreeelement.additemtoselection",
+    "xultreeelement.clearcellselection",
+    "xultreeelement.clearitemselection",
+    "xultreeelement.invertselection",
+    "xultreeelement.removecellfromselection",
+    "xultreeelement.removeitemfromselection",
+    "xultreeelement.selectall",
+    "xultreeelement.selectcell",
+    "xultreeelement.selectcellrange",
+    "xultreeelement.selectedcells",
+    "xultreeelement.selecteditems",
+    "xultreeelement.selectitem",
+    "xultreeelement.selectitemrange",
+    "xultreeelement.togglecellselection",
+    "xultreeelement.toggleitemselection",
+};
+
+static PRInt16 
+findDomProp(const char *propName, int n) 
+{
+    int hi = sizeof(domPropNames)/sizeof(domPropNames[0]) - 1;
+    int lo = 0;
+    do {
+        int mid = (hi + lo) / 2;
+        int cmp = PL_strncmp(propName, domPropNames[mid], n);
+        if (cmp == 0)
+            return mid;
+        if (cmp < 0)
+            hi = mid - 1;
+        else
+            lo = mid + 1;
+    } while (hi > lo);
+    if (PL_strncmp(propName, domPropNames[lo], n) == 0)
+        return lo;
+    return -1;
+}
+
+// security.policy.<policyname>.<object>.<property>[.read|.write]
+
+PR_STATIC_CALLBACK(void)
+enumeratePolicy(const char *prefName, void *policies) {
+    if (!prefName || !*prefName)
+        return;
+    int count = 0;
+    const char *dots[5];
+    for (const char *p=prefName; *p; p++) {
+        if (*p == '.') {
+            dots[count++] = p;
+            if (count == sizeof(dots)/sizeof(dots[0]))
+                break;
+        }
+    }
+    if (count < sizeof(dots)/sizeof(dots[0]))
+        dots[count] = p;
+    if (count >= 4) {
+        const char *policyName = dots[1] + 1;
+        int policyLength = dots[2] - policyName;
+        PRBool isDefault = PL_strncmp("default", policyName, policyLength) == 0;
+        const char *domPropName = dots[2] + 1;
+        int domPropLength = dots[4] - domPropName;
+        PRInt16 domProp = findDomProp(domPropName, domPropLength);
+        if (domProp >= 0) {
+            nsScriptSecurityManager::PolicyType *policyType = 
+                ((nsScriptSecurityManager::PolicyType *) policies) + domProp;
+            if (!isDefault)
+                *policyType = nsScriptSecurityManager::POLICY_TYPE_PERDOMAIN;
+            else if (*policyType == nsScriptSecurityManager::POLICY_TYPE_NONE)
+                *policyType = nsScriptSecurityManager::POLICY_TYPE_DEFAULT;
+            return;
+        }
+    }
+    NS_ASSERTION(PR_FALSE, "DOM property name invalid or not found");
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::InitFromPrefs()
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+    rv = prefs->EnumerateChildren("security.policy", enumeratePolicy,
+                                  domPropertyPolicyTypes);
+    return NS_OK;
+}

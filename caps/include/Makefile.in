@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= caps
 
 EXPORTS		= \
+		nsBasePrincipal.h \
 		nsSystemPrincipal.h \
 		nsCertificatePrincipal.h \
 		nsCodebasePrincipal.h \
