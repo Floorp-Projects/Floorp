@@ -59,6 +59,9 @@ NS_IMPL_ISUPPORTS1(nsRegionGTK, nsIRegion)
 
 nsresult nsRegionGTK::Init(void)
 {
+  if (mRegion) {
+    gdk_region_destroy(mRegion);
+  }
   mRegion = ::gdk_region_new();
   mRegionType = eRegionComplexity_empty;
   return NS_OK;
