@@ -624,16 +624,24 @@ if test $ac_cv_cpp_explicit = yes ; then
    AC_DEFINE(HAVE_CPP_EXPLICIT)
 fi
 
-AC_CACHE_CHECK(for C++ \"exceptions\",
-               ac_cv_cpp_exceptions,
-               [AC_TRY_COMPILE(class X { public: X() {} };
-                               static void F() { throw X(); },
-                               try { F(); } catch(X & e) { },
-                               ac_cv_cpp_exceptions=yes,
-                               ac_cv_cpp_exceptions=no)])
-if test $ac_cv_cpp_exceptions = yes ; then
-   AC_DEFINE(HAVE_CPP_EXCEPTIONS)
-fi
+dnl
+dnl We dont do exceptions on unix.  The only reason this used to be here
+dnl is that mozilla/xpcom/tests/TestCOMPtr.cpp has a test which uses 
+dnl exceptions.  But, we turn exceptions off by default and this test breaks.
+dnl So im commenting this out until someone writes some artificial 
+dnl intelligence to detect not only if the compiler has exceptions, but if 
+dnl they are enabled as well.
+dnl 
+dnl AC_CACHE_CHECK(for C++ \"exceptions\",
+dnl                ac_cv_cpp_exceptions,
+dnl                [AC_TRY_COMPILE(class X { public: X() {} };
+dnl                                static void F() { throw X(); },
+dnl                                try { F(); } catch(X & e) { },
+dnl                                ac_cv_cpp_exceptions=yes,
+dnl                                ac_cv_cpp_exceptions=no)])
+dnl if test $ac_cv_cpp_exceptions = yes ; then
+dnl    AC_DEFINE(HAVE_CPP_EXCEPTIONS)
+dnl fi
 
 AC_CACHE_CHECK(for C++ \"using\" keyword,
                ac_cv_cpp_using,
