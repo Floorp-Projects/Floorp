@@ -174,8 +174,21 @@ function onStart()
 
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
     promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-    if (promptService.confirm(window, title, lString))
+    if (promptService.confirm(window, title, lString)) {
+      var profileDir = profile.getProfileDir(profilename);
+      if (profileDir) {
+        profileDir = profileDir.QueryInterface( Components.interfaces.nsIFile );
+        if (profileDir) {
+          if (!profileDir.exists()) {
+            var errorMessage = gProfileManagerBundle.getString("sourceProfileDirMissing");
+            var profileDirMissingTitle = gProfileManagerBundle.getString("sourceProfileDirMissingTitle");
+            promptService.alert(window, profileDirMissingTitle, errorMessage);
+              return false;          
+          }
+        }
+      }      
       profile.migrateProfile( profilename, true );
+    }
     else
       return false;
   }
