@@ -69,6 +69,12 @@ public:
   virtual PRInt32 ShrinkCache(void) = 0;
 
   /**
+   * Flush the image cache as much as possible. The only images not
+   * flushed out will be those that are in use.
+   */
+  NS_IMETHOD FlushCache(void) = 0;
+
+  /**
    * Determine the type of the image, based on the first few bytes of data.  
    *
    * @param buf - a buffer of image data
