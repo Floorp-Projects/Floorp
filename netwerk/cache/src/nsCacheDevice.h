@@ -44,9 +44,10 @@ public:
 
     virtual nsresult DeactivateEntry( nsCacheEntry * entry ) = 0;
     virtual nsresult BindEntry( nsCacheEntry * entry ) = 0;
+    virtual nsresult DoomEntry( nsCacheEntry * entry ) = 0;
 
     virtual nsresult GetTransportForEntry( nsCacheEntry * entry,
-                                           nsITransport **transport ) = 0;
+                                           nsITransport **result ) = 0;
 
     virtual nsresult OnDataSizeChanged( nsCacheEntry * entry ) = 0;
 
