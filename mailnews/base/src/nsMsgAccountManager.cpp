@@ -1269,7 +1269,7 @@ nsMsgAccountManager::Convert4XUri()
   else {
     printf("turn foobar into mailbox:/nobody@Local Mail/(foobar - mail.directory)\n");
   }
-#endif 0
+#endif
 
   return NS_OK;
 }
