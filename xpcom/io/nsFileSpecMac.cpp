@@ -1210,7 +1210,7 @@ void nsFilePath::operator = (const nsFileSpec& inSpec)
     char * path = MacFileHelpers::PathNameFromFSSpec(inSpec, true);
     path = MacFileHelpers::EncodeMacPath(path, true, false);
     mPath = path;
-    delete [] path;
+    nsCRT::free(path);
     mFileSpec = inSpec;
 } // nsFilePath::operator =
 
@@ -1221,7 +1221,7 @@ void nsFilePath::operator = (const nsFileURL& inOther)
     char * path = MacFileHelpers::PathNameFromFSSpec(inOther.mFileSpec, true);
     path = MacFileHelpers::EncodeMacPath(path, true, false);
     mPath = path;
-    delete [] path;
+    nsCRT::free(path);
     mFileSpec = inOther.GetFileSpec();
 }
 
@@ -1296,7 +1296,7 @@ void nsFileURL::operator = (const nsFileSpec& inOther)
     char* encodedPath = MacFileHelpers::EncodeMacPath(path, true, true);
     nsSimpleCharString encodedURL(kFileURLPrefix);
     encodedURL += encodedPath;
-    delete [] encodedPath;
+    nsCRT::free(encodedPath);
     mURL = encodedURL;
     if (encodedURL[encodedURL.Length() - 1] != '/' && inOther.IsDirectory())
         mURL += "/";
