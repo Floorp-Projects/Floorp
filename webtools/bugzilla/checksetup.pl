@@ -190,7 +190,7 @@ unless (have_vers("Data::Dumper",0))      { push @missing,"Data::Dumper" }
 unless (have_vers("DBD::mysql","1.2209")) { push @missing,"DBD::mysql" }
 unless (have_vers("Date::Parse",0))       { push @missing,"Date::Parse" }
 unless (have_vers("AppConfig","1.52"))    { push @missing,"AppConfig" }
-unless (have_vers("Template","2.01"))     { push @missing,"Template" }
+unless (have_vers("Template","2.06"))     { push @missing,"Template" }
 unless (have_vers("Text::Wrap","2001.0131")) { push @missing,"Text::Wrap" }
 
 # If CGI::Carp was loaded successfully for version checking, it changes the
