@@ -127,6 +127,7 @@ public:
   static nsIAtom* href;
   static nsIAtom* hreflang;
   static nsIAtom* hspace;
+  static nsIAtom* html;
   static nsIAtom* httpEquiv;
 
   static nsIAtom* id;

@@ -101,6 +101,7 @@ nsIAtom* nsHTMLAtoms::hr;
 nsIAtom* nsHTMLAtoms::href;
 nsIAtom* nsHTMLAtoms::hreflang;
 nsIAtom* nsHTMLAtoms::hspace;
+nsIAtom* nsHTMLAtoms::html;
 nsIAtom* nsHTMLAtoms::httpEquiv;
 nsIAtom* nsHTMLAtoms::id;
 nsIAtom* nsHTMLAtoms::iframe;
@@ -297,6 +298,7 @@ void nsHTMLAtoms::AddrefAtoms()
     href = NS_NewAtom("HREF");
     hreflang = NS_NewAtom("HREFLANG");
     hspace = NS_NewAtom("HSPACE");
+    html = NS_NewAtom("HTML");
     httpEquiv = NS_NewAtom("HTTP-EQUIV");
     id = NS_NewAtom("ID");
     iframe = NS_NewAtom("IFRAME");
@@ -486,6 +488,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(hr);
     NS_RELEASE(href);
     NS_RELEASE(hspace);
+    NS_RELEASE(html);
     NS_RELEASE(httpEquiv);
     NS_RELEASE(id);
     NS_RELEASE(iframe);
