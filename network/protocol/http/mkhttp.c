@@ -2199,8 +2199,9 @@ net_parse_first_http_line (ActiveEntry *ce) {
                  * from the cache
                  */
 #ifdef MOZILLA_CLIENT
-                NET_RemoveURLFromCache(ce->URL_s);
+/*                NET_RemoveURLFromCache(ce->URL_s); */
 #endif
+
 
                 if((ce->URL_s->server_status == 204
                     || ce->URL_s->server_status == 201)
