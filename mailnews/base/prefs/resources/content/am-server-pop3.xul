@@ -2,36 +2,48 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+<!ENTITY savePassword.label "Save password.">
+<!ENTITY biffStart.label "Check for new messages every ">
+<!ENTITY biffEnd.label "minutes.">
+<!ENTITY leaveOnServer.label "Leave messages on server.">
+<!ENTITY deleteOnServer.label "Delete messages on server when deleted locally.">
+<!ENTITY emptyTrashOnExit.label "Empty Trash on exit">
+<!ENTITY hostname.label "Server Hostname">
+<!ENTITY username.label "Your Login Name">
+<!ENTITY popServerTitle.label "POP Server Information">
+]
+>
 
-<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       style="width: 100%; height=100%"
       onload = "">
 
-<html:div> POP Server Information </html:div>
 <box align="vertical" style="width: 100%">
 <box align="vertical" class="cleanborder" flex="100%" style="width: 100%; height: 100%;">
   <box align="horizontal">
     <spring flex="100%"/>
-    <html:div>Server Hostname </html:div>
+    <html:div>&hostname.label;</html:div>
     <spring class="spacer"/>
     <html:input type="text"/>
   </box>
   <box align="horizontal">
     <spring flex="100%"/>
-    <html:div>Your Login Name</html:div>
+    <html:div>&username.label;</html:div>
     <spring class="spacer"/>
     <html:input type="text"/>
   </box>
-  <html:div><html:input type="checkbox"/>Save password</html:div>
-  <html:div><html:input type="checkbox"/>Check for new messages every
+  <html:div><html:input type="checkbox"/>&savePassword.label;</html:div>
+  <html:div><html:input type="checkbox"/>&biffStart.label;
             <html:spacer/>
-            <html:input type="text" size="3"/><html:spacer/>minutes</html:div>
-  <html:div><html:input type="checkbox"/>Leave messages on server</html:div>
-  <html:div><html:input type="checkbox"/>Delete messages on server when
-            deleted locally</html:div>
-  <html:div><html:input type="checkbox"/>Empty Trash on exit</html:div>
+            <html:input type="text" size="3"/>
+            <html:spacer/>&biffEnd.label;`
+  </html:div>
+  <html:div><html:input type="checkbox"/>&leaveOnServer.label;</html:div>
+  <html:div><html:input type="checkbox"/>&deleteOnServer.label;</html:div>
+  <html:div><html:input type="checkbox"/>&emptyTrashOnExit.label;</html:div>
 </box>
 </box>
-</xul:window>
+</window>

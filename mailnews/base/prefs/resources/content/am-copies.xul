@@ -2,50 +2,62 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+<!ENTITY copyAndFolderTitle.label "Copy and Folder settings">
+<!ENTITY sendingPrefix.label "When sending messages, automatically ">
+<!ENTITY fccLocalSent.label "Place a copy in folder Sent on Local Mail ">
+<!ENTITY chooseFolderButton.label "Choose Folder...">
+<!ENTITY bccAccount.label "Bcc &lt;account's e-mail address&gt;">
+<!ENTITY bccAddress.label "Bcc these addresses:">
+<!ENTITY specialFolderTitle.label "Special Folders">
+<!ENTITY junkMailFolder.label "Keep junk mail in Junk Mail on Earthlink Inbox">
+<!ENTITY draftMailFolder.label "Keep message drafts in Drafts in Local Mail">
+<!ENTITY templateMailFolder.label "Keep message templates in Templates in Local Mail">
+]>
 
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload = "">
 
 <box align="vertical" flex="100%" style="height: 100%; width: 100%;">
-<html:div>Copy and Folder settings</html:div>
+<html:div>&copyAndFolderTitle.label;</html:div>
 <box align="vertical" class="cleanborder" flex="100%">
-<html:div>When sending messages, automatically</html:div>
+<html:div>&sendingPrefix.label;</html:div>
 
   <box align="horizontal">
     <html:input type="checkbox"/>
-    <html:div>Place a copy in folder Sent on Local Mail</html:div>
+    <html:div>&fccLocalSent.label;</html:div>
     <spring flex="100%"/>
-    <html:button type="button">Choose Folder..</html:button>
+    <html:button type="button">&chooseFolderButton.label;</html:button>
   </box>
   <box align="horizontal">
     <html:input type="checkbox"/>
-    <html:div>Bcc &lt;account's e-mail address&gt;</html:div>
+    <html:div>&bccAccount.label;</html:div>
   </box>
   <box align="horizontal">
     <html:input type="checkbox"/>
-    <html:div>Bcc these addresses:</html:div>
+    <html:div>&bccAddress.label;</html:div>
     <html:input type="text"/>
   </box>
 </box>
 
-<html:div>Special Folders</html:div>
+<html:div>&specialFolderTitle.label;</html:div>
 <box align="vertical" class="cleanborder" flex="100%">
   <box align="horizontal">
-    <html:div>Keep junk mail in Junk Mail in Earthlink Inbox</html:div>
+    <html:div>&junkMailFolder.label;</html:div>
     <spring flex="100%"/>
-    <html:button type="button">Choose Folder...</html:button>
+    <html:button type="button">&chooseFolderButton.label;</html:button>
   </box>
   <box align="horizontal">
-    <html:div>Keep message drafts in Drafts in Local Mail</html:div>
+    <html:div>&draftMailFolder.label;</html:div>
     <spring flex="100%"/>
-    <html:button type="button">Choose Folder...</html:button>
+    <html:button type="button">&chooseFolderButton.label;</html:button>
   </box>
   <box align="horizontal">
-    <html:div>Keep message templates in Templates in Local Mail</html:div>
+    <html:div>&templateMailFolder.label;</html:div>
     <spring flex="100%"/>
-    <html:button type="button">Choose Folder...</html:button>
+    <html:button type="button">&chooseFolderButton.label;</html:button>
   </box>
 </box>
 </box>

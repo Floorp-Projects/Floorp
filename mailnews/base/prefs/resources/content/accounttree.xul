@@ -3,7 +3,11 @@
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/accounttree.css" type="text/css"?>
 
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+<!ENTITY nameCol.label "Name">
+
+]>
 
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -30,7 +34,7 @@
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treehead>
 	<treerow>
-      <treecell>Name</treecell>
+      <treecell>&nameCol.label;</treecell>
 	</treerow>
   </treehead>
 
