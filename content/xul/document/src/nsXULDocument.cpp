@@ -1423,6 +1423,7 @@ nsXULDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
         // before we actually set the script context owner to null so
         // that the content elements can remove references to their
         // script objects.
+
         if (mRootContent)
             mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
