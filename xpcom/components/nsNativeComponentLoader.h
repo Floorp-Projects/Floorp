@@ -45,7 +45,7 @@ class nsNativeComponentLoader : public nsIComponentLoader {
 
  protected:
     nsCOMPtr<nsIRegistry> mRegistry;
-    nsCOMPtr<nsIComponentManager> mCompMgr;
+    nsIComponentManager* mCompMgr;      // weak reference -- backpointer
     nsObjectHashtable*  mDllStore;
     NS_IMETHOD RegisterComponentsInDir(PRInt32 when, nsIFileSpec *dir);
     nsIRegistry::Key mXPCOMKey;

@@ -182,7 +182,7 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
 
     mCompMgr = aCompMgr;
     mRegistry = do_QueryInterface(aReg);
-    if (!mCompMgr.get() || !mRegistry)
+    if (!mCompMgr || !mRegistry)
         return NS_ERROR_INVALID_ARG;
 
     rv = mRegistry->GetSubtree(nsIRegistry::Common, xpcomKeyName,
