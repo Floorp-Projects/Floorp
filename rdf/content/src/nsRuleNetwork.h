@@ -137,7 +137,7 @@ public:
     virtual const char* Type() const = 0;
     virtual PLHashNumber Hash() const = 0;
     virtual PRBool Equals(const MemoryElement& aElement) const = 0;
-    virtual MemoryElement* Clone() const = 0;
+    virtual MemoryElement* Clone(void* aPool) const = 0;
 
     PRBool operator==(const MemoryElement& aMemoryElement) const {
         return Equals(aMemoryElement);
@@ -719,7 +719,7 @@ class InnerNode : public ReteNode
 {
 public:
     // "upward" propogations
-    virtual nsresult Constrain(InstantiationSet& aInstantiations) = 0;
+    virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure) = 0;
 
     virtual nsresult GetAncestorVariables(VariableSet& aVariables) const = 0;
 
@@ -744,7 +744,7 @@ public:
     virtual nsresult Propogate(const InstantiationSet& aInstantiations, void* aClosure);
 
     // "upward" propogations
-    virtual nsresult Constrain(InstantiationSet& aInstantiations);
+    virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure);
 
     virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
 
@@ -773,7 +773,7 @@ public:
     virtual nsresult Propogate(const InstantiationSet& aInstantiations, void* aClosure);
 
     // "upward" propogations
-    virtual nsresult Constrain(InstantiationSet& aInstantiations);
+    virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure);
 
     virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
 
@@ -808,10 +808,10 @@ public:
     virtual nsresult Propogate(const InstantiationSet& aInstantiations, void* aClosure);
 
     // "upward" propogations
-    virtual nsresult Constrain(InstantiationSet& aInstantiations);
+    virtual nsresult Constrain(InstantiationSet& aInstantiations, void* aClosure);
 
     // instantiation filtering
-    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const = 0; //XXX probably better named "ApplyConstraints" or "Discrminiate" or something
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const = 0; //XXX probably better named "ApplyConstraints" or "Discrminiate" or something
 
     virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
 
