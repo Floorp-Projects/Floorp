@@ -4201,14 +4201,6 @@ DR_cookie::~DR_cookie()
   nsFrame::DisplayReflowExit(mFrame, mMetrics, mStatus, mValue);
 }
 
-void DR_DestroyArrayContents(nsVoidArray& aArray)
-{
-  PRInt32 numElements = aArray.Count();
-  for (PRInt32 i = numElements - 1; i >= 0; i--) {
-    delete aArray.ElementAt(i);
-  }
-}
-
 struct DR_FrameTypeInfo;
 struct DR_FrameTreeNode;
 struct DR_Rule;
@@ -4298,7 +4290,13 @@ void DR_Rule::AddPart(nsIAtom* aFrameType)
 struct DR_FrameTypeInfo
 {
   DR_FrameTypeInfo(nsIAtom* aFrmeType, char* aFrameNameAbbrev, char* aFrameName);
-  ~DR_FrameTypeInfo() { DR_DestroyArrayContents(mRules); }
+  ~DR_FrameTypeInfo() { 
+      PRInt32 numElements;
+      numElements = mRules.Count();
+      for (PRInt32 i = numElements - 1; i >= 0; i--) {
+        delete (DR_Rule *)mRules.ElementAt(i);
+      }
+   }
 
   nsIAtom*    mType;
   char        mNameAbbrev[16];
@@ -4364,9 +4362,19 @@ void DR_State::Init()
 
 DR_State::~DR_State()
 {
-  DR_DestroyArrayContents(mWildRules);
-  DR_DestroyArrayContents(mFrameTreeLeaves);
-  DR_DestroyArrayContents(mFrameTypeTable);
+  PRInt32 numElements, i;
+  numElements = mWildRules.Count();
+  for (i = numElements - 1; i >= 0; i--) {
+    delete (DR_Rule *)mWildRules.ElementAt(i);
+  }
+  numElements = mFrameTreeLeaves.Count();
+  for (i = numElements - 1; i >= 0; i--) {
+    delete (DR_FrameTreeNode *)mFrameTreeLeaves.ElementAt(i);
+  }
+  numElements = mFrameTypeTable.Count();
+  for (i = numElements - 1; i >= 0; i--) {
+    delete (DR_FrameTypeInfo *)mFrameTypeTable.ElementAt(i);
+  }
 }
 
 PRBool DR_State::GetNumber(char*     aBuf, 
