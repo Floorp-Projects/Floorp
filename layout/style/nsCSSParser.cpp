@@ -641,6 +641,7 @@ PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia)
       PRUnichar symbol = mToken.mSymbol;
       if (';' == symbol) {
         UngetToken();
+        aMedia.ToUpperCase();
         return PR_TRUE;
       } else if (',' != symbol) {
         UngetToken();
@@ -709,6 +710,79 @@ PRBool CSSParserImpl::ParseImportRule(PRInt32& aErrorCode)
 }
 
 
+typedef PRBool (*nsStringEnumFunc)(const nsString& aSubString, void *aData);
+
+const PRUnichar kNullCh       = PRUnichar('\0');
+const PRUnichar kSingleQuote  = PRUnichar('\'');
+const PRUnichar kDoubleQuote  = PRUnichar('\"');
+const PRUnichar kComma        = PRUnichar(',');
+
+static PRBool EnumerateString(const nsString& aStringList, nsStringEnumFunc aFunc, void* aData)
+{
+  PRBool    running = PR_TRUE;
+
+  nsAutoString  stringList(aStringList); // copy to work buffer
+  nsAutoString  subStr;
+
+  stringList.Append(kNullCh);  // put an extra null at the end
+
+  PRUnichar* start = (PRUnichar*)stringList;
+  PRUnichar* end   = start;
+
+  while (running && (kNullCh != *start)) {
+    PRBool  quoted = PR_FALSE;
+
+    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+      start++;
+    }
+
+    if ((kSingleQuote == *start) || (kDoubleQuote == *start)) { // quoted string
+      PRUnichar quote = *start++;
+      quoted = PR_TRUE;
+      end = start;
+      while (kNullCh != *end) {
+        if (quote == *end) {  // found closing quote
+          *end++ = kNullCh;     // end string here
+          while ((kNullCh != *end) && (kComma != *end)) { // keep going until comma
+            end++;
+          }
+          break;
+        }
+        end++;
+      }
+    }
+    else {  // non-quoted string or ended
+      end = start;
+
+      while ((kNullCh != *end) && (kComma != *end)) { // look for comma
+        end++;
+      }
+      *end = kNullCh; // end string here
+    }
+
+    subStr = start;
+
+    if (PR_FALSE == quoted) {
+      subStr.CompressWhitespace(PR_FALSE, PR_TRUE);
+    }
+
+    if (0 < subStr.Length()) {
+      running = (*aFunc)(subStr, aData);
+    }
+
+    start = ++end;
+  }
+
+  return running;
+}
+
+static PRBool MediumEnumFunc(const nsString& aSubString, void *aData)
+{
+  nsIAtom*  medium = NS_NewAtom(aSubString);
+  ((nsICSSStyleSheet*)aData)->AppendMedium(medium);
+  return PR_TRUE;
+}
+
 PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpec, const nsString& aMedia)
 {
   PRBool result = PR_FALSE;
@@ -754,6 +828,9 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
           aErrorCode = parser->Parse(uin, url, childSheet);
           NS_RELEASE(parser);
           if (NS_SUCCEEDED(aErrorCode) && (nsnull != childSheet)) {
+            if (0 < aMedia.Length()) {
+              EnumerateString(aMedia, MediumEnumFunc, childSheet);
+            }
             mSheet->AppendStyleSheet(childSheet);
             result = PR_TRUE;
           }
