@@ -170,14 +170,39 @@ protected:
     * position of all leaf content.
     * @param aNode          The node whose content we're repositioning.
     *                       aNode can be either a text node or a container node.
-    * @param aNewParentNode The node that will be the repositioned contents' parent
+    * @param aNewParentNode The node that will be the repositioned contents' parent.
+    *                       The caller is responsible for allocating aNewParentNode
     * @param aStartOffset   The start offset of the content of aNode
     * @param aEndOffset     The end offset of the content of aNode.
     */
-  NS_IMETHOD MoveContentIntoNewParent(nsIDOMNode  *aNode, 
-                                      nsIDOMNode  *aNewParentNode, 
-                                      PRInt32      aStartOffset, 
-                                      PRInt32      aEndOffset);
+  NS_IMETHOD MoveContentOfNodeIntoNewParent(nsIDOMNode  *aNode, 
+                                            nsIDOMNode  *aNewParentNode, 
+                                            PRInt32      aStartOffset, 
+                                            PRInt32      aEndOffset);
+
+  /** Moves the content between (aStartNode, aStartOffset) and (aEndNode, aEndOffset)
+    * into aNewParentNode, splitting aStartNode and aEndNode as necessary to maintain 
+    * the relative position of all leaf content.
+    * The content between the two endpoints MUST be "contiguous" in the sense that 
+    * it is all in the same block.  Another way of saying this is all content nodes
+    * between aStartNode and aEndNode must be inline. 
+    * @see IntermediateNodesAreInline
+    *
+    * @param aStartNode       The left node,  can be either a text node or a container node.
+    * @param aStartOffset     The start offset in the content of aStartNode
+    * @param aEndNode         The right node,  can be either a text node or a container node.
+    * @param aEndOffset       The end offset in the content of aEndNode.
+    * @param aGrandParentNode The common ancestor of aStartNode and aEndNode.
+    *                         aGrandParentNode will be the parent of aNewParentNode.
+    * @param aNewParentNode   The node that will be the repositioned contents' parent.
+    *                         The caller is responsible for allocating aNewParentNode
+    */
+  NS_IMETHOD MoveContiguousContentIntoNewParent(nsIDOMNode *aStartNode, 
+                                                PRInt32     aStartOffset, 
+                                                nsIDOMNode *aEndNode, 
+                                                PRInt32     aEndOffset, 
+                                                nsIDOMNode *aGrandParentNode,
+                                                nsIDOMNode *aNewParentNode);
 
 
   NS_IMETHOD SetTextPropertiesForNode(nsIDOMNode  *aNode, 
