@@ -93,18 +93,17 @@ public final class JavaAdapter
         Class[] intfs = new Class[args.length-1];
         int interfaceCount = 0;
         for (int i=0; i < args.length-1; i++) {
-            if (!(args[i] instanceof NativeJavaClass)) {
-                throw NativeGlobal.constructError(cx, "TypeError",
-                        "expected java class object", scope);
+            Object arg = args[i];
+            if (!(arg instanceof NativeJavaClass)) {
+                throw ScriptRuntime.typeError2("msg.not.java.class.arg",
+                                               String.valueOf(i),
+                                               ScriptRuntime.toString(arg));
             }
-            Class c = ((NativeJavaClass) args[i]).getClassObject();
+            Class c = ((NativeJavaClass) arg).getClassObject();
             if (!c.isInterface()) {
                 if (superClass != null) {
-                    String msg = "Only one class may be extended by a " +
-                                 "JavaAdapter. Had " + superClass.getName() +
-                                 " and " + c.getName();
-                    throw NativeGlobal.constructError(cx, "TypeError", msg,
-                                                      scope);
+                    throw ScriptRuntime.typeError2("msg.only.one.super",
+                              superClass.getName(), c.getName());
                 }
                 superClass = c;
             } else {

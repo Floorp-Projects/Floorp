@@ -400,8 +400,8 @@ public class FunctionObject extends BaseFunction
                 }
                 if (!compatible) {
                     // Couldn't find an object to call this on.
-                    throw NativeGlobal.typeError1
-                        ("msg.incompat.call", functionName, scope);
+                    throw ScriptRuntime.typeError1("msg.incompat.call",
+                                                   functionName);
                 }
             }
         }

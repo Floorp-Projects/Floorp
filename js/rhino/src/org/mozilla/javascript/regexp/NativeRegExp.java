@@ -131,7 +131,7 @@ public class NativeRegExp extends IdScriptable implements Function {
     {
 
         NativeRegExp proto = new NativeRegExp();
-        proto.re = (RECompiled)compileRE(cx, scope, "", null, false);
+        proto.re = (RECompiled)compileRE("", null, false);
         proto.prototypeFlag = true;
         proto.setMaxId(MAX_PROTOTYPE_ID);
         proto.setParentScope(scope);
@@ -181,10 +181,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         if (args.length > 0 && args[0] instanceof NativeRegExp) {
             if (args.length > 1 && args[1] != Undefined.instance) {
                 // report error
-                throw NativeGlobal.constructError(cx, "TypeError",
-                                                  "only one argument may be specified " +
-                                                  "if the first argument is a RegExp object",
-                                                  scope);
+                throw ScriptRuntime.typeError0("msg.bad.regexp.compile");
             }
             NativeRegExp thatObj = (NativeRegExp) args[0];
             this.re = thatObj.re;
@@ -195,7 +192,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         String global = args.length > 1 && args[1] != Undefined.instance
             ? ScriptRuntime.toString(args[1])
             : null;
-        this.re = (RECompiled)compileRE(cx, scope, s, global, false);
+        this.re = (RECompiled)compileRE(s, global, false);
         this.lastIndex = 0;
         return this;
     }
@@ -230,7 +227,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         if (args.length == 0) {
             str = reImpl.input;
             if (str == null) {
-                reportError(cx, scopeObj, "msg.no.re.input.for", toString());
+                reportError("msg.no.re.input.for", toString());
             }
         } else {
             str = ScriptRuntime.toString(args[0]);
@@ -253,8 +250,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         return rval;
     }
 
-    static Object compileRE(Context cx, Scriptable scope,
-                            String str, String global, boolean flat)
+    static Object compileRE(String str, String global, boolean flat)
     {
         RECompiled regexp = new RECompiled();
         regexp.source = str.toCharArray();
@@ -271,14 +267,13 @@ public class NativeRegExp extends IdScriptable implements Function {
                 } else if (c == 'm') {
                     flags |= JSREG_MULTILINE;
                 } else {
-                    reportError(cx, scope,
-                                "msg.invalid.re.flag", String.valueOf(c));
+                    reportError("msg.invalid.re.flag", String.valueOf(c));
                 }
             }
         }
         regexp.flags = flags;
 
-        CompilerState state = new CompilerState(regexp.source, length, flags, cx, scope);
+        CompilerState state = new CompilerState(regexp.source, length, flags);
         if (flat && length > 0) {
 if (debug) {
 System.out.println("flat = \"" + str + "\"");
@@ -556,7 +551,7 @@ System.out.println();
                     break;
                 case 'd':
                     if (inRange) {
-                        reportError("msg.bad.range", "", state);
+                        reportError("msg.bad.range", "");
                         return false;
                     }
                     localMax = '9';
@@ -567,7 +562,7 @@ System.out.println();
                 case 'w':
                 case 'W':
                     if (inRange) {
-                        reportError("msg.bad.range", "", state);
+                        reportError("msg.bad.range", "");
                         return false;
                     }
                     target.bmsize = 65535;
@@ -615,7 +610,7 @@ System.out.println();
             }
             if (inRange) {
                 if (rangeStart > localMax) {
-                    reportError("msg.bad.range", "", state);
+                    reportError("msg.bad.range", "");
                     return false;
                 }
                 inRange = false;
@@ -921,7 +916,7 @@ System.out.println();
             }
             else {
                 /* a trailing '\' is an error */
-                reportError("msg.trail.backslash", "", state);
+                reportError("msg.trail.backslash", "");
                 return false;
             }
         case '(':
@@ -957,7 +952,7 @@ System.out.println();
                     return false;
                 if ((state.cp == state.cpend)
                         || (src[state.cp] != ')')) {
-                    reportError("msg.unterm.paren", "", state);
+                    reportError("msg.unterm.paren", "");
                     return false;
                 }
                 else
@@ -974,7 +969,7 @@ System.out.println();
             state.result.startIndex = termStart;
             while (true) {
                 if (state.cp == state.cpend) {
-                    reportError("msg.unterm.class", "", state);
+                    reportError("msg.unterm.class", "");
                     return false;
                 }
                 if (src[state.cp] == '\\')
@@ -1005,8 +1000,7 @@ System.out.println();
         case '+':
         case '}':
         case '?':
-            reportError("msg.bad.quant",
-                        String.valueOf(src[state.cp - 1]), state);
+            reportError("msg.bad.quant", String.valueOf(src[state.cp - 1]));
             return false;
         default:
             state.result = new RENode(REOP_FLAT);
@@ -1060,11 +1054,13 @@ System.out.println();
                         c = src[state.cp];
                     }
                     else {
-                        reportError("msg.bad.quant", String.valueOf(src[state.cp]), state);
+                        reportError("msg.bad.quant",
+                                    String.valueOf(src[state.cp]));
                         return false;
                     }
                     if ((min >> 16) != 0) {
-                        reportError("msg.overlarge.max", String.valueOf(src[state.cp]), state);
+                        reportError("msg.overlarge.max",
+                                    String.valueOf(src[state.cp]));
                         return false;
                     }
                     if (c == ',') {
@@ -1074,23 +1070,27 @@ System.out.println();
                             max = getDecimalValue(c, state);
                             c = src[state.cp];
                             if ((max >> 16) != 0) {
-                                reportError("msg.overlarge.max", String.valueOf(src[state.cp]), state);
+                                reportError("msg.overlarge.max",
+                                            String.valueOf(src[state.cp]));
                                 return false;
                             }
                             if (min > max) {
-                                reportError("msg.max.lt.min", String.valueOf(src[state.cp]), state);
+                                reportError("msg.max.lt.min",
+                                            String.valueOf(src[state.cp]));
                                 return false;
                             }
                         }
                         if (max == 0) {
-                            reportError("msg.zero.quant", String.valueOf(src[state.cp]), state);
+                            reportError("msg.zero.quant",
+                                        String.valueOf(src[state.cp]));
                             return false;
                         }
                     }
                     else {
                         max = min;
                         if (max == 0) {
-                            reportError("msg.zero.quant", String.valueOf(src[state.cp]), state);
+                            reportError("msg.zero.quant",
+                                        String.valueOf(src[state.cp]));
                             return false;
                         }
                     }
@@ -1104,7 +1104,8 @@ System.out.println();
                         break;
                     }
                     else {
-                        reportError("msg.unterm.quant", String.valueOf(src[state.cp]), state);
+                        reportError("msg.unterm.quant",
+                                    String.valueOf(src[state.cp]));
                         return false;
                     }
                 }
@@ -2618,18 +2619,10 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         return re.flags;
     }
 
-    private static void
-    reportError(String msg, String arg, CompilerState state)
+    private static void reportError(String messageId, String arg)
     {
-        reportError(state.cx, state.scope, msg, arg);
-    }
-
-    private static void
-    reportError(Context cx, Scriptable scope, String msg, String arg)
-    {
-        throw NativeGlobal.constructError(cx, "SyntaxError",
-                                          ScriptRuntime.getMessage1(msg, arg),
-                                          scope);
+        String msg = ScriptRuntime.getMessage1(messageId, arg);
+        throw ScriptRuntime.constructError("SyntaxError", msg);
     }
 
     protected int getIdAttributes(int id)
@@ -2867,14 +2860,11 @@ class RENode {
 
 class CompilerState {
 
-    CompilerState(char[] source, int length, int flags,
-                  Context cx, Scriptable scope)
+    CompilerState(char[] source, int length, int flags)
     {
         this.cpbegin = source;
         this.cp = 0;
         this.cpend = length;
-        this.scope = scope;
-        this.cx = cx;
         this.flags = flags;
         this.parenCount = 0;
         this.classCount = 0;
@@ -2882,7 +2872,6 @@ class CompilerState {
     }
 
     Context     cx;
-    Scriptable  scope;
     char        cpbegin[];
     int         cpend;
     int         cp;

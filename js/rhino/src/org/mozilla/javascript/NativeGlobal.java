@@ -93,7 +93,8 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                                   "ReferenceError",
                                   "SyntaxError",
                                   "TypeError",
-                                  "URIError"
+                                  "URIError",
+                                  "InternalError"
                                 };
 
         /*
@@ -482,117 +483,21 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
     }
 
     /**
-     * The eval function property of the global object.
-     *
-     * See ECMA 15.1.2.1
-     */
-    public static Object evalSpecial(Context cx, Scriptable scope,
-                                     Object thisArg, Object[] args,
-                                     String filename, int lineNumber)
-        throws JavaScriptException
-    {
-        if (args.length < 1)
-            return Undefined.instance;
-        Object x = args[0];
-        if (!(x instanceof String)) {
-            String message = Context.getMessage0("msg.eval.nonstring");
-            Context.reportWarning(message);
-            return x;
-        }
-        if (filename == null) {
-            int[] linep = new int[1];
-            filename = Context.getSourcePositionFromStack(linep);
-            if (filename != null) {
-                lineNumber = linep[0];
-            } else {
-                filename = "";
-            }
-        }
-        String sourceName = ScriptRuntime.
-            makeUrlForGeneratedScript(true, filename, lineNumber);
-
-        // Compile the reader with opt level of -1 to force interpreter
-        // mode.
-        int oldOptLevel = cx.getOptimizationLevel();
-        cx.setOptimizationLevel(-1);
-        Script script;
-        try {
-            script = cx.compileString(scope, (String)x, sourceName, 1,
-                                      null);
-        } finally {
-            cx.setOptimizationLevel(oldOptLevel);
-        }
-
-        // if the compile fails, an error has been reported by the
-        // compiler, but we need to stop execution to avoid
-        // infinite looping on while(true) { eval('foo bar') } -
-        // so we throw an EvaluatorException.
-        if (script == null) {
-            String message = Context.getMessage0("msg.syntax");
-            throw new EvaluatorException(message, filename, lineNumber,
-                                         null, 0);
-        }
-
-        InterpretedScript is = (InterpretedScript) script;
-        is.itsData.itsFromEvalCode = true;
-        Object result = is.call(cx, scope, (Scriptable) thisArg,
-                                ScriptRuntime.emptyArgs);
-
-        return result;
-    }
-
-
-    /**
-     * The NativeError functions
-     *
-     * See ECMA 15.11.6
+     * @deprecated Use {@link ScriptRuntime#constructError(String,String)}
+     * instead.
      */
     public static EcmaError constructError(Context cx,
                                            String error,
                                            String message,
                                            Scriptable scope)
     {
-        int[] linep = { 0 };
-        String filename = cx.getSourcePositionFromStack(linep);
-        return constructError(cx, error, message, scope,
-                              filename, linep[0], 0, null);
-    }
-
-    static EcmaError typeError0(String messageId, Scriptable scope)
-    {
-        return constructError(Context.getContext(), "TypeError",
-            ScriptRuntime.getMessage0(messageId), scope);
-    }
-
-    static EcmaError typeError1(String messageId, Object arg1, Scriptable scope)
-    {
-        return constructError(Context.getContext(), "TypeError",
-            ScriptRuntime.getMessage1(messageId, arg1), scope);
-    }
-
-    static RuntimeException undefReadError(Object object, String property,
-                                           Scriptable scope)
-    {
-        String msg = (object == null) ? "msg.null.prop.read"
-                                      : "msg.undef.prop.read";
-        return NativeGlobal.typeError1(msg, property, scope);
-    }
-
-    static RuntimeException undefWriteError(Object object, String property,
-                                            Object value, Scriptable scope)
-    {
-        String msg = (object == null) ? "msg.null.prop.write"
-                                      : "msg.undef.prop.write";
-        String valueStr = (value instanceof Scriptable)
-                          ? value.toString() : ScriptRuntime.toString(value);
-        return constructError(Context.getContext(), "TypeError",
-            ScriptRuntime.getMessage2(msg, property, valueStr), scope);
+        return ScriptRuntime.constructError(error, message);
     }
 
     /**
-     * The NativeError functions
-     *
-     * See ECMA 15.11.6
+     * @deprecated Use
+     * {@link ScriptRuntime#constructError(String,String,String,int,int,String)}
+     * instead.
      */
     public static EcmaError constructError(Context cx,
                                            String error,
@@ -603,16 +508,9 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                                            int columnNumber,
                                            String lineSource)
     {
-        Object args[] = { message };
-        try {
-            Scriptable errorObject = cx.newObject(scope, error, args);
-            errorObject.put("name", errorObject, error);
-            return new EcmaError((NativeError)errorObject, sourceName,
-                                 lineNumber, columnNumber, lineSource);
-        }
-        catch (JavaScriptException x) {
-            throw new RuntimeException(x.toString());
-        }
+        return ScriptRuntime.constructError(error, message, sourceName,
+                                            lineNumber, columnNumber,
+                                            lineSource);
     }
 
     /**

@@ -49,8 +49,6 @@ public class EcmaError extends RuntimeException {
      * Errors internal to the JavaScript engine will simply throw a
      * RuntimeException.
      *
-     * @param nativeError the Scriptable object constructed for this error.
-              Scripts will get it as an argument to catch statement.
      * @param sourceName the name of the source reponsible for the error
      * @param lineNumber the line number of the source
      * @param columnNumber the columnNumber of the source (may be zero if
@@ -58,11 +56,13 @@ public class EcmaError extends RuntimeException {
      * @param lineSource the source of the line containing the error (may be
      *                   null if unknown)
      */
-    public EcmaError(Scriptable nativeError, String sourceName,
-                     int lineNumber, int columnNumber, String lineSource)
+    EcmaError(String errorName, String errorMessage,
+              String sourceName, int lineNumber, int columnNumber,
+              String lineSource)
     {
-        super("EcmaError");
-        errorObject = nativeError;
+        super("EcmaError: "+errorName+": "+errorMessage);
+        this.errorName = errorName;
+        this.errorMessage = errorMessage;
         this.sourceName = sourceName;
         this.lineNumber = lineNumber;
         this.columnNumber = columnNumber;
@@ -70,24 +70,38 @@ public class EcmaError extends RuntimeException {
     }
 
     /**
+     * @deprecated Use
+     * {@link #EcmaError(String, String, String, int, int, String)} instead.
+     */
+    public EcmaError(Scriptable nativeError, String sourceName,
+                     int lineNumber, int columnNumber, String lineSource)
+    {
+        this("InternalError", ScriptRuntime.toString(nativeError),
+             sourceName, lineNumber, columnNumber, lineSource);
+    }
+
+    /**
      * Return a string representation of the error, which currently consists
      * of the name of the error together with the message.
      */
-    public String toString() {
-        if (sourceName == null && lineNumber <= 0)
-            return errorObject.toString();
+    public String toString()
+    {
         StringBuffer buf = new StringBuffer();
-        buf.append(errorObject.toString());
-        buf.append(" (");
-        if (sourceName != null) {
-            buf.append(sourceName);
-            buf.append("; ");
+        buf.append(errorName);
+        buf.append(": ");
+        buf.append(errorMessage);
+        if (sourceName != null || lineNumber > 0) {
+            buf.append(" (");
+            if (sourceName != null) {
+                buf.append(sourceName);
+                buf.append("; ");
+            }
+            if (lineNumber > 0) {
+                buf.append("line ");
+                buf.append(lineNumber);
+            }
+            buf.append(')');
         }
-        if (lineNumber > 0) {
-            buf.append("line ");
-            buf.append(lineNumber);
-        }
-        buf.append(')');
         return buf.toString();
     }
 
@@ -104,7 +118,7 @@ public class EcmaError extends RuntimeException {
      * @return the name of the error.
      */
     public String getName() {
-        return NativeError.getName(errorObject);
+        return errorName;
     }
 
     /**
@@ -115,7 +129,7 @@ public class EcmaError extends RuntimeException {
      * @return an implemenation-defined string describing the error.
      */
     public String getMessage() {
-        return NativeError.getMessage(errorObject);
+        return errorMessage;
     }
 
     /**
@@ -135,13 +149,6 @@ public class EcmaError extends RuntimeException {
     }
 
     /**
-     * Get the error object corresponding to this exception.
-     */
-    public Scriptable getErrorObject() {
-        return errorObject;
-    }
-
-    /**
      * The column number of the location of the error, or zero if unknown.
      */
     public int getColumnNumber() {
@@ -155,7 +162,17 @@ public class EcmaError extends RuntimeException {
         return lineSource;
     }
 
-    private Scriptable errorObject;
+    /**
+     * @deprecated Always returns result of {@link Context#getUndefinedValue()}.
+     *
+     */
+    public Scriptable getErrorObject()
+    {
+        return Undefined.instance;
+    }
+
+    private String errorName;
+    private String errorMessage;
     private String sourceName;
     private int lineNumber;
     private int columnNumber;

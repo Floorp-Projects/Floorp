@@ -48,8 +48,7 @@ public interface RegExpProxy
 
     public boolean isRegExp(Scriptable obj);
 
-    public Object compileRegExp(Context cx, Scriptable scope,
-                                String source, String global);
+    public Object compileRegExp(Context cx, String source, String flags);
 
     public Scriptable wrapRegExp(Context cx, Scriptable scope,
                                  Object compiled);

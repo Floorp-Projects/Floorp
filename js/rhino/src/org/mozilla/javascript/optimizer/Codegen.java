@@ -765,7 +765,6 @@ public class Codegen extends Interpreter {
                                      | ClassFileWriter.ACC_PRIVATE));
                 cfw.addALoad(0); // proxy
                 cfw.addALoad(1); // context
-                cfw.addALoad(2); // scope
                 cfw.addPush(reString);
                 if (reFlags == null) {
                     cfw.add(ByteCode.ACONST_NULL);
@@ -776,7 +775,6 @@ public class Codegen extends Interpreter {
                               "org/mozilla/javascript/RegExpProxy",
                               "compileRegExp",
                               "(Lorg/mozilla/javascript/Context;"
-                              +"Lorg/mozilla/javascript/Scriptable;"
                               +"Ljava/lang/String;Ljava/lang/String;"
                               +")Ljava/lang/Object;");
                 cfw.add(ByteCode.PUTSTATIC, mainClassName,
@@ -787,7 +785,7 @@ public class Codegen extends Interpreter {
         cfw.addPush(1);
         cfw.add(ByteCode.PUTSTATIC, mainClassName, "_reInitDone", "Z");
         cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)3, null);
+        cfw.stopMethod((short)2, null);
     }
 
     private void emitConstantDudeInitializers(ClassFileWriter cfw)
@@ -855,7 +853,6 @@ public class Codegen extends Interpreter {
         // Stack: proxy, array
         cfw.add(ByteCode.DUP);
         cfw.addALoad(contextArg);
-        cfw.addALoad(scopeArg);
         cfw.addInvoke(ByteCode.INVOKESTATIC, mainClassName,
                       REGEXP_INIT_METHOD_NAME, REGEXP_INIT_METHOD_SIGNATURE);
         for (int i = 0; i != regexpCount; ++i) {
@@ -1041,7 +1038,6 @@ public class Codegen extends Interpreter {
     private static final String REGEXP_INIT_METHOD_SIGNATURE
         =  "(Lorg/mozilla/javascript/RegExpProxy;"
            +"Lorg/mozilla/javascript/Context;"
-           +"Lorg/mozilla/javascript/Scriptable;"
            +")V";
     static final String REGEXP_ARRAY_FIELD_NAME = "_re";
     static final String REGEXP_ARRAY_FIELD_TYPE = "[Ljava/lang/Object;";

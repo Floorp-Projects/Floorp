@@ -139,13 +139,13 @@ final class NativeError extends IdScriptable
         return js_toString(this);
     }
 
-    static String getName(Scriptable obj)
+    private static String getName(Scriptable obj)
     {
         Object value = ScriptRuntime.getStrIdElem(obj, "name");
         return ScriptRuntime.toString(value);
     }
 
-    static String getMessage(Scriptable obj)
+    private static String getMessage(Scriptable obj)
     {
         Object value = ScriptRuntime.getStrIdElem(obj, "message");
         return ScriptRuntime.toString(value);

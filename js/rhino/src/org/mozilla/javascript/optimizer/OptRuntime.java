@@ -250,11 +250,8 @@ public final class OptRuntime extends ScriptRuntime {
             obj = obj.getParentScope();
         }
         if ((prop == null) || (prop == Scriptable.NOT_FOUND)) {
-            Object[] errorArgs = { id };
-            throw NativeGlobal.constructError(
-                        cx, "ReferenceError",
-                        ScriptRuntime.getMessage("msg.is.not.defined", errorArgs),
-                        scope);
+            String msg = ScriptRuntime.getMessage1("msg.is.not.defined", id);
+            throw ScriptRuntime.constructError("ReferenceError", msg);
         }
 
         while (thisArg instanceof NativeWith)

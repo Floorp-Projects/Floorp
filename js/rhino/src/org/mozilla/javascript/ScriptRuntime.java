@@ -520,7 +520,7 @@ public class ScriptRuntime {
     {
         if (val instanceof Scriptable) {
             if (val == Undefined.instance) {
-                throw NativeGlobal.typeError0("msg.undef.to.object", scope);
+                throw typeError0("msg.undef.to.object");
             }
             return (Scriptable) val;
         }
@@ -540,7 +540,7 @@ public class ScriptRuntime {
         if (wrapped instanceof Scriptable)
             return (Scriptable) wrapped;
         if (wrapped == null) {
-            throw NativeGlobal.typeError0("msg.null.to.object", scope);
+            throw typeError0("msg.null.to.object");
         }
         throw errorWithClassName("msg.invalid.type", val);
     }
@@ -703,23 +703,35 @@ public class ScriptRuntime {
      */
     public static Object getCatchObject(Context cx, Scriptable scope,
                                         Throwable t)
+        throws JavaScriptException
     {
-        if (t instanceof JavaScriptException) {
-            return ((JavaScriptException)t).getValue();
-        } else if (t instanceof EcmaError) {
-            return ((EcmaError)t).getErrorObject();
-        } else {
-            if (!(t instanceof EvaluatorException)) Context.codeBug();
+        boolean evaluatorException = false;
+        if (t instanceof EvaluatorException) {
+            evaluatorException = true;
             while (t instanceof WrappedException) {
                 t = ((WrappedException)t).getWrappedException();
             }
-            if (t instanceof JavaScriptException) {
-                return ((JavaScriptException)t).getValue();
-            } else if (t instanceof EcmaError) {
-                return ((EcmaError)t).getErrorObject();
-            }
-            return cx.getWrapFactory().wrap(cx, scope, t, null);
         }
+
+        if (t instanceof JavaScriptException) {
+            return ((JavaScriptException)t).getValue();
+
+        } else if (t instanceof EcmaError) {
+            EcmaError ee = (EcmaError)t;
+            String errorName = ee.getName();
+            Object args[] = { ee.getMessage() };
+            Scriptable errorObject = cx.newObject(scope, errorName, args);
+            errorObject.put("name", errorObject, errorName);
+            errorObject.put("fileName", errorObject, ee.getSourceName());
+            errorObject.put("lineNumber", errorObject,
+                            new Integer(ee.getLineNumber()));
+            return errorObject;
+
+        } else if (!evaluatorException) {
+            Context.codeBug();
+        }
+
+        return cx.getWrapFactory().wrap(cx, scope, t, null);
     }
 
     /**
@@ -757,7 +769,7 @@ public class ScriptRuntime {
 
     public static Object getProp(Object obj, String id, Scriptable scope) {
         if (obj == null || obj == Undefined.instance) {
-            throw NativeGlobal.undefReadError(obj, id, scope);
+            throw undefReadError(obj, id);
         }
         Scriptable start;
         if (obj instanceof Scriptable) {
@@ -800,7 +812,7 @@ public class ScriptRuntime {
             s = toObject(scope, obj);
         }
         if (s == null) {
-            throw NativeGlobal.typeError0("msg.null.to.object", scope);
+            throw typeError0("msg.null.to.object");
         }
         return s.getPrototype();
     }
@@ -821,7 +833,7 @@ public class ScriptRuntime {
             s = toObject(scope, obj);
         }
         if (s == null) {
-            throw NativeGlobal.typeError0("msg.null.to.object", scope);
+            throw typeError0("msg.null.to.object");
         }
         return s.getParentScope();
     }
@@ -860,7 +872,7 @@ public class ScriptRuntime {
                                  Scriptable scope)
     {
         if (obj == null || obj == Undefined.instance) {
-            throw NativeGlobal.undefWriteError(obj, id, value, scope);
+            throw undefWriteError(obj, id, value);
         }
         Scriptable start;
         if (obj instanceof Scriptable) {
@@ -977,7 +989,7 @@ public class ScriptRuntime {
         }
         if (obj == null || obj == Undefined.instance) {
             String property = (s != null) ? s : Integer.toString(index);
-            throw NativeGlobal.undefReadError(obj, property, scope);
+            throw undefReadError(obj, property);
         }
         Scriptable start = toObject(scope, obj);
         if (s != null) {
@@ -1035,7 +1047,7 @@ public class ScriptRuntime {
         }
         if (obj == null || obj == Undefined.instance) {
             String property = (s != null) ? s : Integer.toString(index);
-            throw NativeGlobal.undefWriteError(obj, property, value, scope);
+            throw undefWriteError(obj, property, value);
         }
         Scriptable start;
         if (obj instanceof Scriptable) {
@@ -1108,10 +1120,8 @@ public class ScriptRuntime {
                 return result;
             obj = obj.getParentScope();
         }
-        throw NativeGlobal.constructError
-            (Context.getContext(), "ReferenceError",
-             ScriptRuntime.getMessage1("msg.is.not.defined", id.toString()),
-                        scopeChain);
+        String msg = getMessage1("msg.is.not.defined", id.toString());
+        throw constructError("ReferenceError", msg);
     }
 
     /**
@@ -1142,10 +1152,8 @@ public class ScriptRuntime {
         if (base != null) {
             return base;
         }
-        throw NativeGlobal.constructError(
-                    Context.getContext(), "ReferenceError",
-                    ScriptRuntime.getMessage1("msg.is.not.defined", id),
-                    scope);
+        String msg = getMessage1("msg.is.not.defined", id);
+        throw constructError("ReferenceError", msg);
     }
 
     public static Scriptable getThis(Scriptable base) {
@@ -1210,8 +1218,7 @@ public class ScriptRuntime {
         throws JavaScriptException
     {
         if (!(fun instanceof Function)) {
-            throw NativeGlobal.typeError1
-                ("msg.isnt.function", toString(fun), scope);
+            throw typeError1("msg.isnt.function", toString(fun));
         }
         Function function = (Function)fun;
         Scriptable thisObj;
@@ -1233,8 +1240,7 @@ public class ScriptRuntime {
         throws JavaScriptException
     {
         if (!(fun instanceof Function)) {
-            throw NativeGlobal.typeError1
-                ("msg.isnt.function", toString(fun), scope);
+            throw typeError1("msg.isnt.function", toString(fun));
         }
         Function function = (Function)fun;
         return function.construct(cx, scope, args);
@@ -1250,12 +1256,10 @@ public class ScriptRuntime {
         if (callType == Node.SPECIALCALL_EVAL) {
             if (NativeGlobal.isEvalFunction(fun)) {
                 if (isNew) {
-                    throw NativeGlobal.typeError1("msg.not.ctor",
-                                                  "eval", scope);
+                    throw typeError1("msg.not.ctor", "eval");
                 }
-                return NativeGlobal.evalSpecial(cx, scope,
-                                                callerThis, args,
-                                                filename, lineNumber);
+                return evalSpecial(cx, scope, callerThis, args,
+                                   filename, lineNumber);
             }
         } else if (callType == Node.SPECIALCALL_WITH) {
             if (NativeWith.isWithFunction(fun)) {
@@ -1274,6 +1278,66 @@ public class ScriptRuntime {
         } else {
             return call(cx, fun, thisObj, args, scope);
         }
+    }
+
+    /**
+     * The eval function property of the global object.
+     *
+     * See ECMA 15.1.2.1
+     */
+    public static Object evalSpecial(Context cx, Scriptable scope,
+                                     Object thisArg, Object[] args,
+                                     String filename, int lineNumber)
+        throws JavaScriptException
+    {
+        if (args.length < 1)
+            return Undefined.instance;
+        Object x = args[0];
+        if (!(x instanceof String)) {
+            String message = Context.getMessage0("msg.eval.nonstring");
+            Context.reportWarning(message);
+            return x;
+        }
+        if (filename == null) {
+            int[] linep = new int[1];
+            filename = Context.getSourcePositionFromStack(linep);
+            if (filename != null) {
+                lineNumber = linep[0];
+            } else {
+                filename = "";
+            }
+        }
+        String sourceName = ScriptRuntime.
+            makeUrlForGeneratedScript(true, filename, lineNumber);
+
+        // Compile the reader with opt level of -1 to force interpreter
+        // mode.
+        int oldOptLevel = cx.getOptimizationLevel();
+        cx.setOptimizationLevel(-1);
+        Script script;
+        try {
+            script = cx.compileString(scope, (String)x, sourceName, 1,
+                                      null);
+        } finally {
+            cx.setOptimizationLevel(oldOptLevel);
+        }
+
+        // if the compile fails, an error has been reported by the
+        // compiler, but we need to stop execution to avoid
+        // infinite looping on while(true) { eval('foo bar') } -
+        // so we throw an EvaluatorException.
+        if (script == null) {
+            String message = Context.getMessage0("msg.syntax");
+            throw new EvaluatorException(message, filename, lineNumber,
+                                         null, 0);
+        }
+
+        InterpretedScript is = (InterpretedScript) script;
+        is.itsData.itsFromEvalCode = true;
+        Object result = is.call(cx, scope, (Scriptable) thisArg,
+                                ScriptRuntime.emptyArgs);
+
+        return result;
     }
 
     /**
@@ -1368,10 +1432,8 @@ public class ScriptRuntime {
             } while (m != null);
             obj = obj.getParentScope();
         }
-        throw NativeGlobal.constructError
-            (Context.getContext(), "ReferenceError",
-             ScriptRuntime.getMessage1("msg.is.not.defined", id),
-                    scopeChain);
+        String msg = getMessage1("msg.is.not.defined", id);
+        throw constructError("ReferenceError", msg);
     }
 
     public static Object postIncrement(Object obj, String id, Scriptable scope)
@@ -1454,10 +1516,8 @@ public class ScriptRuntime {
             } while (m != null);
             obj = obj.getParentScope();
         }
-        throw NativeGlobal.constructError
-            (Context.getContext(), "ReferenceError",
-             ScriptRuntime.getMessage1("msg.is.not.defined", id),
-                    scopeChain);
+        String msg = getMessage1("msg.is.not.defined", id);
+        throw constructError("ReferenceError", msg);
     }
 
     public static Object postDecrement(Object obj, String id, Scriptable scope) {
@@ -1491,7 +1551,7 @@ public class ScriptRuntime {
         Scriptable s = (Scriptable)val;
         Object result = s.getDefaultValue(null);
         if (result != null && result instanceof Scriptable)
-            throw NativeGlobal.typeError0("msg.bad.default.value", s);
+            throw typeError0("msg.bad.default.value");
         return result;
     }
 
@@ -1642,7 +1702,7 @@ public class ScriptRuntime {
     {
         // Check RHS is an object
         if (! (b instanceof Scriptable)) {
-            throw NativeGlobal.typeError0("msg.instanceof.not.object", scope);
+            throw typeError0("msg.instanceof.not.object");
         }
 
         // for primitive values on LHS, return false
@@ -1686,7 +1746,7 @@ public class ScriptRuntime {
      */
     public static boolean in(Object a, Object b, Scriptable scope) {
         if (!(b instanceof Scriptable)) {
-            throw NativeGlobal.typeError0("msg.instanceof.not.object", scope);
+            throw typeError0("msg.instanceof.not.object");
         }
         String s = getStringId(a);
         return s != null
@@ -1957,6 +2017,66 @@ public class ScriptRuntime {
 
     public static String getMessage(String messageId, Object[] arguments) {
         return Context.getMessage(messageId, arguments);
+    }
+
+    public static EcmaError constructError(String error, String message)
+    {
+        int line = 0;
+        String filename = null;
+        Context cx = Context.getCurrentContext();
+        if (cx != null) {
+            int[] linep = new int[1];
+            filename = cx.getSourcePositionFromStack(linep);
+            line = linep[0];
+        }
+        return constructError(error, message, filename, line, 0, null);
+    }
+
+    public static EcmaError constructError(String error,
+                                           String message,
+                                           String sourceName,
+                                           int lineNumber,
+                                           int columnNumber,
+                                           String lineSource)
+    {
+        return new EcmaError(error, message, sourceName,
+                             lineNumber, columnNumber, lineSource);
+    }
+
+    public static EcmaError typeError0(String messageId)
+    {
+        String msg = getMessage0(messageId);
+        return constructError("TypeError", msg);
+    }
+
+    static EcmaError typeError1(String messageId, String arg1)
+    {
+        String msg = getMessage1(messageId, arg1);
+        return constructError("TypeError", msg);
+    }
+
+    static EcmaError typeError2(String messageId, String arg1, String arg2)
+    {
+        String msg = getMessage2(messageId, arg1, arg2);
+        return constructError("TypeError", msg);
+    }
+
+    static RuntimeException undefReadError(Object object, String property)
+    {
+        String messageId = (object == null) ? "msg.null.prop.read"
+                                            : "msg.undef.prop.read";
+        return typeError1(messageId, property);
+    }
+
+    static RuntimeException undefWriteError(Object object, String property,
+                                            Object value)
+    {
+        String messageId = (object == null) ? "msg.null.prop.write"
+                                            : "msg.undef.prop.write";
+        String valueStr = (value instanceof Scriptable)
+                          ? value.toString() : toString(value);
+        String msg = getMessage2(messageId, property, valueStr);
+        return typeError2(messageId, valueStr, msg);
     }
 
     public static RegExpProxy getRegExpProxy(Context cx)

@@ -102,7 +102,7 @@ public class IdFunction extends BaseFunction
         // to satisfy ECMAScript standard (see bugzilla 202019).
         // To follow current (2003-05-01) SpiderMonkey behavior, change it to:
         // return super.createObject(cx, scope);
-        throw NativeGlobal.typeError1("msg.not.ctor", functionName, scope);
+        throw ScriptRuntime.typeError1("msg.not.ctor", functionName);
     }
 
     public String decompile(Context cx, int indent, boolean justbody)

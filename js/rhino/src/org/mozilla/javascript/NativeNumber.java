@@ -208,7 +208,7 @@ final class NativeNumber extends IdScriptable {
             if (precision < precisionMin || precision > precisionMax) {
                 String msg = ScriptRuntime.getMessage1(
                     "msg.bad.precision", ScriptRuntime.toString(args[0]));
-                throw NativeGlobal.constructError(cx, "RangeError", msg, this);
+                throw ScriptRuntime.constructError("RangeError", msg);
             }
         }
         StringBuffer result = new StringBuffer();

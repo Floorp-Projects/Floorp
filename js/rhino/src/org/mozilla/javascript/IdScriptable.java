@@ -475,10 +475,10 @@ public abstract class IdScriptable extends ScriptableObject
     * @return Scriptable object suitable for a check by the instanceof operator.
     * @throws RuntimeException if no more instanceof target can be found
     */
-    protected static RuntimeException incompatibleCallError(IdFunction f)
+    protected static EcmaError incompatibleCallError(IdFunction f)
     {
-        throw NativeGlobal.typeError1("msg.incompat.call",
-                                      f.getFunctionName(), f);
+        throw ScriptRuntime.typeError1("msg.incompat.call",
+                                       f.getFunctionName());
     }
 
     protected IdFunction newIdFunction(int id)

@@ -270,9 +270,9 @@ public class TokenStream {
     }
 
     public TokenStream(Reader sourceReader, String sourceString,
-                       Scriptable scope, String sourceName, int lineno)
+                       boolean fromEval, String sourceName, int lineno)
     {
-        this.scope = scope;
+        this.fromEval = fromEval;
         this.pushbackToken = Token.EOF;
         this.sourceName = sourceName;
         this.lineno = lineno;
@@ -313,11 +313,11 @@ public class TokenStream {
     {
         String message = Context.getMessage(messageProperty, args);
         if (isError) {
-            if (scope != null) {
+            if (fromEval) {
                 // We're probably in an eval. Need to throw an exception.
-                throw NativeGlobal.constructError(
-                    Context.getContext(), "SyntaxError",
-                    message, scope, sourceName, lineno, lineOffset, line);
+                throw ScriptRuntime.constructError(
+                    "SyntaxError", message, sourceName,
+                    lineno, lineOffset, line);
             } else {
                 Context.reportError(message, sourceName,
                                     lineno, line, lineOffset);
@@ -1190,7 +1190,7 @@ public class TokenStream {
 
     private String sourceName;
     private String line;
-    private Scriptable scope;
+    private boolean fromEval;
     private int pushbackToken;
     private int tokenno;
 

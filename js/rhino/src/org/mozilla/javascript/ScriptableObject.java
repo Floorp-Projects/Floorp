@@ -644,8 +644,8 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         catch (JavaScriptException jse) {
             // fall through to error
         }
-        Object arg = (typeHint == null) ? "undefined" : typeHint.toString();
-        throw NativeGlobal.typeError1("msg.default.value", arg, this);
+        String arg = (typeHint == null) ? "undefined" : typeHint.getName();
+        throw ScriptRuntime.typeError1("msg.default.value", arg);
     }
 
     /**

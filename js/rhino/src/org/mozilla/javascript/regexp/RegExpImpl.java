@@ -49,10 +49,9 @@ public class RegExpImpl implements RegExpProxy {
         return obj instanceof NativeRegExp;
     }
 
-    public Object compileRegExp(Context cx, Scriptable scope,
-                                String source, String global)
+    public Object compileRegExp(Context cx, String source, String flags)
     {
-        return NativeRegExp.compileRE(cx, scope, source, global, false);
+        return NativeRegExp.compileRE(source, flags, false);
     }
 
     public Scriptable wrapRegExp(Context cx, Scriptable scope,
@@ -155,8 +154,7 @@ public class RegExpImpl implements RegExpProxy {
         Scriptable topScope = ScriptableObject.getTopLevelScope(scope);
 
         if (args.length == 0) {
-            Object compiled = NativeRegExp.compileRE(cx, topScope, "", "",
-                                                     false);
+            Object compiled = NativeRegExp.compileRE("", "", false);
             re = new NativeRegExp(topScope, compiled);
         } else if (args[0] instanceof NativeRegExp) {
             re = (NativeRegExp) args[0];
@@ -169,8 +167,7 @@ public class RegExpImpl implements RegExpProxy {
             } else {
                 opt = null;
             }
-            Object compiled = NativeRegExp.compileRE(cx, topScope, src, opt,
-                                                     forceFlat);
+            Object compiled = NativeRegExp.compileRE(src, opt, forceFlat);
             re = new NativeRegExp(topScope, compiled);
         }
         data.regexp = re;

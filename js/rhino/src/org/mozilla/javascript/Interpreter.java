@@ -123,10 +123,10 @@ public class Interpreter
         itsData.itsSourceFile = scriptOrFn.getSourceName();
         itsData.encodedSource = encodedSource;
         if (tree instanceof FunctionNode) {
-            generateFunctionICode(cx, scope);
+            generateFunctionICode(cx);
             return createFunction(cx, scope, itsData, false);
         } else {
-            generateICodeFromTree(cx, scope, scriptOrFn);
+            generateICodeFromTree(cx, scriptOrFn);
             return new InterpretedScript(itsData);
         }
     }
@@ -156,7 +156,7 @@ public class Interpreter
 
     }
 
-    private void generateFunctionICode(Context cx, Scriptable scope)
+    private void generateFunctionICode(Context cx)
     {
         FunctionNode theFunction = (FunctionNode)scriptOrFn;
 
@@ -164,14 +164,14 @@ public class Interpreter
         itsData.itsNeedsActivation = theFunction.requiresActivation();
         itsData.itsName = theFunction.getFunctionName();
 
-        generateICodeFromTree(cx, scope, theFunction.getLastChild());
+        generateICodeFromTree(cx, theFunction.getLastChild());
     }
 
-    private void generateICodeFromTree(Context cx, Scriptable scope, Node tree)
+    private void generateICodeFromTree(Context cx, Node tree)
     {
-        generateNestedFunctions(cx, scope);
+        generateNestedFunctions(cx);
 
-        generateRegExpLiterals(cx, scope);
+        generateRegExpLiterals(cx);
 
         int theICodeTop = 0;
         theICodeTop = generateICode(tree, theICodeTop);
@@ -238,7 +238,7 @@ public class Interpreter
         if (Token.printICode) dumpICode(itsData);
     }
 
-    private void generateNestedFunctions(Context cx, Scriptable scope)
+    private void generateNestedFunctions(Context cx)
     {
         int functionCount = scriptOrFn.getFunctionCount();
         if (functionCount == 0) return;
@@ -254,13 +254,13 @@ public class Interpreter
             jsi.itsData.encodedSource = itsData.encodedSource;
             jsi.itsData.itsCheckThis = def.getCheckThis();
             jsi.itsInFunctionFlag = true;
-            jsi.generateFunctionICode(cx, scope);
+            jsi.generateFunctionICode(cx);
             array[i] = jsi.itsData;
         }
         itsData.itsNestedFunctions = array;
     }
 
-    private void generateRegExpLiterals(Context cx, Scriptable scope)
+    private void generateRegExpLiterals(Context cx)
     {
         int N = scriptOrFn.getRegexpCount();
         if (N == 0) return;
@@ -270,7 +270,7 @@ public class Interpreter
         for (int i = 0; i != N; i++) {
             String string = scriptOrFn.getRegexpString(i);
             String flags = scriptOrFn.getRegexpFlags(i);
-            array[i] = rep.compileRegExp(cx, scope, string, flags);
+            array[i] = rep.compileRegExp(cx, string, flags);
         }
         itsData.itsRegExpLiterals = array;
     }
@@ -2377,8 +2377,8 @@ public class Interpreter
                 lhs = strings[getIndex(iCode, pc + 1)];
                 if (lhs == null) lhs = undefined;
             }
-            throw NativeGlobal.typeError1
-                ("msg.isnt.function", ScriptRuntime.toString(lhs), calleeScope);
+            throw ScriptRuntime.typeError1("msg.isnt.function",
+                                           ScriptRuntime.toString(lhs));
         }
 
         pc += 4;
@@ -2421,8 +2421,8 @@ public class Interpreter
                 lhs = strings[getIndex(iCode, pc + 1)];
                 if (lhs == null) lhs = undefined;
             }
-            throw NativeGlobal.typeError1
-                ("msg.isnt.function", ScriptRuntime.toString(lhs), scope);
+            throw ScriptRuntime.typeError1("msg.isnt.function",
+                                           ScriptRuntime.toString(lhs));
 
         }
         pc += 4;                                                                         instructionCount = cx.instructionCount;
@@ -2920,8 +2920,8 @@ public class Interpreter
         } else {
             double val = stackDbl[stackTop];
             if (lhs == null || lhs == Undefined.instance) {
-                throw NativeGlobal.undefReadError(
-                          lhs, ScriptRuntime.toString(val), scope);
+                throw ScriptRuntime.undefReadError(
+                          lhs, ScriptRuntime.toString(val));
             }
             Scriptable obj = (lhs instanceof Scriptable)
                              ? (Scriptable)lhs
@@ -2953,8 +2953,8 @@ public class Interpreter
         } else {
             double val = stackDbl[stackTop - 1];
             if (lhs == null || lhs == Undefined.instance) {
-                throw NativeGlobal.undefWriteError(
-                          lhs, ScriptRuntime.toString(val), rhs, scope);
+                throw ScriptRuntime.undefWriteError(
+                          lhs, ScriptRuntime.toString(val), rhs);
             }
             Scriptable obj = (lhs instanceof Scriptable)
                              ? (Scriptable)lhs

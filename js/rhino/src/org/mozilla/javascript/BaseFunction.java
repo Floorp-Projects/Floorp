@@ -87,8 +87,8 @@ public class BaseFunction extends IdScriptable implements Function {
         {
             return ScriptRuntime.jsDelegatesTo(instance, (Scriptable)protoProp);
         }
-        throw NativeGlobal.typeError1
-            ("msg.instanceof.bad.prototype", functionName, instance);
+        throw ScriptRuntime.typeError1("msg.instanceof.bad.prototype",
+                                       functionName);
     }
 
     protected int getIdAttributes(int id)
@@ -434,7 +434,7 @@ public class BaseFunction extends IdScriptable implements Function {
         if (val instanceof BaseFunction) {
             return ((BaseFunction)val).decompile(cx, indent, false);
         }
-        throw NativeGlobal.typeError1("msg.incompat.call", "toString", thisObj);
+        throw ScriptRuntime.typeError1("msg.incompat.call", "toString");
     }
 
     /**
@@ -471,7 +471,7 @@ public class BaseFunction extends IdScriptable implements Function {
                 {
                     callArgs = cx.getElements((Scriptable) arg1);
                 } else {
-                    throw NativeGlobal.typeError0("msg.arg.isnt.array", scope);
+                    throw ScriptRuntime.typeError0("msg.arg.isnt.array");
                 }
             }
         } else {

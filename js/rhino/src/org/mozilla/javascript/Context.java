@@ -848,7 +848,7 @@ public class Context {
     {
         // no source name or source text manager, because we're just
         // going to throw away the result.
-        TokenStream ts = new TokenStream(null, source, null, null, 1);
+        TokenStream ts = new TokenStream(null, source, false, null, 1);
 
         // Temporarily set error reporter to always be the exception-throwing
         // DefaultErrorReporter.
@@ -1886,8 +1886,9 @@ public class Context {
                 sourceReader = null;
             }
         }
+        boolean fromEval = (scope != null);
         TokenStream ts = new TokenStream(sourceReader, sourceString,
-                                         scope, sourceName, lineno);
+                                         fromEval, sourceName, lineno);
         Parser p = createParser();
 
         errorCount = 0;
