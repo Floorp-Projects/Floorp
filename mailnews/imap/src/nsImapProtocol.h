@@ -424,7 +424,22 @@ private:
 	void OnMoveFolderHierarchy(const char * aSourceMailbox);
 	void FindMailboxesIfNecessary();
 	void CreateMailbox(const char *mailboxName);
+    void DeleteMailbox(const char *mailboxName);
+    void RenameMailbox(const char *existingName, const char *newName);
 	PRBool CreateMailboxRespectingSubscriptions(const char *mailboxName);
+    PRBool DeleteMailboxRespectingSubscriptions(const char *mailboxName);
+    PRBool  RenameMailboxRespectingSubscriptions(const char *existingName, 
+                                                 const char *newName, 
+                                                 XP_Bool reallyRename);
+    // notify the fe that a folder was deleted
+    void FolderDeleted(const char *mailboxName);
+	// notify the fe that a folder creation failed
+	void FolderNotCreated(const char *mailboxName);
+    // notify the fe that a folder was deleted
+    void FolderRenamed(const char *oldName,
+                       const char *newName);
+    
+	PRBool	MailboxIsNoSelectMailbox(const char *mailboxName);
 	char * CreatePossibleTrashName(const char *prefix);
 	PRBool FolderNeedsACLInitialized(const char *folderName);
 	void DiscoverMailboxList();
@@ -434,6 +449,9 @@ private:
 	void List(const char *mailboxPattern, PRBool addDirectoryIfNecessary);
 	void Subscribe(const char *mailboxName);
 	void Unsubscribe(const char *mailboxName);
+    PRBool DeleteSubFolders(const char* mailboxName);
+	PRBool  RenameHierarchyByHand(const char *oldParentMailboxName, 
+                                  const char *newParentMailboxName);
 
 
 	// End Process AuthenticatedState Url helper methods
@@ -467,6 +485,7 @@ private:
 	PRBool m_needNoop;
 	PRInt32 m_noopCount;
 	PRInt32 m_promoteNoopToCheckCount;
+    PRBool  m_autoSubscribe, m_autoUnsubscribe, m_autoSubscribeOnOpen;
     PRBool m_closeNeededBeforeSelect;
     enum EMailboxHierarchyNameState {
         kNoOperationInProgress,
@@ -481,7 +500,7 @@ private:
     PRBool m_onlineBaseFolderExists;
     EMailboxDiscoverStatus m_discoveryStatus;
     nsVoidArray m_listedMailboxList;
-    nsVoidArray m_deletableChildren;
+    nsVoidArray* m_deletableChildren;
 };
 
 #endif  // nsImapProtocol_h___

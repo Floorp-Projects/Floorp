@@ -386,7 +386,7 @@ struct FolderIsNoSelectProxyEvent : public nsImapMailFolderSinkProxyEvent
                                FolderQueryInfo* aInfo);
     virtual ~FolderIsNoSelectProxyEvent();
     NS_IMETHOD HandleEvent();
-    FolderQueryInfo m_folderQueryInfo;
+    FolderQueryInfo* m_folderQueryInfo;
 };
 
 struct SetupHeaderParseStreamProxyEvent : public nsImapMailFolderSinkProxyEvent

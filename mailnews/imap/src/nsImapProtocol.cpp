@@ -236,6 +236,12 @@ nsImapProtocol::nsImapProtocol() :
 	m_hostName = nsnull;
 
 	m_progressStringId = 0;
+
+    // subscription
+    m_autoSubscribe = PR_TRUE;
+    m_autoUnsubscribe = PR_TRUE;
+    m_autoSubscribeOnOpen = PR_TRUE;
+    m_deletableChildren = nsnull;
 	// where should we do this? Perhaps in the factory object?
 	if (!IMAP)
 		IMAP = PR_NewLogModule("IMAP");
@@ -706,7 +712,7 @@ void nsImapProtocol::EstablishServerConnection()
                              this,                  // for access to current
                                                     // entry and monitor
                              nil,
-							 TRUE);
+							 PR_TRUE);
         
         fFEEventQueue->AdoptEventToEnd(feFinishConnectionEvent);
         IMAP_YIELD(PR_INTERVAL_NO_WAIT);
@@ -727,7 +733,7 @@ void nsImapProtocol::EstablishServerConnection()
 			if (!XP_STRNCASECMP(serverResponse, "* OK", 4))
 			{
 				SetConnectionStatus(0);
-				preAuthSucceeded = FALSE;
+				preAuthSucceeded = PR_FALSE;
 				//if (!XP_STRNCASECMP(serverResponse, "* OK Netscape IMAP4rev1 Service 3.0", 35))
 				//	GetServerStateParser().SetServerIsNetscape30Server();
 			}
@@ -739,12 +745,12 @@ void nsImapProtocol::EstablishServerConnection()
 				GetServerStateParser().PreauthSetAuthenticatedState();
 
 				// tell the master that we're authenticated
-				XP_Bool loginSucceeded = TRUE;
+				PRBool loginSucceeded = PR_TRUE;
 				TImapFEEvent *alertEvent = 
 					new TImapFEEvent(msgSetUserAuthenticated,  // function to call
 							 this,                // access to current entry
 							 (void *)loginSucceeded,
-							 TRUE);            
+							 PR_TRUE);            
 				if (alertEvent)
 				{
 					fFEEventQueue->AdoptEventToEnd(alertEvent);
@@ -752,7 +758,7 @@ void nsImapProtocol::EstablishServerConnection()
 				else
 					HandleMemoryFailure();
 
-				preAuthSucceeded = TRUE;
+				preAuthSucceeded = PR_TRUE;
            		if (fCurrentBiffState == MSG_BIFF_Unknown)
            		{
            			fCurrentBiffState = MSG_BIFF_NoMail;
@@ -771,7 +777,7 @@ void nsImapProtocol::EstablishServerConnection()
 					AlertUserEvent_UsingId(MK_MSG_IMAP_SERVER_NOT_IMAP4);
 					SetCurrentEntryStatus(-1);			
 					SetConnectionStatus(-1);        // stop netlib
-					preAuthSucceeded = FALSE;
+					preAuthSucceeded = PR_FALSE;
 				}
 				else
 				{
@@ -782,11 +788,11 @@ void nsImapProtocol::EstablishServerConnection()
 			}
 			else
 			{
-				preAuthSucceeded = FALSE;
+				preAuthSucceeded = PR_FALSE;
 				SetConnectionStatus(MK_BAD_CONNECT);
 			}
 
-			fNeedGreeting = FALSE;
+			fNeedGreeting = PR_FALSE;
 			FREEIF(serverResponse);
 		}
         else
@@ -903,7 +909,7 @@ void nsImapProtocol::ProcessCurrentURL()
                                                       // url.
     }
     m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
-	PseudoInterrupt(FALSE);	// clear this, because we must be done interrupting?
+	PseudoInterrupt(PR_FALSE);	// clear this, because we must be done interrupting?
     nsCOMPtr<nsISupports> copyState;
 
 	if (m_runningUrl)
@@ -1296,7 +1302,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
     {
 		// OK, code here used to check explicitly for multiple connections to the inbox,
 		// but the connection pool stuff should handle this now.
-    	PRBool selectIssued = FALSE;
+    	PRBool selectIssued = PR_FALSE;
         if (GetServerStateParser().GetIMAPstate() == nsImapServerResponseParser::kFolderSelected)
         {
             if (GetServerStateParser().GetSelectedMailboxName() && 
@@ -1307,7 +1313,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 	Close();
                 if (GetServerStateParser().LastCommandSuccessful()) 
                 {
-                	selectIssued = TRUE;
+                	selectIssued = PR_TRUE;
 					AutoSubscribeToMailboxIfNecessary(mailboxName);
                     SelectMailbox(mailboxName);
                 }
@@ -1315,7 +1321,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
             else if (!GetServerStateParser().GetSelectedMailboxName())
             {       // why are we in the selected state with no box name?
                 SelectMailbox(mailboxName);
-                selectIssued = TRUE;
+                selectIssued = PR_TRUE;
             }
             else
             {
@@ -1328,7 +1334,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 						Check();
 					else
             			Noop();	// I think this is needed when we're using a cached connection
-					m_needNoop = FALSE;
+					m_needNoop = PR_FALSE;
 				}
             }
         }
@@ -1337,7 +1343,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
             // go to selected state
 			AutoSubscribeToMailboxIfNecessary(mailboxName);
             SelectMailbox(mailboxName);
-            selectIssued = TRUE;
+            selectIssued = PR_TRUE;
         }
 
 		if (selectIssued)
@@ -1388,7 +1394,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 
 					WaitForFEEventCompletion();
 					// need to update the mailbox count - is this a good place?
-					ProcessMailboxUpdate(FALSE);	// handle uidvalidity change
+					ProcessMailboxUpdate(PR_FALSE);	// handle uidvalidity change
 				}
 				break;
             case nsIImapUrl::nsImapMsgFetch:
@@ -1470,7 +1476,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 						// to do it by parts:  when viewing a message, or its source
 						// Some times when we're NOT allowed:  when forwarding a message, saving it, moving it, etc.
 #ifdef DOING_MPOD
-						PRBool allowedToBreakApart = (ce  && !DeathSignalReceived()) ? ce->URL_s->allow_content_change : FALSE;
+						PRBool allowedToBreakApart = (ce  && !DeathSignalReceived()) ? ce->URL_s->allow_content_change : PR_FALSE;
 
 						if (gMIMEOnDemand &&
 							allowedToBreakApart && 
@@ -1514,7 +1520,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 							// it in chunks.
 							SetContentModified(IMAP_CONTENT_NOT_MODIFIED);
 							FetchTryChunking(messageIdString, kEveryThingRFC822,
-								bMessageIdsAreUids, NULL, messageSize, TRUE);
+								bMessageIdsAreUids, NULL, messageSize, PR_TRUE);
 						}
 					}
 				}
@@ -1525,7 +1531,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 				// note fall through to next cases.
 			case nsIImapUrl::nsImapSelectFolder:
 			case nsIImapUrl::nsImapSelectNoopFolder:
-            	ProcessMailboxUpdate(TRUE);
+            	ProcessMailboxUpdate(PR_TRUE);
 				break;
             case nsIImapUrl::nsImapMsgHeader:
             {
@@ -1578,7 +1584,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 					}
 
 					deleteMsg->onlineFolderName = convertedCanonicalName;
-					deleteMsg->deleteAllMsgs = FALSE;
+					deleteMsg->deleteAllMsgs = PR_FALSE;
                     deleteMsg->msgIdString   = messageIdString.ToNewCString();	// storage adopted, do not delete
 					if (m_imapMessageSink)
                     	m_imapMessageSink->NotifyMessageDeleted(this, deleteMsg);
@@ -1627,9 +1633,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 					}
                 
 				}
-#ifdef HAVE_PORT
                 DeleteSubFolders(mailboxName);
-#endif
             }
 			break;
 			case nsIImapUrl::nsImapAppendDraftFromFile:
@@ -1663,7 +1667,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
                         
                 ProcessStoreFlags(messageIdString, bMessageIdsAreUids,
-                                  msgFlags, FALSE);
+                                  msgFlags, PR_FALSE);
                     
             }
 			break;
@@ -1673,9 +1677,9 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
                         
                 ProcessStoreFlags(messageIdString, bMessageIdsAreUids,
-                                  msgFlags, TRUE);
+                                  msgFlags, PR_TRUE);
                 ProcessStoreFlags(messageIdString, bMessageIdsAreUids,
-                                  ~msgFlags, FALSE);
+                                  ~msgFlags, PR_FALSE);
             }
 			break;
             case nsIImapUrl::nsImapBiff:
@@ -1773,7 +1777,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
             }
 			default:
 				if (GetServerStateParser().LastCommandSuccessful() && !uidValidityOk)
-        			ProcessMailboxUpdate(FALSE);	// handle uidvalidity change
+        			ProcessMailboxUpdate(PR_FALSE);	// handle uidvalidity change
 				break;
 			}
         }
@@ -1790,7 +1794,7 @@ void nsImapProtocol::AutoSubscribeToMailboxIfNecessary(const char *mailboxName)
 	if (fFolderNeedsSubscribing)	// we don't know about this folder - we need to subscribe to it / list it.
 	{
 		fHierarchyNameState = kListingForInfoOnly;
-		List(mailboxName, FALSE);
+		List(mailboxName, PR_FALSE);
 		fHierarchyNameState = kNoOperationInProgress;
 
 		// removing and freeing it as we go.
@@ -1806,10 +1810,10 @@ void nsImapProtocol::AutoSubscribeToMailboxIfNecessary(const char *mailboxName)
 		if (total > 0)
 		{
 			// Subscribe to it, if the pref says so
-			if (TIMAPHostInfo::GetHostIsUsingSubscription(fCurrentUrl->GetUrlHost()) && fAutoSubscribeOnOpen)
+			if (TIMAPHostInfo::GetHostIsUsingSubscription(fCurrentUrl->GetUrlHost()) && m_autoSubscribeOnOpen)
 			{
 				XP_Bool lastReportingErrors = GetServerStateParser().GetReportingErrors();
-				GetServerStateParser().SetReportingErrors(FALSE);
+				GetServerStateParser().SetReportingErrors(PR_FALSE);
 				Subscribe(mailboxName);
 				GetServerStateParser().SetReportingErrors(lastReportingErrors);
 			}
@@ -1818,12 +1822,12 @@ void nsImapProtocol::AutoSubscribeToMailboxIfNecessary(const char *mailboxName)
 			// so that we can continue to perform operations on it, at least
 			// for this session.
 			fHierarchyNameState = kNoOperationInProgress;
-			List(mailboxName, FALSE);
+			List(mailboxName, PR_FALSE);
 		}
 
 		// We should now be subscribed to it, and have it in our folder lists
 		// and panes.  Even if something failed, we don't want to try this again.
-		fFolderNeedsSubscribing = FALSE;
+		fFolderNeedsSubscribing = PR_FALSE;
 
 	}
 #endif
@@ -1920,7 +1924,7 @@ nsImapProtocol::AdjustChunkSize()
 	PRInt32 t32;
 
 	m_endTime = PR_Now();
-	m_trackingTime = FALSE;
+	m_trackingTime = PR_FALSE;
 	PRTime t;
 	LL_SUB(t, m_endTime, m_startTime);
 	if (! LL_GE_ZERO(t))
@@ -2055,7 +2059,7 @@ void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePa
 				}
 				break;
 			default:
-				NS_ASSERTION(FALSE, "we should only be pipelining MIME headers and Message headers");
+				NS_ASSERTION(PR_FALSE, "we should only be pipelining MIME headers and Message headers");
 				break;
 			}
 
@@ -2106,7 +2110,7 @@ nsImapProtocol::FetchMessage(nsCString &messageIds,
 			if (m_trackingTime)
 				AdjustChunkSize();			// we started another segment
 			m_startTime = PR_Now();			// save start of download time
-			m_trackingTime = TRUE;
+			m_trackingTime = PR_TRUE;
 			if (GetServerStateParser().ServerHasIMAP4Rev1Capability())
 			{
 				if (GetServerStateParser().GetCapabilityFlag() & kHasXSenderCapability)
@@ -2335,7 +2339,7 @@ void nsImapProtocol::FetchTryChunking(nsCString &messageIds,
 			!GetServerStateParser().ContinueParse()))
 		{
 			AbortMessageDownLoad();
-			PseudoInterrupt(FALSE);
+			PseudoInterrupt(PR_FALSE);
 		}
 	}
 	else
@@ -2390,7 +2394,7 @@ void nsImapProtocol::PipelinedFetchMessageParts(nsCString &uid, nsIMAPMessagePar
 				}
 				break;
 			default:
-				NS_ASSERTION(FALSE, "we should only be pipelining MIME headers and Message headers");
+				NS_ASSERTION(PR_FALSE, "we should only be pipelining MIME headers and Message headers");
 				break;
 			}
 
@@ -2423,7 +2427,7 @@ void
 nsImapProtocol::AddXMozillaStatusLine(uint16 /* flags */) // flags not use now
 {
 	static char statusLine[] = "X-Mozilla-Status: 0201\r\n";
-	HandleMessageDownLoadLine(statusLine, FALSE);
+	HandleMessageDownLoadLine(statusLine, PR_FALSE);
 }
 
 void
@@ -2515,7 +2519,7 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
 	{
 		if (!PL_strncmp("From: ", localMessageLine, 6))
 		{
-			m_fromHeaderSeen = TRUE;
+			m_fromHeaderSeen = PR_TRUE;
 			if (PL_strstr(localMessageLine, xSenderInfo) != NULL)
 				AddXMozillaStatusLine(0);
 			GetServerStateParser().FreeXSenderInfo();
@@ -2633,11 +2637,11 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
 	    		// if this string started with a '-', then this is an undo of a delete
 	    		// if its a '+' its a redo
 	    		if (firstChar == '-')
-					Store(undoIds, "-FLAGS (\\Deleted)", TRUE);	// most servers will fail silently on a failure, deal with it?
+					Store(undoIds, "-FLAGS (\\Deleted)", PR_TRUE);	// most servers will fail silently on a failure, deal with it?
 	    		else  if (firstChar == '+')
-					Store(undoIds, "+FLAGS (\\Deleted)", TRUE);	// most servers will fail silently on a failure, deal with it?
+					Store(undoIds, "+FLAGS (\\Deleted)", PR_TRUE);	// most servers will fail silently on a failure, deal with it?
 				else 
-					NS_ASSERTION(FALSE, "bogus undo Id's");
+					NS_ASSERTION(PR_FALSE, "bogus undo Id's");
 			}
 		}
     	
@@ -2651,7 +2655,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
 		if (!added || (added == deleted))
 		{
 			nsCString idsToFetch("1:*");
-			FetchMessage(idsToFetch, kFlags, TRUE);	// id string shows uids
+			FetchMessage(idsToFetch, kFlags, PR_TRUE);	// id string shows uids
 			// lets see if we should expunge during a full sync of flags.
 			if (!DeathSignalReceived())	// only expunge if not reading messages manually and before fetching new
 			{
@@ -2668,7 +2672,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
 			fetchStr.Append(":*");
 
 			// sprintf(fetchStr, "%ld:*", GetServerStateParser().HighestRecordedUID() + 1);
-			FetchMessage(fetchStr, kFlags, TRUE);			// only new messages please
+			FetchMessage(fetchStr, kFlags, PR_TRUE);			// only new messages please
 		}
     }
     else if (!DeathSignalReceived())
@@ -2767,7 +2771,7 @@ void nsImapProtocol::WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRU
     PR_EnterMonitor(m_fetchMsgListMonitor);
     while(!m_fetchMsgListIsNew && !DeathSignalReceived())
         PR_Wait(m_fetchMsgListMonitor, sleepTime);
-    m_fetchMsgListIsNew = FALSE;
+    m_fetchMsgListIsNew = PR_FALSE;
 
     *msgIdList = m_fetchMsgIdList;
     msgCount   = m_fetchCount;
@@ -2782,7 +2786,7 @@ void nsImapProtocol::WaitForPotentialListOfBodysToFetch(PRUint32 **msgIdList, PR
     PR_EnterMonitor(m_fetchBodyListMonitor);
     while(!m_fetchBodyListIsNew && !DeathSignalReceived())
         PR_Wait(m_fetchBodyListMonitor, sleepTime);
-    m_fetchBodyListIsNew = FALSE;
+    m_fetchBodyListIsNew = PR_FALSE;
 
     *msgIdList = m_fetchBodyIdList;
     msgCount   = m_fetchBodyCount;
@@ -2803,7 +2807,7 @@ NS_IMETHODIMP nsImapProtocol::NotifyHdrsToDownload(PRUint32 *keys, PRUint32 keyC
     PR_EnterMonitor(m_fetchMsgListMonitor);
     m_fetchMsgIdList = keys;
     m_fetchCount  	= keyCount;
-    m_fetchMsgListIsNew = TRUE;
+    m_fetchMsgListIsNew = PR_TRUE;
     PR_Notify(m_fetchMsgListMonitor);
     PR_ExitMonitor(m_fetchMsgListMonitor);
 	return NS_OK;
@@ -2816,7 +2820,7 @@ NS_IMETHODIMP nsImapProtocol::NotifyBodysToDownload(PRUint32 *keys, PRUint32 key
     PR_EnterMonitor(m_fetchBodyListMonitor);
     m_fetchBodyIdList = keys;
     m_fetchBodyCount  	= keyCount;
-    m_fetchBodyListIsNew = TRUE;
+    m_fetchBodyListIsNew = PR_TRUE;
     PR_Notify(m_fetchBodyListMonitor);
     PR_ExitMonitor(m_fetchBodyListMonitor);
 	return NS_OK;
@@ -2854,7 +2858,7 @@ void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsI
    		AllocateImapUidString(msgUids + msgsDownloaded, msgsToDownload, idString);	// 20 * 200
 
 		// except I don't think this works ### DB
-		FetchMessage(idString,  fields, TRUE);                  // msg ids are uids                 
+		FetchMessage(idString,  fields, PR_TRUE);                  // msg ids are uids                 
 
 		msgsDownloaded += msgsToDownload;
 		msgCountLeft -= msgsToDownload;
@@ -2904,7 +2908,7 @@ void nsImapProtocol::PeriodicBiff()
 			//sprintf(fetchStr, "%ld:%ld", id, id + GetServerStateParser().NumberOfMessages() - fFlagState->GetNumberOfMessages());
 			fetchStr.Append(id, 10);
 			fetchStr.Append(":*"); 
-			FetchMessage(fetchStr, kFlags, TRUE);
+			FetchMessage(fetchStr, kFlags, PR_TRUE);
 
 			if (((PRUint32) m_flagState.GetHighestNonDeletedUID() >= id) && m_flagState.IsLastMessageUnseen())
 				m_currentBiffState = nsMsgBiffState_NewMail;
@@ -2926,9 +2930,9 @@ void nsImapProtocol::SendSetBiffIndicatorEvent(nsMsgBiffState newState)
     m_imapMiscellaneousSink->SetBiffStateAndUpdate(this, newState);
 
  	if (newState == nsMsgBiffState_NewMail)
-		m_mailToFetch = TRUE;
+		m_mailToFetch = PR_TRUE;
 	else
-		m_mailToFetch = FALSE;
+		m_mailToFetch = PR_FALSE;
     WaitForFEEventCompletion();
 }
 
@@ -3053,7 +3057,7 @@ PRUint32 nsImapProtocol::GetMessageSize(nsCString &messageId,
                 GetImapHostName(), userName, folderFromParser,
                 nsForMailbox);
 
-			char *nonUTF7ConvertedName = CreateUtf7ConvertedString(folderFromParser, FALSE);
+			char *nonUTF7ConvertedName = CreateUtf7ConvertedString(folderFromParser, PR_FALSE);
 			if (nonUTF7ConvertedName)
 				folderFromParser = nonUTF7ConvertedName;
 
@@ -3133,7 +3137,7 @@ PRUint32 nsImapProtocol::CountMessagesInIdString(const char *idString)
 	{
 		// This is in the form <id>,<id>, or <id1>:<id2>
 		char curChar = *uidString;
-		PRBool isRange = FALSE;
+		PRBool isRange = PR_FALSE;
 		PRInt32	curToken;
 		PRInt32	saveStartToken=0;
 
@@ -3185,7 +3189,7 @@ PRBool nsImapProtocol::DeathSignalReceived()
 
 PRBool nsImapProtocol::GetPseudoInterrupted()
 {
-	PRBool rv = FALSE;
+	PRBool rv = PR_FALSE;
 	PR_EnterMonitor(m_pseudoInterruptMonitor);
 	rv = m_pseudoInterrupted;
 	PR_ExitMonitor(m_pseudoInterruptMonitor);
@@ -3259,7 +3263,7 @@ void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char 
 
 		aclRightsInfo->hostName = PL_strdup(GetImapHostName());
 
-		char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, FALSE);
+		char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, PR_FALSE);
 		if (nonUTF7ConvertedName)
 			mailboxName = nonUTF7ConvertedName;
 
@@ -3283,7 +3287,7 @@ void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char 
 
 		if (aclRightsInfo->hostName && 
             aclRightsInfo->mailboxName && aclRightsInfo->rights && 
-			userName ? (aclRightsInfo->userName != NULL) : TRUE)
+			userName ? (aclRightsInfo->userName != NULL) : PR_TRUE)
 		{
             if (m_imapExtensionSink)
             {
@@ -3344,7 +3348,7 @@ void nsImapProtocol::ClearAllFolderRights(const char *mailboxName,
     nsIMAPACLRightsInfo *aclRightsInfo = new nsIMAPACLRightsInfo();
 	if (aclRightsInfo)
 	{
-		char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, FALSE);
+		char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, PR_FALSE);
 		if (nonUTF7ConvertedName)
 			mailboxName = nonUTF7ConvertedName;
 
@@ -3514,7 +3518,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
             if (canonicalSubDir.Length() &&
                 PL_strstr(adoptedBoxSpec->allocatedPathName,
                           canonicalSubDir.GetBuffer()))
-                m_onlineBaseFolderExists = TRUE;
+                m_onlineBaseFolderExists = PR_TRUE;
 
             if (ns && nsPrefix)	// if no personal namespace, there can be no Trash folder
 			{
@@ -3600,7 +3604,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
                               eListMyChildren) &&
                              (!useSubscription || GetSubscribingNow()))
 					{
-						NS_ASSERTION (FALSE, 
+						NS_ASSERTION (PR_FALSE, 
                                       "we should never get here anymore");
                     	SetMailboxDiscoveryStatus(eContinue);
 					}
@@ -3628,12 +3632,14 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
             if (canonicalSubDir.Length() &&
                 PL_strstr(adoptedBoxSpec->allocatedPathName,
                           canonicalSubDir.GetBuffer()))
-                m_onlineBaseFolderExists = TRUE;
+                m_onlineBaseFolderExists = PR_TRUE;
         }
         break;
     case kDeleteSubFoldersInProgress:
         {
-            m_deletableChildren.AppendElement((void*)
+            NS_ASSERTION(m_deletableChildren, 
+                         "Oops .. null m_deletableChildren\n");
+            m_deletableChildren->AppendElement((void*)
                 adoptedBoxSpec->allocatedPathName);
 			delete adoptedBoxSpec->flagState;
             PR_FREEIF( adoptedBoxSpec);
@@ -3659,7 +3665,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
 		}
 		break;
     default:
-        NS_ASSERTION (FALSE, "we aren't supposed to be here");
+        NS_ASSERTION (PR_FALSE, "we aren't supposed to be here");
         break;
 	}
 }
@@ -3954,9 +3960,9 @@ void nsImapProtocol::HandleCurrentUrlError()
 		{
 			notSelectedSpec->allocatedPathName = fCurrentUrl->CreateCanonicalSourceFolderPathString();
 			notSelectedSpec->hostName = fCurrentUrl->GetUrlHost();
-			notSelectedSpec->folderSelected = FALSE;
+			notSelectedSpec->folderSelected = PR_FALSE;
 			notSelectedSpec->flagState = NULL;
-			notSelectedSpec->onlineVerified = FALSE;
+			notSelectedSpec->onlineVerified = PR_FALSE;
 			UpdatedMailboxSpec(notSelectedSpec);
 		}
 	}
@@ -4356,36 +4362,29 @@ char * nsImapProtocol::OnCreateServerDestinationFolderPathString()
 void nsImapProtocol::OnCreateFolder(const char * aSourceMailbox)
 {
 	NS_ASSERTION(0, "on create folder is not implemented yet");
-#ifdef UNREADY_CODE
-           PR_Bool created = CreateMailboxRespectingSubscriptions(aSourceMailbox);
-            if (created)
-			{
-				List(aSourceMailbox, PR_FALSE);
-			}
-			else
-				FolderNotCreated(aSourceMailbox);
-#endif
+    PRBool created = CreateMailboxRespectingSubscriptions(aSourceMailbox);
+    if (created)
+    {
+        List(aSourceMailbox, PR_FALSE);
+    }
+    else
+        FolderNotCreated(aSourceMailbox);
 }
 
-void nsImapProtocol::OnSubscribe(const char * aSourceMailbox)
+void nsImapProtocol::OnSubscribe(const char * sourceMailbox)
 {
-	NS_ASSERTION(0, "subscribe is not implemented yet");
-#ifdef UNREADY_CODE
 	Subscribe(sourceMailbox);
-#endif
 }
 
-void nsImapProtocol::OnUnsubscribe(const char * aSourceMailbox)
+void nsImapProtocol::OnUnsubscribe(const char * sourceMailbox)
 {
 	// When we try to auto-unsubscribe from \Noselect folders,
 	// some servers report errors if we were already unsubscribed
 	// from them.
-#ifdef UNREADY_CODE
 	PRBool lastReportingErrors = GetServerStateParser().GetReportingErrors();
-	GetServerStateParser().SetReportingErrors(FALSE);
+	GetServerStateParser().SetReportingErrors(PR_FALSE);
 	Unsubscribe(sourceMailbox);
 	GetServerStateParser().SetReportingErrors(lastReportingErrors);
-#endif
 }
 
 void nsImapProtocol::OnRefreshACLForFolder(const char *mailboxName)
@@ -4565,20 +4564,359 @@ void nsImapProtocol::OnUpgradeToSubscription()
 #endif
 }
 
-void nsImapProtocol::OnDeleteFolder(const char * aSourceMailbox)
+// Returns PR_TRUE if the mailbox is a NoSelect mailbox.
+// If we don't know about it, returns PR_FALSE.
+PRBool nsImapProtocol::MailboxIsNoSelectMailbox(const char *mailboxName)
 {
-#ifdef UNREADY_CODE
+	FolderQueryInfo *value = (FolderQueryInfo *)PR_MALLOC(sizeof(FolderQueryInfo));
+	PRBool rv = PR_FALSE;
+
+	if (!value) return PR_FALSE;
+
+	nsIMAPNamespace *nsForMailbox = nsnull;
+    m_hostSessionList->GetNamespaceForMailboxForHost(GetImapHostName(),
+                                                     GetImapUserName(),
+                                                     mailboxName, nsForMailbox);
+	// NS_ASSERTION (nsForMailbox, "Oops .. null nsForMailbox\n");
+
+	char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, PR_FALSE);
+	if (nonUTF7ConvertedName)
+		mailboxName = nonUTF7ConvertedName;
+
+	if (nsForMailbox)
+		m_runningUrl->AllocateCanonicalPath(mailboxName,
+                                            nsForMailbox->GetDelimiter(),
+                                            &value->name);
+	else
+		m_runningUrl->AllocateCanonicalPath(mailboxName,
+                                            kOnlineHierarchySeparatorUnknown, 
+                                            &value->name);
+	PR_FREEIF(nonUTF7ConvertedName);
+
+	if (!value->name)
+	{
+		PR_Free(value);
+		return PR_FALSE;
+	}
+
+	value->hostName = PL_strdup(GetImapHostName());
+	if (!value->hostName)
+	{
+		PL_strfree(value->name);
+		PR_Free(value);
+		return PR_FALSE;
+	}
+
+    m_imapMailFolderSink->FolderIsNoSelect(this, value);
+    WaitForFEEventCompletion();
+
+	rv = value->rv;
+	PL_strfree(value->hostName);
+	PL_strfree(value->name);
+	PR_Free(value);
+	return rv;
+}
+
+// returns PR_TRUE is the delete succeeded (regardless of subscription changes)
+PRBool nsImapProtocol::DeleteMailboxRespectingSubscriptions(const char *mailboxName)
+{
+	PRBool rv = PR_TRUE;
+	if (!MailboxIsNoSelectMailbox(mailboxName))
+	{
+		// Only try to delete it if it really exists
+		DeleteMailbox(mailboxName);
+		rv = GetServerStateParser().LastCommandSuccessful();
+	}
+
+	// We can unsubscribe even if the mailbox doesn't exist.
+	if (rv && m_autoUnsubscribe) // auto-unsubscribe is on
+	{
+		PRBool reportingErrors = GetServerStateParser().GetReportingErrors();
+		GetServerStateParser().SetReportingErrors(PR_FALSE);
+		Unsubscribe(mailboxName);
+		GetServerStateParser().SetReportingErrors(reportingErrors);
+
+	}
+	return (rv);
+}
+
+// returns PR_TRUE is the rename succeeded (regardless of subscription changes)
+// reallyRename tells us if we should really do the rename (PR_TRUE) or if we should just move subscriptions (PR_FALSE)
+PRBool nsImapProtocol::RenameMailboxRespectingSubscriptions(const char *existingName, const char *newName, PRBool reallyRename)
+{
+	PRBool rv = PR_TRUE;
+	if (reallyRename && !MailboxIsNoSelectMailbox(existingName))
+	{
+		RenameMailbox(existingName, newName);
+		rv = GetServerStateParser().LastCommandSuccessful();
+	}
+	
+	if (rv)
+	{
+		if (m_autoSubscribe)	// if auto-subscribe is on
+		{
+			PRBool reportingErrors = GetServerStateParser().GetReportingErrors();
+			GetServerStateParser().SetReportingErrors(PR_FALSE);
+			Subscribe(newName);
+			GetServerStateParser().SetReportingErrors(reportingErrors);
+		}
+		if (m_autoUnsubscribe) // if auto-unsubscribe is on
+		{
+			PRBool reportingErrors = GetServerStateParser().GetReportingErrors();
+			GetServerStateParser().SetReportingErrors(PR_FALSE);
+			Unsubscribe(existingName);
+			GetServerStateParser().SetReportingErrors(reportingErrors);
+		}
+	}
+	return (rv);
+}
+
+PRBool nsImapProtocol::RenameHierarchyByHand(const char *oldParentMailboxName,
+                                             const char *newParentMailboxName)
+{
+	PRBool renameSucceeded = PR_TRUE;
+    char onlineDirSeparator = kOnlineHierarchySeparatorUnknown;
+	m_deletableChildren = new nsVoidArray();
+
+	PRBool nonHierarchicalRename = 
+        ((GetServerStateParser().GetCapabilityFlag() & kNoHierarchyRename)
+         || MailboxIsNoSelectMailbox(oldParentMailboxName));
+
+	if (m_deletableChildren)
+	{
+		m_hierarchyNameState = kDeleteSubFoldersInProgress;
+		nsIMAPNamespace *ns = nsnull;
+        m_hostSessionList->GetNamespaceForMailboxForHost(GetImapHostName(),
+                                                         GetImapUserName(), 
+                                                         oldParentMailboxName,
+                                                         ns);	// for delimiter
+		if (!ns)
+		{
+			if (!PL_strcasecmp(oldParentMailboxName, "INBOX"))
+                m_hostSessionList->GetDefaultNamespaceOfTypeForHost(GetImapHostName(),
+                                                                    GetImapUserName(), 
+                                                                    kPersonalNamespace,
+                                                                    ns);
+		}
+		if (ns)
+		{
+            nsCString pattern = oldParentMailboxName;
+            pattern += ns->GetDelimiter();
+            PRBool isUsingSubscription = PR_FALSE;
+            m_hostSessionList->GetHostIsUsingSubscription(GetImapHostName(),
+                                                          GetImapUserName(),
+                                                          isUsingSubscription);
+
+            if (isUsingSubscription)
+                Lsub(pattern, PR_FALSE);
+            else
+                List(pattern, PR_FALSE);
+		}
+		m_hierarchyNameState = kNoOperationInProgress;
+		
+		if (GetServerStateParser().LastCommandSuccessful())
+			renameSucceeded =	// rename this, and move subscriptions 
+                RenameMailboxRespectingSubscriptions(oldParentMailboxName,
+                                                     newParentMailboxName, PR_TRUE);
+		
+		PRInt32 numberToDelete = m_deletableChildren->Count();
+        PRInt32 childIndex;
+		
+		for (childIndex = 1; 
+             (childIndex <= numberToDelete) && renameSucceeded; childIndex++)
+		{
+			// the imap parser has already converted to a non UTF7 string in the canonical
+			// format so convert it back
+			char *currentName = (char *) m_deletableChildren->ElementAt(childIndex);
+		    if (currentName)
+		    {
+		    	char *serverName = nsnull;
+                m_runningUrl->AllocateServerPath(currentName,
+                                                 onlineDirSeparator,
+                                                 &serverName);
+		    	char *convertedName = serverName ? 
+                    CreateUtf7ConvertedString(serverName, PR_TRUE) : (char *)NULL;
+		    	PR_FREEIF(serverName);
+		    	currentName = convertedName;
+		    }
+		    
+		    // calculate the new name and do the rename
+		    nsCString newChildName = newParentMailboxName;
+            newChildName += (currentName + PL_strlen(oldParentMailboxName));
+            RenameMailboxRespectingSubscriptions(currentName,
+                                                 newChildName.GetBuffer(), 
+                                                 nonHierarchicalRename);	
+            // pass in xNonHierarchicalRename to determine if we should really
+            // reanme, or just move subscriptions
+            renameSucceeded = GetServerStateParser().LastCommandSuccessful();
+		    PR_FREEIF(currentName);
+		}
+		
+        delete m_deletableChildren;
+		m_deletableChildren = nsnull;
+	}
+
+	return renameSucceeded;
+}
+
+PRBool nsImapProtocol::DeleteSubFolders(const char* selectedMailbox)
+{
+	PRBool deleteSucceeded = PR_TRUE;
+	m_deletableChildren = new nsVoidArray();
+	
+	if (m_deletableChildren)
+	{
+		m_hierarchyNameState = kDeleteSubFoldersInProgress;
+        nsCString pattern = selectedMailbox;
+        char onlineDirSeparator = kOnlineHierarchySeparatorUnknown;
+        m_runningUrl->GetOnlineSubDirSeparator(&onlineDirSeparator);
+        pattern.Append(onlineDirSeparator);
+
+		if (pattern.Length())
+		{
+			List(pattern.GetBuffer(), PR_FALSE);
+		}
+		m_hierarchyNameState = kNoOperationInProgress;
+		
+		// this should be a short list so perform a sequential search for the
+		// longest name mailbox.  Deleting the longest first will hopefully
+        // prevent the server from having problems about deleting parents
+        // ** jt - why? I don't understand this.
+		PRInt32 numberToDelete = m_deletableChildren->Count();
+        PRInt32 outerIndex, innerIndex;
+		
+		deleteSucceeded = GetServerStateParser().LastCommandSuccessful();
+		for (outerIndex = 1; 
+             (outerIndex <= numberToDelete) && deleteSucceeded;
+             outerIndex++)
+		{
+			char* longestName = nsnull;
+			for (innerIndex = 1; 
+                 innerIndex <= m_deletableChildren->Count();
+                 innerIndex++)
+			{
+				char *currentName = 
+                    (char *) m_deletableChildren->ElementAt(innerIndex);
+				if (!longestName || 
+                    PL_strlen(longestName) < PL_strlen(currentName))
+                {
+					longestName = currentName;
+                }
+			}
+			m_deletableChildren->RemoveElement(longestName);
+			
+			// the imap parser has already converted to a non UTF7 string in
+            // the canonical format so convert it back
+		    if (longestName)
+		    {
+		    	char *serverName = nsnull;
+                m_runningUrl->AllocateServerPath(longestName,
+                                                 onlineDirSeparator,
+                                                 &serverName);
+		    	char *convertedName = serverName ?
+                    CreateUtf7ConvertedString(serverName, PR_TRUE) : 0;
+		    	PR_FREEIF(serverName);
+		    	PR_Free(longestName);
+		    	longestName = convertedName;
+		    }
+			
+			// some imap servers include the selectedMailbox in the list of 
+			// subfolders of the selectedMailbox.  Check for this so we don't
+            // delete the selectedMailbox (usually the trash and doing an
+            // empty trash) 			
+			// The Cyrus imap server ignores the "INBOX.Trash" constraining
+            // string passed to the list command.  Be defensive and make sure
+            // we only delete children of the trash
+			if (longestName && 
+				PL_strcmp(selectedMailbox, longestName) &&
+				!PL_strncmp(selectedMailbox, longestName,
+                            PL_strlen(selectedMailbox)))
+			{	
+	            PRBool deleted =
+                    DeleteMailboxRespectingSubscriptions(longestName);
+				if (deleted)
+					FolderDeleted(longestName);
+				deleteSucceeded = deleted;
+			}
+			PR_FREEIF(longestName);
+		}
+	
+		delete m_deletableChildren;
+		m_deletableChildren = nsnull;
+	}
+	return deleteSucceeded;
+}
+
+void nsImapProtocol::FolderDeleted(const char *mailboxName)
+{
+    char *convertedName = CreateUtf7ConvertedString(mailboxName,FALSE);
+    char onlineDelimiter = kOnlineHierarchySeparatorUnknown;
+    char *orphanedMailboxName = nsnull;
+
+    if (convertedName)
+    {
+        m_runningUrl->AllocateCanonicalPath(convertedName, onlineDelimiter,
+                                            &orphanedMailboxName);
+        m_imapMailFolderSink->OnlineFolderDelete(this, orphanedMailboxName);
+    }
+
+    PR_FREEIF(convertedName);
+    PR_FREEIF(orphanedMailboxName);
+}
+
+void nsImapProtocol::FolderNotCreated(const char *folderName)
+{
+    if (folderName)
+        m_imapMailFolderSink->OnlineFolderCreateFailed(this, folderName);
+}
+
+void nsImapProtocol::FolderRenamed(const char *oldName,
+                                   const char *newName)
+{
+    char onlineDelimiter = kOnlineHierarchySeparatorUnknown;
+
+    if ((m_hierarchyNameState == kNoOperationInProgress) ||
+		(m_hierarchyNameState == kListingForInfoAndDiscovery))
+
+    {
+    	char *oldConvertedName = CreateUtf7ConvertedString(oldName,FALSE);
+    	char *newConvertedName = CreateUtf7ConvertedString(newName,FALSE);
+    	
+    	if (oldConvertedName && newConvertedName)
+    	{
+	        folder_rename_struct *orphanRenameStruct = 
+                (folder_rename_struct *) PR_MALLOC(sizeof(folder_rename_struct));
+			orphanRenameStruct->fHostName = PL_strdup(GetImapHostName());
+            m_runningUrl->AllocateCanonicalPath(oldConvertedName,
+                                                onlineDelimiter,
+                                                &orphanRenameStruct->fOldName);
+            m_runningUrl->AllocateCanonicalPath(newConvertedName,
+                                                onlineDelimiter,
+                                                &orphanRenameStruct->fNewName);
+
+            m_imapMailFolderSink->OnlineFolderRename(this,
+                                                     orphanRenameStruct);
+            PR_FREEIF(orphanRenameStruct->fHostName);
+            PR_FREEIF (orphanRenameStruct->fOldName);
+            PR_FREEIF(orphanRenameStruct->fNewName);
+            PR_FREEIF(orphanRenameStruct);
+        }
+        PR_FREEIF(oldConvertedName);
+        PR_FREEIF(newConvertedName);
+    }
+}
+
+void nsImapProtocol::OnDeleteFolder(const char * sourceMailbox)
+{
     PRBool deleted = DeleteSubFolders(sourceMailbox);
     if (deleted)
         deleted = DeleteMailboxRespectingSubscriptions(sourceMailbox);
 	if (deleted)
 		FolderDeleted(sourceMailbox);
-#endif
 }
 
-void nsImapProtocol::OnRenameFolder(const char * aSourceMailbox)
+void nsImapProtocol::OnRenameFolder(const char * sourceMailbox)
 {
-#ifdef UNREADY_CODE
 	char *destinationMailbox = OnCreateServerDestinationFolderPathString();
 
 	if (destinationMailbox)
@@ -4591,46 +4929,39 @@ void nsImapProtocol::OnRenameFolder(const char * aSourceMailbox)
 	}
 	else
 		HandleMemoryFailure();
-#endif
 }
 
-void nsImapProtocol::OnMoveFolderHierarchy(const char * aSourceMailbox)
+void nsImapProtocol::OnMoveFolderHierarchy(const char * sourceMailbox)
 {
-#ifdef UNREADY_CODE
 	char *destinationMailbox = OnCreateServerDestinationFolderPathString();
 
     if (destinationMailbox)
     {
-        // worst case length
-        char *newBoxName = (char *) PR_ALLOC(PL_Strlen(destinationMailbox) +
-                                             PL_Strlen(sourceMailbox) + 2);
-        if (newBoxName)
-        {
-            char onlineDirSeparator = fCurrentUrl->GetOnlineSubDirSeparator();
-            XP_STRCPY(newBoxName, destinationMailbox);
+        nsCString newBoxName;
+        char onlineDirSeparator = kOnlineHierarchySeparatorUnknown;
+
+        m_runningUrl->GetOnlineSubDirSeparator(&onlineDirSeparator);
+        newBoxName = destinationMailbox;
+
+        nsCString oldBoxName = sourceMailbox;
+        PRInt32 leafStart = oldBoxName.RFindChar(onlineDirSeparator);
+        PRInt32 length = oldBoxName.Length();
+        nsCString leafName;
+
+        if (-1 == leafStart)
+            leafName = oldBoxName;	// this is a root level box
+        else
+            oldBoxName.Right(leafName, length-(leafStart+1));
             
-            char *leafSeparator = XP_STRRCHR(sourceMailbox, onlineDirSeparator);
-            if (!leafSeparator)
-                leafSeparator = sourceMailbox;	// this is a root level box
-            else
-                leafSeparator++;
-            
-            if ( *newBoxName && ( *(newBoxName + XP_STRLEN(newBoxName) - 1) != onlineDirSeparator))
-            {
-                char separatorStr[2];
-                separatorStr[0] = onlineDirSeparator;
-                separatorStr[1] = 0;
-                XP_STRCAT(newBoxName, separatorStr);
-            }
-            XP_STRCAT(newBoxName, leafSeparator);
-			XP_Bool renamed = RenameHierarchyByHand(sourceMailbox, newBoxName);
-	        if (renamed)
-	            FolderRenamed(sourceMailbox, newBoxName);
-        }
+        newBoxName.Append(onlineDirSeparator);
+        newBoxName.Append(leafName);
+        PRBool  renamed = RenameHierarchyByHand(sourceMailbox,
+                                                newBoxName.GetBuffer());
+        if (renamed)
+            FolderRenamed(sourceMailbox, newBoxName);
     }
     else
     	HandleMemoryFailure();
-#endif
 }
 
 void nsImapProtocol::FindMailboxesIfNecessary()
@@ -4695,7 +5026,7 @@ void nsImapProtocol::DiscoverMailboxList()
 				// mscott -> WARNING!!! i where are we going to get this
                 // global variable for unusued name spaces from??? *wince*
 				// dmb - we should get this from a per-host preference,
-				// I'd say. But for now, just make it TRUE;
+				// I'd say. But for now, just make it PR_TRUE;
 				if (!gHideUnusedNamespaces && *prefix &&
                     PL_strcasecmp(prefix, "INBOX."))	// only do it for
                     // non-empty namespace prefixes, and for non-INBOX prefix 
@@ -4772,7 +5103,7 @@ void nsImapProtocol::DiscoverMailboxList()
 				else
 				{
 					List(pattern.GetBuffer(), PR_TRUE);
-					List(pattern2.GetBuffer(), TRUE);
+					List(pattern2.GetBuffer(), PR_TRUE);
 				}
 			}
 		}
@@ -4793,7 +5124,7 @@ void nsImapProtocol::DiscoverMailboxList()
 	if (GetServerStateParser().ServerHasACLCapability())
 	{
 		PRInt32 total = m_listedMailboxList.Count(), cnt = 0;
-		GetServerStateParser().SetReportingErrors(FALSE);
+		GetServerStateParser().SetReportingErrors(PR_FALSE);
 		if (total)
 		{
 			ProgressEventFunctionUsingId(IMAP_GETTING_ACL_FOR_FOLDER);
@@ -4851,7 +5182,7 @@ PRBool nsImapProtocol::FolderNeedsACLInitialized(const char *folderName)
 	//TImapFEEvent *folderACLInitEvent = 
 	//    new TImapFEEvent(MOZTHREAD_FolderNeedsACLInitialized,               // function to call
 	//                    this,                                              // access to current entry/context
-	//                    value, FALSE);
+	//                    value, PR_FALSE);
 
 	rv = value->rv;
 	PR_Free(value->hostName);
@@ -4897,9 +5228,9 @@ void nsImapProtocol::MailboxDiscoveryFinished()
 				m_runningUrl->AllocateServerPath(trashName, ns->GetDelimiter(), &onlineTrashName);
 				if (onlineTrashName)
 				{
-    				GetServerStateParser().SetReportingErrors(FALSE);
+    				GetServerStateParser().SetReportingErrors(PR_FALSE);
     				PRBool created = CreateMailboxRespectingSubscriptions(onlineTrashName);
-    				GetServerStateParser().SetReportingErrors(TRUE);
+    				GetServerStateParser().SetReportingErrors(PR_TRUE);
     				
     				// force discovery of new trash folder.
     				if (created)
@@ -4922,20 +5253,18 @@ void nsImapProtocol::MailboxDiscoveryFinished()
     }
 }
 
-// returns TRUE is the create succeeded (regardless of subscription changes)
+// returns PR_TRUE is the create succeeded (regardless of subscription changes)
 PRBool nsImapProtocol::CreateMailboxRespectingSubscriptions(const char *mailboxName)
 {
 	CreateMailbox(mailboxName);
 	PRBool rv = GetServerStateParser().LastCommandSuccessful();
 	if (rv)
 	{
-		// mscott hack alert!!! what are we going to do about auto subscribe??????
-		PRBool fAutoSubscribe = PR_TRUE;
-		if (fAutoSubscribe) // auto-subscribe is on
+		if (m_autoSubscribe) // auto-subscribe is on
 		{
 			// create succeeded - let's subscribe to it
 			PRBool reportingErrors = GetServerStateParser().GetReportingErrors();
-			GetServerStateParser().SetReportingErrors(FALSE);
+			GetServerStateParser().SetReportingErrors(PR_FALSE);
 			OnSubscribe(mailboxName);
 			GetServerStateParser().SetReportingErrors(reportingErrors);
 		}
@@ -4959,6 +5288,47 @@ void nsImapProtocol::CreateMailbox(const char *mailboxName)
 
 	nsresult rv = SendData(command.GetBuffer());
     if(NS_SUCCEEDED(rv))
+        ParseIMAPandCheckForNewMail();
+}
+
+void nsImapProtocol::DeleteMailbox(const char *mailboxName)
+{
+    ProgressEventFunctionUsingIdWithString (IMAP_STATUS_DELETING_MAILBOX, mailboxName);
+
+    IncrementCommandTagNumber();
+    
+    char *escapedName = CreateEscapedMailboxName(mailboxName);
+    nsCString command(GetServerCommandTag());
+    command += " delete \"";
+    command += escapedName;
+    command += "\"" CRLF;
+    delete []escapedName;
+    
+    nsresult rv = SendData(command.GetBuffer());
+    if (NS_SUCCEEDED(rv))
+        ParseIMAPandCheckForNewMail();
+}
+
+void nsImapProtocol::RenameMailbox(const char *existingName, 
+                                   const char *newName)
+{
+    ProgressEventFunctionUsingIdWithString (IMAP_STATUS_RENAMING_MAILBOX, existingName);
+    
+	IncrementCommandTagNumber();
+    
+    char *escapedExistingName = CreateEscapedMailboxName(existingName);
+    char *escapedNewName = CreateEscapedMailboxName(newName);
+    nsCString command(GetServerCommandTag());
+    command += " rename \"";
+    command += escapedExistingName;
+    command += "\" \"";
+    command += escapedNewName;
+    command += "\"" CRLF;
+    delete []escapedExistingName;
+    delete []escapedNewName;
+            
+    nsresult rv = SendData(command.GetBuffer());
+    if (NS_SUCCEEDED(rv))
         ParseIMAPandCheckForNewMail();
 }
 
@@ -5081,7 +5451,7 @@ void nsImapProtocol::Unsubscribe(const char *mailboxName)
 
 void nsImapProtocol::Search(nsCString &searchCriteria,
 									  PRBool useUID, 
-									  PRBool notifyHit /* TRUE */)
+									  PRBool notifyHit /* PR_TRUE */)
 {
 	m_notifySearchHit = notifyHit;
     ProgressEventFunctionUsingId (IMAP_STATUS_SEARCH_MAILBOX);
@@ -5152,7 +5522,7 @@ void nsImapProtocol::NthLevelChildList(const char* onlineMailboxPrefix,
         {
             pattern += suffix;
             count++;
-            List(pattern.GetBuffer(), FALSE);
+            List(pattern.GetBuffer(), PR_FALSE);
         }
         PR_Free(utf7ListArg);
     }
@@ -5179,6 +5549,7 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
 			break;
 	}
 
+#if 0
 	// all of the other states require the following extra step...
     // even though we don't have to to be legal protocol, Close any select mailbox
     // so we don't miss any info these urls might change for the selected folder
@@ -5190,9 +5561,10 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
 		// However, append message can happen either in a selected state or authenticated state
 		if (imapAction != nsIImapUrl::nsImapAppendMsgFromFile /* kAppendMsgFromFile */)
 		{
-			PR_ASSERT(FALSE);
+			PR_ASSERT(PR_FALSE);
 		}
 	}
+#endif 
 
 	switch (imapAction)
 	{
@@ -5314,7 +5686,7 @@ void nsImapProtocol::ProcessAfterAuthenticated()
 					new TImapFEEvent(msgSetMailServerURLs,  // function to call
 									 this,                // access to current entry
 									 (void *) fCurrentUrl->GetUrlHost(),
-									 TRUE);            
+									 PR_TRUE);            
 				if (alertEvent)
 				{
 					fFEEventQueue->AdoptEventToEnd(alertEvent);
@@ -5333,7 +5705,7 @@ void nsImapProtocol::ProcessAfterAuthenticated()
 					new TImapFEEvent(msgSetMailAccountURL,  // function to call
 									 this,                // access to current entry
 									 (void *) fCurrentUrl->GetUrlHost(),
-									 TRUE);
+									 PR_TRUE);
 				if (alertEvent)
 				{
 					fFEEventQueue->AdoptEventToEnd(alertEvent);
@@ -5490,7 +5862,7 @@ PRBool nsImapProtocol::TryToLogon()
 			PRBool prefBool = PR_TRUE;
 
 			PRBool lastReportingErrors = GetServerStateParser().GetReportingErrors();
-			GetServerStateParser().SetReportingErrors(FALSE);	// turn off errors - we'll put up our own.
+			GetServerStateParser().SetReportingErrors(PR_FALSE);	// turn off errors - we'll put up our own.
 #ifdef UNREADY_CODE
 			PREF_GetBoolPref("mail.auth_login", &prefBool);
 #endif
@@ -5632,7 +6004,7 @@ nsIMAPMailboxInfo::nsIMAPMailboxInfo(const char *name, char delimiter) :
 {
 	m_mailboxName = name;
 	m_delimiter = delimiter;
-	m_childrenListed = FALSE;
+	m_childrenListed = PR_FALSE;
 }
 
 nsIMAPMailboxInfo::~nsIMAPMailboxInfo()

@@ -480,7 +480,10 @@ nsImapMailFolderSinkProxy::FolderIsNoSelect(nsIImapProtocol* aProtocol,
         if(nsnull == ev)
             res = NS_ERROR_OUT_OF_MEMORY;
         else
+        {
+            ev->SetNotifyCompletion(PR_TRUE);
             ev->PostEvent(m_eventQueue);
+        }
     }
     else
     {
@@ -2203,33 +2206,18 @@ FolderIsNoSelectProxyEvent::FolderIsNoSelectProxyEvent(
     nsImapMailFolderSinkProxyEvent(aProxy)
 {
     NS_ASSERTION (aInfo, "Ooops... null folder query info");
-    if (aInfo)
-    {
-        m_folderQueryInfo.name = PL_strdup(aInfo->name);
-        m_folderQueryInfo.hostName = PL_strdup(aInfo->hostName);
-        m_folderQueryInfo.rv = aInfo->rv;
-    }
-    else
-    {
-        m_folderQueryInfo.name = nsnull;
-        m_folderQueryInfo.hostName = nsnull;
-        m_folderQueryInfo.rv = PR_FALSE;
-    }
+    m_folderQueryInfo = aInfo;
 }
 
 FolderIsNoSelectProxyEvent::~FolderIsNoSelectProxyEvent()
 {
-    if (m_folderQueryInfo.name)
-        PL_strfree(m_folderQueryInfo.name);
-    if (m_folderQueryInfo.hostName)
-        PL_strfree(m_folderQueryInfo.hostName);
 }
 
 NS_IMETHODIMP
 FolderIsNoSelectProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMailFolderSink->FolderIsNoSelect(
-        m_proxy->m_protocol, &m_folderQueryInfo);
+        m_proxy->m_protocol, m_folderQueryInfo);
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;

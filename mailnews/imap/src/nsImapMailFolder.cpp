@@ -572,27 +572,10 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash()
     if (NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIMsgDatabase> trashDB;
+
+        rv = trashFolder->Delete(); // delete summary spec
         rv = trashFolder->GetMsgDatabase(getter_AddRefs(trashDB));
-        if (NS_SUCCEEDED(rv))
-        {
-            trashDB->ForceClosed();
-            trashDB = null_nsCOMPtr();
-        }
-        nsCOMPtr<nsIFileSpec> pathSpec;
-        rv = trashFolder->GetPath(getter_AddRefs(pathSpec));
-        if (NS_SUCCEEDED(rv))
-        {
-            nsFileSpec fileSpec;
-            rv = pathSpec->GetFileSpec(&fileSpec);
-            if (NS_SUCCEEDED(rv))
-            {
-                nsLocalFolderSummarySpec summarySpec(fileSpec);
-                if (summarySpec.Exists())
-                    summarySpec.Delete(PR_FALSE);
-            }
-        }
-        
-        rv = trashFolder->GetMsgDatabase(getter_AddRefs(trashDB));
+
         nsCOMPtr<nsIUrlListener> urlListener =
             do_QueryInterface(trashFolder);
 
@@ -607,6 +590,27 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash()
 NS_IMETHODIMP nsImapMailFolder::Delete ()
 {
     nsresult rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIMsgDatabase> thisDb;
+    rv = GetMsgDatabase(getter_AddRefs(thisDb));
+    if (NS_SUCCEEDED(rv))
+    {
+        thisDb->ForceClosed();
+        thisDb = null_nsCOMPtr();
+    }
+
+    nsCOMPtr<nsIFileSpec> pathSpec;
+    rv = GetPath(getter_AddRefs(pathSpec));
+    if (NS_SUCCEEDED(rv))
+    {
+        nsFileSpec fileSpec;
+        rv = pathSpec->GetFileSpec(&fileSpec);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsLocalFolderSummarySpec summarySpec(fileSpec);
+            if (summarySpec.Exists())
+                summarySpec.Delete(PR_FALSE);
+        }
+    }
     return rv;
 }
 
@@ -1410,6 +1414,13 @@ NS_IMETHODIMP nsImapMailFolder::OnlineFolderRename(
     nsIImapProtocol* aProtocol, folder_rename_struct* aStruct) 
 {
     nsresult rv = NS_ERROR_FAILURE;
+    if (aStruct && aStruct->fNewName && *aStruct->fNewName)
+    {
+        nsCOMPtr<nsIMsgFolder> rootFolder;
+        rv = GetRootFolder(getter_AddRefs(rootFolder));
+        if (NS_SUCCEEDED(rv))
+            rv = rootFolder->CreateSubfolder(aStruct->fNewName);
+    }
 	return rv;
 }
 
@@ -1430,7 +1441,9 @@ NS_IMETHODIMP nsImapMailFolder::PromptUserForSubscribeUpdatePath(
 NS_IMETHODIMP nsImapMailFolder::FolderIsNoSelect(nsIImapProtocol* aProtocol,
 												 FolderQueryInfo* aInfo)
 {
-	nsresult rv = NS_ERROR_FAILURE;
+	nsresult rv = NS_OK;
+    if (aInfo)
+        aInfo->rv = PR_FALSE; // ** jt -- temporary hack
 	return rv;
 }
 
