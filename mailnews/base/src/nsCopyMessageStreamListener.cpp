@@ -28,6 +28,7 @@
 #include "nsIRDFService.h"
 #include "nsIRDFNode.h"
 #include "nsRDFCID.h"
+#include "nsIMsgImapMailFolder.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -187,7 +188,10 @@ NS_IMETHODIMP nsCopyMessageStreamListener::OnStopRequest(nsIChannel * aChannel, 
 		// put it in the destination!
 		if(moveMessage)
 		{
-			rv = DeleteMessage(uri, mSrcFolder);
+			// don't do this if we're moving to an imap folder - that's handled elsewhere.
+			nsCOMPtr <nsIMsgImapMailFolder> destImap = do_QueryInterface(mDestination);
+			if (!destImap)
+				rv = DeleteMessage(uri, mSrcFolder);
 		}
 	}
 	//Even if the above actions failed we probably still want to return NS_OK.  There should probably
