@@ -458,7 +458,7 @@
                      observes="month_view_command"/>
 
       <toolbaritem id="throbber-box" align="center" pack="center">
-         <button id="navigator-throbber2" 
+         <button id="navigator-throbber" 
                  oncommand="openAboutDialog();"
                  tooltiptext="&aboutCmd.label;"/>
       </toolbaritem>

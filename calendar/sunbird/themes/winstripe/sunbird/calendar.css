@@ -227,7 +227,7 @@
  *   Throbber button
  *-------------------------------------------------------------------*/
 
-#navigator-throbber2 {
+#navigator-throbber {
   -moz-appearance: none;
   -moz-user-focus: ignore;
   margin: 0 !important;
