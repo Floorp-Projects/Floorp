@@ -26,6 +26,7 @@
 #include "xfe.h"
 #include "fonts.h"
 #include "e_kit.h"
+#include "prefapi.h"
 
 #include <Xm/PushBP.h>		/* For fast updating of the button pixmap... */
 
