@@ -51,8 +51,6 @@ BUILD_TOOLS	= $(topsrcdir)/build/unix
 CONFIG_TOOLS	= $(DEPTH)/config
 AUTOCONF_TOOLS	= $(topsrcdir)/build/autoconf
 
-PERL            = perl
-
 #
 # Tweak the default OS_ARCH and OS_RELEASE macros as needed.
 #
