@@ -44,7 +44,9 @@ INTERNAL_TOOLS	= 1
 
 # autoconf.mk must be deleted last (from the top-level directory)
 # because it is included by every makefile.
-DIST_GARBAGE	= nsprincl.mk nsprincl.sh
+DIST_GARBAGE	= nsprincl.mk nsprincl.sh nspr-config
+
+RELEASE_BINS	= nspr-config
 
 include $(topsrcdir)/config/config.mk
 
@@ -127,6 +129,7 @@ if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); else true; fi
 endef
 
 export:: $(TARGETS)
+	$(RM) -f $(dist_bindir)/nspr-config
 
 $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
@@ -135,3 +138,7 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 else
 	$(CC) $(XCFLAGS) $< $(XLDOPTS) $(OUTOPTION)$@
 endif
+
+real_install:: nspr.m4
+	$(NSINSTALL) -D $(DESTDIR)$(datadir)/aclocal
+	$(NSINSTALL) -t -m 0644 $< $(DESTDIR)$(datadir)/aclocal
