@@ -68,7 +68,8 @@ nsCommonWidget::InitPaintEvent(nsPaintEvent &aEvent)
   aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
 }
 
-void nsCommonWidget::InitSizeEvent(nsSizeEvent &aEvent)
+void
+nsCommonWidget::InitSizeEvent(nsSizeEvent &aEvent)
 {
   memset(&aEvent, 0, sizeof(nsSizeEvent));
   aEvent.eventStructType = NS_SIZE_EVENT;
@@ -76,10 +77,60 @@ void nsCommonWidget::InitSizeEvent(nsSizeEvent &aEvent)
   aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
 }
 
-void nsCommonWidget::InitGUIEvent(nsGUIEvent &aEvent, PRUint32 aMsg)
+void
+nsCommonWidget::InitGUIEvent(nsGUIEvent &aEvent, PRUint32 aMsg)
 {
   memset(&aEvent, 0, sizeof(nsGUIEvent));
   aEvent.eventStructType = NS_GUI_EVENT;
+  aEvent.message = aMsg;
+  aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
+}
+
+void
+nsCommonWidget::InitMouseEvent(nsMouseEvent &aEvent, PRUint32 aMsg)
+{
+  memset(&aEvent, 0, sizeof(nsMouseEvent));
+  aEvent.eventStructType = NS_MOUSE_EVENT;
+  aEvent.message = aMsg;
+  aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
+}
+
+void
+nsCommonWidget::InitButtonEvent(nsMouseEvent &aEvent, PRUint32 aMsg,
+				GdkEventButton *aGdkEvent)
+{
+  memset(&aEvent, 0, sizeof(nsMouseEvent));
+  aEvent.eventStructType = NS_MOUSE_EVENT;
+  aEvent.message = aMsg;
+  aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
+
+  aEvent.point.x = nscoord(aGdkEvent->x);
+  aEvent.point.y = nscoord(aGdkEvent->y);
+
+  aEvent.isShift   = aGdkEvent->state & GDK_SHIFT_MASK;
+  aEvent.isControl = aGdkEvent->state & GDK_CONTROL_MASK;
+  aEvent.isAlt     = aGdkEvent->state & GDK_MOD1_MASK;
+  aEvent.isMeta    = PR_FALSE; // Gtk+ doesn't have meta
+
+  switch (aGdkEvent->type) {
+  case GDK_2BUTTON_PRESS:
+    aEvent.clickCount = 2;
+    break;
+  case GDK_3BUTTON_PRESS:
+    aEvent.clickCount = 3;
+    break;
+    // default is one click
+  default:
+    aEvent.clickCount = 1;
+  }
+
+}
+
+void
+nsCommonWidget::InitMouseScrollEvent(nsMouseScrollEvent &aEvent, PRUint32 aMsg)
+{
+  memset(&aEvent, 0, sizeof(nsMouseScrollEvent));
+  aEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
   aEvent.message = aMsg;
   aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
 }

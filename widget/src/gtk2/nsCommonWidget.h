@@ -38,6 +38,7 @@
 
 #include "nsBaseWidget.h"
 #include "nsGUIEvent.h"
+#include <gdk/gdkevents.h>
 
 class nsCommonWidget : public nsBaseWidget {
  public:
@@ -52,6 +53,10 @@ class nsCommonWidget : public nsBaseWidget {
   void InitPaintEvent(nsPaintEvent &aEvent);
   void InitSizeEvent(nsSizeEvent &aEvent);
   void InitGUIEvent(nsGUIEvent &aEvent, PRUint32 aMsg);
+  void InitMouseEvent(nsMouseEvent &aEvent, PRUint32 aMsg);
+  void InitButtonEvent(nsMouseEvent &aEvent, PRUint32 aMsg,
+		       GdkEventButton *aEvent);
+  void InitMouseScrollEvent(nsMouseScrollEvent &aEvent, PRUint32 aMsg);
   NS_IMETHOD DispatchEvent(nsGUIEvent *aEvent,
 			   nsEventStatus &aStatus);
 

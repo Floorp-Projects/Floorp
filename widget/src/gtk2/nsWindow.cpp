@@ -36,16 +36,27 @@
 #include "nsWindow.h"
 #include "nsToolkit.h"
 #include "nsIRenderingContext.h"
+#include "nsIRegion.h"
 
 #include <gtk/gtkwindow.h>
 #include <gdk/gdkx.h>
 
-static gboolean expose_event_cb   (GtkWidget *widget,
-				   GdkEventExpose *event);
-static gboolean configure_event_cb(GtkWidget *widget,
-				   GdkEventConfigure *event);
-static gboolean delete_event_cb   (GtkWidget *widget,
-				   GdkEventAny *event);
+static gboolean expose_event_cb         (GtkWidget *widget,
+					 GdkEventExpose *event);
+static gboolean configure_event_cb      (GtkWidget *widget,
+					 GdkEventConfigure *event);
+static gboolean delete_event_cb         (GtkWidget *widget,
+					 GdkEventAny *event);
+static gboolean enter_notify_event_cb   (GtkWidget *widget,
+					 GdkEventCrossing *event);
+static gboolean leave_notify_event_cb   (GtkWidget *widget,
+				         GdkEventCrossing *event);
+static gboolean motion_notify_event_cb  (GtkWidget *widget,
+				         GdkEventMotion *event);
+static gboolean button_press_event_cb   (GtkWidget *widget,
+				         GdkEventButton *event);
+static gboolean button_release_event_cb (GtkWidget *widget,
+					 GdkEventButton *event);
 
 nsWindow::nsWindow()
 {
@@ -292,21 +303,51 @@ nsWindow::Validate()
 NS_IMETHODIMP
 nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  GdkRectangle rect;
+
+  rect.x = mBounds.x;
+  rect.y = mBounds.y;
+  rect.width = mBounds.width;
+  rect.height = mBounds.height;
+
+  gdk_window_invalidate_rect(mDrawingarea->inner_window,
+			     &rect, TRUE);
+  if (aIsSynchronous)
+    gdk_window_process_updates(mDrawingarea->inner_window, TRUE);
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWindow::Invalidate(const nsRect &aRect,
 		     PRBool        aIsSynchronous)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  GdkRectangle rect;
+
+  rect.x = aRect.x;
+  rect.y = aRect.y;
+  rect.width = aRect.width;
+  rect.height = aRect.height;
+
+  gdk_window_invalidate_rect(mDrawingarea->inner_window,
+			     &rect, TRUE);
+  if (aIsSynchronous)
+    gdk_window_process_updates(mDrawingarea->inner_window, TRUE);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWindow::InvalidateRegion(const nsIRegion* aRegion,
 			   PRBool           aIsSynchronous)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  GdkRegion *region = nsnull;
+  aRegion->GetNativeRegion((void *)region);
+
+  gdk_window_invalidate_region(mDrawingarea->inner_window,
+			       region, TRUE);
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -354,7 +395,7 @@ nsWindow::GetNativeData(PRUint32 aDataType)
     break;
 
   case NS_NATIVE_PLUGIN_PORT:
-    NS_WARNING("nsWindow::GetNativeData plugin port not supported yet\n");
+    NS_WARNING("nsWindow::GetNativeData plugin port not supported yet");
     return nsnull;
     break;
 
@@ -368,7 +409,7 @@ nsWindow::GetNativeData(PRUint32 aDataType)
     break;
 
   default:
-    NS_WARNING("nsWindow::GetNativeData called with bad value\n");
+    NS_WARNING("nsWindow::GetNativeData called with bad value");
     return nsnull;
   }
 }
@@ -509,6 +550,11 @@ nsWindow::GetAttention()
 gboolean
 nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
 {
+  if (mIsDestroyed) {
+    NS_WARNING("Expose event on destroyed window!");
+    return NS_OK;
+  }
+
   // handle exposes for the inner window only
   if (aEvent->window != mDrawingarea->inner_window)
     return FALSE;
@@ -570,6 +616,134 @@ nsWindow::OnDeleteEvent(GtkWidget *aWidget, GdkEventAny *aEvent)
 
   event.point.x = 0;
   event.point.y = 0;
+
+  nsEventStatus status;
+  DispatchEvent(&event, status);
+}
+
+void
+nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
+{
+  nsMouseEvent event;
+  InitMouseEvent(event, NS_MOUSE_ENTER);
+
+  event.point.x = nscoord(aEvent->x);
+  event.point.y = nscoord(aEvent->y);
+
+  nsEventStatus status;
+  DispatchEvent(&event, status);
+}
+
+void
+nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
+{
+  nsMouseEvent event;
+  InitMouseEvent(event, NS_MOUSE_EXIT);
+
+  event.point.x = nscoord(aEvent->x);
+  event.point.y = nscoord(aEvent->y);
+
+  nsEventStatus status;
+  DispatchEvent(&event, status);
+}
+
+void
+nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
+{
+  nsMouseEvent event;
+  InitMouseEvent(event, NS_MOUSE_MOVE);
+
+  event.point.x = nscoord(aEvent->x);
+  event.point.y = nscoord(aEvent->y);
+
+  event.isShift   = aEvent->state & GDK_SHIFT_MASK;
+  event.isControl = aEvent->state & GDK_CONTROL_MASK;
+  event.isAlt     = aEvent->state & GDK_MOD1_MASK;
+
+  nsEventStatus status;
+  DispatchEvent(&event, status);
+}
+
+void
+nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
+{
+  nsMouseEvent  event;
+  PRUint32      eventType;
+  PRBool        isWheel;
+  nsEventStatus status;
+
+  // wheel mouse is button 4 or 5
+  isWheel = (aEvent->button == 4 || aEvent->button == 5);
+
+  if (isWheel) {
+    nsMouseScrollEvent scrollEvent;
+
+    InitMouseScrollEvent(scrollEvent, NS_MOUSE_SCROLL);
+
+    if (aEvent->button == 4)
+      scrollEvent.delta = -3;
+    else
+      scrollEvent.delta = -4;
+
+    scrollEvent.point.x = nscoord(aEvent->x);
+    scrollEvent.point.y = nscoord(aEvent->y);
+
+    scrollEvent.isShift   = aEvent->state & GDK_SHIFT_MASK;
+    scrollEvent.isControl = aEvent->state & GDK_CONTROL_MASK;
+    scrollEvent.isAlt     = aEvent->state & GDK_MOD1_MASK;
+    scrollEvent.isMeta    = PR_FALSE; // Gtk+ doesn't have meta
+
+    DispatchEvent(&scrollEvent, status);
+    return;
+  }
+
+  switch (aEvent->button) {
+  case 2:
+    eventType = NS_MOUSE_MIDDLE_BUTTON_DOWN;
+    break;
+  case 3:
+    eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
+    break;
+  default:
+    eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
+    break;
+  }
+
+  InitButtonEvent(event, eventType, aEvent);
+  
+  DispatchEvent(&event, status);
+
+  // right menu click on linux should also pop up a context menu
+  if (eventType == NS_MOUSE_RIGHT_BUTTON_DOWN) {
+    InitButtonEvent(event, NS_CONTEXTMENU, aEvent);
+    DispatchEvent(&event, status);
+  }
+}
+
+void
+nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
+{
+  nsMouseEvent  event;
+  PRUint32      eventType;
+
+  switch (aEvent->button) {
+  case 2:
+    eventType = NS_MOUSE_MIDDLE_BUTTON_UP;
+    break;
+  case 3:
+    eventType = NS_MOUSE_RIGHT_BUTTON_UP;
+    break;
+    // don't send events for these types
+  case 4:
+  case 5:
+    return;
+    break;
+  default:
+    eventType = NS_MOUSE_LEFT_BUTTON_UP;
+    break;
+  }
+
+  InitButtonEvent(event, eventType, aEvent);
 
   nsEventStatus status;
   DispatchEvent(&event, status);
@@ -725,6 +899,12 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
   if (mContainer) {
     g_signal_connect(G_OBJECT(mContainer), "expose_event",
 		     G_CALLBACK(expose_event_cb), NULL);
+    g_signal_connect(G_OBJECT(mContainer), "enter_notify_event",
+		     G_CALLBACK(enter_notify_event_cb), NULL);
+    g_signal_connect(G_OBJECT(mContainer), "leave_notify_event",
+		     G_CALLBACK(leave_notify_event_cb), NULL);
+    g_signal_connect(G_OBJECT(mContainer), "motion_notify_event",
+		     G_CALLBACK(motion_notify_event_cb), NULL);
 
   }
 
@@ -749,7 +929,8 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 // gtk callbacks
 
 /* static */
-gboolean expose_event_cb(GtkWidget *widget, GdkEventExpose *event)
+gboolean
+expose_event_cb(GtkWidget *widget, GdkEventExpose *event)
 {
   gpointer user_data;
   user_data = g_object_get_data(G_OBJECT(event->window), "nsWindow");
@@ -791,6 +972,92 @@ delete_event_cb(GtkWidget *widget, GdkEventAny *event)
   nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
 
   window->OnDeleteEvent(widget, event);
+
+  return TRUE;
+}
+
+/* static */
+gboolean
+enter_notify_event_cb (GtkWidget *widget,
+				GdkEventCrossing *event)
+{
+  gpointer user_data;
+  user_data = g_object_get_data(G_OBJECT(event->window), "nsWindow");
+
+  if (!user_data)
+    return TRUE;
+
+  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
+  
+  window->OnEnterNotifyEvent(widget, event);
+
+  return TRUE;
+}
+/* static */
+gboolean
+leave_notify_event_cb (GtkWidget *widget,
+				GdkEventCrossing *event)
+{
+  gpointer user_data;
+  user_data = g_object_get_data(G_OBJECT(event->window), "nsWindow");
+
+  if (!user_data)
+    return TRUE;
+
+  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
+  
+  window->OnLeaveNotifyEvent(widget, event);
+
+  return TRUE;
+}
+
+/* static */
+gboolean
+motion_notify_event_cb (GtkWidget *widget, GdkEventMotion *event)
+{
+  gpointer user_data;
+  user_data = g_object_get_data(G_OBJECT(event->window), "nsWindow");
+
+  if (!user_data)
+    return TRUE;
+
+  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
+
+  window->OnMotionNotifyEvent(widget, event);
+
+  return TRUE;
+}
+
+/* static */
+gboolean
+button_press_event_cb   (GtkWidget *widget, GdkEventButton *event)
+{
+  gpointer user_data;
+  user_data = g_object_get_data(G_OBJECT(event->window), "nsWindow");
+  
+  if (!user_data)
+    return TRUE;
+
+  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
+
+  window->OnButtonPressEvent(widget, event);
+
+  return TRUE;
+}
+
+/* static */
+gboolean
+button_release_event_cb (GtkWidget *widget, GdkEventButton *event)
+{
+  gpointer user_data;
+  user_data = g_object_get_data(G_OBJECT(event->window), "nsWindow");
+  
+  if (!user_data)
+    return TRUE;
+
+  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
+
+  window->OnButtonReleaseEvent(widget, event);
 
   return TRUE;
 }
