@@ -70,7 +70,7 @@
       </menupopup>
     </menulist>
     
-    <checkbox collapsed="true" id="smallicons" oncommand="updateIconSize(this.checked);" label="&useSmallIcons.label;"/>
+    <checkbox id="smallicons" oncommand="updateIconSize(this.checked);" label="&useSmallIcons.label;"/>
 
     <button label="&restoreDefaultSet.label;" oncommand="restoreDefaultSet();"/>
   </box>

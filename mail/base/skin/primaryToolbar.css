@@ -30,7 +30,23 @@
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {
+  -moz-box-orient: vertical;
+  min-width: 0px;
   list-style-image: url("chrome://messenger/skin/icons/mail-toolbar.png");
+}
+
+toolbar[mode="icons"] .toolbarbutton-text {
+  display: none;
+}
+
+toolbar[mode="text"] .toolbarbutton-menubutton-dropmarker,
+toolbar[mode="text"] .toolbarbutton-icon {
+  display: none;
+}
+
+toolbar[mode="text"] .toolbarbutton-text {
+  padding: 0 !important;
+  margin: 3px 5px !important;
 }
 
 #button-getmsg {
@@ -204,6 +220,168 @@
 } 
 
 */
+
+
+/* ::::: small primary toolbar buttons ::::: */
+
+toolbar[iconsize="small"] .toolbarbutton-1 {
+  list-style-image: url("chrome://messenger/skin/icons/mail-toolbar-small.png");
+}
+
+toolbar[iconsize="small"] #button-getmsg {
+  -moz-image-region: rect(0px 20px 20px 0px);
+}
+
+toolbar[iconsize="small"] #button-getmsg[buttonover] {
+  -moz-image-region: rect(20px 20px 40px 0px);
+} 
+
+toolbar[iconsize="small"] #button-getmsg[disabled] {
+  -moz-image-region: rect(40px 20px 60px 0px) !important;
+} 
+
+toolbar[iconsize="small"] #button-newmsg {
+  -moz-image-region: rect(0px 40px 20px 20px);
+}
+
+toolbar[iconsize="small"] #button-newmsg:hover {
+  -moz-image-region: rect(20px 40px 40px 20px);
+} 
+
+toolbar[iconsize="small"] #button-newmsg[disabled] {
+   -moz-image-region: rect(40px 40px 60px 20px) !important;
+} 
+
+toolbar[iconsize="small"] #button-address {
+  -moz-image-region: rect(0px 60px 20px 40px);
+}
+
+toolbar[iconsize="small"] #button-address:hover {
+  -moz-image-region: rect(20px 60px 40px 40px);
+} 
+
+toolbar[iconsize="small"] #button-address[disabled="true"] {
+  -moz-image-region: rect(40px 60px 60px 40px) !important;
+} 
+
+toolbar[iconsize="small"] #button-reply {
+  -moz-image-region: rect(0px 80px 20px 60px);
+}
+
+toolbar[iconsize="small"] #button-reply:hover {
+  -moz-image-region: rect(20px 80px 40px 60px);
+} 
+
+toolbar[iconsize="small"] #button-reply[disabled] {
+  -moz-image-region: rect(40px 80px 60px 60px) !important;
+} 
+
+toolbar[iconsize="small"] #button-replyall {
+  -moz-image-region: rect(0px 100px 20px 80px);
+}
+
+toolbar[iconsize="small"] #button-replyall:hover {
+  -moz-image-region: rect(20px 100px 40px 80px);
+} 
+
+toolbar[iconsize="small"] #button-replyall[disabled] {
+  -moz-image-region: rect(40px 100px 60px 80px) !important;
+} 
+
+toolbar[iconsize="small"] #button-forward {
+  -moz-image-region: rect(0px 120px 20px 100px);
+}
+
+toolbar[iconsize="small"] #button-forward:hover {
+  -moz-image-region: rect(20px 120px 40px 100px);
+} 
+
+toolbar[iconsize="small"] #button-forward[disabled] {
+  -moz-image-region: rect(40px 120px 60px 100px) !important;
+} 
+
+toolbar[iconsize="small"] #button-delete {
+  -moz-image-region: rect(0px 140px 20px 120px);
+}
+
+toolbar[iconsize="small"] #button-delete:hover {
+  -moz-image-region: rect(20px 140px 40px 120px);
+} 
+
+toolbar[iconsize="small"] #button-delete[disabled] {
+  -moz-image-region: rect(40px 140px 60px 120px) !important;
+} 
+
+toolbar[iconsize="small"] #button-junk{
+  -moz-image-region: rect(0px 160px 20px 140px);
+}
+
+toolbar[iconsize="small"] #button-junk:hover {
+  -moz-image-region: rect(20px 160px 40px 140px);
+}
+
+toolbar[iconsize="small"] #button-junk[disabled="true"] {
+  -moz-image-region: rect(40px 160px 60px 140px) !important;
+}
+
+toolbar[iconsize="small"] #button-print {
+  -moz-image-region: rect(0px 180px 20px 160px);
+}
+
+toolbar[iconsize="small"] #button-print[buttonover] {
+  -moz-image-region: rect(20px 180px 40px 160px);
+}
+
+toolbar[iconsize="small"] #button-print[buttondown] {
+  -moz-image-region: rect(20px 180px 40px 160px);
+}
+
+toolbar[iconsize="small"] #button-print[disabled] {
+  -moz-image-region: rect(40px 180px 60px 160px) !important;
+}
+
+toolbar[iconsize="small"] #button-stop {
+  -moz-image-region: rect(0px 200px 20px 180px);
+}
+
+toolbar[iconsize="small"] #button-stop:hover {
+  -moz-image-region: rect(20px 200px 40px 180px);
+} 
+
+toolbar[iconsize="small"] #button-stop[disabled="true"] {
+  -moz-image-region: rect(40px 200px 60px 180px) !important;
+}
+
+toolbar[iconsize="small"] #button-file {
+  -moz-image-region: rect(0px 220px 20px 200px);
+}
+
+toolbar[iconsize="small"] #button-file:hover {
+  -moz-image-region: rect(20px 220px 40px 200px);
+} 
+
+toolbar[iconsize="small"] #button-file:hover:active,
+toolbar[iconsize="small"] #button-file[open] {
+  -moz-image-region: rect(20px 220px 40px 200px);
+} 
+
+toolbar[iconsize="small"] #button-file[disabled] {
+  -moz-image-region: rect(40px 220px 60px 200px) !important;
+} 
+
+toolbar[iconsize="small"] #button-next {
+  -moz-image-region: rect(0px 240px 20px 220px);
+}
+
+toolbar[iconsize="small"] #button-next:hover {
+  -moz-image-region: rect(20px 240px 40px 220px);
+} 
+
+toolbar[iconsize="small"] #button-next[disabled] {
+  -moz-image-region: rect(40px 240px 60px 220px) !important;
+} 
+
+/* ::::: end small primary toolbar buttons ::::: */
 
 #junkBarImage {
   list-style-image: url("chrome://messenger/skin/icons/junkBar.gif");
