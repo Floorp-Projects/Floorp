@@ -46,6 +46,9 @@
                            ((hex-value $digit-value)))
                (:letter-e (#\E #\e) (($default-action $default-action)))
                (:letter-x (#\X #\x) (($default-action $default-action)))
+               (:letter-f (#\F #\f) (($default-action $default-action)))
+               (:letter-l (#\L #\l) (($default-action $default-action)))
+               (:letter-u (#\U #\u) (($default-action $default-action)))
                ((:literal-string-char single) (- :unicode-character (+ (#\' #\\) :line-terminator))
                 (($default-action $default-action)))
                ((:literal-string-char double) (- :unicode-character (+ (#\" #\\) :line-terminator))
@@ -59,15 +62,15 @@
        
        (rule :$next-input-element
              ((lex input-element))
-         (production :$next-input-element ($unit (:next-input-element unit)) $next-input-element-unit
+         (production :$next-input-element ($num (:next-input-element num)) $next-input-element-num
            (lex (lex :next-input-element)))
          (production :$next-input-element ($re (:next-input-element re)) $next-input-element-re
            (lex (lex :next-input-element)))
-         (production :$next-input-element ($non-re (:next-input-element div)) $next-input-element-non-re
+         (production :$next-input-element ($div (:next-input-element div)) $next-input-element-div
            (lex (lex :next-input-element))))
        
        (%text nil "The start symbols are: "
-              (:grammar-symbol (:next-input-element unit)) " if the previous input element was a number; "
+              (:grammar-symbol (:next-input-element num)) " if the previous input element was a number; "
               (:grammar-symbol (:next-input-element re)) " if the previous input element was not a number and a "
               (:character-literal #\/) " should be interpreted as a regular expression; and "
               (:grammar-symbol (:next-input-element div)) " if the previous input element was not a number and a "
@@ -79,15 +82,16 @@
        (deftuple keyword (name string))
        (deftuple punctuator (name string))
        (deftuple identifier (name string))
-       (deftuple number (value float64))
+       (deftag negated-min-long)
        (deftuple regular-expression (body string) (flags string))
        
-       (deftype token (union keyword punctuator identifier number string regular-expression))
+       (deftype token (union keyword punctuator identifier general-number (tag negated-min-long) string regular-expression))
        (deftype input-element (union (tag line-break end-of-input) token))
        
        
        (deftag syntax-error)
-       (deftype semantic-exception (tag syntax-error))
+       (deftag range-error)
+       (deftype semantic-exception (tag syntax-error range-error))
        
        (%heading 1 "Unicode Character Classes")
        (%charclass :unicode-character)
@@ -143,7 +147,7 @@
        
        (%heading 1 "Input Elements")
        
-       (grammar-argument :nu re div unit)
+       (grammar-argument :nu re div num)
        (grammar-argument :nu_2 re div)
        
        (rule (:next-input-element :nu)
@@ -152,12 +156,8 @@
            (lex (lex :input-element)))
          (production (:next-input-element div) (:white-space (:input-element div)) next-input-element-div
            (lex (lex :input-element)))
-         (production (:next-input-element unit) ((:- :continuing-identifier-character #\\) :white-space (:input-element div)) next-input-element-unit-normal
-           (lex (lex :input-element)))
-         (production (:next-input-element unit) ((:- #\_) :identifier-name) next-input-element-unit-name
-           (lex (lex-name :identifier-name)))
-         #|(production (:next-input-element unit) (#\_ :identifier-name) next-input-element-unit-underscore-name
-           (lex (lex-name :identifier-name)))|#)
+         (production (:next-input-element num) ((:- :continuing-identifier-character #\\) :white-space (:input-element div)) next-input-element-num
+           (lex (lex :input-element))))
        
        (%print-actions)
        
@@ -326,9 +326,33 @@
        
        (rule :numeric-literal ((lex token))
          (production :numeric-literal (:decimal-literal) numeric-literal-decimal
-           (lex (new number (real-to-float64 (lex-number :decimal-literal)))))
-         (production :numeric-literal (:hex-integer-literal (:- :hex-digit)) numeric-literal-hex
-           (lex (new number (real-to-float64 (lex-number :hex-integer-literal))))))
+           (lex (real-to-float64 (lex-number :decimal-literal))))
+         (production :numeric-literal (:hex-integer-literal) numeric-literal-hex
+           (lex (real-to-float64 (lex-number :hex-integer-literal))))
+         (production :numeric-literal (:decimal-literal :letter-f) numeric-literal-single
+           (lex (real-to-float32 (lex-number :decimal-literal))))
+         (production :numeric-literal (:integer-literal :letter-l) numeric-literal-long
+           (lex (begin
+                 (const i integer (lex-number :integer-literal))
+                 (cond
+                  ((<= i (- (expt 2 63) 1)) (return (new long i)))
+                  ((= i (expt 2 63)) (return negated-min-long))
+                  (nil (throw range-error))))))
+         (production :numeric-literal (:integer-literal :letter-u :letter-l) numeric-literal-unsigned-long
+           (lex (begin
+                 (const i integer (lex-number :integer-literal))
+                 (if (<= i (- (expt 2 64) 1))
+                   (return (new u-long i))
+                   (throw range-error))))))
+       
+       (rule :integer-literal ((lex-number integer))
+         (production :integer-literal (:decimal-integer-literal) integer-literal-decimal
+           (lex-number (lex-number :decimal-integer-literal)))
+         (production :integer-literal (:hex-integer-literal) integer-literal-hex
+           (lex-number (lex-number :hex-integer-literal))))
+       (%charclass :letter-f)
+       (%charclass :letter-l)
+       (%charclass :letter-u)
        (%print-actions)
        
        (rule :decimal-literal ((lex-number rational))
