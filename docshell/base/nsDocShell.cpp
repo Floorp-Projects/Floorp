@@ -207,6 +207,7 @@ nsDocShell::nsDocShell():
     mAllowImages(PR_TRUE),
     mFocusDocFirst(PR_FALSE),
     mCreatingDocument(PR_FALSE),
+    mUseErrorPages(PR_FALSE),
     mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
     mBusyFlags(BUSY_FLAGS_NONE),
     mFiredUnloadEvent(PR_FALSE),
@@ -215,7 +216,6 @@ nsDocShell::nsDocShell():
     mUseExternalProtocolHandler(PR_FALSE),
     mDisallowPopupWindows(PR_FALSE),
     mIsBeingDestroyed(PR_FALSE),
-    mUseErrorPages(PR_FALSE),
     mParent(nsnull),
     mTreeOwner(nsnull),
     mChromeEventHandler(nsnull)
@@ -1984,41 +1984,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     if (!childAsDocShell)
         return NS_OK;
 
-    // Do some docShell Specific stuff.
-    nsXPIDLString defaultCharset;
-    nsXPIDLString forceCharset;
-    float textZoom = 1.0;
-    NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIMarkupDocumentViewer> muDV =
-        do_QueryInterface(mContentViewer);
-    if (muDV) {
-        NS_ENSURE_SUCCESS(muDV->
-                          GetDefaultCharacterSet(getter_Copies(defaultCharset)),
-                          NS_ERROR_FAILURE);
-        NS_ENSURE_SUCCESS(muDV->
-                          GetForceCharacterSet(getter_Copies(forceCharset)),
-                          NS_ERROR_FAILURE);
-        NS_ENSURE_SUCCESS(muDV->
-                          GetTextZoom(&textZoom),
-                          NS_ERROR_FAILURE);
-    }
-    nsCOMPtr<nsIContentViewer> childCV;
-    NS_ENSURE_SUCCESS(childAsDocShell->
-                      GetContentViewer(getter_AddRefs(childCV)),
-                      NS_ERROR_FAILURE);
-    if (childCV) {
-        nsCOMPtr<nsIMarkupDocumentViewer> childmuDV =
-            do_QueryInterface(childCV);
-        if (childmuDV) {
-            NS_ENSURE_SUCCESS(childmuDV->SetDefaultCharacterSet(defaultCharset),
-                              NS_ERROR_FAILURE);
-            NS_ENSURE_SUCCESS(childmuDV->SetForceCharacterSet(forceCharset),
-                              NS_ERROR_FAILURE);
-            NS_ENSURE_SUCCESS(childmuDV->SetTextZoom(textZoom),
-                              NS_ERROR_FAILURE);
-        }
-    }
+    // charset and zoom will be inherited in SetupNewViewer()
 
     // Now take this document's charset and set the parentCharset field of the 
     // child's DocumentCharsetInfo to it. We'll later use that field, in the 
@@ -4422,6 +4388,15 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                       NS_ERROR_FAILURE);
     nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
 
+    nsXPIDLString defaultCharset;
+    nsXPIDLString forceCharset;
+    nsXPIDLString hintCharset;
+    PRInt32 hintCharsetSource;
+    nsXPIDLString prevDocCharset;
+    float textZoom;
+    // |newMUDV| also serves as a flag to set the data from the above vars
+    nsCOMPtr<nsIMarkupDocumentViewer> newMUDV;
+
     if (mContentViewer || parent) {
         nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
         if (mContentViewer) {
@@ -4437,44 +4412,31 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             oldMUDV = do_QueryInterface(parentContentViewer);
         }
 
-        nsXPIDLString defaultCharset;
-        nsXPIDLString forceCharset;
-        nsXPIDLString hintCharset;
-        PRInt32 hintCharsetSource;
-        nsXPIDLString prevDocCharset;
+        if (oldMUDV) {
+            nsresult rv;
 
-        nsCOMPtr<nsIMarkupDocumentViewer>
-            newMUDV(do_QueryInterface(aNewViewer));
-        if (oldMUDV && newMUDV) {
-            NS_ENSURE_SUCCESS(oldMUDV->
-                              GetDefaultCharacterSet(getter_Copies
-                                                     (defaultCharset)),
-                              NS_ERROR_FAILURE);
-            NS_ENSURE_SUCCESS(oldMUDV->
-                              GetForceCharacterSet(getter_Copies(forceCharset)),
-                              NS_ERROR_FAILURE);
-            NS_ENSURE_SUCCESS(oldMUDV->
-                              GetHintCharacterSet(getter_Copies(hintCharset)),
-                              NS_ERROR_FAILURE);
-            NS_ENSURE_SUCCESS(oldMUDV->
-                              GetHintCharacterSetSource(&hintCharsetSource),
-                              NS_ERROR_FAILURE);
-            NS_ENSURE_SUCCESS(oldMUDV->
-                              GetPrevDocCharacterSet(getter_Copies(prevDocCharset)),
-                              NS_ERROR_FAILURE);
-
-            // set the old state onto the new content viewer
-            NS_ENSURE_SUCCESS(newMUDV->SetDefaultCharacterSet(defaultCharset),
-                              NS_ERROR_FAILURE);
-            NS_ENSURE_SUCCESS(newMUDV->SetForceCharacterSet(forceCharset),
-                              NS_ERROR_FAILURE);
-            NS_ENSURE_SUCCESS(newMUDV->SetHintCharacterSet(hintCharset),
-                              NS_ERROR_FAILURE);
-            NS_ENSURE_SUCCESS(newMUDV->
-                              SetHintCharacterSetSource(hintCharsetSource),
-                              NS_ERROR_FAILURE);
-            NS_ENSURE_SUCCESS(newMUDV->SetPrevDocCharacterSet(prevDocCharset),
-                              NS_ERROR_FAILURE);
+            newMUDV = do_QueryInterface(aNewViewer,&rv);
+            if (newMUDV) {
+                NS_ENSURE_SUCCESS(oldMUDV->
+                                  GetDefaultCharacterSet(getter_Copies
+                                                         (defaultCharset)),
+                                  NS_ERROR_FAILURE);
+                NS_ENSURE_SUCCESS(oldMUDV->
+                                  GetForceCharacterSet(getter_Copies(forceCharset)),
+                                  NS_ERROR_FAILURE);
+                NS_ENSURE_SUCCESS(oldMUDV->
+                                  GetHintCharacterSet(getter_Copies(hintCharset)),
+                                  NS_ERROR_FAILURE);
+                NS_ENSURE_SUCCESS(oldMUDV->
+                                  GetHintCharacterSetSource(&hintCharsetSource),
+                                  NS_ERROR_FAILURE);
+                NS_ENSURE_SUCCESS(oldMUDV->
+                                  GetTextZoom(&textZoom),
+                                  NS_ERROR_FAILURE);
+                NS_ENSURE_SUCCESS(oldMUDV->
+                                  GetPrevDocCharacterSet(getter_Copies(prevDocCharset)),
+                                  NS_ERROR_FAILURE);
+            }
         }
     }
 
@@ -4585,6 +4547,24 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
         mContentViewer = nsnull;
         NS_ERROR("ContentViewer Initialization failed");
         return NS_ERROR_FAILURE;
+    }
+
+    // If we have old state to copy, set the old state onto the new content
+    // viewer
+    if (newMUDV) {
+        NS_ENSURE_SUCCESS(newMUDV->SetDefaultCharacterSet(defaultCharset),
+                          NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(newMUDV->SetForceCharacterSet(forceCharset),
+                          NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(newMUDV->SetHintCharacterSet(hintCharset),
+                          NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(newMUDV->
+                          SetHintCharacterSetSource(hintCharsetSource),
+                          NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(newMUDV->SetPrevDocCharacterSet(prevDocCharset),
+                          NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(newMUDV->SetTextZoom(textZoom),
+                          NS_ERROR_FAILURE);
     }
 
     // End copying block (Don't mess with the old content/document viewer

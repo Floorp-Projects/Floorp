@@ -2290,7 +2290,14 @@ SetChildTextZoom(nsIMarkupDocumentViewer* aChild, void* aClosure)
 NS_IMETHODIMP DocumentViewerImpl::SetTextZoom(float aTextZoom)
 {
   if (mDeviceContext) {
+    float oldTextZoom
+    // Don't reflow or bubble down if there's no change in the textZoom.
+    // Not having this check caused the Tp regression from bug 126346
+    mDeviceContext->GetTextZoom(&oldTextZoom);
     mDeviceContext->SetTextZoom(aTextZoom);
+    if (oldTextZoom == aTextZoom)
+      return NS_OK;
+
     if (mPresContext) {
       mPresContext->ClearStyleDataAndReflow();
     }
