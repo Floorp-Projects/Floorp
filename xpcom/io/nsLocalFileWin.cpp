@@ -503,9 +503,21 @@ nsLocalFile::ResolveAndStat()
     // this is usually correct
     mResolvedPath.Assign(mWorkingPath);
 
+    // slutty hack designed to work around bug 134796 until it is fixed
+    char temp[4];
+    const char *nsprPath = mWorkingPath.get();
+    if (mWorkingPath.Length() == 2 && mWorkingPath.CharAt(1) == ':') 
+    {
+        temp[0] = mWorkingPath[0];
+        temp[1] = mWorkingPath[1];
+        temp[2] = '\\';
+        temp[3] = '\0';
+        nsprPath = temp;
+    }
+
     // first we will see if the working path exists. If it doesn't then
     // there is nothing more that can be done
-    PRStatus status = PR_GetFileInfo64(mWorkingPath.get(), &mFileInfo64);
+    PRStatus status = PR_GetFileInfo64(nsprPath, &mFileInfo64);
     if (status != PR_SUCCESS)
         return NS_ERROR_FILE_NOT_FOUND;
 
@@ -737,7 +749,7 @@ nsLocalFile::AppendNativeInternal(const nsAFlatCString &node, PRBool multipleCom
 
     // check the relative path for validity
     const unsigned char * nodePath = (const unsigned char *) node.get();
-    if (*nodePath == '\\'                                       // can't start with an \ 
+    if (*nodePath == '\\'                                       // can't start with an '\'
         || _mbschr(nodePath, '/')                               // can't contain /
         || node.Equals(".."))                                   // can't be ..
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
@@ -758,7 +770,7 @@ nsLocalFile::AppendNativeInternal(const nsAFlatCString &node, PRBool multipleCom
         if (0 == _mbsncmp(nodePath, (unsigned char *)"..\\", 3))  // catches the remaining cases of prefixes 
             return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }
-    else if (_mbschr(nodePath, '\\'))   // single components can't contain \ 
+    else if (_mbschr(nodePath, '\\'))   // single components can't contain '\'
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     MakeDirty();
