@@ -1128,7 +1128,7 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 	if (children)
 	{
 		// traverse through all the nsWindows to find out who got hit, lowest level of course
-		children->Last();
+		children->First();
 		do
 		{
 			nsISupports* child;
@@ -1144,7 +1144,7 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 			  NS_RELEASE(child);
       }
 		}
-    while (NS_SUCCEEDED(children->Prev()));
+    while (NS_SUCCEEDED(children->Next()));
 		NS_RELEASE(children);
 	}
 
