@@ -167,32 +167,37 @@ protected:
     class Path;
     friend class Path;
 
+    struct Link;
+    friend struct Link;
+
+    // XXXwaterson Kinda gross this is all public, but I couldn't
+    // figure out a better way to detect termination in
+    // ConstIterator::Next(). It's a s3kret class anyway. This isn't
+    // contained inside nsVoidBTree::Path because doing so breaks some
+    // compilers.
+    struct Link {
+        Node*   mNode;
+        PRInt32 mIndex;
+
+        Link&
+        operator=(const Link& aOther) {
+            mNode = aOther.mNode;
+            mIndex = aOther.mIndex;
+            return *this; }
+
+        PRBool operator==(const Link& aOther) const {
+            return mNode == aOther.mNode && mIndex == aOther.mIndex; }
+
+        PRBool operator!=(const Link& aOther) const {
+            return !aOther.operator==(*this); }
+    };
+
     /**
      * A path through the b-tree, used to avoid recursion and
      * maintain state in iterators.
      */
     class NS_COM Path {
     public:
-        // XXXwaterson Kinda gross this is all public, but I couldn't
-        // figure out a better way to detect termination in
-        // ConstIterator::Next(). It's a s3kret class anyway...
-        struct Link {
-            Node*   mNode;
-            PRInt32 mIndex;
-
-            Link&
-            operator=(const Link& aOther) {
-                mNode = aOther.mNode;
-                mIndex = aOther.mIndex;
-                return *this; }
-
-            PRBool operator==(const Link& aOther) const {
-                return mNode == aOther.mNode && mIndex == aOther.mIndex; }
-
-            PRBool operator!=(const Link& aOther) const {
-                return !aOther.operator==(*this); }
-        };
-
         Link mLink[kMaxDepth];
         PRInt32 mTop;
 
