@@ -9135,13 +9135,14 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
   return rv;
 }
 
-// Helper function that searches the immediate child frames for a frame that
-// maps the specified content object
-static nsIFrame*
-FindFrameWithContent(nsIPresContext* aPresContext,
-                     nsIFrame*       aParentFrame,
-                     nsIContent*     aParentContent,
-                     nsIContent*     aContent)
+// Helper function that searches the immediate child frames 
+// (and their children if the frames are "special")
+// for a frame that maps the specified content object
+nsIFrame*
+nsCSSFrameConstructor::FindFrameWithContent(nsIPresContext* aPresContext,
+                                            nsIFrame*       aParentFrame,
+                                            nsIContent*     aParentContent,
+                                            nsIContent*     aContent)
 {
   NS_PRECONDITION(aParentFrame, "No frame to search!");
   if (!aParentFrame) {
@@ -9178,7 +9179,9 @@ keepLooking:
       // We search the immediate children only, but if the child frame has
       // the same content pointer as its parent then we need to search its
       // child frames, too
-      if (kidContent.get() == aParentContent) {
+      // We also need to search the child frames' children if the child frame
+      // is a "special" frame
+      if (kidContent.get() == aParentContent || IsFrameSpecial(aPresContext, kidFrame)) {
         nsIFrame* matchingFrame = FindFrameWithContent(aPresContext, kidFrame, aParentContent,
                                                        aContent);
 
@@ -9250,18 +9253,21 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
         break;
       }
       else { 
-        // We need to check parentFrame's sibling frame as well 
-        parentFrame->GetNextSibling(&parentFrame); 
-        if (!parentFrame) {
-          break;
+        // If this is a special frame, we need to go up the parent chain
+        // until we hit a special frame that has a next sibling.
+        nsIFrame* sibling = nsnull;
+        while (parentFrame && IsFrameSpecial(aFrameManager, parentFrame)) {
+          parentFrame->GetNextSibling(&sibling);
+          if (sibling)
+            break;
+          else
+            parentFrame->GetParent(&parentFrame);
         }
-        else {
-          nsCOMPtr<nsIContent>nextParentContent;
-          parentFrame->GetContent(getter_AddRefs(nextParentContent));
-          if (parentContent!=nextParentContent) {
-            break; 
-          }
-        } 
+
+        if (sibling && IsFrameSpecial(aFrameManager, sibling))
+          parentFrame = sibling;
+        else
+          break;
       }
     }
   }
