@@ -49,6 +49,7 @@ use vars qw(
   @legal_platform
   @legal_priority
   @legal_severity
+  @legal_keywords
   $userid
   %MFORM
   %versions
