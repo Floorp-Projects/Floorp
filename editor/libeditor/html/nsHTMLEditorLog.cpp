@@ -47,6 +47,7 @@
 #include "nsISelection.h"
 #include "nsIDOMRange.h"
 #include "nsHTMLEditorLog.h"
+#include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "prprf.h"
@@ -847,15 +848,8 @@ nsHTMLEditorLog::StartLogging(nsIFile *aLogFile)
       return result;
   }
 
-  mFileStream = do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &result);
+  result = NS_NewLocalFileOutputStream(getter_AddRefs(mFileStream), aLogFile);
   if (NS_FAILED(result)) return result;
-
-  result = mFileStream->Init(aLogFile, -1, -1, 0);
-  if (NS_FAILED(result))
-  {
-    mFileStream = nsnull;
-    return result;
-  }
 
   if (mTxnMgr)
   {

@@ -55,7 +55,7 @@ class nsHTMLEditorLog : public nsHTMLEditor,
 {
 private:
 
-  nsCOMPtr<nsIFileOutputStream>     mFileStream;
+  nsCOMPtr<nsIOutputStream>     mFileStream;
   nsEditorTxnLog       *mEditorTxnLog;
   PRInt32               mLocked;
   PRInt32               mDepth;
