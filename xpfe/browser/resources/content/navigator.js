@@ -574,7 +574,6 @@ function Shutdown()
 
   function updateGoMenu(event)
   {
-      dump("In updategomenu\n");
       if (appCore)
 	     appCore.updateGoMenu(event.target);
 	  else
