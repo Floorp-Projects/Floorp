@@ -98,44 +98,13 @@ nsScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
   nsresult  rv = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName,
                                                            aChildList);
 
-  // Get our view
-  nsIView*        myView;
-  nsIViewManager* viewManager;
-
-  GetView(myView);
-  NS_ASSERTION(nsnull != myView, "no view");
-  myView->GetViewManager(viewManager);
-
-  // Get the scrolled frame's view. Note that it must already have a view
+#ifdef NS_DEBUG
+  // Verify that the scrolled frame has a view
   nsIView*  scrolledView;
 
   mFirstChild->GetView(scrolledView);
   NS_ASSERTION(nsnull != scrolledView, "no view");
-
-  // If the scrolled view is currently inserted in the view hierarchy then
-  // remove it. We'll add it to the scrolling view below
-  nsIView*  parentView;
-  scrolledView->GetParent(parentView);
-  if (nsnull != parentView) {
-    viewManager->RemoveChild(parentView, scrolledView);
-  }
-
-  // Set it as the scrolling view's scrolled view
-  nsIScrollableView*  scrollingView;
-  myView->QueryInterface(kScrollViewIID, (void**)&scrollingView);
-  scrollingView->SetScrolledView(scrolledView);
-
-  // Get the color style info
-  const nsStyleColor* color;
-  mFirstChild->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)color);
-  
-  // If the background is transparent then inform the view manager
-  if (NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags) {
-    viewManager->SetViewContentTransparency(scrolledView, PR_TRUE);
-  }
-
-  // Set the opacity
-  viewManager->SetViewOpacity(scrolledView, color->mOpacity);
+#endif
 
   // We need to allow the view's position to be different than the
   // frame's position
@@ -144,7 +113,6 @@ nsScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
   state &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
   mFirstChild->SetFrameState(state);
 
-  NS_RELEASE(viewManager);
   return rv;
 }
 
