@@ -336,8 +336,8 @@ nsresult COtherDTD::HandleAttributeToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-nsresult COtherDTD::HandleScriptToken(CToken* aToken, nsCParserNode& aNode) {
-  return CNavDTD::HandleScriptToken(aToken, aNode);
+nsresult COtherDTD::HandleScriptToken(nsCParserNode& aNode) {
+  return CNavDTD::HandleScriptToken(aNode);
 }
 
 /**

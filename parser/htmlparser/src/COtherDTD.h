@@ -282,7 +282,7 @@ class COtherDTD : public CNavDTD {
      * @param   aToken is the script token to be handled
      * @return  TRUE if the token was handled.
      */
-    nsresult HandleScriptToken(CToken* aToken, nsCParserNode& aNode);
+    nsresult HandleScriptToken(nsCParserNode& aNode);
     
     /**
      * This method gets called when a style token has been consumed and needs 

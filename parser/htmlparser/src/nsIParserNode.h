@@ -102,7 +102,7 @@ class nsIParserNode : public nsISupports {
      * @update	gess5/11/98
      * @return  count of attributes (may be 0)
      */
-    virtual PRInt32 GetAttributeCount(void) const =0;
+    virtual PRInt32 GetAttributeCount(PRBool askToken=PR_FALSE) const =0;
 
     /**
      * Retrieve the key (of key/value pair) at given index

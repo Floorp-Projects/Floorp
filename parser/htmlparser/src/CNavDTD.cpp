@@ -745,17 +745,12 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
  */
 nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
-
-  CStartToken*  st= (CStartToken*)(aToken);
-  eHTMLTags     tokenTagType=(eHTMLTags)st->GetTypeID();
+  eHTMLTags     tokenTagType=(eHTMLTags)aToken->GetTypeID();
 
   //Begin by gathering up attributes...
   nsCParserNode attrNode((CHTMLToken*)aToken,mLineNumber); 
   PRInt16       attrCount=aToken->GetAttributeCount();
-  PRInt32       theCount;
-  nsresult      result=(0==attrCount)
-    ? NS_OK
-    : CollectAttributes(attrNode,attrCount);
+  nsresult      result=(0==attrCount) ? NS_OK : CollectAttributes(attrNode,attrCount);
 
   if(NS_OK==result) {
       //now check to see if this token should be omitted...
@@ -763,71 +758,42 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   
       switch(tokenTagType) {
 
-        case eHTMLTag_html:
-          result=OpenHTML(attrNode); break;
-
         case eHTMLTag_title:
           {
-            nsCParserNode theNode(st,mLineNumber);
-            result=OpenHead(theNode); //open the head...
+            result=OpenHead(attrNode); //open the head...
             if(NS_OK==result) {
+              PRInt32 theCount;
               result=CollectSkippedContent(attrNode,theCount);
               mSink->SetTitle(attrNode.GetSkippedContent());
-              result=CloseHead(theNode); //close the head...
+              result=CloseHead(attrNode); //close the head...
             }
           }
           break;
 
-        case eHTMLTag_textarea:
-          {
-            CollectSkippedContent(attrNode,theCount);
-            result=AddLeaf(attrNode);
-          }
-          break;
-
-        case eHTMLTag_form:
-          result = OpenForm(attrNode);
-          break;
-
+        case eHTMLTag_base:
         case eHTMLTag_meta:
         case eHTMLTag_link:
           {
-            nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
-            result=OpenHead(theNode);
+            result=OpenHead(attrNode);
             if(NS_OK==result)
               result=AddLeaf(attrNode);
             if(NS_OK==result)
-              result=CloseHead(theNode);
+              result=CloseHead(attrNode);
           }
           break;
 
         case eHTMLTag_style:
           {
-            nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
-            result=OpenHead(theNode);
+            result=OpenHead(attrNode);
             if(NS_OK==result) {
+              PRInt32 theCount;
               CollectSkippedContent(attrNode,theCount);
               if(NS_OK==result) {
                 result=AddLeaf(attrNode);
                 if(NS_OK==result)
-                  result=CloseHead(theNode);
+                  result=CloseHead(attrNode);
               }
             }
-          }
-          break;
-
-        case eHTMLTag_script:
-          result=HandleScriptToken(st, attrNode); break;
-
-        case eHTMLTag_head:
-          break; //ignore head tags...
-
-        case eHTMLTag_base:
-          result=OpenHead(attrNode);
-          if(NS_OK==result) {
-            result=AddLeaf(attrNode);
-            if(NS_OK==result)
-              result=CloseHead(attrNode);
           }
           break;
 
@@ -835,10 +801,6 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           if (mHasOpenMap) {
             result = mSink->AddLeaf(attrNode);
           }
-          break;
-
-        case eHTMLTag_map:
-          result = OpenMap(attrNode);
           break;
 
         default:
@@ -853,6 +815,8 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
   return result;
 }
+
+
 
 
 /**
@@ -1013,12 +977,11 @@ nsresult CNavDTD::HandleAttributeToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-nsresult CNavDTD::HandleScriptToken(CToken* aToken, nsCParserNode& aNode) {
-  NS_PRECONDITION(0!=aToken,kNullToken);
+nsresult CNavDTD::HandleScriptToken(nsCParserNode& aNode) {
   nsresult result=NS_OK;
 
   PRInt32 pos=GetTopmostIndexOf(eHTMLTag_body);
-  PRInt32 attrCount=aToken->GetAttributeCount();
+  PRInt32 attrCount=aNode.GetAttributeCount(PR_TRUE);
 
   if (kNotFound == pos) {
     // We're in the HEAD
@@ -1072,24 +1035,6 @@ nsresult CNavDTD::HandleStyleToken(CToken* aToken){
  * @return error code (should be 0)
  */
 PRInt32 CNavDTD::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
-/*
-  nsDequeIterator end=mParserContext->mTokenDeque.End();
-
-  int attr=0;
-  for(attr=0;attr<aCount;attr++) {
-    if(*mParserContext->mCurrentPos<end) {
-      CToken* tkn=(CToken*)(++(*mParserContext->mCurrentPos));
-      if(tkn){
-        if(eToken_attribute==eHTMLTokenTypes(tkn->GetTokenType())){
-          aNode.AddAttribute(tkn);
-        } 
-        else (*mParserContext->mCurrentPos)--;
-      }
-      else return kInterrupted;
-    }
-    else return kInterrupted;
-  }
-*/
   int attr=0;
   for(attr=0;attr<aCount;attr++){
     CToken* theToken=mParser->PeekToken();
@@ -1120,7 +1065,7 @@ PRInt32 CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
   CToken*         theToken;
   aCount=0;
   do{
-    CToken* theToken=mParser->PeekToken();
+    theToken=mParser->PeekToken();
     if(theToken) {
       theType=eHTMLTokenTypes(theToken->GetTokenType());
       if(eToken_skippedcontent==theType) {
@@ -1130,22 +1075,6 @@ PRInt32 CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
       } 
     }
   } while(theToken && (eToken_skippedcontent==theType));
-
-/*
-  eHTMLTokenTypes   subtype=eToken_attribute;
-  nsDequeIterator   end=mParserContext->mTokenDeque.End();
-
-  aCount=0;
-  while((*mParserContext->mCurrentPos!=end) && (eToken_attribute==subtype)) {
-    CToken* tkn=(CToken*)(++(*mParserContext->mCurrentPos));
-    subtype=eHTMLTokenTypes(tkn->GetTokenType());
-    if(eToken_skippedcontent==subtype) {
-      aNode.SetSkippedContent(tkn);
-      aCount++;
-    } 
-    else (*mParserContext->mCurrentPos)--;
-  }
-*/
   return result;
 }
 
@@ -1273,7 +1202,8 @@ PRBool CNavDTD::CanContainFormElement(eHTMLTags aParent,eHTMLTags aChild) const 
     eHTMLTags topTag=GetTopNode();
     switch(aChild) {
       case eHTMLTag_option:
-        result=PRBool(eHTMLTag_select==topTag); break;
+        result=HasOpenContainer(eHTMLTag_select); 
+        break;
       default:
         result=PR_TRUE;
         break;
@@ -1348,9 +1278,9 @@ static char  gTagSet3[]={
   eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
   eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
 
-  eHTMLTag_label,     eHTMLTag_legend,    eHTMLTag_li,        eHTMLTag_newline,
-      
-  eHTMLTag_noframes,
+  eHTMLTag_label,     eHTMLTag_legend,    eHTMLTag_li,        eHTMLTag_map,
+  
+  eHTMLTag_newline,   eHTMLTag_noframes,
   eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_p,         eHTMLTag_pre,
   eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
   eHTMLTag_samp,      eHTMLTag_small,     eHTMLTag_spacer,
@@ -1380,6 +1310,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
     //This hack code is here because we don't yet know what to do
     //with userdefined tags...  XXX Hack
+
   if(eHTMLTag_userdefined==aChild)  // XXX Hack: For now...
     result=PR_TRUE;
 
@@ -1400,30 +1331,30 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
   }
   else {
     switch((eHTMLTags)aParent) {
-    case eHTMLTag_address:
-      result=PRBool(0!=strchr(gTagSet2,aChild));
-      break;
+      case eHTMLTag_address:
+        result=PRBool(0!=strchr(gTagSet2,aChild));
+        break;
 
-    case eHTMLTag_applet:
-      if(eHTMLTag_param==aChild)
-        result=PR_TRUE;
-      else
-        result=PRBool(0!=strchr(gTagSet2,aChild)); 
-      break;
+      case eHTMLTag_applet:
+        if(eHTMLTag_param==aChild)
+          result=PR_TRUE;
+        else
+          result=PRBool(0!=strchr(gTagSet2,aChild)); 
+        break;
 
-    case eHTMLTag_area:
-    case eHTMLTag_base:
-    case eHTMLTag_basefont:
-    case eHTMLTag_br:
-    case eHTMLTag_embed:
-    case eHTMLTag_hr:      
-    case eHTMLTag_img:
-    case eHTMLTag_input:
-    case eHTMLTag_isindex:
-    case eHTMLTag_meta:
-    case eHTMLTag_spacer:
-    case eHTMLTag_wbr:
-      break;    //singletons can't contain anything...
+      case eHTMLTag_area:
+      case eHTMLTag_base:
+      case eHTMLTag_basefont:
+      case eHTMLTag_br:
+      case eHTMLTag_embed:
+      case eHTMLTag_hr:      
+      case eHTMLTag_img:
+      case eHTMLTag_input:
+      case eHTMLTag_isindex:
+      case eHTMLTag_meta:
+      case eHTMLTag_spacer:
+      case eHTMLTag_wbr:
+        break;    //singletons can't contain anything...
 
     case eHTMLTag_blockquote:
     case eHTMLTag_body:
@@ -1434,244 +1365,256 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         result=PRBool(0!=strchr(gTagSet1,aChild)); 
       break;
 
-    case eHTMLTag_button:
-      result=PRBool(0!=strchr(gTagSet3,aChild));
-      break;
+      case eHTMLTag_button:
+        result=PRBool(0!=strchr(gTagSet3,aChild));
+        break;
 
-    case eHTMLTag_caption:
-      result=PRBool(0!=strchr(gTagSet1,aChild));
-      break;
+      case eHTMLTag_caption:
+        result=PRBool(0!=strchr(gTagSet1,aChild));
+        break;
 
-    case eHTMLTag_center:
-      result=PRBool(0!=strchr(gTagSet1,aChild));
-      break;
+      case eHTMLTag_center:
+        result=PRBool(0!=strchr(gTagSet1,aChild));
+        break;
 
-    case eHTMLTag_col:
-    case eHTMLTag_colgroup:
-      break;    //singletons can't contain anything...
+      case eHTMLTag_col:
+      case eHTMLTag_colgroup:
+        break;    //singletons can't contain anything...
 
-    case eHTMLTag_dt:
-      {
-        static char  datalistTags[]={eHTMLTag_dt,eHTMLTag_dd,0};
+      case eHTMLTag_dt:
+        {
+          static char  datalistTags[]={eHTMLTag_dt,eHTMLTag_dd,0};
 
-        if(0!=strchr(datalistTags,aChild)) {
-          result=PR_TRUE;
-        }
-        else
-          result=PRBool(0!=strchr(gTagSet1,aChild));
-      }
-      break;
-
-    case eHTMLTag_dd:
-    case eHTMLTag_div:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
-
-    case eHTMLTag_dl:
-      {
-        char okTags[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_whitespace,
-                       eHTMLTag_newline,eHTMLTag_p,0};
-        result=PRBool(0!=strchr(okTags,aChild));
-      }
-      break;
-
-    case eHTMLTag_fieldset:
-      if(eHTMLTag_legend==aChild)
-        result=PR_TRUE;
-      else
-        result=PRBool(0!=strchr(gTagSet1,aChild)); 
-      break;
-
-    case eHTMLTag_form:
-      result=PRBool(0!=strchr(gTagSet1,aChild));
-      break;
-
-    case eHTMLTag_frame:
-      break;  //singletons can't contain other tags
-
-    case eHTMLTag_frameset:
-      {
-        static char okTags[]={eHTMLTag_frame,eHTMLTag_frameset,
-                              eHTMLTag_noframes,
-                              eHTMLTag_newline,eHTMLTag_whitespace,0};
-        result=PRBool(0!=strchr(okTags,aChild));
-      }
-      break;
-
-    case eHTMLTag_h1: case eHTMLTag_h2:
-    case eHTMLTag_h3: case eHTMLTag_h4:
-    case eHTMLTag_h5: case eHTMLTag_h6:
-      {
-        if(0!=strchr(gHeadingTags,aChild))
-          result=PR_FALSE;
-        else result=PRBool(0!=strchr(gTagSet1,aChild)); 
-      }
-      break;
-
-    case eHTMLTag_head:
-      {
-        static char  okTags[]={
-          eHTMLTag_base,    eHTMLTag_isindex, eHTMLTag_link,  eHTMLTag_meta,
-          eHTMLTag_script,  eHTMLTag_style,   eHTMLTag_title, 0};
-        result=PRBool(0!=strchr(okTags,aChild));
-      }
-      break;
-
-    case eHTMLTag_html:
-      {
-        static char okTags[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,0};
-        result=PRBool(0!=strchr(okTags,aChild));
-      }
-      break;
-
-    case eHTMLTag_iframe:/* XXX wrong */
-      if(eHTMLTag_frame==aChild)
-        result=PR_FALSE;
-      else
-        result=PRBool(0!=strchr(gTagSet1,aChild)); 
-      break;
-
-    case eHTMLTag_label:
-    case eHTMLTag_legend:/* XXX not sure */
-      result=PRBool(0!=strchr(gTagSet1,aChild));
-      break;
-
-    case eHTMLTag_link:
-      break;    //singletons can't contain anything...
-
-    case eHTMLTag_li:
-      if (eHTMLTag_li == aChild) {
-        result = PR_FALSE;
-      }
-      else result=PRBool(!strchr(gHeadingTags,aChild));
-      break;
-
-    case eHTMLTag_listing:
-      result = PR_TRUE;
-      break;
-
-    case eHTMLTag_map:
-      {
-        static char okTags[] = {eHTMLTag_area,
-                                eHTMLTag_newline,
-                                eHTMLTag_whitespace,
-                                0};
-        result = PRBool(0 != strchr(okTags, aChild));
-      }
-      break;
-
-    case eHTMLTag_menu:
-    case eHTMLTag_dir:
-    case eHTMLTag_ol:
-    case eHTMLTag_ul:
-      // XXX kipp was here
-      result=PRBool(0 != strchr(gTagSet1,aChild));
-      break;
-
-    case eHTMLTag_noframes:
-      if(eHTMLTag_body==aChild)
-        result=PR_TRUE;
-      else
-        result=PRBool(0!=strchr(gTagSet1,aChild)); 
-      break;
-
-    case eHTMLTag_noscript:
-      result=PRBool(0!=strchr(gTagSet1,aChild));
-      break;
-
-    case eHTMLTag_option:
-      //for now, allow an option to contain anything but another option...
-      result=PRBool(eHTMLTag_option!=aChild);
-      break;
-
-    case eHTMLTag_p:
-      {
-        static char  datalistTags[]={eHTMLTag_dt,eHTMLTag_dd,0};
-
-        if(eHTMLTag_p==aChild)
-          result=PR_FALSE;
-        else if(0!=strchr(datalistTags,aChild)) {
-          //we now allow DT/DD inside a paragraph, so long as a DL is open...
-          if(PR_TRUE==HasOpenContainer(eHTMLTag_dl)) {
-            if(PR_TRUE==HasOpenContainer(eHTMLTag_dt))
-              result=PR_FALSE;
-          } else
+          if(0!=strchr(datalistTags,aChild)) {
             result=PR_TRUE;
+          }
+          else
+            result=PRBool(0!=strchr(gTagSet1,aChild));
         }
+        break;
+
+      case eHTMLTag_dd:
+      case eHTMLTag_div:
+        result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+
+      case eHTMLTag_dl:
+        {
+          char okTags[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_whitespace,
+                         eHTMLTag_map,eHTMLTag_form,eHTMLTag_newline,eHTMLTag_p,0};
+          result=PRBool(0!=strchr(okTags,aChild));
+        }
+        break;
+
+      case eHTMLTag_fieldset:
+        if(eHTMLTag_legend==aChild)
+          result=PR_TRUE;
         else
-          result=PRBool(0!=strchr(gTagSet2,aChild));
-      }
-      break;
-
-    case eHTMLTag_object:
-    case eHTMLTag_pre:
-      result=PRBool(0!=strchr(gTagSet2,aChild));
-      break;
-
-    case eHTMLTag_param:
-      break;  //singletons can't contain other tags
-
-    case eHTMLTag_plaintext:
-      break;
-
-    case eHTMLTag_script:
-      break; //unadorned script text...
-
-    case eHTMLTag_select:
-      result=PR_TRUE; //for now, allow select to contain anything...
-      break;
-
-    case eHTMLTag_style:
-      break;  //singletons can't contain other tags
-
-    case eHTMLTag_table:
-      {
-        static char  okTags[]={ 
-          eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,eHTMLTag_tbody,   
-          eHTMLTag_tfoot,  /* eHTMLTag_tr,*/  eHTMLTag_thead,   0};
-        result=PRBool(0!=strchr(okTags,aChild));
-      }
-      break;
-
-    case eHTMLTag_tbody:
-    case eHTMLTag_tfoot:
-    case eHTMLTag_thead:
-      result=PRBool(eHTMLTag_tr==aChild);
-      break;
-
-    case eHTMLTag_th:
-    case eHTMLTag_td:
-      {
-        static char  extraTags[]={eHTMLTag_newline,0};
-        result=PRBool(0!=strchr(extraTags,aChild));
-        if(PR_FALSE==result)
           result=PRBool(0!=strchr(gTagSet1,aChild)); 
-      }
-      break;
+        break;
 
-    case eHTMLTag_textarea:
-    case eHTMLTag_title:
-      break; //nothing but plain text...
+      case eHTMLTag_form:
+        result=PRBool(0!=strchr(gTagSet1,aChild));
+        break;
 
-    case eHTMLTag_tr:
-      {
-        static char  okTags[]={eHTMLTag_td,eHTMLTag_th,0};
-        result=PRBool(0!=strchr(okTags,aChild)); 
-      }
-      break;
+      case eHTMLTag_frame:
+        break;  //singletons can't contain other tags
 
-    case eHTMLTag_userdefined:
-      result=PR_TRUE; //XXX for now...
-      break;
+      case eHTMLTag_frameset:
+        {
+          static char okTags[]={eHTMLTag_frame,eHTMLTag_frameset,
+                                eHTMLTag_noframes,
+                                eHTMLTag_newline,eHTMLTag_whitespace,0};
+          result=PRBool(0!=strchr(okTags,aChild));
+        }
+        break;
 
-    case eHTMLTag_xmp: 
-      break;
+      case eHTMLTag_h1: case eHTMLTag_h2:
+      case eHTMLTag_h3: case eHTMLTag_h4:
+      case eHTMLTag_h5: case eHTMLTag_h6:
+        {
+          if(0!=strchr(gHeadingTags,aChild))
+            result=PR_FALSE;
+          else result=PRBool(0!=strchr(gTagSet1,aChild)); 
+        }
+        break;
 
-    default:
-#ifdef NS_DEBUG
-      printf("XXX: unhandled tag %s in CanContain switch statement\n",
-             NS_EnumToTag((nsHTMLTag)aParent));
-#endif
-      break;
+      case eHTMLTag_head:
+        {
+          static char  okTags[]={
+            eHTMLTag_base,    eHTMLTag_isindex, eHTMLTag_link,  eHTMLTag_meta,
+            eHTMLTag_script,  eHTMLTag_style,   eHTMLTag_title, 0};
+          result=PRBool(0!=strchr(okTags,aChild));
+        }
+        break;
+
+      case eHTMLTag_html:
+        {
+          static char okTags[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_script,0};
+          result=PRBool(0!=strchr(okTags,aChild));
+        }
+        break;
+
+      case eHTMLTag_iframe:/* XXX wrong */
+        if(eHTMLTag_frame==aChild)
+          result=PR_FALSE;
+        else
+          result=PRBool(0!=strchr(gTagSet1,aChild)); 
+        break;
+
+      case eHTMLTag_label:
+      case eHTMLTag_legend:/* XXX not sure */
+        result=PRBool(0!=strchr(gTagSet1,aChild));
+        break;
+
+      case eHTMLTag_link:
+        break;    //singletons can't contain anything...
+
+      case eHTMLTag_li:
+        if (eHTMLTag_li == aChild) {
+          result = PR_FALSE;
+        }
+        else result=PRBool(!strchr(gHeadingTags,aChild));
+        break;
+
+      case eHTMLTag_listing:
+        result = PR_TRUE;
+        break;
+
+      case eHTMLTag_map:
+        {
+          static char okTags[] = {eHTMLTag_area,
+                                  eHTMLTag_newline,
+                                  eHTMLTag_whitespace,
+                                  0};
+          result = PRBool(0 != strchr(okTags, aChild));
+        }
+        break;
+
+      case eHTMLTag_menu:
+      case eHTMLTag_dir:
+      case eHTMLTag_ol:
+      case eHTMLTag_ul:
+        // XXX kipp was here
+        result=PRBool(0 != strchr(gTagSet1,aChild));
+        break;
+
+      case eHTMLTag_noframes:
+        if(eHTMLTag_body==aChild)
+          result=PR_TRUE;
+        else
+          result=PRBool(0!=strchr(gTagSet1,aChild)); 
+        break;
+
+      case eHTMLTag_noscript:
+        result=PRBool(0!=strchr(gTagSet1,aChild));
+        break;
+
+      case eHTMLTag_option:
+        //for now, allow an option to contain anything but another option...
+        result=PRBool(eHTMLTag_option!=aChild);
+        break;
+
+      case eHTMLTag_p:
+        {
+          static char  datalistTags[]={eHTMLTag_dt,eHTMLTag_dd,0};
+
+          if(eHTMLTag_p==aChild)
+            result=PR_FALSE;
+          else if(0!=strchr(datalistTags,aChild)) {
+            //we now allow DT/DD inside a paragraph, so long as a DL is open...
+            if(PR_TRUE==HasOpenContainer(eHTMLTag_dl)) {
+              if(PR_TRUE==HasOpenContainer(eHTMLTag_dt))
+                result=PR_FALSE;
+            } else
+              result=PR_TRUE;
+          }
+          else
+            result=PRBool(0!=strchr(gTagSet2,aChild));
+        }
+        break;
+
+      case eHTMLTag_object:
+      case eHTMLTag_pre:
+        result=PRBool(0!=strchr(gTagSet2,aChild));
+        break;
+
+      case eHTMLTag_param:
+        break;  //singletons can't contain other tags
+
+      case eHTMLTag_plaintext:
+        break;
+
+      case eHTMLTag_script:
+        break; //unadorned script text...
+
+      case eHTMLTag_select:
+        result=PR_TRUE; //for now, allow select to contain anything...
+        break;
+
+      case eHTMLTag_style:
+        break;  //singletons can't contain other tags
+
+      case eHTMLTag_table:
+        {
+          static char  okTags[]={ 
+            eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,eHTMLTag_tbody,   
+            eHTMLTag_tfoot,  /* eHTMLTag_tr,*/  eHTMLTag_thead,   eHTMLTag_map, 0};
+          result=PRBool(0!=strchr(okTags,aChild));
+        }
+        break;
+
+      case eHTMLTag_tbody:
+      case eHTMLTag_tfoot:
+      case eHTMLTag_thead:
+        {
+          static char  okTags[]={eHTMLTag_tr,eHTMLTag_map,eHTMLTag_form,0};
+          result=PRBool(0!=strchr(okTags,aChild));
+        }
+        break;
+
+      case eHTMLTag_th:
+      case eHTMLTag_td:
+        {
+          static char  extraTags[]={eHTMLTag_newline,eHTMLTag_map,0};
+          result=PRBool(0!=strchr(extraTags,aChild));
+          if(PR_FALSE==result)
+            result=PRBool(0!=strchr(gTagSet1,aChild)); 
+        }
+        break;
+
+      case eHTMLTag_textarea:
+      case eHTMLTag_title:
+        break; //nothing but plain text...
+
+      case eHTMLTag_tr:
+        {
+          static char  okTags[]={eHTMLTag_td,eHTMLTag_th,eHTMLTag_form,eHTMLTag_map,0};
+          result=PRBool(0!=strchr(okTags,aChild)); 
+        }
+        break;
+
+      case eHTMLTag_unknown:
+        {
+            //the only thing that should ever have an unknown
+            //parent is an HTML Tag. Everything else should propagate.
+          static char  okTags[]={eHTMLTag_html,0};
+          result=PRBool(0!=strchr(okTags,aChild)); 
+        }
+        break;
+
+      case eHTMLTag_xmp: 
+        break;
+
+      case eHTMLTag_userdefined:
+        result=PR_TRUE; //XXX for now...
+        break;
+
+      default:
+  #ifdef NS_DEBUG
+        printf("XXX: unhandled tag %s in CanContain switch statement\n",
+               NS_EnumToTag((nsHTMLTag)aParent));
+  #endif
+        break;
     } //switch
   } //if
 
@@ -1778,7 +1721,12 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
       break;
 
     case eHTMLTag_unknown:
-      result=PR_FALSE;
+      {
+        static char skippable[]={eHTMLTag_newline,eHTMLTag_whitespace,0};
+        if(0!=strchr(skippable,aChild)) {
+          result=PR_TRUE;
+        }
+      }
       break;
 
     default:
@@ -1977,7 +1925,7 @@ PRBool CNavDTD::IsContainer(eHTMLTags aTag) const {
     case eHTMLTag_style:      
     case eHTMLTag_spacer:
     case eHTMLTag_wbr:
-    case eHTMLTag_form:
+//    case eHTMLTag_form:
     case eHTMLTag_newline:
     case eHTMLTag_whitespace:
     case eHTMLTag_text: 
@@ -1999,9 +1947,9 @@ PRBool CNavDTD::IsContainer(eHTMLTags aTag) const {
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-eHTMLTags CNavDTD::GetDefaultParentTagFor(eHTMLTags aTag) const{
+eHTMLTags CNavDTD::GetDefaultParentTagFor(eHTMLTags aChildTag) const{
   eHTMLTags result=eHTMLTag_unknown;
-  switch(aTag) {
+  switch(aChildTag) {
 
     case eHTMLTag_text:
       result=eHTMLTag_p; break;
@@ -2043,6 +1991,10 @@ eHTMLTags CNavDTD::GetDefaultParentTagFor(eHTMLTags aTag) const{
     case eHTMLTag_dd:
     case eHTMLTag_dt:
       result=eHTMLTag_dl; break;    
+
+    case eHTMLTag_textarea:
+    case eHTMLTag_select:
+      result=eHTMLTag_form; break;
 
     case eHTMLTag_option:
       result=eHTMLTag_select; break;    
@@ -2595,7 +2547,7 @@ nsresult CNavDTD::CloseFrameset(const nsIParserNode& aNode){
  */
 nsresult
 CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
-  NS_PRECONDITION(mContextStack.mCount > 0, kInvalidTagStackPos);
+  NS_PRECONDITION(mContextStack.mCount >= 0, kInvalidTagStackPos);
   
   nsresult   result=NS_OK; 
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
@@ -2609,9 +2561,17 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
       result=OpenBody(aNode); break;
 
     case eHTMLTag_style:
-    case eHTMLTag_textarea:
     case eHTMLTag_head:
     case eHTMLTag_title:
+      break;
+
+    case eHTMLTag_textarea:
+      {
+        PRInt32 theCount;
+        nsCParserNode& theCNode=*(nsCParserNode*)&aNode;
+        CollectSkippedContent(theCNode,theCount);
+        result=AddLeaf(theCNode);
+      }
       break;
 
     case eHTMLTag_map:
@@ -2620,6 +2580,13 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
 
     case eHTMLTag_form:
       result=OpenForm(aNode); break;
+
+    case eHTMLTag_script:
+      {
+        nsCParserNode& theCNode=*(nsCParserNode*)&aNode;
+        result=HandleScriptToken(theCNode);
+      }
+      break;
 
     default:
       result=mSink->OpenContainer(aNode); 
