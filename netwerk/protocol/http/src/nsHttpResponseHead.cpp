@@ -132,6 +132,7 @@ nsHttpResponseHead::ParseStatusLine(char *line)
         mStatusText = "OK";
         LOG(("Have status line [version=%d status=%d statusText=%s]\n",
             mVersion, mStatus, mStatusText.get()));
+        return;
     }
     
     // Status-Code
