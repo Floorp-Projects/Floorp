@@ -410,7 +410,7 @@ void CNsIHistory::PurgeHistoryTest(nsISHistory* theSessionHistory, PRInt32 numEn
 {
    rv = theSessionHistory->PurgeHistory(numEntries);
    RvTestResult(rv, "PurgeHistory() test", 2);
-   FormatAndPrintOutput("Number of removed entries = ", numEntries, 2);		 
+   FormatAndPrintOutput("PurgeHistory(): num requested entries for removal = ", numEntries, 2);		 
 }
 
 void CNsIHistory::RunAllHistoryEntryTests() 
