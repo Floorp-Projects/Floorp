@@ -101,6 +101,7 @@ LINCS= \
     -I$(XPDIST)\public\lay	\
     -I$(XPDIST)\public\style	\
     -I$(XPDIST)\public\zlib	\
+    -I$(XPDIST)\public\softupdt	\
     -I$(XPDIST)\public\network 
 #!endif
 
