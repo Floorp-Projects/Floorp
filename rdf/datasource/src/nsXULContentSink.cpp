@@ -225,6 +225,8 @@ protected:
     PRBool mInScript;
     PRUint32 mScriptLineNo;
 
+    // Overlays
+    nsresult ProcessOverlay(const nsString& aHref);
 
     // Style sheets
     nsresult ProcessStyleLink(nsIContent* aElement,
@@ -727,6 +729,19 @@ static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aPa
 }
 
 nsresult
+XULContentSinkImpl::ProcessOverlay(const nsString& aHref)
+{
+  // Synchronously load the overlay.
+  nsresult result = NS_OK;
+  
+  // XXX Kick off the load 
+  
+  // Block the parser.
+  result = NS_ERROR_HTMLPARSER_BLOCK;
+  return result;
+}
+
+nsresult
 XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
                                      const nsString& aHref, PRBool aAlternate,
                                      const nsString& aTitle, const nsString& aType,
@@ -802,6 +817,7 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
 {
 
     static const char kStyleSheetPI[] = "<?xml-stylesheet";
+    static const char kOverlayPI[] = "<?xml-xuloverlay";
 
     nsresult rv;
     FlushText();
@@ -813,8 +829,21 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
     // We just check for a style sheet PI
     const nsString& text = aNode.GetText();
 
+    if (text.Find(kOverlayPI) == 0) {
+      // Load a XUL overlay.
+      nsAutoString href;
+      if (NS_FAILED(rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "href", href)))
+            return rv;
+
+      // If there was an error or there's no href, we can't do
+      // anything with this PI
+      if (0 == href.Length())
+          return NS_OK;
+
+      return ProcessOverlay(href);
+    }
     // If it's a stylesheet PI...
-    if (0 == text.Find(kStyleSheetPI)) {
+    else if (text.Find(kStyleSheetPI) == 0) {
         nsAutoString href;
         if (NS_FAILED(rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "href", href)))
             return rv;
