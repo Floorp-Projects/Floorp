@@ -35,7 +35,7 @@ CPPSRCS		= \
 		nsUnicodeToCP950.cpp \
 		nsUnicodeToBIG5NoAscii.cpp \
 		nsUCvTWSupport.cpp \
-		nsUCvTWDll.cpp \
+		nsUCvTwModule.cpp \
 		$(NULL)
 
 EXPORTS		= nsUCvTWCID.h

@@ -33,7 +33,7 @@ CPPSRCS =				\
 	nsUnicodeToCP950.cpp		\
 	nsUnicodeToBIG5NoAscii.cpp		\
 	nsUCvTWSupport.cpp		\
-	nsUCvTWDll.cpp			\
+	nsUCvTwModule.cpp			\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -43,7 +43,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToCP950.obj			\
 	.\$(OBJDIR)\nsUnicodeToBIG5NoAscii.obj			\
 	.\$(OBJDIR)\nsUCvTWSupport.obj			\
-	.\$(OBJDIR)\nsUCvTWDll.obj 			\
+	.\$(OBJDIR)\nsUCvTwModule.obj 			\
 	$(NULL)
 
 EXPORTS=nsUCvTWCID.h			\

@@ -36,7 +36,7 @@ CPPSRCS =				\
 	nsUnicodeToCP949.cpp		\
 	nsUnicodeToX11Johab.cpp		\
 	nsUCvKOSupport.cpp		\
-	nsUCvKODll.cpp			\
+	nsUCvKoModule.cpp			\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -49,7 +49,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToCP949.obj		\
 	.\$(OBJDIR)\nsUnicodeToX11Johab.obj		\
 	.\$(OBJDIR)\nsUCvKOSupport.obj			\
-	.\$(OBJDIR)\nsUCvKODll.obj 			\
+	.\$(OBJDIR)\nsUCvKoModule.obj 			\
 	$(NULL)
 
 EXPORTS=nsUCvKOCID.h			\

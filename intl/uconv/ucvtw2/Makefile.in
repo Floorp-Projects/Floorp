@@ -39,7 +39,7 @@ CPPSRCS		= \
 		nsUnicodeToCNS11643p6.cpp \
 		nsUnicodeToCNS11643p7.cpp \
 		nsUCvTW2Support.cpp \
-		nsUCvTW2Dll.cpp \
+		nsUCvTw2Module.cpp \
 		$(NULL)
 
 EXPORTS		= nsUCvTW2CID.h

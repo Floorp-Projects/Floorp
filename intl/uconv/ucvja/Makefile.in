@@ -35,7 +35,7 @@ CPPSRCS		= \
 		nsCP932ToUnicode.cpp \
 		nsUnicodeToCP932.cpp \
 		nsUCvJaSupport.cpp \
-		nsUCVJADll.cpp \
+		nsUCvJaModule.cpp \
 		nsEUCJPToUnicode.cpp \
 		nsISO2022JPToUnicode.cpp \
 		nsUnicodeToEUCJP.cpp \
