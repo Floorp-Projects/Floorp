@@ -162,8 +162,7 @@ protected:
     return 0 != (mState & NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
   }
 
-  void SlideLine(nsIPresContext* aPresContext,
-                 nsISpaceManager* aSpaceManager,
+  void SlideLine(nsBlockReflowState& aState,
                  nsLineBox* aLine, nscoord aDY);
 
   PRBool DrainOverflowLines();

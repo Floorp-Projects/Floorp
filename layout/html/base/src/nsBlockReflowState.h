@@ -584,50 +584,127 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
                                            const nsStyleDisplay* aDisplay,
                                            nsRect& aResult)
 {
-  nscoord availHeight = mUnconstrainedHeight
+  aResult.y = mY;
+  aResult.height = mUnconstrainedHeight
     ? NS_UNCONSTRAINEDSIZE
     : mBottomEdge - mY;
 
   const nsMargin& borderPadding = BorderPadding();
-  nscoord availX, availWidth;
 
-  if (NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay) {
-    // XXX This is a hack until the css2 folks can figure how to deal
-    // with list-items and floaters.
-    nscoord leftMargin = 0;
-#if 0
-    if (mAvailSpaceRect.x != borderPadding.left) {
-      // When a list-item is impacted by a left floater, slide it over
-      // by the right amount so that the bullets will (hopefully) be
-      // visible.
-      float p2t;
-      mPresContext->GetScaledPixelsToTwips(&p2t);
-      leftMargin = NSIntPixelsToTwips(40, p2t);
+  if (NS_FRAME_SPLITTABLE_NON_RECTANGULAR == aSplitType) {
+    if (mBand.GetFloaterCount()) {
+      // Use the float-edge property to determine how the child block
+      // will interact with the floater.
+      const nsStyleSpacing* spacing;
+      aFrame->GetStyleData(eStyleStruct_Spacing,
+                           (const nsStyleStruct*&) spacing);
+      switch (spacing->mFloatEdge) {
+        default:
+        case NS_STYLE_FLOAT_EDGE_CONTENT:
+          // The child block will flow around the floater. Therefore
+          // give it all of the available space.
+          aResult.x = borderPadding.left;
+          aResult.width = mUnconstrainedWidth
+            ? NS_UNCONSTRAINEDSIZE
+            : mContentArea.width;
+          break;
+
+        case NS_STYLE_FLOAT_EDGE_BORDER:
+        case NS_STYLE_FLOAT_EDGE_PADDING:
+          {
+            // The child block's border should be placed adjacent to,
+            // but not overlap the floater(s).
+            nsMargin m(0, 0, 0, 0);
+            spacing->GetMargin(m); // XXX percentage margins
+            if (NS_STYLE_FLOAT_EDGE_PADDING == spacing->mFloatEdge) {
+              // Add in border too
+              nsMargin b;
+              spacing->GetBorder(b);
+              m += b;
+            }
+
+            // determine left edge
+            if (mBand.GetLeftFloaterCount()) {
+              aResult.x = mAvailSpaceRect.x + borderPadding.left - m.left;
+            }
+            else {
+              aResult.x = borderPadding.left;
+            }
+
+            // determine width
+            if (mUnconstrainedWidth) {
+              aResult.width = NS_UNCONSTRAINEDSIZE;
+            }
+            else {
+              if (mBand.GetRightFloaterCount()) {
+                if (mBand.GetLeftFloaterCount()) {
+                  aResult.width = mAvailSpaceRect.width + m.left + m.right;
+                }
+                else {
+                  aResult.width = mAvailSpaceRect.width + m.right;
+                }
+              }
+              else {
+                aResult.width = mAvailSpaceRect.width + m.left;
+              }
+            }
+          }
+          break;
+
+        case NS_STYLE_FLOAT_EDGE_MARGIN:
+          {
+            // The child block's margins should be placed adjacent to,
+            // but not overlap the floater.
+            aResult.x = mAvailSpaceRect.x + borderPadding.left;
+            aResult.width = mAvailSpaceRect.width;
+
+            // Compatability hack: See if we have a list-item and if
+            // the bullet would end up overlapping the floater.
+            if ((NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay) &&
+                ((mBand.GetLeftFloaterCount() &&
+                   (NS_STYLE_DIRECTION_LTR == aDisplay->mDirection)) ||
+                  (mBand.GetRightFloaterCount() &&
+                   (NS_STYLE_DIRECTION_RTL == aDisplay->mDirection)))) {
+              // Ok, we have a list-item and its bullet will be
+              // impacted by the floater.
+              nscoord marginValue = 0;
+              nsStyleUnit unit = spacing->mCompatFloaterMargin.GetUnit();
+              if (eStyleUnit_Auto == unit) {
+                // This is the default value: do nothing
+              }
+              else if (eStyleUnit_Percent == unit) {
+                // XXX write me
+              }
+              else if (eStyleUnit_Coord == unit) {
+                marginValue = spacing->mCompatFloaterMargin.GetCoordValue();
+              }
+              else if (eStyleUnit_Inherit == unit) {
+                // XXX write me
+              }
+              aResult.x += marginValue;
+              aResult.width -= marginValue;
+            }
+          }
+          break;
+      }
     }
-#endif
-
-    // Assume the frame is clueless about the space manager and only
-    // give it free space.
-    availX = mAvailSpaceRect.x + borderPadding.left + leftMargin;
-    availWidth = mAvailSpaceRect.width - leftMargin;
-  }
-  else if (NS_FRAME_SPLITTABLE_NON_RECTANGULAR == aSplitType) {
-    // Frames that know how to do non-rectangular splitting are given
-    // the entire available space, including space consumed by
-    // floaters.
-    availX = borderPadding.left;
-    availWidth = mUnconstrainedWidth
-      ? NS_UNCONSTRAINEDSIZE
-      : mContentArea.width;
+    else {
+      // Since there are no floaters present the float-edge property
+      // doesn't matter therefore give the block element all of the
+      // available space since it will flow around the floater itself.
+      aResult.x = borderPadding.left;
+      aResult.width = mUnconstrainedWidth
+        ? NS_UNCONSTRAINEDSIZE
+        : mContentArea.width;
+    }
   }
   else {
-    // Assume the frame is clueless about the space manager and only
-    // give it free space.
-    availX = mAvailSpaceRect.x + borderPadding.left;
-    availWidth = mAvailSpaceRect.width;
+    // The frame is clueless about the space manager and therefore we
+    // only give it free space. An example is a table frame - the
+    // tables do not flow around floaters.
+    aResult.x = mAvailSpaceRect.x + borderPadding.left;
+    aResult.width = mAvailSpaceRect.width;
   }
-
-  aResult.SetRect(availX, mY, availWidth, availHeight);
 }
 
 PRBool
@@ -643,6 +720,12 @@ nsBlockReflowState::ClearPastFloaters(PRUint8 aBreakType)
     // Apply the previous margin before clearing
     saveY = mY + mPrevBottomMargin;
     ClearFloaters(saveY, aBreakType);
+#ifdef NOISY_FLOATER_CLEARING
+    nsFrame::ListTag(stdout, mBlock);
+    printf(": ClearPastFloaters: mPrevBottomMargin=%d saveY=%d oldY=%d newY=%d deltaY=%d\n",
+           mPrevBottomMargin, saveY, saveY - mPrevBottomMargin, mY,
+           mY - saveY);
+#endif
 
     // Determine how far we just moved. If we didn't move then there
     // was nothing to clear to don't mess with the normal margin
@@ -759,15 +842,22 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   }
 
   // The line may have clear before semantics.
-  if (NS_STYLE_CLEAR_NONE != aLine->mBreakType) {
+  if (aLine->IsBlock() && (NS_STYLE_CLEAR_NONE != aLine->mBreakType)) {
     // Clear past floaters before the block if the clear style is not none
     aApplyTopMargin = ClearPastFloaters(aLine->mBreakType);
+#ifdef NOISY_VERTICAL_MARGINS
+    nsFrame::ListTag(stdout, mBlock);
+    printf(": RecoverStateFrom: y=%d child ", mY);
+    nsFrame::ListTag(stdout, aLine->mFirstChild);
+    printf(" has clear of %d => %s, mPrevBottomMargin=%d\n", aLine->mBreakType,
+           aApplyTopMargin ? "applyTopMargin" : "nope", mPrevBottomMargin);
+#endif
   }
 
   // Recover mPrevBottomMargin and calculate the line's new Y
   // coordinate (newLineY)
   nscoord newLineY = mY;
-  if (0 == aLine->mBounds.height) {
+  if ((0 == aLine->mBounds.height) && (0 == aLine->mCombinedArea.height)) {
     if (aLine->IsBlock() &&
         nsBlockReflowContext::IsHTMLParagraph(aLine->mFirstChild)) {
       // Empty HTML paragraphs disappear entirely - their margins go
@@ -780,8 +870,9 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
       nscoord topMargin, bottomMargin;
       RecoverVerticalMargins(aLine, aApplyTopMargin,
                              &topMargin, &bottomMargin);
-      nscoord m = nsBlockReflowContext::MaxMargin(topMargin, bottomMargin);
-      m = nsBlockReflowContext::MaxMargin(m, mPrevBottomMargin);
+      nscoord m = nsBlockReflowContext::MaxMargin(bottomMargin,
+                                                  mPrevBottomMargin);
+      m = nsBlockReflowContext::MaxMargin(m, topMargin);
       mPrevBottomMargin = m;
     }
   }
@@ -809,10 +900,16 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   // updates the lines Y coordinate and the combined area's Y
   // coordinate.
   nscoord finalDeltaY = newLineY - aLine->mBounds.y;
-  mBlock->SlideLine(mPresContext, mSpaceManager, aLine, finalDeltaY);
+  mBlock->SlideLine(*this, aLine, finalDeltaY);
 
   // Place floaters for this line into the space manager
   if (aLine->mFloaters.NotEmpty()) {
+    // Undo border/padding translation since the nsFloaterCache's
+    // coordinates are relative to the frame not relative to the
+    // border/padding.
+    const nsMargin& bp = BorderPadding();
+    mSpaceManager->Translate(-bp.left, -bp.top);
+
     // Place the floaters into the space-manager again. Also slide
     // them, just like the regular frames on the line.
     nsRect r;
@@ -835,6 +932,9 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
       mSpaceManager->AddRectRegion(floater, fc->mRegion);
       fc = fc->Next();
     }
+
+    // And then put the translation back again
+    mSpaceManager->Translate(bp.left, bp.top);
   }
 
   // Recover mY
@@ -2077,11 +2177,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 #ifdef NOISY_INCREMENTAL_REFLOW
     if (aState.mReflowState.reason == eReflowReason_Incremental) {
       IndentBy(stdout, gNoiseIndent);
-      printf("line=%p mY=%d dirty=%s oldBounds=%d,%d,%d,%d deltaY=%d\n",
+      printf("line=%p mY=%d dirty=%s oldBounds=%d,%d,%d,%d deltaY=%d mPrevBottomMargin=%d\n",
              line, aState.mY, line->IsDirty() ? "yes" : "no",
              line->mBounds.x, line->mBounds.y,
              line->mBounds.width, line->mBounds.height,
-             deltaY);
+             deltaY, aState.mPrevBottomMargin);
       gNoiseIndent++;
     }
 #endif
@@ -2131,11 +2231,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     if (aState.mReflowState.reason == eReflowReason_Incremental) {
       gNoiseIndent--;
       IndentBy(stdout, gNoiseIndent);
-      printf("line=%p mY=%d newBounds=%d,%d,%d,%d deltaY=%d\n",
+      printf("line=%p mY=%d newBounds=%d,%d,%d,%d deltaY=%d mPrevBottomMargin=%d\n",
              line, aState.mY,
              line->mBounds.x, line->mBounds.y,
              line->mBounds.width, line->mBounds.height,
-             deltaY);
+             deltaY, aState.mPrevBottomMargin);
     }
 #endif
 
@@ -2498,8 +2598,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
 }
 
 void
-nsBlockFrame::SlideLine(nsIPresContext* aPresContext,
-                        nsISpaceManager* aSpaceManager,
+nsBlockFrame::SlideLine(nsBlockReflowState& aState,
                         nsLineBox* aLine, nscoord aDY)
 {
   // Adjust line state
@@ -2515,8 +2614,10 @@ nsBlockFrame::SlideLine(nsIPresContext* aPresContext,
   if (aLine->IsBlock()) {
     nsRect r;
     kid->GetRect(r);
-    r.y += aDY;
-    kid->SetRect(r);
+    if (aDY) {
+      r.y += aDY;
+      kid->SetRect(r);
+    }
 
     // If the child has any floaters that impact the space-manager,
     // place them now so that they are present in the space-manager
@@ -2525,12 +2626,17 @@ nsBlockFrame::SlideLine(nsIPresContext* aPresContext,
     nsBlockFrame* bf;
     nsresult rv = kid->QueryInterface(kBlockFrameCID, (void**) &bf);
     if (NS_SUCCEEDED(rv)) {
-      // Translate spacemanager to the child blocks upper-left
-      // corner so that when it places its floaters (which are
-      // relative to it) the right coordinates are used.
-      aSpaceManager->Translate(r.x, r.y);
-      bf->UpdateSpaceManager(aPresContext, aSpaceManager);
-      aSpaceManager->Translate(-r.x, -r.y);
+      // Translate spacemanager to the child blocks upper-left corner
+      // so that when it places its floaters (which are relative to
+      // it) the right coordinates are used. Note that we have already
+      // been translated by our border+padding so factor that in to
+      // get the right translation.
+      const nsMargin& bp = aState.BorderPadding();
+      nscoord dx = r.x - bp.left;
+      nscoord dy = r.y - bp.top;
+      aState.mSpaceManager->Translate(dx, dy);
+      bf->UpdateSpaceManager(aState.mPresContext, aState.mSpaceManager);
+      aState.mSpaceManager->Translate(-dx, -dy);
     }
   }
   else {
@@ -2564,7 +2670,7 @@ nsBlockFrame::UpdateSpaceManager(nsIPresContext* aPresContext,
         nscoord tx, ty;
         aSpaceManager->GetTranslation(tx, ty);
         nsFrame::ListTag(stdout, this);
-        printf(": UpdateSpaceManager: AddRectRegion: tx=%d,%d {%d,%d,%d,%d}\n",
+        printf(": UpdateSpaceManager: AddRectRegion: txy=%d,%d {%d,%d,%d,%d}\n",
                tx, ty,
                fc->mRegion.x, fc->mRegion.y,
                fc->mRegion.width, fc->mRegion.height);
@@ -2847,6 +2953,15 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   aLine->mBreakType = display->mBreakType;
   if (NS_STYLE_CLEAR_NONE != aLine->mBreakType) {
     applyTopMargin = aState.ClearPastFloaters(aLine->mBreakType);
+#ifdef NOISY_VERTICAL_MARGINS
+    ListTag(stdout);
+    printf(": y=%d child ", aState.mY);
+    ListTag(stdout, frame);
+    printf(" has clear of %d => %s, mPrevBottomMargin=%d\n",
+           aLine->mBreakType,
+           applyTopMargin ? "applyTopMargin" : "nope",
+           aState.mPrevBottomMargin);
+#endif
   }
 
   // Compute the available space for the block
@@ -5048,8 +5163,8 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
   nsFrame::ListTag(stdout, mBlock);
   printf(": PlaceFloater: AddRectRegion: txy=%d,%d (%d,%d) {%d,%d,%d,%d}\n",
          tx, ty, mSpaceManagerX, mSpaceManagerY,
-         region.x, region.y,
-         region.width, region.height);
+         aFloaterCache->mRegion.x, aFloaterCache->mRegion.y,
+         aFloaterCache->mRegion.width, aFloaterCache->mRegion.height);
 #endif
 
   // Set the origin of the floater frame, in frame coordinates. These
@@ -5111,32 +5226,6 @@ nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aList)
   }
 }
 
-#if 0
-/**
- * Place current-line floaters.
- */
-void
-nsBlockReflowState::PlaceCurrentLineFloaters(nsFloaterCacheList& aList)
-{
-  nsFloaterCache* fc = aList.Head();
-  while (fc) {
-    if (fc->mIsCurrentLineFloater) {
-      // Place the floater
-      PRBool isLeftFloater;
-      nsPoint origin;
-      PlaceFloater(fc, &isLeftFloater, &origin);
-
-      // Update the running floater combined-area
-      nsRect combinedArea = fc->mCombinedArea;
-      combinedArea.x += origin.x;
-      combinedArea.y += origin.y;
-      CombineRects(combinedArea, mFloaterCombinedArea);
-    }
-    fc = fc->Next();
-  }
-}
-#endif
-
 void
 nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 {
@@ -5148,6 +5237,11 @@ nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
   }
 #endif
 
+#ifdef NOISY_FLOATER_CLEARING
+  printf("nsBlockReflowState::ClearFloaters: aY=%d breakType=%dn",
+         aY, aBreakType);
+  mSpaceManager->List(stdout);
+#endif
   const nsMargin& bp = BorderPadding();
   nscoord newY = mBand.ClearFloaters(aY - bp.top, aBreakType);
   mY = newY + bp.top;
@@ -5832,11 +5926,7 @@ nsBlockFrame::RenumberLists()
   }
 
   // Get to first-in-flow
-  nsBlockFrame* block = this;
-  while (nsnull != block->mPrevInFlow) {
-    block = (nsBlockFrame*) block->mPrevInFlow;
-  }
-
+  nsBlockFrame* block = (nsBlockFrame*) GetFirstInFlow();
   RenumberListsIn(block, &ordinal);
 }
 
@@ -5864,7 +5954,12 @@ nsBlockFrame::RenumberListsIn(nsIFrame* aContainerFrame, PRInt32* aOrdinal)
         rv = kid->QueryInterface(kBlockFrameCID, (void**)&listItem);
         if (NS_SUCCEEDED(rv)) {
           if (nsnull != listItem->mBullet) {
-            *aOrdinal = listItem->mBullet->SetListItemOrdinal(*aOrdinal);
+            PRBool changed;
+            *aOrdinal = listItem->mBullet->SetListItemOrdinal(*aOrdinal,
+                                                              &changed);
+            if (changed) {
+              // Maybe generate a reflow of the bullet
+            }
           }
 
           // XXX temporary? if the list-item has child list-items they
