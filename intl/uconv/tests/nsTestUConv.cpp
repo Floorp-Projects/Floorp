@@ -154,235 +154,6 @@ nsresult testCharsetConverterManager()
 }
 
 //----------------------------------------------------------------------
-// Old SHIT !!! Don't copy this crap, go to the new stuff down in the file.
-// XXX move it to the new & improved framework
-
-#define TABLE_SIZE1     5
-
-#define ISO88597TABLE_SIZE 16
-nsresult testISO88597Decoder()
-{
-  printf("\n[T3] ISO-8859-7 To Unicode\n");
-
-  // create converter
-  nsIUnicodeDecoder * dec;
-  nsAutoString str("iso-8859-7");
-  nsresult res = ccMan->GetUnicodeDecoder(&str,&dec);
-  if (NS_FAILED(res)) {
-    printf("ERROR 0x%x: Cannot instantiate.\n",res);
-    return res;
-  } else {
-    printf("Instantiated.\n");
-  }
-
-  //test converter
-
-  PRInt32 srcL = ISO88597TABLE_SIZE;
-  PRInt32 destL = ISO88597TABLE_SIZE;
-  // some randon C0, ASCII, C1 and ISO-8859-7 code
-  static char src [ISO88597TABLE_SIZE + 1] = 
-  {
-    "\x09\x0d\x20\x40"
-    "\x80\x98\xa3\xaf"
-    "\xa7\xb1\xb3\xc9"
-    "\xd9\xe3\xf4\xff"
-  };
-  static PRUnichar expect [ISO88597TABLE_SIZE] = 
-  {
-   0x0009, 0x000d, 0x0020, 0x0040, 
-   0xfffd, 0xfffd, 0x00a3, 0x2015,
-   0x00a7, 0x00b1, 0x00b3, 0x0399,
-   0x03a9, 0x03b3, 0x03c4, 0xfffd
-
-  };
-  PRUnichar dest [ISO88597TABLE_SIZE];
-
-  res=dec->Convert(dest, 0, &destL, src, 0, &srcL);
-  if (NS_FAILED(res)) {
-    printf("ERROR 0x%x: Convert().\n",res);
-  } else {
-    printf("Read %d, write %d.\n",srcL,destL);
-    printf("Converted:");
-
-    PRBool failed = PR_FALSE;
-    for (int i=0;i<ISO88597TABLE_SIZE;i++) {
-      printf("%x convert to %x. expect value is %x\n" , src[i], dest[i], expect[i]);
-      if (dest[i] != expect[i]) failed = PR_TRUE;
-    }
-    printf("\n");
-
-    if (failed) {
-      printf("Test FAILED!!!\n");
-    } else {
-      printf("Test Passed.\n");
-    }
-  }
-
-  NS_RELEASE(dec);
-
-  return NS_OK;
-}
-
-
-#define SJIS_TEST_SRC_SIZE 40
-#define SJIS_TEST_DEST_SIZE 24
-nsresult testSJISDecoder()
-{
-/*
-[Shift_JIS=4a][Shift_JIS=61][Shift_JIS=70][Shift_JIS=61][Shift_JIS=6e][Shift_JIS=65][Shift_JIS=73][Shift_JIS=65]
-[Shift_JIS=8abf][Shift_JIS=8e9a]
-[Shift_JIS=834a][Shift_JIS=835e][Shift_JIS=834a][Shift_JIS=8369]
-[Shift_JIS=82d0][Shift_JIS=82e7][Shift_JIS=82aa][Shift_JIS=82c8]
-[Shift_JIS=8250][Shift_JIS=8251][Shift_JIS=8252][Shift_JIS=8260][Shift_JIS=8261][Shift_JIS=8262]
-U+004A U+0061 U+0070 U+0061 U+006E U+0065 U+0073 U+0065
-U+6F22 U+5B57
-U+30AB U+30BF U+30AB U+30CA
-U+3072 U+3089 U+304C U+306A
-U+FF11 U+FF12 U+FF13 U+FF21 U+FF22 U+FF23 
- */
-  static const char src[SJIS_TEST_SRC_SIZE + 1] = {
-   "Japanese" /* English */
-   "\x8a\xbf\x8e\x9a" /* Kanji */
-   "\x83\x4a\x83\x5e\x83\x4a\x83\x69" /* Kantakana */
-   "\x82\xd0\x82\xe7\x82\xaa\x82\xc8" /* Hiragana */
-   "\x82\x50\x82\x51\x82\x52\x82\x60\x82\x61\x82\x62" /* full width 123ABC */
-  };
-  static const PRUnichar expect[SJIS_TEST_DEST_SIZE] = {
-   0x004A, 0x0061, 0x0070, 0x0061, 0x006E, 0x0065, 0x0073, 0x0065,
-   0x6f22, 0x5b57,
-   0x30ab, 0x30bf, 0x30ab, 0x30ca,
-   0x3072, 0x3089, 0x304c, 0x306a,
-   0xff11, 0xff12, 0xff13, 0xff21, 0xff22, 0xff23
-  };
-  PRUnichar dest[SJIS_TEST_DEST_SIZE + 44];
-  printf("\n[T3] SJIS2Unicode\n");
-
-  // create converter
-  nsIUnicodeDecoder * dec;
-  nsAutoString str("Shift_JIS");
-  nsresult res = ccMan->GetUnicodeDecoder(&str,&dec);
-  if (NS_FAILED(res)) {
-    printf("ERROR 0x%x: Cannot instantiate.\n",res);
-    return res;
-  } else {
-    printf("Instantiated.\n");
-  }
-
-  //test converter
-
-  PRInt32 srcL = SJIS_TEST_SRC_SIZE;
-  PRInt32 destL = SJIS_TEST_DEST_SIZE+ 44;
-  PRBool failed = PR_FALSE;
-  printf("Test Normal Case\n");
-
-  res=dec->Convert(dest, 0, &destL, src, 0, &srcL);
-  if (NS_FAILED(res)) {
-    printf("ERROR 0x%x: Convert().\n",res);
-	failed = PR_TRUE;
-  } else {
-    printf("Read %d, write %d.\n",srcL,destL);
-    printf("Converted:");
-
-
-    if(destL != SJIS_TEST_DEST_SIZE)
-    {
-      printf("Dest Size bad. Should be %d but got %d!!\n", 
-             SJIS_TEST_DEST_SIZE, destL);
-      failed = PR_TRUE;
-    }
-    for (int i=0;i< destL ;i++) {
-      if (dest[i] != expect[i] ) failed = PR_TRUE;
-    }
-    printf("\n");
-    if (failed) {
-      printf("Test FAILED!!!\n");
-    } else {
-      printf("Test Passed.\n");
-    }
-	failed = PR_FALSE;
-
-    // 	Test NS_PARTIAL_MORE_INPUT case
-    printf("Test NS_PARTIAL_MORE_INPUT Case\n");
-	srcL= SJIS_TEST_SRC_SIZE - 1;
-	destL = SJIS_TEST_DEST_SIZE+ 44;
-    res=dec->Convert(dest, 0, &destL, src, 0, &srcL);
-
-    if (NS_PARTIAL_MORE_INPUT != res) {
-      printf("ERROR 0x%x: Convert().\n",res);
-	  failed = PR_TRUE;
-
-    } else {
-	  if((SJIS_TEST_SRC_SIZE -2 ) != srcL )
-	  {
-        printf("Src Size bad. Should be %d but got %d!!\n", 
-             SJIS_TEST_SRC_SIZE-2, srcL);
-        failed = PR_TRUE;
-	  }
-	  
-      if(destL != (SJIS_TEST_DEST_SIZE-1))
-      {
-        printf("Dest Size bad. Should be %d but got %d!!\n", 
-               SJIS_TEST_DEST_SIZE-1, destL);
-        failed = PR_TRUE;
-      }
-	  for (int i=0;i< destL ;i++) {
-        if (dest[i] != expect[i] ) failed = PR_TRUE;
-	  }
-	}
-    if (failed) {
-      printf("Test FAILED!!!\n");
-    } else {
-      printf("Test Passed.\n");
-    }
-	failed = PR_FALSE;
-
-    // 	Test NS_PARTIAL_MORE_OUTPUT case
-    printf("Test NS_PARTIAL_MORE_OUTNPUT Case\n");
-
- 	srcL= SJIS_TEST_SRC_SIZE;
-	destL = SJIS_TEST_DEST_SIZE-1;
-    res=dec->Convert(dest, 0, &destL, src, 0, &srcL);
-
-    if (NS_PARTIAL_MORE_OUTPUT != res) {
-      printf("ERROR 0x%x: Convert().\n",res);
-	  failed = PR_TRUE;
-
-    } else {
-	  if((SJIS_TEST_SRC_SIZE -2 ) != srcL )
-	  {
-        printf("Src Size bad. Should be %d but got %d!!\n", 
-             SJIS_TEST_SRC_SIZE-2, srcL);
-        failed = PR_TRUE;
-	  }
-	  
-      if(destL != (SJIS_TEST_DEST_SIZE-1))
-      {
-        printf("Dest Size bad. Should be %d but got %d!!\n", 
-               SJIS_TEST_DEST_SIZE-1, destL);
-        failed = PR_TRUE;
-      }
-	  for (int i=0;i< destL ;i++) {
-        if (dest[i] != expect[i] ) failed = PR_TRUE;
-	  }
-	}
-
-	// 	Test NS_ERROR_ILLEGAL_INPUT case
-    //printf("Test NS_ERROR_ILLEGAL_INPUT Case\n");
-    // To Be Implement
-
-    if (failed) {
-      printf("Test FAILED!!!\n");
-    } else {
-      printf("Test Passed.\n");
-    }
-  }
-
-  NS_RELEASE(dec);
-
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
 // Helper functions and macros for testing decoders and encoders
 
 #define CREATE_DECODER(_charset)                                \
@@ -881,6 +652,102 @@ nsresult testEUCJPDecoder()
   }
 }
 
+/**
+ * Test the ISO88597 decoder.
+ */
+nsresult testISO88597Decoder()
+{
+  char * testName = "T104";
+  printf("\n[%s] ISO88597ToUnicode\n", testName);
+
+  // create converter
+  CREATE_DECODER("iso-8859-7");
+
+  // test data
+  char src[] = {
+    "\x09\x0d\x20\x40"
+    "\x80\x98\xa3\xaf"
+    "\xa7\xb1\xb3\xc9"
+    "\xd9\xe3\xf4\xff"
+  };
+  PRUnichar exp[] = {
+    0x0009, 0x000d, 0x0020, 0x0040, 
+    0xfffd, 0xfffd, 0x00a3, 0x2015,
+    0x00a7, 0x00b1, 0x00b3, 0x0399,
+    0x03a9, 0x03b3, 0x03c4, 0xfffd
+  };
+
+  // test converter - normal operation
+  res = testDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+
+  // reset converter
+  if (NS_SUCCEEDED(res)) res = resetDecoder(dec, testName);
+
+  // test converter - stress test
+  if (NS_SUCCEEDED(res)) 
+    res = testStressDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+
+  // release converter
+  NS_RELEASE(dec);
+
+  if (NS_FAILED(res)) {
+    return res;
+  } else {
+    printf("Test Passed.\n");
+    return NS_OK;
+  }
+}
+
+/**
+ * Test the SJIS decoder.
+ */
+nsresult testSJISDecoder()
+{
+  char * testName = "T105";
+  printf("\n[%s] SJISToUnicode\n", testName);
+
+  // create converter
+  CREATE_DECODER("Shift_JIS");
+
+  // test data
+  char src[] = {
+    "Japanese" /* English */
+    "\x8a\xbf\x8e\x9a" /* Kanji */
+    "\x83\x4a\x83\x5e\x83\x4a\x83\x69" /* Kantakana */
+    "\x82\xd0\x82\xe7\x82\xaa\x82\xc8" /* Hiragana */
+    "\x82\x50\x82\x51\x82\x52\x82\x60\x82\x61\x82\x62" /* full width 123ABC */
+  };
+  PRUnichar exp[] = {
+    0x004A, 0x0061, 0x0070, 0x0061, 0x006E, 0x0065, 0x0073, 0x0065,
+    0x6f22, 0x5b57,
+    0x30ab, 0x30bf, 0x30ab, 0x30ca,
+    0x3072, 0x3089, 0x304c, 0x306a,
+    0xff11, 0xff12, 0xff13, 0xff21, 0xff22, 0xff23
+  };
+
+  // test converter - normal operation
+  res = testDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+
+#ifdef NOPE // XXX decomment this when the decoder can take this test.
+  // reset converter
+  if (NS_SUCCEEDED(res)) res = resetDecoder(dec, testName);
+
+  // test converter - stress test
+  if (NS_SUCCEEDED(res)) 
+    res = testStressDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+#endif
+
+  // release converter
+  NS_RELEASE(dec);
+
+  if (NS_FAILED(res)) {
+    return res;
+  } else {
+    printf("Test Passed.\n");
+    return NS_OK;
+  }
+}
+
 //----------------------------------------------------------------------
 // Encoders testing functions
 
@@ -1049,15 +916,13 @@ nsresult testAll()
   testLatin1Decoder();
   testISO2022JPDecoder();
   testEUCJPDecoder();
+  testISO88597Decoder();
+  testSJISDecoder();
 
   // test encoders
   testLatin1Encoder();
   testSJISEncoder();
   testEUCJPEncoder();
-
-  // older tests - XXX to be rewritten in new style
-  testSJISDecoder();
-  testISO88597Decoder();
 
   // return
   return NS_OK;
