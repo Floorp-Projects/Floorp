@@ -52,6 +52,10 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/unreadmail.gif	\
 	$(srcdir)/replyall.gif	\
 	$(srcdir)/next.gif	\
+	$(srcdir)/threadcol.gif	\
+	$(srcdir)/unthreadcol.gif	\
+	$(srcdir)/flagcol.gif	\
+	$(srcdir)/flaggedmail.gif	\
 	$(srcdir)/Folder.gif \
 	$(srcdir)/FolderDraft.gif \
 	$(srcdir)/FolderDraftO.gif \

@@ -23,7 +23,7 @@ window {
  background-color: white;
 }
 
-treeitem[Status=""] > treerow {
+treeitem[Status=" "] > treerow {
 	font-weight: bold;
 }
 
@@ -45,11 +45,19 @@ titledbutton.unreadcol {
   list-style-image: url("chrome://messenger/skin/readmail.gif");
 }
 
-treeitem[Status=""] treerow > treecell > titledbutton.unreadcol {
+treeitem[Status=" "] treerow > treecell > titledbutton.unreadcol {
   list-style-image: url("chrome://messenger/skin/unreadmail.gif");
 }
 
 treeitem[Status="new"] treerow > treecell > titledbutton.unreadcol {
   list-style-image: url("chrome://messenger/skin/unreadmail.gif");
+}
+
+titledbutton.flagcol {
+  list-style-image: url("chrome://messenger/skin/readmail.gif");
+}
+
+treeitem[Flagged="flagged"] treerow > treecell > titledbutton.flagcol {
+  list-style-image: url("chrome://messenger/skin/flaggedmail.gif");
 }
 
