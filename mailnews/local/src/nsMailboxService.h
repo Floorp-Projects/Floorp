@@ -37,7 +37,7 @@
 #include "nsIProtocolHandler.h"
 #include "nsIRDFService.h"
 
-class nsMailboxService : public nsIMailboxService, public nsIMsgMessageService, public nsIProtocolHandler
+class nsMailboxService : public nsIMailboxService, public nsIMsgMessageService, public nsIMsgMessageFetchPartService, public nsIProtocolHandler
 {
 public:
 
@@ -45,9 +45,10 @@ public:
 	virtual ~nsMailboxService();
 	
 	NS_DECL_ISUPPORTS
-    NS_DECL_NSIMAILBOXSERVICE
-    NS_DECL_NSIMSGMESSAGESERVICE
-    NS_DECL_NSIPROTOCOLHANDLER
+  NS_DECL_NSIMAILBOXSERVICE
+  NS_DECL_NSIMSGMESSAGESERVICE
+  NS_DECL_NSIMSGMESSAGEFETCHPARTSERVICE
+  NS_DECL_NSIPROTOCOLHANDLER
 
 protected:
   PRBool        mPrintingOperation; 

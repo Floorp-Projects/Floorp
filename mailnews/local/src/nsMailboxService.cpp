@@ -59,7 +59,7 @@ nsMailboxService::nsMailboxService()
 nsMailboxService::~nsMailboxService()
 {}
 
-NS_IMPL_ISUPPORTS3(nsMailboxService, nsIMailboxService, nsIMsgMessageService, nsIProtocolHandler);
+NS_IMPL_ISUPPORTS4(nsMailboxService, nsIMailboxService, nsIMsgMessageService, nsIProtocolHandler, nsIMsgMessageFetchPartService);
 
 nsresult nsMailboxService::ParseMailbox(nsIMsgWindow *aMsgWindow, nsFileSpec& aMailboxPath, nsIStreamListener *aMailboxParser, 
 										nsIUrlListener * aUrlListener, nsIURI ** aURL)
@@ -175,8 +175,19 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
   return rv;
 }
 
+NS_IMETHODIMP nsMailboxService::FetchMimePart(nsIURI *aURI, const char *aMessageURI, nsISupports *aDisplayConsumer, nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aURL)
+{
+  nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(aURI));
+  msgUrl->SetMsgWindow(aMsgWindow);
 
-nsresult nsMailboxService::DisplayMessage(const char* aMessageURI,
+  // set up the url listener
+	if (aUrlListener)
+		msgUrl->RegisterListener(aUrlListener);
+  
+  return RunMailboxUrl(msgUrl, aDisplayConsumer); 
+}
+
+NS_IMETHODIMP nsMailboxService::DisplayMessage(const char* aMessageURI,
                                           nsISupports * aDisplayConsumer,
                                           nsIMsgWindow * aMsgWindow,
 										                      nsIUrlListener * aUrlListener,
@@ -326,9 +337,8 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 			nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(*aMailboxUrl);
 			url->SetSpec(urlSpec);
 			PR_FREEIF(urlSpec);
-
-			// set up the mailbox action
-			(*aMailboxUrl)->SetMailboxAction(aMailboxAction);
+   
+      (*aMailboxUrl)->SetMailboxAction(aMailboxAction);
 
 			// set up the url listener
 			if (aUrlListener)
