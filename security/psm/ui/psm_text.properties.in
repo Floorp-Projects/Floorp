@@ -826,3 +826,12 @@ cert_renewal_title="Certificate Renewal"
 cert_renewal_info_string="One of your security {glossary certificates,certificate} is now eligible for renewal."
 select_module=Select Module
 
+
+text_crl_button=Delete CRLs
+
+verification_services=OCSP Settings
+crl_dialog_text=Delete CRL
+select_crl_text=Select which CRL(s) you want to delete:
+
+
+

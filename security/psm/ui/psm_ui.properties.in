@@ -632,6 +632,9 @@ formsubmit_dosubmit_js_hdrs=""
 formsubmit_dosubmit_js_content:
 <script language=javascript>
 top.submitform();
+//In case submit test failes, we don't want to leave the buttons
+//frame empty.
+window.back();
 </script>
 :formsubmit_dosubmit_js_content
 
@@ -3560,9 +3563,8 @@ onClick="openIfSelected('cert_authorities', 'cert?baseRef=cert_action&action=cer
 <!- td>
 
 <tr>
-
 <td><div><input type="submit" value="{text_delete}" name="delete" width="72" >
-</div></td>
+{_crlButton}</div></td>
 </tr>
 {textarea_current_cert}
 </table>
@@ -3571,6 +3573,77 @@ onClick="openIfSelected('cert_authorities', 'cert?baseRef=cert_action&action=cer
 </body>
 </html>
 :cert_authorities_content
+
+crlButtonHTML:
+<script language=JavaScript>
+<!--
+function launchCRLDialog()
+{
+  var newWindow = window.open("get?baseRef=crlDialog&target=%1$d", "crlPopup", "width=390,height=350,status=no,toolbar=no,menubar=no,screenX=100,screenY=100");
+  newWindow.advisor = self;
+}
+// -->
+</script>
+<input type=button name=crlButton value='{text_crl_button}' onClick='launchCRLDialog();'>
+:crlButtonHTML
+
+crlDialog_type=text/html
+crlDialog_content={frame_set crl_dialog,formsubmit}
+
+crl_dialog_top_type=text/html
+crl_dialog_top_content={top_frame crl_dialog_text,lockedgif,35,35}
+
+crl_dialog_buttons_type=text/html
+crl_dialog_buttons_content:
+{formsubmit_buttons_close_on_cancel_frame crlDialog,help.htm}
+:crl_dialog_buttons_content
+
+crl_dialog_main_type=text/html
+crl_dialog_main_content:
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
+<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=secadvmodalstyle">
+{disable_right_click_js}
+</head>
+{formsubmit document.forms[0]}
+<body>
+<form name=crlDialog method=get action="formsubmit_handler" >
+<input type=hidden name="baseRef" value="windowclose_doclose_js">
+<input type=hidden name="formName" value="crlDialog">
+<input type=hidden name="target" value="%1$d">
+<br>
+{select_crl_text}
+<p>
+<table BORDER=0 CELLSPACING=0 CELLPADDING=0 COLS=0 WIDTH="100%%">
+<tr VALIGN=TOP ALIGN=LEFT>
+<td><div></div></td>
+<td><div>
+<select MULTIPLE name="crlNames" SIZE="8">
+{_crlList}
+<option value="">{nbsp10}{nbsp10}{nbsp10}{nbsp10}
+</select>
+</div></td>
+<td><div align=left>
+<input type=button value='{text_delete}'>
+</div></td>
+</tr>
+</table>
+</form>
+</body>
+<script>
+document.forms[0].crlNames.selectedIndex = 0;
+</script>
+</html>
+:crl_dialog_main_content
+
+crlclose_doclose_js_type="text/html"
+crlclose_doclose_js_hdrs=""
+crlclose_doclose_js_content:
+<script language=javascript>
+top.advisor.reload();
+top.closewin();
+</script>
+:crlclose_doclose_js_content
 
 cert_websites_type=text/html
 cert_websites_content:
@@ -7709,8 +7782,6 @@ cert_issue_backup_buttons_content:
 verification_setup_type=text/html
 verification_setup_hdrs=
 verification_setup_content={frame_set verification_config,formsubmit}
-
-verification_services=OCSP Settings
 
 verification_config_top_type=text/html
 verification_config_top_hdrs=
