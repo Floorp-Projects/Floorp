@@ -160,6 +160,7 @@ treecol[hideheader="true"] {
   -moz-appearance: none;
   border: none;
   padding: 0;
+  max-height: 0px;
 }
 
 /* ..... internal box ..... */
