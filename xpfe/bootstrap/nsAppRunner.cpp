@@ -222,16 +222,11 @@ int main(int argc, char* argv[])
   /* Comments/questions to alecf@netscape.com */
   {
     nsIAppShellService *messenger;
-    nsCID cid;
-    nsresult result =
-      nsRepository::ProgIDToCLSID("component://netscape/messenger", &cid);
-      
-    if (NS_SUCCEEDED(result)) {
-      result = nsRepository::CreateInstance(cid,
-                                            NULL,
-                                            nsIAppShellService::IID,
-                                            (void **)&messenger);
-      }
+    const char *messengerProgID = "component://netscape/messenger";
+    nsresult result = nsRepository::CreateInstance(messengerProgID,
+                                                   nsnull,
+                                                   nsIAppShellService::IID(),
+                                                   (void **)&messenger);
     if (NS_SUCCEEDED(result)) {
       result = messenger->Initialize();
     }
