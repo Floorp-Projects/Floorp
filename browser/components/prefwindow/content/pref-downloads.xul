@@ -1,0 +1,79 @@
+<?xml version="1.0"?> 
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#  
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#  
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-2000 Netscape Communications Corporation. All
+# Rights Reserved.
+# 
+# Contributor(s): 
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<!DOCTYPE window SYSTEM "chrome://browser/locale/pref/pref-downloads.dtd" >
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://browser/content/pref/pref-downloads.xul');"
+      headertitle="&lHeader;">
+
+  <script type="application/x-javascript">
+  <![CDATA[
+    var _elementIDs = ["defaultDir", "prompt", "useProgressDialogs", "openDownloadsSidebar"];
+    function selectFolder()
+    { 
+      const nsIFilePicker = Components.interfaces.nsIFilePicker;
+      const nsILocalFile = Components.interfaces.nsILocalFile;
+      var fp = Components.classes["@mozilla.org/filepicker;1"]
+                         .createInstance(nsIFilePicker);
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+      // XXXBlake Localize!
+      fp.init(window, "Select Download Directory:", nsIFilePicker.modeGetFolder);
+      try 
+      {
+        var initialDir = pref.getComplexValue("browser.download.dir", nsILocalFile);
+        if (initialDir)
+          fp.displayDirectory = initialDir;
+      }
+      catch (ex)
+      {
+        // ignore exception: file picker will open at default location
+      }
+      fp.appendFilters(nsIFilePicker.filterAll);
+      var ret = fp.show();
+    
+      if (ret == nsIFilePicker.returnOK) {
+        var localFile = fp.file.QueryInterface(nsILocalFile);
+        var viewable = fp.file.path;
+        var folderField = document.getElementById("defaultDir");
+        folderField.value = viewable;
+        pref.setComplexValue("browser.download.dir", nsILocalFile, localFile)
+      }
+    }
+  ]]>
+  </script>
+
+  <groupbox orient="horizontal">
+    <caption label="&defaultDir.label;"/>
+    <textbox id="defaultDir" flex="1" readonly="true" prefstring="browser.download.dir"/>
+    <button label="&browse.label;" oncommand="selectFolder();"/>
+  </groupbox>
+  <groupbox>
+    <caption label="&whenStarting.label;"/>
+    <checkbox id="prompt" label="&prompt.label;" prefstring="browser.download.promptWithFilepicker"/>
+    <checkbox id="useProgressDialogs" label="&useProgressDialogs.label;" accesskey="&useProgressDialogs.accesskey;"
+              prefstring="browser.download.useProgressDialogs"/>
+    <checkbox id="openDownloadsSidebar" label="&openSidebar.label;"
+              prefstring="browser.download.openSidebar"/>
+  </groupbox>
+</page>
+    

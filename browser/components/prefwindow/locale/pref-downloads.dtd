@@ -1,0 +1,8 @@
+<!ENTITY lHeader        "Downloads">
+<!ENTITY prompt.label   "Prompt for directory and file name">
+<!ENTITY defaultDir.label "Default download directory">
+<!ENTITY browse.label   "Browse...">
+<!ENTITY useProgressDialogs.label     "Display a progress window">
+<!ENTITY useProgressDialogs.accesskey "D">
+<!ENTITY whenStarting.label "When starting a download">
+<!ENTITY openSidebar.label "Open Downloads sidebar">
