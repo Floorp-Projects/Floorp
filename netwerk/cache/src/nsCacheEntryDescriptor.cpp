@@ -117,55 +117,55 @@ nsCacheEntryDescriptor::GetFetchCount(PRInt32 *result)
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetLastFetched(PRTime *result)
+nsCacheEntryDescriptor::GetLastFetched(PRUint32 *result)
 {
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    *result = ConvertSecondsToPRTime(mCacheEntry->LastFetched());
+    *result = mCacheEntry->LastFetched();
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetLastModified(PRTime *result)
+nsCacheEntryDescriptor::GetLastModified(PRUint32 *result)
 {
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    *result = ConvertSecondsToPRTime(mCacheEntry->LastModified());
+    *result = mCacheEntry->LastModified();
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetLastValidated(PRTime *result)
+nsCacheEntryDescriptor::GetLastValidated(PRUint32 *result)
 {
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    *result = ConvertSecondsToPRTime(mCacheEntry->LastValidated());
+    *result = mCacheEntry->LastValidated();
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::GetExpirationTime(PRTime *result)
+nsCacheEntryDescriptor::GetExpirationTime(PRUint32 *result)
 {
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    *result = ConvertSecondsToPRTime(mCacheEntry->ExpirationTime());
+    *result = mCacheEntry->ExpirationTime();
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsCacheEntryDescriptor::SetExpirationTime(PRTime expirationTime)
+nsCacheEntryDescriptor::SetExpirationTime(PRUint32 expirationTime)
 {
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    mCacheEntry->SetExpirationTime(ConvertPRTimeToSeconds(expirationTime));
+    mCacheEntry->SetExpirationTime(expirationTime);
     return NS_OK;
 }
 
@@ -435,7 +435,6 @@ nsTransportWrapper::EnsureTransportWithAccess(nsCacheAccessMode  mode)
     }
 
     if (!mTransport) {
-        nsresult rv;
         rv = nsCacheService::GlobalInstance()->
             GetTransportForEntry(descriptor->mCacheEntry,
                                  descriptor->mAccessGranted,
