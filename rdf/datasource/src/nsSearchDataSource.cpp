@@ -1106,9 +1106,9 @@ SearchDataSource::GetSearchEngineList()
 #endif
 				{
 #ifdef	XP_MAC
-					PRInt32	separatorOffset = uri.RFind(":");
+					PRInt32	separatorOffset = uri.RFindChar(':');
 #else
-					PRInt32	separatorOffset = uri.RFind("/");
+					PRInt32	separatorOffset = uri.RFindChar('/');
 #endif
 					if (separatorOffset > 0)
 					{
@@ -1241,7 +1241,7 @@ SearchDataSource::ReadFileContents(char *baseFilename, nsString& sourceContents)
 				PRBool		wasAliased = PR_FALSE;
 				fileSpec.ResolveAlias(wasAliased);
 				nsAutoString	childPath(childURL);
-				PRInt32		separatorOffset = childPath.RFind(":");
+				PRInt32		separatorOffset = childPath.RFindChar(':');
 				if (separatorOffset > 0)
 				{
 						childPath.Cut(0, separatorOffset+1);

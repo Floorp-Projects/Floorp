@@ -393,11 +393,11 @@ nsBrowsingProfile::CountPageVisit(const char* initialURL)
 
     nsAutoString urlStr(initialURL);
     // first chop off any query part of the initialURL
-    pos = urlStr.RFind("?");
+    pos = urlStr.RFindChar('?');
     if (pos >= 0) {
         urlStr.Cut(pos, urlStr.Length());
     }
-    pos = urlStr.RFind("#");
+    pos = urlStr.RFindChar('#');
     if (pos >= 0) {
         urlStr.Cut(pos, urlStr.Length());
     }
@@ -460,7 +460,7 @@ nsBrowsingProfile::CountPageVisit(const char* initialURL)
             }
 
             // _Now_ find the right most forward-slash
-            pos = urlStr.RFind("/");
+            pos = urlStr.RFindChar('/');
 
             if (pos >= 0) {
                 // leave the last '/', as this is the way most opendir

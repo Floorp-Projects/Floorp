@@ -420,7 +420,7 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 		nsString newFileName = sourceFile.GetLeafName();
 
         PRInt32 index;
-		if ((index = newFileName.RFind(".")) > 0)
+		if ((index = newFileName.RFindChar('.')) > 0)
 		{
             nsString extention;
             nsString fileName;

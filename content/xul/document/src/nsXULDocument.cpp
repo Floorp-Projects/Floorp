@@ -2428,8 +2428,8 @@ XULDocumentImpl::SplitProperty(nsIRDFResource* aProperty,
 
     // First try to split the namespace using the rightmost '#' or '/'
     // character.
-    if ((i = uri.RFind('#')) < 0) {
-        if ((i = uri.RFind('/')) < 0) {
+    if ((i = uri.RFindChar('#')) < 0) {
+        if ((i = uri.RFindChar('/')) < 0) {
             *aNameSpaceID = kNameSpaceID_None;
             *aTag = NS_NewAtom(uri);
             return NS_OK;

@@ -1080,9 +1080,9 @@ RDFXMLDataSourceImpl::MakeQName(nsIRDFResource* resource,
     }
 
     // Okay, so we don't have it in our map. Try to make one up.
-    PRInt32 i = uri.RFind('#'); // first try a '#'
+    PRInt32 i = uri.RFindChar('#'); // first try a '#'
     if (i == -1) {
-        i = uri.RFind('/');
+        i = uri.RFindChar('/');
         if (i == -1) {
             // Okay, just punt and assume there is _no_ namespace on
             // this thing...

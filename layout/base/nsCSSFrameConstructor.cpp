@@ -5296,13 +5296,13 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext*  aPresContex
       imageElement->GetSrc(altText);
       if (altText.Length() > 0) {
         // Trim off the path part of the filename
-        PRInt32 offset = altText.RFind('/');
+        PRInt32 offset = altText.RFindChar('/');
         if (offset >= 0) {
           altText.Cut(0, offset + 1);
         }
 
         // Trim off the extension
-        offset = altText.RFind('.');
+        offset = altText.RFindChar('.');
         if (offset >= 0) {
           altText.Truncate(offset);
         }

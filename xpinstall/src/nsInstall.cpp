@@ -71,11 +71,11 @@
 #endif 
 
 #ifdef XP_PC
-#define FILESEP "\\"
+#define FILESEP '\\'
 #elif defined(XP_MAC)
-#define FILESEP ":"
+#define FILESEP ':'
 #else
-#define FILESEP "/"
+#define FILESEP '/'
 #endif
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -791,7 +791,7 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
             int i;
 
             nsString dirStr(dir);
-            if (  (i = dirStr.RFind(FILESEP)) > 0 ) 
+            if (  (i = dirStr.RFindChar(FILESEP)) > 0 ) 
             {
                 // i is the index in the string, not the total number of
                 // characters in the string.  ToCString() requires the
@@ -1906,7 +1906,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
         nsString tempFileName = "xpinstall";
 
         // Get the extension of the file in the JAR
-        result = aJarfile.RFind(".");
+        result = aJarfile.RFindChar('.');
         if (result != -1)
         {
             // We found the extension; add it to the tempFileName string

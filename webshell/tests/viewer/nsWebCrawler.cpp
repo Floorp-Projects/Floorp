@@ -414,7 +414,7 @@ nsWebCrawler::GetOutputFile(nsIURI *aURL, nsString& aOutputName)
 #ifdef NECKO
     nsCRT::free(file);
 #endif
-    PRInt32 fileNameOffset = inputFileFullPath.RFind('/');
+    PRInt32 fileNameOffset = inputFileFullPath.RFindChar('/');
     if (-1==fileNameOffset)
     {
       inputFileName = new char[strlen(kDefaultOutputFileName) + 1];
