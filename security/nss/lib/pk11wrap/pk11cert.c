@@ -3367,15 +3367,41 @@ pk11ListCertCallback(NSSCertificate *c, void *arg)
     if( isCA  && (!CERT_IsCACert(newCert, &certType)) ) {
 	return PR_SUCCESS;
     }
-    CERT_DupCertificate(newCert);
+    if (isUnique) {
+	CERT_DupCertificate(newCert);
 
-    nickname = STAN_GetCERTCertificateName(c);
+	nickname = STAN_GetCERTCertificateName(c);
 
-    /* put slot certs at the end */
-    if (newCert->slot && !PK11_IsInternal(newCert->slot)) {
-    	CERT_AddCertToListTailWithData(certList,newCert,nickname);
+	/* put slot certs at the end */
+	if (newCert->slot && !PK11_IsInternal(newCert->slot)) {
+	    CERT_AddCertToListTailWithData(certList,newCert,nickname);
+	} else {
+	    CERT_AddCertToListHeadWithData(certList,newCert,nickname);
+	}
     } else {
-    	CERT_AddCertToListHeadWithData(certList,newCert,nickname);
+	/* add multiple instances to the cert list */
+	nssCryptokiObject **ip;
+	nssCryptokiObject **instances = nssPKIObject_GetInstances(&c->object);
+	if (!instances) {
+	    return PR_SUCCESS;
+	}
+	for (ip = instances; *ip; ip++) {
+	    nssCryptokiObject *instance = *ip;
+	    PK11SlotInfo *slot = instance->token->pk11slot;
+
+	    /* put the same CERTCertificate in the list for all instances */
+	    CERT_DupCertificate(newCert);
+
+	    nickname = STAN_GetCERTCertificateNameForInstance(c, instance);
+
+	    /* put slot certs at the end */
+	    if (slot && !PK11_IsInternal(slot)) {
+		CERT_AddCertToListTailWithData(certList,newCert,nickname);
+	    } else {
+		CERT_AddCertToListHeadWithData(certList,newCert,nickname);
+	    }
+	}
+	nssCryptokiObjectArray_Destroy(instances);
     }
     return PR_SUCCESS;
 }
