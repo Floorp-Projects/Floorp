@@ -596,20 +596,18 @@ statusbarpanel#statusbar-display {
   min-width: 0;
   background-color: transparent;
   list-style-image: url("chrome://browser/skin/Throbber.png");
-  -moz-image-region: rect(0px, 32px, 32px, 0px);
 }
 #navigator-throbber[busy="true"] {
-  -moz-image-region: rect(0px, 64px, 32px, 32px);
+  list-style-image: url("chrome://browser/skin/Throbber.mng");
 }
 
 toolbar[iconsize="small"] #navigator-throbber,
 toolbar[mode="text"] #navigator-throbber {
   list-style-image: url("chrome://browser/skin/Throbber-small.png");
-  -moz-image-region: rect(0px, 20px, 20px, 0px);
 }
 toolbar[iconsize="small"] #navigator-throbber[busy="true"],
 toolbar[mode="text"] #navigator-throbber[busy="true"] {
-  -moz-image-region: rect(0px, 40px, 20px, 20px);
+  list-style-image: url("chrome://browser/skin/Throbber-small.mng");
 }
 
 .tabs-closebutton {
@@ -618,11 +616,11 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 
 #content .tabs-closebutton {
   list-style-image: url("chrome://browser/skin/Close-tab.png");
-  -moz-image-region: rect(0px, 20px, 16px, 0px);
+  -moz-image-region: rect(0px, 18px, 14px, 0px);
 }
 
 #content .tabs-closebutton:hover {
-  -moz-image-region: rect(0px, 40px, 16px, 20px);
+  -moz-image-region: rect(0px, 36px, 14px, 18px);
 }
 
 toolbarbutton.chevron {
