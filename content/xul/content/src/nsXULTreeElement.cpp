@@ -303,9 +303,10 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
   nsCOMPtr<nsIDOMXULElement> startItem;
   if (aStartItem == nsnull) {
     // Continue the ranged selection based off the first item selected
-    if (!mSelectionStart)
-      mSelectionStart = mCurrentItem;
-    startItem = mSelectionStart;
+    if (mSelectionStart)
+      startItem = mSelectionStart;
+    else
+      startItem = mCurrentItem;
   }
   else startItem = aStartItem;
 
@@ -316,6 +317,8 @@ nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
   PRBool suppressSelect = mSuppressOnSelect;
   SetSuppressOnSelect(PR_TRUE);
   ClearItemSelection();
+
+  mSelectionStart = startItem;
 
   PRInt32 startIndex = 0,
           endIndex = 0;
