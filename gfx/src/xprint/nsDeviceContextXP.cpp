@@ -62,7 +62,8 @@ nsDeviceContextXp :: nsDeviceContextXp()
     mPrintContext(nsnull),
     mSpec(nsnull),
     mParentDeviceContext(nsnull),
-    mFontMetricsContext(nsnull)
+    mFontMetricsContext(nsnull),
+    mRCContext(nsnull)
 {
 }
 
@@ -144,13 +145,16 @@ nsDeviceContextXp::InitDeviceContextXP(nsIDeviceContext *aCreatingDeviceContext,
   mParentDeviceContext = aParentContext;
 
   /* be sure we've cleaned-up old rubbish - new values will re-populate nsFontMetricsXlib soon... */
-  if (mFontMetricsContext)
-  {
-    DeleteFontMetricsXlibContext(mFontMetricsContext);
-    mFontMetricsContext = nsnull;
-  }
+  DeleteRenderingContextXlibContext(mRCContext);
+  DeleteFontMetricsXlibContext(mFontMetricsContext);
+  mRCContext          = nsnull;
+  mFontMetricsContext = nsnull;
  
   rv = CreateFontMetricsXlibContext(this, PR_TRUE, &mFontMetricsContext);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = CreateRenderingContextXlibContext(this, &mRCContext);
   if (NS_FAILED(rv))
     return rv;
    
@@ -310,12 +314,10 @@ void nsDeviceContextXp::DestroyXPContext()
    * properties (build-in fonts for example ) than the printer
    * previously used. */
   FlushFontCache();
-  nsRenderingContextXlib::Shutdown();
-  if (mFontMetricsContext)
-  {
-    DeleteFontMetricsXlibContext(mFontMetricsContext);
-    mFontMetricsContext = nsnull;
-  }
+  DeleteRenderingContextXlibContext(mRCContext);
+  DeleteFontMetricsXlibContext(mFontMetricsContext);
+  mRCContext          = nsnull;
+  mFontMetricsContext = nsnull;
 
   mPrintContext = nsnull; // nsCOMPtr will call |delete mPrintContext;|
 }
