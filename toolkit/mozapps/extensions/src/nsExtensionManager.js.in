@@ -157,12 +157,17 @@ nsInstallLogReader.prototype = {
     var lis = fis.QueryInterface(Components.interfaces.nsILineInputStream);
     var line = { value: "" };
     var more = false;
+    var lines = [];
     do {
       more = lis.readLine(line);
-      this._parseLine(line.value);
+      lines.push(line.value);
     }
     while (more);
     fis.close();
+
+    // Now that we've closed the stream we can remove all the files    
+    for (var i = 0; i < lines.length; ++i)
+      this._parseLine(lines[i]);
   },
   
   _parseLine: function (aLine)
@@ -170,7 +175,7 @@ nsInstallLogReader.prototype = {
     var parts = aLine.split("\t");
     if (parts[0] == this.TOKEN_ADD_FILE) {
       var prefix = this.TOKEN_ADD_FILE + "\t";
-      var filePD = aLine.substr(prefix.length, aLine.length - 1); // strips off \n
+      var filePD = aLine.substr(prefix.length, aLine.length);
       var lf = Components.classes["@mozilla.org/file/local;1"]
                          .createInstance(Components.interfaces.nsILocalFile);
       lf.persistentDescriptor = filePD;
@@ -289,6 +294,24 @@ nsExtensionInstaller.prototype = {
     // Kick off the extraction on a new thread, then join to wait for it to
     // complete. 
     // (new nsJarFileExtractor(aZipReader.file, dir)).extract();
+    
+    this._cleanUpStagedXPI();
+  },
+  
+  _cleanUpStagedXPI: function ()
+  {
+    var stageDir = getDir(this._extDirKey, ["extensions", "temp", this._extensionID]);
+    var sourceXPI = stageDir.clone();
+    sourceXPI.append(this._extensionID + ".xpi");
+    sourceXPI.remove(false);
+    
+    // Remove the extension's stage dir
+    if (!stageDir.directoryEntries.hasMoreElements()) 
+      stageDir.remove(false);
+      
+    // If the parent "temp" dir is empty, remove it.
+    if (!stageDir.parent.directoryEntries.hasMoreElements())
+      stageDir.parent.remove(false);
   },
   
   _registerChromeForExtension: function ()
@@ -382,14 +405,19 @@ nsExtensionUninstaller.prototype = {
     this._reader = new nsInstallLogReader(this._extensionID, 
                                           this._isProfile, 
                                           this);
-    this._reader.read();
+    try { // XXXben don't let errors stop us. 
+      this._reader.read();
+      
+      // Now remove the uninstall log file. 
+      this._removeFile(this._reader.uninstallLog);
+    }
+    catch (e) {
+      dump("******* EEEEEE = " + e + "\n");
+    }
     
-    // Now remove the uninstall log file. 
-    this._removeFile(this._reader.uninstallLog);
-
     // Unset the "toBeUninstalled" flag
     this._extensionDS.setExtensionProperty(this._extensionID, 
-                                           this._extensionDS._emR("toBeInstalled"),
+                                           this._extensionDS._emR("toBeUninstalled"),
                                            null, this._isProfile);
   },
   
@@ -403,19 +431,14 @@ nsExtensionUninstaller.prototype = {
   _removeFile: function (aFile)
   {
     if (aFile.exists()) {
-      try {
-        aFile.remove(false);
-      }
-      catch(e) {
-        dump("*** ex = " + e + ", path = " + aFile.path + "\n");
-      }
-    }
+      dump("*** trying to remove " + aFile.path + "\n");
+      aFile.remove(false);
+      dump("*** just removed " + aFile.path + "\n");
       
-    // Clean up the parent hierarchy if possible  
-    var parent = aFile.parent;
-    if (parent.exists()) {
+      // Clean up the parent hierarchy if possible  
+      var parent = aFile.parent;
       var e = parent.directoryEntries;
-      if (parent.isDirectory() && !e.hasMoreElements() && 
+      if (!e.hasMoreElements() && 
           !parent.equals(this._extensionsDir)) // stop at the extensions dir
         this._removeFile(parent);
     }
@@ -425,7 +448,6 @@ nsExtensionUninstaller.prototype = {
   {
     switch (aChromeType) {
     case this._reader.CHROME_TYPE_PACKAGE:
-      dump("*** dereg " + aProviderName + ", prf = " + aIsProfile + "\n");
       this._cr.uninstallPackage(aProviderName, aIsProfile)
       break;
     case this._reader.CHROME_TYPE_SKIN:
@@ -685,9 +707,6 @@ nsExtensionManager.prototype = {
           var lf = Components.classes["@mozilla.org/file/local;1"]
                               .createInstance(Components.interfaces.nsILocalFile);
           var path = line.value;
-          if (path.charAt(path.length-1) == "\n")
-            path = path.substr(0, path.length - 1);
-          dump("*** loading pref file at " + lf.path + "\n");
           lf.initWithPath(path);
           
           if (lf.exists())
@@ -777,10 +796,12 @@ nsExtensionManager.prototype = {
     for (var i = 0; i < extensions.length; ++i) {
       var extension = extensions[i];
       
-      var valid = this._ds.getExtensionProperty(extension.id, "toBeDisabled") != "true";
-      valid = this._ds.getExtensionProperty(extension.id, "toBeUninstalled") != "true";
+      var valid = this._ds.getExtensionProperty(extension.id, "toBeDisabled") != "true"; // About to be disabled
+      valid = this._ds.getExtensionProperty(extension.id, "disabled") != "true";         // Already disabled
+      valid = this._ds.getExtensionProperty(extension.id, "toBeUninstalled") != "true";  // About to be uninstalled
       
-      if (valid) continue;
+      if (!valid)
+        continue;
       
       // Now locate this extension within the extensions folder
       // First, where is it installed - profile or global?
