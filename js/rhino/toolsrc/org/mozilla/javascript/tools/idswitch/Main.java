@@ -41,9 +41,9 @@ import java.text.SimpleDateFormat;
 import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.tools.ToolErrorReporter;
 
-public class StringIdMap {
+public class Main {
 
-    private static final String PROGRAM_NAME = "StringIdMap";
+    private static final String PROGRAM_NAME = "Main";
 
     private static final String SWITCH_TAG_STR = "string_id_map";
     private static final String GENERATED_TAG_STR = "generated";
@@ -470,7 +470,7 @@ public class StringIdMap {
     }
 
     public static void main(String[] args) {
-        StringIdMap self = new StringIdMap();
+        Main self = new Main();
         int status = self.exec(args);
         System.exit(status);
     }

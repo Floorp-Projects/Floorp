@@ -1,8 +1,12 @@
-Notes on StringIdMap (main class org.mozilla.javascript.tools.idswitch.StringIdMap) utility
+
+USING IDSWITCH GENERATOR TOOL
+
+Usage:
+java org.mozilla.javascript.tools.idswitch.Main <SINGLE-JAVA-SOURCE>
 
 The main purpose of this utility is to generate Java code to map strings to some ids that can be used, for example, in a switch statement.
 
-The utility scans the file for lines with the following structure:
+The utility scans the input file for lines with the following structure:
 
 // #string_id_map#
 ... <DEFINITION AREA>
@@ -68,7 +72,9 @@ For example, if file x.java contains:
 
 
 then invocation
-java org.mozilla.javascript.tools.string_switch.StringIdMap x.java
+
+java org.mozilla.javascript.tools.idswitch.Main x.java
+
 would replace that by a code fragment similar to:
 
 // #string_id_map#
