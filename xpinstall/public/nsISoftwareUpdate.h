@@ -35,6 +35,7 @@
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
+#include "nsIDOMWindowInternal.h"
 
 #define NS_IXPINSTALLCOMPONENT_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/xpinstall;1"
 #define NS_IXPINSTALLCOMPONENT_CLASSNAME "Mozilla XPInstall Component"
@@ -64,6 +65,7 @@ class nsISoftwareUpdate : public nsISupports
             NS_IMETHOD InstallJar(nsIFile* localFile,
                                   const PRUnichar* URL,
                                   const PRUnichar* arguments,
+                                  nsIDOMWindowInternal* aParentWindow,
                                   PRUint32 flags,
                                   nsIXPIListener* aListener = 0) = 0; 
 

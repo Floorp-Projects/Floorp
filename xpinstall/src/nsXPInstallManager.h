@@ -105,6 +105,7 @@ class nsXPInstallManager : public nsIXPIListener,
         PRTime              mLastUpdate;
 
         nsCOMPtr<nsIXPIProgressDlg>  mDlg;
+        nsCOMPtr<nsIDOMWindowInternal> mParentWindow;
         nsCOMPtr<nsIStringBundle>    mStringBundle;
 };
 

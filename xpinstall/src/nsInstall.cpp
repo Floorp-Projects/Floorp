@@ -61,7 +61,7 @@
 #include "nsNetUtil.h"
 
 #include "nsProxiedService.h"
-#include "nsINetSupportDialogService.h"
+#include "nsICommonDialogs.h"
 #include "nsIPrompt.h"
 
 #ifdef _WINDOWS
@@ -84,7 +84,7 @@
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
@@ -97,6 +97,7 @@ nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
                              const PRUnichar*   aArgs, 
                              PRUint32           flags, 
                              nsIXPIListener*    aListener,
+                             nsIDOMWindowInternal* aParentWindow,
                              nsIChromeRegistry* aChromeReg)
 : mError(0),
   mType(aInstallType),
@@ -105,6 +106,7 @@ nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
   mArgs(aArgs), 
   mFile(aFile), 
   mListener(aListener),
+  mParent(aParentWindow),
   mChromeReg(aChromeReg)
 {
     MOZ_COUNT_CTOR(nsInstallInfo);
@@ -2401,13 +2403,13 @@ void nsInstall::SetInstallURL(const nsString& url)  { mInstallURL = url; }
 PRInt32    
 nsInstall::Alert(nsString& string)
 {
-    nsresult res;  
+    nsresult res;
 
-    NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, NS_UI_THREAD_EVENTQ, &res);
+    NS_WITH_PROXIED_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, NS_UI_THREAD_EVENTQ, &res);
     if (NS_FAILED(res)) 
         return res;
-    
-    return dialog->Alert(nsnull, string.GetUnicode());
+
+    return dialog->Alert(mParent, nsnull, string.GetUnicode());
 }
 
 PRInt32    
@@ -2416,11 +2418,11 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
     *aReturn = PR_FALSE; /* default value */
     
     nsresult res;  
-    NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, NS_UI_THREAD_EVENTQ, &res);
+    NS_WITH_PROXIED_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, NS_UI_THREAD_EVENTQ, &res);
     if (NS_FAILED(res)) 
         return res;
     
-    return dialog->Confirm(nsnull, string.GetUnicode(), aReturn);
+    return dialog->Confirm(mParent, nsnull, string.GetUnicode(), aReturn);
 }
 
 

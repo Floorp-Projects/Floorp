@@ -19,6 +19,7 @@ class nsInstallInfo;
 
 #include "nsIScriptExternalNameSet.h"
 #include "nsIAppShellComponent.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsPIXPIStubHook.h"
 #include "nsTopProgressNotifier.h"
 
@@ -58,6 +59,7 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         NS_IMETHOD InstallJar( nsIFile* localFile,
                                const PRUnichar* URL,
                                const PRUnichar* arguments,
+                               nsIDOMWindowInternal* aParentWindow,
                                PRUint32 flags = 0,
                                nsIXPIListener* aListener = 0);
 

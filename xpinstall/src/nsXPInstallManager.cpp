@@ -373,8 +373,10 @@ PRBool nsXPInstallManager::ConfirmChromeInstall(nsIScriptGlobalObject* aGlobalOb
 NS_IMETHODIMP nsXPInstallManager::DialogOpened(nsISupports* aWindow)
 {
   nsresult rv;
-  nsCOMPtr<nsIDOMWindowInternal> win = do_QueryInterface(aWindow, &rv);
+
+  mParentWindow = do_QueryInterface(aWindow, &rv);
   DownloadNext();
+  
   return rv;
 }
 
@@ -490,6 +492,7 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
                         rv = softupdate->InstallJar(mItem->mFile,
                                                 mItem->mURL.GetUnicode(),
                                                 mItem->mArguments.GetUnicode(),
+                                                mParentWindow,
                                                 mItem->mFlags,
                                                 this );
                     }

@@ -271,8 +271,12 @@ PR_PUBLIC_API(PRInt32) XPI_Install(
 #endif  
 
     if (iFile && gXPI)
-        rv = gXPI->InstallJar( iFile, URLstr.GetUnicode(), args.GetUnicode(), 
-                               (aFlags | XPI_NO_NEW_THREAD), gListener );
+        rv = gXPI->InstallJar( iFile,
+                               URLstr.GetUnicode(),
+                               args.GetUnicode(),
+                               nsnull,
+                               (aFlags | XPI_NO_NEW_THREAD),
+                               gListener );
 
     return gInstallStatus;
 }
