@@ -27,7 +27,7 @@
       <xul:deck flex="1" anonid="deck" class="indented">
         <xul:vbox flex="1">
           <xul:hbox flex="1">
-            <xul:progressmeter mode="normal" value="0" flex="1"
+            <xul:progressmeter mode="normal" value="0"
                                xbl:inherits="value=progress,mode=progressmode"/>
             <xul:label xbl:inherits="value=progress"/>
           </xul:hbox>
