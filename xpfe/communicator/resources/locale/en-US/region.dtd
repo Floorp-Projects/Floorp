@@ -1,3 +1,2 @@
 <!-- timebomb.dtd -->
-<!ENTITY     warnText.label          "This is a warning that this product will expire.  Please visit http://www.mozilla.org for newer versions.">
-<!ENTITY     expireText.label        "This version has expired.  You must download a newer version at http://www.mozilla.org.">
+<!ENTITY     timeBombURL.label          "http://www.mozilla.org">
