@@ -52,7 +52,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 LIBRARY_NAME    = $(MODULE)
 META_COMPONENT  = mail
-MODULE_NAME  = nsComm4xMailImport
+MODULE_NAME  = nsComm4xMailImportModule
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsComm4xMailFactory.obj         \
