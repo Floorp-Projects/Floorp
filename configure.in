@@ -785,7 +785,7 @@ case "$target" in
     *-*-os2_emx)
         _PEDANTIC=''
         AR=emxomfar
-        AR_FLAGS='-p128 r $@'
+        AR_FLAGS='-p256 r $@'
         CFLAGS="-Zmtd -Zomf $CFLAGS"
         CXXFLAGS="-Zmtd -Zomf $CXXFLAGS"
         DSO_LDOPTS='-Zomf -Zdll -Zmt -Zcrtdll -Zlinker /NOO'
