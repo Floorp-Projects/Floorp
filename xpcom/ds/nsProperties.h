@@ -21,7 +21,7 @@
 
 #include "nsIFactory.h"
 
-class nsPropertiesFactory : nsIFactory
+class nsPropertiesFactory : public nsIFactory
 {
 public:
   nsPropertiesFactory();
