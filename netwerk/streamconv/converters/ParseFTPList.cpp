@@ -1146,8 +1146,8 @@ int ParseFTPList(const char *line, struct list_state *state,
           }
 
           result->fe_time.tm_year = state->now_tm.tm_year;
-          if ( (( state->now_tm.tm_month  << 4) + state->now_tm.tm_mday) <
-               ((result->fe_time.tm_month << 4) + result->fe_time.tm_mday) )
+          if ( (( state->now_tm.tm_month << 5) + state->now_tm.tm_mday) <
+               ((result->fe_time.tm_month << 5) + result->fe_time.tm_mday) )
             result->fe_time.tm_year--;
        
         } /* time/year */
