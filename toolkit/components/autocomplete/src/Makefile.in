@@ -29,12 +29,13 @@ MODULE = autocomplete
 LIBRARY_NAME = autocomplete_s
 FORCE_STATIC_LIB = 1
 
-REQUIRES = xpcom \
-		       string \
-		       dom \
-		       layout \
-		       mork \
-		       $(NULL)
+REQUIRES =	xpcom \
+		string \
+		dom \
+		layout \
+		mork \
+		unicharutil \
+	 	$(NULL)
 
 CPPSRCS = nsAutoCompleteController.cpp \
           nsAutoCompleteMdbResult.cpp \

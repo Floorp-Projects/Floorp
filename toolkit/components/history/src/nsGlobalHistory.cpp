@@ -4154,7 +4154,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString &aSearchString,
       aPrevResult->GetValueAt(i, url);
       
       if (!AutoCompleteCompare(url, aSearchString, aExclude))
-        aPrevResult->RemoveRowAt(i);
+        aPrevResult->RemoveRowAt(i, PR_FALSE);
     }
     
     *aResult = aPrevResult;

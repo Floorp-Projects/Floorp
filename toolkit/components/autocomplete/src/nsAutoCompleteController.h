@@ -102,7 +102,6 @@ protected:
 
   nsString mSearchString;
   PRPackedBool mEnterAfterSearch;
-  PRPackedBool mNeedToComplete;
   PRPackedBool mDefaultIndexCompleted;
   PRPackedBool mBackspaced;
   PRUint16 mSearchStatus;

@@ -227,12 +227,12 @@ nsFormFillController::GetPopupOpen(PRBool *aPopupOpen)
 NS_IMETHODIMP
 nsFormFillController::SetPopupOpen(PRBool aPopupOpen)
 {
-  if (aPopupOpen) {
-    nsRect popupRect = GetScreenOrigin(mFocusedInput);
-    if (mFocusedPopup)
+  if (mFocusedPopup) {
+    if (aPopupOpen) {
+      nsRect popupRect = GetScreenOrigin(mFocusedInput);
       mFocusedPopup->OpenPopup(this, popupRect.x, popupRect.y+popupRect.height, popupRect.width);
-  } else {
-    mFocusedPopup->ClosePopup();
+    } else
+      mFocusedPopup->ClosePopup();
   }
     
   return NS_OK;
@@ -562,8 +562,20 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
   PRUint32 k;
   keyEvent->GetKeyCode(&k);
   switch (k) {
-  case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
   case nsIDOMKeyEvent::DOM_VK_DELETE:
+    {
+      PRBool isShift = PR_FALSE;
+      keyEvent->GetShiftKey(&isShift);
+
+      if (isShift) {
+        mController->HandleDelete(&cancel);
+
+        break;
+      }
+
+      // fall through
+    }
+  case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
     mController->HandleText();
     break;
   case nsIDOMKeyEvent::DOM_VK_UP:

@@ -73,7 +73,7 @@ interface nsIAutoCompleteMdbResult : nsIAutoCompleteBaseResult
 
   void addRow(in nsIMdbRow row);
 
-  void removeRowAt(in unsigned long rowIndex);
+  void removeRowAt(in unsigned long rowIndex, in boolean removeFromDb);
 
   nsIMdbRow getRowAt(in unsigned long rowIndex);
 

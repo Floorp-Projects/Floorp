@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+ /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Netscape Public License
@@ -20,6 +21,8 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (Original Author)
+ *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Johnny Stenback <jst@mozilla.jstenback.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -37,12 +40,12 @@
 
 #include "nsAutoCompleteController.h"
 
+#include "nsIAutoCompleteResultTypes.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMKeyEvent.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMElement.h"
 #include "nsIAtomService.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 static const char *kAutoCompleteSearchCID = "@mozilla.org/autocomplete/search;1?name=";
 
@@ -52,7 +55,6 @@ NS_IMPL_ISUPPORTS4(nsAutoCompleteController, nsIAutoCompleteController, nsIAutoC
 
 nsAutoCompleteController::nsAutoCompleteController() :
   mEnterAfterSearch(PR_FALSE),
-  mNeedToComplete(PR_FALSE),
   mDefaultIndexCompleted(PR_FALSE),
   mBackspaced(PR_FALSE),
   mSearchStatus(0),
@@ -120,7 +122,6 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
   // Reset all search state members to default values
   mSearchString = newValue;
   mEnterAfterSearch = PR_FALSE;
-  mNeedToComplete = PR_FALSE;
   mDefaultIndexCompleted = PR_FALSE;
   mBackspaced = PR_FALSE;
   mSearchStatus = nsIAutoCompleteController::STATUS_NONE;
@@ -163,7 +164,7 @@ nsAutoCompleteController::StartSearch(const nsAString &aSearchString)
 
 NS_IMETHODIMP
 nsAutoCompleteController::HandleText()
-{  
+{
   // Stop current search in case it's async.
   StopSearch();
   // Stop the queued up search on a timer
@@ -173,8 +174,6 @@ nsAutoCompleteController::HandleText()
   mInput->GetDisableAutoComplete(&disabled);
   NS_ENSURE_TRUE(!disabled, NS_OK;);
 
-  mNeedToComplete = PR_TRUE;
- 
   nsAutoString newValue;
   mInput->GetTextValue(newValue);
 
@@ -264,8 +263,6 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
   // By default, don't cancel the event
   *_retval = PR_FALSE;
   
-  mNeedToComplete = PR_FALSE;
-
   nsCOMPtr<nsIAutoCompletePopup> popup;
   mInput->GetPopup(getter_AddRefs(popup));
   NS_ENSURE_TRUE(popup != nsnull, NS_ERROR_FAILURE);
@@ -322,6 +319,80 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
     ClosePopup();
   }
   
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAutoCompleteController::HandleDelete(PRBool *_retval)
+{
+  *_retval = PR_FALSE;
+  PRBool isOpen = PR_FALSE;
+  mInput->GetPopupOpen(&isOpen);
+  if (!isOpen || mRowCount <= 0) {
+    // Nothing left to delete, proceed as normal
+    HandleText();
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIAutoCompletePopup> popup;
+  mInput->GetPopup(getter_AddRefs(popup));
+
+  PRInt32 index, searchIndex, rowIndex;
+  popup->GetSelectedIndex(&index);
+  RowIndexToSearch(index, &searchIndex, &rowIndex);
+  NS_ENSURE_TRUE(searchIndex >= 0 && rowIndex >= 0, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIAutoCompleteResult> result;
+  mResults->GetElementAt(searchIndex, getter_AddRefs(result));
+  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+
+  nsAutoString search;
+  mInput->GetSearchParam(search);
+
+  nsAutoString value;
+  result->GetValueAt(rowIndex, value);
+
+  nsCOMPtr<nsIAutoCompleteMdbResult> mdbResult(do_QueryInterface(result));
+  if (mdbResult) {
+    // Clear the row in our result and in the DB.
+    mdbResult->RemoveRowAt(rowIndex, PR_TRUE);
+
+    --mRowCount;
+  }
+
+  // Unselect the current item.
+  popup->SetSelectedIndex(-1);
+
+  // Tell the tree that the row count changed. 
+  if (mTree)
+    mTree->RowCountChanged(mRowCount, -1);
+
+  // Adjust index, if needed.
+  if (index >= (PRInt32)mRowCount)
+    index = mRowCount - 1;
+
+  if (mRowCount > 0) {
+    // There are still rows in the popup, select the current index again.
+    popup->SetSelectedIndex(index);
+
+    // Complete to the new current value.
+    nsAutoString value;
+    if (NS_SUCCEEDED(GetResultValueAt(index, PR_TRUE, value))) {
+      CompleteValue(value);
+
+      // Make sure we cancel the event that triggerd this call.
+      *_retval = PR_TRUE;
+    }
+
+    // Invalidate the popup.
+    popup->Invalidate();
+  } else {
+    // Nothing left in the popup, clear any pending search timers and
+    // close the popup.
+    ClearSearchTimer();
+    ClosePopup();
+  }
+
   return NS_OK;
 }
 
@@ -803,7 +874,7 @@ nsAutoCompleteController::EnterMatch()
   
   if (!value.IsEmpty()) {
     mInput->SetTextValue(value);
-    mInput->SelectTextRange(-1, -1);
+    mInput->SelectTextRange(value.Length(), value.Length());
     mSearchString = value;
   }
   
@@ -827,7 +898,6 @@ nsAutoCompleteController::RevertTextValue()
     mInput->SetTextValue(oldValue);
   
   mSearchString.Truncate(0);
-  mNeedToComplete = PR_FALSE;
 
   return NS_OK;
 }
@@ -958,13 +1028,23 @@ nsAutoCompleteController::CompleteDefaultIndex(PRInt32 aSearchIndex)
 nsresult
 nsAutoCompleteController::CompleteValue(nsString &aValue)
 {
-  PRInt32 findIndex = aValue.Find(mSearchString, PR_FALSE);
-  if (findIndex == 0 || mSearchString.IsEmpty()) {
-    // The textbox value matches the beginning of the default value, so we can just
-    // append the latter portion
+  nsString::const_iterator start, end, iter;
+  aValue.BeginReading(start);
+  aValue.EndReading(end);
+  iter = start;
+
+  FindInReadable(mSearchString, iter, end,
+		 nsCaseInsensitiveStringComparator());
+
+  if (iter == start) {
+    // The textbox value matches the beginning of the default value,
+    // or the default value is empty, so we can just append the latter
+    // portion
     mInput->SetTextValue(aValue);
     mInput->SelectTextRange(mSearchString.Length(), aValue.Length());
   } else {
+    PRInt32 findIndex = iter.get() - start.get();
+
     mInput->SetTextValue(mSearchString + Substring(aValue, mSearchString.Length()+findIndex, aValue.Length()));
     mInput->SelectTextRange(mSearchString.Length(), aValue.Length() - findIndex);
 
