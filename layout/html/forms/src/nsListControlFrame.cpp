@@ -2143,6 +2143,11 @@ NS_IMETHODIMP
 nsListControlFrame::FireOnChange()
 {
   nsresult rv = NS_OK;
+  
+  // Since we're firing onChange, we don't want to fire it anymore.
+  if (mComboboxFrame) {
+    mComboboxFrame->SetNeedToFireOnChange(PR_FALSE);
+  }
 
   // Dispatch the NS_FORM_CHANGE event
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -2155,10 +2160,6 @@ nsListControlFrame::FireOnChange()
   if (presShell) {
     rv = presShell->HandleEventWithTarget(&event, this, nsnull,
                                            NS_EVENT_FLAG_INIT, &status);
-    // Obviously the combobox doesn't need to fire onChange anymore
-    if (NS_SUCCEEDED(rv) && mComboboxFrame) {
-      rv = mComboboxFrame->SetNeedToFireOnChange(PR_FALSE);
-    }
   }
 
   return rv;
