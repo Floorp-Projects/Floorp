@@ -1841,12 +1841,15 @@ void nsViewManager2::GetMaxWidgetBounds(nsRect& aMaxWidgetBounds) const
     nsIViewManager* vm = (nsIViewManager*)gViewManagers->ElementAt(index);
     nsCOMPtr<nsIWidget> rootWidget;
 
-    vm->GetWidget(getter_AddRefs(rootWidget));
-
-    nsRect widgetBounds;
-    rootWidget->GetBounds(widgetBounds);
-    aMaxWidgetBounds.width = max(aMaxWidgetBounds.width, widgetBounds.width);
-    aMaxWidgetBounds.height = max(aMaxWidgetBounds.height, widgetBounds.height);
+    if(NS_SUCCEEDED(vm->GetWidget(getter_AddRefs(rootWidget))) && rootWidget)
+    {
+      nsRect widgetBounds;
+      rootWidget->GetBounds(widgetBounds);
+      aMaxWidgetBounds.width = max(aMaxWidgetBounds.width, widgetBounds.width);
+      aMaxWidgetBounds.height = max(aMaxWidgetBounds.height, widgetBounds.height);
+    }
+    else
+      NS_ASSERTION(0, "failure to get rootWidget");
 
   }
 
