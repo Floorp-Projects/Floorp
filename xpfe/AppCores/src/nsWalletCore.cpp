@@ -186,7 +186,7 @@ NS_IMETHODIMP nsWalletCore::ShowWindow(nsIDOMWindow* aCurrentFrontWin, nsIDOMWin
     window = nsnull;
 
     nsCOMPtr<nsIURL> urlObj;
-    rv = NS_NewURL(getter_AddRefs(urlObj), "resource://res/samples/htmldlgs.htm");
+    rv = NS_NewURL(getter_AddRefs(urlObj), "resource://res/samples/WalletPreview.html");
     if (NS_FAILED(rv))
         return rv;
 
