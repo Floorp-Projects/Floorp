@@ -109,7 +109,7 @@ nsLoggingProgressNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar*
     nsCString uline;
     uline.SetCapacity(name.Length());
     for ( int i=0; i < name.Length(); ++i)
-        uline.SetCharAt('-', i);
+        uline.Append('-');
 
     *mLogStream << "     " << name.GetBuffer() << nsEndl;
     *mLogStream << "     " << uline.GetBuffer() << nsEndl;
