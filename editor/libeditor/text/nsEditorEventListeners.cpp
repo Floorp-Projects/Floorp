@@ -513,6 +513,82 @@ nsTextEditorMouseListener::MouseOut(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
+/*
+ * nsTextEditorDragListener implementation
+ */
+
+
+
+NS_IMPL_ADDREF(nsTextEditorDragListener)
+
+NS_IMPL_RELEASE(nsTextEditorDragListener)
+
+
+nsTextEditorDragListener::nsTextEditorDragListener() 
+{
+  NS_INIT_REFCNT();
+}
+
+
+
+nsTextEditorDragListener::~nsTextEditorDragListener() 
+{
+}
+
+
+
+nsresult
+nsTextEditorDragListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  static NS_DEFINE_IID(kIDOMDragListenerIID, NS_IDOMDRAGLISTENER_IID);
+  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMEventListenerIID)) {
+    *aInstancePtr = (void*)(nsIDOMEventListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMDragListenerIID)) {
+    *aInstancePtr = (void*)(nsIDOMDragListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+
+
+nsresult
+nsTextEditorDragListener::ProcessEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+
+
+nsresult
+nsTextEditorDragListener::DragStart(nsIDOMEvent* aDragEvent)
+{
+  return NS_OK;
+}
+
+
+
+nsresult
+nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
+{
+  mEditor->InsertText(nsAutoString("hello"));
+  return NS_OK;
+}
+
 
 
 /*
@@ -556,5 +632,21 @@ NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult,
 }
 
 
+
+nsresult
+NS_NewEditorDragListener(nsIDOMEventListener ** aInstancePtrResult, 
+                          nsITextEditor *aEditor)
+{
+  nsTextEditorDragListener* it = new nsTextEditorDragListener();
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  it->SetEditor(aEditor);
+
+  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
+
+  return it->QueryInterface(kIDOMEventListenerIID, (void **) aInstancePtrResult);   
+}
 
 

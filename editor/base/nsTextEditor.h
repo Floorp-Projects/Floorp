@@ -124,6 +124,7 @@ protected:
   nsTextEditRules* mRules;
   nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
   nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
+  nsCOMPtr<nsIDOMEventListener> mDragListenerP;
 
 };
 

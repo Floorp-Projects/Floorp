@@ -22,6 +22,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseListener.h"
+#include "nsIDOMDragListener.h"
 #include "nsITextEditor.h"
 #include "nsCOMPtr.h"
 
@@ -100,6 +101,38 @@ protected:
 
 };
 
+/** editor Implementation of the MouseListener interface
+ */
+class nsTextEditorDragListener : public nsIDOMDragListener 
+{
+public:
+  /** default constructor
+   */
+  nsTextEditorDragListener();
+  /** default destructor
+   */
+  virtual ~nsTextEditorDragListener();
+
+  /** SetEditor gives an address to the editor that will be accessed
+   *  @param aEditor the editor this listener calls for editing operations
+   */
+  void SetEditor(nsITextEditor *aEditor){mEditor = do_QueryInterface(aEditor);}
+
+/*interfaces for addref and release and queryinterface*/
+  NS_DECL_ISUPPORTS
+
+/*BEGIN implementations of mouseevent handler interface*/
+    virtual nsresult ProcessEvent(nsIDOMEvent* aEvent);
+public:
+  virtual nsresult DragStart(nsIDOMEvent* aDragEvent);
+  virtual nsresult DragDrop(nsIDOMEvent* aDragEvent);
+/*END implementations of mouseevent handler interface*/
+
+protected:
+  nsCOMPtr<nsITextEditor> mEditor;
+
+};
+
 /** factory for the editor key listener
  */
 extern nsresult NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult, nsITextEditor *aEditor);
@@ -107,6 +140,10 @@ extern nsresult NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResul
 /** factory for the editor mouse listener
  */
 extern nsresult NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, nsITextEditor *aEditor);
+
+/** factory for the editor drag listener
+ */
+extern nsresult NS_NewEditorDragListener(nsIDOMEventListener ** aInstancePtrResult, nsITextEditor *aEditor);
 
 #endif //editorInterfaces_h__
 
