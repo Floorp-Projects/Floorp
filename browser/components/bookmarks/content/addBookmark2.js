@@ -114,12 +114,12 @@ function onOK()
     const groups = window.arguments[5];
     for (var i = 0; i < groups.length; ++i) {
       url = getNormalizedURL(groups[i].url);
-      BMDS.createBookmarkInContainer(groups[i].name, url,
+      BMDS.createBookmarkInContainer(groups[i].name, url, null, null,
                                      groups[i].charset, rSource, -1);
     }
   } else {
     url = getNormalizedURL(window.arguments[1]);
-    rSource = BMDS.createBookmark(gName.value, url, window.arguments[3]);
+    rSource = BMDS.createBookmark(gName.value, url, null, null, window.arguments[3]);
   }
   if (!gBMtxmgr)
     gBMtxmgr= BookmarksUtils.getTransactionManager();
