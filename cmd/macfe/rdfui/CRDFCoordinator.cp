@@ -95,6 +95,27 @@ const char* CRDFCoordinator::Pref_EditWorkspace = "browser.editWorkspace";
 const char* CRDFCoordinator::Pref_ShowNavCenterSelector = "browser.chrome.show_navcenter_selector";
 const char* CRDFCoordinator::Pref_ShowNavCenterShelf = "browser.chrome.show_navcenter_shelf";
 
+
+ViewFEData :: ViewFEData ( )
+	: mSelector(NULL)
+{
+}
+
+
+ViewFEData :: ViewFEData ( SelectorData* inSelector )
+	: mSelector(inSelector)
+{
+}
+
+
+ViewFEData :: ~ViewFEData ( )
+{
+	delete mSelector;
+}
+
+
+#pragma mark -
+
 CRDFCoordinator::CRDFCoordinator(LStream* inStream)
 :	LView(inStream),
 	LDragAndDrop ( GetMacPort(), this ),
@@ -116,13 +137,16 @@ CRDFCoordinator::~CRDFCoordinator()
 	// if we don't do this, the LCommander destructor will try to clear the selection and
 	// of course, the HTPane won't be around anymore to update the selection....boom....
 	SwitchTarget(nil);
-	HT_SetNotificationMask ( mHTPane, HT_EVENT_NO_NOTIFICATION_MASK );
 	
 	delete mNavCenter;
 	delete mSelector;
 	
 	UnregisterNavCenter();
 	HT_DeletePane ( mHTPane );
+
+	// do this _after_ the call to delete the pane so we still get the notifications that
+	// the views are going away
+	HT_SetNotificationMask ( mHTPane, HT_EVENT_NO_NOTIFICATION_MASK );
 	
 } // destructor
 
@@ -182,8 +206,8 @@ CRDFCoordinator::FinishCreateSelf()
 			for (Uint32 i = 0; i < numViews; i++)
 			{
 				HT_View view = HT_GetNthView(mHTPane, i);
-				SelectorData* selector = new SelectorData(view);
-				HT_SetViewFEData ( view, selector );
+				ViewFEData* feData = new ViewFEData ( new SelectorData(view, mSelectorPane) );
+				HT_SetViewFEData ( view, feData );
 			}			
 		}
 			
@@ -322,23 +346,50 @@ void CRDFCoordinator::HandleNotification(
 					
 		case HT_EVENT_NODE_VPROP_CHANGED:
 		{
-			//¥¥¥optimization? only redraw the cell that changed
-//			TableIndexT index = HT_GetNodeIndex(HT_GetView(node), node);
-			mTreePane->Refresh();
+			// if the node we get is the topLevel node of a view, redraw the selector bar. Otherwise
+			// redraw the tree view (but only if it is the current view!).
+			if ( HT_TopNode(view) == node ) {
+				// make sure the view has the most up to date icon
+				//¥¥¥ this doesn't work yet because of the icon name weirdness in HT
+				#if 0
+				char* iconURL = HT_GetWorkspaceLargeIconURL(view);
+				if ( iconURL ) {
+					ViewFEData* viewData = static_cast<ViewFEData*>(HT_GetViewFEData(view));
+					Assert_(viewData != NULL);
+					if ( viewData )
+						viewData->mSelector->workspaceImage->SetImageURL ( iconURL );
+				}
+				#endif
+				mSelectorPane->Refresh();
+			}
+			else {
+				//¥¥¥make sure the node has the most up to date icon
+				//¥¥¥optimization? only redraw the cell that changed
+				if ( view == mTreePane->GetHTView() )
+					mTreePane->Refresh();
+			}
 			break;
 		}
 		
 		case HT_EVENT_NODE_SELECTION_CHANGED:
 			mTreePane->SyncSelectionWithHT();
 			break;
-			
+
+
+#if 0
+		// scroll the given node into view. Currently uses (more or less) the LTableView
+		// implementation which tries to scroll as little as possible and isn't very smart
+		// about centering the node. We should change that at some point (pinkerton).
+		//
+		// Waiting on RDF branch to land for this event to be available
+		case HT_EVENT_NODE_SCROLLTO:
+			TableIndexT index = HT_GetNodeIndex(view, node);
+			mTreePane->ScrollRowIntoFrame(index);
+			break;
+#endif
+		
 		case HT_EVENT_VIEW_REFRESH:
 		{
-			// update the sitemap icon if anything has changed
-			if ( view == HT_GetViewType(mHTPane, HT_VIEW_SITEMAP) ) {
-				//.....update the icon, but we don't have an icon or an API yet....
-			}
-
 			// only update if current view
 			//
 			// ¥¥¥ There are some fairly noticable redraw problems here. For example, when
@@ -369,16 +420,16 @@ void CRDFCoordinator::HandleNotification(
 		{
 			//¥¥¥ adds new view at end because we don't have enough data from HT to
 			//¥¥¥ do it right
-			SelectorData* selector = new SelectorData(view);
-			HT_SetViewFEData ( view, selector );
+			ViewFEData* feData = new ViewFEData ( new SelectorData(view, mSelectorPane) );
+			HT_SetViewFEData ( view, feData );
 			mSelectorPane->Refresh();
 			break;
 		}
 					
 		case HT_EVENT_VIEW_DELETED:
 		{
-			SelectorData* sel = static_cast<SelectorData*>(HT_GetViewFEData(view));
-			delete sel;
+			ViewFEData* feData = static_cast<ViewFEData*>(HT_GetViewFEData(view));
+			delete feData;
 			break;
 		}
 		
@@ -539,6 +590,11 @@ CRDFCoordinator :: ObeyCommand ( CommandT inCommand, void* ioParam )
 			cmdHandled = true;
 			break;
 		
+		case msg_TabSelect:
+			// don't accept focus switching to this view
+			cmdHandled = false;
+			break;
+
 		default:
 			cmdHandled = LCommander::ObeyCommand ( inCommand, ioParam );
 			break;
@@ -548,6 +604,7 @@ CRDFCoordinator :: ObeyCommand ( CommandT inCommand, void* ioParam )
 	return cmdHandled;
 	
 } // ObeyCommand
+
 
 
 //

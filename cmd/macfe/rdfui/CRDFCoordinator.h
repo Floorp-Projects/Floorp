@@ -39,6 +39,22 @@
 class CHyperTreeFlexTable;
 
 
+//
+// class ViewFEData
+//
+// Contains all the FE-specific data stuffed into an HT_View. This holds stuff about the icon on
+// the selector bar for the view, columns associated with the view, etc...
+//
+struct ViewFEData {
+	ViewFEData ( );
+	ViewFEData ( SelectorData* inSelector ); 
+	~ViewFEData ( ) ;
+
+	SelectorData* mSelector;
+	// ColumnData* mColumnInfo;		// to come later...
+};
+
+
 class CRDFCoordinator :	public LView,
 						public LListener, public LCommander, LBroadcaster,
 						public CRDFNotificationHandler,
@@ -69,6 +85,9 @@ public:
 		// register/unregister this NavCenter for SiteMap updates, etc
 	void RegisterNavCenter ( MWContext* inContext ) ;
 	void UnregisterNavCenter ( ) ;
+	
+		// because sometimes you just need to get to the top-level HT pane....
+	HT_Pane HTPane ( ) const { return mHTPane; } ;
 
 protected:
 
