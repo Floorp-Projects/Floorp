@@ -159,7 +159,6 @@ const PRInt32 kBackward = 1;
 
 #define ELEMENT_NOT_IN_TABLE ((nsIContent *)1)
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
