@@ -41,6 +41,19 @@
 
 #include "plstr.h"
 
+#if XP_PC
+static char* MakeUpperCase(char* aPath)
+{
+  // windows does not care about case.  push to uppercase:
+  int length = strlen(aPath);
+  for (int i = 0; i < length; i++)
+      if (islower(aPath[i]))
+        aPath[i] = _toupper(aPath[i]);
+    
+  return aPath;
+}
+#endif
+
 static void
 GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
 {
@@ -139,7 +152,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
                 if ( path[1] == ':' && path[2] == '\\' )
                     path[3] = 0;
             }
-            *this = path;
+            *this = MakeUpperCase(path);
         }
 #elif defined(XP_MAC)
         {
@@ -166,7 +179,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
                 }
 
             strcat( path, "\\" );
-            *this = path;
+            *this = MakeUpperCase(path);
 #elif defined(XP_MAC)
             *this = kTemporaryFolderType;
         
@@ -233,7 +246,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             path[len]   = '\\';
             path[len+1] = '\0';
 
-            *this = path;
+            *this = MakeUpperCase(path);
 
             break;
         }
@@ -250,7 +263,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             path[len]   = '\\';
             path[len+1] = '\0';
 
-            *this = path;
+            *this = MakeUpperCase(path);
             break;
         }
 
