@@ -462,8 +462,8 @@ TextFrame::TextFrame()
     // Create text timer the first time out
     gTextBlinker = new BlinkTimer();
   }
-  mSelectionOffset = -1;
-  mSelectionEnd = -1;
+  mSelectionOffset = PRUint32(-1);
+  mSelectionEnd = PRUint32(-1);
   NS_ADDREF(gTextBlinker);
 }
 
@@ -1211,28 +1211,20 @@ TextFrame::GetWidth(nsIRenderingContext& aRenderingContext,
 
   nsIFontMetrics* lastFont = aTextStyle.mLastFont;
   nscoord sum = 0;
-  PRInt32 pendingCount;
-  PRUnichar* runStart = bp;
   nscoord charWidth;
   for (; --aLength >= 0; aBuffer++) {
-    nsIFontMetrics* nextFont;
-    nscoord nextY, glyphWidth;
+    nscoord glyphWidth;
     PRUnichar ch = *aBuffer;
     if (aTextStyle.mSmallCaps && nsCRT::IsLower(ch)) {
-      nextFont = aTextStyle.mSmallFont;
       ch = nsCRT::ToUpper(ch);
       if (lastFont != aTextStyle.mSmallFont) {
-        aRenderingContext.SetFont(aTextStyle.mSmallFont);
-        aRenderingContext.GetWidth(ch, charWidth);
-        aRenderingContext.SetFont(aTextStyle.mNormalFont);
+        lastFont = aTextStyle.mSmallFont;
+        aRenderingContext.SetFont(lastFont);
       }
-      else {
-        aRenderingContext.GetWidth(ch, charWidth);
-      }
+      aRenderingContext.GetWidth(ch, charWidth);
       glyphWidth = charWidth + aTextStyle.mLetterSpacing;
     }
     else if (ch == ' ') {
-      nextFont = aTextStyle.mNormalFont;
       glyphWidth = aTextStyle.mSpaceWidth + aTextStyle.mWordSpacing;
       nscoord extra = aTextStyle.mExtraSpacePerSpace;
       if (--aTextStyle.mNumSpaces == 0) {
@@ -1242,18 +1234,12 @@ TextFrame::GetWidth(nsIRenderingContext& aRenderingContext,
     }
     else {
       if (lastFont != aTextStyle.mNormalFont) {
-        aRenderingContext.SetFont(aTextStyle.mNormalFont);
-        aRenderingContext.GetWidth(ch, charWidth);
-        aRenderingContext.SetFont(aTextStyle.mSmallFont);
+        lastFont = aTextStyle.mNormalFont;
+        aRenderingContext.SetFont(lastFont);
       }
-      else {
-        aRenderingContext.GetWidth(ch, charWidth);
-      }
-      nextFont = aTextStyle.mNormalFont;
+      aRenderingContext.GetWidth(ch, charWidth);
       glyphWidth = charWidth + aTextStyle.mLetterSpacing;
     }
-    if (nextFont != lastFont)
-      lastFont = nextFont;
     sum += glyphWidth;
     *bp++ = ch;
   }
@@ -2241,7 +2227,8 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   PRInt32 column = lineLayout.GetColumn();
   PRInt32 prevColumn = column;
   mColumn = column;
-  PRBool breakable = 0 != lineLayout.GetPlacedFrames();
+
+  PRBool breakable = !lineLayout.LineIsEmpty();
   for (;;) {
     // Get next word/whitespace from the text
     PRBool isWhitespace;
