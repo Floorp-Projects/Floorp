@@ -25,7 +25,6 @@
 #include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
 #include "nsAppCoresCIDs.h"
-#include "nsIDOMToolkitCore.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgIdentity.h"
 
@@ -55,6 +54,37 @@ nsMsgComposeService::~nsMsgComposeService()
 {
 }
 
+// Utility function to open a message compose window and pass an argument string to it.
+static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *args ) {
+    nsCOMPtr<nsIDOMWindow> hiddenWindow;
+    JSContext *jsContext;
+    nsresult rv;
+    NS_WITH_SERVICE( nsIAppShellService, appShell, kAppShellServiceCID, &rv )
+    if ( NS_SUCCEEDED( rv ) ) {
+        rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
+                                                    &jsContext );
+        if ( NS_SUCCEEDED( rv ) ) {
+            // Set up arguments for "window.openDialog"
+            void *stackPtr;
+            jsval *argv = JS_PushArguments( jsContext,
+                                            &stackPtr,
+                                            "WssW",
+                                            chrome,
+                                            "_blank",
+                                            "chrome,dialog=no,all",
+                                            args );
+            if ( argv ) {
+                nsCOMPtr<nsIDOMWindow> newWindow;
+                rv = hiddenWindow->OpenDialog( jsContext,
+                                               argv,
+                                               4,
+                                               getter_AddRefs( newWindow ) );
+                JS_PopArguments( jsContext, stackPtr );
+            }
+        }
+    }
+    return rv;
+}
 
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS(nsMsgComposeService, nsCOMTypeInfo<nsMsgComposeService>::GetIID());
@@ -82,10 +112,6 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 	}
     /*--- temporary hack ---*/
 
-	NS_WITH_SERVICE(nsIDOMToolkitCore, toolkitCore, kToolkitCoreCID, &rv); 
-    if (NS_FAILED(rv))
-		return rv;
-
 	args.Append("type=");
 	args.Append(type);
 	args.Append(",");
@@ -111,9 +137,10 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 	}
 	
 	if (msgComposeWindowURL && *msgComposeWindowURL)
-		toolkitCore->ShowWindowWithArgs(msgComposeWindowURL, nsnull, args);
+        rv = openWindow( msgComposeWindowURL, args.GetUnicode() );
 	else
-		toolkitCore->ShowWindowWithArgs("chrome://messengercompose/content/", nsnull, args);
+        rv = openWindow( nsString("chrome://messengercompose/content/").GetUnicode(),
+                         args.GetUnicode() );
 	
 	return rv;
 }
@@ -130,10 +157,6 @@ nsresult nsMsgComposeService::OpenComposeWindowWithValues(const PRUnichar *msgCo
 	nsAutoString args = "";
 	nsresult rv;
 
-	NS_WITH_SERVICE(nsIDOMToolkitCore, toolkitCore, kToolkitCoreCID, &rv); 
-    if (NS_FAILED(rv))
-		return rv;
-
 	args.Append("format=");
 	args.Append(format);
 	
@@ -145,9 +168,10 @@ nsresult nsMsgComposeService::OpenComposeWindowWithValues(const PRUnichar *msgCo
 	if (body)		{args.Append(",body="); args.Append(body);}
 
 	if (msgComposeWindowURL && *msgComposeWindowURL)
-		toolkitCore->ShowWindowWithArgs(msgComposeWindowURL, nsnull, args);
+        rv = openWindow( msgComposeWindowURL, args.GetUnicode() );
 	else
-		toolkitCore->ShowWindowWithArgs("chrome://messengercompose/content/", nsnull, args);
+        rv = openWindow( nsString("chrome://messengercompose/content/").GetUnicode(),
+                         args.GetUnicode() );
 	
 	return rv;
 }
@@ -159,10 +183,6 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *m
 	nsAutoString args = "";
 	nsresult rv;
 
-	NS_WITH_SERVICE(nsIDOMToolkitCore, toolkitCore, kToolkitCoreCID, &rv); 
-    if (NS_FAILED(rv))
-		return rv;
-
 	args.Append("format=");
 	args.Append(format);
 	
@@ -173,9 +193,10 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *m
 	}
 
 	if (msgComposeWindowURL && *msgComposeWindowURL)
-		toolkitCore->ShowWindowWithArgs(msgComposeWindowURL, nsnull, args);
+        rv = openWindow( msgComposeWindowURL, args.GetUnicode() );
 	else
-		toolkitCore->ShowWindowWithArgs("chrome://messengercompose/content/", nsnull, args);
+        rv = openWindow( nsString("chrome://messengercompose/content/").GetUnicode(),
+                         args.GetUnicode() );
 
     if (NS_FAILED(rv))
 		NS_IF_RELEASE(compFields);
