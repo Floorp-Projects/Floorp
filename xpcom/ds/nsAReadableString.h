@@ -336,6 +336,14 @@ class basic_nsAReadableString
     // protected:
       virtual const void* Implementation() const;
       virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) const = 0;
+      virtual PRBool Promises( const basic_nsAReadableString<CharT>& aString ) const { return &aString == this; }
+
+    private:
+        // NOT TO BE IMPLEMENTED
+      typedef typename nsCharTraits<CharT>::incompatible_char_type incompatible_char_type;
+      PRUint32  CountChar( incompatible_char_type ) const;
+//    in        Compare( incompatible_char_type ) const;
+//    PRBool    Equals( incompatible_char_type ) const;
   };
 
 template <class CharT>
@@ -513,7 +521,7 @@ basic_nsAReadableString<CharT>::CountChar( CharT c ) const
     nsReadingIterator<CharT> iter( BeginReading() );
     for (;;)
       {
-        PRUint32 lengthToExamineInThisFragment = iter.size_forward();
+        PRInt32 lengthToExamineInThisFragment = iter.size_forward();
         result += PRUint32(count(iter.operator->(), iter.operator->()+lengthToExamineInThisFragment, c));
         if ( !(lengthToExamine -= lengthToExamineInThisFragment) )
           return result;
@@ -750,9 +758,11 @@ basic_nsLiteralChar<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFra
   // nsPromiseConcatenation
   //
 
+template <class CharT> class nsPromiseReadable : public basic_nsAReadableString<CharT> { };
+
 template <class CharT>
 class nsPromiseConcatenation
-      : public basic_nsAReadableString<CharT>
+      : public nsPromiseReadable<CharT>
     /*
       NOT FOR USE BY HUMANS
 
@@ -807,6 +817,7 @@ class nsPromiseConcatenation
         }
 
       virtual PRUint32 Length() const;
+      virtual PRBool Promises( const basic_nsAReadableString<CharT>& ) const;
 
       nsPromiseConcatenation<CharT> operator+( const basic_nsAReadableString<CharT>& rhs ) const;
 
@@ -827,6 +838,13 @@ PRUint32
 nsPromiseConcatenation<CharT>::Length() const
   {
     return mStrings[kLeftString]->Length() + mStrings[kRightString]->Length();
+  }
+
+template <class CharT>
+PRBool
+nsPromiseConcatenation<CharT>::Promises( const basic_nsAReadableString<CharT>& aString ) const
+  {
+    return mStrings[0]->Promises(aString) || mStrings[1]->Promises(aString);
   }
 
 template <class CharT>
@@ -866,15 +884,15 @@ nsPromiseConcatenation<CharT>::GetReadableFragment( nsReadableFragment<CharT>& a
       }
 
     const CharT* result;
-    bool done;
+    PRBool done;
     do
       {
-        done = true;
+        done = PR_TRUE;
         result = mStrings[whichString]->GetReadableFragment(aFragment, aRequest, aPosition);
 
         if ( !result )
           {
-            done = false;
+            done = PR_FALSE;
             if ( aRequest == kNextFragment && whichString == kLeftString )
               {
                 aRequest = kFirstFragment;
@@ -886,7 +904,7 @@ nsPromiseConcatenation<CharT>::GetReadableFragment( nsReadableFragment<CharT>& a
                 whichString = SetLeftStringInFragment(aFragment);
               }
             else
-              done = true;
+              done = PR_TRUE;
           }
       }
     while ( !done );
@@ -912,7 +930,7 @@ nsPromiseConcatenation<CharT>::operator+( const basic_nsAReadableString<CharT>& 
 
 template <class CharT>
 class nsPromiseSubstring
-      : public basic_nsAReadableString<CharT>
+      : public nsPromiseReadable<CharT>
     /*
       NOT FOR USE BY HUMANS (mostly)
 
@@ -935,6 +953,7 @@ class nsPromiseSubstring
         }
 
       virtual PRUint32 Length() const;
+      virtual PRBool Promises( const basic_nsAReadableString<CharT>& aString ) const { return mString.Promises(aString); }
 
     private:
       const basic_nsAReadableString<CharT>& mString;
@@ -1037,6 +1056,11 @@ template <class CharT>
 nsPromiseSubstring<CharT>
 Substring( const basic_nsAReadableString<CharT>& aString, PRUint32 aStartPos, PRUint32 aSubstringLength )
   {
+#if 0
+      // signatures don't work, but consider this twist to help in assignments 
+    if ( aSubstringLength == aString.Length() && aStartPos == 0 )
+      return aString;
+#endif
     return nsPromiseSubstring<CharT>(aString, aStartPos, aSubstringLength);
   }
 
