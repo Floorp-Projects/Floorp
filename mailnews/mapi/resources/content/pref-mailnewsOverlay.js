@@ -54,7 +54,7 @@ function mailnewsOverlayInit() {
         if (mapiRegistry.isDefaultMailClient)
             mailnewsEnableMapi.setAttribute("checked", "true");
         else
-            mailnewsEnableMapi.setAttribute("checked", "false");
+            mailnewsEnableMapi.removeAttribute("checked");
     }
     else
         mailnewsEnableMapi.setAttribute("disabled", "true");

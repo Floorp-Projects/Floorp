@@ -364,8 +364,8 @@ function SchemaSelected()
   document.getElementById("removeSynonym").setAttribute("style", "display: inline;");
 
   // enable certain buttons
-  document.getElementById("removeSchema").setAttribute("disabled", "false")
-  document.getElementById("addEntry").setAttribute("disabled", "false")
+  document.getElementById("removeSchema").removeAttribute("disabled");
+  document.getElementById("addEntry").removeAttribute("disabled")
 }
 
 /* an entry has just been selected */
@@ -381,8 +381,8 @@ function EntrySelected()
   synonymText.setAttribute("value", synonymText.getAttribute("value2") + entryName + synonymText.getAttribute("value4"));
 
   // enable certain buttons
-  document.getElementById("removeEntry").setAttribute("disabled", "false")
-  document.getElementById("addSynonym").setAttribute("disabled", "false")
+  document.getElementById("removeEntry").removeAttribute("disabled");
+  document.getElementById("addSynonym").removeAttribute("disabled");
 }
 
 /* a synonym has just been selected */
@@ -390,7 +390,7 @@ function SynonymSelected()
 {
   var synonymtree = document.getElementById("synonymtree");
   if(synonymtree.selectedItems.length) {
-    document.getElementById("removeSynonym").setAttribute("disabled", "false")
+    document.getElementById("removeSynonym").removeAttribute("disabled");
   }
 }
 

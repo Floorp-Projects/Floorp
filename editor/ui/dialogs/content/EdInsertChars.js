@@ -199,8 +199,13 @@ function SelectLatinModifier()
 }
 function DisableLatinL(disable)
 {
-  LatinL_Label.setAttribute("disabled", disable ? "true" : "false");
-  LatinL.setAttribute("disabled", disable ? "true" : "false");
+  if (disable) {
+    LatinL_Label.setAttribute("disabled" "true");
+    LatinL.setAttribute("disabled", "true");
+  else {
+    LatinL_Label.removeAttribute("disabled");
+    LatinL.removeAttribute("disabled");
+  }
 }
 
 function UpdateLatinL()

@@ -404,7 +404,7 @@ function showActionElementFor(menuitem)
     }
 
     // Disable the "New Folder..." button if any other action than MoveToFolder is chosen
-    document.getElementById("newFolderButton").setAttribute("disabled", indexValue == "0" ? "false" : "true");
+    document.getElementById("newFolderButton").disabled = (indexValue != "0");
 }
 
 function onLabelListChanged(event)
