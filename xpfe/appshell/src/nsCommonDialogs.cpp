@@ -27,8 +27,6 @@ static NS_DEFINE_CID( kDialogParamBlockCID,          NS_DialogParamBlock_CID);
 class nsCommonDialogs: public nsICommonDialogs
 {
 public:
-enum {  eMsg =0, eCheckboxMsg =1, eIconURL =2 , eTitleMessage =3, eEditfield1Msg =4, eEditfield2Msg =5, eEditfield1Value = 6, eEditfield2Value = 7 };
-enum { eButtonPressed = 0, eCheckboxState = 1, eNumberButtons = 2, eNumberEditfields =3, ePasswordEditfieldMask =4 };
 			nsCommonDialogs();
   virtual	~nsCommonDialogs();
   NS_IMETHOD Alert(nsIDOMWindow *inParent, const PRUnichar *inMsg);
@@ -97,6 +95,11 @@ NS_IMETHODIMP nsCommonDialogs::Confirm(nsIDOMWindow *inParent, const PRUnichar *
 	block->SetString( eMsg, inMsg );
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
+	
+	nsString yes("yes");
+	nsString no("no");
+	block->SetString( nsICommonDialogs::eButton0Text, yes.GetUnicode() );
+		block->SetString( nsICommonDialogs::eButton1Text, no.GetUnicode() );
 	
 	rv = DoDialog( inParent, block, kPromptURL );
 	
@@ -216,9 +219,9 @@ NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent, const PRUn
 	nsString url( kQuestionIconURL );
 	block->SetString( eIconURL, url.GetUnicode());
 	block->SetInt( eNumberEditfields, 1 );
-	
+	block->SetInt( eEditField1Password, 1 );
 	rv = DoDialog( inParent, block, kPromptURL );
-	block->GetString( eEditfield1Value, outPassword );
+	block->GetString( eEditfield2Value, outPassword );
 	PRInt32 tempInt = 0;
 	block->GetInt( eButtonPressed, &tempInt );
 	*_retval = tempInt ? PR_FALSE : PR_TRUE;
