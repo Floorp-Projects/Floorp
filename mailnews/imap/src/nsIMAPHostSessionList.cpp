@@ -806,7 +806,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::FindShellInCacheForHost(const char *serverK
 	if (host)
 	{
 		if (host->fShellCache)
-			*shell = host->fShellCache->FindShellForUID(uidString, mailboxName);
+			*shell = host->fShellCache->FindShellForUID(uidString, mailboxName, modType);
 	}
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;

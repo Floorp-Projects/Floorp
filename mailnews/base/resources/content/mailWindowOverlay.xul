@@ -1110,6 +1110,7 @@ Rights Reserved.
           <menuitem label="&collapseAllThreadsCmd.label;" accesskey="&collapseAllThreadsCmd.accesskey;" key="key_collapseAllThreads" disabled="true" observes="cmd_collapseAllThreads"/>
         </menupopup>
       </menu>
+      <menuseparator/>
       <menu id="viewheadersmenu" label="&headersMenu.label;" accesskey="&headersMenu.accesskey;">
         <menupopup  onpopupshowing="InitViewHeadersMenu();">
           <menuitem id="viewallheaders"
@@ -1151,6 +1152,8 @@ Rights Reserved.
            oncommand="MsgBodyAsPlaintext()"/>
         </menupopup>
       </menu>
+      <menuitem id="viewAttachmentsInlineMenuitem" label="&viewAttachmentsInlineCmd.label;" accesskey="&viewAttachmentsInlineCmd.accesskey;"
+        oncommand="ToggleInlineAttachment(event.target)" type="checkbox" checked="true"/>
       <menuseparator/>
       <menuitem id="stopMenuitem" label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" key="key_stop" disabled="true" command="cmd_stop"/>
       <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" observes="cmd_reload"/>

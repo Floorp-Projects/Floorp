@@ -205,14 +205,14 @@ Rights Reserved.
 <!ENTITY headersBriefCmd.label ".Brief">
 <!ENTITY headersBriefCmd.accesskey "B">
 <!ENTITY bodyMenu.label "Message Body As">
-<!ENTITY bodyMenu.accesskey "O">
+<!ENTITY bodyMenu.accesskey "B">
 <!ENTITY bodyAllowHTML.label "Original HTML">
 <!ENTITY bodyAllowHTML.accesskey "H">
 <!ENTITY bodySanitized.label "Simple HTML">
 <!ENTITY bodySanitized.accesskey "S">
 <!ENTITY bodyAsPlaintext.label "Plain Text">
 <!ENTITY bodyAsPlaintext.accesskey "P">
-<!ENTITY viewAttachmentsInlineCmd.label ".View Attachments Inline">
+<!ENTITY viewAttachmentsInlineCmd.label "Display Attachments Inline">
 <!ENTITY viewAttachmentsInlineCmd.accesskey "A">
 <!ENTITY reloadCmd.label "Reload">
 <!ENTITY reloadCmd.accesskey "R">

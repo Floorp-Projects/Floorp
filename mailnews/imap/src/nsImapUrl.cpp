@@ -441,6 +441,8 @@ NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result)
 		{
       wherepart += 9;  // nsCRT::strlen("/;section=")
 			char *wherelibmimepart = PL_strstr(wherepart, "&part=");
+			if (!wherelibmimepart)
+        wherelibmimepart = PL_strstr(wherepart, "?part=");
       int numCharsToCopy = (wherelibmimepart) ? wherelibmimepart - wherepart :
                    PL_strlen(m_listOfMessageIds) - (wherepart - m_listOfMessageIds);
 			if (numCharsToCopy)
@@ -1104,7 +1106,7 @@ NS_IMETHODIMP nsImapUrl::SetContentModified(nsImapContentModifiedType contentMod
       contentModifiedAnnotation = "Modified View Inline";
       break;
     case IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS:
-      NS_ASSERTION(PR_FALSE, "we're not using this anymore!");
+      contentModifiedAnnotation = "Modified View As Link";
       break;
     case IMAP_CONTENT_FORCE_CONTENT_NOT_MODIFIED:
       contentModifiedAnnotation = "Force Content Not Modified";

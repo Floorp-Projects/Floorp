@@ -1421,7 +1421,7 @@ MimeDisplayOptions::MimeDisplayOptions()
   attachment_icon_layer_id = 0;
 
   missing_parts = PR_FALSE;
-
+  show_attachment_inline_p = PR_FALSE;
 }
 
 MimeDisplayOptions::~MimeDisplayOptions()
@@ -1618,6 +1618,9 @@ mime_bridge_create_display_stream(
   // (i.e. embedded images)
   if (msd->options->part_to_load)
     msd->options->write_html_p = PR_FALSE;
+
+  if (msd->options->prefs)
+    msd->options->prefs->GetBoolPref("mail.inline_attachments", &(msd->options->show_attachment_inline_p));
 
   obj = mime_new ((MimeObjectClass *)&mimeMessageClass, (MimeHeaders *) NULL, MESSAGE_RFC822);
   if (!obj)

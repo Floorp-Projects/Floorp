@@ -392,6 +392,9 @@ public:
   PRBool missing_parts;	/* Whether or not this message is going to contain
 							   missing parts (from IMAP Mime Parts On Demand) */
 
+  PRBool show_attachment_inline_p; /* Whether or not we should display attachment inline (whatever say
+                         the content-disposition) */
+
 };
 
 #endif /* _MODLMIME_H_ */

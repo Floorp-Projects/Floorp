@@ -113,7 +113,8 @@ nsIMAPBodyShell::nsIMAPBodyShell(nsImapProtocol *protocolConnection, const char 
 	m_folderName = nsCRT::strdup(folderName);
 	if (!m_folderName)
 		return;
-	SetContentModified(IMAP_CONTENT_MODIFIED_VIEW_INLINE);
+
+  SetContentModified(GetShowAttachmentsInline() ? IMAP_CONTENT_MODIFIED_VIEW_INLINE : IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS);
 	// Turn the BODYSTRUCTURE response into a form that the nsIMAPBodypartMessage can be constructed from.
 	char *doctoredBuf = PR_smprintf("(\"message\" \"rfc822\" NIL NIL NIL NIL 0 () %s 0)", buf);
 	if (!doctoredBuf)
@@ -139,6 +140,17 @@ void nsIMAPBodyShell::SetIsValid(PRBool valid)
 	m_isValid = valid;
 }
 
+
+PRBool nsIMAPBodyShell::GetShowAttachmentsInline()
+{
+  if (!m_gotAttachmentPref)
+  {
+    m_showAttachmentsInline = !m_protocolConnection || m_protocolConnection->GetShowAttachmentsInline();
+    m_gotAttachmentPref = TRUE;
+  }
+ 
+  return m_showAttachmentsInline;
+}
 
 // Fills in buffer (and adopts storage) for header object
 void nsIMAPBodyShell::AdoptMessageHeaders(char *headers, const char *partNum)
@@ -945,7 +957,7 @@ PRBool	nsIMAPBodypartLeaf::ShouldFetchInline()
 				if (m_parentPart->GetType() == IMAP_BODY_MULTIPART &&
 					(PL_strlen(m_partNumberString) >= 2) &&
 					!PL_strcmp(m_partNumberString + PL_strlen(m_partNumberString) - 2, ".1") &&	// this is the first text type on this level
-					!PL_strcmp(m_parentPart->GetPartNumberString(), "1") &&
+					(!PL_strcmp(m_parentPart->GetPartNumberString(), "1") || !PL_strcmp(m_parentPart->GetPartNumberString(), "2")) &&
 					!PL_strcasecmp(m_bodyType, "text"))
 					return PR_TRUE;
 				else
@@ -1618,7 +1630,7 @@ PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 	// If it's already in the cache, then just return.
 	// This has the side-effect of re-ordering the LRU list
 	// to put this at the top, which is good, because it's what we want.
-	if (FindShellForUID(shell->GetUID(), shell->GetFolderName()))
+	if (FindShellForUID(shell->GetUID(), shell->GetFolderName(), shell->GetContentModified()))
 		return PR_TRUE;
 
 	// OK, so it's not in the cache currently.
@@ -1653,17 +1665,26 @@ PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 
 }
 
-nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(nsCString &UID, const char *mailboxName)
+nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(nsCString &UID, const char *mailboxName,
+                                                       IMAP_ContentModifiedType modType)
 {
 	nsCStringKey hashKey(UID);
 	nsIMAPBodyShell *foundShell = (nsIMAPBodyShell *) m_shellHash->Get(&hashKey);
 
 	if (!foundShell)
-		return NULL;
+		return nsnull;
+
+  // Make sure the content-modified types are compatible.
+  // This allows us to work seamlessly while people switch between
+  // View Attachments Inline and View Attachments As Links.
+  // Enforce the invariant that any cached shell we use
+  // match the current content-modified settings.
+  if (modType != foundShell->GetContentModified())
+    return nsnull;
 
 	// mailbox names must match also.
 	if (PL_strcmp(mailboxName, foundShell->GetFolderName()))
-		return NULL;
+		return nsnull;
 
 	// adjust the LRU stuff
 	m_shellList->RemoveElement(foundShell);	// oh well, I suppose this defeats the performance gain of the hash if it actually is found
@@ -1672,12 +1693,13 @@ nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(nsCString &UID, const cha
 	return foundShell;
 }
 
-nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(PRUint32 UID, const char *mailboxName)
+nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(PRUint32 UID, const char *mailboxName,
+                                                       IMAP_ContentModifiedType modType)
 {
 	nsCString uidString;
 	
 	uidString.AppendInt(UID);
-	nsIMAPBodyShell *rv = FindShellForUID(uidString, mailboxName);
+	nsIMAPBodyShell *rv = FindShellForUID(uidString, mailboxName, modType);
 	return rv;
 }
 

@@ -74,5 +74,7 @@ interface nsIImapServerSink : nsISupports {
   void RemoveChannelFromUrl(in nsIMsgMailNewsUrl aUrl, in unsigned long statusCode);
   readonly attribute string arbitraryHeaders;
   void forgetPassword();
+
+  readonly attribute boolean showAttachmentsInline;
 };
 

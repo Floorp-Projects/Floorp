@@ -3668,6 +3668,19 @@ nsImapIncomingServer::GetArbitraryHeaders(char **aResult)
 }
 
 NS_IMETHODIMP
+nsImapIncomingServer::GetShowAttachmentsInline(PRBool *aResult)
+{
+  *aResult = PR_TRUE; // true per default
+ 
+  nsresult rv; 
+  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = prefs->GetBoolPref("mail.inline_attachments", aResult);
+  return NS_OK; // In case this pref is not set we need to return NS_OK.
+}
+
+NS_IMETHODIMP
 nsImapIncomingServer::OnUserOrHostNameChanged(const char *oldName, const char *newName)
 {
   nsresult rv;

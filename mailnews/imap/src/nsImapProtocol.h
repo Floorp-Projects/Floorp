@@ -269,7 +269,9 @@ public:
 	void	SetActive(PRBool active);
 	PRBool	GetActive();
 
-	// Sets whether or not the content referenced by the current ActiveEntry has been modified.
+  PRBool GetShowAttachmentsInline();
+
+  // Sets whether or not the content referenced by the current ActiveEntry has been modified.
 	// Used for MIME parts on demand.
 	void	SetContentModified(IMAP_ContentModifiedType modified);
 	PRBool	GetShouldFetchAllParts();

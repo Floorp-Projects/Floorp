@@ -173,6 +173,10 @@ function view_init()
       thread_menuitem.setAttribute('checked',threadColumn.getAttribute('currentView')=='threaded');
   }
 
+  // Initialize the View Attachment Inline menu
+  var viewAttachmentInline = pref.getBoolPref("mail.inline_attachments");
+  document.getElementById("viewAttachmentsInlineMenuitem").setAttribute("checked", viewAttachmentInline ? "true" : "false");
+
   document.commandDispatcher.updateCommands('create-menu-view');
 }
 
@@ -1366,6 +1370,15 @@ function MsgBodyAsPlaintext()
                       disallow_classes_no_html);
     MsgReload();
     return true;
+}
+
+function ToggleInlineAttachment(target)
+{
+    var viewAttachmentInline = !pref.getBoolPref("mail.inline_attachments");
+    pref.setBoolPref("mail.inline_attachments", viewAttachmentInline)
+    target.setAttribute("checked", viewAttachmentInline ? "true" : "false");
+    
+    MsgReload();
 }
 
 function MsgReload()

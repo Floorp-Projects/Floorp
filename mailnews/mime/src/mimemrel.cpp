@@ -484,8 +484,16 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
       PR_Free(location);
       if (absolute) {
         nsCAutoString partnum;
+        nsCAutoString imappartnum;
         partnum.Adopt(mime_part_address(child));
         if (!partnum.IsEmpty()) {
+          if (obj->options->missing_parts)
+          {
+            char * imappart = mime_imap_part_address(child);
+            if (imappart)
+              imappartnum.Adopt(imappart);
+          }
+
           /*
             AppleDouble part need special care: we need to output only the data fork part of it.
             The problem at this point is that we haven't yet decoded the children of the AppleDouble
@@ -495,9 +503,13 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
             partnum.Append(".2");
 
           char* part;
-          part = mime_set_url_part(obj->options->url, partnum.get(),
+          if (!imappartnum.IsEmpty()) 
+            part = mime_set_url_imap_part(obj->options->url, imappartnum.get(), partnum.get());
+          else
+            part = mime_set_url_part(obj->options->url, partnum.get(),
                        PR_FALSE);
-          if (part) {
+          if (part)
+          {
             char *name = MimeHeaders_get_name(child->headers, child->options);
             // let's stick the filename in the part so save as will work.
             if (name)
