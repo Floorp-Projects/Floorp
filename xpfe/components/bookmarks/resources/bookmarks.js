@@ -500,8 +500,11 @@ function fillContextMenu(name)
     if (!rdf)    return(false);
 
     var target_item = document.popupNode.parentNode.parentNode;
-    if (target_item.getAttribute('selected') != 'true') {
-      treeNode.selectItem(target_item);
+    if (target_item && target_item.nodeName == "treeitem")
+    {
+	    if (target_item.getAttribute('selected') != 'true') {
+	      treeNode.selectItem(target_item);
+	    }
     }
 
     var select_list = treeNode.selectedItems;
