@@ -40,7 +40,7 @@ int NativeDeleteFile(const char* aFileToDelete)
     }
     else 
     {
-        if(!unlink(aFileToDelete))
+        if(unlink(aFileToDelete) != 0)
           return TRY_LATER;
     }
     return DONE;
@@ -61,7 +61,7 @@ int NativeReplaceFile(const char* replacementFile, const char* doomedFile )
     if (strcmp(replacementFile, doomedFile))
         return DONE;
 
-    if (!unlink(doomedFile))
+    if (unlink(doomedFile) != 0)
     {
         if (stat(doomedFile, &fileStack) == 0)    
             return TRY_LATER;
@@ -94,7 +94,7 @@ int main(int argc,char* argv[])
             do {
                 status = PerformScheduledTasks(reg);
                 if (status != DONE)
-                   sleep(1000);
+                   sleep(1);
             } while (status == TRY_LATER);
             NR_RegClose(&reg);
         }
