@@ -503,9 +503,8 @@ input[type="file"][disabled] input[type="button"] {
 
 
 input[type=radio] {
-  box-sizing: content-box;
+  box-sizing: border-box;
   /* these margins are for NavQuirks, we need a Standard ua.css */  
-  padding: 0px;
   margin-left:   3px;   
   margin-right:  5px;  
   margin-top:    2px; 
@@ -513,8 +512,8 @@ input[type=radio] {
   border: 2px outset rgb(153, 153, 153);
   background-color:rgb(204, 204, 204);
   color:black;
-  width:8px;
-  height:8px;
+  width:12px;
+  height:12px;
   behavior: none;
   -moz-border-radius:6px;
 }
@@ -554,17 +553,20 @@ input[type=radio][disabled]:active {
 
 
 input[type=checkbox] {
-  box-sizing: content-box;
+  box-sizing: border-box;
   /* these margins are for NavQuirks, we need a Standard ua.css */  
-  padding:       0px;
+  padding-top:   0px;
+  padding-left:  0px;
+  padding-right: 1px;
+  padding-bottom:1px;
   margin-left:   3px;   
   margin-right:  4px;  
   margin-top:    3px; 
   margin-bottom: 3px;
   border: 2px inset rgb(153, 153, 153);
   background-color:rgb(204, 204, 204);
-  width:9px;
-  height:9px;
+  width:13px;
+  height:13px;
   color:black;
   behavior: none;
 /*  -moz-border-radius:1px; */
