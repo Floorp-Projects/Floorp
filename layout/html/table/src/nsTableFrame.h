@@ -85,13 +85,13 @@ public:
   static NS_METHOD GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aTableFrame);
 
   /** helper method for getting the width of the table's containing block */
-  static nscoord GetTableContainerWidth(const nsHTMLReflowState& aState);
+  static nscoord GetTableContainerWidth(const nsHTMLReflowState& aReflowState);
 
 
-  static PRBool TableIsAutoWidth(nsTableFrame *aTableFrame,
-                                 nsIStyleContext *aTableStyle,
+  static PRBool TableIsAutoWidth(nsTableFrame *           aTableFrame,
+                                 nsIStyleContext *        aTableStyle,
                                  const nsHTMLReflowState& aReflowState,
-                                 nscoord& aSpecifiedTableWidth);
+                                 nscoord&                 aSpecifiedTableWidth);
   
   /** return PR_TRUE if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
@@ -127,10 +127,10 @@ public:
     * @see BalanceColumnWidths
     * @see nsIFrame::Reflow 
     */
-  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus& aStatus);
+                    nsReflowStatus&          aStatus);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
@@ -331,7 +331,7 @@ protected:
                                  nsTableColGroupFrame * aInsertedFrame,
                                  PRBool                 aReplace);
 
-    NS_IMETHOD IR_ColGroupAppended(nsIPresContext&      aPresContext,
+  NS_IMETHOD IR_ColGroupAppended(nsIPresContext&        aPresContext,
                                  nsHTMLReflowMetrics&   aDesiredSize,
                                  InnerTableReflowState& aReflowState,
                                  nsReflowStatus&        aStatus,
@@ -363,7 +363,7 @@ protected:
                                 nsTableRowGroupFrame * aDeletedFrame);
   
   NS_IMETHOD AdjustSiblingsAfterReflow(nsIPresContext&        aPresContext,
-                                       InnerTableReflowState& aState,
+                                       InnerTableReflowState& aReflowState,
                                        nsIFrame*              aKidFrame,
                                        nscoord                aDeltaY);
 
@@ -373,38 +373,40 @@ protected:
   nscoord ComputeDesiredWidth(const nsHTMLReflowState& aReflowState) const;
 
   nscoord GetTopMarginFor(nsIPresContext& aCX,
-                          InnerTableReflowState& aState,
+                          InnerTableReflowState& aReflowState,
                           const nsMargin& aKidMargin);
 
-  void PlaceChild(nsIPresContext&    aPresContext,
-                  InnerTableReflowState& aState,
-                  nsIFrame*          aKidFrame,
-                  const nsRect&      aKidRect,
-                  nsSize*            aMaxElementSize,
-                  nsSize&            aKidMaxElementSize);
+  void PlaceChild(nsIPresContext&        aPresContext,
+                  InnerTableReflowState& aReflowState,
+                  nsIFrame*              aKidFrame,
+                  const nsRect&          aKidRect,
+                  nsSize*                aMaxElementSize,
+                  nsSize&                aKidMaxElementSize);
 
   /**
    * Reflow the frames we've already created
    *
    * @param   aPresContext presentation context to use
-   * @param   aState current inline state
+   * @param   aReflowState current inline state
    * @return  true if we successfully reflowed all the mapped children and false
    *            otherwise, e.g. we pushed children to the next in flow
    */
-  PRBool        ReflowMappedChildren(nsIPresContext&        aPresContext,
-                                     InnerTableReflowState& aState,
-                                     nsSize*                aMaxElementSize);
+  NS_IMETHOD ReflowMappedChildren(nsIPresContext&        aPresContext,
+                                  nsHTMLReflowMetrics&   aDesiredSize,
+                                  InnerTableReflowState& aReflowState,
+                                  nsReflowStatus&        aStatus);
   /**
    * Try and pull-up frames from our next-in-flow
    *
    * @param   aPresContext presentation context to use
-   * @param   aState current inline state
+   * @param   aReflowState current reflow state
    * @return  true if we successfully pulled-up all the children and false
    *            otherwise, e.g. child didn't fit
    */
-  PRBool        PullUpChildren(nsIPresContext&        aPresContext,
-                               InnerTableReflowState& aState,
-                               nsSize*                aMaxElementSize);
+  NS_IMETHOD PullUpChildren(nsIPresContext&        aPresContext,
+                            nsHTMLReflowMetrics&   aDesiredSize,
+                            InnerTableReflowState& aReflowState,
+                            nsReflowStatus&        aStatus);
 
   /** assign widths for each column, taking into account the table content, the effective style, 
     * the layout constraints, and the compatibility mode.  Sets mColumnWidths as a side effect.
@@ -588,6 +590,9 @@ public: /* ----- Cell Map public methods ----- */
     * @param aMaxElementSize  [OUT] width field set to the min legal width of the table
     */
   void SetMaxElementSize(nsSize* aMaxElementSize);
+
+  /** returns PR_TRUE if table layout requires a preliminary pass over the content */
+  PRBool RequiresPass1Layout();
 
 private:
   void DebugPrintCount() const; // Debugging routine

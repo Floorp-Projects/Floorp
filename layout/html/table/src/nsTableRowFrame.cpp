@@ -948,17 +948,20 @@ NS_METHOD nsTableRowFrame::IR_CellInserted(nsIPresContext&      aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
-  // do a pass-1 layout of the cell
-  //XXX: check the table frame to see if we can skip this
-  rv = InitialReflow(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                     aInsertedFrame, PR_FALSE);
-  if (NS_FAILED(rv))
-    return rv;
-
   nsTableFrame *tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if (NS_FAILED(rv) || nsnull==tableFrame)
     return rv;
+
+  // do a pass-1 layout of the cell
+  if (PR_TRUE==tableFrame->RequiresPass1Layout())
+  {
+    rv = InitialReflow(aPresContext, aDesiredSize, aReflowState, aStatus, 
+                       aInsertedFrame, PR_FALSE);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
   tableFrame->InvalidateCellMap();
   tableFrame->InvalidateColumnCache();
 
@@ -984,17 +987,20 @@ NS_METHOD nsTableRowFrame::IR_CellAppended(nsIPresContext&      aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
-  // do a pass-1 layout of the cell
-  //XXX: check the table frame to see if we can skip this
-  rv = InitialReflow(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                     aAppendedFrame, PR_FALSE);
-  if (NS_FAILED(rv))
-    return rv;
-
   nsTableFrame *tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if (NS_FAILED(rv) || nsnull==tableFrame)
     return rv;
+
+  // do a pass-1 layout of the cell
+  if (PR_TRUE==tableFrame->RequiresPass1Layout())
+  {
+    rv = InitialReflow(aPresContext, aDesiredSize, aReflowState, aStatus, 
+                       aAppendedFrame, PR_FALSE);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
   tableFrame->InvalidateCellMap();
   tableFrame->InvalidateColumnCache();
 
