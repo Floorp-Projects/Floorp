@@ -420,7 +420,7 @@ private:
   /**  table reflow is a multi-pass operation.  Use these constants to keep track of
     *  which pass is currently being executed.
     */
-  enum {kPASS_UNDEFINED=0, kPASS_FIRST=1, kPASS_SECOND=2, kPASS_THIRD=3};
+  enum {kPASS_UNDEFINED=0, kPASS_FIRST=1, kPASS_SECOND=2, kPASS_THIRD=3, kPASS_INCREMENTAL=4};
 
   nsVoidArray *mColumnLayoutData;   // array of array of cellLayoutData's
   PRInt32     *mColumnWidths;       // widths of each column

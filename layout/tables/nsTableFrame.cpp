@@ -43,6 +43,7 @@
 #include "nsIView.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
+#include "nsIReflowCommand.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -1069,6 +1070,23 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
   PRIntervalTime startTime;
   if (gsTiming) {
     startTime = PR_IntervalNow();
+  }
+
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    // XXX Deal with the case where the reflow command is targeted at us
+    nsIFrame* kidFrame;
+    aReflowState.reflowCommand->GetNext(kidFrame);
+
+    // Pass along the reflow command
+    nsReflowMetrics desiredSize(nsnull);
+    // XXX Correctly compute the available space...
+    nsReflowState kidReflowState(kidFrame, aReflowState, aReflowState.maxSize);
+    kidFrame->WillReflow(*aPresContext);
+    aStatus = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
+
+    // XXX For the time being just fall through and treat it like a
+    // pass 2 reflow...
+    mPass = kPASS_SECOND;
   }
 
   if (PR_TRUE==NeedsReflow(aReflowState.maxSize))
@@ -2634,7 +2652,7 @@ PRBool nsTableFrame::SetCellLayoutData(nsIPresContext* aPresContext,
     result = firstInFlow->SetCellLayoutData(aPresContext, aData, aCell);
   else
   {
-    if (kPASS_FIRST==GetReflowPass())
+    if ((kPASS_FIRST==GetReflowPass()) || (kPASS_INCREMENTAL==GetReflowPass()))
     {
       if (nsnull==mColumnLayoutData)
       {

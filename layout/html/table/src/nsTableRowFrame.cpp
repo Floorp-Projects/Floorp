@@ -29,6 +29,7 @@
 #include "nsColLayoutData.h"
 #include "nsIView.h"
 #include "nsIPtr.h"
+#include "nsIReflowCommand.h"
 
 NS_DEF_PTR(nsIStyleContext);
 
@@ -1051,66 +1052,93 @@ nsTableRowFrame::Reflow(nsIPresContext*      aPresContext,
   PreReflowCheck();
 #endif
 
-  // Initialize out parameter
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = 0;
-    aDesiredSize.maxElementSize->height = 0;
-  }
-
-  // Initialize our internal data
-  ResetMaxChildHeight();
-
-  PRBool reflowMappedOK = PR_TRUE;
-
-  aStatus = NS_FRAME_COMPLETE;
-
-  // Check for an overflow list
-  MoveOverflowToChildList();
-
   RowReflowState state(aPresContext, aReflowState);
   mContentParent->GetContentParent((nsIFrame*&)(state.tableFrame));
 
-  // Reflow the existing frames
-  if (nsnull != mFirstChild) {
-    reflowMappedOK = ReflowMappedChildren(aPresContext, state, aDesiredSize.maxElementSize);
-    if (PR_FALSE == reflowMappedOK) {
-      aStatus = NS_FRAME_NOT_COMPLETE;
-    }
-  }
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    // XXX Recover state
+    // XXX Deal with the case where the reflow command is targeted at us
+    nsIFrame* kidFrame;
+    aReflowState.reflowCommand->GetNext(kidFrame);
 
-  // Did we successfully relow our mapped children?
-  if (PR_TRUE == reflowMappedOK) {
-    // Any space left?
-    if (state.availSize.height <= 0) {
-      // No space left. Don't try to pull-up children or reflow unmapped
-      if (NextChildOffset() < mContent->ChildCount()) {
+    // Pass along the reflow command. Reflow the child with an unconstrained
+    // width and get its maxElementSize
+    nsSize          kidMaxElementSize;
+    nsReflowMetrics desiredSize(&kidMaxElementSize);
+    // XXX Correctly compute the available height...
+    nsSize          availSpace(NS_UNCONSTRAINEDSIZE, aReflowState.maxSize.height);
+    nsReflowState kidReflowState(kidFrame, aReflowState, availSpace);
+    kidFrame->WillReflow(*aPresContext);
+    aStatus = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
+
+    // Update the cell layout data
+    nsCellLayoutData *kidLayoutData = new nsCellLayoutData((nsTableCellFrame *)kidFrame,
+                                                           &desiredSize, &kidMaxElementSize);
+    ((nsTableCellFrame *)kidFrame)->SetCellLayoutData(kidLayoutData);
+    // XXX The equivalent of incrementally updating the column cache
+    state.tableFrame->SetCellLayoutData(aPresContext, kidLayoutData, (nsTableCellFrame*)kidFrame);
+
+    // XXX Compute desired size...
+
+  } else {
+    // Initialize out parameter
+    if (nsnull != aDesiredSize.maxElementSize) {
+      aDesiredSize.maxElementSize->width = 0;
+      aDesiredSize.maxElementSize->height = 0;
+    }
+  
+    // Initialize our internal data
+    ResetMaxChildHeight();
+  
+    PRBool reflowMappedOK = PR_TRUE;
+  
+    aStatus = NS_FRAME_COMPLETE;
+  
+    // Check for an overflow list
+    MoveOverflowToChildList();
+  
+    // Reflow the existing frames
+    if (nsnull != mFirstChild) {
+      reflowMappedOK = ReflowMappedChildren(aPresContext, state, aDesiredSize.maxElementSize);
+      if (PR_FALSE == reflowMappedOK) {
         aStatus = NS_FRAME_NOT_COMPLETE;
       }
-    } else if (NextChildOffset() < mContent->ChildCount()) {
-      // Try and pull-up some children from a next-in-flow
-      if (PullUpChildren(aPresContext, state, aDesiredSize.maxElementSize)) {
-        // If we still have unmapped children then create some new frames
+    }
+  
+    // Did we successfully relow our mapped children?
+    if (PR_TRUE == reflowMappedOK) {
+      // Any space left?
+      if (state.availSize.height <= 0) {
+        // No space left. Don't try to pull-up children or reflow unmapped
         if (NextChildOffset() < mContent->ChildCount()) {
-          aStatus = ReflowUnmappedChildren(aPresContext, state, aDesiredSize.maxElementSize);
+          aStatus = NS_FRAME_NOT_COMPLETE;
         }
-      } else {
-        // We were unable to pull-up all the existing frames from the
-        // next in flow
-        aStatus = NS_FRAME_NOT_COMPLETE;
+      } else if (NextChildOffset() < mContent->ChildCount()) {
+        // Try and pull-up some children from a next-in-flow
+        if (PullUpChildren(aPresContext, state, aDesiredSize.maxElementSize)) {
+          // If we still have unmapped children then create some new frames
+          if (NextChildOffset() < mContent->ChildCount()) {
+            aStatus = ReflowUnmappedChildren(aPresContext, state, aDesiredSize.maxElementSize);
+          }
+        } else {
+          // We were unable to pull-up all the existing frames from the
+          // next in flow
+          aStatus = NS_FRAME_NOT_COMPLETE;
+        }
       }
     }
+  
+    if (NS_FRAME_IS_COMPLETE(aStatus)) {
+      // Don't forget to add in the bottom margin from our last child.
+      // Only add it in if there's room for it.
+      nscoord margin = state.prevMaxPosBottomMargin -
+        state.prevMaxNegBottomMargin;
+    }
+  
+    // Return our desired rect
+    aDesiredSize.width = state.x;
+    aDesiredSize.height = state.maxCellVertSpace;   
   }
-
-  if (NS_FRAME_IS_COMPLETE(aStatus)) {
-    // Don't forget to add in the bottom margin from our last child.
-    // Only add it in if there's room for it.
-    nscoord margin = state.prevMaxPosBottomMargin -
-      state.prevMaxNegBottomMargin;
-  }
-
-  // Return our desired rect
-  aDesiredSize.width = state.x;
-  aDesiredSize.height = state.maxCellVertSpace;   
 
 #ifdef NS_DEBUG
   PostReflowCheck(aStatus);
