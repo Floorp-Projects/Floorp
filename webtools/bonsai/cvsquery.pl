@@ -127,7 +127,7 @@ sub query_checkins {
         }
     }
 
-    if( $query_file ne '') {
+    if (defined $query_file && $query_file ne '') {
         my $q = SqlQuote($query_file);
         if ($query_filetype eq 'regexp') {
             $qstring .= " and files.file regexp $q";
@@ -135,7 +135,7 @@ sub query_checkins {
             $qstring .= " and files.file = $q";
         }
     }
-    if ($query_who ne '') {
+    if (defined $query_who && $query_who ne '') {
         my $q = SqlQuote($query_who);
         if ($query_whotype eq 'regexp') {
             $qstring .= " and people.who regexp $q";
