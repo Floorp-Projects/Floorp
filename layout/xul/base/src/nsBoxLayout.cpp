@@ -196,6 +196,12 @@ nsBoxLayout::ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aCh
 }
 
 NS_IMETHODIMP
+nsBoxLayout::ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBoxLayout::ChildBecameDirty(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChild)
 {
   return NS_OK;

@@ -23,7 +23,11 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=layoutxulbase_s 
 MODULE=layout_xul
-DIRS=outliner
+DIRS=outliner \
+!ifdef MOZ_GRID2
+     grid
+!endif
+
 REQUIRES	= xpcom \
 		  string \
 		  dom \

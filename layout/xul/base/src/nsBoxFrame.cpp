@@ -262,6 +262,24 @@ nsBoxFrame::~nsBoxFrame()
   NS_ASSERTION(mInner == nsnull,"Error Destroy was never called on this Frame!!!");
 }
 
+NS_IMETHODIMP nsBoxFrame::SetParent(const nsIFrame* aParent)
+{
+  // our box parent can only be a box. Make sure its a box and set it
+  // if its not a box then its nsnull
+
+  // cast away const so we can call QueryInterface.
+  nsIFrame* parent = (nsIFrame*)aParent;
+
+  // don't use com ptr. Frames don't support ADDREF or RELEASE;
+  nsIBox* boxParent = nsnull;
+
+  if (parent)
+     parent->QueryInterface(NS_GET_IID(nsIBox), (void**)&boxParent);
+
+  return nsBox::SetParentBox(boxParent);
+}
+
+
 NS_IMETHODIMP
 nsBoxFrame::GetVAlign(Valignment& aAlign)
 {
@@ -323,6 +341,8 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
               nsIStyleContext* aContext,
               nsIFrame*        aPrevInFlow)
 {
+  SetParent(aParent);
+
   mInner->mPresContext = aPresContext;
 
   nsresult  rv = nsContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
@@ -1463,6 +1483,8 @@ nsBoxFrameInner::GetDebugPref(nsIPresContext* aPresContext)
     }
 }
 
+#include "nsIMonument.h"
+
 NS_IMETHODIMP
 nsBoxFrame::Paint(nsIPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
@@ -1470,7 +1492,6 @@ nsBoxFrame::Paint(nsIPresContext*      aPresContext,
                   nsFramePaintLayer    aWhichLayer,
                   PRUint32             aFlags)
 {
-
   const nsStyleVisibility* vis = 
       (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
 
@@ -2693,3 +2714,5 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
   }
   return NS_OK;
 }
+
+

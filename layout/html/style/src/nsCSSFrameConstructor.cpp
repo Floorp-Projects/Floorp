@@ -296,14 +296,29 @@ nsresult
 NS_NewOutlinerBodyFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 // grid
+#ifdef MOZ_GRID2
+nsresult
+NS_NewGridLayout2 ( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout );
+#else
 nsresult
 NS_NewGridLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
+#endif
 
+#ifdef MOZ_GRID2
+nsresult
+NS_NewGridRowLeafLayout ( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout );
+#else
 nsresult
 NS_NewObeliskLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
+#endif
 
+#ifdef MOZ_GRID2
+nsresult
+NS_NewGridRowGroupLayout ( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout );
+#else
 nsresult
 NS_NewTempleLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
+#endif
 
 nsresult
 NS_NewTreeLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
@@ -5339,8 +5354,11 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         processChildren = PR_TRUE;
         isReplaced = PR_TRUE;
         nsCOMPtr<nsIBoxLayout> layout;
+#ifdef MOZ_GRID2
+        NS_NewGridLayout2(aPresShell, getter_AddRefs(layout));
+#else
         NS_NewGridLayout(aPresShell, layout);
-
+#endif
         if (aTag == nsXULAtoms::tree) {
           rv = NS_NewXULTreeFrame(aPresShell, &newFrame, PR_FALSE, layout);
           if (aXBLBaseTag) {
@@ -5402,7 +5420,11 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         }
         else
         {
+#ifdef MOZ_GRID2
+          NS_NewGridRowGroupLayout(aPresShell, getter_AddRefs(layout));
+#else
           NS_NewTempleLayout(aPresShell, layout);
+#endif
           rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
         }
 
@@ -5433,7 +5455,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         isReplaced = PR_TRUE;
       
         nsCOMPtr<nsIBoxLayout> layout;
+
+#ifdef MOZ_GRID2
+        NS_NewGridRowLeafLayout(aPresShell, getter_AddRefs(layout));
+#else
         NS_NewObeliskLayout(aPresShell, layout);
+#endif
 
         if (aTag == nsXULAtoms::treerow)
           rv = NS_NewXULTreeSliceFrame(aPresShell, &newFrame, PR_FALSE, layout);

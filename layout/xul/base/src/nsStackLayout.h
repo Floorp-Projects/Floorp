@@ -65,9 +65,7 @@ public:
   NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
-
-protected:
-  PRBool AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize);
+  static PRBool AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize);
 
 private:
   static nsIBoxLayout* gInstance;

@@ -120,14 +120,17 @@ public:
 
   nsSprocketLayout();
 
+  static PRBool IsHorizontal(nsIBox* aBox);
+
+  static void SetLargestSize(nsSize& aSize1, const nsSize& aSize2, PRBool aIsHorizontal);
+  static void SetSmallestSize(nsSize& aSize1, const nsSize& aSize2, PRBool aIsHorizontal);
+
+  static void AddLargestSize(nsSize& aSize, const nsSize& aSizeToAdd, PRBool aIsHorizontal);
+  static void AddSmallestSize(nsSize& aSize, const nsSize& aSizeToAdd, PRBool aIsHorizontal);
+  static void AddCoord(nscoord& aCoord, nscoord aCoordToAdd);
+
 protected:
 
-  virtual PRBool IsHorizontal(nsIBox* aBox) const;
-  virtual void SetLargestSize(nsSize& aSize1, const nsSize& aSize2, PRBool aIsHorizontal);
-  virtual void SetSmallestSize(nsSize& aSize1, const nsSize& aSize2, PRBool aIsHorizontal);
-  virtual void AddLargestSize(nsSize& aSize, const nsSize& aSizeToAdd, PRBool aIsHorizontal);
-  virtual void AddSmallestSize(nsSize& aSize, const nsSize& aSizeToAdd, PRBool aIsHorizontal);
-  virtual void AddCoord(nscoord& aCoord, nscoord aCoordToAdd);
 
   virtual void ComputeChildsNextPosition(nsIBox* aBox,
                                          nsIBox* aChild, 

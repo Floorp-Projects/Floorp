@@ -1494,35 +1494,23 @@ nsBox::AddInset(nsIBox* aBox, nsSize& aSize)
 }
 
 void
+nsBox::BoundsCheck(nscoord& aMin, nscoord& aPref, nscoord& aMax)
+{
+   if (aMin > aMax)
+       aMin = aMax;
+
+   if (aPref > aMax)
+       aPref = aMax;
+
+   if (aPref < aMin)
+       aPref = aMin;
+}
+
+void
 nsBox::BoundsCheck(nsSize& aMinSize, nsSize& aPrefSize, nsSize& aMaxSize)
 {
-  
-   if (aMinSize.width > aMaxSize.width)
-       aMinSize.width = aMaxSize.width;
-
-   if (aMinSize.height > aMaxSize.height)
-       aMinSize.height = aMaxSize.height;
-
-
-/*
-   if (aMinSize.width > aMaxSize.width)
-       aMaxSize.width = aMinSize.width;
-
-   if (aMinSize.height > aMaxSize.height)
-       aMaxSize.height = aMinSize.height;
-*/
-
-   if (aPrefSize.width > aMaxSize.width)
-       aPrefSize.width = aMaxSize.width;
-
-   if (aPrefSize.height > aMaxSize.height)
-       aPrefSize.height = aMaxSize.height;
-
-   if (aPrefSize.width < aMinSize.width)
-       aPrefSize.width = aMinSize.width;
-
-   if (aPrefSize.height < aMinSize.height)
-       aPrefSize.height = aMinSize.height;
+   BoundsCheck(aMinSize.width, aPrefSize.width, aMaxSize.width);
+   BoundsCheck(aMinSize.height, aPrefSize.height, aMaxSize.height);
 }
 
 NS_IMETHODIMP
@@ -1626,6 +1614,14 @@ NS_IMETHODIMP_(nsrefcnt)
 nsBox::Release(void)
 {
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBox::GetIndexOf(nsIBox* aChild, PRInt32* aIndex)
+{
+  // return -1. We have no children
+  *aIndex = -1;
+  return NS_OK;
 }
 
 //

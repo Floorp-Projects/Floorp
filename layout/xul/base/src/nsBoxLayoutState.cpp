@@ -435,7 +435,12 @@ nsBoxLayoutState::RecycleFreedMemory(nsIPresShell* aShell, void* aMem)
 nsresult
 nsBoxLayoutState::GetPresShell(nsIPresShell** aShell)
 {
-  return mPresContext->GetShell(aShell); 
+  if (mPresContext)
+     return mPresContext->GetShell(aShell); 
+  else {
+     *aShell = nsnull;
+     return NS_OK;
+  }
 }
 
 nsresult

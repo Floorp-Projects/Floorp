@@ -108,6 +108,7 @@ public:
   NS_IMETHOD BeginLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD GetDebug(PRBool& aDebug);
+  NS_IMETHOD SetParent(const nsIFrame* aParent);
 
   //NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
 

@@ -84,6 +84,8 @@ nsGridRowLeafLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
   GetGrid(aBox, &grid, &index);
   PRInt32 isRow = IsHorizontal(aBox);
 
+  // If we are not in a grid. Then we just work like a box. But if we are in a grid
+  // ask the grid for our size.
   if (!grid)
     return nsGridRowLayout::GetPrefSize(aBox, aState, aSize); 
   else {

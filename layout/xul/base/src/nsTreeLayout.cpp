@@ -63,7 +63,12 @@ NS_NewTreeLayout( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout)
   return NS_OK;
 } 
 
-nsTreeLayout::nsTreeLayout(nsIPresShell* aPresShell):nsTempleLayout(aPresShell)
+nsTreeLayout::nsTreeLayout(nsIPresShell* aPresShell):
+#ifdef MOZ_GRID2
+  nsGridRowGroupLayout(aPresShell)
+#else
+  nsTempleLayout(aPresShell)
+#endif
 {
 }
 
@@ -106,7 +111,12 @@ nsXULTreeSliceFrame* nsTreeLayout::GetRowFrame(nsIBox* aBox)
 NS_IMETHODIMP
 nsTreeLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
+#ifdef MOZ_GRID2
+  nsresult rv = nsGridRowGroupLayout::GetPrefSize(aBox, aBoxLayoutState, aSize);
+#else
   nsresult rv = nsTempleLayout::GetPrefSize(aBox, aBoxLayoutState, aSize);
+#endif
+
   nsXULTreeOuterGroupFrame* frame = GetOuterFrame(aBox);
   if (frame) {
     nscoord rowheight = frame->GetRowHeightTwips();
@@ -134,7 +144,12 @@ nsTreeLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSiz
 NS_IMETHODIMP
 nsTreeLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
+#ifdef MOZ_GRID2
+  nsresult rv = nsGridRowGroupLayout::GetMinSize(aBox, aBoxLayoutState, aSize);
+#else
   nsresult rv = nsTempleLayout::GetMinSize(aBox, aBoxLayoutState, aSize);
+#endif
+
   nsXULTreeOuterGroupFrame* frame = GetOuterFrame(aBox);
   if (frame) {
     nscoord rowheight = frame->GetRowHeightTwips();
@@ -162,7 +177,12 @@ nsTreeLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize
 NS_IMETHODIMP
 nsTreeLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
+#ifdef MOZ_GRID2
+  nsresult rv = nsGridRowGroupLayout::GetMaxSize(aBox, aBoxLayoutState, aSize);
+#else
   nsresult rv = nsTempleLayout::GetMaxSize(aBox, aBoxLayoutState, aSize);
+#endif
+
   nsXULTreeOuterGroupFrame* frame = GetOuterFrame(aBox);
   if (frame) {
     nscoord rowheight = frame->GetRowHeightTwips();

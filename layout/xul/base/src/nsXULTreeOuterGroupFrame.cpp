@@ -55,7 +55,6 @@
 #include "nsIServiceManager.h"
 #include "nsIScrollableView.h"
 #include "nsIMonument.h"
-#include "nsTempleLayout.h"
 #include "nsTreeLayout.h"
 #include "nsITimer.h"
 #include "nsIBindingManager.h"
@@ -65,6 +64,12 @@
 #include "nsIFontMetrics.h"
 #include "nsIStyleContext.h"
 #include "nsIDOMText.h"
+
+#ifdef MOZ_GRID2
+  #include "nsGridRowGroupLayout.h"
+#else
+#include "nsTempleLayout.h"
+#endif
 
 #define TICK_FACTOR 50
 
