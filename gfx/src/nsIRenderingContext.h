@@ -204,7 +204,8 @@ public:
   virtual void SetFont(nsIFontMetrics *aFontMetrics) = 0;
 
   /**
-   * Get the current font for the RenderingContext
+   * Get the current font for the RenderingContext.
+   * If no font has been Set, the results are undefined.
    * @return The current font of the RenderingContext
    */
   virtual const nsFont& GetFont() = 0;
@@ -379,32 +380,58 @@ public:
 
   /**
    * Returns the width (in app units) of an 8-bit character
+   * If no font has been Set, the results are undefined.
+   * @param aC character to measure
+   * @param aWidth out parameter for width
+   * @return error status
    */
   NS_IMETHOD  GetWidth(char aC, nscoord &aWidth) = 0;
 
   /**
    * Returns the width (in app units) of a unicode character
+   * If no font has been Set, the results are undefined.
+   * @param aC character to measure
+   * @param aWidth out parameter for width
+   * @return error status
    */
   NS_IMETHOD  GetWidth(PRUnichar aC, nscoord &aWidth) = 0;
 
   /**
    * Returns the width (in app units) of an nsString
+   * If no font has been Set, the results are undefined.
+   * @param aString string to measure
+   * @param aWidth out parameter for width
+   * @return error status
    */
   NS_IMETHOD  GetWidth(const nsString& aString, nscoord &aWidth) = 0;
 
   /**
    * Returns the width (in app units) of an 8-bit character string
+   * If no font has been Set, the results are undefined.
+   * @param aString string to measure
+   * @param aWidth out parameter for width
+   * @return error status
    */
   NS_IMETHOD  GetWidth(const char* aString, nscoord& aWidth) = 0;
 
   /**
    * Returns the width (in app units) of an 8-bit character string
+   * If no font has been Set, the results are undefined.
+   * @param aString string to measure
+   * @param aLength number of characters in string
+   * @param aWidth out parameter for width
+   * @return error status
    */
   NS_IMETHOD  GetWidth(const char* aString, PRUint32 aLength,
                        nscoord& aWidth) = 0;
 
   /**
    * Returns the width (in app units) of a Unicode character string
+   * If no font has been Set, the results are undefined.
+   * @param aString string to measure
+   * @param aLength number of characters in string
+   * @param aWidth out parameter for width
+   * @return error status
    */
   NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength,
                        nscoord &aWidth) = 0;
