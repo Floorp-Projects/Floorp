@@ -761,9 +761,13 @@ nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDataba
     return NS_ERROR_NULL_POINTER; 
 
   openErr = GetDatabase(nsnull);
-  NS_IF_ADDREF(*db = mDatabase);
-  if (NS_SUCCEEDED(openErr)&& *db)
-    openErr = (*db)->GetDBFolderInfo(folderInfo);
+  *db = mDatabase;
+  if (mDatabase) {
+    NS_ADDREF(*db);
+    if (NS_SUCCEEDED(openErr))
+      openErr = (*db)->GetDBFolderInfo(folderInfo);
+  }
+
   return openErr;
 }
 
@@ -1531,21 +1535,20 @@ nsMsgNewsFolder::GetNewsrcLine(char **newsrcLine)
 
 NS_IMETHODIMP nsMsgNewsFolder::SetReadSetFromStr(const char *newsrcLine)
 {
-    if (!newsrcLine) return NS_ERROR_NULL_POINTER;
+  if (!newsrcLine) return NS_ERROR_NULL_POINTER;
 
-    delete mReadSet;
+  delete mReadSet;
 
-    mReadSet = nsMsgKeySet::Create(newsrcLine);
+  mReadSet = nsMsgKeySet::Create(newsrcLine);
 
-    if (!mReadSet) return NS_ERROR_OUT_OF_MEMORY;
+  if (!mReadSet) return NS_ERROR_OUT_OF_MEMORY;
 
-    // Now that mReadSet is recreated, make sure it's stored in the db as well.
-    nsresult rv;
-    nsCOMPtr<nsINewsDatabase> db = do_QueryInterface(mDatabase, &rv);
-    if (NS_SUCCEEDED(rv) && db) // it's ok not to have a db here.
-      db->SetReadSet(mReadSet);
+  // Now that mReadSet is recreated, make sure it's stored in the db as well.
+  nsCOMPtr<nsINewsDatabase> db = do_QueryInterface(mDatabase);
+  if (db) // it's ok not to have a db here.
+    db->SetReadSet(mReadSet);
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1694,13 +1697,12 @@ NS_IMETHODIMP nsMsgNewsFolder::DownloadAllForOffline(nsIUrlListener *listener, n
     }
   }
   DownloadNewsArticlesToOfflineStore *downloadState = new DownloadNewsArticlesToOfflineStore(msgWindow, mDatabase, this);
-  if (downloadState)
-  {
-    m_downloadingMultipleMessages = PR_TRUE;
-    return downloadState->DownloadArticles(msgWindow, this, &srcKeyArray);
-  }
-  else
+  if (!downloadState)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  m_downloadingMultipleMessages = PR_TRUE;
+
+  return downloadState->DownloadArticles(msgWindow, this, &srcKeyArray);
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *window)
@@ -1724,15 +1726,13 @@ NS_IMETHODIMP nsMsgNewsFolder::DownloadMessagesForOffline(nsISupportsArray *mess
       srcKeyArray.Add(key);
   }
   DownloadNewsArticlesToOfflineStore *downloadState = new DownloadNewsArticlesToOfflineStore(window, mDatabase, this);
-  if (downloadState)
-  {
-    m_downloadingMultipleMessages = PR_TRUE;
-    return downloadState->DownloadArticles(window, this, &srcKeyArray);
-  }
-  else
+  if (!downloadState)
     return NS_ERROR_OUT_OF_MEMORY;
-}
 
+  m_downloadingMultipleMessages = PR_TRUE;
+
+  return downloadState->DownloadArticles(window, this, &srcKeyArray);
+}
 
 // line does not have a line terminator (e.g., CR or CRLF)
 NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey keyOfArticle)
@@ -1772,8 +1772,8 @@ NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey k
   }
                                                                                 
   return rv;
-
 }
+
 NS_IMETHODIMP nsMsgNewsFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
@@ -1851,7 +1851,16 @@ NS_IMETHODIMP nsMsgNewsFolder::Shutdown(PRBool shutdownChildren)
   }
 
   mInitialized = PR_FALSE;
-  mReadSet = nsnull;
+  if (mReadSet) {
+    // the nsINewsDatabase holds a weak ref to the readset,
+    // and we outlive the db, so it's safe to delete it here.
+    nsCOMPtr<nsINewsDatabase> db = do_QueryInterface(mDatabase);
+    if (db)
+      db->SetReadSet(nsnull);
+    delete mReadSet;
+    mReadSet = nsnull;
+  }
+
   return nsMsgDBFolder::Shutdown(shutdownChildren);
 }
 
