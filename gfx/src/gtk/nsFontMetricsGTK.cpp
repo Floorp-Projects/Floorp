@@ -1448,23 +1448,18 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     if (!gUserDefinedConverter) {
       res = gCharSetManager->GetUnicodeEncoderRaw("x-user-defined",
                                                  &gUserDefinedConverter);
-      if (NS_SUCCEEDED(res)) {
-        res = gUserDefinedConverter->SetOutputErrorBehavior(
-            gUserDefinedConverter->kOnError_Replace, nsnull, '?');
-        nsCOMPtr<nsICharRepresentable> mapper =
-          do_QueryInterface(gUserDefinedConverter);
-        if (mapper) {
-          gUserDefinedCCMap = MapperToCCMap(mapper);
-          if (!gUserDefinedCCMap)
-            return NS_ERROR_OUT_OF_MEMORY;          
-        }
-      }
-      else {
+      if (NS_FAILED(res)) {
         return res;
       }
-    }
-    else {
-      return res;
+      res = gUserDefinedConverter->SetOutputErrorBehavior(
+          gUserDefinedConverter->kOnError_Replace, nsnull, '?');
+      nsCOMPtr<nsICharRepresentable> mapper =
+        do_QueryInterface(gUserDefinedConverter);
+      if (mapper) {
+        gUserDefinedCCMap = MapperToCCMap(mapper);
+        if (!gUserDefinedCCMap)
+          return NS_ERROR_OUT_OF_MEMORY;          
+      }
     }
 
     nsCAutoString name("font.name.");
