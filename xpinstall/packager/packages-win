@@ -38,7 +38,7 @@ bin\zlib.dll
 bin\components\all.js
 bin\components\appshell.xpt
 bin\components\bookmarks.dll
-bin\components\bookmaarks.xpt
+bin\components\bookmarks.xpt
 bin\components\brprof.dll
 bin\components\caps.dll
 bin\components\caps.xpt
