@@ -20,7 +20,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>,
 #                 Harrison Page <harrison@netscape.com>
-#				  Gervase Markham <gerv@gerv.net>
+#         Gervase Markham <gerv@gerv.net>
 
 # Run me out of cron at midnight to collect Bugzilla statistics.
 
@@ -33,11 +33,11 @@ require "globals.pl";
 
 # tidy up after graphing module
 if (chdir("graphs")) {
-    unlink <./*.gif>; 
+    unlink <./*.gif>;
     unlink <./*.png>;
     chdir("..");
 }
- 
+
 ConnectToDatabase(1);
 GetVersionTable();
 
@@ -77,36 +77,38 @@ sub collect_stats {
     if (open DATA, ">>$file") {
         push my @row, &today;
 
-		foreach my $status ('NEW', 'ASSIGNED', 'REOPENED', 'UNCONFIRMED', 'RESOLVED', 'VERIFIED', 'CLOSED') {
-		    if( $product eq "-All-" ) {
-				SendSQL("select count(bug_status) from bugs where bug_status='$status'");
-		    } else {
-				SendSQL("select count(bug_status) from bugs where bug_status='$status' and product='$product'");
-		    }
-		
-		    push @row, FetchOneColumn();
-	    }
-	  
-	    foreach my $resolution ('FIXED', 'INVALID', 'WONTFIX', 'LATER', 'REMIND', 'DUPLICATE', 'WORKSFORME', 'MOVED') {
-		    if( $product eq "-All-" ) {
-				SendSQL("select count(resolution) from bugs where resolution='$resolution'");
-		    } else {
-				SendSQL("select count(resolution) from bugs where resolution='$resolution' and product='$product'");
-		    }
-		    push @row, FetchOneColumn();
-	    }
+        foreach my $status ('NEW', 'ASSIGNED', 'REOPENED', 'UNCONFIRMED', 'RESOLVED', 'VERIFIED', 'CLOSED') {
+            if( $product eq "-All-" ) {
+                SendSQL("select count(bug_status) from bugs where bug_status='$status'");
+            } else {
+                SendSQL("select count(bug_status) from bugs where bug_status='$status' and product='$product'");
+            }
 
-	    if (! $exists) {
-		    print DATA <<FIN;
+            push @row, FetchOneColumn();
+        }
+
+        foreach my $resolution ('FIXED', 'INVALID', 'WONTFIX', 'LATER', 'REMIND', 'DUPLICATE', 'WORKSFORME', 'MOVED') {
+            if( $product eq "-All-" ) {
+                SendSQL("select count(resolution) from bugs where resolution='$resolution'");
+            } else {
+                SendSQL("select count(resolution) from bugs where resolution='$resolution' and product='$product'");
+            }
+
+            push @row, FetchOneColumn();
+        }
+
+        if (! $exists) {
+            print DATA <<FIN;
 # Bugzilla Daily Bug Stats
 #
 # Do not edit me! This file is generated.
-# 
+#
 # fields: DATE|NEW|ASSIGNED|REOPENED|UNCONFIRMED|RESOLVED|VERIFIED|CLOSED|FIXED|INVALID|WONTFIX|LATER|REMIND|DUPLICATE|WORKSFORME|MOVED
 # Product: $product
 # Created: $when
 FIN
-	    }
+        }
+
         print DATA (join '|', @row) . "\n";
         close DATA;
     } else {
@@ -128,20 +130,18 @@ sub calculate_dupes {
     # Save % count here in a date-named file
     # so we can read it back in to do changed counters
     # First, delete it if it exists, so we don't add to the contents of an old file
-    if (-e "data/mining/dupes$today.db")
-    {
-		system("rm -f data/mining/dupes$today.db");
+    if (-e "data/mining/dupes$today.db") {
+        system("rm -f data/mining/dupes$today.db");
     }
    
     dbmopen(%count, "data/mining/dupes$today.db", 0644) || die "Can't open DBM dupes file: $!";
 
     # Create a hash with key "a bug number", value "bug which that bug is a
     # direct dupe of" - straight from the duplicates table.
-    while (@row = FetchSQLData()) 
-    {
-	    my $dupe_of = shift @row;
-	    my $dupe = shift @row;
-	    $dupes{$dupe} = $dupe_of;
+    while (@row = FetchSQLData()) {
+        my $dupe_of = shift @row;
+        my $dupe = shift @row;
+        $dupes{$dupe} = $dupe_of;
     }
 
     # Total up the number of bugs which are dupes of a given bug
@@ -149,46 +149,41 @@ sub calculate_dupes {
     # value = "number of immediate dupes of that bug".
     foreach $key (keys(%dupes)) 
     {
-	    my $dupe_of = $dupes{$key};
+        my $dupe_of = $dupes{$key};
 
-	    if (!defined($count{$dupe_of}))
-	    {
-		    $count{$dupe_of} = 0;
-	    }
+        if (!defined($count{$dupe_of})) {
+            $count{$dupe_of} = 0;
+        }
 
-	    $count{$dupe_of}++;
+        $count{$dupe_of}++;
     }   
 
     # Now we collapse the dupe tree by iterating over %count until
     # there is no further change.
     while ($changed == 1)
     {
-	    $changed = 0;
-	    foreach $key (keys(%count)) 
-	    {
-		    # if this bug is actually itself a dupe, and has a count...
-		    if (defined($dupes{$key}) && $count{$key} > 0)
-		    {
-				# add that count onto the bug it is a dupe of,
-				# and zero the count; the check is to avoid
-				# loops
-				if ($count{$dupes{$key}} != 0)
-				{
-					$count{$dupes{$key}} += $count{$key};
-					$count{$key} = 0;
-					$changed = 1;
-				}
-	 	    }
-	    }
+        $changed = 0;
+        foreach $key (keys(%count)) {
+            # if this bug is actually itself a dupe, and has a count...
+            if (defined($dupes{$key}) && $count{$key} > 0) {
+                # add that count onto the bug it is a dupe of,
+                # and zero the count; the check is to avoid
+                # loops
+                if ($count{$dupes{$key}} != 0) {
+                    $count{$dupes{$key}} += $count{$key};
+                    $count{$key} = 0;
+                    $changed = 1;
+                }
+            }
+        }
     }
 
     # Remove the values for which the count is zero
     foreach $key (keys(%count))
     {
-	    if ($count{$key} == 0)
-	    {
-			delete $count{$key};
-	    }
+        if ($count{$key} == 0) {
+            delete $count{$key};
+        }
     }
    
     dbmclose(%count);
