@@ -56,9 +56,9 @@ public:
   virtual void Destroy();
   virtual nsIViewManager * GetViewManager();
   virtual nsIWidget * GetWidget();
-  virtual void Paint(nsIRenderingContext& rc, const nsRect& rect);
-  virtual void Paint(nsIRenderingContext& rc, const nsRegion& region);
-  virtual nsEventStatus HandleEvent(nsGUIEvent *event, PRBool aCheckParent = PR_TRUE, PRBool aCheckChildren = PR_TRUE);
+  virtual void Paint(nsIRenderingContext& rc, const nsRect& rect, PRUint32 aPaintFlags);
+  virtual void Paint(nsIRenderingContext& rc, const nsRegion& region, PRUint32 aPaintFlags);
+  virtual nsEventStatus HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags);
   virtual void SetPosition(nscoord x, nscoord y);
   virtual void GetPosition(nscoord *x, nscoord *y);
   virtual void SetDimensions(nscoord width, nscoord height);
@@ -66,9 +66,8 @@ public:
   virtual void SetBounds(const nsRect &aBounds);
   virtual void SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
   virtual void GetBounds(nsRect &aBounds);
-  virtual void SetClip(const nsRect &aClip);
   virtual void SetClip(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-  virtual PRBool GetClip(nsRect& aClip);
+  virtual PRBool GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom);
   virtual void SetVisibility(nsViewVisibility visibility);
   virtual nsViewVisibility GetVisibility();
   virtual void SetZIndex(PRInt32 zindex);
@@ -81,8 +80,8 @@ public:
   virtual void RemoveChild(nsIView *child);
   virtual PRInt32 GetChildCount();
   virtual nsIView * GetChild(PRInt32 index);
-  virtual void SetTransform(nsTransform2D *transform);
-  virtual nsTransform2D * GetTransform();
+  virtual void SetTransform(nsTransform2D &aXForm);
+  virtual void GetTransform(nsTransform2D &aXForm);
   virtual void SetOpacity(float opacity);
   virtual float GetOpacity();
   virtual PRBool HasTransparency();
@@ -118,7 +117,8 @@ protected:
   PRInt32           mNumKids;
   nsRect            mBounds;
   nsRect            mClipRect;
-  nsRect            mContainerRect;
+  nsTransform2D     *mXForm;
+  float             mOpacity;
 };
 
 #endif

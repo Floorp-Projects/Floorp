@@ -91,7 +91,6 @@ nsIView* AbsoluteFrame::CreateView(nsIView*         aContainingView,
 
     // Is there a clip rect specified?
     if (NS_STYLE_CLIP_RECT == aPosition->mClipFlags) {
-      // XXX Michael: this needs to change
       clip.SetRect(aPosition->mClip.left, aPosition->mClip.top,
                    aPosition->mClip.right, aPosition->mClip.bottom);
     }

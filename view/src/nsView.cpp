@@ -124,7 +124,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
         aEvent->point.x = NS_TO_INT_ROUND(aEvent->point.x * cx->GetPixelsToTwips());
         aEvent->point.y = NS_TO_INT_ROUND(aEvent->point.y * cx->GetPixelsToTwips());
 
-        result = view->HandleEvent(aEvent);
+        result = view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | NS_VIEW_FLAG_CHECK_PARENT);
 
         aEvent->point.x = NS_TO_INT_ROUND(aEvent->point.x * cx->GetTwipsToPixels());
         aEvent->point.y = NS_TO_INT_ROUND(aEvent->point.y * cx->GetTwipsToPixels());
@@ -144,6 +144,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 nsView :: nsView()
 {
   mVis = nsViewVisibility_kShow;
+  mXForm = nsnull;
 }
 
 nsView :: ~nsView()
@@ -156,6 +157,12 @@ nsView :: ~nsView()
 
     while (kid = GetChild(0))
       kid->Destroy();
+  }
+
+  if (mXForm != nsnull)
+  {
+    delete mXForm;
+    mXForm = nsnull;
   }
 
   if (nsnull != mViewManager)
@@ -266,8 +273,14 @@ nsresult nsView :: Init(nsIViewManager* aManager,
   NS_ADDREF(aManager);
 
   mBounds = aBounds;
-  mContainerRect = aBounds;
-  mClipRect.Empty();
+
+  if (aClipRect != nsnull)
+    mClipRect = *aClipRect;
+  else
+    mClipRect.Empty();
+
+  mOpacity = aOpacity;
+  mZindex = aZIndex;
 
   // assign the parent view
   SetParent(aParent);
@@ -320,22 +333,14 @@ nsIWidget * nsView :: GetWidget()
   return mWindow;
 }
 
-void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect)
+void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect, PRUint32 aPaintFlags)
 {
   rc.PushState();
 
   if (mClipRect.IsEmpty() == PR_FALSE)
   {
-    nsRect  trect;
-
     rc.Translate(mBounds.x, mBounds.y);
-
-    trect.x = mClipRect.x;
-    trect.y = mClipRect.y;
-    trect.width = (mClipRect.width - mClipRect.x) + 1;
-    trect.height = (mClipRect.height - mClipRect.y) + 1;
-
-    rc.SetClipRect(trect, PR_TRUE);
+    rc.SetClipRect(mClipRect, PR_TRUE);
   }
   else
   {
@@ -356,6 +361,14 @@ void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect)
     NS_RELEASE(cx);
   }
 
+  //XXX maybe we should set this before we set the clip? MMP
+
+  if (nsnull != mXForm)
+  {
+    nsTransform2D *pXForm = rc.GetCurrentTransform();
+    pXForm->Concatenate(mXForm);
+  }
+
   PRInt32 numkids = GetChildCount();
 
   for (PRInt32 cnt = 0; cnt < numkids; cnt++)
@@ -374,7 +387,7 @@ void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect)
         // Translate damage area into kid's coordinate system
         nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
                              damageArea.width, damageArea.height);
-        kid->Paint(rc, kidDamageArea);
+        kid->Paint(rc, kidDamageArea, aPaintFlags);
       }
     }
   }
@@ -382,15 +395,15 @@ void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect)
   rc.PopState();
 }
 
-void nsView :: Paint(nsIRenderingContext& rc, const nsRegion& region)
+void nsView :: Paint(nsIRenderingContext& rc, const nsRegion& region, PRUint32 aPaintFlags)
 {
   // XXX apply region to rc
   // XXX get bounding rect from region
   //if (nsnull != mFrame)
-  //  mFrame->Paint(rc, rect);
+  //  mFrame->Paint(rc, rect, aPaintFlags);
 }
 
-nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRBool aCheckParent, PRBool aCheckChildren)
+nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
 {
   nsIScrollbar  *scroll;
   nsEventStatus retval = nsEventStatus_eIgnore;
@@ -405,7 +418,7 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRBool aCheckParent, PRBo
     if (NS_OK == mWindow->QueryInterface(kscroller, (void **)&scroll))
     {
       if (nsnull != mParent)
-        retval = mParent->HandleEvent(event, PR_FALSE, PR_FALSE);
+        retval = mParent->HandleEvent(event, 0);
 
       NS_RELEASE(scroll);
     }
@@ -431,7 +444,8 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRBool aCheckParent, PRBo
 
   //see if any of this view's children can process the event
   
-  if ((PR_TRUE == aCheckChildren) && (retval == nsEventStatus_eIgnore))
+  if ((aEventFlags & NS_VIEW_FLAG_CHECK_CHILDREN) &&
+      (retval == nsEventStatus_eIgnore))
   {
     PRInt32 numkids = GetChildCount();
     nsRect  trect;
@@ -459,7 +473,7 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRBool aCheckParent, PRBo
         event->point.x -= trect.x;
         event->point.y -= trect.y;
 
-        retval = pKid->HandleEvent(event, PR_FALSE, PR_TRUE);
+        retval = pKid->HandleEvent(event, NS_VIEW_FLAG_CHECK_CHILDREN);
 
         event->point.x += trect.x;
         event->point.y += trect.y;
@@ -480,7 +494,7 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRBool aCheckParent, PRBo
 
     while (pNext)
     {
-      retval = pNext->HandleEvent(event, PR_FALSE, PR_TRUE);
+      retval = pNext->HandleEvent(event, NS_VIEW_FLAG_CHECK_CHILDREN);
 
       if (retval != PR_FALSE)
         break;
@@ -492,13 +506,13 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRBool aCheckParent, PRBo
   //no-one has a clue what to do with this... so ask the
   //parents. kind of mimics life, huh?
 
-  if ((PR_TRUE == aCheckParent) && (retval == PR_FALSE))
+  if ((aEventFlags & NS_VIEW_FLAG_CHECK_PARENT) && (retval == PR_FALSE))
   {
     nsIView *pParent = GetParent();
 
     while (pParent)
     {
-      retval = pParent->HandleEvent(event, PR_FALSE, PR_FALSE);
+      retval = pParent->HandleEvent(event, 0);
 
       if (retval != PR_FALSE)
         break;
@@ -585,32 +599,24 @@ void nsView :: GetBounds(nsRect &aBounds)
   aBounds = mBounds;
 }
 
-void nsView :: SetClip(const nsRect &aClip)
+void nsView :: SetClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom)
 {
-  mClipRect.x = aClip.x;
-  mClipRect.y = aClip.y;
-  mClipRect.width = aClip.width;
-  mClipRect.width = aClip.height;
+  mClipRect.x = aLeft;
+  mClipRect.y = aTop;
+  mClipRect.width = aRight - aLeft;
+  mClipRect.height = aBottom - aTop;
 }
 
-void nsView :: SetClip(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
-{
-  mClipRect.x = aX;
-  mClipRect.y = aY;
-  mClipRect.width = aWidth;
-  mClipRect.width = aHeight;
-}
-
-PRBool nsView :: GetClip(nsRect& aClip)
+PRBool nsView :: GetClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom)
 {
   if (mClipRect.IsEmpty() == PR_TRUE)
     return PR_FALSE;
   else
   {
-    aClip.x = mClipRect.x;
-    aClip.y = mClipRect.y;
-    aClip.width = mClipRect.width;
-    aClip.width = mClipRect.height;
+    *aLeft = mClipRect.x;
+    *aTop = mClipRect.y;
+    *aRight = mClipRect.width + mClipRect.x;
+    *aBottom = mClipRect.height + mClipRect.y;
 
     return PR_TRUE;
   }
@@ -733,22 +739,30 @@ nsIView * nsView :: GetChild(PRInt32 index)
   return nsnull;
 }
 
-void nsView :: SetTransform(nsTransform2D *transform)
+void nsView :: SetTransform(nsTransform2D &aXForm)
 {
+  if (nsnull == mXForm)
+    mXForm = new nsTransform2D(&aXForm);
+  else
+    *mXForm = aXForm;
 }
 
-nsTransform2D * nsView :: GetTransform()
+void nsView :: GetTransform(nsTransform2D &aXForm)
 {
-  return nsnull;
+  if (nsnull != mXForm)
+    aXForm = *mXForm;
+  else
+    aXForm.SetToIdentity();
 }
 
 void nsView :: SetOpacity(float opacity)
 {
+  mOpacity = opacity;
 }
 
 float nsView :: GetOpacity()
 {
-  return 1.0f;
+  return mOpacity;
 }
 
 PRBool nsView :: HasTransparency()
