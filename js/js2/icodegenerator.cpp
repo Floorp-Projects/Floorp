@@ -71,7 +71,8 @@ namespace ICG {
             switchRegister(NotARegister),
             variableList(new VariableList())
     { 
-        iCode = new InstructionStream(); 
+        iCode = new InstructionStream();
+        iCodeOwner = true;
         if (hasTryStatement) 
             exceptionRegister = allocateVariable(world->identifiers[widenCString("__exceptionObject__")]);
         for (uint i = 0; i < switchStatementNesting; i++) {
@@ -117,8 +118,10 @@ namespace ICG {
                 }
         }
         */
-        markMaxRegister();            
-        return new ICodeModule(iCode, variableList, maxRegister, 0);
+        markMaxRegister();
+        ICodeModule* module = new ICodeModule(iCode, variableList, maxRegister, 0);
+        iCodeOwner = false;   // give ownership to the module.
+        return module;
     }
     
     TryCodeState::TryCodeState(Label *catchLabel, Label *finallyLabel, ICodeGenerator *icg) 
