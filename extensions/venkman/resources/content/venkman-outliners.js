@@ -340,7 +340,8 @@ function sov_getcelltext (row, colID)
     switch (colID)
     {
         case "function-name":
-            return this.frames[row].script.functionName;
+            return this.frames[row].script.functionName + " (" +
+                formatArguments(this.frames[row].scope) + ")";
 
         case "line-number":
             return this.frames[row].line;
