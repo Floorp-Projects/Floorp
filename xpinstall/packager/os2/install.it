@@ -73,6 +73,7 @@ MB_MESSAGE_STR=Message
 MB_ATTENTION_STR=Attention
 MSG_CREATE_DIRECTORY=The following directory does not exist:%sWould you like to create it?
 STR_CREATE_DIRECTORY=Create Directory?
+ERROR_FILESYSTEM=The drive you selected does not support long filenames
 CB_DEFAULT=Default
 ERROR_DESTINATION_PATH=Invalid path entered.
 STR_SETUP_TYPE=Setup Type:

@@ -68,7 +68,7 @@ sub RecursiveModify
             # recurse into subdir
             RecursiveModify($entry);
         } else {
-            if(($entry =~ /\.dll/i) || ($entry =~ /\.dll/i))
+            if(($entry =~ /\.dll/i) || ($entry =~ /\.exe/i))
             {
                 # Make sure it is not read only
                 system("chmod 755 $entry");
