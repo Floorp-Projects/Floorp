@@ -1,4 +1,4 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- 
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -115,13 +115,20 @@ Pluglet::Pluglet(const char *mimeDescription, const char *path) {
     strcpy(this->path,path);
     this->mimeDescription = new char[strlen(mimeDescription)+1];
     strcpy(this->mimeDescription,mimeDescription);
+    
 }
  
 Pluglet::~Pluglet(void) {
-    delete[] path;
-    delete[] mimeDescription;
+    if (path != NULL) {
+        delete[] path;
+    }
+    if (mimeDescription != NULL) {
+        delete[] mimeDescription;
+    }
     JNIEnv *env = PlugletEngine::GetJNIEnv();
-    env->DeleteGlobalRef(jthis);
+    if (env != NULL) {
+        env->DeleteGlobalRef(jthis);
+    }
 }
 
 Pluglet * Pluglet::Load(const char * path) {
@@ -134,12 +141,33 @@ Pluglet * Pluglet::Load(const char * path) {
     return result;
 }
 
-
+/*
+  1 if good
+  0 if not good
+ */
 int Pluglet::Compare(const char *mimeType) {
-  return 1;  //nb urgent
+    /* mimedDescription mimeTypes:extensions:description
+       mimeTypes mimeType;mimeType;...
+       extensions extension;extension;...
+    */
+    if (!mimeType) {
+        return 0;
+    }
+    char * terminator = strchr(mimeDescription,':'); // terminator have to be not equal to NULL;
+    char *p1 = mimeDescription;
+    char *p2 = strchr(p1,';');
+    while ( p1 != NULL && p1 < terminator ) {
+        size_t n = sizeof(char) * ( ( (p2 == NULL) ? terminator : p2) - p1 );
+        if (strncmp(p1,mimeType,n) == 0) {
+            return 1;
+        }
+        p1 = p2 ;
+        if (p2 != NULL) {
+            p2 = strchr(p2,';');
+            p1++;
+        }
+    }
+    return 0;
 }
-
-
-
 
 
