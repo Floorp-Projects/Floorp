@@ -73,8 +73,10 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                    PRInt32 aModType,
+                                    nsChangeHint& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 };
 
@@ -270,25 +272,35 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
-nsHTMLHRElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                          nsChangeHint& aHint) const
+nsHTMLHRElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                        PRInt32 aModType,
+                                        nsChangeHint& aHint) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::noshade, NS_STYLE_HINT_VISUAL },
-    { &nsHTMLAtoms::align, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::width, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::size, NS_STYLE_HINT_REFLOW },
-    { nsnull, NS_STYLE_HINT_NONE },
+  nsresult rv =
+    nsGenericHTMLLeafElement::GetAttributeChangeHint(aAttribute,
+                                                     aModType, aHint);
+  if (aAttribute == nsHTMLAtoms::noshade) {
+    NS_UpdateHint(aHint, NS_STYLE_HINT_VISUAL);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsHTMLHRElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+{
+  static const AttributeDependenceEntry attributes[] = {
+    { &nsHTMLAtoms::align },
+    { &nsHTMLAtoms::width },
+    { &nsHTMLAtoms::size },
+    { nsnull },
   };
   
-  static const AttributeImpactEntry* const map[] = {
+  static const AttributeDependenceEntry* const map[] = {
     attributes,
     sCommonAttributeMap,
   };
 
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-  
-  return NS_OK;
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
 

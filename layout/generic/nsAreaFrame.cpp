@@ -171,12 +171,11 @@ nsAreaFrame::AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType,
-                              PRInt32 aHint)
+                              PRInt32 aModType)
 {
   nsresult rv = nsBlockFrame::AttributeChanged(aPresContext, aChild,
                                                aNameSpaceID, aAttribute,
-                                               aModType, aHint);
+                                               aModType);
 
   // If the accesskey changed, register for the new value
   // The old value has been unregistered in nsXULElement::SetAttr

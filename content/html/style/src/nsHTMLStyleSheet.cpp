@@ -874,12 +874,7 @@ HTMLStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   // Handle the content style rules.
   if (styledContent) {
     nsChangeHint hint = NS_STYLE_HINT_NONE;
-    styledContent->GetMappedAttributeImpact(aData->mAttribute,
-                                            aData->mModType, hint);
-    // This is the same test that nsGenericHTMLElement uses when calling
-    // nsHTMLAttributes::SetAttributeFor.
-    if ((hint & ~(nsChangeHint_AttrChange | nsChangeHint_Aural |
-                  nsChangeHint_Content)) != 0) {
+    if (styledContent->HasAttributeDependentStyle(aData->mAttribute)) {
       *aResult = PR_TRUE;
       return NS_OK;
     }

@@ -670,7 +670,7 @@ nsSVGAttributes::SetAttr(nsINodeInfo* aNodeInfo,
       PRInt32 modHint = modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
                                      : PRInt32(nsIDOMMutationEvent::ADDITION);
       document->AttributeChanged(mContent, nameSpaceID, name,
-                                 modHint, NS_STYLE_HINT_UNKNOWN);
+                                 modHint);
       document->EndUpdate();
     }
   }
@@ -746,8 +746,7 @@ nsSVGAttributes::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     
     if (aNotify) {
       document->AttributeChanged(mContent, aNameSpaceID, aName,
-                                 nsIDOMMutationEvent::REMOVAL,
-                                 NS_STYLE_HINT_UNKNOWN);
+                                 nsIDOMMutationEvent::REMOVAL);
       document->EndUpdate();
     }
   }

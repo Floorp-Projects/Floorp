@@ -113,14 +113,14 @@ NS_IMETHODIMP nsScrollbarFrame::IsPercentageBase(PRBool& aBase) const
 
 NS_IMETHODIMP
 nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
-                               nsIContent* aChild,
-                               PRInt32 aNameSpaceID,
-                               nsIAtom* aAttribute,
-                               PRInt32 aModType, 
-                               PRInt32 aHint)
+                                   nsIContent* aChild,
+                                   PRInt32 aNameSpaceID,
+                                   nsIAtom* aAttribute,
+                                   PRInt32 aModType)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                              aNameSpaceID, aAttribute, aModType, aHint);
+                                             aNameSpaceID, aAttribute,
+                                             aModType);
 
   // if the current position changes, notify any nsGfxScrollFrame
   // parent we may have

@@ -194,8 +194,7 @@ nsMathMLmstyleFrame::AttributeChanged(nsIPresContext* aPresContext,
                                       nsIContent*     aContent,
                                       PRInt32         aNameSpaceID,
                                       nsIAtom*        aAttribute,
-                                      PRInt32         aModType, 
-                                      PRInt32         aHint)
+                                      PRInt32         aModType)
 {
   // These attributes can affect too many things, ask our parent to re-layout
   // its children so that we can pick up changes in our attributes & transmit

@@ -237,8 +237,7 @@ public:
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType, 
-                              nsChangeHint aHint); // See nsStyleConsts fot hint values
+                              PRInt32 aModType);
 
   // Notification that we were unable to render a replaced element.
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
@@ -1685,11 +1684,11 @@ StyleSetImpl::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aContent,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
-                               PRInt32 aModType, 
-                               nsChangeHint aHint)
+                               PRInt32 aModType)
 {
   return mFrameConstructor->AttributeChanged(aPresContext, aContent, 
-                                             aNameSpaceID, aAttribute, aModType, aHint);
+                                             aNameSpaceID, aAttribute,
+                                             aModType);
 }
 
 NS_IMETHODIMP

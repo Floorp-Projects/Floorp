@@ -638,7 +638,7 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(inDOMView)
 
 NS_IMETHODIMP
 inDOMView::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent, PRInt32 aNameSpaceID,
-                            nsIAtom* aAttribute, PRInt32 aModType, nsChangeHint aHint)
+                            nsIAtom* aAttribute, PRInt32 aModType)
 {
   if (!mTree) {
     return NS_ERROR_FAILURE;

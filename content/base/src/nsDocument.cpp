@@ -2146,8 +2146,7 @@ nsDocument::AttributeWillChange(nsIContent* aChild, PRInt32 aNameSpaceID,
 
 NS_IMETHODIMP
 nsDocument::AttributeChanged(nsIContent* aChild, PRInt32 aNameSpaceID,
-                             nsIAtom* aAttribute, PRInt32 aModType,
-                             nsChangeHint aHint)
+                             nsIAtom* aAttribute, PRInt32 aModType)
 {
   NS_ABORT_IF_FALSE(aChild, "Null child!");
 
@@ -2158,7 +2157,7 @@ nsDocument::AttributeChanged(nsIContent* aChild, PRInt32 aNameSpaceID,
       NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(i));
 
     nsresult rv2 = observer->AttributeChanged(this, aChild, aNameSpaceID,
-                                              aAttribute, aModType, aHint);
+                                              aAttribute, aModType);
     if (NS_FAILED(rv2) && NS_SUCCEEDED(rv))
       rv = rv2;
   }

@@ -109,9 +109,9 @@ public:
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                      PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                    PRInt32 aModType,
+                                    nsChangeHint& aHint) const;
 
   // nsIOptionElement
   NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify);
@@ -491,35 +491,19 @@ nsHTMLOptionElement::StringToAttribute(nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsHTMLOptionElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                              nsChangeHint& aHint) const
+nsHTMLOptionElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                            PRInt32 aModType,
+                                            nsChangeHint& aHint) const
 {
-  nsIFormControlFrame* fcFrame = GetSelectFrame();
-  
-  if (fcFrame) {    
-    static const AttributeImpactEntry attributes[] = {
-      { &nsHTMLAtoms::label, NS_STYLE_HINT_REFLOW },
-      { &nsHTMLAtoms::text, NS_STYLE_HINT_REFLOW },
-      { nsnull, NS_STYLE_HINT_NONE }
-    };
+  nsresult rv =
+    nsGenericHTMLContainerElement::GetAttributeChangeHint(aAttribute,
+                                                          aModType, aHint);
 
-    static const AttributeImpactEntry* const map[] = {
-      attributes,
-      sCommonAttributeMap,
-    };
-
-    FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-    
-  } else {
-    // XXX don't we want to try common attributes here?
-    if (aAttribute == nsXULAtoms::menuactive) {
-      aHint = NS_STYLE_HINT_CONTENT;
-    } else {
-      aHint = NS_STYLE_HINT_NONE;
-    }
+  if (aAttribute == nsHTMLAtoms::label ||
+      aAttribute == nsHTMLAtoms::text) {
+    NS_UpdateHint(aHint, NS_STYLE_HINT_REFLOW);
   }
-
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

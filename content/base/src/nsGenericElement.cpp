@@ -2185,14 +2185,20 @@ nsGenericElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType, 
-                                           nsChangeHint& aHint) const
+NS_IMETHODIMP_(PRBool)
+nsGenericElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
 {
-  aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
-  return NS_OK;
+  return PR_FALSE;
 }
 
+NS_IMETHODIMP
+nsGenericElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                         PRInt32 aModType, 
+                                         nsChangeHint& aHint) const
+{
+  aHint = nsChangeHint(0);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsGenericElement::Compact()
@@ -3590,8 +3596,7 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
     if (aNotify) {
       PRInt32 modHint = modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
                                      : PRInt32(nsIDOMMutationEvent::ADDITION);
-      mDocument->AttributeChanged(this, nameSpaceID, name, modHint, 
-                                  NS_STYLE_HINT_UNKNOWN);
+      mDocument->AttributeChanged(this, nameSpaceID, name, modHint);
       mDocument->EndUpdate();
     }
   }
@@ -3745,8 +3750,8 @@ nsGenericContainerElement::UnsetAttr(PRInt32 aNameSpaceID,
         binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
 
       if (aNotify) {
-        mDocument->AttributeChanged(this, aNameSpaceID, aName, nsIDOMMutationEvent::REMOVAL, 
-                                    NS_STYLE_HINT_UNKNOWN);
+        mDocument->AttributeChanged(this, aNameSpaceID, aName,
+                                    nsIDOMMutationEvent::REMOVAL);
         mDocument->EndUpdate();
       }
     }

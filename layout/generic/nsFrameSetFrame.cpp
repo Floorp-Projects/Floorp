@@ -300,8 +300,7 @@ nsHTMLFramesetFrame::Observe(nsISupports* aObject, const char* aAction,
       doc->AttributeChanged(mContent,
                             kNameSpaceID_None,
                             nsHTMLAtoms::frameborder,
-                            nsIDOMMutationEvent::MODIFICATION,
-                            NS_STYLE_HINT_REFLOW);
+                            nsIDOMMutationEvent::MODIFICATION);
       doc->EndUpdate();
     }
   }

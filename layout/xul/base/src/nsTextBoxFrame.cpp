@@ -125,8 +125,7 @@ nsTextBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
                                  nsIContent*     aChild,
                                  PRInt32         aNameSpaceID,
                                  nsIAtom*        aAttribute,
-                                 PRInt32         aModType, 
-                                 PRInt32         aHint)
+                                 PRInt32         aModType)
 {
     mState |= NS_STATE_NEED_LAYOUT;
     PRBool aResize;

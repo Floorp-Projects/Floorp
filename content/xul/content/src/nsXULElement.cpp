@@ -407,22 +407,6 @@ static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
 
 //----------------------------------------------------------------------
 
-static nsChangeHint
-StyleHintFor(nsINodeInfo* aNodeInfo)
-{
-    nsCOMPtr<nsIAtom> tagName = aNodeInfo->GetNameAtom();
-    if ((tagName == nsXULAtoms::broadcaster) ||
-        (tagName == nsXULAtoms::command) ||
-        (tagName == nsXULAtoms::key)) {
-        return NS_STYLE_HINT_NONE;
-    }
-
-    return NS_STYLE_HINT_UNKNOWN;
-}
-
-
-//----------------------------------------------------------------------
-
 nsrefcnt             nsXULElement::gRefCnt;
 nsIRDFService*       nsXULElement::gRDFService;
 
@@ -2524,8 +2508,7 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
             ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
             : PRInt32(nsIDOMMutationEvent::ADDITION);
 
-        mDocument->AttributeChanged(this, attrns, attrName, modHint,
-                                    StyleHintFor(NodeInfo()));
+        mDocument->AttributeChanged(this, attrns, attrName, modHint);
         mDocument->EndUpdate();
       }
     }
@@ -2802,8 +2785,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
 
         if (aNotify) {
             mDocument->AttributeChanged(this, aNameSpaceID, aName,
-                                        nsIDOMMutationEvent::REMOVAL,
-                                        StyleHintFor(NodeInfo()));
+                                        nsIDOMMutationEvent::REMOVAL);
 
             // XXXwaterson do we need to mDocument->EndUpdate() here?
         }
@@ -3645,10 +3627,11 @@ nsXULElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
 }
 
 NS_IMETHODIMP
-nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                       nsChangeHint& aHint) const
+nsXULElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                     PRInt32 aModType,
+                                     nsChangeHint& aHint) const
 {
-    aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
+    aHint = NS_STYLE_HINT_NONE;
 
     if (aAttribute == nsXULAtoms::value &&
         (aModType == nsIDOMMutationEvent::REMOVAL || aModType == nsIDOMMutationEvent::ADDITION)) {
@@ -3659,23 +3642,6 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModTy
         // XUL text frame.  If the value attribute is being added or removed, then we need to return
         // a hint of frame change.  (See bugzilla bug 95475 for details.)
         aHint = NS_STYLE_HINT_FRAMECHANGE;
-      else
-        aHint = NS_STYLE_HINT_ATTRCHANGE;
-    }
-    else if (aAttribute == nsXULAtoms::value || aAttribute == nsXULAtoms::flex ||
-        aAttribute == nsXULAtoms::label || aAttribute == nsXULAtoms::mousethrough) {
-      // VERY IMPORTANT! This has a huge positive performance impact!
-      aHint = NS_STYLE_HINT_ATTRCHANGE;
-    }
-    else if (NodeInfo()->Equals(nsXULAtoms::window) ||
-             NodeInfo()->Equals(nsXULAtoms::page) ||
-             NodeInfo()->Equals(nsXULAtoms::dialog) ||
-             NodeInfo()->Equals(nsXULAtoms::wizard)) {
-        // Ignore 'width', 'height', 'screenX', 'screenY' and 'sizemode' on a <window>
-        if (nsXULAtoms::width == aAttribute || nsXULAtoms::height == aAttribute ||
-            nsXULAtoms::screenX == aAttribute || nsXULAtoms::screenY == aAttribute ||
-            nsXULAtoms::sizemode == aAttribute)
-           aHint = NS_STYLE_HINT_NONE;
     } else {
         // if left or top changes we reflow. This will happen in xul containers that
         // manage positioned children such as a bulletinboard.
@@ -3684,6 +3650,12 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModTy
     }
 
     return NS_OK;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsXULElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+{
+    return PR_FALSE;
 }
 
 // Controllers Methods

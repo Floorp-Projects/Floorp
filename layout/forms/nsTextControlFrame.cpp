@@ -2663,20 +2663,12 @@ nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIContent*     aChild,
                                         PRInt32         aNameSpaceID,
                                         nsIAtom*        aAttribute,
-                                        PRInt32         aModType, 
-                                        PRInt32         aHint)
+                                        PRInt32         aModType)
 {
   if (!mEditor || !mSelCon) {return NS_ERROR_NOT_INITIALIZED;}
   nsresult rv = NS_OK;
 
-  if (nsHTMLAtoms::value == aAttribute) 
-  {
-    // XXX If this should happen when value= attribute is set, shouldn't it
-    // happen when .value is set too?
-    if (aHint != NS_STYLE_HINT_REFLOW)
-      nsFormControlHelper::StyleChangeReflow(aPresContext, this);
-  } 
-  else if (nsHTMLAtoms::maxlength == aAttribute) 
+  if (nsHTMLAtoms::maxlength == aAttribute) 
   {
     PRInt32 maxLength;
     nsresult rv = GetMaxLength(&maxLength);
@@ -2744,22 +2736,10 @@ nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     }    
     mEditor->SetFlags(flags);
   }
-  else if ((nsHTMLAtoms::size == aAttribute ||
-            nsHTMLAtoms::rows == aAttribute ||
-            nsHTMLAtoms::cols == aAttribute) && aHint != NS_STYLE_HINT_REFLOW) {
-    // XXX Bug 34573 & 50280
-    // The following code should be all we need for these two bugs (it does work for bug 50280)
-    // This doesn't wrong entirely for rows/cols, the borders don't get painted
-    // to fix that I have added a REFLOW hint in nsHTMLTextAreaElement::GetMappedAttributeImpact
-    // but it appears there are some problems when you hold down the return key
-    mPrefSize.width  = -1;
-    mPrefSize.height = -1;
-    nsFormControlHelper::StyleChangeReflow(aPresContext, this);
-  }
   // Allow the base class to handle common attributes supported
   // by all form elements... 
   else {
-    rv = nsBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint);
+    rv = nsBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType);
   }
 
   return rv;

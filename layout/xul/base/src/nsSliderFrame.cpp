@@ -237,11 +237,11 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
-                               PRInt32 aModType, 
-                               PRInt32 aHint)
+                               PRInt32 aModType)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
-                                              aNameSpaceID, aAttribute, aModType, aHint);
+                                             aNameSpaceID, aAttribute,
+                                             aModType);
   // if the current position changes
   if (aAttribute == nsXULAtoms::curpos) {
      rv = CurrentPositionChanged(aPresContext);
@@ -279,10 +279,9 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
       }
   }
 
-  if ((aHint != NS_STYLE_HINT_REFLOW) &&
-             (aAttribute == nsXULAtoms::maxpos ||
-             aAttribute == nsXULAtoms::pageincrement ||
-             aAttribute == nsXULAtoms::increment)) {
+  if (aAttribute == nsXULAtoms::maxpos ||
+      aAttribute == nsXULAtoms::pageincrement ||
+      aAttribute == nsXULAtoms::increment) {
       nsCOMPtr<nsIPresShell> shell;
       aPresContext->GetShell(getter_AddRefs(shell));
 

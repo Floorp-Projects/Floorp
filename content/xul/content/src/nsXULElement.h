@@ -472,9 +472,10 @@ public:
 
     NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
     NS_IMETHOD GetInlineStyleRule(nsIStyleRule** aStyleRule);
-    NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                        nsChangeHint& aHint) const;
-
+    NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                      PRInt32 aModType,
+                                      nsChangeHint& aHint) const;
+    NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
 
     // nsIXULContent
     NS_IMETHOD PeekChildCount(PRInt32& aCount) const;

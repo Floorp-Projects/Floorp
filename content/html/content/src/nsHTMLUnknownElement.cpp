@@ -204,23 +204,20 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
     }
 
     // set as string value to avoid another string copy
-    nsChangeHint impact = NS_STYLE_HINT_NONE;
-    GetMappedAttributeImpact(aAttribute, nsIDOMMutationEvent::MODIFICATION, impact);
+    PRBool mapped = HasAttributeDependentStyle(aAttribute);
 
     nsCOMPtr<nsIHTMLStyleSheet> sheet(dont_AddRef(GetAttrStyleSheet(mDocument)));
     if (!mAttributes) {
       result = NS_NewHTMLAttributes(&mAttributes);
       NS_ENSURE_SUCCESS(result, result);
     }
-    result = mAttributes->SetAttributeFor(aAttribute, aValue, 
-                                          (impact & ~(nsChangeHint_AttrChange | nsChangeHint_Aural
-                                                      | nsChangeHint_Content)) != 0,
+    result = mAttributes->SetAttributeFor(aAttribute, aValue, mapped,
                                           this, sheet);
   }
 
   if (aNotify && (mDocument)) {
-    result = mDocument->AttributeChanged(this, aNameSpaceID, aAttribute, nsIDOMMutationEvent::MODIFICATION, 
-                                         NS_STYLE_HINT_UNKNOWN);
+    result = mDocument->AttributeChanged(this, aNameSpaceID, aAttribute,
+                                         nsIDOMMutationEvent::MODIFICATION);
     mDocument->EndUpdate();
   }
 

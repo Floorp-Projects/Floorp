@@ -233,8 +233,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 
 #ifdef DEBUG
@@ -493,32 +492,27 @@ public:
    */
   static void MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
                                       nsRuleData* aRuleData);
-  struct AttributeImpactEntry {
+  struct AttributeDependenceEntry {
     nsIAtom** attribute;
-    nsChangeHint hint;
   };
 
-  static const AttributeImpactEntry sCommonAttributeMap[];
-  static const AttributeImpactEntry sImageAttributeMap[];
-  static const AttributeImpactEntry sImageBorderAttributeMap[];
-  static const AttributeImpactEntry sImageAlignAttributeMap[];
-  static const AttributeImpactEntry sBackgroundAttributeMap[];
+  static const AttributeDependenceEntry sCommonAttributeMap[];
+  static const AttributeDependenceEntry sImageMarginSizeAttributeMap[];
+  static const AttributeDependenceEntry sImageBorderAttributeMap[];
+  static const AttributeDependenceEntry sImageAlignAttributeMap[];
+  static const AttributeDependenceEntry sDivAlignAttributeMap[];
+  static const AttributeDependenceEntry sBackgroundAttributeMap[];
   
   /**
-   * A common method where you can just pass in a list of maps to
-   * check for impact. Most implementations of GetMappedAttributeImpact
-   * should use this function as a default handler.
-   *
-   * @param aAttribute   attribute that we care about
-   * @param aHint the    resulting hint
-   * @param aImpactFlags the types of attributes that we care about - see the
-   *                     NS_*_ATTRIBUTE_IMPACT flags
+   * A common method where you can just pass in a list of maps to check
+   * for attribute dependence. Most implementations of
+   * HasAttributeDependentStyle should use this function as a default
+   * handler.
    */
-
-  static void
-  FindAttributeImpact(const nsIAtom* aAttribute, nsChangeHint& aHint,
-                      const AttributeImpactEntry* const aMaps[],
-                      PRUint32 aMapCount);
+  static PRBool
+  FindAttributeDependence(const nsIAtom* aAttribute,
+                          const AttributeDependenceEntry* const aMaps[],
+                          PRUint32 aMapCount);
   /**
    * Helper to map the align attribute into a style struct.
    *
@@ -526,8 +520,8 @@ public:
    * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
-                                    nsRuleData* aData);
+  static void MapImageAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+                                         nsRuleData* aData);
 
   /**
    * Helper to map the align attribute into a style struct for things
@@ -565,8 +559,8 @@ public:
    * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapImagePositionAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
-                                            nsRuleData* aData);
+  static void MapImageSizeAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
+                                         nsRuleData* aData);
   /**
    * Helper to map the background attributes (currently background and bgcolor)
    * into a style struct.

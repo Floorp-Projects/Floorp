@@ -181,8 +181,10 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                    PRInt32 aModType,
+                                    nsChangeHint& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
@@ -1955,9 +1957,9 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
       value.GetIntValue() == NS_FORM_INPUT_IMAGE) {
     nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
     nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
-    nsGenericHTMLElement::MapImagePositionAttributeInto(aAttributes, aData);
+    nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
     // Images treat align as "float"
-    nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
+    nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
   } else {
     // Everything else treats align as "text-align"
     nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
@@ -1967,33 +1969,43 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                             nsChangeHint& aHint) const
+nsHTMLInputElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                           PRInt32 aModType,
+                                           nsChangeHint& aHint) const
 {
-  nsChangeHint valueHint = (mType == NS_FORM_INPUT_BUTTON ||
-                            mType == NS_FORM_INPUT_RESET ||
-                            mType == NS_FORM_INPUT_SUBMIT) ?
-    NS_STYLE_HINT_CONTENT : NS_STYLE_HINT_ATTRCHANGE;
+  nsresult rv =
+    nsGenericHTMLLeafFormElement::GetAttributeChangeHint(aAttribute,
+                                                         aModType, aHint);
+  if (aAttribute == nsHTMLAtoms::type) {
+    NS_UpdateHint(aHint, NS_STYLE_HINT_FRAMECHANGE);
+  } else if (aAttribute == nsHTMLAtoms::value) {
+    NS_UpdateHint(aHint, NS_STYLE_HINT_REFLOW);
+  } else if (aAttribute == nsHTMLAtoms::size &&
+             (mType == NS_FORM_INPUT_TEXT ||
+              mType == NS_FORM_INPUT_PASSWORD)) {
+    NS_UpdateHint(aHint, NS_STYLE_HINT_REFLOW);
+  }
+  return rv;
+}
 
-  const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::value, valueHint },
-    { &nsHTMLAtoms::align, NS_STYLE_HINT_FRAMECHANGE },
-    { &nsHTMLAtoms::type, NS_STYLE_HINT_FRAMECHANGE },
-    { nsnull, NS_STYLE_HINT_NONE },
+NS_IMETHODIMP_(PRBool)
+nsHTMLInputElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+{
+  static const AttributeDependenceEntry attributes[] = {
+    { &nsHTMLAtoms::align },
+    { &nsHTMLAtoms::type },
+    { nsnull },
   };
 
-  const AttributeImpactEntry* const map[] = {
+  static const AttributeDependenceEntry* const map[] = {
     attributes,
     sCommonAttributeMap,
-    sImageAttributeMap,
+    sImageMarginSizeAttributeMap,
     sImageBorderAttributeMap,
   };
 
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-  
-  return NS_OK;
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
-
 
 NS_IMETHODIMP
 nsHTMLInputElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const

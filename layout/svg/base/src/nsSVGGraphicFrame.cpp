@@ -114,19 +114,15 @@ nsSVGGraphicFrame::AttributeChanged(nsIPresContext* aPresContext,
                                     nsIContent*     aChild,
                                     PRInt32         aNameSpaceID,
                                     nsIAtom*        aAttribute,
-                                    PRInt32         aModType,
-                                    PRInt32         aHint)
+                                    PRInt32         aModType)
 {
   // we don't use this notification mechanism
   
 #ifdef DEBUG
-//  printf("** nsSVGGraphicFrame::AttributeChanged(");
 //  nsAutoString str;
 //  aAttribute->ToString(str);
-//  nsCAutoString cstr;
-//  cstr.AssignWithConversion(str);
-//  printf(cstr.get());
-//  printf(")\n");
+//  printf("** nsSVGGraphicFrame::AttributeChanged(%s)\n",
+//         NS_LossyConvertUCS2toASCII(str).get());
 #endif
   
   return NS_OK;

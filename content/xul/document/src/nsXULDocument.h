@@ -128,8 +128,7 @@ public:
                               PRInt32 aIndexInContainer);
 
     NS_IMETHOD AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
-                                nsIAtom* aAttribute, PRInt32 aModType, 
-                                nsChangeHint aHint);
+                                nsIAtom* aAttribute, PRInt32 aModType);
 
     NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                               nsEvent* aEvent,

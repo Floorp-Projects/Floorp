@@ -231,8 +231,7 @@ public:
                               nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType, 
-                              nsChangeHint aHint) = 0;
+                              PRInt32 aModType) = 0;
 
   // Notification that we were unable to render a replaced element.
   // Called when the replaced element can not be rendered, and we should

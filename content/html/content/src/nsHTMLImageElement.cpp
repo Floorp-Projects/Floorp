@@ -122,9 +122,10 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                      PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                    PRInt32 aModType,
+                                    nsChangeHint& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
@@ -549,36 +550,39 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 {
   if (!aData || !aAttributes)
     return;
-  nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImagePositionAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
-
 NS_IMETHODIMP
-nsHTMLImageElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                             PRInt32 aModType,
-                                             nsChangeHint& aHint) const
+nsHTMLImageElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                           PRInt32 aModType,
+                                           nsChangeHint& aHint) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::usemap, NS_STYLE_HINT_FRAMECHANGE },
-    { &nsHTMLAtoms::ismap, NS_STYLE_HINT_FRAMECHANGE },
-    { &nsHTMLAtoms::align, NS_STYLE_HINT_FRAMECHANGE },
-    { nsnull, NS_STYLE_HINT_NONE },
-  };
+  nsresult rv =
+    nsGenericHTMLLeafElement::GetAttributeChangeHint(aAttribute,
+                                                     aModType, aHint);
+  if (aAttribute == nsHTMLAtoms::usemap ||
+      aAttribute == nsHTMLAtoms::ismap) {
+    NS_UpdateHint(aHint, NS_STYLE_HINT_FRAMECHANGE);
+  }
+  return rv;
+}
 
-  static const AttributeImpactEntry* const map[] = {
-    attributes,
+NS_IMETHODIMP_(PRBool)
+nsHTMLImageElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+{
+  static const AttributeDependenceEntry* const map[] = {
     sCommonAttributeMap,
-    sImageAttributeMap,
-    sImageBorderAttributeMap
+    sImageMarginSizeAttributeMap,
+    sImageBorderAttributeMap,
+    sImageAlignAttributeMap
   };
 
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-
-  return NS_OK;
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
 

@@ -5294,8 +5294,7 @@ PresShell::AttributeChanged(nsIDocument *aDocument,
                             nsIContent*  aContent,
                             PRInt32      aNameSpaceID,
                             nsIAtom*     aAttribute,
-                            PRInt32      aModType, 
-                            nsChangeHint aHint)
+                            PRInt32      aModType)
 {
   nsresult rv = NS_OK;
   // XXXwaterson it might be more elegant to wait until after the
@@ -5303,7 +5302,7 @@ PresShell::AttributeChanged(nsIDocument *aDocument,
   // squelch any other inappropriate notifications as well.
   if (mDidInitialReflow) {
     WillCauseReflow();
-    rv = mStyleSet->AttributeChanged(mPresContext, aContent, aNameSpaceID, aAttribute, aModType, aHint);
+    rv = mStyleSet->AttributeChanged(mPresContext, aContent, aNameSpaceID, aAttribute, aModType);
     VERIFY_STYLE_TREE;
     DidCauseReflow();
   }

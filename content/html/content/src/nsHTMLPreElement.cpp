@@ -75,8 +75,10 @@ public:
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                    PRInt32 aModType,
+                                    nsChangeHint& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 };
 
@@ -252,29 +254,37 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
-nsHTMLPreElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                           nsChangeHint& aHint) const
+nsHTMLPreElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                         PRInt32 aModType,
+                                         nsChangeHint& aHint) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::variable, NS_STYLE_HINT_REFLOW},
-    { &nsHTMLAtoms::wrap, NS_STYLE_HINT_REFLOW},
-    { &nsHTMLAtoms::cols, NS_STYLE_HINT_REFLOW},
-    { &nsHTMLAtoms::width, NS_STYLE_HINT_REFLOW},
-    { &nsHTMLAtoms::tabstop, NS_STYLE_HINT_REFLOW},
-    { nsnull, NS_STYLE_HINT_NONE },
+  nsresult rv =
+    nsGenericHTMLContainerElement::GetAttributeChangeHint(aAttribute,
+                                                          aModType, aHint);
+  if (aAttribute == nsHTMLAtoms::tabstop) {
+    NS_UpdateHint(aHint, NS_STYLE_HINT_REFLOW);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsHTMLPreElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+{
+  static const AttributeDependenceEntry attributes[] = {
+    { &nsHTMLAtoms::variable },
+    { &nsHTMLAtoms::wrap },
+    { &nsHTMLAtoms::cols },
+    { &nsHTMLAtoms::width },
+    { nsnull },
   };
   
-  static const AttributeImpactEntry* const map[] = {
+  static const AttributeDependenceEntry* const map[] = {
     attributes,
     sCommonAttributeMap,
   };
 
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-
-  return NS_OK;
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
-
-
 
 NS_IMETHODIMP
 nsHTMLPreElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const

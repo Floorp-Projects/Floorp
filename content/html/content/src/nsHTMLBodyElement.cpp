@@ -121,8 +121,7 @@ public:
                          PRBool aCompileEventHandlers);
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      nsChangeHint& aHint) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
 
 protected:
   BodyRule* mContentStyleRule;
@@ -627,27 +626,28 @@ nsHTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLBodyElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                            nsChangeHint& aHint) const
+NS_IMETHODIMP_(PRBool)
+nsHTMLBodyElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
 {
-  static const AttributeImpactEntry attributes[] = {
-    { &nsHTMLAtoms::link,  NS_STYLE_HINT_VISUAL },
-    { &nsHTMLAtoms::vlink, NS_STYLE_HINT_VISUAL },
-    { &nsHTMLAtoms::alink, NS_STYLE_HINT_VISUAL },
-    { &nsHTMLAtoms::text,  NS_STYLE_HINT_VISUAL },
-    { &nsHTMLAtoms::marginwidth, NS_STYLE_HINT_REFLOW },
-    { &nsHTMLAtoms::marginheight, NS_STYLE_HINT_REFLOW },
-    { nsnull, NS_STYLE_HINT_NONE },
+  static const AttributeDependenceEntry attributes[] = {
+    { &nsHTMLAtoms::link },
+    { &nsHTMLAtoms::vlink },
+    { &nsHTMLAtoms::alink },
+    { &nsHTMLAtoms::text },
+    // These aren't mapped through attribute mapping, but they are
+    // mapped through a style rule, so it is attribute dependent style.
+    // XXXldb But we don't actually replace the body rule when we have
+    // dynamic changes...
+    { &nsHTMLAtoms::marginwidth },
+    { &nsHTMLAtoms::marginheight },
+    { nsnull },
   };
 
-  static const AttributeImpactEntry* const map[] = {
+  static const AttributeDependenceEntry* const map[] = {
     attributes,
     sCommonAttributeMap,
     sBackgroundAttributeMap,
   };
 
-  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
-
-  return NS_OK;
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }

@@ -1779,14 +1779,15 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
-                               PRInt32 aModType, 
-                               PRInt32 aHint)
+                               PRInt32 aModType)
 {
   nsresult rv = nsSplittableFrame::AttributeChanged(aPresContext, aChild,
-                                                    aNameSpaceID, aAttribute, aModType, aHint);
+                                                    aNameSpaceID, aAttribute,
+                                                    aModType);
   if (NS_OK != rv) {
     return rv;
   }
+  // XXXldb Shouldn't width and height be handled by attribute mapping?
   if (nsHTMLAtoms::width == aAttribute || nsHTMLAtoms::height == aAttribute  || nsHTMLAtoms::alt == aAttribute)
   { // XXX: could check for new width == old width, and make that a no-op
     nsCOMPtr<nsIPresShell> presShell;

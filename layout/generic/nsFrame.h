@@ -232,8 +232,7 @@ public:
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
-                               PRInt32         aModType, 
-                               PRInt32         aHint);
+                               PRInt32         aModType);
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD  GetPrevInFlow(nsIFrame** aPrevInFlow) const;
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);

@@ -992,8 +992,7 @@ nsMathMLmoFrame::AttributeChanged(nsIPresContext* aPresContext,
                                   nsIContent*     aContent,
                                   PRInt32         aNameSpaceID,
                                   nsIAtom*        aAttribute,
-                                  PRInt32         aModType, 
-                                  PRInt32         aHint)
+                                  PRInt32         aModType)
 {
   // check if this is an attribute that can affect the embellished hierarchy
   // in a significant way and re-layout the entire hierarchy.
@@ -1015,7 +1014,7 @@ nsMathMLmoFrame::AttributeChanged(nsIPresContext* aPresContext,
 
   return nsMathMLTokenFrame::
          AttributeChanged(aPresContext, aContent, aNameSpaceID,
-                          aAttribute, aModType, aHint);
+                          aAttribute, aModType);
 }
 
 // ----------------------

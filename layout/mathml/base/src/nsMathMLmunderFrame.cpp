@@ -68,8 +68,7 @@ nsMathMLmunderFrame::AttributeChanged(nsIPresContext* aPresContext,
                                       nsIContent*     aContent,
                                       PRInt32         aNameSpaceID,
                                       nsIAtom*        aAttribute,
-                                      PRInt32         aModType, 
-                                      PRInt32         aHint)
+                                      PRInt32         aModType)
 {
   if (nsMathMLAtoms::accentunder_ == aAttribute) {
     // When we have automatic data to update within ourselves, we ask our
@@ -79,7 +78,7 @@ nsMathMLmunderFrame::AttributeChanged(nsIPresContext* aPresContext,
 
   return nsMathMLContainerFrame::
          AttributeChanged(aPresContext, aContent, aNameSpaceID,
-                          aAttribute, aModType, aHint);
+                          aAttribute, aModType);
 }
 
 NS_IMETHODIMP

@@ -167,8 +167,7 @@ public:
                               nsIContent*  aContent,
                               PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
-                              PRInt32      aModType,
-                              nsChangeHint aHint) { return NS_OK; }
+                              PRInt32      aModType) { return NS_OK; }
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
                              nsIContent* aContainer,
                              PRInt32     aNewIndexInContainer)
@@ -461,8 +460,7 @@ public:
   NS_IMETHOD AttributeChanged(nsIContent* aChild,
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
-                              PRInt32 aModType,
-                              nsChangeHint aHint);
+                              PRInt32 aModType);
   NS_IMETHOD ContentAppended(nsIContent* aContainer,
                              PRInt32 aNewIndexInContainer);
   NS_IMETHOD ContentInserted(nsIContent* aContainer,
