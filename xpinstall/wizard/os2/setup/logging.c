@@ -414,8 +414,8 @@ void LogISDiskSpace(dsN *dsnComponentDSRequirement)
         break;
 
       ulDSAvailable = GetDiskSpaceAvailable(dsnTemp->szVDSPath);
-      itoa(ulDSAvailable, szDSAvailable, 10);
-      itoa(dsnTemp->ulSpaceRequired, szDSRequired, 10);
+      _itoa(ulDSAvailable, szDSAvailable, 10);
+      _itoa(dsnTemp->ulSpaceRequired, szDSRequired, 10);
       sprintf(szBuf,
                "             Path: %s\n         Required: %sKB\n        Available: %sKB\n",
                dsnTemp->szVDSPath,

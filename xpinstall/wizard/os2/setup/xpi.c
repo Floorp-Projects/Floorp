@@ -157,7 +157,7 @@ char *GetErrorString(DWORD dwError, char *szErrorString, DWORD dwErrorStringSize
   char szErrorNumber[MAX_BUF];
 
   memset(szErrorString, 0, dwErrorStringSize);
-  itoa(dwError, szErrorNumber, 10);
+  _itoa(dwError, szErrorNumber, 10);
 
   /* map the error value to a string */
   while(TRUE)

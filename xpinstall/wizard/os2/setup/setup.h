@@ -43,10 +43,7 @@ typedef int PRInt32;
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include <direct.h>
-#include <tchar.h>
 #include <ctype.h>
-//#include <commctrl.h>
 #include "setuprsc.h"
 #include "resource.h"
 #include "zipfile.h"

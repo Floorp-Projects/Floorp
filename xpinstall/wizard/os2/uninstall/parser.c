@@ -382,7 +382,7 @@ ULONG GetLogFile(PSZ szTargetPath, PSZ szInFilename, PSZ szOutBuf, ULONG dwOutBu
     strcpy(szOutBuf, szTargetPath);
     AppendBackSlash(szOutBuf, dwOutBufSize);
     strcat(szOutBuf, szFilenameOnly);
-    itoa(ulMaxNumber, szNumber, 10);
+    _itoa(ulMaxNumber, szNumber, 10);
     strcat(szOutBuf, szNumber);
 
     if(*szFilenameExtensionOnly != '\0')

@@ -50,8 +50,6 @@ typedef long HRESULT;
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include <direct.h>
-#include <tchar.h>
 #include "resource.h"
 
 #define CLASS_NAME                      "Uninstall"

@@ -42,57 +42,57 @@ HRESULT TimingCheck(DWORD dwTiming, LPSTR szSection, LPSTR szFile)
     switch(dwTiming)
     {
       case T_PRE_DOWNLOAD:
-        if(strcmpi(szBuf, "pre download") == 0)
+        if(stricmp(szBuf, "pre download") == 0)
           return(TRUE);
         break;
 
       case T_POST_DOWNLOAD:
-        if(strcmpi(szBuf, "post download") == 0)
+        if(stricmp(szBuf, "post download") == 0)
           return(TRUE);
         break;
 
       case T_PRE_XPCOM:
-        if(strcmpi(szBuf, "pre xpcom") == 0)
+        if(stricmp(szBuf, "pre xpcom") == 0)
           return(TRUE);
         break;
 
       case T_POST_XPCOM:
-        if(strcmpi(szBuf, "post xpcom") == 0)
+        if(stricmp(szBuf, "post xpcom") == 0)
           return(TRUE);
         break;
 
       case T_PRE_SMARTUPDATE:
-        if(strcmpi(szBuf, "pre smartupdate") == 0)
+        if(stricmp(szBuf, "pre smartupdate") == 0)
           return(TRUE);
         break;
 
       case T_POST_SMARTUPDATE:
-        if(strcmpi(szBuf, "post smartupdate") == 0)
+        if(stricmp(szBuf, "post smartupdate") == 0)
           return(TRUE);
         break;
 
       case T_PRE_LAUNCHAPP:
-        if(strcmpi(szBuf, "pre launchapp") == 0)
+        if(stricmp(szBuf, "pre launchapp") == 0)
           return(TRUE);
         break;
 
       case T_POST_LAUNCHAPP:
-        if(strcmpi(szBuf, "post launchapp") == 0)
+        if(stricmp(szBuf, "post launchapp") == 0)
           return(TRUE);
         break;
 
       case T_PRE_ARCHIVE:
-        if(strcmpi(szBuf, "pre archive") == 0)
+        if(stricmp(szBuf, "pre archive") == 0)
           return(TRUE);
         break;
 
       case T_POST_ARCHIVE:
-        if(strcmpi(szBuf, "post archive") == 0)
+        if(stricmp(szBuf, "post archive") == 0)
           return(TRUE);
         break;
 
       case T_DEPEND_REBOOT:
-        if(strcmpi(szBuf, "depend reboot") == 0)
+        if(stricmp(szBuf, "depend reboot") == 0)
           return(TRUE);
         break;
     }
@@ -163,28 +163,33 @@ void CleanupPreviousVersionINIKeys(void)
     sprintf(szBufTiny, "Current Version%d", ulIndex);
     GetPrivateProfileString(szSection, szBufTiny, "", szCurrentVersion, sizeof(szCurrentVersion), szFileIniConfig);
 
-    sprintf(szUserAgent, "%s %s", szApp, szCurrentVersion);
-
-    PrfQueryProfileSize(HINI_USERPROFILE, NULL, NULL, &ulAppsLength);
-    szApps = (char*)malloc(ulAppsLength+1);
-    PrfQueryProfileString(HINI_USERPROFILE, NULL, NULL, NULL, szApps, ulAppsLength);
-    szApps[ulAppsLength] = '\0';
-    while (*szApps) {
-      if (strncmp(szApps, szApp, strlen(szApp)) == 0) {
-        if (strncmp(szApps, szUserAgent, strlen(szUserAgent)) != 0) {
-          char szKey[MAX_BUF];
-          PrfQueryProfileString(HINI_USERPROFILE, szApps, szName, "", szKey, MAX_BUF);
-          if (szKey[0]) {
-            AppendBackSlash(szKey, sizeof(szKey));
-            if (strcmpi(szKey, szPath) == 0) {
-              PrfWriteProfileString(HINI_USER, szApps, NULL, NULL);
+    if (*szCurrentVersion != '\0') {
+      sprintf(szUserAgent, "%s %s", szApp, szCurrentVersion);
+  
+      PrfQueryProfileSize(HINI_USERPROFILE, NULL, NULL, &ulAppsLength);
+      szApps = (char*)malloc(ulAppsLength+1);
+      PrfQueryProfileString(HINI_USERPROFILE, NULL, NULL, NULL, szApps, ulAppsLength);
+      szApps[ulAppsLength] = '\0';
+      while (*szApps) {
+        if (strncmp(szApps, szApp, strlen(szApp)) == 0) {
+          if (strncmp(szApps, szUserAgent, strlen(szUserAgent)) != 0) {
+            char szKey[MAX_BUF];
+            PrfQueryProfileString(HINI_USERPROFILE, szApps, szName, "", szKey, MAX_BUF);
+            if (szKey[0]) {
+              AppendBackSlash(szKey, sizeof(szKey));
+              if (stricmp(szKey, szPath) == 0) {
+                PrfWriteProfileString(HINI_USER, szApps, NULL, NULL);
+              }
             }
           }
         }
+        szApps = strchr(szApps, '\0')+1;
       }
-      szApps = strchr(szApps, '\0')+1;
+    } else {
+      /* We've been asked to remove an entire app */
+      char szINI[MAX_BUF];
     }
-    sprintf(szBufTiny, "Product Reg Key%d", ++ulIndex);        
+    sprintf(szBufTiny, "Product INI App%d", ++ulIndex);        
     GetPrivateProfileString(szSection, szBufTiny, "", szApp, sizeof(szApp), szFileIniConfig);
   } 
 }
@@ -435,7 +440,7 @@ HRESULT ProcessUncompressFile(DWORD dwTiming, char *szSectionPrefix)
       GetPrivateProfileString(szSection, "Destination", "", szBuf, sizeof(szBuf), szFileIniConfig);
       DecryptString(szDestination, szBuf);
       GetPrivateProfileString(szSection, "Only If Exists", "", szBuf, sizeof(szBuf), szFileIniConfig);
-      if(strcmpi(szBuf, "TRUE") == 0)
+      if(stricmp(szBuf, "TRUE") == 0)
         bOnlyIfExists = TRUE;
       else
         bOnlyIfExists = FALSE;
@@ -526,7 +531,7 @@ HRESULT FileMove(LPSTR szFrom, LPSTR szTo)
 
   while(bFound)
   {
-    if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
+    if((stricmp(fdFile.achName, ".") != 0) && (stricmp(fdFile.achName, "..") != 0))
     {
       /* create full path string including filename for source */
       strcpy(szFromTemp, szFromDir);
@@ -629,7 +634,7 @@ HRESULT FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists, BOOL bDnu)
 
   while(bFound)
   {
-    if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
+    if((stricmp(fdFile.achName, ".") != 0) && (stricmp(fdFile.achName, "..") != 0))
     {
       /* create full path string including filename for source */
       strcpy(szFromTemp, szFromDir);
@@ -731,7 +736,7 @@ HRESULT FileCopySequential(LPSTR szSourcePath, LPSTR szDestPath, LPSTR szFilenam
     while(bFound)
     {
       memset(szNumber, 0, sizeof(szNumber));
-      if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
+      if((stricmp(fdFile.achName, ".") != 0) && (stricmp(fdFile.achName, "..") != 0))
       {
         strcpy(szNumber, &fdFile.achName[iFilenameOnlyLen]);
         dwNumber = atoi(szNumber);
@@ -752,7 +757,7 @@ HRESULT FileCopySequential(LPSTR szSourcePath, LPSTR szDestPath, LPSTR szFilenam
     strcpy(szDestFullFilename, szDestPath);
     AppendBackSlash(szDestFullFilename, sizeof(szDestFullFilename));
     strcat(szDestFullFilename, szFilenameOnly);
-    itoa(dwMaxNumber + 1, szNumber, 10);
+    _itoa(dwMaxNumber + 1, szNumber, 10);
     strcat(szDestFullFilename, szNumber);
 
     if(*szFilenameExtensionOnly != '\0')
@@ -789,13 +794,13 @@ HRESULT ProcessCopyFile(DWORD dwTiming, char *szSectionPrefix)
       DecryptString(szDestination, szBuf);
 
       GetPrivateProfileString(szSection, "Do Not Uninstall", "", szBuf, sizeof(szBuf), szFileIniConfig);
-      if(strcmpi(szBuf, "TRUE") == 0)
+      if(stricmp(szBuf, "TRUE") == 0)
         bDnu = TRUE;
       else
         bDnu = FALSE;
 
       GetPrivateProfileString(szSection, "Fail If Exists", "", szBuf, sizeof(szBuf), szFileIniConfig);
-      if(strcmpi(szBuf, "TRUE") == 0)
+      if(stricmp(szBuf, "TRUE") == 0)
         bFailIfExists = TRUE;
       else
         bFailIfExists = FALSE;
@@ -1120,7 +1125,7 @@ HRESULT DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs)
       bFound = TRUE;
     while(bFound == TRUE)
     {
-      if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
+      if((stricmp(fdFile.achName, ".") != 0) && (stricmp(fdFile.achName, "..") != 0))
       {
         /* create full path */
         strcpy(szDestTemp, szDestination);
@@ -1170,7 +1175,7 @@ HRESULT ProcessRemoveDirectory(DWORD dwTiming, char *szSectionPrefix)
       DecryptString(szDestination, szBuf);
       GetPrivateProfileString(szSection, "Remove subdirs", "", szBuf, sizeof(szBuf), szFileIniConfig);
       bRemoveSubdirs = FALSE;
-      if(strcmpi(szBuf, "TRUE") == 0)
+      if(stricmp(szBuf, "TRUE") == 0)
         bRemoveSubdirs = TRUE;
 
       DirectoryRemove(szDestination, bRemoveSubdirs);
@@ -1210,10 +1215,10 @@ HRESULT ProcessRunApp(DWORD dwTiming, char *szSectionPrefix)
       //    we are to run the app when the criterion is true.
       bRunApp = TRUE;
       GetPrivateProfileString(szSection, "Criterion ID", "", szBuf, sizeof(szBuf), szFileIniConfig);
-      if(strcmpi(szBuf, "RecaptureHP") == 0)
+      if(stricmp(szBuf, "RecaptureHP") == 0)
       {
         GetPrivateProfileString(szSection, "Run App If Criterion", "", szBuf, sizeof(szBuf), szFileIniConfig);
-        if(strcmpi(szBuf, "FALSE") == 0)
+        if(stricmp(szBuf, "FALSE") == 0)
         {
           if(diAdditionalOptions.bRecaptureHomepage == TRUE)
              bRunApp = FALSE;
@@ -1229,7 +1234,7 @@ HRESULT ProcessRunApp(DWORD dwTiming, char *szSectionPrefix)
       DecryptString(szWorkingDir, szBuf);
 
       GetPrivateProfileString(szSection, "Wait", "", szBuf, sizeof(szBuf), szFileIniConfig);
-      if(strcmpi(szBuf, "FALSE") == 0)
+      if(stricmp(szBuf, "FALSE") == 0)
         bWait = FALSE;
       else
         bWait = TRUE;
@@ -1290,7 +1295,7 @@ HRESULT ProcessOS2INI(ULONG ulTiming, char *szSectionPrefix)
       GetPrivateProfileString(szSection, "App",                 "", szBuf,           sizeof(szBuf),          szFileIniConfig);
       GetPrivateProfileString(szSection, "Decrypt App",         "", szDecrypt,       sizeof(szDecrypt),      szFileIniConfig);
       memset(szApp, 0, sizeof(szApp));
-      if(strcmpi(szDecrypt, "TRUE") == 0)
+      if(stricmp(szDecrypt, "TRUE") == 0)
         DecryptString(szApp, szBuf);
       else
         strcpy(szApp, szBuf);
@@ -1298,7 +1303,7 @@ HRESULT ProcessOS2INI(ULONG ulTiming, char *szSectionPrefix)
       GetPrivateProfileString(szSection, "Key",                "", szBuf,           sizeof(szBuf),           szFileIniConfig);
       GetPrivateProfileString(szSection, "Decrypt Key",        "", szDecrypt,       sizeof(szDecrypt),       szFileIniConfig);
       memset(szKey, 0, sizeof(szKey));
-      if(strcmpi(szDecrypt, "TRUE") == 0)
+      if(stricmp(szDecrypt, "TRUE") == 0)
         DecryptString(szKey, szBuf);
       else
         strcpy(szKey, szBuf);
@@ -1306,7 +1311,7 @@ HRESULT ProcessOS2INI(ULONG ulTiming, char *szSectionPrefix)
       GetPrivateProfileString(szSection, "Key Value",          "", szBuf,           sizeof(szBuf), szFileIniConfig);
       GetPrivateProfileString(szSection, "Decrypt Key Value",  "", szDecrypt,       sizeof(szDecrypt), szFileIniConfig);
       memset(szValue, 0, sizeof(szValue));
-      if(strcmpi(szDecrypt, "TRUE") == 0)
+      if(stricmp(szDecrypt, "TRUE") == 0)
         DecryptString(szValue, szBuf);
       else
         strcpy(szValue, szBuf);
@@ -1323,7 +1328,7 @@ HRESULT ProcessOS2INI(ULONG ulTiming, char *szSectionPrefix)
                               szBuf,
                               sizeof(szBuf),
                               szFileIniConfig);
-      if(strcmpi(szBuf, "TRUE") == 0)
+      if(stricmp(szBuf, "TRUE") == 0)
         bDnu = TRUE;
       else
         bDnu = FALSE;
@@ -1403,7 +1408,7 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
       DecryptString(szProgramFolder, szBuf);
 
       dwIndex1 = 0;
-      itoa(dwIndex1, szIndex1, 10);
+      _itoa(dwIndex1, szIndex1, 10);
       strcpy(szSection1, szSection0);
       strcat(szSection1, "-Object");
       strcat(szSection1, szIndex1);
@@ -1515,7 +1520,7 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
         }
 
         ++dwIndex1;
-        itoa(dwIndex1, szIndex1, 10);
+        _itoa(dwIndex1, szIndex1, 10);
         strcpy(szSection1, szSection0);
         strcat(szSection1, "-Object");
         strcat(szSection1, szIndex1);
@@ -1547,27 +1552,27 @@ HRESULT ProcessProgramFolderShowCmd()
     GetPrivateProfileString(szSection0, "Show Folder", "", szBuf, sizeof(szBuf), szFileIniConfig);
 
 #ifdef OLDCODE
-    if(strcmpi(szBuf, "HIDE") == 0)
+    if(stricmp(szBuf, "HIDE") == 0)
       iShowFolder = SW_HIDE;
-    else if(strcmpi(szBuf, "MAXIMIZE") == 0)
+    else if(stricmp(szBuf, "MAXIMIZE") == 0)
       iShowFolder = SW_MAXIMIZE;
-    else if(strcmpi(szBuf, "MINIMIZE") == 0)
+    else if(stricmp(szBuf, "MINIMIZE") == 0)
       iShowFolder = SW_MINIMIZE;
-    else if(strcmpi(szBuf, "RESTORE") == 0)
+    else if(stricmp(szBuf, "RESTORE") == 0)
       iShowFolder = SW_RESTORE;
-    else if(strcmpi(szBuf, "SHOW") == 0)
+    else if(stricmp(szBuf, "SHOW") == 0)
       iShowFolder = SW_SHOW;
-    else if(strcmpi(szBuf, "SHOWMAXIMIZED") == 0)
+    else if(stricmp(szBuf, "SHOWMAXIMIZED") == 0)
       iShowFolder = SW_SHOWMAXIMIZED;
-    else if(strcmpi(szBuf, "SHOWMINIMIZED") == 0)
+    else if(stricmp(szBuf, "SHOWMINIMIZED") == 0)
       iShowFolder = SW_SHOWMINIMIZED;
-    else if(strcmpi(szBuf, "SHOWMINNOACTIVE") == 0)
+    else if(stricmp(szBuf, "SHOWMINNOACTIVE") == 0)
       iShowFolder = SW_SHOWMINNOACTIVE;
-    else if(strcmpi(szBuf, "SHOWNA") == 0)
+    else if(stricmp(szBuf, "SHOWNA") == 0)
       iShowFolder = SW_SHOWNA;
-    else if(strcmpi(szBuf, "SHOWNOACTIVATE") == 0)
+    else if(stricmp(szBuf, "SHOWNOACTIVATE") == 0)
       iShowFolder = SW_SHOWNOACTIVATE;
-    else if(strcmpi(szBuf, "SHOWNORMAL") == 0)
+    else if(stricmp(szBuf, "SHOWNORMAL") == 0)
       iShowFolder = SW_SHOWNORMAL;
 
     if(iShowFolder != SW_HIDE)

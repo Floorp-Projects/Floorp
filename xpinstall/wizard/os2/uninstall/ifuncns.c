@@ -123,7 +123,7 @@ HRESULT FileMove(PSZ szFrom, PSZ szTo)
 
   while(bFound)
   {
-    if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
+    if((stricmp(fdFile.achName, ".") != 0) && (stricmp(fdFile.achName, "..") != 0))
     {
       /* create full path string including filename for source */
       strcpy(szFromTemp, szFromDir);
@@ -192,7 +192,7 @@ HRESULT FileCopy(PSZ szFrom, PSZ szTo, BOOL bFailIfExists)
 
   while(bFound)
   {
-    if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
+    if((stricmp(fdFile.achName, ".") != 0) && (stricmp(fdFile.achName, "..") != 0))
     {
       /* create full path string including filename for source */
       strcpy(szFromTemp, szFromDir);
@@ -331,7 +331,7 @@ HRESULT DirectoryRemove(PSZ szDestination, BOOL bRemoveSubdirs)
       bFound = TRUE;
     while(bFound == TRUE)
     {
-      if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
+      if((stricmp(fdFile.achName, ".") != 0) && (stricmp(fdFile.achName, "..") != 0))
       {
         /* create full path */
         strcpy(szDestTemp, szDestination);

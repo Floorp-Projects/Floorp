@@ -805,7 +805,7 @@ siC *GetObjectFromArchiveName(char *szArchiveName)
   siCObject = SiCNodeGetObject(dwIndex, TRUE, AC_ALL);
   while(siCObject)
   {
-    if(strcmpi(szArchiveName, siCObject->szArchiveName) == 0)
+    if(stricmp(szArchiveName, siCObject->szArchiveName) == 0)
     {
       siCNode = siCObject;
       break;
@@ -955,7 +955,7 @@ int DownloadFiles(char *szInputIniFile,
     siCCurrentFileObj = GetObjectFromArchiveName(szCurrentFile);
 
     if((*szPartiallyDownloadedFilename != 0) &&
-       (strcmpi(szPartiallyDownloadedFilename, szCurrentFile) == 0))
+       (stricmp(szPartiallyDownloadedFilename, szCurrentFile) == 0))
     {
       struct stat statBuf;
 
