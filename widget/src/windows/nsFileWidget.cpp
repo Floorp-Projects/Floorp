@@ -255,7 +255,7 @@ NS_IMETHODIMP  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsFileWidget::Create(nsIWidget *aParent,
                                    nsString& aTitle,
-                                   nsMode aMode,
+                                   nsFileDlgMode aMode,
                                    nsIDeviceContext *aContext,
                                    nsIAppShell *aAppShell,
                                    nsIToolkit *aToolkit,

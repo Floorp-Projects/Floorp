@@ -100,7 +100,7 @@ NS_METHOD  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
 
 NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
                            nsString& aTitle,
-                           nsMode aMode,
+                           nsFileDlgMode aMode,
                            nsIDeviceContext *aContext,
                            nsIAppShell *aAppShell,
                            nsIToolkit *aToolkit,
