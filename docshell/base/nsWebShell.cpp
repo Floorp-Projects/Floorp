@@ -891,10 +891,10 @@ nsWebShell::GetLinkState(const char* aLinkURI, nsLinkState& aState)
 //      are cleaned up.
 //
 NS_IMETHODIMP
-nsWebShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
+nsWebShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *request,
                           PRInt32 aStateFlags, nsresult aStatus)
 {
-  if (!aRequest) {
+  if (!request) {
     return NS_OK;
   }
 
@@ -903,7 +903,8 @@ nsWebShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
 
     if (aProgress == webProgress.get()) {
       nsCOMPtr<nsIURI> url;
-      nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+      
+      nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
       nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
 
       (void) channel->GetURI(getter_AddRefs(url));
@@ -936,21 +937,21 @@ nsWebShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
          * Fire the OnEndDocumentLoad of the DocLoaderobserver
          */
         if(dlObserver && url) {
-          dlObserver->OnEndDocumentLoad(mDocLoader, channel, aStatus);
+          dlObserver->OnEndDocumentLoad(mDocLoader, request, aStatus);
         }
       }
     }
   }
 
   if (aStateFlags & STATE_IS_REQUEST) {
-    nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
-
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+      
     if (aStateFlags & STATE_START) {
       /*
        *Fire the OnStartDocumentLoad of the webshell observer
        */
       if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver)) {
-        mDocLoaderObserver->OnStartURLLoad(mDocLoader, channel);
+        mDocLoaderObserver->OnStartURLLoad(mDocLoader, request);
       }
     }
     else if (aStateFlags & STATE_STOP) {
@@ -958,27 +959,26 @@ nsWebShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
        *Fire the OnEndDocumentLoad of the webshell observer
        */
       if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver)) {
-        mDocLoaderObserver->OnEndURLLoad(mDocLoader, channel, aStatus);
+        mDocLoaderObserver->OnEndURLLoad(mDocLoader, request, aStatus);
       }
     }
   }
 
-  return nsDocShell::OnStateChange(aProgress, aRequest, aStateFlags, aStatus);
+  return nsDocShell::OnStateChange(aProgress, request, aStateFlags, aStatus);
 }
 
 //----------------------------------------------------------------------
 nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
-                                 nsIChannel *aChannel,
+                                 nsIChannel* channel,
                                  nsresult aStatus)
 {
   nsresult rv = NS_OK;
 
-  if(!aChannel)
+  if(!channel)
     return NS_ERROR_NULL_POINTER;
-
+    
   nsCOMPtr<nsIURI> url;
-
-  rv = aChannel->GetURI(getter_AddRefs(url));
+  rv = channel->GetURI(getter_AddRefs(url));
   if (NS_FAILED(rv)) return rv;
   
   // clean up reload state for meta charset
@@ -993,7 +993,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
   // during this load handler.
   //
   nsCOMPtr<nsIWebShell> kungFuDeathGrip(this);
-  nsDocShell::EndPageLoad(aProgress, aChannel, aStatus);
+  nsDocShell::EndPageLoad(aProgress, channel, aStatus);
 
   //
   // If the page load failed, then deal with the error condition...

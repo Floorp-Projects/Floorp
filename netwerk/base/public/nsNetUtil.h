@@ -36,6 +36,7 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
+#include "nsITransport.h"
 #include "nsMemory.h"
 #include "nsCOMPtr.h"
 #include "nsIHTTPProtocolHandler.h"
@@ -94,9 +95,7 @@ NS_OpenURI(nsIChannel* *result,
            nsIIOService* ioService = nsnull,    // pass in nsIIOService to optimize callers
            nsILoadGroup* loadGroup = nsnull,
            nsIInterfaceRequestor* notificationCallbacks = nsnull,
-           nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL),
-           PRUint32 bufferSegmentSize = 0, 
-           PRUint32 bufferMaxSize = 0)
+           nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL))
 {
     nsresult rv;
 
@@ -123,14 +122,6 @@ NS_OpenURI(nsIChannel* *result,
         rv = channel->SetLoadAttributes(loadAttributes);
         if (NS_FAILED(rv)) return rv;
     }
-    if (bufferSegmentSize != 0) {
-        rv = channel->SetBufferSegmentSize(bufferSegmentSize);
-        if (NS_FAILED(rv)) return rv;
-    }
-    if (bufferMaxSize != 0) {
-        rv = channel->SetBufferMaxSize(bufferMaxSize);
-        if (NS_FAILED(rv)) return rv;
-    }
 
     *result = channel;
     return rv;
@@ -148,20 +139,17 @@ NS_OpenURI(nsIInputStream* *result,
            nsIIOService* ioService = nsnull,     // pass in nsIIOService to optimize callers
            nsILoadGroup* loadGroup = nsnull,
            nsIInterfaceRequestor* notificationCallbacks = nsnull,
-           nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL),
-           PRUint32 bufferSegmentSize = 0, 
-           PRUint32 bufferMaxSize = 0)
+           nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL))
 {
     nsresult rv;
     nsCOMPtr<nsIChannel> channel;
 
     rv = NS_OpenURI(getter_AddRefs(channel), uri, ioService,
-                    loadGroup, notificationCallbacks, loadAttributes,
-                    bufferSegmentSize, bufferMaxSize);
+                    loadGroup, notificationCallbacks, loadAttributes);
     if (NS_FAILED(rv)) return rv;
 
     nsIInputStream* inStr;
-    rv = channel->OpenInputStream(&inStr);
+    rv = channel->Open(&inStr);
     if (NS_FAILED(rv)) return rv;
 
     *result = inStr;
@@ -175,19 +163,16 @@ NS_OpenURI(nsIStreamListener* aConsumer,
            nsIIOService* ioService = nsnull,     // pass in nsIIOService to optimize callers
            nsILoadGroup* loadGroup = nsnull,
            nsIInterfaceRequestor* notificationCallbacks = nsnull,
-           nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL),
-           PRUint32 bufferSegmentSize = 0, 
-           PRUint32 bufferMaxSize = 0)
+           nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL))
 {
     nsresult rv;
     nsCOMPtr<nsIChannel> channel;
 
     rv = NS_OpenURI(getter_AddRefs(channel), uri, ioService,
-                    loadGroup, notificationCallbacks, loadAttributes,
-                    bufferSegmentSize, bufferMaxSize);
+                    loadGroup, notificationCallbacks, loadAttributes);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->AsyncRead(aConsumer, context);
+    rv = channel->AsyncOpen(aConsumer, context);
     return rv;
 }
 
@@ -326,9 +311,7 @@ NS_NewDownloader(nsIDownloader* *result,
                    PRBool synchronous = PR_FALSE,
                    nsILoadGroup* loadGroup = nsnull,
                    nsIInterfaceRequestor* notificationCallbacks = nsnull,
-                   nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL),
-                   PRUint32 bufferSegmentSize = 0, 
-                   PRUint32 bufferMaxSize = 0)
+                   nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL))
 {
     nsresult rv;
     nsCOMPtr<nsIDownloader> downloader;
@@ -338,8 +321,8 @@ NS_NewDownloader(nsIDownloader* *result,
                                             NS_GET_IID(nsIDownloader),
                                             getter_AddRefs(downloader));
     if (NS_FAILED(rv)) return rv;
-    rv = downloader->Init(uri, observer, context, synchronous, loadGroup, notificationCallbacks,
-                          loadAttributes, bufferSegmentSize, bufferMaxSize);
+    rv = downloader->Init(uri, observer, context, synchronous, loadGroup,
+                          notificationCallbacks, loadAttributes);
     if (NS_FAILED(rv)) return rv;
     *result = downloader;
     NS_ADDREF(*result);
@@ -353,9 +336,7 @@ NS_NewStreamLoader(nsIStreamLoader* *result,
                    nsISupports* context = nsnull,
                    nsILoadGroup* loadGroup = nsnull,
                    nsIInterfaceRequestor* notificationCallbacks = nsnull,
-                   nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL),
-                   PRUint32 bufferSegmentSize = 0, 
-                   PRUint32 bufferMaxSize = 0)
+                   nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL))
 {
     nsresult rv;
     nsCOMPtr<nsIStreamLoader> loader;
@@ -365,8 +346,9 @@ NS_NewStreamLoader(nsIStreamLoader* *result,
                                             NS_GET_IID(nsIStreamLoader),
                                             getter_AddRefs(loader));
     if (NS_FAILED(rv)) return rv;
-    rv = loader->Init(uri, observer, context, loadGroup, notificationCallbacks, loadAttributes,
-                      bufferSegmentSize, bufferMaxSize);
+    rv = loader->Init(uri, observer, context, loadGroup,
+                      notificationCallbacks, loadAttributes);
+                      
     if (NS_FAILED(rv)) return rv;
     *result = loader;
     NS_ADDREF(*result);
@@ -393,9 +375,7 @@ NS_NewStreamObserverProxy(nsIStreamObserver **aResult,
     rv = proxy->Init(aObserver, aEventQ);
     if (NS_FAILED(rv)) return rv;
 
-    *aResult = proxy;
-    NS_ADDREF(*aResult);
-
+    NS_ADDREF(*aResult = proxy);
     return NS_OK;
 }
 
@@ -421,9 +401,7 @@ NS_NewStreamListenerProxy(nsIStreamListener **aResult,
     rv = proxy->Init(aListener, aEventQ, aBufferSegmentSize, aBufferMaxSize);
     if (NS_FAILED(rv)) return rv;
 
-    *aResult = proxy;
-    NS_ADDREF(*aResult);
-
+    NS_ADDREF(*aResult = proxy);
     return NS_OK;
 }
 
@@ -449,9 +427,7 @@ NS_NewStreamProviderProxy(nsIStreamProvider **aResult,
     rv = proxy->Init(aProvider, aEventQ, aBufferSegmentSize, aBufferMaxSize);
     if (NS_FAILED(rv)) return rv;
 
-    *aResult = proxy;
-    NS_ADDREF(*aResult);
-
+    NS_ADDREF(*aResult = proxy);
     return NS_OK;
 }
 
@@ -474,9 +450,7 @@ NS_NewSimpleStreamListener(nsIStreamListener **aResult,
     rv = listener->Init(aSink, aObserver);
     if (NS_FAILED(rv)) return rv;
 
-    *aResult = listener.get();
-    NS_ADDREF(*aResult);
-
+    NS_ADDREF(*aResult = listener);
     return NS_OK;
 }
 
@@ -499,9 +473,7 @@ NS_NewSimpleStreamProvider(nsIStreamProvider **aResult,
     rv = provider->Init(aSource, aObserver);
     if (NS_FAILED(rv)) return rv;
 
-    *aResult = provider.get();
-    NS_ADDREF(*aResult);
-
+    NS_ADDREF(*aResult = provider);
     return NS_OK;
 }
 
@@ -522,8 +494,7 @@ NS_NewAsyncStreamObserver(nsIStreamObserver **result,
     rv = obs->Init(receiver, eventQueue);
     if (NS_FAILED(rv)) return rv;
 
-    *result = obs;
-    NS_ADDREF(*result);
+    NS_ADDREF(*result = obs);
     return NS_OK;
 }
 
@@ -544,8 +515,7 @@ NS_NewAsyncStreamListener(nsIStreamListener **result,
     rv = lsnr->Init(receiver, eventQueue);
     if (NS_FAILED(rv)) return rv;
 
-    *result = lsnr;
-    NS_ADDREF(*result);
+    NS_ADDREF(*result = lsnr);
     return NS_OK;
 }
 
@@ -572,25 +542,26 @@ NS_NewSyncStreamListener(nsIInputStream **aInStream,
     rv = NS_NewSimpleStreamListener(aResult, pipeOut);
     if (NS_FAILED(rv)) return rv;
 
-    *aInStream = pipeIn;
-    NS_ADDREF(*aInStream);
-    *aOutStream = pipeOut;
-    NS_ADDREF(*aOutStream);
-
+    NS_ADDREF(*aInStream = pipeIn);
+    NS_ADDREF(*aOutStream = pipeOut);
     return NS_OK;
 }
 
 //
-// Calls AsyncWrite on the specified channel, with a stream provider that
+// Calls AsyncWrite on the specified transport, with a stream provider that
 // reads data from the specified input stream.
 //
 inline nsresult
-NS_AsyncWriteFromStream(nsIChannel *aChannel,
+NS_AsyncWriteFromStream(nsIRequest **aRequest,
+                        nsITransport *aTransport,
                         nsIInputStream *aSource,
+                        PRUint32 aOffset=0,
+                        PRUint32 aCount=0,
+                        PRUint32 aFlags=0,
                         nsIStreamObserver *aObserver=NULL,
                         nsISupports *aContext=NULL)
 {
-    NS_ENSURE_ARG_POINTER(aChannel);
+    NS_ENSURE_ARG_POINTER(aTransport);
 
     nsresult rv;
     nsCOMPtr<nsIStreamProvider> provider;
@@ -599,20 +570,28 @@ NS_AsyncWriteFromStream(nsIChannel *aChannel,
                                     aObserver);
     if (NS_FAILED(rv)) return rv;
 
-    return aChannel->AsyncWrite(provider, aContext);
+    return aTransport->AsyncWrite(provider, aContext,
+                                  aOffset,
+                                  aCount,
+                                  aFlags,
+                                  getter_AddRefs(aRequest));
 }
 
 //
-// Calls AsyncRead on the specified channel, with a stream listener that
+// Calls AsyncRead on the specified transport, with a stream listener that
 // writes data to the specified output stream.
 //
 inline nsresult
-NS_AsyncReadToStream(nsIChannel *aChannel,
+NS_AsyncReadToStream(nsIRequest **aRequest,
+                     nsITransport *aTransport,
                      nsIOutputStream *aSink,
+                     PRUint32 aOffset=0,
+                     PRUint32 aCount=0,
+                     PRUint32 aFlags=0,
                      nsIStreamObserver *aObserver=NULL,
                      nsISupports *aContext=NULL)
 {
-    NS_ENSURE_ARG_POINTER(aChannel);
+    NS_ENSURE_ARG_POINTER(aTransport);
 
     nsresult rv;
     nsCOMPtr<nsIStreamListener> listener;
@@ -621,7 +600,11 @@ NS_AsyncReadToStream(nsIChannel *aChannel,
                                     aObserver);
     if (NS_FAILED(rv)) return rv;
 
-    return aChannel->AsyncRead(listener, aContext);
+    return aTransport->AsyncRead(listener, aContext,
+                                 aOffset,
+                                 aCount,
+                                 aFlags,
+                                 getter_AddRefs(aRequest));
 }
 
 #endif // nsNetUtil_h__

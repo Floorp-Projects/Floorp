@@ -48,6 +48,8 @@ public:
     nsresult SetEventQueue(nsIEventQueue *);
 
     nsresult SetReceiver(nsIStreamObserver *aReceiver) {
+        PRBool same = ::SameCOMIdentity(aReceiver, this);
+        NS_ASSERTION((!same), "aReceiver is self"); 
         mReceiver = aReceiver;
         return NS_OK;
     }
@@ -70,7 +72,7 @@ class nsStreamObserverEvent
 {
 public:
     nsStreamObserverEvent(nsStreamProxyBase *proxy,
-                          nsIChannel *channel, nsISupports *context);
+                          nsIRequest *request, nsISupports *context);
     virtual ~nsStreamObserverEvent();
 
     nsresult FireEvent(nsIEventQueue *);
@@ -82,7 +84,7 @@ protected:
 
     PLEvent                mEvent;
     nsStreamProxyBase     *mProxy;
-    nsCOMPtr<nsIChannel>   mChannel;
+    nsCOMPtr<nsIRequest>   mRequest;
     nsCOMPtr<nsISupports>  mContext;
 };
 

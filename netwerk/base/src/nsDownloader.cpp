@@ -43,9 +43,7 @@ nsDownloader::Init(nsIURI* aURL,
                    PRBool aIsSynchronous,
                    nsILoadGroup* aGroup,
                    nsIInterfaceRequestor* aNotificationCallbacks,
-                   nsLoadFlags aLoadAttributes,
-                   PRUint32 aBufferSegmentSize,
-                   PRUint32 aBufferMaxSize)
+                   nsLoadFlags aLoadAttributes)
 {
   nsresult rv;
   mObserver = aObserver;
@@ -55,10 +53,13 @@ nsDownloader::Init(nsIURI* aURL,
 
   aLoadAttributes |= nsIChannel::CACHE_AS_FILE;
   rv = NS_OpenURI(getter_AddRefs(channel), aURL, nsnull, aGroup, aNotificationCallbacks,
-                  aLoadAttributes, aBufferSegmentSize, aBufferMaxSize);
+                  aLoadAttributes);
   if (NS_SUCCEEDED(rv) && channel)
-    rv = channel->GetLocalFile(getter_AddRefs(localFile));
-
+  {
+    nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(channel);
+    if (fc)
+        rv = fc->GetFile(getter_AddRefs(localFile));
+  }
   if (mObserver && (NS_FAILED(rv) || localFile)) 
   {
      if (aIsSynchronous)
@@ -81,8 +82,7 @@ nsDownloader::Init(nsIURI* aURL,
            return pObserver->OnDownloadComplete(this, mContext, rv, localFile);
      }
   }
-
-  return channel->AsyncRead(this, aContext);
+  return channel->AsyncOpen(this, aContext);
 }
 
 NS_METHOD
@@ -103,13 +103,13 @@ NS_IMPL_ISUPPORTS3(nsDownloader, nsIDownloader,
                    nsIStreamObserver, nsIStreamListener)
 
 NS_IMETHODIMP 
-nsDownloader::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
+nsDownloader::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsDownloader::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+nsDownloader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                               nsresult aStatus, const PRUnichar* aStatusArg)
 {
   nsCOMPtr<nsIFile> file;
@@ -117,6 +117,10 @@ nsDownloader::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
   {
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
+    
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
     rv = channel->GetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString spec;
@@ -147,7 +151,7 @@ nsDownloader::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 #define BUF_SIZE 1024
 
 NS_IMETHODIMP 
-nsDownloader::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, 
+nsDownloader::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, 
                                 nsIInputStream *inStr, 
                                 PRUint32 sourceOffset, PRUint32 count)
 {

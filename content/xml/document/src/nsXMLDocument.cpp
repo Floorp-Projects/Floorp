@@ -77,6 +77,12 @@
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kHTMLStyleSheetCID,NS_HTMLSTYLESHEET_CID);
 
+#include "nsCExternalHandlerService.h"
+#include "nsIMIMEService.h"
+#include "nsNetUtil.h"
+#include "nsMimeTypes.h"
+
+
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
 
@@ -350,7 +356,7 @@ nsXMLDocument::Load(const nsAReadableString& aUrl)
   }
 
   // Start an asynchronous read of the XML document
-  rv = channel->AsyncRead(listener, nsnull);
+  rv = channel->AsyncOpen(listener, nsnull);
 
   return rv;
 }
@@ -380,8 +386,10 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
   rv = aChannel->GetURI(getter_AddRefs(aUrl));
   if (NS_FAILED(rv)) return rv;
 
-  rv = aChannel->GetContentType(&aContentType);
-  
+  nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
+  rv = MIMEService->GetTypeFromURI(aUrl, &aContentType);
+    
   if (NS_SUCCEEDED(rv)) { 
     if ( 0 == PL_strcmp(aContentType, "text/html")) {
 		 bIsHTML = PR_TRUE;

@@ -128,6 +128,10 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIXBLService.h"
 #include "nsReadableUtils.h"
+#include "nsCExternalHandlerService.h"
+#include "nsIMIMEService.h"
+#include "nsNetUtil.h"
+#include "nsMimeTypes.h"
 
 
 //----------------------------------------------------------------------
@@ -314,19 +318,19 @@ NS_IMPL_ISUPPORTS1(nsProxyLoadStream, nsIInputStream);
 
 //----------------------------------------------------------------------
 //
-// PlaceholderChannel
+// PlaceholderRequest
 //
-//   This is a dummy channel implementation that we add to the load
+//   This is a dummy request implementation that we add to the load
 //   group. It ensures that EndDocumentLoad() in the docshell doesn't
 //   fire before we've finished building the complete document content
 //   model.
 //
 
-class PlaceholderChannel : public nsIChannel
+class PlaceHolderRequest : public nsIChannel
 {
 protected:
-    PlaceholderChannel();
-    virtual ~PlaceholderChannel();
+    PlaceHolderRequest();
+    virtual ~PlaceHolderRequest();
 
     static PRInt32 gRefCnt;
     static nsIURI* gURI;
@@ -335,13 +339,12 @@ protected:
 
 public:
     static nsresult
-    Create(nsIChannel** aResult);
+    Create(nsIRequest** aResult);
 	
     NS_DECL_ISUPPORTS
 
 	// nsIRequest
     NS_IMETHOD GetName(PRUnichar* *result) { 
-        NS_NOTREACHED("PlaceholderChannel::GetName");
         return NS_ERROR_NOT_IMPLEMENTED;
     }
     NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
@@ -350,63 +353,50 @@ public:
     NS_IMETHOD Suspend(void) { return NS_OK; }
     NS_IMETHOD Resume(void)  { return NS_OK; }
 
-	// nsIChannel    
+ 	// nsIChannel    
     NS_IMETHOD GetOriginalURI(nsIURI* *aOriginalURI) { *aOriginalURI = gURI; NS_ADDREF(*aOriginalURI); return NS_OK; }
     NS_IMETHOD SetOriginalURI(nsIURI* aOriginalURI) { gURI = aOriginalURI; NS_ADDREF(gURI); return NS_OK; }
     NS_IMETHOD GetURI(nsIURI* *aURI) { *aURI = gURI; NS_ADDREF(*aURI); return NS_OK; }
     NS_IMETHOD SetURI(nsIURI* aURI) { gURI = aURI; NS_ADDREF(gURI); return NS_OK; }
-    NS_IMETHOD OpenInputStream(nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
-	NS_IMETHOD OpenOutputStream(nsIOutputStream **_retval) { *_retval = nsnull; return NS_OK; }
-	NS_IMETHOD AsyncOpen(nsIStreamObserver *observer, nsISupports *ctxt) { return NS_OK; }
-	NS_IMETHOD AsyncRead(nsIStreamListener *listener, nsISupports *ctxt) { return NS_OK; }
-	NS_IMETHOD AsyncWrite(nsIStreamProvider *provider, nsISupports *ctxt) { return NS_OK; }
-	NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes) { *aLoadAttributes = nsIChannel::LOAD_NORMAL; return NS_OK; }
-  	NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes) { return NS_OK; }
-	NS_IMETHOD GetContentType(char * *aContentType) { *aContentType = nsnull; return NS_OK; }
-    NS_IMETHOD SetContentType(const char *aContentType) { return NS_OK; }
-	NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { *aContentLength = 0; return NS_OK; }
-    NS_IMETHOD SetContentLength(PRInt32 aContentLength) { NS_NOTREACHED("SetContentLength"); NS_NOTREACHED("NOTREACHED"); return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD GetTransferOffset(PRUint32 *aTransferOffset) { NS_NOTREACHED("GetTransferOffset"); return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD SetTransferOffset(PRUint32 aTransferOffset) { NS_NOTREACHED("SetTransferOffset"); return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD GetTransferCount(PRInt32 *aTransferCount) { NS_NOTREACHED("GetTransferCount"); return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD SetTransferCount(PRInt32 aTransferCount) { NS_NOTREACHED("SetTransferCount"); return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD GetBufferSegmentSize(PRUint32 *aBufferSegmentSize) { NS_NOTREACHED("GetBufferSegmentSize"); return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD SetBufferSegmentSize(PRUint32 aBufferSegmentSize) { NS_NOTREACHED("SetBufferSegmentSize"); return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD GetBufferMaxSize(PRUint32 *aBufferMaxSize) { NS_NOTREACHED("GetBufferMaxSize"); return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD SetBufferMaxSize(PRUint32 aBufferMaxSize) { NS_NOTREACHED("SetBufferMaxSize"); return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD GetLocalFile(nsIFile* *result) { NS_NOTREACHED("GetLocalFile"); return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD GetPipeliningAllowed(PRBool *aPipeliningAllowed) { *aPipeliningAllowed = PR_FALSE; return NS_OK; }
-    NS_IMETHOD SetPipeliningAllowed(PRBool aPipeliningAllowed) { NS_NOTREACHED("SetPipeliningAllowed"); return NS_ERROR_NOT_IMPLEMENTED; }
-	NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
-	NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
-	NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
-	NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { mLoadGroup = aLoadGroup; return NS_OK; }
-	NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { *aNotificationCallbacks = nsnull; return NS_OK; }
-	NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return NS_OK; }
-    NS_IMETHOD GetSecurityInfo(nsISupports **info) {*info = nsnull; return NS_OK;}
+    NS_IMETHOD Open(nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
+    NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt) { return NS_OK; }
+    NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes) { *aLoadAttributes = nsIChannel::LOAD_NORMAL; return NS_OK; }
+   	NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes) { return NS_OK; }
+ 	NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
+ 	NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
+ 	NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
+ 	NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { mLoadGroup = aLoadGroup; return NS_OK; }
+ 	NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { *aNotificationCallbacks = nsnull; return NS_OK; }
+ 	NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return NS_OK; }
+    NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { *aSecurityInfo = nsnull; return NS_OK; } 
+    NS_IMETHOD GetContentType(char * *aContentType) { *aContentType = nsnull; return NS_OK; } 
+    NS_IMETHOD SetContentType(const char * aContentType) { return NS_OK; } 
+    NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { return NS_OK; }
+    NS_IMETHOD SetContentLength(PRInt32 aContentLength) { return NS_OK; }
+
 };
 
-PRInt32 PlaceholderChannel::gRefCnt;
-nsIURI* PlaceholderChannel::gURI;
+PRInt32 PlaceHolderRequest::gRefCnt;
+nsIURI* PlaceHolderRequest::gURI;
 
-NS_IMPL_ADDREF(PlaceholderChannel);
-NS_IMPL_RELEASE(PlaceholderChannel);
-NS_IMPL_QUERY_INTERFACE2(PlaceholderChannel, nsIRequest, nsIChannel);
+NS_IMPL_ADDREF(PlaceHolderRequest);
+NS_IMPL_RELEASE(PlaceHolderRequest);
+NS_IMPL_QUERY_INTERFACE2(PlaceHolderRequest, nsIRequest, nsIChannel);
 
 nsresult
-PlaceholderChannel::Create(nsIChannel** aResult)
+PlaceHolderRequest::Create(nsIRequest** aResult)
 {
-    PlaceholderChannel* channel = new PlaceholderChannel();
-    if (! channel)
+    PlaceHolderRequest* request = new PlaceHolderRequest();
+    if (! request)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    *aResult = channel;
+    *aResult = request;
     NS_ADDREF(*aResult);
     return NS_OK;
 }
 
 
-PlaceholderChannel::PlaceholderChannel()
+PlaceHolderRequest::PlaceHolderRequest()
 {
     NS_INIT_REFCNT();
 
@@ -418,7 +408,7 @@ PlaceholderChannel::PlaceholderChannel()
 }
 
 
-PlaceholderChannel::~PlaceholderChannel()
+PlaceHolderRequest::~PlaceHolderRequest()
 {
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(gURI);
@@ -774,8 +764,9 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
     // certain hacks (cough, the directory viewer) need to be able to
     // StartDocumentLoad() before the channel's content type has been
     // detected.
+    
     nsXPIDLCString contentType;
-    (void) aChannel->GetContentType(getter_Copies(contentType));
+    aChannel->GetContentType(getter_Copies(contentType));
 
     if (contentType && PL_strcmp(contentType, "text/cached-xul") == 0) {
         // Look in the chrome cache: we've got this puppy loaded
@@ -4964,16 +4955,16 @@ nsXULDocument::PrepareToWalk()
 
         // Add a dummy channel to the load group as a placeholder for the document
         // load
-        rv = PlaceholderChannel::Create(getter_AddRefs(mPlaceholderChannel));
+        rv = PlaceHolderRequest::Create(getter_AddRefs(mPlaceHolderRequest));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
         
         if (group) {
-            rv = mPlaceholderChannel->SetLoadGroup(group);
+            nsCOMPtr<nsIChannel> channel = do_QueryInterface(mPlaceHolderRequest);
+            rv = channel->SetLoadGroup(group);
             if (NS_FAILED(rv)) return rv;
-
-            rv = group->AddChannel(mPlaceholderChannel, nsnull);
+            rv = group->AddRequest(mPlaceHolderRequest, nsnull);
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -5308,10 +5299,10 @@ nsXULDocument::ResumeWalk()
     // docshell, and run the onload handlers, etc.
     nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
     if (group) {
-        rv = group->RemoveChannel(mPlaceholderChannel, nsnull, NS_OK, nsnull);
+        rv = group->RemoveRequest(mPlaceHolderRequest, nsnull, NS_OK, nsnull);
         if (NS_FAILED(rv)) return rv;
 
-        mPlaceholderChannel = nsnull;
+        mPlaceHolderRequest = nsnull;
     }
     return rv;
 }
@@ -5373,8 +5364,11 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
     {
       if (aLoader)
       {
+          nsCOMPtr<nsIRequest> request;
         nsCOMPtr<nsIChannel> channel;
-        aLoader->GetChannel(getter_AddRefs(channel));
+        aLoader->GetRequest(getter_AddRefs(request));
+        if (request)
+            channel = do_QueryInterface(request);
         if (channel)
         {
           nsCOMPtr<nsIURI> uri;
@@ -6534,14 +6528,14 @@ nsXULDocument::CachedChromeStreamListener::~CachedChromeStreamListener()
 NS_IMPL_ISUPPORTS2(nsXULDocument::CachedChromeStreamListener, nsIStreamObserver, nsIStreamListener);
 
 NS_IMETHODIMP
-nsXULDocument::CachedChromeStreamListener::OnStartRequest(nsIChannel* aChannel, nsISupports* acontext)
+nsXULDocument::CachedChromeStreamListener::OnStartRequest(nsIRequest *request, nsISupports* acontext)
 {
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsXULDocument::CachedChromeStreamListener::OnStopRequest(nsIChannel* aChannel,
+nsXULDocument::CachedChromeStreamListener::OnStopRequest(nsIRequest *request,
                                                          nsISupports* aContext,
                                                          nsresult aStatus,
                                                          const PRUnichar* aErrorMsg)
@@ -6556,7 +6550,7 @@ nsXULDocument::CachedChromeStreamListener::OnStopRequest(nsIChannel* aChannel,
 
 
 NS_IMETHODIMP
-nsXULDocument::CachedChromeStreamListener::OnDataAvailable(nsIChannel* aChannel,
+nsXULDocument::CachedChromeStreamListener::OnDataAvailable(nsIRequest *request,
                                                            nsISupports* aContext,
                                                            nsIInputStream* aInStr,
                                                            PRUint32 aSourceOffset,
@@ -6586,14 +6580,14 @@ nsXULDocument::ParserObserver::~ParserObserver()
 NS_IMPL_ISUPPORTS1(nsXULDocument::ParserObserver, nsIStreamObserver);
 
 NS_IMETHODIMP
-nsXULDocument::ParserObserver::OnStartRequest(nsIChannel* aChannel,
+nsXULDocument::ParserObserver::OnStartRequest(nsIRequest *request,
                                               nsISupports* aContext)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULDocument::ParserObserver::OnStopRequest(nsIChannel* aChannel,
+nsXULDocument::ParserObserver::OnStopRequest(nsIRequest *request,
                                              nsISupports* aContext,
                                              nsresult aStatus,
                                              const PRUnichar* aErrorMsg)
@@ -6605,6 +6599,10 @@ nsXULDocument::ParserObserver::OnStopRequest(nsIChannel* aChannel,
         // walk along.
 #define YELL_IF_MISSING_OVERLAY 1
 #if defined(DEBUG) || defined(YELL_IF_MISSING_OVERLAY)
+        
+        nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
+        if (!aChannel) return NS_ERROR_FAILURE;
+
         nsCOMPtr<nsIURI> uri;
         aChannel->GetOriginalURI(getter_AddRefs(uri));
 

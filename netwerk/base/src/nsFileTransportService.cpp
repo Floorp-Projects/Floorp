@@ -59,7 +59,6 @@ nsFileTransportService::Init()
 
 nsFileTransportService::~nsFileTransportService()
 {
-    mPool->Shutdown();
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileTransportService, nsFileTransportService);
@@ -88,7 +87,7 @@ NS_IMETHODIMP
 nsFileTransportService::CreateTransport(nsIFile* file,
                                         PRInt32 ioFlags,
                                         PRInt32 perm,
-                                        nsIChannel** result)
+                                        nsITransport** result)
 {
     nsresult rv;
     nsFileTransport* trans = new nsFileTransport();
@@ -109,7 +108,7 @@ nsFileTransportService::CreateTransportFromStream(const char* name,
                                                   nsIInputStream *fromStream,
                                                   const char* contentType,
                                                   PRInt32 contentLength,
-                                                  nsIChannel** result)
+                                                  nsITransport** result)
 {
     nsresult rv;
     nsFileTransport* trans = new nsFileTransport();
@@ -127,7 +126,7 @@ nsFileTransportService::CreateTransportFromStream(const char* name,
 
 NS_IMETHODIMP
 nsFileTransportService::CreateTransportFromStreamIO(nsIStreamIO *io,
-                                                    nsIChannel **result)
+                                                    nsITransport **result)
 {
     nsresult rv;
     nsFileTransport* trans = new nsFileTransport();
@@ -152,6 +151,17 @@ nsFileTransportService::ProcessPendingRequests(void)
 nsresult
 nsFileTransportService::Shutdown(void)
 {
+    PRUint32 count;
+    mSuspendedTransportList.Count(&count);
+
+    for (PRUint32 i=0; i<count; i++) {
+        nsCOMPtr<nsISupports> supports;
+        mSuspendedTransportList.GetElementAt(i, getter_AddRefs(supports));
+        nsCOMPtr<nsIRequest> trans = do_QueryInterface(supports);
+        trans->Cancel(NS_BINDING_ABORTED);
+    }
+
+    mSuspendedTransportList.Clear();
     return mPool->Shutdown();
 }
 
@@ -162,6 +172,19 @@ nsFileTransportService::DispatchRequest(nsIRunnable* runnable)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+nsresult 
+nsFileTransportService::AddSuspendedTransport(nsITransport* trans)
+{
+    mSuspendedTransportList.AppendElement(trans);
+    return NS_OK;
+}
+
+nsresult 
+nsFileTransportService::RemoveSuspendedTransport(nsITransport* trans)
+{
+    mSuspendedTransportList.RemoveElement(trans);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsFileTransportService::GetTotalTransportCount    (PRUint32 * o_TransCount)

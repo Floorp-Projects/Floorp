@@ -34,8 +34,10 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // nsISupports implementation
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsMultiMixedConv, nsIStreamConverter, 
-							  nsIStreamListener, nsIStreamObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsMultiMixedConv,
+                              nsIStreamConverter, 
+							  nsIStreamListener,
+                              nsIStreamObserver);
 
 
 // nsIStreamConverter implementation
@@ -69,14 +71,17 @@ nsMultiMixedConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *
 
 // nsIStreamListener implementation
 NS_IMETHODIMP
-nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
+nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
                                   nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count) {
     nsresult rv = NS_OK;
     char *buffer = nsnull;
     PRUint32 bufLen = count, read;
 
-    NS_ASSERTION(channel, "multimixed converter needs a channel");
+    NS_ASSERTION(request, "multimixed converter needs a request");
 
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
     buffer = (char*)nsMemory::Alloc(bufLen);
     if (!buffer) ERR_OUT
 
@@ -204,7 +209,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
 
 // nsIStreamObserver implementation
 NS_IMETHODIMP
-nsMultiMixedConv::OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
+nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
 	// we're assuming the content-type is available at this stage
 	NS_ASSERTION(!mToken, "a second on start???");
     char *bndry = nsnull;
@@ -212,9 +217,11 @@ nsMultiMixedConv::OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
     nsresult rv = NS_OK;
     mContext = ctxt;
 
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
     // ask the HTTP channel for the content-type and extract the boundary from it.
-    nsCOMPtr<nsIHTTPChannel> httpChannel;
-    rv = channel->QueryInterface(NS_GET_IID(nsIHTTPChannel), getter_AddRefs(httpChannel));
+    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel, &rv);
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIAtom> header = NS_NewAtom("content-type");
         if (!header) return NS_ERROR_OUT_OF_MEMORY;
@@ -223,7 +230,7 @@ nsMultiMixedConv::OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
     } else {
         // try asking the channel directly
         rv = channel->GetContentType(getter_Copies(delimiter));
-        if (NS_FAILED(rv)) return rv;
+        if (!delimiter || NS_FAILED(rv)) return NS_ERROR_FAILURE;
     }
 
     if (!delimiter) return NS_ERROR_FAILURE;
@@ -250,7 +257,7 @@ nsMultiMixedConv::OnStartRequest(nsIChannel *channel, nsISupports *ctxt) {
 }
 
 NS_IMETHODIMP
-nsMultiMixedConv::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
+nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                                 nsresult aStatus, const PRUnichar* aStatusArg) {
     nsresult rv = NS_OK;
 
@@ -268,10 +275,10 @@ nsMultiMixedConv::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
             }
             rv = mFinalListener->OnStopRequest(mPartChannel, mContext, aStatus, aStatusArg);
         } else {
-            rv = mFinalListener->OnStartRequest(channel, ctxt);
+            rv = mFinalListener->OnStartRequest(request, ctxt);
             if (NS_FAILED(rv)) return rv;
 
-            rv = mFinalListener->OnStopRequest(channel, ctxt, aStatus, aStatusArg);
+            rv = mFinalListener->OnStopRequest(request, ctxt, aStatus, aStatusArg);
         }
     }
     else {
@@ -332,7 +339,7 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
 
     // First build up a dummy uri.
     nsCOMPtr<nsIURI> partURI;
-    rv = aChannel->GetURI(getter_AddRefs (partURI));
+    rv = aChannel->GetURI(getter_AddRefs(partURI));
     if (NS_FAILED(rv)) return rv;
 
     if (mContentType.IsEmpty())
@@ -346,9 +353,9 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     if (NS_FAILED(rv)) return rv;
 
     nsLoadFlags loadFlags = 0;
-    mPartChannel -> GetLoadAttributes (&loadFlags);
+    mPartChannel->GetLoadAttributes(&loadFlags);
     loadFlags |= nsIChannel::LOAD_REPLACE;
-    mPartChannel -> SetLoadAttributes ( loadFlags);
+    mPartChannel->SetLoadAttributes(loadFlags);
 
 	nsCOMPtr<nsILoadGroup> loadGroup;
     (void)aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
@@ -356,7 +363,7 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     if (loadGroup) {
         rv = mPartChannel->SetLoadGroup(loadGroup);
         if (NS_FAILED(rv)) return rv;
-        rv = loadGroup->AddChannel(mPartChannel, nsnull);
+        rv = loadGroup->AddRequest(mPartChannel, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -376,7 +383,7 @@ nsMultiMixedConv::SendStop() {
 
     (void) mPartChannel->GetLoadGroup(getter_AddRefs(loadGroup));
     if (loadGroup) {
-        loadGroup->RemoveChannel(mPartChannel, mContext, NS_OK, nsnull);
+        loadGroup->RemoveRequest(mPartChannel, mContext, NS_OK, nsnull);
     }
 
     mPartChannel = 0;
@@ -548,3 +555,4 @@ NS_NewMultiMixedConv(nsMultiMixedConv** aMultiMixedConv)
     NS_ADDREF(*aMultiMixedConv);
     return (*aMultiMixedConv)->Init();
 }
+

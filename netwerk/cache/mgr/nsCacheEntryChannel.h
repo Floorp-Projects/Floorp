@@ -27,6 +27,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIChannel.h"
+#include "nsITransport.h"
 #include "nsCachedNetData.h"
 #include "nsILoadGroup.h"
 
@@ -47,24 +48,28 @@ protected:
 };
 
 // Override several nsIChannel methods so that they interact with the cache manager
-class nsCacheEntryChannel : public nsChannelProxy {
+class nsCacheEntryChannel : public nsChannelProxy, public nsITransport {
 
 public:
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD GetTransferOffset(PRUint32 *aStartPosition);
-    NS_IMETHOD SetTransferOffset(PRUint32 aStartPosition);
-    NS_IMETHOD GetTransferCount(PRInt32 *aReadCount);
-    NS_IMETHOD SetTransferCount(PRInt32 aReadCount);
-    NS_IMETHOD OpenOutputStream(nsIOutputStream* *aOutputStream);
-    NS_IMETHOD OpenInputStream(nsIInputStream* *aInputStream);
-    NS_IMETHOD AsyncRead(nsIStreamListener *aListener, nsISupports *aContext);
-    NS_IMETHOD AsyncWrite(nsIStreamProvider *aProvider, nsISupports *aContext);
+    // nsIChannel methods
+    NS_IMETHOD Open(nsIInputStream* *aInputStream);
+    NS_IMETHOD AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext);
     NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes);
     NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes);
     NS_IMETHOD GetLoadGroup(nsILoadGroup* *aLoadGroup);
     NS_IMETHOD GetURI(nsIURI * *aURI);
     NS_IMETHOD GetOriginalURI(nsIURI * *aURI);
+
+    // nsITransport methods
+    NS_IMETHOD GetSecurityInfo(nsISupports **);
+    NS_IMETHOD GetProgressEventSink(nsIProgressEventSink **);
+    NS_IMETHOD SetProgressEventSink(nsIProgressEventSink *);
+    NS_IMETHOD OpenInputStream(PRUint32, PRUint32, PRUint32, nsIInputStream **);
+    NS_IMETHOD OpenOutputStream(PRUint32, PRUint32, PRUint32, nsIOutputStream **);
+    NS_IMETHOD AsyncRead(nsIStreamListener *, nsISupports *, PRUint32, PRUint32, PRUint32, nsIRequest **);
+    NS_IMETHOD AsyncWrite(nsIStreamProvider *, nsISupports *, PRUint32, PRUint32, PRUint32, nsIRequest **);
 
 protected:
     nsCacheEntryChannel(nsCachedNetData* aCacheEntry, nsIChannel* aChannel, nsILoadGroup* aLoadGroup);

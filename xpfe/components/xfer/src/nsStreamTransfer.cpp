@@ -80,10 +80,15 @@ private:
 // Get content type and suggested name from input channel in this case.
 NS_IMETHODIMP
 nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWindowInternal *parent ) {
+    
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = aChannel->GetURI( getter_AddRefs( uri ) );
+    if (NS_FAILED(rv)) return rv;
+
     // Content type comes straight from channel.
     nsXPIDLCString contentType;
     aChannel->GetContentType( getter_Copies( contentType ) );
-
+    
     // Suggested name derived from content-disposition response header.
     nsCAutoString suggestedName;
 

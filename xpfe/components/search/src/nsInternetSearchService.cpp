@@ -632,8 +632,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 		{
 			httpChannel->SetRequestMethod(headAtom);
 		}
-
-		if (NS_SUCCEEDED(rv = channel->AsyncRead(search, engineContext)))
+		if (NS_SUCCEEDED(rv = channel->AsyncOpen(search, engineContext)))
 		{
 			search->busySchedule = PR_TRUE;
 
@@ -2202,8 +2201,8 @@ InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *ico
 	nsCOMPtr<nsIChannel>	engineChannel;
 	if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(engineChannel), engineURI, nsnull, mBackgroundLoadGroup)))
 		return(rv);
-
-	if (NS_FAILED(rv = engineChannel->AsyncRead(this, engineContext)))
+    
+	if (NS_FAILED(rv = engineChannel->AsyncOpen(this, engineContext)))
 		return(rv);
 
 	// download icon
@@ -2222,8 +2221,7 @@ InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *ico
 		nsCOMPtr<nsIChannel>	iconChannel;
 		if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(iconChannel), iconURI, nsnull, mBackgroundLoadGroup)))
 			return(rv);
-
-		if (NS_FAILED(rv = iconChannel->AsyncRead(this, iconContext)))
+		if (NS_FAILED(rv = iconChannel->AsyncOpen(this, iconContext)))
 			return(rv);
 	}
 	return(NS_OK);
@@ -2804,18 +2802,18 @@ InternetSearchDataSource::Stop()
 	// cancel any outstanding connections
 	if (mLoadGroup)
 	{
-		nsCOMPtr<nsISimpleEnumerator>	channels;
-		if (NS_SUCCEEDED(rv = mLoadGroup->GetChannels(getter_AddRefs(channels))))
+		nsCOMPtr<nsISimpleEnumerator>	requests;
+		if (NS_SUCCEEDED(rv = mLoadGroup->GetRequests(getter_AddRefs(requests))))
 		{
 			PRBool			more;
-			while (NS_SUCCEEDED(rv = channels->HasMoreElements(&more)) && (more == PR_TRUE))
+			while (NS_SUCCEEDED(rv = requests->HasMoreElements(&more)) && (more == PR_TRUE))
 			{
 				nsCOMPtr<nsISupports>	isupports;
-				if (NS_FAILED(rv = channels->GetNext(getter_AddRefs(isupports))))
+				if (NS_FAILED(rv = requests->GetNext(getter_AddRefs(isupports))))
 					break;
-				nsCOMPtr<nsIChannel>	channel = do_QueryInterface(isupports);
-				if (!channel)	continue;
-				channel->Cancel(NS_BINDING_ABORTED);
+				nsCOMPtr<nsIRequest>	request = do_QueryInterface(isupports);
+				if (!request)	continue;
+				request->Cancel(NS_BINDING_ABORTED);
 			}
 		}
 		mLoadGroup->Cancel(NS_BINDING_ABORTED);
@@ -3566,7 +3564,8 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 				}
 			}
 
-			if (NS_SUCCEEDED(rv = channel->AsyncRead(this, context)))
+            nsCOMPtr<nsIRequest> request;
+			if (NS_SUCCEEDED(rv = channel->AsyncOpen(this, context)))
 			{
 			}
 		}
@@ -4290,7 +4289,7 @@ InternetSearchDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult
 
 
 NS_IMETHODIMP
-InternetSearchDataSource::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
+InternetSearchDataSource::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
 #ifdef	DEBUG_SEARCH_OUTPUT
 	printf("InternetSearchDataSourceCallback::OnStartRequest entered.\n");
@@ -4301,7 +4300,7 @@ InternetSearchDataSource::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 
 
 NS_IMETHODIMP
-InternetSearchDataSource::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
+InternetSearchDataSource::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 				nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
 {
 	if (!ctxt)	return(NS_ERROR_NO_INTERFACE);
@@ -4394,10 +4393,12 @@ InternetSearchDataSource::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt
 
 
 NS_IMETHODIMP
-InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 					nsresult status, const PRUnichar *errorMsg) 
 {
 	if (!mInner)	return(NS_OK);
+
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
 
 	nsCOMPtr<nsIInternetSearchContext>	context = do_QueryInterface(ctxt);
 	if (!ctxt)	return(NS_ERROR_NO_INTERFACE);

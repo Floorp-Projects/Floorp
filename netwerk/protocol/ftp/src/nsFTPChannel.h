@@ -42,6 +42,18 @@
 #include "nsIFTPChannel.h"
 #include "nsIProxy.h"
 
+#define FTP_COMMAND_CHANNEL_SEG_SIZE 64
+#define FTP_COMMAND_CHANNEL_MAX_SIZE 512
+
+#define NS_FTP_BUFFER_READ_SIZE             (8*1024)
+#define NS_FTP_BUFFER_WRITE_SIZE            (8*1024)
+
+#define FTP_CACHE_CONTROL_CONNECTION 1
+//#define FTP_NO_HTTP_INDEX_FORMAT
+//#define FTP_SIMULATE_DROPPED_CONTROL_CONNECTION
+
+
+
 class nsFTPChannel : public nsIFTPChannel,
                      public nsIProxy,
                      public nsIInterfaceRequestor,
@@ -92,14 +104,13 @@ protected:
     nsCOMPtr<nsIStreamObserver>     mObserver;
 
     nsFtpState*                     mFTPState;   
-    PRUint32                        mBufferSegmentSize;
-    PRUint32                        mBufferMaxSize;
-    nsCOMPtr<nsIChannel>            mProxyChannel; // a proxy channel
+
     nsXPIDLCString                  mHost;
     PRLock*                         mLock;
     nsCOMPtr<nsISupports>           mUserContext;
     nsresult                        mStatus;
     
+    nsCOMPtr<nsIChannel>            mProxyChannel; // a proxy channel
     nsCAutoString                   mProxyHost;
     PRInt32                         mProxyPort;
     nsCAutoString                   mProxyType;

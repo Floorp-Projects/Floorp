@@ -89,8 +89,6 @@ protected:
     nsLoadFlags                         mLoadAttributes;
     nsCOMPtr<nsISupports>               mOwner;
 
-    PRUint32                            mStartPosition;
-    PRInt32                             mReadCount;
     nsCOMPtr<nsISupports>               mUserContext;
     nsCOMPtr<nsIStreamListener>         mUserListener;
 
@@ -100,15 +98,13 @@ protected:
     char*                               mJAREntry;
     nsCOMPtr<nsIZipReader>              mJAR;
     nsCOMPtr<nsIFile>                   mDownloadedJARFile;
-    PRUint32                            mBufferSegmentSize;
-    PRUint32                            mBufferMaxSize;
     nsresult                            mStatus;
     PRBool                              mSynchronousRead;
     nsCOMPtr<nsIInputStream>            mSynchronousInputStream;
 
     PRMonitor*                          mMonitor;
     nsCOMPtr<nsIDownloader>             mDownloader;
-    nsCOMPtr<nsIChannel>                mJarExtractionTransport;
+    nsCOMPtr<nsIRequest>                mJarExtractionTransport;
 
 };
 

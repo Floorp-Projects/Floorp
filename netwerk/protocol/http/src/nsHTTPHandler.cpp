@@ -865,9 +865,7 @@ nsHTTPHandler::~nsHTTPHandler()
 
 nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
                                          nsHTTPChannel* i_Channel,
-                                         PRUint32 bufferSegmentSize,
-                                         PRUint32 bufferMaxSize,
-                                         nsIChannel** o_pTrans,
+                                         nsITransport** o_pTrans,
                                          PRUint32 flags)
 {
     nsresult rv;
@@ -914,7 +912,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     if (port == -1)
         GetDefaultPort (&port);
 
-    nsCOMPtr<nsIChannel> trans;
+    nsCOMPtr<nsITransport> trans;
 
     // Check in the idle transports for a host/port match
     count = 0;
@@ -929,8 +927,8 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
         {
             for (index = count - 1; index >= 0; --index)
             {
-                nsCOMPtr<nsIChannel> cTrans = 
-                    dont_AddRef ((nsIChannel*) mIdleTransports->ElementAt(index));
+                nsCOMPtr<nsITransport> cTrans = 
+                    dont_AddRef ((nsITransport*) mIdleTransports->ElementAt(index));
 
                 if (cTrans)
                 {
@@ -951,18 +949,20 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
             for (index = count - 1; index >= 0; --index)
             {
                 nsCOMPtr<nsIURI> uri;
-                nsCOMPtr<nsIChannel> cTrans = dont_AddRef ((nsIChannel*) mIdleTransports->ElementAt(index) );
+                nsCOMPtr<nsITransport> cTrans =
+                    dont_AddRef ((nsITransport*) mIdleTransports->ElementAt(index) );
+
+                nsCOMPtr<nsISocketTransport> socketTrans = do_QueryInterface(cTrans);
             
-                if (cTrans && 
-                        (NS_SUCCEEDED (cTrans->GetURI(getter_AddRefs(uri)))))
+                if (socketTrans)
                 {
                     nsXPIDLCString idlehost;
-                    if (NS_SUCCEEDED (uri->GetHost(getter_Copies(idlehost))))
+                    if (NS_SUCCEEDED (socketTrans->GetHost(getter_Copies(idlehost))))
                     {
                         if (!PL_strcasecmp (usingProxy ? proxy : host, idlehost))
                         {
                             PRInt32 idleport;
-                            if (NS_SUCCEEDED (uri->GetPort(&idleport)))
+                            if (NS_SUCCEEDED (socketTrans->GetPort(&idleport)))
                             {
                                 if (idleport == -1)
                                     GetDefaultPort (&idleport);
@@ -1011,16 +1011,12 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
                                         port, 
                                         proxy, 
                                         proxyPort, 
-                                        bufferSegmentSize, 
-                                        bufferMaxSize, 
                                         getter_AddRefs(trans) );
         } else {
             rv = CreateTransport( host, 
                                   port, 
                                   proxy, 
                                   proxyPort, 
-                                  bufferSegmentSize, 
-                                  bufferMaxSize, 
                                   getter_AddRefs(trans) );
         }
        
@@ -1054,12 +1050,9 @@ nsresult nsHTTPHandler::CreateTransport(const char* host,
                                         PRInt32 port, 
                                         const char* proxyHost,
                                         PRInt32 proxyPort,
-                                        PRUint32 bufferSegmentSize,
-                                        PRUint32 bufferMaxSize,
-                                        nsIChannel** o_pTrans)
+                                        nsITransport** o_pTrans)
 {
-    return CreateTransportOfType(nsnull, host, port, proxyHost, proxyPort,
-                                 bufferSegmentSize, bufferMaxSize, o_pTrans);
+    return CreateTransportOfType(nsnull, host, port, proxyHost, proxyPort, o_pTrans);
 }
 
 nsresult nsHTTPHandler::CreateTransportOfType(const char* type,
@@ -1067,9 +1060,7 @@ nsresult nsHTTPHandler::CreateTransportOfType(const char* type,
                                               PRInt32 port, 
                                               const char* proxyHost,
                                               PRInt32 proxyPort,
-                                              PRUint32 bufferSegmentSize,
-                                              PRUint32 bufferMaxSize,
-                                              nsIChannel** o_pTrans)
+                                              nsITransport** o_pTrans)
 {
     nsresult rv;
     
@@ -1082,8 +1073,8 @@ nsresult nsHTTPHandler::CreateTransportOfType(const char* type,
                                     port, 
                                     proxyHost, 
                                     proxyPort, 
-                                    bufferSegmentSize, 
-                                    bufferMaxSize, 
+                                    HTTP_DEFAULT_SEGMENT_SIZE, 
+                                    HTTP_DEFAULT_BUFFER_SIZE, 
                                     o_pTrans);
     
     return rv;
@@ -1092,7 +1083,7 @@ nsresult nsHTTPHandler::CreateTransportOfType(const char* type,
 static  PRUint32 sMaxKeepAlives = 0;
 
 nsresult
-nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
+nsHTTPHandler::ReleaseTransport (nsITransport* i_pTrans  ,
                                  PRUint32 aCapabilities, 
                                  PRBool aDontRestartChannels,
                                  PRUint32 aKeepAliveTimeout,
@@ -1128,12 +1119,11 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
     PRInt32 port    = -1;
     nsXPIDLCString  host;
 
-    i_pTrans->GetURI (getter_AddRefs (uri));
-
-    if (uri)
+    // Get the address of the socket transport
     {
-        uri->GetHost (getter_Copies (host));
-        uri->GetPort (&port);
+        nsCOMPtr<nsISocketTransport> socketTrans = do_QueryInterface(i_pTrans);
+        socketTrans->GetHost(getter_Copies(host));
+        socketTrans->GetPort(&port);
     }
     if (port == -1)
         GetDefaultPort (&port);
@@ -1153,7 +1143,7 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
 
         for (index = count - 1; index >= 0; --index)
         {
-            nsCOMPtr<nsIChannel> cTrans = dont_AddRef ((nsIChannel*) mIdleTransports->ElementAt (index) );
+            nsCOMPtr<nsITransport> cTrans = dont_AddRef ((nsITransport*) mIdleTransports->ElementAt (index) );
 
             if (cTrans)
             {
@@ -1166,23 +1156,19 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
                 else
                 if (capabilities & (ALLOW_KEEPALIVE|ALLOW_PROXY_KEEPALIVE))
                 {        
-                    cTrans->GetURI (getter_AddRefs (uri));
-                    if (uri)
-                    {
-                        PRInt32 lPort    = -1;
-                        nsXPIDLCString  lHost;
+                    PRInt32 lPort    = -1;
+                    nsXPIDLCString  lHost;
 
-                        uri->GetHost (getter_Copies (lHost));
-                        uri->GetPort (&lPort);
-                        if (lPort == -1)
-                            GetDefaultPort (&lPort);
+                    sTrans->GetHost (getter_Copies (lHost));
+                    sTrans->GetPort (&lPort);
+                    if (lPort == -1)
+                        GetDefaultPort (&lPort);
 
-                        if (lHost && !PL_strcasecmp (lHost, host) && lPort == port)
-                            keepAliveMaxCon++;
+                    if (lHost && !PL_strcasecmp(lHost, host) && lPort == port)
+                        keepAliveMaxCon++;
 
-                        if (keepAliveMaxCon >= aKeepAliveMaxCon)
-                            mIdleTransports->RemoveElement (cTrans);
-                    }
+                    if (keepAliveMaxCon >= aKeepAliveMaxCon)
+                        mIdleTransports->RemoveElement(cTrans);
                 } /* IsAlive */
             } /* cTrans */
         } /* for */
@@ -1190,12 +1176,12 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
 
     if (capabilities & (ALLOW_KEEPALIVE|ALLOW_PROXY_KEEPALIVE))
     {
-        nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (i_pTrans, &rv);
+        nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface (i_pTrans, &rv);
 
         if (NS_SUCCEEDED (rv))
         {
             PRBool alive = PR_FALSE;
-            rv = trans->IsAlive(0, &alive);
+            rv = sTrans->IsAlive(0, &alive);
         
             if (NS_SUCCEEDED (rv) && alive)
             {
@@ -1209,8 +1195,8 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
                 NS_ASSERTION(added, 
                     "Failed to add a socket to idle transports list!");
 
-                trans->SetReuseConnection(PR_TRUE);
-                trans->SetIdleTimeout(aKeepAliveTimeout);
+                sTrans->SetReuseConnection(PR_TRUE);
+                sTrans->SetIdleTimeout(aKeepAliveTimeout);
 
                 mIdleTransports->Count(&count);
                 if (count > sMaxKeepAlives)
@@ -1225,7 +1211,7 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
     // to the transport and the transport which references the HTTPChannel
     // through the event sink...
     //
-    rv = i_pTrans->SetNotificationCallbacks(nsnull);
+    rv = i_pTrans->SetProgressEventSink(nsnull);
 
     rv = mTransportList->RemoveElement(i_pTrans);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Transport not in table...");
@@ -1260,7 +1246,7 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
         PR_LOG (gHTTPLog, PR_LOG_ALWAYS, ("nsHTTPHandler::ReleaseTransport."
                 "\tRestarting nsHTTPChannel [%x]\n", channel));
 
-        channel->Open();
+        channel->Begin();
     }
 
     return rv;

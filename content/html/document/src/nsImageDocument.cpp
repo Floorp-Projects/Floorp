@@ -121,10 +121,14 @@ ImageListener::~ImageListener()
 NS_IMPL_THREADSAFE_ISUPPORTS1(ImageListener, nsIStreamListener)
 
 NS_IMETHODIMP
-ImageListener::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
+ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
   nsresult rv;
   nsIURI* uri;
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+  if (!channel) return NS_ERROR_NULL_POINTER;
+
   rv = channel->GetURI(&uri);
   if (NS_FAILED(rv)) return rv;
   
@@ -133,11 +137,11 @@ ImageListener::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
-  return mNextStream->OnStartRequest(channel, ctxt);
+  return mNextStream->OnStartRequest(request, ctxt);
 }
 
 NS_IMETHODIMP
-ImageListener::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                              nsresult status, const PRUnichar *errorMsg)
 {
   if(mDocument){
@@ -147,17 +151,17 @@ ImageListener::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
-  return mNextStream->OnStopRequest(channel, ctxt, status, errorMsg);
+  return mNextStream->OnStopRequest(request, ctxt, status, errorMsg);
 }
 
 NS_IMETHODIMP
-ImageListener::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
+ImageListener::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
                                nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 {
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
-  return mNextStream->OnDataAvailable(channel, ctxt, inStr, sourceOffset, count);
+  return mNextStream->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);
 }
 
 //----------------------------------------------------------------------

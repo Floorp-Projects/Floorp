@@ -22,7 +22,7 @@
 
 #include "nsIStreamObserver.idl"
 
-interface nsIChannel;
+interface nsIRequest;
 interface nsIInputStream;
 interface nsIOutputStream;
 interface nsIEventQueue;
@@ -37,7 +37,7 @@ interface nsIStreamListener : nsIStreamObserver
     /**
      * Called when there is data to be read from the channel.
      *
-     * @param channel - the channel being read
+     * @param request - the request returned by AsyncRead
      * @param ctxt - opaque parameter passed to AsyncRead
      * @param input - temporary input stream for reading data chunk
      * @param offset - current stream position (informational)
@@ -52,7 +52,7 @@ interface nsIStreamListener : nsIStreamObserver
      *   becomes available.
      * @return <other-error> - if failure.
      */
-    void onDataAvailable(in nsIChannel channel,
+    void onDataAvailable(in nsIRequest request,
                          in nsISupports ctxt, 
                          in nsIInputStream input,
                          in unsigned long offset,

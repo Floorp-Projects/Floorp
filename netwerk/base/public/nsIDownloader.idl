@@ -48,9 +48,7 @@ interface nsIDownloader : nsISupports
 			  in boolean synchronous,
               in nsILoadGroup loadGroup,
               in nsIInterfaceRequestor notificationCallbacks,
-              in nsLoadFlags loadAttributes,
-              in unsigned long bufferSegmentSize,
-              in unsigned long bufferMaxSize);
+              in nsLoadFlags loadAttributes);
 };
 
 %{C++

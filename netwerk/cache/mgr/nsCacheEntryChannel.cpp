@@ -49,9 +49,9 @@ nsCacheEntryChannel::~nsCacheEntryChannel()
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsCacheEntryChannel, 
-        nsISupports, 
-        nsIChannel, 
-        nsIRequest)
+                              nsITransport,
+                              nsIChannel, 
+                              nsIRequest)
 
 // A proxy for nsIOutputStream
 class CacheOutputStream : public nsIOutputStream {
@@ -136,37 +136,30 @@ protected:
 NS_IMPL_THREADSAFE_ISUPPORTS1(CacheOutputStream, nsIOutputStream)
 
 NS_IMETHODIMP
-nsCacheEntryChannel::GetTransferOffset(PRUint32 *aStartPosition)
+nsCacheEntryChannel::Open(nsIInputStream **aInputStream)
 {
-    return mChannel->GetTransferOffset(aStartPosition);
+    return OpenInputStream(0, -1, 0, aInputStream);
 }
 
 NS_IMETHODIMP
-nsCacheEntryChannel::SetTransferOffset(PRUint32 aStartPosition)
+nsCacheEntryChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
-    mCacheEntry->mLogicalLength = aStartPosition;
-    return mChannel->SetTransferOffset(aStartPosition);
+    nsCOMPtr<nsIRequest> req;
+    return AsyncRead(aListener, aContext, 0, -1, 0, getter_AddRefs(req));
 }
 
 NS_IMETHODIMP
-nsCacheEntryChannel::GetTransferCount(PRInt32 *aReadCount)
-{
-    return mChannel->GetTransferCount(aReadCount);
-}
-
-NS_IMETHODIMP
-nsCacheEntryChannel::SetTransferCount(PRInt32 aReadCount)
-{
-    return mChannel->SetTransferCount(aReadCount);
-}
-
-NS_IMETHODIMP
-nsCacheEntryChannel::OpenOutputStream(nsIOutputStream* *aOutputStream)
+nsCacheEntryChannel::OpenOutputStream(PRUint32 offset, PRUint32 count, PRUint32 flags,
+                                      nsIOutputStream* *aOutputStream)
 {
     nsresult rv;
     nsCOMPtr<nsIOutputStream> baseOutputStream;
     
-    rv = mChannel->OpenOutputStream(getter_AddRefs(baseOutputStream));
+    nsCOMPtr<nsITransport> trans = do_QueryInterface(mChannel, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = trans->OpenOutputStream(offset, count, flags,
+                                 getter_AddRefs(baseOutputStream));
     if (NS_FAILED(rv)) return rv;
 
     mCacheEntry->NoteAccess();
@@ -180,33 +173,57 @@ nsCacheEntryChannel::OpenOutputStream(nsIOutputStream* *aOutputStream)
 }
 
 NS_IMETHODIMP
-nsCacheEntryChannel::OpenInputStream(nsIInputStream* *aInputStream)
+nsCacheEntryChannel::OpenInputStream(PRUint32 offset, PRUint32 count, PRUint32 flags,
+                                     nsIInputStream* *aInputStream)
 {
     mCacheEntry->NoteAccess();
 
-    return mChannel->OpenInputStream(aInputStream);
+    nsresult rv;
+    nsCOMPtr<nsITransport> trans = do_QueryInterface(mChannel, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return trans->OpenInputStream(offset, count, flags, aInputStream);
 }
 
 NS_IMETHODIMP
-nsCacheEntryChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *aContext)
+nsCacheEntryChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *aContext,
+                               PRUint32 offset, PRUint32 count, PRUint32 flags,
+                               nsIRequest **aResult)
 {
-    nsresult rv;
-
-	NS_ENSURE_ARG(aListener);
-
     mCacheEntry->NoteAccess();
 
-    rv = mChannel->AsyncRead(aListener, aContext);
+    nsresult rv;
+    nsCOMPtr<nsITransport> trans = do_QueryInterface(mChannel, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    return rv;
+    return trans->AsyncRead(aListener, aContext, offset, count, flags, aResult);
 }
 
 // No async writes allowed to the cache yet
 NS_IMETHODIMP
-nsCacheEntryChannel::AsyncWrite(nsIStreamProvider *aProvider,
-                                nsISupports *aContext)
+nsCacheEntryChannel::AsyncWrite(nsIStreamProvider *aProvider, nsISupports *aContext,
+                                PRUint32 offset, PRUint32 count, PRUint32 flags,
+                                nsIRequest **aResult)
 {
     NS_NOTREACHED("nsCacheEntryChannel::AsyncWrite");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCacheEntryChannel::GetSecurityInfo(nsISupports **aResult)
+{
+    return mChannel->GetSecurityInfo(aResult);
+}
+
+NS_IMETHODIMP
+nsCacheEntryChannel::GetProgressEventSink(nsIProgressEventSink **aSink)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCacheEntryChannel::SetProgressEventSink(nsIProgressEventSink *aSink)
+{
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

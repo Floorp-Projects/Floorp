@@ -25,7 +25,7 @@
 #include "nsFileSpec.h"
 %}
 
-interface nsIChannel;
+interface nsITransport;
 interface nsIEventSinkGetter;
 interface nsIInputStream;
 interface nsIRunnable;
@@ -35,18 +35,18 @@ interface nsIStreamIO;
 [scriptable, uuid(57211a60-8c45-11d3-93ac-00104ba0fd40)]
 interface nsIFileTransportService : nsISupports
 {
-    nsIChannel createTransport(in nsIFile file,
-                               in long ioFlags,
-                               in long perm);
+    nsITransport createTransport(in nsIFile file,
+                                 in long ioFlags,
+                                 in long perm);
 
     // This version can be used with an existing input stream to serve
     // as a data pump:
-    nsIChannel createTransportFromStream(in string name,
-                                         in nsIInputStream fromStream,
-                                         in string contentType,
-                                         in long contentLength);
+    nsITransport createTransportFromStream(in string name,
+                                           in nsIInputStream fromStream,
+                                           in string contentType,
+                                           in long contentLength);
 
-    nsIChannel createTransportFromStreamIO(in nsIStreamIO io);
+    nsITransport createTransportFromStreamIO(in nsIStreamIO io);
 
     void dispatchRequest(in nsIRunnable runnable);
     void processPendingRequests();

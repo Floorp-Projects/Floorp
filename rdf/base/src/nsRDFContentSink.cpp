@@ -927,7 +927,8 @@ RDFContentSinkImpl::GetNameSpaceURI(nsIAtom* aPrefix, const char** aNameSpaceURI
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
         nsAutoString prefixStr;
-        aPrefix->ToString(prefixStr);
+        if (aPrefix)
+            aPrefix->ToString(prefixStr);
 
         char* prefixCStr = prefixStr.ToNewCString();
 

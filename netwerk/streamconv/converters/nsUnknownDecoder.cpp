@@ -21,7 +21,6 @@
  */
 
 #include "nsUnknownDecoder.h"
-
 #include "nsIServiceManager.h"
 #include "nsIStreamConverterService.h"
 
@@ -120,7 +119,7 @@ nsUnknownDecoder::AsyncConvertData(const PRUnichar *aFromType,
 // ----
 
 NS_IMETHODIMP
-nsUnknownDecoder::OnDataAvailable(nsIChannel *aChannel, 
+nsUnknownDecoder::OnDataAvailable(nsIRequest* request, 
                                   nsISupports *aCtxt,
                                   nsIInputStream *aStream, 
                                   PRUint32 aSourceOffset, 
@@ -161,11 +160,11 @@ nsUnknownDecoder::OnDataAvailable(nsIChannel *aChannel,
       //
       aSourceOffset += mBufferLen;
 
-      DetermineContentType(aChannel);
+      DetermineContentType(request);
 
       NS_ASSERTION(!mContentType.IsEmpty(), 
                    "Content type should be known by now.");
-      rv = FireListenerNotifications(aChannel, aCtxt);
+      rv = FireListenerNotifications(request, aCtxt);
     }
   }
 
@@ -173,7 +172,7 @@ nsUnknownDecoder::OnDataAvailable(nsIChannel *aChannel,
     NS_ASSERTION(!mContentType.IsEmpty(), 
                  "Content type should be known by now.");
 
-    rv = mNextListener->OnDataAvailable(aChannel, aCtxt, aStream, 
+    rv = mNextListener->OnDataAvailable(request, aCtxt, aStream, 
                                         aSourceOffset, aCount);
   }
 
@@ -187,7 +186,7 @@ nsUnknownDecoder::OnDataAvailable(nsIChannel *aChannel,
 // ----
 
 NS_IMETHODIMP
-nsUnknownDecoder::OnStartRequest(nsIChannel *aChannel, nsISupports *aCtxt) 
+nsUnknownDecoder::OnStartRequest(nsIRequest* request, nsISupports *aCtxt) 
 {
   nsresult rv = NS_OK;
 
@@ -207,7 +206,7 @@ nsUnknownDecoder::OnStartRequest(nsIChannel *aChannel, nsISupports *aCtxt)
 }
 
 NS_IMETHODIMP
-nsUnknownDecoder::OnStopRequest(nsIChannel *aChannel, nsISupports *aCtxt,
+nsUnknownDecoder::OnStopRequest(nsIRequest* request, nsISupports *aCtxt,
                                 nsresult aStatus, const PRUnichar* aStatusArg)
 {
   nsresult rv = NS_OK;
@@ -219,25 +218,25 @@ nsUnknownDecoder::OnStopRequest(nsIChannel *aChannel, nsISupports *aCtxt,
   // Analyze the buffer now...
   //
   if (mContentType.IsEmpty()) {
-    DetermineContentType(aChannel);
+    DetermineContentType(request);
 
     NS_ASSERTION(!mContentType.IsEmpty(), 
                  "Content type should be known by now.");
-    rv = FireListenerNotifications(aChannel, aCtxt);
+    rv = FireListenerNotifications(request, aCtxt);
 
     if (NS_FAILED(rv)) {
       aStatus = rv;
     }
   }
 
-  rv = mNextListener->OnStopRequest(aChannel, aCtxt, aStatus, aStatusArg);
+  rv = mNextListener->OnStopRequest(request, aCtxt, aStatus, aStatusArg);
   mNextListener = 0;
 
   return rv;
 }
 
 
-void nsUnknownDecoder::DetermineContentType(nsIChannel *aChannel)
+void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
 {
   PRUint32 i;
 
@@ -276,7 +275,10 @@ void nsUnknownDecoder::DetermineContentType(nsIChannel *aChannel)
      */
 
     PRBool isLocalFile = PR_FALSE;
-    if (aChannel) {
+    if (request) {
+      nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
+      if (!request) { NS_WARNING("QI failed"); return; }
+
       nsCOMPtr<nsIURI> pURL;
       if (NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(pURL))))
           pURL->SchemeIs(nsIURI::FILE, &isLocalFile);
@@ -324,7 +326,7 @@ void nsUnknownDecoder::DetermineContentType(nsIChannel *aChannel)
   }
 }
 
-nsresult nsUnknownDecoder::FireListenerNotifications(nsIChannel *aChannel,
+nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
                                                      nsISupports *aCtxt)
 {
   nsresult rv = NS_OK;
@@ -333,11 +335,14 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIChannel *aChannel,
 
   if (!mBuffer) return NS_ERROR_OUT_OF_MEMORY;
 
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request, &rv);
+  if (NS_FAILED(rv)) return rv;
+
   // Set the new content type on the channel...
-  aChannel->SetContentType(mContentType);
+  channel->SetContentType(mContentType);
 
   // Fire the OnStartRequest(...)
-  rv = mNextListener->OnStartRequest(aChannel, aCtxt);
+  rv = mNextListener->OnStartRequest(request, aCtxt);
 
   // Fire the first OnDataAvailable for the data that was read from the
   // stream into the sniffer buffer...
@@ -354,7 +359,7 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIChannel *aChannel,
       rv = out->Write(mBuffer, mBufferLen, &len);
       if (NS_SUCCEEDED(rv)) {
         if (len == mBufferLen) {
-          rv = mNextListener->OnDataAvailable(aChannel, aCtxt, in, 0, len);
+          rv = mNextListener->OnDataAvailable(request, aCtxt, in, 0, len);
         } else {
           NS_ASSERTION(0, "Unable to write all the data into the pipe.");
           rv = NS_ERROR_FAILURE;

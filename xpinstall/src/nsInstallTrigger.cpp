@@ -110,13 +110,14 @@ nsInstallTrigger::HandleContent(const char * aContentType,
                                 const char * aCommand, 
                                 const char * aWindowTarget, 
                                 nsISupports* aWindowContext, 
-                                nsIChannel * aChannel)
+                                nsIRequest* request)
 {
     nsresult rv = NS_OK;
-    if (!aChannel) return NS_ERROR_NULL_POINTER;
+    if (!request) return NS_ERROR_NULL_POINTER;
 
     if (nsCRT::strcasecmp(aContentType, "application/x-xpinstall") == 0) {
         nsCOMPtr<nsIURI> uri;
+        nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
         rv = aChannel->GetURI(getter_AddRefs(uri));
         if (NS_FAILED(rv)) return rv;
 

@@ -28,6 +28,8 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsXPIDLString.h"
 #include "nsISocketTransportService.h"
+#include "nsITransport.h"
+#include "nsIProgressEventSink.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
@@ -41,7 +43,11 @@ nsDateTimeChannel::nsDateTimeChannel() {
 nsDateTimeChannel::~nsDateTimeChannel() {
 }
 
-NS_IMPL_ISUPPORTS4(nsDateTimeChannel, nsIChannel, nsIRequest, nsIStreamListener, nsIStreamObserver)
+NS_IMPL_ISUPPORTS4(nsDateTimeChannel, 
+                   nsIChannel, 
+                   nsIRequest, 
+                   nsIStreamListener, 
+                   nsIStreamObserver)
 
 nsresult
 nsDateTimeChannel::Init(nsIURI* uri)
@@ -156,57 +162,48 @@ nsDateTimeChannel::SetURI(nsIURI* aURI)
 }
 
 NS_IMETHODIMP
-nsDateTimeChannel::OpenInputStream(nsIInputStream **_retval)
+nsDateTimeChannel::Open(nsIInputStream **_retval)
 {
     nsresult rv = NS_OK;
 
     NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIChannel> channel;
-    rv = socketService->CreateTransport(mHost, mPort, nsnull, -1, 32, 32, getter_AddRefs(channel));
+    nsCOMPtr<nsITransport> transport;
+    rv = socketService->CreateTransport(mHost, mPort, nsnull, -1, 32, 32, getter_AddRefs(transport));
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->SetNotificationCallbacks(mCallbacks);
-    if (NS_FAILED(rv)) return rv;
+    if (mCallbacks) {
+        nsCOMPtr<nsIProgressEventSink> sink = do_GetInterface(mCallbacks);
+        if (sink)
+            transport->SetProgressEventSink(sink);
+    }
 
-    return channel->OpenInputStream(_retval);
+    return transport->OpenInputStream(0, -1, 0, _retval);
 }
 
 NS_IMETHODIMP
-nsDateTimeChannel::OpenOutputStream(nsIOutputStream **_retval)
-{
-    NS_NOTREACHED("nsDateTimeChannel::OpenOutputStream");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDateTimeChannel::AsyncRead(nsIStreamListener *aListener,
-                             nsISupports *ctxt)
+nsDateTimeChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
     nsresult rv = NS_OK;
 
     NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIChannel> channel;
-    rv = socketService->CreateTransport(mHost, mPort, nsnull, 0, 32, 32, getter_AddRefs(channel));
+    nsCOMPtr<nsITransport> transport;
+    rv = socketService->CreateTransport(mHost, mPort, nsnull, -1, 32, 32, getter_AddRefs(transport));
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->SetNotificationCallbacks(mCallbacks);
-    if (NS_FAILED(rv)) return rv;
+    if (mCallbacks) {
+        nsCOMPtr<nsIProgressEventSink> sink = do_GetInterface(mCallbacks);
+        if (sink)
+            transport->SetProgressEventSink(sink);
+    }
 
     mListener = aListener;
-
-    return channel->AsyncRead(this, ctxt);
-}
-
-NS_IMETHODIMP
-nsDateTimeChannel::AsyncWrite(nsIStreamProvider *provider,
-                              nsISupports *ctxt)
-{
-    NS_NOTREACHED("nsDateTimeChannel::AsyncWrite");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    
+    nsCOMPtr<nsIRequest> request;
+    return transport->AsyncRead(this, ctxt, 0, -1, 0, getter_AddRefs(request));
 }
 
 NS_IMETHODIMP
@@ -257,83 +254,6 @@ nsDateTimeChannel::SetContentLength(PRInt32 aContentLength)
 }
 
 NS_IMETHODIMP
-nsDateTimeChannel::GetTransferOffset(PRUint32 *aTransferOffset)
-{
-    NS_NOTREACHED("nsDateTimeChannel::GetTransferOffset");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDateTimeChannel::SetTransferOffset(PRUint32 aTransferOffset)
-{
-    NS_NOTREACHED("nsDateTimeChannel::SetTransferOffset");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDateTimeChannel::GetTransferCount(PRInt32 *aTransferCount)
-{
-    NS_NOTREACHED("nsDateTimeChannel::GetTransferCount");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDateTimeChannel::SetTransferCount(PRInt32 aTransferCount)
-{
-    NS_NOTREACHED("nsDateTimeChannel::SetTransferCount");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDateTimeChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
-{
-    NS_NOTREACHED("nsDateTimeChannel::GetBufferSegmentSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDateTimeChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
-{
-    NS_NOTREACHED("nsDateTimeChannel::SetBufferSegmentSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDateTimeChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
-{
-    NS_NOTREACHED("nsDateTimeChannel::GetBufferMaxSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDateTimeChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
-{
-    NS_NOTREACHED("nsDateTimeChannel::SetBufferMaxSize");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDateTimeChannel::GetLocalFile(nsIFile* *file)
-{
-    *file = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDateTimeChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
-{
-    *aPipeliningAllowed = PR_FALSE;
-    return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsDateTimeChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
-{
-    NS_NOTREACHED("SetPipeliningAllowed");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDateTimeChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup;
@@ -345,11 +265,11 @@ NS_IMETHODIMP
 nsDateTimeChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
     if (mLoadGroup) // if we already had a load group remove ourselves...
-      (void)mLoadGroup->RemoveChannel(this, nsnull, NS_OK, nsnull);
+      (void)mLoadGroup->RemoveRequest(this, nsnull, NS_OK, nsnull);
 
     mLoadGroup = aLoadGroup;
     if (mLoadGroup) {
-        return mLoadGroup->AddChannel(this, nsnull);
+        return mLoadGroup->AddRequest(this, nsnull);
     }
     return NS_OK;
 }
@@ -384,25 +304,26 @@ nsDateTimeChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
     return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsDateTimeChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+NS_IMETHODIMP
+nsDateTimeChannel::GetSecurityInfo(nsISupports **sec)
 {
-    *aSecurityInfo = nsnull;
+    NS_ENSURE_ARG_POINTER(sec);
+    *sec = nsnull;
     return NS_OK;
 }
 
 // nsIStreamObserver methods
 NS_IMETHODIMP
-nsDateTimeChannel::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
+nsDateTimeChannel::OnStartRequest(nsIRequest *request, nsISupports *aContext) {
     return mListener->OnStartRequest(this, aContext);
 }
 
 
 NS_IMETHODIMP
-nsDateTimeChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
+nsDateTimeChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
                                  nsresult aStatus, const PRUnichar* aStatusArg) {
     if (mLoadGroup) {
-        nsresult rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aStatusArg);
+        nsresult rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus, aStatusArg);
         if (NS_FAILED(rv)) return rv;
     }
     return mListener->OnStopRequest(this, aContext, aStatus, aStatusArg);
@@ -411,7 +332,7 @@ nsDateTimeChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
 
 // nsIStreamListener method
 NS_IMETHODIMP
-nsDateTimeChannel::OnDataAvailable(nsIChannel* aChannel, nsISupports* aContext,
+nsDateTimeChannel::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
                                nsIInputStream *aInputStream, PRUint32 aSourceOffset,
                                PRUint32 aLength) {
     mContentLength = aLength;

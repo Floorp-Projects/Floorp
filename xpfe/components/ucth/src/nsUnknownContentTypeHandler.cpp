@@ -87,15 +87,20 @@ public:
 // HandleUnknownContentType (from nsIUnknownContentTypeHandler) implementation.
 // XXX We can get the content type from the channel now so that arg could be dropped.
 NS_IMETHODIMP
-nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
+nsUnknownContentTypeHandler::HandleUnknownContentType( nsIRequest *request,
                                                        const char *aContentType,
                                                        nsIDOMWindowInternal *aWindow ) {
     nsresult rv = NS_OK;
 
+    nsCOMPtr<nsIChannel> aChannel;
     nsCOMPtr<nsISupports> channel;
     nsCAutoString         contentDisp;
+    
 
-    if ( aChannel ) {
+    if ( request ) {
+        
+      aChannel = do_QueryInterface(request);
+
         // Need root nsISupports for later JS_PushArguments call.
         channel = do_QueryInterface( aChannel );
 
@@ -103,7 +108,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
         nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( aChannel );
         if ( httpChannel ) {
             // Get content-disposition response header.
-            nsCOMPtr<nsIAtom> atom = NS_NewAtom( "content-disposition" );
+            nsCOMPtr<nsIAtom> atom = dont_AddRef(NS_NewAtom( "content-disposition" ));
             if ( atom ) {
                 nsXPIDLCString disp; 
                 rv = httpChannel->GetResponseHeader( atom, getter_Copies( disp ) );
@@ -114,7 +119,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
         }
 
         // Cancel input channel now.
-        rv = aChannel->Cancel(NS_BINDING_ABORTED);
+        rv = request->Cancel(NS_BINDING_ABORTED);
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Cancel failed, rv=0x%08X\n",
                           (char*)__FILE__, (int)__LINE__, (int)rv );
