@@ -26,6 +26,16 @@
 { 0x18032ad2, 0xb265, 0x11d1, \
 { 0xaa, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
 
+
+/**
+ *
+ * Scrollbar.
+ * Converts mouse input into values that can be used
+ * to shift the contents of a window
+ *
+ */
+
+
 class nsIScrollbar : public nsIWidget
 {
 public:

@@ -28,15 +28,17 @@
     { 0xaa, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
 
 
-/*
+/**
+ *
  * Toolkit to associate with widgets.
  * Each widget that is created must belong to a specific toolkit
- * or the default toolkit.
+ * The toolkit is used to switch to the appropriate thread when
+ * the message pump for the widget is processed.
  */
 
 class nsIToolkit : public nsISupports {
 
-public:
+  public:
 
     /**
      * Initialize this toolkit with aThread. 
@@ -44,7 +46,7 @@ public:
      *  NULL can be passed in, in which case a new thread gets created
      *  and a message pump will run in that thread
      *
-     **/
+     */
     virtual void Init(PRThread *aThread) = 0;
 
 };

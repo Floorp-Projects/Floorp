@@ -27,7 +27,7 @@
 #define NS_ITEXTAREAWIDGET_IID \
 { 0xf8030012, 0xc342, 0x11d1, { 0x97, 0xf0, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } };
 
-/*
+/**
  * Multi-line text editor. 
  * @see nsITextWidget for capabilities. 
  * Displays a scrollbar when the text content exceeds the number of lines 

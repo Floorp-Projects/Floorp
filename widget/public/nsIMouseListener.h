@@ -22,14 +22,15 @@
 
 #include "nsGUIEvent.h"
 
-/*
+/**
+ *
  * Mouse up/down/move event listener
  *
  */
 
 class nsIMouseListener {
 
-public:
+  public:
 
     /**
      * Processes a mouse pressed event

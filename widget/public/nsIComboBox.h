@@ -29,6 +29,7 @@
 /**
  * Single selection drop down list. @see nsIListWidget for capabilities 
  */
+
 class nsIComboBox : public nsIListWidget {
 };
 
