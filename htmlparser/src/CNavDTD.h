@@ -540,6 +540,7 @@ protected:
     PRUint32            mComputedCRC32;
     PRUint32            mExpectedCRC32;
     nsAutoString        mScratch;  //used for various purposes; non-persistent
+    PRBool              mStyleHandlingEnabled;
 
 #ifdef NS_DEBUG
     PRInt32 gNodeCount;

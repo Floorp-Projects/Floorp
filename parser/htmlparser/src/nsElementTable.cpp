@@ -121,7 +121,7 @@ TagList  gContainsOpts={3,{eHTMLTag_option,eHTMLTag_optgroup,eHTMLTag_script}};
 TagList  gContainsParam={1,{eHTMLTag_param}};
 TagList  gColgroupKids={1,{eHTMLTag_col}}; 
 TagList  gAddressKids={1,{eHTMLTag_p}};
-TagList  gBodyKids={5,{eHTMLTag_del,eHTMLTag_ins,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_li}};
+TagList  gBodyKids={6,{eHTMLTag_del,eHTMLTag_ins,eHTMLTag_noscript,eHTMLTag_nolayer,eHTMLTag_script,eHTMLTag_li}};
 TagList  gButtonKids={2,{eHTMLTag_caption,eHTMLTag_legend}};
 TagList  gDLKids={2,{eHTMLTag_dd,eHTMLTag_dt}};
 TagList  gDTKids={1,{eHTMLTag_dt}};
@@ -130,8 +130,8 @@ TagList  gFontKids={2,{eHTMLTag_legend,eHTMLTag_text}};
 TagList  gFormKids={1,{eHTMLTag_keygen}};
 TagList  gFramesetKids={3,{eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes}};
 
-TagList  gHtmlKids={8,{eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_newline,eHTMLTag_whitespace}};
-TagList  gHeadKids={9,{eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed,eHTMLTag_noscript}};
+TagList  gHtmlKids={9,{eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_noframes,eHTMLTag_script,eHTMLTag_newline,eHTMLTag_whitespace}};
+TagList  gHeadKids={8,{eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed}};
 
 TagList  gLabelKids={1,{eHTMLTag_span}};
 TagList  gLIKids={2,{eHTMLTag_ol,eHTMLTag_ul}};
@@ -896,26 +896,26 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gNoframeRoot,&gNoframeRoot,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
-      /*special props, prop-range*/       kDiscardTag, kNoPropRange,
-      /*special parents,kids,skip*/       &gNoframeRoot,&gNoframesKids,eHTMLTag_noframes);
+      /*special props, prop-range*/       0, kNoPropRange,
+      /*special parents,kids,skip*/       &gNoframeRoot,&gNoframesKids,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_nolayer,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-      /*special props, prop-range*/       kDiscardTag, kNoPropRange,
-      /*special parents,kids,skip*/       0,0,eHTMLTag_nolayer);
+      /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
+      /*special props, prop-range*/       0, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_noscript,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
-      /*special props, prop-range*/       kDiscardTag, kNoPropRange,
-      /*special parents,kids,skip*/       0,0,eHTMLTag_noscript);
+      /*parent,incl,exclgroups*/          kBlock, kFlowEntity|kSelf, kNone,	
+      /*special props, prop-range*/       0, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_object,
@@ -1536,6 +1536,21 @@ PRBool nsHTMLElement::IsFlowParent(eHTMLTags aTag){
   if((aTag>=eHTMLTag_unknown) & (aTag<=eHTMLTag_userdefined)){
     result=TestBits(gHTMLElements[aTag].mInclusionBits,kFlowEntity);
   } 
+  return result;
+}
+
+/**
+ * 
+ * @update	harishd 11/19/99
+ * @param 
+ * @return
+ */
+PRBool nsHTMLElement::IsSpecialParent(eHTMLTags aTag) const{
+  PRBool result=PR_FALSE;
+  if(mSpecialParents) {
+    if(FindTagInSet(aTag,mSpecialParents->mTags,mSpecialParents->mCount))
+        result=PR_TRUE;
+  }
   return result;
 }
 

@@ -542,7 +542,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
         result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE); 
       } 
     } 
-    else if(('\b'==theChar) || ('\t'==theChar) || (' '==theChar)) {
+    else if(('\b'==aChar) || ('\t'==aChar) || (' '==aChar)) {
       static CWhitespaceToken theWS; 
       result=theWS.Consume(aChar,aScanner,aMode); 
       if(NS_OK==result) { 
@@ -986,9 +986,22 @@ nsString& CNewlineToken::GetStringValueXXX(void) {
  *  @return  error result
  */
 nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
+
+#if 0
+  mTextValue=kNewLine;  //This is what I THINK we should be doing.
+#endif
   mTextValue=aChar;
 
-    //we already read the \r or \n, let's see what's next!
+/*******************************************************************
+
+  Here's what the HTML spec says about newlines:
+
+  "A line break is defined to be a carriage return (&#x000D;), 
+   a line feed (&#x000A;), or a carriage return/line feed pair. 
+   All line breaks constitute white space."
+
+ *******************************************************************/
+
   PRUnichar theChar;
   nsresult result=aScanner.Peek(theChar);
 
@@ -1000,10 +1013,10 @@ nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMo
           mTextValue+=theChar;
         }
         break;
-      case kCR:
+      case kCR: 
+          //convert CRLF into just CR
         if(kNewLine==theChar) {
           result=aScanner.GetChar(theChar);
-          mTextValue+=theChar;
         }
         break;
       default:
