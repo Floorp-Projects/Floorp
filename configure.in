@@ -269,6 +269,18 @@ AC_ARG_ENABLE(min-shared,
 	    FULL_STATIC_BUILD=
         fi] )
 
+AC_ARG_ENABLE(shared,
+[  --disable-shared        disable building of internal shared libs],
+	[if test "$enableval" = "no"; then
+	    NO_SHARED_LIB=1
+	fi] )
+
+AC_ARG_ENABLE(static,
+[  --disable-static        disable building of internal static libs (broken)],
+	[if test "$enableval" = "no"; then
+	    NO_STATIC_LIB=1
+	fi] )
+
 AC_ARG_ENABLE(crypto,
 [  --enable-crypto	  enable use of SSL (untested)],
 	[if test "$enableval" = "yes"; then
@@ -291,13 +303,15 @@ AC_ARG_ENABLE(java,
 	[if test "$enableval" = "yes"; then
 	    MOZ_JAVA=1
 	    FULL_STATIC_BUILD=
+	    NO_SHARED_LIB=
 	fi] )
 
 AC_ARG_ENABLE(oji,
-[  --enable-oji            enable use of Open JVM Interface (untested)],
+[  --enable-oji            enable use of Open JVM Interface],
 	[if test "$enableval" = "yes"; then
 	    MOZ_OJI=1
 	    FULL_STATIC_BUILD=
+	    NO_SHARED_LIB=
 	fi] )
 
 AC_ARG_ENABLE(debug,
@@ -336,18 +350,6 @@ AC_ARG_ENABLE(async-dns,
 	    NO_UNIX_ASYNC_DNS=1
 	fi] )
 
-AC_ARG_ENABLE(shared,
-[  --disable-shared        disable building of internal shared libs (broken)],
-	[if test "$enableval" = "no"; then
-	    NO_SHARED_LIB=1
-	fi] )
-
-AC_ARG_ENABLE(static,
-[  --disable-static        disable building of internal static libs (broken)],
-	[if test "$enableval" = "no"; then
-	    NO_STATIC_LIB=1
-	fi] )
-
 AC_ARG_ENABLE(tests,
 [  --enable-tests          enable test stubs],
 	[if test "$enableval" = "yes"; then
@@ -355,7 +357,7 @@ AC_ARG_ENABLE(tests,
 	fi])
 
 AC_ARG_ENABLE(homedir,
-[  --enable-homedir=\$val   set the homedir to \$val (broken)],
+[  --enable-homedir=\$val   set the homedir to \$val],
 	[ res=`echo $enableval | grep -c "\/"`
 	    if [ test $res != 0 ]; then
 		AC_MSG_ERROR("Homedir must be single relative path.")
@@ -809,7 +811,6 @@ network/protocol/pop3/Makefile
 network/protocol/remote/Makefile
 network/protocol/smtp/Makefile
 network/util/Makefile
-$NSPR_MAKEFILES
 privacy/Makefile
 privacy/public/Makefile
 privacy/src/Makefile
