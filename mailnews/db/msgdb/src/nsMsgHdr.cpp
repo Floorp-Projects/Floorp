@@ -223,6 +223,8 @@ NS_IMETHODIMP nsMsgHdr::SetFlags(PRUint32 flags)
 
 NS_IMETHODIMP nsMsgHdr::OrFlags(PRUint32 flags, PRUint32 *result)
 {
+  if (!(m_initedValues & FLAGS_INITED))
+    InitFlags();
   if ((m_flags & flags) != flags)
     SetFlags (m_flags | flags);
   *result = m_flags;
@@ -231,6 +233,8 @@ NS_IMETHODIMP nsMsgHdr::OrFlags(PRUint32 flags, PRUint32 *result)
 
 NS_IMETHODIMP nsMsgHdr::AndFlags(PRUint32 flags, PRUint32 *result)
 {
+  if (!(m_initedValues & FLAGS_INITED))
+    InitFlags();
   if ((m_flags & flags) != m_flags)
     SetFlags (m_flags & flags);
   *result = m_flags;
@@ -597,11 +601,11 @@ NS_IMETHODIMP nsMsgHdr::SetMessageOffset(PRUint32 offset)
 
 NS_IMETHODIMP nsMsgHdr::GetMessageSize(PRUint32 *result)
 {
-	PRUint32 size;
-	nsresult res = GetUInt32Column(m_mdb->m_messageSizeColumnToken, &size);
+  PRUint32 size;
+  nsresult res = GetUInt32Column(m_mdb->m_messageSizeColumnToken, &size);
 
-	*result = size;
-	return res;
+  *result = size;
+  return res;
 }
 
 NS_IMETHODIMP nsMsgHdr::GetLineCount(PRUint32 *result)
