@@ -37,8 +37,9 @@ import java.util.*;
  * @see netscape.ldap.LDAPModification
  * @see netscape.ldap.LDAPConnection#modify(java.lang.String, netscape.ldap.LDAPModificationSet)
  */
-public class LDAPModificationSet {
+public class LDAPModificationSet implements java.io.Serializable {
 
+    static final long serialVersionUID = 4650238666753391214L;
     private int current = 0;
     private Vector modifications;
 

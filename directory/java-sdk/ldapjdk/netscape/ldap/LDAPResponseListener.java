@@ -29,6 +29,8 @@ package netscape.ldap;
  */
 public class LDAPResponseListener extends LDAPMessageQueue{
 
+    static final long serialVersionUID = 901897097111294329L;
+
     /**
      * Constructor
      * @param asynchOp a boolean flag that is true if the object is used for 

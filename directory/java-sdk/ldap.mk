@@ -33,6 +33,7 @@
 #    classes
 #      LDAPCLASSES
 #        MAIN
+#        FACTORY
 #        CLIENT
 #        OPERS
 #        UTIL
@@ -90,7 +91,8 @@ else
   endif
 endif
 JAASLIB=$(BASEDIR)/ldapjdk/lib/jaas.jar
-JAVACLASSPATH:=$(BASEDIR)/ldapjdk$(SEP)$(JAASLIB)$(SEP)$(BASEDIR)/ldapbeans$(SEP)$(JDK)/lib/classes.zip$(SEP)$(CLASSPATH)
+JSSELIB=$(BASEDIR)/ldapjdk/lib/jnet.jar$(SEP)$(BASEDIR)/ldapjdk/lib/jsse.jar
+JAVACLASSPATH:=$(BASEDIR)/ldapjdk$(SEP)$(JAASLIB)$(SEP)$(JSSELIB)$(SEP)$(BASEDIR)/ldapbeans$(SEP)$(JDK)/lib/classes.zip$(SEP)$(CLASSPATH)
 
 SRCDIR=netscape/ldap
 BEANDIR=$(BASEDIR)/ldapbeans/netscape/ldap/beans
@@ -137,7 +139,8 @@ BERDOCCLASSES=netscape.ldap.ber.stream
 SASLDOCCLASSES=com.netscape.sasl com.netscape.sasl.mechanisms
 
 DOCCLASSES=netscape.ldap netscape.ldap.beans netscape.ldap.controls \
-	netscape.ldap.util $(SASLDOCCLASSES) $(TOOLSDIR)/*.java $(BERDOCCLASSES)
+	netscape.ldap.util netscape.ldap.factory \
+	$(SASLDOCCLASSES) $(TOOLSDIR)/*.java $(BERDOCCLASSES)
 
 all: classes
 
@@ -157,7 +160,7 @@ tests: $(CLASSDIR)
 package: basepackage filterpackage beanpackage docpackage
 
 basepackage: $(CLASSPACKAGEDIR)
-	cd $(DISTDIR)/classes; rm -f ../packages/$(BASEPACKAGENAME); $(JAR) cvf ../packages/$(BASEPACKAGENAME) netscape/ldap/*.class netscape/ldap/client/*.class netscape/ldap/client/opers/*.class netscape/ldap/ber/stream/*.class netscape/ldap/controls/*.class netscape/ldap/util/*.class netscape/ldap/errors/*.props com/netscape/sasl/*.class com/netscape/sasl/mechanisms/*.class *.class
+	cd $(DISTDIR)/classes; rm -f ../packages/$(BASEPACKAGENAME); $(JAR) cvf ../packages/$(BASEPACKAGENAME) netscape/ldap/*.class netscape/ldap/client/*.class netscape/ldap/client/opers/*.class netscape/ldap/ber/stream/*.class netscape/ldap/controls/*.class netscape/ldap/factory/*.class netscape/ldap/util/*.class netscape/ldap/errors/*.props com/netscape/sasl/*.class com/netscape/sasl/mechanisms/*.class *.class
 
 beanpackage: $(CLASSPACKAGEDIR)
 	cd $(DISTDIR)/classes; rm -f ../packages/$(BEANPACKAGENAME); $(JAR) cvf ../packages/$(BEANPACKAGENAME) netscape/ldap/beans
@@ -167,6 +170,9 @@ docpackage: $(DOCDIR) $(CLASSPACKAGEDIR)
 
 MAIN: basics
 	cd ldapjdk/$(SRCDIR); $(JAVAC) -d "$(CLASS_DEST)" *.java
+
+FACTORY: basics
+	cd ldapjdk/$(SRCDIR)/factory; $(JAVAC) -d "$(CLASS_DEST)" *.java
 
 CLIENT: basics
 	cd ldapjdk/$(SRCDIR)/client; $(JAVAC) -d "$(CLASS_DEST)" *.java
@@ -192,7 +198,7 @@ ERRORS: basics $(ERRORSDIR)
 CONTROLS: basics
 	cd ldapjdk/$(SRCDIR)/controls; $(JAVAC) -d "$(CLASS_DEST)" *.java
 
-LDAPCLASSES: BER OPERS CLIENT MAIN UTIL CONTROLS ERRORS SASL SASLMECHANISM TOOLS
+LDAPCLASSES: BER OPERS CLIENT MAIN FACTORY UTIL CONTROLS ERRORS SASL SASLMECHANISM TOOLS
 
 BEANS: OTHERBEANS
 

@@ -95,6 +95,9 @@ public abstract class JDAPFilter {
         f.trim();
         if (f.startsWith("&")) {         /* and */
             JDAPFilter filters[] = getFilterList(f.substring(1, f.length()));
+            if (filters == null) {
+                throw new IllegalArgumentException("Bad search filter");
+            }
             JDAPFilterAnd and = new JDAPFilterAnd();
             for (int i = 0; i < filters.length; i++) {
                 and.addElement(filters[i]);
@@ -102,13 +105,20 @@ public abstract class JDAPFilter {
             return and;
         } else if (f.startsWith("|")) {  /* or  */
             JDAPFilter filters[] = getFilterList(f.substring(1, f.length()));
+            if (filters == null) {
+                throw new IllegalArgumentException("Bad search filter");
+            }
             JDAPFilterOr or = new JDAPFilterOr();
             for (int i = 0; i < filters.length; i++) {
                 or.addElement(filters[i]);
             }
             return or;
         } else if (f.startsWith("!")) {  /* not */
-            return new JDAPFilterNot(getFilter(f.substring(1, f.length())));
+            JDAPFilter filter = getFilter(f.substring(1, f.length()));
+            if (filter == null) {
+                throw new IllegalArgumentException("Bad search filter");
+            }
+            return new JDAPFilterNot(filter);
         } else {                         /* item */
             return getFilterItem(f.substring(0, f.length()));
         }

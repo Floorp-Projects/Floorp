@@ -28,7 +28,10 @@ import netscape.ldap.client.opers.JDAPExtendedResponse;
  * 
  * @version 1.0
  */
-public class LDAPExtendedResponse extends LDAPResponse {
+public class LDAPExtendedResponse extends LDAPResponse
+                                  implements java.io.Serializable {
+
+    static final long serialVersionUID = -3813049515964705320L;
 
     /**
      * Constructor

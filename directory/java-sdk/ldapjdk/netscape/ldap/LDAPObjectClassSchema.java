@@ -104,6 +104,9 @@ import java.util.*;
  * @see netscape.ldap.LDAPSchemaElement
  **/
 public class LDAPObjectClassSchema extends LDAPSchemaElement {
+
+    static final long serialVersionUID = -1732784695071118656L;
+
     /**
      * Constructs an object class definition, using the specified
      * information. The type of the object class will be STRUCTURAL.
@@ -121,19 +124,7 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
     public LDAPObjectClassSchema( String name, String oid, String superior,
                                   String description,
                                   String[] required, String[] optional ) {
-        super( name, oid, description );
-        attrName = "objectclasses";
-        setQualifier( SUPERIOR, superior );
-        if ( required != null ) {
-            for( int i = 0; i < required.length; i++ ) {
-                must.addElement( required[i] );
-            }
-        }
-        if ( optional != null ) {
-            for( int i = 0; i < optional.length; i++ ) {
-                may.addElement( optional[i] );
-            }
-        }
+        this( name, oid, superior, description, required, optional, null );
     }
 
     /**
@@ -161,13 +152,43 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
         this( name, oid,
               ((superiors != null) && (superiors.length > 0)) ?
                   superiors[0] : null,
-              description, required, optional );
+              description, required, optional, aliases );
         if ( (superiors != null) && (superiors.length > 1) ) {
             setQualifier( SUPERIOR, superiors );
         }
         setQualifier( TYPE, typeToString( type ) );
-        if ( (aliases != null) && (aliases.length > 0) ) {
-            this.aliases = aliases;
+    }
+
+    /**
+     * Constructs an object class definition, using the specified
+     * information. The type of the object class will be STRUCTURAL.
+     * @param name name of the object class
+     * @param oid object identifier (OID) of the object class
+     * in dotted-string format (for example, "1.2.3.4")
+     * @param description description of the object class
+     * @param superior name of the parent object class
+     * (the object class that the new object class inherits from)
+     * @param required array of names of attributes required
+     * in this object class
+     * @param optional array of names of optional attributes
+     * allowed in this object class
+     */
+    protected LDAPObjectClassSchema( String name, String oid, String superior,
+                                     String description,
+                                     String[] required, String[] optional,
+                                     String[] aliases ) {
+        super( name, oid, description, aliases );
+        attrName = "objectclasses";
+        setQualifier( SUPERIOR, superior );
+        if ( required != null ) {
+            for( int i = 0; i < required.length; i++ ) {
+                must.addElement( required[i] );
+            }
+        }
+        if ( optional != null ) {
+            for( int i = 0; i < optional.length; i++ ) {
+                may.addElement( optional[i] );
+            }
         }
     }
 

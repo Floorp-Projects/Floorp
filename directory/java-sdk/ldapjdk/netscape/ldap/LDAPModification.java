@@ -44,7 +44,9 @@ import netscape.ldap.ber.stream.*;
  * @version 1.0
  * @see netscape.ldap.LDAPConnection#modify(java.lang.String, netscape.ldap.LDAPModification)
  */
-public class LDAPModification {
+public class LDAPModification implements java.io.Serializable {
+
+    static final long serialVersionUID = 4836472112866826595L;
 
     /**
      * Specifies that a value should be added to an attribute.

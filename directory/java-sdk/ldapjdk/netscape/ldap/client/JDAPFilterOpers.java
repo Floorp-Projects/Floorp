@@ -74,17 +74,19 @@ class JDAPFilterOpers {
                 return null;
             }
 
-            String hex = "0x"+val.substring(pos+1, pos+3);
-
             Integer num = null;
 
             // decode this number to integer, exception thrown when this is not the
             // hex
             try {
+                String hex = "0x"+val.substring(pos+1, pos+3);
                 num = Integer.decode(hex);
+            } catch (IndexOutOfBoundsException e) {
+                printDebug(e.toString());
+                throw new IllegalArgumentException("Bad search filter");
             } catch (NumberFormatException e) {
                 printDebug(e.toString());
-                return null;
+                throw new IllegalArgumentException("Bad search filter");
             }
 
             byte[] b = {(byte)num.intValue()};

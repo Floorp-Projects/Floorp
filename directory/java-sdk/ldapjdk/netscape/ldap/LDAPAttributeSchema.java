@@ -113,6 +113,9 @@ import java.util.*;
  **/
 
 public class LDAPAttributeSchema extends LDAPSchemaElement {
+
+    static final long serialVersionUID = 2482595821879862595L;
+
     /**
      * Constructs a blank element.
      */
@@ -185,7 +188,7 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
     public LDAPAttributeSchema( String name, String oid, String description,
                                 String syntaxString, boolean single,
                                 String superior, String[] aliases ) {
-        super( name, oid, description );
+        super( name, oid, description, aliases );
         attrName = "attributetypes";
         syntaxElement.syntax = syntaxElement.syntaxCheck( syntaxString );
         syntaxElement.syntaxString = syntaxString;
@@ -195,9 +198,6 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
         }
         if ( (superior != null) && (superior.length() > 0) ) {
             setQualifier( SUPERIOR, superior );
-        }
-        if ( (aliases != null) && (aliases.length > 0) ) {
-            this.aliases = aliases;
         }
     }
 

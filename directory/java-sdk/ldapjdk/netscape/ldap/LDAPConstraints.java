@@ -31,8 +31,9 @@ package netscape.ldap;
  *
  * @version 1.0
  */
-public class LDAPConstraints implements Cloneable {
+public class LDAPConstraints implements Cloneable, java.io.Serializable {
 
+    static final long serialVersionUID = 6506767263918312029L;
     private int m_hop_limit;
     private LDAPBind m_bind_proc;
     private LDAPRebind m_rebind_proc;

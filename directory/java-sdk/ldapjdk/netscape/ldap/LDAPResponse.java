@@ -31,6 +31,8 @@ import netscape.ldap.client.opers.JDAPResult;
  */
 public class LDAPResponse extends LDAPMessage {
 
+    static final long serialVersionUID = 5822205242593427418L;
+
     /**
      * Constructor
      * 

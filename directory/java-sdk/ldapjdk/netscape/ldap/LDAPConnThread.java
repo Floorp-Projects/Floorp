@@ -71,7 +71,7 @@ class LDAPConnThread extends Thread {
     transient private Thread m_thread = null;
     transient Object m_sendRequestLock = new Object();
     transient LDAPConnSetupMgr m_connMgr = null;
-    transient PrintWriter m_traceOutput = null;
+    transient Object m_traceOutput = null;
 
     /**
      * Constructs a connection thread that maintains connection to the
@@ -80,7 +80,7 @@ class LDAPConnThread extends Thread {
      * @param port LDAP port number
      * @param factory LDAP socket factory
      */
-    public LDAPConnThread(LDAPConnSetupMgr connMgr, LDAPCache cache, OutputStream traceOutput)
+    public LDAPConnThread(LDAPConnSetupMgr connMgr, LDAPCache cache, Object traceOutput)
         throws LDAPException {
         super("LDAPConnThread " + connMgr.getHost() +":"+ connMgr.getPort());
         m_requests = new Hashtable ();
@@ -88,7 +88,7 @@ class LDAPConnThread extends Thread {
         m_connMgr = connMgr;
         m_socket = connMgr.getSocket();
         setCache( cache );
-        setTraceOutputStream(traceOutput);
+        setTraceOutput(traceOutput);
         
         setDaemon(true);
         
@@ -128,10 +128,31 @@ class LDAPConnThread extends Thread {
         m_serverOutput = os;
     }
 
-    void setTraceOutputStream(OutputStream os) {
+    void setTraceOutput(Object traceOutput) {
         synchronized (m_sendRequestLock) {
-            m_traceOutput = (os == null) ? null : new PrintWriter(os);
+            if (traceOutput == null) {
+               m_traceOutput = null;
+            }
+            else if (traceOutput instanceof OutputStream) {
+                m_traceOutput = new PrintWriter((OutputStream)traceOutput);
+            }
+            else if (traceOutput instanceof LDAPTraceWriter) {
+                m_traceOutput = traceOutput;
+            }
         }            
+    }
+    
+    void logLDAPMessage(LDAPMessage msg) {
+        synchronized( m_sendRequestLock ) {
+            if (m_traceOutput instanceof PrintWriter) {
+                PrintWriter traceOutput = (PrintWriter)m_traceOutput;
+                traceOutput.println(msg.toTraceString());
+                traceOutput.flush();
+            }
+            else if (m_traceOutput instanceof LDAPTraceWriter) {
+                ((LDAPTraceWriter)m_traceOutput).write(msg.toTraceString());
+            }
+        }
     }
     
         
@@ -187,8 +208,7 @@ class LDAPConnThread extends Thread {
         synchronized( m_sendRequestLock ) {
             try {
                 if (m_traceOutput != null) {
-                    m_traceOutput.println(msg.toTraceString());
-                    m_traceOutput.flush();
+                    logLDAPMessage(msg);
                 }                    
                 msg.write (m_serverOutput);
                 m_serverOutput.flush ();
@@ -317,6 +337,7 @@ class LDAPConnThread extends Thread {
             m_registered = null;
             m_messages = null;
             m_requests.clear();
+            m_cache = null;
         }
     }
 
@@ -402,10 +423,7 @@ class LDAPConnThread extends Thread {
                 msg = LDAPMessage.parseMessage(element);
 
                 if (m_traceOutput != null) {
-                    synchronized( m_sendRequestLock ) {
-                        m_traceOutput.println(msg.toTraceString());
-                        m_traceOutput.flush();
-                    }
+                    logLDAPMessage(msg);
                 }                    
 
                 // passed in the ber element size to approximate the size of the cache

@@ -31,14 +31,19 @@ import java.net.*;
  * in parallel by creating a separate thread after the specified delay.
  * Connection setup status is preserved for later attempts, so that servers
  * that are more likely to be available will be tried first.
+ * <P>
+ * The total time spent opening a connection can be limited with the
+ * <CODE>ConnectTimeout</CODE> property.
+ * <P>
  * When a connection is successfully created, a socket is opened. The socket 
  * is passed to the LDAPConnThread. The LDAPConnThread must call
  * invalidateConnection() if the connection is lost due to a network or 
  * server error, or disconnect() if the connection is deliberately terminated
  * by the user.
  */
-class LDAPConnSetupMgr implements Cloneable{
+class LDAPConnSetupMgr implements Cloneable, java.io.Serializable {
 
+    static final long serialVersionUID = 1519402748245755306L;
     /**
      * Policy for opening a connection when multiple servers are used
      */
@@ -53,7 +58,8 @@ class LDAPConnSetupMgr implements Cloneable{
     private static final int CONNECTED    = 0;  
     private static final int DISCONNECTED = 1;
     private static final int NEVER_USED   = 2;
-    private static final int FAILED       = 3;
+    private static final int INTERRUPTED  = 3;
+    private static final int FAILED       = 4;
     
     /**
      * Representation for a server in the server list.
@@ -104,65 +110,135 @@ class LDAPConnSetupMgr implements Cloneable{
     /**
      * Connection setup policy (PARALLEL or SERIAL)
      */
-    int m_policy;
+    int m_policy = SERIAL;
     
     /**
      * Delay in ms before another connection setup thread is started.    
      */
-    int m_connSetupDelay;
+    int m_connSetupDelay = -1;
+
+    /**
+     * The maximum time to wait to established the connection
+     */
+    int m_connectTimeout = 0;
+
+    /**
+     *  During connection setup, the current count of servers to which
+     *  connection attmpt has been made 
+     */
+    private transient int m_attemptCnt = 0;
 
     /**
      * Constructor
      * @param host list of host names to which to connect
      * @param port list of port numbers corresponding to the host list
-     * @param factory socket factory for SSL connections
-     * @param delay delay in seconds for the parallel connection setup policy.
-     * Possible values are: <br>(delay=-1) use serial policy,<br>
-     * (delay=0) start immediately concurrent threads to each specified server
-     * <br>(delay>0) create a new connection setup thread after delay seconds
+     * @param factory socket factory for SSL connections     
      */
-    LDAPConnSetupMgr(String[] hosts, int[] ports, LDAPSocketFactory factory, int delay) {
+    LDAPConnSetupMgr(String[] hosts, int[] ports, LDAPSocketFactory factory) {
         m_dsList = new ServerEntry[hosts.length];
         for (int i=0; i < hosts.length; i++) {
             m_dsList[i] = new ServerEntry(hosts[i], ports[i], NEVER_USED);
         }
         m_factory = factory;
-        m_policy = (delay < 0) ? SERIAL : PARALLEL;
-        m_connSetupDelay = delay*1000;
     }
 
     /**
-     * Constructor used by clone()
-     */
-    private LDAPConnSetupMgr() {}
-
-    /**
-     * Try to open the connection to any of the servers in the list.
+     * Try to open the connection to any of the servers in the list, limiting
+     * the time waiting for the connection to be established
+     * @return connection socket
     */
-    Socket openConnection() throws LDAPException{
-        m_socket = null;
-        m_connException = null;
-    
+    synchronized Socket openConnection() throws LDAPException{
+        
+        long tcur=0, tmax = Long.MAX_VALUE;
+        Thread th = null; 
+        
+        reset();
+        
        // If reconnecting, sort dsList so that servers more likly to
         // be available are tried first
         sortDsList();
+    
+        if (m_connectTimeout == 0) {
+            // No need for a separate thread, connect time not limited
+            connect();
+        }
+        else {
+        
+            // Wait for connection at most m_connectTimeout milliseconds
+            // Run connection setup in a separate thread to monitor the time
+            tmax = System.currentTimeMillis() + m_connectTimeout;
+            th = new Thread (new Runnable() {
+                public void run() {
+                    connect();
+                }
+            }, "ConnSetupMgr");
+            th.setDaemon(true);
+            th.start();
+        
+            while  (m_socket==null && (m_attemptCnt < m_dsList.length) &&
+                   (tcur = System.currentTimeMillis()) < tmax) {
+                try {
+                    wait(tmax - tcur);
+                }
+                catch (InterruptedException e) {
+                    th.interrupt();
+                    cleanup();
+                    throw new LDAPInterruptedException("Interrupted connect operation");
+                }
+            }
+        }
+
+        if (m_socket != null) {
+            return m_socket;
+        }
+
+        if  ( th != null && (tcur = System.currentTimeMillis()) >= tmax) {
+            // We have timed out 
+            th.interrupt();
+            cleanup();
+            throw new LDAPException(
+                "connect timeout, " + getServerList() + " might be unreachable",
+                LDAPException.CONNECT_ERROR);
+        }
+
+        if (m_connException != null && m_dsList.length == 1) {
+            throw m_connException;
+        }
+
+        throw new LDAPException(
+            "failed to connect to server " + getServerList(),
+            LDAPException.CONNECT_ERROR);
+    }
+
+    private void reset() {
+        m_socket = null;
+        m_connException = null;
+        m_attemptCnt = 0;
+                
+        for (int i=0; i < m_dsList.length; i++) {
+            m_dsList[i].connSetupThread = null;
+        }        
+    }
+    
+    private String getServerList() {
+        StringBuffer sb = new StringBuffer();
+        for (int i=0; i < m_dsList.length; i++) {
+            sb.append(i==0 ? "" : " ");
+            sb.append(m_dsList[i].host);
+            sb.append(":");
+            sb.append(m_dsList[i].port);
+        }
+        return sb.toString();
+   }
+
+    private void connect() {
     
         if (m_policy == SERIAL || m_dsList.length == 1) {
             openSerial();
         }
         else {
             openParallel();
-        }
-    
-        if (m_socket != null) {
-            return m_socket;
-        }
-    
-        if (m_connException != null) {
-            throw m_connException;
-        }
-    
-        return null;    
+        }    
     }
 
     /**
@@ -170,7 +246,7 @@ class LDAPConnSetupMgr implements Cloneable{
      * Put the connected server at the end of the server list for
      * the next connect attempt.    
      */
-    void invalidateConnection() {
+    synchronized void invalidateConnection() {
         if (m_socket != null) {
             m_dsList[m_dsIdx].connSetupStatus = FAILED;
         
@@ -221,6 +297,35 @@ class LDAPConnSetupMgr implements Cloneable{
         return m_dsList[0].port;
     }
 
+    int  getConnSetupDelay() {
+        return m_connSetupDelay/1000;
+    }
+    
+    /**
+     * Selects the connection failover policy
+     * @param delay in seconds for the parallel connection setup policy.
+     * Possible values are: <br>(delay=-1) use serial policy,<br>
+     * (delay=0) start immediately concurrent threads to each specified server
+     * <br>(delay>0) create a new connection setup thread after delay seconds
+     */
+    void setConnSetupDelay(int delay) {
+        m_policy = (delay < 0) ? SERIAL : PARALLEL;        
+        m_connSetupDelay = delay*1000;
+        
+    }
+    
+    int getConnectTimeout() {
+        return m_connectTimeout/1000;
+    }
+
+    /**
+     * Sets the maximum time to spend in the openConnection() call
+     * @param timeout in seconds to wait for the connection to be established
+     */
+    void setConnectTimeout(int timeout) {
+        m_connectTimeout = timeout*1000;
+    }
+    
     /**
      * Check if the user has voluntarily closed the connection
      */
@@ -268,24 +373,16 @@ class LDAPConnSetupMgr implements Cloneable{
                 try {
                     wait(m_connSetupDelay);
                 }
-                catch (InterruptedException e) {}
+                catch (InterruptedException e) {
+                    return;
+                }
             }
         }    
 
         // At this point all threads are started. Wait until first thread
         // succeeds to connect or all threads terminate
     
-        while (m_socket == null) {
-        
-            // Check whether there are still running threads
-            boolean threadsRunning = false;
-            for (int i=0; i < m_dsList.length; i++) {
-                if (m_dsList[i].connSetupThread != null) {
-                    threadsRunning = true;
-                    break;
-                }    
-            }
-            if (!threadsRunning) { return; }
+        while (m_socket == null && (m_attemptCnt < m_dsList.length)) {
         
             // Wait for a thread to terminate
             try {
@@ -339,6 +436,7 @@ class LDAPConnSetupMgr implements Cloneable{
                     entry.connSetupStatus = FAILED;
                     m_connException = conex;
                 }
+                m_attemptCnt++;
                 notifyAll();
             }    
         }
@@ -353,7 +451,7 @@ class LDAPConnSetupMgr implements Cloneable{
             ServerEntry entry = m_dsList[i];
             if (entry.connSetupThread != null && entry.connSetupThread != currThread) {
             
-                entry.connSetupStatus = FAILED;
+                entry.connSetupStatus = INTERRUPTED;
                 //Thread.stop() is considered to be dangerous, use Thread.interrupt().
                 //interrupt() will however not work if the thread is blocked in the
                 //socket library native connect() call, but the connect() will
@@ -371,7 +469,8 @@ class LDAPConnSetupMgr implements Cloneable{
      * are tried first. The likelihood of making a successful connection
      * is determined by the connSetupStatus. Lower values have higher
      * likelihood. Thus, the order of server access is (1) disconnected by
-     * the user (2) never used (3) connection setup failed/connection lost
+     * the user (2) never used (3) interrupted connection attempt
+    *  (4) connection setup failed/connection lost
      */
     private void sortDsList() {
         int srvCnt = m_dsList.length;
@@ -411,17 +510,17 @@ class LDAPConnSetupMgr implements Cloneable{
     }    
 
     public Object clone() {
-        LDAPConnSetupMgr cloneMgr = new LDAPConnSetupMgr();
-        cloneMgr.m_factory = m_factory;
-        cloneMgr.m_policy = m_policy;
-        cloneMgr.m_connSetupDelay = m_connSetupDelay;
-        cloneMgr.m_dsIdx = m_dsIdx;
-        cloneMgr.m_dsList = new ServerEntry[m_dsList.length];
-        cloneMgr.m_socket = m_socket;
-        for (int i=0; i<m_dsList.length; i++) {
-            ServerEntry e = m_dsList[i];
-            cloneMgr.m_dsList[i] = new ServerEntry(e.host, e.port, e.connSetupStatus);
+        try {
+            LDAPConnSetupMgr cloneMgr = (LDAPConnSetupMgr) super.clone();
+            cloneMgr.m_dsList = new ServerEntry[m_dsList.length];
+            for (int i=0; i<m_dsList.length; i++) {
+                ServerEntry e = m_dsList[i];
+                cloneMgr.m_dsList[i] = new ServerEntry(e.host, e.port, e.connSetupStatus);
+            }
+            return  cloneMgr;
         }
-        return  cloneMgr;
+        catch (CloneNotSupportedException ex) {
+            return null;
+        }
     }    
 }

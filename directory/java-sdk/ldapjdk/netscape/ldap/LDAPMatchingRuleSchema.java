@@ -100,6 +100,9 @@ import java.util.*;
  **/
 
 public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
+
+    static final long serialVersionUID = 6466155218986944131L;
+
     /**
      * Constructs a matching rule definition, using the specified
      * information.

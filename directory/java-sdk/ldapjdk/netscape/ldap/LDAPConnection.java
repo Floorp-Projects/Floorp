@@ -28,7 +28,6 @@ import netscape.ldap.ber.stream.*;
 import netscape.ldap.util.*;
 import java.io.*;
 import java.net.*;
-//import javax.security.auth.callback.CallbackHandler;
 
 /**
  * Represents a connection to an LDAP server. <P>
@@ -93,7 +92,9 @@ import java.net.*;
  * @see netscape.ldap.LDAPException
  */
 public class LDAPConnection
-       implements LDAPv3, LDAPAsynchronousConnection, Cloneable {
+       implements LDAPv3, LDAPAsynchronousConnection, Cloneable, Serializable {
+
+    static final long serialVersionUID = -8698420087475771144L;
 
     /**
      * Version of the LDAP protocol used by default.
@@ -170,7 +171,7 @@ public class LDAPConnection
      * Name of the property to enable/disable LDAP message trace. <P>
      *
      * The property can be specified either as a system property 
-     * (java -D command line option),  or programmatically with
+     * (java -D command line option),  or programmatically with the
      * <CODE>setProperty</CODE> method.
      * <P>
      * When -D command line option is used, defining the property with
@@ -179,10 +180,10 @@ public class LDAPConnection
      * If the file name is prefixed with a '+' character, the file is
      * opened in append mode.
      * <P>
-     * When the property is set with <CODE>getProperty</CODE> method,
+     * When the property is set with the <CODE>getProperty</CODE> method,
      * the property value must be either a String (represents a file name)
-     * or an OutputStream. To stop tracing, <CODE>null</CODE> should be
-     * passed as the property value.
+     * an OutputStream or an instance of LDAPTraceWriter. To stop tracing,
+     * <CODE>null</CODE> should be  passed as the property value.
      * 
      * @see netscape.ldap.LDAPConnection#setProperty(java.lang.String, java.lang.Object)
      */
@@ -230,9 +231,10 @@ public class LDAPConnection
     private int m_protocolVersion = LDAP_VERSION;
     private LDAPConnSetupMgr m_connMgr;
     private int m_connSetupDelay = -1;
+    private int m_connectTimeout = 0;
     private LDAPSocketFactory m_factory;
     /* m_thread does all socket i/o for the object and any clones */
-    private LDAPConnThread m_thread = null;
+    private transient LDAPConnThread m_thread = null;
     /* To manage received server controls on a per-thread basis,
        we keep a table of active threads and a table of controls,
        indexed by thread */
@@ -258,11 +260,11 @@ public class LDAPConnection
     /**
      * Properties
      */
-    private final static Float SdkVersion = new Float(4.07f);
+    private final static Float SdkVersion = new Float(4.1f);
     private final static Float ProtocolVersion = new Float(3.0f);
     private final static String SecurityVersion = new String("none,simple,sasl");
     private final static Float MajorVersion = new Float(4.0f);
-    private final static Float MinorVersion = new Float(0.07f);
+    private final static Float MinorVersion = new Float(0.1f);
     private final static String DELIM = "#";
     private final static String PersistSearchPackageName =
       "netscape.ldap.controls.LDAPPersistSearchControl";
@@ -347,6 +349,12 @@ public class LDAPConnection
      *  @see netscape.ldap.LDAPConnection#getCache
      */
     public void setCache(LDAPCache cache) {
+        if (m_cache != null) {
+            m_cache.removeReference();
+        }
+        if (cache != null) {
+            cache.addReference();
+        }
         m_cache = cache;
         if ( m_thread != null ) {
             m_thread.setCache( cache );
@@ -441,19 +449,19 @@ public class LDAPConnection
 
         } else if ( name.equalsIgnoreCase( TRACE_PROPERTY ) ) {
 
-            OutputStream os = null;
+            Object traceOutput = null;
             if (val == null) {
                 m_properties.remove(TRACE_PROPERTY);
             }                
             else {
                 if (m_thread != null) {
-                    os = createTraceOutputStream(val);
+                    traceOutput = createTraceOutput(val);
                 }
                 m_properties.put( TRACE_PROPERTY, val ); 
             }
 
             if (m_thread != null) {
-                m_thread.setTraceOutputStream(os);
+                m_thread.setTraceOutput(traceOutput);
             }
 
         // This is used only by the ldapjdk test cases to simulate a
@@ -467,17 +475,20 @@ public class LDAPConnection
     }
 
     /**
-     * Create output stream from the TRACE_PROPERTY value.
-     * The value can be either of type String or OutputStream. The
-     * String value represents output file name. If the name is an empty
+     * Evaluate the TRACE_PROPERTY value and create output stream.
+     * The value can be of type String, OutputStream or LDAPTraceWriter.
+     * The String value represents output file name. If the name is an empty
      * string, the output is sent to System.err. If the file name is
      * prefixed with a '+' character, the file is opened in append mode.
-     * @param out Trace output specifier
+     *
+     * @param out Trace output specifier. A file name, an output stream 
+     * or an instance of LDAPTraceWriter
+     * @return An output stream or an LDAPTraceWriter instance
      */
-    OutputStream createTraceOutputStream(Object out) throws LDAPException {
-        OutputStream os = null;
-        
+    Object createTraceOutput(Object out) throws LDAPException {
+                
         if (out instanceof String) { // trace file name
+            OutputStream os = null;
             String file = (String)out;
             if (file.length() == 0) {
                 os = System.err;
@@ -496,15 +507,18 @@ public class LDAPConnection
                         "Can not open output trace file " + file + " " + e);
                 }
             }
+            return os;
         }        
         else if (out instanceof OutputStream)  {
-            os = (OutputStream) out;
+            return out;
+        }       
+        else if (out instanceof LDAPTraceWriter)  {
+            return out;
         }       
         else {
-            throw new LDAPException(TRACE_PROPERTY + " must be OutputStream or String" );
+            throw new LDAPException(TRACE_PROPERTY + " must be an OutputStream, a file name or an instance of LDAPTraceWriter" );
         }
 
-        return os;
     }
     
     /**
@@ -558,6 +572,30 @@ public class LDAPConnection
     }
     
     /**
+     * Returns the maximum time to wait for the connection to be established.
+     * @return the maximum connect time in seconds or 0 (unlimited)
+     * @see netscape.ldap.LDAPConnection#setConnectTimeout
+     */
+    public int getConnectTimeout () {
+        return m_connectTimeout;
+    }
+
+    /**
+     * Specifies the maximum time to wait for the connection to be established.
+     * If the value is 0, the time is not limited.
+     * @param timeout the maximum connect time in seconds or 0 (unlimited)
+     */
+    public void setConnectTimeout (int timeout) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException("Timeout value can not be negative");
+        }
+        m_connectTimeout = timeout;
+        if (m_connMgr != null) {
+            m_connMgr.setConnectTimeout(m_connectTimeout);
+        }
+    }
+        
+    /**
      * Returns the delay in seconds when making concurrent connection attempts to
      * multiple servers.
      * @return the delay in seconds between connection attempts:<br>
@@ -577,9 +615,9 @@ public class LDAPConnection
      * Specifies the delay in seconds when making concurrent connection attempts to
      * multiple servers.
      * <P>Effectively, selects the connection setup policy when a list of hosts is passed
-     * to the <CODE>connect</CODE>method.
+     * to the <CODE>connect</CODE> method.
      * 
-     * <br>If the serial policy, the default one, is selected, an attempt is made to
+     * <br>If the serial policy is selected, the default one, an attempt is made to
      * connect to the first host in the list. The next entry in
      * the list is tried only if the attempt to connect to the current host fails.
      * This might cause your application to block for unacceptably long time if a host is down.
@@ -602,6 +640,9 @@ public class LDAPConnection
      */
     public void setConnSetupDelay (int delay) {
         m_connSetupDelay = delay;
+        if (m_connMgr != null) {
+            m_connMgr.setConnSetupDelay(delay);
+        }
     }
 
     /**
@@ -689,24 +730,30 @@ public class LDAPConnection
      * }
      * System.out.println( "Connected to " + ldapHost + " at port " + ldapPort )
      * </PRE>
-     *
+     *<P>
+     * You can limit the time spent waiting for the connection to be established
+     * by calling <CODE>setConnectTimeout</CODE> before <CODE>connect</CODE>. 
+     * <P>
      * @param host host name of the LDAP server to which you want to connect.
      * This value can also be a space-delimited list of hostnames or
      * hostnames and port numbers (using the syntax
-     * <I>hostname:portnumber</I>). The connection setup policy specified with
-     * the <CODE>ConnSetupDelay</CODE> property controls whether connection
-     * attempts are made serially or concurrently. For example, you can specify
+     * <I>hostname:portnumber</I>). For example, you can specify
      * the following values for the <CODE>host</CODE> argument:<BR>
      *<PRE>
      *   myhost
      *   myhost hishost:389 herhost:5000 whathost
      *   myhost:686 myhost:389 hishost:5000 whathost:1024
      *</PRE>
+     * If multiple servers are specified in the <CODE>host</CODE> list, the connection
+     *  setup policy specified with the <CODE>ConnSetupDelay</CODE> property controls
+     * whether connection attempts are made serially or concurrently.
+     * <P>
      * @param port port number of the LDAP server to which you want to connect.
      * This parameter is ignored for any host in the <CODE>host</CODE>
      * parameter which includes a colon and port number.
      * @exception LDAPException The connection failed.
      * @see netscape.ldap.LDAPConnection#setConnSetupDelay
+     * @see netscape.ldap.LDAPConnection#setConnectTimeout
      */
     public void connect(String host, int port) throws LDAPException {
         connect( host, port, null, null, m_defaultConstraints, false );
@@ -749,19 +796,24 @@ public class LDAPConnection
      * }
      * System.out.println( "Connected to " + ldapHost + " at port " + ldapPort );
      * </PRE>
-     *
+     *<P>
+     * You can limit the time spent waiting for the connection to be established
+     * by calling <CODE>setConnectTimeout</CODE> before <CODE>connect</CODE>. 
+     * <P>
      * @param host host name of the LDAP server to which you want to connect.
      * This value can also be a space-delimited list of hostnames or
      * hostnames and port numbers (using the syntax
-     * <I>hostname:portnumber</I>). The connection setup policy specified with
-     * the <CODE>ConnSetupDelay</CODE> property controls whether connection
-     * attempts are made serially or concurrently. For example, you can specify
+     * <I>hostname:portnumber</I>). For example, you can specify
      * the following values for the <CODE>host</CODE> argument:<BR>
      *<PRE>
      *   myhost
      *   myhost hishost:389 herhost:5000 whathost
      *   myhost:686 myhost:389 hishost:5000 whathost:1024
      *</PRE>
+     * If multiple servers are specified in the <CODE>host</CODE> list, the connection
+     *  setup policy specified with the <CODE>ConnSetupDelay</CODE> property controls
+     * whether connection attempts are made serially or concurrently.
+     * <P>
      * @param port port number of the LDAP server to which you want to connect.
      * This parameter is ignored for any host in the <CODE>host</CODE>
      * parameter which includes a colon and port number.
@@ -769,6 +821,7 @@ public class LDAPConnection
      * @param passwd password used for authentication
      * @exception LDAPException The connection or authentication failed.
      * @see netscape.ldap.LDAPConnection#setConnSetupDelay
+     * @see netscape.ldap.LDAPConnection#setConnectTimeout
      */
     public void connect(String host, int port, String dn, String passwd)
         throws LDAPException {
@@ -781,19 +834,24 @@ public class LDAPConnection
      * represents an open connection, the connection is closed first
      * before the new connection is opened. This method allows the user to 
      * specify the preferences for the bind operation.
-     * 
+     *<P>
+     * You can limit the time spent waiting for the connection to be established
+     * by calling <CODE>setConnectTimeout</CODE> before <CODE>connect</CODE>. 
+     * <P>
      * @param host host name of the LDAP server to which you want to connect.
      * This value can also be a space-delimited list of hostnames or
      * hostnames and port numbers (using the syntax
-     * <I>hostname:portnumber</I>). The connection setup policy specified with
-     * the <CODE>ConnSetupDelay</CODE> property controls whether connection
-     * attempts are made serially or concurrently. For example, you can specify
+     * <I>hostname:portnumber</I>). For example, you can specify
      * the following values for the <CODE>host</CODE> argument:<BR>
      *<PRE>
      *   myhost
      *   myhost hishost:389 herhost:5000 whathost
      *   myhost:686 myhost:389 hishost:5000 whathost:1024
      *</PRE>
+     * If multiple servers are specified in the <CODE>host</CODE> list, the connection
+     *  setup policy specified with the <CODE>ConnSetupDelay</CODE> property controls
+     * whether connection attempts are made serially or concurrently.
+     * <P>
      * @param port port number of the LDAP server to which you want to connect.
      * This parameter is ignored for any host in the <CODE>host</CODE>
      * parameter which includes a colon and port number.
@@ -802,6 +860,7 @@ public class LDAPConnection
      * @param cons preferences for the bind operation
      * @exception LDAPException The connection or authentication failed.
      * @see netscape.ldap.LDAPConnection#setConnSetupDelay
+     * @see netscape.ldap.LDAPConnection#setConnectTimeout
      */
     public void connect(String host, int port, String dn, String passwd,
         LDAPConstraints cons) throws LDAPException {
@@ -849,8 +908,9 @@ public class LDAPConnection
         }
 
         /* Create the Connection Setup Manager */
-        m_connMgr = new LDAPConnSetupMgr(hostList, portList, m_factory,
-                                         m_connSetupDelay);
+        m_connMgr = new LDAPConnSetupMgr(hostList, portList, m_factory);
+        m_connMgr.setConnSetupDelay(m_connSetupDelay);
+        m_connMgr.setConnectTimeout(m_connectTimeout);
     
         connect();
 
@@ -970,20 +1030,20 @@ public class LDAPConnection
                                       LDAPException.PARAM_ERROR );
         }        
 
-        m_connMgr.openConnection();              
+        m_connMgr.openConnection();
         m_thread = getNewThread(m_connMgr, m_cache);
         authenticateSSLConnection();
     }
 
     /**
-     * Returns the trace output stream if set by the user
+     * Returns the trace output object if set by the user
      */
-    OutputStream getTraceOutputStream() throws LDAPException {
+    Object getTraceOutput() throws LDAPException {
         
         // Check first if trace output has been set using setProperty()
         Object traceOut = m_properties.get(TRACE_PROPERTY);
         if (traceOut != null) {
-            return createTraceOutputStream(traceOut);
+            return createTraceOutput(traceOut);
         }
         
         // Check if the property has been set with java -Dcom.netscape.ldap.trace
@@ -992,7 +1052,7 @@ public class LDAPConnection
         try {
             traceOut = System.getProperty(TRACE_PROPERTY);
             if (traceOut != null) {
-                return createTraceOutputStream(traceOut);
+                return createTraceOutput(traceOut);
             }
         }
         catch (Exception e) {
@@ -1033,7 +1093,7 @@ public class LDAPConnection
                             // to the new thread
                             try {
                                 newThread = new LDAPConnThread(connMgr, cache,
-                                                getTraceOutputStream());
+                                                getTraceOutput());
                                 v = (Vector)m_threadConnTable.remove(connThread);
                                 break;
                             } catch (Exception e) {
@@ -1055,7 +1115,7 @@ public class LDAPConnection
             if (!connExists) {
                 try {
                     newThread = new LDAPConnThread(connMgr, cache,
-                                    getTraceOutputStream());
+                                    getTraceOutput());
                     v = new Vector();
                     v.addElement(this);
                 } catch (Exception e) {
@@ -1296,7 +1356,7 @@ public class LDAPConnection
      * obtain additional required information
      * @exception LDAPException Failed to authenticate to the LDAP server.
      * @see netscape.ldap.LDAPConnection#authenticate(java.lang.String,
-     * java.util.Hashtable, javax.security.auth.callback.CallbackHandler)
+     * java.util.Hashtable, java.lang.Object)
      */
     public void authenticate(String dn, String[] mechanisms,
                              Hashtable props, /*CallbackHandler*/ Object cbh)
@@ -1613,7 +1673,7 @@ public class LDAPConnection
      * obtain additional required information
      * @exception LDAPException Failed to authenticate to the LDAP server.
      * @see netscape.ldap.LDAPConnection#bind(java.lang.String,
-     * java.util.Hashtable, javax.security.auth.callback.CallbackHandler)
+     * java.util.Hashtable, java.lang.Object)
      */
     public void bind(String dn, String[] mechanisms,
                      Hashtable props, /*CallbackHandler*/ Object cbh)
@@ -1709,14 +1769,16 @@ public class LDAPConnection
      * Mark this connection as bound in the thread connection table
      */
     void markConnAsBound() {
-        if (m_threadConnTable.containsKey(m_thread)) {
-            Vector v = (Vector)m_threadConnTable.get(m_thread);
-            for (int i=0, n=v.size(); i<n; i++) {
-                LDAPConnection conn = (LDAPConnection)v.elementAt(i);
-                conn.m_bound = true;
+        synchronized (m_threadConnTable) {
+            if (m_threadConnTable.containsKey(m_thread)) {
+                Vector v = (Vector)m_threadConnTable.get(m_thread);
+                for (int i=0, n=v.size(); i<n; i++) {
+                    LDAPConnection conn = (LDAPConnection)v.elementAt(i);
+                    conn.m_bound = true;
+                }
+            } else {
+                printDebug("Thread table does not contain the thread of this object");
             }
-        } else {
-            printDebug("Thread table does not contain the thread of this object");
         }
     }
 
@@ -1731,16 +1793,24 @@ public class LDAPConnection
         // Before sendRequest gets invoked, it is possible that the LDAPConnThread
         // encountered a network error and called deregisterConnection which
         // set the thread reference to null.
-        for (int i=0; i<3; i++) {
+        boolean requestSent=false;
+        for (int i=0; !requestSent && i<3; i++) {
             try {
                 m_thread.sendRequest(this, oper, myListener, cons);
-                break;
+                requestSent=true;
             } catch(NullPointerException ne) {
                 // do nothing
+            }catch (IllegalArgumentException e) {
+                throw new LDAPException(e.getMessage(), LDAPException.PARAM_ERROR);
             }
+            
         }
         if (!isConnected()) {
             throw new LDAPException("The connection is not available",
+                LDAPException.OTHER);
+        }
+        if (!requestSent) {
+            throw new LDAPException("Failed to send request",
                 LDAPException.OTHER);
         }
     }
@@ -1829,7 +1899,7 @@ public class LDAPConnection
         }
     
         if (m_cache != null) {
-            m_cache.cleanup();
+            m_cache.removeReference();
             m_cache = null;
         }
         deleteThreadConnEntry();
@@ -1840,17 +1910,19 @@ public class LDAPConnection
      * Remove this connection from the thread connection table
      */
     private void deleteThreadConnEntry() {
-        Enumeration keys = m_threadConnTable.keys();
-        while (keys.hasMoreElements()) {
-            LDAPConnThread connThread = (LDAPConnThread)keys.nextElement();
-            Vector connVector = (Vector)m_threadConnTable.get(connThread);
+        synchronized (m_threadConnTable) {
+            Vector connVector = (Vector)m_threadConnTable.get(m_thread);
+            if (connVector == null) {
+                printDebug("Thread table does not contain the thread of this object");
+                return;
+            }
             Enumeration enumv = connVector.elements();
             while (enumv.hasMoreElements()) {
                 LDAPConnection c = (LDAPConnection)enumv.nextElement();
                 if (c.equals(this)) {
                     connVector.removeElement(c);
                     if (connVector.size() == 0) {
-                        m_threadConnTable.remove(connThread);
+                        m_threadConnTable.remove(m_thread);
                     }
                     return;
                 }
@@ -2028,8 +2100,10 @@ public class LDAPConnection
 
     public LDAPEntry read (String DN, String attrs[],
         LDAPSearchConstraints cons) throws LDAPException {
-        LDAPSearchResults results = search (DN, SCOPE_BASE,
-                                            defaultFilter, attrs, false, cons);
+        LDAPSearchResults results =
+            search (DN, SCOPE_BASE,
+                    "(|(objectclass=*)(objectclass=ldapsubentry))",
+                    attrs, false, cons);
         if (results == null) {
             return null;
         }
@@ -5147,16 +5221,18 @@ public class LDAPConnection
             c.m_prevBoundDN = this.m_prevBoundDN;
             c.m_prevBoundPasswd = this.m_prevBoundPasswd;
             c.m_anonymousBound = this.m_anonymousBound;
-            c.m_cache = this.m_cache;
+            c.setCache(this.m_cache); // increments cache reference cnt
             c.m_factory = this.m_factory;
             c.m_thread = this.m_thread; /* share current connection thread */
 
-            Vector v = (Vector)m_threadConnTable.get(this.m_thread);
-            if (v != null) {
-                v.addElement(c);
-            } else {
-                printDebug("Failed to clone");
-                return null;
+            synchronized (m_threadConnTable) {
+                Vector v = (Vector)m_threadConnTable.get(this.m_thread);
+                if (v != null) {
+                    v.addElement(c);
+                } else {
+                    printDebug("Failed to clone");
+                    return null;
+                }
             }
 
             c.m_thread.register(c);

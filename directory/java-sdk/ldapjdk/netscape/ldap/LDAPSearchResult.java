@@ -30,6 +30,8 @@ import netscape.ldap.client.opers.JDAPSearchResponse;
  */
 public class LDAPSearchResult extends LDAPMessage {
 
+    static final long serialVersionUID = 36890821518462301L;
+
     /**
      * LDAPEntry 
      */

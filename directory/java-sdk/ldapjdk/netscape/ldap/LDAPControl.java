@@ -161,7 +161,8 @@ import netscape.ldap.controls.*;
  * @see netscape.ldap.LDAPConstraints#setClientControls
  * @see netscape.ldap.LDAPConstraints#setServerControls
  */
-public class LDAPControl implements Cloneable {
+public class LDAPControl implements Cloneable, java.io.Serializable {
+    static final long serialVersionUID = 5149887553272603753L;
     public final static String MANAGEDSAIT       = "2.16.840.1.113730.3.4.2";
     /* Password information sent back to client */
     public final static String PWEXPIRED         = "2.16.840.1.113730.3.4.4";

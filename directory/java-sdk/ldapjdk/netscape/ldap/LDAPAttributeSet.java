@@ -32,8 +32,8 @@ import netscape.ldap.client.opers.*;
  * @version 1.0
  * @see netscape.ldap.LDAPAttribute
  */
-public class LDAPAttributeSet implements Cloneable
-{
+public class LDAPAttributeSet implements Cloneable, java.io.Serializable {
+    static final long serialVersionUID = 5018474561697778100L;
     Hashtable attrHash = null;
     LDAPAttribute[] attrs = new LDAPAttribute[0];
     /* If there are less attributes than this in the set, it's not worth
@@ -333,6 +333,9 @@ public class LDAPAttributeSet implements Cloneable
                     if (i != index) {
                         vals[j++] = attrs[i];
                     }
+                }
+                if (attrHash != null) {
+                    attrHash.remove(attrs[index].getName().toLowerCase());
                 }
                 attrs = vals;
             }

@@ -31,8 +31,9 @@ import netscape.ldap.ber.stream.*;
  * @version 1.0
  * @see netscape.ldap.LDAPAttributeSet
  */
-public class LDAPAttribute {
+public class LDAPAttribute implements java.io.Serializable {
 
+    static final long serialVersionUID = -4594745735452202600L; 
     private String name = null;
     private byte[] nameBuf = null;
     /**

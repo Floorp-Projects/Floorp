@@ -23,7 +23,6 @@ package netscape.ldap;
 
 import java.util.*;
 import java.text.*;
-import netscape.ldap.client.*;
 
 /**
  * Compares LDAP entries based on one or more attribute values.
@@ -39,12 +38,15 @@ import netscape.ldap.client.*;
  * @see LDAPSearchResults#sort
  */
 
-public class LDAPCompareAttrNames implements LDAPEntryComparator {
+public class LDAPCompareAttrNames
+             implements LDAPEntryComparator, java.io.Serializable {
 
-    String m_attrs[];
-    boolean m_ascending[];
-    Locale m_locale = null;
-    Collator m_collator = null;
+    static final long serialVersionUID = -2567450425231175944L;
+    private String m_attrs[];
+    private boolean m_ascending[];
+    private Locale m_locale = null;
+    private Collator m_collator = null;
+    private boolean m_sensitive = true;
 
     /**
      * Constructs a comparator that compares the string values of
@@ -168,17 +170,62 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
 
     /**
      * Set the locale, if any, used for collation. If the locale is null,
-     * an ordinary string comparison is used for sorting.
+     * an ordinary string comparison is used for sorting. If sorting
+     * has been set to case-insensitive, the collation strength is set
+     * to Collator.PRIMARY, otherwise to Collator.IDENTICAL. If a
+     * different collation strength setting is required, use the signature
+     * that takes a collation strength parameter.
      *
      * @param locale the locale used for collation, or null.
      */
     public void setLocale( Locale locale ) {
+        if ( m_sensitive ) {
+            setLocale( locale, Collator.IDENTICAL );
+        } else {
+            setLocale( locale, Collator.PRIMARY );
+        }
+    }
+
+    /**
+     * Sets the locale, if any, used for collation. If the locale is null,
+     * an ordinary string comparison is used for sorting.
+     *
+     * @param locale the locale used for collation, or null.
+     * @param strength collation strength: Collator.PRIMARY,
+     * Collator.SECONDARY, Collator.TERTIARY, or Collator.IDENTICAL
+     */
+    public void setLocale( Locale locale, int strength ) {
         m_locale = locale;
         if ( m_locale == null ) {
             m_collator = null;
         } else {
             m_collator = Collator.getInstance( m_locale );
+            m_collator.setStrength(strength);
         }
+    }
+
+    /**
+     * Gets the state of the case-sensitivity flag. This only applies to
+     * Unicode sort order; for locale-specific sorting, case-sensitivity
+     * is controlled by the collation strength.
+     *
+     * @return <code>true</code> for case-sensitive sorting; this is
+     * the default
+     */
+    public boolean getCaseSensitive() {
+        return m_sensitive;
+    }
+
+    /**
+     * Sets the state of the case-sensitivity flag. This only applies to
+     * Unicode sort order; for locale-specific sorting, case-sensitivity
+     * is controlled by the collation strength.
+     *
+     * @param sensitive <code>true</code> for case-sensitive sorting;
+     * this is the default
+     */
+    public void setCaseSensitive( boolean sensitive ) {
+        m_sensitive = sensitive;
     }
 
     /**
@@ -258,24 +305,41 @@ public class LDAPCompareAttrNames implements LDAPEntryComparator {
         if ((lessValue == null) ^ (greaterValue == null))
             return greaterValue != null;
 
-        if (lessValue == null ||
-            lessValue.equalsIgnoreCase (greaterValue))
-            if (attrPos == m_attrs.length - 1)
-                return false;
-            else
-                return attrGreater (greater, less, attrPos+1);
+        // Check for equality
+        if ( (lessValue == null) ||
+             ((m_collator != null) &&
+              (m_collator.compare( greaterValue, lessValue ) == 0) ) ||
+             ((m_collator == null) && m_sensitive &&
+              lessValue.equals(greaterValue)) ||
+             ((m_collator == null) && !m_sensitive &&
+              lessValue.equalsIgnoreCase(greaterValue)) ) {
 
-        if ( m_collator != null ) {
-            if ( ascending )
+            if (attrPos == m_attrs.length - 1) {
+                return false;
+            } else {
+                return attrGreater (greater, less, attrPos+1);
+            }
+        }
+
+        // Not equal, check for order
+        if ( ascending ) {
+            if ( m_collator != null ) {
                 return ( m_collator.compare( greaterValue, lessValue ) > 0 );
-            else
-                return ( m_collator.compare( greaterValue, lessValue ) < 0 );
-        } else {
-            if ( ascending )
+            } else if ( m_sensitive ) {
                 return (greaterValue.compareTo (lessValue) > 0);
-            else
+            } else {
+                return (greaterValue.toLowerCase().compareTo (
+                    lessValue.toLowerCase()) > 0);
+            }
+        } else {
+            if ( m_collator != null ) {
+                return ( m_collator.compare( greaterValue, lessValue ) < 0 );
+            } else if ( m_sensitive ) {
                 return (greaterValue.compareTo (lessValue) < 0);
+            } else {
+                return (greaterValue.toLowerCase().compareTo (
+                    lessValue.toLowerCase()) < 0);
+            }
         }
     }
-
 }

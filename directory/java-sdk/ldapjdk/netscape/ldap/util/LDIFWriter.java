@@ -133,6 +133,18 @@ public class LDIFWriter extends LDAPWriter {
      * @param dn the DN of the entry
      */
     protected void printEntryStart( String dn ) {
+		if ( dn == null ) {
+			dn = "";
+		} else {
+            byte[] b = null;
+            try {
+                b = dn.getBytes( "UTF8" );
+            } catch ( UnsupportedEncodingException ex ) {
+            }
+            if ( !LDIF.isPrintable(b) ) {
+                dn = getPrintableValue( b );
+            }
+        }
 		printString( "dn" + m_sep + " " + dn );
 	}
 

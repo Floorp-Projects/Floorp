@@ -37,6 +37,7 @@ import java.io.*;
  */
 public class LDAPReferralException extends LDAPException {
 
+    static final long serialVersionUID = 1771536577344289897L;
     private String m_referrals[] = null; /* modified for LDAPv3 */
 
     /**

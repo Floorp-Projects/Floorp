@@ -28,8 +28,9 @@ import java.util.*;
  *
  * @version 1.0
  */
-public class LDAPEntry {
+public class LDAPEntry implements java.io.Serializable {
 
+    static final long serialVersionUID = -5563306228920012807L;
     private String dn = null;
     private LDAPAttributeSet attrSet = null;
 
@@ -38,7 +39,7 @@ public class LDAPEntry {
      */
     public LDAPEntry() {
         dn = null;
-        attrSet = null;
+        attrSet = new LDAPAttributeSet();
     }
 
     /**
@@ -48,7 +49,7 @@ public class LDAPEntry {
      */
     public LDAPEntry( String distinguishedName ) {
         dn = distinguishedName;
-        attrSet = null;
+        attrSet = new LDAPAttributeSet();
     }
 
     /**

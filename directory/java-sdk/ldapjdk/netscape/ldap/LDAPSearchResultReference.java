@@ -30,6 +30,8 @@ import netscape.ldap.client.opers.JDAPSearchResultReference;
  */
 public class LDAPSearchResultReference extends LDAPMessage {
 
+    static final long serialVersionUID = -7816778029315223117L;
+
     /**
      * A list of LDAP URLs that are referred to.
      */

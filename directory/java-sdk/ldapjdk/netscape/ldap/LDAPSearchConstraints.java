@@ -38,7 +38,7 @@ public class LDAPSearchConstraints extends LDAPConstraints
     private int maxRes;
     private int batch;
     private int serverTimeLimit;
-    transient private int m_maxBacklog = 100;
+    private int m_maxBacklog = 100;
 
     /**
      * Constructs an <CODE>LDAPSearchConstraints</CODE> object that specifies

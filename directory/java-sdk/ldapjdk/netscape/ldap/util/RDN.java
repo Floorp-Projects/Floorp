@@ -229,9 +229,8 @@ public final class RDN implements java.io.Serializable {
      * @param rdn the DN component to compare against the
      * current DN component.
      * @return <code>true</code> if the two DN components are equal.
-     * @see netscape.ldap.util.RDN#registerCesAttribute
-     * @see netscape.ldap.util.RDN#cesAttributeIsRegistered
-     * @see netscape.ldap.util.RDN#getRegisteredCesAttributes
+     * @see netscape.ldap.util.RDN#registerAttributeSyntax
+     * @see netscape.ldap.util.RDN#getAttributeSyntax
      */
     public boolean equals(RDN rdn) {
         String[] this_types = (String[])getTypes().clone(); 

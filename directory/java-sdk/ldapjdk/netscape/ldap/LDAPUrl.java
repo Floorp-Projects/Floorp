@@ -31,7 +31,7 @@ import java.net.MalformedURLException;
  * TARGET="_blank">RFC 1959</A>.  LDAP URLs have the following format:
  *
  * <PRE>
- * "ldap://" [ <I>hostName</I> [":" <I>portNumber</I>] ] "//"
+ * "ldap://" [ <I>hostName</I> [":" <I>portNumber</I>] ] "/"
  *                      <I>distinguishedName</I>
  *          ["?" <I>attributeList</I> ["?" <I>scope</I>
  *                      "?" <I>filterString</I> ] ]
@@ -77,8 +77,9 @@ import java.net.MalformedURLException;
  *
  * @version 1.0
  */
-public class LDAPUrl {
+public class LDAPUrl implements java.io.Serializable {
 
+    static final long serialVersionUID = -3245440798565713640L;
     public static String defaultFilter = "(objectClass=*)";
 
     private String hostName;
@@ -95,106 +96,144 @@ public class LDAPUrl {
      * @exception MalformedURLException failed to parse URL
      */
     public LDAPUrl (String url) throws java.net.MalformedURLException {
-        StringTokenizer urlParser = new StringTokenizer (url, ":/?", true);
-        String currentToken;
-        String attributeList = null;
         attributes = null;
         scope = LDAPv2.SCOPE_BASE;
         filter = defaultFilter;
         URL = url;
 
-        try {
-            currentToken = urlParser.nextToken();
-            if (!currentToken.equalsIgnoreCase ("LDAP"))
-                throw new MalformedURLException ();
+        parseUrl(url);
+    }
 
-            urlParser.nextToken();    // ":"
-            urlParser.nextToken();    // "/"
-            urlParser.nextToken();    // "/"
+    /**
+     * Parse URL as defined in RFC 1959
+     */
+    private void parseUrl(String url) throws MalformedURLException {
+        StringTokenizer urlParser = new StringTokenizer (url, ":/?", true);
+        String currentToken;
+        String str = null;
 
-            currentToken = urlParser.nextToken();
+        currentToken = urlParser.nextToken();
+        if (!currentToken.equalsIgnoreCase ("LDAP"))
+            throw new MalformedURLException ();
 
-            if (currentToken.equals ("/")) {
-                hostName = null;
-                portNumber = LDAPv2.DEFAULT_PORT;
-            } else {
-                hostName = currentToken;
-                if (urlParser.countTokens() == 0) {
-                    portNumber = LDAPv2.DEFAULT_PORT;
-                    return;
-                }
-                currentToken = urlParser.nextToken (); // either ":" or "/"
-
-                if (currentToken.equals (":")) {
-                    portNumber = Integer.parseInt (urlParser.nextToken());
-                    if (urlParser.countTokens() == 0) {
-                        return;
-                    }
-                    urlParser.nextToken ();   // "/"
-                } else
-                    portNumber = LDAPv2.DEFAULT_PORT;
-            }
-
-            if (urlParser.countTokens() == 0)
-                return;
-
-            DN = decode (urlParser.nextToken ());
-
-            // it retrieves the ? token, meaning no DN is supplied
-            if (DN.equals("?"))
-                DN = "";
-            else if (DN.equals("/"))
-                throw new MalformedURLException ();
-
-            if (urlParser.hasMoreTokens ()) {
-                // we have a "?attributeList" portion
-                String str = null;
-                str = readNextConstruct(urlParser);
-
-                // if attribute
-                if ((str != null) && (isAttribute(str))) {
-                    // it retrieves the ? token, meaning no attribute is supplied
-                    if (str.equals("?")) {
-                        attributeList = null;
-                        str = urlParser.nextToken();
-                    }
-                    else {
-                        attributeList = decode(str);
-                        str = readNextConstruct(urlParser);
-                    }
-                }
-
-                // if scope
-                if ((str != null) && ((scope = getScope(str)) != -1))
-                    str = readNextConstruct(urlParser);
-                // no scope is supplied
-                else if ((str != null) && (str.equals("?"))) {
-                        scope = LDAPv2.SCOPE_BASE;
-                    str = urlParser.nextToken();
-                } else {
-                    scope = LDAPv2.SCOPE_BASE;
-                }
-
-                // if filter
-                if ((str != null) && (isFilter(str))) {
-                    filter = decode(str);
-                    str = readNextConstruct(urlParser);
-                }
-            }
-        } catch (NumberFormatException nf) {
+        currentToken = urlParser.nextToken();
+        if (!currentToken.equals(":")) {
+            throw new MalformedURLException ();
+        }
+        currentToken = urlParser.nextToken();
+        if (!currentToken.equals("/")) {
+            throw new MalformedURLException ();
+        }
+        currentToken = urlParser.nextToken();
+        if (!currentToken.equals("/")) {
             throw new MalformedURLException ();
         }
 
-        if (attributeList != null) {
+        currentToken = urlParser.nextToken();
+
+        if (currentToken.equals ("/")) {
+            hostName = null;
+            portNumber = LDAPv2.DEFAULT_PORT;
+        } else {
+            hostName = currentToken;
+            if (urlParser.countTokens() == 0) {
+                portNumber = LDAPv2.DEFAULT_PORT;
+                return;
+            }
+            currentToken = urlParser.nextToken (); // either ":" or "/"
+
+            if (currentToken.equals (":")) {
+                try {
+                    portNumber = Integer.parseInt (urlParser.nextToken());
+                } catch (NumberFormatException nf) {
+                    throw new MalformedURLException ();
+                }
+                    
+                if (urlParser.countTokens() == 0) {
+                    return;
+                }
+                urlParser.nextToken ();   // "/"
+            } else
+                portNumber = LDAPv2.DEFAULT_PORT;
+        }
+
+
+        // DN
+        if (!urlParser.hasMoreTokens ()) {
+            return;
+        }
+        DN = decode(readNextConstruct(urlParser));
+        if (DN.equals("?")) {
+            DN = "";
+        }
+        else if (DN.equals("/")) {
+            throw new MalformedURLException ();
+        }            
+            
+        // attribute
+        if (!urlParser.hasMoreTokens ()) {
+            return;
+        }        
+        str = readNextConstruct(urlParser);
+        if (!str.equals("?")) {
             StringTokenizer attributeParser = new
-            StringTokenizer (attributeList, ", ");
+                StringTokenizer (decode(str), ", ");
             attributes = new Vector ();
 
-            while (attributeParser.hasMoreTokens())
+            while (attributeParser.hasMoreTokens()) {
                 attributes.addElement (attributeParser.nextToken());
+            }
+        }
+
+        // scope
+        if (!urlParser.hasMoreTokens ()) {
+            return;
+        }
+        str = readNextConstruct(urlParser);
+        if (!str.equals("?")) {
+            scope = getScope(str);
+            if (scope < 0) {
+                throw new MalformedURLException("Bad scope:" + str);
+            }
+        }
+
+        // filter
+        if (!urlParser.hasMoreTokens ()) {
+            return;
+        }
+        str = readNextConstruct(urlParser);
+        filter = decode(str);
+        checkBalancedParentheses(filter);
+        if (!filter.startsWith("(") && !filter.endsWith(")")) {
+            filter = "(" + filter + ")";
+        }
+
+        // Nothing after the filter is allowed
+        if (urlParser.hasMoreTokens()) {
+            throw new MalformedURLException();
+        }
+    }    
+    
+    private void checkBalancedParentheses(String filter) throws MalformedURLException {
+        int parenCnt =0;
+        StringTokenizer filterParser = new StringTokenizer (filter, "()", true);
+        while (filterParser.hasMoreElements()) {
+            String token = filterParser.nextToken();
+            if (token.equals("(")) {
+                parenCnt++;
+            }
+            else if (token.equals(")")) {
+                if (--parenCnt < 0) {
+                    throw new MalformedURLException("Unbalanced filter parentheses");
+                }
+            }
+        }
+        
+        if (parenCnt != 0) {
+            throw new MalformedURLException("Unbalanced filter parentheses");
         }
     }
-
+        
     /**
      * Constructs with the specified host, port, and DN.  This form is used to
      * create URL references to a particular object in the directory.
@@ -442,34 +481,6 @@ public class LDAPUrl {
     }
 
     /**
-     * Checks if the given string is a filter expression.
-     * @param the string which is checked
-     * @return <code>true</code> if the given string is a filter expression; otherwise,
-     * <code>false</code>.
-     */
-    private boolean isFilter(String str) {
-        if (str.startsWith("("))
-            return true;
-        else
-            return false;
-    }
-
-
-    /**
-     * Checks if the given string is an attribute expression.
-     * @param the string which is checked
-     * @return <code>true</code> if the given string is an attribute expression; otherwise,
-     * <code>false</code>.
-     */
-    private boolean isAttribute(String str) {
-        if ((!str.startsWith("(")) && (!str.equalsIgnoreCase("base")) &&
-          (!str.equalsIgnoreCase("one")) && (!str.equalsIgnoreCase("sub")))
-            return true;
-        else
-            return false;
-    }
-
-    /**
      * Reads next construct from the given string parser.
      * @param parser the string parser
      * @return the next construct which can be an attribute, scope or filter.
@@ -481,8 +492,19 @@ public class LDAPUrl {
 
         try {
             if (parser.hasMoreTokens()) {
-                parser.nextToken();     // "?"
-                return parser.nextToken();
+                String tkn = parser.nextToken();
+                if (tkn.equals("?")) { // empty construct
+                    return tkn;
+                }
+                else if (parser.hasMoreTokens()){
+                    // Remove '?' delimiter
+                    String delim = parser.nextToken();
+                    if (!delim.equals("?")) {
+                        throw new MalformedURLException();
+                    }
+                }
+                
+                return tkn;
             }
         } catch (NoSuchElementException e) {
             throw new MalformedURLException();

@@ -30,6 +30,8 @@ package netscape.ldap;
  */
 public class LDAPInterruptedException extends LDAPException {
 
+    static final long serialVersionUID = 5267455101797397456L;
+
     /**
      * Constructs a default exception with a specified string of
      * additional information. This string appears if you call

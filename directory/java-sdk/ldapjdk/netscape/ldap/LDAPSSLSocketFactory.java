@@ -45,7 +45,10 @@ import java.net.*;
  * @see LDAPSSLSocketFactoryExt
  * @see LDAPConnection#LDAPConnection(netscape.ldap.LDAPSocketFactory)
  */
-public class LDAPSSLSocketFactory implements LDAPSSLSocketFactoryExt {
+public class LDAPSSLSocketFactory
+             implements LDAPSSLSocketFactoryExt, java.io.Serializable {
+
+    static final long serialVersionUID = -3331456736649381427L;
 
     /**
      * Indicates if client authentication is on.

@@ -213,6 +213,9 @@ public class DSMLWriter extends LDAPWriter {
      * @param dn the DN of the entry
      */
     protected void printEntryStart( String dn ) {
+		if ( dn == null ) {
+			dn = "";
+		}
 		printString( "  <dsml:entry dn=\"" + dn + "\">" );
 	}
 

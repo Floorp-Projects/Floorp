@@ -42,8 +42,9 @@ import java.io.*;
  * </pre>
  * @see java.util.Locale
  */
-class LDAPResourceBundle {
+class LDAPResourceBundle implements java.io.Serializable {
 
+    static final long serialVersionUID = -5903986665461157980L;
     private static final boolean m_debug = false;
     private static final String m_suffix = ".props";
     private static final String m_locale_separator = "_";

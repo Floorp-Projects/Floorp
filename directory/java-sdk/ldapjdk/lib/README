@@ -1,0 +1,8 @@
+Jar files in this directory are used only for compilation and are
+not to be distributed.
+
+jaas.jar
+    required for SASL code compilation
+
+jnet.jar and jsse.jar
+    required for JSSESocketFactory.java compilation

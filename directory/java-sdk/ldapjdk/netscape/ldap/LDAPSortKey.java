@@ -26,7 +26,8 @@ package netscape.ldap;
  *
  * @version 1.0
  */
-public class LDAPSortKey {
+public class LDAPSortKey implements java.io.Serializable {
+    static final long serialVersionUID = -7044232342344864405L;
     public final static int REVERSE = 0x81;
 
     /**

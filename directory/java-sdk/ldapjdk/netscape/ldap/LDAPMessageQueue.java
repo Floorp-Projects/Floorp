@@ -33,7 +33,9 @@ import java.util.Vector;
  * Superclass for LDAResponseListener and LDAPSearchListener
  *
  */
-class LDAPMessageQueue {
+class LDAPMessageQueue implements java.io.Serializable {
+
+    static final long serialVersionUID = -7163312406176592277L;
 
     /**
      * Request entry encapsulates request parameters

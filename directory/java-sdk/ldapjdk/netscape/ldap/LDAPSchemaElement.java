@@ -77,7 +77,10 @@ import java.util.*;
  * @version 1.0
  **/
 
-public abstract class LDAPSchemaElement {
+public abstract class LDAPSchemaElement implements java.io.Serializable {
+
+    static final long serialVersionUID = -3972153461950418863L;
+
     /**
      * Constructs a blank element.
      */
@@ -92,12 +95,28 @@ public abstract class LDAPSchemaElement {
      */
     protected LDAPSchemaElement( String name, String oid,
                                  String description ) {
-        if ( (oid == null) || (oid.trim().length() < 1) ) {
+        this( name, oid, description, null );
+    }
+
+    /**
+     * Constructs a definition explicitly.
+     * @param name name of element
+     * @param oid dotted-string object identifier
+     * @param description description of element
+     * @param aliases names which are to be considered aliases for this
+     * element; <CODE>null</CODE> if there are no aliases
+     */
+    protected LDAPSchemaElement( String name, String oid,
+                                 String description, String[] aliases ) {
+        if ( oid == null ) {
             throw new IllegalArgumentException( "OID required" );
         }
         this.name = name;
         this.oid = oid;
         this.description = description;
+        if ( (aliases != null) && (aliases.length > 0) ) {
+            this.aliases = aliases;
+        }
     }
 
     /**
@@ -300,7 +319,8 @@ public abstract class LDAPSchemaElement {
      * @return <CODE>true<CODE> if the element is defined as obsolete.
      */
     public boolean isObsolete() {
-        return properties.containsKey(OBSOLETE);
+        return (properties == null) ? false :
+            properties.containsKey(OBSOLETE);
     }
 
     /**
@@ -476,7 +496,7 @@ public abstract class LDAPSchemaElement {
      */
     String getValuePrefix() {
         String s = "( " + oid + ' ';
-        if ( name != null ) {
+        if ( (name != null) && (name.length() > 0) ) {
             s += "NAME ";
             if ( aliases != null ) {
                 s += "( " + '\'' + name + "\' ";

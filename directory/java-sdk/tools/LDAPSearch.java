@@ -407,7 +407,7 @@ public class LDAPSearch extends LDAPTool {
 			cons.setServerControls(controls);
 			cons.setDereference( m_deref );
 			cons.setMaxResults( m_sizelimit );
-			cons.setTimeLimit( m_timelimit );
+			cons.setServerTimeLimit( m_timelimit );
 			cons.setReferrals( m_referrals );
 			if ( m_referrals ) {
 				setDefaultReferralCredentials( cons );
@@ -468,6 +468,7 @@ public class LDAPSearch extends LDAPTool {
 						System.err.println("\t"+urls[i].getUrl().toString());
 					continue;
 				} catch (Exception e) {
+					m_pw.flush();
 					System.err.println( e.toString() );
 					continue;
 				}
@@ -483,6 +484,7 @@ public class LDAPSearch extends LDAPTool {
 				}
 			}
 		} catch (Exception e) {
+			m_pw.flush();
 			System.err.println( e.toString() );
 			System.exit(0);
 		}
@@ -501,11 +503,13 @@ public class LDAPSearch extends LDAPTool {
 
 	protected static boolean isSchemaEntry( LDAPEntry entry ) {
         LDAPAttribute attr = entry.getAttribute( "objectclass" );
-        String[] vals = attr.getStringValueArray();
-        for( int i = 0; i < vals.length; i++ ) {
-            if ( vals[i].equalsIgnoreCase( "subschema" ) ) {
-                return true;
-            }
+		if ( attr != null ) {
+			String[] vals = attr.getStringValueArray();
+			for( int i = 0; i < vals.length; i++ ) {
+				if ( vals[i].equalsIgnoreCase( "subschema" ) ) {
+					return true;
+				}
+			}
         }
         return false;
     }

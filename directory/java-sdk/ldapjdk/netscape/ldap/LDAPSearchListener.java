@@ -31,6 +31,7 @@ import netscape.ldap.client.*;
  */
 public class LDAPSearchListener extends LDAPMessageQueue {
 
+    static final long serialVersionUID = -7163312406176592277L;
     // this instance variable is only for cache purpose
     private Long m_key = null;
     private LDAPSearchConstraints m_constraints;

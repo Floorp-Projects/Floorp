@@ -132,11 +132,15 @@ public class LDAPDN {
         StringBuffer copy = new StringBuffer();
         int i=0;
         while (i<buffer.length()) {
-            char c = buffer.charAt(i);
-            if (c != '\\')
+            char c = buffer.charAt(i++);
+            if (c != '\\') {
                 copy.append(c);
-
-            i++;
+            }
+            else { // copy the escaped char following the back slash
+                if (i<buffer.length()) {
+                    copy.append(buffer.charAt(i++));
+                }
+            }
         }
 
         return name.getTypes()[0]+"="+(new String(copy));

@@ -26,7 +26,8 @@ package netscape.ldap;
  * It stores the response controls and its corresponding LDAPConnection and
  * the message ID for its corresponding LDAPMessage.
  */
-class LDAPResponseControl {
+class LDAPResponseControl implements java.io.Serializable {
+    static final long serialVersionUID = 389472019686058593L;
     private LDAPConnection m_connection;
     private int m_messageID;
     private LDAPControl[] m_controls;

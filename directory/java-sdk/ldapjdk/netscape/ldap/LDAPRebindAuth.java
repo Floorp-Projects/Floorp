@@ -53,8 +53,9 @@ import java.io.*;
  * @version 1.0
  * @see netscape.ldap.LDAPRebind
  */
-public class LDAPRebindAuth {
+public class LDAPRebindAuth implements java.io.Serializable {
 
+    static final long serialVersionUID = 7161655313564756294L;
     private String m_dn;
     private String m_password;
 

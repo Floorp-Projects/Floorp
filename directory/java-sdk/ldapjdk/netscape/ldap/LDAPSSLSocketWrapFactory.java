@@ -40,7 +40,10 @@ import java.util.Hashtable;
  * @see LDAPSocketFactory
  * @see LDAPConnection#LDAPConnection(netscape.ldap.LDAPSocketFactory)
  */
-public class LDAPSSLSocketWrapFactory implements LDAPSSLSocketFactoryExt {
+public class LDAPSSLSocketWrapFactory
+             implements LDAPSSLSocketFactoryExt, java.io.Serializable {
+
+    static final long serialVersionUID = -4171548771815037740L;
 
     /**
      * The constructor with the specified package for security

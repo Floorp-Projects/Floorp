@@ -49,7 +49,9 @@ import java.text.SimpleDateFormat;
  *
  * @version 1.0
  */
-public class LDAPMessage {
+public class LDAPMessage implements java.io.Serializable {
+
+    static final long serialVersionUID = -1364094245850026720L;
 
     public final static int BIND_REQUEST        = 0;
     public final static int BIND_RESPONSE       = 1;

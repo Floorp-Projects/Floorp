@@ -33,6 +33,9 @@ import java.util.*;
  **/
 
 class LDAPSyntaxSchemaElement extends LDAPSchemaElement {
+
+    static final long serialVersionUID = 6086340702503710702L;
+
     /**
      * Construct a blank element.
      */

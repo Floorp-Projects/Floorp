@@ -158,7 +158,10 @@ import java.util.*;
  * @version 1.0
  * @author Rob Weltman
  **/
-public class LDAPSchema {
+public class LDAPSchema implements java.io.Serializable {
+
+    static final long serialVersionUID = -3911737419783579398L;
+
     /**
      * Constructs a new <CODE>LDAPSchema</CODE> object.
      * Once you construct the object, you can get
@@ -276,6 +279,130 @@ public class LDAPSchema {
     }
 
     /**
+     * Add a syntax schema definition to the current schema.
+     * You can also add syntax schema definitions by calling the
+     * <CODE>add</CODE> method of your newly constructed
+     * <CODE>LDAPSyntaxSchema</CODE> object.
+     * <P>
+     *
+     * To remove a syntax schema definition that you have added,
+     * call the <CODE>getSyntax</CODE> method to get the
+     * <CODE>LDAPSyntaxSchema</CODE> object representing your
+     * syntax type and call the <CODE>remove</CODE> method.
+     * <P>
+     *
+     * <B>NOTE: </B>For information on the <CODE>add</CODE> and
+     * <CODE>remove</CODE> methods of <CODE>LDAPSyntaxSchema</CODE>,
+     * see the documentation for <CODE>LDAPSchemaElement</CODE>.
+     * (These methods are inherited from <CODE>LDAPSchemaElement</CODE>.)
+     * <P>
+     *
+     * @param syntaxSchema <CODE>LDAPSyntaxSchema</CODE> object
+     * representing the syntax schema definition to add
+     * @see netscape.ldap.LDAPSyntaxSchema
+     * @see netscape.ldap.LDAPSchemaElement#add
+     * @see netscape.ldap.LDAPSchemaElement#remove
+     */
+    public void addSyntax( LDAPSyntaxSchema syntaxSchema ) {
+        String name = syntaxSchema.getName().toLowerCase();
+        if ( name.length() < 1 ) {
+            name = syntaxSchema.getOID();
+        }
+        syntaxes.put( name, syntaxSchema );
+    }
+
+    /**
+     * Add a structure rule definition to the current schema.
+     * You can also add structure rule definitions by calling the
+     * <CODE>add</CODE> method of your newly constructed
+     * <CODE>LDAPDITStructureRuleSchema</CODE> object.
+     * <P>
+     *
+     * To remove a structure rule definition that you have added,
+     * call the <CODE>getDITStructureRule</CODE> method to get the
+     * <CODE>LDAPDITStructureRuleSchema</CODE> object representing your
+     * rule and call the <CODE>remove</CODE> method.
+     * <P>
+     *
+     * <B>NOTE: </B>For information on the <CODE>add</CODE> and
+     * <CODE>remove</CODE> methods of <CODE>LDAPSyntaxSchema</CODE>,
+     * see the documentation for <CODE>LDAPSchemaElement</CODE>.
+     * (These methods are inherited from <CODE>LDAPSchemaElement</CODE>.)
+     * <P>
+     *
+     * @param rule <CODE>LDAPDITStructureRuleSchema</CODE> object
+     * representing the structure rule definition to add
+     * @see netscape.ldap.LDAPDITStructureRuleSchema
+     * @see netscape.ldap.LDAPSchemaElement#add
+     * @see netscape.ldap.LDAPSchemaElement#remove
+     */
+    public void addDITStructureRule( LDAPDITStructureRuleSchema rule ) {
+        String name = rule.getName().toLowerCase();
+        structureRulesByName.put( name, rule );
+        structureRulesById.put( new Integer( rule.getRuleID() ), rule );
+    }
+
+    /**
+     * Add a content rule definition to the current schema.
+     * You can also add content rule definitions by calling the
+     * <CODE>add</CODE> method of your newly constructed
+     * <CODE>LDAPDITContentRuleSchema</CODE> object.
+     * <P>
+     *
+     * To remove a content rule definition that you have added,
+     * call the <CODE>getDITContentRule</CODE> method to get the
+     * <CODE>LDAPDITContentRuleSchema</CODE> object representing your
+     * rule and call the <CODE>remove</CODE> method.
+     * <P>
+     *
+     * <B>NOTE: </B>For information on the <CODE>add</CODE> and
+     * <CODE>remove</CODE> methods of <CODE>LDAPSyntaxSchema</CODE>,
+     * see the documentation for <CODE>LDAPSchemaElement</CODE>.
+     * (These methods are inherited from <CODE>LDAPSchemaElement</CODE>.)
+     * <P>
+     *
+     * @param rule <CODE>LDAPDITContentRuleSchema</CODE> object
+     * representing the content rule definition to add
+     * @see netscape.ldap.LDAPDITContentRuleSchema
+     * @see netscape.ldap.LDAPSchemaElement#add
+     * @see netscape.ldap.LDAPSchemaElement#remove
+     */
+    public void addDITContentRule( LDAPDITContentRuleSchema rule ) {
+        String name = rule.getName().toLowerCase();
+        contentRules.put( name, rule );
+    }
+
+    /**
+     * Add a name form definition to the current schema.
+     * You can also add name form definitions by calling the
+     * <CODE>add</CODE> method of your newly constructed
+     * <CODE>LDAPNameFormSchema</CODE> object.
+     * <P>
+     *
+     * To remove a name form definition that you have added,
+     * call the <CODE>getNameForm</CODE> method to get the
+     * <CODE>LDAPNameFormSchema</CODE> object representing your
+     * nameForm type and call the <CODE>remove</CODE> method.
+     * <P>
+     *
+     * <B>NOTE: </B>For information on the <CODE>add</CODE> and
+     * <CODE>remove</CODE> methods of <CODE>LDAPNameFormSchema</CODE>,
+     * see the documentation for <CODE>LDAPSchemaElement</CODE>.
+     * (These methods are inherited from <CODE>LDAPSchemaElement</CODE>.)
+     * <P>
+     *
+     * @param nameForm <CODE>LDAPNameFormSchema</CODE> object
+     * representing the name form definition to add
+     * @see netscape.ldap.LDAPNameFormSchema
+     * @see netscape.ldap.LDAPSchemaElement#add
+     * @see netscape.ldap.LDAPSchemaElement#remove
+     */
+    public void addNameForm( LDAPNameFormSchema nameForm ) {
+        String name = nameForm.getName().toLowerCase();
+        nameForms.put( name, nameForm );
+    }
+
+    /**
      * Gets an enumeration ofthe object class definitions in this schema.
      * @return an enumeration of object class definitions.
      */
@@ -297,6 +424,38 @@ public class LDAPSchema {
      */
     public Enumeration getMatchingRules() {
         return matchingRules.elements();
+    }
+
+    /**
+     * Get an enumeration of the syntaxes in this schema.
+     * @return an enumeration of syntax objects
+     */
+    public Enumeration getSyntaxes() {
+        return syntaxes.elements();
+    }
+
+    /**
+     * Get an enumeration of the structure rules in this schema.
+     * @return an enumeration of structure rule objects
+     */
+    public Enumeration getDITStructureRules() {
+        return structureRulesByName.elements();
+    }
+
+    /**
+     * Get an enumeration of the content rules in this schema.
+     * @return an enumeration of content rule objects
+     */
+    public Enumeration getDITContentRules() {
+        return contentRules.elements();
+    }
+
+    /**
+     * Get an enumeration of the name forms in this schema.
+     * @return an enumeration of name form objects
+     */
+    public Enumeration getNameForms() {
+        return nameForms.elements();
     }
 
     /**
@@ -330,6 +489,59 @@ public class LDAPSchema {
     }
 
     /**
+     * Gets the definition of a syntax with the specified name.
+     * @param name name of the syntax to find
+     * @return an <CODE>LDAPSyntaxSchema</CODE> object representing
+     * the syntax definition, or <CODE>null</CODE> if not found.
+     */
+    public LDAPSyntaxSchema getSyntax( String name ) {
+        return (LDAPSyntaxSchema)syntaxes.get( name.toLowerCase() );
+    }
+
+    /**
+     * Gets the definition of a structure rule with the specified name.
+     * @param name name of the rule to find
+     * @return an <CODE>LDAPDITStructureRuleSchema</CODE> object representing
+     * the rule, or <CODE>null</CODE> if not found.
+     */
+    public LDAPDITStructureRuleSchema getDITStructureRule( String name ) {
+        return (LDAPDITStructureRuleSchema)structureRulesByName.get(
+            name.toLowerCase() );
+    }
+
+    /**
+     * Gets the definition of a structure rule with the specified name.
+     * @param ID ID of the rule to find
+     * @return an <CODE>LDAPDITStructureRuleSchema</CODE> object representing
+     * the rule, or <CODE>null</CODE> if not found.
+     */
+    public LDAPDITStructureRuleSchema getDITStructureRule( int ID ) {
+        return (LDAPDITStructureRuleSchema)structureRulesById.get(
+            new Integer( ID ) );
+    }
+
+    /**
+     * Gets the definition of a content rule with the specified name.
+     * @param name name of the rule to find
+     * @return an <CODE>LDAPDITContentRuleSchema</CODE> object representing
+     * the rule, or <CODE>null</CODE> if not found.
+     */
+    public LDAPDITContentRuleSchema getDITContentRule( String name ) {
+        return (LDAPDITContentRuleSchema)contentRules.get(
+            name.toLowerCase() );
+    }
+
+    /**
+     * Gets the definition of a name form with the specified name.
+     * @param name name of the name form to find
+     * @return an <CODE>LDAPNameFormSchema</CODE> object representing
+     * the syntax definition, or <CODE>null</CODE> if not found.
+     */
+    public LDAPNameFormSchema getNameForm( String name ) {
+        return (LDAPNameFormSchema)nameForms.get( name.toLowerCase() );
+    }
+
+    /**
      * Get an enumeration of the names of the object classes in this schema.
      * @return an enumeration of object class names (all lower-case).
      */
@@ -351,6 +563,38 @@ public class LDAPSchema {
      */
     public Enumeration getMatchingRuleNames() {
         return matchingRules.keys();
+    }
+
+    /**
+     * Get an enumeration of the names of the syntaxes in this schema.
+     * @return an enumeration of syntax names (all lower-case).
+     */
+    public Enumeration getSyntaxNames() {
+        return syntaxes.keys();
+    }
+
+    /**
+     * Get an enumeration of the names of the structure rules in this schema.
+     * @return an enumeration of names of the structure rule objects
+     */
+    public Enumeration getDITStructureRuleNames() {
+        return structureRulesByName.keys();
+    }
+
+    /**
+     * Get an enumeration of the names of the content rules in this schema.
+     * @return an enumeration of names of the content rule objects
+     */
+    public Enumeration getDITContentRuleNames() {
+        return contentRules.keys();
+    }
+
+    /**
+     * Get an enumeration of the names of the name forms in this schema.
+     * @return an enumeration of names of name form objects
+     */
+    public Enumeration getNameFormNames() {
+        return nameForms.keys();
     }
 
     /**
@@ -396,6 +640,53 @@ public class LDAPSchema {
                 LDAPAttributeSchema sch =
                     new LDAPAttributeSchema( (String)en.nextElement() );
                 addAttribute( sch );
+            }
+        }
+
+        /* Get all syntax definitions */
+        attr = entry.getAttribute( "ldapsyntaxes" );
+        if ( attr != null ) {
+            en = attr.getStringValues();
+            while( en.hasMoreElements() ) {
+                LDAPSyntaxSchema sch =
+                    new LDAPSyntaxSchema( (String)en.nextElement() );
+                addSyntax( sch );
+            }
+        }
+
+        /* Get all structure rule definitions */
+        attr = entry.getAttribute( "ldapditstructurerules" );
+        if ( attr != null ) {
+            en = attr.getStringValues();
+            while( en.hasMoreElements() ) {
+                LDAPDITStructureRuleSchema sch =
+                    new LDAPDITStructureRuleSchema(
+                        (String)en.nextElement() );
+                addDITStructureRule( sch );
+            }
+        }
+
+        /* Get all content rule definitions */
+        attr = entry.getAttribute( "ldapditcontentrules" );
+        if ( attr != null ) {
+            en = attr.getStringValues();
+            while( en.hasMoreElements() ) {
+                LDAPDITContentRuleSchema sch =
+                    new LDAPDITContentRuleSchema(
+                        (String)en.nextElement() );
+                addDITContentRule( sch );
+            }
+        }
+
+        /* Get all name form definitions */
+        attr = entry.getAttribute( "nameforms" );
+        if ( attr != null ) {
+            en = attr.getStringValues();
+            while( en.hasMoreElements() ) {
+                LDAPNameFormSchema sch =
+                    new LDAPNameFormSchema(
+                        (String)en.nextElement() );
+                addNameForm( sch );
             }
         }
 
@@ -527,6 +818,12 @@ public class LDAPSchema {
             s += en.nextElement().toString();
             s += '\n';
         }
+        s += "Syntaxes:\n";
+        en = getSyntaxes();
+        while( en.hasMoreElements() ) {
+            s += en.nextElement().toString();
+            s += '\n';
+        }
         return s;
     }
 
@@ -572,7 +869,7 @@ public class LDAPSchema {
 
     private static LDAPEntry readSchema( LDAPConnection ld, String dn )
                                          throws LDAPException {
-        return readSchema( ld, dn, null );
+        return readSchema( ld, dn, new String[] { "*", "ldapsyntaxes" } );
     }
 
     /**
@@ -620,6 +917,8 @@ public class LDAPSchema {
             printEnum( schema.getAttributes() );
             System.out.println( "\nMatching rules: " );
             printEnum( schema.getMatchingRules() );
+            System.out.println( "\nSyntaxes: " );
+            printEnum( schema.getSyntaxes() );
             System.exit( 0 );
         } catch ( LDAPException e ) {
             System.err.println( e );
@@ -629,4 +928,9 @@ public class LDAPSchema {
     private Hashtable objectClasses = new Hashtable();
     private Hashtable attributes = new Hashtable();
     private Hashtable matchingRules = new Hashtable();
+    private Hashtable syntaxes = new Hashtable();
+    private Hashtable structureRulesByName = new Hashtable();
+    private Hashtable structureRulesById = new Hashtable();
+    private Hashtable contentRules = new Hashtable();
+    private Hashtable nameForms = new Hashtable();
 }

@@ -86,8 +86,16 @@ import java.util.zip.CRC32;
  * All clones of an <CODE>LDAPConnection</CODE> object share
  * the same <CODE>LDAPCache</CODE> object.
  * <P>
+ * 
+ * Note that <CODE>LDAPCache</CODE> does not maintain consistency 
+ * with the directory, so that cached search results may no longer be
+ * valid after a directory update. If the same application is performing 
+ * both cached searches and directory updates, then the 
+ * application should flush the corresponding cache entries after an update.
+ * To do this use the <CODE>flushEntries</CODE> method.
+ * <P>
  *
- * Note that search requests that return referrals are not cached.
+ * Also, note that search requests that return referrals are not cached.
  * <P>
  *
  * The <CODE>LDAPCache</CODE> class includes methods for
@@ -98,13 +106,18 @@ import java.util.zip.CRC32;
  * @see netscape.ldap.LDAPConnection#setCache(netscape.ldap.LDAPCache)
  * @see netscape.ldap.LDAPConnection#getCache
  */
-public class LDAPCache {
+public class LDAPCache implements Serializable {
+    static final long serialVersionUID = 6275167993337814294L;
     private Hashtable m_cache;
     private long m_timeToLive;
     private long m_maxSize;
     private String[] m_dns;
     private Vector m_orderedStruct;
     private long m_remainingSize = 0;
+
+    // Count of LDAPConnections that share this cache
+    private int m_refCnt = 0;
+
     /**
      * Delimiter used internally when creating keys
      * for the cache.
@@ -606,12 +619,50 @@ public class LDAPCache {
     }
 
     /**
+     * Get number of LDAPConnections that share this cache
+     * @return Reference Count
+     */
+    int getRefCount() {
+        return m_refCnt;
+    }
+
+    /**
+     * Add a new reference to this cache.
+     *
+     */
+    synchronized void addReference() {
+        m_refCnt++;
+        if (m_debug) {
+            System.err.println("Cache refCnt="+ m_refCnt);
+        }
+    }
+
+    /**
+     * Remove a reference to this cache.
+     * If the reference count is 0, cleaup the cache.
+     *
+     */
+    synchronized void removeReference() {
+        if (m_refCnt > 0) {
+            m_refCnt--;
+            if (m_debug) {
+                System.err.println("Cache refCnt="+ m_refCnt);
+            }
+            if (m_refCnt == 0 ) {
+                cleanup();
+            }
+        }
+    }
+
+    /**
      * Cleans up
      */
-    void cleanup() {
+    synchronized void cleanup() {
         flushEntries(null, 0);
-        m_timer.stop();
-        m_timer = null;
+        if (m_timer != null) {
+            m_timer.stop();
+            m_timer = null;
+        }
     }
 
     /**

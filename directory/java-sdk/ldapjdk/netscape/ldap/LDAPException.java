@@ -129,7 +129,10 @@ import java.io.*;
  * @version 1.0
  * @see netscape.ldap.LDAPReferralException
  */
-public class LDAPException extends java.lang.Exception {
+public class LDAPException extends java.lang.Exception
+                           implements java.io.Serializable {
+
+    static final long serialVersionUID = -9215007872184847924L;
 
     /**
      * (0) The operation completed successfully.

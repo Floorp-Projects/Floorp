@@ -123,7 +123,9 @@ package netscape.ldap;
  * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String, java.lang.String[], boolean)
  *
  */
-public class LDAPExtendedOperation {
+public class LDAPExtendedOperation implements java.io.Serializable {
+
+    static final long serialVersionUID = 4010382829133611945L;
 
     /**
      * Construct an object

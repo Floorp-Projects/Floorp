@@ -41,8 +41,9 @@ import java.io.*;
  * @see netscape.ldap.LDAPConnection#search(java.lang.String, int, java.lang.String, java.lang.String[], boolean)
  * @see netscape.ldap.LDAPConnection#abandon(netscape.ldap.LDAPSearchResults)
  */
-public class LDAPSearchResults implements Enumeration {
+public class LDAPSearchResults implements Enumeration, java.io.Serializable {
 
+    static final long serialVersionUID = -501692208613904825L;
     private Vector entries = null;
     private LDAPSearchListener resultSource;
     private boolean searchComplete = false;
@@ -73,6 +74,7 @@ public class LDAPSearchResults implements Enumeration {
         entries = new Vector();
         connectionToClose = null;
         searchComplete = true;
+        currCons = new LDAPSearchConstraints();
     }
 
     LDAPSearchResults(LDAPConnection conn, LDAPSearchConstraints cons,
@@ -105,8 +107,10 @@ public class LDAPSearchResults implements Enumeration {
         }
     }
 
-    LDAPSearchResults(Vector v, LDAPConnection conn, LDAPSearchConstraints cons,
-      String base, int scope, String filter, String[] attrs, boolean attrsOnly) {
+    LDAPSearchResults(Vector v, LDAPConnection conn,
+                      LDAPSearchConstraints cons,
+                      String base, int scope, String filter,
+                      String[] attrs, boolean attrsOnly) {
         this(v);
         currConn = conn;
         currCons = cons;
@@ -124,8 +128,7 @@ public class LDAPSearchResults implements Enumeration {
     void add( LDAPMessage msg ) {
         if (msg instanceof LDAPSearchResult) {
             entries.addElement( ((LDAPSearchResult)msg).getEntry());
-        }            
-        else if (msg instanceof LDAPSearchResultReference) {
+        } else if (msg instanceof LDAPSearchResultReference) {
             /* convert to LDAPReferralException */
             String urls[] = ((LDAPSearchResultReference)msg).getUrls();
             if (urls != null) {
@@ -190,22 +193,24 @@ public class LDAPSearchResults implements Enumeration {
      */
     void quicksort (LDAPEntry[] toSort, LDAPEntryComparator compare,
                      int low, int high) {
-        if (low >= high)
+        if (low >= high) {
             return;
+        }
 
         LDAPEntry pivot = toSort[low];
         int slow = low-1, shigh = high+1;
 
         while (true) {
-            do
+            do {
                 shigh--;
-            while (compare.isGreater (toSort[shigh], pivot));
-            do
+            } while (compare.isGreater (toSort[shigh], pivot));
+            do {
                 slow++;
-            while (compare.isGreater (pivot, toSort[slow]));
+            } while (compare.isGreater (pivot, toSort[slow]));
 
-            if (slow >= shigh)
+            if (slow >= shigh) {
                  break;
+            }
 
              LDAPEntry temp = toSort[slow];
              toSort[slow] = toSort[shigh];
@@ -277,26 +282,31 @@ public class LDAPSearchResults implements Enumeration {
 
         // if automatic referral, then add to the entries, otherwise, dont do it
         // since the elements in referralResults are LDAPReferralException.
-        if (currCons.getReferrals())
+        if (currCons.getReferrals()) {
             while (referralResults.size() > 0) {
                 Object obj = null;
-                if ((obj=nextReferralElement()) != null)
+                if ((obj=nextReferralElement()) != null) {
                     entries.addElement(obj);
+                }
+            }
         }
 
         int numEntries = entries.size();
-        if (numEntries <= 0)
+        if (numEntries <= 0) {
             return;
+        }
 
         LDAPEntry[] toSort = new LDAPEntry[numEntries];
         entries.copyInto (toSort);
 
-        if (toSort.length > 1)
+        if (toSort.length > 1) {
             quicksort (toSort, compare, 0, numEntries-1);
+        }
 
         entries.removeAllElements();
-        for (int i = 0; i < numEntries; i++)
+        for (int i = 0; i < numEntries; i++) {
             entries.addElement (toSort[i]);
+        }
     }
 
     /**
@@ -338,10 +348,12 @@ public class LDAPSearchResults implements Enumeration {
     public LDAPEntry next() throws LDAPException {
         Object o = nextElement();
         if ((o instanceof LDAPReferralException) ||
-            (o instanceof LDAPException))
+            (o instanceof LDAPException)) {
             throw (LDAPException)o;
-        if (o instanceof LDAPEntry)
+        }
+        if (o instanceof LDAPEntry) {
             return (LDAPEntry)o;
+        }
         return null;
     }
 
@@ -405,11 +417,12 @@ public class LDAPSearchResults implements Enumeration {
                 return obj;
             }
 
-            if ((obj == null) || (!res.hasMoreElements()))
+            if ((obj == null) || (!res.hasMoreElements())) {
                 referralResults.removeElementAt(0);
-        }
-        else
+            }
+        } else {
             referralResults.removeElementAt(0);
+        }
 
         return null;
     }
@@ -434,8 +447,9 @@ public class LDAPSearchResults implements Enumeration {
      */
     public boolean hasMoreElements() {
 
-        while ((entries.size() == 0) && (!searchComplete))
+        while ((entries.size() == 0) && (!searchComplete)) {
             fetchResult();
+        }
 
         if ((entries.size() == 0) && 
           ((exceptions == null) || (exceptions.size() == 0))) {
@@ -454,25 +468,31 @@ public class LDAPSearchResults implements Enumeration {
     }
 
     /**
-     * Returns a count of the entries in the search results.
-     * @return count of entries found by the search.
+     * Returns a count of queued search results immediately available for
+     * processing.
+     * A search result is either a search entry or an exception. If the
+     * search is asynchronous (batch size not 0), this reports the number
+     * of results received so far.
+     * @return count of search results immediatly available for processing
      */
     public int getCount() {
-        int totalReferralEntries = 0;
-        int count = 0;
-        for (int i=0; i<referralResults.size(); i++) {
+        int count = entries.size();
+
+        for ( int i = 0; i < referralResults.size(); i++ ) {
             LDAPSearchResults res =
-              (LDAPSearchResults)referralResults.elementAt(i);
-            totalReferralEntries = totalReferralEntries+res.getCount();
+                (LDAPSearchResults)referralResults.elementAt(i);
+            count += res.getCount();
+        } 
+
+        if ( resultSource != null ) {
+          count += resultSource.getMessageCount();
         }
-        if (resultSource != null) {
-            count = resultSource.getMessageCount();
-        } else {
-            count = entries.size();
-        }
-        if (exceptions != null)
-            return (count + exceptions.size() + totalReferralEntries);
-        return (count + totalReferralEntries);
+
+        if ( exceptions != null ) {
+            count += exceptions.size();
+        } 
+
+        return count;
     }
 
     /**
@@ -480,8 +500,9 @@ public class LDAPSearchResults implements Enumeration {
      * @return Message ID.
      */
     int getMessageID() {
-        if ( resultSource == null )
+        if ( resultSource == null ) {
             return -1;
+        }
         return resultSource.getMessageID();
     }
 
@@ -493,8 +514,7 @@ public class LDAPSearchResults implements Enumeration {
         /* Asynchronous case */
         if ( resultSource != null ) {
             synchronized( this ) {
-                if (searchComplete || firstResult)
-                {
+                if (searchComplete || firstResult) {
                     firstResult = false;
                     return;
                 }
