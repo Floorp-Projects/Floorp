@@ -832,6 +832,7 @@ extensions/transformiix/Makefile
 MAKEFILES_tridentprofile="
 extensions/tridentprofile/Makefile
 extensions/tridentprofile/public/Makefile
+extensions/tridentprofile/resources/Makefile
 extensions/tridentprofile/src/Makefile
 "
 
