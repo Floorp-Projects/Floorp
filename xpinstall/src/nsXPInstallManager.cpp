@@ -59,7 +59,7 @@
 
 #include "nsProxiedService.h"
 #include "nsIAppShellComponentImpl.h"
-#include "nsICommonDialogs.h"
+#include "nsIPromptService.h"
 #include "nsIScriptGlobalObject.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -67,7 +67,6 @@ static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
-static NS_DEFINE_CID(kCommonDialogCID, NS_CommonDialog_CID);
 
 #include "nsIEventQueueService.h"
 
@@ -359,8 +358,8 @@ PRBool nsXPInstallManager::ConfirmChromeInstall(nsIScriptGlobalObject* aGlobalOb
         nsCOMPtr<nsIDOMWindowInternal> parentWindow(do_QueryInterface(aGlobalObject));
         if (parentWindow)
         {
-            NS_WITH_SERVICE(nsICommonDialogs, dlgService, kCommonDialogCID, &rv);
-            if (NS_SUCCEEDED(rv))
+            nsCOMPtr<nsIPromptService> dlgService(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+            if (dlgService)
             {
                 rv = dlgService->ConfirmCheck( parentWindow,
                                                nsnull,

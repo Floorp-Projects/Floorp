@@ -62,7 +62,7 @@
 
 #include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
-#include "nsICommonDialogs.h"
+#include "nsIPromptService.h"
 #include "nsIPrompt.h"
 
 #ifdef _WINDOWS
@@ -93,8 +93,6 @@
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-
-static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
@@ -2481,7 +2479,7 @@ void nsInstall::SetInstallURL(const nsString& url)  { mInstallURL = url; }
 //-----------------------------------------------------------------------------
 // GetTranslatedString :
 // This is a utility function that translates "Alert" or 
-// "Confirm" to pass as the title to the CommonDialogs Alert and Confirm 
+// "Confirm" to pass as the title to the PromptService Alert and Confirm 
 // functions as the title.  If you pass nsnull as the title, you get garbage
 // instead of a blank title.
 //-----------------------------------------------------------------------------
@@ -2504,15 +2502,18 @@ PRUnichar *GetTranslatedString(const PRUnichar* aString)
 PRInt32    
 nsInstall::Alert(nsString& string)
 {
-    nsresult res;
-
-    NS_WITH_PROXIED_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, NS_UI_THREAD_EVENTQ, &res);
-    if (NS_FAILED(res)) 
-        return res;
+    nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+    nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+    nsCOMPtr<nsIPromptService> proxiedDialog;
+    if (proxyman && dialog)
+      proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPromptService),
+                  dialog, PROXY_SYNC, getter_AddRefs(proxiedDialog));
+    if (!proxiedDialog)
+        return NS_ERROR_FAILURE;
 
     PRUnichar *title = GetTranslatedString(NS_ConvertASCIItoUCS2("Alert").get());
 
-    return dialog->Alert(mParent, title, string.GetUnicode());
+    return proxiedDialog->Alert(mParent, title, string.GetUnicode());
 }
 
 PRInt32    
@@ -2520,10 +2521,14 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
 {
     *aReturn = PR_FALSE; /* default value */
     
-    nsresult res;  
-    NS_WITH_PROXIED_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, NS_UI_THREAD_EVENTQ, &res);
-    if (NS_FAILED(res)) 
-        return res;
+    nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+    nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+    nsCOMPtr<nsIPromptService> proxiedDialog;
+    if (proxyman && dialog)
+      proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ, NS_GET_IID(nsIPromptService),
+                  dialog, PROXY_SYNC, getter_AddRefs(proxiedDialog));
+    if (!proxiedDialog)
+        return NS_ERROR_FAILURE;
 
     PRUnichar *title = GetTranslatedString(NS_ConvertASCIItoUCS2("Confirm").get());
     

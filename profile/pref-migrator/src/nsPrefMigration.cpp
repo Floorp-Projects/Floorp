@@ -27,9 +27,9 @@
 #include "nsRepository.h"
 #include "nsIAppShellComponentImpl.h"
 #include "nsIComponentManager.h"
+#include "nsIDialogParamBlock.h"
 #include "nsIServiceManager.h"
 #include "nsIWindowMediator.h"
-#include "nsICommonDialogs.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsFileStream.h"
@@ -227,8 +227,6 @@ static NS_DEFINE_IID(kPrefMigrationCID,  NS_PREFMIGRATION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
-static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -489,7 +487,7 @@ nsPrefMigration::ShowSpaceDialog(PRInt32 *choice)
     // list to the dialog
     //-----------------------------------------------------
     nsCOMPtr<nsIDialogParamBlock> ioParamBlock;
-    rv = nsComponentManager::CreateInstance(kDialogParamBlockCID,
+    rv = nsComponentManager::CreateInstance("@mozilla.org/embedcomp/dialogparam;1",
                                             nsnull,
                                             NS_GET_IID(nsIDialogParamBlock),
                                             getter_AddRefs(ioParamBlock));

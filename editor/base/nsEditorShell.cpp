@@ -80,7 +80,9 @@
 #include "nsIFilePicker.h"
 #include "nsIFindComponent.h"
 #include "nsIPrompt.h"
-#include "nsICommonDialogs.h"
+#include "nsIDialogParamBlock.h"
+#include "nsIPromptService.h"
+#include "nsPIPromptService.h"
 
 #include "nsIEditorController.h"
 //#include "nsEditorController.h"
@@ -138,8 +140,6 @@
 static NS_DEFINE_CID(kHTMLEditorCID,            NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
-static NS_DEFINE_CID(kDialogParamBlockCID,      NS_DialogParamBlock_CID);
 static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
 static NS_DEFINE_CID(kChromeRegistryCID,        NS_CHROMEREGISTRY_CID);
 static NS_DEFINE_CID(kStandardURLCID,           NS_STANDARDURL_CID);
@@ -1740,8 +1740,8 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
           if (!mMailCompose && (!saveAsText && mEditorType == eHTMLTextEditorType) && (title.Length() == 0))
           {
             // Use a "prompt" common dialog to get title string from user
-            NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res); 
-            if (NS_SUCCEEDED(res)) 
+            nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+            if (dialog)
             { 
               PRUnichar *titleUnicode;
               nsAutoString captionStr, msgStr1, msgStr2;
@@ -1755,11 +1755,11 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
               PRBool retVal = PR_FALSE;
               if(!mContentWindow)
                 return NS_ERROR_NOT_INITIALIZED;
-              nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
+              nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
               if (!cwP) return NS_ERROR_NOT_INITIALIZED;
 
               res = dialog->Prompt(cwP, captionStr.GetUnicode(), msgStr1.GetUnicode(),
-                                   title.GetUnicode(), &titleUnicode, &retVal); 
+                                   title.GetUnicode(), 0, 0, &titleUnicode, &retVal); 
               
               if( retVal == PR_FALSE)
               {
@@ -2827,17 +2827,17 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
                                  const nsString *aYesString, const nsString *aNoString)
 {
   nsEditorShell::EConfirmResult result = nsEditorShell::eCancel;
-  
+
   nsIDialogParamBlock* block = NULL; 
-  nsresult rv = nsComponentManager::CreateInstance(kDialogParamBlockCID, 0,
-                                          NS_GET_IID(nsIDialogParamBlock), 
+  nsresult rv = nsComponentManager::CreateInstance("@mozilla.org/embedcomp/dialogparam;1",
+                                          0, NS_GET_IID(nsIDialogParamBlock), 
                                           (void**)&block ); 
   if ( NS_SUCCEEDED(rv) )
   { 
     // Stuff in Parameters 
-    block->SetString( nsICommonDialogs::eMsg, aQuestion.GetUnicode()); 
+    block->SetString( nsIPromptService::eMsg, aQuestion.GetUnicode()); 
     nsAutoString url; url.AssignWithConversion( "chrome://global/skin/question-icon.gif" ); 
-    block->SetString( nsICommonDialogs::eIconURL, url.GetUnicode()); 
+    block->SetString( nsIPromptService::eIconURL, url.GetUnicode()); 
 
     nsAutoString yesStr, noStr;
     // Default is Yes, No, Cancel
@@ -2851,34 +2851,34 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
     if (aNoString && aNoString->Length() > 0)
     {
       noStr.Assign(*aNoString);
-      block->SetString( nsICommonDialogs::eButton2Text, noStr.GetUnicode() ); 
+      block->SetString( nsIPromptService::eButton2Text, noStr.GetUnicode() ); 
     }
     else
     {
       // No string for "No" means we only want Yes, Cancel
       numberOfButtons = 2;
     }    
-    block->SetInt( nsICommonDialogs::eNumberButtons, numberOfButtons ); 
+    block->SetInt( nsIPromptService::eNumberButtons, numberOfButtons ); 
 
     nsAutoString cancelStr;
     GetBundleString(NS_LITERAL_STRING("Cancel"), cancelStr);
 
-    block->SetString( nsICommonDialogs::eDialogTitle, aTitle.GetUnicode() );
+    block->SetString( nsIPromptService::eDialogTitle, aTitle.GetUnicode() );
     //Note: "button0" is always Ok or Yes action, "button1" is Cancel
-    block->SetString( nsICommonDialogs::eButton0Text, yesStr.GetUnicode() ); 
-    block->SetString( nsICommonDialogs::eButton1Text, cancelStr.GetUnicode() ); 
+    block->SetString( nsIPromptService::eButton0Text, yesStr.GetUnicode() ); 
+    block->SetString( nsIPromptService::eButton1Text, cancelStr.GetUnicode() ); 
 
-    NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
-    if ( NS_SUCCEEDED( rv ) ) 
+    nsCOMPtr<nsPIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+    if (dialog)
     { 
       PRInt32 buttonPressed = 0; 
       if(!mContentWindow)
         return result;
-      nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
+      nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
       if (!cwP) return result;
       rv = dialog->DoDialog( cwP, block, "chrome://global/content/commonDialog.xul" ); 
-      block->GetInt( nsICommonDialogs::eButtonPressed, &buttonPressed ); 
-      // NOTE: If order of buttons changes in nsICommonDialogs,
+      block->GetInt( nsIPromptService::eButtonPressed, &buttonPressed ); 
+      // NOTE: If order of buttons changes in nsIPromptService,
       //       then we must change the EConfirmResult enums in nsEditorShell.h
       result = nsEditorShell::EConfirmResult(buttonPressed);
     } 
@@ -2894,12 +2894,12 @@ nsEditorShell::Confirm(const nsString& aTitle, const nsString& aQuestion)
   nsresult rv;
   PRBool   result = PR_FALSE;
 
-  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
-  if (NS_SUCCEEDED(rv) && dialog)
+  nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+  if (dialog)
   {
     if(!mContentWindow)
       return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
+    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
     if (!cwP) return NS_ERROR_NOT_INITIALIZED;
     rv = dialog->Confirm(cwP, aTitle.GetUnicode(), aQuestion.GetUnicode(), &result);
   }
@@ -2913,12 +2913,12 @@ nsEditorShell::AlertWithTitle(const PRUnichar *aTitle, const PRUnichar *aMsg)
     return NS_ERROR_NULL_POINTER;
 
   nsresult rv = NS_ERROR_FAILURE;
-  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
-  if (NS_SUCCEEDED(rv) && dialog)
+  nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+  if (dialog)
   {
     if(!mContentWindow)
       return NS_ERROR_NOT_INITIALIZED;
-    nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
+    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
     if (!cwP) return NS_ERROR_NOT_INITIALIZED;
     rv = dialog->Alert(cwP, aTitle, aMsg);
   }
@@ -2930,12 +2930,12 @@ void
 nsEditorShell::Alert(const nsString& aTitle, const nsString& aMsg)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
-  if (NS_SUCCEEDED(rv) && dialog)
+  nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+  if (dialog)
   {
     if(!mContentWindow)
       return;
-    nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
+    nsCOMPtr<nsIDOMWindow> cwP = do_QueryReferent(mContentWindow);
     if (!cwP) return;
     rv = dialog->Alert(cwP, aTitle.GetUnicode(), aMsg.GetUnicode());
   }
