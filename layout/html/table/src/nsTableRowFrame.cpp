@@ -114,10 +114,12 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext& aPresContext,
                                  const nsRect& aDirtyRect)
 {
   // for debug...
+  /*
   if (nsIFrame::GetShowFrameBorders()) {
     aRenderingContext.SetColor(NS_RGB(0,0,128));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
+  */
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
   return NS_OK;

@@ -66,9 +66,14 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
 
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                   aDirtyRect, mRect, *myColor);
+
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                               aDirtyRect, mRect, *myBorder, 0);
-
+  /*
+  printf("painting borders, size = %d %d %d %d\n", 
+          myBorder->mSize.left, myBorder->mSize.top, 
+          myBorder->mSize.right, myBorder->mSize.bottom);
+  */
 
   // for debug...
   if (nsIFrame::GetShowFrameBorders()) {

@@ -36,13 +36,14 @@ static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLETEXT_SID);
 static NS_DEFINE_IID(kStyleBorderSID, NS_STYLETEXT_SID);
 
 #ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
+static PRBool gsDebug = PR_TRUE;
 static PRBool gsNoisyRefs = PR_FALSE;
 #else
 static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsNoisyRefs = PR_FALSE;
 #endif
 
+// nsTableContent checks aTag
 nsTableCell::nsTableCell(nsIAtom* aTag)
   : nsTableContent(aTag),
   mRow(0),
@@ -63,6 +64,7 @@ nsTableCell::nsTableCell(PRBool aImplicit)
   mImplicit = aImplicit;
 }
 
+// nsTableContent checks aTag
 nsTableCell::nsTableCell (nsIAtom* aTag, int aRowSpan, int aColSpan)
   : nsTableContent(aTag),
   mRow(0),
@@ -80,12 +82,14 @@ nsTableCell::~nsTableCell()
   NS_IF_RELEASE(mRow);
 }
 
+// for debugging only
 nsrefcnt nsTableCell::AddRef(void)
 {
   if (gsNoisyRefs) printf("Add Ref: %x, nsTableCell cnt = %d \n",this, mRefCnt+1);
   return ++mRefCnt;
 }
 
+// for debugging only
 nsrefcnt nsTableCell::Release(void)
 {
   if (gsNoisyRefs==PR_TRUE) printf("Release: %x, nsTableCell cnt = %d \n",this, mRefCnt-1);
@@ -129,11 +133,13 @@ void nsTableCell::SetRow (nsTableRow * aRow)
 
 int nsTableCell::GetColIndex ()
 {
+  NS_ASSERTION(0<=mColIndex, "bad column index");
   return mColIndex;
 }
 
 void nsTableCell::SetColIndex (int aColIndex)
 {
+  NS_ASSERTION(0<=aColIndex, "illegal negative column index.");
   mColIndex = aColIndex;
 }
 
@@ -151,6 +157,7 @@ nsIFrame* nsTableCell::CreateFrame(nsIPresContext* aPresContext,
 
 void nsTableCell::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {
+  NS_PRECONDITION(nsnull!=aAttribute, "bad attribute arg");
   nsHTMLValue val;
   if ((aAttribute == nsHTMLAtoms::align) &&
       ParseDivAlignParam(aValue, val)) {
@@ -277,6 +284,9 @@ void nsTableCell::MapBorderMarginPaddingInto(nsIStyleContext* aContext,
 void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
                                     nsIPresContext* aPresContext)
 {
+  NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
+  NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+
   nsHTMLValue value;
 
   // align: enum

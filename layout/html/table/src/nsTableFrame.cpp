@@ -39,7 +39,7 @@
 
 
 #ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
+static PRBool gsDebug = PR_TRUE;
 static PRBool gsDebugCLD = PR_FALSE;
 static PRBool gsTiming = PR_FALSE;
 static PRBool gsDebugMBP = PR_FALSE;
@@ -131,6 +131,26 @@ struct InnerTableReflowState {
     if (nsnull!=footerList)
       delete footerList;
   }
+};
+
+
+
+/* ----------- SpanInfo ---------- */
+
+struct SpanInfo
+{
+  PRInt32 span;
+  PRInt32 cellMinWidth;
+  PRInt32 cellDesiredWidth;
+
+  SpanInfo(PRInt32 aSpan, PRInt32 aMinWidth, PRInt32 aDesiredWidth)
+  {
+    span = aSpan;
+    cellMinWidth = aMinWidth;
+    cellDesiredWidth = aDesiredWidth;
+  };
+
+  ~SpanInfo() {};
 };
 
 
@@ -1623,6 +1643,7 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext,
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
 
   if (gsDebug==PR_TRUE) printf ("  AssignFixedColumnWidths\n");
+  nsVoidArray *spanList=nsnull;
   for (PRInt32 colIndex = 0; colIndex<aNumCols; colIndex++)
   { 
     nsVoidArray *columnLayoutData = GetColumnLayoutData();
@@ -1667,7 +1688,33 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext,
     }
 #endif
 
-    // Scan the column
+    /* Scan the column, simulatneously assigning fixed column widths
+     * and computing the min/max column widths
+     */
+    // first, deal with any cells that span into this column from a pervious column
+    if (nsnull!=spanList)
+    {
+      PRInt32 spanCount = spanList->Count();
+      // go through the list backwards so we can delete easily
+      for (PRInt32 spanIndex=spanCount-1; 0<=spanIndex; spanIndex--)
+      {
+        SpanInfo *spanInfo = (SpanInfo *)(spanList->ElementAt(spanIndex));
+        if (minColWidth < spanInfo->cellMinWidth)
+          minColWidth = spanInfo->cellMinWidth;
+        if (maxColWidth < spanInfo->cellDesiredWidth)
+          maxColWidth = spanInfo->cellDesiredWidth;
+        spanInfo->span--;
+        if (gsDebug==PR_TRUE) 
+          printf ("    for spanning cell %d with remaining span=%d, min = %d and  des = %d\n", 
+                  spanIndex, spanInfo->span, spanInfo->cellMinWidth, spanInfo->cellDesiredWidth);
+        if (0==spanInfo->span)
+        {
+          spanList->RemoveElementAt(spanIndex);
+          delete spanInfo;
+        }
+      }
+    }
+
     for (PRInt32 cellIndex = 0; cellIndex<numCells; cellIndex++)
     {
       nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(cellIndex));
@@ -1675,8 +1722,10 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext,
       nsSize * cellMinSize = data->GetMaxElementSize();
       nsReflowMetrics * cellDesiredSize = data->GetDesiredSize();
       NS_ASSERTION(nsnull != cellDesiredSize, "bad cellDesiredSize");
+      PRInt32 colSpan = data->GetCellFrame()->GetColSpan();
       if (gsDebug==PR_TRUE) 
-        printf ("    for cell %d  min = %d,%d  and  des = %d,%d\n", cellIndex, cellMinSize->width, cellMinSize->height,
+        printf ("    for cell %d with colspan=%d, min = %d,%d  and  des = %d,%d\n", 
+                cellIndex, colSpan, cellMinSize->width, cellMinSize->height,
                 cellDesiredSize->width, cellDesiredSize->height);
 
       PRBool haveCellWidth = PR_FALSE;
@@ -1750,23 +1799,24 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext,
 
       // regardless of the width specification, keep track of the
       // min/max column widths
-      /* TODO: must distribute COLSPAN'd cell widths between columns,
-       *       either here or in the subsequent Balance***ColumnWidth
-       *       routines
-       */
-      if (minColWidth < cellMinSize->width)
-        minColWidth = cellMinSize->width;
-      if (maxColWidth < cellDesiredSize->width)
-        maxColWidth = cellDesiredSize->width;
+      PRInt32 cellMinWidth = cellMinSize->width/colSpan;
+      PRInt32 cellDesiredWidth = cellDesiredSize->width/colSpan;
+      if (minColWidth < cellMinWidth)
+        minColWidth = cellMinWidth;
+      if (maxColWidth < cellDesiredWidth)
+        maxColWidth = cellDesiredWidth;
+      if (1<colSpan)
+      {
+        // add the cell to our list of spanners
+        SpanInfo *spanInfo = new SpanInfo(colSpan-1, cellMinWidth, cellDesiredWidth);
+        if (nsnull==spanList)
+          spanList = new nsVoidArray();
+        spanList->AppendElement(spanInfo);
+      }
       if (gsDebug) {
         printf ("    after cell %d, minColWidth = %d and maxColWidth = %d\n",
                 cellIndex, minColWidth, maxColWidth);
       }
-      /* take colspan into account? */
-      /*
-      PRInt32 colSpan = col->GetColSpan();
-      cellIndex += colSpan-1;
-      */
     }
 
 #if 0
@@ -1797,6 +1847,8 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext,
       printf ("  after this col, minTableWidth = %d and maxTableWidth = %d\n", aMinTableWidth, aMaxTableWidth);
   
   } // end Step 1 for fixed-width columns
+  if (nsnull!=spanList)
+    delete spanList;
   return PR_TRUE;
 }
 
@@ -1930,6 +1982,7 @@ PRBool nsTableFrame::BalanceColumnsTableFits(nsIPresContext* aPresContext,
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
 
   PRBool result = PR_TRUE;
+  nsVoidArray *spanList=nsnull;
   nsVoidArray *columnLayoutData = GetColumnLayoutData();
   PRInt32 numCols = columnLayoutData->Count();
   for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
@@ -1941,30 +1994,66 @@ PRBool nsTableFrame::BalanceColumnsTableFits(nsIPresContext* aPresContext,
     PRInt32 maxColWidth = 0;
     PRInt32 numCells = cells->Count();
     if (gsDebug==PR_TRUE) printf ("  for col %d\n", colIndex);
-    /* TODO:  must distribute COLSPAN'd cell widths between columns, either here 
-     *        or in the prior Balance***ColumnWidth routines 
-     */
 
     // XXX Need columnFrame to ask the style question
     nsStylePosition* colPosition = nsnull;
 
     if (PR_TRUE==IsProportionalWidth(colPosition))
     {
+      // first, deal with any cells that span into this column from a pervious column
+      if (nsnull!=spanList)
+      {
+        PRInt32 spanCount = spanList->Count();
+        // go through the list backwards so we can delete easily
+        for (PRInt32 spanIndex=spanCount-1; 0<=spanIndex; spanIndex--)
+        {
+          SpanInfo *spanInfo = (SpanInfo *)(spanList->ElementAt(spanIndex));
+          if (minColWidth < spanInfo->cellMinWidth)
+            minColWidth = spanInfo->cellMinWidth;
+          if (maxColWidth < spanInfo->cellDesiredWidth)
+            maxColWidth = spanInfo->cellDesiredWidth;
+          spanInfo->span--;
+          if (gsDebug==PR_TRUE) 
+            printf ("    for spanning cell %d with remaining span=%d, min = %d and  des = %d\n", 
+                    spanIndex, spanInfo->span, spanInfo->cellMinWidth, spanInfo->cellDesiredWidth);
+          if (0==spanInfo->span)
+          {
+            spanList->RemoveElementAt(spanIndex);
+            delete spanInfo;
+          }
+        }
+      }
+
       for (PRInt32 cellIndex = 0; cellIndex<numCells; cellIndex++)
       { // this col has proportional width, so determine its width requirements
         nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(cellIndex));
         NS_ASSERTION(nsnull != data, "bad data");
+
+        PRInt32 colSpan = data->GetCellFrame()->GetColSpan();
+        // distribute a portion of the spanning cell's min and max width to this column
         nsSize * cellMinSize = data->GetMaxElementSize();
         NS_ASSERTION(nsnull != cellMinSize, "bad cellMinSize");
         nsReflowMetrics * cellDesiredSize = data->GetDesiredSize();
         NS_ASSERTION(nsnull != cellDesiredSize, "bad cellDesiredSize");
-        if (minColWidth < cellMinSize->width)
-          minColWidth = cellMinSize->width;
-        if (maxColWidth < cellDesiredSize->width)
-          maxColWidth = cellDesiredSize->width;
+        PRInt32 cellMinWidth = cellMinSize->width/colSpan;
+        PRInt32 cellDesiredWidth = cellDesiredSize->width/colSpan;
+        if (PR_TRUE==gsDebug)
+          printf("factoring in cell %d with colSpan=%d\n  factoring in min=%d and desired=%d\n", 
+                 cellIndex, colSpan, cellMinWidth, cellDesiredWidth);
+        if (minColWidth < cellMinWidth)
+          minColWidth = cellMinWidth;
+        if (maxColWidth < cellDesiredWidth)
+          maxColWidth = cellDesiredWidth;
         if (gsDebug==PR_TRUE) 
           printf ("    after cell %d, minColWidth = %d and maxColWidth = %d\n", 
                   cellIndex, minColWidth, maxColWidth);
+        if (1<colSpan)
+        { // add the cell to our list of spanners
+          SpanInfo *spanInfo = new SpanInfo(colSpan-1, cellMinWidth, cellDesiredWidth);
+          if (nsnull==spanList)
+            spanList = new nsVoidArray();
+          spanList->AppendElement(spanInfo);
+        }
       }
 
       if (gsDebug==PR_TRUE) 
@@ -2022,6 +2111,8 @@ PRBool nsTableFrame::BalanceColumnsTableFits(nsIPresContext* aPresContext,
       }
     }
   }
+  if (nsnull!=spanList)
+    delete spanList;
   return result;
 }
 
@@ -2035,6 +2126,7 @@ PRBool nsTableFrame::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext
 
   PRBool result = PR_TRUE;
   PRInt32 maxOfAllMinColWidths = 0;
+  nsVoidArray *spanList=nsnull;
   nsVoidArray *columnLayoutData = GetColumnLayoutData();
   PRInt32 numCols = columnLayoutData->Count();
   for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
@@ -2058,23 +2150,55 @@ PRBool nsTableFrame::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext
 
     if (PR_TRUE==IsProportionalWidth(colPosition))
     {
+      // first, deal with any cells that span into this column from a pervious column
+      if (nsnull!=spanList)
+      {
+        PRInt32 spanCount = spanList->Count();
+        // go through the list backwards so we can delete easily
+        for (PRInt32 spanIndex=spanCount-1; 0<=spanIndex; spanIndex--)
+        {
+          SpanInfo *spanInfo = (SpanInfo *)(spanList->ElementAt(spanIndex));
+          if (minColWidth < spanInfo->cellMinWidth)
+            minColWidth = spanInfo->cellMinWidth;
+          if (maxColWidth < spanInfo->cellDesiredWidth)
+            maxColWidth = spanInfo->cellDesiredWidth;
+          spanInfo->span--;
+          if (gsDebug==PR_TRUE) 
+            printf ("    for spanning cell %d with remaining span=%d, min = %d and  des = %d\n", 
+                    spanIndex, spanInfo->span, spanInfo->cellMinWidth, spanInfo->cellDesiredWidth);
+          if (0==spanInfo->span)
+          {
+            spanList->RemoveElementAt(spanIndex);
+            delete spanInfo;
+          }
+        }
+      }
       for (PRInt32 cellIndex = 0; cellIndex<numCells; cellIndex++)
       { // this col has proportional width, so determine its width requirements
         nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(cellIndex));
         NS_ASSERTION(nsnull != data, "bad data");
+        PRInt32 colSpan = data->GetCellFrame()->GetColSpan();
         nsSize * cellMinSize = data->GetMaxElementSize();
         NS_ASSERTION(nsnull != cellMinSize, "bad cellMinSize");
         nsReflowMetrics * cellDesiredSize = data->GetDesiredSize();
         NS_ASSERTION(nsnull != cellDesiredSize, "bad cellDesiredSize");
-        if (minColWidth < cellMinSize->width)
-          minColWidth = cellMinSize->width;
-        if (maxColWidth < cellDesiredSize->width)
-          maxColWidth = cellDesiredSize->width;
-        /*
+        PRInt32 cellMinWidth = cellMinSize->width/colSpan;
+        PRInt32 cellDesiredWidth = cellDesiredSize->width/colSpan;
+        if (minColWidth < cellMinWidth)
+          minColWidth = cellMinWidth;
+        if (maxColWidth < cellDesiredWidth)
+          maxColWidth = cellDesiredWidth;
+        if (1<colSpan)
+        {
+          // add the cell to our list of spanners
+          SpanInfo *spanInfo = new SpanInfo(colSpan-1, cellMinWidth, cellDesiredWidth);
+          if (nsnull==spanList)
+            spanList = new nsVoidArray();
+          spanList->AppendElement(spanInfo);
+        }
         if (gsDebug==PR_TRUE) 
           printf ("    after cell %d, minColWidth = %d and maxColWidth = %d\n", 
                   cellIndex, minColWidth, maxColWidth);
-        */
       }
 
       if (gsDebug==PR_TRUE) 
@@ -2101,7 +2225,7 @@ PRBool nsTableFrame::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext
         }
         else
 #endif
-          if (AutoColumnWidths())
+        if (AutoColumnWidths())
         {
           PRInt32 W = aMaxWidth - aMinTableWidth;
           PRInt32 D = aMaxTableWidth - aMinTableWidth;
@@ -2148,6 +2272,9 @@ PRBool nsTableFrame::BalanceColumnsHTML4Constrained(nsIPresContext* aPresContext
     for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
       mColumnWidths[colIndex] = maxOfAllMinColWidths;
   }
+
+  if (nsnull!=spanList)
+    delete spanList;
 
   return result;
 }

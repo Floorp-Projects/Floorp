@@ -42,12 +42,13 @@ static const PRBool gsNoisyRefs = PR_FALSE;
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
 
-
+// nsTableContent checks aTag
 nsTableRowGroup::nsTableRowGroup(nsIAtom* aTag)
   : nsTableContent(aTag)
 {
 }
 
+// nsTableContent checks aTag
 nsTableRowGroup::nsTableRowGroup(nsIAtom* aTag, PRBool aImplicit)
   : nsTableContent(aTag)
 {
@@ -93,6 +94,7 @@ nsrefcnt nsTableRowGroup::Release(void)
   return mRefCnt;
 }
 
+// nsTableRowGroupFrame checks arguments
 nsIFrame* nsTableRowGroup::CreateFrame( nsIPresContext* aPresContext,
                                         PRInt32 aIndexInParent,
                                         nsIFrame* aParentFrame)
@@ -105,14 +107,15 @@ nsIFrame* nsTableRowGroup::CreateFrame( nsIPresContext* aPresContext,
 
 void nsTableRowGroup::ResetCellMap ()
 {
-  // SEC Assert.Assertion(nsnull!=mTable)
+  // GREG:  enable this assertion when the content notification code is checked in
+  // NS_ASSERTION(nsnull!=mTable, "illegal table content state");
   if (nsnull != mTable)
     mTable->ResetCellMap ();
 }
 
 PRBool nsTableRowGroup::AppendChild (nsIContent *aContent)
 {
-  //SEC Assert.PreCondition(nsnull!=aContent);
+  NS_PRECONDITION(nsnull!=aContent, "bad arg to AppendChild");
   PRBool result = PR_TRUE;
 
   // is aContent a TableRow?
@@ -175,7 +178,7 @@ PRBool nsTableRowGroup::AppendChild (nsIContent *aContent)
 
 PRBool nsTableRowGroup::InsertChildAt (nsIContent *aContent, int aIndex)
 {
-  //SEC Assert.PreCondition(nsnull!=aContent);
+  NS_PRECONDITION(nsnull!=aContent, "bad arg to InsertChildAt");
 
   // is aContent a TableRow?
   PRBool isRow = IsRow(aContent);
@@ -200,9 +203,9 @@ PRBool nsTableRowGroup::InsertChildAt (nsIContent *aContent, int aIndex)
 
 PRBool nsTableRowGroup::ReplaceChildAt (nsIContent *aContent, int aIndex)
 {
-  // SEC Assert.PreCondition (nsnull!=aContent);
-  // SEC Assert.PreCondition (aIndex in range);
-  if ((nsnull==aContent) || /*(aIndex not in range)*/PR_FALSE)
+  NS_PRECONDITION(nsnull!=aContent, "bad aContent arg to ReplaceChildAt");
+  NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
+  if ((nsnull==aContent) || !(0<=aIndex && aIndex<ChildCount()))
     return PR_FALSE;
 
   // is aContent a TableRow?
@@ -233,6 +236,10 @@ PRBool nsTableRowGroup::ReplaceChildAt (nsIContent *aContent, int aIndex)
  */
 PRBool nsTableRowGroup::RemoveChildAt (int aIndex)
 {
+  NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to RemoveChildAt");
+  if (!(0<=aIndex && aIndex<ChildCount()))
+    return PR_FALSE;
+
   nsIContent * lastChild = ChildAt (aIndex);  // lastChild: REFCNT++   
   PRBool result = nsTableContent::RemoveChildAt (aIndex);
   if (result)

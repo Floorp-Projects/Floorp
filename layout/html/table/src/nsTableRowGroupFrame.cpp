@@ -116,10 +116,12 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext& aPresContext,
 {
 
   // for debug...
+  /*
   if (nsIFrame::GetShowFrameBorders()) {
     aRenderingContext.SetColor(NS_RGB(128,0,0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
+  */
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
   return NS_OK;
