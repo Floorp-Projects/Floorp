@@ -535,9 +535,9 @@ NS_IMETHODIMP nsComboboxButtonAccessible::GetAccActionName(PRUint8 index, nsAWri
     return NS_ERROR_FAILURE;
   comboFrame->IsDroppedDown(&isOpen);
   if (isOpen)
-    _retval = NS_LITERAL_STRING("close");
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("close"), _retval); 
   else
-    _retval = NS_LITERAL_STRING("open");
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("open"), _retval); 
 
   return NS_OK;
 }

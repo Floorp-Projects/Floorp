@@ -281,7 +281,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccActionName(PRUint8 index, nsAWritableS
   // Action 0 (default action): Jump to link
   if (index == eAction_Jump) {   
     if (IsALink()) {
-      _retval = NS_LITERAL_STRING("jump"); 
+      nsAccessible::GetTranslatedString(NS_LITERAL_STRING("jump"), _retval); 
       return NS_OK;
     }
   }

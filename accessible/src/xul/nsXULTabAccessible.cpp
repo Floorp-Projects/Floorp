@@ -74,7 +74,7 @@ NS_IMETHODIMP nsXULTabAccessible::GetAccNumActions(PRUint8 *_retval)
 NS_IMETHODIMP nsXULTabAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
 {
   if (index == eAction_Click) {
-    _retval = NS_LITERAL_STRING("switch");
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("switch"), _retval); 
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;

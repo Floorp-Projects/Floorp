@@ -107,7 +107,7 @@ protected:
   NS_IMETHOD CacheOptimizations(nsIAccessible *aParent, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList);
   // helper method to verify frames
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
-  static nsresult GetTranslatedString(PRUnichar *aKey, nsAWritableString *aStringOut);
+  static nsresult GetTranslatedString(const nsAReadableString& aKey, nsAWritableString& aStringOut);
   void GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect);
 
   // Data Members

@@ -84,9 +84,9 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccActionName(PRUint8 index, nsAWrita
     GetAccState(&state);
 
     if (state & STATE_CHECKED)
-      _retval = NS_LITERAL_STRING("uncheck");
+      nsAccessible::GetTranslatedString(NS_LITERAL_STRING("uncheck"), _retval); 
     else
-      _retval = NS_LITERAL_STRING("check");
+      nsAccessible::GetTranslatedString(NS_LITERAL_STRING("check"), _retval); 
 
     return NS_OK;
   }
@@ -171,7 +171,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetAccNumActions(PRUint8 *_retval)
 NS_IMETHODIMP nsHTMLButtonAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
 {
   if (index == eAction_Click) {
-    _retval = NS_LITERAL_STRING("press");
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("press"), _retval); 
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
@@ -225,7 +225,7 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccNumActions(PRUint8 *_retval)
 NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccActionName(PRUint8 index, nsAWritableString& _retval)
 {
   if (index == eAction_Click) {
-    _retval = NS_LITERAL_STRING("press");
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("press"), _retval); 
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;
