@@ -21,32 +21,73 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-offline.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://messenger-offline/locale/pref-offline.dtd">
 
-<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://messenger/content/pref-offline.xul');"
-      headertitle="&pane.title;">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="init();"
+        buttons="accept, cancel"
+        ondialogaccept="savePrefs();"
+        persist="screenX screenY"
+        title="&pane.title;">
 
   <script type="application/x-javascript">
+
   <![CDATA[
     var _elementIDs = ["whengoingOnlinestate", "whengoingOfflinestate", "offlineCompactFolder", "offlineCompactFolderMin"];
-  ]]>
     
-  function Startup()
-  {
-    var aCheckbox = document.getElementById("offlineCompactFolder");
-    enableField(aCheckbox, "offlineCompactFolderMin");
-  }
+    function init()
+    {
+      var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
-  function enableField(aCheckbox, aNodeID) 
-  { 
-     var aField = document.getElementById(aNodeID); 
-     if (aCheckbox.checked) 
+      // initialize the default window values...
+      for( var i = 0; i < _elementIDs.length; i++ )
+      {        
+        var elementID = _elementIDs[i];
+        var element = document.getElementById(elementID);
+        if (!element) break;
+        var eltType = element.localName;
+        if (eltType == "radiogroup")
+          element.selectedItem = element.childNodes[pref.getIntPref(element.getAttribute("prefstring"))];
+        else if (eltType == "checkbox")
+          element.checked = pref.getBoolPref(element.getAttribute("prefstring"));
+        else if (eltType == "textbox")
+          element.setAttribute("value", pref.getIntPref(element.getAttribute("prefstring")) );
+      }
+
+      var aCheckbox = document.getElementById("offlineCompactFolder");
+      enableField(aCheckbox, "offlineCompactFolderMin");
+    }
+
+    function enableField(aCheckbox, aNodeID) 
+    { 
+       var aField = document.getElementById(aNodeID); 
+       if (aCheckbox.checked) 
          aField.removeAttribute("disabled"); 
-     else 
+       else 
          aField.setAttribute("disabled", "true"); 
-  } 
+    } 
 
+    function savePrefs()
+    {
+      var pref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+
+      for( var i = 0; i < _elementIDs.length; i++ )
+      {
+        var elementID = _elementIDs[i];
+
+        var element = document.getElementById(elementID);
+        if (!element) break;
+        var eltType = element.localName;
+
+        if (eltType == "radiogroup")
+          pref.setIntPref(element.getAttribute("prefstring"), parseInt(element.value));
+        else if (eltType == "checkbox")
+          pref.setBoolPref(element.getAttribute("prefstring"), element.checked);
+        else if (eltType == "textbox" && element.preftype == "int")
+          pref.setIntPref(element.getAttribute("prefstring"), parseInt(element.getAttribute("value")) );
+       }
+    }
+  ]]>
   </script>
 
 <groupbox>
@@ -83,4 +124,5 @@
         <label value="&kb.label;"/>
     </hbox>
 </groupbox>
-</page>
+
+</dialog>

@@ -5,15 +5,18 @@
 
   <!-- list all the packages being supplied by this jar -->
   <RDF:Seq about="urn:mozilla:package:root">
-    <RDF:li resource="urn:mozilla:package:messenger-views"/>
+    <RDF:li resource="urn:mozilla:package:messenger-offline"/>
   </RDF:Seq>
 
   <!-- package information -->
   <RDF:Description about="urn:mozilla:package:messenger-offline"
-        chrome:displayName="Messenger"
+        chrome:displayName="Offline"
         chrome:author="mozilla.org"
         chrome:name="messenger-offline"
-        chrome:localeVersion="1.4b"
+        chrome:description="This extension adds offline support to Mozilla Thunderbird." 
+        chrome:extension="true"
+        chrome:settingsURL="chrome://messenger-offline/content/pref-offline.xul"
+        chrome:localeVersion="1.5a"
         chrome:skinVersion="1.2">
   </RDF:Description>
 
@@ -24,11 +27,11 @@
   </RDF:Seq>
 
   <RDF:Seq about="chrome://messenger/content/mailWindowOverlay.xul">
-    <RDF:li>chrome://messenger/content/msgOfflineOverlay.xul</RDF:li>
+    <RDF:li>chrome://messenger-offline/content/msgOfflineOverlay.xul</RDF:li>
   </RDF:Seq>
 
   <RDF:Seq about="chrome://messenger/content/preftree.xul">
-    <RDF:li>chrome://messenger/content/pref-offlineOverlay.xul</RDF:li>
+    <RDF:li>chrome://messenger-offline/content/pref-offlineOverlay.xul</RDF:li>
   </RDF:Seq>
 
 </RDF:RDF>

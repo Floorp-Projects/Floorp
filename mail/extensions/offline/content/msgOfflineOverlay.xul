@@ -36,14 +36,14 @@
 #
 # ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/offline.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://messenger-offline/locale/offline.dtd">
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="JavaScript" src="chrome://messenger/content/mail-offline.js"/>
+  <script language="JavaScript" src="chrome://messenger-offline/content/mail-offline.js"/>
 
   <stringbundleset id="stringbundleset">
-    <stringbundle id="bundle_offlinePrompts" src="chrome://messenger/locale/offline.properties"/>
+    <stringbundle id="bundle_offlinePrompts" src="chrome://messenger-offline/locale/offline.properties"/>
   </stringbundleset>
   
   <statusbar class="chromeclass-status" id="status-bar"> 
