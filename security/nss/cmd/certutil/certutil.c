@@ -39,6 +39,7 @@
 */
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #if defined(WIN32)
 #include "fcntl.h"
@@ -638,7 +639,7 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 		rv = SECSuccess;
 	    } else if (raw) {
 		numBytes = PR_Write(outfile, data.data, data.len);
-		if (numBytes != data.len) {
+		if (numBytes != (PRInt32) data.len) {
 		   SECU_PrintSystemError(progName, "error writing raw cert");
 		    rv = SECFailure;
 		}
@@ -2199,10 +2200,44 @@ enum {
     opt_RW,
     opt_Exponent,
     opt_NoiseFile,
-    opt_Hash
+    opt_Hash,
+    opt_Batch
 };
 
-static secuCommandFlag certutil_commands[] =
+static int 
+certutil_main(int argc, char **argv, PRBool initialize)
+{
+    CERTCertDBHandle *certHandle;
+    PK11SlotInfo *slot = NULL;
+    CERTName *  subject         = 0;
+    PRFileDesc *inFile          = PR_STDIN;
+    PRFileDesc *outFile         = NULL;
+    char *      certfile        = "tempcert";
+    char *      certreqfile     = "tempcertreq";
+    char *      slotname        = "internal";
+    char *      certPrefix      = "";
+    KeyType     keytype         = rsaKey;
+    char *      name            = NULL;
+    SECOidTag   hashAlgTag      = SEC_OID_UNKNOWN;
+    int	        keysize	        = DEFAULT_KEY_BITS;
+    int         publicExponent  = 0x010001;
+    unsigned int serialNumber   = 0;
+    int         warpmonths      = 0;
+    int         validitylength  = 0;
+    int         commandsEntered = 0;
+    char        commandToRun    = '\0';
+    secuPWData  pwdata          = { PW_NONE, 0 };
+    PRBool 	readOnly	= PR_FALSE;
+
+    SECKEYPrivateKey *privkey = NULL;
+    SECKEYPublicKey *pubkey = NULL;
+
+    int i;
+    SECStatus rv;
+
+    secuCommand certutil;
+
+secuCommandFlag certutil_commands[] =
 {
 	{ /* cmd_AddCert             */  'A', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_CreateNewCert       */  'C', PR_FALSE, 0, PR_FALSE },
@@ -2225,7 +2260,7 @@ static secuCommandFlag certutil_commands[] =
 	{ /* cmd_Version             */  'Y', PR_FALSE, 0, PR_FALSE }
 };
 
-static secuCommandFlag certutil_options[] =
+secuCommandFlag certutil_options[] =
 {
 	{ /* opt_SSOPass             */  '0', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_AddKeyUsageExt      */  '1', PR_FALSE, 0, PR_FALSE },
@@ -2264,47 +2299,17 @@ static secuCommandFlag certutil_options[] =
 	{ /* opt_RW                  */  'X', PR_FALSE, 0, PR_FALSE },
 	{ /* opt_Exponent            */  'y', PR_TRUE,  0, PR_FALSE },
 	{ /* opt_NoiseFile           */  'z', PR_TRUE,  0, PR_FALSE },
-	{ /* opt_Hash                */  'Z', PR_TRUE,  0, PR_FALSE }
+	{ /* opt_Hash                */  'Z', PR_TRUE,  0, PR_FALSE },
+	{ /* opt_Batch               */  'B', PR_TRUE,  0, PR_FALSE }
 };
 
-int 
-main(int argc, char **argv)
-{
-    CERTCertDBHandle *certHandle;
-    PK11SlotInfo *slot = NULL;
-    CERTName *  subject         = 0;
-    PRFileDesc *inFile          = PR_STDIN;
-    PRFileDesc *outFile         = 0;
-    char *      certfile        = "tempcert";
-    char *      certreqfile     = "tempcertreq";
-    char *      slotname        = "internal";
-    char *      certPrefix      = "";
-    KeyType     keytype         = rsaKey;
-    char *      name            = NULL;
-    SECOidTag   hashAlgTag      = SEC_OID_UNKNOWN;
-    int	        keysize	        = DEFAULT_KEY_BITS;
-    int         publicExponent  = 0x010001;
-    unsigned int serialNumber   = 0;
-    int         warpmonths      = 0;
-    int         validitylength  = 0;
-    int         commandsEntered = 0;
-    char        commandToRun    = '\0';
-    secuPWData  pwdata          = { PW_NONE, 0 };
-    PRBool 	readOnly	= PR_FALSE;
 
-    SECKEYPrivateKey *privkey = NULL;
-    SECKEYPublicKey *pubkey = NULL;
-
-    int i;
-    SECStatus rv;
-
-    secuCommand certutil;
     certutil.numCommands = sizeof(certutil_commands) / sizeof(secuCommandFlag);
     certutil.numOptions = sizeof(certutil_options) / sizeof(secuCommandFlag);
     certutil.commands = certutil_commands;
     certutil.options = certutil_options;
 
-    progName = strrchr(argv[0], '/');
+    progName = PORT_Strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
 
     rv = SECU_ParseCommandLine(argc, argv, progName, &certutil);
@@ -2632,14 +2637,16 @@ main(int argc, char **argv)
 
     PK11_SetPasswordFunc(SECU_GetModulePassword);
 
-    /*  Initialize NSPR and NSS.  */
-    PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    rv = NSS_Initialize(SECU_ConfigDirectory(NULL), certPrefix, certPrefix,
-                        "secmod.db", readOnly ? NSS_INIT_READONLY: 0);
-    if (rv != SECSuccess) {
-	SECU_PrintPRandOSError(progName);
-	rv = SECFailure;
-	goto shutdown;
+    if (PR_TRUE == initialize) {
+        /*  Initialize NSPR and NSS.  */
+        PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
+        rv = NSS_Initialize(SECU_ConfigDirectory(NULL), certPrefix, certPrefix,
+                            "secmod.db", readOnly ? NSS_INIT_READONLY: 0);
+        if (rv != SECSuccess) {
+	    SECU_PrintPRandOSError(progName);
+	    rv = SECFailure;
+	    goto shutdown;
+        }
     }
     certHandle = CERT_GetDefaultCertDB();
 
@@ -2874,7 +2881,94 @@ shutdown:
 	SECKEY_DestroyPublicKey(pubkey);
     }
 
-    if (NSS_Shutdown() != SECSuccess) {
+    /* Open the batch command file.
+     *
+     * - If -B <command line> option is specified, the contents in the
+     * command file will be interpreted as subsequent certutil
+     * commands to be executed in the current certutil process
+     * context after the current certutil command has been executed.
+     * - Each line in the command file consists of the command
+     * line arguments for certutil.
+     * - The -d <configdir> option will be ignored if specified in the
+     * command file.
+     * - Quoting with double quote characters ("...") is supported
+     * to allow white space in a command line argument.  The
+     * double quote character cannot be escaped and quoting cannot
+     * be nested in this version.
+     * - each line in the batch file is limited to 512 characters
+    */
+
+    if ((SECSuccess == rv) && certutil.options[opt_Batch].activated) {
+	FILE* batchFile = fopen(certutil.options[opt_Batch].arg, "r");
+        char nextcommand[512];
+        if (!batchFile) {
+	    PR_fprintf(PR_STDERR,
+	               "%s:  unable to open \"%s\" for reading (%ld, %ld).\n",
+	               progName, certutil.options[opt_Batch].arg,
+	               PR_GetError(), PR_GetOSError());
+	    return 255;
+        }
+        /* read and execute command-lines in a loop */
+        while ( (SECSuccess == rv ) &&
+                fgets(nextcommand, sizeof(nextcommand), batchFile)) {
+            /* we now need to split the command into argc / argv format */
+            char* commandline = PORT_Strdup(nextcommand);
+            PRBool invalid = PR_FALSE;
+            int newargc = 2;
+            char* space = NULL;
+            char* nextarg = NULL;
+            char** newargv = NULL;
+            char* crlf = PORT_Strrchr(commandline, '\n');
+            if (crlf) {
+                *crlf = '\0';
+            }
+
+            newargv = PORT_Alloc(sizeof(char*)*(newargc+1));
+            newargv[0] = progName;
+            newargv[1] = commandline;
+            nextarg = commandline;
+            while ((space = PORT_Strpbrk(nextarg, " \f\n\r\t\v")) ) {
+                while (isspace(*space) ) {
+                    *space = '\0';
+                    space ++;
+                }
+                if (*space == '\0') {
+                    break;
+                } else if (*space != '\"') {
+                    nextarg = space;
+                } else {
+                    char* closingquote = strchr(space+1, '\"');
+                    if (closingquote) {
+                        *closingquote = '\0';
+                        space++;
+                        nextarg = closingquote+1;
+                    } else {
+                        invalid = PR_TRUE;
+                        nextarg = space;
+                    }
+                }
+                newargc++;
+                newargv = PORT_Realloc(newargv, sizeof(char*)*(newargc+1));
+                newargv[newargc-1] = space;
+            }
+            newargv[newargc] = NULL;
+            
+            /* invoke next command */
+            if (PR_TRUE == invalid) {
+                PR_fprintf(PR_STDERR, "Missing closing quote in batch command :\n%s\nNot executed.\n",
+                           nextcommand);
+                rv = SECFailure;
+            } else {
+                if (0 != certutil_main(newargc, newargv, PR_FALSE) )
+                    rv = SECFailure;
+            }
+            PORT_Free(newargv);
+            PORT_Free(commandline);
+        }
+        fclose(batchFile);
+    }
+
+    if ((initialize == PR_TRUE) && NSS_Shutdown() != SECSuccess) {
         exit(1);
     }
 
@@ -2883,4 +2977,10 @@ shutdown:
     } else {
 	return 255;
     }
+}
+
+int
+main(int argc, char **argv)
+{
+    return certutil_main(argc, argv, PR_TRUE);
 }
