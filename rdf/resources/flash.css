@@ -4,14 +4,6 @@
 
  */
 
-treeitem[type="http://home.netscape.com/NC-rdf#StockFlash"] > treecell > titledbutton {
-  list-style-image: url("resource:/res/rdf/stock.gif");
-}
-
-treeitem[type="http://home.netscape.com/NC-rdf#OnlinePresence"] > treecell > titledbutton {
-  list-style-image: url("resource:/res/rdf/online.gif");
-}
-
-treeitem[type="http://home.netscape.com/NC-rdf#Biff"] > treecell > titledbutton {
-  list-style-image: url("resource:/res/rdf/unread.gif");
+treeitem[type="http://www.mozilla.org/RDF#TinderboxFlash"] > treecell > titledbutton {
+  list-style-image: url("resource:/res/rdf/flames.gif");
 }

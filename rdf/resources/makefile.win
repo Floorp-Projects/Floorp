@@ -44,6 +44,7 @@ FILES=\
         flash.css                       \
         flash.js                        \
         flash.xul                       \
+        flames.gif                      \
         folder-closed.gif               \
         folder-open.gif                 \
         iefavorite.gif                  \
