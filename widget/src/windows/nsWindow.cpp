@@ -2559,9 +2559,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             mContext->GetPaletteInfo(palInfo);
             if (palInfo.isPaletteDevice && palInfo.palette) {
                 HDC hDC = ::GetDC(mWnd);
-                // XXX Setting this to TRUE to stop it hanging
-                // it should be FALSE
-                //HPALETTE hOldPal = ::SelectPalette(hDC, (HPALETTE)palInfo.palette, FALSE);
                 HPALETTE hOldPal = ::SelectPalette(hDC, (HPALETTE)palInfo.palette, TRUE);
                 
                 // Realize the drawing palette
@@ -2572,9 +2569,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                   // Yes, so repaint
                   ::InvalidateRect(mWnd, (LPRECT)NULL, TRUE);
                 }
-
-                ::SelectPalette(hDC, hOldPal, TRUE);
-                ::RealizePalette(hDC);
                 ::ReleaseDC(mWnd, hDC);
                 *aRetValue = TRUE;
             }
