@@ -37,3 +37,6 @@ Rights Reserved.
 <!ENTITY cancel.label             "Cancel">
 
 <!ENTITY select.label             "Select the type of material to import:">
+
+<!ENTITY title.label              "Title">
+<!ENTITY processing.label         "Processing">

@@ -72,8 +72,8 @@ Rights Reserved.
     <box class="wizard-box" orient="vertical">
       <spring flex="1"/>
       <titledbox orient="vertical">
-        <label id="progressTitle" value="Title"/>
-        <text class="label indent" id="progressStatus" value="Processing"/>
+        <label id="progressTitle" value="&title.label;"/>
+        <text class="label indent" id="progressStatus" value="&processing.label;"/>
         <box class="box-padded" orient="vertical">
           <progressmeter id="progressMeter" mode="normal" value="5"/>
         </box>
