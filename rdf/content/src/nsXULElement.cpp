@@ -1600,16 +1600,7 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
                 if (NS_OK == owner->GetScriptContext(getter_AddRefs(context))) {
                     nsAutoString tag;
                     Tag()->ToString(tag);
-
-                    char buf[64];
-                    char* p = buf;
-                    if (tag.Length() >= PRInt32(sizeof buf))
-                        p = (char *)nsAllocator::Alloc(tag.Length() + 1);
-
-                    context->AddNamedReference((void*) &mScriptObject, mScriptObject, buf);
-
-                    if (p != buf)
-                        nsCRT::free(p);
+                    context->AddNamedReference((void*) &mScriptObject, mScriptObject, nsCAutoString(tag));
                 }
             }
         }
