@@ -381,9 +381,13 @@ protected:
     nsCharsetSource     mCharsetSource;
     nsresult            mInternalState;
     CObserverService    mObserverService;
+
 #ifdef RAPTOR_PERF_METRICS
+public:
     Stopwatch           mTotalTime;
+    Stopwatch           mParseTime;
 #endif
+
 };
 
 

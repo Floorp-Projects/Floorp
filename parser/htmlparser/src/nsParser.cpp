@@ -194,6 +194,11 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mDTDVerification=PR_FALSE;
   mCharsetSource=kCharsetUninitialized;
   mInternalState=NS_OK;
+
+#ifdef RAPTOR_PERF_METRICS
+
+  mParseTime.Reset();
+#endif
 }
 
  
@@ -635,6 +640,9 @@ nsresult nsParser::EnableParser(PRBool aState){
     if(result!=NS_OK) 
       result=mInternalState;
   }
+  else {
+    NS_STOP_STOPWATCH(mParseTime);
+  }
 
   NS_STOP_STOPWATCH(mTotalTime)
 
@@ -649,9 +657,7 @@ nsresult nsParser::EnableParser(PRBool aState){
  *  @update  vidur 4/12/99
  *  @return  current state
  */
-PRBool    
-nsParser::IsParserEnabled()
-{
+PRBool nsParser::IsParserEnabled() {
   return mParserContext->mParserEnabled;
 }
 
@@ -669,6 +675,7 @@ nsParser::IsParserEnabled()
  */
 nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerifyEnabled, void* aKey,eParseMode aMode) {
   NS_START_STOPWATCH(mTotalTime)
+
   NS_PRECONDITION(0!=aURL,kNullURL);
 
   nsresult result=kBadURL;
@@ -713,6 +720,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIStreamObserver* aListener,PRBool aVerif
  */
 nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aKey,eParseMode aMode){
   NS_START_STOPWATCH(mTotalTime)
+
   mDTDVerification=aVerifyEnabled;
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
 
@@ -902,6 +910,9 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
 nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
   nsresult result=NS_OK;
   if(mParserContext->mParserEnabled && mInternalState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
+
+    NS_START_STOPWATCH(mParseTime)
+
     result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
     if(mParserContext->mDTD) {
       mParserContext->mDTD->WillResumeParse();
@@ -915,10 +926,18 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
           ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
           DidBuildModel(mStreamStatus);
           NS_STOP_STOPWATCH(mTotalTime);
+          NS_STOP_STOPWATCH(mParseTime);
+
+
 #ifdef RAPTOR_PERF_METRICS
           printf("Total Time: ");
           mTotalTime.Print();
           printf("\n");
+
+          printf("Parse Time: ");
+          mParseTime.Print();
+          printf("\n");
+
 #endif
           return mInternalState;
         }
@@ -938,6 +957,8 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
       mInternalState=result=NS_ERROR_HTMLPARSER_UNRESOLVEDDTD;
     }
   }//if
+
+  NS_STOP_STOPWATCH(mParseTime);
 
   return result;
 }
@@ -1288,7 +1309,7 @@ nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUin
             printf("xmlencoding detect- %s\n", guess.ToNewCString());
 #endif
             this->SetDocumentCharset(guess, guessSource);
-			mParserContext->mScanner->SetDocumentCharset(guess, guessSource);
+			      mParserContext->mScanner->SetDocumentCharset(guess, guessSource);
          }
       }
       theTotalRead+=theNumRead;

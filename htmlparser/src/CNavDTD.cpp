@@ -78,6 +78,20 @@ static eHTMLTags gWhitespaceTags[]={
 #include "nsElementTable.h"
 
 
+
+#ifdef RAPTOR_PERF_METRICS
+#  define START_TIMER()                    \
+    if(mParser) mParser->mParseTime.Start(PR_FALSE);
+
+#  define STOP_TIMER()                     \
+    if(mParser) mParser->mParseTime.Stop();
+
+#else
+#  define STOP_TIMER() 
+#  define START_TIMER()
+#endif
+
+
 /***************************************************************
   This the ITagHandler deque deallocator, needed by the 
   CTagHandlerRegister
@@ -487,8 +501,6 @@ eAutoDetectResult CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, 
 }
 
 
-PRTime  gStartTime;
-
 /**
  * 
  * @update  gess5/18/98
@@ -506,17 +518,15 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
   mHasOpenScript=PR_FALSE;
   if((aNotifySink) && (aSink)) {
 
+    STOP_TIMER();
+
     if(aSink && (!mSink)) {
       result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
     }
-
-
-#ifdef RGESS_DEBUG
-    gStartTime = PR_Now();
-    printf("Begin parsing...\n");
-#endif
-
     result = aSink->WillBuildModel();
+
+    START_TIMER();
+
     CStartToken theToken(eHTMLTag_html);
     HandleStartToken(&theToken);
 
@@ -603,15 +613,6 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
           }
         } 
 
-  #ifdef RGESS_DEBUG 
-        PRTime theEnd= PR_Now(); 
-        PRTime creates, ustoms; 
-        LL_I2L(ustoms, 1000); 
-        LL_SUB(creates, theEnd, gStartTime); 
-        LL_DIV(creates, creates, ustoms); 
-        printf("End parse elapsed: %lldms\n",creates); 
-  #endif 
-
           //let's only grab this state once! 
         if(!gShowCRC) { 
           gShowCRC=1; //this only indicates we'll not initialize again. 
@@ -622,6 +623,8 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
             } 
           } 
         } 
+
+        STOP_TIMER();
 
         if(2==gShowCRC) { 
           if(mComputedCRC32!=mExpectedCRC32) { 
@@ -641,6 +644,9 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
         if(mDTDDebug) { 
           mDTDDebug->DumpVectorRecord(); 
         } 
+
+        START_TIMER();
+
       } 
     } 
   }
@@ -821,10 +827,16 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
     case eHTMLTag_xmp:
       //grab the skipped content and dump it out as text...
       {
+
+        STOP_TIMER();
+
         const nsString& theText=aNode.GetSkippedContent();
         if(0<theText.Length()) {
           CViewSourceHTML::WriteText(theText,*mSink,PR_TRUE,PR_FALSE);
         }
+
+        START_TIMER();
+
       }
       break;
     default:
@@ -1285,8 +1297,14 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
       switch(theChildTag) { 
 
         case eHTMLTag_area:
+
+          STOP_TIMER();
+          
           if (mHasOpenMap && mSink)
             result=mSink->AddLeaf(*theNode);
+          
+          START_TIMER();
+
           break;
 
         case eHTMLTag_image:
@@ -1634,7 +1652,12 @@ nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
     WriteTokenToLog(aToken);
   #endif
 
+  STOP_TIMER();
+
   nsresult result=(mSink) ? mSink->AddComment(aNode) : NS_OK;  
+
+  START_TIMER();
+
   return result;
 }
 
@@ -1704,7 +1727,12 @@ nsresult CNavDTD::HandleProcessingInstructionToken(CToken* aToken){
     WriteTokenToLog(aToken);
   #endif
 
+  STOP_TIMER();
+
   nsresult result=(mSink) ? mSink->AddProcessingInstruction(aNode) : NS_OK; 
+
+  START_TIMER();
+
   return result;
 }
 
@@ -1731,7 +1759,13 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
     mLineNumber += (docTypeStr).CountChar(kNewLine);
     docTypeStr.Trim("<!>");
     nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+
+    STOP_TIMER();
+
     result = (mSink)? mSink->AddDocTypeDecl(theNode, pc->mParseMode):NS_OK;
+
+    START_TIMER();
+
   }
   return result;
 }
@@ -2235,7 +2269,12 @@ nsresult CNavDTD::CloseTransientStyles(eHTMLTags aChildTag){
 nsresult CNavDTD::OpenHTML(const nsIParserNode& aNode){
   NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
 
+  STOP_TIMER();
+
   nsresult result=(mSink) ? mSink->OpenHTML(aNode) : NS_OK; 
+
+  START_TIMER();
+
   mBodyContext->Push((eHTMLTags)aNode.GetNodeType());
   return result;
 }
@@ -2251,7 +2290,13 @@ nsresult CNavDTD::OpenHTML(const nsIParserNode& aNode){
  */
 nsresult CNavDTD::CloseHTML(const nsIParserNode& aNode){
   NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
+
+  STOP_TIMER();
+
   nsresult result=(mSink) ? mSink->CloseHTML(aNode) : NS_OK; 
+
+  START_TIMER();
+
   mBodyContext->Pop();
   return result;
 }
@@ -2268,9 +2313,15 @@ nsresult CNavDTD::CloseHTML(const nsIParserNode& aNode){
 nsresult CNavDTD::OpenHead(const nsIParserNode& aNode){
   //mBodyContext->Push(eHTMLTag_head);
   nsresult result=NS_OK;
+
+  STOP_TIMER();
+
   if(!mHasOpenHead++) {
     result=(mSink) ? mSink->OpenHead(aNode) : NS_OK; 
   }
+
+  START_TIMER();
+
   return result;
 }
 
@@ -2286,7 +2337,13 @@ nsresult CNavDTD::CloseHead(const nsIParserNode& aNode){
   nsresult result=NS_OK;
   if(mHasOpenHead) {
     if(0==--mHasOpenHead){
+
+      STOP_TIMER();
+
       result=(mSink) ? mSink->CloseHead(aNode) : NS_OK; 
+
+      START_TIMER();
+
     }
   }
   //mBodyContext->Pop();
@@ -2324,7 +2381,13 @@ nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
   }
 
   if(NS_OK==result) {
+
+    STOP_TIMER();
+
     result=(mSink) ? mSink->OpenBody(aNode) : NS_OK; 
+
+    START_TIMER();
+
     if(!theBodyIsOpen) {
       mBodyContext->Push((eHTMLTags)aNode.GetNodeType());
       mTokenizer->PrependTokens(mMisplacedContent);
@@ -2344,7 +2407,13 @@ nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
  */
 nsresult CNavDTD::CloseBody(const nsIParserNode& aNode){
   NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
+
+  STOP_TIMER();
+
   nsresult result=(mSink) ? mSink->CloseBody(aNode) : NS_OK; 
+
+  START_TIMER();
+
   mBodyContext->Pop();
   return result;
 }
@@ -2360,7 +2429,13 @@ nsresult CNavDTD::CloseBody(const nsIParserNode& aNode){
 nsresult CNavDTD::OpenForm(const nsIParserNode& aNode){
   if(mHasOpenForm)
     CloseForm(aNode);
+
+  STOP_TIMER();
+
   nsresult result=(mSink) ? mSink->OpenForm(aNode) : NS_OK; 
+
+  START_TIMER();
+
   if(NS_OK==result)
     mHasOpenForm=PR_TRUE;
   return result;
@@ -2379,7 +2454,13 @@ nsresult CNavDTD::CloseForm(const nsIParserNode& aNode){
   nsresult result=NS_OK;
   if(mHasOpenForm) {
     mHasOpenForm=PR_FALSE;
+
+    STOP_TIMER();
+
     result=(mSink) ? mSink->CloseForm(aNode) : NS_OK; 
+
+    START_TIMER();
+
   }
   return result;
 }
@@ -2395,7 +2476,13 @@ nsresult CNavDTD::CloseForm(const nsIParserNode& aNode){
 nsresult CNavDTD::OpenMap(const nsIParserNode& aNode){
   if(mHasOpenMap)
     CloseMap(aNode);
+
+  STOP_TIMER();
+
   nsresult result=(mSink) ? mSink->OpenMap(aNode) : NS_OK; 
+
+  START_TIMER();
+
   if(NS_OK==result) {
     mBodyContext->Push((eHTMLTags)aNode.GetNodeType());
     mHasOpenMap=PR_TRUE;
@@ -2416,7 +2503,13 @@ nsresult CNavDTD::CloseMap(const nsIParserNode& aNode){
   nsresult result=NS_OK;
   if(mHasOpenMap) {
     mHasOpenMap=PR_FALSE;
+
+    STOP_TIMER();
+
     result=(mSink) ? mSink->CloseMap(aNode) : NS_OK; 
+
+    START_TIMER();
+
     mBodyContext->Pop();
   }
   return result;
@@ -2434,7 +2527,13 @@ nsresult CNavDTD::OpenFrameset(const nsIParserNode& aNode){
   NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
 
   mHadFrameset=PR_TRUE;
+
+  STOP_TIMER();
+
   nsresult result=(mSink) ? mSink->OpenFrameset(aNode) : NS_OK; 
+
+  START_TIMER();
+
   mBodyContext->Push((eHTMLTags)aNode.GetNodeType());
   mHadFrameset=PR_TRUE;
   return result;
@@ -2450,7 +2549,13 @@ nsresult CNavDTD::OpenFrameset(const nsIParserNode& aNode){
  */
 nsresult CNavDTD::CloseFrameset(const nsIParserNode& aNode){
   NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
+
+  STOP_TIMER();
+
   nsresult result=(mSink) ? mSink->CloseFrameset(aNode) : NS_OK; 
+
+  START_TIMER();
+
   mBodyContext->Pop();
   return result;
 }
@@ -2530,7 +2635,13 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aClosedByStartTag){
       break;
 
     default:
+
+      STOP_TIMER();
+
       result=(mSink) ? mSink->OpenContainer(aNode) : NS_OK; 
+
+      START_TIMER();
+
       mBodyContext->Push((eHTMLTags)aNode.GetNodeType());
       break;
   }
@@ -2594,7 +2705,13 @@ CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool aClosed
 
     case eHTMLTag_title:
     default:
+
+      STOP_TIMER();
+
       result=(mSink) ? mSink->CloseContainer(aNode) : NS_OK; 
+
+      START_TIMER();
+
       mBodyContext->Pop();
       break;
   }
@@ -2716,7 +2833,13 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
   if(mSink){
     eHTMLTags theTag=(eHTMLTags)aNode.GetNodeType();
     OpenTransientStyles(theTag); 
+
+    STOP_TIMER();
+
     result=mSink->AddLeaf(aNode);
+
+    START_TIMER();
+
   }
   return result;
 }
@@ -2947,7 +3070,13 @@ nsITokenizer* CNavDTD::GetTokenizer(void) {
  * @return
  */
 nsresult CNavDTD::WillResumeParse(void){
+
+  STOP_TIMER();
+
   nsresult result=(mSink) ? mSink->WillResume() : NS_OK; 
+
+  START_TIMER();
+
   return result;
 }
 
@@ -2958,7 +3087,13 @@ nsresult CNavDTD::WillResumeParse(void){
  * @return  error code
  */
 nsresult CNavDTD::WillInterruptParse(void){
+
+  STOP_TIMER();
+
   nsresult result=(mSink) ? mSink->WillInterrupt() : NS_OK; 
+
+  START_TIMER();
+
   return result;
 }
 
