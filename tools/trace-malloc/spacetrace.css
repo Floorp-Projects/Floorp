@@ -61,6 +61,32 @@ body {
   font-style: italic;
 }
 
+.option-box {
+  border: solid black;
+  background: grey;
+  padding-left: .5em;
+  padding-right: .5em;
+  margin: .5em;
+}
+
+.option-name {
+  font-weight: bold;
+  margin: 1em;
+}
+
+.option-box input[type=text]
+{
+  border: inset thin;
+  padding: 2px;
+}
+
+.option-help {
+  white-space: pre;
+  right: 0px;
+  background: white;
+  padding: 0.5em;
+  border: thin inset;
+}
 
 /* data tables */
 
