@@ -285,18 +285,11 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   nscoord bottomInset = borderPadding.bottom;
   nscoord leftInset = borderPadding.left;
 
-  // Get the margin information, available space should
-  // be reduced accordingly
-  nsMargin      margin(0,0,0,0);
-  nsTableFrame* tableFrame;
-  nsTableFrame::GetTableFrame(this, tableFrame);
-  tableFrame->GetCellMarginData(this,margin);
-
   // reduce available space by insets, if we're in a constrained situation
   if (NS_UNCONSTRAINEDSIZE!=availSize.width)
     availSize.width -= leftInset+rightInset;
   if (NS_UNCONSTRAINEDSIZE!=availSize.height)
-    availSize.height -= topInset+bottomInset+margin.top+margin.bottom;
+    availSize.height -= topInset+bottomInset;
 
   if (eReflowReason_Incremental == aReflowState.reason) 
   {
