@@ -730,7 +730,6 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
     /DEDIT_REMOTE /DLAYERS /DMQUOTE \
 	/D_IMAGE_CONVERT \
 	/D_IME_COMPOSITION \
-      /DENDER \
 !if "$(MOZ_BITS)" == "32"
 !ifndef NSPR20
     /DWIN32 /DJAVA_WIN32 /DHW_THREADS /D_AFXDLL \
@@ -749,6 +748,9 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
     /DOJI \
 !elseif defined(MOZ_JAVA)
     /DJAVA \
+!endif
+!if defined(MOZ_ENDER)
+	/DENDER \
 !endif
     /DMOZILLA_CLIENT
 
@@ -1660,6 +1662,9 @@ install:    \
 !IF EXIST($(DIST)\bin\brpref$(MOZ_BITS).dll)
 	    $(OUTDIR)\brpref$(MOZ_BITS).dll    \
 !ENDIF
+!IF EXIST($(DIST)\bin\winpref.dll)
+	    $(OUTDIR)\winpref.dll    \
+!ENDIF
 !ifdef EDITOR
 !IF EXIST($(DIST)\bin\edpref$(MOZ_BITS).dll)
 	    $(OUTDIR)\edpref$(MOZ_BITS).dll    \
@@ -2287,6 +2292,9 @@ $(OUTDIR)\prefui$(MOZ_BITS).dll:   $(DIST)\bin\prefui$(MOZ_BITS).dll
     @IF EXIST $(DIST)\bin\$(@F) copy $(DIST)\bin\$(@F) $@
 
 $(OUTDIR)\brpref$(MOZ_BITS).dll:   $(DIST)\bin\brpref$(MOZ_BITS).dll
+    @IF EXIST $(DIST)\bin\$(@F) copy $(DIST)\bin\$(@F) $@
+
+$(OUTDIR)\winpref.dll:   $(DIST)\bin\winpref.dll
     @IF EXIST $(DIST)\bin\$(@F) copy $(DIST)\bin\$(@F) $@
 
 $(OUTDIR)\lipref$(MOZ_BITS).dll:   $(DIST)\bin\lipref$(MOZ_BITS).dll
