@@ -28,9 +28,15 @@ REQUIRES=xpcom js nspr netlib
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=    nsNNTPProtocol.cpp				\
+			nsNNTPArticleSet.cpp			\
+			nsNNTPArticleList.cpp			\
+			nsNNTPNewsgroupList.cpp			\
    			$(NULL)
 
 CPP_OBJS=   nsNNTPProtocol.obj				\
+			nsNNTPArticleSet.obj			\
+			nsNNTPArticleList.obj			\
+			nsNNTPNewsgroupList.obj			\
 			$(NULL)
 
 
