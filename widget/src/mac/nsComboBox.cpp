@@ -32,7 +32,7 @@ nsComboBox::nsComboBox() : nsMacControl(), nsIListWidget(), nsIComboBox()
 {
 	NS_INIT_REFCNT();
 	strcpy(gInstanceClassName, "nsComboBox");
-	SetControlType(kControlPopupButtonProc | kControlPopupFixedWidthVariant);
+	SetControlType(kControlPopupButtonProc);
 
 	mMenuHandle	= nsnull;
 	mMenuID		=  -12345;	// so that the control doesn't look for a menu in resource
@@ -48,9 +48,24 @@ nsComboBox::~nsComboBox()
 {
 	if (mMenuHandle)
 	{
+		::DeleteMenu(mMenuID);
 		::DisposeMenu(mMenuHandle);
 		mMenuHandle = nsnull;
 	}
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void nsComboBox::GetRectForMacControl(nsRect &outRect)
+{
+	//¥TODO: we can certainly remove this function if we
+	// implement GetDesiredSize() in nsComboboxControlFrame
+	outRect = mBounds;
+	outRect.x = 0;
+	outRect.y = 3;
+	outRect.height -= 6;
 }
 
 //-------------------------------------------------------------------------
@@ -74,15 +89,17 @@ NS_IMETHODIMP nsComboBox::Create(nsIWidget *aParent,
   		mMenuHandle = ::NewMenu(mMenuID, "\p");
   		if (mMenuHandle)
   		{
-			::SetControlData(mControl, kControlNoPart, kControlPopupButtonMenuHandleTag, sizeof(mMenuHandle), (Ptr)mMenuHandle);
-			::SetControlData(mControl, kControlNoPart, kControlPopupButtonMenuIDTag, sizeof(mMenuID), (Ptr)mMenuID);
-
+  			StartDraw();
+  			::InsertMenu(mMenuHandle, hierMenu);
+//			::SetControlData(mControl, kControlNoPart, kControlPopupButtonMenuHandleTag, sizeof(mMenuHandle), (Ptr)&mMenuHandle);
+//			::SetControlData(mControl, kControlNoPart, kControlPopupButtonMenuIDTag, sizeof(mMenuID), (Ptr)&mMenuID);
 			PopupPrivateData* popupData = (PopupPrivateData*)*((*mControl)->contrlData);
 			if (popupData)
 			{
 				popupData->mHandle = mMenuHandle;
 				popupData->mID = mMenuID;
 			}
+			EndDraw();
   		}
   		else
   			res = NS_ERROR_FAILURE;
@@ -133,10 +150,20 @@ nsresult nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 	Str255 pString;
 	StringToStr255(aItem, pString);
 
+	StartDraw();
 	if (aPosition == -1)
 		::MacAppendMenu(mMenuHandle, pString);
 	else
-		::MacInsertMenuItem(mMenuHandle, pString, aPosition);
+	{
+		::MacInsertMenuItem(mMenuHandle, "\p ", aPosition + 1);
+		::SetMenuItemText(mMenuHandle, aPosition + 1, pString);
+	}
+
+	short menuItems = GetItemCount();
+	::SetControlMinimum(mControl, (menuItems ? 1 : 0));
+	::SetControlMaximum(mControl, (menuItems ? menuItems : 0));
+	EndDraw();
+
 	return NS_OK;
 }
 
@@ -153,12 +180,12 @@ PRInt32  nsComboBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 	PRInt32 index = -1;
 	short itemCount = CountMenuItems(mMenuHandle);
 
-	if (aStartPos < itemCount)
+	if (aStartPos <= itemCount)
 	{
 		Str255 searchStr;
 		StringToStr255(aItem, searchStr);
 
-		for (short i = aStartPos; i < itemCount; i ++)
+		for (short i = aStartPos + 1; i <= itemCount; i ++)
 		{
 			Str255	itemStr;
 			::GetMenuItemText(mMenuHandle, i, itemStr);
@@ -198,7 +225,17 @@ PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
 	if (GetItemCount() < aPosition)
 		return PR_FALSE;
 
-	::DeleteMenuItem(mMenuHandle, aPosition);
+	StartDraw();
+	if (aPosition == -1)
+		::DeleteMenuItem(mMenuHandle, GetItemCount());
+	else
+		::DeleteMenuItem(mMenuHandle, aPosition + 1);
+
+	short menuItems = GetItemCount();
+	::SetControlMinimum(mControl, (menuItems ? 1 : 0));
+	::SetControlMaximum(mControl, (menuItems ? menuItems : 0));
+	EndDraw();
+
 	return PR_TRUE;
 }
 
@@ -214,11 +251,11 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 	if (! mMenuHandle)
 		return PR_FALSE;
 
-	if (GetItemCount() < aPosition)
+	if (aPosition >= GetItemCount())
 		return PR_FALSE;
 
 	Str255	itemStr;
-	::GetMenuItemText(mMenuHandle, aPosition, itemStr);
+	::GetMenuItemText(mMenuHandle, aPosition + 1, itemStr);
 	Str255ToString(itemStr, anItem);
 
   return PR_TRUE;
@@ -267,7 +304,13 @@ nsresult nsComboBox::SelectItem(PRInt32 aPosition)
 	if (! mMenuHandle)
 		return NS_ERROR_NOT_INITIALIZED;
 
-	::SetControlValue(mControl, aPosition);
+	StartDraw();
+	if (aPosition == -1)
+		::SetControlValue(mControl, GetItemCount());
+	else
+		::SetControlValue(mControl, aPosition + 1);
+	EndDraw();
+
 	return NS_OK;
 }
 
@@ -279,4 +322,36 @@ nsresult nsComboBox::SelectItem(PRInt32 aPosition)
 nsresult nsComboBox::Deselect()
 {
 	return SelectItem(0);
+}
+
+//-------------------------------------------------------------------------
+//
+//  DispatchMouseEvent
+//
+//-------------------------------------------------------------------------
+PRBool nsComboBox::DispatchMouseEvent(nsMouseEvent &aEvent)
+{
+	PRBool eatEvent = PR_FALSE;
+	switch (aEvent.message)
+	{
+		case NS_MOUSE_LEFT_DOUBLECLICK:
+		case NS_MOUSE_LEFT_BUTTON_DOWN:
+			StartDraw();
+			{
+				Point thePoint;
+				thePoint.h = aEvent.point.x;
+				thePoint.v = aEvent.point.y;
+				::TrackControl(mControl, thePoint, nil);
+				//¥TODO: the mouseUp event is eaten by TrackControl.
+				//¥ We must create it and dispatch it after the mouseDown;
+				eatEvent = PR_TRUE;
+			}
+			EndDraw();
+			break;
+	}
+
+	if (eatEvent)
+		return PR_TRUE;
+	return (Inherited::DispatchMouseEvent(aEvent));
+
 }
