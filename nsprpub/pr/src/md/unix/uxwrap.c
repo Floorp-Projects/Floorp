@@ -296,10 +296,10 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
 }
 
 /*
- * Linux, BSDI, and FreeBSD don't have poll()
+ * Linux, BSDI, FreeBSD, and Rhapsody don't have poll().
  */
 
-#if !defined(LINUX) && !defined(FREEBSD) && !defined(BSDI)
+#if !defined(LINUX) && !defined(FREEBSD) && !defined(BSDI) && !defined(RHAPSODY)
 
 /*
  *-----------------------------------------------------------------------

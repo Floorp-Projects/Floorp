@@ -49,7 +49,7 @@
         || defined(UNIXWARE) || defined(NCR) || defined(SNI) || defined(NEC) \
         || defined(BSDI) || defined(SONY)
 #include <sys/select.h>
-#elif defined(SUNOS4) || defined(SCO) || defined(FREEBSD)
+#elif defined(SUNOS4) || defined(SCO) || defined(FREEBSD) || defined(RHAPSODY)
 #include <sys/types.h>
 #elif defined(LINUX)
 #include <sys/time.h>
@@ -156,7 +156,7 @@ extern void _MD_unix_init_running_cpu(struct _PRCPU *cpu);
 ** work - it just means that we don't really have a functional
 ** redzone.
 */
-#if defined(DEBUG)
+#if defined(DEBUG) && !defined(RHAPSODY)
 #if !defined(SOLARIS)	
 #include <string.h>  /* for memset() */
 #define _MD_INIT_STACK(ts,REDZONE)					\

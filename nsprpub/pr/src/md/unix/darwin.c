@@ -38,7 +38,7 @@ PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 {
 #ifndef _PR_PTHREADS
     if (isCurrent) {
-	(void) sigsetjmp(CONTEXT(t), 1);
+	(void) setjmp(CONTEXT(t));
     }
     *np = sizeof(CONTEXT(t)) / sizeof(PRWord);
     return (PRWord *) CONTEXT(t);
@@ -78,11 +78,11 @@ _MD_WAKEUP_WAITER(PRThread *thread)
     return PR_SUCCESS;
 }
 
-/* These functions should not be called for FreeBSD */
+/* These functions should not be called for OSF1 */
 void
 _MD_YIELD(void)
 {
-    PR_NOT_REACHED("_MD_YIELD should not be called for FreeBSD.");
+    PR_NOT_REACHED("_MD_YIELD should not be called for OSF1.");
 }
 
 PRStatus
@@ -94,7 +94,7 @@ _MD_CREATE_THREAD(
     PRThreadState state,
     PRUint32 stackSize)
 {
-    PR_NOT_REACHED("_MD_CREATE_THREAD should not be called for FreeBSD.");
+    PR_NOT_REACHED("_MD_CREATE_THREAD should not be called for OSF1.");
 	return PR_FAILURE;
 }
 #endif /* ! _PR_PTHREADS */

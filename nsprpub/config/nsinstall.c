@@ -37,8 +37,16 @@
 
 #define HAVE_LCHOWN
 
-#if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE)
+#if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) || defined(RHAPSODY)
 #undef HAVE_LCHOWN
+#endif
+
+/*
+ * Does getcwd() take NULL as the first argument and malloc
+ * the result buffer?
+ */
+#if !defined(RHAPSODY)
+#define GETCWD_CAN_MALLOC
 #endif
 
 #ifdef LINUX
@@ -187,10 +195,21 @@ main(int argc, char **argv)
     if (onlydir)
 	return 0;
 
-    if (!cwd)
+    if (!cwd) {
+#ifdef GETCWD_CAN_MALLOC
 	cwd = getcwd(0, PATH_MAX);
+#else
+	cwd = malloc(PATH_MAX + 1);
+	cwd = getcwd(cwd, PATH_MAX);
+#endif
+    }
     xchdir(todir);
+#ifdef GETCWD_CAN_MALLOC
     todir = getcwd(0, PATH_MAX);
+#else
+    todir = malloc(PATH_MAX + 1);
+    todir = getcwd(todir, PATH_MAX);
+#endif
     tdlen = strlen(todir);
     xchdir(cwd);
     tdlen = strlen(todir);

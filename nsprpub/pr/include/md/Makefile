@@ -79,6 +79,10 @@ ifeq ($(OS_ARCH),SINIX)
 MDCPUCFG_H = _reliantunix.cfg
 endif
 
+ifeq ($(OS_ARCH),Rhapsody)
+MDCPUCFG_H = _rhapsody.cfg
+endif
+
 ifeq ($(OS_ARCH),NEWS-OS)
 MDCPUCFG_H = _sony.cfg
 endif

@@ -149,6 +149,7 @@ PR_IMPLEMENT(void) PR_MapSegment(PRSegment *seg, PRSegmentAccess how)
     seg->access = how;
 
 #ifdef XP_UNIX
+#ifndef RHAPSODY
     if (seg->flags & _PR_SEG_VM) {
 	int prot;
 	switch (how) {
@@ -164,6 +165,7 @@ PR_IMPLEMENT(void) PR_MapSegment(PRSegment *seg, PRSegmentAccess how)
 	}
 	(void) mprotect(seg->vaddr, seg->size, prot);
     }
+#endif
 #endif
 }
 
