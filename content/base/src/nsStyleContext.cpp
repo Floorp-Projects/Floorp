@@ -748,7 +748,7 @@ static PRInt32 gInstanceCount;
 static PRInt32 gInstrument = 6;
 #endif
 
-PRBool HashStyleRule(nsISupports* aRule, void* aData)
+static PRBool HashStyleRule(nsISupports* aRule, void* aData)
 {
   *((PRUint32*)aData) ^= PRUint32(aRule);
   return PR_TRUE;
@@ -1132,7 +1132,7 @@ struct MapStyleData {
   nsIPresContext*   mPresContext;
 };
 
-PRBool MapStyleRule(nsISupports* aRule, void* aData)
+static PRBool MapStyleRule(nsISupports* aRule, void* aData)
 {
   nsIStyleRule* rule = (nsIStyleRule*)aRule;
   MapStyleData* data = (MapStyleData*)aData;

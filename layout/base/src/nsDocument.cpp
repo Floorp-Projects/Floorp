@@ -544,10 +544,10 @@ nsIArena* nsDocument::GetArena()
   return mArena;
 }
 
-NS_IMETHODIMP
-nsDocument::StartDocumentLoad(nsIURL *aURL, 
-                              nsIContentViewerContainer* aContainer,
-                              nsIStreamListener **aDocListener)
+nsresult
+nsDocument::StartDocLoad(nsIURL *aURL, 
+                         nsIContentViewerContainer* aContainer,
+                         nsIStreamListener **aDocListener)
 {
   // Delete references to style sheets - this should be done in superclass...
   PRInt32 index = mStyleSheets.Count();

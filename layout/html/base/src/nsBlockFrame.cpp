@@ -940,7 +940,7 @@ nsBaseIBFrame::PrepareFrameRemovedReflow(nsBlockReflowState& aState)
   aState.reflowCommand->GetPrevSiblingFrame(prevSibling);
 
   // Remove the frame. This marks the affected lines dirty.
-  RemoveFrame(aState, this, deletedFrame, prevSibling);
+  DoRemoveFrame(aState, this, deletedFrame, prevSibling);
   return NS_OK;
 }
 
@@ -3095,10 +3095,10 @@ nsBaseIBFrame::InsertNewFrame(nsIPresContext& aPresContext,
 
 // XXX this code can't work...rewrite it!
 nsresult
-nsBaseIBFrame::RemoveFrame(nsBlockReflowState& aState,
-                           nsBaseIBFrame* aParentFrame,
-                           nsIFrame* aDeletedFrame,
-                           nsIFrame* aPrevSibling)
+nsBaseIBFrame::DoRemoveFrame(nsBlockReflowState& aState,
+                             nsBaseIBFrame* aParentFrame,
+                             nsIFrame* aDeletedFrame,
+                             nsIFrame* aPrevSibling)
 {
   // Find the line that contains deletedFrame; we also find the pointer to
   // the line.
@@ -4577,7 +4577,7 @@ nsBlockFrame::BuildFloaterList()
 
 // XXX keep the text-run data in the first-in-flow of the block
 nsresult
-nsBlockFrame::FindTextRuns(nsBlockReflowState& aState)
+nsBlockFrame::ComputeTextRuns(nsBlockReflowState& aState)
 {
   // Destroy old run information first
   nsTextRun::DeleteTextRuns(mTextRuns);
@@ -4722,7 +4722,7 @@ nsBlockFrame::PrepareInitialReflow(nsBlockReflowState& aState)
   }
 
   nsresult rv = nsBlockFrameSuper::PrepareInitialReflow(aState);
-  FindTextRuns(aState);
+  ComputeTextRuns(aState);
   RenumberLists(aState);
   return rv;
 }
@@ -4732,7 +4732,7 @@ nsBlockFrame::PrepareFrameAppendedReflow(nsBlockReflowState& aState)
 {
   nsresult rv = nsBlockFrameSuper::PrepareFrameAppendedReflow(aState);
   RenumberLists(aState);
-  rv = FindTextRuns(aState);
+  rv = ComputeTextRuns(aState);
   return rv;
 }
 
@@ -4741,7 +4741,7 @@ nsBlockFrame::PrepareFrameInsertedReflow(nsBlockReflowState& aState)
 {
   nsresult rv = nsBlockFrameSuper::PrepareFrameInsertedReflow(aState);
   RenumberLists(aState);
-  rv = FindTextRuns(aState);
+  rv = ComputeTextRuns(aState);
   return rv;
 }
 
@@ -4750,7 +4750,7 @@ nsBlockFrame::PrepareFrameRemovedReflow(nsBlockReflowState& aState)
 {
   nsresult rv = nsBlockFrameSuper::PrepareFrameRemovedReflow(aState);
   RenumberLists(aState);
-  rv = FindTextRuns(aState);
+  rv = ComputeTextRuns(aState);
   return rv;
 }
 

@@ -293,31 +293,12 @@ extern nsresult NS_NewTableRowFrame(nsIFrame*& aResult);
 extern nsresult NS_NewTableRowGroupFrame(nsIFrame*& aResult);
 extern nsresult NS_NewTableCellFrame(nsIFrame*& aResult);
 
-// Everything below this line is obsolete...
-//----------------------------------------------------------------------
-// XXX naming consistency puhleeze!
 
 // XXX passing aWebShell into this is wrong
 extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                       nsIDocument* aDoc,
                                       nsIURL* aURL,
                                       nsIWebShell* aWebShell);
-
-extern nsresult
-NS_NewHTMLEmbed(nsIHTMLContent** aInstancePtrResult,
-                nsIAtom* aTag);
-
-extern nsresult
-NS_NewHTMLObject(nsIHTMLContent** aInstancePtrResult,
-                 nsIAtom* aTag);
-
-extern nsresult
-NS_NewHTMLImage(nsIHTMLContent** aInstancePtrResult,
-                nsIAtom* aTag);
-
-extern nsresult
-NS_NewHTMLLayer(nsIHTMLContent** aInstancePtrResult,
-                nsIAtom* aTag);
 
 /** Create a new HTML reflow command */
 extern nsresult

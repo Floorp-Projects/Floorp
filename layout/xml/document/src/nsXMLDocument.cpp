@@ -126,8 +126,7 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
                                  nsIStreamListener **aDocListener,
                                  const char* aCommand)
 {
-  nsresult rv = nsDocument::StartDocumentLoad(aUrl, aContainer,
-                                              aDocListener);
+  nsresult rv = nsDocument::StartDocLoad(aUrl, aContainer, aDocListener);
   if (NS_FAILED(rv)) {
     return rv;
   }
