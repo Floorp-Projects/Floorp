@@ -110,6 +110,9 @@ public:
 	void SetCtxMenuImageSrc(nsAutoString& strImgSrc);
 	nsAutoString mCtxMenuImgSrc;
 
+	void SetCurrentFrameURL(nsAutoString& strCurrentFrameURL);
+	nsString mCtxMenuCurrentFrameURL;
+
 	inline void ClearFindDialog() { m_pFindDlg = NULL; }
 	CFindDialog* m_pFindDlg;
   CPrintProgressDialog* m_pPrintProgressDlg;
@@ -135,6 +138,8 @@ public:
     };
     int m_SecurityState;
     void ShowSecurityInfo();
+
+    BOOL ViewContentContainsFrames();
     
 	// Overrides
 	// ClassWizard generated virtual function overrides
@@ -185,6 +190,8 @@ protected:
 	afx_msg void OnFilePrintSetup();
 	afx_msg void OnUpdateFilePrint(CCmdUI* pCmdUI);
 	afx_msg LRESULT OnFindMsg(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnViewFrameSource();
+	afx_msg void OnOpenFrameInNewWindow();
 
 	// Handlers to keep the toolbar/menu items up to date
 	//

@@ -330,6 +330,8 @@ void CBrowserFrame::BrowserFrameGlueObj::DestroyBrowserFrame()
     pThis->PostMessage(WM_CLOSE);
 }
 
+#define GOTO_BUILD_CTX_MENU { bContentHasFrames = FALSE; goto BUILD_CTX_MENU; }
+
 void CBrowserFrame::BrowserFrameGlueObj::ShowContextMenu(PRUint32 aContextFlags, nsIDOMNode *aNode)
 {
     METHOD_PROLOGUE(CBrowserFrame, BrowserFrameGlueObj)
@@ -406,9 +408,58 @@ void CBrowserFrame::BrowserFrameGlueObj::ShowContextMenu(PRUint32 aContextFlags,
         pThis->m_wndBrowserView.SetCtxMenuImageSrc(strImgSrcUcs2); // Set the new Img Src
     }
 
+    // Determine if we need to add the Frame related context menu items
+    // such as "View Frame Source" etc.
+    //
+    BOOL bContentHasFrames = FALSE;
+    if(pThis->m_wndBrowserView.ViewContentContainsFrames())
+    {
+        bContentHasFrames = TRUE;
+
+        nsAutoString strFrameURL;
+        pThis->m_wndBrowserView.SetCurrentFrameURL(strFrameURL); // Clear it
+
+        //Determine the current Frame URL
+        //
+        nsresult rv = NS_OK;
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        rv = aNode->GetOwnerDocument(getter_AddRefs(domDoc));
+        if(NS_FAILED(rv))
+            GOTO_BUILD_CTX_MENU;
+
+        nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(domDoc, &rv));
+        if(NS_FAILED(rv))
+            GOTO_BUILD_CTX_MENU;
+
+        rv = htmlDoc->GetURL(strFrameURL);
+        if(NS_FAILED(rv))
+            GOTO_BUILD_CTX_MENU;
+
+        pThis->m_wndBrowserView.SetCurrentFrameURL(strFrameURL); //Set it to the new URL
+    }
+
+BUILD_CTX_MENU:
+
     CMenu ctxMenu;
     if(ctxMenu.LoadMenu(nIDResource))
     {
+        //Append the Frame related menu items if content has frames
+        if(bContentHasFrames) 
+        {
+            CMenu* pCtxMenu = ctxMenu.GetSubMenu(0);
+            if(pCtxMenu)
+            {
+                pCtxMenu->AppendMenu(MF_SEPARATOR);
+
+                CString strMenuItem;
+                strMenuItem.LoadString(IDS_VIEW_FRAME_SOURCE);
+                pCtxMenu->AppendMenu(MF_STRING, ID_VIEW_FRAME_SOURCE, strMenuItem);
+
+                strMenuItem.LoadString(IDS_OPEN_FRAME_IN_NEW_WINDOW);
+                pCtxMenu->AppendMenu(MF_STRING, ID_OPEN_FRAME_IN_NEW_WINDOW, strMenuItem);
+            }
+        }
+
         POINT cursorPos;
         GetCursorPos(&cursorPos);
 

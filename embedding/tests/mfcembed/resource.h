@@ -27,6 +27,8 @@
 #define IDS_ENCRYPTION_NONE             149
 #define IDS_SRCH_STR_NOT_FOUND          150
 #define IDD_PRINTSETUP_DIALOG           152
+#define IDS_VIEW_FRAME_SOURCE           153
+#define IDS_OPEN_FRAME_IN_NEW_WINDOW    154
 #define ID_URL_BAR                      1001
 #define ID_PROG_BAR                     1002
 #define IDC_PROMPT_ANSWER               1003
@@ -94,14 +96,16 @@
 #define ID_EDIT_PREFERENCES             32788
 #define ID_FILE_PRINTPREVIEW            32789
 #define ID_FILE_PRINTSETUP              32790
+#define ID_VIEW_FRAME_SOURCE            32791
+#define ID_OPEN_FRAME_IN_NEW_WINDOW     32792
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        154
-#define _APS_NEXT_COMMAND_VALUE         32791
+#define _APS_NEXT_RESOURCE_VALUE        155
+#define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         1042
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
