@@ -20,6 +20,7 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=layoutbase_s 
 DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
