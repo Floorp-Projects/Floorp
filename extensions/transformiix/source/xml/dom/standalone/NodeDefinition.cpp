@@ -266,7 +266,7 @@ MBool NodeDefinition::hasChildNodes() const
     return MB_FALSE;
 }
 
-MBool NodeDefinition::getLocalName(txAtom** aLocalName)
+MBool NodeDefinition::getLocalName(nsIAtom** aLocalName)
 {
   if (!aLocalName)
     return MB_FALSE;
@@ -290,7 +290,7 @@ PRInt32 NodeDefinition::getNamespaceID()
 //
 // @return namespace associated with prefix
 //
-PRInt32 NodeDefinition::lookupNamespaceID(txAtom* aPrefix)
+PRInt32 NodeDefinition::lookupNamespaceID(nsIAtom* aPrefix)
 {
   // this is http://www.w3.org/2000/xmlns/,
   // ID = kNameSpaceID_XMLNS, see txNamespaceManager::Init

@@ -138,7 +138,7 @@ ExprResult* NumberFunctionCall::evaluate(txIEvalContext* aContext)
     return new StringResult(NS_LITERAL_STRING("error"));
 }
 
-nsresult NumberFunctionCall::getNameAtom(txAtom** aAtom)
+nsresult NumberFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     switch (mType) {
         case NUMBER:

@@ -75,7 +75,7 @@ void Element::setAttributeNS(const nsAString& aNamespaceURI,
 /**
  * Call nsIContent::GetAttr for the localname and nsID.
  */
-MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
+MBool Element::getAttr(nsIAtom* aLocalName, PRInt32 aNSID,
                        nsAString& aValue)
 {
     nsCOMPtr<nsIContent> cont(do_QueryInterface(mMozObject));
@@ -93,7 +93,7 @@ MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
 /**
  * Call nsIContent::GetAttr for the localname and nsID.
  */
-MBool Element::hasAttr(txAtom* aLocalName, PRInt32 aNSID)
+MBool Element::hasAttr(nsIAtom* aLocalName, PRInt32 aNSID)
 {
     nsCOMPtr<nsIContent> cont(do_QueryInterface(mMozObject));
     NS_ASSERTION(cont, "Element doesn't implement nsIContent");
@@ -108,7 +108,7 @@ MBool Element::hasAttr(txAtom* aLocalName, PRInt32 aNSID)
  *
  * @return the node's localname atom
  */
-MBool Element::getLocalName(txAtom** aLocalName)
+MBool Element::getLocalName(nsIAtom** aLocalName)
 {
     NS_ENSURE_TRUE(aLocalName, MB_FALSE);
     nsCOMPtr<nsIContent> cont(do_QueryInterface(mMozObject));

@@ -101,7 +101,7 @@ ExprResult* GenerateIdFunctionCall::evaluate(txIEvalContext* aContext)
     return new StringResult(NS_ConvertASCIItoUCS2(buf));
 }
 
-nsresult GenerateIdFunctionCall::getNameAtom(txAtom** aAtom)
+nsresult GenerateIdFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::generateId;
     TX_ADDREF_ATOM(*aAtom);

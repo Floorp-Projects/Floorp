@@ -161,7 +161,7 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
                 case LOCAL_NAME:
                 {
                     nsAutoString localName;
-                    txAtom* localNameAtom;
+                    nsIAtom* localNameAtom;
                     node->getLocalName(&localNameAtom);
                     if (localNameAtom) {
                         // Node has a localName
@@ -220,7 +220,7 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
     return new StringResult(NS_LITERAL_STRING("error"));
 }
 
-nsresult NodeSetFunctionCall::getNameAtom(txAtom** aAtom)
+nsresult NodeSetFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     switch (mType) {
         case COUNT:

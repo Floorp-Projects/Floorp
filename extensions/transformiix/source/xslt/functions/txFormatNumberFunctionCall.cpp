@@ -476,7 +476,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     return new StringResult(res);
 } //-- evaluate
 
-nsresult txFormatNumberFunctionCall::getNameAtom(txAtom** aAtom)
+nsresult txFormatNumberFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::formatNumber;
     TX_ADDREF_ATOM(*aAtom);

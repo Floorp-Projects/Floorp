@@ -27,7 +27,7 @@
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 
-txNameTest::txNameTest(txAtom* aPrefix, txAtom* aLocalName, PRInt32 aNSID,
+txNameTest::txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
                        Node::NodeType aNodeType)
     :mPrefix(aPrefix), mLocalName(aLocalName), mNamespace(aNSID),
      mNodeType(aNodeType)
@@ -66,7 +66,7 @@ MBool txNameTest::matches(Node* aNode, txIMatchContext* aContext)
         return MB_TRUE;
 
     // Compare local-names
-    txAtom* localName;
+    nsIAtom* localName;
     aNode->getLocalName(&localName);
     MBool result = localName == mLocalName;
     TX_IF_RELEASE_ATOM(localName);

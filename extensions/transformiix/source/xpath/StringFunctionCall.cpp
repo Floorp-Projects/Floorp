@@ -251,7 +251,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
     return new StringResult(NS_LITERAL_STRING("error"));
 }
 
-nsresult StringFunctionCall::getNameAtom(txAtom** aAtom)
+nsresult StringFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     switch (mType) {
         case CONCAT:

@@ -49,7 +49,7 @@ Attr::Attr(const nsAString& name, Document* owner):
     // namespace handling has to be handled late, the attribute must
     // be added to the tree to resolve the prefix, unless it's
     // xmlns or xml, try to do that here
-    txAtom* prefixAtom = TX_GET_ATOM(Substring(nodeName, 0, idx));
+    nsIAtom* prefixAtom = TX_GET_ATOM(Substring(nodeName, 0, idx));
     if (prefixAtom == txXMLAtoms::xmlns)
       mNamespaceID = kNameSpaceID_XMLNS;
     else if (prefixAtom == txXMLAtoms::xml)
@@ -104,7 +104,7 @@ Node* Attr::appendChild(Node* newChild)
 //
 //Return the attributes local (unprefixed) name atom.
 //
-MBool Attr::getLocalName(txAtom** aLocalName)
+MBool Attr::getLocalName(nsIAtom** aLocalName)
 {
   if (!aLocalName)
     return MB_FALSE;
@@ -126,7 +126,7 @@ PRInt32 Attr::getNamespaceID()
   mNamespaceID = kNameSpaceID_None;
   PRInt32 idx = nodeName.FindChar(':');
   if (idx != kNotFound) {
-    nsCOMPtr<txAtom> prefixAtom = TX_GET_ATOM(Substring(nodeName, 0, idx));
+    nsCOMPtr<nsIAtom> prefixAtom = TX_GET_ATOM(Substring(nodeName, 0, idx));
     mNamespaceID = lookupNamespaceID(prefixAtom);
   }
   return mNamespaceID;
