@@ -359,6 +359,9 @@ static int do_lzw(gif_struct *gs, const PRUint8 *q)
         /* the first code is always < avail */
         *stackp++ = firstchar;
         code = oldcode;
+
+        if (stackp == stack + MAX_BITS)
+          return -1;
       }
 
       int code2 = 0;
@@ -370,6 +373,9 @@ static int do_lzw(gif_struct *gs, const PRUint8 *q)
 
         *stackp++ = suffix[code];
         code = prefix[code];
+
+        if (stackp == stack + MAX_BITS)
+          return -1;
 
         if (code2 == prefix[code])
           return -1;
