@@ -1,9 +1,36 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+
+<!-- These entity declarations will go into a separate, locale file at some point -->
+<!-- Window title -->
+<!ENTITY windowTitle.label "Check Spelling">
+
+<!ENTITY wordEditField.label "Word">
+<!ENTITY checkwordButton.label "Check Word">
+<!ENTITY suggestions.label "Suggestions:">
+
+<!ENTITY ignoreButton.label "Ignore">
+<!ENTITY ignoreallButton.label "Ignore All">
+<!ENTITY changeButton.label "Change">
+<!ENTITY changeallButton.label "Change All">
+
+<!ENTITY userDictionary.label "User Dictionary:">
+<!ENTITY addtouserdictionaryButton.label "Add">
+<!ENTITY edituserdictionaryButton.label "Edit">
+<!ENTITY closeButton.label "Close">
+
+<!ENTITY languagePopup.label "Language:">
+<!ENTITY englishLanguagePopup.value "English">
+<!ENTITY spanishLanguagePopup.value "Spanish">
+<!ENTITY frenchLanguagePopup.value "French">
+
+]>
+
 <!-- dialog containing a control requiring initial setup -->
-<xul:window class="dialog" title="Check Spelling"
+<xul:window class="dialog" title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
@@ -19,27 +46,27 @@
   <table>
     <tr>
       <td colspan="3">
-        Word<br/>
+        <label for="Word"> &wordEditField.label; </label>
       </td>
     </tr>
     <tr>
       <td>
-        <input type="text" class="SpellCheckWord" id="Word" size="10"/>
+        <input type="text" class="SpellCheckWord" id="Word" size="24"/>
       </td>
       <td>
-        <xul:titledbutton class="SizeToCell"  id="CheckWord" onclick="CheckWord()" value="Check word"/>
+        <xul:titledbutton class="SizeToCell"  id="CheckWord" onclick="CheckWord()" value="&checkwordButton.label;"/>
       </td>
       <td>
       </td>
     </tr>
     <tr>
       <td colspan="3">
-        Suggestions:
+        <label> &suggestions.label; </label>
       </td>
     </tr>
     <tr>
       <td rowspan="5">
-        <select class="SpellCheckList" id="SuggestedList" size="6" onchange="SelectSuggestedWord()">
+        <select class="SpellCheckList" id="SuggestedList" size="8" onchange="SelectSuggestedWord()">
           <option>Sample contents 1</option>
           <option>Sample contents 2</option>
           <option>Sample contents 3</option>
@@ -51,47 +78,46 @@
     </tr>
     <tr>
       <td>
-        <xul:titledbutton class="SizeToCell"  id="Ignore" onclick="Ignore()" value="Ignore"/>
+        <xul:titledbutton class="SizeToCell"  id="Ignore" onclick="Ignore()" value="&ignoreButton.label;"/>
       </td>
       <td>
-        <xul:titledbutton class="SizeToCell"  id="IgnoreAll" onclick="IgnoreAll()" value="Ignore All"/>
+        <xul:titledbutton class="SizeToCell"  id="IgnoreAll" onclick="IgnoreAll()" value="&ignoreallButton.label;"/>
       </td>
     </tr>
     <tr>
       <td>
-        <xul:titledbutton class="SizeToCell"  id="Replace" onclick="Replace()" value="Change"/>
+        <xul:titledbutton class="SizeToCell"  id="Replace" onclick="Replace()" value="&changeButton.label;"/>
       </td>
       <td>
-        <xul:titledbutton class="SizeToCell"  id="ReplaceAll" onclick="ReplaceAll()" value="Change All"/>
+        <xul:titledbutton class="SizeToCell"  id="ReplaceAll" onclick="ReplaceAll()" value="&changeallButton.label;"/>
       </td>
     </tr>
     <tr>
       <td colspan="2">
-        User Dictionary:
+        <label> &userDictionary.label; </label>
       </td>
     </tr>
     <tr>
       <td>
-        <xul:titledbutton class="SizeToCell"  id="AddToDictionary" onclick="AddToDictionary()" value="Add"/>
+        <xul:titledbutton class="SizeToCell"  id="AddToDictionary" onclick="AddToDictionary()" value="&addtouserdictionaryButton.label;"/>
       </td>
       <td>
-        <xul:titledbutton class="SizeToCell"  id="EditDictionary" onclick="EditDictionary()" value="Edit"/>
+        <xul:titledbutton class="SizeToCell"  id="EditDictionary" onclick="EditDictionary()" value="&edituserdictionaryButton.label;"/>
       </td>
     </tr>
     <tr>
       <td colspan="3">
-        Language:
+        <label> &languagePopup.label; </label>
       </td>
     </tr>
     <tr>
       <td colspan="2">
         <select class="SpellCheckLanguage" id="LanguageList" size="1"  onchange="SelectLanguage()">
-          <option>English
-          </option>
+          <option> &englishLanguagePopup.value; </option>
         </select>
       </td>
       <td>
-        <xul:titledbutton class="SizeToCell"  id="Close" onclick="Close()" value="Close"/>
+        <xul:titledbutton class="SizeToCell"  id="Close" onclick="Close()" value="&closeButton.label;"/>
       </td>
     </tr>
   </table>

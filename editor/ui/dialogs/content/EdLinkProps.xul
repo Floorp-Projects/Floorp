@@ -1,9 +1,42 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
-<!DOCTYPE window>
+<!-- Eventually we'll move to this...
+<!DOCTYPE window SYSTEM "chrome://editordlgs/en-US/EditorLinkProperties.dtd">
+-->
 
-<xul:window class="dialog" title="Link Properties"
+<!DOCTYPE window
+[
+
+<!-- These entity declarations will go into a separate, locale file at some point -->
+
+<!-- These strings are generic to all or most of the editor's dialogs. -->
+<!-- They should be moved into a "common" file -->
+
+<!ENTITY OKButton.label "OK">
+<!ENTITY CancelButton.label "Cancel">
+
+<!-- This button is for the progressive disclosure of additional editing functionality -->
+<!ENTITY AdditionalEditingButton.label "Advanced">
+
+
+<!-- These strings are for use specifically in the editor's link dialog. -->
+<!-- Window title -->
+<!ENTITY windowTitle.label "Link Properties">
+
+<!-- These are in the link source fieldset. -->
+<!ENTITY LinkSourceFieldset.label "Link Source">
+<!ENTITY LinkSourceText.label "Enter text to display for a new link:">
+
+<!-- These controls are in the Dimensions Fieldset of the advanced area -->
+<!ENTITY LinkURLFieldset.label "Link To">
+<!ENTITY LinkURLEditField.label "Enter a web page location or local file:">
+<!ENTITY LinkChooseFileButton.label "Choose File...">
+
+]>
+
+
+<xul:window class="dialog" title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
@@ -16,29 +49,31 @@
   </script>
   <xul:broadcaster id="args" value=""/>
 
-<table>
-    <tr>
-      <td>
-        <fieldset><legend align="left">Link source </legend>
-          <p class="smallmargin" id="linkMessage">Enter text to display for a new link:</p>
-          <input type="text" size="25" length="25" id="linkTextInput"></input>
-        </fieldset>
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <fieldset><legend align="left">Link to </legend>
-          <p class="spacedtext">Enter a web page location or local file: </p>
-          <input type="text" size="25" length="25" id="hrefInput"></input>
-          <button class="ChooseFile" id="ChooseFile" onclick="ChooseFile()">Choose File...</button>
-        </fieldset>
-      </td>
-    </tr>
-  </table>
+  <fieldset><legend align="left"> &LinkSourceFieldset.label; </legend>
+    <xul:box align="vertical">
+      <xul:box> align="horizontal">
+  	    <label class="smallmargin" id="linkMessage" for="linkTextInput"> &LinkSourceText.label; </label>
+	    </xul:box>
+	    <input type="text" size="25" length="25" id="linkTextInput"></input>
+    </xul:box>
+  </fieldset>
+
+  <fieldset><legend align="left"> &LinkURLFieldset.label; </legend>
+    <xul:box align="vertical">
+      <xul:box align="horizontal">
+  	    <label class="smallmargin" for="ChooseFile"> &LinkURLEditField.label; </label>
+	    </xul:box>
+	    <xul:box align="horizontal">
+  	    <input type="text" size="25" length="25" id="hrefInput"></input>
+	      <button class="ChooseFile" id="ChooseFile" onclick="ChooseFile()"> &LinkChooseFileButton.label; </button>
+      </xul:box>
+    </xul:box>
+ </fieldset>
+
   <xul:box>
     <xul:titledbutton class="spaced" id="Advanced" onclick="onAdvanced()" value="More Attributes..."/>
     <xul:spring flex="100%"/>    
-    <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="OK"/>  
-    <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="Cancel"/>
+    <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="&OKButton.label;"/>  
+    <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="&CancelButton.label;"/>
   </xul:box>
 </xul:window>
