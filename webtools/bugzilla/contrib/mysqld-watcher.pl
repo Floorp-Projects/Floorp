@@ -26,45 +26,59 @@
 use diagnostics;
 use strict;
 
-require "globals.pl";
-
 # some configurables: 
 
 # length of time before a thread is eligible to be killed, in seconds
 #
-my $long_query_time = 600;
+my $long_query_time = 180;
 #
 # the From header for any messages sent out
 #
-my $mail_from = "root\@lounge.mozilla.org";
+my $mail_from = "root\@mothra.mozilla.org";
+#
+# the To header for any messages sent out
+#
+my $mail_to = "root";
 #
 # mail transfer agent.  this should probably really be converted to a Param().
 #
 my $mta_program = "/usr/lib/sendmail -t -ODeliveryMode=deferred";
 
-# and STDIN is where we get the info about running threads
+# The array of long-running queries
 #
-close(STDIN);
-open(STDIN, "/usr/bonsaitools/bin/mysqladmin processlist |");
+my $long = {};
 
-# iterate through the running threads
-#
-my @LONGEST = (0,0,0,0,0,0,0,0,0);
-while ( <STDIN> ) { 
-    my @F = split(/\|/);
+# Run mysqladmin processlist twice, the first time getting complete queries
+# and the second time getting just abbreviated queries.  We want complete
+# queries so we know which queries are taking too long to run, but complete
+# queries with line breaks get missed by this script, so we get abbreviated
+# queries as well to make sure we don't miss any.
+foreach my $command ("/opt/mysql/bin/mysqladmin --verbose processlist", 
+                     "/opt/mysql/bin/mysqladmin processlist")
+{
+    close(STDIN);
+    open(STDIN, "$command |");
 
-    # if this line is not the correct number of fields, or if the thread-id
-    # field contains Id, skip this line.  both these cases indicate that this
-    # line contains pretty-printing gunk and not thread info.
+    # iterate through the running threads
     #
-    next if ( $#F != 9 || $F[1] =~ /Id/); 
+    while ( <STDIN> ) { 
+        my @F = split(/\|/);
 
-    if ( $F[4] =~ /shadow_bugs/             # shadowbugs database in use
-         && $F[5] =~ /Query/                # this is actually a query
-         && $F[6] > $long_query_time        # this query has taken too long
-         && $F[8] =~ /(select|SELECT)/      # only kill a select
-         && $F[6] > $LONGEST[6] ) {         # the longest running query seen
-        @LONGEST = @F;
+        # if this line is not the correct number of fields, or if the thread-id
+        # field contains Id, skip this line.  both these cases indicate that this
+        # line contains pretty-printing gunk and not thread info.
+        #
+        next if ( $#F != 9 || $F[1] =~ /Id/); 
+
+        if ( $F[4] =~ /shadow_bugs/             # shadowbugs database in use
+             && $F[5] =~ /Query/                # this is actually a query
+             && $F[6] > $long_query_time        # this query has taken too long
+             && $F[8] =~ /(select|SELECT)/      # only kill a select
+             && !defined($long->{$F[1]}) )      # haven't seen this one already
+        {
+	    $long->{$F[1]} = \@F;
+            system("/opt/mysql/bin/mysqladmin", "kill", $F[1]);
+        }
     }
 }
 
@@ -90,13 +104,15 @@ sub sendEmail($$$$) {
 
 # if we found anything, kill the database thread and send mail about it
 #
-if ($LONGEST[6] != 0) {
+if (scalar(keys(%$long))) {
+    my $message = "";
+    foreach my $process_id (keys(%$long)) {
+        my $qry = $long->{$process_id};
+        $message .= join(" ", @$qry) . "\n\n";
+    }
 
-    system ("/usr/bonsaitools/bin/mysqladmin", "kill", $LONGEST[1]);
-
-    # fire off an email telling the maintainer that we had to kill a thread
+    # fire off an email telling the maintainer that we had to kill some threads
     #
-    sendEmail($mail_from, Param("maintainer"), 
-	     "long running MySQL thread killed",
-	     join(" ", @LONGEST) . "\n");
+    sendEmail($mail_from, $mail_to, "long running MySQL thread(s) killed", $message);
 }
+
