@@ -1,0 +1,104 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Shell Service.
+ *
+ * The Initial Developer of the Original Code is mozilla.org.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Ben Goodger <ben@mozilla.org>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIDOMElement;
+
+[scriptable, uuid(7d8a7a34-f492-43c0-9657-ec7dbbeba236)]
+interface nsIShellService : nsISupports
+{
+  /**
+   * Determines whether or not Firefox is the "Default Browser."
+   * This is simply whether or not Firefox is registered to handle 
+   * http links. 
+   * 
+   * @param aStartupCheck true if this is the check being performed
+   *                      by the first browser window at startup, 
+   *                      false otherwise. 
+   */
+  boolean isDefaultBrowser(in boolean aStartupCheck);
+
+  /**
+   * Registers Firefox as the "Default Browser."
+   *
+   * @param aClaimAllTypes Register Firefox as the handler for 
+   *                       additional protocols (ftp, chrome etc)
+   *                       and web documents (.html, .xhtml etc).
+   */
+  void setDefaultBrowser(in boolean aClaimAllTypes);
+
+  /** 
+   * Used to determine whether or not to show a "Set Default Browser"
+   * query dialog. This attribute is true if the application is starting
+   * up and "browser.shell.checkDefaultBrowser" is true, otherwise it
+   * is false.
+   */
+  attribute boolean shouldCheckDefaultBrowser;
+
+  /** 
+   * Flags for positioning/sizing of the Desktop Background image.
+   */
+  const long BACKGROUND_TILE      = 0x00;
+  const long BACKGROUND_STRETCH   = 0x01;
+  const long BACKGROUND_CENTER    = 0x02;
+
+    /**
+     * Sets the desktop background image using either the HTML <IMG> 
+     * element supplied or the background image of the element supplied.
+     *
+     * @param aImageElement Either a HTML <IMG> element or an element with
+     *                      a background image from which to source the
+     *                      background image. 
+     * @param aPosition     How to place the image on the desktop
+     */
+  void setDesktopBackground(in nsIDOMElement aElement, in long aPosition);
+
+  /**
+   * Constants identifying preferred applications that can be opened with
+   * openPreferredApplication.
+   */
+  const long APPLICATION_MAIL        = 0;
+  const long APPLICATION_NEWS        = 1;
+
+  /**
+   * Opens the preferred application specified.
+   */
+  void openPreferredApplication(in long aApplication);
+
+};
+ 

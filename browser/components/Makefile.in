@@ -42,12 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = bookmarks help migration history prefwindow security sidebar cookieviewer
-
-
-ifeq ($(OS_ARCH),WINNT)
-DIRS    += winhooks 
-endif
+DIRS = bookmarks help migration history prefwindow security shell sidebar cookieviewer
 
 DIRS += build
 

@@ -41,29 +41,8 @@
 
 1 24 "firefox.exe.manifest"
 
-// Program icon.
-IDI_APPLICATION ICON
-	"mozilla.ico"
-
-// Splash screen dialog.
-IDD_SPLASH DIALOGEX
-	DISCARDABLE
-	0,0,0,0
-	STYLE DS_SETFOREGROUND | DS_CENTER | WS_POPUP
-    EXSTYLE WS_EX_TOOLWINDOW
-	FONT 8, "MS Sans Serif"
-	BEGIN
-		CONTROL
-            		IDB_SPLASH,
-			IDB_SPLASH,
-			"Static",
-			SS_BITMAP,
-			0,0,0,0
-	END
-
-// Splash screen bitmap.
-// IDB_SPLASH BITMAP
-// 	"splash.bmp"
+IDI_DOCUMENT ICON "document.ico"
+IDI_APPLICATION ICON "firefox.ico"
 
 STRINGTABLE DISCARDABLE
 BEGIN

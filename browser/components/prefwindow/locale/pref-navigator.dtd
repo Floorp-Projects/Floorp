@@ -29,3 +29,10 @@
 
 <!ENTITY showFontsAndColors.label           "Fonts &amp; Colors...">
 <!ENTITY showFontsAndColors.accesskey       "f">
+
+
+<!ENTITY checkForDefault.label              "&brandShortName; should check to see if it is the default browser when starting.">
+<!ENTITY checkForDefault.accesskey          "d">
+<!ENTITY checkNow.label                     "Check Now">
+<!ENTITY checkNow.accesskey                 "N">
+

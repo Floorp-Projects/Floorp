@@ -124,6 +124,9 @@ endif
 ifdef BUILD_STATIC_LIBS
 RCFLAGS += -DMOZ_STATIC_BUILD
 endif
+ifdef DEBUG
+RCFLAGS += -DDEBUG
+endif
 endif
 
 ifeq ($(OS_ARCH),OS2)

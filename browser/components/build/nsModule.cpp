@@ -41,7 +41,11 @@
 #include "nsBrowserCompsCID.h"
 #include "nsBookmarksService.h"
 #ifdef XP_WIN
-#include "nsWindowsHooks.h"
+#include "nsWindowsShellService.h"
+#elif defined(XP_MACOSX)
+#include "nsMacShellService.h"
+#else
+#include "nsGNOMEShellService.h"
 #endif
 #include "nsProfileMigrator.h"
 #include "nsDogbertProfileMigrator.h"
@@ -62,7 +66,11 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 #ifdef XP_WIN
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsShellService)
+#elif defined(XP_MACOSX)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacShellService)
+#else
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsGNOMEShellService)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDogbertProfileMigrator)
@@ -83,11 +91,24 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsICabProfileMigrator)
 
 static const nsModuleComponentInfo components[] =
 {
-#ifdef XP_WIN
-  { NS_IWINDOWSHOOKS_CLASSNAME,
-    NS_IWINDOWSHOOKS_CID,
-    NS_IWINDOWSHOOKS_CONTRACTID,
-    nsWindowsHooksConstructor },
+#if defined(XP_WIN)
+  { "Browser Shell Shervice",
+    NS_SHELLSERVICE_CID,
+    NS_SHELLSERVICE_CONTRACTID,
+    nsWindowsShellServiceConstructor },
+
+#elif defined (XP_MACOSX)
+  { "Browser Shell Shervice",
+    NS_SHELLSERVICE_CID,
+    NS_SHELLSERVICE_CONTRACTID,
+    nsMacShellServiceConstructor },
+
+#else
+  { "Browser Shell Shervice",
+    NS_SHELLSERVICE_CID,
+    NS_SHELLSERVICE_CONTRACTID,
+    nsGNOMEShellServiceConstructor },
+
 #endif
   { "Bookmarks",
     NS_BOOKMARKS_SERVICE_CID,
