@@ -16,18 +16,15 @@
  * Reserved.
  */
 
-// *** pinkerton -- 02/23/99 ***
-//
-// Here is what is happening right now, we are assuming in places w/in this file that the
-// implementation of |nsIWidget| is really |nsWindow| and then calling methods
-// specific to nsWindow to finish the job. These should be |dyanmic_cast|s,
-// but that doesn't work because of changes to |nsISupports| by beard. The
-// only way to get it working in the short term is to use a |reinterpret_cast|,
-// which is very dangerous, and guaranteed to crash if anyone writes their
-// own widget (and doesn't inherit from |nsWindow|).
-//
-// In the future, we need to do something to either a) get rid of the RTTI usage, or b) fix
-// |nsISupports|
+
+// ***IMPORTANT***
+// On all platforms, we are assuming in places that the implementation of |nsIWidget|
+// is really |nsWindow| and then calling methods specific to nsWindow to finish the job.
+// This is by design and the assumption is safe because an nsIWidget can only be created through
+// our Widget factory where all our widgets, including the XP widgets, inherit from nsWindow.
+// Still, in the places (or most of them) where this assumption is done, a |static_cast| has been used.
+// A similar warning is in nsWidgetFactory.cpp.
+
 
 #include "nsWindow.h"
 #include "nsIFontMetrics.h"
@@ -37,8 +34,8 @@
 #include "nsIEnumerator.h"
 
 
-NS_IMPL_ADDREF(ChildWindow)
-NS_IMPL_RELEASE(ChildWindow)
+NS_IMPL_ADDREF(ChildWindow);
+NS_IMPL_RELEASE(ChildWindow);
 
 ChildWindow::ChildWindow() : nsWindow()
 {
@@ -46,7 +43,7 @@ ChildWindow::ChildWindow() : nsWindow()
   strcpy(gInstanceClassName, "ChildWindow");
 }
 
-
+#pragma mark -
 //-------------------------------------------------------------------------
 //
 // nsWindow constructor
@@ -773,35 +770,31 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 	EndDraw();
 
 	// recursively draw the children
-	nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
+	nsIEnumerator* children = GetChildren();
 	if (children)
 	{
 		children->First();
-		nsCOMPtr<nsISupports> child;
 		do
 		{
-			if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) )
+			nsISupports* child;
+			if (NS_SUCCEEDED(children->CurrentItem(&child)))
 			{
-				nsCOMPtr<nsIWidget> childWidget ( do_QueryInterface(child) );
-				if ( childWidget ) {
-					nsRect childBounds;
-					childWidget->GetBounds(childBounds);
+				nsWindow* childWindow = static_cast<nsWindow*>(child);
+				nsRect childBounds;
+				childWindow->GetBounds(childBounds);
 
-					// redraw only the intersection of the child rect and the update rect
-					nsRect intersection;
-					if (intersection.IntersectRect(aRect, childBounds))
-					{
-						intersection.MoveBy(-childBounds.x, -childBounds.y);					
-						// pinkerton -- THIS IS A SERIOUS, BUT TEMPORARY HACK
-						// See (***) comment at top of this file.
-						nsWindow* window = reinterpret_cast<nsWindow*> ( childWidget.get() );
-						if ( window )
-							window->UpdateWidget(intersection, aContext);
-					}
-	          	}
-			}
+				// redraw only the intersection of the child rect and the update rect
+				nsRect intersection;
+				if (intersection.IntersectRect(aRect, childBounds))
+				{
+					intersection.MoveBy(-childBounds.x, -childBounds.y);
+					childWindow->UpdateWidget(intersection, aContext);
+				}
+				NS_RELEASE(child);
+    	}
 		}
 		while (NS_SUCCEEDED(children->Next()));			
+		NS_RELEASE(children);
 	}
 }
 
@@ -837,31 +830,29 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 	EndDraw();
 
 	// scroll the children
-	nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
+	nsIEnumerator* children = GetChildren();
 	if (children)
 	{
 		children->First();
 		do
 		{
-			nsCOMPtr<nsISupports> child;
-			if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) ) {
-				nsCOMPtr<nsIWidget> childWidget ( do_QueryInterface(child) );
-				if ( childWidget ) {	
-					// pinkerton -- THIS IS A SERIOUS, BUT TEMPORARY HACK
-					// See (***) comment at top of this file.
-					nsWindow* window = reinterpret_cast<nsWindow*> ( childWidget.get() );
-					if ( window ) {
-						nsRect bounds;
-						window->GetBounds(bounds);
-						bounds.x += aDx;
-						bounds.y += aDy;
-						window->SetBounds(bounds);
-						window->Scroll(aDx, aDy, &bounds);
-					}
-				}
-          	}
+			nsISupports* child;
+			if (NS_SUCCEEDED(children->CurrentItem(&child)))
+			{
+				nsWindow* childWindow = static_cast<nsWindow*>(child);
+
+				nsRect bounds;
+				childWindow->GetBounds(bounds);
+				bounds.x += aDx;
+				bounds.y += aDy;
+				childWindow->SetBounds(bounds);
+				childWindow->Scroll(aDx, aDy, &bounds);
+
+				NS_RELEASE(child);
+  		}
 		}
 		while (NS_SUCCEEDED(children->Next()));			
+		NS_RELEASE(children);
 	}
 	return NS_OK;
 }
@@ -1129,40 +1120,32 @@ PRBool nsWindow::PointInWidget(Point aThePoint)
 //-------------------------------------------------------------------------
 nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 {
-	nsWindow*	widgetHit;
+	if (! PointInWidget(aThePoint))
+		return nsnull;
 
-	if (PointInWidget(aThePoint))
+	nsWindow* widgetHit = this;
+	nsIEnumerator* children = GetChildren();
+	if (children)
 	{
-		widgetHit = this;
-		nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
-		if (children)
+		children->First();
+		do
 		{
-			children->First();
-			do
-			{
-				nsCOMPtr<nsISupports> child;
-				if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) )
-				{
-					nsCOMPtr<nsIWidget> childWidget ( do_QueryInterface(child) );
-					if ( childWidget ) {
-						// pinkerton -- THIS IS A SERIOUS, BUT TEMPORARY HACK
-						// See (***) comment at top of this file.
-						nsWindow* window = reinterpret_cast<nsWindow*> ( childWidget.get() );
-						if ( window ) {
-							nsWindow* deeperHit = window->FindWidgetHit(aThePoint);
-							if (deeperHit)
-							{
-								widgetHit = deeperHit;
-								break;
-							}
-						}
-					}
-				}
-			} while (NS_SUCCEEDED(children->Next()));
+			nsISupports* child;
+      if (NS_SUCCEEDED(children->CurrentItem(&child)))
+      {
+      	nsWindow* childWindow = static_cast<nsWindow*>(child);
+			  nsWindow* deeperHit = childWindow->FindWidgetHit(aThePoint);
+			  if (deeperHit)
+			  {
+				  widgetHit = deeperHit;
+				  break;
+			  }
+			  NS_RELEASE(child);
+      }
 		}
+    while (NS_SUCCEEDED(children->Next()));
+		NS_RELEASE(children);
 	}
-	else
-		widgetHit = nsnull;
 
 	return widgetHit;
 }
