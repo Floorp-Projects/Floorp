@@ -2350,6 +2350,9 @@ nsSelection::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
   if (NS_FAILED(result))
     return result;
 
+  if (thisLine < 0) 
+    return NS_ERROR_FAILURE;
+
   nsIFrame *firstFrame;
   nsIFrame *lastFrame;
   nsRect    nonUsedRect;
