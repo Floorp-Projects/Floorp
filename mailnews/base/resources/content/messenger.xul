@@ -450,6 +450,9 @@ Rights Reserved.
 		  <titledbutton src="&forwardButton.img;" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage()"/>
 		  <titledbutton src="&nextButton.img;" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
 		  <titledbutton src="&deleteButton.img;" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
+		  <html:div class="separator" align="vertical"/> 
+		  <titledbutton src="&printButton.img;" align="top" value="&printButton.label;" onclick="Print()"/>
+		  <titledbutton src="&stopButton.img;" align="top" value="&stopButton.label;" onclick="MsgStop();"/>
 		  <spring flex="100%"/>
 		  <titledbutton id="Throbber" onclick="window.open('&throbber.url;');">
 			 <observes element="Messenger:Throbber" attribute="busy"/>

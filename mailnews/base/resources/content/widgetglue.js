@@ -633,11 +633,15 @@ function MsgDecreaseFont() {}
 function MsgReload() {}
 function MsgShowImages() {}
 function MsgRefresh() {}
-function MsgStop() {}
 function MsgViewPageSource() {}
 function MsgViewPageInfo() {}
 function MsgFirstUnreadMessage() {}
 function MsgFirstFlaggedMessage() {}
+
+function MsgStop() {
+	dump("sorry, stop doesn't work yet.\n");
+}
+
 function MsgNextMessage()
 {
 	GoNextMessage(GoMessage, false);

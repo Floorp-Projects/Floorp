@@ -276,6 +276,12 @@ Rights Reserved.
 <!-- LOCALIZATION NOTE (deleteButton.img) : Do not translate below line. -->
 <!ENTITY deleteButton.img "chrome://messenger/skin/trash.gif">
 <!ENTITY deleteButton.label "Delete">  
+<!-- LOCALIZATION NOTE (printButton.img) : Do not translate below line. -->
+<!ENTITY printButton.img "chrome://global/skin/print.gif">
+<!ENTITY printButton.label "Print">  
+<!-- LOCALIZATION NOTE (stopButton.img) : Do not translate below line. -->
+<!ENTITY stopButton.img "chrome://global/skin/stop.gif">
+<!ENTITY stopButton.label "Stop">  
 <!-- LOCALIZATION NOTE (throbber.url) : Do not translate below line. -->
 <!ENTITY throbber.url "http://www.mozilla.org/mailnews"> 
 
