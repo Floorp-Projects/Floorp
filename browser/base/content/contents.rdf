@@ -12,8 +12,8 @@
         chrome:displayName="Browser"
         chrome:author="mozilla.org"
         chrome:name="browser"
-        chrome:localeVersion="0.9.9"
-        chrome:skinVersion="1.5">
+        chrome:localeVersion="fb0.7"
+        chrome:skinVersion="fb0.7">
   </RDF:Description>
 
 </RDF:RDF>

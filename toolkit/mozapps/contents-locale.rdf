@@ -18,6 +18,6 @@
 
   <!-- version information -->
   <RDF:Description about="urn:mozilla:locale:en-US:mozapps"
-     chrome:localeVersion="1.5a"/>
+     chrome:localeVersion="fb0.7"/>
 
 </RDF:RDF>
