@@ -125,18 +125,16 @@ nsTableRowFrame::InitChildReflowState(nsIPresContext&         aPresContext,
 void 
 nsTableRowFrame::SetFixedHeight(nscoord aValue)
 {
-  if (!HasPctHeight()) {
-    nscoord height = PR_MAX(0, aValue); 
-    if (HasFixedHeight()) {
-      if (height > mStyleHeight) {
-        mStyleHeight = height;
-      }
+  nscoord height = PR_MAX(0, aValue);
+  if (HasFixedHeight()) {
+    if (height > mStyleFixedHeight) {
+      mStyleFixedHeight = height;
     }
-    else {
-      mStyleHeight = height;
-      if (height > 0) {
-        SetHasFixedHeight(PR_TRUE);
-      }
+  }
+  else {
+    mStyleFixedHeight = height;
+    if (height > 0) {
+      SetHasFixedHeight(PR_TRUE);
     }
   }
 }
@@ -147,12 +145,12 @@ nsTableRowFrame::SetPctHeight(float  aPctValue,
 {
   nscoord height = PR_MAX(0, NSToCoordRound(aPctValue * 100.0f));
   if (HasPctHeight()) {
-    if ((height > mStyleHeight) || aForce) {
-      mStyleHeight = height;
+    if ((height > mStylePctHeight) || aForce) {
+      mStylePctHeight = height;
     }
   }
   else {
-    mStyleHeight = height;
+    mStylePctHeight = height;
     if (height > 0.0f) {
       SetHasPctHeight(PR_TRUE);
     }
@@ -458,8 +456,8 @@ nsTableRowFrame::GetHeight(nscoord aPctBasis) const
   if ((aPctBasis > 0) && HasPctHeight()) {
     height = NSToCoordRound(GetPctHeight() * (float)aPctBasis);
   }
-  else if (HasFixedHeight()) {
-    height = GetFixedHeight();
+  if (HasFixedHeight()) {
+    height = PR_MAX(height, GetFixedHeight());
   }
   return PR_MAX(height, GetContentHeight());
 }
@@ -470,6 +468,7 @@ nsTableRowFrame::ResetHeight(nscoord aFixedHeight)
   SetHasFixedHeight(PR_FALSE);
   SetHasPctHeight(PR_FALSE);
   SetFixedHeight(0);
+  SetPctHeight(0);
   SetContentHeight(0);
 
   if (aFixedHeight > 0) {
