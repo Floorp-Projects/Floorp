@@ -34,6 +34,7 @@ EX_LIBS = $(DIST)/lib/libshell_s.a \
 	$(DIST)/bin/libreg.so	\
 	$(DIST)/bin/libraptorbase.so	\
 	$(DIST)/bin/libraptorgfx.so	\
+	$(DIST)/bin/libgfxunix.so	\
 	$(DIST)/lib/libplc21.a	\
 	$(DIST)/lib/libplds21.a	\
 	$(DIST)/lib/libnspr21.a	\
