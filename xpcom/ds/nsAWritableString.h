@@ -293,14 +293,6 @@ class basic_nsAWritableString
           return aResult;
         }
 
-        // deprecated
-      nsWritingIterator<CharT>
-      BeginWriting()
-        {
-          nsWritingIterator<CharT> result;
-          return BeginWriting(result); // copies (since I return a value, not a reference)
-        }
-
 
       nsWritingIterator<CharT>&
       EndWriting( nsWritingIterator<CharT>& aResult )
@@ -310,14 +302,6 @@ class basic_nsAWritableString
           aResult.mPosition = aResult.mFragment.mEnd;
           // must not |normalize_backward| as that would likely invalidate tests like |while ( first != last )|
           return aResult;
-        }
-
-        // deprecated
-      nsWritingIterator<CharT>
-      EndWriting()
-        {
-          nsWritingIterator<CharT> result;
-          return EndWriting(result); // copies (since I return a value, not a reference)
         }
 
 
