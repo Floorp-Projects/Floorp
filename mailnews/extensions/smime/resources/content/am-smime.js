@@ -39,6 +39,8 @@ var gNeverEncrypt = null;
 var gBundle = null;
 var gBrandBundle;
 var gSmimePrefbranch;
+var gEncryptionChoicesLocked;
+var gSigningChoicesLocked;
 
 function onInit() 
 {
@@ -52,6 +54,9 @@ function onInit()
   gNeverEncrypt       = document.getElementById("encrypt_mail_never");
   gBundle             = document.getElementById("bundle_smime");
   gBrandBundle        = document.getElementById("bundle_brand");
+
+  gEncryptionChoicesLocked = false;
+  gSigningChoicesLocked = false;
 
   gEncryptionCertName.value = gIdentity.getUnicharAttribute("encryption_cert_name");
 
@@ -74,6 +79,9 @@ function onInit()
     gEncryptAlways.setAttribute("disabled", true);
     gNeverEncrypt.setAttribute("disabled", true);
   }
+  else {
+    enableEncryptionControls();
+  }
 
   gSignCertName.value = gIdentity.getUnicharAttribute("signing_cert_name");
   gSignMessages.checked = gIdentity.getBoolAttribute("sign_mail");
@@ -81,6 +89,16 @@ function onInit()
   {
     gSignMessages.setAttribute("disabled", true);
   }
+  else {
+    enableSigningControls();
+  }
+
+  // Always start with enabling signing and encryption cert select buttons.
+  // This will keep the visibility of buttons in a sane state as user
+  // jumps from security panel of one account to another.
+  enableCertSelectButtons();
+
+  // Disable all locked elements on the panel
   onLockPreference();
 }
 
@@ -110,7 +128,9 @@ function onLockPreference()
 
   var allPrefElements = [
     { prefstring:"signingCertSelectButton", id:"signingCertSelectButton"},
-    { prefstring:"encryptionCertSelectButton", id:"encryptionCertSelectButton"}
+    { prefstring:"encryptionCertSelectButton", id:"encryptionCertSelectButton"},
+    { prefstring:"sign_mail", id:"identity.sign_mail"},
+    { prefstring:"encryptionpolicy", id:"encryptionChoices"}
   ];
 
   finalPrefString = initPrefString + "." + gIdentity.key + ".";
@@ -129,7 +149,24 @@ function disableIfLocked( prefstrArray )
     var id = prefstrArray[i].id;
     var element = document.getElementById(id);
     if (gSmimePrefbranch.prefIsLocked(prefstrArray[i].prefstring)) {
+      // If encryption choices radio group is locked, make sure the individual 
+      // choices in the group are locked. Set a global (gEncryptionChoicesLocked) 
+      // indicating the status so that locking can be maintained further.
+      if (id == "encryptionChoices") {
+        document.getElementById("encrypt_mail_never").setAttribute("disabled", "true");
+        document.getElementById("encrypt_mail_always").setAttribute("disabled", "true");
+        gEncryptionChoicesLocked = true;
+      }
+      // If option to sign mail is locked (with true/false set in config file), disable
+      // the corresponding checkbox and set a global (gSigningChoicesLocked) in order to
+      // honor the locking as user changes other elements on the panel. 
+      if (id == "identity.sign_mail") {
+        document.getElementById("identity.sign_mail").setAttribute("disabled", "true");
+        gSigningChoicesLocked = true;
+      }
+      else {
         element.setAttribute("disabled", "true");
+      }
     }
   }
 }
@@ -288,11 +325,21 @@ function smimeSelectCert(smime_cert)
 
 function enableEncryptionControls()
 {
+  if (!gEncryptionChoicesLocked) {
   gEncryptAlways.removeAttribute("disabled");
   gNeverEncrypt.removeAttribute("disabled");
+}
 }
 
 function enableSigningControls()
 {
+  if (!gSigningChoicesLocked) {
   gSignMessages.removeAttribute("disabled");
+  }
+}
+
+function enableCertSelectButtons()
+{
+  document.getElementById("signingCertSelectButton").removeAttribute("disabled");
+  document.getElementById("encryptionCertSelectButton").removeAttribute("disabled");
 }
