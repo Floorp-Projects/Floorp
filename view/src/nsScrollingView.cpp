@@ -33,9 +33,6 @@ static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
-#define NS_TO_INT_ROUND(x)            ((PRInt32)floor((x) + 0.5))
-#define NS_POINTS_TO_TWIPS_INT(x)     ((PRInt32)(20 * (x)))
-
 class ScrollBarView : public nsView
 {
 public:
@@ -91,15 +88,15 @@ void ScrollBarView :: SetPosition(nscoord x, nscoord y)
   if (nsnull != mWindow)
   {
     nsIPresContext  *px = mViewManager->GetPresContext();
-    float           scale = px->GetTwipsToPixels();
+    float           twipToPix = px->GetTwipsToPixels();
     nscoord         parx = 0, pary = 0;
     nsIWidget       *pwidget = nsnull;
   
     pwidget = GetOffsetFromWidget(&parx, &pary);
     NS_IF_RELEASE(pwidget);
     
-    mWindow->Move(NS_TO_INT_ROUND((x + parx) * scale),
-                  NS_TO_INT_ROUND((y + pary) * scale));
+    mWindow->Move(NSTwipsToIntPixels((x + parx), twipToPix),
+                  NSTwipsToIntPixels((y + pary), twipToPix));
 
     NS_RELEASE(px);
   }
@@ -114,7 +111,7 @@ void ScrollBarView :: SetDimensions(nscoord width, nscoord height)
     nsIPresContext  *px = mViewManager->GetPresContext();
     float           t2p = px->GetTwipsToPixels();
   
-    mWindow->Resize(NS_TO_INT_ROUND(t2p * width), NS_TO_INT_ROUND(t2p * height),
+    mWindow->Resize(NSTwipsToIntPixels(width, t2p), NSTwipsToIntPixels(height, t2p),
                     PR_TRUE);
 
     NS_RELEASE(px);
@@ -254,10 +251,10 @@ PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
         rc.SetColor(NS_RGB(0, 0, 0));
 
-        rc.FillEllipse(nscoord(brect.width * 0.15f),
-                       nscoord(brect.height * 0.15f),
-                       NS_TO_INT_ROUND(brect.width * 0.7f),
-                       NS_TO_INT_ROUND(brect.height * 0.7f));
+        rc.FillEllipse(NSToCoordFloor(brect.width * 0.15f),
+                       NSToCoordFloor(brect.height * 0.15f),
+                       NSToCoordRound(brect.width * 0.7f),    // XXX should use NSToCoordCeil ??
+                       NSToCoordRound(brect.height * 0.7f));  // XXX should use NSToCoordCeil ??
 
         if (mQuality == nsContentQuality_kGood)
           rc.SetColor(NS_RGB(0, 255, 0));
@@ -270,8 +267,8 @@ PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
         //something funny happens on windows when the *right* numbers are
         //used. MMP
 
-        rc.FillEllipse(NS_TO_INT_ROUND(brect.width * 0.23f),
-                       NS_TO_INT_ROUND(brect.height * 0.23f),
+        rc.FillEllipse(NSToCoordRound(brect.width * 0.23f),  // XXX should use NSToCoordCeil ??
+                       NSToCoordRound(brect.height * 0.23f), // XXX should use NSToCoordCeil ??
                        nscoord(brect.width * 0.46f),
                        nscoord(brect.height * 0.46f));
 
@@ -285,8 +282,8 @@ PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
         rc.SetColor(tcolor);
 
-        rc.FillEllipse(NS_TO_INT_ROUND(brect.width * 0.34f),
-                       NS_TO_INT_ROUND(brect.height * 0.34f),
+        rc.FillEllipse(NSToCoordRound(brect.width * 0.34f),  // XXX should use NSToCoordCeil ??
+                       NSToCoordRound(brect.height * 0.34f), // XXX should use NSToCoordCeil ??
                        nscoord(brect.width * 0.28f),
                        nscoord(brect.height * 0.28f));
 
@@ -296,8 +293,8 @@ PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
         rc.SetColor(tcolor);
 
-        rc.FillEllipse(NS_TO_INT_ROUND(brect.width * 0.32f),
-                       NS_TO_INT_ROUND(brect.height * 0.32f),
+        rc.FillEllipse(NSToCoordRound(brect.width * 0.32f),  // XXX should use NSToCoordCeil ??
+                       NSToCoordRound(brect.height * 0.32f), // XXX should use NSToCoordCeil ??
                        nscoord(brect.width * 0.17f),
                        nscoord(brect.height * 0.17f));
       }
@@ -416,9 +413,9 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
       nsRect trect;
 
-      trect.width = NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+      trect.width = NSToCoordRound(dx->GetScrollBarWidth());
       trect.x = aBounds.x + aBounds.XMost() - trect.width;
-      trect.height = NS_TO_INT_ROUND(dx->GetScrollBarHeight());
+      trect.height = NSToCoordRound(dx->GetScrollBarHeight());
       trect.y = aBounds.y + aBounds.YMost() - trect.height;
 
       rv = mCornerView->Init(mViewManager, trect, this, nsnull, nsnull, nsnull, -1, nsnull, 1.0f, nsViewVisibility_kHide);
@@ -436,9 +433,9 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
       nsRect trect = aBounds;
 
-      trect.width = NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+      trect.width = NSToCoordRound(dx->GetScrollBarWidth());
       trect.x += aBounds.XMost() - trect.width;
-      trect.height -= NS_TO_INT_ROUND(dx->GetScrollBarHeight());
+      trect.height -= NSToCoordRound(dx->GetScrollBarHeight());
 
       static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 
@@ -457,9 +454,9 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
       nsRect trect = aBounds;
 
-      trect.height = NS_TO_INT_ROUND(dx->GetScrollBarHeight());
+      trect.height = NSToCoordRound(dx->GetScrollBarHeight());
       trect.y += aBounds.YMost() - trect.height;
-      trect.width -= NS_TO_INT_ROUND(dx->GetScrollBarWidth());
+      trect.width -= NSToCoordRound(dx->GetScrollBarWidth());
 
       static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
 
@@ -481,8 +478,8 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
   nsIPresContext    *cx = mViewManager->GetPresContext();
   nsIDeviceContext  *dx = cx->GetDeviceContext();
   nscoord           showHorz = 0, showVert = 0;
-  nscoord           scrollWidth = NS_TO_INT_ROUND(dx->GetScrollBarWidth());
-  nscoord           scrollHeight = NS_TO_INT_ROUND(dx->GetScrollBarHeight());
+  nscoord           scrollWidth = NSToCoordRound(dx->GetScrollBarWidth());
+  nscoord           scrollHeight = NSToCoordRound(dx->GetScrollBarHeight());
 
   if (nsnull != mCornerView)
   {
@@ -511,8 +508,8 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
     mClipX = width - showVert;
     mClipY = height - showHorz;
   
-    mWindow->Resize(NS_TO_INT_ROUND(t2p * (width - showVert)),
-                    NS_TO_INT_ROUND(t2p * (height - showHorz)),
+    mWindow->Resize(NSTwipsToIntPixels((width - showVert), t2p),
+                    NSTwipsToIntPixels((height - showHorz), t2p),
                     PR_TRUE);
   }
   else
@@ -634,9 +631,9 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
     //our scroll bar at the top edge of the same pixel that
     //is displayed.
 
-    mOffsetY = NS_TO_INT_ROUND(NS_TO_INT_ROUND(((nsScrollbarEvent *)aEvent)->position * scale) * px->GetPixelsToTwips());
+    mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(((nsScrollbarEvent *)aEvent)->position, scale), px->GetPixelsToTwips());
 
-    dy = NS_TO_INT_ROUND(scale * (oy - mOffsetY));
+    dy = NSTwipsToIntPixels((oy - mOffsetY), scale);
 
     if (dy != 0)
     {
@@ -647,14 +644,14 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
 
       clip.x = 0;
       clip.y = 0;
-      clip.width = NS_TO_INT_ROUND(scale * (mBounds.width - sx));
+      clip.width = NSTwipsToIntPixels((mBounds.width - sx), scale);
 
       if ((nsnull != mHScrollBarView) && (mHScrollBarView->GetVisibility() == nsViewVisibility_kShow))
         mHScrollBarView->GetDimensions(&sx, &sy);
       else
         sy = 0;
 
-      clip.height = NS_TO_INT_ROUND(scale * (mBounds.height - sy));
+      clip.height = NSTwipsToIntPixels((mBounds.height - sy), scale);
 
       mViewManager->ClearDirtyRegion();
 
@@ -702,9 +699,9 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
     //our scroll bar at the top edge of the same pixel that
     //is displayed.
 
-    mOffsetX = NS_TO_INT_ROUND(NS_TO_INT_ROUND(((nsScrollbarEvent *)aEvent)->position * scale) * px->GetPixelsToTwips());
+    mOffsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(((nsScrollbarEvent *)aEvent)->position, scale), px->GetPixelsToTwips());
 
-    dx = NS_TO_INT_ROUND(scale * (ox - mOffsetX));
+    dx = NSTwipsToIntPixels((ox - mOffsetX), scale);
 
     if (dx != 0)
     {
@@ -719,11 +716,11 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
       else
         sx = 0;
 
-      clip.width = NS_TO_INT_ROUND(scale * (mBounds.width - sx));
+      clip.width = NSTwipsToIntPixels((mBounds.width - sx), scale);
 
       mHScrollBarView->GetDimensions(&sx, &sy);
 
-      clip.height = NS_TO_INT_ROUND(scale * (mBounds.height - sy));
+      clip.height = NSTwipsToIntPixels((mBounds.height - sy), scale);
 
       mViewManager->ClearDirtyRegion();
 
@@ -963,17 +960,17 @@ void nsScrollingView :: ComputeContainerSize()
 
           PRUint32  oldpos = scrollv->GetPosition();
 
-          mOffsetY = NS_TO_INT_ROUND(NS_TO_INT_ROUND((((float)oldpos * mSizeY) / oldsizey) * scale) * px->GetPixelsToTwips());
+          mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeY) / oldsizey), scale), px->GetPixelsToTwips());
 
-          dy = NS_TO_INT_ROUND(scale * (offy - mOffsetY));
+          dy = NSTwipsToIntPixels((offy - mOffsetY), scale);
 
           scrollv->SetParameters(mSizeY, mBounds.height - ((nsnull != scrollh) ? hheight : 0),
-                                 mOffsetY, NS_POINTS_TO_TWIPS_INT(12));
+                                 mOffsetY, NSIntPointsToTwips(12));
         }
         else
         {
           mOffsetY = 0;
-          dy = NS_TO_INT_ROUND(scale * offy);
+          dy = NSTwipsToIntPixels(offy, scale);
 
           if (mScrollPref == nsScrollPreference_kAlwaysScroll)
           {
@@ -1015,22 +1012,22 @@ void nsScrollingView :: ComputeContainerSize()
 
           PRUint32  oldpos = scrollh->GetPosition();
 
-          mOffsetX = NS_TO_INT_ROUND(NS_TO_INT_ROUND((((float)oldpos * mSizeX) / oldsizex) * scale) * px->GetPixelsToTwips());
+          mOffsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeX) / oldsizex), scale), px->GetPixelsToTwips());
 
-          dx = NS_TO_INT_ROUND(scale * (offx - mOffsetX));
+          dx = NSTwipsToIntPixels((offx - mOffsetX), scale);
 
           scrollh->SetParameters(mSizeX, mBounds.width - ((nsnull != scrollv) ? vwidth : 0),
-                                 mOffsetX, NS_POINTS_TO_TWIPS_INT(12));
+                                 mOffsetX, NSIntPointsToTwips(12));
 
 //          //now make the vertical scroll region account for this scrollbar
 //
 //          if (nsnull != scrollv)
-//            scrollv->SetParameters(mSizeY, mBounds.height - hheight, mOffsetY, NS_POINTS_TO_TWIPS_INT(12));
+//            scrollv->SetParameters(mSizeY, mBounds.height - hheight, mOffsetY, NSIntPointsToTwips(12));
         }
         else
         {
           mOffsetX = 0;
-          dx = NS_TO_INT_ROUND(scale * offx);
+          dx = NSTwipsToIntPixels(offx, scale);
 
           if (mScrollPref == nsScrollPreference_kAlwaysScroll)
           {
@@ -1187,7 +1184,7 @@ nsScrollingView :: ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags)
 
       // Move the scrollbar's thumb
       PRUint32 newpos =
-        NS_TO_INT_ROUND(NS_TO_INT_ROUND(aY * t2p) * p2t);
+        NSIntPixelsToTwips(NSTwipsToIntPixels(aY, t2p), p2t);
       scrollv->SetPosition(newpos);
 
       // Update offsets
@@ -1291,9 +1288,9 @@ void nsScrollingView :: AdjustChildWidgets(nsScrollingView *aScrolling, nsIView 
           (isscroll &&
           (kid != ((nsScrollingView *)aView)->mVScrollBarView) &&
           (kid != ((nsScrollingView *)aView)->mHScrollBarView)))
-        win->Move(NS_TO_INT_ROUND((bounds.x + aDx) * scale), NS_TO_INT_ROUND((bounds.y + aDy) * scale));
+        win->Move(NSTwipsToIntPixels((bounds.x + aDx), scale), NSTwipsToIntPixels((bounds.y + aDy), scale));
       else
-        win->Move(NS_TO_INT_ROUND((bounds.x + aDx + offx) * scale), NS_TO_INT_ROUND((bounds.y + aDy + offy) * scale));
+        win->Move(NSTwipsToIntPixels((bounds.x + aDx + offx), scale), NSTwipsToIntPixels((bounds.y + aDy + offy), scale));
     }
 
     AdjustChildWidgets(aScrolling, kid, aDx, aDy, scale);
