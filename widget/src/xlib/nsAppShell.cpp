@@ -239,7 +239,7 @@ nsresult nsAppShell::Run()
       //printf("xlib data available.\n");
       //XNextEvent(mDisplay, &event);
       while (XCheckMaskEvent(mDisplay, ALL_EVENTS, &event)) {
-        DispatchEvent(&event);
+        DispatchXEvent(&event);
       }
     }
     if (please_run_timer_queue) {
@@ -287,7 +287,7 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
 }
 
 void
-nsAppShell::DispatchEvent(XEvent *event)
+nsAppShell::DispatchXEvent(XEvent *event)
 {
   nsWidget *widget;
   XEvent    config_event;
