@@ -128,7 +128,7 @@ moz_test_binary()
 ##########################################################################
 moz_get_debugger()
 {
-	debuggers="ddd gdb dbx"
+	debuggers="ddd gdb dbx bdb"
 	debugger="notfound"
 	done="no"
 	for d in $debuggers
