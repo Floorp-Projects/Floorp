@@ -2305,22 +2305,18 @@ nsProfile::RemigrateProfile(const PRUnichar* profileName)
     rv = profileDir->GetNativeLeafName(origDirLeafName);
     NS_ENSURE_SUCCESS(rv,rv);
      
-    // Backup what we're remigrating by renaming it and leaving in place
-    // XXX todo: what if <xxxxxxxx>.slt-old already exists?
-    nsCAutoString oldLeafName;
-    oldLeafName = origDirLeafName + NS_LITERAL_CSTRING("-old");
-    rv = profileDir->MoveToNative(nsnull, oldLeafName);
+    // leave <xxxxxxxx>.slt alone, 
+    // and remigrate the 4.x profile into <xxxxxxxx>.slt-new
+    nsCAutoString newDirLeafName(origDirLeafName + NS_LITERAL_CSTRING("-new"));
+    rv = newProfileDir->SetLeafName(newDirLeafName);
     NS_ENSURE_SUCCESS(rv,rv);
-     
+    
     // Create a new directory for the remigrated profile
-    rv = newProfileDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+    rv = newProfileDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0775);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create new directory for the remigrated profile");
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv)) {
         rv = MigrateProfileInternal(profileName, oldProfileDir, newProfileDir);
-        
-    if (NS_FAILED(rv)) {
-        newProfileDir->Remove(PR_TRUE);
-        profileDir->MoveToNative(nsnull, origDirLeafName);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "MigrateProfileInternal failed");
     }
     return rv;
 }
