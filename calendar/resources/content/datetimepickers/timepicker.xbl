@@ -91,7 +91,7 @@
 	   in the time field using the current format to verify
 	   whether the time was parsed correctly.
 	 This cannot be done with textbox oninput, so use a workaround.
-         This was done with textbox onkeypress="parseTextBoxTime(false)"
+         This was done with textbox onkeypress="parseTextBoxTime(true)"
            and onblur="parseTextBoxTime(true)" which worked in Moz1.6, but
            no longer works in Moz1.7.
          Therefore constructor stores attribute kTimePicker on the textbox,
@@ -109,7 +109,7 @@
       <xul:hbox flex="1" id="hbox" class="timepicker-box-class">
 	<xul:textbox xbl:inherits="disabled" class="timepicker-text-class"
          id="textbox"
-	 onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.kTimePicker.parseTextBoxTime(false);"
+         onkeypress="if (event.keyCode == 13) this.kTimePicker.parseTextBoxTime(true);"
 	 onblur="this.parentNode.parentNode.kTimePicker.parseTextBoxTime(true);"/>
 	<xul:menu id="button" xbl:inherits="disabled"
 	 class="timepicker-button-class">

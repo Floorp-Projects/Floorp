@@ -80,7 +80,7 @@
            in the date field using the current format to verify
            whether the date was parsed correctly.
          This cannot be done with textbox oninput, so use a workaround.
-         This was done with textbox onkeypress="parseTextBoxDate(false)"
+         This was done with textbox onkeypress="parseTextBoxDate(true)"
            and onblur="parseTextBoxDate(true)" which worked in Moz1.6, but
            no longer works in Moz1.7.
          Therefore constructor stores attribute kDatePicker on the textbox,
@@ -98,7 +98,7 @@
         <xul:hbox flex="1" id="hbox" class="datepicker-box-class">
             <xul:textbox id="textbox" class="datepicker-text-class"
                 xbl:inherits="disabled"
-                onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.kDatePicker.parseTextBoxDate(false);"
+                onkeypress="if (event.keyCode == 13) this.kDatePicker.parseTextBoxDate(true);"
                 onblur="this.parentNode.parentNode.kDatePicker.parseTextBoxDate(true);"/>
 
             <xul:menu class="datepicker-button-class"
