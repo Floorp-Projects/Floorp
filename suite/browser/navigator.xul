@@ -42,7 +42,8 @@ Contributor(s): ______________________________________. -->
   align="vertical"
   width="640" height="480"
   x="10" y="10"
-  persist="width height x y"> 
+  persist="width height x y"
+  ondraggesture="return GeneralDrag(event);"> 
 
 <html:script language="javascript" src="chrome://global/content/strres.js" />
 <html:script language="javascript" src="navigator.js" />
