@@ -611,6 +611,7 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
 nsresult
 nsXULTooltipListener::DestroyTooltip()
 {
+  nsCOMPtr<nsIDOMMouseListener> kungFuDeathGrip(this);
   if (mCurrentTooltip) {
     // clear out the tooltip node on the document
     nsCOMPtr<nsIDocument> doc = mCurrentTooltip->GetDocument();
