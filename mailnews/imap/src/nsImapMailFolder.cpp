@@ -474,7 +474,7 @@ nsresult nsImapMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 NS_IMETHODIMP
 nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
 {
-    nsresult rv = NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_ERROR_NULL_POINTER;
   PRBool selectFolder = PR_FALSE;
 
   NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv); 
@@ -483,25 +483,25 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
 
   selectFolder = PR_TRUE;
 
-    PRBool isServer;
-    rv = GetIsServer(&isServer);
-    if (NS_SUCCEEDED(rv) && isServer)
-    {
-        if (!m_haveDiscoveredAllFolders)
-        {
-            PRBool hasSubFolders = PR_FALSE;
-            GetHasSubFolders(&hasSubFolders);
-            if (!hasSubFolders)
-            {
-                rv = CreateClientSubfolderInfo("Inbox", kOnlineHierarchySeparatorUnknown);
-                if (NS_FAILED(rv)) 
-                    return rv;
-            }
-            m_haveDiscoveredAllFolders = PR_TRUE;
-        }
-        selectFolder = PR_FALSE;
-    }
-    rv = GetDatabase(msgWindow);
+  PRBool isServer;
+  rv = GetIsServer(&isServer);
+  if (NS_SUCCEEDED(rv) && isServer)
+  {
+      if (!m_haveDiscoveredAllFolders)
+      {
+          PRBool hasSubFolders = PR_FALSE;
+          GetHasSubFolders(&hasSubFolders);
+          if (!hasSubFolders)
+          {
+              rv = CreateClientSubfolderInfo("Inbox", kOnlineHierarchySeparatorUnknown);
+              if (NS_FAILED(rv)) 
+                  return rv;
+          }
+          m_haveDiscoveredAllFolders = PR_TRUE;
+      }
+      selectFolder = PR_FALSE;
+  }
+  rv = GetDatabase(msgWindow);
 
   PRBool noSelect = PR_FALSE;
   GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
@@ -517,7 +517,13 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
       pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                         getter_AddRefs(eventQ));
     rv = imapService->SelectFolder(eventQ, this, this, msgWindow, nsnull);
-    m_urlRunning = PR_TRUE;
+    if (NS_SUCCEEDED(rv))
+      m_urlRunning = PR_TRUE;
+    else if (rv == NS_MSG_ERROR_OFFLINE)
+    {
+      rv = NS_OK;
+      NotifyFolderEvent(mFolderLoadedAtom);
+    }
   }
   else if (NS_SUCCEEDED(rv))  // tell the front end that the folder is loaded if we're not going to 
   {                           // actually run a url.

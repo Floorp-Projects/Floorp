@@ -58,6 +58,7 @@
 #include "nsIMsgSearchSession.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIWebNavigation.h"
+#include "nsIIOService.h"
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -73,6 +74,7 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID); 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kMessengerMigratorCID, NS_MESSENGERMIGRATOR_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
                     
 nsNntpService::nsNntpService()
 {
@@ -998,10 +1000,27 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
     return NS_ERROR_OUT_OF_MEMORY;
   return rv;
 }
+
+PRBool nsNntpService::WeAreOffline()
+{
+	nsresult rv = NS_OK;
+  PRBool offline = PR_FALSE;
+
+  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && netService)
+  {
+    netService->GetOffline(&offline);
+  }
+  return offline;
+}
+
 nsresult 
 nsNntpService::RunNewsUrl(nsIURI * aUri, nsIMsgWindow *aMsgWindow, nsISupports * aConsumer)
 {
   nsresult rv;
+
+  if (WeAreOffline())
+    return NS_MSG_ERROR_OFFLINE;
 
   // almost there...now create a nntp protocol instance to run the url in...
   nsCOMPtr <nsINNTPProtocol> nntpProtocol;

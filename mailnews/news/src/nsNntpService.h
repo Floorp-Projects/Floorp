@@ -64,6 +64,7 @@ public:
   CMDLINEHANDLER_REGISTERPROC_DECLS
 
 protected:
+  PRBool WeAreOffline();
   nsresult ConvertNewsMessageURI2NewsURI(const char *messageURI,
                                          nsCString &newsURI,
                                          nsCString &newsgroupName,
