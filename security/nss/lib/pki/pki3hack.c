@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.70 $ $Date: 2002/10/01 14:32:15 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.71 $ $Date: 2002/10/22 14:43:08 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -274,7 +274,7 @@ nss3certificate_matchIdentifier(nssDecodedCert *dc, void *id)
 	    /* this is some kind of error, so treat it as unknown */
 	    return nssCertIDMatch_Unknown;
 	}
-	if (SECITEM_ItemsAreEqual(&c->derSubject, caName) &&
+	if (SECITEM_ItemsAreEqual(&c->derIssuer, caName) &&
 	    SECITEM_ItemsAreEqual(&c->serialNumber, caSN)) 
 	{
 	    /* change the state to positive match, but keep going */
