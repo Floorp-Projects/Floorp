@@ -111,24 +111,24 @@ static void AddRefTable()
 
     nsString* xmlns = new nsString( NS_ConvertToString(kXMLNSNameSpaceURI) );
     nsString* xml = new nsString( NS_ConvertToString(kXMLNameSpaceURI) );
-    nsString* html = new nsString( NS_ConvertToString(kHTMLNameSpaceURI) );
     nsString* xhtml = new nsString( NS_ConvertToString(kXHTMLNameSpaceURI) );
     nsString* xlink = new nsString( NS_ConvertToString(kXLinkNameSpaceURI) );
+    nsString* html = new nsString( NS_ConvertToString(kHTMLNameSpaceURI) );
     gURIArray->AppendElement(xmlns);  // ordering here needs to match IDs
     gURIArray->AppendElement(xml);
-    gURIArray->AppendElement(html); 
     gURIArray->AppendElement(xhtml); 
     gURIArray->AppendElement(xlink);
+    gURIArray->AppendElement(html); 
     NameSpaceURIKey xmlnsKey(xmlns);
     NameSpaceURIKey xmlKey(xml);
-    NameSpaceURIKey htmlKey(html);
     NameSpaceURIKey xhtmlKey(xhtml);
     NameSpaceURIKey xlinkKey(xlink);
+    NameSpaceURIKey htmlKey(html);
     gURIToIDTable->Put(&xmlnsKey, (void*)kNameSpaceID_XMLNS);
     gURIToIDTable->Put(&xmlKey, (void*)kNameSpaceID_XML);
-    gURIToIDTable->Put(&htmlKey, (void*)kNameSpaceID_HTML);
     gURIToIDTable->Put(&xhtmlKey, (void*)kNameSpaceID_HTML);
     gURIToIDTable->Put(&xlinkKey, (void*)kNameSpaceID_XLink);
+    gURIToIDTable->Put(&htmlKey, (void*)kNameSpaceID_HTML);
   }
   NS_ASSERTION(nsnull != gURIToIDTable, "no URI table");
   NS_ASSERTION(nsnull != gURIArray, "no URI array");
