@@ -50,6 +50,7 @@
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsLayoutAtoms.h"
+#include "nsIChromeEventHandler.h"
 
 class nsHTMLFrame;
 
@@ -753,21 +754,22 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
       // Make sure all shells have links back to the content element in the
       // nearest enclosing chrome shell.
       
-      nsCOMPtr<nsIContent> chromeElement;
+      nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
       nsWebShellType chromeShellType;
       outerShell->GetWebShellType(chromeShellType);
       if (chromeShellType == nsWebShellChrome) {
         // Our parent shell is a chrome shell. It is therefore our nearest
-        // enclosing chrome shell. 
-        chromeElement = dont_QueryInterface(mContent);
+        // enclosing chrome shell.
+        chromeEventHandler = do_QueryInterface(mContent);
+        NS_WARN_IF_FALSE(chromeEventHandler, "This mContent should implement this.");
       }
       else {
         // Our parent shell is a content shell. Get the chrome info from
         // it and use that for our shell as well.
-        outerShell->GetContainingChromeElement(getter_AddRefs(chromeElement));
+        outerShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
       }
 
-      mWebShell->SetContainingChromeElement(chromeElement);
+      mWebShell->SetChromeEventHandler(chromeEventHandler);
       
 #endif // INCLUDE_XUL 
 

@@ -43,6 +43,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsIChromeEventHandler.h"
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
@@ -223,8 +224,8 @@ public:
 
   NS_IMETHOD SetWebShellType(nsWebShellType aWebShellType);
   NS_IMETHOD GetWebShellType(nsWebShellType& aWebShellType);
-  NS_IMETHOD GetContainingChromeElement(nsIContent** aResult);
-  NS_IMETHOD SetContainingChromeElement(nsIContent* aChromeElement);
+  NS_IMETHOD GetChromeEventHandler(nsIChromeEventHandler** aChromeEventHandler);
+  NS_IMETHOD SetChromeEventHandler(nsIChromeEventHandler* aChromeEventHander);
 
   NS_IMETHOD GetScrolling(PRInt32& aScrolling);
   NS_IMETHOD SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial = PR_TRUE);
@@ -471,7 +472,7 @@ protected:
   eCharsetReloadState mCharsetReloadState;
 
   nsWebShellType mWebShellType;
-  nsIContent* mChromeElement; // Weak reference.
+  nsIChromeEventHandler* mChromeEventHandler; //Weak Reference
 
   nsISupports* mHistoryState; // Weak reference.  Session history owns this.
 
@@ -656,7 +657,7 @@ nsWebShell::nsWebShell()
   mThreadEventQueue = nsnull;
   InitFrameData(PR_TRUE);
   mWebShellType = nsWebShellContent;
-  mChromeElement = nsnull;
+  mChromeEventHandler = nsnull;
   mSHist = nsnull;
   mIsInSHist = PR_FALSE;
   mFailedToLoadHistoryService = PR_FALSE;
@@ -1768,19 +1769,21 @@ nsWebShell::SetWebShellType(nsWebShellType aWebShellType)
 }
 
 NS_IMETHODIMP
-nsWebShell::GetContainingChromeElement(nsIContent** aResult)
+nsWebShell::GetChromeEventHandler(nsIChromeEventHandler** aChromeEventHandler)
 {
-  NS_IF_ADDREF(mChromeElement);
-  *aResult = mChromeElement;
-  return NS_OK;
+    NS_ENSURE_ARG_POINTER(aChromeEventHandler);
+
+    NS_IF_ADDREF(mChromeEventHandler);
+    *aChromeEventHandler = mChromeEventHandler;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShell::SetContainingChromeElement(nsIContent* aChromeElement)
+nsWebShell::SetChromeEventHandler(nsIChromeEventHandler* aChromeEventHandler)
 {
-  // Weak reference. Don't addref.
-  mChromeElement = aChromeElement;
-  return NS_OK;
+   // Weak reference. Don't addref.
+   mChromeEventHandler = aChromeEventHandler;
+   return NS_OK;
 }
 
 NS_IMETHODIMP

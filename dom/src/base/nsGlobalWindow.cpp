@@ -143,7 +143,7 @@ GlobalWindowImpl::GlobalWindowImpl()
 
   mFirstDocumentLoad = PR_TRUE;
 
-  mChromeElement = nsnull;
+  mChromeEventHandler = nsnull;
 }
 
 GlobalWindowImpl::~GlobalWindowImpl() 
@@ -379,11 +379,10 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
     }
     // Get our enclosing chrome shell and retrieve its global window impl, so that we can
     // do some forwarding to the chrome document.
-    nsCOMPtr<nsIContent> chromeElement;
-    mWebShell->GetContainingChromeElement(getter_AddRefs(chromeElement));
-    if (chromeElement) {
-      mChromeElement = chromeElement.get(); // Weak ref.
-    }
+    nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+    mWebShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+    if(chromeEventHandler)
+      mChromeEventHandler = chromeEventHandler.get(); // Weak ref
   }
 }
 
@@ -2954,9 +2953,9 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   }
   
   //Capturing stage
-  if (NS_EVENT_FLAG_BUBBLE != aFlags && mChromeElement) {
+  if (NS_EVENT_FLAG_BUBBLE != aFlags && mChromeEventHandler) {
     // Check chrome document capture here.
-    mChromeElement->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+    mChromeEventHandler->HandleChromeEvent(&aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, &aEventStatus);
   }
 
   //Local handling stage
@@ -2966,13 +2965,13 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   }
 
   //Bubbling stage
-  if (NS_EVENT_FLAG_CAPTURE != aFlags && mChromeElement) {
+  if (NS_EVENT_FLAG_CAPTURE != aFlags && mChromeEventHandler) {
     // Bubble to a chrome document if it exists
     // XXX Need a way to know if an event should really bubble or not.
     // For now filter out load and unload, since they cause problems.
     if (aEvent->message != NS_PAGE_LOAD && aEvent->message != NS_PAGE_UNLOAD && aEvent->message != NS_FOCUS_CONTENT
                 && aEvent->message != NS_BLUR_CONTENT) {
-      mChromeElement->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
+      mChromeEventHandler->HandleChromeEvent(&aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, &aEventStatus);
     }
   }
 
@@ -3470,10 +3469,11 @@ GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow** aParent)
 
    if(NS_STATIC_CAST(nsIDOMWindow*, this) == parent.get())
       {
-      if(mChromeElement)
+      nsCOMPtr<nsIContent> chromeElement(do_QueryInterface(mChromeEventHandler));
+      if(chromeElement)
          {
          nsCOMPtr<nsIDocument> doc;
-         NS_ENSURE_SUCCESS(mChromeElement->GetDocument(*getter_AddRefs(doc)),
+         NS_ENSURE_SUCCESS(chromeElement->GetDocument(*getter_AddRefs(doc)),
             NS_ERROR_FAILURE);
 
          nsCOMPtr<nsIScriptContextOwner> contextOwner = 
