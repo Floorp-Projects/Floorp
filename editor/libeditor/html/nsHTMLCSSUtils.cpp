@@ -1349,14 +1349,17 @@ nsHTMLCSSUtils::GetElementContainerOrSelf(nsIDOMNode * aNode, nsIDOMElement ** a
   // loop until we find an element
   while (node && nsIDOMNode::ELEMENT_NODE != type) {
     parentNode = node;
-    parentNode->GetParentNode(getter_AddRefs(node));
+    res = parentNode->GetParentNode(getter_AddRefs(node));
     if (NS_FAILED(res)) return res;
-    node->GetNodeType(&type);
-    if (NS_FAILED(res)) return res;
+    if (node) {
+      res = node->GetNodeType(&type);
+      if (NS_FAILED(res)) return res;
+    }
   }
+  NS_ASSERTION(node, "we reached a null node ancestor !");
   NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
   (*aElement) = element;
-  NS_ADDREF(*aElement);
+  NS_IF_ADDREF(*aElement);
   return NS_OK;
 }
