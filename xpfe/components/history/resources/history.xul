@@ -24,7 +24,6 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
 
 <?xul-overlay href="chrome://communicator/content/history/historyTreeOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
@@ -42,12 +41,11 @@
         orient="vertical"
         windowtype="history:manager">
 
-  <script type="application/x-javascript" src="chrome://communicator/content/history/history.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
   <stringbundle id="historyBundle"
                 src="chrome://communicator/locale/history/history.properties"/>
+  <stringbundle id="sortBundle" src="chrome://global/locale/nsOutlinerSorting.properties"/>
 
 <commandset id="tasksCommands">
   <commandset id="selectEditMenuItems"/>
@@ -65,7 +63,6 @@
   <command id="cmd_quit"/>
   <command id="bm_cmd_saveas"/>
   <!-- Edit Menu -->
-  <command id="cmd_undo"/>
   <command id="cmd_cut"/>
   <command id="cmd_copy"/>
   <command id="cmd_delete"/>
@@ -82,7 +79,6 @@
   <key id="key_close"/>
   <key id="key_quit"/>
   <!-- Edit Menu -->
-  <key id="key_undo"/>
   <key id="key_cut"/>
   <key id="key_copy"/>
   <key id="key_delete"/>
@@ -107,8 +103,6 @@
 
   <menu id="menu_Edit">
     <menupopup>
-      <menuitem id="menu_undo" disabled="true" />
-      <menuseparator/>
       <menuitem id="menu_cut"/>
       <menuitem id="menu_copy"/>
       <menuitem id="menu_delete"/>
@@ -122,28 +116,27 @@
   </menu>
   <menu id="menu_View">
     <menupopup oncreate="fillViewMenu(this)">
+      <menu label="&groupBy.label;" accesskey="&groupBy.accesskey;">
+        <menupopup>
+          <menuitem id="groupByDay" label="&groupByDay.label;" accesskey="&groupByDay.accesskey;" type="radio" oncommand="GroupBy('day');"/>
+          <menuitem id="groupBySite" label="&groupBySite.label;" accesskey="&groupBySite.accesskey;" type="radio" oncommand="GroupBy('site');"/>
+          <menuitem id="groupByNone" label="&groupByNone.label;" accesskey="&groupByNone.accesskey;" type="radio" oncommand="GroupBy('none');"/>
+        </menupopup>
+      </menu>
       <menuitem type="radio" name="sort_column" id="unsorted_menuitem"
         label="&menuitem.view.unsorted.label;"
         accesskey="&menuitem.view.unsorted.accesskey;"
-        oncommand="return SetSortDirection('natural');"/>
+        oncommand="return SortInNewDirection('natural');"/>
       <menuseparator id="fill_after_this_node"/>
       <menuseparator id="fill_before_this_node"/>
       <menuitem type="radio" name="sort_direction" id="sort_ascending"
         label="&menuitem.view.ascending.label;"
         accesskey="&menuitem.view.ascending.accesskey;"
-        oncommand="return SetSortDirection('ascending');"/>
+        oncommand="return SortInNewDirection('ascending');"/>
       <menuitem type="radio" name="sort_direction" id="sort_descending"
         label="&menuitem.view.descending.label;"
         accesskey="&menuitem.view.descending.accesskey;"
-        oncommand="return SetSortDirection('descending');"/>
-      <menuseparator/>
-      <menu label="&menuitem.view.show_columns.label;"
-                 accesskey="&menuitem.view.show_columns.accesskey;">
-        <menupopup
-          oncreate="BuildTreePopup(document.getElementById('theColumns'), 
-                                   document.getElementById('headRow'), this,
-                                   document.getElementById('popupCell'))"/>
-      </menu>
+        oncommand="return SortInNewDirection('descending');"/>
     </menupopup>
   </menu>
   <menu id="tasksMenu" accesskey="t" />
@@ -151,16 +144,10 @@
 </menubar>
 </toolbox>
 
-<popupset>
-  <popup id="contextual" oncreate="return fillContextMenu('contextual', 'historyTree');" >
-    <menu />
-  </popup>
-</popupset>
-
-  <tree id="historyTree"/>
+  <outliner id="historyOutliner"/>
   <statusbar id="status-bar">
-    <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
     <statusbarpanel id="statusbar-display" crop="right" flex="1"/>
+    <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
   </statusbar>
 
 </window>

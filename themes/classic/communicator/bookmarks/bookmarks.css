@@ -25,17 +25,19 @@
 /** 
  * Style rules for generic bookmarks items. 
  */    
-  .bookmark-item
+  .bookmark-item, outlinerbody:-moz-outliner-image(Name)
     {
+      padding-right: 2px;
       list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
     }
- 
-  .bookmark-item[container="true"]
+
+  .bookmark-item[container="true"], outlinerbody:-moz-outliner-image(Name, container)
     {
+      padding-right: 2px;
       list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
     }
 
-  .bookmark-item[container="true"][open="true"]
+  .bookmark-item[container="true"][open="true"], outlinerbody:-moz-outliner-image(Name, open)
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
     }

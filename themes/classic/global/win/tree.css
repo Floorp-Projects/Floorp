@@ -1,5 +1,5 @@
 
-/******** Tree widget **********/
+/******** Tree widget **********/ 
 
 /** basic tree ****************************************************
  *  basic tree widget for use in main windows where no decoration
@@ -211,11 +211,6 @@ treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-ico
     padding-left          : 0px;
   }
 
-treeitem[selected="true"] > treerow > treecell > .tree-cell-twisty 
-  {
-    list-style-image      : url("chrome://global/skin/twisty-closed-selected.gif");
-  }
-
 .tree-cell-twisty[disabled="true"] 
   {
     list-style-image      : none;
@@ -224,11 +219,6 @@ treeitem[selected="true"] > treerow > treecell > .tree-cell-twisty
 treeitem[container="true"][open="true"] > treerow > treecell > .tree-cell-twisty 
   {
     list-style-image      : url("chrome://global/skin/twisty-open.gif");
-  }
-
-treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > .tree-cell-twisty 
-  {
-    list-style-image      : url("chrome://global/skin/twisty-open-selected.gif");
   }
 
 /* tree header with sort direction indicators */

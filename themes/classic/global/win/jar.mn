@@ -38,5 +38,7 @@ classic.jar:
     skin/classic/global/alert-icon.gif
     skin/classic/global/dialogOverlay.css
     skin/classic/global/linkTree.css
+    skin/classic/global/twisty-open.gif
+    skin/classic/global/twisty-closed.gif
 
 

@@ -2,13 +2,13 @@
 #sidebar-splitter 
   {
     border-top            : 1px solid ThreeDHighlight;
+    border-bottom         : 1px solid ThreeDShadow;
   }
 
 #sidebar-box 
   {
     border-left           : 1px solid ThreeDShadow;
     border-right          : 1px solid ThreeDHighlight;
-    border-bottom         : 1px solid ThreeDHighlight;
     background-color      : AppWorkspace;
   }
 

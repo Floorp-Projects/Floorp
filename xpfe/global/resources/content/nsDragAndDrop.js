@@ -30,7 +30,6 @@
 /**
  * XXX - until load is supported in chrome, you also need to include 
  *       these files:
- *       chrome://global/content/nsJSSupportsUtils.js
  *       chrome://global/content/nsTransferable.js
  **/
 
@@ -90,7 +89,9 @@ var nsDragAndDrop = {
       if (!transferData.data) return;
       transferData = transferData.data;
       
-      var transArray = nsJSSupportsUtils.createSupportsArray();
+      var transArray = Components.classes["@mozilla.org/supports-array;1"]
+                                 .createInstance(Components.interfaces.nsISupportsArray);
+
       var count = 0;
       do 
         {
@@ -190,7 +191,9 @@ var nsDragAndDrop = {
    **/  
   getDragData: function (aFlavourSet)
     {
-      var supportsArray = nsJSSupportsUtils.createSupportsArray();
+      var supportsArray = Components.classes["@mozilla.org/supports-array;1"]
+                                    .createInstance(Components.interfaces.nsISupportsArray);
+
       for (var i = 0; i < nsDragAndDrop.mDragSession.numDropItems; ++i)
         {
           var trans = nsTransferable.createTransferable();

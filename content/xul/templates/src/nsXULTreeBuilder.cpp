@@ -677,14 +677,37 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
             mSortDirection = eDirection_Ascending;
         }
 
-        header->SetAttribute(kNameSpaceID_None, nsXULAtoms::sortDirection, dir, PR_FALSE);
-
         // Sort it
         SortSubtree(mRows.GetRoot());
         mRows.InvalidateCachedRow();
         mBoxObject->Invalidate();
-    }
 
+        header->SetAttribute(kNameSpaceID_None, nsXULAtoms::sortDirection, dir, PR_FALSE);
+
+        // Unset sort attribute(s) on the other columns
+        nsCOMPtr<nsIContent> parentContent;
+        header->GetParent(*getter_AddRefs(parentContent));
+        if (parentContent) {
+            nsCOMPtr<nsIAtom> parentTag;
+            parentContent->GetTag(*getter_AddRefs(parentTag));
+            if (parentTag.get() == nsXULAtoms::outliner) {
+                PRInt32 numChildren;
+                parentContent->ChildCount(numChildren);
+                for (int i = 0; i < numChildren; ++i) {
+                    nsCOMPtr<nsIContent> childContent;
+                    nsCOMPtr<nsIAtom> childTag;
+                    parentContent->ChildAt(i, *getter_AddRefs(childContent));
+                    if (childContent) {
+                        childContent->GetTag(*getter_AddRefs(childTag));
+                        if (childTag.get() == nsXULAtoms::outlinercol && childContent != header) {
+                            childContent->UnsetAttribute(kNameSpaceID_None,
+                                                         nsXULAtoms::sortDirection, false);
+                        }
+                    }
+                }
+            }
+        }
+    }
     return NS_OK;
 }
 

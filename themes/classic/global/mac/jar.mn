@@ -223,4 +223,10 @@ classic.jar:
     skin/classic/global/error-icon.gif (::error-icon.gif)
     skin/classic/global/alert-icon.gif (::alert-icon.gif)
     skin/classic/global/question-icon.gif (::question-icon.gif)
+    skin/classic/global/twisty-open.gif
+    skin/classic/global/twisty-open-active.gif
+    skin/classic/global/twisty-open-selected.gif
+    skin/classic/global/twisty-closed.gif
+    skin/classic/global/twisty-closed-active.gif
+    skin/classic/global/twisty-closed-selected.gif
     

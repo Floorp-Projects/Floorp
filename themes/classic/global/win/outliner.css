@@ -7,8 +7,13 @@
  **/
 
 outliner {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
+  border-spacing        : 0px;     
+  border-top            : 1px solid ThreeDShadow;                             
+  border-right          : 1px solid ThreeDHighlight;                          
+  border-bottom         : 1px solid ThreeDShadow;                          
+  border-left           : 1px solid ThreeDShadow; 
+  background-color      : -moz-Field;
+  color                 : -moz-FieldText;   
 }
 
 outliner.inset {
