@@ -105,7 +105,7 @@ pull_layout:
 pull_seamonkey:
 	cd $(MOZ_SRC)\.
 !if !exist($(MOZ_SRC)\mozilla\config\cvsco.pl)
-	$(CVSCO) mozilla\config\cvsco.pl
+	$(CVSCO) mozilla/config/cvsco.pl
 !endif
 	@perl mozilla\config\cvsco.pl $(CVSCO) SeaMonkeyAll
 
