@@ -514,14 +514,15 @@ static nsICaseConversion * gCaseConv = 0;
 NS_IMPL_ISUPPORTS(HandleCaseConversionShutdown3, kIShutdownListenerIID);
 
 nsresult HandleCaseConversionShutdown3::OnShutdown(const nsCID& cid, nsISupports* service) {
+    nsresult rv = NS_OK;
     if (cid.Equals(kUnicharUtilCID)) {
         NS_ASSERTION(service == gCaseConv, "wrong service!");
-        if(gCaseConv){
-          gCaseConv->Release();
-          gCaseConv = 0;
+        if (gCaseConv) {
+          rv = nsServiceManager::ReleaseService(kUnicharUtilCID, gCaseConv);
+          gCaseConv = nsnull;
         }
     }
-    return NS_OK;
+    return rv;
 }
 
 
@@ -531,7 +532,9 @@ public:
     mListener = new HandleCaseConversionShutdown3();
     if(mListener){
       mListener->AddRef();
-      nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,(nsISupports**) &gCaseConv, mListener);
+      nsresult rv = nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,
+                                                 (nsISupports**) &gCaseConv, mListener);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "can't get case conversion service");
     }
   }
 protected:
