@@ -47,8 +47,11 @@ public:
 
   NS_IMETHOD RemoveOption(PRInt32 index) = 0; 
 
+  /**
+   * Sets the select state of the option at index
+   */
 
+  NS_IMETHOD SetOptionSelected(PRInt32 index, PRBool value) = 0;
 };
 
 #endif
-
