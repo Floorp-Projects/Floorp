@@ -82,7 +82,8 @@
 <!ENTITY forwardButton.tooltip        "Go forward one page">
 <!ENTITY reloadButton.label           "Reload">
 <!ENTITY reloadButton.tooltip         "Reload current page">
-<!ENTITY stopButton.label             "Stop">
+<!ENTITY stopCmd.label                "Stop">
+<!ENTITY stopCmd.accesskey            "S">
 <!ENTITY stopButton.tooltip           "Stop loading this page">
 <!ENTITY searchButton.label           "Search">
 <!ENTITY searchButton.tooltip         "Type a word in the field to the left, then click Search">
@@ -199,8 +200,6 @@
 <!ENTITY reloadCmd.label              "Reload">
 <!ENTITY reloadCmd.accesskey          "R">
 <!ENTITY reloadCmd.commandkey         "r">
-<!ENTITY stopCmd.label                "Stop">
-<!ENTITY stopCmd.accesskey            "S">
 <!ENTITY reloadFrameCmd.label         "Reload Frame">
 <!ENTITY reloadFrameCmd.accesskey     "R">
 <!ENTITY viewPartialSourceForSelectionCmd.label "View Selection Source">
