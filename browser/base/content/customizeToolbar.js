@@ -44,7 +44,9 @@ function addItemToToolbar(newItem, newToolbar)
 
   enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                        "toolbarpaletteitem");
-  
+  if (newItem.getAttribute("flex"))
+    enclosure.setAttribute("flex", newItem.getAttribute("flex"));
+
   // Set a draggesture handler to allow drag-rearrange within the clone toolbar.
   enclosure.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver)");
   enclosure.appendChild(newItem);

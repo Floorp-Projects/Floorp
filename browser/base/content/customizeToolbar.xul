@@ -37,7 +37,8 @@
         title="&window.title;"
         onload="buildDialog()"
         ondialogaccept="updateToolbar()"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="700" height="420">
 
 <script type="application/x-javascript" src="chrome://browser/content/customizeToolbar.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
