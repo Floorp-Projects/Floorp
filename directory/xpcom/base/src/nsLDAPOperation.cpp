@@ -379,19 +379,6 @@ nsLDAPOperation::AbandonExt(LDAPControl **serverctrls,
     return NS_OK;
 }
 
-/**  
- * wrapper for ldap_abandon_ext() with NULL LDAPControl
- * parameters, equivalent to old-style ldap_abandon(), thus the name.
- *
- * @exception NS_ERROR_NOT_INITIALIZED		operation not initialized
- * @exception NS_ERROR_LDAP_ENCODING_ERROR  	error during BER-encoding
- * @exception NS_ERROR_LDAP_SERVER_DOWN	    	the LDAP server did not
- *					    	receive the request or the
- *					    	connection was lost
- * @exception NS_ERROR_OUT_OF_MEMORY	    	out of memory
- * @exception NS_ERROR_UNEXPECTED		internal error
- */
-
 NS_IMETHODIMP
 nsLDAPOperation::Abandon(void)
 {
