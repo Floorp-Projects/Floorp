@@ -59,7 +59,7 @@ nsMalloc::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
     if (!aInstancePtr)
 	     return NS_ERROR_INVALID_POINTER;
-    if (outer && !aIID.Equals(kISupportsIID))
+    if (outer && !aIID.Equals(NS_GET_IID(nsISupports)))
         return NS_ERROR_INVALID_ARG;
     nsMalloc* mm = new nsMalloc(outer);
     if (mm == NULL)
