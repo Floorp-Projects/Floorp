@@ -1526,7 +1526,8 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   nscoord maxAscent = 0;
   nscoord maxDescent = 0;
   PRInt32 kidIndex = 0;
-  PRInt32 lastIndex = mContent->ChildCount();
+  PRInt32 lastIndex;
+  mContent->ChildCount(lastIndex);
   PRInt32 contentOffset=0;
   nsIFrame* prevKidFrame = nsnull;/* XXX incremental reflow! */
 
@@ -1550,7 +1551,8 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
    *  TBody, in order
    */
   for (;;) {
-    nsIContentPtr kid = mContent->ChildAt(kidIndex);   // kid: REFCNT++
+    nsIContentPtr kid;
+    mContent->ChildAt(kidIndex, kid.AssignRef());   // kid: REFCNT++
     if (kid.IsNull()) {
       result = NS_FRAME_COMPLETE;
       break;
@@ -1698,7 +1700,8 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
   nsSize kidMaxSize(0,0);
 
   PRInt32 kidIndex = 0;
-  PRInt32 lastIndex = c->ChildCount();
+  PRInt32 lastIndex;
+  c->ChildCount(lastIndex);
   nsIFrame* prevKidFrame = nsnull;/* XXX incremental reflow! */
 
 #ifdef NS_DEBUG
@@ -1722,16 +1725,19 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
   // Did we successfully reflow our mapped children?
   if (PR_TRUE == reflowMappedOK) {
     // Any space left?
+    PRInt32 numKids;
+    mContent->ChildCount(numKids);
     if (state.availSize.height <= 0) {
       // No space left. Don't try to pull-up children or reflow unmapped
-      if (NextChildOffset() < mContent->ChildCount()) {
+      if (NextChildOffset() < numKids) {
         status = NS_FRAME_NOT_COMPLETE;
       }
-    } else if (NextChildOffset() < mContent->ChildCount()) {
+    } else if (NextChildOffset() < numKids) {
       // Try and pull-up some children from a next-in-flow
       if (PullUpChildren(aPresContext, state, aDesiredSize.maxElementSize)) {
         // If we still have unmapped children then create some new frames
-        if (NextChildOffset() < mContent->ChildCount()) {
+        mContent->ChildCount(numKids);
+        if (NextChildOffset() < numKids) {
           status = ReflowUnmappedChildren(aPresContext, state, aDesiredSize.maxElementSize);
         }
       } else {
@@ -2366,7 +2372,8 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
   LastChild(prevKidFrame);
   for (;;) {
     // Get the next content object
-    nsIContentPtr kid = mContent->ChildAt(kidIndex);
+    nsIContentPtr kid;
+    mContent->ChildAt(kidIndex, kid.AssignRef());
     if (kid.IsNull()) {
       result = NS_FRAME_COMPLETE;
       break;
@@ -2882,7 +2889,8 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
     nsIContent *content = nsnull;
     rg->GetContent(content);                                              // content: REFCNT++
     NS_ASSERTION(nsnull!=content, "bad frame, returned null content.");
-    nsIAtom * rgTag = content->GetTag();
+    nsIAtom * rgTag;
+    content->GetTag(rgTag);
     // if we've found a header or a footer, replicate it
     if (tHeadTag==rgTag || tFootTag==rgTag)
     {
@@ -2909,6 +2917,7 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
       duplicateFrame->SetNextSibling(bodyRowGroupFromOverflow);
       lastSib = duplicateFrame;
     }
+    NS_IF_RELEASE(rgTag);
     NS_RELEASE(content);                                                 // content: REFCNT--
     // get the next row group
     rg->GetNextSibling(rg);
@@ -3055,7 +3064,7 @@ void nsTableFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   nsHTMLValue border_value;
 
 
-  nsContentAttr border_result;
+  nsresult border_result;
 
   nscoord   padding = 0;
   nscoord   spacing = 0;
@@ -3072,7 +3081,7 @@ void nsTableFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
 
   border_result = table->GetAttribute(nsHTMLAtoms::border,border_value);
-  if (border_result == eContentAttr_HasValue)
+  if (border_result == NS_CONTENT_ATTR_HAS_VALUE)
   {
     PRInt32 intValue = 0;
 

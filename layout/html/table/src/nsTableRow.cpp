@@ -169,9 +169,11 @@ nsTableRow::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
 {
   nsresult rv = NS_OK;
 
+  PRInt32 numKids;
+  ChildCount(numKids);
   NS_PRECONDITION(nsnull!=aContent, "bad aContent arg to ReplaceChildAt");
-  NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
-  if ((nsnull==aContent) || !(0<=aIndex && aIndex<ChildCount()))
+  NS_PRECONDITION(0<=aIndex && aIndex<numKids, "bad aIndex arg to ReplaceChildAt");
+  if ((nsnull==aContent) || !(0<=aIndex && aIndex<numKids))
     return NS_ERROR_FAILURE;
   else
   {
@@ -187,7 +189,8 @@ nsTableRow::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
       return NS_ERROR_NOT_IMPLEMENTED;
     }
 #if XXX
-    nsIContent * oldChild = ChildAt (aIndex); // oldChild: REFCNT++
+    nsIContent * oldChild;
+    ChildAt (aIndex, oldChild); // oldChild: REFCNT++
     result = nsTableContent::ReplaceChildAt (aContent, aIndex, aNotify);
     if (result)
     {
@@ -207,12 +210,15 @@ nsTableRow::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
 NS_IMETHODIMP
 nsTableRow::RemoveChildAt (int aIndex, PRBool aNotify)
 {
-  NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
-  if (!(0<=aIndex && aIndex<ChildCount()))
+  PRInt32 numKids;
+  ChildCount(numKids);
+  NS_PRECONDITION(0<=aIndex && aIndex<numKids, "bad aIndex arg to ReplaceChildAt");
+  if (!(0<=aIndex && aIndex<numKids))
     return NS_ERROR_FAILURE;
   
   nsresult rv = NS_OK;
-  nsIContent * oldChild = ChildAt (aIndex);   // oldChild: REFCNT++
+  nsIContent * oldChild;
+  ChildAt (aIndex, oldChild);   // oldChild: REFCNT++
   if (nsnull!=oldChild)
   {
     rv = nsTableContent::RemoveChildAt (aIndex, aNotify);
@@ -226,30 +232,30 @@ nsTableRow::RemoveChildAt (int aIndex, PRBool aNotify)
   return rv;
 }
 
-void nsTableRow::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+NS_IMETHODIMP
+nsTableRow::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                         PRBool aNotify)
 {
   NS_PRECONDITION(nsnull!=aAttribute, "bad attribute arg");
   nsHTMLValue val;
   if (aAttribute == nsHTMLAtoms::bgcolor) {
     ParseColor(aValue, val);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   if ((aAttribute == nsHTMLAtoms::align) &&
       ParseDivAlignParam(aValue, val)) {
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   if ((aAttribute == nsHTMLAtoms::valign) &&
       ParseAlignParam(aValue, val)) {
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
-  nsTableContent::SetAttribute(aAttribute, aValue);
+  return nsTableContent::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-void nsTableRow::MapAttributesInto(nsIStyleContext* aContext,
-                                   nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsTableRow::MapAttributesInto(nsIStyleContext* aContext,
+                              nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
@@ -277,17 +283,18 @@ void nsTableRow::MapAttributesInto(nsIStyleContext* aContext,
     //background: color
     MapBackgroundAttributesInto(aContext, aPresContext);
   }
+  return NS_OK;
 }
 
-nsContentAttr
+NS_IMETHODIMP
 nsTableRow::AttributeToString(nsIAtom* aAttribute,
                               nsHTMLValue& aValue,
                               nsString& aResult) const
 {
-  nsContentAttr ca = eContentAttr_NotThere;
+  nsresult ca = NS_CONTENT_ATTR_NOT_THERE;
   if (aAttribute == nsHTMLAtoms::valign) {
     AlignParamToString(aValue, aResult);
-    ca = eContentAttr_HasValue;
+    ca = NS_CONTENT_ATTR_HAS_VALUE;
   }
   else {
     ca = nsTableContent::AttributeToString(aAttribute, aValue, aResult);

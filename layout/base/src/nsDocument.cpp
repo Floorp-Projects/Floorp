@@ -1113,13 +1113,16 @@ nsISelection * nsDocument::GetSelection() {
 }
 
 
-void TraverseBlockContent(nsIContent * aContent, nsString & aStr) 
+static void TraverseBlockContent(nsIContent * aContent, nsString & aStr) 
 {
   nsIContent * parent = aContent;
-  PRInt32 i;
-  for (i=0;i<parent->ChildCount();i++) {
-    nsIContent * child = parent->ChildAt(i);
-    nsIAtom * atom = child->GetTag();
+  PRInt32 i, n;
+  parent->ChildCount(n);
+  for (i=0;i<n;i++) {
+    nsIContent * child;
+    parent->ChildAt(i, child);
+    nsIAtom * atom;
+    child->GetTag(atom);
     if (atom == nsnull) {
       static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
       nsIDOMText* textContent;
@@ -1148,13 +1151,16 @@ void nsDocument::SelectAll() {
   nsIContent * body  = nsnull;
 
   nsString bodyStr("BODY");
-  PRInt32 i;
-  for (i=0;i<mRootContent->ChildCount();i++) {
-    nsIContent * child = mRootContent->ChildAt(i);
+  PRInt32 i, n;
+  mRootContent->ChildCount(n);
+  for (i=0;i<n;i++) {
+    nsIContent * child;
+    mRootContent->ChildAt(i, child);
     PRBool isSynthetic;
     child->IsSynthetic(isSynthetic);
     if (!isSynthetic) {
-      nsIAtom * atom = child->GetTag();
+      nsIAtom * atom;
+      child->GetTag(atom);
       if (bodyStr.EqualsIgnoreCase(atom)) {
         body = child;
         break;
@@ -1170,20 +1176,21 @@ void nsDocument::SelectAll() {
 
   start = body;
   // Find Very first Piece of Content
-  while (start->ChildCount() > 0) {
+  start->ChildCount(n);
+  while (n > 0) {
     nsIContent * child = start;
-    start = child->ChildAt(0);
+    child->ChildAt(0, start);
     NS_RELEASE(child);
   }
 
   end = body;
   // Last piece of Content
-  PRInt32 count = end->ChildCount();
-  while (count > 0) {
+  end->ChildCount(n);
+  while (n > 0) {
     nsIContent * child = end;
-    end   = child->ChildAt(count-1);
+    child->ChildAt(n-1, end);
     NS_RELEASE(child);
-    count = end->ChildCount();
+    end->ChildCount(n);
   }
 
   //NS_RELEASE(start);
@@ -1227,7 +1234,8 @@ void nsDocument::TraverseTree(nsString   & aText,
       aText.Append(text);
       //NS_IF_RELEASE(textContent);
     } else {
-      nsIAtom * atom = aContent->GetTag();
+      nsIAtom * atom;
+      aContent->GetTag(atom);
       if (atom != nsnull) {
         nsString str;
         atom->ToString(str);
@@ -1251,8 +1259,12 @@ void nsDocument::TraverseTree(nsString   & aText,
     }
   }
 
-  for (PRInt32 i=0;i<aContent->ChildCount();i++) {
-    TraverseTree(aText, aContent->ChildAt(i), aStart, aEnd, aInRange);
+  PRInt32 n;
+  aContent->ChildCount(n);
+  for (PRInt32 i=0;i<n;i++) {
+    nsIContent* kid;
+    aContent->ChildAt(i, kid);
+    TraverseTree(aText, kid, aStart, aEnd, aInRange);
   }
   if (addReturn) {
     aText.Append("\n");
@@ -1394,12 +1406,14 @@ nsIContent* nsDocument::FindContent(const nsIContent* aStartNode,
                                     const nsIContent* aTest1, 
                                     const nsIContent* aTest2) const
 {
-  PRInt32       count = aStartNode->ChildCount();
+  PRInt32       count;
+  aStartNode->ChildCount(count);
   PRInt32       index;
 
   for(index = 0; index < count;index++)
   {
-    nsIContent* child = aStartNode->ChildAt(index);
+    nsIContent* child;
+    aStartNode->ChildAt(index, child);
     nsIContent* content = FindContent(child,aTest1,aTest2);
     if (content != nsnull) {
       NS_IF_RELEASE(child);
@@ -1485,12 +1499,14 @@ nsIContent* nsDocument::GetPrevContent(const nsIContent *aContent) const
 
   if (nsnull != aContent)
   {
-    nsIContent* parent = aContent->GetParent();
+    nsIContent* parent;
+    aContent->GetParent(parent);
     if (parent != nsnull && parent != mRootContent)
     {
-      PRInt32  index = parent->IndexOf((nsIContent*)aContent);
+      PRInt32  index;
+      parent->IndexOf((nsIContent*)aContent, index);
       if (index > 0)
-        result = parent->ChildAt(index-1);
+        parent->ChildAt(index-1, result);
       else
         result = GetPrevContent(parent);
     }
@@ -1506,17 +1522,22 @@ nsIContent* nsDocument::GetNextContent(const nsIContent *aContent) const
   if (nsnull != aContent)
   {
     // Look at next sibling
-    nsIContent* parent = aContent->GetParent();
+    nsIContent* parent;
+    aContent->GetParent(parent);
     if (parent != nsnull && parent != mRootContent)
     {
-      PRInt32     index = parent->IndexOf((nsIContent*)aContent);
-      PRInt32     count = parent->ChildCount();
+      PRInt32     index;
+      parent->IndexOf((nsIContent*)aContent, index);
+      PRInt32     count;
+      parent->ChildCount(count);
       if (index+1 < count) {
-        result = parent->ChildAt(index+1);
+        parent->ChildAt(index+1, result);
         // Get first child down the tree
-        while (result->ChildCount() > 0) {
+        PRInt32 n;
+        result->ChildCount(n);
+        while (n > 0) {
           nsIContent * old = result;
-          result = old->ChildAt(0);
+          old->ChildAt(0, result);
           NS_RELEASE(old);
         }
       } else {

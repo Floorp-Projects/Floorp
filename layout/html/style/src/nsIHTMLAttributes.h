@@ -35,27 +35,38 @@ class nsIHTMLContent;
 
 class nsIHTMLAttributes : public nsISupports {
 public:
-  virtual PRInt32 SetAttribute(nsIAtom* aAttribute, const nsString& aValue) = 0;
-  virtual PRInt32 SetAttribute(nsIAtom* aAttribute, 
-                               const nsHTMLValue& aValue = nsHTMLValue::kNull) = 0;
-  virtual PRInt32 UnsetAttribute(nsIAtom* aAttribute) = 0;
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aValue) const = 0;
-  virtual PRInt32 GetAllAttributeNames(nsISupportsArray* aArray) const = 0;
+  // XXX why is this part of the interface?
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRInt32& aCount) = 0;
 
-  virtual PRInt32 Count(void) const = 0;
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, 
+                               const nsHTMLValue& aValue,
+                               PRInt32& aCount) = 0;
 
-  virtual PRInt32   SetID(nsIAtom* aID) = 0;
-  virtual nsIAtom*  GetID(void) const = 0;
-  virtual PRInt32   SetClass(nsIAtom* aClass) = 0;  // XXX this will have to change for CSS2
-  virtual nsIAtom*  GetClass(void) const = 0;  // XXX this will have to change for CSS2
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRInt32& aCount) = 0;
+
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
+                          nsHTMLValue& aValue) const = 0;
+
+  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,
+                                  PRInt32& aCount) const = 0;
+
+  NS_IMETHOD Count(PRInt32& aCount) const = 0;
+
+  NS_IMETHOD SetID(nsIAtom* aID, PRInt32& aIndex) = 0;
+
+  NS_IMETHOD GetID(nsIAtom*& aResult) const = 0;
+
+  NS_IMETHOD SetClass(nsIAtom* aClass, PRInt32& aIndex) = 0;  // XXX this will have to change for CSS2
+
+  NS_IMETHOD GetClass(nsIAtom*& aResult) const = 0;  // XXX this will have to change for CSS2
 
   /**
    * Add this object's size information to the sizeof handler.
    */
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const = 0;
 
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 };
 
 extern NS_HTML nsresult

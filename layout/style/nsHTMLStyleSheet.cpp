@@ -51,7 +51,7 @@ public:
 
   virtual void MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   nscolor mColor;
 };
@@ -86,8 +86,10 @@ void HTMLAnchorRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPr
   }
 }
 
-void HTMLAnchorRule::List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP
+HTMLAnchorRule::List(FILE* out, PRInt32 aIndent) const
 {
+  return NS_OK;
 }
 
 // -----------------------------------------------------------
@@ -295,7 +297,8 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
   if (aContent != parentContent) {  // if not a pseudo frame...
     nsIHTMLContent* htmlContent;
     if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
-      nsIAtom*  tag = htmlContent->GetTag();
+      nsIAtom*  tag;
+      htmlContent->GetTag(tag);
       // if we have anchor colors, check if this is an anchor with an href
       if (tag == nsHTMLAtoms::a) {
         if ((nsnull != mLinkRule) || (nsnull != mVisitedRule) || (nsnull != mActiveRule)) {
@@ -305,9 +308,9 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
           if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
               (nsnull != linkHandler)) {
             nsAutoString base, href;  // XXX base??
-            nsContentAttr attrState = htmlContent->GetAttribute("href", href);
+            nsresult attrState = htmlContent->GetAttribute("href", href);
 
-            if (eContentAttr_HasValue == attrState) {
+            if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
               nsIURL* docURL = nsnull;
               nsIDocument* doc = nsnull;
               aContent->GetDocument(doc);
@@ -375,8 +378,8 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       } // end TD/TH tag
 
       // just get the one and only style rule from the content
-      nsIStyleRule* rule = htmlContent->GetStyleRule();
-
+      nsIStyleRule* rule;
+      htmlContent->GetStyleRule(rule);
       if (nsnull != rule) {
         aResults->AppendElement(rule);
         NS_RELEASE(rule);

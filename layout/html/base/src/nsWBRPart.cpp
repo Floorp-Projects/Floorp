@@ -24,10 +24,10 @@ class WBRPart : public nsHTMLTagContent {
 public:
   WBRPart(nsIAtom* aTag);
 
-  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
-                               nsIFrame* aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*& aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult);
 
 protected:
   virtual ~WBRPart();

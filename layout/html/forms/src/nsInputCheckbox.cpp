@@ -103,8 +103,8 @@ nsInputCheckboxFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aV
   // get the intial state of the checkbox
   nsInputCheckbox* content = (nsInputCheckbox *)mContent; // this must be an nsCheckbox 
   nsHTMLValue value; 
-  nsContentAttr result = content->GetAttribute(nsHTMLAtoms::checked, value); 
-  PRBool checked = (result != eContentAttr_NotThere) ? PR_TRUE : PR_FALSE;
+  nsresult result = content->GetAttribute(nsHTMLAtoms::checked, value); 
+  PRBool checked = (result != NS_CONTENT_ATTR_NOT_THERE) ? PR_TRUE : PR_FALSE;
 
   // set the widget to the initial state
   nsICheckButton* checkbox;
@@ -153,8 +153,9 @@ nsInputCheckbox::~nsInputCheckbox()
 }
 
 
-void nsInputCheckbox::MapAttributesInto(nsIStyleContext* aContext, 
-                                     nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsInputCheckbox::MapAttributesInto(nsIStyleContext* aContext, 
+                                   nsIPresContext* aPresContext)
 {
   float p2t = aPresContext->GetPixelsToTwips();
   nscoord pad = NSIntPixelsToTwips(3, p2t);
@@ -180,6 +181,8 @@ void nsInputCheckbox::MapAttributesInto(nsIStyleContext* aContext,
     nsInput::MapAttributesInto(aContext, aPresContext);
   }
   NS_IF_RELEASE(formMan);
+
+  return NS_OK;
 }
 
 PRInt32 
@@ -242,17 +245,20 @@ void nsInputCheckbox::GetType(nsString& aResult) const
   aResult = "checkbox";
 }
 
-void nsInputCheckbox::SetAttribute(nsIAtom* aAttribute,
-                                   const nsString& aValue)
+NS_IMETHODIMP
+nsInputCheckbox::SetAttribute(nsIAtom* aAttribute,
+                              const nsString& aValue,
+                              PRBool aNotify)
 {
   if (aAttribute == nsHTMLAtoms::checked) {
     mChecked = PR_TRUE;
   }
-  nsInputCheckboxSuper::SetAttribute(aAttribute, aValue);
+  return nsInputCheckboxSuper::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-nsContentAttr nsInputCheckbox::GetAttribute(nsIAtom* aAttribute,
-                                            nsHTMLValue& aResult) const
+NS_IMETHODIMP
+nsInputCheckbox::GetAttribute(nsIAtom* aAttribute,
+                              nsHTMLValue& aResult) const
 {
   aResult.Reset();
   if (aAttribute == nsHTMLAtoms::checked) {

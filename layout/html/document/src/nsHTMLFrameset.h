@@ -128,15 +128,16 @@ protected:
 class nsHTMLFrameset : public nsHTMLContainer {
 public:
  
-  virtual nsresult  CreateFrame(nsIPresContext*  aPresContext,
-                                nsIFrame*        aParentFrame,
-                                nsIStyleContext* aStyleContext,
-                                nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
 
-  virtual void  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-  virtual void MapAttributesInto(nsIStyleContext* aContext,
-                                 nsIPresContext* aPresContext);
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,
+                               nsIPresContext* aPresContext);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
 
 protected:
   nsHTMLFrameset(nsIAtom* aTag, nsIWebShell* aParentWebShell);

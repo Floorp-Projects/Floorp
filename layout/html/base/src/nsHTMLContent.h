@@ -33,7 +33,11 @@ class nsXIFConverter;
  * allocation from the malloc heap as well as from an arena. Note
  * that instances of this object are created with zero'd memory.
  */
-class nsHTMLContent : public nsIHTMLContent, public nsIDOMNode, public nsIScriptObjectOwner, public nsIDOMEventReceiver {
+class nsHTMLContent : public nsIHTMLContent,
+                      public nsIDOMNode,
+                      public nsIScriptObjectOwner,
+                      public nsIDOMEventReceiver
+{
 public:
   /**
    * This new method allocates memory from the standard malloc heap
@@ -58,71 +62,89 @@ public:
   NS_IMETHOD_(nsrefcnt) Release();
 
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const;
-  virtual void SetDocument(nsIDocument* aDocument);
+  NS_IMETHOD SetDocument(nsIDocument* aDocument);
 
-  virtual nsIContent* GetParent() const;
-  virtual void SetParent(nsIContent* aParent);
+  NS_IMETHOD GetParent(nsIContent*& aResult) const;
+  NS_IMETHOD SetParent(nsIContent* aParent);
 
-  virtual PRBool CanContainChildren() const;
-  virtual PRInt32 ChildCount() const;
-  virtual nsIContent* ChildAt(PRInt32 aIndex) const;
-  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
+  NS_IMETHOD CanContainChildren(PRBool& aResult) const;
 
-  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
-  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD ChildCount(PRInt32& aResult) const;
+
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
+
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const;
+
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
+                           PRBool aNotify);
+
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+                            PRBool aNotify);
+
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
+
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
   NS_IMETHOD IsSynthetic(PRBool& aResult);
 
-  virtual void Compact();
+  NS_IMETHOD Compact();
   
-  virtual void SetAttribute(const nsString& aName, const nsString& aValue);
-  virtual nsContentAttr GetAttribute(const nsString& aName,
-                                     nsString& aResult) const;
+  NS_IMETHOD SetAttribute(const nsString& aName,
+                          const nsString& aValue,
+                          PRBool aNotify);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-  virtual nsContentAttr GetAttribute(nsIAtom *aAttribute,
-                                     nsString &aResult) const;
-  virtual void SetAttribute(nsIAtom* aAttribute,
-                            const nsHTMLValue& aValue = nsHTMLValue::kNull);
-  virtual void UnsetAttribute(nsIAtom* aAttribute);
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aValue) const;
-  virtual PRInt32 GetAllAttributeNames(nsISupportsArray* aArray) const;
-  virtual PRInt32 GetAttributeCount(void) const;
+  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aResult) const;
 
-  virtual void      SetID(nsIAtom* aID);
-  virtual nsIAtom*  GetID(void) const;
-  virtual void      SetClass(nsIAtom* aClass);  // XXX this will have to change for CSS2
-  virtual nsIAtom*  GetClass(void) const;  // XXX this will have to change for CSS2
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
 
-  virtual nsIStyleRule* GetStyleRule(void);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute,
+                          const nsHTMLValue& aValue,
+                          PRBool aNotify);
 
-  virtual void MapAttributesInto(nsIStyleContext* aContext, 
-                                 nsIPresContext* aPresContext);
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute);
 
-  virtual void List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD GetAttribute(nsIAtom *aAttribute,
+                          nsString &aResult) const;
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
+                          nsHTMLValue& aValue) const;
+
+  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,
+                                  PRInt32& aCountResult) const;
+  NS_IMETHOD GetAttributeCount(PRInt32& aCountResult) const;
+
+  NS_IMETHOD SetID(nsIAtom* aID);
+  NS_IMETHOD GetID(nsIAtom*& aResult) const;
+  // XXX this will have to change for CSS2
+  NS_IMETHOD SetClass(nsIAtom* aClass);
+  // XXX this will have to change for CSS2
+  NS_IMETHOD GetClass(nsIAtom*& aResult) const;
+
+  NS_IMETHOD GetStyleRule(nsIStyleRule*& aResult);
+
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
+                               nsIPresContext* aPresContext);
+
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               nsHTMLValue& aValue,
+                               nsString& aResult) const = 0;
+
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsString& aValue,
+                               nsHTMLValue& aResult) = 0;
+
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
 
-  virtual nsIAtom* GetTag() const;
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
 
-  virtual void ToHTML(FILE* out) const;
+  NS_IMETHOD ToHTML(FILE* out) const;
 
   virtual nsIContentDelegate* GetDelegate(nsIPresContext* aCX);
 
-  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
-                                          nsHTMLValue& aValue,
-                                          nsString& aResult) const = 0;
-
-  static void NewGlobalAtom(const char* aString, nsIAtom** aAtomResult);
-
-  static void ReleaseGlobalAtom(nsIAtom** aAtomResult);
-
   static void QuoteForHTML(const nsString& aValue, nsString& aResult);
 
-public:
   NS_IMETHOD ResetScriptObject();
 
   // nsIDOMNode interface

@@ -25,6 +25,8 @@ class nsIFormManager;
 { 0x282ff440, 0xcd7e, 0x11d1, \
   {0x89, 0xad, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
 
+// XXX XPCOM'ize me
+
 /**
   * Interface which all form controls (e.g. buttons, checkboxes, text,
   * radio buttons, select, etc) implement. 

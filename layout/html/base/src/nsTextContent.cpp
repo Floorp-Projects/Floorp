@@ -247,14 +247,14 @@ public:
   virtual void GetText(nsStringBuf* aBuf, PRInt32 aOffset, PRInt32 aCount);
 #endif
 
-  virtual void List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
-  virtual void ToHTMLString(nsString& aBuf) const;
+  NS_IMETHOD ToHTMLString(nsString& aBuf) const;
 
-  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
-                               nsIFrame* aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*& aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult);
 
   // nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
@@ -307,20 +307,20 @@ public:
    * FinishConvertToXIF -- closes a container
    
   */
-  virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  virtual void ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
+  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const;
+  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const;
+  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const;
 
-  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
-                                          nsHTMLValue& aValue,
-                                          nsString& aResult) const {
-    return eContentAttr_NotThere;
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               nsHTMLValue& aValue,
+                               nsString& aResult) const {
+    return NS_CONTENT_ATTR_NOT_THERE;
   }
 
-  virtual nsContentAttr StringToAttribute(nsIAtom* aAttribute,
-                                          const nsString& aValue,
-                                          nsHTMLValue& aResult) {
-    return eContentAttr_NotThere;
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsString& aValue,
+                               nsHTMLValue& aResult) {
+    return NS_CONTENT_ATTR_NOT_THERE;
   }
 
   PRUnichar* mText;
@@ -1824,7 +1824,8 @@ nsrefcnt Text::Release(void)
   return count;
 }
 
-void Text::List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP
+Text::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
   fputs("Text", out);
@@ -1836,12 +1837,15 @@ void Text::List(FILE* out, PRInt32 aIndent) const
   fputs(tmp, out);
 
   fputs("\">\n", out);
+  return NS_OK;
 }
 
-void Text::ToHTMLString(nsString& aBuf) const
+NS_IMETHODIMP
+Text::ToHTMLString(nsString& aBuf) const
 {
   aBuf.SetLength(0);
   aBuf.Append(mText, mLength);
+  return NS_OK;
 }
 
 void Text::ToCString(nsString& aBuf, PRInt32 aOffset, PRInt32 aLen) const
@@ -1864,12 +1868,17 @@ void Text::ToCString(nsString& aBuf, PRInt32 aOffset, PRInt32 aLen) const
     }
   }
 }
-void Text::BeginConvertToXIF(nsXIFConverter& aConverter) const
+
+NS_IMETHODIMP
+Text::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
+  return NS_OK;
 }
 
-void Text::FinishConvertToXIF(nsXIFConverter& aConverter) const
+NS_IMETHODIMP
+Text::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
+  return NS_OK;
 }
 
 /**
@@ -1877,7 +1886,8 @@ void Text::FinishConvertToXIF(nsXIFConverter& aConverter) const
  * XIF is an intermediate form of the content model, the buffer
  * will then be parsed into any number of formats including HTML, TXT, etc.
  */
-void Text::ConvertContentToXIF(nsXIFConverter& aConverter) const
+NS_IMETHODIMP
+Text::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
   const nsIContent* content = this;
 
@@ -1924,6 +1934,7 @@ void Text::ConvertContentToXIF(nsXIFConverter& aConverter) const
     buffer.Append(mText, mLength);
     aConverter.AddContent(buffer);
   }
+  return NS_OK;
 }
 
 

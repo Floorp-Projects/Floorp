@@ -152,10 +152,12 @@ public:
   virtual PRBool RemoveFormControl(nsIFormControl* aFormControl, 
                                    PRBool aChildIsRef = PR_TRUE);
 
-  virtual void SetAttribute(const nsString& aName, const nsString& aValue);
+  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue);
+  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue,
+                          PRBool aNotify);
 
-  virtual nsContentAttr GetAttribute(const nsString& aName,
-                              nsString& aResult) const;
+  NS_IMETHOD GetAttribute(const nsString& aName,
+                          nsString& aResult) const;
 
   virtual nsresult GetRefCount() const;
 
@@ -808,7 +810,16 @@ nsForm::OnTab()
 {
 }
 
-void nsForm::SetAttribute(const nsString& aName, const nsString& aValue)
+NS_IMETHODIMP
+nsForm::SetAttribute(const nsString& aName, const nsString& aValue)
+{
+  return SetAttribute(aName, aValue, PR_FALSE);
+}
+
+// XXX return error status properly
+NS_IMETHODIMP
+nsForm::SetAttribute(const nsString& aName, const nsString& aValue,
+                     PRBool aNotify)
 {
   nsAutoString tmp(aName);
   tmp.ToUpperCase();
@@ -858,35 +869,39 @@ void nsForm::SetAttribute(const nsString& aName, const nsString& aValue)
       NS_NewHTMLAttributes(&mAttributes, nsnull);
     }
     if (nsnull != mAttributes) {
-      mAttributes->SetAttribute(atom, aValue);
+      PRInt32 na;
+      mAttributes->SetAttribute(atom, aValue, na);
     }
   }
   NS_RELEASE(atom);
+
+  return NS_OK;
 }
 
-nsContentAttr nsForm::GetAttribute(const nsString& aName,
-                            nsString& aResult) const
+NS_IMETHODIMP
+nsForm::GetAttribute(const nsString& aName,
+                     nsString& aResult) const
 {
   nsAutoString tmp(aName);
   tmp.ToUpperCase();
   nsIAtom* atom = NS_NewAtom(tmp);
-  nsContentAttr rv = eContentAttr_NoValue;
+  nsresult rv = NS_CONTENT_ATTR_NO_VALUE;
   if (atom == nsHTMLAtoms::action) {
     if (nsnull != mAction) {
       aResult = *mAction;
-      rv = eContentAttr_HasValue;
+      rv = NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (atom == nsHTMLAtoms::encoding) {
     if (nsnull != mEncoding) {
       aResult = *mEncoding;
-      rv = eContentAttr_HasValue;
+      rv = NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (atom == nsHTMLAtoms::target) {
     if (nsnull != mTarget) {
       aResult = *mTarget;
-      rv = eContentAttr_HasValue;
+      rv = NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (atom == nsHTMLAtoms::method) {
@@ -897,7 +912,7 @@ nsContentAttr nsForm::GetAttribute(const nsString& aName,
       else {
         aResult = "get";
       }
-      rv = eContentAttr_HasValue;
+      rv = NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else {
@@ -905,12 +920,12 @@ nsContentAttr nsForm::GetAttribute(const nsString& aName,
     if (nsnull != mAttributes) {
       nsHTMLValue value;
       rv = mAttributes->GetAttribute(atom, value);
-      if (eContentAttr_HasValue == rv) {
+      if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
         if (value.GetUnit() == eHTMLUnit_String) {
           value.GetStringValue(aResult);
         }
         else {
-          rv = eContentAttr_NoValue;
+          rv = NS_CONTENT_ATTR_NO_VALUE;
         }
       }
     }
@@ -1054,7 +1069,7 @@ nsForm::GetAcceptCharset(nsString& aAcceptCharset)
 NS_IMETHODIMP    
 nsForm::SetAcceptCharset(const nsString& aAcceptCharset)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::acceptcharset, aAcceptCharset);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::acceptcharset, aAcceptCharset, PR_TRUE);
 
   return NS_OK;  
 }
@@ -1070,7 +1085,7 @@ nsForm::GetAction(nsString& aAction)
 NS_IMETHODIMP    
 nsForm::SetAction(const nsString& aAction)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::action, aAction);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::action, aAction, PR_TRUE);
 
   return NS_OK;  
 }
@@ -1086,7 +1101,7 @@ nsForm::GetEnctype(nsString& aEnctype)
 NS_IMETHODIMP    
 nsForm::SetEnctype(const nsString& aEnctype)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::enctype, aEnctype);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::enctype, aEnctype, PR_TRUE);
 
   return NS_OK;  
 }
@@ -1102,7 +1117,7 @@ nsForm::GetMethod(nsString& aMethod)
 NS_IMETHODIMP    
 nsForm::SetMethod(const nsString& aMethod)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::method, aMethod);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::method, aMethod, PR_TRUE);
 
   return NS_OK;  
 }
@@ -1118,7 +1133,7 @@ nsForm::GetTarget(nsString& aTarget)
 NS_IMETHODIMP    
 nsForm::SetTarget(const nsString& aTarget)
 {
-  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::target, aTarget);
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::target, aTarget, PR_TRUE);
 
   return NS_OK;  
 }
@@ -1187,9 +1202,9 @@ nsForm::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
       if (NS_OK == result) {
         nsAutoString name;
         // XXX Should it be an EqualsIgnoreCase?
-        if (((content->GetAttribute("NAME", name) == eContentAttr_HasValue) &&
+        if (((content->GetAttribute("NAME", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name))) ||
-            ((content->GetAttribute("ID", name) == eContentAttr_HasValue) &&
+            ((content->GetAttribute("ID", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name)))) {
           result = control->QueryInterface(kIDOMElementIID, (void **)aReturn);
         }
@@ -1505,9 +1520,9 @@ nsFormElementList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
       if (NS_OK == result) {
         nsAutoString name;
         // XXX Should it be an EqualsIgnoreCase?
-        if (((content->GetAttribute("NAME", name) == eContentAttr_HasValue) &&
+        if (((content->GetAttribute("NAME", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name))) ||
-            ((content->GetAttribute("ID", name) == eContentAttr_HasValue) &&
+            ((content->GetAttribute("ID", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name)))) {
           result = control->QueryInterface(kIDOMNodeIID, (void **)aReturn);
         }

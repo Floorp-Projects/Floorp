@@ -1,8 +1,6 @@
 todo for AOL August 1st deadline:
 ---------------------------------
 
-o pages without titles don't clear the title
-
 o bug17-3.html: when dealing with incremental frame-appended reflow we
   need to know how the last clean line was ended (e.g. break, clear=all, etc.)
   otherwise we won't adjust the y coordinate properly. We can save the
@@ -31,16 +29,6 @@ o bug2.html
 
 o UMR bug because of painting during reflow
 
-o implement base tag support:
-  o frame, iframe, frameset
-  o layer
-  o body background, table background, etc.
-
-o TEST base tag support:
-  o script src=
-  o style src=
-
-o missing space after ampersand on http://home.netscape.com
 
 o fast scroll to #ref for a link targeted at the same document as is
   currently showing
@@ -56,13 +44,13 @@ o Viewer:
   o fix link-over status
 
 o fix floating tables
-  o current-line floaters need to go in previous line's bcl list; if first line
+  x current-line floaters need to go in previous line's bcl list; if first line
     then they go in the block-frame's pending floater list
-  o <block><floater>... we need a place to hang current-line floaters!!!
+  x <block><floater>... we need a place to hang current-line floaters!!!
   x http://www.news.com
   x http://www.usatoday.com/ 
   o http://www.mrshowbiz.com/
-  o file:/f:/html/floating-images.html
+  x file:/f:/html/floating-images.html
 	"tucked between the woofers" isn't
   o file:/f:/html/floating-tables-inline.html
 	overwrite errors
@@ -80,18 +68,12 @@ o fix blocks inside of inlines; need to find the block's inline-layout
   state and see where the block child is with respect to the left edge
   of the line.
 
-o iframe on infoseek
-
-x table tag is closing paragraphs
-
 o mark/insert-at-mark for parser???
 
 o www.cnn.com: crash
 
 o performance:
   o people.netscape.com
-
-o initial black reflow bug
 
 o slide show resize bug
 
@@ -100,11 +82,29 @@ o fix assertion on LCIC in nscssblockframe::content-inserted when
 
 o docloader needs to disconnect itself as an observer when it's done
 
-o fix limited stack depth in content sink
-
 ----------------------------------------------------------------------
 After august 10th
 ----------------------------------------------------------------------
+
+o why is nsInlineLayout different from nsInlineReflowState (mott@nc.com)
+
+BASE TAG SUPPORT:
+o revise the way that base tags work (somehow); either make the
+  content sink aware of all tags that can have url's in them, or better
+  yet, add in base tag api's to the nsHTMLDocument and make the content
+  set-attribute methods deal with it; or add in a method to
+  nsIHTMLContent called SetBaseURL and SetTarget (which is defined to be
+  ignored except for those tags that care)
+
+  o implement base tag support:
+    o frame, iframe, frameset
+    o layer
+    o Body (background), TABLE, TR, TD (background), etc.
+    o Image, Anchor; look at html4.0 spec for attributes that are URI's
+
+  o TEST base tag support:
+    o script src=
+    o style src=
 
 o NS_FRAME_FIRST_REFLOW needs to go; block code is the only consumer
   instead keep a list of new frames and when we hit one, trigger the
@@ -224,3 +224,10 @@ Would be nice someday
 async dns slow mode
 
 css parser keeping comments
+
+----------------------------------------------------------------------
+DONE
+----------------------------------------------------------------------
+
+x fix limited stack depth in content sink
+x missing space after ampersand on http://home.netscape.com

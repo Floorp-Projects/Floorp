@@ -608,7 +608,8 @@ nsresult nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
   // ignore all but the first
   for (PRInt32 kidIndex = 0; /* nada */ ; kidIndex++) 
   {
-    nsIContentPtr caption = mContent->ChildAt(kidIndex);
+    nsIContentPtr caption;
+    mContent->ChildAt(kidIndex, caption.AssignRef());
     if (PR_TRUE==caption.IsNull()) {
       break;
     }

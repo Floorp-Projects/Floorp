@@ -159,8 +159,7 @@ nsHTMLAnchor::GetAccessKey(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetAccessKey(const nsString& aValue)
 {
-  mInner.SetAttribute(nsHTMLAtoms::accesskey, aValue);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::accesskey, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -173,8 +172,7 @@ nsHTMLAnchor::GetCharset(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetCharset(const nsString& aValue)
 {
-  mInner.SetAttribute(nsHTMLAtoms::charset, aValue);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::charset, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -187,8 +185,7 @@ nsHTMLAnchor::GetCoords(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetCoords(const nsString& aValue)
 {
-  mInner.SetAttribute(nsHTMLAtoms::coords, aValue);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::coords, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -201,8 +198,7 @@ nsHTMLAnchor::GetHref(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetHref(const nsString& aValue)
 {
-  mInner.SetAttribute(nsHTMLAtoms::href, aValue);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::href, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -215,8 +211,7 @@ nsHTMLAnchor::GetHreflang(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetHreflang(const nsString& aValue)
 {
-  mInner.SetAttribute(nsHTMLAtoms::hreflang, aValue);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::hreflang, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -229,8 +224,7 @@ nsHTMLAnchor::GetName(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetName(const nsString& aValue)
 {
-  mInner.SetAttribute(nsHTMLAtoms::name, aValue);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::name, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -243,8 +237,7 @@ nsHTMLAnchor::GetRel(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetRel(const nsString& aValue)
 {
-  mInner.SetAttribute(nsHTMLAtoms::rel, aValue);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::rel, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -257,8 +250,7 @@ nsHTMLAnchor::GetRev(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetRev(const nsString& aValue)
 {
-  mInner.SetAttribute(nsHTMLAtoms::rev, aValue);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::rev, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -271,8 +263,7 @@ nsHTMLAnchor::GetShape(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetShape(const nsString& aValue)
 {
-  mInner.SetAttribute(nsHTMLAtoms::shape, aValue);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::shape, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -280,7 +271,7 @@ nsHTMLAnchor::GetTabIndex(PRInt32* aValue)
 {
   nsHTMLValue value;
   *aValue = -1;
-  if (eContentAttr_HasValue ==
+  if (NS_CONTENT_ATTR_HAS_VALUE ==
       mInner.GetAttribute(nsHTMLAtoms::tabindex, value)) {
     if (value.GetUnit() == eHTMLUnit_Integer) {
       *aValue = value.GetIntValue();
@@ -293,8 +284,7 @@ NS_IMETHODIMP
 nsHTMLAnchor::SetTabIndex(PRInt32 aValue)
 {
   nsHTMLValue value(aValue, eHTMLUnit_Integer);
-  mInner.SetAttribute(nsHTMLAtoms::tabindex, value);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::tabindex, value, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -307,8 +297,7 @@ nsHTMLAnchor::GetTarget(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetTarget(const nsString& aValue)
 {
-  mInner.SetAttribute(nsHTMLAtoms::target, aValue);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::target, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -321,8 +310,7 @@ nsHTMLAnchor::GetType(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLAnchor::SetType(const nsString& aValue)
 {
-  mInner.SetAttribute(nsHTMLAtoms::type, aValue);
-  return NS_OK;
+  return mInner.SetAttribute(nsHTMLAtoms::type, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -337,7 +325,7 @@ nsHTMLAnchor::Focus()
   return NS_OK;
 }
 
-nsContentAttr
+NS_IMETHODIMP
 nsHTMLAnchor::StringToAttribute(nsIAtom* aAttribute,
                                 const nsString& aValue,
                                 nsHTMLValue& aResult)
@@ -345,12 +333,12 @@ nsHTMLAnchor::StringToAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::tabindex) {
     nsHTMLGenericContent::ParseValue(aValue, 0, 32767, aResult,
                                      eHTMLUnit_Integer);
-    return eContentAttr_HasValue;
+    return NS_CONTENT_ATTR_HAS_VALUE;
   }
-  return eContentAttr_NotThere;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-nsContentAttr
+NS_IMETHODIMP
 nsHTMLAnchor::AttributeToString(nsIAtom* aAttribute,
                                 nsHTMLValue& aValue,
                                 nsString& aResult) const
@@ -358,10 +346,11 @@ nsHTMLAnchor::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-void
+NS_IMETHODIMP
 nsHTMLAnchor::MapAttributesInto(nsIStyleContext* aContext,
                                 nsIPresContext* aPresContext)
 {
+  return NS_OK;
 }
 
 NS_IMETHODIMP

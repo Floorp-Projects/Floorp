@@ -76,16 +76,17 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
 
-  virtual void MapAttributesInto(nsIStyleContext* aContext,
-                                 nsIPresContext* aPresContext);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,
+                               nsIPresContext* aPresContext);
   
   /** @see nsIHTMLContent::CreateFrame */
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
 
   /** returns nsITableContent::kTableColGroupType */
   virtual int GetType();
@@ -171,7 +172,9 @@ inline void nsTableColGroup::SetStartColumnIndex (int aIndex)
 inline void nsTableColGroup::SetSpan (int aSpan)
 {
   mSpan = aSpan;
-  if (0 < ChildCount ())  // span is only relevant if we don't have children
+  PRInt32 n;
+  ChildCount (n);
+  if (0 < n)  // span is only relevant if we don't have children
     ResetColumns ();
 }
 

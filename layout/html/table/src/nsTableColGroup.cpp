@@ -88,12 +88,14 @@ int nsTableColGroup::GetColumnCount ()
 {
   if (0 == mColCount)
   {
-    int count = ChildCount ();
+    int count;
+    ChildCount (count);
     if (0 < count)
     {
       for (int index = 0; index < count; index++)
       {
-        nsIContent * child = ChildAt (index); // child: REFCNT++
+        nsIContent * child;
+        ChildAt (index, child); // child: REFCNT++
         NS_ASSERTION(nsnull!=child, "bad child");
         // is child a column?
         nsTableContent *tableContent = (nsTableContent *)child;
@@ -143,10 +145,12 @@ nsTableColGroup::AppendChildTo (nsIContent *aContent, PRBool aNotify)
      * and if we already have an implicit column for this actual column, 
      * then replace the implicit col with this actual col.
      */
-    PRInt32 childCount = ChildCount();
+    PRInt32 childCount;
+    ChildCount(childCount);
     for (PRInt32 colIndex=0; colIndex<childCount; colIndex++)
     {
-      nsTableContent *col = (nsTableContent*)ChildAt(colIndex);
+      nsTableContent *col;
+      ChildAt(colIndex, (nsIContent*&)col);
       NS_ASSERTION(nsnull!=col, "bad child");
       PRBool colIsImplicit;
       col->IsSynthetic(colIsImplicit);
@@ -201,9 +205,11 @@ NS_IMETHODIMP
 nsTableColGroup::ReplaceChildAt (nsIContent * aContent, PRInt32 aIndex,
                                  PRBool aNotify)
 {
+  PRInt32 numKids;
+  ChildCount(numKids);
   NS_ASSERTION(nsnull!=aContent, "bad arg");
-  NS_ASSERTION((0<=aIndex && ChildCount()>aIndex), "bad arg");
-  if ((nsnull==aContent) || !(0<=aIndex && ChildCount()>aIndex))
+  NS_ASSERTION((0<=aIndex && numKids>aIndex), "bad arg");
+  if ((nsnull==aContent) || !(0<=aIndex && numKids>aIndex))
     return PR_FALSE;
 
   // is aContent a TableRow?
@@ -216,7 +222,8 @@ nsTableColGroup::ReplaceChildAt (nsIContent * aContent, PRInt32 aIndex,
     return NS_OK;
   }
 
-  nsIContent * lastChild = ChildAt (aIndex);  // lastChild : REFCNT++
+  nsIContent * lastChild;
+  ChildAt (aIndex, lastChild);  // lastChild : REFCNT++
   NS_ASSERTION(nsnull!=lastChild, "bad child");
   nsresult result = nsTableContent::ReplaceChildAt (aContent, aIndex, aNotify);
   if (NS_OK==result)
@@ -238,8 +245,14 @@ nsTableColGroup::ReplaceChildAt (nsIContent * aContent, PRInt32 aIndex,
 NS_IMETHODIMP
 nsTableColGroup::RemoveChildAt (PRInt32 aIndex, PRBool aNotify)
 {
-  NS_ASSERTION((0<=aIndex && ChildCount()>aIndex), "bad arg");
-  nsIContent * lastChild = ChildAt (aIndex);  // lastChild: REFCNT++
+#ifdef NS_DEBUG
+  PRInt32 numKids;
+  ChildCount(numKids);
+  NS_ASSERTION((0<=aIndex && numKids>aIndex), "bad arg");
+#endif
+
+  nsIContent * lastChild;
+  ChildAt (aIndex, lastChild);  // lastChild: REFCNT++
   NS_ASSERTION(nsnull!=lastChild, "bad child");
   nsresult result = nsTableContent::RemoveChildAt (aIndex, aNotify);
   if (NS_OK==result)
@@ -275,40 +288,41 @@ PRBool nsTableColGroup::IsCol(nsIContent * aContent) const
   return result;
 }
 
-void nsTableColGroup::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+NS_IMETHODIMP
+nsTableColGroup::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                              PRBool aNotify)
 {
   nsHTMLValue val;
 
   if (aAttribute == nsHTMLAtoms::width) 
   {
     ParseValueOrPercentOrProportional(aValue, val, eHTMLUnit_Pixel);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if ( aAttribute == nsHTMLAtoms::span)
   {
     ParseValue(aValue, 0, val, eHTMLUnit_Integer);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
     SetSpan(val.GetIntValue());
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     nsHTMLValue val;
     if (ParseTableAlignParam(aValue, val)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
-    return;
   }
   else if (aAttribute == nsHTMLAtoms::valign) {
     nsHTMLValue val;
     if (ParseTableAlignParam(aValue, val)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
-    return;
   }
-  nsTableContent::SetAttribute(aAttribute, aValue);
+  return nsTableContent::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-void nsTableColGroup::MapAttributesInto(nsIStyleContext* aContext,
-                                        nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsTableColGroup::MapAttributesInto(nsIStyleContext* aContext,
+                                   nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
@@ -352,9 +366,10 @@ void nsTableColGroup::MapAttributesInto(nsIStyleContext* aContext,
       textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
     }
   }
+  return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsTableColGroup::CreateFrame(nsIPresContext* aPresContext,
                              nsIFrame* aParentFrame,
                              nsIStyleContext* aStyleContext,

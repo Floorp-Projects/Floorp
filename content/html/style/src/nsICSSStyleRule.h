@@ -54,9 +54,6 @@ public:
 
 class nsICSSStyleRule : public nsIStyleRule {
 public:
-  virtual PRBool Equals(const nsIStyleRule* aRule) const = 0;
-  virtual PRUint32 HashValue(void) const = 0;
-
   virtual nsCSSSelector* FirstSelector(void) = 0;
   virtual void AddSelector(const nsCSSSelector& aSelector) = 0;
   virtual void DeleteSelector(nsCSSSelector* aSelector) = 0;
@@ -66,8 +63,6 @@ public:
 
   virtual PRInt32 GetWeight(void) const = 0;
   virtual void SetWeight(PRInt32 aWeight) = 0;
-
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 };
 
 extern NS_HTML nsresult

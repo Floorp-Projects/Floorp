@@ -288,11 +288,13 @@ NS_IMETHODIMP
 nsScrollBodyFrame::ListTag(FILE* out) const
 {
   fputs("*scrollbodyframe<", out);
-  nsIAtom* atom = mContent->GetTag();
+  nsIAtom* atom;
+  mContent->GetTag(atom);
   if (nsnull != atom) {
     nsAutoString tmp;
     atom->ToString(tmp);
     fputs(tmp, out);
+    NS_RELEASE(atom);
   }
   PRInt32 contentIndex;
   GetContentIndex(contentIndex);
@@ -420,11 +422,13 @@ NS_IMETHODIMP
 nsScrollInnerFrame::ListTag(FILE* out) const
 {
   fputs("*scrollinnerframe<", out);
-  nsIAtom* atom = mContent->GetTag();
+  nsIAtom* atom;
+  mContent->GetTag(atom);
   if (nsnull != atom) {
     nsAutoString tmp;
     atom->ToString(tmp);
     fputs(tmp, out);
+    NS_RELEASE(atom);
   }
   PRInt32 contentIndex;
   GetContentIndex(contentIndex);
@@ -536,11 +540,13 @@ NS_IMETHODIMP
 nsScrollOuterFrame::ListTag(FILE* out) const
 {
   fputs("*scrollouterframe<", out);
-  nsIAtom* atom = mContent->GetTag();
+  nsIAtom* atom;
+  mContent->GetTag(atom);
   if (nsnull != atom) {
     nsAutoString tmp;
     atom->ToString(tmp);
     fputs(tmp, out);
+    NS_RELEASE(atom);
   }
   PRInt32 contentIndex;
   GetContentIndex(contentIndex);

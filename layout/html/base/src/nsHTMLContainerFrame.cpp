@@ -114,7 +114,8 @@ NS_METHOD nsHTMLContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresConte
   // Get child's cursor, if any
   nsContainerFrame::GetCursorAndContentAt(aPresContext, aPoint, aFrame, aContent, aCursor);
   if (aCursor != NS_STYLE_CURSOR_INHERIT) {
-    nsIAtom* tag = mContent->GetTag();
+    nsIAtom* tag;
+    mContent->GetTag(tag);
     if (nsHTMLAtoms::a == tag) {
       // Anchor tags override their child cursors in some cases.
       if ((NS_STYLE_CURSOR_IBEAM == aCursor) &&
@@ -171,7 +172,8 @@ nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
   // Find the frame that precedes the insertion point
   nsIFrame* prevSibling = nsnull;
   if (aIndexInParent > 0) {
-    nsIContent* precedingContent = aContainer->ChildAt(aIndexInParent - 1);
+    nsIContent* precedingContent;
+    aContainer->ChildAt(aIndexInParent - 1, precedingContent);
     prevSibling = aShell->FindFrameWithContent(precedingContent);
     NS_RELEASE(precedingContent);
 
@@ -252,7 +254,8 @@ nsHTMLContainerFrame::ContentDeleted(nsIPresShell*   aShell,
   nsIFrame* deadFrame;
   nsIFrame* prevSibling;
   if (aIndexInParent > 0) {
-    nsIContent* precedingContent = aContainer->ChildAt(aIndexInParent - 1);
+    nsIContent* precedingContent;
+    aContainer->ChildAt(aIndexInParent - 1, precedingContent);
     prevSibling = aShell->FindFrameWithContent(precedingContent);
     NS_RELEASE(precedingContent);
 

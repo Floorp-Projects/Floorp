@@ -36,20 +36,20 @@ class LayerPart : public nsHTMLContainer {
 public:
   LayerPart(nsIAtom* aTag);
 
-  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
-                               nsIFrame* aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*& aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aString);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aString,
+                          PRBool aNotify);
 
-  virtual void MapAttributesInto(nsIStyleContext* aContext, 
-                                 nsIPresContext* aPresContext);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
+                               nsIPresContext* aPresContext);
 
-protected:
-  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
-                                          nsHTMLValue& aValue,
-                                          nsString& aResult) const;
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               nsHTMLValue& aValue,
+                               nsString& aResult) const;
 };
 
 // -----------------------------------------------------------
@@ -65,8 +65,9 @@ static nsHTMLTagContent::EnumTable kVisibilityTable[] = {
   {0}
 };
 
-void
-LayerPart::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
+NS_IMETHODIMP
+LayerPart::SetAttribute(nsIAtom* aAttribute, const nsString& aString,
+                        PRBool aNotify)
 {
   // XXX CLIP
   nsHTMLValue val;
@@ -74,50 +75,49 @@ LayerPart::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
     nsAutoString src(aString);
     src.StripWhitespace();
     val.SetStringValue(src);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if ((aAttribute == nsHTMLAtoms::left) ||
       (aAttribute == nsHTMLAtoms::top)) {
     nsHTMLValue val;
     if (ParseValue(aString, _I32_MIN, val, eHTMLUnit_Pixel)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if ((aAttribute == nsHTMLAtoms::width) ||
            (aAttribute == nsHTMLAtoms::height)) {
     nsHTMLValue val;
     if (ParseValueOrPercent(aString, val, eHTMLUnit_Pixel)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if (aAttribute == nsHTMLAtoms::zindex) {
     nsHTMLValue val;
     if (ParseValue(aString, 0, val, eHTMLUnit_Integer)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if (aAttribute == nsHTMLAtoms::visibility) {
     if (ParseEnumValue(aString, kVisibilityTable, val)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
     ParseColor(aString, val);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if (aAttribute == nsHTMLAtoms::background) {
     nsAutoString url(aString);
     url.StripWhitespace();
     val.SetStringValue(url);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
-  else {
-    // ABOVE, BELOW, OnMouseOver, OnMouseOut, OnFocus, OnBlur, OnLoad
-    nsHTMLTagContent::SetAttribute(aAttribute, aString);
-  }
+
+  // ABOVE, BELOW, OnMouseOver, OnMouseOut, OnFocus, OnBlur, OnLoad
+  return nsHTMLTagContent::SetAttribute(aAttribute, aString, aNotify);
 }
 
-void
+NS_IMETHODIMP
 LayerPart::MapAttributesInto(nsIStyleContext* aContext, 
                              nsIPresContext*  aPresContext)
 {
@@ -180,9 +180,10 @@ LayerPart::MapAttributesInto(nsIStyleContext* aContext,
     // Background and bgcolor
     MapBackgroundAttributesInto(aContext, aPresContext);
   }
+  return NS_OK;
 }
 
-nsContentAttr
+NS_IMETHODIMP
 LayerPart::AttributeToString(nsIAtom*     aAttribute,
                              nsHTMLValue& aValue,
                              nsString&    aResult) const
@@ -190,13 +191,13 @@ LayerPart::AttributeToString(nsIAtom*     aAttribute,
   if (aAttribute == nsHTMLAtoms::visibility) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
       EnumValueToString(aValue, kVisibilityTable, aResult);
-      return eContentAttr_HasValue;
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return eContentAttr_NotThere;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-nsresult
+NS_IMETHODIMP
 LayerPart::CreateFrame(nsIPresContext*  aPresContext,
                        nsIFrame*        aParentFrame,
                        nsIStyleContext* aStyleContext,

@@ -219,7 +219,7 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
                 (kInputText_FileText == textType)) {
     nsHTMLValue sizeAttr;
     PRInt32 width = 21;
-    if (eContentAttr_HasValue == ((nsInput*)mContent)->GetAttribute(nsHTMLAtoms::size, sizeAttr)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == ((nsInput*)mContent)->GetAttribute(nsHTMLAtoms::size, sizeAttr)) {
       width = (sizeAttr.GetUnit() == eHTMLUnit_Pixel) ? sizeAttr.GetPixelValue() : sizeAttr.GetIntValue();
       if (kBackwardMode == GetMode()) {
         width += 1;
@@ -287,7 +287,7 @@ nsInputTextFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
     nsInputText* content;
     GetContent((nsIContent *&) content);
     nsAutoString valAttr;
-    nsContentAttr valStatus = ((nsHTMLTagContent *)content)->GetAttribute(nsHTMLAtoms::value, valAttr);
+    nsresult valStatus = ((nsHTMLTagContent *)content)->GetAttribute(nsHTMLAtoms::value, valAttr);
     text->SetText(valAttr);
     PRInt32 maxLength = content->GetMaxLength();
     if (ATTR_NOTSET != maxLength) {
@@ -386,7 +386,9 @@ void nsInputText::GetType(nsString& aResult) const
   }
 }
 
-void nsInputText::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+NS_IMETHODIMP
+nsInputText::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify)
 {
   if (aAttribute == nsHTMLAtoms::maxlength) {
     CacheAttribute(aValue, ATTR_NOTSET, mMaxLength);
@@ -397,11 +399,12 @@ void nsInputText::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   else if ((aAttribute == nsHTMLAtoms::cols) && (kInputText_Area == mType)) {
     CacheAttribute(aValue, ATTR_NOTSET, mNumCols);
   }
-  nsInputTextSuper::SetAttribute(aAttribute, aValue);
+  return nsInputTextSuper::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-nsContentAttr nsInputText::GetAttribute(nsIAtom* aAttribute,
-                                        nsHTMLValue& aResult) const
+NS_IMETHODIMP
+nsInputText::GetAttribute(nsIAtom* aAttribute,
+                          nsHTMLValue& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::maxlength) {
     return GetCacheAttribute(mMaxLength, aResult, eHTMLUnit_Integer);

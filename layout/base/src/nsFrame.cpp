@@ -272,9 +272,10 @@ NS_METHOD nsFrame::GetContent(nsIContent*& aContent) const
 
 NS_METHOD nsFrame::GetContentIndex(PRInt32& aIndexInParent) const
 {
-  nsIContent* parent = mContent->GetParent();
+  nsIContent* parent;
+  mContent->GetParent(parent);
   if (nsnull != parent) {
-    aIndexInParent = parent->IndexOf(mContent);
+    parent->IndexOf(mContent, aIndexInParent);
     NS_RELEASE(parent);
   }
   else {
@@ -500,7 +501,9 @@ NS_METHOD nsFrame::Paint(nsIPresContext&      aPresContext,
   // Get Content
   nsIContent * content;
   GetContent(content);
-  if (content->ChildCount() > 0) {
+  PRInt32 n;
+  content->ChildCount(n);
+  if (n > 0) {
     NS_RELEASE(content);
     return NS_OK;
   }
@@ -1406,7 +1409,8 @@ NS_METHOD nsFrame::List(FILE* out, PRInt32 aIndent) const
 // Output the frame's tag
 NS_METHOD nsFrame::ListTag(FILE* out) const
 {
-  nsIAtom* tag = mContent->GetTag();
+  nsIAtom* tag;
+  mContent->GetTag(tag);
   if (tag != nsnull) {
     nsAutoString buf;
     tag->ToString(buf);
@@ -1792,7 +1796,8 @@ GetTagName(nsFrame* aFrame, nsIContent* aContent, PRIntn aResultSize,
   char namebuf[40];
   namebuf[0] = 0;
   if (nsnull != aContent) {
-    nsIAtom* tag = aContent->GetTag();
+    nsIAtom* tag;
+    aContent->GetTag(tag);
     if (nsnull != tag) {
       nsAutoString tmp;
       tag->ToString(tmp);

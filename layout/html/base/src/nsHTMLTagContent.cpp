@@ -66,7 +66,8 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
       EndConvertToXIF
  */
 
-void nsHTMLTagContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
+NS_IMETHODIMP
+nsHTMLTagContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
   if (nsnull != mTag)
   {
@@ -74,8 +75,9 @@ void nsHTMLTagContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
     mTag->ToString(name);
 
 
-    PRBool    isLeaf = CanContainChildren() == PR_FALSE;
-    if (isLeaf)
+    PRBool    isContainer;
+    CanContainChildren(isContainer);
+    if (!isContainer)
       aConverter.BeginLeaf(name);    
     else
       aConverter.BeginContainer(name);
@@ -88,8 +90,8 @@ void nsHTMLTagContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
     nsresult rv = NS_NewISupportsArray(&attrs);
     if (NS_OK == rv) 
     {
-      mAttributes->GetAllAttributeNames(attrs);
-      PRInt32 i, n = attrs->Count();
+      PRInt32 i, n;
+      mAttributes->GetAllAttributeNames(attrs, n);
       nsAutoString name, value;
       for (i = 0; i < n; i++) 
       {
@@ -104,23 +106,27 @@ void nsHTMLTagContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
       NS_RELEASE(attrs);
     }
   }
+  return NS_OK;
 }
 
 
-void nsHTMLTagContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
+NS_IMETHODIMP
+nsHTMLTagContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
 {
   if (nsnull != mTag)
   {
-    PRBool  isLeaf = CanContainChildren() == PR_FALSE;
+    PRBool  isContainer;
+    CanContainChildren(isContainer);
   
     nsAutoString name;
     mTag->ToString(name);
 
-    if (isLeaf)
+    if (!isContainer)
       aConverter.EndLeaf(name);    
     else
       aConverter.EndContainer(name);
   }
+  return NS_OK;
 }
 
 /**
@@ -128,9 +134,11 @@ void nsHTMLTagContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
  * XIF is an intermediate form of the content model, the buffer
  * will then be parsed into any number of formats including HTML, TXT, etc.
  */
-void nsHTMLTagContent::ConvertContentToXIF(nsXIFConverter& aConverter) const
+NS_IMETHODIMP
+nsHTMLTagContent::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
   // Do nothing, all conversion is handled in the StartConvertToXIF and FinishConvertToXIF 
+  return NS_OK;
 }
 
 
@@ -185,10 +193,11 @@ nsrefcnt nsHTMLTagContent::Release(void)
   return nsHTMLContent::Release(); 
 }
 
-nsIAtom* nsHTMLTagContent::GetTag() const
+NS_IMETHODIMP nsHTMLTagContent::GetTag(nsIAtom*& aResult) const
 {
   NS_IF_ADDREF(mTag);
-  return mTag;
+  aResult = mTag;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -210,12 +219,14 @@ nsHTMLTagContent::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
   }
 }
 
-void nsHTMLTagContent::ToHTMLString(nsString& aBuf) const
+NS_IMETHODIMP
+nsHTMLTagContent::ToHTMLString(nsString& aBuf) const
 {
   aBuf.Truncate(0);
   aBuf.Append('<');
 
-  nsIAtom* tag = GetTag();
+  nsIAtom* tag;
+  GetTag(tag);
   if (nsnull != tag) {
     nsAutoString tmp;
     tag->ToString(tmp);
@@ -228,8 +239,8 @@ void nsHTMLTagContent::ToHTMLString(nsString& aBuf) const
     nsISupportsArray* attrs;
     nsresult rv = NS_NewISupportsArray(&attrs);
     if (NS_OK == rv) {
-      mAttributes->GetAllAttributeNames(attrs);
-      PRInt32 i, n = attrs->Count();
+      PRInt32 i, n;
+      mAttributes->GetAllAttributeNames(attrs, n);
       nsAutoString name, value, quotedValue;
       for (i = 0; i < n; i++) {
         nsIAtom* atom = (nsIAtom*) attrs->ElementAt(i);
@@ -249,73 +260,83 @@ void nsHTMLTagContent::ToHTMLString(nsString& aBuf) const
   }
 
   aBuf.Append('>');
+  return NS_OK;
 }
 
-void nsHTMLTagContent::SetDocument(nsIDocument* aDocument)
+NS_IMETHODIMP
+nsHTMLTagContent::SetDocument(nsIDocument* aDocument)
 {
-  nsHTMLContent::SetDocument(aDocument);
+  nsresult rv = nsHTMLContent::SetDocument(aDocument);
+  if (NS_OK != rv) {
+    return rv;
+  }
 
   // Once the element is added to the doc tree we need to check if event handler
   // were registered on it.  Unfortunately, this means doing a GetAttribute for
   // every type of handler.
   if (nsnull != mAttributes) {
     nsHTMLValue mValue;
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onclick, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onclick, mValue))
       AddScriptEventListener(nsHTMLAtoms::onclick, mValue, kIDOMMouseListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::ondblclick, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::ondblclick, mValue))
       AddScriptEventListener(nsHTMLAtoms::onclick, mValue, kIDOMMouseListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmousedown, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmousedown, mValue))
       AddScriptEventListener(nsHTMLAtoms::onmousedown, mValue, kIDOMMouseListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmouseup, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmouseup, mValue))
       AddScriptEventListener(nsHTMLAtoms::onmouseup, mValue, kIDOMMouseListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmouseover, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmouseover, mValue))
       AddScriptEventListener(nsHTMLAtoms::onmouseover, mValue, kIDOMMouseListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmouseout, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmouseout, mValue))
       AddScriptEventListener(nsHTMLAtoms::onmouseout, mValue, kIDOMMouseListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onkeydown, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onkeydown, mValue))
       AddScriptEventListener(nsHTMLAtoms::onkeydown, mValue, kIDOMKeyListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onkeyup, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onkeyup, mValue))
       AddScriptEventListener(nsHTMLAtoms::onkeyup, mValue, kIDOMKeyListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onkeypress, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onkeypress, mValue))
       AddScriptEventListener(nsHTMLAtoms::onkeypress, mValue, kIDOMKeyListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmousemove, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onmousemove, mValue))
       AddScriptEventListener(nsHTMLAtoms::onmousemove, mValue, kIDOMMouseMotionListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onload, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onload, mValue))
       AddScriptEventListener(nsHTMLAtoms::onload, mValue, kIDOMLoadListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onunload, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onunload, mValue))
       AddScriptEventListener(nsHTMLAtoms::onunload, mValue, kIDOMLoadListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onabort, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onabort, mValue))
       AddScriptEventListener(nsHTMLAtoms::onabort, mValue, kIDOMLoadListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onerror, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onerror, mValue))
       AddScriptEventListener(nsHTMLAtoms::onerror, mValue, kIDOMLoadListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onfocus, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onfocus, mValue))
       AddScriptEventListener(nsHTMLAtoms::onfocus, mValue, kIDOMFocusListenerIID); 
-    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onblur, mValue))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::onblur, mValue))
       AddScriptEventListener(nsHTMLAtoms::onblur, mValue, kIDOMFocusListenerIID); 
   }
+  return rv;
 }
 
-void nsHTMLTagContent::SetAttribute(const nsString& aName,
-                                    const nsString& aValue)
+NS_IMETHODIMP
+nsHTMLTagContent::SetAttribute(const nsString& aName,
+                               const nsString& aValue,
+                               PRBool aNotify)
 {
   nsAutoString upper;
   aName.ToUpperCase(upper);
   nsIAtom* attr = NS_NewAtom(upper);
-  SetAttribute(attr, aValue);
+  nsresult rv = SetAttribute(attr, aValue, aNotify);
   NS_RELEASE(attr);
+  return rv;
 }
 
-nsContentAttr nsHTMLTagContent::GetAttribute(nsIAtom *aAttribute,
-                                             nsString &aResult) const
+NS_IMETHODIMP
+nsHTMLTagContent::GetAttribute(nsIAtom *aAttribute,
+                               nsString &aResult) const
 {
   nsHTMLValue value;
-  nsContentAttr result = GetAttribute(aAttribute, value);
+  nsresult result = GetAttribute(aAttribute, value);
 
   char cbuf[20];
   nscolor color;
-  if (eContentAttr_HasValue == result) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
     // Try subclass conversion routine first
-    if (eContentAttr_HasValue == AttributeToString(aAttribute, value, aResult)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == AttributeToString(aAttribute, value, aResult)) {
       return result;
     }
 
@@ -357,7 +378,7 @@ nsContentAttr nsHTMLTagContent::GetAttribute(nsIAtom *aAttribute,
     default:
     case eHTMLUnit_Enumerated:
       NS_NOTREACHED("no default enumerated value to string conversion");
-      result = eContentAttr_NotThere;
+      result = NS_CONTENT_ATTR_NOT_THERE;
       break;
     }
   }
@@ -365,21 +386,19 @@ nsContentAttr nsHTMLTagContent::GetAttribute(nsIAtom *aAttribute,
   return result;
 }
 
-nsContentAttr nsHTMLTagContent::GetAttribute(const nsString& aName,
-                                             nsString& aResult) const
+NS_IMETHODIMP
+nsHTMLTagContent::GetAttribute(const nsString& aName,
+                               nsString& aResult) const
 {
   nsAutoString upper;
   aName.ToUpperCase(upper);
   nsIAtom* attr = NS_NewAtom(upper);
-  nsContentAttr result;
-
-  result = GetAttribute(attr, aResult);
-
+  nsresult result = GetAttribute(attr, aResult);
   NS_RELEASE(attr);
   return result;
 }
 
-nsContentAttr
+NS_IMETHODIMP
 nsHTMLTagContent::AttributeToString(nsIAtom* aAttribute,
                                     nsHTMLValue& aValue,
                                     nsString& aResult) const
@@ -389,20 +408,20 @@ nsHTMLTagContent::AttributeToString(nsIAtom* aAttribute,
       nsIStyleRule* rule = (nsIStyleRule*) aValue.GetISupportsValue();
       // rule->ToString(str);
       aResult = "XXX style rule ToString goes here";
-      return eContentAttr_HasValue;
+      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   aResult.Truncate();
-  return eContentAttr_NotThere;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 // XXX temporary stub until this class is nuked
-nsContentAttr
+NS_IMETHODIMP
 nsHTMLTagContent::StringToAttribute(nsIAtom* aAttribute,
                                     const nsString& aValue,
                                     nsHTMLValue& aResult)
 {
-  return eContentAttr_NotThere;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 nsresult
@@ -454,14 +473,19 @@ nsHTMLTagContent::AddScriptEventListener(nsIAtom* aAttribute, nsHTMLValue& aValu
 // Note: Subclasses should override to parse the value string; in
 // addition, when they see an unknown attribute they should call this
 // so that global attributes are handled (like CLASS, ID, STYLE, etc.)
-void
+NS_IMETHODIMP
 nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
-                               const nsString& aValue)
+                               const nsString& aValue,
+                               PRBool aNotify)
 {
   if (nsnull == mAttributes) {
     NS_NewHTMLAttributes(&mAttributes, this);
+    if (nsnull == mAttributes) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   if (nsnull != mAttributes) {
+    PRInt32 na;
     if (nsHTMLAtoms::style == aAttribute) {
       // XXX the style sheet language is a document property that
       // should be used to lookup the style sheet parser to parse the
@@ -469,134 +493,171 @@ nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
       nsICSSParser* css;
       nsresult rv = NS_NewCSSParser(&css);
       if (NS_OK != rv) {
-        return;
+        return rv;
       }
       nsIStyleRule* rule;
       rv = css->ParseDeclarations(aValue, nsnull, rule);
       if ((NS_OK == rv) && (nsnull != rule)) {
-        mAttributes->SetAttribute(aAttribute, nsHTMLValue(rule));
+        mAttributes->SetAttribute(aAttribute, nsHTMLValue(rule), na);
         NS_RELEASE(rule);
       }
       NS_RELEASE(css);
     }
     else {
-      mAttributes->SetAttribute(aAttribute, aValue);
+      mAttributes->SetAttribute(aAttribute, aValue, na);
     }
   }
+  return NS_OK;
 }
 
-void nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
-                                    const nsHTMLValue& aValue)
+NS_IMETHODIMP
+nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               PRBool aNotify)
 {
   if (nsnull == mAttributes) {
     NS_NewHTMLAttributes(&mAttributes, this);
+    if (nsnull == mAttributes) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   if (nsnull != mAttributes) {
-    mAttributes->SetAttribute(aAttribute, aValue);
+    PRInt32 ix;
+    mAttributes->SetAttribute(aAttribute, aValue, ix);
   }
+  return NS_OK;
 }
 
-void nsHTMLTagContent::UnsetAttribute(nsIAtom* aAttribute)
+NS_IMETHODIMP
+nsHTMLTagContent::UnsetAttribute(nsIAtom* aAttribute)
 {
   if (nsnull != mAttributes) {
-    PRInt32 count = mAttributes->UnsetAttribute(aAttribute);
+    PRInt32 count;
+    mAttributes->UnsetAttribute(aAttribute, count);
     if (0 == count) {
       NS_RELEASE(mAttributes);
     }
   }
+  return NS_OK;
 }
 
-nsContentAttr nsHTMLTagContent::GetAttribute(nsIAtom* aAttribute,
-                                             nsHTMLValue& aValue) const
+NS_IMETHODIMP
+nsHTMLTagContent::GetAttribute(nsIAtom* aAttribute,
+                               nsHTMLValue& aValue) const
 {
   if (nsnull != mAttributes) {
     return mAttributes->GetAttribute(aAttribute, aValue);
   }
   aValue.Reset();
-  return eContentAttr_NotThere;
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-PRInt32 nsHTMLTagContent::GetAllAttributeNames(nsISupportsArray* aArray) const
+NS_IMETHODIMP
+nsHTMLTagContent::GetAllAttributeNames(nsISupportsArray* aArray,
+                                       PRInt32& aCount) const
 {
   if (nsnull != mAttributes) {
-    return mAttributes->GetAllAttributeNames(aArray);
+    return mAttributes->GetAllAttributeNames(aArray, aCount);
   }
-  return 0;
+  aCount = 0;
+  return NS_OK;
 }
 
-PRInt32 nsHTMLTagContent::GetAttributeCount(void) const
+NS_IMETHODIMP
+nsHTMLTagContent::GetAttributeCount(PRInt32& aCount) const
 {
   if (nsnull != mAttributes) {
-    return mAttributes->Count();
+    return mAttributes->Count(aCount);
   }
-  return 0;
+  aCount = 0;
+  return NS_OK;
 }
 
-void nsHTMLTagContent::SetID(nsIAtom* aID)
+NS_IMETHODIMP
+nsHTMLTagContent::SetID(nsIAtom* aID)
 {
   if (nsnull != aID) {
     if (nsnull == mAttributes) {
       NS_NewHTMLAttributes(&mAttributes, this);
+      if (nsnull == mAttributes) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
     if (nsnull != mAttributes) {
-      mAttributes->SetID(aID);
+      PRInt32 na;
+      mAttributes->SetID(aID, na);
     }
   }
   else {
     if (nsnull != mAttributes) {
-      PRInt32 count = mAttributes->SetID(nsnull);
+      PRInt32 count;
+      mAttributes->SetID(nsnull, count);
       if (0 == count) {
         NS_RELEASE(mAttributes);
       }
     }
   }
+  return NS_OK;
 }
 
-nsIAtom* nsHTMLTagContent::GetID(void) const
+NS_IMETHODIMP
+nsHTMLTagContent::GetID(nsIAtom*& aResult) const
 {
   if (nsnull != mAttributes) {
-    return mAttributes->GetID();
+    return mAttributes->GetID(aResult);
   }
-  return nsnull;
+  aResult = nsnull;
+  return NS_OK;
 }
 
-void nsHTMLTagContent::SetClass(nsIAtom* aClass)
+NS_IMETHODIMP
+nsHTMLTagContent::SetClass(nsIAtom* aClass)
 {
   if (nsnull != aClass) {
     if (nsnull == mAttributes) {
       NS_NewHTMLAttributes(&mAttributes, this);
+      if (nsnull == mAttributes) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
     if (nsnull != mAttributes) {
-      mAttributes->SetClass(aClass);
+      PRInt32 na;
+      mAttributes->SetClass(aClass, na);
     }
   }
   else {
     if (nsnull != mAttributes) {
-      PRInt32 count = mAttributes->SetClass(nsnull);
+      PRInt32 count;
+      mAttributes->SetClass(nsnull, count);
       if (0 == count) {
         NS_RELEASE(mAttributes);
       }
     }
   }
+  return NS_OK;
 }
 
-nsIAtom* nsHTMLTagContent::GetClass(void) const
+NS_IMETHODIMP
+nsHTMLTagContent::GetClass(nsIAtom*& aResult) const
 {
   if (nsnull != mAttributes) {
-    return mAttributes->GetClass();
+    return mAttributes->GetClass(aResult);
   }
-  return nsnull;
+  aResult = nsnull;
+  return NS_OK;
 }
 
 
-nsIStyleRule* nsHTMLTagContent::GetStyleRule(void)
+NS_IMETHODIMP
+nsHTMLTagContent::GetStyleRule(nsIStyleRule*& aResult)
 {
   nsIStyleRule* result = nsnull;
 
   if (nsnull != mAttributes) {
     mAttributes->QueryInterface(kIStyleRuleIID, (void**)&result);
   }
-  return result;
+  aResult = result;
+  return NS_OK;
 }
 
 //
@@ -890,7 +951,7 @@ nsHTMLTagContent::GetDOMAttribute(const nsString& aName, nsString& aReturn)
 NS_IMETHODIMP    
 nsHTMLTagContent::SetDOMAttribute(const nsString& aName, const nsString& aValue)
 {
-  SetAttribute(aName, aValue);
+  SetAttribute(aName, aValue, PR_TRUE);
   return NS_OK;
 }
 
@@ -908,7 +969,7 @@ NS_IMETHODIMP
 nsHTMLTagContent::GetAttributeNode(const nsString& aName, nsIDOMAttribute** aReturn)
 {
   nsAutoString value;
-  if(eContentAttr_NotThere != GetAttribute(aName, value)) {
+  if(NS_CONTENT_ATTR_NOT_THERE != GetAttribute(aName, value)) {
     *aReturn = new nsDOMAttribute(aName, value);
   }
 
@@ -929,7 +990,7 @@ nsHTMLTagContent::SetAttributeNode(nsIDOMAttribute* aAttribute)
     if (NS_OK == res) {
       res = aAttribute->GetValue(value);
       if (NS_OK == res) {
-        SetAttribute(name, value);
+        SetAttribute(name, value, PR_TRUE);
       }
     }
   }
@@ -984,7 +1045,7 @@ nsHTMLTagContent::GetId(nsString& aId)
 NS_IMETHODIMP    
 nsHTMLTagContent::SetId(const nsString& aId)
 {
-  SetAttribute(nsHTMLAtoms::id, aId);
+  SetAttribute(nsHTMLAtoms::id, aId, PR_TRUE);
   
   return NS_OK;
 }
@@ -1000,7 +1061,7 @@ nsHTMLTagContent::GetTitle(nsString& aTitle)
 NS_IMETHODIMP    
 nsHTMLTagContent::SetTitle(const nsString& aTitle)
 {
-  SetAttribute(nsHTMLAtoms::title, aTitle);
+  SetAttribute(nsHTMLAtoms::title, aTitle, PR_TRUE);
 
   return NS_OK;
 }
@@ -1016,7 +1077,7 @@ nsHTMLTagContent::GetLang(nsString& aLang)
 NS_IMETHODIMP    
 nsHTMLTagContent::SetLang(const nsString& aLang)
 {
-  SetAttribute(nsHTMLAtoms::lang, aLang);
+  SetAttribute(nsHTMLAtoms::lang, aLang, PR_TRUE);
 
   return NS_OK;
 }
@@ -1032,7 +1093,7 @@ nsHTMLTagContent::GetDir(nsString& aDir)
 NS_IMETHODIMP    
 nsHTMLTagContent::SetDir(const nsString& aDir)
 {
-  SetAttribute(nsHTMLAtoms::dir, aDir);
+  SetAttribute(nsHTMLAtoms::dir, aDir, PR_TRUE);
 
   return NS_OK;
 }
@@ -1048,7 +1109,7 @@ nsHTMLTagContent::GetClassName(nsString& aClassName)
 NS_IMETHODIMP    
 nsHTMLTagContent::SetClassName(const nsString& aClassName)
 {
-  SetAttribute(nsHTMLAtoms::kClass, aClassName);
+  SetAttribute(nsHTMLAtoms::kClass, aClassName, PR_TRUE);
 
   return NS_OK;
 }

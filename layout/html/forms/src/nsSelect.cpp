@@ -89,17 +89,18 @@ public:
   typedef nsInput nsSelectSuper;
   nsSelect (nsIAtom* aTag, nsIFormManager* aFormMan);
 
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
 
   nsOption* GetNthOption(PRInt32 aIndex);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
 
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aResult) const;
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
+                          nsHTMLValue& aResult) const;
 
   virtual PRInt32 GetMaxNumValues();
   
@@ -129,17 +130,18 @@ public:
 
   nsOption (nsIAtom* aTag);
 
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
 
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aResult) const;
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
+                          nsHTMLValue& aResult) const;
 
   virtual PRInt32 GetMaxNumValues();
 
@@ -254,9 +256,11 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   // get the size of the longest option child
   PRInt32 maxWidth = 1;
-  PRInt32 numChildren = select->ChildCount();
+  PRInt32 numChildren;
+  select->ChildCount(numChildren);
   for (int childX = 0; childX < numChildren; childX++) {
-    nsIContent* child = select->ChildAt(childX);
+    nsIContent* child;
+    select->ChildAt(childX, child);
     nsOption* option;
     nsresult result = child->QueryInterface(kOptionIID, (void**)&option);
     if (NS_OK == result) {
@@ -292,7 +296,7 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   aDesiredLayoutSize.width = calcSize.width;
   // account for vertical scrollbar, if present  
-  if (!widthExplicit && ((numRows < select->ChildCount()) || select->mIsComboBox)) {
+  if (!widthExplicit && ((numRows < numChildren) || select->mIsComboBox)) {
     float p2t = aPresContext->GetPixelsToTwips();
     aDesiredLayoutSize.width += GetScrollbarWidth(p2t);
   }
@@ -379,10 +383,12 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
     list->SetFont(widgetFont);
   }
 
-  PRInt32 numChildren = select->ChildCount();
+  PRInt32 numChildren;
+  select->ChildCount(numChildren);
   int optionX = -1;
   for (int childX = 0; childX < numChildren; childX++) {
-    nsIContent* child = select->ChildAt(childX);
+    nsIContent* child;
+    select->ChildAt(childX, child);
     nsOption* option;
     nsresult result = child->QueryInterface(kOptionIID, (void**)&option);
     if (NS_OK == result) {
@@ -434,17 +440,20 @@ nsSelect::CreateFrame(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-void nsSelect::SetAttribute(nsIAtom* aAttribute,
-                                const nsString& aValue)
+NS_IMETHODIMP
+nsSelect::SetAttribute(nsIAtom* aAttribute,
+                       const nsString& aValue,
+                       PRBool aNotify)
 {
   if (aAttribute == nsHTMLAtoms::multiple) {
     mMultiple = PR_TRUE;
   }
-  nsSelectSuper::SetAttribute(aAttribute, aValue);
+  return nsSelectSuper::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-nsContentAttr nsSelect::GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aResult) const
+NS_IMETHODIMP
+nsSelect::GetAttribute(nsIAtom* aAttribute,
+                       nsHTMLValue& aResult) const
 {
   aResult.Reset();
   if (aAttribute == nsHTMLAtoms::multiple) {
@@ -460,7 +469,9 @@ PRInt32
 nsSelect::GetMaxNumValues()
 {
   if (mMultiple) {
-    return ChildCount();
+    PRInt32 n;
+    ChildCount(n);
+    return n;
   }
   else {
     return 1;
@@ -470,9 +481,11 @@ nsSelect::GetMaxNumValues()
 nsOption* nsSelect::GetNthOption(PRInt32 aIndex)
 {
   int optionX = -1;
-  PRInt32 numChildren = ChildCount();
+  PRInt32 numChildren;
+  ChildCount(numChildren);
   for (int childX = 0; childX < numChildren; childX++) {
-    nsIContent* child = ChildAt(childX);
+    nsIContent* child;
+    ChildAt(childX, child);
     nsOption* option;
     nsresult result = child->QueryInterface(kOptionIID, (void**)&option);
     if (NS_OK == result) {
@@ -558,7 +571,8 @@ nsSelect::Reset()
 {
 //  PRBool allowMultiple;
 //  super::GetAttribute(nsHTMLAtoms::multiple, allowMultiple);
-  PRInt32 numChildren = ChildCount();
+  PRInt32 numChildren;
+  ChildCount(numChildren);
 
   nsIListWidget* list;
   nsresult stat = mWidget->QueryInterface(kListWidgetIID, (void **) &list);
@@ -569,7 +583,8 @@ nsSelect::Reset()
   PRInt32 selIndex = -1;
   int optionX      = -1;
   for (int childX = 0; childX < numChildren; childX++) {
-    nsIContent* child = ChildAt(childX);
+    nsIContent* child;
+    ChildAt(childX, child);
     nsOption* option;
     nsresult result = child->QueryInterface(kOptionIID, (void**)&option);
     if (NS_OK == result) {
@@ -643,19 +658,24 @@ nsresult nsOption::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return nsInput::QueryInterface(aIID, aInstancePtr);
 }
 
-void nsOption::SetAttribute(nsIAtom* aAttribute,
-                            const nsString& aValue)
+NS_IMETHODIMP
+nsOption::SetAttribute(nsIAtom* aAttribute,
+                       const nsString& aValue,
+                       PRBool aNotify)
 {
   if (aAttribute == nsHTMLAtoms::selected) {
     mSelected = PR_TRUE;
+    // XXX aNotify
+    return NS_OK;
   }
   else {
-    nsOptionSuper::SetAttribute(aAttribute, aValue);
+    return nsOptionSuper::SetAttribute(aAttribute, aValue, aNotify);
   }
 }
 
-nsContentAttr nsOption::GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aResult) const
+NS_IMETHODIMP
+nsOption::GetAttribute(nsIAtom* aAttribute,
+                       nsHTMLValue& aResult) const
 {
   aResult.Reset();
   if (aAttribute == nsHTMLAtoms::selected) {
@@ -710,8 +730,8 @@ nsOption::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   }
 
   nsString valAttr;
-  nsContentAttr stat = nsHTMLTagContent::GetAttribute(nsHTMLAtoms::value, valAttr);
-  if (eContentAttr_HasValue == stat) {
+  nsresult stat = nsHTMLTagContent::GetAttribute(nsHTMLAtoms::value, valAttr);
+  if (NS_CONTENT_ATTR_HAS_VALUE == stat) {
     aValues[0] = valAttr;
     aNumValues = 1;
     return PR_TRUE;
@@ -727,13 +747,11 @@ nsOption::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   }
 }
 
-void HACK(nsSelect* aSel, PRInt32); 
-
 // FACTORY functions
 
 nsresult
 NS_NewHTMLSelect(nsIHTMLContent** aInstancePtrResult,
-                 nsIAtom* aTag, nsIFormManager* aFormMan, PRInt32 aHackIndex)
+                 nsIAtom* aTag, nsIFormManager* aFormMan)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
@@ -741,11 +759,6 @@ NS_NewHTMLSelect(nsIHTMLContent** aInstancePtrResult,
   }
 
   nsIHTMLContent* it = new nsSelect(aTag, aFormMan);
-
-  if (aHackIndex > 0) {
-    HACK((nsSelect*)it, aHackIndex);
-  }
-
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -768,43 +781,3 @@ NS_NewHTMLOption(nsIHTMLContent** aInstancePtrResult,
   }
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
-
-void HACK(nsSelect* aSel, PRInt32 aIndex) 
-{
-  char buf[100];
-
-  nsIAtom* nameAttr = NS_NewAtom("NAME");
-  sprintf(&buf[0], "select %d", aIndex);
-  nsString name(&buf[0]);
-  aSel->SetAttribute(nameAttr, name);
-  nsIAtom* sizeAttr = NS_NewAtom("SIZE");
-  int numOpt = 2;
-  if (aIndex == 1) {
-    nsString size("2");
-    aSel->SetAttribute(sizeAttr, size);
-  } else if (aIndex == 2) {
-    nsString size("4");
-    aSel->SetAttribute(sizeAttr, size);
-    nsIAtom* multAttr = NS_NewAtom("MULTIPLE");
-    nsString mult("1");
-    aSel->SetAttribute(multAttr, mult);
-    numOpt = 8;
-  } else {
-    nsString size("1");
-    aSel->SetAttribute(sizeAttr, size);
-  }
-
-  for (int i = 0; i < numOpt; i++) {
-    nsIAtom* atom = NS_NewAtom("OPTION");
-    nsOption* option;
-    NS_NewHTMLOption((nsIHTMLContent**)&option, atom);
-    sprintf(&buf[0], "option %d", i);
-    nsString label(&buf[0]);
-    option->SetContent(label);
-    aSel->AppendChildTo(option, PR_FALSE);
-  }
-}
-
-
-
-

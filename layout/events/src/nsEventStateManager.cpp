@@ -102,8 +102,10 @@ NS_METHOD nsEventStateManager::SetActiveLink(nsIContent *aLink)
   if (nsnull != mActiveLink) {
     if (NS_OK == mActiveLink->GetDocument(mDocument)) {
       nsIContent *mKid;
-      for (int i = 0; i < mActiveLink->ChildCount(); i++) {
-        mKid = mActiveLink->ChildAt(i);
+      PRInt32 numKids;
+      mActiveLink->ChildCount(numKids);
+      for (int i = 0; i < numKids; i++) {
+        mActiveLink->ChildAt(i, mKid);
         mDocument->ContentChanged(mKid, nsnull);
         NS_RELEASE(mKid);
       }
@@ -119,8 +121,10 @@ NS_METHOD nsEventStateManager::SetActiveLink(nsIContent *aLink)
   if (nsnull != mActiveLink) {
     if (NS_OK == mActiveLink->GetDocument(mDocument)) {
       nsIContent *mKid;
-      for (int i = 0; i < mActiveLink->ChildCount(); i++) {
-        mKid = mActiveLink->ChildAt(i);
+      PRInt32 numKids;
+      mActiveLink->ChildCount(numKids);
+      for (int i = 0; i < numKids; i++) {
+        mActiveLink->ChildAt(i, mKid);
         mDocument->ContentChanged(mKid, nsnull);
         NS_RELEASE(mKid);
       }

@@ -114,29 +114,37 @@ nsHTMLContainer::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
   }
 }
 
-PRBool nsHTMLContainer::CanContainChildren() const
+NS_IMETHODIMP
+nsHTMLContainer::CanContainChildren(PRBool& aResult) const
 {
-  return PR_TRUE;
+  aResult = PR_TRUE;
+  return NS_OK;
 }
 
-PRInt32 nsHTMLContainer::ChildCount() const
+NS_IMETHODIMP
+nsHTMLContainer::ChildCount(PRInt32& aCount) const
 {
-  return mChildren.Count();
+  aCount = mChildren.Count();
+  return NS_OK;
 }
 
-nsIContent* nsHTMLContainer::ChildAt(PRInt32 aIndex) const
+NS_IMETHODIMP
+nsHTMLContainer::ChildAt(PRInt32 aIndex, nsIContent*& aResult) const
 {
   nsIContent *child = (nsIContent*) mChildren.ElementAt(aIndex);
   if (nsnull != child) {
     NS_ADDREF(child);
   }
-  return child;
+  aResult = child;
+  return NS_OK;
 }
 
-PRInt32 nsHTMLContainer::IndexOf(nsIContent* aPossibleChild) const
+NS_IMETHODIMP
+nsHTMLContainer::IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const
 {
   NS_PRECONDITION(nsnull != aPossibleChild, "null ptr");
-  return mChildren.IndexOf(aPossibleChild);
+  aIndex = mChildren.IndexOf(aPossibleChild);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -227,12 +235,14 @@ nsHTMLContainer::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   return NS_OK;
 }
 
-void nsHTMLContainer::Compact()
+NS_IMETHODIMP
+nsHTMLContainer::Compact()
 {
   //XXX I'll turn this on in a bit... mChildren.Compact();
+  return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
                              nsIFrame* aParentFrame,
                              nsIStyleContext* aStyleContext,
@@ -304,8 +314,10 @@ static nsHTMLTagContent::EnumTable kDirTable[] = {
   { 0 }
 };
 
-void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
-                                   const nsString& aValue)
+NS_IMETHODIMP
+nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
+                              const nsString& aValue,
+                              PRBool aNotify)
 {
   // Special handling code for various html container attributes; note
   // that if an attribute doesn't require special handling then we
@@ -315,36 +327,30 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
   // Check for attributes common to most html containers
   if (aAttribute == nsHTMLAtoms::dir) {
     if (ParseEnumValue(aValue, kDirTable, val)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
-    return;
   }
-  if (aAttribute == nsHTMLAtoms::lang) {
-    nsHTMLTagContent::SetAttribute(aAttribute, aValue);
-    return;
+  else if (aAttribute == nsHTMLAtoms::lang) {
+    return nsHTMLTagContent::SetAttribute(aAttribute, aValue, aNotify);
   }
 
   if (mTag == nsHTMLAtoms::p) {
     if ((aAttribute == nsHTMLAtoms::align) &&
         ParseDivAlignParam(aValue, val)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if (mTag == nsHTMLAtoms::a) {
     if (aAttribute == nsHTMLAtoms::href) {
       nsAutoString href(aValue);
       href.StripWhitespace();
-      nsHTMLTagContent::SetAttribute(aAttribute, href);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, href, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::suppress) {
       if (aValue.EqualsIgnoreCase("true")) {
         nsHTMLValue val;
         val.SetEmptyValue();
-        nsHTMLTagContent::SetAttribute(aAttribute, val);
-        return;
+        return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
       }
     }
     // XXX PRE?
@@ -359,37 +365,31 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
       PRUnichar ch = tmp.First();
       val.SetIntValue(v, ((ch == '+') || (ch == '-')) ?
                       eHTMLUnit_Integer : eHTMLUnit_Enumerated);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::color) {
       ParseColor(aValue, val);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if ((mTag == nsHTMLAtoms::div) || (mTag == nsHTMLAtoms::multicol)) {
     if ((mTag == nsHTMLAtoms::div) && (aAttribute == nsHTMLAtoms::align) &&
         ParseDivAlignParam(aValue, val)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::cols) {
       ParseValue(aValue, 0, val, eHTMLUnit_Integer);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
 
     // Note: These attributes only apply when cols > 1
     if (aAttribute == nsHTMLAtoms::gutter) {
       ParseValue(aValue, 1, val, eHTMLUnit_Pixel);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::width) {
       ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if ((mTag == nsHTMLAtoms::h1) || (mTag == nsHTMLAtoms::h2) ||
@@ -397,21 +397,18 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
            (mTag == nsHTMLAtoms::h5) || (mTag == nsHTMLAtoms::h6)) {
     if ((aAttribute == nsHTMLAtoms::align) &&
         ParseDivAlignParam(aValue, val)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if (mTag == nsHTMLAtoms::pre) {
     if ((aAttribute == nsHTMLAtoms::wrap) ||
         (aAttribute == nsHTMLAtoms::variable)) {
       val.SetEmptyValue();
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::cols) {
       ParseValue(aValue, 0, val, eHTMLUnit_Integer);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::tabstop) {
       PRInt32 ec, tabstop = aValue.ToInteger(&ec);
@@ -419,22 +416,19 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
         tabstop = 8;
       }
       val.SetIntValue(tabstop, eHTMLUnit_Integer);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if (mTag == nsHTMLAtoms::li) {
     if (aAttribute == nsHTMLAtoms::type) {
       if (ParseEnumValue(aValue, kListItemTypeTable, val)) {
-        nsHTMLTagContent::SetAttribute(aAttribute, val);
-        return;
+        return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
       }
       // Illegal type values are left as is for the dom
     }
     if (aAttribute == nsHTMLAtoms::value) {
       ParseValue(aValue, 1, val, eHTMLUnit_Integer);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if ((mTag == nsHTMLAtoms::ul) || (mTag == nsHTMLAtoms::ol) ||
@@ -443,96 +437,85 @@ void nsHTMLContainer::SetAttribute(nsIAtom* aAttribute,
       if (!ParseEnumValue(aValue, kListTypeTable, val)) {
         val.SetIntValue(NS_STYLE_LIST_STYLE_BASIC, eHTMLUnit_Enumerated);
       }
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::start) {
       ParseValue(aValue, 1, val, eHTMLUnit_Integer);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::compact) {
       val.SetEmptyValue();
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if (mTag == nsHTMLAtoms::dl) {
     if (aAttribute == nsHTMLAtoms::compact) {
       val.SetEmptyValue();
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
   else if (mTag == nsHTMLAtoms::body) {
     if (aAttribute == nsHTMLAtoms::background) {
       nsAutoString href(aValue);
       href.StripWhitespace();
-      nsHTMLTagContent::SetAttribute(aAttribute, href);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, href, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::bgcolor) {
       ParseColor(aValue, val);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::text) {
       ParseColor(aValue, val);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::link) {
       ParseColor(aValue, val);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::alink) {
       ParseColor(aValue, val);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::vlink) {
       ParseColor(aValue, val);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::marginwidth) {
       ParseValue(aValue, 0, val, eHTMLUnit_Pixel);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
     if (aAttribute == nsHTMLAtoms::marginheight) {
       ParseValue(aValue, 0, val, eHTMLUnit_Pixel);
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-      return;
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
   }
 
   // Use default attribute catching code
-  nsHTMLTagContent::SetAttribute(aAttribute, aValue);
+  return nsHTMLTagContent::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-nsContentAttr nsHTMLContainer::AttributeToString(nsIAtom* aAttribute,
-                                                 nsHTMLValue& aValue,
-                                                 nsString& aResult) const
+NS_IMETHODIMP
+nsHTMLContainer::AttributeToString(nsIAtom* aAttribute,
+                                   nsHTMLValue& aValue,
+                                   nsString& aResult) const
 {
-  nsContentAttr ca = eContentAttr_NotThere;
+  nsresult ca = NS_CONTENT_ATTR_NOT_THERE;
   if (aValue.GetUnit() == eHTMLUnit_Enumerated) {
     if (aAttribute == nsHTMLAtoms::align) {
       DivAlignParamToString(aValue, aResult);
-      ca = eContentAttr_HasValue;
+      ca = NS_CONTENT_ATTR_HAS_VALUE;
     }
     else if (mTag == nsHTMLAtoms::li) {
       if (aAttribute == nsHTMLAtoms::type) {
         EnumValueToString(aValue, kListItemTypeTable, aResult);
-        ca = eContentAttr_HasValue;
+        ca = NS_CONTENT_ATTR_HAS_VALUE;
       }
     }
     else if ((mTag == nsHTMLAtoms::ul) || (mTag == nsHTMLAtoms::ol) ||
              (mTag == nsHTMLAtoms::menu) || (mTag == nsHTMLAtoms::dir)) {
       if (aAttribute == nsHTMLAtoms::type) {
         EnumValueToString(aValue, kListTypeTable, aResult);
-        ca = eContentAttr_HasValue;
+        ca = NS_CONTENT_ATTR_HAS_VALUE;
       }
     }
     else if (mTag == nsHTMLAtoms::font) {
@@ -541,7 +524,7 @@ nsContentAttr nsHTMLContainer::AttributeToString(nsIAtom* aAttribute,
           (aAttribute == nsHTMLAtoms::fontWeight)) {
         aResult.Truncate();
         aResult.Append(aValue.GetIntValue(), 10);
-        ca = eContentAttr_HasValue;
+        ca = NS_CONTENT_ATTR_HAS_VALUE;
       }
     }
   }
@@ -556,7 +539,7 @@ nsContentAttr nsHTMLContainer::AttributeToString(nsIAtom* aAttribute,
           aResult.Append('+');
         }
         aResult.Append(value, 10);
-        ca = eContentAttr_HasValue;
+        ca = NS_CONTENT_ATTR_HAS_VALUE;
       }
     }
   }
@@ -566,8 +549,9 @@ nsContentAttr nsHTMLContainer::AttributeToString(nsIAtom* aAttribute,
   return ca;
 }
 
-void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext, 
-                                        nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext, 
+                                   nsIPresContext* aPresContext)
 {
   if (nsnull != mAttributes) {
     nsHTMLValue value;
@@ -845,6 +829,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFixedFont.size, scaleFactor);
     }
   }
+  return NS_OK;
 }
 
 
@@ -855,7 +840,7 @@ nsHTMLContainer::MapBackgroundAttributesInto(nsIStyleContext* aContext,
   nsHTMLValue value;
 
   // background
-  if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::background, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(nsHTMLAtoms::background, value)) {
     if (eHTMLUnit_String == value.GetUnit()) {
       nsAutoString absURLSpec;
       nsAutoString spec;
@@ -881,7 +866,7 @@ nsHTMLContainer::MapBackgroundAttributesInto(nsIStyleContext* aContext,
   }
 
   // bgcolor
-  if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::bgcolor, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(nsHTMLAtoms::bgcolor, value)) {
     if (eHTMLUnit_Color == value.GetUnit()) {
       nsStyleColor* color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
       color->mBackgroundColor = value.GetColorValue();
@@ -966,9 +951,10 @@ static void
 SetDocumentInChildrenOf(nsIContent* aContent, nsIDocument* aDocument)
 {
   PRInt32 i, n;
-  n = aContent->ChildCount();
+  aContent->ChildCount(n);
   for (i = 0; i < n; i++) {
-    nsIContent* child = aContent->ChildAt(i);
+    nsIContent* child;
+    aContent->ChildAt(i, child);
     if (nsnull != child) {
       child->SetDocument(aDocument);
       SetDocumentInChildrenOf(child, aDocument);
@@ -1006,7 +992,8 @@ nsHTMLContainer::InsertBefore(nsIDOMNode* aNewChild,
       res = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
       NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
       if (NS_OK == res) {
-        PRInt32 pos = IndexOf(refContent);
+        PRInt32 pos;
+        IndexOf(refContent, pos);
         if (pos >= 0) {
           SetDocumentInChildrenOf(newContent, mDocument);
           res = InsertChildAt(newContent, pos, PR_TRUE);
@@ -1036,7 +1023,8 @@ nsHTMLContainer::ReplaceChild(nsIDOMNode* aNewChild,
   nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
   NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
   if (NS_OK == res) {
-    PRInt32 pos = IndexOf(content);
+    PRInt32 pos;
+    IndexOf(content, pos);
     if (pos >= 0) {
       nsIContent* newContent = nsnull;
       nsresult res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
@@ -1063,7 +1051,8 @@ nsHTMLContainer::RemoveChild(nsIDOMNode* aOldChild,
   nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
   NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
   if (NS_OK == res) {
-    PRInt32 pos = IndexOf(content);
+    PRInt32 pos;
+    IndexOf(content, pos);
     if (pos >= 0) {
       res = RemoveChildAt(pos, PR_TRUE);
       *aReturn = aOldChild;

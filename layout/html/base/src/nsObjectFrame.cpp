@@ -220,7 +220,8 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
 
   // XXX deal with border and padding the usual way...wrap it up!
 
-  nsIAtom* atom = mContent->GetTag();
+  nsIAtom* atom;
+  mContent->GetTag(atom);
   if (nsnull != atom) {
     //don't make a view for an applet since we know we can't support them yet...
     if (atom != nsHTMLAtoms::applet) {
@@ -276,10 +277,10 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
 
                 //stream in the object source if there is one...
 
-                if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
+                if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute("SRC", src)) {
                   SetURL(src);
 
-                  if (eContentAttr_HasValue == mContent->GetAttribute(NS_HTML_BASE_HREF, base))
+                  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(NS_HTML_BASE_HREF, base))
                     SetBaseHREF(base);
 
                   nsIPresShell  *shell = aPresContext.GetShell();
@@ -367,7 +368,8 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
   float p2t = aPresContext.GetPixelsToTwips();
   nscoord px3 = NSIntPixelsToTwips(3, p2t);
   nsAutoString tmp;
-  nsIAtom* atom = mContent->GetTag();
+  nsIAtom* atom;
+  mContent->GetTag(atom);
   if (nsnull != atom) {
     atom->ToString(tmp);
     NS_RELEASE(atom);

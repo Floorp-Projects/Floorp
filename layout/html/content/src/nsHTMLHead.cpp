@@ -24,10 +24,10 @@ class nsHTMLHead : public nsHTMLContainer {
 public:
   nsHTMLHead(nsIAtom* aTag);
 
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
 
 protected:
   virtual ~nsHTMLHead();
@@ -42,7 +42,7 @@ nsHTMLHead::~nsHTMLHead()
 {
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLHead::CreateFrame(nsIPresContext*  aPresContext,
                         nsIFrame*        aParentFrame,
                         nsIStyleContext* aStyleContext,

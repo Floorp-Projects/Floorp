@@ -255,12 +255,13 @@ void RootContentFrame::CreateFirstChild(nsIPresContext* aPresContext)
   } else {
     // Create a frame for the body/frameset child
     PRInt32 i, n;
-    n = mContent->ChildCount();
+    mContent->ChildCount(n);
     for (i = 0; i < n; i++) {
-      nsIContent* child = mContent->ChildAt(i);
+      nsIContent* child;
+      mContent->ChildAt(i, child);
       if (nsnull != child) {
         nsIAtom* tag;
-        tag = child->GetTag();
+        child->GetTag(tag);
         if ((nsHTMLAtoms::body == tag) || (nsHTMLAtoms::frameset == tag)) {
           // Create a frame
           nsIContentDelegate* cd = child->GetDelegate(aPresContext);
@@ -611,10 +612,10 @@ class RootPart : public nsHTMLContainer {
 public:
   RootPart(nsIDocument* aDoc);
 
-  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
-                               nsIFrame* aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*& aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult);
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
                             nsEvent* aEvent, 

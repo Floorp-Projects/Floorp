@@ -110,10 +110,12 @@ void nsTableContent::SetTableForChildren(nsTablePart *aTable)
 {
  if (aTable != nsnull)
   {
-    PRInt32 count = ChildCount();
+    PRInt32 count;
+    ChildCount(count);
     for (PRInt32 index = 0; index < count; index++)
     {
-      nsIContent* child = ChildAt(index);
+      nsIContent* child;
+      ChildAt(index, child);
       SetTableForTableContent(child,aTable);
       NS_RELEASE(child);
     }
@@ -157,11 +159,13 @@ void nsTableContent::SetTableForTableContent(nsIContent* aContent, nsTablePart *
 
 /* ----- overridable methods from nsHTMLContainer ----- */
 
-void nsTableContent::List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP
+nsTableContent::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  nsIAtom* tag = GetTag();
+  nsIAtom* tag;
+  GetTag(tag);
   if (tag != nsnull) {
     nsAutoString buf;
     tag->ToString(buf);
@@ -177,16 +181,21 @@ void nsTableContent::List(FILE* out, PRInt32 aIndent) const
 
   fprintf(out, " RefCount=%d<%s\n", mRefCnt, isImplicitString);
 
-  if (CanContainChildren()) {
-    PRInt32 kids = ChildCount();
+  PRBool canHaveKids;
+  CanContainChildren(canHaveKids);
+  if (canHaveKids) {
+    PRInt32 kids;
+    ChildCount(kids);
     for (i = 0; i < kids; i++) {
-      nsIContent* kid = ChildAt(i);
+      nsIContent* kid;
+      ChildAt(i, kid);
       kid->List(out, aIndent + 1);
       NS_RELEASE(kid);
     }
   }
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   fputs(">\n", out);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -202,7 +211,8 @@ nsTableContent::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 NS_IMETHODIMP
 nsTableContent::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 { 
-  nsIContent* child = ChildAt(aIndex);
+  nsIContent* child;
+  ChildAt(aIndex, child);
   nsresult rv = nsHTMLContainer::ReplaceChildAt(aKid, aIndex, aNotify);
   if (NS_OK == rv)
   {
@@ -226,7 +236,8 @@ nsTableContent::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 NS_IMETHODIMP
 nsTableContent::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 { 
-  nsTableContent* child = (nsTableContent*)ChildAt(aIndex);
+  nsTableContent* child;
+  ChildAt(aIndex, (nsIContent*&) child);
   nsresult rv = nsHTMLContainer::RemoveChildAt(aIndex, aNotify);
   if (NS_OK == rv)
     SetTableForTableContent(child,nsnull);

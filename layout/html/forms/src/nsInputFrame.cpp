@@ -532,12 +532,12 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   aFrame->GetContent((nsIContent*&) content);
 
   nsAutoString valAttr;
-  nsContentAttr valStatus = eContentAttr_NotThere;
+  nsresult valStatus = NS_CONTENT_ATTR_NOT_THERE;
   if (nsnull != aSpec.mColValueAttr) {
     valStatus = ((nsHTMLTagContent*)content)->GetAttribute(aSpec.mColValueAttr, valAttr);
   }
   nsHTMLValue colAttr;
-  nsContentAttr colStatus = eContentAttr_NotThere;
+  nsresult colStatus = NS_CONTENT_ATTR_NOT_THERE;
   if (nsnull != aSpec.mColSizeAttr) {
     colStatus = content->GetAttribute(aSpec.mColSizeAttr, colAttr);
   }
@@ -545,7 +545,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
 
   // determine the width
   nscoord adjSize;
-  if (eContentAttr_HasValue == colStatus) {  // col attr will provide width
+  if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
     if (aSpec.mColSizeAttrInPixels) {
       adjSize = (colAttr.GetPixelValue() > 0) ? colAttr.GetPixelValue() : 15;
       aBounds.width = NSIntPixelsToTwips(adjSize, p2t);
@@ -568,7 +568,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
 	    aWidthExplicit = PR_TRUE;
     } 
     else {                       
-      if (eContentAttr_HasValue == valStatus) { // use width of initial value 
+      if (NS_CONTENT_ATTR_HAS_VALUE == valStatus) { // use width of initial value 
         charWidth = GetTextSize(*aPresContext, aFrame, valAttr, aBounds);
       }
       else if (aSpec.mColDefaultValue) { // use default value
@@ -587,11 +587,11 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
 
   // determine the height
   nsHTMLValue rowAttr;
-  nsContentAttr rowStatus = eContentAttr_NotThere;
+  nsresult rowStatus = NS_CONTENT_ATTR_NOT_THERE;
   if (nsnull != aSpec.mRowSizeAttr) {
     rowStatus = content->GetAttribute(aSpec.mRowSizeAttr, rowAttr);
   }
-  if (eContentAttr_HasValue == rowStatus) { // row attr will provide height
+  if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
     PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
     adjSize = (rowAttrInt > 0) ? rowAttrInt : 1;
     if (0 == charWidth) {

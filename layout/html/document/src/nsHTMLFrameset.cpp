@@ -319,7 +319,7 @@ PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsIPresContext* aPresContext)
   nsHTMLValue htmlVal;
   PRInt32 intVal;
   nsHTMLTagContent* content = (nsHTMLTagContent*)mContent;
-  if (eContentAttr_HasValue == (content->GetAttribute(nsHTMLAtoms::border, htmlVal))) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::border, htmlVal))) {
     if (eHTMLUnit_Pixel == htmlVal.GetUnit()) {
       intVal = htmlVal.GetPixelValue();
     } else {
@@ -370,8 +370,10 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
 {
   nsIContent* content;
   aChild->GetContent(content);
-  nsIContent* contentParent = content->GetParent();
-  nsIAtom* tag = ((nsHTMLTagContent*)contentParent)->GetTag();
+  nsIContent* contentParent;
+  content->GetParent(contentParent);
+  nsIAtom* tag;
+  ((nsHTMLTagContent*)contentParent)->GetTag(tag);
   nsHTMLFramesetFrame* parent = nsnull;
   if (nsHTMLAtoms::frameset == tag) {
     aChild->GetGeometricParent((nsIFrame*&)parent);
@@ -432,7 +434,7 @@ void nsHTMLFramesetFrame::ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, ns
   nsHTMLValue value;
   nsAutoString rowsCols;
   nsHTMLFrameset* content = (nsHTMLFrameset*)mContent;
-  if (eContentAttr_HasValue == content->GetAttribute(aAttrType, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(aAttrType, value)) {
     if (eHTMLUnit_String == value.GetUnit()) {
       value.GetStringValue(rowsCols);
       nsFramesetSpec* specs = new nsFramesetSpec[gMaxNumRowColSpecs];
@@ -545,7 +547,7 @@ nsFrameborder nsHTMLFramesetFrame::GetFrameborder()
 {
   nsHTMLTagContent* content = (nsHTMLTagContent*)mContent;
   nsHTMLValue value;
-  if (eContentAttr_HasValue == (content->GetAttribute(nsHTMLAtoms::frameborder, value))) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetAttribute(nsHTMLAtoms::frameborder, value))) {
     if (eHTMLUnit_String == value.GetUnit()) {
       nsAutoString frameborder;
       value.GetStringValue(frameborder);
@@ -562,7 +564,7 @@ nsFrameborder nsHTMLFramesetFrame::GetFrameborder()
 nsFrameborder nsHTMLFramesetFrame::GetFrameborder(nsHTMLTagContent* aContent) 
 {
   nsHTMLValue value;
-  if (eContentAttr_HasValue == (aContent->GetAttribute(nsHTMLAtoms::frameborder, value))) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttribute(nsHTMLAtoms::frameborder, value))) {
     if (eHTMLUnit_String == value.GetUnit()) {
       nsAutoString frameborder;
       value.GetStringValue(frameborder);
@@ -647,13 +649,16 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
     mChildCount = 0;
     nsHTMLFrameset* content = (nsHTMLFrameset*)mContent;
     nsIFrame* frame;
-    PRInt32 numChildren = content->ChildCount();
+    PRInt32 numChildren;
+    content->ChildCount(numChildren);
     for (int childX = 0; childX < numChildren; childX++) {
-      nsHTMLTagContent* child = (nsHTMLTagContent*)(content->ChildAt(childX));
+      nsHTMLTagContent* child;
+      content->ChildAt(childX, (nsIContent*&)child);
       if (nsnull == child) {
         continue;
       }
-      nsIAtom* tag = child->GetTag();
+      nsIAtom* tag;
+      child->GetTag(tag);/* XXX leak */
       if ((nsHTMLAtoms::frameset == tag) || (nsHTMLAtoms::frame == tag)) {
         nsresult result = nsHTMLBase::CreateFrame(&aPresContext, this, child, nsnull, frame);
 
@@ -851,31 +856,35 @@ nsHTMLFrameset::~nsHTMLFrameset()
   mParentWebShell = nsnull;
 }
 
-void nsHTMLFrameset::List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP
+nsHTMLFrameset::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
   fprintf(out, "%X \n", this);
-  nsHTMLContainer::List(out, aIndent);
+  return nsHTMLContainer::List(out, aIndent);
 }
 
-void nsHTMLFrameset::SetAttribute(nsIAtom* aAttribute, const nsString& aString)
+NS_IMETHODIMP
+nsHTMLFrameset::SetAttribute(nsIAtom* aAttribute, const nsString& aString,
+                             PRBool aNotify)
 {
   nsHTMLValue val;
   if (ParseImageProperty(aAttribute, aString, val)) { // convert width or height to pixels
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
-  nsHTMLContainer::SetAttribute(aAttribute, aString);
+  return nsHTMLContainer::SetAttribute(aAttribute, aString, aNotify);
 }
 
-void nsHTMLFrameset::MapAttributesInto(nsIStyleContext* aContext, 
-                                       nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsHTMLFrameset::MapAttributesInto(nsIStyleContext* aContext, 
+                                  nsIPresContext* aPresContext)
 {
   MapImagePropertiesInto(aContext, aPresContext);
   MapImageBorderInto(aContext, aPresContext, nsnull);
+  return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLFrameset::CreateFrame(nsIPresContext*  aPresContext,
                             nsIFrame*        aParentFrame,
                             nsIStyleContext* aStyleContext,

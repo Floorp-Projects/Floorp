@@ -47,13 +47,13 @@ public:
   /**
     * @see nsIContentDelegate CreateFrame
     */
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult) = 0;
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult) = 0;
 
-  virtual void MapAttributesInto(nsIStyleContext* aContext, 
-                                 nsIPresContext* aPresContext);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
+                               nsIPresContext* aPresContext);
 
   /**
     * @see nsISupports QueryInterface
@@ -120,17 +120,17 @@ public:
     * if there is an attribute but no value, or eContentAttr_HasValue
     * if there is no attribute.
     */
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aValue) const;
-
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute, PRInt32& aValue) const;
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,
+                          nsHTMLValue& aValue) const;
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute, PRInt32& aValue) const;
  
   /**
     * Set the named attribute of this input
     * @param aAttribute the name of the attribute
     * @param aValue the value of the attribute
     */
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                          PRBool aNotify);
 
   NS_FORWARD_IDOMNODE(nsHTMLContainer::)
   NS_FORWARD_IDOMELEMENT(nsHTMLContainer::)
@@ -186,8 +186,8 @@ protected:
 
   void          CacheAttribute(const nsString& aValue, nsString*& aLoc);
   void          CacheAttribute(const nsString& aValue, PRInt32 aMinValue, PRInt32& aLoc);
-  nsContentAttr GetCacheAttribute(nsString* const& aLoc, nsHTMLValue& aValue) const;
-  nsContentAttr GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue, nsHTMLUnit aUnit) const;
+  nsresult GetCacheAttribute(nsString* const& aLoc, nsHTMLValue& aValue) const;
+  nsresult GetCacheAttribute(PRInt32 aLoc, nsHTMLValue& aValue, nsHTMLUnit aUnit) const;
 
   // Attributes common to all html form elements
   nsString*       mName;

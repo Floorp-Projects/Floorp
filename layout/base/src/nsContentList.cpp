@@ -115,7 +115,8 @@ NS_IMETHODIMP
 nsContentList::Match(nsIContent *aContent, PRBool *aMatch)
 {
   if (nsnull != mMatchTag) {
-    nsIAtom *name = aContent->GetTag();
+    nsIAtom *name = nsnull;
+    aContent->GetTag(name);
     
     if ((nsnull !=name) && mMatchTag->EqualsIgnoreCase(name)) {
       *aMatch = PR_TRUE;
@@ -196,9 +197,9 @@ nsContentList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
     if (nsnull != content) {
       nsAutoString name;
       // XXX Should it be an EqualsIgnoreCase?
-      if (((content->GetAttribute("NAME", name) == eContentAttr_HasValue) &&
+      if (((content->GetAttribute("NAME", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
            (aName.Equals(name))) ||
-          ((content->GetAttribute("ID", name) == eContentAttr_HasValue) &&
+          ((content->GetAttribute("ID", name) == NS_CONTENT_ATTR_HAS_VALUE) &&
            (aName.Equals(name)))) {
         return content->QueryInterface(kIDOMNodeIID, (void **)aReturn);
       }
@@ -241,9 +242,10 @@ PRBool nsContentList::MatchSelf(nsIContent *aContent)
     return PR_TRUE;
   }
   
-  count = aContent->ChildCount();
+  aContent->ChildCount(count);
   for (i = 0; i < count; i++) {
-    nsIContent *child = aContent->ChildAt(i);
+    nsIContent *child;
+    aContent->ChildAt(i, child);
     if (MatchSelf(child)) {
       NS_RELEASE(child);
       return PR_TRUE;
@@ -264,9 +266,10 @@ void nsContentList::PopulateSelf(nsIContent *aContent)
     Add(aContent);
   }
   
-  count = aContent->ChildCount();
+  aContent->ChildCount(count);
   for (i = 0; i < count; i++) {
-    nsIContent *child = aContent->ChildAt(i);
+    nsIContent *child;
+    aContent->ChildAt(i, child);
     PopulateSelf(child);
     NS_RELEASE(child);
   }
@@ -276,8 +279,11 @@ NS_IMETHODIMP
 nsContentList::ContentAppended(nsIDocument *aDocument,
                                nsIContent* aContainer)
 {
-  if (aContainer->ChildCount() > 0) {
-    nsIContent *content = aContainer->ChildAt(aContainer->ChildCount()-1);
+  PRInt32 count;
+  aContainer->ChildCount(count);
+  if (count > 0) {
+    nsIContent *content;
+    aContainer->ChildAt(count-1, content);
     if (MatchSelf(content)) {
       Reset();
       nsIContent *root = aDocument->GetRootContent();

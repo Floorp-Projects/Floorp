@@ -539,14 +539,15 @@ nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
 PRBool
 nsHTMLDocument::MatchLinks(nsIContent *aContent)
 {
-  nsIAtom *name = aContent->GetTag();
+  nsIAtom *name;
+  aContent->GetTag(name);
   static nsAutoString area("AREA"), anchor("A");
   nsAutoString attr;
   PRBool result = PR_FALSE;
   
   if ((nsnull != name) && 
       (area.EqualsIgnoreCase(name) || anchor.EqualsIgnoreCase(name)) &&
-      (eContentAttr_HasValue == aContent->GetAttribute("HREF", attr))) {
+      (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute("HREF", attr))) {
       result = PR_TRUE;
   }
 
@@ -625,14 +626,15 @@ nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
 PRBool
 nsHTMLDocument::MatchAnchors(nsIContent *aContent)
 {
-  nsIAtom *name = aContent->GetTag();
+  nsIAtom *name;
+  aContent->GetTag(name);
   static nsAutoString anchor("A");
   nsAutoString attr;
   PRBool result = PR_FALSE;
   
   if ((nsnull != name) && 
       anchor.EqualsIgnoreCase(name) &&
-      (eContentAttr_HasValue == aContent->GetAttribute("NAME", attr))) {
+      (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute("NAME", attr))) {
       result = PR_TRUE;
   }
 
@@ -764,19 +766,20 @@ nsHTMLDocument::MatchName(nsIContent *aContent, const nsString& aName)
   nsAutoString value;
   nsIContent *result = nsnull;
 
-  if ((eContentAttr_HasValue == aContent->GetAttribute(id, value)) &&
+  if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(id, value)) &&
       aName.Equals(value)) {
     return aContent;
   }
-  else if ((eContentAttr_HasValue == aContent->GetAttribute(name, value)) &&
+  else if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(name, value)) &&
            aName.Equals(value)) {
     return aContent;
   }
   
   PRInt32 i, count;
-  count = aContent->ChildCount();
+  aContent->ChildCount(count);
   for (i = 0; i < count && result == nsnull; i++) {
-    nsIContent *child = aContent->ChildAt(i);
+    nsIContent *child;
+    aContent->ChildAt(i, child);
     result = MatchName(child, aName);
     NS_RELEASE(child);
   }  
@@ -939,7 +942,8 @@ nsHTMLDocument::RegisterNamedItems(nsIContent *aContent, PRBool aInForm)
 {
   static nsAutoString name("NAME");
   nsAutoString value;
-  nsIAtom *tag = aContent->GetTag();
+  nsIAtom *tag;
+  aContent->GetTag(tag);
   PRBool inForm;
 
   // Only the content types reflected in Level 0 with a NAME
@@ -949,7 +953,7 @@ nsHTMLDocument::RegisterNamedItems(nsIContent *aContent, PRBool aInForm)
   if ((tag == nsHTMLAtoms::img) || (tag == nsHTMLAtoms::form) ||
       (!aInForm && ((tag == nsHTMLAtoms::applet) || 
                     (tag == nsHTMLAtoms::embed)))) {
-    if (eContentAttr_HasValue == aContent->GetAttribute(name, value)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(name, value)) {
       char *nameStr = value.ToNewCString();
       PL_HashTableAdd(mNamedItems, nameStr, aContent);
     }
@@ -959,9 +963,10 @@ nsHTMLDocument::RegisterNamedItems(nsIContent *aContent, PRBool aInForm)
   NS_IF_RELEASE(tag);
   
   PRInt32 i, count;
-  count = aContent->ChildCount();
+  aContent->ChildCount(count);
   for (i = 0; i < count; i++) {
-    nsIContent *child = aContent->ChildAt(i);
+    nsIContent *child;
+    aContent->ChildAt(i, child);
     RegisterNamedItems(child, inForm);
     NS_RELEASE(child);
   }  
@@ -984,7 +989,7 @@ nsHTMLDocument::NamedItem(const nsString& aName, nsIDOMElement** aReturn)
       nsIFormManager *form = (nsIFormManager *)mTempForms.ElementAt(i);
       if (NS_OK == form->QueryInterface(kIContentIID, (void **)&content)) {
         nsAutoString value;
-        if (eContentAttr_HasValue == content->GetAttribute(name, value)) {
+        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(name, value)) {
           char *nameStr = value.ToNewCString();
           PL_HashTableAdd(mNamedItems, nameStr, content);
         }
@@ -1253,7 +1258,8 @@ PRBool nsHTMLDocument::SearchBlock(BlockText & aBlockText,
 PRBool nsHTMLDocument::ContentIsBlock(nsIContent * aContent) 
 {
   PRBool    isBlock = PR_FALSE;
-  nsIAtom * atom    = aContent->GetTag();
+  nsIAtom * atom;
+  aContent->GetTag(atom);
   if (atom != nsnull) {
     nsString str;
     atom->ToString(str);
@@ -1280,7 +1286,8 @@ nsIContent * nsHTMLDocument::FindBlockParent(nsIContent * aContent,
     NS_RELEASE(mChildStack[i]);
   }
   mStackInx = 0;
-  nsIContent * parent = aContent->GetParent();
+  nsIContent * parent;
+  aContent->GetParent(parent);
   nsIContent * child;
 
   if (parent == nsnull) {
@@ -1298,18 +1305,21 @@ nsIContent * nsHTMLDocument::FindBlockParent(nsIContent * aContent,
     child = aContent;
     PRBool done = PR_FALSE;
     while (!done) {
-      PRInt32 inx = parent->IndexOf(child) + (mSearchDirection == kForward?1:-1);
-      if (inx < 0 || inx >= parent->ChildCount()) {
+      PRInt32 inx, numKids;
+      parent->IndexOf(child, inx);
+      inx += (mSearchDirection == kForward?1:-1);
+      parent->ChildCount(numKids);
+      if (inx < 0 || inx >= numKids) {
         NS_RELEASE(child);
         child  = parent;
-        parent = child->GetParent();
+        child->GetParent(parent);
         if (parent == nsnull) {
           NS_RELEASE(child);
           return nsnull;
         }
       } else {
         NS_RELEASE(child);
-        child = parent->ChildAt(inx);
+        parent->ChildAt(inx, child);
         done = PR_TRUE;
       }
     }
@@ -1334,7 +1344,7 @@ nsIContent * nsHTMLDocument::FindBlockParent(nsIContent * aContent,
 
     nsIContent * oldChild = child;
     child  = parent;
-    parent = child->GetParent();
+    child->GetParent(parent);
     NS_RELEASE(oldChild);
   } while (parent != nsnull);
 
@@ -1382,13 +1392,17 @@ PRBool nsHTMLDocument::BuildBlockFromContent(nsIContent   * aContent,
 PRBool nsHTMLDocument::BuildBlockTraversing(nsIContent   * aParent,
                                             BlockText    & aBlockText) 
 {
-  nsIAtom * atom = aParent->GetTag();
+  nsIAtom * atom;
+  aParent->GetTag(atom);
   if (atom != nsnull) {
-    if (aParent->ChildCount() > 0) {
+    PRInt32 numKids;
+    aParent->ChildCount(numKids);
+    if (numKids > 0) {
       PRInt32 i;
       if (mSearchDirection == kForward) {
-        for (i=0;i<aParent->ChildCount();i++) {
-          nsIContent * child = aParent->ChildAt(i);
+        for (i=0;i<numKids;i++) {
+          nsIContent * child;
+          aParent->ChildAt(i, child);
           if (BuildBlockFromContent(child, aBlockText)) {
             NS_IF_RELEASE(child);
             return PR_TRUE;
@@ -1396,8 +1410,9 @@ PRBool nsHTMLDocument::BuildBlockTraversing(nsIContent   * aParent,
           NS_RELEASE(child);
         }
       } else { // Backward
-        for (i=aParent->ChildCount()-1;i>=0;i--) {
-          nsIContent * child = aParent->ChildAt(i);
+        for (i=numKids-1;i>=0;i--) {
+          nsIContent * child;
+          aParent->ChildAt(i, child);
           if (BuildBlockFromContent(child, aBlockText)) {
             NS_IF_RELEASE(child);
             return PR_TRUE;
@@ -1432,13 +1447,17 @@ PRBool nsHTMLDocument::BuildBlockFromStack(nsIContent * aParent,
   nsIContent * stackParent = mParentStack[aStackInx];
   nsIContent * stackChild  = mChildStack[aStackInx];
 
-  PRInt32      inx         = aParent->IndexOf(stackChild);
+  PRInt32      inx;
   PRInt32      j;
+  aParent->IndexOf(stackChild, inx);
 
   // Forward
   if (mSearchDirection == kForward) {
-    for (j=inx;j<aParent->ChildCount();j++) {
-      nsIContent * child = aParent->ChildAt(j);
+    PRInt32 numKids;
+    aParent->ChildCount(numKids);
+    for (j=inx;j<numKids;j++) {
+      nsIContent * child;
+      aParent->ChildAt(j, child);
       if (child == stackChild && aStackInx < mStackInx) {
         if (BuildBlockFromStack(child, aBlockText, aStackInx+1)) {
           NS_IF_RELEASE(child);
@@ -1459,7 +1478,8 @@ PRBool nsHTMLDocument::BuildBlockFromStack(nsIContent * aParent,
     }
   } else { // Backward
     for (j=inx;j>=0;j--) {
-      nsIContent * child = aParent->ChildAt(j);
+      nsIContent * child;
+      aParent->ChildAt(j, child);
       if (child == stackChild && aStackInx < mStackInx) {
         if (BuildBlockFromStack(child, aBlockText, aStackInx+1)) {
           NS_IF_RELEASE(child);
@@ -1493,12 +1513,16 @@ PRBool nsHTMLDocument::BuildBlock(nsIContent * aParent,
 {
   nsIContent * stackParent = mParentStack[0];
   nsIContent * stackChild  = mChildStack[0];
-  PRInt32      inx         = stackParent->IndexOf(stackChild);
+  PRInt32      inx;
   PRInt32      j;
+  stackParent->IndexOf(stackChild, inx);
 
   if (mSearchDirection == kForward) {
-    for (j=inx;j<stackParent->ChildCount();j++) {
-      nsIContent * child = stackParent->ChildAt(j);
+    PRInt32 numKids;
+    stackParent->ChildCount(numKids);
+    for (j=inx;j<numKids;j++) {
+      nsIContent * child;
+      stackParent->ChildAt(j, child);
       if (child == stackChild && mStackInx > 1) {
         if (BuildBlockFromStack(child, aBlockText, 1)) {
           NS_IF_RELEASE(child);
@@ -1520,7 +1544,8 @@ PRBool nsHTMLDocument::BuildBlock(nsIContent * aParent,
   } else {
     for (j=inx;j>=0;j--) {
       BlockText blockText;
-      nsIContent * child = stackParent->ChildAt(j);
+      nsIContent * child;
+      stackParent->ChildAt(j, child);
       if (child == stackChild && mStackInx > 1) {
         if (BuildBlockFromStack(child, blockText, 1)) {
           NS_IF_RELEASE(child);
@@ -1564,13 +1589,16 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
   nsIContent * body  = nsnull;
 
   nsString bodyStr("BODY");
-  PRInt32 i;
-  for (i=0;i<mRootContent->ChildCount();i++) {
-    nsIContent * child = mRootContent->ChildAt(i);
+  PRInt32 i, n;
+  mRootContent->ChildCount(n);
+  for (i=0;i<n;i++) {
+    nsIContent * child;
+    mRootContent->ChildAt(i, child);
     PRBool isSynthetic;
     child->IsSynthetic(isSynthetic);
     if (!isSynthetic) {
-      nsIAtom * atom = child->GetTag();
+      nsIAtom * atom;
+      child->GetTag(atom);/* XXX leak */
       if (bodyStr.EqualsIgnoreCase(atom)) {
         body = child;
         break;
@@ -1587,21 +1615,24 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
   start = body;
   NS_ADDREF(body);
   // Find Very first Piece of Content
-  while (start->ChildCount() > 0) {
+  PRInt32 snc;
+  start->ChildCount(snc);
+  while (snc > 0) {
     nsIContent * child = start;
-    start = child->ChildAt(0);
+    child->ChildAt(0, start);
     NS_RELEASE(child);
   }
 
   end = body;
   NS_ADDREF(body);
   // Last piece of Content
-  PRInt32 count = end->ChildCount();
+  PRInt32 count;
+  end->ChildCount(count);
   while (count > 0) {
     nsIContent * child = end;
-    end   = child->ChildAt(count-1);
+    child->ChildAt(count-1, end);
     NS_RELEASE(child);
-    count = end->ChildCount();
+    end->ChildCount(count);
   }
 
   nsSelectionRange * range        = mSelection->GetRange();

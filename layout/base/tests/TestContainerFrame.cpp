@@ -53,43 +53,85 @@ public:
     adoc = mDocument;
     return NS_OK;
   }
-
-  void         SetDocument(nsIDocument* aDocument) {mDocument = aDocument;}
-
-  nsIContent* GetParent() const { return nsnull; }
-  void SetParent(nsIContent* aParent) {}
-
-  PRBool       CanContainChildren() const {return PR_FALSE;}
-  PRInt32      ChildCount() const {return 0;}
-  nsIContent*  ChildAt(PRInt32 aIndex) const {return nsnull;}
-  PRInt32      IndexOf(nsIContent* aPossibleChild) const {return -1;}
+  NS_IMETHOD SetDocument(nsIDocument* aDocument) {
+    mDocument = aDocument;
+    return NS_OK;
+  }
+  NS_IMETHOD GetParent(nsIContent*& aResult) const {
+    aResult = nsnull;
+    return NS_OK;
+  }
+  NS_IMETHOD SetParent(nsIContent* aParent) {
+    return NS_OK;
+  }
+  NS_IMETHOD CanContainChildren(PRBool& aResult) const {
+    aResult = PR_FALSE;
+    return NS_OK;
+  }
+  NS_IMETHOD ChildCount(PRInt32& aResult) const {
+    aResult = 0;
+    return NS_OK;
+  }
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {
+    aResult = nsnull;
+    return NS_OK;
+  }
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const {
+    aResult = -1;
+    return NS_OK;
+  }
   NS_IMETHOD   InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
-                            PRBool aNotify) { return NS_OK; }
+                             PRBool aNotify) {
+    return NS_OK;
+  }
   NS_IMETHOD   ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
-                              PRBool aNotify){ return NS_OK; }
-  NS_IMETHOD   AppendChildTo(nsIContent* aKid, PRBool aNotify) {return NS_OK;}
-  NS_IMETHOD   RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {return NS_OK;}
-
+                              PRBool aNotify){
+    return NS_OK;
+  }
+  NS_IMETHOD   AppendChildTo(nsIContent* aKid, PRBool aNotify) {
+    return NS_OK;
+  }
+  NS_IMETHOD   RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {
+    return NS_OK;
+  }
   NS_IMETHOD IsSynthetic(PRBool& aResult) {
     aResult = PR_FALSE;
     return NS_OK;
   }
-
-  virtual void BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  virtual void ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  virtual void FinishConvertToXIF(nsXIFConverter& aConverter) const;
-
-
-  nsIAtom* GetTag() const {return nsnull;}
-  void     SetAttribute(const nsString& aName,const nsString& aValue) {;}
-  nsContentAttr GetAttribute(const nsString& aName, nsString& aRet) const {return eContentAttr_NotThere;}
-
-  nsIContentDelegate* GetDelegate(nsIPresContext* aCX) {return nsnull;}
-
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const {;}
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const { return NS_OK; }
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, nsEvent* aEvent, nsIDOMEvent** aDOMEvent, PRUint32 aFlags, nsEventStatus& aEventStatus) 
-    {return NS_OK;}
+  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {
+    return NS_OK;
+  }
+  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {
+    return NS_OK;
+  }
+  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {
+    return NS_OK;
+  }
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const {
+    aResult = nsnull;
+    return NS_OK;
+  }
+  NS_IMETHOD SetAttribute(const nsString& aName,const nsString& aValue,
+                          PRBool aNotify) {
+    return NS_OK;
+  }
+  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aRet) const {
+    return NS_CONTENT_ATTR_NOT_THERE;
+  }
+  nsIContentDelegate* GetDelegate(nsIPresContext* aCX) {
+    return nsnull;
+  }
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const {
+    return NS_OK;
+  }
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const {
+    return NS_OK;
+  }
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, nsEvent* aEvent,
+                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
+                            nsEventStatus& aEventStatus) {
+    return NS_OK;
+  }
 
   NS_DECL_ISUPPORTS
 
@@ -98,18 +140,6 @@ protected:
 };
 
 SimpleContent::SimpleContent()
-{
-}
-
-void SimpleContent::BeginConvertToXIF(nsXIFConverter& aConverter) const
-{
-}
-
-void SimpleContent::FinishConvertToXIF(nsXIFConverter& aConverter) const
-{
-}
-
-void SimpleContent::ConvertContentToXIF(nsXIFConverter& aConverter) const
 {
 }
 

@@ -175,7 +175,7 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     // just get the one and only style rule from the content's STYLE attribute
     if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
       nsHTMLValue value;
-      if (eContentAttr_HasValue == htmlContent->GetAttribute(nsHTMLAtoms::style, value)) {
+      if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetAttribute(nsHTMLAtoms::style, value)) {
         if (eHTMLUnit_ISupports == value.GetUnit()) {
           nsISupports*  rule = value.GetISupportsValue();
           if (nsnull != rule) {

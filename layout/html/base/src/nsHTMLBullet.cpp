@@ -55,15 +55,15 @@ public:
 
   NS_IMETHOD IsSynthetic(PRBool& aResult);
 
-  void MapAttributesInto(nsIStyleContext* aContext, 
-                         nsIPresContext* aPresContext);
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext, 
+                               nsIPresContext* aPresContext);
 
-  void List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
-  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
-                               nsIFrame* aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*& aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult);
 };
 
 class BulletFrame : public nsFrame, private nsIInlineReflow {
@@ -119,7 +119,7 @@ Bullet::Bullet()
 {
 }
 
-void
+NS_IMETHODIMP
 Bullet::MapAttributesInto(nsIStyleContext* aContext, 
                           nsIPresContext*  aPresContext)
 {
@@ -127,23 +127,25 @@ Bullet::MapAttributesInto(nsIStyleContext* aContext,
   nsStyleDisplay* display = (nsStyleDisplay*)
     aContext->GetMutableStyleData(eStyleStruct_Display);
   display->mDisplay = NS_STYLE_DISPLAY_INLINE;
+  return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 Bullet::IsSynthetic(PRBool& aResult)
 {
   aResult = PR_TRUE;
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 Bullet::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
   fprintf(out, "Bullet RefCnt=%d<>\n", mRefCnt);
+  return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 Bullet::CreateFrame(nsIPresContext*  aPresContext,
                     nsIFrame*        aParentFrame,
                     nsIStyleContext* aStyleContext,
@@ -317,7 +319,8 @@ BulletFrame::GetListContainerReflowState(nsIPresContext*      aCX,
   while (nsnull != rs) {
     nsIContent* content;
     rs->frame->GetContent(content);
-    nsIAtom* tag = content->GetTag();
+    nsIAtom* tag;
+    content->GetTag(tag);
     NS_RELEASE(content);
     if ((tag == nsHTMLAtoms::ul) || (tag == nsHTMLAtoms::ol) ||
         (tag == nsHTMLAtoms::menu) || (tag == nsHTMLAtoms::dir)) {
@@ -347,7 +350,7 @@ BulletFrame::GetListItemOrdinal(nsIPresContext*        aCX,
   nsIContent* parentContent;
   mContentParent->GetContent(parentContent);
   nsIHTMLContent* html = (nsIHTMLContent*) parentContent;
-  if (eContentAttr_HasValue == html->GetAttribute(nsHTMLAtoms::value, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == html->GetAttribute(nsHTMLAtoms::value, value)) {
     if (eHTMLUnit_Integer == value.GetUnit()) {
       ordinal = value.GetIntValue();
       if (nsnull != aReflowState) {

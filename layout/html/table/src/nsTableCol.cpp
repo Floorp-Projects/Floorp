@@ -90,41 +90,42 @@ nsrefcnt nsTableCol::Release(void)
   return mRefCnt;
 }
 
-void nsTableCol::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+NS_IMETHODIMP
+nsTableCol::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
+                         PRBool aNotify)
 {
   nsHTMLValue val;
 
   if (aAttribute == nsHTMLAtoms::width) 
   {
     ParseValueOrPercentOrProportional(aValue, val, eHTMLUnit_Pixel);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if ( aAttribute == nsHTMLAtoms::repeat)
   {
     ParseValue(aValue, 0, val, eHTMLUnit_Integer);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
     SetRepeat(val.GetIntValue());
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     nsHTMLValue val;
     if (ParseTableAlignParam(aValue, val)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
-    return;
   }
   else if (aAttribute == nsHTMLAtoms::valign) {
     nsHTMLValue val;
     if (ParseTableAlignParam(aValue, val)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
+      return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
     }
-    return;
   }
   // unknown attributes are handled by my parent
-  nsTableContent::SetAttribute(aAttribute, aValue);
+  return nsTableContent::SetAttribute(aAttribute, aValue, aNotify);
 }
 
-void nsTableCol::MapAttributesInto(nsIStyleContext* aContext,
-                                   nsIPresContext* aPresContext)
+NS_IMETHODIMP
+nsTableCol::MapAttributesInto(nsIStyleContext* aContext,
+                              nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
@@ -168,11 +169,12 @@ void nsTableCol::MapAttributesInto(nsIStyleContext* aContext,
       textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
     }
   }
+  return NS_OK;
 }
 
 
 
-nsresult
+NS_IMETHODIMP
 nsTableCol::CreateFrame(nsIPresContext* aPresContext,
                         nsIFrame* aParentFrame,
                         nsIStyleContext* aStyleContext,

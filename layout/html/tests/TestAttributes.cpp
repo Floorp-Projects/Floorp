@@ -39,25 +39,25 @@ void testAttributes(nsIHTMLContent* content) {
   nsString sempty("");
   nsString sfoo_gif("foo.gif");
 
-  content->SetAttribute(sBORDER);
-  content->SetAttribute(sWIDTH, nsHTMLValue(5, eHTMLUnit_Pixel));
-  content->SetAttribute(sHEIGHT, sempty);
-  content->SetAttribute(sSRC, sfoo_gif);
+  content->SetAttribute(sBORDER, nsHTMLValue::kNull, PR_FALSE);
+  content->SetAttribute(sWIDTH, nsHTMLValue(5, eHTMLUnit_Pixel), PR_FALSE);
+  content->SetAttribute(sHEIGHT, sempty, PR_FALSE);
+  content->SetAttribute(sSRC, sfoo_gif, PR_FALSE);
 
   nsHTMLValue ret;
-  nsContentAttr rv;
+  nsresult rv;
   rv = content->GetAttribute(sBORDER, ret);
-  if ((rv != eContentAttr_NoValue) || (ret.GetUnit() != eHTMLUnit_Null)) {
+  if ((rv != NS_CONTENT_ATTR_NO_VALUE) || (ret.GetUnit() != eHTMLUnit_Null)) {
     printf("test 0 failed\n");
   }
 
   rv = content->GetAttribute(sWIDTH, ret);
-  if ((rv != eContentAttr_HasValue) || (! (ret == nsHTMLValue(5, eHTMLUnit_Pixel)))) {
+  if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (! (ret == nsHTMLValue(5, eHTMLUnit_Pixel)))) {
     printf("test 1 failed\n");
   }
 
   rv = content->GetAttribute(sBAD, ret);
-  if (rv != eContentAttr_NotThere) {
+  if (rv != NS_CONTENT_ATTR_NOT_THERE) {
     printf("test 2 failed\n");
   }
 
@@ -66,7 +66,7 @@ void testAttributes(nsIHTMLContent* content) {
   nsString sborder("border");
   nsString strRet;
   rv = ((nsIContent*)content)->GetAttribute(sborder, strRet);
-  if (rv != eContentAttr_NoValue) {
+  if (rv != NS_CONTENT_ATTR_NO_VALUE) {
     printf("test 3 (case comparison) failed\n");
   }
 
@@ -75,8 +75,9 @@ void testAttributes(nsIHTMLContent* content) {
   nsISupportsArray* allNames;
   NS_NewISupportsArray(&allNames);
 
-  content->GetAllAttributeNames(allNames);
-  if (allNames->Count() != 3) {
+  PRInt32 na;
+  content->GetAllAttributeNames(allNames, na);
+  if (na != 3) {
     printf("test 5 (unset attriubte) failed\n");
   }
 
@@ -225,7 +226,9 @@ int main(int argc, char** argv)
     printf("Could not create text content.\n");
     return -1;
   }
-  NS_ASSERTION(!text->CanContainChildren(),"");
+  PRBool canHaveKids;
+  text->CanContainChildren(canHaveKids);
+  NS_ASSERTION(!canHaveKids,"");
   text->SetDocument(myDoc);
 
 #if 0
@@ -255,11 +258,14 @@ int main(int argc, char** argv)
     printf("Could not create container.\n");
     return -1;
   }
-  NS_ASSERTION(container->CanContainChildren(),"");
+  container->CanContainChildren(canHaveKids);
+  NS_ASSERTION(canHaveKids,"");
   container->SetDocument(myDoc);
 
   container->AppendChildTo(text, PR_FALSE);
-  if (container->ChildCount() != 1) {
+  PRInt32 nk;
+  container->ChildCount(nk);
+  if (nk != 1) {
     printf("Container has wrong number of children.");
   }
 

@@ -86,7 +86,9 @@ NS_IMETHODIMP
 nsDOMNodeList::GetLength(PRUint32* aLength)
 {
   if (nsnull != mContent) {
-    *aLength = mContent->ChildCount();
+    PRInt32 n;
+    mContent->ChildCount(n);
+    *aLength = PRUint32(n);
   }
   else {
     *aLength = 0;
@@ -100,7 +102,7 @@ nsDOMNodeList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   nsIContent *content = nsnull;
   nsresult res = NS_OK;
   if (nsnull != mContent) {
-    content = mContent->ChildAt(aIndex);
+    mContent->ChildAt(aIndex, content);
     if (nsnull != content) {
       res = content->QueryInterface(kIDOMNodeIID, (void**)aReturn);
       NS_RELEASE(content);

@@ -36,6 +36,8 @@ enum nsFormRenderingMode {
   kForwardMode        // newest
 };
 
+// XXX XPCOM'ize me
+
 /** 
   * Abstract form manager interface. Form managers are responsible for
   * the management of form controls. This includes gathering of data
@@ -116,30 +118,14 @@ public:
 
   // methods accessing attributes
 
-  /**
-    * Get the named attribute of this manager
-    * @param aName the name of the attribute
-    * @param aResult the value of the attribute 
-    * @return  <UL>
-    *
-    * <LI>If the attribute is not set and has no default value, return
-    * eContentAttr_NotThere.
-    *
-    * <LI>If the attribute exists, but has no value, return
-    * eContentAttr_NoValue.
-    *
-    * <LI>If the attribute has a value, empty or otherwise, set ret to
-    * be the value, and return eContentAttr_HasValue.
-    *
-    * </UL> */
-  virtual nsContentAttr GetAttribute(const nsString& aName,
-                              nsString& aResult) const = 0;
+  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aResult) const = 0;
+
   /**
     * Set the named attribute of this manager
     * @param aName the name of the attribute
     * @param aValue the value of the attribute
     */
-  virtual void SetAttribute(const nsString& aName, const nsString& aValue) = 0;
+  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue) = 0;
 
   // misc methods
 

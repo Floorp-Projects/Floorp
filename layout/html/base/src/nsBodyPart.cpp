@@ -42,7 +42,7 @@ public:
 
   virtual void MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   BodyPart* mPart;
 };
@@ -54,12 +54,12 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
-  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
-                               nsIFrame* aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*& aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult);
 
-  virtual nsIStyleRule* GetStyleRule(void);
+  NS_IMETHOD GetStyleRule(nsIStyleRule*& aResult);
 
 protected:
   virtual ~BodyPart();
@@ -103,7 +103,8 @@ void BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresCont
       nsHTMLValue   value;
       nsStyleCoord  zero(0);
       PRInt32       count = 0;
-      PRInt32       attrCount = mPart->GetAttributeCount();
+      PRInt32       attrCount;
+      mPart->GetAttributeCount(attrCount);
 
       if (0 < attrCount) {
         // if marginwidth/marginheigth is set in our attribute zero out left,right/top,bottom padding
@@ -154,8 +155,10 @@ void BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresCont
   }
 }
 
-void BodyRule::List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP
+BodyRule::List(FILE* out, PRInt32 aIndent) const
 {
+  return NS_OK;
 }
 
 // -----------------------------------------------------------
@@ -204,14 +207,16 @@ BodyPart::CreateFrame(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-nsIStyleRule* BodyPart::GetStyleRule(void)
+NS_IMETHODIMP
+BodyPart::GetStyleRule(nsIStyleRule*& aResult)
 {
   if (nsnull == mStyleRule) {
     mStyleRule = new BodyRule(this);
     NS_IF_ADDREF(mStyleRule);
   }
   NS_IF_ADDREF(mStyleRule);
-  return mStyleRule;
+  aResult = mStyleRule;
+  return NS_OK;
 }
 
 

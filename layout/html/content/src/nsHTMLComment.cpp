@@ -26,12 +26,12 @@ class nsHTMLComment : public nsHTMLCommentSuper {
 public:
   nsHTMLComment(nsIAtom* aTag, const nsString& aComment);
 
-  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
-                               nsIFrame*        aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*&       aResult);
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
+                         nsIFrame*        aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*&       aResult);
 
-  virtual void List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
 protected:
   virtual ~nsHTMLComment();
@@ -48,7 +48,7 @@ nsHTMLComment::~nsHTMLComment()
 {
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLComment::CreateFrame(nsIPresContext*  aPresContext,
                            nsIFrame*        aParentFrame,
                            nsIStyleContext* aStyleContext,
@@ -64,7 +64,7 @@ nsHTMLComment::CreateFrame(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsHTMLComment::List(FILE* out, PRInt32 aIndent) const
 {
   NS_PRECONDITION(nsnull != mDocument, "bad content");
@@ -72,7 +72,8 @@ nsHTMLComment::List(FILE* out, PRInt32 aIndent) const
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  nsIAtom* tag = GetTag();
+  nsIAtom* tag;
+  GetTag(tag);
   if (tag != nsnull) {
     nsAutoString buf;
     tag->ToString(buf);
@@ -85,6 +86,7 @@ nsHTMLComment::List(FILE* out, PRInt32 aIndent) const
   fprintf(out, " RefCount=%d<", mRefCnt);
   fputs(mComment, out);
   fputs(">\n", out);
+  return NS_OK;
 }
 
 nsresult
