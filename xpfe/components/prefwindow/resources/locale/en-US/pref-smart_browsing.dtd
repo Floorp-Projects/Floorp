@@ -1,0 +1,13 @@
+<!-- extracted from content/pref-smart_browsing.xul -->
+
+<!ENTITY  title.label "Smart Browsing">
+<!ENTITY  smartHeader.label "What's Related">
+<!ENTITY  enableRelatedRadio.label "Enable 'What's Related'">
+<!ENTITY  autoDecp.label "Automatically load 'Whats Related' information">
+<!ENTITY  neverRadio "Never">
+<!ENTITY  afterAutoloadFirstRadio "After first use">
+<!ENTITY  afterAutoloadAlwaysRadio "Always">
+<!ENTITY  doNotDecp.label "Do not request Whats Related information for the following domains  (a comma-seperated list)">
+<!ENTITY  internetKeywordsHeader.label "Internet Keywords">
+<!ENTITY  enableKeyCheck.label "Enable Internet Keywords">
+

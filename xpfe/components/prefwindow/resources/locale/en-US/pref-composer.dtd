@@ -1,0 +1,16 @@
+<!-- extracted from content/pref-composer.xul -->
+
+<!ENTITY  title.label "Composer">
+<!ENTITY  lHeader "Composer">
+<!ENTITY  rHeader "Set general preferences for the authoring Web pages">
+<!ENTITY  authorName "Author Name">
+<!ENTITY  AutoSaveCheck.label "Automatically save page every">
+<!ENTITY  minText "minutes">
+<!ENTITY  exterLegand.label "External Editors">
+<!ENTITY  htmlSource "HTML Source:">
+<!ENTITY  chooseButton.label "Choose...">
+<!ENTITY  fontSizeHeader "Font Size Mode">
+<!ENTITY  img "Images:">
+<!ENTITY  relSizeRadio.label "Show relative size as points based on your Navigator font sizes">
+<!ENTITY  relfontRadio.label "Show relative HTML font scale: -2, -1, 0, +1, +2, +3, +4">
+<!ENTITY  relScaleRadio.label "Show relative HTML scale and absolute &quot;point-size&quot; attributes">

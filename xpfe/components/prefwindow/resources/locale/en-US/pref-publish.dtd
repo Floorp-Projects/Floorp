@@ -1,0 +1,16 @@
+<!-- extracted from content/pref-publish.xul -->
+
+<!ENTITY  window.title "Publish">
+<!ENTITY  composerHeader.label "Publish">
+<!ENTITY  maintainCheckbox.label "Maintain links.">
+<!ENTITY  keepCheck.label "Keep images with page.">
+
+<!ENTITY  adjustDesc.label "Adjust links to work from the page's location. (Links to local pages will work when
+			      local versions exist.)           ">
+<!ENTITY  saveDesc.label "Save copies of images to the page's location.  Images will always
+				appear in local versions of the page and when the page is published.">
+<!ENTITY  tip.label "Tip: Check both options if you will be using remote publishing.">
+<!ENTITY defaultHeader.label  "Default publishing location">
+<!ENTITY  publishFtp.label "If publishing to a FTP site, enter the HTTP address to browse to:">
+<!ENTITY  publishhtp.label "If publishing to a FTP site, enter the HTTP address to browse to:">
+
