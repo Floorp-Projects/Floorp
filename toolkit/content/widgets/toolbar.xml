@@ -80,11 +80,12 @@
       
       <constructor>
         <![CDATA[
-          this.lastPermanentChild = this.firstChild;
+          this.lastPermanentChild = this.lastChild;
           
           // Searching for the toolbox palette in the toolbar binding because
           // toolbars are constructed first.
           var toolbox = this.parentNode;
+          
           if (!toolbox.palette) {
             // Look to see if there is a toolbarpalette.
             var node = toolbox.firstChild;
@@ -145,14 +146,9 @@
         
         <setter>
           <![CDATA[
-            // Remove all items before the last permanent child.
-            if (this.lastPermanentChild) {
-              while (this.lastPermanentChild.previousSibling)
-                this.removeChild(this.lastPermanentChild.previousSibling);
-            } else {
-              while (this.lastChild)
-                this.removeChild(this.lastChild);
-            }
+            // Remove all items after the last permanent child.
+            while (this.lastChild && this.lastChild != this.lastPermanentChild)
+              this.removeChild(this.lastChild);
             
             if (val == "__empty")
               return;
@@ -216,8 +212,8 @@
             }
             
             // Insert the palette item into the toolbar.
-            if (aBeforeElt || this.lastPermanentChild)
-              this.insertBefore(insertItem, aBeforeElt ? aBeforeElt : this.lastPermanentChild);
+            if (aBeforeElt)
+              this.insertBefore(insertItem, aBeforeElt);
             else
               this.appendChild(insertItem);
                
@@ -229,10 +225,6 @@
   </binding>
 
   <binding id="menubar" extends="xul:menubar">
-    <resources>
-      <stylesheet src="chrome://global/skin/toolbar.css"/>
-    </resources>
-
     <implementation implements="nsIAccessibleProvider">
       <property name="accessible">
         <getter>

@@ -108,7 +108,7 @@ menubar > menu[_moz-menuactive="true"] {
   border-left: 1px solid ThreeDHighlight;
 }
 
-menubar > menu[_moz-menuactive="true"][open="true"] {
+menubar > menu[_moz-menuactive="true"][open="true"]  {
   border-top: 1px solid ThreeDShadow;
   border-right: 1px solid ThreeDHighlight;
   border-bottom: 1px solid ThreeDHighlight;

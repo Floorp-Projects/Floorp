@@ -131,6 +131,11 @@ function notifyParentComplete()
     gToolbox.customizeDone(gToolboxChanged);
 }
 
+function getToolbarAt(i)
+{
+  return gToolbox.childNodes[i];
+}
+
 /**
  * Persist the current set of buttons in all customizable toolbars to
  * localstore.
@@ -143,7 +148,7 @@ function persistCurrentSets()
   var customCount = 0;
   for (var i = 0; i < gToolbox.childNodes.length; ++i) {
     // Look for customizable toolbars that need to be persisted.
-    var toolbar = gToolbox.childNodes[i];
+    var toolbar = getToolbarAt(i);
     if (isCustomizableToolbar(toolbar)) {
       // Calculate currentset and store it in the attribute.
       var currentSet = toolbar.currentSet;
@@ -183,7 +188,7 @@ function persistCurrentSets()
 function wrapToolbarItems()
 {
   for (var i = 0; i < gToolbox.childNodes.length; ++i) {
-    var toolbar = gToolbox.childNodes[i];
+    var toolbar = getToolbarAt(i);
     if (isCustomizableToolbar(toolbar)) {
       for (var k = 0; k < toolbar.childNodes.length; ++k) {
         var item = toolbar.childNodes[k];
@@ -291,7 +296,7 @@ function getCurrentItemIds()
 {
   var currentItems = {};
   for (var i = 0; i < gToolbox.childNodes.length; ++i) {
-    var toolbar = gToolbox.childNodes[i];
+    var toolbar = getToolbarAt(i);
     if (isCustomizableToolbar(toolbar)) {
       var child = toolbar.firstChild;
       while (child) {
@@ -585,7 +590,7 @@ function updateIconSize(aUseSmallIcons)
   gToolboxDocument.persist(gToolbox.id, "iconsize");
   
   for (var i = 0; i < gToolbox.childNodes.length; ++i) {
-    var toolbar = gToolbox.childNodes[i];
+    var toolbar = getToolbarAt(i);
     if (isCustomizableToolbar(toolbar)) {
       setAttribute(toolbar, "iconsize", val);
       gToolboxDocument.persist(toolbar.id, "iconsize");
@@ -601,7 +606,7 @@ function updateToolbarMode(aModeValue)
   gToolboxDocument.persist(gToolbox.id, "mode");
 
   for (var i = 0; i < gToolbox.childNodes.length; ++i) {
-    var toolbar = gToolbox.childNodes[i];
+    var toolbar = getToolbarAt(i);
     if (isCustomizableToolbar(toolbar)) {
       setAttribute(toolbar, "mode", aModeValue);
       gToolboxDocument.persist(toolbar.id, "mode");
@@ -632,7 +637,7 @@ function setAttribute(aElt, aAttr, aVal)
 
 function isCustomizableToolbar(aElt)
 {
-  return aElt.localName == "toolbar" &&
+  return (aElt.localName == "toolbar" &&
          aElt.getAttribute("customizable") == "true";
 }
 

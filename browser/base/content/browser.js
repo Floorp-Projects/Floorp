@@ -1329,12 +1329,14 @@ function updateToolbarStates(toolbarMenuElt)
       for (i = 0; i < toolbarMenuElt.childNodes.length; ++i)
         document.getElementById(toolbarMenuElt.childNodes[i].getAttribute("observes")).removeAttribute("checked");
       var toolbars = document.getElementsByTagName("toolbar");
-      for (i = 0; i < toolbars.length; ++i) {
+      
+      // Start i at 1, since we skip the menubar.
+      for (i = 1; i < toolbars.length; ++i) {
         if (toolbars[i].getAttribute("class").indexOf("chromeclass") != -1)
           toolbars[i].setAttribute("hidden", "true");
       }
       var statusbars = document.getElementsByTagName("statusbar");
-      for (i = 0; i < statusbars.length; ++i) {
+      for (i = 1; i < statusbars.length; ++i) {
         if (statusbars[i].getAttribute("class").indexOf("chromeclass") != -1)
           statusbars[i].setAttribute("hidden", "true");
       }
@@ -2615,7 +2617,7 @@ function openAboutDialog()
 
 function BrowserCustomizeToolbar()
 {
-  // Disable tlhe menubar and toolbar context menu items
+  // Disable the toolbar context menu items
   var menubar = document.getElementById("main-menubar");
   for (var i = 0; i < menubar.childNodes.length; ++i)
     menubar.childNodes[i].setAttribute("disabled", true);
@@ -3044,7 +3046,8 @@ function onViewToolbarsPopupShowing(aEvent)
   for (i = 0; i < toolbox.childNodes.length; ++i) {
     var toolbar = toolbox.childNodes[i];
     var toolbarName = toolbar.getAttribute("toolbarname");
-    if (toolbarName) {
+    var type = toolbar.getAttribute("type");
+    if (toolbarName && type != "menubar") {
       var menuItem = document.createElement("menuitem");
       menuItem.setAttribute("toolbarindex", i);
       menuItem.setAttribute("type", "checkbox");
