@@ -134,7 +134,8 @@
 #elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(SOLARIS) \
 	|| defined(HPUX) || defined(LINUX) || defined(FREEBSD) \
 	|| defined(NETBSD) || defined(OPENBSD) || defined(BSDI) \
-	|| defined(VMS) || defined(NTO) || defined(DARWIN)
+	|| defined(VMS) || defined(NTO) || defined(DARWIN) \
+	|| defined(UNIXWARE)
 #define _PT_PTHREAD_INVALIDATE_THR_HANDLE(t)  (t) = 0
 #define _PT_PTHREAD_THR_HANDLE_IS_INVALID(t)  (t) == 0
 #define _PT_PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
@@ -194,7 +195,7 @@
  */
 #if (defined(AIX) && !defined(AIX4_3)) || defined(LINUX) \
 	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
-	|| defined(BSDI) || defined(VMS)
+	|| defined(BSDI) || defined(VMS) || defined(UNIXWARE)
 #define PT_NO_SIGTIMEDWAIT
 #endif
 
@@ -245,7 +246,7 @@
 #define PT_PRIO_MIN            1
 #define PT_PRIO_MAX            127
 #elif defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
-	|| defined(BSDI) || defined(DARWIN) /* XXX */
+	|| defined(BSDI) || defined(DARWIN) || defined(UNIXWARE) /* XXX */
 #define PT_PRIO_MIN            0
 #define PT_PRIO_MAX            126
 #else
@@ -278,7 +279,8 @@ extern int (*_PT_aix_yield_fcn)();
     PR_END_MACRO
 #elif defined(HPUX) || defined(LINUX) || defined(SOLARIS) \
 	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
-	|| defined(BSDI) || defined(NTO) || defined(DARWIN)
+	|| defined(BSDI) || defined(NTO) || defined(DARWIN) \
+	|| defined(UNIXWARE)
 #define _PT_PTHREAD_YIELD()            	sched_yield()
 #else
 #error "Need to define _PT_PTHREAD_YIELD for this platform"
