@@ -195,7 +195,7 @@ sub GenerateVersionTable {
     while (@line = FetchSQLData()) {
         my ($p, $d, $votesperuser, $dis, $u) = (@line);
         $::proddesc{$p} = $d;
-        if (!$dis) {
+        if (!$dis && scalar($::components{$p})) {
             push @::enterable_products, $p;
         }
         if ($dotargetmilestone) {
