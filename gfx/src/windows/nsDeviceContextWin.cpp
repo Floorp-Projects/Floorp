@@ -319,98 +319,123 @@ NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarDimensions(float &aWidth, float 
   return NS_OK;
 }
 
-nsresult GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont * aFont) 
+nsresult GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont* aFont) 
 {
   NONCLIENTMETRICS ncm;
+  HGDIOBJ hGDI;
 
-  memset(&ncm, sizeof(NONCLIENTMETRICS), 0);
-  ncm.cbSize = sizeof(NONCLIENTMETRICS);
+  LOGFONT logFont;
+  LOGFONT* ptrLogFont = NULL;
 
-  BOOL status = SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 
-                                     sizeof(NONCLIENTMETRICS),  
+  BOOL status;
+  if (anID == eSystemAttr_Font_Icon) 
+  {
+    status = ::SystemParametersInfo(SPI_GETICONTITLELOGFONT,
+                                  sizeof(logFont),
+                                  (PVOID)&logFont,
+                                  0);
+  }
+  else
+  {
+    ncm.cbSize = sizeof(NONCLIENTMETRICS);
+    status = ::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 
+                                     sizeof(ncm),  
                                      (PVOID)&ncm, 
                                      0);
-  if (!status) {
+  }
+
+  if (!status)
+  {
     return NS_ERROR_FAILURE;
   }
 
-  LOGFONT * logFont = NULL;
-  switch (anID) {
-    case eSystemAttr_Font_Caption : 
-      logFont = &ncm.lfCaptionFont;
+  switch (anID)
+  {
+    case eSystemAttr_Font_Caption: 
+      ptrLogFont = &ncm.lfCaptionFont;
       break;
 
-    case eSystemAttr_Font_Icon : 
-      logFont = &ncm.lfSmCaptionFont; // XXX this may not be right
+    case eSystemAttr_Font_Icon: 
+      ptrLogFont = &logFont;
       break;
 
-    case eSystemAttr_Font_Menu : 
-      logFont = &ncm.lfMenuFont;
+    case eSystemAttr_Font_Menu: 
+      ptrLogFont = &ncm.lfMenuFont;
       break;
 
-    case eSystemAttr_Font_MessageBox : 
-      logFont = &ncm.lfMessageFont; // XXX this may not be right
+    case eSystemAttr_Font_MessageBox: 
+      ptrLogFont = &ncm.lfMessageFont;
       break;
 
-    case eSystemAttr_Font_SmallCaption : 
-      logFont = &ncm.lfSmCaptionFont; // XXX this may not be right
+    case eSystemAttr_Font_SmallCaption: 
+      ptrLogFont = &ncm.lfSmCaptionFont;
       break;
 
-    case eSystemAttr_Font_StatusBar : 
-    case eSystemAttr_Font_Tooltips : 
-      logFont = &ncm.lfStatusFont;
+    case eSystemAttr_Font_StatusBar: 
+    case eSystemAttr_Font_Tooltips: 
+      ptrLogFont = &ncm.lfStatusFont;
       break;
 
     case eSystemAttr_Font_Widget:
-      break;
 
-		case eSystemAttr_Font_Window:			// css3
-		case eSystemAttr_Font_Document:
-		case eSystemAttr_Font_Workspace:
-		case eSystemAttr_Font_Desktop:
-		case eSystemAttr_Font_Info:
-		case eSystemAttr_Font_Dialog:
-		case eSystemAttr_Font_Button:
-		case eSystemAttr_Font_PullDownMenu:
-		case eSystemAttr_Font_List:
-		case eSystemAttr_Font_Field:
-			break;
+    case eSystemAttr_Font_Window:      // css3
+    case eSystemAttr_Font_Document:
+    case eSystemAttr_Font_Workspace:
+    case eSystemAttr_Font_Desktop:
+    case eSystemAttr_Font_Info:
+    case eSystemAttr_Font_Dialog:
+    case eSystemAttr_Font_Button:
+    case eSystemAttr_Font_PullDownMenu:
+    case eSystemAttr_Font_List:
+    case eSystemAttr_Font_Field:
+      hGDI = ::GetStockObject(DEFAULT_GUI_FONT);
+      if (hGDI != NULL)
+      {
+        if (::GetObject(hGDI, sizeof(logFont), &logFont) > 0)
+        { 
+          ptrLogFont = &logFont;
+        }
+      }
+      break;
   } // switch 
 
-  if (nsnull == logFont) {
+  if (nsnull == ptrLogFont)
+  {
     return NS_ERROR_FAILURE;
   }
-
   
-  aFont->name.AssignWithConversion(logFont->lfFaceName);
+  aFont->name.AssignWithConversion(ptrLogFont->lfFaceName);
 
   // Do Style
   aFont->style = NS_FONT_STYLE_NORMAL;
-  if (logFont->lfItalic) {
+  if (ptrLogFont->lfItalic)
+  {
     aFont->style = NS_FONT_STYLE_ITALIC;
   }
   // XXX What about oblique?
 
-
-  aFont->variant = 0;
+  aFont->variant = NS_FONT_VARIANT_NORMAL;
 
   // Do Weight
-  aFont->weight = (logFont->lfWeight == FW_BOLD?NS_FONT_WEIGHT_BOLD:NS_FONT_WEIGHT_NORMAL);
+  aFont->weight = (ptrLogFont->lfWeight == FW_BOLD ? 
+            NS_FONT_WEIGHT_BOLD : NS_FONT_WEIGHT_NORMAL);
 
   // Do decorations
   aFont->decorations = NS_FONT_DECORATION_NONE;
-  if (logFont->lfUnderline) {
+  if (ptrLogFont->lfUnderline)
+  {
     aFont->decorations |= NS_FONT_DECORATION_UNDERLINE;
   }
-  if (logFont->lfStrikeOut) {
+  if (ptrLogFont->lfStrikeOut)
+  {
     aFont->decorations |= NS_FONT_DECORATION_LINE_THROUGH;
   }
 
   // Do Size
-  aFont->size = logFont->lfHeight * -1;
+  int pointSize = -MulDiv(ptrLogFont->lfHeight, 72, ::GetDeviceCaps(aHDC, LOGPIXELSY));
+  aFont->size = NSIntPointsToTwips(pointSize);
 
   return NS_OK;
-
 }
 
 NS_IMETHODIMP nsDeviceContextWin :: GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
@@ -488,6 +513,18 @@ NS_IMETHODIMP nsDeviceContextWin :: GetSystemAttribute(nsSystemAttrID anID, Syst
     case eSystemAttr_Font_SmallCaption: 
     case eSystemAttr_Font_StatusBar: 
     case eSystemAttr_Font_Tooltips: 
+    case eSystemAttr_Font_Widget:
+
+    case eSystemAttr_Font_Window:      // css3
+    case eSystemAttr_Font_Document:
+    case eSystemAttr_Font_Workspace:
+    case eSystemAttr_Font_Desktop:
+    case eSystemAttr_Font_Info:
+    case eSystemAttr_Font_Dialog:
+    case eSystemAttr_Font_Button:
+    case eSystemAttr_Font_PullDownMenu:
+    case eSystemAttr_Font_List:
+    case eSystemAttr_Font_Field:
     {
       HWND  hwnd;
       HDC   tdc;
@@ -507,14 +544,6 @@ NS_IMETHODIMP nsDeviceContextWin :: GetSystemAttribute(nsSystemAttrID anID, Syst
 
       break;
     }
-    case eSystemAttr_Font_Widget:
-
-      aInfo->mFont->name.AssignWithConversion("Arial");
-      aInfo->mFont->style       = NS_FONT_STYLE_NORMAL;
-      aInfo->mFont->weight      = NS_FONT_WEIGHT_NORMAL;
-      aInfo->mFont->decorations = NS_FONT_DECORATION_NONE;
-      aInfo->mFont->size        = 204;
-      break;
   } // switch 
 
   return NS_OK;
@@ -550,13 +579,13 @@ NS_IMETHODIMP nsDeviceContextWin :: CheckFontExistence(const nsString& aFontName
   const PRUnichar* unicodefontname = aFontName.GetUnicode();
 
   int outlen = ::WideCharToMultiByte(CP_ACP, 0, aFontName.GetUnicode(), aFontName.Length(), 
-	                                 fontName, LF_FACESIZE, NULL, NULL);
+                                   fontName, LF_FACESIZE, NULL, NULL);
   if(outlen > 0)
-	  fontName[outlen] = '\0'; // null terminate
+    fontName[outlen] = '\0'; // null terminate
 
   // somehow the WideCharToMultiByte failed, let's try the old code
   if(0 == outlen) 
-	  aFontName.ToCString(fontName, LF_FACESIZE);
+    aFontName.ToCString(fontName, LF_FACESIZE);
 
   ::EnumFontFamilies(hdc, fontName, (FONTENUMPROC)fontcallback, (LPARAM)&isthere);
 
@@ -682,8 +711,8 @@ NS_IMETHODIMP nsDeviceContextWin :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, 
 {
   if ( mSpec )
   {
-	  // we have a printer device
-		aWidth = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+    // we have a printer device
+    aWidth = NSToIntRound(mWidth * mDevUnitsToAppUnits);
     aHeight = NSToIntRound(mHeight * mDevUnitsToAppUnits);
   }
   else {
@@ -701,11 +730,11 @@ NS_IMETHODIMP nsDeviceContextWin :: GetRect(nsRect &aRect)
 {
   if ( mSpec )
   {
-	  // we have a printer device
-	  aRect.x = 0;
-	  aRect.y = 0;
-		aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
-		aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+    // we have a printer device
+    aRect.x = 0;
+    aRect.y = 0;
+    aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+    aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
   }
   else
     ComputeFullAreaUsingScreen ( &aRect );
@@ -718,11 +747,11 @@ NS_IMETHODIMP nsDeviceContextWin :: GetClientRect(nsRect &aRect)
 {
   if ( mSpec )
   {
-	  // we have a printer device
-	  aRect.x = 0;
-	  aRect.y = 0;
-		aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
-		aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+    // we have a printer device
+    aRect.x = 0;
+    aRect.y = 0;
+    aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+    aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
   }
   else
     ComputeClientRectUsingScreen ( &aRect );
