@@ -46,6 +46,7 @@ LIBS		= \
 	-lxp \
 	-lraptorbase \
 	-lxpcom \
+	-lreg \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
