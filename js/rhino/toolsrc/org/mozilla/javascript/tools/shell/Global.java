@@ -58,7 +58,7 @@ public class Global extends ImporterTopLevel {
     {
         // Define some global functions particular to the shell. Note
         // that these functions are not part of ECMA.
-        super(cx);
+        super(cx, Main.sealedStdLib);
         String[] names = { "print", "quit", "version", "load", "help",
                            "loadClass", "defineClass", "spawn", "sync",
                            "serialize", "deserialize", "runCommand" };

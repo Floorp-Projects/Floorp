@@ -231,41 +231,45 @@ public class NativeArray extends IdScriptable {
 
     public void put(String id, Scriptable start, Object value)
     {
+        super.put(id, start, value);
         if (start == this) {
+            // If the object is sealed, super will throw exception
             long index = toArrayIndex(id);
             if (index >= length) {
                 length = index + 1;
             }
         }
-        super.put(id, start, value);
     }
 
     public void put(int index, Scriptable start, Object value)
     {
+        if (start == this && !isSealed()
+            && dense != null && 0 <= index && index < dense.length)
+        {
+            // If start == this && sealed, super will throw exception
+            dense[index] = value;
+        } else {
+            super.put(index, start, value);
+        }
         if (start == this) {
             // only set the array length if given an array index (ECMA 15.4.0)
             if (this.length <= index) {
                 // avoid overflowing index!
                 this.length = (long)index + 1;
             }
-
-            if (dense != null && 0 <= index && index < dense.length) {
-                dense[index] = value;
-                return;
-            }
         }
-        super.put(index, start, value);
+
     }
 
     public void delete(int index)
     {
-        if (!isSealed()) {
-            if (dense != null && 0 <= index && index < dense.length) {
-                dense[index] = NOT_FOUND;
-                return;
-            }
+        if (!isSealed()
+            && dense != null && 0 <= index && index < dense.length)
+        {
+            dense[index] = NOT_FOUND;
+        } else {
+            super.delete(index);
         }
-        super.delete(index);
     }
 
     public Object[] getIds()

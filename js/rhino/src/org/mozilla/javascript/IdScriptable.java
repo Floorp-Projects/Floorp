@@ -99,8 +99,12 @@ public abstract class IdScriptable extends ScriptableObject
         if (maxId != 0) {
             int id = mapNameToId_cached(name);
             if (id != 0) {
+                if (start == this && isSealed()) {
+                    throw Context.reportRuntimeError1("msg.modify.sealed",
+                                                      name);
+                }
                 int attr = getIdAttributes(id);
-                if ((attr & READONLY) == 0 && !isSealed()) {
+                if ((attr & READONLY) == 0) {
                     if (start == this) {
                         setIdValue(id, value);
                     }

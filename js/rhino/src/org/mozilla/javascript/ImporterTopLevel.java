@@ -80,7 +80,11 @@ public class ImporterTopLevel extends ScriptableObject {
     }
 
     public ImporterTopLevel(Context cx) {
-        cx.initStandardObjects(this);
+        this(cx, false);
+    }
+
+    public ImporterTopLevel(Context cx, boolean sealed) {
+        cx.initStandardObjects(this, sealed);
         init();
     }
 

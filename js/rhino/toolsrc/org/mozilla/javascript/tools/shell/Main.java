@@ -82,6 +82,15 @@ public class Main {
      *  Execute the given arguments, but don't System.exit at the end.
      */
     public static int exec(String args[]) {
+
+        for (int i=0; i < args.length; i++) {
+            String arg = args[i];
+            if (arg.equals("-sealedlib")) {
+                sealedStdLib = true;
+                break;
+            }
+        }
+
         Context cx = enterContext();
         // Create the top-level scope object.
         global = getGlobal();
@@ -175,6 +184,11 @@ public class Main {
                 if (++i == args.length)
                     usage(arg);
                 fileList.addElement(args[i].equals("-") ? null : args[i]);
+                continue;
+            }
+            if (arg.equals("-sealedlib")) {
+                // Should already be processed
+                if (!sealedStdLib) Context.codeBug();
                 continue;
             }
             usage(arg);
@@ -447,6 +461,7 @@ public class Main {
     static private final int EXITCODE_FILE_NOT_FOUND = 4;
     //static private DebugShell debugShell;
     static boolean processStdin = true;
+    static boolean sealedStdLib = false;
     static Vector fileList = new Vector(5);
     private static SecurityProxy securityImpl;
 }

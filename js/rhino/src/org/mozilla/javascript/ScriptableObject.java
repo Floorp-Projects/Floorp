@@ -256,8 +256,10 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             }
             // Note: cache is not updated in put
         }
-
-        if ((slot.attributes & ScriptableObject.READONLY) != 0 || isSealed()) {
+        if (start == this && isSealed()) {
+            throw Context.reportRuntimeError1("msg.modify.sealed", name);
+        }
+        if ((slot.attributes & ScriptableObject.READONLY) != 0) {
             return;
         }
         if ((slot.flags & Slot.HAS_SETTER) != 0) {
@@ -293,8 +295,15 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             setterThis = start;
             args = new Object[] { actualArg };
         } else {
+            if (start != this) Context.codeBug();
             setterThis = slot.delegateTo;
             args = new Object[] { this, actualArg };
+        }
+        // Check start is sealed: start is always instance of ScriptableObject
+        // due to logic in if (start != this) above
+        if (((ScriptableObject)start).isSealed()) {
+            throw Context.reportRuntimeError1("msg.modify.sealed",
+                                              slot.stringKey);
         }
 
         try {
@@ -343,8 +352,13 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             }
             slot = getSlotToSet(null, index);
         }
-        if ((slot.attributes & ScriptableObject.READONLY) != 0 || isSealed())
+        if (start == this && isSealed()) {
+            throw Context.reportRuntimeError1("msg.modify.sealed",
+                                              Integer.toString(index));
+        }
+        if ((slot.attributes & ScriptableObject.READONLY) != 0) {
             return;
+        }
         if (this == start) {
             slot.value = value;
         } else {
@@ -1571,8 +1585,10 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * caused the table to grow while this thread was searching.
      */
     private synchronized Slot addSlot(String id, int index, Slot newSlot) {
-        if (isSealed())
-            throw Context.reportRuntimeError0("msg.add.sealed");
+        if (isSealed()) {
+            String str = (id != null) ? id : Integer.toString(index);
+            throw Context.reportRuntimeError1("msg.add.sealed", str);
+        }
 
         if (slots == null) { slots = new Slot[5]; }
 
@@ -1619,8 +1635,10 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * deletes are not common.
      */
     private synchronized void removeSlot(String name, int index) {
-        if (isSealed())
-            throw Context.reportRuntimeError0("msg.remove.sealed");
+        if (isSealed()) {
+            String str = (name != null) ? name : Integer.toString(index);
+            throw Context.reportRuntimeError1("msg.remove.sealed", str);
+        }
 
         int i = getSlotPosition(slots, name, index);
         if (i >= 0) {
