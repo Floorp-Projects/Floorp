@@ -544,7 +544,7 @@ pref("network.enableIDN", true);
 pref("network.dns.ipv4OnlyDomains", ".doubleclick.net");
 
 // This preference can be used to turn off IPv6 name lookups. See bug 68796.
-pref("network.dns.disableIPv6, false);
+pref("network.dns.disableIPv6", false);
 
 // This preference controls whether or not URLs with UTF-8 characters are
 // escaped.  Set this preference to TRUE for strict RFC2396 conformance.
