@@ -188,9 +188,6 @@ protected:
   void GetNestedChildren(nsIAtom* aTag, nsIContent* aContent,
                          nsISupportsArray** aList);
 
-  // This should never be called, but is necessary to satisfy nsRefPtr.
-  nsXBLPrototypeBinding() { NS_NOTREACHED("nsXBLPrototypeBinding default ctor"); }
-
 protected:
   // Internal helper class for managing our IID table.
   class nsIIDKey : public nsHashKey {

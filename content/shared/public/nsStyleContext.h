@@ -150,10 +150,6 @@ public:
 #endif
 
 protected:
-  // A default ctor is needed to use nsRefPtr (nsDerivedSafe) with this class.
-  // It should never be called.
-  nsStyleContext() { NS_NOTREACHED("nsStyleContext default ctor"); }
-
   void AppendChild(nsStyleContext* aChild);
   void RemoveChild(nsStyleContext* aChild);
 
