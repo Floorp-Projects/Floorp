@@ -81,8 +81,8 @@ This section contains the names and descriptions of the functions in
 your module that will be called automatically depending on what is
 happening on IRC.
 
-All your functions should start by shifting the $self variable from the
-argument list:
+All your functions should start by shifting the $self variable from
+the argument list:
 
    my $self = shift;
 
@@ -92,8 +92,8 @@ After this, it is common to get the other variables too:
 
 ...where the bit in the brackets is given in the brackets of the
 definitions of the functions as shown below. For example, for
-JoinedChannel it would be ($event, $channel), so a function to override
-the default JoinedChannel action would be something like:
+JoinedChannel it would be ($event, $channel), so a function to
+override the default JoinedChannel action would be something like:
 
    sub JoinedChannel {
        my $self = shift;
@@ -102,22 +102,21 @@ the default JoinedChannel action would be something like:
        return $self->SUPER::JoinedChannel($event, $channel); # call inherited method
    }
 
-Many functions have to return a special value, typically 0 if the event
-was handled, and 1 if it was not.
+Many functions have to return a special value, typically 0 if the
+event was handled, and 1 if it was not.
 
-What actually happens is that for every event that occurs, the bot
-has a list of event handlers it should call. For example, if
-someone says 'bot: hi' then the bot wants to call the Told()
-handler and the Baffled() handler. It first calls the Told()
-handler of every module. It then looks to see if any of the
-handlers returned 0. If so, it stops. Note, though, that every
-Told() handler got called! If none of the handlers returned 0,
-then it looks to see what the highest return value was. If it was
-greater than 1, then it increments the 'level' field of the $event
-hash (see below) and calls all the Told() handlers that returned 1 
-or more again. This means that if your module decides whether or 
-not to respond by looking at a random number, it is prone to being 
-confused by another module!
+For these functions, what actually happens is that for the relevant
+event, the bot has a list of event handlers it should call. For
+example, if someone says 'bot: hi' then the bot wants to call the
+Told() handler and the Baffled() handler. It first calls the Told()
+handler of every module. It then looks to see if any of the handlers
+returned 0. If so, it stops. Note, though, that every Told() handler
+got called! If none of the handlers returned 0, then it looks to see
+what the highest return value was. If it was greater than 1, then it
+increments the 'level' field of the $event hash (see below) and calls
+all the Told() handlers that returned 1 or more again. This means that
+if your module decides whether or not to respond by looking at a
+random number, it is prone to being confused by another module!
 
    YOU SHOULD NOT USE RANDOM NUMBERS TO DECIDE WHETHER OR NOT TO
    RESPOND TO A MESSAGE!
