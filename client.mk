@@ -39,54 +39,68 @@
 #
 # Options:
 #   MOZ_OBJDIR           - Destination object directory
-#   MOZ_CO_BRANCH        - Branch tag to use for checkout (default: HEAD)
 #   MOZ_CO_DATE          - Date tag to use for checkout (default: none)
 #   MOZ_CO_MODULE        - Module to checkout (default: SeaMonkeyAll)
 #   MOZ_CVS_FLAGS        - Flags to pass cvs (default: -q -z3)
 #   MOZ_CO_FLAGS         - Flags to pass after 'cvs co' (default: -P)
 #   MOZ_MAKE_FLAGS       - Flags to pass to $(MAKE)
+#   MOZ_CO_BRANCH        - Branch tag (Depricated. Use MOZ_CO_TAG below.)
 #
 
-CWD		:= $(shell pwd)
+#######################################################################
+# Checkout Tags
+#
+# For branches, uncomment the MOZ_CO_TAG line with the proper tag,
+# and commit this file on that tag.
+#MOZ_CO_TAG = <tag>
+NSPR_CO_TAG = NSPRPUB_CLIENT_BRANCH
+PSM_CO_TAG = SeaMonkey_M14_BRANCH
+
+#######################################################################
+# Defines
+#
+CWD := $(shell pwd)
 ifneq (, $(wildcard client.mk))
-ROOTDIR		:= $(shell dirname $(CWD))
-TOPSRCDIR       := $(CWD)
+# Ran from mozilla directory
+ROOTDIR   := $(shell dirname $(CWD))
+TOPSRCDIR := $(CWD)
 else
-ROOTDIR		:= $(CWD)
-TOPSRCDIR       := $(CWD)/mozilla
+# Ran from mozilla/.. directory (?)
+ROOTDIR   := $(CWD)
+TOPSRCDIR := $(CWD)/mozilla
 endif
 
-AUTOCONF	:= autoconf
-MKDIR		:= mkdir
-SH		:= /bin/sh
+AUTOCONF := autoconf
+MKDIR := mkdir
+SH := /bin/sh
 ifndef MAKE
-MAKE		:= gmake
+MAKE := gmake
 endif
 
-CONFIG_GUESS  := $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
+CONFIG_GUESS := $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
 ifdef CONFIG_GUESS
   CONFIG_GUESS := $(shell $(CONFIG_GUESS))
 else
   _IS_FIRST_CHECKOUT := 1
 endif
 
-#######################################################################
-# Defines
-#
-
 ####################################
 # CVS
 
 # Add the CVS root to CVS_FLAGS if needed
-CVS_ROOT_IN_TREE  := $(shell cat $(TOPSRCDIR)/CVS/Root 2>/dev/null)
+CVS_ROOT_IN_TREE := $(shell cat $(TOPSRCDIR)/CVS/Root 2>/dev/null)
 ifneq ($(CVS_ROOT_IN_TREE),)
 ifneq ($(CVS_ROOT_IN_TREE),$(CVSROOT))
   CVS_FLAGS := -d $(CVS_ROOT_IN_TREE)
 endif
 endif
 
-CVSCO	      = cvs $(CVS_FLAGS) co $(CVS_CO_FLAGS)
+CVSCO = cvs $(CVS_FLAGS) co $(CVS_CO_FLAGS)
 CVSCO_LOGFILE := $(ROOTDIR)/cvsco.log
+
+ifdef MOZ_CO_TAG
+  CVS_CO_FLAGS :=  -r $(MOZ_CO_TAG)
+endif
 
 ####################################
 # Load mozconfig Options
@@ -119,15 +133,17 @@ else
   CVS_FLAGS := $(MOZ_CVS_FLAGS)
 endif
 
-# MOZ_CO_FLAGS - Anything that we should use on all checkouts
-ifeq "$(origin MOZ_CO_FLAGS)" "undefined"
-  CVS_CO_FLAGS := -P
-else
-  CVS_CO_FLAGS := $(MOZ_CO_FLAGS)
+# This option is depricated. The best way to have client.mk pull a tag
+# is to set MOZ_CO_TAG (see above) and commit that change on the tag.
+ifdef MOZ_CO_BRANCH
+  CVS_CO_FLAGS :=  -r $(MOZ_CO_BRANCH)
 endif
 
-ifdef MOZ_CO_BRANCH
-  CVS_CO_FLAGS := $(CVS_CO_FLAGS) -r $(MOZ_CO_BRANCH)
+# MOZ_CO_FLAGS - Anything that we should use on all checkouts
+ifeq "$(origin MOZ_CO_FLAGS)" "undefined"
+  CVS_CO_FLAGS := $(CVS_CO_FLAGS) -P
+else
+  CVS_CO_FLAGS := $(CVS_CO_FLAGS) $(MOZ_CO_FLAGS)
 endif
 
 ifdef MOZ_CO_DATE
@@ -138,10 +154,18 @@ ifndef MOZ_CO_MODULE
   MOZ_CO_MODULE := SeaMonkeyAll
 endif
 
+ifeq "$(origin MOZ_MAKE_FLAGS)" "undefined"
+  MOZ_MAKE_ENV :=
+else
+  MOZ_MAKE_ENV := MAKE="$(MAKE) $(MOZ_MAKE_FLAGS)"
+endif
+
 ifdef MOZ_OBJDIR
   OBJDIR := $(MOZ_OBJDIR)
+  MOZ_MAKE := $(MOZ_MAKE_ENV) $(MAKE) -C $(OBJDIR)
 else
   OBJDIR := $(TOPSRCDIR)
+  MOZ_MAKE := $(MOZ_MAKE_ENV) $(MAKE)
 endif
 
 
@@ -151,23 +175,18 @@ endif
 
 PSM_CO_MODULE= mozilla/security
 PSM_CO_FLAGS := -P
-CVSCO_PSM    = cvs $(CVS_FLAGS) co $(PSM_CO_FLAGS)
-PSM_CO_TAG   = SeaMonkey_M14_BRANCH
-
+CVSCO_PSM = cvs $(CVS_FLAGS) co $(PSM_CO_FLAGS) $(PSM_CO_MODULE)
 ifdef PSM_CO_TAG
   PSM_CO_FLAGS := $(PSM_CO_FLAGS) -r $(PSM_CO_TAG)
 endif
-
 
 #######################################################################
 # NSPR
 #
 
-NSPR_CO_MODULE        = mozilla/nsprpub
+NSPR_CO_MODULE = mozilla/nsprpub
 NSPR_CO_FLAGS := -P
-CVSCO_NSPR    = cvs $(CVS_FLAGS) co $(NSPR_CO_FLAGS)
-NSPR_CO_TAG   = NSPRPUB_CLIENT_BRANCH
-
+CVSCO_NSPR = cvs $(CVS_FLAGS) co $(NSPR_CO_FLAGS) $(NSPR_CO_MODULE)
 ifdef NSPR_CO_TAG
   NSPR_CO_FLAGS := $(NSPR_CO_FLAGS) -r $(NSPR_CO_TAG)
 endif
@@ -184,10 +203,9 @@ all: checkout depend build
 endif
 
 # Windows equivalents
-pull_all:     checkout
-build_all:    build
-clobber:      clean
-clobber_all:  clean
+pull_all: checkout
+build_all: build
+clobber clobber_all: clean
 pull_and_build_all: checkout depend build
 
 # Do everything from scratch
@@ -214,16 +232,16 @@ real_checkout:
 	 : error. If the file is created, remove it and return an error.
 	@rm -f cvs-failed.tmp*; \
 	: Checkout NSPR; \
-	echo $(CVSCO_NSPR) $(NSPR_CO_MODULE); \
-	($(CVSCO_NSPR) $(NSPR_CO_MODULE) || touch cvs-failed.tmp) 2>&1 \
+	echo $(CVSCO_NSPR); \
+	($(CVSCO_NSPR) || touch cvs-failed.tmp) 2>&1 \
 	  | tee -a $(CVSCO_LOGFILE); \
 	if test -f cvs-failed.tmp; then exit 1; else true; fi; \
 	: Checkout PSM client libs; \
-	echo $(CVSCO_PSM) $(PSM_CO_MODULE); \
-	($(CVSCO_PSM) $(PSM_CO_MODULE) || touch cvs-failed.tmp) 2>&1 \
+	echo $(CVSCO_PSM); \
+	($(CVSCO_PSM) || touch cvs-failed.tmp) 2>&1 \
 	  | tee -a $(CVSCO_LOGFILE); \
 	if test -f cvs-failed.tmp; then exit 1; else true; fi; \
-	: Checkout the SeaMonkeyAll; \
+	: Checkout SeaMonkeyAll; \
 	echo $(CVSCO) $(MOZ_CO_MODULE); \
 	($(CVSCO) $(MOZ_CO_MODULE) || touch cvs-failed.tmp) 2>&1 \
 	  | tee -a $(CVSCO_LOGFILE)
@@ -330,20 +348,20 @@ endif
 # Depend
 
 depend: $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	cd $(OBJDIR); $(MAKE) $@;
+	$(MOZ_MAKE) $@;
 
 ####################################
 # Build it
 
 build:  $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	cd $(OBJDIR); $(MAKE) export && $(MAKE) install
+	$(MOZ_MAKE) export && $(MOZ_MAKE) install
 
 ####################################
 # Other targets
 
 # Pass these target onto the real build system
-clean realclean distclean:
-	cd $(OBJDIR); $(MAKE) $@
+install export clean realclean distclean:
+	$(MOZ_MAKE) $@
 
 cleansrcdir:
 	@cd $(TOPSRCDIR); \
@@ -366,4 +384,4 @@ cleansrcdir:
 # (! IS_FIRST_CHECKOUT)
 endif
 
-.PHONY: checkout real_checkout depend build clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything
+.PHONY: checkout real_checkout depend build export install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything
