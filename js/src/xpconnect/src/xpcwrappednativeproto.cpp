@@ -37,7 +37,7 @@
 
 #include "xpcprivate.h"
 
-#ifdef DEBUG
+#if defined(DEBUG_xpc_hacker) || defined(DEBUG)
 PRInt32 XPCWrappedNativeProto::gDEBUG_LiveProtoCount = 0;
 #endif
 

@@ -129,7 +129,7 @@
 
 // Note that one would not normally turn *any* of these on in a non-DEBUG build.
 
-#if defined(DEBUG_jband) || defined(DEBUG_jst) || defined(DEBUG_dbradley) || defined(DEBUG_shaver)
+#if defined(DEBUG_jband) || defined(DEBUG_jst) || defined(DEBUG_dbradley) || defined(DEBUG_shaver) || defined(DEBUG_timeless)
 #define DEBUG_xpc_hacker
 #endif
 
@@ -1643,7 +1643,7 @@ protected:
                 const XPCNativeScriptableCreateInfo* scriptableCreateInfo);
 
 private:
-#ifdef DEBUG
+#if defined(DEBUG_xpc_hacker) || defined(DEBUG)
     static PRInt32 gDEBUG_LiveProtoCount;
 #endif
 
