@@ -64,7 +64,7 @@ sub status
     return;
     }
 
-  $url = $url || "http://cvs-mirror.mozilla.org/webtools/tinderbox/" .
+  $url = $url || "http://tinderbox.mozilla.org/" .
     "showbuilds.cgi?quickparse=1&tree="; 
 	
   my $output = get $url . join ',', @$trees;
