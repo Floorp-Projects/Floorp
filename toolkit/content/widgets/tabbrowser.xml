@@ -397,7 +397,7 @@
                 newTitle += sep;
             }
             newTitle += modifier;
-            window.title = newTitle;
+            this.ownerDocument.title = newTitle;
           ]]>
         </body>
       </method>
