@@ -25,6 +25,7 @@
 #if 0
 %}
 
+typedef boolean             PRBool   ;
 typedef octet               PRUint8  ;
 typedef unsigned short      PRUint16 ;
 typedef unsigned long       PRUint32 ;
