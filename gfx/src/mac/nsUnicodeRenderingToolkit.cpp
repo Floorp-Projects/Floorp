@@ -38,6 +38,7 @@ static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
 //#define DISABLE_TEC_FALLBACK
 //#define DISABLE_PRECOMPOSEHANGUL_FALLBACK
+//#define DISABLE_LATINL_FALLBACK
 //#define DISABLE_ATSUI_FALLBACK
 //#define DISABLE_TRANSLITERATE_FALLBACK
 //#define DISABLE_UPLUS_FALLBACK
@@ -345,7 +346,48 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackGetWidth(
     nsAutoString tmp(aCharPt, 1);
     char* conv = nsnull;
     if(NS_SUCCEEDED(mTrans->Convert(tmp.GetUnicode(), &conv)) && conv) {
-  		GetScriptTextWidth(conv, nsCRT::strlen(conv),oWidth);    
+	    GrafPtr thePort;
+	    ::GetPort(&thePort);
+	    short aSize = ::GetPortTextSize(thePort);		 		
+  		PRInt32 l=nsCRT::strlen(conv);
+    	if((l>3) && ('^' == conv[0]) && ('(' == conv[1]) && (')' == conv[l-1])) // sup
+    	{
+    		short small = aSize * 2 / 3;
+    		::TextSize(small);
+  			GetScriptTextWidth(conv+2, l-3,oWidth);   
+    		::TextSize(aSize);
+    	} 
+    	else if((l>3) && ('v' == conv[0]) && ('(' == conv[1]) && (')' == conv[l-1])) // sub
+    	{
+    		short small = aSize * 2 / 3;
+    		::TextSize(small);
+  			GetScriptTextWidth(conv+2, l-3,oWidth);   
+     		::TextSize(aSize);
+   		} 
+   		else if((l>1) && ('0' <= conv[0]) && ( conv[0] <= '9') && ('\/' == conv[1])) // fract
+    	{
+    		short small = aSize * 2 / 3;
+    		short tmpw=0;
+    		
+    		::TextSize(small);
+   			GetScriptTextWidth(conv, 1 ,tmpw);   
+   			oWidth = tmpw;
+    		
+     		::TextSize(aSize);
+  			GetScriptTextWidth(conv+1, 1,tmpw);   
+    		oWidth += tmpw;
+     		
+    		if(l>2) {
+    			::TextSize(small);
+  				GetScriptTextWidth(conv+2, l-2,tmpw);   
+    			oWidth += tmpw;
+ 	    		::TextSize(aSize);
+    		}
+    	} else {
+  			GetScriptTextWidth(conv, l,oWidth);   
+  		}
+  		
+  		 
     	nsAllocator::Free(conv);
     	return PR_TRUE;
     }
@@ -364,7 +406,46 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackDrawChar(
     nsAutoString tmp(aCharPt, 1);
     char* conv = nsnull;
     if(NS_SUCCEEDED(mTrans->Convert(tmp.GetUnicode(), &conv)) && conv) {
-  		DrawScriptText(conv, nsCRT::strlen(conv), x, y, oWidth);
+	    GrafPtr thePort;
+	    ::GetPort(&thePort);
+	    short aSize = ::GetPortTextSize(thePort);		
+    	PRInt32 l=nsCRT::strlen(conv);
+    	if((l>3) && ('^' == conv[0]) && ('(' == conv[1]) && (')' == conv[l-1])) // sup
+    	{
+    		short small = aSize * 2 / 3;
+    		::TextSize(small);
+    		DrawScriptText(conv+2, l-3, x, y-small/2, oWidth);
+    		::TextSize(aSize);
+    	} 
+    	else if((l>3) && ('v' == conv[0]) && ('(' == conv[1]) && (')' == conv[l-1])) // sub
+    	{
+    		short small = aSize * 2 / 3;
+    		::TextSize(small);
+    		DrawScriptText(conv+2, l-3, x, y+small/2, oWidth);
+     		::TextSize(aSize);
+   		} 
+   		else if((l>1) && ('0' <= conv[0]) && ( conv[0] <= '9') && ('\/' == conv[1])) // fract
+    	{
+    		short small = aSize * 2 / 3;
+    		short tmpw=0;
+    		
+    		::TextSize(small);
+    		DrawScriptText(conv, 1, x, y-small/2, tmpw);
+    		oWidth = tmpw;
+    		
+     		::TextSize(aSize);
+    		DrawScriptText(conv+1, 1, x+oWidth, y, tmpw);
+    		oWidth += tmpw;
+     		
+    		if(l>2) {
+    			::TextSize(small);
+    			DrawScriptText(conv+2, l-2, x+oWidth, y+small/2, tmpw);
+    			oWidth += tmpw;
+ 	    		::TextSize(aSize);
+    		}
+    	} else {
+  			DrawScriptText(conv, l, x, y, oWidth);
+  		}
     	nsAllocator::Free(conv);
     	return PR_TRUE;
     }
@@ -496,6 +577,166 @@ PRBool nsUnicodeRenderingToolkit :: UPlusFallbackDrawChar(
   ::TextSize(saveSize);
   return (-1 != len);
 }
+//------------------------------------------------------------------------
+/*
+# capital mean above
+# small mean below
+# r - ring below
+# R - Ring Above
+# d - dot below
+# D - Dot Above
+# l - line below
+# L - Line Above
+# c - cedilla
+# A - Acute
+# x - circumflex below
+# X - Circumflex Above
+# G - Grave above
+# T - Tilde above
+# t - tilde below
+# B - Breve Above
+# b - breve below
+# U - Diaeresis Above
+# u - diaeresis below
+# H - Hook Above 
+# N - Horn Above
+*/
+static char *g1E00Dec = 
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1E00 - U+1E0F
+ "Ar ar BD bD Bd bd Bl bl CcAccADD dD Dd dd Dl dl "
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1E10 - U+1E1F
+ "Dc dc Dx dx ELGeLGELAeLAEx ex Et et EcBecBFD fD "
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1E20 - U+1E2F
+ "GL gL HD hD Hd hd HU hU Hc hc Hb hb It it IUAiUA"
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1E30 - U+1E3F
+ "KA kA Kd kd Kl kl Ld ld LdLldLLl ll Lx lx MA mA "
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1E40 - U+1E4F
+ "MD mD Md md ND nD Nd nd Nl nl Nx nx OTAoTAOTUoTU"
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1E50 - U+1E5F
+ "OLGoLGOLAoLAPA pA PD pD RD rD Rd rd RdLrdLRl rl "
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1E60 - U+1E6F
+ "SD sD Sd sd SADsADSBDsBDSdDsdDTD tD Td td Tl tl "
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1E70 - U+1E7F
+ "Tx tx Uu uu Ut ut Ux ux UTAuTAULUuLUVT vT Vd vd "
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1E80 - U+1E8F
+ "WG wG WA wA WU wU WD wD Wd wd XD xD XU xU YD Yd "
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1E90 - U+1E9F
+ "ZX zX Zd zd Zl zl Hl tU wR yR aH                "
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1EA0 - U+1EAF
+ "Ad ad AH aH AXAaXAAXGaXGAXHaXHAXTaXTAdXadXABAaBA"
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1EB0 - U+1EBF
+ "ABGaBGABHaBHABTaBTAdBadBEd ed EH eH ET eT EXAeXA"
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1EC0 - U+1ECF
+ "EXGeXGEXHeXHEXTeXTEdXedXIH iH Id id Od od OH oH "
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1ED0 - U+1EDF
+ "OXAoXAOXGoXGOXHoXHOXToXTOdXodXOAnoAnOGnoGnOHnoHn"
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1EE0 - U+1EEF
+ "OHToHTOdTodTUd ud UH uh UAnuAnUGnuGnUHnuHnUTnuTn"
+//0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F   U+1EF0 - U+1EFF
+ "UdnudnYG yG Yd yd YH yH YT yT                   "
+;
+//------------------------------------------------------------------------
+static void CCodeToMacRoman(char aIn, char& aOut,short aWidth, short aHeight, short& oXadj, short& oYadj)
+{
+	aOut = ' ';
+	oXadj = oYadj = 0;
+	switch(aIn)
+	{
+		case 'r' : aOut = '\xfb'; oYadj = aHeight * 5 / 6; break ;// # r - ring below
+		case 'R' : aOut = '\xfb';                          break ;// # R - Ring Above
+		case 'd' : aOut = '\xfa'; oYadj = aHeight * 5 / 6; break ;// # d - dot below
+		case 'D' : aOut = '\xfa';                          break ;// # D - Dot Above
+		case 'l' : aOut = '_';                             break ;// # l - line below
+		case 'L' : aOut = '\xf8';                          break ;// # L - Line Above
+		case 'c' : aOut = '\xfc';                          break ;// # c - cedilla
+		case 'A' : aOut = '\xab';                          break ;// # A - Acute
+		case 'x' : aOut = '\xf6'; oYadj= aHeight * 5 / 6;  break ;// # x - circumflex below
+		case 'X' : aOut = '\xf6';                          break ;// # X - Circumflex Above
+		case 'G' : aOut = '`';                             break ;// # G - Grave above
+		case 'T' : aOut = '\xf7';                          break ;// # T - Tilde above
+		case 't' : aOut = '\xf7'; oYadj= aHeight * 5 / 6;  break ;// # t - tilde below
+		case 'B' : aOut = '\xf9';                          break ;// # B - Breve Above
+		case 'b' : aOut = '\xf9'; oYadj= aHeight * 5 / 6;  break ;// # b - breve below
+		case 'U' : aOut = '\xac';                          break ;// # U - Diaeresis Above
+		case 'u' : aOut = '\xac'; oYadj= aHeight * 5 / 6;  break ;// # u - diaeresis below
+		case 'H' : aOut = ',';    oYadj= - aHeight * 5 / 6;  break ;// # H - Hook Above 
+		case 'n' : aOut = ',';    oYadj= - aHeight * 5 / 6;  oXadj = aWidth /4; break ;// # N - Horn Above
+		defalt: NS_ASSERTION(0, "unknown ccode");
+		        break;	
+	}
+}
+
+PRBool nsUnicodeRenderingToolkit :: LatinFallbackGetWidth(
+	const PRUnichar *aCharPt, 
+	short& oWidth)
+{
+  if(0x1E00 == (0xFF00 & *aCharPt)) 
+  {
+  	PRInt32 idx = 3 * ( *aCharPt & 0x00FF);
+  	if(' ' != g1E00Dec[idx])
+  	{
+   		GetScriptTextWidth(g1E00Dec+idx, 1, oWidth);
+  		return PR_TRUE;
+  	}
+  }
+  return PR_FALSE;
+}
+//------------------------------------------------------------------------
+
+PRBool nsUnicodeRenderingToolkit :: LatinFallbackDrawChar(
+	const PRUnichar *aCharPt, 
+	PRInt32 x, 
+	PRInt32 y, 
+	short& oWidth)
+{
+  if(0x1E00 == (0xFF00 & *aCharPt)) 
+  {
+  	PRInt32 idx = 3 * ( *aCharPt & 0x00FF);
+  	if(' ' != g1E00Dec[idx])
+  	{
+	    GrafPtr thePort;
+	    ::GetPort(&thePort);
+	    short aSize = ::GetPortTextSize(thePort);	
+	    short dummy;
+	    short realwidth;
+  		char comb[2];
+  		short xadj;
+  		short yadj;
+  		short yadjB=0;
+  		
+  		PRBool baseTooBig = 	('A'<= g1E00Dec[idx]  ) && (g1E00Dec[idx] <= 'Z'  ) 
+  		                     || ('f' == g1E00Dec[idx])|| ('l' == g1E00Dec[idx])|| ('k' == g1E00Dec[idx]);
+  		PRBool firstIsAbove    = ('A'<= g1E00Dec[idx+1]) && (g1E00Dec[idx+1] <= 'Z') ;
+  		PRBool secondIsAbove   = ('A'<= g1E00Dec[idx+2]) && (g1E00Dec[idx+2] <= 'Z') ;
+  		
+  		GetScriptTextWidth(g1E00Dec+idx, 1, oWidth);
+  		if(baseTooBig && (firstIsAbove ||secondIsAbove ))
+    		::TextSize(aSize *3/4);		
+
+  		DrawScriptText(g1E00Dec+idx, 1, x, y, realwidth);
+
+  		if(baseTooBig && (firstIsAbove ||secondIsAbove ))
+  			::TextSize(aSize);  			
+  		if(' ' != g1E00Dec[idx+1]) {
+  			CCodeToMacRoman(g1E00Dec[idx+1],comb[0], realwidth, aSize, xadj, yadj);
+  			
+  			GetScriptTextWidth(comb, 1, dummy);
+  			
+  			DrawScriptText( comb, 1, x + xadj + ( realwidth - dummy ) / 2, y + yadj + yadjB, dummy);
+  		}
+  		if(' ' != g1E00Dec[idx+2]) {
+  			if( firstIsAbove && secondIsAbove)
+   				yadjB = yadjB - aSize / 6; 		
+  		
+  			CCodeToMacRoman(g1E00Dec[idx+2],comb[0], realwidth, aSize, xadj, yadj);
+  			GetScriptTextWidth(comb, 1, dummy);
+  			DrawScriptText( comb, 1, x + xadj+ ( realwidth - dummy ) / 2, y+ yadj + yadjB, dummy);
+  		}
+  		return PR_TRUE;
+  	}
+  }
+  return PR_FALSE;
+}
 
 //------------------------------------------------------------------------
 void nsUnicodeRenderingToolkit :: GetScriptTextWidth(
@@ -600,6 +841,10 @@ nsresult nsUnicodeRenderingToolkit :: GetTextSegmentWidth(
 		 fallbackDone = TECFallbackGetWidth(aString, thisWidth, fontNum, scriptFallbackFonts);
 #endif
 
+		  //
+		  // We really don't care too much of performance after this
+		  // This will only be called when we cannot display this character in ANY mac script avaliable
+		  // 
 #ifndef DISABLE_ATSUI_FALLBACK  
 		  // Fallback by using ATSUI
 		  if(! fallbackDone)  {
@@ -612,14 +857,19 @@ nsresult nsUnicodeRenderingToolkit :: GetTextSegmentWidth(
 									  		mGS->mColor );
 		  }
 #endif
+#ifndef DISABLE_LATIN_FALLBACK
+		  if(! fallbackDone)
+		  	fallbackDone = LatinFallbackGetWidth(aString, thisWidth);
+#endif
 #ifndef DISABLE_PRECOMPOSEHANGUL_FALLBACK
 		  if(! fallbackDone)
 		  	fallbackDone = PrecomposeHangulFallbackGetWidth(aString, thisWidth,scriptFallbackFonts[smKorean], fontNum);
 #endif
 #ifndef DISABLE_TRANSLITERATE_FALLBACK  
 		  // Fallback to Transliteration
-		  if(! fallbackDone)
+		  if(! fallbackDone) {
 		  	fallbackDone = TransliterateFallbackGetWidth(aString, thisWidth);
+		  }
 #endif
 #ifndef DISABLE_UPLUS_FALLBACK  
 		  // Fallback to UPlus
@@ -730,6 +980,10 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 		  // Fallback by try different Script code
 		  fallbackDone = TECFallbackDrawChar(aString, x, y, thisWidth, fontNum, scriptFallbackFonts);
 #endif
+		  //
+		  // We really don't care too much of performance after this
+		  // This will only be called when we cannot display this character in ANY mac script avaliable
+		  // 
 
 #ifndef DISABLE_ATSUI_FALLBACK  
 		  // Fallback by using ATSUI
@@ -743,14 +997,19 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 									  		mGS->mColor );
 		  }
 #endif
+#ifndef DISABLE_LATIN_FALLBACK
+		  if(! fallbackDone)
+		  	fallbackDone = LatinFallbackDrawChar(aString, x, y, thisWidth);
+#endif
 #ifndef DISABLE_PRECOMPOSEHANGUL_FALLBACK
 		  if(! fallbackDone)
 		  	fallbackDone = PrecomposeHangulFallbackDrawChar(aString, x, y, thisWidth,scriptFallbackFonts[smKorean], fontNum);
 #endif
 #ifndef DISABLE_TRANSLITERATE_FALLBACK  
 		  // Fallback to Transliteration
-		  if(! fallbackDone)
+		  if(! fallbackDone) {
 		  	fallbackDone = TransliterateFallbackDrawChar(aString, x, y, thisWidth);
+		  }
 #endif
 #ifndef DISABLE_UPLUS_FALLBACK  
 		  // Fallback to U+xxxx

@@ -59,6 +59,8 @@ private:
 	PRBool 				QuestionMarkFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
 	PRBool 				QuestionMarkFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
 
+	PRBool 				LatinFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
+	PRBool 				LatinFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth);
 	PRBool 				PrecomposeHangulFallbackGetWidth(const PRUnichar *pChar, short& oWidth,short koreanFont, short origFont);
 	PRBool 				PrecomposeHangulFallbackDrawChar(const PRUnichar *pChar, PRInt32 x, PRInt32 y, short& oWidth,short koreanFont, short origFont);
 	PRBool 				TransliterateFallbackGetWidth(const PRUnichar *pChar, short& oWidth);
