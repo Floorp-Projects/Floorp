@@ -939,7 +939,7 @@ PreferredFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   PRInt32 i;
   nsAutoString fontName;
-  nsGlyphTable* glyphTable;
+  nsGlyphTable* glyphTable = nsnull;
   PreferredFontEnumContext* context = (PreferredFontEnumContext*)aData;
   // see if the table already exists in mTableList[0..mDefaultCount-1]
   PRBool found = PR_FALSE;
@@ -1521,9 +1521,8 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   // initialize the search list for this char
   PRBool alreadyCSS = PR_FALSE;
   nsAutoVoidArray tableList;
-  PRInt32 index = nsMathMLOperators::FindStretchyOperator(uchar);
   // see if there are user-specified preferred tables for the variants of this char
-  PRInt32 count, t = nsGlyphTableList::gVariants[index];
+  PRInt32 count, t = nsGlyphTableList::gVariants[mOperator];
   gGlyphTableList->GetPreferredListAt(aPresContext, t, &tableList, &count);
   if (!count) {
     // get a list that attempts to honor the css font-family
@@ -1600,7 +1599,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   ////////////////////////////////////////////////////////////////////////////////////
 
   // see if there are user-specified preferred tables for the parts of this char
-  t = nsGlyphTableList::gParts[index];
+  t = nsGlyphTableList::gParts[mOperator];
   gGlyphTableList->GetPreferredListAt(aPresContext, t, &tableList, &count);
   if (!count && !alreadyCSS) {
     // we didn't do this earlier... so we need to do it here:
@@ -1795,6 +1794,7 @@ nsMathMLChar::ComposeChildren(nsIPresContext*      aPresContext,
   for (i = 0, child = mSibling; child; child = child->mSibling, i++) {
     // child chars should just inherit our values - which may change between calls...
     child->mData = mData;
+    child->mOperator = mOperator;
     child->mDirection = mDirection;
     child->mStyleContext = mStyleContext;
     child->mGlyphTable = aGlyphTable; // the child is associated to this table
@@ -1966,7 +1966,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
   PRInt32 i;
   nsGlyphCode ch, chdata[4];
   nsBoundingMetrics bm, bmdata[4];
-  nscoord stride, offset[3], start[3], end[3];
+  nscoord stride = 0, offset[3], start[3], end[3];
   nscoord width = aRect.width;
   nsGlyphCode glue = aGlyphTable->GlueOf(aPresContext, aChar);
   for (i = 0; i < 4; i++) {
@@ -2144,7 +2144,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
   PRInt32 i;
   nsGlyphCode ch, chdata[4];
   nsBoundingMetrics bm, bmdata[4];
-  nscoord stride, offset[3], start[3], end[3];
+  nscoord stride = 0, offset[3], start[3], end[3];
   dy = aRect.y;
   nsGlyphCode glue = aGlyphTable->GlueOf(aPresContext, aChar);
   for (i = 0; i < 4; i++) {
