@@ -271,7 +271,11 @@ public:
     // rhp: For character set handling
     PRBool        m_doCharsetConversion;
     nsString      m_charset;
-    nsString      m_outputFormat;
+    enum {
+	    eUnknown,
+	    ePlainText,
+	    eHTML
+    }             m_outputFormat;
     nsString      m_msgBuffer;
 
     nsCString     m_contentType;    // used only when saving attachment
@@ -1107,13 +1111,13 @@ nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity,
       // a "printing" operation
       if (saveAsFileType == TEXT_FILE_TYPE) 
       {
-        saveListener->m_outputFormat = NS_LITERAL_STRING(TEXT_PLAIN);
+        saveListener->m_outputFormat = nsSaveMsgListener::ePlainText;
         saveListener->m_doCharsetConversion = PR_TRUE;
         urlString += NS_LITERAL_CSTRING("?header=print");  
       }
       else 
       {
-        saveListener->m_outputFormat = NS_LITERAL_STRING(TEXT_HTML);
+        saveListener->m_outputFormat = nsSaveMsgListener::eHTML;
         saveListener->m_doCharsetConversion = PR_FALSE;
         urlString += NS_LITERAL_CSTRING("?header=saveas");  
       }
@@ -1669,8 +1673,7 @@ nsMessenger::SendUnsentMessages(nsIMsgIdentity *aIdentity, nsIMsgWindow *aMsgWin
 
 nsSaveMsgListener::nsSaveMsgListener(nsIFileSpec* aSpec, nsMessenger *aMessenger)
 {
-    if (aSpec)
-      m_fileSpec = do_QueryInterface(aSpec);
+    m_fileSpec = do_QueryInterface(aSpec);
     m_messenger = aMessenger;
     m_dataBuffer = nsnull;
 
@@ -1680,6 +1683,7 @@ nsSaveMsgListener::nsSaveMsgListener(nsIFileSpec* aSpec, nsMessenger *aMessenger
     mProgress = 0;
     mContentLength = -1;
     mCanceled = PR_FALSE;
+    m_outputFormat = eUnknown;
     mInitialized = PR_FALSE;
 }
 
@@ -1914,7 +1918,7 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
     // If we need text/plain, then we need to convert the HTML and then convert
     // to the systems charset
     //
-    if (m_outputFormat.EqualsWithConversion(TEXT_PLAIN))
+    if (m_outputFormat == ePlainText)
     {
       ConvertBufToPlainText(m_msgBuffer);
       rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, nsMsgI18NFileSystemCharset(), 
@@ -2037,7 +2041,7 @@ nsSaveMsgListener::OnDataAvailable(nsIRequest* request,
       //
       if (NS_SUCCEEDED(rv))
       {
-        if ( (m_doCharsetConversion) && (m_outputFormat.EqualsWithConversion(TEXT_PLAIN)) )
+        if ( (m_doCharsetConversion) && (m_outputFormat == ePlainText) )
           m_msgBuffer.Append(NS_ConvertUTF8toUCS2(m_dataBuffer, readCount));
         else
           rv = m_outputStream->Write(m_dataBuffer, readCount, &writeCount);
