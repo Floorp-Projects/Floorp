@@ -2080,11 +2080,13 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 			// BufferInput(CRLF, 2);
             BufferInput(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
 
+            m_pop3ConData->parsed_bytes += (buffer_size+2); // including CRLF
+    
 			// now read in the next line
 			PR_FREEIF(line);
 			line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size,
                                                     pauseForMoreData);
-			status += buffer_size;
+			status += (buffer_size+2); // including CRLF
 		} while (/* !pauseForMoreData && */ line);
     }
 
@@ -2217,8 +2219,6 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
         m_nsIPop3Sink->IncorporateWrite(m_pop3ConData->msg_closure, 
                                              line, line_length);
 
-    m_pop3ConData->parsed_bytes += line_length;
-    
     if ((status >= 0) &&
         (line[0] == '.') &&
         ((line[1] == CR) || (line[1] == LF)))
