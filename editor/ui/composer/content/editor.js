@@ -425,44 +425,6 @@ function SafeSetAttribute(nodeID, attributeName, attributeValue)
         theNode.setAttribute(attributeName, attributeValue);
 }
 
-function FindAndSelectEditorWindowWithURL(urlToMatch)
-{
-  if (!urlToMatch || urlToMatch.length == 0)
-    return false;
-
-  // returns true if found; false if an error or not found
-
-  var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService();
-  if ( !windowManager )
-    return false;
-
-  var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
-  if ( !windowManagerInterface )
-    return false;
-
-  var enumerator = windowManagerInterface.getEnumerator( "composer:html" );
-  if ( !enumerator )
-    return false;
-  try {
-    while ( enumerator.hasMoreElements() )
-    {
-      var window = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
-      if ( window )
-      {
-        if (editorShell.checkOpenWindowForURLMatch(urlToMatch, window))
-        {
-          window.focus();
-          return true;
-        }
-      }
-    }
-  }
-  catch (ex) {}
-
-  // not found
-  return false;
-}
-
 function DocumentHasBeenSaved()
 {
   var fileurl = "";
@@ -481,6 +443,10 @@ function DocumentHasBeenSaved()
 
 function CheckAndSaveDocument(reasonToSave, allowDontSave)
 {
+  // if we don't have an editorShell or an editorDocument, bail
+  if (!window.editorShell && !window.editorShell.editorDocument)
+    return true;
+
   var document = editorShell.editorDocument;
   if (!editorShell.documentModified && !gHTMLSourceChanged)
     return true;
@@ -535,26 +501,7 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
 // used by openLocation. see openLocation.js for additional notes.
 function delayedOpenWindow(chrome, flags, url)
 {
-  if (chrome == "chrome://editor/content")
-  {
-    // We are opening an editor window
-    // First, switch to another editor window if already editing this page
-    // *** 1/12/01: The only caller to delayedOpenWindow
-    //     (editPage in utilityOverlay.js) already does this
-//    if (FindAndSelectEditorWindowWithURL(url)) return;
-
-    // Load into current editor if empty
-    if (PageIsEmptyAndUntouched())
-    {
-      if (IsInHTMLSourceMode())
-        FinishHTMLSource(); 
-
-      editorShell.LoadUrl(url);
-      SetSaveAndPublishUI(url);
-      return;
-    }
-  }
-  // We are NOT using an existing editor, so delay starting a new one
+  dump("setting timeout\n");
   setTimeout("window.openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
 }
 
@@ -1619,33 +1566,6 @@ function InitPasteAsMenu()
   // TODO: Do enabling based on what is in the clipboard
 }
 
-function EditorOpenUrl(url)
-{
-  if (!url)
-    return;
-
-  // if the existing window is untouched, just load there
-  if (!FindAndSelectEditorWindowWithURL(url))
-  {
-    if (PageIsEmptyAndUntouched())
-    {
-      if (IsInHTMLSourceMode())
-        FinishHTMLSource(); 
-
-      window.editorShell.LoadUrl(url);
-      SetSaveAndPublishUI(url);
-    }
-    else
-    {
-      // open new window
-      window.openDialog("chrome://editor/content",
-                        "_blank",
-                        "chrome,dialog=no,all",
-                        url);
-    }
-  }
-}
-
 function BuildRecentMenu(savePrefs)
 {
   // Can't do anything if no prefs
@@ -1764,7 +1684,7 @@ function AppendRecentMenuitem(menupopup, title, url, menuIndex)
       menuItem.setAttribute("value", url);
       if (accessKey != " ")
         menuItem.setAttribute("accesskey", accessKey);
-      menuItem.setAttribute("oncommand", "EditorOpenUrl(getAttribute('value'))");
+      menuItem.setAttribute("oncommand", "editPage(getAttribute('value'), window, false)");
       menupopup.appendChild(menuItem);
     }
   }
@@ -2300,6 +2220,12 @@ function RemoveInapplicableUIElements()
     HideItem("spellingButton");
     HideItem("menu_checkspelling");
     RemoveItem("sep_checkspelling");
+  }
+  else
+  {
+    SetElementEnabled(document.getElementById("menu_checkspelling"), true);
+    SetElementEnabled(document.getElementById("spellingButton"), true);
+    SetElementEnabled(document.getElementById("checkspellingkb"), true);
   }
 
   // Remove menu items (from overlay shared with HTML editor) in PlainText editor
