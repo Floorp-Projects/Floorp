@@ -14,7 +14,7 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 2000 Netscape Communications Corporation. All
+ * Copyright (C) 2000-2001 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributor(s): 
@@ -38,10 +38,15 @@ public:
   nsImage();
   virtual ~nsImage();
 
-  /* additional members */
-
 private:
+  /* additional members */
+  PRUint32 mBytesPerRow;
   nsSize2 mSize;
   gfx_format mFormat;
+
+  PRUint32 mBitsLength;
+
+  gfx_depth mDepth;
+  PRUint8 *mBits;
 };
 
