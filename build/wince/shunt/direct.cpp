@@ -44,7 +44,9 @@ extern "C" {
 
 MOZCE_SHUNT_API int mozce_mkdir(const char* inDirname)
 {
+#ifdef DEBUG
     printf("mozce_mkdir called\n");
+#endif
     
     int retval = -1;
     
@@ -67,7 +69,9 @@ MOZCE_SHUNT_API int mozce_mkdir(const char* inDirname)
 
 MOZCE_SHUNT_API int mozce_rmdir(const char* inDirname)
 {
+#ifdef DEBUG
     printf("mozce_rmdir called (%s)\n", inDirname);
+#endif
     
     int retval = -1;
     

@@ -278,13 +278,18 @@
 #define CallWindowProcA            CallWindowProcW
 #define GetWindowLongA             GetWindowLongW
 #define SetWindowLongA             SetWindowLongW
+
+#undef FindFirstFile
+#undef FindNextFile
+
 #define FindFirstFile              FindFirstFileW
 #define FindNextFile               FindNextFileW
 
-
+/*
 #define GetProp                   mozce_GetPropA
 #define SetProp                   mozce_SetPropA
 #define RemoveProp                mozce_RemovePropA
+*/
 
 // From win32w.cpp
 #define GetCurrentDirectory       mozce_GetCurrentDirectoryW

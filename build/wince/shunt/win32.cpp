@@ -49,7 +49,9 @@ extern "C" {
 
 MOZCE_SHUNT_API int mozce_MulDiv(int inNumber, int inNumerator, int inDenominator)
 {
+#ifdef DEBUG
     printf("mozce_MulDiv called\n");
+#endif
     
     if (inDenominator == 0)
         return 0;
@@ -60,7 +62,9 @@ MOZCE_SHUNT_API int mozce_MulDiv(int inNumber, int inNumerator, int inDenominato
 
 MOZCE_SHUNT_API int mozce_GetDIBits(HDC inDC, HBITMAP inBMP, UINT inStartScan, UINT inScanLines, LPVOID inBits, LPBITMAPINFO inInfo, UINT inUsage)
 {
+#ifdef DEBUG
     printf("-- mozce_GetDIBits called\n");
+#endif
 
     int retval = 0;
 
@@ -72,7 +76,9 @@ MOZCE_SHUNT_API int mozce_GetDIBits(HDC inDC, HBITMAP inBMP, UINT inStartScan, U
 
 MOZCE_SHUNT_API int mozce_SetDIBits(HDC inDC, HBITMAP inBMP, UINT inStartScan, UINT inScanLines, CONST LPVOID inBits, CONST LPBITMAPINFO inInfo, UINT inUsage)
 {
+#ifdef DEBUG
     printf("-- mozce_SetDIBits called\n");
+#endif
 
     int retval = 0;
 
@@ -84,17 +90,21 @@ MOZCE_SHUNT_API int mozce_SetDIBits(HDC inDC, HBITMAP inBMP, UINT inStartScan, U
 
 MOZCE_SHUNT_API HBITMAP mozce_CreateDIBitmap(HDC inDC, CONST BITMAPINFOHEADER *inBMIH, DWORD inInit, CONST VOID *inBInit, CONST BITMAPINFO *inBMI, UINT inUsage)
 {
+#ifdef DEBUG
     printf("-- mozce_CreateDIBitmap called\n");
+#endif
 
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 
-    return retval;
+    return NULL;
 }
 
 
 MOZCE_SHUNT_API int mozce_SetPolyFillMode(HDC inDC, int inPolyFillMode)
 {
+#ifdef DEBUG
     printf("-- mozce_SetPolyFillMode called\n");
+#endif
 
     int retval = 0;
 
@@ -106,7 +116,9 @@ MOZCE_SHUNT_API int mozce_SetPolyFillMode(HDC inDC, int inPolyFillMode)
 
 MOZCE_SHUNT_API int mozce_SetStretchBltMode(HDC inDC, int inStretchMode)
 {
+#ifdef DEBUG
     printf("-- mozce_SetStretchBltMode called\n");
+#endif
 
     int retval = 0;
 
@@ -118,7 +130,9 @@ MOZCE_SHUNT_API int mozce_SetStretchBltMode(HDC inDC, int inStretchMode)
 
 MOZCE_SHUNT_API int mozce_ExtSelectClipRgn(HDC inDC, HRGN inRGN, int inMode)
 {
+#ifdef DEBUG
     printf("-- mozce_ExtSelectClipRgn called\n");
+#endif
 
     int retval = ERROR;
 
@@ -135,7 +149,9 @@ typedef VOID CALLBACK LINEDDAPROC(
 
 MOZCE_SHUNT_API BOOL mozce_LineDDA(int inXStart, int inYStart, int inXEnd, int inYEnd, LINEDDAPROC inLineFunc, LPARAM inData)
 {
+#ifdef DEBUG
     printf("-- mozce_LineDDA called\n");
+#endif
 
     BOOL retval = FALSE;
 
@@ -147,7 +163,9 @@ MOZCE_SHUNT_API BOOL mozce_LineDDA(int inXStart, int inYStart, int inXEnd, int i
 
 MOZCE_SHUNT_API int mozce_FrameRect(HDC inDC, CONST RECT *inRect, HBRUSH inBrush)
 {
+#ifdef DEBUG
     printf("-- mozce_FrameRect called\n");
+#endif
 
     int retval = 0;
 
@@ -159,7 +177,9 @@ MOZCE_SHUNT_API int mozce_FrameRect(HDC inDC, CONST RECT *inRect, HBRUSH inBrush
 
 MOZCE_SHUNT_API int mozce_SetArcDirection(HDC inDC, int inArcDirection)
 {
+#ifdef DEBUG
     printf("-- mozce_SetArcDirection called\n");
+#endif
 
     int retval = 0;
 
@@ -171,7 +191,9 @@ MOZCE_SHUNT_API int mozce_SetArcDirection(HDC inDC, int inArcDirection)
 
 MOZCE_SHUNT_API BOOL mozce_Arc(HDC inDC, int inLeftRect, int inTopRect, int inRightRect, int inBottomRect, int inXStartArc, int inYStartArc, int inXEndArc, int inYEndArc)
 {
+#ifdef DEBUG
     printf("-- mozce_Arc called\n");
+#endif
 
     BOOL retval = FALSE;
 
@@ -183,7 +205,9 @@ MOZCE_SHUNT_API BOOL mozce_Arc(HDC inDC, int inLeftRect, int inTopRect, int inRi
 
 MOZCE_SHUNT_API BOOL mozce_Pie(HDC inDC, int inLeftRect, int inTopRect, int inRightRect, int inBottomRect, int inXRadial1, int inYRadial1, int inXRadial2, int inYRadial2)
 {
+#ifdef DEBUG
     printf("-- mozce_Pie called\n");
+#endif
 
     BOOL retval = FALSE;
 
@@ -195,15 +219,11 @@ MOZCE_SHUNT_API BOOL mozce_Pie(HDC inDC, int inLeftRect, int inTopRect, int inRi
 
 MOZCE_SHUNT_API DWORD mozce_GetFontData(HDC inDC, DWORD inTable, DWORD inOffset, LPVOID outBuffer, DWORD inData)
 {
+#ifdef DEBUG
     printf("-- mozce_GetFontData called\n");
+#endif
 
     DWORD retval = GDI_ERROR;
-
-    if(NULL != outBuffer && 0 < inData)
-    {
-        memset(outBuffer, 0, inData);
-    }
-
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 
     return retval;
@@ -212,7 +232,9 @@ MOZCE_SHUNT_API DWORD mozce_GetFontData(HDC inDC, DWORD inTable, DWORD inOffset,
 
 MOZCE_SHUNT_API UINT mozce_GetTextCharset(HDC inDC)
 {
+#ifdef DEBUG
     printf("mozce_GetTextCharset called\n");
+#endif
 
     UINT retval = DEFAULT_CHARSET;
 
@@ -228,7 +250,9 @@ MOZCE_SHUNT_API UINT mozce_GetTextCharset(HDC inDC)
 
 MOZCE_SHUNT_API UINT mozce_GetTextCharsetInfo(HDC inDC, LPFONTSIGNATURE outSig, DWORD inFlags)
 {
+#ifdef DEBUG
     printf("mozce_GetTextCharsetInfo called\n");
+#endif
 
     // A broken implementation.
     if(NULL != outSig)
@@ -242,7 +266,9 @@ MOZCE_SHUNT_API UINT mozce_GetTextCharsetInfo(HDC inDC, LPFONTSIGNATURE outSig, 
 
 MOZCE_SHUNT_API UINT mozce_GetOutlineTextMetrics(HDC inDC, UINT inData, void* outOTM)
 {
+#ifdef DEBUG
     printf("-- mozce_GetOutlineTextMetrics called\n");
+#endif
 
     UINT retval = 0;
 
@@ -286,7 +312,9 @@ static int CALLBACK collectProc(CONST LOGFONT* inLF, CONST TEXTMETRIC* inTM, DWO
 
 MOZCE_SHUNT_API int mozce_EnumFontFamiliesEx(HDC inDC, LPLOGFONT inLogfont, FONTENUMPROC inFunc, LPARAM inParam, DWORD inFlags)
 {
+#ifdef DEBUG
     printf("mozce_EnumFontFamiliesEx called\n");
+#endif
 
     int retval = 0;
 
@@ -321,7 +349,9 @@ MOZCE_SHUNT_API int mozce_EnumFontFamiliesEx(HDC inDC, LPLOGFONT inLogfont, FONT
 
 MOZCE_SHUNT_API int mozce_GetMapMode(HDC inDC)
 {
-    printf("mozce_GetMapMode called\n");
+#ifdef DEBUG
+    printf("-- mozce_GetMapMode called\n");
+#endif
 
     int retval = -1; //MM_TEXT;
 
@@ -331,7 +361,9 @@ MOZCE_SHUNT_API int mozce_GetMapMode(HDC inDC)
 
 MOZCE_SHUNT_API BOOL mozce_GetIconInfo(HICON inIcon, PICONINFO outIconinfo)
 {
+#ifdef DEBUG
     printf("-- mozce_GetIconInfo called\n");
+#endif
 
     BOOL retval = FALSE;
 
@@ -348,7 +380,9 @@ MOZCE_SHUNT_API BOOL mozce_GetIconInfo(HICON inIcon, PICONINFO outIconinfo)
 
 MOZCE_SHUNT_API BOOL mozce_LPtoDP(HDC inDC, LPPOINT inoutPoints, int inCount)
 {
+#ifdef DEBUG
     printf("-- mozce_LPtoDP called\n");
+#endif
 
     BOOL retval = TRUE;
 
@@ -358,7 +392,9 @@ MOZCE_SHUNT_API BOOL mozce_LPtoDP(HDC inDC, LPPOINT inoutPoints, int inCount)
 
 MOZCE_SHUNT_API LONG mozce_RegCreateKey(HKEY inKey, LPCTSTR inSubKey, PHKEY outResult)
 {
+#ifdef DEBUG
     printf("mozce_RegCreateKey called\n");
+#endif
 
     LONG retval = ERROR_SUCCESS;
     DWORD disp = 0;
@@ -371,7 +407,9 @@ MOZCE_SHUNT_API LONG mozce_RegCreateKey(HKEY inKey, LPCTSTR inSubKey, PHKEY outR
 
 MOZCE_SHUNT_API BOOL mozce_WaitMessage(VOID)
 {
+#ifdef DEBUG
     printf("mozce_WaitMessage called\n");
+#endif
 
     BOOL retval = TRUE;
 
@@ -388,7 +426,9 @@ MOZCE_SHUNT_API BOOL mozce_WaitMessage(VOID)
 
 MOZCE_SHUNT_API BOOL mozce_FlashWindow(HWND inWnd, BOOL inInvert)
 {
+#ifdef DEBUG
     printf("-- mozce_FlashWindow called\n");
+#endif
 
     BOOL retval = FALSE;
 
@@ -444,7 +484,9 @@ static BOOL ECWHelper(HWND inParent, ECWWindows* inChildren, BOOL inRecurse)
 
 MOZCE_SHUNT_API BOOL mozce_EnumChildWindows(HWND inParent, WNDENUMPROC inFunc, LPARAM inParam)
 {
+#ifdef DEBUG
     printf("mozce_EnumChildWindows called\n");
+#endif
 
     BOOL retval = FALSE;
 
@@ -488,7 +530,9 @@ MOZCE_SHUNT_API BOOL mozce_EnumChildWindows(HWND inParent, WNDENUMPROC inFunc, L
 
 MOZCE_SHUNT_API BOOL mozce_EnumThreadWindows(DWORD inThreadID, WNDENUMPROC inFunc, LPARAM inParam)
 {
+#ifdef DEBUG
     printf("mozce_EnumThreadWindows called\n");
+#endif
 
     BOOL retval = FALSE;
 
@@ -527,7 +571,9 @@ MOZCE_SHUNT_API BOOL mozce_EnumThreadWindows(DWORD inThreadID, WNDENUMPROC inFun
 
 MOZCE_SHUNT_API BOOL mozce_IsIconic(HWND inWnd)
 {
+#ifdef DEBUG
     printf("-- mozce_IsIconic called\n");
+#endif
 
     BOOL retval = FALSE;
 
@@ -539,7 +585,9 @@ MOZCE_SHUNT_API BOOL mozce_IsIconic(HWND inWnd)
 
 MOZCE_SHUNT_API BOOL mozce_OpenIcon(HWND inWnd)
 {
+#ifdef DEBUG
     printf("-- mozce_OpenIcon called\n");
+#endif
 
     BOOL retval = FALSE;
 
@@ -551,7 +599,9 @@ MOZCE_SHUNT_API BOOL mozce_OpenIcon(HWND inWnd)
 
 MOZCE_SHUNT_API HHOOK mozce_SetWindowsHookEx(int inType, void* inFunc, HINSTANCE inMod, DWORD inThreadId)
 {
+#ifdef DEBUG
     printf("-- mozce_SetWindowsHookEx called\n");
+#endif
 
     HHOOK retval = NULL;
 
@@ -563,7 +613,9 @@ MOZCE_SHUNT_API HHOOK mozce_SetWindowsHookEx(int inType, void* inFunc, HINSTANCE
 
 MOZCE_SHUNT_API BOOL mozce_UnhookWindowsHookEx(HHOOK inHook)
 {
+#ifdef DEBUG
     printf("-- mozce_UnhookWindowsHookEx called\n");
+#endif
 
     BOOL retval = FALSE;
 
@@ -575,7 +627,9 @@ MOZCE_SHUNT_API BOOL mozce_UnhookWindowsHookEx(HHOOK inHook)
 
 MOZCE_SHUNT_API LRESULT mozce_CallNextHookEx(HHOOK inHook, int inCode, WPARAM wParam, LPARAM lParam)
 {
+#ifdef DEBUG
     printf("-- mozce_CallNextHookEx called\n");
+#endif
 
     LRESULT retval = NULL;
 
@@ -587,7 +641,9 @@ MOZCE_SHUNT_API LRESULT mozce_CallNextHookEx(HHOOK inHook, int inCode, WPARAM wP
 
 MOZCE_SHUNT_API BOOL mozce_InvertRgn(HDC inDC, HRGN inRGN)
 {
+#ifdef DEBUG
     printf("-- mozce_InvertRgn called\n");
+#endif
 
     BOOL retval = FALSE;
 
@@ -599,7 +655,9 @@ MOZCE_SHUNT_API BOOL mozce_InvertRgn(HDC inDC, HRGN inRGN)
 
 MOZCE_SHUNT_API int mozce_GetScrollPos(HWND inWnd, int inBar)
 {
+#ifdef DEBUG
     printf("mozce_GetScrollPos called\n");
+#endif
 
     int retval = 0;
     SCROLLINFO info;
@@ -615,7 +673,9 @@ MOZCE_SHUNT_API int mozce_GetScrollPos(HWND inWnd, int inBar)
 
 MOZCE_SHUNT_API BOOL mozce_GetScrollRange(HWND inWnd, int inBar, LPINT outMinPos, LPINT outMaxPos)
 {
+#ifdef DEBUG
     printf("mozce_GetScrollRange called\n");
+#endif
 
     BOOL retval = FALSE;
     SCROLLINFO info;
@@ -638,7 +698,9 @@ MOZCE_SHUNT_API BOOL mozce_GetScrollRange(HWND inWnd, int inBar, LPINT outMinPos
 
 MOZCE_SHUNT_API HRESULT mozce_CoLockObjectExternal(IUnknown* inUnk, BOOL inLock, BOOL inLastUnlockReleases)
 {
+#ifdef DEBUG
     printf("mozce_CoLockObjectExternal called\n");
+#endif
 
     HRESULT retval = S_OK;
 
@@ -664,7 +726,9 @@ MOZCE_SHUNT_API HRESULT mozce_CoLockObjectExternal(IUnknown* inUnk, BOOL inLock,
 
 MOZCE_SHUNT_API HRESULT mozce_OleSetClipboard(IDataObject* inDataObj)
 {
+#ifdef DEBUG
     printf("-- mozce_OleSetClipboard called\n");
+#endif
 
     HRESULT retval = E_NOTIMPL;
 
@@ -676,7 +740,9 @@ MOZCE_SHUNT_API HRESULT mozce_OleSetClipboard(IDataObject* inDataObj)
 
 MOZCE_SHUNT_API HRESULT mozce_OleGetClipboard(IDataObject** outDataObj)
 {
+#ifdef DEBUG
     printf("-- mozce_OleGetClipboard called\n");
+#endif
 
     HRESULT retval = E_NOTIMPL;
 
@@ -692,7 +758,9 @@ MOZCE_SHUNT_API HRESULT mozce_OleGetClipboard(IDataObject** outDataObj)
 
 MOZCE_SHUNT_API HRESULT mozce_OleFlushClipboard(void)
 {
+#ifdef DEBUG
     printf("-- mozce_OleFlushClipboard called\n");
+#endif
 
     HRESULT retval = E_NOTIMPL;
 
@@ -704,7 +772,9 @@ MOZCE_SHUNT_API HRESULT mozce_OleFlushClipboard(void)
 
 MOZCE_SHUNT_API HRESULT mozce_OleQueryLinkFromData(IDataObject* inSrcDataObject)
 {
+#ifdef DEBUG
     printf("-- mozce_OleQueryLinkFromData called\n");
+#endif
 
     HRESULT retval = E_NOTIMPL;
 
@@ -716,7 +786,9 @@ MOZCE_SHUNT_API HRESULT mozce_OleQueryLinkFromData(IDataObject* inSrcDataObject)
 //LPITEMIDLIST
 MOZCE_SHUNT_API void* mozce_SHBrowseForFolder(void* /*LPBROWSEINFOS*/ inBI)
 {
+#ifdef DEBUG
     printf("-- mozce_SHBrowseForFolder called\n");
+#endif
 
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return NULL;
@@ -725,19 +797,19 @@ MOZCE_SHUNT_API void* mozce_SHBrowseForFolder(void* /*LPBROWSEINFOS*/ inBI)
 
 MOZCE_SHUNT_API BOOL mozce_SetMenu(HWND inWnd, HMENU inMenu)
 {
+#ifdef DEBUG
     printf("-- mozce_SetMenu called\n");
-
-    BOOL retval = FALSE;
-
+#endif
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-    return retval;
+    return FALSE;
 }
 
 
 MOZCE_SHUNT_API BOOL mozce_GetUserName(LPTSTR inBuffer, LPDWORD inoutSize)
 {
+#ifdef DEBUG
     printf("-- mozce_GetUserName called\n");
+#endif
 
     BOOL retval = FALSE;
 
@@ -750,7 +822,9 @@ MOZCE_SHUNT_API BOOL mozce_GetUserName(LPTSTR inBuffer, LPDWORD inoutSize)
 
 MOZCE_SHUNT_API DWORD mozce_GetShortPathName(LPCTSTR inLongPath, LPTSTR outShortPath, DWORD inBufferSize)
 {
+#ifdef DEBUG
     printf("-- mozce_GetShortPathName called\n");
+#endif
 
     DWORD retval = 0;
 
@@ -761,7 +835,9 @@ MOZCE_SHUNT_API DWORD mozce_GetShortPathName(LPCTSTR inLongPath, LPTSTR outShort
 
 MOZCE_SHUNT_API DWORD mozce_GetEnvironmentVariable(LPCTSTR lpName, LPSTR lpBuffer, DWORD nSize)
 {
+#ifdef DEBUG
     printf("-- mozce_GetEnvironmentVariable called\n");
+#endif
 
     DWORD retval = 0;
 
@@ -772,7 +848,9 @@ MOZCE_SHUNT_API DWORD mozce_GetEnvironmentVariable(LPCTSTR lpName, LPSTR lpBuffe
 
 MOZCE_SHUNT_API void mozce_GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime)
 {
+#ifdef DEBUG
     printf("mozce_GetSystemTimeAsFileTime called\n");
+#endif
 
     SYSTEMTIME st;
     GetSystemTime(&st);
@@ -803,31 +881,41 @@ struct lconv s_locale_conv =
 
 MOZCE_SHUNT_API struct lconv * mozce_localeconv(void)
 {
+#ifdef DEBUG
     printf("mozce_localeconv called\n");
+#endif
     return &s_locale_conv;
 }
 
 MOZCE_SHUNT_API DWORD mozce_GetCurrentThreadId(void)
 {
+#ifdef DEBUG
     printf("mozce_GetCurrentThreadId called\n");
+#endif
     return GetCurrentThreadId();
 }
 
 MOZCE_SHUNT_API DWORD mozce_TlsAlloc(void)
 {
+#ifdef DEBUG
     printf("mozce_TlsAlloc called\n");
+#endif
     return TlsAlloc();
 }
 
 MOZCE_SHUNT_API BOOL mozce_TlsFree(DWORD dwTlsIndex)
 {
+#ifdef DEBUG
     printf("mozce_TlsFree called\n");
+#endif
     return TlsFree(dwTlsIndex);
 }
 
 MOZCE_SHUNT_API HANDLE mozce_GetCurrentProcess(void)
 {
+#ifdef DEBUG
     printf("mozce_GetCurrentProcess called\n");
+#endif
     return GetCurrentProcess();
 }
 
@@ -859,7 +947,9 @@ MOZCE_SHUNT_API DWORD mozce_GetFullPathName(LPCSTR lpFileName,
             *lpFilePart = lpBuffer;
     }
 
+#ifdef DEBUG
     printf("mozce_GetFullPathName called %s (%s)\n", lpBuffer, *lpFilePart);
+#endif
     return len;	
 }
 

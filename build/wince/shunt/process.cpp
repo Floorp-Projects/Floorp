@@ -44,7 +44,9 @@ extern "C" {
 
 MOZCE_SHUNT_API void mozce_abort(void)
 {
+#ifdef DEBUG
 printf("mozce_abort called\n");
+#endif
 
 #if defined(DEBUG)
     DebugBreak();
@@ -55,24 +57,39 @@ printf("mozce_abort called\n");
 
 MOZCE_SHUNT_API char* mozce_getenv(const char* inName)
 {
+#ifdef DEBUG
     printf("mozce_getenv called (%s)\n", inName);
+#endif
 
     char* retval = NULL;
- //   if (!strcmp(inName, "NSPR_LOG_MODULES"))
- //       return "all:5";
+
+#ifdef DEBUG
+
+    if (!strcmp(inName, "NSPR_LOG_MODULES"))
+        return "all:5";
+
+    if (!strcmp(inName, "NSPR_LOG_FILE"))
+        return "nspr.log";
+#endif  
+
+
     return retval;
 }
 
 MOZCE_SHUNT_API int mozce_putenv(const char *a) 
 {
+#ifdef DEBUG
     printf("mozce_putenv called\n");
+#endif
 
     return 0;
 }
 
 MOZCE_SHUNT_API int mozce_getpid(void)
 {
+#ifdef DEBUG
     printf("mozce_getpid called\n");
+#endif
 
     int retval = 0;
 

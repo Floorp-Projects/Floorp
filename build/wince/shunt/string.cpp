@@ -42,8 +42,9 @@ extern "C" {
 
 MOZCE_SHUNT_API char* mozce_strerror(int inErrno)
 {
+#ifdef DEBUG
     printf("mozce_strerror called\n");
-
+#endif
     return "Unknown Error";
 }
 

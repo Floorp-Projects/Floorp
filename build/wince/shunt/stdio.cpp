@@ -43,7 +43,9 @@ extern "C" {
 
 MOZCE_SHUNT_API void mozce_rewind(FILE* inStream)
 {
+#ifdef DEBUG
     printf("mozce_rewind called\n");
+#endif
 
     fseek(inStream, 0, SEEK_SET);
 }
@@ -51,7 +53,9 @@ MOZCE_SHUNT_API void mozce_rewind(FILE* inStream)
 
 MOZCE_SHUNT_API FILE* mozce_fdopen(int inFD, const char* inMode)
 {
+#ifdef DEBUG
     printf("mozce_fdopen called\n");
+#endif
 
     FILE* retval = NULL;
 
@@ -72,7 +76,9 @@ MOZCE_SHUNT_API FILE* mozce_fdopen(int inFD, const char* inMode)
 
 MOZCE_SHUNT_API void mozce_perror(const char* inString)
 {
+#ifdef DEBUG
     printf("mozce_perror called\n");
+#endif
 
     fprintf(stderr, "%s", inString);
 }
@@ -80,7 +86,9 @@ MOZCE_SHUNT_API void mozce_perror(const char* inString)
 
 MOZCE_SHUNT_API int mozce_remove(const char* inPath)
 {
+#ifdef DEBUG
     printf("mozce_remove called on %s\n", inPath);
+#endif
 
     int retval = -1;
 
@@ -103,7 +111,9 @@ MOZCE_SHUNT_API int mozce_remove(const char* inPath)
 
 MOZCE_SHUNT_API char* mozce_getcwd(char* buff, size_t size)
 {
+#ifdef DEBUG
     printf("mozce_getcwd called.  NOT IMPLEMENTED!!\n");
+#endif
     return NULL;
 }
 
