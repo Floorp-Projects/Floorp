@@ -118,15 +118,20 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   PRInt32 sslStatus;
   char* signer = nsnull;
   nsresult rv;
+  PRInt32 encryptBits;
 
   if (SECSuccess == SSL_SecurityStatus(fd, &sslStatus, nsnull, nsnull,
-                                       nsnull, &signer, nsnull))
+                                       &encryptBits, &signer, nsnull))
     {
       PRInt32 secStatus;
       if (sslStatus == SSL_SECURITY_STATUS_OFF)
         secStatus = nsIWebProgressListener::STATE_IS_BROKEN;
+      else if (encryptBits >= 90)
+        secStatus = (nsIWebProgressListener::STATE_IS_SECURE |
+                     nsIWebProgressListener::STATE_SECURE_HIGH);
       else
-        secStatus = nsIWebProgressListener::STATE_IS_SECURE;
+        secStatus = (nsIWebProgressListener::STATE_IS_SECURE |
+                     nsIWebProgressListener::STATE_SECURE_LOW);
 
       CERTName* certName = CERT_AsciiToName(signer);
       char* caName = CERT_GetOrgName(certName);
