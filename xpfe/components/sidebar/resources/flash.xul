@@ -44,18 +44,7 @@
         <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
           <treerow>
             <treecell>
-              <treeindentation />
-              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#source" align="left" />
-            </treecell>
-
-            <treecell>
-              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#description" align="left"
-                            style="list-style-image: none;" />
-            </treecell>
-
-            <treecell>
-              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#timestamp" align="left"
-                            style="list-style-image: none;" />
+              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#description" align="left" />
             </treecell>
           </treerow>
         </treeitem>
