@@ -467,7 +467,6 @@ function BrowserBack()
   }
   catch(ex) {
   }
-  UpdateBackForwardButtons();
 }
 
 function BrowserForward()
@@ -477,7 +476,6 @@ function BrowserForward()
   }
   catch(ex) {
   }
-  UpdateBackForwardButtons();
 }
 
 function BrowserBackMenu(event)

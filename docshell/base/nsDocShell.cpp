@@ -5018,7 +5018,6 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     // Get the post data from the channel
     nsCOMPtr<nsIInputStream> inputStream;
     if (aChannel) {
-
         nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
 
         if (httpChannel) {
@@ -5028,23 +5027,23 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     /* Create SH Entry (mLSHE) only if there is a  SessionHistory object (mSessionHistory) in
      * the current frame or in the root docshell
      */
-
+    nsCOMPtr<nsISHistory> rootSH=mSessionHistory;
     if (!mSessionHistory) {
-      nsCOMPtr<nsIDocShellTreeItem> root;
-      //Get the root docshell
-      GetSameTypeRootTreeItem(getter_AddRefs(root));
-      if (root) {
-        // QI root to nsIWebNavigation
-        nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
-        if (rootAsWebnav) {
-          // Get the handle to SH from the root docshell
-          nsCOMPtr<nsISHistory> rootSH;
-          rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));
-          if (!rootSH)
-            shAvailable = PR_FALSE;
+        nsCOMPtr<nsIDocShellTreeItem> root;
+        //Get the root docshell
+        GetSameTypeRootTreeItem(getter_AddRefs(root));
+        if (root) {
+            // QI root to nsIWebNavigation
+            nsCOMPtr<nsIWebNavigation> rootAsWebnav(do_QueryInterface(root));
+            if (rootAsWebnav) {
+                // Get the handle to SH from the root docshell          
+                rootAsWebnav->GetSessionHistory(getter_AddRefs(rootSH));
+                if (!rootSH)
+                    shAvailable = PR_FALSE;
+            }
         }
-      }
     }  // mSessionHistory
+
 
     // Determine if this type of load should update history.    
     if (aLoadType == LOAD_BYPASS_HISTORY ||
@@ -5066,7 +5065,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
      */
     if (NS_SUCCEEDED(aURI->Equals(mCurrentURI, &equalUri))
        && equalUri && !inputStream &&
-       (mLoadType == LOAD_NORMAL || mLoadType == LOAD_LINK))
+       (mLoadType == LOAD_NORMAL || mLoadType == LOAD_LINK || mLoadType == LOAD_REFRESH))
         mLoadType = LOAD_NORMAL_REPLACE;
 
     /* If the user pressed shift-reload, cache will create a new cache key
@@ -5086,9 +5085,9 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
           mLSHE->SetCacheKey(cacheKey);
     }
 
-
+    
     if (updateHistory && shAvailable) { 
-      // Update session history if necessary...
+        // Update session history if necessary...
         if (!mLSHE && (mItemType == typeContent) && mURIResultedInDocument) {
             /* This is  a fresh page getting loaded for the first time
              *.Create a Entry for it and add it to SH, if this is the
@@ -5105,6 +5104,13 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         }
     }
 
+    // If this was a history load, update the index in 
+    // SH. 
+    if (rootSH && (mLoadType & LOAD_CMD_HISTORY)) {
+        nsCOMPtr<nsISHistoryInternal> shInternal(do_QueryInterface(rootSH));
+        if (shInternal)
+            shInternal->UpdateIndex();
+    }
     SetCurrentURI(aURI);
     // if there's a refresh header in the channel, this method
     // will set it up for us. 
@@ -5493,21 +5499,21 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
      * flag to PR_TRUE and save HistoryLayoutState.
      */
     if (!cacheToken)
-      entry->SetSaveHistoryStateFlag(PR_FALSE);
+        entry->SetSaveLayoutStateFlag(PR_FALSE);
     else {
-      // Check if the page has expired from cache 
-      nsCOMPtr<nsICacheEntryDescriptor> cacheEntryDesc(do_QueryInterface(cacheToken));
-      if (cacheEntryDesc) {        
-         PRUint32 expTime;         
-         cacheEntryDesc->GetExpirationTime(&expTime);         
-         PRUint32 now = PRTimeToSeconds(PR_Now());                  
-         if (expTime <=  now)            
-           expired = PR_TRUE;         
+        // Check if the page has expired from cache 
+        nsCOMPtr<nsICacheEntryDescriptor> cacheEntryDesc(do_QueryInterface(cacheToken));
+        if (cacheEntryDesc) {        
+            PRUint32 expTime;         
+            cacheEntryDesc->GetExpirationTime(&expTime);         
+            PRUint32 now = PRTimeToSeconds(PR_Now());                  
+            if (expTime <=  now)            
+                expired = PR_TRUE;         
          
-      }
+        }
     }
     if (expired == PR_TRUE)
-      entry->SetExpirationStatus(PR_TRUE);
+        entry->SetExpirationStatus(PR_TRUE);
 
 
     // If no Session History component is available in the parent DocShell
@@ -5605,7 +5611,7 @@ NS_IMETHODIMP nsDocShell::PersistLayoutHistoryState()
 
     if (mOSHE) {
         PRBool saveHistoryState = PR_TRUE;
-        mOSHE->GetSaveHistoryStateFlag(&saveHistoryState);
+        mOSHE->GetSaveLayoutStateFlag(&saveHistoryState);
         // Don't capture historystate and save it in history
         // if the page asked not to do so.
         if (!saveHistoryState)
@@ -5654,6 +5660,9 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
         nsCOMPtr<nsIURI> referrerURI;
         PRUnichar *title = nsnull;
         nsCOMPtr<nsISHEntry> parent;
+        PRBool expirationStatus;
+        PRBool layoutStatus;
+        nsCOMPtr<nsISupports> cacheKey;
         PRUint32 id;
         result = nsComponentManager::CreateInstance(NS_SHENTRY_CONTRACTID, NULL,
                                                     NS_GET_IID(nsISHEntry),
@@ -5669,6 +5678,9 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
         //XXX Is this correct? parent is a weak ref in nsISHEntry
         src->GetParent(getter_AddRefs(parent));
         src->GetID(&id);
+        src->GetExpirationStatus(&expirationStatus);
+        src->GetSaveLayoutStateFlag(&layoutStatus);
+        src->GetCacheKey(getter_AddRefs(cacheKey));
 
         // XXX do we care much about valid values for these uri, title etc....
         dest->SetURI(uri);
@@ -5679,6 +5691,9 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
         dest->SetParent(parent);
         dest->SetID(id);
         dest->SetIsSubFrame(PR_TRUE);
+        dest->SetExpirationStatus(expirationStatus);
+        dest->SetSaveLayoutStateFlag(layoutStatus);
+        dest->SetCacheKey(cacheKey);
         *resultEntry = dest;
 
         PRInt32 childCount = 0;
