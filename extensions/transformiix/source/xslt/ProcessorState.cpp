@@ -25,13 +25,13 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.5 2000/06/22 07:30:03 Peter.VanderBeken%pandora.be Exp $
+ * $Id: ProcessorState.cpp,v 1.6 2000/08/26 04:28:27 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.5 $ $Date: 2000/06/22 07:30:03 $
+ * @version $Revision: 1.6 $ $Date: 2000/08/26 04:28:27 $
 **/
 
 #include "ProcessorState.h"
@@ -178,7 +178,13 @@ MBool ProcessorState::addToResultTree(Node* node) {
             if (current->getNodeType() != Node::ELEMENT_NODE) return MB_FALSE;
             Element* element = (Element*)current;
             Attr* attr = (Attr*)node;
+#ifdef MOZ_XSL
+            String nameSpaceURI;
+            getNameSpaceURI(attr->getName(), nameSpaceURI);
+            element->setAttributeNS(nameSpaceURI, attr->getName(), attr->getValue());
+#else
             element->setAttribute(attr->getName(),attr->getValue());
+#endif
             delete node;
             break;
         }
@@ -289,7 +295,13 @@ Element* ProcessorState::findTemplate(Node* node, Node* context, String* mode) {
             currentPriority = tmpPriority;
         }
     }
-    //cout << "findTemplate:end"<<endl;
+    // cout << "findTemplate:end"<<endl;
+    // if (matchTemplate) {
+    //     String nodeName = node->getNodeName();
+    //     cout << "node " << nodeName;
+    //     String match = matchTemplate->getAttribute(MATCH_ATTR);
+    //     cout << " matched template: " << match << endl;
+    // }
 
     return matchTemplate;
 } //-- findTemplate
@@ -761,97 +773,86 @@ void ProcessorState::initialize() {
 
     //-- determine xsl properties
     Element* element = xslDocument->getDocumentElement();
-    if ( element )
-        initialize(element);
+    if ( element ) {
+	    //-- process namespace nodes
+	    NamedNodeMap* atts = element->getAttributes();
+	    if ( atts ) {
+	        for (int i = 0; i < atts->getLength(); i++) {
+	            Attr* attr = (Attr*)atts->item(i);
+	            String attName = attr->getName();
+	            String attValue = attr->getValue();
+	            if ( attName.indexOf(XMLUtils::XMLNS) == 0) {
+	                String ns;
+	                XMLUtils::getLocalPart(attName, ns);
+	                // default namespace
+	                if ( attName.isEqual(XMLUtils::XMLNS) ) {
+	                    setDefaultNameSpaceURI(attValue);
+	                }
+	                // namespace declaration
+	                else {
+	                    String ns;
+	                    XMLUtils::getLocalPart(attName, ns);
+	                    nameSpaceMap.put(ns, new String(attValue));
+	                }
+	                // check for XSL namespace
+	                if ( attValue.indexOf(XSLT_NS) == 0) {
+	                    xsltNameSpace = ns;
+	                }
+	            }
+	            else if ( attName.isEqual(DEFAULT_SPACE_ATTR) ) {
+	                if ( attValue.isEqual(STRIP_VALUE) ) {
+	                    defaultSpace = STRIP;
+	                }
+	            }
+	            else if ( attName.isEqual(RESULT_NS_ATTR) ) {
+	                if (attValue.length() > 0) {
+	                    if ( attValue.indexOf(HTML_NS) == 0 ) {
+	                        setOutputMethod("html");
+	                    }
+	                    else setOutputMethod(attValue);
+	                }
+	            }
+	            else if ( attName.isEqual(INDENT_RESULT_ATTR) ) {
+	                if ( attValue.length() > 0 ) {
+	                    format.setIndent(attValue.isEqual(YES_VALUE));
+	                }
+	            }
+
+	        } //-- end for each att
+	    } //-- end if atts are not null
+
+	    /* Create default (built-in) templates */
+
+	    //-- create default template for elements
+	    String templateName = xsltNameSpace;
+	    if (templateName.length() > 0) templateName.append(':');
+	    templateName.append(TEMPLATE);
+
+	    String actionName = xsltNameSpace;
+	    if ( actionName.length()>0) actionName.append(':');
+	    actionName.append(APPLY_TEMPLATES);
+
+	    dfWildCardTemplate = xslDocument->createElement(templateName);
+	    dfWildCardTemplate->setAttribute(MATCH_ATTR, "* | /");
+	    dfWildCardTemplate->appendChild(xslDocument->createElement(actionName));
+	    templates.add(dfWildCardTemplate);
+
+	    //-- create default "built-in" templates for text nodes
+	    dfTextTemplate = xslDocument->createElement(templateName);
+	    dfTextTemplate->setAttribute(MATCH_ATTR, "text()|@*");
+	    actionName = xsltNameSpace;
+	    if ( actionName.length()>0) actionName.append(':');
+	    actionName.append(VALUE_OF);
+	    Element* value_of = xslDocument->createElement(actionName);
+	    value_of->setAttribute(SELECT_ATTR, IDENTITY_OP);
+	    dfTextTemplate->appendChild(value_of);
+	    templates.add(dfTextTemplate);
+
+	    //-- add PatternExpr hash for default templates
+	    patternExprHash.put("*",      new WildCardExpr());
+	    patternExprHash.put("/",      new RootExpr());
+	    patternExprHash.put("text()", new TextExpr());
+
+	    //cout << "XSLT namespace: " << xsltNameSpace << endl;
+	}
 }
-
-/**
- * Initializes this ProcessorState (second stage)
-**/
-void ProcessorState::initialize(Element* element) {
-
-    //-- process namespace nodes
-    NamedNodeMap* atts = element->getAttributes();
-    if ( atts ) {
-        for (int i = 0; i < atts->getLength(); i++) {
-            Attr* attr = (Attr*)atts->item(i);
-            String attName = attr->getName();
-            String attValue = attr->getValue();
-            if ( attName.indexOf(XMLUtils::XMLNS) == 0) {
-                String ns;
-                XMLUtils::getLocalPart(attName, ns);
-                // default namespace
-                if ( attName.isEqual(XMLUtils::XMLNS) ) {
-                    setDefaultNameSpaceURI(attValue);
-                }
-                // namespace declaration
-                else {
-                    String ns;
-                    XMLUtils::getNameSpace(attName, ns);
-                    nameSpaceMap.put(ns, new String(attValue));
-                }
-                // check for XSL namespace
-                if ( attValue.indexOf(XSLT_NS) == 0) {
-                    xsltNameSpace = ns;
-                }
-            }
-            else if ( attName.isEqual(DEFAULT_SPACE_ATTR) ) {
-                if ( attValue.isEqual(STRIP_VALUE) ) {
-                    defaultSpace = STRIP;
-                }
-            }
-            else if ( attName.isEqual(RESULT_NS_ATTR) ) {
-                if (attValue.length() > 0) {
-                    if ( attValue.indexOf(HTML_NS) == 0 ) {
-                        setOutputMethod("html");
-                    }
-                    else setOutputMethod(attValue);
-                }
-            }
-            else if ( attName.isEqual(INDENT_RESULT_ATTR) ) {
-                if ( attValue.length() > 0 ) {
-                    format.setIndent(attValue.isEqual(YES_VALUE));
-                }
-            }
-
-        } //-- end for each att
-    } //-- end if atts are not null
-
-    /* Create default (built-in) templates */
-
-    //-- create default template for elements
-
-
-    String templateName = xsltNameSpace;
-    if (templateName.length() > 0) templateName.append(':');
-    templateName.append(TEMPLATE);
-
-    String actionName = xsltNameSpace;
-    if ( actionName.length()>0) actionName.append(':');
-    actionName.append(APPLY_TEMPLATES);
-
-    dfWildCardTemplate = xslDocument->createElement(templateName);
-    dfWildCardTemplate->setAttribute(MATCH_ATTR, "* | /");
-    dfWildCardTemplate->appendChild(xslDocument->createElement(actionName));
-    templates.add(dfWildCardTemplate);
-
-    //-- create default "built-in" templates for text nodes
-    dfTextTemplate = xslDocument->createElement(templateName);
-    dfTextTemplate->setAttribute(MATCH_ATTR, "text()|@*");
-    actionName = xsltNameSpace;
-    if ( actionName.length()>0) actionName.append(':');
-    actionName.append(VALUE_OF);
-    Element* value_of = xslDocument->createElement(actionName);
-    value_of->setAttribute(SELECT_ATTR, IDENTITY_OP);
-    dfTextTemplate->appendChild(value_of);
-    templates.add(dfTextTemplate);
-
-    //-- add PatternExpr hash for default templates
-    patternExprHash.put("*",      new WildCardExpr());
-    patternExprHash.put("/",      new RootExpr());
-    patternExprHash.put("text()", new TextExpr());
-
-    //cout << "XSLT namespace: " << xsltNameSpace << endl;
-} //-- initialize
-
-
