@@ -416,6 +416,8 @@ SECStatus SECMOD_AddNewModule(char* moduleName, char* dllPath,
     int s,i;
     PK11SlotInfo* slot;
 
+    PR_SetErrorText(0, NULL);
+
     module = SECMOD_CreateModule(dllPath,moduleName,NULL, NULL);
 
     if (module->dllName != NULL) {
