@@ -551,7 +551,11 @@ var XPInstallDownloadManager = {
       xpiString += localTarget.path + ",";
       
       // MIME Info
-      var mimeInfo = mimeService.getFromTypeAndExtension(null, url.fileExtension);
+      var mimeInfo = null;
+      try {
+        mimeInfo = mimeService.getFromTypeAndExtension(null, url.fileExtension);
+      }
+      catch (e) { }
       
       if (!iconURL) 
         iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
