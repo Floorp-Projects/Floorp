@@ -525,6 +525,11 @@ int CDialogUPass::DoModal(char * message, char ** user, char ** passwd)
     else
         m_csUser   = "";
 
+#if defined(SingleSignon)
+    if(*passwd)
+	m_csPasswd = *passwd;
+    else
+#endif
     m_csPasswd = "";
 
 	status = CDialog::DoModal();

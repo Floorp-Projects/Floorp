@@ -5346,6 +5346,11 @@ void FE_SubmitInputElement(MWContext * pContext, LO_Element * pElement)
     // Create the URL to load
 	URL_s = NET_CreateURLStruct((char *)submit->action, NET_DONT_RELOAD); 
 
+#if defined(SingleSignon)
+    // Check for a password submission and remember the data if so
+        SI_RememberSignonData(pContext, submit);
+#endif
+
     // attach form data to the URL
 	NET_AddLOSubmitDataToURLStruct(submit, URL_s);
 

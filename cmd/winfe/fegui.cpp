@@ -939,6 +939,25 @@ xp_FileName(const char * name, XP_FileType type, char* *myName)
 		// changed -- jonm to support multi-profile
 		sprintf(newName, "%s\\cookies.txt", (const char *)theApp.m_UserDirectory);
 		break;
+
+#if defined(CookieManagement)
+	case xpHTTPCookiePermission:
+		newName = (char *) XP_ALLOC(_MAX_PATH);
+                //sprintf(newName, "%s\\cookperm.txt", theApp.m_pInstallDir->GetCharValue());
+		// changed -- jonm to support multi-profile
+                sprintf(newName, "%s\\cookperm.txt", (const char *)theApp.m_UserDirectory);
+		break;
+#endif
+
+#if defined(SingleSignon)
+	case xpHTTPSingleSignon:
+		newName = (char *) XP_ALLOC(_MAX_PATH);
+                //sprintf(newName, "%s\\signons.txt", theApp.m_pInstallDir->GetCharValue());
+		// changed -- jonm to support multi-profile
+                sprintf(newName, "%s\\signons.txt", (const char *)theApp.m_UserDirectory);
+		break;
+#endif
+
 #ifdef MOZ_MAIL_NEWS      
 	case xpSNewsRC:
 	case xpNewsRC:

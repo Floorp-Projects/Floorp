@@ -1785,6 +1785,10 @@ static struct update_PrefTable prefUpdater[] =
   {"security.submit_email_forms","Network","Warn Submit Email Form",PREF_BOOL},
   {"security.email_as_ftp_password","Network","Use Email For FTP",PREF_BOOL},
   {"network.cookie.warnAboutCookies","Network","Warn Accepting Cookie",PREF_BOOL},
+#if defined(SingleSignon)
+  {"network.signon.rememberSignons","Network","Remember Signons",PREF_BOOL},
+#endif
+
   {"network.max_connections","Network","Max Connections",PREF_INT},
   {"network.tcpbufsize","Network","TCP Buffer Size",PREF_INT},
 //
@@ -2094,6 +2098,20 @@ int     login_UpdateFilesToNewLocation(const char * path,CWnd *pParent,BOOL bCop
 		csTmp += "\\cookies.txt";
 		pDlg->StartFileUpdate("General Files","cookies.txt");
 		WFE_CopyFile(csMain + "\\cookies.txt",csTmp);
+
+#if defined(CookieManagement)
+		csTmp = path;
+		csTmp += "\\cookperm.txt";
+		pDlg->StartFileUpdate("General Files","cookperm.txt");
+		WFE_CopyFile(csMain + "\\cookperm.txt",csTmp);
+#endif
+
+#if defined(SingleSignon)
+		csTmp = path;
+		csTmp += "\\signons.txt";
+		pDlg->StartFileUpdate("General Files","signons.txt");
+		WFE_CopyFile(csMain + "\\signons.txt",csTmp);
+#endif
 
 		csTmp = path;
 		csTmp += "\\key.db";
