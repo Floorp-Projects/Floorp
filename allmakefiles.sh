@@ -106,22 +106,6 @@ expat/Makefile
 expat/xmlparse/Makefile
 expat/xmltok/Makefile
 extensions/Makefile
-extensions/cookie/Makefile
-extensions/cookie/tests/Makefile
-extensions/irc/Makefile
-extensions/irc/libbs/Makefile
-extensions/wallet/Makefile
-extensions/wallet/public/Makefile
-extensions/wallet/src/Makefile
-extensions/wallet/editor/Makefile
-extensions/wallet/cookieviewer/Makefile
-extensions/wallet/signonviewer/Makefile
-extensions/wallet/walletpreview/Makefile
-extensions/wallet/build/Makefile
-extensions/pics/Makefile
-extensions/pics/public/Makefile
-extensions/pics/src/Makefile
-extensions/pics/tests/Makefile
 gfx/Makefile
 gfx/idl/Makefile
 gfx/public/Makefile
@@ -685,4 +669,40 @@ if [ "$MOZ_MATHML" ]; then
   layout/mathml/content/Makefile
   layout/mathml/content/src/Makefile
 END_MATHML_MAKEFILES
+fi
+
+if [ `echo "$MOZ_EXTENSIONS" | grep -c cookie` != 0 ]; then
+  add_makefiles <<END_EXTENSIONS_COOKIE_MAKEFILES
+  extensions/cookie/Makefile
+  extensions/cookie/tests/Makefile
+END_EXTENSIONS_COOKIE_MAKEFILES
+fi
+
+if [ `echo "$MOZ_EXTENSIONS" | grep -c irc` != 0 ]; then
+  add_makefiles <<END_EXTENSIONS_IRC_MAKEFILES
+  extensions/irc/Makefile
+  extensions/irc/libbs/Makefile
+END_EXTENSIONS_IRC_MAKEFILES
+fi
+
+if [ `echo "$MOZ_EXTENSIONS" | grep -c wallet` != 0 ]; then
+  add_makefiles <<END_EXTENSIONS_WALLET_MAKEFILES
+  extensions/wallet/Makefile
+  extensions/wallet/public/Makefile
+  extensions/wallet/src/Makefile
+  extensions/wallet/editor/Makefile
+  extensions/wallet/cookieviewer/Makefile
+  extensions/wallet/signonviewer/Makefile
+  extensions/wallet/walletpreview/Makefile
+  extensions/wallet/build/Makefile
+END_EXTENSIONS_WALLET_MAKEFILES
+fi
+
+if [ `echo "$MOZ_EXTENSIONS" | grep -c pics` != 0 ]; then
+  add_makefiles <<END_EXTENSIONS_PICS_MAKEFILES
+  extensions/pics/Makefile
+  extensions/pics/public/Makefile
+  extensions/pics/src/Makefile
+  extensions/pics/tests/Makefile
+END_EXTENSIONS_PICS_MAKEFILES
 fi

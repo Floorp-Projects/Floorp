@@ -2283,48 +2283,6 @@ fi
 
 dnl ========================================================
 dnl =
-dnl = ClientWallet, CookieManagement, SingleSignon hacks
-dnl = 
-dnl = Dont ask why these variables are named this way.
-dnl = 
-dnl ========================================================
-ClientWallet=1
-CookieManagement=1
-SingleSignon=1
-
-MOZ_ARG_DISABLE_BOOL(client-wallet,
-[  --disable-client-wallet Disable ClientWallet],
-  ClientWallet= )
-
-MOZ_ARG_DISABLE_BOOL(cookie-management,
-[  --disable-cookie-management
-                          Disable CookieManagement],
-  CookieManagement= )
-
-MOZ_ARG_DISABLE_BOOL(single-signon,
-[  --disable-single-signon Disable SingleSignon],
-  SingleSignon= )
-
-if test "$ClientWallet"
-then
-  AC_DEFINE(ClientWallet)
-
-  # I guess one depends on the other
-  SingleSignon=1
-fi
-
-if test "$CookieManagement"
-then
-  AC_DEFINE(CookieManagement)
-fi
-
-if test "$SingleSignon"
-then
-  AC_DEFINE(SingleSignon)
-fi
-
-dnl ========================================================
-dnl =
 dnl = Compiler Options
 dnl = 
 dnl ========================================================
@@ -2448,12 +2406,19 @@ dnl ========================================================
 dnl =
 dnl = --with-extensions=extension1,extension2,
 dnl = 
-dnl = Enable debug for specific modules only
+dnl = Enable compilation of specific extension modules
 dnl = 
 dnl ========================================================
+MOZ_EXTENSIONS="cookie wallet"
 MOZ_ARG_WITH_STRING(extensions,
 [  --with-extensions       Enable extensions (dirs in extensions/)],
-  [ MOZ_EXTENSIONS=`echo $withval | sed 's/,/ /g'` ] )
+  [ if test "$withval" = "yes" || test "$withval" = "all"; then
+        MOZ_EXTENSIONS="cookie irc wallet"
+    elif test "$withval" = "no" || test "$withval" = "none"; then
+        MOZ_EXTENSIONS=""
+    elif "$withval" != ""; then
+        MOZ_EXTENSIONS=`echo $withval | sed 's/,/ /g'`
+    fi ] )
 dnl ========================================================
 
 _cpp_md_flag=

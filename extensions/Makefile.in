@@ -26,14 +26,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= cookie wallet
-
-ifdef MOZ_EXTENSIONS
-ifneq (, $(filter all yes, $(MOZ_EXTENSIONS)))
-DIRS		+= irc
-else
-DIRS		+= $(MOZ_EXTENSIONS)
-endif
-endif
+DIRS		= $(MOZ_EXTENSIONS)
 
 include $(topsrcdir)/config/rules.mk
