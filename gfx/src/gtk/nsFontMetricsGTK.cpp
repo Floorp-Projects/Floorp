@@ -1384,13 +1384,54 @@ ISO10646Convert(nsFontCharSetInfo* aSelf, XFontStruct* aFont,
   return (gint) aSrcLen * 2;
 }
 
+#ifdef DEBUG
+
+static void
+CheckMap(nsFontCharSetMap* aEntry)
+{
+  while (aEntry->mName) {
+    if (aEntry->mInfo->mCharSet) {
+      nsresult res;
+      nsCOMPtr<nsIAtom> charset =
+        getter_AddRefs(NS_NewAtom(aEntry->mInfo->mCharSet));
+      if (charset) {
+        nsIUnicodeEncoder* converter = nsnull;
+        res = gCharSetManager->GetUnicodeEncoder(charset, &converter);
+        if (NS_FAILED(res)) {
+          printf("=== %s failed (%s)\n", aEntry->mInfo->mCharSet, __FILE__);
+        }
+      }
+    }
+    aEntry++;
+  }
+}
+
+static void
+CheckSelf(void)
+{
+  CheckMap(gCharSetMap);
+
+  // XXX MathML people: please figure out why this is failing
+  // CheckMap(gSpecialCharSetMap);
+}
+
+#endif /* DEBUG */
+
 static void
 SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
 {
-  nsCOMPtr<nsIAtom> charset;
-  nsresult res = gCharSetManager->GetCharsetAtom2(aSelf->mCharSet,
-    getter_AddRefs(charset));
-  if (NS_SUCCEEDED(res)) {
+
+#ifdef DEBUG
+  static int checkedSelf = 0;
+  if (!checkedSelf) {
+    CheckSelf();
+    checkedSelf = 1;
+  }
+#endif
+
+  nsresult res;
+  nsCOMPtr<nsIAtom> charset = getter_AddRefs(NS_NewAtom(aSelf->mCharSet));
+  if (charset) {
     nsIUnicodeEncoder* converter = nsnull;
     res = gCharSetManager->GetUnicodeEncoder(charset, &converter);
     if (NS_SUCCEEDED(res)) {
@@ -1442,15 +1483,15 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
         }
       }
       else {
-        printf("=== nsICharRepresentable %s failed\n", aSelf->mCharSet);
+        NS_WARNING("cannot get nsICharRepresentable");
       }
     }
     else {
-      printf("=== GetUnicodeEncoder %s failed\n", aSelf->mCharSet);
+      NS_WARNING("cannot get Unicode converter");
     }
   }
   else {
-    printf("=== GetCharsetAtom2 %s failed\n", aSelf->mCharSet);
+    NS_WARNING("cannot get atom");
   }
 }
 
