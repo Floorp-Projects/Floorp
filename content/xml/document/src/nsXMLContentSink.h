@@ -139,7 +139,7 @@ protected:
                          nsIContent* aContent,
                          PRBool aIsHTML);
   nsresult AddContentAsLeaf(nsIContent *aContent);
-  void PushNameSpacesFrom(const nsIParserNode& aNode);
+  nsresult PushNameSpacesFrom(const nsIParserNode& aNode);
   static void SplitXMLName(nsAReadableString& aString, nsIAtom **aPrefix,
                            nsIAtom **aTagName);
   PRInt32 GetNameSpaceId(nsIAtom* aPrefix);

@@ -700,7 +700,8 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   // of an element before creating the element. This is because the
   // namespace prefix for an element might be declared within the attribute
   // list.
-  PushNameSpacesFrom(aNode);
+  result = PushNameSpacesFrom(aNode);
+  NS_ENSURE_SUCCESS(result, result);
 
   PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
 
