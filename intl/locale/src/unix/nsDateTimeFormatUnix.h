@@ -24,6 +24,9 @@
 #define nsDateTimeFormatUnix_h__
 
 
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetConverterManager2.h"
+#include "nsCOMPtr.h"
 #include "nsIDateTimeFormat.h"
 
 #define kPlatformLocaleLength 64
@@ -78,6 +81,7 @@ private:
   nsString    mCharset;                                    // in order to convert API result to unicode
   char        mPlatformLocale[kPlatformLocaleLength+1];    // for setlocale
   PRBool      mLocalePreferred24hour;                       // true if 24 hour format is preferred by current locale
+  nsCOMPtr <nsIUnicodeDecoder>   mDecoder;
 };
 
 #endif  /* nsDateTimeFormatUnix_h__ */

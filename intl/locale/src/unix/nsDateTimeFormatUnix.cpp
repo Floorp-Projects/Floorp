@@ -24,14 +24,12 @@
 #include <locale.h>
 #include "plstr.h"
 #include "nsIServiceManager.h"
-#include "nsICharsetConverterManager.h"
 #include "nsDateTimeFormatUnix.h"
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
 #include "nsILocaleService.h"
 #include "nsIPlatformCharset.h"
 #include "nsIPosixLocale.h"
-#include "nsCOMPtr.h"
 #include "nsCRT.h"
 
 static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
@@ -110,6 +108,17 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
     }
   }
 
+  // Initialize unicode decoder
+  nsCOMPtr <nsIAtom>                      charsetAtom;
+  nsCOMPtr <nsICharsetConverterManager2>  charsetConverterManager;
+  charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+  if (NS_SUCCEEDED(res)) {
+    res = charsetConverterManager->GetCharsetAtom(mCharset.GetUnicode(), getter_AddRefs(charsetAtom));
+    if (NS_SUCCEEDED(res)) {
+      res = charsetConverterManager->GetUnicodeDecoder(charsetAtom, getter_AddRefs(mDecoder));
+    }
+  }
+
   mLocalePreferred24hour = LocalePreferred24hour();
 
   return res;
@@ -158,7 +167,7 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
                                         nsString& stringOut) 
 {
 #define NSDATETIME_FORMAT_BUFFER_LEN  80
-  char strOut[NSDATETIME_FORMAT_BUFFER_LEN];
+  char strOut[NSDATETIME_FORMAT_BUFFER_LEN*2];  // buffer for date and time
   char fmtD[NSDATETIME_FORMAT_BUFFER_LEN], fmtT[NSDATETIME_FORMAT_BUFFER_LEN];
   nsresult res;
 
@@ -232,25 +241,15 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   (void) setlocale(LC_TIME, old_locale);
 
   // convert result to unicode
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res);
-  if(NS_SUCCEEDED(res) && ccm) {
-    nsCOMPtr<nsIUnicodeDecoder> decoder;
-    res = ccm->GetUnicodeDecoder(&mCharset, getter_AddRefs(decoder));
-    if (NS_SUCCEEDED(res) && decoder) {
-      PRInt32 unicharLength = 0;
-      PRInt32 srcLength = (PRInt32) PL_strlen(strOut);
-      res = decoder->GetMaxLength(strOut, srcLength, &unicharLength);
-      PRUnichar *unichars = new PRUnichar [ unicharLength ];
-  
-      if (nsnull != unichars) {
-        res = decoder->Convert(strOut, &srcLength,
-                               unichars, &unicharLength);
-        if (NS_SUCCEEDED(res)) {
-          stringOut.Assign(unichars, unicharLength);
-        }
-      }
-      delete [] unichars;
-    }    
+  if (mDecoder) {
+    PRInt32 srcLength = (PRInt32) PL_strlen(strOut);
+    PRInt32 unicharLength = NSDATETIME_FORMAT_BUFFER_LEN*2;
+    PRUnichar unichars[NSDATETIME_FORMAT_BUFFER_LEN*2];   // buffer for date and time
+
+    res = mDecoder->Convert(strOut, &srcLength, unichars, &unicharLength);
+    if (NS_SUCCEEDED(res)) {
+      stringOut.Assign(unichars, unicharLength);
+    }
   }
   
   return res;

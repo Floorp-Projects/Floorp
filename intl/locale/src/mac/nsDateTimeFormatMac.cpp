@@ -22,7 +22,6 @@
  */
 
 #include "nsIServiceManager.h"
-#include "nsICharsetConverterManager.h"
 #include "nsDateTimeFormatMac.h"
 #include <Resources.h>
 #include <IntlResources.h>
@@ -35,7 +34,6 @@
 #include "nsIPlatformCharset.h"
 #include "nsIMacLocale.h"
 #include "nsCRT.h"
-#include "nsCOMPtr.h"
 #include "plstr.h"
 #include "prmem.h"
 
@@ -301,6 +299,18 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
       res = platformCharset->GetCharset(kPlatformCharsetSel_FileName, mSystemCharset);      
     }
   }
+
+  // Initialize unicode decoder
+  nsCOMPtr <nsIAtom>                      charsetAtom;
+  nsCOMPtr <nsICharsetConverterManager2>  charsetConverterManager;
+  charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
+  if (NS_SUCCEEDED(res)) {
+    res = charsetConverterManager->GetCharsetAtom(mUseDefaultLocale ? mSystemCharset.GetUnicode() : mCharset.GetUnicode(), 
+                                                  getter_AddRefs(charsetAtom));
+    if (NS_SUCCEEDED(res)) {
+      res = charsetConverterManager->GetUnicodeDecoder(charsetAtom, getter_AddRefs(mDecoder));
+    }
+  }
   
   return res;
 }
@@ -403,40 +413,29 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   }
   
   // construct a C string
-  char *aBuffer;
+  char *localBuffer;
   if (dateFormatSelector != kDateFormatNone && timeFormatSelector != kTimeFormatNone) {
-    aBuffer = p2cstr(dateString);
-    strcat(aBuffer, " ");
-    strcat(aBuffer, p2cstr(timeString));
+    localBuffer = p2cstr(dateString);
+    strcat(localBuffer, " ");
+    strcat(localBuffer, p2cstr(timeString));
   }
   else if (dateFormatSelector != kDateFormatNone) {
-    aBuffer = p2cstr(dateString);
+    localBuffer = p2cstr(dateString);
   }
   else if (timeFormatSelector != kTimeFormatNone) {
-    aBuffer = p2cstr(timeString);
+    localBuffer = p2cstr(timeString);
   }
 
-
   // convert result to unicode
-  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res);
-  if(NS_SUCCEEDED(res) && ccm) {
-    nsCOMPtr <nsIUnicodeDecoder> decoder;
-    res = ccm->GetUnicodeDecoder(mUseDefaultLocale ? &mSystemCharset : &mCharset, getter_AddRefs(decoder));
-    if(NS_SUCCEEDED(res) && decoder) {
-      PRInt32 unicharLength = 0;
-      PRInt32 srcLength = (PRInt32) PL_strlen(aBuffer);
-      res = decoder->GetMaxLength(aBuffer, srcLength, &unicharLength);
-      PRUnichar *unichars = new PRUnichar [ unicharLength ];
-  
-      if (nsnull != unichars) {
-        res = decoder->Convert(aBuffer, &srcLength,
-                               unichars, &unicharLength);
-        if (NS_SUCCEEDED(res)) {
-          stringOut.Assign(unichars, unicharLength);
-        }
-      }
-      delete [] unichars;
-    }    
+  if (mDecoder) {
+    PRInt32 srcLength = (PRInt32) PL_strlen(localBuffer);
+    PRInt32 unicharLength = sizeof(Str255)*2;
+    PRUnichar unichars[sizeof(Str255)*2];   // buffer for combined date and time
+
+    res = mDecoder->Convert(localBuffer, &srcLength, unichars, &unicharLength);
+    if (NS_SUCCEEDED(res)) {
+      stringOut.Assign(unichars, unicharLength);
+    }
   }
   
   return res;
