@@ -1849,10 +1849,12 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
         styleContext->GetStyleData(eStyleStruct_Border));
       const nsStyleOutline *outline = NS_STATIC_CAST(const nsStyleOutline*,
         styleContext->GetStyleData(eStyleStruct_Outline));
+      const nsStyleBackground *backg = NS_STATIC_CAST(const nsStyleBackground*,
+        styleContext->GetStyleData(eStyleStruct_Background));
 
       nsRect rect(mRect); //0, 0, mRect.width, mRect.height);
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
-                                      aDirtyRect, rect, *border, 0, 0);
+      nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
+                                      aDirtyRect, rect, *backg, *border, 0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aForFrame,
                                   aDirtyRect, rect, *border, styleContext, skipSides);
       nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, aForFrame,
