@@ -110,13 +110,12 @@ public class Interpreter
     // Last icode
         END_ICODE                       = BASE_ICODE + 30;
 
-    public Object compile(Context cx, Scriptable scope,
+    public Object compile(Scriptable scope,
                           CompilerEnvirons compilerEnv,
                           ScriptOrFnNode tree,
                           String encodedSource,
                           boolean returnFunction,
-                          SecurityController securityController,
-                          Object securityDomain)
+                          Object staticSecurityDomain)
     {
         this.compilerEnv = compilerEnv;
         (new NodeTransformer(compilerEnv)).transform(tree);
@@ -129,17 +128,30 @@ public class Interpreter
             tree = tree.getFunctionNode(0);
         }
 
+        Context cx = Context.getContext();
+        SecurityController sc = cx.getSecurityController();
+        Object dynamicDomain;
+        if (sc != null) {
+            dynamicDomain = sc.getDynamicSecurityDomain(staticSecurityDomain);
+        } else {
+            if (staticSecurityDomain != null) {
+                throw new IllegalArgumentException();
+            }
+            dynamicDomain = null;
+        }
+
         scriptOrFn = tree;
-        itsData = new InterpreterData(securityDomain,
-                                      compilerEnv.getLanguageVersion());
-        itsData.itsSourceFile = scriptOrFn.getSourceName();
-        itsData.encodedSource = encodedSource;
+        itsData = new InterpreterData(sc, dynamicDomain,
+                                      compilerEnv.getLanguageVersion(),
+                                      scriptOrFn.getSourceName(),
+                                      encodedSource);
         itsData.topLevel = true;
+
         if (tree instanceof FunctionNode) {
-            generateFunctionICode(cx);
+            generateFunctionICode();
             return createFunction(cx, scope, itsData, false);
         } else {
-            generateICodeFromTree(cx, scriptOrFn);
+            generateICodeFromTree(scriptOrFn);
             itsData.itsFromEvalCode = compilerEnv.isFromEval();
             return new InterpretedScript(itsData);
         }
@@ -169,7 +181,7 @@ public class Interpreter
         }
     }
 
-    private void generateFunctionICode(Context cx)
+    private void generateFunctionICode()
     {
         FunctionNode theFunction = (FunctionNode)scriptOrFn;
 
@@ -186,14 +198,14 @@ public class Interpreter
             }
         }
 
-        generateICodeFromTree(cx, theFunction.getLastChild());
+        generateICodeFromTree(theFunction.getLastChild());
     }
 
-    private void generateICodeFromTree(Context cx, Node tree)
+    private void generateICodeFromTree(Node tree)
     {
-        generateNestedFunctions(cx);
+        generateNestedFunctions();
 
-        generateRegExpLiterals(cx);
+        generateRegExpLiterals();
 
         int theICodeTop = 0;
         theICodeTop = generateICode(tree, theICodeTop);
@@ -260,7 +272,7 @@ public class Interpreter
         if (Token.printICode) dumpICode(itsData);
     }
 
-    private void generateNestedFunctions(Context cx)
+    private void generateNestedFunctions()
     {
         int functionCount = scriptOrFn.getFunctionCount();
         if (functionCount == 0) return;
@@ -271,24 +283,21 @@ public class Interpreter
             Interpreter jsi = new Interpreter();
             jsi.compilerEnv = compilerEnv;
             jsi.scriptOrFn = def;
-            jsi.itsData = new InterpreterData(itsData.securityDomain,
-                                              itsData.languageVersion);
-            jsi.itsData.parentData = itsData;
-            jsi.itsData.itsSourceFile = itsData.itsSourceFile;
-            jsi.itsData.encodedSource = itsData.encodedSource;
+            jsi.itsData = new InterpreterData(itsData);
             jsi.itsData.itsCheckThis = def.getCheckThis();
             jsi.itsInFunctionFlag = true;
-            jsi.generateFunctionICode(cx);
+            jsi.generateFunctionICode();
             array[i] = jsi.itsData;
         }
         itsData.itsNestedFunctions = array;
     }
 
-    private void generateRegExpLiterals(Context cx)
+    private void generateRegExpLiterals()
     {
         int N = scriptOrFn.getRegexpCount();
         if (N == 0) return;
 
+        Context cx = Context.getContext();
         RegExpProxy rep = ScriptRuntime.checkRegExpProxy(cx);
         Object[] array = new Object[N];
         for (int i = 0; i != N; i++) {
@@ -1857,8 +1866,7 @@ public class Interpreter
             if (argsDbl != null) {
                 args = getArgsArray(args, argsDbl, argShift, argCount);
             }
-            SecurityController sc = cx.getSecurityController();
-
+            SecurityController sc = idata.securityController;
             Object savedDomain = cx.interpreterSecurityDomain;
             cx.interpreterSecurityDomain = idata.securityDomain;
             try {

@@ -2070,6 +2070,11 @@ public class Context
                            boolean fromEval)
         throws IOException
     {
+        if (securityDomain != null && securityController == null) {
+            throw new IllegalArgumentException(
+                "securityDomain should be null if setSecurityController() was never called");
+        }
+
         // One of sourceReader or sourceString has to be null
         if (!(sourceReader == null ^ sourceString == null)) Kit.codeBug();
         // scope should be given if and only if compiling function
@@ -2096,19 +2101,12 @@ public class Context
         int syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
         if (syntaxErrorCount == 0) {
             Interpreter compiler = createCompiler();
-            if (securityController != null) {
-                securityDomain = securityController.
-                                     getDynamicSecurityDomain(securityDomain);
-            } else {
-                securityDomain = null;
-            }
 
             String encodedSource = p.getEncodedSource();
 
-            Object result = compiler.compile(this, scope, compilerEnv,
+            Object result = compiler.compile(scope, compilerEnv,
                                              tree, encodedSource,
                                              returnFunction,
-                                             securityController,
                                              securityDomain);
             syntaxErrorCount = compilerEnv.getSyntaxErrorCount();
             if (syntaxErrorCount == 0) {

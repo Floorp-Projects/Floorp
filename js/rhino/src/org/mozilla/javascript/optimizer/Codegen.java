@@ -54,14 +54,14 @@ import java.lang.reflect.Constructor;
 
 public class Codegen extends Interpreter
 {
-    public Object compile(Context cx, Scriptable scope,
+    public Object compile(Scriptable scope,
                           CompilerEnvirons compilerEnv,
                           ScriptOrFnNode scriptOrFn,
                           String encodedSource,
                           boolean returnFunction,
-                          SecurityController securityController,
                           Object securityDomain)
     {
+        Context cx = Context.getCurrentContext();
         OptClassNameHelper
             nameHelper = (OptClassNameHelper)ClassNameHelper.get(cx);
         Class[] interfaces = nameHelper.getTargetImplements();
@@ -120,14 +120,8 @@ public class Codegen extends Interpreter
 
         Exception e = null;
         Class result = null;
-        ClassLoader parentLoader = cx.getApplicationClassLoader();
-        GeneratedClassLoader loader;
-        if (securityController == null) {
-            loader = cx.createClassLoader(parentLoader);
-        } else {
-            loader = securityController.createClassLoader(parentLoader,
-                                                          securityDomain);
-        }
+        GeneratedClassLoader
+            loader = SecurityController.createLoader(null, securityDomain);
 
         try {
             result = loader.defineClass(mainClassName, mainClassBytes);

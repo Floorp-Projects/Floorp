@@ -62,8 +62,8 @@ package org.mozilla.javascript;
  * @see java.lang.ClassLoader
  * @since 1.5 Release 4
  */
-public abstract class SecurityController {
-
+public abstract class SecurityController
+{
     /**
      * Get class loader-like object that can be used
      * to define classes with the given security context.
@@ -72,8 +72,40 @@ public abstract class SecurityController {
      * @param securityDomain some object specifying the security
      *        context of the code that is defined by the returned class loader.
      */
-    public abstract GeneratedClassLoader
-    createClassLoader(ClassLoader parentLoader, Object securityDomain);
+    public abstract GeneratedClassLoader createClassLoader(
+        ClassLoader parentLoader, Object securityDomain);
+
+    /**
+     * Create {@link GeneratedClassLoader} with restrictions imposed by
+     * staticDomain and all current stack frames.
+     * The method uses the SecurityController instance associated with the
+     * current {@link Context} to construct proper dynamic domain and create
+     * corresponding class loader.
+     * <par>
+     * If no SecurityController is associated with the current {@link Context} ,
+     * the method calls {@link Context#createClassLoader(ClassLoader parent)}.
+     *
+     * @param parent parent class loader. If null,
+     *        {@link Context#getApplicationClassLoader()} will be used.
+     * @param staticDomain static security domain.
+     */
+    public static GeneratedClassLoader createLoader(
+        ClassLoader parent, Object staticDomain)
+    {
+        Context cx = Context.getContext();
+        if (parent == null) {
+            parent = cx.getApplicationClassLoader();
+        }
+        SecurityController sc = cx.getSecurityController();
+        GeneratedClassLoader loader;
+        if (sc == null) {
+            loader = cx.createClassLoader(parent);
+        } else {
+            Object dynamicDomain = sc.getDynamicSecurityDomain(staticDomain);
+            loader = sc.createClassLoader(parent, dynamicDomain);
+        }
+        return loader;
+    }
 
     /**
      * Get dynamic security domain that allows an action only if it is allowed

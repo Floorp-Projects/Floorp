@@ -559,16 +559,8 @@ public final class JavaAdapter
 
     private static Class loadAdapterClass(String className, byte[] classBytes)
     {
-        Context cx = Context.getContext();
-        ClassLoader parentLoader = cx.getApplicationClassLoader();
-        GeneratedClassLoader loader;
-        SecurityController sc = cx.getSecurityController();
-        if (sc == null) {
-            loader = cx.createClassLoader(parentLoader);
-        } else {
-            Object securityDomain = sc.getDynamicSecurityDomain(null);
-            loader = sc.createClassLoader(parentLoader, securityDomain);
-        }
+        GeneratedClassLoader loader
+            = SecurityController.createLoader(null, null);
         Class result = loader.defineClass(className, classBytes);
         loader.linkClass(result);
         return result;
