@@ -1027,9 +1027,9 @@ RDFXULBuilderImpl::CreateHTMLElement(nsIRDFResource* aResource,
 
         // These are special beacuse they're used to specify the tree
         // structure of the XUL: ignore them b/c they're not attributes
-        if ((property == kRDF_instanceOf) ||
-            (property == kRDF_nextVal) ||
-            (property == kRDF_type))
+        if ((property.get() == kRDF_instanceOf) ||
+            (property.get() == kRDF_nextVal) ||
+            (property.get() == kRDF_type))
             continue;
 
         // XXX TODO Move this out of this loop, and use a cursor
@@ -1147,9 +1147,9 @@ RDFXULBuilderImpl::CreateXULElement(nsIRDFResource* aResource,
 
         // These are special beacuse they're used to specify the tree
         // structure of the XUL: ignore them b/c they're not attributes
-        if ((property == kRDF_instanceOf) ||
-            (property == kRDF_nextVal) ||
-            (property == kRDF_type) ||
+        if ((property.get() == kRDF_instanceOf) ||
+            (property.get() == kRDF_nextVal) ||
+            (property.get() == kRDF_type) ||
             rdf_IsOrdinalProperty(property))
             continue;
 

@@ -1345,7 +1345,7 @@ RDFGenericElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMNode*
 		XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
 		
 		if (xulListener->mAttribute == attr &&
-			xulListener->mListener == aNode)
+			xulListener->mListener.get() == aNode)
 		{
 			// Do the removal.
 			mBroadcastListeners.RemoveElementAt(i);

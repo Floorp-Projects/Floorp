@@ -532,7 +532,7 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
         if (NS_FAILED(FindTreeElement(aElement, getter_AddRefs(treeElement))))
             return NS_OK;
 
-        if (treeElement != mRoot)
+        if (treeElement.get() != mRoot)
             return NS_OK;
     }
 
@@ -743,7 +743,7 @@ RDFTreeBuilderImpl::FindChildByTag(nsIContent* aElement,
         if (NS_FAILED(rv = kid->GetTag(*getter_AddRefs(kidTag))))
             return rv; // XXX fatal
 
-        if (kidTag != aTag)
+        if (kidTag.get() != aTag)
             continue;
 
         *aChild = kid;
@@ -789,7 +789,7 @@ RDFTreeBuilderImpl::FindChildByTagAndResource(nsIContent* aElement,
         if (NS_FAILED(rv = kid->GetTag(*getter_AddRefs(tag))))
             return rv; // XXX fatal
 
-        if (tag != aTag)
+        if (tag.get() != aTag)
             continue; // wrong tag
 
         // Now get the resource ID from the RDF:ID attribute. We do it
@@ -953,7 +953,7 @@ RDFTreeBuilderImpl::FindTreeElement(nsIContent* aElement,
             if (NS_FAILED(rv = element->GetTag(*getter_AddRefs(tag))))
                 return rv;
 
-            if (tag == kTreeAtom) {
+            if (tag.get() == kTreeAtom) {
                 *aTreeElement = element;
                 NS_ADDREF(*aTreeElement);
                 return NS_OK;
@@ -1019,7 +1019,7 @@ RDFTreeBuilderImpl::EnsureCell(nsIContent* aTreeItemElement,
             return rv;
         }
 
-        if (tag != kTreeCellAtom)
+        if (tag.get() != kTreeCellAtom)
             continue; // not <xul:treecell>
 
         // Okay, it's a xul:treecell; see if it's the right one...
@@ -1129,7 +1129,7 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
             return rv;
         }
 
-        if (tag != kTreeColAtom)
+        if (tag.get() != kTreeColAtom)
             continue; // not <xul:treecol>
 
         // Okay, we've found a column. Ensure that we've got a real
@@ -1257,7 +1257,7 @@ RDFTreeBuilderImpl::GetColumnForProperty(nsIContent* aTreeElement,
             return rv;
         }
 
-        if (tag != kTreeColAtom)
+        if (tag.get() != kTreeColAtom)
             continue; // not <xul:treecol>
 
         // Okay, we've found a column. Is it the right one?  The
@@ -1339,7 +1339,7 @@ RDFTreeBuilderImpl::IsTreeElement(nsIContent* element)
     if (NS_FAILED(rv = element->GetTag(*getter_AddRefs(elementTag))))
         return PR_FALSE;
 
-    if (elementTag != kTreeAtom)
+    if (elementTag.get() != kTreeAtom)
         return PR_FALSE;
 
     return PR_TRUE;
@@ -1356,7 +1356,7 @@ RDFTreeBuilderImpl::IsTreeItemElement(nsIContent* aElement)
     if (NS_FAILED(rv = aElement->GetTag(*getter_AddRefs(tag))))
         return PR_FALSE;
 
-    if (tag != kTreeItemAtom)
+    if (tag.get() != kTreeItemAtom)
         return PR_FALSE;
 
     return PR_TRUE;
