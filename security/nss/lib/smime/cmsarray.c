@@ -34,7 +34,7 @@
 /*
  * CMS array functions.
  *
- * $Id: cmsarray.c,v 1.2 2000/06/13 21:56:26 chrisk%netscape.com Exp $
+ * $Id: cmsarray.c,v 1.3 2000/06/21 18:12:02 chrisk%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -54,6 +54,8 @@
 
 /*
  * NSS_CMSArray_Alloc - allocate an array in an arena
+ *
+ * This allocates space for the array of pointers
  */
 void **
 NSS_CMSArray_Alloc(PRArenaPool *poolp, int n)
@@ -63,6 +65,8 @@ NSS_CMSArray_Alloc(PRArenaPool *poolp, int n)
 
 /*
  * NSS_CMSArray_Add - add an element to the end of an array
+ *
+ * The array of pointers is either created (if array was empty before) or grown.
  */
 SECStatus
 NSS_CMSArray_Add(PRArenaPool *poolp, void ***array, void *obj)
@@ -103,7 +107,7 @@ NSS_CMSArray_IsEmpty(void **array)
 }
 
 /*
- * NSS_CMSArray_IsEmpty - count number of elements in array
+ * NSS_CMSArray_Count - count number of elements in array
  */
 int
 NSS_CMSArray_Count(void **array)
@@ -120,14 +124,16 @@ NSS_CMSArray_Count(void **array)
 }
 
 /*
- * NSS_CMSArray_Sort - sort an array ascending, in place
+ * NSS_CMSArray_Sort - sort an array in place
  *
- * If "secondary" is not NULL, the same reordering gets applied to it.
- * If "tertiary" is not NULL, the same reordering gets applied to it.
+ * If "secondary" or "tertiary are not NULL, it must be arrays with the same
+ *  number of elements as "primary". The same reordering will get applied to it.
+ *
  * "compare" is a function that returns 
  *  < 0 when the first element is less than the second
  *  = 0 when the first element is equal to the second
  *  > 0 when the first element is greater than the second
+ * to acheive ascending ordering.
  */
 void
 NSS_CMSArray_Sort(void **primary, int (*compare)(void *,void *), void **secondary, void **tertiary)
@@ -135,10 +141,11 @@ NSS_CMSArray_Sort(void **primary, int (*compare)(void *,void *), void **secondar
     int n, i, limit, lastxchg;
     void *tmp;
 
-    if (primary == NULL)
-	return;
-	
     n = NSS_CMSArray_Count(primary);
+
+    PORT_Assert(secondary == NULL || NSS_CMSArray_Count(secondary) == n);
+    PORT_Assert(tertiary == NULL || NSS_CMSArray_Count(tertiary) == n);
+    
     if (n <= 1)	/* ordering is fine */
 	return;
     
