@@ -435,36 +435,34 @@ function parseOutlookCSVData( icalStr, discardDuplicates, promptEach )
   var lineIndex = 1;
   var totalLines = lines.length-1;
   var exists = false;
-
+  var formater = new DateFormater(); 
+  
   while (lineIndex < totalLines) {
-
     var fields = lines[lineIndex].split('","');
-    fields[0] = fields[0].substring(1); // strip off the leading quote...
-
-    var title = fields[0];
-    var stime = new Date(fields[1] + " " + fields[2]);
-    var etime = new Date(fields[3] + " " + fields[4]);
-
-    exists = entryExists(stime, title);
-      
-    calendarEvent = createEvent();
-    calendarEvent.id = createUniqueID( );
-    calendarEvent.title = title;
-    calendarEvent.start.setTime(stime);
-    calendarEvent.end.setTime(etime);
-
-    if ( !exists )
-      eventArray[ eventArray.length ] = calendarEvent;
-    else
-      dupArray[ dupArray.length ] = calendarEvent;
-
-
     ++lineIndex;
+    if (fields.length < 5)
+      continue;
+      
+    fields[0] = fields[0].substring(1); // strip off the leading quote...
+    var title = fields[0];
+    //parseShortDate magically decides the format (locale) of dates/times
+    var sdate = formater.parseShortDate(fields[1]+" "+fields[2]);
+    var edate = formater.parseShortDate(fields[3]+" "+fields[4]);
+    if ((sdate != null) && (edate != null)) {
+      exists = entryExists(sdate, title);
+      calendarEvent = createEvent();
+      calendarEvent.id = createUniqueID();
+      calendarEvent.title = title;
+      calendarEvent.start.setTime(sdate);
+      calendarEvent.end.setTime(edate);
+      if ( !exists )
+        eventArray[ eventArray.length ] = calendarEvent;
+      else
+        dupArray[ dupArray.length ] = calendarEvent;
+    }
   }
-
 //   dump("*** calendar entries : " + eventArray.length + "\n");
 //   dump("*** duplicate entries: " + dupArray.length + "\n");
-
   return { calendarEventArray: eventArray, calendarDuplicateArray: dupArray };
 }
 
