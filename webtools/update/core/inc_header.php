@@ -68,14 +68,19 @@
 		<li><a href="/about/" title="Learn More About Mozilla Updates">about</a></li>
 		<li><a href="/developers/" title="Find Tools and Information for Developers">developers</a></li>
 		<li>
-		<form id="search" method="get" action="http://www.google.com/custom" title="Mozilla.org Search">
+		<form id="search" method="get" action="/quicksearch.php" title="Search Mozilla Update">
 		<div>
-		<label for="q" title="Search mozilla.org&quot;s sites">search:</label>
-		<input type="hidden" name="cof" value="">
-		<input type="hidden" name="domains" value="update.mozilla.org">
-		<input type="hidden" name="sitesearch" value="update.mozilla.org">
+		<label for="q" title="Search Mozilla Update">search:</label>
 		<input type="text" id="q" name="q" accesskey="s" size="10">
-		<select name="section" id="sectionsearch"><option value="1">Entire Site</option><option value="2">Extensions</option><option value="">Themes</option><!--<option value="3">Plugins</option><option value="4">Search Engines</option>--></select>
+		<select name="section" id="sectionsearch">
+		  <option value="A">Entire Site</option>
+		  <option value="E">Extensions</option>
+		  <option value="T">Themes</option>
+		<!--
+		  <option value="P">Plugins</option>
+		  <option value="S">Search Engines</option>
+		-->
+		</select>
 		<input type="submit" id="submit" value="Go">
 		</div>
 		</form>
