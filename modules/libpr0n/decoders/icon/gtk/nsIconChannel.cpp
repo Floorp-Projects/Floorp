@@ -54,6 +54,7 @@ extern "C" {
 #include <gtk/gtkimage.h>
 #include <gtk/gtkwindow.h>
 #include <gtk/gtkfixed.h>
+#include <gtk/gtkversion.h>
 
 #include "nsIMIMEService.h"
 
@@ -128,7 +129,10 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIChannel **aChannel)
 
 static GtkWidget *gProtoWindow = nsnull;
 static GtkWidget *gStockImageWidget = nsnull;
+
+#if GTK_CHECK_VERSION(2,4,0)
 static GtkIconFactory *gIconFactory = nsnull;
+#endif
 
 static void
 ensure_stock_image_widget()
@@ -145,6 +149,7 @@ ensure_stock_image_widget()
   }
 }
 
+#if GTK_CHECK_VERSION(2,4,0)
 static void
 ensure_icon_factory()
 {
@@ -154,6 +159,7 @@ ensure_icon_factory()
     g_object_unref(gIconFactory);
   }
 }
+#endif
 
 static GtkIconSize
 moz_gtk_icon_size(const char *name)
@@ -347,6 +353,7 @@ nsIconChannel::Init(nsIURI* aURI) {
 
   GdkPixbuf *icon = gtk_widget_render_icon(gStockImageWidget, stockIcon.get(),
                                            icon_size, NULL);
+#if GTK_CHECK_VERSION(2,4,0)
   if (!icon) {
     ensure_icon_factory();
       
@@ -362,6 +369,7 @@ nsIconChannel::Init(nsIURI* aURI) {
     icon = gtk_widget_render_icon(gStockImageWidget, stockIcon.get(),
                                   icon_size, NULL);
   }
+#endif
 
   if (!icon)
     return NS_ERROR_NOT_AVAILABLE;
