@@ -92,9 +92,6 @@ class EmbedPrivate {
   nsresult AppendToStream     (const char *aData, PRInt32 aLen);
   nsresult CloseStream        (void);
 
-	nsCOMPtr<nsIHelperAppLauncher> app_launcher;
-nsCOMPtr<nsISupports> context;
-
   // This function will find the specific EmbedPrivate object for a
   // given nsIWebBrowserChrome.
   static EmbedPrivate *FindPrivateForBrowser(nsIWebBrowserChrome *aBrowser);

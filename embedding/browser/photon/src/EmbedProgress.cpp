@@ -141,44 +141,6 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
     	else if( aStateFlags & STATE_STOP ) 
 		{
 			PtWebCompleteCallback_t cbcomplete;
-#if 1
-			/* if the mozilla was saving a file as a result of Pt_ARG_MOZ_DOWNLOAD or Pt_ARG_MOZ_UNKNOWN_RESP, move the temporary file into the desired destination ( moz->download_dest ) */
-			if( moz->download_dest ) 
-			{
-				if( moz->EmbedRef->app_launcher ) 
-				{
-					nsCOMPtr<nsIURI> aSourceUrl;
-					nsCOMPtr<nsIFile> tempFile;
-					moz->EmbedRef->app_launcher->GetSource( getter_AddRefs(aSourceUrl) );
-					moz->EmbedRef->app_launcher->GetTargetFile( getter_AddRefs( tempFile ) );
-
-					if( tempFile ) 
-					{
-						nsresult rv;
-						nsCOMPtr<nsILocalFile> fileToUse = do_CreateInstance( NS_LOCAL_FILE_CONTRACTID, &rv );
-						fileToUse->InitWithNativePath( nsDependentCString(moz->download_dest) );
-	
-						PRBool equalToTempFile = PR_FALSE;
-						PRBool filetoUseAlreadyExists = PR_FALSE;
-						fileToUse->Equals( tempFile, &equalToTempFile );
-						fileToUse->Exists(&filetoUseAlreadyExists);
-						if( filetoUseAlreadyExists && !equalToTempFile )
-							fileToUse->Remove(PR_FALSE);
-
-						// extract the new leaf name from the file location
-						nsXPIDLCString fileName;
-						fileToUse->GetNativeLeafName(fileName);
-						nsCOMPtr<nsIFile> directoryLocation;
-						fileToUse->GetParent(getter_AddRefs(directoryLocation));
-						if( directoryLocation ) rv = tempFile->MoveToNative(directoryLocation, fileName);
-					}
-
-					moz->EmbedRef->app_launcher = NULL;
-				}
-				free(moz->download_dest);
-				moz->download_dest = NULL;
-			}
-#endif
 
 			cbinfo.reason = Pt_CB_MOZ_COMPLETE;
 			cbinfo.cbdata = &cbcomplete;

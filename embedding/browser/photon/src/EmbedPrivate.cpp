@@ -952,9 +952,9 @@ static void mozilla_set_default_pref( nsIPref *pref )
 	pref->SetIntPref( "browser.cache.disk.capacity", 5000 );
 	pref->SetIntPref( "network.http.connect.timeout", 2400 );
 	pref->SetIntPref( "network.http.max-connections", 4 );
-	pref->SetCharPref( "network.proxy.http_port", "80" );
-	pref->SetCharPref( "network.proxy.ftp_port", "80" );
-	pref->SetCharPref( "network.proxy.gopher_port", "80" );
+	pref->SetIntPref( "network.proxy.http_port", 80 );
+	pref->SetIntPref( "network.proxy.ftp_port", 80 );
+	pref->SetIntPref( "network.proxy.gopher_port", 80 );
 
 	pref->SetCharPref( "general.skins.selectedSkin", "classic/1.0" );
 	pref->SetIntPref( "browser.cache.memory.capacity", 100 ); /* 100k ( no cache ) */

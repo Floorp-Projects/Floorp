@@ -63,6 +63,7 @@ extern PtWidgetClassRef_t *PtMozilla;
 #define Pt_ARG_MOZ_DOWNLOAD					Pt_RESOURCE( 104,  12 )
 #define Pt_ARG_MOZ_GET_HISTORY			Pt_RESOURCE( 104,  13 )
 #define Pt_ARG_MOZ_AUTH_CTRL				Pt_RESOURCE( 104, 14 ) // used internally for authentification
+#define Pt_ARG_MOZ_UNKNOWN_CTRL			Pt_RESOURCE( 104, 15 ) // used internally for downloading
 
 #define Pt_CB_MOZ_PROGRESS					Pt_RESOURCE( 104,  20 )
 #define Pt_CB_MOZ_START							Pt_RESOURCE( 104,  21 )
@@ -84,6 +85,7 @@ extern PtWidgetClassRef_t *PtMozilla;
 #define Pt_CB_MOZ_WEB_DATA_REQ     	Pt_RESOURCE( 104,  38 )
 #define Pt_CB_MOZ_UNKNOWN						Pt_RESOURCE( 104,  39 )
 #define Pt_CB_MOZ_ERROR							Pt_RESOURCE( 104,  40 )
+#define Pt_CB_MOZ_DOWNLOAD					Pt_RESOURCE( 104,  41 )
 
 
 #define MAX_URL_LENGTH						1024
@@ -305,6 +307,13 @@ typedef struct {
 	PtModalCtrl_t ctrl;
 	} PtMozillaAuthCtrl_t;
 
+typedef struct {
+	short response, waiting;
+	char *filename;
+	long download_ticket;
+	PtModalCtrl_t ctrl;
+	} PtMozillaUnknownCtrl_t;
+
 class EmbedPrivate;
 
 typedef struct Pt_mozilla_client_widget 
@@ -318,6 +327,9 @@ typedef struct Pt_mozilla_client_widget
 	int 				navigate_flags;
 	char 				disable_exception_dlg, disable_new_windows, spare[2];
 
+	int fDownloadCount;
+	struct Download_ **fDownload;
+
 	/* text_zoom is the text zooming as set by the client ( 100 = 100% ) */
 	short int		text_zoom;
 	/* actual_text_zoom is the text zooming as returned by the browser - when a window is being created
@@ -326,9 +338,9 @@ typedef struct Pt_mozilla_client_widget
 	short int actual_text_zoom;
 
 	char				*rightClickUrl; /* keep the url the user clicked on, to provide it latter for Pt_ARG_WEB_GET_CONTEXT */
-	char				*download_dest;
 
 	PtMozillaAuthCtrl_t *moz_auth_ctrl;
+	PtMozillaUnknownCtrl_t *moz_unknown_ctrl;
 
 	// callbacks
 	PtCallbackList_t 	*title_cb;
@@ -352,6 +364,7 @@ typedef struct Pt_mozilla_client_widget
 	PtCallbackList_t 	*web_data_req_cb;
 	PtCallbackList_t 	*web_unknown_cb;
 	PtCallbackList_t 	*web_error_cb;
+	PtCallbackList_t 	*web_download_cb;
 } PtMozillaWidget_t;
 
 /* Widget union */
