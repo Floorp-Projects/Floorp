@@ -1401,7 +1401,8 @@ nsMessengerMigrator::MigratePopAccount(nsIMsgIdentity *identity)
   }
 
   // we want .../Mail/<hostname>, not .../Mail
-  rv = mailDirSpec->AppendRelativeUnixPath(hostAndPort);
+  // Only host name is required 
+  rv = mailDirSpec->AppendRelativeUnixPath(hostname);
   if (NS_FAILED(rv)) return rv;
   
   // set the local path for this "pop3" server
