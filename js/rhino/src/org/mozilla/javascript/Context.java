@@ -1571,7 +1571,7 @@ public final class Context {
 
     private void newArrayHelper(Scriptable scope, Scriptable array) {
         array.setParentScope(scope);
-        Object ctor = scope.get("Array", scope);
+        Object ctor = ScriptRuntime.getTopLevelProp(scope, "Array");
         if (ctor != null && ctor instanceof Scriptable) {
             Scriptable s = (Scriptable) ctor;
             array.setPrototype((Scriptable) s.get("prototype", s));
