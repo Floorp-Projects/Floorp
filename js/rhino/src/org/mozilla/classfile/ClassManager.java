@@ -57,31 +57,20 @@ public class ClassManager {
             Method defineClass = loader.getClass().getMethod("defineClass", types);
             Object[] args = { name, data };
             return (Class) defineClass.invoke(loader, args);
-        } catch (InvocationTargetException ite) {
-            Throwable targetException = ite.getTargetException();
-            targetException.printStackTrace(System.err);
-        } catch (Throwable th) {
-            th.printStackTrace(System.err);
+        } catch (Exception ex) {
         }
         return null;
     }
     
     public static Class loadClass(ClassLoader loader, String name, boolean resolve)
-        throws ClassNotFoundException
     {
         try {
             Class[] types = { String.class, boolean.class };
             Method loadClass = loader.getClass().getMethod("loadClass", types);
             Object[] args = { name, new Boolean(resolve) };
             return (Class) loadClass.invoke(loader, args);
-        } catch (InvocationTargetException ite) {
-            Throwable th = ite.getTargetException();
-            if (th instanceof ClassNotFoundException)
-                throw (ClassNotFoundException)th;
-            else
-                throw new ClassNotFoundException(name);
         } catch (Exception ex) {
-            throw new ClassNotFoundException(name);
         }
+        return null;
     }
 }
