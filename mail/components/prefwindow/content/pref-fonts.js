@@ -450,8 +450,7 @@ function saveFontPrefs()
                     // that are shipped for font.name and font.name-list.
                     try
                       {
-                        // ClearUserPref throws an exception...
-                        pref.ClearUserPref( fontPrefString );
+                        pref.clearUserPref( fontPrefString );
                       }
                     catch(e)
                       {
