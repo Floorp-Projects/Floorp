@@ -647,6 +647,7 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       // Once Accel+[shift]+G or [shift]+F3 has been used once,
       // new typing will start a new find
       CancelFind();
+      mRepeatingMode = eRepeatingNone;
     }
     // If a web page wants to use printable character keys,
     // they have to use evt.preventDefault() after they get the key
@@ -707,7 +708,16 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     mTypeAheadBuffer += uniChar;
 
     if (bufferLength == 0) {
+
       // --------- Initialize find -----------
+      if (!mLinksOnlyManuallySet) {
+        // Reset links only to default, if not manually set
+        // by the user via ' or / keypress at beginning
+        mLinksOnly = mLinksOnlyPref;
+      }
+
+      mRepeatingMode = eRepeatingNone;
+
       // If you can see the selection (not collapsed or thru caret browsing),
       // or if already focused on a page element, start there.
       // Otherwise we're going to start at the first visible element
@@ -1601,13 +1611,13 @@ nsTypeAheadFind::CancelFind()
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
     SetSelectionLook(presShell, PR_FALSE, PR_FALSE);
   }
-  mLinksOnly = mLinksOnlyPref;
+
+  // This is set to true if the user types / (all text) or ' (links only) first
   mLinksOnlyManuallySet = PR_FALSE;
 
   // These will be initialized to their true values after
   // the first character is typed
   mCaretBrowsingOn = PR_FALSE;
-  mRepeatingMode = eRepeatingNone;
   mLiteralTextSearchOnly = PR_FALSE;
   mDontTryExactMatch = PR_FALSE;
   mStartFindRange = nsnull;
