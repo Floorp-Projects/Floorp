@@ -262,6 +262,7 @@ NS_IMETHODIMP nsMailDatabase::EndBatch()
   {
     if (m_folderStream)
     {
+      m_folderStream->flush();
       m_folderStream->close();  
       delete m_folderStream;
     }
@@ -291,6 +292,7 @@ NS_IMETHODIMP nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChan
   {
     if (m_folderStream)
     {
+      m_folderStream->flush(); // this does a sync
       m_folderStream->close();
       delete m_folderStream;
     }
@@ -323,6 +325,7 @@ PRBool nsMailDatabase::SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags fla
     UpdateFolderFlag(msgHdr, bSet, flag, &fileStream);
     if (fileStream)
     {
+      fileStream->flush();
       fileStream->close();
       delete fileStream;
       SetFolderInfoValid(m_folderSpec, 0, 0);
@@ -426,7 +429,6 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
           PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS_FORMAT,
             flags & 0x0000FFFF);
           fileStream->write(buf, PL_strlen(buf));
-          fileStream->flush();
           
           // time to upate x-mozilla-status2
           position = fileStream->tell();
@@ -443,7 +445,6 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
               fileStream->seek(position + MSG_LINEBREAK_LEN);
               PR_snprintf(buf, sizeof(buf), X_MOZILLA_STATUS2_FORMAT, dbFlags);
               fileStream->write(buf, PL_strlen(buf));
-              fileStream->flush();
             }
           }
         } else 
