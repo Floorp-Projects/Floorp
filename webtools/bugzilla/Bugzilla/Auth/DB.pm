@@ -39,24 +39,54 @@ sub authenticate {
 
     return (AUTH_NODATA) unless defined $username && defined $passwd;
 
-    my $dbh = Bugzilla->dbh;
-
-    # We're just testing against the db, so any value is ok
+    # We're just testing against the db: any value is ok
     trick_taint($username);
 
-    # Retrieve the user's ID and crypted password from the database.
-    my $sth = $dbh->prepare_cached("SELECT userid,cryptpassword,disabledtext " .
-                                   "FROM profiles " .
-                                   "WHERE login_name=?");
-    my ($userid, $realcryptpwd, $disabledtext) =
-      $dbh->selectrow_array($sth,
-                            undef,
-                            $username);
-
-    # If the user doesn't exist, return now
+    my $userid = $class->get_id_from_username($username);
     return (AUTH_LOGINFAILED) unless defined $userid;
 
-    # OK, now authenticate the user
+    return (AUTH_LOGINFAILED, $userid) 
+        unless $class->check_password($userid, $passwd);
+
+    # The user's credentials are okay, so delete any outstanding
+    # password tokens they may have generated.
+    require Token;
+    Token::DeletePasswordTokens($userid, "user_logged_in");
+
+    # Account may have been disabled
+    my $disabledtext = $class->get_disabled($userid);
+    return (AUTH_DISABLED, $userid, $disabledtext)
+      if $disabledtext ne '';
+
+    return (AUTH_OK, $userid);
+}
+
+sub can_edit { return 1; }
+
+sub get_id_from_username {
+    my ($class, $username) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $sth = $dbh->prepare_cached("SELECT userid FROM profiles " .
+                                   "WHERE login_name=?");
+    my ($userid) = $dbh->selectrow_array($sth, undef, $username);
+    return $userid;
+}
+
+sub get_disabled {
+    my ($class, $userid) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $sth = $dbh->prepare_cached("SELECT disabledtext FROM profiles " .
+                                   "WHERE userid=?");
+    my ($text) = $dbh->selectrow_array($sth, undef, $userid);
+    return $text;
+}
+
+sub check_password {
+    my ($class, $userid, $passwd) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $sth = $dbh->prepare_cached("SELECT cryptpassword FROM profiles " .
+                                   "WHERE userid=?");
+    my ($realcryptpwd) = $dbh->selectrow_array($sth, undef, $userid);
 
     # Get the salt from the user's crypted password.
     my $salt = $realcryptpwd;
@@ -64,24 +94,16 @@ sub authenticate {
     # Using the salt, crypt the password the user entered.
     my $enteredCryptedPassword = crypt($passwd, $salt);
 
-    # Make sure the passwords match or return an error
-    return (AUTH_LOGINFAILED, $userid) unless
-      ($enteredCryptedPassword eq $realcryptpwd);
-
-    # Now we know that the user has logged in successfully,
-    # so delete any password tokens for them
-    require Token;
-    Token::DeletePasswordTokens($userid, "user_logged_in");
-
-    # The user may have had their account disabled
-    return (AUTH_DISABLED, $userid, $disabledtext)
-      if $disabledtext ne '';
-
-    # If we get to here, then the user is allowed to login, so we're done!
-    return (AUTH_OK, $userid);
+    return $enteredCryptedPassword eq $realcryptpwd;
 }
 
-sub can_edit { return 1; }
+sub change_password {
+    my ($class, $userid, $password) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $cryptpassword = Crypt($password);
+    $dbh->do("UPDATE profiles SET cryptpassword = ? WHERE userid = ?", 
+             undef, $cryptpassword, $userid);
+}
 
 1;
 
