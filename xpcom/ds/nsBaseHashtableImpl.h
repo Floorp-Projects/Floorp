@@ -207,7 +207,7 @@ PLDHashOperator
 nsBaseHashtable<KeyClass,DataType,UserDataType>::s_EnumReadStub
   (PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number, void* arg)
 {
-  EntryType* ent = (EntryType*) hdr;
+  EntryType* ent = NS_STATIC_CAST(EntryType*, hdr);
   s_EnumReadArgs* eargs = (s_EnumReadArgs*) arg;
 
   PLDHashOperator res = (eargs->func)(ent->GetKey(), ent->mData, eargs->userArg);
