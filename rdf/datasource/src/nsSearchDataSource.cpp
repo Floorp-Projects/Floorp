@@ -117,7 +117,7 @@ public:
     NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_ERROR_NOT_IMPLEMENTED; }
     // nsIStreamListener methods:
-    NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+    NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 #else
 	// stream observer
 
@@ -2025,7 +2025,7 @@ SearchDataSourceCallback::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 
 NS_IMETHODIMP
 #ifdef NECKO
-SearchDataSourceCallback::OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *aIStream,
+SearchDataSourceCallback::OnDataAvailable(nsISupports *ctxt, nsIInputStream *aIStream,
 					PRUint32 sourceOffset, PRUint32 aLength)
 #else
 SearchDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
