@@ -26,6 +26,9 @@
 #include "plstr.h"
 #include "prprf.h"  /* PR_snprintf(...) */
 #include "prmem.h"  /* PR_Malloc(...) / PR_Free(...) */
+#ifdef XP_MAC
+#include "xp_mcom.h"	/* XP_STRDUP() */
+#endif
 
 #ifdef XP_PC
 #include <windows.h>
@@ -750,10 +753,7 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
 #endif
 
 #ifdef XP_MAC
-#define MAXPATHLEN 2000
-
-    resourceBase = (char *)PR_Malloc(MAXPATHLEN);;
-	*resourceBase = '\0';
+	resourceBase = XP_STRDUP("usr/local/netscape/bin");
 #endif
 
   // Join base path to resource name
