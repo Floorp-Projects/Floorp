@@ -456,7 +456,7 @@ void
 XFE_NavCenterView::createTree()
 {
 
-	_rdftree = new XFE_RDFChromeTreeView(this, getBaseWidget(),
+	_rdftree = new XFE_RDFChromeTreeView(m_toplevel, getBaseWidget(),
 										 this, _isStandalone ? RDF_PANE_STANDALONE : RDF_PANE_DOCKED, m_contextData);
 	
 	_rdftree->setStandAlone(_isStandalone);
