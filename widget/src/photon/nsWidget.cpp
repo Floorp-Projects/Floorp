@@ -225,9 +225,12 @@ NS_IMETHODIMP nsWidget::ResetInputState( ) {
   return NS_OK;
 	}
 
-// to be implemented
-NS_IMETHODIMP nsWidget::PasswordFieldInit( ) {
-  return NS_OK;
+NS_IMETHODIMP SetIMEOpenState(PRBool aState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+NS_IMETHODIMP GetIMEOpenState(PRBool* aState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
 	}
 
 //-------------------------------------------------------------------------
