@@ -128,18 +128,46 @@ endif
 
 $(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
 
-DESKTOP_ICONS := \
-	abcardWindow.ico \
-	addressbookWindow.ico \
-	messengerWindow.ico \
-	msgcomposeWindow.ico \
+ifneq (,$(filter windows os2 gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows os2,$(MOZ_WIDGET_TOOLKIT)))
+ICON_SUFFIX=.ico
+else
+ICON_SUFFIX=.xpm
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ICON_DIR=gtk
+else
+ICON_DIR=$(MOZ_WIDGET_TOOLKIT)
+endif
+
+DESKTOP_ICONS = \
+	abcardWindow \
+	addressbookWindow \
+	messengerWindow \
+	msgcomposeWindow \
 	$(NULL) 
 
-libs:: $(DESKTOP_ICONS)
+ifeq ($(ICON_DIR),gtk)
+DESKTOP_ICONS_SMALL=$(patsubst %,%16,$(DESKTOP_ICONS))
+endif
+
+DESKTOP_ICON_FILES = $(addsuffix $(ICON_SUFFIX), $(DESKTOP_ICONS) $(DESKTOP_ICONS_SMALL))
+
+libs:: $(addprefix icons/$(ICON_DIR)/,$(DESKTOP_ICON_FILES))
 	$(INSTALL) $^ $(DIST)/bin/chrome/icons/default
 
-install:: $(DESKTOP_ICONS)
+install:: $(addprefix icons/$(ICON_DIR)/,$(DESKTOP_ICON_FILES))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/chrome/icons/default
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+libs::
+	$(INSTALL) $(srcdir)/default.xpm $(DIST)/bin/chrome/icons
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/default.xpm $(DESTDIR)$(mozappdir)/icons
+endif
 
 ifneq (,$(filter-out OS2 WINNT Darwin,$(OS_ARCH)))
 thunderbird:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
