@@ -1,4 +1,5 @@
 file:///s|/mozilla/layout/html/tests/table/viewer_tests/test3.html
 file:///s|/mozilla/layout/html/tests/table/viewer_tests/test4.html
+delay:=2
 file:///s|/mozilla/layout/html/tests/table/viewer_tests/test6.html
 
