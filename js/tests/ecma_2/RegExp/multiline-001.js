@@ -16,9 +16,9 @@
     var woodpeckers = "ivory-billed\ndowny\nhairy\nacorn\nyellow-bellied sapsucker\n" +
         "northern flicker\npileated\n";
 
-    AddRegExpCases( /[d]$/g, woodpeckers, woodpeckers.indexOf("ivory-billed"), ["ivory-billed"] );
+    AddRegExpCases( /.*[y]$/m, woodpeckers, woodpeckers.indexOf("downy"), ["downy"] );
 
-    AddRegExpCases( /[d]$/m, woodpeckers, woodpeckers.indexOf("ivory-billed"), ["ivory-billed"] );
+    AddRegExpCases( /.*[d]$/m, woodpeckers, woodpeckers.indexOf("ivory-billed"), ["ivory-billed"] );
 
     test();
 
