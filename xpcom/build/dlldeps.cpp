@@ -88,7 +88,6 @@
 #include "pure.h"
 #endif
 #include "pldhash.h"
-#include "nsLogging.h"
 #ifdef NS_TRACE_MALLOC
 #include "nsTraceMalloc.h"
 #endif
@@ -181,9 +180,6 @@ void XXXNeverCalled()
     PL_DHashTableFinish(NULL);
     nsSlidingString sliding(NULL, NULL, NULL);
     NS_NewInputStreamTee(NULL, NULL, NULL);
-#ifdef NS_ENABLE_LOGGING
-    nsLog();
-#endif
 #ifdef NS_TRACE_MALLOC
     NS_TraceMallocStartup(0);
     NS_TraceMallocStartupArgs(0, NULL);
