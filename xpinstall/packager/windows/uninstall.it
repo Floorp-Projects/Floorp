@@ -72,7 +72,7 @@ CHARSET=0
 ;  OEM_CHARSET 255
 Show Dialog=TRUE
 Title=$ProductName$ Uninstaller
-Message0=This will uninstall %s from your system.  Click Uninstall to begin uninstallation.
+Message0=Are you sure you want to completely remove %s and all of its components?
 
 Uninstall=&Uninstall
 Cancel=&Cancel
