@@ -936,7 +936,7 @@ void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
 			}
 		}
     }
-    else if (!mPath.IsEmpty())
+    else
     {
 		nsFileSpec& filePath = (nsFileSpec&) *this;
 
