@@ -2130,7 +2130,8 @@ class BodyCodegen
                     cfw.addPush(special);
                     cfw.addALoad(contextLocal);
                     cfw.addALoad(variableObjectLocal);
-                    addScriptRuntimeInvoke("specialReference",
+                    addScriptRuntimeInvoke(
+                        "specialRef",
                         "(Ljava/lang/Object;"
                         +"Ljava/lang/String;"
                         +"Lorg/mozilla/javascript/Context;"

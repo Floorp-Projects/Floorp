@@ -96,12 +96,12 @@ class XMLReference extends Reference
         return value;
     }
 
-    public void delete(Context cx)
+    public boolean delete(Context cx)
     {
-        if (xmlObject == null) {
-            return;
+        if (xmlObject != null) {
+            xmlObject.deleteXMLProperty(xmlName, descendants);
         }
-        xmlObject.deleteXMLProperty(xmlName, descendants);
+        return !has(cx);
     }
 }
 

@@ -53,8 +53,9 @@ public abstract class Reference
 
     public abstract Object set(Context cx, Object value);
 
-    public void delete(Context cx)
+    public boolean delete(Context cx)
     {
+        return false;
     }
 }
 

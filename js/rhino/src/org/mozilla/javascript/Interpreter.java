@@ -3226,8 +3226,8 @@ switch (op) {
         //stringReg: name of special property
         Object obj = stack[stackTop];
         if (obj == DBL_MRK) obj = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.specialReference(obj, stringReg,
-                                                         cx, frame.scope);
+        stack[stackTop] = ScriptRuntime.specialRef(obj, stringReg,
+                                                   cx, frame.scope);
         continue Loop;
     }
     case Token.REF_MEMBER: {

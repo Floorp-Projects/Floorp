@@ -1116,32 +1116,6 @@ public class ScriptRuntime {
         }
     }
 
-    public static Scriptable getProto(Object obj, Scriptable scope) {
-        Scriptable s;
-        if (obj instanceof Scriptable) {
-            s = (Scriptable) obj;
-        } else {
-            s = toObject(scope, obj);
-        }
-        if (s == null) {
-            throw typeError0("msg.null.to.object");
-        }
-        return s.getPrototype();
-    }
-
-   public static Scriptable getParent(Object obj, Scriptable scope) {
-        Scriptable s;
-        if (obj instanceof Scriptable) {
-            s = (Scriptable) obj;
-        } else {
-            s = toObject(scope, obj);
-        }
-        if (s == null) {
-            throw typeError0("msg.null.to.object");
-        }
-        return s.getParentScope();
-    }
-
     /**
      * Return -1L if str is not an index or the index value as lower 32
      * bits of the result.
@@ -1518,6 +1492,46 @@ public class ScriptRuntime {
         return value;
     }
 
+    public static boolean deleteObjectElem(Scriptable target, Object elem,
+                                           Context cx)
+    {
+        boolean result;
+        if (target instanceof XMLObject) {
+            XMLObject xmlObject = (XMLObject)target;
+            result = xmlObject.ecmaDelete(cx, elem);
+        } else {
+            String s = toStringIdOrIndex(cx, elem);
+            if (s == null) {
+                int index = lastIndexResult(cx);
+                result = ScriptableObject.deleteProperty(target, index);
+            } else {
+                result = ScriptableObject.deleteProperty(target, s);
+            }
+        }
+        return result;
+    }
+
+    public static boolean hasObjectElem(Scriptable target, Object elem,
+                                        Context cx)
+    {
+        boolean result;
+
+        if (target instanceof XMLObject) {
+            XMLObject xmlObject = (XMLObject)target;
+            result = xmlObject.ecmaHas(cx, elem);
+        } else {
+            String s = toStringIdOrIndex(cx, elem);
+            if (s == null) {
+                int index = lastIndexResult(cx);
+                result = ScriptableObject.hasProperty(target, index);
+            } else {
+                result = ScriptableObject.hasProperty(target, s);
+            }
+        }
+
+        return result;
+    }
+
     public static Object getReference(Reference ref, Context cx)
     {
         return ref.get(cx);
@@ -1530,8 +1544,7 @@ public class ScriptRuntime {
 
     public static Object deleteReference(Reference ref, Context cx)
     {
-        ref.delete(cx);
-        return wrapBoolean(!ref.has(cx));
+        return wrapBoolean(ref.delete(cx));
     }
 
     static boolean isSpecialProperty(String s)
@@ -1539,66 +1552,10 @@ public class ScriptRuntime {
         return s.equals("__proto__") || s.equals("__parent__");
     }
 
-    public static Reference specialReference(final Object obj,
-                                             final String specialProperty,
-                                             Context cx,
-                                             final Scriptable scope)
+    public static Reference specialRef(Object obj, String specialProperty,
+                                       Context cx, Scriptable scope)
     {
-        final int PROTO = 0;
-        final int PARENT = 1;
-        final int id;
-        if (specialProperty.equals("__proto__")) {
-            id = PROTO;
-        } else if (specialProperty.equals("__parent__")) {
-            id = PARENT;
-        } else {
-            throw Kit.codeBug();
-        }
-        final boolean
-            specials = cx.hasFeature(Context.FEATURE_PARENT_PROTO_PROPRTIES);
-
-        final Scriptable sobj = toObject(scope, obj);
-        return new Reference() {
-            public Object get(Context cx2)
-            {
-                if (!specials) {
-                    return getObjectProp(sobj, specialProperty, cx2);
-                }
-                if (id == PROTO) {
-                    return getProto(sobj, scope);
-                } else {
-                    return getParent(sobj, scope);
-                }
-            }
-
-            public Object set(Context cx2, Object value)
-            {
-                if (!specials) {
-                    return setObjectProp(sobj, specialProperty, value, cx2);
-                }
-                Scriptable result;
-                if (value == null) {
-                    result = null;
-                } else {
-                    result = toObject(scope, value);
-                    Scriptable s = result;
-                    do {
-                        if (s == sobj) {
-                            throw Context.reportRuntimeError1(
-                                "msg.cyclic.value", specialProperty);
-                        }
-                        s = (id == PROTO)
-                            ? s.getPrototype() : s.getParentScope();
-                    } while (s != null);
-                }
-                if (id == PROTO) {
-                    sobj.setPrototype(result);
-                } else {
-                    sobj.setParentScope(result);
-                }
-                return result;
-            }
-        };
+        return SpecialRef.createSpecial(cx, scope, obj, specialProperty);
     }
 
     /**
@@ -1617,19 +1574,7 @@ public class ScriptRuntime {
     {
         Scriptable sobj = (obj instanceof Scriptable)
                           ? (Scriptable)obj : toObject(cx, scope, obj);
-        boolean result;
-        if (sobj instanceof XMLObject) {
-            XMLObject xmlObject = (XMLObject)sobj;
-            result = xmlObject.ecmaDelete(cx, id);
-        } else {
-            String s = toStringIdOrIndex(cx, id);
-            if (s == null) {
-                int index = lastIndexResult(cx);
-                result = ScriptableObject.deleteProperty(sobj, index);
-            } else {
-                result = ScriptableObject.deleteProperty(sobj, s);
-            }
-        }
+        boolean result = deleteObjectElem(sobj, id, cx);
         return wrapBoolean(result);
     }
 
@@ -2727,22 +2672,7 @@ public class ScriptRuntime {
             throw typeError0("msg.instanceof.not.object");
         }
 
-        boolean result;
-
-        if (b instanceof XMLObject) {
-            XMLObject xmlObject = (XMLObject)b;
-            result = xmlObject.ecmaHas(cx, a);
-        } else {
-            String s = toStringIdOrIndex(cx, a);
-            if (s == null) {
-                int index = lastIndexResult(cx);
-                result = ScriptableObject.hasProperty((Scriptable)b, index);
-            } else {
-                result = ScriptableObject.hasProperty((Scriptable)b, s);
-            }
-        }
-
-        return result;
+        return hasObjectElem((Scriptable)b, a, cx);
     }
 
     public static boolean cmp_LT(Object val1, Object val2)
