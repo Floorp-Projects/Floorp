@@ -413,9 +413,21 @@ XRemoteService::AddBrowserInstance(nsIDOMWindowInternal *aBrowser)
   nsCAutoString profile;
   GetProfileName(profile);
 
+  // Make sure that the profile is actually set to something.
+  const char *profileTmp = NULL;
+  if (profile.Length())
+      profileTmp = profile.get();
+
+  // Normalize program names to lower case and make sure it actually
+  // has a value.
+  ToLowerCase(mProgram);
+  const char *programTmp = NULL;
+  if (mProgram.Length())
+      programTmp = mProgram.get();
+
   nsresult rv;
-  rv = widgetHelper->EnableXRemoteCommands(mainWidget, profile.get(),
-                                           mProgram.get());
+  rv = widgetHelper->EnableXRemoteCommands(mainWidget, profileTmp,
+                                           programTmp);
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to enable x remote commands for widget");
     return rv;
