@@ -456,3 +456,4 @@ pref("custtoolbar.Composer.Formatting_Toolbar.position", 1);
 pref("custtoolbar.Composer.Formatting_Toolbar.showing", true);
 pref("custtoolbar.Composer.Formatting_Toolbar.open", true);
 
+pref("sidebar.customize.all_panels.url", "http://sidebar-rdf.netscape.com/%LOCALE%/sidebar-rdf/%SIDEBAR_VERSION%/all-panels.rdf");
