@@ -161,7 +161,7 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIFrame* aFrame, nsBoxInfo& aSize)
  *
  */
 nsresult
-nsBoxFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsBoxInfo& aSize)
+nsBoxFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize)
 {
   aSize.clear();
 
@@ -186,44 +186,46 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowStat
   // redefine anything depending on css
   GetRedefinedMinPrefMax(aFrame, aSize);
 
-  // subtract out the childs margin and border 
-  const nsStyleSpacing* spacing;
-  nsresult rv = aFrame->GetStyleData(eStyleStruct_Spacing,
-                 (const nsStyleStruct*&) spacing);
+  // if we are still intrinsically sized the flow to get the size otherwise
+  // we are done.
+  if (aSize.prefSize.width == NS_INTRINSICSIZE && aSize.prefSize.width == NS_INTRINSICSIZE)
+  {
+    // subtract out the childs margin and border 
+    const nsStyleSpacing* spacing;
+    nsresult rv = aFrame->GetStyleData(eStyleStruct_Spacing,
+                   (const nsStyleStruct*&) spacing);
 
-  nsMargin margin;
-  spacing->GetMargin(margin);
-  nsMargin border;
-  spacing->GetBorderPadding(border);
-  nsMargin total = margin + border;
+    nsMargin margin;
+    spacing->GetMargin(margin);
+    nsMargin border;
+    spacing->GetBorderPadding(border);
+    nsMargin total = margin + border;
 
-  // add in childs margin and border
-  if (aSize.prefSize.height != NS_INTRINSICSIZE)
-      aSize.prefSize.height += (total.left + total.right);
+    // add in childs margin and border
+    if (aSize.prefSize.height != NS_INTRINSICSIZE)
+        aSize.prefSize.height += (total.left + total.right);
 
-  if (aSize.prefSize.height != NS_INTRINSICSIZE)
-      aSize.prefSize.height += (total.top + total.bottom);
+    if (aSize.prefSize.height != NS_INTRINSICSIZE)
+        aSize.prefSize.height += (total.top + total.bottom);
 
-  // flow child at preferred size
-  nsHTMLReflowMetrics desiredSize(nsnull);
+    // flow child at preferred size
+    nsHTMLReflowMetrics desiredSize(nsnull);
 
-  nsCalculatedBoxInfo info(aSize);
+    aSize.calculatedSize = aSize.prefSize;
 
-  info.calculatedSize = aSize.prefSize;
+    nsReflowStatus status;
+    PRBool redraw;
+    nsString reason("To get pref size");
+    FlowChildAt(aFrame, aPresContext, desiredSize, aReflowState, status, aSize, redraw, reason);
 
-  nsReflowStatus status;
-  PRBool redraw;
-  nsString reason("To get pref size");
-  FlowChildAt(aFrame, aPresContext, desiredSize, aReflowState, status, info, redraw, reason);
+    // remove margin and border
+    desiredSize.height -= (total.top + total.bottom);
+    desiredSize.width -= (total.left + total.right);
 
-  // remove margin and border
-  desiredSize.height -= (total.top + total.bottom);
-  desiredSize.width -= (total.left + total.right);
-
-  // get the size returned and the it as the preferredsize.
-  aSize.prefSize.width = desiredSize.width;
-  aSize.prefSize.height = desiredSize.height;
-
+    // get the size returned and the it as the preferredsize.
+    aSize.prefSize.width = desiredSize.width;
+    aSize.prefSize.height = desiredSize.height;
+  }
 
   return NS_OK;
 }
@@ -280,7 +282,16 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
   // cached values for the children in the reflow list
   nsIFrame* incrementalChild = nsnull;
   if ( aReflowState.reason == eReflowReason_Incremental ) {
-    Dirty(aReflowState,incrementalChild);
+    nsIFrame* targetFrame;    
+    // See if it's targeted at us
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+    if (this == targetFrame) {
+      // if it has redraw us
+      Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+    } else {
+      // otherwise dirty our children
+      Dirty(aReflowState,incrementalChild);
+    }
   } 
 #if 0
 ListTag(stdout);

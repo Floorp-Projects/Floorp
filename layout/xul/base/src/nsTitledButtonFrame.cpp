@@ -702,12 +702,20 @@ nsTitledButtonFrame::Reflow(nsIPresContext&   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+  // redraw us on a reflow
+  
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    nsIFrame* targetFrame;
+    
+    // See if it's targeted at us
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+    if (this == targetFrame) {
+      Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+    }
+  }
+
   mNeedsLayout = PR_TRUE;
   nsresult result = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
-
-  // redraw us on a reflow
-  Invalidate(nsRect(0,0,mRect.width, mRect.height), PR_FALSE);
-
   return result;
 }
 
