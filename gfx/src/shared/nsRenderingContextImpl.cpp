@@ -70,7 +70,7 @@ nsTransform2D       *theTransform;
 
   tvrect.SetRect(0,0,aX1-aX0,aY1-aY0);
 
-  if( !hasMask && ((aWidth<(tvrect.width/16)) || (aHeight<(tvrect.height/16)))) {
+  if(!hasMask && ((aWidth<(tvrect.width/16)) || (aHeight<(tvrect.height/16)))) {
 
     // create a larger tile to use
     GetDeviceContext(theDevCon);

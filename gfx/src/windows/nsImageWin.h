@@ -171,7 +171,7 @@ private:
    * @param aWidth - width of DIB
    * @param aHeight - height of DIB
    */
-  nsresult PrintDDB(nsDrawingSurface aSurface,PRInt32 aX,PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight);
+  nsresult PrintDDB(nsDrawingSurface aSurface,PRInt32 aX,PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight,PRUint32  aROP);
 
 
   
