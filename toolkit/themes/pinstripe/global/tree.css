@@ -126,9 +126,8 @@ treechildren::-moz-tree-line {
 /* ::::: tree separator ::::: */
 
 treechildren::-moz-tree-separator {
-  -moz-appearance: separator;
-  border-top: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDHighlight;
+  border-top: 1px dashed #C7C7C7;
+  margin: 0 2px;
 }
 
 
@@ -318,12 +317,12 @@ treechildren::-moz-tree-image(Name, separator) {
 }
 
 treechildren::-moz-tree-cell-text(Name, separator) {
-  color: ThreeDShadow;
-  margin: 0px 5px 0px 5px;
+  color: #999;
+  -moz-margin-end: 5px;
 }
 
 treechildren::-moz-tree-cell-text(Name, separator, selected, focus) {
-  color: HighlightText;
+  color: #FFF;
 }
 
 /* ::::: alternating background ::::: */
