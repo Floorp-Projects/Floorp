@@ -56,8 +56,6 @@ static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
-static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 const nscoord kSuggestedNotSet = -1;
 nsTextControlFrame::nsTextControlFrame() 
@@ -99,7 +97,8 @@ nsTextControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 
 // for a text area aInnerHeight is the height of one line
 nscoord 
-nsTextControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
+nsTextControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+                                             float aPixToTwip, 
                                              nscoord aInnerHeight) const
 {
 
@@ -117,14 +116,13 @@ nsTextControlFrame::GetVerticalInsidePadding(float aPixToTwip,
   float   padTextField;
   PRInt32 vertPad;
   PRInt32 shouldUseVertPad;
-  nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  nsCOMPtr<nsILookAndFeel> lookAndFeel;
+  if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextAreaVerticalInsidePadding,  padTextArea);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextFieldVerticalInsidePadding,  padTextField);
    // These two (below) are really only needed for GTK
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextVerticalInsidePadding,  vertPad);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextShouldUseVerticalInsidePadding,  shouldUseVertPad);
-   NS_RELEASE(lookAndFeel);
   }
 
   if (1 == shouldUseVertPad) {
@@ -139,7 +137,7 @@ nsTextControlFrame::GetVerticalInsidePadding(float aPixToTwip,
     }
   }
 }
-
+//static float pad = 0.95F;
 nscoord 
 nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
                                                float aPixToTwip, 
@@ -161,16 +159,15 @@ nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   PRInt32 padMinText;
   PRInt32 shouldUsePadMinText;
 
-  nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  nsCOMPtr<nsILookAndFeel> lookAndFeel;
+  if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextFieldHorizontalInsidePadding,  padTextField);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextAreaHorizontalInsidePadding,  padTextArea);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextHorizontalInsideMinimumPadding,  padMinText);
    // This one (below) is really only needed for GTK
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextShouldUseHorizontalInsideMinimumPadding,  shouldUsePadMinText);
-   NS_RELEASE(lookAndFeel);
   }
-
+//padTextField = pad;
   nscoord padding;
   PRInt32 type;
   GetType(&type);
@@ -179,6 +176,7 @@ nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   } else {
     padding = (nscoord)(aCharWidth * padTextField);
   }
+  printf("Padding - %d  %5.2f %d\n", aCharWidth, padTextField, padding);
   nscoord min = NSIntPixelsToTwips(padMinText, aPixToTwip);
   if (padding > min && (1 == shouldUsePadMinText)) {
     return padding;
@@ -292,14 +290,13 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
 
   if (eCompatibility_Standard == mode) {
-    nsILookAndFeel * lookAndFeel;
-    if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+    nsCOMPtr<nsILookAndFeel> lookAndFeel;
+    if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
       PRInt32 borderSize;
       lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldBorder, borderSize);
       nscoord borderTwips = NSIntPixelsToTwips(borderSize, p2t);
       desiredSize.width  -= borderTwips*2;
       desiredSize.height -= borderTwips*2;
-      NS_RELEASE(lookAndFeel);
     }
   }
 
