@@ -518,7 +518,7 @@ if ($action eq 'update') {
 
     if ($sortkey != $sortkeyold) {
         SendSQL("UPDATE milestones SET sortkey=$sortkey
-                 WHERE product=" . SqlQuote($product) . "
+                 WHERE product_id=" . $product_id . "
                    AND value=" . SqlQuote($milestoneold));
         unlink "data/versioncache";
         print "Updated sortkey.<BR>\n";
