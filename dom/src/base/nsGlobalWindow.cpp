@@ -3460,9 +3460,9 @@ nsCloseEvent::PostCloseEvent()
 NS_IMETHODIMP
 GlobalWindowImpl::Close()
 {
-  if (IsFrame()) {
-    // window.close() is called on a frame in a frameset, such calls
-    // are ignored.
+  if (IsFrame() || !mDocShell) {
+    // window.close() is called on a frame in a frameset, or on a
+    // window that's already closed. Ignore such calls.
 
     return NS_OK;
   }
