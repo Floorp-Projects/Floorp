@@ -17,7 +17,7 @@
 
 <!ENTITY name.label                  "Name">
 <!ENTITY url.label                   "URL">
-<!ENTITY shortcut.label              "Shortcut URL">
+<!ENTITY shortcut.label              "Nickname">
 <!ENTITY description.label           "Description">
 
 <!ENTITY contains.label              "contains">
