@@ -30,26 +30,37 @@
 #include "imgRequest.h"
 #include "imgRequestProxy.h"
 
+#ifdef IMG_BUILD_gif
 // gif
 #include "imgContainerGIF.h"
 #include "nsGIFDecoder2.h"
+#endif
 
-
+#ifdef IMG_BUILD_bmp
 // bmp/ico
 #include "nsBMPDecoder.h"
 #include "nsICODecoder.h"
+#endif
 
+#ifdef IMG_BUILD_png
 // png
 #include "nsPNGDecoder.h"
+#endif
 
+#ifdef IMG_BUILD_jpeg
 // jpeg
 #include "nsJPEGDecoder.h"
+#endif
 
+#ifdef IMG_BUILD_xbm
 // xbm
 #include "nsXBMDecoder.h"
+#endif
 
+#ifdef IMG_BUILD_ppm
 // ppm
 #include "nsPPMDecoder.h"
+#endif
 
 // objects that just require generic constructors
 
@@ -58,25 +69,37 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(imgContainer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgLoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequestProxy)
 
+#ifdef IMG_BUILD_gif
 // gif
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgContainerGIF)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGIFDecoder2)
+#endif
 
+#ifdef IMG_BUILD_jpeg
 // jpeg
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJPEGDecoder)
+#endif
 
+#ifdef IMG_BUILD_bmp
 // bmp
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsICODecoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBMPDecoder)
+#endif
 
+#ifdef IMG_BUILD_png
 // png
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPNGDecoder)
+#endif
 
+#ifdef IMG_BUILD_xbm
 // xbm
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXBMDecoder)
+#endif
 
+#ifdef IMG_BUILD_ppm
 // ppm
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPPMDecoder)
+#endif
 
 static const nsModuleComponentInfo components[] =
 {
@@ -97,6 +120,7 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/image/request;1",
     imgRequestProxyConstructor, },
 
+#ifdef IMG_BUILD_gif
   // gif
   { "GIF image container",
     NS_GIFCONTAINER_CID,
@@ -106,7 +130,9 @@ static const nsModuleComponentInfo components[] =
      NS_GIFDECODER2_CID,
      "@mozilla.org/image/decoder;2?type=image/gif",
      nsGIFDecoder2Constructor, },
-  
+#endif
+
+#ifdef IMG_BUILD_jpeg
   // jpeg
   { "JPEG decoder",
     NS_JPEGDECODER_CID,
@@ -120,7 +146,9 @@ static const nsModuleComponentInfo components[] =
     NS_JPEGDECODER_CID,
     "@mozilla.org/image/decoder;2?type=image/jpg",
     nsJPEGDecoderConstructor, },
-  
+#endif
+
+#ifdef IMG_BUILD_bmp
   // bmp
   { "ICO Decoder",
      NS_ICODECODER_CID,
@@ -130,7 +158,9 @@ static const nsModuleComponentInfo components[] =
      NS_BMPDECODER_CID,
      "@mozilla.org/image/decoder;2?type=image/bmp",
      nsBMPDecoderConstructor, },
-  
+#endif
+
+#ifdef IMG_BUILD_png
   // png
   { "PNG Decoder",
     NS_PNGDECODER_CID,
@@ -140,7 +170,9 @@ static const nsModuleComponentInfo components[] =
     NS_PNGDECODER_CID,
     "@mozilla.org/image/decoder;2?type=image/x-png",
     nsPNGDecoderConstructor, },
+#endif
 
+#ifdef IMG_BUILD_xbm
   // xbm
   { "XBM Decoder",
      NS_XBMDECODER_CID,
@@ -154,7 +186,10 @@ static const nsModuleComponentInfo components[] =
      NS_XBMDECODER_CID,
      "@mozilla.org/image/decoder;2?type=image/xbm",
      nsXBMDecoderConstructor, },
-  
+#endif
+
+
+#ifdef IMG_BUILD_ppm
   // ppm
   { "pbm decoder",
     NS_PPMDECODER_CID,
@@ -168,6 +203,7 @@ static const nsModuleComponentInfo components[] =
     NS_PPMDECODER_CID,
     "@mozilla.org/image/decoder;2?type=image/x-portable-pixmap",
     nsPPMDecoderConstructor, },
+#endif
 };
 
 PR_STATIC_CALLBACK(nsresult)

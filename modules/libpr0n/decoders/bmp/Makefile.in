@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= imgbmp
 LIBRARY_NAME	= imgbmp_s
-EXPORT_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 MODULE_NAME	= nsBMPModule
 
