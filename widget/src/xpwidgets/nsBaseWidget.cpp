@@ -62,9 +62,6 @@ static PRInt32 gNumWidgets;
 // nsBaseWidget
 NS_IMPL_ISUPPORTS1(nsBaseWidget, nsIWidget)
 
-// nsBaseWidget::Enumerator
-NS_IMPL_ISUPPORTS2(nsBaseWidget::Enumerator, nsIBidirectionalEnumerator, nsIEnumerator)
-
 
 //-------------------------------------------------------------------------
 //
@@ -241,6 +238,9 @@ NS_IMETHODIMP nsBaseWidget::SetClientData(void* aClientData)
 //-------------------------------------------------------------------------
 NS_METHOD nsBaseWidget::Destroy()
 {
+  // Just in case our parent is the only ref to us
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+  
   // disconnect from the parent
   nsIWidget *parent = GetParent();
   if (parent) {
@@ -279,29 +279,24 @@ nsIWidget* nsBaseWidget::GetParent(void)
 
 //-------------------------------------------------------------------------
 //
-// Get this nsBaseWidget's list of children
-//
-//-------------------------------------------------------------------------
-nsIEnumerator* nsBaseWidget::GetChildren()
-{
-  nsIEnumerator* children = nsnull;
-
-  if (mChildren.Count()) {
-    children = new Enumerator(*this);
-    NS_IF_ADDREF(children);
-  }
-  return children;
-}
-
-
-//-------------------------------------------------------------------------
-//
 // Add a child to the list of children
 //
 //-------------------------------------------------------------------------
 void nsBaseWidget::AddChild(nsIWidget* aChild)
 {
-  mChildren.AppendObject(aChild);
+  NS_PRECONDITION(!aChild->GetNextSibling() && !aChild->GetPrevSibling(),
+                  "aChild not properly removed from its old child list");
+  
+  if (!mFirstChild) {
+    mFirstChild = mLastChild = aChild;
+  } else {
+    // append to the list
+    NS_ASSERTION(mLastChild, "Bogus state");
+    NS_ASSERTION(!mLastChild->GetNextSibling(), "Bogus state");
+    mLastChild->SetNextSibling(aChild);
+    aChild->SetPrevSibling(mLastChild);
+    mLastChild = aChild;
+  }
 }
 
 
@@ -312,7 +307,29 @@ void nsBaseWidget::AddChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsBaseWidget::RemoveChild(nsIWidget* aChild)
 {
-  mChildren.RemoveObject(aChild);
+  NS_ASSERTION(aChild->GetParent() == NS_STATIC_CAST(nsIWidget*, this),
+               "Not one of our kids!");
+  
+  if (mLastChild == aChild) {
+    mLastChild = mLastChild->GetPrevSibling();
+  }
+  if (mFirstChild == aChild) {
+    mFirstChild = mFirstChild->GetNextSibling();
+  }
+
+  // Now remove from the list.  Make sure that we pass ownership of the tail
+  // of the list correctly before we have aChild let go of it.
+  nsIWidget* prev = aChild->GetPrevSibling();
+  nsIWidget* next = aChild->GetNextSibling();
+  if (prev) {
+    prev->SetNextSibling(next);
+  }
+  if (next) {
+    next->SetPrevSibling(prev);
+  }
+  
+  aChild->SetNextSibling(nsnull);
+  aChild->SetPrevSibling(nsnull);
 }
 
 
@@ -328,26 +345,36 @@ NS_IMETHODIMP nsBaseWidget::SetZIndex(PRInt32 aZIndex)
   // reorder this child in its parent's list.
   nsBaseWidget* parent = NS_STATIC_CAST(nsBaseWidget*, GetParent());
   if (parent) {
-    parent->mChildren.RemoveObject(this);
-    PRInt32 childCount = parent->mChildren.Count();
-    PRInt32 index;
-    // XXXbz would a binary search for the right insertion point be
-    // better?  How long does this list get?
-    for (index = 0; index < childCount; index++) {
-      nsIWidget* childWidget = parent->mChildren[index];
+    parent->RemoveChild(this);
+    // Scope sib outside the for loop so we can check it afterward
+    nsIWidget* sib = parent->GetFirstChild();
+    for ( ; sib; sib = sib->GetNextSibling()) {
       PRInt32 childZIndex;
-      if (NS_SUCCEEDED(childWidget->GetZIndex(&childZIndex))) {
+      if (NS_SUCCEEDED(sib->GetZIndex(&childZIndex))) {
         if (aZIndex < childZIndex) {
-          parent->mChildren.InsertObjectAt(this, index);
-          PlaceBehind(eZPlacementBelow, childWidget, PR_FALSE);
+          // Insert ourselves before sib
+          nsIWidget* prev = sib->GetPrevSibling();
+          mNextSibling = sib;
+          mPrevSibling = prev;
+          sib->SetPrevSibling(this);
+          if (prev) {
+            prev->SetNextSibling(this);
+          } else {
+            NS_ASSERTION(sib == parent->mFirstChild, "Broken child list");
+            // We've taken ownership of sib, so it's safe to have parent let
+            // go of it
+            parent->mFirstChild = this;
+          }
+          PlaceBehind(eZPlacementBelow, sib, PR_FALSE);
           break;
         }
       }
     }
     // were we added to the list?
-    if (index == childCount) {
-      parent->mChildren.AppendObject(this);
+    if (!sib) {
+      parent->AddChild(this);
     }
+    
     NS_RELEASE(parent);
   }
   return NS_OK;
@@ -1275,131 +1302,3 @@ nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
 
 #endif // DEBUG
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//-------------------------------------------------------------------------
-//
-// Constructor
-//
-//-------------------------------------------------------------------------
-
-nsBaseWidget::Enumerator::Enumerator(nsBaseWidget & inParent)
-  : mCurrentPosition(0), mParent(inParent)
-{
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Destructor
-//
-//-------------------------------------------------------------------------
-nsBaseWidget::Enumerator::~Enumerator()
-{   
-}
-
-
-//enumerator interfaces
-NS_IMETHODIMP
-nsBaseWidget::Enumerator::Next()
-{
-  if (mCurrentPosition < mParent.mChildren.Count() - 1 )
-    mCurrentPosition ++;
-  else
-    return NS_ERROR_FAILURE;
-  return NS_OK;
-}
-
-
- 
-NS_IMETHODIMP
-nsBaseWidget::Enumerator::Prev()
-{
-  if (mCurrentPosition > 0 )
-    mCurrentPosition --;
-  else
-    return NS_ERROR_FAILURE;
-  return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
-{
-  if (!aItem)
-    return NS_ERROR_NULL_POINTER;
-
-  if ( mCurrentPosition < mParent.mChildren.Count() )
-    NS_IF_ADDREF(*aItem = mParent.mChildren[mCurrentPosition]);
-  else
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsBaseWidget::Enumerator::First()
-{
-  if ( mParent.mChildren.Count() ) {
-    mCurrentPosition = 0;
-    return NS_OK;
-  }
-  else
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsBaseWidget::Enumerator::Last()
-{
-  PRInt32 itemCount = mParent.mChildren.Count();
-  if ( itemCount ) {
-    mCurrentPosition = itemCount - 1;
-    return NS_OK;
-  }
-  else
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsBaseWidget::Enumerator::IsDone()
-{
-  PRInt32 itemCount = mParent.mChildren.Count();
-
-  if ((mCurrentPosition == itemCount-1) || (itemCount == 0) ){ //empty lists always return done
-    return NS_OK;
-  }
-  else {
-    return NS_ENUMERATOR_FALSE;
-  }
-  return NS_OK;
-}

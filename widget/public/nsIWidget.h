@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -46,6 +46,7 @@
 
 #include "prthread.h"
 #include "nsEvent.h"
+#include "nsCOMPtr.h"
 
 // forward declarations
 class   nsIAppShell;
@@ -256,6 +257,12 @@ class nsIWidget : public nsISupports {
 
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWIDGET_IID)
 
+    nsIWidget()
+      : mLastChild(nsnull)
+      , mPrevSibling(nsnull)
+    {}
+
+        
     /**
      * Create and initialize a widget. 
      *
@@ -357,13 +364,48 @@ class nsIWidget : public nsISupports {
     virtual nsIWidget* GetParent(void) = 0;
 
     /**
-     * Return an nsEnumerator over the children of this widget.
-     *
-     * @return an enumerator over the list of children or nsnull if it does not
-     * have any children
-     *
+     * Return the first child of this widget.  Will return null if
+     * there are no children.
      */
-    virtual nsIEnumerator*  GetChildren(void) = 0;
+    nsIWidget* GetFirstChild() const {
+        return mFirstChild;
+    }
+    
+    /**
+     * Return the last child of this widget.  Will return null if
+     * there are no children.
+     */
+    nsIWidget* GetLastChild() const {
+        return mLastChild;
+    }
+
+    /**
+     * Return the next sibling of this widget
+     */
+    nsIWidget* GetNextSibling() const {
+        return mNextSibling;
+    }
+    
+    /**
+     * Set the next sibling of this widget
+     */
+    void SetNextSibling(nsIWidget* aSibling) {
+        mNextSibling = aSibling;
+    }
+    
+    /**
+     * Return the previous sibling of this widget
+     */
+    nsIWidget* GetPrevSibling() const {
+        return mPrevSibling;
+    }
+
+    /**
+     * Set the previous sibling of this widget
+     */
+    void SetPrevSibling(nsIWidget* aSibling) {
+        mPrevSibling = aSibling;
+    }
 
     /**
      * Show or hide this widget
@@ -975,6 +1017,18 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD GetLastInputEventTime(PRUint32& aTime) = 0;
 
+
+protected:
+    // keep the list of children.  We also keep track of our siblings.
+    // The ownership model is as follows: parent holds a strong ref to
+    // the first element of the list, and each element holds a strong
+    // ref to the next element in the list.  The prevsibling and
+    // lastchild pointers are weak, which is fine as long as they are
+    // maintained properly.
+    nsCOMPtr<nsIWidget> mFirstChild;
+    nsIWidget* mLastChild;
+    nsCOMPtr<nsIWidget> mNextSibling;
+    nsIWidget* mPrevSibling;
 };
 
 #endif // nsIWidget_h__
