@@ -30,6 +30,7 @@ body {
 }
 
 
+/* ::::: message text, incl. quotes ::::: */
 
 .moz-text-flowed blockquote {
   margin: inherit;
@@ -38,85 +39,74 @@ body {
 }
 
 .moz-text-plain pre {
-  font-family: inherit;
   margin: inherit;
+  font-family: inherit;
 }
-.moz-text-plain[wrap=true] {
+.moz-text-plain[wrap="true"] {
   white-space: -moz-pre-wrap;
 }
-.moz-text-plain[wrap=false] {
+.moz-text-plain[wrap="false"] {
   white-space: pre;
 }
-.moz-text-plain[wrap=flow] .moz-txt-sig {
+.moz-text-plain[wrap="flow"] .moz-txt-sig {
   white-space: -moz-pre-wrap;
 }
-.moz-text-plain[graphical-quote=false] blockquote {
-  padding-left: inherit;
-  border-left: inherit;
+.moz-text-plain[graphical-quote="false"] blockquote {
   margin: inherit;
+  border-left: inherit;
+  padding-left: inherit;
 }
-.moz-text-plain[graphical-quote=true] blockquote {
+.moz-text-plain[graphical-quote="true"] blockquote {
   margin: inherit;
   border-width: medium;
   border-color: gray;
 }
-.moz-text-plain[graphical-quote=true] .moz-txt-citetags {
+.moz-text-plain[graphical-quote="true"] .moz-txt-citetags {
   display: none;
 }
 
-.moz-txt-sig, .moz-signature {
+/* ::::: signature ::::: */
+
+.moz-txt-sig,
+.moz-signature {
   color: gray;
 }
-.moz-txt-sig > a, .moz-signature > a {
-  color: 7777FF /* light blue */;
+.moz-txt-sig > a,
+.moz-signature > a {
+  color: #7777FF /* light blue */;
 }
 
-/* smileys */
+
+/* ::::: smilies ::::: */
+
 span[-moz-smiley] {
   min-height: 17px; margin-left: 2px; margin-top: 2px;
   padding-left: 20px; 
   background-repeat: no-repeat; 
   background-position: center center;
-
-
 }
-
 span[-moz-smiley] > span {
-
     display: none;
 }
-
-
 
 span[-moz-smiley="s1"] {
   background-image: url(chrome://global/skin/smiley/smile_n.gif);
 }
-
-
 span[-moz-smiley="s2"] {
   background-image: url(chrome://global/skin/smiley/frown_n.gif);
 }
-
-
 span[-moz-smiley="s3"] {
   background-image: url(chrome://global/skin/smiley/wink_n.gif);
 }
-
-
 span[-moz-smiley="s4"] { 
   background-image: url(chrome://global/skin/smiley/tongue_n.gif);
 }
-
 span[-moz-smiley="s5"] {
   background-image: url(chrome://global/skin/smiley/laughing_n.gif);
 }
-
 span[-moz-smiley="s6"] {
   background-image: url(chrome://global/skin/smiley/embarrassed_n.gif);
 }
-
-
 span[-moz-smiley="s7"] {
   background-image: url(chrome://global/skin/smiley/undecided_n.gif);
 }
-

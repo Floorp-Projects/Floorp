@@ -25,15 +25,19 @@
   == Styles for the body of a mail message.
   ======================================================================= */
 
+/* XXX Breaks the HTML rules below (.moz-class stuff), at least on Linux.
+   "html|.class" doesn't work.
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml"); 
+*/
 
 window {
   overflow: auto;
 }
 
-html|body {
-  background-color: #FFFFFF;
+body {
+  /* XXX Doesn't seem to work. (Same with "html|body".) */
+  background-color: white;
 }
 
 mailattachcount {
@@ -77,7 +81,7 @@ div.headerdisplayname {
   white-space: pre;
 }
 
-/* ::::: message text ::::: */
+/* ::::: message text, incl. quotes ::::: */
 
 .moz-text-flowed blockquote {
   margin: inherit;
@@ -89,36 +93,30 @@ div.headerdisplayname {
   margin: inherit;
   font-family: inherit;
 }
-
 .moz-text-plain[wrap="true"] {
   white-space: -moz-pre-wrap;
 }
-
 .moz-text-plain[wrap="false"] {
   white-space: pre;
 }
-
 .moz-text-plain[wrap="flow"] .moz-txt-sig {
   white-space: -moz-pre-wrap;
 }
-
 .moz-text-plain[graphical-quote="false"] blockquote {
   margin: inherit;
   border-left: inherit;
   padding-left: inherit;
 }
-
 .moz-text-plain[graphical-quote="true"] blockquote {
   margin: inherit;
   border-width: medium;
   border-color: gray;
 }
-
 .moz-text-plain[graphical-quote="true"] .moz-txt-citetags {
   display: none;
 }
 
-/* :::: signature ::::: */
+/* ::::: signature ::::: */
 
 .moz-txt-sig,
 .moz-signature {
@@ -126,55 +124,40 @@ div.headerdisplayname {
 }
 .moz-txt-sig > a,
 .moz-signature > a {
-  color: #7777FF;
+  color: #7777FF /* light blue */;
 }
 
-/* smileys */
+
+/* ::::: smilies ::::: */
+
 span[-moz-smiley] {
   min-height: 17px; margin-left: 2px; margin-top: 2px;
   padding-left: 20px; 
   background-repeat: no-repeat; 
   background-position: center center;
-
-
 }
-
 span[-moz-smiley] > span {
-
     display: none;
 }
-
-
 
 span[-moz-smiley="s1"] {
   background-image: url(chrome://global/skin/smiley/smile_n.gif);
 }
-
-
 span[-moz-smiley="s2"] {
   background-image: url(chrome://global/skin/smiley/frown_n.gif);
 }
-
-
 span[-moz-smiley="s3"] {
   background-image: url(chrome://global/skin/smiley/wink_n.gif);
 }
-
-
 span[-moz-smiley="s4"] { 
   background-image: url(chrome://global/skin/smiley/tongue_n.gif);
 }
-
 span[-moz-smiley="s5"] {
   background-image: url(chrome://global/skin/smiley/laughing_n.gif);
 }
-
 span[-moz-smiley="s6"] {
   background-image: url(chrome://global/skin/smiley/embarrassed_n.gif);
 }
-
-
 span[-moz-smiley="s7"] {
   background-image: url(chrome://global/skin/smiley/undecided_n.gif);
 }
-
