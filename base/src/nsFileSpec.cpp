@@ -466,7 +466,7 @@ nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
 {
     const nsAutoCString aString(inString);
     const char* aCString = (const char*) aString;
-    if (!inString)
+    if (!inString.Length())
     	return;
     NS_ASSERTION(strstr(aCString, kFileURLPrefix) == aCString, "Not a URL!");
     // Make canonical and absolute.
