@@ -1594,7 +1594,7 @@ nsHTMLEditRules::WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBo
   if (!(*aHandled))
   {
     res = StandardBreakImpl(node, offset, aSelection);
-	  *aHandled = PR_TRUE;
+    *aHandled = PR_TRUE;
   }
   return res;
 }
@@ -1717,34 +1717,33 @@ nsHTMLEditRules::SplitMailCites(nsISelection *aSelection, PRBool aPlaintext, PRB
   if (NS_FAILED(res)) return res;
   if (citeNode)
   {
-    if (IsInlineNode(citeNode))
+    // If our selection is just before a break, nudge it to be
+    // just after it.  This does two things for us.  It saves us the trouble of having to add
+    // a break here ourselves to preserve the "blockness" of the inline span mailquote
+    // (in the inline case), and :
+    // it means the break wont end up making an empty line that happens to be inside a
+    // mailquote (in either inline or block case).  
+    // The latter can confuse a user if they click there and start typing,
+    // because being in the mailquote may affect wrapping behavior, or font color, etc.
+    nsWSRunObject wsObj(mHTMLEditor, selNode, selOffset);
+    nsCOMPtr<nsIDOMNode> visNode;
+    PRInt32 visOffset=0;
+    PRInt16 wsType;
+    res = wsObj.NextVisibleNode(selNode, selOffset, address_of(visNode), &visOffset, &wsType);
+    if (NS_FAILED(res)) return res;
+    if (wsType==nsWSRunObject::eBreak)
     {
-      // this is getting messy.  If our selection is just before a break, nudge it to be
-      // just after it.  This does two things for us.  It saves us the trouble of having to add
-      // a break here ourselves to preserve the "blockness" of the inline span mailquote, and 
-      // it means the break wont end up making an empty line that happens to be inside a
-      // mailquote.  The latter can confuse a user if they click there and start typing,
-      // because being in the mailquote may affect wrapping behavior, or font color, etc.
-      nsWSRunObject wsObj(mHTMLEditor, selNode, selOffset);
-      nsCOMPtr<nsIDOMNode> visNode;
-      PRInt32 visOffset=0;
-      PRInt16 wsType;
-      res = wsObj.NextVisibleNode(selNode, selOffset, address_of(visNode), &visOffset, &wsType);
-      if (NS_FAILED(res)) return res;
-      if (wsType==nsWSRunObject::eBreak)
+      // ok, we are just before a break.  is it inside the mailquote?
+      PRInt32 unused;
+      if (nsEditorUtils::IsDescendantOf(visNode, citeNode, &unused))
       {
-        // ok, we are just before a break.  is it inside the mailquote?
-        PRInt32 unused;
-        if (nsEditorUtils::IsDescendantOf(visNode, citeNode, &unused))
-        {
-          // it is.  so lets reset our selection to be just after it.
-          res = mHTMLEditor->GetNodeLocation(visNode, address_of(selNode), &selOffset);
-          if (NS_FAILED(res)) return res;
-          ++selOffset;
-        }
+        // it is.  so lets reset our selection to be just after it.
+        res = mHTMLEditor->GetNodeLocation(visNode, address_of(selNode), &selOffset);
+        if (NS_FAILED(res)) return res;
+        ++selOffset;
       }
     }
-    
+     
     nsCOMPtr<nsIDOMNode> brNode;
     res = mHTMLEditor->SplitNodeDeep(citeNode, selNode, selOffset, &newOffset, 
                        PR_TRUE, address_of(leftCite), address_of(rightCite));
@@ -2048,6 +2047,14 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
     }
     else if (wsType==nsWSRunObject::eOtherBlock)
     {
+      // make sure it's not a table element.  If so, cancel the operation 
+      // (translation: users cannot backspace or delete across table cells)
+      if (nsHTMLEditUtils::IsTableElement(visNode))
+      {
+        *aCancel = PR_TRUE;
+        return NS_OK;
+      }
+      
       // next to a block.  See if we are between a block and a br.  If so, we really
       // want to delete the br.  Else join content at selection to the block.
       
@@ -2091,9 +2098,9 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       // dont cross table boundaries
       if (leftNode && rightNode)
       {
-	      PRBool bInDifTblElems;
-	      res = InDifferentTableElements(leftNode, rightNode, &bInDifTblElems);
-	      if (NS_FAILED(res) || bInDifTblElems) return res;
+        PRBool bInDifTblElems;
+        res = InDifferentTableElements(leftNode, rightNode, &bInDifTblElems);
+        if (NS_FAILED(res) || bInDifTblElems) return res;
       }
       
       if (bDeletedBR)
@@ -2138,8 +2145,15 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
     }
     else if (wsType==nsWSRunObject::eThisBlock)
     {
-
       // at edge of our block.  Look beside it and see if we can join to an adjacent block
+      
+      // make sure it's not a table element.  If so, cancel the operation 
+      // (translation: users cannot backspace or delete across table cells)
+      if (nsHTMLEditUtils::IsTableElement(visNode))
+      {
+        *aCancel = PR_TRUE;
+        return NS_OK;
+      }
       
       // first find the relavent nodes
       nsCOMPtr<nsIDOMNode> leftNode, rightNode, leftParent, rightParent;
