@@ -321,17 +321,13 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             if (to == ScriptRuntime.StringClass) {
                 result = 1;
             }
-            else if (to == ScriptRuntime.ObjectClass ||
-                     to == ScriptRuntime.SerializableClass ||
-                     to == ScriptRuntime.ComparableClass)
-            {
+            else if (to.isInstance(fromObj)) {
                 result = 2;
             }
-            else if (to.isPrimitive() && to != Boolean.TYPE) {
+            else if (to.isPrimitive()) {
                 if (to == Character.TYPE) {
                     result = 3;
-                }
-                else {
+                } else if (to != Boolean.TYPE) {
                     result = 4;
                 }
             }
@@ -549,14 +545,12 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
             break;
 
         case JSTYPE_STRING:
-            if (type == ScriptRuntime.StringClass ||
-                type == ScriptRuntime.ObjectClass ||
-                type == ScriptRuntime.SerializableClass ||
-                type == ScriptRuntime.ComparableClass) {
+            if (type == ScriptRuntime.StringClass || type.isInstance(value)) {
                 return value;
             }
-            else if (type == Character.TYPE ||
-                     type == ScriptRuntime.CharacterClass) {
+            else if (type == Character.TYPE
+                     || type == ScriptRuntime.CharacterClass)
+            {
                 // Special case for converting a single char string to a
                 // character
                 // Placed here because it applies *only* to JS strings,
@@ -568,8 +562,9 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                     return coerceToNumber(type, value, useErrorHandler);
                 }
             }
-            else if ((type.isPrimitive() && type != Boolean.TYPE) ||
-                     ScriptRuntime.NumberClass.isAssignableFrom(type)) {
+            else if ((type.isPrimitive() && type != Boolean.TYPE)
+                     || ScriptRuntime.NumberClass.isAssignableFrom(type))
+            {
                 return coerceToNumber(type, value, useErrorHandler);
             }
             else {

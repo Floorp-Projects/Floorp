@@ -84,10 +84,6 @@ public class ScriptRuntime {
 
         DateClass         = classOrNull("java.util.Date");
 
-    // It will be null under JDK 1.1 as Comparable is only since JDK 1.2
-    public final static Class
-        ComparableClass = classOrNull("java.lang.Comparable");
-
     public final static Class
         ContextClass      = classOrNull("org.mozilla.javascript.Context"),
         FunctionClass     = classOrNull("org.mozilla.javascript.Function"),
