@@ -18,6 +18,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsGlobalWindow.h"
+#include "nsIContent.h"
 #include "nscore.h"
 #include "nsRect.h"
 #include "nslayout.h"
@@ -143,7 +144,7 @@ GlobalWindowImpl::GlobalWindowImpl()
 
   mFirstDocumentLoad = PR_TRUE;
 
-  mChromeDocument = nsnull;
+  mChromeElement = nsnull;
 }
 
 GlobalWindowImpl::~GlobalWindowImpl() 
@@ -379,17 +380,10 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
     }
     // Get our enclosing chrome shell and retrieve its global window impl, so that we can
     // do some forwarding to the chrome document.
-    nsCOMPtr<nsIWebShell> chromeShell;
-    mWebShell->GetContainingChromeShell(getter_AddRefs(chromeShell));
-    if (chromeShell) {
-      nsCOMPtr<nsIDOMWindow> chromeWindow;
-      WebShellToDOMWindow(chromeShell, getter_AddRefs(chromeWindow));
-      if (chromeWindow) {
-        nsCOMPtr<nsIDOMDocument> chromeDoc;
-        chromeWindow->GetDocument(getter_AddRefs(chromeDoc));
-        nsCOMPtr<nsIDocument> realDoc = do_QueryInterface(chromeDoc);
-        mChromeDocument = realDoc.get(); // Don't addref it
-      }
+    nsCOMPtr<nsIContent> chromeElement;
+    mWebShell->GetContainingChromeElement(getter_AddRefs(chromeElement));
+    if (chromeElement) {
+      mChromeElement = chromeElement.get(); // Weak ref.
     }
   }
 }
@@ -2829,9 +2823,9 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   }
   
   //Capturing stage
-  if (NS_EVENT_FLAG_BUBBLE != aFlags && mChromeDocument) {
-    // Check chrome document capture here
-    mChromeDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+  if (NS_EVENT_FLAG_BUBBLE != aFlags && mChromeElement) {
+    // Check chrome document capture here.
+    mChromeElement->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
   }
 
   //Local handling stage
@@ -2841,12 +2835,13 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   }
 
   //Bubbling stage
-  if (NS_EVENT_FLAG_CAPTURE != aFlags && mChromeDocument) {
+  if (NS_EVENT_FLAG_CAPTURE != aFlags && mChromeElement) {
     // Bubble to a chrome document if it exists
     // XXX Need a way to know if an event should really bubble or not.
     // For now filter out load and unload, since they cause problems.
-    if (aEvent->message != NS_PAGE_LOAD && aEvent->message != NS_PAGE_UNLOAD)
-      mChromeDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
+    if (aEvent->message != NS_PAGE_LOAD && aEvent->message != NS_PAGE_UNLOAD) {
+      mChromeElement->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
+    }
   }
 
   if (NS_EVENT_FLAG_INIT == aFlags) {
