@@ -90,8 +90,7 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
 
 .attachmentBox 
 {
-  width: 15em;
-  max-width: 10em;
+  min-width: 15em;
   text-align: left;
 }
 
