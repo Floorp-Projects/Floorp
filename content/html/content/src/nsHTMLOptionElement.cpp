@@ -298,8 +298,7 @@ NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value)
 NS_IMETHODIMP                                                      
 nsHTMLOptionElement::GetLabel(nsString& aValue)                             
 {                                                                  
-  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::label, aValue); 
-  return NS_OK;                                                   
+  return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::label, aValue);                                                  
 }         
                                                          
 NS_IMETHODIMP                                                      
