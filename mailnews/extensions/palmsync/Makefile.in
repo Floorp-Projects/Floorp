@@ -33,6 +33,8 @@ DIRS		= build public src
 ifdef PALM_CDK_DIR
 DIRS		+= conduit
 
+PACKAGE_FILE = palmsync.pkg
+
 install:: $(README)
 	$(INSTALL) $< $(DIST)/bin
 

@@ -33,6 +33,9 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= emitter
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMimeEmitterModule
+
+PACKAGE_FILE = mimeemitter.pkg
+
 REQUIRES	= xpcom \
                   xpcom_obsolete \
 		  string \

@@ -38,6 +38,8 @@ endif
 
 META_COMPONENT = mail
 
+PACKAGE_FILE = msgbaseutil.pkg
+
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
 		  string \

@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= impText
+PACKAGE_FILE = importtext.pkg
 
 ifndef MOZ_STATIC_MAIL_BUILD
 

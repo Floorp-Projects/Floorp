@@ -29,6 +29,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= dom
 LIBRARY_NAME	= jsdom
 EXPORT_LIBRARY = 1
+
+PACKAGE_FILE = dom.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  js \

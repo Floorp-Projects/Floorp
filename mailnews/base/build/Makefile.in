@@ -36,6 +36,9 @@ META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMsgBaseModule
+
+PACKAGE_FILE = msgbase.pkg
+
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
 		  string \

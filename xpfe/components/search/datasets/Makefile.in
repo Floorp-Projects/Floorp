@@ -26,6 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE       = appcomps
+PACKAGE_FILE = searchplugins.pkg
+
 ifdef MOZ_PHOENIX
 FILES		= \
 	google.gif          \

@@ -33,6 +33,8 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsChromeModule
 GRE_MODULE	= 1
 
+PACKAGE_FILE = chrome.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  rdf \

@@ -33,6 +33,9 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= bayesflt
 IS_COMPONENT	= 1
 MODULE_NAME	= nsBayesianFilterModule
+
+PACKAGE_FILE = bayesian.pkg
+
 REQUIRES	= xpcom \
 		  mailnews \
 		  msgbase \

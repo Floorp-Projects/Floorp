@@ -33,6 +33,8 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsSecurityManagerModule
 GRE_MODULE	= 1
 
+PACKAGE_FILE = caps.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  pref \

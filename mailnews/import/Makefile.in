@@ -28,6 +28,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= import
 
+PACKAGE_FILE = msgimport.pkg
+PACKAGE_VARS += MOZ_STATIC_MAIL_BUILD
+
 DIRS		= public src text comm4x
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

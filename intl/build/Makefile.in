@@ -30,6 +30,9 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsI18nModule
 GRE_MODULE	= 1
 
+PACKAGE_FILE = intl.pkg
+PACKAGE_VARS = MOZ_MATHML
+
 REQUIRES	= xpcom \
 		  string \
 		  unicharutil \

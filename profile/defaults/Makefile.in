@@ -26,6 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE       = profile
+PACKAGE_FILE = profiledef.pkg
+
 DIRS		= chrome
 
 include $(topsrcdir)/config/rules.mk

@@ -27,6 +27,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgmdn
+PACKAGE_FILE = mdn.pkg
+PACKAGE_VARS = MOZ_STATIC_MAIL_BUILD
+
 DIRS		= src
 
 ifndef MOZ_STATIC_MAIL_BUILD

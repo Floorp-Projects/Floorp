@@ -32,6 +32,9 @@ META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= mime_services
+
+PACKAGE_FILE = mime.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  necko \

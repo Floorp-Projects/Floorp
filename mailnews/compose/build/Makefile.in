@@ -36,6 +36,9 @@ MODULE_NAME	= nsMsgComposeModule
 ifeq ($(OS_ARCH),WINNT)
 XPIDL_MODULE	= msgcompo
 endif
+
+PACKAGE_FILE = msgcompose.pkg
+
 REQUIRES	= xpcom \
                   xpcom_obsolete \
 		  string \

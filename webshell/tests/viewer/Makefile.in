@@ -247,7 +247,7 @@ endif
 endif
 
 libs:: $(PROGRAM) $(srcdir)/mozilla-viewer.sh
-ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
+ifeq (,$(filter WINNT OS2,$(OS_ARCH)))
 	$(INSTALL) $(srcdir)/mozilla-viewer.sh $(DIST)/bin
 endif
 

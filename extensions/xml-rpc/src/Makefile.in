@@ -23,6 +23,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE       = xml-rpc
+PACKAGE_FILE = xml-rpc.pkg
+
 EXTRA_COMPONENTS = \
                 $(srcdir)/nsDictionary.js \
                 $(srcdir)/nsXmlRpcClient.js \

@@ -26,6 +26,9 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE       = mailview
+PACKAGE_FILE = mailviewdef.pkg
+
 EXPORT_DIR	= $(DIST)/bin/defaults/messenger
 EXPORT_L10N_DIR	= $(EXPORT_DIR)/US
 

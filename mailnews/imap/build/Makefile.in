@@ -32,6 +32,9 @@ META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= IMAP_factory
+
+PACKAGE_FILE = msgimap.pkg
+
 REQUIRES	= xpcom \
                   xpcom_obsolete \
 		  string \

@@ -32,6 +32,8 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= I18nCompatibility
 
+PACKAGE_FILE = intlcmpt.pkg
+
 REQUIRES	= \
 		xpcom \
 		string \

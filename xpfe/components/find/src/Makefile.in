@@ -32,6 +32,9 @@ LIBRARY_NAME	= mozfind
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsFindComponent
+
+PACKAGE_FILE = mozfind.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  $(NULL)

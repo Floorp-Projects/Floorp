@@ -29,6 +29,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = layout
 LIBRARY_NAME = gkmathmlbase_s
+
+PACKAGE_FILE = mathml.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  dom \

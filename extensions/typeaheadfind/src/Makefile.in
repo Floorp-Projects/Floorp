@@ -38,6 +38,8 @@ SHORT_LIBNAME = typahead
 endif
 GRE_MODULE	= 1
 
+PACKAGE_FILE = typeaheadfind.pkg
+
 REQUIRES	= appcomps \
 		  embedcomponents \
 		  content \

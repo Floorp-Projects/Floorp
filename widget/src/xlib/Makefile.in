@@ -34,6 +34,8 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsWidgetXLIBModule
 GRE_MODULE	= 1
 
+PACKAGE_FILE = widget_xlib.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  appshell \

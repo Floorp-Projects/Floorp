@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= impOutlk
+PACKAGE_FILE = importoutlook.pkg
 
 ifndef MOZ_STATIC_MAIL_BUILD
 

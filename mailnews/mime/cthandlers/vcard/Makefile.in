@@ -38,6 +38,8 @@ else
 LIBRARY_NAME = vcard_s
 endif
 
+PACKAGE_FILE = vcard.pkg
+
 META_COMPONENT = mail
 
 REQUIRES	= xpcom \

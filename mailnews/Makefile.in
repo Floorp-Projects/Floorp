@@ -26,6 +26,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE       = mailnews
+PACKAGE_FILE = mailnews.pkg
+PACKAGE_VARS += \
+		MOZ_MOVEMAIL \
+		MOZ_STATIC_MAIL_BUILD \
+		$(NULL)
+
 DIRS		= public base db/msgdb news local mime compose imap addrbook import extensions
 
 ifeq ($(OS_ARCH),WINNT)

@@ -35,6 +35,9 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsLayoutModule
 GRE_MODULE	= 1
 
+PACKAGE_FILE = layout.pkg
+PACKAGE_VARS += MOZ_XUL
+
 EXTRA_DSO_LIBS	= gkgfx
 ifdef MOZ_PERF_METRICS
 EXTRA_DSO_LIBS	+= mozutil_s

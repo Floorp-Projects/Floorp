@@ -39,6 +39,8 @@ endif
 IS_COMPONENT	= 1
 GRE_MODULE	= 1
 
+PACKAGE_FILE = xpcomobsoletec.pkg
+
 REQUIRES	= xpcom  \
 		  xpcom_obsolete \
 		  string \

@@ -34,6 +34,9 @@ SHORT_LIBNAME	= fileview
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsFileViewModule
+
+PACKAGE_FILE = filepicker.pkg
+
 REQUIRES	= \
 		xpcom \
 		layout \

@@ -26,6 +26,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE       = content-packs
+PACKAGE_FILE = content-packs.pkg
+
 DIRS		= resources
 
 include $(topsrcdir)/config/rules.mk

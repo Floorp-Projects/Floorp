@@ -33,6 +33,8 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsWalletModule
 GRE_MODULE	= 1
 
+PACKAGE_FILE = wallet.pkg
+
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
 		  string \

@@ -42,6 +42,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE      = plugin
+
 ifdef MOZ_DEBUG
 BUILDSTYLE	= Development
 else
@@ -53,6 +55,8 @@ endif
 endif
 
 TARGET		= "Default Plugin"
+
+PACKAGE_FILE = npnul.pkg
 
 include $(topsrcdir)/config/rules.mk
 

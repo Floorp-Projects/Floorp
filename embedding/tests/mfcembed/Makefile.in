@@ -38,6 +38,7 @@ PROGRAM		= mfcembed$(BIN_SUFFIX)
 RESFILE		= MfcEmbed.res
 
 MODULE = mfcEmbed
+PACKAGE_FILE = mfcembed.pkg
 
 # comment this out if for some reason you want to link against xpcom
 # directly instead of using the standalone glue

@@ -40,6 +40,8 @@ REQUIRES	= xpcom \
 		  chardet \
 		  $(NULL)
 
+PACKAGE_FILE = universalchardet.pkg
+
 CPPSRCS = \
 		CharDistribution.cpp \
 		JpCntx.cpp \

@@ -65,6 +65,8 @@ LIBRARY_NAME   = imp4mail_s
 
 endif
 
+PACKAGE_FILE = importcomm4x.pkg
+
 META_COMPONENT  = mail
 REQUIRES	= xpcom \
 		  xpcom_obsolete \

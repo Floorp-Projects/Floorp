@@ -46,6 +46,8 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsJarModule
 GRE_MODULE	= 1
 
+PACKAGE_FILE = libjar.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  caps \

@@ -33,6 +33,8 @@ LIBRARY_NAME	= docshell
 EXPORT_LIBRARY = 1
 GRE_MODULE	= 1
 
+PACKAGE_FILE = docshell.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  dom \

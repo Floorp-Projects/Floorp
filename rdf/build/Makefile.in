@@ -33,6 +33,8 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsRDFModule
 GRE_MODULE	= 1
 
+PACKAGE_FILE = rdf.pkg
+
 EXTRA_DSO_LIBS	= 
 REQUIRES	= xpcom \
 		  string \

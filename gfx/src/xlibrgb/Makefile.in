@@ -32,6 +32,8 @@ LIBRARY_NAME	= xlibrgb
 EXPORT_LIBRARY = 1
 GRE_MODULE	= 1
 
+PACKAGE_FILE = xlibrgb.pkg
+
 CSRCS		= xlibrgb.c
 
 EXPORTS		= xlibrgb.h

@@ -27,6 +27,19 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE = psm
+
+PACKAGE_FILE = psm.pkg
+PACKAGE_VARS += \
+	NSS3_LIB \
+	SMIME3_LIB \
+	SSL3_LIB \
+	SOFTOKEN3_LIB \
+	SOFTOKEN3_CHK \
+	LOADABLE_ROOT_MODULE \
+	HAVE_FREEBL_MODULES \
+	$(NULL)
+
 LOADABLE_ROOT_MODULE = $(DLL_PREFIX)nssckbi$(DLL_SUFFIX)
 
 NSS3_LIB = $(DLL_PREFIX)nss3$(DLL_SUFFIX)
@@ -104,7 +117,7 @@ export:: .nss.cleaned
 .nss.checkout:
 	touch $(srcdir)/$@
 
-dependclean export::
+dependclean export packages chrome::
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
 ifdef MOZ_XUL

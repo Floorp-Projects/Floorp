@@ -30,6 +30,9 @@ MODULE      = gfx
 LIBRARY_NAME    = gkgfx
 EXPORT_LIBRARY = 1
 GRE_MODULE	= 1
+
+PACKAGE_FILE = gfx.pkg
+
 REQUIRES	= xpcom \
 		  windowwatcher \
 		  dom \
@@ -147,4 +150,3 @@ FORCE_USE_PIC = 1
 include $(topsrcdir)/config/rules.mk
 
 DEFINES     += -D_IMPL_NS_GFX
-

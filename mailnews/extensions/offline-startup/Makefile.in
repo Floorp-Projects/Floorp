@@ -34,6 +34,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= offline-startup
+PACKAGE_FILE = offline-startup.pkg
 
 DIRS        = resources
 

@@ -31,6 +31,9 @@ LIBRARY_NAME	= gfx_photon
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxPhModule
+
+PACKAGE_FILE = photon.pkg
+
 REQUIRES	= xpcom \
 		  string \
 		  widget \

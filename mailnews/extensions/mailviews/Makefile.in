@@ -28,6 +28,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mailview
 
+PACKAGE_FILE = mailviews.pkg
+PACKAGE_VARS += MOZ_STATIC_MAIL_BUILD
+
 DIRS		= public src resources
 
 ifndef MOZ_STATIC_MAIL_BUILD

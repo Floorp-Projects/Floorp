@@ -24,6 +24,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE = activex
+PACKAGE_FILE = activex.pkg
+
 DIRS = $(NULL)
 
 # Common
