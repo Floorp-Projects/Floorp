@@ -40,19 +40,14 @@
 #include "nsNodeSet.h"
 #include "nsIDOMClassInfo.h"
 
-static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-
-
 // QueryInterface implementation for nsNodeSet
-NS_INTERFACE_MAP_BEGIN(nsNodeSet)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(NodeSet)
-NS_INTERFACE_MAP_END
-
-
 NS_IMPL_ADDREF(nsNodeSet)
 NS_IMPL_RELEASE(nsNodeSet)
+NS_INTERFACE_MAP_BEGIN(nsNodeSet)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
+    NS_INTERFACE_MAP_ENTRY(nsISupports)
+    NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(NodeSet)
+NS_INTERFACE_MAP_END
 
 
 nsNodeSet::nsNodeSet(NodeSet* aNodeSet) {

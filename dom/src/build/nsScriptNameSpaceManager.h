@@ -41,6 +41,8 @@
 #include "nsID.h"
 #include "pldhash.h"
 
+#include "nsDOMClassInfo.h"
+ 
 struct nsGlobalNameStruct
 {
   enum nametype {
@@ -51,12 +53,15 @@ struct nsGlobalNameStruct
     eTypeStaticNameSet,
     eTypeDynamicNameSet,
     eTypeClassConstructor,
-    eTypeClassProto
+    eTypeClassProto,
+    eTypeExternalClassInfoCreator,
+    eTypeExternalClassInfo
   } mType;
 
   union {
     PRInt32 mDOMClassInfoID; // eTypeClassConstructor
     nsIID mIID; // eTypeClassProto
+    nsExternalDOMClassInfoData* mData; // eTypeExternalClassInfo
     nsCID mCID; // All other types...
   };
 
@@ -92,6 +97,21 @@ public:
                               const nsIID *aConstructorProtoIID,
                               PRBool *aFoundOld);
 
+  nsresult RegisterExternalInterfaces(PRBool aAsProto);
+
+  nsresult RegisterExternalClassName(const char *aClassName,
+                                     nsCID& aCID);
+
+  // Register the info for an external class. aName must be static
+  // data, it will not be deleted by the DOM code.
+  nsresult RegisterDOMCIData(const char *aName,
+                             nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
+                             const nsIID *aProtoChainInterface,
+                             const nsIID **aInterfaces,
+                             PRUint32 aScriptableFlags,
+                             PRBool aHasClassInterface,
+                             const nsCID *aConstructorCID);
+
 protected:
   // Adds a new entry to the hash and returns the nsGlobalNameStruct
   // that aKey will be mapped to. If mType in the returned
@@ -103,6 +123,9 @@ protected:
                     const char *aCategory,
                     nsGlobalNameStruct::nametype aType);
   nsresult FillHashWithDOMInterfaces();
+  nsresult RegisterInterface(nsIInterfaceInfo* aIfInfo,
+                             const char* aIfName,
+                             PRBool* aFoundOld);
 
   // Inline PLDHashTable, init with PL_DHashTableInit() and delete
   // with PL_DHashTableFinish().

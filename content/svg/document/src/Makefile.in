@@ -41,7 +41,8 @@ REQUIRES	= content \
 		  js \
 		  caps \
 		  locale \
-		  view
+		  view \
+		  xpconnect
 
 CPPSRCS		= \
 		nsSVGDocument.cpp \

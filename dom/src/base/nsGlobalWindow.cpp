@@ -5195,7 +5195,7 @@ NavigatorImpl::Preference()
   NS_ENSURE_SUCCESS(rv, rv);
 
   //--Check to see if the caller is allowed to access prefs
-  if (sPrefInternal_id = JSVAL_VOID)
+  if (sPrefInternal_id == JSVAL_VOID)
     sPrefInternal_id = STRING_TO_JSVAL(::JS_InternString(cx, "preferenceinternal"));
 
   nsCOMPtr<nsIScriptSecurityManager> secMan = 

@@ -66,6 +66,20 @@ public:
                                    nsIScriptGlobalObject **aGlobal) = 0;
 
   NS_IMETHOD_(nsISupports *)GetClassInfoInstance(nsDOMClassInfoID aID) = 0;
+  NS_IMETHOD_(nsISupports *)GetExternalClassInfoInstance(const nsAString& aName) = 0;
+
+  // Register the info for an external class. aName must be static
+  // data, it will not be deleted by the DOM code. aProtoChainInterface
+  // must be registered in the JAVASCRIPT_DOM_INTERFACE category, or
+  // prototypes for this class won't work (except if the interface
+  // name starts with nsIDOM).
+  NS_IMETHOD RegisterDOMClassInfo(const char *aName,
+                                  nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
+                                  const nsIID *aProtoChainInterface,
+                                  const nsIID **aInterfaces,
+                                  PRUint32 aScriptableFlags,
+                                  PRBool aHasClassInterface,
+                                  const nsCID *aConstructorCID) = 0;
 };
 
 #endif /* nsIDOMScriptObjectFactory_h__ */

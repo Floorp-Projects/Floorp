@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  layout \
 		  content \
-		  content_xsl \
 		  caps \
 		  docshell \
 		  xpconnect \
@@ -56,10 +55,8 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  htmlparser \
 		  chardet \
-		  transformiix \
-		  xmlextras \
-                  find \
-                  appshell \
+		  find \
+		  appshell \
 		  $(NULL)
 
 CPPSRCS =			\
@@ -84,7 +81,7 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS        += -I$(srcdir)/../build
+CXXFLAGS        += -I$(srcdir) -I$(srcdir)/../build
 
 DEFINES		+= -D_IMPL_NS_DOM
 

@@ -36,6 +36,8 @@ REQUIRES	= xpcom \
 		  gfx \
 		  content \
 		  content_xul \
+		  xpconnect \
+		  js \
 		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN

@@ -29,6 +29,8 @@ REQUIRES	= string \
 		  content_xsl \
 		  content \
 		  unicharutil \
+		  xpconnect \
+		  js \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 

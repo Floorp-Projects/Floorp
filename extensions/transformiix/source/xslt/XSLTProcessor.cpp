@@ -165,17 +165,14 @@ XSLTProcessor::~XSLTProcessor()
 // XXX Mozilla module only code. This should move to txMozillaXSLTProcessor
 // XXX
 
-// QueryInterface implementation for XSLTProcessor
-NS_INTERFACE_MAP_BEGIN(XSLTProcessor)
-  NS_INTERFACE_MAP_ENTRY(nsIDocumentTransformer)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptLoaderObserver)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocumentTransformer)
-  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XSLTProcessor)
-NS_INTERFACE_MAP_END
-
-
 NS_IMPL_ADDREF(XSLTProcessor)
 NS_IMPL_RELEASE(XSLTProcessor)
+NS_INTERFACE_MAP_BEGIN(XSLTProcessor)
+    NS_INTERFACE_MAP_ENTRY(nsIDocumentTransformer)
+    NS_INTERFACE_MAP_ENTRY(nsIScriptLoaderObserver)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocumentTransformer)
+    NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XSLTProcessor)
+NS_INTERFACE_MAP_END
 
 // XXX
 // XXX Mozilla module only code. This should move to txMozillaXSLTProcessor

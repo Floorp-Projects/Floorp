@@ -25,6 +25,7 @@
 
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
+#include "nsIDOMClassInfo.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsSyncLoader.h"
@@ -33,10 +34,38 @@
 #include "XSLTProcessor.h"
 #include "XPathProcessor.h"
 
+/* 1c1a3c01-14f6-11d6-a7f2-ea502af815dc */
+#define TRANSFORMIIX_DOMCI_EXTENSION_CID   \
+{ 0x1c1a3c01, 0x14f6, 0x11d6, {0xa7, 0xf2, 0xea, 0x50, 0x2a, 0xf8, 0x15, 0xdc} }
+
+#define TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID \
+"@mozilla.org/transformiix-domci-extender;1"
+
+
+NS_DOMCI_EXTENSION(Transformiix)
+    static NS_DEFINE_CID(kXSLTProcessorCID, TRANSFORMIIX_XSLT_PROCESSOR_CID);
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XSLTProcessor)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDocumentTransformer)
+    NS_DOMCI_EXTENSION_ENTRY_END(XSLTProcessor, nsIDocumentTransformer, PR_FALSE, &kXSLTProcessorCID)
+
+    static NS_DEFINE_CID(kXPathProcessorCID, TRANSFORMIIX_XPATH_PROCESSOR_CID);
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XPathProcessor)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIXPathNodeSelector)
+    NS_DOMCI_EXTENSION_ENTRY_END(XPathProcessor, nsIXPathNodeSelector, PR_FALSE, &kXPathProcessorCID)
+
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(NodeSet)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMNodeList)
+    NS_DOMCI_EXTENSION_ENTRY_END(NodeSet, nsIDOMNodeList, PR_FALSE, nsnull)
+NS_DOMCI_EXTENSION_END
+
 // Factory Constructor
 NS_GENERIC_FACTORY_CONSTRUCTOR(XSLTProcessor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(XPathProcessor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSyncLoader)
+
+NS_DECL_DOM_CLASSINFO(XSLTProcessor)
+NS_DECL_DOM_CLASSINFO(XPathProcessor)
+NS_DECL_DOM_CLASSINFO(NodeSet)
 
 static NS_METHOD 
 RegisterTransformiix(nsIComponentManager *aCompMgr,
@@ -54,15 +83,33 @@ RegisterTransformiix(nsIComponentManager *aCompMgr,
     return rv;
 
   nsXPIDLCString previous;
-  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
                                 "XSLTProcessor",
-                                TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID,
+                                TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
                                 "XPathProcessor",
-                                TRANSFORMIIX_XPATH_PROCESSOR_CONTRACTID,
+                                TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
+                                "NodeSet",
+                                TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE,
+                                "nsIDocumentTransformer",
+                                NS_GET_IID(nsIDocumentTransformer).ToString(),
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE,
+                                "nsIXPathNodeSelector",
+                                NS_GET_IID(nsIXPathNodeSelector).ToString(),
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
 
   return rv;
@@ -101,6 +148,10 @@ Shutdown(nsIModule* aSelf)
 
   gInitialized = PR_FALSE;
 
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(XSLTProcessor));
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(XPathProcessor));
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(NodeSet));
+
   txXMLAtoms::shutdown();
   txXPathAtoms::shutdown();
   txXSLTAtoms::shutdown();
@@ -121,7 +172,11 @@ static const nsModuleComponentInfo gComponents[] = {
     { "Transformiix Synchronous Loader",
       TRANSFORMIIX_SYNCLOADER_CID,
       TRANSFORMIIX_SYNCLOADER_CONTRACTID,
-      nsSyncLoaderConstructor }
+      nsSyncLoaderConstructor },
+    { "Transformiix DOMCI Extender",
+      TRANSFORMIIX_DOMCI_EXTENSION_CID,
+      TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,
+      NS_DOMCI_EXTENSION_CONSTRUCTOR(Transformiix) }
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(TransformiixModule, gComponents,

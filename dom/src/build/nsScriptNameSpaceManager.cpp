@@ -50,8 +50,9 @@
 #include "xptinfo.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsDOMClassInfo.h"
 
-
+#define NS_INTERFACE_PREFIX "nsI"
 #define NS_DOM_INTERFACE_PREFIX "nsIDOM"
 
 // Our extended PLDHashEntryHdr
@@ -99,6 +100,18 @@ GlobalNameHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   // An entry is being cleared, let the key (nsString) do its own
   // cleanup.
   e->mKey.~nsString();
+  if (e->mGlobalName.mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
+    nsIClassInfo* ci = GET_CLEAN_CI_PTR(e->mGlobalName.mData->mCachedClassInfo);
+
+    // If we constructed an internal helper, we'll let the helper delete 
+    // the nsDOMClassInfoData structure, if not we do it here.
+    if (!ci || e->mGlobalName.mData->mExternalConstructorFptr) {
+      delete e->mGlobalName.mData;
+    }
+
+    // Release our pointer to the helper.
+    NS_IF_RELEASE(ci);
+  }
 
   // This will set e->mGlobalName.mType to
   // nsGlobalNameStruct::eTypeNotInitialized
@@ -112,7 +125,7 @@ GlobalNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
   GlobalNameMapEntry *e = NS_STATIC_CAST(GlobalNameMapEntry *, entry);
   const nsAString *keyStr = NS_STATIC_CAST(const nsAString *, key);
 
-  // Inititlize the key in the entry with placement new
+  // Initialize the key in the entry with placement new
   nsString *str = new (&e->mKey) nsString(*keyStr);
 
   // This will set e->mGlobalName.mType to
@@ -219,15 +232,16 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
     dont_AddRef(XPTI_GetInterfaceInfoManager());
   NS_ENSURE_TRUE(iim, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIEnumerator> e;
+  // First look for all interfaces whose name starts with nsIDOM
+  nsCOMPtr<nsIEnumerator> domInterfaces;
   nsresult rv =
     iim->EnumerateInterfacesWhoseNamesStartWith(NS_DOM_INTERFACE_PREFIX,
-                                                getter_AddRefs(e));
+                                                getter_AddRefs(domInterfaces));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISupports> entry;
 
-  rv = e->First();
+  rv = domInterfaces->First();
 
   if (NS_FAILED(rv)) {
     // Empty interface list?
@@ -237,63 +251,170 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
     return NS_OK;
   }
 
-  for ( ; e->IsDone() == NS_COMFALSE; e->Next()) {
-    rv = e->CurrentItem(getter_AddRefs(entry));
+  PRBool found_old;
+  nsCOMPtr<nsIInterfaceInfo> if_info;
+  nsXPIDLCString if_name;
+
+  for ( ; domInterfaces->IsDone() == NS_COMFALSE; domInterfaces->Next()) {
+    rv = domInterfaces->CurrentItem(getter_AddRefs(entry));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIInterfaceInfo> if_info(do_QueryInterface(entry));
+    if_info->GetName(getter_Copies(if_name));
+    rv = RegisterInterface(if_info,
+                           if_name.get() + sizeof(NS_DOM_INTERFACE_PREFIX) - 1,
+                           &found_old);
 
-    NS_ASSERTION(if_info, "Interface info not an nsIInterfaceInfo!");
+#ifdef DEBUG
+    NS_ASSERTION(!found_old,
+                 "Whaaa, interface name already in hash!");
+#endif
+  }
 
-    // With the InterfaceInfo system it is actually cheaper to get the 
-    // interface name than to get the count of constants. The former is 
-    // always cached. The latter might require loading an xpt file!
+  // Next, look for externally registered DOM interfaces
+  rv = RegisterExternalInterfaces(PR_FALSE);
 
-    nsXPIDLCString if_name;
+  return rv;
+}
 
-    rv = if_info->GetName(getter_Copies(if_name));
-    NS_ENSURE_SUCCESS(rv, rv);
+nsresult
+nsScriptNameSpaceManager::RegisterExternalInterfaces(PRBool aAsProto)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> cm =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint16 constant_count = 0;
+  nsCOMPtr<nsIInterfaceInfoManager> iim =
+    dont_AddRef(XPTI_GetInterfaceInfoManager());
+  NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
 
-    rv = if_info->GetConstantCount(&constant_count);
-    if (NS_FAILED(rv)) {
-      NS_ERROR("can't get constant count");
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  rv = cm->EnumerateCategory(JAVASCRIPT_DOM_INTERFACE,
+                             getter_AddRefs(enumerator));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString IID_string, category_entry;
+  const char* if_name;
+  nsCOMPtr<nsISupports> entry;
+  nsCOMPtr<nsIInterfaceInfo> if_info;
+  PRBool found_old, dom_prefix;
+
+  while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(entry)))) {
+    nsCOMPtr<nsISupportsString> category(do_QueryInterface(entry));
+
+    if (!category) {
+      NS_WARNING("Category entry not an nsISupportsString!");
+
       continue;
     }
 
-    if (constant_count) {
-      PRUint16 parent_constant_count = 0;
+    rv = category->GetData(getter_Copies(category_entry));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      nsCOMPtr<nsIInterfaceInfo> parent_info;
+    rv = cm->GetCategoryEntry(JAVASCRIPT_DOM_INTERFACE, category_entry,
+                              getter_Copies(IID_string));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-      if_info->GetParent(getter_AddRefs(parent_info));
+    nsIID primary_IID;
+    if (!primary_IID.Parse(IID_string) ||
+        primary_IID.Equals(NS_GET_IID(nsISupports))) {
+      NS_ERROR("Invalid IID registered with the script namespace manager!");
+      continue;
+    }
 
-      if (parent_info) {
-        rv = parent_info->GetConstantCount(&parent_constant_count);
-        if (NS_FAILED(rv)) {
-          NS_ERROR("can't get constant count");
-          continue;
+    iim->GetInfoForIID(&primary_IID, getter_AddRefs(if_info));
+
+    while (if_info) {
+      const nsIID *iid;
+      if_info->GetIIDShared(&iid);
+      NS_ENSURE_TRUE(iid, NS_ERROR_UNEXPECTED);
+
+      if (iid->Equals(NS_GET_IID(nsISupports))) {
+        break;
+      }
+
+      if_info->GetNameShared(&if_name);
+      dom_prefix = (strncmp(if_name, NS_DOM_INTERFACE_PREFIX,
+                            sizeof(NS_DOM_INTERFACE_PREFIX) - 1) == 0);
+
+      const char* name;
+      if (dom_prefix) {
+        if (!aAsProto) {
+          // nsIDOM* interfaces have already been registered.
+          break;
         }
+        name = if_name + sizeof(NS_DOM_INTERFACE_PREFIX) - 1;
+      } else {
+        name = if_name + sizeof(NS_INTERFACE_PREFIX) - 1;
       }
 
-      if (constant_count != parent_constant_count) {
-        nsGlobalNameStruct *s =
-          AddToHash(NS_ConvertASCIItoUCS2(if_name.get() +
-                                          strlen(NS_DOM_INTERFACE_PREFIX)));
-        NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
-
-#ifdef DEBUG
-        NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized,
-                     "Whaaa, interface name already in hash!");
-#endif
-
-        s->mType = nsGlobalNameStruct::eTypeInterface;
+      if (aAsProto) {
+        RegisterClassProto(name, iid, &found_old);
+      } else {
+        RegisterInterface(if_info, name, &found_old);
       }
+
+      if (found_old) {
+        break;
+      }
+
+      nsCOMPtr<nsIInterfaceInfo> tmp(if_info);
+      tmp->GetParent(getter_AddRefs(if_info));
     }
   }
 
-  return rv;
+  return NS_OK;
+}
+
+nsresult
+nsScriptNameSpaceManager::RegisterInterface(nsIInterfaceInfo* aIfInfo,
+                                            const char* aIfName,
+                                            PRBool* aFoundOld)
+{
+  NS_ASSERTION(aIfInfo, "Interface info not an nsIInterfaceInfo!");
+
+  // With the InterfaceInfo system it is actually cheaper to get the 
+  // interface name than to get the count of constants. The former is 
+  // always cached. The latter might require loading an xpt file!
+
+  PRUint16 constant_count = 0;
+  *aFoundOld = PR_FALSE;
+
+  nsresult rv = aIfInfo->GetConstantCount(&constant_count);
+  if (NS_FAILED(rv)) {
+    NS_ERROR("can't get constant count");
+    return rv;
+  }
+
+  if (constant_count) {
+    PRUint16 parent_constant_count = 0;
+
+    nsCOMPtr<nsIInterfaceInfo> parent_info;
+
+    aIfInfo->GetParent(getter_AddRefs(parent_info));
+
+    if (parent_info) {
+      rv = parent_info->GetConstantCount(&parent_constant_count);
+      if (NS_FAILED(rv)) {
+        NS_ERROR("can't get constant count");
+        return rv;
+      }
+    }
+
+    if (constant_count != parent_constant_count) {
+      nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aIfName));
+      NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
+
+      if (s->mType != nsGlobalNameStruct::eTypeNotInitialized) {
+          *aFoundOld = PR_TRUE;
+          return NS_OK;
+      }
+
+      s->mType = nsGlobalNameStruct::eTypeInterface;
+    }
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -394,6 +515,10 @@ nsresult
 nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
                                             PRInt32 aDOMClassInfoID)
 {
+  if (!nsCRT::IsAscii(aClassName)) {
+    NS_ERROR("Trying to register a non-ASCII class name");
+    return NS_OK;
+  }
   nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aClassName));
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
@@ -408,8 +533,8 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
     return NS_OK;
   }
 
-  NS_ASSERTION(!(s->mType != nsGlobalNameStruct::eTypeNotInitialized &&
-                 s->mType != nsGlobalNameStruct::eTypeInterface),
+  NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
+               s->mType == nsGlobalNameStruct::eTypeInterface,
                "Whaaa, JS environment name clash!");
 
   s->mType = nsGlobalNameStruct::eTypeClassConstructor;
@@ -439,6 +564,75 @@ nsScriptNameSpaceManager::RegisterClassProto(const char *aClassName,
 
   s->mType = nsGlobalNameStruct::eTypeClassProto;
   s->mIID = *aConstructorProtoIID;
+
+  return NS_OK;
+}
+
+nsresult
+nsScriptNameSpaceManager::RegisterExternalClassName(const char *aClassName,
+                                                    nsCID& aCID)
+{
+  nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aClassName));
+  NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
+
+  // If an external constructor is already defined with aClassName we
+  // won't overwrite it.
+
+  if (s->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
+    return NS_OK;
+  }
+
+  NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
+               s->mType == nsGlobalNameStruct::eTypeInterface,
+               "Whaaa, JS environment name clash!");
+
+  s->mType = nsGlobalNameStruct::eTypeExternalClassInfoCreator;
+  s->mCID = aCID;
+
+  return NS_OK;
+}
+
+nsresult
+nsScriptNameSpaceManager::RegisterDOMCIData(const char *aName,
+                                            nsDOMClassInfoExternalConstructorFnc aConstructorFptr,
+                                            const nsIID *aProtoChainInterface,
+                                            const nsIID **aInterfaces,
+                                            PRUint32 aScriptableFlags,
+                                            PRBool aHasClassInterface,
+                                            const nsCID *aConstructorCID)
+{
+  nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aName));
+  NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
+
+  // If an external constructor is already defined with aClassName we
+  // won't overwrite it.
+
+  if (s->mType == nsGlobalNameStruct::eTypeClassConstructor ||
+      s->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
+    return NS_OK;
+  }
+
+  // XXX Should we bail out here?
+  NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
+               s->mType == nsGlobalNameStruct::eTypeExternalClassInfoCreator,
+               "Someone tries to register classinfo data for a class that isn't new or external!");
+
+  s->mData = new nsExternalDOMClassInfoData;
+  NS_ENSURE_TRUE(s->mData, NS_ERROR_OUT_OF_MEMORY);
+
+  s->mType = nsGlobalNameStruct::eTypeExternalClassInfo;
+  s->mData->mName = aName;
+  if (aConstructorFptr)
+    s->mData->mExternalConstructorFptr = aConstructorFptr;
+  else
+    // null constructor will cause us to use nsDOMGenericSH::doCreate
+    s->mData->mExternalConstructorFptr = nsnull;
+  s->mData->mCachedClassInfo = nsnull;
+  s->mData->mProtoChainInterface = aProtoChainInterface;
+  s->mData->mInterfaces = aInterfaces;
+  s->mData->mScriptableFlags = aScriptableFlags;
+  s->mData->mHasClassInterface = aHasClassInterface;
+  s->mData->mConstructorCID = aConstructorCID;
 
   return NS_OK;
 }

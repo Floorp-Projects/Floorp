@@ -51,4 +51,10 @@
 #define JAVASCRIPT_GLOBAL_DYNAMIC_NAMESET_CATEGORY \
   "JavaScript global dynamic nameset"
 
+#define JAVASCRIPT_DOM_CLASS \
+  "JavaScript DOM class"
+
+#define JAVASCRIPT_DOM_INTERFACE \
+  "JavaScript DOM interface"
+
 #endif /* nsIScriptNameSpaceManager_h__ */

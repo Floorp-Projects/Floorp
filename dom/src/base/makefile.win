@@ -37,7 +37,6 @@ REQUIRES	= xpcom \
 		  layout_xul \
 		  content \
 		  content_xul \
-		  content_xsl \
 		  caps \
 		  docshell \
 		  xpconnect \
@@ -56,10 +55,8 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  htmlparser \
 		  chardet \
-		  transformiix \
-		  xmlextras \
-                  find \
-                  appshell \
+		  find \
+		  appshell \
 		  $(NULL)
 
 MODULE=dom
