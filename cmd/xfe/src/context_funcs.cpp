@@ -53,7 +53,7 @@ extern "C" char * _XmStringGetTextConcat(XmString);
 #include "xfe2_extern.h"
 
 #include "Netcaster.h"
-#include "NavCenterView.h"
+#include "BuiltinTreeView.h"
 
 #include "xpgetstr.h"
 
@@ -2822,30 +2822,41 @@ extern "C" MWContext *FE_GetRDFContext(void) {
    */
 
 extern "C" Widget
-fe_showRDFView (Widget parent, int width, int height)
+fe_showRDFTreeView (Widget parent, LO_BuiltinStruct *builtin_struct)
 {
   MWContext *context = fe_WidgetToMWContext (parent);
   XFE_Component *toplevel = fe_frameFromMWContext (context);
-  XFE_View *view = new XFE_NavCenterView (toplevel, parent, NULL, context);
 
-#ifdef DEBUG_spence
-  printf ("fe_showRDFView\n");
+  // XFE_View *view =
+  //   new XFE_NavCenterView (toplevel, parent, NULL, context);
+
+  XFE_BuiltinTreeView *builtin = 
+	  new XFE_BuiltinTreeView(toplevel, parent, 
+							  NULL, context, builtin_struct);
+
+#ifdef DEBUG_mcafee
+  printf ("fe_showRDFTreeView\n");
 #endif
 
-  if (view == NULL) {
-#ifdef DEBUG_spence
-    printf ("fe_showRDFView: view creation failed\n");
+  if (builtin == NULL) {
+#ifdef DEBUG_mcafee
+    printf ("fe_showRDFTreeView: view creation failed\n");
 #endif
 	return NULL;
   }
 
-#ifdef DEBUG_spence
-  printf ("fe_showRDFView: width %d: height %d\n", width, height);
+#ifdef DEBUG_mcafee
+  printf ("fe_showRDFView: width %d: height %d\n", 
+		  builtin_struct->width,
+		  builtin_struct->height);
 #endif
 
-  XtVaSetValues (view->getBaseWidget(), XmNwidth, width, XmNheight, height, 0);
+  XtVaSetValues (builtin->getBaseWidget(), 
+				 XmNwidth,  builtin_struct->width, 
+				 XmNheight, builtin_struct->height, 
+				 NULL);
   XtRealizeWidget (parent);
 
-  return (view->getBaseWidget());
+  return (builtin->getBaseWidget());
 }
 

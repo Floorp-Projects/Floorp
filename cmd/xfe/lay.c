@@ -2313,11 +2313,12 @@ XFE_FreeEdgeElement (MWContext *context, LO_EdgeStruct *edge)
   XP_FREE (sashinfo);
 }
 
-extern Widget fe_showRDFView (Widget w, int width, int height);
+extern Widget fe_showRDFTreeView (Widget w, 
+								  LO_BuiltinStruct *builtin_struct);
 
 void
 XFE_DisplayBuiltin (MWContext *context, int iLocation,
-                                   LO_BuiltinStruct *builtin_struct)
+					LO_BuiltinStruct *builtin_struct)
 {
 	fe_Drawable *fe_drawable = CONTEXT_DATA(context)->drawable;
 	Drawable drawable = fe_drawable->xdrawable;
@@ -2326,7 +2327,11 @@ XFE_DisplayBuiltin (MWContext *context, int iLocation,
 	Widget view = NULL;
 	int xs, ys;
 
-#ifdef DEBUG_spence
+	char *classid = NULL;
+	char *url = NULL;
+	char *target = NULL;
+
+#ifdef DEBUG_mcafee
     printf ("XFE_DisplayBuiltin\n");
 #endif
 
@@ -2334,8 +2339,13 @@ XFE_DisplayBuiltin (MWContext *context, int iLocation,
 	
 	if (builtin_struct->FE_Data) return; /* been here XXX */
 
-	view = fe_showRDFView (CONTEXT_DATA (context)->drawing_area,
-						   builtin_struct->width, builtin_struct->height);
+	classid = LO_GetBuiltInAttribute(builtin_struct, "classid");
+	url = LO_GetBuiltInAttribute(builtin_struct, "data");
+	target = LO_GetBuiltInAttribute(builtin_struct, "target");
+	
+	view = fe_showRDFTreeView(CONTEXT_DATA (context)->drawing_area,
+							  builtin_struct);
+							  
     builtin_struct->FE_Data = (void *) view;
 
 	/* update the window's position */
