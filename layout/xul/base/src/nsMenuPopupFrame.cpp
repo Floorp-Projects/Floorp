@@ -1131,7 +1131,15 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   }  
 
   viewManager->MoveViewTo(view, xpos, ypos); 
-  //viewManager->ResizeView(view, mRect.width, mRect.height);
+
+  nsCOMPtr<nsIContent> parentContent;
+  aFrame->GetContent(getter_AddRefs(parentContent));
+  nsAutoString sizeToContent;
+  parentContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizeToContent);
+  if (sizeToContent == NS_LITERAL_STRING("true")) {
+    nsBoxLayoutState state(mPresContext);
+    SetBounds(state, nsRect(mRect.x, mRect.y, parentRect.width, mRect.height));
+  }
   
   nsAutoString shouldDisplay, menuActive;
   mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, menuActive);
