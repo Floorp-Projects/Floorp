@@ -27,10 +27,7 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #endif // NECKO
 #include "nsIDocument.h"
 #include "nsIView.h"
@@ -77,8 +74,8 @@ public:
 
 #ifdef NECKO
   // nsIStreamObserver methods:
-  NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-  NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
+  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
 #else
   // nsIStreamObserver
   NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
@@ -710,22 +707,8 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
 #ifndef NECKO
   NS_MakeAbsoluteURL(baseURL, empty, aRelURL, aAbsURL);
 #else
-  nsresult result;
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-  if (NS_FAILED(result)) return;
-
-  nsIURI *baseUri = nsnull;
-  result = baseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-  if (NS_FAILED(result)) return;
-
-  char *absUrlStr = nsnull;
-  char *urlSpec = aRelURL.ToNewCString();
-  if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
-  result = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
-  NS_RELEASE(baseUri);
-  aAbsURL= absUrlStr;
-  nsCRT::free(urlSpec);
-  delete [] absUrlStr;
+  nsresult rv = NS_MakeAbsoluteURI(aRelURL, baseURL, aAbsURL);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "XXX make this function return an nsresult, like it should!");
 #endif // NECKO
   NS_IF_RELEASE(baseURL);
 }
@@ -1111,7 +1094,7 @@ TempObserver::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-TempObserver::OnStartRequest(nsISupports *ctxt)
+TempObserver::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 #else
 TempObserver::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
@@ -1126,7 +1109,8 @@ TempObserver::OnStartRequest(nsIURI* aURL, const char *aContentType)
 
 NS_IMETHODIMP
 #ifdef NECKO
-TempObserver::OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
+TempObserver::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+                            nsresult status, const PRUnichar *errorMsg)
 #else
 TempObserver::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 #endif

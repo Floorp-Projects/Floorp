@@ -28,12 +28,18 @@
 #include "nsIURL.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
+#ifdef NECKO
+#include "nsIProgressEventSink.h"
+#endif
 
 /*------------------------- nsDownloadProgressDialog ---------------------------
 | This class implements a "download progress" dialog that transfers a URL      |
 | to an output file and indicates the progress to the user as it does so.      |
 ------------------------------------------------------------------------------*/
 class nsDownloadProgressDialog : public nsIXULWindowCallbacks,
+#ifdef NECKO
+                                 public nsIProgressEventSink,
+#endif
                                  public nsIStreamListener,
                                  public nsIDocumentObserver {
 public:
@@ -47,13 +53,13 @@ public:
     // Declare implementations of nsIStreamListener/nsIStreamObserver functions.
 #ifdef NECKO
     // nsIProgressEventSink methods:
-    NS_IMETHOD OnProgress(nsISupports* context, PRUint32 Progress, PRUint32 ProgressMax);
-    NS_IMETHOD OnStatus(nsISupports* context, const PRUnichar* aMmsg);
+    NS_IMETHOD OnProgress(nsIChannel* channel, nsISupports* context, PRUint32 Progress, PRUint32 ProgressMax);
+    NS_IMETHOD OnStatus(nsIChannel* channel, nsISupports* context, const PRUnichar* aMmsg);
     // nsIStreamObserver methods:
-    NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-    NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
     // nsIStreamListener methods:
-    NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 #else
     NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength);

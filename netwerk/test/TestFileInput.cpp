@@ -102,7 +102,8 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStartRequest(nsISupports* context) {
+    NS_IMETHOD OnStartRequest(nsIChannel* channel,
+                              nsISupports* context) {
         PR_EnterMonitor(mMonitor);
         printf("start binding\n"); 
         mStartTime = PR_IntervalNow();
@@ -110,7 +111,8 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnDataAvailable(nsISupports* context,
+    NS_IMETHOD OnDataAvailable(nsIChannel* channel, 
+                               nsISupports* context,
                                nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength) {
@@ -128,7 +130,8 @@ public:
         return NS_OK;
     }
 
-    NS_IMETHOD OnStopRequest(nsISupports* context,
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, 
+                             nsISupports* context,
                              nsresult aStatus,
                              const PRUnichar* aMsg) {
         nsresult rv;
@@ -192,7 +195,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     nsFileSpec spec(path);
     PRUint32 sourceOffset = 0;
 
-    rv = reader->OnStartRequest(nsnull);
+    rv = reader->OnStartRequest(nsnull, nsnull);
     if (NS_FAILED(rv)) goto done;       // XXX should this abort the transfer?
 
     rv = NS_NewTypicalInputFileStream(&fs, spec);
@@ -222,7 +225,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
         }
         if (NS_FAILED(rv)) break;
 
-        rv = reader->OnDataAvailable(nsnull, bufStr, sourceOffset, amt);
+        rv = reader->OnDataAvailable(nsnull, nsnull, bufStr, sourceOffset, amt);
         if (NS_FAILED(rv)) break;
 
         sourceOffset += amt;
@@ -232,7 +235,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     NS_IF_RELEASE(bufStr);
     NS_IF_RELEASE(fileStr);
 
-    rv = reader->OnStopRequest(nsnull, rv, nsnull);
+    rv = reader->OnStopRequest(nsnull, nsnull, rv, nsnull);
     return rv;
 }
 

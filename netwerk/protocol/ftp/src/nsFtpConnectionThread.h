@@ -110,7 +110,8 @@ class nsFtpConnectionThread : public nsIRunnable {
 public:
     NS_DECL_ISUPPORTS
 
-    nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamListener *aListener);
+    nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamListener *aListener,
+                          nsIChannel* channel, nsISupports* ctxt);
     virtual ~nsFtpConnectionThread();
     
     // nsIRunnable method
@@ -173,6 +174,8 @@ private:
 
     nsIStreamListener*  mListener;          // the listener we want to call
                                             // during our event firing.
+    nsIChannel*         mChannel;
+    nsISupports*        mContext;
 
     PRLock              *mLock;
     PRThread            *mThread;

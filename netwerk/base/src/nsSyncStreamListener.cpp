@@ -30,13 +30,13 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIStreamObserver methods:
-    NS_IMETHOD OnStartRequest(nsISupports* context);
-    NS_IMETHOD OnStopRequest(nsISupports* context,
+    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
                              nsresult aStatus,
                              const PRUnichar* aMsg);
 
     // nsIStreamListener methods:
-    NS_IMETHOD OnDataAvailable(nsISupports* context,
+    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
                                nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
@@ -98,13 +98,13 @@ nsSyncStreamListener::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP 
-nsSyncStreamListener::OnStartRequest(nsISupports* context)
+nsSyncStreamListener::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsSyncStreamListener::OnStopRequest(nsISupports* context,
+nsSyncStreamListener::OnStopRequest(nsIChannel* channel, nsISupports* context,
                                     nsresult aStatus,
                                     const PRUnichar* aMsg)
 {
@@ -113,7 +113,8 @@ nsSyncStreamListener::OnStopRequest(nsISupports* context,
 }
 
 NS_IMETHODIMP 
-nsSyncStreamListener::OnDataAvailable(nsISupports* context,
+nsSyncStreamListener::OnDataAvailable(nsIChannel* channel,
+                                      nsISupports* context, 
                                       nsIInputStream *aIStream, 
                                       PRUint32 aSourceOffset,
                                       PRUint32 aLength)

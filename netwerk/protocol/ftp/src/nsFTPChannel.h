@@ -64,13 +64,13 @@ public:
     NS_IMETHOD SetStreamListener(nsIStreamListener* aListener);
 
     // nsIStreamObserver methods:
-    NS_IMETHOD OnStartRequest(nsISupports* context);
-    NS_IMETHOD OnStopRequest(nsISupports* context,
+    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
                              nsresult aStatus,
                              const PRUnichar* aMsg);
 
     // nsIStreamListener methods:
-    NS_IMETHOD OnDataAvailable(nsISupports* context,
+    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
                                nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);

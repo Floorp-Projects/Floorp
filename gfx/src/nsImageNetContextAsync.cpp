@@ -26,6 +26,7 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsILoadGroup.h"
+#include "nsIChannel.h"
 #else
 #include "nsIURLGroup.h"
 #endif
@@ -110,10 +111,19 @@ public:
   
 #ifdef NECKO
   // nsIStreamObserver methods:
-  NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-  NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
+  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
   // nsIStreamListener methods:
-  NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+  NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+
+  void SetKeepPumpingData(nsIChannel* channel, nsISupports* context) {
+    NS_IF_RELEASE(mChannel);
+    mChannel = channel;
+    NS_ADDREF(mChannel);
+    NS_IF_RELEASE(mUserContext);
+    mUserContext = context;
+    NS_ADDREF(mUserContext);
+  }
 #else
   NS_IMETHOD GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax);
@@ -132,15 +142,15 @@ protected:
   ilIURL *mURL;
   PRBool mInterrupted;
   ImageNetContextImpl *mContext;
-#ifdef NECKO
   nsIInputStream *mStream;
-#else
-  nsIInputStream *mStream;
-#endif
   nsITimer *mTimer;
   PRBool mFirstRead;
   char *mBuffer;
   PRInt32 mStatus;
+#ifdef NECKO
+  nsIChannel* mChannel;
+  nsISupports* mUserContext;
+#endif
 };
 
 ImageConsumer::ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext)
@@ -156,6 +166,10 @@ ImageConsumer::ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext)
   mTimer = nsnull;
   mBuffer = nsnull;
   mStatus = 0;
+#ifdef NECKO
+  mChannel = nsnull;
+  mUserContext = nsnull;
+#endif
 }
 
 NS_DEFINE_IID(kIStreamNotificationIID, NS_ISTREAMLISTENER_IID);
@@ -183,7 +197,7 @@ ImageConsumer::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-ImageConsumer::OnStartRequest(nsISupports* aContext)
+ImageConsumer::OnStartRequest(nsIChannel* channel, nsISupports* aContext)
 #else
 ImageConsumer::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
@@ -216,7 +230,7 @@ ImageConsumer::OnStartRequest(nsIURI* aURL, const char *aContentType)
 
 NS_IMETHODIMP
 #ifdef NECKO
-ImageConsumer::OnDataAvailable(nsISupports* aContext, nsIInputStream *pIStream,
+ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIInputStream *pIStream,
                                PRUint32 offset, PRUint32 length)
 #else
 ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length)
@@ -309,14 +323,19 @@ ImageConsumer::KeepPumpingStream(nsITimer *aTimer, void *aClosure)
   if (consumer->mURL) {
     consumer->mURL->QueryInterface(kIURLIID, (void**)&url);
   }
+#ifdef NECKO
+  consumer->OnStopRequest(consumer->mChannel, consumer->mUserContext,
+                          NS_BINDING_SUCCEEDED, status.GetUnicode());
+#else
   consumer->OnStopRequest(url, NS_BINDING_SUCCEEDED, status.GetUnicode());
+#endif
 
   NS_IF_RELEASE(url);
 }
 
 NS_IMETHODIMP
 #ifdef NECKO
-ImageConsumer::OnStopRequest(nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
+ImageConsumer::OnStopRequest(nsIChannel* channel, nsISupports* aContext, nsresult status, const PRUnichar* aMsg)
 #else
 ImageConsumer::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
 #endif
@@ -336,7 +355,8 @@ ImageConsumer::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMs
     nsresult err = mStream->GetLength(&str_length);
     if (err == NS_OK) {
 #ifdef NECKO
-      err = OnDataAvailable(aContext, mStream, 0, str_length);  // XXX fix offset
+      err = OnDataAvailable(channel, aContext, mStream, 0, str_length);  // XXX fix offset
+      SetKeepPumpingData(channel, aContext);
 #else
       err = OnDataAvailable(aURL, mStream, str_length);
 #endif
@@ -392,6 +412,10 @@ ImageConsumer::~ImageConsumer()
   if (mBuffer != nsnull) {
     PR_DELETE(mBuffer);
   }
+#ifdef NECKO
+  NS_IF_RELEASE(mChannel);
+  NS_IF_RELEASE(mUserContext);
+#endif
 }
 
 ImageNetContextImpl::ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,

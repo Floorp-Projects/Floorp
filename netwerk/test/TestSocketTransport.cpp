@@ -104,14 +104,14 @@ public:
   NS_IMETHOD Run(void);
 
   // IStreamListener interface...
-  NS_IMETHOD OnStartRequest(nsISupports* context);
+  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
 
-  NS_IMETHOD OnDataAvailable(nsISupports* context,
+  NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
                              nsIInputStream *aIStream, 
                              PRUint32 aSourceOffset,
                              PRUint32 aLength);
 
-  NS_IMETHOD OnStopRequest(nsISupports* context,
+  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
                            nsresult aStatus,
                            const PRUnichar* aMsg);
 
@@ -141,7 +141,7 @@ protected:
 
 
 NS_IMETHODIMP
-TestConnection::OnStartRequest(nsISupports* context)
+TestConnection::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
   printf("\n+++ TestConnection::OnStartRequest +++. Context = %p\n", context);
   return NS_OK;
@@ -149,7 +149,7 @@ TestConnection::OnStartRequest(nsISupports* context)
 
 
 NS_IMETHODIMP
-TestConnection::OnDataAvailable(nsISupports* context,
+TestConnection::OnDataAvailable(nsIChannel* channel, nsISupports* context,
                                 nsIInputStream *aIStream, 
                                 PRUint32 aSourceOffset,
                                 PRUint32 aLength)
@@ -177,7 +177,8 @@ TestConnection::OnDataAvailable(nsISupports* context,
 
 
 NS_IMETHODIMP
-TestConnection::OnStopRequest(nsISupports* context,
+TestConnection::OnStopRequest(nsIChannel* channel, 
+                              nsISupports* context,
                               nsresult aStatus,
                               const PRUnichar* aMsg)
 {

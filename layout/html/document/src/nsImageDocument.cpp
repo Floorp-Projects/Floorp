@@ -91,10 +91,10 @@ public:
   NS_DECL_ISUPPORTS
 #ifdef NECKO
   // nsIStreamObserver methods:
-  NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-  NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
+  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
   // nsIStreamListener methods:
-  NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+  NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
 #else
   NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
@@ -127,16 +127,13 @@ NS_IMPL_ISUPPORTS(ImageListener, kIStreamListenerIID)
 
 NS_IMETHODIMP
 #ifdef NECKO
-ImageListener::OnStartRequest(nsISupports *ctxt)
+ImageListener::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 #else
 ImageListener::OnStartRequest(nsIURI* aURL, const char *aContentType)
 #endif
 {
 #ifdef NECKO
   nsresult rv;
-  nsIChannel* channel;
-  rv = ctxt->QueryInterface(nsIChannel::GetIID(), (void**)&channel);
-  if (NS_FAILED(rv)) return rv;
   nsIURI* uri;
   rv = channel->GetURI(&uri);
   if (NS_FAILED(rv)) return rv;
@@ -151,7 +148,7 @@ ImageListener::OnStartRequest(nsIURI* aURL, const char *aContentType)
     return NS_ERROR_FAILURE;
   }
 #ifdef NECKO
-  return mNextStream->OnStartRequest(ctxt);
+  return mNextStream->OnStartRequest(channel, ctxt);
 #else
   return mNextStream->OnStartRequest(aURL, aContentType);
 #endif
@@ -180,8 +177,8 @@ ImageListener::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 
 NS_IMETHODIMP
 #ifdef NECKO
-ImageListener::OnStopRequest(nsISupports *ctxt, nsresult status, 
-                             const PRUnichar *errorMsg)
+ImageListener::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+                             nsresult status, const PRUnichar *errorMsg)
 #else
 ImageListener::OnStopRequest(nsIURI* aURL, nsresult aStatus,
                              const PRUnichar* aMsg)
@@ -192,7 +189,7 @@ ImageListener::OnStopRequest(nsIURI* aURL, nsresult aStatus,
   }
 #ifdef NECKO
   mDocument->EndLayout(ctxt, status, errorMsg);
-  return mNextStream->OnStopRequest(ctxt, status, errorMsg);
+  return mNextStream->OnStopRequest(channel, ctxt, status, errorMsg);
 #else
   mDocument->EndLayout(aURL, aStatus, aMsg);
   return mNextStream->OnStopRequest(aURL, aStatus, aMsg);
@@ -212,8 +209,8 @@ ImageListener::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 
 NS_IMETHODIMP
 #ifdef NECKO
-ImageListener::OnDataAvailable(nsISupports *ctxt, nsIInputStream *inStr,
-                               PRUint32 sourceOffset, PRUint32 count)
+ImageListener::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
+                               nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 #else
 ImageListener::OnDataAvailable(nsIURI* aURL, nsIInputStream* aStream,
                                PRUint32 aCount)
@@ -223,7 +220,7 @@ ImageListener::OnDataAvailable(nsIURI* aURL, nsIInputStream* aStream,
     return NS_ERROR_FAILURE;
   }
 #ifdef NECKO
-  return mNextStream->OnDataAvailable(ctxt, inStr, sourceOffset, count);
+  return mNextStream->OnDataAvailable(channel, ctxt, inStr, sourceOffset, count);
 #else
   return mNextStream->OnDataAvailable(aURL, aStream, aCount);
 #endif

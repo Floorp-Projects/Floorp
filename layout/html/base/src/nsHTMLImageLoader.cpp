@@ -20,10 +20,7 @@
 #include "nsFrame.h"
 #include "nsIURL.h"
 #ifdef NECKO
-#include "nsIIOService.h"
-#include "nsIURL.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNeckoUtil.h"
 #endif // NECKO
 
 #ifdef DEBUG
@@ -85,21 +82,7 @@ nsHTMLImageLoader::SetURL(const nsString& aNewSpec)
 #ifndef NECKO
     rv = NS_MakeAbsoluteURL(mBaseURL, empty, mURLSpec, mURL);
 #else
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return;
-
-    nsIURI *baseUri = nsnull;
-    rv = mBaseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-    if (NS_FAILED(rv)) return;
-
-    char *absUrl = nsnull;
-    char *urlSpec = mURLSpec.ToNewCString();
-    if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
-    rv = service->MakeAbsolute(urlSpec, baseUri, &absUrl);
-    NS_RELEASE(baseUri);
-    nsCRT::free(urlSpec);
-    mURL = absUrl;
-    delete [] absUrl;
+    rv = NS_MakeAbsoluteURI(mURLSpec, mBaseURL, mURL);
 #endif // NECKO
     if (NS_FAILED(rv)) {
       mURL = mURLSpec;

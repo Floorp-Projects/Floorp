@@ -922,7 +922,7 @@ nsHTTPRequest::GetInputStream(nsIInputStream* *o_Stream)
 }
 
 NS_IMETHODIMP
-nsHTTPRequest::OnStartRequest(nsISupports* i_pContext)
+nsHTTPRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_pContext)
 {
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("nsHTTPRequest [this=%x]. Starting to write request to server.\n",
@@ -932,9 +932,9 @@ nsHTTPRequest::OnStartRequest(nsISupports* i_pContext)
 }
 
 NS_IMETHODIMP
-nsHTTPRequest::OnStopRequest(nsISupports* i_pContext,
-                                 nsresult iStatus,
-                                 const PRUnichar* i_pMsg)
+nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext,
+                             nsresult iStatus,
+                             const PRUnichar* i_pMsg)
 {
     nsresult rv = iStatus;
     
@@ -975,7 +975,7 @@ nsHTTPRequest::OnStopRequest(nsISupports* i_pContext,
         (void) m_pConnection->GetResponseContext(getter_AddRefs(consumerContext));
         rv = m_pConnection->GetResponseDataListener(getter_AddRefs(consumer));
         if (consumer) {
-            consumer->OnStopRequest(consumerContext, iStatus, i_pMsg);
+            consumer->OnStopRequest(m_pConnection, consumerContext, iStatus, i_pMsg);
         }
 
         rv = iStatus;

@@ -27,7 +27,8 @@
 
 class nsFtpStreamListenerEvent : public PLEvent {
 public:
-    nsFtpStreamListenerEvent(nsIStreamListener* listener, nsISupports* context);
+    nsFtpStreamListenerEvent(nsIStreamListener* listener,
+                             nsIChannel* channel, nsISupports* context);
     virtual ~nsFtpStreamListenerEvent();
 
     nsresult Fire(nsIEventQueue* aEventQ);
@@ -38,15 +39,17 @@ protected:
     static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
     static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
 
-    nsIStreamListener* mListener;
-    nsISupports*                mContext;
+    nsIStreamListener*  mListener;
+    nsIChannel*         mChannel;
+    nsISupports*        mContext;
 };
 
 class nsFtpOnStartRequestEvent : public nsFtpStreamListenerEvent
 {
 public:
-    nsFtpOnStartRequestEvent(nsIStreamListener* listener, nsISupports* context)
-        : nsFtpStreamListenerEvent(listener, context) {}
+    nsFtpOnStartRequestEvent(nsIStreamListener* listener, 
+                             nsIChannel* channel, nsISupports* context)
+        : nsFtpStreamListenerEvent(listener, channel, context) {}
     virtual ~nsFtpOnStartRequestEvent() {}
 
     NS_IMETHOD HandleEvent();
@@ -56,8 +59,9 @@ public:
 class nsFtpOnDataAvailableEvent : public nsFtpStreamListenerEvent
 {
 public:
-    nsFtpOnDataAvailableEvent(nsIStreamListener* listener, nsISupports* context)
-        : nsFtpStreamListenerEvent(listener, context),
+    nsFtpOnDataAvailableEvent(nsIStreamListener* listener,
+                              nsIChannel* channel, nsISupports* context)
+        : nsFtpStreamListenerEvent(listener, channel, context),
           mIStream(nsnull), mLength(0) {}
     virtual ~nsFtpOnDataAvailableEvent();
 
@@ -74,8 +78,9 @@ protected:
 class nsFtpOnStopRequestEvent : public nsFtpStreamListenerEvent
 {
 public:
-    nsFtpOnStopRequestEvent(nsIStreamListener* listener, nsISupports* context)
-        : nsFtpStreamListenerEvent(listener, context),
+    nsFtpOnStopRequestEvent(nsIStreamListener* listener,
+                            nsIChannel* channel, nsISupports* context)
+        : nsFtpStreamListenerEvent(listener, channel, context),
           mStatus(NS_OK), mMessage(nsnull) {}
     virtual ~nsFtpOnStopRequestEvent();
 

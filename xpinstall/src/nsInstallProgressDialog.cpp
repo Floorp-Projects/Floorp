@@ -34,14 +34,12 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMElement.h"
-#include "nsIURL.h"
 #ifndef NECKO
+#include "nsIURL.h"
 #include "nsINetService.h"
 #else
-#include "nsIIOService.h"
+#include "nsNeckoUtil.h"
 #include "nsIURL.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
@@ -221,15 +219,7 @@ nsInstallProgressDialog::Open()
 #ifndef NECKO
         rv = NS_NewURL( &url, urlStr );
 #else
-        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsIURI *uri = nsnull;
-        rv = service->NewURI(urlStr, nsnull, &uri);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&url);
-        NS_RELEASE(uri);
+        rv = NS_NewURI( &url, urlStr );
 #endif // NECKO
         
         if ( NS_SUCCEEDED(rv) ) 

@@ -180,14 +180,14 @@ public:
   NS_DECL_ISUPPORTS
 
   // IStreamListener interface...
-  NS_IMETHOD OnStartRequest(nsISupports* context);
+  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
 
-  NS_IMETHOD OnDataAvailable(nsISupports* context,
+  NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
                              nsIInputStream *aIStream, 
                              PRUint32 aSourceOffset,
                              PRUint32 aLength);
 
-  NS_IMETHOD OnStopRequest(nsISupports* context,
+  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
                            nsresult aStatus,
                            const PRUnichar* aMsg);
 };
@@ -207,7 +207,7 @@ NS_IMPL_ISUPPORTS(InputTestConsumer,nsCOMTypeInfo<nsIStreamListener>::GetIID());
 
 
 NS_IMETHODIMP
-InputTestConsumer::OnStartRequest(nsISupports* context)
+InputTestConsumer::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
   URLLoadInfo* info = (URLLoadInfo*)context;
   if (info) {
@@ -235,7 +235,8 @@ InputTestConsumer::OnStartRequest(nsISupports* context)
 
 
 NS_IMETHODIMP
-InputTestConsumer::OnDataAvailable(nsISupports* context,
+InputTestConsumer::OnDataAvailable(nsIChannel* channel, 
+                                   nsISupports* context,
                                    nsIInputStream *aIStream, 
                                    PRUint32 aSourceOffset,
                                    PRUint32 aLength)
@@ -263,7 +264,8 @@ InputTestConsumer::OnDataAvailable(nsISupports* context,
 
 
 NS_IMETHODIMP
-InputTestConsumer::OnStopRequest(nsISupports* context,
+InputTestConsumer::OnStopRequest(nsIChannel* channel, 
+                                 nsISupports* context,
                                  nsresult aStatus,
                                  const PRUnichar* aMsg)
 {

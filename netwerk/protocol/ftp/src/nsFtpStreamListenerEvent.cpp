@@ -19,19 +19,22 @@
 #include "nsFtpStreamListenerEvent.h"
 #include "nsIBufferInputStream.h"
 #include "nscore.h"
-
+#include "nsIChannel.h"
 
 nsFtpStreamListenerEvent::nsFtpStreamListenerEvent(nsIStreamListener* listener,
-                                             nsISupports* context)
-    : mListener(listener), mContext(context)
+                                                   nsIChannel* channel,
+                                                   nsISupports* context)
+    : mListener(listener), mChannel(channel), mContext(context)
 {
-    NS_IF_ADDREF(mListener);
+    NS_ADDREF(mListener);
+    NS_ADDREF(mChannel);
     NS_IF_ADDREF(mContext);
 }
 
 nsFtpStreamListenerEvent::~nsFtpStreamListenerEvent()
 {
-    NS_IF_RELEASE(mListener);
+    NS_RELEASE(mListener);
+    NS_RELEASE(mChannel);
     NS_IF_RELEASE(mContext);
 }
 
@@ -80,7 +83,7 @@ NS_IMETHODIMP
 nsFtpOnStartRequestEvent::HandleEvent()
 {
   nsIStreamObserver* receiver = (nsIStreamObserver*)mListener;
-  return receiver->OnStartRequest(mContext);
+  return receiver->OnStartRequest(mChannel, mContext);
 }
 /*
 NS_IMETHODIMP 
@@ -129,7 +132,7 @@ NS_IMETHODIMP
 nsFtpOnDataAvailableEvent::HandleEvent()
 {
   nsIStreamListener* receiver = (nsIStreamListener*)mListener;
-  return receiver->OnDataAvailable(mContext, mIStream, mSourceOffset, mLength);
+  return receiver->OnDataAvailable(mChannel, mContext, mIStream, mSourceOffset, mLength);
 }
 /*
 NS_IMETHODIMP 
@@ -179,7 +182,7 @@ NS_IMETHODIMP
 nsFtpOnStopRequestEvent::HandleEvent()
 {
   nsIStreamObserver* receiver = (nsIStreamObserver*)mListener;
-  return receiver->OnStopRequest(mContext, mStatus, mMessage);
+  return receiver->OnStopRequest(mChannel, mContext, mStatus, mMessage);
 }
 /*
 NS_IMETHODIMP 

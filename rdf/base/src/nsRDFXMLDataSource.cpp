@@ -572,7 +572,7 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
         goto done;
 
 #ifdef NECKO
-    aConsumer->OnStartRequest(channel);
+    aConsumer->OnStartRequest(channel, nsnull);
 #else
     // XXX shouldn't netlib be doing this???
     aConsumer->OnStartRequest(aURL, "text/rdf");
@@ -590,7 +590,7 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
         proxy->SetBuffer(buf, readCount);
 
 #ifdef NECKO
-        rv = aConsumer->OnDataAvailable(channel, proxy, sourceOffset, readCount);
+        rv = aConsumer->OnDataAvailable(channel, nsnull, proxy, sourceOffset, readCount);
         sourceOffset += readCount;
 #else
         // XXX shouldn't netlib be doing this???
@@ -603,7 +603,7 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
         rv = NS_OK;
     }
 #ifdef NECKO
-    aConsumer->OnStopRequest(channel, NS_OK, nsnull);
+    aConsumer->OnStopRequest(channel, nsnull, NS_OK, nsnull);
 #else
     // XXX shouldn't netlib be doing this???
     aConsumer->OnStopRequest(aURL, 0, nsnull);
