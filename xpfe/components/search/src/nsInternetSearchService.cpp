@@ -1171,8 +1171,10 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 
 
 NS_IMETHODIMP
-InternetSearchDataSource::FindInternetSearchResults(const char *url)
+InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *searchInProgress)
 {
+	*searchInProgress = PR_FALSE;
+
 	if (!mInner)	return(NS_OK);
 
 	// if the url doesn't look like a HTTP GET query, just return,
@@ -1276,6 +1278,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url)
 		// do the search
 		DoSearch(nsnull, engine, searchURL, nsAutoString(""));
 
+		*searchInProgress = PR_TRUE;
 	}
 
 	return(NS_OK);

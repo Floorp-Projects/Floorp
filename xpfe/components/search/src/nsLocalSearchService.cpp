@@ -346,7 +346,7 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 			nsIRDFLiteral	*literal;
 			gRDFService->GetLiteral(url.GetUnicode(), &literal);
 			*target = literal;
-			rv = NS_OK;
+			return(NS_OK);
 		}
 		else if (property == kRDF_type)
 		{
@@ -359,7 +359,7 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 			gRDFService->GetLiteral(url.GetUnicode(), &literal);
 
 			*target = literal;
-			return NS_OK;
+			return(NS_OK);
 		}
 		else if (property == kNC_pulse)
 		{
@@ -369,7 +369,14 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 			if (NS_FAILED(rv)) return rv;
 
 			*target = pulseLiteral;
-			return NS_OK;
+			return(NS_OK);
+		}
+		else if (property == kNC_Child)
+		{
+			// fake out the generic builder (i.e. return anything in this case)
+			// so that search containers never appear to be empty
+			*target = source;
+			return(NS_OK);
 		}
 	}
 	return NS_RDF_NO_VALUE;
