@@ -1874,10 +1874,7 @@ nsCAutoString::nsCAutoString() : nsCString(){
 
 }
 
-/**
- * Default constructor
- */
-nsCAutoString::nsCAutoString(const nsCAutoString& aString) : nsCString() {
+nsCAutoString::nsCAutoString( const nsCString& aString ) : nsCString(){
   Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
