@@ -655,12 +655,15 @@ PRBool nsWidget::OnResize(nsRect &aRect)
 //------
 PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 {
-    nsGUIEvent event;
 #if 0
-    printf("nsWidget::OnMove %s (%p)\n",
+    printf("nsWidget::OnMove %s (%p) (%d,%d) -> (%d,%d)\n",
            (const char *) debug_GetName(mWidget),
-           this);
+           this, mBounds.x, mBounds.y, aX, aY);
 #endif
+    mBounds.x = aX;
+    mBounds.y = aY;
+
+    nsGUIEvent event;
     InitEvent(event, NS_MOVE);
     event.point.x = aX;
     event.point.y = aY;

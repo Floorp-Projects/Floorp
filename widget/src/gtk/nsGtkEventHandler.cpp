@@ -1015,9 +1015,7 @@ handle_superwin_flush(gpointer aData)
 gboolean
 handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p)
 {
-  // This event handler is only installed on toplevel windows, because:
-  //  a) gdk_window_get_root_origin gives bad results for inner windows, and
-  //  b) we don't really need to worry about move events on inner windows
+  // This event handler is only installed on toplevel windows
 
   nsWindow *widget = (nsWindow *)p;
 
@@ -1025,21 +1023,24 @@ handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p)
   nsRect oldBounds;
   widget->GetBounds(oldBounds);
 
+  // this is really supposed to be get_origin, not get_root_origin
+  // - bryner
   nscoord x,y;
-  gdk_window_get_root_origin(w->window, &x, &y);
+  gdk_window_get_origin(w->window, &x, &y);
 
-  if ((oldBounds.x == x) && (oldBounds.y == y))
+  if ((oldBounds.x == x) && (oldBounds.y == y)) {
+#ifdef DEBUG_MOVE
+    printf("Window: No position change\n");
+#endif
     return PR_FALSE;
+  }
 
 #ifdef DEBUG_MOVE
-  printf("Window: Move from (%d,%d) to (%d,%d)\n", oldBounds.x, oldBounds.y,
-         x, y);
+  printf("Window: Move from (%d,%d) to (%d,%d)\n", oldBounds.x,
+         oldBounds.y, x, y);
 #endif
 
-  nscoord relX, relY;
-  gdk_window_get_origin(w->window, &relX, &relY);
-
-  widget->OnMove(relX, relY);
+  widget->OnMove(x, y);
   return PR_FALSE;
 }
 
