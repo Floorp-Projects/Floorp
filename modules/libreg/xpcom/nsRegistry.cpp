@@ -361,24 +361,14 @@ NS_IMPL_ISUPPORTS1( nsRegistryNode,         nsIRegistryNode  )
 NS_IMPL_ISUPPORTS1( nsRegistryValue,        nsIRegistryValue )
 
 /*-------------------------- nsRegistry::nsRegistry ----------------------------
-| Vanilla nsRegistry constructor.  The first time called, it does              |
-| NR_StartupRegistry.                                                          |
+| Vanilla nsRegistry constructor.                                              |
 ------------------------------------------------------------------------------*/
 nsRegistry::nsRegistry() 
     : mReg(0), mCurRegFile(NULL), mCurRegID(0) {
     NS_INIT_REFCNT();
-
-    // Ensure libreg is started.
-    static PRBool libregStarted = PR_FALSE;
-    if( !libregStarted ) {
-        NR_StartupRegistry();
-        libregStarted = PR_TRUE;
-    }
-
 #ifdef EXTRA_THREADSAFE
     mregLock = PR_NewLock();
 #endif
-
     return;
 }
 

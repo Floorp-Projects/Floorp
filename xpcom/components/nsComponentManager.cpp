@@ -36,6 +36,7 @@
 #include "xcDll.h"
 #include "prerror.h"
 #include "prmem.h"
+#include "NSReg.h"
 
 #include "prcmon.h"
 #include "prthread.h" /* XXX: only used for the NSPR initialization hack (rick) */
@@ -241,6 +242,7 @@ nsresult nsComponentManagerImpl::Init(void)
            ("nsComponentManager: Initialized."));
 
 #ifdef USE_REGISTRY
+    NR_StartupRegistry();
     PlatformInit();
 #endif
 
@@ -279,6 +281,10 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     // Destroy the Lock
     if (mMon)
         PR_DestroyMonitor(mMon);
+
+#ifdef USE_REGISTRY
+    NR_ShutdownRegistry();
+#endif /* USE_REGISTRY */
 
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Destroyed."));
 
