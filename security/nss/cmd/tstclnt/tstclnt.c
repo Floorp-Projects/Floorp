@@ -450,7 +450,9 @@ int main(int argc, char **argv)
 	    if (prStatus == PR_SUCCESS) {
     		PR_Shutdown(s, PR_SHUTDOWN_BOTH);
     		PR_Close(s);
-    		NSS_Shutdown();
+               if (NSS_Shutdown() != SECSuccess) {
+                   exit(1);
+               }
     		PR_Cleanup();
 		return 0;
 	    }
@@ -727,7 +729,10 @@ int main(int argc, char **argv)
   done:
     PR_Close(s);
     SSL_ClearSessionCache();
-    NSS_Shutdown();
+    if (NSS_Shutdown() != SECSuccess) {
+        exit(1);
+    }
+
     PR_Cleanup();
     return error;
 }
