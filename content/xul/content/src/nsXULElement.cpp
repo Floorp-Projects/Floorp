@@ -2573,8 +2573,9 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
 
     nsresult rv;
 
-    nsXULAttribute* attr = FindLocalAttribute(aNodeInfo);
-    if (attr) {
+#if DEBUG_smfr
+    nsXULAttribute* theAttr = FindLocalAttribute(aNodeInfo);
+    if (theAttr) {
         nsAutoString  oldValue;
         attr->GetValue(oldValue);
         if (oldValue.Equals(aValue))
@@ -2588,8 +2589,8 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
           blurb.AppendWithConversion(aValue);
           NS_WARNING(blurb.get());
         }
-       
     }
+#endif
 
     nsCOMPtr<nsIAtom> attrName;
     PRInt32 attrns;
@@ -2653,7 +2654,7 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
     // XXX need to check if they're changing an event handler: if so, then we need
     // to unhook the old one.
 
-
+    nsXULAttribute* attr = FindLocalAttribute(aNodeInfo);
     PRBool modification;
     nsAutoString oldValue;
 
