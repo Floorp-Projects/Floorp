@@ -60,6 +60,7 @@
 #include "nsBlender.h"
 #include "nsCOMPtr.h"
 #include "nsPrintOptionsMac.h"
+#include "nsUnicodeMappingUtil.h"
 
 #include "nsIGenericFactory.h"
 
@@ -170,6 +171,12 @@ static nsModuleComponentInfo components[] =
     nsScreenManagerMacConstructor }
 };
 
-NS_IMPL_NSGETMODULE(nsGfxModule, components)
+PR_STATIC_CALLBACK(void)
+nsGfxMacModuleDtor(nsIModule *self)
+{
+  nsUnicodeMappingUtil::FreeSingleton();
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsGfxModule, components, nsGfxMacModuleDtor)
 
 
