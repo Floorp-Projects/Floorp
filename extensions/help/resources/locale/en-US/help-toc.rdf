@@ -768,6 +768,14 @@
     </nc:subheadings>
   </rdf:Description>
 
+<rdf:Description about="#navigator_pref_smart_browsing">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li><rdf:Description ID="navigator_pref_autocomplete-adv" nc:name="Auto-complete" nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#autocomplete-adv"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
 <rdf:Description about="#advanced_pref_advanced">
     <nc:subheadings>
       <rdf:Seq>
