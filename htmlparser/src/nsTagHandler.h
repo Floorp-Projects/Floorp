@@ -51,7 +51,7 @@ public:
    * Destructor
    * @update dc 11/05/98
    */
-  ~nsTagHandler() {}
+  virtual ~nsTagHandler() {}
 
   /**
    * Sets the string (tag) for this nsTagHandler to handle
