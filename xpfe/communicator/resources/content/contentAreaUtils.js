@@ -319,7 +319,7 @@ function foundHeaderInfo(aSniffer, aData)
     source      : source,
     contentType : (isDocument && fp.filterIndex == 2) ? "text/plain" : contentType,
     target      : fp.file,
-    postData    : aData.document ? getPostData() : null,
+    postData    : isDocument ? getPostData() : null,
     bypassCache : aData.bypassCache
   };
   
@@ -564,6 +564,23 @@ function appendFiltersForContentType(aFilePicker, aContentType, aSaveMode)
     if (aSaveMode == MODE_COMPLETE)
       aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterText);
     break;
+
+  case "application/xhtml+xml":
+    if (aSaveMode == MODE_COMPLETE)
+      aFilePicker.appendFilter(bundle.GetStringFromName("WebPageCompleteFilter"), "*.xht; *.xhtml");
+    aFilePicker.appendFilter(bundle.GetStringFromName("WebPageXHTMLOnlyFilter"), "*.xht; *.xhtml");
+    if (aSaveMode == MODE_COMPLETE)
+      aFilePicker.appendFilters(Components.interfaces.nsIFilePicker.filterText);
+    break;
+
+  case "text/xml":
+  case "application/xml":
+    if (aSaveMode == MODE_COMPLETE)
+      aFilePicker.appendFilter(bundle.GetStringFromName("WebPageCompleteFilter"), "*.xml");
+    aFilePicker.appendFilter(bundle.GetStringFromName("WebPageXMLOnlyFilter"), "*.xml");
+    // It does not make sense to save as text because we have no idea how to format text only
+    break;
+
   default:
     var mimeInfo = getMIMEInfoForType(aContentType);
     if (mimeInfo) {
@@ -831,11 +848,10 @@ function isDocumentType(aContentType)
 {
   switch (aContentType) {
   case "text/html":
-    return true;
   case "text/xml":
   case "application/xhtml+xml":
   case "application/xml":
-    return false; // XXX Disables Save As Complete until it works for XML
+    return true;
   }
   return false;
 }
