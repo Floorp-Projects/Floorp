@@ -141,7 +141,8 @@ class nsParserState
 {
 public:
   nsParserState(nsIPersistentProperties* aProps) :
-    mState(eParserState_AwaitingKey), mProps(aProps) {}
+    mState(eParserState_AwaitingKey), mHaveMultiLine(PR_FALSE),
+    mProps(aProps) {}
 
   void WaitForKey() {
     mState = eParserState_AwaitingKey;
@@ -183,8 +184,9 @@ public:
   // if we see a '\' then we enter this special state
   PRUint32 mSpecialState;
 
-  PRUint32 mUnicodeValuesRead;   // should be 4!
-  PRUnichar mUnicodeValue;
+  PRUint32  mUnicodeValuesRead; // should be 4!
+  PRUnichar mUnicodeValue;      // currently parsed unicode value
+  PRBool    mHaveMultiLine;     // if this key is multi-line
 
 private:
   PRUint32 mState;
@@ -263,19 +265,34 @@ ParseValueCharacter(nsParserState& aState, PRUnichar c,
   case eParserSpecial_None:
     switch (c) {
     case '\\':
+      // handle multilines - since this is the beginning of a line,
+      // there's no value to append
+      if (aState.mHaveMultiLine)
+        aState.mHaveMultiLine = PR_FALSE;
+      else
+        aState.mValue += Substring(tokenStart, cur);
+      
       aState.mSpecialState = eParserSpecial_Escaped;
-      aState.mValue += Substring(tokenStart, cur);
       break;
       
     case '\n':
     case '\r':
+      // ignore sequential line endings
+      if (aState.mHaveMultiLine)
+        break;
+      
       // we're done! We have a key and value
       aState.mValue += Substring(tokenStart, cur);
       aState.FinishValueState(oldValue);
       break;
 
     default:
-      // there is nothing to do with normal characters
+      // there is nothing to do with normal characters,
+      // but handle multilines correctly
+      if (aState.mHaveMultiLine) {
+        aState.mHaveMultiLine = PR_FALSE;
+        tokenStart = cur;
+      }
       break;
     }
     break;
@@ -314,6 +331,7 @@ ParseValueCharacter(nsParserState& aState, PRUnichar c,
       // a \ immediately followed by a newline means we're going multiline
     case '\r':
     case '\n':
+      aState.mHaveMultiLine = PR_TRUE;
       aState.mSpecialState = eParserSpecial_None;
       break;
       
