@@ -30,6 +30,8 @@ CPPSRCS = \
 	nsCoreFactory.cpp \
 	nsCalendarUser.cpp \
 	nsCalendarModel.cpp \
+	nsCalStreamReader.cpp \
+	nsCapiCallbackReader.cpp \
 	$(NULL)
 
 

@@ -13,14 +13,17 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-CFLAGS         +=-D_IMPL_NS_CALENDAR  -DNSPR20
+CFLAGS         +=-D_IMPL_NS_CAL_UTIL  -DNSPR20
 INCLUDES       +=-I../inc -I$(GDEPTH)/include
+
+ifeq ($(OS_ARCH), WINNT)
+CFLAGS += /Zm1000
+endif
 
 LIBRARY_NAME      = util
 LIBRARY_VERSION   = 10
 
 LD_LIBS += \
-	$(NATIVE_JULIAN_DLL) \
 	$(NATIVE_LIBNLS_LIBS) \
 	raptorbase \
 	xpcom$(MOZ_BITS) \

@@ -18,7 +18,6 @@ INCLUDES       += -I../inc -I$(GDEPTH)/include
 
 
 LD_LIBS += \
-	$(NATIVE_JULIAN_DLL) \
     $(NATIVE_LIBNLS_LIBS) \
     util10
 

@@ -19,6 +19,6 @@ PRIVATE_EXPORTS = \
     nsTrexTestShellFactory.h \
 	$(NULL)
 
-MODULE = trextest
+MODULE = trex
 
 REQUIRES = raptor xpfc

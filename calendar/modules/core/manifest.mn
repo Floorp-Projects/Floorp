@@ -10,6 +10,19 @@
 GDEPTH = ../../..
 DEPTH  = ../../..
 
+DIRS = ical src capi
+
 DIRS_EXPORT = public inc 
-DIRS_LIBS = src
+
+LIBRARY_NAME = calcore
+
+EXPORTS = \
+	$(NULL)
+
+PRIVATE_EXPORTS = \
+	$(NULL)
+
+MODULE = trex
+
+REQUIRES = xpcom raptor shell trex
 

@@ -19,7 +19,6 @@ LD_LIBS += \
 	raptorbase \
 	$(NATIVE_RAPTOR_GFX) \
 	raptorhtmlpars \
-	$(NATIVE_JULIAN_DLL) \
 	xpcom$(MOZ_BITS) \
     $(NATIVE_LIBNLS_LIBS) \
 	$(NATIVE_RAPTOR_WIDGET) \

@@ -23,6 +23,18 @@ CPPSRCS = \
 	nsDateTime.cpp \
 	nsDuration.cpp \
 	nsUtilFactory.cpp \
+	jutility.cpp \
+	jatom.cpp \
+	jlog.cpp \
+	jlogerr.cpp \
+	jlogitr.cpp \
+	jlogvctr.cpp \
+	julnstr.cpp \
+	ptrarray.cpp \
+	uidrgntr.cpp \
+	duration.cpp \
+	datetime.cpp \
+	keyword.cpp \
 	$(NULL)
 
 REQUIRES = xpcom raptor shell trex julian nls

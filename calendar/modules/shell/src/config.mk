@@ -49,11 +49,11 @@ LD_LIBS += \
 	$(RAPTOR_GFX) \
 	$(NATIVE_ZLIB_DLL) \
 	$(NATIVE_XP_DLL) \
-	$(NATIVE_JULIAN_DLL) \
     $(NATIVE_LIBNLS_LIBS) \
 	xpcom$(MOZ_BITS) \
 	util10 \
 	calcore10 \
+	cal_core_ical10 \
 	$(XP_REG_LIB)
 
 STATIC_LIBS += shell

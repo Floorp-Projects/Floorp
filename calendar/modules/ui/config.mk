@@ -1,5 +1,5 @@
 #
-#           CONFIDENTIAL AND PROPRIETARY SOURCE CODE OF
+	#           CONFIDENTIAL AND PROPRIETARY SOURCE CODE OF
 #              NETSCAPE COMMUNICATIONS CORPORATION
 # Copyright © 1996, 1997 Netscape Communications Corporation.  All Rights
 # Reserved.  Use of this Source Code is subject to the terms of the
@@ -19,10 +19,11 @@ LD_LIBS += \
 	raptorbase \
 	$(NATIVE_RAPTOR_GFX) \
 	$(NATIVE_RAPTOR_WIDGET) \
-	$(NATIVE_JULIAN_DLL) \
 	xpcom$(MOZ_BITS) \
     $(NATIVE_LIBNLS_LIBS) \
     xpfc10 \
+	util10 \
+	cal_core_ical10 \
     calcore10 \
 	$(XP_REG_LIB)
 

@@ -13,6 +13,7 @@ DEPTH = ../../../..
 EXPORTS = \
 	nsIDateTime.h \
     nsIDuration.h \
+	nscalutilexp.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \

@@ -17,6 +17,6 @@ EXPORTS = \
 PRIVATE_EXPORTS = \
 	$(NULL)
 
-MODULE = trextest
+MODULE = trex
 
 REQUIRES = raptor xpfc

@@ -13,21 +13,19 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-CFLAGS         +=-D_IMPL_NS_CALENDAR -DNSPR20 -I$(GDEPTH)/include
+CFLAGS         +=-D_IMPL_NS_CALENDAR -DNSPR20 -I$(GDEPTH)/include 
 
-LD_LIBS += \
-	raptorbase \
-	raptorhtmlpars \
-	$(NATIVE_JULIAN_DLL) \
-	xpcom$(MOZ_BITS) \
-    $(NATIVE_LIBNLS_LIBS) \
-	$(NATIVE_RAPTOR_WIDGET) \
-	calcapi10 \
-	util10  \
-	xpcom$(MOZ_BITS) \
-	$(XP_REG_LIB)
+ifeq ($(OS_ARCH), WINNT)
+CFLAGS += /Zm1000
+endif
 
-LIBRARY_NAME      = calcore
+LIBRARY_NAME      = cal_core_src
 LIBRARY_VERSION   = 10
+
+ARCHIVE_ONLY=1
+
+#AR_LIBS += \
+#              cal_core_ical \
+#              $(NULL)
 
 EXTRA_LIBS += $(NSPR_LIBS)

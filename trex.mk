@@ -39,9 +39,6 @@ CVST=cvs -q -d $(CVTREX) co -P
 LIBNLS_BRANCH           = -r libnls_v3_Normandy
 LIBNLS_DIR              = ns/modules/libnls
 
-JULIAN_BRANCH           =
-JULIAN_DIR              = mozilla/modules/calendar
-
 
 default:  pull_all build_all
 
@@ -62,7 +59,6 @@ pull_julian:
 	cd $(MOZ_SRC)/ns/.; \
 	$(CVST) -d config ns/clientconfig; \
 	cd $(MOZ_SRC); \
-	$(CVS) $(JULIAN_BRANCH) $(JULIAN_DIR); \
 	$(CVST) $(LIBNLS_BRANCH) $(LIBNLS_DIR); \
 	cd $(MOZ_SRC)
 
@@ -83,8 +79,6 @@ build_platform:
 
 build_julian:: 
 	cd $(MOZ_SRC)/ns/modules/libnls; \
-	gmake; \
-	cd $(MOZ_SRC)/mozilla/modules/calendar; \
 	gmake; \
 	cd $(MOZ_SRC)
 

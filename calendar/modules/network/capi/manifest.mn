@@ -10,7 +10,7 @@
 GDEPTH = ../../../..
 DEPTH  = ../../../..
 
-DIRS = cst local core 
+DIRS = cst core 
 DIRS_EXPORT = public inc 
 DIRS_LIBS = src
 

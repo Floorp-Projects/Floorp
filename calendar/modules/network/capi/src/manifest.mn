@@ -20,8 +20,6 @@ MODULE = trex
 CPPSRCS = \
     nsCapiLocal.cpp \
     nsCapiCST.cpp \
-    nsCalStreamReader.cpp \
-    nsCapiCallbackReader.cpp \
 	$(NULL)
 
 REQUIRES = raptor xpcom trex julian nls

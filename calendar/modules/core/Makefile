@@ -31,12 +31,14 @@ include $(GDEPTH)/gconfig/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
+include config.mk
 
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################
 
+include $(GDEPTH)/gconfig/ruleset.mk
 include $(GDEPTH)/gconfig/rules.mk
 
 #######################################################################

@@ -20,6 +20,20 @@ PRIVATE_EXPORTS = \
     nsCalUtilCIID.h \
     nscalexport.h \
     nsX400Parser.h \
+	jatom.h \
+	jdefines.h \
+	jlog.h \
+	jlogerr.h \
+	jlogitr.h \
+	jlogvctr.h \
+	julnstr.h \
+	ptrarray.h \
+	stdafx.h \
+	uidrgntr.h \
+	duration.h \
+	datetime.h \
+	jutility.h \
+	keyword.h \
     $(NULL)
 
 MODULE = trex

@@ -56,9 +56,9 @@
 #ifndef _NS_CURL_PARSER_H
 #define _NS_CURL_PARSER_H
 
-#include "nscalexport.h"
+#include "nscalutilexp.h"
 
-class NS_CALENDAR nsCurlParser
+class NS_CAL_UTIL nsCurlParser
 {
 public:
   enum ePROTOCOL {eUNKNOWN, eCAPI, eIMIP, eIRIP, eFILE, eRESOURCE, 

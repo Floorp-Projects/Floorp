@@ -42,11 +42,9 @@ LD_LIBS += \
 	netlib \
 	xpfc10 \
 	$(NATIVE_RAPTOR_WIDGET) \
-	$(NATIVE_JULIAN_DLL) \
     $(NATIVE_LIBNLS_LIBS) \
 	$(NATIVE_RAPTOR_GFX) \
 	$(RAPTOR_GFX) \
-	$(NATIVE_JULIAN_DLL) \
 	xpcom$(MOZ_BITS) \
 	$(NATIVE_ZLIB_DLL) \
 	$(NATIVE_XP_DLL) \

@@ -10,7 +10,9 @@
 GDEPTH = ../../..
 DEPTH  = ../../..
 
-DIRS =  capi
+DIRS =  capi 
+
+#LIBRARY_NAME = calnetwork
 
 EXPORTS = \
 	$(NULL)

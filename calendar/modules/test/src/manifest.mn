@@ -15,7 +15,7 @@ EXPORTS = \
 PRIVATE_EXPORTS = \
 	$(NULL)
 
-MODULE = trextest
+MODULE = trex
 
 CPPSRCS = \
 	nsTrexTestShell.cpp \
@@ -23,5 +23,5 @@ CPPSRCS = \
 	$(NULL)
 
 
-REQUIRES = xpcom raptor julian nls netlib pref js xpfc
+REQUIRES = xpcom raptor julian nls netlib pref js xpfc trex
 
