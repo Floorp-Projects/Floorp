@@ -41,6 +41,8 @@
 
 #include <stdio.h>
 
+#include "prproces.h"
+
 // certainly not all the error that can be 
 // encountered, but many of them common ones
 static nsresult ConvertWinError(DWORD winErr)
