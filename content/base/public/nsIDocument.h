@@ -619,6 +619,18 @@ public:
    */
   virtual PRInt32 GetDefaultNamespaceID() const = 0;
 
+  virtual void* GetProperty(nsIAtom *aPropertyName,
+                            nsresult *aStatus = nsnull) const = 0;
+
+  virtual nsresult SetProperty(nsIAtom            *aPropertyName,
+                               void               *aValue,
+                               NSPropertyDtorFunc  aDtor = nsnull) = 0;
+
+  virtual nsresult DeleteProperty(nsIAtom *aPropertyName) = 0;
+
+  virtual void* UnsetProperty(nsIAtom  *aPropertyName,
+                              nsresult *aStatus = nsnull) = 0;
+
   nsPropertyTable* PropertyTable() { return &mPropertyTable; }
 
 protected:

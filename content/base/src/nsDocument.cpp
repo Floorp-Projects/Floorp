@@ -4455,3 +4455,31 @@ nsDocument::CreateElement(nsINodeInfo *aNodeInfo, PRInt32 aElementType,
 
   return NS_OK;
 }
+
+void*
+nsDocument::GetProperty(nsIAtom *aPropertyName, nsresult *aStatus) const
+{
+  // ick
+  return NS_CONST_CAST(nsDocument*, this)->mPropertyTable.GetProperty(this, aPropertyName, aStatus);
+}
+
+nsresult
+nsDocument::SetProperty(nsIAtom            *aPropertyName,
+                        void               *aValue,
+                        NSPropertyDtorFunc  aDtor)
+{
+  return mPropertyTable.SetProperty(this, aPropertyName, aValue,
+                                    aDtor, nsnull);
+}
+
+nsresult
+nsDocument::DeleteProperty(nsIAtom *aPropertyName)
+{
+  return mPropertyTable.DeleteProperty(this, aPropertyName);
+}
+
+void*
+nsDocument::UnsetProperty(nsIAtom *aPropertyName, nsresult *aStatus)
+{
+  return mPropertyTable.UnsetProperty(this, aPropertyName, aStatus);
+}
