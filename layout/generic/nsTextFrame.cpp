@@ -27,6 +27,7 @@
  *   Tomi Leppikangas <tomi.leppikangas@oulu.fi>
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *   Daniel Glazman <glazman@netscape.com>
+ *   Neil Deakin <neil@mozdevgroup.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -733,6 +734,7 @@ public:
                                   PRBool&                  aDisplayingSelection,
                                   PRBool&                  aIsPaginated,
                                   PRBool&                  aIsSelected,
+                                  PRBool&                  aHideStandardSelection,
                                   PRInt16&                 aSelectionValue,
                                   nsILineBreaker**         aLineBreaker);
 
@@ -1214,7 +1216,7 @@ DrawSelectionIterator::CurrentForeGroundColor()
       colorSet = PR_TRUE;
     }
   }
-  else if (mTypes[mCurrentIdx] | nsISelectionController::SELECTION_NORMAL)//Find color based on mTypes[mCurrentIdx];
+  else if (mTypes[mCurrentIdx] & nsISelectionController::SELECTION_NORMAL)//Find color based on mTypes[mCurrentIdx];
   {
     foreColor = mOldStyle.mSelectionTextColor;
     colorSet = PR_TRUE;
@@ -1234,7 +1236,7 @@ DrawSelectionIterator::CurrentBackGroundColor(nscolor &aColor, PRBool *aIsTransp
 { 
   //Find color based on mTypes[mCurrentIdx];
   *aIsTransparent = PR_FALSE;
-  if (mTypes? (mTypes[mCurrentIdx] | nsISelectionController::SELECTION_NORMAL): (mCurrentIdx == (PRUint32)mDetails->mStart)) {
+  if (mTypes? (mTypes[mCurrentIdx] & nsISelectionController::SELECTION_NORMAL): (mCurrentIdx == (PRUint32)mDetails->mStart)) {
     aColor = mOldStyle.mSelectionBGColor;
     if (mSelectionPseudoStyle) {
       aColor = mSelectionPseudoBGcolor;
@@ -1967,8 +1969,9 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                                 break;
            case nsISelectionController::SELECTION_SPELLCHECK:{
               aTextStyle.mNormalFont->GetUnderline(offset, size);
+              aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
               aRenderingContext.SetColor(NS_RGB(255,0,0));
-              aRenderingContext.FillRect(aX + startOffset, aY + baseline - offset, textWidth, size);
+              aRenderingContext.DrawLine(aX + startOffset, aY + baseline - offset, aX + startOffset + textWidth, aY + baseline - offset);
                                 }break;
           case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:{
 #ifdef USE_INVERT_FOR_SELECTION
@@ -2078,6 +2081,7 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsPresContext*          aPresContex
                                              PRBool&                  aDisplayingSelection,
                                              PRBool&                  aIsPaginated,
                                              PRBool&                  aIsSelected,
+                                             PRBool&                  aHideStandardSelection,
                                              PRInt16&                 aSelectionValue,
                                              nsILineBreaker**         aLineBreaker)
 {
@@ -2112,6 +2116,20 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsPresContext*          aPresContex
   if (!(textSel & nsISelectionDisplay::DISPLAY_TEXT))
     aDisplayingSelection = PR_FALSE;
 
+  // the spellcheck selection should be visible all the time
+  aHideStandardSelection = !aDisplayingSelection;
+  if (!aDisplayingSelection){
+    nsCOMPtr<nsISelection> spellcheckSelection;
+    (*aSelectionController)->GetSelection(nsISelectionController::SELECTION_SPELLCHECK,
+                                          getter_AddRefs(spellcheckSelection));
+    if (spellcheckSelection){
+      PRBool iscollapsed = PR_FALSE;
+      spellcheckSelection->GetIsCollapsed(&iscollapsed);
+      if (!iscollapsed)
+        aDisplayingSelection = PR_TRUE;
+    }
+  }
+
   // Transform text from content into renderable form
   // XXX If the text fragment is already Unicode and the text wasn't
   // transformed when we formatted it, then there's no need to do all
@@ -2137,6 +2155,7 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
   PRBool  displaySelection;
   PRBool  isPaginated;
   PRBool  isSelected;
+  PRBool  hideStandardSelection;
   PRInt16 selectionValue;
   nsCOMPtr<nsILineBreaker> lb;
   if (NS_FAILED(GetTextInfoForPainting(aPresContext, 
@@ -2146,6 +2165,7 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
                                        displaySelection,
                                        isPaginated,
                                        isSelected,
+                                       hideStandardSelection,
                                        selectionValue,
                                        getter_AddRefs(lb)))) {
     return PR_FALSE;
@@ -2270,6 +2290,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
   PRBool  displaySelection,canDarkenColor=PR_FALSE;
   PRBool  isPaginated;
   PRBool  isSelected;
+  PRBool hideStandardSelection;
   PRInt16 selectionValue;
   nsCOMPtr<nsILineBreaker> lb;
 #ifdef IBMBIDI
@@ -2284,6 +2305,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
                                        displaySelection,
                                        isPaginated,
                                        isSelected,
+                                       hideStandardSelection,
                                        selectionValue,
                                        getter_AddRefs(lb)))) {
      return;
@@ -2425,6 +2447,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
 #endif
         sdptr = sdptr->mNext;
       }
+      if (!hideStandardSelection) {
       //while we have substrings...
       //PRBool drawn = PR_FALSE;
       DrawSelectionIterator iter(content, details,text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext, mStyleContext);
@@ -2490,6 +2513,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
       {
         aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
         aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
+      }
       }
       PaintTextDecorations(aRenderingContext, aStyleContext, aPresContext,
                            aTextStyle, dx, dy, width, text, details, 0,
@@ -3000,6 +3024,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
   PRBool  displaySelection;
   PRBool  isPaginated,canDarkenColor=PR_FALSE;
   PRBool  isSelected;
+  PRBool  hideStandardSelection;
   PRInt16 selectionValue;
   nsCOMPtr<nsILineBreaker> lb;
   if (NS_FAILED(GetTextInfoForPainting(aPresContext, 
@@ -3009,6 +3034,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
                                        displaySelection,
                                        isPaginated,
                                        isSelected,
+                                       hideStandardSelection,
                                        selectionValue,
                                        getter_AddRefs(lb)))) {
      return;
@@ -3179,6 +3205,7 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
   PRBool  displaySelection,canDarkenColor=PR_FALSE;
   PRBool  isPaginated;
   PRBool  isSelected;
+  PRBool  hideStandardSelection;
   PRInt16 selectionValue;
   nsCOMPtr<nsILineBreaker> lb;
   if (NS_FAILED(GetTextInfoForPainting(aPresContext, 
@@ -3188,6 +3215,7 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
                                        displaySelection,
                                        isPaginated,
                                        isSelected,
+                                       hideStandardSelection,
                                        selectionValue,
                                        getter_AddRefs(lb)))) {
      return;
@@ -3322,51 +3350,57 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
         sdptr = sdptr->mNext;
       }
-      DrawSelectionIterator iter(content, details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext, mStyleContext); //ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
-      if (!iter.IsDone() && iter.First())
-      {
-        nscoord currentX = dx;
-        nscoord newWidth;//temp
-        while (!iter.IsDone())
+
+      if (!hideStandardSelection) {
+        //ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
+        DrawSelectionIterator iter(content, details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle,
+                                   selectionValue, aPresContext, mStyleContext);
+        if (!iter.IsDone() && iter.First())
         {
-          char *currenttext  = iter.CurrentTextCStrPtr();
-          PRUint32   currentlength= iter.CurrentLength();
-          //TextStyle &currentStyle = iter.CurrentStyle();
-          nscolor    currentFGColor = iter.CurrentForeGroundColor();
-          nscolor    currentBKColor;
-          PRBool     isCurrentBKColorTransparent;
-
-          if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
+          nscoord currentX = dx;
+          nscoord newWidth;//temp
+          while (!iter.IsDone())
           {
-            if (iter.CurrentBackGroundColor(currentBKColor, &isCurrentBKColorTransparent) && !isPaginated)
-            {//DRAW RECT HERE!!!
-              if (!isCurrentBKColorTransparent) {
-                aRenderingContext.SetColor(currentBKColor);
-                aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+            char *currenttext  = iter.CurrentTextCStrPtr();
+            PRUint32   currentlength= iter.CurrentLength();
+            //TextStyle &currentStyle = iter.CurrentStyle();
+            nscolor    currentFGColor = iter.CurrentForeGroundColor();
+            nscolor    currentBKColor;
+            PRBool     isCurrentBKColorTransparent;
+
+            if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
+            {
+              if (iter.CurrentBackGroundColor(currentBKColor, &isCurrentBKColorTransparent) && !isPaginated)
+              {//DRAW RECT HERE!!!
+                if (!isCurrentBKColorTransparent) {
+                  aRenderingContext.SetColor(currentBKColor);
+                  aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
+                }
+                currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
               }
-              currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
             }
+            else
+              newWidth =0;
+
+            if (isPaginated && !iter.IsBeforeOrAfter()) {
+              aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
+            } else if (!isPaginated) {
+              aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,isPaginated));
+              aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
+            }
+
+            currentX+=newWidth;//increment twips X start
+
+            iter.Next();
           }
-          else
-            newWidth =0;
-
-          if (isPaginated && !iter.IsBeforeOrAfter()) {
-            aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
-          } else if (!isPaginated) {
-            aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,isPaginated));
-            aRenderingContext.DrawString(currenttext, currentlength, currentX, dy + mAscent);
-          }
-
-          currentX+=newWidth;//increment twips X start
-
-          iter.Next();
+        }
+        else if (!isPaginated) 
+        {
+          aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
+          aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
         }
       }
-      else if (!isPaginated) 
-      {
-        aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
-        aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
-      }
+
       PaintTextDecorations(aRenderingContext, aStyleContext, aPresContext,
                            aTextStyle, dx, dy, width,
                            unicodePaintBuffer.mBuffer,
