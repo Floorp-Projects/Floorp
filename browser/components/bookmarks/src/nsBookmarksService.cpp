@@ -4381,13 +4381,16 @@ nsBookmarksService::GetBookmarksFile(nsIFile* *aResult)
     nsCOMPtr<nsIPref> prefServ(do_GetService(kPrefCID, &rv));
     if (NS_SUCCEEDED(rv))
     {
-        nsXPIDLCString prefVal;
-        rv = prefServ->CopyCharPref("browser.bookmarks.file",
-                                    getter_Copies(prefVal));      
+        nsCOMPtr<nsISupportsString> prefVal;
+        rv = prefServ->GetComplexValue("browser.bookmarks.file",
+                                       NS_GET_IID(nsISupportsString),
+                                       getter_AddRefs(prefVal));      
         if (NS_SUCCEEDED(rv))
         {
-            rv = NS_NewNativeLocalFile(prefVal, PR_TRUE,
-                                       (nsILocalFile**)(nsIFile**) getter_AddRefs(bookmarksFile));
+            nsXPIDLString bookmarkPath;
+            prefVal->ToString(getter_Copies(bookmarkPath));
+            rv = NS_NewLocalFile(bookmarkPath, PR_TRUE,
+                                 (nsILocalFile**)(nsIFile**) getter_AddRefs(bookmarksFile));
 
             if (NS_SUCCEEDED(rv))
             {
