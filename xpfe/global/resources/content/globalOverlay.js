@@ -184,7 +184,7 @@ function NewEditorWindow()
   dump("In NewEditorWindow()...\n");
   // Open editor window with blank page
   // Kludge to leverage openDialog non-modal!
-  window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", "resource:/res/html/empty_doc.html");
+  window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", "about:blank");
 }
 
 function NewEditorFromTemplate()
