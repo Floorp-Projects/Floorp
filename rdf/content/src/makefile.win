@@ -36,6 +36,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsJSXULDocument.obj           \
         .\$(OBJDIR)\nsJSXULElement.obj            \
         .\$(OBJDIR)\nsJSXULTreeElement.obj        \
+		.\$(OBJDIR)\nsJSXULFocusTracker.obj		  \
         .\$(OBJDIR)\nsRDFContentUtils.obj         \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
         .\$(OBJDIR)\nsRDFElement.obj              \
