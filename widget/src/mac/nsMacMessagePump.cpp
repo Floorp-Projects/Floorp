@@ -175,15 +175,18 @@ nsRect 				rect;
 			{
 			thewindow = thewindow->FindWidgetHit(aTheEvent->where);
 
-			// generate a paint event
-			pevent.message = NS_PAINT;
-			pevent.widget = thewindow;
-			pevent.eventStructType = NS_PAINT_EVENT;
-			pevent.point.x = aTheEvent->where.h;
-	    pevent.point.y = aTheEvent->where.v;
-	    pevent.rect = &rect;
-	    pevent.time = 0; 
-	    thewindow->OnPaint(pevent);
+			if (thewindow != nsnull)
+				{
+				// generate a paint event
+				pevent.message = NS_PAINT;
+				pevent.widget = thewindow;
+				pevent.eventStructType = NS_PAINT_EVENT;
+				pevent.point.x = aTheEvent->where.h;
+		    pevent.point.y = aTheEvent->where.v;
+		    pevent.rect = &rect;
+		    pevent.time = 0; 
+		    thewindow->OnPaint(pevent);
+		    }
 	    }
 		EndUpdate(whichwindow);
 		}
