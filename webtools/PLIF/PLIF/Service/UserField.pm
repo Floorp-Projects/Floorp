@@ -39,7 +39,9 @@ use PLIF::Service;
 sub provides {
     my $class = shift;
     my($service) = @_;
-    return ($service eq 'user.field.'.$class->type or $class->SUPER::provides($service));
+    return ($service eq 'user.field' or
+            $service eq 'user.field.'.$class->type or
+            $class->SUPER::provides($service));
 }
 
 # the 'data' field of field descriptions means different things
