@@ -27,7 +27,7 @@ ARCH			:= dec
 CPU_ARCH		:= alpha
 GFX_ARCH		:= x
 
-OS_INCLUDES		= -I/usr/include/alpha
+OS_INCLUDES		=
 G++INCLUDES		=
 LOC_LIB_DIR		= /usr/lib/X11
 MOTIF			=
