@@ -156,9 +156,13 @@ MRESULT EXPENTRY DlgProcWelcome(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
       /* Initialize controls */
       WinSetWindowText(hDlg, diWelcome.szTitle);
       sprintf(szBuf, diWelcome.szMessage0, sgProduct.szProductName, sgProduct.szProductName);
+      strcat(szBuf, "\n\n");
+      strcat(szBuf, diWelcome.szMessage1);
+      strcat(szBuf, "\n\n");
+      strcat(szBuf, diWelcome.szMessage2);
       WinSetDlgItemText(hDlg, IDC_STATIC0, szBuf);
-      WinSetDlgItemText(hDlg, IDC_STATIC1, diWelcome.szMessage1);
-      WinSetDlgItemText(hDlg, IDC_STATIC2, diWelcome.szMessage2);
+//      WinSetDlgItemText(hDlg, IDC_STATIC1, diWelcome.szMessage1);
+//      WinSetDlgItemText(hDlg, IDC_STATIC2, diWelcome.szMessage2);
       WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
       WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
 
@@ -1612,6 +1616,11 @@ void AppendStringWOTilde(LPSTR szInputString, DWORD dwInputStringSize, LPSTR szS
   {
     if(szString[i] != '~')
       szInputString[iInputStringCounter++] = szString[i];
+    else
+      if (szString[i-1] == '(') {
+         szInputString[iInputStringCounter-1] = '\0';
+         break;
+      }
   }
 }
 

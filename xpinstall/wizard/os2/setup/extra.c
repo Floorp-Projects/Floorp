@@ -5466,9 +5466,11 @@ BOOL LocatePathOS2INI(PSZ szSection, PSZ szPath, ULONG ulPathSize)
   char  szName[MAX_BUF];
   char  szVerifyExistence[MAX_BUF];
   char  szBuf[MAX_BUF];
+  char  szIni[MAX_BUF];
   BOOL  bDecryptKey;
   BOOL  bContainsFilename;
   BOOL  bReturn;
+  HINI  hini = HINI_USERPROFILE;
 
   bReturn = FALSE;
   GetPrivateProfileString(szSection, "App", "", szApp, sizeof(szApp), szFileIniConfig);
@@ -5477,7 +5479,7 @@ BOOL LocatePathOS2INI(PSZ szSection, PSZ szPath, ULONG ulPathSize)
     bReturn = FALSE;
     memset(szPath, 0, ulPathSize);
 
-    GetPrivateProfileString(szSection, "Name",         "", szName,  sizeof(szName),  szFileIniConfig);
+    GetPrivateProfileString(szSection, "Key",         "", szName,  sizeof(szName),  szFileIniConfig);
     GetPrivateProfileString(szSection, "Decrypt App", "", szBuf,   sizeof(szBuf),   szFileIniConfig);
     if(stricmp(szBuf, "FALSE") == 0)
       bDecryptKey = FALSE;
@@ -5501,7 +5503,21 @@ BOOL LocatePathOS2INI(PSZ szSection, PSZ szPath, ULONG ulPathSize)
       strcpy(szApp, szBuf);
     }
 
-    PrfQueryProfileString(HINI_USERPROFILE, szApp, szName, "", szBuf, sizeof(szBuf));
+    GetPrivateProfileString(szSection, "INI", "", szIni,  sizeof(szIni),  szFileIniConfig);
+    if (szIni[0]) {
+      BOOL bDecryptINI;
+      GetPrivateProfileString(szSection, "Decrypt INI", "", szBuf,   sizeof(szBuf),   szFileIniConfig);
+      if(stricmp(szBuf, "FALSE")) {
+        DecryptString(szBuf, szIni);
+        strcpy(szIni, szBuf);
+      }
+      hini = PrfOpenProfile((HAB)0, szIni);
+    }
+
+    PrfQueryProfileString(hini, szApp, szName, "", szBuf, sizeof(szBuf));
+    if (szIni[0]) {
+      PrfCloseProfile(hini);
+    }
     if(*szBuf != '\0')
     {
       if(stricmp(szVerifyExistence, "FILE") == 0)
@@ -5641,7 +5657,18 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
     /* Locate the "OS2" directory */
     ULONG ulBootDrive = 0;
     APIRET rc;
-    char  buffer[] = " :\\OS2\\";
+    char  buffer[] = " :\\OS2";
+    DosQuerySysInfo(QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
+                    &ulBootDrive, sizeof(ulBootDrive));
+    buffer[0] = 'A' - 1 + ulBootDrive;
+    strcpy(szVariable, buffer);
+  }
+  else if(stricmp(szVariable, "OS2SYSDIR") == 0)
+  {
+    /* Locate the "OS2\SYSTEM" directory */
+    ULONG ulBootDrive = 0;
+    APIRET rc;
+    char  buffer[] = " :\\OS2\\SYSTEM";
     DosQuerySysInfo(QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
                     &ulBootDrive, sizeof(ulBootDrive));
     buffer[0] = 'A' - 1 + ulBootDrive;

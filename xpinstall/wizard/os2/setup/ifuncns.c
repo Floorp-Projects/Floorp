@@ -129,17 +129,24 @@ void GetUserAgentShort(char *szUserAgent, char *szOutUAShort, DWORD dwOutUAShort
 
 void CleanupPreviousVersionINIKeys(void)
 {
-  ULONG ulIndex = 0;
-  char  szBufTiny[MAX_BUF_TINY];
+  char  szIndex[MAX_BUF];
+  char  szSection[MAX_BUF];
+  char  szValue[MAX_BUF];
+  char  szPath[MAX_BUF];
+  char  szBuf[MAX_BUF];
+  char  szDecrypt[MAX_BUF];
+  char  szMainSectionName[] = "Cleanup Previous Product INIApps";
+  char  szApp[MAX_BUF];
+  char  szKey[MAX_BUF];
+  char  szDirKey[MAX_BUF];
+  char  szCleanupProduct[MAX_BUF];
   char  szCurrentVersion[MAX_BUF_TINY];
   char  szUserAgent[MAX_BUF];
-  char  szPath[MAX_BUF];
-  char  szApp[MAX_BUF];
-  char  szCleanupProduct[MAX_BUF];
-  char  szName[] = "Install Directory";
-  char  szSection[] = "Cleanup Previous Product INIApps";
-  ULONG ulAppsLength;
+  char  szIni[MAX_BUF];
+  BOOL  bFound;
+  ULONG ulAppsLength, ulIndex;
   CHAR* szApps;
+  HINI  hini = HINI_USERPROFILE;
 
   strcpy(szPath, sgProduct.szPath);
   if(*sgProduct.szSubPath != '\0')
@@ -149,32 +156,39 @@ void CleanupPreviousVersionINIKeys(void)
   }
   AppendBackSlash(szPath, sizeof(szPath));
 
-  sprintf(szBufTiny, "Product INI App%d", ulIndex);
-  GetPrivateProfileString(szSection, szBufTiny, "", szApp, sizeof(szApp), szFileIniConfig);
-
-  while(*szApp != '\0')
+  bFound  = FALSE;
+  ulIndex = -1;
+  while(!bFound)
   {
-    sprintf(szBufTiny, "Product Name%d", ulIndex);
-    GetPrivateProfileString(szSection, szBufTiny, "", szCleanupProduct, sizeof(szCleanupProduct), szFileIniConfig);
-    // something is wrong, they didn't give a product name.
-    if(*szCleanupProduct == '\0')
-      return;
+    ++ulIndex;
+    itoa(ulIndex, szIndex, 10);
+    strcpy(szSection, szMainSectionName);
+    strcat(szSection, szIndex);
 
-    sprintf(szBufTiny, "Current Version%d", ulIndex);
-    GetPrivateProfileString(szSection, szBufTiny, "", szCurrentVersion, sizeof(szCurrentVersion), szFileIniConfig);
+    GetPrivateProfileString(szSection, "Product Name", "", szValue, sizeof(szValue), szFileIniConfig);
+    if(*szValue != '\0') {
+      GetPrivateProfileString(szSection, "Product Name", "", szCleanupProduct, sizeof(szCleanupProduct), szFileIniConfig);
+      GetPrivateProfileString(szSection, "Current Version", "", szCurrentVersion, sizeof(szCurrentVersion), szFileIniConfig);
 
-    if (*szCurrentVersion != '\0') {
-      sprintf(szUserAgent, "%s %s", szApp, szCurrentVersion);
-  
+      GetPrivateProfileString(szSection, "Key",                "", szBuf,           sizeof(szBuf),           szFileIniConfig);
+      GetPrivateProfileString(szSection, "Decrypt Key",        "", szDecrypt,       sizeof(szDecrypt),       szFileIniConfig);
+      memset(szKey, 0, sizeof(szKey));
+      if(strcmpi(szDecrypt, "TRUE") == 0)
+        DecryptString(szDirKey, szBuf);
+      else
+        strcpy(szDirKey, szBuf);
+
+      sprintf(szUserAgent, "%s %s", szCleanupProduct, szCurrentVersion);
+
       PrfQueryProfileSize(HINI_USERPROFILE, NULL, NULL, &ulAppsLength);
       szApps = (char*)malloc(ulAppsLength+1);
       PrfQueryProfileString(HINI_USERPROFILE, NULL, NULL, NULL, szApps, ulAppsLength);
       szApps[ulAppsLength] = '\0';
       while (*szApps) {
-        if (strncmp(szApps, szApp, strlen(szApp)) == 0) {
+        if (strncmp(szApps, szCleanupProduct, strlen(szCleanupProduct)) == 0) {
           if (strncmp(szApps, szUserAgent, strlen(szUserAgent)) != 0) {
             char szKey[MAX_BUF];
-            PrfQueryProfileString(HINI_USERPROFILE, szApps, szName, "", szKey, MAX_BUF);
+            PrfQueryProfileString(HINI_USERPROFILE, szApps, szDirKey, "", szKey, MAX_BUF);
             if (szKey[0]) {
               AppendBackSlash(szKey, sizeof(szKey));
               if (stricmp(szKey, szPath) == 0) {
@@ -186,12 +200,52 @@ void CleanupPreviousVersionINIKeys(void)
         szApps = strchr(szApps, '\0')+1;
       }
     } else {
-      /* We've been asked to remove an entire app */
-      char szINI[MAX_BUF];
+      GetPrivateProfileString(szSection, "App", "", szValue, sizeof(szValue), szFileIniConfig);
+      if(*szValue != '\0') {
+        GetPrivateProfileString(szSection, "App",                 "", szBuf,           sizeof(szBuf),          szFileIniConfig);
+        GetPrivateProfileString(szSection, "Decrypt App",         "", szDecrypt,       sizeof(szDecrypt),      szFileIniConfig);
+        memset(szApp, 0, sizeof(szApp));
+        if(strcmpi(szDecrypt, "TRUE") == 0)
+          DecryptString(szApp, szBuf);
+        else
+          strcpy(szApp, szBuf);
+  
+        GetPrivateProfileString(szSection, "Key",                "", szBuf,           sizeof(szBuf),           szFileIniConfig);
+        GetPrivateProfileString(szSection, "Decrypt Key",        "", szDecrypt,       sizeof(szDecrypt),       szFileIniConfig);
+        memset(szDirKey, 0, sizeof(szKey));
+        if(strcmpi(szDecrypt, "TRUE") == 0)
+          DecryptString(szDirKey, szBuf);
+        else
+          strcpy(szDirKey, szBuf);
+  
+        GetPrivateProfileString(szSection, "INI", "", szIni,  sizeof(szIni),  szFileIniConfig);
+        if (szIni[0]) {
+          BOOL bDecryptINI;
+          GetPrivateProfileString(szSection, "Decrypt INI", "", szBuf,   sizeof(szBuf),   szFileIniConfig);
+          if(strcmpi(szBuf, "FALSE")) {
+            DecryptString(szBuf, szIni);
+            strcpy(szIni, szBuf);
+          }
+          hini = PrfOpenProfile((HAB)0, szIni);
+        }
+  
+        PrfQueryProfileString(hini, szApp, szDirKey, "", szKey, MAX_BUF);
+        if (szKey[0]) {
+          AppendBackSlash(szKey, sizeof(szKey));
+          if (strcmpi(szKey, szPath) == 0) {
+            PrfWriteProfileString(hini, szApp, NULL, NULL);
+          }
+        }
+        if (szIni[0]) {
+          PrfCloseProfile(hini);
+        }
+      }
+      else
+      {
+        break;
+      }
     }
-    sprintf(szBufTiny, "Product INI App%d", ++ulIndex);        
-    GetPrivateProfileString(szSection, szBufTiny, "", szApp, sizeof(szApp), szFileIniConfig);
-  } 
+  }
 }
 
 void ProcessFileOps(DWORD dwTiming, char *szSectionPrefix)
@@ -1397,6 +1451,7 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
   char  szAssocFilters[MAX_BUF];
   char  szAssocTypes[MAX_BUF];
 
+  ULONG ulFlags = CO_REPLACEIFEXISTS;
 
   dwIndex0 = 0;
   BuildNumberedString(dwIndex0, szSectionPrefix, "Program Folder", szSection0, sizeof(szSection0));
@@ -1489,7 +1544,16 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
            strcpy(szClassName, "WPProgram");
         }
 
-        WinCreateObject(szClassName, szTitle, szSetupString, szLocation, CO_UPDATEIFEXISTS);
+        GetPrivateProfileString(szSection1, "Attributes", "", szBuf, sizeof(szBuf), szFileIniConfig);
+        if (szBuf[0]) {
+          if (strcmp(szBuf, "UPDATE") == 0) {
+            ulFlags = CO_UPDATEIFEXISTS;
+          } else if (strcmp(szBuf, "FAIL") == 0) {
+            ulFlags = CO_FAILIFEXISTS;
+          }
+        }
+
+        WinCreateObject(szClassName, szTitle, szSetupString, szLocation, ulFlags);
 
         if (szObjectID[0]) {
           strcpy(szBuf, szObjectID);
