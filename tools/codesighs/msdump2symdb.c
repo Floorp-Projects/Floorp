@@ -531,6 +531,7 @@ int processLine(Options* inOptions, MSDump_Container* inContainer, const char* i
                         {
                             const char* offsetArg = NULL;
                             const char* classArg = NULL;
+                            unsigned classWords = 1;
 
                             /*
                             **  This is an section we've seen before, and must list a symbol.
@@ -544,6 +545,10 @@ int processLine(Options* inOptions, MSDump_Container* inContainer, const char* i
                             if(0 == strncmp(classArg, "()", 2))
                             {
                                 classArg = skipToArg(classArg, 2);
+                            }
+                            if(0 == strncmp(classArg, ".bf or.ef", 9))
+                            {
+                                classWords = 2;
                             }
 
                             if(0 != strncmp(classArg, "Label", 5))
@@ -571,7 +576,7 @@ int processLine(Options* inOptions, MSDump_Container* inContainer, const char* i
                                         const char* symbolArg = NULL;
 
 
-                                        symbolArg = skipToArg(classArg, 3);
+                                        symbolArg = skipToArg(classArg, 3 + (classWords - 1));
 
                                         
                                         /*
@@ -767,11 +772,11 @@ int reportContainer(Options* inOptions, MSDump_Container* inContainer)
         {
             for(symbolLoop = 0; 0 == retval && symbolLoop < inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbolCount; symbolLoop++)
             {
-                printRes = fprintf(inOptions->mOutput, "%s\t%s\t%s\t%.8X\n",
+                printRes = fprintf(inOptions->mOutput, "%s\t%s\t%.8X\t%s\n",
                     inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbols[symbolLoop].mName,
                     inContainer->mObjects[objectLoop].mSections[sectionLoop].mType,
-                    inContainer->mObjects[objectLoop].mObject,
-                    inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbols[symbolLoop].mSize
+                    inContainer->mObjects[objectLoop].mSections[sectionLoop].mSymbols[symbolLoop].mSize,
+                    inContainer->mObjects[objectLoop].mObject
                     );
 
                 if(0 > printRes)
@@ -1040,7 +1045,7 @@ void showHelp(Options* inOptions)
         printf(DESC_NEWLINE "%s\n\n", gSwitches[loop]->mDescription);
     }
 
-    printf("This tool takes the output of \"dumpbin /summary\" to produce a simple\n");
+    printf("This tool takes the output of \"dumpbin /symbols\" to produce a simple\n");
     printf("tsv db file of symbols and their respective attributes, like size.\n");
 }
 

@@ -74,6 +74,7 @@ typedef struct __struct_MSMap_Symbol
     address mRVABase;
     char* mObject;
     MSMap_SymbolScope mScope;
+    unsigned mSymDBSize;
 }
 MSMap_Symbol;
 
