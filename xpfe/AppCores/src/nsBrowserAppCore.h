@@ -64,6 +64,11 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);
     NS_IMETHOD    SetDisableCallback(const nsString& aScript);
     NS_IMETHOD    SetEnableCallback(const nsString& aScript);
+    NS_IMETHOD    NewWindow();
+    NS_IMETHOD    PrintPreview();
+    NS_IMETHOD    Close();
+    NS_IMETHOD    Exit();
+
 
     // nsIStreamObserver
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);

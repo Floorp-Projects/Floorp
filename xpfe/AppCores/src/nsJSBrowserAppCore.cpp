@@ -359,6 +359,138 @@ BrowserAppCoreSetWebShellWindow(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
 
 //
+// Native method NewWindow
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreNewWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->NewWindow()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function newWindow requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method PrintPreview
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCorePrintPreview(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->PrintPreview()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function printPreview requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Close
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Close()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function close requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Exit
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Exit()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function exit requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method SetDisableCallback
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -468,6 +600,10 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"setToolbarWindow",          BrowserAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          BrowserAppCoreSetContentWindow,     1},
   {"setWebShellWindow",          BrowserAppCoreSetWebShellWindow,     1},
+  {"newWindow",          BrowserAppCoreNewWindow,     0},
+  {"printPreview",          BrowserAppCorePrintPreview,     0},
+  {"close",          BrowserAppCoreClose,     0},
+  {"exit",          BrowserAppCoreExit,     0},
   {"setDisableCallback",          BrowserAppCoreSetDisableCallback,     1},
   {"setEnableCallback",          BrowserAppCoreSetEnableCallback,     1},
   {0}
