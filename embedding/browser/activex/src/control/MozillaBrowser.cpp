@@ -35,6 +35,7 @@
 #include "MozillaBrowser.h"
 #include "IEHtmlDocument.h"
 #include "PropertyDlg.h"
+#include "PromptService.h"
 
 #include "nsCWebBrowser.h"
 #include "nsIDiskDocument.h"
@@ -54,6 +55,12 @@
 #ifdef HACK_NON_REENTRANCY
 static HANDLE s_hHackedNonReentrancy = NULL;
 #endif
+
+
+#define NS_PROMPTSERVICE_CID \
+    {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
+
+static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
 
 // Macros to return errors from bad calls to the automation
 // interfaces and sets a descriptive string on IErrorInfo so VB programmers
@@ -94,6 +101,9 @@ GUID CGID_MSHTML_Moz =
 
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
+
+
+nsVoidArray CMozillaBrowser::sBrowserList;
 
 //
 // Constructor
@@ -895,6 +905,18 @@ HRESULT CMozillaBrowser::Initialize()
         return E_FAIL;
     }
 
+    // Register our own native prompting service for message boxes, login
+    // prompts etc.
+
+    nsCOMPtr<nsIFactory> promptFactory;
+    rv = NS_NewPromptServiceFactory(getter_AddRefs(promptFactory));
+    if (NS_FAILED(rv)) return rv;
+    rv = nsComponentManager::RegisterFactory(kPromptServiceCID,
+        "Prompt Service",
+        "@mozilla.org/embedcomp/prompt-service;1",
+        promptFactory,
+        PR_TRUE); // replace existing
+
     // Make a new default profile
     nsAutoString newProfileName; newProfileName.AssignWithConversion("MozillaControl");
     PRBool profileExists = PR_FALSE;
@@ -1022,6 +1044,9 @@ HRESULT CMozillaBrowser::CreateBrowser()
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mWebBrowserContainer))));
     mWebBrowser->AddWebBrowserListener(listener, NS_GET_IID(nsIWebProgressListener));
 
+    // Append browser to browser list
+    sBrowserList.AppendElement(this);
+
 	mValidBrowserFlag = TRUE;
 
 	return S_OK;
@@ -1032,7 +1057,10 @@ HRESULT CMozillaBrowser::DestroyBrowser()
 {
 	// TODO unregister drop target
 
-	mValidBrowserFlag = FALSE;
+    mValidBrowserFlag = FALSE;
+
+    // Remove browser from browser list
+    sBrowserList.RemoveElement(this);
 
  	// Destroy the htmldoc
  	if (mIERootDocument != NULL)

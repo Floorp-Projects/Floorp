@@ -55,6 +55,7 @@ OBJS =                                 \
     .\$(OBJDIR)\IEHtmlDocument.obj     \
     .\$(OBJDIR)\DropTarget.obj         \
     .\$(OBJDIR)\PropertyDlg.obj        \
+	.\$(OBJDIR)\PromptService.obj      \
     .\$(OBJDIR)\guids.obj              \
     $(NULL)
 
@@ -106,31 +107,3 @@ $(DEFFILE) : mkctldef.bat
 MozillaControl_i.c \
 MozillaControl.h: MozillaControl.idl
     midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c MozillaControl.idl
-
-PropertyDlg.cpp : StdAfx.h resource.h
-
-ControlSite.cpp \
-ControlSiteIPFrame.cpp \
-PropertyBag.cpp : StdAfx.h PropertyBag.h ControlSite.h ControlSiteIPFrame.h
-
-ItemContainer.cpp : StdAfx.h ItemContainer.h
-
-MozillaControl.cpp \
-StdAfx.cpp: StdAfx.h MozillaControl_i.c MozillaControl.h MozillaBrowser.h WebBrowserContainer.h
-
-IEHtmlNode.cpp : StdAfx.h IEHtmlNode.h
-
-IEHtmlElementCollection.cpp : StdAfx.h IEHtmlElementCollection.h
-
-IEHtmlElement.cpp : StdAfx.h IEHtmlNode.h IEHtmlElement.h
-
-IEHtmlDocument.cpp : StdAfx.h IEHtmlNode.h IEHtmlDocument.h
-
-DropTarget.cpp: StdAfx.h DropTarget.h
-
-MozillaControl.cpp \
-MozillaBrowser.cpp \
-WebBrowserContainer.cpp \
-StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebBrowserContainer.h IOleCommandTargetImpl.h
-
-guids.cpp: StdAfx.h guids.h

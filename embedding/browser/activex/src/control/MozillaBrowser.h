@@ -58,6 +58,7 @@ extern GUID CGID_MSHTML_Moz;
 typedef CComPtr<IUnknown> CComUnkPtr;
 
 class CWebBrowserContainer;
+class CPromptService;
 
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
@@ -86,6 +87,8 @@ class ATL_NO_VTABLE CMozillaBrowser :
     public IMozControlBridge
 {
 	friend CWebBrowserContainer;
+    friend CPromptService;
+
 public:
 	CMozillaBrowser();
 	virtual ~CMozillaBrowser();
@@ -333,6 +336,9 @@ END_OLECOMMAND_TABLE()
 
 // Protected members
 protected:
+
+    // List of browsers
+    static nsVoidArray sBrowserList;
 
 	// Pointer to web shell manager
 	CWebBrowserContainer	*	mWebBrowserContainer;

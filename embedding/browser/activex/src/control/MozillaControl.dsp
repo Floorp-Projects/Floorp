@@ -142,6 +142,10 @@ SOURCE=.\nsSetupRegistry.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\PromptService.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\PropertyBag.cpp
 # End Source File
 # Begin Source File
@@ -223,6 +227,10 @@ SOURCE=.\ItemContainer.h
 # Begin Source File
 
 SOURCE=.\MozillaBrowser.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\PromptService.h
 # End Source File
 # Begin Source File
 
