@@ -146,11 +146,6 @@ public:
                                         nsIStyleContext** aStyleContext) const;
   NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
                                         nsIStyleContext* aStyleContext);
-  NS_IMETHOD  ReResolveStyleContext(nsIPresContext* aPresContext,
-                                    nsIStyleContext* aParentContext,
-                                    PRInt32 aParentChange,
-                                    nsStyleChangeList* aChangeList,
-                                    PRInt32* aLocalChange);
   NS_IMETHOD  GetParent(nsIFrame** aParent) const;
   NS_IMETHOD  SetParent(const nsIFrame* aParent);
   NS_IMETHOD  GetRect(nsRect& aRect) const;
