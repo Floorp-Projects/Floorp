@@ -1,3 +1,4 @@
 classic.jar:
   skin/classic/messenger-newsblog/subscriptions.css             (subscriptions.css)
+  skin/classic/messenger-newsblog/newsBlogOverlay.css            (newsBlogOverlay.css)
   skin/classic/messenger-newsblog/contents.rdf                  
