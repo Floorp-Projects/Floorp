@@ -1,0 +1,11 @@
+#
+# This is a list of local files which get copied to the mozilla:htmlparser directory
+#
+
+nshtmlpars.h
+nsIContentSink.h
+nsIHTMLContentSink.h
+nsHTMLTokens.h
+nsIParserNode.h
+nsIParser.h
+nsToken.h
