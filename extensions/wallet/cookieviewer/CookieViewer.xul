@@ -38,8 +38,9 @@
         orient="vertical"
         onload="Startup()">
 
-  <script src="chrome://communicator/content/wallet/CookieViewer.js"></script>
-	<script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script src="chrome://communicator/content/wallet/CookieViewer.js"/>
+  <script src="chrome://global/content/strres.js"/>
+  <script src="chrome://communicator/content/wallet/nsWalletTreeUtils.js"/>
 
   <keyset id="keyset"/>
            
@@ -64,8 +65,13 @@
             </treecolgroup>
             <treehead>
               <treerow>
-                <treecell class="treecell-header" value="&treehead.cookiedomain.label;"/>
-                <treecell class="treecell-header" value="&treehead.cookiename.label;"/>
+                <treecell class="treecell-header sortDirectionIndicator"
+                          value="&treehead.cookiedomain.label;"
+                          onclick="return Wallet_ColumnSort('0', 'cookielist');"/>
+                <treecell class="treecell-header
+                          sortDirectionIndicator"
+                          value="&treehead.cookiename.label;"
+                          onclick="return Wallet_ColumnSort('1', 'cookielist');"/>
               </treerow>          
             </treehead>
             <treechildren id="cookielist" flex="1"/>
@@ -134,8 +140,12 @@
             </treecolgroup>
             <treehead>
               <treerow>
-                <treecell class="treecell-header" value="&treehead.sitename.label;"/>
-                <treecell class="treecell-header" value="&treehead.status.label;"/>
+                <treecell class="treecell-header sortDirectionIndicator"
+                          value="&treehead.sitename.label;"
+                          onclick="return Wallet_ColumnSort('0', 'permissionslist');"/>
+                <treecell class="treecell-header sortDirectionIndicator"
+                          value="&treehead.status.label;"
+                          onclick="return Wallet_ColumnSort('1', 'permissionslist');"/>
               </treerow>          
             </treehead>
             <treechildren flex="1" id="permissionslist"/>
@@ -163,8 +173,12 @@
             </treecolgroup>
             <treehead>
               <treerow>
-                <treecell class="treecell-header" value="&treehead.sitename.label;"/>
-                <treecell class="treecell-header" value="&treehead.status.label;"/>
+                <treecell class="treecell-header sortDirectionIndicator"
+                          value="&treehead.sitename.label;"
+                          onclick="return Wallet_ColumnSort('0', 'imageslist');"/>
+                <treecell class="treecell-header sortDirectionIndicator"
+                          value="&treehead.status.label;"
+                          onclick="return Wallet_ColumnSort('1', 'imageslist');"/>
               </treerow>          
             </treehead>
             <treechildren flex="1" id="imageslist"/>

@@ -38,8 +38,9 @@
         class="dialog"
         onload="Startup()">
 
-  <script src="chrome://communicator/content/wallet/SignonViewer.js"></script>
-	<script src="chrome://global/content/strres.js"></script>
+  <script src="chrome://communicator/content/wallet/SignonViewer.js"/>
+  <script src="chrome://global/content/strres.js"/>
+  <script src="chrome://communicator/content/wallet/nsWalletTreeUtils.js"/>
 
   <keyset id="keyset"/>
            
@@ -65,8 +66,12 @@
             </treecolgroup>
             <treehead>
               <treerow>
-                <treecell class="treecell-header" value="&treehead.site.label;"/>
-                <treecell class="treecell-header" value="&treehead.username.label;"/>
+                <treecell class="treecell-header sortDirectionIndicator"
+                          value="&treehead.site.label;"
+                          onclick="return Wallet_ColumnSort('0', 'savesignonlist');"/>
+                <treecell class="treecell-header sortDirectionIndicator"
+                          value="&treehead.username.label;"
+                          onclick="return Wallet_ColumnSort('1', 'savesignonlist');"/>
               </treerow>          
             </treehead>
             <treechildren id="savesignonlist" flex="1"/>
@@ -92,7 +97,9 @@
             </treecolgroup>
             <treehead>
               <treerow>
-                <treecell class="treecell-header" value="&treehead.site.label;"/>
+                <treecell class="treecell-header sortDirectionIndicator"
+                          value="&treehead.site.label;"
+                          onclick="return Wallet_ColumnSort('0', 'ignoredlist');"/>
               </treerow>          
             </treehead>
             <treechildren flex="1" id="ignoredlist"/>
@@ -119,7 +126,9 @@
             
             <treehead>
               <treerow>
-                <treecell class="treecell-header" value="&treehead.site.label;"/>
+                <treecell class="treecell-header sortDirectionIndicator"
+                          value="&treehead.site.label;"
+                          onclick="return Wallet_ColumnSort('0', 'nopreviewlist');"/>
               </treerow>          
             </treehead>
             <treechildren flex="1" id="nopreviewlist"/>
@@ -145,7 +154,9 @@
             </treecolgroup>
             <treehead>
               <treerow>
-                <treecell class="treecell-header" value="&treehead.site.label;"/>
+                <treecell class="treecell-header sortDirectionIndicator"
+                          value="&treehead.site.label;"
+                          onclick="return Wallet_ColumnSort('0', 'nocapturelist');"/>
               </treerow>          
             </treehead>
             <treechildren flex="1" id="nocapturelist"/>

@@ -1,4 +1,5 @@
 comm.jar:
+        content/communicator/wallet/nsWalletTreeUtils.js	(cookieviewer/nsWalletTreeUtils.js)
         content/communicator/wallet/CookieViewer.js	(cookieviewer/CookieViewer.js)
 	content/communicator/wallet/CookieViewer.xul	(cookieviewer/CookieViewer.xul)
 	content/communicator/wallet/privacy.xul		(editor/privacy.xul)
