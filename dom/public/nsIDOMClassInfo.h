@@ -87,7 +87,6 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_HTMLOptionCollection_id,
   eDOMClassInfo_HTMLFormControlCollection_id,
   eDOMClassInfo_HTMLGenericCollection_id,
-  eDOMClassInfo_ImageDocument_id,
 
   // HTML element classes
   eDOMClassInfo_HTMLAnchorElement_id,
@@ -265,6 +264,8 @@ enum nsDOMClassInfoID {
   // Processing-instruction with target "xml-stylesheet"
   eDOMClassInfo_XMLStylesheetProcessingInstruction_id,
   
+  eDOMClassInfo_ImageDocument_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };
