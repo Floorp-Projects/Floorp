@@ -34,6 +34,7 @@
         <setter>
         <![CDATA[
           var aDOMElement = val;
+          val.setAttribute("focused", "true");
           this.data = aDOMElement.data;
 
           aDOMElement.checked = true;
@@ -45,13 +46,37 @@
               if( groupElements[i] != aDOMElement && groupElements[i].checked )
                 {
                   groupElements[i].checked = false;
-                  groupElements[i].removeAttribute( "checked" );
+                  groupElements[i].removeAttribute("checked");
+                  groupElements[i].removeAttribute("focused");
                 }
             }
           return val;
         ]]>
         </setter>        
       </property>
+      <method name="checkAdjacentElement">
+        <argument name="aNextFlag"/>
+        <body>
+        <![CDATA[
+          var radios = this.getElementsByTagName("radio");
+          for (var i = 0; i < radios.length; i++ ) {
+            if (radios[i] != this.selectedItem) 
+              continue;
+            if (aNextFlag) {
+              var index = i + 1 < radios.length ? i + 1 : 0;
+              this.selectedItem = radios[index];
+              break;
+            }
+            else {
+              
+              var index = i - 1 >= 0 ? i - 1 : radios.length - 1;
+              this.selectedItem = radios[index];
+              break;
+            }
+          }
+        ]]>
+        </body>
+      </method>
     </implementation>
     <handlers>
       <handler event="click">
@@ -79,8 +104,39 @@
           {
           }
        ]]>
-      </handler>     
+      </handler>    
+      
+      <!-- keyboard navigation -->
+      <!-- Here's how keyboard navigation works in radio groups on Windows:
+           The group takes 'focus'
+           The user is then free to navigate around inside the group
+           using the arrow keys. Accessing previous or following radio buttons
+           is done solely through the arrow keys and not the tab button. Tab
+           takes you to the next widget in the tab order -->
+      <handler event="keypress" keycode="VK_UP">
+        this.checkAdjacentElement(false);
+      </handler>
+      <handler event="keypress" keycode="VK_LEFT">
+        this.checkAdjacentElement(false);
+      </handler>
+      <handler event="keypress" keycode="VK_DOWN">
+        this.checkAdjacentElement(true);
+      </handler>
+      <handler event="keypress" keycode="VK_RIGHT">
+        this.checkAdjacentElement(true);
+      </handler>
+
+      <!-- set a focused attribute on the selected item when the group
+           receives focus so that we can style it as if it were focused even though
+           it is not (Windows platform behaviour is for the group to receive focus,
+           not the item -->
+      <handler event="focus">
+        this.selectedItem.setAttribute("focused", "true");
+      </handler>
+      <handler event="blur">
+        this.selectedItem.removeAttribute("focused");
+      </handler>
     </handlers>
   </binding>
-
+  
 </bindings>
