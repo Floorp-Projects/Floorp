@@ -1101,12 +1101,7 @@ nsresult nsParser::OnDataAvailable(nsIChannel* channel, nsISupports* aContext,
 nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 aLength)
 #endif
 {
-/*  if (nsnull != mListener) {
-      //Rick potts removed this.
-      //Does it need to be here?
-    mListener->OnDataAvailable(pIStream, aLength);
-  }
-*/
+
   NS_PRECONDITION(((eOnStart==mParserContext->mStreamListenerState)||(eOnDataAvail==mParserContext->mStreamListenerState)),kOnStartNotCalled);
 
   if(eInvalidDetect==mParserContext->mAutoDetectStatus) {
@@ -1154,8 +1149,6 @@ nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUin
 #endif
 
       mParserContext->mScanner->Append(mParserContext->mTransferBuffer,theNumRead);
-      nsString& theBuffer=mParserContext->mScanner->GetBuffer();
-      // theBuffer.ToUCS2(theStartPos);
 
 #ifdef rickgdebug
       (*gDumpFile) << mParserContext->mTransferBuffer;
