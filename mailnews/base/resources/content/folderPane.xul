@@ -41,7 +41,7 @@
 			  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
 	          ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
 		  	  <treerow >
-					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"/>
 					<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
 					<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
 		  		</treerow>
@@ -50,7 +50,7 @@
 		</rule>
 	  </template>
 
-	  <treecol persist="width" width="3*" id="FolderColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+	  <treecol persist="width" width="3*" id="FolderColumn" rdf:resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
 	  <treecol persist="width" width="1*" id="TotalUnreadCol" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
 	  <treecol persist="width" width="1*" id="TotalMsgCol" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
 

@@ -64,8 +64,7 @@ public:
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
   NS_IMETHOD GetChildNamed(const char* name, nsISupports ** aChild);
-
-	NS_IMETHOD GetPrettyName(PRUnichar ** prettyName);	// Override of the base, for top-level news folder
+	NS_IMETHODIMP GetAbbreviatedName(PRUnichar * *aAbbreviatedName);
 
   NS_IMETHOD GetFolderURL(char **url);
 

@@ -113,6 +113,7 @@ protected:
 	nsresult createFolderNode(nsIMsgFolder *folder, nsIRDFResource* property,
                             nsIRDFNode **target);
 	nsresult createFolderNameNode(nsIMsgFolder *folder, nsIRDFNode **target, PRBool sort);
+	nsresult createFolderTreeNameNode(nsIMsgFolder *folder, nsIRDFNode **target, PRBool sort);
 	nsresult createFolderSpecialNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createFolderServerTypeNode(nsIMsgFolder *folder,
                                       nsIRDFNode **target);
@@ -147,6 +148,7 @@ protected:
 
 	nsresult GetBiffStateString(PRUint32 biffState, nsCAutoString & biffStateStr);
 
+	nsresult CreateNameSortString(nsIMsgFolder *folder, nsString &name);
 	nsresult GetFolderSortOrder(nsIMsgFolder *folder, PRInt32* order);
 
 	nsresult CreateArcsOutEnumerator();
@@ -155,7 +157,9 @@ protected:
   static nsIRDFResource* kNC_MessageChild;
   static nsIRDFResource* kNC_Folder;
   static nsIRDFResource* kNC_Name;
+  static nsIRDFResource* kNC_FolderTreeName;
   static nsIRDFResource* kNC_NameSort;
+  static nsIRDFResource* kNC_FolderTreeNameSort;
   static nsIRDFResource* kNC_Columns;
   static nsIRDFResource* kNC_MSGFolderRoot;
   static nsIRDFResource* kNC_SpecialFolder;

@@ -45,6 +45,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_CHILD				NC_NAMESPACE_URI "child"
 #define NC_RDF_MESSAGECHILD			NC_NAMESPACE_URI "MessageChild"
 #define NC_RDF_NAME					NC_NAMESPACE_URI "Name"
+#define NC_RDF_FOLDERTREENAME		NC_NAMESPACE_URI "FolderTreeName"
 #define NC_RDF_FOLDER				NC_NAMESPACE_URI "Folder"
 #define NC_RDF_SPECIALFOLDER		NC_NAMESPACE_URI "SpecialFolder"
 #define NC_RDF_SERVERTYPE   NC_NAMESPACE_URI "ServerType"
@@ -59,6 +60,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_SENDER_COLLATION_SORT	NC_NAMESPACE_URI "Sender?collation=true"
 
 #define NC_RDF_NAME_SORT				NC_NAMESPACE_URI "Name?sort=true"
+#define NC_RDF_FOLDERTREENAME_SORT		NC_NAMESPACE_URI "FolderTreeName?sort=true"
 
 //Folder Commands
 #define NC_RDF_DELETE				NC_NAMESPACE_URI "Delete"

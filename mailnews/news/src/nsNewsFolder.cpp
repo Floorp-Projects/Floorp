@@ -544,37 +544,38 @@ nsMsgNewsFolder::GetChildNamed(const char *name, nsISupports ** aChild)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetPrettyName(PRUnichar ** prettyName)
+NS_IMETHODIMP nsMsgNewsFolder::GetAbbreviatedName(PRUnichar * *aAbbreviatedName)
 {
   nsresult rv = NS_OK;
 
-  if (!prettyName)
+  if (!aAbbreviatedName)
     return NS_ERROR_NULL_POINTER;
 
-  rv = nsMsgFolder::GetPrettyName(prettyName);
+  rv = nsMsgFolder::GetPrettyName(aAbbreviatedName);
+  if(NS_FAILED(rv)) return rv;
 
-  //not ready for prime time yet, as I don't know how to test this yet.
-#ifdef NOT_READY_FOR_PRIME_TIME
   // only do this for newsgroup names, not for newsgroup hosts.
   PRBool isNewsServer = PR_FALSE;
   rv = GetIsServer(&isNewsServer);
   if (NS_FAILED(rv)) return rv;
   
   if (!isNewsServer) {  
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     
     PRInt32 numFullWords;
     rv = prefs->GetIntPref(PREF_NEWS_ABBREVIATE_PRETTY_NAMES, &numFullWords);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+	  numFullWords = 1;
     
     if (numFullWords != 0) { 
-      rv = AbbreviatePrettyName(prettyName, numFullWords);
-    }
+      rv = AbbreviatePrettyName(aAbbreviatedName, numFullWords);
+	}
   }
-#endif /* NOT_READY_FOR_PRIME_TIME */
+
   return rv;
 }
+
 
 // original code from Oleg Rekutin
 // rekusha@asan.com
@@ -597,10 +598,21 @@ nsresult nsMsgNewsFolder::AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 
   PRInt32 totalwords = 0; // total no. of words
 
   // get the total no. of words
-  for (PRInt32 pos = 0;
-       (pos++) != name.Length();
-       pos = name.FindChar('.', PR_FALSE,pos))
-    totalwords ++;
+  PRInt32 pos = 0;
+  while(1)
+  {
+	  pos = name.FindChar('.', PR_FALSE, pos);
+	  if(pos == -1)
+	  {
+		  totalwords++;
+		  break;
+	  }
+	  else
+	  {
+		  totalwords++;
+		  pos++;
+	  }
+  }
 
   // get the no. of words to abbreviate
   PRInt32 abbrevnum = totalwords - fullwords;

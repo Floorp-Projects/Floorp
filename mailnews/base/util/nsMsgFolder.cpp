@@ -481,6 +481,12 @@ NS_IMETHODIMP nsMsgFolder::SetName(const PRUnichar * name)
 	return NS_OK;
 }
 
+//For default, just return name
+NS_IMETHODIMP nsMsgFolder::GetAbbreviatedName(PRUnichar * *aAbbreviatedName)
+{
+	return GetName(aAbbreviatedName);
+}
+
 NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild)
 {
 	NS_ASSERTION(aChild, "NULL child");

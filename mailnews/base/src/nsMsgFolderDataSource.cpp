@@ -52,7 +52,9 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_Child = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_MessageChild = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Folder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Name= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeName= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_NameSort= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeNameSort= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SpecialFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_ServerType = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_IsServer = nsnull;
@@ -97,7 +99,9 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_MessageChild, refcnt);
 		NS_RELEASE2(kNC_Folder, refcnt);
 		NS_RELEASE2(kNC_Name, refcnt);
+		NS_RELEASE2(kNC_FolderTreeName, refcnt);
 		NS_RELEASE2(kNC_NameSort, refcnt);
+		NS_RELEASE2(kNC_FolderTreeNameSort, refcnt);
 		NS_RELEASE2(kNC_SpecialFolder, refcnt);
 		NS_RELEASE2(kNC_ServerType, refcnt);
 		NS_RELEASE2(kNC_IsServer, refcnt);
@@ -138,7 +142,9 @@ nsresult nsMsgFolderDataSource::Init()
     rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
     rdf->GetResource(NC_RDF_FOLDER,  &kNC_Folder);
     rdf->GetResource(NC_RDF_NAME,    &kNC_Name);
+    rdf->GetResource(NC_RDF_FOLDERTREENAME,    &kNC_FolderTreeName);
     rdf->GetResource(NC_RDF_NAME_SORT,    &kNC_NameSort);
+    rdf->GetResource(NC_RDF_FOLDERTREENAME_SORT,    &kNC_FolderTreeNameSort);
     rdf->GetResource(NC_RDF_SPECIALFOLDER, &kNC_SpecialFolder);
     rdf->GetResource(NC_RDF_SERVERTYPE, &kNC_ServerType);
     rdf->GetResource(NC_RDF_ISSERVER, &kNC_IsServer);
@@ -356,6 +362,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 		}
     }
     else if ((kNC_Name == property) ||
+		     (kNC_FolderTreeName == property) ||
              (kNC_SpecialFolder == property) ||
              (kNC_IsServer == property) ||
              (kNC_ServerType == property))
@@ -469,6 +476,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
 		return rv;
   
   (*arcs)->AppendElement(kNC_Name);
+  (*arcs)->AppendElement(kNC_FolderTreeName);
   (*arcs)->AppendElement(kNC_SpecialFolder);
   (*arcs)->AppendElement(kNC_ServerType);
   (*arcs)->AppendElement(kNC_IsServer);
@@ -789,8 +797,12 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 
   if (kNC_NameSort == property)
 		rv = createFolderNameNode(folder, target, PR_TRUE);
+  else if(kNC_FolderTreeNameSort == property)
+	rv = createFolderTreeNameNode(folder, target, PR_TRUE);
   else if (kNC_Name == property)
 		rv = createFolderNameNode(folder, target, PR_FALSE);
+  else if (kNC_FolderTreeName == property)
+		rv = createFolderTreeNameNode(folder, target, PR_FALSE);
   else if ((kNC_SpecialFolder == property))
 		rv = createFolderSpecialNode(folder,target);
   else if ((kNC_ServerType == property))
@@ -825,19 +837,43 @@ nsresult nsMsgFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
   nsString nameString(name);
 	if(sort)
 	{
-		PRInt32 order;
-		rv = GetFolderSortOrder(folder, &order);
-		if(NS_FAILED(rv))
-			return rv;
-		char * orderString = PR_smprintf("%d", order);
-		if(!orderString)
-			return NS_ERROR_OUT_OF_MEMORY;
-
-		nameString.Insert(orderString, 0);
-		PR_smprintf_free(orderString);
+		CreateNameSortString(folder, nameString);
 	}
 	createNode(nameString, target, getRDFService());
   return NS_OK;
+}
+
+
+nsresult nsMsgFolderDataSource::createFolderTreeNameNode(nsIMsgFolder *folder,
+                                                     nsIRDFNode **target, PRBool sort)
+{
+
+  nsXPIDLString name;
+  nsresult rv = folder->GetAbbreviatedName(getter_Copies(name));
+  if (NS_FAILED(rv)) return rv;
+  nsString nameString(name);
+	if(sort)
+	{
+		CreateNameSortString(folder, nameString);
+	}
+	createNode(nameString, target, getRDFService());
+  return NS_OK;
+}
+
+nsresult nsMsgFolderDataSource::CreateNameSortString(nsIMsgFolder *folder, nsString &name)
+{
+	PRInt32 order;
+	nsresult rv = GetFolderSortOrder(folder, &order);
+	if(NS_FAILED(rv))
+		return rv;
+	char * orderString = PR_smprintf("%d", order);
+	if(!orderString)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	name.Insert(orderString, 0);
+	PR_smprintf_free(orderString);
+
+	return NS_OK;
 }
 
 nsresult
@@ -1226,6 +1262,7 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
 			rv = folder->HasMessage(message, hasAssertion);
 	}
 	else if ((kNC_Name == property) ||
+			(kNC_FolderTreeName == property) ||
            (kNC_SpecialFolder == property) ||
            (kNC_ServerType == property) ||
            (kNC_IsServer == property) ||

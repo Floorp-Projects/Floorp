@@ -288,7 +288,7 @@ function OnLoadFolderPane(folderTree)
 {
 	dump('In onLoadfolderPane\n');
     gFolderTree = folderTree;
-	SortFolderPane('FolderColumn', 'http://home.netscape.com/NC-rdf#Name');
+	SortFolderPane('FolderColumn', 'http://home.netscape.com/NC-rdf#FolderTreeName');
 	//Add folderDataSource and accountManagerDataSource to folderPane
 	accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
 	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);

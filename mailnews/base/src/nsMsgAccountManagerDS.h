@@ -62,7 +62,9 @@ public:
 protected:
 
   static nsIRDFResource* kNC_Name;
+  static nsIRDFResource* kNC_FolderTreeName;
   static nsIRDFResource* kNC_NameSort;
+  static nsIRDFResource* kNC_FolderTreeNameSort;
   static nsIRDFResource* kNC_PageTag;
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_AccountRoot;

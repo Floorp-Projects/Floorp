@@ -59,7 +59,9 @@ typedef struct _serverCreationParams {
 // static members
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Child=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Name=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_FolderTreeName=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_NameSort=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_FolderTreeNameSort=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTag=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Settings=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_AccountRoot=nsnull;
@@ -110,7 +112,9 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
 	{
       NS_IF_RELEASE(kNC_Child);
       NS_IF_RELEASE(kNC_Name);
+      NS_IF_RELEASE(kNC_FolderTreeName);
       NS_IF_RELEASE(kNC_NameSort);
+      NS_IF_RELEASE(kNC_FolderTreeNameSort);
       NS_IF_RELEASE(kNC_PageTag);
       NS_IF_RELEASE(kNC_Account);
       NS_IF_RELEASE(kNC_Server);
@@ -148,7 +152,9 @@ nsMsgAccountManagerDataSource::Init()
 	if (gAccountManagerResourceRefCnt++ == 0) {
       getRDFService()->GetResource(NC_RDF_CHILD, &kNC_Child);
       getRDFService()->GetResource(NC_RDF_NAME, &kNC_Name);
+      getRDFService()->GetResource(NC_RDF_FOLDERTREENAME, &kNC_FolderTreeName);
       getRDFService()->GetResource(NC_RDF_NAME_SORT, &kNC_NameSort);
+      getRDFService()->GetResource(NC_RDF_FOLDERTREENAME_SORT, &kNC_FolderTreeNameSort);
       getRDFService()->GetResource(NC_RDF_PAGETAG, &kNC_PageTag);
       getRDFService()->GetResource(NC_RDF_ACCOUNT, &kNC_Account);
       getRDFService()->GetResource(NC_RDF_SERVER, &kNC_Server);
@@ -187,7 +193,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
   rv = NS_RDF_NO_VALUE;
 
   nsString str="";
-  if (property == kNC_Name) {
+  if (property == kNC_Name || property == kNC_FolderTreeName) {
 
     // XXX these should be localized
     if (source == kNC_PageTitleMain)
@@ -220,7 +226,6 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       }
     }
   }
-
   else if (property == kNC_PageTag) {
     // do NOT localize these strings. these are the urls of the XUL files
     if (source == kNC_PageTitleServer)
@@ -236,7 +241,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
   }
 
   // handle sorting of servers
-  else if (property == kNC_NameSort) {
+  else if ((property == kNC_NameSort) || (property == kNC_FolderTreeNameSort)) {
     // make sure we're handling a root folder that is a server
     nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(source,&rv);
     if (NS_FAILED(rv))
@@ -436,7 +441,9 @@ nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
 
   arcs->AppendElement(kNC_Settings);
   arcs->AppendElement(kNC_Name);
+  arcs->AppendElement(kNC_FolderTreeName);
   arcs->AppendElement(kNC_NameSort);
+  arcs->AppendElement(kNC_FolderTreeNameSort);
   arcs->AppendElement(kNC_PageTag);
 
 #ifdef DEBUG_amds_
