@@ -60,17 +60,19 @@ static NS_DEFINE_IID(kITableRowGroupFrameIID, NS_ITABLEROWGROUPFRAME_IID);
 static const PRInt32 kColumnWidthIncrement=100;
 
 #if 1
-PRBool nsDebugTable::gRflTable   = PR_FALSE;
-PRBool nsDebugTable::gRflRowGrp  = PR_FALSE;
-PRBool nsDebugTable::gRflRow     = PR_FALSE;
-PRBool nsDebugTable::gRflCell    = PR_FALSE;
-PRBool nsDebugTable::gRflArea    = PR_FALSE;
+PRBool nsDebugTable::gRflTableOuter = PR_FALSE;
+PRBool nsDebugTable::gRflTable      = PR_FALSE;
+PRBool nsDebugTable::gRflRowGrp     = PR_FALSE;
+PRBool nsDebugTable::gRflRow        = PR_FALSE;
+PRBool nsDebugTable::gRflCell       = PR_FALSE;
+PRBool nsDebugTable::gRflArea       = PR_FALSE;
 #else
-PRBool nsDebugTable::gRflTable   = PR_TRUE;
-PRBool nsDebugTable::gRflRowGrp  = PR_TRUE;
-PRBool nsDebugTable::gRflRow     = PR_TRUE;
-PRBool nsDebugTable::gRflCell    = PR_TRUE;
-PRBool nsDebugTable::gRflArea    = PR_TRUE;
+PRBool nsDebugTable::gRflTableOuter = PR_TRUE;
+PRBool nsDebugTable::gRflTable      = PR_TRUE;
+PRBool nsDebugTable::gRflRowGrp     = PR_TRUE;
+PRBool nsDebugTable::gRflRow        = PR_TRUE;
+PRBool nsDebugTable::gRflCell       = PR_TRUE;
+PRBool nsDebugTable::gRflArea       = PR_TRUE;
 #endif
 /* ----------- InnerTableReflowState ---------- */
 
@@ -5353,11 +5355,12 @@ void nsTableFrame::DebugGetIndent(const nsIFrame* aFrame,
   while (parent) {
     nsIAtom* frameType = nsnull;
     parent->GetFrameType(&frameType);
-    if ((nsDebugTable::gRflTable  && (nsLayoutAtoms::tableFrame         == frameType)) ||
-        (nsDebugTable::gRflRowGrp && (nsLayoutAtoms::tableRowGroupFrame == frameType)) ||
-        (nsDebugTable::gRflRow    && (nsLayoutAtoms::tableRowFrame      == frameType)) ||
-        (nsDebugTable::gRflCell   && (nsLayoutAtoms::tableCellFrame     == frameType)) ||
-        (nsDebugTable::gRflArea   && (nsLayoutAtoms::areaFrame          == frameType))) {
+    if ((nsDebugTable::gRflTableOuter && (nsLayoutAtoms::tableOuterFrame    == frameType)) ||
+        (nsDebugTable::gRflTable      && (nsLayoutAtoms::tableFrame         == frameType)) ||
+        (nsDebugTable::gRflRowGrp     && (nsLayoutAtoms::tableRowGroupFrame == frameType)) ||
+        (nsDebugTable::gRflRow        && (nsLayoutAtoms::tableRowFrame      == frameType)) ||
+        (nsDebugTable::gRflCell       && (nsLayoutAtoms::tableCellFrame     == frameType)) ||
+        (nsDebugTable::gRflArea       && (nsLayoutAtoms::areaFrame          == frameType))) {
       numLevels++;
     }
     NS_IF_RELEASE(frameType);

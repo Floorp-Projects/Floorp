@@ -396,23 +396,24 @@ void  nsTableCellFrame::VerticallyAlignChild()
   switch (verticalAlignFlags) 
   {
     case NS_STYLE_VERTICAL_ALIGN_BASELINE:
-    // Align the child's baseline at the max baseline
-    //kidYTop = aMaxAscent - kidAscent;
-    break;
+      // Align the baselines of the child frame with the baselines of 
+      // other children in the same row which have align = baseline 
+      // XXX Not yet implemented, so fall through to top
 
     case NS_STYLE_VERTICAL_ALIGN_TOP:
-    // Align the top of the child frame with the top of the box, 
-    // minus the top padding
+      // Align the top of the child frame with the top of the content area, 
       kidYTop = topInset;
     break;
 
     case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+      // Align the bottom of the child frame with the bottom of the content area, 
       kidYTop = height - childHeight - bottomInset;
     break;
 
     default:
     case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-      kidYTop = height/2 - childHeight/2;
+      // Align the middle of the child frame with the middle of the content area, 
+      kidYTop = (height - childHeight - bottomInset + topInset) / 2;
   }
   firstKid->MoveTo(kidRect.x, kidYTop);
 }
