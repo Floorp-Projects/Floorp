@@ -608,28 +608,36 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   float p2t;
   aPresContext->GetPixelsToTwips(&p2t);
 
-  // find the nearest row at or before aStartRowFrameIn that isn't spanned into. 
+  // find the nearest row index at or before aStartRowFrameIn that isn't spanned into. 
   // If we have a computed height, then we can't compute the heights
   // incrementally from aStartRowFrameIn, and we must start at the first row.
-  nsTableRowFrame* startRowFrame = GetFirstRow();
-  if (aStartRowFrameIn && (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight)
-                       && (aReflowState.mComputedHeight > 0)) {
-    nsTableRowFrame* rowFrame = startRowFrame;
-    while (rowFrame) {
-      PRInt32 rowIndex = rowFrame->GetRowIndex();
-      if (!tableFrame->RowIsSpannedInto(rowIndex)) {
-        startRowFrame = rowFrame;
-        if (aStartRowFrameIn == startRowFrame) 
-          break; 
-      }
-      else if (aStartRowFrameIn == rowFrame) 
+  PRInt32 rgStart = GetStartRowIndex();
+  PRInt32 startRowIndex = (aStartRowFrameIn) ? aStartRowFrameIn->GetRowIndex() : rgStart;
+  PRInt32 startRowIndexSave = startRowIndex;
+  if ((NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) && (aReflowState.mComputedHeight > 0)) {
+    startRowIndex = rgStart;
+  }
+  else {
+    while (startRowIndex > rgStart) {
+      if (!tableFrame->RowIsSpannedInto(startRowIndex)) 
         break;
-      rowFrame = rowFrame->GetNextRow();
+      startRowIndex--;
     }
-  } 
+  }
+  // find the row corresponding to the row index we just found
+  nsTableRowFrame* startRowFrame = aStartRowFrameIn;
+  if (!startRowFrame || (startRowIndex != startRowIndexSave)) {
+    PRInt32 rowX = rgStart;
+    for (startRowFrame = (nsTableRowFrame*)mFrames.FirstChild(); 
+         startRowFrame; 
+         startRowFrame->GetNextSibling((nsIFrame**)&startRowFrame)) {
+      if (rowX >= startRowIndex)
+        break;
+      rowX++;
+    }
+  }
+      
   if (!startRowFrame) return;
-
-  PRInt32 startRowIndex = startRowFrame->GetRowIndex();
 
   nsRect startRowRect;
   startRowFrame->GetRect(startRowRect);
