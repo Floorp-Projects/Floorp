@@ -1713,7 +1713,8 @@ nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     PRInt32 index;
     for (index = 0; index < count; index++) {
       const nsGenericAttribute* attr = (const nsGenericAttribute*)mAttributes->ElementAt(index);
-      if ((attr->mNameSpaceID == aNameSpaceID) && (attr->mName == aName)) {
+      if (((kNameSpaceID_Unknown == aNameSpaceID) || (attr->mNameSpaceID == aNameSpaceID)) && 
+          (attr->mName == aName)) {
         aResult = attr->mValue;
         if (0 < aResult.Length()) {
           rv = NS_CONTENT_ATTR_HAS_VALUE;
@@ -1746,7 +1747,8 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     PRBool  found = PR_FALSE;
     for (index = 0; index < count; index++) {
       nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
-      if ((attr->mNameSpaceID == aNameSpaceID) && (attr->mName == aName)) {
+      if (((kNameSpaceID_Unknown == aNameSpaceID) || (attr->mNameSpaceID == aNameSpaceID)) && 
+          (attr->mName == aName)) {
         mAttributes->RemoveElementAt(index);
         delete attr;
         found = PR_TRUE;
