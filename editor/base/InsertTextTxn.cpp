@@ -56,16 +56,18 @@ nsresult InsertTextTxn::Do(void)
 {
   // advance caret: This requires the presentation shell to get the selection.
   nsCOMPtr<nsIDOMSelection> selection;
-  nsresult res = mPresShell->GetSelection(getter_AddRefs(selection));
-  selection->StartBatchChanges();
-  res = mElement->InsertData(mOffset, mStringToInsert);
-  if (NS_SUCCEEDED(res)) {
-    res = selection->Collapse(mElement, mOffset+mStringToInsert.Length());
+  nsresult result = mPresShell->GetSelection(getter_AddRefs(selection));
+  NS_ASSERTION(selection,"Could not get selection in InsertTextTxn::Do\n");
+  if (NS_SUCCEEDED(result) && selection) {
+    selection->StartBatchChanges();
+    result = mElement->InsertData(mOffset, mStringToInsert);
+    if (NS_SUCCEEDED(result)) {
+      result = selection->Collapse(mElement, mOffset+mStringToInsert.Length());
+      NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after insert.");
+    }
+    selection->EndBatchChanges();
   }
-  else
-    NS_ASSERTION(PR_FALSE,"Could not get selection in InsertTextTxn::Do\n");
-  selection->EndBatchChanges();
-  return res;
+  return result;
 }
 
 nsresult InsertTextTxn::Undo(void)
@@ -77,8 +79,11 @@ nsresult InsertTextTxn::Undo(void)
   { // set the selection to the insertion point where the string was removed
     nsCOMPtr<nsIDOMSelection> selection;
     result = mPresShell->GetSelection(getter_AddRefs(selection));
-    if (NS_SUCCEEDED(result)) {
+    if (NS_SUCCEEDED(result) && selection) {
+      selection->StartBatchChanges();
       result = selection->Collapse(mElement, mOffset);
+      NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of insert.");
+      selection->EndBatchChanges();
     }
   }
   return result;

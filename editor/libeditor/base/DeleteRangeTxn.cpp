@@ -231,7 +231,12 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
     result = TransactionFactory::GetNewTransaction(kDeleteTextTxnIID, (EditTxn **)&txn);
     if (nsnull!=txn)
     {
-      txn->Init(textNode, aStartOffset, (aEndOffset-aStartOffset)+1);
+      PRInt32 numToDel;
+      if (aStartOffset==aEndOffset)
+        numToDel = 1;
+      else
+        numToDel = aEndOffset-aStartOffset;
+      txn->Init(mEditor, textNode, aStartOffset, numToDel);
       AppendChild(txn);
     }
   }
@@ -293,7 +298,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
     result = TransactionFactory::GetNewTransaction(kDeleteTextTxnIID, (EditTxn **)&txn);
     if (nsnull!=txn)
     {
-      txn->Init(textNode, start, numToDelete);
+      txn->Init(mEditor, textNode, start, numToDelete);
       AppendChild(txn);
     }
     else

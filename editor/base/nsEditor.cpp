@@ -711,7 +711,7 @@ nsresult nsEditor::CreateTxnForCreateElement(const nsString& aTag,
   {
     result = TransactionFactory::GetNewTransaction(kCreateElementTxnIID, (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result))  {
-      result = (*aTxn)->Init(mDoc, aTag, aParent, aPosition);
+      result = (*aTxn)->Init(this, aTag, aParent, aPosition);
     }
   }
   return result;
@@ -866,7 +866,7 @@ nsresult nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
   {
     result = TransactionFactory::GetNewTransaction(kDeleteTextTxnIID, (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result))  {
-      result = (*aTxn)->Init(aElement, aOffset, aLength);
+      result = (*aTxn)->Init(this, aElement, aOffset, aLength);
     }
   }
   return result;
@@ -1485,6 +1485,40 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
 
   return result;
 }
+
+nsresult nsIEditorSupport::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
+{
+  NS_ASSERTION((aChild && aParent), "bad args");
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (aChild && aParent)
+  {
+    nsCOMPtr<nsIDOMNodeList> childNodes;
+    result = aParent->GetChildNodes(getter_AddRefs(childNodes));
+    if ((NS_SUCCEEDED(result)) && (childNodes))
+    {
+      PRInt32 i=0;
+      for ( ; NS_SUCCEEDED(result); i++)
+      {
+        nsCOMPtr<nsIDOMNode> childNode;
+        result = childNodes->Item(i, getter_AddRefs(childNode));
+        if ((NS_SUCCEEDED(result)) && (childNode))
+        {
+          if (childNode.get()==aChild)
+          {
+            aOffset = i;
+            break;
+          }
+        }
+        else if (!childNode)
+          result = NS_ERROR_NULL_POINTER;
+      }
+    }
+    else if (!childNodes)
+      result = NS_ERROR_NULL_POINTER;
+  }
+  return result;
+}
+
 
 //END nsEditor Private methods
 

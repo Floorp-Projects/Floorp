@@ -20,6 +20,7 @@
 #define DeleteTextTxn_h__
 
 #include "EditTxn.h"
+#include "nsIEditor.h"
 #include "nsIDOMCharacterData.h"
 #include "nsCOMPtr.h"
 
@@ -36,11 +37,13 @@ class DeleteTextTxn : public EditTxn
 public:
 
   /** initialize the transaction.
+    * @param aEditor  the provider of basic editing operations
     * @param aElement the content node to remove text from
     * @param aOffset  the location in aElement to begin the deletion
     * @param aNumCharsToDelete  the number of characters to delete.  Not the number of bytes!
     */
-  virtual nsresult Init(nsIDOMCharacterData *aElement,
+  virtual nsresult Init(nsIEditor *aEditor,
+                        nsIDOMCharacterData *aElement,
                         PRUint32 aOffset,
                         PRUint32 aNumCharsToDelete);
 
@@ -62,7 +65,10 @@ public:
   virtual nsresult GetRedoString(nsString **aString);
 
 protected:
-  
+
+  /** the provider of basic editing operations */
+  nsCOMPtr<nsIEditor> mEditor;
+
   /** the text element to operate upon */
   nsCOMPtr<nsIDOMCharacterData> mElement;
   
