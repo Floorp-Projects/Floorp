@@ -46,7 +46,7 @@ NS_IMETHODIMP nsCNativeAppImpl::Create(nsISupports* aOuter, const nsIID& aIID,
 	NS_ENSURE_NO_AGGREGATION(aOuter);
 
 	nsCNativeAppImpl* app = new nsCNativeAppImpl();
-	NS_ENSURE(app, NS_ERROR_OUT_OF_MEMORY);
+	NS_ENSURE_TRUE(app, NS_ERROR_OUT_OF_MEMORY);
 
 	NS_ADDREF(app);
 	nsresult rv = app->QueryInterface(aIID, ppv);
@@ -74,12 +74,12 @@ NS_IMETHODIMP nsCNativeAppImpl::CreateEventLoop(const PRUnichar* EventLoopName,
 	switch(type)
 		{
 		case nsEventLoopTypes::MainAppLoop:
-			NS_ENSURE_NOT(GetLoop(type), NS_ERROR_UNEXPECTED);
+			NS_ENSURE_FALSE(GetLoop(type), NS_ERROR_UNEXPECTED);
 			progID = NS_EVENTLOOP_APP_PROGID;
 			break;
 
 		case nsEventLoopTypes::ThreadLoop:
-			NS_ENSURE_NOT(GetLoop(PR_CurrentThread()), NS_ERROR_UNEXPECTED);
+			NS_ENSURE_FALSE(GetLoop(PR_CurrentThread()), NS_ERROR_UNEXPECTED);
 			progID = NS_EVENTLOOP_THREAD_PROGID;
 			break;
 
@@ -103,7 +103,7 @@ NS_IMETHODIMP nsCNativeAppImpl::CreateEventLoop(const PRUnichar* EventLoopName,
 	if(NS_FAILED(pvtLoop->LoopInit(EventLoopName)))
 		return NS_ERROR_FAILURE;
 
-	NS_ENSURE(AddLoop(EventLoopName, PR_CurrentThread(), loop, type), 
+	NS_ENSURE_TRUE(AddLoop(EventLoopName, PR_CurrentThread(), loop, type), 
 		NS_ERROR_FAILURE);
 
 	*eventLoop = loop;
@@ -122,7 +122,7 @@ NS_IMETHODIMP nsCNativeAppImpl::FindEventLoop(const PRUnichar* EventLoopName,
 	while(PR_TRUE)	// Do this in case GetEventLoop fails.  Provides list cleanup
 		{
 		loopInfo = GetLoop(EventLoopName);
-		NS_ENSURE(loopInfo, NS_ERROR_INVALID_ARG);
+		NS_ENSURE_TRUE(loopInfo, NS_ERROR_INVALID_ARG);
 
 		loopInfo->GetEventLoop(eventLoop);
 		if(!eventLoop)
@@ -131,7 +131,7 @@ NS_IMETHODIMP nsCNativeAppImpl::FindEventLoop(const PRUnichar* EventLoopName,
 			break;
 		}
 
-	NS_ENSURE(*eventLoop, NS_ERROR_INVALID_ARG);
+	NS_ENSURE_TRUE(*eventLoop, NS_ERROR_INVALID_ARG);
 	return NS_OK;
 }
 
