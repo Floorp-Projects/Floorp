@@ -72,6 +72,7 @@ public:
     virtual nsIDeviceContext* GetDeviceContext();
     virtual nsIAppShell *   GetAppShell();
     virtual nsIToolkit*     GetToolkit();  
+    NS_IMETHOD              SetModal(void); 
     NS_IMETHOD              SetBorderStyle(nsBorderStyle aBorderStyle); 
     NS_IMETHOD              SetTitle(const nsString& aTitle); 
     NS_IMETHOD              SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);   

@@ -191,6 +191,22 @@ NS_METHOD nsWidget::Show(PRBool bState)
   return NS_OK;
 }
 
+NS_METHOD nsWidget::SetModal(void)
+{
+  GtkWindow *toplevel;
+
+  if (!mWidget)
+    return NS_ERROR_FAILURE;
+
+  toplevel = (GtkWindow *) ::gtk_widget_get_toplevel (mWidget);
+  if (!toplevel)
+    return NS_ERROR_FAILURE;
+
+  ::gtk_window_set_modal(toplevel, PR_TRUE);
+
+  return NS_OK;
+}
+
 NS_METHOD nsWidget::IsVisible(PRBool &aState)
 {
     if (mWidget) {

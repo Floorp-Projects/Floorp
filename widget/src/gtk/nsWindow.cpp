@@ -429,8 +429,6 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
   return NS_OK;
 }
 
-
-
 /**
  * Processes an Expose Event
  *
