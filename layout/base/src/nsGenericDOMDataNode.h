@@ -209,10 +209,10 @@ struct nsGenericDOMDataNode {
                   size_t aInstanceSize) const;
 
   // Implementation for nsIContent
-  nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
+  nsresult BeginConvertToXIF(nsIXIFConverter * aConverter) const;
   nsresult ConvertContentToXIF(const nsIContent *aOuterContent,
-                               nsXIFConverter& aConverter) const;
-  nsresult FinishConvertToXIF(nsXIFConverter& aConverter) const;
+                               nsIXIFConverter * aConverter) const;
+  nsresult FinishConvertToXIF(nsIXIFConverter * aConverter) const;
   nsresult CanContainChildren(PRBool& aResult) const {
     aResult = PR_FALSE;
     return NS_OK;
@@ -513,13 +513,13 @@ struct nsGenericDOMDataNode {
     return _g.GetAttributeCount(aResult);                                  \
   }                                                                        \
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;                       \
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {         \
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const {         \
     return _g.BeginConvertToXIF(aConverter);                               \
   }                                                                        \
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {       \
+  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const {       \
     return _g.ConvertContentToXIF(this, aConverter);                       \
   }                                                                        \
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
+  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter * aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
   }                                                                        \
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \

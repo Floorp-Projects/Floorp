@@ -2665,19 +2665,19 @@ nsGenericContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 
 // XXX To be implemented
 nsresult 
-nsGenericContainerElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
+nsGenericContainerElement::BeginConvertToXIF(nsIXIFConverter* aConverter) const
 {
   return NS_OK;
 }
 
 nsresult 
-nsGenericContainerElement::ConvertContentToXIF(nsXIFConverter& aConverter) const
+nsGenericContainerElement::ConvertContentToXIF(nsIXIFConverter* aConverter) const
 {
   return NS_OK;
 }
  
 nsresult 
-nsGenericContainerElement::FinishConvertToXIF(nsXIFConverter& aConverter) const
+nsGenericContainerElement::FinishConvertToXIF(nsIXIFConverter* aConverter) const
 {
   return NS_OK;
 }

@@ -27,7 +27,7 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsXIFConverter.h"
+#include "nsIXIFConverter.h"
 #include "nsRange.h"
 #include "nsTextContentChangeData.h"
 #include "nsIDOMSelection.h"
@@ -551,13 +551,13 @@ nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager** aResult)
 
 
 nsresult
-nsGenericDOMDataNode::BeginConvertToXIF(nsXIFConverter& aConverter) const
+nsGenericDOMDataNode::BeginConvertToXIF(nsIXIFConverter* aConverter) const
 {
   return NS_OK;
 }
 
 nsresult
-nsGenericDOMDataNode::FinishConvertToXIF(nsXIFConverter& aConverter) const
+nsGenericDOMDataNode::FinishConvertToXIF(nsIXIFConverter* aConverter) const
 {
   return NS_OK;
 }
@@ -569,12 +569,13 @@ nsGenericDOMDataNode::FinishConvertToXIF(nsXIFConverter& aConverter) const
  */
 nsresult
 nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
-                                          nsXIFConverter& aConverter) const
+                                          nsIXIFConverter* aConverter) const
 {
   const nsIContent* content = aOuterContent;
-  nsIDOMSelection* sel = aConverter.GetSelection();
+  nsCOMPtr<nsIDOMSelection> sel;
+  aConverter->GetSelection(getter_AddRefs(sel));
 
-  if (sel != nsnull && mDocument->IsInSelection(sel,content))
+  if (sel && mDocument->IsInSelection(sel,content))
   {
     nsCOMPtr<nsIEnumerator> enumerator;
     if (NS_SUCCEEDED(sel->GetEnumerator(getter_AddRefs(enumerator)))) {
@@ -612,7 +613,7 @@ nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
             if (startContent.get() == content)
              buffer.Cut(0,startOffset); 
           }
-          aConverter.AddContent(buffer);
+          aConverter->AddContent(buffer);
 
           NS_RELEASE(range);
         }
@@ -623,7 +624,7 @@ nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
   {
     nsString  buffer;
     mText.AppendTo(buffer);
-    aConverter.AddContent(buffer);
+    aConverter->AddContent(buffer);
   }
   return NS_OK;
 }

@@ -35,7 +35,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMEventTarget.h"
-#include "nsXIFConverter.h"
+#include "nsIXIFConverter.h"
 #include "nsIJSScriptObject.h"
 #include "nsIContent.h"
 #include "nsGenericDOMNodeList.h"
@@ -325,10 +325,10 @@ public:
     * and places the result in aBuffer.
     */
   NS_IMETHOD   CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection);
-  NS_IMETHOD   ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
-  virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
-  virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
-  virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+  NS_IMETHOD   ToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode);
+  virtual void BeginConvertToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode);
+  virtual void ConvertChildrenToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode);
+  virtual void FinishConvertToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode);
 
   NS_IMETHOD FlushPendingNotifications();
   NS_IMETHOD GetAndIncrementContentID(PRInt32* aID);

@@ -44,7 +44,17 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIEventStateManager.h"
 #include "nsContentList.h"
+
 #include "nsIDOMEventListener.h"
+#include "nsIDOMFormListener.h"
+#include "nsIDOMPaintListener.h"
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMKeyListener.h"
+#include "nsIDOMFocusListener.h"
+#include "nsIDOMLoadListener.h"
+
+
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsDOMAttribute.h"
@@ -59,7 +69,7 @@
 
 #include "nsITextContent.h"
 #include "nsIDocumentEncoder.h"
-//#include "nsXIFConverter.h"
+//#include "nsIXIFConverter.h"
 #include "nsIHTMLContentSink.h"
 //#include "nsHTMLContentSinkStream.h"
 //#include "nsHTMLToTXTSinkStream.h"
@@ -94,41 +104,19 @@
 #include "nsIAggregatePrincipal.h"
 #include "nsIPrivateDOMImplementation.h"
 
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
-static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 #include "nsIDOMElement.h"
 
-static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMNSDocumentIID, NS_IDOMNSDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
-static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
-static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
-static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
-static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
-static NS_DEFINE_IID(kIPostDataIID, NS_IPOSTDATA_IID);
-static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
-static NS_DEFINE_IID(kIDOMDOMImplementationIID, NS_IDOMDOMIMPLEMENTATION_IID);
-static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
-static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
-static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
-static NS_DEFINE_IID(kIDOMRange, NS_IDOMRANGE_IID);
-static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
-static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
-static NS_DEFINE_IID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-static NS_DEFINE_IID(kIPrivateDOMImplementationIID, NS_IPRIVATEDOMIMPLEMENTATION_IID);
-
+static NS_DEFINE_CID(kXIFConverterCID, NS_XIFCONVERTER_CID);
+static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
+static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 #include "nsILineBreakerFactory.h"
 #include "nsIWordBreakerFactory.h"
 #include "nsLWBrkCIID.h"
-static NS_DEFINE_IID(kLWBrkCID, NS_LWBRK_CID);
-static NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
-static NS_DEFINE_IID(kIWordBreakerFactoryIID, NS_IWORDBREAKERFACTORY_IID);
+static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 
 #include "nsIHTMLDocument.h"
-static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 class nsDOMStyleSheetList : public nsIDOMStyleSheetList,
                             public nsIScriptObjectOwner,
@@ -247,15 +235,14 @@ nsDOMStyleSheetList::GetLength(PRUint32* aLength)
       PRInt32 i, imax = mDocument->GetNumberOfStyleSheets();
       
       for (i = 0; i < imax; i++) {
-        nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(i);
-        nsIDOMStyleSheet *domss;
+        nsCOMPtr<nsIStyleSheet> sheet(do_QueryInterface(mDocument->GetStyleSheetAt(i)));
+        if (!sheet)
+          continue;
+        nsCOMPtr<nsIDOMStyleSheet> domss(do_QueryInterface(sheet));
 
-        if (NS_OK == sheet->QueryInterface(kIDOMStyleSheetIID, (void **)&domss)) {
+        if (domss) {
           count++;
-          NS_RELEASE(domss);
         }
-
-        NS_RELEASE(sheet);
       }
       mLength = count;
     }
@@ -278,18 +265,17 @@ nsDOMStyleSheetList::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
   
     // XXX Not particularly efficient, but does anyone care?
     for (i = 0; (i < imax) && (nsnull == *aReturn); i++) {
-      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(i);
-      nsIDOMStyleSheet *domss;
-      
-      if (NS_OK == sheet->QueryInterface(kIDOMStyleSheetIID, (void **)&domss)) {
+      nsCOMPtr<nsIStyleSheet> sheet(do_QueryInterface(mDocument->GetStyleSheetAt(i)));
+      if (!sheet)
+        continue;
+      nsCOMPtr<nsIDOMStyleSheet> domss(do_QueryInterface(sheet));
+
+      if (domss) {
         if (count++ == aIndex) {
           *aReturn = domss;
-          NS_ADDREF(domss);
+          NS_IF_ADDREF(*aReturn = domss);
         }
-        NS_RELEASE(domss);
       }
-      
-      NS_RELEASE(sheet);
     }
   }
 
@@ -328,10 +314,9 @@ nsDOMStyleSheetList::StyleSheetAdded(nsIDocument *aDocument,
                                      nsIStyleSheet* aStyleSheet)
 {
   if (-1 != mLength) {
-    nsIDOMStyleSheet *domss;
-    if (NS_OK == aStyleSheet->QueryInterface(kIDOMStyleSheetIID, (void **)&domss)) {
+    nsCOMPtr<nsIDOMStyleSheet> domss(do_QueryInterface(aStyleSheet));
+    if (domss) {
       mLength++;
-      NS_RELEASE(domss);
     }
   }
   
@@ -343,13 +328,11 @@ nsDOMStyleSheetList::StyleSheetRemoved(nsIDocument *aDocument,
                                        nsIStyleSheet* aStyleSheet)
 {
   if (-1 != mLength) {
-    nsIDOMStyleSheet *domss;
-    if (NS_OK == aStyleSheet->QueryInterface(kIDOMStyleSheetIID, (void **)&domss)) {
+    nsCOMPtr<nsIDOMStyleSheet> domss(do_QueryInterface(aStyleSheet));
+    if (domss) {
       mLength--;
-      NS_RELEASE(domss);
     }
   }
-  
   return NS_OK;  
 }
 
@@ -411,7 +394,7 @@ NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
   nsDOMImplementation* domImpl = new nsDOMImplementation();
   if (domImpl == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
-  return domImpl->QueryInterface(kIDOMDOMImplementationIID, (void**) aInstancePtrResult);
+  return domImpl->QueryInterface(NS_GET_IID(nsIDOMDOMImplementation), (void**) aInstancePtrResult);
 }
 
 nsDOMImplementation::nsDOMImplementation(nsIDocument* aDocument)
@@ -425,42 +408,8 @@ nsDOMImplementation::~nsDOMImplementation()
 {
 }
 
-NS_IMPL_ADDREF(nsDOMImplementation)
-NS_IMPL_RELEASE(nsDOMImplementation)
+NS_IMPL_ISUPPORTS4(nsDOMImplementation, nsIDOMDOMImplementation, nsIPrivateDOMImplementation, nsIScriptObjectOwner, nsIDOMDOMImplementation)
 
-nsresult 
-nsDOMImplementation::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIDOMDOMImplementationIID)) {
-    nsIDOMDOMImplementation* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIPrivateDOMImplementationIID)) {
-    nsIPrivateDOMImplementation* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDOMDOMImplementation* tmp = this;
-    nsISupports* tmp2 = tmp;
-    *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
 NS_IMETHODIMP    
 nsDOMImplementation::HasFeature(const nsString& aFeature, 
@@ -602,7 +551,7 @@ nsDocumentChildNodes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   if (nsnull != mDocument) {
     result = mDocument->ChildAt(aIndex, content);
     if ((NS_OK == result) && (nsnull != content)) {
-      result = content->QueryInterface(kIDOMNodeIID, (void**)aReturn);
+      result = content->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);
     }
   }
 
@@ -736,19 +685,19 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIDocumentIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDocument))) {
     nsIDocument* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMDocumentIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMDocument))) {
     nsIDOMDocument* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMNSDocumentIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMNSDocument))) {
     nsIDOMNSDocument* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -766,13 +715,13 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     nsIScriptObjectOwner* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIJSScriptObjectIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIJSScriptObject))) {
     nsIJSScriptObject* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -784,19 +733,19 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMEventReceiverIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver))) {
     nsIDOMEventReceiver* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMEventTargetIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventTarget))) {
     nsIDOMEventTarget* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMNodeIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
     nsIDOMNode* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -1042,7 +991,7 @@ NS_IMETHODIMP nsDocument::GetLineBreaker(nsILineBreaker** aResult)
      nsILineBreakerFactory *lf;
      nsresult result;
      result = nsServiceManager::GetService(kLWBrkCID,
-                                          kILineBreakerFactoryIID,
+                                          NS_GET_IID(nsILineBreakerFactory),
                                           (nsISupports **)&lf);
      if (NS_SUCCEEDED(result)) {
       nsILineBreaker *lb = nsnull ;
@@ -1072,7 +1021,7 @@ NS_IMETHODIMP nsDocument::GetWordBreaker(nsIWordBreaker** aResult)
      nsIWordBreakerFactory *lf;
      nsresult result;
      result = nsServiceManager::GetService(kLWBrkCID,
-                                          kIWordBreakerFactoryIID,
+                                          NS_GET_IID(nsIWordBreakerFactory),
                                           (nsISupports **)&lf);
      if (NS_SUCCEEDED(result)) {
       nsIWordBreaker *lb = nsnull ;
@@ -1957,7 +1906,7 @@ nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return impl->QueryInterface(kIDOMDOMImplementationIID, (void**)aImplementation);
+  return impl->QueryInterface(NS_GET_IID(nsIDOMDOMImplementation), (void**)aImplementation);
 }
 
 NS_IMETHODIMP    
@@ -1970,7 +1919,7 @@ nsDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)
   nsresult res = NS_ERROR_FAILURE;
 
   if (nsnull != mRootContent) {
-    res = mRootContent->QueryInterface(kIDOMElementIID, (void**)aDocumentElement);
+    res = mRootContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aDocumentElement);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Element");
   }
   
@@ -1992,7 +1941,7 @@ nsDocument::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
   nsresult        rv = NS_NewTextNode(&text);
 
   if (NS_OK == rv) {
-    rv = text->QueryInterface(kIDOMTextIID, (void**)aReturn);
+    rv = text->QueryInterface(NS_GET_IID(nsIDOMText), (void**)aReturn);
     (*aReturn)->AppendData(aData);
     NS_RELEASE(text);
   }
@@ -2013,7 +1962,7 @@ nsDocument::CreateComment(const nsString& aData, nsIDOMComment** aReturn)
   nsresult        rv = NS_NewCommentNode(&comment);
 
   if (NS_OK == rv) {
-    rv = comment->QueryInterface(kIDOMCommentIID, (void**)aReturn);
+    rv = comment->QueryInterface(NS_GET_IID(nsIDOMComment), (void**)aReturn);
     (*aReturn)->AppendData(aData);
     NS_RELEASE(comment);
   }
@@ -2050,7 +1999,7 @@ nsDocument::CreateAttribute(const nsString& aName,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return attribute->QueryInterface(kIDOMAttrIID, (void**)aReturn);
+  return attribute->QueryInterface(NS_GET_IID(nsIDOMAttr), (void**)aReturn);
 }
 
 NS_IMETHODIMP    
@@ -2087,7 +2036,7 @@ nsDocument::GetElementsByTagName(const nsString& aTagname,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return list->QueryInterface(kIDOMNodeListIID, (void **)aReturn);
+  return list->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void **)aReturn);
 }
 
 NS_IMETHODIMP    
@@ -2300,7 +2249,7 @@ nsDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
     NS_ADDREF(mChildNodes);
   }
 
-  return mChildNodes->QueryInterface(kIDOMNodeListIID, (void**)aChildNodes);
+  return mChildNodes->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void**)aChildNodes);
 }
 
 NS_IMETHODIMP    
@@ -2320,14 +2269,14 @@ nsDocument::GetFirstChild(nsIDOMNode** aFirstChild)
     content = (nsIContent *)mProlog->ElementAt(0);
 
     if (nsnull != content) {
-      result = content->QueryInterface(kIDOMNodeIID, (void**)aFirstChild);
+      result = content->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aFirstChild);
     }
   }
   else {
     nsIDOMElement* element;
     result = GetDocumentElement(&element);
     if (NS_OK == result) {
-      result = element->QueryInterface(kIDOMNodeIID, (void**)aFirstChild);
+      result = element->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aFirstChild);
       NS_RELEASE(element);
     }
   }
@@ -2344,14 +2293,14 @@ nsDocument::GetLastChild(nsIDOMNode** aLastChild)
     nsIContent* content;
     content = (nsIContent *)mEpilog->ElementAt(mEpilog->Count()-1);
     if (nsnull != content) {
-      result = content->QueryInterface(kIDOMNodeIID, (void**)aLastChild);
+      result = content->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aLastChild);
     }
   }
   else {
     nsIDOMElement* element;
     result = GetDocumentElement(&element);
     if (NS_OK == result) {
-      result = element->QueryInterface(kIDOMNodeIID, (void**)aLastChild);
+      result = element->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aLastChild);
       NS_RELEASE(element);
     }
   }
@@ -2427,7 +2376,7 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNod
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  result = aNewChild->QueryInterface(kIContentIID, (void**)&content);
+  result = aNewChild->QueryInterface(NS_GET_IID(nsIContent), (void**)&content);
   if (NS_OK != result) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
@@ -2442,7 +2391,7 @@ nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNod
     }
   }
   else {
-    result = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
+    result = aRefChild->QueryInterface(NS_GET_IID(nsIContent), (void**)&refContent);
     if (NS_OK != result) {
       NS_RELEASE(content);
       return NS_ERROR_DOM_NOT_FOUND_ERR;
@@ -2504,12 +2453,12 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  result = aNewChild->QueryInterface(kIContentIID, (void**)&content);
+  result = aNewChild->QueryInterface(NS_GET_IID(nsIContent), (void**)&content);
   if (NS_OK != result) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  result = aOldChild->QueryInterface(kIContentIID, (void**)&refContent);
+  result = aOldChild->QueryInterface(NS_GET_IID(nsIContent), (void**)&refContent);
   if (NS_OK != result) {
     NS_RELEASE(content);
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
@@ -2568,7 +2517,7 @@ nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
     return NS_ERROR_NULL_POINTER;
   }
 
-  result = aOldChild->QueryInterface(kIContentIID, (void**)&content);
+  result = aOldChild->QueryInterface(NS_GET_IID(nsIContent), (void**)&content);
   if (NS_OK != result) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
@@ -2644,7 +2593,7 @@ nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)
 {
   if (nsnull != mListenerManager) {
-    return mListenerManager->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult);
+    return mListenerManager->QueryInterface(NS_GET_IID(nsIEventListenerManager), (void**) aInstancePtrResult);
   }
   if (NS_OK == GetNewListenerManager(aInstancePtrResult)) {
     mListenerManager = *aInstancePtrResult;
@@ -2704,7 +2653,7 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext,
       //Okay, so someone in the DOM loop (a listener, JS object) still has a ref to the DOM Event but
       //the internal data hasn't been malloc'd.  Force a copy of the data here so the DOM Event is still valid.
         nsIPrivateDOMEvent *mPrivateEvent;
-        if (NS_OK == (*aDOMEvent)->QueryInterface(kIPrivateDOMEventIID, (void**)&mPrivateEvent)) {
+        if (NS_OK == (*aDOMEvent)->QueryInterface(NS_GET_IID(nsIPrivateDOMEvent), (void**)&mPrivateEvent)) {
           mPrivateEvent->DuplicatePrivateData();
           NS_RELEASE(mPrivateEvent);
         }
@@ -2812,7 +2761,7 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
         if (NS_OK == GetListenerManager(&mManager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
-             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseListenerIID)) {
+             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, NS_GET_IID(nsIDOMMouseListener))) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
@@ -2822,7 +2771,7 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
         if (NS_OK == GetListenerManager(&mManager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
-             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMKeyListenerIID)) {
+             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, NS_GET_IID(nsIDOMKeyListener))) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
@@ -2832,7 +2781,7 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
         if (NS_OK == GetListenerManager(&mManager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
-             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMMouseMotionListenerIID)) {
+             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, NS_GET_IID(nsIDOMMouseMotionListener))) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
@@ -2842,7 +2791,7 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
         if (NS_OK == GetListenerManager(&mManager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
-             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFocusListenerIID)) {
+             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, NS_GET_IID(nsIDOMFocusListener))) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
@@ -2853,7 +2802,7 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
         if (NS_OK == GetListenerManager(&mManager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
-             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMFormListenerIID)) {
+             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, NS_GET_IID(nsIDOMFormListener))) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
@@ -2864,7 +2813,7 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
         if (NS_OK == GetListenerManager(&mManager)) {
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
-             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, kIDOMLoadListenerIID)) {
+             NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, atom, NS_GET_IID(nsIDOMLoadListener))) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
@@ -2875,7 +2824,7 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
           nsCOMPtr<nsIScriptContext> mScriptCX;
           if(NS_FAILED(nsLayoutUtils::GetStaticScriptContext(aContext, (JSObject*)mScriptObject, getter_AddRefs(mScriptCX))) ||
              NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this,
-                                                             atom, kIDOMPaintListenerIID)) {
+                                                             atom, NS_GET_IID(nsIDOMPaintListener))) {
             NS_RELEASE(mManager);
             return PR_FALSE;
           }
@@ -2930,14 +2879,13 @@ NS_IMETHODIMP nsDocument::FindNext(const nsString &aSearchStr, PRBool aMatchCase
 
 
 
-void nsDocument::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+void nsDocument::BeginConvertToXIF(nsIXIFConverter *aConverter, nsIDOMNode* aNode)
 {
-  nsIContent* content = nsnull;
-  nsresult    isContent = aNode->QueryInterface(kIContentIID, (void**)&content);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
   PRBool      isSynthetic = PR_TRUE;
 
   // Begin Conversion
-  if (NS_OK == isContent) 
+  if (content) 
   {
     content->IsSynthetic(isSynthetic);
     if (PR_FALSE == isSynthetic)
@@ -2945,51 +2893,47 @@ void nsDocument::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode
       content->BeginConvertToXIF(aConverter);
       content->ConvertContentToXIF(aConverter);
     }
-    NS_RELEASE(content);
   }
 }
 
-void nsDocument::ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+void nsDocument::ConvertChildrenToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode)
 {
   // Iterate through the children, convertion child nodes
   nsresult result = NS_OK;
-  nsIDOMNode* child = nsnull;
-  result = aNode->GetFirstChild(&child);
+  nsCOMPtr<nsIDOMNode> child;
+  result = aNode->GetFirstChild(getter_AddRefs(child));
     
   while ((result == NS_OK) && (child != nsnull))
   { 
-    nsIDOMNode* temp = child;
+    nsCOMPtr<nsIDOMNode> temp(child);
     result=ToXIF(aConverter,child);    
-    result = child->GetNextSibling(&child);
-    NS_RELEASE(temp);
+    result = temp->GetNextSibling(getter_AddRefs(child));
   }
 }
 
-void nsDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+void nsDocument::FinishConvertToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode)
 {
-  nsIContent* content = nsnull;
-  nsresult    isContent = aNode->QueryInterface(kIContentIID, (void**)&content);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
   PRBool      isSynthetic = PR_TRUE;
 
-  if (NS_OK == isContent) 
+  if (content) 
   {
     content->IsSynthetic(isSynthetic);
     if (PR_FALSE == isSynthetic)
       content->FinishConvertToXIF(aConverter);
-    NS_RELEASE(content);
   }
 }
 
 
 NS_IMETHODIMP
-nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+nsDocument::ToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode)
 {
   nsresult result=NS_OK;
-  nsIDOMSelection* sel = aConverter.GetSelection();
-  if (sel != nsnull)
+  nsCOMPtr<nsIDOMSelection> sel;
+  aConverter->GetSelection(getter_AddRefs(sel));
+  if (sel)
   {
-    nsIContent* content = nsnull;
-    result=aNode->QueryInterface(kIContentIID, (void**)&content);
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
 
     if (NS_SUCCEEDED(result) && content)
     {
@@ -3005,7 +2949,6 @@ nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
       {
         ConvertChildrenToXIF(aConverter,aNode);
       }
-      NS_RELEASE(content);
     }
   }
   else
@@ -3015,36 +2958,42 @@ nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
     FinishConvertToXIF(aConverter,aNode);
   }
   return result;
-}
+} 
 
 NS_IMETHODIMP
 nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 {
     nsresult result=NS_OK;
 
-    nsXIFConverter converter(aBuffer);
+    nsCOMPtr<nsIXIFConverter> converter;
+    nsresult res = nsComponentManager::CreateInstance(kXIFConverterCID,
+                             nsnull,
+                             NS_GET_IID(nsIXIFConverter),
+                             getter_AddRefs(converter));
+    NS_ENSURE_TRUE(converter,NS_ERROR_FAILURE);
+    converter->Init(aBuffer);
 
-    converter.SetSelection(aSelection);
+    converter->SetSelection(aSelection);
 
-    converter.AddStartTag( NS_ConvertToString("section") ); 
-    converter.AddStartTag( NS_ConvertToString("section_head") );
+    converter->AddStartTag( NS_ConvertToString("section") , PR_TRUE); 
+    converter->AddStartTag( NS_ConvertToString("section_head") , PR_TRUE);
 
-    converter.BeginStartTag( NS_ConvertToString("document_info") );
-    converter.AddAttribute(NS_ConvertToString("charset"),mCharacterSet);
+    converter->BeginStartTag( NS_ConvertToString("document_info") );
+    converter->AddAttribute(NS_ConvertToString("charset"),mCharacterSet);
     nsCOMPtr<nsIURI> uri (getter_AddRefs(GetDocumentURL()));
     if (uri)
     {
       char* spec = 0;
       if (NS_SUCCEEDED(uri->GetSpec(&spec)) && spec)
       {
-        converter.AddAttribute(NS_ConvertToString("uri"), NS_ConvertToString(spec));
+        converter->AddAttribute(NS_ConvertToString("uri"), NS_ConvertToString(spec));
         Recycle(spec);
       }
     }
-    converter.FinishStartTag(NS_ConvertToString("document_info"),PR_TRUE,PR_TRUE);
+    converter->FinishStartTag(NS_ConvertToString("document_info"),PR_TRUE,PR_TRUE);
 
-    converter.AddEndTag(NS_ConvertToString("section_head"));
-    converter.AddStartTag(NS_ConvertToString("section_body"));
+    converter->AddEndTag(NS_ConvertToString("section_head"), PR_TRUE, PR_TRUE);
+    converter->AddStartTag(NS_ConvertToString("section_body"), PR_TRUE);
 
     nsCOMPtr<nsIDOMDocumentType> doctype;
     GetDoctype(getter_AddRefs(doctype));
@@ -3078,9 +3027,8 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
           docTypeStr.AppendWithConversion("\n]");
         }
       }
-
       if (docTypeStr.Length())
-        converter.AddMarkupDeclaration(docTypeStr);
+        converter->AddMarkupDeclaration(docTypeStr);
     }
 
     nsIDOMElement* root = nsnull;
@@ -3125,8 +3073,8 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
     #endif
         NS_RELEASE(root);
      }
-  converter.AddEndTag(NS_ConvertToString("section_body"));
-  converter.AddEndTag(NS_ConvertToString("section"));
+  converter->AddEndTag(NS_ConvertToString("section_body"), PR_TRUE, PR_TRUE);
+  converter->AddEndTag(NS_ConvertToString("section"), PR_TRUE, PR_TRUE);
   return result;
 }
 
