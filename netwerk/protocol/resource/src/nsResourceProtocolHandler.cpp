@@ -310,7 +310,7 @@ nsResourceProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     
     nsIChannel* channel;
     rv = serv->NewChannel(verb, filePath, uri, aLoadGroup, notificationCallbacks,
-                          loadAttributes, originalURI, &channel);
+                          loadAttributes, originalURI ? originalURI : uri, &channel);
     nsCRT::free(filePath);
     if (NS_FAILED(rv)) return rv;
 
