@@ -2561,7 +2561,7 @@ nsWindowSH::DefineInterfaceProperty(JSContext *cx, JSObject *obj,
   nsCAutoString name("nsIDOM");
   name.Append(::JS_GetStringBytes(str));
 
-  JSObject *if_object = GetInterfaceObject(cx, obj, name);
+  JSObject *if_object = GetInterfaceObject(cx, obj, name.get());
 
   if (!if_object) {
     return NS_ERROR_UNEXPECTED;
