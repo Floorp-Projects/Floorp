@@ -34,7 +34,7 @@ NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
 //-------------------------------------------------------------------------
 // static variables
 //-------------------------------------------------------------------------
-  //static PRBool gHaveDrag = FALSE;
+  //static PRBool gHaveDrag = PR_FALSE;
 
 //-------------------------------------------------------------------------
 //
@@ -138,7 +138,7 @@ nsDragService::DragLeave (GtkWidget	       *widget,
 			                    guint             time)
 {
   g_print("leave\n");
-  //gHaveDrag = FALSE;
+  //gHaveDrag = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -154,7 +154,7 @@ nsDragService::DragMotion(GtkWidget	       *widget,
 
 #if 0
   if (!gHaveDrag) {
-      gHaveDrag = TRUE;
+      gHaveDrag = PR_TRUE;
   }
 #endif
 
@@ -165,7 +165,7 @@ nsDragService::DragMotion(GtkWidget	       *widget,
 
   gdk_drag_status (context, context->suggested_action, time);
   
-  return TRUE;
+  return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -177,16 +177,16 @@ nsDragService::DragDrop(GtkWidget	       *widget,
 			                  guint             time)
 {
   g_print("drop\n");
-  //gHaveDrag = FALSE;
+  //gHaveDrag = PR_FALSE;
 
   if (context->targets){
     gtk_drag_get_data (widget, context, 
 			                 GPOINTER_TO_INT (context->targets->data), 
 			                 time);
-    return TRUE;
+    return PR_TRUE;
   }
   
-  return FALSE;
+  return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -201,11 +201,11 @@ nsDragService::DragDataReceived  (GtkWidget          *widget,
 {
   if ((data->length >= 0) && (data->format == 8)) {
     g_print ("Received \"%s\"\n", (gchar *)data->data);
-    gtk_drag_finish (context, TRUE, FALSE, time);
+    gtk_drag_finish (context, PR_TRUE, PR_FALSE, time);
     return;
   }
   
-  gtk_drag_finish (context, FALSE, FALSE, time);
+  gtk_drag_finish (context, PR_FALSE, PR_FALSE, time);
 }
   
 //-------------------------------------------------------------------------
