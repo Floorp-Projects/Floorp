@@ -245,7 +245,7 @@ mime_output_fn(char *buf, PRInt32 size, void *stream_closure)
   return written;
 }
 
-#if 0
+#ifdef XP_MAC
 static int
 compose_only_output_fn(char *buf, PRInt32 size, void *stream_closure)
 {
