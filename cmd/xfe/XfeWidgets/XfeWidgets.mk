@@ -70,8 +70,6 @@ XFE_BM_REQUIRES			= XfeBm
 ##
 ifeq ($(OS_ARCH),Linux)
 
-  -include $(DEPTH)/config/motif.mk
-
   XFE_X_CC_FLAGS		= $(MOZILLA_XFE_X11_INCLUDE_FLAGS)
 
   XFE_XM_CC_FLAGS		= $(MOZILLA_XFE_MOTIF_INCLUDE_FLAGS)
