@@ -690,7 +690,7 @@ sub MakeResourceAliases()
 	}	
 
 	my($chrome_dir) = "$dist_dir" . "chrome:";
-	BuildFolderResourceAliases(":mozilla:rdf:chrome:build:",			"$chrome_dir");
+	MakeAlias(":mozilla:rdf:chrome:build:registry.rdf",								"$chrome_dir");
 }
 
 
