@@ -209,10 +209,14 @@ nsresult nsCaseConversionImp2::ToTitle(
   {
     PRUnichar upper;
     upper = gUpperMap->Map(aChar);
-    for(PRUint32 i = 0 ; i < gUpperToTitleItems; i++) {
-      if ( upper == gUpperToTitle[(i*2)+kUpperIdx]) {
-         *aReturn = gUpperToTitle[(i*2)+kTitleIdx];
-         return NS_OK;
+    
+    if( 0x01C0 == ( upper & 0xFFC0)) // 0x01Cx - 0x01Fx
+    {
+      for(PRUint32 i = 0 ; i < gUpperToTitleItems; i++) {
+        if ( upper == gUpperToTitle[(i*2)+kUpperIdx]) {
+           *aReturn = gUpperToTitle[(i*2)+kTitleIdx];
+           return NS_OK;
+        }
       }
     }
     *aReturn = upper;
