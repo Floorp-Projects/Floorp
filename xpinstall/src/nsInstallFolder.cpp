@@ -505,7 +505,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
             break;
     }
 
-    if (aRelativePath.Length() > 0 && mFileSpec)
+    if (mFileSpec && !aRelativePath.IsEmpty())
     {
         AppendXPPath(aRelativePath);
     }
@@ -519,18 +519,26 @@ nsInstallFolder::AppendXPPath(const nsString& aRelativePath)
     PRInt32 start = 0;
     PRInt32 curr;
 
+    NS_ASSERTION(!aRelativePath.IsEmpty(),"InstallFolder appending null path");
     do {
         curr = aRelativePath.FindChar('/',PR_FALSE,start);
-        if ( curr > start )
+        if ( curr == start )
+        {
+            // illegal, two slashes in a row (or not a relative path)
+            mFileSpec = nsnull;
+            break;
+        }
+        else if ( curr == kNotFound )
+        {
+            // last segment
+            aRelativePath.Mid(segment,start,-1);
+            start = aRelativePath.Length();
+        }
+        else
         {
             // found a segment
             aRelativePath.Mid(segment,start,curr-start);
             start = curr+1;
-        }
-        else 
-        {
-            // last segment
-            aRelativePath.Mid(segment,start,-1);
         }
             
         nsresult rv = mFileSpec->AppendUnicode(segment.GetUnicode());
@@ -542,7 +550,7 @@ nsInstallFolder::AppendXPPath(const nsString& aRelativePath)
             tmp.AssignWithConversion(segment);
             mFileSpec->Append(tmp.get());
         }
-    } while ( curr != kNotFound );
+    } while ( start < aRelativePath.Length() );
 }
 
 
