@@ -66,6 +66,7 @@
 #include "nsIRDFResource.h"
 #include "nsCOMPtr.h"
 #include "nsMsgBaseCID.h"
+#include "nsIMsgMailNewsUrl.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -503,9 +504,9 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 	if (NS_SUCCEEDED(rv) && m_url)
     {
         m_url->SetImapLog(this);
-
-		rv = m_url->SetSpec(m_urlString); // reset spec
-		m_url->RegisterListener(this);
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_url);
+		rv = mailnewsurl->SetSpec(m_urlString); // reset spec
+		mailnewsurl->RegisterListener(this);
 
     }
 	
@@ -633,13 +634,14 @@ nsresult nsIMAP4TestDriver::OnTestUrlParsing()
 		else
 			urlSpec = PR_smprintf("imap://%s", hostName);
 
-		imapUrl->SetSpec("imap://nsmail-2.mcom.com:143/test");
+		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(imapUrl);
+		mailnewsurl->SetSpec("imap://nsmail-2.mcom.com:143/test");
 		
 		const char * urlHost = nsnull;
 		PRUint32 urlPort = 0;
 
-		imapUrl->GetHost(&urlHost);
-		imapUrl->GetHostPort(&urlPort);
+		mailnewsurl->GetHost(&urlHost);
+		mailnewsurl->GetHostPort(&urlPort);
 
 		printf("Host name test: %s\n", PL_strcmp(urlHost, hostName) == 0 ? "PASSED." : "FAILED!");
 		if (port > 0) // did the user try to test the port?

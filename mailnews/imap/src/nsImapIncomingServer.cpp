@@ -167,18 +167,19 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue*
     rv = CreateImapConnection(aClientEventQueue, aImapUrl, &aProtocol);
     if (NS_FAILED(rv)) return rv;
 
-    if (aUrlListener)
-        aImapUrl->RegisterListener(aUrlListener);
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(aImapUrl, &rv);
+    if (NS_SUCCEEDED(rv) && mailnewsurl && aUrlListener)
+        mailnewsurl->RegisterListener(aUrlListener);
 
     if (aProtocol)
     {
-        rv = aProtocol->LoadUrl(aImapUrl, aConsumer);
+        rv = aProtocol->LoadUrl(mailnewsurl, aConsumer);
         // *** jt - in case of the time out situation or the connection gets
         // terminated by some unforseen problems let's give it a second chance
         // to run the url
         if (NS_FAILED(rv))
         {
-            rv = aProtocol->LoadUrl(aImapUrl, aConsumer);
+            rv = aProtocol->LoadUrl(mailnewsurl, aConsumer);
         }
         else
         {
@@ -196,7 +197,7 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue*
     }
     if (aURL)
     {
-        *aURL = aImapUrl;
+        *aURL = mailnewsurl;
         NS_IF_RELEASE(*aURL);
     }
 
@@ -232,7 +233,9 @@ nsImapIncomingServer::LoadNextQueuedUrl()
                                                &protocolInstance);
             if (NS_SUCCEEDED(rv) && protocolInstance)
             {
-                rv = protocolInstance->LoadUrl(aImapUrl, aConsumer);
+				nsCOMPtr<nsIURL> url = do_QueryInterface(aImapUrl, &rv);
+				if (NS_SUCCEEDED(rv) && url)
+					rv = protocolInstance->LoadUrl(url, aConsumer);
                 m_urlQueue->RemoveElementAt(0);
                 m_urlConsumers.RemoveElementAt(0);
             }
