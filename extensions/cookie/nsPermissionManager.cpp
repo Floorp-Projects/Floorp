@@ -155,7 +155,7 @@ nsPermissionEnumerator::Prefetch()
     if (entry) {
       // see if we've found it
       permission = entry->GetPermission(mTypeIndex);
-      if (permission != nsIPermissionManager::UNKNOWN_ACTION) {
+      if (permission != nsIPermissionManager::UNKNOWN_ACTION && mTypeArray[mTypeIndex]) {
         mNextPermission = new nsPermission(entry->GetHost(), 
                                            nsDependentCString(mTypeArray[mTypeIndex]),
                                            permission);
@@ -229,11 +229,9 @@ nsPermissionManager::Add(nsIURI     *aURI,
   nsresult rv;
 
   nsCAutoString hostPort;
-  aURI->GetHostPort(hostPort);
-  if (hostPort.IsEmpty()) {
-    // Nothing to add
-    return NS_OK;
-  }
+  rv = GetHostPort(aURI, hostPort);
+  // no host doesn't mean an error. just return the default
+  if (NS_FAILED(rv)) return NS_OK;
 
   PRInt32 typeIndex = GetTypeIndex(aType, PR_TRUE);
   if (typeIndex == -1 || aPermission >= NUMBER_OF_PERMISSIONS)
@@ -329,11 +327,9 @@ nsPermissionManager::TestPermission(nsIURI     *aURI,
   *aPermission = nsIPermissionManager::UNKNOWN_ACTION;
 
   nsCAutoString hostPort;
-  aURI->GetHostPort(hostPort);
-  // Don't error on no host. Just return UNKNOWN_ACTION as permission.
-  if (hostPort.IsEmpty()) {
-    return NS_OK;
-  }
+  nsresult rv = GetHostPort(aURI, hostPort);
+  // no host doesn't mean an error. just return the default
+  if (NS_FAILED(rv)) return NS_OK;
   
   PRInt32 typeIndex = GetTypeIndex(aType, PR_FALSE);
   // If type == -1, the type isn't known,
@@ -781,3 +777,22 @@ nsPermissionManager::Write()
   return NS_OK;
 }
 
+nsresult
+nsPermissionManager::GetHostPort(nsIURI *aURI, nsACString &aResult)
+{
+  NS_ASSERTION(aURI, "could not get uri");
+
+  aURI->GetHostPort(aResult);
+
+  // If there is no host, use the scheme, and prepend "scheme:",
+  // to make sure it isn't a host or something.
+  if (aResult.IsEmpty()) {
+    aURI->GetScheme(aResult);
+    if (aResult.IsEmpty()) {
+      // still empty. Return error.
+      return NS_ERROR_FAILURE;
+    }
+    aResult = NS_LITERAL_CSTRING("scheme:") + aResult;
+  }
+  return NS_OK;
+}

@@ -168,6 +168,7 @@ private:
   nsresult Write();
   nsresult NotifyObservers(const nsACString &aHost);
   nsresult RemoveAllFromMemory();
+  nsresult GetHostPort(nsIURI *aURI, nsACString &aResult);
   void     RemoveTypeStrings();
 
   nsCOMPtr<nsIObserverService> mObserverService;
