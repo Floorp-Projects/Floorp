@@ -319,7 +319,7 @@ nsObjectHashtable::nsObjectHashtable(nsHashtableCloneElementFunc cloneElementFun
 
 nsObjectHashtable::~nsObjectHashtable()
 {
-    Reset(mDestroyElementFun, mDestroyElementClosure);
+    Reset();
 }
 
 PR_CALLBACK PRIntn 
@@ -353,8 +353,7 @@ nsObjectHashtable::Clone()
 void 
 nsObjectHashtable::Reset()
 {
-    Enumerate(mDestroyElementFun, mDestroyElementClosure);
-    nsHashtable::Reset();
+    nsHashtable::Reset(mDestroyElementFun, mDestroyElementClosure);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
