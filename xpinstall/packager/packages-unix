@@ -319,6 +319,7 @@ bin/components/msgimap.xpt
 bin/components/msglocal.xpt
 bin/components/msgnews.xpt
 bin/components/msgsearch.xpt
+bin/components/nsLDAPPrefsService.js
 bin/components/txmgr.xpt
 bin/components/import.xpt
 bin/components/absync.xpt
