@@ -4721,6 +4721,15 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
     mCachedPlugins = next;
   }
 
+  // reverse our list of plugins 
+  nsPluginTag *next,*prev = nsnull;
+  for (nsPluginTag *cur = mPlugins; cur; cur = next) {
+    next = cur->mNext;
+    cur->mNext = prev;
+    prev = cur;
+  }
+  mPlugins = prev;
+
   NS_TIMELINE_STOP_TIMER("LoadPlugins");
   NS_TIMELINE_MARK_TIMER("LoadPlugins");
 
