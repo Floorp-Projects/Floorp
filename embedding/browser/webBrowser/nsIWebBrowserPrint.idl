@@ -24,7 +24,6 @@
 
 interface nsIDOMWindow;
 interface nsIPrintSettings;
-interface nsIPrintOptions;
 interface nsIPrintListener;
 
 
@@ -42,8 +41,17 @@ interface nsIWebBrowserPrint : nsISupports
    * aThePrintOptions - Printer Settings for the print job
    */
   void Print(in nsIDOMWindow aDOMWindow,
-             in nsIPrintOptions aThePrintOptions, 
+             in nsIPrintSettings aThePrintSettings, 
              in nsIPrintListener aPrintListsner);
+
+  /**
+   * Print Preview the specified DOM window
+   *
+   * aDOMWindow - The DOM window to print preview
+   * aThePrintOptions - Printer Settings for the print preview
+   */
+  void PrintPreview(in nsIDOMWindow aDOMWindow,
+                    in nsIPrintSettings aThePrintSettings);
 
   void Cancel();
 

@@ -123,6 +123,12 @@ protected:
     NS_IMETHOD UnBindListener(nsISupports *aListener, const nsIID& aIID);
     NS_IMETHOD EnableGlobalHistory(PRBool aEnable);
 
+    // helper function for Printing and Print Preview 
+    nsresult DoPrintOrPrintPreview(nsIDOMWindow *aDOMWindow, 
+                                   nsIPrintSettings *aThePrintSettings,
+                                   nsIPrintListener *aPrintListener,
+                                   PRBool            aDoPrinting);
+
     static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
 protected:

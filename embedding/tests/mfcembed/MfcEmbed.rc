@@ -111,7 +111,9 @@ BEGIN
         MENUITEM "&Open File...\tCtrl+O",       ID_FILE_OPEN
         MENUITEM "&Save Page As...\tCtrl+S",    ID_FILE_SAVE_AS
         MENUITEM SEPARATOR
+        MENUITEM "Page Set&up...",              ID_FILE_PRINTSETUP
         MENUITEM "&Print...\tCtrl-P",           ID_FILE_PRINT
+        MENUITEM "Print Pre&view",              ID_FILE_PRINTPREVIEW
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_APP_EXIT
     END
@@ -349,6 +351,33 @@ BEGIN
     EDITTEXT        IDC_EDIT_HOMEPAGE,53,95,211,14,ES_AUTOHSCROLL
 END
 
+IDD_PRINTSETUP_DIALOG DIALOG DISCARDABLE  0, 0, 205, 141
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Page Setup"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,7,120,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,108,120,50,14
+    GROUPBOX        "Margins",IDC_STATIC,7,8,147,44
+    LTEXT           "Left:",IDC_STATIC,89,22,15,8
+    EDITTEXT        IDC_LEFT_MARGIN_TXT,105,18,40,14,ES_AUTOHSCROLL
+    LTEXT           "Top:",IDC_STATIC,22,22,16,8
+    EDITTEXT        IDC_TOP_MARGIN_TXT,39,19,40,14,ES_AUTOHSCROLL
+    LTEXT           "Right:",IDC_STATIC,85,38,20,8
+    EDITTEXT        IDC_BOTTOM_MARGIN_TXT,39,35,40,14,ES_AUTOHSCROLL
+    LTEXT           "Bottom:",IDC_STATIC,13,37,25,8
+    EDITTEXT        IDC_RIGHT_MARGIN_TXT,106,35,40,14,ES_AUTOHSCROLL
+    CONTROL         "Print Background C&olors",IDC_PRT_BGCOLORS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,93,92,10
+    CONTROL         "Slider1",IDC_SCALE,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    TBS_BOTH | WS_TABSTOP,9,65,100,19
+    EDITTEXT        IDC_SCALE_TXT,110,71,19,14,ES_AUTOHSCROLL
+    GROUPBOX        "Scaling",IDC_STATIC,7,54,148,34
+    CONTROL         "Print Background &Images",IDC_PRT_BGIMAGES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,106,95,10
+END
+
+
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -439,6 +468,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 48
     END
+
+    IDD_PRINTSETUP_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 198
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 134
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -526,6 +563,12 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     ID_EDIT_SELECT_NONE     "Select nothing in the document\nSelect None"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_PRINTPREVIEW    "Print Preview"
+    ID_FILE_PRINTSETUP      "Page Setup Dialog"
 END
 
 #endif    // English (U.S.) resources

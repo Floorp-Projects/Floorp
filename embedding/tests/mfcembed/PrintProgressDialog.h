@@ -21,6 +21,7 @@ class CPrintProgressDialog : public CDialog
 public:
 	CPrintProgressDialog(nsIWebBrowser* aWebBrowser, 
                        nsIDOMWindow* aDOMWin,
+                       nsIPrintSettings* aPrintSettings,
                        CWnd* pParent = NULL);
 	virtual ~CPrintProgressDialog();
   virtual int DoModal( );
@@ -54,6 +55,7 @@ protected:
   nsIWebBrowser*             m_WebBrowser;
   nsIDOMWindow*              m_DOMWin;
   nsCOMPtr<nsIPrintListener> m_PrintListener;
+  nsIPrintSettings*          m_PrintSettings;
   BOOL                       m_InModalMode;
 
 	// Generated message map functions

@@ -85,11 +85,13 @@ CDlgPrintListener::OnEndPrinting(PRUint32 aStatus)
 
 CPrintProgressDialog::CPrintProgressDialog(nsIWebBrowser* aWebBrowser,
                                            nsIDOMWindow* aDOMWin,
+                                           nsIPrintSettings* aPrintSettings,
                                            CWnd* pParent /*=NULL*/)
 	: CDialog(CPrintProgressDialog::IDD, pParent),
   m_WebBrowser(aWebBrowser),
   m_DOMWin(aDOMWin),
   m_PrintListener(nsnull),
+  m_PrintSettings(aPrintSettings),
   m_InModalMode(PR_FALSE)
 {
 	//{{AFX_DATA_INIT(CPrintProgressDialog)
@@ -178,7 +180,7 @@ int CPrintProgressDialog::DoModal( )
     m_PrintListener = new CDlgPrintListener(this); // constructor addrefs
     if (m_PrintListener) {
       // doModal will be set to false if the print job was cancelled
-      doModal = NS_SUCCEEDED(print->Print(m_DOMWin, nsnull, m_PrintListener)) == PR_TRUE;
+      doModal = NS_SUCCEEDED(print->Print(m_DOMWin, m_PrintSettings, m_PrintListener)) == PR_TRUE;
     }
   }
 

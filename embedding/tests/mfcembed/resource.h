@@ -26,6 +26,7 @@
 #define IDS_ENCRYPTION_LOW_GRADE        148
 #define IDS_ENCRYPTION_NONE             149
 #define IDS_SRCH_STR_NOT_FOUND          150
+#define IDD_PRINTSETUP_DIALOG           152
 #define ID_URL_BAR                      1001
 #define ID_PROG_BAR                     1002
 #define IDC_PROMPT_ANSWER               1003
@@ -46,6 +47,14 @@
 #define IDC_NEW_NAME                    1018
 #define IDC_PPD_DOC_TXT                 1020
 #define IDC_PPD_DOC_TITLE_STATIC        1021
+#define IDC_LEFT_MARGIN_TXT             1022
+#define IDC_TOP_MARGIN_TXT              1023
+#define IDC_BOTTOM_MARGIN_TXT           1024
+#define IDC_RIGHT_MARGIN_TXT            1026
+#define IDC_PRT_BGCOLORS                1027
+#define IDC_SCALE                       1028
+#define IDC_SCALE_TXT                   1030
+#define IDC_PRT_BGIMAGES                1031
 #define IDC_MATCH_WHOLE_WORD            1040
 #define IDC_MATCH_CASE                  1041
 #define IDC_WRAP_AROUND                 1042
@@ -70,15 +79,17 @@
 #define ID_COPY_LINK_LOCATION           32786
 #define ID_MANAGE_PROFILES              32787
 #define ID_EDIT_PREFERENCES             32788
+#define ID_FILE_PRINTPREVIEW            32789
+#define ID_FILE_PRINTSETUP              32790
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        152
-#define _APS_NEXT_COMMAND_VALUE         32789
-#define _APS_NEXT_CONTROL_VALUE         1022
+#define _APS_NEXT_RESOURCE_VALUE        153
+#define _APS_NEXT_COMMAND_VALUE         32791
+#define _APS_NEXT_CONTROL_VALUE         1032
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

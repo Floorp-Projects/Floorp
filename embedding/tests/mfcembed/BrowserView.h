@@ -57,6 +57,7 @@ class CBrowserFrame;
 class CBrowserImpl;
 class CFindDialog;
 class CPrintProgressDialog;
+class nsIPrintSettings;
 
 class CBrowserView : public CWnd
 {
@@ -145,6 +146,8 @@ public:
 
 	// Generated message map functions
 protected:
+	nsIPrintSettings* m_PrintSettings;
+
 	//{{AFX_MSG(CBrowserView)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
@@ -178,6 +181,8 @@ protected:
 	afx_msg void OnSaveImageAs();
 	afx_msg void OnShowFindDlg();
 	afx_msg void OnFilePrint();
+	afx_msg void OnFilePrintPreview();
+	afx_msg void OnFilePrintSetup();
 	afx_msg void OnUpdateFilePrint(CCmdUI* pCmdUI);
 	afx_msg LRESULT OnFindMsg(WPARAM wParam, LPARAM lParam);
 
