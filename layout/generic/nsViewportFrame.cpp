@@ -20,8 +20,12 @@
 #include "nsHTMLIIDs.h"
 #include "nsLayoutAtoms.h"
 #include "nsIViewManager.h"
+#include "nsIScrollableView.h"
+#include "nsIDeviceContext.h"
+#include "nsIPresContext.h"
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
+static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 /**
  * Viewport frame class.
@@ -67,6 +71,11 @@ protected:
 
   void ReflowFixedFrames(nsIPresContext&          aPresContext,
                          const nsHTMLReflowState& aReflowState) const;
+
+  void CalculateFixedContainingBlockSize(nsIPresContext&          aPresContext,
+                                         const nsHTMLReflowState& aReflowState,
+                                         nscoord&                 aWidth,
+                                         nscoord&                 aHeight) const;
 
 private:
   nsFrameList mFixedFrames;  // additional named child list
@@ -138,6 +147,47 @@ ViewportFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
   return nsContainerFrame::FirstChild(aListName, aFirstChild);
 }
 
+void
+ViewportFrame::CalculateFixedContainingBlockSize(nsIPresContext&          aPresContext,
+                                                 const nsHTMLReflowState& aReflowState,
+                                                 nscoord&                 aWidth,
+                                                 nscoord&                 aHeight) const
+{
+  // Initialize the values to the computed width/height in our reflow
+  // state struct
+  aWidth = aReflowState.computedWidth;
+  aHeight = aReflowState.computedHeight;
+
+  // Get our prinicpal child frame and see if we're scrollable
+  nsIFrame* kidFrame = mFrames.FirstChild();
+  nsIView*  kidView;
+
+  kidFrame->GetView(kidView);
+  if (nsnull != kidView) {
+    nsIScrollableView* scrollingView;
+    
+    if (NS_SUCCEEDED(kidView->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+      // Get the scrollbar dimensions
+      float             sbWidth, sbHeight;
+      nsIDeviceContext* dc = aPresContext.GetDeviceContext();
+
+      dc->GetScrollBarDimensions(sbWidth, sbHeight);
+      NS_RELEASE(dc);
+      
+      // See if the scrollbars are visible
+      PRBool  vertSBVisible, horzSBVisible;
+      
+      scrollingView->GetScrollbarVisibility(&vertSBVisible, &horzSBVisible);
+      if (vertSBVisible) {
+        aWidth -= NSToCoordRound(sbWidth);
+      }
+      if (horzSBVisible) {
+        aHeight -= NSToCoordRound(sbHeight);
+      }
+    }
+  }
+}
+
 nsresult
 ViewportFrame::ReflowFixedFrame(nsIPresContext&          aPresContext,
                                 const nsHTMLReflowState& aReflowState,
@@ -199,12 +249,24 @@ ViewportFrame::ReflowFixedFrames(nsIPresContext&          aPresContext,
   NS_PRECONDITION(eReflowReason_Incremental != aReflowState.reason,
                   "unexpected reflow reason");
 
+  // Calculate how much room is available for the fixed items. That means
+  // determining if the viewport is scrollable and whether the vertical and/or
+  // horizontal scrollbars are visible
+  nscoord width, height;
+  CalculateFixedContainingBlockSize(aPresContext, aReflowState, width, height);
+
+  // Make a copy of the reflow state and change the computed width and height
+  // to reflect the available space for the fixed items
+  // XXX Find a cleaner way to do this...
+  nsHTMLReflowState reflowState(aReflowState);
+  reflowState.computedWidth = width;
+  reflowState.computedHeight = height;
+
   nsIFrame* kidFrame;
   for (kidFrame = mFixedFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
     // Reflow the frame using our reflow reason
     nsReflowStatus  kidStatus;
-    ReflowFixedFrame(aPresContext, aReflowState, kidFrame, PR_FALSE,
-                     kidStatus);
+    ReflowFixedFrame(aPresContext, reflowState, kidFrame, PR_FALSE, kidStatus);
   }
 }
 
@@ -260,9 +322,21 @@ ViewportFrame::IncrementalReflow(nsIPresContext&          aPresContext,
       (nsIReflowCommand::FrameInserted == type)) {
 
     while (numFrames-- > 0) {
-      nsReflowStatus  status;
+      // Calculate how much room is available for the fixed items. That means
+      // determining if the viewport is scrollable and whether the vertical and/or
+      // horizontal scrollbars are visible
+      nscoord width, height;
+      CalculateFixedContainingBlockSize(aPresContext, aReflowState, width, height);
 
-      ReflowFixedFrame(aPresContext, aReflowState, newFrames, PR_TRUE, status);
+      // Make a copy of the reflow state and change the computed width and height
+      // to reflect the available space for the fixed items
+      // XXX Find a cleaner way to do this...
+      nsHTMLReflowState reflowState(aReflowState);
+      reflowState.computedWidth = width;
+      reflowState.computedHeight = height;
+
+      nsReflowStatus  status;
+      ReflowFixedFrame(aPresContext, reflowState, newFrames, PR_TRUE, status);
       newFrames->GetNextSibling(newFrames);
     }
   }
