@@ -1917,7 +1917,23 @@ function HandleJunkStatusChanged(folder)
     // we don't want to show the junk bar
     // (since the message pane is blank)
     if (messageURI && (GetNumSelectedMessages() == 1))
-      SetUpJunkBar(messenger.messageServiceFromURI(messageURI).messageURIToMsgHdr(messageURI));
+    {
+      // we may be forcing junk mail to be rendered with sanitized html. In that scenario, we want to 
+      // reload the message if the status has just changed to not junk. 
+      var msgHdr = messenger.messageServiceFromURI(messageURI).messageURIToMsgHdr(messageURI);
+      SetUpJunkBar(msgHdr);
+
+      if (msgHdr)
+      {
+        var sanitizeJunkMail = gPrefs.getBoolPref("mailnews.display.sanitizeJunkMail");
+        if (sanitizeJunkMail) // only bother doing this if we are modifying the html for junk mail....
+        {
+          var junkScore = msgHdr.getStringProperty("junkscore"); 
+          if ((junkScore == "") || (junkScore == "0"))
+            MsgReload();
+        }
+      }
+    }
     else
       SetUpJunkBar(null);
   }
