@@ -230,10 +230,10 @@ nsMemoryImpl::IsLowMemory(PRBool *result)
 nsresult 
 nsMemoryImpl::Startup()
 {
-#ifdef NS_MEMORY_FLUSHER_THREAD
     sFlushLock = PR_NewLock();
     if (!sFlushLock) return NS_ERROR_FAILURE;
 
+#ifdef NS_MEMORY_FLUSHER_THREAD
     return sGlobalMemoryFlusher.Init();
 #else
     return NS_OK;
