@@ -1684,7 +1684,7 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
   }
     
 #ifdef NS_TRACE_MALLOC
-  argc = NS_TraceMallocStartupArgs(argc, argv);
+  gArgc = argc = NS_TraceMallocStartupArgs(argc, argv);
 #endif
 
   nsXREDirProvider dirProvider;
