@@ -4,7 +4,7 @@ iframe {
 }
 
 iframe[class=sidebarframe] {
-  width: 180px;
+  width: 0px;
 }
 
 titledbutton[class=grippy] {
