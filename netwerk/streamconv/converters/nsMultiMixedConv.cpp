@@ -172,7 +172,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
                             nsCString headerVal(colon + 1);
                             headerVal.StripWhitespace();
 
-                            if (headerStr == "content-type") {
+                            if (headerStr.Equals("content-type")) {
                                 contentTypeStr = headerVal;
                                 NS_RELEASE(header);
                             } else {
