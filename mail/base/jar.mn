@@ -40,6 +40,7 @@ classic.jar:
 +   skin/classic/messenger/mailWindow1.css          (skin/mailWindow1.css)
 +   skin/classic/messenger/junkMail.css             (skin/junkMail.css)
 +   skin/classic/messenger/folderMenus.css          (skin/folderMenus.css)
++   skin/classic/messenger/subscribe.css            (skin/subscribe.css)
 +   skin/classic/messenger/searchDialog.css         (skin/searchDialog.css)
 +   skin/classic/messenger/icons/new-mail-alert.png (skin/icons/new-mail-alert.png)
     skin/classic/messenger/icons/mail-toolbar.png   (skin/icons/mail-toolbar.png)

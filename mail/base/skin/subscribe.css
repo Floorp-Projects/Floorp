@@ -1,0 +1,51 @@
+/* ===== subscribe.css ==================================================
+  == Styles for the Subscribe dialog.
+  ======================================================================= */
+
+@import url("chrome://messenger/skin/");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: Subscription Icons  :::::: */
+
+treechildren::-moz-tree-image(subscribedColumn),
+treechildren::-moz-tree-image(subscribedColumn2) {
+  margin-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/dot.gif");
+}
+
+treechildren::-moz-tree-image(subscribedColumn, Subscribed-true),
+treechildren::-moz-tree-image(subscribedColumn2, subscribed) {
+  list-style-image: url("chrome://messenger/skin/icons/check.gif");
+}
+
+/* ::::: Folders :::::: */
+
+treechildren::-moz-tree-image(nameColumn) {
+  margin-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/folder-closed.png");
+}
+
+treechildren::-moz-tree-image(nameColumn, ServerType-nntp),
+treechildren::-moz-tree-image(nameColumn2, nntp) {
+  margin-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.png");
+}
+
+/* ::::: Servers :::::: */
+
+.subscribeMenuItem {
+  list-style-image: url("chrome://messenger/skin/icons/server-mail.png");
+}
+
+.subscribeMenuItem[ServerType="imap"][IsSecure="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.png");
+}
+
+.subscribeMenuItem[ServerType="nntp"] {
+  list-style-image: url("chrome://messenger/skin/icons/server-news.png");
+}
+
+.subscribeMenuItem[ServerType="nntp"][IsSecure="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/server-news-lock.png");
+}
