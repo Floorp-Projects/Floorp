@@ -78,7 +78,7 @@ sub BuildMozilla()
 		BuildProject(":cmd:macfe:restext:StringLib.mcp",											"Strings$D.shlb");
 		MakeAlias(":cmd:macfe:restext:Strings$D.shlb", "${dist_dir}:");
 		
-		BuildProject(":lib:mac:MoreFiles:build:MoreFilesPPC.mcp"							"MoreFiles$D.shlb");
+		BuildProject(":lib:mac:MoreFiles:build:MoreFilesPPC.mcp",							"MoreFiles$D.shlb");
 		MakeAlias(":lib:mac:MoreFiles:build:MoreFiles$D.shlb", "${dist_dir}:");
 		
 		BuildProject(":nsprpub:macbuild:NSPR20PPC.mcp",												"NSPR20$D.shlb");
@@ -135,14 +135,20 @@ sub BuildMozilla()
 		if ( $main::MOZ_LITE == 0 )
 			{
 				BuildProject(":cmd:macfe:Composer:build:Composer.mcp",						"Composer$D.o");
+				
+				# Build the appropriate resources target
+				BuildProject(":cmd:macfe:projects:client:Client.mcp", 						"Moz_Resources");
 			}
 		else
 			{
 				# Build a project with dummy targets to make stub libraries
 				BuildProject("cmd:macfe:projects:dummies:MakeDummies.mcp",				"Composer$D.o");
+				
+				# Build the appropriate resources target
+				BuildProject(":cmd:macfe:projects:client:Client.mcp", 						"Nav_Resources");
 			}
-			
-		BuildProject(":cmd:macfe:projects:client:Navigator.mcp", 							"Navigator$D");
+		
+		BuildProject(":cmd:macfe:projects:client:Client.mcp", 								"Client$D");
 	}
 
 1;
