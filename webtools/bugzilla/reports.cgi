@@ -68,7 +68,7 @@ sub choose_product
 	{
 	GetVersionTable();
 	
-	my $product_popup = make_options (\@::legal_product);
+	my $product_popup = make_options (\@::legal_product, $::legal_product[0]);
 
 	print <<FIN;
 <center>
