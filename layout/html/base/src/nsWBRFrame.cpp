@@ -19,8 +19,13 @@
 #include "nsFrame.h"
 
 nsresult
-NS_NewWBRFrame(nsIFrame*& aResult)
+NS_NewWBRFrame(nsIFrame** aNewFrame)
 {
+  return NS_
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsIFrame* frame = nsnull;
   nsresult rv = NS_NewEmptyFrame(&frame);
   if (NS_OK != rv) {

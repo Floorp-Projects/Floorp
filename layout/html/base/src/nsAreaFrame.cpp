@@ -33,14 +33,18 @@
 static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 
 nsresult
-NS_NewAreaFrame(nsIFrame*& aResult, PRUint32 aFlags)
+NS_NewAreaFrame(nsIFrame** aNewFrame, PRUint32 aFlags)
 {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsAreaFrame* it = new nsAreaFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   it->SetFlags(aFlags);
-  aResult = it;
+  *aNewFrame = it;
   return NS_OK;
 }
 
@@ -269,7 +273,8 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
   // Compute our desired size taking into account floaters that stick outside
   // our box. Note that if this frame has a height specified by CSS then we
   // don't do this
-  if ((NS_UNCONSTRAINEDSIZE == aReflowState.computedHeight) &&
+  if ((mFlags & NS_AREA_WRAP_HEIGHT) &&
+      (NS_UNCONSTRAINEDSIZE == aReflowState.computedHeight) &&
       (NS_FRAME_OUTSIDE_CHILDREN & mState)) {
     nscoord contentYMost = aDesiredSize.height;
     nscoord yMost = aDesiredSize.mCombinedArea.YMost();

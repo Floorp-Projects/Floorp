@@ -48,12 +48,17 @@ static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 nsresult
-NS_NewFileControlFrame(nsIFrame*& aResult)
+NS_NewFileControlFrame(nsIFrame** aNewFrame)
 {
-  aResult = new nsFileControlFrame;
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsFileControlFrame* it = new nsFileControlFrame;
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  *aNewFrame = it;
   return NS_OK;
 }
 
@@ -206,7 +211,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     if (disabled) {
       text->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, nsAutoString("1"), PR_FALSE);  // XXX this should use an "empty" bool value
     }
-    NS_NewTextControlFrame(childFrame);
+    NS_NewTextControlFrame(&childFrame);
 
      //XXX: This style should be cached, rather than resolved each time.
      // Get pseudo style for the text field
@@ -232,7 +237,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
     if (disabled) {
       browse->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, nsAutoString("1"), PR_FALSE);  // XXX should be "empty"
     }
-    NS_NewButtonControlFrame(childFrame);
+    NS_NewButtonControlFrame(&childFrame);
     ((nsButtonControlFrame*)childFrame)->SetMouseListener((nsIFormControlFrame*)this);
     mBrowseFrame = (nsButtonControlFrame*)childFrame;
 

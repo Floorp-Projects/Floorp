@@ -1368,13 +1368,17 @@ nsTableRowGroupFrame::GetFrameType(nsIAtom** aType) const
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableRowGroupFrame(nsIFrame*& aResult)
+NS_NewTableRowGroupFrame(nsIFrame** aNewFrame)
 {
-  nsIFrame* it = new nsTableRowGroupFrame;
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsTableRowGroupFrame* it = new nsTableRowGroupFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aResult = it;
+  *aNewFrame = it;
   return NS_OK;
 }
 

@@ -48,7 +48,7 @@ class nsBoxFrame : public nsHTMLContainerFrame, public nsIBox
 {
 public:
 
-  friend nsresult NS_NewBoxFrame(nsIFrame*& aNewFrame);
+  friend nsresult NS_NewBoxFrame(nsIFrame** aNewFrame);
 
   // nsIBox methods
   NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);

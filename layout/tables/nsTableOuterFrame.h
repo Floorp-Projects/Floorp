@@ -48,7 +48,7 @@ public:
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   friend nsresult 
-  NS_NewTableOuterFrame(nsIFrame*& aResult);
+  NS_NewTableOuterFrame(nsIFrame** aResult);
 
   /**  @see nsIFrame::SetInitialChildList */    
   NS_IMETHOD  SetInitialChildList(nsIPresContext& aPresContext,

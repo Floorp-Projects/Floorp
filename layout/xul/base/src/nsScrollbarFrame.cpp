@@ -34,11 +34,16 @@
 // Wrapper for creating a new scrollbar
 //
 nsresult
-NS_NewScrollbarFrame(nsIFrame*& aResult)
+NS_NewScrollbarFrame(nsIFrame** aNewFrame)
 {
-  aResult = new nsScrollbarFrame;
-  if ( !aResult )
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsScrollbarFrame* it = new nsScrollbarFrame;
+  if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
+  *aNewFrame = it;
   return NS_OK;
 }
 

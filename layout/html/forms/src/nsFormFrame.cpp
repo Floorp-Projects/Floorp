@@ -405,13 +405,17 @@ nsFormFrame::OnRadioChecked(nsRadioControlFrame& aControl, PRBool aChecked)
 
 
 nsresult
-NS_NewFormFrame(nsIFrame*& aResult)
+NS_NewFormFrame(nsIFrame** aNewFrame)
 {
-  nsIFrame* frame = new nsFormFrame;
-  if (nsnull == frame) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsFormFrame* it = new nsFormFrame;
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aResult = frame;
+  *aNewFrame = it;
   return NS_OK;
 }
 

@@ -34,11 +34,16 @@
 // Wrapper for creating a new color picker
 //
 nsresult
-NS_NewColorPickerFrame(nsIFrame*& aResult)
+NS_NewColorPickerFrame(nsIFrame** aNewFrame)
 {
-  aResult = new nsColorPickerFrame;
-  if ( !aResult )
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsColorPickerFrame* it = new nsColorPickerFrame;
+  if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
+  *aNewFrame = it;
   return NS_OK;
 }
 

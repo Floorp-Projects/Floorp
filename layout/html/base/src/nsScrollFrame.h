@@ -29,6 +29,8 @@
  */
 class nsScrollFrame : public nsHTMLContainerFrame {
 public:
+  friend nsresult NS_NewScrollFrame(nsIFrame** aNewFrame);
+
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -62,6 +64,7 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
 protected:
+  nsScrollFrame();
   virtual PRIntn GetSkipSides() const;
 
 private:
@@ -69,4 +72,3 @@ private:
 };
 
 #endif /* nsScrollFrame_h___ */
-

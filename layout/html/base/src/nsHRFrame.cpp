@@ -60,13 +60,17 @@ protected:
 };
 
 nsresult
-NS_NewHRFrame(nsIFrame*& aResult)
+NS_NewHRFrame(nsIFrame** aNewFrame)
 {
-  nsIFrame* frame = new HRuleFrame;
-  if (nsnull == frame) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  HRuleFrame* it = new HRuleFrame;
+  if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aResult = frame;
+  *aNewFrame = it;
   return NS_OK;
 }
 

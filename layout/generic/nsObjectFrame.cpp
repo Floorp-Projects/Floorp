@@ -366,7 +366,7 @@ nsObjectFrame::Init(nsIPresContext&  aPresContext,
   if(bImage)
   {
     nsIFrame * aNewFrame = nsnull;
-    rv = NS_NewImageFrame(aNewFrame);
+    rv = NS_NewImageFrame(&aNewFrame);
     if(rv != NS_OK)
       return rv;
 
@@ -1569,12 +1569,17 @@ nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
 }
 
 nsresult
-NS_NewObjectFrame(nsIFrame*& aFrameResult)
+NS_NewObjectFrame(nsIFrame** aNewFrame)
 {
-  aFrameResult = new nsObjectFrame;
-  if (nsnull == aFrameResult) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsObjectFrame* it = new nsObjectFrame;
+  if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  *aNewFrame = it;
   return NS_OK;
 }
 

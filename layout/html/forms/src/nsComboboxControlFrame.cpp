@@ -65,12 +65,17 @@ static NS_DEFINE_IID(kIDOMHTMLOptionElementIID,  NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIListControlFrameIID,      NS_ILISTCONTROLFRAME_IID);
 
 nsresult
-NS_NewComboboxControlFrame(nsIFrame*& aResult)
+NS_NewComboboxControlFrame(nsIFrame** aNewFrame)
 {
-  aResult = new nsComboboxControlFrame;
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsComboboxControlFrame* it = new nsComboboxControlFrame;
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  *aNewFrame = it;
   return NS_OK;
 }
 

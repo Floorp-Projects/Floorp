@@ -29,13 +29,17 @@
 // Creates a new tree frame
 //
 nsresult
-NS_NewTreeFrame (nsIFrame*& aNewFrame)
+NS_NewTreeFrame (nsIFrame** aNewFrame)
 {
-  nsTreeFrame* theFrame = new nsTreeFrame;
-  if (theFrame == nsnull)
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsTreeFrame* it = new nsTreeFrame;
+  if (!it)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  aNewFrame = theFrame;
+  *aNewFrame = it;
   return NS_OK;
   
 } // NS_NewTreeFrame

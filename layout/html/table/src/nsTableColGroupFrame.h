@@ -42,7 +42,7 @@ public:
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   friend nsresult 
-  NS_NewTableColGroupFrame(nsIFrame*& aResult);
+  NS_NewTableColGroupFrame(nsIFrame** aResult);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,

@@ -76,7 +76,7 @@ public:
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   friend nsresult 
-  NS_NewTableFrame(nsIFrame*& aResult);
+  NS_NewTableFrame(nsIFrame** aResult);
 
   /** sets defaults for table-specific style.
     * @see nsIFrame::Init 

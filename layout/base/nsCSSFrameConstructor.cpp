@@ -76,19 +76,19 @@
 #include "nsTreeCellFrame.h"
 
 nsresult
-NS_NewTabFrame ( nsIFrame*& aNewFrame );
+NS_NewTabFrame ( nsIFrame** aNewFrame );
 
 nsresult
-NS_NewDeckFrame ( nsIFrame*& aNewFrame );
+NS_NewDeckFrame ( nsIFrame** aNewFrame );
 
 nsresult
-NS_NewProgressMeterFrame ( nsIFrame*& aNewFrame );
+NS_NewProgressMeterFrame ( nsIFrame** aNewFrame );
 
 nsresult
-NS_NewTitledButtonFrame ( nsIFrame*& aNewFrame );
+NS_NewTitledButtonFrame ( nsIFrame** aNewFrame );
 
 nsresult
-NS_NewBoxFrame ( nsIFrame*& aNewFrame );
+NS_NewBoxFrame ( nsIFrame** aNewFrame );
 
 #endif
 
@@ -252,41 +252,41 @@ nsFrameConstructorSaveState::~nsFrameConstructorSaveState()
 
 // Structure used when creating table frames.
 struct nsTableCreator {
-  virtual nsresult CreateTableFrame(nsIFrame*& aNewFrame);
-  virtual nsresult CreateTableRowGroupFrame(nsIFrame*& aNewFrame);
-  virtual nsresult CreateTableColFrame(nsIFrame*& aNewFrame);
-  virtual nsresult CreateTableColGroupFrame(nsIFrame*& aNewFrame);
-  virtual nsresult CreateTableRowFrame(nsIFrame*& aNewFrame);
-  virtual nsresult CreateTableCellFrame(nsIFrame*& aNewFrame);
+  virtual nsresult CreateTableFrame(nsIFrame** aNewFrame);
+  virtual nsresult CreateTableRowGroupFrame(nsIFrame** aNewFrame);
+  virtual nsresult CreateTableColFrame(nsIFrame** aNewFrame);
+  virtual nsresult CreateTableColGroupFrame(nsIFrame** aNewFrame);
+  virtual nsresult CreateTableRowFrame(nsIFrame** aNewFrame);
+  virtual nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
 };
 
 nsresult
-nsTableCreator::CreateTableFrame(nsIFrame*& aNewFrame) {
+nsTableCreator::CreateTableFrame(nsIFrame** aNewFrame) {
   return NS_NewTableFrame(aNewFrame);
 }
 
 nsresult
-nsTableCreator::CreateTableRowGroupFrame(nsIFrame*& aNewFrame) {
+nsTableCreator::CreateTableRowGroupFrame(nsIFrame** aNewFrame) {
   return NS_NewTableRowGroupFrame(aNewFrame);
 }
 
 nsresult
-nsTableCreator::CreateTableColFrame(nsIFrame*& aNewFrame) {
+nsTableCreator::CreateTableColFrame(nsIFrame** aNewFrame) {
   return NS_NewTableColFrame(aNewFrame);
 }
 
 nsresult
-nsTableCreator::CreateTableColGroupFrame(nsIFrame*& aNewFrame) {
+nsTableCreator::CreateTableColGroupFrame(nsIFrame** aNewFrame) {
   return NS_NewTableColGroupFrame(aNewFrame);
 }
 
 nsresult
-nsTableCreator::CreateTableRowFrame(nsIFrame*& aNewFrame) {
+nsTableCreator::CreateTableRowFrame(nsIFrame** aNewFrame) {
   return NS_NewTableRowFrame(aNewFrame);
 }
 
 nsresult
-nsTableCreator::CreateTableCellFrame(nsIFrame*& aNewFrame) {
+nsTableCreator::CreateTableCellFrame(nsIFrame** aNewFrame) {
   return NS_NewTableCellFrame(aNewFrame);
 }
 
@@ -294,18 +294,18 @@ nsTableCreator::CreateTableCellFrame(nsIFrame*& aNewFrame) {
 
 // Structure used when creating tree frames
 struct nsTreeCreator: public nsTableCreator {
-  nsresult CreateTableFrame(nsIFrame*& aNewFrame);
-  nsresult CreateTableCellFrame(nsIFrame*& aNewFrame);
+  nsresult CreateTableFrame(nsIFrame** aNewFrame);
+  nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
 };
 
 nsresult
-nsTreeCreator::CreateTableFrame(nsIFrame*& aNewFrame)
+nsTreeCreator::CreateTableFrame(nsIFrame** aNewFrame)
 {
   return NS_NewTreeFrame(aNewFrame);
 }
 
 nsresult
-nsTreeCreator::CreateTableCellFrame(nsIFrame*& aNewFrame)
+nsTreeCreator::CreateTableCellFrame(nsIFrame** aNewFrame)
 {
   return NS_NewTreeCellFrame(aNewFrame);
 }
@@ -426,7 +426,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   
     // Create an image frame and initialize it
     nsIFrame* imageFrame;
-    NS_NewImageFrame(imageFrame);
+    NS_NewImageFrame(&imageFrame);
     imageFrame->Init(*aPresContext, imageContent, aParentFrame, aStyleContext, nsnull);
     NS_RELEASE(imageContent);
   
@@ -494,7 +494,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   
     // Create a text frame and initialize it
     nsIFrame* textFrame;
-    NS_NewTextFrame(textFrame);
+    NS_NewTextFrame(&textFrame);
     textFrame->Init(*aPresContext, textContent, aParentFrame, aStyleContext, nsnull);
   
     NS_RELEASE(textContent);
@@ -582,9 +582,9 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext
         nsFrameItems  childFrames;
   
         if (NS_STYLE_DISPLAY_BLOCK == displayValue) {
-          NS_NewBlockFrame(containerFrame, 0);
+          NS_NewBlockFrame(&containerFrame);
         } else {
-          NS_NewInlineFrame(containerFrame);
+          NS_NewInlineFrame(&containerFrame);
         }
         containerFrame->Init(*aPresContext, aContent, aFrame, pseudoStyleContext, nsnull);
 
@@ -697,40 +697,40 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent* aContent, nsIFrame*& aFrame)
   nsAutoString  val;
   if (NS_OK == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, val)) {
     if (val.EqualsIgnoreCase("submit")) {
-      rv = NS_NewButtonControlFrame(aFrame);
+      rv = NS_NewButtonControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("reset")) {
-      rv = NS_NewButtonControlFrame(aFrame);
+      rv = NS_NewButtonControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("button")) {
-      rv = NS_NewButtonControlFrame(aFrame);
+      rv = NS_NewButtonControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("checkbox")) {
-      rv = NS_NewCheckboxControlFrame(aFrame);
+      rv = NS_NewCheckboxControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("file")) {
-      rv = NS_NewFileControlFrame(aFrame);
+      rv = NS_NewFileControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("hidden")) {
-      rv = NS_NewButtonControlFrame(aFrame);
+      rv = NS_NewButtonControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("image")) {
-      rv = NS_NewImageControlFrame(aFrame);
+      rv = NS_NewImageControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("password")) {
-      rv = NS_NewTextControlFrame(aFrame);
+      rv = NS_NewTextControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("radio")) {
-      rv = NS_NewRadioControlFrame(aFrame);
+      rv = NS_NewRadioControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("text")) {
-      rv = NS_NewTextControlFrame(aFrame);
+      rv = NS_NewTextControlFrame(&aFrame);
     }
     else {
-      rv = NS_NewTextControlFrame(aFrame);
+      rv = NS_NewTextControlFrame(&aFrame);
     }
   } else {
-    rv = NS_NewTextControlFrame(aFrame);
+    rv = NS_NewTextControlFrame(&aFrame);
   }
 
   return rv;
@@ -770,7 +770,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*          aPresContext
   nsIFrame* captionFrame   = nsnull;
 
   // Create an anonymous table outer frame which holds the caption and table frame
-  NS_NewTableOuterFrame(aNewFrame);
+  NS_NewTableOuterFrame(&aNewFrame);
 
   // Init the table outer frame and see if we need to create a view, e.g.
   // the frame is absolutely positioned
@@ -789,7 +789,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*          aPresContext
                                            outerStyleContext, PR_FALSE);
 #endif
   // Create the inner table frame
-  aTableCreator.CreateTableFrame(innerFrame);
+  aTableCreator.CreateTableFrame(&innerFrame);
   
   // This gets reset later, since there may also be a caption. 
   // It allows descendants to get at the inner frame before that
@@ -993,7 +993,7 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame(nsIPresContext*          aPr
     aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableOuterPseudo, 
                                                tableParentSC, PR_FALSE,
                                                getter_AddRefs(outerStyleContext));
-    rv = NS_NewTableOuterFrame(aOuterFrame);
+    rv = NS_NewTableOuterFrame(&aOuterFrame);
     if (NS_FAILED(rv)) return rv;
     aOuterFrame->Init(*aPresContext, aContent, tableParent, outerStyleContext,
                       nsnull);
@@ -1003,7 +1003,7 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame(nsIPresContext*          aPr
     aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tablePseudo, 
                                                outerStyleContext, PR_FALSE,
                                                getter_AddRefs(innerStyleContext));
-    rv = aTableCreator.CreateTableFrame(aInnerFrame);
+    rv = aTableCreator.CreateTableFrame(&aInnerFrame);
     if (NS_FAILED(rv)) return rv;
     aInnerFrame->Init(*aPresContext, aContent, aOuterFrame, innerStyleContext,
                       nsnull);
@@ -1030,7 +1030,7 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*          aPres
                                                   nsIFrame*&               aNewCaptionFrame,
                                                   nsTableCreator&          aTableCreator)
 {
-  nsresult rv = NS_NewAreaFrame(aNewCaptionFrame, 0);
+  nsresult rv = NS_NewTableCaptionFrame(&aNewCaptionFrame);
   if (NS_FAILED(rv)) return rv;
 
   const nsStyleDisplay* parentDisplay = GetDisplay(aParentFrame);
@@ -1177,7 +1177,7 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPr
 
   if (IsScrollable(aPresContext, styleDisplay)) {
     // Create a scroll frame and initialize it
-    rv = NS_NewScrollFrame(aNewTopFrame);
+    rv = NS_NewScrollFrame(&aNewTopFrame);
     if (NS_FAILED(rv)) return rv;
     aNewTopFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
 
@@ -1189,8 +1189,8 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPr
                                                getter_AddRefs(scrolledPseudoStyle));
 
     // Create an area container for the frame
-    rv = (aIsRowGroup) ? aTableCreator.CreateTableRowGroupFrame(aNewGroupFrame)
-                       : aTableCreator.CreateTableColGroupFrame(aNewGroupFrame);
+    rv = (aIsRowGroup) ? aTableCreator.CreateTableRowGroupFrame(&aNewGroupFrame)
+                       : aTableCreator.CreateTableColGroupFrame(&aNewGroupFrame);
     if (NS_FAILED(rv)) return rv;
     // Initialize the frame and force it to have a view
     aNewGroupFrame->Init(*aPresContext, aContent, aNewTopFrame, scrolledPseudoStyle,
@@ -1199,8 +1199,8 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPr
                                              scrolledPseudoStyle, PR_TRUE);
     aNewTopFrame->SetInitialChildList(*aPresContext, nsnull, aNewGroupFrame);
   } else {
-    rv = (aIsRowGroup) ? aTableCreator.CreateTableRowGroupFrame(aNewTopFrame)
-                       : aTableCreator.CreateTableColGroupFrame(aNewTopFrame);
+    rv = (aIsRowGroup) ? aTableCreator.CreateTableRowGroupFrame(&aNewTopFrame)
+                       : aTableCreator.CreateTableColGroupFrame(&aNewTopFrame);
     if (NS_FAILED(rv)) return rv;
     aNewTopFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
                        nsnull);
@@ -1305,7 +1305,7 @@ nsCSSFrameConstructor::ConstructTableRowFrameOnly(nsIPresContext*          aPres
                                                   nsIFrame*&               aNewRowFrame,
                                                   nsTableCreator&          aTableCreator)
 {
-  nsresult rv = aTableCreator.CreateTableRowFrame(aNewRowFrame);
+  nsresult rv = aTableCreator.CreateTableRowFrame(&aNewRowFrame);
   if (NS_FAILED(rv)) return rv;
   aNewRowFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext,
                      nsnull);
@@ -1371,7 +1371,7 @@ nsCSSFrameConstructor::ConstructTableColFrameOnly(nsIPresContext*          aPres
                                                   nsIFrame*&               aNewColFrame,
                                                   nsTableCreator&          aTableCreator)
 {
-  nsresult rv = aTableCreator.CreateTableColFrame(aNewColFrame);
+  nsresult rv = aTableCreator.CreateTableColFrame(&aNewColFrame);
   if (NS_FAILED(rv)) return rv;
   aNewColFrame->Init(*aPresContext, aContent, aParentFrame, 
                      aStyleContext, nsnull);
@@ -1470,7 +1470,7 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*          aPre
   nsresult rv;
 
   // Create a table cell frame
-  rv = aTableCreator.CreateTableCellFrame(aNewCellFrame);
+  rv = aTableCreator.CreateTableCellFrame(&aNewCellFrame);
   if (NS_FAILED(rv)) return rv;
  
   // Initialize the table cell frame
@@ -1478,7 +1478,7 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*          aPre
                       nsnull);
 
   // Create an area frame that will format the cell's content
-  rv = NS_NewAreaFrame(aNewCellBodyFrame, 0);
+  rv = NS_NewTableCellInnerFrame(&aNewCellBodyFrame);
   if (NS_FAILED(rv)) {
     aNewCellFrame->DeleteFrame(*aPresContext);
     aNewCellFrame = nsnull;
@@ -1805,9 +1805,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
       aNewFrame = tableFrame;
       return NS_OK;
     }
+
     // Create an area frame for the document element
     nsIFrame* areaFrame;
-    NS_NewAreaFrame(areaFrame, 0);
+    NS_NewAreaFrame(&areaFrame);
     areaFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext, nsnull);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, areaFrame,
                                              styleContext, PR_FALSE);
@@ -1847,7 +1848,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
     nsIFrame* scrollFrame = nsnull;
 
     if (IsScrollable(aPresContext, display)) {
-      NS_NewScrollFrame(scrollFrame);
+      NS_NewScrollFrame(&scrollFrame);
       scrollFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext,
                         nsnull);
     
@@ -1875,7 +1876,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
 
     // XXX Until we clean up how painting damage is handled, we need to use the
     // flag that says that this is the body...
-    NS_NewAreaFrame(areaFrame, NS_BLOCK_DOCUMENT_ROOT|NS_BLOCK_MARGIN_ROOT);
+    NS_NewDocumentElementFrame(&areaFrame);
     areaFrame->Init(*aPresContext, aDocElement, parFrame, styleContext, nsnull);
 
     if (scrollFrame) {
@@ -1971,7 +1972,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
   nsCOMPtr<nsIStyleContext> viewportPseudoStyle;
 
   // Create the viewport frame
-  NS_NewViewportFrame(viewportFrame);
+  NS_NewViewportFrame(&viewportFrame);
 
   // Create a pseudo element style context
   aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::viewportPseudo,
@@ -2035,7 +2036,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
   // scroll frame
   nsIFrame* scrollFrame;
   if (isScrollable) {
-    NS_NewScrollFrame(scrollFrame);
+    NS_NewScrollFrame(&scrollFrame);
     // XXX should probably be a scrolled content pseudo style context
     scrollFrame->Init(*aPresContext, nsnull, viewportFrame, viewportPseudoStyle,
                       nsnull);
@@ -2056,7 +2057,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     nsIFrame* pageSequenceFrame;
 
     // Create a page sequence frame
-    NS_NewSimplePageSequenceFrame(pageSequenceFrame);
+    NS_NewSimplePageSequenceFrame(&pageSequenceFrame);
     // XXX should probably be a page sequence pseudo style context
     pageSequenceFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
                             viewportFrame, viewportPseudoStyle, nsnull);
@@ -2067,7 +2068,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
 
     // Create the first page
     nsIFrame* pageFrame;
-    NS_NewPageFrame(pageFrame);
+    NS_NewPageFrame(&pageFrame);
 
     // The page is the containing block for 'fixed' elements. which are repeated
     // on every page
@@ -2112,7 +2113,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     // document element's frame, then we could eliminate the root frame and make
     // the document element frame a child of the viewport (or its scroll frame)
     nsIFrame* rootFrame;
-    NS_NewRootFrame(rootFrame);
+    NS_NewRootFrame(&rootFrame);
 
     // XXX this should be a root pseudo style context
     rootFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
@@ -2202,7 +2203,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
       if ((1 == size) || (kNoSizeSpecified  == size)) {
             // Construct a frame-based combo box
           nsIFrame * comboboxFrame;
-          rv = NS_NewComboboxControlFrame(comboboxFrame);
+          rv = NS_NewComboboxControlFrame(&comboboxFrame);
 
           nsIFrame* geometricParent = aParentFrame;
           if (aIsAbsolutelyPositioned) {
@@ -2215,7 +2216,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
           nsIComboboxControlFrame* comboBox = nsnull;
           if (NS_OK == comboboxFrame->QueryInterface(kIComboboxControlFrameIID, (void**)&comboBox)) {
             nsIFrame * listFrame;
-            rv = NS_NewListControlFrame(listFrame);
+            rv = NS_NewListControlFrame(&listFrame);
 
             // This is important to do before it is initialized
             // it tells it that it is in "DropDown Mode"
@@ -2323,7 +2324,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
       } else {
           // Construct a frame-based list box
         nsIFrame * listFrame;
-        rv = NS_NewListControlFrame(listFrame);
+        rv = NS_NewListControlFrame(&listFrame);
         aNewFrame = listFrame;
         InitializeScrollFrame(aPresContext, aState, listFrame, aContent, aParentFrame,
                               aStyleContext, aNewFrame, aIsAbsolutelyPositioned, PR_FALSE,
@@ -2341,12 +2342,12 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
       }
       NS_RELEASE(select);
     } else {
-      rv = NS_NewSelectControlFrame(aNewFrame);
+      rv = NS_NewSelectControlFrame(&aNewFrame);
     }
   }
   else {
     // Not frame based. Use a SelectFrame which creates a native widget.
-     rv = NS_NewSelectControlFrame(aNewFrame);
+     rv = NS_NewSelectControlFrame(&aNewFrame);
   }
 
   return rv;
@@ -2374,7 +2375,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
   nsresult  rv = NS_OK;
 
   if (nsLayoutAtoms::textTagName == aTag) {
-    rv = NS_NewTextFrame(newFrame);
+    rv = NS_NewTextFrame(&newFrame);
     isReplaced = PR_TRUE;   // XXX kipp: temporary
   }
   else {
@@ -2404,17 +2405,17 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
         isReplaced = PR_TRUE;
         // XXX If image display is turned off, then use ConstructAlternateImageFrame()
         // instead...
-        rv = NS_NewImageFrame(newFrame);
+        rv = NS_NewImageFrame(&newFrame);
       }
       else if (nsHTMLAtoms::hr == aTag) {
-        rv = NS_NewHRFrame(newFrame);
+        rv = NS_NewHRFrame(&newFrame);
       }
       else if (nsHTMLAtoms::br == aTag) {
-        rv = NS_NewBRFrame(newFrame);
+        rv = NS_NewBRFrame(&newFrame);
         isReplaced = PR_TRUE;
       }
       else if (nsHTMLAtoms::wbr == aTag) {
-        rv = NS_NewWBRFrame(newFrame);
+        rv = NS_NewWBRFrame(&newFrame);
       }
       else if (nsHTMLAtoms::input == aTag) {
         isReplaced = PR_TRUE;
@@ -2422,7 +2423,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
       }
       else if (nsHTMLAtoms::textarea == aTag) {
         isReplaced = PR_TRUE;
-        rv = NS_NewTextControlFrame(newFrame);
+        rv = NS_NewTextControlFrame(&newFrame);
       }
       else if (nsHTMLAtoms::select == aTag) {
         isReplaced = PR_TRUE;
@@ -2433,41 +2434,41 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
       }
       else if (nsHTMLAtoms::applet == aTag) {
         isReplaced = PR_TRUE;
-        rv = NS_NewObjectFrame(newFrame);
+        rv = NS_NewObjectFrame(&newFrame);
       }
       else if (nsHTMLAtoms::embed == aTag) {
-        rv = NS_NewObjectFrame(newFrame);
+        rv = NS_NewObjectFrame(&newFrame);
       }
       else if (nsHTMLAtoms::fieldset == aTag) {
-        rv = NS_NewFieldSetFrame(newFrame);
+        rv = NS_NewFieldSetFrame(&newFrame);
         processChildren = PR_TRUE;
       }
       else if (nsHTMLAtoms::legend == aTag) {
-        rv = NS_NewLegendFrame(newFrame);
+        rv = NS_NewLegendFrame(&newFrame);
         processChildren = PR_TRUE;
         canBePositioned = PR_FALSE;
       }
       else if (nsHTMLAtoms::object == aTag) {
         isReplaced = PR_TRUE;
-        rv = NS_NewObjectFrame(newFrame);
+        rv = NS_NewObjectFrame(&newFrame);
       }
       else if (nsHTMLAtoms::form == aTag) {
-        rv = NS_NewFormFrame(newFrame);
+        rv = NS_NewFormFrame(&newFrame);
       }
       else if (nsHTMLAtoms::frameset == aTag) {
-        rv = NS_NewHTMLFramesetFrame(newFrame);
+        rv = NS_NewHTMLFramesetFrame(&newFrame);
         canBePositioned = PR_FALSE;
       }
       else if (nsHTMLAtoms::iframe == aTag) {
         isReplaced = PR_TRUE;
-        rv = NS_NewHTMLFrameOuterFrame(newFrame);
+        rv = NS_NewHTMLFrameOuterFrame(&newFrame);
       }
       else if (nsHTMLAtoms::spacer == aTag) {
-        rv = NS_NewSpacerFrame(newFrame);
+        rv = NS_NewSpacerFrame(&newFrame);
         canBePositioned = PR_FALSE;
       }
       else if (nsHTMLAtoms::button == aTag) {
-        rv = NS_NewHTMLButtonControlFrame(newFrame);
+        rv = NS_NewHTMLButtonControlFrame(&newFrame);
         // the html4 button needs to act just like a 
         // regular button except contain html content
         // so it must be replaced or html outside it will
@@ -2476,7 +2477,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
         processChildren = PR_TRUE;
       }
       else if (nsHTMLAtoms::label == aTag) {
-        rv = NS_NewLabelFrame(newFrame);
+        rv = NS_NewLabelFrame(&newFrame);
         processChildren = PR_TRUE;
       }
     }
@@ -2611,25 +2612,25 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
 
     // Create a frame based on the tag
     if (aTag == nsXULAtoms::button)
-      rv = NS_NewButtonControlFrame(newFrame);
+      rv = NS_NewButtonControlFrame(&newFrame);
     else if (aTag == nsXULAtoms::checkbox)
-      rv = NS_NewTriStateCheckboxFrame(newFrame);
+      rv = NS_NewTriStateCheckboxFrame(&newFrame);
     else if (aTag == nsXULAtoms::slider)
-      rv = NS_NewSliderFrame(newFrame);
+      rv = NS_NewSliderFrame(&newFrame);
     else if (aTag == nsXULAtoms::spinner)
-      rv = NS_NewSpinnerFrame(newFrame);
+      rv = NS_NewSpinnerFrame(&newFrame);
     else if (aTag == nsXULAtoms::scrollbar)
-      rv = NS_NewScrollbarFrame(newFrame);
+      rv = NS_NewScrollbarFrame(&newFrame);
     else if (aTag == nsXULAtoms::colorpicker)
-      rv = NS_NewColorPickerFrame(newFrame);
+      rv = NS_NewColorPickerFrame(&newFrame);
     else if (aTag == nsXULAtoms::fontpicker)
-      rv = NS_NewFontPickerFrame(newFrame);
+      rv = NS_NewFontPickerFrame(&newFrame);
     else if (aTag == nsXULAtoms::radio)
-      rv = NS_NewRadioControlFrame(newFrame);
+      rv = NS_NewRadioControlFrame(&newFrame);
     else if (aTag == nsXULAtoms::text)
-      rv = NS_NewTextControlFrame(newFrame);
+      rv = NS_NewTextControlFrame(&newFrame);
     else if (aTag == nsXULAtoms::widget)
-      rv = NS_NewObjectFrame(newFrame);
+      rv = NS_NewObjectFrame(&newFrame);
   
     // TREE CONSTRUCTION
     // The following code is used to construct a tree view from the XUL content
@@ -2736,18 +2737,18 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
   }
   else if (aTag == nsXULAtoms::treeindentation)
   {
-    rv = NS_NewTreeIndentationFrame(newFrame);
+    rv = NS_NewTreeIndentationFrame(&newFrame);
   }
   // End of TREE CONSTRUCTION code here (there's more later on in the function)
 
     // TOOLBAR CONSTRUCTION
     else if (aTag == nsXULAtoms::toolbox) {
       processChildren = PR_TRUE;
-      rv = NS_NewToolboxFrame(newFrame);
+      rv = NS_NewToolboxFrame(&newFrame);
     }
     else if (aTag == nsXULAtoms::toolbar) {
       processChildren = PR_TRUE;
-      rv = NS_NewToolbarFrame(newFrame);
+      rv = NS_NewToolbarFrame(&newFrame);
     }
     // End of TOOLBAR CONSTRUCTION logic
 
@@ -2755,7 +2756,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     else if (aTag == nsXULAtoms::progressmeter) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      rv = NS_NewProgressMeterFrame(newFrame);
+      rv = NS_NewProgressMeterFrame(&newFrame);
     }
     // End of PROGRESS METER CONSTRUCTION logic
 
@@ -2763,7 +2764,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     else if (aTag == nsXULAtoms::box || aTag == nsXULAtoms::tabbox || aTag == nsXULAtoms::tabpage || aTag == nsXULAtoms::tabcontrol) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      rv = NS_NewBoxFrame(newFrame);
+      rv = NS_NewBoxFrame(&newFrame);
     }
     // End of BOX CONSTRUCTION logic
 
@@ -2771,7 +2772,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     else if (aTag == nsXULAtoms::titledbutton) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      rv = NS_NewTitledButtonFrame(newFrame);
+      rv = NS_NewTitledButtonFrame(&newFrame);
     }
     // End of TITLED BUTTON CONSTRUCTION logic
 
@@ -2779,7 +2780,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     else if (aTag == nsXULAtoms::deck || aTag == nsXULAtoms::tabpanel) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      rv = NS_NewDeckFrame(newFrame);
+      rv = NS_NewDeckFrame(&newFrame);
     }
     // End of DECK CONSTRUCTION logic
 
@@ -2787,7 +2788,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     else if (aTag == nsXULAtoms::tab) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
-      rv = NS_NewTabFrame(newFrame);
+      rv = NS_NewTabFrame(&newFrame);
     }
     // End of TAB CONSTRUCTION logic
 
@@ -2885,7 +2886,7 @@ nsCSSFrameConstructor::InitializeScrollFrame(nsIPresContext*          aPresConte
 
   // Create an area container for the frame
   nsIFrame* scrolledFrame;
-  NS_NewAreaFrame(scrolledFrame, NS_BLOCK_SHRINK_WRAP);
+  NS_NewAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
 
   // Initialize the frame and force it to have a view
   scrolledFrame->Init(*aPresContext, aContent, scrollFrame,
@@ -2984,7 +2985,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
 
     // Create a scroll frame
     nsIFrame* scrollFrame;
-    NS_NewScrollFrame(scrollFrame);
+    NS_NewScrollFrame(&scrollFrame);
 
     // Initialize it
     InitializeScrollFrame(aPresContext, aState, scrollFrame, aContent, aParentFrame,
@@ -3003,8 +3004,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
       isFixedPositioned = PR_TRUE;
     }
 
-    // Create an area frame
-    NS_NewAreaFrame(newFrame, NS_BLOCK_MARGIN_ROOT);
+    // Create a frame to wrap up the absolute positioned item
+    NS_NewAbsoluteItemWrapperFrame(&newFrame);
     newFrame->Init(*aPresContext, aContent,
                    (isAbsolutelyPositioned
                     ? aState.mAbsoluteItems.containingBlock
@@ -3044,7 +3045,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
             (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay) ||
             (NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay))) {
     // Create an area frame
-    NS_NewAreaFrame(newFrame, NS_BLOCK_SHRINK_WRAP);
+    NS_NewFloatingItemWrapperFrame(&newFrame);
 
     // Initialize the frame
     newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
@@ -3072,11 +3073,11 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
   else if (NS_STYLE_POSITION_RELATIVE == position->mPosition) {
     // Is it block-level or inline-level?
     if (NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) {
-      // Create an area frame. No space manager, though
-      NS_NewAreaFrame(newFrame, NS_AREA_NO_SPACE_MGR);
+      // Create a wrapper frame. No space manager, though
+      NS_NewRelativeItemWrapperFrame(&newFrame);
     } else {
       // Create a positioned inline frame
-      NS_NewPositionedInlineFrame(newFrame);
+      NS_NewPositionedInlineFrame(&newFrame);
     }
 
     // Initialize the frame
@@ -3129,7 +3130,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
     case NS_STYLE_DISPLAY_LIST_ITEM:
     case NS_STYLE_DISPLAY_RUN_IN:
     case NS_STYLE_DISPLAY_COMPACT:
-      rv = NS_NewBlockFrame(newFrame, 0);
+      rv = NS_NewBlockFrame(&newFrame);
       processChildren = PR_TRUE;
       newFrameIsFloaterContainer = PR_TRUE;
       if (NS_SUCCEEDED(rv)) {
@@ -3140,7 +3141,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
       break;
   
     case NS_STYLE_DISPLAY_INLINE:
-      rv = NS_NewInlineFrame(newFrame);
+      rv = NS_NewInlineFrame(&newFrame);
       processChildren = PR_TRUE;
       haveFirstLetterStyle = aHaveFirstLetterStyle;
       break;
@@ -4944,11 +4945,11 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext*  aPresContex
       aStyleContext->GetStyleData(eStyleStruct_Position);
 
     if (position->IsAbsolutelyPositioned()) {
-      NS_NewAreaFrame(containerFrame, NS_BLOCK_MARGIN_ROOT);
+      NS_NewAbsoluteItemWrapperFrame(&containerFrame);
     } else if (display->IsFloating() || (NS_STYLE_DISPLAY_BLOCK == display->mDisplay)) {
-      NS_NewBlockFrame(containerFrame, 0);
+      NS_NewBlockFrame(&containerFrame);
     } else {
-      NS_NewInlineFrame(containerFrame);
+      NS_NewInlineFrame(&containerFrame);
     }
     containerFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, containerFrame,
@@ -4959,7 +4960,7 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext*  aPresContex
     nsIFrame*        textFrame;
     nsIStyleContext* textStyleContext;
 
-    NS_NewTextFrame(textFrame);
+    NS_NewTextFrame(&textFrame);
     aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::textPseudo,
                                                aStyleContext, PR_FALSE,
                                                &textStyleContext);
@@ -5129,7 +5130,7 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresContext*  aPresCon
   nsIFrame* newFrame;
   nsresult  rv;
 
-  rv = NS_NewTableOuterFrame(newFrame);
+  rv = NS_NewTableOuterFrame(&newFrame);
   if (NS_SUCCEEDED(rv)) {
     newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, aFrame);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -5171,7 +5172,7 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresContext*  aPresCon
         nsFrameConstructorState state(mFixedContainingBlock,
                                       GetAbsoluteContainingBlock(aPresContext, newFrame),
                                       captionFrame);
-        NS_NewAreaFrame(captionFrame, 0);
+        NS_NewTableCaptionFrame(&captionFrame);
         captionFrame->Init(*aPresContext, caption, newFrame, captionStyle, nsnull);
         ProcessChildren(aPresContext, state, caption, captionFrame,
                         PR_TRUE, childItems);
@@ -5209,7 +5210,7 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresContext*  aPresContext,
   nsIFrame* newFrame;
   nsresult  rv;
     
-  rv = NS_NewTableFrame(newFrame);
+  rv = NS_NewTableFrame(&newFrame);
   if (NS_SUCCEEDED(rv)) {
     newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, aFrame);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -5239,7 +5240,7 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresContext*  aPresContext,
                                       GetAbsoluteContainingBlock(aPresContext, newFrame),
                                       nsnull);
 
-        NS_NewTableRowGroupFrame(headerFooterFrame);
+        NS_NewTableRowGroupFrame(&headerFooterFrame);
         rowGroupFrame->GetContent(&headerFooter);
         headerFooterFrame->Init(*aPresContext, headerFooter, newFrame,
                                 rowGroupStyle, nsnull);
@@ -5296,7 +5297,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
   aFrame->GetStyleContext(&styleContext);
 
   if (nsLayoutAtoms::textFrame == frameType) {
-    rv = NS_NewTextFrame(newFrame);
+    rv = NS_NewTextFrame(&newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -5304,7 +5305,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
     }
     
   } else if (nsLayoutAtoms::inlineFrame == frameType) {
-    rv = NS_NewInlineFrame(newFrame);
+    rv = NS_NewInlineFrame(&newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -5312,7 +5313,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
     }
   
   } else if (nsLayoutAtoms::blockFrame == frameType) {
-    rv = NS_NewBlockFrame(newFrame, 0);
+    rv = NS_NewBlockFrame(&newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -5320,15 +5321,16 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
     }
   
   } else if (nsLayoutAtoms::areaFrame == frameType) {
-    rv = NS_NewAreaFrame(newFrame, 0);
+    rv = NS_NewAreaFrame(&newFrame);
     if (NS_SUCCEEDED(rv)) {
-      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext,
+                     aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
                                                styleContext, PR_FALSE);
     }
   
   } else if (nsLayoutAtoms::positionedInlineFrame == frameType) {
-    rv = NS_NewPositionedInlineFrame(newFrame);
+    rv = NS_NewPositionedInlineFrame(&newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -5336,7 +5338,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
     }
 
   } else if (nsLayoutAtoms::pageFrame == frameType) {
-    rv = NS_NewPageFrame(newFrame);
+    rv = NS_NewPageFrame(&newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -5352,7 +5354,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
                                     content, styleContext, &newFrame);
 
   } else if (nsLayoutAtoms::tableRowGroupFrame == frameType) {
-    rv = NS_NewTableRowGroupFrame(newFrame);
+    rv = NS_NewTableRowGroupFrame(&newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -5360,7 +5362,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
     }
 
   } else if (nsLayoutAtoms::tableRowFrame == frameType) {
-    rv = NS_NewTableRowFrame(newFrame);
+    rv = NS_NewTableRowFrame(&newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
@@ -5392,7 +5394,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
     }
 
   } else if (nsLayoutAtoms::tableCellFrame == frameType) {
-    rv = NS_NewTableCellFrame(newFrame);
+    rv = NS_NewTableCellFrame(&newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,

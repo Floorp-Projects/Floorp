@@ -34,11 +34,16 @@
 // Wrapper for creating a new font picker
 //
 nsresult
-NS_NewFontPickerFrame(nsIFrame*& aResult)
+NS_NewFontPickerFrame(nsIFrame** aNewFrame)
 {
-  aResult = new nsFontPickerFrame;
-  if ( !aResult )
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsFontPickerFrame* it = new nsFontPickerFrame;
+  if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
+  *aNewFrame = it;
   return NS_OK;
 }
 

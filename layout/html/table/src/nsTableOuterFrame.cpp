@@ -1219,13 +1219,17 @@ nsTableOuterFrame::GetFrameType(nsIAtom** aType) const
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableOuterFrame(nsIFrame*& aResult)
+NS_NewTableOuterFrame(nsIFrame** aNewFrame)
 {
-  nsIFrame* it = new nsTableOuterFrame;
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsTableOuterFrame* it = new nsTableOuterFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aResult = it;
+  *aNewFrame = it;
   return NS_OK;
 }
 

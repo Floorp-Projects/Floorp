@@ -35,14 +35,18 @@
 // Creates a new Toolbar frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewToolbarFrame ( nsIFrame*& aNewFrame )
+NS_NewToolbarFrame ( nsIFrame** aNewFrame )
 {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsToolbarFrame* it = new nsToolbarFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // it->SetFlags(aFlags);
-  aNewFrame = it;
+  * aNewFrame = it;
   return NS_OK;
   
 } // NS_NewToolbarFrame

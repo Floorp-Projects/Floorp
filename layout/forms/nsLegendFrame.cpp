@@ -50,12 +50,17 @@ static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
 static NS_DEFINE_IID(kIDOMHTMLLegendElementIID, NS_IDOMHTMLLEGENDELEMENT_IID);
  
 nsresult
-NS_NewLegendFrame(nsIFrame*& aResult)
+NS_NewLegendFrame(nsIFrame** aNewFrame)
 {
-  aResult = new nsLegendFrame;
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsLegendFrame* it = new nsLegendFrame;
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  *aNewFrame = it;
   return NS_OK;
 }
 
@@ -91,7 +96,7 @@ nsLegendFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
   PRUint8 flags = (mInline) ? NS_BLOCK_SHRINK_WRAP : 0;
   nsIFrame* areaFrame;
-  NS_NewAreaFrame(areaFrame, flags);
+  NS_NewAreaFrame(&areaFrame, flags);
   mFrames.SetFrames(areaFrame);
 
   // Resolve style and initialize the frame

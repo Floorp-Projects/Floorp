@@ -45,13 +45,17 @@ protected:
 };
 
 nsresult
-NS_NewBRFrame(nsIFrame*& aResult)
+NS_NewBRFrame(nsIFrame** aNewFrame)
 {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsIFrame* frame = new BRFrame;
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  aResult = frame;
+  *aNewFrame = frame;
   return NS_OK;
 }
 

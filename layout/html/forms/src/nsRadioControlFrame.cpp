@@ -50,14 +50,18 @@ static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 #define NS_DEFAULT_RADIOBOX_SIZE  12
 
 
-nsresult NS_NewRadioControlFrame(nsIFrame*& aResult);
 nsresult
-NS_NewRadioControlFrame(nsIFrame*& aResult)
+NS_NewRadioControlFrame(nsIFrame** aNewFrame)
 {
-  aResult = new nsRadioControlFrame;
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsRadioControlFrame* it = new nsRadioControlFrame;
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  *aNewFrame = it;
   return NS_OK;
 }
 

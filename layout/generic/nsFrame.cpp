@@ -143,17 +143,17 @@ nsIFrame::GetLogModuleInfo()
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_IID(kIFrameSelection, NS_IFRAMESELECTION_IID);
 nsresult
-NS_NewEmptyFrame(nsIFrame**  aInstancePtrResult)
+NS_NewEmptyFrame(nsIFrame** aNewFrame)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsFrame;
+  nsFrame* it = new nsFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  *aInstancePtrResult = it;
+  *aNewFrame = it;
   return NS_OK;
 }
 

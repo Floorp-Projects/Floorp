@@ -111,12 +111,17 @@ protected:
 };
 
 nsresult
-NS_NewLabelFrame(nsIFrame*& aResult)
+NS_NewLabelFrame(nsIFrame** aNewFrame)
 {
-  aResult = new nsLabelFrame;
-  if (nsnull == aResult) {
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsLabelFrame* it = new nsLabelFrame;
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  *aNewFrame = it;
   return NS_OK;
 }
 
@@ -353,7 +358,7 @@ nsLabelFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
   PRUint8 flags = (mInline) ? NS_BLOCK_SHRINK_WRAP : 0;
   nsIFrame* areaFrame;
-  NS_NewAreaFrame(areaFrame, flags);
+  NS_NewAreaFrame(&areaFrame, flags);
   mFrames.SetFrames(areaFrame);
 
   // Resolve style and initialize the frame
