@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.5 2001/11/08 00:15:30 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.6 2001/11/15 23:04:39 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -81,6 +81,9 @@ pk11_keydb_name_cb(void *arg, int dbVersion)
     const char *dbver;
     
     switch (dbVersion) {
+      case 4:
+	dbver = "4";
+	break;
       case 3:
 	dbver = "3";
 	break;

@@ -57,7 +57,11 @@ typedef struct NSSLOWKEYDBKeyStr NSSLOWKEYDBKey;
 
 typedef struct NSSLOWKEYDBHandleStr NSSLOWKEYDBHandle;
 
+#ifdef NSS_USE_KEY4_DB
+#define NSSLOWKEY_DB_FILE_VERSION 4
+#else
 #define NSSLOWKEY_DB_FILE_VERSION 3
+#endif
 
 #define NSSLOWKEY_VERSION	    0	/* what we *create* */
 

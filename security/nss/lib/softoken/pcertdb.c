@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.2 2001/11/08 00:15:37 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.3 2001/11/15 23:04:40 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -4121,22 +4121,69 @@ NSSLOWCERTCertificate *
 nsslowcert_FindCertByIssuerAndSN(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTIssuerAndSN *issuerAndSN)
 {
     SECItem certKey;
+    SECItem *sn = &issuerAndSN->serialNumber;
+    SECItem *issuer = &issuerAndSN->derIssuer;
     NSSLOWCERTCertificate *cert;
-    
-    certKey.len = issuerAndSN->serialNumber.len + issuerAndSN->derIssuer.len;
-    certKey.data = (unsigned char*)PORT_Alloc(certKey.len);
+    int data_left = sn->len-1;
+    int data_len = sn->len;
+    int index = 0;
+
+    /* automatically detect DER encoded serial numbers and remove the der
+     * encoding since the database expects unencoded data. 
+     * if it's DER encoded, there must be at least 3 bytes, tag, len, data */
+    if ((sn->len >= 3) && (sn->data[0] == 0x2)) {
+	/* remove the der encoding of the serial number before generating the
+	 * key.. */
+	data_left = sn->len-2;
+	data_len = sn->data[1];
+	index = 2;
+
+	/* extended length ? (not very likely for a serial number) */
+	if (data_len & 0x80) {
+	    int len_count = data_len & 0x7f;
+
+	    data_len = 0;
+	    data_left -= len_count;
+	    if (data_left > 0) {
+		while (len_count --) {
+		    data_len = (data_len << 8) | sn->data[index++];
+		}
+	    } 
+	}
+	/* not a valid der, must be just an unlucky serial number value */
+	if (data_len != data_left) {
+	    data_len = sn->len;
+	    index = 0;
+	}
+    }
+
+    certKey.data = (unsigned char*)PORT_Alloc(sn->len + issuer->len);
+    certKey.len = data_len + issuer->len;
     
     if ( certKey.data == NULL ) {
 	return(0);
     }
 
+    /* first try the der encoded serial number */
     /* copy the serialNumber */
-    PORT_Memcpy(certKey.data, issuerAndSN->serialNumber.data,
-	      issuerAndSN->serialNumber.len);
+    PORT_Memcpy(certKey.data, &sn->data[index], data_len);
 
     /* copy the issuer */
-    PORT_Memcpy( &certKey.data[issuerAndSN->serialNumber.len],
-	      issuerAndSN->derIssuer.data, issuerAndSN->derIssuer.len);
+    PORT_Memcpy( &certKey.data[data_len],issuer->data,issuer->len);
+
+    cert = nsslowcert_FindCertByKey(handle, &certKey);
+    if (cert) {
+	PORT_Free(certKey.data);
+	return (cert);
+    }
+
+    /* didn't find it, try by old serial number */
+    /* copy the serialNumber */
+    PORT_Memcpy(certKey.data, sn->data, sn->len);
+
+    /* copy the issuer */
+    PORT_Memcpy( &certKey.data[sn->len], issuer->data, issuer->len);
+    certKey.len = sn->len + issuer->len;
 
     cert = nsslowcert_FindCertByKey(handle, &certKey);
     
