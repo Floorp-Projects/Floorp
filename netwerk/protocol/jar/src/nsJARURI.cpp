@@ -50,13 +50,16 @@ nsJARURI::Init(const char *charsetHint)
 #define NS_JAR_DELIMITER        NS_LITERAL_CSTRING("!/")
 
 nsresult
-nsJARURI::FormatSpec(const nsACString &entryPath, nsACString &result)
+nsJARURI::FormatSpec(const nsACString &entryPath, nsACString &result,
+                     PRBool aIncludeScheme)
 {
     nsCAutoString fileSpec;
     nsresult rv = mJARFile->GetSpec(fileSpec);
     if (NS_FAILED(rv)) return rv;
 
-    result = NS_JAR_SCHEME + fileSpec + NS_JAR_DELIMITER + entryPath;
+    if (aIncludeScheme)
+        result = NS_JAR_SCHEME;
+    result.Append(fileSpec + NS_JAR_DELIMITER + entryPath);
     return NS_OK;
 }
 
@@ -134,7 +137,7 @@ nsJARURI::SetSpec(const nsACString &aSpec)
 NS_IMETHODIMP
 nsJARURI::GetPrePath(nsACString &prePath)
 {
-    prePath = "jar:";
+    prePath = NS_JAR_SCHEME;
     return NS_OK;
 }
 
@@ -227,7 +230,7 @@ nsJARURI::SetPort(PRInt32 aPort)
 NS_IMETHODIMP
 nsJARURI::GetPath(nsACString &aPath)
 {
-    return NS_ERROR_FAILURE;
+    return FormatSpec(mJAREntry, aPath, PR_FALSE);
 }
 
 NS_IMETHODIMP
