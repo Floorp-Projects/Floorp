@@ -1218,32 +1218,6 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
     if(1<theCount){ 
   
       const nsString& theKey=aNode.GetKeyAt(0); 
-#if 0
-      //<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1"> 
-      if(theKey.EqualsIgnoreCase("HTTP-EQUIV")) { 
-        const nsString& theKey2=aNode.GetKeyAt(1); 
-        if(theKey2.EqualsIgnoreCase("CONTENT")) { 
-            nsScanner* theScanner=mParser->GetScanner(); 
-            if(theScanner) { 
-              const nsString& theValue=aNode.GetValueAt(1); 
-              PRInt32 charsetValueStart = theValue.RFind("charset=", PR_TRUE ) ; 
-              if(kNotFound != charsetValueStart) { 
-                 charsetValueStart += 8; // 8 = "charset=".length 
-                 PRInt32 charsetValueEnd = theValue.FindCharInSet("\'\";", charsetValueStart  );
-                 if(kNotFound == charsetValueEnd ) 
-                    charsetValueEnd = theValue.Length();
-                 nsAutoString theCharset;
-                 theValue.Mid(theCharset, charsetValueStart, charsetValueEnd - charsetValueStart);
-                 theScanner->SetDocumentCharset(theCharset, kCharsetFromMetaTag);
-				 // XXX this should be delete after META charset really work
-				 nsParser::gHackMetaCharset = theCharset;
-              } //if
-          } //if
-        }
-      } //if
-
-      else 
-#endif
       if(theKey.EqualsIgnoreCase("NAME")) { 
         const nsString& theValue1=aNode.GetValueAt(0); 
         if(theValue1.EqualsIgnoreCase("\"CRC\"")) { 
