@@ -128,7 +128,7 @@ public:
   /** SetOptimizeDrawCaret
   *  To start or stop process of optimizing draw caret
   */
-  NS_IMETHOD SetOptimizeDrawCaret(PRBool aOptimzeDrawCaret) = 0;
+  NS_IMETHOD SetOptimizeDrawCaret(PRBool aOptimizeDrawCaret) = 0;
 
 };
 

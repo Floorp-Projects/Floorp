@@ -65,7 +65,7 @@ class nsCaret : public nsICaret,
     NS_IMETHOD    SetVisibilityDuringSelection(PRBool aVisibility);
     NS_IMETHOD    DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset);
 
-    NS_IMETHOD    SetOptimizeDrawCaret(PRBool aOptimzeDrawCaret);
+    NS_IMETHOD    SetOptimizeDrawCaret(PRBool aOptimizeDrawCaret);
 
     //nsISelectionListener interface
     NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
