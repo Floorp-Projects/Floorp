@@ -75,8 +75,8 @@ public:
 
 private:
 
-    nsresult EnqueueURI(nsIURI *aURI);
-    nsresult DequeueURI(nsIURI **aURI);
+    nsresult EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI);
+    nsresult DequeueURI(nsIURI **aURI, nsIURI **aReferrerURI);
     void     EmptyQueue();
     void     StartPrefetching();
     void     StopPrefetching();
@@ -116,10 +116,16 @@ private:
 class nsPrefetchNode
 {
 public:
-    nsPrefetchNode(nsIURI *aURI) : mNext(nsnull), mURI(aURI) { }
+    nsPrefetchNode(nsIURI *aURI,
+                   nsIURI *aReferrerURI)
+        : mNext(nsnull)
+        , mURI(aURI)
+        , mReferrerURI(aReferrerURI)
+        { }
 
     nsPrefetchNode  *mNext;
     nsCOMPtr<nsIURI> mURI;
+    nsCOMPtr<nsIURI> mReferrerURI;
 };
 
 #endif // !nsPrefetchService_h__

@@ -4929,6 +4929,36 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 void
 HTMLContentSink::PrefetchHref(const nsAString &aHref)
 {
+  //
+  // SECURITY CHECK: disable prefetching from mailnews!
+  //
+  // walk up the docshell tree to see if any containing
+  // docshell are of type MAIL.
+  //
+  nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(mWebShell));
+  if (!docshell)
+    return;
+  nsCOMPtr<nsIDocShellTreeItem> treeItem, parentItem;
+  do {
+    PRUint32 appType;
+    nsresult rv = docshell->GetAppType(&appType);
+    if (NS_FAILED(rv) || appType == nsIDocShell::APP_TYPE_MAIL)
+      return; // do not prefetch from mailnews
+    if (treeItem = do_QueryInterface(docshell)) {
+      treeItem->GetParent(getter_AddRefs(parentItem));
+      if (parentItem) {
+        treeItem = parentItem;
+        docshell = do_QueryInterface(treeItem);
+        if (!docshell) {
+          NS_ERROR("cannot get a docshell from a treeItem!");
+          return;
+        }
+      }
+    }
+  } while (parentItem);
+  
+  // OK, we passed the security check...
+  
   nsCOMPtr<nsIPrefetchService> prefetchService(
           do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
   if (prefetchService) {
@@ -4941,7 +4971,7 @@ HTMLContentSink::PrefetchHref(const nsAString &aHref)
                               : NS_LossyConvertUCS2toASCII(charset).get(),
             mDocumentBaseURL);
     if (uri)
-      prefetchService->PrefetchURI(uri);
+      prefetchService->PrefetchURI(uri, mDocumentURI);
   }
 }
 
