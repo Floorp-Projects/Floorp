@@ -42,6 +42,7 @@ var homeDir;
 
 var directoryTree;
 var textInput;
+var okButton;
 
 var bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");   
 
@@ -50,6 +51,7 @@ function onLoad() {
 
   directoryTree = document.getElementById("directoryTree");
   textInput = document.getElementById("textInput");
+  okButton = document.getElementById("ok");
 
   if (window.arguments) {
     var o = window.arguments[0];
@@ -110,7 +112,6 @@ function onLoad() {
     }
 
     if (buttonLabel) {
-      var okButton = document.getElementById("ok");
       okButton.setAttribute("value", buttonLabel);
     }
   } catch (exception) {
@@ -135,6 +136,7 @@ function onLoad() {
   retvals.buttonStatus = nsIFilePicker.returnCancel;
 
   gotoDirectory(sfile);
+  doEnabling();
   textInput.focus();
 }
 
@@ -243,21 +245,37 @@ function onOK()
         gotoDirectory(file);
       }
       textInput.value = "";
+      doEnabling();
       ret = nsIFilePicker.returnCancel;
     }
     break;
   case nsIFilePicker.modeSave:
-    if (isFile) {
+    if (isFile) { // can only be true if file.exists()
       // we need to pop up a dialog asking if you want to save
       rv = window.confirm(file.path + " " + bundle.GetStringFromName("confirmFileReplacing"));
-      if (rv)
+      if (rv) {
         ret = nsIFilePicker.returnReplace;
-      else
+        retvals.directory = file.parent.path;
+      } else {
         ret = nsIFilePicker.returnCancel;
-      retvals.directory = file.parent.path;
-    } else if (!file.exists()) {
-      ret = nsIFilePicker.returnOK;
-      retvals.directory = file.parent.path;
+      }
+    } else if (isDir) {
+      if (!sfile.equals(file)) {
+        gotoDirectory(file);
+      }
+      textInput.value = "";
+      doEnabling();
+      ret = nsIFilePicker.returnCancel;
+    } else {
+      var parent = file.parent;
+      if (parent.exists() && parent.isDirectory()) {
+        ret = nsIFilePicker.returnOK;
+        retvals.directory = parent.path;
+      } else {
+        // See bug 55026, do nothing for now, leaves typed text as clue.
+        // window.alert("Directory "+parent.path+" doesn't seem to exist, can't save "+file.path);
+        ret = nsIFilePicker.returnCancel;
+      }
     }
     break;
   case nsIFilePicker.modeGetFolder:
@@ -289,14 +307,18 @@ function onCancel()
 
 function onClick(e) {
   if ( e.detail == 2 ) {
-    var file = URLpathToFile(e.target.parentNode.getAttribute("path"));
+    var path = e.target.parentNode.getAttribute("path");
 
-    if (file.isDirectory()) {
-      gotoDirectory(file);
-    }
-    else if (file.isFile()) {
-      /* what about symlinks? what if they symlink to a directory? */
-      return doOKButton();
+    if (path) {
+      var file = URLpathToFile(path);
+      if (file) {
+        if (file.isDirectory()) {
+          gotoDirectory(file);
+        }
+        else if (file.isFile()) {
+          doOKButton();
+        }
+      }
     }
   }
 }
@@ -306,15 +328,38 @@ function onKeypress(e) {
     goUp();
 }
 
+function doEnabling() {
+  // Maybe add check if textInput.value would resolve to an existing
+  // file or directory in .modeOpen. Too costly I think.
+  var enable = (textInput.value != "");
+
+  if (enable) {
+    if (okButton.getAttribute("disabled")) {
+      okButton.removeAttribute("disabled");
+    }
+  } else {
+    if (!okButton.getAttribute("disabled")) {
+      okButton.setAttribute("disabled","true");
+    }
+  }
+}
+
 function onSelect(e) {
   if (e.target.selectedItems.length != 1)
     return;
-  var file = URLpathToFile(e.target.selectedItems[0].firstChild.getAttribute("path"));
+  var path = e.target.selectedItems[0].firstChild.getAttribute("path");
 
-  if (file.isFile() || (filePickerMode == nsIFilePicker.modeGetFolder)) {
-    /* Note, if we're in GetFolder mode, everything in the display list
-       will be a directory, so we don't need an extra check */
-    textInput.value = file.leafName;
+  if (path) {
+    var file = URLpathToFile(path);
+    if (file) {
+      /* Put the leafName of the selected item in the input field if:
+         - GetFolder mode   : a directory was selected (only option)
+         - Open or Save mode: a file was selected                    */
+      if ((filePickerMode == nsIFilePicker.modeGetFolder) || file.isFile()) {
+        textInput.value = file.leafName;
+        doEnabling();
+      }
+    }
   }
 }
 
@@ -325,7 +370,9 @@ function onDirectoryChanged(target)
   var file = Components.classes[nsILocalFile_CONTRACTID].createInstance(nsILocalFile);
   file.initWithPath(path);
 
-  gotoDirectory(file);
+  if (!sfile.equals(file)) {
+    gotoDirectory(file);
+  }
 }
 
 function addToHistory(directoryName) {

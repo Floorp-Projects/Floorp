@@ -56,7 +56,7 @@
 
 <box flex="1">
   <tree id="directoryTree" flex="1" onkeypress="onKeypress(event)"
-  onselect="onSelect(event)" datasources="rdf:files">
+        onselect="onSelect(event)" datasources="rdf:files">
     <template id="fileFilter">
       <!-- This is the rule for files matching the filter -->
       <rule id="matchRule.0">
@@ -79,9 +79,9 @@
             
     <treecolgroup>
       <treecol flex="1" id="FilenameColumn" resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending"/>
-            <splitter class="tree-splitter"/>
+      <splitter class="tree-splitter"/>
       <treecol flex="1" id="ContentLengthColumn" resource="http://home.netscape.com/NC-rdf#Content-Length"/>
-            <splitter class="tree-splitter"/>
+      <splitter class="tree-splitter"/>
       <treecol flex="1" id="LastModifiedDateColumn" resource="http//home.netscape.com/WEB-rdf#LastModifiedDate"/>
     </treecolgroup>
     <treehead>
@@ -95,15 +95,23 @@
   </tree>
 </box>
 
-<box autostretch="never" style="margin-top: 5px">
-  <text value="&textInput.label;"/>
-  <textfield id="textInput" flex="1"/>
-</box>
+<grid style="margin-top: 5px">
+  <columns>
+    <column/>
+    <column flex="1"/>
+  </columns>
 
-<box autostretch="never" id="filterBox" hidden="true">
-  <text value="&filterMenuList.label;"/>
-  <menulist id="filterMenuList" flex="1" oncommand="onFilterChanged(event.target);"/>
-</box>
+  <rows>
+    <row>
+      <text value="&textInput.label;"/>
+      <textfield id="textInput" flex="1" oninput="doEnabling()"/>
+    </row>
+    <row id="filterBox" hidden="true">
+      <text value="&filterMenuList.label;"/>
+      <menulist id="filterMenuList" flex="1" oncommand="onFilterChanged(event.target);"/>
+    </row>
+  </rows>
+</grid>
 
 <box id="okCancelButtons"/>
 
