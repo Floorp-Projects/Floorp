@@ -54,25 +54,25 @@
                   onselect="if (event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
         <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child">
           <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
-          <xul:menupopup>
+          <xul:menupopup onpopupshowing="this.parentNode.parentNode.parentNode.mContextTab = document.popupNode;">
             <xul:menuitem label="&newTab.label;" accesskey="&newTab.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.selectedTab = tabbrowser.addTab('about:blank');"/>
             <xul:menuseparator/>
             <xul:menuitem label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
-                                     tabbrowser.reloadTab(document.popupNode);"/>
+                                     tabbrowser.reloadTab(tabbrowser.mContextTab);"/>
             <xul:menuitem label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
-                                     tabbrowser.reloadAllTabs(document.popupNode);"/>
+                                     tabbrowser.reloadAllTabs(tabbrowser.mContextTab);"/>
             <xul:menuseparator/>
             <xul:menuitem label="&closeTab.label;" accesskey="&closeTab.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
-                                     tabbrowser.removeTab(document.popupNode);"/>
+                                     tabbrowser.removeTab(tabbrowser.mContextTab);"/>
             <xul:menuseparator/>
             <xul:menuitem label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
-                                     tabbrowser.removeAllTabsBut(document.popupNode);"/>
+                                     tabbrowser.removeAllTabsBut(tabbrowser.mContextTab);"/>
           </xul:menupopup>
 
           <xul:tabs class="tabbrowser-tabs" closebutton="true" flex="1"
@@ -140,6 +140,9 @@
         false
       </field>
       <field name="mMissedIconCache">
+        null
+      </field>
+      <field name="mContextTab">
         null
       </field>
 
