@@ -79,7 +79,7 @@ pref("font.name.sans-serif.x-cyrillic", "Helv");
 pref("font.name.monospace.x-cyrillic", "Courier");
 
 pref("font.name.serif.x-unicode", "Times New Roman MT 30");
-pref("font.name.sans-serif.x-unicode", "Helv");
+pref("font.name.sans-serif.x-unicode", "Times New Roman MT 30");
 pref("font.name.monospace.x-unicode", "Courier");
 
 pref("font.name.serif.x-western", "Tms Rmn");
