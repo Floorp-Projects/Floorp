@@ -109,7 +109,7 @@ ImageListener::~ImageListener()
   NS_IF_RELEASE(mNextStream);
 }
 
-NS_IMPL_ISUPPORTS(ImageListener, kIStreamListenerIID)
+NS_IMPL_THREADSAFE_ISUPPORTS(ImageListener, kIStreamListenerIID)
 
 NS_IMETHODIMP
 ImageListener::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
