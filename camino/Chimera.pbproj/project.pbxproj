@@ -123,6 +123,7 @@
 				F53A902202C1127A01A967F3,
 				A708E74103FB9041003C038B,
 				A708E74303FB90AB003C038B,
+				A7D88E680465D94000A80196,
 			);
 			isa = PBXGroup;
 			name = Components;
@@ -190,6 +191,7 @@
 				F6BD644E01B315FA01A962F7,
 				F517941F027F3F2901A967DF,
 				A7DF2C6003C3C83E00A80196,
+				A7D88E6A0465D9F800A80196,
 			);
 			isa = PBXGroup;
 			name = "XPT files";
@@ -1523,6 +1525,30 @@
 			settings = {
 			};
 		};
+		A7D88E680465D94000A80196 = {
+			isa = PBXFileReference;
+			name = libtypeaheadfind.dylib;
+			path = ../extensions/typeaheadfind/src/libtypeaheadfind.dylib;
+			refType = 2;
+		};
+		A7D88E690465D97F00A80196 = {
+			fileRef = A7D88E680465D94000A80196;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A7D88E6A0465D9F800A80196 = {
+			isa = PBXFileReference;
+			name = typeaheadfind.xpt;
+			path = ../extensions/typeaheadfind/public/_xpidlgen/typeaheadfind.xpt;
+			refType = 2;
+		};
+		A7D88E6B0465DA0000A80196 = {
+			fileRef = A7D88E6A0465D9F800A80196;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		A7DF2C6003C3C83E00A80196 = {
 			isa = PBXFileReference;
 			name = xmlextras.xpt;
@@ -1549,6 +1575,24 @@
 		};
 		A7E5D961041A07DF00A967F8 = {
 			fileRef = A7E5D960041A07C900A967F8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A7FD31C80466000A00A80196 = {
+			fileRef = A7D88E6A0465D9F800A80196;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		A7FD31C90466004E00A80196 = {
+			isa = PBXFileReference;
+			name = libtypeaheadfind.a;
+			path = ../extensions/typeaheadfind/src/libtypeaheadfind.a;
+			refType = 2;
+		};
+		A7FD31CA0466005200A80196 = {
+			fileRef = A7FD31C90466004E00A80196;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -5361,6 +5405,7 @@
 				A7E5D960041A07C900A967F8,
 				A72CB3D8041A0BA100A967F8,
 				0FEBFCA1044F989900A96652,
+				A7FD31C90466004E00A80196,
 			);
 			isa = PBXGroup;
 			name = "Gecko Static Components";
@@ -7510,7 +7555,7 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/cookie ../dist/include/ \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\" \"$(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers\"";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader /Volumes/Vertigo/Projects/macho_objs/camino_static/intl/uconv/util";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader";
 				OPTIMIZATION_CFLAGS = "-O2";
 				OTHER_CFLAGS = "-fno-rtti -fno-exceptions -fpascal-strings -fshort-wchar -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" -D_BUILD_STATIC_BIN -DIBMBIDI";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lxpcom_compat -lmozjs -lmozjpeg -ljsj -lmozpng -lmozmng -lpthread -lz -lm";
@@ -8004,6 +8049,7 @@
 				F5AC38BA02AD8E7B01A967F3,
 				F54AD84502C115DA01A967F3,
 				F5E47655030C5FD501A967F3,
+				A7FD31CA0466005200A80196,
 				A7E5D961041A07DF00A967F8,
 				A72CB3DA041A0BEB00A967F8,
 				F5BAAB9B02AC4AA701A967F3,
@@ -8787,6 +8833,7 @@
 				F5461CBF03AAC36B01A96660,
 				A7DF2C6403C3C92F00A80196,
 				A7A744740427019D00A967DF,
+				A7FD31C80466000A00A80196,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -10647,6 +10694,8 @@
 				A7DF2C6303C3C8FD00A80196,
 				A708E74203FB9077003C038B,
 				A708E74403FB90B4003C038B,
+				A7D88E690465D97F00A80196,
+				A7D88E6B0465DA0000A80196,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
