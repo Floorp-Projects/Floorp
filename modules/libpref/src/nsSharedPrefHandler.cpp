@@ -118,7 +118,7 @@ nsresult nsSharedPrefHandler::OnSessionBegin()
   // read in our data. The transaction service holds a lock on
   // our data file during our reply.
   rv = mTransService->Attach(kPrefsTSQueueName, this, PR_TRUE);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "tmITransactionService::Attach() failed");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "ipcITransactionService::Attach() failed");
   
   if (NS_SUCCEEDED(rv))
     mSessionActive = PR_TRUE;
@@ -132,7 +132,7 @@ nsresult nsSharedPrefHandler::OnSessionEnd()
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = mTransService->Detach(kPrefsTSQueueName);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "tmITransactionService::Detach() failed");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "ipcITransactionService::Detach() failed");
 
   mSessionActive = PR_FALSE;
 
@@ -148,7 +148,7 @@ nsresult nsSharedPrefHandler::OnSavePrefs()
   // write out our data. The transaction service holds a lock on
   // our data file during our reply.
   rv = mTransService->Flush(kPrefsTSQueueName, PR_TRUE);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "tmITransactionService::Flush() failed");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "ipcITransactionService::Flush() failed");
 
   return NS_OK;
 }
@@ -202,7 +202,7 @@ nsresult nsSharedPrefHandler::OnPrefChanged(PrefAction action,
   NS_ASSERTION(NS_SUCCEEDED(rv), "OnPrefChanged: outMsg failed");
   if (NS_SUCCEEDED(rv)) {
     rv = mTransService->PostTransaction(kPrefsTSQueueName, outMsg.GetBuffer(), outMsg.GetSize());
-    NS_ASSERTION(NS_SUCCEEDED(rv), "tmITransactionService::PostTransaction() failed");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "ipcITransactionService::PostTransaction() failed");
   }
   return rv;
 }
@@ -279,10 +279,10 @@ nsresult nsSharedPrefHandler::EnsureTransactionService()
 // nsSharedPrefHandler::nsISupports
 //*****************************************************************************   
 
-NS_IMPL_ISUPPORTS1(nsSharedPrefHandler, tmITransactionObserver)
+NS_IMPL_ISUPPORTS1(nsSharedPrefHandler, ipcITransactionObserver)
 
 //*****************************************************************************
-// nsSharedPrefHandler::tmITransactionObserver
+// nsSharedPrefHandler::ipcITransactionObserver
 //*****************************************************************************   
 
 NS_IMETHODIMP nsSharedPrefHandler::OnTransactionAvailable(PRUint32 aQueueID, const PRUint8 *aData, PRUint32 aDataLen)

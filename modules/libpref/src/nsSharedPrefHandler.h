@@ -40,7 +40,8 @@
 #define nsSharedPrefHandler_h__
 
 // Interfaces needed
-#include "tmITransactionService.h"
+#include "ipcITransactionService.h"
+#include "ipcITransactionObserver.h"
 
 // Includes
 #include "nsCOMPtr.h"
@@ -57,12 +58,12 @@ class nsPrefService;
 //  nsSharedPrefHandler
 // --------------------------------------------------------------------------------------
 
-class nsSharedPrefHandler : public tmITransactionObserver
+class nsSharedPrefHandler : public ipcITransactionObserver
 {
   friend nsresult NS_CreateSharedPrefHandler(nsPrefService*);
     
   NS_DECL_ISUPPORTS
-  NS_DECL_TMITRANSACTIONOBSERVER
+  NS_DECL_IPCITRANSACTIONOBSERVER
     
 public:    
   nsresult        OnSessionBegin();
@@ -90,7 +91,7 @@ protected:
 protected:
   nsPrefService   *mPrefService;      // weak ref
   
-  nsCOMPtr<tmITransactionService> mTransService;
+  nsCOMPtr<ipcITransactionService> mTransService;
   const nsCString mPrefsTSQueueName;
   
   PRPackedBool    mSessionActive;
