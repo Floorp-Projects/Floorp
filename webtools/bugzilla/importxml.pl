@@ -192,7 +192,7 @@ if (defined $tree->[1][0]->{'urlbase'}) {
   
 
 my $bugqty = ($#{@{$tree}->[1]} +1 -3) / 4;
-my $log = "Imported $bugqty bug(s) from $urlbase,\n  sent by $exporter.\n";
+my $log = "Imported $bugqty bug(s) from $urlbase,\n  sent by $exporter.\n\n";
 for (my $k=1 ; $k <= $bugqty ; $k++) {
   my $cur = $k*4;
 
