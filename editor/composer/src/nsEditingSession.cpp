@@ -77,6 +77,8 @@
 
 #include "nsIDOMNSDocument.h"
 #include "nsIScriptContext.h"
+#include "imgIContainer.h"
+#include "nsIPresContext.h"
 
 #include "nsEditorParserObserver.h"
 
@@ -108,6 +110,9 @@ nsEditingSession::nsEditingSession()
 ----------------------------------------------------------------------------*/
 nsEditingSession::~nsEditingSession()
 {
+  // Must cancel previous timer?
+  if (mLoadBlankDocTimer)
+    mLoadBlankDocTimer->Cancel();
 }
 
 NS_IMPL_ISUPPORTS3(nsEditingSession, nsIEditingSession, nsIWebProgressListener, 
@@ -395,6 +400,21 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
   if (NS_FAILED(rv)) return rv;  
 
+  nsCOMPtr<nsIPresShell> presShell;
+  rv = docShell->GetPresShell(getter_AddRefs(presShell));
+  if (NS_FAILED(rv)) return rv;
+  if (!presShell) return NS_ERROR_FAILURE;
+
+  // Disable animation of images in this document:
+  nsCOMPtr<nsIPresContext> presContext;
+  rv = presShell->GetPresContext(getter_AddRefs(presContext));
+  if (NS_FAILED(rv)) return rv;
+  if (!presContext) return NS_ERROR_FAILURE;
+
+  rv = presContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
+  if (NS_FAILED(rv)) return rv;
+
+  // create and set editor
   nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(docShell, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -417,11 +437,6 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   // Set mimetype on editor
   rv = editor->SetContentsMIMEType(mimeCType.get());
   if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = docShell->GetPresShell(getter_AddRefs(presShell));
-  if (NS_FAILED(rv)) return rv;
-  if (!presShell) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContentViewer> contentViewer;
   rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
@@ -481,6 +496,13 @@ NS_IMETHODIMP
 nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
 {
   nsresult rv;
+  
+   // Kill any existing reload timer
+   if (mLoadBlankDocTimer)
+   {
+     mLoadBlankDocTimer->Cancel();
+     mLoadBlankDocTimer = nsnull;
+   }
 
   nsCOMPtr<nsIEditorDocShell> editorDocShell;
   rv = GetEditorDocShellFromWindow(aWindow, getter_AddRefs(editorDocShell));
@@ -605,8 +627,8 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
       {
         nsXPIDLCString spec;
         uri->GetSpec(spec);
-        printf(" **** STATE_START: CHANNEL URI=%s, 
-               flags=%x\n",spec.get(), aStateFlags);
+        printf(" **** STATE_START: CHANNEL URI=%s, flags=%x\n",
+               spec.get(), aStateFlags);
       }
     }
     else
@@ -671,8 +693,8 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
       {
         nsXPIDLCString spec;
         uri->GetSpec(spec);
-        printf(" **** STATE_STOP: CHANNEL URI=%s,
-                flags=%x\n",spec.get(), aStateFlags);
+        printf(" **** STATE_STOP: CHANNEL URI=%s, flags=%x\n",
+               spec.get(), aStateFlags);
       }
     }
     else
@@ -888,8 +910,10 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
   nsCOMPtr<nsIDocShell> docShell;
   nsresult rv = GetDocShellFromWindow(domWindow, getter_AddRefs(docShell));
   if (NS_FAILED(rv)) return rv;       // better error handling?
-  
+
   // cancel refresh from meta tags
+  // we need to make sure that all pages in editor (whether editable or not)
+  // can't refresh contents being edited
   nsCOMPtr<nsIRefreshURI> refreshURI = do_QueryInterface(docShell);
   if (refreshURI)
     refreshURI->CancelRefreshURITimers();
@@ -980,6 +1004,9 @@ nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress,
   rv = GetDocShellFromWindow(domWindow, getter_AddRefs(docShell));
   if (NS_FAILED(rv)) return rv;
 
+  // cancel refresh from meta tags
+  // we need to make sure that all pages in editor (whether editable or not)
+  // can't refresh contents being edited
   nsCOMPtr<nsIRefreshURI> refreshURI = do_QueryInterface(docShell);
   if (refreshURI)
     refreshURI->CancelRefreshURITimers();
