@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# 
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+# 
+# The Original Code is Mozilla.org Code.
+# 
+# The Initial Developer of the Original Code is
+# Doron Rosenberg.
+# Portions created by the Initial Developer are Copyright (C) 2001
+# the Initial Developer. All Rights Reserved.
+# 
+# Contributor(s):
+#   Ben Goodger <ben@netscape.com> (Original Author)
+# 
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+# 
+# ***** END LICENSE BLOCK *****
+
+<bindings id="privacyExpanderBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="expander" display="xul:vbox">
+    <content>
+      <xul:hbox align="center">
+        <xul:button type="disclosure" class="expanderButton" anonid="disclosure" xbl:inherits="disabled" mousethrough="always"/>
+        <xul:label class="header expanderButton" anonid="label" xbl:inherits="value=label,disabled" mousethrough="always" flex="1"/>
+        <xul:button anonid="clear-button" xbl:inherits="label=clearlabel,disabled,disabled=cleardisabled" mousethrough="always"/>
+      </xul:hbox>
+      <xul:vbox flex="1" anonid="settings" class="settingsContainer" collapsed="true">
+        <children/>
+      </xul:vbox>
+    </content>
+    <implementation>
+      <constructor><![CDATA[
+        var settings = document.getAnonymousElementByAttribute(this, "anonid", "settings");
+        var expander = document.getAnonymousElementByAttribute(this, "anonid", "disclosure");
+
+        var open = this.getAttribute("open") == "true";
+        settings.collapsed = !open;
+        expander.open = open;
+      ]]></constructor>
+      <method name="onCommand">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var element = aEvent.originalTarget;
+          var button = element.getAttribute("anonid");
+          switch (button) {
+          case "disclosure":
+          case "label":
+            var settings = document.getAnonymousElementByAttribute(this, "anonid", "settings");
+            settings.collapsed = !settings.collapsed;
+            var disclosure = document.getAnonymousElementByAttribute(this, "anonid", "disclosure");
+            disclosure.open = !disclosure.open;
+            this.setAttribute("open", disclosure.open);
+            break;
+          case "clear-button":
+            var event = document.createEvent("Events");
+            event.initEvent("clear", false, true);
+            this.dispatchEvent(event);
+            break;
+          }
+        ]]></body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="command"><![CDATA[
+        this.onCommand(event);
+      ]]></handler>
+      <handler event="click"><![CDATA[
+        if (event.originalTarget.localName == "label")
+          this.onCommand(event);
+      ]]></handler>
+    </handlers>
+  </binding>
+          
+</bindings>
+
+          

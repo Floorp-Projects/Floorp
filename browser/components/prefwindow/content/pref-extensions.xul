@@ -20,7 +20,6 @@
 # the Initial Developer. All Rights Reserved.
 # 
 # Contributor(s):
-#   Ben Goodger <ben@netscape.com>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,71 +38,57 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/pref/pref.css" type="text/css"?>
 
-<!DOCTYPE window [
-<!ENTITY % themesDTD SYSTEM "chrome://browser/locale/pref/pref-themes.dtd" >
-%themesDTD;
-<!ENTITY % regionDTD SYSTEM "chrome://global-region/locale/region.dtd" >
-%regionDTD;
-]>
+<!DOCTYPE page SYSTEM "chrome://browser/locale/pref/pref-extensions.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:html="http://www.w3.org/1999/xhtml"
-      onload="parent.initPanel('chrome://browser/content/pref/pref-themes.xul'); Startup()"
+      onload="parent.initPanel('chrome://browser/content/pref/pref-extensions.xul'); Startup()"
       headertitle="&lHeader;">
+
+  <script type="application/x-javascript" src="chrome://browser/content/pref/pref-extensions.js"/>
 
   <stringbundle id="bundle_prefutilities"
                 src="chrome://browser/locale/pref/prefutilities.properties"/>
-  <stringbundle id="bundle_brand"
-                src="chrome://global/locale/brand.properties"/>
-  <stringbundle id="bundle_navigator"
-                src="chrome://navigator/locale/navigator.properties"/>
-
-  <script type="application/x-javascript" src="chrome://browser/content/pref/pref-themes.js"/>
-
+      
   <vbox flex="1">
-    <description>&skinIntro.label;</description>
-  
-    <description>&installedThemes.label;</description>
-  
-    <listbox id="skinsList" datasources="rdf:chrome" 
-          onselect="themeSelect();" flex="1"
-          ref="urn:mozilla:skin:root" rows="3">
-      <template>
-        <rule>
-          <listitem uri="..." skin="true"
+    <label value="&extensionTitle.label;"/>
+    
+    <listbox id="extList" datasources="rdf:chrome" 
+          onselect="extensionSelect();" flex="1"
+          ref="urn:mozilla:package:root" rows="10">
+      <template xmlns:chrome="http://www.mozilla.org/rdf/chrome">
+        <rule chrome:extension="true">
+          <listitem uri="..."
                     label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
                     author="rdf:http://www.mozilla.org/rdf/chrome#author"
                     authorURL="rdf:http://www.mozilla.org/rdf/chrome#authorURL"
+                    settingsURL="rdf:http://www.mozilla.org/rdf/chrome#settingsURL"
                     displayName="rdf:http://www.mozilla.org/rdf/chrome#displayName"
                     name="rdf:http://www.mozilla.org/rdf/chrome#name"
                     description="rdf:http://www.mozilla.org/rdf/chrome#description"
-                    image="rdf:http://www.mozilla.org/rdf/chrome#image"
-                    loctype="rdf:http://www.mozilla.org/rdf/chrome#locType"/>
+                    disabledState="rdf:http://www.mozilla.org/rdf/chrome#disabled"/>
         </rule>
       </template>
     </listbox>
 
     <separator class="thin"/>
-
-    <vbox class="inset extensionInfoArea" style="overflow: auto;">
-      <label class="header" id="displayName" value=""/>
+    <vbox flex="1" class="inset extensionInfoArea" style="overflow:auto;">
+      <label class="header" id="extDisplayName" value=""/>
       <hbox pack="start">
-        <label id="author" onclick="visitLink(event, true);" tooltip="&author.tooltip;"/>
+        <label id="extAuthor" tooltip="&author.tooltip;" onclick="visitLink(event, true);"/>
       </hbox>
-
-      <description>
-        <image id="previewImage"/>
-      </description>
-
-      <description id="description" flex="1"/>
+      <description id="extDescription" flex="1"/>
     </vbox>
-    
+    <separator/>
     <hbox align="center">
-      <html:a class="themesLink" id="themesLink" link="http://texturizer.net/phoenix/themes.html"
-          style="padding-left:4px; display: block;" tooltip="&getnew.tooltip;" onclick="visitLink(event, false);">&getNewThemes.label;</html:a>
-      <spacer flex="1"/>    
-      <button id="uninstallSkin" label="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
+      <html:a class="themesLink" link="http://texturizer.net/phoenix/extensions.html" onclick="visitLink(event, false);"
+          style="padding-left:4px; display: block;" tooltip="&getnew.tooltip;">&getNewExtensions.label;</html:a>
+      <spacer flex="1"/>
+      <button disabled="true" id="extensionSettings" label="&extensionSettings.label;" oncommand="showSettings();"/>
+      <button disabled="true" id="disableExtension" label="&disableExtension.label;" oncommand="toggleExtension();"/>
+      <button disabled="true" label="&uninstallExtension.label;" oncommand="uninstallExtension();" hidden="true"/>
     </hbox>
   </vbox>
+      
+</page>      
 
-</page>

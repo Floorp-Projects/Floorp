@@ -1,0 +1,11 @@
+
+<!ENTITY  lHeader                 "Extensions">
+<!ENTITY  extensionTitle.label    "The following Extensions are installed:">
+<!ENTITY  disableExtension.label  "Disable Extension">
+<!ENTITY  uninstallExtension.label "Uninstall Extension">
+<!ENTITY  getNewExtensions.label  "Get New Extensions">
+<!ENTITY  extensionSettings.label "Settings">
+
+<!ENTITY  author.tooltip          "Close Options and visit the author's web page">
+<!ENTITY  getnew.tooltip          "Close Options and visit PhoenixHelp's Extensions page">
+

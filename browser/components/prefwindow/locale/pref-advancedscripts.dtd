@@ -1,0 +1,9 @@
+
+<!ENTITY allowScripts.title              "Advanced JavaScript Options">
+<!ENTITY allowScripts.label              "Allow scripts to:">
+<!ENTITY allowWindowOpen.label           "Open unrequested windows">
+<!ENTITY allowWindowMoveResize.label     "Move or resize existing windows">
+<!ENTITY allowWindowFlip.label           "Raise or lower windows">
+<!ENTITY allowWindowStatusChange.label   "Change status bar text">
+<!ENTITY allowWindowImageSrcChange.label "Change images">
+<!ENTITY allowHideStatusBar.label        "Hide the status bar">

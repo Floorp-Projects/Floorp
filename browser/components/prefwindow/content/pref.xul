@@ -1,5 +1,6 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://browser/skin/pref/pref.css"?>
 
 <!DOCTYPE window SYSTEM "chrome://browser/locale/pref/pref.dtd" >
 
@@ -7,9 +8,8 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&prefWindow.title;" 
         style="&prefWindow.size;"
-        windowtype="mozilla:preferences"
         buttons="accept,cancel"
-        onload="Startup();"
+        onload="Startup();" onunload="Shutdown();"
         ondialogaccept="return hPrefWindow.onOK(event);"
         ondialogcancel="return hPrefWindow.onCancel(event);"
         persist="screenX screenY"> 
@@ -23,18 +23,60 @@
    *  Place all necessary modifications to pref tree here. 
    **/
   function Startup()
-    {
-      hPrefWindow = new nsPrefWindow('panelFrame');  
-      
-      if( !hPrefWindow )
-        throw "failed to create prefwindow";
+  {
+    hPrefWindow = new nsPrefWindow("panelFrame");  
+    
+    if(!hPrefWindow)
+      throw "failed to create prefwindow";
 
-      hPrefWindow.init();
+    hPrefWindow.init();
 
-      // If this call worked, we could center the window here:
-      // centerWindowOnScreen();
-      
+    var prefsCategories = document.getElementById("prefsCategories");
+    var index = prefsCategories.getAttribute("lastpanel") || 0;
+    var button = prefsCategories.childNodes[index];
+    button.click();
+    button.focus();
+  }
+    
+  function Shutdown ()
+  {
+    var prefsCategories = document.getElementById("prefsCategories");
+    for (var i = 0; i < prefsCategories.childNodes.length; ++i) {
+      if (prefsCategories.childNodes[i].checked) {
+        prefsCategories.setAttribute("lastpanel", i);
+        document.persist("prefsCategories", "lastpanel");
+        break;
+      }
     }
+    
+    document.persist("prefsDialog", "screenX screenY");
+  } 
+   
+  function switchPage(aEvent)
+  {
+    var newURL = "chrome://browser/content/pref/" + aEvent.target.getAttribute("url");
+    var newTag = aEvent.target.getAttribute("tag");
+    if (hPrefWindow)
+      hPrefWindow.switchPage(newURL, newTag);
+  }    
+
+  function visitLink(aTitle, aMsg, aURL)
+  {
+    var prefbundle = document.getElementById("bundle_prefutilities");
+    var title = prefbundle.getString(aTitle);
+    var msg = prefbundle.getString(aMsg);
+    
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+    var flags = promptService.BUTTON_TITLE_OK * promptService.BUTTON_POS_0;
+    flags += promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1;
+
+    rv = promptService.confirmEx(window, title, msg, flags, null, null, null, null, { value: 0 });
+    
+    if (rv == 0) {
+      window.opener.openNewWindowWith(aURL, null, false);
+      document.documentElement.acceptDialog();
+    }
+  }
   
   ]]>
   
@@ -46,101 +88,21 @@
   <script type="application/x-javascript" src="chrome://browser/content/pref/nsPrefWindow.js"/>
 
   <hbox flex="1">
-    <tree id="prefsTree" seltype="single" hidecolumnpicker="true" style="width: 13em;"
-              onselect="if( hPrefWindow ) hPrefWindow.switchPage();">
-      <treecols>
-        <treecol id="categoryCol" flex="1" hideheader="true" primary="true"/>
-      </treecols>
+    <vbox id="prefsCategories" class="buttonBox listBox" oncommand="switchPage(event);" orient="vertical" lastpanel="0" persist="lastpanel">
+      <button id="catGeneralButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&general.label;"   url="pref-navigator.xul"/>
+      <button id="catPrivacyButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&privacy.label;"   url="pref-privacy.xul"/>
+      <button id="catFeaturesbutton"  orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&features.label;"  url="pref-features.xul"/>
+      <button id="catThemesButton"    orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&themes.label;"    url="pref-themes.xul"/>
+      <button id="catExtButton"       orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&ext.label;"       url="pref-extensions.xul"/>
+      <button id="catFontsButton"     orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&fonts.label;"     url="pref-fonts.xul"/>
+      <button id="catProxiesButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&proxies.label;"   url="pref-connection.xul"/>
+    </vbox>
     
-      <treechildren id="panelChildren">
-        <treeitem id="navigator">
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-navigator.xul" label="&navigator.label;"/>
-          </treerow>
-        </treeitem>
-    
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-fonts.xul" label="&fonts.label;"/>
-          </treerow>
-        </treeitem>
-    
-        <treeitem id="themes-panel">
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-themes.xul" label="&themes.label;"/>
-          </treerow>
-        </treeitem>
-    
-        <!-- XXX remove this when overlays.rdf works for navigator -->
-    
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-privacy.xul" label="&privacy.label;" />
-          </treerow>
-        </treeitem>
-    
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-connection.xul" label="&connection.label;" />
-          </treerow>
-        </treeitem>
-
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-downloads.xul" label="&downloads.label;" />
-          </treerow>
-        </treeitem>   
-    
-        <treeitem id="advancedItem" container="true">
-          <treerow>
-            <treecell url="chrome://browser/content/pref/pref-advanced.xul" label="&advance.label;"/>
-          </treerow>
-          <treechildren id="advancedChildren">
-            <treeitem>
-              <treerow>
-                <treecell url="chrome://browser/content/pref/pref-images.xul" label="&images.label;"/>
-              </treerow>
-            </treeitem>
-    
-            <treeitem>
-              <treerow>
-                <treecell url="chrome://browser/content/pref/pref-scripts.xul" label="&scriptsAndWindows.label;"/> 
-              </treerow>
-            </treeitem>
-            <treeitem>
-              <treerow>
-                <treecell url="chrome://browser/content/pref/pref-tabs.xul" label="&tabs.label;"/> 
-              </treerow>
-            </treeitem>
-#ifdef XP_WIN
-            <treeitem id="winhooks">
-              <treerow>
-                <treecell url="chrome://browser/content/pref/pref-winhooks.xul" label="&winhooks.label;"/>
-              </treerow>
-            </treeitem> 
-#endif
-          </treechildren>
-        </treeitem>
-      </treechildren>
-    </tree>
     <vbox flex="1">
       <dialogheader id="header"/>
       <iframe id="panelFrame" name="panelFrame" style="width: 0px" flex="1"/>
-   </vbox>
+    </vbox>
   </hbox>
-
-   <script type="application/x-javascript">
-    <![CDATA[
-      if(window.arguments && window.arguments[0]) {
-        document.getElementById("panelFrame").setAttribute("src", window.arguments[0] );
-        document.getElementById("panelFrame").setAttribute("tag", window.arguments[0] );
-      }
-      else {
-        document.getElementById("panelFrame").setAttribute("src", "chrome://browser/content/pref/pref-navigator.xul" );
-        document.getElementById("panelFrame").setAttribute("tag", "chrome://browser/content/pref/pref-navigator.xul" );
-      }
-    ]]>
-    </script>
 
   <separator/>
      

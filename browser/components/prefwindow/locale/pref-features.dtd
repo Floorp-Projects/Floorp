@@ -1,0 +1,23 @@
+<!ENTITY  lHeader                           "Web Page Capabilities">
+
+<!ENTITY  enbJavaCheck.label                "Enable Java">
+<!ENTITY  enbJavaCheck.accesskey            "j">
+<!ENTITY  enableJavaScript.label            "Enable JavaScript">
+<!ENTITY  enableJavaScript.accesskey        "s">
+<!ENTITY  advancedJavaScript.label          "Advanced...">
+<!ENTITY  advancedJavaScript.accesskey      "a">
+
+<!ENTITY  enableImages.label                "Load Images">
+<!ENTITY  enableImages.accesskey            "i">
+<!ENTITY  forOriginatingSiteOnly.label      "for the originating Web site only">
+<!ENTITY  forOriginatingSiteOnly.accesskey  "W">
+<!ENTITY  manageImages.label                "Permissions...">
+<!ENTITY  manageImages.accesskey            "p">
+<!ENTITY  popupReject.label                 "Block Popup Windows">
+<!ENTITY  popupReject.accesskey             "b">
+
+<!ENTITY  div.blessedservers.label          "Always allow the sites below to open popup windows:">
+<!ENTITY  addpermission.label               "Add Site...">
+<!ENTITY  removepermission.label            "Remove Site">
+<!ENTITY  removeallpermissions.label        "Remove All Sites">
+
