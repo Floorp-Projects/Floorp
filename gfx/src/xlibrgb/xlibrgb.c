@@ -3448,9 +3448,9 @@ xlib_draw_rgb_image_core (Drawable drawable,
 
     if(!XInitImage(&ximage))
     {
-#ifdef USE_MOZILLA_TYPES
+#ifdef DSIABLED_FOR_NOW_DUE_LINK_ISSUES
       NS_ERROR("xlib_draw_rgb_image_core: XInitImage() failure - should not happen...\n");
-#endif /* USE_MOZILLA_TYPES */    
+#endif /* DSIABLED_FOR_NOW_DUE_LINK_ISSUES */    
       return; /* error - should not happen... */
     }
     

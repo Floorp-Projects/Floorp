@@ -23,20 +23,20 @@
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@
+VPATH		= @srcdir@ @srcdir@/../xlib
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gfxxprint
-EXPORT_LIBRARY = 1
+EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxXprintModule
 
 EXTRA_DSO_LIBS	= gkgfx
 REQUIRES	= xpcom string widget view img util dom pref locale uconv unicharutil gfx2 necko imglib2 intl
 
-CSRCS		= ../xlibrgb/xlibrgb.c \
+CSRCS		= \
                 xprintutil.c \
                 xprintutil_printtofile.c \
 		$(NULL)
@@ -47,7 +47,7 @@ CPPSRCS		= \
 		nsRenderingContextXP.cpp \
 		nsGfxFactoryXP.cpp \
 		nsXPrintContext.cpp \
-		../xlib/nsRegionXlib.cpp \
+		nsRegionXlib.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -74,6 +74,7 @@ CXXFLAGS	+= $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
+		-lxlibrgb  \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
