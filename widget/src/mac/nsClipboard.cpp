@@ -105,8 +105,7 @@ nsClipboard :: SetNativeClipboardData()
       // find MacOS flavor
       ResType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
     
-      // get data. This takes converters into account. We don't own the data
-      // so make sure not to delete it.
+      // get data. This takes converters into account.
       void* data = nsnull;
       PRUint32 dataSize = 0;
       nsCOMPtr<nsISupports> genericDataWrapper;
