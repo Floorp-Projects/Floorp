@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.64 2004/02/26 00:05:29 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.65 2004/04/08 00:17:46 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1138,6 +1138,7 @@ CERT_KeyUsageAndTypeForCertUsage(SECCertUsage usage,
 	    requiredCertType = NS_CERT_TYPE_OBJECT_SIGNING_CA;
 	    break;
 	  case certUsageAnyCA:
+	  case certUsageVerifyCA:
 	  case certUsageStatusResponder:
 	    requiredKeyUsage = KU_KEY_CERT_SIGN;
 	    requiredCertType = NS_CERT_TYPE_OBJECT_SIGNING_CA |
@@ -1338,20 +1339,7 @@ CERT_AddOKDomainName(CERTCertificate *cert, const char *hn)
 static SECStatus
 cert_TestHostName(char * cn, const char * hn)
 {
-    char * hndomain;
-    int    regvalid;
-
-    if ((hndomain = PORT_Strchr(hn, '.')) == NULL) {
-	/* No domain in URI host name */
-	char * cndomain;
-	if ((cndomain = PORT_Strchr(cn, '.')) != NULL &&
-	    (cndomain - cn) > 0) {
-	    /* there is a domain in the cn string, so chop it off */
-	    *cndomain = '\0';
-	}
-    }
-
-    regvalid = PORT_RegExpValid(cn);
+    int regvalid = PORT_RegExpValid(cn);
     if (regvalid != NON_SXP) {
 	SECStatus rv;
 	/* cn is a regular expression, try to match the shexp */
@@ -1372,13 +1360,6 @@ cert_TestHostName(char * cn, const char * hn)
 	return SECSuccess;
     }
 	    
-    if ( hndomain ) {
-	/* compare just domain name with cert name */
-	if ( PORT_Strcasecmp(hndomain+1, cn) == 0 ) {
-	    return SECSuccess;
-	}
-    }
-
     PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
     return SECFailure;
 }
