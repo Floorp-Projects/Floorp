@@ -206,6 +206,10 @@ function OnLoadNewMailList()
           selectedAB = parentURI;
         }
   }
+      else if (!(directory.operations & directory.opWrite)) {
+        selectedAB = kPersonalAddressbookURI;
+        
+      }      
       else {
         selectedAB = abURI;
       }

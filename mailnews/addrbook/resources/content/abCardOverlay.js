@@ -50,7 +50,8 @@ function OnLoadNewCard()
   var cardproperty = Components.classes["@mozilla.org/addressbook/cardproperty;1"].createInstance(Components.interfaces.nsIAbCard);
 
   editCard.card = cardproperty;
-  editCard.titleProperty = "newCardTitle"
+  editCard.titleProperty = "newCardTitle";
+  editCard.selectedAB = "";
 
   if ("arguments" in window && window.arguments[0])
   {
@@ -69,6 +70,9 @@ function OnLoadNewCard()
           // use the personal addressbook
           editCard.selectedAB = kPersonalAddressbookURI;
         }
+      }
+      else if (!(directory.operations & directory.opWrite)) {
+        editCard.selectedAB = kPersonalAddressbookURI;
       }
       else {
       editCard.selectedAB = window.arguments[0].selectedAB;
@@ -177,6 +181,23 @@ function OnLoadEditCard()
   var displayName = editCard.card.displayName;
   top.window.title = gAddressBookBundle.getFormattedString(editCard.titleProperty,
                                                            [ displayName ]);
+  // check if selectedAB is a writeable
+  // if not disable all the fields
+  if ("arguments" in window && window.arguments[0])
+  {
+    if ("abURI" in window.arguments[0]) {
+      var abURI = window.arguments[0].abURI;
+      var directory = GetDirectoryFromURI(abURI);
+
+      if (!(directory.operations & directory.opWrite)) 
+      {
+        var disableElements = document.getElementsByAttribute("disableforreadonly", "true");
+        for (var i=0; i<disableElements.length; i++)
+          disableElements[i].setAttribute('disabled', 'true');
+      }
+    }
+  }
+  
 }
 
 // this is used by people who extend the ab card dialog

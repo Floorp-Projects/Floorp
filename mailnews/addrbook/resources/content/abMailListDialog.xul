@@ -42,6 +42,7 @@ Rights Reserved.
       <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" 
         datasources="rdf:addressdirectory">
         <template> 
+        <rule nc:IsWriteable="false"/> 
         <rule nc:IsMailList="false">
           <menuitem uri="..."
                     label="rdf:http://home.netscape.com/NC-rdf#DirName"

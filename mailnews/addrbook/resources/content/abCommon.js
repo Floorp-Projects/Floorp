@@ -157,7 +157,8 @@ var DirPaneController =
         if (selectedItems.length == 1) {
           var mailingListUri = selectedItems[0].getAttribute('id');
           var directory = GetDirectoryFromURI(mailingListUri);
-          if (directory.isMailList)
+          if ((directory.isMailList) || 
+              (!(directory.operations & directory.opWrite)))
              return true;
         }
         return false;
@@ -202,6 +203,18 @@ function AbEditSelectedDirectory()
     if (directory.isMailList) {
       var parentURI = selectedItems[0].parentNode.parentNode.getAttribute('id');
       goEditListDialog(parentURI, null, mailingListUri, UpdateCardView);
+    }
+    else if (!(directory.operations & directory.opWrite))
+    {
+      var ldapUrlPrefix = "moz-abldapdirectory://";
+      if ((mailingListUri.indexOf(ldapUrlPrefix, 0)) == 0)
+      {
+        var args = { selectedDirectory: directory.dirName,
+                     selectedDirectoryString: null};
+        args.selectedDirectoryString = mailingListUri.substr(ldapUrlPrefix.length, mailingListUri.length);
+        window.openDialog("chrome://messenger/content/addressbook/pref-directory-add.xul",
+                      "editDirectory", "chrome,modal=yes,resizable=no", args);
+      }
     }
   }
 }

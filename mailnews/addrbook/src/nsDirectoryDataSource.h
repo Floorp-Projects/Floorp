@@ -121,6 +121,8 @@ protected:
                                       nsIRDFNode **target);
   nsresult createDirectoryIsRemoteNode(nsIAbDirectory *directory,
     nsIRDFNode **target);
+	nsresult createDirectoryIsWriteableNode(nsIAbDirectory *directory,
+                                            nsIRDFNode **target);
 	static nsresult getDirectoryArcLabelsOut(nsIAbDirectory *directory,
 										   nsISupportsArray **arcs);
 
@@ -146,6 +148,7 @@ protected:
 	static nsIRDFResource* kNC_DirUri;
 	static nsIRDFResource* kNC_IsMailList;
   static nsIRDFResource* kNC_IsRemote;
+	static nsIRDFResource* kNC_IsWriteable;
 
 	// commands
 	static nsIRDFResource* kNC_Delete;

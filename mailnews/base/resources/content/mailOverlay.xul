@@ -6,12 +6,11 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    function goNewCardDialog(selectedAB)
+    function openNewCardDialog()
       {
         window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
                           "",
-                          "chrome,resizable=no,titlebar,modal",
-                          {selectedAB:selectedAB});
+                          "chrome,resizable=no,titlebar,modal");
       }
 
     function goOpenNewMessage()
@@ -42,7 +41,7 @@
   <!-- generic commands -->  
   <commandset id="tasksCommands">
     <command id="cmd_newMessage" oncommand="goOpenNewMessage();"/>
-    <command id="cmd_newCard" oncommand="goNewCardDialog(0)"/>
+    <command id="cmd_newCard" oncommand="openNewCardDialog()"/>
   </commandset>
   <menuitem id="menu_newCard" label="&newCardCmd.label;" accesskey="&newCardCmd.accesskey;" command="cmd_newCard"/>
   <menuitem id="menu_newMessage" label="&newMessageCmd.label;" accesskey="&newMessageCmd.accesskey;" key="key_newMessage" command="cmd_newMessage"/>
