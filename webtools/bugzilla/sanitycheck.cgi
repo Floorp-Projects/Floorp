@@ -66,18 +66,27 @@ sub CrossCheck {
     }
     while (@_) {
         my $ref = shift @_;
-        my $t2 = shift @$ref;
-        my $f2 = shift @$ref;
-        my %exceptions;
-        foreach my $v (@$ref) {
-            $exceptions{$v} = 1;
-        }
+        my ($t2, $f2, $key2, $exceptions) = @$ref;
+
+        $exceptions ||= [];
+        my %exceptions = map { $_ => 1 } @$exceptions;
+
         Status("... from $t2.$f2");
-        SendSQL("SELECT DISTINCT $f2 FROM $t2");
+        
+        SendSQL("SELECT DISTINCT $f2" . ($key2 ? ", $key2" : '') ." FROM $t2");
         while (MoreSQLData()) {
-            my $value = FetchOneColumn();
+            my ($value, $key) = FetchSQLData();
             if (!$valid{$value} && !$exceptions{$value}) {
-                Alert("Bad value $value found in $t2.$f2");
+                my $alert = "Bad value $value found in $t2.$f2";
+                if ($key2) {
+                    if ($key2 eq 'bug_id') {
+                        $alert .= qq{ (<a href="show_bug.cgi?id=$key">bug $key</a>)};
+                    }
+                    else {
+                        $alert .= " ($key2 == '$key')";
+                    }
+                    Alert($alert);
+                }
             }
         }
     }
@@ -128,14 +137,14 @@ CrossCheck("bugs", "bug_id",
            ["keywords", "bug_id"]);
 
 CrossCheck("profiles", "userid",
-           ["bugs", "reporter"],
-           ["bugs", "assigned_to"],
-           ["bugs", "qa_contact", 0],
-           ["attachments", "submitter_id"],
-           ["bugs_activity", "who"],
-           ["cc", "who"],
-           ["votes", "who"],
-           ["longdescs", "who"],
+           ["bugs", "reporter", "bug_id"],
+           ["bugs", "assigned_to", "bug_id"],
+           ["bugs", "qa_contact", "bug_id", ["0"]],
+           ["attachments", "submitter_id", "bug_id"],
+           ["bugs_activity", "who", "bug_id"],
+           ["cc", "who", "bug_id"],
+           ["votes", "who", "bug_id"],
+           ["longdescs", "who", "bug_id"],
            ["namedqueries", "userid"]);
 
 
@@ -237,9 +246,9 @@ foreach my $ref (@checklist) {
 Status("Checking profile logins");
 
 my $emailregexp = Param("emailregexp");
-
+$emailregexp =~ s/'/\\'/g;
 SendSQL("SELECT userid, login_name FROM profiles " .
-        "WHERE login_name NOT REGEXP " . SqlQuote($emailregexp));
+        "WHERE login_name NOT REGEXP '" . $emailregexp . "'");
 
 
 while (my ($id,$email) = (FetchSQLData())) {

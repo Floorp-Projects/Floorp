@@ -263,7 +263,12 @@ sub cvsmenu {
           print "<b>$title</b><br><ul>\n";
           foreach $i (@::TreeList) {
                $branch = '';
-               $branch = "&branch=$::TreeInfo{$i}{'branch'}"
+               # HACK ALERT
+               # quick fix by adam:
+               # when browsing with rview, branch needs to be in 'rev' param
+               # not 'branch' param.  don't ask me why ...
+               my $hack = ($page eq 'rview.cgi') ? 'rev' : 'branch';
+               $branch = "&$hack=$::TreeInfo{$i}{'branch'}"
                     if $::TreeInfo{$i}{'branch'};
 
                $desc = $::TreeInfo{$i}{'shortdesc'};

@@ -276,6 +276,7 @@ List users with login name matching:
 </SELECT>
 <BR>
 <INPUT TYPE=SUBMIT VALUE="Submit">
+</FORM>
 };
     PutTrailer();
     exit;

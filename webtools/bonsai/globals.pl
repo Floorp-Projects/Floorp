@@ -517,7 +517,8 @@ sub DataDir {
 
      # Make sure it exists...
      unless (-d $dir) {
-          system ("rm", "-rf", "$dir;", "mkdir", "-p", $dir);
+          system ("rm", "-rf", $dir);
+          system ("mkdir", "-p", $dir);
           die "Couldn't create '$dir'\n"
                unless (-d $dir);
           chmod(0777, $dir);
