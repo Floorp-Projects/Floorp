@@ -328,7 +328,7 @@ if( !$show_raw ) {
 }
 else {
     print "<pre>";
-    for my $ci (@$result) {
+    for my $ci (reverse @$result) {
         $ci->[$::CI_LOG] = '';
         $s = join("|",@$ci);
         print "$s\n";
