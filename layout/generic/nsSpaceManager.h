@@ -132,7 +132,7 @@ public:
 protected:
   nsIFrame* const mFrame;     // frame associated with the space manager
   nscoord         mX, mY;     // translation from local to global coordinate space
-  BandList        mBandList;  // header for circular linked list of band rects
+  BandList        mBandList;  // header/sentinel for circular linked list of band rects
   PLHashTable*    mFrameInfoMap;
 
 protected:

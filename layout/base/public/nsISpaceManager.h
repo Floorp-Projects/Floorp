@@ -101,7 +101,10 @@ public:
   NS_IMETHOD GetTranslation(nscoord& aX, nscoord& aY) const = 0;
 
   /**
-   * Returns the y-most of the bottommost band, or 0 if there are no bands.
+   * Returns the y-most of the bottommost band or 0 if there are no bands.
+   *
+   * @return  NS_OK if there are bands and NS_COMFALSE if there are
+   *          no bands
    */
   NS_IMETHOD YMost(nscoord& aYMost) const = 0;
 
@@ -133,16 +136,12 @@ public:
    * Add a rectangular region of unavailable space. The space is relative to
    * the local coordinate system.
    *
-   * The region is tagged with a frame. When translated to world coordinates
-   * the origin of the rect MUST be within the defined coordinate space, i.e.
-   * the x-offset and y-offset must be >= 0
+   * The region is tagged with a frame
    *
    * @param   aFrame the frame used to identify the region. Must not be NULL
    * @param   aUnavailableSpace the bounding rect of the unavailable space
    * @return  NS_OK if successful
    *          NS_ERROR_FAILURE if there is already a region tagged with aFrame
-   *          NS_ERROR_INVALID_ARG if the rect translated to world coordinates
-   *            is not within the defined coordinate space
    */
   NS_IMETHOD AddRectRegion(nsIFrame*     aFrame,
                            const nsRect& aUnavailableSpace) = 0;
@@ -153,8 +152,7 @@ public:
    * rect. You specify whether the width change applies to the left or right edge
    *
    * Returns NS_OK if successful, NS_ERROR_INVALID_ARG if there is no region
-   * tagged with aFrame, and NS_ERROR_FAILURE if the new offset when translated
-   * to world coordinates is outside the defined coordinate space
+   * tagged with aFrame
    */
   enum AffectedEdge {LeftEdge, RightEdge};
   NS_IMETHOD ResizeRectRegion(nsIFrame*    aFrame,
@@ -166,8 +164,7 @@ public:
    * Offset the region associated with aFrame by the specified amount.
    *
    * Returns NS_OK if successful, NS_ERROR_INVALID_ARG if there is no region
-   * tagged with aFrame, and NS_ERROR_FAILURE if the new offset when translated
-   * to world coordinates is outside the defined coordinate space
+   * tagged with aFrame
    */
   NS_IMETHOD OffsetRegion(nsIFrame* aFrame, nscoord dx, nscoord dy) = 0;
 
