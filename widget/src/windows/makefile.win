@@ -20,7 +20,7 @@ DEPTH=..\..\..
 
 LIBRARY_NAME = raptorwidget_s
 REQUIRES=xpcom gfxwin raptor
-DEFINES =-D_IMPL_NS_WIDGET
+DEFINES =-D_IMPL_NS_WIDGET -DNS_DLLNAME=raptorwidget.dll
 
 CPPSRCS =              \
 	nsPopUpMenu.cpp      \

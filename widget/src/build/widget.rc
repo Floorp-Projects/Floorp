@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "resource.h"
+#include "..\\windows\\resource.h"
 
 IDC_SELECTANCHOR        CURSOR  DISCARDABLE     "res\\select.cur"
 IDC_ARROWSOUTH          CURSOR  DISCARDABLE     "res\\arrow_south.cur"
