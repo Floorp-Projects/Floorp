@@ -71,6 +71,14 @@
 #include "nsQuickSort.h"
 
 /*
+**  strcasecmp API please.
+*/
+#if defined(_MSC_VER)
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#endif
+
+/*
 ** the globals variables.  happy joy.
 */
 STGlobals globals;
@@ -95,161 +103,24 @@ int showHelp(void)
 {
     int retval = 0;
 
-    if(0 != globals.mOptions.mHelp)
+    if(PR_FALSE != globals.mOptions.mHelp)
     {
-        PR_fprintf(PR_STDOUT,
-"Usage:\t%s [OPTION]... [-|filename]\n\n",
-                   globals.mProgramName);
+        PR_fprintf(PR_STDOUT, "Usage:\t%s [OPTION]... [-|filename]\n\n", globals.mProgramName);
 
-        PR_fprintf(PR_STDOUT, "%s",
-"OPTIONS:\n"
-" -h                                                         Show this help.\n"
-                   "\n");
+#define ST_CMD_OPTION_BOOL(option_name, option_help) \
+    PR_fprintf(PR_STDOUT, "--%s\nDisabled by default.\n%s\n", #option_name, option_help);
+#define ST_CMD_OPTION_STRING(option_name, default_value, option_help) \
+    PR_fprintf(PR_STDOUT, "--%s=<value>\nDefault value is \"%s\".\n%s\n", #option_name, default_value, option_help);
+#define ST_CMD_OPTION_STRING_ARRAY(option_name, array_size, option_help) \
+    PR_fprintf(PR_STDOUT, "--%s=<value>\nUp to %u occurrences allowed.\n%s\n", #option_name, array_size, option_help);
+#define ST_CMD_OPTION_STRING_PTR_ARRAY(option_name, option_help) \
+    PR_fprintf(PR_STDOUT, "--%s=<value>\nUnlimited occurrences allowed.\n%s\n", #option_name, option_help);
+#define ST_CMD_OPTION_UINT32(option_name, default_value, multiplier, option_help) \
+    PR_fprintf(PR_STDOUT, "--%s=<value>\nDefault value is %u.\n%s\n", #option_name, default_value, option_help);
+#define ST_CMD_OPTION_UINT64(option_name, default_value, multiplier, option_help) \
+    PR_fprintf(PR_STDOUT, "--%s=<value>\nDefault value is %llu.\n%s\n", #option_name, default_value, option_help);
 
-        PR_fprintf(PR_STDOUT, "%s",
-" -p<port>                 Listen for http requests on the specified <port>.\n"
-"                                                    Default port is '1969'.\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -d<dir>                                          Place -b output in <dir>.\n"
-"                                                  The directory must exist.\n"
-"                                              The default directory is '.'.\n"
-"                               Very important to not have a trailing slash!\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -b<filepath>                 Execute in batch mode, multiple -b's allowed.\n"
-"                                   Save <filepath> into -d<dir>, then exit.\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -l<max>              Set the maximum number of items to display in a list.\n"
-"                                                The default <max> is '500'.\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -o<num>           Sets the order in which lists are sorted when displayed.\n"
-"                                   '0' is by weight (lifespan * byte size).\n"
-"                                                       '1' is by byte size.\n"
-"                                                 '2' is by time (lifetime).\n"
-                   "");
-        PR_fprintf(PR_STDOUT, "%s",
-"                                         '3' is by allocation object count.\n"
-"                                     '4' is by heap operation runtime cost.\n"
-"                                                  By default, <num> is '0'.\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -smin<num>       Set the minimum byte size to exclude smaller allocations.\n"
-"                                                  The default <num> is '0'.\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -smax<num>        Set the maximum byte size to exclude larger allocations.\n"
-"                                           By default, there is no maximum.\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT,
-" -tmin<num>                 Set the minimum allocation lifetime in seconds.\n"
-"              Excludes allocations which do not live at least said seconds.\n"
-"                                         The default <num> is '%u' seconds.\n"
-                   "\n", ST_DEFAULT_LIFETIME_MIN);
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -tmax<num>                 Set the maximum allocation lifetime in seconds.\n"
-"              Excludes allocations which live longer than the said seconds.\n"
-"                                           By default, there is no maximum.\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -wmin<num>                              Set the minimum allocation weight.\n"
-"                                            Weight is lifespan * byte size.\n"
-"                         Excludes allocations which do not have the weight.\n"
-"                                                  The default <num> is '0'.\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -wmax<num>                              Set the maximum allocation weight.\n"
-"                                            Weight is lifespan * byte size.\n"
-"                                Excludes allocations which are over weight.\n"
-"                                           By default, there is no maximum.\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -imin<num>                                     Set the minimum in seconds.\n"
-"                   Excludes allocations existing solely before said second.\n"
-"                                                  The default <num> is '0'.\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -imax<num>                                     Set the maximum in seconds.\n"
-"                    Excludes allocations existing solely after said second.\n"
-"                                           By default, there is no maximum.\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -amin<num>                          Set the allocation minimum in seconds.\n"
-"                           Excludes allocations created before said second.\n"
-"                                                  The default <num> is '0'.\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -amax<num>                          Set the allocation maximum in seconds.\n"
-"                            Excludes allocations created after said second.\n"
-"                                           By default, there is no maximum.\n"
-                   "\n");
-
-#if ST_WANT_GRAPHS
-        PR_fprintf(PR_STDOUT, "%s",
-" -gmin<num>                               Set the graph minimum in seconds.\n"
-"                  Excludes representing graph intervals before said second.\n"
-"                                                  The default <num> is '0'.\n"
-                   "\n");
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -gmax<num>                               Set the graph maximum in seconds.\n"
-"                   Excludes representing graph intervals after said second.\n"
-"                                           By default, there is no maximum.\n"
-                   "\n");
-#endif /* ST_WANT_GRAPHS */
-
-        PR_fprintf(PR_STDOUT,
-" -a<num>                               Set an allocation alignment boundry.\n"
-"                                     All allocations are a factor of <num>.\n"
-"      Meaning, an allocation of 1 byte would actually count as <num> bytes.\n"
-            );
-        PR_fprintf(PR_STDOUT,
-"              Set <num> to '1' in order to see the actual allocation sizes.\n"
-"              Alignment is taken into account prior to allocation overhead.\n"
-"                                                   By default, <num> is %u.\n"
-                   "\n", ST_DEFAULT_ALIGNMENT_SIZE);
-
-        PR_fprintf(PR_STDOUT,
-" -h<num>                                           Set allocation overhead.\n"
-"                            All allocations cost an additional <num> bytes.\n"
-"                 Overhead is taken into account after allocation alignment.\n"
-"              Set <num> to '0' in order to see the actual allocation sizes.\n"
-"                                                    By default, <num> is %u.\n"
-                   "\n", ST_DEFAULT_OVERHEAD_SIZE);
-
-        PR_fprintf(PR_STDOUT,
-" -c<text>     Restrict callsite backtraces to only those containing <text>.\n"
-"                      Allows targeting of specific object creation methods.\n"
-"                     A maximum of %d multiple restrictions can be specified.\n"
-"                                By default, there is no <text> restriction.\n"
-                   "\n", ST_SUBSTRING_MATCH_MAX);
-
-        PR_fprintf(PR_STDOUT, "%s",
-" -r<category-rules-filename>                   Set the category rules file.\n"
-"              This file contains rules about how to categorize allocations.\n"
-"                                                The default is 'rules.txt'.\n"
-                   "\n");
-        PR_fprintf(PR_STDOUT, "%s",
-" -f<focus-category-name>                 Set the category name to focus on.\n"
-"     Focus all reports on allocations that belong to a particular category.\n"
-"                                             The default is 'All' category.\n"
-                   "\n");
+#include "stoptions.h"
 
         /*
         ** Showed something.
@@ -307,533 +178,130 @@ int initOptions(int aArgCount, char** aArgArray)
 
     /*
     ** Go through all arguments.
-    ** If argument does not being with a dash it is a file name.
-    ** If argument does begin with a dash but is only a dash
-    **  it means input comes from stdin.
-    ** If argument begins with a dash and does not end, then it
-    **  maybe an option.
+    ** Two dashes lead off an option.
+    ** Any single dash leads off help, unless it is a lone dash (stdin).
+    ** Anything else will be attempted as a file to be processed.
     */
     for(traverse = 1; traverse < aArgCount; traverse++)
     {
-        if('-' == aArgArray[traverse][0])
+        if('-' == aArgArray[traverse][0] && '-' == aArgArray[traverse][1])
+        {
+            const char* option = &aArgArray[traverse][2];
+
+            /*
+            **  Initial if(0) needed to make "else if"s valid.
+            */
+            if(0)
+            {
+            }
+
+#define ST_CMD_OPTION_BOOL(option_name, option_help) \
+    else if(0 == strcasecmp(option, #option_name)) \
+    { \
+        globals.mOptions.m##option_name = PR_TRUE; \
+    }
+#define ST_CMD_OPTION_STRING(option_name, default_value, option_help) \
+    else if(0 == strncasecmp(option, #option_name "=", strlen(#option_name "="))) \
+    { \
+        PR_snprintf(globals.mOptions.m##option_name, sizeof(globals.mOptions.m##option_name), "%s", option + strlen(#option_name "=")); \
+    }
+#define ST_CMD_OPTION_STRING_ARRAY(option_name, array_size, option_help) \
+    else if(0 == strncasecmp(option, #option_name "=", strlen(#option_name "="))) \
+    { \
+        int arrLoop = 0; \
+        \
+        for(arrLoop = 0; arrLoop < array_size; arrLoop++) \
+        { \
+            if('\0' == globals.mOptions.m##option_name[arrLoop][0]) \
+            { \
+                break; \
+            } \
+        }\
+        \
+        if(arrLoop != array_size) \
+        { \
+            PR_snprintf(globals.mOptions.m##option_name[arrLoop], sizeof(globals.mOptions.m##option_name[arrLoop]), "%s", option + strlen(#option_name "=")); \
+        } \
+        else \
+        { \
+            REPORT_ERROR_MSG(__LINE__, option); \
+            retval = __LINE__; \
+            globals.mOptions.mHelp = PR_TRUE; \
+        } \
+    }
+#define ST_CMD_OPTION_STRING_PTR_ARRAY(option_name, option_help) \
+    else if(0 == strncasecmp(option, #option_name "=", strlen(#option_name "="))) \
+    { \
+        const char** expand = NULL; \
+        \
+        expand = (const char**)realloc((void*)globals.mOptions.m##option_name, sizeof(const char*) * (globals.mOptions.m##option_name##Count + 1)); \
+        if(NULL != expand) \
+        { \
+            globals.mOptions.m##option_name = expand; \
+            globals.mOptions.m##option_name[globals.mOptions.m##option_name##Count] = option + strlen(#option_name "="); \
+            globals.mOptions.m##option_name##Count++; \
+        } \
+        else \
+        { \
+            retval = __LINE__; \
+            globals.mOptions.mHelp = PR_TRUE; \
+        } \
+    }
+#define ST_CMD_OPTION_UINT32(option_name, default_value, multiplier, option_help) \
+    else if(0 == strncasecmp(option, #option_name "=", strlen(#option_name "="))) \
+    { \
+        PRInt32 scanRes = 0; \
+        \
+        scanRes = PR_sscanf(option + strlen(#option_name "="), "%u", &globals.mOptions.m##option_name); \
+        if(1 != scanRes) \
+        { \
+            REPORT_ERROR_MSG(__LINE__, option); \
+            retval = __LINE__; \
+            globals.mOptions.mHelp = PR_TRUE; \
+        } \
+    }
+#define ST_CMD_OPTION_UINT64(option_name, default_value, multiplier, option_help) \
+    else if(0 == strncasecmp(option, #option_name "=", strlen(#option_name "="))) \
+    { \
+        PRInt32 scanRes = 0; \
+        \
+        scanRes = PR_sscanf(option + strlen(#option_name "="), "%llu", &globals.mOptions.m##option_name##64); \
+        if(1 != scanRes) \
+        { \
+            REPORT_ERROR_MSG(__LINE__, option); \
+            retval = __LINE__; \
+            globals.mOptions.mHelp = PR_TRUE; \
+        } \
+    }
+
+            /*
+            **  Expands to a bunch of "else if"s.
+            */
+#include "stoptions.h"
+
+            /*
+            **  If no match on options, this else will get hit.
+            */
+            else
+            {
+                REPORT_ERROR_MSG(__LINE__, option);
+                retval = __LINE__;
+                globals.mOptions.mHelp = PR_TRUE;
+            }
+        }
+        else if('-' == aArgArray[traverse][0] && '\0' != aArgArray[traverse][1])
         {
             /*
-            ** Regular dash options.
-            ** Detect what to do.
+            **  Show help, bad/legacy option.
             */
-            switch(tolower(aArgArray[traverse][1]))
-            {
-                case '\0':
-                {
-                    /*
-                    ** If the entire option is a dash,
-                    ** then input is stdin.
-                    */
-                    PR_snprintf(globals.mOptions.mFileName, sizeof(globals.mOptions.mFileName), "%s", "-");
-                }
-                break;
-
-                case 'h':
-                {
-                    if('\0' != aArgArray[traverse][2])
-                    {
-                        PRInt32 scanRes = 0;
-                        
-                        /*
-                        ** Allocation overhead.
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][2], "%u", &globals.mOptions.mOverhead);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                    }
-                    else
-                    {
-                        /*
-                        ** Help.
-                        */
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-
-                case 'p':
-                {
-                    PRInt32 scanRes = 0;
-
-                    /*
-                    ** Port.
-                    */
-                    scanRes = PR_sscanf(&aArgArray[traverse][2], "%u", &globals.mOptions.mHttpdPort);
-                    if(1 != scanRes)
-                    {
-                        retval = __LINE__;
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-
-                case 'o':
-                {
-                    PRInt32 scanRes = 0;
-
-                    /*
-                    ** Sort Order.
-                    */
-                    scanRes = PR_sscanf(&aArgArray[traverse][2], "%u", &globals.mOptions.mOrderBy);
-                    if(1 != scanRes)
-                    {
-                        retval = __LINE__;
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-
-                case 'd':
-                {
-                    /*
-                    ** Where to stick the '-b' output.
-                    */
-                    if('\0' != aArgArray[traverse][2])
-                    {
-                        PR_snprintf(globals.mOptions.mOutputDir, sizeof(globals.mOptions.mOutputDir), "%s", &aArgArray[traverse][2]);
-                    }
-                    else
-                    {
-                        retval = __LINE__;
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-
-                case 'b':
-                {
-                    /*
-                    ** Batch mode request.
-                    */
-                    if('\0' != aArgArray[traverse][2])
-                    {
-                        const char** expand = NULL;
-
-                        /*
-                        ** Increase size of batch buffer.
-                        */
-                        expand = (const char**)realloc((void*)globals.mOptions.mBatchRequest, sizeof(const char*) * (globals.mOptions.mBatchRequestCount + 1));
-                        if(NULL != expand)
-                        {
-                            /*
-                            ** Reassign in case of pointer move.
-                            */
-                            globals.mOptions.mBatchRequest = expand;
-
-                            /*
-                            ** Add new entry, increase the count.
-                            */
-                            globals.mOptions.mBatchRequest[globals.mOptions.mBatchRequestCount] = &aArgArray[traverse][2];
-                            globals.mOptions.mBatchRequestCount++;
-                        }
-                        else
-                        {
-                            retval = __LINE__;
-                            REPORT_ERROR(__LINE__, realloc);
-                        }
-                    }
-                    else
-                    {
-                        retval = __LINE__;
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-
-                case 'l':
-                {
-                    PRInt32 scanRes = 0;
-
-                    /*
-                    ** List item max.
-                    */
-                    scanRes = PR_sscanf(&aArgArray[traverse][2], "%u", &globals.mOptions.mListItemMax);
-                    if(1 != scanRes)
-                    {
-                        retval = __LINE__;
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-
-                case 'i':
-                {
-                    if(0 == strncmp(&aArgArray[traverse][2], "min", 3))
-                    {
-                        PRInt32 scanRes = 0;
-
-                        /*
-                        ** Timeval min.
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mTimevalMin);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                        else
-                        {
-                            globals.mOptions.mTimevalMin *= ST_TIMEVAL_RESOLUTION;
-                        }
-                    }
-                    else if(0 == strncmp(&aArgArray[traverse][2], "max", 3))
-                    {
-                        PRInt32 scanRes = 0;
-
-                        /*
-                        ** Timeval max
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mTimevalMax);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                        else
-                        {
-                            globals.mOptions.mTimevalMax *= ST_TIMEVAL_RESOLUTION;
-                        }
-                    }
-                    else
-                    {
-                        retval = __LINE__;
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-
-                case 'a':
-                {
-                    if(0 == strncmp(&aArgArray[traverse][2], "min", 3))
-                    {
-                        PRInt32 scanRes = 0;
-
-                        /*
-                        ** Allocation Timeval min.
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mAllocationTimevalMin);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                        else
-                        {
-                            globals.mOptions.mAllocationTimevalMin *= ST_TIMEVAL_RESOLUTION;
-                        }
-                    }
-                    else if(0 == strncmp(&aArgArray[traverse][2], "max", 3))
-                    {
-                        PRInt32 scanRes = 0;
-
-                        /*
-                        ** Allocation timeval max
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mAllocationTimevalMax);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                        else
-                        {
-                            globals.mOptions.mAllocationTimevalMax *= ST_TIMEVAL_RESOLUTION;
-                        }
-                    }
-                    else
-                    {
-                        PRInt32 scanRes = 0;
-                        
-                        /*
-                        ** Align by.
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][2], "%u", &globals.mOptions.mAlignBy);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                    }
-                }
-                break;
-
-#if ST_WANT_GRAPHS
-                case 'g':
-                {
-                    if(0 == strncmp(&aArgArray[traverse][2], "min", 3))
-                    {
-                        PRInt32 scanRes = 0;
-
-                        /*
-                        ** Graph Timeval min.
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mGraphTimevalMin);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                        else
-                        {
-                            globals.mOptions.mGraphTimevalMin *= ST_TIMEVAL_RESOLUTION;
-                        }
-                    }
-                    else if(0 == strncmp(&aArgArray[traverse][2], "max", 3))
-                    {
-                        PRInt32 scanRes = 0;
-
-                        /*
-                        ** Graph Timeval max
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mGraphTimevalMax);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                        else
-                        {
-                            globals.mOptions.mGraphTimevalMax *= ST_TIMEVAL_RESOLUTION;
-                        }
-                    }
-                    else
-                    {
-                        retval = __LINE__;
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-#endif /* ST_WANT_GRAPHS */
-
-                case 's':
-                {
-                    if(0 == strncmp(&aArgArray[traverse][2], "min", 3))
-                    {
-                        PRInt32 scanRes = 0;
-
-                        /*
-                        ** Size min.
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mSizeMin);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                    }
-                    else if(0 == strncmp(&aArgArray[traverse][2], "max", 3))
-                    {
-                        PRInt32 scanRes = 0;
-
-                        /*
-                        ** Size max.
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mSizeMax);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                    }
-                    else
-                    {
-                        retval = __LINE__;
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-
-                case 't':
-                {
-                    if(0 == strncmp(&aArgArray[traverse][2], "min", 3))
-                    {
-                        PRInt32 scanRes = 0;
-
-                        /*
-                        ** Lifetime min.
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mLifetimeMin);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                        else
-                        {
-                            globals.mOptions.mLifetimeMin *= ST_TIMEVAL_RESOLUTION;
-                        }
-                    }
-                    else if(0 == strncmp(&aArgArray[traverse][2], "max", 3))
-                    {
-                        PRInt32 scanRes = 0;
-
-                        /*
-                        ** Lifetime max.
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mLifetimeMax);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                        else
-                        {
-                            globals.mOptions.mLifetimeMax *= ST_TIMEVAL_RESOLUTION;
-                        }
-                    }
-                    else
-                    {
-                        retval = __LINE__;
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-
-                case 'w':
-                {
-                    if(0 == strncmp(&aArgArray[traverse][2], "min", 3))
-                    {
-                        PRInt32 scanRes = 0;
-
-                        /*
-                        ** Weight min.
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%llu", &globals.mOptions.mWeightMin64);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                    }
-                    else if(0 == strncmp(&aArgArray[traverse][2], "max", 3))
-                    {
-                        PRInt32 scanRes = 0;
-
-                        /*
-                        ** Weight max.
-                        */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%llu", &globals.mOptions.mWeightMax64);
-                        if(1 != scanRes)
-                        {
-                            retval = __LINE__;
-                            globals.mOptions.mHelp = __LINE__;
-                        }
-                    }
-                    else
-                    {
-                        retval = __LINE__;
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-
-                case 'c':
-                {
-                    /*
-                    ** Restrict callsite text.
-                    */
-                    if('\0' != aArgArray[traverse][2])
-                    {
-                        int looper = 0;
-
-                        /*
-                        ** Figure out if we have any free space.
-                        ** If so, copy it.
-                        */
-                        for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
-                        {
-                            if('\0' != globals.mOptions.mRestrictText[looper][0])
-                            {
-                                continue;
-                            }
-
-                            PR_snprintf(globals.mOptions.mRestrictText[looper], sizeof(globals.mOptions.mRestrictText[looper]), "%s", &aArgArray[traverse][2]);
-                            break;
-                        }
-
-                        /*
-                        ** Error on no more space left.
-                        */
-                        if(ST_SUBSTRING_MATCH_MAX == looper)
-                        {
-                            retval = __LINE__;
-                        }
-                    }
-                    else
-                    {
-                        retval = __LINE__;
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-
-                case 'r':
-                {
-                    /*
-                    ** rules file for categorization
-                    */
-                    if('\0' != aArgArray[traverse][2])
-                    {
-                        PR_snprintf(globals.mOptions.mCategoryFile, sizeof(globals.mOptions.mCategoryFile), "%s", &aArgArray[traverse][2]);
-                    }
-                    else
-                    {
-                        retval = __LINE__;
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-
-                case 'f':
-                {
-                    /*
-                    ** focus on category
-                    */
-                    if('\0' != aArgArray[traverse][2])
-                    {
-                        PR_snprintf(globals.mOptions.mCategoryName, sizeof(globals.mOptions.mCategoryName), "%s", &aArgArray[traverse][2]);
-                    }
-                    else
-                    {
-                        retval = __LINE__;
-                        globals.mOptions.mHelp = __LINE__;
-                    }
-                }
-                break;
-
-                default:
-                {
-                    /*
-                    ** Unknown option.
-                    ** Error and show help.
-                    */
-                    retval = __LINE__;
-                    globals.mOptions.mHelp = __LINE__;
-                }
-                break;
-            }
-
-            /*
-            ** Check for some type of error, so we know to break the
-            **  loop if need be.
-            */
-            if(0 != retval)
-            {
-                break;
-            }
+            REPORT_ERROR_MSG(__LINE__, aArgArray[traverse]);
+            retval = __LINE__;
+            globals.mOptions.mHelp = PR_TRUE;
         }
         else
         {
             /*
-            ** File to process.
+            ** Default is same as FileName option, the file to process.
             */
             PR_snprintf(globals.mOptions.mFileName, sizeof(globals.mOptions.mFileName), "%s", aArgArray[traverse]);
         }
@@ -5850,7 +5318,7 @@ void handleClient(void* inArg)
                 **  mime type, otherwise, say it is text/html. 
                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.29 2002/05/08 00:16:19 blythe%netscape.com Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.30 2002/05/08 21:32:23 blythe%netscape.com Exp $", crlf);
                 if(NULL != getData)
                 {
                     if(NULL == cookieData || (NULL != cookieData && 0 != strcmp(getData, cookieData)))
