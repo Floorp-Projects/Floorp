@@ -261,6 +261,7 @@ protected:
     PRBool       mHaveSetRootResource;
 
     nsIDocument* mDocument;
+    nsIDocument* mChildDocument;
     nsIParser*   mParser;
     
 	nsVoidArray*       mOverlayArray;
@@ -296,6 +297,7 @@ XULContentSinkImpl::XULContentSinkImpl()
       mDocumentBaseURL(nsnull),
       mHaveSetRootResource(PR_FALSE),
       mDocument(nsnull),
+      mChildDocument(nsnull),
       mParser(nsnull),
       mOverlayArray(nsnull),
 	  mCurrentOverlay(0),
@@ -513,8 +515,8 @@ XULContentSinkImpl::MakeResourceFromQualifiedTag(PRInt32 aNameSpaceID,
 NS_IMETHODIMP 
 XULContentSinkImpl::WillBuildModel(void)
 {
-    mDocument->BeginLoad();
-    return NS_OK;
+  mChildDocument->BeginLoad();
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -535,7 +537,7 @@ XULContentSinkImpl::DidBuildModel(PRInt32 aQualityLevel)
         }
     }
 
-    mDocument->EndLoad();
+    mChildDocument->EndLoad();
 
     // Drop our reference to the parser to get rid of a circular
     // reference.
@@ -1082,6 +1084,8 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource)
     if (! aDocument)
         return NS_ERROR_NULL_POINTER;
     
+    mChildDocument = aDocument;
+
     nsCOMPtr<nsIXULChildDocument> childDocument;
     childDocument = do_QueryInterface(aDocument);
     childDocument->GetContentSink(&mParentContentSink);
@@ -1109,7 +1113,7 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIRDFDataSource* aDataSource)
             return NS_ERROR_INVALID_ARG; 
         } 
 
-		aDocument = rootDocument;
+		    aDocument = rootDocument;
 		
         nsCOMPtr<nsIRDFDataSource> docDataSource; 
         if (NS_FAILED(rv = rdfRootDoc->GetDocumentDataSource(getter_AddRefs(docDataSource)))) { 
