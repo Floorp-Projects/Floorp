@@ -1958,7 +1958,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   if (NS_FAILED(rv)) {
     // no dice.
     nsAutoString urlSpec;
-    urlStr.Trim(" ", PR_TRUE, PR_TRUE);
+    urlStr.Trim(" ");
 
     // see if we've got a file url.
     convertFileToURL(urlStr, urlSpec);
@@ -3142,9 +3142,12 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             retryHost = "www.";
             retryHost += hostStr;
             retryHost += ".com";
-        } else if ( (hostStr.Length() - dotLoc) == 3) {
-            retryHost = "www.";
-            retryHost += hostStr;
+        } else {
+            PRInt32 hostLen = hostStr.Length();
+            if ( ((hostLen - dotLoc) == 3) || ((hostLen - dotLoc) == 4) ) {
+                retryHost = "www.";
+                retryHost += hostStr;
+            }
         }
 
         if (!retryHost.IsEmpty()) {
