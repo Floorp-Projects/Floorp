@@ -43,6 +43,7 @@
 #define ZIP_ERR_PARAM         -5
 #define ZIP_ERR_FNF           -6
 #define ZIP_ERR_UNSUPPORTED   -7
+#define ZIP_ERR_SMALLBUF      -8
 
 
 PR_BEGIN_EXTERN_C
@@ -55,27 +56,29 @@ PR_BEGIN_EXTERN_C
 PR_EXTERN(PRInt32) ZIP_OpenArchive( const char * zipname, void** hZip );
 PR_EXTERN(PRInt32) ZIP_CloseArchive( void** hZip );
 
+
 /* Extract the named file in the archive to disk. 
- * Will not overwrite an existing Outfile -- it's up to the caller 
- * to move it out of the way
+ * This function will happily overwrite an existing Outfile if it can.
+ * It's up to the caller to detect or move it out of the way if it's important.
  */
 PR_EXTERN(PRInt32) ZIP_ExtractFile( void* hZip, const char * filename, const char * outname );
 
-#if 0
+
 /* Functions to list the files contained in the archive
  *
- * Find() initializes the search with the pattern, then FindNext() is
+ * FindInit() initializes the search with the pattern, then FindNext() is
  * called to get the matching filenames if any.
  * 
- * a NULL pattern will find all the files in the archive, otherwise the
+ * a NULL pattern will find all the files in the archive, otherwise the 
  * pattern must be a shell regexp type pattern.
  *
- * NOTE! currently the only patterns actually supported are exact matches 
- * or a prefix string with a trailing '*' wildcard (i.e. "foo" or "foo*" only)
+ * if a matching filename is too small for the passed buffer FindNext()
+ * will return ZIP_ERR_SMALLBUF. When no more matches can be found in
+ * the archive it will return ZIP_ERR_FNF
  */
-PR_EXTERN(PRInt32) ZIP_Find( void* hZip, const char * pattern );
+PR_EXTERN(PRInt32) ZIP_FindInit( void* hZip, const char * pattern );
 PR_EXTERN(PRInt32) ZIP_FindNext( void* hZip, char * outbuf, PRUint16 bufsize );
-#endif
+
 
 PR_END_EXTERN_C
 

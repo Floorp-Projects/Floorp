@@ -22,25 +22,55 @@
  *     Daniel Veditz <dveditz@netscape.com>
  */
 
-/* 
- * nsZipArchive -- a class for manipulating the PKZIP file format.
- *
- * This class is incomplete. Currently it only does extraction
- */
 #include "prtypes.h"
 
 #define ZIP_MAGIC   0x5F5A4950L   /* "_ZIP" */
 #define ZIP_TABSIZE 256
 #define ZIP_BUFLEN  32767
 
-class nsZipItem;
+/**
+ * nsZipItem -- a helper class for nsZipArchive
+ *
+ * each nsZipItem represents one file in the archive and all the
+ * information needed to manipulate it.
+ */
+class nsZipItem
+{
+public:
+  char*       name;
+  PRUint32    namelen;
 
+  PRUint32    offset;
+  PRUint32    headerloc;
+  PRUint16    compression;
+  PRUint32    size;
+  PRUint32    realsize;
+  PRUint32    crc32;
+
+  nsZipItem*  next;
+
+  nsZipItem();
+  ~nsZipItem();
+
+private:
+  //-- prevent copies and assignments
+  nsZipItem& operator=(const nsZipItem& rhs);
+  nsZipItem(const nsZipItem& rhs);
+};
+
+
+
+/** 
+ * nsZipArchive -- a class for reading the PKZIP file format.
+ *
+ */
 class nsZipArchive 
 {
 public:
   /** cookie used to validate supposed objects passed from C code */
   const PRInt32 kMagic;
 
+  /** constructing does not open the archive. See OpenArchive() */
   nsZipArchive();
 
   /** destructing the object closes the archive */
@@ -67,17 +97,25 @@ public:
    */
   PRInt32 ExtractFile( const char * aFilename, const char * aOutname );
 
+  PRInt32 FindInit( const char * aPattern );
+  PRInt32 FindNext( char * aBuf, PRUint16 aSize );
+
 private:
   //--- private members ---
   
-  PRFileDesc *mFd;
+  PRFileDesc    *mFd;
 
-  nsZipItem* mFiles[ZIP_TABSIZE];
+  nsZipItem*    mFiles[ZIP_TABSIZE];
+
+  char*         mPattern;
+  PRUint16      mPatternSlot;
+  nsZipItem*    mPatternItem;
+  PRBool        mPatternIsRegExp;
 
   //--- private methods ---
   
-  nsZipArchive& operator=(const nsZipArchive& rhs); // don't want assignments
-  nsZipArchive(const nsZipArchive& rhs);            // don't want copies
+  nsZipArchive& operator=(const nsZipArchive& rhs); // prevent assignments
+  nsZipArchive(const nsZipArchive& rhs);            // prevent copies
 
   PRInt32           BuildFileList();
   PRInt32           CopyItemToDisk( const nsZipItem* aItem, const char* aOutname );
@@ -86,33 +124,3 @@ private:
   PRInt32           InflateItemToDisk( const nsZipItem* aItem, const char* aOutname );
 };
 
-
-/**
- * nsZipItem -- a helper class for nsZipArchive
- *
- * each nsZipItem represents one file in the archive and all the
- * information needed to manipulate it.
- */
-
-class nsZipItem
-{
-public:
-  char*       name;
-
-  PRUint32    offset;
-  PRUint32    headerloc;
-  PRUint16    compression;
-  PRUint32    size;
-  PRUint32    realsize;
-  PRUint32    crc32;
-
-  nsZipItem*  next;
-
-  nsZipItem();
-  ~nsZipItem();
-
-private:
-  //-- prevent copies and assignments
-  nsZipItem& operator=(const nsZipItem& rhs);
-  nsZipItem(const nsZipItem& rhs);
-};

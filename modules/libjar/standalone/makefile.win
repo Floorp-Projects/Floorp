@@ -23,28 +23,22 @@
 
 IGNORE_MANIFEST=1
 
-DIRS=standalone
-
 MODULE=jar 
-DEPTH=..\..
+DEPTH=..\..\..
 
 MAKE_OBJ_TYPE=DLL
 
-DLLNAME=jar$(VERSION_NUMBER)
-
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-MAPFILE=$(DLLNAME).map
-
-EXPORTS=zipfile.h
+LIBRARY=$(OBJDIR)\jar_s.lib
 
 OBJS=.\$(OBJDIR)\nsZipArchive.obj
+
+LCFLAGS=-DSTANDALONE
 
 LINCS=                        \
     -I$(XPDIST)\public\nspr   \
     -I$(XPDIST)\public\raptor \
     -I$(XPDIST)\public\xpcom  \
     -I$(XPDIST)\public\zlib   \
-    -I$(XPDIST)\public\network \
     $(NULL)
 
 LLIBS=                        \
@@ -56,12 +50,17 @@ LLIBS=                        \
 
 include <$(DEPTH)/config/rules.mak>
 
-install:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+docopy:
+    $(MAKE_INSTALL) ..\nsZip*.*  .
+    $(MAKE_INSTALL) ..\zip*.*    .
+
+export:: docopy
+
+install:: $(LIBRARY)
+    $(MAKE_INSTALL) .\$(OBJDIR)\jar_s.lib $(DIST)\lib
+    $(RM) *.h *.cpp
 
 clobber::
   $(RM) $(OBJS)
-  $(RM) $(DIST)\bin\$(DLLNAME).dll
-  $(RM) $(DIST)\lib\$(DLLNAME).lib
+  $(RM) $(DIST)\lib\jar_s.lib
 
