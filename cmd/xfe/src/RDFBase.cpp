@@ -278,6 +278,14 @@ XFE_RDFBase::notify_cb(HT_Notification ns, HT_Resource n,
 {
   XFE_RDFBase * xfe_rdfpane_obj = (XFE_RDFBase *)ns->data;
 
+  // HT is so great.  It start call us with events before we have
+  // even returned from the pane creation function.  Thus, _ht_pane,
+  // may still be NULL.  This will fix that.
+  if (xfe_rdfpane_obj->_ht_pane == NULL)
+  {
+      HT_View view = HT_GetView(n);
+      xfe_rdfpane_obj->_ht_pane = HT_GetPane(view);
+  }
   xfe_rdfpane_obj->notify(n, whatHappened);
 }
 //////////////////////////////////////////////////////////////////////////
