@@ -33,18 +33,16 @@ ifneq ($(OS_TARGET),Rhapsody)
 EXTRA_DSO_LDOPTS += -lm
 endif
 
-INCLUDES += -I$(srcdir)/../public -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom -I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(PUBLIC)/netlib -I$(PUBLIC)/plugin -I$(PUBLIC)/java -I$(PUBLIC)/jsurl
+INCLUDES += -I$(srcdir)/../public  -I$(PUBLIC)/xpcom -I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(PUBLIC)/netlib -I$(PUBLIC)/java -I$(PUBLIC)/jsurl
 
 DEFINES += -D_IMPL_NS_WEB
 
-CPPSRCS=				\
- nsDLLFactory.cpp			\
- nsDocumentViewer.cpp			\
- nsDocLoader.cpp			\
- nsPluginViewer.cpp			\
- nsThrobber.cpp				\
- nsWebShell.cpp				\
- $(NULL)
+CPPSRCS=			\
+	nsDLLFactory.cpp	\
+	nsDocLoader.cpp		\
+	nsThrobber.cpp		\
+	nsWebShell.cpp		\
+	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
