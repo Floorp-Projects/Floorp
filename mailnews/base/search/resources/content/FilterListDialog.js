@@ -44,7 +44,7 @@ function onLoad()
     
     updateButtons();
     
-    var firstitem;
+    var firstItem;
     var args = window.arguments;
     if (args && args[0])
         firstItem = args[0].initialServerUri;
@@ -92,7 +92,7 @@ function onToggleEnabled(event)
         item = item.parentNode;
     }
     
-    var filterResource = rdf.GetResource(item.id);
+    var filterResource = rdf.GetUnicodeResource(item.id);
     filter = filterResource.GetDelegate("filter",
                                         Components.interfaces.nsIMsgFilter);
     filter.enabled = !filter.enabled;
@@ -119,7 +119,7 @@ function currentFilter()
 
     var filter;
     try {
-        var filterResource = rdf.GetResource(selection[0].id);
+        var filterResource = rdf.GetUnicodeResource(selection[0].id);
         filter = filterResource.GetDelegate("filter",
                                             Components.interfaces.nsIMsgFilter);
     } catch (ex) {
