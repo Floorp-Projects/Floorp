@@ -27,27 +27,22 @@ var numInputChangers = 2;
 var inputs = document.getElementsByTagName("INPUT");
 var numInputs = inputs.length;
 var inputValues = new Array(numInputs+numInputs);
-var start = numInputs;
-var jsBug = 0;
+var start = 0;
 for (var i = 0; i < numInputs; i++) {
   inputValues[i] = inputs[i].value; 
 	inputValues[numInputs+i] = "CHANGED"
 }
 
 function changeValues(aNativeChanger) { 
-  if ((jsBug > 1) || (aNativeChanger == 1)) {
-	  jsBug = 0;
-		if (start == 0) {
-		  start = numInputs;
-	  } else {
-		  start = 0;
-		}
+	if (start == 0) {
+		start = numInputs;
+	} 
+	else {
+		start = 0;
 	}
-  for (var i = numInputChangers; i < numInputs; i++) {
-    inputs[i].value = inputValues[start+i];
-  }
-
-	jsBug = jsBug + 1;
+	for (var i = numInputChangers; i < numInputs; i++) {
+		inputs[i].value = inputValues[start+i];
+	}
 }
 
 function changeSizes() {
