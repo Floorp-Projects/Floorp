@@ -8,6 +8,7 @@
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
 	align="vertical"
 	onload="commonDialogOnLoad()"
+	style="width: 40em;"
 	class="dialog"> 
     
     <script language="JavaScript" src="chrome://global/content/commonDialog.js" />
