@@ -618,8 +618,18 @@ nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
 
   rv = sSecurityManager->CheckSameOriginPrincipal(subjectPrincipal,
                                                   principal);
+  if (NS_SUCCEEDED(rv)) {
+    return PR_TRUE;
+  }
 
-  return NS_SUCCEEDED(rv);
+  // see if the caller has otherwise been given the ability to touch
+  // input args to DOM methods
+
+  PRBool enabled = PR_FALSE;
+  rv = sSecurityManager->IsCapabilityEnabled("UniversalBrowserRead",
+                                             &enabled);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  return enabled;
 }
 
 //static
