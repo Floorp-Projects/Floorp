@@ -268,31 +268,32 @@ function openTopWin( url )
      but if we do this we need to have the option for chrome controls because goClickThrobber()
      needs to use this function with chrome controls */
   /* also, do we want to limit the number of help windows that can be spawned? */
-    dump("SetPrefToCurrentPage("+ url +") \n ");
+    // dump("SetPrefToCurrentPage("+ url +")\n");
     if ((url == null) || (url == "")) return;
-     
+    
+    // xlate the URL if necessary
+    if (url.indexOf("urn:") == 0)
+    {
+        url = xlateURL(url);        // does RDF urn expansion
+    }
+    
+    // avoid loading "", since this loads a directory listing
+    if (url == "") {
+        dump("openTopWin told to load an empty URL, so loading about:blank instead\n");
+        url = "about:blank";
+    }
+    
     var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
     var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
  
     var topWindowOfType = windowManagerInterface.getMostRecentWindow( "navigator:browser" );
     if ( topWindowOfType )
     {
-        dump("setting page: " + topWindowOfType._content.location.href + "\n");
         topWindowOfType.focus();
-		// urn:
-		var pos = url.indexOf("urn:");
-		dump("\n ** openTopWin, url=" + url + ", pos=" + pos + "\n");
-		if (pos == 0) {
-        	topWindowOfType._content.location.href = xlateURL(url);
-		}
-		else
-		{
-        	topWindowOfType._content.location.href = url;
-		}
+		topWindowOfType._content.location.href = url;
     }
     else
     {
-        dump(" No browser window. Should be disabling this button \n");
         window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url );
     }
 }

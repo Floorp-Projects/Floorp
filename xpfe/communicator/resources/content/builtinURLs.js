@@ -1,119 +1,159 @@
 // the rdf service
-var RDF;
-var titleArc;
-var contentArc;
-var ds;
-var state;
-var loaded;
+var gRDFService;
+var gTitleArc;
+var gContentArc;
+var gBuiltinUrlsDataSource;
+var gDataSourceState;
+var gDataSourceLoaded;
+var gSinkObserverRegistered;
 
 var SinkObserver = 
 {
 	onBeginLoad: function( aSink) {
-		state = (state | 1); 
-		//dump("\n-> SinkObserver:onBeginLoad: " + aSink + ", state=" + state + "\n");
+		gDataSourceState = (gDataSourceState | 1); 
+		debug_dump("\n-> SinkObserver:onBeginLoad: " + aSink + ", gDataSourceState=" + gDataSourceState + "\n");
 	},
 	
 	onInterrupt: function( aSink) {
-		state = (state | 2);
-		//dump("\n-> SinkObserver:onInterrupt: " + aSink + ", state=" + state + "\n");
+		gDataSourceState = (gDataSourceState | 2);
+		debug_dump("\n-> SinkObserver:onInterrupt: " + aSink + ", gDataSourceState=" + gDataSourceState + "\n");
 	},
 	
 	onResume: function( aSink) {
-		state = (state & ~2);
-		//dump("\n-> SinkObserver:onResume: " + aSink + ", state=" + state + "\n");
+		gDataSourceState = (gDataSourceState & ~2);
+		debug_dump("\n-> SinkObserver:onResume: " + aSink + ", gDataSourceState=" + gDataSourceState + "\n");
 	},
 	
 	onEndLoad: function( aSink) {
-		state = (state | 4);
-		loaded = (state  == 5);
-		//dump("\n-> onEndLoad: " + aSink + ", state=" + state + ", loaded=" + loaded + "\n");
+		gDataSourceState = (gDataSourceState | 4);
+		gDataSourceLoaded = (gDataSourceState  == 5);
+		
+		debug_dump("\n-> onEndLoad: " + aSink + ", gDataSourceState=" + gDataSourceState + ", gDataSourceLoaded=" + gDataSourceLoaded + "\n");
 
-		if (!loaded) {
-			dump("\n-> builtin URLs not loaded!\n");
+		if (!gDataSourceLoaded) {
+			debug_dump("\n-> builtin URLs not loaded!\n");
 			return;
 		}
 
-		ds = aSink.QueryInterface(Components.interfaces.nsIRDFDataSource);
-
-		titleArc   = RDF.GetResource("http://home.netscape.com/NC-rdf#title");
-		contentArc = RDF.GetResource("http://home.netscape.com/NC-rdf#content");
+		gBuiltinUrlsDataSource = aSink.QueryInterface(Components.interfaces.nsIRDFDataSource);
+		
+		debug_dump("Got gBuiltinUrlsDataSource " + gBuiltinUrlsDataSource + " with gTitleArc " + gTitleArc + " and gContentArc " + gContentArc + "\n");
 	},
 
 	onError: function( aSink, aStatus, aErrMsg) {
-		state = (state | 8);
-		dump("\n-> SinkObserver:onError: " + aSink +  ", status=" + aStatus + 
-			", errMsg=" + aErrMsg + ", state=" + state + "\n");
+		gDataSourceState = (gDataSourceState | 8);
+		debug_dump("\n-> SinkObserver:onError: " + aSink +  ", status=" + aStatus + 
+			", errMsg=" + aErrMsg + ", gDataSourceState=" + gDataSourceState + "\n");
 	}
 };
 
+function debug_dump(msg)
+{
+}
+
+/*
+function debug_dump(msg)
+{
+    dump(msg);
+}
+*/
+
 function loadDS()
 {
-	//dump("\n-->loadDS() called <--\n");
-	if (ds && loaded) {
-		//dump("\n-->loadDS(): ds=" + ds + ", loaded=" + loaded + ", returning! <--\n");
+	debug_dump("\n-->loadDS() called for " + window.document + " <--\n");
+	if (gBuiltinUrlsDataSource && gDataSourceLoaded) {
+		debug_dump("\n-->loadDS(): gBuiltinUrlsDataSource=" + gBuiltinUrlsDataSource + ", gDataSourceLoaded=" + gDataSourceLoaded + ", returning! <--\n");
 		return;
     }
-
+    
+    if (gSinkObserverRegistered)
+    {
+        debug_dump("Already registered SinkObserver in loadDS()\n");
+        return;
+    }
+    
 	// initialize
-	RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
-    RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+	gRDFService = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
+    gRDFService = gRDFService.QueryInterface(Components.interfaces.nsIRDFService);
 
-	if (!RDF) {
-		dump("\n-->loadDS(): RDF service is null!\n");
+	if (!gRDFService) {
+		debug_dump("\n-->loadDS(): gRDFService service is null!\n");
 		return;
 	}
 	
-    var ds_uri = "chrome://global/locale/builtinURLs.rdf";
-    var url_ds = RDF.GetDataSource(ds_uri); // return nsIRDFDataSource
-	if (!url_ds) {
-		dump("\n >>Can't get " + ds_uri + "<-\n");
-		return;
-	} 	
-	var rdfXMLSink = url_ds.QueryInterface( Components.interfaces.nsIRDFXMLSink );
-	if (rdfXMLSink) {
-		ds         = null;
-		state      = 0x0; // init.
-		loaded     = false;
+    gTitleArc   = gRDFService.GetResource("http://home.netscape.com/NC-rdf#title");
+    gContentArc = gRDFService.GetResource("http://home.netscape.com/NC-rdf#content");
 
-		rdfXMLSink.addXMLSinkObserver(SinkObserver);
+    var ds_uri = "chrome://global/locale/builtinURLs.rdf";
+    var url_ds = gRDFService.GetDataSource(ds_uri); // return nsIRDFDataSource
+	if (!url_ds) {
+		debug_dump("\n >>Can't get " + ds_uri + "<-\n");
+		return;
+	}
+	
+	if (url_ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).loaded)
+	{
+        var ds_uri = "chrome://global/locale/builtinURLs.rdf";
+        gBuiltinUrlsDataSource = gRDFService.GetDataSource(ds_uri); // return nsIRDFDataSource
+	    gDataSourceLoaded = (gBuiltinUrlsDataSource != null);
+	}
+	else
+	{
+    	var rdfXMLSink = url_ds.QueryInterface( Components.interfaces.nsIRDFXMLSink );
+    	if (rdfXMLSink) {
+    		gBuiltinUrlsDataSource         = null;
+    		gDataSourceState      = 0x0; // init.
+    		gDataSourceLoaded     = false;
+            gSinkObserverRegistered = true;
+            
+    		rdfXMLSink.addXMLSinkObserver(SinkObserver);
+    	}
+    	else
+    	{
+    	    debug_dump("rdfXMLSink is null\n");
+    	}
 	}
 }
 
 function xlateURL(key)
 {
-	//dump("\n>> xlateURL(" + key + "): ds=" + ds + ", loaded=" + loaded);
-	if (!ds || !loaded) {
-		dump("\n xlateURL(): data source is not loaded! Try again later! \n");
-		return "";
+	debug_dump("\n>> xlateURL(" + key + "): gBuiltinUrlsDataSource=" + gBuiltinUrlsDataSource + ", gDataSourceLoaded=" + gDataSourceLoaded + "\n");
+	
+	if (!gBuiltinUrlsDataSource || !gDataSourceLoaded) {
+		throw("urn translation data source not loaded");
 	}
 	// get data
-	var srcNode = RDF.GetResource(key);
-	var titleTarget = ds.GetTarget(srcNode, titleArc, true);
+	var srcNode = gRDFService.GetResource(key);
+	var titleTarget = gBuiltinUrlsDataSource.GetTarget(srcNode, gTitleArc, true);
 	if (titleTarget) {
 		titleTarget = 
 			titleTarget.QueryInterface(Components.interfaces.nsIRDFLiteral);
-		dump("\n-> " + key + "::title=" + titleTarget.Value);
+		debug_dump("\n-> " + key + "::title=" + titleTarget.Value);
 	}
 	else {
-		dump("\n title target=" + titleTarget + "\n");
+		debug_dump("\n title target=" + titleTarget + "\n");
 	}
 
-	var contentTarget = ds.GetTarget(srcNode, contentArc, true);
+	var contentTarget = gBuiltinUrlsDataSource.GetTarget(srcNode, gContentArc, true);
 	if (contentTarget) {
 		contentTarget = 
 			contentTarget.QueryInterface(Components.interfaces.nsIRDFLiteral);
-		dump("\n-> " + key + "::content=" + contentTarget.Value + "\n");
+		debug_dump("\n-> " + key + "::content=" + contentTarget.Value + "\n");
 		return contentTarget.Value;
 	}
 	else {
-		dump("\n content target=" + contentTarget + "\n");
+		debug_dump("\n content target=" + contentTarget + "\n");
+		throw("urn not found in datasource");
 	}
 	
+	// not reached
 	return "";
 }
 
 function loadXURL(key)
 {
+    debug_dump("loadXURL call with " + key + "\n");
+    
 	window._content.location.href = xlateURL(key);
 }
 
