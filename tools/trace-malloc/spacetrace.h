@@ -375,9 +375,12 @@ struct __struct_STCategoryNode
         PRUint32 nchildren;
 
         /*
-        ** The Run. Valid for both leaf and parent nodes.
+        ** The Run(s). Valid for both leaf and parent nodes.
+        ** One run per --Context to handle multiple data sets.
+        ** The relevant index for the particular request will be
+        **      mIndex stored by the mContext of the request.
         */
-        STRun *run;
+        STRun **runs;
 };
 
 
@@ -400,7 +403,6 @@ struct __struct_STCategoryRule
         ** The node this should be categorized into
         */
         STCategoryNode* node;
-
 };
 
 
@@ -688,7 +690,7 @@ typedef struct __struct_STGlobals
 extern STRun* createRun(PRUint32 aStamp);
 extern void freeRun(STRun* aRun);
 extern int initCategories(STGlobals* g);
-extern int categorizeRun(STOptions* inOptions, const STRun* aRun, STGlobals* g);
+extern int categorizeRun(STOptions* inOptions, STContext* inContext, const STRun* aRun, STGlobals* g);
 extern STCategoryNode* findCategoryNode(const char *catName, STGlobals *g);
 extern int freeCategories(STGlobals* g);
 extern int displayCategoryReport(STRequest* inRequest, STCategoryNode *root, int depth);
