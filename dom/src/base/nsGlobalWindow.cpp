@@ -217,6 +217,7 @@ GlobalWindowImpl::GlobalWindowImpl()
     mIsScopeClear(PR_TRUE),
     mIsDocumentLoaded(PR_FALSE),
     mFullScreen(PR_FALSE),
+    mIsClosed(PR_FALSE),
     mLastMouseButtonAction(LL_ZERO),
     mGlobalObjectOwner(nsnull),
     mDocShell(nsnull),
@@ -1294,7 +1295,10 @@ GlobalWindowImpl::GetDirectories(nsIDOMBarProp** aDirectories)
 NS_IMETHODIMP
 GlobalWindowImpl::GetClosed(PRBool* aClosed)
 {
-  *aClosed = !mDocShell;
+  // If someone called close(), or if we don't have a docshell, we're
+  // closed.
+  *aClosed = mIsClosed || !mDocShell;
+
   return NS_OK;
 }
 
@@ -3315,6 +3319,9 @@ GlobalWindowImpl::Close()
       return NS_OK;
     }
   }
+
+  // Flag that we were closed.
+  mIsClosed = PR_TRUE;
 
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService(sJSStackContractID);
