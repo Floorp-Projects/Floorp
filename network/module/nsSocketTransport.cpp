@@ -70,8 +70,8 @@ nsSocketTransport::LoadURL(nsIURL *pURL)
       return NS_ERROR_NULL_POINTER;
   }
 
+  NS_IF_ADDREF(pURL);
   m_url = pURL;
-  NS_IF_ADDREF(m_url);
   pURL->SetHostPort(m_port);
 
   nsresult ns_result = NS_OpenURL(pURL, m_inputStreamConsumer);
@@ -276,8 +276,8 @@ nsSocketTransport::GetURLInfo(nsIURL* pURL, URL_Struct_ **aResult)
   if (aResult)
   {
 	  *aResult = nsnull;
-
-	  rv = pURL->QueryInterface(kINetlibURLIID, (void**)&pNetlibURL);
+      if (pURL)
+          rv = pURL->QueryInterface(kINetlibURLIID, (void**)&pNetlibURL);
 	  if (NS_SUCCEEDED(rv) && pNetlibURL) {
 
 		pNetlibURL->GetURLInfo(aResult);
