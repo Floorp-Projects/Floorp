@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssldef.c,v 1.4 2001/05/08 23:12:29 nelsonb%netscape.com Exp $
+ * $Id: ssldef.c,v 1.5 2001/05/10 02:37:59 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -108,6 +108,7 @@ int ssl_DefSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
     PRFileDesc *lower = ss->fd->lower;
     int rv, count;
 
+#if NSS_DISABLE_NAGLE_DELAYS
     /* Although this is overkill, we disable Nagle delays completely for 
     ** SSL sockets.
     */
@@ -115,6 +116,7 @@ int ssl_DefSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
 	ssl_EnableNagleDelay(ss, PR_FALSE);   /* ignore error */
     	ss->delayDisabled = 1;
     }
+#endif
     count = 0;
     for (;;) {
 	rv = lower->methods->send(lower, (const void *)buf, len,
