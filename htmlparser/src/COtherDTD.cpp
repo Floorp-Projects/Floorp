@@ -1,16 +1,16 @@
-#if 0
+#if 1
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */  
 /*                               
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of 
  * the License at http://www.mozilla.org/NPL/
- *      
+ *        
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or 
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *  
  * The Original Code is mozilla.org code. 
  * 
  * The Initial Developer of the Original Code is Netscape
@@ -19,21 +19,17 @@
  * Rights Reserved. 
  * 
  * Contributor(s):   
- */         
+ */          
     
 //#define ENABLE_CRC  
 //#define RICKG_DEBUG    
 
-
-#ifdef  RICKG_DEBUG
-#include  <fstream.h>   
-#endif  
       
 #include "nsDebug.h" 
 #include "nsIDTDDebug.h"  
 #include "COtherDTD.h" 
 #include "nsHTMLTokens.h"
-#include "nsCRT.h"   
+#include "nsCRT.h"    
 #include "nsParser.h"  
 #include "nsIParser.h"
 #include "nsIHTMLContentSink.h"  
@@ -418,7 +414,7 @@ eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& a
   return result;
 }
 
-
+ 
 /**
   * The parser uses a code sandwich to wrap the parsing process. Before
   * the process begins, WillBuildModel() is called. Afterwards the parser

@@ -97,7 +97,7 @@ public:
     nsIDTD* theDTD;
     NS_NewNavHTMLDTD(&theDTD);    //do this as a default HTML DTD...
     mDTDDeque.Push(theDTD);
-#if 0
+#if 1
     NS_NewOtherHTMLDTD(&theDTD);  //do this as the default DTD for strict documents...
     mDTDDeque.Push(theDTD);
 #endif
@@ -484,7 +484,7 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aBuffer) {
   return PR_FALSE;
 }
 
-#ifdef NS_DEBUG
+#ifdef TEST_DOCTYPES
 static const char* doctypes[] = {
 
     //here are a few HTML doctypes we'll treat as strict...
@@ -492,6 +492,8 @@ static const char* doctypes[] = {
   "<!DOCTYPE HTML SYSTEM SystemID>",
 
   "<!DOCTYPE \"-//W3C//DTD HTML 5.0//EN\">",
+  "<!DOCTYPE \"-//W3C//DTD HTML 6.01 Transitional//EN\">",
+  "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 6.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">",
   "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">",
   "<!DOCTYPE \"-//W3C//DTD HTML 4.0 STRICT//EN\">",
   "<!DOCTYPE \"-//W3C//DTD HTML 4.01//EN\">",
@@ -596,21 +598,19 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
 
   nsresult result=NS_OK;
 
-#if 0
+#if TEST_DOCTYPES
 
   static PRBool tested=PR_FALSE;
+  const char** theDocType=doctypes;
 
-#ifdef  NS_DEBUG
   if(!tested) {
     tested=PR_TRUE;
-    const char** theDocType=doctypes;
     while(*theDocType) {
       nsAutoString theType(*theDocType);
       eParseMode result=mParserContext->DetermineParseMode(theType);
       theDocType++;
     }
   }
-#endif
 #endif
  
   if(mParserContext){
@@ -897,8 +897,6 @@ aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,eParseMode aMode){
 
       if(pc && theScanner) { 
         PushContext(*pc); 
-
-        if(theDTD) theDTD->WillBuildModel(*pc,nsnull); // Fixing UMR - Bug 33570
 
         pc->mMultipart=!aLastCall; //by default 
         if (pc->mPrevContext) { 
