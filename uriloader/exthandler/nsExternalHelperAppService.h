@@ -336,7 +336,7 @@ protected:
    */
   nsCOMPtr<nsIFile> mFinalFileDestination;
 
-  char * mDataBuffer;
+  char mDataBuffer[DATA_BUFFER_SIZE];
 
   nsresult SetUpTempFile(nsIChannel * aChannel);
   /**
