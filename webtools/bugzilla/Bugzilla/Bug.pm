@@ -33,6 +33,8 @@ package Bug;
 use CGI::Carp qw(fatalsToBrowser);
 my %ok_field;
 
+use Bugzilla::Util;
+
 for my $key (qw (bug_id alias product version rep_platform op_sys bug_status 
                 resolution priority bug_severity component assigned_to
                 reporter bug_file_loc short_desc target_milestone 
@@ -78,7 +80,7 @@ sub initBug  {
   $bug_id = &::BugAliasToID($bug_id) if $bug_id !~ /^[1-9][0-9]*$/;
   
   my $old_bug_id = $bug_id;
-  if ((! defined $bug_id) || (!$bug_id) || (!&::detaint_natural($bug_id))) {
+  if ((! defined $bug_id) || (!$bug_id) || (!detaint_natural($bug_id))) {
       # no bug number given or the alias didn't match a bug
       $self->{'bug_id'} = $old_bug_id;
       $self->{'error'} = "InvalidBugId";
@@ -387,7 +389,7 @@ sub CanChangeField {
     if ($oldvalue eq $newvalue) {
         return 1;
     }
-    if (&::trim($oldvalue) eq &::trim($newvalue)) {
+    if (trim($oldvalue) eq trim($newvalue)) {
         return 1;
     }
     if ($f =~ /^longdesc/) {

@@ -28,6 +28,8 @@
 use diagnostics;
 use strict;
 
+use Bugzilla::Util;
+
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
 
@@ -230,16 +232,6 @@ sub SqlLog {
     }
 }
 
-# This is from the perlsec page, slightly modifed to remove a warning
-# From that page:
-#      This function makes use of the fact that the presence of
-#      tainted data anywhere within an expression renders the
-#      entire expression tainted.
-# Don't ask me how it works...
-sub is_tainted {
-    return not eval { my $foo = join('',@_), kill 0; 1; };
-}
-
 sub SendSQL {
     my ($str, $dontshadow) = (@_);
 
@@ -352,21 +344,6 @@ sub GetFieldID {
     my $fieldid = FetchOneColumn();
     die "Unknown field id: $f" if !$fieldid;
     return $fieldid;
-}
-        
-
-
-
-sub lsearch {
-    my ($list,$item) = (@_);
-    my $count = 0;
-    foreach my $i (@$list) {
-        if ($i eq $item) {
-            return $count;
-        }
-        $count++;
-    }
-    return -1;
 }
 
 # Generate a string which, when later interpreted by the Perl compiler, will
@@ -993,24 +970,6 @@ sub get_component_name {
     return $comp;
 }
 
-# Use trick_taint() when you know that there is no way that the data
-# in a scalar can be tainted, but taint mode still bails on it.
-# WARNING!! Using this routine on data that really could be tainted
-#           defeats the purpose of taint mode.  It should only be
-#           used on variables that cannot be touched by users.
-
-sub trick_taint {
-    $_[0] =~ /^(.*)$/s;
-    $_[0] = $1;
-    return (defined($_[0]));
-}
-
-sub detaint_natural {
-    $_[0] =~ /^(\d+)$/;
-    $_[0] = $1;
-    return (defined($_[0]));
-}
-
 # This routine quoteUrls contains inspirations from the HTML::FromText CPAN
 # module by Gareth Rees <garethr@cre.canon.co.uk>.  It has been heavily hacked,
 # all that is really recognizable from the original is bits of the regular
@@ -1541,32 +1500,6 @@ sub PerformSubsts {
     return $str;
 }
 
-# Min and max routines.
-sub min {
-    my $min = shift(@_);
-    foreach my $val (@_) {
-        $min = $val if $val < $min;
-    }
-    return $min;
-}
-
-sub max {
-    my $max = shift(@_);
-    foreach my $val (@_) {
-        $max = $val if $val > $max;
-    }
-    return $max;
-}
-
-# Trim whitespace from front and back.
-
-sub trim {
-    my ($str) = @_;
-    $str =~ s/^\s+//g;
-    $str =~ s/\s+$//g;
-    return $str;
-}
-
 ###############################################################################
 # Global Templatization Code
 
@@ -1614,8 +1547,6 @@ $::template ||= Template->new(
             $var =~ s/\r/\\r/g; 
             return $var;
         } , 
-        
-        html => \&html_quote , 
 
         # HTML collapses newlines in element attributes to a single space,
         # so form elements which may have whitespace (ie comments) need
@@ -1821,7 +1752,7 @@ $::vars =
     'PerformSubsts' => \&PerformSubsts ,
 
     # Generic linear search function
-    'lsearch' => \&lsearch ,
+    'lsearch' => \&Bugzilla::Util::lsearch ,
 
     # UserInGroup - you probably want to cache this
     'UserInGroup' => \&UserInGroup ,

@@ -33,6 +33,8 @@ use lib ".";
 
 # use Carp;                       # for confess
 
+use Bugzilla::Util;
+
 # commented out the following snippet of code. this tosses errors into the
 # CGI if you are perl 5.6, and doesn't if you have perl 5.003. 
 # We want to check for the existence of the LDAP modules here.
@@ -332,31 +334,6 @@ sub ValidateComment {
         DisplayError("Comments cannot be longer than 65,535 characters.");
         exit;
     }
-}
-
-sub html_quote {
-    my ($var) = (@_);
-    $var =~ s/\&/\&amp;/g;
-    $var =~ s/</\&lt;/g;
-    $var =~ s/>/\&gt;/g;
-    $var =~ s/"/\&quot;/g;
-    return $var;
-}
-
-sub value_quote {
-    my ($var) = (@_);
-    $var =~ s/\&/\&amp;/g;
-    $var =~ s/</\&lt;/g;
-    $var =~ s/>/\&gt;/g;
-    $var =~ s/"/\&quot;/g;
-    # See bug http://bugzilla.mozilla.org/show_bug.cgi?id=4928 for 
-    # explanaion of why bugzilla does this linebreak substitution. 
-    # This caused form submission problems in mozilla (bug 22983, 32000).
-    $var =~ s/\r\n/\&#013;/g;
-    $var =~ s/\n\r/\&#013;/g;
-    $var =~ s/\r/\&#013;/g;
-    $var =~ s/\n/\&#013;/g;
-    return $var;
 }
 
 # Adds <link> elements for bug lists. These can be inserted into the header by

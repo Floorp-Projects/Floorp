@@ -35,6 +35,8 @@ use vars qw($userid $usergroupset);
 
 package Bugzilla::Search;
 
+use Bugzilla::Util;
+
 # Create a new Search
 sub new {
     my $invocant = shift;
@@ -66,33 +68,33 @@ sub init {
     my @andlist;
 
     # First, deal with all the old hard-coded non-chart-based poop.
-    if (&::lsearch($fieldsref, 'map_assigned_to.login_name') >= 0) {
+    if (lsearch($fieldsref, 'map_assigned_to.login_name') >= 0) {
         push @supptables, "profiles AS map_assigned_to";
         push @wherepart, "bugs.assigned_to = map_assigned_to.userid";
     }
 
-    if (&::lsearch($fieldsref, 'map_reporter.login_name') >= 0) {
+    if (lsearch($fieldsref, 'map_reporter.login_name') >= 0) {
         push @supptables, "profiles AS map_reporter";
         push @wherepart, "bugs.reporter = map_reporter.userid";
     }
 
-    if (&::lsearch($fieldsref, 'map_qa_contact.login_name') >= 0) {
+    if (lsearch($fieldsref, 'map_qa_contact.login_name') >= 0) {
         push @supptables, "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid";
     }
 
-    if (&::lsearch($fieldsref, 'map_products.name') >= 0) {
+    if (lsearch($fieldsref, 'map_products.name') >= 0) {
         push @supptables, "products AS map_products";
         push @wherepart, "bugs.product_id = map_products.id";
     }
 
-    if (&::lsearch($fieldsref, 'map_components.name') >= 0) {
+    if (lsearch($fieldsref, 'map_components.name') >= 0) {
         push @supptables, "components AS map_components";
         push @wherepart, "bugs.component_id = map_components.id";
     }
 
     my $minvotes;
     if (defined $F{'votes'}) {
-        my $c = &::trim($F{'votes'});
+        my $c = trim($F{'votes'});
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
                 $::vars->{'value'} = $c;
@@ -116,7 +118,7 @@ sub init {
                         "target_milestone", "groupset");
 
     foreach my $field (keys %F) {
-        if (&::lsearch(\@legal_fields, $field) != -1) {
+        if (lsearch(\@legal_fields, $field) != -1) {
             push(@specialchart, [$field, "anyexact",
                                  join(',', @{$M{$field}})]);
         }
@@ -146,7 +148,7 @@ sub init {
         if (!defined ($F{"email$id"})) {
             next;
         }
-        my $email = &::trim($F{"email$id"});
+        my $email = trim($F{"email$id"});
         if ($email eq "") {
             next;
         }
@@ -154,7 +156,7 @@ sub init {
         if ($type eq "exact") {
             $type = "anyexact";
             foreach my $name (split(',', $email)) {
-                $name = &::trim($name);
+                $name = trim($name);
                 if ($name) {
                     &::DBNameToIdAndCheck($name);
                 }
@@ -186,7 +188,7 @@ sub init {
 
 
     if (defined $F{'changedin'}) {
-        my $c = &::trim($F{'changedin'});
+        my $c = trim($F{'changedin'});
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
                 $::vars->{'value'} = $c;
@@ -200,14 +202,14 @@ sub init {
     my $ref = $M{'chfield'};
 
     if (defined $ref) {
-        my $which = &::lsearch($ref, "[Bug creation]");
+        my $which = lsearch($ref, "[Bug creation]");
         if ($which >= 0) {
             splice(@$ref, $which, 1);
             push(@specialchart, ["creation_ts", "greaterthan",
                                  SqlifyDate($F{'chfieldfrom'})]);
             my $to = $F{'chfieldto'};
             if (defined $to) {
-                $to = &::trim($to);
+                $to = trim($to);
                 if ($to ne "" && $to !~ /^now$/i) {
                     push(@specialchart, ["creation_ts", "lessthan",
                                          SqlifyDate($to)]);
@@ -229,7 +231,7 @@ sub init {
              &::SqlQuote(SqlifyDate($F{'chfieldfrom'})));
         my $to = $F{'chfieldto'};
         if (defined $to) {
-            $to = &::trim($to);
+            $to = trim($to);
             if ($to ne "" && $to !~ /^now$/i) {
                 push(@wherepart, "actcheck.bug_when <= " .
                      &::SqlQuote(SqlifyDate($to)));
@@ -237,7 +239,7 @@ sub init {
         }
         my $value = $F{'chfieldvalue'};
         if (defined $value) {
-            $value = &::trim($value);
+            $value = trim($value);
             if ($value ne "") {
                 push(@wherepart, "actcheck.added = " .
                      &::SqlQuote($value))
@@ -248,7 +250,7 @@ sub init {
     foreach my $f ("short_desc", "long_desc", "bug_file_loc",
                    "status_whiteboard") {
         if (defined $F{$f}) {
-            my $s = &::trim($F{$f});
+            my $s = trim($F{$f});
             if ($s ne "") {
                 my $n = $f;
                 my $q = &::SqlQuote($s);
@@ -731,14 +733,14 @@ sub init {
                 $t = $F{"type$chart-$row-$col"} || "noop";
                 $v = $F{"value$chart-$row-$col"};
                 $v = "" if !defined $v;
-                $v = &::trim($v);
+                $v = trim($v);
                 if ($f eq "noop" || $t eq "noop" || $v eq "") {
                     next;
                 }
                 # chart -1 is generated by other code above, not from the user-
                 # submitted form, so we'll blindly accept any values in chart -1
                 if ((!$chartfields{$f}) && ($chart != -1)) {
-                    my $errstr = "Can't use " . &::html_quote($f) . " as a field name.  " .
+                    my $errstr = "Can't use " . html_quote($f) . " as a field name.  " .
                         "If you think you're getting this in error, please copy the " .
                         "entire URL out of the address bar at the top of your browser " .
                         "window and email it to <109679\@bugzilla.org>";
@@ -749,7 +751,7 @@ sub init {
                 # This is either from the internal chart (in which case we
                 # already know about it), or it was in %chartfields, so it is
                 # a valid field name, which means that its ok.
-                &::trick_taint($f);
+                trick_taint($f);
                 $q = &::SqlQuote($v);
                 my $func;
                 $term = undef;
@@ -805,7 +807,7 @@ sub init {
     $query = &::SelectVisible($query, $::userid, $::usergroupset);
 
     if ($debug) {
-        print "<p><code>" . &::value_quote($query) . "</code></p>\n";
+        print "<p><code>" . value_quote($query) . "</code></p>\n";
         exit;
     }
     
