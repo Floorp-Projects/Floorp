@@ -27,7 +27,7 @@ MODULE		= i18n
 LIBRARY_NAME	= i18n
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
-MODULE_NAME	= nbsI18nModule
+MODULE_NAME	= nsI18nModule
 REQUIRES	= xpcom \
 		  string \
 		  unicharutil \
