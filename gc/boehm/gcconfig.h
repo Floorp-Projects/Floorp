@@ -487,6 +487,7 @@
 # ifdef POWERPC
 #   define MACH_TYPE "POWERPC"
 #   define ALIGNMENT 4
+#   define ALIGN_DOUBLE
 #   ifdef MACOS
 #     ifndef __LOWMEM__
 #     include <LowMem.h>
