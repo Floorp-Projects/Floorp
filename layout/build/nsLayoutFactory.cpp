@@ -23,6 +23,8 @@
 #include "nsIDocument.h"
 #include "nsIHTMLContent.h"
 #include "nsICollection.h"
+#include "nsIPresShell.h"
+#include "nsISelection.h"
 
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
@@ -31,16 +33,21 @@
 #include "nsIDOMNativeObjectRegistry.h"
 #include "nsIServiceManager.h"
 #include "nsICSSParser.h"
+#include "nsIHTMLStyleSheet.h"
 #include "nsICollection.h"
 
 static NS_DEFINE_IID(kCHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCXMLDocumentCID, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCCSSParserCID,     NS_CSSPARSER_CID);
+static NS_DEFINE_CID(kHTMLStyleSheetCID, NS_HTMLSTYLESHEET_CID);
 static NS_DEFINE_IID(kCHTMLImageElementFactoryCID, NS_HTMLIMAGEELEMENTFACTORY_CID);
 static NS_DEFINE_IID(kIDOMHTMLImageElementFactoryIID, NS_IDOMHTMLIMAGEELEMENTFACTORY_IID);
 static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
 static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
+static NS_DEFINE_CID(kPresShellCID,  NS_PRESSHELL_CID);
+static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
+static NS_DEFINE_CID(kSelectionCID,  NS_SELECTION_CID);
 
 
 nsresult NS_NewRangeList(nsICollection **);
@@ -208,6 +215,13 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     inst = new HTMLImageElementFactory();
     refCounted = PR_FALSE;
   }
+  else if (mClassID.Equals(kPresShellCID)) {
+    res = NS_NewPresShell((nsIPresShell**) &inst);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    refCounted = PR_TRUE;
+  }
   else if (mClassID.Equals(kICollectionIID)) {
     res = NS_NewRangeList((nsICollection **)&inst);
     if (!NS_SUCCEEDED(res)) {
@@ -220,6 +234,23 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     // that all the HTML, generic layout, and style stuff isn't munged
     // together.
     if (NS_FAILED(res = NS_NewCSSParser((nsICSSParser**)&inst)))
+      return res;
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kHTMLStyleSheetCID)) {
+    // XXX ibid
+    if (NS_FAILED(res = NS_NewHTMLStyleSheet((nsIHTMLStyleSheet**)&inst)))
+      return res;
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kTextNodeCID)) {
+    // XXX ibid
+    if (NS_FAILED(res = NS_NewTextNode((nsIHTMLContent**) &inst)))
+      return res;
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kSelectionCID)) {
+    if (NS_FAILED(res = NS_NewSelection((nsISelection**) &inst)))
       return res;
     refCounted = PR_TRUE;
   }
