@@ -45,8 +45,6 @@ import java.io.*;
 
 import org.mozilla.javascript.debug.*;
 
-import org.mozilla.javascript.xml.XMLObject;
-
 public class Interpreter
 {
 
@@ -3202,19 +3200,15 @@ switch (op) {
             if (lhs == DBL_MRK) {
                 sDbl[stackTop] += rDbl;
             } else {
-                do_add(lhs, rDbl, stack, sDbl, stackTop, true);
+                do_add(lhs, rDbl, stack, sDbl, stackTop, true, cx);
             }
         } else if (lhs == DBL_MRK) {
-            do_add(rhs, sDbl[stackTop], stack, sDbl, stackTop, false);
+            do_add(rhs, sDbl[stackTop], stack, sDbl, stackTop, false, cx);
         } else {
-            if (lhs instanceof XMLObject || rhs instanceof XMLObject) {
+            if (lhs instanceof Scriptable || rhs instanceof Scriptable) {
                 stack[stackTop] = ScriptRuntime.add(lhs, rhs, cx);
                 return stackTop;
             }
-            if (lhs instanceof Scriptable)
-                lhs = ((Scriptable) lhs).getDefaultValue(null);
-            if (rhs instanceof Scriptable)
-                rhs = ((Scriptable) rhs).getDefaultValue(null);
             if (lhs instanceof String) {
                 String lstr = (String)lhs;
                 String rstr = ScriptRuntime.toString(rhs);
@@ -3239,14 +3233,17 @@ switch (op) {
     private static void do_add
         (Object lhs, double rDbl,
          Object[] stack, double[] stackDbl, int stackTop,
-         boolean left_right_order)
+         boolean left_right_order, Context cx)
     {
         if (lhs instanceof Scriptable) {
-            if (lhs == Undefined.instance) {
-                lhs = ScriptRuntime.NaNobj;
-            } else {
-                lhs = ((Scriptable)lhs).getDefaultValue(null);
+            Object rhs = doubleWrap(rDbl);
+            if (!left_right_order) {
+                Object tmp = lhs;
+                lhs = rhs;
+                rhs = tmp;
             }
+            stack[stackTop] = ScriptRuntime.add(lhs, rhs, cx);
+            return;
         }
         if (lhs instanceof String) {
             String lstr = (String)lhs;

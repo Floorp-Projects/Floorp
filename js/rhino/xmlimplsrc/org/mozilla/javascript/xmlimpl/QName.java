@@ -52,15 +52,9 @@ final class QName extends IdScriptableObject
     private String localName;
     private String uri;
 
-    static void init(XMLLibImpl lib, boolean sealed)
-    {
-        QName obj = new QName(lib, "", "", "");
-        lib.qnamePrototype = obj;
-        obj.exportAsJSClass(MAX_PROTOTYPE_ID, lib.globalScope(), sealed);
-    }
-
     public QName(XMLLibImpl lib, String uri, String localName, String prefix)
     {
+        super(lib.globalScope(), lib.qnamePrototype);
         if (localName == null) throw new IllegalArgumentException();
         this.lib = lib;
         this.uri = uri;
@@ -151,20 +145,6 @@ final class QName extends IdScriptableObject
     public Object getDefaultValue (Class hint)
     {
         return toString();
-    }
-
-    protected Scriptable defaultPrototype()
-    {
-        Scriptable result = lib.qnamePrototype;
-        if (result == this) {
-            result = null;
-        }
-        return result;
-    }
-
-    protected Scriptable defaultParentScope()
-    {
-        return lib.globalScope();
     }
 
 // #string_id_map#

@@ -323,6 +323,11 @@ public abstract class IdScriptableObject extends ScriptableObject
     {
     }
 
+    public IdScriptableObject(Scriptable scope, Scriptable prototype)
+    {
+        super(scope, prototype);
+    }
+
     public boolean has(String name, Scriptable start)
     {
         if (maxInstanceId != 0) {

@@ -53,6 +53,8 @@ class Namespace extends IdScriptableObject
 
     public Namespace(XMLLibImpl lib, String uri)
     {
+        super(lib.globalScope(), lib.namespacePrototype);
+
         if (uri == null)
             throw new IllegalArgumentException();
 
@@ -64,6 +66,8 @@ class Namespace extends IdScriptableObject
 
     public Namespace(XMLLibImpl lib, String prefix, String uri)
     {
+        super(lib.globalScope(), lib.namespacePrototype);
+
         if (uri == null)
             throw new IllegalArgumentException();
         if (uri.length() == 0) {
@@ -150,20 +154,6 @@ class Namespace extends IdScriptableObject
     public Object getDefaultValue (Class hint)
     {
         return uri();
-    }
-
-    protected Scriptable defaultPrototype()
-    {
-        Scriptable result = lib.namespacePrototype;
-        if (result == this) {
-            result = null;
-        }
-        return result;
-    }
-
-    protected Scriptable defaultParentScope()
-    {
-        return lib.globalScope();
     }
 
 // #string_id_map#

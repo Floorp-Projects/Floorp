@@ -39,14 +39,17 @@ import org.mozilla.javascript.*;
 
 public abstract class XMLLib
 {
+    private static final Object XML_LIB_KEY = new Object();
+
     public static XMLLib extractFromScopeOrNull(Scriptable scope)
     {
-        scope = ScriptableObject.getTopLevelScope(scope);
-        Object testXML = ScriptableObject.getClassPrototype(scope, "XML");
-        if (testXML instanceof XMLObject) {
-            return ((XMLObject)testXML).lib();
-        }
-        return null;
+        ScriptableObject so = ScriptRuntime.getLibraryScope(scope);
+
+        // Ensure lazily initialization of real XML library instance
+        // which is done on first access to XML property
+        ScriptableObject.getProperty(so, "XML");
+
+        return (XMLLib)so.getAssociatedValue(XML_LIB_KEY);
     }
 
     public static XMLLib extractFromScope(Scriptable scope)
@@ -57,6 +60,12 @@ public abstract class XMLLib
         }
         String msg = ScriptRuntime.getMessage0("msg.XML.not.available");
         throw Context.reportRuntimeError(msg);
+    }
+
+    protected final XMLLib bindToScope(Scriptable scope)
+    {
+        ScriptableObject so = ScriptRuntime.getLibraryScope(scope);
+        return (XMLLib)so.associateValue(XML_LIB_KEY, this);
     }
 
     public abstract boolean isXMLName(Context cx, Object name);
@@ -71,12 +80,6 @@ public abstract class XMLLib
 
     public abstract Reference xmlPrimaryReference(Object nameObject,
                                                   Scriptable scope);
-
-    public abstract Scriptable enterXMLWith(XMLObject object,
-                                            Scriptable scope);
-
-    public abstract Scriptable enterDotQuery(XMLObject object,
-                                             Scriptable scope);
 
     /**
      * Escapes the reserved characters in a value of an attribute
@@ -94,13 +97,6 @@ public abstract class XMLLib
      */
     public abstract String escapeTextValue(Object value);
 
-
-    /**
-     * Must calculate obj1 + obj2
-     */
-    public abstract Object addXMLObjects(Context cx,
-                                         XMLObject obj1,
-                                         XMLObject obj2);
 
     /**
      * Construct namespace for default xml statement.

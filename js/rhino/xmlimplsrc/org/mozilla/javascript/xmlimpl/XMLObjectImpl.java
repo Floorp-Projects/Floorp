@@ -53,8 +53,9 @@ abstract class XMLObjectImpl extends XMLObject
     protected final XMLLibImpl lib;
     protected boolean prototypeFlag;
 
-    protected XMLObjectImpl(XMLLibImpl lib)
+    protected XMLObjectImpl(XMLLibImpl lib, XMLObject prototype)
     {
+        super(lib.globalScope(), prototype);
         this.lib = lib;
     }
 
@@ -149,11 +150,6 @@ abstract class XMLObjectImpl extends XMLObject
         return toString();
     }
 
-    protected final Scriptable defaultParentScope()
-    {
-        return lib.globalScope();
-    }
-
     public void delete(String name)
     {
         throw new IllegalArgumentException("String: [" + name + "]");
@@ -164,7 +160,7 @@ abstract class XMLObjectImpl extends XMLObject
      * never returns null for them but rather calls equivalentXml(value)
      * and box the result as Boolean.
      */
-    public final Boolean equivalentValues(Object value)
+    protected final Boolean equivalentValues(Object value)
     {
         boolean result = equivalentXml(value);
 
@@ -247,6 +243,40 @@ abstract class XMLObjectImpl extends XMLObject
         }
         deleteXMLProperty(xmlName);
         return true;
+    }
+
+    public NativeWith enterWith(Scriptable scope)
+    {
+        return new XMLWithScope(lib, scope, this);
+    }
+
+    public NativeWith enterDotQuery(Scriptable scope)
+    {
+        XMLWithScope xws = new XMLWithScope(lib, scope, this);
+        xws.initAsDotQuery();
+        return xws;
+    }
+
+    public final Object addValues(Context cx, boolean thisIsLeft,
+                                     Object value)
+    {
+        if (value instanceof XMLObject) {
+            XMLObject v1, v2;
+            if (thisIsLeft) {
+                v1 = this;
+                v2 = (XMLObject)value;
+            } else {
+                v1 = (XMLObject)value;
+                v2 = this;
+            }
+            return lib.addXMLObjects(cx, v1, v2);
+        }
+        if (value == Undefined.instance) {
+            // both "xml + undefined" and "undefined + xml" gives String(xml)
+            return ScriptRuntime.toString(this);
+        }
+
+        return super.addValues(cx, thisIsLeft, value);
     }
 
     //

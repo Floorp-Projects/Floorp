@@ -177,7 +177,7 @@ class XML extends XMLObjectImpl
      */
     XML(XMLLibImpl lib)
     {
-        super(lib);
+        super(lib, lib.xmlPrototype);
         XmlObject xo = XmlObject.Factory.newInstance();
 
         XmlCursor curs = xo.newCursor();
@@ -198,7 +198,7 @@ class XML extends XMLObjectImpl
      */
     private XML(XMLLibImpl lib, XScriptAnnotation anno)
     {
-        super(lib);
+        super(lib, lib.xmlPrototype);
         _anno = anno;
         _anno._xScriptXML = this;
     }
@@ -209,7 +209,7 @@ class XML extends XMLObjectImpl
      */
     XML(XMLLibImpl lib, Object inputObject)
     {
-        super(lib);
+        super(lib, lib.xmlPrototype);
         XmlObject xo;
         boolean isText = false;
         String frag;
@@ -377,7 +377,7 @@ todo need to handle namespace prefix not found in XML look for namespace type in
      */
     private XML(XMLLibImpl lib, XmlCursor cursor)
     {
-        super(lib);
+        super(lib, lib.xmlPrototype);
         if(cursor == null || !cursor.isAttr())
         {
             // Make default empty XML
@@ -1146,15 +1146,6 @@ todo need to handle namespace prefix not found in XML look for namespace type in
     public String getClassName ()
     {
         return "XML";
-    }
-
-    protected Scriptable defaultPrototype()
-    {
-        Scriptable result = lib.xmlPrototype;
-        if (result == this) {
-            result = null;
-        }
-        return result;
     }
 
     //

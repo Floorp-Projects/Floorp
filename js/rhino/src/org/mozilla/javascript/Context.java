@@ -1099,68 +1099,8 @@ public class Context
     public ScriptableObject initStandardObjects(ScriptableObject scope,
                                                 boolean sealed)
     {
-        if (scope == null) {
-            scope = new NativeObject();
-        }
-        (new ClassCache()).associate(scope);
-
-        BaseFunction.init(this, scope, sealed);
-        NativeObject.init(this, scope, sealed);
-
-        Scriptable objectProto = ScriptableObject.getObjectPrototype(scope);
-
-        // Function.prototype.__proto__ should be Object.prototype
-        Scriptable functionProto = ScriptableObject.getFunctionPrototype(scope);
-        functionProto.setPrototype(objectProto);
-
-        // Set the prototype of the object passed in if need be
-        if (scope.getPrototype() == null)
-            scope.setPrototype(objectProto);
-
-        // must precede NativeGlobal since it's needed therein
-        NativeError.init(this, scope, sealed);
-        NativeGlobal.init(this, scope, sealed);
-
-        NativeArray.init(this, scope, sealed);
-        NativeString.init(this, scope, sealed);
-        NativeBoolean.init(this, scope, sealed);
-        NativeNumber.init(this, scope, sealed);
-        NativeDate.init(this, scope, sealed);
-        NativeMath.init(this, scope, sealed);
-
-        NativeWith.init(this, scope, sealed);
-        NativeCall.init(this, scope, sealed);
-        NativeScript.init(this, scope, sealed);
-
-        boolean withXml = hasFeature(FEATURE_E4X);
-
-        for (int i = 0; i != lazilyNames.length; i += 2) {
-            String topProperty = lazilyNames[i];
-            String className = lazilyNames[i + 1];
-            if (!withXml && className == XML_INIT_CLASS) {
-                continue;
-            }
-            new LazilyLoadedCtor(scope, topProperty, className, sealed);
-        }
-
-        return scope;
+        return ScriptRuntime.initStandardObjects(this, scope, sealed);
     }
-
-    private static final String
-        XML_INIT_CLASS = "org.mozilla.javascript.xmlimpl.XMLLibImpl";
-
-    private static final String[] lazilyNames = {
-        "RegExp",        "org.mozilla.javascript.regexp.NativeRegExp",
-        "Packages",      "org.mozilla.javascript.NativeJavaTopPackage",
-        "java",          "org.mozilla.javascript.NativeJavaTopPackage",
-        "getClass",      "org.mozilla.javascript.NativeJavaTopPackage",
-        "JavaAdapter",   "org.mozilla.javascript.JavaAdapter",
-        "JavaImporter",  "org.mozilla.javascript.ImporterTopLevel",
-        "XML",           XML_INIT_CLASS,
-        "XMLList",       XML_INIT_CLASS,
-        "Namespace",     XML_INIT_CLASS,
-        "QName",         XML_INIT_CLASS,
-    };
 
     /**
      * Get the singleton object that represents the JavaScript Undefined value.

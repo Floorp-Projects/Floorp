@@ -150,7 +150,7 @@ public class NativeWith implements Scriptable, IdFunctionCall {
     /**
      * Must return null to continue looping or the final collection result.
      */
-    public Object updateDotQuery(boolean value)
+    protected Object updateDotQuery(boolean value)
     {
         // NativeWith itself does not support it
         throw new IllegalStateException();

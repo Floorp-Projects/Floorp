@@ -111,6 +111,19 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         }
     }
 
+    public ScriptableObject()
+    {
+    }
+
+    public ScriptableObject(Scriptable scope, Scriptable prototype)
+    {
+        if (scope == null)
+            throw new IllegalArgumentException();
+
+        parentScopeObject = scope;
+        prototypeObject = prototype;
+    }
+
     /**
      * Return the name of the class.
      *
@@ -435,24 +448,11 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     }
 
     /**
-     * Returns the default value for prototype of the object.
-     */
-    protected Scriptable defaultPrototype()
-    {
-        return null;
-    }
-
-    /**
      * Returns the prototype of the object.
      */
     public Scriptable getPrototype()
     {
-        Scriptable x = prototypeObject;
-        if (x == UNSET_SCRIPTABLE_FIELD) {
-            x = defaultPrototype();
-            prototypeObject = x;
-        }
-        return x;
+        return prototypeObject;
     }
 
     /**
@@ -463,26 +463,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         prototypeObject = m;
     }
 
-
-    /**
-     * Returns the default value for prototype of the object.
-     */
-    protected Scriptable defaultParentScope()
-    {
-        return null;
-    }
-
     /**
      * Returns the parent (enclosing) scope of the object.
      */
     public Scriptable getParentScope()
     {
-        Scriptable x = parentScopeObject;
-        if (x == UNSET_SCRIPTABLE_FIELD) {
-            x = defaultParentScope();
-            parentScopeObject = x;
-        }
-        return x;
+        return parentScopeObject;
     }
 
     /**
@@ -648,7 +634,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * if <tt>this == value</tt> or null otherwise to indicate no custom
      * equality is available unless <tt>value</tt> is <tt>this</tt>.
      */
-    public Boolean equivalentValues(Object value)
+    protected Boolean equivalentValues(Object value)
     {
         return (this == value) ? Boolean.TRUE : null;
     }
@@ -1921,17 +1907,15 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         }
     }
 
-    private static final Scriptable UNSET_SCRIPTABLE_FIELD = new NativeObject();
-
     /**
      * The prototype of this object.
      */
-    private Scriptable prototypeObject = UNSET_SCRIPTABLE_FIELD;
+    private Scriptable prototypeObject;
 
     /**
      * The parent scope of this object.
      */
-    private Scriptable parentScopeObject = UNSET_SCRIPTABLE_FIELD;
+    private Scriptable parentScopeObject;
 
     private static final Object HAS_STATIC_ACCESSORS = Void.TYPE;
     private static final Slot REMOVED = new Slot();

@@ -56,6 +56,15 @@ public class BaseFunction extends IdScriptableObject implements Function
         obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);
     }
 
+    public BaseFunction()
+    {
+    }
+
+    public BaseFunction(Scriptable scope, Scriptable prototype)
+    {
+        super(scope, prototype);
+    }
+
     public String getClassName() {
         return "Function";
     }

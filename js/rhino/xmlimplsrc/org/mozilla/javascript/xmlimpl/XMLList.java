@@ -102,7 +102,7 @@ class XMLList extends XMLObjectImpl implements Function
      */
     XMLList(XMLLibImpl lib)
     {
-        super(lib);
+        super(lib, lib.xmlListPrototype);
         _annos = new AnnotationList();
     }
 
@@ -112,7 +112,7 @@ class XMLList extends XMLObjectImpl implements Function
      */
     XMLList(XMLLibImpl lib, Object inputObject)
     {
-        super(lib);
+        super(lib, lib.xmlListPrototype);
         String frag;
 
         if (inputObject == null || inputObject instanceof Undefined)
@@ -289,15 +289,6 @@ class XMLList extends XMLObjectImpl implements Function
     public String getClassName ()
     {
         return "XMLList";
-    }
-
-    protected Scriptable defaultPrototype()
-    {
-        Scriptable result = lib.xmlListPrototype;
-        if (result == this) {
-            result = null;
-        }
-        return result;
     }
 
     //

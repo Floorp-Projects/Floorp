@@ -41,6 +41,9 @@ public class IdFunctionObject extends BaseFunction
 {
     public IdFunctionObject(IdFunctionCall idcall, Object tag, int id, int arity)
     {
+        if (arity < 0)
+            throw new IllegalArgumentException();
+
         this.idcall = idcall;
         this.tag = tag;
         this.methodId = id;
@@ -49,10 +52,20 @@ public class IdFunctionObject extends BaseFunction
     }
 
     public IdFunctionObject(IdFunctionCall idcall, Object tag, int id,
-                      String name, int arity, Scriptable scope)
+                            String name, int arity, Scriptable scope)
     {
-        this(idcall, tag, id, arity);
-        initFunction(name, scope);
+        super(scope, null);
+
+        if (arity < 0)
+            throw new IllegalArgumentException();
+        if (name == null)
+            throw new IllegalArgumentException();
+
+        this.idcall = idcall;
+        this.tag = tag;
+        this.methodId = id;
+        this.arity = arity;
+        this.functionName = name;
     }
 
     public void initFunction(String name, Scriptable scope)

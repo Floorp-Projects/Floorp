@@ -72,7 +72,10 @@ public final class XMLLibImpl extends XMLLib
     public static void init(Context cx, Scriptable scope, boolean sealed)
     {
         XMLLibImpl lib = new XMLLibImpl(scope);
-        lib.exportToScope(sealed);
+        XMLLib bound = lib.bindToScope(scope);
+        if (bound == lib) {
+            lib.exportToScope(sealed);
+        }
     }
 
     private void exportToScope(boolean sealed)
@@ -527,6 +530,36 @@ public final class XMLLibImpl extends XMLLib
         return new QName(this, uri, localName, prefix);
     }
 
+    Object addXMLObjects(Context cx, XMLObject obj1, XMLObject obj2)
+    {
+        XMLList listToAdd = new XMLList(this);
+
+        if (obj1 instanceof XMLList) {
+            XMLList list1 = (XMLList)obj1;
+            if (list1.length() == 1) {
+                listToAdd.addToList(list1.item(0));
+            } else {
+                // Might be xmlFragment + xmlFragment + xmlFragment + ...;
+                // then the result will be an XMLList which we want to be an
+                // rValue and allow it to be assigned to an lvalue.
+                listToAdd = new XMLList(this, obj1);
+            }
+        } else {
+            listToAdd.addToList(((XML)obj1));
+        }
+
+        if (obj2 instanceof XMLList) {
+            XMLList list2 = (XMLList)obj2;
+            for (int i = 0; i < list2.length(); i++) {
+                listToAdd.addToList(list2.item(i));
+            }
+        } else if (obj2 instanceof XML) {
+            listToAdd.addToList(((XML)obj2));
+        }
+
+        return listToAdd;
+    }
+
     //
     //
     // Overriding XMLLib methods
@@ -608,37 +641,6 @@ public final class XMLLibImpl extends XMLLib
         return new XMLReference(xmlObj, xmlName);
     }
 
-    public Scriptable enterXMLWith(XMLObject object, Scriptable scope)
-    {
-        return new XMLWithScope(this, scope, object);
-    }
-
-    public Scriptable enterDotQuery(XMLObject object, Scriptable scope)
-    {
-        XMLWithScope xws = new XMLWithScope(this, scope, object);
-
-        // XMLWithScope also handles the .(xxx) DotQuery for XML
-        // basically DotQuery is a for/in/with statement and in
-        // the following 3 statements we setup to signal it's
-        // DotQuery,
-        // the index and the object being looped over.  The
-        // xws.setPrototype is the scope of the object which is
-        // is a element of the lhs (XMLList).
-        xws.setCurrIndex(0);
-        xws.setDQPrototype(object);
-
-        if (object instanceof XMLList) {
-            XMLList xl = (XMLList)object;
-            if (xl.length() > 0) {
-                xws.setPrototype((Scriptable)(xl.get(0, null)));
-            }
-        }
-        // Always return the outer-most type of XML lValue of
-        // XML to left of dotQuery.
-        xws.setXMLList(new XMLList(this));
-        return xws;
-    }
-
     /**
      * Escapes the reserved characters in a value of an attribute
      *
@@ -695,36 +697,6 @@ public final class XMLLibImpl extends XMLLib
         return (begin < end) ? elementText.substring(begin, end) : "";
     }
 
-    public Object addXMLObjects(Context cx, XMLObject obj1, XMLObject obj2)
-    {
-        XMLList listToAdd = new XMLList(this);
-
-        if (obj1 instanceof XMLList) {
-            XMLList list1 = (XMLList)obj1;
-            if (list1.length() == 1) {
-                listToAdd.addToList(list1.item(0));
-            } else {
-                // Might be xmlFragment + xmlFragment + xmlFragment + ...;
-                // then the result will be an XMLList which we want to be an
-                // rValue and allow it to be assigned to an lvalue.
-                listToAdd = new XMLList(this, obj1);
-            }
-        } else {
-            listToAdd.addToList(((XML)obj1));
-        }
-
-        if (obj2 instanceof XMLList) {
-            XMLList list2 = (XMLList)obj2;
-            for (int i = 0; i < list2.length(); i++) {
-                listToAdd.addToList(list2.item(i));
-            }
-        } else if (obj2 instanceof XML) {
-            listToAdd.addToList(((XML)obj2));
-        }
-
-        return listToAdd;
-    }
-
     public Object toDefaultXmlNamespace(Context cx, Object uriValue)
     {
         return constructNamespace(cx, uriValue);
@@ -765,6 +737,4 @@ public final class XMLLibImpl extends XMLLib
 
         return Undefined.instance;
     }
-
-
 }

@@ -97,6 +97,92 @@ public class ScriptRuntime {
         ScriptableObjectClass = Kit.classOrNull("org.mozilla.javascript.ScriptableObject"),
         UndefinedClass    = Kit.classOrNull("org.mozilla.javascript.Undefined");
 
+    private static final String
+        XML_INIT_CLASS = "org.mozilla.javascript.xmlimpl.XMLLibImpl";
+
+    private static final String[] lazilyNames = {
+        "RegExp",        "org.mozilla.javascript.regexp.NativeRegExp",
+        "Packages",      "org.mozilla.javascript.NativeJavaTopPackage",
+        "java",          "org.mozilla.javascript.NativeJavaTopPackage",
+        "getClass",      "org.mozilla.javascript.NativeJavaTopPackage",
+        "JavaAdapter",   "org.mozilla.javascript.JavaAdapter",
+        "JavaImporter",  "org.mozilla.javascript.ImporterTopLevel",
+        "XML",           XML_INIT_CLASS,
+        "XMLList",       XML_INIT_CLASS,
+        "Namespace",     XML_INIT_CLASS,
+        "QName",         XML_INIT_CLASS,
+    };
+
+    private static final Object LIBRARY_SCOPE_KEY = new Object();
+
+    public static ScriptableObject initStandardObjects(Context cx,
+                                                       ScriptableObject scope,
+                                                       boolean sealed)
+    {
+        if (scope == null) {
+            scope = new NativeObject();
+        }
+        scope.associateValue(LIBRARY_SCOPE_KEY, LIBRARY_SCOPE_KEY);
+
+        (new ClassCache()).associate(scope);
+
+        BaseFunction.init(cx, scope, sealed);
+        NativeObject.init(cx, scope, sealed);
+
+        Scriptable objectProto = ScriptableObject.getObjectPrototype(scope);
+
+        // Function.prototype.__proto__ should be Object.prototype
+        Scriptable functionProto = ScriptableObject.getFunctionPrototype(scope);
+        functionProto.setPrototype(objectProto);
+
+        // Set the prototype of the object passed in if need be
+        if (scope.getPrototype() == null)
+            scope.setPrototype(objectProto);
+
+        // must precede NativeGlobal since it's needed therein
+        NativeError.init(cx, scope, sealed);
+        NativeGlobal.init(cx, scope, sealed);
+
+        NativeArray.init(cx, scope, sealed);
+        NativeString.init(cx, scope, sealed);
+        NativeBoolean.init(cx, scope, sealed);
+        NativeNumber.init(cx, scope, sealed);
+        NativeDate.init(cx, scope, sealed);
+        NativeMath.init(cx, scope, sealed);
+
+        NativeWith.init(cx, scope, sealed);
+        NativeCall.init(cx, scope, sealed);
+        NativeScript.init(cx, scope, sealed);
+
+        boolean withXml = cx.hasFeature(Context.FEATURE_E4X);
+
+        for (int i = 0; i != lazilyNames.length; i += 2) {
+            String topProperty = lazilyNames[i];
+            String className = lazilyNames[i + 1];
+            if (!withXml && className == XML_INIT_CLASS) {
+                continue;
+            }
+            new LazilyLoadedCtor(scope, topProperty, className, sealed);
+        }
+
+        return scope;
+    }
+
+    public static ScriptableObject getLibraryScope(Scriptable scope)
+    {
+        scope = ScriptableObject.getTopLevelScope(scope);
+        do {
+            if (scope instanceof ScriptableObject) {
+                ScriptableObject so = (ScriptableObject)scope;
+                if (null != so.getAssociatedValue(LIBRARY_SCOPE_KEY)) {
+                    return so;
+                }
+            }
+            scope = scope.getPrototype();
+        } while (scope != null);
+        throw new IllegalStateException("Failed to find library scope");
+    }
+
     public static Boolean wrapBoolean(boolean b)
     {
         return b ? Boolean.TRUE : Boolean.FALSE;
@@ -2171,20 +2257,18 @@ public class ScriptRuntime {
             return new Double(((Number)val1).doubleValue() +
                               ((Number)val2).doubleValue());
         }
-
-        if (val1 instanceof XMLObject && val2 instanceof XMLObject) {
-            XMLObject xml1 = (XMLObject)val1;
-            XMLObject xml2 = (XMLObject)val2;
-            XMLLib xmlLib = xml1.lib();
-            return xmlLib.addXMLObjects(cx, xml1, xml2);
-        } else if (val1 == Undefined.instance && val2 instanceof XMLObject) {
-            // Undefined added to any XML or XMLList the undefined needs
-            // to be "".
-            val1 = "";
-        } else if (val2 == Undefined.instance && val1 instanceof XMLObject) {
-            val2 = "";
+        if (val1 instanceof XMLObject) {
+            Object test = ((XMLObject)val1).addValues(cx, true, val2);
+            if (test != Scriptable.NOT_FOUND) {
+                return test;
+            }
         }
-
+        if (val2 instanceof XMLObject) {
+            Object test = ((XMLObject)val2).addValues(cx, false, val1);
+            if (test != Scriptable.NOT_FOUND) {
+                return test;
+            }
+        }
         if (val1 instanceof Scriptable)
             val1 = ((Scriptable) val1).getDefaultValue(null);
         if (val2 instanceof Scriptable)
@@ -2792,8 +2876,7 @@ public class ScriptRuntime {
     public static Scriptable enterWith(Object value, Scriptable scope) {
         if (value instanceof XMLObject) {
             XMLObject object = (XMLObject)value;
-            XMLLib xmlLib = object.lib();
-            return xmlLib.enterXMLWith(object, scope);
+            return object.enterWith(scope);
         }
         return new NativeWith(scope, toObject(scope, value));
     }
@@ -2812,8 +2895,7 @@ public class ScriptRuntime {
                                            ScriptRuntime.toString(value));
         }
         XMLObject object = (XMLObject)value;
-        XMLLib xmlLib = object.lib();
-        return xmlLib.enterDotQuery(object, scope);
+        return object.enterDotQuery(scope);
     }
 
     public static Object updateDotQuery(boolean value, Scriptable scope)

@@ -357,9 +357,9 @@ class JavaMembers
                 ht.put(name, field);
             } else if (member instanceof NativeJavaMethod) {
                 NativeJavaMethod method = (NativeJavaMethod) member;
-                FieldAndMethods fam = new FieldAndMethods(method.methods,
+                FieldAndMethods fam = new FieldAndMethods(scope,
+                                                          method.methods,
                                                           field);
-                fam.setPrototype(ScriptableObject.getFunctionPrototype(scope));
                 getFieldAndMethodsTable(isStatic).put(name, fam);
                 ht.put(name, fam);
             } else if (member instanceof Field) {
@@ -583,7 +583,7 @@ class JavaMembers
         Enumeration e = ht.elements();
         while (len-- > 0) {
             FieldAndMethods fam = (FieldAndMethods) e.nextElement();
-            FieldAndMethods famNew = new FieldAndMethods(fam.methods,
+            FieldAndMethods famNew = new FieldAndMethods(scope, fam.methods,
                                                          fam.field);
             famNew.javaObject = javaObject;
             result.put(fam.field.getName(), famNew);
@@ -664,10 +664,12 @@ class BeanProperty
 class FieldAndMethods extends NativeJavaMethod
 {
 
-    FieldAndMethods(MemberBox[] methods, Field field)
+    FieldAndMethods(Scriptable scope, MemberBox[] methods, Field field)
     {
         super(methods);
         this.field = field;
+        setParentScope(scope);
+        setPrototype(ScriptableObject.getFunctionPrototype(scope));
     }
 
     public Object getDefaultValue(Class hint)

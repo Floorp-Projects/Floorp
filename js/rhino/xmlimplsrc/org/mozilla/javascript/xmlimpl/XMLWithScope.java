@@ -43,50 +43,45 @@ import org.mozilla.javascript.xml.*;
 
 final class XMLWithScope extends NativeWith
 {
-    private XMLLib lib;
+    private XMLLibImpl lib;
     private int         _currIndex;
-    private XMLList _xmlList = null;
-    private Scriptable  _dqPrototype;
+    private XMLList     _xmlList;
+    private XMLObject   _dqPrototype;
 
-    XMLWithScope(XMLLib lib, Scriptable parent, XMLObject prototype)
+    XMLWithScope(XMLLibImpl lib, Scriptable parent, XMLObject prototype)
     {
         super(parent, prototype);
         this.lib = lib;
     }
 
-    public XMLLib lib()
+    void initAsDotQuery()
     {
-        return lib;
+        XMLObject prototype = (XMLObject)getPrototype();
+        // XMLWithScope also handles the .(xxx) DotQuery for XML
+        // basically DotQuery is a for/in/with statement and in
+        // the following 3 statements we setup to signal it's
+        // DotQuery,
+        // the index and the object being looped over.  The
+        // xws.setPrototype is the scope of the object which is
+        // is a element of the lhs (XMLList).
+        _currIndex = 0;
+        _dqPrototype = prototype;
+        if (prototype instanceof XMLList) {
+            XMLList xl = (XMLList)prototype;
+            if (xl.length() > 0) {
+                setPrototype((Scriptable)(xl.get(0, null)));
+            }
+        }
+        // Always return the outer-most type of XML lValue of
+        // XML to left of dotQuery.
+        _xmlList = new XMLList(lib);
     }
 
-    public void setCurrIndex (int idx)
-    {
-        _currIndex = idx;
-    }
-
-    public int getCurrIndex ()
-    {
-        return _currIndex;
-    }
-
-    public void setXMLList (XMLList l)
-    {
-        _xmlList = l;
-    }
-
-    public Scriptable getDQPrototype() {
-        return _dqPrototype;
-    }
-
-    public void setDQPrototype(Scriptable dqPrototype) {
-        _dqPrototype = dqPrototype;
-    }
-
-    public Object updateDotQuery(boolean value)
+    protected Object updateDotQuery(boolean value)
     {
         // Return null to continue looping
 
-        Scriptable seed = getDQPrototype();
+        XMLObject seed = _dqPrototype;
         XMLList xmlL = _xmlList;
 
         Object result;
@@ -96,7 +91,7 @@ final class XMLWithScope extends NativeWith
             // to our result list.  If false, we try the next element.
             XMLList orgXmlL = (XMLList)seed;
 
-            int idx = getCurrIndex();
+            int idx = _currIndex;
 
             if (value) {
                 xmlL.addToList(orgXmlL.get(idx, null));
@@ -107,7 +102,7 @@ final class XMLWithScope extends NativeWith
                 // Yes, set our new index, get the next element and
                 // reset the expression to run with this object as
                 // the WITH selector.
-                setCurrIndex(idx);
+                _currIndex = idx;
                 setPrototype((Scriptable)(orgXmlL.get(idx, null)));
 
                 // continue looping
