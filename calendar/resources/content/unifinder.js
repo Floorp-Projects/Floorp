@@ -581,6 +581,13 @@ var treeView =
             }
             return false;
 
+        case "unifinder-search-results-tree-col-filename":
+            var thisCalendar = gCalendarWindow.calendarManager.getCalendarByName( calendarEvent.parent.server );
+            if( thisCalendar )
+                return( thisCalendar.getAttribute( "http://home.netscape.com/NC-rdf#name" ) );
+            else
+                return( "" );
+
          default: 
             return false;
       }

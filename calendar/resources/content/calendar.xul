@@ -496,6 +496,11 @@
                       flex="1"
                       hidden="true"
                       label="&calendar.unifinder.tree.status.label;"/>
+                   <treecol id="unifinder-search-results-tree-col-filename"
+                      persist="hidden ordinal width sortDirection sortActive" 
+                      flex="1"
+                      hidden="true"
+                      label="&calendar.unifinder.tree.filename.label;"/>
                   </treecols>
        
                   <!-- on mousedown here happens before onclick above -->
