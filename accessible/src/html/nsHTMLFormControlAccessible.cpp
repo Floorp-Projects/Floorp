@@ -226,11 +226,9 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
     NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
     nsCOMPtr<nsISupportsArray> anonymousElements;
     shell->GetAnonymousContentFor(content, getter_AddRefs(anonymousElements));
-    if (anonymousElements) {
-      nsCOMPtr<nsIDOMNode> domNode(do_QueryElementAt(anonymousElements, 0));
-      if (domNode) {
-        domNode->GetNodeValue(name);
-      }
+    nsCOMPtr<nsIDOMNode> domNode(do_QueryElementAt(anonymousElements, 0));
+    if (domNode) {
+      domNode->GetNodeValue(name);
     }
   }
 
