@@ -10,6 +10,12 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+
+5/24/99 Added "Mac System 8.6" to the list of OS's.  Feed this to mysql:
+
+	alter table bugs change column op_sys op_sys enum("All", "Windows 3.1", "Windows 95", "Windows 98", "Windows NT", "Mac System 7", "Mac System 7.5", "Mac System 7.6.1", "Mac System 8.0", "Mac System 8.5", "Mac System 8.6", "AIX", "BSDI", "HP-UX", "IRIX", "Linux", "FreeBSD", "OSF/1", "Solaris", "SunOS", "OS/2", "other") not null;
+
+
 5/12/99 Added a pref to control how much email you get.  This needs a new
 column in the profiles table, so feed the following to mysql:
 
