@@ -941,10 +941,13 @@ void nsFontMetricsGTK::RealizeFont()
 
   if (::XGetFontProperty(fontInfo, XA_X_HEIGHT, &pr))
   {
-    mXHeight = nscoord(pr * f);
+    if (pr < 0x00ffffff)  // Bug 43214: arbitrary to exclude garbage values
+    {
+      mXHeight = nscoord(pr * f);
 #ifdef REALLY_NOISY_FONTS
-    printf("xHeight=%d\n", mXHeight);
+      printf("xHeight=%d\n", mXHeight);
 #endif
+    }
   }
 
   if (::XGetFontProperty(fontInfo, XA_UNDERLINE_POSITION, &pr))

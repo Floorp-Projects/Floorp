@@ -482,8 +482,11 @@ void nsFontMetricsXlib::RealizeFont()
 
   if (::XGetFontProperty(mFontHandle, XA_X_HEIGHT, &pr))
   {
-    mXHeight = nscoord(pr * f);
-    PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("xHeight=%d\n", mXHeight));
+    if (pr < 0x00ffffff)  // Bug 43214: arbitrary to exclude garbage values
+    {
+      mXHeight = nscoord(pr * f);
+      PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("xHeight=%d\n", mXHeight));
+    }
   }
 
   if (::XGetFontProperty(mFontHandle, XA_UNDERLINE_POSITION, &pr))
