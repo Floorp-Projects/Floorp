@@ -27,36 +27,23 @@ function println(s)
         dump(s+"\n");
 }
 
-// a ctor for Interface IDs
-function nsIID(str)
-{
-    var id = Components.classes.nsIID.createInstance();
-    id = id.QueryInterface(Components.interfaces.nsIJSIID);
-    id.init(str);
-    return id;
-}
-
-// a ctor for CLSIDs
-function nsCID(str)
-{
-    var id = Components.classes.nsCID.createInstance();
-    id = id.QueryInterface(Components.interfaces.nsIJSCID);
-    id.init(str);
-    return id;
-}
+// alias this ctor for simplicity of use
+var nsID = Components.ID;
 
 // some explicit IDs
 
-var NS_ISUPPORTS_IID = new nsIID("{00000000-0000-0000-c000-000000000046}");
-var NS_ECHO_UPPER    = new nsCID("{ED132C20-EED1-11D2-BAA4-00805F8A5DD7}");
-var NS_ECHO          = new nsCID("{ed132c20-eed1-11d2-baa4-00805f8a5dd7}");
-var NS_BOGUS_IID     = new nsIID("{15898420-4d11-11d3-9893-006008962422}");
+var NS_ISUPPORTS_IID = new nsID("{00000000-0000-0000-c000-000000000046}");
+var NS_ECHO          = new nsID("{ed132c20-eed1-11d2-baa4-00805f8a5dd7}");
+var NS_ECHO_UPPER    = new nsID("{ED132C20-EED1-11D2-BAA4-00805F8A5DD7}");
+var NS_BOGUS_IID     = new nsID("{15898420-4d11-11d3-9893-006008962422}");
 
 // our test data array
 data = [
- // we expect bare interfacesIDs to resolve to names of interfaces (if they exist)
- [NS_ISUPPORTS_IID                   , "nsISupports"],
- [NS_ISUPPORTS_IID.name              , "nsISupports"],
+ // toString of bare id resolved to canonical form
+ [NS_ISUPPORTS_IID                   , "{00000000-0000-0000-c000-000000000046}"],
+ // name of bare id is empty string
+ [NS_ISUPPORTS_IID.name              , ""],
+ // number of bare id resolved to canonical form
  [NS_ISUPPORTS_IID.number            , "{00000000-0000-0000-c000-000000000046}"],
  // this one is made up so it only resolves to the number
  [NS_BOGUS_IID                       , "{15898420-4d11-11d3-9893-006008962422}"],
@@ -89,9 +76,6 @@ data = [
 
  // does not work with bogus CID
  [Components.classesByID["{35fb7000-4d23-11d3-9893-006008962422}"], "undefined"],
-
- // but the same bogus CID works if not claiming that it is a registered CID
- [new nsCID("{35fb7000-4d23-11d3-9893-006008962422}"), "{35fb7000-4d23-11d3-9893-006008962422}"],
 
  // classesByID should not resolve the number to the progid
  [Components.classesByID["{ed132c20-eed1-11d2-baa4-00805f8a5dd7}"].name,  ""],

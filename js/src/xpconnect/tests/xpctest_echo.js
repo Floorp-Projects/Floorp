@@ -25,14 +25,7 @@ function nsNativeEcho()
     return obj;
 }    
 
-function nsID(str)
-{
-    var id = Components.classes.nsIID.createInstance();
-    id = id.QueryInterface(Components.interfaces.nsIJSIID);
-    id.init(str);
-    return id;
-}
-
+var nsID = Components.ID;
 var NS_ISUPPORTS_IID    = new nsID("{00000000-0000-0000-c000-000000000046}");
 var NS_ITESTXPC_FOO_IID = new nsID("{159E36D0-991E-11d2-AC3F-00C09300144B}");
 
@@ -234,12 +227,6 @@ if(Components.RESULT_NS_OK != Components.lastResult) {
     print(Components.lastResult);
 }
 
-echo.ReturnCode_NS_COMFALSE()
-if(Components.RESULT_NS_COMFALSE != Components.lastResult) {
-    all_ok = false;
-    print("expected: RESULT_NS_COMFALSE = "+Components.RESULT_NS_COMFALSE+"  got: "+Components.lastResult);
-}
-
 try {
     echo.ReturnCode_NS_ERROR_NULL_POINTER()
     all_ok = false;
@@ -326,84 +313,6 @@ catch(e) {
 
 if(all_ok)
     print("FailInJSTest - passed");
-
-////////////////////
-// nsID tests...
-
-function idTest(name, iid, same)
-{
-    result = true;
-    var idFromName = new nsID(name);
-    var idFromIID  = new nsID(iid);
-
-    if(!idFromName.valid || !idFromIID.valid) {
-        return (same && idFromName.valid == idFromIID.valid) ||
-               (!same && idFromName.valid != idFromIID.valid);
-    }
-
-    if(same != idFromName.equals(idFromIID) ||
-       same != idFromIID.equals(idFromName)) {
-        print("iid equals test failed for "+name+" "+iid);
-        result = false;
-    }
-
-    nameNormalized = name.toLowerCase();
-    iidNormalized  = iid.toLowerCase();
-
-    idFromName_NameNormalized = idFromName.name ?
-                                    idFromName.name.toLowerCase() :
-                                    idFromName.name;
-
-    idFromIID_NameNormalized = idFromIID.name ?
-                                    idFromIID.name.toLowerCase() :
-                                    idFromIID.name;
-
-    idFromName_StringNormalized = idFromName.number ?
-                                    idFromName.number.toLowerCase() :
-                                    idFromName.number;
-
-    idFromIID_StringNormalized = idFromIID.number ?
-                                    idFromIID.number.toLowerCase() :
-                                    idFromIID.number;
-
-    if(idFromName_NameNormalized != nameNormalized ||
-       same != (idFromIID_NameNormalized == nameNormalized)) {
-        print("iid toName test failed for "+name+" "+iid);
-        result = false;
-    }
-
-    if(idFromIID_StringNormalized != iidNormalized ||
-       same != (idFromName_StringNormalized == iidNormalized)) {
-        print("iid toString test failed for "+name+" "+iid);
-        result = false;
-    }
-
-    if(!idFromName.equals(new nsID(idFromName)) ||
-       !idFromIID.equals(new nsID(idFromIID))) {
-        print("new id from id test failed for "+name+" "+iid);
-        result = false;
-    }
-
-    return result;
-}
-
-var all_ok = true;
-// these 4 should be valid and the same
-all_ok = idTest("nsISupports",   "{00000000-0000-0000-c000-000000000046}", true)  && all_ok;
-all_ok = idTest("nsITestXPCFoo", "{159E36D0-991E-11d2-AC3F-00C09300144B}", true)  && all_ok;
-all_ok = idTest("nsITestXPCFoo2","{5F9D20C0-9B6B-11d2-9FFE-000064657374}", true)  && all_ok;
-all_ok = idTest("nsIEcho",       "{CD2F2F40-C5D9-11d2-9838-006008962422}", true)  && all_ok;
-// intentional mismatches
-all_ok = idTest("nsISupports",   "{CD2F2F40-C5D9-11d2-9838-006008962422}", false) && all_ok;
-all_ok = idTest("nsITestXPCFoo", "{00000000-0000-0000-c000-000000000046}", false) && all_ok;
-// intentional bad name
-all_ok = idTest("bogus",         "{CD2F2F40-C5D9-11d2-9838-006008962422}", false) && all_ok;
-// intentional bad iid
-all_ok = idTest("nsISupports",   "{XXXXXXXX-C5D9-11d2-9838-006008962422}", false) && all_ok;
-// intentional bad name AND iid
-all_ok = idTest("bogus",         "{XXXXXXXX-C5D9-11d2-9838-006008962422}", true)  && all_ok;
-
-print("nsID tests - "+(all_ok ? "passed" : "failed"));
 
 /***************************************************************************/
 

@@ -47,6 +47,7 @@
 #include "xpcforwards.h"
 #include "xpclog.h"
 #include "xpccomponents.h"
+#include "xpcexception.h"
 #include "xpcjsid.h"
 #include "prlong.h"
 
@@ -120,14 +121,18 @@ class nsXPConnect : public nsIXPConnect
                                         nsIJSStackFrameLocation* aCaller,
                                         nsIJSStackFrameLocation** aStack);
 
+    NS_IMETHOD GetPendingException(nsIXPCException** aException);
+    /* pass nsnull to clear pending exception */
+    NS_IMETHOD SetPendingException(nsIXPCException* aException);
+
     // non-interface implementation
 public:
     static nsXPConnect* GetXPConnect();
-    static nsIAllocator* GetAllocator(nsXPConnect* xpc = NULL);
     static nsIInterfaceInfoManager* GetInterfaceInfoManager(nsXPConnect* xpc = NULL);
     static XPCContext*  GetContext(JSContext* cx, nsXPConnect* xpc = NULL);
     static XPCJSThrower* GetJSThrower(nsXPConnect* xpc = NULL);
     static JSBool IsISupportsDescendent(nsIInterfaceInfo* info);
+    static nsIJSContextStack* GetContextStack(nsXPConnect* xpc = NULL);
 
     JSContext2XPCContextMap* GetContextMap() {return mContextMap;}
     nsIXPCScriptable* GetArbitraryScriptable() {return mArbitraryScriptable;}
@@ -141,10 +146,10 @@ private:
 private:
     static nsXPConnect* mSelf;
     JSContext2XPCContextMap* mContextMap;
-    nsIAllocator* mAllocator;
     nsIXPCScriptable* mArbitraryScriptable;
     nsIInterfaceInfoManager* mInterfaceInfoManager;
     XPCJSThrower* mThrower;
+    nsIJSContextStack* mContextStack;
 };
 
 /***************************************************************************/
@@ -698,19 +703,36 @@ XPC_JSArgumentFormatter(JSContext *cx, const char *format,
                         JSBool fromJS, jsval **vpp, va_list *app);
 
 /***************************************************************************/
-// This is a hidden shared base to handle most of the shared implementation 
-// between nsJSIID and nsJSCID
+/*
+* nsJSID implements nsIJSID. It is also used by nsJSIID and nsJSCID as a 
+* member (as a hidden implementaion detail) to which they delegate many calls.
+*/
 
-class nsJSIDDDetails
+class nsJSID : public nsIJSID
 {
 public:
-    nsresult GetName(char * *aName);
-    nsresult GetNumber(char * *aNumber);
-    nsresult GetId(nsID* *aId);
-    nsresult GetValid(PRBool *aValid);
-    nsresult equals(nsIJSID *other, PRBool *_retval);
-    nsresult init(const char *idString, PRBool *_retval);
-    nsresult toString(char **_retval);
+    NS_DECL_ISUPPORTS
+
+    /* readonly attribute string name; */
+    NS_IMETHOD GetName(char * *aName);
+
+    /* readonly attribute string number; */
+    NS_IMETHOD GetNumber(char * *aNumber);
+
+    /* readonly attribute nsID id; */
+    NS_IMETHOD GetId(nsID* *aId);
+
+    /* readonly attribute boolean valid; */
+    NS_IMETHOD GetValid(PRBool *aValid);
+
+    /* boolean equals (in nsIJSID other); */
+    NS_IMETHOD equals(nsIJSID *other, PRBool *_retval);
+
+    /* void initialize (in string idString); */
+    NS_IMETHOD initialize(const char *idString);
+
+    /* string toString (); */
+    NS_IMETHOD toString(char **_retval);
 
     PRBool initWithName(const nsID& id, const char *nameString);
     PRBool setName(const char* name);
@@ -719,8 +741,10 @@ public:
     PRBool nameIsSet() const {return nsnull != mName;}        
     const nsID* getID() const {return &mID;}
 
-    nsJSIDDDetails();
-    ~nsJSIDDDetails();
+    static nsJSID* NewID(const char* str);
+
+    nsJSID();
+    ~nsJSID();
 protected:
 
     void reset();
@@ -740,7 +764,7 @@ class nsJSIID : public nsIJSIID
 public:
     NS_DECL_ISUPPORTS
 
-    // we manually delagate these to nsJSIDDDetails
+    // we manually delagate these to nsJSID
 
     /* readonly attribute string name; */
     NS_IMETHOD GetName(char * *aName);
@@ -757,8 +781,8 @@ public:
     /* boolean equals (in nsIJSID other); */
     NS_IMETHOD equals(nsIJSID *other, PRBool *_retval);
 
-    /* boolean init (in string idString); */
-    NS_IMETHOD init(const char *idString, PRBool *_retval);
+    /* void initialize (in string idString); */
+    NS_IMETHOD initialize(const char *idString);
 
     /* string toString (); */
     NS_IMETHOD toString(char **_retval);
@@ -774,7 +798,7 @@ private:
     void resolveName();
 
 private:
-    nsJSIDDDetails mDetails;
+    nsJSID mDetails;
 };
 
 // nsJSCID
@@ -784,7 +808,7 @@ class nsJSCID : public nsIJSCID
 public:
     NS_DECL_ISUPPORTS
 
-    // we manually delagate these to nsJSIDDDetails
+    // we manually delagate these to nsJSID
 
     /* readonly attribute string name; */
     NS_IMETHOD GetName(char * *aName);
@@ -801,8 +825,8 @@ public:
     /* boolean equals (in nsIJSID other); */
     NS_IMETHOD equals(nsIJSID *other, PRBool *_retval);
 
-    /* boolean init (in string idString); */
-    NS_IMETHOD init(const char *idString, PRBool *_retval);
+    /* void initialize (in string idString); */
+    NS_IMETHOD initialize(const char *idString);
 
     /* string toString (); */
     NS_IMETHOD toString(char **_retval);
@@ -824,12 +848,12 @@ private:
     void resolveName();
 
 private:
-    nsJSIDDDetails mDetails;
+    nsJSID mDetails;
 };
 
 
 JSObject*
-xpc_NewIIDObject(JSContext *cx, const nsID& aID);
+xpc_NewIDObject(JSContext *cx, const nsID& aID);
 
 nsID*
 xpc_JSObjectToID(JSContext *cx, JSObject* obj);
@@ -840,9 +864,8 @@ xpc_JSObjectToID(JSContext *cx, JSObject* obj);
 class nsXPCInterfaces;
 class nsXPCClasses;
 class nsXPCClassesByID;
-class ComponentsScriptable;
 
-class nsXPCComponents : public nsIXPCComponents
+class nsXPCComponents : public nsIXPCComponents, public nsIXPCScriptable
 {
 public:
     NS_DECL_ISUPPORTS
@@ -859,13 +882,15 @@ public:
     /* readonly attribute nsIJSStackFrameLocation stack; */
     NS_IMETHOD GetStack(nsIJSStackFrameLocation * *aStack);
 
+    XPC_DECLARE_IXPCSCRIPTABLE
+
     nsXPCComponents();
     virtual ~nsXPCComponents();
 private:
     nsXPCInterfaces*      mInterfaces;
     nsXPCClasses*         mClasses;
     nsXPCClassesByID*     mClassesByID;
-    ComponentsScriptable* mScriptable;
+    PRBool                mCreating;
 };
 
 /***************************************************************************/
@@ -912,6 +937,30 @@ private:
 };
 
 /***************************************************************************/
+// a class to put on the stack when we are entering xpconnect from an entry 
+// point where the JSContext is known. This pushes and pops the given context
+// with the nsThreadJSContextStack service as this object goes into and out 
+// of scope.
+
+class AutoPushJSContext
+{
+public:
+    AutoPushJSContext(JSContext *cx, nsXPConnect* xpc = nsnull);
+    ~AutoPushJSContext();
+private:
+    AutoPushJSContext();    // no implementation
+
+private:
+    nsIJSContextStack* mContextStack;
+#ifdef DEBUG
+    JSContext* mDebugCX;
+#endif
+};
+
+#define AUTO_PUSH_JSCONTEXT(cx) AutoPushJSContext _AutoPushJSContext(cx)
+#define AUTO_PUSH_JSCONTEXT2(cx,xpc) AutoPushJSContext _AutoPushJSContext(cx,xpc)
+
+/***************************************************************************/
 class XPCJSStackFrame;
 
 class XPCJSStack
@@ -935,6 +984,54 @@ private:
 
     XPCJSStackFrame* mTopFrame;
     int mRefCount;
+};
+
+/***************************************************************************/
+
+class nsXPCException : public nsIXPCException
+{
+public:
+    // all the interface method declarations...
+    NS_DECL_ISUPPORTS
+
+    /* readonly attribute string message; */
+    NS_IMETHOD GetMessage(char * *aMessage);
+
+    /* readonly attribute PRInt32 code; */
+    NS_IMETHOD GetCode(PRInt32 *aCode);
+
+    /* readonly attribute nsIJSStackFrameLocation location; */
+    NS_IMETHOD GetLocation(nsIJSStackFrameLocation * *aLocation);
+
+    /* readonly attribute nsISupports data; */
+    NS_IMETHOD GetData(nsISupports * *aData);
+
+    /* void initialize (in string aMessage, in PRInt32 aCode, in nsIJSStackFrameLocation aLocation, in nsISupports aData); */
+    NS_IMETHOD initialize(const char *aMessage, PRInt32 aCode, nsIJSStackFrameLocation *aLocation, nsISupports *aData);
+
+    /* string toString (); */
+    NS_IMETHOD toString(char **_retval);
+
+    nsXPCException();
+    virtual ~nsXPCException();
+
+    static nsIXPCException* NewException(const char *aMessage, 
+                                         PRInt32 aCode, 
+                                         nsIJSStackFrameLocation *aLocation,
+                                         nsISupports *aData,
+                                         PRInt32 aLeadingFramesToTrim);
+
+    static const char* NameForNSResult(nsresult rv);
+
+protected:
+    void reset();
+
+private:
+    char*                       mMessage;
+    PRInt32                     mCode;
+    nsIJSStackFrameLocation*    mLocation;
+    nsISupports*                mData;
+    PRBool                      mInitialized;
 };
 
 /***************************************************************************/

@@ -78,9 +78,6 @@ public:
     /* void ReturnCode_NS_OK (); */
     NS_IMETHOD ReturnCode_NS_OK();
 
-    /* void ReturnCode_NS_COMFALSE (); */
-    NS_IMETHOD ReturnCode_NS_COMFALSE();
-
     /* void ReturnCode_NS_ERROR_NULL_POINTER (); */
     NS_IMETHOD ReturnCode_NS_ERROR_NULL_POINTER();
 
@@ -260,10 +257,6 @@ xpctestEcho::SharedString(const char **str)
 NS_IMETHODIMP
 xpctestEcho::ReturnCode_NS_OK()
 {return NS_OK;}
-
-NS_IMETHODIMP
-xpctestEcho::ReturnCode_NS_COMFALSE()
-{return NS_COMFALSE;}
 
 NS_IMETHODIMP
 xpctestEcho::ReturnCode_NS_ERROR_NULL_POINTER()

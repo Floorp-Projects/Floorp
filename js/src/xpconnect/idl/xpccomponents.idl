@@ -51,7 +51,6 @@ interface nsIXPCComponents : nsISupports
      */
 
     const long RESULT_NS_OK                           = 0;
-    const long RESULT_NS_COMFALSE                     = 1;
     const long RESULT_NS_ERROR_NOT_IMPLEMENTED        = 0x80004001;
     const long RESULT_NS_NOINTERFACE                  = 0x80004002;
     const long RESULT_NS_ERROR_NO_INTERFACE           = RESULT_NS_NOINTERFACE;

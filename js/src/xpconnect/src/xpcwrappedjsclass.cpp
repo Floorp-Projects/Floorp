@@ -136,7 +136,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
     if(!cx)
         return NULL;
 
-    id = xpc_NewIIDObject(cx, aIID);
+    id = xpc_NewIDObject(cx, aIID);
 
     if(id)
     {

@@ -199,6 +199,10 @@ public:
                                         nsIJSStackFrameLocation* aCaller,
                                         nsIJSStackFrameLocation** aStack) = 0;
 
+    NS_IMETHOD GetPendingException(nsIXPCException** aException) = 0;
+    /* pass nsnull to clear pending exception */
+    NS_IMETHOD SetPendingException(nsIXPCException* aException) = 0;
+
     // XXX other methods?
 };
 

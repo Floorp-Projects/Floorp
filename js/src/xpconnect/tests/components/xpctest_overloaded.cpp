@@ -71,50 +71,79 @@
 * nsIXPCScriptable instance per class if desired.
 */
 
-class xpcoverloadedScriptable : public nsIXPCScriptable
+class xpcoverloaded : public nsIXPCTestOverloaded, public nsIXPCScriptable
 {
 public:
     NS_DECL_ISUPPORTS
+
+    /* void Foo1 (in PRInt32 p1); */
+    NS_IMETHOD Foo1(PRInt32 p1);
+
+    /* void Foo2 (in PRInt32 p1, in PRInt32 p2); */
+    NS_IMETHOD Foo2(PRInt32 p1, PRInt32 p2);
+
     XPC_DECLARE_IXPCSCRIPTABLE
-    xpcoverloadedScriptable();
-    virtual ~xpcoverloadedScriptable();
+
+    xpcoverloaded();
+    virtual ~xpcoverloaded();
 };
 
-xpcoverloadedScriptable::xpcoverloadedScriptable()
+xpcoverloaded::xpcoverloaded()
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 }
-xpcoverloadedScriptable::~xpcoverloadedScriptable()
+
+xpcoverloaded::~xpcoverloaded()
 {
     // empty
 }
 
-static NS_DEFINE_IID(kxpcoverloadedScriptableIID, NS_IXPCSCRIPTABLE_IID);
-NS_IMPL_ISUPPORTS(xpcoverloadedScriptable, kxpcoverloadedScriptableIID);
+NS_IMPL_ADDREF(xpcoverloaded)
+NS_IMPL_RELEASE(xpcoverloaded)
+// this macro is a simple way to expose nsIXPCScriptable implementation
+NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(xpcoverloaded, NS_GET_IID(nsIXPCTestOverloaded), this)
+
+
+/* void Foo1 (in PRInt32 p1); */
+NS_IMETHODIMP
+xpcoverloaded::Foo1(PRInt32 p1)
+{
+    printf("xpcoverloaded::Foo1 called with p1 = %d\n", p1);
+    return NS_OK;
+}
+
+/* void Foo2 (in PRInt32 p1, in PRInt32 p2); */
+NS_IMETHODIMP
+xpcoverloaded::Foo2(PRInt32 p1, PRInt32 p2)
+{
+    printf("xpcoverloaded::Foo2 called with p1 = %d and p2 = %d\n", p1, p2);
+    return NS_OK;
+}
 
 // These macros give default implementations for these methods.
 
-//XPC_IMPLEMENT_FORWARD_CREATE(xpcoverloadedScriptable)
-XPC_IMPLEMENT_IGNORE_GETFLAGS(xpcoverloadedScriptable);
-XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(xpcoverloadedScriptable)
-XPC_IMPLEMENT_FORWARD_DEFINEPROPERTY(xpcoverloadedScriptable)
-XPC_IMPLEMENT_FORWARD_GETPROPERTY(xpcoverloadedScriptable)
-XPC_IMPLEMENT_FORWARD_SETPROPERTY(xpcoverloadedScriptable)
-XPC_IMPLEMENT_FORWARD_GETATTRIBUTES(xpcoverloadedScriptable)
-XPC_IMPLEMENT_FORWARD_SETATTRIBUTES(xpcoverloadedScriptable)
-XPC_IMPLEMENT_FORWARD_DELETEPROPERTY(xpcoverloadedScriptable)
-XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(xpcoverloadedScriptable)
-XPC_IMPLEMENT_FORWARD_ENUMERATE(xpcoverloadedScriptable)
-XPC_IMPLEMENT_FORWARD_CHECKACCESS(xpcoverloadedScriptable)
-XPC_IMPLEMENT_FORWARD_CALL(xpcoverloadedScriptable)
-XPC_IMPLEMENT_FORWARD_CONSTRUCT(xpcoverloadedScriptable)
-XPC_IMPLEMENT_FORWARD_FINALIZE(xpcoverloadedScriptable)
+//XPC_IMPLEMENT_FORWARD_CREATE(xpcoverloaded)
+XPC_IMPLEMENT_IGNORE_GETFLAGS(xpcoverloaded);
+XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(xpcoverloaded)
+XPC_IMPLEMENT_FORWARD_DEFINEPROPERTY(xpcoverloaded)
+XPC_IMPLEMENT_FORWARD_GETPROPERTY(xpcoverloaded)
+XPC_IMPLEMENT_FORWARD_SETPROPERTY(xpcoverloaded)
+XPC_IMPLEMENT_FORWARD_GETATTRIBUTES(xpcoverloaded)
+XPC_IMPLEMENT_FORWARD_SETATTRIBUTES(xpcoverloaded)
+XPC_IMPLEMENT_FORWARD_DELETEPROPERTY(xpcoverloaded)
+XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(xpcoverloaded)
+XPC_IMPLEMENT_FORWARD_ENUMERATE(xpcoverloaded)
+XPC_IMPLEMENT_FORWARD_CHECKACCESS(xpcoverloaded)
+XPC_IMPLEMENT_FORWARD_CALL(xpcoverloaded)
+XPC_IMPLEMENT_FORWARD_CONSTRUCT(xpcoverloaded)
+XPC_IMPLEMENT_FORWARD_HASINSTANCE(xpcoverloaded);
+XPC_IMPLEMENT_FORWARD_FINALIZE(xpcoverloaded)
 
 // we implement this method ourselves
 
 NS_IMETHODIMP
-xpcoverloadedScriptable::Create(JSContext *cx, JSObject *obj,
+xpcoverloaded::Create(JSContext *cx, JSObject *obj,
                                 nsIXPConnectWrappedNative* wrapper,
                                 nsIXPCScriptable* arbitrary)
 {
@@ -137,9 +166,9 @@ xpcoverloadedScriptable::Create(JSContext *cx, JSObject *obj,
 *     should be prepared to convert the code when the new scheme arrives. ***
 */
 
-    static const char name[] = "__xpcoverloadedScriptableProto__";
+    static const char name[] = "__xpcoverloadedProto__";
     static const char source[] =
-        "__xpcoverloadedScriptableProto__ = {"
+        "__xpcoverloadedProto__ = {"
         "   Foo : function() {"
         "     switch(arguments.length) {"
         "     case 1: return this.Foo1(arguments[0]);"
@@ -186,58 +215,6 @@ xpcoverloadedScriptable::Create(JSContext *cx, JSObject *obj,
 }
 
 /***************************************************************************/
-
-class xpcoverloaded : public nsIXPCTestOverloaded
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    /* void Foo1 (in PRInt32 p1); */
-    NS_IMETHOD Foo1(PRInt32 p1);
-
-    /* void Foo2 (in PRInt32 p1, in PRInt32 p2); */
-    NS_IMETHOD Foo2(PRInt32 p1, PRInt32 p2);
-
-    xpcoverloaded();
-    virtual ~xpcoverloaded();
-private:
-    xpcoverloadedScriptable* mScriptable;
-};
-
-xpcoverloaded::xpcoverloaded()
-    : mScriptable(new xpcoverloadedScriptable())
-{
-    NS_INIT_REFCNT();
-    NS_ADDREF_THIS();
-}
-
-xpcoverloaded::~xpcoverloaded()
-{
-    if(mScriptable)
-        NS_RELEASE(mScriptable);
-}
-
-NS_IMPL_ADDREF(xpcoverloaded)
-NS_IMPL_RELEASE(xpcoverloaded)
-// this macro is a simple way to expose nsIXPCScriptable implementation
-NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(xpcoverloaded, mScriptable)
-
-
-/* void Foo1 (in PRInt32 p1); */
-NS_IMETHODIMP
-xpcoverloaded::Foo1(PRInt32 p1)
-{
-    printf("xpcoverloaded::Foo1 called with p1 = %d\n", p1);
-    return NS_OK;
-}
-
-/* void Foo2 (in PRInt32 p1, in PRInt32 p2); */
-NS_IMETHODIMP
-xpcoverloaded::Foo2(PRInt32 p1, PRInt32 p2)
-{
-    printf("xpcoverloaded::Foo2 called with p1 = %d and p2 = %d\n", p1, p2);
-    return NS_OK;
-}
 
 
 /***************************************************************************/

@@ -20,8 +20,8 @@
 
 #include "xpcprivate.h"
 
-void JS_DLL_CALLBACK
-xpc_ThreadDTORCB(void* ptr)
+JS_STATIC_DLL_CALLBACK(void)
+xpc_StackDtorCB(void* ptr)
 {
     nsDeque* myStack = (nsDeque*) ptr;
     if(myStack)
@@ -31,11 +31,12 @@ xpc_ThreadDTORCB(void* ptr)
 static nsDeque*
 GetMyStack()
 {
+#define BAD_TLS_INDEX ((PRUintn) -1)
     nsDeque* myStack;
-    static PRUintn index = -1;
-    if(-1 == index)
+    static PRUintn index = BAD_TLS_INDEX;
+    if(index == BAD_TLS_INDEX)
     {
-        if(PR_FAILURE == PR_NewThreadPrivateIndex(&index, xpc_ThreadDTORCB))
+        if(PR_FAILURE == PR_NewThreadPrivateIndex(&index, xpc_StackDtorCB))
         {
             NS_ASSERTION(0, "PR_NewThreadPrivateIndex failed!");
             return NULL;

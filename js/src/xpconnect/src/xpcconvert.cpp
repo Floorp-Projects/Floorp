@@ -236,7 +236,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 if(!iid)
                     break;
                 JSObject* obj;
-                if(!(obj = xpc_NewIIDObject(cx, *iid)))
+                if(!(obj = xpc_NewIDObject(cx, *iid)))
                     return JS_FALSE;
                 *d = OBJECT_TO_JSVAL(obj);
                 break;

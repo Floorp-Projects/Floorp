@@ -34,9 +34,25 @@ interface nsIJSStackFrameLocation : nsISupports
 [scriptable, uuid(b2a34010-3983-11d3-9888-006008962422)]
 interface nsIXPCException : nsISupports
 {
-    readonly attribute string                  msg;
+    readonly attribute string                  message;
     readonly attribute PRInt32                 code;
     readonly attribute nsIJSStackFrameLocation location;
+    readonly attribute nsISupports             data;
+
+    void initialize(in string                  aMessage, 
+                    in PRInt32                 aCode, 
+                    in nsIJSStackFrameLocation aLocation,
+                    in nsISupports             aData);
 
     string toString();
 };
+
+/* this goes into the C++ header verbatim. */
+%{ C++
+/********************************************************/
+// {5632BF70-51EC-11d3-9896-006008962422}
+#define NS_XPCEXCEPTION_CID  \
+{ 0x5632bf70, 0x51ec, 0x11d3, \
+    { 0x98, 0x96, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+%}
+

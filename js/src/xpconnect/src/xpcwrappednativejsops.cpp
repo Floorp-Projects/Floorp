@@ -20,12 +20,52 @@
 
 #include "xpcprivate.h"
 
+/***************************************************************************/
+
+AutoPushJSContext::AutoPushJSContext(JSContext *cx, nsXPConnect* xpc /*= nsnull*/)
+{
+    NS_ASSERTION(cx, "pushing null cx");
+#ifdef DEBUG
+    mDebugCX = cx;
+#endif
+    mContextStack = nsXPConnect::GetContextStack(xpc);
+    if(mContextStack)
+    {
+        JSContext* current;
+
+        if(NS_FAILED(mContextStack->Peek(&current)) ||
+           current == cx ||
+           NS_FAILED(mContextStack->Push(cx)))
+        {
+            NS_RELEASE(mContextStack);
+        }
+    }
+}        
+
+AutoPushJSContext::~AutoPushJSContext()
+{
+    if(mContextStack)
+    {
+#ifdef DEBUG
+        JSContext* cx;
+        nsresult rv = mContextStack->Pop(&cx);
+        NS_ASSERTION(NS_SUCCEEDED(rv) && cx == mDebugCX, "unbalanced stack usage");
+#else
+        mContextStack->Pop(nsnull);
+#endif
+        NS_RELEASE(mContextStack);
+    }
+}        
+
+/***************************************************************************/
+
 static void ThrowException(uintN errNum, JSContext* cx)
     {nsXPConnect::GetJSThrower()->ThrowException(errNum, cx);}
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
 
     if (!wrapper) {
@@ -60,14 +100,14 @@ WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         XPCContext* xpcc;
         const XPCNativeMemberDescriptor* desc;
 
-        if(NULL != (xpcc = clazz->GetXPCContext()) &&
-           NULL != (desc = clazz->LookupMemberByID(
+        if(nsnull != (xpcc = clazz->GetXPCContext()) &&
+           nsnull != (desc = clazz->LookupMemberByID(
                            xpcc->GetStringID(XPCContext::IDX_TO_STRING))) &&
            desc->IsMethod())
         {
             if(!clazz->CallWrappedMethod(cx, wrapper, desc, 
                                          nsXPCWrappedNativeClass::CALL_METHOD, 
-                                         0, NULL, vp))
+                                         0, nsnull, vp))
                 return JS_FALSE;
             if(JSVAL_IS_PRIMITIVE(*vp))
                 return JS_TRUE;
@@ -103,6 +143,7 @@ JSBool JS_DLL_CALLBACK
 WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
                          uintN argc, jsval *argv, jsval *vp)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     JSFunction *fun;
     jsid id;
     jsval idval;
@@ -132,6 +173,7 @@ WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
 JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     nsXPCWrappedNative* wrapper;
 
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
@@ -176,8 +218,8 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     {
         nsIXPCScriptable* ds;
         nsIXPCScriptable* as;
-        if(NULL != (ds = wrapper->GetDynamicScriptable()) &&
-           NULL != (as = wrapper->GetArbitraryScriptable()))
+        if(nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+           nsnull != (as = wrapper->GetArbitraryScriptable()))
         {
             JSBool retval;
             if(NS_SUCCEEDED(ds->GetProperty(cx, obj, id, vp,
@@ -193,6 +235,7 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     nsXPCWrappedNative* wrapper;
 
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
@@ -214,8 +257,8 @@ WrappedNative_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     {
         nsIXPCScriptable* ds;
         nsIXPCScriptable* as;
-        if(NULL != (ds = wrapper->GetDynamicScriptable()) &&
-           NULL != (as = wrapper->GetArbitraryScriptable()))
+        if(nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+           nsnull != (as = wrapper->GetArbitraryScriptable()))
         {
             JSBool retval;
             if(NS_SUCCEEDED(ds->SetProperty(cx, obj, id, vp,
@@ -235,6 +278,7 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
 #endif
                             )
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
@@ -248,8 +292,8 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
             *propp = (JSProperty*)1;
             return JS_TRUE;
         }
-        else if(NULL != (ds = wrapper->GetDynamicScriptable()) &&
-                NULL != (as = wrapper->GetArbitraryScriptable()))
+        else if(nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+                nsnull != (as = wrapper->GetArbitraryScriptable()))
         {
             JSBool retval;
             if(NS_SUCCEEDED(ds->LookupProperty(cx, obj, id, objp, propp,
@@ -258,8 +302,8 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
         }
     }
 
-    *objp = NULL;
-    *propp = NULL;
+    *objp = nsnull;
+    *propp = nsnull;
     return JS_TRUE;
 }
 
@@ -268,12 +312,13 @@ WrappedNative_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(wrapper && 
-       NULL != (ds = wrapper->GetDynamicScriptable()) &&
-       NULL != (as = wrapper->GetArbitraryScriptable()))
+       nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+       nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
@@ -295,12 +340,13 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_GetAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(wrapper && 
-       NULL != (ds = wrapper->GetDynamicScriptable()) &&
-       NULL != (as = wrapper->GetArbitraryScriptable()))
+       nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+       nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
@@ -321,12 +367,13 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_SetAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(wrapper && 
-       NULL != (ds = wrapper->GetDynamicScriptable()) &&
-       NULL != (as = wrapper->GetArbitraryScriptable()))
+       nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+       nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
@@ -345,12 +392,13 @@ WrappedNative_SetAttributes(JSContext *cx, JSObject *obj, jsid id,
 JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(wrapper && 
-       NULL != (ds = wrapper->GetDynamicScriptable()) &&
-       NULL != (as = wrapper->GetArbitraryScriptable()))
+       nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+       nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
@@ -369,12 +417,13 @@ WrappedNative_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_DefaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(wrapper && 
-       NULL != (ds = wrapper->GetDynamicScriptable()) &&
-       NULL != (as = wrapper->GetArbitraryScriptable()))
+       nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+       nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
         JSBool retval;
         if(NS_SUCCEEDED(ds->DefaultValue(cx, obj, type, vp,
@@ -388,6 +437,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                         jsval *statep, jsid *idp)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     nsXPCWrappedNative* wrapper;
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
@@ -403,8 +453,8 @@ WrappedNative_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
     NS_ASSERTION(clazz,"wrapper without class");
 
-    if(NULL != (ds = wrapper->GetDynamicScriptable()) &&
-       NULL != (as = wrapper->GetArbitraryScriptable()))
+    if(nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+       nsnull != (as = wrapper->GetArbitraryScriptable()))
         return clazz->DynamicEnumerate(wrapper, ds, as, cx, obj, enum_op, 
                                        statep, idp);
     else
@@ -415,12 +465,13 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_CheckAccess(JSContext *cx, JSObject *obj, jsid id,
                       JSAccessMode mode, jsval *vp, uintN *attrsp)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(wrapper && 
-       NULL != (ds = wrapper->GetDynamicScriptable()) &&
-       NULL != (as = wrapper->GetArbitraryScriptable()))
+       nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+       nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
         nsXPCWrappedNativeClass* clazz = wrapper->GetClass();
         NS_ASSERTION(clazz,"wrapper without class");
@@ -452,6 +503,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_Call(JSContext *cx, JSObject *obj,
                    uintN argc, jsval *argv, jsval *rval)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     // this is a hack to get the obj of the actual object not the object
     // that JS thinks is the 'this' (which it passes as 'obj').
     if(!(obj = (JSObject*)argv[-2]))
@@ -461,8 +513,8 @@ WrappedNative_Call(JSContext *cx, JSObject *obj,
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx,obj);
     if(wrapper && 
-       NULL != (ds = wrapper->GetDynamicScriptable()) &&
-       NULL != (as = wrapper->GetArbitraryScriptable()))
+       nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+       nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
         JSBool retval;
         if(NS_SUCCEEDED(ds->Call(cx, obj, argc, argv, rval,
@@ -479,6 +531,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_Construct(JSContext *cx, JSObject *obj,
                         uintN argc, jsval *argv, jsval *rval)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     // this is a hack to get the obj of the actual object not the object
     // that JS thinks is the 'this' (which it passes as 'obj').
     if(!(obj = (JSObject*)argv[-2]))
@@ -488,8 +541,8 @@ WrappedNative_Construct(JSContext *cx, JSObject *obj,
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx,obj);
     if(wrapper && 
-       NULL != (ds = wrapper->GetDynamicScriptable()) &&
-       NULL != (as = wrapper->GetArbitraryScriptable()))
+       nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+       nsnull != (as = wrapper->GetArbitraryScriptable()))
     {
         JSBool retval;
         if(NS_SUCCEEDED(ds->Construct(cx, obj, argc, argv, rval,
@@ -502,9 +555,40 @@ WrappedNative_Construct(JSContext *cx, JSObject *obj,
     return JS_FALSE;
 }
 
+// this is the final resting place of non-handled hasInstance calls
+JS_STATIC_DLL_CALLBACK(JSBool)
+WrappedNative_ClassHasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+{
+    AUTO_PUSH_JSCONTEXT(cx);
+    //XXX our default policy is to just say no. Is this right?
+    *bp = JS_FALSE;
+    return JS_TRUE;
+}        
+
+// this is in the ObjectOps and is called first
+JS_STATIC_DLL_CALLBACK(JSBool)
+WrappedNative_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+{
+    AUTO_PUSH_JSCONTEXT(cx);
+    nsIXPCScriptable* ds;
+    nsIXPCScriptable* as;
+    nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx,obj);
+    if(wrapper && 
+       nsnull != (ds = wrapper->GetDynamicScriptable()) &&
+       nsnull != (as = wrapper->GetArbitraryScriptable()))
+    {
+        JSBool retval;
+        if(NS_SUCCEEDED(ds->HasInstance(cx, obj, v, bp,
+                        wrapper, as, &retval)))
+            return retval;
+    }        
+    return WrappedNative_ClassHasInstance(cx, obj, v, bp);
+}        
+
 JS_STATIC_DLL_CALLBACK(void)
 WrappedNative_Finalize(JSContext *cx, JSObject *obj)
 {
+    AUTO_PUSH_JSCONTEXT(cx);
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx,obj);
     if(!wrapper)
         return;
@@ -516,13 +600,13 @@ WrappedNative_Finalize(JSContext *cx, JSObject *obj)
 /*
 * We have two classes - one with and one without call and construct. We use
 * the one without for any object without an nsIXPCScriptable so that the
-* engine will shoe a typeof 'object' instead of 'function'
+* engine will show a typeof 'object' instead of 'function'
 */
 
 static JSObjectOps WrappedNative_ops = {
     /* Mandatory non-null function pointer members. */
-    NULL,                       /* filled in at runtime! - newObjectMap */
-    NULL,                       /* filled in at runtime! - destroyObjectMap */
+    nsnull,                      /* filled in at runtime! - newObjectMap */
+    nsnull,                      /* filled in at runtime! - destroyObjectMap */
     WrappedNative_LookupProperty,
     WrappedNative_DefineProperty,
     WrappedNative_GetProperty,
@@ -535,18 +619,18 @@ static JSObjectOps WrappedNative_ops = {
     WrappedNative_CheckAccess,
 
     /* Optionally non-null members start here. */
-    NULL,                       /* thisObject */
-    NULL,                       /* dropProperty */
-    NULL,                       /* call, */
-    NULL,                       /* construct, */
-    NULL,                       /* xdrObject */
-    NULL,                       /* hasInstance */
+    nsnull,                     /* thisObject   */
+    nsnull,                     /* dropProperty */
+    nsnull,                     /* call         */
+    nsnull,                     /* construct    */
+    nsnull,                     /* xdrObject    */
+    WrappedNative_HasInstance   /* hasInstance  */
 };
 
 static JSObjectOps WrappedNativeWithCall_ops = {
     /* Mandatory non-null function pointer members. */
-    NULL,                       /* filled in at runtime! - newObjectMap */
-    NULL,                       /* filled in at runtime! - destroyObjectMap */
+    nsnull,                       /* filled in at runtime! - newObjectMap */
+    nsnull,                       /* filled in at runtime! - destroyObjectMap */
     WrappedNative_LookupProperty,
     WrappedNative_DefineProperty,
     WrappedNative_GetProperty,
@@ -559,12 +643,12 @@ static JSObjectOps WrappedNativeWithCall_ops = {
     WrappedNative_CheckAccess,
 
     /* Optionally non-null members start here. */
-    NULL,                       /* thisObject */
-    NULL,                       /* dropProperty */
-    WrappedNative_Call,
-    WrappedNative_Construct,
-    NULL,                       /* xdrObject */
-    NULL,                       /* hasInstance */
+    nsnull,                     /* thisObject   */
+    nsnull,                     /* dropProperty */
+    WrappedNative_Call,         /* call         */
+    WrappedNative_Construct,    /* construct    */
+    nsnull,                     /* xdrObject    */
+    WrappedNative_HasInstance   /* hasInstance  */
 };
 
 JS_STATIC_DLL_CALLBACK(JSObjectOps *)
@@ -586,7 +670,13 @@ JSClass WrappedNative_class = {
     JS_EnumerateStub, JS_ResolveStub,
     WrappedNative_Convert,
     WrappedNative_Finalize,
-    WrappedNative_getObjectOps,
+    /* Optionally non-null members start here. */
+    WrappedNative_getObjectOps,         /* getObjectOps */
+    nsnull,                             /* checkAccess  */
+    nsnull,                             /* call         */
+    nsnull,                             /* construct    */
+    nsnull,                             /* xdrObject    */
+    WrappedNative_ClassHasInstance      /* hasInstance  */
 };
 
 JSClass WrappedNativeWithCall_class = {
@@ -595,7 +685,13 @@ JSClass WrappedNativeWithCall_class = {
     JS_EnumerateStub, JS_ResolveStub,
     WrappedNative_Convert,
     WrappedNative_Finalize,
-    WrappedNative_getWithCallObjectOps,
+    /* Optionally non-null members start here. */
+    WrappedNative_getWithCallObjectOps, /* getObjectOps */
+    nsnull,                             /* checkAccess  */
+    nsnull,                             /* call         */
+    nsnull,                             /* construct    */
+    nsnull,                             /* xdrObject    */
+    WrappedNative_ClassHasInstance      /* hasInstance  */
 };
 
 

@@ -35,6 +35,7 @@ OBJS=					\
 	.\$(OBJDIR)\xpccomponents.obj	\
 	.\$(OBJDIR)\xpccontext.obj	\
 	.\$(OBJDIR)\xpcconvert.obj	\
+	.\$(OBJDIR)\xpcexception.obj	\
 	.\$(OBJDIR)\xpcjsid.obj	\
 	.\$(OBJDIR)\xpclog.obj	\
 	.\$(OBJDIR)\xpcmaps.obj	\

@@ -24,15 +24,15 @@
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
-static NS_DEFINE_CID(kJSIID_CID, NS_JS_IID_CID);
-static NS_DEFINE_CID(kJSCID_CID, NS_JS_CID_CID);
+static NS_DEFINE_CID(kJSID_CID,  NS_JS_ID_CID);
+static NS_DEFINE_CID(kXPCException_CID,  NS_XPCEXCEPTION_CID);
 static NS_DEFINE_CID(kXPConnect_CID, NS_XPCONNECT_CID);
 static NS_DEFINE_CID(kXPCThreadJSContextStack_CID, NS_XPC_THREAD_JSCONTEXT_STACK_CID);
 
 /********************************************/
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSIID)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSCID)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSID)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCException)
 
 static NS_IMETHODIMP
 Construct_nsXPConnect(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -124,14 +124,14 @@ NSGetFactory(nsISupports* aServMgr,
 
     // add more factories as 'if else's below...
 
-    if(aClass.Equals(kJSIID_CID))
-        rv = factory->SetConstructor(nsJSIIDConstructor);
-    else if(aClass.Equals(kJSCID_CID))
-        rv = factory->SetConstructor(nsJSCIDConstructor);
+    if(aClass.Equals(kJSID_CID))
+        rv = factory->SetConstructor(nsJSIDConstructor);
     else if(aClass.Equals(kXPConnect_CID))
         rv = factory->SetConstructor(Construct_nsXPConnect);
     else if(aClass.Equals(kXPCThreadJSContextStack_CID))
         rv = factory->SetConstructor(Construct_nsXPCThreadJSContextStack);
+    else if(aClass.Equals(kXPCException_CID))
+        rv = factory->SetConstructor(nsXPCExceptionConstructor);
     else
     {
         NS_ASSERTION(0, "incorrectly registered");
@@ -165,21 +165,25 @@ NSRegisterSelf(nsISupports* aServMgr, const char *aPath)
                      aServMgr, kComponentManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->RegisterComponent(kJSIID_CID,
-                                    "nsIJSIID","nsIID",
+    rv = compMgr->RegisterComponent(kJSID_CID,
+                                    "nsIJSID","nsID",
                                     aPath, PR_TRUE, PR_TRUE);
-
-    rv = compMgr->RegisterComponent(kJSCID_CID,
-                                    "nsIJSCID","nsCID",
-                                    aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->RegisterComponent(kXPConnect_CID,
                                     "nsIXPConnect","nsIXPConnect",
                                     aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->RegisterComponent(kXPCThreadJSContextStack_CID,
                                     "nsThreadJSContextStack","nsThreadJSContextStack",
                                     aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = compMgr->RegisterComponent(kXPCException_CID,
+                                    "nsXPCException","nsXPCException",
+                                    aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
     return rv;
 }
@@ -195,10 +199,10 @@ NSUnregisterSelf(nsISupports* aServMgr, const char *aPath)
                      aServMgr, kComponentManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->UnregisterComponent(kJSIID_CID, aPath);
-    rv = compMgr->UnregisterComponent(kJSCID_CID, aPath);
+    rv = compMgr->UnregisterComponent(kJSID_CID, aPath);
     rv = compMgr->UnregisterComponent(kXPConnect_CID, aPath);
     rv = compMgr->UnregisterComponent(kXPCThreadJSContextStack_CID, aPath);
+    rv = compMgr->UnregisterComponent(kXPCException_CID, aPath);
 
     return rv;
 }

@@ -530,7 +530,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             if(type.TagPart() == nsXPTType::T_INTERFACE)
             {
                 if(NS_FAILED(GetInterfaceInfo()->
-                         GetIIDForParam(vtblIndex, &param, &conditional_iid)))
+                        GetIIDForParam(vtblIndex, &param, &conditional_iid)))
                 {
                     ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
                                            cx, desc, i);
