@@ -147,7 +147,7 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
       char* flavorStr;
-      currentFlavor->toString(&flavorStr);
+      currentFlavor->ToString(&flavorStr);
       UINT format = GetFormat(flavorStr);
 
       // check here to see if we can the data back from global member
@@ -538,7 +538,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
       char* flavorStr;
-      currentFlavor->toString(&flavorStr);
+      currentFlavor->ToString(&flavorStr);
       UINT format = GetFormat(flavorStr);
 
       void   * data;
@@ -651,7 +651,7 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
     nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
       char* flavorStr;
-      currentFlavor->toString(&flavorStr);
+      currentFlavor->ToString(&flavorStr);
       UINT format = GetFormat(flavorStr);
 
       void   * data;

@@ -212,7 +212,7 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray )
           nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericWrapper) );
 	      if ( currentFlavor ) {
 	        char* flavorStr = nsnull;
-	        currentFlavor->toString ( &flavorStr );
+	        currentFlavor->ToString ( &flavorStr );
 	        FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
 	        ::AddDragItemFlavor ( mDragRef, itemIndex, macOSFlavor, NULL, 0, flags );
 	        delete [] flavorStr;
@@ -282,7 +282,7 @@ nsDragService :: GetData ( nsITransferable * aTransferable, PRUint32 aItemIndex 
     if ( currentFlavor ) {
       // find MacOS flavor
       char* flavorStr;
-      currentFlavor->toString ( &flavorStr );
+      currentFlavor->ToString ( &flavorStr );
       FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
 printf("looking for data in type %s, mac flavor %ld\n", flavorStr, macOSFlavor);
 	    
