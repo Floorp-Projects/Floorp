@@ -43,7 +43,6 @@
 #include "nsIClipboardOwner.h"
 #include "nsCOMPtr.h"
 
-#include <qlist.h>
 #include <qcstring.h>
 #include <qmime.h>
 
