@@ -101,7 +101,7 @@ else
    $versionMain = "$versionParts[0]\.$versionParts[1]\.$versionParts[2]";
 }
 print "The display version is: $versionMain\n";
-$ENV{WIZ_nameCompany}          = "Mozilla";
+$ENV{WIZ_nameCompany}          = "mozilla.org";
 $ENV{WIZ_nameProduct}          = "GRE";
 $ENV{WIZ_nameProductNoVersion} = "GRE";
 $ENV{WIZ_fileMainExe}          = "none.exe";
