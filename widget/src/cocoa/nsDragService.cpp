@@ -74,6 +74,12 @@
 #include "nsCarbonHelpers.h"
 #include "nsGfxUtils.h"
 
+// file save stuff
+#include "nsNetUtil.h"
+#include "nsIURL.h"
+#include "nsILocalFileMac.h"
+#include "nsIImageMac.h"
+
 #include "nsIXULContent.h"
 #include "nsIDOMElement.h"
 #include "nsLinebreakConverter.h"
@@ -89,7 +95,10 @@ NS_IMPL_QUERY_INTERFACE3(nsDragService, nsIDragService, nsIDragSession, nsIDragS
 // DragService constructor
 //
 nsDragService::nsDragService()
-  : mDragRef(0), mDataItems(nsnull), mImageDraggingSupported(PR_FALSE), mDragSendDataUPP(nsnull)
+  : mDragSendDataUPP(nsnull)
+  , mDragRef(0)
+  , mDataItems(nsnull)
+  , mImageDraggingSupported(PR_FALSE)
 {
 #if USE_TRANSLUCENT_DRAGS
   // check if the Drag Manager supports image dragging
@@ -161,7 +170,6 @@ nsDragService :: ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outSc
   //
   
 	nsRect	aRect(0,0,0,0);
-	nsIView	*parentView = nsnull;
 	aFrame->GetRect(aRect);
 
   // Find offset from our view
@@ -445,13 +453,27 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray, RgnHa
             nsXPIDLCString flavorStr;
             currentFlavor->ToString ( getter_Copies(flavorStr) );
             FlavorType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
-            ::AddDragItemFlavor ( mDragRef, itemIndex, macOSFlavor, NULL, 0, flags );
+            
+            if (macOSFlavor == kDragFlavorTypePromiseHFS) {
+              // we got kFilePromiseMime
+              // kDragFlavorTypePromiseHFS is special. See http://developer.apple.com/technotes/tn/tn1085.html
+              PromiseHFSFlavor promiseData;
+              promiseData.fileType           = 0;     // let the file extension prevail!
+              promiseData.fileCreator        = 0;
+              promiseData.fdFlags            = 0;
+              promiseData.promisedFlavor     = kDragPromisedFlavor;
+
+              ::AddDragItemFlavor(mDragRef, itemIndex, flavorTypePromiseHFS, &promiseData, sizeof(promiseData), flavorNotSaved);
+              ::AddDragItemFlavor(mDragRef, itemIndex, kDragPromisedFlavor, NULL, 0, flavorNotSaved);
+            }
+            else
+              ::AddDragItemFlavor(mDragRef, itemIndex, macOSFlavor, NULL, 0, flags);
             
             // If we advertise text/unicode, then make sure we add 'TEXT' to the list
             // of flavors supported since we will do the conversion ourselves in GetDataForFlavor()
             if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
               theMapper.MapMimeTypeToMacOSType(kTextMime);
-              ::AddDragItemFlavor ( mDragRef, itemIndex, 'TEXT', NULL, 0, flags );          
+              ::AddDragItemFlavor(mDragRef, itemIndex, 'TEXT', NULL, 0, flags);
             }
           }
           
@@ -470,7 +492,7 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray, RgnHa
                                mapping, mappingLen, flags );
       nsCRT::free ( mapping );
     
-      SetDragItemBounds(mDragRef, itemIndex, &dragRgnBounds);
+      ::SetDragItemBounds(mDragRef, itemIndex, &dragRgnBounds);
     }
     
   } // foreach drag item 
@@ -763,8 +785,12 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
 {
   if ( !inDragItems || !inDragRef )
     return paramErr;
-    
+  
+  *outData = nsnull;
+  *outDataSize = 0;
+
   OSErr retVal = noErr;
+  nsresult rv;
   
   // (assumes that the items were placed into the transferable as nsITranferable*'s, not nsISupports*'s.)
   nsCOMPtr<nsISupports> genericItem;
@@ -786,8 +812,61 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
       actualFlavor = kUnicodeMime;
       needToDoConversionToPlainText = PR_TRUE;
     }
+    else if ( strcmp(actualFlavor, kFilePromiseMime) == 0 ) {
+      nsCOMPtr<nsISupports> imageURLPrimitive;
+      PRUint32 dataSize = 0;
+      rv = item->GetTransferData(kFilePromiseURLMime, getter_AddRefs(imageURLPrimitive), &dataSize);
+      if (NS_FAILED(rv)) return cantGetFlavorErr;
       
-    *outDataSize = 0;
+      nsCOMPtr<nsISupportsString> doubleByteText = do_QueryInterface(imageURLPrimitive);
+      if (!doubleByteText) return cantGetFlavorErr;
+
+      nsAutoString imageURLString;
+      PRUnichar* imageURL = nsnull;
+      doubleByteText->ToString(&imageURL);
+      if (imageURL) {
+        imageURLString.Assign(imageURL);
+        nsMemory::Free(imageURL);
+      }
+      
+      if (imageURLString.IsEmpty())
+        return cantGetFlavorErr;
+        
+      return HandleHFSPromiseDrop(inDragRef, inItemIndex, inFlavor, imageURLString, outData, outDataSize);
+    }
+    else if ( strcmp(actualFlavor, kNativeImageMime) == 0 ) {
+      PRUint32 dataSize = 0;
+      nsCOMPtr<nsISupports> transferSupports;
+      rv = item->GetTransferData(actualFlavor, getter_AddRefs(transferSupports), &dataSize);
+      if (NS_FAILED(rv)) return cantGetFlavorErr;
+
+      nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive(do_QueryInterface(transferSupports));
+      if (!ptrPrimitive) return cantGetFlavorErr; 
+      
+      nsCOMPtr<nsISupports> primitiveData;
+      ptrPrimitive->GetData(getter_AddRefs(primitiveData));
+      nsCOMPtr<nsIImageMac> image = do_QueryInterface(primitiveData);
+      if (!image) return cantGetFlavorErr; 
+
+      PicHandle picture = nsnull;
+      image->ConvertToPICT(&picture);
+      if (!picture) return cantGetFlavorErr; 
+
+      PRInt32 pictSize = ::GetHandleSize((Handle)picture);
+      char* pictData = (char*)nsMemory::Alloc(pictSize);
+      if (pictData) {
+        ::BlockMoveData(*picture, pictData, pictSize);    // doesn't move memory
+        *outData = (void*)pictData;
+        *outDataSize = pictSize;
+        retVal = noErr;
+      }
+      else
+        retVal = cantGetFlavorErr;
+      ::KillPicture(picture);
+      
+      return retVal;
+    }
+      
     nsCOMPtr<nsISupports> data;
     if ( NS_SUCCEEDED(item->GetTransferData(actualFlavor, getter_AddRefs(data), outDataSize)) ) {
       nsPrimitiveHelpers::CreateDataFromPrimitive ( actualFlavor, data, outData, *outDataSize );
@@ -800,7 +879,7 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
       nsLinebreakConverter::ConvertUnicharLineBreaksInSitu(&castedUnicode,
                                                            nsLinebreakConverter::eLinebreakUnix,
                                                            nsLinebreakConverter::eLinebreakMac,
-                                                           *outDataSize, nsnull);
+                                                           *outDataSize / sizeof(PRUnichar), nsnull);
 
       // if required, do the extra work to convert unicode to plain text and replace the output
       // values with the plain text.
@@ -967,3 +1046,125 @@ nsDragService :: SetDragAction ( PRUint32 anAction )
  
   return nsBaseDragService::SetDragAction(anAction);
 }
+
+#pragma mark -
+// Utility routines for dragging files to the Finder
+
+static OSErr GetDropDirectory(DragReference dragRef, FSSpecPtr fssOut)
+{
+  OSErr err;
+
+  AEDesc dropLocAlias = { typeNull, nil };
+  err = ::GetDropLocation(dragRef, &dropLocAlias);
+  if (err != noErr) return err;
+  
+  if (dropLocAlias.descriptorType != typeAlias)
+    return paramErr;
+
+  AEDesc dropLocFSS = { typeNull, nil };
+  if ((err = ::AECoerceDesc(&dropLocAlias, typeFSS, &dropLocFSS)) == noErr)
+  {
+    err = ::AEGetDescData(&dropLocFSS, fssOut, sizeof(FSSpec));
+    (void)::AEDisposeDesc(&dropLocFSS);
+  }
+
+  if (dropLocAlias.dataHandle)
+    (void)::AEDisposeDesc(&dropLocAlias);
+
+  return err;
+}
+
+static OSErr CreatePromisedFile(const PromiseHFSFlavor *phfs, const FSSpec *fss, ScriptCode scriptTag)
+{
+  OSErr err;
+
+  err = ::FSpCreate(fss, phfs->fileCreator, phfs->fileType, scriptTag);
+  if (err != noErr) return err;
+
+  if (phfs->fdFlags)
+  {
+    FInfo finderInfo;
+    if (::FSpGetFInfo(fss, &finderInfo) == noErr)
+    {
+      finderInfo.fdFlags = phfs->fdFlags;
+      err = ::FSpSetFInfo(fss, &finderInfo);
+    }
+  }
+
+  return err;
+}
+
+// will return -43 if the file does not exist, which is OK
+static OSErr GetFolderFileSpec(const FSSpec *inFolderSpec, ConstStr255Param inFileName, FSSpec* outFSSpec)
+{
+  CInfoPBRec cipbp = {0};
+  OSErr err = noErr;
+
+  cipbp.dirInfo.ioVRefNum = inFolderSpec->vRefNum;
+  cipbp.dirInfo.ioDrDirID = inFolderSpec->parID;
+  cipbp.dirInfo.ioNamePtr = (StringPtr)inFolderSpec->name;
+
+  err = ::PBGetCatInfoSync(&cipbp);
+  if (err != noErr) return err;
+  
+  if ((cipbp.dirInfo.ioFlAttrib & ioDirMask) == 0)
+    return dirNFErr;
+
+  return ::FSMakeFSSpec(inFolderSpec->vRefNum, cipbp.dirInfo.ioDrDirID, inFileName, outFSSpec);
+}
+
+
+OSErr
+nsDragService::HandleHFSPromiseDrop(DragReference inDragRef, unsigned int inItemIndex, 
+        FlavorType inFlavor, const nsAString& inSourceURL, void** outData, unsigned int* outDataSize)
+{
+  *outData = NULL;
+  *outDataSize = 0;
+  
+  OSErr err;
+  nsresult rv;
+  
+  nsCOMPtr<nsIURI> sourceURI;
+  rv = NS_NewURI(getter_AddRefs(sourceURI), inSourceURL);
+  if (NS_FAILED(rv)) return paramErr;
+  
+  // get the promise data
+  PromiseHFSFlavor promiseData;
+  Size dataSize = sizeof(promiseData);
+  err = ::GetFlavorData(inDragRef, inItemIndex, kDragFlavorTypePromiseHFS, &promiseData, &dataSize, 0);
+  if (err != noErr) return err;
+  
+  FSSpec dropLocation;
+  err = GetDropDirectory(inDragRef, &dropLocation);
+  if (err != noErr) return err;
+  
+  nsCOMPtr<nsILocalFileMac> dropFolderSpec;
+  rv = NS_NewLocalFileWithFSSpec(&dropLocation, PR_FALSE, getter_AddRefs(dropFolderSpec));
+  if (NS_FAILED(rv)) return paramErr;
+
+  // call the base class to create the file
+  nsCOMPtr<nsILocalFile> droppedFileSpec;
+  rv = CreateFileInDirectory(sourceURI, dropFolderSpec, getter_AddRefs(droppedFileSpec));
+  if (NS_FAILED(rv)) return paramErr;
+  
+  // now fire off a download of the item into the file.
+  // we rely on the fact that the WPB is refcounted by the channel etc,
+  // so we don't keep a ref to it. It will die when finished.
+  rv = SaveURIToFile(sourceURI, droppedFileSpec);
+  if (NS_FAILED(rv)) return paramErr;
+  
+  nsCOMPtr<nsILocalFileMac> targetFileMac = do_QueryInterface(droppedFileSpec);
+  if (!targetFileMac) return paramErr;
+
+  FSSpec targetFileSpec;
+  rv = targetFileMac->GetFSSpec(&targetFileSpec);
+  if (NS_FAILED(rv)) return paramErr;
+  
+  // now we know that everything is working, put the promised data back in the drag
+  err = ::SetDragItemFlavorData(inDragRef, inItemIndex, inFlavor, &targetFileSpec, sizeof(FSSpec), 0);
+  if (err != noErr) return err;
+  
+  return err;
+}
+
+

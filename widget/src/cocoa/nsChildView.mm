@@ -2564,16 +2564,31 @@ const PRInt32 kNumLines = 4;
   nsMouseScrollEvent geckoEvent;
   geckoEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
   geckoEvent.nativeMsg = nsnull;
+  geckoEvent.scrollFlags = 0;
+
   [self convert:theEvent message:NS_MOUSE_SCROLL toGeckoEvent:&geckoEvent];
+  PRInt32 incomingDeltaX = (PRInt32)[theEvent deltaX];
   PRInt32 incomingDeltaY = (PRInt32)[theEvent deltaY];
+
+  PRInt32 scrollDelta = 0;
+  if (incomingDeltaY != 0)
+  {
+    geckoEvent.scrollFlags |= nsMouseScrollEvent::kIsVertical;
+    scrollDelta = incomingDeltaY;
+  }
+  else if (incomingDeltaX != 0)
+  {
+    geckoEvent.scrollFlags |= nsMouseScrollEvent::kIsHorizontal;
+    scrollDelta = incomingDeltaX;
+  }
+  
   // Use hasJaguarAppKit to determine if we're on 10.2 where the user has control
   // over the deltaY from a scrollwheel event via the Mouse panel in System Preferences
   if (hasJaguarAppKit())
-    geckoEvent.delta = -incomingDeltaY;
+    geckoEvent.delta = -scrollDelta;
   else
-    geckoEvent.delta = incomingDeltaY * -kNumLines;
-  geckoEvent.scrollFlags |= nsMouseScrollEvent::kIsVertical;
- 
+    geckoEvent.delta = scrollDelta * -kNumLines;
+    
   // send event into Gecko by going directly to the
   // the widget.
   mGeckoChild->DispatchWindowEvent(geckoEvent);

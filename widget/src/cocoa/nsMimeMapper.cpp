@@ -99,12 +99,16 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIf
     if ( PL_strcmp(aMimeStr, kTextMime) == 0 )
       format = kScrapFlavorTypeText;
     else if ( PL_strcmp(aMimeStr, kFileMime) == 0 )
-      format = flavorTypeHFS;
+      format = kDragFlavorTypeHFS;
+    else if ( PL_strcmp(aMimeStr, kFilePromiseMime) == 0 )
+      format = kDragFlavorTypePromiseHFS;
     else if ( PL_strcmp(aMimeStr, kPNGImageMime) == 0 )
       format = kScrapFlavorTypePicture;
     else if ( PL_strcmp(aMimeStr, kJPEGImageMime) == 0 )
       format = kScrapFlavorTypePicture;
     else if ( PL_strcmp(aMimeStr, kGIFImageMime) == 0 )
+      format = kScrapFlavorTypePicture;
+    else if ( PL_strcmp(aMimeStr, kNativeImageMime) == 0 )
       format = kScrapFlavorTypePicture;
     else if ( PL_strcmp(aMimeStr, kUnicodeMime) == 0 )
       format = kScrapFlavorTypeUnicode;
@@ -125,7 +129,8 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIf
   }
 
   if ( inAddIfNotPresent )
-    NS_ASSERTION ( format, "Didn't map mimeType to a macOS type for some reason" );   
+    NS_ASSERTION ( format, "Didn't map mimeType to a macOS type for some reason" );
+    
   return format;
   
 } // MapMimeTypeToMacOSType
@@ -143,9 +148,12 @@ nsMimeMapperMac :: MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & o
 {
   switch ( inMacType ) {
   
-    case kScrapFlavorTypeText: outMimeStr = kTextMime; break;
-    case kScrapFlavorTypeUnicode: outMimeStr = kUnicodeMime; break;
-    case flavorTypeHFS: outMimeStr = kFileMime; break;
+    case kScrapFlavorTypeText:      outMimeStr = kTextMime;         break;
+    case kScrapFlavorTypeUnicode:   outMimeStr = kUnicodeMime;      break;
+    case kScrapFlavorTypePicture:   outMimeStr = kNativeImageMime;  break;
+    case kDragFlavorTypeHFS:        outMimeStr = kFileMime;         break;
+    case kDragFlavorTypePromiseHFS: outMimeStr = kFilePromiseMime;  break;
+    case kDragPromisedFlavor:       outMimeStr = kFilePromiseMime;  break;
     
     // This flavor is the old 4.x Composer flavor for HTML. The actual data is a binary
     // data structure which we do NOT want to deal with in any way shape or form. I am
